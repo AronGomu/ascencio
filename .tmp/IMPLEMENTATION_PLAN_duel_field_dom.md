@@ -1,6 +1,6 @@
 # DOM Duel-Field Implementation Plan
 
-> Status: approved amended plan; DF-07 accepted; DF-08 implementation pending
+> Status: approved amended plan; DF-09 complete; DF-10 implementation pending
 > Created: 2026-07-31
 > Scope: Standard-format desktop field → rich state → accessibility/responsive parity → Phaser removal
 > Architecture: [`architecture/05-presentation/duel-field-architecture.md`](../docs/architecture/05-presentation/duel-field-architecture.md)
@@ -108,7 +108,7 @@ DF-00 → DF-01 → DF-02 → DF-03 → DF-04 → DF-05 → DF-06 → DF-07 → 
 - [x] DF-06
 - [x] DF-07
 - [x] DF-08
-- [ ] DF-09
+- [x] DF-09
 - [ ] DF-10
 - [ ] DF-11
 - [ ] DF-12
@@ -614,14 +614,14 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-- [ ] **Red:** add `DuelField` component test expecting named region, 34 stable physical zone nodes/labels, two shared EMZs, keyed visible/hidden cards, stack counts.
-- [ ] Assert no `<canvas>`, no duplicate EMZ controls, no hidden opponent card identity/alt text.
-- [ ] Assert defense/opponent orientation exposed by DOM class/data state plus readable accessible label.
-- [ ] **Green:** create `FieldBoard`, `ZoneControl`, `CardControl`, `StackControl` focused components from `BoardViewModel`.
-- [ ] Use native buttons only where inspect/action exists; passive empty slots remain labelled unless prompt later makes actionable.
-- [ ] Position via CSS custom properties/percentages; define explicit layer tokens.
-- [ ] Render placeholder/back immediately; avoid image readiness dependency.
-- [ ] Keep component isolated from Worker/store; do not replace App's Phaser host in this ticket.
+- [x] **Red:** add `DuelField` component test expecting named region, 34 stable physical zone nodes/labels, two shared EMZs, keyed visible/hidden cards, stack counts.
+- [x] Assert no `<canvas>`, no duplicate EMZ controls, no hidden opponent card identity/alt text.
+- [x] Assert defense/opponent orientation exposed by DOM class/data state plus readable accessible label.
+- [x] **Green:** create `FieldBoard`, `ZoneControl`, `CardControl`, `StackControl` focused components from `BoardViewModel`.
+- [x] Use native buttons only where inspect/action exists; passive empty slots remain labelled unless prompt later makes actionable.
+- [x] Position via CSS custom properties/percentages; define explicit layer tokens.
+- [x] Render placeholder/back immediately; avoid image readiness dependency.
+- [x] Keep component isolated from Worker/store; do not replace App's Phaser host in this ticket.
 
 ### Outputs
 
@@ -631,10 +631,10 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- [ ] `npm run test:component` green.
-- [ ] Testing Library finds card/stack/zone by role/name, not `data-testid` coordinates.
-- [ ] Component imports no Phaser/Worker modules.
-- [ ] Screenshot `ST-01..04` at VP-01/02 reviewed against wireframe/rule refs.
+- [x] `npm run test:component` green.
+- [x] Testing Library finds card/stack/zone by role/name, not `data-testid` coordinates.
+- [x] Component imports no Phaser/Worker modules.
+- [x] Screenshot `ST-01..04` at VP-01/02 reviewed against wireframe/rule refs.
 
 ---
 

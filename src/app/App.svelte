@@ -10,7 +10,7 @@
   import type { PromptCard } from "../duel/contracts/player-prompt.ts";
   import type { PublicCard } from "../duel/contracts/public-duel-state.ts";
   import { fieldCardChoices, fieldZoneChoice } from "../field/card-mapping.ts";
-  import DuelField from "./components/DuelField.svelte";
+  import LegacyPhaserDuelField from "./components/LegacyPhaserDuelField.svelte";
   import { downloadDuelDiagnostics } from "./diagnostics/download-diagnostics.ts";
   import { DuelWorkerClient } from "./DuelWorkerClient.ts";
   import {
@@ -933,7 +933,7 @@
 
   {#if imageLibrary && $duel.snapshot}
     {#key `${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}:${imageLibraryGeneration}`}
-      <DuelField
+      <LegacyPhaserDuelField
         snapshot={$duel.snapshot}
         prompt={$duel.prompt}
         events={$duel.presentationEvents}

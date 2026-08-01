@@ -19,6 +19,11 @@
   --accent-strong: #42c9b5;
   --danger: #ff8c9b;
   --warning: #ffd580;
+  --duel-field-layer-surface: 0;
+  --duel-field-layer-zone: 10;
+  --duel-field-layer-stack: 20;
+  --duel-field-layer-card: 30;
+  --duel-field-layer-label: 40;
 }
 
 * {
@@ -413,6 +418,168 @@ li + li {
   .counts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+.duel-field {
+  min-width: 0;
+  padding: 1rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  background: linear-gradient(180deg, #0b1728, #08111f);
+  box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.18);
+}
+
+.duel-field-board {
+  position: relative;
+  isolation: isolate;
+  width: min(100%, calc((100vh - 4rem) * 16 / 9));
+  min-width: 48rem;
+  margin-inline: auto;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid #436558;
+  border-radius: 0.8rem;
+  background: #153d35;
+}
+
+.duel-field-board__surface {
+  position: absolute;
+  z-index: var(--duel-field-layer-surface);
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      90deg,
+      transparent 49.9%,
+      rgb(213 240 230 / 0.18) 50%,
+      transparent 50.1%
+    ),
+    linear-gradient(
+      0deg,
+      transparent 49.8%,
+      rgb(213 240 230 / 0.28) 50%,
+      transparent 50.2%
+    ),
+    radial-gradient(circle at center, rgb(115 218 202 / 0.12), transparent 30%),
+    linear-gradient(135deg, #173f36, #102e2a);
+}
+
+.duel-field-zone,
+.duel-field-stack,
+.duel-field-card {
+  position: absolute;
+  left: var(--field-x);
+  top: var(--field-y);
+  width: var(--field-width);
+  height: var(--field-height);
+  transform: translate(-50%, -50%);
+}
+
+.duel-field-zone {
+  z-index: var(--duel-field-layer-zone);
+  display: grid;
+  place-items: center;
+  padding: 0.2rem;
+  border: 1px solid rgb(183 220 207 / 0.48);
+  border-radius: 0.35rem;
+  background: rgb(8 26 25 / 0.28);
+  color: rgb(232 237 248 / 0.7);
+  font-size: clamp(0.42rem, 0.7vw, 0.68rem);
+  line-height: 1.15;
+  text-align: center;
+}
+
+.duel-field-zone[data-zone-kind="hand"] {
+  border-style: dashed;
+  background: rgb(28 79 66 / 0.45);
+}
+
+.duel-field-zone--shared {
+  border: 2px solid var(--accent);
+  background: rgb(19 69 66 / 0.72);
+  color: #e8edf8;
+}
+
+.duel-field-stack {
+  z-index: var(--duel-field-layer-stack);
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.1rem;
+  padding: 0.2rem;
+  border: 2px solid #9f8deb;
+  border-radius: 0.4rem;
+  background:
+    linear-gradient(145deg, rgb(159 141 235 / 0.24), transparent 65%), #201d35;
+  color: #e8edf8;
+  text-transform: capitalize;
+}
+
+.duel-field-stack__name {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: clamp(0.45rem, 0.72vw, 0.72rem);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.duel-field-stack__count {
+  font-size: clamp(0.7rem, 1.15vw, 1.1rem);
+}
+
+.duel-field-card {
+  z-index: var(--duel-field-layer-card);
+  margin: 0;
+  pointer-events: none;
+}
+
+.duel-field-card__art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border: 1px solid rgb(235 243 255 / 0.78);
+  border-radius: 0.28rem;
+  background: var(--surface-strong);
+  box-shadow: 0 0.35rem 0.8rem rgb(0 0 0 / 0.32);
+  transform-origin: center;
+}
+
+.duel-field-card__art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.duel-field-card.is-sideways .duel-field-card__art {
+  transform: rotate(90deg) scale(0.69, 1.45);
+}
+
+.duel-field-card.is-opponent:not(.is-sideways) .duel-field-card__art {
+  transform: rotate(180deg);
+}
+
+.duel-field-card.is-opponent.is-sideways .duel-field-card__art {
+  transform: rotate(270deg) scale(0.69, 1.45);
+}
+
+.duel-field-card__label {
+  position: absolute;
+  z-index: var(--duel-field-layer-label);
+  right: -0.1rem;
+  bottom: -0.1rem;
+  left: -0.1rem;
+  overflow: hidden;
+  padding: 0.12rem 0.18rem;
+  border-radius: 0.2rem;
+  color: #ffffff;
+  background: rgb(4 13 22 / 0.82);
+  font-size: clamp(0.38rem, 0.55vw, 0.57rem);
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @media (prefers-reduced-motion: reduce) {

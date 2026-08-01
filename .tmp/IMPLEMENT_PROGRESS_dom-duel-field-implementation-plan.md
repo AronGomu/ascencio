@@ -3,7 +3,7 @@
 - Branch: `plan/dom-duel-field-implementation-plan`
 - Plan: `.tmp/IMPLEMENTATION_PLAN_duel_field_dom.md`
 - Started: 2026-08-01T09:03:37Z
-- Updated: 2026-08-01T11:14:16Z
+- Updated: 2026-08-01T11:33:40Z
 
 ## Status
 
@@ -17,8 +17,8 @@
 | DF-05 | Separate bounded semantic log from feedback queue | done | 5bbdd22 | Ship locally verified; validated and pushed |
 | DF-06 | Derive renderer-neutral `BoardViewModel` | done | 382d036 | Ship locally verified; validated and pushed |
 | DF-07 | Derive discriminated `InteractionSpec` | done | b6a5b3d | Ship locally verified; validated and pushed |
-| DF-08 | Add `InteractionSession` reducer and authoritative pending lifecycle | done | DF-08-COMMIT | Ship locally verified; isolated checkpoint ready to commit/push |
-| DF-09 | Render static semantic DOM field | pending | — | — |
+| DF-08 | Add `InteractionSession` reducer and authoritative pending lifecycle | done | b6e7706 | Ship locally verified; validated and pushed |
+| DF-09 | Render static semantic DOM field | done | DF-09-COMMIT | Nix Chromium captures plus full gates green; validated for commit/push |
 | DF-10 | Connect complete pointer field workflows | pending | — | — |
 | DF-11 | Add HUD, inspector, stacks/trays, rich state | pending | — | — |
 | DF-12 | Add bounded CSS/DOM/SVG feedback | pending | — | — |
@@ -56,4 +56,6 @@
 - 2026-08-01T10:42:16Z DF-07 start.
 - 2026-08-01T10:57:30Z DF-07 done b6a5b3d: red missing interaction-spec module; focused prompt/spec 26/26, unit 354/354, full test 405/405; typecheck/lint/format/build green. Review clean; malformed targets stay semantic-only/omitted; spec structured-clones without functions/elements.
 - 2026-08-01T11:00:49Z DF-08 start.
-- 2026-08-01T11:14:16Z DF-08 done DF-08-COMMIT: red missing interaction-session module plus 4 store/client failures; focused 39/39, unit 367/367, full test 418/418; typecheck/lint/format/build green. Inline correctness/contract/concurrency/privacy review clean; pending remains store-authoritative and keyed, stale/duplicate submit paths emit no extra Worker command.
+- 2026-08-01T11:14:16Z DF-08 done b6e7706: red missing interaction-session module plus 4 store/client failures; focused 39/39, unit 367/367, full test 418/418; typecheck/lint/format/build green. Review clean; pending remains store-authoritative/keyed; stale/duplicate submits emit no extra Worker command.
+- 2026-08-01T11:16:27Z DF-09 start.
+- 2026-08-01T11:33:40Z DF-09 done DF-09-COMMIT: reconstructed red missing semantic board expectations; focused 5/5, component 15/15, unit 367/367; typecheck/lint/format/build/diff green. Repair used `nix build github:NixOS/nixpkgs/nixos-unstable#playwright-driver.browsers --no-link --print-out-paths` plus `PLAYWRIGHT_BROWSERS_PATH=/nix/store/58nx8ipi0v36amc4rgmd09l17iyrvwpm-playwright-browsers`; Chromium 149.0.7827.55 rendered actual `DuelField.svelte`. ST-01..04 at VP-01/02 semantic assertions plus 8 screenshots/8 traces green; wireframe/RULE-01/CORE-01/CORE-02 review clean. Artifact `test-results/df-09-static-field-captures.zip` SHA-256 `e2e7638c061dec3bb1b548fa4465f48eb224116e5e987e6ee44f518b34150d6c`; repo policy ignores `test-results/`, so artifact remains unstaged.

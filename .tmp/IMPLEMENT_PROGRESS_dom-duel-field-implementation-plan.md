@@ -3,7 +3,7 @@
 - Branch: `plan/dom-duel-field-implementation-plan`
 - Plan: `.tmp/IMPLEMENTATION_PLAN_duel_field_dom.md`
 - Started: 2026-08-01T09:03:37Z
-- Updated: 2026-08-01T15:11:39Z
+- Updated: 2026-08-01T13:39:49Z
 
 ## Status
 
@@ -22,11 +22,11 @@
 | DF-10 | Connect complete pointer field workflows | done | bc941f2 | Ship locally verified; validated and pushed |
 | DF-11 | Add HUD, inspector, stacks/trays, rich state | done | b30a1bc | Ship locally verified; validated and pushed |
 | DF-12 | Add bounded CSS/DOM/SVG feedback | done | cd728aa | Ship locally verified; validated and pushed |
-| DF-13 | Lease image URLs and remove image input gate | done | DF-13-COMMIT | Retry diagnosed stale count oracle; all gates green; validated for commit/push |
-| DF-14 | Add spatial keyboard and screen-reader behavior | pending | — | — |
-| DF-15 | Recompose field across supported viewports | pending | — | — |
-| DF-16 | Prove semantic, visual, browser, resource, and performance parity | pending | — | — |
-| DF-17 | Remove Phaser renderer and obsolete bridge | pending | — | — |
+| DF-13 | Lease image URLs and remove image input gate | done | 2cae7d9 | Retry diagnosed stale count oracle; validated and pushed |
+| DF-14 | Add spatial keyboard and screen-reader behavior | blocked_user | — | Automated candidate green; needs real NVDA/Firefox + VoiceOver/Safari PASS |
+| DF-15 | Recompose field across supported viewports | blocked_dep | — | Strict serial order depends on accepted DF-14 |
+| DF-16 | Prove semantic, visual, browser, resource, and performance parity | blocked_dep | — | Depends on DF-14/DF-15 |
+| DF-17 | Remove Phaser renderer and obsolete bridge | blocked_dep | — | Depends on accepted DF-16 removal gate |
 
 ## Assumptions
 
@@ -66,5 +66,10 @@
 - 2026-08-01T12:25:48Z DF-12 start.
 - 2026-08-01T12:45:18Z DF-12 done cd728aa: red focused 5 failures/3 files; green focused 22/22, unit 373/373, component 29/29, integration 20/20, legacy 21/21; typecheck/lint/format/build/diff green. Fake timers retained zero timers/animations after cancel; reduced motion skipped WAAPI while preserving text/highlight; SVG is aria-hidden/focus-disabled/pointer-transparent; field input callback remained synchronous. Lifecycle review caught Worker event→state order plus Svelte pre-patch reactive timing, so target feedback waits for adjacent snapshot and `tick()`; generation changes cancel and watermark stale queued events. Minimal live-wiring expansion to `App.svelte` plus `DuelFieldErrorBoundary.svelte` approved because isolated component-only feedback would not activate production queue.
 - 2026-08-01T12:48:33Z DF-13 start.
-- 2026-08-01T15:04:50Z DF-13 blocked without commit: focused unit/component 40/40, aggregate legacy 21/unit 374/component 31/integration 20, typecheck/lint/format/build green; Nix Chromium 10/11. Resource lifecycle E2E expected restart active URL baseline 5 but observed 4 after allowed lint repair. Artifact `test-results/df-13-image-lifecycle.zip` SHA-256 `d8b12604eaed680d1b6647cfd67435bd8bb663285b1e4611c7d56c96d6dd933d` includes failure trace plus passing nonblocking-input evidence.
-- 2026-08-01T15:11:39Z DF-13 retry done DF-13-COMMIT: failure trace showed restarted five-card hand contained duplicate `Soul Release`, so dedup-by-code correctly retained four mounted URLs versus five initial unique codes. Replaced stale hardcoded count equality with exact active-URL/mounted-blob identity-set equality plus zero obsolete-generation overlap. Focused unit 374/component 31 and repaired E2E 1/1 green; aggregate legacy 21/unit 374/component 31/integration 20, typecheck/lint/format/build/diff green; Nix Chromium 11/11 plus trace capture 2/2 green. Lifecycle evidence proves active set equals mounted set, old URLs revoked, hidden identities use no blob lease; nonblocking evidence records one Worker response while image preload remained unsettled. Artifact `test-results/df-13-image-lifecycle.zip` SHA-256 `4d4e529c7e9f8a94ee74f9a6ae90947c4fb0b4e69e71d81536e723de8deb63be`; `unzip -t` and both embedded trace ZIP integrity checks green; ignored by repo policy.
+- 2026-08-01T13:04:50Z DF-13 blocked without commit: focused unit/component 40/40, aggregate legacy 21/unit 374/component 31/integration 20, typecheck/lint/format/build green; Nix Chromium 10/11. Resource lifecycle E2E expected restart active URL baseline 5 but observed 4 after allowed lint repair. Artifact `test-results/df-13-image-lifecycle.zip` SHA-256 `d8b12604eaed680d1b6647cfd67435bd8bb663285b1e4611c7d56c96d6dd933d` includes failure trace plus passing nonblocking-input evidence.
+- 2026-08-01T13:11:39Z DF-13 retry done 2cae7d9: failure trace showed restarted five-card hand contained duplicate `Soul Release`, so dedup-by-code correctly retained four mounted URLs versus five initial unique codes. Replaced stale hardcoded count equality with exact active-URL/mounted-blob identity-set equality plus zero obsolete-generation overlap. Focused unit 374/component 31 and repaired E2E 1/1 green; aggregate legacy 21/unit 374/component 31/integration 20, typecheck/lint/format/build/diff green; Nix Chromium 11/11 plus trace capture 2/2 green. Lifecycle evidence proves active set equals mounted set, old URLs revoked, hidden identities use no blob lease; nonblocking evidence records one Worker response while image preload remained unsettled. Artifact `test-results/df-13-image-lifecycle.zip` SHA-256 `4d4e529c7e9f8a94ee74f9a6ae90947c4fb0b4e69e71d81536e723de8deb63be`; `unzip -t` and both embedded trace ZIP integrity checks green; ignored by repo policy.
+- 2026-08-01T13:14:41Z DF-14 start.
+- 2026-08-01T13:39:49Z DF-14 blocked_user without commit: automated candidate unit 378/component 37/integration 20/Chromium 12 green; keyboard full duel emitted 74 unique responses with zero duplicates; 52 targets minimum 65.48×65.39 px; typecheck/lint/format/build/reproducibility green. Required actual NVDA/Firefox and VoiceOver/Safari manual reviews unavailable on Linux. Artifact `test-results/df-14-keyboard-screen-reader.zip` SHA-256 `5becde78206be350377a5ac23aba8664953911b16dae8902d3390b105e65b602` remains local/ignored.
+- 2026-08-01T13:39:49Z DF-15 blocked_dep: strict serial order requires accepted DF-14.
+- 2026-08-01T13:39:49Z DF-16 blocked_dep: depends on DF-14/DF-15.
+- 2026-08-01T13:39:49Z DF-17 blocked_dep: depends on accepted DF-16 removal gate.

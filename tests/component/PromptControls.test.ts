@@ -118,6 +118,50 @@ describe("PromptControls", () => {
     expect(onsubmit).toHaveBeenCalledWith(["card"]);
   });
 
+  it("keeps legal input enabled while mounted card art has only a placeholder", async () => {
+    const onsubmit = vi.fn<(choiceIds: readonly ChoiceId[]) => boolean>(
+      () => true,
+    );
+    const release = vi.fn();
+    const lease = vi.fn<(code: number) => { url: string; release: () => void }>(
+      () => ({ url: "blob:late-card", release }),
+    );
+    const value = prompt("selectCard", {
+      choices: [
+        choice("card", "Select card", {
+          card: {
+            instanceId: cardInstanceId("slow-image-card"),
+            code: cardCode(97590747),
+            controller: 0,
+            location: "monster",
+            sequence: 0,
+            position: "faceUpAttack",
+          },
+        }),
+      ],
+    });
+    const rendered = render(PromptControls, {
+      prompt: value,
+      disabled: false,
+      onsubmit,
+      imageLibrary: null,
+      placeholderUrl: "data:image/svg+xml,placeholder",
+    });
+
+    expect(screen.getByRole("checkbox")).not.toHaveProperty("disabled", true);
+    expect(screen.getByRole("img").getAttribute("src")).toBe(
+      "data:image/svg+xml,placeholder",
+    );
+    await userEvent.setup().click(screen.getByRole("checkbox"));
+    await userEvent.setup().click(button("Confirm selection"));
+    expect(onsubmit).toHaveBeenCalledOnce();
+
+    await rendered.rerender({ imageLibrary: { lease } });
+    expect(lease).toHaveBeenCalledWith(97590747);
+    rendered.unmount();
+    expect(release).toHaveBeenCalledOnce();
+  });
+
   it("re-enables the same prompt after a recoverable response rejection", async () => {
     const user = userEvent.setup();
     const onsubmit = vi.fn<(choiceIds: readonly ChoiceId[]) => boolean>(

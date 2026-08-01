@@ -112,14 +112,59 @@ describe("CardImageCache", () => {
     expect(first.diagnostics[0]?.status).toBe("cache-miss");
     expect(second.diagnostics[0]?.status).toBe("cache-hit");
     expect(fallback.diagnostics[0]?.status).toBe("cache-hit");
-    expect(first.urlFor(97590747)).toMatch(/^blob:image-/);
-    expect(first.urlFor(undefined, true)).toContain("data:image/svg+xml");
+    expect(objectUrl).toBe(0);
+    const firstLease = first.lease(97590747);
+    const duplicateLease = first.lease(97590747);
+    const sharedSnapshotLease = second.lease(97590747);
+    expect(firstLease.url).toBe("blob:image-1");
+    expect(duplicateLease.url).toBe(firstLease.url);
+    expect(sharedSnapshotLease.url).toBe(firstLease.url);
+    expect(objectUrl).toBe(1);
 
+    firstLease.release();
+    duplicateLease.release();
+    expect(revoke).not.toHaveBeenCalled();
     first.dispose();
     first.dispose();
+    expect(revoke).not.toHaveBeenCalled();
+    sharedSnapshotLease.release();
+    expect(revoke).toHaveBeenCalledTimes(1);
     second.dispose();
     fallback.dispose();
-    expect(revoke).toHaveBeenCalledTimes(3);
+  });
+
+  it("keeps snapshot generations isolated and revokes the replaced generation", async () => {
+    const revoke = vi.fn();
+    let objectUrl = 0;
+    const cache = new CardImageCache({
+      applicationBaseUrl: "https://example.test/game/",
+      fetch: vi.fn(async () => imageResponse()),
+      cacheStorage: new FakeCacheStorage() as unknown as CacheStorage,
+      createObjectUrl: () => `blob:generation-${++objectUrl}`,
+      revokeObjectUrl: revoke,
+      decodeImage: async () => undefined,
+    });
+    const oldFixture = fixture("a");
+    const newFixture = fixture("b");
+    const oldLibrary = await cache.preload(
+      oldFixture.manifest,
+      oldFixture.digest,
+    );
+    const newLibrary = await cache.preload(
+      newFixture.manifest,
+      newFixture.digest,
+    );
+    const oldLease = oldLibrary.lease(97590747);
+    const newLease = newLibrary.lease(97590747);
+
+    expect(oldLease.url).toBe("blob:generation-1");
+    expect(newLease.url).toBe("blob:generation-2");
+    oldLibrary.dispose();
+    expect(revoke).toHaveBeenCalledWith("blob:generation-1");
+    expect(revoke).not.toHaveBeenCalledWith("blob:generation-2");
+    oldLease.release();
+    newLease.release();
+    expect(revoke).toHaveBeenCalledWith("blob:generation-2");
   });
 
   it("deduplicates concurrent revision requests", async () => {
@@ -199,7 +244,9 @@ describe("CardImageCache", () => {
 
     const library = await cache.preload(manifest, digest);
     expect(fetch).toHaveBeenCalledTimes(1);
-    expect(library.urlFor(97590747)).toBe("blob:verified");
+    const lease = library.lease(97590747);
+    expect(lease.url).toBe("blob:verified");
+    lease.release();
     expect(
       new Uint8Array(await (await stored.match(source))!.arrayBuffer()),
     ).toEqual(JPEG);
@@ -250,7 +297,9 @@ describe("CardImageCache", () => {
     });
     const missing = await missingCache.preload(missingManifest, missingDigest);
     expect(noFetch).not.toHaveBeenCalled();
-    expect(missing.urlFor(97590747)).toBe(missing.placeholderUrl);
+    const missingLease = missing.lease(97590747);
+    expect(missingLease.url).toBe(missing.placeholderUrl);
+    missingLease.release();
 
     const providerCache = new CardImageCache({
       applicationBaseUrl: "https://example.test/game/",
@@ -262,7 +311,9 @@ describe("CardImageCache", () => {
     });
     const failed = await providerCache.preload(manifest, digest);
     expect(failed.diagnostics[0]).toMatchObject({ status: "missing" });
-    expect(failed.urlFor(97590747)).toBe(failed.placeholderUrl);
+    const failedLease = failed.lease(97590747);
+    expect(failedLease.url).toBe(failed.placeholderUrl);
+    failedLease.release();
   });
 
   it("uses the network when an image cache read fails", async () => {
@@ -284,7 +335,9 @@ describe("CardImageCache", () => {
 
     const library = await cache.preload(manifest, digest);
     expect(fetch).toHaveBeenCalledTimes(1);
-    expect(library.urlFor(97590747)).toBe("blob:network-fallback");
+    const lease = library.lease(97590747);
+    expect(lease.url).toBe("blob:network-fallback");
+    lease.release();
   });
 
   it("continues with verified bytes when Cache Storage quota is exhausted", async () => {
@@ -303,7 +356,9 @@ describe("CardImageCache", () => {
       decodeImage: async () => undefined,
     });
     const library = await cache.preload(manifest, digest);
-    expect(library.urlFor(97590747)).toBe("blob:quota-fallback");
+    const lease = library.lease(97590747);
+    expect(lease.url).toBe("blob:quota-fallback");
+    lease.release();
     expect(library.diagnostics[0]?.detail).toContain("Quota exceeded");
   });
 

@@ -1,16 +1,17 @@
 # Card Images
 
-> Status: accepted target; migration pending; distribution review required
+> Status: implemented DOM image lifecycle; distribution review required
 
-Current baseline verifies and caches active-deck images for the Phaser field, creates eager object URLs, and retains image-dependent field/input gates. DF-13 migrates to mounted-image leases and makes legal input independent of image readiness.
+Active-deck images remain verified and cached as blobs. DOM consumers acquire snapshot-and-code-scoped leases only while art is mounted; final release revokes each object URL. Image loading status is diagnostic only and never gates legal input.
 
 ## Coverage and delivery
 
 - Maintain a versioned card-code-to-image manifest for every supported catalog ID.
 - Keep the multi-gigabyte image archive outside the JavaScript bundle and source Git.
 - Serve approved images from project-controlled static hosting rather than continual provider hotlinking.
-- Preload/verify active-deck blobs with bounded concurrency, but never block a legal prompt on image or storage I/O; use placeholders until art is ready.
+- Preload/verify active-deck blobs with bounded concurrency, but never block a legal prompt on image or storage I/O; render card backs/placeholders immediately.
 - Create object URLs lazily for mounted/soon-visible DOM images. Deduplicate leases by snapshot+card code and revoke after final consumer, generation replacement, restart, or disposal.
+- Use native asynchronous image decoding. Decode/load failure returns that element to deterministic placeholder art without changing prompt legality.
 
 ## Rendering and privacy
 

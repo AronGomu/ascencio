@@ -7,6 +7,17 @@ interface BrowserCapture {
   readonly events: readonly Readonly<Record<string, unknown>>[];
   readonly workers: number;
   readonly terminations: number;
+  readonly imageUrls: {
+    readonly created: readonly string[];
+    readonly revoked: readonly string[];
+    readonly active: ReadonlySet<string>;
+  };
+}
+
+declare global {
+  interface Window {
+    readonly __duelCapture: BrowserCapture;
+  }
 }
 
 interface CapturedStateEvent {
@@ -32,8 +43,27 @@ test.beforeEach(async ({ page }) => {
       events: [] as unknown[],
       workers: 0,
       terminations: 0,
+      imageUrls: {
+        created: [] as string[],
+        revoked: [] as string[],
+        active: new Set<string>(),
+      },
     };
     Object.defineProperty(window, "__duelCapture", { value: capture });
+
+    const nativeCreateObjectURL = URL.createObjectURL.bind(URL);
+    const nativeRevokeObjectURL = URL.revokeObjectURL.bind(URL);
+    URL.createObjectURL = (object: Blob | MediaSource): string => {
+      const url = nativeCreateObjectURL(object);
+      capture.imageUrls.created.push(url);
+      capture.imageUrls.active.add(url);
+      return url;
+    };
+    URL.revokeObjectURL = (url: string): void => {
+      capture.imageUrls.revoked.push(url);
+      capture.imageUrls.active.delete(url);
+      nativeRevokeObjectURL(url);
+    };
 
     const NativeWorker = window.Worker;
     const nativePostMessage = NativeWorker.prototype.postMessage;
@@ -342,6 +372,151 @@ test("refresh during loading and after completion starts a clean duel", async ({
   await expect(
     page.getByRole("heading", { name: "Duel surrendered" }),
   ).toHaveCount(0);
+});
+
+test("mounted card image leases return to baseline across tray, restart, and destroy", async ({
+  page,
+}, testInfo) => {
+  await page.goto("./");
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+  await expect
+    .poll(async () => {
+      const state = await mountedImageLeaseState(page);
+      return state.activeCount > 0 && state.activeMatchesMounted;
+    })
+    .toBe(true);
+  const baseline = await mountedImageLeaseState(page);
+  const revokedBefore = await page.evaluate(
+    () => window.__duelCapture.imageUrls.revoked.length,
+  );
+
+  const ownExtra = page.getByRole("button", {
+    name: /Open Your Extra Deck tray, \d+ cards/,
+  });
+  if ((await ownExtra.count()) > 0) {
+    await ownExtra.click();
+    await expect(
+      page.getByRole("region", { name: "Your Extra Deck tray" }),
+    ).toBeVisible();
+    await page
+      .getByRole("button", { name: "Close Your Extra Deck tray" })
+      .click();
+    await expect
+      .poll(async () => mountedImageLeaseState(page))
+      .toEqual(baseline);
+  }
+
+  await page.getByRole("button", { name: "Surrender duel" }).click();
+  await page.getByRole("button", { name: "Confirm surrender" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Duel surrendered" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Start another duel" }).click();
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+  await expect
+    .poll(async () => {
+      const state = await mountedImageLeaseState(page);
+      return state.activeCount > 0 && state.activeMatchesMounted;
+    })
+    .toBe(true);
+  const restarted = await mountedImageLeaseState(page);
+  expect(restarted.activeUrls).not.toEqual(baseline.activeUrls);
+  expect(
+    restarted.activeUrls.filter((url) => baseline.activeUrls.includes(url)),
+  ).toEqual([]);
+  expect(
+    await page.evaluate(() => window.__duelCapture.imageUrls.revoked.length),
+  ).toBeGreaterThan(revokedBefore);
+
+  const evidence = await page.evaluate(() => ({
+    created: window.__duelCapture.imageUrls.created.length,
+    revoked: window.__duelCapture.imageUrls.revoked.length,
+    active: window.__duelCapture.imageUrls.active.size,
+  }));
+  const evidencePath = testInfo.outputPath("df-13-object-url-lifecycle.json");
+  await writeFile(
+    evidencePath,
+    JSON.stringify({ baseline, restarted, ...evidence }, null, 2),
+  );
+  await testInfo.attach("df-13-object-url-lifecycle", {
+    path: evidencePath,
+    contentType: "application/json",
+  });
+
+  await page.goto("about:blank");
+  await expect
+    .poll(async () =>
+      page.evaluate(() => window.__duelCapture.imageUrls.active.size),
+    )
+    .toBe(0);
+});
+
+test("slow image preload cannot delay a legal Worker response", async ({
+  page,
+}, testInfo) => {
+  let markBlocked!: () => void;
+  let releaseImages!: () => void;
+  const blocked = new Promise<void>((resolve) => (markBlocked = resolve));
+  const released = new Promise<void>((resolve) => (releaseImages = resolve));
+  let first = true;
+  await page.route(/\/runtime\/images\/\d+\.jpg$/, async (route) => {
+    if (first) {
+      first = false;
+      markBlocked();
+    }
+    await released;
+    await route.abort("failed");
+  });
+
+  await page.goto("./");
+  await blocked;
+  const controls = page.locator("[data-prompt-kind]");
+  await expect(controls).toBeVisible({ timeout: 120_000 });
+  await expect(controls.getByRole("button").first()).toBeEnabled();
+  const field = page.getByRole("region", { name: "Duel field" });
+  await expect(field.getByRole("img").first()).toHaveAttribute(
+    "src",
+    /^data:image\/svg\+xml/,
+  );
+  const capture = await readCapture(page);
+  const prompt = capture.events.find(
+    (event) => event.type === "prompt",
+  ) as unknown as CapturedPromptEvent;
+  await field.getByRole("button", { name: "End turn", exact: true }).click();
+  await expect
+    .poll(
+      async () =>
+        (await readCapture(page)).commands.filter(
+          (command) =>
+            command.type === "respond" && command.promptId === prompt.prompt.id,
+        ).length,
+    )
+    .toBe(1);
+  const evidencePath = testInfo.outputPath("df-13-nonblocking-input.json");
+  await writeFile(
+    evidencePath,
+    JSON.stringify(
+      {
+        imagePreloadSettled: false,
+        workerResponseCount: 1,
+        fieldImageSource: await field
+          .getByRole("img")
+          .first()
+          .getAttribute("src"),
+      },
+      null,
+      2,
+    ),
+  );
+  await testInfo.attach("df-13-nonblocking-input", {
+    path: evidencePath,
+    contentType: "application/json",
+  });
+  releaseImages();
 });
 
 test("missing active images use deterministic placeholders without blocking input", async ({
@@ -670,6 +845,32 @@ async function keyboardActivate(page: Page, target: Locator): Promise<void> {
     (node) => node instanceof HTMLInputElement && node.type === "checkbox",
   );
   await page.keyboard.press(isCheckbox ? "Space" : "Enter");
+}
+
+async function mountedImageLeaseState(page: Page): Promise<{
+  readonly activeCount: number;
+  readonly activeMatchesMounted: boolean;
+  readonly activeUrls: readonly string[];
+  readonly mountedUrls: readonly string[];
+}> {
+  return page.evaluate(() => {
+    const activeUrls = [...window.__duelCapture.imageUrls.active].sort();
+    const mountedUrls = [
+      ...new Set(
+        [...document.querySelectorAll<HTMLImageElement>("img")]
+          .map((image) => image.currentSrc || image.src)
+          .filter((url) => url.startsWith("blob:")),
+      ),
+    ].sort();
+    return {
+      activeCount: activeUrls.length,
+      activeMatchesMounted:
+        activeUrls.length === mountedUrls.length &&
+        activeUrls.every((url, index) => url === mountedUrls[index]),
+      activeUrls,
+      mountedUrls,
+    };
+  });
 }
 
 async function readCapture(page: Page): Promise<BrowserCapture> {

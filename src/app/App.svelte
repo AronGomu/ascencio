@@ -4,7 +4,6 @@
   import { isCardIdentityVisible } from "../duel/card-visibility.ts";
   import type { DuelDiagnosticTrace } from "../duel/contracts/duel-diagnostics.ts";
   import { snapshotId, type SnapshotId } from "../duel/contracts/ids.ts";
-  import type { PromptCard } from "../duel/contracts/player-prompt.ts";
   import type { PublicCard } from "../duel/contracts/public-duel-state.ts";
   import {
     mapSnapshotToBoard,
@@ -36,7 +35,8 @@
 
   const CURRENT_RUNTIME_SNAPSHOT_ID = snapshotId(__RUNTIME_SNAPSHOT_ID__);
   const CURRENT_ACTIVATION_SNAPSHOT_ID = snapshotId(__ACTIVATION_SNAPSHOT_ID__);
-  const EMPTY_CARD_IMAGES = new Map<number, string>();
+  const DEFAULT_CARD_PLACEHOLDER =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 104'%3E%3Crect width='72' height='104' rx='5' fill='%2318243b'/%3E%3Cpath d='M8 8h56v88H8z' fill='none' stroke='%23697895' stroke-width='2'/%3E%3Ctext x='36' y='57' fill='%23a9b5ca' font-size='28' text-anchor='middle'%3E?%3C/text%3E%3C/svg%3E";
   const ACTIVE_CARD_TEXTS = new Map(
     __ACTIVE_CARD_TEXTS__.map((record) => [record.code, record] as const),
   );
@@ -129,6 +129,11 @@
     appDisposed = false;
     let imageLoadGeneration = 0;
     let imageAbortController: AbortController | null = null;
+    const applicationBaseUrl = new URL(
+      import.meta.env.BASE_URL,
+      globalThis.location.origin,
+    ).href;
+    const cardImageCache = new CardImageCache({ applicationBaseUrl });
 
     const initializeStorage = async (): Promise<void> => {
       storageWarning = null;
@@ -226,25 +231,20 @@
       imageProgress = 0;
       imageWarning = null;
       imageLibraryVerified = false;
-      const applicationBaseUrl = new URL(
-        import.meta.env.BASE_URL,
-        globalThis.location.origin,
-      ).href;
       try {
-        const cache = new CardImageCache({ applicationBaseUrl });
         const onProgress = (completed: number, total: number): void => {
           if (generation === imageLoadGeneration)
             imageProgress = completed / Math.max(total, 1);
         };
         const library =
           request === null
-            ? await cache.preload(
+            ? await cardImageCache.preload(
                 __ACTIVE_IMAGE_MANIFEST__,
                 __ACTIVE_IMAGE_MANIFEST_SHA256__,
                 onProgress,
                 controller.signal,
               )
-            : await cache.preloadCachedSnapshot(
+            : await cardImageCache.preloadCachedSnapshot(
                 request.snapshotId,
                 request.manifestSha256,
                 onProgress,
@@ -573,25 +573,11 @@
     return null;
   }
 
-  function resolvePublicCardImage(card: PublicCard): string | undefined {
-    if (imageLibrary === null || !isInspectableCard(card)) return undefined;
-    return imagesMatchRuntime
-      ? imageLibrary.urlFor(card.code, false)
-      : imageLibrary.urlFor(undefined, false);
-  }
-
   function isInspectableCard(card: PublicCard): boolean {
     return (
       card.code !== undefined &&
       isCardIdentityVisible(0, card.controller, card.location, card.position)
     );
-  }
-
-  function resolvePromptCardImage(card: PromptCard): string | undefined {
-    if (imageLibrary === null) return undefined;
-    return imagesMatchRuntime
-      ? imageLibrary.urlFor(card.code, card.code === undefined)
-      : imageLibrary.urlFor(undefined, card.code === undefined);
   }
 
   function withDeadline<T>(
@@ -912,15 +898,13 @@
     {#key `${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
       <DuelFieldErrorBoundary
         board={duelBoard}
-        imageUrls={imagesMatchRuntime && imageLibrary
-          ? imageLibrary.urls
-          : EMPTY_CARD_IMAGES}
+        imageLibrary={imagesMatchRuntime ? imageLibrary : null}
         cardBackUrl={imageLibrary?.cardBackUrl ?? ""}
         placeholderUrl={imageLibrary?.placeholderUrl ?? ""}
         prompt={$duel.prompt}
         spec={fieldInteractionSpec}
         session={$duel.interactionSession}
-        pending={$duel.responsePending || imageLoading}
+        pending={$duel.responsePending}
         presentationEvents={$duel.presentationEvents}
         feedbackGeneration={`${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
         injectFailure={injectDuelFieldFailure}
@@ -939,7 +923,8 @@
     <DuelHud
       snapshot={$duel.snapshot}
       cardTexts={ACTIVE_CARD_TEXTS}
-      resolveCardImage={resolvePublicCardImage}
+      imageLibrary={imagesMatchRuntime ? imageLibrary : null}
+      placeholderUrl={imageLibrary?.placeholderUrl ?? DEFAULT_CARD_PLACEHOLDER}
       oninspect={inspectHudCard}
     />
   {:else if $duel.status === "active"}
@@ -955,7 +940,8 @@
     <CardInspector
       card={inspectedCard}
       cardTexts={ACTIVE_CARD_TEXTS}
-      resolveCardImage={resolvePublicCardImage}
+      imageLibrary={imagesMatchRuntime ? imageLibrary : null}
+      placeholderUrl={imageLibrary?.placeholderUrl ?? DEFAULT_CARD_PLACEHOLDER}
       onclose={() => void closeCardInspector()}
     />
   {/if}
@@ -968,18 +954,14 @@
       bind:this={promptPanel}
     >
       {#if $duel.prompt}
-        {#if imageLoading}
-          <p class="empty-copy" aria-busy="true">
-            Card images are still loading. Decisions unlock after every image is
-            verified or assigned a placeholder.
-          </p>
-        {/if}
         {#key $duel.prompt.id}
           <PromptControls
             prompt={$duel.prompt}
-            disabled={$duel.responsePending || imageLoading}
+            disabled={$duel.responsePending}
             onsubmit={duel.respond}
-            resolveCardImage={resolvePromptCardImage}
+            imageLibrary={imagesMatchRuntime ? imageLibrary : null}
+            placeholderUrl={imageLibrary?.placeholderUrl ??
+              DEFAULT_CARD_PLACEHOLDER}
           />
         {/key}
       {:else}

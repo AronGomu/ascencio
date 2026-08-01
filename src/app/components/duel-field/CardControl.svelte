@@ -1,9 +1,15 @@
 <script lang="ts">
+  import { onDestroy } from "svelte";
   import type { BoardCardView } from "../../../field/board-view-model.ts";
+  import type {
+    CardImageLease,
+    CardImageLibrary,
+  } from "../../images/card-image-cache.ts";
   import type { ActiveInteractionSpec } from "../../prompts/interaction-spec.ts";
 
   export let card: BoardCardView;
   export let imageUrl: string;
+  export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let interactionKind: ActiveInteractionSpec["kind"] | null = null;
   export let actionable = false;
   export let selected = false;
@@ -13,7 +19,16 @@
 
   let pointerOrigin: { readonly x: number; readonly y: number } | null = null;
   let pointerMoved = false;
+  let activeImageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
+  let activeImageCode: number | undefined;
+  let imageLease: CardImageLease | null = null;
+  let renderedImageUrl = imageUrl;
 
+  $: synchronizeImageLease(
+    imageLibrary,
+    card.image.kind === "face" ? card.image.code : undefined,
+    imageUrl,
+  );
   $: positionStyle = `--field-x: ${card.x * 100}%; --field-y: ${card.y * 100}%; --field-width: ${card.width * 100}%; --field-height: ${card.height * 100}%;`;
   $: accessibleLabel =
     card.facing === "opponent" &&
@@ -26,6 +41,29 @@
       : interactionKind === "counterAllocation"
         ? `Allocate counter to ${accessibleLabel}`
         : `Select ${accessibleLabel}`;
+
+  onDestroy(() => imageLease?.release());
+
+  function synchronizeImageLease(
+    library: Pick<CardImageLibrary, "lease"> | null,
+    code: number | undefined,
+    fallbackUrl: string,
+  ): void {
+    if (library !== activeImageLibrary || code !== activeImageCode) {
+      imageLease?.release();
+      activeImageLibrary = library;
+      activeImageCode = code;
+      imageLease =
+        library !== null && code !== undefined ? library.lease(code) : null;
+    }
+    renderedImageUrl = imageLease?.url ?? fallbackUrl;
+  }
+
+  function useFallbackImage(event: Event): void {
+    const image = event.currentTarget as HTMLImageElement;
+    image.onerror = null;
+    renderedImageUrl = imageUrl;
+  }
 
   function pointerDown(event: PointerEvent): void {
     pointerOrigin = { x: event.clientX, y: event.clientY };
@@ -74,10 +112,11 @@
 >
   <div class="duel-field-card__art">
     <img
-      src={imageUrl}
+      src={renderedImageUrl}
       alt={card.hidden ? "" : accessibleLabel}
       aria-hidden={card.hidden}
       decoding="async"
+      onerror={useFallbackImage}
     />
   </div>
   <span class="duel-field-card__label" aria-hidden="true">

@@ -40,15 +40,19 @@ export interface CardImageDiagnostic {
   readonly detail?: string;
 }
 
+export interface CardImageLease {
+  readonly url: string;
+  release(): void;
+}
+
 export interface CardImageLibrary {
   readonly snapshotId: SnapshotId;
   readonly imageManifestSha256: string;
   readonly provider: "bundled-archive";
-  readonly urls: ReadonlyMap<number, string>;
   readonly cardBackUrl: string;
   readonly placeholderUrl: string;
   readonly diagnostics: readonly CardImageDiagnostic[];
-  urlFor(code: CardCode | number | undefined, hidden?: boolean): string;
+  lease(code: CardCode | number): CardImageLease;
   dispose(): void;
 }
 
@@ -92,12 +96,11 @@ export function createPlaceholderCardImageLibrary(
     snapshotId: snapshotId(manifest.snapshotId),
     imageManifestSha256: expectedManifestSha256,
     provider: "bundled-archive" as const,
-    urls: new Map<number, string>(),
     cardBackUrl,
     placeholderUrl,
     diagnostics: Object.freeze(diagnostics),
-    urlFor(_code: CardCode | number | undefined, hidden = false): string {
-      return hidden ? cardBackUrl : placeholderUrl;
+    lease(): CardImageLease {
+      return staticImageLease(placeholderUrl);
     },
     dispose(): void {
       // Data-URL placeholders do not retain external resources.
@@ -114,6 +117,10 @@ export class CardImageCache {
   readonly #decodeImage: (blob: Blob) => Promise<void>;
   readonly #imageTimeoutMs: number;
   readonly #pending = new Map<string, Promise<Uint8Array>>();
+  readonly #activeLeases = new Map<
+    string,
+    { readonly url: string; references: number }
+  >();
 
   constructor(options: CardImageCacheOptions) {
     this.#applicationBaseUrl = options.applicationBaseUrl;
@@ -215,8 +222,7 @@ export class CardImageCache {
     const orderedRecords = [...manifest.files].sort(
       (left, right) => left.code - right.code,
     );
-    const urls = new Map<number, string>();
-    const objectUrls: string[] = [];
+    const blobs = new Map<number, Blob>();
     const diagnostics: CardImageDiagnostic[] = manifest.missing.map((code) => ({
       code,
       status: "missing",
@@ -288,9 +294,7 @@ export class CardImageCache {
                 detail = describeError("Image cache write failed", error);
               }
             }
-            const objectUrl = this.#createObjectUrl(blob);
-            objectUrls.push(objectUrl);
-            urls.set(record.code, objectUrl);
+            blobs.set(record.code, blob);
             diagnostics.push({
               code: record.code,
               status,
@@ -314,13 +318,8 @@ export class CardImageCache {
         }
       },
     );
-    try {
-      await Promise.all(workers);
-      signal?.throwIfAborted();
-    } catch (error) {
-      objectUrls.forEach(this.#revokeObjectUrl);
-      throw error;
-    }
+    await Promise.all(workers);
+    signal?.throwIfAborted();
 
     const cardBackUrl = svgDataUrl(
       "Card back",
@@ -335,24 +334,79 @@ export class CardImageCache {
       "#27344d",
     );
     let disposed = false;
+    const ownedLeases = new Set<CardImageLease>();
+    const librarySnapshotId = snapshotId(manifest.snapshotId);
     return Object.freeze({
-      snapshotId: snapshotId(manifest.snapshotId),
+      snapshotId: librarySnapshotId,
       imageManifestSha256: expectedManifestSha256,
       provider: "bundled-archive" as const,
-      urls,
       cardBackUrl,
       placeholderUrl,
       diagnostics: Object.freeze(diagnostics),
-      urlFor(code: CardCode | number | undefined, hidden = false): string {
-        if (hidden || code === undefined) return cardBackUrl;
-        return urls.get(Number(code)) ?? placeholderUrl;
+      lease: (code: CardCode | number): CardImageLease => {
+        if (disposed) return staticImageLease(placeholderUrl);
+        const blob = blobs.get(Number(code));
+        if (blob === undefined) return staticImageLease(placeholderUrl);
+        let sharedLease: CardImageLease;
+        try {
+          sharedLease = this.#acquireLease(
+            librarySnapshotId,
+            Number(code),
+            blob,
+          );
+        } catch (error) {
+          console.warn({
+            event: "duel.image_cache.object_url_failed",
+            err: error,
+          });
+          return staticImageLease(placeholderUrl);
+        }
+        let released = false;
+        const lease: CardImageLease = Object.freeze({
+          url: sharedLease.url,
+          release: (): void => {
+            if (released) return;
+            released = true;
+            ownedLeases.delete(lease);
+            sharedLease.release();
+          },
+        });
+        ownedLeases.add(lease);
+        return lease;
       },
       dispose: () => {
         if (disposed) return;
         disposed = true;
-        objectUrls.forEach(this.#revokeObjectUrl);
-        objectUrls.length = 0;
-        urls.clear();
+        for (const lease of [...ownedLeases]) lease.release();
+        blobs.clear();
+      },
+    });
+  }
+
+  #acquireLease(
+    snapshot: SnapshotId,
+    code: number,
+    blob: Blob,
+  ): CardImageLease {
+    const key = `${snapshot}:${code}`;
+    let active = this.#activeLeases.get(key);
+    if (active === undefined) {
+      active = { url: this.#createObjectUrl(blob), references: 0 };
+      this.#activeLeases.set(key, active);
+    }
+    active.references += 1;
+    let released = false;
+    return Object.freeze({
+      url: active.url,
+      release: (): void => {
+        if (released) return;
+        released = true;
+        const current = this.#activeLeases.get(key);
+        if (current === undefined) return;
+        current.references -= 1;
+        if (current.references > 0) return;
+        this.#activeLeases.delete(key);
+        this.#revokeObjectUrl(current.url);
       },
     });
   }
@@ -661,6 +715,10 @@ function copyArrayBuffer(bytes: Uint8Array): ArrayBuffer {
   const copy = new Uint8Array(bytes.byteLength);
   copy.set(bytes);
   return copy.buffer;
+}
+
+function staticImageLease(url: string): CardImageLease {
+  return Object.freeze({ url, release: (): void => undefined });
 }
 
 function describeError(prefix: string, error: unknown): string {

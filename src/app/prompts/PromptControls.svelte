@@ -1,11 +1,16 @@
 <script lang="ts">
-  import { afterUpdate, onMount, tick } from "svelte";
+  import { afterUpdate, onDestroy, onMount, tick } from "svelte";
+  import { SvelteMap } from "svelte/reactivity";
   import type { ChoiceId, PromptId } from "../../duel/contracts/ids.ts";
   import type {
     PlayerPrompt,
     PromptCard,
     PromptChoice,
   } from "../../duel/contracts/player-prompt.ts";
+  import type {
+    CardImageLease,
+    CardImageLibrary,
+  } from "../images/card-image-cache.ts";
   import { promptControlFamily } from "./prompt-control-family.ts";
   import {
     describePromptConstraints,
@@ -20,6 +25,8 @@
     readonly id: ChoiceId;
     readonly nonce: number;
   } | null = null;
+  export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
+  export let placeholderUrl = "";
   export let resolveCardImage: (card: PromptCard) => string | undefined = () =>
     undefined;
 
@@ -33,7 +40,11 @@
   let localError: string | null = null;
   let reorderAnnouncement = "";
   let handledIntentNonce = -1;
+  let activeImageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
+  let imageLeases = new SvelteMap<number, CardImageLease>();
+  let leasedImageUrls = new Map<number, string>();
 
+  $: synchronizeImageLeases(imageLibrary, mountedImageCodes(prompt));
   $: family = promptControlFamily(prompt.kind);
   $: constraintsId = `${prompt.id}-constraints`;
   $: validationId = `${prompt.id}-validation`;
@@ -64,6 +75,8 @@
   onMount(() => {
     heading.focus();
   });
+
+  onDestroy(releaseImageLeases);
 
   afterUpdate(() => {
     const promptChanged = activePromptId !== prompt.id;
@@ -155,6 +168,59 @@
     localError = null;
   }
 
+  function mountedImageCodes(value: PlayerPrompt): readonly number[] {
+    const codes = [value.contextCard, ...value.choices.map(({ card }) => card)]
+      .map((card) => card?.code)
+      .filter((code): code is NonNullable<typeof code> => code !== undefined);
+    return [...new Set(codes.map(Number))];
+  }
+
+  function synchronizeImageLeases(
+    library: Pick<CardImageLibrary, "lease"> | null,
+    codes: readonly number[],
+  ): void {
+    if (library !== activeImageLibrary) {
+      releaseImageLeases();
+      activeImageLibrary = library;
+    }
+    const mounted = new Set(codes);
+    for (const [code, lease] of imageLeases) {
+      if (mounted.has(code)) continue;
+      lease.release();
+      imageLeases.delete(code);
+    }
+    if (library !== null) {
+      for (const code of mounted) {
+        if (!imageLeases.has(code)) imageLeases.set(code, library.lease(code));
+      }
+    }
+    leasedImageUrls = new Map(
+      [...imageLeases].map(([code, lease]) => [code, lease.url]),
+    );
+  }
+
+  function releaseImageLeases(): void {
+    for (const lease of imageLeases.values()) lease.release();
+    imageLeases.clear();
+    leasedImageUrls = new Map();
+  }
+
+  function cardImageUrl(card: PromptCard): string | undefined {
+    const resolved = resolveCardImage(card);
+    if (resolved !== undefined) return resolved;
+    if (card.code === undefined) return undefined;
+    return (
+      leasedImageUrls.get(Number(card.code)) ?? (placeholderUrl || undefined)
+    );
+  }
+
+  function useFallbackImage(event: Event): void {
+    const image = event.currentTarget as HTMLImageElement;
+    image.onerror = null;
+    if (placeholderUrl) image.src = placeholderUrl;
+    else image.remove();
+  }
+
   function cardTitle(card: PromptCard, fallback: string): string {
     return (
       card.name ?? (card.code === undefined ? fallback : `Card ${card.code}`)
@@ -213,11 +279,13 @@
   {#if prompt.contextCard}
     <details class="card-detail">
       <summary>Inspect {cardTitle(prompt.contextCard, "effect card")}</summary>
-      {#if resolveCardImage(prompt.contextCard)}
+      {#if cardImageUrl(prompt.contextCard)}
         <img
           class="card-image"
-          src={resolveCardImage(prompt.contextCard)}
+          src={cardImageUrl(prompt.contextCard)}
           alt={cardTitle(prompt.contextCard, "Effect card")}
+          decoding="async"
+          onerror={useFallbackImage}
         />
       {/if}
       {#if prompt.contextCard.description}
@@ -260,11 +328,13 @@
           {#if choice.card}
             <details class="card-detail compact">
               <summary>Inspect {cardTitle(choice.card, choice.label)}</summary>
-              {#if resolveCardImage(choice.card)}
+              {#if cardImageUrl(choice.card)}
                 <img
                   class="card-image"
-                  src={resolveCardImage(choice.card)}
+                  src={cardImageUrl(choice.card)}
                   alt={cardTitle(choice.card, choice.label)}
+                  decoding="async"
+                  onerror={useFallbackImage}
                 />
               {/if}
               {#if choice.card.description}
@@ -305,11 +375,13 @@
               <details class="card-detail compact">
                 <summary>Inspect {cardTitle(choice.card, choice.label)}</summary
                 >
-                {#if resolveCardImage(choice.card)}
+                {#if cardImageUrl(choice.card)}
                   <img
                     class="card-image"
-                    src={resolveCardImage(choice.card)}
+                    src={cardImageUrl(choice.card)}
                     alt={cardTitle(choice.card, choice.label)}
+                    decoding="async"
+                    onerror={useFallbackImage}
                   />
                 {/if}
                 {#if choice.card.description}
@@ -372,11 +444,13 @@
           {#if choice.card}
             <details class="card-detail compact">
               <summary>Inspect {cardTitle(choice.card, choice.label)}</summary>
-              {#if resolveCardImage(choice.card)}
+              {#if cardImageUrl(choice.card)}
                 <img
                   class="card-image"
-                  src={resolveCardImage(choice.card)}
+                  src={cardImageUrl(choice.card)}
                   alt={cardTitle(choice.card, choice.label)}
+                  decoding="async"
+                  onerror={useFallbackImage}
                 />
               {/if}
               <p>{choice.card.description || "No effect text is available."}</p>
@@ -433,11 +507,13 @@
           {#if choice.card}
             <details class="card-detail compact">
               <summary>Inspect {cardTitle(choice.card, choice.label)}</summary>
-              {#if resolveCardImage(choice.card)}
+              {#if cardImageUrl(choice.card)}
                 <img
                   class="card-image"
-                  src={resolveCardImage(choice.card)}
+                  src={cardImageUrl(choice.card)}
                   alt={cardTitle(choice.card, choice.label)}
+                  decoding="async"
+                  onerror={useFallbackImage}
                 />
               {/if}
               <p>{choice.card.description || "No effect text is available."}</p>

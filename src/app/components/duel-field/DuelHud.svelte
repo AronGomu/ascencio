@@ -4,6 +4,7 @@
     PublicCard,
     PublicDuelState,
   } from "../../../duel/contracts/public-duel-state.ts";
+  import type { CardImageLibrary } from "../../images/card-image-cache.ts";
   import CardTray from "./CardTray.svelte";
   import ChainStatus from "./ChainStatus.svelte";
 
@@ -14,6 +15,8 @@
 
   export let snapshot: PublicDuelState;
   export let cardTexts: ReadonlyMap<number, CardText> = new Map();
+  export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
+  export let placeholderUrl = "";
   export let resolveCardImage: (card: PublicCard) => string | undefined = () =>
     undefined;
   export let oninspect: (
@@ -100,6 +103,8 @@
             count={player.deckCount}
             cards={[]}
             {cardTexts}
+            {imageLibrary}
+            {placeholderUrl}
             {resolveCardImage}
             {oninspect}
           />
@@ -112,6 +117,8 @@
             count={player.extraDeckCount}
             cards={player.extraDeck}
             {cardTexts}
+            {imageLibrary}
+            {placeholderUrl}
             {resolveCardImage}
             {oninspect}
           />
@@ -122,6 +129,8 @@
             count={player.graveyard.length}
             cards={player.graveyard}
             {cardTexts}
+            {imageLibrary}
+            {placeholderUrl}
             {resolveCardImage}
             {oninspect}
           />
@@ -132,6 +141,8 @@
             count={player.banished.length}
             cards={player.banished}
             {cardTexts}
+            {imageLibrary}
+            {placeholderUrl}
             {resolveCardImage}
             {oninspect}
           />

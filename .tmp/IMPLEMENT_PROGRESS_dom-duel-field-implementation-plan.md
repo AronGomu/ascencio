@@ -3,7 +3,7 @@
 - Branch: `plan/dom-duel-field-implementation-plan`
 - Plan: `.tmp/IMPLEMENTATION_PLAN_duel_field_dom.md`
 - Started: 2026-08-01T09:03:37Z
-- Updated: 2026-08-01T12:45:18Z
+- Updated: 2026-08-01T15:11:39Z
 
 ## Status
 
@@ -21,8 +21,8 @@
 | DF-09 | Render static semantic DOM field | done | de5655d | Nix Chromium captures plus full gates green; pushed |
 | DF-10 | Connect complete pointer field workflows | done | bc941f2 | Ship locally verified; validated and pushed |
 | DF-11 | Add HUD, inspector, stacks/trays, rich state | done | b30a1bc | Ship locally verified; validated and pushed |
-| DF-12 | Add bounded CSS/DOM/SVG feedback | done | DF-12-COMMIT | Ship locally verified; validated for commit/push |
-| DF-13 | Lease image URLs and remove image input gate | pending | — | — |
+| DF-12 | Add bounded CSS/DOM/SVG feedback | done | cd728aa | Ship locally verified; validated and pushed |
+| DF-13 | Lease image URLs and remove image input gate | done | DF-13-COMMIT | Retry diagnosed stale count oracle; all gates green; validated for commit/push |
 | DF-14 | Add spatial keyboard and screen-reader behavior | pending | — | — |
 | DF-15 | Recompose field across supported viewports | pending | — | — |
 | DF-16 | Prove semantic, visual, browser, resource, and performance parity | pending | — | — |
@@ -64,4 +64,7 @@
 - 2026-08-01T12:01:31Z DF-11 start.
 - 2026-08-01T12:22:53Z DF-11 done b30a1bc: red missing HUD component imports; green focused 6/6, component 26/26, unit 367/367, integration 20/20, legacy 21/21; typecheck/lint/format/build/diff green. Nix Chromium focused privacy capture 1/1 plus final suite 9/9 green. Closed trays mount zero cards/images; open pages cap 24; focus enters/returns; hidden opponent DOM/a11y/image resolver checks green. Visual hierarchy reviewed against MD-01 plus LE-01/02. Artifact `test-results/df-11-hud-privacy.zip` SHA-256 `9406555d948bf8d9cbe7e10e0842d5a7458400cb8f2e4ff38c4dda5a68d54d58`; ignored by repo policy.
 - 2026-08-01T12:25:48Z DF-12 start.
-- 2026-08-01T12:45:18Z DF-12 done DF-12-COMMIT: red focused 5 failures/3 files; green focused 22/22, unit 373/373, component 29/29, integration 20/20, legacy 21/21; typecheck/lint/format/build/diff green. Fake timers retained zero timers/animations after cancel; reduced motion skipped WAAPI while preserving text/highlight; SVG is aria-hidden/focus-disabled/pointer-transparent; field input callback remained synchronous. Lifecycle review caught Worker event→state order plus Svelte pre-patch reactive timing, so target feedback waits for adjacent snapshot and `tick()`; generation changes cancel and watermark stale queued events. Minimal live-wiring expansion to `App.svelte` plus `DuelFieldErrorBoundary.svelte` approved because isolated component-only feedback would not activate production queue.
+- 2026-08-01T12:45:18Z DF-12 done cd728aa: red focused 5 failures/3 files; green focused 22/22, unit 373/373, component 29/29, integration 20/20, legacy 21/21; typecheck/lint/format/build/diff green. Fake timers retained zero timers/animations after cancel; reduced motion skipped WAAPI while preserving text/highlight; SVG is aria-hidden/focus-disabled/pointer-transparent; field input callback remained synchronous. Lifecycle review caught Worker event→state order plus Svelte pre-patch reactive timing, so target feedback waits for adjacent snapshot and `tick()`; generation changes cancel and watermark stale queued events. Minimal live-wiring expansion to `App.svelte` plus `DuelFieldErrorBoundary.svelte` approved because isolated component-only feedback would not activate production queue.
+- 2026-08-01T12:48:33Z DF-13 start.
+- 2026-08-01T15:04:50Z DF-13 blocked without commit: focused unit/component 40/40, aggregate legacy 21/unit 374/component 31/integration 20, typecheck/lint/format/build green; Nix Chromium 10/11. Resource lifecycle E2E expected restart active URL baseline 5 but observed 4 after allowed lint repair. Artifact `test-results/df-13-image-lifecycle.zip` SHA-256 `d8b12604eaed680d1b6647cfd67435bd8bb663285b1e4611c7d56c96d6dd933d` includes failure trace plus passing nonblocking-input evidence.
+- 2026-08-01T15:11:39Z DF-13 retry done DF-13-COMMIT: failure trace showed restarted five-card hand contained duplicate `Soul Release`, so dedup-by-code correctly retained four mounted URLs versus five initial unique codes. Replaced stale hardcoded count equality with exact active-URL/mounted-blob identity-set equality plus zero obsolete-generation overlap. Focused unit 374/component 31 and repaired E2E 1/1 green; aggregate legacy 21/unit 374/component 31/integration 20, typecheck/lint/format/build/diff green; Nix Chromium 11/11 plus trace capture 2/2 green. Lifecycle evidence proves active set equals mounted set, old URLs revoked, hidden identities use no blob lease; nonblocking evidence records one Worker response while image preload remained unsettled. Artifact `test-results/df-13-image-lifecycle.zip` SHA-256 `4d4e529c7e9f8a94ee74f9a6ae90947c4fb0b4e69e71d81536e723de8deb63be`; `unzip -t` and both embedded trace ZIP integrity checks green; ignored by repo policy.

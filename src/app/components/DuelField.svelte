@@ -3,6 +3,7 @@
   import { SvelteSet } from "svelte/reactivity";
   import type { DuelPresentationEvent } from "../../duel/contracts/duel-presentation-event.ts";
   import type { PlayerPrompt } from "../../duel/contracts/player-prompt.ts";
+  import type { CardImageLibrary } from "../images/card-image-cache.ts";
   import type {
     BoardCardView,
     BoardTargetId,
@@ -42,6 +43,7 @@
 
   export let board: BoardViewModel;
   export let imageUrls: ReadonlyMap<number, string> = EMPTY_IMAGE_URLS;
+  export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let cardBackUrl = DEFAULT_CARD_BACK;
   export let placeholderUrl = DEFAULT_PLACEHOLDER;
   export let prompt: PlayerPrompt | null = null;
@@ -356,6 +358,7 @@
   <FieldBoard
     {board}
     {imageUrls}
+    {imageLibrary}
     cardBackUrl={resolvedCardBackUrl}
     placeholderUrl={resolvedPlaceholderUrl}
     {spec}

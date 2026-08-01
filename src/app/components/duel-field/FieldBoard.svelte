@@ -5,6 +5,7 @@
     BoardViewModel,
     BoardZoneView,
   } from "../../../field/board-view-model.ts";
+  import type { CardImageLibrary } from "../../images/card-image-cache.ts";
   import type { ActiveInteractionSpec } from "../../prompts/interaction-spec.ts";
   import CardControl from "./CardControl.svelte";
   import StackControl from "./StackControl.svelte";
@@ -12,6 +13,7 @@
 
   export let board: BoardViewModel;
   export let imageUrls: ReadonlyMap<number, string>;
+  export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let cardBackUrl: string;
   export let placeholderUrl: string;
   export let spec: ActiveInteractionSpec | null = null;
@@ -48,6 +50,7 @@
     <CardControl
       {card}
       imageUrl={cardImageUrl(card)}
+      {imageLibrary}
       interactionKind={spec?.cardChoices.has(card.targetId) === true
         ? spec.kind
         : null}

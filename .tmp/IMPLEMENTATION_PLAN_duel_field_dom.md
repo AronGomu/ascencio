@@ -1,6 +1,6 @@
 # DOM Duel-Field Implementation Plan
 
-> Status: approved amended plan; DF-12 complete; DF-13 implementation pending
+> Status: approved amended plan; DF-13 complete; DF-14 implementation pending
 > Created: 2026-07-31
 > Scope: Standard-format desktop field → rich state → accessibility/responsive parity → Phaser removal
 > Architecture: [`architecture/05-presentation/duel-field-architecture.md`](../docs/architecture/05-presentation/duel-field-architecture.md)
@@ -112,7 +112,7 @@ DF-00 → DF-01 → DF-02 → DF-03 → DF-04 → DF-05 → DF-06 → DF-07 → 
 - [x] DF-10
 - [x] DF-11
 - [x] DF-12
-- [ ] DF-13
+- [x] DF-13
 - [ ] DF-14
 - [ ] DF-15
 - [ ] DF-16
@@ -227,7 +227,7 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### DF-13 territory
 
-- Source/docs: `src/app/images/card-image-cache.ts`, `src/app/App.svelte`, `src/app/prompts/PromptControls.svelte`, `src/app/components/DuelField.svelte`, `src/app/components/duel-field/CardControl.svelte`, `src/app/components/duel-field/CardInspector.svelte`, `src/app/components/duel-field/CardTray.svelte`, `docs/architecture/04-data/card-images.md`.
+- Source/docs: `src/app/images/card-image-cache.ts`, `src/app/App.svelte`, `src/app/prompts/PromptControls.svelte`, `src/app/components/DuelField.svelte`, `src/app/components/duel-field/CardControl.svelte`, `src/app/components/duel-field/CardInspector.svelte`, `src/app/components/duel-field/CardTray.svelte`, `src/app/components/duel-field/DuelFieldErrorBoundary.svelte`, `src/app/components/duel-field/DuelHud.svelte`, `src/app/components/duel-field/FieldBoard.svelte`, `docs/architecture/04-data/card-images.md`.
 - Tests/evidence: `tests/unit/card-image-cache.test.ts`, `tests/component/DuelField.test.ts`, `tests/component/PromptControls.test.ts`, `e2e/duel-smoke.spec.ts`.
 - Generated/lock: `test-results/df-13-image-lifecycle.zip`.
 
@@ -763,14 +763,14 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-- [ ] **Red:** mock `URL.createObjectURL`/`revokeObjectURL`; mount/unmount/reopen tray/restart. Assert one URL per active code lease and final revocation.
-- [ ] Add slow/failed image test: field renders immediately with placeholder/back, prompt/field controls stay enabled, and accepted response reaches Worker before preload settles.
-- [ ] Add privacy test: hidden opponent identities create no URL/request.
-- [ ] Add generation test: old snapshot URLs revoked; late image resolution cannot mutate new generation.
-- [ ] **Green:** cache verified blobs/receipts; expose mounted-code lease API and create object URLs lazily for mounted/soon-visible images.
-- [ ] Reference-count/deduplicate leases by snapshot+code; release on final consumer/unmount/restart.
-- [ ] Remove all image input gates: `queueFieldChoice` image check, `PromptControls` image disable condition, and `{#if imageLibrary && snapshot}` field-render condition. Provide immediate placeholder/back source independent of preload.
-- [ ] Use native `<img>` decoding/error fallback; image status remains diagnostic/UI only.
+- [x] **Red:** mock `URL.createObjectURL`/`revokeObjectURL`; mount/unmount/reopen tray/restart. Assert one URL per active code lease and final revocation.
+- [x] Add slow/failed image test: field renders immediately with placeholder/back, prompt/field controls stay enabled, and accepted response reaches Worker before preload settles.
+- [x] Add privacy test: hidden opponent identities create no URL/request.
+- [x] Add generation test: old snapshot URLs revoked; late image resolution cannot mutate new generation.
+- [x] **Green:** cache verified blobs/receipts; expose mounted-code lease API and create object URLs lazily for mounted/soon-visible images.
+- [x] Reference-count/deduplicate leases by snapshot+code; release on final consumer/unmount/restart.
+- [x] Remove all image input gates: `queueFieldChoice` image check, `PromptControls` image disable condition, and `{#if imageLibrary && snapshot}` field-render condition. Provide immediate placeholder/back source independent of preload.
+- [x] Use native `<img>` decoding/error fallback; image status remains diagnostic/UI only.
 
 ### Outputs
 
@@ -780,10 +780,10 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- [ ] Object URL count returns to baseline after tray close/restart/destroy.
-- [ ] Slow/failing image cannot delay Worker response.
-- [ ] Existing cache integrity/provider tests remain green.
-- [ ] Unit/component/E2E `ST-10` green.
+- [x] Object URL count returns to baseline after tray close/restart/destroy.
+- [x] Slow/failing image cannot delay Worker response.
+- [x] Existing cache integrity/provider tests remain green.
+- [x] Unit/component/E2E `ST-10` green.
 
 ---
 

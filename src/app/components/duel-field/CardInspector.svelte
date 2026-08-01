@@ -1,7 +1,11 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import { isCardIdentityVisible } from "../../../duel/card-visibility.ts";
   import type { PublicCard } from "../../../duel/contracts/public-duel-state.ts";
+  import type {
+    CardImageLease,
+    CardImageLibrary,
+  } from "../../images/card-image-cache.ts";
 
   interface CardText {
     readonly name: string;
@@ -10,11 +14,17 @@
 
   export let card: PublicCard;
   export let cardTexts: ReadonlyMap<number, CardText> = new Map();
+  export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
+  export let placeholderUrl = "";
   export let resolveCardImage: (card: PublicCard) => string | undefined = () =>
     undefined;
   export let onclose: () => void = () => undefined;
 
   let heading: HTMLHeadingElement | undefined;
+  let activeImageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
+  let activeImageCode: number | undefined;
+  let imageLease: CardImageLease | null = null;
+  let leasedImageUrl: string | undefined;
   $: identityVisible =
     card.code !== undefined &&
     isCardIdentityVisible(0, card.controller, card.location, card.position);
@@ -24,9 +34,38 @@
       : undefined;
   $: name = text?.name ?? "Public card";
   $: description = text?.description;
-  $: imageUrl = identityVisible ? resolveCardImage(card) : undefined;
+  $: synchronizeImageLease(
+    imageLibrary,
+    identityVisible ? card.code : undefined,
+  );
+  $: imageUrl = identityVisible
+    ? (resolveCardImage(card) ??
+      leasedImageUrl ??
+      (placeholderUrl || undefined))
+    : undefined;
 
   onMount(() => heading?.focus());
+  onDestroy(() => imageLease?.release());
+
+  function synchronizeImageLease(
+    library: Pick<CardImageLibrary, "lease"> | null,
+    code: number | undefined,
+  ): void {
+    if (library === activeImageLibrary && code === activeImageCode) return;
+    imageLease?.release();
+    activeImageLibrary = library;
+    activeImageCode = code;
+    imageLease =
+      library !== null && code !== undefined ? library.lease(code) : null;
+    leasedImageUrl = imageLease?.url;
+  }
+
+  function useFallbackImage(event: Event): void {
+    const image = event.currentTarget as HTMLImageElement;
+    image.onerror = null;
+    if (placeholderUrl) image.src = placeholderUrl;
+    else image.remove();
+  }
 
   function words(value: string): string {
     return value.replaceAll(/([a-z])([A-Z])/g, "$1 $2").toLocaleLowerCase();
@@ -79,7 +118,12 @@
         </ol>
       {/if}
     </div>
-    {#if imageUrl}<img src={imageUrl} alt={name} decoding="async" />{/if}
+    {#if imageUrl}<img
+        src={imageUrl}
+        alt={name}
+        decoding="async"
+        onerror={useFallbackImage}
+      />{/if}
     <button type="button" class="secondary" onclick={onclose}
       >Close card details</button
     >

@@ -598,4 +598,28 @@ describe("DuelField", () => {
     );
     expect(document.querySelector("[aria-busy='true']")).toBeNull();
   });
+
+  it("leases mounted visible art only and releases it on unmount", () => {
+    const release = vi.fn();
+    const lease = vi.fn<(code: number) => { url: string; release: () => void }>(
+      () => ({ url: "blob:mounted-card", release }),
+    );
+    const rendered = render(DuelField, {
+      board: board("ST-04"),
+      imageLibrary: { lease },
+      cardBackUrl: "/cards/back.webp",
+      placeholderUrl: "/cards/placeholder.webp",
+    });
+
+    expect(lease).toHaveBeenCalledTimes(2);
+    expect(lease).toHaveBeenCalledWith(97590747);
+    expect(lease.mock.calls.every(([code]) => code > 0)).toBe(true);
+    expect(
+      screen
+        .getByRole("img", { name: /The Legendary Fisherman/ })
+        .getAttribute("src"),
+    ).toBe("blob:mounted-card");
+    rendered.unmount();
+    expect(release).toHaveBeenCalledTimes(2);
+  });
 });

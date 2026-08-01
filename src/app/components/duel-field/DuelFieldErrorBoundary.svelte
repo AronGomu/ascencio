@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { DuelPresentationEvent } from "../../../duel/contracts/duel-presentation-event.ts";
   import type { PlayerPrompt } from "../../../duel/contracts/player-prompt.ts";
+  import type { CardImageLibrary } from "../../images/card-image-cache.ts";
   import type {
     BoardCardView,
     BoardViewModel,
@@ -12,8 +13,11 @@
   import type { ActiveInteractionSpec } from "../../prompts/interaction-spec.ts";
   import DuelField from "../DuelField.svelte";
 
+  const EMPTY_IMAGE_URLS: ReadonlyMap<number, string> = new Map();
+
   export let board: BoardViewModel;
-  export let imageUrls: ReadonlyMap<number, string>;
+  export let imageUrls: ReadonlyMap<number, string> = EMPTY_IMAGE_URLS;
+  export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let cardBackUrl: string;
   export let placeholderUrl: string;
   export let prompt: PlayerPrompt | null;
@@ -63,6 +67,7 @@
   <DuelField
     {board}
     {imageUrls}
+    {imageLibrary}
     {cardBackUrl}
     {placeholderUrl}
     {prompt}

@@ -385,7 +385,8 @@ export class DuelWorkerClient implements DuelClient {
       this.#diagnosticsPending = false;
       this.#clearWatchdog();
       if (
-        event.error.code === "invalid_response" &&
+        (event.error.code === "invalid_response" ||
+          event.error.code === "stale_prompt") &&
         this.#lastResponsePromptId !== null
       ) {
         this.#respondedPromptIds.delete(this.#lastResponsePromptId);

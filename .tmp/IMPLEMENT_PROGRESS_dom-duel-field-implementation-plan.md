@@ -3,7 +3,7 @@
 - Branch: `plan/dom-duel-field-implementation-plan`
 - Plan: `.tmp/IMPLEMENTATION_PLAN_duel_field_dom.md`
 - Started: 2026-08-01T09:03:37Z
-- Updated: 2026-08-01T12:57:30Z
+- Updated: 2026-08-01T11:14:16Z
 
 ## Status
 
@@ -16,8 +16,8 @@
 | DF-04 | Project counters and actual chain provenance | done | 89af5ce | Ship locally verified; validated and pushed |
 | DF-05 | Separate bounded semantic log from feedback queue | done | 5bbdd22 | Ship locally verified; validated and pushed |
 | DF-06 | Derive renderer-neutral `BoardViewModel` | done | 382d036 | Ship locally verified; validated and pushed |
-| DF-07 | Derive discriminated `InteractionSpec` | done | DF-07-COMMIT | Ship locally verified; isolated checkpoint ready to commit/push |
-| DF-08 | Add `InteractionSession` reducer and authoritative pending lifecycle | pending | — | — |
+| DF-07 | Derive discriminated `InteractionSpec` | done | b6a5b3d | Ship locally verified; validated and pushed |
+| DF-08 | Add `InteractionSession` reducer and authoritative pending lifecycle | done | DF-08-COMMIT | Ship locally verified; isolated checkpoint ready to commit/push |
 | DF-09 | Render static semantic DOM field | pending | — | — |
 | DF-10 | Connect complete pointer field workflows | pending | — | — |
 | DF-11 | Add HUD, inspector, stacks/trays, rich state | pending | — | — |
@@ -54,4 +54,6 @@
 - 2026-08-01T10:26:15Z DF-06 start.
 - 2026-08-01T10:39:30Z DF-06 done 382d036: red missing board mapper module; focused 62/62, unit 335/335, full 386/386; typecheck/lint/format/build green. Existing Phaser `FieldSnapshotView` retained until consumer migration; hidden material keys snapshot-scoped after privacy review.
 - 2026-08-01T10:42:16Z DF-07 start.
-- 2026-08-01T12:57:30Z DF-07 done DF-07-COMMIT: red missing interaction-spec module; focused prompt/spec 26/26, unit 354/354, full test 405/405; typecheck/lint/format/build green. Inline code/duplication/contract/test-quality review found no blockers; malformed targets stay semantic-only or omitted, and spec structured-clones without functions/elements.
+- 2026-08-01T10:57:30Z DF-07 done b6a5b3d: red missing interaction-spec module; focused prompt/spec 26/26, unit 354/354, full test 405/405; typecheck/lint/format/build green. Review clean; malformed targets stay semantic-only/omitted; spec structured-clones without functions/elements.
+- 2026-08-01T11:00:49Z DF-08 start.
+- 2026-08-01T11:14:16Z DF-08 done DF-08-COMMIT: red missing interaction-session module plus 4 store/client failures; focused 39/39, unit 367/367, full test 418/418; typecheck/lint/format/build green. Inline correctness/contract/concurrency/privacy review clean; pending remains store-authoritative and keyed, stale/duplicate submit paths emit no extra Worker command.

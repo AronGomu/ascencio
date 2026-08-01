@@ -107,7 +107,7 @@ DF-00 → DF-01 → DF-02 → DF-03 → DF-04 → DF-05 → DF-06 → DF-07 → 
 - [x] DF-05
 - [x] DF-06
 - [x] DF-07
-- [ ] DF-08
+- [x] DF-08
 - [ ] DF-09
 - [ ] DF-10
 - [ ] DF-11
@@ -577,14 +577,14 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-- [ ] **Red:** pure reducer tests for new key reset, target toggle, explicit confirm, cancel, allocation max/total, order, stale action ignored, menu open/close.
-- [ ] Add store reducer regression: valid response → pending; intermediate `state`/presentation event leaves pending true and prompt locked.
-- [ ] Add completion tests: new prompt key, result, recoverable invalid/stale response, terminal error, worker/session replacement.
-- [ ] Add duplicate submit test across field and `PromptControls`; exactly one Worker `respond` command.
-- [ ] **Green:** implement pure session reducer and store/session adapter.
-- [ ] Keep pending authority in store; local session mirrors submitting only after store accepts response.
-- [ ] Ensure recoverable error restores editing draft/focus target where still valid; generation change discards all draft state.
-- [ ] Preserve current prompt validation before client call.
+- [x] **Red:** pure reducer tests for new key reset, target toggle, explicit confirm, cancel, allocation max/total, order, stale action ignored, menu open/close.
+- [x] Add store reducer regression: valid response → pending; intermediate `state`/presentation event leaves pending true and prompt locked.
+- [x] Add completion tests: new prompt key, result, recoverable invalid/stale response, terminal error, worker/session replacement.
+- [x] Add duplicate submit test across field and `PromptControls`; exactly one Worker `respond` command.
+- [x] **Green:** implement pure session reducer and store/session adapter.
+- [x] Keep pending authority in store; local session mirrors submitting only after store accepts response.
+- [x] Ensure recoverable error restores editing draft/focus target where still valid; generation change discards all draft state.
+- [x] Preserve current prompt validation before client call.
 
 ### Outputs
 
@@ -594,10 +594,10 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- [ ] Snapshot alone never unlocks submitted prompt.
-- [ ] Old prompt actions after new key produce no state/command.
-- [ ] Exactly one command per accepted submit.
-- [ ] Focused store/session tests, `npm run test:unit`, `npm run typecheck` green.
+- [x] Snapshot alone never unlocks submitted prompt.
+- [x] Old prompt actions after new key produce no state/command.
+- [x] Exactly one command per accepted submit.
+- [x] Focused store/session tests, `npm run test:unit`, `npm run typecheck` green.
 
 ---
 

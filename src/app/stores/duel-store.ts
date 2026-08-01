@@ -12,6 +12,20 @@ import type {
   DuelClientEvent,
 } from "../DuelWorkerClient.ts";
 import { validatePromptSelection } from "../prompts/prompt-selection.ts";
+import {
+  createInactiveInteractionSession,
+  reduceInteractionSession,
+  sameInteractionKey,
+  synchronizeInteractionSession,
+  type InteractionSession,
+  type InteractionSessionAction,
+} from "../prompts/interaction-session.ts";
+import {
+  interactionKey,
+  mapPromptToInteractionSpec,
+  type ActiveInteractionSpec,
+  type InteractionKey,
+} from "../prompts/interaction-spec.ts";
 import type { ChoiceId, SnapshotId } from "../../duel/contracts/ids.ts";
 import {
   formatDuelLogEntry,
@@ -72,12 +86,15 @@ export interface DuelViewState {
   readonly nextPresentationSequence: number;
   readonly nextLogSequence: number;
   readonly responsePending: boolean;
+  readonly responsePendingKey: InteractionKey | null;
+  readonly interactionSession: InteractionSession;
 }
 
 export interface DuelStore extends Readable<DuelViewState> {
   initialize(): boolean;
   start(): boolean;
   respond(choiceIds: readonly ChoiceId[]): boolean;
+  dispatchInteraction(action: InteractionSessionAction): boolean;
   surrender(): boolean;
   requestDiagnostics(): boolean;
   retry(): Promise<boolean>;
@@ -107,6 +124,8 @@ export function createInitialDuelViewState(
     nextPresentationSequence: 1,
     nextLogSequence: 1,
     responsePending: false,
+    responsePendingKey: null,
+    interactionSession: createInactiveInteractionSession(),
   });
 }
 
@@ -177,14 +196,30 @@ export function reduceDuelViewState(
           logEntry === null ? state.nextLogSequence : state.nextLogSequence + 1,
       });
     }
-    case "prompt":
+    case "prompt": {
+      const spec = activeInteractionSpec(
+        event.prompt,
+        state.snapshot,
+        received.context,
+      );
+      const newPrompt = !sameInteractionKey(
+        state.interactionSession.key,
+        spec.key,
+      );
       return freezeState({
         ...state,
-        status: "awaiting-input",
+        status:
+          state.responsePending && !newPrompt ? "active" : "awaiting-input",
         prompt: event.prompt,
         error: state.error?.recoverable === true ? null : state.error,
-        responsePending: false,
+        responsePending: newPrompt ? false : state.responsePending,
+        responsePendingKey: newPrompt ? null : state.responsePendingKey,
+        interactionSession: synchronizeInteractionSession(
+          state.interactionSession,
+          spec,
+        ),
       });
+    }
     case "diagnostics":
       return freezeState({ ...state, diagnostics: event.trace });
     case "result":
@@ -196,24 +231,46 @@ export function reduceDuelViewState(
         error: null,
         loading: null,
         responsePending: false,
+        responsePendingKey: null,
+        interactionSession: createInactiveInteractionSession(),
       });
-    case "error":
-      return event.error.code === "invalid_response" && state.prompt !== null
-        ? freezeState({
-            ...state,
-            status: "awaiting-input",
-            error: event.error,
-            responsePending: false,
-          })
-        : freezeState({
-            ...state,
-            status: "failed",
-            prompt: null,
-            result: null,
-            error: event.error,
-            loading: null,
-            responsePending: false,
-          });
+    case "error": {
+      const recoverableResponseError =
+        (event.error.code === "invalid_response" ||
+          event.error.code === "stale_prompt") &&
+        state.prompt !== null;
+      if (recoverableResponseError) {
+        const spec = activeInteractionSpec(
+          state.prompt,
+          state.snapshot,
+          received.context,
+        );
+        const rejected = reduceInteractionSession(
+          state.interactionSession,
+          spec,
+          { type: "submissionRejected", key: spec.key },
+        );
+        return freezeState({
+          ...state,
+          status: "awaiting-input",
+          error: event.error,
+          responsePending: false,
+          responsePendingKey: null,
+          interactionSession: rejected.session,
+        });
+      }
+      return freezeState({
+        ...state,
+        status: "failed",
+        prompt: null,
+        result: null,
+        error: event.error,
+        loading: null,
+        responsePending: false,
+        responsePendingKey: null,
+        interactionSession: createInactiveInteractionSession(),
+      });
+    }
     case "disposed":
       return state;
   }
@@ -244,6 +301,75 @@ export function createDuelStore(client: DuelClient): DuelStore {
     );
     return true;
   };
+  const acceptResponse = (
+    choiceIds: readonly ChoiceId[],
+    expectedKey: InteractionKey | null = null,
+  ): boolean => {
+    const prompt = current.prompt;
+    if (
+      prompt === null ||
+      current.status !== "awaiting-input" ||
+      current.responsePending
+    ) {
+      return false;
+    }
+    const key = interactionKey(
+      current.context.workerGeneration,
+      current.context.sessionGeneration,
+      prompt.id,
+    );
+    if (expectedKey !== null && !sameInteractionKey(expectedKey, key))
+      return false;
+    const validation = validatePromptSelection(prompt, choiceIds);
+    if (!validation.valid) {
+      set(
+        freezeState({
+          ...current,
+          error: {
+            code: "invalid_response",
+            message: validation.message,
+            recoverable: true,
+          },
+        }),
+      );
+      return false;
+    }
+    if (!client.respond(prompt.id, choiceIds)) {
+      if ((current as DuelViewState).status === "failed") return false;
+      set(
+        freezeState({
+          ...current,
+          error: {
+            code: "stale_prompt",
+            message: "That prompt is no longer active",
+            recoverable: true,
+          },
+        }),
+      );
+      return false;
+    }
+    const spec = activeInteractionSpec(
+      prompt,
+      current.snapshot,
+      current.context,
+    );
+    const accepted = reduceInteractionSession(
+      current.interactionSession,
+      spec,
+      { type: "submissionAccepted", key },
+    );
+    set(
+      freezeState({
+        ...current,
+        status: "active",
+        responsePending: true,
+        responsePendingKey: key,
+        interactionSession: accepted.session,
+        error: null,
+      }),
+    );
+    return true;
+  };
   const replaceAndInitialize = (): Promise<boolean> => {
     if (replacementOperation !== null) return replacementOperation;
     set(
@@ -262,6 +388,8 @@ export function createDuelStore(client: DuelClient): DuelStore {
         nextPresentationSequence: 1,
         nextLogSequence: 1,
         responsePending: true,
+        responsePendingKey: null,
+        interactionSession: createInactiveInteractionSession(),
       }),
     );
     replacementOperation = (async () => {
@@ -320,51 +448,28 @@ export function createDuelStore(client: DuelClient): DuelStore {
       return true;
     },
     start: startCurrentDuel,
-    respond: (choiceIds) => {
+    respond: (choiceIds) => acceptResponse(choiceIds),
+    dispatchInteraction: (action) => {
       const prompt = current.prompt;
-      if (
-        prompt === null ||
-        current.status !== "awaiting-input" ||
-        current.responsePending
-      ) {
-        return false;
-      }
-      const validation = validatePromptSelection(prompt, choiceIds);
-      if (!validation.valid) {
-        set(
-          freezeState({
-            ...current,
-            error: {
-              code: "invalid_response",
-              message: validation.message,
-              recoverable: true,
-            },
-          }),
-        );
-        return false;
-      }
-      if (!client.respond(prompt.id, choiceIds)) {
-        if ((current as DuelViewState).status === "failed") return false;
-        set(
-          freezeState({
-            ...current,
-            error: {
-              code: "stale_prompt",
-              message: "That prompt is no longer active",
-              recoverable: true,
-            },
-          }),
-        );
-        return false;
-      }
-      set(
-        freezeState({
-          ...current,
-          status: "active",
-          responsePending: true,
-          error: null,
-        }),
+      if (prompt === null || current.responsePending) return false;
+      const spec = activeInteractionSpec(
+        prompt,
+        current.snapshot,
+        current.context,
       );
+      const reduction = reduceInteractionSession(
+        current.interactionSession,
+        spec,
+        action,
+      );
+      if (reduction.command !== null) {
+        return acceptResponse(
+          reduction.command.choiceIds,
+          reduction.command.key,
+        );
+      }
+      if (reduction.session === current.interactionSession) return false;
+      set(freezeState({ ...current, interactionSession: reduction.session }));
       return true;
     },
     surrender: () => {
@@ -375,6 +480,8 @@ export function createDuelStore(client: DuelClient): DuelStore {
           status: "active",
           prompt: null,
           responsePending: true,
+          responsePendingKey: null,
+          interactionSession: createInactiveInteractionSession(),
           error: null,
         }),
       );
@@ -416,6 +523,17 @@ function appendDuelLog(
     text: `${omittedCount} earlier duel event${omittedCount === 1 ? "" : "s"} omitted.`,
   });
   return Object.freeze([marker, ...retained]);
+}
+
+function activeInteractionSpec(
+  prompt: PlayerPrompt,
+  snapshot: PublicDuelState | null,
+  context: DuelClientContext,
+): ActiveInteractionSpec {
+  const spec = mapPromptToInteractionSpec(prompt, snapshot, null, context);
+  if (spec.kind === "inactive")
+    throw new Error(`Unsupported active prompt kind: ${prompt.kind}`);
+  return spec;
 }
 
 function sameContext(

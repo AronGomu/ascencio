@@ -11,6 +11,8 @@ import {
   DuelWorkerClient,
   type DuelWorkerPort,
 } from "../../src/app/DuelWorkerClient.ts";
+import { createDuelStore } from "../../src/app/stores/duel-store.ts";
+import type { InteractionKey } from "../../src/app/prompts/interaction-spec.ts";
 
 class FakeWorkerPort implements DuelWorkerPort {
   onmessage: ((event: MessageEvent<unknown>) => void) | null = null;
@@ -125,25 +127,74 @@ describe("DuelWorkerClient", () => {
     ]);
   });
 
-  it("restores one response attempt after a recoverable Worker rejection", () => {
+  it("emits one Worker response across field and prompt-control submits", async () => {
     const { client, workers } = createHarness();
     const worker = workers[0]!;
+    const store = createDuelStore(client);
+    let key: InteractionKey | null = null;
+    const unsubscribe = store.subscribe((state) => {
+      key = state.interactionSession.key;
+    });
     client.initialize();
     worker.emit({ type: "ready", coreVersion: [11, 0] });
-    client.startDuel(duelId("mvp-preset-v1"));
+    expect(store.start()).toBe(true);
     worker.emit(promptEvent);
+    if (key === null) throw new Error("Expected active interaction key");
 
-    expect(client.respond(promptEvent.prompt.id, [choiceId("yes")])).toBe(true);
-    worker.emit({
-      type: "error",
-      error: {
-        code: "invalid_response",
-        message: "Try another selection",
-        recoverable: true,
+    expect(
+      store.dispatchInteraction({
+        type: "toggleChoice",
+        key,
+        choiceId: choiceId("yes"),
+      }),
+    ).toBe(true);
+    expect(store.dispatchInteraction({ type: "confirm", key })).toBe(true);
+    expect(store.respond([choiceId("yes")])).toBe(false);
+    expect(
+      worker.commands.filter((command) => command.type === "respond"),
+    ).toEqual([
+      {
+        type: "respond",
+        promptId: promptEvent.prompt.id,
+        choiceIds: [choiceId("yes")],
       },
-    });
-    expect(client.respond(promptEvent.prompt.id, [choiceId("no")])).toBe(true);
+    ]);
+
+    unsubscribe();
+    const disposal = store.destroy();
+    worker.emit({ type: "disposed", clean: true });
+    await disposal;
   });
+
+  it.each(["invalid_response", "stale_prompt"] as const)(
+    "restores one response attempt after recoverable %s rejection",
+    (code) => {
+      const { client, workers } = createHarness();
+      const worker = workers[0]!;
+      client.initialize();
+      worker.emit({ type: "ready", coreVersion: [11, 0] });
+      client.startDuel(duelId("mvp-preset-v1"));
+      worker.emit(promptEvent);
+
+      expect(client.respond(promptEvent.prompt.id, [choiceId("yes")])).toBe(
+        true,
+      );
+      worker.emit({
+        type: "error",
+        error: {
+          code,
+          message: "Try another selection",
+          recoverable: true,
+        },
+      });
+      expect(client.respond(promptEvent.prompt.id, [choiceId("no")])).toBe(
+        true,
+      );
+      expect(
+        worker.commands.filter((command) => command.type === "respond"),
+      ).toHaveLength(2);
+    },
+  );
 
   it("deduplicates diagnostic requests until the Worker responds", () => {
     const { client, workers } = createHarness();

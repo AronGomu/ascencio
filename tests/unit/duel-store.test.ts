@@ -102,6 +102,11 @@ class FakeDuelClient implements DuelClient {
   readonly #listeners = new Set<(event: DuelClientEvent) => void>();
   replaceFailure: Error | null = null;
   initializeResult = true;
+  respondResult = true;
+  readonly respondCalls: Array<{
+    readonly promptId: string;
+    readonly choiceIds: readonly string[];
+  }> = [];
 
   subscribe(listener: (event: DuelClientEvent) => void): () => void {
     this.#listeners.add(listener);
@@ -125,8 +130,12 @@ class FakeDuelClient implements DuelClient {
     return this.context;
   }
 
-  respond(): boolean {
-    return true;
+  respond(
+    prompt: Parameters<DuelClient["respond"]>[0],
+    choiceIds: Parameters<DuelClient["respond"]>[1],
+  ): boolean {
+    this.respondCalls.push({ promptId: prompt, choiceIds: [...choiceIds] });
+    return this.respondResult;
   }
 
   surrender(): boolean {
@@ -470,36 +479,170 @@ describe("duel view-state reducer", () => {
     await failingStore.destroy();
   });
 
-  it("keeps recoverable errors actionable and makes terminal errors fail", () => {
-    let view = apply(createInitialDuelViewState(CONTEXT), PROMPT_EVENT);
-    view = { ...view, responsePending: true };
-    view = apply(view, {
-      type: "error",
-      error: {
-        code: "invalid_response",
-        message: "Choose again",
-        recoverable: true,
-      },
+  it.each(["invalid_response", "stale_prompt"] as const)(
+    "keeps recoverable %s errors actionable and makes terminal errors fail",
+    (code) => {
+      let view = apply(createInitialDuelViewState(CONTEXT), PROMPT_EVENT);
+      view = {
+        ...view,
+        responsePending: true,
+        responsePendingKey: view.interactionSession.key,
+        interactionSession: {
+          ...view.interactionSession,
+          status: "submitting",
+          selectedChoiceIds: [choiceId("choice-current")],
+        },
+      };
+      view = apply(view, {
+        type: "error",
+        error: {
+          code,
+          message: "Choose again",
+          recoverable: true,
+        },
+      });
+      expect(view).toMatchObject({
+        status: "awaiting-input",
+        prompt: PROMPT_EVENT.prompt,
+        responsePending: false,
+        responsePendingKey: null,
+        error: { recoverable: true },
+        interactionSession: {
+          status: "editing",
+          selectedChoiceIds: [choiceId("choice-current")],
+        },
+      });
+
+      view = apply(view, {
+        type: "error",
+        error: {
+          code: "engine_error",
+          message: "Core failed",
+          recoverable: false,
+        },
+      });
+      expect(view).toMatchObject({
+        status: "failed",
+        prompt: null,
+        error: { recoverable: false },
+        interactionSession: { key: null, status: "idle" },
+      });
+    },
+  );
+
+  it("accepts one submit across interaction and prompt-control paths", async () => {
+    const client = new FakeDuelClient();
+    const store = createDuelStore(client);
+    let current = createInitialDuelViewState(client.context);
+    const unsubscribe = store.subscribe((state) => {
+      current = state;
     });
-    expect(view).toMatchObject({
-      status: "awaiting-input",
-      prompt: PROMPT_EVENT.prompt,
-      responsePending: false,
-      error: { recoverable: true },
+    expect(store.start()).toBe(true);
+    client.emit(PROMPT_EVENT);
+    const key = current.interactionSession.key;
+    if (key === null) throw new Error("Expected active interaction key");
+
+    expect(
+      store.dispatchInteraction({
+        type: "toggleChoice",
+        key,
+        choiceId: choiceId("choice-current"),
+      }),
+    ).toBe(true);
+    expect(store.dispatchInteraction({ type: "confirm", key })).toBe(true);
+    expect(store.respond([choiceId("choice-current")])).toBe(false);
+    expect(client.respondCalls).toEqual([
+      {
+        promptId: "prompt-current",
+        choiceIds: ["choice-current"],
+      },
+    ]);
+    expect(current).toMatchObject({
+      responsePending: true,
+      responsePendingKey: key,
+      interactionSession: { status: "submitting" },
     });
 
-    view = apply(view, {
-      type: "error",
-      error: {
-        code: "engine_error",
-        message: "Core failed",
-        recoverable: false,
-      },
+    client.emit({ type: "state", state: STATE });
+    client.emit({
+      type: "event",
+      eventSequence: 1,
+      event: { type: "phaseChanged", phase: "main1" },
     });
-    expect(view).toMatchObject({
-      status: "failed",
-      prompt: null,
-      error: { recoverable: false },
+    client.emit(PROMPT_EVENT);
+    expect(current).toMatchObject({
+      responsePending: true,
+      responsePendingKey: key,
+      prompt: PROMPT_EVENT.prompt,
+      interactionSession: { status: "submitting" },
     });
+    unsubscribe();
+    await store.destroy();
+  });
+
+  it("marks local submitting only after client acceptance and resets on new key/result/replacement", async () => {
+    const client = new FakeDuelClient();
+    const store = createDuelStore(client);
+    let current = createInitialDuelViewState(client.context);
+    const unsubscribe = store.subscribe((state) => {
+      current = state;
+    });
+    store.start();
+    client.emit(PROMPT_EVENT);
+    const firstKey = current.interactionSession.key;
+    if (firstKey === null) throw new Error("Expected active interaction key");
+
+    client.respondResult = false;
+    expect(store.respond([choiceId("choice-current")])).toBe(false);
+    expect(current.interactionSession.status).toBe("editing");
+    expect(current.responsePending).toBe(false);
+    expect(store.respond([])).toBe(false);
+    expect(client.respondCalls).toHaveLength(1);
+
+    client.respondResult = true;
+    expect(store.respond([choiceId("choice-current")])).toBe(true);
+    expect(current).toMatchObject({
+      responsePending: true,
+      responsePendingKey: firstKey,
+      interactionSession: { status: "submitting" },
+    });
+
+    const nextPrompt: DuelWorkerEvent = {
+      ...PROMPT_EVENT,
+      prompt: { ...PROMPT_EVENT.prompt, id: promptId("prompt-next") },
+    };
+    client.emit(nextPrompt);
+    expect(current.interactionSession).toMatchObject({
+      key: { promptId: "prompt-next" },
+      status: "editing",
+      selectedChoiceIds: [],
+      menuTarget: null,
+    });
+    expect(
+      store.dispatchInteraction({
+        type: "toggleChoice",
+        key: firstKey,
+        choiceId: choiceId("choice-current"),
+      }),
+    ).toBe(false);
+    expect(client.respondCalls).toHaveLength(2);
+
+    client.emit({
+      type: "result",
+      result: { type: "completed", winner: 0, loser: 1, reason: 1 },
+    });
+    expect(current.interactionSession).toMatchObject({
+      key: null,
+      status: "idle",
+    });
+
+    await expect(store.restart()).resolves.toBe(true);
+    expect(current).toMatchObject({
+      responsePending: false,
+      responsePendingKey: null,
+      interactionSession: { key: null, status: "idle" },
+    });
+    unsubscribe();
+    await store.destroy();
   });
 });

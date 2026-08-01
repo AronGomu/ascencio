@@ -28,6 +28,7 @@ export interface InteractionSessionReduction {
 }
 
 type KeyedInteractionAction =
+  | { readonly type: "chooseChoice"; readonly choiceId: ChoiceId }
   | { readonly type: "toggleChoice"; readonly choiceId: ChoiceId }
   | {
       readonly type: "adjustAllocation";
@@ -53,6 +54,15 @@ export type InteractionSessionAction = KeyedInteractionAction & {
   readonly key: InteractionKey;
 };
 
+type WithoutInteractionKey<Action> = Action extends {
+  readonly key: InteractionKey;
+}
+  ? Omit<Action, "key">
+  : never;
+
+export type UnkeyedInteractionSessionAction =
+  WithoutInteractionKey<InteractionSessionAction>;
+
 const EMPTY_CHOICE_IDS = Object.freeze([]) as readonly ChoiceId[];
 const EMPTY_ALLOCATIONS = Object.freeze(
   new Map<ChoiceId, number>(),
@@ -76,7 +86,11 @@ export function createInteractionSession(
   return freezeSession({
     key: spec.key,
     status: "editing",
-    selectedChoiceIds: EMPTY_CHOICE_IDS,
+    selectedChoiceIds: Object.freeze(
+      choicesInPromptOrder(spec)
+        .filter(({ toggleState }) => toggleState === "selected")
+        .map(({ id }) => id),
+    ),
     order: choiceIdsInPromptOrder(spec),
     allocations: EMPTY_ALLOCATIONS,
     menuTarget: null,
@@ -107,6 +121,10 @@ export function reduceInteractionSession(
 
   const choices = choicesById(spec);
   switch (action.type) {
+    case "chooseChoice":
+      return session.status === "editing" && choices.has(action.choiceId)
+        ? submit(session, spec, Object.freeze([action.choiceId]))
+        : unchanged(session);
     case "toggleChoice": {
       if (session.status !== "editing" || !choices.has(action.choiceId))
         return unchanged(session);
@@ -178,7 +196,7 @@ export function reduceInteractionSession(
         : unchanged(session);
     case "confirm":
       return session.status === "editing"
-        ? submit(session, spec, confirmedChoiceIds(session, spec))
+        ? submit(session, spec, interactionSessionChoiceIds(session, spec))
         : unchanged(session);
     case "cancel":
       return session.status === "editing" && spec.constraints.cancelable
@@ -243,7 +261,7 @@ function choiceIdsInPromptOrder(
   return Object.freeze(choicesInPromptOrder(spec).map(({ id }) => id));
 }
 
-function confirmedChoiceIds(
+export function interactionSessionChoiceIds(
   session: InteractionSession,
   spec: ActiveInteractionSpec,
 ): readonly ChoiceId[] {

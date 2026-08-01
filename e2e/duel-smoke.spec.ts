@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { duelFieldRenderFailureUrl } from "../tests/fixtures/duel-field-component-failure.ts";
 
 interface BrowserCapture {
   readonly commands: readonly Readonly<Record<string, unknown>>[];
@@ -83,29 +84,28 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   await page.goto("./");
 
   await expect(
-    page.getByRole("heading", { name: "Choose a Main Phase action" }),
+    page
+      .getByRole("region", { name: "Current decision" })
+      .getByRole("heading", { name: "Choose a Main Phase action" }),
   ).toBeVisible({ timeout: 120_000 });
   expect(Date.now() - startupBeganAt).toBeLessThan(15_000);
   await expect(page.getByText("ocgcore 11.0")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Your turn" })).toBeVisible();
   await expect(page.getByText("8,000 LP").first()).toBeVisible();
-  const fieldCanvas = page.getByTestId("duel-field-canvas");
-  await expect(fieldCanvas).toBeVisible();
-  await expect(fieldCanvas).toHaveAttribute("data-card-back-ready", "true");
-  await expect
-    .poll(async () =>
-      Number(await fieldCanvas.getAttribute("data-hidden-cards")),
-    )
-    .toBeGreaterThan(0);
-  await expect
-    .poll(async () =>
-      Number(await fieldCanvas.getAttribute("data-visible-card-images")),
-    )
-    .toBeGreaterThan(0);
+  const field = page.getByRole("region", { name: "Duel field" });
+  await expect(field).toBeVisible();
+  await expect(field.locator("canvas")).toHaveCount(0);
+  await expect(field.locator("[data-zone-id]")).toHaveCount(34);
+  await expect(
+    field.getByRole("article", { name: /Hidden opponent hand card/ }).first(),
+  ).toBeVisible();
+  await expect(field.getByRole("img").first()).toHaveAttribute("src", /.+/);
 
-  const promptHeading = page.getByRole("heading", {
-    name: "Choose a Main Phase action",
-  });
+  const promptHeading = page
+    .getByRole("region", { name: "Current decision" })
+    .getByRole("heading", {
+      name: "Choose a Main Phase action",
+    });
   await expect(promptHeading).toBeFocused();
 
   const capture = await readCapture(page);
@@ -154,7 +154,10 @@ test("production bundle initializes the real Worker and sends one opaque choice 
     (event) => event.type === "prompt",
   ) as unknown as CapturedPromptEvent | undefined;
   expect(prompt).toBeDefined();
-  const endTurn = page.getByRole("button", { name: "End turn", exact: true });
+  const endTurn = field.getByRole("button", {
+    name: "End turn",
+    exact: true,
+  });
   await endTurn.evaluate((element) => {
     (element as HTMLButtonElement).click();
     (element as HTMLButtonElement).click();
@@ -317,24 +320,45 @@ test("forced Worker initialization timeout terminates and replaces the Worker", 
   expect((await readCapture(page)).workers).toBeGreaterThanOrEqual(2);
 });
 
-test("visual field startup failure announces the semantic fallback and retry", async ({
+test("injected DOM field failure preserves fallback controls and one opaque response", async ({
   page,
 }) => {
-  await page.route(/create-phaser-presentation-bridge-.*\.js$/, (route) =>
-    route.abort("failed"),
-  );
-  await page.goto("./");
-  await expect(page.getByRole("heading", { name: "Your turn" })).toBeVisible({
-    timeout: 120_000,
+  await page.goto(duelFieldRenderFailureUrl());
+  await expect(
+    page.getByRole("heading", { name: "Interactive field could not render" }),
+  ).toBeVisible({ timeout: 120_000 });
+  await expect(
+    page.getByText("Injected duel field component failure"),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Surrender duel" }),
+  ).toBeVisible();
+  const promptControls = page.locator("[data-prompt-kind]");
+  await expect(promptControls).toBeVisible();
+  const prompt = (await readCapture(page)).events.find(
+    (event) => event.type === "prompt",
+  ) as unknown as CapturedPromptEvent | undefined;
+  expect(prompt).toBeDefined();
+  const endTurn = promptControls.getByRole("button", {
+    name: "End turn",
+    exact: true,
   });
-  await expect(
-    page.getByText(
-      /Visual duel field unavailable:.*text view remains available/i,
-    ),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Retry visual field" }),
-  ).toBeVisible();
+  await endTurn.evaluate((element) => {
+    (element as HTMLButtonElement).click();
+    (element as HTMLButtonElement).click();
+  });
+  await expect
+    .poll(
+      async () =>
+        (await readCapture(page)).commands.filter(
+          (command) =>
+            command.type === "respond" &&
+            command.promptId === prompt?.prompt.id,
+        ).length,
+    )
+    .toBe(1);
+  await page.getByRole("button", { name: "Retry duel field" }).click();
+  await expect(page.getByRole("region", { name: "Duel field" })).toBeVisible();
 });
 
 test("mobile layout preserves controls and honors reduced motion", async ({
@@ -346,9 +370,7 @@ test("mobile layout preserves controls and honors reduced motion", async ({
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
   });
-  const fieldCanvas = page.getByTestId("duel-field-canvas");
-  await expect(fieldCanvas).toHaveAttribute("data-reduced-motion", "true");
-  const fieldRegion = page.getByRole("region", { name: "Visual duel field" });
+  const fieldRegion = page.getByRole("region", { name: "Duel field" });
   await expect(fieldRegion).toBeVisible();
   const dimensions = await fieldRegion.evaluate((element) => ({
     clientWidth: element.clientWidth,
@@ -358,6 +380,7 @@ test("mobile layout preserves controls and honors reduced motion", async ({
   }));
   expect(dimensions.scrollWidth).toBeGreaterThan(dimensions.clientWidth);
   expect(dimensions.bodyWidth).toBeLessThanOrEqual(dimensions.viewportWidth);
+  await expect(fieldRegion.locator("canvas")).toHaveCount(0);
   const firstDecision = page.locator("[data-prompt-kind] button").first();
   const box = await firstDecision.boundingBox();
   expect(box?.height).toBeGreaterThanOrEqual(44);

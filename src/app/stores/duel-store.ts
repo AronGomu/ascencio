@@ -27,6 +27,7 @@ import {
   type InteractionKey,
 } from "../prompts/interaction-spec.ts";
 import type { ChoiceId, SnapshotId } from "../../duel/contracts/ids.ts";
+import { mapSnapshotToBoard } from "../../field/board-view-model.ts";
 import {
   formatDuelLogEntry,
   type DuelLogSourceType,
@@ -530,7 +531,9 @@ function activeInteractionSpec(
   snapshot: PublicDuelState | null,
   context: DuelClientContext,
 ): ActiveInteractionSpec {
-  const spec = mapPromptToInteractionSpec(prompt, snapshot, null, context);
+  const boardResult = snapshot === null ? null : mapSnapshotToBoard(snapshot);
+  const board = boardResult?.ok === true ? boardResult.value : null;
+  const spec = mapPromptToInteractionSpec(prompt, snapshot, board, context);
   if (spec.kind === "inactive")
     throw new Error(`Unsupported active prompt kind: ${prompt.kind}`);
   return spec;

@@ -1,6 +1,6 @@
 # DOM Duel-Field Implementation Plan
 
-> Status: approved amended plan; DF-09 complete; DF-10 implementation pending
+> Status: approved amended plan; DF-10 complete; DF-11 implementation pending
 > Created: 2026-07-31
 > Scope: Standard-format desktop field → rich state → accessibility/responsive parity → Phaser removal
 > Architecture: [`architecture/05-presentation/duel-field-architecture.md`](../docs/architecture/05-presentation/duel-field-architecture.md)
@@ -109,7 +109,7 @@ DF-00 → DF-01 → DF-02 → DF-03 → DF-04 → DF-05 → DF-06 → DF-07 → 
 - [x] DF-07
 - [x] DF-08
 - [x] DF-09
-- [ ] DF-10
+- [x] DF-10
 - [ ] DF-11
 - [ ] DF-12
 - [ ] DF-13
@@ -651,16 +651,16 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-- [ ] **Red:** component tests command-card action menus, zone selection, multi-select, sum, unselect, counter allocation, order, cancel/finish/pass.
-- [ ] Assert activation occurs on click/pointer-up, not `pointerdown`; movement-cancel fixture prevents accidental action.
-- [ ] Assert command-target cards expose anchored legal-action/Inspect menu even with one legal action; selection-family card activation toggles draft only and never hides inspection access.
-- [ ] Assert multi/place/counter/order workflows do not submit before explicit Confirm.
-- [ ] Assert Confirm disabled until `validatePromptSelection` passes; recoverable error unlocks without duplicate.
-- [ ] **Green:** connect DOM controls to spec/session reducer and existing store callback.
-- [ ] Implement `FieldActionMenu` plus `SelectionDock`; anchor from target DOMRect and update on resize/scroll.
-- [ ] Wire new DOM field into `App.svelte` inside a field-local Svelte error boundary. On component failure, show sanitized error plus retry/remount while preserving `PromptControls`, surrender, and diagnostics.
-- [ ] Add component/E2E failure injection proving fallback remains operable and submits one opaque response.
-- [ ] Replace canvas pointer assertions in focused E2E with role/name/state assertions; leave Phaser source/dependency present until DF-17.
+- [x] **Red:** component tests command-card action menus, zone selection, multi-select, sum, unselect, counter allocation, order, cancel/finish/pass.
+- [x] Assert activation occurs on click/pointer-up, not `pointerdown`; movement-cancel fixture prevents accidental action.
+- [x] Assert command-target cards expose anchored legal-action/Inspect menu even with one legal action; selection-family card activation toggles draft only and never hides inspection access.
+- [x] Assert multi/place/counter/order workflows do not submit before explicit Confirm.
+- [x] Assert Confirm disabled until `validatePromptSelection` passes; recoverable error unlocks without duplicate.
+- [x] **Green:** connect DOM controls to spec/session reducer and existing store callback.
+- [x] Implement `FieldActionMenu` plus `SelectionDock`; anchor from target DOMRect and update on resize/scroll.
+- [x] Wire new DOM field into `App.svelte` inside a field-local Svelte error boundary. On component failure, show sanitized error plus retry/remount while preserving `PromptControls`, surrender, and diagnostics.
+- [x] Add component/E2E failure injection proving fallback remains operable and submits one opaque response.
+- [x] Replace canvas pointer assertions in focused E2E with role/name/state assertions; leave Phaser source/dependency present until DF-17.
 
 ### Outputs
 
@@ -670,11 +670,11 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- [ ] Every reachable field-capable prompt family emits expected opaque choice list once.
-- [ ] Pointer and prompt panel share store validation/pending lock.
-- [ ] `npm run test:component` plus focused Chromium E2E green.
-- [ ] No direct Worker import/call from field components.
-- [ ] `ST-05..07`, `ST-11..12` semantic assertions and injected field-failure fallback green.
+- [x] Every reachable field-capable prompt family emits expected opaque choice list once.
+- [x] Pointer and prompt panel share store validation/pending lock.
+- [x] `npm run test:component` plus focused Chromium E2E green.
+- [x] No direct Worker import/call from field components.
+- [x] `ST-05..07`, `ST-11..12` semantic assertions and injected field-failure fallback green.
 
 ---
 

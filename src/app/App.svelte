@@ -2,15 +2,14 @@
   import { afterUpdate, onMount, tick } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
   import type { DuelDiagnosticTrace } from "../duel/contracts/duel-diagnostics.ts";
-  import {
-    snapshotId,
-    type ChoiceId,
-    type SnapshotId,
-  } from "../duel/contracts/ids.ts";
+  import { snapshotId, type SnapshotId } from "../duel/contracts/ids.ts";
   import type { PromptCard } from "../duel/contracts/player-prompt.ts";
   import type { PublicCard } from "../duel/contracts/public-duel-state.ts";
-  import { fieldCardChoices, fieldZoneChoice } from "../field/card-mapping.ts";
-  import LegacyPhaserDuelField from "./components/LegacyPhaserDuelField.svelte";
+  import {
+    mapSnapshotToBoard,
+    type BoardCardView,
+  } from "../field/board-view-model.ts";
+  import DuelFieldErrorBoundary from "./components/duel-field/DuelFieldErrorBoundary.svelte";
   import { downloadDuelDiagnostics } from "./diagnostics/download-diagnostics.ts";
   import { DuelWorkerClient } from "./DuelWorkerClient.ts";
   import {
@@ -29,6 +28,7 @@
   } from "../storage/snapshot-store.ts";
   import { formatDuelPresentationEvent } from "./presentation/format-duel-presentation-event.ts";
   import PromptControls from "./prompts/PromptControls.svelte";
+  import { mapPromptToInteractionSpec } from "./prompts/interaction-spec.ts";
   import { createDuelStore } from "./stores/duel-store.ts";
 
   const CURRENT_RUNTIME_SNAPSHOT_ID = snapshotId(__RUNTIME_SNAPSHOT_ID__);
@@ -57,7 +57,6 @@
   let previousStatus = $duel.status;
   let imageLibrary: CardImageLibrary | null = null;
   let imageLibraryVerified = false;
-  let imageLibraryGeneration = 0;
   let imageLoading = true;
   let retryImages: () => void = () => undefined;
   let requestFallbackImages: (
@@ -72,13 +71,8 @@
     imageLibrary.snapshotId === $duel.runtimeSnapshotId;
   let imageProgress = 0;
   let imageWarning: string | null = null;
-  let fieldChoiceIntent: {
-    readonly id: ChoiceId;
-    readonly nonce: number;
-  } | null = null;
-  let fieldIntentNonce = 0;
-  let fieldIntentMessage = "";
   let inspectedCard: PublicCard | null = null;
+  let injectDuelFieldFailure = false;
   let diagnosticPending = false;
   let diagnosticMessage: string | null = null;
   let downloadedDiagnostics = $duel.diagnostics;
@@ -95,6 +89,19 @@
   let snapshotActivationAttempted = false;
   let appDisposed = false;
   const pendingStorageOperations = new SvelteSet<Promise<unknown>>();
+  $: boardResult =
+    $duel.snapshot === null
+      ? null
+      : mapSnapshotToBoard($duel.snapshot, ACTIVE_CARD_TEXTS);
+  $: duelBoard = boardResult?.ok === true ? boardResult.value : null;
+  $: mappedInteractionSpec = mapPromptToInteractionSpec(
+    $duel.prompt,
+    $duel.snapshot,
+    duelBoard,
+    $duel.context,
+  );
+  $: fieldInteractionSpec =
+    mappedInteractionSpec.kind === "inactive" ? null : mappedInteractionSpec;
   $: appAnnouncement =
     storageWarning ??
     imageWarning ??
@@ -113,6 +120,10 @@
 
   onMount(() => {
     let disposed = false;
+    injectDuelFieldFailure =
+      new URLSearchParams(globalThis.location.search).get(
+        "duelFieldFailure",
+      ) === "once";
     appDisposed = false;
     let imageLoadGeneration = 0;
     let imageAbortController: AbortController | null = null;
@@ -241,7 +252,6 @@
         else {
           imageLibrary?.dispose();
           imageLibrary = library;
-          imageLibraryGeneration += 1;
           imageLibraryVerified = true;
           const unavailable = library.diagnostics.filter(
             ({ status }) => status === "missing" || status === "invalid",
@@ -272,7 +282,6 @@
             request?.manifestSha256 ?? __ACTIVE_IMAGE_MANIFEST_SHA256__,
             detail,
           );
-          imageLibraryGeneration += 1;
           imageWarning = detail;
         }
       } finally {
@@ -517,34 +526,13 @@
       diagnosticMessage = "Diagnostics are unavailable for this session.";
   }
 
-  function fieldCardIntent(instanceId: string): void {
-    const card = findPublicCard(instanceId);
-    if (card !== null) {
-      cardInspectorTrigger = null;
-      inspectedCard = card;
-      void tick().then(() => cardInspectorHeading?.focus());
-    }
-    const choices = fieldCardChoices($duel.prompt, $duel.snapshot, instanceId);
-    if (choices.length === 1) {
-      queueFieldChoice(choices[0]?.id);
-      return;
-    }
-    if (choices.length > 1) {
-      fieldIntentMessage = `${choices.length} actions are available for that card. Choose the intended action in the controls below.`;
-      promptPanel.focus();
-    }
-  }
-
-  function fieldZoneIntent(zoneId: string): void {
-    const choice = fieldZoneChoice($duel.prompt, zoneId);
-    queueFieldChoice(choice?.id);
-  }
-
-  function queueFieldChoice(id: ChoiceId | undefined): void {
-    if (id === undefined || $duel.responsePending || imageLoading) return;
-    fieldIntentMessage = "";
-    fieldIntentNonce += 1;
-    fieldChoiceIntent = { id, nonce: fieldIntentNonce };
+  function inspectFieldCard(card: BoardCardView): void {
+    if (card.instanceId === undefined) return;
+    const publicCard = findPublicCard(card.instanceId);
+    if (publicCard === null) return;
+    cardInspectorTrigger = null;
+    inspectedCard = publicCard;
+    void tick().then(() => cardInspectorHeading?.focus());
   }
 
   function retryCardImageLoading(): void {
@@ -931,19 +919,29 @@
     </section>
   {/if}
 
-  {#if imageLibrary && $duel.snapshot}
-    {#key `${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}:${imageLibraryGeneration}`}
-      <LegacyPhaserDuelField
-        snapshot={$duel.snapshot}
+  {#if duelBoard}
+    {#key `${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
+      <DuelFieldErrorBoundary
+        board={duelBoard}
+        imageUrls={imagesMatchRuntime && imageLibrary
+          ? imageLibrary.urls
+          : EMPTY_CARD_IMAGES}
+        cardBackUrl={imageLibrary?.cardBackUrl ?? ""}
+        placeholderUrl={imageLibrary?.placeholderUrl ?? ""}
         prompt={$duel.prompt}
-        events={$duel.presentationEvents}
-        imageUrls={imagesMatchRuntime ? imageLibrary.urls : EMPTY_CARD_IMAGES}
-        cardBackUrl={imageLibrary.cardBackUrl}
-        placeholderUrl={imageLibrary.placeholderUrl}
-        oncardintent={fieldCardIntent}
-        onzoneintent={fieldZoneIntent}
+        spec={fieldInteractionSpec}
+        session={$duel.interactionSession}
+        pending={$duel.responsePending || imageLoading}
+        injectFailure={injectDuelFieldFailure}
+        oninteraction={duel.dispatchInteraction}
+        oninspect={inspectFieldCard}
       />
     {/key}
+  {:else if $duel.snapshot}
+    <section class="field-error" role="alert">
+      <h2>Duel field unavailable</h2>
+      <p>Prompt controls remain available.</p>
+    </section>
   {/if}
 
   {#if inspectedCard}
@@ -1220,7 +1218,6 @@
       tabindex="-1"
       bind:this={promptPanel}
     >
-      <p class="visually-hidden" aria-live="polite">{fieldIntentMessage}</p>
       {#if $duel.prompt}
         {#if imageLoading}
           <p class="empty-copy" aria-busy="true">
@@ -1233,7 +1230,6 @@
             prompt={$duel.prompt}
             disabled={$duel.responsePending || imageLoading}
             onsubmit={duel.respond}
-            choiceIntent={fieldChoiceIntent}
             resolveCardImage={resolvePromptCardImage}
           />
         {/key}

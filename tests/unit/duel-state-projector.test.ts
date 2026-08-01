@@ -42,6 +42,22 @@ describe("DuelStateProjector", () => {
       sequence: 0,
       position: EnginePosition.FACE_DOWN_DEFENSE,
     });
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 5053103,
+      from: {
+        controller: 1,
+        location: EngineLocation.DECK,
+        sequence: 39,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 1,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    });
     const position = value.apply({
       type: EngineMessageType.POSITION_CHANGE,
       code: 5053103,
@@ -165,6 +181,344 @@ describe("DuelStateProjector", () => {
     expect(snapshot.players[0].hand).toHaveLength(0);
     expect(snapshot.players[0].monsters).toHaveLength(1);
     expect(snapshot.players[0].monsters[0]?.code).toBe(97590747);
+  });
+
+  it("preserves sparse monster slot sequences when another slot moves", () => {
+    const value = projector();
+    const codes = [97590747, 5053103, 46986414, 44519536];
+    const sequences = [4, 0, 6, 5];
+
+    for (const [index, sequence] of sequences.entries()) {
+      value.apply({
+        type: EngineMessageType.MOVE,
+        card: codes[index]!,
+        from: {
+          controller: 0,
+          location: EngineLocation.DECK,
+          sequence: 39 - index,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+        to: {
+          controller: 0,
+          location: EngineLocation.MONSTER,
+          sequence,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+      });
+    }
+
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: codes[1]!,
+      from: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.GRAVEYARD,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    value.apply({
+      type: EngineMessageType.POSITION_CHANGE,
+      code: codes[0]!,
+      controller: 0,
+      location: EngineLocation.MONSTER,
+      sequence: 4,
+      prev_position: EnginePosition.FACE_UP_ATTACK,
+      position: EnginePosition.FACE_UP_DEFENSE,
+    });
+
+    expect(
+      value
+        .snapshot()
+        .players[0].monsters.toSorted(
+          (left, right) => left.sequence - right.sequence,
+        )
+        .map((card) => [card.code, card.sequence, card.position]),
+    ).toEqual([
+      [codes[0], 4, "faceUpDefense"],
+      [codes[3], 5, "faceUpAttack"],
+      [codes[2], 6, "faceUpAttack"],
+    ]);
+  });
+
+  it("keeps Spell/Trap and Field sequence zero as separate fixed slots", () => {
+    const value = projector();
+    const placements = [
+      { code: 97590747, location: EngineLocation.SPELL_TRAP, sequence: 0 },
+      { code: 5053103, location: EngineLocation.FIELD, sequence: 0 },
+      { code: 46986414, location: EngineLocation.SPELL_TRAP, sequence: 4 },
+    ] as const;
+
+    for (const [index, placement] of placements.entries()) {
+      value.apply({
+        type: EngineMessageType.MOVE,
+        card: placement.code,
+        from: {
+          controller: 0,
+          location: EngineLocation.DECK,
+          sequence: 39 - index,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+        to: {
+          controller: 0,
+          location: placement.location,
+          sequence: placement.sequence,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+      });
+    }
+
+    value.apply({
+      type: EngineMessageType.POSITION_CHANGE,
+      code: placements[1].code,
+      controller: 0,
+      location: EngineLocation.FIELD,
+      sequence: 0,
+      prev_position: EnginePosition.FACE_UP_ATTACK,
+      position: EnginePosition.FACE_UP_DEFENSE,
+    });
+
+    expect(
+      value
+        .snapshot()
+        .players[0].spellsAndTraps.map((card) => [
+          card.code,
+          card.location,
+          card.sequence,
+          card.position,
+        ]),
+    ).toEqual([
+      [placements[0].code, "spellTrap", 0, "faceUpAttack"],
+      [placements[1].code, "field", 0, "faceUpDefense"],
+      [placements[2].code, "spellTrap", 4, "faceUpAttack"],
+    ]);
+
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: placements[1].code,
+      from: {
+        controller: 0,
+        location: EngineLocation.FIELD,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_DEFENSE,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.GRAVEYARD,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+
+    const player = value.snapshot().players[0];
+    expect(
+      player.spellsAndTraps.map((card) => [
+        card.code,
+        card.location,
+        card.sequence,
+        card.position,
+      ]),
+    ).toEqual([
+      [placements[0].code, "spellTrap", 0, "faceUpAttack"],
+      [placements[2].code, "spellTrap", 4, "faceUpAttack"],
+    ]);
+    expect(
+      player.graveyard.map((card) => [
+        card.code,
+        card.location,
+        card.sequence,
+        card.position,
+      ]),
+    ).toEqual([[placements[1].code, "graveyard", 0, "faceUpAttack"]]);
+  });
+
+  it("rejects duplicate fixed-slot destinations without mutating state", () => {
+    const value = projector();
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 0,
+        location: EngineLocation.DECK,
+        sequence: 39,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 4,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+
+    expect(() =>
+      value.apply({
+        type: EngineMessageType.MOVE,
+        card: 5053103,
+        from: {
+          controller: 0,
+          location: EngineLocation.DECK,
+          sequence: 38,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+        to: {
+          controller: 0,
+          location: EngineLocation.MONSTER,
+          sequence: 4,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+      }),
+    ).toThrow("Fixed slot monster 4 for player 0 is already occupied");
+    expect(value.snapshot().players[0]).toMatchObject({
+      deckCount: 39,
+      monsters: [{ code: 97590747, sequence: 4 }],
+    });
+  });
+
+  it("rejects moves from missing fixed slots instead of fabricating cards", () => {
+    const value = projector();
+
+    expect(() =>
+      value.apply({
+        type: EngineMessageType.MOVE,
+        card: 97590747,
+        from: {
+          controller: 0,
+          location: EngineLocation.MONSTER,
+          sequence: 4,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+        to: {
+          controller: 0,
+          location: EngineLocation.GRAVEYARD,
+          sequence: 0,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+      }),
+    ).toThrow("Fixed slot monster 4 for player 0 is empty");
+    expect(value.snapshot().players[0].graveyard).toEqual([]);
+  });
+
+  it("rejects position changes for empty fixed slots without changing state", () => {
+    const value = projector();
+    const before = value.snapshot();
+
+    expect(() =>
+      value.apply({
+        type: EngineMessageType.POSITION_CHANGE,
+        code: 97590747,
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 4,
+        prev_position: EnginePosition.FACE_UP_ATTACK,
+        position: EnginePosition.FACE_UP_DEFENSE,
+      }),
+    ).toThrow("Fixed slot monster 4 for player 0 is empty");
+    expect(value.snapshot()).toEqual(before);
+  });
+
+  it("keeps one card in place when a fixed-slot move repeats its address", () => {
+    const value = projector();
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 0,
+        location: EngineLocation.DECK,
+        sequence: 39,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 4,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    const before = value.snapshot().players[0];
+    const instanceId = before.monsters[0]?.instanceId;
+
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 4,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 4,
+        position: EnginePosition.FACE_UP_DEFENSE,
+      },
+    });
+
+    expect(value.snapshot().players[0]).toMatchObject({
+      deckCount: 39,
+      monsters: [
+        {
+          instanceId,
+          code: 97590747,
+          location: "monster",
+          sequence: 4,
+          position: "faceUpDefense",
+        },
+      ],
+    });
+  });
+
+  it("continues resequencing ordered graveyard and banished lists", () => {
+    const value = projector();
+    for (const [index, code] of [97590747, 5053103].entries()) {
+      value.apply({
+        type: EngineMessageType.MOVE,
+        card: code,
+        from: {
+          controller: 0,
+          location: EngineLocation.DECK,
+          sequence: 39 - index,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+        to: {
+          controller: 0,
+          location: EngineLocation.GRAVEYARD,
+          sequence: index,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+      });
+    }
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 0,
+        location: EngineLocation.GRAVEYARD,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.BANISHED,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+
+    const player = value.snapshot().players[0];
+    expect(player.graveyard.map((card) => [card.code, card.sequence])).toEqual([
+      [5053103, 0],
+    ]);
+    expect(player.banished.map((card) => [card.code, card.sequence])).toEqual([
+      [97590747, 0],
+    ]);
   });
 
   it("projects shuffles and reconciles the visible human hand order", () => {

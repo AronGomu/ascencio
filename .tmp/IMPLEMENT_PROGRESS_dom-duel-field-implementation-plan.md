@@ -3,14 +3,14 @@
 - Branch: `plan/dom-duel-field-implementation-plan`
 - Plan: `.tmp/IMPLEMENTATION_PLAN_duel_field_dom.md`
 - Started: 2026-08-01T09:03:37Z
-- Updated: 2026-08-01T09:07:12Z
+- Updated: 2026-08-01T09:19:00Z
 
 ## Status
 
 | ID | Title | State | SHA | Note |
 | --- | --- | --- | --- | --- |
 | DF-00 | Record renderer decision and delivery contract | done | this commit | Docs-only ship locally verified; checkboxed and checkpointed |
-| DF-01 | Preserve sparse fixed-slot projection | pending | — | Existing dirty checkpoint; verify, checkbox, commit |
+| DF-01 | Preserve sparse fixed-slot projection | done | DF-01-COMMIT | Ship locally verified; parent normalizes SHA |
 | DF-02 | Model physical Standard zones and shared EMZs | pending | — | Existing dirty checkpoint; verify, checkbox, commit |
 | DF-03 | Project overlay materials and useful Extra Deck state | pending | — | Existing dirty checkpoint; verify, checkbox, commit |
 | DF-04 | Project counters and actual chain provenance | pending | — | Existing dirty checkpoint; verify, checkbox, commit |
@@ -40,3 +40,5 @@
 - 2026-08-01T09:03:37Z Added plan execution/step/validation checkboxes.
 - 2026-08-01T09:03:37Z DF-00 start.
 - 2026-08-01T09:07:12Z DF-00 validated: 53 Markdown files/91 local links resolved; 7 generated-HTML local refs resolved; six external screenshot URLs returned HTTP 200; current architecture contains no authoritative Phaser ownership; archive links ADR; `git diff --check` passed.
+- 2026-08-01T09:11:52Z DF-01 start.
+- 2026-08-01T09:19:00Z DF-01 done DF-01-COMMIT: baseline regression 6 failures; focused projector 16/16, contracts 26/26, programmed real-WASM 1/1, unit 189/189, integration 18/18, full test 238/238, typecheck/lint/format/build green.

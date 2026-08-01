@@ -372,9 +372,27 @@ export class DuelStateProjector {
       fromLocation,
       from.position,
     );
-    const source = publicZone(fromPlayer, fromLocation);
-    let card = source?.splice(from.sequence, 1)[0];
+    const toPlayer = this.#players[to.controller];
+    const toLocation = engineLocation(to.location);
+    const toVisible = isPublicCard(to.controller, toLocation, to.position);
+    assertFixedDestinationAvailable(
+      toPlayer,
+      to.controller,
+      toLocation,
+      to.sequence,
+      {
+        controller: from.controller,
+        location: fromLocation,
+        sequence: from.sequence,
+      },
+    );
+
+    let card = removePublicCard(fromPlayer, fromLocation, from.sequence);
     if (card === undefined) {
+      if (isFixedLocation(fromLocation))
+        throw new Error(
+          `Fixed slot ${fromLocation} ${from.sequence} for player ${from.controller} is empty`,
+        );
       card = this.#createCard(
         from.controller,
         fromLocation,
@@ -387,11 +405,7 @@ export class DuelStateProjector {
     }
     const priorInstanceId = card.instanceId;
     const priorCode = card.code;
-    resequence(source);
 
-    const toPlayer = this.#players[to.controller];
-    const toLocation = engineLocation(to.location);
-    const toVisible = isPublicCard(to.controller, toLocation, to.position);
     if (fromVisible && !toVisible) this.#rotatePublicIdentity(card);
     card.controller = to.controller;
     card.location = toLocation;
@@ -401,13 +415,8 @@ export class DuelStateProjector {
     if (rawCode > 0 && toVisible) card.code = cardCode(rawCode);
     else delete card.code;
 
-    const destination = publicZone(toPlayer, toLocation);
-    if (destination !== null) {
-      destination.splice(Math.min(to.sequence, destination.length), 0, card);
-      resequence(destination);
-    } else if (toLocation === "deck") {
-      toPlayer.deckCount += 1;
-    }
+    const stored = insertPublicCard(toPlayer, toLocation, to.sequence, card);
+    if (!stored && toLocation === "deck") toPlayer.deckCount += 1;
     fromPlayer.handCount = fromPlayer.hand.length;
     toPlayer.handCount = toPlayer.hand.length;
     return {
@@ -436,8 +445,14 @@ export class DuelStateProjector {
     const playerIndex = asPlayer(controller);
     const publicLocation = engineLocation(location);
     const player = this.#players[playerIndex];
-    const card = publicZone(player, publicLocation)?.[sequence];
-    if (card === undefined) return;
+    const card = findPublicCard(player, publicLocation, sequence);
+    if (card === undefined) {
+      if (isFixedLocation(publicLocation))
+        throw new Error(
+          `Fixed slot ${publicLocation} ${sequence} for player ${playerIndex} is empty`,
+        );
+      return;
+    }
     const wasVisible = isCardIdentityVisible(
       0,
       playerIndex,
@@ -550,6 +565,89 @@ function publicZone(
     case "extra":
       return null;
   }
+}
+
+interface FixedAddress {
+  readonly controller: PlayerIndex;
+  readonly location: PublicLocation;
+  readonly sequence: number;
+}
+
+function findPublicCard(
+  player: MutablePlayer,
+  location: PublicLocation,
+  sequence: number,
+): MutableCard | undefined {
+  const zone = publicZone(player, location);
+  if (zone === null) return undefined;
+  if (isFixedLocation(location))
+    return zone.find(
+      (card) => card.location === location && card.sequence === sequence,
+    );
+  return zone[sequence];
+}
+
+function removePublicCard(
+  player: MutablePlayer,
+  location: PublicLocation,
+  sequence: number,
+): MutableCard | undefined {
+  const zone = publicZone(player, location);
+  if (zone === null) return undefined;
+  if (isFixedLocation(location)) {
+    const index = zone.findIndex(
+      (card) => card.location === location && card.sequence === sequence,
+    );
+    if (index < 0) return undefined;
+    return zone.splice(index, 1)[0];
+  }
+  const [card] = zone.splice(sequence, 1);
+  resequence(zone);
+  return card;
+}
+
+function insertPublicCard(
+  player: MutablePlayer,
+  location: PublicLocation,
+  sequence: number,
+  card: MutableCard,
+): boolean {
+  const zone = publicZone(player, location);
+  if (zone === null) return false;
+  if (isFixedLocation(location)) {
+    zone.push(card);
+    return true;
+  }
+  zone.splice(Math.min(sequence, zone.length), 0, card);
+  resequence(zone);
+  return true;
+}
+
+function assertFixedDestinationAvailable(
+  player: MutablePlayer,
+  controller: PlayerIndex,
+  location: PublicLocation,
+  sequence: number,
+  from: FixedAddress,
+): void {
+  if (!isFixedLocation(location)) return;
+  const occupant = findPublicCard(player, location, sequence);
+  if (occupant === undefined) return;
+  if (
+    from.controller === controller &&
+    from.location === location &&
+    from.sequence === sequence
+  )
+    return;
+  throw new Error(
+    `Fixed slot ${location} ${sequence} for player ${controller} is already occupied`,
+  );
+}
+
+function isFixedLocation(location: PublicLocation): boolean {
+  return (
+    location === "monster" || location === "spellTrap" || location === "field"
+  );
 }
 
 function engineLocation(value: number): PublicLocation {

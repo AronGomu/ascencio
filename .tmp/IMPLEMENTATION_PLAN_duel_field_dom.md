@@ -100,7 +100,7 @@ DF-00 → DF-01 → DF-02 → DF-03 → DF-04 → DF-05 → DF-06 → DF-07 → 
 ### Execution checklist
 
 - [x] DF-00
-- [ ] DF-01
+- [x] DF-01
 - [ ] DF-02
 - [ ] DF-03
 - [ ] DF-04
@@ -308,15 +308,15 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-- [ ] **Red:** extend `tests/unit/duel-state-projector.test.ts` with cards entering monster sequences `0`, `4`, `5`, `6` in non-dense order.
-- [ ] Move sequence `0` out; assert remaining sequences stay `4`, `5`, `6`.
-- [ ] Add simultaneous Spell/Trap sequence `0` plus Field Zone sequence `0`, Spell/Trap outer-slot, and Field Zone movement cases; assert no collision or resequencing.
-- [ ] Add duplicate fixed-slot destination fixtures for both same-location duplicates and cross-location equal sequences; require deterministic rejection/reconciliation, never silent alias.
-- [ ] Preserve ordered-zone tests proving hand/GY/banished resequence where protocol order changes.
-- [ ] **Green:** introduce location policy helpers: fixed-slot find/remove/insert by composite `(controller, normalized location, sequence)`; ordered list remove/insert/resequence by index.
-- [ ] Route `#move` and `#changePosition` through policy helpers.
-- [ ] Refactor only projector-local mutation helpers; retain privacy/identity rotation.
-- [ ] Run projector, contract, real-WASM programmed-duel tests.
+- [x] **Red:** extend `tests/unit/duel-state-projector.test.ts` with cards entering monster sequences `0`, `4`, `5`, `6` in non-dense order.
+- [x] Move sequence `0` out; assert remaining sequences stay `4`, `5`, `6`.
+- [x] Add simultaneous Spell/Trap sequence `0` plus Field Zone sequence `0`, Spell/Trap outer-slot, and Field Zone movement cases; assert no collision or resequencing.
+- [x] Add duplicate fixed-slot destination fixtures for both same-location duplicates and cross-location equal sequences; require deterministic rejection/reconciliation, never silent alias.
+- [x] Preserve ordered-zone tests proving hand/GY/banished resequence where protocol order changes.
+- [x] **Green:** introduce location policy helpers: fixed-slot find/remove/insert by composite `(controller, normalized location, sequence)`; ordered list remove/insert/resequence by index.
+- [x] Route `#move` and `#changePosition` through policy helpers.
+- [x] Refactor only projector-local mutation helpers; retain privacy/identity rotation.
+- [x] Run projector, contract, real-WASM programmed-duel tests.
 
 ### Outputs
 
@@ -326,11 +326,11 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- [ ] Focused: `npx vitest run tests/unit/duel-state-projector.test.ts`.
-- [ ] `npm run test:unit` and `npm run test:integration` green.
-- [ ] Moving/removing one field card cannot move another card's sequence or alias a different normalized location with the same sequence.
-- [ ] Existing hidden-information/one-instance invariants remain green.
-- [ ] No presentation code changed.
+- [x] Focused: `npx vitest run tests/unit/duel-state-projector.test.ts`.
+- [x] `npm run test:unit` and `npm run test:integration` green.
+- [x] Moving/removing one field card cannot move another card's sequence or alias a different normalized location with the same sequence.
+- [x] Existing hidden-information/one-instance invariants remain green.
+- [x] No presentation code changed.
 
 ---
 

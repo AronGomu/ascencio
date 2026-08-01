@@ -105,6 +105,36 @@ describe("programmed real-WASM duels", () => {
     ]) {
       expect(messageTypes.has(required), `message type ${required}`).toBe(true);
     }
+    const allMessageSequence = [...completed.values()].flatMap((run) =>
+      messageTypeSequence(run.trace),
+    );
+    const allMessageTypes = new Set(allMessageSequence);
+    for (const required of [
+      EngineMessageType.CHAINING,
+      EngineMessageType.CHAINED,
+      EngineMessageType.CHAIN_SOLVING,
+      EngineMessageType.CHAIN_SOLVED,
+      EngineMessageType.CHAIN_END,
+    ])
+      expect(allMessageTypes.has(required), `chain message ${required}`).toBe(
+        true,
+      );
+    const appendCount = allMessageSequence.filter(
+      (type) => type === EngineMessageType.CHAINING,
+    ).length;
+    const endCount = allMessageSequence.filter(
+      (type) => type === EngineMessageType.CHAIN_END,
+    ).length;
+    const chainChangedSizes = [...completed.values()].flatMap(
+      (run) => run.chainChangedSizes,
+    );
+    expect(chainChangedSizes.filter((size) => size > 0)).toHaveLength(
+      appendCount,
+    );
+    expect(chainChangedSizes.filter((size) => size === 0)).toHaveLength(
+      endCount,
+    );
+    expect(chainChangedSizes).toHaveLength(appendCount + endCount);
 
     const promptMatrix = completed.get("real-wasm-prompt-matrix");
     if (promptMatrix === undefined)
@@ -146,6 +176,7 @@ describe("programmed real-WASM duels", () => {
 interface ProgrammedDuelRun {
   readonly result: DuelAdvance["result"];
   readonly trace: DuelTrace;
+  readonly chainChangedSizes: readonly number[];
   readonly humanResponses: number;
   readonly engineDiagnostics: readonly string[];
   readonly sessionDisposed: boolean;
@@ -188,6 +219,7 @@ function playProgrammedDuel(
   });
   let humanResponses = 0;
   const coverage = new Set<MvpCoverageKey>();
+  const chainChangedSizes: number[] = [];
   let attackPending = false;
   let activationPending = false;
   let tributePending = false;
@@ -245,6 +277,7 @@ function playProgrammedDuel(
     return {
       result: advance.result,
       trace: controller.trace(),
+      chainChangedSizes: Object.freeze([...chainChangedSizes]),
       humanResponses,
       engineDiagnostics: Object.freeze([...engineDiagnostics]),
       sessionDisposed: session.disposed,
@@ -370,6 +403,9 @@ function playProgrammedDuel(
           if (event.to === "banished")
             coverage.add(actionCoverageKey("banish"));
           break;
+        case "chainChanged":
+          chainChangedSizes.push(event.size);
+          break;
         default:
           break;
       }
@@ -378,12 +414,14 @@ function playProgrammedDuel(
 }
 
 function messageTypesIn(trace: DuelTrace): ReadonlySet<number> {
-  return new Set(
-    trace.entries.flatMap((entry) =>
-      entry.kind === "message" && entry.messageType !== undefined
-        ? [entry.messageType]
-        : [],
-    ),
+  return new Set(messageTypeSequence(trace));
+}
+
+function messageTypeSequence(trace: DuelTrace): readonly number[] {
+  return trace.entries.flatMap((entry) =>
+    entry.kind === "message" && entry.messageType !== undefined
+      ? [entry.messageType]
+      : [],
   );
 }
 

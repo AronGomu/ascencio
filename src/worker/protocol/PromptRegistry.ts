@@ -22,6 +22,7 @@ import type {
   PublicLocation,
 } from "../../duel/contracts/public-duel-state.ts";
 import type { ActiveDuelDependencies } from "../assets/active-duel-dependencies.ts";
+import { resolveEffectDescription } from "./effect-description.ts";
 import {
   EngineBattleAction,
   EngineIdleAction,
@@ -1209,13 +1210,7 @@ function describeOption(
   dependencies: ActiveDuelDependencies,
   onDiagnostic: PromptDiagnosticSink,
 ): string {
-  const code = Number(option >> 20n);
-  const index = Number(option & 0xfffffn);
-  const text = dependencies.texts.get(code);
-  const value =
-    text?.strings[index] ||
-    text?.name ||
-    (code === 0 ? dependencies.strings.system[String(index)] : undefined);
+  const value = resolveEffectDescription(option, dependencies);
   if (value !== undefined) return value;
   onDiagnostic({
     type: "missing_text",

@@ -34,8 +34,14 @@ const MAXIMUM_ID_LENGTH = 512;
 const MAXIMUM_TEXT_LENGTH = 32_768;
 const MAXIMUM_CHOICES = 256;
 const MAXIMUM_PUBLIC_CARDS = 256;
-const MAXIMUM_CHAIN_LINKS = 256;
+const MAXIMUM_COUNTERS_PER_CARD = 256;
+const MAXIMUM_STATE_COUNTERS = 1_024;
+const MAXIMUM_CHAIN_LINKS = 255;
+const MAXIMUM_COUNTER_NAME_LENGTH = 1_024;
+const MAXIMUM_STATE_TEXT_UNITS = 262_144;
 const MAXIMUM_DIAGNOSTIC_TEXT_UNITS = 1_000_000;
+const CHAIN_PHASES = new Set(["pending", "solving", "solved"]);
+const CHAIN_OUTCOMES = new Set(["normal", "negated", "disabled"]);
 
 const PROMPT_KINDS: ReadonlySet<PromptKind> = new Set([
   "idleCommand",
@@ -448,12 +454,19 @@ function validatePublicState(value: unknown): void {
   requireEnum(state.phase, PHASES, "state.phase");
   const players = requireArray(state.players, "state.players", 2);
   if (players.length !== 2) throw invalid("state.players length");
-  const instances = { count: 0, ids: new Set<string>() };
+  const instances = {
+    count: 0,
+    counterCount: 0,
+    textUnits: 0,
+    ids: new Set<string>(),
+  };
   players.forEach((player, index) =>
     validatePublicPlayer(player, index, instances),
   );
   if (instances.count > MAXIMUM_PUBLIC_CARDS)
     throw invalid("state physical card instance limit");
+  if (instances.counterCount > MAXIMUM_STATE_COUNTERS)
+    throw invalid("state counter entry limit");
   const firstPlayer = requireRecord(players[0], "state.players[0]");
   const secondPlayer = requireRecord(players[1], "state.players[1]");
   if (firstPlayer.player !== 0 || secondPlayer.player !== 1)
@@ -461,11 +474,15 @@ function validatePublicState(value: unknown): void {
   if (!Array.isArray(secondPlayer.hand) || secondPlayer.hand.length !== 0)
     throw invalid("state.players[1].hand privacy");
   const chain = requireArray(state.chain, "state.chain", MAXIMUM_CHAIN_LINKS);
-  chain.forEach((link, index) => validateChainLink(link, index));
+  chain.forEach((link, index) => validateChainLink(link, index, instances));
+  if (instances.textUnits > MAXIMUM_STATE_TEXT_UNITS)
+    throw invalid("state text limit");
 }
 
 interface PublicInstanceValidation {
   count: number;
+  counterCount: number;
+  textUnits: number;
   readonly ids: Set<string>;
 }
 
@@ -576,6 +593,7 @@ function validatePublicCard(
       "sequence",
       "position",
       "faceUp",
+      "counters",
       "overlayMaterials",
     ],
     label,
@@ -594,6 +612,34 @@ function validatePublicCard(
     card.position === "faceUpAttack" || card.position === "faceUpDefense";
   if (card.faceUp !== expectedFaceUp)
     throw invalid(`${label}.faceUp position consistency`);
+  const counters = requireArray(
+    card.counters,
+    `${label}.counters`,
+    MAXIMUM_COUNTERS_PER_CARD,
+  );
+  let previousCounterType = 0;
+  counters.forEach((counter, index) => {
+    const counterLabel = `${label}.counters[${index}]`;
+    const record = requireRecord(counter, counterLabel);
+    requireExactKeys(record, ["type", "name", "count"], counterLabel);
+    requireSafeInteger(record.type, `${counterLabel}.type`, 1, 0xffff);
+    if ((record.type as number) <= previousCounterType)
+      throw invalid(`${counterLabel}.type order`);
+    previousCounterType = record.type as number;
+    requireString(
+      record.name,
+      `${counterLabel}.name`,
+      MAXIMUM_COUNTER_NAME_LENGTH,
+    );
+    if (
+      (record.name as string).length === 0 ||
+      (record.name as string).trim() !== record.name
+    )
+      throw invalid(`${counterLabel}.name`);
+    requireSafeInteger(record.count, `${counterLabel}.count`, 1, 0xffff);
+    instances.counterCount += 1;
+    instances.textUnits += (record.name as string).length;
+  });
   const materials = requireArray(
     card.overlayMaterials,
     `${label}.overlayMaterials`,
@@ -646,15 +692,79 @@ function recordPublicInstance(
   instances.ids.add(id);
 }
 
-function validateChainLink(value: unknown, index: number): void {
+function validateChainLink(
+  value: unknown,
+  index: number,
+  instances: PublicInstanceValidation,
+): void {
   const label = `state.chain[${index}]`;
   const link = requireRecord(value, label);
-  requireExactKeys(link, ["index", "controller", "card", "label"], label);
-  requireSafeInteger(link.index, `${label}.index`, 0, MAXIMUM_CHAIN_LINKS);
+  requireExactKeys(
+    link,
+    [
+      "index",
+      "controller",
+      "sourceIdentityVisible",
+      "sourceInstanceId",
+      "sourceCard",
+      "label",
+      "description",
+      "phase",
+      "outcome",
+    ],
+    label,
+  );
+  requireSafeInteger(link.index, `${label}.index`, 1, MAXIMUM_CHAIN_LINKS);
+  if (link.index !== index + 1) throw invalid(`${label}.index order`);
   requirePlayer(link.controller, `${label}.controller`);
-  if (link.card !== undefined)
-    requireSafeInteger(link.card, `${label}.card`, 1, Number.MAX_SAFE_INTEGER);
+  requireBoolean(link.sourceIdentityVisible, `${label}.sourceIdentityVisible`);
+  if (link.sourceInstanceId !== undefined)
+    requireString(
+      link.sourceInstanceId,
+      `${label}.sourceInstanceId`,
+      MAXIMUM_ID_LENGTH,
+    );
+  if (link.sourceCard !== undefined)
+    requireSafeInteger(
+      link.sourceCard,
+      `${label}.sourceCard`,
+      1,
+      Number.MAX_SAFE_INTEGER,
+    );
   requireString(link.label, `${label}.label`, MAXIMUM_TEXT_LENGTH);
+  if (
+    (link.label as string).length === 0 ||
+    (link.label as string).trim() !== link.label
+  )
+    throw invalid(`${label}.label`);
+  if (link.description !== undefined) {
+    requireString(
+      link.description,
+      `${label}.description`,
+      MAXIMUM_TEXT_LENGTH,
+    );
+    if (
+      (link.description as string).length === 0 ||
+      (link.description as string).trim() !== link.description
+    )
+      throw invalid(`${label}.description`);
+  }
+  requireEnum(link.phase, CHAIN_PHASES, `${label}.phase`);
+  requireEnum(link.outcome, CHAIN_OUTCOMES, `${label}.outcome`);
+  if (link.sourceIdentityVisible === true) {
+    if (link.sourceInstanceId === undefined || link.sourceCard === undefined)
+      throw invalid(`${label}.visible source identity`);
+  } else if (
+    link.sourceInstanceId !== undefined ||
+    link.sourceCard !== undefined ||
+    link.description !== undefined ||
+    link.label !== "Card effect"
+  ) {
+    throw invalid(`${label}.hidden source identity`);
+  }
+  instances.textUnits +=
+    (link.label as string).length +
+    (link.description === undefined ? 0 : (link.description as string).length);
 }
 
 function validatePresentationEvent(value: unknown): void {

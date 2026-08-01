@@ -3,7 +3,7 @@
 - Branch: `plan/dom-duel-field-implementation-plan`
 - Plan: `.tmp/IMPLEMENTATION_PLAN_duel_field_dom.md`
 - Started: 2026-08-01T09:03:37Z
-- Updated: 2026-08-01T09:58:08Z
+- Updated: 2026-08-01T10:12:25Z
 
 ## Status
 
@@ -12,8 +12,8 @@
 | DF-00 | Record renderer decision and delivery contract | done | ecf4de1 | Docs-only ship locally verified; checkboxed and pushed |
 | DF-01 | Preserve sparse fixed-slot projection | done | 7d0b46e | Ship locally verified; validated and pushed |
 | DF-02 | Model physical Standard zones and shared EMZs | done | 8ab6a23 | Ship locally verified; validated and pushed |
-| DF-03 | Project overlay materials and useful Extra Deck state | done | DF-03-COMMIT | Ship locally verified; isolated checkpoint validated and ready to push |
-| DF-04 | Project counters and actual chain provenance | pending | — | Existing dirty checkpoint; verify, checkbox, commit |
+| DF-03 | Project overlay materials and useful Extra Deck state | done | aa5be77 | Ship locally verified; validated and pushed |
+| DF-04 | Project counters and actual chain provenance | done | DF-04-COMMIT | Ship locally verified; isolated checkpoint ready to commit/push |
 | DF-05 | Separate bounded semantic log from feedback queue | pending | — | Partial dirty impl detected; worker completes via TDD |
 | DF-06 | Derive renderer-neutral `BoardViewModel` | pending | — | — |
 | DF-07 | Derive discriminated `InteractionSpec` | pending | — | — |
@@ -46,4 +46,6 @@
 - 2026-08-01T09:22:46Z DF-02 start.
 - 2026-08-01T09:31:42Z DF-02 done 8ab6a23: reconstructed red 40 failures; focused 44/44, unit 317/317, full test 368/368, typecheck/lint/format/build green; prior independent review findings 3/3 closed, final inline review clean.
 - 2026-08-01T09:35:29Z DF-03 start.
-- 2026-08-01T09:58:08Z DF-03 done DF-03-COMMIT: recovered exact pre-DF-04 checkpoint from writer transcripts; focused isolated candidate 136/136 green; aggregate/typecheck/lint/format/build and push evidence recorded in completion report.
+- 2026-08-01T09:58:08Z DF-03 done aa5be77: focused 136/136, unit 276, integration 20, full 327, typecheck/lint/format/build green; real-WASM host-list fallback passed.
+- 2026-08-01T10:04:44Z DF-04 start.
+- 2026-08-01T10:12:25Z DF-04 done DF-04-COMMIT: focused 317 unit/20 integration plus isolated 305 unit/20 integration green; full isolated 356-test aggregate, typecheck/lint/format/build green; prior production review 10 findings closed, native real-WASM counter reachability accepted residual; DF-05 hunks preserved unstaged.

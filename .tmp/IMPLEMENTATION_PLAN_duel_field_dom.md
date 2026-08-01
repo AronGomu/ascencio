@@ -103,7 +103,7 @@ DF-00 → DF-01 → DF-02 → DF-03 → DF-04 → DF-05 → DF-06 → DF-07 → 
 - [x] DF-01
 - [x] DF-02
 - [x] DF-03
-- [ ] DF-04
+- [x] DF-04
 - [ ] DF-05
 - [ ] DF-06
 - [ ] DF-07
@@ -430,17 +430,17 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-- [ ] **Red:** add adapter/projector fixtures for add/remove counters, multiple counter types, underflow/malformed removal, host card movement.
-- [ ] Add pinned `ADD_COUNTER`/`REMOVE_COUNTER` message constants and `COUNTERS` query flag fixtures before classification code.
-- [ ] Add chain fixtures: append link from `CHAINING`; transition solving/solved/negated/disabled by actual link index; clear on `CHAIN_END`.
-- [ ] Add privacy fixture where chain source card identity is concealed; retain safe label/status only.
-- [ ] Define `PublicCounter` and expanded `PublicChainLink` focused contracts.
-- [ ] **Green:** classify message constants/types and update projector state by composite fixed card address.
-- [ ] Resolve counter names from trusted `dependencies.strings.counter` data with deterministic fallback.
-- [ ] Replace `#chainSize` synthetic array with actual immutable chain records.
-- [ ] On unknown address or underflow, query-reconcile first through the Worker-only DF-03 seam and emit sanitized diagnostic. Terminate deterministically only when query result remains invalid or unavailable; never fabricate state.
-- [ ] Extend exact-key/recursive bounds and opponent-policy projection.
-- [ ] Add presentation events only when useful; do not duplicate public truth in animation event.
+- [x] **Red:** add adapter/projector fixtures for add/remove counters, multiple counter types, underflow/malformed removal, host card movement.
+- [x] Add pinned `ADD_COUNTER`/`REMOVE_COUNTER` message constants and `COUNTERS` query flag fixtures before classification code.
+- [x] Add chain fixtures: append link from `CHAINING`; transition solving/solved/negated/disabled by actual link index; clear on `CHAIN_END`.
+- [x] Add privacy fixture where chain source card identity is concealed; retain safe label/status only.
+- [x] Define `PublicCounter` and expanded `PublicChainLink` focused contracts.
+- [x] **Green:** classify message constants/types and update projector state by composite fixed card address.
+- [x] Resolve counter names from trusted `dependencies.strings.counter` data with deterministic fallback.
+- [x] Replace `#chainSize` synthetic array with actual immutable chain records.
+- [x] On unknown address or underflow, query-reconcile first through the Worker-only DF-03 seam and emit sanitized diagnostic. Terminate deterministically only when query result remains invalid or unavailable; never fabricate state.
+- [x] Extend exact-key/recursive bounds and opponent-policy projection.
+- [x] Add presentation events only when useful; do not duplicate public truth in animation event.
 
 ### Outputs
 
@@ -450,10 +450,10 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- [ ] Counter underflow/unknown address always attempts query reconciliation first; persistent invalid/unavailable query terminates deterministically with sanitized evidence.
-- [ ] Chain order/status survives clone validation.
-- [ ] Hidden identities absent from chain/card labels.
-- [ ] `npm run test:unit && npm run test:integration && npm run typecheck` green.
+- [x] Counter underflow/unknown address always attempts query reconciliation first; persistent invalid/unavailable query terminates deterministically with sanitized evidence.
+- [x] Chain order/status survives clone validation.
+- [x] Hidden identities absent from chain/card labels.
+- [x] `npm run test:unit && npm run test:integration && npm run typecheck` green.
 
 ---
 

@@ -32,6 +32,12 @@ export interface PublicOverlayMaterial {
   readonly sequence: number;
 }
 
+export interface PublicCounter {
+  readonly type: number;
+  readonly name: string;
+  readonly count: number;
+}
+
 export interface PublicCard {
   readonly instanceId: CardInstanceId;
   readonly code?: CardCode;
@@ -41,6 +47,7 @@ export interface PublicCard {
   readonly sequence: number;
   readonly position: CardPosition;
   readonly faceUp: boolean;
+  readonly counters: readonly PublicCounter[];
   readonly overlayMaterials: readonly PublicOverlayMaterial[];
 }
 
@@ -58,11 +65,19 @@ export interface PublicPlayerState {
   readonly banished: readonly PublicCard[];
 }
 
+export type PublicChainPhase = "pending" | "solving" | "solved";
+export type PublicChainOutcome = "normal" | "negated" | "disabled";
+
 export interface PublicChainLink {
   readonly index: number;
   readonly controller: PlayerIndex;
-  readonly card?: CardCode;
+  readonly sourceIdentityVisible: boolean;
+  readonly sourceInstanceId?: CardInstanceId;
+  readonly sourceCard?: CardCode;
   readonly label: string;
+  readonly description?: string;
+  readonly phase: PublicChainPhase;
+  readonly outcome: PublicChainOutcome;
 }
 
 export interface PublicDuelState {

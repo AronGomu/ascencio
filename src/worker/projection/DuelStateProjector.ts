@@ -13,11 +13,16 @@ import type {
   DuelPhase,
   PlayerIndex,
   PublicCard,
+  PublicChainLink,
+  PublicChainOutcome,
+  PublicChainPhase,
+  PublicCounter,
   PublicDuelState,
   PublicLocation,
   PublicOverlayMaterial,
   PublicPlayerState,
 } from "../../duel/contracts/public-duel-state.ts";
+import type { ActiveDuelDependencies } from "../assets/active-duel-dependencies.ts";
 import {
   EngineLocation,
   EngineMessageType,
@@ -25,6 +30,7 @@ import {
   EnginePosition,
 } from "../engine/engine-constants.ts";
 import type { EngineMessage } from "../engine/OcgCoreAdapter.ts";
+import { resolveEffectDescription } from "../protocol/effect-description.ts";
 
 interface MutableOverlayMaterial {
   instanceId: CardInstanceId;
@@ -32,6 +38,12 @@ interface MutableOverlayMaterial {
   identityVisible: boolean;
   sequence: number;
   owner?: PlayerIndex;
+}
+
+interface MutableCounter {
+  type: number;
+  name: string;
+  count: number;
 }
 
 interface MutableCard {
@@ -43,7 +55,20 @@ interface MutableCard {
   sequence: number;
   position: CardPosition;
   faceUp: boolean;
+  counters: MutableCounter[];
   overlayMaterials: MutableOverlayMaterial[];
+}
+
+interface MutableChainLink {
+  index: number;
+  controller: PlayerIndex;
+  sourceIdentityVisible: boolean;
+  sourceInstanceId?: CardInstanceId;
+  sourceCard?: CardCode;
+  label: string;
+  description?: string;
+  phase: PublicChainPhase;
+  outcome: PublicChainOutcome;
 }
 
 interface MovedCard {
@@ -89,15 +114,31 @@ export interface QueriedOverlayMaterial {
   readonly identityVisible?: boolean;
 }
 
+export interface QueriedCounter {
+  readonly type: number;
+  readonly count: number;
+}
+
 export type ProjectionReconciliationRequest =
   | { readonly type: "extraDeck"; readonly player: PlayerIndex }
-  | ({ readonly type: "overlayMaterials" } & EngineCardAddress);
+  | ({ readonly type: "overlayMaterials" } & EngineCardAddress)
+  | ({ readonly type: "counters" } & EngineCardAddress);
 
 export interface ProjectionUpdate {
   readonly events: readonly DuelPresentationEvent[];
   readonly reconciliationRequests: readonly ProjectionReconciliationRequest[];
   readonly reconciliationFailure?: OverlayMoveUpdate["failure"];
   readonly result?: DuelResult;
+}
+
+interface ProjectionCheckpoint {
+  readonly players: [MutablePlayer, MutablePlayer];
+  readonly revision: number;
+  readonly turn: number;
+  readonly turnPlayer: PlayerIndex;
+  readonly phase: DuelPhase;
+  readonly chain: MutableChainLink[];
+  readonly cardSequence: number;
 }
 
 export class DuelStateProjector {
@@ -107,8 +148,10 @@ export class DuelStateProjector {
   #turn = 0;
   #turnPlayer: PlayerIndex = 0;
   #phase: DuelPhase = "unknown";
-  #chainSize = 0;
+  #chain: MutableChainLink[] = [];
   #cardSequence = 0;
+  readonly #textDependencies:
+    Pick<ActiveDuelDependencies, "texts" | "strings"> | undefined;
 
   constructor(
     snapshotId: SnapshotId,
@@ -118,8 +161,10 @@ export class DuelStateProjector {
       readonly CardCode[],
       readonly CardCode[],
     ] = [[], []],
+    textDependencies?: Pick<ActiveDuelDependencies, "texts" | "strings">,
   ) {
     this.#snapshotId = snapshotId;
+    this.#textDependencies = textDependencies;
     this.#players = [
       mutablePlayer(deckCounts[0], extraDeckCounts[0]),
       mutablePlayer(deckCounts[1], extraDeckCounts[1]),
@@ -129,10 +174,35 @@ export class DuelStateProjector {
     this.#seedOwnExtraDeck(initialExtraDeckOrders[0]);
   }
 
+  checkpoint(): ProjectionCheckpoint {
+    return structuredClone({
+      players: this.#players,
+      revision: this.#revision,
+      turn: this.#turn,
+      turnPlayer: this.#turnPlayer,
+      phase: this.#phase,
+      chain: this.#chain,
+      cardSequence: this.#cardSequence,
+    });
+  }
+
+  restore(checkpoint: ProjectionCheckpoint): void {
+    const restored = structuredClone(checkpoint);
+    this.#players[0] = restored.players[0];
+    this.#players[1] = restored.players[1];
+    this.#revision = restored.revision;
+    this.#turn = restored.turn;
+    this.#turnPlayer = restored.turnPlayer;
+    this.#phase = restored.phase;
+    this.#chain = restored.chain;
+    this.#cardSequence = restored.cardSequence;
+  }
+
   apply(message: EngineMessage): ProjectionUpdate {
     const events: DuelPresentationEvent[] = [];
     const reconciliationRequests: ProjectionReconciliationRequest[] = [];
     let reconciliationFailure: OverlayMoveUpdate["failure"];
+    let deferRevision = false;
     let result: DuelResult | undefined;
 
     switch (message.type) {
@@ -279,22 +349,51 @@ export class DuelStateProjector {
           lifePoints: message.lp,
         });
         break;
+      case EngineMessageType.ADD_COUNTER:
+      case EngineMessageType.REMOVE_COUNTER: {
+        const request = this.#updateCounter(
+          message.type === EngineMessageType.ADD_COUNTER ? "add" : "remove",
+          message.counter_type,
+          message.controller,
+          message.location,
+          message.sequence,
+          message.count,
+        );
+        if (request !== undefined) {
+          reconciliationRequests.push(request);
+          deferRevision = true;
+        }
+        break;
+      }
       case EngineMessageType.CHAINING:
-        this.#chainSize = message.chain_size;
-        events.push({ type: "chainChanged", size: this.#chainSize });
+        this.#appendChainLink(message);
+        events.push({ type: "chainChanged", size: this.#chain.length });
         break;
       case EngineMessageType.CHAINED:
+        if (
+          this.#requireChainLink(message.chain_size).index !==
+          this.#chain.length
+        )
+          throw new Error("CHAINED does not reference the latest link");
+        break;
       case EngineMessageType.CHAIN_SOLVING:
+        this.#setChainPhase(message.chain_size, "solving");
+        break;
       case EngineMessageType.CHAIN_SOLVED:
+        this.#setChainPhase(message.chain_size, "solved");
+        break;
       case EngineMessageType.CHAIN_NEGATED:
+        this.#setChainOutcome(message.chain_size, "negated");
+        break;
       case EngineMessageType.CHAIN_DISABLED:
-        this.#chainSize = message.chain_size;
-        events.push({ type: "chainChanged", size: this.#chainSize });
+        this.#setChainOutcome(message.chain_size, "disabled");
         break;
-      case EngineMessageType.CHAIN_END:
-        this.#chainSize = 0;
-        events.push({ type: "chainChanged", size: 0 });
+      case EngineMessageType.CHAIN_END: {
+        const hadChain = this.#chain.length > 0;
+        this.#chain = [];
+        if (hadChain) events.push({ type: "chainChanged", size: 0 });
         break;
+      }
       case EngineMessageType.HINT:
         events.push({ type: "hint", message: `System hint ${message.hint}` });
         break;
@@ -329,7 +428,8 @@ export class DuelStateProjector {
         break;
     }
 
-    if (reconciliationFailure === undefined) this.#revision += 1;
+    if (reconciliationFailure === undefined && !deferRevision)
+      this.#revision += 1;
     const requests = Object.freeze(reconciliationRequests);
     return result === undefined
       ? {
@@ -387,6 +487,7 @@ export class DuelStateProjector {
           sequence,
           position,
           faceUp: isFaceUp(record.position),
+          counters: matched?.counters ?? [],
           overlayMaterials: [],
         });
       }
@@ -447,6 +548,42 @@ export class DuelStateProjector {
     }
   }
 
+  reconcileCounters(
+    address: EngineCardAddress,
+    records: readonly QueriedCounter[],
+  ): void {
+    const player = this.#players[address.controller];
+    const location = engineLocation(address.location);
+    const host = findPublicCard(player, location, address.sequence);
+    if (host === undefined)
+      throw new Error("Counter reconciliation host is unavailable");
+    const previous = host.counters;
+    const previousRevision = this.#revision;
+    try {
+      if (records.length > 256)
+        throw new Error("Counter query exceeds per-card limit");
+      let priorType = 0;
+      host.counters = records.map((record) => {
+        validateCounterType(record.type);
+        validateCounterCount(record.count);
+        if (record.type <= priorType)
+          throw new Error("Counter query types are not sorted and unique");
+        priorType = record.type;
+        return {
+          type: record.type,
+          name: this.#counterName(record.type),
+          count: record.count,
+        };
+      });
+      this.#revision += 1;
+      this.snapshot();
+    } catch (error) {
+      host.counters = previous;
+      this.#revision = previousRevision;
+      throw error;
+    }
+  }
+
   snapshot(): PublicDuelState {
     const players: [PublicPlayerState, PublicPlayerState] = [
       immutablePlayer(0, this.#players[0], true),
@@ -469,6 +606,14 @@ export class DuelStateProjector {
     const ids = new Set(allInstanceIds);
     if (ids.size !== allInstanceIds.length)
       throw new Error("A card instance occupies multiple public zones");
+    const counterEntries = allVisibleCards.reduce(
+      (total, card) => total + card.counters.length,
+      0,
+    );
+    if (counterEntries > 1_024)
+      throw new Error("Public state exceeds 1024 counter entries");
+    if (this.#stateTextUnits() > 262_144)
+      throw new Error("Public state exceeds text limit");
 
     return Object.freeze({
       snapshotId: this.#snapshotId,
@@ -478,13 +623,7 @@ export class DuelStateProjector {
       phase: this.#phase,
       players: Object.freeze(players),
       chain: Object.freeze(
-        Array.from({ length: this.#chainSize }, (_, index) =>
-          Object.freeze({
-            index,
-            controller: this.#turnPlayer,
-            label: `Chain Link ${index + 1}`,
-          }),
-        ),
+        this.#chain.map((link): PublicChainLink => Object.freeze({ ...link })),
       ),
     });
   }
@@ -590,6 +729,7 @@ export class DuelStateProjector {
     const priorInstanceId = card.instanceId;
     const priorCode = card.code;
 
+    if (countersResetOnMove(fromLocation, toLocation)) card.counters = [];
     if (fromVisible && !toVisible) this.#rotatePublicIdentity(card);
     card.controller = to.controller;
     card.location = toLocation;
@@ -770,6 +910,7 @@ export class DuelStateProjector {
           sequence: to.sequence,
           position: enginePosition(to.position),
           faceUp: isFaceUp(to.position),
+          counters: [],
           overlayMaterials: [],
         } satisfies MutableCard);
       moved.controller = to.controller;
@@ -847,6 +988,230 @@ export class DuelStateProjector {
     else if (!visible) delete card.code;
   }
 
+  #updateCounter(
+    operation: "add" | "remove",
+    type: number,
+    controller: number,
+    rawLocation: number,
+    sequence: number,
+    count: number,
+  ):
+    | Extract<ProjectionReconciliationRequest, { readonly type: "counters" }>
+    | undefined {
+    const player = asPlayer(controller);
+    const location = engineLocation(rawLocation);
+    validateCounterType(type);
+    if (!Number.isSafeInteger(count) || count < 0 || count > 0xffff)
+      throw new Error("Counter delta is outside uint16 bounds");
+    if (!Number.isSafeInteger(sequence) || sequence < 0 || sequence > 255)
+      throw new Error("Counter address sequence is invalid");
+    if (count === 0) return undefined;
+    const request = {
+      type: "counters" as const,
+      controller: player,
+      location: rawLocation,
+      sequence,
+    };
+    const host = findPublicCard(this.#players[player], location, sequence);
+    if (host === undefined) return request;
+    const index = host.counters.findIndex((counter) => counter.type === type);
+    const current = index < 0 ? undefined : host.counters[index];
+    if (operation === "remove") {
+      if (current === undefined || current.count < count) return request;
+      const next = current.count - count;
+      if (next === 0) host.counters.splice(index, 1);
+      else current.count = next;
+      return undefined;
+    }
+    const next = (current?.count ?? 0) + count;
+    if (next > 0xffff) return request;
+    if (current === undefined) {
+      const name = this.#counterName(type);
+      if (
+        host.counters.length >= 256 ||
+        this.#counterEntryCount() >= 1_024 ||
+        this.#stateTextUnits() + name.length > 262_144
+      )
+        return request;
+      host.counters.push({ type, name, count: next });
+      host.counters.sort((left, right) => left.type - right.type);
+    } else current.count = next;
+    return undefined;
+  }
+
+  #counterEntryCount(): number {
+    return this.#players.reduce(
+      (stateTotal, player) =>
+        stateTotal +
+        [
+          ...player.hand,
+          ...player.extraDeck,
+          ...player.monsters,
+          ...player.spellsAndTraps,
+          ...player.graveyard,
+          ...player.banished,
+        ].reduce((total, card) => total + card.counters.length, 0),
+      0,
+    );
+  }
+
+  #stateTextUnits(): number {
+    const counterText = this.#players.reduce(
+      (stateTotal, player) =>
+        stateTotal +
+        [
+          ...player.hand,
+          ...player.extraDeck,
+          ...player.monsters,
+          ...player.spellsAndTraps,
+          ...player.graveyard,
+          ...player.banished,
+        ].reduce(
+          (total, card) =>
+            total +
+            card.counters.reduce(
+              (cardTotal, counter) => cardTotal + counter.name.length,
+              0,
+            ),
+          0,
+        ),
+      0,
+    );
+    return (
+      counterText +
+      this.#chain.reduce(
+        (total, link) =>
+          total + link.label.length + (link.description?.length ?? 0),
+        0,
+      )
+    );
+  }
+
+  #appendChainLink(message: {
+    readonly code: number;
+    readonly controller: number;
+    readonly location: number;
+    readonly sequence: number;
+    readonly position: number;
+    readonly overlay_sequence?: number;
+    readonly triggering_controller: number;
+    readonly description: bigint;
+    readonly chain_size: number;
+  }): void {
+    if (
+      !Number.isSafeInteger(message.chain_size) ||
+      message.chain_size !== this.#chain.length + 1 ||
+      message.chain_size > 255
+    )
+      throw new Error("CHAINING link index is invalid");
+    const controller = asPlayer(message.triggering_controller);
+    const source = this.#chainSource(message);
+    const visible = source !== undefined;
+    const description = visible
+      ? cleanProjectionText(
+          this.#textDependencies === undefined
+            ? undefined
+            : resolveEffectDescription(
+                message.description,
+                this.#textDependencies,
+              ),
+        )
+      : undefined;
+    const label = visible
+      ? (cleanProjectionText(
+          this.#textDependencies?.texts.get(source.card)?.name,
+        ) ?? "Card effect")
+      : "Card effect";
+    if (
+      this.#stateTextUnits() + label.length + (description?.length ?? 0) >
+      262_144
+    )
+      throw new Error("Chain text exceeds public state limit");
+    this.#chain.push({
+      index: message.chain_size,
+      controller,
+      sourceIdentityVisible: visible,
+      ...(source === undefined
+        ? {}
+        : {
+            sourceInstanceId: source.instanceId,
+            sourceCard: source.card,
+          }),
+      label,
+      ...(description === undefined ? {} : { description }),
+      phase: "pending",
+      outcome: "normal",
+    });
+  }
+
+  #chainSource(message: {
+    readonly code: number;
+    readonly controller: number;
+    readonly location: number;
+    readonly sequence: number;
+    readonly position: number;
+    readonly overlay_sequence?: number;
+  }):
+    | { readonly instanceId: CardInstanceId; readonly card: CardCode }
+    | undefined {
+    const controller = asPlayer(message.controller);
+    const location = engineLocation(message.location);
+    if (isOverlayAddress(message)) {
+      const host = findPublicCard(
+        this.#players[controller],
+        location,
+        message.sequence,
+      );
+      const material = host?.overlayMaterials[message.overlay_sequence ?? 0];
+      return material?.identityVisible === true &&
+        material.code === message.code
+        ? { instanceId: material.instanceId, card: material.code }
+        : undefined;
+    }
+    const card = findPublicCard(
+      this.#players[controller],
+      location,
+      message.sequence,
+    );
+    if (
+      card?.code === undefined ||
+      card.code !== message.code ||
+      !isPublicCard(controller, location, message.position)
+    )
+      return undefined;
+    return { instanceId: card.instanceId, card: card.code };
+  }
+
+  #requireChainLink(index: number): MutableChainLink {
+    if (!Number.isSafeInteger(index) || index < 1 || index > 255)
+      throw new Error("Chain link index is invalid");
+    const link = this.#chain[index - 1];
+    if (link === undefined || link.index !== index)
+      throw new Error("Chain status references an unknown link");
+    return link;
+  }
+
+  #setChainPhase(index: number, phase: PublicChainPhase): void {
+    this.#requireChainLink(index).phase = phase;
+  }
+
+  #setChainOutcome(
+    index: number,
+    outcome: Exclude<PublicChainOutcome, "normal">,
+  ): void {
+    const link = this.#requireChainLink(index);
+    if (link.outcome !== "negated" || outcome === "negated")
+      link.outcome = outcome;
+  }
+
+  #counterName(type: number): string {
+    const value = cleanProjectionText(
+      this.#textDependencies?.strings.counter[`0x${type.toString(16)}`],
+      1_024,
+    );
+    return value ?? `Counter 0x${type.toString(16).toUpperCase()}`;
+  }
+
   #seedOwnExtraDeck(codes: readonly CardCode[]): void {
     const state = this.#players[0];
     state.extraDeck = codes.map((code, sequence) => ({
@@ -858,6 +1223,7 @@ export class DuelStateProjector {
       sequence,
       position: "faceDownDefense",
       faceUp: false,
+      counters: [],
       overlayMaterials: [],
     }));
   }
@@ -887,6 +1253,7 @@ export class DuelStateProjector {
       sequence,
       position: enginePosition(position),
       faceUp: isFaceUp(position),
+      counters: [],
       overlayMaterials: [],
     };
   }
@@ -935,6 +1302,11 @@ function immutablePlayer(
 function immutableCard(value: MutableCard): PublicCard {
   return Object.freeze({
     ...value,
+    counters: Object.freeze(
+      value.counters.map((counter): PublicCounter =>
+        Object.freeze({ ...counter }),
+      ),
+    ),
     overlayMaterials: Object.freeze(
       value.overlayMaterials.map((material): PublicOverlayMaterial =>
         Object.freeze({
@@ -1059,6 +1431,13 @@ function isFixedLocation(location: PublicLocation): boolean {
   );
 }
 
+function countersResetOnMove(
+  from: PublicLocation,
+  to: PublicLocation,
+): boolean {
+  return isFixedLocation(from) && from !== to;
+}
+
 function reconciliationRequestsForMove(
   from: {
     readonly controller: 0 | 1;
@@ -1091,7 +1470,9 @@ function reconciliationRequestsForMove(
     const key =
       request.type === "extraDeck"
         ? `extra:${request.player}`
-        : `overlay:${request.controller}:${request.location}:${request.sequence}`;
+        : request.type === "overlayMaterials"
+          ? `overlay:${request.controller}:${request.location}:${request.sequence}`
+          : `counter:${request.controller}:${request.location}:${request.sequence}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -1197,6 +1578,27 @@ function phase(value: number): DuelPhase {
     default:
       return "unknown";
   }
+}
+
+function validateCounterType(value: number): void {
+  if (!Number.isSafeInteger(value) || value < 1 || value > 0xffff)
+    throw new Error("Counter type is outside uint16 bounds");
+}
+
+function validateCounterCount(value: number): void {
+  if (!Number.isSafeInteger(value) || value < 1 || value > 0xffff)
+    throw new Error("Counter count is outside uint16 bounds");
+}
+
+function cleanProjectionText(
+  value: string | undefined,
+  maximumLength = 32_768,
+): string | undefined {
+  if (value === undefined) return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 && trimmed.length <= maximumLength
+    ? trimmed
+    : undefined;
 }
 
 function resequence(cards: MutableCard[] | null | undefined): void {

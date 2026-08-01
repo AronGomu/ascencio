@@ -40,6 +40,7 @@ const STATE: PublicDuelState = {
           sequence: 0,
           position: "faceDownDefense",
           faceUp: false,
+          counters: [],
           overlayMaterials: [],
         },
       ],

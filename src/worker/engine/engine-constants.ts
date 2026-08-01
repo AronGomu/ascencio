@@ -36,6 +36,7 @@ export const EngineQueryFlag = {
   OWNER: 0x40000,
   IS_PUBLIC: 0x100000,
   OVERLAY_CARD: 0x10000,
+  COUNTERS: 0x20000,
   IS_HIDDEN: 0x1000000,
 } as const;
 
@@ -82,6 +83,8 @@ export const EngineMessageType = {
   RECOVER: 92,
   LIFE_POINTS_UPDATE: 94,
   PAY_LIFE_POINTS: 100,
+  ADD_COUNTER: 101,
+  REMOVE_COUNTER: 102,
   ATTACK: 110,
   BATTLE: 111,
   ROCK_PAPER_SCISSORS: 132,

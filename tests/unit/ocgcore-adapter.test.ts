@@ -2,12 +2,17 @@ import { describe, expect, it, vi } from "vitest";
 import type { OcgCoreSync } from "../../vendor/ocgcore-wasm/0.1.2/dist/index.js";
 import {
   OcgCoreAdapter,
+  vendoredMessageTypes,
   type CoreFactory,
   type EngineCardQuery,
   type EngineDuelHandle,
   type EngineLocationQuery,
 } from "../../src/worker/engine/OcgCoreAdapter.ts";
-import { EngineResponseType } from "../../src/worker/engine/engine-constants.ts";
+import {
+  EngineMessageType,
+  EngineQueryFlag,
+  EngineResponseType,
+} from "../../src/worker/engine/engine-constants.ts";
 
 function fakeCore(version: readonly [number, number]): OcgCoreSync {
   return { getVersion: () => version } as OcgCoreSync;
@@ -55,6 +60,59 @@ describe("OcgCoreAdapter", () => {
     });
 
     expect(adapter.getMessages({} as EngineDuelHandle)).toEqual([move]);
+  });
+
+  it("pins counter messages, query flag, and rich chain records to the vendored wrapper", async () => {
+    expect(EngineMessageType.ADD_COUNTER).toBe(101);
+    expect(EngineMessageType.REMOVE_COUNTER).toBe(102);
+    expect(EngineQueryFlag.COUNTERS).toBe(0x20000);
+    expect(vendoredMessageTypes()).toEqual(
+      expect.arrayContaining([
+        EngineMessageType.ADD_COUNTER,
+        EngineMessageType.REMOVE_COUNTER,
+      ]),
+    );
+    const records = [
+      {
+        type: EngineMessageType.ADD_COUNTER,
+        counter_type: 0xffff,
+        controller: 1,
+        location: 4,
+        sequence: 6,
+        count: 0xffff,
+      },
+      {
+        type: EngineMessageType.REMOVE_COUNTER,
+        counter_type: 1,
+        controller: 0,
+        location: 8,
+        sequence: 4,
+        count: 2,
+      },
+      {
+        type: EngineMessageType.CHAINING,
+        code: 97590747,
+        controller: 0,
+        location: 132,
+        sequence: 1,
+        position: 1,
+        overlay_sequence: 2,
+        triggering_controller: 1,
+        triggering_location: 2,
+        triggering_sequence: 3,
+        description: 102n,
+        chain_size: 1,
+      },
+    ];
+    const core = {
+      getVersion: () => [11, 0] as const,
+      duelGetMessage: () => records,
+    } as unknown as OcgCoreSync;
+    const adapter = await OcgCoreAdapter.initialize({
+      wasmBinary: new ArrayBuffer(8),
+      factory: async () => core,
+    });
+    expect(adapter.getMessages({} as EngineDuelHandle)).toEqual(records);
   });
 
   it("adds operation context to parser and encoder failures", async () => {

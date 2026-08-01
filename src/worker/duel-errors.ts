@@ -104,16 +104,42 @@ export function toDuelError(
   error: unknown,
   options: { readonly terminal?: boolean } = {},
 ): DuelError {
+  const operationError = findDuelOperationError(error, new Set(), 0);
   const duelError =
-    error instanceof DuelOperationError
-      ? error.duelError
-      : fallbackEngineError(error);
+    operationError === undefined
+      ? fallbackEngineError(error)
+      : operationError.duelError;
   if (options.terminal !== true || !duelError.recoverable) return duelError;
   return {
     ...duelError,
     code: "engine_error",
     recoverable: false,
   };
+}
+
+function findDuelOperationError(
+  error: unknown,
+  visited: Set<object>,
+  depth: number,
+): DuelOperationError | undefined {
+  if (error instanceof DuelOperationError) return error;
+  if (!(error instanceof Error) || depth >= MAXIMUM_LOG_ERROR_DEPTH)
+    return undefined;
+  if (visited.has(error)) return undefined;
+  visited.add(error);
+  try {
+    if (error instanceof AggregateError) {
+      for (const nested of error.errors.slice(0, MAXIMUM_AGGREGATE_ERRORS)) {
+        const found = findDuelOperationError(nested, visited, depth + 1);
+        if (found !== undefined) return found;
+      }
+    }
+    return "cause" in error
+      ? findDuelOperationError(error.cause, visited, depth + 1)
+      : undefined;
+  } finally {
+    visited.delete(error);
+  }
 }
 
 function fallbackEngineError(error: unknown): DuelError {

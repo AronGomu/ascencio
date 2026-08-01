@@ -14,9 +14,11 @@ import type {
   EngineCardQuery,
   EngineCardQueryResult,
   EngineLocationQueryResult,
+  EngineMessage,
 } from "./engine/OcgCoreAdapter.ts";
 import {
   EngineLocation,
+  EngineMessageType,
   EnginePosition,
   EngineQueryFlag,
 } from "./engine/engine-constants.ts";
@@ -28,6 +30,7 @@ import {
 import {
   DuelStateProjector,
   type ProjectionReconciliationRequest,
+  type QueriedCounter,
   type QueriedOverlayMaterial,
   type QueriedPublicCard,
 } from "./projection/DuelStateProjector.ts";
@@ -70,6 +73,7 @@ export class HeadlessDuelController {
       options.deckCounts,
       options.extraDeckCounts,
       [options.session.initialExtraDeckOrder(0), []],
+      options.dependencies,
     );
     this.#trace =
       options.trace ??
@@ -112,109 +116,138 @@ export class HeadlessDuelController {
       automaticResponses <= this.#maximumAutomaticResponses;
       automaticResponses += 1
     ) {
-      const boundary = this.#session.processUntilBoundary();
-      for (const [index, status] of boundary.statuses.entries()) {
-        this.#trace.record({
-          kind: "process",
-          status,
-          detail: `iteration ${index + 1} of ${boundary.iterations}`,
-        });
-      }
-      let answeredOpponent = false;
-      let humanPrompt: PlayerPrompt | undefined;
-
-      for (const message of boundary.messages) {
-        this.#trace.record({ kind: "message", messageType: message.type });
-        const update = this.#projector.apply(message);
-        this.#reconcile(update.reconciliationRequests);
-        if (update.reconciliationFailure !== undefined) {
+      const checkpoint = this.#projector.checkpoint();
+      const previousResult = this.#result;
+      try {
+        const boundary = this.#session.processUntilBoundary();
+        for (const [index, status] of boundary.statuses.entries()) {
           this.#trace.record({
-            kind: "promptDiagnostic",
-            detail: "reconcile:overlayHost:invariant",
+            kind: "process",
+            status,
+            detail: `iteration ${index + 1} of ${boundary.iterations}`,
           });
-          throw new DuelOperationError(
-            {
-              code: "unsupported_message",
-              message: "Unable to reconcile overlayMaterials state",
-              recoverable: false,
-            },
-            new Error(
-              `Projection reconciliation failed: ${update.reconciliationFailure}`,
-            ),
+        }
+        let answeredOpponent = false;
+        let humanPrompt: PlayerPrompt | undefined;
+        const counterRequests = new Map<
+          string,
+          Extract<
+            ProjectionReconciliationRequest,
+            { readonly type: "counters" }
+          >
+        >();
+
+        for (const message of boundary.messages) {
+          this.#trace.record({ kind: "message", messageType: message.type });
+          const counterKey = counterMessageAddressKey(message);
+          const update =
+            counterKey !== undefined && counterRequests.has(counterKey)
+              ? { events: [], reconciliationRequests: [] }
+              : this.#projector.apply(message);
+          const immediateRequests: ProjectionReconciliationRequest[] = [];
+          for (const request of update.reconciliationRequests) {
+            if (request.type === "counters")
+              counterRequests.set(counterAddressKey(request), request);
+            else immediateRequests.push(request);
+          }
+          this.#reconcile(immediateRequests);
+          if (update.reconciliationFailure !== undefined) {
+            this.#trace.record({
+              kind: "promptDiagnostic",
+              detail: "reconcile:overlayHost:invariant",
+            });
+            throw new DuelOperationError(
+              {
+                code: "unsupported_message",
+                message: "Unable to reconcile overlayMaterials state",
+                recoverable: false,
+              },
+              new Error(
+                `Projection reconciliation failed: ${update.reconciliationFailure}`,
+              ),
+            );
+          }
+          events.push(...update.events);
+          for (const event of update.events)
+            this.#trace.record({ kind: "presentation", detail: event.type });
+          if (update.result !== undefined) {
+            this.#result = update.result;
+            this.#trace.record({
+              kind: "result",
+              detail: JSON.stringify(update.result),
+            });
+          }
+        }
+
+        this.#reconcile([...counterRequests.values()]);
+
+        for (const message of boundary.messages) {
+          const prompt = this.#prompts.publish(message);
+          if (prompt === null) continue;
+          this.#trace.record({
+            kind: "prompt",
+            promptId: prompt.id,
+            player: prompt.player,
+          });
+          if (humanPrompt !== undefined) {
+            throw duelOperationError(
+              "unsupported_message",
+              "ocgcore emitted multiple player prompts in one process batch",
+            );
+          }
+          if (prompt.player === 0) {
+            humanPrompt = prompt;
+            continue;
+          }
+
+          const decision = this.#opponent.choose(
+            prompt,
+            toOpponentVisibleState(this.#projector.snapshot()),
           );
-        }
-        events.push(...update.events);
-        for (const event of update.events)
-          this.#trace.record({ kind: "presentation", detail: event.type });
-        if (update.result !== undefined) {
-          this.#result = update.result;
+          const response = this.#prompts.respond(prompt.id, decision.choiceIds);
+          this.#session.respond(response);
           this.#trace.record({
-            kind: "result",
-            detail: JSON.stringify(update.result),
+            kind: "response",
+            promptId: prompt.id,
+            choiceIds: decision.choiceIds,
+            player: 1,
+            opponentReason: decision.reason,
           });
+          answeredOpponent = true;
         }
 
-        const prompt = this.#prompts.publish(message);
-        if (prompt === null) continue;
-        this.#trace.record({
-          kind: "prompt",
-          promptId: prompt.id,
-          player: prompt.player,
-        });
+        if (this.#result !== null) {
+          const result = this.#result;
+          this.#closeSession("completed");
+          return {
+            state: this.#projector.snapshot(),
+            events,
+            result,
+          };
+        }
         if (humanPrompt !== undefined) {
+          return {
+            state: this.#projector.snapshot(),
+            events,
+            prompt: humanPrompt,
+          };
+        }
+        if (boundary.status === "ended") {
           throw duelOperationError(
             "unsupported_message",
-            "ocgcore emitted multiple player prompts in one process batch",
+            "ocgcore ended without emitting a duel result",
           );
         }
-        if (prompt.player === 0) {
-          humanPrompt = prompt;
-          continue;
+        if (!answeredOpponent) {
+          throw duelOperationError(
+            "unsupported_message",
+            "ocgcore is waiting but emitted no supported player prompt",
+          );
         }
-
-        const decision = this.#opponent.choose(
-          prompt,
-          toOpponentVisibleState(this.#projector.snapshot()),
-        );
-        const response = this.#prompts.respond(prompt.id, decision.choiceIds);
-        this.#session.respond(response);
-        this.#trace.record({
-          kind: "response",
-          promptId: prompt.id,
-          choiceIds: decision.choiceIds,
-          player: 1,
-          opponentReason: decision.reason,
-        });
-        answeredOpponent = true;
-      }
-
-      if (this.#result !== null) {
-        const result = this.#result;
-        this.#closeSession("completed");
-        return {
-          state: this.#projector.snapshot(),
-          events,
-          result,
-        };
-      }
-      if (humanPrompt !== undefined) {
-        return {
-          state: this.#projector.snapshot(),
-          events,
-          prompt: humanPrompt,
-        };
-      }
-      if (boundary.status === "ended") {
-        throw duelOperationError(
-          "unsupported_message",
-          "ocgcore ended without emitting a duel result",
-        );
-      }
-      if (!answeredOpponent) {
-        throw duelOperationError(
-          "unsupported_message",
-          "ocgcore is waiting but emitted no supported player prompt",
-        );
+      } catch (error) {
+        this.#projector.restore(checkpoint);
+        this.#result = previousResult;
+        throw error;
       }
     }
 
@@ -238,10 +271,15 @@ export class HeadlessDuelController {
             request.player,
             this.#queryExtraDeck(request.player),
           );
-        } else {
+        } else if (request.type === "overlayMaterials") {
           this.#projector.reconcileOverlayMaterials(
             request,
             this.#queryOverlayMaterials(request),
+          );
+        } else {
+          this.#projector.reconcileCounters(
+            request,
+            this.#queryCounters(request),
           );
         }
       } catch (error) {
@@ -250,7 +288,11 @@ export class HeadlessDuelController {
             ? error.category
             : "invariant";
         const addressClass =
-          request.type === "extraDeck" ? "extraDeck" : "overlayHost";
+          request.type === "extraDeck"
+            ? "extraDeck"
+            : request.type === "overlayMaterials"
+              ? "overlayHost"
+              : "counterHost";
         this.#trace.record({
           kind: "promptDiagnostic",
           detail: `reconcile:${addressClass}:${category}`,
@@ -315,6 +357,8 @@ export class HeadlessDuelController {
     try {
       if (host === null || !Array.isArray(host.overlayCards))
         throw new Error("Overlay host query omitted material list");
+      if (host.overlayCards.length > 256)
+        throw new Error("Overlay host query exceeds physical instance limit");
       if (
         host.overlayCards.some(
           (code) => !Number.isSafeInteger(code) || code <= 0,
@@ -353,6 +397,54 @@ export class HeadlessDuelController {
       });
     } catch (error) {
       if (error instanceof ReconciliationEvidenceError) throw error;
+      throw new ReconciliationEvidenceError("malformed", error);
+    }
+  }
+
+  #queryCounters(
+    address: Extract<
+      ProjectionReconciliationRequest,
+      { readonly type: "counters" }
+    >,
+  ): readonly QueriedCounter[] {
+    let value: EngineCardQueryResult;
+    try {
+      value = this.#session.queryCard({
+        flags: EngineQueryFlag.COUNTERS as EngineCardQuery["flags"],
+        controller: address.controller,
+        location: address.location as EngineCardQuery["location"],
+        sequence: address.sequence,
+        overlaySequence: 0,
+      });
+    } catch (error) {
+      throw new ReconciliationEvidenceError("unavailable", error);
+    }
+    try {
+      if (value === null || !isRecord(value.counters))
+        throw new Error("Counter host query omitted counters");
+      const entries = Object.entries(value.counters);
+      if (entries.length > 256)
+        throw new Error("Counter host query exceeds per-card limit");
+      return entries
+        .map(([key, count]): QueriedCounter => {
+          const type = Number(key);
+          if (
+            !Number.isSafeInteger(type) ||
+            type < 1 ||
+            type > 0xffff ||
+            String(type) !== key
+          )
+            throw new Error("Counter host query returned an invalid type");
+          if (
+            !Number.isSafeInteger(count) ||
+            (count as number) < 1 ||
+            (count as number) > 0xffff
+          )
+            throw new Error("Counter host query returned an invalid count");
+          return { type, count: count as number };
+        })
+        .sort((left, right) => left.type - right.type);
+    } catch (error) {
       throw new ReconciliationEvidenceError("malformed", error);
     }
   }
@@ -458,6 +550,23 @@ export class HeadlessDuelController {
   }
 }
 
+function counterMessageAddressKey(message: EngineMessage): string | undefined {
+  if (
+    message.type !== EngineMessageType.ADD_COUNTER &&
+    message.type !== EngineMessageType.REMOVE_COUNTER
+  )
+    return undefined;
+  return `${message.controller}:${message.location}:${message.sequence}`;
+}
+
+function counterAddressKey(address: {
+  readonly controller: number;
+  readonly location: number;
+  readonly sequence: number;
+}): string {
+  return `${address.controller}:${address.location}:${address.sequence}`;
+}
+
 function queryFlags(includeOverlay = false): EngineCardQuery["flags"] {
   return (EngineQueryFlag.CODE |
     EngineQueryFlag.POSITION |
@@ -484,6 +593,10 @@ function isFaceUpPosition(position: number): boolean {
     position === EnginePosition.FACE_UP_ATTACK ||
     position === EnginePosition.FACE_UP_DEFENSE
   );
+}
+
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function queriedCard(

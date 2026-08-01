@@ -295,6 +295,7 @@ describe("Worker contracts", () => {
       sequence: 0,
       position: "faceDownDefense" as const,
       faceUp: false,
+      counters: [],
       overlayMaterials: [],
     };
     const opponent = baseEvent.state.players[1] as unknown as Record<
@@ -345,6 +346,7 @@ describe("Worker contracts", () => {
         sequence: 0,
         position: "faceUpAttack",
         faceUp: true,
+        counters: [],
         overlayMaterials: [
           {
             instanceId: cardInstanceId("host"),
@@ -384,6 +386,7 @@ describe("Worker contracts", () => {
       sequence: index,
       position: "faceUpAttack" as const,
       faceUp: true,
+      counters: [],
       overlayMaterials: [],
     });
     const manyHuman = tooMany.state.players[0] as unknown as Record<
@@ -415,6 +418,7 @@ describe("Worker contracts", () => {
       sequence: 0,
       position: "faceDownDefense",
       faceUp: false,
+      counters: [],
       overlayMaterials: [],
     };
 
@@ -461,6 +465,7 @@ describe("Worker contracts", () => {
       sequence: 0,
       position: "faceUpAttack",
       faceUp: true,
+      counters: [],
       overlayMaterials: [
         {
           instanceId: cardInstanceId("material"),
@@ -490,6 +495,299 @@ describe("Worker contracts", () => {
 
     host.overlayMaterials[0]!.sequence = 1;
     expect(() => parseDuelWorkerEvent(fixture)).toThrow(/sequence order/);
+  });
+
+  it("validates exact counter and actual chain contracts with recursive bounds", () => {
+    const base = structuredClone(
+      examples.find((example) => example.type === "state"),
+    );
+    if (base?.type !== "state") throw new Error("State fixture missing");
+    const card = {
+      instanceId: cardInstanceId("counter-host"),
+      code: cardCode(97590747),
+      owner: 0 as const,
+      controller: 0 as const,
+      location: "monster" as const,
+      sequence: 0,
+      position: "faceUpAttack" as const,
+      faceUp: true,
+      counters: [
+        { type: 1, name: "Spell Counter", count: 2 },
+        { type: 0x1002, name: "Signal Counter", count: 1 },
+      ],
+      overlayMaterials: [],
+    };
+    const stateOf = (event: unknown) =>
+      (event as { state: unknown }).state as {
+        players: [Record<string, unknown>, Record<string, unknown>];
+        chain: Record<string, unknown>[];
+      };
+    const mutableState = stateOf(base);
+    mutableState.players[0].monsters = [card];
+    mutableState.chain = [
+      {
+        index: 1,
+        controller: 1,
+        sourceIdentityVisible: true,
+        sourceInstanceId: card.instanceId,
+        sourceCard: card.code,
+        label: "Visible Source",
+        description: "Resolved effect",
+        phase: "solving",
+        outcome: "disabled",
+      },
+      {
+        index: 2,
+        controller: 0,
+        sourceIdentityVisible: false,
+        label: "Card effect",
+        phase: "pending",
+        outcome: "normal",
+      },
+    ];
+    const parsed = parseDuelWorkerEvent(base);
+    expect(structuredClone(parsed)).toEqual(parsed);
+
+    const mutate = (change: (event: unknown) => void) => {
+      const event: unknown = structuredClone(base);
+      change(event);
+      return () => parseDuelWorkerEvent(event);
+    };
+    expect(
+      mutate((event) => {
+        const monsters = stateOf(event).players[0].monsters as Record<
+          string,
+          unknown
+        >[];
+        delete monsters[0]!.counters;
+      }),
+    ).toThrow(/counters/);
+    expect(
+      mutate((event) => {
+        const monsters = stateOf(event).players[0].monsters as Record<
+          string,
+          unknown
+        >[];
+        monsters[0]!.counters = [
+          { type: 2, name: "Two", count: 1 },
+          { type: 1, name: "One", count: 1 },
+        ];
+      }),
+    ).toThrow(/type order/);
+    expect(
+      mutate((event) => {
+        const monsters = stateOf(event).players[0].monsters as Record<
+          string,
+          unknown
+        >[];
+        monsters[0]!.counters = [{ type: 1, name: "One", count: 0 }];
+      }),
+    ).toThrow(/count/);
+    expect(
+      mutate((event) => {
+        stateOf(event).chain[0]!.index = 2;
+      }),
+    ).toThrow(/index order/);
+    expect(
+      mutate((event) => {
+        const chain = stateOf(event).chain;
+        chain[1] = { ...chain[1]!, sourceCard: cardCode(5053103) };
+      }),
+    ).toThrow(/hidden source identity/);
+    expect(
+      mutate((event) => {
+        const chain = stateOf(event).chain;
+        chain[1] = { ...chain[1]!, label: "Leaked source" };
+      }),
+    ).toThrow(/hidden source identity/);
+
+    const contractMutations: readonly [
+      string,
+      (event: unknown) => void,
+      RegExp,
+    ][] = [
+      [
+        "counter exact keys",
+        (event) => {
+          const monsters = stateOf(event).players[0].monsters as Record<
+            string,
+            unknown
+          >[];
+          (monsters[0]!.counters as Record<string, unknown>[])[0]!.extra = 1;
+        },
+        /extra/,
+      ],
+      [
+        "counter trimmed name",
+        (event) => {
+          const monsters = stateOf(event).players[0].monsters as Record<
+            string,
+            unknown
+          >[];
+          (monsters[0]!.counters as Record<string, unknown>[])[0]!.name =
+            " Spell Counter ";
+        },
+        /name/,
+      ],
+      [
+        "chain exact keys",
+        (event) => {
+          stateOf(event).chain[0]!.extra = 1;
+        },
+        /extra/,
+      ],
+      [
+        "chain phase enum",
+        (event) => {
+          stateOf(event).chain[0]!.phase = "unknown";
+        },
+        /phase/,
+      ],
+      [
+        "chain outcome enum",
+        (event) => {
+          stateOf(event).chain[0]!.outcome = "unknown";
+        },
+        /outcome/,
+      ],
+      [
+        "visible source requires instance",
+        (event) => {
+          delete stateOf(event).chain[0]!.sourceInstanceId;
+        },
+        /visible source identity/,
+      ],
+      [
+        "chain label trim",
+        (event) => {
+          stateOf(event).chain[0]!.label = " Visible Source ";
+        },
+        /label/,
+      ],
+      [
+        "chain description trim",
+        (event) => {
+          stateOf(event).chain[0]!.description = " Resolved effect ";
+        },
+        /description/,
+      ],
+    ];
+    for (const [, change, expected] of contractMutations)
+      expect(mutate(change)).toThrow(expected);
+
+    expect(
+      mutate((event) => {
+        const monsters = stateOf(event).players[0].monsters as Record<
+          string,
+          unknown
+        >[];
+        monsters[0]!.counters = Array.from({ length: 257 }, (_, index) => ({
+          type: index + 1,
+          name: `Counter ${index + 1}`,
+          count: 1,
+        }));
+      }),
+    ).toThrow(/counters/);
+    const exactChain: unknown = structuredClone(base);
+    stateOf(exactChain).chain = Array.from({ length: 255 }, (_, index) => ({
+      index: index + 1,
+      controller: 0,
+      sourceIdentityVisible: false,
+      label: "Card effect",
+      phase: "pending",
+      outcome: "normal",
+    }));
+    expect(() => parseDuelWorkerEvent(exactChain)).not.toThrow();
+    expect(
+      mutate((event) => {
+        stateOf(event).chain = Array.from({ length: 256 }, (_, index) => ({
+          index: index + 1,
+          controller: 0,
+          sourceIdentityVisible: false,
+          label: "Card effect",
+          phase: "pending",
+          outcome: "normal",
+        }));
+      }),
+    ).toThrow(/state.chain/);
+
+    const exactText: unknown = structuredClone(base);
+    const exactTextState = stateOf(exactText);
+    exactTextState.chain = [];
+    const exactTextCards = exactTextState.players[0].monsters as Record<
+      string,
+      unknown
+    >[];
+    exactTextCards[0]!.counters = Array.from({ length: 256 }, (_, index) => ({
+      type: index + 1,
+      name: "x".repeat(1_024),
+      count: 1,
+    }));
+    expect(() => parseDuelWorkerEvent(exactText)).not.toThrow();
+    exactTextState.chain = [
+      {
+        index: 1,
+        controller: 0,
+        sourceIdentityVisible: false,
+        label: "Card effect",
+        phase: "pending",
+        outcome: "normal",
+      },
+    ];
+    expect(() => parseDuelWorkerEvent(exactText)).toThrow(/text limit/);
+
+    const fanIn: unknown = structuredClone(base);
+    const fanInState = stateOf(fanIn);
+    fanInState.chain = [];
+    fanInState.players[0].handCount = 1;
+    fanInState.players[0].extraDeckCount = 1;
+    fanInState.players[0].hand = [
+      {
+        ...card,
+        instanceId: cardInstanceId("counter-hand"),
+        location: "hand",
+        sequence: 0,
+      },
+    ];
+    fanInState.players[0].extraDeck = [
+      {
+        ...card,
+        instanceId: cardInstanceId("counter-extra"),
+        location: "extra",
+        sequence: 0,
+      },
+    ];
+    fanInState.players[0].monsters = [
+      { ...card, instanceId: cardInstanceId("counter-fixed") },
+    ];
+    expect(() => parseDuelWorkerEvent(fanIn)).not.toThrow();
+    for (const zone of ["hand", "extraDeck", "monsters"] as const) {
+      const missing: unknown = structuredClone(fanIn);
+      const player = stateOf(missing).players[0];
+      const cards = player[zone] as Record<string, unknown>[];
+      delete cards[0]!.counters;
+      expect(() => parseDuelWorkerEvent(missing)).toThrow(/counters/);
+    }
+
+    const global: unknown = structuredClone(base);
+    const globalState = stateOf(global);
+    globalState.chain = [];
+    globalState.players[0].monsters = [];
+    globalState.players[0].graveyard = Array.from(
+      { length: 5 },
+      (_, cardIndex) => ({
+        ...card,
+        instanceId: cardInstanceId(`counter-host-${cardIndex}`),
+        location: "graveyard" as const,
+        sequence: cardIndex,
+        counters: Array.from({ length: 205 }, (_, index) => ({
+          type: index + 1,
+          name: `Counter ${index + 1}`,
+          count: 1,
+        })),
+      }),
+    );
+    expect(() => parseDuelWorkerEvent(global)).toThrow(/counter entry limit/);
   });
 
   it("returns a detached validated value rather than the untrusted input", () => {

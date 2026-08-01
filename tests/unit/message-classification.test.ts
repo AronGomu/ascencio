@@ -23,6 +23,11 @@ describe("pinned protocol compatibility inventory", () => {
     }
   });
 
+  it("classifies counter deltas as projector events", () => {
+    expect(classifyEngineMessage(101)).toBe("event");
+    expect(classifyEngineMessage(102)).toBe("event");
+  });
+
   it("documents why every internal message needs no presentation", () => {
     const internalTypes = Object.entries(PINNED_MESSAGE_CLASSIFICATION)
       .filter(([, classification]) => classification === "internal")

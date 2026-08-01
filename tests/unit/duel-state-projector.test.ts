@@ -915,6 +915,7 @@ describe("DuelStateProjector", () => {
     });
     expect(value.snapshot().players[0].monsters[0]).toMatchObject({
       sequence: 4,
+      counters: [],
       overlayMaterials: [{ instanceId: secondId, code: 46986414 }],
     });
   });
@@ -1936,6 +1937,941 @@ describe("DuelStateProjector", () => {
       },
     });
     expect(value.snapshot().players[0].handCount).toBe(1);
+  });
+
+  it("restores complete projector state from a failed batch checkpoint", () => {
+    const value = projector();
+    const control = projector();
+    const before = value.snapshot();
+    const checkpoint = value.checkpoint();
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 0,
+        location: EngineLocation.DECK,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    expect(() =>
+      value.reconcileCounters(
+        {
+          controller: 1,
+          location: EngineLocation.MONSTER,
+          sequence: 4,
+        },
+        [{ type: 1, count: 1 }],
+      ),
+    ).toThrow("host is unavailable");
+    value.restore(checkpoint);
+    expect(value.snapshot()).toEqual(before);
+    const move = {
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 0,
+        location: EngineLocation.DECK,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    } as const;
+    value.apply(move);
+    control.apply(move);
+    expect(value.snapshot()).toEqual(control.snapshot());
+  });
+
+  it("projects sorted named counters and resets them when a card leaves the field", () => {
+    const value = new DuelStateProjector(
+      snapshotId("counter-projection"),
+      [40, 40],
+      [0, 0],
+      [[], []],
+      {
+        texts: new Map(),
+        strings: {
+          system: {},
+          victory: {},
+          counter: { "0x1": "  Spell Counter  " },
+          setname: {},
+        },
+      },
+    );
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 0,
+        location: EngineLocation.DECK,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 2,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    value.apply({
+      type: EngineMessageType.ADD_COUNTER,
+      counter_type: 1,
+      controller: 0,
+      location: EngineLocation.MONSTER,
+      sequence: 2,
+      count: 0,
+    });
+    expect(value.snapshot().players[0].monsters[0]?.counters).toEqual([]);
+    value.apply({
+      type: EngineMessageType.ADD_COUNTER,
+      counter_type: 0x1002,
+      controller: 0,
+      location: EngineLocation.MONSTER,
+      sequence: 2,
+      count: 2,
+    });
+    value.apply({
+      type: EngineMessageType.ADD_COUNTER,
+      counter_type: 1,
+      controller: 0,
+      location: EngineLocation.MONSTER,
+      sequence: 2,
+      count: 3,
+    });
+    value.apply({
+      type: EngineMessageType.ADD_COUNTER,
+      counter_type: 1,
+      controller: 0,
+      location: EngineLocation.MONSTER,
+      sequence: 2,
+      count: 2,
+    });
+    expect(value.snapshot().players[0].monsters[0]?.counters).toEqual([
+      { type: 1, name: "Spell Counter", count: 5 },
+      { type: 0x1002, name: "Counter 0x1002", count: 2 },
+    ]);
+    const partial = value.apply({
+      type: EngineMessageType.REMOVE_COUNTER,
+      counter_type: 1,
+      controller: 0,
+      location: EngineLocation.MONSTER,
+      sequence: 2,
+      count: 2,
+    });
+    expect(partial.reconciliationRequests).toEqual([]);
+    expect(value.snapshot().players[0].monsters[0]?.counters[0]?.count).toBe(3);
+    const beforeUnderflow = value.snapshot();
+    const underflow = value.apply({
+      type: EngineMessageType.REMOVE_COUNTER,
+      counter_type: 1,
+      controller: 0,
+      location: EngineLocation.MONSTER,
+      sequence: 2,
+      count: 4,
+    });
+    expect(underflow.reconciliationRequests).toHaveLength(1);
+    expect(value.snapshot()).toEqual(beforeUnderflow);
+    value.apply({
+      type: EngineMessageType.REMOVE_COUNTER,
+      counter_type: 1,
+      controller: 0,
+      location: EngineLocation.MONSTER,
+      sequence: 2,
+      count: 3,
+    });
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 2,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.GRAVEYARD,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    expect(value.snapshot().players[0].graveyard[0]?.counters).toEqual([]);
+  });
+
+  it("matches core counter reset boundaries while preserving controller transfer", () => {
+    const counteredMonster = () => {
+      const value = projector();
+      value.apply({
+        type: EngineMessageType.MOVE,
+        card: 97590747,
+        from: {
+          controller: 0,
+          location: EngineLocation.DECK,
+          sequence: 0,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+        to: {
+          controller: 0,
+          location: EngineLocation.MONSTER,
+          sequence: 0,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+      });
+      value.apply({
+        type: EngineMessageType.ADD_COUNTER,
+        counter_type: 1,
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        count: 2,
+      });
+      return value;
+    };
+    for (const destination of [
+      EngineLocation.HAND,
+      EngineLocation.GRAVEYARD,
+      EngineLocation.BANISHED,
+      EngineLocation.SPELL_TRAP,
+    ] as const) {
+      const value = counteredMonster();
+      value.apply({
+        type: EngineMessageType.MOVE,
+        card: 97590747,
+        from: {
+          controller: 0,
+          location: EngineLocation.MONSTER,
+          sequence: 0,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+        to: {
+          controller: 0,
+          location: destination,
+          sequence: 0,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+      });
+      const player = value.snapshot().players[0];
+      const moved =
+        destination === EngineLocation.HAND
+          ? player.hand[0]
+          : destination === EngineLocation.GRAVEYARD
+            ? player.graveyard[0]
+            : destination === EngineLocation.BANISHED
+              ? player.banished[0]
+              : player.spellsAndTraps[0];
+      expect(moved?.counters, `destination ${destination}`).toEqual([]);
+    }
+
+    const toDeck = counteredMonster();
+    toDeck.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.DECK,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    });
+    toDeck.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 0,
+        location: EngineLocation.DECK,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    expect(toDeck.snapshot().players[0].monsters[0]?.counters).toEqual([]);
+
+    const toOverlay = counteredMonster();
+    toOverlay.apply({
+      type: EngineMessageType.MOVE,
+      card: 5053103,
+      from: {
+        controller: 0,
+        location: EngineLocation.DECK,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 1,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    toOverlay.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 1,
+        position: EnginePosition.FACE_UP_ATTACK,
+        overlay_sequence: 0,
+      },
+    });
+    expect(
+      toOverlay.snapshot().players[0].monsters[0]?.overlayMaterials[0],
+    ).not.toHaveProperty("counters");
+
+    const transfer = counteredMonster();
+    transfer.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+      to: {
+        controller: 1,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    expect(transfer.snapshot().players[1].monsters[0]?.counters).toEqual([
+      { type: 1, name: "Counter 0x1", count: 2 },
+    ]);
+  });
+
+  it("defers invalid counter deltas to authoritative replacement without mutation", () => {
+    const value = projector();
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 0,
+        location: EngineLocation.DECK,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    const before = value.snapshot();
+    const update = value.apply({
+      type: EngineMessageType.REMOVE_COUNTER,
+      counter_type: 1,
+      controller: 0,
+      location: EngineLocation.MONSTER,
+      sequence: 0,
+      count: 1,
+    });
+    expect(update.events).toEqual([]);
+    expect(update.reconciliationRequests).toEqual([
+      {
+        type: "counters",
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+      },
+    ]);
+    expect(value.snapshot()).toEqual(before);
+    value.reconcileCounters(update.reconciliationRequests[0] as never, [
+      { type: 2, count: 4 },
+      { type: 5, count: 1 },
+    ]);
+    expect(value.snapshot().revision).toBe(before.revision + 1);
+    expect(value.snapshot().players[0].monsters[0]?.counters).toEqual([
+      { type: 2, name: "Counter 0x2", count: 4 },
+      { type: 5, name: "Counter 0x5", count: 1 },
+    ]);
+    value.reconcileCounters(
+      {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+      },
+      [],
+    );
+    expect(value.snapshot().players[0].monsters[0]?.counters).toEqual([]);
+    const beforeInvalidQuery = value.snapshot();
+    expect(() =>
+      value.reconcileCounters(
+        {
+          controller: 0,
+          location: EngineLocation.MONSTER,
+          sequence: 0,
+        },
+        [
+          { type: 2, count: 1 },
+          { type: 1, count: 1 },
+        ],
+      ),
+    ).toThrow("sorted and unique");
+    expect(value.snapshot()).toEqual(beforeInvalidQuery);
+    value.reconcileCounters(
+      {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+      },
+      [{ type: 1, count: 0xffff }],
+    );
+    const beforeOverflow = value.snapshot();
+    const overflow = value.apply({
+      type: EngineMessageType.ADD_COUNTER,
+      counter_type: 1,
+      controller: 0,
+      location: EngineLocation.MONSTER,
+      sequence: 0,
+      count: 1,
+    });
+    expect(overflow.reconciliationRequests).toHaveLength(1);
+    expect(value.snapshot()).toEqual(beforeOverflow);
+
+    const missing = value.apply({
+      type: EngineMessageType.ADD_COUNTER,
+      counter_type: 1,
+      controller: 1,
+      location: EngineLocation.MONSTER,
+      sequence: 4,
+      count: 1,
+    });
+    expect(missing.reconciliationRequests).toEqual([
+      {
+        type: "counters",
+        controller: 1,
+        location: EngineLocation.MONSTER,
+        sequence: 4,
+      },
+    ]);
+  });
+
+  it("defers counter additions at exact per-card, global, and text bounds", () => {
+    const addMonster = (
+      value: DuelStateProjector,
+      sequence: number,
+      code = 97590747,
+    ) =>
+      value.apply({
+        type: EngineMessageType.MOVE,
+        card: code,
+        from: {
+          controller: 0,
+          location: EngineLocation.DECK,
+          sequence: 0,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+        to: {
+          controller: 0,
+          location: EngineLocation.MONSTER,
+          sequence,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+      });
+    const fullCounters = Array.from({ length: 256 }, (_, index) => ({
+      type: index + 1,
+      count: 1,
+    }));
+
+    const perCard = projector();
+    addMonster(perCard, 0);
+    perCard.reconcileCounters(
+      {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+      },
+      fullCounters,
+    );
+    expect(perCard.snapshot().players[0].monsters[0]?.counters).toHaveLength(
+      256,
+    );
+    const beforePerCard = perCard.snapshot();
+    expect(
+      perCard.apply({
+        type: EngineMessageType.ADD_COUNTER,
+        counter_type: 257,
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        count: 1,
+      }).reconciliationRequests,
+    ).toHaveLength(1);
+    expect(perCard.snapshot()).toEqual(beforePerCard);
+
+    const global = projector();
+    for (let sequence = 0; sequence < 5; sequence += 1)
+      addMonster(global, sequence, 97590747 + sequence);
+    for (let sequence = 0; sequence < 4; sequence += 1)
+      global.reconcileCounters(
+        {
+          controller: 0,
+          location: EngineLocation.MONSTER,
+          sequence,
+        },
+        fullCounters,
+      );
+    expect(
+      global
+        .snapshot()
+        .players[0].monsters.reduce(
+          (total, card) => total + (card?.counters.length ?? 0),
+          0,
+        ),
+    ).toBe(1_024);
+    const beforeGlobal = global.snapshot();
+    expect(
+      global.apply({
+        type: EngineMessageType.ADD_COUNTER,
+        counter_type: 1,
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 4,
+        count: 1,
+      }).reconciliationRequests,
+    ).toHaveLength(1);
+    expect(global.snapshot()).toEqual(beforeGlobal);
+
+    const counter = Object.fromEntries(
+      Array.from({ length: 256 }, (_, index) => [
+        `0x${(index + 1).toString(16)}`,
+        "x".repeat(1_024),
+      ]),
+    );
+    const textBound = new DuelStateProjector(
+      snapshotId("counter-text-bound"),
+      [40, 40],
+      [0, 0],
+      [[], []],
+      {
+        texts: new Map(),
+        strings: { system: {}, victory: {}, counter, setname: {} },
+      },
+    );
+    addMonster(textBound, 0);
+    addMonster(textBound, 1, 5053103);
+    textBound.reconcileCounters(
+      {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+      },
+      fullCounters,
+    );
+    expect(
+      textBound
+        .snapshot()
+        .players[0].monsters[0]?.counters.reduce(
+          (total, entry) => total + entry.name.length,
+          0,
+        ),
+    ).toBe(262_144);
+    const beforeText = textBound.snapshot();
+    expect(
+      textBound.apply({
+        type: EngineMessageType.ADD_COUNTER,
+        counter_type: 1,
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 1,
+        count: 1,
+      }).reconciliationRequests,
+    ).toHaveLength(1);
+    expect(textBound.snapshot()).toEqual(beforeText);
+  });
+
+  it("rejects malformed counter deltas and addresses before mutation", () => {
+    const cases = [
+      {
+        counter_type: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        count: 1,
+      },
+      {
+        counter_type: 1,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        count: -1,
+      },
+      {
+        counter_type: 1,
+        location: EngineLocation.MONSTER,
+        sequence: -1,
+        count: 1,
+      },
+      { counter_type: 1, location: 999, sequence: 0, count: 1 },
+    ];
+    for (const record of cases) {
+      const value = projector();
+      const before = value.snapshot();
+      expect(() =>
+        value.apply({
+          type: EngineMessageType.ADD_COUNTER,
+          counter_type: record.counter_type,
+          controller: 0,
+          location: record.location as never,
+          sequence: record.sequence,
+          count: record.count,
+        }),
+      ).toThrow();
+      expect(value.snapshot()).toEqual(before);
+    }
+  });
+
+  it("tracks actual one-based chain provenance, phases, and outcomes", () => {
+    const code = 97590747;
+    const value = new DuelStateProjector(
+      snapshotId("chain-projection"),
+      [40, 40],
+      [0, 0],
+      [[], []],
+      {
+        texts: new Map([
+          [
+            code,
+            {
+              code,
+              name: "Visible Source",
+              description: "",
+              strings: ["", "Resolved effect text"],
+            },
+          ],
+        ]),
+        strings: { system: {}, victory: {}, counter: {}, setname: {} },
+      },
+    );
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: code,
+      from: {
+        controller: 0,
+        location: EngineLocation.DECK,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 1,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    const first = value.apply({
+      type: EngineMessageType.CHAINING,
+      code,
+      controller: 0,
+      location: EngineLocation.MONSTER,
+      sequence: 1,
+      position: EnginePosition.FACE_UP_ATTACK,
+      triggering_controller: 1,
+      triggering_location: EngineLocation.HAND,
+      triggering_sequence: 3,
+      description: (BigInt(code) << 20n) | 1n,
+      chain_size: 1,
+    });
+    expect(
+      value.apply({ type: EngineMessageType.CHAINED, chain_size: 1 }).events,
+    ).toEqual([]);
+    const second = value.apply({
+      type: EngineMessageType.CHAINING,
+      code,
+      controller: 0,
+      location: EngineLocation.MONSTER,
+      sequence: 1,
+      position: EnginePosition.FACE_UP_ATTACK,
+      triggering_controller: 0,
+      triggering_location: EngineLocation.MONSTER,
+      triggering_sequence: 1,
+      description: (BigInt(code) << 20n) | 1n,
+      chain_size: 2,
+    });
+    expect(
+      value.apply({ type: EngineMessageType.CHAINED, chain_size: 2 }).events,
+    ).toEqual([]);
+    expect(() =>
+      value.apply({ type: EngineMessageType.CHAINED, chain_size: 1 }),
+    ).toThrow("latest link");
+    expect(first.events).toEqual([{ type: "chainChanged", size: 1 }]);
+    expect(second.events).toEqual([{ type: "chainChanged", size: 2 }]);
+    for (const status of [
+      { type: EngineMessageType.CHAIN_SOLVING, chain_size: 2 },
+      { type: EngineMessageType.CHAIN_NEGATED, chain_size: 2 },
+      { type: EngineMessageType.CHAIN_SOLVED, chain_size: 2 },
+      { type: EngineMessageType.CHAIN_DISABLED, chain_size: 1 },
+      { type: EngineMessageType.CHAIN_SOLVING, chain_size: 1 },
+      { type: EngineMessageType.CHAIN_SOLVED, chain_size: 1 },
+    ] as const)
+      expect(value.apply(status).events).toEqual([]);
+    expect(value.snapshot().chain).toMatchObject([
+      {
+        index: 1,
+        controller: 1,
+        sourceIdentityVisible: true,
+        sourceCard: code,
+        label: "Visible Source",
+        description: "Resolved effect text",
+        phase: "solved",
+        outcome: "disabled",
+      },
+      {
+        index: 2,
+        controller: 0,
+        phase: "solved",
+        outcome: "negated",
+      },
+    ]);
+    expect(() =>
+      value.apply({ type: EngineMessageType.CHAIN_SOLVING, chain_size: 3 }),
+    ).toThrow("unknown link");
+    const ended = value.apply({ type: EngineMessageType.CHAIN_END });
+    expect(ended.events).toEqual([{ type: "chainChanged", size: 0 }]);
+    expect(value.snapshot().chain).toEqual([]);
+    expect(value.apply({ type: EngineMessageType.CHAIN_END }).events).toEqual(
+      [],
+    );
+  });
+
+  it.each([0, 2, 256, 1.5])(
+    "rejects invalid first CHAINING index %s atomically",
+    (chainSize) => {
+      const value = projector();
+      const before = value.snapshot();
+      expect(() =>
+        value.apply({
+          type: EngineMessageType.CHAINING,
+          code: 5053103,
+          controller: 1,
+          location: EngineLocation.HAND,
+          sequence: 0,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+          triggering_controller: 1,
+          triggering_location: EngineLocation.HAND,
+          triggering_sequence: 0,
+          description: 0n,
+          chain_size: chainSize,
+        }),
+      ).toThrow("link index");
+      expect(value.snapshot()).toEqual(before);
+    },
+  );
+
+  it("rejects duplicate and skipped CHAINING indices", () => {
+    const value = projector();
+    const chaining = (chain_size: number) =>
+      ({
+        type: EngineMessageType.CHAINING,
+        code: 5053103,
+        controller: 1 as const,
+        location: EngineLocation.HAND,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+        triggering_controller: 1 as const,
+        triggering_location: EngineLocation.HAND,
+        triggering_sequence: 0,
+        description: 0n,
+        chain_size,
+      }) as const;
+    value.apply(chaining(1));
+    const before = value.snapshot();
+    expect(() => value.apply(chaining(1))).toThrow("link index");
+    expect(value.snapshot()).toEqual(before);
+    expect(() => value.apply(chaining(3))).toThrow("link index");
+    expect(value.snapshot()).toEqual(before);
+  });
+
+  it("resolves a visible overlay material as the chain source", () => {
+    const value = projector();
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 0,
+        location: EngineLocation.DECK,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 5053103,
+      from: {
+        controller: 0,
+        location: EngineLocation.DECK,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+        overlay_sequence: 0,
+      },
+    });
+    const material =
+      value.snapshot().players[0].monsters[0]?.overlayMaterials[0];
+    value.apply({
+      type: EngineMessageType.CHAINING,
+      code: 5053103,
+      controller: 0,
+      location: EngineLocation.MONSTER,
+      sequence: 0,
+      position: EnginePosition.FACE_UP_ATTACK,
+      overlay_sequence: 0,
+      triggering_controller: 0,
+      triggering_location: EngineLocation.MONSTER,
+      triggering_sequence: 0,
+      description: 0n,
+      chain_size: 1,
+    });
+    expect(value.snapshot().chain[0]).toMatchObject({
+      sourceIdentityVisible: true,
+      sourceInstanceId: material?.instanceId,
+      sourceCard: 5053103,
+    });
+  });
+
+  it("keeps concealed overlay chain source generic across clone boundary", () => {
+    const value = projector();
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 1,
+        location: EngineLocation.DECK,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 1,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    value.reconcileOverlayMaterials(
+      {
+        controller: 1,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+      },
+      [{ code: 5053103, identityVisible: false }],
+    );
+    value.apply({
+      type: EngineMessageType.CHAINING,
+      code: 5053103,
+      controller: 1,
+      location: EngineLocation.MONSTER,
+      sequence: 0,
+      position: EnginePosition.FACE_UP_ATTACK,
+      overlay_sequence: 0,
+      triggering_controller: 1,
+      triggering_location: EngineLocation.MONSTER,
+      triggering_sequence: 0,
+      description: BigInt(5053103) << 20n,
+      chain_size: 1,
+    });
+    const parsed = parseDuelWorkerEvent({
+      type: "state",
+      state: value.snapshot(),
+    });
+    if (parsed.type !== "state") throw new Error("State event missing");
+    const link = structuredClone(parsed.state.chain[0]);
+    expect(link).toEqual({
+      index: 1,
+      controller: 1,
+      sourceIdentityVisible: false,
+      label: "Card effect",
+      phase: "pending",
+      outcome: "normal",
+    });
+    expect(JSON.stringify(link)).not.toContain("5053103");
+  });
+
+  it("keeps concealed chain source identity and description out of projection", () => {
+    const code = 5053103;
+    const value = new DuelStateProjector(
+      snapshotId("hidden-chain"),
+      [40, 40],
+      [0, 0],
+      [[], []],
+      {
+        texts: new Map([
+          [
+            code,
+            {
+              code,
+              name: "Private Source",
+              description: "",
+              strings: ["Private effect text"],
+            },
+          ],
+        ]),
+        strings: { system: {}, victory: {}, counter: {}, setname: {} },
+      },
+    );
+    value.apply({
+      type: EngineMessageType.CHAINING,
+      code,
+      controller: 1,
+      location: EngineLocation.HAND,
+      sequence: 0,
+      position: EnginePosition.FACE_DOWN_DEFENSE,
+      triggering_controller: 1,
+      triggering_location: EngineLocation.HAND,
+      triggering_sequence: 0,
+      description: BigInt(code) << 20n,
+      chain_size: 1,
+    });
+    const link = value.snapshot().chain[0];
+    expect(link).toEqual({
+      index: 1,
+      controller: 1,
+      sourceIdentityVisible: false,
+      label: "Card effect",
+      phase: "pending",
+      outcome: "normal",
+    });
+    expect(JSON.stringify(link)).not.toContain(code.toString());
+    expect(JSON.stringify(link)).not.toContain("Private");
   });
 
   it("tracks life points, turns, phases, and core-provided results", () => {

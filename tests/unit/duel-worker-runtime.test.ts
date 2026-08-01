@@ -30,6 +30,24 @@ const WIN_MESSAGE = {
   reason: 1,
 } as const;
 
+const counterReconciliationFailureProgram = () => ({
+  steps: [
+    {
+      status: EngineProcess.WAITING,
+      messages: [
+        {
+          type: EngineMessageType.REMOVE_COUNTER,
+          counter_type: 1,
+          controller: 0 as const,
+          location: EngineLocation.MONSTER,
+          sequence: 0,
+          count: 1,
+        },
+      ],
+    },
+  ],
+});
+
 const reconciliationFailureProgram = () => ({
   steps: [
     {
@@ -572,7 +590,7 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     const cleanupMessage = "expected unrelated cleanup failure";
     const internalCleanup = new Error(cleanupMessage);
     const internalHarness = await createFakeOcgCoreAdapter(
-      reconciliationFailureProgram,
+      counterReconciliationFailureProgram,
       {
         destroyError: internalCleanup,
         queryCard: () => {
@@ -597,7 +615,11 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     expect(aggregate.errors[0]).toBeInstanceOf(DuelOperationError);
     expect(aggregate.errors[1]).toBe(internalCleanup);
     expect(inspect(aggregate, { depth: 8 })).toContain(hiddenSentinel);
+    expect(JSON.stringify(internalEvents)).toContain(
+      "Unable to reconcile counters state",
+    );
     expect(JSON.stringify(internalEvents)).not.toContain(hiddenSentinel);
+    expect(JSON.stringify(internalEvents)).not.toContain(cleanupMessage);
     const internalTrace = await internalRuntime.handle({
       type: "requestDiagnostics",
     });
@@ -605,7 +627,7 @@ describe("DuelWorkerRuntime command lifecycle", () => {
 
     const loggedCleanup = new Error(cleanupMessage);
     const loggedHarness = await createFakeOcgCoreAdapter(
-      reconciliationFailureProgram,
+      counterReconciliationFailureProgram,
       {
         destroyError: loggedCleanup,
         queryCard: () => {
@@ -650,6 +672,10 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     expect(JSON.stringify(logger.error.mock.calls)).not.toContain(
       hiddenSentinel,
     );
+    expect(JSON.stringify(publicEvents)).toContain(
+      "Unable to reconcile counters state",
+    );
+    expect(JSON.stringify(publicEvents)).not.toContain(cleanupMessage);
     expect(JSON.stringify([publicEvents, publicTrace])).not.toContain(
       hiddenSentinel,
     );

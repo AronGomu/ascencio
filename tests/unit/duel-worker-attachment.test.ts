@@ -2,7 +2,10 @@ import { inspect } from "node:util";
 import { describe, expect, it, vi } from "vitest";
 import { DuelOperationError } from "../../src/duel/contracts/duel-error.ts";
 import type { DuelWorkerEvent } from "../../src/duel/contracts/duel-worker-event.ts";
-import { DuelWorkerRuntime } from "../../src/worker/DuelWorkerRuntime.ts";
+import {
+  DuelWorkerRuntime,
+  toDuelError,
+} from "../../src/worker/DuelWorkerRuntime.ts";
 import { routineLogError } from "../../src/worker/duel-errors.ts";
 import {
   attachDuelWorker,
@@ -137,14 +140,14 @@ describe("duel Worker attachment", () => {
     const typedError = new DuelOperationError(
       {
         code: "unsupported_message",
-        message: "Unable to reconcile overlayMaterials state",
+        message: "Unable to reconcile counters state",
         recoverable: false,
       },
       new Error(sentinel),
     );
     const compounded = new AggregateError(
       [typedError, cleanupError],
-      "Unable to reconcile overlayMaterials state; session cleanup failed",
+      "Unable to reconcile counters state; session cleanup failed",
       { cause: typedError },
     );
     const posted: DuelWorkerEvent[] = [];
@@ -167,7 +170,7 @@ describe("duel Worker attachment", () => {
           ],
         });
         return Promise.resolve([
-          { type: "error", error: typedError.duelError },
+          { type: "error", error: toDuelError(compounded) },
         ]);
       },
     );
@@ -201,6 +204,17 @@ describe("duel Worker attachment", () => {
     expect(inspect(logs, { depth: 8 })).toContain(cleanupError.message);
     expect(inspect(logs, { depth: 8 })).not.toContain(sentinel);
     expect(JSON.stringify(logs)).not.toContain(sentinel);
+    expect(posted).toEqual([
+      {
+        type: "error",
+        error: {
+          code: "unsupported_message",
+          message: "Unable to reconcile counters state",
+          recoverable: false,
+        },
+      },
+    ]);
+    expect(JSON.stringify(posted)).not.toContain(cleanupError.message);
     expect(JSON.stringify(posted)).not.toContain(sentinel);
     detach();
   });

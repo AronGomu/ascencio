@@ -48,6 +48,7 @@ const state = {
           sequence: 0,
           position: "faceDownDefense",
           faceUp: false,
+          counters: [],
           overlayMaterials: [],
         },
       ],
@@ -61,6 +62,7 @@ const state = {
           sequence: 0,
           position: "faceDownDefense",
           faceUp: false,
+          counters: [],
           overlayMaterials: [],
         },
       ],
@@ -74,6 +76,7 @@ const state = {
           sequence: 0,
           position: "faceUpAttack",
           faceUp: true,
+          counters: [{ type: 1, name: "Private Counter Name", count: 2 }],
           overlayMaterials: [
             {
               instanceId: cardInstanceId("human-private-material"),
@@ -102,7 +105,16 @@ const state = {
       banished: [],
     },
   ],
-  chain: [],
+  chain: [
+    {
+      index: 1,
+      controller: 0,
+      sourceIdentityVisible: false,
+      label: "Card effect",
+      phase: "pending",
+      outcome: "normal",
+    },
+  ],
 } satisfies PublicDuelState;
 const opponentState = toOpponentVisibleState(state);
 
@@ -193,6 +205,9 @@ describe("BasicOpponentPolicy", () => {
     );
     expect(opponentState.players[0]).not.toHaveProperty("hand");
     expect(opponentState.players[0]).not.toHaveProperty("extraDeck");
+    expect(opponentState.chainSize).toBe(1);
+    expect(JSON.stringify(opponentState)).not.toContain("Private Counter Name");
+    expect(JSON.stringify(opponentState)).not.toContain("Card effect");
   });
 
   it.each([

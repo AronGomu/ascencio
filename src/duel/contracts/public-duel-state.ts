@@ -25,6 +25,13 @@ export type PublicLocation =
   | "banished"
   | "extra";
 
+export interface PublicOverlayMaterial {
+  readonly instanceId: CardInstanceId;
+  readonly code: CardCode;
+  readonly identityVisible: boolean;
+  readonly sequence: number;
+}
+
 export interface PublicCard {
   readonly instanceId: CardInstanceId;
   readonly code?: CardCode;
@@ -34,7 +41,7 @@ export interface PublicCard {
   readonly sequence: number;
   readonly position: CardPosition;
   readonly faceUp: boolean;
-  readonly overlayMaterials: readonly CardInstanceId[];
+  readonly overlayMaterials: readonly PublicOverlayMaterial[];
 }
 
 export interface PublicPlayerState {
@@ -44,6 +51,7 @@ export interface PublicPlayerState {
   readonly extraDeckCount: number;
   readonly handCount: number;
   readonly hand: readonly PublicCard[];
+  readonly extraDeck: readonly PublicCard[];
   readonly monsters: readonly PublicCard[];
   readonly spellsAndTraps: readonly PublicCard[];
   readonly graveyard: readonly PublicCard[];

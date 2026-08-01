@@ -47,6 +47,7 @@ const examples: readonly (DuelCommand | DuelWorkerEvent)[] = [
           extraDeckCount: 0,
           handCount: 0,
           hand: [],
+          extraDeck: [],
           monsters: [],
           spellsAndTraps: [],
           graveyard: [],
@@ -59,6 +60,7 @@ const examples: readonly (DuelCommand | DuelWorkerEvent)[] = [
           extraDeckCount: 0,
           handCount: 5,
           hand: [],
+          extraDeck: [],
           monsters: [],
           spellsAndTraps: [],
           graveyard: [],
@@ -278,6 +280,216 @@ describe("Worker contracts", () => {
         },
       }),
     ).toThrow(/identity privacy/);
+  });
+
+  it("enforces Extra/material privacy, uniqueness, shallow shape, and global bounds", () => {
+    const baseEvent = structuredClone(
+      examples.find((example) => example.type === "state"),
+    );
+    if (baseEvent?.type !== "state") throw new Error("State fixture missing");
+    const hiddenOpponentExtra = {
+      instanceId: cardInstanceId("opponent-hidden-extra"),
+      owner: 1 as const,
+      controller: 1 as const,
+      location: "extra" as const,
+      sequence: 0,
+      position: "faceDownDefense" as const,
+      faceUp: false,
+      overlayMaterials: [],
+    };
+    const opponent = baseEvent.state.players[1] as unknown as Record<
+      string,
+      unknown
+    >;
+    opponent.extraDeckCount = 1;
+    opponent.extraDeck = [hiddenOpponentExtra];
+    const parsed = parseDuelWorkerEvent(baseEvent);
+    expect(structuredClone(parsed)).toEqual(parsed);
+    const missingCollection = structuredClone(baseEvent) as unknown as Record<
+      string,
+      unknown
+    >;
+    const missingPlayer = (
+      (missingCollection.state as Record<string, unknown>).players as Record<
+        string,
+        unknown
+      >[]
+    )[0]!;
+    delete missingPlayer.extraDeck;
+    expect(() => parseDuelWorkerEvent(missingCollection)).toThrow(/extraDeck/);
+
+    const leaked = structuredClone(baseEvent);
+    if (leaked.type !== "state") throw new Error("State fixture missing");
+    const leakedOpponent = leaked.state.players[1] as unknown as Record<
+      string,
+      unknown
+    >;
+    leakedOpponent.extraDeck = [
+      { ...hiddenOpponentExtra, code: cardCode(5053103) },
+    ];
+    expect(() => parseDuelWorkerEvent(leaked)).toThrow(/code privacy/);
+
+    const duplicate = structuredClone(baseEvent);
+    if (duplicate.type !== "state") throw new Error("State fixture missing");
+    const duplicateHuman = duplicate.state.players[0] as unknown as Record<
+      string,
+      unknown
+    >;
+    duplicateHuman.monsters = [
+      {
+        instanceId: cardInstanceId("host"),
+        code: cardCode(97590747),
+        owner: 0,
+        controller: 0,
+        location: "monster",
+        sequence: 0,
+        position: "faceUpAttack",
+        faceUp: true,
+        overlayMaterials: [
+          {
+            instanceId: cardInstanceId("host"),
+            code: cardCode(5053103),
+            identityVisible: true,
+            sequence: 0,
+          },
+        ],
+      },
+    ];
+    expect(() => parseDuelWorkerEvent(duplicate)).toThrow(/duplicate/);
+
+    const nested = structuredClone(duplicate) as unknown as Record<
+      string,
+      unknown
+    >;
+    const nestedMaterial = (
+      (
+        (nested.state as Record<string, unknown>).players as Record<
+          string,
+          unknown
+        >[]
+      )[0]!.monsters as Record<string, unknown>[]
+    )[0]!.overlayMaterials as Record<string, unknown>[];
+    nestedMaterial[0]!.instanceId = "material";
+    nestedMaterial[0]!.overlayMaterials = [];
+    expect(() => parseDuelWorkerEvent(nested)).toThrow(/overlayMaterials/);
+
+    const tooMany = structuredClone(baseEvent);
+    if (tooMany.type !== "state") throw new Error("State fixture missing");
+    const makeCard = (index: number, location: "hand" | "graveyard") => ({
+      instanceId: cardInstanceId(`bounded-${location}-${index}`),
+      code: cardCode(97590747),
+      owner: 0 as const,
+      controller: 0 as const,
+      location,
+      sequence: index,
+      position: "faceUpAttack" as const,
+      faceUp: true,
+      overlayMaterials: [],
+    });
+    const manyHuman = tooMany.state.players[0] as unknown as Record<
+      string,
+      unknown
+    >;
+    manyHuman.handCount = 128;
+    manyHuman.hand = Array.from({ length: 128 }, (_, index) =>
+      makeCard(index, "hand"),
+    );
+    manyHuman.graveyard = Array.from({ length: 129 }, (_, index) =>
+      makeCard(index, "graveyard"),
+    );
+    expect(() => parseDuelWorkerEvent(tooMany)).toThrow(/instance limit/);
+  });
+
+  it("rejects inconsistent Extra collections and overlay material shapes", () => {
+    const fixture = structuredClone(
+      examples.find((example) => example.type === "state"),
+    );
+    if (fixture?.type !== "state") throw new Error("State fixture missing");
+    const own = fixture.state.players[0] as unknown as Record<string, unknown>;
+    const ownExtra = {
+      instanceId: cardInstanceId("own-extra"),
+      code: cardCode(97590747),
+      owner: 0,
+      controller: 0,
+      location: "extra",
+      sequence: 0,
+      position: "faceDownDefense",
+      faceUp: false,
+      overlayMaterials: [],
+    };
+
+    own.extraDeckCount = 2;
+    own.extraDeck = [ownExtra];
+    expect(() => parseDuelWorkerEvent(fixture)).toThrow(
+      /complete own collection/,
+    );
+
+    own.extraDeckCount = 1;
+    own.extraDeck = [{ ...ownExtra, owner: 1 }];
+    expect(() => parseDuelWorkerEvent(fixture)).toThrow(/owner/);
+
+    own.extraDeck = [{ ...ownExtra, sequence: 1 }];
+    expect(() => parseDuelWorkerEvent(fixture)).toThrow(/sequence order/);
+    own.extraDeckCount = 0;
+    own.extraDeck = [];
+
+    const opponent = fixture.state.players[1] as unknown as Record<
+      string,
+      unknown
+    >;
+    opponent.extraDeckCount = 0;
+    opponent.extraDeck = [
+      {
+        ...ownExtra,
+        instanceId: cardInstanceId("opponent-extra"),
+        owner: 1,
+        controller: 1,
+        code: undefined,
+      },
+    ];
+    expect(() => parseDuelWorkerEvent(fixture)).toThrow(/extraDeck count/);
+
+    own.extraDeckCount = 0;
+    own.extraDeck = [];
+    opponent.extraDeck = [];
+    const host = {
+      instanceId: cardInstanceId("material-host"),
+      code: cardCode(97590747),
+      owner: 0,
+      controller: 0,
+      location: "monster",
+      sequence: 0,
+      position: "faceUpAttack",
+      faceUp: true,
+      overlayMaterials: [
+        {
+          instanceId: cardInstanceId("material"),
+          code: cardCode(5053103),
+          identityVisible: false,
+          sequence: 0,
+        },
+      ],
+    };
+    own.monsters = [host];
+    const material = host.overlayMaterials[0] as Record<string, unknown>;
+    for (const key of ["code", "identityVisible"] as const) {
+      const original = material[key];
+      delete material[key];
+      expect(() => parseDuelWorkerEvent(fixture)).toThrow(
+        new RegExp(`${key}$`),
+      );
+      material[key] = original;
+    }
+    for (const key of ["owner", "controller"] as const) {
+      material[key] = 0;
+      expect(() => parseDuelWorkerEvent(fixture)).toThrow(
+        new RegExp(`${key}$`),
+      );
+      delete material[key];
+    }
+
+    host.overlayMaterials[0]!.sequence = 1;
+    expect(() => parseDuelWorkerEvent(fixture)).toThrow(/sequence order/);
   });
 
   it("returns a detached validated value rather than the untrusted input", () => {

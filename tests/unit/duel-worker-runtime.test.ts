@@ -1,5 +1,7 @@
+import { inspect } from "node:util";
 import { describe, expect, it, vi } from "vitest";
 import {
+  DuelOperationError,
   duelOperationError,
   type DuelErrorCode,
 } from "../../src/duel/contracts/duel-error.ts";
@@ -16,7 +18,9 @@ import {
 } from "../../src/worker/DuelWorkerRuntime.ts";
 import { EngineInitializationError } from "../../src/worker/engine/OcgCoreAdapter.ts";
 import {
+  EngineLocation,
   EngineMessageType,
+  EnginePosition,
   EngineProcess,
 } from "../../src/worker/engine/engine-constants.ts";
 
@@ -25,6 +29,49 @@ const WIN_MESSAGE = {
   player: 1,
   reason: 1,
 } as const;
+
+const reconciliationFailureProgram = () => ({
+  steps: [
+    {
+      status: EngineProcess.WAITING,
+      messages: [
+        {
+          type: EngineMessageType.MOVE,
+          card: 97590747,
+          from: {
+            controller: 0 as const,
+            location: EngineLocation.DECK,
+            sequence: 0,
+            position: EnginePosition.FACE_DOWN_DEFENSE,
+          },
+          to: {
+            controller: 0 as const,
+            location: EngineLocation.MONSTER,
+            sequence: 0,
+            position: EnginePosition.FACE_UP_ATTACK,
+          },
+        },
+        {
+          type: EngineMessageType.MOVE,
+          card: 5053103,
+          from: {
+            controller: 0 as const,
+            location: EngineLocation.DECK,
+            sequence: 1,
+            position: EnginePosition.FACE_DOWN_DEFENSE,
+          },
+          to: {
+            controller: 0 as const,
+            location: EngineLocation.MONSTER,
+            sequence: 0,
+            position: EnginePosition.FACE_UP_ATTACK,
+            overlay_sequence: 0,
+          },
+        },
+      ],
+    },
+  ],
+});
 
 describe("DuelWorkerRuntime command lifecycle", () => {
   it("does not report a terminal controller failure as recoverable input", () => {
@@ -446,6 +493,166 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     expect(diagnostics.trace.entries.length).toBeGreaterThan(0);
     expect(JSON.stringify(diagnostics.trace)).not.toContain("wasmBinary");
     runtime.dispose();
+  });
+
+  it("keeps reconciliation causes internal while routine Worker logs stay sanitized", async () => {
+    const hiddenSentinel = "private-reconciliation-card-5053103";
+    const harness = await createFakeOcgCoreAdapter(
+      reconciliationFailureProgram,
+      {
+        queryCard: () => {
+          throw new Error(hiddenSentinel);
+        },
+      },
+    );
+
+    const internalRuntime = new DuelWorkerRuntime(async () =>
+      createResources(harness.adapter),
+    );
+    await internalRuntime.handle({ type: "initialize" });
+    let internalFailure: unknown;
+    const internalEvents = await internalRuntime.handle(
+      { type: "startDuel", duelId: FAKE_PRESET.id },
+      undefined,
+      (error) => {
+        internalFailure = error;
+      },
+    );
+    expect(internalFailure).toBeInstanceOf(DuelOperationError);
+    expect(inspect(internalFailure, { depth: 8 })).toContain(hiddenSentinel);
+    expect(JSON.stringify(internalEvents)).not.toContain(hiddenSentinel);
+    const internalTrace = await internalRuntime.handle({
+      type: "requestDiagnostics",
+    });
+    expect(JSON.stringify(internalTrace)).not.toContain(hiddenSentinel);
+    internalRuntime.dispose();
+
+    const logger = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    };
+    const loggedRuntime = new DuelWorkerRuntime(
+      async () => createResources(harness.adapter),
+      { logger },
+    );
+    await loggedRuntime.handle({ type: "initialize" });
+    const publicEvents = await loggedRuntime.handle({
+      type: "startDuel",
+      duelId: FAKE_PRESET.id,
+    });
+    const publicTrace = await loggedRuntime.handle({
+      type: "requestDiagnostics",
+    });
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "duel.worker.command.failed",
+        err: expect.objectContaining({
+          name: "DuelOperationError",
+          message: "Unable to reconcile overlayMaterials state",
+          code: "unsupported_message",
+        }),
+      }),
+    );
+    expect(inspect(logger.error.mock.calls, { depth: 8 })).not.toContain(
+      hiddenSentinel,
+    );
+    expect(JSON.stringify(logger.error.mock.calls)).not.toContain(
+      hiddenSentinel,
+    );
+    expect(JSON.stringify([publicEvents, publicTrace])).not.toContain(
+      hiddenSentinel,
+    );
+    loggedRuntime.dispose();
+  });
+
+  it("sanitizes reconciliation causes nested by cleanup failure in routine logs", async () => {
+    const hiddenSentinel = "private-structural-cause-5053103";
+    const cleanupMessage = "expected unrelated cleanup failure";
+    const internalCleanup = new Error(cleanupMessage);
+    const internalHarness = await createFakeOcgCoreAdapter(
+      reconciliationFailureProgram,
+      {
+        destroyError: internalCleanup,
+        queryCard: () => {
+          throw new Error(hiddenSentinel);
+        },
+      },
+    );
+    const internalRuntime = new DuelWorkerRuntime(async () =>
+      createResources(internalHarness.adapter),
+    );
+    await internalRuntime.handle({ type: "initialize" });
+    let internalFailure: unknown;
+    const internalEvents = await internalRuntime.handle(
+      { type: "startDuel", duelId: FAKE_PRESET.id },
+      undefined,
+      (error) => {
+        internalFailure = error;
+      },
+    );
+    expect(internalFailure).toBeInstanceOf(AggregateError);
+    const aggregate = internalFailure as AggregateError;
+    expect(aggregate.errors[0]).toBeInstanceOf(DuelOperationError);
+    expect(aggregate.errors[1]).toBe(internalCleanup);
+    expect(inspect(aggregate, { depth: 8 })).toContain(hiddenSentinel);
+    expect(JSON.stringify(internalEvents)).not.toContain(hiddenSentinel);
+    const internalTrace = await internalRuntime.handle({
+      type: "requestDiagnostics",
+    });
+    expect(JSON.stringify(internalTrace)).not.toContain(hiddenSentinel);
+
+    const loggedCleanup = new Error(cleanupMessage);
+    const loggedHarness = await createFakeOcgCoreAdapter(
+      reconciliationFailureProgram,
+      {
+        destroyError: loggedCleanup,
+        queryCard: () => {
+          throw new Error(hiddenSentinel);
+        },
+      },
+    );
+    const logger = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    };
+    const loggedRuntime = new DuelWorkerRuntime(
+      async () => createResources(loggedHarness.adapter),
+      { logger },
+    );
+    await loggedRuntime.handle({ type: "initialize" });
+    const publicEvents = await loggedRuntime.handle({
+      type: "startDuel",
+      duelId: FAKE_PRESET.id,
+    });
+    const publicTrace = await loggedRuntime.handle({
+      type: "requestDiagnostics",
+    });
+    const commandFailure = logger.error.mock.calls.find(
+      ([entry]) => entry.event === "duel.worker.command.failed",
+    );
+    expect(commandFailure).toBeDefined();
+    const loggedError = commandFailure?.[0].err as {
+      readonly errors: readonly unknown[];
+    };
+    expect(Object.isFrozen(loggedError)).toBe(true);
+    expect(Object.isFrozen(loggedError.errors)).toBe(true);
+    expect(loggedError.errors[1]).toBe(loggedCleanup);
+    expect(inspect(logger.error.mock.calls, { depth: 8 })).toContain(
+      cleanupMessage,
+    );
+    expect(inspect(logger.error.mock.calls, { depth: 8 })).not.toContain(
+      hiddenSentinel,
+    );
+    expect(JSON.stringify(logger.error.mock.calls)).not.toContain(
+      hiddenSentinel,
+    );
+    expect(JSON.stringify([publicEvents, publicTrace])).not.toContain(
+      hiddenSentinel,
+    );
   });
 
   it("releases a failed controller so a later duel can start cleanly", async () => {

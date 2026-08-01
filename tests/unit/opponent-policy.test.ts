@@ -36,7 +36,7 @@ const state = {
       player: 0,
       lifePoints: 8000,
       deckCount: 35,
-      extraDeckCount: 0,
+      extraDeckCount: 1,
       handCount: 5,
       hand: [
         {
@@ -51,7 +51,39 @@ const state = {
           overlayMaterials: [],
         },
       ],
-      monsters: [],
+      extraDeck: [
+        {
+          instanceId: cardInstanceId("human-private-extra"),
+          code: cardCode(5053103),
+          owner: 0,
+          controller: 0,
+          location: "extra",
+          sequence: 0,
+          position: "faceDownDefense",
+          faceUp: false,
+          overlayMaterials: [],
+        },
+      ],
+      monsters: [
+        {
+          instanceId: cardInstanceId("human-private-host"),
+          code: cardCode(97590747),
+          owner: 0,
+          controller: 0,
+          location: "monster",
+          sequence: 0,
+          position: "faceUpAttack",
+          faceUp: true,
+          overlayMaterials: [
+            {
+              instanceId: cardInstanceId("human-private-material"),
+              code: cardCode(5053103),
+              identityVisible: false,
+              sequence: 0,
+            },
+          ],
+        },
+      ],
       spellsAndTraps: [],
       graveyard: [],
       banished: [],
@@ -63,6 +95,7 @@ const state = {
       extraDeckCount: 0,
       handCount: 5,
       hand: [],
+      extraDeck: [],
       monsters: [],
       spellsAndTraps: [],
       graveyard: [],
@@ -153,7 +186,13 @@ describe("BasicOpponentPolicy", () => {
   it("never receives human card identities", () => {
     expect(opponentState.players[0].handCount).toBe(5);
     expect(JSON.stringify(opponentState)).not.toContain("97590747");
+    expect(JSON.stringify(opponentState)).not.toContain("5053103");
+    expect(JSON.stringify(opponentState)).not.toContain("human-private-extra");
+    expect(JSON.stringify(opponentState)).not.toContain(
+      "human-private-material",
+    );
     expect(opponentState.players[0]).not.toHaveProperty("hand");
+    expect(opponentState.players[0]).not.toHaveProperty("extraDeck");
   });
 
   it.each([

@@ -1,6 +1,7 @@
 import { parseDuelCommand } from "../duel/contracts/duel-command.ts";
 import type { DuelWorkerEvent } from "../duel/contracts/duel-worker-event.ts";
 import { toDuelError, type DuelWorkerRuntime } from "./DuelWorkerRuntime.ts";
+import { routineLogError } from "./duel-errors.ts";
 import {
   safeWorkerLogger,
   workerLog,
@@ -71,7 +72,7 @@ export function attachDuelWorker(
           ...(context.traceTail === undefined
             ? {}
             : { traceTail: context.traceTail }),
-          err: error,
+          err: routineLogError(error),
         });
       })
       .then((messages) => {
@@ -100,7 +101,7 @@ export function attachDuelWorker(
         logger.error({
           event: "duel.worker.command.failed",
           commandType: command.type,
-          err: error,
+          err: routineLogError(error),
         });
         post({ type: "error", error: toDuelError(error) });
         reportReplacementRequired();

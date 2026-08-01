@@ -102,7 +102,7 @@ DF-00 → DF-01 → DF-02 → DF-03 → DF-04 → DF-05 → DF-06 → DF-07 → 
 - [x] DF-00
 - [x] DF-01
 - [x] DF-02
-- [ ] DF-03
+- [x] DF-03
 - [ ] DF-04
 - [ ] DF-05
 - [ ] DF-06
@@ -390,16 +390,16 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-- [ ] **Red:** add parsed-message/projector fixtures for attach material, multiple materials, detach, host move, hidden/public transitions.
-- [ ] Assert material never appears simultaneously as top-level field card and overlay.
-- [ ] Add own Extra Deck count decrement/increment and ordered-collection fixtures plus opponent face-up/face-down Extra fixtures. Overlay identity may remain in clone-safe state, but presentation visibility must be explicit and hidden identity must not reach image requests or routine diagnostics.
-- [ ] Define overlay material as exactly `{ instanceId, sequence, code, identityVisible }`; host carries placement controller, and material owner is not guessed. Extend the one-instance invariant across top-level cards, Extra collections, and materials.
-- [ ] Add Worker-only query access from `OcgCoreAdapter` through `DuelSession` to `HeadlessDuelController`/projector reconciliation. Trigger reconciliation after every `MOVE` touching overlay or Extra. For overlays, use host `overlayCards` as authoritative count/order/code evidence. Use valid code-consistent detailed queries only to enrich `identityVisible`; empty, unavailable, malformed, or contradictory detail falls back to prior visibility, then own-host visible/opponent-host hidden. Invalid host material lists emit a sanitized diagnostic followed by deterministic terminal failure; publish no partial snapshot.
-- [ ] **Green:** classify overlay move/query records in adapter; attach/detach by stable instance identity/order, including duplicate codes by ordinal.
-- [ ] Seed own Extra identities only from trusted preset order; query evidence controls live collection/count. Existing Extra presentation filtering remains independent from overlay internal identity retention.
-- [ ] Extend `parseDuelWorkerEvent` exact-key/size/visibility validation; reject material owner/controller keys.
-- [ ] Adapt opponent-visible state so policy receives no hidden identities and cannot cheat.
-- [ ] Add a real-WASM attachment scenario proving successful host-list fallback without changing `ocgcore`.
+- [x] **Red:** add parsed-message/projector fixtures for attach material, multiple materials, detach, host move, hidden/public transitions.
+- [x] Assert material never appears simultaneously as top-level field card and overlay.
+- [x] Add own Extra Deck count decrement/increment and ordered-collection fixtures plus opponent face-up/face-down Extra fixtures. Overlay identity may remain in clone-safe state, but presentation visibility must be explicit and hidden identity must not reach image requests or routine diagnostics.
+- [x] Define overlay material as exactly `{ instanceId, sequence, code, identityVisible }`; host carries placement controller, and material owner is not guessed. Extend the one-instance invariant across top-level cards, Extra collections, and materials.
+- [x] Add Worker-only query access from `OcgCoreAdapter` through `DuelSession` to `HeadlessDuelController`/projector reconciliation. Trigger reconciliation after every `MOVE` touching overlay or Extra. For overlays, use host `overlayCards` as authoritative count/order/code evidence. Use valid code-consistent detailed queries only to enrich `identityVisible`; empty, unavailable, malformed, or contradictory detail falls back to prior visibility, then own-host visible/opponent-host hidden. Invalid host material lists emit a sanitized diagnostic followed by deterministic terminal failure; publish no partial snapshot.
+- [x] **Green:** classify overlay move/query records in adapter; attach/detach by stable instance identity/order, including duplicate codes by ordinal.
+- [x] Seed own Extra identities only from trusted preset order; query evidence controls live collection/count. Existing Extra presentation filtering remains independent from overlay internal identity retention.
+- [x] Extend `parseDuelWorkerEvent` exact-key/size/visibility validation; reject material owner/controller keys.
+- [x] Adapt opponent-visible state so policy receives no hidden identities and cannot cheat.
+- [x] Add a real-WASM attachment scenario proving successful host-list fallback without changing `ocgcore`.
 
 ### Outputs
 
@@ -409,11 +409,11 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- [ ] New projector/contract fixtures green.
-- [ ] One physical instance invariant includes top-level cards, materials, and Extra collection; Extra count decrement/increment stays atomic with collection changes.
-- [ ] Hidden overlay code plus `identityVisible: false` survive `structuredClone`/JSON while opponent policy and sanitized diagnostics exclude that identity.
-- [ ] Real-WASM overlay attachment reconciles successfully through host-list fallback.
-- [ ] `npm run test:unit && npm run test:integration && npm run typecheck` green.
+- [x] New projector/contract fixtures green.
+- [x] One physical instance invariant includes top-level cards, materials, and Extra collection; Extra count decrement/increment stays atomic with collection changes.
+- [x] Hidden overlay code plus `identityVisible: false` survive `structuredClone`/JSON while opponent policy and sanitized diagnostics exclude that identity.
+- [x] Real-WASM overlay attachment reconciles successfully through host-list fallback.
+- [x] `npm run test:unit && npm run test:integration && npm run typecheck` green.
 
 ---
 

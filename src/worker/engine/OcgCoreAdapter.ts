@@ -7,6 +7,9 @@ import createCore, {
   type OcgDuelHandle,
   type OcgMessage,
   type OcgNewCardInfo,
+  type OcgQuery,
+  type OcgQueryLocation,
+  type OcgCardQueryInfo,
   type OcgRace,
   type OcgResponse,
   type SelectFieldPlace,
@@ -24,6 +27,10 @@ export type EngineResponse = OcgResponse;
 export type EngineAttribute = OcgAttribute;
 export type EngineRace = OcgRace;
 export type EngineFieldPlace = SelectFieldPlace;
+export type EngineCardQuery = OcgQuery;
+export type EngineCardQueryResult = Partial<OcgCardQueryInfo> | null;
+export type EngineLocationQuery = OcgQueryLocation;
+export type EngineLocationQueryResult = EngineCardQueryResult[];
 
 export interface EngineCardData {
   readonly code: number;
@@ -168,11 +175,26 @@ export class OcgCoreAdapter {
     return this.#core.duelQueryField(handle);
   }
 
+  queryCard(
+    handle: EngineDuelHandle,
+    query: EngineCardQuery,
+  ): EngineCardQueryResult {
+    try {
+      return this.#core.duelQuery(handle, query);
+    } catch (error) {
+      throw operationError("query core card", error);
+    }
+  }
+
   queryLocation(
     handle: EngineDuelHandle,
-    query: Parameters<OcgCoreSync["duelQueryLocation"]>[1],
-  ): ReturnType<OcgCoreSync["duelQueryLocation"]> {
-    return this.#core.duelQueryLocation(handle, query);
+    query: EngineLocationQuery,
+  ): EngineLocationQueryResult {
+    try {
+      return this.#core.duelQueryLocation(handle, query);
+    } catch (error) {
+      throw operationError("query core location", error);
+    }
   }
 }
 

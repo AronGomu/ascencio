@@ -15,6 +15,7 @@ import type {
   PublicCard,
   PublicDuelState,
   PublicLocation,
+  PublicOverlayMaterial,
   PublicPlayerState,
 } from "../../duel/contracts/public-duel-state.ts";
 import {
@@ -25,6 +26,14 @@ import {
 } from "../engine/engine-constants.ts";
 import type { EngineMessage } from "../engine/OcgCoreAdapter.ts";
 
+interface MutableOverlayMaterial {
+  instanceId: CardInstanceId;
+  code: CardCode;
+  identityVisible: boolean;
+  sequence: number;
+  owner?: PlayerIndex;
+}
+
 interface MutableCard {
   instanceId: CardInstanceId;
   code?: CardCode;
@@ -34,12 +43,18 @@ interface MutableCard {
   sequence: number;
   position: CardPosition;
   faceUp: boolean;
-  overlayMaterials: CardInstanceId[];
+  overlayMaterials: MutableOverlayMaterial[];
 }
 
 interface MovedCard {
   readonly card?: CardCode;
   readonly instanceId?: CardInstanceId;
+}
+
+interface OverlayMoveUpdate {
+  readonly moved: MovedCard;
+  readonly failure?:
+    "source_unavailable" | "destination_unavailable" | "nested_materials";
 }
 
 interface MutablePlayer {
@@ -48,14 +63,40 @@ interface MutablePlayer {
   extraDeckCount: number;
   handCount: number;
   hand: MutableCard[];
+  extraDeck: MutableCard[];
   monsters: MutableCard[];
   spellsAndTraps: MutableCard[];
   graveyard: MutableCard[];
   banished: MutableCard[];
 }
 
+export interface EngineCardAddress {
+  readonly controller: PlayerIndex;
+  readonly location: number;
+  readonly sequence: number;
+}
+
+export interface QueriedPublicCard {
+  readonly code?: number;
+  readonly owner: PlayerIndex;
+  readonly position: number;
+  readonly isPublic: boolean;
+  readonly isHidden: boolean;
+}
+
+export interface QueriedOverlayMaterial {
+  readonly code: number;
+  readonly identityVisible?: boolean;
+}
+
+export type ProjectionReconciliationRequest =
+  | { readonly type: "extraDeck"; readonly player: PlayerIndex }
+  | ({ readonly type: "overlayMaterials" } & EngineCardAddress);
+
 export interface ProjectionUpdate {
   readonly events: readonly DuelPresentationEvent[];
+  readonly reconciliationRequests: readonly ProjectionReconciliationRequest[];
+  readonly reconciliationFailure?: OverlayMoveUpdate["failure"];
   readonly result?: DuelResult;
 }
 
@@ -73,16 +114,25 @@ export class DuelStateProjector {
     snapshotId: SnapshotId,
     deckCounts: readonly [number, number],
     extraDeckCounts: readonly [number, number],
+    initialExtraDeckOrders: readonly [
+      readonly CardCode[],
+      readonly CardCode[],
+    ] = [[], []],
   ) {
     this.#snapshotId = snapshotId;
     this.#players = [
       mutablePlayer(deckCounts[0], extraDeckCounts[0]),
       mutablePlayer(deckCounts[1], extraDeckCounts[1]),
     ];
+    if (initialExtraDeckOrders[0].length !== extraDeckCounts[0])
+      throw new Error("Own Extra Deck seed does not match its count");
+    this.#seedOwnExtraDeck(initialExtraDeckOrders[0]);
   }
 
   apply(message: EngineMessage): ProjectionUpdate {
     const events: DuelPresentationEvent[] = [];
+    const reconciliationRequests: ProjectionReconciliationRequest[] = [];
+    let reconciliationFailure: OverlayMoveUpdate["failure"];
     let result: DuelResult | undefined;
 
     switch (message.type) {
@@ -124,7 +174,18 @@ export class DuelStateProjector {
         break;
       }
       case EngineMessageType.MOVE: {
-        const moved = this.#move(message.card, message.from, message.to);
+        const overlayMove =
+          isOverlayAddress(message.from) || isOverlayAddress(message.to);
+        const overlayUpdate = overlayMove
+          ? this.#moveOverlay(message.card, message.from, message.to)
+          : undefined;
+        const moved =
+          overlayUpdate?.moved ??
+          this.#move(message.card, message.from, message.to);
+        reconciliationFailure = overlayUpdate?.failure;
+        reconciliationRequests.push(
+          ...reconciliationRequestsForMove(message.from, message.to),
+        );
         events.push({
           type: "cardMoved",
           ...(moved.card === undefined ? {} : { card: moved.card }),
@@ -268,8 +329,122 @@ export class DuelStateProjector {
         break;
     }
 
-    this.#revision += 1;
-    return result === undefined ? { events } : { events, result };
+    if (reconciliationFailure === undefined) this.#revision += 1;
+    const requests = Object.freeze(reconciliationRequests);
+    return result === undefined
+      ? {
+          events,
+          reconciliationRequests: requests,
+          ...(reconciliationFailure === undefined
+            ? {}
+            : { reconciliationFailure }),
+        }
+      : {
+          events,
+          reconciliationRequests: requests,
+          ...(reconciliationFailure === undefined
+            ? {}
+            : { reconciliationFailure }),
+          result,
+        };
+  }
+
+  reconcileExtraDeck(
+    player: PlayerIndex,
+    records: readonly QueriedPublicCard[],
+  ): void {
+    const state = this.#players[player];
+    const previous = state.extraDeck;
+    const previousCount = state.extraDeckCount;
+    const previousCardSequence = this.#cardSequence;
+    try {
+      if (records.length > 256)
+        throw new Error("Extra Deck query exceeds physical instance limit");
+      const remaining = [...state.extraDeck];
+      const next: MutableCard[] = [];
+      for (const [sequence, record] of records.entries()) {
+        if (record.owner !== player)
+          throw new Error("Extra Deck query owner does not match player");
+        const position = enginePosition(record.position);
+        const publicOpponentCard =
+          player === 1 && record.isPublic && isFaceUp(record.position);
+        if (player === 1 && !publicOpponentCard) continue;
+        if (record.code === undefined || record.code <= 0) {
+          if (player === 0)
+            throw new Error("Own Extra Deck query omitted card code");
+          throw new Error("Public opponent Extra Deck query omitted card code");
+        }
+        const code = cardCode(record.code);
+        const previousIndex = remaining.findIndex((card) => card.code === code);
+        const [matched] =
+          previousIndex < 0 ? [] : remaining.splice(previousIndex, 1);
+        next.push({
+          instanceId: matched?.instanceId ?? this.#nextInstanceId(),
+          code,
+          owner: record.owner,
+          controller: player,
+          location: "extra",
+          sequence,
+          position,
+          faceUp: isFaceUp(record.position),
+          overlayMaterials: [],
+        });
+      }
+      state.extraDeck = next;
+      state.extraDeckCount = records.length;
+      this.snapshot();
+    } catch (error) {
+      state.extraDeck = previous;
+      state.extraDeckCount = previousCount;
+      this.#cardSequence = previousCardSequence;
+      throw error;
+    }
+  }
+
+  reconcileOverlayMaterials(
+    address: EngineCardAddress,
+    records: readonly QueriedOverlayMaterial[],
+  ): void {
+    const player = this.#players[address.controller];
+    const location = engineLocation(address.location);
+    const host = findPublicCard(player, location, address.sequence);
+    if (host === undefined || location !== "monster")
+      throw new Error("Overlay reconciliation host is unavailable");
+    const previous = host.overlayMaterials;
+    const previousCardSequence = this.#cardSequence;
+    try {
+      if (records.length > 256)
+        throw new Error("Overlay query exceeds physical instance limit");
+      const remaining = [...host.overlayMaterials];
+      const next: MutableOverlayMaterial[] = records.map((record, sequence) => {
+        if (!Number.isSafeInteger(record.code) || record.code <= 0)
+          throw new Error(
+            "Overlay host query returned an invalid material code",
+          );
+        const code = cardCode(record.code);
+        const previousIndex = remaining.findIndex(
+          (material) => material.code === code,
+        );
+        const [matched] =
+          previousIndex < 0 ? [] : remaining.splice(previousIndex, 1);
+        return {
+          instanceId: matched?.instanceId ?? this.#nextInstanceId(),
+          code,
+          identityVisible:
+            record.identityVisible ??
+            matched?.identityVisible ??
+            address.controller === 0,
+          sequence,
+          ...(matched?.owner === undefined ? {} : { owner: matched.owner }),
+        };
+      });
+      host.overlayMaterials = next;
+      this.snapshot();
+    } catch (error) {
+      host.overlayMaterials = previous;
+      this.#cardSequence = previousCardSequence;
+      throw error;
+    }
   }
 
   snapshot(): PublicDuelState {
@@ -279,13 +454,20 @@ export class DuelStateProjector {
     ];
     const allVisibleCards = players.flatMap((player) => [
       ...player.hand,
+      ...player.extraDeck,
       ...player.monsters,
       ...player.spellsAndTraps,
       ...player.graveyard,
       ...player.banished,
     ]);
-    const ids = new Set(allVisibleCards.map((card) => card.instanceId));
-    if (ids.size !== allVisibleCards.length)
+    const allInstanceIds = allVisibleCards.flatMap((card) => [
+      card.instanceId,
+      ...card.overlayMaterials.map((material) => material.instanceId),
+    ]);
+    if (allInstanceIds.length > 256)
+      throw new Error("Public state exceeds 256 physical card instances");
+    const ids = new Set(allInstanceIds);
+    if (ids.size !== allInstanceIds.length)
       throw new Error("A card instance occupies multiple public zones");
 
     return Object.freeze({
@@ -403,6 +585,8 @@ export class DuelStateProjector {
       if (fromLocation === "deck")
         fromPlayer.deckCount = Math.max(0, fromPlayer.deckCount - 1);
     }
+    if (fromLocation === "extra")
+      fromPlayer.extraDeckCount = Math.max(0, fromPlayer.extraDeckCount - 1);
     const priorInstanceId = card.instanceId;
     const priorCode = card.code;
 
@@ -417,6 +601,7 @@ export class DuelStateProjector {
 
     const stored = insertPublicCard(toPlayer, toLocation, to.sequence, card);
     if (!stored && toLocation === "deck") toPlayer.deckCount += 1;
+    if (toLocation === "extra") toPlayer.extraDeckCount += 1;
     fromPlayer.handCount = fromPlayer.hand.length;
     toPlayer.handCount = toPlayer.hand.length;
     return {
@@ -432,6 +617,195 @@ export class DuelStateProjector {
         : toVisible
           ? { instanceId: card.instanceId }
           : {}),
+    };
+  }
+
+  #moveOverlay(
+    rawCode: number,
+    from: {
+      controller: 0 | 1;
+      location: number;
+      sequence: number;
+      position: number;
+      overlay_sequence?: number;
+    },
+    to: {
+      controller: 0 | 1;
+      location: number;
+      sequence: number;
+      position: number;
+      overlay_sequence?: number;
+    },
+  ): OverlayMoveUpdate {
+    const fromOverlay = isOverlayAddress(from);
+    const toOverlay = isOverlayAddress(to);
+    if (toOverlay && (!Number.isSafeInteger(rawCode) || rawCode <= 0))
+      throw new Error("Overlay MOVE omitted material card code");
+    const fromLocation = engineLocation(from.location);
+    const toLocation = engineLocation(to.location);
+    const endpointFromVisible = isPublicOverlayMoveEndpoint(from, fromLocation);
+    const toVisible = isPublicOverlayMoveEndpoint(to, toLocation);
+    const sourceHost = fromOverlay
+      ? findPublicCard(
+          this.#players[from.controller],
+          fromLocation,
+          from.sequence,
+        )
+      : undefined;
+    const sourceOrdinal = from.overlay_sequence ?? 0;
+    const sourceMaterial = sourceHost?.overlayMaterials[sourceOrdinal];
+    const fromVisible = fromOverlay
+      ? sourceMaterial?.identityVisible === true
+      : endpointFromVisible;
+    const fallbackMoved: MovedCard =
+      rawCode > 0 && (fromVisible || toVisible)
+        ? { card: cardCode(rawCode) }
+        : {};
+    if (
+      fromOverlay &&
+      (sourceMaterial === undefined ||
+        fromLocation !== "monster" ||
+        (!toOverlay && sourceMaterial.owner === undefined))
+    )
+      return { moved: fallbackMoved, failure: "source_unavailable" };
+    const sourceCard = fromOverlay
+      ? undefined
+      : findPublicCard(
+          this.#players[from.controller],
+          fromLocation,
+          from.sequence,
+        );
+    const destinationHost = toOverlay
+      ? findPublicCard(this.#players[to.controller], toLocation, to.sequence)
+      : undefined;
+    if (
+      toOverlay &&
+      (destinationHost === undefined || toLocation !== "monster")
+    )
+      return { moved: fallbackMoved, failure: "destination_unavailable" };
+    if (toOverlay && sourceCard !== undefined) {
+      if (sourceCard.overlayMaterials.length > 0)
+        return { moved: fallbackMoved, failure: "nested_materials" };
+    } else if (!toOverlay) {
+      assertFixedDestinationAvailable(
+        this.#players[to.controller],
+        to.controller,
+        toLocation,
+        to.sequence,
+        fromOverlay
+          ? { controller: from.controller, location: "deck", sequence: 0 }
+          : {
+              controller: from.controller,
+              location: fromLocation,
+              sequence: from.sequence,
+            },
+      );
+    }
+
+    let card: MutableCard | undefined;
+    let detachedMaterial: MutableOverlayMaterial | undefined;
+    if (fromOverlay) {
+      detachedMaterial = sourceHost!.overlayMaterials.splice(
+        sourceOrdinal,
+        1,
+      )[0];
+      sourceHost!.overlayMaterials.forEach((entry, sequence) => {
+        entry.sequence = sequence;
+      });
+    } else {
+      const fromPlayer = this.#players[from.controller];
+      card = removePublicCard(fromPlayer, fromLocation, from.sequence);
+      if (card === undefined) {
+        if (isFixedLocation(fromLocation))
+          throw new Error(
+            `Fixed slot ${fromLocation} ${from.sequence} for player ${from.controller} is empty`,
+          );
+        card = this.#createCard(
+          from.controller,
+          fromLocation,
+          from.sequence,
+          from.position,
+          fromVisible && rawCode > 0 ? rawCode : undefined,
+        );
+      }
+      if (fromLocation === "deck")
+        fromPlayer.deckCount = Math.max(0, fromPlayer.deckCount - 1);
+      if (fromLocation === "extra")
+        fromPlayer.extraDeckCount = Math.max(0, fromPlayer.extraDeckCount - 1);
+    }
+
+    const priorInstanceId = card?.instanceId ?? detachedMaterial?.instanceId;
+    const priorCode = card?.code ?? detachedMaterial?.code;
+    if (fromVisible && !toVisible && card !== undefined)
+      this.#rotatePublicIdentity(card);
+    const currentInstanceId = card?.instanceId ?? detachedMaterial?.instanceId;
+    if (toOverlay) {
+      const host = destinationHost!;
+      const material: MutableOverlayMaterial = detachedMaterial ?? {
+        instanceId: card!.instanceId,
+        code: cardCode(rawCode),
+        identityVisible: toVisible,
+        sequence: to.overlay_sequence ?? host.overlayMaterials.length,
+        owner: card!.owner,
+      };
+      material.code = cardCode(rawCode);
+      material.identityVisible = toVisible;
+      const ordinal = Math.min(
+        to.overlay_sequence ?? host.overlayMaterials.length,
+        host.overlayMaterials.length,
+      );
+      host.overlayMaterials.splice(ordinal, 0, material);
+      host.overlayMaterials.forEach((entry, sequence) => {
+        entry.sequence = sequence;
+      });
+    } else {
+      const toPlayer = this.#players[to.controller];
+      const moved =
+        card ??
+        ({
+          instanceId: detachedMaterial!.instanceId,
+          owner: detachedMaterial!.owner!,
+          controller: to.controller,
+          location: toLocation,
+          sequence: to.sequence,
+          position: enginePosition(to.position),
+          faceUp: isFaceUp(to.position),
+          overlayMaterials: [],
+        } satisfies MutableCard);
+      moved.controller = to.controller;
+      moved.location = toLocation;
+      moved.sequence = to.sequence;
+      moved.position = enginePosition(to.position);
+      moved.faceUp = isFaceUp(to.position);
+      if (toVisible && rawCode > 0) moved.code = cardCode(rawCode);
+      else if (!toVisible) delete moved.code;
+      const stored = insertPublicCard(toPlayer, toLocation, to.sequence, moved);
+      if (!stored && toLocation === "deck") toPlayer.deckCount += 1;
+      if (toLocation === "extra") toPlayer.extraDeckCount += 1;
+    }
+
+    this.#players[from.controller].handCount =
+      this.#players[from.controller].hand.length;
+    this.#players[to.controller].handCount =
+      this.#players[to.controller].hand.length;
+    const eventCode =
+      toVisible && rawCode > 0
+        ? cardCode(rawCode)
+        : fromVisible
+          ? priorCode
+          : undefined;
+    const eventInstanceId = fromVisible
+      ? priorInstanceId
+      : toVisible
+        ? currentInstanceId
+        : undefined;
+    return {
+      moved: {
+        ...(eventCode === undefined ? {} : { card: eventCode }),
+        ...(eventInstanceId === undefined
+          ? {}
+          : { instanceId: eventInstanceId }),
+      },
     };
   }
 
@@ -473,9 +847,28 @@ export class DuelStateProjector {
     else if (!visible) delete card.code;
   }
 
-  #rotatePublicIdentity(card: MutableCard): void {
+  #seedOwnExtraDeck(codes: readonly CardCode[]): void {
+    const state = this.#players[0];
+    state.extraDeck = codes.map((code, sequence) => ({
+      instanceId: this.#nextInstanceId(),
+      code,
+      owner: 0,
+      controller: 0,
+      location: "extra",
+      sequence,
+      position: "faceDownDefense",
+      faceUp: false,
+      overlayMaterials: [],
+    }));
+  }
+
+  #nextInstanceId(): CardInstanceId {
     this.#cardSequence += 1;
-    card.instanceId = cardInstanceId(`card-${this.#cardSequence}`);
+    return cardInstanceId(`card-${this.#cardSequence}`);
+  }
+
+  #rotatePublicIdentity(card: MutableCard): void {
+    card.instanceId = this.#nextInstanceId();
   }
 
   #createCard(
@@ -485,9 +878,8 @@ export class DuelStateProjector {
     position: number,
     code?: number,
   ): MutableCard {
-    this.#cardSequence += 1;
     return {
-      instanceId: cardInstanceId(`card-${this.#cardSequence}`),
+      instanceId: this.#nextInstanceId(),
       ...(code === undefined || code <= 0 ? {} : { code: cardCode(code) }),
       owner,
       controller: owner,
@@ -510,6 +902,7 @@ function mutablePlayer(
     extraDeckCount,
     handCount: 0,
     hand: [],
+    extraDeck: [],
     monsters: [],
     spellsAndTraps: [],
     graveyard: [],
@@ -531,6 +924,7 @@ function immutablePlayer(
     hand: Object.freeze(
       includeHandIdentities ? value.hand.map(immutableCard) : [],
     ),
+    extraDeck: Object.freeze(value.extraDeck.map(immutableCard)),
     monsters: Object.freeze(value.monsters.map(immutableCard)),
     spellsAndTraps: Object.freeze(value.spellsAndTraps.map(immutableCard)),
     graveyard: Object.freeze(value.graveyard.map(immutableCard)),
@@ -541,7 +935,16 @@ function immutablePlayer(
 function immutableCard(value: MutableCard): PublicCard {
   return Object.freeze({
     ...value,
-    overlayMaterials: Object.freeze([...value.overlayMaterials]),
+    overlayMaterials: Object.freeze(
+      value.overlayMaterials.map((material): PublicOverlayMaterial =>
+        Object.freeze({
+          instanceId: material.instanceId,
+          code: material.code,
+          identityVisible: material.identityVisible,
+          sequence: material.sequence,
+        }),
+      ),
+    ),
   });
 }
 
@@ -561,8 +964,9 @@ function publicZone(
       return player.graveyard;
     case "banished":
       return player.banished;
-    case "deck":
     case "extra":
+      return player.extraDeck;
+    case "deck":
       return null;
   }
 }
@@ -580,7 +984,7 @@ function findPublicCard(
 ): MutableCard | undefined {
   const zone = publicZone(player, location);
   if (zone === null) return undefined;
-  if (isFixedLocation(location))
+  if (isFixedLocation(location) || location === "extra")
     return zone.find(
       (card) => card.location === location && card.sequence === sequence,
     );
@@ -594,7 +998,7 @@ function removePublicCard(
 ): MutableCard | undefined {
   const zone = publicZone(player, location);
   if (zone === null) return undefined;
-  if (isFixedLocation(location)) {
+  if (isFixedLocation(location) || location === "extra") {
     const index = zone.findIndex(
       (card) => card.location === location && card.sequence === sequence,
     );
@@ -616,6 +1020,11 @@ function insertPublicCard(
   if (zone === null) return false;
   if (isFixedLocation(location)) {
     zone.push(card);
+    return true;
+  }
+  if (location === "extra") {
+    const index = zone.findIndex((entry) => entry.sequence >= sequence);
+    zone.splice(index < 0 ? zone.length : index, 0, card);
     return true;
   }
   zone.splice(Math.min(sequence, zone.length), 0, card);
@@ -648,6 +1057,45 @@ function isFixedLocation(location: PublicLocation): boolean {
   return (
     location === "monster" || location === "spellTrap" || location === "field"
   );
+}
+
+function reconciliationRequestsForMove(
+  from: {
+    readonly controller: 0 | 1;
+    readonly location: number;
+    readonly sequence: number;
+    readonly overlay_sequence?: number;
+  },
+  to: {
+    readonly controller: 0 | 1;
+    readonly location: number;
+    readonly sequence: number;
+    readonly overlay_sequence?: number;
+  },
+): readonly ProjectionReconciliationRequest[] {
+  const requests: ProjectionReconciliationRequest[] = [];
+  for (const endpoint of [from, to]) {
+    if (isOverlayAddress(endpoint)) {
+      requests.push({
+        type: "overlayMaterials",
+        controller: endpoint.controller,
+        location: endpoint.location & ~EngineLocation.OVERLAY,
+        sequence: endpoint.sequence,
+      });
+    }
+    if (engineLocation(endpoint.location) === "extra")
+      requests.push({ type: "extraDeck", player: endpoint.controller });
+  }
+  const seen = new Set<string>();
+  return requests.filter((request) => {
+    const key =
+      request.type === "extraDeck"
+        ? `extra:${request.player}`
+        : `overlay:${request.controller}:${request.location}:${request.sequence}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function engineLocation(value: number): PublicLocation {
@@ -698,6 +1146,29 @@ function isPublicCard(
     asPlayer(controller),
     location,
     enginePosition(position),
+  );
+}
+
+function isPublicOverlayMoveEndpoint(
+  endpoint: {
+    readonly controller: 0 | 1;
+    readonly location: number;
+    readonly position: number;
+    readonly overlay_sequence?: number;
+  },
+  location: PublicLocation,
+): boolean {
+  if (isOverlayAddress(endpoint)) return endpoint.controller === 0;
+  return isPublicCard(endpoint.controller, location, endpoint.position);
+}
+
+function isOverlayAddress(value: {
+  readonly location: number;
+  readonly overlay_sequence?: number;
+}): boolean {
+  return (
+    value.overlay_sequence !== undefined ||
+    (value.location & EngineLocation.OVERLAY) !== 0
   );
 }
 

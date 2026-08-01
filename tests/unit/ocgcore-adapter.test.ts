@@ -3,7 +3,9 @@ import type { OcgCoreSync } from "../../vendor/ocgcore-wasm/0.1.2/dist/index.js"
 import {
   OcgCoreAdapter,
   type CoreFactory,
+  type EngineCardQuery,
   type EngineDuelHandle,
+  type EngineLocationQuery,
 } from "../../src/worker/engine/OcgCoreAdapter.ts";
 import { EngineResponseType } from "../../src/worker/engine/engine-constants.ts";
 
@@ -23,6 +25,36 @@ describe("OcgCoreAdapter", () => {
     expect(factory).toHaveBeenCalledWith(
       expect.objectContaining({ sync: true }),
     );
+  });
+
+  it("preserves raw overlay location bits and ordinal from parsed MOVE", async () => {
+    const move = {
+      type: 50,
+      card: 5053103,
+      from: {
+        controller: 0,
+        location: 16,
+        sequence: 0,
+        position: 1,
+      },
+      to: {
+        controller: 0,
+        location: 132,
+        sequence: 0,
+        position: 1,
+        overlay_sequence: 2,
+      },
+    };
+    const core = {
+      getVersion: () => [11, 0] as const,
+      duelGetMessage: () => [move],
+    } as unknown as OcgCoreSync;
+    const adapter = await OcgCoreAdapter.initialize({
+      wasmBinary: new ArrayBuffer(8),
+      factory: async () => core,
+    });
+
+    expect(adapter.getMessages({} as EngineDuelHandle)).toEqual([move]);
   });
 
   it("adds operation context to parser and encoder failures", async () => {
@@ -50,6 +82,55 @@ describe("OcgCoreAdapter", () => {
         yes: true,
       }),
     ).toThrow("Unable to encode core response type 3: offset");
+  });
+
+  it("wraps card and location query failures with operation context", async () => {
+    const cardQuery = vi.fn(() => ({ overlayCards: [1, 2] }));
+    const locationQuery = vi.fn(() => [{ code: 1 }]);
+    const core = {
+      getVersion: () => [11, 0] as const,
+      duelQuery: cardQuery,
+      duelQueryLocation: locationQuery,
+    } as unknown as OcgCoreSync;
+    const adapter = await OcgCoreAdapter.initialize({
+      wasmBinary: new ArrayBuffer(8),
+      factory: async () => core,
+    });
+    const handle = {} as EngineDuelHandle;
+    const cardRequest: EngineCardQuery = {
+      flags: 1,
+      controller: 0 as const,
+      location: 4 as EngineCardQuery["location"],
+      sequence: 0,
+      overlaySequence: 0,
+    };
+    const locationRequest: EngineLocationQuery = {
+      flags: 1,
+      controller: 0 as const,
+      location: 64 as EngineLocationQuery["location"],
+    };
+
+    expect(adapter.queryCard(handle, cardRequest)).toEqual({
+      overlayCards: [1, 2],
+    });
+    expect(adapter.queryLocation(handle, locationRequest)).toEqual([
+      { code: 1 },
+    ]);
+    expect(cardQuery).toHaveBeenCalledWith(handle, cardRequest);
+    expect(locationQuery).toHaveBeenCalledWith(handle, locationRequest);
+
+    cardQuery.mockImplementation(() => {
+      throw new Error("bad card query");
+    });
+    expect(() => adapter.queryCard(handle, cardRequest)).toThrow(
+      "Unable to query core card: bad card query",
+    );
+    locationQuery.mockImplementation(() => {
+      throw new Error("bad location query");
+    });
+    expect(() => adapter.queryLocation(handle, locationRequest)).toThrow(
+      "Unable to query core location: bad location query",
+    );
   });
 
   it("reports a bounded structured initialization failure", async () => {

@@ -51,6 +51,7 @@ const state: PublicDuelState = {
           overlayMaterials: [],
         },
       ],
+      extraDeck: [],
       monsters: [],
       spellsAndTraps: [],
       graveyard: [],
@@ -63,6 +64,7 @@ const state: PublicDuelState = {
       extraDeckCount: 0,
       handCount: 2,
       hand: [],
+      extraDeck: [],
       monsters: [
         {
           instanceId: cardInstanceId("opponent-monster"),

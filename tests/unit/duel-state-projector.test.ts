@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { snapshotId } from "../../src/duel/contracts/ids.ts";
+import { parseDuelWorkerEvent } from "../../src/duel/contracts/duel-worker-event.ts";
+import { cardCode, snapshotId } from "../../src/duel/contracts/ids.ts";
 import {
   EngineLocation,
   EngineMessageType,
@@ -9,6 +10,20 @@ import { DuelStateProjector } from "../../src/worker/projection/DuelStateProject
 
 function projector(): DuelStateProjector {
   return new DuelStateProjector(snapshotId("a".repeat(64)), [40, 40], [0, 0]);
+}
+
+function queriedExtra(code: number) {
+  return {
+    code,
+    owner: 0 as const,
+    position: EnginePosition.FACE_DOWN_DEFENSE,
+    isPublic: false,
+    isHidden: true,
+  };
+}
+
+function queriedCard(code: number) {
+  return { code, identityVisible: true };
 }
 
 describe("DuelStateProjector", () => {
@@ -609,6 +624,1318 @@ describe("DuelStateProjector", () => {
       { type: "hint", message: "Choose a card" },
       { type: "hint", message: "Player 2 hint 6: 44" },
     ]);
+  });
+
+  it("seeds, summons, returns, and atomically reconciles own Extra order", () => {
+    const value = new DuelStateProjector(
+      snapshotId("a".repeat(64)),
+      [40, 40],
+      [2, 1],
+      [[cardCode(97590747), cardCode(5053103)], []],
+    );
+    const initial = value.snapshot().players[0].extraDeck;
+    expect(initial.map(({ code }) => code)).toEqual([97590747, 5053103]);
+
+    const summon = value.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 0,
+        location: EngineLocation.EXTRA,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    expect(summon.reconciliationRequests).toEqual([
+      { type: "extraDeck", player: 0 },
+    ]);
+    value.reconcileExtraDeck(0, [queriedExtra(5053103)]);
+    expect(value.snapshot().players[0]).toMatchObject({
+      extraDeckCount: 1,
+      extraDeck: [{ code: 5053103, location: "extra", sequence: 0 }],
+      monsters: [{ code: 97590747 }],
+    });
+
+    const returnedMove = value.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.EXTRA,
+        sequence: 1,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    });
+    expect(returnedMove.reconciliationRequests).toEqual([
+      { type: "extraDeck", player: 0 },
+    ]);
+    value.reconcileExtraDeck(0, [
+      queriedExtra(5053103),
+      queriedExtra(97590747),
+    ]);
+    const returned = value.snapshot().players[0];
+    expect(returned.extraDeckCount).toBe(2);
+    expect(
+      returned.extraDeck.map(({ code, sequence }) => [code, sequence]),
+    ).toEqual([
+      [5053103, 0],
+      [97590747, 1],
+    ]);
+    expect(returned.extraDeck[0]?.instanceId).toBe(initial[1]?.instanceId);
+    expect(returned.extraDeck[1]?.instanceId).toBe(initial[0]?.instanceId);
+
+    const before = value.snapshot();
+    expect(() =>
+      value.reconcileExtraDeck(0, [
+        {
+          owner: 0,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+          isPublic: false,
+          isHidden: true,
+        },
+      ]),
+    ).toThrow("Own Extra Deck query omitted card code");
+    expect(value.snapshot()).toEqual(before);
+  });
+
+  it("exposes opponent Extra identity only when query says public and face-up", () => {
+    const value = new DuelStateProjector(
+      snapshotId("a".repeat(64)),
+      [40, 40],
+      [0, 2],
+    );
+    value.reconcileExtraDeck(1, [
+      {
+        code: 46986414,
+        owner: 1,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+        isPublic: true,
+        isHidden: false,
+      },
+      {
+        code: 5053103,
+        owner: 1,
+        position: EnginePosition.FACE_UP_ATTACK,
+        isPublic: true,
+        isHidden: false,
+      },
+    ]);
+
+    const opponent = value.snapshot().players[1];
+    expect(opponent.extraDeckCount).toBe(2);
+    expect(opponent.extraDeck).toEqual([
+      expect.objectContaining({ code: 5053103, sequence: 1, faceUp: true }),
+    ]);
+    expect(JSON.stringify(structuredClone(value.snapshot()))).not.toContain(
+      "46986414",
+    );
+  });
+
+  it("requests overlay reconciliation when the projected host is missing", () => {
+    const value = projector();
+    const update = value.apply({
+      type: EngineMessageType.MOVE,
+      card: 5053103,
+      from: {
+        controller: 0,
+        location: EngineLocation.DECK,
+        sequence: 39,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 0,
+        location: (EngineLocation.MONSTER | EngineLocation.OVERLAY) as never,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+        overlay_sequence: 0,
+      },
+    });
+
+    expect(update).toMatchObject({
+      reconciliationFailure: "destination_unavailable",
+      reconciliationRequests: [
+        {
+          type: "overlayMaterials",
+          controller: 0,
+          location: EngineLocation.MONSTER,
+          sequence: 0,
+        },
+      ],
+    });
+  });
+
+  it("attaches, detaches, and moves hosts while preserving material identity", () => {
+    const value = projector();
+    for (const [code, sequence] of [
+      [97590747, 0],
+      [5053103, 1],
+      [46986414, 2],
+    ] as const) {
+      value.apply({
+        type: EngineMessageType.MOVE,
+        card: code,
+        from: {
+          controller: 0,
+          location: EngineLocation.DECK,
+          sequence: 39 - sequence,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+        to: {
+          controller: 0,
+          location:
+            sequence === 0 ? EngineLocation.MONSTER : EngineLocation.GRAVEYARD,
+          sequence: sequence === 0 ? 0 : sequence - 1,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+      });
+    }
+
+    const firstSourceId = value.snapshot().players[0].graveyard[0]!.instanceId;
+    const attach = (code: number) =>
+      value.apply({
+        type: EngineMessageType.MOVE,
+        card: code,
+        from: {
+          controller: 0,
+          location: EngineLocation.GRAVEYARD,
+          sequence: 0,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+        to: {
+          controller: 0,
+          location: (EngineLocation.MONSTER | EngineLocation.OVERLAY) as never,
+          sequence: 0,
+          position: EnginePosition.FACE_UP_ATTACK,
+          overlay_sequence: 0,
+        },
+      });
+    expect(attach(5053103).reconciliationRequests).toEqual([
+      {
+        type: "overlayMaterials",
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+      },
+    ]);
+    value.reconcileOverlayMaterials(
+      { controller: 0, location: EngineLocation.MONSTER, sequence: 0 },
+      [queriedCard(5053103)],
+    );
+    const firstId =
+      value.snapshot().players[0].monsters[0]!.overlayMaterials[0]!.instanceId;
+    expect(firstId).toBe(firstSourceId);
+
+    const secondSourceId = value.snapshot().players[0].graveyard[0]!.instanceId;
+    attach(46986414);
+    value.reconcileOverlayMaterials(
+      { controller: 0, location: EngineLocation.MONSTER, sequence: 0 },
+      [queriedCard(5053103), queriedCard(46986414)],
+    );
+    const beforeDetach = value.snapshot().players[0].monsters[0]!;
+    const secondId = beforeDetach.overlayMaterials[1]!.instanceId;
+    expect(secondId).toBe(secondSourceId);
+    expect(
+      beforeDetach.overlayMaterials.map(({ code, sequence }) => [
+        code,
+        sequence,
+      ]),
+    ).toEqual([
+      [5053103, 0],
+      [46986414, 1],
+    ]);
+    expect(value.snapshot().players[0].graveyard).toEqual([]);
+
+    const detach = value.apply({
+      type: EngineMessageType.MOVE,
+      card: 5053103,
+      from: {
+        controller: 0,
+        location: (EngineLocation.MONSTER | EngineLocation.OVERLAY) as never,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+        overlay_sequence: 0,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.GRAVEYARD,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    expect(detach.reconciliationRequests).toEqual([
+      {
+        type: "overlayMaterials",
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+      },
+    ]);
+    value.reconcileOverlayMaterials(
+      { controller: 0, location: EngineLocation.MONSTER, sequence: 0 },
+      [queriedCard(46986414)],
+    );
+    expect(value.snapshot().players[0].graveyard).toEqual([
+      expect.objectContaining({ instanceId: firstId, code: 5053103 }),
+    ]);
+    expect(value.snapshot().players[0].monsters[0]?.overlayMaterials).toEqual([
+      expect.objectContaining({
+        instanceId: secondId,
+        code: 46986414,
+        sequence: 0,
+      }),
+    ]);
+
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 4,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    expect(value.snapshot().players[0].monsters[0]).toMatchObject({
+      sequence: 4,
+      overlayMaterials: [{ instanceId: secondId, code: 46986414 }],
+    });
+  });
+
+  it("retains hidden opponent material identity with explicit presentation visibility", () => {
+    const value = projector();
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 1,
+        location: EngineLocation.DECK,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 1,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    const address = {
+      controller: 1 as const,
+      location: EngineLocation.MONSTER,
+      sequence: 0,
+    };
+    value.reconcileOverlayMaterials(address, [{ code: 123456789 }]);
+
+    const parsed = parseDuelWorkerEvent({
+      type: "state",
+      state: value.snapshot(),
+    });
+    if (parsed.type !== "state") throw new Error("State event expected");
+    expect(
+      structuredClone(parsed).state.players[1].monsters[0]?.overlayMaterials[0],
+    ).toMatchObject({ code: 123456789, identityVisible: false });
+    expect(JSON.stringify(parsed)).toContain("123456789");
+
+    value.reconcileOverlayMaterials(address, [
+      { code: 123456789, identityVisible: true },
+    ]);
+    const visibleMaterial =
+      value.snapshot().players[1].monsters[0]?.overlayMaterials[0];
+    expect(visibleMaterial).toMatchObject({
+      code: 123456789,
+      identityVisible: true,
+    });
+
+    value.reconcileOverlayMaterials(address, [{ code: 123456789 }]);
+    expect(
+      value.snapshot().players[1].monsters[0]?.overlayMaterials[0],
+    ).toMatchObject({
+      instanceId: visibleMaterial?.instanceId,
+      code: 123456789,
+      identityVisible: true,
+    });
+
+    const beforeOversized = value.snapshot();
+    expect(() =>
+      value.reconcileOverlayMaterials(
+        address,
+        Array.from({ length: 257 }, (_, index) => ({ code: index + 1 })),
+      ),
+    ).toThrow("physical instance limit");
+    expect(value.snapshot()).toEqual(beforeOversized);
+  });
+
+  it("keeps duplicate hidden material IDs stable by authoritative ordinal", () => {
+    const value = projector();
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 1,
+        location: EngineLocation.DECK,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 1,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    const address = {
+      controller: 1 as const,
+      location: EngineLocation.MONSTER,
+      sequence: 0,
+    };
+    const hidden = [{ code: 5053103 }, { code: 5053103 }];
+    value.reconcileOverlayMaterials(address, hidden);
+    const initial = value.snapshot().players[1].monsters[0]!.overlayMaterials;
+    expect(initial).toHaveLength(2);
+    expect(initial.map(({ code }) => code)).toEqual([5053103, 5053103]);
+    expect(initial.map(({ sequence }) => sequence)).toEqual([0, 1]);
+    const duplicateIds = initial.map(({ instanceId }) => String(instanceId));
+    expect(new Set(duplicateIds)).toHaveProperty("size", 2);
+
+    value.reconcileOverlayMaterials(address, hidden);
+    expect(
+      value
+        .snapshot()
+        .players[1].monsters[0]!.overlayMaterials.map(({ instanceId }) =>
+          String(instanceId),
+        ),
+    ).toEqual(duplicateIds);
+
+    value.reconcileOverlayMaterials(address, [{ code: 97590747 }, ...hidden]);
+    const prefixed = value.snapshot().players[1].monsters[0]!.overlayMaterials;
+    expect(prefixed.map(({ code, sequence }) => ({ code, sequence }))).toEqual([
+      { code: 97590747, sequence: 0 },
+      { code: 5053103, sequence: 1 },
+      { code: 5053103, sequence: 2 },
+    ]);
+    expect(
+      prefixed.slice(1).map(({ instanceId }) => String(instanceId)),
+    ).toEqual(duplicateIds);
+
+    value.reconcileOverlayMaterials(address, hidden);
+    expect(
+      value
+        .snapshot()
+        .players[1].monsters[0]!.overlayMaterials.map(({ instanceId }) =>
+          String(instanceId),
+        ),
+    ).toEqual(duplicateIds);
+  });
+
+  it("does not expose concealed opponent codes in overlay MOVE events", () => {
+    const value = projector();
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 1,
+        location: EngineLocation.DECK,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 1,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    const overlayLocation = (EngineLocation.MONSTER |
+      EngineLocation.OVERLAY) as never;
+    const attached = value.apply({
+      type: EngineMessageType.MOVE,
+      card: 5053103,
+      from: {
+        controller: 1,
+        location: EngineLocation.EXTRA,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 1,
+        location: overlayLocation,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+        overlay_sequence: 0,
+      },
+    });
+    expect(JSON.stringify(attached.events)).not.toContain("5053103");
+    value.reconcileOverlayMaterials(
+      { controller: 1, location: EngineLocation.MONSTER, sequence: 0 },
+      [{ code: 5053103 }],
+    );
+
+    const hiddenDetach = value.apply({
+      type: EngineMessageType.MOVE,
+      card: 5053103,
+      from: {
+        controller: 1,
+        location: overlayLocation,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+        overlay_sequence: 0,
+      },
+      to: {
+        controller: 1,
+        location: EngineLocation.EXTRA,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    });
+    expect(JSON.stringify(hiddenDetach.events)).not.toContain("5053103");
+    value.reconcileExtraDeck(1, [
+      {
+        code: 5053103,
+        owner: 1,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+        isPublic: false,
+        isHidden: true,
+      },
+    ]);
+
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 5053103,
+      from: {
+        controller: 1,
+        location: EngineLocation.EXTRA,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 1,
+        location: overlayLocation,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+        overlay_sequence: 0,
+      },
+    });
+    value.reconcileOverlayMaterials(
+      { controller: 1, location: EngineLocation.MONSTER, sequence: 0 },
+      [{ code: 5053103 }],
+    );
+    const publicDetach = value.apply({
+      type: EngineMessageType.MOVE,
+      card: 5053103,
+      from: {
+        controller: 1,
+        location: overlayLocation,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+        overlay_sequence: 0,
+      },
+      to: {
+        controller: 1,
+        location: EngineLocation.GRAVEYARD,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    expect(publicDetach.events).toEqual([
+      expect.objectContaining({ type: "cardMoved", card: 5053103 }),
+    ]);
+  });
+
+  it("keeps concealed material identity out of detach events after host control changes", () => {
+    const value = projector();
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 1,
+        location: EngineLocation.DECK,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 1,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    const overlayLocation = (EngineLocation.MONSTER |
+      EngineLocation.OVERLAY) as never;
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 5053103,
+      from: {
+        controller: 1,
+        location: EngineLocation.EXTRA,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 1,
+        location: overlayLocation,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+        overlay_sequence: 0,
+      },
+    });
+    value.reconcileOverlayMaterials(
+      { controller: 1, location: EngineLocation.MONSTER, sequence: 0 },
+      [{ code: 5053103 }],
+    );
+    const materialId =
+      value.snapshot().players[1].monsters[0]?.overlayMaterials[0]?.instanceId;
+
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 1,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    const detached = value.apply({
+      type: EngineMessageType.MOVE,
+      card: 5053103,
+      from: {
+        controller: 0,
+        location: overlayLocation,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+        overlay_sequence: 0,
+      },
+      to: {
+        controller: 1,
+        location: EngineLocation.DECK,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    });
+    const parsed = detached.events.map((event) =>
+      parseDuelWorkerEvent({ type: "event", event }),
+    );
+    const serialized = JSON.stringify(structuredClone(parsed));
+    expect(serialized).not.toContain("5053103");
+    expect(serialized).not.toContain(String(materialId));
+  });
+
+  it("preserves sparse opponent Extra identities by authoritative sequence", () => {
+    const extraRecord = (
+      code: number,
+      position: number,
+      isPublic: boolean,
+    ) => ({
+      code,
+      owner: 1 as const,
+      position,
+      isPublic,
+      isHidden: !isPublic,
+    });
+    const records = [
+      extraRecord(5053103, EnginePosition.FACE_DOWN_DEFENSE, false),
+      extraRecord(97590747, EnginePosition.FACE_UP_ATTACK, true),
+    ];
+
+    const publicMove = new DuelStateProjector(
+      snapshotId("sparse-public-extra"),
+      [40, 40],
+      [0, 2],
+    );
+    publicMove.reconcileExtraDeck(1, records);
+    const publicId = publicMove.snapshot().players[1].extraDeck[0]?.instanceId;
+    expect(publicMove.snapshot().players[1].extraDeck[0]).toMatchObject({
+      code: 97590747,
+      sequence: 1,
+    });
+    publicMove.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 1,
+        location: EngineLocation.EXTRA,
+        sequence: 1,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+      to: {
+        controller: 1,
+        location: EngineLocation.GRAVEYARD,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    expect(publicMove.snapshot().players[1].graveyard[0]).toMatchObject({
+      code: 97590747,
+      instanceId: publicId,
+    });
+    expect(publicMove.snapshot().players[1].extraDeck).toEqual([]);
+    publicMove.reconcileExtraDeck(1, [records[0]!]);
+    expect(publicMove.snapshot().players[1].graveyard).toHaveLength(1);
+
+    const hiddenMove = new DuelStateProjector(
+      snapshotId("sparse-hidden-extra"),
+      [40, 40],
+      [0, 2],
+    );
+    hiddenMove.apply({
+      type: EngineMessageType.MOVE,
+      card: 46986414,
+      from: {
+        controller: 1,
+        location: EngineLocation.DECK,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 1,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    hiddenMove.reconcileExtraDeck(1, records);
+    const stablePublicId =
+      hiddenMove.snapshot().players[1].extraDeck[0]?.instanceId;
+    const overlayLocation = (EngineLocation.MONSTER |
+      EngineLocation.OVERLAY) as never;
+    hiddenMove.apply({
+      type: EngineMessageType.MOVE,
+      card: 5053103,
+      from: {
+        controller: 1,
+        location: EngineLocation.EXTRA,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 1,
+        location: overlayLocation,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+        overlay_sequence: 0,
+      },
+    });
+    expect(hiddenMove.snapshot().players[1].extraDeck[0]?.instanceId).toBe(
+      stablePublicId,
+    );
+    expect(
+      hiddenMove.snapshot().players[1].monsters[0]?.overlayMaterials[0]
+        ?.instanceId,
+    ).not.toBe(stablePublicId);
+    hiddenMove.reconcileExtraDeck(1, [records[1]!]);
+    hiddenMove.reconcileOverlayMaterials(
+      { controller: 1, location: EngineLocation.MONSTER, sequence: 0 },
+      [{ code: 5053103 }],
+    );
+    expect(hiddenMove.snapshot().players[1].extraDeck[0]).toMatchObject({
+      code: 97590747,
+      instanceId: stablePublicId,
+      sequence: 0,
+    });
+  });
+
+  it("deduplicates reconciliation requests from both MOVE endpoints", () => {
+    const sameExtra = new DuelStateProjector(
+      snapshotId("same-extra"),
+      [40, 40],
+      [1, 0],
+      [[cardCode(97590747)], []],
+    );
+    expect(
+      sameExtra.apply({
+        type: EngineMessageType.MOVE,
+        card: 97590747,
+        from: {
+          controller: 0,
+          location: EngineLocation.EXTRA,
+          sequence: 0,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+        to: {
+          controller: 0,
+          location: EngineLocation.EXTRA,
+          sequence: 0,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+      }).reconciliationRequests,
+    ).toEqual([{ type: "extraDeck", player: 0 }]);
+
+    const distinctExtra = new DuelStateProjector(
+      snapshotId("distinct-extra"),
+      [40, 40],
+      [1, 1],
+      [[cardCode(97590747)], []],
+    );
+    expect(
+      distinctExtra.apply({
+        type: EngineMessageType.MOVE,
+        card: 97590747,
+        from: {
+          controller: 0,
+          location: EngineLocation.EXTRA,
+          sequence: 0,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+        to: {
+          controller: 1,
+          location: EngineLocation.EXTRA,
+          sequence: 0,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+      }).reconciliationRequests,
+    ).toEqual([
+      { type: "extraDeck", player: 0 },
+      { type: "extraDeck", player: 1 },
+    ]);
+
+    const overlay = projector();
+    for (const sequence of [0, 1])
+      overlay.apply({
+        type: EngineMessageType.MOVE,
+        card: 97590747 + sequence,
+        from: {
+          controller: 0,
+          location: EngineLocation.DECK,
+          sequence,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+        to: {
+          controller: 0,
+          location: EngineLocation.MONSTER,
+          sequence,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+      });
+    overlay.reconcileOverlayMaterials(
+      { controller: 0, location: EngineLocation.MONSTER, sequence: 0 },
+      [queriedCard(5053103)],
+    );
+    const overlayLocation = (EngineLocation.MONSTER |
+      EngineLocation.OVERLAY) as never;
+    const distinct = overlay.apply({
+      type: EngineMessageType.MOVE,
+      card: 5053103,
+      from: {
+        controller: 0,
+        location: overlayLocation,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+        overlay_sequence: 0,
+      },
+      to: {
+        controller: 0,
+        location: overlayLocation,
+        sequence: 1,
+        position: EnginePosition.FACE_UP_ATTACK,
+        overlay_sequence: 0,
+      },
+    });
+    expect(distinct.reconciliationRequests).toEqual([
+      {
+        type: "overlayMaterials",
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+      },
+      {
+        type: "overlayMaterials",
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 1,
+      },
+    ]);
+    const same = overlay.apply({
+      type: EngineMessageType.MOVE,
+      card: 5053103,
+      from: {
+        controller: 0,
+        location: overlayLocation,
+        sequence: 1,
+        position: EnginePosition.FACE_UP_ATTACK,
+        overlay_sequence: 0,
+      },
+      to: {
+        controller: 0,
+        location: overlayLocation,
+        sequence: 1,
+        position: EnginePosition.FACE_UP_ATTACK,
+        overlay_sequence: 0,
+      },
+    });
+    expect(same.reconciliationRequests).toEqual([
+      {
+        type: "overlayMaterials",
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 1,
+      },
+    ]);
+  });
+
+  it("leaves invalid overlay moves atomic and preserves ID allocation", () => {
+    const setup = () => {
+      const value = projector();
+      for (const sequence of [0, 1])
+        value.apply({
+          type: EngineMessageType.MOVE,
+          card: 97590747 + sequence,
+          from: {
+            controller: 0,
+            location: EngineLocation.DECK,
+            sequence,
+            position: EnginePosition.FACE_DOWN_DEFENSE,
+          },
+          to: {
+            controller: 0,
+            location: EngineLocation.MONSTER,
+            sequence,
+            position: EnginePosition.FACE_UP_ATTACK,
+          },
+        });
+      value.apply({
+        type: EngineMessageType.MOVE,
+        card: 5053103,
+        from: {
+          controller: 0,
+          location: EngineLocation.DECK,
+          sequence: 2,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+        to: {
+          controller: 0,
+          location: EngineLocation.GRAVEYARD,
+          sequence: 0,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+      });
+      value.apply({
+        type: EngineMessageType.MOVE,
+        card: 5053103,
+        from: {
+          controller: 0,
+          location: EngineLocation.GRAVEYARD,
+          sequence: 0,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+        to: {
+          controller: 0,
+          location: overlayLocation,
+          sequence: 0,
+          position: EnginePosition.FACE_UP_ATTACK,
+          overlay_sequence: 0,
+        },
+      });
+      value.reconcileOverlayMaterials(
+        { controller: 0, location: EngineLocation.MONSTER, sequence: 0 },
+        [queriedCard(5053103)],
+      );
+      return value;
+    };
+    const overlayLocation = (EngineLocation.MONSTER |
+      EngineLocation.OVERLAY) as never;
+    const missing = setup();
+    const missingControl = setup();
+    const beforeMissing = missing.snapshot();
+    const missingUpdate = missing.apply({
+      type: EngineMessageType.MOVE,
+      card: 5053103,
+      from: {
+        controller: 0,
+        location: overlayLocation,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+        overlay_sequence: 9,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.GRAVEYARD,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    expect(missingUpdate.reconciliationFailure).toBe("source_unavailable");
+    expect(missing.snapshot()).toEqual(beforeMissing);
+
+    const detach = setup();
+    const detachControl = setup();
+    const beforeDetach = detach.snapshot();
+    expect(() =>
+      detach.apply({
+        type: EngineMessageType.MOVE,
+        card: 5053103,
+        from: {
+          controller: 0,
+          location: overlayLocation,
+          sequence: 0,
+          position: EnginePosition.FACE_UP_ATTACK,
+          overlay_sequence: 0,
+        },
+        to: {
+          controller: 0,
+          location: EngineLocation.MONSTER,
+          sequence: 1,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+      }),
+    ).toThrow("already occupied");
+    expect(detach.snapshot()).toEqual(beforeDetach);
+
+    const nested = setup();
+    const nestedControl = setup();
+    const beforeNested = nested.snapshot();
+    const failure = nested.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+      to: {
+        controller: 0,
+        location: overlayLocation,
+        sequence: 1,
+        position: EnginePosition.FACE_UP_ATTACK,
+        overlay_sequence: 0,
+      },
+    });
+    expect(failure.reconciliationFailure).toBe("nested_materials");
+    expect(nested.snapshot()).toEqual(beforeNested);
+
+    const allocate = (value: DuelStateProjector) => {
+      value.apply({
+        type: EngineMessageType.MOVE,
+        card: 46986414,
+        from: {
+          controller: 0,
+          location: EngineLocation.DECK,
+          sequence: 2,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+        to: {
+          controller: 0,
+          location: EngineLocation.GRAVEYARD,
+          sequence: 0,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+      });
+      return value.snapshot().players[0].graveyard[0]?.instanceId;
+    };
+    expect(allocate(missing)).toBe(allocate(missingControl));
+    expect(allocate(detach)).toBe(allocate(detachControl));
+    expect(allocate(nested)).toBe(allocate(nestedControl));
+  });
+
+  it("rejects missing overlay attach codes before every source mutation", () => {
+    const overlayLocation = (EngineLocation.MONSTER |
+      EngineLocation.OVERLAY) as never;
+    const moveTo = {
+      controller: 0 as const,
+      location: overlayLocation,
+      sequence: 0,
+      position: EnginePosition.FACE_UP_ATTACK,
+      overlay_sequence: 0,
+    };
+    const setupLocation = (
+      location: "deck" | "hand" | "graveyard" | "extra",
+    ) => {
+      const value =
+        location === "extra"
+          ? new DuelStateProjector(
+              snapshotId("missing-overlay-code-extra"),
+              [40, 40],
+              [1, 0],
+              [[cardCode(5053103)], []],
+            )
+          : projector();
+      if (location === "hand") {
+        value.apply({
+          type: EngineMessageType.DRAW,
+          player: 0,
+          drawn: [
+            { code: 5053103, position: EnginePosition.FACE_DOWN_DEFENSE },
+          ],
+        });
+      } else if (location === "graveyard") {
+        value.apply({
+          type: EngineMessageType.MOVE,
+          card: 5053103,
+          from: {
+            controller: 0,
+            location: EngineLocation.DECK,
+            sequence: 0,
+            position: EnginePosition.FACE_DOWN_DEFENSE,
+          },
+          to: {
+            controller: 0,
+            location: EngineLocation.GRAVEYARD,
+            sequence: 0,
+            position: EnginePosition.FACE_UP_ATTACK,
+          },
+        });
+      }
+      const engineLocation = {
+        deck: EngineLocation.DECK,
+        hand: EngineLocation.HAND,
+        graveyard: EngineLocation.GRAVEYARD,
+        extra: EngineLocation.EXTRA,
+      }[location];
+      return {
+        value,
+        from: {
+          controller: 0 as const,
+          location: engineLocation,
+          sequence: 0,
+          position:
+            location === "graveyard"
+              ? EnginePosition.FACE_UP_ATTACK
+              : EnginePosition.FACE_DOWN_DEFENSE,
+        },
+      };
+    };
+    const setupOverlay = () => {
+      const value = projector();
+      value.apply({
+        type: EngineMessageType.MOVE,
+        card: 97590747,
+        from: {
+          controller: 0,
+          location: EngineLocation.DECK,
+          sequence: 0,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+        to: {
+          controller: 0,
+          location: EngineLocation.MONSTER,
+          sequence: 0,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+      });
+      value.apply({
+        type: EngineMessageType.MOVE,
+        card: 5053103,
+        from: {
+          controller: 0,
+          location: EngineLocation.DECK,
+          sequence: 1,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+        to: {
+          controller: 0,
+          location: overlayLocation,
+          sequence: 0,
+          position: EnginePosition.FACE_UP_ATTACK,
+          overlay_sequence: 0,
+        },
+      });
+      return {
+        value,
+        from: {
+          controller: 0 as const,
+          location: overlayLocation,
+          sequence: 0,
+          position: EnginePosition.FACE_UP_ATTACK,
+          overlay_sequence: 0,
+        },
+      };
+    };
+    const cases = [
+      ["deck", () => setupLocation("deck")],
+      ["hand", () => setupLocation("hand")],
+      ["graveyard", () => setupLocation("graveyard")],
+      ["extra", () => setupLocation("extra")],
+      ["overlay", setupOverlay],
+    ] as const;
+    const allocate = (value: DuelStateProjector) => {
+      value.apply({
+        type: EngineMessageType.MOVE,
+        card: 46986414,
+        from: {
+          controller: 0,
+          location: EngineLocation.DECK,
+          sequence: 39,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+        to: {
+          controller: 0,
+          location: EngineLocation.BANISHED,
+          sequence: 0,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+      });
+      return value.snapshot().players[0].banished.at(-1)?.instanceId;
+    };
+
+    for (const [label, setup] of cases) {
+      const failed = setup();
+      const control = setup();
+      const before = failed.value.snapshot();
+      expect(() =>
+        failed.value.apply({
+          type: EngineMessageType.MOVE,
+          card: 0,
+          from: failed.from,
+          to: moveTo,
+        }),
+      ).toThrow("Overlay MOVE omitted material card code");
+      expect(failed.value.snapshot(), label).toEqual(before);
+      expect(allocate(failed.value), label).toBe(allocate(control.value));
+    }
+  });
+
+  it("rolls back valid-then-invalid reconciliation including ID allocation", () => {
+    const extra = () =>
+      new DuelStateProjector(
+        snapshotId("atomic-extra"),
+        [40, 40],
+        [1, 0],
+        [[cardCode(97590747)], []],
+      );
+    const failedExtra = extra();
+    const controlExtra = extra();
+    const beforeExtra = failedExtra.snapshot();
+    expect(() =>
+      failedExtra.reconcileExtraDeck(0, [
+        queriedExtra(5053103),
+        {
+          owner: 0,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+          isPublic: false,
+          isHidden: true,
+        },
+      ]),
+    ).toThrow("omitted card code");
+    expect(failedExtra.snapshot()).toEqual(beforeExtra);
+    failedExtra.reconcileExtraDeck(0, [queriedExtra(5053103)]);
+    controlExtra.reconcileExtraDeck(0, [queriedExtra(5053103)]);
+    expect(failedExtra.snapshot()).toEqual(controlExtra.snapshot());
+
+    const overlay = () => {
+      const value = projector();
+      value.apply({
+        type: EngineMessageType.MOVE,
+        card: 97590747,
+        from: {
+          controller: 0,
+          location: EngineLocation.DECK,
+          sequence: 0,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+        to: {
+          controller: 0,
+          location: EngineLocation.MONSTER,
+          sequence: 0,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+      });
+      return value;
+    };
+    const failedOverlay = overlay();
+    const controlOverlay = overlay();
+    const address = {
+      controller: 0 as const,
+      location: EngineLocation.MONSTER,
+      sequence: 0,
+    };
+    const beforeOverlay = failedOverlay.snapshot();
+    expect(() =>
+      failedOverlay.reconcileOverlayMaterials(address, [
+        queriedCard(5053103),
+        { code: -1 },
+      ]),
+    ).toThrow("invalid material code");
+    expect(failedOverlay.snapshot()).toEqual(beforeOverlay);
+    failedOverlay.reconcileOverlayMaterials(address, [queriedCard(5053103)]);
+    controlOverlay.reconcileOverlayMaterials(address, [queriedCard(5053103)]);
+    expect(failedOverlay.snapshot()).toEqual(controlOverlay.snapshot());
+  });
+
+  it("keeps handCount correct for hand and overlay moves", () => {
+    const value = projector();
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 97590747,
+      from: {
+        controller: 0,
+        location: EngineLocation.DECK,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    value.apply({
+      type: EngineMessageType.DRAW,
+      player: 0,
+      drawn: [{ code: 5053103, position: EnginePosition.FACE_DOWN_DEFENSE }],
+    });
+    const overlayLocation = (EngineLocation.MONSTER |
+      EngineLocation.OVERLAY) as never;
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 5053103,
+      from: {
+        controller: 0,
+        location: EngineLocation.HAND,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 0,
+        location: overlayLocation,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+        overlay_sequence: 0,
+      },
+    });
+    expect(value.snapshot().players[0].handCount).toBe(0);
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 5053103,
+      from: {
+        controller: 0,
+        location: overlayLocation,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+        overlay_sequence: 0,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.HAND,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    });
+    expect(value.snapshot().players[0].handCount).toBe(1);
   });
 
   it("tracks life points, turns, phases, and core-provided results", () => {

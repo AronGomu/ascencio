@@ -1,4 +1,7 @@
-import { duelOperationError } from "../duel/contracts/duel-error.ts";
+import {
+  DuelOperationError,
+  duelOperationError,
+} from "../duel/contracts/duel-error.ts";
 import type { ChoiceId, PromptId, SnapshotId } from "../duel/contracts/ids.ts";
 import type { DuelPresentationEvent } from "../duel/contracts/duel-presentation-event.ts";
 import type { DuelResult } from "../duel/contracts/duel-result.ts";
@@ -7,12 +10,27 @@ import type { PublicDuelState } from "../duel/contracts/public-duel-state.ts";
 import type { ActiveDuelDependencies } from "./assets/active-duel-dependencies.ts";
 import { BoundedDuelTrace, type DuelTrace } from "./diagnostics/duel-trace.ts";
 import type { DuelSession } from "./engine/DuelSession.ts";
+import type {
+  EngineCardQuery,
+  EngineCardQueryResult,
+  EngineLocationQueryResult,
+} from "./engine/OcgCoreAdapter.ts";
+import {
+  EngineLocation,
+  EnginePosition,
+  EngineQueryFlag,
+} from "./engine/engine-constants.ts";
 import {
   BasicOpponentPolicy,
   toOpponentVisibleState,
   type OpponentPolicy,
 } from "./opponent/OpponentPolicy.ts";
-import { DuelStateProjector } from "./projection/DuelStateProjector.ts";
+import {
+  DuelStateProjector,
+  type ProjectionReconciliationRequest,
+  type QueriedOverlayMaterial,
+  type QueriedPublicCard,
+} from "./projection/DuelStateProjector.ts";
 import { PromptRegistry } from "./protocol/PromptRegistry.ts";
 
 export interface DuelAdvance {
@@ -43,6 +61,7 @@ export class HeadlessDuelController {
   readonly #trace: BoundedDuelTrace;
   readonly #maximumAutomaticResponses: number;
   #result: DuelResult | null = null;
+  #ownExtraDeckReconciled = false;
 
   constructor(options: HeadlessDuelControllerOptions) {
     this.#session = options.session;
@@ -50,6 +69,7 @@ export class HeadlessDuelController {
       options.snapshotId,
       options.deckCounts,
       options.extraDeckCounts,
+      [options.session.initialExtraDeckOrder(0), []],
     );
     this.#trace =
       options.trace ??
@@ -84,6 +104,7 @@ export class HeadlessDuelController {
   }
 
   #advanceUntilBoundary(): DuelAdvance {
+    this.#ensureOwnExtraDeckReconciled();
     const events: DuelPresentationEvent[] = [];
 
     for (
@@ -105,6 +126,23 @@ export class HeadlessDuelController {
       for (const message of boundary.messages) {
         this.#trace.record({ kind: "message", messageType: message.type });
         const update = this.#projector.apply(message);
+        this.#reconcile(update.reconciliationRequests);
+        if (update.reconciliationFailure !== undefined) {
+          this.#trace.record({
+            kind: "promptDiagnostic",
+            detail: "reconcile:overlayHost:invariant",
+          });
+          throw new DuelOperationError(
+            {
+              code: "unsupported_message",
+              message: "Unable to reconcile overlayMaterials state",
+              recoverable: false,
+            },
+            new Error(
+              `Projection reconciliation failed: ${update.reconciliationFailure}`,
+            ),
+          );
+        }
         events.push(...update.events);
         for (const event of update.events)
           this.#trace.record({ kind: "presentation", detail: event.type });
@@ -186,6 +224,139 @@ export class HeadlessDuelController {
     );
   }
 
+  #ensureOwnExtraDeckReconciled(): void {
+    if (this.#ownExtraDeckReconciled) return;
+    this.#reconcile([{ type: "extraDeck", player: 0 }]);
+    this.#ownExtraDeckReconciled = true;
+  }
+
+  #reconcile(requests: readonly ProjectionReconciliationRequest[]): void {
+    for (const request of requests) {
+      try {
+        if (request.type === "extraDeck") {
+          this.#projector.reconcileExtraDeck(
+            request.player,
+            this.#queryExtraDeck(request.player),
+          );
+        } else {
+          this.#projector.reconcileOverlayMaterials(
+            request,
+            this.#queryOverlayMaterials(request),
+          );
+        }
+      } catch (error) {
+        const category =
+          error instanceof ReconciliationEvidenceError
+            ? error.category
+            : "invariant";
+        const addressClass =
+          request.type === "extraDeck" ? "extraDeck" : "overlayHost";
+        this.#trace.record({
+          kind: "promptDiagnostic",
+          detail: `reconcile:${addressClass}:${category}`,
+        });
+        throw new DuelOperationError(
+          {
+            code: "unsupported_message",
+            message: `Unable to reconcile ${request.type} state`,
+            recoverable: false,
+          },
+          error,
+        );
+      }
+    }
+  }
+
+  #queryExtraDeck(player: 0 | 1): readonly QueriedPublicCard[] {
+    const flags = queryFlags(false);
+    let values: EngineLocationQueryResult;
+    try {
+      values = this.#session.queryLocation({
+        flags,
+        controller: player,
+        location: EngineLocation.EXTRA as EngineCardQuery["location"],
+      });
+    } catch (error) {
+      throw new ReconciliationEvidenceError("unavailable", error);
+    }
+    try {
+      const result: QueriedPublicCard[] = [];
+      for (const value of values) {
+        if (value === null) continue;
+        const record = queriedCard(value);
+        if (record.owner !== player)
+          throw new Error("Extra Deck query owner does not match player");
+        result.push(record);
+      }
+      return result;
+    } catch (error) {
+      throw new ReconciliationEvidenceError("malformed", error);
+    }
+  }
+
+  #queryOverlayMaterials(
+    address: Extract<
+      ProjectionReconciliationRequest,
+      { readonly type: "overlayMaterials" }
+    >,
+  ): readonly QueriedOverlayMaterial[] {
+    let host: EngineCardQueryResult;
+    try {
+      host = this.#session.queryCard({
+        flags: EngineQueryFlag.OVERLAY_CARD,
+        controller: address.controller,
+        location: address.location as EngineCardQuery["location"],
+        sequence: address.sequence,
+        overlaySequence: 0,
+      });
+    } catch (error) {
+      throw new ReconciliationEvidenceError("unavailable", error);
+    }
+    try {
+      if (host === null || !Array.isArray(host.overlayCards))
+        throw new Error("Overlay host query omitted material list");
+      if (
+        host.overlayCards.some(
+          (code) => !Number.isSafeInteger(code) || code <= 0,
+        )
+      )
+        throw new Error("Overlay host query returned an invalid material code");
+      return host.overlayCards.map((queriedCode, overlaySequence) => {
+        try {
+          const value = this.#session.queryCard({
+            flags: queryFlags(true),
+            controller: address.controller,
+            location: (address.location |
+              EngineLocation.OVERLAY) as EngineCardQuery["location"],
+            sequence: address.sequence,
+            overlaySequence,
+          });
+          if (value === null)
+            throw new Error("Overlay material query returned an empty slot");
+          const record = queriedCard(value);
+          if (record.code !== queriedCode)
+            throw new Error(
+              "Overlay query omitted or contradicted material code",
+            );
+          return {
+            code: queriedCode,
+            identityVisible:
+              record.isPublic && isFaceUpPosition(record.position),
+          };
+        } catch {
+          this.#trace.record({
+            kind: "promptDiagnostic",
+            detail: "reconcile:overlayHost:enrichment_unavailable",
+          });
+          return { code: queriedCode };
+        }
+      });
+    } catch (error) {
+      if (error instanceof ReconciliationEvidenceError) throw error;
+      throw new ReconciliationEvidenceError("malformed", error);
+    }
+  }
+
   respond(promptId: PromptId, choiceIds: readonly ChoiceId[]): DuelAdvance {
     this.#assertActive();
     const prompt = this.#prompts.current;
@@ -208,6 +379,12 @@ export class HeadlessDuelController {
 
   surrender(): DuelAdvance {
     this.#assertActive();
+    try {
+      this.#ensureOwnExtraDeckReconciled();
+    } catch (error) {
+      this.#fail(error);
+      throw error;
+    }
     this.#result = { type: "surrendered", winner: 1, loser: 0 };
     this.#trace.record({
       kind: "result",
@@ -279,4 +456,62 @@ export class HeadlessDuelController {
       throw duelOperationError("duel_not_active", "Duel has been disposed");
     }
   }
+}
+
+function queryFlags(includeOverlay = false): EngineCardQuery["flags"] {
+  return (EngineQueryFlag.CODE |
+    EngineQueryFlag.POSITION |
+    EngineQueryFlag.OWNER |
+    EngineQueryFlag.IS_PUBLIC |
+    EngineQueryFlag.IS_HIDDEN |
+    (includeOverlay
+      ? EngineQueryFlag.OVERLAY_CARD
+      : 0)) as EngineCardQuery["flags"];
+}
+
+class ReconciliationEvidenceError extends Error {
+  readonly category: "unavailable" | "malformed";
+
+  constructor(category: "unavailable" | "malformed", cause: unknown) {
+    super(`Reconciliation evidence is ${category}`, { cause });
+    this.name = "ReconciliationEvidenceError";
+    this.category = category;
+  }
+}
+
+function isFaceUpPosition(position: number): boolean {
+  return (
+    position === EnginePosition.FACE_UP_ATTACK ||
+    position === EnginePosition.FACE_UP_DEFENSE
+  );
+}
+
+function queriedCard(
+  value: Exclude<EngineCardQueryResult, null>,
+): QueriedPublicCard {
+  if (value.owner !== 0 && value.owner !== 1)
+    throw new Error("Card query omitted a valid owner");
+  if (
+    value.position !== EnginePosition.FACE_UP_ATTACK &&
+    value.position !== EnginePosition.FACE_DOWN_ATTACK &&
+    value.position !== EnginePosition.FACE_UP_DEFENSE &&
+    value.position !== EnginePosition.FACE_DOWN_DEFENSE
+  )
+    throw new Error("Card query omitted a valid position");
+  if (typeof value.isPublic !== "boolean")
+    throw new Error("Card query omitted public visibility");
+  if (typeof value.isHidden !== "boolean")
+    throw new Error("Card query omitted hidden visibility");
+  if (
+    value.code !== undefined &&
+    (!Number.isSafeInteger(value.code) || value.code <= 0)
+  )
+    throw new Error("Card query returned an invalid code");
+  return {
+    ...(value.code === undefined ? {} : { code: value.code }),
+    owner: value.owner,
+    position: value.position,
+    isPublic: value.isPublic,
+    isHidden: value.isHidden,
+  };
 }

@@ -16,6 +16,10 @@ import type {
   EngineMessage,
   EngineNewCard,
   EngineResponse,
+  EngineCardQuery,
+  EngineCardQueryResult,
+  EngineLocationQuery,
+  EngineLocationQueryResult,
   OcgCoreAdapter,
 } from "./OcgCoreAdapter.ts";
 import {
@@ -73,6 +77,10 @@ export class DuelSession {
   readonly #adapter: OcgCoreAdapter;
   readonly #handle: EngineDuelHandle;
   readonly #maximumProcessIterations: number;
+  readonly #initialExtraDeckOrders: readonly [
+    readonly CardCode[],
+    readonly CardCode[],
+  ];
   #cleanupFailed = false;
   #disposed = false;
 
@@ -81,11 +89,16 @@ export class DuelSession {
     handle: EngineDuelHandle,
     seed: DuelSeed,
     maximumProcessIterations: number,
+    initialExtraDeckOrders: readonly [readonly CardCode[], readonly CardCode[]],
   ) {
     this.#adapter = adapter;
     this.#handle = handle;
     this.seed = seed;
     this.#maximumProcessIterations = maximumProcessIterations;
+    this.#initialExtraDeckOrders = Object.freeze([
+      Object.freeze([...initialExtraDeckOrders[0]]),
+      Object.freeze([...initialExtraDeckOrders[1]]),
+    ]);
   }
 
   static create(options: DuelSessionOptions): DuelSession {
@@ -201,6 +214,7 @@ export class DuelSession {
         handle,
         seed,
         maximumProcessIterations,
+        [options.playerDeck.extra, options.opponentDeck.extra],
       );
     } catch (error) {
       try {
@@ -254,6 +268,21 @@ export class DuelSession {
   respond(response: EngineResponse): void {
     this.#assertActive();
     this.#adapter.setResponse(this.#handle, response);
+  }
+
+  queryCard(query: EngineCardQuery): EngineCardQueryResult {
+    this.#assertActive();
+    return this.#adapter.queryCard(this.#handle, query);
+  }
+
+  queryLocation(query: EngineLocationQuery): EngineLocationQueryResult {
+    this.#assertActive();
+    return this.#adapter.queryLocation(this.#handle, query);
+  }
+
+  initialExtraDeckOrder(player: 0 | 1): readonly CardCode[] {
+    this.#assertActive();
+    return this.#initialExtraDeckOrders[player];
   }
 
   dispose(): void {

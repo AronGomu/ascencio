@@ -24,7 +24,7 @@ import {
   HeadlessDuelController,
   type DuelAdvance,
 } from "./HeadlessDuelController.ts";
-import { toDuelError } from "./duel-errors.ts";
+import { routineLogError, toDuelError } from "./duel-errors.ts";
 import {
   safeWorkerLogger,
   workerLog,
@@ -469,7 +469,7 @@ export class DuelWorkerRuntime {
       ...(context.traceTail === undefined
         ? {}
         : { traceTail: context.traceTail }),
-      err: error,
+      err: routineLogError(error),
     });
   }
 

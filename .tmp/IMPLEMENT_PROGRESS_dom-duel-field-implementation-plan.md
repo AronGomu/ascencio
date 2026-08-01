@@ -3,7 +3,7 @@
 - Branch: `plan/dom-duel-field-implementation-plan`
 - Plan: `.tmp/IMPLEMENTATION_PLAN_duel_field_dom.md`
 - Started: 2026-08-01T09:03:37Z
-- Updated: 2026-08-01T09:31:42Z
+- Updated: 2026-08-01T09:58:08Z
 
 ## Status
 
@@ -11,8 +11,8 @@
 | --- | --- | --- | --- | --- |
 | DF-00 | Record renderer decision and delivery contract | done | ecf4de1 | Docs-only ship locally verified; checkboxed and pushed |
 | DF-01 | Preserve sparse fixed-slot projection | done | 7d0b46e | Ship locally verified; validated and pushed |
-| DF-02 | Model physical Standard zones and shared EMZs | done | DF-02-COMMIT | Ship locally verified; parent normalizes SHA |
-| DF-03 | Project overlay materials and useful Extra Deck state | pending | — | Existing dirty checkpoint; verify, checkbox, commit |
+| DF-02 | Model physical Standard zones and shared EMZs | done | 8ab6a23 | Ship locally verified; validated and pushed |
+| DF-03 | Project overlay materials and useful Extra Deck state | done | DF-03-COMMIT | Ship locally verified; isolated checkpoint validated and ready to push |
 | DF-04 | Project counters and actual chain provenance | pending | — | Existing dirty checkpoint; verify, checkbox, commit |
 | DF-05 | Separate bounded semantic log from feedback queue | pending | — | Partial dirty impl detected; worker completes via TDD |
 | DF-06 | Derive renderer-neutral `BoardViewModel` | pending | — | — |
@@ -44,4 +44,6 @@
 - 2026-08-01T09:11:52Z DF-01 start.
 - 2026-08-01T09:19:00Z DF-01 done 7d0b46e: baseline regression 6 failures; focused projector 16/16, contracts 26/26, programmed real-WASM 1/1, unit 189/189, integration 18/18, full test 238/238, typecheck/lint/format/build green.
 - 2026-08-01T09:22:46Z DF-02 start.
-- 2026-08-01T09:31:42Z DF-02 done DF-02-COMMIT: reconstructed red 40 failures; focused 44/44, unit 317/317, full test 368/368, typecheck/lint/format/build green; prior independent review findings 3/3 closed, final inline review clean.
+- 2026-08-01T09:31:42Z DF-02 done 8ab6a23: reconstructed red 40 failures; focused 44/44, unit 317/317, full test 368/368, typecheck/lint/format/build green; prior independent review findings 3/3 closed, final inline review clean.
+- 2026-08-01T09:35:29Z DF-03 start.
+- 2026-08-01T09:58:08Z DF-03 done DF-03-COMMIT: recovered exact pre-DF-04 checkpoint from writer transcripts; focused isolated candidate 136/136 green; aggregate/typecheck/lint/format/build and push evidence recorded in completion report.

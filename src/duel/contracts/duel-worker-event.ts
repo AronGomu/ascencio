@@ -448,7 +448,12 @@ function validatePublicState(value: unknown): void {
   requireEnum(state.phase, PHASES, "state.phase");
   const players = requireArray(state.players, "state.players", 2);
   if (players.length !== 2) throw invalid("state.players length");
-  players.forEach((player, index) => validatePublicPlayer(player, index));
+  const instances = { count: 0, ids: new Set<string>() };
+  players.forEach((player, index) =>
+    validatePublicPlayer(player, index, instances),
+  );
+  if (instances.count > MAXIMUM_PUBLIC_CARDS)
+    throw invalid("state physical card instance limit");
   const firstPlayer = requireRecord(players[0], "state.players[0]");
   const secondPlayer = requireRecord(players[1], "state.players[1]");
   if (firstPlayer.player !== 0 || secondPlayer.player !== 1)
@@ -459,7 +464,16 @@ function validatePublicState(value: unknown): void {
   chain.forEach((link, index) => validateChainLink(link, index));
 }
 
-function validatePublicPlayer(value: unknown, index: number): void {
+interface PublicInstanceValidation {
+  count: number;
+  readonly ids: Set<string>;
+}
+
+function validatePublicPlayer(
+  value: unknown,
+  index: number,
+  instances: PublicInstanceValidation,
+): void {
   const label = `state.players[${index}]`;
   const player = requireRecord(value, label);
   requireExactKeys(
@@ -471,6 +485,7 @@ function validatePublicPlayer(value: unknown, index: number): void {
       "extraDeckCount",
       "handCount",
       "hand",
+      "extraDeck",
       "monsters",
       "spellsAndTraps",
       "graveyard",
@@ -495,6 +510,7 @@ function validatePublicPlayer(value: unknown, index: number): void {
   }
   for (const zone of [
     "hand",
+    "extraDeck",
     "monsters",
     "spellsAndTraps",
     "graveyard",
@@ -507,9 +523,23 @@ function validatePublicPlayer(value: unknown, index: number): void {
     );
     cards.forEach((card, cardIndex) => {
       const cardLabel = `${label}.${zone}[${cardIndex}]`;
-      validatePublicCard(card, cardLabel);
+      validatePublicCard(card, cardLabel, instances);
+      const record = requireRecord(card, cardLabel);
+      if (record.controller !== index) throw invalid(`${cardLabel}.controller`);
+      const validLocation =
+        (zone === "hand" && record.location === "hand") ||
+        (zone === "extraDeck" && record.location === "extra") ||
+        (zone === "monsters" && record.location === "monster") ||
+        (zone === "spellsAndTraps" &&
+          (record.location === "spellTrap" || record.location === "field")) ||
+        (zone === "graveyard" && record.location === "graveyard") ||
+        (zone === "banished" && record.location === "banished");
+      if (!validLocation) throw invalid(`${cardLabel}.location`);
+      if (zone === "extraDeck" && record.owner !== index)
+        throw invalid(`${cardLabel}.owner`);
+      if (zone === "extraDeck" && index === 0 && record.sequence !== cardIndex)
+        throw invalid(`${cardLabel}.sequence order`);
       if (index === 1) {
-        const record = requireRecord(card, cardLabel);
         const concealed =
           record.position === "faceDownAttack" ||
           record.position === "faceDownDefense";
@@ -518,9 +548,22 @@ function validatePublicPlayer(value: unknown, index: number): void {
       }
     });
   }
+  const extraDeck = requireArray(
+    player.extraDeck,
+    `${label}.extraDeck`,
+    MAXIMUM_PUBLIC_CARDS,
+  );
+  if (extraDeck.length > (player.extraDeckCount as number))
+    throw invalid(`${label}.extraDeck count`);
+  if (index === 0 && extraDeck.length !== player.extraDeckCount)
+    throw invalid(`${label}.extraDeck complete own collection`);
 }
 
-function validatePublicCard(value: unknown, label: string): void {
+function validatePublicCard(
+  value: unknown,
+  label: string,
+  instances: PublicInstanceValidation,
+): void {
   const card = requireRecord(value, label);
   requireExactKeys(
     card,
@@ -538,6 +581,7 @@ function validatePublicCard(value: unknown, label: string): void {
     label,
   );
   requireString(card.instanceId, `${label}.instanceId`, MAXIMUM_ID_LENGTH);
+  recordPublicInstance(card.instanceId, label, instances);
   if (card.code !== undefined)
     requireSafeInteger(card.code, `${label}.code`, 1, Number.MAX_SAFE_INTEGER);
   requirePlayer(card.owner, `${label}.owner`);
@@ -556,12 +600,50 @@ function validatePublicCard(value: unknown, label: string): void {
     MAXIMUM_PUBLIC_CARDS,
   );
   materials.forEach((material, index) =>
-    requireString(
+    validateOverlayMaterial(
       material,
       `${label}.overlayMaterials[${index}]`,
-      MAXIMUM_ID_LENGTH,
+      instances,
+      index,
     ),
   );
+}
+
+function validateOverlayMaterial(
+  value: unknown,
+  label: string,
+  instances: PublicInstanceValidation,
+  expectedSequence: number,
+): void {
+  const material = requireRecord(value, label);
+  requireExactKeys(
+    material,
+    ["instanceId", "code", "identityVisible", "sequence"],
+    label,
+  );
+  requireString(material.instanceId, `${label}.instanceId`, MAXIMUM_ID_LENGTH);
+  recordPublicInstance(material.instanceId, label, instances);
+  requireSafeInteger(
+    material.code,
+    `${label}.code`,
+    1,
+    Number.MAX_SAFE_INTEGER,
+  );
+  requireBoolean(material.identityVisible, `${label}.identityVisible`);
+  requireSafeInteger(material.sequence, `${label}.sequence`, 0, 255);
+  if (material.sequence !== expectedSequence)
+    throw invalid(`${label}.sequence order`);
+}
+
+function recordPublicInstance(
+  value: unknown,
+  label: string,
+  instances: PublicInstanceValidation,
+): void {
+  const id = value as string;
+  instances.count += 1;
+  if (instances.ids.has(id)) throw invalid(`${label}.instanceId duplicate`);
+  instances.ids.add(id);
 }
 
 function validateChainLink(value: unknown, index: number): void {

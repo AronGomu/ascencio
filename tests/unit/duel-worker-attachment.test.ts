@@ -1,6 +1,9 @@
+import { inspect } from "node:util";
 import { describe, expect, it, vi } from "vitest";
+import { DuelOperationError } from "../../src/duel/contracts/duel-error.ts";
 import type { DuelWorkerEvent } from "../../src/duel/contracts/duel-worker-event.ts";
 import { DuelWorkerRuntime } from "../../src/worker/DuelWorkerRuntime.ts";
+import { routineLogError } from "../../src/worker/duel-errors.ts";
 import {
   attachDuelWorker,
   type DuelWorkerScope,
@@ -74,6 +77,174 @@ describe("duel Worker attachment", () => {
         }),
       ]),
     );
+  });
+
+  it("sanitizes typed operation causes at the Worker logger boundary", async () => {
+    const sentinel = "private-worker-cause-5053103";
+    const raw = new DuelOperationError(
+      {
+        code: "unsupported_message",
+        message: "Unable to reconcile overlayMaterials state",
+        recoverable: false,
+      },
+      new Error(sentinel),
+    );
+    const posted: DuelWorkerEvent[] = [];
+    const scope = createScope(posted);
+    const runtime = new DuelWorkerRuntime(async () => {
+      throw new Error("initializer should not run");
+    });
+    vi.spyOn(runtime, "handle").mockImplementation(
+      (_command, _progress, failureSink) => {
+        failureSink?.(raw, {
+          commandType: "initialize",
+          code: raw.duelError.code,
+          runtimeId: "runtime-test",
+        });
+        return Promise.resolve([{ type: "error", error: raw.duelError }]);
+      },
+    );
+    const logs: LoggedEntry[] = [];
+    const detach = attachDuelWorker(scope, runtime, memoryLogger(logs));
+
+    scope.onmessage?.({
+      data: { type: "initialize" },
+    } as MessageEvent<unknown>);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(inspect(raw, { depth: 8 })).toContain(sentinel);
+    expect(inspect(logs, { depth: 8 })).not.toContain(sentinel);
+    expect(JSON.stringify(logs)).not.toContain(sentinel);
+    expect(JSON.stringify(posted)).not.toContain(sentinel);
+    expect(logs).toContainEqual(
+      expect.objectContaining({
+        level: "error",
+        event: "duel.worker.command.failed",
+        err: expect.objectContaining({
+          name: "DuelOperationError",
+          message: "Unable to reconcile overlayMaterials state",
+          code: "unsupported_message",
+        }),
+      }),
+    );
+    detach();
+  });
+
+  it("sanitizes typed causes nested by cleanup failure at the Worker logger boundary", async () => {
+    const sentinel = "private-worker-structural-cause-5053103";
+    const cleanupError = new Error("expected unrelated Worker cleanup failure");
+    const typedError = new DuelOperationError(
+      {
+        code: "unsupported_message",
+        message: "Unable to reconcile overlayMaterials state",
+        recoverable: false,
+      },
+      new Error(sentinel),
+    );
+    const compounded = new AggregateError(
+      [typedError, cleanupError],
+      "Unable to reconcile overlayMaterials state; session cleanup failed",
+      { cause: typedError },
+    );
+    const posted: DuelWorkerEvent[] = [];
+    const scope = createScope(posted);
+    const runtime = new DuelWorkerRuntime(async () => {
+      throw new Error("initializer should not run");
+    });
+    vi.spyOn(runtime, "handle").mockImplementation(
+      (_command, _progress, failureSink) => {
+        failureSink?.(compounded, {
+          commandType: "startDuel",
+          code: "engine_error",
+          runtimeId: "runtime-test",
+          traceTail: [
+            {
+              sequence: 1,
+              kind: "promptDiagnostic",
+              detail: "reconcile:overlayHost:unavailable",
+            },
+          ],
+        });
+        return Promise.resolve([
+          { type: "error", error: typedError.duelError },
+        ]);
+      },
+    );
+    const logs: LoggedEntry[] = [];
+    const detach = attachDuelWorker(scope, runtime, memoryLogger(logs));
+
+    scope.onmessage?.({
+      data: { type: "startDuel", duelId: "preset-test" },
+    } as MessageEvent<unknown>);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(inspect(compounded, { depth: 8 })).toContain(sentinel);
+    const failureLog = logs.find(
+      (entry) => entry.event === "duel.worker.command.failed",
+    );
+    expect(failureLog).toMatchObject({
+      traceTail: [
+        {
+          kind: "promptDiagnostic",
+          detail: "reconcile:overlayHost:unavailable",
+        },
+      ],
+    });
+    const loggedError = failureLog?.err as {
+      readonly errors: readonly unknown[];
+    };
+    expect(Object.isFrozen(loggedError)).toBe(true);
+    expect(Object.isFrozen(loggedError.errors)).toBe(true);
+    expect(loggedError.errors[1]).toBe(cleanupError);
+    expect(inspect(logs, { depth: 8 })).toContain(cleanupError.message);
+    expect(inspect(logs, { depth: 8 })).not.toContain(sentinel);
+    expect(JSON.stringify(logs)).not.toContain(sentinel);
+    expect(JSON.stringify(posted)).not.toContain(sentinel);
+    detach();
+  });
+
+  it("bounds and freezes cyclic logger projections without mutating leaves", () => {
+    const sentinel = "private-cyclic-cause-5053103";
+    const cleanupError = new Error("cycle cleanup remains represented");
+    const typedError = new DuelOperationError(
+      {
+        code: "unsupported_message",
+        message: "Unable to reconcile overlayMaterials state",
+        recoverable: false,
+      },
+      new Error(sentinel),
+    );
+    const outer = new Error(`outer cleanup wrapper ${sentinel}`);
+    const aggregate = new AggregateError(
+      [typedError, cleanupError],
+      `aggregate cleanup wrapper ${sentinel}`,
+      { cause: outer },
+    );
+    Object.defineProperty(outer, "cause", {
+      configurable: true,
+      value: aggregate,
+    });
+
+    const projected = routineLogError(outer) as {
+      readonly cause: {
+        readonly cause: unknown;
+        readonly errors: readonly unknown[];
+      };
+    };
+
+    expect(Object.isFrozen(projected)).toBe(true);
+    expect(Object.isFrozen(projected.cause)).toBe(true);
+    expect(Object.isFrozen(projected.cause.errors)).toBe(true);
+    expect(projected.cause.errors[1]).toBe(cleanupError);
+    expect(inspect(projected, { depth: 12 })).toContain("Cyclic error omitted");
+    expect(inspect(projected, { depth: 12 })).not.toContain(sentinel);
+    expect(JSON.stringify(projected)).not.toContain(sentinel);
+    expect((outer as Error & { readonly cause: unknown }).cause).toBe(
+      aggregate,
+    );
+    expect(aggregate.errors[0]).toBe(typedError);
   });
 
   it("preserves Worker behavior when an injected logger fails", () => {

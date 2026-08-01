@@ -11,6 +11,10 @@ import {
   type EngineDuelHandle,
   type EngineDuelOptions,
   type EngineMessage,
+  type EngineCardQuery,
+  type EngineCardQueryResult,
+  type EngineLocationQuery,
+  type EngineLocationQueryResult,
   OcgCoreAdapter,
 } from "../../src/worker/engine/OcgCoreAdapter.ts";
 import { EngineProcess } from "../../src/worker/engine/engine-constants.ts";
@@ -37,6 +41,10 @@ export interface FakeCoreCounters {
 
 export interface FakeOcgCoreAdapterOptions {
   readonly destroyError?: Error;
+  readonly queryCard?: (query: EngineCardQuery) => EngineCardQueryResult;
+  readonly queryLocation?: (
+    query: EngineLocationQuery,
+  ) => EngineLocationQueryResult;
   readonly createDiagnostic?: {
     readonly type: number;
     readonly message: string;
@@ -46,6 +54,8 @@ export interface FakeOcgCoreAdapterOptions {
 export interface FakeOcgCoreAdapterHarness {
   readonly adapter: OcgCoreAdapter;
   readonly counters: FakeCoreCounters;
+  readonly cardQueries: readonly EngineCardQuery[];
+  readonly locationQueries: readonly EngineLocationQuery[];
   readonly activeHandles: () => number;
 }
 
@@ -98,6 +108,8 @@ export async function createFakeOcgCoreAdapter(
   options: FakeOcgCoreAdapterOptions = {},
 ): Promise<FakeOcgCoreAdapterHarness> {
   const counters: FakeCoreCounters = { createDuel: 0, destroyDuel: 0 };
+  const cardQueries: EngineCardQuery[] = [];
+  const locationQueries: EngineLocationQuery[] = [];
   const handles = new Map<EngineDuelHandle, FakeHandleState>();
   let nextHandle = 1;
 
@@ -152,6 +164,17 @@ export async function createFakeOcgCoreAdapter(
       return messages;
     },
     duelSetResponse: () => undefined,
+    duelQuery: (_handle: EngineDuelHandle, query: EngineCardQuery) => {
+      cardQueries.push(query);
+      return options.queryCard?.(query) ?? null;
+    },
+    duelQueryLocation: (
+      _handle: EngineDuelHandle,
+      query: EngineLocationQuery,
+    ) => {
+      locationQueries.push(query);
+      return options.queryLocation?.(query) ?? [];
+    },
   } as unknown as OcgCoreSync;
 
   const adapter = await OcgCoreAdapter.initialize({
@@ -162,6 +185,8 @@ export async function createFakeOcgCoreAdapter(
   return {
     adapter,
     counters,
+    cardQueries,
+    locationQueries,
     activeHandles: () => handles.size,
   };
 }

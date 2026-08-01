@@ -8,7 +8,7 @@ After the preset duel is reproducibly complete, extensions may proceed in this o
 2. Deck editor and arbitrary local decks.
 3. Collection and saves.
 4. Visual-novel dialogue and branching story state.
-5. Phaser maps and NPC interaction.
+5. Maps and NPC interaction; renderer requires a separate workload-based decision.
 6. Rewards, shops, relationships, and tournaments.
 7. Stronger deck-specific opponents.
 8. Optional server-authoritative multiplayer.

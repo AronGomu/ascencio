@@ -1,5 +1,6 @@
 # YGO Story Duel Simulator: Technical MVP Implementation Plan
 
+> Historical baseline: this completed plan records Phaser-based MVP delivery. Current field migration is planned in [`DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`](DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md).
 > Status: Checkpoints A–G complete locally; the private MVP release candidate passed the full and isolated clean-checkout gates
 > Checklist reconciled: 2026-07-14. Checked entries under **Excluded** mean the exclusion was verified, not implemented. Historical process exceptions and pinned-adapter limits are recorded explicitly below.
 > Scope: browser-based offline duel client only

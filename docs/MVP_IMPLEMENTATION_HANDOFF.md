@@ -1,8 +1,9 @@
 # MVP implementation handoff
 
+> Historical baseline: this handoff records completed Phaser-based MVP delivery. Current field migration is planned in [`DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`](DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md).
 > Date: 2026-07-14
 > Status: **Checkpoints A–G are complete. The private MVP release candidate passed the full local and isolated clean-checkout gates; 2026-07-14 closed remaining plan-checklist gaps with verification.**
-> Canonical plan: [`MVP_TECHNICAL_IMPLEMENTATION_PLAN.md`](MVP_TECHNICAL_IMPLEMENTATION_PLAN.md)
+> Baseline plan: [`MVP_TECHNICAL_IMPLEMENTATION_PLAN.md`](MVP_TECHNICAL_IMPLEMENTATION_PLAN.md)
 
 ## 1. Start here
 

@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Duel-Field Validation References</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f4f6f8;
+  --surface: #ffffff;
+  --surface-2: #edf2f6;
+  --ink: #162230;
+  --muted: #5b6875;
+  --line: #d5dde5;
+  --accent: #087e8b;
+  --accent-soft: #d9f1f2;
+  --warm: #a65d00;
+  --code: #101c2a;
+  --code-ink: #dceafa;
+  --shadow: 0 16px 45px rgb(23 38 52 / 10%);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b121b;
+    --surface: #111c28;
+    --surface-2: #172536;
+    --ink: #edf5fa;
+    --muted: #a9b8c5;
+    --line: #2a3c4d;
+    --accent: #65d4da;
+    --accent-soft: #15373d;
+    --warm: #f1b65f;
+    --code: #07101a;
+    --code-ink: #dceafa;
+    --shadow: 0 16px 45px rgb(0 0 0 / 25%);
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.62 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+a { color: var(--accent); text-underline-offset: 0.18em; }
+a:hover { text-decoration-thickness: 2px; }
+.skip-link { position: fixed; top: -4rem; left: 1rem; z-index: 20; padding: .7rem 1rem; background: var(--surface); border: 1px solid var(--accent); border-radius: .5rem; }
+.skip-link:focus { top: 1rem; }
+.hero {
+  background: radial-gradient(circle at 85% 20%, var(--accent-soft), transparent 35%), var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.hero-inner { max-width: 1480px; margin: auto; padding: 2.7rem clamp(1.2rem, 4vw, 4rem) 2.4rem; }
+.eyebrow { margin: 0 0 .55rem; color: var(--accent); font-size: .76rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.hero h1 { max-width: 1000px; margin: 0; font-size: clamp(2rem, 5vw, 4.6rem); line-height: 1.02; letter-spacing: -.045em; }
+.hero-summary { max-width: 780px; margin: 1rem 0 0; color: var(--muted); font-size: 1.05rem; }
+.stats { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 1.5rem; }
+.stat { min-width: 125px; padding: .72rem .9rem; background: color-mix(in srgb, var(--surface) 85%, transparent); border: 1px solid var(--line); border-radius: .7rem; }
+.stat strong { display: block; color: var(--ink); font-size: 1.15rem; }
+.stat span { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .07em; }
+.layout { display: grid; grid-template-columns: minmax(220px, 285px) minmax(0, 970px); gap: clamp(1.5rem, 4vw, 4rem); max-width: 1480px; margin: auto; padding: 2rem clamp(1.2rem, 4vw, 4rem) 5rem; }
+.toc { position: sticky; top: 1rem; align-self: start; max-height: calc(100vh - 2rem); overflow: auto; padding: 1.2rem; background: var(--surface); border: 1px solid var(--line); border-radius: .9rem; box-shadow: var(--shadow); }
+.toc h2 { margin: 0 0 .8rem; font-size: .78rem; color: var(--muted); letter-spacing: .12em; text-transform: uppercase; }
+.toc ol { list-style: none; margin: 0; padding: 0; }
+.toc li { margin: .24rem 0; }
+.toc li.depth-3 { padding-left: .9rem; font-size: .86rem; }
+.toc a { display: block; padding: .25rem .38rem; border-radius: .35rem; color: var(--muted); text-decoration: none; }
+.toc a:hover { background: var(--surface-2); color: var(--ink); }
+main { min-width: 0; }
+main > h1:first-child { display: none; }
+h2 { margin: 3.5rem 0 1rem; padding-top: .5rem; font-size: clamp(1.5rem, 3vw, 2.15rem); line-height: 1.18; letter-spacing: -.025em; }
+h2:first-of-type { margin-top: 0; }
+h3 { margin: 2.3rem 0 .7rem; font-size: 1.25rem; line-height: 1.3; }
+h4 { margin: 1.6rem 0 .5rem; font-size: 1.02rem; color: var(--accent); }
+.anchor-heading { position: relative; }
+.heading-link { position: absolute; right: 100%; padding-right: .45rem; opacity: 0; text-decoration: none; font-weight: 500; }
+.anchor-heading:hover .heading-link, .heading-link:focus { opacity: 1; }
+p { margin: .7rem 0 1rem; }
+.meta-block { margin: 0 0 1.7rem; padding: 1rem 1.15rem; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: .45rem; background: var(--surface); color: var(--muted); }
+.content-list { margin: .6rem 0 1.2rem; padding-left: 1.35rem; }
+.content-list li { margin: .32rem 0; padding-left: .15rem; }
+code { padding: .12em .34em; border-radius: .28rem; background: var(--surface-2); color: var(--ink); font: .88em/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.code-block, .diagram { overflow: auto; margin: 1.25rem 0 1.7rem; padding: 1.15rem; border-radius: .75rem; background: var(--code); color: var(--code-ink); box-shadow: var(--shadow); }
+.code-block code, .diagram code { padding: 0; background: none; color: inherit; }
+.diagram { min-height: 8rem; border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+.diagram .mermaid { min-width: 720px; margin: 0; background: transparent; color: inherit; text-align: center; }
+.table-wrap { overflow-x: auto; margin: 1rem 0 1.7rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface); box-shadow: 0 6px 20px rgb(23 38 52 / 5%); }
+table { width: 100%; border-collapse: collapse; font-size: .91rem; }
+th, td { padding: .72rem .8rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { position: sticky; top: 0; background: var(--surface-2); color: var(--ink); font-size: .75rem; letter-spacing: .055em; text-transform: uppercase; }
+tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: color-mix(in srgb, var(--accent-soft) 42%, transparent); }
+.inline-figure { margin: 1.5rem 0; }
+.inline-figure img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface); box-shadow: var(--shadow); }
+.inline-figure figcaption { margin-top: .5rem; color: var(--muted); font-size: .82rem; }
+.check { display: inline-grid; place-items: center; width: 1.05rem; height: 1.05rem; margin-right: .5rem; border: 1px solid var(--muted); border-radius: .22rem; vertical-align: -.1rem; }
+.check.checked { border-color: var(--accent); background: var(--accent); color: var(--bg); font-size: .75rem; }
+.contract { margin: 0 0 2rem; padding: 1.2rem 1.35rem; border: 1px solid var(--line); border-radius: .9rem; background: var(--surface); box-shadow: var(--shadow); }
+.contract h2 { margin: 0 0 .45rem; font-size: 1.2rem; }
+.status { display: inline-flex; align-items: center; gap: .35rem; font-size: .77rem; font-weight: 750; }
+.status.pass { color: var(--accent); }
+.status.gap { color: var(--warm); }
+.ticket-heading { margin-top: 4.5rem; padding: 1rem 1.1rem; border: 1px solid var(--line); border-left: 5px solid var(--accent); border-radius: .7rem; background: var(--surface); box-shadow: var(--shadow); }
+hr { margin: 3rem 0; border: 0; border-top: 1px solid var(--line); }
+footer { padding: 2rem clamp(1.2rem, 4vw, 4rem); border-top: 1px solid var(--line); color: var(--muted); text-align: center; font-size: .82rem; }
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .toc { position: static; max-height: none; }
+  .toc li.depth-3 { display: none; }
+  .diagram .mermaid { min-width: 620px; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+@media print {
+  :root { --bg: #fff; --surface: #fff; --surface-2: #f4f4f4; --ink: #111; --muted: #444; --line: #ccc; }
+  .toc, .skip-link, .heading-link { display: none; }
+  .layout { display: block; max-width: none; padding: 1rem; }
+  .hero-inner { padding: 1rem; }
+  .hero h1 { font-size: 2.4rem; }
+  h2, h3, .ticket-heading { break-after: avoid; }
+  table, pre, .meta-block { break-inside: avoid; }
+  a { color: inherit; }
+}
+</style>
+</head>
+<body data-document-kind="validation">
+<a class="skip-link" href="#content">Skip to content</a>
+<header class="hero"><div class="hero-inner"><p class="eyebrow">Architecture design · Validation catalog</p><h1>Duel-Field Validation References</h1><p class="hero-summary">Rule, visual, accessibility, viewport, fixture, performance, privacy comparison catalog for DOM-field parity.</p><div class="stats"><div class="stat"><strong>Accepted</strong><span>status</span></div><div class="stat"><strong>9</strong><span>sections</span></div><div class="stat"><strong>0</strong><span>diagrams</span></div></div></div></header>
+<div class="layout"><nav class="toc" aria-label="Document contents"><h2>Contents</h2><ol><li class="depth-2"><a href="#reference-precedence">Reference precedence</a></li><li class="depth-2"><a href="#local-original-reference-image">Local original reference image</a></li><li class="depth-2"><a href="#official-rules-schema-references">Official rules/schema references</a></li><li class="depth-2"><a href="#external-game-screenshots">External game screenshots</a></li><li class="depth-3"><a href="#yu-gi-oh-master-duel-konami">Yu-Gi-Oh! Master Duel — KONAMI</a></li><li class="depth-3"><a href="#yu-gi-oh-legacy-of-the-duelist-link-evolution-konami">Yu-Gi-Oh! Legacy of the Duelist: Link Evolution — KONAMI</a></li><li class="depth-2"><a href="#standards-references">Standards references</a></li><li class="depth-2"><a href="#required-local-comparison-captures">Required local comparison captures</a></li><li class="depth-3"><a href="#viewports">Viewports</a></li><li class="depth-3"><a href="#state-fixtures">State fixtures</a></li><li class="depth-3"><a href="#naming">Naming</a></li><li class="depth-2"><a href="#comparison-rubric">Comparison rubric</a></li><li class="depth-3"><a href="#rule-correctness">Rule correctness</a></li><li class="depth-3"><a href="#interaction">Interaction</a></li><li class="depth-3"><a href="#accessibility">Accessibility</a></li><li class="depth-3"><a href="#visual-hierarchy">Visual hierarchy</a></li><li class="depth-3"><a href="#performance-resource-behavior">Performance/resource behavior</a></li><li class="depth-2"><a href="#manual-review-record-template">Manual review record template</a></li><li class="depth-2"><a href="#copyright-and-retention">Copyright and retention</a></li></ol></nav><main id="content"><h1 id="duel-field-validation-references" class="anchor-heading"><a class="heading-link" href="#duel-field-validation-references" aria-label="Link to Duel-Field Validation References">#</a>Duel-Field Validation References</h1>
+<aside class="meta-block">Status: accepted validation catalog<br>Last checked: 2026-07-31<br>Purpose: compare rule layout, information hierarchy, interaction clarity, accessibility, and responsive behavior without copying another game&#x27;s visual design</aside>
+<h2 id="reference-precedence" class="anchor-heading"><a class="heading-link" href="#reference-precedence" aria-label="Link to Reference precedence">#</a>Reference precedence</h2>
+<ol class="content-list"><li><code>ocgcore</code>/public contract decides actual state and legal choices.</li><li>Official Yu-Gi-Oh! rules decide physical Standard field meaning.</li><li>Project architecture decides ownership, accessibility, privacy, and scope.</li><li>Local wireframe decides expected component placement/behavior.</li><li>External game screenshots are visual heuristics only.</li></ol>
+<p>A screenshot never overrides engine sequence semantics, privacy, keyboard access, 44 px targets, reduced motion, or product no-spectacle scope.</p>
+<h2 id="local-original-reference-image" class="anchor-heading"><a class="heading-link" href="#local-original-reference-image" aria-label="Link to Local original reference image">#</a>Local original reference image</h2>
+<figure class="inline-figure"><img src="architecture/05-presentation/references/standard-field-wireframe.svg" alt="Standard-format DOM field wireframe" loading="lazy"><figcaption>Standard-format DOM field wireframe</figcaption></figure>
+<p>File: <a href="architecture/05-presentation/references/standard-field-wireframe.svg"><code>references/standard-field-wireframe.svg</code></a></p>
+<p>Validate:</p>
+<ul class="content-list"><li>opponent top/local player bottom;</li><li>five Main Monster plus five Spell/Trap slots per player;</li><li>exactly two shared Extra Monster Zone controls;</li><li>field/deck/Extra/GY/banished stack controls remain distinguishable;</li><li>hand, inspector, action menu, HUD, and selection dock do not cover required targets;</li><li>explicit Confirm exists for multi-select/allocation/order workflows.</li></ul>
+<p>Do not validate pixel-perfect color, typography, or spacing against wireframe.</p>
+<h2 id="official-rules-schema-references" class="anchor-heading"><a class="heading-link" href="#official-rules-schema-references" aria-label="Link to Official rules/schema references">#</a>Official rules/schema references</h2>
+<div class="table-wrap"><table><thead><tr>
+<th style="text-align:left">ID</th>
+<th style="text-align:left">Source</th>
+<th style="text-align:left">Use</th>
+<th style="text-align:left">Validation question</th>
+</tr></thead><tbody>
+<tr>
+<td style="text-align:left">RULE-01</td>
+<td style="text-align:left"><a href="https://img.yugioh-card.com/en/downloads/rulebook/SD_RuleBook_EN_10.pdf" target="_blank" rel="noreferrer">Official Rulebook v10 PDF</a>, “The Game Mat”, printed pages 4–5</td>
+<td style="text-align:left">Canonical physical zone names/counts, Pendulum use of outer Spell/Trap slots, separate Field Zones, shared Extra Monster Zone concept</td>
+<td style="text-align:left">Does board show correct physical Standard topology without inventing owner-specific duplicate EMZs?</td>
+</tr>
+<tr>
+<td style="text-align:left">CORE-01</td>
+<td style="text-align:left"><a href="https://github.com/edo9300/ygopro-core/blob/master/field.cpp" target="_blank" rel="noreferrer"><code>field.cpp</code> in embedded-core upstream</a>, <code>is_location_useable</code></td>
+<td style="text-align:left">Engine slot collision relation: opponent Extra Monster sequence conflicts through <code>11 - sequence</code></td>
+<td style="text-align:left">Do <code>p0:s5</code> and <code>p1:s6</code> map to one physical slot, plus <code>p0:s6</code>/<code>p1:s5</code> to other?</td>
+</tr>
+<tr>
+<td style="text-align:left">CORE-02</td>
+<td style="text-align:left">Same source, <code>add_card</code>, <code>remove_card</code>, <code>get_field_card</code></td>
+<td style="text-align:left">MZONE/SZONE use fixed indexed slots while hand/GY/banished/Extra use ordered lists</td>
+<td style="text-align:left">Does projector preserve fixed sequences after removal/move?</td>
+</tr>
+</tbody></table></div>
+<p>Pin core-code citations to vendored embedded revision when that revision becomes discoverable. Until then, fixture behavior from pinned WASM outranks moving upstream source.</p>
+<h2 id="external-game-screenshots" class="anchor-heading"><a class="heading-link" href="#external-game-screenshots" aria-label="Link to External game screenshots">#</a>External game screenshots</h2>
+<p>Links open publisher-supplied storefront media. Images remain externally hosted; repository does not copy or redistribute them.</p>
+<h3 id="yu-gi-oh-master-duel-konami" class="anchor-heading"><a class="heading-link" href="#yu-gi-oh-master-duel-konami" aria-label="Link to Yu-Gi-Oh! Master Duel — KONAMI">#</a>Yu-Gi-Oh! Master Duel — KONAMI</h3>
+<p>Product sources: <a href="https://www.konami.com/yugioh/masterduel/us/en/" target="_blank" rel="noreferrer">official site</a> · <a href="https://store.steampowered.com/app/1449850/YuGiOh_Master_Duel/" target="_blank" rel="noreferrer">Steam listing</a></p>
+<div class="table-wrap"><table><thead><tr>
+<th style="text-align:left">ID</th>
+<th style="text-align:left">Screenshot</th>
+<th style="text-align:left">Study</th>
+<th style="text-align:left">Reject/copy nothing</th>
+</tr></thead><tbody>
+<tr>
+<td style="text-align:left">MD-01</td>
+<td style="text-align:left"><a href="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1449850/ss_f4e2257edc1cb8093f1f0b40d7daf96211405f90.1920x1080.jpg" target="_blank" rel="noreferrer">Active duel field with inspector and LP</a></td>
+<td style="text-align:left">field dominance, persistent LP/turn state, inspector adjacency, clear occupied/empty slots</td>
+<td style="text-align:left">3D arena, particles, damage spectacle, proprietary skin</td>
+</tr>
+<tr>
+<td style="text-align:left">MD-02</td>
+<td style="text-align:left"><a href="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1449850/ss_6501d1b0e2dc14a5e1031d5e02456d9b72912a0b.1920x1080.jpg" target="_blank" rel="noreferrer">Card/effect selection during duel</a></td>
+<td style="text-align:left">target emphasis, card enlargement, action context while preserving board orientation</td>
+<td style="text-align:left">animated effects, numbered spectacle, exact layout</td>
+</tr>
+</tbody></table></div>
+<h3 id="yu-gi-oh-legacy-of-the-duelist-link-evolution-konami" class="anchor-heading"><a class="heading-link" href="#yu-gi-oh-legacy-of-the-duelist-link-evolution-konami" aria-label="Link to Yu-Gi-Oh! Legacy of the Duelist: Link Evolution — KONAMI">#</a>Yu-Gi-Oh! Legacy of the Duelist: Link Evolution — KONAMI</h3>
+<p>Product sources: <a href="https://www.konami.com/yugioh/lotd_le/us/en/" target="_blank" rel="noreferrer">official site</a> · <a href="https://store.steampowered.com/app/1150640/YuGiOh_Legacy_of_the_Duelist__Link_Evolution/" target="_blank" rel="noreferrer">Steam listing</a></p>
+<div class="table-wrap"><table><thead><tr>
+<th style="text-align:left">ID</th>
+<th style="text-align:left">Screenshot</th>
+<th style="text-align:left">Study</th>
+<th style="text-align:left">Reject/copy nothing</th>
+</tr></thead><tbody>
+<tr>
+<td style="text-align:left">LE-01</td>
+<td style="text-align:left"><a href="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1150640/ss_d9e917a2ea99d55785bff853fc5f4c4da48570ea.1920x1080.jpg" target="_blank" rel="noreferrer">Full duel field, hand, inspector</a></td>
+<td style="text-align:left">compact desktop information density, visible hand, stack counts, card text beside board</td>
+<td style="text-align:left">proprietary art/layout; mouse-only assumptions</td>
+</tr>
+<tr>
+<td style="text-align:left">LE-02</td>
+<td style="text-align:left"><a href="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1150640/ss_1bc66a6b9696cd519c161210b1cccc9dc9853f42.1920x1080.jpg" target="_blank" rel="noreferrer">Occupied field with active card detail</a></td>
+<td style="text-align:left">readable occupied zones, controller orientation, persistent card detail</td>
+<td style="text-align:left">low-contrast tiny text, exact color language</td>
+</tr>
+<tr>
+<td style="text-align:left">LE-03</td>
+<td style="text-align:left"><a href="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1150640/ss_ed9bf5db1fe85587b7015bac4291d682542921a1.1920x1080.jpg" target="_blank" rel="noreferrer">Pendulum-zone field state</a></td>
+<td style="text-align:left">outer Spell/Trap zones gaining Pendulum meaning without extra physical slots</td>
+<td style="text-align:left">format-specific effects outside public contract</td>
+</tr>
+<tr>
+<td style="text-align:left">LE-04</td>
+<td style="text-align:left"><a href="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1150640/ss_829bfd3760cc7078ca2cd22d82c0471a61e1c35b.1920x1080.jpg" target="_blank" rel="noreferrer">Extra Monster Zone/Link field state</a></td>
+<td style="text-align:left">shared center slots and full-board relation</td>
+<td style="text-align:left">exact board texture/animation</td>
+</tr>
+</tbody></table></div>
+<h2 id="standards-references" class="anchor-heading"><a class="heading-link" href="#standards-references" aria-label="Link to Standards references">#</a>Standards references</h2>
+<div class="table-wrap"><table><thead><tr>
+<th style="text-align:left">ID</th>
+<th style="text-align:left">Source</th>
+<th style="text-align:left">Validation use</th>
+</tr></thead><tbody>
+<tr>
+<td style="text-align:left">A11Y-01</td>
+<td style="text-align:left"><a href="https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html" target="_blank" rel="noreferrer">WCAG 2.2 Keyboard</a></td>
+<td style="text-align:left">Every field operation completes without pointer.</td>
+</tr>
+<tr>
+<td style="text-align:left">A11Y-02</td>
+<td style="text-align:left"><a href="https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html" target="_blank" rel="noreferrer">WCAG 2.2 Focus Visible</a></td>
+<td style="text-align:left">Focus indicator remains visible on rotated/overlapped cards.</td>
+</tr>
+<tr>
+<td style="text-align:left">A11Y-03</td>
+<td style="text-align:left"><a href="https://www.w3.org/WAI/WCAG22/Understanding/name-role-value.html" target="_blank" rel="noreferrer">WCAG 2.2 Name, Role, Value</a></td>
+<td style="text-align:left">Card/zone/menu/tray state has programmatic names/roles/states.</td>
+</tr>
+<tr>
+<td style="text-align:left">A11Y-04</td>
+<td style="text-align:left"><a href="https://www.w3.org/WAI/ARIA/apg/patterns/grid/" target="_blank" rel="noreferrer">WAI-ARIA APG Grid</a></td>
+<td style="text-align:left">Roving focus/arrow-key behavior reference; use role only after SR validation.</td>
+</tr>
+<tr>
+<td style="text-align:left">A11Y-05</td>
+<td style="text-align:left"><a href="https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html" target="_blank" rel="noreferrer">WCAG 2.2 Target Size</a></td>
+<td style="text-align:left">Standards floor; project keeps stricter 44 px target.</td>
+</tr>
+<tr>
+<td style="text-align:left">TEST-01</td>
+<td style="text-align:left"><a href="https://playwright.dev/docs/locators" target="_blank" rel="noreferrer">Playwright locators</a></td>
+<td style="text-align:left">Prefer role/name/state assertions over coordinates or implementation IDs.</td>
+</tr>
+<tr>
+<td style="text-align:left">TEST-02</td>
+<td style="text-align:left"><a href="https://playwright.dev/docs/test-snapshots" target="_blank" rel="noreferrer">Playwright visual comparisons</a></td>
+<td style="text-align:left">Stable targeted screenshots; do not replace semantic tests.</td>
+</tr>
+</tbody></table></div>
+<h2 id="required-local-comparison-captures" class="anchor-heading"><a class="heading-link" href="#required-local-comparison-captures" aria-label="Link to Required local comparison captures">#</a>Required local comparison captures</h2>
+<p>Capture generated test artifacts; do not commit card-art screenshots unless licensing review approves them.</p>
+<h3 id="viewports" class="anchor-heading"><a class="heading-link" href="#viewports" aria-label="Link to Viewports">#</a>Viewports</h3>
+<div class="table-wrap"><table><thead><tr>
+<th style="text-align:left">ID</th>
+<th style="text-align:right">CSS viewport</th>
+<th style="text-align:right">DPR</th>
+<th style="text-align:left">Purpose</th>
+</tr></thead><tbody>
+<tr>
+<td style="text-align:left">VP-01</td>
+<td style="text-align:right">1366×768</td>
+<td style="text-align:right">1</td>
+<td style="text-align:left">minimum common desktop composition</td>
+</tr>
+<tr>
+<td style="text-align:left">VP-02</td>
+<td style="text-align:right">1920×1080</td>
+<td style="text-align:right">1</td>
+<td style="text-align:left">full desktop layout</td>
+</tr>
+<tr>
+<td style="text-align:left">VP-03</td>
+<td style="text-align:right">1280×720</td>
+<td style="text-align:right">2</td>
+<td style="text-align:left">high-DPR minimum supported field</td>
+</tr>
+<tr>
+<td style="text-align:left">VP-04</td>
+<td style="text-align:right">1024×768</td>
+<td style="text-align:right">1</td>
+<td style="text-align:left">narrow desktop/tablet transition</td>
+</tr>
+<tr>
+<td style="text-align:left">VP-05</td>
+<td style="text-align:right">667×375 landscape</td>
+<td style="text-align:right">2</td>
+<td style="text-align:left">contained compact field/touch targets</td>
+</tr>
+<tr>
+<td style="text-align:left">VP-06</td>
+<td style="text-align:right">375×667 portrait</td>
+<td style="text-align:right">2</td>
+<td style="text-align:left">semantic controls/recomposition fallback</td>
+</tr>
+<tr>
+<td style="text-align:left">VP-07</td>
+<td style="text-align:right">1280×720 at 200% browser zoom</td>
+<td style="text-align:right">browser-controlled</td>
+<td style="text-align:left">text/control usability, no critical clipping</td>
+</tr>
+</tbody></table></div>
+<h3 id="state-fixtures" class="anchor-heading"><a class="heading-link" href="#state-fixtures" aria-label="Link to State fixtures">#</a>State fixtures</h3>
+<div class="table-wrap"><table><thead><tr>
+<th style="text-align:left">ID</th>
+<th style="text-align:left">Fixture</th>
+<th style="text-align:left">Required visible proof</th>
+</tr></thead><tbody>
+<tr>
+<td style="text-align:left">ST-01</td>
+<td style="text-align:left">Empty board, both hands, initial prompt</td>
+<td style="text-align:left">topology, LP/turn/phase, hand privacy, prompt focus</td>
+</tr>
+<tr>
+<td style="text-align:left">ST-02</td>
+<td style="text-align:left">Main zones <code>0</code> and <code>4</code> occupied</td>
+<td style="text-align:left">sparse fixed-slot placement, no resequencing</td>
+</tr>
+<tr>
+<td style="text-align:left">ST-03</td>
+<td style="text-align:left">both shared EMZ engine addresses exercised</td>
+<td style="text-align:left">exactly two physical controls, no duplicate occupancy</td>
+</tr>
+<tr>
+<td style="text-align:left">ST-04</td>
+<td style="text-align:left">face-up/face-down attack/defense</td>
+<td style="text-align:left">correct orientation, privacy-safe labels/art</td>
+</tr>
+<tr>
+<td style="text-align:left">ST-05</td>
+<td style="text-align:left">selectable card/zone prompt</td>
+<td style="text-align:left">legal highlight, visible focus, action menu</td>
+</tr>
+<tr>
+<td style="text-align:left">ST-06</td>
+<td style="text-align:left">multi-select + exact/sum constraint</td>
+<td style="text-align:left">selection dock, count/total, explicit Confirm</td>
+</tr>
+<tr>
+<td style="text-align:left">ST-07</td>
+<td style="text-align:left">counter allocation + overlay materials</td>
+<td style="text-align:left">badges/material stack, allocation limits</td>
+</tr>
+<tr>
+<td style="text-align:left">ST-08</td>
+<td style="text-align:left">active multi-link chain</td>
+<td style="text-align:left">provenance, order, resolving/negated/disabled state</td>
+</tr>
+<tr>
+<td style="text-align:left">ST-09</td>
+<td style="text-align:left">60-card open tray</td>
+<td style="text-align:left">scroll/focus, bounded mount, no board loss</td>
+</tr>
+<tr>
+<td style="text-align:left">ST-10</td>
+<td style="text-align:left">missing/slow image</td>
+<td style="text-align:left">immediate placeholder, input remains enabled</td>
+</tr>
+<tr>
+<td style="text-align:left">ST-11</td>
+<td style="text-align:left">response submitted then intermediate state event</td>
+<td style="text-align:left">controls stay locked until authoritative completion</td>
+</tr>
+<tr>
+<td style="text-align:left">ST-12</td>
+<td style="text-align:left">recoverable invalid response</td>
+<td style="text-align:left">current prompt restored/unlocked, focus/error announced</td>
+</tr>
+<tr>
+<td style="text-align:left">ST-13</td>
+<td style="text-align:left">reduced motion</td>
+<td style="text-align:left">no nonessential movement; final state/highlight preserved</td>
+</tr>
+<tr>
+<td style="text-align:left">ST-14</td>
+<td style="text-align:left">result/restart</td>
+<td style="text-align:left">menus/session cleared, resources released, fresh focus</td>
+</tr>
+</tbody></table></div>
+<h3 id="naming" class="anchor-heading"><a class="heading-link" href="#naming" aria-label="Link to Naming">#</a>Naming</h3>
+<p>Use deterministic artifact paths:</p>
+<pre class="code-block"><code class="language-text">test-results/duel-field/&lt;browser&gt;/&lt;viewport-id&gt;/&lt;state-id&gt;.png
+test-results/duel-field/&lt;browser&gt;/&lt;viewport-id&gt;/&lt;state-id&gt;.trace.zip</code></pre>
+<p>Each visual ticket records before/after captures for affected state IDs. Final parity ticket captures every state at VP-01/02/04, plus responsive subset at VP-05/06/07.</p>
+<h2 id="comparison-rubric" class="anchor-heading"><a class="heading-link" href="#comparison-rubric" aria-label="Link to Comparison rubric">#</a>Comparison rubric</h2>
+<p>Score each item pass/fail; no aesthetic averaging can hide functional failure.</p>
+<h3 id="rule-correctness" class="anchor-heading"><a class="heading-link" href="#rule-correctness" aria-label="Link to Rule correctness">#</a>Rule correctness</h3>
+<ul class="content-list"><li><span class="check" aria-hidden="true"></span>Five Main Monster and five Spell/Trap slots per player.</li><li><span class="check" aria-hidden="true"></span>Two shared EMZ controls only.</li><li><span class="check" aria-hidden="true"></span>Fixed sequences remain stable through movement/removal.</li><li><span class="check" aria-hidden="true"></span>Pendulum state reuses outer Spell/Trap slots.</li><li><span class="check" aria-hidden="true"></span>Controller/owner/face state matches public snapshot.</li><li><span class="check" aria-hidden="true"></span>Hidden identities never appear in DOM, accessible names, requests, screenshots, or logs.</li></ul>
+<h3 id="interaction" class="anchor-heading"><a class="heading-link" href="#interaction" aria-label="Link to Interaction">#</a>Interaction</h3>
+<ul class="content-list"><li><span class="check" aria-hidden="true"></span>Legal targets are identifiable without hover.</li><li><span class="check" aria-hidden="true"></span>Card inspection remains available independently from legal action.</li><li><span class="check" aria-hidden="true"></span>Multiple actions use anchored menu.</li><li><span class="check" aria-hidden="true"></span>Multi-select/allocation/order requires explicit Confirm.</li><li><span class="check" aria-hidden="true"></span>Pointer-up/click and keyboard produce same opaque choice IDs.</li><li><span class="check" aria-hidden="true"></span>Pending response cannot double-submit or unlock on intermediate snapshot.</li></ul>
+<h3 id="accessibility" class="anchor-heading"><a class="heading-link" href="#accessibility" aria-label="Link to Accessibility">#</a>Accessibility</h3>
+<ul class="content-list"><li><span class="check" aria-hidden="true"></span>One meaningful field entry tab stop plus documented spatial keys.</li><li><span class="check" aria-hidden="true"></span>Focus visible on every state/background/rotation.</li><li><span class="check" aria-hidden="true"></span>Focus returns after menu/tray close and recoverable errors.</li><li><span class="check" aria-hidden="true"></span>Screen reader receives name, zone, controller, position, legal/selected state.</li><li><span class="check" aria-hidden="true"></span>Live announcements are useful and non-repetitive.</li><li><span class="check" aria-hidden="true"></span>44×44 CSS px targets and 200% zoom pass.</li></ul>
+<h3 id="visual-hierarchy" class="anchor-heading"><a class="heading-link" href="#visual-hierarchy" aria-label="Link to Visual hierarchy">#</a>Visual hierarchy</h3>
+<ul class="content-list"><li><span class="check" aria-hidden="true"></span>Board remains primary surface.</li><li><span class="check" aria-hidden="true"></span>LP/turn/phase/current decision visible without searching.</li><li><span class="check" aria-hidden="true"></span>Legal, selected, resolving, disabled, hidden states do not rely on color alone.</li><li><span class="check" aria-hidden="true"></span>Inspector/menu/tray preserve board context.</li><li><span class="check" aria-hidden="true"></span>Stack counts and open affordances remain clear.</li><li><span class="check" aria-hidden="true"></span>Motion communicates state change, never delays input.</li></ul>
+<h3 id="performance-resource-behavior" class="anchor-heading"><a class="heading-link" href="#performance-resource-behavior" aria-label="Link to Performance/resource behavior">#</a>Performance/resource behavior</h3>
+<ul class="content-list"><li><span class="check" aria-hidden="true"></span>No idle animation loop.</li><li><span class="check" aria-hidden="true"></span>Closed tray does not mount full collection.</li><li><span class="check" aria-hidden="true"></span>No long task caused by normal prompt target update.</li><li><span class="check" aria-hidden="true"></span>Object URL/DOM listener counts return to baseline after restart.</li><li><span class="check" aria-hidden="true"></span>Missing/slow images never block legal input.</li><li><span class="check" aria-hidden="true"></span>Final build contains no Phaser chunk after removal ticket.</li></ul>
+<h2 id="manual-review-record-template" class="anchor-heading"><a class="heading-link" href="#manual-review-record-template" aria-label="Link to Manual review record template">#</a>Manual review record template</h2>
+<pre class="code-block"><code class="language-md">### Review YYYY-MM-DD / commit &lt;sha&gt;
+
+- Browser/OS:
+- Screen reader/input:
+- Viewport/DPR/zoom:
+- Fixtures:
+- Reference IDs compared:
+- Rule correctness: pass/fail + evidence
+- Pointer flow: pass/fail + evidence
+- Keyboard/focus flow: pass/fail + evidence
+- Screen-reader output: pass/fail + evidence
+- Reduced motion: pass/fail + evidence
+- Visual hierarchy: pass/fail + evidence
+- Perf trace path:
+- Defects/ticket IDs:
+- Reviewer:</code></pre>
+<h2 id="copyright-and-retention" class="anchor-heading"><a class="heading-link" href="#copyright-and-retention" aria-label="Link to Copyright and retention">#</a>Copyright and retention</h2>
+<p>Yu-Gi-Oh! names/screenshots/card art belong to respective owners. External screenshots are linked for internal comparative review only. Do not copy them into source, product assets, test snapshots, or public docs without legal approval. Prefer placeholder art for committed visual fixtures. Generated CI screenshots containing bundled private-mode card art inherit existing distribution restrictions and remain short-lived private artifacts.</p></main></div>
+<footer>Generated from <a href="architecture/05-presentation/duel-field-validation-references.md">docs/architecture/05-presentation/duel-field-validation-references.md</a>. Markdown remains review source; HTML is human-readable projection.</footer>
+<script type="module">
+const diagrams = document.querySelectorAll('.mermaid');
+if (diagrams.length) {
+  try {
+    const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs');
+    const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+    mermaid.initialize({ startOnLoad: false, theme: dark ? 'dark' : 'neutral', securityLevel: 'strict', flowchart: { htmlLabels: true, curve: 'basis' } });
+    await mermaid.run({ nodes: diagrams });
+  } catch (error) {
+    console.warn('Mermaid unavailable; diagram source preserved.', error);
+  }
+}
+</script>
+</body>
+</html>

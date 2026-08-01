@@ -4,9 +4,9 @@ Browser-first, offline Yu-Gi-Oh! duel simulator built around Project Ignis `ygop
 
 The MVP launches directly into a normal duel between one human player and a basic computer opponent. Both sides use bundled preset decks; production games shuffle the decks and draw randomized starting hands normally. The opponent uses only simple, straightforward cards and shallow legal-action priorities rather than strategic combo planning.
 
-Development is headless-first. Programmed real-WASM integration scenarios must cover every supported game-action family before Svelte, Phaser, or other visual duel-simulator work begins. The target architecture requires `ocgcore-wasm@0.1.2` to be vendored and integrity-verified.
+Development remains headless-first. Programmed real-WASM integration scenarios cover every supported game-action family before presentation changes. The architecture requires `ocgcore-wasm@0.1.2` to stay vendored and integrity-verified.
 
-> **Current status:** the browser MVP is implemented through Checkpoint G. The pinned synchronous core runs in a dedicated Worker; Svelte provides exhaustive accessible controls; Phaser renders the public field; active runtime/image artifacts are integrity-checked and revision-cached; diagnostics, restart, rollback, and failure fallbacks are bounded. Programmed and randomized real-WASM suites remain the compatibility gate, while the production bundle is exercised in Chromium with Firefox/WebKit startup smoke coverage.
+> **Current status:** browser MVP is implemented through Checkpoint G. Pinned synchronous core runs in a dedicated Worker; Svelte provides exhaustive accessible controls; Phaser currently renders public field. Accepted target replaces interactive Phaser canvas with semantic Svelte DOM under [`docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`](docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md). Active runtime/image artifacts, diagnostics, restart, rollback, compatibility, and browser gates remain unchanged during migration.
 
 ## Included asset pipeline
 
@@ -230,7 +230,8 @@ Per-duel bounded traces record revisions, process/message ordering, public event
 ## Documentation
 
 - [`context.md`](context.md) — concise project context and target architecture
-- [`docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md`](docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md) — ordered MVP implementation plan
+- [`docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`](docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md) — current TDD ticket/dependency plan
+- [`docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md`](docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md) — completed MVP/Phaser baseline plan
 - [`docs/assets/asset-import-pipeline.md`](docs/assets/asset-import-pipeline.md) — asset sources, transformations, integrity guarantees, and observed counts
 - [`docs/README.md`](docs/README.md) — documentation index
 - [`docs/architecture/architecture.md`](docs/architecture/architecture.md) — canonical architecture map and granular decisions

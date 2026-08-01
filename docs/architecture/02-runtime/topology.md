@@ -1,13 +1,14 @@
 # Runtime Topology
 
-> Status: accepted
+> Status: accepted target; migration pending
 
-## Main thread owns
+Current baseline keeps the public field in a Phaser scene while Svelte owns prompt controls and application lifecycle. DF-01 through DF-17 migrate projection, interaction, and presentation to the target ownership below; Worker engine authority remains unchanged.
 
-- Svelte application lifecycle, controls, card details, logs, loading/errors, and results.
-- Latest immutable public duel snapshot and one current human prompt.
-- Phaser presentation bridge and scene lifecycle.
-- Active-duel image preload/cache coordination.
+## Target main thread owns
+
+- Svelte application lifecycle, semantic field controls, card details, logs, loading/errors, and results.
+- Latest immutable public duel snapshot, one current human prompt, and prompt-keyed interaction session.
+- DOM/CSS/SVG presentation lifecycle and active-duel image lease/cache coordination.
 - Typed Worker client only; it never imports the engine.
 
 ## Dedicated Worker owns
@@ -28,7 +29,8 @@
 ## Boundaries
 
 - Communication uses structured-clone-safe domain commands and events.
-- Raw protocol values never cross to Svelte or Phaser.
-- Opponent hidden identities are removed before snapshots leave the Worker.
-- Phaser communicates through the presentation store/bridge, never directly with the Worker.
+- Raw protocol values never cross to Svelte/presentation components.
+- Offline snapshots may retain opponent hidden identities with explicit visibility metadata; presentation, accessibility, image loading, screenshots, and routine diagnostics must conceal them.
+- DOM field communicates through typed store callbacks, never directly with the Worker.
+- Logical field geometry and interaction specs are pure main-thread mappings from immutable domain data.
 - A runaway or unresponsive engine is bounded by terminating/replacing the Worker.

@@ -14,7 +14,7 @@ Ship a static browser application that starts a normal Yu-Gi-Oh! duel between on
 - Test-only programmed deck order, seed, starting hands, and responses.
 - Current standard-format BabelCDB metadata, Project Ignis CardScripts, system strings, and image manifest.
 - Typed Worker protocol, public-state projection, human prompts, and deterministic deck-specific opponent.
-- Svelte controls, Phaser field, card images, result/restart/surrender, and diagnostic download.
+- Svelte controls and semantic DOM field, card images, result/restart/surrender, and diagnostic download. Migration from implemented Phaser baseline follows the approved field plan.
 - Unit, real-WASM integration, asset-integrity, compatibility, and browser smoke tests.
 
 ## Excluded
@@ -24,6 +24,6 @@ Ship a static browser application that starts a normal Yu-Gi-Oh! duel between on
 - General-purpose competitive AI.
 - Online multiplayer, lobbies, chat, or server authority.
 - Match/side-deck flow and EDOPro replay compatibility.
-- Pixel-perfect EDOPro parity, mobile-first polish, or every image in the initial JS bundle.
+- Pixel-perfect EDOPro/Master Duel parity, mobile-first polish, alternate field formats, Tag Duel, spectacle animation, or every image in the initial JS bundle.
 
 “Project Ignis-like” means current rules/data/script coverage and a complete playable duel surface, not copying EDOPro menus, networking, or visual design.

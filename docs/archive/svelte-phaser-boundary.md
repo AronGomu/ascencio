@@ -1,6 +1,9 @@
 # Svelte–Phaser Boundary
 
-> Status: accepted
+> Status: superseded on 2026-07-31
+> Superseded by: [`../ADR/001_ADR_semantic_dom_duel_field_rendering.md`](../ADR/001_ADR_semantic_dom_duel_field_rendering.md)
+
+This file preserves implemented-MVP history. It is not current architecture.
 
 ## Svelte owns
 

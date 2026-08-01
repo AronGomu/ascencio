@@ -11,7 +11,7 @@
 
 ## Import boundary
 
-A focused Worker-owned adapter is the only application module allowed to import the engine. Svelte, Phaser, stores, contracts, and policies depend only on domain types.
+A focused Worker-owned adapter is the only application module allowed to import the engine. Svelte field/components, stores, contracts, and policies depend only on domain types.
 
 ## Synchronous callback rule
 

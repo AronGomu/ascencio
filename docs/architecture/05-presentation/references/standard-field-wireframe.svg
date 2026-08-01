@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="900" viewBox="0 0 1280 900" role="img" aria-labelledby="title desc">
+  <title id="title">Standard-format DOM duel-field wireframe</title>
+  <desc id="desc">Desktop-first board showing opponent and player hands, five main monster zones, five spell and trap zones, two shared Extra Monster Zones, stack controls, HUD, inspector, action menu, and selection dock.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#0a1320"/>
+      <stop offset="1" stop-color="#101b2b"/>
+    </linearGradient>
+    <style>
+      .panel{fill:#111d2d;stroke:#34465d;stroke-width:2}.zone{fill:#162538;stroke:#55708f;stroke-width:2}.shared{fill:#1f3045;stroke:#6ad5e3;stroke-width:3}.stack{fill:#251f3b;stroke:#9f8deb;stroke-width:2}.hand{fill:#172a27;stroke:#65c99c;stroke-width:2}.menu{fill:#34271b;stroke:#efbd65;stroke-width:2}.dock{fill:#222a38;stroke:#7f95b2;stroke-width:2}.label{fill:#edf4fb;font:600 16px system-ui,sans-serif}.small{fill:#a9b8ca;font:13px system-ui,sans-serif}.tiny{fill:#91a2b8;font:11px system-ui,sans-serif}.title{fill:#fff;font:700 22px system-ui,sans-serif}.arrow{stroke:#efbd65;stroke-width:2;fill:none;stroke-dasharray:7 5}
+    </style>
+  </defs>
+  <rect width="1280" height="900" rx="24" fill="url(#bg)"/>
+  <text x="36" y="44" class="title">DOM duel field · Standard desktop wireframe</text>
+  <text x="36" y="68" class="small">Physical slots render once. Opponent top, local player bottom. Diagram is layout/behavior reference, not visual skin.</text>
+
+  <rect x="30" y="92" width="1220" height="68" rx="14" class="panel"/>
+  <text x="52" y="121" class="label">HUD</text>
+  <text x="52" y="145" class="small">Opponent LP · Turn · Phase · Chain · Player LP</text>
+  <rect x="1025" y="105" width="205" height="42" rx="10" class="menu"/>
+  <text x="1042" y="132" class="label">Inspector / status</text>
+
+  <rect x="165" y="178" width="950" height="560" rx="22" class="panel"/>
+  <text x="184" y="204" class="small">Field board · aspect-ratio container</text>
+
+  <rect x="400" y="217" width="480" height="44" rx="12" class="hand"/>
+  <text x="553" y="244" class="label">Opponent hand · hidden count</text>
+
+  <g aria-label="Opponent spell and trap zones">
+    <rect x="365" y="282" width="92" height="70" rx="8" class="zone"/><rect x="480" y="282" width="92" height="70" rx="8" class="zone"/><rect x="595" y="282" width="92" height="70" rx="8" class="zone"/><rect x="710" y="282" width="92" height="70" rx="8" class="zone"/><rect x="825" y="282" width="92" height="70" rx="8" class="zone"/>
+    <text x="526" y="323" class="small">Opponent Spell / Trap 0–4</text>
+  </g>
+  <g aria-label="Opponent main monster zones">
+    <rect x="365" y="370" width="92" height="70" rx="8" class="zone"/><rect x="480" y="370" width="92" height="70" rx="8" class="zone"/><rect x="595" y="370" width="92" height="70" rx="8" class="zone"/><rect x="710" y="370" width="92" height="70" rx="8" class="zone"/><rect x="825" y="370" width="92" height="70" rx="8" class="zone"/>
+    <text x="535" y="411" class="small">Opponent Main Monster 0–4</text>
+  </g>
+
+  <rect x="500" y="455" width="115" height="68" rx="10" class="shared"/>
+  <rect x="665" y="455" width="115" height="68" rx="10" class="shared"/>
+  <text x="557" y="484" text-anchor="middle" class="label">Shared EMZ</text><text x="557" y="506" text-anchor="middle" class="tiny">left · p0 s5 ↔ p1 s6</text>
+  <text x="722" y="484" text-anchor="middle" class="label">Shared EMZ</text><text x="722" y="506" text-anchor="middle" class="tiny">right · p0 s6 ↔ p1 s5</text>
+
+  <g aria-label="Player main monster zones">
+    <rect x="365" y="538" width="92" height="70" rx="8" class="zone"/><rect x="480" y="538" width="92" height="70" rx="8" class="zone"/><rect x="595" y="538" width="92" height="70" rx="8" class="zone"/><rect x="710" y="538" width="92" height="70" rx="8" class="zone"/><rect x="825" y="538" width="92" height="70" rx="8" class="zone"/>
+    <text x="552" y="579" class="small">Your Main Monster 0–4</text>
+  </g>
+  <g aria-label="Player spell and trap zones">
+    <rect x="365" y="626" width="92" height="70" rx="8" class="zone"/><rect x="480" y="626" width="92" height="70" rx="8" class="zone"/><rect x="595" y="626" width="92" height="70" rx="8" class="zone"/><rect x="710" y="626" width="92" height="70" rx="8" class="zone"/><rect x="825" y="626" width="92" height="70" rx="8" class="zone"/>
+    <text x="542" y="667" class="small">Your Spell / Trap 0–4</text>
+  </g>
+
+  <g aria-label="Opponent stacks">
+    <rect x="198" y="282" width="112" height="60" rx="9" class="stack"/><text x="221" y="318" class="small">Opp. Extra</text>
+    <rect x="970" y="282" width="112" height="60" rx="9" class="stack"/><text x="992" y="318" class="small">Opp. Deck</text>
+    <rect x="198" y="365" width="112" height="60" rx="9" class="stack"/><text x="221" y="401" class="small">Opp. Field</text>
+    <rect x="970" y="365" width="112" height="60" rx="9" class="stack"/><text x="994" y="401" class="small">Opp. GY</text>
+    <rect x="198" y="445" width="112" height="60" rx="9" class="stack"/><text x="214" y="481" class="small">Opp. Banished</text>
+  </g>
+  <g aria-label="Player stacks">
+    <rect x="198" y="626" width="112" height="60" rx="9" class="stack"/><text x="223" y="662" class="small">Your Extra</text>
+    <rect x="970" y="626" width="112" height="60" rx="9" class="stack"/><text x="997" y="662" class="small">Your Deck</text>
+    <rect x="198" y="543" width="112" height="60" rx="9" class="stack"/><text x="225" y="579" class="small">Your Field</text>
+    <rect x="970" y="543" width="112" height="60" rx="9" class="stack"/><text x="999" y="579" class="small">Your GY</text>
+    <rect x="970" y="463" width="112" height="60" rx="9" class="stack"/><text x="988" y="499" class="small">Your Banished</text>
+  </g>
+
+  <rect x="400" y="710" width="480" height="44" rx="12" class="hand"/>
+  <text x="555" y="737" class="label">Your hand · keyed card controls</text>
+
+  <rect x="24" y="220" width="126" height="310" rx="16" class="panel"/>
+  <text x="47" y="250" class="label">Inspector</text>
+  <rect x="50" y="270" width="74" height="108" rx="6" class="zone"/>
+  <text x="43" y="406" class="small">Name · text</text><text x="43" y="429" class="small">ATK/DEF/state</text><text x="43" y="452" class="small">Counters</text><text x="43" y="475" class="small">Materials</text>
+
+  <rect x="1128" y="302" width="126" height="180" rx="14" class="menu"/>
+  <text x="1153" y="333" class="label">Actions</text>
+  <rect x="1146" y="352" width="90" height="34" rx="7" class="zone"/><text x="1167" y="375" class="small">Activate</text>
+  <rect x="1146" y="398" width="90" height="34" rx="7" class="zone"/><text x="1168" y="421" class="small">Inspect</text>
+  <path d="M1128 392 C1086 392 1060 411 1018 411" class="arrow"/>
+
+  <rect x="240" y="782" width="800" height="88" rx="16" class="dock"/>
+  <text x="268" y="814" class="label">Selection dock</text>
+  <text x="268" y="840" class="small">Prompt constraints · selected cards/order/allocation · explicit Confirm · Cancel</text>
+  <rect x="830" y="801" width="100" height="44" rx="9" class="hand"/><text x="848" y="829" class="label">Confirm</text>
+  <rect x="944" y="801" width="72" height="44" rx="9" class="zone"/><text x="958" y="829" class="label">Cancel</text>
+</svg>

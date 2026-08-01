@@ -4,14 +4,14 @@
 
 ## Mandatory order
 
-Build the programmed real-WASM headless integration suite before visual duel code. It must cover every supported action/prompt family and reach `MSG_WIN` using the two preset decks. Svelte, Phaser, and visual rendering begin only after this gate is green.
+The programmed real-WASM headless integration suite remains prerequisite for visual work. It covers every supported action/prompt family and reaches `MSG_WIN` using the two preset decks. DOM-field changes start with failing projection/interaction/component fixtures and must preserve this gate.
 
 ## Test layers
 
-- **Pure unit:** binary readers, message fixtures, response bytes, contracts, projection invariants, deck/dependency resolution, opponent decisions, and presentation mappings.
+- **Pure unit:** binary readers, message fixtures, response bytes, contracts, fixed-slot projection invariants, physical-zone/board mappings, interaction spec/session/navigation reducers, deck/dependency resolution, opponent decisions, and presentation mappings.
 - **Worker integration:** vendored real-WASM load, synchronous callbacks, fixed-seed traces, complete duels, and handle cleanup.
 - **Asset/compatibility:** hashes/counts/coverage, required globals, script indexes, protocol constant classification, and active-deck dependencies.
-- **Browser:** production static bundle at a non-root base, Worker/WASM paths, one-response prompts, image/back rendering and fallback, keyboard flow, result/restart, diagnostic download, loading/completion refresh, forced Worker timeout, mobile overflow/touch targets, reduced motion, and hidden-message inspection. The full flow runs in Chromium; startup smoke also runs in Firefox and WebKit.
+- **Component/browser:** role/name/state field controls, pointer/keyboard equivalence, focus return, explicit confirmation, production static bundle at a non-root base, Worker/WASM paths, one-response prompts, nonblocking image/back fallback, result/restart, diagnostic download, loading/completion refresh, forced Worker timeout, responsive overflow/touch targets, reduced motion, resource disposal, and hidden-message inspection. Full flow runs in Chromium; startup smoke also runs in Firefox/WebKit.
 
 ## Regression and update rules
 

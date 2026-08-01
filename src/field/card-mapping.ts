@@ -10,6 +10,7 @@ import type {
   PublicDuelState,
   PublicLocation,
 } from "../duel/contracts/public-duel-state.ts";
+import type { BoardTargetId, BoardViewModel } from "./board-view-model.ts";
 import {
   CARD_HEIGHT,
   CARD_WIDTH,
@@ -278,6 +279,47 @@ function cardLayoutId(
     return mapping.ok ? mapping.zoneId : undefined;
   }
   return fieldZoneId(player, zone);
+}
+
+export type PromptChoiceBoardTargetResolution =
+  | { readonly kind: "board"; readonly targetId: BoardTargetId }
+  | {
+      readonly kind: "nonField";
+      readonly reason:
+        | "choice_has_no_field_target"
+        | "unsupported_field_address"
+        | "target_not_mounted";
+    };
+
+export function resolvePromptChoiceBoardTarget(
+  choice: PromptChoice,
+  snapshot: PublicDuelState | null,
+  board: BoardViewModel,
+): PromptChoiceBoardTargetResolution {
+  if (choice.place !== undefined) {
+    const mapping = mapEngineFieldAddress(choice.place);
+    if (!mapping.ok)
+      return Object.freeze({
+        kind: "nonField",
+        reason: "unsupported_field_address",
+      });
+    const zone = board.zones.find(({ id }) => id === mapping.zoneId);
+    return zone === undefined
+      ? Object.freeze({ kind: "nonField", reason: "target_not_mounted" })
+      : Object.freeze({ kind: "board", targetId: zone.targetId });
+  }
+  if (choice.card !== undefined) {
+    const publicCard = findPublicCard(snapshot, choice.card);
+    const instanceId = publicCard?.instanceId ?? choice.card.instanceId;
+    const card = board.cards.find(({ id }) => id === instanceId);
+    return card === undefined
+      ? Object.freeze({ kind: "nonField", reason: "target_not_mounted" })
+      : Object.freeze({ kind: "board", targetId: card.targetId });
+  }
+  return Object.freeze({
+    kind: "nonField",
+    reason: "choice_has_no_field_target",
+  });
 }
 
 export function choiceIdsForFieldIntent(

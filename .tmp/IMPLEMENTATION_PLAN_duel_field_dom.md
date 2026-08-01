@@ -1,6 +1,6 @@
 # DOM Duel-Field Implementation Plan
 
-> Status: approved amended plan; DF-05 accepted; DF-06 implementation pending
+> Status: approved amended plan; DF-06 accepted; DF-07 implementation pending
 > Created: 2026-07-31
 > Scope: Standard-format desktop field → rich state → accessibility/responsive parity → Phaser removal
 > Architecture: [`architecture/05-presentation/duel-field-architecture.md`](../docs/architecture/05-presentation/duel-field-architecture.md)
@@ -105,7 +105,7 @@ DF-00 → DF-01 → DF-02 → DF-03 → DF-04 → DF-05 → DF-06 → DF-07 → 
 - [x] DF-03
 - [x] DF-04
 - [x] DF-05
-- [ ] DF-06
+- [x] DF-06
 - [ ] DF-07
 - [ ] DF-08
 - [ ] DF-09
@@ -505,14 +505,14 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-- [ ] **Red:** table-driven mapper tests for `ST-01` through `ST-08`: empty/occupied fixed slots, shared EMZ, positions, hidden hands, counters, materials, chains/stacks.
-- [ ] Assert mapping same snapshot twice is deeply equal and stable-keyed.
-- [ ] Assert impossible duplicate physical occupancy returns diagnostic/error instead of last-write-wins.
-- [ ] Assert closed collection stacks contain counts/summaries, not permanently mounted card lists.
-- [ ] Add initial spatial-neighbor graph tests for main rows/shared EMZ/stack controls.
-- [ ] **Green:** create focused board-view contracts and pure mapper; adapt/remove Phaser-specific `FieldSnapshotView` use only when consumers migrate.
-- [ ] Normalize coordinates to `0..1`; preserve aspect-independent physical data.
-- [ ] Build privacy-safe accessible labels from public card text/state.
+- [x] **Red:** table-driven mapper tests for `ST-01` through `ST-08`: empty/occupied fixed slots, shared EMZ, positions, hidden hands, counters, materials, chains/stacks.
+- [x] Assert mapping same snapshot twice is deeply equal and stable-keyed.
+- [x] Assert impossible duplicate physical occupancy returns diagnostic/error instead of last-write-wins.
+- [x] Assert closed collection stacks contain counts/summaries, not permanently mounted card lists.
+- [x] Add initial spatial-neighbor graph tests for main rows/shared EMZ/stack controls.
+- [x] **Green:** create focused board-view contracts and pure mapper; adapt/remove Phaser-specific `FieldSnapshotView` use only when consumers migrate.
+- [x] Normalize coordinates to `0..1`; preserve aspect-independent physical data.
+- [x] Build privacy-safe accessible labels from public card text/state.
 
 ### Outputs
 
@@ -522,10 +522,10 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- [ ] Mapper unit tests green and contain no DOM/Phaser setup.
-- [ ] Every visible public card maps exactly once.
-- [ ] Every field prompt target can resolve to stable board target or explicit non-field fallback.
-- [ ] `npm run test:unit && npm run typecheck` green.
+- [x] Mapper unit tests green and contain no DOM/Phaser setup.
+- [x] Every visible public card maps exactly once.
+- [x] Every field prompt target can resolve to stable board target or explicit non-field fallback.
+- [x] `npm run test:unit && npm run typecheck` green.
 
 ---
 

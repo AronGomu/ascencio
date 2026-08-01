@@ -70,7 +70,11 @@ const examples: readonly (DuelCommand | DuelWorkerEvent)[] = [
       chain: [],
     },
   },
-  { type: "event", event: { type: "phaseChanged", phase: "main1" } },
+  {
+    type: "event",
+    eventSequence: 1,
+    event: { type: "phaseChanged", phase: "main1" },
+  },
   {
     type: "result",
     result: { type: "completed", winner: 0, loser: 1, reason: 1 },
@@ -155,6 +159,43 @@ describe("Worker contracts", () => {
     expect(structuredClone(example)).toEqual(example);
   });
 
+  it("requires a positive safe presentation event sequence", () => {
+    expect(
+      parseDuelWorkerEvent({
+        type: "event",
+        eventSequence: 1,
+        event: { type: "phaseChanged", phase: "main1" },
+      }),
+    ).toEqual({
+      type: "event",
+      eventSequence: 1,
+      event: { type: "phaseChanged", phase: "main1" },
+    });
+
+    for (const eventSequence of [
+      undefined,
+      0,
+      -1,
+      1.5,
+      Number.MAX_SAFE_INTEGER + 1,
+    ]) {
+      const candidate = {
+        type: "event",
+        ...(eventSequence === undefined ? {} : { eventSequence }),
+        event: { type: "phaseChanged", phase: "main1" },
+      };
+      expect(() => parseDuelWorkerEvent(candidate)).toThrow();
+    }
+    expect(() =>
+      parseDuelWorkerEvent({
+        type: "event",
+        eventSequence: 1,
+        event: { type: "phaseChanged", phase: "main1" },
+        duplicate: true,
+      }),
+    ).toThrow("presentation event.duplicate");
+  });
+
   it("validates untrusted Worker commands and bounds response selections", () => {
     expect(
       parseDuelCommand({
@@ -198,7 +239,11 @@ describe("Worker contracts", () => {
   });
 
   it.each([
-    { type: "event", event: { type: "phaseChanged" } },
+    {
+      type: "event",
+      eventSequence: 1,
+      event: { type: "phaseChanged" },
+    },
     {
       type: "state",
       state: {

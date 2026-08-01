@@ -1,6 +1,6 @@
 # DOM Duel-Field Implementation Plan
 
-> Status: approved amended plan; DF-04 accepted; DF-05 implementation pending
+> Status: approved amended plan; DF-05 accepted; DF-06 implementation pending
 > Created: 2026-07-31
 > Scope: Standard-format desktop field → rich state → accessibility/responsive parity → Phaser removal
 > Architecture: [`architecture/05-presentation/duel-field-architecture.md`](../docs/architecture/05-presentation/duel-field-architecture.md)
@@ -104,7 +104,7 @@ DF-00 → DF-01 → DF-02 → DF-03 → DF-04 → DF-05 → DF-06 → DF-07 → 
 - [x] DF-02
 - [x] DF-03
 - [x] DF-04
-- [ ] DF-05
+- [x] DF-05
 - [ ] DF-06
 - [ ] DF-07
 - [ ] DF-08
@@ -469,14 +469,14 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-- [ ] **Red:** store reducer test feeds >100 accepted Worker presentation/domain events; assert derived semantic rows remain while presentation queue keeps last 100.
-- [ ] Feed >2,000 events; assert collection never exceeds 2,000 total rows including one visible truncation marker.
-- [ ] Assert restart/runtime replacement clears both collections.
-- [ ] Assert duplicate event delivery and duplicate state application do not duplicate log rows.
-- [ ] Define immutable `DuelLogEntry` with independent monotonic log sequence plus formatted privacy-safe text and source event type; never retain the nested source event or raw protocol.
-- [ ] **Green:** derive each log row once at reducer ingress from accepted Worker presentation/domain event; split 2,000-entry `duelLog` from independently sequenced `presentationEvents`; keep 100-entry queue for transient feedback.
-- [ ] Preserve current diagnostics bounds and sensitive-data rules.
-- [ ] Add exhaustive durable-log formatter decisions for every presentation event, including DF-04 `chainChanged`. DF-04 counters remain state-only and do not create log rows because no counter presentation event contract exists; arbitrary `hint` text remains transient rather than durable.
+- [x] **Red:** store reducer test feeds >100 accepted Worker presentation/domain events; assert derived semantic rows remain while presentation queue keeps last 100.
+- [x] Feed >2,000 events; assert collection never exceeds 2,000 total rows including one visible truncation marker.
+- [x] Assert restart/runtime replacement clears both collections.
+- [x] Assert duplicate event delivery and duplicate state application do not duplicate log rows.
+- [x] Define immutable `DuelLogEntry` with independent monotonic log sequence plus formatted privacy-safe text and source event type; never retain the nested source event or raw protocol.
+- [x] **Green:** derive each log row once at reducer ingress from accepted Worker presentation/domain event; split 2,000-entry `duelLog` from independently sequenced `presentationEvents`; keep 100-entry queue for transient feedback.
+- [x] Preserve current diagnostics bounds and sensitive-data rules.
+- [x] Add exhaustive durable-log formatter decisions for every presentation event, including DF-04 `chainChanged`. DF-04 counters remain state-only and do not create log rows because no counter presentation event contract exists; arbitrary `hint` text remains transient rather than durable.
 
 ### Outputs
 
@@ -486,9 +486,9 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- [ ] Store unit tests cover >100, >2,000, restart, stale context.
-- [ ] No raw protocol or hidden identity in log entries.
-- [ ] `npm run test:unit && npm run typecheck` green.
+- [x] Store unit tests cover >100, >2,000, restart, stale context.
+- [x] No raw protocol or hidden identity in log entries.
+- [x] `npm run test:unit && npm run typecheck` green.
 
 ---
 

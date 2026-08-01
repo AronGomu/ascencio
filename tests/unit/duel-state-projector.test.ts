@@ -1237,8 +1237,8 @@ describe("DuelStateProjector", () => {
         position: EnginePosition.FACE_DOWN_DEFENSE,
       },
     });
-    const parsed = detached.events.map((event) =>
-      parseDuelWorkerEvent({ type: "event", event }),
+    const parsed = detached.events.map((event, index) =>
+      parseDuelWorkerEvent({ type: "event", eventSequence: index + 1, event }),
     );
     const serialized = JSON.stringify(structuredClone(parsed));
     expect(serialized).not.toContain("5053103");

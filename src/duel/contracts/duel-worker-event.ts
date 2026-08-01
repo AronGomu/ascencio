@@ -23,7 +23,11 @@ export type DuelWorkerEvent =
       readonly progress?: number;
     }
   | { readonly type: "state"; readonly state: PublicDuelState }
-  | { readonly type: "event"; readonly event: DuelPresentationEvent }
+  | {
+      readonly type: "event";
+      readonly eventSequence: number;
+      readonly event: DuelPresentationEvent;
+    }
   | { readonly type: "prompt"; readonly prompt: PlayerPrompt }
   | { readonly type: "result"; readonly result: DuelResult }
   | { readonly type: "diagnostics"; readonly trace: DuelDiagnosticTrace }
@@ -166,7 +170,17 @@ export function parseDuelWorkerEvent(value: unknown): DuelWorkerEvent {
       validatePublicState(event.state);
       break;
     case "event":
-      requireExactKeys(event, ["type", "event"], "presentation event");
+      requireExactKeys(
+        event,
+        ["type", "eventSequence", "event"],
+        "presentation event",
+      );
+      requireSafeInteger(
+        event.eventSequence,
+        "presentation event.eventSequence",
+        1,
+        Number.MAX_SAFE_INTEGER,
+      );
       validatePresentationEvent(event.event);
       break;
     case "prompt":

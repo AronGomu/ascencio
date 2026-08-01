@@ -172,6 +172,46 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     runtime.dispose();
   });
 
+  it("allocates event sequences monotonically and resets them for each duel session", async () => {
+    const harness = await createFakeOcgCoreAdapter(() => ({
+      steps: [
+        {
+          status: EngineProcess.END,
+          messages: [
+            { type: EngineMessageType.NEW_TURN, player: 0 as const },
+            { type: EngineMessageType.NEW_PHASE, phase: 4 },
+            WIN_MESSAGE,
+          ],
+        },
+      ],
+    }));
+    const runtime = new DuelWorkerRuntime(async () =>
+      createResources(harness.adapter),
+    );
+    await runtime.handle({ type: "initialize" });
+
+    const first = await runtime.handle({
+      type: "startDuel",
+      duelId: FAKE_PRESET.id,
+    });
+    expect(
+      first
+        .filter((event) => event.type === "event")
+        .map(({ eventSequence }) => eventSequence),
+    ).toEqual([1, 2]);
+
+    const second = await runtime.handle({
+      type: "startDuel",
+      duelId: FAKE_PRESET.id,
+    });
+    expect(
+      second
+        .filter((event) => event.type === "event")
+        .map(({ eventSequence }) => eventSequence),
+    ).toEqual([1, 2]);
+    runtime.dispose();
+  });
+
   it("streams initialization progress before ready", async () => {
     const harness = await createFakeOcgCoreAdapter(() => ({ steps: [] }));
     const initialization = deferred<DuelRuntimeResources>();

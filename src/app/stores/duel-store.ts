@@ -13,8 +13,13 @@ import type {
 } from "../DuelWorkerClient.ts";
 import { validatePromptSelection } from "../prompts/prompt-selection.ts";
 import type { ChoiceId, SnapshotId } from "../../duel/contracts/ids.ts";
+import {
+  formatDuelLogEntry,
+  type DuelLogSourceType,
+} from "../presentation/format-duel-log-entry.ts";
 
 const MAXIMUM_PRESENTATION_EVENTS = 100;
+const MAXIMUM_DUEL_LOG_ENTRIES = 2_000;
 
 export type DuelStatus =
   | "idle"
@@ -35,6 +40,20 @@ export interface SequencedPresentationEvent {
   readonly event: DuelPresentationEvent;
 }
 
+export type DuelLogEntry =
+  | {
+      readonly kind: "activity";
+      readonly logSequence: number;
+      readonly sourceType: DuelLogSourceType;
+      readonly text: string;
+    }
+  | {
+      readonly kind: "truncated";
+      readonly logSequence: 0;
+      readonly omittedCount: number;
+      readonly text: string;
+    };
+
 export interface DuelViewState {
   readonly context: DuelClientContext;
   readonly status: DuelStatus;
@@ -47,8 +66,11 @@ export interface DuelViewState {
   readonly result: DuelResult | null;
   readonly error: DuelError | null;
   readonly diagnostics: DuelDiagnosticTrace | null;
-  readonly events: readonly DuelPresentationEvent[];
   readonly presentationEvents: readonly SequencedPresentationEvent[];
+  readonly duelLog: readonly DuelLogEntry[];
+  readonly lastAcceptedEventSequence: number;
+  readonly nextPresentationSequence: number;
+  readonly nextLogSequence: number;
   readonly responsePending: boolean;
 }
 
@@ -79,8 +101,11 @@ export function createInitialDuelViewState(
     result: null,
     error: null,
     diagnostics: null,
-    events: Object.freeze([]),
     presentationEvents: Object.freeze([]),
+    duelLog: Object.freeze([]),
+    lastAcceptedEventSequence: 0,
+    nextPresentationSequence: 1,
+    nextLogSequence: 1,
     responsePending: false,
   });
 }
@@ -120,18 +145,36 @@ export function reduceDuelViewState(
         responsePending: state.responsePending,
       });
     case "event": {
-      const sequence = (state.presentationEvents.at(-1)?.sequence ?? 0) + 1;
+      if (event.eventSequence <= state.lastAcceptedEventSequence) return state;
+      const presentationEntry = Object.freeze({
+        sequence: state.nextPresentationSequence,
+        event: event.event,
+      });
+      const formatted = formatDuelLogEntry(event.event);
+      const logEntry =
+        formatted === null
+          ? null
+          : Object.freeze({
+              kind: "activity" as const,
+              logSequence: state.nextLogSequence,
+              sourceType: formatted.sourceType,
+              text: formatted.text,
+            });
       return freezeState({
         ...state,
-        events: Object.freeze(
-          [...state.events, event.event].slice(-MAXIMUM_PRESENTATION_EVENTS),
-        ),
         presentationEvents: Object.freeze(
-          [
-            ...state.presentationEvents,
-            Object.freeze({ sequence, event: event.event }),
-          ].slice(-MAXIMUM_PRESENTATION_EVENTS),
+          [...state.presentationEvents, presentationEntry].slice(
+            -MAXIMUM_PRESENTATION_EVENTS,
+          ),
         ),
+        duelLog:
+          logEntry === null
+            ? state.duelLog
+            : appendDuelLog(state.duelLog, logEntry),
+        lastAcceptedEventSequence: event.eventSequence,
+        nextPresentationSequence: state.nextPresentationSequence + 1,
+        nextLogSequence:
+          logEntry === null ? state.nextLogSequence : state.nextLogSequence + 1,
       });
     }
     case "prompt":
@@ -213,8 +256,11 @@ export function createDuelStore(client: DuelClient): DuelStore {
         snapshot: null,
         result: null,
         diagnostics: null,
-        events: Object.freeze([]),
         presentationEvents: Object.freeze([]),
+        duelLog: Object.freeze([]),
+        lastAcceptedEventSequence: 0,
+        nextPresentationSequence: 1,
+        nextLogSequence: 1,
         responsePending: true,
       }),
     );
@@ -346,6 +392,30 @@ export function createDuelStore(client: DuelClient): DuelStore {
       await client.dispose();
     },
   };
+}
+
+function appendDuelLog(
+  existing: readonly DuelLogEntry[],
+  entry: Extract<DuelLogEntry, { readonly kind: "activity" }>,
+): readonly DuelLogEntry[] {
+  const activities =
+    existing[0]?.kind === "truncated" ? existing.slice(1) : existing;
+  const appended = [...activities, entry];
+  if (
+    existing[0]?.kind !== "truncated" &&
+    appended.length <= MAXIMUM_DUEL_LOG_ENTRIES
+  ) {
+    return Object.freeze(appended);
+  }
+  const retained = appended.slice(-(MAXIMUM_DUEL_LOG_ENTRIES - 1));
+  const omittedCount = entry.logSequence - retained.length;
+  const marker = Object.freeze({
+    kind: "truncated" as const,
+    logSequence: 0 as const,
+    omittedCount,
+    text: `${omittedCount} earlier duel event${omittedCount === 1 ? "" : "s"} omitted.`,
+  });
+  return Object.freeze([marker, ...retained]);
 }
 
 function sameContext(

@@ -94,6 +94,7 @@ export class DuelWorkerRuntime {
   readonly #logger: WorkerLogger;
   #pendingCommands = 0;
   #nextDuelSequence = 0;
+  #nextEventSequence = 0;
   #activeCommandDepth = 0;
   #deferredControllerDisposal: HeadlessDuelController | null = null;
   #replacementRequired = false;
@@ -398,6 +399,7 @@ export class DuelWorkerRuntime {
         promptIdNamespace: `${this.#runtimeId}-duel-${++this.#nextDuelSequence}`,
         trace,
       });
+      this.#nextEventSequence = 0;
       this.#controller = controller;
       this.#recordAdvance(controller, controller.advance(), events);
     } catch (error) {
@@ -420,11 +422,34 @@ export class DuelWorkerRuntime {
     advance: DuelAdvance,
     events: DuelWorkerEvent[],
   ): void {
-    events.push(...advanceEvents(advance));
+    events.push(...this.#advanceEvents(advance));
     if (advance.result !== undefined || controller.disposed) {
       this.#lastTrace = controller.trace();
       this.#controller = null;
     }
+  }
+
+  #advanceEvents(advance: DuelAdvance): DuelWorkerEvent[] {
+    const events: DuelWorkerEvent[] = advance.events.map((event) => {
+      if (this.#nextEventSequence === Number.MAX_SAFE_INTEGER) {
+        throw duelOperationError(
+          "engine_error",
+          "Duel presentation event sequence exhausted",
+        );
+      }
+      this.#nextEventSequence += 1;
+      return {
+        type: "event",
+        eventSequence: this.#nextEventSequence,
+        event,
+      };
+    });
+    events.push({ type: "state", state: advance.state });
+    if (advance.prompt !== undefined)
+      events.push({ type: "prompt", prompt: advance.prompt });
+    if (advance.result !== undefined)
+      events.push({ type: "result", result: advance.result });
+    return events;
   }
 
   #flushDeferredDisposal(): void {
@@ -556,17 +581,4 @@ export class DuelWorkerRuntime {
     }
     return this.#controller;
   }
-}
-
-function advanceEvents(advance: DuelAdvance): DuelWorkerEvent[] {
-  const events: DuelWorkerEvent[] = advance.events.map((event) => ({
-    type: "event",
-    event,
-  }));
-  events.push({ type: "state", state: advance.state });
-  if (advance.prompt !== undefined)
-    events.push({ type: "prompt", prompt: advance.prompt });
-  if (advance.result !== undefined)
-    events.push({ type: "result", result: advance.result });
-  return events;
 }

@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { duelFieldRenderFailureUrl } from "../tests/fixtures/duel-field-component-failure.ts";
 
@@ -176,6 +176,75 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   expect(JSON.stringify(commands)).not.toMatch(
     /"seed"|"deckOrder"|"startupScript"|"programmed"|"mode"/,
   );
+});
+
+test("duel HUD keeps hidden stacks count-only and tray image work mounted on demand", async ({
+  page,
+}, testInfo) => {
+  const imageRequests: string[] = [];
+  page.on("request", (request) => {
+    if (/\/runtime\/images\/\d+\.jpg$/.test(request.url()))
+      imageRequests.push(request.url());
+  });
+  await page.goto("./");
+
+  const hud = page.getByRole("region", { name: "Duel HUD" });
+  await expect(hud).toBeVisible({ timeout: 120_000 });
+  await expect(hud.getByText(/8,000 LP/).first()).toBeVisible();
+  await expect(hud.getByText(/Turn \d+/)).toBeVisible();
+  await expect(hud.getByText(/main 1|draw|standby|battle|end/)).toBeVisible();
+
+  const opponentDeck = hud.getByRole("region", {
+    name: /Opponent Deck, \d+ cards/,
+  });
+  await expect(opponentDeck.getByText("Count only")).toBeVisible();
+  await expect(
+    opponentDeck.getByRole("button", { name: /Open Opponent Deck/ }),
+  ).toHaveCount(0);
+  await expect(hud.locator("[data-card-code]")).toHaveCount(0);
+
+  const beforeTray = imageRequests.length;
+  const ownExtra = hud.getByRole("button", {
+    name: /Open Your Extra Deck tray, \d+ cards/,
+  });
+  if ((await ownExtra.count()) > 0) {
+    await ownExtra.click();
+    const tray = page.getByRole("region", { name: "Your Extra Deck tray" });
+    await expect(tray).toBeVisible();
+    expect(
+      await tray.getByRole("button", { name: /^Inspect / }).count(),
+    ).toBeLessThanOrEqual(24);
+    await tray
+      .getByRole("button", { name: "Close Your Extra Deck tray" })
+      .click();
+    await expect(tray).toHaveCount(0);
+    await expect(ownExtra).toBeFocused();
+  }
+  expect(imageRequests.length).toBe(beforeTray);
+
+  const screenshotPath = testInfo.outputPath("df-11-hud.png");
+  await page.screenshot({ path: screenshotPath, fullPage: true });
+  await testInfo.attach("df-11-hud", {
+    path: screenshotPath,
+    contentType: "image/png",
+  });
+  const networkPath = testInfo.outputPath("df-11-privacy-network.json");
+  await writeFile(
+    networkPath,
+    JSON.stringify(
+      {
+        activeImageRequests: imageRequests,
+        trayAddedRequests: imageRequests.length - beforeTray,
+        opponentDeckContentsMounted: false,
+      },
+      null,
+      2,
+    ),
+  );
+  await testInfo.attach("df-11-privacy-network", {
+    path: networkPath,
+    contentType: "application/json",
+  });
 });
 
 test("repeated restart replaces the Worker and clears presentation state", async ({

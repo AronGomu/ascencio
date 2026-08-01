@@ -1,6 +1,7 @@
 <script lang="ts">
   import { afterUpdate, onMount, tick } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
+  import { isCardIdentityVisible } from "../duel/card-visibility.ts";
   import type { DuelDiagnosticTrace } from "../duel/contracts/duel-diagnostics.ts";
   import { snapshotId, type SnapshotId } from "../duel/contracts/ids.ts";
   import type { PromptCard } from "../duel/contracts/player-prompt.ts";
@@ -9,7 +10,10 @@
     mapSnapshotToBoard,
     type BoardCardView,
   } from "../field/board-view-model.ts";
+  import CardInspector from "./components/duel-field/CardInspector.svelte";
   import DuelFieldErrorBoundary from "./components/duel-field/DuelFieldErrorBoundary.svelte";
+  import DuelHud from "./components/duel-field/DuelHud.svelte";
+  import DuelLog from "./components/duel-field/DuelLog.svelte";
   import { downloadDuelDiagnostics } from "./diagnostics/download-diagnostics.ts";
   import { DuelWorkerClient } from "./DuelWorkerClient.ts";
   import {
@@ -26,7 +30,6 @@
     type SnapshotArtifactReceipt,
     type SnapshotStorageStatus,
   } from "../storage/snapshot-store.ts";
-  import { formatDuelPresentationEvent } from "./presentation/format-duel-presentation-event.ts";
   import PromptControls from "./prompts/PromptControls.svelte";
   import { mapPromptToInteractionSpec } from "./prompts/interaction-spec.ts";
   import { createDuelStore } from "./stores/duel-store.ts";
@@ -51,7 +54,6 @@
   let promptPanel: HTMLElement;
   let resultHeading: HTMLHeadingElement;
   let errorHeading: HTMLHeadingElement;
-  let cardInspectorHeading: HTMLHeadingElement;
   let cardInspectorTrigger: HTMLButtonElement | null = null;
   let previousErrorKey = "";
   let previousStatus = $duel.status;
@@ -336,7 +338,9 @@
     if ($duel.error !== null) diagnosticPending = false;
     if (inspectedCard !== null) {
       const currentCard = findPublicCard(inspectedCard.instanceId);
-      if (currentCard !== inspectedCard) inspectedCard = currentCard;
+      if (currentCard === null || !isInspectableCard(currentCard))
+        inspectedCard = null;
+      else if (currentCard !== inspectedCard) inspectedCard = currentCard;
     }
     if (
       snapshotStaged &&
@@ -529,10 +533,15 @@
   function inspectFieldCard(card: BoardCardView): void {
     if (card.instanceId === undefined) return;
     const publicCard = findPublicCard(card.instanceId);
-    if (publicCard === null) return;
+    if (publicCard === null || !isInspectableCard(publicCard)) return;
     cardInspectorTrigger = null;
     inspectedCard = publicCard;
-    void tick().then(() => cardInspectorHeading?.focus());
+  }
+
+  function inspectHudCard(card: PublicCard, trigger: HTMLButtonElement): void {
+    if (!isInspectableCard(card)) return;
+    cardInspectorTrigger = trigger;
+    inspectedCard = card;
   }
 
   function retryCardImageLoading(): void {
@@ -553,6 +562,7 @@
     for (const player of snapshot.players) {
       const card = [
         ...player.hand,
+        ...player.extraDeck,
         ...player.monsters,
         ...player.spellsAndTraps,
         ...player.graveyard,
@@ -564,10 +574,17 @@
   }
 
   function resolvePublicCardImage(card: PublicCard): string | undefined {
-    if (imageLibrary === null) return undefined;
+    if (imageLibrary === null || !isInspectableCard(card)) return undefined;
     return imagesMatchRuntime
-      ? imageLibrary.urlFor(card.code, !card.faceUp)
-      : imageLibrary.urlFor(undefined, !card.faceUp);
+      ? imageLibrary.urlFor(card.code, false)
+      : imageLibrary.urlFor(undefined, false);
+  }
+
+  function isInspectableCard(card: PublicCard): boolean {
+    return (
+      card.code !== undefined &&
+      isCardIdentityVisible(0, card.controller, card.location, card.position)
+    );
   }
 
   function resolvePromptCardImage(card: PromptCard): string | undefined {
@@ -590,26 +607,6 @@
     ]);
   }
 
-  function cardLabel(card: PublicCard): string {
-    if (card.code === undefined) return "Hidden card";
-    return ACTIVE_CARD_TEXTS.get(card.code)?.name ?? `Card ${card.code}`;
-  }
-
-  function cardDescription(card: PublicCard): string | null {
-    if (card.code === undefined) return null;
-    return ACTIVE_CARD_TEXTS.get(card.code)?.description ?? null;
-  }
-
-  async function inspectCard(
-    card: PublicCard,
-    event: MouseEvent,
-  ): Promise<void> {
-    cardInspectorTrigger = event.currentTarget as HTMLButtonElement;
-    inspectedCard = card;
-    await tick();
-    cardInspectorHeading.focus();
-  }
-
   async function closeCardInspector(): Promise<void> {
     inspectedCard = null;
     await tick();
@@ -622,14 +619,6 @@
       event.preventDefault();
       void closeCardInspector();
     }
-  }
-
-  function inspectorLabel(
-    card: PublicCard,
-    player: 0 | 1,
-    zone: string,
-  ): string {
-    return `Inspect ${cardLabel(card)}, ${player === 0 ? "your" : "opponent"} ${zone}`;
   }
 
   function phaseLabel(value: string): string {
@@ -944,264 +933,13 @@
     </section>
   {/if}
 
-  {#if inspectedCard}
-    <aside
-      id="card-inspector"
-      class="card-inspector"
-      aria-labelledby="card-inspector-heading"
-      aria-describedby={cardDescription(inspectedCard) === null
-        ? "card-inspector-location"
-        : "card-inspector-location card-inspector-description"}
-    >
-      <div>
-        <p class="eyebrow">Public card details</p>
-        <h2
-          id="card-inspector-heading"
-          tabindex="-1"
-          bind:this={cardInspectorHeading}
-        >
-          {cardLabel(inspectedCard)}
-        </h2>
-        <p id="card-inspector-location">
-          {phaseLabel(inspectedCard.location)} · {phaseLabel(
-            inspectedCard.position,
-          )}
-        </p>
-        {#if cardDescription(inspectedCard)}
-          <p id="card-inspector-description">
-            {cardDescription(inspectedCard)}
-          </p>
-        {/if}
-      </div>
-      {#if resolvePublicCardImage(inspectedCard)}
-        <img
-          src={resolvePublicCardImage(inspectedCard)}
-          alt={cardLabel(inspectedCard)}
-        />
-      {/if}
-      <button
-        type="button"
-        class="secondary"
-        onclick={() => void closeCardInspector()}>Close card details</button
-      >
-    </aside>
-  {/if}
-
   {#if $duel.snapshot}
-    <section class="duel-summary" aria-labelledby="duel-summary-heading">
-      <div class="turn-summary">
-        <div>
-          <p class="eyebrow">Turn {$duel.snapshot.turn}</p>
-          <h2 id="duel-summary-heading">
-            {$duel.snapshot.turnPlayer === 0 ? "Your turn" : "Opponent's turn"}
-          </h2>
-        </div>
-        <p class="phase-pill">{phaseLabel($duel.snapshot.phase)}</p>
-      </div>
-
-      <div class="player-grid">
-        {#each $duel.snapshot.players as player (player.player)}
-          <article
-            class="player-card"
-            aria-label={player.player === 0 ? "Your state" : "Opponent state"}
-          >
-            <div class="player-heading">
-              <h3>{player.player === 0 ? "You" : "Opponent"}</h3>
-              <strong>{player.lifePoints.toLocaleString()} LP</strong>
-            </div>
-            <dl class="counts">
-              <div>
-                <dt>Deck</dt>
-                <dd>{player.deckCount}</dd>
-              </div>
-              <div>
-                <dt>Extra</dt>
-                <dd>{player.extraDeckCount}</dd>
-              </div>
-              <div>
-                <dt>Hand</dt>
-                <dd>{player.handCount}</dd>
-              </div>
-              <div>
-                <dt>Graveyard</dt>
-                <dd>{player.graveyard.length}</dd>
-              </div>
-              <div>
-                <dt>Banished</dt>
-                <dd>{player.banished.length}</dd>
-              </div>
-            </dl>
-            <div class="zones">
-              <div>
-                <h4>Monsters</h4>
-                {#if player.monsters.length === 0}
-                  <p class="empty-copy">Empty</p>
-                {:else}
-                  <ul>
-                    {#each player.monsters as card (card.instanceId)}
-                      <li>
-                        {#if card.code === undefined}
-                          {cardLabel(card)}
-                        {:else}
-                          <button
-                            type="button"
-                            class="card-detail-trigger"
-                            aria-controls="card-inspector"
-                            aria-expanded={inspectedCard?.instanceId ===
-                              card.instanceId}
-                            aria-label={inspectorLabel(
-                              card,
-                              player.player,
-                              "monsters",
-                            )}
-                            onclick={(event) => void inspectCard(card, event)}
-                            >{cardLabel(card)}</button
-                          >
-                        {/if}
-                        · {phaseLabel(card.position)}
-                      </li>
-                    {/each}
-                  </ul>
-                {/if}
-              </div>
-              <div>
-                <h4>Spells &amp; traps</h4>
-                {#if player.spellsAndTraps.length === 0}
-                  <p class="empty-copy">Empty</p>
-                {:else}
-                  <ul>
-                    {#each player.spellsAndTraps as card (card.instanceId)}
-                      <li>
-                        {#if card.code === undefined}
-                          {cardLabel(card)}
-                        {:else}
-                          <button
-                            type="button"
-                            class="card-detail-trigger"
-                            aria-controls="card-inspector"
-                            aria-expanded={inspectedCard?.instanceId ===
-                              card.instanceId}
-                            aria-label={inspectorLabel(
-                              card,
-                              player.player,
-                              "spells and traps",
-                            )}
-                            onclick={(event) => void inspectCard(card, event)}
-                            >{cardLabel(card)}</button
-                          >
-                        {/if}
-                        · {phaseLabel(card.position)}
-                      </li>
-                    {/each}
-                  </ul>
-                {/if}
-              </div>
-              <div>
-                <h4>Graveyard</h4>
-                {#if player.graveyard.length === 0}
-                  <p class="empty-copy">Empty</p>
-                {:else}
-                  <ul>
-                    {#each player.graveyard as card (card.instanceId)}
-                      <li>
-                        <button
-                          type="button"
-                          class="card-detail-trigger"
-                          aria-controls="card-inspector"
-                          aria-expanded={inspectedCard?.instanceId ===
-                            card.instanceId}
-                          aria-label={inspectorLabel(
-                            card,
-                            player.player,
-                            "graveyard",
-                          )}
-                          onclick={(event) => void inspectCard(card, event)}
-                          >{cardLabel(card)}</button
-                        >
-                      </li>
-                    {/each}
-                  </ul>
-                {/if}
-              </div>
-              <div>
-                <h4>Banished</h4>
-                {#if player.banished.length === 0}
-                  <p class="empty-copy">Empty</p>
-                {:else}
-                  <ul>
-                    {#each player.banished as card (card.instanceId)}
-                      <li>
-                        {#if card.code === undefined}
-                          {cardLabel(card)}
-                        {:else}
-                          <button
-                            type="button"
-                            class="card-detail-trigger"
-                            aria-controls="card-inspector"
-                            aria-expanded={inspectedCard?.instanceId ===
-                              card.instanceId}
-                            aria-label={inspectorLabel(
-                              card,
-                              player.player,
-                              "banished cards",
-                            )}
-                            onclick={(event) => void inspectCard(card, event)}
-                            >{cardLabel(card)}</button
-                          >
-                        {/if}
-                        · {phaseLabel(card.position)}
-                      </li>
-                    {/each}
-                  </ul>
-                {/if}
-              </div>
-              {#if player.player === 0}
-                <div>
-                  <h4>Your hand</h4>
-                  {#if player.hand.length === 0}
-                    <p class="empty-copy">Empty</p>
-                  {:else}
-                    <ul>
-                      {#each player.hand as card (card.instanceId)}
-                        <li>
-                          <button
-                            type="button"
-                            class="card-detail-trigger"
-                            aria-controls="card-inspector"
-                            aria-expanded={inspectedCard?.instanceId ===
-                              card.instanceId}
-                            aria-label={inspectorLabel(
-                              card,
-                              player.player,
-                              "hand",
-                            )}
-                            onclick={(event) => void inspectCard(card, event)}
-                            >{cardLabel(card)}</button
-                          >
-                        </li>
-                      {/each}
-                    </ul>
-                  {/if}
-                </div>
-              {/if}
-            </div>
-          </article>
-        {/each}
-      </div>
-
-      <section class="chain-panel" aria-labelledby="chain-heading">
-        <h3 id="chain-heading">Active chain</h3>
-        {#if $duel.snapshot.chain.length === 0}
-          <p class="empty-copy">No chain is resolving.</p>
-        {:else}
-          <ol>
-            {#each $duel.snapshot.chain as link (link.index)}
-              <li>{link.label}</li>
-            {/each}
-          </ol>
-        {/if}
-      </section>
-    </section>
+    <DuelHud
+      snapshot={$duel.snapshot}
+      cardTexts={ACTIVE_CARD_TEXTS}
+      resolveCardImage={resolvePublicCardImage}
+      oninspect={inspectHudCard}
+    />
   {:else if $duel.status === "active"}
     <section class="message-panel" aria-live="polite">
       <div>
@@ -1209,6 +947,15 @@
         <h2>Waiting for the first public state…</h2>
       </div>
     </section>
+  {/if}
+
+  {#if inspectedCard}
+    <CardInspector
+      card={inspectedCard}
+      cardTexts={ACTIVE_CARD_TEXTS}
+      resolveCardImage={resolvePublicCardImage}
+      onclose={() => void closeCardInspector()}
+    />
   {/if}
 
   <div class="workspace-grid">
@@ -1246,36 +993,6 @@
       {/if}
     </section>
 
-    <section class="event-log" aria-labelledby="event-log-heading">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Latest activity</p>
-          <h2 id="event-log-heading">Duel log</h2>
-        </div>
-        <span>{$duel.presentationEvents.length}/100</span>
-      </div>
-      <p class="visually-hidden" aria-live="polite">
-        {$duel.presentationEvents.length > 0
-          ? formatDuelPresentationEvent($duel.presentationEvents.at(-1)!.event)
-          : ""}
-      </p>
-      {#if $duel.presentationEvents.length === 0}
-        <p class="empty-copy">Duel events will appear here.</p>
-      {:else}
-        <!-- svelte-ignore a11y_no_noninteractive_tabindex (focus enables keyboard scrolling) -->
-        <div
-          class="log-scroll"
-          role="region"
-          tabindex="0"
-          aria-labelledby="event-log-heading"
-        >
-          <ol>
-            {#each $duel.presentationEvents as entry (entry.sequence)}
-              <li>{formatDuelPresentationEvent(entry.event)}</li>
-            {/each}
-          </ol>
-        </div>
-      {/if}
-    </section>
+    <DuelLog entries={$duel.duelLog} />
   </div>
 </main>

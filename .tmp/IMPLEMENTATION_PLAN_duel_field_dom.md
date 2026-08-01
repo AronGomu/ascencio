@@ -1,6 +1,6 @@
 # DOM Duel-Field Implementation Plan
 
-> Status: approved amended plan; DF-10 complete; DF-11 implementation pending
+> Status: approved amended plan; DF-11 complete; DF-12 implementation pending
 > Created: 2026-07-31
 > Scope: Standard-format desktop field → rich state → accessibility/responsive parity → Phaser removal
 > Architecture: [`architecture/05-presentation/duel-field-architecture.md`](../docs/architecture/05-presentation/duel-field-architecture.md)
@@ -110,7 +110,7 @@ DF-00 → DF-01 → DF-02 → DF-03 → DF-04 → DF-05 → DF-06 → DF-07 → 
 - [x] DF-08
 - [x] DF-09
 - [x] DF-10
-- [ ] DF-11
+- [x] DF-11
 - [ ] DF-12
 - [ ] DF-13
 - [ ] DF-14
@@ -691,14 +691,14 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-- [ ] **Red:** component tests for LP/turn/phase, chain provenance/status, counter/material badges, public inspector, stack tray open/close, log >100 entries plus truncation marker.
-- [ ] Add privacy tests for hidden stack/card labels and image requests.
-- [ ] Add tray test with 60 controls: closed tray mounts none; open tray mounts bounded/page-visible content; focus enters/returns correctly (focus details completed DF-14).
-- [ ] **Green:** create `DuelHud`, `CardInspector`, `CardTray`, chain/log components.
-- [ ] Move duplicated App field-adjacent summary into focused components only after parity tests.
-- [ ] Keep deck/hidden Extra as count-only; show contents only when public/owned contract permits.
-- [ ] Surface counters/materials without color-only meaning.
-- [ ] Preserve existing surrender/result/diagnostics outside field.
+- [x] **Red:** component tests for LP/turn/phase, chain provenance/status, counter/material badges, public inspector, stack tray open/close, log >100 entries plus truncation marker.
+- [x] Add privacy tests for hidden stack/card labels and image requests.
+- [x] Add tray test with 60 controls: closed tray mounts none; open tray mounts bounded/page-visible content; focus enters/returns correctly (focus details completed DF-14).
+- [x] **Green:** create `DuelHud`, `CardInspector`, `CardTray`, chain/log components.
+- [x] Move duplicated App field-adjacent summary into focused components only after parity tests.
+- [x] Keep deck/hidden Extra as count-only; show contents only when public/owned contract permits.
+- [x] Surface counters/materials without color-only meaning.
+- [x] Preserve existing surrender/result/diagnostics outside field.
 
 ### Outputs
 
@@ -708,10 +708,10 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- [ ] `npm run test:component && npm run typecheck` green.
-- [ ] No identity leaks in DOM/accessibility tree/network capture.
-- [ ] `ST-07..09` pass semantic assertions.
-- [ ] Visual hierarchy compared against MD-01 and LE-01/02, not pixel-copied.
+- [x] `npm run test:component && npm run typecheck` green.
+- [x] No identity leaks in DOM/accessibility tree/network capture.
+- [x] `ST-07..09` pass semantic assertions.
+- [x] Visual hierarchy compared against MD-01 and LE-01/02, not pixel-copied.
 
 ---
 

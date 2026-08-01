@@ -3,7 +3,7 @@
 - Branch: `plan/dom-duel-field-implementation-plan`
 - Plan: `.tmp/IMPLEMENTATION_PLAN_duel_field_dom.md`
 - Started: 2026-08-01T09:03:37Z
-- Updated: 2026-08-01T11:33:40Z
+- Updated: 2026-08-01T12:22:53Z
 
 ## Status
 
@@ -18,9 +18,9 @@
 | DF-06 | Derive renderer-neutral `BoardViewModel` | done | 382d036 | Ship locally verified; validated and pushed |
 | DF-07 | Derive discriminated `InteractionSpec` | done | b6a5b3d | Ship locally verified; validated and pushed |
 | DF-08 | Add `InteractionSession` reducer and authoritative pending lifecycle | done | b6e7706 | Ship locally verified; validated and pushed |
-| DF-09 | Render static semantic DOM field | done | DF-09-COMMIT | Nix Chromium captures plus full gates green; validated for commit/push |
-| DF-10 | Connect complete pointer field workflows | pending | — | — |
-| DF-11 | Add HUD, inspector, stacks/trays, rich state | pending | — | — |
+| DF-09 | Render static semantic DOM field | done | de5655d | Nix Chromium captures plus full gates green; pushed |
+| DF-10 | Connect complete pointer field workflows | done | bc941f2 | Ship locally verified; validated and pushed |
+| DF-11 | Add HUD, inspector, stacks/trays, rich state | done | DF-11-COMMIT | Ship locally verified; validated for commit/push |
 | DF-12 | Add bounded CSS/DOM/SVG feedback | pending | — | — |
 | DF-13 | Lease image URLs and remove image input gate | pending | — | — |
 | DF-14 | Add spatial keyboard and screen-reader behavior | pending | — | — |
@@ -58,4 +58,8 @@
 - 2026-08-01T11:00:49Z DF-08 start.
 - 2026-08-01T11:14:16Z DF-08 done b6e7706: red missing interaction-session module plus 4 store/client failures; focused 39/39, unit 367/367, full test 418/418; typecheck/lint/format/build green. Review clean; pending remains store-authoritative/keyed; stale/duplicate submits emit no extra Worker command.
 - 2026-08-01T11:16:27Z DF-09 start.
-- 2026-08-01T11:33:40Z DF-09 done DF-09-COMMIT: reconstructed red missing semantic board expectations; focused 5/5, component 15/15, unit 367/367; typecheck/lint/format/build/diff green. Repair used `nix build github:NixOS/nixpkgs/nixos-unstable#playwright-driver.browsers --no-link --print-out-paths` plus `PLAYWRIGHT_BROWSERS_PATH=/nix/store/58nx8ipi0v36amc4rgmd09l17iyrvwpm-playwright-browsers`; Chromium 149.0.7827.55 rendered actual `DuelField.svelte`. ST-01..04 at VP-01/02 semantic assertions plus 8 screenshots/8 traces green; wireframe/RULE-01/CORE-01/CORE-02 review clean. Artifact `test-results/df-09-static-field-captures.zip` SHA-256 `e2e7638c061dec3bb1b548fa4465f48eb224116e5e987e6ee44f518b34150d6c`; repo policy ignores `test-results/`, so artifact remains unstaged.
+- 2026-08-01T11:33:40Z DF-09 done de5655d: reconstructed red missing semantic board expectations; focused 5/5, component 15/15, unit 367/367; typecheck/lint/format/build/diff green. Repair used `nix build github:NixOS/nixpkgs/nixos-unstable#playwright-driver.browsers --no-link --print-out-paths` plus `PLAYWRIGHT_BROWSERS_PATH=/nix/store/58nx8ipi0v36amc4rgmd09l17iyrvwpm-playwright-browsers`; Chromium 149.0.7827.55 rendered actual `DuelField.svelte`. ST-01..04 at VP-01/02 semantic assertions plus 8 screenshots/8 traces green; wireframe/RULE-01/CORE-01/CORE-02 review clean. Artifact `test-results/df-09-static-field-captures.zip` SHA-256 `e2e7638c061dec3bb1b548fa4465f48eb224116e5e987e6ee44f518b34150d6c`; repo policy ignores `test-results/`, so artifact remains unstaged.
+- 2026-08-01T11:37:18Z DF-10 start.
+- 2026-08-01T11:57:57Z DF-10 done bc941f2: red 4/9 focused failures for absent pointer workflow; green component 20/20, unit 367/367, integration 20/20, legacy 21/21; typecheck/lint/format/build/diff green. Nix Chromium focused 4/4 plus trace capture 2/2 green: DOM role/state path, one opaque response, missing-image input, responsive field, sanitized injected failure fallback/retry. Artifact `test-results/df-10-pointer-workflows.zip` SHA-256 `6be3440ee33131f197c4e1ecc7ce196057b0a98ab4fecffc470ab379fe20b3ce`; ignored by repo policy. Inline correctness/a11y/privacy/race/error review clean; Phaser source/dependency retained migration-only.
+- 2026-08-01T12:01:31Z DF-11 start.
+- 2026-08-01T12:22:53Z DF-11 done DF-11-COMMIT: red missing HUD component imports; green focused 6/6, component 26/26, unit 367/367, integration 20/20, legacy 21/21; typecheck/lint/format/build/diff green. Nix Chromium focused privacy capture 1/1 plus final suite 9/9 green. Closed trays mount zero cards/images; open pages cap 24; focus enters/returns; hidden opponent DOM/a11y/image resolver checks green. Visual hierarchy reviewed against MD-01 plus LE-01/02. Artifact `test-results/df-11-hud-privacy.zip` SHA-256 `9406555d948bf8d9cbe7e10e0842d5a7458400cb8f2e4ff38c4dda5a68d54d58`; ignored by repo policy.

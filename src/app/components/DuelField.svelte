@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
+  import type { DuelPresentationEvent } from "../../duel/contracts/duel-presentation-event.ts";
   import type { PlayerPrompt } from "../../duel/contracts/player-prompt.ts";
   import type {
     BoardCardView,
@@ -20,8 +21,16 @@
     InteractionChoice,
   } from "../prompts/interaction-spec.ts";
   import { validatePromptSelection } from "../prompts/prompt-selection.ts";
+  import {
+    createDomFeedbackController,
+    EMPTY_DOM_FEEDBACK_STATE,
+    type DomFeedbackController,
+    type DomFeedbackState,
+  } from "../presentation/dom-feedback-controller.ts";
+  import { presentationCommandForDomEvent } from "../presentation/presentation-command.ts";
   import FieldActionMenu from "./duel-field/FieldActionMenu.svelte";
   import FieldBoard from "./duel-field/FieldBoard.svelte";
+  import FieldLines from "./duel-field/FieldLines.svelte";
   import SelectionDock from "./duel-field/SelectionDock.svelte";
 
   const EMPTY_IMAGE_URLS: ReadonlyMap<number, string> = new Map();
@@ -39,6 +48,12 @@
   export let spec: ActiveInteractionSpec | null = null;
   export let session: InteractionSession = createInactiveInteractionSession();
   export let pending = false;
+  export let presentationEvents: readonly {
+    readonly sequence: number;
+    readonly event: DuelPresentationEvent;
+  }[] = [];
+  export let feedbackGeneration = "component";
+  export let reducedMotion: boolean | null = null;
   export let injectFailure: boolean = false;
   export let oninteraction: (
     action: InteractionSessionAction,
@@ -53,12 +68,31 @@
     readonly bottom: number;
   }
 
+  let fieldRoot: HTMLElement;
+  let feedbackController: DomFeedbackController | null = null;
+  let feedbackState: DomFeedbackState = EMPTY_DOM_FEEDBACK_STATE;
+  let mediaReducedMotion = false;
+  let effectiveReducedMotion = false;
+  let observedBoard: BoardViewModel | null = null;
+  let deferredPresentationEvents: typeof presentationEvents = [];
+  let activeFeedbackGeneration: string | null = null;
+  let lastPresentationSequence = 0;
+  let appliedReducedMotion: boolean | null = null;
+  let feedbackSyncSequence = 0;
   let anchorElement: HTMLButtonElement | null = null;
   let anchor: FieldMenuAnchor | null = null;
   let resizeObserver: ResizeObserver | null = null;
   let menuCard: BoardCardView | null = null;
 
   $: resolvedCardBackUrl = cardBackUrl || DEFAULT_CARD_BACK;
+  $: effectiveReducedMotion = reducedMotion ?? mediaReducedMotion;
+  $: scheduleFeedbackSync(
+    feedbackController,
+    feedbackGeneration,
+    presentationEvents,
+    effectiveReducedMotion,
+    board,
+  );
   $: resolvedPlaceholderUrl = placeholderUrl || DEFAULT_PLACEHOLDER;
   $: selectedTargets =
     spec === null ? EMPTY_TARGETS : targetSelections(spec, session);
@@ -81,14 +115,151 @@
 
   onMount(() => {
     const update = (): void => updateAnchor();
+    const motionQuery = globalThis.matchMedia?.(
+      "(prefers-reduced-motion: reduce)",
+    );
+    const updateMotion = (): void => {
+      mediaReducedMotion = motionQuery?.matches ?? false;
+    };
+    updateMotion();
+    motionQuery?.addEventListener("change", updateMotion);
+    feedbackController = createDomFeedbackController(fieldRoot, (state) => {
+      feedbackState = state;
+    });
+    synchronizeFeedback(
+      feedbackController,
+      feedbackGeneration,
+      presentationEvents,
+      effectiveReducedMotion,
+      board,
+    );
     window.addEventListener("resize", update);
     window.addEventListener("scroll", update, true);
     return () => {
       window.removeEventListener("resize", update);
       window.removeEventListener("scroll", update, true);
+      motionQuery?.removeEventListener("change", updateMotion);
+      feedbackSyncSequence += 1;
+      feedbackController?.cancel();
+      feedbackController = null;
       resizeObserver?.disconnect();
     };
   });
+
+  function scheduleFeedbackSync(
+    controller: DomFeedbackController | null,
+    generation: string,
+    events: typeof presentationEvents,
+    motionReduced: boolean,
+    currentBoard: BoardViewModel,
+  ): void {
+    const sequence = ++feedbackSyncSequence;
+    void tick().then(() => {
+      if (sequence !== feedbackSyncSequence) return;
+      synchronizeFeedback(
+        controller,
+        generation,
+        events,
+        motionReduced,
+        currentBoard,
+      );
+    });
+  }
+
+  function synchronizeFeedback(
+    controller: DomFeedbackController | null,
+    generation: string,
+    events: typeof presentationEvents,
+    motionReduced: boolean,
+    currentBoard: BoardViewModel,
+  ): void {
+    if (controller === null) return;
+    const boardChanged = currentBoard !== observedBoard;
+    const priorBoard = observedBoard;
+    observedBoard = currentBoard;
+    if (generation !== activeFeedbackGeneration) {
+      controller.cancel();
+      activeFeedbackGeneration = generation;
+      lastPresentationSequence = events.at(-1)?.sequence ?? 0;
+      deferredPresentationEvents = [];
+      appliedReducedMotion = motionReduced;
+      return;
+    } else if (motionReduced !== appliedReducedMotion) {
+      controller.cancel();
+      appliedReducedMotion = motionReduced;
+      const latest = events.at(-1);
+      if (latest !== undefined) {
+        controller.present(
+          presentationCommandForDomEvent(
+            latest.event,
+            {
+              currentBoard,
+              ...(priorBoard === null ? {} : { previousBoard: priorBoard }),
+            },
+            motionReduced,
+          ),
+        );
+        lastPresentationSequence = latest.sequence;
+      }
+      return;
+    }
+    if (boardChanged && deferredPresentationEvents.length > 0) {
+      for (const entry of deferredPresentationEvents)
+        presentFeedbackEntry(
+          controller,
+          entry,
+          motionReduced,
+          currentBoard,
+          priorBoard,
+        );
+      deferredPresentationEvents = [];
+    }
+    for (const entry of events) {
+      if (entry.sequence <= lastPresentationSequence) continue;
+      if (!boardChanged && feedbackNeedsNextBoard(entry.event)) {
+        deferredPresentationEvents = [...deferredPresentationEvents, entry];
+      } else {
+        presentFeedbackEntry(
+          controller,
+          entry,
+          motionReduced,
+          currentBoard,
+          priorBoard,
+        );
+      }
+      lastPresentationSequence = entry.sequence;
+    }
+  }
+
+  function presentFeedbackEntry(
+    controller: DomFeedbackController,
+    entry: (typeof presentationEvents)[number],
+    motionReduced: boolean,
+    currentBoard: BoardViewModel,
+    priorBoard: BoardViewModel | null,
+  ): void {
+    controller.present(
+      presentationCommandForDomEvent(
+        entry.event,
+        {
+          currentBoard,
+          ...(priorBoard === null ? {} : { previousBoard: priorBoard }),
+        },
+        motionReduced,
+      ),
+    );
+  }
+
+  function feedbackNeedsNextBoard(event: DuelPresentationEvent): boolean {
+    return (
+      event.type === "cardMoved" ||
+      event.type === "summon" ||
+      event.type === "specialSummon" ||
+      event.type === "flipSummon" ||
+      event.type === "set" ||
+      event.type === "positionChanged"
+    );
+  }
 
   function dispatch(action: UnkeyedInteractionSessionAction): void {
     if (spec === null || pending) return;
@@ -180,7 +351,7 @@
   }
 </script>
 
-<section class="duel-field" aria-label="Duel field">
+<section class="duel-field" aria-label="Duel field" bind:this={fieldRoot}>
   <h2 class="visually-hidden">Duel field</h2>
   <FieldBoard
     {board}
@@ -194,6 +365,22 @@
     onzoneactivate={activateZone}
     {oninspect}
   />
+  {#if feedbackState.line}
+    <FieldLines line={feedbackState.line} />
+  {/if}
+  {#if feedbackState.kind !== null}
+    <p
+      class="duel-field-feedback"
+      class:is-life-points={feedbackState.kind === "life-points"}
+      class:is-chain={feedbackState.kind === "chain"}
+      role="status"
+      aria-live="polite"
+      data-feedback-kind={feedbackState.kind}
+      data-feedback-duration={feedbackState.durationMs}
+    >
+      {feedbackState.label}
+    </p>
+  {/if}
   {#if menuVisible && menuCard && anchor}
     <FieldActionMenu
       label={menuCard.label}

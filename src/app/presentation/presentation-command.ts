@@ -1,5 +1,10 @@
 import { assertNever } from "../../duel/contracts/assert-never.ts";
 import type { DuelPresentationEvent } from "../../duel/contracts/duel-presentation-event.ts";
+import type {
+  BoardCardView,
+  BoardTargetId,
+  BoardViewModel,
+} from "../../field/board-view-model.ts";
 
 export type PresentationCommand =
   | {
@@ -35,6 +40,35 @@ export type PresentationCommand =
       readonly label: string;
       readonly durationMs: number;
     };
+
+export type DomPresentationCommand =
+  | Exclude<
+      PresentationCommand,
+      { readonly kind: "card-move" | "summon" | "set" | "position" | "attack" }
+    >
+  | (Extract<PresentationCommand, { readonly kind: "card-move" }> & {
+      readonly fromTargetId: BoardTargetId;
+      readonly toTargetId: BoardTargetId;
+    })
+  | (Extract<
+      PresentationCommand,
+      { readonly kind: "summon" | "set" | "position" }
+    > & {
+      readonly targetId: BoardTargetId;
+    })
+  | (Extract<PresentationCommand, { readonly kind: "attack" }> & {
+      readonly fromTargetId: BoardTargetId;
+      readonly toTargetId: BoardTargetId;
+    });
+
+export interface DomPresentationContext {
+  readonly currentBoard: BoardViewModel;
+  readonly previousBoard?: BoardViewModel;
+  readonly attackEndpoints?: {
+    readonly fromTargetId: BoardTargetId;
+    readonly toTargetId: BoardTargetId;
+  };
+}
 
 export function presentationCommandForEvent(
   event: DuelPresentationEvent,
@@ -125,6 +159,93 @@ export function presentationCommandForEvent(
     default:
       return assertNever(event);
   }
+}
+
+export function presentationCommandForDomEvent(
+  event: DuelPresentationEvent,
+  context: DomPresentationContext,
+  reducedMotion = false,
+): DomPresentationCommand {
+  const command = presentationCommandForEvent(event, reducedMotion);
+  switch (command.kind) {
+    case "card-move": {
+      const current = cardForEvent(context.currentBoard, event);
+      const previous =
+        context.previousBoard === undefined
+          ? undefined
+          : cardForEvent(context.previousBoard, event);
+      if (current === undefined || previous === undefined)
+        return noticeFor(command);
+      return {
+        ...command,
+        fromTargetId: `zone:${previous.zoneId}`,
+        toTargetId: current.targetId,
+      };
+    }
+    case "summon":
+    case "set": {
+      if (
+        event.type !== "summon" &&
+        event.type !== "specialSummon" &&
+        event.type !== "flipSummon" &&
+        event.type !== "set"
+      ) {
+        return noticeFor(command);
+      }
+      const target = uniqueCard(context.currentBoard, event.card, event.player);
+      return target === undefined
+        ? noticeFor(command)
+        : { ...command, targetId: target.targetId };
+    }
+    case "position": {
+      if (event.type !== "positionChanged") return noticeFor(command);
+      const target = uniqueCard(context.currentBoard, event.card);
+      return target === undefined
+        ? noticeFor(command)
+        : { ...command, targetId: target.targetId };
+    }
+    case "attack":
+      return context.attackEndpoints === undefined
+        ? noticeFor(command)
+        : { ...command, ...context.attackEndpoints };
+    case "life-points":
+    case "chain":
+    case "notice":
+      return command;
+  }
+}
+
+function cardForEvent(
+  board: BoardViewModel,
+  event: DuelPresentationEvent,
+): BoardCardView | undefined {
+  if (event.type !== "cardMoved") return undefined;
+  if (event.instanceId !== undefined)
+    return board.cards.find(
+      ({ instanceId }) => instanceId === event.instanceId,
+    );
+  return uniqueCard(board, event.card);
+}
+
+function uniqueCard(
+  board: BoardViewModel,
+  code: number | undefined,
+  player?: 0 | 1,
+): BoardCardView | undefined {
+  if (code === undefined) return undefined;
+  const matches = board.cards.filter(
+    (card) =>
+      card.code === code && (player === undefined || card.player === player),
+  );
+  return matches.length === 1 ? matches[0] : undefined;
+}
+
+function noticeFor(command: PresentationCommand): DomPresentationCommand {
+  return {
+    kind: "notice",
+    label: command.label,
+    durationMs: command.durationMs,
+  };
 }
 
 export class PresentationScheduler {

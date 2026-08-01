@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { DuelPresentationEvent } from "../../../duel/contracts/duel-presentation-event.ts";
   import type { PlayerPrompt } from "../../../duel/contracts/player-prompt.ts";
   import type {
     BoardCardView,
@@ -19,6 +20,11 @@
   export let spec: ActiveInteractionSpec | null;
   export let session: InteractionSession;
   export let pending: boolean;
+  export let presentationEvents: readonly {
+    readonly sequence: number;
+    readonly event: DuelPresentationEvent;
+  }[] = [];
+  export let feedbackGeneration = "component";
   export let injectFailure = false;
   export let oninteraction: (action: InteractionSessionAction) => unknown;
   export let oninspect: (card: BoardCardView) => void;
@@ -63,6 +69,8 @@
     {spec}
     {session}
     {pending}
+    {presentationEvents}
+    {feedbackGeneration}
     injectFailure={shouldFail}
     {oninteraction}
     {oninspect}

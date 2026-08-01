@@ -38,7 +38,10 @@ import {
   BOARD_VIEW_MODEL_FIXTURES,
 } from "../fixtures/board-view-model.ts";
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  Reflect.deleteProperty(Element.prototype, "animate");
+});
 
 function board(state: keyof typeof BOARD_VIEW_MODEL_FIXTURES) {
   const result = mapSnapshotToBoard(
@@ -447,6 +450,131 @@ describe("DuelField", () => {
     );
     await user.click(screen.getByRole("button", { name: "Retry duel field" }));
     expect(screen.getByRole("region", { name: "Duel field" })).toBeTruthy();
+  });
+
+  it("shows final feedback classes and an aria-hidden pointer-transparent SVG line", async () => {
+    const current = board("ST-05");
+    const moved = current.cards[0];
+    if (moved === undefined || moved.instanceId === undefined)
+      throw new Error("Missing movement fixture card");
+    const previous = {
+      ...current,
+      cards: [
+        {
+          ...moved,
+          zoneId: "p0:hand" as const,
+        },
+      ],
+    };
+    const rendered = render(DuelField, {
+      board: previous,
+      feedbackGeneration: "1:1",
+      presentationEvents: [],
+    });
+
+    await rendered.rerender({
+      presentationEvents: [
+        {
+          sequence: 1,
+          event: {
+            type: "cardMoved",
+            instanceId: moved.instanceId,
+            from: "hand",
+            to: "monster",
+          },
+        },
+      ],
+    });
+    expect(screen.queryByRole("status")).toBeNull();
+
+    await rendered.rerender({ board: current });
+
+    expect(screen.getByRole("status").textContent).toContain("Card moved");
+    expect(
+      document.querySelector(`[data-card-id="${moved.id}"]`)?.classList,
+    ).toContain("is-feedback-target");
+    const line = document.querySelector("svg.field-lines");
+    expect(line?.getAttribute("aria-hidden")).toBe("true");
+    expect(line?.getAttribute("focusable")).toBe("false");
+    expect(line?.querySelector("line")).not.toBeNull();
+  });
+
+  it("cancels feedback on a new runtime generation", async () => {
+    const value = board("ST-05");
+    const card = value.cards[0];
+    if (card === undefined || card.code === undefined)
+      throw new Error("Missing summon fixture card");
+    const presentationEvents = [
+      {
+        sequence: 1,
+        event: { type: "summon" as const, player: 0 as const, card: card.code },
+      },
+    ];
+    const rendered = render(DuelField, {
+      board: board("ST-01"),
+      feedbackGeneration: "1:1",
+      presentationEvents: [],
+    });
+    await rendered.rerender({ presentationEvents });
+    await rendered.rerender({ board: value });
+    expect(screen.getByRole("status").textContent).toBe("Normal Summon");
+
+    await rendered.rerender({
+      feedbackGeneration: "2:0",
+      presentationEvents,
+    });
+
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(document.querySelector(".is-feedback-target")).toBeNull();
+    expect(document.querySelector("svg.field-lines")).toBeNull();
+  });
+
+  it("uses no movement in reduced motion while final highlight, text, and input remain", async () => {
+    const animate = vi.fn(() => ({
+      cancel: vi.fn(),
+      finished: new Promise<void>(() => undefined),
+    }));
+    Object.defineProperty(Element.prototype, "animate", {
+      configurable: true,
+      value: animate,
+    });
+    const value = fieldPrompt("selectCard", [
+      mountedChoice("select", "Select card"),
+    ]);
+    const valueBoard = board("ST-05");
+    const card = valueBoard.cards[0];
+    if (card === undefined || card.code === undefined)
+      throw new Error("Missing feedback fixture card");
+    const spec = activeSpec(value);
+    const oninteraction = vi.fn(() => true);
+    const rendered = render(DuelField, {
+      board: valueBoard,
+      prompt: value,
+      spec,
+      session: createInteractionSession(spec),
+      pending: false,
+      feedbackGeneration: "1:1",
+      reducedMotion: true,
+      presentationEvents: [],
+      oninteraction,
+    });
+    await rendered.rerender({
+      presentationEvents: [
+        {
+          sequence: 1,
+          event: { type: "summon", player: 0, card: card.code },
+        },
+      ],
+    });
+    await rendered.rerender({ board: { ...valueBoard } });
+
+    expect(animate).not.toHaveBeenCalled();
+    expect(screen.getByRole("status").textContent).toBe("Normal Summon");
+    expect(document.querySelector(".is-feedback-target")).not.toBeNull();
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: /Select The Legendary/ }));
+    expect(oninteraction).toHaveBeenCalledOnce();
   });
 
   it("renders placeholder and back art immediately without image readiness state", () => {

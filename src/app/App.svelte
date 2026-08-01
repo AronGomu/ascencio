@@ -921,6 +921,8 @@
         spec={fieldInteractionSpec}
         session={$duel.interactionSession}
         pending={$duel.responsePending || imageLoading}
+        presentationEvents={$duel.presentationEvents}
+        feedbackGeneration={`${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
         injectFailure={injectDuelFieldFailure}
         oninteraction={duel.dispatchInteraction}
         oninspect={inspectFieldCard}

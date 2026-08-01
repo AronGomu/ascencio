@@ -1,6 +1,6 @@
 # DOM Duel-Field Implementation Plan
 
-> Status: approved amended plan; DF-11 complete; DF-12 implementation pending
+> Status: approved amended plan; DF-12 complete; DF-13 implementation pending
 > Created: 2026-07-31
 > Scope: Standard-format desktop field → rich state → accessibility/responsive parity → Phaser removal
 > Architecture: [`architecture/05-presentation/duel-field-architecture.md`](../docs/architecture/05-presentation/duel-field-architecture.md)
@@ -111,7 +111,7 @@ DF-00 → DF-01 → DF-02 → DF-03 → DF-04 → DF-05 → DF-06 → DF-07 → 
 - [x] DF-09
 - [x] DF-10
 - [x] DF-11
-- [ ] DF-12
+- [x] DF-12
 - [ ] DF-13
 - [ ] DF-14
 - [ ] DF-15
@@ -727,13 +727,13 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-- [ ] **Red:** unit tests map move/summon/set/position/LP/chain/attack events to bounded DOM feedback; unknown endpoints degrade to notice.
-- [ ] Component tests assert final state, classes, ARIA-hidden SVG line, cancellation on new generation/restart.
-- [ ] Reduced-motion test requires duration 0/no movement while final highlight/text remains.
-- [ ] **Green:** adapt presentation scheduler to DOM controller; use CSS transitions/WAAPI only for bounded commands.
-- [ ] Add pointer-transparent `FieldLines.svelte` for attack/target lines when both DOMRects resolve.
-- [ ] No permanent RAF; use transition/animation completion plus abort/generation token.
-- [ ] Ensure animation never blocks store/response path.
+- [x] **Red:** unit tests map move/summon/set/position/LP/chain/attack events to bounded DOM feedback; unknown endpoints degrade to notice.
+- [x] Component tests assert final state, classes, ARIA-hidden SVG line, cancellation on new generation/restart.
+- [x] Reduced-motion test requires duration 0/no movement while final highlight/text remains.
+- [x] **Green:** adapt presentation scheduler to DOM controller; use CSS transitions/WAAPI only for bounded commands.
+- [x] Add pointer-transparent `FieldLines.svelte` for attack/target lines when both DOMRects resolve.
+- [x] No permanent RAF; use transition/animation completion plus abort/generation token.
+- [x] Ensure animation never blocks store/response path.
 
 ### Outputs
 
@@ -743,10 +743,10 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- [ ] Fake-timer tests leave zero active timers/animations after cancel.
-- [ ] SVG receives no pointer/focus and is `aria-hidden`.
-- [ ] Worker response timing unchanged.
-- [ ] Unit/component reduced-motion tests green.
+- [x] Fake-timer tests leave zero active timers/animations after cancel.
+- [x] SVG receives no pointer/focus and is `aria-hidden`.
+- [x] Worker response timing unchanged.
+- [x] Unit/component reduced-motion tests green.
 
 ---
 

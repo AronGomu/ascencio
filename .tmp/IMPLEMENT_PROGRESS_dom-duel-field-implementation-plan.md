@@ -3,7 +3,7 @@
 - Branch: `plan/dom-duel-field-implementation-plan`
 - Plan: `.tmp/IMPLEMENTATION_PLAN_duel_field_dom.md`
 - Started: 2026-08-01T09:03:37Z
-- Updated: 2026-08-01T12:39:30Z
+- Updated: 2026-08-01T12:57:30Z
 
 ## Status
 
@@ -15,8 +15,8 @@
 | DF-03 | Project overlay materials and useful Extra Deck state | done | aa5be77 | Ship locally verified; validated and pushed |
 | DF-04 | Project counters and actual chain provenance | done | 89af5ce | Ship locally verified; validated and pushed |
 | DF-05 | Separate bounded semantic log from feedback queue | done | 5bbdd22 | Ship locally verified; validated and pushed |
-| DF-06 | Derive renderer-neutral `BoardViewModel` | done | DF-06-COMMIT | Ship locally verified; isolated checkpoint ready to commit/push |
-| DF-07 | Derive discriminated `InteractionSpec` | pending | — | — |
+| DF-06 | Derive renderer-neutral `BoardViewModel` | done | 382d036 | Ship locally verified; validated and pushed |
+| DF-07 | Derive discriminated `InteractionSpec` | done | DF-07-COMMIT | Ship locally verified; isolated checkpoint ready to commit/push |
 | DF-08 | Add `InteractionSession` reducer and authoritative pending lifecycle | pending | — | — |
 | DF-09 | Render static semantic DOM field | pending | — | — |
 | DF-10 | Connect complete pointer field workflows | pending | — | — |
@@ -52,4 +52,6 @@
 - 2026-08-01T10:16:55Z DF-05 start.
 - 2026-08-01T10:21:42Z DF-05 done 5bbdd22: reconstructed red 7 failures; focused 111/111, unit 317/317, integration 20/20, full 368, typecheck/lint/format/build green. Minimal Worker `eventSequence` scope expansion approved: payload equality cannot distinguish replay from legitimate equal events. App log rendering deferred to DF-11.
 - 2026-08-01T10:26:15Z DF-06 start.
-- 2026-08-01T12:39:30Z DF-06 done DF-06-COMMIT: red missing board mapper module; focused 62/62, unit 335/335, full 386/386; typecheck/lint/format/build green. Existing Phaser `FieldSnapshotView` retained unchanged until consumer migration; hidden material keys snapshot-scoped after privacy review.
+- 2026-08-01T10:39:30Z DF-06 done 382d036: red missing board mapper module; focused 62/62, unit 335/335, full 386/386; typecheck/lint/format/build green. Existing Phaser `FieldSnapshotView` retained until consumer migration; hidden material keys snapshot-scoped after privacy review.
+- 2026-08-01T10:42:16Z DF-07 start.
+- 2026-08-01T12:57:30Z DF-07 done DF-07-COMMIT: red missing interaction-spec module; focused prompt/spec 26/26, unit 354/354, full test 405/405; typecheck/lint/format/build green. Inline code/duplication/contract/test-quality review found no blockers; malformed targets stay semantic-only or omitted, and spec structured-clones without functions/elements.

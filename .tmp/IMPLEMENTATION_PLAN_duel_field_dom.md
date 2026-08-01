@@ -1,6 +1,6 @@
 # DOM Duel-Field Implementation Plan
 
-> Status: approved amended plan; DF-06 accepted; DF-07 implementation pending
+> Status: approved amended plan; DF-07 accepted; DF-08 implementation pending
 > Created: 2026-07-31
 > Scope: Standard-format desktop field → rich state → accessibility/responsive parity → Phaser removal
 > Architecture: [`architecture/05-presentation/duel-field-architecture.md`](../docs/architecture/05-presentation/duel-field-architecture.md)
@@ -106,7 +106,7 @@ DF-00 → DF-01 → DF-02 → DF-03 → DF-04 → DF-05 → DF-06 → DF-07 → 
 - [x] DF-04
 - [x] DF-05
 - [x] DF-06
-- [ ] DF-07
+- [x] DF-07
 - [ ] DF-08
 - [ ] DF-09
 - [ ] DF-10
@@ -541,14 +541,14 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-- [ ] **Red:** add one spec fixture per prompt family: action, single card, multi/tribute/sum, unselect, place/disabled field, counter, order, non-field.
-- [ ] Assert multiple actions on same card remain distinct opaque choices.
-- [ ] Assert positional prompt cards resolve to public instance/physical target; unresolved targets route to semantic prompt fallback.
-- [ ] Assert spec contains no selected/order/allocation mutable state.
-- [ ] Assert malformed/unknown choices cannot become field targets.
-- [ ] **Green:** implement discriminated spec mapper and `InteractionKey(workerGeneration, sessionGeneration, promptId)`.
-- [ ] Reuse existing control-family/validation logic; no duplicate min/max/sum legality algorithm.
-- [ ] Add readonly target maps for card/zone/global choices.
+- [x] **Red:** add one spec fixture per prompt family: action, single card, multi/tribute/sum, unselect, place/disabled field, counter, order, non-field.
+- [x] Assert multiple actions on same card remain distinct opaque choices.
+- [x] Assert positional prompt cards resolve to public instance/physical target; unresolved targets route to semantic prompt fallback.
+- [x] Assert spec contains no selected/order/allocation mutable state.
+- [x] Assert malformed/unknown choices cannot become field targets.
+- [x] **Green:** implement discriminated spec mapper and `InteractionKey(workerGeneration, sessionGeneration, promptId)`.
+- [x] Reuse existing control-family/validation logic; no duplicate min/max/sum legality algorithm.
+- [x] Add readonly target maps for card/zone/global choices.
 
 ### Outputs
 
@@ -558,10 +558,10 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- [ ] All current `PromptKind` values classified exhaustively.
-- [ ] Existing prompt selection tests unchanged/green.
-- [ ] Spec serialization contains only domain IDs/data; no elements/functions.
-- [ ] `npm run test:unit && npm run typecheck` green.
+- [x] All current `PromptKind` values classified exhaustively.
+- [x] Existing prompt selection tests unchanged/green.
+- [x] Spec serialization contains only domain IDs/data; no elements/functions.
+- [x] `npm run test:unit && npm run typecheck` green.
 
 ---
 

@@ -15,7 +15,9 @@ import {
   CARD_WIDTH,
   createDuelFieldLayout,
   fieldZoneId,
+  mapEngineFieldAddress,
   type FieldZoneKind,
+  type PhysicalZoneId,
 } from "./duel-field-layout.ts";
 
 export interface FieldCardView {
@@ -85,13 +87,8 @@ export function promptFieldTargets(
   if (prompt === null) return { cardIds, zoneIds };
   for (const choice of prompt.choices) {
     if (choice.place !== undefined) {
-      zoneIds.add(
-        fieldZoneId(
-          choice.place.player,
-          normalizePromptLocation(choice.place.location),
-          choice.place.sequence,
-        ),
-      );
+      const mapping = mapEngineFieldAddress(choice.place);
+      if (mapping.ok) zoneIds.add(mapping.zoneId);
     }
     if (choice.card === undefined) continue;
     const publicCard = findPublicCard(snapshot, choice.card);
@@ -113,19 +110,24 @@ export function fieldCardChoices(
   });
 }
 
+export function fieldZoneChoices(
+  prompt: PlayerPrompt | null,
+  zoneId: string,
+): readonly PromptChoice[] {
+  if (prompt === null) return [];
+  return prompt.choices.filter((choice) => {
+    if (choice.place === undefined) return false;
+    const mapping = mapEngineFieldAddress(choice.place);
+    return mapping.ok && mapping.zoneId === zoneId;
+  });
+}
+
 export function fieldZoneChoice(
   prompt: PlayerPrompt | null,
   zoneId: string,
 ): PromptChoice | undefined {
-  return prompt?.choices.find(
-    (choice) =>
-      choice.place !== undefined &&
-      fieldZoneId(
-        choice.place.player,
-        normalizePromptLocation(choice.place.location),
-        choice.place.sequence,
-      ) === zoneId,
-  );
+  const choices = fieldZoneChoices(prompt, zoneId);
+  return choices.length === 1 ? choices[0] : undefined;
 }
 
 export function reconcileFieldKeys(
@@ -146,12 +148,10 @@ function addCards(
 ): void {
   for (const card of values) {
     const effectiveZone = card.location === "field" ? "field" : zone;
-    const base = LAYOUT_BY_ID.get(
-      fieldZoneId(player, effectiveZone, card.sequence),
-    );
-    const stackBase = LAYOUT_BY_ID.get(fieldZoneId(player, effectiveZone, 0));
-    if (base === undefined && stackBase === undefined) continue;
-    const coordinate = base ?? stackBase!;
+    const layoutId = cardLayoutId(player, effectiveZone, card.sequence);
+    if (layoutId === undefined) continue;
+    const coordinate = LAYOUT_BY_ID.get(layoutId);
+    if (coordinate === undefined) continue;
     const offset =
       zone === "hand" ? handOffset(card.sequence, values.length) : 0;
     target.set(
@@ -235,7 +235,11 @@ function findPublicCard(
   if (snapshot === null) return undefined;
   const player = snapshot.players[candidate.controller];
   const zone = publicCards(player, candidate.location);
-  return zone?.find((card) => card.sequence === candidate.sequence);
+  return zone?.find(
+    (card) =>
+      card.location === candidate.location &&
+      card.sequence === candidate.sequence,
+  );
 }
 
 function publicCards(
@@ -260,10 +264,20 @@ function publicCards(
   }
 }
 
-function normalizePromptLocation(
-  location: "monster" | "spellTrap" | "field" | "pendulum",
-): FieldZoneKind {
-  return location === "pendulum" ? "spellTrap" : location;
+function cardLayoutId(
+  player: PlayerIndex,
+  zone: FieldZoneKind,
+  sequence: number,
+): PhysicalZoneId | undefined {
+  if (zone === "monster" || zone === "spellTrap" || zone === "field") {
+    const mapping = mapEngineFieldAddress({
+      player,
+      location: zone,
+      sequence,
+    });
+    return mapping.ok ? mapping.zoneId : undefined;
+  }
+  return fieldZoneId(player, zone);
 }
 
 export function choiceIdsForFieldIntent(

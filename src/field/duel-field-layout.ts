@@ -15,9 +15,37 @@ export type FieldZoneKind =
   | "graveyard"
   | "banished";
 
-export interface FieldZoneLayout {
-  readonly id: string;
+export type PhysicalZoneId =
+  | `p${PlayerIndex}:mainMonster:${0 | 1 | 2 | 3 | 4}`
+  | "shared:extraMonster:left"
+  | "shared:extraMonster:right"
+  | `p${PlayerIndex}:spellTrap:${0 | 1 | 2 | 3 | 4}`
+  | `p${PlayerIndex}:field`
+  | `p${PlayerIndex}:deck`
+  | `p${PlayerIndex}:extra`
+  | `p${PlayerIndex}:graveyard`
+  | `p${PlayerIndex}:banished`
+  | `p${PlayerIndex}:hand`;
+
+export interface EngineFieldAddress {
   readonly player: PlayerIndex;
+  readonly location: "monster" | "spellTrap" | "field" | "pendulum";
+  readonly sequence: number;
+}
+
+export type PhysicalZoneMappingResult =
+  | { readonly ok: true; readonly zoneId: PhysicalZoneId }
+  | {
+      readonly ok: false;
+      readonly error: {
+        readonly type: "unsupported_field_address";
+        readonly address: EngineFieldAddress;
+      };
+    };
+
+export interface StandardFieldZoneLayout {
+  readonly id: PhysicalZoneId;
+  readonly player: PlayerIndex | "shared";
   readonly kind: FieldZoneKind;
   readonly sequence: number;
   readonly x: number;
@@ -27,24 +55,89 @@ export interface FieldZoneLayout {
   readonly label: string;
 }
 
+export type FieldZoneLayout = StandardFieldZoneLayout;
+
+export function mapEngineFieldAddress(
+  address: EngineFieldAddress,
+): PhysicalZoneMappingResult {
+  const { player, location, sequence } = address;
+  if ((player !== 0 && player !== 1) || !Number.isInteger(sequence))
+    return unsupported(address);
+
+  switch (location) {
+    case "monster":
+      if (sequence >= 0 && sequence <= 4)
+        return supported(
+          `p${player}:mainMonster:${sequence as 0 | 1 | 2 | 3 | 4}`,
+        );
+      if (sequence === 5)
+        return supported(
+          player === 0
+            ? "shared:extraMonster:left"
+            : "shared:extraMonster:right",
+        );
+      if (sequence === 6)
+        return supported(
+          player === 0
+            ? "shared:extraMonster:right"
+            : "shared:extraMonster:left",
+        );
+      return unsupported(address);
+    case "spellTrap":
+      if (sequence < 0 || sequence > 4) return unsupported(address);
+      return supported(`p${player}:spellTrap:${sequence as 0 | 1 | 2 | 3 | 4}`);
+    case "field":
+      return sequence === 0
+        ? supported(`p${player}:field`)
+        : unsupported(address);
+    case "pendulum":
+      if (sequence !== 0 && sequence !== 1) return unsupported(address);
+      return supported(`p${player}:spellTrap:${sequence === 0 ? 0 : 4}`);
+  }
+}
+
 export function fieldZoneId(
   player: PlayerIndex,
   kind: FieldZoneKind,
   sequence = 0,
-): string {
-  return `p${player}:${kind}:${sequence}`;
+): PhysicalZoneId {
+  if (kind === "monster" || kind === "spellTrap" || kind === "field") {
+    const result = mapEngineFieldAddress({ player, location: kind, sequence });
+    if (result.ok) return result.zoneId;
+    throw new Error(`Unsupported field zone: ${kind} ${sequence}`);
+  }
+  return `p${player}:${kind}`;
 }
 
+export const STANDARD_DUEL_FIELD_LAYOUT: readonly StandardFieldZoneLayout[] =
+  createStandardDuelFieldLayout();
+
+// Legacy Phaser adapter. DOM-facing layout remains normalized above.
 export function createDuelFieldLayout(): readonly FieldZoneLayout[] {
-  const zones: FieldZoneLayout[] = [];
+  return Object.freeze(
+    STANDARD_DUEL_FIELD_LAYOUT.map((zone) =>
+      Object.freeze({
+        ...zone,
+        x: zone.x * DUEL_FIELD_WIDTH,
+        y: zone.y * DUEL_FIELD_HEIGHT,
+        width: zone.width * DUEL_FIELD_WIDTH,
+        height: zone.height * DUEL_FIELD_HEIGHT,
+      }),
+    ),
+  );
+}
+
+function createStandardDuelFieldLayout(): readonly StandardFieldZoneLayout[] {
+  const zones: StandardFieldZoneLayout[] = [];
   for (const player of [0, 1] as const) {
     const mirrored = player === 1;
     const monsterY = mirrored ? 250 : 470;
     const spellY = mirrored ? 135 : 585;
-    for (let sequence = 0; sequence < 8; sequence += 1) {
-      const x =
-        sequence < 5 ? 440 + sequence * 100 : 290 + (sequence - 5) * 470;
-      zones.push(zone(player, "monster", sequence, x, monsterY, "Monster"));
+    for (let sequence = 0; sequence < 5; sequence += 1) {
+      const x = 440 + sequence * 100;
+      zones.push(
+        zone(player, "monster", sequence, x, monsterY, "Main Monster"),
+      );
       zones.push(
         zone(player, "spellTrap", sequence, x, spellY, "Spell / Trap"),
       );
@@ -56,10 +149,14 @@ export function createDuelFieldLayout(): readonly FieldZoneLayout[] {
     zones.push(zone(player, "banished", 0, 1130, monsterY, "Banished"));
     zones.push({
       ...zone(player, "hand", 0, 640, mirrored ? 42 : 678, "Hand"),
-      width: 720,
-      height: 72,
+      width: 720 / DUEL_FIELD_WIDTH,
+      height: 72 / DUEL_FIELD_HEIGHT,
     });
   }
+  zones.push(
+    sharedExtraMonsterZone("left", 590),
+    sharedExtraMonsterZone("right", 690),
+  );
   return Object.freeze(zones.map((value) => Object.freeze(value)));
 }
 
@@ -70,16 +167,52 @@ function zone(
   x: number,
   y: number,
   label: string,
-): FieldZoneLayout {
+): StandardFieldZoneLayout {
   return {
     id: fieldZoneId(player, kind, sequence),
     player,
     kind,
     sequence,
-    x,
-    y,
-    width: CARD_WIDTH + 10,
-    height: CARD_HEIGHT + 10,
-    label: `${player === 0 ? "Your" : "Opponent"} ${label}${sequence > 0 || kind === "monster" || kind === "spellTrap" ? ` ${sequence + 1}` : ""}`,
+    x: x / DUEL_FIELD_WIDTH,
+    y: y / DUEL_FIELD_HEIGHT,
+    width: (CARD_WIDTH + 10) / DUEL_FIELD_WIDTH,
+    height: (CARD_HEIGHT + 10) / DUEL_FIELD_HEIGHT,
+    label: `${player === 0 ? "Your" : "Opponent"} ${label}${kind === "monster" || kind === "spellTrap" ? ` ${sequence + 1}` : ""}`,
   };
+}
+
+function sharedExtraMonsterZone(
+  side: "left" | "right",
+  x: number,
+): StandardFieldZoneLayout {
+  return {
+    id: `shared:extraMonster:${side}`,
+    player: "shared",
+    kind: "monster",
+    sequence: side === "left" ? 5 : 6,
+    x: x / DUEL_FIELD_WIDTH,
+    y: 360 / DUEL_FIELD_HEIGHT,
+    width: (CARD_WIDTH + 10) / DUEL_FIELD_WIDTH,
+    height: (CARD_HEIGHT + 10) / DUEL_FIELD_HEIGHT,
+    label: `Shared Extra Monster Zone ${side}`,
+  };
+}
+
+function supported(zoneId: PhysicalZoneId): PhysicalZoneMappingResult {
+  return Object.freeze({ ok: true, zoneId });
+}
+
+function unsupported(address: EngineFieldAddress): PhysicalZoneMappingResult {
+  const addressCopy = Object.freeze({
+    player: address.player,
+    location: address.location,
+    sequence: address.sequence,
+  });
+  return Object.freeze({
+    ok: false,
+    error: Object.freeze({
+      type: "unsupported_field_address",
+      address: addressCopy,
+    }),
+  });
 }

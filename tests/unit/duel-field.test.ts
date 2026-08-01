@@ -10,6 +10,8 @@ import type { PlayerPrompt } from "../../src/duel/contracts/player-prompt.ts";
 import type { PublicDuelState } from "../../src/duel/contracts/public-duel-state.ts";
 import {
   fieldCardChoices,
+  fieldZoneChoice,
+  fieldZoneChoices,
   mapSnapshotToField,
   promptFieldTargets,
   reconcileFieldKeys,
@@ -17,6 +19,10 @@ import {
 import {
   createDuelFieldLayout,
   fieldZoneId,
+  mapEngineFieldAddress,
+  STANDARD_DUEL_FIELD_LAYOUT,
+  type EngineFieldAddress,
+  type PhysicalZoneId,
 } from "../../src/field/duel-field-layout.ts";
 
 const state: PublicDuelState = {
@@ -105,15 +111,376 @@ const prompt: PlayerPrompt = {
 };
 
 describe("duel field mapping", () => {
-  it("creates a deterministic complete two-player layout", () => {
-    const first = createDuelFieldLayout();
-    const second = createDuelFieldLayout();
-    expect(first).toEqual(second);
-    expect(first).toHaveLength(44);
-    expect(new Set(first.map(({ id }) => id)).size).toBe(first.length);
-    expect(first).toContainEqual(
+  it("creates 34 unique Standard physical controls with two shared EMZs", () => {
+    const layout = STANDARD_DUEL_FIELD_LAYOUT;
+    expect(createDuelFieldLayout()).toEqual(createDuelFieldLayout());
+    expect(layout).toHaveLength(34);
+    expect(new Set(layout.map(({ id }) => id)).size).toBe(layout.length);
+    expect(layout.filter(({ player }) => player === 0)).toHaveLength(16);
+    expect(layout.filter(({ player }) => player === 1)).toHaveLength(16);
+    expect(layout.filter(({ player }) => player === "shared")).toEqual([
+      expect.objectContaining({ id: "shared:extraMonster:left" }),
+      expect.objectContaining({ id: "shared:extraMonster:right" }),
+    ]);
+    expect(layout).toContainEqual(
       expect.objectContaining({ id: fieldZoneId(0, "monster", 0) }),
     );
+    expect(
+      layout.every(({ x, y, width, height }) =>
+        [x, y, width, height].every((value) => value > 0 && value <= 1),
+      ),
+    ).toBe(true);
+    expect(createDuelFieldLayout()).toContainEqual(
+      expect.objectContaining({
+        id: "p0:mainMonster:0",
+        x: 440,
+        y: 470,
+        width: 82,
+        height: 114,
+      }),
+    );
+  });
+
+  it.each<readonly [EngineFieldAddress, PhysicalZoneId]>([
+    [{ player: 0, location: "monster", sequence: 0 }, "p0:mainMonster:0"],
+    [{ player: 0, location: "monster", sequence: 4 }, "p0:mainMonster:4"],
+    [{ player: 1, location: "monster", sequence: 0 }, "p1:mainMonster:0"],
+    [{ player: 1, location: "monster", sequence: 4 }, "p1:mainMonster:4"],
+    [
+      { player: 0, location: "monster", sequence: 5 },
+      "shared:extraMonster:left",
+    ],
+    [
+      { player: 0, location: "monster", sequence: 6 },
+      "shared:extraMonster:right",
+    ],
+    [
+      { player: 1, location: "monster", sequence: 5 },
+      "shared:extraMonster:right",
+    ],
+    [
+      { player: 1, location: "monster", sequence: 6 },
+      "shared:extraMonster:left",
+    ],
+    [{ player: 0, location: "spellTrap", sequence: 0 }, "p0:spellTrap:0"],
+    [{ player: 0, location: "spellTrap", sequence: 1 }, "p0:spellTrap:1"],
+    [{ player: 0, location: "spellTrap", sequence: 2 }, "p0:spellTrap:2"],
+    [{ player: 0, location: "spellTrap", sequence: 3 }, "p0:spellTrap:3"],
+    [{ player: 0, location: "spellTrap", sequence: 4 }, "p0:spellTrap:4"],
+    [{ player: 1, location: "spellTrap", sequence: 0 }, "p1:spellTrap:0"],
+    [{ player: 1, location: "spellTrap", sequence: 1 }, "p1:spellTrap:1"],
+    [{ player: 1, location: "spellTrap", sequence: 2 }, "p1:spellTrap:2"],
+    [{ player: 1, location: "spellTrap", sequence: 3 }, "p1:spellTrap:3"],
+    [{ player: 1, location: "spellTrap", sequence: 4 }, "p1:spellTrap:4"],
+    [{ player: 0, location: "field", sequence: 0 }, "p0:field"],
+    [{ player: 1, location: "field", sequence: 0 }, "p1:field"],
+    [{ player: 0, location: "pendulum", sequence: 0 }, "p0:spellTrap:0"],
+    [{ player: 0, location: "pendulum", sequence: 1 }, "p0:spellTrap:4"],
+    [{ player: 1, location: "pendulum", sequence: 0 }, "p1:spellTrap:0"],
+    [{ player: 1, location: "pendulum", sequence: 1 }, "p1:spellTrap:4"],
+  ])("maps engine address %j to %s", (address, zoneId) => {
+    expect(mapEngineFieldAddress(address)).toEqual({ ok: true, zoneId });
+  });
+
+  it.each<EngineFieldAddress>([
+    { player: 0, location: "monster", sequence: -1 },
+    { player: 0, location: "monster", sequence: 0.5 },
+    { player: 0, location: "monster", sequence: 7 },
+    { player: 1, location: "monster", sequence: 8 },
+    { player: 0, location: "spellTrap", sequence: -1 },
+    { player: 0, location: "spellTrap", sequence: 5 },
+    { player: 1, location: "spellTrap", sequence: 7 },
+    { player: 0, location: "field", sequence: -1 },
+    { player: 0, location: "field", sequence: 1 },
+    { player: 1, location: "pendulum", sequence: -1 },
+    { player: 1, location: "pendulum", sequence: 2 },
+  ])("returns a typed error for unsupported address %j", (address) => {
+    expect(mapEngineFieldAddress(address)).toEqual({
+      ok: false,
+      error: { type: "unsupported_field_address", address },
+    });
+  });
+
+  it("rejects unsafe players and keeps unsupported diagnostics immutable", () => {
+    const unsafeAddress = {
+      player: 2,
+      location: "monster" as const,
+      sequence: 0,
+    };
+    const result = mapEngineFieldAddress(
+      unsafeAddress as unknown as EngineFieldAddress,
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        type: "unsupported_field_address",
+        address: unsafeAddress,
+      },
+    });
+    expect(Object.isFrozen(result)).toBe(true);
+    if (result.ok) throw new Error("Unsafe player unexpectedly mapped");
+    expect(Object.isFrozen(result.error)).toBe(true);
+    expect(Object.isFrozen(result.error.address)).toBe(true);
+
+    unsafeAddress.sequence = 4;
+    expect(result.error.address.sequence).toBe(0);
+  });
+
+  it("maps sparse main slots 0 and 4 without resequencing", () => {
+    const sparseState: PublicDuelState = {
+      ...state,
+      players: [
+        {
+          ...state.players[0],
+          monsters: [
+            {
+              instanceId: cardInstanceId("main-zero"),
+              code: cardCode(97590747),
+              owner: 0,
+              controller: 0,
+              location: "monster",
+              sequence: 0,
+              position: "faceUpAttack",
+              faceUp: true,
+              overlayMaterials: [],
+            },
+            {
+              instanceId: cardInstanceId("main-four"),
+              code: cardCode(5053103),
+              owner: 0,
+              controller: 0,
+              location: "monster",
+              sequence: 4,
+              position: "faceUpAttack",
+              faceUp: true,
+              overlayMaterials: [],
+            },
+          ],
+        },
+        state.players[1],
+      ],
+    };
+
+    const mapped = mapSnapshotToField(sparseState);
+    expect(mapped.cards.get("main-zero")).toMatchObject({
+      sequence: 0,
+      x: 440,
+      y: 470,
+    });
+    expect(mapped.cards.get("main-four")).toMatchObject({
+      sequence: 4,
+      x: 840,
+      y: 470,
+    });
+  });
+
+  it("maps both shared EMZs and omits invalid fixed cards", () => {
+    const sharedState: PublicDuelState = {
+      ...state,
+      players: [
+        {
+          ...state.players[0],
+          monsters: [
+            {
+              instanceId: cardInstanceId("p0-left-emz"),
+              code: cardCode(97590747),
+              owner: 0,
+              controller: 0,
+              location: "monster",
+              sequence: 5,
+              position: "faceUpAttack",
+              faceUp: true,
+              overlayMaterials: [],
+            },
+            {
+              instanceId: cardInstanceId("invalid-monster"),
+              code: cardCode(5053103),
+              owner: 0,
+              controller: 0,
+              location: "monster",
+              sequence: 7,
+              position: "faceUpAttack",
+              faceUp: true,
+              overlayMaterials: [],
+            },
+          ],
+        },
+        {
+          ...state.players[1],
+          monsters: [
+            {
+              instanceId: cardInstanceId("p1-right-emz"),
+              code: cardCode(89631139),
+              owner: 1,
+              controller: 1,
+              location: "monster",
+              sequence: 5,
+              position: "faceUpAttack",
+              faceUp: true,
+              overlayMaterials: [],
+            },
+          ],
+        },
+      ],
+    };
+
+    const mapped = mapSnapshotToField(sharedState);
+    const p0 = mapped.cards.get("p0-left-emz");
+    const p1 = mapped.cards.get("p1-right-emz");
+    expect(p0).toMatchObject({ sequence: 5, x: 590, y: 360 });
+    expect(p1).toMatchObject({ sequence: 5, x: 690, y: 360 });
+    expect(mapped.cards.has("invalid-monster")).toBe(false);
+  });
+
+  it("resolves equal-sequence Field and Spell/Trap cards by location", () => {
+    const fieldState: PublicDuelState = {
+      ...state,
+      players: [
+        {
+          ...state.players[0],
+          spellsAndTraps: [
+            {
+              instanceId: cardInstanceId("spell-trap-zero"),
+              code: cardCode(97590747),
+              owner: 0,
+              controller: 0,
+              location: "spellTrap",
+              sequence: 0,
+              position: "faceUpAttack",
+              faceUp: true,
+              overlayMaterials: [],
+            },
+            {
+              instanceId: cardInstanceId("field-zero"),
+              code: cardCode(5053103),
+              owner: 0,
+              controller: 0,
+              location: "field",
+              sequence: 0,
+              position: "faceUpAttack",
+              faceUp: true,
+              overlayMaterials: [],
+            },
+            {
+              instanceId: cardInstanceId("invalid-spell-trap-five"),
+              code: cardCode(46986414),
+              owner: 0,
+              controller: 0,
+              location: "spellTrap",
+              sequence: 5,
+              position: "faceUpAttack",
+              faceUp: true,
+              overlayMaterials: [],
+            },
+            {
+              instanceId: cardInstanceId("invalid-field-one"),
+              code: cardCode(44519536),
+              owner: 0,
+              controller: 0,
+              location: "field",
+              sequence: 1,
+              position: "faceUpAttack",
+              faceUp: true,
+              overlayMaterials: [],
+            },
+          ],
+        },
+        state.players[1],
+      ],
+    };
+    const fieldPrompt: PlayerPrompt = {
+      ...prompt,
+      choices: [
+        {
+          id: choiceId("field-card-choice"),
+          label: "Field card",
+          action: "select",
+          card: {
+            instanceId: cardInstanceId("positional-field"),
+            code: cardCode(5053103),
+            controller: 0,
+            location: "field",
+            sequence: 0,
+            position: "faceUpAttack",
+          },
+        },
+      ],
+    };
+
+    const mapped = mapSnapshotToField(fieldState);
+    const spellTrap = mapped.cards.get("spell-trap-zero");
+    const field = mapped.cards.get("field-zero");
+    expect(spellTrap).toMatchObject({ zone: "spellTrap", sequence: 0 });
+    expect(field).toMatchObject({ zone: "field", sequence: 0 });
+    expect([spellTrap?.x, spellTrap?.y]).not.toEqual([field?.x, field?.y]);
+    expect(mapped.cards.has("invalid-spell-trap-five")).toBe(false);
+    expect(mapped.cards.has("invalid-field-one")).toBe(false);
+    expect(promptFieldTargets(fieldPrompt, fieldState).cardIds).toEqual(
+      new Set(["field-zero"]),
+    );
+  });
+
+  it("maps valid prompt places to physical IDs and omits invalid places", () => {
+    const placePrompt: PlayerPrompt = {
+      id: promptId("place-prompt"),
+      kind: "selectPlace",
+      player: 0,
+      title: "Choose a zone",
+      choices: [
+        {
+          id: choiceId("left-emz-p0"),
+          label: "Left EMZ",
+          action: "select",
+          place: { player: 0, location: "monster", sequence: 5 },
+        },
+        {
+          id: choiceId("left-emz-p1"),
+          label: "Left EMZ alias",
+          action: "select",
+          place: { player: 1, location: "monster", sequence: 6 },
+        },
+        {
+          id: choiceId("field-zone"),
+          label: "Field Zone",
+          action: "select",
+          place: { player: 0, location: "field", sequence: 0 },
+        },
+        {
+          id: choiceId("pendulum-zone"),
+          label: "Pendulum Zone",
+          action: "select",
+          place: { player: 0, location: "pendulum", sequence: 1 },
+        },
+        {
+          id: choiceId("invalid-zone"),
+          label: "Invalid Zone",
+          action: "select",
+          place: { player: 0, location: "spellTrap", sequence: 5 },
+        },
+      ],
+      minimum: 1,
+      maximum: 1,
+      cancelable: false,
+      ordered: false,
+    };
+
+    expect(promptFieldTargets(placePrompt, null).zoneIds).toEqual(
+      new Set(["shared:extraMonster:left", "p0:field", "p0:spellTrap:4"]),
+    );
+    expect(
+      fieldZoneChoices(placePrompt, "shared:extraMonster:left").map(
+        ({ id }) => id,
+      ),
+    ).toEqual(["left-emz-p0", "left-emz-p1"]);
+    expect(
+      fieldZoneChoice(placePrompt, "shared:extraMonster:left"),
+    ).toBeUndefined();
+    expect(fieldZoneChoice(placePrompt, "p0:field")?.id).toBe("field-zone");
+    expect(fieldZoneChoice(placePrompt, "p0:spellTrap:4")?.id).toBe(
+      "pendulum-zone",
+    );
+    expect(fieldZoneChoice(placePrompt, "p0:spellTrap:0")).toBeUndefined();
   });
 
   it("maps snapshots idempotently with hidden opponent-hand placeholders", () => {

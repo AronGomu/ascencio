@@ -101,7 +101,7 @@ DF-00 → DF-01 → DF-02 → DF-03 → DF-04 → DF-05 → DF-06 → DF-07 → 
 
 - [x] DF-00
 - [x] DF-01
-- [ ] DF-02
+- [x] DF-02
 - [ ] DF-03
 - [ ] DF-04
 - [ ] DF-05
@@ -347,18 +347,18 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-- [ ] **Red:** replace 44-zone expectation with 34 physical controls: 16 per player including hand lane, plus two shared EMZs.
-- [ ] Add table-driven engine-address mapping tests:
+- [x] **Red:** replace 44-zone expectation with 34 physical controls: 16 per player including hand lane, plus two shared EMZs.
+- [x] Add table-driven engine-address mapping tests:
    - p0 MZONE 0/4 → own main slots;
    - p0 s5/s6 → shared left/right;
    - p1 s5/s6 → shared right/left;
    - p0 s5 equals p1 s6 physical ID; p0 s6 equals p1 s5.
-- [ ] Add SZONE tests: `0..4` only; Pendulum reuses `0/4`; Field Zone separate.
-- [ ] Add invalid sequence tests; unsupported address returns typed diagnostic/result, never fallback to sequence 0.
-- [ ] **Green:** define `PhysicalZoneId`, `EngineFieldAddress`, Standard layout table, pure address mapper.
-- [ ] Replace owner-duplicated EMZ generation. Keep logical normalized coordinates renderer-neutral.
-- [ ] Adapt prompt place mapping to physical IDs.
-- [ ] Update existing Phaser mapper adapter only enough to remain green until removal.
+- [x] Add SZONE tests: `0..4` only; Pendulum reuses `0/4`; Field Zone separate.
+- [x] Add invalid sequence tests; unsupported address returns typed diagnostic/result, never fallback to sequence 0.
+- [x] **Green:** define `PhysicalZoneId`, `EngineFieldAddress`, Standard layout table, pure address mapper.
+- [x] Replace owner-duplicated EMZ generation. Keep logical normalized coordinates renderer-neutral.
+- [x] Adapt prompt place mapping to physical IDs.
+- [x] Update existing Phaser mapper adapter only enough to remain green until removal.
 
 ### Outputs
 
@@ -368,11 +368,11 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- [ ] Focused: `npx vitest run tests/unit/duel-field.test.ts`.
-- [ ] No duplicate physical IDs.
-- [ ] Exactly two EMZ layout entries.
-- [ ] `ST-02`, `ST-03` fixture data available for later visual tests.
-- [ ] `npm run typecheck && npm run test:unit` green.
+- [x] Focused: `npx vitest run tests/unit/duel-field.test.ts`.
+- [x] No duplicate physical IDs.
+- [x] Exactly two EMZ layout entries.
+- [x] `ST-02`, `ST-03` fixture data available for later visual tests.
+- [x] `npm run typecheck && npm run test:unit` green.
 
 ---
 

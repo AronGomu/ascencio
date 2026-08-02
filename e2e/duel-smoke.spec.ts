@@ -1,5 +1,11 @@
 import { readFile, writeFile } from "node:fs/promises";
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import {
+  expect,
+  test,
+  type Locator,
+  type Page,
+  type TestInfo,
+} from "@playwright/test";
 import { duelFieldRenderFailureUrl } from "../tests/fixtures/duel-field-component-failure.ts";
 
 interface BrowserCapture {
@@ -35,6 +41,15 @@ interface CapturedPromptEvent {
   readonly type: "prompt";
   readonly prompt: { readonly id: string; readonly kind: string };
 }
+
+const RESPONSIVE_VIEWPORTS = [
+  { id: "VP-01", width: 1366, height: 768 },
+  { id: "VP-02", width: 1920, height: 1080 },
+  { id: "VP-04", width: 1024, height: 768 },
+  { id: "VP-05", width: 667, height: 375 },
+  { id: "VP-06", width: 375, height: 667 },
+  { id: "VP-07", width: 640, height: 360, zoomEquivalent: "1280x720@200%" },
+] as const;
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -631,6 +646,139 @@ test("mobile layout preserves controls and honors reduced motion", async ({
   expect(box?.width).toBeGreaterThanOrEqual(44);
 });
 
+test("responsive field compositions contain controls across supported viewports", async ({
+  page,
+}, testInfo) => {
+  await page.goto("./");
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+
+  for (const viewport of RESPONSIVE_VIEWPORTS) {
+    await page.setViewportSize({
+      width: viewport.width,
+      height: viewport.height,
+    });
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect(page.locator("[data-prompt-kind]")).toBeVisible();
+    const viewportLabel =
+      "zoomEquivalent" in viewport
+        ? `${viewport.id} ${viewport.zoomEquivalent}`
+        : viewport.id;
+    await assertNoPageWideHorizontalOverflow(page, viewportLabel);
+
+    const field = page.getByRole("region", { name: "Duel field" });
+    await expect(field).toBeVisible();
+    await expect(field.locator("canvas")).toHaveCount(0);
+    const fieldMetrics = await field.evaluate((element) => ({
+      clientWidth: element.clientWidth,
+      scrollWidth: element.scrollWidth,
+      clientHeight: element.clientHeight,
+      scrollHeight: element.scrollHeight,
+      overflowX: getComputedStyle(element).overflowX,
+      overflowY: getComputedStyle(element).overflowY,
+    }));
+    expect(fieldMetrics.scrollWidth).toBeGreaterThanOrEqual(
+      fieldMetrics.clientWidth,
+    );
+    expect(fieldMetrics.scrollHeight).toBeGreaterThanOrEqual(
+      fieldMetrics.clientHeight,
+    );
+    if (fieldMetrics.scrollWidth > fieldMetrics.clientWidth)
+      expect(fieldMetrics.overflowX).toMatch(/auto|scroll/);
+    if (fieldMetrics.scrollHeight > fieldMetrics.clientHeight)
+      expect(fieldMetrics.overflowY).toMatch(/auto|scroll/);
+
+    const board = field.getByRole("group", { name: "Standard duel board" });
+    await expect(board).toBeVisible();
+    const boardRatio = await board.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      return box.width / box.height;
+    });
+    expect(boardRatio).toBeGreaterThan(1.7);
+    expect(boardRatio).toBeLessThan(1.85);
+
+    const targets = field.locator("[data-field-target]");
+    const boxes = await targets.evaluateAll((elements) =>
+      elements.map((element) => {
+        const box = element.getBoundingClientRect();
+        return { width: box.width, height: box.height };
+      }),
+    );
+    expect(boxes.length).toBeGreaterThan(0);
+    expect(
+      boxes.every(({ width, height }) => width >= 44 && height >= 44),
+    ).toBe(true);
+
+    const entry = field.locator("[data-field-target][tabindex='0']");
+    await keyboardFocus(page, entry);
+    await entry.evaluate((element) =>
+      element.scrollIntoView({ block: "nearest", inline: "nearest" }),
+    );
+    await assertRectInsideViewport(
+      page,
+      entry,
+      `${viewport.id} focused field target`,
+    );
+    expect(
+      await entry.evaluate((element) => ({
+        focusVisible: element.matches(":focus-visible"),
+        outline: getComputedStyle(element).outlineStyle,
+      })),
+    ).toEqual({ focusVisible: true, outline: "solid" });
+
+    const dock = field.locator(".selection-dock");
+    if ((await dock.count()) > 0) {
+      await dock.scrollIntoViewIfNeeded();
+      await assertRectInsideViewport(
+        page,
+        dock,
+        `${viewport.id} selection dock`,
+      );
+    }
+    await captureResponsiveState(page, testInfo, viewport.id, "ST-01");
+
+    const actionTarget = field
+      .locator("[data-field-target][aria-label^='Legal action']")
+      .first();
+    if ((await actionTarget.count()) > 0) {
+      await actionTarget.scrollIntoViewIfNeeded();
+      await actionTarget.click();
+      const menu = page.getByRole("menu");
+      await expect(menu).toBeVisible();
+      await assertRectInsideViewport(page, menu, `${viewport.id} action menu`);
+      await captureResponsiveState(page, testInfo, viewport.id, "ST-05");
+      await page.keyboard.press("Escape");
+      await expect(menu).toHaveCount(0);
+    }
+
+    const trayButton = page
+      .getByRole("button", { name: /Open Your (Extra Deck|GY|Banished) tray/ })
+      .first();
+    if ((await trayButton.count()) > 0) {
+      await trayButton.scrollIntoViewIfNeeded();
+      await trayButton.click();
+      const tray = page.getByRole("region", {
+        name: /Your (Extra Deck|GY|Banished) tray/,
+      });
+      await expect(tray).toBeVisible();
+      await assertRectInsideViewport(page, tray, `${viewport.id} card tray`);
+      await captureResponsiveState(page, testInfo, viewport.id, "ST-09");
+      await tray.getByRole("button", { name: /^Close / }).click();
+      await expect(tray).toHaveCount(0);
+    }
+
+    if (viewport.id === "VP-07") {
+      expect(
+        await page.evaluate(() => document.documentElement.style.zoom),
+      ).toBe("");
+      expect(
+        await field.evaluate((element) => getComputedStyle(element).transform),
+      ).toBe("none");
+    }
+  }
+});
+
 test("spatial field navigation has one visible 44px keyboard entry without a trap", async ({
   page,
 }, testInfo) => {
@@ -1211,6 +1359,70 @@ async function keyboardTabFocus(page: Page, target: Locator): Promise<void> {
       `Unable to focus keyboard target: ${await target.getAttribute("aria-label")}`,
     );
   }
+}
+
+async function captureResponsiveState(
+  page: Page,
+  testInfo: TestInfo,
+  viewportId: string,
+  stateId: "ST-01" | "ST-05" | "ST-09",
+): Promise<void> {
+  const screenshotPath = testInfo.outputPath(
+    `df-15-${viewportId}-${stateId}.png`,
+  );
+  await page.screenshot({ path: screenshotPath, fullPage: true });
+  await testInfo.attach(`df-15-${viewportId}-${stateId}`, {
+    path: screenshotPath,
+    contentType: "image/png",
+  });
+}
+
+async function assertNoPageWideHorizontalOverflow(
+  page: Page,
+  label: string,
+): Promise<void> {
+  const metrics = await page.evaluate(() => {
+    const root = document.documentElement;
+    return {
+      bodyScrollWidth: document.body.scrollWidth,
+      rootScrollWidth: root.scrollWidth,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  expect(
+    Math.max(metrics.bodyScrollWidth, metrics.rootScrollWidth),
+    `${label} page-wide horizontal overflow`,
+  ).toBeLessThanOrEqual(metrics.viewportWidth + 1);
+}
+
+async function assertRectInsideViewport(
+  page: Page,
+  target: Locator,
+  label: string,
+): Promise<void> {
+  const rect = await target.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    return {
+      left: box.left,
+      top: box.top,
+      right: box.right,
+      bottom: box.bottom,
+      width: box.width,
+      height: box.height,
+      viewportWidth: window.innerWidth,
+      viewportHeight: window.innerHeight,
+    };
+  });
+  expect(rect.width, `${label} width`).toBeGreaterThan(0);
+  expect(rect.height, `${label} height`).toBeGreaterThan(0);
+  expect(rect.left, `${label} left`).toBeGreaterThanOrEqual(-1);
+  expect(rect.top, `${label} top`).toBeGreaterThanOrEqual(-1);
+  expect(rect.right, `${label} right`).toBeLessThanOrEqual(
+    rect.viewportWidth + 1,
+  );
+  expect(rect.bottom, `${label} bottom`).toBeLessThanOrEqual(
+    rect.viewportHeight + 1,
+  );
 }
 
 async function mountedImageLeaseState(page: Page): Promise<{

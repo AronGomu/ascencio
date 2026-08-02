@@ -168,4 +168,22 @@ describe("field navigation", () => {
     });
     expect(state.activeTarget).toBe("zone:p0:mainMonster:4");
   });
+
+  it("keeps responsive composition separate from physical nav adjacency", () => {
+    const value = board("ST-05");
+    const route = (context: string) => {
+      let state = synchronize(value, ["card:st02-main-zero"], context);
+      for (const key of ["ArrowRight", "ArrowRight", "ArrowDown"] as const) {
+        state = reduceFieldNavigation(state, {
+          type: "move",
+          board: value,
+          key,
+        });
+      }
+      return state.activeTarget;
+    };
+
+    expect(route("desktop-layout")).toBe(route("compact-layout"));
+    expect(route("compact-layout")).toBe(route("portrait-layout"));
+  });
 });

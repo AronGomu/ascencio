@@ -116,7 +116,7 @@ Execution checklist:
 - [x] DF-12
 - [x] DF-13
 - [x] DF-14
-- [ ] DF-15
+- [x] DF-15
 - [ ] DF-16
 - [ ] DF-17
 
@@ -841,13 +841,13 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-- [ ] **Red:** Playwright viewport assertions for no critical clipping, contained overflow, 44 px targets, menu/tray inside viewport, 200% zoom usability.
-- [ ] Add screenshot captures for ST-01/05/09 at VP-01/02/04/05/06/07.
-- [ ] **Green:** use container/media queries to recompose HUD, inspector, action menu, tray, dock.
-- [ ] Preserve board aspect ratio on desktop. On narrow landscape, allow contained field scroll only if target/focus stays reachable.
-- [ ] Portrait may switch inspector/tray to modal sheet and stack HUD; preserve same DOM semantics/interaction reducer.
-- [ ] Update nav graph selection only if physical visual adjacency changes; add reducer fixtures.
-- [ ] Verify browser zoom/text expansion rather than transform-scaling entire UI.
+- [x] **Red:** Playwright viewport assertions for no critical clipping, contained overflow, 44 px targets, menu/tray inside viewport, 200% zoom usability.
+- [x] Add screenshot captures for ST-01/05/09 at VP-01/02/04/05/06/07.
+- [x] **Green:** use container/media queries to recompose HUD, inspector, action menu, tray, dock.
+- [x] Preserve board aspect ratio on desktop. On narrow landscape, allow contained field scroll only if target/focus stays reachable.
+- [x] Portrait may switch inspector/tray to modal sheet and stack HUD; preserve same DOM semantics/interaction reducer.
+- [x] Update nav graph selection only if physical visual adjacency changes; add reducer fixtures.
+- [x] Verify browser zoom/text expansion rather than transform-scaling entire UI.
 
 ### Outputs
 
@@ -857,11 +857,11 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- [ ] VP matrix assertions green.
-- [ ] No page-wide horizontal overflow.
-- [ ] Focused target scrolls into view without hiding behind dock/menu.
-- [ ] 200% zoom completes current prompt.
-- [ ] Mobile-first polish remains out of scope; automated semantic usability passes.
+- [x] VP matrix assertions green.
+- [x] No page-wide horizontal overflow.
+- [x] Focused target scrolls into view without hiding behind dock/menu.
+- [x] 200% zoom completes current prompt.
+- [x] Mobile-first polish remains out of scope; automated semantic usability passes.
 
 ---
 

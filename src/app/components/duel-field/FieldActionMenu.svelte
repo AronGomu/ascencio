@@ -17,7 +17,10 @@
   export let onclose: () => void;
 
   let menuElement: HTMLDivElement;
-  $: positionStyle = `left: ${anchor.left}px; top: ${anchor.bottom}px;`;
+  $: positionStyle = [
+    `--field-action-menu-left: ${anchor.left}px`,
+    `--field-action-menu-top: ${anchor.bottom}px`,
+  ].join(";");
 
   onMount(() => menuItems()[0]?.focus());
 

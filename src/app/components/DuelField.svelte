@@ -114,6 +114,12 @@
     menuCard !== null &&
     anchor !== null &&
     menuChoices.length > 0;
+  $: fieldAnnouncement = pending
+    ? "Response sent. Waiting for the engine."
+    : prompt === null
+      ? ""
+      : `${prompt.title}. Use Arrow keys to move through the field.`;
+  $: duelStateAnnouncement = stateAnnouncement(presentationEvents);
 
   onMount(() => {
     const update = (): void => updateAnchor();
@@ -303,18 +309,22 @@
   }
 
   function chooseMenuAction(choice: InteractionChoice): void {
+    anchorElement?.focus({ preventScroll: true });
     dispatch({ type: "chooseChoice", choiceId: choice.id });
     clearMenuAnchor();
   }
 
   function inspectMenuCard(): void {
     if (menuCard !== null) oninspect(menuCard);
-    closeMenu();
+    void closeMenu();
   }
 
-  function closeMenu(): void {
+  async function closeMenu(returnFocus = true): Promise<void> {
+    const returnTarget = anchorElement;
     dispatch({ type: "closeMenu" });
     clearMenuAnchor();
+    await tick();
+    if (returnFocus && returnTarget?.isConnected) returnTarget.focus();
   }
 
   function clearMenuAnchor(): void {
@@ -337,6 +347,20 @@
     anchor = { left: rect.left, top: rect.top, bottom: rect.bottom };
   }
 
+  function stateAnnouncement(events: typeof presentationEvents): string {
+    const latest = [...events]
+      .reverse()
+      .find(
+        ({ event }) =>
+          event.type === "turnStarted" || event.type === "phaseChanged",
+      )?.event;
+    if (latest?.type === "turnStarted")
+      return `Turn ${latest.turn}. ${latest.player === 0 ? "Your turn" : "Opponent turn"}.`;
+    if (latest?.type === "phaseChanged")
+      return `Phase ${latest.phase.replaceAll(/([a-z])(\d)/g, "$1 $2")}.`;
+    return "";
+  }
+
   function targetSelections(
     value: ActiveInteractionSpec,
     draft: InteractionSession,
@@ -355,6 +379,22 @@
 
 <section class="duel-field" aria-label="Duel field" bind:this={fieldRoot}>
   <h2 class="visually-hidden">Duel field</h2>
+  <p
+    class="visually-hidden"
+    aria-label="Field updates"
+    aria-live="polite"
+    aria-atomic="true"
+  >
+    {fieldAnnouncement}
+  </p>
+  <p
+    class="visually-hidden"
+    aria-label="Duel state updates"
+    aria-live="polite"
+    aria-atomic="true"
+  >
+    {duelStateAnnouncement}
+  </p>
   <FieldBoard
     {board}
     {imageUrls}

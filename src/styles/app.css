@@ -670,6 +670,15 @@ button.duel-field-zone,
   box-shadow: 0 0 0 3px rgb(175 232 112 / 0.78);
 }
 
+.duel-field-zone.is-navigation-active:focus-visible,
+.duel-field-stack.is-navigation-active:focus-visible,
+.duel-field-card.is-navigation-active:focus-visible,
+.duel-field-card.is-navigation-active:focus-within .duel-field-card__art {
+  outline: 3px solid #f6c177;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px rgb(8 17 31 / 0.9);
+}
+
 .duel-field-card.is-feedback-target .duel-field-card__art,
 .duel-field-zone.is-feedback-target,
 .duel-field-stack.is-feedback-target {
@@ -730,6 +739,8 @@ button.duel-field-zone,
 .duel-field-stack {
   z-index: var(--duel-field-layer-stack);
   display: grid;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
   align-content: center;
   justify-items: center;
   gap: 0.1rem;
@@ -757,6 +768,8 @@ button.duel-field-zone,
 
 .duel-field-card {
   z-index: var(--duel-field-layer-card);
+  min-width: 2.75rem;
+  min-height: 2.75rem;
   margin: 0;
   pointer-events: none;
 }
@@ -812,8 +825,8 @@ button.duel-field-zone,
   position: absolute;
   z-index: var(--duel-field-layer-control);
   inset: 0;
-  min-width: 100%;
-  min-height: 100%;
+  min-width: max(100%, 2.75rem);
+  min-height: max(100%, 2.75rem);
   padding: 0;
   border: 0;
   border-radius: 0.3rem;

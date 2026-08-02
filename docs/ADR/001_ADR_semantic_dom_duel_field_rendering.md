@@ -1,7 +1,8 @@
 # ADR-001: Semantic DOM Duel-Field Rendering
 
-> Status: accepted; implementation pending
+> Status: accepted; implementation in progress (DF-00–DF-13 done; DF-14 a11y gate = Chromium automated)
 > Decided: 2026-07-31
+> Amended: 2026-03-22 — Chromium PWA product target; **no manual testing gates until DF-17 feature complete**; automated Chromium evidence only
 > Owners: presentation architecture
 > Supersedes: [`../archive/svelte-phaser-boundary.md`](../archive/svelte-phaser-boundary.md)
 
@@ -89,16 +90,19 @@ Rejected. Rule/engine slot semantics must remain testable TypeScript data, not s
 
 ## Validation/removal gate
 
+**Supported product browsers:** current Chromium-based desktops with installable PWA support (Chrome, Edge, and Chromium equivalents). Firefox, Safari/WebKit, NVDA, and VoiceOver are **out of product acceptance** for this field migration. Existing non-Chromium CI smoke may remain hygiene-only and never blocks DF-14–DF-17.
+
 Phaser removal requires:
 
 - sparse fixed-zone projection tests green for sequences `0`, `4`, `5`, `6`;
 - one shared physical identity per Extra Monster Zone;
 - complete pointer plus keyboard flows for every reachable prompt family;
 - no duplicate response submission; pending input locked until new prompt, result, recoverable error;
-- Chromium full E2E plus Firefox/WebKit startup/privacy/image smoke green;
-- manual NVDA/Firefox plus VoiceOver/Safari review recorded;
-- representative update-to-paint, long-task, animation, heap/object-URL, bundle measurements recorded;
-- visual comparison against approved reference catalog complete.
+- Chromium full E2E green on Playwright Chromium (PWA-capable engine family), including keyboard-only duel, role/name/state, focus, live regions, 200% zoom focus visibility, and privacy/image nonblocking paths;
+- DF-14 a11y gate satisfied by automated Chromium evidence in [`../architecture/05-presentation/duel-field-screen-reader-review.md`](../architecture/05-presentation/duel-field-screen-reader-review.md);
+- representative update-to-paint, long-task, animation, heap/object-URL, bundle measurements recorded on pinned Chromium profile;
+- layout/hierarchy checks encoded as automated semantic assertions where feasible; screenshot artifacts never require human visual approval during migration;
+- **no manual testing** (playtest, SR session, eyeball rubric, multi-browser human matrix) as a serial gate before DF-17 acceptance.
 
 Implementation plan: [`../DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`](../DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md).
 Validation references: [`../duel-field-validation-references.html`](../duel-field-validation-references.html).

@@ -1,10 +1,17 @@
 <script lang="ts">
+  import { tick } from "svelte";
   import type {
     BoardCardView,
     BoardTargetId,
     BoardViewModel,
     BoardZoneView,
   } from "../../../field/board-view-model.ts";
+  import {
+    createFieldNavigationState,
+    reduceFieldNavigation,
+    type FieldNavigationKey,
+    type FieldNavigationState,
+  } from "../../prompts/field-navigation.ts";
   import type { CardImageLibrary } from "../../images/card-image-cache.ts";
   import type { ActiveInteractionSpec } from "../../prompts/interaction-spec.ts";
   import CardControl from "./CardControl.svelte";
@@ -26,36 +33,143 @@
   export let onzoneactivate: (zone: BoardZoneView) => void = () => undefined;
   export let oninspect: (card: BoardCardView) => void = () => undefined;
 
+  let boardElement: HTMLDivElement;
+  let navigationState: FieldNavigationState = createFieldNavigationState();
+
+  $: actionableTargets = new Set<BoardTargetId>(
+    disabled
+      ? []
+      : [
+          ...(spec?.cardChoices.keys() ?? []),
+          ...(spec?.zoneChoices.keys() ?? []),
+        ],
+  );
+  $: navigationContext =
+    spec === null
+      ? "inactive"
+      : `${spec.key.workerGeneration}:${spec.key.sessionGeneration}:${spec.key.promptId}`;
+  $: synchronizeNavigation(board, actionableTargets, navigationContext);
+
   function cardImageUrl(card: BoardViewModel["cards"][number]): string {
     if (card.image.kind === "back") return cardBackUrl;
     return imageUrls.get(card.image.code) ?? placeholderUrl;
   }
+
+  function synchronizeNavigation(
+    value: BoardViewModel,
+    actionable: ReadonlySet<BoardTargetId>,
+    context: string,
+  ): void {
+    const shouldRestoreFocus =
+      boardElement?.contains(document.activeElement) ?? false;
+    const next = reduceFieldNavigation(navigationState, {
+      type: "synchronize",
+      board: value,
+      actionableTargets: actionable,
+      context,
+    });
+    if (next === navigationState) return;
+    navigationState = next;
+    if (shouldRestoreFocus) void focusActiveTarget();
+  }
+
+  function fieldTarget(event: Event): HTMLElement | null {
+    const origin = event.target;
+    return origin instanceof Element
+      ? origin.closest<HTMLElement>("[data-field-target]")
+      : null;
+  }
+
+  function focusTarget(event: FocusEvent): void {
+    const target = fieldTarget(event)?.dataset.fieldTarget as
+      BoardTargetId | undefined;
+    if (target === undefined) return;
+    navigationState = reduceFieldNavigation(navigationState, {
+      type: "focus",
+      board,
+      target,
+    });
+  }
+
+  function navigate(event: KeyboardEvent): void {
+    if (!isNavigationKey(event.key) || fieldTarget(event) === null) return;
+    event.preventDefault();
+    navigationState = reduceFieldNavigation(navigationState, {
+      type: "move",
+      board,
+      key: event.key,
+    });
+    void focusActiveTarget();
+  }
+
+  async function focusActiveTarget(): Promise<void> {
+    await tick();
+    if (navigationState.activeTarget === null) return;
+    const target = [
+      ...boardElement.querySelectorAll<HTMLElement>("[data-field-target]"),
+    ].find(
+      (element) => element.dataset.fieldTarget === navigationState.activeTarget,
+    );
+    target?.focus({ preventScroll: true });
+    if (typeof target?.scrollIntoView === "function")
+      target.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }
+
+  function isNavigationKey(key: string): key is FieldNavigationKey {
+    return (
+      key === "ArrowLeft" ||
+      key === "ArrowRight" ||
+      key === "ArrowUp" ||
+      key === "ArrowDown" ||
+      key === "Home" ||
+      key === "End"
+    );
+  }
 </script>
 
-<div class="duel-field-board" role="group" aria-label="Standard duel board">
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions (delegated events implement roving focus for named controls) -->
+<div
+  class="duel-field-board"
+  role="group"
+  aria-label="Standard duel board"
+  aria-describedby="duel-field-keyboard-help"
+  bind:this={boardElement}
+  onfocusin={focusTarget}
+  onkeydown={navigate}
+>
+  <span id="duel-field-keyboard-help" class="visually-hidden">
+    Use Arrow keys to move between field controls. Home and End move to row
+    edges. Enter or Space activates a legal control.
+  </span>
   <div class="duel-field-board__surface" aria-hidden="true"></div>
   {#each board.zones as zone (zone.id)}
     <ZoneControl
       {zone}
-      actionable={spec?.zoneChoices.has(zone.targetId) === true}
+      actionable={!disabled && spec?.zoneChoices.has(zone.targetId) === true}
       selected={selectedTargets.has(zone.targetId)}
+      active={navigationState.activeTarget === zone.targetId}
       {disabled}
       onactivate={() => onzoneactivate(zone)}
     />
   {/each}
   {#each board.stacks as stack (stack.targetId)}
-    <StackControl {stack} />
+    <StackControl
+      {stack}
+      active={navigationState.activeTarget === stack.targetId}
+    />
   {/each}
   {#each board.cards as card (card.id)}
     <CardControl
       {card}
       imageUrl={cardImageUrl(card)}
       {imageLibrary}
-      interactionKind={spec?.cardChoices.has(card.targetId) === true
+      interactionKind={!disabled &&
+      spec?.cardChoices.has(card.targetId) === true
         ? spec.kind
         : null}
-      actionable={spec?.cardChoices.has(card.targetId) === true}
+      actionable={!disabled && spec?.cardChoices.has(card.targetId) === true}
       selected={selectedTargets.has(card.targetId)}
+      active={navigationState.activeTarget === card.targetId}
       {disabled}
       onactivate={(element) => oncardactivate(card, element)}
       oninspect={() => oninspect(card)}

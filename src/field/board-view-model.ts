@@ -518,6 +518,7 @@ function neighborInDirection(
       ? Math.abs(candidate.y - origin.y) < NAV_ALIGNMENT_EPSILON
       : Math.abs(candidate.x - origin.x) < NAV_ALIGNMENT_EPSILON,
   );
+  if (horizontal && aligned.length === 0) return {};
   const pool = aligned.length > 0 ? aligned : candidates;
   const neighbor = pool.toSorted((left, right) => {
     const leftPrimary = horizontal

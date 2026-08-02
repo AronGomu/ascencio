@@ -70,7 +70,7 @@ Dedicated Duel Worker
 - Core, catalog, scripts, strings, and image metadata form one pinned, verified snapshot; browser activation occurs only after runtime and active-image receipts match.
 - Production duels shuffle normally; deterministic inputs are restricted to tests and diagnostics.
 - Every duel can be reproduced from revision metadata, seed, and ordered responses.
-- Headless real-WASM coverage must remain green; production packaging and Chromium/Firefox/WebKit browser gates are required for the release candidate.
+- Headless real-WASM coverage must remain green; production packaging and **Chromium (PWA-capable)** browser gates are required for the release candidate. Firefox/WebKit smoke is optional hygiene, not DOM-field acceptance.
 
 ## Decision maintenance
 

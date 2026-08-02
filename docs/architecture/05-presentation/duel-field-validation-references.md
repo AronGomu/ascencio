@@ -172,25 +172,23 @@ Score each item pass/fail; no aesthetic averaging can hide functional failure.
 - [ ] Missing/slow images never block legal input.
 - [ ] Final build contains no Phaser chunk after removal ticket.
 
-## Manual review record template
+## Automated Chromium acceptance record template
+
+**During DF-00–DF-17:** product gate is Chromium PWA family + automated Playwright Chromium evidence only. **No manual testing** (playtest, SR, visual eyeball) until DF-17 feature complete. Post-DF-17 manual QA is optional and outside the migration serial path.
 
 ```md
-### Review YYYY-MM-DD / commit <sha>
+### Automated gate YYYY-MM-DD / commit <sha>
 
-- Browser/OS:
-- Screen reader/input:
-- Viewport/DPR/zoom:
+- Engine: Playwright Chromium (PWA-capable family)
+- Commands/suites run:
+- Viewport/DPR/zoom covered:
 - Fixtures:
-- Reference IDs compared:
-- Rule correctness: pass/fail + evidence
-- Pointer flow: pass/fail + evidence
-- Keyboard/focus flow: pass/fail + evidence
-- Screen-reader output: pass/fail + evidence
+- Semantic assertions (rule/pointer/keyboard/a11y/privacy): pass/fail + log paths
 - Reduced motion: pass/fail + evidence
-- Visual hierarchy: pass/fail + evidence
-- Perf trace path:
+- Perf metrics path (p50/p95, long tasks, heap/object URL):
+- Screenshot/trace artifacts (non-blocking):
 - Defects/ticket IDs:
-- Reviewer:
+- Gate result: PASS/FAIL (automated only)
 ```
 
 ## Copyright and retention

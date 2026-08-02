@@ -1,8 +1,9 @@
 # DOM Duel-Field Implementation Plan
 
-> Status: approved amended plan; DF-04 accepted; DF-05 implementation pending
+> Status: approved amended plan; DF-00–DF-14 done; DF-15 next
 > Created: 2026-07-31
-> Scope: Standard-format desktop field → rich state → accessibility/responsive parity → Phaser removal
+> Amended: 2026-03-22 — Chromium PWA only; **no manual testing gates until DF-17 feature complete**
+> Scope: Standard-format desktop field → rich state → Chromium PWA a11y/responsive parity → Phaser removal
 > Architecture: [`architecture/05-presentation/duel-field-architecture.md`](architecture/05-presentation/duel-field-architecture.md)
 > Decision: [`architecture/05-presentation/duel-field-rendering.md`](architecture/05-presentation/duel-field-rendering.md)
 > Validation catalog: [`architecture/05-presentation/duel-field-validation-references.md`](architecture/05-presentation/duel-field-validation-references.md)
@@ -21,6 +22,7 @@ This plan supersedes no completed MVP history. [`MVP_TECHNICAL_IMPLEMENTATION_PL
 - Images never block legal input.
 - No permanent animation loop. No spectacle/background work.
 - Each ticket is one reviewable checkpoint, starts with failing test, leaves ticket-scoped aggregate gates green.
+- **No manual testing until feature complete (DF-17 accepted).** Ticket gates are automated only: unit/component/integration/Chromium E2E, typecheck/lint/format/build, recorded metrics/artifacts. No human playtest, SR session, visual eyeball sign-off, or reviewer product walkthrough as serial gate. Optional post-DF-17 manual QA is out of migration path.
 - This agent run records checkpoints only; it creates no VCS history, refs, branches, pull requests, or staged changes. Suggested change labels remain handoff labels only.
 - If ticket exceeds described outputs, split it; do not absorb adjacent cleanup.
 
@@ -30,9 +32,9 @@ This plan supersedes no completed MVP history. [`MVP_TECHNICAL_IMPLEMENTATION_PL
 2. **Green:** add minimum implementation. Run focused test until green.
 3. **Refactor:** remove only duplication introduced by ticket; retain behavior.
 4. **Boundary:** run typecheck plus ticket-scoped unit/component/integration/browser layers.
-5. **Checkpoint:** record ticket files, red/green evidence, ticket-scoped aggregate gates, review disposition, and suggested change label; do not stage.
+5. **Checkpoint:** record ticket files, red/green evidence, ticket-scoped aggregate gates (automated pass/fail), and suggested change label; do not stage. No manual product review step.
 
-Never implement behavior before reproducible failing test. Visual capture alone is not test; pair screenshots with semantic assertions.
+Never implement behavior before reproducible failing test. Screenshot artifacts are optional CI evidence only; pair with automated semantic assertions. Screenshots never require human visual approval to advance a ticket.
 
 ## Dependency graph
 
@@ -97,7 +99,28 @@ DF-00 → DF-01 → DF-02 → DF-03 → DF-04 → DF-05 → DF-06 → DF-07 → 
       → DF-09 → DF-10 → DF-11 → DF-12 → DF-13 → DF-14 → DF-15 → DF-16 → DF-17
 ```
 
-A ticket starts only after prior checkpoint has passing focused tests, ticket-scoped aggregate gates, completed review disposition, and recorded changed-file territory. Shared integration files are serial-only. Later tickets may amend earlier-owned files only when their own listed integration output requires it.
+Execution checklist:
+
+- [x] DF-00
+- [x] DF-01
+- [x] DF-02
+- [x] DF-03
+- [x] DF-04
+- [x] DF-05
+- [x] DF-06
+- [x] DF-07
+- [x] DF-08
+- [x] DF-09
+- [x] DF-10
+- [x] DF-11
+- [x] DF-12
+- [x] DF-13
+- [x] DF-14
+- [ ] DF-15
+- [ ] DF-16
+- [ ] DF-17
+
+A ticket starts only after prior checkpoint has passing focused tests, ticket-scoped aggregate automated gates, and recorded changed-file territory. Shared integration files are serial-only. Later tickets may amend earlier-owned files only when their own listed integration output requires it.
 
 ## Ticket summary
 
@@ -249,12 +272,12 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-1. **Red:** grep current architecture for authoritative Phaser ownership links; list stale current-source paths.
-2. Move superseded boundary document to `docs/archive/` and mark it superseded.
-3. Add renderer ADR, detailed architecture, this plan, validation catalog, original wireframe.
-4. Update architecture index, docs index, context, and listed atomic decisions.
-5. **Green:** run Markdown link/path checker or scripted local-link scan; grep current architecture for stale authoritative Phaser rules.
-6. Review external screenshot links and copyright restrictions.
+- [x] **Red:** grep current architecture for authoritative Phaser ownership links; list stale current-source paths.
+- [x] Move superseded boundary document to `docs/archive/` and mark it superseded.
+- [x] Add renderer ADR, detailed architecture, this plan, validation catalog, original wireframe.
+- [x] Update architecture index, docs index, context, and listed atomic decisions.
+- [x] **Green:** run Markdown link/path checker or scripted local-link scan; grep current architecture for stale authoritative Phaser rules.
+- [x] Review external screenshot links and copyright restrictions.
 
 ### Outputs
 
@@ -266,11 +289,11 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- Every local Markdown link resolves.
-- `docs/architecture/` contains no current statement assigning field authority to Phaser.
-- Archived file points to new ADR.
-- `git diff --check` passes.
-- Architecture docs clearly distinguish accepted target from migration-pending implementation.
+- [x] Every local Markdown link resolves.
+- [x] `docs/architecture/` contains no current statement assigning field authority to Phaser.
+- [x] Archived file points to new ADR.
+- [x] `git diff --check` passes.
+- [x] Architecture docs clearly distinguish accepted target from migration-pending implementation.
 
 ---
 
@@ -287,15 +310,15 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-1. **Red:** extend `tests/unit/duel-state-projector.test.ts` with cards entering monster sequences `0`, `4`, `5`, `6` in non-dense order.
-2. Move sequence `0` out; assert remaining sequences stay `4`, `5`, `6`.
-3. Add simultaneous Spell/Trap sequence `0` plus Field Zone sequence `0`, Spell/Trap outer-slot, and Field Zone movement cases; assert no collision or resequencing.
-4. Add duplicate fixed-slot destination fixtures for both same-location duplicates and cross-location equal sequences; require deterministic rejection/reconciliation, never silent alias.
-5. Preserve ordered-zone tests proving hand/GY/banished resequence where protocol order changes.
-6. **Green:** introduce location policy helpers: fixed-slot find/remove/insert by composite `(controller, normalized location, sequence)`; ordered list remove/insert/resequence by index.
-7. Route `#move` and `#changePosition` through policy helpers.
-8. Refactor only projector-local mutation helpers; retain privacy/identity rotation.
-9. Run projector, contract, real-WASM programmed-duel tests.
+- [x] **Red:** extend `tests/unit/duel-state-projector.test.ts` with cards entering monster sequences `0`, `4`, `5`, `6` in non-dense order.
+- [x] Move sequence `0` out; assert remaining sequences stay `4`, `5`, `6`.
+- [x] Add simultaneous Spell/Trap sequence `0` plus Field Zone sequence `0`, Spell/Trap outer-slot, and Field Zone movement cases; assert no collision or resequencing.
+- [x] Add duplicate fixed-slot destination fixtures for both same-location duplicates and cross-location equal sequences; require deterministic rejection/reconciliation, never silent alias.
+- [x] Preserve ordered-zone tests proving hand/GY/banished resequence where protocol order changes.
+- [x] **Green:** introduce location policy helpers: fixed-slot find/remove/insert by composite `(controller, normalized location, sequence)`; ordered list remove/insert/resequence by index.
+- [x] Route `#move` and `#changePosition` through policy helpers.
+- [x] Refactor only projector-local mutation helpers; retain privacy/identity rotation.
+- [x] Run projector, contract, real-WASM programmed-duel tests.
 
 ### Outputs
 
@@ -305,11 +328,11 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- Focused: `npx vitest run tests/unit/duel-state-projector.test.ts`.
-- `npm run test:unit` and `npm run test:integration` green.
-- Moving/removing one field card cannot move another card's sequence or alias a different normalized location with the same sequence.
-- Existing hidden-information/one-instance invariants remain green.
-- No presentation code changed.
+- [x] Focused: `npx vitest run tests/unit/duel-state-projector.test.ts`.
+- [x] `npm run test:unit` and `npm run test:integration` green.
+- [x] Moving/removing one field card cannot move another card's sequence or alias a different normalized location with the same sequence.
+- [x] Existing hidden-information/one-instance invariants remain green.
+- [x] No presentation code changed.
 
 ---
 
@@ -326,18 +349,18 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-1. **Red:** replace 44-zone expectation with 34 physical controls: 16 per player including hand lane, plus two shared EMZs.
-2. Add table-driven engine-address mapping tests:
+- [x] **Red:** replace 44-zone expectation with 34 physical controls: 16 per player including hand lane, plus two shared EMZs.
+- [x] Add table-driven engine-address mapping tests:
    - p0 MZONE 0/4 → own main slots;
    - p0 s5/s6 → shared left/right;
    - p1 s5/s6 → shared right/left;
    - p0 s5 equals p1 s6 physical ID; p0 s6 equals p1 s5.
-3. Add SZONE tests: `0..4` only; Pendulum reuses `0/4`; Field Zone separate.
-4. Add invalid sequence tests; unsupported address returns typed diagnostic/result, never fallback to sequence 0.
-5. **Green:** define `PhysicalZoneId`, `EngineFieldAddress`, Standard layout table, pure address mapper.
-6. Replace owner-duplicated EMZ generation. Keep logical normalized coordinates renderer-neutral.
-7. Adapt prompt place mapping to physical IDs.
-8. Update existing Phaser mapper adapter only enough to remain green until removal.
+- [x] Add SZONE tests: `0..4` only; Pendulum reuses `0/4`; Field Zone separate.
+- [x] Add invalid sequence tests; unsupported address returns typed diagnostic/result, never fallback to sequence 0.
+- [x] **Green:** define `PhysicalZoneId`, `EngineFieldAddress`, Standard layout table, pure address mapper.
+- [x] Replace owner-duplicated EMZ generation. Keep logical normalized coordinates renderer-neutral.
+- [x] Adapt prompt place mapping to physical IDs.
+- [x] Update existing Phaser mapper adapter only enough to remain green until removal.
 
 ### Outputs
 
@@ -347,11 +370,11 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- Focused: `npx vitest run tests/unit/duel-field.test.ts`.
-- No duplicate physical IDs.
-- Exactly two EMZ layout entries.
-- `ST-02`, `ST-03` fixture data available for later visual tests.
-- `npm run typecheck && npm run test:unit` green.
+- [x] Focused: `npx vitest run tests/unit/duel-field.test.ts`.
+- [x] No duplicate physical IDs.
+- [x] Exactly two EMZ layout entries.
+- [x] `ST-02`, `ST-03` fixture data available for later visual tests.
+- [x] `npm run typecheck && npm run test:unit` green.
 
 ---
 
@@ -369,16 +392,16 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-1. **Red:** add parsed-message/projector fixtures for attach material, multiple materials, detach, host move, hidden/public transitions.
-2. Assert material never appears simultaneously as top-level field card and overlay.
-3. Add own Extra Deck count decrement/increment and ordered-collection fixtures plus opponent face-up/face-down Extra fixtures. Overlay identity may remain in clone-safe state, but presentation visibility must be explicit and hidden identity must not reach image requests or routine diagnostics.
-4. Define overlay material as exactly `{ instanceId, sequence, code, identityVisible }`; host carries placement controller, and material owner is not guessed. Extend the one-instance invariant across top-level cards, Extra collections, and materials.
-5. Add Worker-only query access from `OcgCoreAdapter` through `DuelSession` to `HeadlessDuelController`/projector reconciliation. Trigger reconciliation after every `MOVE` touching overlay or Extra. For overlays, use host `overlayCards` as authoritative count/order/code evidence. Use valid code-consistent detailed queries only to enrich `identityVisible`; empty, unavailable, malformed, or contradictory detail falls back to prior visibility, then own-host visible/opponent-host hidden. Invalid host material lists emit a sanitized diagnostic followed by deterministic terminal failure; publish no partial snapshot.
-6. **Green:** classify overlay move/query records in adapter; attach/detach by stable instance identity/order, including duplicate codes by ordinal.
-7. Seed own Extra identities only from trusted preset order; query evidence controls live collection/count. Existing Extra presentation filtering remains independent from overlay internal identity retention.
-8. Extend `parseDuelWorkerEvent` exact-key/size/visibility validation; reject material owner/controller keys.
-9. Adapt opponent-visible state so policy receives no hidden identities and cannot cheat.
-10. Add a real-WASM attachment scenario proving successful host-list fallback without changing `ocgcore`.
+- [x] **Red:** add parsed-message/projector fixtures for attach material, multiple materials, detach, host move, hidden/public transitions.
+- [x] Assert material never appears simultaneously as top-level field card and overlay.
+- [x] Add own Extra Deck count decrement/increment and ordered-collection fixtures plus opponent face-up/face-down Extra fixtures. Overlay identity may remain in clone-safe state, but presentation visibility must be explicit and hidden identity must not reach image requests or routine diagnostics.
+- [x] Define overlay material as exactly `{ instanceId, sequence, code, identityVisible }`; host carries placement controller, and material owner is not guessed. Extend the one-instance invariant across top-level cards, Extra collections, and materials.
+- [x] Add Worker-only query access from `OcgCoreAdapter` through `DuelSession` to `HeadlessDuelController`/projector reconciliation. Trigger reconciliation after every `MOVE` touching overlay or Extra. For overlays, use host `overlayCards` as authoritative count/order/code evidence. Use valid code-consistent detailed queries only to enrich `identityVisible`; empty, unavailable, malformed, or contradictory detail falls back to prior visibility, then own-host visible/opponent-host hidden. Invalid host material lists emit a sanitized diagnostic followed by deterministic terminal failure; publish no partial snapshot.
+- [x] **Green:** classify overlay move/query records in adapter; attach/detach by stable instance identity/order, including duplicate codes by ordinal.
+- [x] Seed own Extra identities only from trusted preset order; query evidence controls live collection/count. Existing Extra presentation filtering remains independent from overlay internal identity retention.
+- [x] Extend `parseDuelWorkerEvent` exact-key/size/visibility validation; reject material owner/controller keys.
+- [x] Adapt opponent-visible state so policy receives no hidden identities and cannot cheat.
+- [x] Add a real-WASM attachment scenario proving successful host-list fallback without changing `ocgcore`.
 
 ### Outputs
 
@@ -388,11 +411,11 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- New projector/contract fixtures green.
-- One physical instance invariant includes top-level cards, materials, and Extra collection; Extra count decrement/increment stays atomic with collection changes.
-- Hidden overlay code plus `identityVisible: false` survive `structuredClone`/JSON while opponent policy and sanitized diagnostics exclude that identity.
-- Real-WASM overlay attachment reconciles successfully through host-list fallback.
-- `npm run test:unit && npm run test:integration && npm run typecheck` green.
+- [x] New projector/contract fixtures green.
+- [x] One physical instance invariant includes top-level cards, materials, and Extra collection; Extra count decrement/increment stays atomic with collection changes.
+- [x] Hidden overlay code plus `identityVisible: false` survive `structuredClone`/JSON while opponent policy and sanitized diagnostics exclude that identity.
+- [x] Real-WASM overlay attachment reconciles successfully through host-list fallback.
+- [x] `npm run test:unit && npm run test:integration && npm run typecheck` green.
 
 ---
 
@@ -409,17 +432,17 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-1. **Red:** add adapter/projector fixtures for add/remove counters, multiple counter types, underflow/malformed removal, host card movement.
-2. Add pinned `ADD_COUNTER`/`REMOVE_COUNTER` message constants and `COUNTERS` query flag fixtures before classification code.
-3. Add chain fixtures: append link from `CHAINING`; transition solving/solved/negated/disabled by actual link index; clear on `CHAIN_END`.
-4. Add privacy fixture where chain source card identity is concealed; retain safe label/status only.
-5. Define `PublicCounter` and expanded `PublicChainLink` focused contracts.
-6. **Green:** classify message constants/types and update projector state by composite fixed card address.
-7. Resolve counter names from trusted `dependencies.strings.counter` data with deterministic fallback.
-8. Replace `#chainSize` synthetic array with actual immutable chain records.
-9. On unknown address or underflow, query-reconcile first through the Worker-only DF-03 seam and emit sanitized diagnostic. Terminate deterministically only when query result remains invalid or unavailable; never fabricate state.
-10. Extend exact-key/recursive bounds and opponent-policy projection.
-11. Add presentation events only when useful; do not duplicate public truth in animation event.
+- [x] **Red:** add adapter/projector fixtures for add/remove counters, multiple counter types, underflow/malformed removal, host card movement.
+- [x] Add pinned `ADD_COUNTER`/`REMOVE_COUNTER` message constants and `COUNTERS` query flag fixtures before classification code.
+- [x] Add chain fixtures: append link from `CHAINING`; transition solving/solved/negated/disabled by actual link index; clear on `CHAIN_END`.
+- [x] Add privacy fixture where chain source card identity is concealed; retain safe label/status only.
+- [x] Define `PublicCounter` and expanded `PublicChainLink` focused contracts.
+- [x] **Green:** classify message constants/types and update projector state by composite fixed card address.
+- [x] Resolve counter names from trusted `dependencies.strings.counter` data with deterministic fallback.
+- [x] Replace `#chainSize` synthetic array with actual immutable chain records.
+- [x] On unknown address or underflow, query-reconcile first through the Worker-only DF-03 seam and emit sanitized diagnostic. Terminate deterministically only when query result remains invalid or unavailable; never fabricate state.
+- [x] Extend exact-key/recursive bounds and opponent-policy projection.
+- [x] Add presentation events only when useful; do not duplicate public truth in animation event.
 
 ### Outputs
 
@@ -429,10 +452,10 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- Counter underflow/unknown address always attempts query reconciliation first; persistent invalid/unavailable query terminates deterministically with sanitized evidence.
-- Chain order/status survives clone validation.
-- Hidden identities absent from chain/card labels.
-- `npm run test:unit && npm run test:integration && npm run typecheck` green.
+- [x] Counter underflow/unknown address always attempts query reconciliation first; persistent invalid/unavailable query terminates deterministically with sanitized evidence.
+- [x] Chain order/status survives clone validation.
+- [x] Hidden identities absent from chain/card labels.
+- [x] `npm run test:unit && npm run test:integration && npm run typecheck` green.
 
 ---
 
@@ -448,14 +471,14 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-1. **Red:** store reducer test feeds >100 accepted Worker presentation/domain events; assert derived semantic rows remain while presentation queue keeps last 100.
-2. Feed >2,000 events; assert collection never exceeds 2,000 total rows including one visible truncation marker.
-3. Assert restart/runtime replacement clears both collections.
-4. Assert duplicate event delivery and duplicate state application do not duplicate log rows.
-5. Define immutable `DuelLogEntry` with independent monotonic log sequence plus formatted privacy-safe text and source event type; never retain the nested source event or raw protocol.
-6. **Green:** derive each log row once at reducer ingress from accepted Worker presentation/domain event; split 2,000-entry `duelLog` from independently sequenced `presentationEvents`; keep 100-entry queue for transient feedback.
-7. Preserve current diagnostics bounds and sensitive-data rules.
-8. Add exhaustive durable-log formatter decisions for every presentation event, including DF-04 `chainChanged`. DF-04 counters remain state-only and do not create log rows because no counter presentation event contract exists; arbitrary `hint` text remains transient rather than durable.
+- [x] **Red:** store reducer test feeds >100 accepted Worker presentation/domain events; assert derived semantic rows remain while presentation queue keeps last 100.
+- [x] Feed >2,000 events; assert collection never exceeds 2,000 total rows including one visible truncation marker.
+- [x] Assert restart/runtime replacement clears both collections.
+- [x] Assert duplicate event delivery and duplicate state application do not duplicate log rows.
+- [x] Define immutable `DuelLogEntry` with independent monotonic log sequence plus formatted privacy-safe text and source event type; never retain the nested source event or raw protocol.
+- [x] **Green:** derive each log row once at reducer ingress from accepted Worker presentation/domain event; split 2,000-entry `duelLog` from independently sequenced `presentationEvents`; keep 100-entry queue for transient feedback.
+- [x] Preserve current diagnostics bounds and sensitive-data rules.
+- [x] Add exhaustive durable-log formatter decisions for every presentation event, including DF-04 `chainChanged`. DF-04 counters remain state-only and do not create log rows because no counter presentation event contract exists; arbitrary `hint` text remains transient rather than durable.
 
 ### Outputs
 
@@ -465,9 +488,9 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- Store unit tests cover >100, >2,000, restart, stale context.
-- No raw protocol or hidden identity in log entries.
-- `npm run test:unit && npm run typecheck` green.
+- [x] Store unit tests cover >100, >2,000, restart, stale context.
+- [x] No raw protocol or hidden identity in log entries.
+- [x] `npm run test:unit && npm run typecheck` green.
 
 ---
 
@@ -484,14 +507,14 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-1. **Red:** table-driven mapper tests for `ST-01` through `ST-08`: empty/occupied fixed slots, shared EMZ, positions, hidden hands, counters, materials, chains/stacks.
-2. Assert mapping same snapshot twice is deeply equal and stable-keyed.
-3. Assert impossible duplicate physical occupancy returns diagnostic/error instead of last-write-wins.
-4. Assert closed collection stacks contain counts/summaries, not permanently mounted card lists.
-5. Add initial spatial-neighbor graph tests for main rows/shared EMZ/stack controls.
-6. **Green:** create focused board-view contracts and pure mapper; adapt/remove Phaser-specific `FieldSnapshotView` use only when consumers migrate.
-7. Normalize coordinates to `0..1`; preserve aspect-independent physical data.
-8. Build privacy-safe accessible labels from public card text/state.
+- [x] **Red:** table-driven mapper tests for `ST-01` through `ST-08`: empty/occupied fixed slots, shared EMZ, positions, hidden hands, counters, materials, chains/stacks.
+- [x] Assert mapping same snapshot twice is deeply equal and stable-keyed.
+- [x] Assert impossible duplicate physical occupancy returns diagnostic/error instead of last-write-wins.
+- [x] Assert closed collection stacks contain counts/summaries, not permanently mounted card lists.
+- [x] Add initial spatial-neighbor graph tests for main rows/shared EMZ/stack controls.
+- [x] **Green:** create focused board-view contracts and pure mapper; adapt/remove Phaser-specific `FieldSnapshotView` use only when consumers migrate.
+- [x] Normalize coordinates to `0..1`; preserve aspect-independent physical data.
+- [x] Build privacy-safe accessible labels from public card text/state.
 
 ### Outputs
 
@@ -501,10 +524,10 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- Mapper unit tests green and contain no DOM/Phaser setup.
-- Every visible public card maps exactly once.
-- Every field prompt target can resolve to stable board target or explicit non-field fallback.
-- `npm run test:unit && npm run typecheck` green.
+- [x] Mapper unit tests green and contain no DOM/Phaser setup.
+- [x] Every visible public card maps exactly once.
+- [x] Every field prompt target can resolve to stable board target or explicit non-field fallback.
+- [x] `npm run test:unit && npm run typecheck` green.
 
 ---
 
@@ -520,14 +543,14 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-1. **Red:** add one spec fixture per prompt family: action, single card, multi/tribute/sum, unselect, place/disabled field, counter, order, non-field.
-2. Assert multiple actions on same card remain distinct opaque choices.
-3. Assert positional prompt cards resolve to public instance/physical target; unresolved targets route to semantic prompt fallback.
-4. Assert spec contains no selected/order/allocation mutable state.
-5. Assert malformed/unknown choices cannot become field targets.
-6. **Green:** implement discriminated spec mapper and `InteractionKey(workerGeneration, sessionGeneration, promptId)`.
-7. Reuse existing control-family/validation logic; no duplicate min/max/sum legality algorithm.
-8. Add readonly target maps for card/zone/global choices.
+- [x] **Red:** add one spec fixture per prompt family: action, single card, multi/tribute/sum, unselect, place/disabled field, counter, order, non-field.
+- [x] Assert multiple actions on same card remain distinct opaque choices.
+- [x] Assert positional prompt cards resolve to public instance/physical target; unresolved targets route to semantic prompt fallback.
+- [x] Assert spec contains no selected/order/allocation mutable state.
+- [x] Assert malformed/unknown choices cannot become field targets.
+- [x] **Green:** implement discriminated spec mapper and `InteractionKey(workerGeneration, sessionGeneration, promptId)`.
+- [x] Reuse existing control-family/validation logic; no duplicate min/max/sum legality algorithm.
+- [x] Add readonly target maps for card/zone/global choices.
 
 ### Outputs
 
@@ -537,10 +560,10 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- All current `PromptKind` values classified exhaustively.
-- Existing prompt selection tests unchanged/green.
-- Spec serialization contains only domain IDs/data; no elements/functions.
-- `npm run test:unit && npm run typecheck` green.
+- [x] All current `PromptKind` values classified exhaustively.
+- [x] Existing prompt selection tests unchanged/green.
+- [x] Spec serialization contains only domain IDs/data; no elements/functions.
+- [x] `npm run test:unit && npm run typecheck` green.
 
 ---
 
@@ -556,14 +579,14 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-1. **Red:** pure reducer tests for new key reset, target toggle, explicit confirm, cancel, allocation max/total, order, stale action ignored, menu open/close.
-2. Add store reducer regression: valid response → pending; intermediate `state`/presentation event leaves pending true and prompt locked.
-3. Add completion tests: new prompt key, result, recoverable invalid/stale response, terminal error, worker/session replacement.
-4. Add duplicate submit test across field and `PromptControls`; exactly one Worker `respond` command.
-5. **Green:** implement pure session reducer and store/session adapter.
-6. Keep pending authority in store; local session mirrors submitting only after store accepts response.
-7. Ensure recoverable error restores editing draft/focus target where still valid; generation change discards all draft state.
-8. Preserve current prompt validation before client call.
+- [x] **Red:** pure reducer tests for new key reset, target toggle, explicit confirm, cancel, allocation max/total, order, stale action ignored, menu open/close.
+- [x] Add store reducer regression: valid response → pending; intermediate `state`/presentation event leaves pending true and prompt locked.
+- [x] Add completion tests: new prompt key, result, recoverable invalid/stale response, terminal error, worker/session replacement.
+- [x] Add duplicate submit test across field and `PromptControls`; exactly one Worker `respond` command.
+- [x] **Green:** implement pure session reducer and store/session adapter.
+- [x] Keep pending authority in store; local session mirrors submitting only after store accepts response.
+- [x] Ensure recoverable error restores editing draft/focus target where still valid; generation change discards all draft state.
+- [x] Preserve current prompt validation before client call.
 
 ### Outputs
 
@@ -573,10 +596,10 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- Snapshot alone never unlocks submitted prompt.
-- Old prompt actions after new key produce no state/command.
-- Exactly one command per accepted submit.
-- Focused store/session tests, `npm run test:unit`, `npm run typecheck` green.
+- [x] Snapshot alone never unlocks submitted prompt.
+- [x] Old prompt actions after new key produce no state/command.
+- [x] Exactly one command per accepted submit.
+- [x] Focused store/session tests, `npm run test:unit`, `npm run typecheck` green.
 
 ---
 
@@ -593,14 +616,14 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-1. **Red:** add `DuelField` component test expecting named region, 34 stable physical zone nodes/labels, two shared EMZs, keyed visible/hidden cards, stack counts.
-2. Assert no `<canvas>`, no duplicate EMZ controls, no hidden opponent card identity/alt text.
-3. Assert defense/opponent orientation exposed by DOM class/data state plus readable accessible label.
-4. **Green:** create `FieldBoard`, `ZoneControl`, `CardControl`, `StackControl` focused components from `BoardViewModel`.
-5. Use native buttons only where inspect/action exists; passive empty slots remain labelled unless prompt later makes actionable.
-6. Position via CSS custom properties/percentages; define explicit layer tokens.
-7. Render placeholder/back immediately; avoid image readiness dependency.
-8. Keep component isolated from Worker/store; do not replace App's Phaser host in this ticket.
+- [x] **Red:** add `DuelField` component test expecting named region, 34 stable physical zone nodes/labels, two shared EMZs, keyed visible/hidden cards, stack counts.
+- [x] Assert no `<canvas>`, no duplicate EMZ controls, no hidden opponent card identity/alt text.
+- [x] Assert defense/opponent orientation exposed by DOM class/data state plus readable accessible label.
+- [x] **Green:** create `FieldBoard`, `ZoneControl`, `CardControl`, `StackControl` focused components from `BoardViewModel`.
+- [x] Use native buttons only where inspect/action exists; passive empty slots remain labelled unless prompt later makes actionable.
+- [x] Position via CSS custom properties/percentages; define explicit layer tokens.
+- [x] Render placeholder/back immediately; avoid image readiness dependency.
+- [x] Keep component isolated from Worker/store; do not replace App's Phaser host in this ticket.
 
 ### Outputs
 
@@ -610,10 +633,10 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- `npm run test:component` green.
-- Testing Library finds card/stack/zone by role/name, not `data-testid` coordinates.
-- Component imports no Phaser/Worker modules.
-- Screenshot `ST-01..04` at VP-01/02 reviewed against wireframe/rule refs.
+- [x] `npm run test:component` green.
+- [x] Testing Library finds card/stack/zone by role/name, not `data-testid` coordinates.
+- [x] Component imports no Phaser/Worker modules.
+- [x] Optional screenshot `ST-01..04` at VP-01/02 stored as CI artifacts; advancement uses semantic role/name/layout assertions only (no human visual review).
 
 ---
 
@@ -630,16 +653,16 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-1. **Red:** component tests command-card action menus, zone selection, multi-select, sum, unselect, counter allocation, order, cancel/finish/pass.
-2. Assert activation occurs on click/pointer-up, not `pointerdown`; movement-cancel fixture prevents accidental action.
-3. Assert command-target cards expose anchored legal-action/Inspect menu even with one legal action; selection-family card activation toggles draft only and never hides inspection access.
-4. Assert multi/place/counter/order workflows do not submit before explicit Confirm.
-5. Assert Confirm disabled until `validatePromptSelection` passes; recoverable error unlocks without duplicate.
-6. **Green:** connect DOM controls to spec/session reducer and existing store callback.
-7. Implement `FieldActionMenu` plus `SelectionDock`; anchor from target DOMRect and update on resize/scroll.
-8. Wire new DOM field into `App.svelte` inside a field-local Svelte error boundary. On component failure, show sanitized error plus retry/remount while preserving `PromptControls`, surrender, and diagnostics.
-9. Add component/E2E failure injection proving fallback remains operable and submits one opaque response.
-10. Replace canvas pointer assertions in focused E2E with role/name/state assertions; leave Phaser source/dependency present until DF-17.
+- [x] **Red:** component tests command-card action menus, zone selection, multi-select, sum, unselect, counter allocation, order, cancel/finish/pass.
+- [x] Assert activation occurs on click/pointer-up, not `pointerdown`; movement-cancel fixture prevents accidental action.
+- [x] Assert command-target cards expose anchored legal-action/Inspect menu even with one legal action; selection-family card activation toggles draft only and never hides inspection access.
+- [x] Assert multi/place/counter/order workflows do not submit before explicit Confirm.
+- [x] Assert Confirm disabled until `validatePromptSelection` passes; recoverable error unlocks without duplicate.
+- [x] **Green:** connect DOM controls to spec/session reducer and existing store callback.
+- [x] Implement `FieldActionMenu` plus `SelectionDock`; anchor from target DOMRect and update on resize/scroll.
+- [x] Wire new DOM field into `App.svelte` inside a field-local Svelte error boundary. On component failure, show sanitized error plus retry/remount while preserving `PromptControls`, surrender, and diagnostics.
+- [x] Add component/E2E failure injection proving fallback remains operable and submits one opaque response.
+- [x] Replace canvas pointer assertions in focused E2E with role/name/state assertions; leave Phaser source/dependency present until DF-17.
 
 ### Outputs
 
@@ -649,11 +672,11 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- Every reachable field-capable prompt family emits expected opaque choice list once.
-- Pointer and prompt panel share store validation/pending lock.
-- `npm run test:component` plus focused Chromium E2E green.
-- No direct Worker import/call from field components.
-- `ST-05..07`, `ST-11..12` semantic assertions and injected field-failure fallback green.
+- [x] Every reachable field-capable prompt family emits expected opaque choice list once.
+- [x] Pointer and prompt panel share store validation/pending lock.
+- [x] `npm run test:component` plus focused Chromium E2E green.
+- [x] No direct Worker import/call from field components.
+- [x] `ST-05..07`, `ST-11..12` semantic assertions and injected field-failure fallback green.
 
 ---
 
@@ -670,14 +693,14 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-1. **Red:** component tests for LP/turn/phase, chain provenance/status, counter/material badges, public inspector, stack tray open/close, log >100 entries plus truncation marker.
-2. Add privacy tests for hidden stack/card labels and image requests.
-3. Add tray test with 60 controls: closed tray mounts none; open tray mounts bounded/page-visible content; focus enters/returns correctly (focus details completed DF-14).
-4. **Green:** create `DuelHud`, `CardInspector`, `CardTray`, chain/log components.
-5. Move duplicated App field-adjacent summary into focused components only after parity tests.
-6. Keep deck/hidden Extra as count-only; show contents only when public/owned contract permits.
-7. Surface counters/materials without color-only meaning.
-8. Preserve existing surrender/result/diagnostics outside field.
+- [x] **Red:** component tests for LP/turn/phase, chain provenance/status, counter/material badges, public inspector, stack tray open/close, log >100 entries plus truncation marker.
+- [x] Add privacy tests for hidden stack/card labels and image requests.
+- [x] Add tray test with 60 controls: closed tray mounts none; open tray mounts bounded/page-visible content; focus enters/returns correctly (focus details completed DF-14).
+- [x] **Green:** create `DuelHud`, `CardInspector`, `CardTray`, chain/log components.
+- [x] Move duplicated App field-adjacent summary into focused components only after parity tests.
+- [x] Keep deck/hidden Extra as count-only; show contents only when public/owned contract permits.
+- [x] Surface counters/materials without color-only meaning.
+- [x] Preserve existing surrender/result/diagnostics outside field.
 
 ### Outputs
 
@@ -687,10 +710,10 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- `npm run test:component && npm run typecheck` green.
-- No identity leaks in DOM/accessibility tree/network capture.
-- `ST-07..09` pass semantic assertions.
-- Visual hierarchy compared against MD-01 and LE-01/02, not pixel-copied.
+- [x] `npm run test:component && npm run typecheck` green.
+- [x] No identity leaks in DOM/accessibility tree/network capture.
+- [x] `ST-07..09` pass semantic assertions.
+- [x] Visual hierarchy compared against MD-01 and LE-01/02, not pixel-copied.
 
 ---
 
@@ -706,13 +729,13 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-1. **Red:** unit tests map move/summon/set/position/LP/chain/attack events to bounded DOM feedback; unknown endpoints degrade to notice.
-2. Component tests assert final state, classes, ARIA-hidden SVG line, cancellation on new generation/restart.
-3. Reduced-motion test requires duration 0/no movement while final highlight/text remains.
-4. **Green:** adapt presentation scheduler to DOM controller; use CSS transitions/WAAPI only for bounded commands.
-5. Add pointer-transparent `FieldLines.svelte` for attack/target lines when both DOMRects resolve.
-6. No permanent RAF; use transition/animation completion plus abort/generation token.
-7. Ensure animation never blocks store/response path.
+- [x] **Red:** unit tests map move/summon/set/position/LP/chain/attack events to bounded DOM feedback; unknown endpoints degrade to notice.
+- [x] Component tests assert final state, classes, ARIA-hidden SVG line, cancellation on new generation/restart.
+- [x] Reduced-motion test requires duration 0/no movement while final highlight/text remains.
+- [x] **Green:** adapt presentation scheduler to DOM controller; use CSS transitions/WAAPI only for bounded commands.
+- [x] Add pointer-transparent `FieldLines.svelte` for attack/target lines when both DOMRects resolve.
+- [x] No permanent RAF; use transition/animation completion plus abort/generation token.
+- [x] Ensure animation never blocks store/response path.
 
 ### Outputs
 
@@ -722,10 +745,10 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- Fake-timer tests leave zero active timers/animations after cancel.
-- SVG receives no pointer/focus and is `aria-hidden`.
-- Worker response timing unchanged.
-- Unit/component reduced-motion tests green.
+- [x] Fake-timer tests leave zero active timers/animations after cancel.
+- [x] SVG receives no pointer/focus and is `aria-hidden`.
+- [x] Worker response timing unchanged.
+- [x] Unit/component reduced-motion tests green.
 
 ---
 
@@ -742,14 +765,14 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-1. **Red:** mock `URL.createObjectURL`/`revokeObjectURL`; mount/unmount/reopen tray/restart. Assert one URL per active code lease and final revocation.
-2. Add slow/failed image test: field renders immediately with placeholder/back, prompt/field controls stay enabled, and accepted response reaches Worker before preload settles.
-3. Add privacy test: hidden opponent identities create no URL/request.
-4. Add generation test: old snapshot URLs revoked; late image resolution cannot mutate new generation.
-5. **Green:** cache verified blobs/receipts; expose mounted-code lease API and create object URLs lazily for mounted/soon-visible images.
-6. Reference-count/deduplicate leases by snapshot+code; release on final consumer/unmount/restart.
-7. Remove all image input gates: `queueFieldChoice` image check, `PromptControls` image disable condition, and `{#if imageLibrary && snapshot}` field-render condition. Provide immediate placeholder/back source independent of preload.
-8. Use native `<img>` decoding/error fallback; image status remains diagnostic/UI only.
+- [x] **Red:** mock `URL.createObjectURL`/`revokeObjectURL`; mount/unmount/reopen tray/restart. Assert one URL per active code lease and final revocation.
+- [x] Add slow/failed image test: field renders immediately with placeholder/back, prompt/field controls stay enabled, and accepted response reaches Worker before preload settles.
+- [x] Add privacy test: hidden opponent identities create no URL/request.
+- [x] Add generation test: old snapshot URLs revoked; late image resolution cannot mutate new generation.
+- [x] **Green:** cache verified blobs/receipts; expose mounted-code lease API and create object URLs lazily for mounted/soon-visible images.
+- [x] Reference-count/deduplicate leases by snapshot+code; release on final consumer/unmount/restart.
+- [x] Remove all image input gates: `queueFieldChoice` image check, `PromptControls` image disable condition, and `{#if imageLibrary && snapshot}` field-render condition. Provide immediate placeholder/back source independent of preload.
+- [x] Use native `<img>` decoding/error fallback; image status remains diagnostic/UI only.
 
 ### Outputs
 
@@ -759,10 +782,10 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- Object URL count returns to baseline after tray close/restart/destroy.
-- Slow/failing image cannot delay Worker response.
-- Existing cache integrity/provider tests remain green.
-- Unit/component/E2E `ST-10` green.
+- [x] Object URL count returns to baseline after tray close/restart/destroy.
+- [x] Slow/failing image cannot delay Worker response.
+- [x] Existing cache integrity/provider tests remain green.
+- [x] Unit/component/E2E `ST-10` green.
 
 ---
 
@@ -779,29 +802,30 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-1. **Red:** pure nav reducer tests for Arrow/Home/End across rows, stacks, shared EMZ, hands, empty/occupied/actionable changes.
-2. Component tests: one field entry tab stop; Enter/Space equals click; visible focus class; menu Escape/return; tray enter/return; prompt change moves/retains focus intentionally.
-3. Playwright keyboard-only tests complete full preset duel without pointer and assert one response each.
-4. Add accessible name/state tests including controller, zone, position, legal, selected, counter/material state; avoid hidden identity.
-5. **Green:** implement roving `tabindex` adapter and focus side effects around pure nav state.
-6. Use native focus and `:focus-visible`; do not use `role="application"`.
-7. Evaluate `role="grid"` manually; omit if announcements are worse than named group/buttons.
-8. Add persistent live announcements for prompt, submit, recoverable error, turn/phase/result.
-9. Record NVDA/Firefox and VoiceOver/Safari manual review using template.
+- [x] **Red:** pure nav reducer tests for Arrow/Home/End across rows, stacks, shared EMZ, hands, empty/occupied/actionable changes.
+- [x] Component tests: one field entry tab stop; Enter/Space equals click; visible focus class; menu Escape/return; tray enter/return; prompt change moves/retains focus intentionally.
+- [x] Playwright keyboard-only tests complete full preset duel without pointer and assert one response each.
+- [x] Add accessible name/state tests including controller, zone, position, legal, selected, counter/material state; avoid hidden identity.
+- [x] **Green:** implement roving `tabindex` adapter and focus side effects around pure nav state.
+- [x] Use native focus and `:focus-visible`; do not use `role="application"`.
+- [x] Evaluate `role="grid"` against Chromium a11y-tree/name quality; omit if worse than named group/buttons (default: omit).
+- [x] Add persistent live announcements for prompt, submit, recoverable error, turn/phase/result.
+- [x] Record DF-14 gate in [`architecture/05-presentation/duel-field-screen-reader-review.md`](architecture/05-presentation/duel-field-screen-reader-review.md) from **automated Chromium** evidence only. No manual testing of any kind.
 
 ### Outputs
 
 - Keyboard-complete spatial field.
-- Tested focus lifecycle and screen-reader labels.
-- Manual SR decision on role structure.
+- Tested focus lifecycle and accessible name/state/live regions on Chromium.
+- Role-structure decision recorded from Chromium automated evidence.
 
 ### Validation criteria
 
-- Full duel keyboard E2E green in Chromium.
-- No keyboard trap; focus never lost to removed node.
-- Focus visible at 200% zoom, defense rotation, overlaps.
-- 44×44 targets verified by browser bounding boxes.
-- Manual SR record has no blocker; defects create new tickets and block DF-16.
+- [x] Full duel keyboard E2E green in Chromium (PWA-capable engine family).
+- [x] No keyboard trap; focus never lost to removed node.
+- [x] Focus visible at 200% zoom, defense rotation, overlaps.
+- [x] 44×44 targets verified by browser bounding boxes.
+- [x] Chromium a11y gate has no blocker; defects create new tickets and block DF-16.
+- [x] Firefox/Safari/NVDA/VoiceOver never block DF-14.
 
 ---
 
@@ -817,27 +841,27 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-1. **Red:** Playwright viewport assertions for no critical clipping, contained overflow, 44 px targets, menu/tray inside viewport, 200% zoom usability.
-2. Add screenshot captures for ST-01/05/09 at VP-01/02/04/05/06/07.
-3. **Green:** use container/media queries to recompose HUD, inspector, action menu, tray, dock.
-4. Preserve board aspect ratio on desktop. On narrow landscape, allow contained field scroll only if target/focus stays reachable.
-5. Portrait may switch inspector/tray to modal sheet and stack HUD; preserve same DOM semantics/interaction reducer.
-6. Update nav graph selection only if physical visual adjacency changes; add reducer fixtures.
-7. Verify browser zoom/text expansion rather than transform-scaling entire UI.
+- [ ] **Red:** Playwright viewport assertions for no critical clipping, contained overflow, 44 px targets, menu/tray inside viewport, 200% zoom usability.
+- [ ] Add screenshot captures for ST-01/05/09 at VP-01/02/04/05/06/07.
+- [ ] **Green:** use container/media queries to recompose HUD, inspector, action menu, tray, dock.
+- [ ] Preserve board aspect ratio on desktop. On narrow landscape, allow contained field scroll only if target/focus stays reachable.
+- [ ] Portrait may switch inspector/tray to modal sheet and stack HUD; preserve same DOM semantics/interaction reducer.
+- [ ] Update nav graph selection only if physical visual adjacency changes; add reducer fixtures.
+- [ ] Verify browser zoom/text expansion rather than transform-scaling entire UI.
 
 ### Outputs
 
 - Supported desktop/narrow/portrait compositions.
 - Same semantic controls/state across layouts.
-- Capture set for visual review.
+- Optional capture set as CI artifacts only (no human visual gate).
 
 ### Validation criteria
 
-- VP matrix assertions green.
-- No page-wide horizontal overflow.
-- Focused target scrolls into view without hiding behind dock/menu.
-- 200% zoom completes current prompt.
-- Mobile-first polish remains out of scope; semantic usability passes.
+- [ ] VP matrix assertions green.
+- [ ] No page-wide horizontal overflow.
+- [ ] Focused target scrolls into view without hiding behind dock/menu.
+- [ ] 200% zoom completes current prompt.
+- [ ] Mobile-first polish remains out of scope; automated semantic usability passes.
 
 ---
 
@@ -854,30 +878,30 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-1. **Red:** add first deterministic `ST-01` browser fixture/semantic test and artifact-path assertion; run it to fail because field fixture/capture harness is absent.
-2. **Green:** implement privacy-safe fixture seam through `parseDuelWorkerEvent` plus store/component harness; never inject raw core values into UI. Add ST-01 through ST-14, with semantic assertions before screenshots.
-3. Run Chromium full flow plus explicitly named Firefox/WebKit production startup, privacy, and missing/slow-image smoke tests.
-4. Mark accepted public snapshot/event at store ingress and next paint after two `requestAnimationFrame` callbacks. Record p50/p95 by nearest-rank calculation for update→paint and action latency; record long tasks >50 ms plus dropped frames for normal/pathological/60-card tray/burst workloads under pinned profile.
-5. Record heap/object-URL/listener counts before/after repeated restart and tray cycles.
-6. Compare captures against RULE/CORE/local wireframe and MD/LE hierarchy refs; record pass/fail rubric.
-7. Run reduced motion, 200% zoom, keyboard-only, touch emulation, missing-image, recoverable error, stale generation.
-8. Fix only test-harness omissions in this ticket. Product failures create focused defect tickets; DF-17 remains blocked.
-9. Store private screenshots/traces as CI artifacts; retain reviewable metrics/rubric text without restricted card art.
+- [ ] **Red:** add first deterministic `ST-01` browser fixture/semantic test and artifact-path assertion; run it to fail because field fixture/capture harness is absent.
+- [ ] **Green:** implement privacy-safe fixture seam through `parseDuelWorkerEvent` plus store/component harness; never inject raw core values into UI. Add ST-01 through ST-14 with **automated** semantic assertions; screenshots optional non-blocking artifacts only.
+- [ ] Run Chromium full flow including privacy and missing/slow-image paths. Firefox/WebKit smokes are optional CI hygiene only; not DF-16 product acceptance.
+- [ ] Mark accepted public snapshot/event at store ingress and next paint after two `requestAnimationFrame` callbacks. Record p50/p95 by nearest-rank calculation for update→paint and action latency; record long tasks >50 ms plus dropped frames for normal/pathological/60-card tray/burst workloads under pinned profile.
+- [ ] Record heap/object-URL/listener counts before/after repeated restart and tray cycles.
+- [ ] Encode RULE/CORE/wireframe/hierarchy checks as automated semantic/layout assertions (or skip if not automatable until post-DF-17). **No human visual rubric sign-off.**
+- [ ] Run reduced motion, 200% zoom, keyboard-only, touch emulation, missing-image, recoverable error, stale generation via Playwright Chromium.
+- [ ] Fix only test-harness omissions in this ticket. Product failures create focused defect tickets; DF-17 remains blocked.
+- [ ] Store private screenshots/traces as CI artifacts; retain machine-readable metrics without restricted card art. No manual review queue.
 
 ### Outputs
 
 - Reproducible browser/perf/resource harness.
 - Acceptance record at `docs/architecture/05-presentation/duel-field-performance-baseline.md` with device/browser revision, throttle, warm-up/sample count, mark boundaries, nearest-rank percentiles, and workloads.
-- Explicit pass/fail decision for Phaser removal.
+- Automated pass/fail decision for Phaser removal (thresholds + `npm run check`).
 
 ### Validation criteria
 
-- Newly adopted migration acceptance threshold: update→paint p95 <50 ms; input feedback <100 ms under the pinned profile and measurement method above. These thresholds are not claims about the existing Phaser baseline. Any miss creates a focused defect ticket and blocks DF-17; thresholds never change silently.
-- No normal prompt update creates >50 ms long task.
-- No object URL/listener growth after repeated restart.
-- Every rubric item passes; no privacy/a11y blocker.
-- `npm run check` green.
-- Reviewer explicitly accepts removal gate.
+- [ ] Newly adopted migration acceptance threshold: update→paint p95 <50 ms; input feedback <100 ms under the pinned profile and measurement method above. These thresholds are not claims about the existing Phaser baseline. Any miss creates a focused defect ticket and blocks DF-17; thresholds never change silently.
+- [ ] No normal prompt update creates >50 ms long task.
+- [ ] No object URL/listener growth after repeated restart.
+- [ ] Automated privacy/a11y/perf assertions green; no open blocker tickets.
+- [ ] `npm run check` green.
+- [ ] Removal gate = automated evidence only (no human product acceptance step before DF-17).
 
 ---
 
@@ -893,14 +917,14 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-1. **Red:** change build/dependency tests to require no `phaser` package/import/chunk/canvas field metadata; run and observe failure.
-2. Delete `DuelScene.ts`, `create-phaser-presentation-bridge.ts`, obsolete `duel-presentation-bridge.ts`, renderer-specific tests/styles, and migration-only imports.
-3. Remove `phaser` dependency/lock entries plus Phaser license-copy logic in `scripts/lib/vite-runtime-assets.ts` atomically.
-4. Remove canvas `data-*` E2E assertions; keep semantic and screenshot tests.
-5. Update `scripts/verify-browser-build.ts` budgets/manifest guards to reject reintroduced Phaser package, import, chunk, license, or canvas field metadata.
-6. Mark ADR implementation complete; update topology/technology/context/tree and archive any migration-only docs notes.
-7. Run clean install/build reproducibility to catch stale lock/bundle artifacts.
-8. **Green:** full headless/browser/build gates.
+- [ ] **Red:** change build/dependency tests to require no `phaser` package/import/chunk/canvas field metadata; run and observe failure.
+- [ ] Delete `DuelScene.ts`, `create-phaser-presentation-bridge.ts`, obsolete `duel-presentation-bridge.ts`, renderer-specific tests/styles, and migration-only imports.
+- [ ] Remove `phaser` dependency/lock entries plus Phaser license-copy logic in `scripts/lib/vite-runtime-assets.ts` atomically.
+- [ ] Remove canvas `data-*` E2E assertions; keep semantic and screenshot tests.
+- [ ] Update `scripts/verify-browser-build.ts` budgets/manifest guards to reject reintroduced Phaser package, import, chunk, license, or canvas field metadata.
+- [ ] Mark ADR implementation complete; update topology/technology/context/tree and archive any migration-only docs notes.
+- [ ] Run clean install/build reproducibility to catch stale lock/bundle artifacts.
+- [ ] **Green:** full headless/browser/build gates.
 
 ### Outputs
 
@@ -910,26 +934,28 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- `grep -R` finds no current source import/reference requiring Phaser; historical archive/audit plans may retain history labels.
-- `npm ls phaser` reports absent.
-- Production manifest/license output contains no Phaser chunk or license residue and stays within revised budget.
-- Fresh `npm ci`, `npm run check`, reproducible build, Chromium full flow, and explicit Firefox/WebKit smokes green.
-- Clean checkout passes same gates.
+- [ ] `grep -R` finds no current source import/reference requiring Phaser; historical archive/audit plans may retain history labels.
+- [ ] `npm ls phaser` reports absent.
+- [ ] Production manifest/license output contains no Phaser chunk or license residue and stays within revised budget.
+- [ ] Fresh `npm ci`, `npm run check`, reproducible build, and Chromium full flow green. Firefox/WebKit not required for DF-17 product acceptance.
+- [ ] Clean checkout passes same gates.
 
 ## Completion definition
 
-Migration completes only when the DF-17 checkpoint passes review and is accepted. “DOM field visible” is not completion. Required final properties:
+Migration completes only when the DF-17 checkpoint passes **automated** gates and is accepted. “DOM field visible” is not completion. Required final properties (all proven by automated tests/metrics, not manual testing):
 
 - fixed-slot state correct;
 - physical Standard board correct;
 - all field/non-field prompts complete through same validator/store;
-- pointer/keyboard/SR workflows complete;
+- pointer/keyboard/Chromium a11y workflows complete;
 - response pending authoritative;
 - rich public state truthful/privacy-safe;
 - images nonblocking/leak-free;
 - responsive/reduced-motion behavior validated;
 - perf/resource evidence recorded;
 - Phaser fully removed.
+
+Manual testing may begin only **after** DF-17 acceptance if desired; it is outside this plan’s serial path.
 
 ## Deferred follow-up decisions
 

@@ -12,6 +12,7 @@ import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import DuelField from "../../src/app/components/DuelField.svelte";
 import DuelFieldErrorBoundary from "../../src/app/components/duel-field/DuelFieldErrorBoundary.svelte";
+import CardTray from "../../src/app/components/duel-field/CardTray.svelte";
 import {
   cardInstanceId,
   choiceId,
@@ -37,6 +38,10 @@ import {
   BOARD_CARD_TEXTS,
   BOARD_VIEW_MODEL_FIXTURES,
 } from "../fixtures/board-view-model.ts";
+import {
+  PUBLIC_STATE_CARD_TEXTS,
+  SIXTY_PUBLIC_CARDS,
+} from "../fixtures/board-public-states.ts";
 
 afterEach(() => {
   cleanup();
@@ -231,6 +236,190 @@ describe("DuelField", () => {
     expect(opponentCard.getAttribute("data-facing")).toBe("opponent");
     expect(opponentCard.classList.contains("is-opponent")).toBe(true);
     expect(opponentCard.getAttribute("aria-label")).toContain("Opponent");
+  });
+
+  it("uses one roving field tab stop and spatial Arrow/Home/End focus", async () => {
+    const user = userEvent.setup();
+    const value = fieldPrompt("selectCard", [
+      mountedChoice("select", "Select monster"),
+    ]);
+    renderInteractive(value);
+
+    const targets = [
+      ...document.querySelectorAll<HTMLElement>("[data-field-target]"),
+    ];
+    expect(targets.filter((target) => target.tabIndex === 0)).toHaveLength(1);
+    const card = screen.getByRole("button", {
+      name: /Legal.*Select The Legendary Fisherman/,
+    });
+    expect(card.tabIndex).toBe(0);
+    card.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(document.activeElement?.getAttribute("data-field-target")).toBe(
+      "zone:p0:mainMonster:1",
+    );
+    await user.keyboard("{End}");
+    expect(document.activeElement?.getAttribute("data-field-target")).toBe(
+      "stack:p0:banished",
+    );
+    await user.keyboard("{Home}");
+    expect(document.activeElement?.getAttribute("data-field-target")).toBe(
+      "zone:p0:field",
+    );
+    expect(
+      document.activeElement?.classList.contains("is-navigation-active"),
+    ).toBe(true);
+  });
+
+  it("makes native Enter and Space activation equal click and exposes legal/selected state", async () => {
+    const user = userEvent.setup();
+    const value = fieldPrompt("selectCard", [
+      mountedChoice("select", "Select monster"),
+    ]);
+    const harness = renderInteractive(value);
+    const card = screen.getByRole("button", {
+      name: /Legal.*Select The Legendary Fisherman.*face-up attack/,
+    });
+    card.focus();
+    await user.keyboard("{Enter}");
+    expect(card.getAttribute("aria-pressed")).toBe("true");
+    expect(harness.commands).toEqual([]);
+    await user.keyboard(" ");
+    expect(card.getAttribute("aria-pressed")).toBe("false");
+    expect(harness.commands).toEqual([]);
+  });
+
+  it("focuses a command menu then returns focus on Escape", async () => {
+    const user = userEvent.setup();
+    const value = fieldPrompt("idleCommand", [
+      mountedChoice("activate", "Activate effect", { action: "activate" }),
+    ]);
+    renderInteractive(value);
+    const card = screen.getByRole("button", {
+      name: /Open actions for The Legendary Fisherman/,
+    });
+    card.focus();
+    await user.keyboard("{Enter}");
+    const firstAction = screen.getByRole("menuitem", {
+      name: "Activate effect",
+    });
+    await waitFor(() => expect(document.activeElement).toBe(firstAction));
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(document.activeElement).toBe(card);
+  });
+
+  it("returns field focus before a command menu action removes its focused node", async () => {
+    const user = userEvent.setup();
+    const value = fieldPrompt("idleCommand", [
+      mountedChoice("activate", "Activate effect", { action: "activate" }),
+    ]);
+    const harness = renderInteractive(value);
+    const card = screen.getByRole("button", {
+      name: /Open actions for The Legendary Fisherman/,
+    });
+    card.focus();
+    await user.keyboard("{Enter}");
+    const action = screen.getByRole("menuitem", { name: "Activate effect" });
+    await waitFor(() => expect(document.activeElement).toBe(action));
+    await user.keyboard("{Enter}");
+    await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+    expect(document.activeElement).toBe(card);
+    expect(harness.commands).toEqual([["activate"]]);
+  });
+
+  it("moves field focus to a new prompt target without stealing outside focus", async () => {
+    const firstPrompt = fieldPrompt("selectCard", [
+      mountedChoice("first", "First target"),
+    ]);
+    const firstSpec = activeSpec(firstPrompt);
+    const rendered = render(DuelField, {
+      board: board("ST-05"),
+      prompt: firstPrompt,
+      spec: firstSpec,
+      session: createInteractionSession(firstSpec),
+    });
+    const firstTarget = screen.getByRole("button", {
+      name: /Select The Legendary Fisherman/,
+    });
+    firstTarget.focus();
+
+    const nextPrompt = fieldPrompt("selectPlace", [
+      promptChoice("next", "Your Main Monster 5", {
+        place: { player: 0, location: "monster", sequence: 4 },
+      }),
+    ]);
+    const nextSpec = activeSpec(nextPrompt);
+    await rendered.rerender({
+      prompt: nextPrompt,
+      spec: nextSpec,
+      session: createInteractionSession(nextSpec),
+    });
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByRole("button", { name: /Select Your Main Monster 5/ }),
+      ),
+    );
+
+    const outside = document.createElement("button");
+    document.body.append(outside);
+    outside.focus();
+    await rendered.rerender({
+      prompt: firstPrompt,
+      spec: firstSpec,
+      session: createInteractionSession(firstSpec),
+    });
+    expect(document.activeElement).toBe(outside);
+    outside.remove();
+  });
+
+  it("announces prompt/submission persistently and exposes public controller, zone, position, counters, and materials", async () => {
+    const value = fieldPrompt("selectCard", [
+      mountedChoice("select", "Select monster"),
+    ]);
+    const harness = renderInteractive(value);
+    expect(screen.getByLabelText("Field updates").textContent).toContain(
+      "Test selectCard",
+    );
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: /Select The Legendary/ }));
+    await harness.rendered.rerender({ pending: true });
+    expect(screen.getByLabelText("Field updates").textContent).toContain(
+      "Response sent",
+    );
+
+    cleanup();
+    render(DuelField, { board: board("ST-07") });
+    const rich = screen.getByRole("article", {
+      name: /The Legendary Fisherman in Your Main Monster 2, face-up attack, 3 Spell Counters, 2 materials/,
+    });
+    expect(rich.getAttribute("data-facing")).toBe("self");
+    expect(document.body.innerHTML).not.toContain("46986414");
+  });
+
+  it("enters a card tray with Enter and returns focus with Escape", async () => {
+    const user = userEvent.setup();
+    render(CardTray, {
+      label: "Your GY",
+      player: 0,
+      zone: "graveyard",
+      count: 60,
+      cards: SIXTY_PUBLIC_CARDS,
+      cardTexts: PUBLIC_STATE_CARD_TEXTS,
+    });
+    const open = screen.getByRole("button", {
+      name: "Open Your GY tray, 60 cards",
+    });
+    open.focus();
+    await user.keyboard("{Enter}");
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getAllByRole("button", { name: /^Inspect / })[0],
+      ),
+    );
+    await user.keyboard("{Escape}");
+    expect(document.activeElement).toBe(open);
   });
 
   it("opens command menus on click, never pointerdown, and cancels moved pointers", async () => {

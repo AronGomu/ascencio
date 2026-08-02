@@ -1,9 +1,9 @@
 # Implement progress: DOM Duel-Field Implementation Plan
 
 - Branch: `plan/dom-duel-field-implementation-plan`
-- Plan: `.tmp/IMPLEMENTATION_PLAN_duel_field_dom.md`
+- Plan: `docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`
 - Started: 2026-08-01T09:03:37Z
-- Updated: 2026-08-01T13:39:49Z
+- Updated: 2026-08-02T10:23:54Z
 
 ## Status
 
@@ -23,10 +23,10 @@
 | DF-11 | Add HUD, inspector, stacks/trays, rich state | done | b30a1bc | Ship locally verified; validated and pushed |
 | DF-12 | Add bounded CSS/DOM/SVG feedback | done | cd728aa | Ship locally verified; validated and pushed |
 | DF-13 | Lease image URLs and remove image input gate | done | 2cae7d9 | Retry diagnosed stale count oracle; validated and pushed |
-| DF-14 | Add spatial keyboard and screen-reader behavior | blocked_user | — | Automated candidate green; needs real NVDA/Firefox + VoiceOver/Safari PASS |
-| DF-15 | Recompose field across supported viewports | blocked_dep | — | Strict serial order depends on accepted DF-14 |
-| DF-16 | Prove semantic, visual, browser, resource, and performance parity | blocked_dep | — | Depends on DF-14/DF-15 |
-| DF-17 | Remove Phaser renderer and obsolete bridge | blocked_dep | — | Depends on accepted DF-16 removal gate |
+| DF-14 | Add spatial keyboard and screen-reader behavior | done | — | Extra retry locally verified; horizontal row-local nav fixed defense focus-visible Chromium gate |
+| DF-15 | Recompose field across supported viewports | blocked_dep | — | Pending DF-14 retry outcome |
+| DF-16 | Prove semantic, visual, browser, resource, and performance parity | blocked_dep | — | Pending DF-14 retry outcome |
+| DF-17 | Remove Phaser renderer and obsolete bridge | blocked_dep | — | Pending DF-14 retry outcome |
 
 ## Assumptions
 
@@ -73,3 +73,13 @@
 - 2026-08-01T13:39:49Z DF-15 blocked_dep: strict serial order requires accepted DF-14.
 - 2026-08-01T13:39:49Z DF-16 blocked_dep: depends on DF-14/DF-15.
 - 2026-08-01T13:39:49Z DF-17 blocked_dep: depends on accepted DF-16 removal gate.
+- 2026-03-22: User decision — ignore NVDA/Firefox and VoiceOver/Safari manual reviews. Product browsers = Chromium PWA family only. Updated ADR-001, DOM plan, browser-platform, testing, architecture map, DF-14 review template. DF-14 no longer `blocked_user`; next step accept on existing Chromium evidence then DF-15.
+- 2026-03-22: User decision — **remove all manual testing from plan until feature complete (DF-17)**. Ticket gates automated only; no human playtest/SR/visual rubric/reviewer product accept. Docs updated accordingly.
+- 2026-08-01T14:36:21Z DF-14 resume: canonical plan selected; prior automated candidate queued for revalidation.
+- 2026-08-01T14:50:50Z DF-14 failed without commit after one repair loop: focused nav 4/4, component 21/21, typecheck, diff check, and Chromium spatial test green. Fresh Chromium full keyboard duel failed after 1.7m because defense-focus traversal changed roving target, then `keyboardFocus` could not reach inactive `Legal action, Select Battle Ox in Your Hand` by Tab. No canonical DF-14 boxes checked; no stage/commit/push.
+- 2026-08-01T14:52:31Z DF-14 first worker partial: full keyboard Chromium E2E failed; defense traversal left next actionable `Battle Ox` at `tabindex=-1`. Parent-directed retry 1 started.
+- 2026-08-01T15:00:08Z DF-14 final retry failed without commit: root cause was E2E `keyboardFocus` using Tab for targets intentionally removed from Tab order by roving `tabindex`; helper now uses Arrow/Home/End traversal for field targets while retaining Tab for other controls. Focused nav/component 25/25 and `git diff --check` passed. Full Chromium keyboard duel advanced past prior `Battle Ox` failure, then exceeded 180 seconds and finished with `defenseFocusVisible` false (`Expected: true`, `Received: false`). Final-retry contract halted further repair; canonical boxes remain unchecked; no stage/commit/push.
+- 2026-08-01T15:02:06Z DF-14 final retry blocked: focused nav/component 25/25 and `git diff --check` passed; full keyboard Chromium E2E timed out at 180000 ms because `defenseFocusVisible` expected true, received false. No commit/push; DF-14 boxes remain unchecked.
+- 2026-08-01T15:02:06Z DF-15/DF-16/DF-17 blocked_dep via strict serial DF-14 chain.
+- 2026-08-02T08:11:11Z DF-14 user-authorized extra retry beyond one-repair cap; launch worker for Chromium defense focus-visible gate.
+- 2026-08-02T10:23:54Z DF-14 extra retry done pending commit: root cause was horizontal spatial nav falling back off-row (`p1:deck` → `p1:banished`), which trapped the keyboard proof loop before opponent hand/defense rotation. Added row-local horizontal nav regression, constrained horizontal fallback, and revalidated full Chromium keyboard duel plus required unit/component/integration/static/build gates.

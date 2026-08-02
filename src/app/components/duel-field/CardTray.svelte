@@ -144,8 +144,8 @@
     trayElement?.querySelector<HTMLButtonElement>(".card-tray__card")?.focus();
   }
 
-  function inspect(card: PublicCard, trigger: HTMLButtonElement): void {
-    oninspect(card, trigger);
+  function inspect(card: PublicCard): void {
+    oninspect(card, openButton);
     void close(false);
   }
 </script>
@@ -206,8 +206,7 @@
               type="button"
               class="card-tray__card"
               aria-label={`Inspect ${cardName(card)}`}
-              onclick={(event) =>
-                inspect(card, event.currentTarget as HTMLButtonElement)}
+              onclick={() => inspect(card)}
             >
               {#if pageImages[index]}
                 <img

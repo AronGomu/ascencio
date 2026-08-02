@@ -4,7 +4,7 @@
 
 YGO Story Duel Simulator is a browser-first, offline Yu-Gi-Oh! duel client. The MVP launches directly into one human-versus-computer duel using bundled preset decks. Project Ignis `ygopro-core` is the sole authority for rules, legal actions, effects, and results.
 
-The private browser MVP baseline is complete. Accepted next architecture replaces the implemented Phaser field with a semantic Svelte DOM field; migration is pending under `docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`.
+The private browser MVP baseline is complete. Accepted next architecture replaces the implemented Phaser field with a semantic Svelte DOM field; migration under `docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md` (DF-00–DF-13 done; DF-14+). Product browser = Chromium PWA family. **No manual testing gates until DF-17 complete** — automated Chromium evidence only.
 
 ## Documentation routing
 

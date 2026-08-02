@@ -280,7 +280,7 @@ Components consume props/callbacks only. No component imports Worker client. Pre
 - Field is named region/group. Do not use `role="application"`.
 - Card/stack/zone actions use native `<button type="button">`.
 - One roving tab stop enters spatial field. Arrow keys follow precomputed navigation graph; Home/End behavior follows documented row/collection semantics.
-- Irregular shared EMZ may use APG layout-grid behavior only if manual SR testing confirms understandable announcements. Do not add `role="grid"` for styling.
+- Irregular shared EMZ may use APG layout-grid behavior only if Chromium a11y evidence shows named controls fail spatial context. Do not add `role="grid"` for styling. Default remains named group/buttons.
 - Enter/Space invokes same action as pointer click.
 - Action menu returns focus to trigger on close/submit failure; opening tray moves focus to tray heading/first item; closing returns focus to trigger.
 - All focus indicators remain visible over transformed/rotated cards.
@@ -367,5 +367,5 @@ Required layers:
 - component: roles/names/states, pointer/keyboard equivalence, focus return, explicit confirmation, image failure;
 - integration: real-WASM prompt/projection enrichment, privacy, generations/pending lifecycle;
 - browser: complete keyboard duel, touch/pointer parity, restart/disposal, reduced motion, narrow viewport, screenshots;
-- manual: NVDA/Firefox, VoiceOver/Safari, zoom 200%, high contrast/forced colors where supported;
+- a11y gate: automated Chromium keyboard/role/name/state/live-region/focus/target-size (PWA-capable Chromium family); zoom 200% and reduced motion in Chromium suite; **no manual testing until DF-17 complete**;
 - performance: recorded browser traces against fixtures, not universal claims.

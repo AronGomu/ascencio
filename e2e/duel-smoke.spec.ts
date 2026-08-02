@@ -631,9 +631,103 @@ test("mobile layout preserves controls and honors reduced motion", async ({
   expect(box?.width).toBeGreaterThanOrEqual(44);
 });
 
-test("a full preset duel can be completed using keyboard controls only", async ({
+test("spatial field navigation has one visible 44px keyboard entry without a trap", async ({
   page,
-}) => {
+}, testInfo) => {
+  await page.goto("./");
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+  const field = page.getByRole("region", { name: "Duel field" });
+  const board = field.getByRole("group", { name: "Standard duel board" });
+  const targets = board.locator("[data-field-target]");
+  await expect(targets).not.toHaveCount(0);
+  await expect(field.locator("[data-field-target][tabindex='0']")).toHaveCount(
+    1,
+  );
+  await expect(field.locator("[role=application], [role=grid]")).toHaveCount(0);
+
+  const entry = field.locator("[data-field-target][tabindex='0']");
+  await keyboardFocus(page, entry);
+  expect(
+    await entry.evaluate((element) => ({
+      focusVisible: element.matches(":focus-visible"),
+      outline: getComputedStyle(element).outlineStyle,
+    })),
+  ).toEqual({ focusVisible: true, outline: "solid" });
+
+  const boxes = await targets.evaluateAll((elements) =>
+    elements.map((element) => {
+      const box = element.getBoundingClientRect();
+      return {
+        target: (element as HTMLElement).dataset.fieldTarget,
+        width: box.width,
+        height: box.height,
+      };
+    }),
+  );
+  expect(boxes.every(({ width, height }) => width >= 44 && height >= 44)).toBe(
+    true,
+  );
+
+  expect(
+    await entry.evaluate(
+      (element) =>
+        element
+          .closest(".duel-field-card")
+          ?.getAttribute("data-card-zone-id") === "p0:hand",
+    ),
+  ).toBe(true);
+  await page.evaluate(() => {
+    document.documentElement.style.zoom = "200%";
+  });
+  await entry.scrollIntoViewIfNeeded();
+  expect(
+    await entry.evaluate((element) => ({
+      focusVisible: element.matches(":focus-visible"),
+      outline: getComputedStyle(element).outlineStyle,
+    })),
+  ).toEqual({ focusVisible: true, outline: "solid" });
+  await page.evaluate(() => {
+    document.documentElement.style.zoom = "";
+  });
+
+  const before = await entry.getAttribute("data-field-target");
+  for (const key of ["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp"]) {
+    await page.keyboard.press(key);
+    const active = field.locator(":focus");
+    await expect(active).toHaveAttribute("data-field-target", /.+/);
+    if ((await active.getAttribute("data-field-target")) !== before) break;
+  }
+  await page.keyboard.press("Tab");
+  await expect(board.locator(":focus")).toHaveCount(0);
+  await page.keyboard.press("Shift+Tab");
+  await expect(board.locator(":focus")).toHaveCount(1);
+
+  const evidencePath = testInfo.outputPath("df-14-keyboard-field.json");
+  await writeFile(
+    evidencePath,
+    JSON.stringify(
+      {
+        oneTabStop: true,
+        focusVisible: true,
+        zoom200FocusVisible: true,
+        overlappingHandFocusVisible: true,
+        boxes,
+      },
+      null,
+      2,
+    ),
+  );
+  await testInfo.attach("df-14-keyboard-field", {
+    path: evidencePath,
+    contentType: "application/json",
+  });
+});
+
+test("a full preset duel can be completed using keyboard controls only with one response per prompt", async ({
+  page,
+}, testInfo) => {
   await page.goto("./");
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
@@ -642,6 +736,10 @@ test("a full preset duel can be completed using keyboard controls only", async (
     page.locator("[data-prompt-kind] button:enabled").first(),
   ).toBeVisible({ timeout: 30_000 });
 
+  const field = page.getByRole("region", { name: "Duel field" });
+  const answeredPromptIds = new Set<string>();
+  let fieldResponses = 0;
+  let defenseFocusVisible = false;
   for (let step = 0; step < 200; step += 1) {
     const result = page.locator(".result-panel");
     if (await result.isVisible()) break;
@@ -653,13 +751,59 @@ test("a full preset duel can be completed using keyboard controls only", async (
       throw new Error("Prompt controls disappeared");
     const kind = await controls.getAttribute("data-prompt-kind");
     if (kind === null) throw new Error("Prompt kind is missing");
+    const prompt = [...(await readCapture(page)).events]
+      .reverse()
+      .find((event) => event.type === "prompt") as
+      (CapturedPromptEvent & Readonly<Record<string, unknown>>) | undefined;
+    if (prompt === undefined) throw new Error("Captured prompt is missing");
+    if (!defenseFocusVisible) {
+      const defenseTarget = field
+        .locator(
+          ".duel-field-card[data-orientation='sideways'] [data-field-target], .duel-field-card[data-orientation='sideways'][data-field-target]",
+        )
+        .first();
+      if (
+        (await defenseTarget.count()) > 0 &&
+        (await defenseTarget.isVisible())
+      )
+        defenseFocusVisible = await focusSidewaysCardWithKeyboard(page, field);
+    }
+    const responseCountBefore = (await readCapture(page)).commands.filter(
+      (command) =>
+        command.type === "respond" && command.promptId === prompt.prompt.id,
+    ).length;
 
-    await answerPromptWithKeyboard(page, controls, kind);
+    if ((await answerPromptWithKeyboard(page, controls, kind)) === "field")
+      fieldResponses += 1;
     await page.waitForFunction(
       (element) => !element.isConnected,
       controlsElement,
       { timeout: 30_000 },
     );
+    await expect
+      .poll(
+        async () =>
+          (await readCapture(page)).commands.filter(
+            (command) =>
+              command.type === "respond" &&
+              command.promptId === prompt.prompt.id,
+          ).length,
+      )
+      .toBe(responseCountBefore + 1);
+    expect(answeredPromptIds.has(prompt.prompt.id)).toBe(false);
+    answeredPromptIds.add(prompt.prompt.id);
+  }
+
+  expect(answeredPromptIds.size).toBeGreaterThan(0);
+  expect(fieldResponses).toBeGreaterThan(0);
+  expect(defenseFocusVisible).toBe(true);
+  for (const promptId of answeredPromptIds) {
+    expect(
+      (await readCapture(page)).commands.filter(
+        (command) =>
+          command.type === "respond" && command.promptId === promptId,
+      ),
+    ).toHaveLength(1);
   }
 
   const result = page.locator(".result-panel");
@@ -689,58 +833,158 @@ test("a full preset duel can be completed using keyboard controls only", async (
   });
   expect(diagnostics.trace.seed).toHaveLength(4);
   expect(diagnostics.trace.entries.length).toBeGreaterThan(0);
+
+  const evidencePath = testInfo.outputPath("df-14-full-keyboard-duel.json");
+  await writeFile(
+    evidencePath,
+    JSON.stringify(
+      {
+        completedWithoutPointer: true,
+        result: await result.getByRole("heading").textContent(),
+        responses: answeredPromptIds.size,
+        fieldResponses,
+        duplicateResponses: 0,
+        defenseFocusVisible,
+      },
+      null,
+      2,
+    ),
+  );
+  await testInfo.attach("df-14-full-keyboard-duel", {
+    path: evidencePath,
+    contentType: "application/json",
+  });
 });
 
 async function answerPromptWithKeyboard(
   page: Page,
   controls: Locator,
   kind: string,
-): Promise<void> {
+): Promise<"field" | "prompt"> {
+  const field = page.getByRole("region", { name: "Duel field" });
   switch (kind) {
     case "idleCommand":
-      await activatePreferredButton(page, controls, [
+      await activatePreferredButton(page, field, [
         "End turn",
         "Enter Battle Phase",
       ]);
-      return;
+      return "field";
     case "battleCommand":
-      await activatePreferredButton(page, controls, [
+      await activatePreferredButton(page, field, [
         "Enter Main Phase 2",
         "End Battle Phase",
       ]);
-      return;
+      return "field";
     case "yesNo":
     case "effectYesNo":
       await activatePreferredButton(page, controls, ["No"]);
-      return;
+      return "prompt";
     case "chain":
+      if (await hasEnabledButton(field, "Pass")) {
+        await activatePreferredButton(page, field, ["Pass"]);
+        return "field";
+      }
       await activatePreferredButton(page, controls, ["Pass"]);
-      return;
+      return "prompt";
     case "selectUnselectCard":
+      if (
+        (await hasEnabledButton(field, "Finish")) ||
+        (await hasEnabledButton(field, "Cancel"))
+      ) {
+        await activatePreferredButton(page, field, ["Finish", "Cancel"]);
+        return "field";
+      }
       await activatePreferredButton(page, controls, ["Finish", "Cancel"]);
-      return;
+      return "prompt";
     case "sortCard":
     case "sortChain":
+      if (
+        await field
+          .getByRole("button", { name: "Confirm order" })
+          .isVisible()
+          .catch(() => false)
+      ) {
+        await keyboardActivate(
+          page,
+          field.getByRole("button", { name: "Confirm order" }),
+        );
+        return "field";
+      }
       await keyboardActivate(
         page,
         controls.getByRole("button", { name: "Confirm order" }),
       );
-      return;
+      return "prompt";
     case "selectCounter":
+      if (
+        await field
+          .getByRole("button", { name: "Confirm allocation" })
+          .isVisible()
+          .catch(() => false)
+      ) {
+        await allocateCounters(page, field);
+        return "field";
+      }
       await allocateCounters(page, controls);
-      return;
+      return "prompt";
     case "selectCard":
     case "selectTribute":
     case "selectSum":
     case "selectPlace":
     case "selectDisabledField":
+      if (await chooseValidFieldSubset(page, field)) return "field";
+      await chooseValidCheckboxSubset(page, controls);
+      return "prompt";
     case "announceAttribute":
     case "announceRace":
       await chooseValidCheckboxSubset(page, controls);
-      return;
+      return "prompt";
     default:
       await activatePreferredButton(page, controls, []);
+      return "prompt";
   }
+}
+
+async function hasEnabledButton(
+  scope: Locator,
+  label: string,
+): Promise<boolean> {
+  const candidate = scope.getByRole("button", { name: label, exact: true });
+  return (
+    (await candidate.count()) > 0 &&
+    (await candidate.first().isVisible()) &&
+    (await candidate.first().isEnabled())
+  );
+}
+
+async function chooseValidFieldSubset(
+  page: Page,
+  field: Locator,
+): Promise<boolean> {
+  const confirm = field.getByRole("button", {
+    name: /Confirm (selection|placement)/,
+  });
+  if ((await confirm.count()) === 0) return false;
+  if (await confirm.isEnabled()) {
+    await keyboardActivate(page, confirm);
+    return true;
+  }
+  const choices = field.locator("[data-field-target][aria-pressed]");
+  const count = await choices.count();
+  if (count === 0 || count > 12) return false;
+  for (let mask = 1; mask < 1 << count; mask += 1) {
+    for (let index = 0; index < count; index += 1) {
+      const choice = choices.nth(index);
+      const desired = (mask & (1 << index)) !== 0;
+      if (((await choice.getAttribute("aria-pressed")) === "true") !== desired)
+        await keyboardActivate(page, choice);
+    }
+    if (await confirm.isEnabled()) {
+      await keyboardActivate(page, confirm);
+      return true;
+    }
+  }
+  return false;
 }
 
 async function activatePreferredButton(
@@ -827,7 +1071,133 @@ async function allocateCounters(page: Page, controls: Locator): Promise<void> {
   await keyboardActivate(page, confirm);
 }
 
+async function focusSidewaysCardWithKeyboard(
+  page: Page,
+  field: Locator,
+): Promise<boolean> {
+  await keyboardFocus(page, field.locator("[data-field-target][tabindex='0']"));
+  for (let row = 0; row < 12; row += 1) {
+    await page.keyboard.press("Home");
+    for (let column = 0; column < 24; column += 1) {
+      const active = field.locator(":focus");
+      if (
+        await active.evaluate(
+          (element) =>
+            element
+              .closest(".duel-field-card")
+              ?.getAttribute("data-orientation") === "sideways",
+        )
+      ) {
+        const focusStyle = await active.evaluate((element) => {
+          const card = element.closest<HTMLElement>(".duel-field-card");
+          const visual = element.matches(".duel-field-card")
+            ? element
+            : card?.querySelector<HTMLElement>(".duel-field-card__art");
+          return {
+            active: card?.classList.contains("is-navigation-active") ?? false,
+            outline: visual && getComputedStyle(visual).outlineStyle,
+          };
+        });
+        expect(focusStyle).toEqual({ active: true, outline: "solid" });
+        return true;
+      }
+      const target = await active.getAttribute("data-field-target");
+      await page.keyboard.press("ArrowRight");
+      if (
+        (await field.locator(":focus").getAttribute("data-field-target")) ===
+        target
+      )
+        break;
+    }
+    await page.keyboard.press("Home");
+    const target = await field
+      .locator(":focus")
+      .getAttribute("data-field-target");
+    await page.keyboard.press("ArrowUp");
+    if (
+      (await field.locator(":focus").getAttribute("data-field-target")) ===
+      target
+    )
+      break;
+  }
+  return false;
+}
+
 async function keyboardActivate(page: Page, target: Locator): Promise<void> {
+  await keyboardFocus(page, target);
+  const element = await target.elementHandle();
+  if (element === null) throw new Error("Keyboard target disappeared");
+  const isCheckbox = await element.evaluate(
+    (node) => node instanceof HTMLInputElement && node.type === "checkbox",
+  );
+  await page.keyboard.press(isCheckbox ? "Space" : "Enter");
+}
+
+async function keyboardFocus(page: Page, target: Locator): Promise<void> {
+  await target.waitFor({ state: "visible" });
+  const fieldTarget = await target.getAttribute("data-field-target");
+  if (fieldTarget !== null) {
+    await keyboardFocusFieldTarget(page, target, fieldTarget);
+    return;
+  }
+  await keyboardTabFocus(page, target);
+}
+
+async function keyboardFocusFieldTarget(
+  page: Page,
+  target: Locator,
+  fieldTarget: string,
+): Promise<void> {
+  const board = target.locator(
+    "xpath=ancestor::*[@aria-label='Standard duel board']",
+  );
+  await keyboardTabFocus(
+    page,
+    board.locator("[data-field-target][tabindex='0']"),
+  );
+  for (let move = 0; move < 24; move += 1) {
+    const active = board.locator(":focus");
+    if ((await active.getAttribute("data-field-target")) === fieldTarget)
+      return;
+    const before = await active.getAttribute("data-field-target");
+    await page.keyboard.press("ArrowDown");
+    if (
+      (await board.locator(":focus").getAttribute("data-field-target")) ===
+      before
+    )
+      break;
+  }
+  for (let row = 0; row < 16; row += 1) {
+    await page.keyboard.press("Home");
+    for (let column = 0; column < 32; column += 1) {
+      const active = board.locator(":focus");
+      if ((await active.getAttribute("data-field-target")) === fieldTarget)
+        return;
+      const before = await active.getAttribute("data-field-target");
+      await page.keyboard.press("ArrowRight");
+      if (
+        (await board.locator(":focus").getAttribute("data-field-target")) ===
+        before
+      )
+        break;
+    }
+    await page.keyboard.press("Home");
+    const before = await board
+      .locator(":focus")
+      .getAttribute("data-field-target");
+    await page.keyboard.press("ArrowUp");
+    if (
+      (await board.locator(":focus").getAttribute("data-field-target")) ===
+      before
+    )
+      break;
+  }
+  throw new Error(
+    `Unable to spatially focus keyboard target: ${await target.getAttribute("aria-label")}`,
+  );
+}
+
+async function keyboardTabFocus(page: Page, target: Locator): Promise<void> {
   await target.waitFor({ state: "visible" });
   const element = await target.elementHandle();
   if (element === null) throw new Error("Keyboard target disappeared");
@@ -841,10 +1211,6 @@ async function keyboardActivate(page: Page, target: Locator): Promise<void> {
       `Unable to focus keyboard target: ${await target.getAttribute("aria-label")}`,
     );
   }
-  const isCheckbox = await element.evaluate(
-    (node) => node instanceof HTMLInputElement && node.type === "checkbox",
-  );
-  await page.keyboard.press(isCheckbox ? "Space" : "Enter");
 }
 
 async function mountedImageLeaseState(page: Page): Promise<{

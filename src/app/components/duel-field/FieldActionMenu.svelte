@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import type { InteractionChoice } from "../../prompts/interaction-spec.ts";
 
   interface FieldMenuAnchor {
@@ -15,7 +16,37 @@
   export let oninspect: () => void;
   export let onclose: () => void;
 
+  let menuElement: HTMLDivElement;
   $: positionStyle = `left: ${anchor.left}px; top: ${anchor.bottom}px;`;
+
+  onMount(() => menuItems()[0]?.focus());
+
+  function menuItems(): HTMLButtonElement[] {
+    return [
+      ...menuElement.querySelectorAll<HTMLButtonElement>(
+        "[role=menuitem]:not(:disabled)",
+      ),
+    ];
+  }
+
+  function handleKeydown(event: KeyboardEvent): void {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      onclose();
+      return;
+    }
+    const items = menuItems();
+    const current = items.indexOf(document.activeElement as HTMLButtonElement);
+    let destination: number | null = null;
+    if (event.key === "ArrowDown") destination = (current + 1) % items.length;
+    else if (event.key === "ArrowUp")
+      destination = (current - 1 + items.length) % items.length;
+    else if (event.key === "Home") destination = 0;
+    else if (event.key === "End") destination = items.length - 1;
+    if (destination === null) return;
+    event.preventDefault();
+    items[destination]?.focus();
+  }
 </script>
 
 <div
@@ -24,9 +55,8 @@
   tabindex="-1"
   aria-label={`${label} actions`}
   style={positionStyle}
-  onkeydown={(event) => {
-    if (event.key === "Escape") onclose();
-  }}
+  bind:this={menuElement}
+  onkeydown={handleKeydown}
 >
   {#each choices as choice (choice.id)}
     <button

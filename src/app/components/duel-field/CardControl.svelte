@@ -13,6 +13,7 @@
   export let interactionKind: ActiveInteractionSpec["kind"] | null = null;
   export let actionable = false;
   export let selected = false;
+  export let active = false;
   export let disabled = false;
   export let onactivate: (element: HTMLButtonElement) => void = () => undefined;
   export let oninspect: () => void = () => undefined;
@@ -37,10 +38,10 @@
       : card.label;
   $: activationLabel =
     interactionKind === "cardAction"
-      ? `Open actions for ${accessibleLabel}`
+      ? `Legal action, Open actions for ${accessibleLabel}`
       : interactionKind === "counterAllocation"
-        ? `Allocate counter to ${accessibleLabel}`
-        : `Select ${accessibleLabel}`;
+        ? `Legal action, Allocate counter to ${accessibleLabel}`
+        : `Legal action, Select ${accessibleLabel}`;
 
   onDestroy(() => imageLease?.release());
 
@@ -94,15 +95,19 @@
   }
 </script>
 
+<!-- svelte-ignore a11y_no_noninteractive_tabindex (passive card participates in spatial roving focus) -->
 <article
   class:is-hidden={card.hidden}
   class:is-opponent={card.facing === "opponent"}
   class:is-sideways={card.orientation === "sideways"}
   class:is-actionable={actionable}
   class:is-selected={selected}
+  class:is-navigation-active={active}
   class="duel-field-card"
   aria-label={accessibleLabel}
   data-card-id={card.id}
+  data-field-target={actionable ? undefined : card.targetId}
+  tabindex={actionable ? undefined : active ? 0 : -1}
   data-facing={card.facing}
   data-hidden={card.hidden}
   data-orientation={card.orientation}
@@ -128,6 +133,8 @@
       class="duel-field-card__target"
       aria-label={activationLabel}
       aria-pressed={interactionKind === "cardSelection" ? selected : undefined}
+      data-field-target={card.targetId}
+      tabindex={active ? 0 : -1}
       {disabled}
       onpointerdown={pointerDown}
       onpointermove={pointerMove}
@@ -138,6 +145,7 @@
         type="button"
         class="duel-field-card__inspect"
         aria-label={`Inspect ${accessibleLabel}`}
+        tabindex="-1"
         onclick={oninspect}>Inspect</button
       >
     {/if}

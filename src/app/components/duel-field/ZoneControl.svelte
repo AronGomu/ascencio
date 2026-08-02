@@ -4,6 +4,7 @@
   export let zone: BoardZoneView;
   export let actionable = false;
   export let selected = false;
+  export let active = false;
   export let disabled = false;
   export let onactivate: () => void = () => undefined;
 
@@ -27,13 +28,16 @@
   class:duel-field-zone--shared={zone.player === "shared"}
   class:is-actionable={actionable}
   class:is-selected={selected}
+  class:is-navigation-active={active}
   class="duel-field-zone"
   role={actionable ? undefined : "group"}
-  aria-label={actionable ? `Select ${zone.label}` : zone.label}
+  aria-label={actionable ? `Legal placement, Select ${zone.label}` : zone.label}
   aria-pressed={actionable ? selected : undefined}
   data-zone-id={zone.id}
   data-player={zone.player}
   data-zone-kind={zone.kind}
+  data-field-target={zone.targetId}
+  tabindex={active ? 0 : -1}
   style={positionStyle}
   disabled={actionable ? disabled : undefined}
   onpointerdown={(event: PointerEvent) => {

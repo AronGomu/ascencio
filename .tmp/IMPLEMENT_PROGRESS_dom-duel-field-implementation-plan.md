@@ -3,7 +3,7 @@
 - Branch: `plan/dom-duel-field-implementation-plan`
 - Plan: `docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`
 - Started: 2026-08-01T09:03:37Z
-- Updated: 2026-08-02T10:23:54Z
+- Updated: 2026-08-02T08:27:26Z
 
 ## Status
 
@@ -23,10 +23,10 @@
 | DF-11 | Add HUD, inspector, stacks/trays, rich state | done | b30a1bc | Ship locally verified; validated and pushed |
 | DF-12 | Add bounded CSS/DOM/SVG feedback | done | cd728aa | Ship locally verified; validated and pushed |
 | DF-13 | Lease image URLs and remove image input gate | done | 2cae7d9 | Retry diagnosed stale count oracle; validated and pushed |
-| DF-14 | Add spatial keyboard and screen-reader behavior | done | — | Extra retry locally verified; horizontal row-local nav fixed defense focus-visible Chromium gate |
-| DF-15 | Recompose field across supported viewports | blocked_dep | — | Pending DF-14 retry outcome |
-| DF-16 | Prove semantic, visual, browser, resource, and performance parity | blocked_dep | — | Pending DF-14 retry outcome |
-| DF-17 | Remove Phaser renderer and obsolete bridge | blocked_dep | — | Pending DF-14 retry outcome |
+| DF-14 | Add spatial keyboard and screen-reader behavior | done | cd645c5 | Extra retry locally verified; row-local horizontal nav fixed defense focus-visible Chromium gate; pushed |
+| DF-15 | Recompose field across supported viewports | pending | — | DF-14 accepted; next serial ticket |
+| DF-16 | Prove semantic, visual, browser, resource, and performance parity | blocked_dep | — | Depends on DF-15 |
+| DF-17 | Remove Phaser renderer and obsolete bridge | blocked_dep | — | Depends on DF-16 |
 
 ## Assumptions
 
@@ -83,3 +83,4 @@
 - 2026-08-01T15:02:06Z DF-15/DF-16/DF-17 blocked_dep via strict serial DF-14 chain.
 - 2026-08-02T08:11:11Z DF-14 user-authorized extra retry beyond one-repair cap; launch worker for Chromium defense focus-visible gate.
 - 2026-08-02T10:23:54Z DF-14 extra retry done pending commit: root cause was horizontal spatial nav falling back off-row (`p1:deck` → `p1:banished`), which trapped the keyboard proof loop before opponent hand/defense rotation. Added row-local horizontal nav regression, constrained horizontal fallback, and revalidated full Chromium keyboard duel plus required unit/component/integration/static/build gates.
+- 2026-08-02T08:27:26Z DF-14 ledger SHA recorded after pushed commit cd645c5; DF-15 unblocked.

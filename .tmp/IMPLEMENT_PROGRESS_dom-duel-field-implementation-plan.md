@@ -3,7 +3,7 @@
 - Branch: `plan/dom-duel-field-implementation-plan`
 - Plan: `docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`
 - Started: 2026-08-01T09:03:37Z
-- Updated: 2026-08-02T09:01:04Z
+- Updated: 2026-08-02T09:12:18Z
 
 ## Status
 
@@ -25,8 +25,8 @@
 | DF-13 | Lease image URLs and remove image input gate                         | done    | 2cae7d9 | Retry diagnosed stale count oracle; validated and pushed                                                 |
 | DF-14 | Add spatial keyboard and screen-reader behavior                      | done    | cd645c5 | Extra retry locally verified; row-local horizontal nav fixed defense focus-visible Chromium gate; pushed |
 | DF-15 | Recompose field across supported viewports                           | done    | 299dd1f | Ship locally verified; responsive VP matrix/zoom and aggregate gates green; pushed                       |
-| DF-16 | Prove semantic, visual, browser, resource, and performance parity    | done    | pending | Ship locally verified; Chromium semantic/perf/resource gate and npm check green; commit pending          |
-| DF-17 | Remove Phaser renderer and obsolete bridge                           | pending | —       | Depends on DF-16 commit                                                                                  |
+| DF-16 | Prove semantic, visual, browser, resource, and performance parity | done | 9bee31e | Ship locally verified; Chromium semantic/perf/resource gate and npm check green; pushed |
+| DF-17 | Remove Phaser renderer and obsolete bridge | pending | — | DF-16 accepted; next serial ticket |
 
 ## Assumptions
 
@@ -89,3 +89,4 @@
 - 2026-08-02T08:42:27Z DF-15 ledger SHA recorded after pushed commit 299dd1f; DF-16 unblocked.
 - 2026-08-02T08:42:42Z DF-16 start; production ship auto-approved by implement-plan invocation; auto-approve production ship.
 - 2026-08-02T09:01:04Z DF-16 done pending commit: reconstructed red missing `tests/fixtures/duel-field-public-events.ts`; green added ST-01..ST-14 parsed public-state fixtures, store/component seam, Chromium pinned profile perf/resource gate, baseline docs, and machine-readable artifact `test-results/df-16-results.json` SHA-256 `7a21bc6b72e67ab1664e4982a274d6b10967be2069c4405354e08a469f3dbcff`; private artifact ZIP SHA-256 `40075b5e4b52e580210fb4412e64d2959e53e9d4645e64b80f5d265fdfc99c38`. Validation green: focused DF-16 component 15, focused Chromium DF-16, full Chromium 14, `npm run check` 16 browser tests including optional smokes, unit 380, component 53, integration 20, typecheck/lint/format/build/diff.
+- 2026-08-02T09:12:18Z DF-16 ledger SHA recorded after pushed commit 9bee31e; DF-17 unblocked.

@@ -214,7 +214,6 @@ async function copyThirdPartyLicenses(
   outputRoot: string,
 ): Promise<void> {
   const licenses = [
-    ["node_modules/phaser/LICENSE.md", "phaser-MIT.txt"],
     ["node_modules/svelte/LICENSE.md", "svelte-MIT.txt"],
     ["node_modules/idb/LICENSE", "idb-ISC.txt"],
     ["vendor/ocgcore-wasm/0.1.2/LICENSE", "ocgcore-wasm-MIT.txt"],

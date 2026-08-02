@@ -170,11 +170,11 @@ Score each item pass/fail; no aesthetic averaging can hide functional failure.
 - [ ] No long task caused by normal prompt target update.
 - [ ] Object URL/DOM listener counts return to baseline after restart.
 - [ ] Missing/slow images never block legal input.
-- [ ] Final build contains no Phaser chunk after removal ticket.
+- [x] Final build contains no removed renderer chunk after DF-17.
 
 ## Automated Chromium acceptance record template
 
-**During DF-00–DF-17:** product gate is Chromium PWA family + automated Playwright Chromium evidence only. **No manual testing** (playtest, SR, visual eyeball) until DF-17 feature complete. Post-DF-17 manual QA is optional and outside the migration serial path.
+**DF-17 acceptance:** product gate is Chromium PWA family + automated Playwright Chromium evidence only. Post-DF-17 manual QA is optional and outside the migration serial path.
 
 ```md
 ### Automated gate YYYY-MM-DD / commit <sha>

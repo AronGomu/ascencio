@@ -1,8 +1,8 @@
 # Protocol and Public State
 
-> Status: accepted target; migration pending
+> Status: implemented
 
-Current implementation preserves fixed-slot projection, reconciles populated overlays, exposes visibility-tagged Extra Deck collections, and projects counters plus actual chain provenance. Bounded semantic logging remains pending DF-05.
+Current implementation preserves fixed-slot projection, reconciles populated overlays, exposes visibility-tagged Extra Deck collections, projects counters plus actual chain provenance, and maintains a bounded semantic log.
 
 ## Protocol adapter
 

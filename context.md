@@ -4,7 +4,7 @@
 
 YGO Story Duel Simulator is a browser-first, offline Yu-Gi-Oh! duel client. The MVP launches directly into one human-versus-computer duel using bundled preset decks. Project Ignis `ygopro-core` is the sole authority for rules, legal actions, effects, and results.
 
-The private browser MVP baseline is complete. Accepted next architecture replaces the implemented Phaser field with a semantic Svelte DOM field; migration under `docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md` (DF-00–DF-13 done; DF-14+). Product browser = Chromium PWA family. **No manual testing gates until DF-17 complete** — automated Chromium evidence only.
+The private browser MVP baseline and semantic Svelte DOM duel-field migration are complete. Product browser = Chromium PWA family. Field acceptance uses automated Chromium evidence only.
 
 ## Documentation routing
 
@@ -22,7 +22,7 @@ The private browser MVP baseline is complete. Accepted next architecture replace
 | Language | TypeScript (strict), Node.js 24+ | Application, contracts, tooling, tests, and opponent policy |
 | Build | Vite | Dev server, Worker/WASM handling, and static build |
 | UI | Svelte | Application layout, semantic DOM field, prompts, logs, errors, and results |
-| Duel field | Svelte DOM + CSS/SVG target; Phaser migration baseline | Native controls, typed physical layout, highlights, and non-authoritative feedback |
+| Duel field | Svelte DOM + CSS/SVG | Native controls, typed physical layout, highlights, and non-authoritative feedback |
 | Rules | Vendored `ocgcore-wasm@0.1.2` / Project Ignis `ygopro-core` | Authoritative duel engine |
 | Isolation | Dedicated Web Worker | Sole owner of WASM, protocol, scripts, handles, and state projection |
 | Data | BabelCDB, CardScripts, Project Ignis strings | Versioned card/effect/protocol snapshot |
@@ -75,7 +75,7 @@ Prefer small, cohesive, independently navigable files.
 │   ├── main.ts
 │   ├── app/                           # Svelte shell, atomic components, stores
 │   ├── duel/                          # Atomic contracts, presentation types, presets
-│   ├── field/                         # Phaser baseline → typed DOM-field model migration
+│   ├── field/                         # Typed DOM-field layout/model mapping
 │   ├── worker/                        # Worker entry, engine, protocol, projection, opponent, assets
 │   ├── storage/                       # IndexedDB and Cache Storage adapters
 │   └── styles/

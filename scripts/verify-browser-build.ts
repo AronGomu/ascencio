@@ -18,6 +18,7 @@ const outputRoot = path.join(projectRoot, "dist");
 const runtimeRoot = path.join(outputRoot, "runtime");
 const assetRoot = path.join(runtimeRoot, "assets/current");
 await stat(path.join(outputRoot, "index.html"));
+await verifyNoRemovedPhaserResidue();
 
 const runtimeManifestBytes = await readFile(
   path.join(runtimeRoot, "current/manifest.json"),
@@ -189,9 +190,67 @@ console.log(
   ),
 );
 
+async function verifyNoRemovedPhaserResidue(): Promise<void> {
+  const packageJson = JSON.parse(
+    await readFile(path.join(projectRoot, "package.json"), "utf8"),
+  ) as {
+    readonly dependencies?: Readonly<Record<string, string>>;
+    readonly devDependencies?: Readonly<Record<string, string>>;
+  };
+  if (
+    packageJson.dependencies?.phaser !== undefined ||
+    packageJson.devDependencies?.phaser !== undefined
+  ) {
+    throw new Error("Browser build must not depend on Phaser");
+  }
+  const lock = JSON.parse(
+    await readFile(path.join(projectRoot, "package-lock.json"), "utf8"),
+  ) as {
+    readonly packages?: Readonly<Record<string, unknown>>;
+    readonly dependencies?: Readonly<Record<string, unknown>>;
+  };
+  if (
+    lock.packages?.["node_modules/phaser"] !== undefined ||
+    lock.dependencies?.phaser !== undefined
+  ) {
+    throw new Error("Browser build lockfile retains Phaser");
+  }
+  const forbiddenPackageMarkers = ["node_modules/phaser", "phaser-MIT"];
+  const forbiddenBundleMarkers = [
+    "phaser",
+    "Phaser",
+    "DuelScene",
+    "create-phaser-presentation-bridge",
+    "duel-field-canvas",
+    "data-loaded-face-images",
+    "data-card-back-ready",
+    "data-failed-textures",
+    "data-hidden-cards",
+    "data-visible-card-images",
+  ];
+  for (const file of await findFiles(outputRoot)) {
+    const relative = path.relative(outputRoot, file).replaceAll("\\", "/");
+    const packageMarker = forbiddenPackageMarkers.find((marker) =>
+      relative.includes(marker),
+    );
+    if (packageMarker !== undefined) {
+      throw new Error(`Browser build retains Phaser artifact: ${relative}`);
+    }
+    if (!/\.(?:html|js|json|txt|css)$/.test(relative)) continue;
+    const source = await readFile(file, "utf8");
+    const bundleMarker = forbiddenBundleMarkers.find((marker) =>
+      source.includes(marker),
+    );
+    if (bundleMarker !== undefined) {
+      throw new Error(
+        `Browser build ${relative} contains removed Phaser marker: ${bundleMarker}`,
+      );
+    }
+  }
+}
+
 async function verifyThirdPartyLicenses(): Promise<void> {
   const expectedPackages = {
-    phaser: { version: "4.2.1", license: "MIT" },
     svelte: { version: "5.56.4", license: "MIT" },
     idb: { version: "8.0.3", license: "ISC" },
   } as const;
@@ -228,7 +287,6 @@ async function verifyThirdPartyLicenses(): Promise<void> {
       throw new Error(`Runtime package identity is unreviewed: ${name}`);
   }
   const licenses = [
-    ["licenses/phaser-MIT.txt", "node_modules/phaser/LICENSE.md"],
     ["licenses/svelte-MIT.txt", "node_modules/svelte/LICENSE.md"],
     ["licenses/idb-ISC.txt", "node_modules/idb/LICENSE"],
     ["licenses/ocgcore-wasm-MIT.txt", "vendor/ocgcore-wasm/0.1.2/LICENSE"],
@@ -254,17 +312,8 @@ async function verifySizeBudgets(
       sizes.set(file, (await stat(file)).size);
     }),
   );
-  const presentationBytes = [...sizes]
-    .filter(([file]) =>
-      path.basename(file).startsWith("create-phaser-presentation-bridge-"),
-    )
-    .reduce((total, [, bytes]) => total + bytes, 0);
   const initialScriptBytes = [...sizes]
-    .filter(
-      ([file]) =>
-        file !== workerFile &&
-        !path.basename(file).startsWith("create-phaser-presentation-bridge-"),
-    )
+    .filter(([file]) => file !== workerFile)
     .reduce((total, [, bytes]) => total + bytes, 0);
   const runtimeBytes = await totalFileBytes(
     path.join(runtimeRoot, "assets/current"),
@@ -279,7 +328,6 @@ async function verifySizeBudgets(
     ["aggregate cold-start transfer", coldStartBytes, 10_000_000],
     ["initial JavaScript", initialScriptBytes, 300_000],
     ["Duel Worker JavaScript", sizes.get(workerFile) ?? 0, 200_000],
-    ["lazy Phaser presentation", presentationBytes, 1_600_000],
     ["active runtime closure", runtimeBytes, 6_500_000],
     ["active card images", imageBytes, 4_000_000],
   ] as const;

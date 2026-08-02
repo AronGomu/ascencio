@@ -1,10 +1,10 @@
 # Runtime Topology
 
-> Status: accepted target; migration pending
+> Status: implemented
 
-Current baseline keeps the public field in a Phaser scene while Svelte owns prompt controls and application lifecycle. DF-01 through DF-17 migrate projection, interaction, and presentation to the target ownership below; Worker engine authority remains unchanged.
+Svelte owns the public field, prompt controls, and application lifecycle. Worker engine authority remains unchanged.
 
-## Target main thread owns
+## Main thread owns
 
 - Svelte application lifecycle, semantic field controls, card details, logs, loading/errors, and results.
 - Latest immutable public duel snapshot, one current human prompt, and prompt-keyed interaction session.

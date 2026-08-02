@@ -81,8 +81,7 @@ export default defineConfig({
   },
   build: {
     target: "es2023",
-    // Phaser is isolated in an on-demand presentation chunk.
-    chunkSizeWarningLimit: 1_500,
+    chunkSizeWarningLimit: 500,
   },
   worker: {
     format: "es",

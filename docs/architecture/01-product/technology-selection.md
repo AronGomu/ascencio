@@ -7,7 +7,7 @@
 - **TypeScript (strict):** orchestration, contracts, protocol, projected state, tooling, and opponent policy.
 - **Vite:** development server, Worker/WASM assets, and static production build.
 - **Svelte:** application shell plus semantic DOM duel field, prompts, inspector, logs, errors, and results.
-- **CSS and SVG:** typed-coordinate field placement plus pointer-transparent, non-authoritative feedback. Phaser remains only as migration-era implementation until the DOM parity gate removes it.
+- **CSS and SVG:** typed-coordinate field placement plus pointer-transparent, non-authoritative feedback.
 - **Project Ignis `ygopro-core` through vendored `ocgcore-wasm@0.1.2`:** rules engine.
 - **Dedicated Web Worker:** synchronous WASM isolation and duel ownership.
 - **IndexedDB via `idb` and Cache Storage:** snapshot metadata/preferences/debug runs and image cache.
@@ -27,5 +27,5 @@ Node.js 24+ runs repository tooling and the existing asset pipeline.
 - **Rust wrapper:** duplicates bindings without solving browser presentation.
 - **JSPI asynchronous core:** deferred until browser support justifies it.
 - **Second SQLite WASM runtime:** unnecessary while build-time CDB conversion is sufficient.
-- **Interactive Phaser/canvas duel field:** superseded by [`../05-presentation/duel-field-rendering.md`](../05-presentation/duel-field-rendering.md); retain only until measured DOM parity permits removal.
+- **Interactive Phaser/canvas duel field:** superseded by [`../05-presentation/duel-field-rendering.md`](../05-presentation/duel-field-rendering.md) and removed after measured DOM parity.
 - **Synchronized canvas plus DOM controls:** rejected because it duplicates geometry, focus, z-order, and disposal.

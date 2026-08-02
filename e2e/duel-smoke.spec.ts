@@ -229,7 +229,6 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   await expect(page.getByText("8,000 LP").first()).toBeVisible();
   const field = page.getByRole("region", { name: "Duel field" });
   await expect(field).toBeVisible();
-  await expect(field.locator("canvas")).toHaveCount(0);
   await expect(field.locator("[data-zone-id]")).toHaveCount(34);
   await expect(
     field.getByRole("article", { name: /Hidden opponent hand card/ }).first(),
@@ -729,7 +728,6 @@ test("mobile layout preserves controls and honors reduced motion", async ({
   }));
   expect(dimensions.scrollWidth).toBeGreaterThan(dimensions.clientWidth);
   expect(dimensions.bodyWidth).toBeLessThanOrEqual(dimensions.viewportWidth);
-  await expect(fieldRegion.locator("canvas")).toHaveCount(0);
   const firstDecision = page.locator("[data-prompt-kind] button").first();
   const box = await firstDecision.boundingBox();
   expect(box?.height).toBeGreaterThanOrEqual(44);
@@ -759,7 +757,6 @@ test("responsive field compositions contain controls across supported viewports"
 
     const field = page.getByRole("region", { name: "Duel field" });
     await expect(field).toBeVisible();
-    await expect(field.locator("canvas")).toHaveCount(0);
     const fieldMetrics = await field.evaluate((element) => ({
       clientWidth: element.clientWidth,
       scrollWidth: element.scrollWidth,

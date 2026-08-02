@@ -1,8 +1,9 @@
 # ADR-001: Semantic DOM Duel-Field Rendering
 
-> Status: accepted; implementation in progress (DF-00–DF-13 done; DF-14 a11y gate = Chromium automated)
+> Status: accepted; implemented
 > Decided: 2026-07-31
-> Amended: 2026-03-22 — Chromium PWA product target; **no manual testing gates until DF-17 feature complete**; automated Chromium evidence only
+> Amended: 2026-03-22 — Chromium PWA product target; automated Chromium evidence only
+> Implemented: 2026-08-02 — DF-17 removed Phaser runtime/dependency/bridge
 > Owners: presentation architecture
 > Supersedes: [`../archive/svelte-phaser-boundary.md`](../archive/svelte-phaser-boundary.md)
 
@@ -20,7 +21,7 @@ Current production evidence:
 
 WHATWG defines `<canvas>` as resolution-dependent bitmap and requires equivalent fallback content. Interactive bitmap regions need equivalent focusable descendants plus explicit visual-focus sync. Native HTML controls already provide browser focus, activation, semantics, accessibility mappings.
 
-No benchmark proves DOM faster than canvas for this app. Decision follows workload/architecture fit. Representative profiling remains removal gate.
+No benchmark proves DOM universally faster than canvas. Decision follows workload/architecture fit. Representative profiling passed the removal gate for this app.
 
 ## Decision
 
@@ -31,7 +32,7 @@ No benchmark proves DOM faster than canvas for this app. Decision follows worklo
 5. Use SVG for non-interactive target/attack/chain lines. SVG stays `aria-hidden`, pointer-transparent.
 6. Keep Svelte responsible for focus, spatial navigation, action menus, trays, inspector, HUD, reduced motion, interaction-session state.
 7. Keep Worker/`ocgcore` authority unchanged. DOM state never creates legal choices; it renders current public snapshot plus validated prompt-derived interaction spec.
-8. Keep current Phaser path during migration only. Remove scene, bridge, dependency, bundle budget, canvas-specific tests after semantic, visual, performance, browser parity passes.
+8. Keep no runtime Phaser path after migration. Scene, bridge, dependency, bundle budget, and canvas-specific tests are removed after semantic, visual, performance, and browser parity passes.
 9. Permit future canvas only as optional non-interactive FX layer after profiling proves concrete need. Such layer requires separate ADR. It cannot own hit testing, focus, legal state, response submission.
 
 ## Required boundaries
@@ -53,7 +54,7 @@ Detailed design: [`../duel-field-architecture.html`](../duel-field-architecture.
 - Native focus/activation plus role/name Playwright locators replace canvas metadata/coordinate tests.
 - Menus/inspector anchor from transformed DOM geometry.
 - CSS recomposes desktop/narrow layouts without canvas-scale sync.
-- Phaser parse/init, scene lifecycle, texture-manager loading, renderer bridge disappear after migration.
+- Renderer parse/init, scene lifecycle, texture-manager loading, and bridge are absent from current production build.
 - Optional decoration can fail without disabling field interaction.
 
 ### Negative
@@ -68,7 +69,7 @@ Detailed design: [`../duel-field-architecture.html`](../duel-field-architecture.
 
 - `ocgcore` remains sole rules authority.
 - Public-state privacy, prompt IDs, choice IDs, Worker generations, diagnostics, assets, image verification boundaries remain.
-- Existing semantic `PromptControls` remains fallback/complement for non-spatial prompt families during migration.
+- Existing semantic `PromptControls` remains fallback/complement for non-spatial prompt families.
 
 ## Rejected alternatives
 
@@ -92,7 +93,7 @@ Rejected. Rule/engine slot semantics must remain testable TypeScript data, not s
 
 **Supported product browsers:** current Chromium-based desktops with installable PWA support (Chrome, Edge, and Chromium equivalents). Firefox, Safari/WebKit, NVDA, and VoiceOver are **out of product acceptance** for this field migration. Existing non-Chromium CI smoke may remain hygiene-only and never blocks DF-14–DF-17.
 
-Phaser removal requires:
+Renderer removal gate passed with:
 
 - sparse fixed-zone projection tests green for sequences `0`, `4`, `5`, `6`;
 - one shared physical identity per Extra Monster Zone;
@@ -100,9 +101,8 @@ Phaser removal requires:
 - no duplicate response submission; pending input locked until new prompt, result, recoverable error;
 - Chromium full E2E green on Playwright Chromium (PWA-capable engine family), including keyboard-only duel, role/name/state, focus, live regions, 200% zoom focus visibility, and privacy/image nonblocking paths;
 - DF-14 a11y gate satisfied by automated Chromium evidence in [`../architecture/05-presentation/duel-field-screen-reader-review.md`](../architecture/05-presentation/duel-field-screen-reader-review.md);
-- representative update-to-paint, long-task, animation, heap/object-URL, bundle measurements recorded on pinned Chromium profile;
-- layout/hierarchy checks encoded as automated semantic assertions where feasible; screenshot artifacts never require human visual approval during migration;
-- **no manual testing** (playtest, SR session, eyeball rubric, multi-browser human matrix) as a serial gate before DF-17 acceptance.
+- representative update-to-paint, long-task, animation, heap/object-URL, and bundle measurements recorded on pinned Chromium profile;
+- layout/hierarchy checks encoded as automated semantic assertions where feasible; screenshot artifacts never require human visual approval.
 
 Implementation plan: [`../DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`](../DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md).
 Validation references: [`../duel-field-validation-references.html`](../duel-field-validation-references.html).

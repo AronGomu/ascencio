@@ -8,9 +8,9 @@ Ship a static browser application. The production bundle must resolve Worker, WA
 
 ## Browser support
 
-**Product target:** current desktop **Chromium-based** browsers with **installable PWA** support (Chrome, Edge, Chromium equivalents). Field migration acceptance (DF-14–DF-17) and Phaser removal gates run on Playwright Chromium only.
+**Product target:** current desktop **Chromium-based** browsers with **installable PWA** support (Chrome, Edge, Chromium equivalents). Field acceptance and renderer-removal gates run on Playwright Chromium.
 
-Firefox and Safari/WebKit are **not** product acceptance targets for the DOM-field migration. Existing startup smokes may remain as optional CI hygiene and must not block field tickets.
+Firefox and Safari/WebKit are **not** product acceptance targets for the DOM field. Existing startup smokes may remain optional CI hygiene and must not block field tickets.
 
 Field delivery is desktop-first, then responsive composition. Mobile-first polish remains outside MVP, but a 375px viewport must keep semantic controls usable, targets at least 44px, and any wide-field scrolling contained.
 
@@ -20,4 +20,4 @@ Use the single-threaded synchronous WASM build inside a dedicated Worker. The MV
 
 ## Resilience checks
 
-Verify refresh during loading and after completion, missing-image fallback, Worker timeout/termination, keyboard-only prompt completion, hidden-information safety through main-thread message inspection, and DF-16 pinned Chromium performance/resource budgets before Phaser removal.
+Verify refresh during loading and after completion, missing-image fallback, Worker timeout/termination, keyboard-only prompt completion, hidden-information safety through main-thread message inspection, and pinned Chromium performance/resource budgets.

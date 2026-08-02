@@ -156,7 +156,6 @@ describe("DuelField", () => {
     render(DuelField, { board: value.board });
 
     const field = screen.getByRole("region", { name: "Duel field" });
-    expect(field.querySelector("canvas")).toBeNull();
     expect(field.querySelectorAll("[data-zone-id]")).toHaveLength(34);
     expect(value.artifactPath).toBe("test-results/df-16-ST-01.json");
     expect(document.body.textContent).not.toContain("Dark Magician");
@@ -168,7 +167,6 @@ describe("DuelField", () => {
     ({ id, board: value, assertions }) => {
       render(DuelField, { board: value });
       const field = screen.getByRole("region", { name: "Duel field" });
-      expect(field.querySelector("canvas")).toBeNull();
       expect(field.querySelectorAll("[data-zone-id]")).toHaveLength(34);
       expect(value.nav.size).toBeGreaterThan(0);
       expect(assertions.length).toBeGreaterThan(0);
@@ -231,7 +229,6 @@ describe("DuelField", () => {
     render(DuelField, { board: value });
 
     const field = screen.getByRole("region", { name: "Duel field" });
-    expect(field.querySelector("canvas")).toBeNull();
     expect(field.querySelectorAll("[data-zone-id]")).toHaveLength(34);
 
     for (const zone of value.zones) {

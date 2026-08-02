@@ -6,7 +6,7 @@ The MVP launches directly into a normal duel between one human player and a basi
 
 Development remains headless-first. Programmed real-WASM integration scenarios cover every supported game-action family before presentation changes. The architecture requires `ocgcore-wasm@0.1.2` to stay vendored and integrity-verified.
 
-> **Current status:** browser MVP is implemented through Checkpoint G. Pinned synchronous core runs in a dedicated Worker; Svelte provides exhaustive accessible controls; Phaser currently renders public field. Accepted target replaces interactive Phaser canvas with semantic Svelte DOM under [`docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`](docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md). Active runtime/image artifacts, diagnostics, restart, rollback, compatibility, and browser gates remain unchanged during migration.
+> **Current status:** browser MVP is implemented through Checkpoint G plus the DOM duel-field migration. Pinned synchronous core runs in a dedicated Worker; Svelte renders the semantic DOM field, accessible controls, HUD, inspector, logs, and feedback. Active runtime/image artifacts, diagnostics, restart, rollback, compatibility, and browser gates remain unchanged.
 
 ## Included asset pipeline
 
@@ -79,7 +79,7 @@ Both launchers accept the same options as `npm run assets:mvp` and can be launch
 | `npm run test:unit` | Run the focused Vitest unit suite. |
 | `npm run test:component` | Run Svelte component tests. |
 | `npm run test:integration` | Run real asset/WASM integration tests. |
-| `npm run test:e2e` | Build at a non-root base and run Chromium plus Firefox/WebKit smoke coverage. |
+| `npm run test:e2e` | Build at a non-root base and run the Playwright browser suite. |
 | `npm run check` | Run every headless, component, build, reproducibility, and browser gate. |
 | `npm run lint` | Run ESLint. |
 | `npm run format:check` | Verify Prettier formatting. |
@@ -260,7 +260,7 @@ Keep the deployment private. The generated active-image manifest records `redist
 
 - The MVP has two fixed preset decks, a deliberately basic legal-action opponent, and no story, progression, deck editor, multiplayer, or save/resume system.
 - Rare protocol families use reviewable programmed real-core fixtures. An unclassified/unsupported runtime message ends safely and offers a diagnostic rather than guessing a response.
-- Desktop Chrome, Firefox, and Safari are targeted. Chromium runs the complete automated flow; Firefox and WebKit currently run production startup smoke coverage. Mobile controls remain usable, but the Phaser field uses contained horizontal scrolling rather than a mobile redesign.
+- Current desktop Chromium-based browsers are the product target. The field remains desktop-first with responsive composition; mobile controls stay usable, but mobile-first polish remains outside MVP.
 - Missing or invalid card art uses deterministic placeholders. The current full archive has documented provider-missing IDs, while the production package contains only the preset decks' active subset.
 - Downloaded diagnostics include the production seed and are sensitive.
 - Public deployment remains blocked on BabelCDB/content/image redistribution review and AGPL/source-availability compliance.

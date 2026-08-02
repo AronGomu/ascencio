@@ -1,15 +1,15 @@
 # DOM Duel-Field Architecture
 
-> Status: accepted target; migration pending
-> Last updated: 2026-07-31
+> Status: implemented
+> Last updated: 2026-08-02
 > Renderer decision: [`../../ADR/001_ADR_semantic_dom_duel_field_rendering.md`](../../ADR/001_ADR_semantic_dom_duel_field_rendering.md)
 > Human-readable view: [`../../duel-field-architecture.html`](../../duel-field-architecture.html)
 
-## Scope and delivery order
+## Scope
 
-This document defines the Standard-format, desktop-first duel field after Phaser removal.
+This document defines the implemented Standard-format, desktop-first DOM duel field.
 
-Delivery gates:
+Completed delivery gates:
 
 1. correct public domain projection;
 2. correct physical Standard board model;
@@ -17,7 +17,7 @@ Delivery gates:
 4. semantic desktop field;
 5. rich state/HUD/feedback;
 6. responsive composition;
-7. Phaser removal after parity/profiling.
+7. renderer removal after parity/profiling.
 
 Speed Duel, Rush Duel, Tag Duel, alternate player counts, story backgrounds, character animation, particles, and shader effects are outside this architecture. They need domain work and separate decisions. `PlayerIndex = 0 | 1` cannot represent Tag Duel.
 
@@ -323,7 +323,7 @@ Resource rules:
 - hidden identities never cause image requests;
 - image decode/failure cannot change prompt/pending state.
 
-Removing Phaser texture entries alone is insufficient while upstream object URLs remain alive.
+Removing renderer code is insufficient unless upstream object URLs are also lifetime-bounded.
 
 ## Feedback
 
@@ -340,7 +340,7 @@ Feedback is bounded, cancellable, and non-authoritative:
 
 No permanent `requestAnimationFrame` loop. Board mounts zones plus visible cards/stacks; closed trays mount no card collection. Key by stable IDs.
 
-Before Phaser removal, record representative p50/p95 update→paint, long tasks >50 ms, dropped animation frames, heap/object-URL counts, transfer/parse size, and E2E action latency. Workloads/viewports live in validation reference catalog.
+Representative p50/p95 update→paint, long tasks >50 ms, dropped animation frames, heap/object-URL counts, transfer/parse size, and E2E action latency are recorded before renderer removal. Workloads/viewports live in validation reference catalog.
 
 ## Failure behavior
 
@@ -367,5 +367,5 @@ Required layers:
 - component: roles/names/states, pointer/keyboard equivalence, focus return, explicit confirmation, image failure;
 - integration: real-WASM prompt/projection enrichment, privacy, generations/pending lifecycle;
 - browser: complete keyboard duel, touch/pointer parity, restart/disposal, reduced motion, narrow viewport, screenshots;
-- a11y gate: automated Chromium keyboard/role/name/state/live-region/focus/target-size (PWA-capable Chromium family); zoom 200% and reduced motion in Chromium suite; **no manual testing until DF-17 complete**;
+- a11y gate: automated Chromium keyboard/role/name/state/live-region/focus/target-size (PWA-capable Chromium family); zoom 200% and reduced motion in Chromium suite;
 - performance: recorded browser traces against fixtures, not universal claims.

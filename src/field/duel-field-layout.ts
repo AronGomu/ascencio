@@ -55,8 +55,6 @@ export interface StandardFieldZoneLayout {
   readonly label: string;
 }
 
-export type FieldZoneLayout = StandardFieldZoneLayout;
-
 export function mapEngineFieldAddress(
   address: EngineFieldAddress,
 ): PhysicalZoneMappingResult {
@@ -111,21 +109,6 @@ export function fieldZoneId(
 
 export const STANDARD_DUEL_FIELD_LAYOUT: readonly StandardFieldZoneLayout[] =
   createStandardDuelFieldLayout();
-
-// Legacy Phaser adapter. DOM-facing layout remains normalized above.
-export function createDuelFieldLayout(): readonly FieldZoneLayout[] {
-  return Object.freeze(
-    STANDARD_DUEL_FIELD_LAYOUT.map((zone) =>
-      Object.freeze({
-        ...zone,
-        x: zone.x * DUEL_FIELD_WIDTH,
-        y: zone.y * DUEL_FIELD_HEIGHT,
-        width: zone.width * DUEL_FIELD_WIDTH,
-        height: zone.height * DUEL_FIELD_HEIGHT,
-      }),
-    ),
-  );
-}
 
 function createStandardDuelFieldLayout(): readonly StandardFieldZoneLayout[] {
   const zones: StandardFieldZoneLayout[] = [];

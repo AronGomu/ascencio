@@ -7,7 +7,7 @@ This directory contains current project documentation and historical context. Ro
 | Document                                                                                               | Purpose                                                              |
 | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
 | [`architecture/architecture.md`](architecture/architecture.md)                                         | Canonical architecture index, invariants, and task-based routing     |
-| [`DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`](DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md)                       | Current TDD ticket plan for semantic DOM-field migration             |
+| [`DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`](DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md)                       | Completed TDD ticket ledger for semantic DOM-field migration         |
 | [`ADR/001_ADR_semantic_dom_duel_field_rendering.md`](ADR/001_ADR_semantic_dom_duel_field_rendering.md) | Accepted renderer ADR                                                |
 | [`duel-field-architecture.html`](duel-field-architecture.html)                                         | Styled field architecture design                                     |
 | [`duel-field-validation-references.html`](duel-field-validation-references.html)                       | Styled rule/visual/a11y validation catalog                           |

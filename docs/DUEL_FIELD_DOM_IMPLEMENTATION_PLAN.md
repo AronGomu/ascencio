@@ -1,6 +1,6 @@
 # DOM Duel-Field Implementation Plan
 
-> Status: approved amended plan; DF-00–DF-16 done; DF-17 next
+> Status: implemented; DF-00–DF-17 done
 > Created: 2026-07-31
 > Amended: 2026-03-22 — Chromium PWA only; **no manual testing gates until DF-17 feature complete**
 > Scope: Standard-format desktop field → rich state → Chromium PWA a11y/responsive parity → Phaser removal
@@ -117,8 +117,8 @@ Execution checklist:
 - [x] DF-13
 - [x] DF-14
 - [x] DF-15
-- [ ] DF-16
-- [ ] DF-17
+- [x] DF-16
+- [x] DF-17
 
 A ticket starts only after prior checkpoint has passing focused tests, ticket-scoped aggregate automated gates, and recorded changed-file territory. Shared integration files are serial-only. Later tickets may amend earlier-owned files only when their own listed integration output requires it.
 
@@ -917,14 +917,14 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-- [ ] **Red:** change build/dependency tests to require no `phaser` package/import/chunk/canvas field metadata; run and observe failure.
-- [ ] Delete `DuelScene.ts`, `create-phaser-presentation-bridge.ts`, obsolete `duel-presentation-bridge.ts`, renderer-specific tests/styles, and migration-only imports.
-- [ ] Remove `phaser` dependency/lock entries plus Phaser license-copy logic in `scripts/lib/vite-runtime-assets.ts` atomically.
-- [ ] Remove canvas `data-*` E2E assertions; keep semantic and screenshot tests.
-- [ ] Update `scripts/verify-browser-build.ts` budgets/manifest guards to reject reintroduced Phaser package, import, chunk, license, or canvas field metadata.
-- [ ] Mark ADR implementation complete; update topology/technology/context/tree and archive any migration-only docs notes.
-- [ ] Run clean install/build reproducibility to catch stale lock/bundle artifacts.
-- [ ] **Green:** full headless/browser/build gates.
+- [x] **Red:** change build/dependency tests to require no `phaser` package/import/chunk/canvas field metadata; run and observe failure.
+- [x] Delete `DuelScene.ts`, `create-phaser-presentation-bridge.ts`, obsolete `duel-presentation-bridge.ts`, renderer-specific tests/styles, and migration-only imports.
+- [x] Remove `phaser` dependency/lock entries plus Phaser license-copy logic in `scripts/lib/vite-runtime-assets.ts` atomically.
+- [x] Remove canvas `data-*` E2E assertions; keep semantic and screenshot tests.
+- [x] Update `scripts/verify-browser-build.ts` budgets/manifest guards to reject reintroduced Phaser package, import, chunk, license, or canvas field metadata.
+- [x] Mark ADR implementation complete; update topology/technology/context/tree and archive any migration-only docs notes.
+- [x] Run clean install/build reproducibility to catch stale lock/bundle artifacts.
+- [x] **Green:** full headless/browser/build gates.
 
 ### Outputs
 
@@ -934,11 +934,11 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- [ ] `grep -R` finds no current source import/reference requiring Phaser; historical archive/audit plans may retain history labels.
-- [ ] `npm ls phaser` reports absent.
-- [ ] Production manifest/license output contains no Phaser chunk or license residue and stays within revised budget.
-- [ ] Fresh `npm ci`, `npm run check`, reproducible build, and Chromium full flow green. Firefox/WebKit not required for DF-17 product acceptance.
-- [ ] Clean checkout passes same gates.
+- [x] `grep -R` finds no current source import/reference requiring Phaser; historical archive/audit plans may retain history labels.
+- [x] `npm ls phaser` reports absent.
+- [x] Production manifest/license output contains no Phaser chunk or license residue and stays within revised budget.
+- [x] Fresh `npm ci`, `npm run check`, reproducible build, and Chromium full flow green. Firefox/WebKit not required for DF-17 product acceptance.
+- [x] Clean checkout passes same gates.
 
 ## Completion definition
 

@@ -2,7 +2,7 @@
 
 > Status: accepted and current
 > Last consolidated: 2026-07-31
-> Scope: browser-based offline duel MVP plus approved semantic DOM-field migration
+> Scope: browser-based offline duel MVP plus implemented semantic DOM duel field
 
 This is the canonical architecture entry point. Detailed decisions are intentionally atomic and grouped by concern so humans and AI can load only the context needed for a task.
 
@@ -42,7 +42,7 @@ This is the canonical architecture entry point. Detailed decisions are intention
 
 ## System at a glance
 
-Accepted target below. Current source retains migration-era Phaser field until DF-17 completes.
+Current implemented topology:
 
 ```text
 Browser main thread

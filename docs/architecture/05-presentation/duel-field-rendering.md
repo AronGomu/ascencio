@@ -1,6 +1,6 @@
 # Duel-Field Rendering Documentation
 
-> Status: accepted target; migration pending
+> Status: implemented
 > Canonical decision: [ADR-001: Semantic DOM Duel-Field Rendering](../../ADR/001_ADR_semantic_dom_duel_field_rendering.md)
 
 This page routes readers to authoritative duel-field rendering documents. It does not duplicate ADR rationale, decision, or consequences.
@@ -13,8 +13,6 @@ This page routes readers to authoritative duel-field rendering documents. It doe
 - [Implementation plan](../../DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md) defines DF-00 through DF-17 delivery and removal gates.
 - [Archived Svelte–Phaser boundary](../../archive/svelte-phaser-boundary.md) preserves historical MVP architecture only.
 
-## Migration status
+## Implementation status
 
-Semantic DOM rendering is accepted target architecture, not current completed runtime.
-Current production field remains Phaser-backed during migration.
-Phaser source, bridge, dependency, and canvas-specific tests remain until DF-17 completes after parity and validation gates.
+Semantic DOM rendering is the production runtime. Phaser scene, bridge, dependency, lazy chunk, license copy, and canvas metadata tests are removed after DF-16 parity and DF-17 removal gates.

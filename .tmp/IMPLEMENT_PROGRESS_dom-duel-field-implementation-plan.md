@@ -3,30 +3,30 @@
 - Branch: `plan/dom-duel-field-implementation-plan`
 - Plan: `docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`
 - Started: 2026-08-01T09:03:37Z
-- Updated: 2026-08-02T08:42:27Z
+- Updated: 2026-08-02T09:01:04Z
 
 ## Status
 
-| ID | Title | State | SHA | Note |
-| --- | --- | --- | --- | --- |
-| DF-00 | Record renderer decision and delivery contract | done | ecf4de1 | Docs-only ship locally verified; checkboxed and pushed |
-| DF-01 | Preserve sparse fixed-slot projection | done | 7d0b46e | Ship locally verified; validated and pushed |
-| DF-02 | Model physical Standard zones and shared EMZs | done | 8ab6a23 | Ship locally verified; validated and pushed |
-| DF-03 | Project overlay materials and useful Extra Deck state | done | aa5be77 | Ship locally verified; validated and pushed |
-| DF-04 | Project counters and actual chain provenance | done | 89af5ce | Ship locally verified; validated and pushed |
-| DF-05 | Separate bounded semantic log from feedback queue | done | 5bbdd22 | Ship locally verified; validated and pushed |
-| DF-06 | Derive renderer-neutral `BoardViewModel` | done | 382d036 | Ship locally verified; validated and pushed |
-| DF-07 | Derive discriminated `InteractionSpec` | done | b6a5b3d | Ship locally verified; validated and pushed |
-| DF-08 | Add `InteractionSession` reducer and authoritative pending lifecycle | done | b6e7706 | Ship locally verified; validated and pushed |
-| DF-09 | Render static semantic DOM field | done | de5655d | Nix Chromium captures plus full gates green; pushed |
-| DF-10 | Connect complete pointer field workflows | done | bc941f2 | Ship locally verified; validated and pushed |
-| DF-11 | Add HUD, inspector, stacks/trays, rich state | done | b30a1bc | Ship locally verified; validated and pushed |
-| DF-12 | Add bounded CSS/DOM/SVG feedback | done | cd728aa | Ship locally verified; validated and pushed |
-| DF-13 | Lease image URLs and remove image input gate | done | 2cae7d9 | Retry diagnosed stale count oracle; validated and pushed |
-| DF-14 | Add spatial keyboard and screen-reader behavior | done | cd645c5 | Extra retry locally verified; row-local horizontal nav fixed defense focus-visible Chromium gate; pushed |
-| DF-15 | Recompose field across supported viewports | done | 299dd1f | Ship locally verified; responsive VP matrix/zoom and aggregate gates green; pushed |
-| DF-16 | Prove semantic, visual, browser, resource, and performance parity | pending | — | DF-15 accepted; next serial ticket |
-| DF-17 | Remove Phaser renderer and obsolete bridge | blocked_dep | — | Depends on DF-16 |
+| ID    | Title                                                                | State   | SHA     | Note                                                                                                     |
+| ----- | -------------------------------------------------------------------- | ------- | ------- | -------------------------------------------------------------------------------------------------------- |
+| DF-00 | Record renderer decision and delivery contract                       | done    | ecf4de1 | Docs-only ship locally verified; checkboxed and pushed                                                   |
+| DF-01 | Preserve sparse fixed-slot projection                                | done    | 7d0b46e | Ship locally verified; validated and pushed                                                              |
+| DF-02 | Model physical Standard zones and shared EMZs                        | done    | 8ab6a23 | Ship locally verified; validated and pushed                                                              |
+| DF-03 | Project overlay materials and useful Extra Deck state                | done    | aa5be77 | Ship locally verified; validated and pushed                                                              |
+| DF-04 | Project counters and actual chain provenance                         | done    | 89af5ce | Ship locally verified; validated and pushed                                                              |
+| DF-05 | Separate bounded semantic log from feedback queue                    | done    | 5bbdd22 | Ship locally verified; validated and pushed                                                              |
+| DF-06 | Derive renderer-neutral `BoardViewModel`                             | done    | 382d036 | Ship locally verified; validated and pushed                                                              |
+| DF-07 | Derive discriminated `InteractionSpec`                               | done    | b6a5b3d | Ship locally verified; validated and pushed                                                              |
+| DF-08 | Add `InteractionSession` reducer and authoritative pending lifecycle | done    | b6e7706 | Ship locally verified; validated and pushed                                                              |
+| DF-09 | Render static semantic DOM field                                     | done    | de5655d | Nix Chromium captures plus full gates green; pushed                                                      |
+| DF-10 | Connect complete pointer field workflows                             | done    | bc941f2 | Ship locally verified; validated and pushed                                                              |
+| DF-11 | Add HUD, inspector, stacks/trays, rich state                         | done    | b30a1bc | Ship locally verified; validated and pushed                                                              |
+| DF-12 | Add bounded CSS/DOM/SVG feedback                                     | done    | cd728aa | Ship locally verified; validated and pushed                                                              |
+| DF-13 | Lease image URLs and remove image input gate                         | done    | 2cae7d9 | Retry diagnosed stale count oracle; validated and pushed                                                 |
+| DF-14 | Add spatial keyboard and screen-reader behavior                      | done    | cd645c5 | Extra retry locally verified; row-local horizontal nav fixed defense focus-visible Chromium gate; pushed |
+| DF-15 | Recompose field across supported viewports                           | done    | 299dd1f | Ship locally verified; responsive VP matrix/zoom and aggregate gates green; pushed                       |
+| DF-16 | Prove semantic, visual, browser, resource, and performance parity    | done    | pending | Ship locally verified; Chromium semantic/perf/resource gate and npm check green; commit pending          |
+| DF-17 | Remove Phaser renderer and obsolete bridge                           | pending | —       | Depends on DF-16 commit                                                                                  |
 
 ## Assumptions
 
@@ -87,3 +87,5 @@
 - 2026-08-02T08:27:40Z DF-15 start.
 - 2026-08-02T10:37:00Z DF-15 done pending commit: red Nix Chromium responsive E2E failed target-size assertion before implementation; green added contained field scroll/container queries, clamped action menu, compact tray/inspector/dock composition, VP-01/02/04/05/06/07 captures for ST-01/05/09, and nav fixture proving physical adjacency unchanged. Focused Nix Chromium responsive/spatial/full-keyboard 3/3 and full Chromium 13/13 green; unit 380, component 38, integration 20, legacy 21, typecheck/lint/format/build/diff green.
 - 2026-08-02T08:42:27Z DF-15 ledger SHA recorded after pushed commit 299dd1f; DF-16 unblocked.
+- 2026-08-02T08:42:42Z DF-16 start; production ship auto-approved by implement-plan invocation; auto-approve production ship.
+- 2026-08-02T09:01:04Z DF-16 done pending commit: reconstructed red missing `tests/fixtures/duel-field-public-events.ts`; green added ST-01..ST-14 parsed public-state fixtures, store/component seam, Chromium pinned profile perf/resource gate, baseline docs, and machine-readable artifact `test-results/df-16-results.json` SHA-256 `7a21bc6b72e67ab1664e4982a274d6b10967be2069c4405354e08a469f3dbcff`; private artifact ZIP SHA-256 `40075b5e4b52e580210fb4412e64d2959e53e9d4645e64b80f5d265fdfc99c38`. Validation green: focused DF-16 component 15, focused Chromium DF-16, full Chromium 14, `npm run check` 16 browser tests including optional smokes, unit 380, component 53, integration 20, typecheck/lint/format/build/diff.

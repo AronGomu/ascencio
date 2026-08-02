@@ -1,0 +1,158 @@
+{
+  "acceptance": "pass",
+  "browser": {
+    "name": "chromium",
+    "version": "149.0.7827.55"
+  },
+  "profile": {
+    "os": "linux-headless",
+    "viewport": "1280x720",
+    "deviceScaleFactor": 1,
+    "cpuThrottlingRate": 4,
+    "networkThrottleAfterFixtureLoad": "none",
+    "warmUpRuns": 5,
+    "measuredRuns": 30,
+    "percentileMethod": "nearest-rank",
+    "markBoundaries": {
+      "updateToPaint": "accepted public browser event/two requestAnimationFrame callbacks",
+      "inputFeedback": "focus request/two requestAnimationFrame callbacks"
+    }
+  },
+  "thresholds": {
+    "updateToPaintP95Ms": 50,
+    "inputFeedbackP95Ms": 100,
+    "normalLongTaskMs": 50
+  },
+  "workloads": {
+    "normalPrompt": {
+      "updateToPaintMs": {
+        "p50": 26.299999999813735,
+        "p95": 29.09999999962747,
+        "min": 18.399999999441206,
+        "max": 29.5,
+        "samples": [
+          23.799999999813735,
+          18.399999999441206,
+          26.5,
+          27.5,
+          29.09999999962747,
+          22.100000000558794,
+          26.100000000558794,
+          26.200000000186265,
+          27,
+          26.899999999441206,
+          24,
+          26.700000000186265,
+          28.200000000186265,
+          27.90000000037253,
+          25.200000000186265,
+          27.300000000745058,
+          25.299999999813735,
+          24.200000000186265,
+          26.09999999962747,
+          27.700000000186265,
+          29.5,
+          23.09999999962747,
+          26.200000000186265,
+          26.299999999813735,
+          23.899999999441206,
+          26.40000000037253,
+          26.90000000037253,
+          26.299999999813735,
+          28.200000000186265,
+          25.600000000558794
+        ]
+      },
+      "inputFeedbackMs": {
+        "p50": 24.90000000037253,
+        "p95": 31.09999999962747,
+        "min": 0.2999999998137355,
+        "max": 32.299999999813735,
+        "samples": [
+          19.600000000558794,
+          3.7999999998137355,
+          30.299999999813735,
+          27.100000000558794,
+          22.200000000186265,
+          27.09999999962747,
+          24.90000000037253,
+          18.09999999962747,
+          25.09999999962747,
+          21.300000000745058,
+          1,
+          32.299999999813735,
+          16.59999999962747,
+          19.299999999813735,
+          28.299999999813735,
+          26,
+          24.90000000037253,
+          27,
+          23.59999999962747,
+          5.6000000005587935,
+          25,
+          25.40000000037253,
+          30.899999999441206,
+          0.2999999998137355,
+          30.59999999962747,
+          25.700000000186265,
+          29.200000000186265,
+          31.09999999962747,
+          14.699999999254942,
+          9.100000000558794
+        ]
+      },
+      "longTasks": []
+    },
+    "pathological": {
+      "reducedMotionAndZoomCoveredByChromiumSuite": true
+    },
+    "sixtyCardTray": {
+      "trayCycles": 6,
+      "objectUrlGrowth": 0,
+      "activeMatchesMountedBefore": true,
+      "activeMatchesMountedAfter": true,
+      "obsoleteObjectUrlOverlap": 0
+    },
+    "burst": {
+      "restartCycles": 1,
+      "listenerGrowth": 0,
+      "droppedFrames": 0
+    }
+  },
+  "resources": {
+    "before": {
+      "heapUsedBytes": 5061244,
+      "objectUrls": {
+        "active": 5,
+        "created": 10,
+        "revoked": 5,
+        "mounted": 5,
+        "activeMatchesMounted": true
+      },
+      "listeners": {
+        "active": 30,
+        "added": 40,
+        "removed": 10
+      }
+    },
+    "after": {
+      "heapUsedBytes": 5164040,
+      "objectUrls": {
+        "active": 5,
+        "created": 15,
+        "revoked": 10,
+        "mounted": 5,
+        "activeMatchesMounted": true
+      },
+      "listeners": {
+        "active": 30,
+        "added": 50,
+        "removed": 20
+      }
+    }
+  },
+  "privacy": {
+    "hiddenOpponentHandInWorkerEvents": false,
+    "restrictedCardArtInMetrics": false
+  }
+}

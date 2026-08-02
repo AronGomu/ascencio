@@ -31,6 +31,10 @@ import {
   type InteractionSessionAction,
 } from "../../src/app/prompts/interaction-session.ts";
 import {
+  createInitialDuelViewState,
+  reduceDuelViewState,
+} from "../../src/app/stores/duel-store.ts";
+import {
   mapPromptToInteractionSpec,
   type ActiveInteractionSpec,
 } from "../../src/app/prompts/interaction-spec.ts";
@@ -38,6 +42,10 @@ import {
   BOARD_CARD_TEXTS,
   BOARD_VIEW_MODEL_FIXTURES,
 } from "../fixtures/board-view-model.ts";
+import {
+  DUEL_FIELD_PUBLIC_STATE_MATRIX,
+  DUEL_FIELD_PUBLIC_STATES,
+} from "../fixtures/duel-field-public-events.ts";
 import {
   PUBLIC_STATE_CARD_TEXTS,
   SIXTY_PUBLIC_CARDS,
@@ -138,6 +146,86 @@ function renderInteractive(value: PlayerPrompt) {
 }
 
 describe("DuelField", () => {
+  it("DF-16 validates ST-01 public fixture through parse/store/component seam", () => {
+    const value = DUEL_FIELD_PUBLIC_STATES["ST-01"];
+    const view = reduceDuelViewState(createInitialDuelViewState(CONTEXT), {
+      context: CONTEXT,
+      event: value.event,
+    });
+    expect(view.snapshot).toBe(value.event.state);
+    render(DuelField, { board: value.board });
+
+    const field = screen.getByRole("region", { name: "Duel field" });
+    expect(field.querySelector("canvas")).toBeNull();
+    expect(field.querySelectorAll("[data-zone-id]")).toHaveLength(34);
+    expect(value.artifactPath).toBe("test-results/df-16-ST-01.json");
+    expect(document.body.textContent).not.toContain("Dark Magician");
+    expect(document.body.innerHTML).not.toContain("46986414");
+  });
+
+  it.each(DUEL_FIELD_PUBLIC_STATE_MATRIX)(
+    "DF-16 validates %s semantic/layout acceptance assertions",
+    ({ id, board: value, assertions }) => {
+      render(DuelField, { board: value });
+      const field = screen.getByRole("region", { name: "Duel field" });
+      expect(field.querySelector("canvas")).toBeNull();
+      expect(field.querySelectorAll("[data-zone-id]")).toHaveLength(34);
+      expect(value.nav.size).toBeGreaterThan(0);
+      expect(assertions.length).toBeGreaterThan(0);
+
+      switch (id) {
+        case "ST-01":
+        case "ST-12":
+          expect(
+            within(field).getAllByRole("article", {
+              name: "Hidden opponent hand card",
+            }).length,
+          ).toBeGreaterThan(0);
+          expect(document.body.textContent).not.toContain("Dark Magician");
+          break;
+        case "ST-03":
+          expect(
+            within(field).getAllByRole("group", {
+              name: /^Shared Extra Monster Zone/,
+            }),
+          ).toHaveLength(2);
+          break;
+        case "ST-04":
+        case "ST-11":
+          expect(
+            within(field)
+              .getByRole("article", { name: /face-up defense/ })
+              .getAttribute("data-orientation"),
+          ).toBe("sideways");
+          break;
+        case "ST-07":
+        case "ST-13":
+          expect(
+            value.cards.some((card) =>
+              card.counters.some(
+                (counter) =>
+                  counter.name === "Spell Counter" && counter.count === 3,
+              ),
+            ),
+          ).toBe(true);
+          expect(document.body.textContent).not.toContain("Dark Magician");
+          break;
+        case "ST-08":
+        case "ST-09":
+        case "ST-14":
+          expect(
+            within(field).getAllByRole("group", { name: /Your Extra Deck/ })
+              .length,
+          ).toBeGreaterThan(0);
+          break;
+        default:
+          expect(
+            within(field).getByRole("group", { name: "Standard duel board" }),
+          ).toBeTruthy();
+      }
+    },
+  );
+
   it("renders one named semantic board with 34 stable physical zones and two shared EMZs", () => {
     const value = board("ST-01");
     render(DuelField, { board: value });

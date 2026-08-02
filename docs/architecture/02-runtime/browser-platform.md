@@ -20,4 +20,4 @@ Use the single-threaded synchronous WASM build inside a dedicated Worker. The MV
 
 ## Resilience checks
 
-Verify refresh during loading and after completion, missing-image fallback, Worker timeout/termination, keyboard-only prompt completion, and hidden-information safety through main-thread message inspection.
+Verify refresh during loading and after completion, missing-image fallback, Worker timeout/termination, keyboard-only prompt completion, hidden-information safety through main-thread message inspection, and DF-16 pinned Chromium performance/resource budgets before Phaser removal.

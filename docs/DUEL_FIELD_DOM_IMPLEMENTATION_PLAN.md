@@ -1,6 +1,6 @@
 # DOM Duel-Field Implementation Plan
 
-> Status: approved amended plan; DF-00–DF-14 done; DF-15 next
+> Status: approved amended plan; DF-00–DF-16 done; DF-17 next
 > Created: 2026-07-31
 > Amended: 2026-03-22 — Chromium PWA only; **no manual testing gates until DF-17 feature complete**
 > Scope: Standard-format desktop field → rich state → Chromium PWA a11y/responsive parity → Phaser removal
@@ -351,10 +351,10 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 - [x] **Red:** replace 44-zone expectation with 34 physical controls: 16 per player including hand lane, plus two shared EMZs.
 - [x] Add table-driven engine-address mapping tests:
-   - p0 MZONE 0/4 → own main slots;
-   - p0 s5/s6 → shared left/right;
-   - p1 s5/s6 → shared right/left;
-   - p0 s5 equals p1 s6 physical ID; p0 s6 equals p1 s5.
+  - p0 MZONE 0/4 → own main slots;
+  - p0 s5/s6 → shared left/right;
+  - p1 s5/s6 → shared right/left;
+  - p0 s5 equals p1 s6 physical ID; p0 s6 equals p1 s5.
 - [x] Add SZONE tests: `0..4` only; Pendulum reuses `0/4`; Field Zone separate.
 - [x] Add invalid sequence tests; unsupported address returns typed diagnostic/result, never fallback to sequence 0.
 - [x] **Green:** define `PhysicalZoneId`, `EngineFieldAddress`, Standard layout table, pure address mapper.
@@ -878,15 +878,15 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### TDD-style steps
 
-- [ ] **Red:** add first deterministic `ST-01` browser fixture/semantic test and artifact-path assertion; run it to fail because field fixture/capture harness is absent.
-- [ ] **Green:** implement privacy-safe fixture seam through `parseDuelWorkerEvent` plus store/component harness; never inject raw core values into UI. Add ST-01 through ST-14 with **automated** semantic assertions; screenshots optional non-blocking artifacts only.
-- [ ] Run Chromium full flow including privacy and missing/slow-image paths. Firefox/WebKit smokes are optional CI hygiene only; not DF-16 product acceptance.
-- [ ] Mark accepted public snapshot/event at store ingress and next paint after two `requestAnimationFrame` callbacks. Record p50/p95 by nearest-rank calculation for update→paint and action latency; record long tasks >50 ms plus dropped frames for normal/pathological/60-card tray/burst workloads under pinned profile.
-- [ ] Record heap/object-URL/listener counts before/after repeated restart and tray cycles.
-- [ ] Encode RULE/CORE/wireframe/hierarchy checks as automated semantic/layout assertions (or skip if not automatable until post-DF-17). **No human visual rubric sign-off.**
-- [ ] Run reduced motion, 200% zoom, keyboard-only, touch emulation, missing-image, recoverable error, stale generation via Playwright Chromium.
-- [ ] Fix only test-harness omissions in this ticket. Product failures create focused defect tickets; DF-17 remains blocked.
-- [ ] Store private screenshots/traces as CI artifacts; retain machine-readable metrics without restricted card art. No manual review queue.
+- [x] **Red:** add first deterministic `ST-01` browser fixture/semantic test and artifact-path assertion; run it to fail because field fixture/capture harness is absent.
+- [x] **Green:** implement privacy-safe fixture seam through `parseDuelWorkerEvent` plus store/component harness; never inject raw core values into UI. Add ST-01 through ST-14 with **automated** semantic assertions; screenshots optional non-blocking artifacts only.
+- [x] Run Chromium full flow including privacy and missing/slow-image paths. Firefox/WebKit smokes are optional CI hygiene only; not DF-16 product acceptance.
+- [x] Mark accepted public snapshot/event at store ingress and next paint after two `requestAnimationFrame` callbacks. Record p50/p95 by nearest-rank calculation for update→paint and action latency; record long tasks >50 ms plus dropped frames for normal/pathological/60-card tray/burst workloads under pinned profile.
+- [x] Record heap/object-URL/listener counts before/after repeated restart and tray cycles.
+- [x] Encode RULE/CORE/wireframe/hierarchy checks as automated semantic/layout assertions (or skip if not automatable until post-DF-17). **No human visual rubric sign-off.**
+- [x] Run reduced motion, 200% zoom, keyboard-only, touch emulation, missing-image, recoverable error, stale generation via Playwright Chromium.
+- [x] Fix only test-harness omissions in this ticket. Product failures create focused defect tickets; DF-17 remains blocked.
+- [x] Store private screenshots/traces as CI artifacts; retain machine-readable metrics without restricted card art. No manual review queue.
 
 ### Outputs
 
@@ -896,12 +896,12 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 
 ### Validation criteria
 
-- [ ] Newly adopted migration acceptance threshold: update→paint p95 <50 ms; input feedback <100 ms under the pinned profile and measurement method above. These thresholds are not claims about the existing Phaser baseline. Any miss creates a focused defect ticket and blocks DF-17; thresholds never change silently.
-- [ ] No normal prompt update creates >50 ms long task.
-- [ ] No object URL/listener growth after repeated restart.
-- [ ] Automated privacy/a11y/perf assertions green; no open blocker tickets.
-- [ ] `npm run check` green.
-- [ ] Removal gate = automated evidence only (no human product acceptance step before DF-17).
+- [x] Newly adopted migration acceptance threshold: update→paint p95 <50 ms; input feedback <100 ms under the pinned profile and measurement method above. These thresholds are not claims about the existing Phaser baseline. Any miss creates a focused defect ticket and blocks DF-17; thresholds never change silently.
+- [x] No normal prompt update creates >50 ms long task.
+- [x] No object URL/listener growth after repeated restart.
+- [x] Automated privacy/a11y/perf assertions green; no open blocker tickets.
+- [x] `npm run check` green.
+- [x] Removal gate = automated evidence only (no human product acceptance step before DF-17).
 
 ---
 

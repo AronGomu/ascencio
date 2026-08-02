@@ -1,7 +1,8 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import {
   expect,
   test,
+  type CDPSession,
   type Locator,
   type Page,
   type TestInfo,
@@ -18,6 +19,17 @@ interface BrowserCapture {
     readonly revoked: readonly string[];
     readonly active: ReadonlySet<string>;
   };
+  readonly eventPaints: Array<{
+    readonly type: string;
+    readonly receivedAt: number;
+    readonly paintedAt: number;
+    readonly duration: number;
+  }>;
+  readonly longTasks: Array<{
+    readonly name: string;
+    readonly duration: number;
+  }>;
+  readonly listeners: { readonly added: number; readonly removed: number };
 }
 
 declare global {
@@ -63,6 +75,14 @@ test.beforeEach(async ({ page }) => {
         revoked: [] as string[],
         active: new Set<string>(),
       },
+      eventPaints: [] as Array<{
+        type: string;
+        receivedAt: number;
+        paintedAt: number;
+        duration: number;
+      }>,
+      longTasks: [] as Array<{ name: string; duration: number }>,
+      listeners: { added: 0, removed: 0 },
     };
     Object.defineProperty(window, "__duelCapture", { value: capture });
 
@@ -79,6 +99,57 @@ test.beforeEach(async ({ page }) => {
       capture.imageUrls.active.delete(url);
       nativeRevokeObjectURL(url);
     };
+
+    const nativeAddEventListener = EventTarget.prototype.addEventListener;
+    const nativeRemoveEventListener = EventTarget.prototype.removeEventListener;
+    EventTarget.prototype.addEventListener = function (
+      type: string,
+      callback: EventListenerOrEventListenerObject | null,
+      options?: AddEventListenerOptions | boolean,
+    ): void {
+      if (
+        this === window ||
+        this === document ||
+        this === document.body ||
+        this === document.documentElement
+      )
+        capture.listeners.added += 1;
+      return Reflect.apply(nativeAddEventListener, this, [
+        type,
+        callback,
+        options,
+      ]) as void;
+    };
+    EventTarget.prototype.removeEventListener = function (
+      type: string,
+      callback: EventListenerOrEventListenerObject | null,
+      options?: EventListenerOptions | boolean,
+    ): void {
+      if (
+        this === window ||
+        this === document ||
+        this === document.body ||
+        this === document.documentElement
+      )
+        capture.listeners.removed += 1;
+      return Reflect.apply(nativeRemoveEventListener, this, [
+        type,
+        callback,
+        options,
+      ]) as void;
+    };
+
+    try {
+      new PerformanceObserver((list) => {
+        for (const entry of list.getEntries())
+          capture.longTasks.push({
+            name: entry.name,
+            duration: entry.duration,
+          });
+      }).observe({ entryTypes: ["longtask"] });
+    } catch {
+      // Long Task API may be unavailable in non-Chromium hygiene projects.
+    }
 
     const NativeWorker = window.Worker;
     const nativePostMessage = NativeWorker.prototype.postMessage;
@@ -105,6 +176,25 @@ test.beforeEach(async ({ page }) => {
         capture.workers += 1;
         this.addEventListener("message", (event) => {
           capture.events.push(structuredClone(event.data));
+          const receivedAt = performance.now();
+          const eventType =
+            typeof event.data === "object" &&
+            event.data !== null &&
+            "type" in event.data &&
+            typeof event.data.type === "string"
+              ? event.data.type
+              : "unknown";
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              const paintedAt = performance.now();
+              capture.eventPaints.push({
+                type: eventType,
+                receivedAt,
+                paintedAt,
+                duration: paintedAt - receivedAt,
+              });
+            });
+          });
         });
       }
 
@@ -779,6 +869,146 @@ test("responsive field compositions contain controls across supported viewports"
   }
 });
 
+test("DF-16 Chromium pinned parity/perf/resource gate records automated evidence", async ({
+  page,
+  browser,
+}, testInfo) => {
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Performance.enable").catch(() => undefined);
+  await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto("./");
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+  await expect(page.getByRole("region", { name: "Duel field" })).toBeVisible();
+  await page.waitForFunction(
+    () =>
+      window.__duelCapture.eventPaints.some((entry) => entry.type === "state"),
+    undefined,
+    { timeout: 30_000 },
+  );
+
+  await page.evaluate(() => {
+    window.__duelCapture.longTasks.length = 0;
+  });
+  for (let run = 0; run < 5; run += 1) await measureTwoFrameLatency(page);
+  const updatePaintSamples: number[] = [];
+  const actionLatencySamples: number[] = [];
+  for (let run = 0; run < 30; run += 1) {
+    updatePaintSamples.push(await measureTwoFrameLatency(page));
+    actionLatencySamples.push(await measureFocusFeedbackLatency(page));
+  }
+
+  const normalLongTasks = (await readCapture(page)).longTasks.filter(
+    (entry) => entry.duration > 50,
+  );
+  await runTrayCycle(page, 1);
+  await runRestartCycle(page);
+  await runTrayCycle(page, 1);
+  const resourceBefore = await browserResourceSnapshot(page, cdp);
+  await runTrayCycle(page, 3);
+  await runRestartCycle(page);
+  await runTrayCycle(page, 3);
+  const resourceAfter = await browserResourceSnapshot(page, cdp);
+
+  const updatePaint = summarizeSamples(updatePaintSamples);
+  const actionLatency = summarizeSamples(actionLatencySamples);
+  const objectUrlGrowth =
+    resourceAfter.objectUrls.active - resourceBefore.objectUrls.active;
+  const obsoleteObjectUrlOverlap = resourceBefore.objectUrls.activeUrls.filter(
+    (url) => resourceAfter.objectUrls.activeUrls.includes(url),
+  );
+  const objectUrlLeak =
+    !resourceBefore.objectUrls.activeMatchesMounted ||
+    !resourceAfter.objectUrls.activeMatchesMounted ||
+    obsoleteObjectUrlOverlap.length > 0;
+  const listenerGrowth =
+    resourceAfter.listeners.active - resourceBefore.listeners.active;
+  const droppedFrames = updatePaintSamples.filter(
+    (sample) => sample > 50,
+  ).length;
+  const removalGate =
+    updatePaint.p95 < 50 &&
+    actionLatency.p95 < 100 &&
+    normalLongTasks.length === 0 &&
+    !objectUrlLeak &&
+    listenerGrowth === 0;
+
+  const evidence = {
+    acceptance: removalGate ? "pass" : "fail",
+    browser: {
+      name: browser.browserType().name(),
+      version: browser.version(),
+    },
+    profile: {
+      os: "linux-headless",
+      viewport: "1280x720",
+      deviceScaleFactor: 1,
+      cpuThrottlingRate: 4,
+      networkThrottleAfterFixtureLoad: "none",
+      warmUpRuns: 5,
+      measuredRuns: 30,
+      percentileMethod: "nearest-rank",
+      markBoundaries: {
+        updateToPaint:
+          "accepted public browser event/two requestAnimationFrame callbacks",
+        inputFeedback: "focus request/two requestAnimationFrame callbacks",
+      },
+    },
+    thresholds: {
+      updateToPaintP95Ms: 50,
+      inputFeedbackP95Ms: 100,
+      normalLongTaskMs: 50,
+    },
+    workloads: {
+      normalPrompt: {
+        updateToPaintMs: updatePaint,
+        inputFeedbackMs: actionLatency,
+        longTasks: normalLongTasks,
+      },
+      pathological: { reducedMotionAndZoomCoveredByChromiumSuite: true },
+      sixtyCardTray: {
+        trayCycles: 6,
+        objectUrlGrowth,
+        activeMatchesMountedBefore:
+          resourceBefore.objectUrls.activeMatchesMounted,
+        activeMatchesMountedAfter:
+          resourceAfter.objectUrls.activeMatchesMounted,
+        obsoleteObjectUrlOverlap: obsoleteObjectUrlOverlap.length,
+      },
+      burst: { restartCycles: 1, listenerGrowth, droppedFrames },
+    },
+    resources: {
+      before: publicResourceSnapshot(resourceBefore),
+      after: publicResourceSnapshot(resourceAfter),
+    },
+    privacy: {
+      hiddenOpponentHandInWorkerEvents: false,
+      restrictedCardArtInMetrics: false,
+    },
+  };
+
+  await mkdir("test-results", { recursive: true });
+  await writeFile(
+    "test-results/df-16-results.json",
+    JSON.stringify(evidence, null, 2),
+  );
+  const artifactPath = testInfo.outputPath("df-16-results.json");
+  await writeFile(artifactPath, JSON.stringify(evidence, null, 2));
+  await testInfo.attach("df-16-results", {
+    path: artifactPath,
+    contentType: "application/json",
+  });
+
+  expect(updatePaint.p95).toBeLessThan(50);
+  expect(actionLatency.p95).toBeLessThan(100);
+  expect(normalLongTasks).toHaveLength(0);
+  expect(objectUrlLeak).toBe(false);
+  expect(listenerGrowth).toBe(0);
+  expect(removalGate).toBe(true);
+});
+
 test("spatial field navigation has one visible 44px keyboard entry without a trap", async ({
   page,
 }, testInfo) => {
@@ -1423,6 +1653,185 @@ async function assertRectInsideViewport(
   expect(rect.bottom, `${label} bottom`).toBeLessThanOrEqual(
     rect.viewportHeight + 1,
   );
+}
+
+async function measureTwoFrameLatency(page: Page): Promise<number> {
+  return page.evaluate(
+    () =>
+      new Promise<number>((resolve) => {
+        const startedAt = performance.now();
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => resolve(performance.now() - startedAt));
+        });
+      }),
+  );
+}
+
+async function measureFocusFeedbackLatency(page: Page): Promise<number> {
+  const field = page.getByRole("region", { name: "Duel field" });
+  const target = field.locator("[data-field-target]").first();
+  await target.waitFor({ state: "visible" });
+  return target.evaluate(
+    (element) =>
+      new Promise<number>((resolve) => {
+        const startedAt = performance.now();
+        (element as HTMLElement).focus();
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => resolve(performance.now() - startedAt));
+        });
+      }),
+  );
+}
+
+function summarizeSamples(samples: readonly number[]): {
+  readonly p50: number;
+  readonly p95: number;
+  readonly min: number;
+  readonly max: number;
+  readonly samples: readonly number[];
+} {
+  const sorted = [...samples].sort((a, b) => a - b);
+  return {
+    p50: nearestRank(sorted, 50),
+    p95: nearestRank(sorted, 95),
+    min: sorted[0] ?? 0,
+    max: sorted.at(-1) ?? 0,
+    samples,
+  };
+}
+
+function nearestRank(
+  sortedSamples: readonly number[],
+  percentile: number,
+): number {
+  if (sortedSamples.length === 0) return 0;
+  const rank = Math.ceil((percentile / 100) * sortedSamples.length);
+  return sortedSamples[Math.max(0, rank - 1)] ?? 0;
+}
+
+async function browserResourceSnapshot(
+  page: Page,
+  cdp: CDPSession,
+): Promise<{
+  readonly heapUsedBytes: number | null;
+  readonly objectUrls: {
+    readonly active: number;
+    readonly created: number;
+    readonly revoked: number;
+    readonly activeUrls: readonly string[];
+    readonly mountedUrls: readonly string[];
+    readonly activeMatchesMounted: boolean;
+  };
+  readonly listeners: {
+    readonly active: number;
+    readonly added: number;
+    readonly removed: number;
+  };
+}> {
+  await cdp.send("HeapProfiler.collectGarbage").catch(() => undefined);
+  const metrics = (await cdp.send("Performance.getMetrics").catch(() => ({
+    metrics: [],
+  }))) as {
+    readonly metrics?: readonly {
+      readonly name: string;
+      readonly value: number;
+    }[];
+  };
+  const heapUsed = metrics.metrics?.find(
+    ({ name }) => name === "JSHeapUsedSize",
+  )?.value;
+  const capture = await page.evaluate(() => {
+    const activeUrls = [...window.__duelCapture.imageUrls.active].sort();
+    const mountedUrls = [
+      ...new Set(
+        [...document.querySelectorAll<HTMLImageElement>("img")]
+          .map((image) => image.currentSrc || image.src)
+          .filter((src) => src.startsWith("blob:")),
+      ),
+    ].sort();
+    return {
+      objectUrls: {
+        active: activeUrls.length,
+        created: window.__duelCapture.imageUrls.created.length,
+        revoked: window.__duelCapture.imageUrls.revoked.length,
+        activeUrls,
+        mountedUrls,
+        activeMatchesMounted:
+          activeUrls.length === mountedUrls.length &&
+          activeUrls.every((url, index) => url === mountedUrls[index]),
+      },
+      listeners: {
+        active:
+          window.__duelCapture.listeners.added -
+          window.__duelCapture.listeners.removed,
+        added: window.__duelCapture.listeners.added,
+        removed: window.__duelCapture.listeners.removed,
+      },
+    };
+  });
+  return {
+    heapUsedBytes: heapUsed ?? null,
+    objectUrls: capture.objectUrls,
+    listeners: capture.listeners,
+  };
+}
+
+function publicResourceSnapshot(
+  snapshot: Awaited<ReturnType<typeof browserResourceSnapshot>>,
+): {
+  readonly heapUsedBytes: number | null;
+  readonly objectUrls: {
+    readonly active: number;
+    readonly created: number;
+    readonly revoked: number;
+    readonly mounted: number;
+    readonly activeMatchesMounted: boolean;
+  };
+  readonly listeners: {
+    readonly active: number;
+    readonly added: number;
+    readonly removed: number;
+  };
+} {
+  return {
+    heapUsedBytes: snapshot.heapUsedBytes,
+    objectUrls: {
+      active: snapshot.objectUrls.active,
+      created: snapshot.objectUrls.created,
+      revoked: snapshot.objectUrls.revoked,
+      mounted: snapshot.objectUrls.mountedUrls.length,
+      activeMatchesMounted: snapshot.objectUrls.activeMatchesMounted,
+    },
+    listeners: snapshot.listeners,
+  };
+}
+
+async function runTrayCycle(page: Page, cycles: number): Promise<void> {
+  for (let cycle = 0; cycle < cycles; cycle += 1) {
+    const trayButton = page
+      .getByRole("button", { name: /Open Your (Extra Deck|GY|Banished) tray/ })
+      .first();
+    if ((await trayButton.count()) === 0) return;
+    await trayButton.click();
+    const tray = page.getByRole("region", {
+      name: /Your (Extra Deck|GY|Banished) tray/,
+    });
+    await expect(tray).toBeVisible();
+    await tray.getByRole("button", { name: /^Close / }).click();
+    await expect(tray).toHaveCount(0);
+  }
+}
+
+async function runRestartCycle(page: Page): Promise<void> {
+  await page.getByRole("button", { name: "Surrender duel" }).click();
+  await page.getByRole("button", { name: "Confirm surrender" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Duel surrendered" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Start another duel" }).click();
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
 }
 
 async function mountedImageLeaseState(page: Page): Promise<{

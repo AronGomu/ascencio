@@ -18,7 +18,12 @@ type DuelCommand =
 
 ```ts
 type DuelWorkerEvent =
-  | { type: "ready"; coreVersion: readonly [number, number]; snapshotId?: string; activeImageManifestSha256?: string }
+  | {
+      type: "ready";
+      coreVersion: readonly [number, number];
+      snapshotId?: string;
+      activeImageManifestSha256?: string;
+    }
   | { type: "loading"; stage: string; progress?: number }
   | { type: "state"; state: PublicDuelState }
   | { type: "event"; event: DuelPresentationEvent }
@@ -40,7 +45,7 @@ type DuelWorkerEvent =
 - Commands execute in arrival order through a bounded queue; initialization is single-flight.
 - `dispose` invalidates queued work, aborts cooperative initialization, suppresses late events, and is idempotent.
 - Commands and events are exhaustive unions with `assertNever` consumers.
-- Every incoming event is detached with `structuredClone`, exact-key and dense-array validated, recursively bounded, and checked for public-state/prompt privacy before it reaches the store.
+- Every incoming event is detached with `structuredClone`, exact-key and dense-array validated, recursively bounded, and checked for valid presentation-visibility metadata before it reaches the store. Hidden identity may be retained in offline solo state.
 - Diagnostics requests are single-flight, timeout-bounded, and accepted only for inactive sessions.
 - Every shape has serialization and boundary tests; real Node and browser Worker integration proves production state, prompt, result, diagnostics, and error events cross an actual structured-clone boundary.
 - Worker bootstrap and detailed filesystem/WASM failures stay in structured Worker logs; public initialization errors use stable sanitized messages.

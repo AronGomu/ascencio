@@ -25,3 +25,10 @@ test-results/
 .impeccable/live/deferred-svelte-component-accepts.json
 .impeccable/live/*.png
 # impeccable-ignore-end
+
+# Agent tooling scratch / ephemeral state
+.agents/
+.agentsystem/
+.pi/
+.pi-subagents/
+.tmp/

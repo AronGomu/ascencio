@@ -913,7 +913,7 @@ nav a.is-active { color: var(--ink); background: var(--surface-2); box-shadow: i
       <tr><td>Legacy pipeline</td><td>Asset import helpers and acquisition behavior</td><td class="path">tests/*.test.ts</td></tr>
       <tr><td>Browser E2E</td><td>Production static package at subpath, real browser Worker/WASM/images, hidden privacy, full keyboard duel, restart, timeouts, fallbacks</td><td class="path">e2e/duel-smoke.spec.ts</td></tr>
     </tbody></table>
-    <h3>E2E browser matrix</h3><ul><li><strong>Chromium:</strong> complete flow suite, including full duel.</li><li><strong>Firefox/WebKit:</strong> production startup smoke selected by test title.</li><li><strong>Base path:</strong> <code>/ygo-story-duel/</code> catches root-relative Worker/WASM/image bugs.</li><li><strong>Artifacts on failure:</strong> trace, screenshot, video retained.</li></ul>
+    <h3>E2E browser matrix</h3><ul><li><strong>Product target:</strong> Chromium PWA family (Chrome/Edge/Chromium).</li><li><strong>Chromium:</strong> complete flow suite, including full duel; sole field-migration acceptance engine.</li><li><strong>Firefox/WebKit:</strong> optional CI hygiene smoke only; not product acceptance for DOM-field migration.</li><li><strong>Base path:</strong> <code>/ygo-story-duel/</code> catches root-relative Worker/WASM/image bugs.</li><li><strong>Artifacts on failure:</strong> trace, screenshot, video retained.</li></ul>
   </section>
 
   <section id="data-quality--ci">

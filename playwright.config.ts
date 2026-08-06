@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const basePath = "/ygo-story-duel/";
-const baseURL = `http://127.0.0.1:4173${basePath}`;
+const baseURL = `http://127.0.0.1:4202${basePath}`;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -35,7 +35,7 @@ export default defineConfig({
   ],
   webServer: {
     command:
-      "npm run vendor:verify && npm run snapshot:verify && npm run build:app -- --base=/ygo-story-duel/ && npm run build:verify && npm run preview -- --host 127.0.0.1 --port 4173 --strictPort --base=/ygo-story-duel/",
+      "npm run vendor:verify && npm run snapshot:verify && npm run build:app -- --base=/ygo-story-duel/ && npm run build:verify && npm run preview -- --host 127.0.0.1 --port 4202 --strictPort --base=/ygo-story-duel/",
     url: baseURL,
     reuseExistingServer: false,
     timeout: 180_000,

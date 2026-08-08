@@ -9,6 +9,9 @@
     mapSnapshotToBoard,
     type BoardCardView,
   } from "../field/board-view-model.ts";
+  import AppMenubar from "./components/AppMenubar.svelte";
+  import MenuDialog from "./components/MenuDialog.svelte";
+  import SettingsDialog from "./components/SettingsDialog.svelte";
   import CardInspector from "./components/duel-field/CardInspector.svelte";
   import DuelFieldErrorBoundary from "./components/duel-field/DuelFieldErrorBoundary.svelte";
   import DuelHud from "./components/duel-field/DuelHud.svelte";
@@ -32,6 +35,7 @@
   import PromptControls from "./prompts/PromptControls.svelte";
   import { mapPromptToInteractionSpec } from "./prompts/interaction-spec.ts";
   import { createDuelStore } from "./stores/duel-store.ts";
+  import { createUiSettingsStore } from "./stores/ui-settings-store.ts";
 
   const CURRENT_RUNTIME_SNAPSHOT_ID = snapshotId(__RUNTIME_SNAPSHOT_ID__);
   const CURRENT_ACTIVATION_SNAPSHOT_ID = snapshotId(__ACTIVATION_SNAPSHOT_ID__);
@@ -46,7 +50,11 @@
   ];
   const client = new DuelWorkerClient();
   const duel = createDuelStore(client);
+  const uiSettings = createUiSettingsStore();
   const autoStartedWorkerGenerations = new SvelteSet<number>();
+  let menuOpen = false;
+  let settingsOpen = false;
+  let menubarTrigger: HTMLButtonElement | null = null;
   let confirmingSurrender = false;
   let surrenderContext = "";
   let surrenderTrigger: HTMLButtonElement;
@@ -305,6 +313,10 @@
     };
     requestFallbackImages = (snapshot, manifestSha256) =>
       void loadImages({ snapshotId: snapshot, manifestSha256 });
+
+    menubarTrigger = document.querySelector<HTMLButtonElement>(
+      '[data-cy="app-menubar-settings-button"]',
+    );
 
     duel.initialize();
     trackStorageOperation("initialize", initializeStorage());
@@ -628,6 +640,26 @@
     await tick();
     promptPanel.focus();
   }
+
+  function openMenu(): void {
+    menuOpen = true;
+  }
+
+  async function closeMenu(): Promise<void> {
+    menuOpen = false;
+    await tick();
+    menubarTrigger?.focus();
+  }
+
+  function openSettings(): void {
+    settingsOpen = true;
+  }
+
+  async function closeSettings(): Promise<void> {
+    settingsOpen = false;
+    await tick();
+    menubarTrigger?.focus();
+  }
 </script>
 
 <svelte:head>
@@ -635,6 +667,8 @@
 </svelte:head>
 
 <svelte:window onkeydown={handleGlobalKeydown} />
+
+<AppMenubar onopensettings={openMenu} />
 
 <header class="app-header" data-cy="app-header">
   <div data-cy="app-header-title">
@@ -1068,4 +1102,34 @@
 
     <DuelLog entries={$duel.duelLog} />
   </div>
+
+  {#if menuOpen}
+    <MenuDialog
+      surrenderAvailable={($duel.status === "active" ||
+        $duel.status === "awaiting-input") &&
+        !$duel.result}
+      responsePending={$duel.responsePending}
+      onopensettings={() => {
+        menuOpen = false;
+        openSettings();
+      }}
+      onsurrender={() => {
+        duel.surrender();
+        menuOpen = false;
+      }}
+      onclose={() => void closeMenu()}
+    />
+  {/if}
+
+  {#if settingsOpen}
+    <SettingsDialog
+      settings={$uiSettings}
+      coreVersion={$duel.coreVersion}
+      activeSnapshotId={snapshotStorageStatus.activeSnapshotId}
+      fallbackSnapshotId={snapshotStorageStatus.fallbackSnapshotId}
+      onshowduelhud={uiSettings.setShowDuelHud}
+      onshowworkspace={uiSettings.setShowWorkspace}
+      onclose={() => void closeSettings()}
+    />
+  {/if}
 </main>

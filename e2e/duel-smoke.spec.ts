@@ -224,7 +224,6 @@ test("production bundle initializes the real Worker and sends one opaque choice 
       .getByRole("heading", { name: "Choose a Main Phase action" }),
   ).toBeVisible({ timeout: 120_000 });
   expect(Date.now() - startupBeganAt).toBeLessThan(15_000);
-  await expect(page.getByText("ocgcore 11.0")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Your turn" })).toBeVisible();
   await expect(page.getByText("8,000 LP").first()).toBeVisible();
   const field = page.getByRole("region", { name: "Duel field" });
@@ -241,6 +240,13 @@ test("production bundle initializes the real Worker and sends one opaque choice 
       name: "Choose a Main Phase action",
     });
   await expect(promptHeading).toBeFocused();
+
+  await page.locator('[data-cy="app-menubar-settings-button"]').click();
+  await page.locator('[data-cy="menu-dialog-settings-button"]').click();
+  await expect(page.locator('[data-cy="settings-engine-version"]')).toHaveText(
+    /ocgcore 11\.0/,
+  );
+  await page.locator('[data-cy="settings-dialog-close-button"]').click();
 
   const capture = await readCapture(page);
   const ready = capture.events.find((event) => event.type === "ready");
@@ -389,15 +395,22 @@ test("repeated restart replaces the Worker and clears presentation state", async
     await expect(page.locator("[data-prompt-kind]")).toBeVisible({
       timeout: 120_000,
     });
-    await page.getByRole("button", { name: "Surrender duel" }).click();
     if (cycle === 1) {
-      await page.getByRole("button", { name: "Keep playing" }).click();
-      await expect(
-        page.getByRole("button", { name: "Surrender duel" }),
-      ).toBeFocused();
-      await page.getByRole("button", { name: "Surrender duel" }).click();
+      await page.locator('[data-cy="app-menubar-settings-button"]').click();
+      await page.locator('[data-cy="menu-dialog-surrender-button"]').click();
+      await page
+        .locator('[data-cy="menu-dialog-surrender-cancel-button"]')
+        .click();
+      // Cancelling returns to the menu's main view (still open); reopen the
+      // surrender confirmation from there rather than the outer trigger,
+      // which sits behind the still-open dialog backdrop.
+      await page.locator('[data-cy="menu-dialog-surrender-button"]').click();
+      await page
+        .locator('[data-cy="menu-dialog-surrender-confirm-button"]')
+        .click();
+    } else {
+      await surrenderThroughMenu(page);
     }
-    await page.getByRole("button", { name: "Confirm surrender" }).click();
     const surrenderedHeading = page.getByRole("heading", {
       name: "Duel surrendered",
     });
@@ -450,8 +463,7 @@ test("refresh during loading and after completion starts a clean duel", async ({
     timeout: 120_000,
   });
 
-  await page.getByRole("button", { name: "Surrender duel" }).click();
-  await page.getByRole("button", { name: "Confirm surrender" }).click();
+  await surrenderThroughMenu(page);
   await expect(
     page.getByRole("heading", { name: "Duel surrendered" }),
   ).toBeVisible();
@@ -512,8 +524,7 @@ test("mounted card image leases return to baseline across tray, restart, and des
       .toEqual(baseline);
   }
 
-  await page.getByRole("button", { name: "Surrender duel" }).click();
-  await page.getByRole("button", { name: "Confirm surrender" }).click();
+  await surrenderThroughMenu(page);
   await expect(
     page.getByRole("heading", { name: "Duel surrendered" }),
   ).toBeVisible();
@@ -678,9 +689,11 @@ test("injected DOM field failure preserves fallback controls and one opaque resp
   await expect(
     page.getByText("Injected duel field component failure"),
   ).toHaveCount(0);
+  await page.locator('[data-cy="app-menubar-settings-button"]').click();
   await expect(
-    page.getByRole("button", { name: "Surrender duel" }),
+    page.locator('[data-cy="menu-dialog-surrender-button"]'),
   ).toBeVisible();
+  await page.locator('[data-cy="menu-dialog-close-button"]').click();
   const promptControls = page.locator("[data-prompt-kind]");
   await expect(promptControls).toBeVisible();
   const prompt = (await readCapture(page)).events.find(
@@ -1803,6 +1816,14 @@ function publicResourceSnapshot(
   };
 }
 
+async function surrenderThroughMenu(page: Page): Promise<void> {
+  await page.locator('[data-cy="app-menubar-settings-button"]').click();
+  await page.locator('[data-cy="menu-dialog-surrender-button"]').click();
+  await page
+    .locator('[data-cy="menu-dialog-surrender-confirm-button"]')
+    .click();
+}
+
 async function runTrayCycle(page: Page, cycles: number): Promise<void> {
   for (let cycle = 0; cycle < cycles; cycle += 1) {
     const trayButton = page
@@ -1820,8 +1841,7 @@ async function runTrayCycle(page: Page, cycles: number): Promise<void> {
 }
 
 async function runRestartCycle(page: Page): Promise<void> {
-  await page.getByRole("button", { name: "Surrender duel" }).click();
-  await page.getByRole("button", { name: "Confirm surrender" }).click();
+  await surrenderThroughMenu(page);
   await expect(
     page.getByRole("heading", { name: "Duel surrendered" }),
   ).toBeVisible();

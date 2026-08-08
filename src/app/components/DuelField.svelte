@@ -114,13 +114,6 @@
     menuCard !== null &&
     anchor !== null &&
     menuChoices.length > 0;
-  $: fieldAnnouncement = pending
-    ? "Response sent. Waiting for the engine."
-    : prompt === null
-      ? ""
-      : `${prompt.title}. Use Arrow keys to move through the field.`;
-  $: duelStateAnnouncement = stateAnnouncement(presentationEvents);
-
   onMount(() => {
     const update = (): void => updateAnchor();
     const motionQuery = globalThis.matchMedia?.(
@@ -347,20 +340,6 @@
     anchor = { left: rect.left, top: rect.top, bottom: rect.bottom };
   }
 
-  function stateAnnouncement(events: typeof presentationEvents): string {
-    const latest = [...events]
-      .reverse()
-      .find(
-        ({ event }) =>
-          event.type === "turnStarted" || event.type === "phaseChanged",
-      )?.event;
-    if (latest?.type === "turnStarted")
-      return `Turn ${latest.turn}. ${latest.player === 0 ? "Your turn" : "Opponent turn"}.`;
-    if (latest?.type === "phaseChanged")
-      return `Phase ${latest.phase.replaceAll(/([a-z])(\d)/g, "$1 $2")}.`;
-    return "";
-  }
-
   function targetSelections(
     value: ActiveInteractionSpec,
     draft: InteractionSession,
@@ -383,25 +362,6 @@
   bind:this={fieldRoot}
   data-cy="duel-field"
 >
-  <h2 class="visually-hidden" data-cy="duel-field-heading">Duel field</h2>
-  <p
-    class="visually-hidden"
-    aria-label="Field updates"
-    aria-live="polite"
-    aria-atomic="true"
-    data-cy="duel-field-announcement"
-  >
-    {fieldAnnouncement}
-  </p>
-  <p
-    class="visually-hidden"
-    aria-label="Duel state updates"
-    aria-live="polite"
-    aria-atomic="true"
-    data-cy="duel-field-state-announcement"
-  >
-    {duelStateAnnouncement}
-  </p>
   <FieldBoard
     {board}
     {imageUrls}

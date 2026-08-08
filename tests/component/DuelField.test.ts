@@ -224,6 +224,20 @@ describe("DuelField", () => {
     },
   );
 
+  it("has no stray heading or field/duel-state live regions, and still renders the board", () => {
+    const value = board("ST-01");
+    const { container } = render(DuelField, { board: value });
+
+    expect(container.querySelector("h2")).toBeNull();
+    expect(container.querySelector('[aria-label="Field updates"]')).toBeNull();
+    expect(
+      container.querySelector('[aria-label="Duel state updates"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-cy="duel-field-board"]'),
+    ).not.toBeNull();
+  });
+
   it("renders one named semantic board with 34 stable physical zones and two shared EMZs", () => {
     const value = board("ST-01");
     render(DuelField, { board: value });
@@ -458,23 +472,7 @@ describe("DuelField", () => {
     outside.remove();
   });
 
-  it("announces prompt/submission persistently and exposes public controller, zone, position, counters, and materials", async () => {
-    const value = fieldPrompt("selectCard", [
-      mountedChoice("select", "Select monster"),
-    ]);
-    const harness = renderInteractive(value);
-    expect(screen.getByLabelText("Field updates").textContent).toContain(
-      "Test selectCard",
-    );
-    await userEvent
-      .setup()
-      .click(screen.getByRole("button", { name: /Select The Legendary/ }));
-    await harness.rendered.rerender({ pending: true });
-    expect(screen.getByLabelText("Field updates").textContent).toContain(
-      "Response sent",
-    );
-
-    cleanup();
+  it("exposes public controller, zone, position, counters, and materials", () => {
     render(DuelField, { board: board("ST-07") });
     const rich = screen.getByRole("article", {
       name: /The Legendary Fisherman in Your Main Monster 2, face-up attack, 3 Spell Counters, 2 materials/,

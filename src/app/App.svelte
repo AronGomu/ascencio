@@ -16,6 +16,7 @@
   import DuelFieldErrorBoundary from "./components/duel-field/DuelFieldErrorBoundary.svelte";
   import DuelHud from "./components/duel-field/DuelHud.svelte";
   import DuelLog from "./components/duel-field/DuelLog.svelte";
+  import LoadingOverlay from "./components/LoadingOverlay.svelte";
   import { downloadDuelDiagnostics } from "./diagnostics/download-diagnostics.ts";
   import { DuelWorkerClient } from "./DuelWorkerClient.ts";
   import {
@@ -55,10 +56,7 @@
   let menuOpen = false;
   let settingsOpen = false;
   let menubarTrigger: HTMLButtonElement | null = null;
-  let confirmingSurrender = false;
-  let surrenderContext = "";
-  let surrenderTrigger: HTMLButtonElement;
-  let surrenderConfirm: HTMLButtonElement;
+  let generationContext = "";
   let promptPanel: HTMLElement;
   let resultHeading: HTMLHeadingElement;
   let errorHeading: HTMLHeadingElement;
@@ -119,9 +117,7 @@
     (snapshotActivationPending
       ? "Activating verified snapshot"
       : $duel.responsePending
-        ? confirmingSurrender
-          ? "Surrender sent. Waiting for the duel result"
-          : "Response sent. Waiting for the engine"
+        ? "Response sent. Waiting for the engine"
         : imageLoading
           ? "Preparing active card images"
           : $duel.loading
@@ -341,9 +337,8 @@
 
   afterUpdate(() => {
     const context = `${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`;
-    if (context !== surrenderContext) {
-      surrenderContext = context;
-      confirmingSurrender = false;
+    if (context !== generationContext) {
+      generationContext = context;
       diagnosticPending = false;
       inspectedCard = null;
     }
@@ -623,18 +618,6 @@
     return value.replaceAll(/([a-z])([A-Z])/g, "$1 $2");
   }
 
-  async function openSurrenderConfirmation(): Promise<void> {
-    confirmingSurrender = true;
-    await tick();
-    surrenderConfirm.focus();
-  }
-
-  async function cancelSurrenderConfirmation(): Promise<void> {
-    confirmingSurrender = false;
-    await tick();
-    surrenderTrigger.focus();
-  }
-
   async function dismissRecoverableError(): Promise<void> {
     duel.clearError();
     await tick();
@@ -670,21 +653,20 @@
 
 <AppMenubar onopensettings={openMenu} />
 
-<header class="app-header" data-cy="app-header">
-  <div data-cy="app-header-title">
-    <p class="eyebrow" data-cy="app-header-eyebrow">Offline preset duel</p>
-    <h1 data-cy="app-header-heading">YGO Story Duel Simulator</h1>
-  </div>
-  <p class="engine-state" aria-live="polite" data-cy="app-engine-state">
-    {#if $duel.coreVersion}
-      ocgcore {$duel.coreVersion[0]}.{$duel.coreVersion[1]}
-    {:else}
-      Engine not ready
-    {/if}
-  </p>
-</header>
-
 <main data-cy="app-main">
+  {#if imageLoading}
+    <LoadingOverlay
+      label="Preparing active card images"
+      progress={imageProgress}
+    />
+  {:else if snapshotActivationPending}
+    <LoadingOverlay label="Activating verified snapshot" />
+  {:else if $duel.loading}
+    <LoadingOverlay
+      label={`Loading ${phaseLabel($duel.loading.stage)}`}
+      progress={$duel.loading.progress ?? null}
+    />
+  {/if}
   <p
     class="visually-hidden"
     aria-live="polite"
@@ -693,70 +675,6 @@
   >
     {appAnnouncement}
   </p>
-  <section
-    class="status-panel"
-    aria-labelledby="duel-status-heading"
-    data-cy="status-panel"
-  >
-    <div data-cy="status-panel-summary">
-      <p class="eyebrow" data-cy="status-panel-eyebrow">Session status</p>
-      <h2 id="duel-status-heading" data-cy="status-panel-heading">
-        {phaseLabel($duel.status)}
-      </h2>
-      {#if snapshotStorageStatus.activeSnapshotId}
-        <p
-          class="snapshot-state"
-          title={snapshotStorageStatus.activeSnapshotId}
-          data-cy="status-panel-snapshot-state"
-        >
-          Active assets {snapshotStorageStatus.activeSnapshotId.slice(0, 12)}
-          {#if snapshotStorageStatus.fallbackSnapshotId}
-            · fallback {snapshotStorageStatus.fallbackSnapshotId.slice(0, 12)}
-          {/if}
-        </p>
-      {/if}
-    </div>
-    {#if imageLoading}
-      <div
-        class="loading-state"
-        aria-live="polite"
-        data-cy="status-panel-image-loading"
-      >
-        <p data-cy="status-panel-image-loading-text">
-          Preparing active card images…
-        </p>
-        <progress
-          aria-label="Preparing active card images"
-          value={imageProgress}
-          max="1"
-          data-cy="app-image-progress"
-        ></progress>
-      </div>
-    {:else if $duel.loading}
-      <div
-        class="loading-state"
-        aria-live="polite"
-        data-cy="status-panel-duel-loading"
-      >
-        <p data-cy="status-panel-duel-loading-text">
-          Loading {phaseLabel($duel.loading.stage)}…
-        </p>
-        {#if $duel.loading.progress === undefined}
-          <progress
-            aria-label={`Loading ${$duel.loading.stage}`}
-            data-cy="status-panel-duel-loading-progress-indeterminate"
-          ></progress>
-        {:else}
-          <progress
-            aria-label={`Loading ${$duel.loading.stage}`}
-            value={$duel.loading.progress}
-            max="1"
-            data-cy="status-panel-duel-loading-progress-value"
-          ></progress>
-        {/if}
-      </div>
-    {/if}
-  </section>
 
   {#if storageWarning || snapshotActivationPending}
     <section
@@ -953,61 +871,6 @@
     </p>
   {/if}
 
-  {#if ($duel.status === "active" || $duel.status === "awaiting-input") && !$duel.result}
-    <section
-      class="lifecycle-panel"
-      aria-label="Duel actions"
-      aria-busy={$duel.responsePending}
-      data-cy="lifecycle-panel"
-    >
-      {#if confirmingSurrender}
-        <div role="alert" data-cy="lifecycle-panel-surrender-confirm">
-          <strong data-cy="lifecycle-panel-surrender-confirm-heading"
-            >Surrender this duel?</strong
-          >
-          <p data-cy="lifecycle-panel-surrender-confirm-copy">
-            This immediately awards the duel to your opponent.
-          </p>
-          {#if $duel.responsePending}
-            <p data-cy="lifecycle-panel-surrender-pending">
-              Surrender sent. Waiting for the duel result…
-            </p>
-          {/if}
-        </div>
-        <div class="button-row" data-cy="lifecycle-panel-surrender-actions">
-          <button
-            type="button"
-            class="danger"
-            bind:this={surrenderConfirm}
-            disabled={$duel.responsePending}
-            data-cy="app-surrender-confirm-button"
-            onclick={() => {
-              duel.surrender();
-            }}>Confirm surrender</button
-          >
-          <button
-            type="button"
-            class="secondary"
-            disabled={$duel.responsePending}
-            data-cy="app-surrender-cancel-button"
-            onclick={() => void cancelSurrenderConfirmation()}
-            >Keep playing</button
-          >
-        </div>
-      {:else}
-        <button
-          type="button"
-          class="secondary"
-          bind:this={surrenderTrigger}
-          disabled={$duel.responsePending}
-          data-cy="app-surrender-button"
-          onclick={() => void openSurrenderConfirmation()}
-          >Surrender duel</button
-        >
-      {/if}
-    </section>
-  {/if}
-
   {#if duelBoard}
     {#key `${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
       <DuelFieldErrorBoundary
@@ -1092,9 +955,7 @@
         <h2 data-cy="prompt-panel-heading">No decision pending</h2>
         <p class="empty-copy" data-cy="prompt-panel-empty-copy">
           {$duel.responsePending
-            ? confirmingSurrender
-              ? "Surrender sent. Waiting for the duel result…"
-              : "Your response was sent. Waiting for the engine…"
+            ? "Your response was sent. Waiting for the engine…"
             : "The engine will pause here when your input is required."}
         </p>
       {/if}

@@ -332,6 +332,10 @@ progress {
   gap: 1rem;
 }
 
+.prompt-dialog-panel {
+  width: min(36rem, 100%);
+}
+
 .player-heading strong {
   color: var(--warning);
   font-size: 1.25rem;

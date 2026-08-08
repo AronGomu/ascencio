@@ -34,7 +34,9 @@
     type SnapshotStorageStatus,
   } from "../storage/snapshot-store.ts";
   import PromptControls from "./prompts/PromptControls.svelte";
+  import PromptDialog from "./components/PromptDialog.svelte";
   import { mapPromptToInteractionSpec } from "./prompts/interaction-spec.ts";
+  import { promptSurface } from "./prompts/prompt-surface.ts";
   import { createDuelStore } from "./stores/duel-store.ts";
   import { createUiSettingsStore } from "./stores/ui-settings-store.ts";
 
@@ -110,6 +112,11 @@
   );
   $: fieldInteractionSpec =
     mappedInteractionSpec.kind === "inactive" ? null : mappedInteractionSpec;
+  $: currentPromptSurface = promptSurface(
+    $duel.prompt,
+    mappedInteractionSpec,
+    $uiSettings.showWorkspace,
+  );
   $: appAnnouncement =
     storageWarning ??
     imageWarning ??
@@ -621,7 +628,7 @@
   async function dismissRecoverableError(): Promise<void> {
     duel.clearError();
     await tick();
-    promptPanel.focus();
+    promptPanel?.focus();
   }
 
   function openMenu(): void {
@@ -896,14 +903,30 @@
     </section>
   {/if}
 
+  {#if currentPromptSurface === "dialog" && $duel.prompt}
+    {#key $duel.prompt.id}
+      <PromptDialog
+        prompt={$duel.prompt}
+        disabled={$duel.responsePending}
+        imageLibrary={imagesMatchRuntime ? imageLibrary : null}
+        placeholderUrl={imageLibrary?.placeholderUrl ??
+          DEFAULT_CARD_PLACEHOLDER}
+        onsubmit={duel.respond}
+      />
+    {/key}
+  {/if}
+
   {#if $duel.snapshot}
-    <DuelHud
-      snapshot={$duel.snapshot}
-      cardTexts={ACTIVE_CARD_TEXTS}
-      imageLibrary={imagesMatchRuntime ? imageLibrary : null}
-      placeholderUrl={imageLibrary?.placeholderUrl ?? DEFAULT_CARD_PLACEHOLDER}
-      oninspect={inspectHudCard}
-    />
+    {#if $uiSettings.showDuelHud}
+      <DuelHud
+        snapshot={$duel.snapshot}
+        cardTexts={ACTIVE_CARD_TEXTS}
+        imageLibrary={imagesMatchRuntime ? imageLibrary : null}
+        placeholderUrl={imageLibrary?.placeholderUrl ??
+          DEFAULT_CARD_PLACEHOLDER}
+        oninspect={inspectHudCard}
+      />
+    {/if}
   {:else if $duel.status === "active"}
     <section
       class="message-panel"
@@ -931,38 +954,40 @@
     />
   {/if}
 
-  <div class="workspace-grid" data-cy="workspace-grid">
-    <section
-      class="prompt-panel"
-      aria-label="Current decision"
-      tabindex="-1"
-      bind:this={promptPanel}
-      data-cy="prompt-panel"
-    >
-      {#if $duel.prompt}
-        {#key $duel.prompt.id}
-          <PromptControls
-            prompt={$duel.prompt}
-            disabled={$duel.responsePending}
-            onsubmit={duel.respond}
-            imageLibrary={imagesMatchRuntime ? imageLibrary : null}
-            placeholderUrl={imageLibrary?.placeholderUrl ??
-              DEFAULT_CARD_PLACEHOLDER}
-          />
-        {/key}
-      {:else}
-        <p class="eyebrow" data-cy="prompt-panel-eyebrow">Current decision</p>
-        <h2 data-cy="prompt-panel-heading">No decision pending</h2>
-        <p class="empty-copy" data-cy="prompt-panel-empty-copy">
-          {$duel.responsePending
-            ? "Your response was sent. Waiting for the engine…"
-            : "The engine will pause here when your input is required."}
-        </p>
-      {/if}
-    </section>
+  {#if $uiSettings.showWorkspace}
+    <div class="workspace-grid" data-cy="workspace-grid">
+      <section
+        class="prompt-panel"
+        aria-label="Current decision"
+        tabindex="-1"
+        bind:this={promptPanel}
+        data-cy="prompt-panel"
+      >
+        {#if $duel.prompt}
+          {#key $duel.prompt.id}
+            <PromptControls
+              prompt={$duel.prompt}
+              disabled={$duel.responsePending}
+              onsubmit={duel.respond}
+              imageLibrary={imagesMatchRuntime ? imageLibrary : null}
+              placeholderUrl={imageLibrary?.placeholderUrl ??
+                DEFAULT_CARD_PLACEHOLDER}
+            />
+          {/key}
+        {:else}
+          <p class="eyebrow" data-cy="prompt-panel-eyebrow">Current decision</p>
+          <h2 data-cy="prompt-panel-heading">No decision pending</h2>
+          <p class="empty-copy" data-cy="prompt-panel-empty-copy">
+            {$duel.responsePending
+              ? "Your response was sent. Waiting for the engine…"
+              : "The engine will pause here when your input is required."}
+          </p>
+        {/if}
+      </section>
 
-    <DuelLog entries={$duel.duelLog} />
-  </div>
+      <DuelLog entries={$duel.duelLog} />
+    </div>
+  {/if}
 
   {#if menuOpen}
     <MenuDialog

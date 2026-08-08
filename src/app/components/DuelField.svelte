@@ -361,6 +361,7 @@
   aria-label="Duel field"
   bind:this={fieldRoot}
   data-cy="duel-field"
+  data-prompt-kind={prompt === null ? undefined : prompt.kind}
 >
   <FieldBoard
     {board}

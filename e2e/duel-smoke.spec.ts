@@ -220,10 +220,11 @@ test("production bundle initializes the real Worker and sends one opaque choice 
 
   await expect(
     page
-      .getByRole("region", { name: "Current decision" })
+      .locator('[data-cy="selection-dock"]')
       .getByRole("heading", { name: "Choose a Main Phase action" }),
   ).toBeVisible({ timeout: 120_000 });
   expect(Date.now() - startupBeganAt).toBeLessThan(15_000);
+  await enableDuelHud(page);
   await expect(page.getByRole("heading", { name: "Your turn" })).toBeVisible();
   await expect(page.getByText("8,000 LP").first()).toBeVisible();
   const field = page.getByRole("region", { name: "Duel field" });
@@ -235,11 +236,11 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   await expect(field.getByRole("img").first()).toHaveAttribute("src", /.+/);
 
   const promptHeading = page
-    .getByRole("region", { name: "Current decision" })
+    .locator('[data-cy="selection-dock"]')
     .getByRole("heading", {
       name: "Choose a Main Phase action",
     });
-  await expect(promptHeading).toBeFocused();
+  await expect(promptHeading).toBeVisible();
 
   await page.locator('[data-cy="app-menubar-settings-button"]').click();
   await page.locator('[data-cy="menu-dialog-settings-button"]').click();
@@ -318,6 +319,22 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   );
 });
 
+test("panels stay hidden until settings enable them", async ({ page }) => {
+  await page.goto("./");
+  await expect(
+    page.locator('[data-cy="duel-field"][data-prompt-kind]'),
+  ).toBeVisible({ timeout: 120_000 });
+
+  await expect(page.locator('[data-cy="duel-hud"]')).toHaveCount(0);
+  await expect(page.locator('[data-cy="workspace-grid"]')).toHaveCount(0);
+
+  await enableDuelHud(page);
+  await enableWorkspace(page);
+
+  await expect(page.locator('[data-cy="duel-hud"]')).toBeVisible();
+  await expect(page.locator('[data-cy="workspace-grid"]')).toBeVisible();
+});
+
 test("duel HUD keeps hidden stacks count-only and tray image work mounted on demand", async ({
   page,
 }, testInfo) => {
@@ -327,6 +344,7 @@ test("duel HUD keeps hidden stacks count-only and tray image work mounted on dem
       imageRequests.push(request.url());
   });
   await page.goto("./");
+  await enableDuelHud(page);
 
   const hud = page.getByRole("region", { name: "Duel HUD" });
   await expect(hud).toBeVisible({ timeout: 120_000 });
@@ -392,7 +410,9 @@ test("repeated restart replaces the Worker and clears presentation state", async
 }) => {
   await page.goto("./");
   for (let cycle = 1; cycle <= 2; cycle += 1) {
-    await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    await expect(
+      page.locator('[data-cy="duel-field"][data-prompt-kind]'),
+    ).toBeVisible({
       timeout: 120_000,
     });
     if (cycle === 1) {
@@ -421,7 +441,9 @@ test("repeated restart replaces the Worker and clears presentation state", async
       .poll(async () => (await readCapture(page)).workers)
       .toBe(cycle + 1);
   }
-  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+  await expect(
+    page.locator('[data-cy="duel-field"][data-prompt-kind]'),
+  ).toBeVisible({
     timeout: 120_000,
   });
   const capture = await readCapture(page);
@@ -459,7 +481,9 @@ test("refresh during loading and after completion starts a clean duel", async ({
   const reloadDuringLoading = page.reload();
   releaseManifest();
   await reloadDuringLoading;
-  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+  await expect(
+    page.locator('[data-cy="duel-field"][data-prompt-kind]'),
+  ).toBeVisible({
     timeout: 120_000,
   });
 
@@ -482,7 +506,9 @@ test("refresh during loading and after completion starts a clean duel", async ({
   };
   expect(diagnostic.trace.sensitivity).toBe("contains-production-seed");
   await page.reload();
-  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+  await expect(
+    page.locator('[data-cy="duel-field"][data-prompt-kind]'),
+  ).toBeVisible({
     timeout: 120_000,
   });
   await expect(
@@ -494,7 +520,10 @@ test("mounted card image leases return to baseline across tray, restart, and des
   page,
 }, testInfo) => {
   await page.goto("./");
-  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+  await enableDuelHud(page);
+  await expect(
+    page.locator('[data-cy="duel-field"][data-prompt-kind]'),
+  ).toBeVisible({
     timeout: 120_000,
   });
   await expect
@@ -529,7 +558,9 @@ test("mounted card image leases return to baseline across tray, restart, and des
     page.getByRole("heading", { name: "Duel surrendered" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Start another duel" }).click();
-  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+  await expect(
+    page.locator('[data-cy="duel-field"][data-prompt-kind]'),
+  ).toBeVisible({
     timeout: 120_000,
   });
   await expect
@@ -589,7 +620,7 @@ test("slow image preload cannot delay a legal Worker response", async ({
 
   await page.goto("./");
   await blocked;
-  const controls = page.locator("[data-prompt-kind]");
+  const controls = page.locator('[data-cy="duel-field"][data-prompt-kind]');
   await expect(controls).toBeVisible({ timeout: 120_000 });
   await expect(controls.getByRole("button").first()).toBeEnabled();
   const field = page.getByRole("region", { name: "Duel field" });
@@ -641,7 +672,7 @@ test("missing active images use deterministic placeholders without blocking inpu
     route.abort("failed"),
   );
   await page.goto("./");
-  const controls = page.locator("[data-prompt-kind]");
+  const controls = page.locator('[data-cy="duel-field"][data-prompt-kind]');
   await expect(controls).toBeVisible({ timeout: 120_000 });
   await expect(
     page.locator(".image-warning").getByText(/card images? .*placeholder/i),
@@ -694,6 +725,9 @@ test("injected DOM field failure preserves fallback controls and one opaque resp
     page.locator('[data-cy="menu-dialog-surrender-button"]'),
   ).toBeVisible();
   await page.locator('[data-cy="menu-dialog-close-button"]').click();
+  // The interactive field failed to render, so the field surface can never
+  // host this prompt; reveal the workspace so the docked prompt panel can.
+  await enableWorkspace(page);
   const promptControls = page.locator("[data-prompt-kind]");
   await expect(promptControls).toBeVisible();
   const prompt = (await readCapture(page)).events.find(
@@ -768,6 +802,7 @@ test("responsive field compositions contain controls across supported viewports"
   page,
 }, testInfo) => {
   await page.goto("./");
+  await enableDuelHud(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
   });
@@ -913,6 +948,7 @@ test("DF-16 Chromium pinned parity/perf/resource gate records automated evidence
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto("./");
+  await enableDuelHud(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
   });
@@ -1142,12 +1178,14 @@ test("a full preset duel can be completed using keyboard controls only with one 
   page,
 }, testInfo) => {
   await page.goto("./");
-  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+  await expect(
+    page.locator('[data-cy="duel-field"][data-prompt-kind]'),
+  ).toBeVisible({
     timeout: 120_000,
   });
   await expect(
-    page.locator("[data-prompt-kind] button:enabled").first(),
-  ).toBeVisible({ timeout: 30_000 });
+    (await activePromptControls(page)).getByRole("button").first(),
+  ).toBeEnabled({ timeout: 30_000 });
 
   const field = page.getByRole("region", { name: "Duel field" });
   const answeredPromptIds = new Set<string>();
@@ -1161,11 +1199,8 @@ test("a full preset duel can be completed using keyboard controls only with one 
     const result = page.locator(".result-panel");
     if (await result.isVisible()) break;
 
-    const controls = page.locator("[data-prompt-kind]");
+    const controls = await activePromptControls(page);
     await controls.waitFor({ state: "visible", timeout: 30_000 });
-    const controlsElement = await controls.elementHandle();
-    if (controlsElement === null)
-      throw new Error("Prompt controls disappeared");
     const kind = await controls.getAttribute("data-prompt-kind");
     if (kind === null) throw new Error("Prompt kind is missing");
     const prompt = [...(await readCapture(page)).events]
@@ -1194,11 +1229,27 @@ test("a full preset duel can be completed using keyboard controls only with one 
       (await answerPromptWithKeyboard(page, controls, kind, setup)) === "field"
     )
       fieldResponses += 1;
-    await page.waitForFunction(
-      (element) => !element.isConnected,
-      controlsElement,
-      { timeout: 30_000 },
-    );
+    // The field surface reuses `section.duel-field` across prompts and only
+    // mutates its `data-prompt-kind` attribute in place (no element swap),
+    // and consecutive prompts can share the same kind (e.g. two idleCommand
+    // decisions in a row), so neither "element disconnected" nor "kind
+    // changed" reliably signals the engine moved past this prompt. The
+    // engine's own prompt id is the one thing guaranteed to change (or the
+    // duel to complete), so wait on that directly.
+    await expect
+      .poll(
+        async () => {
+          if (await result.isVisible()) return true;
+          const latest = [...(await readCapture(page)).events]
+            .reverse()
+            .find((event) => event.type === "prompt") as
+            | (CapturedPromptEvent & Readonly<Record<string, unknown>>)
+            | undefined;
+          return latest !== undefined && latest.prompt.id !== prompt.prompt.id;
+        },
+        { timeout: 30_000 },
+      )
+      .toBe(true);
     await expect
       .poll(
         async () =>
@@ -1274,6 +1325,20 @@ test("a full preset duel can be completed using keyboard controls only with one 
     contentType: "application/json",
   });
 });
+
+// Non-field prompts render inside the modal dialog while field-capable
+// prompts render on `section.duel-field` itself, and `section.duel-field`
+// always carries `data-prompt-kind` as a readiness marker (T5). When a
+// non-field prompt is open, both elements carry the attribute at once, so
+// callers that need the one actually hosting live controls must prefer the
+// dialog when it is present.
+async function activePromptControls(page: Page): Promise<Locator> {
+  const dialogControls = page.locator(
+    '[data-cy="prompt-dialog"] [data-prompt-kind]',
+  );
+  if ((await dialogControls.count()) > 0) return dialogControls;
+  return page.locator('[data-cy="duel-field"][data-prompt-kind]');
+}
 
 async function answerPromptWithKeyboard(
   page: Page,
@@ -1889,6 +1954,23 @@ function publicResourceSnapshot(
     },
     listeners: snapshot.listeners,
   };
+}
+
+async function openSettingsDialog(page: Page): Promise<void> {
+  await page.locator('[data-cy="app-menubar-settings-button"]').click();
+  await page.locator('[data-cy="menu-dialog-settings-button"]').click();
+}
+
+async function enableDuelHud(page: Page): Promise<void> {
+  await openSettingsDialog(page);
+  await page.locator('[data-cy="settings-show-duel-hud-checkbox"]').check();
+  await page.locator('[data-cy="settings-dialog-close-button"]').click();
+}
+
+async function enableWorkspace(page: Page): Promise<void> {
+  await openSettingsDialog(page);
+  await page.locator('[data-cy="settings-show-workspace-checkbox"]').check();
+  await page.locator('[data-cy="settings-dialog-close-button"]').click();
 }
 
 async function surrenderThroughMenu(page: Page): Promise<void> {

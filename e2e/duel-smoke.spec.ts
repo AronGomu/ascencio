@@ -1190,9 +1190,9 @@ test("a full preset duel can be completed using keyboard controls only with one 
   const field = page.getByRole("region", { name: "Duel field" });
   const answeredPromptIds = new Set<string>();
   // Opponent hand cards render upright, so the only sideways cards in a duel are
-  // real defense-position monsters. Ask the walker to set one so the
+  // real defense-position monsters. Ask the walker to produce one so the
   // focus-visibility assertion on rotated card art has something to focus.
-  const setup = { setMonster: true };
+  const setup = { needsDefense: true };
   let fieldResponses = 0;
   let defenseFocusVisible = false;
   for (let step = 0; step < 200; step += 1) {
@@ -1214,11 +1214,16 @@ test("a full preset duel can be completed using keyboard controls only with one 
           ".duel-field-card[data-orientation='sideways'] [data-field-target], .duel-field-card[data-orientation='sideways'][data-field-target]",
         )
         .first();
-      if (
-        (await defenseTarget.count()) > 0 &&
-        (await defenseTarget.isVisible())
-      )
+      const defenseOnBoard =
+        (await defenseTarget.count()) > 0 && (await defenseTarget.isVisible());
+      if (defenseOnBoard)
         defenseFocusVisible = await focusSidewaysCardWithKeyboard(page, field);
+      // Whether a given Main Phase offers a settable monster depends on the
+      // duel's random seed, so one opportunistic attempt is not enough: keep
+      // asking every Main Phase until the board actually holds a sideways
+      // card, and ask again if that card leaves the board before the walker
+      // managed to focus it.
+      setup.needsDefense = !defenseFocusVisible && !defenseOnBoard;
     }
     const responseCountBefore = (await readCapture(page)).commands.filter(
       (command) =>
@@ -1344,15 +1349,13 @@ async function answerPromptWithKeyboard(
   page: Page,
   controls: Locator,
   kind: string,
-  setup: { setMonster: boolean },
+  setup: { needsDefense: boolean },
 ): Promise<"field" | "prompt"> {
   const field = page.getByRole("region", { name: "Duel field" });
   switch (kind) {
     case "idleCommand":
-      if (setup.setMonster && (await setHandMonsterWithKeyboard(page, field))) {
-        setup.setMonster = false;
+      if (setup.needsDefense && (await setHandMonsterWithKeyboard(page, field)))
         return "field";
-      }
       await activatePreferredButton(page, field, [
         "End turn",
         "Enter Battle Phase",
@@ -1434,10 +1437,22 @@ async function answerPromptWithKeyboard(
   }
 }
 
+// The engine labels both `setMonster` and `setSpellTrap` "Set <card>", so the
+// walker matches the engine action id carried by each menu item's `data-cy`
+// instead of the item's text. Matching the label is what made this walker
+// non-deterministic: a hand whose first actionable card was a spell or trap
+// set a backrow card, which renders upright, and the duel then never gained a
+// sideways card at all.
+const MONSTER_SET_ACTION = "setMonster";
+const MONSTER_SET_ITEM = `[role="menuitem"][data-cy$="-${MONSTER_SET_ACTION}"]`;
+
 /**
  * Sets one hand monster face-down using only the keyboard, so the board gains a
- * genuine defense-position (sideways) card. Returns false when no hand card
- * offers a Set action, leaving the prompt unanswered for the caller.
+ * genuine defense-position (sideways) card. Every hand card is inspected, so
+ * the result does not depend on the order the duel's random seed dealt the
+ * hand. Returns false when no hand card offers a monster set, leaving the
+ * prompt unanswered for the caller to end the turn and try again next Main
+ * Phase.
  */
 async function setHandMonsterWithKeyboard(
   page: Page,
@@ -1452,20 +1467,22 @@ async function setHandMonsterWithKeyboard(
     await keyboardActivate(page, opener);
     const menu = page.getByRole("menu");
     if ((await menu.count()) === 0) continue;
-    const items = menu.getByRole("menuitem");
-    let chose = false;
-    for (let move = 0; move < (await items.count()); move += 1) {
-      const focused = menu.locator(":focus");
-      if (/^Set /.test((await focused.textContent()) ?? "")) {
-        await page.keyboard.press("Enter");
-        chose = true;
-        break;
+    // The menu moves focus onto its first item as it mounts; waiting for that
+    // focus to land is what makes the arrow-key walk below deterministic.
+    await expect(menu.locator(":focus")).toHaveCount(1);
+    if ((await menu.locator(MONSTER_SET_ITEM).count()) > 0) {
+      const items = menu.getByRole("menuitem");
+      for (let move = 0; move < (await items.count()); move += 1) {
+        const focused = menu.locator(":focus");
+        if ((await focused.count()) === 0) break;
+        const focusedId = (await focused.getAttribute("data-cy")) ?? "";
+        if (focusedId.endsWith(`-${MONSTER_SET_ACTION}`)) {
+          await page.keyboard.press("Enter");
+          await expect(menu).toHaveCount(0);
+          return true;
+        }
+        await page.keyboard.press("ArrowDown");
       }
-      await page.keyboard.press("ArrowDown");
-    }
-    if (chose) {
-      await expect(menu).toHaveCount(0);
-      return true;
     }
     await page.keyboard.press("Escape");
     await expect(menu).toHaveCount(0);
@@ -1604,6 +1621,34 @@ async function focusSidewaysCardWithKeyboard(
   field: Locator,
 ): Promise<boolean> {
   await keyboardFocus(page, field.locator("[data-field-target][tabindex='0']"));
+  if (await sweepRowsUpwardForSidewaysCard(page, field)) return true;
+  // The sweep only walks rows upwards, so every row below wherever roving
+  // focus happened to sit stayed unvisited - and which row that is depends on
+  // the prompt the duel is currently on. Drop to the bottom row and sweep the
+  // rest of the board.
+  for (let move = 0; move < 16; move += 1) {
+    const target = await field
+      .locator(":focus")
+      .getAttribute("data-field-target");
+    await page.keyboard.press("ArrowDown");
+    if (
+      (await field.locator(":focus").getAttribute("data-field-target")) ===
+      target
+    )
+      break;
+  }
+  return await sweepRowsUpwardForSidewaysCard(page, field);
+}
+
+/**
+ * Walks the board upwards row by row from the focused control, asserting the
+ * focus ring on the first sideways card it lands on. Returns false when the
+ * sweep runs out of board without meeting one.
+ */
+async function sweepRowsUpwardForSidewaysCard(
+  page: Page,
+  field: Locator,
+): Promise<boolean> {
   for (let row = 0; row < 12; row += 1) {
     await page.keyboard.press("Home");
     for (let column = 0; column < 24; column += 1) {

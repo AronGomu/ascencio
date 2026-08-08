@@ -127,7 +127,7 @@ button:disabled {
 }
 
 main {
-  width: min(90rem, calc(100% - 2rem));
+  width: min(120rem, calc(100% - 2rem));
   margin-inline: auto;
 }
 
@@ -136,7 +136,7 @@ main {
   align-items: center;
   justify-content: flex-end;
   gap: 0.75rem;
-  width: min(90rem, calc(100% - 2rem));
+  width: min(120rem, calc(100% - 2rem));
   margin-inline: auto;
   padding-block: 0.75rem;
 }
@@ -641,8 +641,10 @@ li + li {
   min-width: 0;
   max-width: 100%;
   padding: 1rem;
-  overflow: auto;
-  overscroll-behavior: contain;
+  /* Horizontal only: the board keeps a min-width so field targets stay >=44px,
+     so narrow viewports must be able to pan. Vertical overflow stays visible and
+     overscroll chaining stays default so the wheel always scrolls the page. */
+  overflow-x: auto;
   scroll-padding: clamp(0.75rem, 4vw, 2rem);
   border: 1px solid var(--border);
   border-radius: 0.9rem;
@@ -653,7 +655,8 @@ li + li {
 .duel-field-board {
   position: relative;
   isolation: isolate;
-  width: min(100%, calc((100vh - 4rem) * 16 / 9));
+  width: 100%;
+  /* 52rem keeps the 72/1280-unit card wider than the 44px minimum target. */
   min-width: 52rem;
   margin-inline: auto;
   aspect-ratio: 16 / 9;
@@ -713,6 +716,11 @@ li + li {
 .duel-field-zone[data-zone-kind="hand"] {
   border-style: dashed;
   background: rgb(28 79 66 / 0.45);
+}
+
+.duel-field-zone[data-zone-id="p1:hand"] {
+  border-color: transparent;
+  background: transparent;
 }
 
 .duel-field-zone--shared {
@@ -1011,11 +1019,6 @@ button.duel-field-zone,
     align-items: stretch;
     grid-template-columns: 1fr;
     flex-direction: column;
-  }
-
-  .duel-field {
-    max-height: calc(100svh - 1rem);
-    padding: 0.75rem;
   }
 }
 

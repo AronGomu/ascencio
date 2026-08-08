@@ -376,8 +376,8 @@ function addHiddenHandPlaceholder(
       targetId: `card:${id}` as const,
       player,
       zoneId: layout.id,
-      position: "faceDownDefense" as const,
-      orientation: "sideways" as const,
+      position: "faceDownAttack" as const,
+      orientation: "upright" as const,
       facing: player === 0 ? ("self" as const) : ("opponent" as const),
       hidden: true,
       label:

@@ -747,6 +747,23 @@ test("mobile layout preserves controls and honors reduced motion", async ({
   expect(box?.width).toBeGreaterThanOrEqual(44);
 });
 
+test("wheel over the duel field scrolls the page", async ({ page }) => {
+  await page.setViewportSize({ width: 900, height: 420 });
+  await page.goto("./");
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+  const field = page.locator('[data-cy="duel-field"]');
+  await expect(field).toBeVisible();
+  const box = await field.boundingBox();
+  if (box === null) throw new Error("Duel field has no bounding box");
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.wheel(0, 400);
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBeGreaterThan(0);
+});
+
 test("responsive field compositions contain controls across supported viewports", async ({
   page,
 }, testInfo) => {
@@ -788,6 +805,14 @@ test("responsive field compositions contain controls across supported viewports"
       expect(fieldMetrics.overflowX).toMatch(/auto|scroll/);
     if (fieldMetrics.scrollHeight > fieldMetrics.clientHeight)
       expect(fieldMetrics.overflowY).toMatch(/auto|scroll/);
+    // Desktop widths must show the whole board with no horizontal panning.
+    // Below 1024px the board's min-width still applies, because keeping every
+    // field target at 44px outranks avoiding a horizontal scrollbar there.
+    if (viewport.width >= 1024)
+      expect(
+        fieldMetrics.scrollWidth,
+        `${viewportLabel} duel field has no horizontal overflow`,
+      ).toBeLessThanOrEqual(fieldMetrics.clientWidth + 1);
 
     const board = field.getByRole("group", { name: "Standard duel board" });
     await expect(board).toBeVisible();
@@ -1126,6 +1151,10 @@ test("a full preset duel can be completed using keyboard controls only with one 
 
   const field = page.getByRole("region", { name: "Duel field" });
   const answeredPromptIds = new Set<string>();
+  // Opponent hand cards render upright, so the only sideways cards in a duel are
+  // real defense-position monsters. Ask the walker to set one so the
+  // focus-visibility assertion on rotated card art has something to focus.
+  const setup = { setMonster: true };
   let fieldResponses = 0;
   let defenseFocusVisible = false;
   for (let step = 0; step < 200; step += 1) {
@@ -1161,7 +1190,9 @@ test("a full preset duel can be completed using keyboard controls only with one 
         command.type === "respond" && command.promptId === prompt.prompt.id,
     ).length;
 
-    if ((await answerPromptWithKeyboard(page, controls, kind)) === "field")
+    if (
+      (await answerPromptWithKeyboard(page, controls, kind, setup)) === "field"
+    )
       fieldResponses += 1;
     await page.waitForFunction(
       (element) => !element.isConnected,
@@ -1248,10 +1279,15 @@ async function answerPromptWithKeyboard(
   page: Page,
   controls: Locator,
   kind: string,
+  setup: { setMonster: boolean },
 ): Promise<"field" | "prompt"> {
   const field = page.getByRole("region", { name: "Duel field" });
   switch (kind) {
     case "idleCommand":
+      if (setup.setMonster && (await setHandMonsterWithKeyboard(page, field))) {
+        setup.setMonster = false;
+        return "field";
+      }
       await activatePreferredButton(page, field, [
         "End turn",
         "Enter Battle Phase",
@@ -1331,6 +1367,45 @@ async function answerPromptWithKeyboard(
       await activatePreferredButton(page, controls, []);
       return "prompt";
   }
+}
+
+/**
+ * Sets one hand monster face-down using only the keyboard, so the board gains a
+ * genuine defense-position (sideways) card. Returns false when no hand card
+ * offers a Set action, leaving the prompt unanswered for the caller.
+ */
+async function setHandMonsterWithKeyboard(
+  page: Page,
+  field: Locator,
+): Promise<boolean> {
+  const openers = field.getByRole("button", {
+    name: /^Legal action, Open actions for .+ in Your Hand$/,
+  });
+  for (let index = 0; index < (await openers.count()); index += 1) {
+    const opener = openers.nth(index);
+    if (!(await opener.isEnabled())) continue;
+    await keyboardActivate(page, opener);
+    const menu = page.getByRole("menu");
+    if ((await menu.count()) === 0) continue;
+    const items = menu.getByRole("menuitem");
+    let chose = false;
+    for (let move = 0; move < (await items.count()); move += 1) {
+      const focused = menu.locator(":focus");
+      if (/^Set /.test((await focused.textContent()) ?? "")) {
+        await page.keyboard.press("Enter");
+        chose = true;
+        break;
+      }
+      await page.keyboard.press("ArrowDown");
+    }
+    if (chose) {
+      await expect(menu).toHaveCount(0);
+      return true;
+    }
+    await page.keyboard.press("Escape");
+    await expect(menu).toHaveCount(0);
+  }
+  return false;
 }
 
 async function hasEnabledButton(

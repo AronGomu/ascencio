@@ -18,6 +18,7 @@ import {
   DUPLICATE_SHARED_OCCUPANCY,
   promptChoice,
 } from "../fixtures/board-view-model.ts";
+import { RICH_PUBLIC_DUEL_STATE } from "../fixtures/board-public-states.ts";
 
 describe("duel field mapping", () => {
   it("creates 34 unique Standard physical controls with two shared EMZs", () => {
@@ -351,6 +352,52 @@ describe("semantic board view model", () => {
     );
     expect(stacks.nav.get("stack:p0:deck")?.up).toBe("stack:p0:graveyard");
     expect(stacks.nav.get("stack:p0:deck")?.left).toBe("zone:p0:spellTrap:4");
+  });
+
+  it("hidden hand placeholders are upright", () => {
+    const result = mapSnapshotToBoard(RICH_PUBLIC_DUEL_STATE);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const opponentHiddenHand = result.value.cards.filter(
+      (card) => card.zoneId === "p1:hand",
+    );
+    expect(opponentHiddenHand.length).toBeGreaterThan(0);
+    expect(
+      opponentHiddenHand.every((card) => card.orientation === "upright"),
+    ).toBe(true);
+  });
+
+  it("hidden hand placeholders are not defense position", () => {
+    const result = mapSnapshotToBoard(RICH_PUBLIC_DUEL_STATE);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const opponentHiddenHand = result.value.cards.filter(
+      (card) => card.zoneId === "p1:hand",
+    );
+    expect(opponentHiddenHand.length).toBeGreaterThan(0);
+    expect(
+      opponentHiddenHand.every((card) => card.position === "faceDownAttack"),
+    ).toBe(true);
+  });
+
+  it("own hidden hand placeholders are upright too", () => {
+    const snapshot = {
+      ...RICH_PUBLIC_DUEL_STATE,
+      players: [
+        { ...RICH_PUBLIC_DUEL_STATE.players[0], handCount: 2 },
+        RICH_PUBLIC_DUEL_STATE.players[1],
+      ],
+    } as typeof RICH_PUBLIC_DUEL_STATE;
+    const result = mapSnapshotToBoard(snapshot);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const ownHiddenHand = result.value.cards.filter(
+      (card) => card.zoneId === "p0:hand" && card.hidden,
+    );
+    expect(ownHiddenHand.length).toBeGreaterThan(0);
+    expect(ownHiddenHand.every((card) => card.orientation === "upright")).toBe(
+      true,
+    );
   });
 
   it("resolves each prompt choice to stable board target or explicit fallback", () => {

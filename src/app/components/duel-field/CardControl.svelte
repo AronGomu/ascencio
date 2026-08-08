@@ -114,17 +114,23 @@
   data-position={card.position}
   data-card-zone-id={card.zoneId}
   style={positionStyle}
+  data-cy={`field-card-${card.id}`}
 >
-  <div class="duel-field-card__art">
+  <div class="duel-field-card__art" data-cy="card-control-art">
     <img
       src={renderedImageUrl}
       alt={card.hidden ? "" : accessibleLabel}
       aria-hidden={card.hidden}
       decoding="async"
       onerror={useFallbackImage}
+      data-cy="card-control-image"
     />
   </div>
-  <span class="duel-field-card__label" aria-hidden="true">
+  <span
+    class="duel-field-card__label"
+    aria-hidden="true"
+    data-cy="card-control-label"
+  >
     {card.hidden ? "Hidden card" : card.label}
   </span>
   {#if actionable}
@@ -139,6 +145,7 @@
       onpointerdown={pointerDown}
       onpointermove={pointerMove}
       onclick={activate}
+      data-cy={`field-card-target-${card.id}`}
     ></button>
     {#if interactionKind !== "cardAction"}
       <button
@@ -146,7 +153,8 @@
         class="duel-field-card__inspect"
         aria-label={`Inspect ${accessibleLabel}`}
         tabindex="-1"
-        onclick={oninspect}>Inspect</button
+        onclick={oninspect}
+        data-cy="card-control-inspect-button">Inspect</button
       >
     {/if}
   {/if}

@@ -51,14 +51,24 @@
     class="field-error"
     role="alert"
     aria-labelledby="field-error-heading"
+    data-cy="duel-field-error-boundary-panel"
   >
-    <div>
-      <p class="eyebrow">Duel field unavailable</p>
-      <h2 id="field-error-heading">Interactive field could not render</h2>
-      <p>{sanitizedFailureMessage(error)}</p>
+    <div data-cy="duel-field-error-boundary-body">
+      <p class="eyebrow" data-cy="duel-field-error-boundary-eyebrow">
+        Duel field unavailable
+      </p>
+      <h2 id="field-error-heading" data-cy="duel-field-error-boundary-heading">
+        Interactive field could not render
+      </h2>
+      <p data-cy="duel-field-error-boundary-message">
+        {sanitizedFailureMessage(error)}
+      </p>
     </div>
-    <button type="button" class="secondary" onclick={() => retry(reset)}
-      >Retry duel field</button
+    <button
+      type="button"
+      class="secondary"
+      onclick={() => retry(reset)}
+      data-cy="duel-field-error-boundary-retry-button">Retry duel field</button
     >
   </section>
 {/snippet}

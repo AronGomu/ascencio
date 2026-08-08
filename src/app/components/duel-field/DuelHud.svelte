@@ -63,39 +63,56 @@
   }
 </script>
 
-<section class="duel-hud" aria-label="Duel HUD">
-  <header class="duel-hud__turn">
-    <div>
-      <p class="eyebrow">Turn {snapshot.turn}</p>
-      <h2>{snapshot.turnPlayer === 0 ? "Your turn" : "Opponent's turn"}</h2>
+<section class="duel-hud" aria-label="Duel HUD" data-cy="duel-hud">
+  <header class="duel-hud__turn" data-cy="duel-hud-turn">
+    <div data-cy="duel-hud-turn-title">
+      <p class="eyebrow" data-cy="duel-hud-turn-eyebrow">
+        Turn {snapshot.turn}
+      </p>
+      <h2 data-cy="duel-hud-turn-heading">
+        {snapshot.turnPlayer === 0 ? "Your turn" : "Opponent's turn"}
+      </h2>
     </div>
-    <p class="phase-pill">{words(snapshot.phase)}</p>
+    <p class="phase-pill" data-cy="duel-hud-phase-pill">
+      {words(snapshot.phase)}
+    </p>
   </header>
 
-  <div class="duel-hud__players">
+  <div class="duel-hud__players" data-cy="duel-hud-players">
     {#each snapshot.players as player (player.player)}
       <article
         aria-label={player.player === 0 ? "Your state" : "Opponent state"}
+        data-cy={`duel-hud-player-${player.player}`}
       >
-        <div class="player-heading">
-          <h3>{player.player === 0 ? "You" : "Opponent"}</h3>
-          <strong>{player.lifePoints.toLocaleString()} LP</strong>
+        <div class="player-heading" data-cy="duel-hud-player-heading">
+          <h3 data-cy="duel-hud-player-name">
+            {player.player === 0 ? "You" : "Opponent"}
+          </h3>
+          <strong data-cy="duel-hud-player-life-points"
+            >{player.lifePoints.toLocaleString()} LP</strong
+          >
         </div>
-        <dl class="duel-hud__counts">
-          <div>
-            <dt>Deck</dt>
-            <dd>{player.deckCount}</dd>
+        <dl class="duel-hud__counts" data-cy="duel-hud-player-counts">
+          <div data-cy="duel-hud-player-deck-count-row">
+            <dt data-cy="duel-hud-player-deck-count-label">Deck</dt>
+            <dd data-cy="duel-hud-player-deck-count-value">
+              {player.deckCount}
+            </dd>
           </div>
-          <div>
-            <dt>Extra</dt>
-            <dd>{player.extraDeckCount}</dd>
+          <div data-cy="duel-hud-player-extra-count-row">
+            <dt data-cy="duel-hud-player-extra-count-label">Extra</dt>
+            <dd data-cy="duel-hud-player-extra-count-value">
+              {player.extraDeckCount}
+            </dd>
           </div>
-          <div>
-            <dt>Hand</dt>
-            <dd>{player.handCount}</dd>
+          <div data-cy="duel-hud-player-hand-count-row">
+            <dt data-cy="duel-hud-player-hand-count-label">Hand</dt>
+            <dd data-cy="duel-hud-player-hand-count-value">
+              {player.handCount}
+            </dd>
           </div>
         </dl>
-        <div class="duel-hud__trays">
+        <div class="duel-hud__trays" data-cy="duel-hud-player-trays">
           <CardTray
             label={player.player === 0 ? "Your Deck" : "Opponent Deck"}
             player={player.player}
@@ -151,14 +168,22 @@
     {/each}
   </div>
 
-  <section class="rich-card-state" aria-label="Public and owned card state">
-    <h3>Public and owned card state</h3>
+  <section
+    class="rich-card-state"
+    aria-label="Public and owned card state"
+    data-cy="duel-hud-rich-card-state"
+  >
+    <h3 data-cy="duel-hud-rich-card-state-heading">
+      Public and owned card state
+    </h3>
     {#if inspectableCards.length === 0}
-      <p class="empty-copy">No inspectable card details.</p>
+      <p class="empty-copy" data-cy="duel-hud-rich-card-state-empty">
+        No inspectable card details.
+      </p>
     {:else}
-      <ul>
+      <ul data-cy="duel-hud-rich-card-state-list">
         {#each inspectableCards as card (card.instanceId)}
-          <li>
+          <li data-cy={`duel-hud-card-${card.instanceId}`}>
             <button
               type="button"
               class="card-detail-trigger"
@@ -166,33 +191,50 @@
               aria-label={`Inspect ${cardName(card)}`}
               onclick={(event) =>
                 oninspect(card, event.currentTarget as HTMLButtonElement)}
+              data-cy={`duel-hud-card-inspect-button-${card.instanceId}`}
               >{cardName(card)}</button
             >
-            <span>{words(card.position)}</span>
+            <span data-cy="duel-hud-card-position">{words(card.position)}</span>
             {#if card.counters.length > 0}
               <ul
                 class="state-badges"
                 aria-label={`Counters on ${cardName(card)}`}
+                data-cy="duel-hud-card-counters-list"
               >
                 {#each card.counters as counter (`${counter.type}:${counter.name}`)}
-                  <li>
-                    <span aria-hidden="true">◆</span>
+                  <li
+                    data-cy={`duel-hud-card-counter-${counter.type}-${counter.name}`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      data-cy="duel-hud-card-counter-icon">◆</span
+                    >
                     {counterLabel(counter.name, counter.count)}
                   </li>
                 {/each}
               </ul>
             {/if}
             {#if card.overlayMaterials.length > 0}
-              <div class="material-summary">
-                <strong
+              <div
+                class="material-summary"
+                data-cy="duel-hud-card-material-summary"
+              >
+                <strong data-cy="duel-hud-card-material-count"
                   >{card.overlayMaterials.length}
                   {card.overlayMaterials.length === 1
                     ? "material"
                     : "materials"}</strong
                 >
-                <ol aria-label={`Materials on ${cardName(card)}`}>
+                <ol
+                  aria-label={`Materials on ${cardName(card)}`}
+                  data-cy="duel-hud-card-materials-list"
+                >
                   {#each card.overlayMaterials as material, index (material.instanceId)}
-                    <li>{materialName(card, index)}</li>
+                    <li
+                      data-cy={`duel-hud-card-material-${material.instanceId}`}
+                    >
+                      {materialName(card, index)}
+                    </li>
                   {/each}
                 </ol>
               </div>

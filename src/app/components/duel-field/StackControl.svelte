@@ -19,11 +19,20 @@
   data-stack-id={stack.id}
   data-stack-zone={stack.zone}
   style={positionStyle}
+  data-cy={`field-stack-${stack.id}`}
 >
-  <span class="duel-field-stack__name" aria-hidden="true">
+  <span
+    class="duel-field-stack__name"
+    aria-hidden="true"
+    data-cy="stack-control-name"
+  >
     {stack.zone === "graveyard" ? "GY" : stack.zone}
   </span>
-  <strong class="duel-field-stack__count" aria-hidden="true">
+  <strong
+    class="duel-field-stack__count"
+    aria-hidden="true"
+    data-cy="stack-control-count"
+  >
     {stack.count}
   </strong>
 </div>

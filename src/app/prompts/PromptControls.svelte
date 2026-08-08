@@ -256,29 +256,46 @@
   class="controls"
   aria-labelledby="active-prompt-heading"
   data-prompt-kind={prompt.kind}
+  data-cy="prompt-controls-panel"
 >
   <p
     class="visually-hidden"
     role="status"
     aria-live="polite"
     aria-atomic="true"
+    data-cy="prompt-controls-announcement"
   >
     {liveAnnouncement}
   </p>
-  <header>
-    <p class="prompt-kind">Your decision · {prompt.kind}</p>
-    <h2 id="active-prompt-heading" tabindex="-1" bind:this={heading}>
+  <header data-cy="prompt-controls-header">
+    <p class="prompt-kind" data-cy="prompt-controls-kind">
+      Your decision · {prompt.kind}
+    </p>
+    <h2
+      id="active-prompt-heading"
+      tabindex="-1"
+      bind:this={heading}
+      data-cy="prompt-controls-heading"
+    >
       {prompt.title}
     </h2>
-    {#if prompt.message}<p>{prompt.message}</p>{/if}
-    <p class="constraints" id={constraintsId}>
+    {#if prompt.message}<p data-cy="prompt-controls-message">
+        {prompt.message}
+      </p>{/if}
+    <p
+      class="constraints"
+      id={constraintsId}
+      data-cy="prompt-controls-constraints"
+    >
       {describePromptConstraints(prompt)}
     </p>
   </header>
 
   {#if prompt.contextCard}
-    <details class="card-detail">
-      <summary>Inspect {cardTitle(prompt.contextCard, "effect card")}</summary>
+    <details class="card-detail" data-cy="prompt-controls-context-card-detail">
+      <summary data-cy="prompt-controls-context-card-summary"
+        >Inspect {cardTitle(prompt.contextCard, "effect card")}</summary
+      >
       {#if cardImageUrl(prompt.contextCard)}
         <img
           class="card-image"
@@ -286,12 +303,17 @@
           alt={cardTitle(prompt.contextCard, "Effect card")}
           decoding="async"
           onerror={useFallbackImage}
+          data-cy="prompt-controls-context-card-image"
         />
       {/if}
       {#if prompt.contextCard.description}
-        <p>{prompt.contextCard.description}</p>
+        <p data-cy="prompt-controls-context-card-description">
+          {prompt.contextCard.description}
+        </p>
       {:else}
-        <p>No effect text is available.</p>
+        <p data-cy="prompt-controls-context-card-no-description">
+          No effect text is available.
+        </p>
       {/if}
     </details>
   {/if}
@@ -302,18 +324,35 @@
         type="button"
         disabled={controlsDisabled}
         onclick={() => submit([], emptyValidation)}
+        data-cy="prompt-controls-empty-submit-button"
         >{prompt.cancelable ? "Cancel" : "Continue"}</button
       >
     {:else}
-      <div class="unsupported" role="alert">
-        <h3>No supported choices</h3>
-        <p>This prompt cannot be answered by the current interface.</p>
+      <div
+        class="unsupported"
+        role="alert"
+        data-cy="prompt-controls-unsupported"
+      >
+        <h3 data-cy="prompt-controls-unsupported-heading">
+          No supported choices
+        </h3>
+        <p data-cy="prompt-controls-unsupported-copy">
+          This prompt cannot be answered by the current interface.
+        </p>
       </div>
     {/if}
   {:else if family === "single" || family === "toggle"}
-    <div class="action-grid" role="group" aria-label={prompt.title}>
+    <div
+      class="action-grid"
+      role="group"
+      aria-label={prompt.title}
+      data-cy="prompt-controls-single-grid"
+    >
       {#each prompt.choices as choice (choice.id)}
-        <div class="choice-with-detail">
+        <div
+          class="choice-with-detail"
+          data-cy={`prompt-controls-single-choice-row-${choice.id}`}
+        >
           <button
             type="button"
             aria-pressed={family === "toggle"
@@ -321,13 +360,19 @@
               : undefined}
             disabled={controlsDisabled}
             onclick={() => submit([choice.id])}
+            data-cy={`prompt-controls-choice-${choice.id}`}
           >
             {choice.label}
             {choice.selected ? " · selected" : ""}
           </button>
           {#if choice.card}
-            <details class="card-detail compact">
-              <summary>Inspect {cardTitle(choice.card, choice.label)}</summary>
+            <details
+              class="card-detail compact"
+              data-cy={`prompt-controls-single-choice-detail-${choice.id}`}
+            >
+              <summary data-cy="prompt-controls-single-choice-summary"
+                >Inspect {cardTitle(choice.card, choice.label)}</summary
+              >
               {#if cardImageUrl(choice.card)}
                 <img
                   class="card-image"
@@ -335,12 +380,17 @@
                   alt={cardTitle(choice.card, choice.label)}
                   decoding="async"
                   onerror={useFallbackImage}
+                  data-cy="prompt-controls-single-choice-image"
                 />
               {/if}
               {#if choice.card.description}
-                <p>{choice.card.description}</p>
+                <p data-cy="prompt-controls-single-choice-description">
+                  {choice.card.description}
+                </p>
               {:else}
-                <p>No effect text is available.</p>
+                <p data-cy="prompt-controls-single-choice-no-description">
+                  No effect text is available.
+                </p>
               {/if}
             </details>
           {/if}
@@ -351,29 +401,42 @@
     <fieldset
       disabled={controlsDisabled}
       aria-describedby={`${constraintsId}${!selectedValidation.valid && selected.length > 0 ? ` ${validationId}` : ""}`}
+      data-cy="prompt-controls-multiple-fieldset"
     >
-      <legend>{prompt.title}</legend>
-      <div class="selection-list">
+      <legend data-cy="prompt-controls-multiple-legend">{prompt.title}</legend>
+      <div class="selection-list" data-cy="prompt-controls-multiple-list">
         {#each prompt.choices as choice (choice.id)}
-          <div class="selection-choice">
-            <label>
+          <div
+            class="selection-choice"
+            data-cy={`prompt-controls-multiple-choice-row-${choice.id}`}
+          >
+            <label
+              data-cy={`prompt-controls-multiple-choice-label-${choice.id}`}
+            >
               <input
                 type="checkbox"
                 checked={selected.includes(choice.id)}
                 aria-invalid={!selectedValidation.valid && selected.length > 0}
                 onchange={(event) =>
                   setSelected(choice.id, event.currentTarget.checked)}
+                data-cy={`prompt-controls-choice-${choice.id}`}
               />
-              <span>
+              <span data-cy="prompt-controls-multiple-choice-text">
                 {choice.label}
                 {#if contributionLabel(choice)}
-                  <small>{contributionLabel(choice)}</small>
+                  <small data-cy="prompt-controls-multiple-choice-contribution"
+                    >{contributionLabel(choice)}</small
+                  >
                 {/if}
               </span>
             </label>
             {#if choice.card}
-              <details class="card-detail compact">
-                <summary>Inspect {cardTitle(choice.card, choice.label)}</summary
+              <details
+                class="card-detail compact"
+                data-cy={`prompt-controls-multiple-choice-detail-${choice.id}`}
+              >
+                <summary data-cy="prompt-controls-multiple-choice-summary"
+                  >Inspect {cardTitle(choice.card, choice.label)}</summary
                 >
                 {#if cardImageUrl(choice.card)}
                   <img
@@ -382,12 +445,17 @@
                     alt={cardTitle(choice.card, choice.label)}
                     decoding="async"
                     onerror={useFallbackImage}
+                    data-cy="prompt-controls-multiple-choice-image"
                   />
                 {/if}
                 {#if choice.card.description}
-                  <p>{choice.card.description}</p>
+                  <p data-cy="prompt-controls-multiple-choice-description">
+                    {choice.card.description}
+                  </p>
                 {:else}
-                  <p>No effect text is available.</p>
+                  <p data-cy="prompt-controls-multiple-choice-no-description">
+                    No effect text is available.
+                  </p>
                 {/if}
               </details>
             {/if}
@@ -395,55 +463,79 @@
         {/each}
       </div>
       {#if selectedContribution}
-        <p class="selection-summary">
+        <p class="selection-summary" data-cy="prompt-controls-multiple-summary">
           Selected: {selectedContribution}
         </p>
       {/if}
-      <div class="button-row">
+      <div class="button-row" data-cy="prompt-controls-multiple-actions">
         <button
           type="button"
           disabled={!selectedValidation.valid ||
             (selected.length === 0 && prompt.minimum > 0)}
           onclick={() => submit(selected, selectedValidation)}
+          data-cy="prompt-controls-multiple-confirm-button"
         >
           Confirm selection
         </button>
         {#if prompt.cancelable}
-          <button type="button" class="secondary" onclick={() => submit([])}
-            >Cancel</button
+          <button
+            type="button"
+            class="secondary"
+            onclick={() => submit([])}
+            data-cy="prompt-controls-multiple-cancel-button">Cancel</button
           >
         {/if}
       </div>
       {#if !selectedValidation.valid && selected.length > 0}
-        <p class="validation" id={validationId}>
+        <p
+          class="validation"
+          id={validationId}
+          data-cy="prompt-controls-multiple-validation"
+        >
           {selectedValidation.message}
         </p>
       {/if}
     </fieldset>
   {:else if family === "order"}
-    <ol class="order-list">
+    <ol class="order-list" data-cy="prompt-controls-order-list">
       {#each order as choice, index (choice.id)}
-        <li>
-          <span><strong>{index + 1}.</strong> {choice.label}</span>
-          <span class="order-actions">
+        <li data-cy={`prompt-controls-choice-${choice.id}`}>
+          <span data-cy={`prompt-controls-order-choice-label-${choice.id}`}
+            ><strong data-cy="prompt-controls-order-choice-index"
+              >{index + 1}.</strong
+            >
+            {choice.label}</span
+          >
+          <span
+            class="order-actions"
+            data-cy={`prompt-controls-order-choice-actions-${choice.id}`}
+          >
             <button
               type="button"
               class="secondary compact-button"
               aria-label={`Move ${choice.label} up`}
               disabled={controlsDisabled || index === 0}
-              onclick={() => moveChoice(index, -1)}>↑</button
+              onclick={() => moveChoice(index, -1)}
+              data-cy={`prompt-controls-order-choice-up-${choice.id}`}>↑</button
             >
             <button
               type="button"
               class="secondary compact-button"
               aria-label={`Move ${choice.label} down`}
               disabled={controlsDisabled || index === order.length - 1}
-              onclick={() => moveChoice(index, 1)}>↓</button
+              onclick={() => moveChoice(index, 1)}
+              data-cy={`prompt-controls-order-choice-down-${choice.id}`}
+              >↓</button
             >
           </span>
           {#if choice.card}
-            <details class="card-detail compact">
-              <summary>Inspect {cardTitle(choice.card, choice.label)}</summary>
+            <details
+              class="card-detail compact"
+              data-cy={`prompt-controls-order-choice-detail-${choice.id}`}
+            >
+              <summary data-cy="prompt-controls-order-choice-summary"
+                >Inspect {cardTitle(choice.card, choice.label)}</summary
+              >
               {#if cardImageUrl(choice.card)}
                 <img
                   class="card-image"
@@ -451,16 +543,21 @@
                   alt={cardTitle(choice.card, choice.label)}
                   decoding="async"
                   onerror={useFallbackImage}
+                  data-cy="prompt-controls-order-choice-image"
                 />
               {/if}
-              <p>{choice.card.description || "No effect text is available."}</p>
+              <p data-cy="prompt-controls-order-choice-description">
+                {choice.card.description || "No effect text is available."}
+              </p>
             </details>
           {/if}
         </li>
       {/each}
     </ol>
-    <p class="visually-hidden">{reorderAnnouncement}</p>
-    <div class="button-row">
+    <p class="visually-hidden" data-cy="prompt-controls-order-announcement">
+      {reorderAnnouncement}
+    </p>
+    <div class="button-row" data-cy="prompt-controls-order-actions">
       <button
         type="button"
         disabled={controlsDisabled || !orderValidation.valid}
@@ -468,31 +565,48 @@
           submit(
             order.map((choice) => choice.id),
             orderValidation,
-          )}>Confirm order</button
+          )}
+        data-cy="prompt-controls-order-confirm-button">Confirm order</button
       >
       {#if prompt.cancelable}
         <button
           type="button"
           class="secondary"
           disabled={controlsDisabled}
-          onclick={() => submit([])}>Cancel ordering</button
+          onclick={() => submit([])}
+          data-cy="prompt-controls-order-cancel-button">Cancel ordering</button
         >
       {/if}
     </div>
   {:else if family === "counter"}
-    <div class="counter-list">
+    <div class="counter-list" data-cy="prompt-controls-counter-list">
       {#each prompt.choices as choice (choice.id)}
-        <div class="counter-row">
-          <span>{choice.label}</span>
-          <div role="group" aria-label={`Counters on ${choice.label}`}>
+        <div
+          class="counter-row"
+          data-cy={`prompt-controls-choice-${choice.id}`}
+        >
+          <span data-cy={`prompt-controls-counter-choice-label-${choice.id}`}
+            >{choice.label}</span
+          >
+          <div
+            role="group"
+            aria-label={`Counters on ${choice.label}`}
+            data-cy={`prompt-controls-counter-choice-controls-${choice.id}`}
+          >
             <button
               type="button"
               class="secondary compact-button"
               aria-label={`Remove one counter from ${choice.label}`}
               disabled={controlsDisabled || (allocations[choice.id] ?? 0) === 0}
-              onclick={() => adjustAllocation(choice, -1)}>−</button
+              onclick={() => adjustAllocation(choice, -1)}
+              data-cy={`prompt-controls-counter-choice-decrement-${choice.id}`}
+              >−</button
             >
-            <output aria-live="polite">{allocations[choice.id] ?? 0}</output>
+            <output
+              aria-live="polite"
+              data-cy={`prompt-controls-counter-choice-value-${choice.id}`}
+              >{allocations[choice.id] ?? 0}</output
+            >
             <button
               type="button"
               class="secondary compact-button"
@@ -501,12 +615,19 @@
                 (allocations[choice.id] ?? 0) >=
                   (choice.allocationMaximum ?? 0) ||
                 allocatedIds.length >= prompt.maximum}
-              onclick={() => adjustAllocation(choice, 1)}>+</button
+              onclick={() => adjustAllocation(choice, 1)}
+              data-cy={`prompt-controls-counter-choice-increment-${choice.id}`}
+              >+</button
             >
           </div>
           {#if choice.card}
-            <details class="card-detail compact">
-              <summary>Inspect {cardTitle(choice.card, choice.label)}</summary>
+            <details
+              class="card-detail compact"
+              data-cy={`prompt-controls-counter-choice-detail-${choice.id}`}
+            >
+              <summary data-cy="prompt-controls-counter-choice-summary"
+                >Inspect {cardTitle(choice.card, choice.label)}</summary
+              >
               {#if cardImageUrl(choice.card)}
                 <img
                   class="card-image"
@@ -514,9 +635,12 @@
                   alt={cardTitle(choice.card, choice.label)}
                   decoding="async"
                   onerror={useFallbackImage}
+                  data-cy="prompt-controls-counter-choice-image"
                 />
               {/if}
-              <p>{choice.card.description || "No effect text is available."}</p>
+              <p data-cy="prompt-controls-counter-choice-description">
+                {choice.card.description || "No effect text is available."}
+              </p>
             </details>
           {/if}
         </div>
@@ -526,16 +650,21 @@
       type="button"
       disabled={controlsDisabled || !allocationValidation.valid}
       onclick={() => submit(allocatedIds, allocationValidation)}
+      data-cy="prompt-controls-counter-confirm-button"
       >Confirm allocation</button
     >
   {/if}
 
   {#if localError}
-    <p class="validation">{localError}</p>
+    <p class="validation" data-cy="prompt-controls-local-error">
+      {localError}
+    </p>
   {/if}
 </section>
 {#if submitted || disabled}
-  <p class="sent">Response sent. Waiting for the engine…</p>
+  <p class="sent" data-cy="prompt-controls-sent-message">
+    Response sent. Waiting for the engine…
+  </p>
 {/if}
 
 <style>

@@ -82,21 +82,31 @@
   class="selection-dock"
   aria-label="Field selection"
   aria-busy={disabled}
+  data-cy="selection-dock"
 >
-  <div>
-    <p class="eyebrow">Field decision</p>
-    <h3>{spec.title}</h3>
+  <div data-cy="selection-dock-title">
+    <p class="eyebrow" data-cy="selection-dock-eyebrow">Field decision</p>
+    <h3 data-cy="selection-dock-title-heading">{spec.title}</h3>
     {#if selectedLabels.length > 0}
-      <p>Selected: {selectedLabels.join(", ")}</p>
+      <p data-cy="selection-dock-selected-summary">
+        Selected: {selectedLabels.join(", ")}
+      </p>
     {/if}
   </div>
 
   {#if spec.kind === "counterAllocation"}
-    <div class="selection-dock__list">
+    <div class="selection-dock__list" data-cy="selection-dock-allocation-list">
       {#each allChoices as choice (choice.id)}
-        <div class="selection-dock__row">
-          <span>{choice.label}</span>
-          <div role="group" aria-label={`Counters on ${choice.label}`}>
+        <div
+          class="selection-dock__row"
+          data-cy={`selection-dock-allocation-row-${choice.id}`}
+        >
+          <span data-cy="selection-dock-allocation-label">{choice.label}</span>
+          <div
+            role="group"
+            aria-label={`Counters on ${choice.label}`}
+            data-cy="selection-dock-allocation-controls"
+          >
             <button
               type="button"
               class="secondary compact-button"
@@ -108,9 +118,13 @@
                   type: "adjustAllocation",
                   choiceId: choice.id,
                   delta: -1,
-                })}>−</button
+                })}
+              data-cy={`selection-dock-allocation-decrement-${choice.id}`}
+              >−</button
             >
-            <output>{session.allocations.get(choice.id) ?? 0}</output>
+            <output data-cy={`selection-dock-allocation-value-${choice.id}`}
+              >{session.allocations.get(choice.id) ?? 0}</output
+            >
             <button
               type="button"
               class="secondary compact-button"
@@ -124,33 +138,42 @@
                   type: "adjustAllocation",
                   choiceId: choice.id,
                   delta: 1,
-                })}>+</button
+                })}
+              data-cy={`selection-dock-allocation-increment-${choice.id}`}
+              >+</button
             >
           </div>
         </div>
       {/each}
     </div>
   {:else if spec.kind === "order"}
-    <ol class="selection-dock__list">
+    <ol class="selection-dock__list" data-cy="selection-dock-order-list">
       {#each session.order as choiceId, index (choiceId)}
         {@const choice = choicesById.get(choiceId)}
         {#if choice}
-          <li class="selection-dock__row">
-            <span>{index + 1}. {choice.label}</span>
-            <span>
+          <li
+            class="selection-dock__row"
+            data-cy={`selection-dock-order-row-${choiceId}`}
+          >
+            <span data-cy="selection-dock-order-label"
+              >{index + 1}. {choice.label}</span
+            >
+            <span data-cy="selection-dock-order-controls">
               <button
                 type="button"
                 class="secondary compact-button"
                 aria-label={`Move ${choice.label} up`}
                 disabled={disabled || index === 0}
-                onclick={() => move(choice, -1)}>↑</button
+                onclick={() => move(choice, -1)}
+                data-cy={`selection-dock-order-up-${choiceId}`}>↑</button
               >
               <button
                 type="button"
                 class="secondary compact-button"
                 aria-label={`Move ${choice.label} down`}
                 disabled={disabled || index === session.order.length - 1}
-                onclick={() => move(choice, 1)}>↓</button
+                onclick={() => move(choice, 1)}
+                data-cy={`selection-dock-order-down-${choiceId}`}>↓</button
               >
             </span>
           </li>
@@ -164,6 +187,7 @@
       class="selection-dock__actions"
       role="group"
       aria-label="Other legal actions"
+      data-cy="selection-dock-global-actions"
     >
       {#each globalChoices as choice (choice.id)}
         <button
@@ -172,6 +196,7 @@
           {disabled}
           onclick={() =>
             dispatch({ type: "chooseChoice", choiceId: choice.id })}
+          data-cy={`selection-dock-global-choice-${choice.id}`}
           >{choice.label}</button
         >
       {/each}
@@ -179,26 +204,35 @@
   {/if}
 
   {#if spec.kind !== "cardAction" && spec.kind !== "nonField"}
-    <div class="selection-dock__actions">
+    <div
+      class="selection-dock__actions"
+      data-cy="selection-dock-confirm-actions"
+    >
       <button
         type="button"
         disabled={disabled || !confirmValid}
         aria-describedby={!confirmValid && validationMessage
           ? "field-selection-validation"
           : undefined}
-        onclick={() => dispatch({ type: "confirm" })}>{confirmLabel()}</button
+        onclick={() => dispatch({ type: "confirm" })}
+        data-cy="selection-dock-confirm-button">{confirmLabel()}</button
       >
       {#if spec.constraints.cancelable}
         <button
           type="button"
           class="secondary"
           {disabled}
-          onclick={() => dispatch({ type: "cancel" })}>Cancel</button
+          onclick={() => dispatch({ type: "cancel" })}
+          data-cy="selection-dock-cancel-button">Cancel</button
         >
       {/if}
     </div>
     {#if !confirmValid && validationMessage}
-      <p id="field-selection-validation" class="validation">
+      <p
+        id="field-selection-validation"
+        class="validation"
+        data-cy="selection-dock-validation-message"
+      >
         {validationMessage}
       </p>
     {/if}

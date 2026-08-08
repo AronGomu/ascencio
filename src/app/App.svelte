@@ -636,12 +636,12 @@
 
 <svelte:window onkeydown={handleGlobalKeydown} />
 
-<header class="app-header">
-  <div>
-    <p class="eyebrow">Offline preset duel</p>
-    <h1>YGO Story Duel Simulator</h1>
+<header class="app-header" data-cy="app-header">
+  <div data-cy="app-header-title">
+    <p class="eyebrow" data-cy="app-header-eyebrow">Offline preset duel</p>
+    <h1 data-cy="app-header-heading">YGO Story Duel Simulator</h1>
   </div>
-  <p class="engine-state" aria-live="polite">
+  <p class="engine-state" aria-live="polite" data-cy="app-engine-state">
     {#if $duel.coreVersion}
       ocgcore {$duel.coreVersion[0]}.{$duel.coreVersion[1]}
     {:else}
@@ -650,18 +650,30 @@
   </p>
 </header>
 
-<main>
-  <p class="visually-hidden" aria-live="polite" aria-atomic="true">
+<main data-cy="app-main">
+  <p
+    class="visually-hidden"
+    aria-live="polite"
+    aria-atomic="true"
+    data-cy="app-announcement"
+  >
     {appAnnouncement}
   </p>
-  <section class="status-panel" aria-labelledby="duel-status-heading">
-    <div>
-      <p class="eyebrow">Session status</p>
-      <h2 id="duel-status-heading">{phaseLabel($duel.status)}</h2>
+  <section
+    class="status-panel"
+    aria-labelledby="duel-status-heading"
+    data-cy="status-panel"
+  >
+    <div data-cy="status-panel-summary">
+      <p class="eyebrow" data-cy="status-panel-eyebrow">Session status</p>
+      <h2 id="duel-status-heading" data-cy="status-panel-heading">
+        {phaseLabel($duel.status)}
+      </h2>
       {#if snapshotStorageStatus.activeSnapshotId}
         <p
           class="snapshot-state"
           title={snapshotStorageStatus.activeSnapshotId}
+          data-cy="status-panel-snapshot-state"
         >
           Active assets {snapshotStorageStatus.activeSnapshotId.slice(0, 12)}
           {#if snapshotStorageStatus.fallbackSnapshotId}
@@ -671,24 +683,41 @@
       {/if}
     </div>
     {#if imageLoading}
-      <div class="loading-state" aria-live="polite">
-        <p>Preparing active card images…</p>
+      <div
+        class="loading-state"
+        aria-live="polite"
+        data-cy="status-panel-image-loading"
+      >
+        <p data-cy="status-panel-image-loading-text">
+          Preparing active card images…
+        </p>
         <progress
           aria-label="Preparing active card images"
           value={imageProgress}
           max="1"
+          data-cy="app-image-progress"
         ></progress>
       </div>
     {:else if $duel.loading}
-      <div class="loading-state" aria-live="polite">
-        <p>Loading {phaseLabel($duel.loading.stage)}…</p>
+      <div
+        class="loading-state"
+        aria-live="polite"
+        data-cy="status-panel-duel-loading"
+      >
+        <p data-cy="status-panel-duel-loading-text">
+          Loading {phaseLabel($duel.loading.stage)}…
+        </p>
         {#if $duel.loading.progress === undefined}
-          <progress aria-label={`Loading ${$duel.loading.stage}`}></progress>
+          <progress
+            aria-label={`Loading ${$duel.loading.stage}`}
+            data-cy="status-panel-duel-loading-progress-indeterminate"
+          ></progress>
         {:else}
           <progress
             aria-label={`Loading ${$duel.loading.stage}`}
             value={$duel.loading.progress}
             max="1"
+            data-cy="status-panel-duel-loading-progress-value"
           ></progress>
         {/if}
       </div>
@@ -699,10 +728,13 @@
     <section
       class="message-panel storage-warning"
       aria-busy={snapshotActivationPending}
+      data-cy="app-storage-warning-panel"
     >
-      <div>
-        <p class="eyebrow">Local snapshot storage</p>
-        <p>
+      <div data-cy="app-storage-warning-body">
+        <p class="eyebrow" data-cy="app-storage-warning-eyebrow">
+          Local snapshot storage
+        </p>
+        <p data-cy="app-storage-warning-message">
           {snapshotActivationPending
             ? "Activating verified snapshot…"
             : storageWarning}
@@ -713,6 +745,7 @@
           type="button"
           class="secondary"
           disabled={snapshotActivationPending}
+          data-cy="app-retry-snapshot-activation-button"
           onclick={() => {
             storageWarning = null;
             snapshotActivationAttempted = false;
@@ -722,23 +755,32 @@
             : "Retry snapshot activation"}</button
         >
       {:else if storageWarning && !snapshotStaged}
-        <button type="button" class="secondary" onclick={retryStorage}
-          >Retry local storage</button
+        <button
+          type="button"
+          class="secondary"
+          data-cy="app-retry-storage-button"
+          onclick={retryStorage}>Retry local storage</button
         >
       {/if}
     </section>
   {/if}
 
   {#if imageWarning}
-    <section class="message-panel image-warning">
-      <div>
-        <p class="eyebrow">Card image fallback</p>
-        <p>{imageWarning}</p>
+    <section
+      class="message-panel image-warning"
+      data-cy="app-image-warning-panel"
+    >
+      <div data-cy="app-image-warning-body">
+        <p class="eyebrow" data-cy="app-image-warning-eyebrow">
+          Card image fallback
+        </p>
+        <p data-cy="app-image-warning-message">{imageWarning}</p>
       </div>
       <button
         type="button"
         class="secondary"
         disabled={imageLoading}
+        data-cy="app-retry-images-button"
         onclick={retryCardImageLoading}>Retry card images</button
       >
     </section>
@@ -750,36 +792,48 @@
       class="message-panel error-panel"
       role="alert"
       aria-labelledby="duel-error-heading"
+      data-cy="app-error-panel"
     >
-      <div>
-        <p class="eyebrow">
+      <div data-cy="app-error-body">
+        <p class="eyebrow" data-cy="app-error-eyebrow">
           {$duel.status === "failed"
             ? "Duel stopped"
             : "Choice needs attention"}
         </p>
-        <h2 id="duel-error-heading" tabindex="-1" bind:this={errorHeading}>
+        <h2
+          id="duel-error-heading"
+          tabindex="-1"
+          bind:this={errorHeading}
+          data-cy="app-error-heading"
+        >
           {$duel.error.message}
         </h2>
-        <p>Error code: {$duel.error.code}</p>
+        <p data-cy="app-error-code">Error code: {$duel.error.code}</p>
       </div>
-      <div class="button-row">
+      <div class="button-row" data-cy="app-error-actions">
         {#if $duel.error.recoverable && $duel.status !== "failed"}
           <button
             type="button"
             class="secondary"
+            data-cy="app-dismiss-error-button"
             onclick={() => void dismissRecoverableError()}>Dismiss</button
           >
         {:else}
-          <button type="button" onclick={() => void duel.retry()}
-            >Try again</button
+          <button
+            type="button"
+            data-cy="app-retry-duel-button"
+            onclick={() => void duel.retry()}>Try again</button
           >
         {/if}
         {#if $duel.context.sessionGeneration > 0 && $duel.status === "failed"}
-          <span class="sensitive-note">Contains the production seed.</span>
+          <span class="sensitive-note" data-cy="app-error-sensitive-note"
+            >Contains the production seed.</span
+          >
           <button
             type="button"
             class="secondary"
             disabled={diagnosticPending}
+            data-cy="app-error-download-diagnostics-button"
             onclick={requestDiagnostics}
             >{diagnosticPending
               ? "Preparing diagnostics…"
@@ -798,10 +852,16 @@
       aria-atomic="true"
       aria-busy={$duel.status !== "completed"}
       aria-labelledby="duel-result-heading"
+      data-cy="app-result-panel"
     >
-      <div>
-        <p class="eyebrow">Duel complete</p>
-        <h2 id="duel-result-heading" tabindex="-1" bind:this={resultHeading}>
+      <div data-cy="app-result-body">
+        <p class="eyebrow" data-cy="app-result-eyebrow">Duel complete</p>
+        <h2
+          id="duel-result-heading"
+          tabindex="-1"
+          bind:this={resultHeading}
+          data-cy="app-result-heading"
+        >
           {#if $duel.result.type === "completed"}
             {$duel.result.winner === 0 ? "You won" : "Opponent won"}
           {:else if $duel.result.type === "surrendered"}
@@ -813,27 +873,37 @@
           {/if}
         </h2>
         {#if $duel.result.type === "completed"}
-          <p>Finish reason {$duel.result.reason}</p>
+          <p data-cy="app-result-finish-reason">
+            Finish reason {$duel.result.reason}
+          </p>
         {:else if $duel.result.type === "unsupported"}
-          <p>{$duel.result.detail}</p>
+          <p data-cy="app-result-unsupported-detail">
+            {$duel.result.detail}
+          </p>
         {:else if $duel.result.type === "engineError"}
-          <p>{$duel.result.detail}</p>
+          <p data-cy="app-result-engine-error-detail">
+            {$duel.result.detail}
+          </p>
         {/if}
       </div>
-      <div class="button-row">
+      <div class="button-row" data-cy="app-result-actions">
         <button
           type="button"
           disabled={$duel.status !== "completed"}
+          data-cy="app-restart-duel-button"
           onclick={() => void duel.restart()}
           >{$duel.status === "completed"
             ? "Start another duel"
             : "Starting another duel…"}</button
         >
-        <span class="sensitive-note">Contains the production seed.</span>
+        <span class="sensitive-note" data-cy="app-result-sensitive-note"
+          >Contains the production seed.</span
+        >
         <button
           type="button"
           class="secondary"
           disabled={diagnosticPending}
+          data-cy="app-result-download-diagnostics-button"
           onclick={requestDiagnostics}
           >{diagnosticPending
             ? "Preparing diagnostics…"
@@ -844,7 +914,7 @@
   {/if}
 
   {#if diagnosticMessage}
-    <p class="diagnostic-message">
+    <p class="diagnostic-message" data-cy="app-diagnostic-message">
       {diagnosticMessage}
     </p>
   {/if}
@@ -854,21 +924,29 @@
       class="lifecycle-panel"
       aria-label="Duel actions"
       aria-busy={$duel.responsePending}
+      data-cy="lifecycle-panel"
     >
       {#if confirmingSurrender}
-        <div role="alert">
-          <strong>Surrender this duel?</strong>
-          <p>This immediately awards the duel to your opponent.</p>
+        <div role="alert" data-cy="lifecycle-panel-surrender-confirm">
+          <strong data-cy="lifecycle-panel-surrender-confirm-heading"
+            >Surrender this duel?</strong
+          >
+          <p data-cy="lifecycle-panel-surrender-confirm-copy">
+            This immediately awards the duel to your opponent.
+          </p>
           {#if $duel.responsePending}
-            <p>Surrender sent. Waiting for the duel result…</p>
+            <p data-cy="lifecycle-panel-surrender-pending">
+              Surrender sent. Waiting for the duel result…
+            </p>
           {/if}
         </div>
-        <div class="button-row">
+        <div class="button-row" data-cy="lifecycle-panel-surrender-actions">
           <button
             type="button"
             class="danger"
             bind:this={surrenderConfirm}
             disabled={$duel.responsePending}
+            data-cy="app-surrender-confirm-button"
             onclick={() => {
               duel.surrender();
             }}>Confirm surrender</button
@@ -877,6 +955,7 @@
             type="button"
             class="secondary"
             disabled={$duel.responsePending}
+            data-cy="app-surrender-cancel-button"
             onclick={() => void cancelSurrenderConfirmation()}
             >Keep playing</button
           >
@@ -887,6 +966,7 @@
           class="secondary"
           bind:this={surrenderTrigger}
           disabled={$duel.responsePending}
+          data-cy="app-surrender-button"
           onclick={() => void openSurrenderConfirmation()}
           >Surrender duel</button
         >
@@ -913,9 +993,9 @@
       />
     {/key}
   {:else if $duel.snapshot}
-    <section class="field-error" role="alert">
-      <h2>Duel field unavailable</h2>
-      <p>Prompt controls remain available.</p>
+    <section class="field-error" role="alert" data-cy="app-field-error-panel">
+      <h2 data-cy="app-field-error-heading">Duel field unavailable</h2>
+      <p data-cy="app-field-error-copy">Prompt controls remain available.</p>
     </section>
   {/if}
 
@@ -928,10 +1008,18 @@
       oninspect={inspectHudCard}
     />
   {:else if $duel.status === "active"}
-    <section class="message-panel" aria-live="polite">
-      <div>
-        <p class="eyebrow">Preparing duel</p>
-        <h2>Waiting for the first public state…</h2>
+    <section
+      class="message-panel"
+      aria-live="polite"
+      data-cy="app-preparing-duel-panel"
+    >
+      <div data-cy="app-preparing-duel-body">
+        <p class="eyebrow" data-cy="app-preparing-duel-eyebrow">
+          Preparing duel
+        </p>
+        <h2 data-cy="app-preparing-duel-heading">
+          Waiting for the first public state…
+        </h2>
       </div>
     </section>
   {/if}
@@ -946,12 +1034,13 @@
     />
   {/if}
 
-  <div class="workspace-grid">
+  <div class="workspace-grid" data-cy="workspace-grid">
     <section
       class="prompt-panel"
       aria-label="Current decision"
       tabindex="-1"
       bind:this={promptPanel}
+      data-cy="prompt-panel"
     >
       {#if $duel.prompt}
         {#key $duel.prompt.id}
@@ -965,9 +1054,9 @@
           />
         {/key}
       {:else}
-        <p class="eyebrow">Current decision</p>
-        <h2>No decision pending</h2>
-        <p class="empty-copy">
+        <p class="eyebrow" data-cy="prompt-panel-eyebrow">Current decision</p>
+        <h2 data-cy="prompt-panel-heading">No decision pending</h2>
+        <p class="empty-copy" data-cy="prompt-panel-empty-copy">
           {$duel.responsePending
             ? confirmingSurrender
               ? "Surrender sent. Waiting for the duel result…"

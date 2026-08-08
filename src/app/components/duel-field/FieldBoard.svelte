@@ -136,12 +136,21 @@
   bind:this={boardElement}
   onfocusin={focusTarget}
   onkeydown={navigate}
+  data-cy="duel-field-board"
 >
-  <span id="duel-field-keyboard-help" class="visually-hidden">
+  <span
+    id="duel-field-keyboard-help"
+    class="visually-hidden"
+    data-cy="duel-field-board-keyboard-help"
+  >
     Use Arrow keys to move between field controls. Home and End move to row
     edges. Enter or Space activates a legal control.
   </span>
-  <div class="duel-field-board__surface" aria-hidden="true"></div>
+  <div
+    class="duel-field-board__surface"
+    aria-hidden="true"
+    data-cy="duel-field-board-surface"
+  ></div>
   {#each board.zones as zone (zone.id)}
     <ZoneControl
       {zone}

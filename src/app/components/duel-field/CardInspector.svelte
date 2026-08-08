@@ -92,28 +92,54 @@
     id="card-inspector"
     class="card-inspector"
     aria-labelledby="card-inspector-heading"
+    data-cy="card-inspector"
   >
-    <div class="card-inspector__copy">
-      <p class="eyebrow">Public card details</p>
-      <h2 id="card-inspector-heading" tabindex="-1" bind:this={heading}>
+    <div class="card-inspector__copy" data-cy="card-inspector-copy">
+      <p class="eyebrow" data-cy="card-inspector-eyebrow">
+        Public card details
+      </p>
+      <h2
+        id="card-inspector-heading"
+        tabindex="-1"
+        bind:this={heading}
+        data-cy="card-inspector-heading"
+      >
         {name}
       </h2>
-      <p>{words(card.location)} · {words(card.position)}</p>
-      {#if description}<p>{description}</p>{/if}
+      <p data-cy="card-inspector-location">
+        {words(card.location)} · {words(card.position)}
+      </p>
+      {#if description}<p data-cy="card-inspector-description">
+          {description}
+        </p>{/if}
       {#if card.counters.length > 0}
-        <ul class="state-badges" aria-label="Counters">
+        <ul
+          class="state-badges"
+          aria-label="Counters"
+          data-cy="card-inspector-counters-list"
+        >
           {#each card.counters as counter (`${counter.type}:${counter.name}`)}
-            <li>
-              <span aria-hidden="true">◆</span>
+            <li
+              data-cy={`card-inspector-counter-${counter.type}-${counter.name}`}
+            >
+              <span aria-hidden="true" data-cy="card-inspector-counter-icon"
+                >◆</span
+              >
               {counterLabel(counter.name, counter.count)}
             </li>
           {/each}
         </ul>
       {/if}
       {#if card.overlayMaterials.length > 0}
-        <ol class="material-list" aria-label="Materials">
+        <ol
+          class="material-list"
+          aria-label="Materials"
+          data-cy="card-inspector-materials-list"
+        >
           {#each card.overlayMaterials as material, index (material.instanceId)}
-            <li>Material {index + 1}: {materialName(index)}</li>
+            <li data-cy={`card-inspector-material-${material.instanceId}`}>
+              Material {index + 1}: {materialName(index)}
+            </li>
           {/each}
         </ol>
       {/if}
@@ -123,9 +149,13 @@
         alt={name}
         decoding="async"
         onerror={useFallbackImage}
+        data-cy="card-inspector-image"
       />{/if}
-    <button type="button" class="secondary" onclick={onclose}
-      >Close card details</button
+    <button
+      type="button"
+      class="secondary"
+      onclick={onclose}
+      data-cy="card-inspector-close-button">Close card details</button
     >
   </aside>
 {/if}

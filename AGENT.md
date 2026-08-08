@@ -78,6 +78,10 @@ Prefer small, cohesive, independently navigable files.
 - Keep imports directional across the architecture boundaries documented above.
 - When both choices remain sensible, prefer the additional focused file.
 
+## HTML element contract
+
+Every HTML element rendered by a Svelte component under `src/app/` must carry a `data-cy` attribute that acts as its variable name. Values are kebab-case, describe the role rather than the styling, and are unique inside a rendered document. Elements rendered in a loop suffix the value with the item's stable id, for example `` data-cy={`field-card-${card.id}`} ``. `tests/unit/data-cy-coverage.test.ts` enforces presence and uniqueness.
+
 ## Project tree
 
 ```text

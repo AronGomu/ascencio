@@ -56,6 +56,7 @@
     }
   }}
   onclick={actionable ? activate : undefined}
+  data-cy={`field-zone-${zone.id}`}
 >
-  <span aria-hidden="true">{zone.label}</span>
+  <span aria-hidden="true" data-cy="zone-control-label">{zone.label}</span>
 </svelte:element>

@@ -377,13 +377,19 @@
   }
 </script>
 
-<section class="duel-field" aria-label="Duel field" bind:this={fieldRoot}>
-  <h2 class="visually-hidden">Duel field</h2>
+<section
+  class="duel-field"
+  aria-label="Duel field"
+  bind:this={fieldRoot}
+  data-cy="duel-field"
+>
+  <h2 class="visually-hidden" data-cy="duel-field-heading">Duel field</h2>
   <p
     class="visually-hidden"
     aria-label="Field updates"
     aria-live="polite"
     aria-atomic="true"
+    data-cy="duel-field-announcement"
   >
     {fieldAnnouncement}
   </p>
@@ -392,6 +398,7 @@
     aria-label="Duel state updates"
     aria-live="polite"
     aria-atomic="true"
+    data-cy="duel-field-state-announcement"
   >
     {duelStateAnnouncement}
   </p>
@@ -420,6 +427,7 @@
       aria-live="polite"
       data-feedback-kind={feedbackState.kind}
       data-feedback-duration={feedbackState.durationMs}
+      data-cy="duel-field-feedback"
     >
       {feedbackState.label}
     </p>

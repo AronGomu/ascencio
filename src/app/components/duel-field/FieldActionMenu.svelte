@@ -60,19 +60,28 @@
   style={positionStyle}
   bind:this={menuElement}
   onkeydown={handleKeydown}
+  data-cy="field-action-menu"
 >
   {#each choices as choice (choice.id)}
     <button
       type="button"
       role="menuitem"
       {disabled}
-      onclick={() => onchoose(choice)}>{choice.label}</button
+      onclick={() => onchoose(choice)}
+      data-cy={`field-action-menu-choice-${choice.id}`}>{choice.label}</button
     >
   {/each}
-  <button type="button" role="menuitem" onclick={oninspect}
-    >Inspect {label}</button
+  <button
+    type="button"
+    role="menuitem"
+    onclick={oninspect}
+    data-cy="field-action-menu-inspect-button">Inspect {label}</button
   >
-  <button type="button" role="menuitem" class="secondary" onclick={onclose}
-    >Close actions</button
+  <button
+    type="button"
+    role="menuitem"
+    class="secondary"
+    onclick={onclose}
+    data-cy="field-action-menu-close-button">Close actions</button
   >
 </div>

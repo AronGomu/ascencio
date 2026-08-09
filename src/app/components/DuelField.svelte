@@ -17,9 +17,10 @@
     type InteractionSessionAction,
     type UnkeyedInteractionSessionAction,
   } from "../prompts/interaction-session.ts";
-  import type {
-    ActiveInteractionSpec,
-    InteractionChoice,
+  import {
+    fieldActionBarRequired,
+    type ActiveInteractionSpec,
+    type InteractionChoice,
   } from "../prompts/interaction-spec.ts";
   import { validatePromptSelection } from "../prompts/prompt-selection.ts";
   import {
@@ -29,10 +30,10 @@
     type DomFeedbackState,
   } from "../presentation/dom-feedback-controller.ts";
   import { presentationCommandForDomEvent } from "../presentation/presentation-command.ts";
+  import FieldActionBar from "./duel-field/FieldActionBar.svelte";
   import FieldActionMenu from "./duel-field/FieldActionMenu.svelte";
   import FieldBoard from "./duel-field/FieldBoard.svelte";
   import FieldLines from "./duel-field/FieldLines.svelte";
-  import SelectionDock from "./duel-field/SelectionDock.svelte";
 
   const EMPTY_IMAGE_URLS: ReadonlyMap<number, string> = new Map();
   const EMPTY_TARGETS: ReadonlySet<BoardTargetId> = new Set();
@@ -85,6 +86,7 @@
   let anchor: FieldMenuAnchor | null = null;
   let resizeObserver: ResizeObserver | null = null;
   let menuCard: BoardCardView | null = null;
+  let actionBarHeight = 0;
 
   $: resolvedCardBackUrl = cardBackUrl || DEFAULT_CARD_BACK;
   $: effectiveReducedMotion = reducedMotion ?? mediaReducedMotion;
@@ -114,6 +116,11 @@
     menuCard !== null &&
     anchor !== null &&
     menuChoices.length > 0;
+  $: actionBarVisible =
+    prompt !== null &&
+    spec !== null &&
+    spec.fieldCapable &&
+    fieldActionBarRequired(spec);
   onMount(() => {
     const update = (): void => updateAnchor();
     const motionQuery = globalThis.matchMedia?.(
@@ -361,7 +368,11 @@
   aria-label="Duel field"
   bind:this={fieldRoot}
   data-cy="duel-field"
+  data-field-action-bar={actionBarVisible ? "true" : undefined}
   data-prompt-kind={prompt === null ? undefined : prompt.kind}
+  style:--field-action-bar-height={actionBarVisible
+    ? `${actionBarHeight}px`
+    : undefined}
 >
   <FieldBoard
     {board}
@@ -404,14 +415,15 @@
       onclose={closeMenu}
     />
   {/if}
-  {#if prompt && spec && spec.fieldCapable}
-    <SelectionDock
+  {#if actionBarVisible && prompt && spec}
+    <FieldActionBar
       {prompt}
       {spec}
       {session}
       disabled={pending}
       confirmValid={validation.valid}
       validationMessage={validation.valid ? "" : validation.message}
+      bind:clientHeight={actionBarHeight}
       {oninteraction}
     />
   {/if}

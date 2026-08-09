@@ -871,6 +871,44 @@ describe("DuelField", () => {
     expect(document.querySelector("[aria-busy='true']")).toBeNull();
   });
 
+  it("renders the field action bar inside the field and never a selection dock", () => {
+    const value = fieldPrompt("selectCard", [
+      mountedChoice("select", "Select monster"),
+    ]);
+    renderInteractive(value);
+
+    const field = screen.getByRole("region", { name: "Duel field" });
+    expect(field.querySelector('[data-cy="field-action-bar"]')).not.toBeNull();
+    expect(field.querySelector(".selection-dock")).toBeNull();
+  });
+
+  it("flags the field so it reserves a gutter while the action bar renders", () => {
+    const value = fieldPrompt("selectCard", [
+      mountedChoice("select", "Select monster"),
+    ]);
+    renderInteractive(value);
+
+    const field = screen.getByRole("region", { name: "Duel field" });
+    expect(field.getAttribute("data-field-action-bar")).toBe("true");
+    expect(field.style.getPropertyValue("--field-action-bar-height")).toMatch(
+      /^\d+px$/,
+    );
+  });
+
+  it("reserves no gutter when a card action spec renders no action bar", () => {
+    const value = fieldPrompt("idleCommand", [
+      mountedChoice("activate", "Activate effect", { action: "activate" }),
+    ]);
+    const harness = renderInteractive(value);
+
+    expect(harness.spec.kind).toBe("cardAction");
+    expect(harness.spec.globalChoices.size).toBe(0);
+    const field = screen.getByRole("region", { name: "Duel field" });
+    expect(field.querySelector('[data-cy="field-action-bar"]')).toBeNull();
+    expect(field.hasAttribute("data-field-action-bar")).toBe(false);
+    expect(field.style.getPropertyValue("--field-action-bar-height")).toBe("");
+  });
+
   it("leases mounted visible art only and releases it on unmount", () => {
     const release = vi.fn();
     const lease = vi.fn<(code: number) => { url: string; release: () => void }>(

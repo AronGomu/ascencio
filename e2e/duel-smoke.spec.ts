@@ -219,9 +219,9 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   await page.goto("./");
 
   await expect(
-    page
-      .locator('[data-cy="selection-dock"]')
-      .getByRole("heading", { name: "Choose a Main Phase action" }),
+    page.locator('[data-cy="field-action-bar-title"]', {
+      hasText: "Choose a Main Phase action",
+    }),
   ).toBeVisible({ timeout: 120_000 });
   expect(Date.now() - startupBeganAt).toBeLessThan(15_000);
   await enableDuelHud(page);
@@ -235,12 +235,10 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   ).toBeVisible();
   await expect(field.getByRole("img").first()).toHaveAttribute("src", /.+/);
 
-  const promptHeading = page
-    .locator('[data-cy="selection-dock"]')
-    .getByRole("heading", {
-      name: "Choose a Main Phase action",
-    });
-  await expect(promptHeading).toBeVisible();
+  const promptTitle = page.locator('[data-cy="field-action-bar-title"]', {
+    hasText: "Choose a Main Phase action",
+  });
+  await expect(promptTitle).toBeVisible();
 
   await page.locator('[data-cy="app-menubar-settings-button"]').click();
   await page.locator('[data-cy="menu-dialog-settings-button"]').click();
@@ -887,7 +885,7 @@ test("responsive field compositions contain controls across supported viewports"
       })),
     ).toEqual({ focusVisible: true, outline: "solid" });
 
-    const dock = field.locator(".selection-dock");
+    const dock = field.locator('[data-cy="field-action-bar"]');
     if ((await dock.count()) > 0) {
       await dock.scrollIntoViewIfNeeded();
       await assertRectInsideViewport(
@@ -895,6 +893,21 @@ test("responsive field compositions contain controls across supported viewports"
         dock,
         `${viewport.id} selection dock`,
       );
+      // The bar is pinned inside the field, so it must live in a reserved
+      // gutter below the board. If its box ever re-enters the board box it
+      // starts swallowing clicks meant for the player's hand.
+      const barRect = await dock.evaluate((element) => {
+        const box = element.getBoundingClientRect();
+        return { top: box.top, bottom: box.bottom };
+      });
+      const boardRect = await board.evaluate((element) => {
+        const box = element.getBoundingClientRect();
+        return { top: box.top, bottom: box.bottom };
+      });
+      expect(
+        barRect.top,
+        `${viewportLabel} field action bar (top ${barRect.top}) must clear the duel board (bottom ${boardRect.bottom})`,
+      ).toBeGreaterThanOrEqual(boardRect.bottom - 1);
     }
     await captureResponsiveState(page, testInfo, viewport.id, "ST-01");
 

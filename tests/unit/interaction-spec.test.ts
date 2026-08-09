@@ -11,6 +11,7 @@ import type {
   PromptKind,
 } from "../../src/duel/contracts/player-prompt.ts";
 import {
+  fieldActionBarRequired,
   INTERACTION_SPEC_KINDS,
   interactionKey,
   mapPromptToInteractionSpec,
@@ -325,6 +326,73 @@ describe("prompt interaction spec", () => {
     expect(mapPromptToInteractionSpec(null, SNAPSHOT, BOARD, CONTEXT)).toEqual({
       kind: "inactive",
     });
+  });
+});
+
+describe("fieldActionBarRequired", () => {
+  it("is required for card selection", () => {
+    const spec = specFor(
+      prompt("selectCard", { choices: [mountedCardChoice(FIRST)] }),
+    );
+    expect(fieldActionBarRequired(spec)).toBe(true);
+  });
+
+  it("is required for counter allocation", () => {
+    const spec = specFor(
+      prompt("selectCounter", {
+        choices: [mountedCardChoice(FIRST, { allocationMaximum: 2 })],
+      }),
+    );
+    expect(fieldActionBarRequired(spec)).toBe(true);
+  });
+
+  it("is required for order", () => {
+    const spec = specFor(
+      prompt("sortCard", {
+        choices: [mountedCardChoice(FIRST)],
+        ordered: true,
+      }),
+    );
+    expect(fieldActionBarRequired(spec)).toBe(true);
+  });
+
+  it("is required for place selection", () => {
+    const spec = specFor(
+      prompt("selectPlace", {
+        choices: [
+          choice(FIRST, {
+            place: { player: 0, location: "monster", sequence: 0 },
+          }),
+        ],
+      }),
+    );
+    expect(fieldActionBarRequired(spec)).toBe(true);
+  });
+
+  it("is required when a card action has global choices", () => {
+    const spec = specFor(
+      prompt("idleCommand", {
+        choices: [mountedCardChoice(FIRST), choice(SECOND, { action: "pass" })],
+      }),
+    );
+    expect(spec.kind).toBe("cardAction");
+    expect(spec.globalChoices.size).toBeGreaterThan(0);
+    expect(fieldActionBarRequired(spec)).toBe(true);
+  });
+
+  it("is not required for a bare card action", () => {
+    const spec = specFor(
+      prompt("idleCommand", { choices: [mountedCardChoice(FIRST)] }),
+    );
+    expect(spec.kind).toBe("cardAction");
+    expect(spec.globalChoices.size).toBe(0);
+    expect(fieldActionBarRequired(spec)).toBe(false);
+  });
+
+  it("is not required for non-field specs", () => {
+    const spec = specFor(prompt("yesNo"));
+    expect(spec.kind).toBe("nonField");
+    expect(fieldActionBarRequired(spec)).toBe(false);
   });
 });
 

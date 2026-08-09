@@ -656,6 +656,19 @@ li + li {
   box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.18);
 }
 
+/* The action bar is pinned to the bottom of the field, so the field reserves a
+   gutter tall enough to hold it clear of the board. Without this the bar sits on
+   top of the player's hand and swallows clicks meant for board targets.
+   DuelField.svelte measures the live bar into --field-action-bar-height and only
+   sets data-field-action-bar while the bar renders, so no gutter appears when
+   there is no bar. The 2.75rem floor covers the frame before the first
+   measurement lands. */
+.duel-field[data-field-action-bar="true"] {
+  padding-bottom: calc(
+    1rem + max(2.75rem, var(--field-action-bar-height, 0px)) + 0.75rem
+  );
+}
+
 .duel-field-board {
   position: relative;
   isolation: isolate;
@@ -951,52 +964,40 @@ button.duel-field-zone,
   box-shadow: 0 0.8rem 2rem rgb(0 0 0 / 0.45);
 }
 
-.selection-dock {
-  position: sticky;
-  left: 0;
-  z-index: var(--duel-field-layer-menu);
-  display: grid;
-  grid-template-columns: minmax(10rem, 1fr) minmax(16rem, 2fr) auto;
-  align-items: center;
-  gap: 0.75rem;
-  width: min(100%, 72rem);
-  margin: 0.75rem auto 0;
-  padding: 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: 0.75rem;
-  background: var(--surface-strong);
-}
-
-.selection-dock h3,
-.selection-dock p {
-  margin: 0;
-}
-
-.selection-dock__list {
-  display: grid;
-  min-width: 0;
-  gap: 0.35rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.selection-dock__row,
-.selection-dock__row > div,
-.selection-dock__row > span,
-.selection-dock__actions {
+.field-action-bar {
+  position: absolute;
+  z-index: var(--duel-field-layer-control);
+  bottom: 0.75rem;
+  left: 50%;
   display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.selection-dock__row,
-.selection-dock__actions {
-  justify-content: space-between;
-}
-
-.selection-dock__actions {
   flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: min(52rem, calc(100% - 2rem));
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--surface-strong) 94%, transparent);
+  box-shadow: 0 0.6rem 1.6rem rgb(0 0 0 / 0.4);
+  transform: translateX(-50%);
+}
+
+.field-action-bar p {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.field-action-bar [data-cy="field-action-bar-list"] {
+  display: grid;
+  gap: 0.3rem;
+  max-height: 9rem;
+  overflow: auto;
+  width: 100%;
+}
+
+.field-action-bar [data-cy="field-action-bar-validation"] {
+  color: var(--danger);
+  width: 100%;
 }
 
 .field-error {
@@ -1010,15 +1011,7 @@ button.duel-field-zone,
   background: rgb(86 27 42 / 0.32);
 }
 
-@container duel-field (max-width: 48rem) {
-  .selection-dock {
-    align-items: stretch;
-    grid-template-columns: 1fr;
-  }
-}
-
 @media (max-width: 48rem) {
-  .selection-dock,
   .field-error {
     align-items: stretch;
     grid-template-columns: 1fr;

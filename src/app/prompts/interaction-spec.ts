@@ -163,6 +163,17 @@ const PUBLIC_LOCATIONS = {
 } as const satisfies Readonly<Record<PublicLocation, true>>;
 const INACTIVE_SPEC = Object.freeze({ kind: "inactive" as const });
 
+export function fieldActionBarRequired(spec: ActiveInteractionSpec): boolean {
+  if (spec.kind === "nonField") return false;
+  return (
+    spec.kind === "cardSelection" ||
+    spec.kind === "placeSelection" ||
+    spec.kind === "counterAllocation" ||
+    spec.kind === "order" ||
+    spec.globalChoices.size > 0
+  );
+}
+
 export function interactionKey(
   workerGeneration: number,
   sessionGeneration: number,

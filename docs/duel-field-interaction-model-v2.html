@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Duel Field Interaction Model v2</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f4f6f8; --surface: #ffffff; --surface-2: #edf2f6; --ink: #162230; --muted: #5b6875;
+  --line: #d5dde5; --accent: #087e8b; --accent-soft: #d9f1f2; --warm: #a65d00; --warm-soft: #fdf0dc;
+  --danger: #a3283c; --ok: #1d7a52; --code: #101c2a; --code-ink: #dceafa;
+  --shadow: 0 16px 45px rgb(23 38 52 / 10%);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b121b; --surface: #111c28; --surface-2: #172536; --ink: #edf5fa; --muted: #a9b8c5;
+    --line: #2a3c4d; --accent: #65d4da; --accent-soft: #15373d; --warm: #f1b65f; --warm-soft: #33270f;
+    --danger: #ff8c9b; --ok: #7ee2a8; --code: #07101a; --code-ink: #dceafa;
+    --shadow: 0 16px 45px rgb(0 0 0 / 25%);
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.62 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+a { color: var(--accent); text-underline-offset: .18em; }
+code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+code { padding: .1rem .32rem; border-radius: .28rem; background: var(--surface-2); font-size: .88em; }
+pre { overflow-x: auto; padding: .9rem 1rem; border-radius: .6rem; background: var(--code); color: var(--code-ink); font-size: .83rem; line-height: 1.55; }
+pre code { padding: 0; background: none; color: inherit; }
+.skip-link { position: fixed; top: -4rem; left: 1rem; z-index: 20; padding: .7rem 1rem; background: var(--surface); border: 1px solid var(--accent); border-radius: .5rem; }
+.skip-link:focus { top: 1rem; }
+.hero { background: radial-gradient(circle at 85% 12%, var(--accent-soft), transparent 40%), var(--surface); border-bottom: 1px solid var(--line); }
+.hero-inner { max-width: 1320px; margin: auto; padding: 2.6rem clamp(1.2rem, 4vw, 4rem) 2.1rem; }
+.eyebrow { margin: 0 0 .5rem; color: var(--accent); font-size: .76rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.hero h1 { max-width: 24ch; margin: 0; font-size: clamp(1.9rem, 4.6vw, 3.4rem); line-height: 1.05; letter-spacing: -.04em; }
+.hero p { max-width: 76ch; margin: 1rem 0 0; color: var(--muted); }
+.layout { display: grid; grid-template-columns: 16rem minmax(0, 1fr); gap: 2.1rem; max-width: 1320px; margin: auto; padding: 2.1rem clamp(1.2rem, 4vw, 4rem) 4rem; }
+@media (max-width: 62rem) { .layout { grid-template-columns: minmax(0, 1fr); } .toc { position: static; max-height: none; } }
+.toc { position: sticky; top: 1rem; align-self: start; max-height: calc(100vh - 2rem); overflow: auto; padding: 1.05rem; background: var(--surface); border: 1px solid var(--line); border-radius: .9rem; box-shadow: var(--shadow); }
+.toc h2 { margin: 0 0 .55rem; font-size: .76rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.toc ol { margin: 0; padding-left: 1.1rem; font-size: .87rem; }
+.toc li { margin: .3rem 0; }
+section.card { margin-bottom: 1.7rem; padding: 1.35rem clamp(1rem, 2.4vw, 1.8rem); background: var(--surface); border: 1px solid var(--line); border-radius: .9rem; box-shadow: var(--shadow); }
+section.card > h2 { margin-top: 0; font-size: 1.42rem; letter-spacing: -.02em; }
+h3 { font-size: 1rem; margin-bottom: .4rem; }
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .89rem; }
+th, td { padding: .5rem .6rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+th { font-size: .73rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+tbody tr:last-child td { border-bottom: none; }
+.note { padding: .85rem 1rem; border-left: 3px solid var(--warm); border-radius: .35rem; background: var(--warm-soft); font-size: .92rem; }
+.note.good { border-left-color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); }
+.note.bad { border-left-color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, transparent); }
+ul.tight, ol.tight { padding-left: 1.15rem; }
+ul.tight li, ol.tight li { margin: .26rem 0; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1rem; }
+.tile { padding: .9rem 1rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface-2); }
+.tile h4 { margin: 0 0 .3rem; font-size: .9rem; }
+.tile p { margin: 0; font-size: .85rem; color: var(--muted); }
+.bandfig { position: relative; aspect-ratio: 16/9; width: 100%; border: 1px solid var(--line); border-radius: .6rem; background: #153d35; overflow: hidden; }
+.bandfig div { position: absolute; border-radius: .2rem; font-size: .58rem; display: grid; place-items: center; color: #eaf6f1; text-align: center; }
+.bandfig .zone { background: rgb(213 240 230 / .16); border: 1px solid rgb(213 240 230 / .35); }
+.bandfig .band { background: rgb(101 212 218 / .2); border: 1px dashed rgb(101 212 218 / .85); }
+.bandfig .emz { background: rgb(241 182 95 / .3); border: 1px solid rgb(241 182 95 / .9); }
+.bandfig .chip { background: rgb(8 16 31 / .8); border: 1px solid rgb(255 255 255 / .25); font-weight: 700; }
+.bandfig .chip.cur { box-shadow: 0 0 0 2px #65d4da, 0 0 .5rem #65d4da; }
+footer { max-width: 1320px; margin: auto; padding: 0 clamp(1.2rem, 4vw, 4rem) 3rem; color: var(--muted); font-size: .86rem; }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="hero">
+  <div class="hero-inner">
+    <p class="eyebrow">Architecture · duel field · 2026-08-09</p>
+    <h1>Duel Field Interaction Model v2</h1>
+    <p>
+      How a prompt becomes something you can click, after the round-2 feedback. Adds three things the
+      v1 shell did not have: pile contents as first-class interaction targets, a projected deck order
+      with reveal tracking, and a client-side policy for prompts that are not decisions. Supersedes
+      the interaction sections of <code>duel-field-interaction-shell.html</code> wherever the two
+      disagree.
+    </p>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="toc" aria-label="Contents">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#pipeline">Prompt pipeline</a></li>
+      <li><a href="#targets">Four target kinds</a></li>
+      <li><a href="#surfaces">Surface routing</a></li>
+      <li><a href="#auto">Automatic resolution</a></li>
+      <li><a href="#deck">Deck order &amp; reveals</a></li>
+      <li><a href="#overlays">Field overlays</a></li>
+      <li><a href="#privacy">Privacy invariants</a></li>
+      <li><a href="#adr">Related ADRs</a></li>
+    </ol>
+  </nav>
+
+  <main id="main">
+
+    <section class="card" id="pipeline">
+      <h2>Prompt pipeline</h2>
+      <p>Unchanged in shape, widened in the middle. The engine still owns legality; the field only expresses it.</p>
+      <pre><code>Worker                                        Main thread
+──────                                        ───────────
+ocgcore message
+  │
+  ├─ message-classification.ts  "prompt"|"event"|"internal"
+  │
+  ├─ PromptRegistry             → PlayerPrompt { choices[] with card | place }
+  └─ DuelStateProjector         → PublicDuelState
+
+                     ── clone-safe boundary ──
+
+                                   mapSnapshotToBoard   → BoardViewModel {zones, cards, stacks, nav}
+                                   mapPromptToInteractionSpec
+                                     └─ resolvePromptChoiceBoardTarget
+                                          → board  (a mounted card / a placement zone)
+                                          → stack  (deck | extra | graveyard | banished)   ← NEW
+                                          → nonField
+                                   ActiveInteractionSpec
+                                     { cardChoices, zoneChoices, stackChoices, globalChoices }   ← NEW
+                                   promptSurface → "field" | "dialog" | "docked" | "none"
+                                   InteractionSession → submit(choiceIds)</code></pre>
+      <p class="note good">
+        The rules layer never moves. Every addition below is presentation resolving <em>which pixel</em>
+        expresses a choice the engine already offered. Presentation state still never gates legality.
+      </p>
+    </section>
+
+    <section class="card" id="targets">
+      <h2>Four target kinds</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Kind</th><th>Produced when</th><th>Rendered by</th><th>Click does</th></tr></thead>
+          <tbody>
+            <tr><td><code>cardChoices</code></td><td>choice targets a mounted card (hand, monster, spell/trap, field)</td>
+              <td><code>CardControl</code></td>
+              <td>one choice → fire it; several → open the chip row</td></tr>
+            <tr><td><code>zoneChoices</code></td><td>choice carries a <code>place</code></td>
+              <td><code>ZoneControl</code></td>
+              <td>single-place prompt → submit directly; otherwise toggle</td></tr>
+            <tr><td><code>stackChoices</code></td><td>choice targets a card in deck / extra / graveyard / banished</td>
+              <td><code>StackControl</code> halo + <code>ZoneListDialog</code></td>
+              <td>open the pile's list; act on a card inside it</td></tr>
+            <tr><td><code>globalChoices</code></td><td>no field target at all (<code>pass</code>, <code>endPhase</code>, <code>battlePhase</code>, …)</td>
+              <td><code>FieldActionBar</code>, <code>PhaseStrip</code>, <code>EndTurnButton</code></td>
+              <td>fire the choice</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Why a pile choice cannot be matched by id</h3>
+      <p>
+        <code>sanitizeChoice</code> reduces a choice to
+        <code>{ id, label, action, value?, toggleState?, allocationMaximum? }</code> — the card is
+        gone. And <code>PromptChoice.card.instanceId</code> is not the projector's instance id: the
+        protocol layer synthesises <code>p{controller}-l{location}-s{sequence}</code>. The only
+        reliable join is the address triple, so <code>InteractionChoice</code> carries
+        <code>cardAddress: { controller, location, sequence }</code> and the list dialog filters on it.
+      </p>
+      <p class="note bad">
+        Ordering trap. <code>stackChoices</code> must not count toward <code>fieldCapable</code> until
+        the list dialog exists. Flip it early and a graveyard activation is unanswerable — the modal
+        hides, the field has nothing to click, the duel deadlocks.
+      </p>
+    </section>
+
+    <section class="card" id="surfaces">
+      <h2>Surface routing</h2>
+      <pre><code>promptSurface(prompt, spec, showWorkspace)
+  prompt === null                    → "none"
+  showWorkspace                      → "docked"     (dev workspace panel)
+  prompt.kind === "chain"            → "field"      ← NEW: chains never modal
+  spec.fieldCapable                  → "field"
+  otherwise                          → "dialog"</code></pre>
+      <p>
+        <code>fieldCapable = cardChoices.size &gt; 0 || zoneChoices.size &gt; 0 || stackChoices.size &gt; 0</code>.
+        A chain is forced to <code>"field"</code> unconditionally so a source the mapper cannot place
+        still cannot resurrect the modal. The chain question lives in the preview panel's status line
+        — <em>"Do you respond?"</em> with three pulsing dots, suppressed under
+        <code>prefers-reduced-motion</code>.
+      </p>
+      <h3>Passing versus cancelling</h3>
+      <p>
+        <code>promptControlFamily("chain") === "single"</code>, and
+        <code>validatePromptSelection</code> rejects an empty response for a <code>single</code>-family
+        prompt <em>even when it is cancelable</em>. So a click on empty field means two different
+        things depending on the prompt:
+      </p>
+      <ul class="tight">
+        <li><b>chain</b> → submit the <code>pass</code> choice. A <em>forced</em> chain has no
+        <code>pass</code>, so the click is inert and the player must answer.</li>
+        <li><b><code>multiple</code>/<code>order</code> family, cancelable</b> → submit an empty
+        selection (a real cancel).</li>
+        <li><b>anything else</b> → inert.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="auto">
+      <h2>Automatic resolution</h2>
+      <p>Two in-memory session settings, both on by default. Both policies are pure functions of the prompt, so both are unit-testable without a duel.</p>
+      <div class="grid2">
+        <div class="tile">
+          <h4><code>autoResolveTrivialPrompts</code></h4>
+          <p>Answers a chain with only <code>pass</code>; a forced chain with exactly one choice; an
+          <code>option</code> with one choice; a <code>selectPosition</code> with one choice. Requires
+          <code>player === 0</code> and a one-of-many shape.</p>
+        </div>
+        <div class="tile">
+          <h4><code>autoPlaceCards</code></h4>
+          <p>Answers a <code>selectPlace</code> with <code>min === max === 1</code> using the most
+          central offered place. Rank <code>[2, 1, 3, 0, 4]</code>; extra monster zones after every
+          main sequence, 5 before 6; player 0 before player 1; ties on choice id.</p>
+        </div>
+      </div>
+      <p style="margin-top:1rem">
+        Resolution fires once per prompt id, from a reactive statement, never while a response is in
+        flight. <code>selectDisabledField</code> is excluded despite sharing the
+        <code>placeSelection</code> spec kind — it is targeting, not placement.
+      </p>
+      <p class="note">
+        Precedence is free. The drag-drop <code>pendingPlacement</code> intent answers from inside the
+        worker-client subscription, so <code>responsePending</code> is already <code>true</code> when
+        the auto-resolution statement runs. A deliberate drop always beats the automatic centre.
+      </p>
+    </section>
+
+    <section class="card" id="deck">
+      <h2>Deck order &amp; reveals</h2>
+      <p>
+        The projector does <b>not</b> model deck contents. It keeps
+        <code>deckReveals: Map&lt;offsetFromTop, CardCode&gt;</code> per player and synthesises
+        <code>PublicPlayerState.deck</code> at snapshot time from <code>deckCount</code> plus that map.
+        Index 0 is the top.
+      </p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Engine message</th><th>Effect on reveals</th><th>Why it is safe</th></tr></thead>
+          <tbody>
+            <tr><td><code>DRAW</code></td><td>shift every reveal down by <code>drawn.length</code></td><td>cards leave the top; no sequence involved</td></tr>
+            <tr><td><code>CONFIRM_DECKTOP</code> (30)</td><td>reveal offsets <code>0..n-1</code></td><td><code>cards[i]</code> <em>is</em> the i-th from the top</td></tr>
+            <tr><td><code>DECK_TOP</code> (38)</td><td>reveal offset <code>count</code></td><td><code>count</code> is already an offset from the top</td></tr>
+            <tr><td><code>SHUFFLE_DECK</code> (32)</td><td>clear</td><td rowspan="4">order destroyed or untrackable — forget rather than guess</td></tr>
+            <tr><td><code>SWAP_GRAVE_DECK</code> (35)</td><td>clear</td></tr>
+            <tr><td><code>REVERSE_DECK</code> (37)</td><td>clear</td></tr>
+            <tr><td><code>MOVE</code> touching a deck</td><td>clear</td></tr>
+            <tr><td><code>CONFIRM_CARDS</code> (31)</td><td>ignored</td><td>its entries carry engine deck sequences — the ambiguity we are avoiding</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note good">
+        <b>The safety asymmetry.</b> The projection may <em>forget</em> a reveal. It can never
+        <em>invent</em> one. Every future change to this map must preserve that, and every clear-on-doubt
+        above exists for it.
+      </p>
+      <h3>Slot shape</h3>
+      <pre><code>unrevealed  { instanceId: "deck-p0-7", location: "deck", sequence: 7,
+              position: "faceDownAttack", faceUp: false }          // no code
+
+revealed    { instanceId: "deck-p0-0", location: "deck", sequence: 0,
+              code: 12345, position: "faceUpAttack", faceUp: true }</code></pre>
+      <p>
+        <code>faceUp</code> is what carries visibility downstream, and it is also what keeps the
+        contract validator's <em>opponent face-down implies no code</em> rule satisfied for a
+        legitimately revealed opponent deck card.
+      </p>
+      <p class="note bad">
+        Foot-gun. <code>isCardIdentityVisible(0, 0, "deck", …)</code> returns <code>true</code> — its
+        first disjunct is <code>controller === viewer</code>. Using it for deck entries would reveal
+        your whole deck. Deck entries read <code>faceUp &amp;&amp; code !== undefined</code> instead.
+      </p>
+      <p>
+        The deck pile on the board still shows no art. <code>publicCards.at(-1)</code> on a deck is the
+        <em>deepest</em> revealed card, not the top one, and only graveyard and banished were asked for.
+      </p>
+    </section>
+
+    <section class="card" id="overlays">
+      <h2>Field overlays</h2>
+      <p>
+        The board's geometry is fixed by <code>duel-field-layout.ts</code>. One horizontal band —
+        <b>y 51%–64%</b> — is free of every zone except the two shared extra monster zones at
+        <b>x 46.1%–60.3%</b>. Overlays live there or outside the zone extents. Nowhere else.
+      </p>
+      <figure style="margin:0">
+        <div class="bandfig" role="img" aria-label="Board diagram: phase chips in the free band left and right of the extra monster zones, End turn at the far right">
+          <div class="band" style="left:0;    top:51%;  width:46.1%; height:13%"></div>
+          <div class="band" style="left:60.3%;top:51%;  width:39.7%; height:13%"></div>
+          <div class="zone" style="left:34.4%;top:34.7%;width:39.8%; height:15.9%">p1 monsters</div>
+          <div class="zone" style="left:34.4%;top:65.3%;width:39.8%; height:15.8%">p0 monsters</div>
+          <div class="emz"  style="left:46.1%;top:50%;  width:6.4%;  height:15.8%">EMZ</div>
+          <div class="emz"  style="left:53.9%;top:50%;  width:6.4%;  height:15.8%">EMZ</div>
+          <div class="zone" style="left:88.3%;top:34.7%;width:6.4%;  height:15.9%">p1 ban</div>
+          <div class="zone" style="left:88.3%;top:65.3%;width:6.4%;  height:15.8%">p0 ban</div>
+          <div class="chip" style="left:22.5%;top:54.5%;width:7%;    height:6%">Draw</div>
+          <div class="chip" style="left:30.2%;top:54.5%;width:7.5%;  height:6%">Standby</div>
+          <div class="chip cur" style="left:38.4%;top:54.5%;width:7%;height:6%">Main 1</div>
+          <div class="chip" style="left:61%;  top:54.5%;width:7%;    height:6%">Battle</div>
+          <div class="chip" style="left:68.7%;top:54.5%;width:7%;    height:6%">Main 2</div>
+          <div class="chip" style="left:76.4%;top:54.5%;width:5.5%;  height:6%">End</div>
+          <div class="chip" style="left:88%;  top:54.5%;width:11%;   height:6%">End turn</div>
+        </div>
+        <figcaption style="font-size:.8rem;color:var(--muted);margin-top:.4rem">
+          Blue halo marks the current phase. Only phases the engine currently offers render as buttons.
+        </figcaption>
+      </figure>
+      <div class="tablewrap" style="margin-top:1rem">
+        <table>
+          <thead><tr><th>Overlay</th><th>Placement</th><th>Pointer rule</th></tr></thead>
+          <tbody>
+            <tr><td><code>PhaseStrip</code></td><td>free band, split by the EMZs</td><td>container <code>none</code>; only offered chips <code>auto</code></td></tr>
+            <tr><td><code>EndTurnButton</code></td><td><code>right: 1%; top: 57.5%</code>, between the banished piles</td><td>always <code>auto</code>, outside every zone</td></tr>
+            <tr><td><code>FieldActionBar</code></td><td>pinned bottom, board padding reserved for it</td><td>board padding carves its footprint out of the hit area</td></tr>
+            <tr><td><code>ZoneListDialog</code></td><td>centred on the board, <code>max 80% × 70%</code></td><td><b>no backdrop</b> — must never block the field</td></tr>
+            <tr><td><code>CardActionChips</code></td><td>above the hovered card, overlapping 0.35rem</td><td>revealed on hover / focus-within only</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note bad">
+        History, not theory: a field bar painted over card targets once cost a full session and 344
+        retried Playwright clicks. The chromium responsive-composition spec is the standing gate. If it
+        fails, move the overlay — never relax the assertion.
+      </p>
+    </section>
+
+    <section class="card" id="privacy">
+      <h2>Privacy invariants</h2>
+      <ul class="tight">
+        <li>Opponent hidden information is stripped in the worker, before the clone boundary. The UI
+        re-checks anyway; both layers are load-bearing.</li>
+        <li>A face-down card in <code>state.players[1]</code> must carry no <code>code</code>. The
+        contract validator enforces it. Revealed deck slots satisfy it by being
+        <code>faceUpAttack</code>.</li>
+        <li>Zone list entries derive visibility per zone: graveyard, banished and extra deck through
+        <code>isCardIdentityVisible</code>; deck through <code>faceUp &amp;&amp; code</code>. Never a
+        blanket rule.</li>
+        <li>A hidden card previews as <em>"Face-down card"</em> with no text and no image lease. It
+        never leaks a code through the preview path.</li>
+        <li>The opponent's extra deck and deck list as face-down entries with a position number and
+        nothing else. Position is public; identity is not.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="adr">
+      <h2>Related ADRs</h2>
+      <ul class="tight">
+        <li><a href="ADR/001_ADR_semantic_dom_duel_field_rendering.md">ADR-001</a> — semantic DOM field rendering</li>
+        <li><a href="ADR/002_ADR_universal_data_cy_selector_contract.md">ADR-002</a> — universal <code>data-cy</code> contract</li>
+        <li><a href="ADR/003_ADR_field_first_application_chrome.md">ADR-003</a> — field-first chrome</li>
+        <li><a href="ADR/004_ADR_prompt_surfaces_after_selection_dock.md">ADR-004</a> — prompt surfaces</li>
+        <li><a href="ADR/005_ADR_optimistic_drag_placement.md">ADR-005</a> — optimistic drag placement</li>
+        <li><a href="ADR/006_ADR_preview_panel_replaces_card_inspector.md">ADR-006</a> — preview panel</li>
+        <li><a href="ADR/007_ADR_stack_zones_as_interaction_targets.md">ADR-007</a> — stack zones as interaction targets</li>
+        <li><a href="ADR/008_ADR_projected_deck_order_and_reveals.md">ADR-008</a> — projected deck order and reveals</li>
+        <li><a href="ADR/009_ADR_automatic_prompt_resolution.md">ADR-009</a> — automatic prompt resolution</li>
+        <li><a href="ADR/010_ADR_in_field_phase_navigation.md">ADR-010</a> — in-field phase navigation</li>
+      </ul>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  Plan: <code>ai-artifacts/PLAN_2026_08_09_duel_field_feedback_round_2.md</code> ·
+  Canonical map: <a href="architecture/architecture.md"><code>docs/architecture/architecture.md</code></a>
+</footer>
+</body>
+</html>
+</content>

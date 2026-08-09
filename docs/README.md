@@ -15,9 +15,15 @@ This directory contains current project documentation and historical context. Ro
 | [`ADR/004_ADR_prompt_surfaces_after_selection_dock.md`](ADR/004_ADR_prompt_surfaces_after_selection_dock.md) | Accepted prompt-surface routing after the selection dock is removed |
 | [`ADR/005_ADR_optimistic_drag_placement.md`](ADR/005_ADR_optimistic_drag_placement.md)                 | Accepted optimistic drag placement with engine reconciliation        |
 | [`ADR/006_ADR_preview_panel_replaces_card_inspector.md`](ADR/006_ADR_preview_panel_replaces_card_inspector.md) | Accepted preview panel replacing the modal card inspector    |
+| [`ADR/007_ADR_stack_zones_as_interaction_targets.md`](ADR/007_ADR_stack_zones_as_interaction_targets.md) | Accepted deck/extra/graveyard/banished piles as field interaction targets |
+| [`ADR/008_ADR_projected_deck_order_and_reveals.md`](ADR/008_ADR_projected_deck_order_and_reveals.md)   | Accepted projected deck order with offset-based reveal tracking      |
+| [`ADR/009_ADR_automatic_prompt_resolution.md`](ADR/009_ADR_automatic_prompt_resolution.md)             | Accepted automatic placement and automatic answering of non-decisions |
+| [`ADR/010_ADR_in_field_phase_navigation.md`](ADR/010_ADR_in_field_phase_navigation.md)                 | Accepted in-field phase strip replacing the corner status pills      |
 | [`duel-field-architecture.html`](duel-field-architecture.html)                                         | Styled field architecture design                                     |
 | [`duel-field-interaction-shell.html`](duel-field-interaction-shell.html)                               | Styled interaction-shell design: surfaces, routing, drag, settings   |
-| [`../ai-artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md`](../ai-artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md) | Active TDD ticket ledger for the duel-field UX overhaul |
+| [`duel-field-interaction-model-v2.html`](duel-field-interaction-model-v2.html)                         | Styled round-2 interaction model: stack targets, deck reveals, auto-resolution, overlay geometry |
+| [`../ai-artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md`](../ai-artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md) | Completed TDD ticket ledger for the duel-field UX overhaul |
+| [`../ai-artifacts/PLAN_2026_08_09_duel_field_feedback_round_2.md`](../ai-artifacts/PLAN_2026_08_09_duel_field_feedback_round_2.md) | Active TDD ticket ledger for duel-field feedback round 2 |
 | [`duel-field-validation-references.html`](duel-field-validation-references.html)                       | Styled rule/visual/a11y validation catalog                           |
 | [`MVP_TECHNICAL_IMPLEMENTATION_PLAN.md`](MVP_TECHNICAL_IMPLEMENTATION_PLAN.md)                         | Completed MVP/Phaser baseline audit plan                             |
 | [`assets/asset-import-pipeline.md`](assets/asset-import-pipeline.md)                                   | Implemented asset acquisition, generation, and verification pipeline |

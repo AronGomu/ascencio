@@ -4,11 +4,15 @@
   export let surrenderAvailable = false;
   export let responsePending = false;
   export let onopensettings: () => void;
-  export let onsurrender: () => void;
+  /* Reports whether the surrender actually started. A refusal (no active duel,
+     worker closed, disposal in flight) changes nothing, so the dialog has to
+     stay up and say so rather than dismiss on an action that never happened. */
+  export let onsurrender: () => boolean;
   export let onclose: () => void;
 
   let panel: HTMLDivElement | undefined;
   let confirming = false;
+  let surrenderFailed = false;
 
   onMount(() => {
     panel?.querySelector("button")?.focus();
@@ -27,14 +31,21 @@
 
   function beginSurrenderConfirmation(): void {
     confirming = true;
+    surrenderFailed = false;
   }
 
   function cancelSurrenderConfirmation(): void {
     confirming = false;
+    surrenderFailed = false;
   }
 
   function confirmSurrender(): void {
-    onsurrender();
+    if (!onsurrender()) {
+      surrenderFailed = true;
+      return;
+    }
+    surrenderFailed = false;
+    onclose();
   }
 </script>
 
@@ -60,6 +71,12 @@
       <div role="alert" data-cy="menu-dialog-surrender-warning">
         This immediately awards the duel to your opponent.
       </div>
+      {#if surrenderFailed}
+        <div role="alert" data-cy="menu-dialog-surrender-error">
+          The duel could not be surrendered. Nothing has changed — try again in
+          a moment.
+        </div>
+      {/if}
       <button
         type="button"
         class="danger"

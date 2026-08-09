@@ -61,6 +61,8 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 - [ ] While that drag is live, no Spell/Trap zone, no Field zone, no opponent zone and no already-occupied monster zone lights up.
 - [ ] Release over one of the tinted zones: the monster is summoned into exactly that zone in one gesture — no second click, and no zone-picker prompt appears.
 - [ ] Drag the same kind of card and release it over an _occupied_ monster zone: nothing happens at all, the card stays in your hand and no response is sent.
+- [ ] Drag a hand card whose only offers are a Normal Summon and/or a Set, and release it on either shared Extra Monster Zone in the middle row: nothing happens — the card stays in your hand, your once-per-turn Normal Summon is still available, and no zone-picker prompt appears. Those two zones must never tint for such a card either.
+- [ ] Drag a hand card the engine offers a _Special_ Summon for and release it on a tinted shared Extra Monster Zone: the card arrives there as a Special Summon and your Normal Summon for the turn is still unspent.
 - [ ] Drag a card and release it outside the board entirely: nothing happens and the tint disappears.
 - [ ] Drag a settable Spell or Trap out of your hand: only the Spell/Trap zones tint, never the monster row, and dropping on one plays it.
 - [ ] Start a drag and then press `Escape` or switch to another window mid-gesture: the tint clears and no card is played.

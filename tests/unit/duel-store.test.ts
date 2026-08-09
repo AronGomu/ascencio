@@ -814,4 +814,34 @@ describe("duel view-state reducer", () => {
       unsubscribe();
     }
   });
+
+  /* The two error states the store synthesises for itself never reach the
+     reducer, so they have to honour the same invariant by hand: no `error`
+     event follows them and nothing else would clear the guess. */
+  it("clears a placement intent the store rejects locally", () => {
+    for (const rejection of ["invalid_response", "stale_prompt"] as const) {
+      const client = new FakeDuelClient();
+      client.respondResult = rejection !== "stale_prompt";
+      const store = createDuelStore(client);
+      let current = createInitialDuelViewState(client.context);
+      const unsubscribe = store.subscribe((state) => {
+        current = state;
+      });
+      store.start();
+      client.emit({ type: "state", state: STATE });
+      client.emit(IDLE_PROMPT_EVENT);
+      expect(store.armPlacementIntent("p0:mainMonster:2")).toBe(true);
+      expect(current.pendingPlacement).not.toBeNull();
+
+      /* An empty selection fails validation locally; a valid one reaches a
+         client that refuses it. */
+      const choiceIds =
+        rejection === "invalid_response" ? [] : [choiceId("idle-summon")];
+      expect(store.respond(choiceIds)).toBe(false);
+
+      expect(current.error?.code, `rejected as ${rejection}`).toBe(rejection);
+      expect(current.pendingPlacement, `cleared by ${rejection}`).toBeNull();
+      unsubscribe();
+    }
+  });
 });

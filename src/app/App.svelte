@@ -37,6 +37,7 @@
   import { mapPromptToInteractionSpec } from "./prompts/interaction-spec.ts";
   import {
     cardPreviewForCode,
+    cardPreviewForPublicCard,
     type CardPreviewView,
   } from "./presentation/card-preview.ts";
   import { promptSurface } from "./prompts/prompt-surface.ts";
@@ -558,9 +559,11 @@
 
   /* Still wired to `DuelHud`'s `oninspect`, so the HUD and the card trays need
      no change: the trigger button they hand over is irrelevant now that the
-     panel replaces the modal inspector. */
+     panel replaces the modal inspector. Unlike `BoardCardView.code`, a raw
+     `PublicCard.code` is not already gated on identity visibility, so the
+     preview re-checks it here. */
   function previewHudCard(card: PublicCard): void {
-    const next = cardPreviewForCode(card.code, ACTIVE_CARD_TEXTS);
+    const next = cardPreviewForPublicCard(card, ACTIVE_CARD_TEXTS);
     if (next !== null) previewCard = next;
   }
 
@@ -975,10 +978,7 @@
         menuOpen = false;
         openSettings();
       }}
-      onsurrender={() => {
-        duel.surrender();
-        menuOpen = false;
-      }}
+      onsurrender={() => duel.surrender()}
       onclose={() => void closeMenu()}
     />
   {/if}

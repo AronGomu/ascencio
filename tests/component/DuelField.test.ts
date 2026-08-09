@@ -12,6 +12,7 @@ import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import DuelField from "../../src/app/components/DuelField.svelte";
 import DuelFieldErrorBoundary from "../../src/app/components/duel-field/DuelFieldErrorBoundary.svelte";
+import FieldBoard from "../../src/app/components/duel-field/FieldBoard.svelte";
 import CardTray from "../../src/app/components/duel-field/CardTray.svelte";
 import {
   cardInstanceId,
@@ -1255,6 +1256,44 @@ describe("DuelField", () => {
     const field = screen.getByRole("region", { name: "Duel field" });
     expect(field.querySelector('[data-cy="life-pill-p0"]')).toBeNull();
     expect(field.querySelector('[data-cy="life-pill-p1"]')).toBeNull();
+  });
+});
+
+describe("FieldBoard", () => {
+  /* Svelte writes `null` into a `bind:this` ref as the element unmounts, and
+     the queued focus move resumes after that write. The rejection would be
+     unhandled — `focusActiveTarget` is `void`-called — so the only observable
+     is the process-level report. */
+  it("survives unmounting while a queued focus move is in flight", async () => {
+    const rejections: unknown[] = [];
+    const record = (reason: unknown): void => {
+      rejections.push(reason);
+    };
+    process.on("unhandledRejection", record);
+    try {
+      const rendered = render(FieldBoard, {
+        board: board("ST-05"),
+        imageUrls: new Map<number, string>(),
+        cardBackUrl: "card-back.png",
+        placeholderUrl: "placeholder.png",
+      });
+      const zone = document.querySelector<HTMLElement>("[data-field-target]");
+      expect(zone).not.toBeNull();
+
+      /* Deliberately not awaited: the focus move must still be suspended on
+         `tick()` when the component goes away. */
+      void fireEvent.keyDown(zone as HTMLElement, { key: "ArrowRight" });
+      rendered.unmount();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    } finally {
+      process.off("unhandledRejection", record);
+    }
+
+    expect(
+      rejections.map((reason) =>
+        reason instanceof Error ? reason.message : String(reason),
+      ),
+    ).toEqual([]);
   });
 });
 

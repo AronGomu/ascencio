@@ -345,6 +345,7 @@ export function createDuelStore(client: DuelClient): DuelStore {
             message: validation.message,
             recoverable: true,
           },
+          pendingPlacement: null,
         }),
       );
       return false;
@@ -359,6 +360,7 @@ export function createDuelStore(client: DuelClient): DuelStore {
             message: "That prompt is no longer active",
             recoverable: true,
           },
+          pendingPlacement: null,
         }),
       );
       return false;

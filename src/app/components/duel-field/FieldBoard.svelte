@@ -117,8 +117,11 @@
   async function focusActiveTarget(): Promise<void> {
     await tick();
     if (navigationState.activeTarget === null) return;
+    /* Svelte nulls the `bind:this` ref as the element unmounts, which can land
+       while this microtask is suspended. Nothing left to focus, then. */
     const target = [
-      ...boardElement.querySelectorAll<HTMLElement>("[data-field-target]"),
+      ...(boardElement?.querySelectorAll<HTMLElement>("[data-field-target]") ??
+        []),
     ].find(
       (element) => element.dataset.fieldTarget === navigationState.activeTarget,
     );

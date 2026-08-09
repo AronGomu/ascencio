@@ -31,7 +31,7 @@ describe("MenuDialog", () => {
       surrenderAvailable: true,
       responsePending: false,
       onopensettings: vi.fn(),
-      onsurrender: vi.fn(),
+      onsurrender: vi.fn(() => true),
       onclose: vi.fn(),
     });
 
@@ -48,7 +48,7 @@ describe("MenuDialog", () => {
 
   it("needs confirmation before surrendering", async () => {
     const user = userEvent.setup();
-    const onsurrender = vi.fn();
+    const onsurrender = vi.fn(() => true);
     render(MenuDialog, {
       surrenderAvailable: true,
       responsePending: false,
@@ -74,7 +74,7 @@ describe("MenuDialog", () => {
 
   it("cancel returns to the menu without surrendering", async () => {
     const user = userEvent.setup();
-    const onsurrender = vi.fn();
+    const onsurrender = vi.fn(() => true);
     render(MenuDialog, {
       surrenderAvailable: true,
       responsePending: false,
@@ -100,12 +100,116 @@ describe("MenuDialog", () => {
     expect(onsurrender).not.toHaveBeenCalled();
   });
 
+  it("closes the menu once a surrender is under way", async () => {
+    const user = userEvent.setup();
+    const onclose = vi.fn();
+    render(MenuDialog, {
+      surrenderAvailable: true,
+      responsePending: false,
+      onopensettings: vi.fn(),
+      onsurrender: vi.fn(() => true),
+      onclose,
+    });
+
+    await user.click(
+      document.querySelector(
+        '[data-cy="menu-dialog-surrender-button"]',
+      ) as HTMLButtonElement,
+    );
+    await user.click(
+      document.querySelector(
+        '[data-cy="menu-dialog-surrender-confirm-button"]',
+      ) as HTMLButtonElement,
+    );
+
+    expect(onclose).toHaveBeenCalledTimes(1);
+    expect(
+      document.querySelector('[data-cy="menu-dialog-surrender-error"]'),
+    ).toBeNull();
+  });
+
+  /* A surrender the store refuses changes nothing, so dismissing the menu
+     would leave the player believing an action they never committed. */
+  it("keeps the menu open and announces a surrender that never started", async () => {
+    const user = userEvent.setup();
+    const onclose = vi.fn();
+    const onsurrender = vi.fn(() => false);
+    render(MenuDialog, {
+      surrenderAvailable: true,
+      responsePending: false,
+      onopensettings: vi.fn(),
+      onsurrender,
+      onclose,
+    });
+
+    await user.click(
+      document.querySelector(
+        '[data-cy="menu-dialog-surrender-button"]',
+      ) as HTMLButtonElement,
+    );
+    await user.click(
+      document.querySelector(
+        '[data-cy="menu-dialog-surrender-confirm-button"]',
+      ) as HTMLButtonElement,
+    );
+
+    expect(onsurrender).toHaveBeenCalledTimes(1);
+    expect(onclose).not.toHaveBeenCalled();
+    expect(document.querySelector('[data-cy="menu-dialog"]')).not.toBeNull();
+    const failure = document.querySelector(
+      '[data-cy="menu-dialog-surrender-error"]',
+    );
+    expect(failure?.getAttribute("role")).toBe("alert");
+    expect(failure?.textContent).toContain("could not");
+    expect(
+      document.querySelector(
+        '[data-cy="menu-dialog-surrender-confirm-button"]',
+      ),
+    ).not.toBeNull();
+  });
+
+  it("clears a surrender failure when the player keeps playing", async () => {
+    const user = userEvent.setup();
+    render(MenuDialog, {
+      surrenderAvailable: true,
+      responsePending: false,
+      onopensettings: vi.fn(),
+      onsurrender: vi.fn(() => false),
+      onclose: vi.fn(),
+    });
+
+    await user.click(
+      document.querySelector(
+        '[data-cy="menu-dialog-surrender-button"]',
+      ) as HTMLButtonElement,
+    );
+    await user.click(
+      document.querySelector(
+        '[data-cy="menu-dialog-surrender-confirm-button"]',
+      ) as HTMLButtonElement,
+    );
+    await user.click(
+      document.querySelector(
+        '[data-cy="menu-dialog-surrender-cancel-button"]',
+      ) as HTMLButtonElement,
+    );
+    await user.click(
+      document.querySelector(
+        '[data-cy="menu-dialog-surrender-button"]',
+      ) as HTMLButtonElement,
+    );
+
+    expect(
+      document.querySelector('[data-cy="menu-dialog-surrender-error"]'),
+    ).toBeNull();
+  });
+
   it("hides surrender when unavailable", () => {
     render(MenuDialog, {
       surrenderAvailable: false,
       responsePending: false,
       onopensettings: vi.fn(),
-      onsurrender: vi.fn(),
+      onsurrender: vi.fn(() => true),
       onclose: vi.fn(),
     });
 
@@ -120,7 +224,7 @@ describe("MenuDialog", () => {
       surrenderAvailable: true,
       responsePending: true,
       onopensettings: vi.fn(),
-      onsurrender: vi.fn(),
+      onsurrender: vi.fn(() => true),
       onclose: vi.fn(),
     });
 
@@ -141,7 +245,7 @@ describe("MenuDialog", () => {
       surrenderAvailable: false,
       responsePending: false,
       onopensettings: vi.fn(),
-      onsurrender: vi.fn(),
+      onsurrender: vi.fn(() => true),
       onclose,
     });
 
@@ -156,7 +260,7 @@ describe("MenuDialog", () => {
       surrenderAvailable: false,
       responsePending: false,
       onopensettings: vi.fn(),
-      onsurrender: vi.fn(),
+      onsurrender: vi.fn(() => true),
       onclose,
     });
 

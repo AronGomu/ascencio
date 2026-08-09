@@ -19,6 +19,7 @@
   --accent-strong: #42c9b5;
   --danger: #ff8c9b;
   --warning: #ffd580;
+  --success: #7ee2a8;
   --duel-field-layer-surface: 0;
   --duel-field-layer-zone: 10;
   --duel-field-layer-stack: 20;
@@ -712,6 +713,63 @@ li + li {
   padding-bottom: calc(
     1rem + max(2.75rem, var(--field-action-bar-height, 0px)) + 0.75rem
   );
+}
+
+.field-status-pills {
+  position: absolute;
+  z-index: var(--duel-field-layer-control);
+  top: 0.75rem;
+  right: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  pointer-events: none;
+}
+
+.prio-pill,
+.field-phase-pill {
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.prio-pill {
+  color: #2b1d00;
+  background: var(--warning);
+}
+
+.prio-pill.is-priority {
+  color: #04210f;
+  background: var(--success);
+}
+
+.field-phase-pill {
+  color: #08101f;
+  background: #cfe0f5;
+}
+
+.life-pill {
+  position: absolute;
+  z-index: var(--duel-field-layer-control);
+  left: 0.75rem;
+  margin: 0;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgb(8 16 31 / 0.82);
+  color: var(--warning);
+  font-weight: 800;
+  pointer-events: none;
+}
+
+.life-pill.is-opponent {
+  top: 0.75rem;
+}
+
+.life-pill.is-self {
+  bottom: 0.75rem;
 }
 
 .duel-field-board {

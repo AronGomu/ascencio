@@ -87,3 +87,14 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 - [ ] Keep shrinking to a phone width: the panel stays under the field, stays fully on screen, and nothing on the page scrolls sideways except the duel field itself.
 - [ ] Surrender and start another duel: the panel resets to its empty state instead of holding the previous duel's card.
 - [ ] Play a full duel with the panel on screen: card art keeps loading correctly and the app never slows down or shows a broken image placeholder where art should be.
+
+## T8 status-and-life-pills
+
+- [ ] On your turn, the field's top-right corner reads `Choose Action - Main 1` (or the current phase) in two pills separated by a `-`, the left pill green.
+- [ ] While the opponent is acting (your response has been sent and you have no prompt), the left pill turns orange and reads `Waiting Opponent`; the phase pill still updates.
+- [ ] Play through Draw, Standby, both Main Phases, Battle Start, Battle Step, Damage, Damage Calculation, Battle and End: the phase pill shows the matching human-readable name at each step.
+- [ ] Two life-point pills are visible inside the duel field itself (not the Duel HUD): the opponent's top-left, yours bottom-left, each formatted like `8,000 LP`.
+- [ ] Deal or take damage: both LP pills update to the new totals immediately.
+- [ ] The status pills and both life pills never block a click — a card underneath any of them (top-right corner, top-left corner, bottom-left corner) is still clickable/draggable exactly as if the pill were not there.
+- [ ] With a screen reader, the priority/phase pill group announces once per change (not once per unrelated re-render) as a single `polite` region; the `-` separator itself is not announced.
+- [ ] There is no `Inspect` button in the Duel HUD pointing at a missing `card-inspector` id — Inspect buttons still open the card preview panel with no console error.

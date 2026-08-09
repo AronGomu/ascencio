@@ -226,10 +226,22 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   expect(Date.now() - startupBeganAt).toBeLessThan(15_000);
   await enableDuelHud(page);
   await expect(page.getByRole("heading", { name: "Your turn" })).toBeVisible();
-  await expect(page.getByText("8,000 LP").first()).toBeVisible();
+  await expect(page.locator('[data-cy="life-pill-p0"]')).toBeVisible();
   const field = page.getByRole("region", { name: "Duel field" });
   await expect(field).toBeVisible();
   await expect(field.locator("[data-zone-id]")).toHaveCount(34);
+  await expect(field.locator('[data-cy="prio-pill"]')).toHaveText(
+    "Choose Action",
+  );
+  await expect(field.locator('[data-cy="phase-pill"]')).toHaveText(
+    /Main 1|Draw|Standby/,
+  );
+  await expect(field.locator('[data-cy="life-pill-p0"]')).toHaveText(
+    "8,000 LP",
+  );
+  await expect(field.locator('[data-cy="life-pill-p1"]')).toHaveText(
+    "8,000 LP",
+  );
   await expect(
     field.getByRole("article", { name: /Hidden opponent hand card/ }).first(),
   ).toBeVisible();

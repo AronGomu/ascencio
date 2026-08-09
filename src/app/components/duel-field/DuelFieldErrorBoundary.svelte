@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { DuelPresentationEvent } from "../../../duel/contracts/duel-presentation-event.ts";
   import type { PlayerPrompt } from "../../../duel/contracts/player-prompt.ts";
+  import type { DuelPhase } from "../../../duel/contracts/public-duel-state.ts";
   import type { CardImageLibrary } from "../../images/card-image-cache.ts";
   import type {
     BoardCardView,
@@ -37,6 +38,9 @@
   export let onplacementintent: (zoneId: PhysicalZoneId) => unknown = () =>
     false;
   export let onpreview: (card: BoardCardView) => void = () => undefined;
+  export let phase: DuelPhase = "unknown";
+  export let hasPriority = false;
+  export let lifePoints: readonly [number, number] | null = null;
 
   let shouldFail: boolean = injectFailure;
 
@@ -95,5 +99,8 @@
     {oninteraction}
     {onplacementintent}
     {onpreview}
+    {phase}
+    {hasPriority}
+    {lifePoints}
   />
 </svelte:boundary>

@@ -40,6 +40,7 @@
     type CardPreviewView,
   } from "./presentation/card-preview.ts";
   import { promptSurface } from "./prompts/prompt-surface.ts";
+  import { hasDuelPriority } from "./prompts/duel-priority.ts";
   import { createDuelStore } from "./stores/duel-store.ts";
   import { createUiSettingsStore } from "./stores/ui-settings-store.ts";
 
@@ -119,6 +120,13 @@
     mappedInteractionSpec,
     $uiSettings.showWorkspace,
   );
+  $: fieldLifePoints =
+    $duel.snapshot === null
+      ? null
+      : ([
+          $duel.snapshot.players[0].lifePoints,
+          $duel.snapshot.players[1].lifePoints,
+        ] as const);
   $: appAnnouncement =
     storageWarning ??
     imageWarning ??
@@ -855,6 +863,9 @@
             oninteraction={duel.dispatchInteraction}
             onplacementintent={duel.armPlacementIntent}
             onpreview={previewFieldCard}
+            phase={$duel.snapshot?.phase ?? "unknown"}
+            hasPriority={hasDuelPriority($duel.prompt, $duel.responsePending)}
+            lifePoints={fieldLifePoints}
           />
         {/key}
       {:else if $duel.snapshot}

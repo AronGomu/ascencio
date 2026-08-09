@@ -187,7 +187,6 @@
             <button
               type="button"
               class="card-detail-trigger"
-              aria-controls="card-inspector"
               aria-label={`Inspect ${cardName(card)}`}
               onclick={(event) =>
                 oninspect(card, event.currentTarget as HTMLButtonElement)}

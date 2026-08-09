@@ -1239,6 +1239,23 @@ describe("DuelField", () => {
       harness.onpreview.mock.calls.every(([value]) => value !== null),
     ).toBe(true);
   });
+
+  it("field mounts pills and both life pills", () => {
+    const value = DUEL_FIELD_PUBLIC_STATES["ST-01"];
+    render(DuelField, { board: value.board, lifePoints: [8000, 7500] });
+    const field = screen.getByRole("region", { name: "Duel field" });
+    expect(field.querySelector('[data-cy="field-status-pills"]')).toBeTruthy();
+    expect(field.querySelector('[data-cy="life-pill-p0"]')).toBeTruthy();
+    expect(field.querySelector('[data-cy="life-pill-p1"]')).toBeTruthy();
+  });
+
+  it("field omits life pills without a snapshot", () => {
+    const value = DUEL_FIELD_PUBLIC_STATES["ST-01"];
+    render(DuelField, { board: value.board, lifePoints: null });
+    const field = screen.getByRole("region", { name: "Duel field" });
+    expect(field.querySelector('[data-cy="life-pill-p0"]')).toBeNull();
+    expect(field.querySelector('[data-cy="life-pill-p1"]')).toBeNull();
+  });
 });
 
 const HAND_CARD_ID = "st01-own-hand";

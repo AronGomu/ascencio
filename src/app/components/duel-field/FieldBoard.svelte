@@ -43,6 +43,7 @@
   export let oncarddragstart: (card: BoardCardView) => void = () => undefined;
   export let oncarddragmove: (x: number, y: number) => void = () => undefined;
   export let oncarddragend: (x: number, y: number) => void = () => undefined;
+  export let oncardpreview: (card: BoardCardView) => void = () => undefined;
 
   let boardElement: HTMLDivElement;
   let navigationState: FieldNavigationState = createFieldNavigationState();
@@ -204,6 +205,7 @@
       ondragstart={() => oncarddragstart(card)}
       ondragmove={oncarddragmove}
       ondragend={oncarddragend}
+      onpreview={() => oncardpreview(card)}
     />
   {/each}
 </div>

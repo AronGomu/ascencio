@@ -28,6 +28,7 @@
   export let ondragstart: () => void = () => undefined;
   export let ondragmove: (x: number, y: number) => void = () => undefined;
   export let ondragend: (x: number, y: number) => void = () => undefined;
+  export let onpreview: (card: BoardCardView) => void = () => undefined;
 
   let pointerOrigin: { readonly x: number; readonly y: number } | null = null;
   let pointerMoved = false;
@@ -111,6 +112,13 @@
     renderedImageUrl = imageUrl;
   }
 
+  /* Preview is a read-only side effect of hovering, pressing or focusing a
+     card whose identity the local player may already see. It never consumes
+     the event and never touches the drag bookkeeping below. */
+  function reportPreview(): void {
+    if (card.code !== undefined) onpreview(card);
+  }
+
   function pointerDown(
     event: PointerEvent & { currentTarget: HTMLButtonElement },
   ): void {
@@ -120,6 +128,7 @@
        pointer has travelled onto a zone. jsdom implements neither capture
        method, hence the optional calls. */
     if (draggable) event.currentTarget.setPointerCapture?.(event.pointerId);
+    reportPreview();
   }
 
   function pointerMove(event: PointerEvent): void {
@@ -171,6 +180,8 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex (passive card participates in spatial roving focus) -->
 <article
+  onpointerenter={reportPreview}
+  onfocusin={reportPreview}
   class:is-hidden={card.hidden}
   class:is-opponent={card.facing === "opponent"}
   class:is-sideways={card.orientation === "sideways"}

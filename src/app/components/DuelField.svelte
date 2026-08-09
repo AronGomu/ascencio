@@ -70,6 +70,7 @@
     document.elementFromPoint(x, y);
   export let onplacementintent: (zoneId: PhysicalZoneId) => unknown = () =>
     false;
+  export let onpreview: (card: BoardCardView) => void = () => undefined;
 
   if (injectFailure) throw new Error("Injected duel field component failure");
 
@@ -391,6 +392,7 @@
     oncarddragstart={startCardDrag}
     oncarddragmove={moveCardDrag}
     oncarddragend={endCardDrag}
+    oncardpreview={onpreview}
   />
   {#if feedbackState.line}
     <FieldLines line={feedbackState.line} />

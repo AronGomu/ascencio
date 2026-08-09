@@ -1173,6 +1173,72 @@ describe("DuelField", () => {
       target.closest(".duel-field-card")?.getAttribute("data-dragging"),
     ).toBeNull();
   });
+
+  it("hover reports a visible card", async () => {
+    const harness = renderDraggableHand();
+    const card = harness.board.cards.find(({ id }) => id === HAND_CARD_ID);
+    if (card === undefined) throw new Error("Missing hand fixture card");
+
+    await fireEvent.pointerEnter(handCardArticle());
+
+    expect(harness.onpreview).toHaveBeenCalledTimes(1);
+    expect(harness.onpreview).toHaveBeenCalledWith(card);
+  });
+
+  it("press reports a visible card", async () => {
+    const harness = renderDraggableHand();
+
+    await fireEvent.pointerDown(handDragTarget(), { clientX: 10, clientY: 10 });
+
+    expect(harness.onpreview).toHaveBeenCalledTimes(1);
+    expect(harness.onpreview.mock.calls[0]?.[0]).toMatchObject({
+      id: HAND_CARD_ID,
+    });
+    // The same `pointerdown` still opens the drag gesture: previewing must not
+    // consume the event or disturb the 8px click-suppression origin.
+    await fireEvent.pointerMove(handDragTarget(), { clientX: 30, clientY: 30 });
+    expect(candidateZoneIds()).toHaveLength(5);
+  });
+
+  it("focus reports a visible card", async () => {
+    const harness = renderDraggableHand();
+
+    await fireEvent.focusIn(handDragTarget());
+
+    expect(harness.onpreview).toHaveBeenCalledTimes(1);
+    expect(harness.onpreview.mock.calls[0]?.[0]).toMatchObject({
+      id: HAND_CARD_ID,
+    });
+  });
+
+  it("hidden cards never report", async () => {
+    const harness = renderDraggableHand();
+    const hidden = screen.getAllByRole("article", {
+      name: "Hidden opponent hand card",
+    })[0];
+    if (hidden === undefined) throw new Error("Missing hidden opponent card");
+
+    await fireEvent.pointerEnter(hidden);
+    await fireEvent.focusIn(hidden);
+
+    expect(harness.onpreview).not.toHaveBeenCalled();
+  });
+
+  it("pointer leave keeps the panel", async () => {
+    const harness = renderDraggableHand();
+    const article = handCardArticle();
+    await fireEvent.pointerEnter(article);
+
+    await fireEvent.pointerLeave(article);
+    await fireEvent.pointerOut(article);
+
+    // There is no clear path at all: leaving fires nothing, and every call the
+    // field ever makes carries a card, never a null that would blank the panel.
+    expect(harness.onpreview).toHaveBeenCalledTimes(1);
+    expect(
+      harness.onpreview.mock.calls.every(([value]) => value !== null),
+    ).toBe(true);
+  });
 });
 
 const HAND_CARD_ID = "st01-own-hand";
@@ -1232,6 +1298,7 @@ function renderDraggableHand(
   if (spec.kind === "inactive") throw new Error("Expected active field spec");
   const dispatch = vi.fn();
   const onplacementintent = vi.fn();
+  const onpreview = vi.fn();
   let hit: Element | null = null;
   const rendered = render(DuelField, {
     board: valueBoard,
@@ -1241,16 +1308,27 @@ function renderDraggableHand(
     pending: false,
     oninteraction: dispatch,
     onplacementintent,
+    onpreview,
     hitTest: () => hit,
   });
   return {
     rendered,
+    board: valueBoard,
     dispatch,
     onplacementintent,
+    onpreview,
     setHit: (element: Element | null) => {
       hit = element;
     },
   };
+}
+
+function handCardArticle(): HTMLElement {
+  const article = document.querySelector<HTMLElement>(
+    `[data-cy="field-card-${HAND_CARD_ID}"]`,
+  );
+  if (article === null) throw new Error("Missing hand card article");
+  return article;
 }
 
 function handDragTarget(): HTMLElement {

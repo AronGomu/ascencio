@@ -214,28 +214,62 @@ h4 {
   white-space: nowrap;
 }
 
-.card-inspector {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+/* The duel field and the card preview panel share one row, and the panel is
+   stretched to the field's height so the effect text scrolls inside it rather
+   than making the row taller than the board. */
+.duel-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22rem;
   gap: 1rem;
+  align-items: stretch;
+}
+
+.card-preview-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  min-width: 0;
   padding: 1rem;
-  border: 1px solid var(--accent);
+  border: 1px solid var(--border);
   border-radius: 0.9rem;
-  background: var(--surface-strong);
-  box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.24);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
 }
 
-.card-inspector > div {
-  min-width: min(100%, 16rem);
-  flex: 1;
-}
-
-.card-inspector img {
-  width: 8rem;
-  max-width: 100%;
-  height: auto;
+.card-preview-panel__art img {
+  display: block;
+  width: 100%;
+  max-height: 22rem;
+  object-fit: contain;
   border-radius: 0.5rem;
+}
+
+.card-preview-panel__copy {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.35rem;
+  min-height: 0;
+}
+
+.card-preview-panel [data-cy="card-preview-text"] {
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 0.4rem;
+  color: var(--muted);
+  white-space: pre-wrap;
+}
+
+/* Solving `mainWidth - 22rem panel - 1rem gap - 2rem field padding >= 52rem
+   board min-width` gives a 1264px floor. Below it the panel must stack, or the
+   board's min-width would push a horizontal scrollbar onto the page at the
+   1024px viewport the responsive e2e gate forbids it at. */
+@media (max-width: 79rem) {
+  .duel-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .card-preview-panel {
+    max-height: 18rem;
+  }
 }
 
 .diagnostic-message,
@@ -258,8 +292,7 @@ main {
 .message-panel,
 .prompt-panel,
 .event-log,
-.duel-hud,
-.card-inspector {
+.duel-hud {
   border: 1px solid var(--border);
   border-radius: 0.9rem;
   background: color-mix(in srgb, var(--surface) 94%, transparent);
@@ -1103,18 +1136,6 @@ button.card-action-chip:hover:not(:disabled) {
       max(0.5rem, env(safe-area-inset-bottom))
       max(0.5rem, env(safe-area-inset-left));
     padding: 0.75rem;
-  }
-}
-
-@media (max-width: 38rem) {
-  .card-inspector {
-    position: fixed;
-    z-index: var(--duel-field-layer-menu);
-    inset: auto max(0.5rem, env(safe-area-inset-right))
-      max(0.5rem, env(safe-area-inset-bottom))
-      max(0.5rem, env(safe-area-inset-left));
-    max-height: min(85svh, 34rem);
-    overflow: auto;
   }
 }
 

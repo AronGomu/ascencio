@@ -69,3 +69,21 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 - [ ] Play a card by dragging, then keep playing with chips and the keyboard for the rest of the turn: nothing about the earlier drag leaks into a later decision (no zone gets chosen for you unexpectedly).
 - [ ] Keyboard only, with no mouse touched: the whole duel is still playable and no drag behaviour interferes.
 - [ ] Rare case, if you can reach it: play a card whose zone the engine refuses (e.g. a summon that must go to a specific zone). The normal zone-selection prompt appears with its own highlighted zones and you pick one by hand — the mis-guess costs you nothing.
+
+## T11 card-preview-panel
+
+- [ ] Open the app on a wide desktop window (wider than ~1264px): a `22rem` panel sits to the right of the duel field, its top edge level with the field's and its bottom edge level with the field's, and the board is still fully visible with no horizontal scrollbar anywhere.
+- [ ] Before you touch anything, the panel reads `Hover a card to see its details.` and shows no image, no name and no effect text.
+- [ ] Hover each card in your hand in turn: the panel fills with that card's art, name and effect text, and swaps as you move between cards.
+- [ ] Press and hold the pointer down on a face-up monster on the field (without moving it): the panel fills with that card while the button is held.
+- [ ] Move the pointer off the card and onto the panel: the content stays put — it must not blank out while you are reading it.
+- [ ] Hover a face-down card of yours and an opponent hand card: the panel does not change at all — it neither fills with the hidden card nor clears whatever it was showing.
+- [ ] Keyboard only: arrow the board focus from card to card — the panel follows the focused card exactly as hovering does.
+- [ ] Find a card with long effect text: the text region scrolls inside the panel, and the panel and the duel field stay the same height — the field must not get taller to fit the text.
+- [ ] Try to click, tab into, or select anything in the panel: nothing in it is focusable or clickable, and tabbing through the page skips it entirely.
+- [ ] With the Duel HUD enabled, open a card tray and click an `Inspect …` button: the panel fills with that card instead of a modal dialog opening.
+- [ ] There is no card-inspector dialog anywhere any more, and pressing `Escape` with the panel filled does nothing (it must not close or clear the panel, and it must not disturb pinned action chips).
+- [ ] Slowly shrink the window below ~1264px: the panel drops beneath the duel field, the field becomes full width, and the panel is capped at about `18rem` tall with its text still scrollable.
+- [ ] Keep shrinking to a phone width: the panel stays under the field, stays fully on screen, and nothing on the page scrolls sideways except the duel field itself.
+- [ ] Surrender and start another duel: the panel resets to its empty state instead of holding the previous duel's card.
+- [ ] Play a full duel with the panel on screen: card art keeps loading correctly and the app never slows down or shows a broken image placeholder where art should be.

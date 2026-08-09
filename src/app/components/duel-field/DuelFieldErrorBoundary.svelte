@@ -2,7 +2,10 @@
   import type { DuelPresentationEvent } from "../../../duel/contracts/duel-presentation-event.ts";
   import type { PlayerPrompt } from "../../../duel/contracts/player-prompt.ts";
   import type { CardImageLibrary } from "../../images/card-image-cache.ts";
-  import type { BoardViewModel } from "../../../field/board-view-model.ts";
+  import type {
+    BoardCardView,
+    BoardViewModel,
+  } from "../../../field/board-view-model.ts";
   import type { PhysicalZoneId } from "../../../field/duel-field-layout.ts";
   import type {
     InteractionSession,
@@ -33,6 +36,7 @@
      (`document.elementFromPoint`) is the correct one in the app. */
   export let onplacementintent: (zoneId: PhysicalZoneId) => unknown = () =>
     false;
+  export let onpreview: (card: BoardCardView) => void = () => undefined;
 
   let shouldFail: boolean = injectFailure;
 
@@ -90,5 +94,6 @@
     injectFailure={shouldFail}
     {oninteraction}
     {onplacementintent}
+    {onpreview}
   />
 </svelte:boundary>

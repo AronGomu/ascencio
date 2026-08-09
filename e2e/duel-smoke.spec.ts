@@ -930,6 +930,42 @@ test("dragging a hand card onto a highlighted zone plays it", async ({
   expect(placePrompt?.prompt.kind).toBe("selectPlace");
 });
 
+test("hovering a hand card fills the preview panel sharing the field row", async ({
+  page,
+}) => {
+  // 1366 is above the 79rem (1264px) stacking breakpoint, so the panel is
+  // beside the field here; below it the panel drops under the board instead.
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await page.goto("./");
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+
+  const field = page.locator('[data-cy="duel-field"]');
+  const panel = page.locator('[data-cy="card-preview-panel"]');
+  await expect(panel).toBeVisible();
+  await expect(panel.locator('[data-cy="card-preview-empty"]')).toBeVisible();
+  await assertSharesFieldRow(page, "empty preview");
+
+  const handCard = page
+    .locator(
+      '[data-cy="duel-field"] .duel-field-card[data-card-zone-id="p0:hand"]',
+    )
+    .first();
+  await expect(handCard).toBeVisible();
+  await handCard.hover();
+
+  await expect(panel.locator('[data-cy="card-preview-name"]')).not.toBeEmpty();
+  await expect(
+    panel.locator('[data-cy="card-preview-image"]'),
+  ).not.toHaveAttribute("src", "");
+  await assertSharesFieldRow(page, "populated preview");
+
+  // The panel is presentation only: nothing in it is focusable or clickable.
+  expect(await panel.locator("button, a, [tabindex]").count()).toBe(0);
+  expect(await field.count()).toBe(1);
+});
+
 test("responsive field compositions contain controls across supported viewports", async ({
   page,
 }, testInfo) => {
@@ -951,6 +987,49 @@ test("responsive field compositions contain controls across supported viewports"
         ? `${viewport.id} ${viewport.zoomEquivalent}`
         : viewport.id;
     await assertNoPageWideHorizontalOverflow(page, viewportLabel);
+
+    // The card preview panel shares the field's grid row only above the 79rem
+    // (1264px) stacking breakpoint. At or below it the field must be full
+    // width with the panel underneath, or the board's 52rem min-width would
+    // push horizontal overflow onto the page — which the assertion above and
+    // the per-field one below both forbid from 1024px up.
+    const rowLayout = await page.evaluate(() => {
+      const rect = (selector: string): DOMRect | null =>
+        document.querySelector(selector)?.getBoundingClientRect() ?? null;
+      const row = rect('[data-cy="duel-row"]');
+      const fieldBox = rect('[data-cy="duel-field"]');
+      const panelBox = rect('[data-cy="card-preview-panel"]');
+      return row === null || fieldBox === null || panelBox === null
+        ? null
+        : {
+            rowWidth: row.width,
+            fieldWidth: fieldBox.width,
+            fieldTop: fieldBox.top,
+            fieldBottom: fieldBox.bottom,
+            panelTop: panelBox.top,
+          };
+    });
+    if (rowLayout === null)
+      throw new Error(`${viewportLabel} duel row is not mounted`);
+    if (viewport.width >= 1264) {
+      expect(
+        rowLayout.panelTop,
+        `${viewportLabel} preview panel shares the field row`,
+      ).toBeLessThanOrEqual(rowLayout.fieldTop + 2);
+      expect(
+        rowLayout.fieldWidth,
+        `${viewportLabel} field yields its row to the panel`,
+      ).toBeLessThan(rowLayout.rowWidth - 300);
+    } else {
+      expect(
+        rowLayout.panelTop,
+        `${viewportLabel} preview panel stacks below the field`,
+      ).toBeGreaterThanOrEqual(rowLayout.fieldBottom - 1);
+      expect(
+        Math.abs(rowLayout.fieldWidth - rowLayout.rowWidth),
+        `${viewportLabel} stacked field is full width`,
+      ).toBeLessThanOrEqual(1);
+    }
 
     const field = page.getByRole("region", { name: "Duel field" });
     await expect(field).toBeVisible();
@@ -2021,6 +2100,38 @@ async function captureResponsiveState(
     path: screenshotPath,
     contentType: "image/png",
   });
+}
+
+async function assertSharesFieldRow(page: Page, label: string): Promise<void> {
+  const boxes = await page.evaluate(() => {
+    const rect = (selector: string): DOMRect | null =>
+      document.querySelector(selector)?.getBoundingClientRect() ?? null;
+    const fieldBox = rect('[data-cy="duel-field"]');
+    const panelBox = rect('[data-cy="card-preview-panel"]');
+    return fieldBox === null || panelBox === null
+      ? null
+      : {
+          fieldY: fieldBox.y,
+          panelY: panelBox.y,
+          fieldHeight: fieldBox.height,
+          panelHeight: panelBox.height,
+          fieldRight: fieldBox.right,
+          panelLeft: panelBox.left,
+        };
+  });
+  if (boxes === null) throw new Error(`${label}: missing field or panel box`);
+  expect(
+    Math.abs(boxes.fieldY - boxes.panelY),
+    `${label} shares the field row top (${boxes.fieldY} vs ${boxes.panelY})`,
+  ).toBeLessThanOrEqual(2);
+  expect(
+    Math.abs(boxes.fieldHeight - boxes.panelHeight),
+    `${label} matches the field height (${boxes.fieldHeight} vs ${boxes.panelHeight})`,
+  ).toBeLessThanOrEqual(2);
+  expect(
+    boxes.panelLeft,
+    `${label} sits beside the field, not over it`,
+  ).toBeGreaterThanOrEqual(boxes.fieldRight - 1);
 }
 
 async function assertNoPageWideHorizontalOverflow(

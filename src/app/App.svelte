@@ -1,15 +1,17 @@
 <script lang="ts">
   import { afterUpdate, onMount, tick } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
-  import { isCardIdentityVisible } from "../duel/card-visibility.ts";
   import type { DuelDiagnosticTrace } from "../duel/contracts/duel-diagnostics.ts";
   import { snapshotId, type SnapshotId } from "../duel/contracts/ids.ts";
   import type { PublicCard } from "../duel/contracts/public-duel-state.ts";
-  import { mapSnapshotToBoard } from "../field/board-view-model.ts";
+  import {
+    mapSnapshotToBoard,
+    type BoardCardView,
+  } from "../field/board-view-model.ts";
   import AppMenubar from "./components/AppMenubar.svelte";
   import MenuDialog from "./components/MenuDialog.svelte";
   import SettingsDialog from "./components/SettingsDialog.svelte";
-  import CardInspector from "./components/duel-field/CardInspector.svelte";
+  import CardPreviewPanel from "./components/CardPreviewPanel.svelte";
   import DuelFieldErrorBoundary from "./components/duel-field/DuelFieldErrorBoundary.svelte";
   import DuelHud from "./components/duel-field/DuelHud.svelte";
   import DuelLog from "./components/duel-field/DuelLog.svelte";
@@ -33,6 +35,10 @@
   import PromptControls from "./prompts/PromptControls.svelte";
   import PromptDialog from "./components/PromptDialog.svelte";
   import { mapPromptToInteractionSpec } from "./prompts/interaction-spec.ts";
+  import {
+    cardPreviewForCode,
+    type CardPreviewView,
+  } from "./presentation/card-preview.ts";
   import { promptSurface } from "./prompts/prompt-surface.ts";
   import { createDuelStore } from "./stores/duel-store.ts";
   import { createUiSettingsStore } from "./stores/ui-settings-store.ts";
@@ -59,7 +65,6 @@
   let promptPanel: HTMLElement;
   let resultHeading: HTMLHeadingElement;
   let errorHeading: HTMLHeadingElement;
-  let cardInspectorTrigger: HTMLButtonElement | null = null;
   let previousErrorKey = "";
   let previousStatus = $duel.status;
   let imageLibrary: CardImageLibrary | null = null;
@@ -78,7 +83,7 @@
     imageLibrary.snapshotId === $duel.runtimeSnapshotId;
   let imageProgress = 0;
   let imageWarning: string | null = null;
-  let inspectedCard: PublicCard | null = null;
+  let previewCard: CardPreviewView | null = null;
   let injectDuelFieldFailure = false;
   let diagnosticPending = false;
   let diagnosticMessage: string | null = null;
@@ -344,15 +349,12 @@
     if (context !== generationContext) {
       generationContext = context;
       diagnosticPending = false;
-      inspectedCard = null;
+      /* A new worker or session means new cards and a new image library
+         generation, so the previewed card — and the image lease behind it —
+         must not survive into the next duel. */
+      previewCard = null;
     }
     if ($duel.error !== null) diagnosticPending = false;
-    if (inspectedCard !== null) {
-      const currentCard = findPublicCard(inspectedCard.instanceId);
-      if (currentCard === null || !isInspectableCard(currentCard))
-        inspectedCard = null;
-      else if (currentCard !== inspectedCard) inspectedCard = currentCard;
-    }
     if (
       snapshotStaged &&
       !snapshotActivationPending &&
@@ -541,10 +543,17 @@
       diagnosticMessage = "Diagnostics are unavailable for this session.";
   }
 
-  function inspectHudCard(card: PublicCard, trigger: HTMLButtonElement): void {
-    if (!isInspectableCard(card)) return;
-    cardInspectorTrigger = trigger;
-    inspectedCard = card;
+  function previewFieldCard(card: BoardCardView): void {
+    const next = cardPreviewForCode(card.code, ACTIVE_CARD_TEXTS);
+    if (next !== null) previewCard = next;
+  }
+
+  /* Still wired to `DuelHud`'s `oninspect`, so the HUD and the card trays need
+     no change: the trigger button they hand over is irrelevant now that the
+     panel replaces the modal inspector. */
+  function previewHudCard(card: PublicCard): void {
+    const next = cardPreviewForCode(card.code, ACTIVE_CARD_TEXTS);
+    if (next !== null) previewCard = next;
   }
 
   function retryCardImageLoading(): void {
@@ -559,30 +568,6 @@
     retryImages();
   }
 
-  function findPublicCard(instanceId: string): PublicCard | null {
-    const snapshot = $duel.snapshot;
-    if (snapshot === null) return null;
-    for (const player of snapshot.players) {
-      const card = [
-        ...player.hand,
-        ...player.extraDeck,
-        ...player.monsters,
-        ...player.spellsAndTraps,
-        ...player.graveyard,
-        ...player.banished,
-      ].find((candidate) => candidate.instanceId === instanceId);
-      if (card !== undefined) return card;
-    }
-    return null;
-  }
-
-  function isInspectableCard(card: PublicCard): boolean {
-    return (
-      card.code !== undefined &&
-      isCardIdentityVisible(0, card.controller, card.location, card.position)
-    );
-  }
-
   function withDeadline<T>(
     operation: Promise<T>,
     milliseconds: number,
@@ -594,20 +579,6 @@
         setTimeout(() => reject(new Error(message)), milliseconds),
       ),
     ]);
-  }
-
-  async function closeCardInspector(): Promise<void> {
-    inspectedCard = null;
-    await tick();
-    cardInspectorTrigger?.focus();
-    cardInspectorTrigger = null;
-  }
-
-  function handleGlobalKeydown(event: KeyboardEvent): void {
-    if (event.key === "Escape" && inspectedCard !== null) {
-      event.preventDefault();
-      void closeCardInspector();
-    }
   }
 
   function phaseLabel(value: string): string {
@@ -644,8 +615,6 @@
 <svelte:head>
   <title>Preset Duel · YGO Story Duel Simulator</title>
 </svelte:head>
-
-<svelte:window onkeydown={handleGlobalKeydown} />
 
 <AppMenubar onopensettings={openMenu} />
 
@@ -867,29 +836,46 @@
     </p>
   {/if}
 
-  {#if duelBoard}
-    {#key `${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
-      <DuelFieldErrorBoundary
-        board={duelBoard}
+  {#if duelBoard || $duel.snapshot}
+    <div class="duel-row" data-cy="duel-row">
+      {#if duelBoard}
+        {#key `${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
+          <DuelFieldErrorBoundary
+            board={duelBoard}
+            imageLibrary={imagesMatchRuntime ? imageLibrary : null}
+            cardBackUrl={imageLibrary?.cardBackUrl ?? ""}
+            placeholderUrl={imageLibrary?.placeholderUrl ?? ""}
+            prompt={$duel.prompt}
+            spec={fieldInteractionSpec}
+            session={$duel.interactionSession}
+            pending={$duel.responsePending}
+            presentationEvents={$duel.presentationEvents}
+            feedbackGeneration={`${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
+            injectFailure={injectDuelFieldFailure}
+            oninteraction={duel.dispatchInteraction}
+            onplacementintent={duel.armPlacementIntent}
+            onpreview={previewFieldCard}
+          />
+        {/key}
+      {:else if $duel.snapshot}
+        <section
+          class="field-error"
+          role="alert"
+          data-cy="app-field-error-panel"
+        >
+          <h2 data-cy="app-field-error-heading">Duel field unavailable</h2>
+          <p data-cy="app-field-error-copy">
+            Prompt controls remain available.
+          </p>
+        </section>
+      {/if}
+      <CardPreviewPanel
+        preview={previewCard}
         imageLibrary={imagesMatchRuntime ? imageLibrary : null}
-        cardBackUrl={imageLibrary?.cardBackUrl ?? ""}
-        placeholderUrl={imageLibrary?.placeholderUrl ?? ""}
-        prompt={$duel.prompt}
-        spec={fieldInteractionSpec}
-        session={$duel.interactionSession}
-        pending={$duel.responsePending}
-        presentationEvents={$duel.presentationEvents}
-        feedbackGeneration={`${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
-        injectFailure={injectDuelFieldFailure}
-        oninteraction={duel.dispatchInteraction}
-        onplacementintent={duel.armPlacementIntent}
+        placeholderUrl={imageLibrary?.placeholderUrl ??
+          DEFAULT_CARD_PLACEHOLDER}
       />
-    {/key}
-  {:else if $duel.snapshot}
-    <section class="field-error" role="alert" data-cy="app-field-error-panel">
-      <h2 data-cy="app-field-error-heading">Duel field unavailable</h2>
-      <p data-cy="app-field-error-copy">Prompt controls remain available.</p>
-    </section>
+    </div>
   {/if}
 
   {#if currentPromptSurface === "dialog" && $duel.prompt}
@@ -913,7 +899,7 @@
         imageLibrary={imagesMatchRuntime ? imageLibrary : null}
         placeholderUrl={imageLibrary?.placeholderUrl ??
           DEFAULT_CARD_PLACEHOLDER}
-        oninspect={inspectHudCard}
+        oninspect={previewHudCard}
       />
     {/if}
   {:else if $duel.status === "active"}
@@ -931,16 +917,6 @@
         </h2>
       </div>
     </section>
-  {/if}
-
-  {#if inspectedCard}
-    <CardInspector
-      card={inspectedCard}
-      cardTexts={ACTIVE_CARD_TEXTS}
-      imageLibrary={imagesMatchRuntime ? imageLibrary : null}
-      placeholderUrl={imageLibrary?.placeholderUrl ?? DEFAULT_CARD_PLACEHOLDER}
-      onclose={() => void closeCardInspector()}
-    />
   {/if}
 
   {#if $uiSettings.showWorkspace}

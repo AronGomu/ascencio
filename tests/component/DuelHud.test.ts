@@ -3,7 +3,6 @@
 import { cleanup, render, screen, within } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import CardInspector from "../../src/app/components/duel-field/CardInspector.svelte";
 import CardTray from "../../src/app/components/duel-field/CardTray.svelte";
 import DuelHud from "../../src/app/components/duel-field/DuelHud.svelte";
 import DuelLog from "../../src/app/components/duel-field/DuelLog.svelte";
@@ -144,40 +143,6 @@ describe("DuelHud", () => {
     expect(
       screen.queryByRole("button", { name: /Open Opponent Deck/ }),
     ).toBeNull();
-  });
-});
-
-describe("CardInspector", () => {
-  it("shows public card text plus non-color-only counter and material badges", () => {
-    const card = RICH_PUBLIC_DUEL_STATE.players[0].monsters[0];
-    if (card === undefined) throw new Error("Missing inspector card");
-    render(CardInspector, { card, cardTexts: PUBLIC_STATE_CARD_TEXTS });
-
-    const inspector = screen.getByRole("complementary", {
-      name: "The Legendary Fisherman",
-    });
-    expect(within(inspector).getByText("The Legendary Fisherman")).toBeTruthy();
-    expect(within(inspector).getByText("3 Spell Counters")).toBeTruthy();
-    expect(within(inspector).getByText("Material 1: Axe Raider")).toBeTruthy();
-    expect(
-      within(inspector).getByText("Material 2: Hidden material"),
-    ).toBeTruthy();
-  });
-
-  it("mounts no hidden identity, accessible label, or image request", () => {
-    const hidden = RICH_PUBLIC_DUEL_STATE.players[1].extraDeck[0];
-    if (hidden === undefined) throw new Error("Missing hidden inspector card");
-    const resolveCardImage = vi.fn(() => "/cards/private.jpg");
-    render(CardInspector, {
-      card: hidden,
-      cardTexts: PUBLIC_STATE_CARD_TEXTS,
-      resolveCardImage,
-    });
-
-    expect(screen.queryByRole("complementary")).toBeNull();
-    expect(document.body.textContent).not.toContain("Dark Magician");
-    expect(document.body.innerHTML).not.toContain("46986414");
-    expect(resolveCardImage).not.toHaveBeenCalled();
   });
 });
 

@@ -12,6 +12,7 @@
     type FieldNavigationKey,
     type FieldNavigationState,
   } from "../../prompts/field-navigation.ts";
+  import type { PhysicalZoneId } from "../../../field/duel-field-layout.ts";
   import type { CardImageLibrary } from "../../images/card-image-cache.ts";
   import type {
     ActiveInteractionSpec,
@@ -30,6 +31,7 @@
   export let selectedTargets: ReadonlySet<BoardTargetId> = new Set();
   export let disabled = false;
   export let pinnedTarget: BoardTargetId | null = null;
+  export let dropCandidates: ReadonlySet<PhysicalZoneId> = new Set();
   export let oncardactivate: (
     card: BoardCardView,
     element: HTMLButtonElement,
@@ -38,6 +40,9 @@
   export let oncardchoose: (choice: InteractionChoice) => void = () =>
     undefined;
   export let oncarddismiss: () => void = () => undefined;
+  export let oncarddragstart: (card: BoardCardView) => void = () => undefined;
+  export let oncarddragmove: (x: number, y: number) => void = () => undefined;
+  export let oncarddragend: (x: number, y: number) => void = () => undefined;
 
   let boardElement: HTMLDivElement;
   let navigationState: FieldNavigationState = createFieldNavigationState();
@@ -164,6 +169,7 @@
       selected={selectedTargets.has(zone.targetId)}
       active={navigationState.activeTarget === zone.targetId}
       {disabled}
+      dropCandidate={dropCandidates.has(zone.id)}
       onactivate={() => onzoneactivate(zone)}
     />
   {/each}
@@ -188,9 +194,16 @@
       {disabled}
       choices={spec?.cardChoices.get(card.targetId) ?? []}
       pinned={pinnedTarget === card.targetId}
+      draggable={!disabled &&
+        spec?.kind === "cardAction" &&
+        spec.cardChoices.has(card.targetId) &&
+        card.zoneId === "p0:hand"}
       onactivate={(element) => oncardactivate(card, element)}
       onchoose={oncardchoose}
       ondismiss={oncarddismiss}
+      ondragstart={() => oncarddragstart(card)}
+      ondragmove={oncarddragmove}
+      ondragend={oncarddragend}
     />
   {/each}
 </div>

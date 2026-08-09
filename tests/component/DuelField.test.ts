@@ -1036,4 +1036,257 @@ describe("DuelField", () => {
     rendered.unmount();
     expect(release).toHaveBeenCalledTimes(2);
   });
+
+  it("drag halos every candidate zone and nothing else", async () => {
+    const harness = renderDraggableHand();
+
+    const target = await startHandDrag();
+
+    expect(
+      target.closest(".duel-field-card")?.getAttribute("data-dragging"),
+    ).toBe("true");
+    expect(candidateZoneIds()).toEqual([
+      "p0:mainMonster:0",
+      "p0:mainMonster:1",
+      "p0:mainMonster:2",
+      "p0:mainMonster:3",
+      "p0:mainMonster:4",
+    ]);
+    expect(harness.dispatch).not.toHaveBeenCalled();
+    expect(harness.onplacementintent).not.toHaveBeenCalled();
+  });
+
+  it("omits an occupied zone from the halo", async () => {
+    renderDraggableHand({ occupiedZoneId: "p0:mainMonster:2" });
+
+    await startHandDrag();
+
+    expect(candidateZoneIds()).not.toContain("p0:mainMonster:2");
+    expect(candidateZoneIds()).toHaveLength(4);
+  });
+
+  it("does not drag a card that is not in the hand", async () => {
+    const value = fieldPrompt("idleCommand", [
+      mountedChoice("summon", "Summon monster", { action: "summon" }),
+    ]);
+    renderInteractive(value);
+    const target = screen.getByRole("button", {
+      name: /Open actions for The Legendary Fisherman/,
+    });
+
+    await fireEvent.pointerDown(target, { clientX: 10, clientY: 10 });
+    await fireEvent.pointerMove(target, { clientX: 30, clientY: 30 });
+
+    expect(candidateZoneIds()).toEqual([]);
+    expect(
+      target.closest(".duel-field-card")?.getAttribute("data-dragging"),
+    ).toBeNull();
+  });
+
+  it("drops on a candidate zone with one intent and one dispatch", async () => {
+    const harness = renderDraggableHand();
+    await startHandDrag();
+
+    await dropAt(harness, zoneElement("p0:mainMonster:3"));
+
+    expect(harness.onplacementintent.mock.calls).toEqual([
+      ["p0:mainMonster:3"],
+    ]);
+    expect(harness.dispatch).toHaveBeenCalledTimes(1);
+    expect(harness.dispatch.mock.calls[0]?.[0]).toMatchObject({
+      type: "chooseChoice",
+      choiceId: "summon",
+    });
+    expect(candidateZoneIds()).toEqual([]);
+  });
+
+  it("resolves a hit on the zone's own label to the enclosing zone", async () => {
+    const harness = renderDraggableHand();
+    await startHandDrag();
+    const label = zoneElement("p0:mainMonster:1").querySelector(
+      '[data-cy="zone-control-label"]',
+    );
+    if (label === null) throw new Error("Missing zone label");
+
+    await dropAt(harness, label);
+
+    expect(harness.onplacementintent.mock.calls).toEqual([
+      ["p0:mainMonster:1"],
+    ]);
+    expect(harness.dispatch).toHaveBeenCalledTimes(1);
+  });
+
+  it("never mistakes an action chip that outranks the zones for a drop target", async () => {
+    const harness = renderDraggableHand();
+    await startHandDrag();
+    // Chips sit above the zones in z-order and stay visible while their card
+    // is pinned, so a hit test can land on one mid-drag. A chip belongs to no
+    // zone, so the gesture must fall through as a miss rather than guess.
+    const chip = document.querySelector('[data-cy^="card-action-chip-"]');
+    if (chip === null) throw new Error("Missing action chip");
+    expect(chip.closest("[data-zone-id]")).toBeNull();
+
+    await dropAt(harness, chip);
+
+    expect(harness.onplacementintent).not.toHaveBeenCalled();
+    expect(harness.dispatch).not.toHaveBeenCalled();
+    expect(candidateZoneIds()).toEqual([]);
+  });
+
+  it("cancels a drop outside any zone", async () => {
+    const harness = renderDraggableHand();
+    await startHandDrag();
+
+    await dropAt(harness, null);
+
+    expect(harness.onplacementintent).not.toHaveBeenCalled();
+    expect(harness.dispatch).not.toHaveBeenCalled();
+    expect(candidateZoneIds()).toEqual([]);
+  });
+
+  it("cancels a drop on a zone that is not a candidate", async () => {
+    const harness = renderDraggableHand({ occupiedZoneId: "p0:mainMonster:2" });
+    await startHandDrag();
+
+    await dropAt(harness, zoneElement("p0:mainMonster:2"));
+
+    expect(harness.onplacementintent).not.toHaveBeenCalled();
+    expect(harness.dispatch).not.toHaveBeenCalled();
+
+    await startHandDrag();
+    await dropAt(harness, zoneElement("p0:field"));
+
+    expect(harness.onplacementintent).not.toHaveBeenCalled();
+    expect(harness.dispatch).not.toHaveBeenCalled();
+  });
+
+  it("cancels a drag whose pointer was taken away", async () => {
+    const harness = renderDraggableHand();
+    const target = await startHandDrag();
+    expect(candidateZoneIds()).toHaveLength(5);
+
+    await fireEvent.pointerCancel(target);
+
+    expect(candidateZoneIds()).toEqual([]);
+    expect(harness.dispatch).not.toHaveBeenCalled();
+    expect(
+      target.closest(".duel-field-card")?.getAttribute("data-dragging"),
+    ).toBeNull();
+  });
 });
+
+const HAND_CARD_ID = "st01-own-hand";
+
+function handChoice(
+  id: string,
+  label: string,
+  overrides: Partial<PromptChoice> = {},
+): PromptChoice {
+  return promptChoice(id, label, {
+    card: {
+      instanceId: cardInstanceId(HAND_CARD_ID),
+      controller: 0,
+      location: "hand",
+      sequence: 0,
+    },
+    ...overrides,
+  } as Partial<PromptChoice>);
+}
+
+/** ST-01 gives player 0 one visible hand card and an otherwise empty field. */
+function renderDraggableHand(
+  options: { readonly occupiedZoneId?: string } = {},
+) {
+  const base = board("ST-01");
+  const occupant = base.cards[0];
+  if (occupant === undefined) throw new Error("Missing hand fixture card");
+  const valueBoard =
+    options.occupiedZoneId === undefined
+      ? base
+      : {
+          ...base,
+          cards: [
+            ...base.cards,
+            {
+              ...occupant,
+              id: "drag-occupant",
+              targetId: "card:drag-occupant" as const,
+              zoneId: options.occupiedZoneId as typeof occupant.zoneId,
+            },
+          ],
+        };
+  const value = fieldPrompt("idleCommand", [
+    handChoice("summon", "Summon The Legendary Fisherman", {
+      action: "summon",
+    }),
+    handChoice("setmonster", "Set The Legendary Fisherman", {
+      action: "setMonster",
+    }),
+  ]);
+  const spec = mapPromptToInteractionSpec(
+    value,
+    BOARD_VIEW_MODEL_FIXTURES["ST-01"],
+    valueBoard,
+    CONTEXT,
+  );
+  if (spec.kind === "inactive") throw new Error("Expected active field spec");
+  const dispatch = vi.fn();
+  const onplacementintent = vi.fn();
+  let hit: Element | null = null;
+  const rendered = render(DuelField, {
+    board: valueBoard,
+    prompt: value,
+    spec,
+    session: createInteractionSession(spec),
+    pending: false,
+    oninteraction: dispatch,
+    onplacementintent,
+    hitTest: () => hit,
+  });
+  return {
+    rendered,
+    dispatch,
+    onplacementintent,
+    setHit: (element: Element | null) => {
+      hit = element;
+    },
+  };
+}
+
+function handDragTarget(): HTMLElement {
+  const target = document.querySelector<HTMLElement>(
+    `[data-cy="field-card-target-${HAND_CARD_ID}"]`,
+  );
+  if (target === null) throw new Error("Missing hand card drag target");
+  return target;
+}
+
+/** 20px past the origin clears `CardControl`'s 8px click-suppression gate. */
+async function startHandDrag(): Promise<HTMLElement> {
+  const target = handDragTarget();
+  await fireEvent.pointerDown(target, { clientX: 10, clientY: 10 });
+  await fireEvent.pointerMove(target, { clientX: 30, clientY: 30 });
+  return target;
+}
+
+async function dropAt(
+  harness: ReturnType<typeof renderDraggableHand>,
+  element: Element | null,
+): Promise<void> {
+  harness.setHit(element);
+  await fireEvent.pointerUp(handDragTarget(), { clientX: 30, clientY: 30 });
+}
+
+function zoneElement(zoneId: string): HTMLElement {
+  const zone = document.querySelector<HTMLElement>(
+    `[data-zone-id="${zoneId}"]`,
+  );
+  if (zone === null) throw new Error(`Missing zone ${zoneId}`);
+  return zone;
+}
+
+function candidateZoneIds(): readonly string[] {
+  return [...document.querySelectorAll('[data-drop-candidate="true"]')].map(
+    (zone) => zone.getAttribute("data-zone-id") ?? "",
+  );
+}

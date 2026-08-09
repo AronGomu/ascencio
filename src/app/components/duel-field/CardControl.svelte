@@ -21,12 +21,17 @@
   export let disabled = false;
   export let choices: readonly InteractionChoice[] = [];
   export let pinned = false;
+  export let draggable = false;
   export let onactivate: (element: HTMLButtonElement) => void = () => undefined;
   export let onchoose: (choice: InteractionChoice) => void = () => undefined;
   export let ondismiss: () => void = () => undefined;
+  export let ondragstart: () => void = () => undefined;
+  export let ondragmove: (x: number, y: number) => void = () => undefined;
+  export let ondragend: (x: number, y: number) => void = () => undefined;
 
   let pointerOrigin: { readonly x: number; readonly y: number } | null = null;
   let pointerMoved = false;
+  let dragging = false;
   let activeImageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   let activeImageCode: number | undefined;
   let imageLease: CardImageLease | null = null;
@@ -106,9 +111,15 @@
     renderedImageUrl = imageUrl;
   }
 
-  function pointerDown(event: PointerEvent): void {
+  function pointerDown(
+    event: PointerEvent & { currentTarget: HTMLButtonElement },
+  ): void {
     pointerOrigin = { x: event.clientX, y: event.clientY };
     pointerMoved = false;
+    /* Capture keeps the move and up events on this button even once the
+       pointer has travelled onto a zone. jsdom implements neither capture
+       method, hence the optional calls. */
+    if (draggable) event.currentTarget.setPointerCapture?.(event.pointerId);
   }
 
   function pointerMove(event: PointerEvent): void {
@@ -121,6 +132,29 @@
     ) {
       pointerMoved = true;
     }
+    if (!pointerMoved || !draggable) return;
+    if (!dragging) {
+      dragging = true;
+      ondragstart();
+    }
+    ondragmove(event.clientX, event.clientY);
+  }
+
+  function pointerUp(
+    event: PointerEvent & { currentTarget: HTMLButtonElement },
+  ): void {
+    if (!dragging) return;
+    ondragend(event.clientX, event.clientY);
+    dragging = false;
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+  }
+
+  /* A cancelled pointer has no meaningful drop coordinate; the field reads
+     `NaN` as "the gesture was abandoned". */
+  function pointerCancel(): void {
+    if (!dragging) return;
+    dragging = false;
+    ondragend(Number.NaN, Number.NaN);
   }
 
   function activate(
@@ -141,6 +175,7 @@
   class:is-opponent={card.facing === "opponent"}
   class:is-sideways={card.orientation === "sideways"}
   class:is-actionable={actionable}
+  class:is-dragging={dragging}
   class:is-pinned={pinned}
   class:is-selected={selected}
   class:is-navigation-active={active}
@@ -154,6 +189,7 @@
   data-orientation={card.orientation}
   data-position={card.position}
   data-card-zone-id={card.zoneId}
+  data-dragging={dragging ? "true" : undefined}
   style={positionStyle}
   data-cy={`field-card-${card.id}`}
 >
@@ -186,6 +222,8 @@
       bind:this={targetElement}
       onpointerdown={pointerDown}
       onpointermove={pointerMove}
+      onpointerup={pointerUp}
+      onpointercancel={pointerCancel}
       onclick={activate}
       data-cy={`field-card-target-${card.id}`}
     ></button>

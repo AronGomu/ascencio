@@ -26,7 +26,12 @@ import {
   type ActiveInteractionSpec,
   type InteractionKey,
 } from "../prompts/interaction-spec.ts";
+import {
+  resolvePendingPlacementChoice,
+  type PendingPlacement,
+} from "../prompts/pending-placement.ts";
 import type { ChoiceId, SnapshotId } from "../../duel/contracts/ids.ts";
+import type { PhysicalZoneId } from "../../field/duel-field-layout.ts";
 import { mapSnapshotToBoard } from "../../field/board-view-model.ts";
 import {
   formatDuelLogEntry,
@@ -89,6 +94,10 @@ export interface DuelViewState {
   readonly responsePending: boolean;
   readonly responsePendingKey: InteractionKey | null;
   readonly interactionSession: InteractionSession;
+  /* A zone the player dropped a hand card on, waiting for the engine's own
+     follow-up place prompt. Cleared by every prompt, result and error, so a
+     guess can never survive into a later turn. */
+  readonly pendingPlacement: PendingPlacement | null;
 }
 
 export interface DuelStore extends Readable<DuelViewState> {
@@ -96,6 +105,7 @@ export interface DuelStore extends Readable<DuelViewState> {
   start(): boolean;
   respond(choiceIds: readonly ChoiceId[]): boolean;
   dispatchInteraction(action: InteractionSessionAction): boolean;
+  armPlacementIntent(zoneId: PhysicalZoneId): boolean;
   surrender(): boolean;
   requestDiagnostics(): boolean;
   retry(): Promise<boolean>;
@@ -127,6 +137,7 @@ export function createInitialDuelViewState(
     responsePending: false,
     responsePendingKey: null,
     interactionSession: createInactiveInteractionSession(),
+    pendingPlacement: null,
   });
 }
 
@@ -219,6 +230,9 @@ export function reduceDuelViewState(
           state.interactionSession,
           spec,
         ),
+        /* The intent is consumed (or discarded) by whoever inspected the
+           previous state before this reduction; it never survives a prompt. */
+        pendingPlacement: null,
       });
     }
     case "diagnostics":
@@ -234,6 +248,7 @@ export function reduceDuelViewState(
         responsePending: false,
         responsePendingKey: null,
         interactionSession: createInactiveInteractionSession(),
+        pendingPlacement: null,
       });
     case "error": {
       const recoverableResponseError =
@@ -258,6 +273,7 @@ export function reduceDuelViewState(
           responsePending: false,
           responsePendingKey: null,
           interactionSession: rejected.session,
+          pendingPlacement: null,
         });
       }
       return freezeState({
@@ -270,6 +286,7 @@ export function reduceDuelViewState(
         responsePending: false,
         responsePendingKey: null,
         interactionSession: createInactiveInteractionSession(),
+        pendingPlacement: null,
       });
     }
     case "disposed":
@@ -284,9 +301,6 @@ export function createDuelStore(client: DuelClient): DuelStore {
     current = next;
     state.set(next);
   };
-  const unsubscribeClient = client.subscribe((event) => {
-    set(reduceDuelViewState(current, event));
-  });
   let replacementOperation: Promise<boolean> | null = null;
   const startCurrentDuel = (): boolean => {
     const context = client.startDuel(MVP_PRESET_ID);
@@ -371,6 +385,23 @@ export function createDuelStore(client: DuelClient): DuelStore {
     );
     return true;
   };
+  /* Subscribed only once `acceptResponse` exists: a prompt that matches an
+     armed placement is answered from inside this callback. */
+  const unsubscribeClient = client.subscribe((received) => {
+    /* The reducer clears the placement intent on every prompt, so the guess
+       has to be read off the state that preceded this event. `next ===
+       previous` means the reducer rejected the event (stale context), and a
+       rejected event must not consume the intent either. */
+    const previous = current;
+    const next = reduceDuelViewState(previous, received);
+    set(next);
+    if (received.event.type !== "prompt" || next === previous) return;
+    const placementChoiceId = resolvePendingPlacementChoice(
+      received.event.prompt,
+      previous.pendingPlacement,
+    );
+    if (placementChoiceId !== null) acceptResponse([placementChoiceId]);
+  });
   const replaceAndInitialize = (): Promise<boolean> => {
     if (replacementOperation !== null) return replacementOperation;
     set(
@@ -471,6 +502,19 @@ export function createDuelStore(client: DuelClient): DuelStore {
       }
       if (reduction.session === current.interactionSession) return false;
       set(freezeState({ ...current, interactionSession: reduction.session }));
+      return true;
+    },
+    armPlacementIntent: (zoneId) => {
+      if (current.prompt === null || current.responsePending) return false;
+      set(
+        freezeState({
+          ...current,
+          pendingPlacement: Object.freeze({
+            zoneId,
+            armedAtPromptId: current.prompt.id,
+          }),
+        }),
+      );
       return true;
     },
     surrender: () => {

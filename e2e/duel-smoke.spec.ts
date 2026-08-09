@@ -796,6 +796,140 @@ test("wheel over the duel field scrolls the page", async ({ page }) => {
     .toBeGreaterThan(0);
 });
 
+test("dragging a hand card onto a highlighted zone plays it", async ({
+  page,
+}) => {
+  /* A pointer gesture is driven in viewport coordinates, so the whole board —
+     the hand row and the monster row at once — has to be on screen. The
+     default 720px-tall viewport puts the hand below the fold, where
+     `elementFromPoint` returns null and every synthetic move is a no-op. */
+  await page.setViewportSize({ width: 1440, height: 1400 });
+  await page.goto("./");
+  await expect(
+    page.locator('[data-cy="duel-field"][data-prompt-kind="idleCommand"]'),
+  ).toBeVisible({ timeout: 120_000 });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  const field = page.getByRole("region", { name: "Duel field" });
+
+  /* Match the engine's own action id through the chip's `data-cy` suffix,
+     never the chip's word: `cardActionLabel` prints `Set` for both
+     `setMonster` and `setSpellTrap`, so a text match could pick a spell and
+     then fail on a monster zone for a reason unrelated to dragging. */
+  const handChip = (action: string): Locator =>
+    field.locator(
+      `.duel-field-card[data-card-zone-id="p0:hand"] [data-cy^="card-action-chip-"][data-cy$="-${action}"]`,
+    );
+  const summonChips = handChip("summon");
+  const setChips = handChip("setMonster");
+  const chip =
+    (await summonChips.count()) > 0 ? summonChips.first() : setChips.first();
+  if ((await chip.count()) === 0)
+    test.skip(true, "preset opening hand offers no placement action");
+
+  const cardId = await chip.evaluate(
+    (element) =>
+      element.closest(".duel-field-card")?.getAttribute("data-card-id") ?? "",
+  );
+  expect(cardId).not.toBe("");
+  const dragTarget = field.locator(`[data-cy="field-card-target-${cardId}"]`);
+  // Both matched actions place a monster, so the drop zone kind comes from the
+  // action, not from the chip's wording.
+  const targetZoneId = await field.evaluate((element) => {
+    for (let sequence = 0; sequence < 5; sequence += 1) {
+      const zoneId = `p0:mainMonster:${sequence}`;
+      if (
+        element.querySelector(
+          `.duel-field-card[data-card-zone-id="${zoneId}"]`,
+        ) === null
+      )
+        return zoneId;
+    }
+    return null;
+  });
+  if (targetZoneId === null)
+    throw new Error("Every own monster zone is already occupied");
+  const targetZone = field.locator(`[data-zone-id="${targetZoneId}"]`);
+
+  await dragTarget.scrollIntoViewIfNeeded();
+  const cardBox = await dragTarget.boundingBox();
+  const zoneBox = await targetZone.boundingBox();
+  if (cardBox === null || zoneBox === null)
+    throw new Error("Missing drag geometry");
+  const viewportHeight = await page.evaluate(() => window.innerHeight);
+  expect(
+    cardBox.y + cardBox.height <= viewportHeight &&
+      zoneBox.y + zoneBox.height <= viewportHeight,
+    `hand card (bottom ${cardBox.y + cardBox.height}) and target zone (bottom ${zoneBox.y + zoneBox.height}) must both sit inside the ${viewportHeight}px viewport for a pointer drag`,
+  ).toBe(true);
+  const from = {
+    x: cardBox.x + cardBox.width / 2,
+    y: cardBox.y + cardBox.height / 2,
+  };
+  const to = {
+    x: zoneBox.x + zoneBox.width / 2,
+    y: zoneBox.y + zoneBox.height / 2,
+  };
+
+  const before = await readCapture(page);
+  const idlePrompt = [...before.events]
+    .reverse()
+    .find((event) => event.type === "prompt") as unknown as
+    CapturedPromptEvent | undefined;
+  expect(idlePrompt?.prompt.kind).toBe("idleCommand");
+  const idlePromptId = idlePrompt?.prompt.id;
+  const responsesBefore = before.commands.filter(
+    (command) => command.type === "respond",
+  ).length;
+
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(
+    from.x + (to.x - from.x) / 3,
+    from.y + (to.y - from.y) / 3,
+    { steps: 4 },
+  );
+  await page.mouse.move(
+    from.x + ((to.x - from.x) * 2) / 3,
+    from.y + ((to.y - from.y) * 2) / 3,
+    { steps: 4 },
+  );
+  await expect(targetZone).toHaveAttribute("data-drop-candidate", "true");
+  await page.mouse.move(to.x, to.y, { steps: 4 });
+  await page.mouse.up();
+
+  await expect(
+    field.locator(`.duel-field-card[data-card-zone-id="${targetZoneId}"]`),
+  ).toHaveCount(1, { timeout: 30_000 });
+  await expect(targetZone).not.toHaveAttribute("data-drop-candidate", "true");
+
+  // One gesture, two responses: the chosen action, then the engine's own place
+  // prompt answered from the armed zone. Neither prompt may be answered twice.
+  const capture = await readCapture(page);
+  const responds = capture.commands.filter(
+    (command) => command.type === "respond",
+  );
+  expect(responds).toHaveLength(responsesBefore + 2);
+  const placeResponse = responds.at(-1);
+  expect(responds.at(-2)?.promptId).toBe(idlePromptId);
+  expect(placeResponse?.promptId).not.toBe(idlePromptId);
+  const respondsByPrompt = new Map<unknown, number>();
+  for (const command of responds)
+    respondsByPrompt.set(
+      command.promptId,
+      (respondsByPrompt.get(command.promptId) ?? 0) + 1,
+    );
+  expect([...respondsByPrompt.values()].filter((count) => count > 1)).toEqual(
+    [],
+  );
+  const placePrompt = capture.events.find(
+    (event) =>
+      event.type === "prompt" &&
+      (event.prompt as { readonly id?: string } | undefined)?.id ===
+        placeResponse?.promptId,
+  ) as unknown as CapturedPromptEvent | undefined;
+  expect(placePrompt?.prompt.kind).toBe("selectPlace");
+});
+
 test("responsive field compositions contain controls across supported viewports", async ({
   page,
 }, testInfo) => {

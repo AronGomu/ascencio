@@ -89,6 +89,53 @@ const PROMPT_EVENT: DuelWorkerEvent = {
   },
 };
 
+/* Drag and drop arms a placement guess on an idle command and expects the
+   engine's own `selectPlace` prompt to arrive next. */
+const IDLE_PROMPT_EVENT: Extract<DuelWorkerEvent, { type: "prompt" }> = {
+  type: "prompt",
+  prompt: {
+    id: promptId("prompt-idle"),
+    kind: "idleCommand",
+    player: 0,
+    title: "Choose a Main Phase action",
+    choices: [
+      {
+        id: choiceId("idle-summon"),
+        label: "Summon Card 1",
+        action: "summon",
+      },
+    ],
+    minimum: 1,
+    maximum: 1,
+    cancelable: false,
+    ordered: false,
+  },
+};
+
+function placePromptEvent(
+  id: string,
+): Extract<DuelWorkerEvent, { type: "prompt" }> {
+  return {
+    type: "prompt",
+    prompt: {
+      id: promptId(id),
+      kind: "selectPlace",
+      player: 0,
+      title: "Choose a zone",
+      choices: [0, 1, 2].map((sequence) => ({
+        id: choiceId(`place-mainMonster-${sequence}`),
+        label: `Your monster ${sequence + 1}`,
+        action: "select" as const,
+        place: { player: 0 as const, location: "monster" as const, sequence },
+      })),
+      minimum: 1,
+      maximum: 1,
+      cancelable: false,
+      ordered: false,
+    },
+  };
+}
+
 function apply(
   state: ReturnType<typeof createInitialDuelViewState>,
   event: DuelWorkerEvent,
@@ -644,5 +691,127 @@ describe("duel view-state reducer", () => {
     });
     unsubscribe();
     await store.destroy();
+  });
+
+  it("refuses a placement intent without an active prompt", () => {
+    const client = new FakeDuelClient();
+    const store = createDuelStore(client);
+    let current = createInitialDuelViewState(client.context);
+    const unsubscribe = store.subscribe((state) => {
+      current = state;
+    });
+    const before = current;
+
+    expect(current.prompt).toBeNull();
+    expect(store.armPlacementIntent("p0:mainMonster:0")).toBe(false);
+    expect(current).toBe(before);
+    expect(current.pendingPlacement).toBeNull();
+    unsubscribe();
+  });
+
+  it("records the armed zone against the prompt that armed it", () => {
+    const client = new FakeDuelClient();
+    const store = createDuelStore(client);
+    let current = createInitialDuelViewState(client.context);
+    const unsubscribe = store.subscribe((state) => {
+      current = state;
+    });
+    store.start();
+    client.emit({ type: "state", state: STATE });
+    client.emit(IDLE_PROMPT_EVENT);
+
+    expect(store.armPlacementIntent("p0:mainMonster:3")).toBe(true);
+    expect(current.pendingPlacement).toEqual({
+      zoneId: "p0:mainMonster:3",
+      armedAtPromptId: "prompt-idle",
+    });
+    unsubscribe();
+  });
+
+  it("auto-answers the follow-up place prompt that matches the armed zone", () => {
+    const client = new FakeDuelClient();
+    const store = createDuelStore(client);
+    let current = createInitialDuelViewState(client.context);
+    const unsubscribe = store.subscribe((state) => {
+      current = state;
+    });
+    store.start();
+    client.emit({ type: "state", state: STATE });
+    client.emit(IDLE_PROMPT_EVENT);
+    expect(store.armPlacementIntent("p0:mainMonster:1")).toBe(true);
+    expect(store.respond([choiceId("idle-summon")])).toBe(true);
+
+    // The state traffic between the chosen action and the engine's place
+    // prompt must not consume the intent.
+    client.emit({ type: "state", state: STATE });
+    expect(current.pendingPlacement).not.toBeNull();
+
+    client.emit(placePromptEvent("prompt-place"));
+
+    expect(client.respondCalls).toEqual([
+      { promptId: "prompt-idle", choiceIds: ["idle-summon"] },
+      { promptId: "prompt-place", choiceIds: ["place-mainMonster-1"] },
+    ]);
+    expect(current.pendingPlacement).toBeNull();
+    unsubscribe();
+  });
+
+  it("leaves a place prompt the guess missed to the player and costs nothing", () => {
+    const client = new FakeDuelClient();
+    const store = createDuelStore(client);
+    let current = createInitialDuelViewState(client.context);
+    const unsubscribe = store.subscribe((state) => {
+      current = state;
+    });
+    store.start();
+    client.emit({ type: "state", state: STATE });
+    client.emit(IDLE_PROMPT_EVENT);
+    expect(store.armPlacementIntent("p0:mainMonster:4")).toBe(true);
+    expect(store.respond([choiceId("idle-summon")])).toBe(true);
+
+    const placeEvent = placePromptEvent("prompt-place");
+    client.emit(placeEvent);
+
+    expect(client.respondCalls).toEqual([
+      { promptId: "prompt-idle", choiceIds: ["idle-summon"] },
+    ]);
+    expect(current).toMatchObject({
+      status: "awaiting-input",
+      prompt: placeEvent.prompt,
+      responsePending: false,
+      pendingPlacement: null,
+    });
+    unsubscribe();
+  });
+
+  it("never lets a placement intent leak past a prompt, result or error", () => {
+    for (const clearing of [
+      { type: "result", result: { type: "surrendered", winner: 1, loser: 0 } },
+      {
+        type: "error",
+        error: { code: "worker_error", message: "boom", recoverable: false },
+      },
+      { type: "prompt", prompt: IDLE_PROMPT_EVENT.prompt },
+    ] as const satisfies readonly DuelWorkerEvent[]) {
+      const client = new FakeDuelClient();
+      const store = createDuelStore(client);
+      let current = createInitialDuelViewState(client.context);
+      const unsubscribe = store.subscribe((state) => {
+        current = state;
+      });
+      store.start();
+      client.emit({ type: "state", state: STATE });
+      client.emit(IDLE_PROMPT_EVENT);
+      expect(store.armPlacementIntent("p0:mainMonster:0")).toBe(true);
+      expect(current.pendingPlacement).not.toBeNull();
+
+      client.emit(clearing);
+
+      expect(
+        current.pendingPlacement,
+        `cleared by ${clearing.type}`,
+      ).toBeNull();
+      unsubscribe();
+    }
   });
 });

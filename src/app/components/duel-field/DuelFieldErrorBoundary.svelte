@@ -3,6 +3,7 @@
   import type { PlayerPrompt } from "../../../duel/contracts/player-prompt.ts";
   import type { CardImageLibrary } from "../../images/card-image-cache.ts";
   import type { BoardViewModel } from "../../../field/board-view-model.ts";
+  import type { PhysicalZoneId } from "../../../field/duel-field-layout.ts";
   import type {
     InteractionSession,
     InteractionSessionAction,
@@ -28,6 +29,10 @@
   export let feedbackGeneration = "component";
   export let injectFailure = false;
   export let oninteraction: (action: InteractionSessionAction) => unknown;
+  /* `hitTest` is deliberately not forwarded: the component default
+     (`document.elementFromPoint`) is the correct one in the app. */
+  export let onplacementintent: (zoneId: PhysicalZoneId) => unknown = () =>
+    false;
 
   let shouldFail: boolean = injectFailure;
 
@@ -84,5 +89,6 @@
     {feedbackGeneration}
     injectFailure={shouldFail}
     {oninteraction}
+    {onplacementintent}
   />
 </svelte:boundary>

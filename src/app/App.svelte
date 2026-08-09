@@ -882,6 +882,7 @@
         feedbackGeneration={`${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
         injectFailure={injectDuelFieldFailure}
         oninteraction={duel.dispatchInteraction}
+        onplacementintent={duel.armPlacementIntent}
       />
     {/key}
   {:else if $duel.snapshot}

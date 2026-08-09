@@ -6,6 +6,9 @@
   export let selected = false;
   export let active = false;
   export let disabled = false;
+  /* Presentation only: a local guess at where a dragged card could land. It
+     never gates a response — the engine's own place prompt does that. */
+  export let dropCandidate = false;
   export let onactivate: () => void = () => undefined;
 
   let pointerOrigin: { readonly x: number; readonly y: number } | null = null;
@@ -27,6 +30,7 @@
   type={actionable ? "button" : undefined}
   class:duel-field-zone--shared={zone.player === "shared"}
   class:is-actionable={actionable}
+  class:is-drop-candidate={dropCandidate}
   class:is-selected={selected}
   class:is-navigation-active={active}
   class="duel-field-zone"
@@ -36,6 +40,7 @@
   data-zone-id={zone.id}
   data-player={zone.player}
   data-zone-kind={zone.kind}
+  data-drop-candidate={dropCandidate ? "true" : undefined}
   data-field-target={zone.targetId}
   tabindex={active ? 0 : -1}
   style={positionStyle}

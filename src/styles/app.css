@@ -772,6 +772,26 @@ button.duel-field-zone,
   box-shadow: 0 0 0 2px rgb(255 213 128 / 0.55);
 }
 
+/* A drag candidate wears the same orange as legality, filled in: the tint is
+   what separates "you could drop here" from "you may act here". */
+.duel-field-zone.is-drop-candidate {
+  border-color: var(--warning);
+  background: rgb(255 213 128 / 0.14);
+  box-shadow: 0 0 0 3px rgb(255 213 128 / 0.7);
+}
+
+.duel-field-card.is-dragging {
+  opacity: 0.72;
+}
+
+/* Chips float above the zones and stay visible while their card is hovered,
+   focused or pinned — all of which survive a drag. Taking them out of hit
+   testing for the duration keeps `document.elementFromPoint` on the zone the
+   player is actually pointing at. */
+.duel-field[data-dragging="true"] .card-action-chips {
+  pointer-events: none;
+}
+
 .duel-field-zone.is-selected,
 .duel-field-card.is-selected .duel-field-card__art {
   border-color: #dfffb5;

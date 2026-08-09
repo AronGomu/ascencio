@@ -21,7 +21,10 @@
     fieldActionBarRequired,
     type ActiveInteractionSpec,
   } from "../prompts/interaction-spec.ts";
+  import { dropChoiceForZone } from "../prompts/drop-target.ts";
   import { validatePromptSelection } from "../prompts/prompt-selection.ts";
+  import { placementZoneCandidates } from "../../field/placement-candidates.ts";
+  import type { PhysicalZoneId } from "../../field/duel-field-layout.ts";
   import {
     createDomFeedbackController,
     EMPTY_DOM_FEEDBACK_STATE,
@@ -36,6 +39,7 @@
 
   const EMPTY_IMAGE_URLS: ReadonlyMap<number, string> = new Map();
   const EMPTY_TARGETS: ReadonlySet<BoardTargetId> = new Set();
+  const EMPTY_ZONE_IDS: ReadonlySet<PhysicalZoneId> = new Set();
   const DEFAULT_CARD_BACK =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 104'%3E%3Crect width='72' height='104' rx='5' fill='%2314263c'/%3E%3Cpath d='M8 8h56v88H8z' fill='none' stroke='%2373daca' stroke-width='3'/%3E%3Cpath d='m12 84 48-64M12 60l32-40M28 92l32-40' stroke='%2346637f' stroke-width='4'/%3E%3C/svg%3E";
   const DEFAULT_PLACEHOLDER =
@@ -60,6 +64,12 @@
   export let oninteraction: (
     action: InteractionSessionAction,
   ) => unknown = () => false;
+  /* Injectable so a component test can drive a drop without a layout engine
+     (assumption A5). The default is the only thing the app ever uses. */
+  export let hitTest: (x: number, y: number) => Element | null = (x, y) =>
+    document.elementFromPoint(x, y);
+  export let onplacementintent: (zoneId: PhysicalZoneId) => unknown = () =>
+    false;
 
   if (injectFailure) throw new Error("Injected duel field component failure");
 
@@ -75,6 +85,8 @@
   let appliedReducedMotion: boolean | null = null;
   let feedbackSyncSequence = 0;
   let actionBarHeight = 0;
+  let dragCard: BoardCardView | null = null;
+  let dropCandidates: ReadonlySet<PhysicalZoneId> = EMPTY_ZONE_IDS;
 
   $: resolvedCardBackUrl = cardBackUrl || DEFAULT_CARD_BACK;
   $: effectiveReducedMotion = reducedMotion ?? mediaReducedMotion;
@@ -276,6 +288,61 @@
       dispatch({ type: "toggleChoice", choiceId: choice.id });
   }
 
+  /* The halo is a local guess at where the engine might accept this card. It
+     is presentation only and never gates a response: the follow-up place
+     prompt stays authoritative. */
+  function startCardDrag(card: BoardCardView): void {
+    if (spec === null || spec.kind !== "cardAction") return;
+    if (card.zoneId !== "p0:hand") return;
+    const candidates = new SvelteSet<PhysicalZoneId>();
+    for (const choice of spec.cardChoices.get(card.targetId) ?? []) {
+      for (const zoneId of placementZoneCandidates(choice.action, board))
+        candidates.add(zoneId);
+    }
+    dragCard = card;
+    dropCandidates = candidates;
+  }
+
+  /* Deliberately inert: the halo does not track the pointer in this slice, so
+     a drag does no per-move DOM work. The signature stays so the gesture can
+     grow a follower later without touching CardControl. */
+  function moveCardDrag(x: number, y: number): void {
+    void x;
+    void y;
+  }
+
+  function endCardDrag(x: number, y: number): void {
+    const card = dragCard;
+    const candidates = dropCandidates;
+    dragCard = null;
+    dropCandidates = EMPTY_ZONE_IDS;
+    if (card === null || spec === null) return;
+    /* `pointercancel` reports NaN: the gesture was abandoned, not dropped. */
+    if (Number.isNaN(x) || Number.isNaN(y)) return;
+    const zoneId = zoneIdAtPoint(x, y);
+    if (zoneId === null || !candidates.has(zoneId)) return;
+    const zone = board.zones.find((value) => value.id === zoneId);
+    if (zone === undefined) return;
+    const choice = dropChoiceForZone(
+      zone,
+      spec.cardChoices.get(card.targetId) ?? [],
+    );
+    if (choice === null) return;
+    onplacementintent(zone.id);
+    dispatch({ type: "chooseChoice", choiceId: choice.id });
+  }
+
+  /* Never trust the topmost element: action chips sit above the zones and can
+     be visible mid-drag, and a zone's own label span is a child of the zone.
+     Only an enclosing `[data-zone-id]` counts, and anything else is a miss. */
+  function zoneIdAtPoint(x: number, y: number): PhysicalZoneId | null {
+    const hit = hitTest(x, y);
+    if (hit === null) return null;
+    const zoneElement = hit.closest("[data-zone-id]");
+    if (zoneElement === null) return null;
+    return zoneElement.getAttribute("data-zone-id") as PhysicalZoneId | null;
+  }
+
   function targetSelections(
     value: ActiveInteractionSpec,
     draft: InteractionSession,
@@ -298,6 +365,7 @@
   bind:this={fieldRoot}
   data-cy="duel-field"
   data-field-action-bar={actionBarVisible ? "true" : undefined}
+  data-dragging={dragCard === null ? undefined : "true"}
   data-prompt-kind={prompt === null ? undefined : prompt.kind}
   style:--field-action-bar-height={actionBarVisible
     ? `${actionBarHeight}px`
@@ -313,12 +381,16 @@
     {selectedTargets}
     disabled={pending}
     pinnedTarget={session.menuTarget}
+    {dropCandidates}
     oncardactivate={activateCard}
     onzoneactivate={activateZone}
     oncardchoose={(choice) => {
       dispatch({ type: "chooseChoice", choiceId: choice.id });
     }}
     oncarddismiss={() => dispatch({ type: "closeMenu" })}
+    oncarddragstart={startCardDrag}
+    oncarddragmove={moveCardDrag}
+    oncarddragend={endCardDrag}
   />
   {#if feedbackState.line}
     <FieldLines line={feedbackState.line} />

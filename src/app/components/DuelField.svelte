@@ -20,7 +20,6 @@
   import {
     fieldActionBarRequired,
     type ActiveInteractionSpec,
-    type InteractionChoice,
   } from "../prompts/interaction-spec.ts";
   import { validatePromptSelection } from "../prompts/prompt-selection.ts";
   import {
@@ -31,7 +30,6 @@
   } from "../presentation/dom-feedback-controller.ts";
   import { presentationCommandForDomEvent } from "../presentation/presentation-command.ts";
   import FieldActionBar from "./duel-field/FieldActionBar.svelte";
-  import FieldActionMenu from "./duel-field/FieldActionMenu.svelte";
   import FieldBoard from "./duel-field/FieldBoard.svelte";
   import FieldLines from "./duel-field/FieldLines.svelte";
   import EndTurnButton from "./duel-field/EndTurnButton.svelte";
@@ -62,15 +60,8 @@
   export let oninteraction: (
     action: InteractionSessionAction,
   ) => unknown = () => false;
-  export let oninspect: (card: BoardCardView) => void = () => undefined;
 
   if (injectFailure) throw new Error("Injected duel field component failure");
-
-  interface FieldMenuAnchor {
-    readonly left: number;
-    readonly top: number;
-    readonly bottom: number;
-  }
 
   let fieldRoot: HTMLElement;
   let feedbackController: DomFeedbackController | null = null;
@@ -83,10 +74,6 @@
   let lastPresentationSequence = 0;
   let appliedReducedMotion: boolean | null = null;
   let feedbackSyncSequence = 0;
-  let anchorElement: HTMLButtonElement | null = null;
-  let anchor: FieldMenuAnchor | null = null;
-  let resizeObserver: ResizeObserver | null = null;
-  let menuCard: BoardCardView | null = null;
   let actionBarHeight = 0;
 
   $: resolvedCardBackUrl = cardBackUrl || DEFAULT_CARD_BACK;
@@ -107,23 +94,12 @@
     prompt === null || spec === null
       ? { valid: false as const, message: "No active field decision" }
       : validatePromptSelection(prompt, submittedChoiceIds);
-  $: menuChoices =
-    spec !== null && session.menuTarget !== null
-      ? (spec.cardChoices.get(session.menuTarget) ?? [])
-      : [];
-  $: menuVisible =
-    spec?.kind === "cardAction" &&
-    session.menuTarget !== null &&
-    menuCard !== null &&
-    anchor !== null &&
-    menuChoices.length > 0;
   $: actionBarVisible =
     prompt !== null &&
     spec !== null &&
     spec.fieldCapable &&
     fieldActionBarRequired(spec);
   onMount(() => {
-    const update = (): void => updateAnchor();
     const motionQuery = globalThis.matchMedia?.(
       "(prefers-reduced-motion: reduce)",
     );
@@ -142,16 +118,11 @@
       effectiveReducedMotion,
       board,
     );
-    window.addEventListener("resize", update);
-    window.addEventListener("scroll", update, true);
     return () => {
-      window.removeEventListener("resize", update);
-      window.removeEventListener("scroll", update, true);
       motionQuery?.removeEventListener("change", updateMotion);
       feedbackSyncSequence += 1;
       feedbackController?.cancel();
       feedbackController = null;
-      resizeObserver?.disconnect();
     };
   });
 
@@ -275,17 +246,13 @@
     oninteraction({ ...action, key: spec.key } as InteractionSessionAction);
   }
 
-  function activateCard(card: BoardCardView, element: HTMLButtonElement): void {
+  function activateCard(card: BoardCardView): void {
     if (spec === null) return;
     const choices = spec.cardChoices.get(card.targetId);
     const choice = choices?.[0];
     if (choice === undefined) return;
     switch (spec.kind) {
       case "cardAction":
-        menuCard = card;
-        anchorElement = element;
-        observeAnchor(element);
-        updateAnchor();
         dispatch({ type: "openMenu", target: card.targetId });
         break;
       case "cardSelection":
@@ -307,45 +274,6 @@
     const choice = spec.zoneChoices.get(zone.targetId)?.[0];
     if (choice !== undefined)
       dispatch({ type: "toggleChoice", choiceId: choice.id });
-  }
-
-  function chooseMenuAction(choice: InteractionChoice): void {
-    anchorElement?.focus({ preventScroll: true });
-    dispatch({ type: "chooseChoice", choiceId: choice.id });
-    clearMenuAnchor();
-  }
-
-  function inspectMenuCard(): void {
-    if (menuCard !== null) oninspect(menuCard);
-    void closeMenu();
-  }
-
-  async function closeMenu(returnFocus = true): Promise<void> {
-    const returnTarget = anchorElement;
-    dispatch({ type: "closeMenu" });
-    clearMenuAnchor();
-    await tick();
-    if (returnFocus && returnTarget?.isConnected) returnTarget.focus();
-  }
-
-  function clearMenuAnchor(): void {
-    resizeObserver?.disconnect();
-    anchorElement = null;
-    anchor = null;
-    menuCard = null;
-  }
-
-  function observeAnchor(element: HTMLButtonElement): void {
-    resizeObserver?.disconnect();
-    if (typeof ResizeObserver === "undefined") return;
-    resizeObserver = new ResizeObserver(() => updateAnchor());
-    resizeObserver.observe(element);
-  }
-
-  function updateAnchor(): void {
-    if (anchorElement === null) return;
-    const rect = anchorElement.getBoundingClientRect();
-    anchor = { left: rect.left, top: rect.top, bottom: rect.bottom };
   }
 
   function targetSelections(
@@ -384,9 +312,13 @@
     {spec}
     {selectedTargets}
     disabled={pending}
+    pinnedTarget={session.menuTarget}
     oncardactivate={activateCard}
     onzoneactivate={activateZone}
-    {oninspect}
+    oncardchoose={(choice) => {
+      dispatch({ type: "chooseChoice", choiceId: choice.id });
+    }}
+    oncarddismiss={() => dispatch({ type: "closeMenu" })}
   />
   {#if feedbackState.line}
     <FieldLines line={feedbackState.line} />
@@ -404,17 +336,6 @@
     >
       {feedbackState.label}
     </p>
-  {/if}
-  {#if menuVisible && menuCard && anchor}
-    <FieldActionMenu
-      label={menuCard.label}
-      choices={menuChoices}
-      {anchor}
-      disabled={pending}
-      onchoose={chooseMenuAction}
-      oninspect={inspectMenuCard}
-      onclose={closeMenu}
-    />
   {/if}
   {#if actionBarVisible && prompt && spec}
     <FieldActionBar

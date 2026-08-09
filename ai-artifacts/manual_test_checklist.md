@@ -6,7 +6,7 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 
 - [ ] Start a duel and reach a "select a card" prompt: a compact bar appears pinned to the bottom of the duel field, below the board, with the prompt title on it.
 - [ ] The bar sits in its own strip under the board — it does not cover the player's hand, and no empty strip is left under the board once the bar disappears.
-- [ ] A legal-action card at the bottom of the board is still clickable while the action bar is on screen (click a hand card whose action menu should open; the menu opens, nothing swallows the click).
+- [ ] A legal-action card at the bottom of the board is still clickable while the action bar is on screen (click a hand card that has actions; its chips appear and stay pinned, nothing swallows the click).
 - [ ] Select two cards: the bar shows `2 selected` as a count on one line, never a comma-separated list of card names.
 - [ ] `Confirm selection` is disabled until the selection is legal, and the red validation text under it explains why.
 - [ ] `Cancel` appears only on prompts the engine allows you to back out of, and backing out returns you to the same board state.
@@ -25,10 +25,32 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 - [ ] An orange `End turn` button sits fixed in the bottom-right corner of the duel field at all times, whether or not any other prompt is on screen.
 - [ ] In Main Phase with nothing else to do, the button is enabled and reads `End turn`; clicking it ends the phase.
 - [ ] In Battle Phase, the same corner button reads `End Battle Phase` instead, and clicking it ends the battle phase.
-- [ ] When no `End turn` choice is currently legal (e.g. mid-menu on a card action with no phase choice offered), the corner button is visibly disabled and unclickable, but still reads `End turn`.
+- [ ] When no `End turn` choice is currently legal (e.g. a card-action prompt that offers no phase choice), the corner button is visibly disabled and unclickable, but still reads `End turn`.
 - [ ] The field action bar no longer shows its own `End turn` / `End Battle Phase` button — that choice only ever appears in the corner now. If a prompt's only reason to show the bar was that choice, no bar appears at all.
 - [ ] The corner button never sits on top of the board — a legal-action card in the board's bottom-right corner is still clickable with the corner button on screen.
 - [ ] When the field action bar is also open, the corner button and the bar do not overlap each other at any window width, including a narrow phone-width window where the bar and button both need room in the bottom strip.
 - [ ] Resize the window from a wide desktop down to a phone width: the corner button stays fully on screen and never overlaps the board at any size.
 - [ ] Double-clicking the corner button quickly (or clicking again while a response is pending) only ends the phase once.
 - [ ] Keyboard only: tab to the corner button, confirm it announces its current label (`End turn` or `End Battle Phase`) and its disabled state is announced when it's not usable.
+
+## T9 card-action-chips
+
+- [ ] Reach a Main Phase idle-command prompt: every card you can act on wears an orange halo, and cards you cannot act on wear none.
+- [ ] Actionable zones (e.g. a place-selection prompt) wear the same orange halo; a card you have _selected_ keeps its distinct lime highlight, so legality and selection never look alike.
+- [ ] Hover an actionable card with the mouse: tiny orange chips fade in floating just above the card's top edge, and nothing appears when you hover a card with no legal action.
+- [ ] Move the pointer from the middle of the card straight up onto a chip without the chips disappearing on the way — there must be no dead gap between the card and its chips.
+- [ ] Chip wording is the short action only (`Summon`, `Set`, `Activate`, `Flip`, `Special Summon`, `Change Position`), never the engine's full `Activate <card name>` sentence.
+- [ ] Hover a chip and wait for the native tooltip: it shows the full engine label for that action.
+- [ ] A monster in hand that can be both summoned and set shows both chips at once, and they stay the same fixed size regardless of the word length.
+- [ ] There is no `Inspect` chip, no `Close actions` chip, and no `Inspect` button on any card on the board.
+- [ ] Click a chip: the action is taken exactly once, the chips disappear, and the duel moves on — clicking fast twice must not send two responses.
+- [ ] Click the card itself (not a chip): the chips stay pinned open even after you move the mouse away; clicking a different actionable card moves the pin to that card.
+- [ ] Press and drag from a card, then release: the drag must _not_ pin the chips — only a clean click does.
+- [ ] Keyboard only: arrow to an actionable card, press `Enter`: the chips pin and focus lands on the first chip with a visible focus ring.
+- [ ] With a chip focused, `ArrowRight` / `ArrowLeft` walk the chips and wrap around at both ends; `Home` and `End` jump to the first and last chip.
+- [ ] Press `Escape` with a chip focused: the chips unpin and focus is back on the card itself, ready for arrow-key board navigation.
+- [ ] Tab or arrow the keyboard focus onto an actionable card without pressing Enter: the chips show while the card holds focus and hide again once focus moves elsewhere.
+- [ ] Chips never fall off the edge of the window: check an actionable card in the leftmost and rightmost columns, and on a phone-width window.
+- [ ] Chips never cover the board's own controls in a way that blocks them: with chips showing, the `End turn` corner button and the field action bar are both still clickable.
+- [ ] Play a full duel using only the chips for card actions: every Main Phase, Battle Phase and chain decision stays answerable to the end of the duel.
+- [ ] With a screen reader, a chip announces the full engine label (e.g. `Activate Mystical Space Typhoon`), not the short word, and the chip group announces as `<card name> actions`.

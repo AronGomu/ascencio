@@ -945,17 +945,34 @@ test("responsive field compositions contain controls across supported viewports"
     await captureResponsiveState(page, testInfo, viewport.id, "ST-01");
 
     const actionTarget = field
-      .locator("[data-field-target][aria-label^='Legal action']")
+      .locator("[data-field-target][aria-label^='Legal action, Open actions']")
       .first();
     if ((await actionTarget.count()) > 0) {
       await actionTarget.scrollIntoViewIfNeeded();
+      const cardId = (
+        (await actionTarget.getAttribute("data-cy")) ?? ""
+      ).replace(/^field-card-target-/, "");
       await actionTarget.click();
-      const menu = page.getByRole("menu");
-      await expect(menu).toBeVisible();
-      await assertRectInsideViewport(page, menu, `${viewport.id} action menu`);
+      // The chips element is always mounted for an actionable card and is
+      // merely `display: none` until the card is hovered, holds focus, or is
+      // the pinned menu target. Every assertion here is therefore about
+      // visibility; `toHaveCount` would pass or fail for the wrong reason.
+      const chips = field.locator(`[data-cy="card-action-chips-${cardId}"]`);
+      await expect(chips).toBeVisible();
+      await assertRectInsideViewport(
+        page,
+        chips,
+        `${viewport.id} card action chips`,
+      );
       await captureResponsiveState(page, testInfo, viewport.id, "ST-05");
       await page.keyboard.press("Escape");
-      await expect(menu).toHaveCount(0);
+      // Escape unpins and hands focus back to the card target. Focus and the
+      // lingering pointer each keep the chips shown on their own, so drop both
+      // before asserting that the pinned state is really gone.
+      await expect(actionTarget).toBeFocused();
+      await page.mouse.move(0, 0);
+      await actionTarget.evaluate((element: HTMLElement) => element.blur());
+      await expect(chips).toBeHidden();
     }
 
     const trayButton = page
@@ -1483,14 +1500,17 @@ async function answerPromptWithKeyboard(
   }
 }
 
-// The engine labels both `setMonster` and `setSpellTrap` "Set <card>", so the
-// walker matches the engine action id carried by each menu item's `data-cy`
-// instead of the item's text. Matching the label is what made this walker
-// non-deterministic: a hand whose first actionable card was a spell or trap
-// set a backrow card, which renders upright, and the duel then never gained a
-// sideways card at all.
+// The engine labels both `setMonster` and `setSpellTrap` "Set <card>", and the
+// chips collapse both to the word "Set", so the walker matches the engine
+// action id carried by each chip's `data-cy` instead of its text. Matching the
+// label is what made this walker non-deterministic: a hand whose first
+// actionable card was a spell or trap set a backrow card, which renders
+// upright, and the duel then never gained a sideways card at all.
+// The suffix match survives the rename away from the old action menu
+// untouched: its items ended in `-choice-${choice.id}` and chips are
+// `card-action-chip-${choice.id}`, so both still end in `-setMonster`.
 const MONSTER_SET_ACTION = "setMonster";
-const MONSTER_SET_ITEM = `[role="menuitem"][data-cy$="-${MONSTER_SET_ACTION}"]`;
+const MONSTER_SET_CHIP = `[data-cy$="-${MONSTER_SET_ACTION}"]`;
 
 /**
  * Sets one hand monster face-down using only the keyboard, so the board gains a
@@ -1510,28 +1530,40 @@ async function setHandMonsterWithKeyboard(
   for (let index = 0; index < (await openers.count()); index += 1) {
     const opener = openers.nth(index);
     if (!(await opener.isEnabled())) continue;
+    const cardId = ((await opener.getAttribute("data-cy")) ?? "").replace(
+      /^field-card-target-/,
+      "",
+    );
+    const chips = field.locator(`[data-cy="card-action-chips-${cardId}"]`);
+    if ((await chips.count()) === 0) continue;
     await keyboardActivate(page, opener);
-    const menu = page.getByRole("menu");
-    if ((await menu.count()) === 0) continue;
-    // The menu moves focus onto its first item as it mounts; waiting for that
-    // focus to land is what makes the arrow-key walk below deterministic.
-    await expect(menu.locator(":focus")).toHaveCount(1);
-    if ((await menu.locator(MONSTER_SET_ITEM).count()) > 0) {
-      const items = menu.getByRole("menuitem");
+    // Activating the card pins its chips and moves focus onto the first one;
+    // waiting for that focus to land is what makes the arrow walk below
+    // deterministic.
+    await expect(chips).toBeVisible();
+    await expect(chips.locator(":focus")).toHaveCount(1);
+    if ((await chips.locator(MONSTER_SET_CHIP).count()) > 0) {
+      const items = chips.locator("button");
       for (let move = 0; move < (await items.count()); move += 1) {
-        const focused = menu.locator(":focus");
+        const focused = chips.locator(":focus");
         if ((await focused.count()) === 0) break;
         const focusedId = (await focused.getAttribute("data-cy")) ?? "";
         if (focusedId.endsWith(`-${MONSTER_SET_ACTION}`)) {
           await page.keyboard.press("Enter");
-          await expect(menu).toHaveCount(0);
+          // The response goes pending, which drops the card out of its
+          // actionable state and unmounts these chips with it. Waiting on that
+          // keeps the caller from racing the next prompt.
+          await expect(chips).toBeHidden();
           return true;
         }
-        await page.keyboard.press("ArrowDown");
+        await page.keyboard.press("ArrowRight");
       }
     }
+    // Escape unpins and returns focus to the card target. The chips stay
+    // mounted and stay shown while that target holds focus, so the check is
+    // that focus came home, not that anything was removed.
     await page.keyboard.press("Escape");
-    await expect(menu).toHaveCount(0);
+    await expect(opener).toBeFocused();
   }
   return false;
 }

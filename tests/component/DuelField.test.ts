@@ -392,10 +392,13 @@ describe("DuelField", () => {
     expect(harness.commands).toEqual([]);
   });
 
-  it("focuses a command menu then returns focus on Escape", async () => {
+  it("pins the chips on Enter, walks them, and returns focus on Escape", async () => {
     const user = userEvent.setup();
     const value = fieldPrompt("idleCommand", [
       mountedChoice("activate", "Activate effect", { action: "activate" }),
+      mountedChoice("set", "Set The Legendary Fisherman", {
+        action: "setMonster",
+      }),
     ]);
     renderInteractive(value);
     const card = screen.getByRole("button", {
@@ -403,16 +406,60 @@ describe("DuelField", () => {
     });
     card.focus();
     await user.keyboard("{Enter}");
-    const firstAction = screen.getByRole("menuitem", {
-      name: "Activate effect",
+    const firstChip = screen.getByRole("button", { name: "Activate effect" });
+    const secondChip = screen.getByRole("button", {
+      name: "Set The Legendary Fisherman",
     });
-    await waitFor(() => expect(document.activeElement).toBe(firstAction));
+    await waitFor(() => expect(document.activeElement).toBe(firstChip));
+    // The engine labels every set identically, so the chips carry the action
+    // word while the full label stays on `title` / the accessible name.
+    expect(firstChip.textContent?.trim()).toBe("Activate");
+    expect(secondChip.textContent?.trim()).toBe("Set");
+    await user.keyboard("{ArrowRight}");
+    expect(document.activeElement).toBe(secondChip);
     await user.keyboard("{Escape}");
-    expect(screen.queryByRole("menu")).toBeNull();
-    expect(document.activeElement).toBe(card);
+    await waitFor(() => expect(document.activeElement).toBe(card));
+    // The chips element is hidden by CSS, never unmounted, so it is still in
+    // the DOM here — count assertions would prove nothing either way.
+    expect(
+      document.querySelector('[data-cy^="card-action-chips-"]'),
+    ).not.toBeNull();
   });
 
-  it("returns field focus before a command menu action removes its focused node", async () => {
+  it("survives unpinning after the pinned card target has already unmounted", async () => {
+    const value = fieldPrompt("idleCommand", [
+      mountedChoice("activate", "Activate effect", { action: "activate" }),
+    ]);
+    const spec = activeSpec(value);
+    const idle = createInteractionSession(spec);
+    const rendered = render(DuelField, {
+      board: board("ST-05"),
+      prompt: value,
+      spec,
+      session: idle,
+      pending: false,
+    });
+    const card = screen.getByRole("button", {
+      name: /Open actions for The Legendary Fisherman/,
+    });
+    const targetId = card.getAttribute("data-field-target");
+    if (targetId === null) throw new Error("Missing field target");
+    await rendered.rerender({
+      session: { ...idle, menuTarget: targetId } as InteractionSession,
+    });
+
+    // A pending response drops the card out of its actionable state, which
+    // unmounts the target button and leaves `bind:this` holding null. The
+    // unpin that arrives with the next prompt must not trip over that.
+    await rendered.rerender({ pending: true });
+    expect(
+      document.querySelector('[data-cy^="card-action-chips-"]'),
+    ).toBeNull();
+    await rendered.rerender({ pending: true, session: idle });
+    expect(screen.getByRole("region", { name: "Duel field" })).toBeTruthy();
+  });
+
+  it("dispatches exactly one chooseChoice from a chip and never reopens the menu", async () => {
     const user = userEvent.setup();
     const value = fieldPrompt("idleCommand", [
       mountedChoice("activate", "Activate effect", { action: "activate" }),
@@ -423,12 +470,14 @@ describe("DuelField", () => {
     });
     card.focus();
     await user.keyboard("{Enter}");
-    const action = screen.getByRole("menuitem", { name: "Activate effect" });
-    await waitFor(() => expect(document.activeElement).toBe(action));
+    const chip = screen.getByRole("button", { name: "Activate effect" });
+    await waitFor(() => expect(document.activeElement).toBe(chip));
+    harness.dispatch.mockClear();
     await user.keyboard("{Enter}");
-    await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
-    expect(document.activeElement).toBe(card);
     expect(harness.commands).toEqual([["activate"]]);
+    expect(harness.dispatch.mock.calls.map(([action]) => action.type)).toEqual([
+      "chooseChoice",
+    ]);
   });
 
   it("moves field focus to a new prompt target without stealing outside focus", async () => {
@@ -509,34 +558,95 @@ describe("DuelField", () => {
     expect(document.activeElement).toBe(open);
   });
 
-  it("opens command menus on click, never pointerdown, and cancels moved pointers", async () => {
+  it("pins the chips on click, never pointerdown, and a moved pointer does not pin them", async () => {
     const value = fieldPrompt("idleCommand", [
       mountedChoice("activate", "Activate effect", { action: "activate" }),
     ]);
-    renderInteractive(value);
+    const harness = renderInteractive(value);
     const card = screen.getByRole("button", {
       name: /Open actions for The Legendary Fisherman/,
     });
+    const article = card.closest(".duel-field-card");
+    if (article === null) throw new Error("Missing card article");
+    const targetId = card.getAttribute("data-field-target");
+    expect(
+      article.querySelector(
+        `[data-cy="card-action-chips-${article.getAttribute("data-card-id")}"]`,
+      ),
+    ).not.toBeNull();
 
     await fireEvent.pointerDown(card, { clientX: 10, clientY: 10 });
-    expect(screen.queryByRole("menu", { name: /actions/i })).toBeNull();
+    expect(article.classList.contains("is-pinned")).toBe(false);
     await fireEvent.pointerMove(card, { clientX: 40, clientY: 40 });
     await fireEvent.pointerUp(card, { clientX: 40, clientY: 40 });
     await fireEvent.click(card);
-    expect(screen.queryByRole("menu", { name: /actions/i })).toBeNull();
+    expect(article.classList.contains("is-pinned")).toBe(false);
+    expect(harness.dispatch).not.toHaveBeenCalled();
 
     await fireEvent.pointerDown(card, { clientX: 10, clientY: 10 });
     await fireEvent.pointerUp(card, { clientX: 10, clientY: 10 });
     await fireEvent.click(card);
-    const menu = screen.getByRole("menu", {
-      name: /The Legendary Fisherman.* actions/,
+    expect(harness.dispatch.mock.calls[0]?.[0]).toMatchObject({
+      type: "openMenu",
+      target: targetId,
     });
+    await waitFor(() =>
+      expect(article.classList.contains("is-pinned")).toBe(true),
+    );
     expect(
-      within(menu).getByRole("menuitem", { name: "Activate effect" }),
-    ).toBeTruthy();
+      within(article as HTMLElement).getByRole("button", {
+        name: "Activate effect",
+      }).textContent,
+    ).toBe("Activate");
+  });
+
+  it("gives every actionable card chips markup, non-actionable cards none, and no menu anywhere", () => {
+    const value = fieldPrompt("idleCommand", [
+      mountedChoice("activate", "Activate effect", { action: "activate" }),
+    ]);
+    // ST-06 holds two monsters; only the one the prompt names is actionable.
+    const valueBoard = board("ST-06");
+    const spec = mapPromptToInteractionSpec(
+      value,
+      BOARD_VIEW_MODEL_FIXTURES["ST-06"],
+      valueBoard,
+      CONTEXT,
+    );
+    if (spec.kind === "inactive") throw new Error("Expected active field spec");
+    const { container } = render(DuelField, {
+      board: valueBoard,
+      prompt: value,
+      spec,
+      session: createInteractionSession(spec),
+    });
+
+    expect(container.querySelector('[role="menu"]')).toBeNull();
+    const actionable = container.querySelector(
+      ".duel-field-card.is-actionable",
+    );
+    if (actionable === null) throw new Error("Missing actionable card");
     expect(
-      within(menu).getByRole("menuitem", { name: /Inspect/ }),
-    ).toBeTruthy();
+      actionable.querySelector('[data-cy^="card-action-chips-"]'),
+    ).not.toBeNull();
+
+    const passive = [
+      ...container.querySelectorAll(".duel-field-card:not(.is-actionable)"),
+    ];
+    expect(passive.length).toBeGreaterThan(0);
+    for (const card of passive)
+      expect(card.querySelector('[data-cy^="card-action-chips-"]')).toBeNull();
+  });
+
+  it("offers no Inspect button anywhere on the field", () => {
+    const value = fieldPrompt("selectCard", [
+      mountedChoice("select", "Select monster"),
+    ]);
+    const { rendered } = renderInteractive(value);
+    expect(screen.queryAllByRole("button", { name: /^Inspect / })).toEqual([]);
+    expect(
+      rendered.container.querySelector(".duel-field-card__inspect"),
+    ).toBeNull();
+    expect(rendered.container.querySelector('[role="menu"]')).toBeNull();
   });
 
   it("toggles multi, sum, unselect, and place drafts without submitting before explicit Confirm", async () => {
@@ -597,12 +707,10 @@ describe("DuelField", () => {
         (screen.getByRole("button", { name: /Confirm/ }) as HTMLButtonElement)
           .disabled,
       ).toBe(false);
-      if (kind !== "selectPlace" && kind !== "selectDisabledField")
-        expect(
-          screen.getByRole("button", {
-            name: /Inspect The Legendary Fisherman/,
-          }),
-        ).toBeTruthy();
+      // Inspection moved off the card entirely; the HUD trays own it now.
+      expect(screen.queryAllByRole("button", { name: /^Inspect / })).toEqual(
+        [],
+      );
       await user.click(screen.getByRole("button", { name: /Confirm/ }));
       expect(harness.commands).toEqual([[choice.id]]);
     }
@@ -653,47 +761,9 @@ describe("DuelField", () => {
       ]);
       harness = renderInteractive(command);
       await user.click(screen.getByRole("button", { name: /Open actions/ }));
-      await user.click(screen.getByRole("menuitem", { name: label }));
+      await user.click(screen.getByRole("button", { name: label }));
       expect(harness.commands).toEqual([[choiceId(label.toLowerCase())]]);
     }
-  });
-
-  it("updates anchored menu geometry on resize and scroll", async () => {
-    const value = fieldPrompt("idleCommand", [
-      mountedChoice("activate", "Activate", { action: "activate" }),
-    ]);
-    renderInteractive(value);
-    const card = screen.getByRole("button", { name: /Open actions/ });
-    const rect = vi.spyOn(card, "getBoundingClientRect");
-    rect.mockReturnValue({
-      x: 20,
-      y: 30,
-      left: 20,
-      top: 30,
-      right: 70,
-      bottom: 100,
-      width: 50,
-      height: 70,
-      toJSON: () => ({}),
-    });
-    await userEvent.setup().click(card);
-    const menu = screen.getByRole("menu", { name: /actions/i });
-    expect(menu.getAttribute("style")).toContain("100px");
-    rect.mockReturnValue({
-      x: 80,
-      y: 90,
-      left: 80,
-      top: 90,
-      right: 130,
-      bottom: 160,
-      width: 50,
-      height: 70,
-      toJSON: () => ({}),
-    });
-    window.dispatchEvent(new Event("resize"));
-    await waitFor(() => expect(menu.getAttribute("style")).toContain("160px"));
-    window.dispatchEvent(new Event("scroll"));
-    expect(rect).toHaveBeenCalledTimes(3);
   });
 
   it("contains render failure locally and remounts without exposing error detail", async () => {
@@ -713,7 +783,6 @@ describe("DuelField", () => {
       pending: false,
       injectFailure: true,
       oninteraction: vi.fn(),
-      oninspect: vi.fn(),
     });
 
     expect(

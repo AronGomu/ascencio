@@ -13,7 +13,10 @@
     type FieldNavigationState,
   } from "../../prompts/field-navigation.ts";
   import type { CardImageLibrary } from "../../images/card-image-cache.ts";
-  import type { ActiveInteractionSpec } from "../../prompts/interaction-spec.ts";
+  import type {
+    ActiveInteractionSpec,
+    InteractionChoice,
+  } from "../../prompts/interaction-spec.ts";
   import CardControl from "./CardControl.svelte";
   import StackControl from "./StackControl.svelte";
   import ZoneControl from "./ZoneControl.svelte";
@@ -26,12 +29,15 @@
   export let spec: ActiveInteractionSpec | null = null;
   export let selectedTargets: ReadonlySet<BoardTargetId> = new Set();
   export let disabled = false;
+  export let pinnedTarget: BoardTargetId | null = null;
   export let oncardactivate: (
     card: BoardCardView,
     element: HTMLButtonElement,
   ) => void = () => undefined;
   export let onzoneactivate: (zone: BoardZoneView) => void = () => undefined;
-  export let oninspect: (card: BoardCardView) => void = () => undefined;
+  export let oncardchoose: (choice: InteractionChoice) => void = () =>
+    undefined;
+  export let oncarddismiss: () => void = () => undefined;
 
   let boardElement: HTMLDivElement;
   let navigationState: FieldNavigationState = createFieldNavigationState();
@@ -180,8 +186,11 @@
       selected={selectedTargets.has(card.targetId)}
       active={navigationState.activeTarget === card.targetId}
       {disabled}
+      choices={spec?.cardChoices.get(card.targetId) ?? []}
+      pinned={pinnedTarget === card.targetId}
       onactivate={(element) => oncardactivate(card, element)}
-      oninspect={() => oninspect(card)}
+      onchoose={oncardchoose}
+      ondismiss={oncarddismiss}
     />
   {/each}
 </div>

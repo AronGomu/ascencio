@@ -33,6 +33,16 @@ describe("global styles", () => {
     expect(duelFieldBlock(css)).toContain("overflow-x: auto");
   });
 
+  it("the actionable halo is orange", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const block = ruleBlock(
+      css,
+      ".duel-field-zone.is-actionable,\n.duel-field-card.is-actionable .duel-field-card__art {",
+    );
+    expect(block).toContain("border-color: var(--warning)");
+    expect(block).not.toContain("--accent");
+  });
+
   it("opponent hand zone is plain", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     expect(css).toContain(

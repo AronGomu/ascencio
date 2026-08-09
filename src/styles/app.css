@@ -763,10 +763,13 @@ button.duel-field-zone,
   cursor: pointer;
 }
 
+/* Orange is the "you may act here" colour across the field. The lime
+   `.is-selected` treatment below stays as it is: selection is a different
+   state from legality and the two must never be confusable. */
 .duel-field-zone.is-actionable,
 .duel-field-card.is-actionable .duel-field-card__art {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgb(115 218 202 / 0.38);
+  border-color: var(--warning);
+  box-shadow: 0 0 0 2px rgb(255 213 128 / 0.55);
 }
 
 .duel-field-zone.is-selected,
@@ -939,41 +942,50 @@ button.duel-field-zone,
   cursor: pointer;
 }
 
-.duel-field-card__inspect {
-  position: absolute;
-  z-index: calc(var(--duel-field-layer-control) + 1);
-  right: -0.2rem;
-  bottom: -1.5rem;
-  min-width: 2.75rem;
-  min-height: 2.75rem;
-  padding: 0.15rem 0.3rem;
-  font-size: 0.58rem;
-}
-
 .duel-field-card.is-actionable {
   pointer-events: auto;
 }
 
-.field-action-menu {
-  position: fixed;
+/* Chips float above the card and deliberately overlap its top edge by
+   0.35rem, so a pointer travelling from the card to a chip never crosses a
+   gap that would drop the `:hover` that reveals them. */
+.card-action-chips {
+  position: absolute;
   z-index: var(--duel-field-layer-menu);
-  left: clamp(
-    0.5rem,
-    var(--field-action-menu-left),
-    calc(100vw - 18rem - 0.5rem)
-  );
-  top: clamp(0.5rem, var(--field-action-menu-top), calc(100vh - 6rem));
-  bottom: 0.5rem;
-  display: grid;
-  width: min(18rem, calc(100vw - 1rem));
-  gap: 0.4rem;
-  max-height: none;
-  padding: 0.65rem;
-  overflow: auto;
-  border: 1px solid var(--accent);
-  border-radius: 0.7rem;
-  background: var(--surface-strong);
-  box-shadow: 0 0.8rem 2rem rgb(0 0 0 / 0.45);
+  bottom: calc(100% - 0.35rem);
+  left: 50%;
+  display: none;
+  gap: 0.15rem;
+  padding: 0.12rem;
+  border-radius: 0.3rem;
+  background: rgb(8 16 31 / 0.92);
+  transform: translateX(-50%);
+}
+
+/* Always mounted for an actionable card, merely hidden: assertions about
+   dismissal must test visibility, never element count. */
+.duel-field-card.is-actionable:hover .card-action-chips,
+.duel-field-card.is-actionable:focus-within .card-action-chips,
+.duel-field-card.is-pinned .card-action-chips {
+  display: flex;
+}
+
+button.card-action-chip {
+  min-width: 3.4rem;
+  min-height: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.3rem;
+  border-radius: 0.25rem;
+  color: #2b1d00;
+  background: var(--warning);
+  font-size: 0.55rem;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+button.card-action-chip:hover:not(:disabled) {
+  background: #ffc75c;
 }
 
 .field-end-turn {

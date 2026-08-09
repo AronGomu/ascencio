@@ -5,10 +5,7 @@
   import type { DuelDiagnosticTrace } from "../duel/contracts/duel-diagnostics.ts";
   import { snapshotId, type SnapshotId } from "../duel/contracts/ids.ts";
   import type { PublicCard } from "../duel/contracts/public-duel-state.ts";
-  import {
-    mapSnapshotToBoard,
-    type BoardCardView,
-  } from "../field/board-view-model.ts";
+  import { mapSnapshotToBoard } from "../field/board-view-model.ts";
   import AppMenubar from "./components/AppMenubar.svelte";
   import MenuDialog from "./components/MenuDialog.svelte";
   import SettingsDialog from "./components/SettingsDialog.svelte";
@@ -544,14 +541,6 @@
       diagnosticMessage = "Diagnostics are unavailable for this session.";
   }
 
-  function inspectFieldCard(card: BoardCardView): void {
-    if (card.instanceId === undefined) return;
-    const publicCard = findPublicCard(card.instanceId);
-    if (publicCard === null || !isInspectableCard(publicCard)) return;
-    cardInspectorTrigger = null;
-    inspectedCard = publicCard;
-  }
-
   function inspectHudCard(card: PublicCard, trigger: HTMLButtonElement): void {
     if (!isInspectableCard(card)) return;
     cardInspectorTrigger = trigger;
@@ -893,7 +882,6 @@
         feedbackGeneration={`${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
         injectFailure={injectDuelFieldFailure}
         oninteraction={duel.dispatchInteraction}
-        oninspect={inspectFieldCard}
       />
     {/key}
   {:else if $duel.snapshot}

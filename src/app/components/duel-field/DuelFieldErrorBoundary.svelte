@@ -2,10 +2,7 @@
   import type { DuelPresentationEvent } from "../../../duel/contracts/duel-presentation-event.ts";
   import type { PlayerPrompt } from "../../../duel/contracts/player-prompt.ts";
   import type { CardImageLibrary } from "../../images/card-image-cache.ts";
-  import type {
-    BoardCardView,
-    BoardViewModel,
-  } from "../../../field/board-view-model.ts";
+  import type { BoardViewModel } from "../../../field/board-view-model.ts";
   import type {
     InteractionSession,
     InteractionSessionAction,
@@ -31,7 +28,6 @@
   export let feedbackGeneration = "component";
   export let injectFailure = false;
   export let oninteraction: (action: InteractionSessionAction) => unknown;
-  export let oninspect: (card: BoardCardView) => void;
 
   let shouldFail: boolean = injectFailure;
 
@@ -88,6 +84,5 @@
     {feedbackGeneration}
     injectFailure={shouldFail}
     {oninteraction}
-    {oninspect}
   />
 </svelte:boundary>

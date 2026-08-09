@@ -31,7 +31,9 @@
 
   $: allChoices = choicesInPromptOrder(spec);
   $: choicesById = new Map(allChoices.map((choice) => [choice.id, choice]));
-  $: globalChoices = [...spec.globalChoices.values()];
+  $: globalChoices = [...spec.globalChoices.values()].filter(
+    (choice) => choice.action !== "endPhase",
+  );
   $: allocatedTotal = [...session.allocations.values()].reduce(
     (total, amount) => total + amount,
     0,

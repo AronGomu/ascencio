@@ -11,6 +11,7 @@ import type {
   PromptKind,
 } from "../../src/duel/contracts/player-prompt.ts";
 import {
+  endPhaseChoice,
   fieldActionBarRequired,
   INTERACTION_SPEC_KINDS,
   interactionKey,
@@ -393,6 +394,64 @@ describe("fieldActionBarRequired", () => {
     const spec = specFor(prompt("yesNo"));
     expect(spec.kind).toBe("nonField");
     expect(fieldActionBarRequired(spec)).toBe(false);
+  });
+
+  it("is not required when endPhase is the only global choice", () => {
+    const spec = specFor(
+      prompt("idleCommand", {
+        choices: [
+          mountedCardChoice(FIRST),
+          choice(SECOND, { action: "endPhase", label: "End turn" }),
+        ],
+      }),
+    );
+    expect(spec.kind).toBe("cardAction");
+    expect(fieldActionBarRequired(spec)).toBe(false);
+  });
+
+  it("is still required with another global choice alongside endPhase", () => {
+    const spec = specFor(
+      prompt("idleCommand", {
+        choices: [
+          mountedCardChoice(FIRST),
+          choice(SECOND, { action: "endPhase", label: "End turn" }),
+          choice(choiceId("battle-phase"), {
+            action: "battlePhase",
+            label: "Enter Battle Phase",
+          }),
+        ],
+      }),
+    );
+    expect(fieldActionBarRequired(spec)).toBe(true);
+  });
+});
+
+describe("endPhaseChoice", () => {
+  it("finds the endPhase choice among the spec's global choices", () => {
+    const spec = specFor(
+      prompt("idleCommand", {
+        choices: [
+          choice(FIRST, { action: "battlePhase", label: "Enter Battle Phase" }),
+          choice(SECOND, { action: "endPhase", label: "End turn" }),
+        ],
+      }),
+    );
+    expect(endPhaseChoice(spec)).toEqual(spec.globalChoices.get(SECOND));
+  });
+
+  it("returns null when the spec has no endPhase choice", () => {
+    const spec = specFor(
+      prompt("idleCommand", {
+        choices: [
+          choice(FIRST, { action: "battlePhase", label: "Enter Battle Phase" }),
+        ],
+      }),
+    );
+    expect(endPhaseChoice(spec)).toBeNull();
+  });
+
+  it("tolerates a null spec", () => {
+    expect(endPhaseChoice(null)).toBeNull();
   });
 });
 

@@ -170,8 +170,20 @@ export function fieldActionBarRequired(spec: ActiveInteractionSpec): boolean {
     spec.kind === "placeSelection" ||
     spec.kind === "counterAllocation" ||
     spec.kind === "order" ||
-    spec.globalChoices.size > 0
+    [...spec.globalChoices.values()].filter(
+      (choice) => choice.action !== "endPhase",
+    ).length > 0
   );
+}
+
+export function endPhaseChoice(
+  spec: ActiveInteractionSpec | null,
+): InteractionChoice | null {
+  if (spec === null) return null;
+  for (const choice of spec.globalChoices.values()) {
+    if (choice.action === "endPhase") return choice;
+  }
+  return null;
 }
 
 export function interactionKey(

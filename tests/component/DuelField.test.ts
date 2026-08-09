@@ -259,7 +259,11 @@ describe("DuelField", () => {
     ).toEqual(
       new Set(["shared:extraMonster:left", "shared:extraMonster:right"]),
     );
-    expect(within(field).queryAllByRole("button")).toHaveLength(0);
+    // The always-mounted, disabled End turn corner button is the sole
+    // exception: it has no active prompt/spec to drive it here.
+    const buttons = within(field).queryAllByRole("button");
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0]?.getAttribute("data-cy")).toBe("field-end-turn-button");
   });
 
   it("keeps visible and hidden card nodes keyed without exposing opponent identity", async () => {
@@ -907,6 +911,37 @@ describe("DuelField", () => {
     expect(field.querySelector('[data-cy="field-action-bar"]')).toBeNull();
     expect(field.hasAttribute("data-field-action-bar")).toBe(false);
     expect(field.style.getPropertyValue("--field-action-bar-height")).toBe("");
+  });
+
+  it("hides the endPhase choice from the action bar", () => {
+    const value = fieldPrompt("idleCommand", [
+      mountedChoice("activate", "Activate", { action: "activate" }),
+      promptChoice("battle", "Enter Battle Phase", { action: "battlePhase" }),
+      promptChoice("end", "End turn", { action: "endPhase" }),
+    ]);
+    renderInteractive(value);
+
+    const field = screen.getByRole("region", { name: "Duel field" });
+    const barChoices = field.querySelectorAll(
+      '[data-cy^="field-action-bar-choice-"]',
+    );
+    expect(barChoices).toHaveLength(1);
+    expect(barChoices[0]?.getAttribute("data-cy")).toBe(
+      "field-action-bar-choice-battle",
+    );
+  });
+
+  it("mounts the corner End turn button inside the field", () => {
+    const value = fieldPrompt("idleCommand", [
+      mountedChoice("activate", "Activate", { action: "activate" }),
+    ]);
+    renderInteractive(value);
+
+    expect(
+      document.querySelector(
+        '[data-cy="duel-field"] [data-cy="field-end-turn-button"]',
+      ),
+    ).not.toBeNull();
   });
 
   it("leases mounted visible art only and releases it on unmount", () => {

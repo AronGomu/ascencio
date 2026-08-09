@@ -34,6 +34,7 @@
   import FieldActionMenu from "./duel-field/FieldActionMenu.svelte";
   import FieldBoard from "./duel-field/FieldBoard.svelte";
   import FieldLines from "./duel-field/FieldLines.svelte";
+  import EndTurnButton from "./duel-field/EndTurnButton.svelte";
 
   const EMPTY_IMAGE_URLS: ReadonlyMap<number, string> = new Map();
   const EMPTY_TARGETS: ReadonlySet<BoardTargetId> = new Set();
@@ -427,4 +428,5 @@
       {oninteraction}
     />
   {/if}
+  <EndTurnButton {spec} disabled={pending} {oninteraction} />
 </section>

@@ -909,6 +909,39 @@ test("responsive field compositions contain controls across supported viewports"
         `${viewportLabel} field action bar (top ${barRect.top}) must clear the duel board (bottom ${boardRect.bottom})`,
       ).toBeGreaterThanOrEqual(boardRect.bottom - 1);
     }
+
+    // Unlike the action bar, the End turn corner button is always mounted, so
+    // this check runs unconditionally at every viewport.
+    const endTurnButton = field.locator('[data-cy="field-end-turn-button"]');
+    await expect(endTurnButton).toBeVisible();
+    const endTurnRect = await endTurnButton.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      return {
+        top: box.top,
+        left: box.left,
+        bottom: box.bottom,
+        right: box.right,
+      };
+    });
+    const boardBoxForButton = await board.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      return {
+        top: box.top,
+        left: box.left,
+        bottom: box.bottom,
+        right: box.right,
+      };
+    });
+    const buttonIntersectsBoard =
+      endTurnRect.left < boardBoxForButton.right &&
+      endTurnRect.right > boardBoxForButton.left &&
+      endTurnRect.top < boardBoxForButton.bottom &&
+      endTurnRect.bottom > boardBoxForButton.top;
+    expect(
+      buttonIntersectsBoard,
+      `${viewportLabel} End turn corner button (rect ${JSON.stringify(endTurnRect)}) must not overlap the duel board (rect ${JSON.stringify(boardBoxForButton)})`,
+    ).toBe(false);
+
     await captureResponsiveState(page, testInfo, viewport.id, "ST-01");
 
     const actionTarget = field

@@ -72,6 +72,16 @@ button.danger {
   background: var(--danger);
 }
 
+button.warning {
+  color: #2b1d00;
+  border-color: transparent;
+  background: var(--warning);
+}
+
+button.warning:hover:not(:disabled) {
+  background: #ffc75c;
+}
+
 button.neutral {
   color: #e8edf8;
   border-color: var(--border);
@@ -644,7 +654,10 @@ li + li {
   position: relative;
   min-width: 0;
   max-width: 100%;
-  padding: 1rem;
+  /* The End turn corner button is always mounted (unlike the action bar), so
+     the bottom gutter has an unconditional floor sized to hold it clear of
+     the board: base padding + the button's own height + its own inset. */
+  padding: 1rem 1rem calc(1rem + 2.75rem + 0.75rem);
   /* Horizontal only: the board keeps a min-width so field targets stay >=44px,
      so narrow viewports must be able to pan. Vertical overflow stays visible and
      overscroll chaining stays default so the wheel always scrolls the page. */
@@ -656,12 +669,11 @@ li + li {
   box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.18);
 }
 
-/* The action bar is pinned to the bottom of the field, so the field reserves a
-   gutter tall enough to hold it clear of the board. Without this the bar sits on
-   top of the player's hand and swallows clicks meant for board targets.
-   DuelField.svelte measures the live bar into --field-action-bar-height and only
-   sets data-field-action-bar while the bar renders, so no gutter appears when
-   there is no bar. The 2.75rem floor covers the frame before the first
+/* The action bar is pinned to the bottom of the field too, and it can grow
+   taller than the always-present End turn button's floor above. When it
+   renders, its measured height (DuelField.svelte binds it into
+   --field-action-bar-height) wins if it needs more room than the floor
+   already reserves. The 2.75rem term keeps the same minimum before the first
    measurement lands. */
 .duel-field[data-field-action-bar="true"] {
   padding-bottom: calc(
@@ -964,6 +976,15 @@ button.duel-field-zone,
   box-shadow: 0 0.8rem 2rem rgb(0 0 0 / 0.45);
 }
 
+.field-end-turn {
+  position: absolute;
+  z-index: var(--duel-field-layer-control);
+  right: 0.75rem;
+  bottom: 0.75rem;
+  min-height: 2.75rem;
+  padding: 0.55rem 1rem;
+}
+
 .field-action-bar {
   position: absolute;
   z-index: var(--duel-field-layer-control);
@@ -998,6 +1019,30 @@ button.duel-field-zone,
 .field-action-bar [data-cy="field-action-bar-validation"] {
   color: var(--danger);
   width: 100%;
+}
+
+/* Below 40rem the bar's max-width (100% - 2rem) leaves too little clearance
+   beside the always-present, right-anchored End turn button, so the two would
+   overlap. Stack the bar above the button instead, and grow the reserved
+   gutter to match: the bottom offset moving from 0.75rem to 4rem needs the
+   same increase added to the padding-bottom floor below.
+   This must be a viewport media query, not a `@container` query on
+   `.duel-field` itself: a container query cannot style the container element
+   against its own size, only descendants (`.field-action-bar` below is a
+   descendant of `.duel-field`, so its container-query rule works fine — the
+   padding-bottom rule targets `.duel-field` itself, which cannot self-query).
+   48rem comfortably covers this field's supported narrow viewports (down to
+   ~23.4rem) while excluding the desktop ones, which never get this close. */
+@media (max-width: 48rem) {
+  .field-action-bar {
+    bottom: 4rem;
+  }
+
+  .duel-field[data-field-action-bar="true"] {
+    padding-bottom: calc(
+      1rem + max(2.75rem, var(--field-action-bar-height, 0px)) + 4rem
+    );
+  }
 }
 
 .field-error {

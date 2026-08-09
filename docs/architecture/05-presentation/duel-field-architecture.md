@@ -259,19 +259,36 @@ Current store behavior retaining pending across `state` events is preserved and 
 
 ## DOM composition
 
+Files live under `src/app/components/` (`duel-field/` for the field's own parts) except `PromptControls.svelte`, which lives in `src/app/prompts/`.
+
 ```text
-DuelField.svelte
-├── DuelHud.svelte                 LP, turn, phase, chain summary
-├── FieldBoard.svelte              aspect-ratio board
-│   ├── ZoneControl.svelte         native button/labelled slot
-│   ├── CardControl.svelte         native button + image + badges
-│   ├── StackControl.svelte        count + tray trigger
-│   └── FieldLines.svelte          pointer-events:none SVG
-├── FieldActionMenu.svelte         anchored target actions
-├── SelectionDock.svelte           explicit confirm/cancel/order state
-├── CardTray.svelte                GY/banished/Extra contents
-└── CardInspector.svelte           public card details
+App.svelte
+├── AppMenubar.svelte              menu + settings entry points
+├── DuelFieldErrorBoundary.svelte  field render error fallback
+│   └── DuelField.svelte           field shell, drag and feedback owner
+│       ├── FieldBoard.svelte      aspect-ratio board
+│       │   ├── ZoneControl.svelte native button/labelled slot
+│       │   ├── StackControl.svelte count + tray trigger
+│       │   └── CardControl.svelte native button + image + label
+│       │       └── CardActionChips.svelte  per-card legal actions
+│       ├── FieldStatusPills.svelte priority + phase pills
+│       ├── LifePointsPill.svelte  one per player
+│       ├── FieldLines.svelte      pointer-events:none SVG
+│       ├── FieldActionBar.svelte  confirm/cancel/order/allocate state
+│       └── EndTurnButton.svelte   corner end-phase control
+├── CardPreviewPanel.svelte        hovered/focused card art + text
+├── PromptDialog.svelte            non-field prompts
+│   └── PromptControls.svelte      prompt control families
+├── DuelHud.svelte                 LP, turn, phase, counts (settings-gated)
+│   ├── CardTray.svelte            GY/banished/Extra contents
+│   └── ChainStatus.svelte         active chain summary
+├── DuelLog.svelte                 event log panel (settings-gated)
+├── MenuDialog.svelte              menu + surrender
+├── SettingsDialog.svelte          panel toggles + build identity
+└── LoadingOverlay.svelte          startup and activation states
 ```
+
+`FieldActionMenu.svelte`, `SelectionDock.svelte` and `CardInspector.svelte` were deleted by the field-first conversion: anchored target actions became `CardActionChips.svelte`, the dock became `FieldActionBar.svelte`, and card details moved to `CardPreviewPanel.svelte`.
 
 Components consume props/callbacks only. No component imports Worker client. Prefer one component per independently testable responsibility; avoid generic catch-all components.
 

@@ -204,20 +204,20 @@
   style={positionStyle}
   data-cy={`field-card-${card.id}`}
 >
-  <div class="duel-field-card__art" data-cy="card-control-art">
+  <div class="duel-field-card__art" data-cy={`card-control-art-${card.id}`}>
     <img
       src={renderedImageUrl}
       alt={card.hidden ? "" : accessibleLabel}
       aria-hidden={card.hidden}
       decoding="async"
       onerror={useFallbackImage}
-      data-cy="card-control-image"
+      data-cy={`card-control-image-${card.id}`}
     />
   </div>
   <span
     class="duel-field-card__label"
     aria-hidden="true"
-    data-cy="card-control-label"
+    data-cy={`card-control-label-${card.id}`}
   >
     {card.hidden ? "Hidden card" : card.label}
   </span>

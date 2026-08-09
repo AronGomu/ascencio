@@ -24,14 +24,14 @@
   <span
     class="duel-field-stack__name"
     aria-hidden="true"
-    data-cy="stack-control-name"
+    data-cy={`stack-control-name-${stack.id}`}
   >
     {stack.zone === "graveyard" ? "GY" : stack.zone}
   </span>
   <strong
     class="duel-field-stack__count"
     aria-hidden="true"
-    data-cy="stack-control-count"
+    data-cy={`stack-control-count-${stack.id}`}
   >
     {stack.count}
   </strong>

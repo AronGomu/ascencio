@@ -831,35 +831,76 @@ test("dragging a hand card onto a highlighted zone plays it", async ({
     field.locator(
       `.duel-field-card[data-card-zone-id="p0:hand"] [data-cy^="card-action-chip-"][data-cy$="-${action}"]`,
     );
-  const summonChips = handChip("summon");
-  const setChips = handChip("setMonster");
-  const chip =
-    (await summonChips.count()) > 0 ? summonChips.first() : setChips.first();
-  if ((await chip.count()) === 0)
-    test.skip(true, "preset opening hand offers no placement action");
+  /* Any placement the hand offers exercises the same seam, so the walker tries
+     the monster row first and falls back to the backrow rather than skipping.
+     `activate` is deliberately absent: `dropChoiceForZone` prefers it over
+     `setSpellTrap` for a card offering both, and an activated Spell need not
+     stay in the zone it was placed in, so it cannot carry the "one gesture,
+     two responses" assertions below. */
+  const PLACEMENTS = [
+    { action: "summon", zoneKind: "mainMonster" },
+    { action: "setMonster", zoneKind: "mainMonster" },
+    { action: "setSpellTrap", zoneKind: "spellTrap" },
+  ] as const;
 
+  const firstEmptyZone = async (
+    zoneKind: "mainMonster" | "spellTrap",
+  ): Promise<string | null> =>
+    field.evaluate((element, kind) => {
+      for (let sequence = 0; sequence < 5; sequence += 1) {
+        const zoneId = `p0:${kind}:${sequence}`;
+        if (
+          element.querySelector(
+            `.duel-field-card[data-card-zone-id="${zoneId}"]`,
+          ) === null
+        )
+          return zoneId;
+      }
+      return null;
+    }, zoneKind);
+
+  let chosen: { readonly chip: Locator; readonly zoneId: string } | null = null;
+  for (const placement of PLACEMENTS) {
+    const zoneId = await firstEmptyZone(placement.zoneKind);
+    if (zoneId === null) continue;
+    const chips = handChip(placement.action);
+    const total = await chips.count();
+    for (let index = 0; index < total; index += 1) {
+      const chip = chips.nth(index);
+      /* A card offering both would resolve to `activate` on a backrow drop,
+         which this test cannot assert on. Skip to the next card instead. */
+      if (
+        placement.action === "setSpellTrap" &&
+        (await chip.evaluate(
+          (element) =>
+            element
+              .closest(".duel-field-card")
+              ?.querySelector(
+                '[data-cy^="card-action-chip-"][data-cy$="-activate"]',
+              ) != null,
+        ))
+      )
+        continue;
+      chosen = { chip, zoneId };
+      break;
+    }
+    if (chosen !== null) break;
+  }
+  if (chosen === null) {
+    test.skip(
+      true,
+      "opening hand offers no summon, no monster set and no settable spell or trap — there is no placement of any kind to drag",
+    );
+    return;
+  }
+
+  const { chip, zoneId: targetZoneId } = chosen;
   const cardId = await chip.evaluate(
     (element) =>
       element.closest(".duel-field-card")?.getAttribute("data-card-id") ?? "",
   );
   expect(cardId).not.toBe("");
   const dragTarget = field.locator(`[data-cy="field-card-target-${cardId}"]`);
-  // Both matched actions place a monster, so the drop zone kind comes from the
-  // action, not from the chip's wording.
-  const targetZoneId = await field.evaluate((element) => {
-    for (let sequence = 0; sequence < 5; sequence += 1) {
-      const zoneId = `p0:mainMonster:${sequence}`;
-      if (
-        element.querySelector(
-          `.duel-field-card[data-card-zone-id="${zoneId}"]`,
-        ) === null
-      )
-        return zoneId;
-    }
-    return null;
-  });
-  if (targetZoneId === null)
-    throw new Error("Every own monster zone is already occupied");
   const targetZone = field.locator(`[data-zone-id="${targetZoneId}"]`);
 
   await dragTarget.scrollIntoViewIfNeeded();
@@ -987,6 +1028,11 @@ test("responsive field compositions contain controls across supported viewports"
     timeout: 120_000,
   });
 
+  /* Whether any card is actionable is seed-dependent, so the chip block below
+     stays guarded — but a run where it never fired proves nothing about chips,
+     and used to pass silently. Counted here, asserted after the loop. */
+  let chipViewportsExercised = 0;
+
   for (const viewport of RESPONSIVE_VIEWPORTS) {
     await page.setViewportSize({
       width: viewport.width,
@@ -1110,30 +1156,29 @@ test("responsive field compositions contain controls across supported viewports"
       })),
     ).toEqual({ focusVisible: true, outline: "solid" });
 
+    /* Unconditional: the first Main Phase `idleCommand` always carries a
+       non-`endPhase` global choice, so `fieldActionBarRequired` is true and the
+       bar is mounted. A `count() > 0` guard here would silently delete the
+       geometry gate below instead of failing when the bar goes missing. */
     const dock = field.locator('[data-cy="field-action-bar"]');
-    if ((await dock.count()) > 0) {
-      await dock.scrollIntoViewIfNeeded();
-      await assertRectInsideViewport(
-        page,
-        dock,
-        `${viewport.id} selection dock`,
-      );
-      // The bar is pinned inside the field, so it must live in a reserved
-      // gutter below the board. If its box ever re-enters the board box it
-      // starts swallowing clicks meant for the player's hand.
-      const barRect = await dock.evaluate((element) => {
-        const box = element.getBoundingClientRect();
-        return { top: box.top, bottom: box.bottom };
-      });
-      const boardRect = await board.evaluate((element) => {
-        const box = element.getBoundingClientRect();
-        return { top: box.top, bottom: box.bottom };
-      });
-      expect(
-        barRect.top,
-        `${viewportLabel} field action bar (top ${barRect.top}) must clear the duel board (bottom ${boardRect.bottom})`,
-      ).toBeGreaterThanOrEqual(boardRect.bottom - 1);
-    }
+    await expect(dock).toBeVisible();
+    await dock.scrollIntoViewIfNeeded();
+    await assertRectInsideViewport(page, dock, `${viewport.id} selection dock`);
+    // The bar is pinned inside the field, so it must live in a reserved
+    // gutter below the board. If its box ever re-enters the board box it
+    // starts swallowing clicks meant for the player's hand.
+    const barRect = await dock.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      return { top: box.top, bottom: box.bottom };
+    });
+    const boardRect = await board.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      return { top: box.top, bottom: box.bottom };
+    });
+    expect(
+      barRect.top,
+      `${viewportLabel} field action bar (top ${barRect.top}) must clear the duel board (bottom ${boardRect.bottom})`,
+    ).toBeGreaterThanOrEqual(boardRect.bottom - 1);
 
     // Unlike the action bar, the End turn corner button is always mounted, so
     // this check runs unconditionally at every viewport.
@@ -1173,6 +1218,7 @@ test("responsive field compositions contain controls across supported viewports"
       .locator("[data-field-target][aria-label^='Legal action, Open actions']")
       .first();
     if ((await actionTarget.count()) > 0) {
+      chipViewportsExercised += 1;
       // scrollIntoViewIfNeeded() only scrolls far enough to make the element
       // visible, parking it flush against a viewport edge. The chips are
       // wider than the card and centred on it, so at narrow viewports that
@@ -1186,12 +1232,29 @@ test("responsive field compositions contain controls across supported viewports"
       const cardId = (
         (await actionTarget.getAttribute("data-cy")) ?? ""
       ).replace(/^field-card-target-/, "");
-      await actionTarget.click();
       // The chips element is always mounted for an actionable card and is
       // merely `display: none` until the card is hovered, holds focus, or is
       // the pinned menu target. Every assertion here is therefore about
       // visibility; `toHaveCount` would pass or fail for the wrong reason.
       const chips = field.locator(`[data-cy="card-action-chips-${cardId}"]`);
+
+      /* Hover and focus are the plan's headline reveal triggers and the pinned
+         path below exercises neither, so assert each on its own. Both the
+         pointer and focus are dropped first, or the previous state would carry
+         the assertion. */
+      await page.mouse.move(0, 0);
+      await actionTarget.evaluate((element: HTMLElement) => element.blur());
+      await expect(chips).toBeHidden();
+      await actionTarget.hover();
+      await expect(chips).toBeVisible();
+      await page.mouse.move(0, 0);
+      await expect(chips).toBeHidden();
+      await actionTarget.focus();
+      await expect(chips).toBeVisible();
+      await actionTarget.evaluate((element: HTMLElement) => element.blur());
+      await expect(chips).toBeHidden();
+
+      await actionTarget.click();
       await expect(chips).toBeVisible();
       await assertRectInsideViewport(
         page,
@@ -1234,6 +1297,11 @@ test("responsive field compositions contain controls across supported viewports"
       ).toBe("none");
     }
   }
+
+  expect(
+    chipViewportsExercised,
+    `no viewport offered an actionable card, so the chip hover/focus reveal, the chip visibility and viewport-containment assertions, the ST-05 evidence capture and the Escape round trip never ran at any of the ${RESPONSIVE_VIEWPORTS.length} viewports`,
+  ).toBeGreaterThan(0);
 });
 
 test("DF-16 Chromium pinned parity/perf/resource gate records automated evidence", async ({

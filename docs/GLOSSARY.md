@@ -14,16 +14,16 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 | client | Main-thread typed Worker client/port | `src/app/DuelWorkerClient.ts` (`DuelWorkerClient`, `DuelWorkerPort`) |
 | field | Semantic DOM duel field component | `src/app/components/DuelField.svelte`, `src/app/components/duel-field/FieldBoard.svelte` |
 | board | Board view model projected for rendering | `src/field/board-view-model.ts` (`BoardCardView`, `BoardZoneView`, `BoardStackView`) |
-| zone | Physical zone ids + field geometry constants | `src/field/duel-field-layout.ts` (`PhysicalZoneId`, `FieldZoneKind`), `duel-field/ZoneControl.svelte` |
+| zone | Physical zone ids + field geometry constants | `src/field/duel-field-layout.ts` (`PhysicalZoneId`, `FieldZoneKind`), `src/app/components/duel-field/ZoneControl.svelte` |
 | hud | Life points / turn / phase heads-up display | `src/app/components/duel-field/DuelHud.svelte`, `.duel-hud` in `src/styles/app.css` |
 | prompts | Prompt UI controls and control families | `src/app/prompts/PromptControls.svelte`, `prompt-control-family.ts` |
-| selection | Prompt choice validation / selection dock | `src/app/prompts/prompt-selection.ts` (`validatePromptSelection`), `duel-field/SelectionDock.svelte` |
+| selection | Prompt choice validation / field decision bar | `src/app/prompts/prompt-selection.ts` (`validatePromptSelection`), `src/app/components/duel-field/FieldActionBar.svelte` |
 | interaction | Active interaction spec + session reducer | `src/app/prompts/interaction-spec.ts`, `interaction-session.ts` (`synchronizeInteractionSession`) |
 | navigation | Keyboard/spatial field focus movement | `src/app/prompts/field-navigation.ts` (`reduceFieldNavigation`, `SpatialNeighbors`) |
 | presentation | Event → DOM feedback commands, scheduler | `src/app/presentation/presentation-command.ts` (`PresentationScheduler`) |
-| feedback | Non-authoritative CSS/SVG field feedback state | `src/app/presentation/dom-feedback-controller.ts`, `duel-field/FieldLines.svelte` |
-| log | Duel event log formatting + panel | `src/app/presentation/format-duel-log-entry.ts`, `duel-field/DuelLog.svelte` |
-| inspector | Card detail inspection panel | `src/app/components/duel-field/CardInspector.svelte` |
+| feedback | Non-authoritative CSS/SVG field feedback state | `src/app/presentation/dom-feedback-controller.ts`, `src/app/components/duel-field/FieldLines.svelte` |
+| log | Duel event log formatting + panel | `src/app/presentation/format-duel-log-entry.ts`, `src/app/components/duel-field/DuelLog.svelte` |
+| preview | Hovered/focused card art + text panel | `src/app/components/CardPreviewPanel.svelte`, `src/app/presentation/card-preview.ts` |
 | images | Card art cache, leases, placeholders | `src/app/images/card-image-cache.ts` (`CardImageLibrary`, `CardImageLease`) |
 | styles | Single global stylesheet | `src/styles/app.css` |
 | boundary | Field render error boundary | `src/app/components/duel-field/DuelFieldErrorBoundary.svelte` |

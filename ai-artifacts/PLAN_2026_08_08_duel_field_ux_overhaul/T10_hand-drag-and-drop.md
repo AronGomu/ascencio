@@ -188,6 +188,13 @@ No new static values. `ZoneControl` gains `data-drop-candidate={dropCandidate ? 
 - Public API: `armPlacementIntent` on `DuelStore`; `pendingPlacement` on `DuelViewState`.
 - Migrate / config: none.
 
+## Assumptions
+
+Recorded 2026-08-09 by `R4`. Documentation only — the code these describe shipped as written and is not being changed.
+
+- **A-T10-1 Both authorised remedies for the chip hit-test trap shipped, not one.** The drop hit test walks `closest("[data-zone-id]")` from whatever `document.elementFromPoint` returns, *and* `src/styles/app.css:882` adds `.duel-field[data-dragging="true"] .card-action-chips { pointer-events: none; }`. Either alone would have satisfied the step; shipping both was a deliberate belt-and-braces choice, because the `closest` walk only rescues a hit that lands on a chip belonging to a card *inside* a zone, while the CSS rule also covers chips floating over the gap between zones. Accepted cost: while any drag is in flight, the chips of a keyboard-pinned card stop accepting clicks even though that pin has nothing to do with the drag. The rule is scoped to `[data-dragging="true"]`, so the loss lasts exactly as long as the gesture, and a pointer drag and a chip click cannot be issued by the same pointer at the same time.
+- **A-T10-2 An armed placement intent is consumed only by an accepted prompt event.** Beyond the step-7 code, the client subscription in `src/app/stores/duel-store.ts:392-406` bails on `next === previous` before reading `previous.pendingPlacement`. `reduceDuelViewState` clears `pendingPlacement` on every prompt, so the guess is read off the pre-event state; returning the identical state means the reducer *rejected* the event (stale worker/session context). Without the guard a rejected event would still burn the intent, stranding the player in a manual placement after a gesture the app had already accepted. With it, the intent survives a rejected event and is answered by the next accepted prompt.
+
 ## Validation
 
 - [x] `npx vitest run tests/unit/placement-candidates.test.ts tests/unit/drop-target.test.ts tests/unit/pending-placement.test.ts` passes

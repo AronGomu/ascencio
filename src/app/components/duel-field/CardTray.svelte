@@ -42,6 +42,9 @@
   let imageLeases = new SvelteMap<number, CardImageLease>();
   let leasedImageUrls = new Map<number, string>();
 
+  /* One tray is mounted per player and zone, so every element inside a tray
+     suffixes this pair to stay unique inside the rendered document. */
+  $: trayId = `${player}-${zone}`;
   $: visibleCards = cards.filter(canRevealCard);
   $: totalPages = Math.max(1, Math.ceil(visibleCards.length / PAGE_SIZE));
   $: if (page >= totalPages) page = totalPages - 1;
@@ -162,11 +165,11 @@
 <section
   class="card-tray-summary"
   aria-label={`${label}, ${count} ${count === 1 ? "card" : "cards"}`}
-  data-cy={`card-tray-${player}-${zone}`}
+  data-cy={`card-tray-${trayId}`}
 >
-  <div data-cy="card-tray-summary-row">
-    <strong data-cy="card-tray-label">{label}</strong>
-    <span data-cy="card-tray-count">{count}</span>
+  <div data-cy={`card-tray-summary-row-${trayId}`}>
+    <strong data-cy={`card-tray-label-${trayId}`}>{label}</strong>
+    <span data-cy={`card-tray-count-${trayId}`}>{count}</span>
   </div>
   {#if collectionCanOpen}
     <button
@@ -174,26 +177,29 @@
       class="secondary compact-button"
       bind:this={openButton}
       aria-expanded={open}
-      aria-controls={`card-tray-${player}-${zone}`}
+      aria-controls={`card-tray-${trayId}`}
       aria-label={`${open ? "Close" : "Open"} ${label} tray, ${count} ${count === 1 ? "card" : "cards"}`}
       onclick={() => (open ? void close() : void show())}
-      data-cy="card-tray-toggle-button">{open ? "Close" : "View"}</button
+      data-cy={`card-tray-toggle-button-${trayId}`}
+      >{open ? "Close" : "View"}</button
     >
   {:else}
-    <span class="count-only" data-cy="card-tray-count-only">Count only</span>
+    <span class="count-only" data-cy={`card-tray-count-only-${trayId}`}
+      >Count only</span
+    >
   {/if}
 
   {#if open}
     <div
-      id={`card-tray-${player}-${zone}`}
+      id={`card-tray-${trayId}`}
       class="card-tray"
       role="region"
       bind:this={trayElement}
       aria-label={`${label} tray`}
-      data-cy={`card-tray-panel-${player}-${zone}`}
+      data-cy={`card-tray-panel-${trayId}`}
     >
-      <div class="card-tray__heading" data-cy="card-tray-heading">
-        <p data-cy="card-tray-page-count">
+      <div class="card-tray__heading" data-cy={`card-tray-heading-${trayId}`}>
+        <p data-cy={`card-tray-page-count-${trayId}`}>
           {firstVisible}–{lastVisible} of {visibleCards.length}
         </p>
         <button
@@ -201,10 +207,10 @@
           class="secondary compact-button"
           aria-label={`Close ${label} tray`}
           onclick={() => void close()}
-          data-cy="card-tray-close-button">Close</button
+          data-cy={`card-tray-close-button-${trayId}`}>Close</button
         >
       </div>
-      <ul class="card-tray__cards" data-cy="card-tray-cards-list">
+      <ul class="card-tray__cards" data-cy={`card-tray-cards-list-${trayId}`}>
         {#each pageCards as card, index (card.instanceId)}
           <li data-cy={`card-tray-card-${card.instanceId}`}>
             <button
@@ -220,10 +226,12 @@
                   alt=""
                   decoding="async"
                   onerror={useFallbackImage}
-                  data-cy="card-tray-card-image"
+                  data-cy={`card-tray-card-image-${card.instanceId}`}
                 />
               {/if}
-              <span data-cy="card-tray-card-label">{cardName(card)}</span>
+              <span data-cy={`card-tray-card-label-${card.instanceId}`}
+                >{cardName(card)}</span
+              >
             </button>
           </li>
         {/each}
@@ -232,16 +240,17 @@
         <div
           class="card-tray__pagination"
           aria-label={`${label} pages`}
-          data-cy="card-tray-pagination"
+          data-cy={`card-tray-pagination-${trayId}`}
         >
           <button
             type="button"
             class="secondary compact-button"
             disabled={page === 0}
             onclick={() => void changePage(page - 1)}
-            data-cy="card-tray-page-previous-button">Previous</button
+            data-cy={`card-tray-page-previous-button-${trayId}`}
+            >Previous</button
           >
-          <span data-cy="card-tray-page-indicator"
+          <span data-cy={`card-tray-page-indicator-${trayId}`}
             >Page {page + 1} of {totalPages}</span
           >
           <button
@@ -249,7 +258,7 @@
             class="secondary compact-button"
             disabled={page === totalPages - 1}
             onclick={() => void changePage(page + 1)}
-            data-cy="card-tray-page-next-button">Next</button
+            data-cy={`card-tray-page-next-button-${trayId}`}>Next</button
           >
         </div>
       {/if}

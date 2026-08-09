@@ -43,6 +43,19 @@ describe("global styles", () => {
     expect(block).not.toContain("--accent");
   });
 
+  /* jsdom loads no stylesheet, so no component test can observe `display`, and
+     the e2e only ever reaches the chips through the pinned path. Without this
+     row both reveal triggers could be deleted with the suite still green. */
+  it("chips are hidden until hover, focus or a pin reveals them", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    expect(ruleBlock(css, "\n.card-action-chips {")).toContain("display: none");
+    const reveal = ruleBlock(
+      css,
+      ".duel-field-card.is-actionable:hover .card-action-chips,\n.duel-field-card.is-actionable:focus-within .card-action-chips,\n.duel-field-card.is-pinned .card-action-chips {",
+    );
+    expect(reveal).toContain("display: flex");
+  });
+
   it("opponent hand zone is plain", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     expect(css).toContain(

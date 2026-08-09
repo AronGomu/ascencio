@@ -1105,7 +1105,7 @@ describe("DuelField", () => {
     const harness = renderDraggableHand();
     await startHandDrag();
     const label = zoneElement("p0:mainMonster:1").querySelector(
-      '[data-cy="zone-control-label"]',
+      '[data-cy="zone-control-label-p0:mainMonster:1"]',
     );
     if (label === null) throw new Error("Missing zone label");
 

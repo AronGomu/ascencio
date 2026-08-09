@@ -153,6 +153,13 @@ export let lifePoints: readonly [number, number] | null = null;
 - Public API: `duelPhaseLabel`, `DUEL_PHASE_LABELS`, `hasDuelPriority`; three new `DuelField` props consumed again by T9 and T10.
 - Migrate / config: none.
 
+## Assumptions
+
+Recorded 2026-08-09 by `R4`; the manual-check box below cites this section. Documentation only — no code changes.
+
+- **A-T8-1 The manual check was discharged by automation, not by an interactive session.** No `npm run dev` browser session was run. The e2e test `production bundle initializes the real Worker and sends one opaque choice once` asserts `[data-cy="prio-pill"]` reads "Choose Action", `[data-cy="phase-pill"]` matches `/Main 1|Draw|Standby/`, and both `[data-cy^="life-pill-p"]` elements read "8,000 LP" against the real production bundle in Chromium. That covers the same observations the manual step asked for, on a build closer to production than `npm run dev` is. Not covered: subjective placement/legibility judgements, and any browser other than Chromium and Firefox (`webkit-smoke` is environment-blocked in this sandbox).
+- **A-T8-2 T8 ran last, not in table order.** Execution was T6 → T7 → T9 → T10 → T11 → T8: T8 depends on T7 and nothing depends on T8, so it was deferred to the end of the run. The plan index records the executed order.
+
 ## Validation
 
 - [x] `npx vitest run tests/unit/duel-phase-label.test.ts tests/unit/duel-priority.test.ts tests/component/FieldStatusPills.test.ts` passes

@@ -25,3 +25,11 @@ test-results/
 .impeccable/live/deferred-svelte-component-accepts.json
 .impeccable/live/*.png
 # impeccable-ignore-end
+
+# Generated knowledge graph (rebuild with `graphify .`)
+graphify-out/
+
+# Agent scratch and subagent transcripts. Machine-local, large, and churns
+# every run; the transcripts also carry opaque session tokens.
+.pi-subagents/
+.tmp/

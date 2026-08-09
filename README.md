@@ -229,7 +229,7 @@ Per-duel bounded traces record revisions, process/message ordering, public event
 
 ## Documentation
 
-- [`context.md`](context.md) — concise project context and target architecture
+- [`AGENT.md`](AGENT.md) — concise project context and target architecture
 - [`docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`](docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md) — current TDD ticket/dependency plan
 - [`docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md`](docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md) — completed MVP/Phaser baseline plan
 - [`docs/assets/asset-import-pipeline.md`](docs/assets/asset-import-pipeline.md) — asset sources, transformations, integrity guarantees, and observed counts

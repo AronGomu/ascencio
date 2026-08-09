@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>DOM Duel-Field Implementation Plan</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f4f6f8;
+  --surface: #ffffff;
+  --surface-2: #edf2f6;
+  --ink: #162230;
+  --muted: #5b6875;
+  --line: #d5dde5;
+  --accent: #087e8b;
+  --accent-soft: #d9f1f2;
+  --warm: #a65d00;
+  --code: #101c2a;
+  --code-ink: #dceafa;
+  --shadow: 0 16px 45px rgb(23 38 52 / 10%);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b121b;
+    --surface: #111c28;
+    --surface-2: #172536;
+    --ink: #edf5fa;
+    --muted: #a9b8c5;
+    --line: #2a3c4d;
+    --accent: #65d4da;
+    --accent-soft: #15373d;
+    --warm: #f1b65f;
+    --code: #07101a;
+    --code-ink: #dceafa;
+    --shadow: 0 16px 45px rgb(0 0 0 / 25%);
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.62 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+a { color: var(--accent); text-underline-offset: 0.18em; }
+a:hover { text-decoration-thickness: 2px; }
+.skip-link { position: fixed; top: -4rem; left: 1rem; z-index: 20; padding: .7rem 1rem; background: var(--surface); border: 1px solid var(--accent); border-radius: .5rem; }
+.skip-link:focus { top: 1rem; }
+.hero {
+  background: radial-gradient(circle at 85% 20%, var(--accent-soft), transparent 35%), var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.hero-inner { max-width: 1480px; margin: auto; padding: 2.7rem clamp(1.2rem, 4vw, 4rem) 2.4rem; }
+.eyebrow { margin: 0 0 .55rem; color: var(--accent); font-size: .76rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.hero h1 { max-width: 1000px; margin: 0; font-size: clamp(2rem, 5vw, 4.6rem); line-height: 1.02; letter-spacing: -.045em; }
+.hero-summary { max-width: 780px; margin: 1rem 0 0; color: var(--muted); font-size: 1.05rem; }
+.stats { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 1.5rem; }
+.stat { min-width: 125px; padding: .72rem .9rem; background: color-mix(in srgb, var(--surface) 85%, transparent); border: 1px solid var(--line); border-radius: .7rem; }
+.stat strong { display: block; color: var(--ink); font-size: 1.15rem; }
+.stat span { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .07em; }
+.layout { display: grid; grid-template-columns: minmax(220px, 285px) minmax(0, 970px); gap: clamp(1.5rem, 4vw, 4rem); max-width: 1480px; margin: auto; padding: 2rem clamp(1.2rem, 4vw, 4rem) 5rem; }
+.toc { position: sticky; top: 1rem; align-self: start; max-height: calc(100vh - 2rem); overflow: auto; padding: 1.2rem; background: var(--surface); border: 1px solid var(--line); border-radius: .9rem; box-shadow: var(--shadow); }
+.toc h2 { margin: 0 0 .8rem; font-size: .78rem; color: var(--muted); letter-spacing: .12em; text-transform: uppercase; }
+.toc ol { list-style: none; margin: 0; padding: 0; }
+.toc li { margin: .24rem 0; }
+.toc li.depth-3 { padding-left: .9rem; font-size: .86rem; }
+.toc a { display: block; padding: .25rem .38rem; border-radius: .35rem; color: var(--muted); text-decoration: none; }
+.toc a:hover { background: var(--surface-2); color: var(--ink); }
+main { min-width: 0; }
+main > h1:first-child { display: none; }
+h2 { margin: 3.5rem 0 1rem; padding-top: .5rem; font-size: clamp(1.5rem, 3vw, 2.15rem); line-height: 1.18; letter-spacing: -.025em; }
+h2:first-of-type { margin-top: 0; }
+h3 { margin: 2.3rem 0 .7rem; font-size: 1.25rem; line-height: 1.3; }
+h4 { margin: 1.6rem 0 .5rem; font-size: 1.02rem; color: var(--accent); }
+.anchor-heading { position: relative; }
+.heading-link { position: absolute; right: 100%; padding-right: .45rem; opacity: 0; text-decoration: none; font-weight: 500; }
+.anchor-heading:hover .heading-link, .heading-link:focus { opacity: 1; }
+p { margin: .7rem 0 1rem; }
+.meta-block { margin: 0 0 1.7rem; padding: 1rem 1.15rem; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: .45rem; background: var(--surface); color: var(--muted); }
+.content-list { margin: .6rem 0 1.2rem; padding-left: 1.35rem; }
+.content-list li { margin: .32rem 0; padding-left: .15rem; }
+code { padding: .12em .34em; border-radius: .28rem; background: var(--surface-2); color: var(--ink); font: .88em/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.code-block, .diagram { overflow: auto; margin: 1.25rem 0 1.7rem; padding: 1.15rem; border-radius: .75rem; background: var(--code); color: var(--code-ink); box-shadow: var(--shadow); }
+.code-block code, .diagram code { padding: 0; background: none; color: inherit; }
+.diagram { min-height: 8rem; border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+.diagram .mermaid { min-width: 720px; margin: 0; background: transparent; color: inherit; text-align: center; }
+.table-wrap { overflow-x: auto; margin: 1rem 0 1.7rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface); box-shadow: 0 6px 20px rgb(23 38 52 / 5%); }
+table { width: 100%; border-collapse: collapse; font-size: .91rem; }
+th, td { padding: .72rem .8rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { position: sticky; top: 0; background: var(--surface-2); color: var(--ink); font-size: .75rem; letter-spacing: .055em; text-transform: uppercase; }
+tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: color-mix(in srgb, var(--accent-soft) 42%, transparent); }
+.inline-figure { margin: 1.5rem 0; }
+.inline-figure img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface); box-shadow: var(--shadow); }
+.inline-figure figcaption { margin-top: .5rem; color: var(--muted); font-size: .82rem; }
+.check { display: inline-grid; place-items: center; width: 1.05rem; height: 1.05rem; margin-right: .5rem; border: 1px solid var(--muted); border-radius: .22rem; vertical-align: -.1rem; }
+.check.checked { border-color: var(--accent); background: var(--accent); color: var(--bg); font-size: .75rem; }
+.contract { margin: 0 0 2rem; padding: 1.2rem 1.35rem; border: 1px solid var(--line); border-radius: .9rem; background: var(--surface); box-shadow: var(--shadow); }
+.contract h2 { margin: 0 0 .45rem; font-size: 1.2rem; }
+.status { display: inline-flex; align-items: center; gap: .35rem; font-size: .77rem; font-weight: 750; }
+.status.pass { color: var(--accent); }
+.status.gap { color: var(--warm); }
+.ticket-heading { margin-top: 4.5rem; padding: 1rem 1.1rem; border: 1px solid var(--line); border-left: 5px solid var(--accent); border-radius: .7rem; background: var(--surface); box-shadow: var(--shadow); }
+hr { margin: 3rem 0; border: 0; border-top: 1px solid var(--line); }
+footer { padding: 2rem clamp(1.2rem, 4vw, 4rem); border-top: 1px solid var(--line); color: var(--muted); text-align: center; font-size: .82rem; }
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .toc { position: static; max-height: none; }
+  .toc li.depth-3 { display: none; }
+  .diagram .mermaid { min-width: 620px; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+@media print {
+  :root { --bg: #fff; --surface: #fff; --surface-2: #f4f4f4; --ink: #111; --muted: #444; --line: #ccc; }
+  .toc, .skip-link, .heading-link { display: none; }
+  .layout { display: block; max-width: none; padding: 1rem; }
+  .hero-inner { padding: 1rem; }
+  .hero h1 { font-size: 2.4rem; }
+  h2, h3, .ticket-heading { break-after: avoid; }
+  table, pre, .meta-block { break-inside: avoid; }
+  a { color: inherit; }
+}
+</style>
+<meta name="artifact-kind" content="html">
+<meta name="artifact-generated" content="1785511261946">
+<meta name="artifact-project" content="/home/aron/coding/ygo-story-duel-simulator">
+</head>
+<body data-document-kind="plan">
+<a class="skip-link" href="#content">Skip to content</a>
+<header class="hero"><div class="hero-inner"><p class="eyebrow">Implementation plan · TDD migration</p><h1>DOM Duel-Field Implementation Plan</h1><p class="hero-summary">Eighteen commit-sized tickets. Hard dependencies, parallel waves, Red/Green steps, outputs, removal gates.</p><div class="stats"><div class="stat"><strong>18</strong><span>tickets</span></div><div class="stat"><strong>25</strong><span>sections</span></div><div class="stat"><strong>1</strong><span>diagrams</span></div><div class="stat"><strong>DF-17</strong><span>removal gate</span></div></div></div></header>
+<div class="layout"><nav class="toc" aria-label="Document contents"><h2>Contents</h2><ol><li class="depth-2"><a href="#non-negotiable-constraints">Non-negotiable constraints</a></li><li class="depth-2"><a href="#tdd-protocol-for-every-code-ticket">TDD protocol for every code ticket</a></li><li class="depth-2"><a href="#dependency-graph">Dependency graph</a></li><li class="depth-2"><a href="#start-gates-and-parallel-waves">Start gates and parallel waves</a></li><li class="depth-2"><a href="#ticket-summary">Ticket summary</a></li><li class="depth-2"><a href="#df-00-record-renderer-decision-and-delivery-contract">DF-00 — Record renderer decision and delivery contract</a></li><li class="depth-3"><a href="#starting-requirements-and-inputs">Starting requirements and inputs</a></li><li class="depth-3"><a href="#tdd-style-steps">TDD-style steps</a></li><li class="depth-3"><a href="#outputs">Outputs</a></li><li class="depth-3"><a href="#validation-criteria">Validation criteria</a></li><li class="depth-2"><a href="#df-01-preserve-sparse-fixed-slot-projection">DF-01 — Preserve sparse fixed-slot projection</a></li><li class="depth-3"><a href="#starting-requirements-and-inputs-2">Starting requirements and inputs</a></li><li class="depth-3"><a href="#tdd-style-steps-2">TDD-style steps</a></li><li class="depth-3"><a href="#outputs-2">Outputs</a></li><li class="depth-3"><a href="#validation-criteria-2">Validation criteria</a></li><li class="depth-2"><a href="#df-02-model-physical-standard-zones-and-shared-emzs">DF-02 — Model physical Standard zones and shared EMZs</a></li><li class="depth-3"><a href="#starting-requirements-and-inputs-3">Starting requirements and inputs</a></li><li class="depth-3"><a href="#tdd-style-steps-3">TDD-style steps</a></li><li class="depth-3"><a href="#outputs-3">Outputs</a></li><li class="depth-3"><a href="#validation-criteria-3">Validation criteria</a></li><li class="depth-2"><a href="#df-03-project-overlay-materials-and-useful-extra-deck-state">DF-03 — Project overlay materials and useful Extra Deck state</a></li><li class="depth-3"><a href="#starting-requirements-and-inputs-4">Starting requirements and inputs</a></li><li class="depth-3"><a href="#tdd-style-steps-4">TDD-style steps</a></li><li class="depth-3"><a href="#outputs-4">Outputs</a></li><li class="depth-3"><a href="#validation-criteria-4">Validation criteria</a></li><li class="depth-2"><a href="#df-04-project-counters-and-actual-chain-provenance">DF-04 — Project counters and actual chain provenance</a></li><li class="depth-3"><a href="#starting-requirements-and-inputs-5">Starting requirements and inputs</a></li><li class="depth-3"><a href="#tdd-style-steps-5">TDD-style steps</a></li><li class="depth-3"><a href="#outputs-5">Outputs</a></li><li class="depth-3"><a href="#validation-criteria-5">Validation criteria</a></li><li class="depth-2"><a href="#df-05-separate-bounded-semantic-log-from-feedback-queue">DF-05 — Separate bounded semantic log from feedback queue</a></li><li class="depth-3"><a href="#starting-requirements-and-inputs-6">Starting requirements and inputs</a></li><li class="depth-3"><a href="#tdd-style-steps-6">TDD-style steps</a></li><li class="depth-3"><a href="#outputs-6">Outputs</a></li><li class="depth-3"><a href="#validation-criteria-6">Validation criteria</a></li><li class="depth-2"><a href="#df-06-derive-renderer-neutral-boardviewmodel">DF-06 — Derive renderer-neutral BoardViewModel</a></li><li class="depth-3"><a href="#starting-requirements-and-inputs-7">Starting requirements and inputs</a></li><li class="depth-3"><a href="#tdd-style-steps-7">TDD-style steps</a></li><li class="depth-3"><a href="#outputs-7">Outputs</a></li><li class="depth-3"><a href="#validation-criteria-7">Validation criteria</a></li><li class="depth-2"><a href="#df-07-derive-discriminated-interactionspec">DF-07 — Derive discriminated InteractionSpec</a></li><li class="depth-3"><a href="#starting-requirements-and-inputs-8">Starting requirements and inputs</a></li><li class="depth-3"><a href="#tdd-style-steps-8">TDD-style steps</a></li><li class="depth-3"><a href="#outputs-8">Outputs</a></li><li class="depth-3"><a href="#validation-criteria-8">Validation criteria</a></li><li class="depth-2"><a href="#df-08-add-interactionsession-reducer-and-authoritative-pending-lifecycle">DF-08 — Add InteractionSession reducer and authoritative pending lifecycle</a></li><li class="depth-3"><a href="#starting-requirements-and-inputs-9">Starting requirements and inputs</a></li><li class="depth-3"><a href="#tdd-style-steps-9">TDD-style steps</a></li><li class="depth-3"><a href="#outputs-9">Outputs</a></li><li class="depth-3"><a href="#validation-criteria-9">Validation criteria</a></li><li class="depth-2"><a href="#df-09-render-static-semantic-dom-field">DF-09 — Render static semantic DOM field</a></li><li class="depth-3"><a href="#starting-requirements-and-inputs-10">Starting requirements and inputs</a></li><li class="depth-3"><a href="#tdd-style-steps-10">TDD-style steps</a></li><li class="depth-3"><a href="#outputs-10">Outputs</a></li><li class="depth-3"><a href="#validation-criteria-10">Validation criteria</a></li><li class="depth-2"><a href="#df-10-connect-complete-pointer-field-workflows">DF-10 — Connect complete pointer field workflows</a></li><li class="depth-3"><a href="#starting-requirements-and-inputs-11">Starting requirements and inputs</a></li><li class="depth-3"><a href="#tdd-style-steps-11">TDD-style steps</a></li><li class="depth-3"><a href="#outputs-11">Outputs</a></li><li class="depth-3"><a href="#validation-criteria-11">Validation criteria</a></li><li class="depth-2"><a href="#df-11-add-hud-inspector-stacks-trays-rich-state">DF-11 — Add HUD, inspector, stacks/trays, rich state</a></li><li class="depth-3"><a href="#starting-requirements-and-inputs-12">Starting requirements and inputs</a></li><li class="depth-3"><a href="#tdd-style-steps-12">TDD-style steps</a></li><li class="depth-3"><a href="#outputs-12">Outputs</a></li><li class="depth-3"><a href="#validation-criteria-12">Validation criteria</a></li><li class="depth-2"><a href="#df-12-add-bounded-css-dom-svg-feedback">DF-12 — Add bounded CSS/DOM/SVG feedback</a></li><li class="depth-3"><a href="#starting-requirements-and-inputs-13">Starting requirements and inputs</a></li><li class="depth-3"><a href="#tdd-style-steps-13">TDD-style steps</a></li><li class="depth-3"><a href="#outputs-13">Outputs</a></li><li class="depth-3"><a href="#validation-criteria-13">Validation criteria</a></li><li class="depth-2"><a href="#df-13-lease-image-urls-and-remove-image-input-gate">DF-13 — Lease image URLs and remove image input gate</a></li><li class="depth-3"><a href="#starting-requirements-and-inputs-14">Starting requirements and inputs</a></li><li class="depth-3"><a href="#tdd-style-steps-14">TDD-style steps</a></li><li class="depth-3"><a href="#outputs-14">Outputs</a></li><li class="depth-3"><a href="#validation-criteria-14">Validation criteria</a></li><li class="depth-2"><a href="#df-14-add-spatial-keyboard-and-screen-reader-behavior">DF-14 — Add spatial keyboard and screen-reader behavior</a></li><li class="depth-3"><a href="#starting-requirements-and-inputs-15">Starting requirements and inputs</a></li><li class="depth-3"><a href="#tdd-style-steps-15">TDD-style steps</a></li><li class="depth-3"><a href="#outputs-15">Outputs</a></li><li class="depth-3"><a href="#validation-criteria-15">Validation criteria</a></li><li class="depth-2"><a href="#df-15-recompose-field-across-supported-viewports">DF-15 — Recompose field across supported viewports</a></li><li class="depth-3"><a href="#starting-requirements-and-inputs-16">Starting requirements and inputs</a></li><li class="depth-3"><a href="#tdd-style-steps-16">TDD-style steps</a></li><li class="depth-3"><a href="#outputs-16">Outputs</a></li><li class="depth-3"><a href="#validation-criteria-16">Validation criteria</a></li><li class="depth-2"><a href="#df-16-prove-semantic-visual-browser-resource-and-performance-parity">DF-16 — Prove semantic, visual, browser, resource, and performance parity</a></li><li class="depth-3"><a href="#starting-requirements-and-inputs-17">Starting requirements and inputs</a></li><li class="depth-3"><a href="#tdd-style-steps-17">TDD-style steps</a></li><li class="depth-3"><a href="#outputs-17">Outputs</a></li><li class="depth-3"><a href="#validation-criteria-17">Validation criteria</a></li><li class="depth-2"><a href="#df-17-remove-phaser-renderer-and-obsolete-bridge">DF-17 — Remove Phaser renderer and obsolete bridge</a></li><li class="depth-3"><a href="#starting-requirements-and-inputs-18">Starting requirements and inputs</a></li><li class="depth-3"><a href="#tdd-style-steps-18">TDD-style steps</a></li><li class="depth-3"><a href="#outputs-18">Outputs</a></li><li class="depth-3"><a href="#validation-criteria-18">Validation criteria</a></li><li class="depth-2"><a href="#completion-definition">Completion definition</a></li><li class="depth-2"><a href="#deferred-follow-up-decisions">Deferred follow-up decisions</a></li></ol></nav><main id="content"><section class="contract" aria-labelledby="skill-compare"><h2 id="skill-compare">make-plan-aron comparison</h2><p>HTML regeneration preserves approved plan. Template gaps stay explicit; no ticket facts invented.</p><div class="table-wrap"><table><thead><tr><th>Contract</th><th>Status</th><th>Finding</th></tr></thead><tbody><tr><td>Goal, scope, assumptions</td><td><span class="status pass">PASS</span></td><td>Present in source plan</td></tr><tr><td>Hard-dependency flowchart</td><td><span class="status pass">PASS</span></td><td>Mermaid graph plus parallel waves</td></tr><tr><td>Commit-sized ticket outcomes</td><td><span class="status pass">PASS</span></td><td>DF-00…DF-17 include commit subject, deps, outcome</td></tr><tr><td>Requirements / inputs split</td><td><span class="status gap">GAP</span></td><td>Source combines both under one heading</td></tr><tr><td>Red / Green / Refactor labels</td><td><span class="status gap">GAP</span></td><td>Red/Green present; Refactor not explicit in every ticket</td></tr><tr><td>Per-ticket test-plan table</td><td><span class="status gap">GAP</span></td><td>Assertions live in TDD steps, not separate tables</td></tr><tr><td>Impl steps separated from TDD</td><td><span class="status gap">GAP</span></td><td>Source interleaves implementation with TDD sequence</td></tr><tr><td>Outputs / validation / app gate</td><td><span class="status pass">PASS</span></td><td>Present per ticket</td></tr><tr><td>Required output set</td><td><span class="status pass">PASS</span></td><td>Markdown plan, HTML plan, numbered ADR, architecture HTML</td></tr></tbody></table></div></section><h1 id="dom-duel-field-implementation-plan" class="anchor-heading"><a class="heading-link" href="#dom-duel-field-implementation-plan" aria-label="Link to DOM Duel-Field Implementation Plan">#</a>DOM Duel-Field Implementation Plan</h1>
+<aside class="meta-block">Status: approved plan; implementation not started<br>Created: 2026-07-31<br>Scope: Standard-format desktop field → rich state → accessibility/responsive parity → Phaser removal<br>Architecture: <a href="../docs/duel-field-architecture.html"><code>architecture/05-presentation/duel-field-architecture.md</code></a><br>Decision: <a href="../docs/ADR/001_ADR_semantic_dom_duel_field_rendering.md"><code>architecture/05-presentation/duel-field-rendering.md</code></a><br>Validation catalog: <a href="../docs/duel-field-validation-references.html"><code>architecture/05-presentation/duel-field-validation-references.md</code></a></aside>
+<p>This plan supersedes no completed MVP history. <a href="../docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md"><code>MVP_TECHNICAL_IMPLEMENTATION_PLAN.md</code></a> remains audit record for released Phaser baseline. This document is canonical plan for DOM-field migration.</p>
+<h2 id="non-negotiable-constraints" class="anchor-heading"><a class="heading-link" href="#non-negotiable-constraints" aria-label="Link to Non-negotiable constraints">#</a>Non-negotiable constraints</h2>
+<ul class="content-list"><li><code>ocgcore</code> remains sole authority for legality, effects, state, and result.</li><li>Worker remains sole owner of WASM/raw protocol/response indexes.</li><li>Opponent hidden identities never cross Worker boundary or trigger image requests.</li><li>Standard two-player field only. No Speed/Rush/Tag abstraction.</li><li>Interactive field uses semantic DOM. No synchronized interactive canvas mirror.</li><li>Multi-select/allocation/order uses explicit Confirm.</li><li>Response pending survives intermediate state/events; only new prompt/result/recoverable error/runtime replacement ends it.</li><li>Images never block legal input.</li><li>No permanent animation loop. No spectacle/background work.</li><li>Each ticket is one reviewable commit, starts with failing test, leaves aggregate affected gates green.</li><li>If ticket exceeds described outputs, split it; do not absorb adjacent cleanup.</li></ul>
+<h2 id="tdd-protocol-for-every-code-ticket" class="anchor-heading"><a class="heading-link" href="#tdd-protocol-for-every-code-ticket" aria-label="Link to TDD protocol for every code ticket">#</a>TDD protocol for every code ticket</h2>
+<ol class="content-list"><li><strong>Red:</strong> add smallest fixture/test expressing missing behavior. Run focused command; record expected failure.</li><li><strong>Green:</strong> add minimum implementation. Run focused test until green.</li><li><strong>Refactor:</strong> remove only duplication introduced by ticket; retain behavior.</li><li><strong>Boundary:</strong> run typecheck plus affected unit/component/integration/browser layer.</li><li><strong>Commit:</strong> commit only ticket files using listed Conventional Commit subject.</li></ol>
+<p>Never implement behavior before reproducible failing test. Visual capture alone is not test; pair screenshots with semantic assertions.</p>
+<h2 id="dependency-graph" class="anchor-heading"><a class="heading-link" href="#dependency-graph" aria-label="Link to Dependency graph">#</a>Dependency graph</h2>
+<div class="diagram" role="img" aria-label="Ticket dependency graph"><pre class="mermaid">flowchart TD
+  D00[DF-00 Decision docs] --&gt; D01[DF-01 Fixed-slot projection]
+
+  D01 --&gt; D02[DF-02 Physical Standard zones]
+  D01 --&gt; D03[DF-03 Overlay and Extra projection]
+  D03 --&gt; D04[DF-04 Counters and chain provenance]
+  D01 --&gt; D05[DF-05 Bounded semantic log]
+
+  D02 --&gt; D07[DF-07 InteractionSpec]
+  D07 --&gt; D08[DF-08 InteractionSession and pending]
+
+  D02 --&gt; D06[DF-06 BoardViewModel]
+  D03 --&gt; D06
+  D04 --&gt; D06
+
+  D06 --&gt; D09[DF-09 Static semantic DOM field]
+  D08 --&gt; D10[DF-10 Field interaction workflows]
+  D09 --&gt; D10
+
+  D04 --&gt; D11[DF-11 HUD inspector trays]
+  D05 --&gt; D11
+  D09 --&gt; D11
+
+  D09 --&gt; D12[DF-12 DOM and SVG feedback]
+  D09 --&gt; D13[DF-13 Image leases and nonblocking input]
+
+  D10 --&gt; D14[DF-14 Keyboard and screen-reader UX]
+  D11 --&gt; D14
+
+  D10 --&gt; D15[DF-15 Responsive composition]
+  D11 --&gt; D15
+
+  D10 --&gt; D16[DF-16 Parity performance gate]
+  D11 --&gt; D16
+  D12 --&gt; D16
+  D13 --&gt; D16
+  D14 --&gt; D16
+  D15 --&gt; D16
+
+  D16 --&gt; D17[DF-17 Remove Phaser]
+
+  classDef domain fill:#19364a,stroke:#58cbe0,color:#fff;
+  classDef interaction fill:#302653,stroke:#ac92ff,color:#fff;
+  classDef ui fill:#173d31,stroke:#66d9a4,color:#fff;
+  classDef gate fill:#49351a,stroke:#f1c266,color:#fff;
+  class D01,D02,D03,D04,D05,D06 domain;
+  class D07,D08,D10 interaction;
+  class D09,D11,D12,D13,D14,D15 ui;
+  class D00,D16,D17 gate;</pre></div>
+<h2 id="start-gates-and-parallel-waves" class="anchor-heading"><a class="heading-link" href="#start-gates-and-parallel-waves" aria-label="Link to Start gates and parallel waves">#</a>Start gates and parallel waves</h2>
+<div class="table-wrap"><table><thead><tr>
+<th style="text-align:left">Ticket</th>
+<th style="text-align:left">Cannot start before</th>
+<th style="text-align:left">Merge-safe parallel work</th>
+</tr></thead><tbody>
+<tr>
+<td style="text-align:left">DF-00</td>
+<td style="text-align:left">none</td>
+<td style="text-align:left">none; decision freezes interfaces</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-01</td>
+<td style="text-align:left">DF-00</td>
+<td style="text-align:left">none; domain gate</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-02</td>
+<td style="text-align:left">DF-01</td>
+<td style="text-align:left">DF-03, DF-05</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-03</td>
+<td style="text-align:left">DF-01</td>
+<td style="text-align:left">DF-02, DF-05</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-04</td>
+<td style="text-align:left">DF-03</td>
+<td style="text-align:left">DF-02, DF-05, DF-07/08 after DF-02</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-05</td>
+<td style="text-align:left">DF-01</td>
+<td style="text-align:left">DF-02, DF-03/04</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-06</td>
+<td style="text-align:left">DF-02 + DF-03 + DF-04</td>
+<td style="text-align:left">DF-08, DF-05</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-07</td>
+<td style="text-align:left">DF-02</td>
+<td style="text-align:left">DF-03/04/05</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-08</td>
+<td style="text-align:left">DF-07</td>
+<td style="text-align:left">DF-03/04/05/06</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-09</td>
+<td style="text-align:left">DF-06</td>
+<td style="text-align:left">DF-08</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-10</td>
+<td style="text-align:left">DF-08 + DF-09</td>
+<td style="text-align:left">DF-11/12/13 after DF-09; coordinate final <code>DuelField.svelte</code> wiring</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-11</td>
+<td style="text-align:left">DF-04 + DF-05 + DF-09</td>
+<td style="text-align:left">DF-10/12/13; new focused components only</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-12</td>
+<td style="text-align:left">DF-09</td>
+<td style="text-align:left">DF-10/11/13; keep feedback controller isolated</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-13</td>
+<td style="text-align:left">DF-09</td>
+<td style="text-align:left">DF-10/11/12; keep cache/resource files isolated</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-14</td>
+<td style="text-align:left">DF-10 + DF-11</td>
+<td style="text-align:left">DF-15</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-15</td>
+<td style="text-align:left">DF-10 + DF-11</td>
+<td style="text-align:left">DF-14</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-16</td>
+<td style="text-align:left">DF-10 through DF-15 complete</td>
+<td style="text-align:left">none; convergence gate</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-17</td>
+<td style="text-align:left">DF-16 accepted</td>
+<td style="text-align:left">none; irreversible renderer removal</td>
+</tr>
+</tbody></table></div>
+<p>Practical parallel waves:</p>
+<pre class="code-block"><code class="language-text">Wave 0: DF-00 → DF-01                         serial
+Wave 1: DF-02 │ DF-03 → DF-04 │ DF-05          parallel lanes
+Wave 2: DF-07 → DF-08 │ DF-06                  parallel after dependencies
+Wave 3: DF-09                                  serial integration point
+Wave 4: DF-10 │ DF-11 │ DF-12 │ DF-13          parallel with frozen component APIs
+Wave 5: DF-14 │ DF-15                          parallel
+Wave 6: DF-16 → DF-17                          serial gates</code></pre>
+<h2 id="ticket-summary" class="anchor-heading"><a class="heading-link" href="#ticket-summary" aria-label="Link to Ticket summary">#</a>Ticket summary</h2>
+<div class="table-wrap"><table><thead><tr>
+<th style="text-align:left">ID</th>
+<th style="text-align:left">Commit</th>
+<th style="text-align:left">Working result</th>
+</tr></thead><tbody>
+<tr>
+<td style="text-align:left">DF-00</td>
+<td style="text-align:left"><code>docs: adopt semantic DOM duel field</code></td>
+<td style="text-align:left">Current ADR, architecture, plan, references</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-01</td>
+<td style="text-align:left"><code>fix: preserve fixed field sequences</code></td>
+<td style="text-align:left">Projector no longer dense-resequences field slots</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-02</td>
+<td style="text-align:left"><code>fix: model shared extra monster zones</code></td>
+<td style="text-align:left">Correct 34-slot Standard physical layout</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-03</td>
+<td style="text-align:left"><code>feat: project overlays and extra deck state</code></td>
+<td style="text-align:left">Useful material/Extra public state</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-04</td>
+<td style="text-align:left"><code>feat: project counters and chain provenance</code></td>
+<td style="text-align:left">Useful counters plus actual chain links</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-05</td>
+<td style="text-align:left"><code>feat: retain bounded semantic duel log</code></td>
+<td style="text-align:left">2,000-entry log separate from animation queue</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-06</td>
+<td style="text-align:left"><code>feat: derive semantic board view model</code></td>
+<td style="text-align:left">Renderer-neutral immutable board/nav model</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-07</td>
+<td style="text-align:left"><code>feat: derive field interaction specs</code></td>
+<td style="text-align:left">Pure prompt→field action contract</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-08</td>
+<td style="text-align:left"><code>feat: manage prompt interaction sessions</code></td>
+<td style="text-align:left">Draft/pending state keyed by runtime+prompt</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-09</td>
+<td style="text-align:left"><code>feat: render semantic DOM duel field</code></td>
+<td style="text-align:left">Static accessible board/cards/stacks</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-10</td>
+<td style="text-align:left"><code>feat: connect duel field interactions</code></td>
+<td style="text-align:left">Complete pointer field workflows</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-11</td>
+<td style="text-align:left"><code>feat: add duel HUD inspector and trays</code></td>
+<td style="text-align:left">Rich public state around board</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-12</td>
+<td style="text-align:left"><code>feat: add bounded DOM field feedback</code></td>
+<td style="text-align:left">CSS/SVG feedback, reduced-motion safe</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-13</td>
+<td style="text-align:left"><code>fix: lease card image object URLs</code></td>
+<td style="text-align:left">Mounted-image lifetime; input never blocked</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-14</td>
+<td style="text-align:left"><code>feat: add spatial keyboard field navigation</code></td>
+<td style="text-align:left">Keyboard/SR-complete field</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-15</td>
+<td style="text-align:left"><code>feat: adapt duel field across viewports</code></td>
+<td style="text-align:left">Narrow/portrait/zoom composition</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-16</td>
+<td style="text-align:left"><code>test: validate DOM field parity and budgets</code></td>
+<td style="text-align:left">Recorded semantic/visual/perf acceptance evidence</td>
+</tr>
+<tr>
+<td style="text-align:left">DF-17</td>
+<td style="text-align:left"><code>refactor: remove Phaser field renderer</code></td>
+<td style="text-align:left">No Phaser runtime/chunk/bridge/canvas tests</td>
+</tr>
+</tbody></table></div>
+<hr>
+<h2 id="df-00-record-renderer-decision-and-delivery-contract" class="anchor-heading ticket-heading"><a class="heading-link" href="#df-00-record-renderer-decision-and-delivery-contract" aria-label="Link to DF-00 — Record renderer decision and delivery contract">#</a>DF-00 — Record renderer decision and delivery contract</h2>
+<p><strong>Commit:</strong> <code>docs: adopt semantic DOM duel field</code></p>
+<h3 id="starting-requirements-and-inputs" class="anchor-heading"><a class="heading-link" href="#starting-requirements-and-inputs" aria-label="Link to Starting requirements and inputs">#</a>Starting requirements and inputs</h3>
+<ul class="content-list"><li>Validated canvas-vs-DOM recommendation.</li><li>Existing architecture governance in <code>docs/architecture/architecture.md</code>.</li><li>Existing Svelte–Phaser decision preserved as historical context.</li><li>No runtime source changes.</li></ul>
+<h3 id="tdd-style-steps" class="anchor-heading"><a class="heading-link" href="#tdd-style-steps" aria-label="Link to TDD-style steps">#</a>TDD-style steps</h3>
+<ol class="content-list"><li><strong>Red:</strong> grep current architecture for authoritative Phaser ownership links; list stale current-source paths.</li><li>Move superseded boundary document to <code>docs/archive/</code> and mark it superseded.</li><li>Add renderer ADR, detailed architecture, this plan, validation catalog, original wireframe.</li><li>Update architecture index, docs index, context, affected atomic decisions.</li><li><strong>Green:</strong> run Markdown link/path checker or scripted local-link scan; grep current architecture for stale authoritative Phaser rules.</li><li>Review external screenshot links and copyright restrictions.</li></ol>
+<h3 id="outputs" class="anchor-heading"><a class="heading-link" href="#outputs" aria-label="Link to Outputs">#</a>Outputs</h3>
+<ul class="content-list"><li>Durable accepted ADR.</li><li>One current detailed field architecture.</li><li>Ticket/dependency plan.</li><li>Rules/screenshot/schema reference catalog.</li><li>No competing current presentation decision.</li></ul>
+<h3 id="validation-criteria" class="anchor-heading"><a class="heading-link" href="#validation-criteria" aria-label="Link to Validation criteria">#</a>Validation criteria</h3>
+<ul class="content-list"><li>Every local Markdown link resolves.</li><li><code>docs/architecture/</code> contains no current statement assigning field authority to Phaser.</li><li>Archived file points to new ADR.</li><li><code>git diff --check</code> passes.</li><li>Architecture docs clearly distinguish accepted target from migration-pending implementation.</li></ul>
+<hr>
+<h2 id="df-01-preserve-sparse-fixed-slot-projection" class="anchor-heading ticket-heading"><a class="heading-link" href="#df-01-preserve-sparse-fixed-slot-projection" aria-label="Link to DF-01 — Preserve sparse fixed-slot projection">#</a>DF-01 — Preserve sparse fixed-slot projection</h2>
+<p><strong>Commit:</strong> <code>fix: preserve fixed field sequences</code></p>
+<h3 id="starting-requirements-and-inputs-2" class="anchor-heading"><a class="heading-link" href="#starting-requirements-and-inputs-2" aria-label="Link to Starting requirements and inputs">#</a>Starting requirements and inputs</h3>
+<ul class="content-list"><li>DF-00 merged.</li><li><code>src/worker/projection/DuelStateProjector.ts</code> current dense <code>splice(from.sequence)</code>/<code>resequence()</code> behavior.</li><li>Pinned core semantics: MZONE/SZONE fixed slots; hand/GY/banished/Extra ordered lists.</li><li>Existing projector fixtures/privacy invariants.</li></ul>
+<h3 id="tdd-style-steps-2" class="anchor-heading"><a class="heading-link" href="#tdd-style-steps-2" aria-label="Link to TDD-style steps">#</a>TDD-style steps</h3>
+<ol class="content-list"><li><strong>Red:</strong> extend <code>tests/unit/duel-state-projector.test.ts</code> with cards entering monster sequences <code>0</code>, <code>4</code>, <code>5</code>, <code>6</code> in non-dense order.</li><li>Move sequence <code>0</code> out; assert remaining sequences stay <code>4</code>, <code>5</code>, <code>6</code>.</li><li>Add Spell/Trap outer-slot and Field Zone cases; assert no resequencing.</li><li>Add duplicate fixed-slot destination fixture; require deterministic rejection/reconciliation, never silent alias.</li><li>Preserve ordered-zone tests proving hand/GY/banished resequence where protocol order changes.</li><li><strong>Green:</strong> introduce location policy helpers: fixed-slot find/remove/insert by <code>card.sequence</code>; ordered list remove/insert/resequence by index.</li><li>Route <code>#move</code> and <code>#changePosition</code> through policy helpers.</li><li>Refactor only projector-local mutation helpers; retain privacy/identity rotation.</li><li>Run projector, contract, real-WASM programmed-duel tests.</li></ol>
+<h3 id="outputs-2" class="anchor-heading"><a class="heading-link" href="#outputs-2" aria-label="Link to Outputs">#</a>Outputs</h3>
+<ul class="content-list"><li>Fixed-slot projection retaining authoritative sequence.</li><li>Explicit ordered-vs-fixed location policy.</li><li>Regression fixtures for <code>0/4/5/6</code> and duplicate occupancy.</li></ul>
+<h3 id="validation-criteria-2" class="anchor-heading"><a class="heading-link" href="#validation-criteria-2" aria-label="Link to Validation criteria">#</a>Validation criteria</h3>
+<ul class="content-list"><li>Focused: <code>npx vitest run tests/unit/duel-state-projector.test.ts</code>.</li><li><code>npm run test:unit</code> and <code>npm run test:integration</code> green.</li><li>Moving/removing one field card cannot move another card&#x27;s sequence.</li><li>Existing hidden-information/one-instance invariants remain green.</li><li>No presentation code changed.</li></ul>
+<hr>
+<h2 id="df-02-model-physical-standard-zones-and-shared-emzs" class="anchor-heading ticket-heading"><a class="heading-link" href="#df-02-model-physical-standard-zones-and-shared-emzs" aria-label="Link to DF-02 — Model physical Standard zones and shared EMZs">#</a>DF-02 — Model physical Standard zones and shared EMZs</h2>
+<p><strong>Commit:</strong> <code>fix: model shared extra monster zones</code></p>
+<h3 id="starting-requirements-and-inputs-3" class="anchor-heading"><a class="heading-link" href="#starting-requirements-and-inputs-3" aria-label="Link to Starting requirements and inputs">#</a>Starting requirements and inputs</h3>
+<ul class="content-list"><li>DF-01 merged.</li><li>Official Rulebook v10 game-mat schema (<code>RULE-01</code>).</li><li>Core collision relation (<code>CORE-01</code>).</li><li>Current <code>duel-field-layout.ts</code>, <code>card-mapping.ts</code>, field mapping tests.</li></ul>
+<h3 id="tdd-style-steps-3" class="anchor-heading"><a class="heading-link" href="#tdd-style-steps-3" aria-label="Link to TDD-style steps">#</a>TDD-style steps</h3>
+<ol class="content-list"><li><strong>Red:</strong> replace 44-zone expectation with 34 physical controls: 16 per player including hand lane, plus two shared EMZs.</li><li>Add table-driven engine-address mapping tests:</li></ol>
+<ul class="content-list"><li>p0 MZONE 0/4 → own main slots;</li><li>p0 s5/s6 → shared left/right;</li><li>p1 s5/s6 → shared right/left;</li><li>p0 s5 equals p1 s6 physical ID; p0 s6 equals p1 s5.</li></ul>
+<ol class="content-list"><li>Add SZONE tests: <code>0..4</code> only; Pendulum reuses <code>0/4</code>; Field Zone separate.</li><li>Add invalid sequence tests; unsupported address returns typed diagnostic/result, never fallback to sequence 0.</li><li><strong>Green:</strong> define <code>PhysicalZoneId</code>, <code>EngineFieldAddress</code>, Standard layout table, pure address mapper.</li><li>Replace owner-duplicated EMZ generation. Keep logical normalized coordinates renderer-neutral.</li><li>Adapt prompt place mapping to physical IDs.</li><li>Update existing Phaser mapper adapter only enough to remain green until removal.</li></ol>
+<h3 id="outputs-3" class="anchor-heading"><a class="heading-link" href="#outputs-3" aria-label="Link to Outputs">#</a>Outputs</h3>
+<ul class="content-list"><li>Rule-correct Standard physical layout.</li><li>Shared EMZ identity mapper.</li><li>Stable labels/IDs suitable for DOM and tests.</li></ul>
+<h3 id="validation-criteria-3" class="anchor-heading"><a class="heading-link" href="#validation-criteria-3" aria-label="Link to Validation criteria">#</a>Validation criteria</h3>
+<ul class="content-list"><li>Focused: <code>npx vitest run tests/unit/duel-field.test.ts</code>.</li><li>No duplicate physical IDs.</li><li>Exactly two EMZ layout entries.</li><li><code>ST-02</code>, <code>ST-03</code> fixture data available for later visual tests.</li><li><code>npm run typecheck &amp;&amp; npm run test:unit</code> green.</li></ul>
+<hr>
+<h2 id="df-03-project-overlay-materials-and-useful-extra-deck-state" class="anchor-heading ticket-heading"><a class="heading-link" href="#df-03-project-overlay-materials-and-useful-extra-deck-state" aria-label="Link to DF-03 — Project overlay materials and useful Extra Deck state">#</a>DF-03 — Project overlay materials and useful Extra Deck state</h2>
+<p><strong>Commit:</strong> <code>feat: project overlays and extra deck state</code></p>
+<h3 id="starting-requirements-and-inputs-4" class="anchor-heading"><a class="heading-link" href="#starting-requirements-and-inputs-4" aria-label="Link to Starting requirements and inputs">#</a>Starting requirements and inputs</h3>
+<ul class="content-list"><li>DF-01 merged.</li><li>Current <code>PublicCard.overlayMaterials</code> empty ID list and <code>extraDeckCount</code> only.</li><li>Wrapper query fields <code>overlayCards</code> plus core overlay MOVE semantics.</li><li>Active preset deck definitions and privacy rules.</li></ul>
+<h3 id="tdd-style-steps-4" class="anchor-heading"><a class="heading-link" href="#tdd-style-steps-4" aria-label="Link to TDD-style steps">#</a>TDD-style steps</h3>
+<ol class="content-list"><li><strong>Red:</strong> add parsed-message/projector fixtures for attach material, multiple materials, detach, host move, hidden/public transitions.</li><li>Assert material never appears simultaneously as top-level field card and overlay.</li><li>Add own Extra Deck plus opponent face-up/face-down privacy fixtures. Assert hidden opponent identity absent from JSON, boundary clone, image requests.</li><li>Define public material summary/Extra collection shape. Keep counts authoritative even when identities unavailable.</li><li><strong>Green:</strong> classify overlay move/query records in adapter; attach/detach by stable instance identity/order.</li><li>Seed/reconcile human-owned Extra identities from trusted preset/query evidence; expose opponent only when public.</li><li>Extend <code>parseDuelWorkerEvent</code> exact-key/size/privacy validation.</li><li>Adapt opponent-visible state so policy receives no new private identities.</li><li>Add real-WASM compatibility scenario when reachable; otherwise permanent binary fixture plus query test.</li></ol>
+<h3 id="outputs-4" class="anchor-heading"><a class="heading-link" href="#outputs-4" aria-label="Link to Outputs">#</a>Outputs</h3>
+<ul class="content-list"><li>Populated privacy-safe overlay material state.</li><li>Useful own/public Extra Deck collection plus count.</li><li>Boundary validation and deterministic material ordering.</li></ul>
+<h3 id="validation-criteria-4" class="anchor-heading"><a class="heading-link" href="#validation-criteria-4" aria-label="Link to Validation criteria">#</a>Validation criteria</h3>
+<ul class="content-list"><li>New projector/contract fixtures green.</li><li>One physical instance invariant includes materials and Extra collection.</li><li>Opponent hidden Extra identities absent after <code>structuredClone</code> and JSON serialization.</li><li><code>npm run test:unit &amp;&amp; npm run test:integration &amp;&amp; npm run typecheck</code> green.</li></ul>
+<hr>
+<h2 id="df-04-project-counters-and-actual-chain-provenance" class="anchor-heading ticket-heading"><a class="heading-link" href="#df-04-project-counters-and-actual-chain-provenance" aria-label="Link to DF-04 — Project counters and actual chain provenance">#</a>DF-04 — Project counters and actual chain provenance</h2>
+<p><strong>Commit:</strong> <code>feat: project counters and chain provenance</code></p>
+<h3 id="starting-requirements-and-inputs-5" class="anchor-heading"><a class="heading-link" href="#starting-requirements-and-inputs-5" aria-label="Link to Starting requirements and inputs">#</a>Starting requirements and inputs</h3>
+<ul class="content-list"><li>DF-03 merged.</li><li>Wrapper supports <code>ADD_COUNTER</code>, <code>REMOVE_COUNTER</code>, card query <code>counters</code>, rich <code>CHAINING</code> records.</li><li>Active strings include counter names/effect text.</li><li>Current projector emits synthetic chain links from chain size only.</li></ul>
+<h3 id="tdd-style-steps-5" class="anchor-heading"><a class="heading-link" href="#tdd-style-steps-5" aria-label="Link to TDD-style steps">#</a>TDD-style steps</h3>
+<ol class="content-list"><li><strong>Red:</strong> add adapter/projector fixtures for add/remove counters, multiple counter types, underflow/malformed removal, host card movement.</li><li>Add chain fixtures: append link from <code>CHAINING</code>; transition solving/solved/negated/disabled; clear on <code>CHAIN_END</code>.</li><li>Add privacy fixture where chain source card identity is concealed; retain safe label/status only.</li><li>Define <code>PublicCounter</code> and expanded <code>PublicChainLink</code> focused contracts.</li><li><strong>Green:</strong> classify message constants/types and update projector state by fixed card address.</li><li>Resolve counter names from trusted string table with deterministic fallback.</li><li>Replace <code>#chainSize</code> synthetic array with actual immutable chain records.</li><li>Add reconciliation path for query-provided counters where event stream is incomplete.</li><li>Extend exact-key/recursive bounds and opponent-policy projection.</li><li>Add presentation events only when useful; do not duplicate public truth in animation event.</li></ol>
+<h3 id="outputs-5" class="anchor-heading"><a class="heading-link" href="#outputs-5" aria-label="Link to Outputs">#</a>Outputs</h3>
+<ul class="content-list"><li>Per-card public counter collections.</li><li>Ordered chain links with public source/controller/description/status.</li><li>No fabricated chain controller/card values.</li></ul>
+<h3 id="validation-criteria-5" class="anchor-heading"><a class="heading-link" href="#validation-criteria-5" aria-label="Link to Validation criteria">#</a>Validation criteria</h3>
+<ul class="content-list"><li>Counter underflow/unknown address fails deterministically or triggers reconciliation.</li><li>Chain order/status survives clone validation.</li><li>Hidden identities absent from chain/card labels.</li><li><code>npm run test:unit &amp;&amp; npm run test:integration &amp;&amp; npm run typecheck</code> green.</li></ul>
+<hr>
+<h2 id="df-05-separate-bounded-semantic-log-from-feedback-queue" class="anchor-heading ticket-heading"><a class="heading-link" href="#df-05-separate-bounded-semantic-log-from-feedback-queue" aria-label="Link to DF-05 — Separate bounded semantic log from feedback queue">#</a>DF-05 — Separate bounded semantic log from feedback queue</h2>
+<p><strong>Commit:</strong> <code>feat: retain bounded semantic duel log</code></p>
+<h3 id="starting-requirements-and-inputs-6" class="anchor-heading"><a class="heading-link" href="#starting-requirements-and-inputs-6" aria-label="Link to Starting requirements and inputs">#</a>Starting requirements and inputs</h3>
+<ul class="content-list"><li>DF-01 merged.</li><li>Current store truncates both <code>events</code> and sequenced presentation events to 100.</li><li>Diagnostics remain separately bounded/sensitive.</li></ul>
+<h3 id="tdd-style-steps-6" class="anchor-heading"><a class="heading-link" href="#tdd-style-steps-6" aria-label="Link to TDD-style steps">#</a>TDD-style steps</h3>
+<ol class="content-list"><li><strong>Red:</strong> store reducer test feeds &gt;100 semantic events; assert all remain while presentation queue keeps last 100.</li><li>Feed &gt;2,000 events; assert oldest entries truncate once, visible truncation marker appears, memory does not grow unbounded.</li><li>Assert restart/runtime replacement clears both collections.</li><li>Assert duplicate state application does not duplicate log rows.</li><li>Define immutable <code>DuelLogEntry</code> with monotonic sequence plus formatted privacy-safe text/source event.</li><li><strong>Green:</strong> split 2,000-entry <code>duelLog</code> from <code>presentationEvents</code>; keep 100-entry queue for transient feedback.</li><li>Preserve current diagnostics bounds and sensitive-data rules.</li><li>Add formatter exhaustive tests for new counter/chain events if DF-04 already merged; otherwise integrate by rebase.</li></ol>
+<h3 id="outputs-6" class="anchor-heading"><a class="heading-link" href="#outputs-6" aria-label="Link to Outputs">#</a>Outputs</h3>
+<ul class="content-list"><li>Privacy-safe semantic log capped at 2,000 entries with explicit truncation marker.</li><li>Existing 100-entry animation/feedback queue.</li><li>Stable sequence keys for DOM log.</li></ul>
+<h3 id="validation-criteria-6" class="anchor-heading"><a class="heading-link" href="#validation-criteria-6" aria-label="Link to Validation criteria">#</a>Validation criteria</h3>
+<ul class="content-list"><li>Store unit tests cover &gt;100, &gt;2,000, restart, stale context.</li><li>No raw protocol or hidden identity in log entries.</li><li><code>npm run test:unit &amp;&amp; npm run typecheck</code> green.</li></ul>
+<hr>
+<h2 id="df-06-derive-renderer-neutral-boardviewmodel" class="anchor-heading ticket-heading"><a class="heading-link" href="#df-06-derive-renderer-neutral-boardviewmodel" aria-label="Link to DF-06 — Derive renderer-neutral `BoardViewModel`">#</a>DF-06 — Derive renderer-neutral <code>BoardViewModel</code></h2>
+<p><strong>Commit:</strong> <code>feat: derive semantic board view model</code></p>
+<h3 id="starting-requirements-and-inputs-7" class="anchor-heading"><a class="heading-link" href="#starting-requirements-and-inputs-7" aria-label="Link to Starting requirements and inputs">#</a>Starting requirements and inputs</h3>
+<ul class="content-list"><li>DF-02, DF-03, DF-04 merged.</li><li>Physical layout/address mapper.</li><li>Expanded immutable public state.</li><li>Current <code>card-mapping.ts</code> behavior/tests.</li></ul>
+<h3 id="tdd-style-steps-7" class="anchor-heading"><a class="heading-link" href="#tdd-style-steps-7" aria-label="Link to TDD-style steps">#</a>TDD-style steps</h3>
+<ol class="content-list"><li><strong>Red:</strong> table-driven mapper tests for <code>ST-01</code> through <code>ST-08</code>: empty/occupied fixed slots, shared EMZ, positions, hidden hands, counters, materials, chains/stacks.</li><li>Assert mapping same snapshot twice is deeply equal and stable-keyed.</li><li>Assert impossible duplicate physical occupancy returns diagnostic/error instead of last-write-wins.</li><li>Assert closed collection stacks contain counts/summaries, not permanently mounted card lists.</li><li>Add initial spatial-neighbor graph tests for main rows/shared EMZ/stack controls.</li><li><strong>Green:</strong> create focused board-view contracts and pure mapper; adapt/remove Phaser-specific <code>FieldSnapshotView</code> use only when consumers migrate.</li><li>Normalize coordinates to <code>0..1</code>; preserve aspect-independent physical data.</li><li>Build privacy-safe accessible labels from public card text/state.</li></ol>
+<h3 id="outputs-7" class="anchor-heading"><a class="heading-link" href="#outputs-7" aria-label="Link to Outputs">#</a>Outputs</h3>
+<ul class="content-list"><li>Immutable <code>BoardViewModel</code> with zones/cards/stacks/nav.</li><li>Stable target IDs and accessible labels.</li><li>No renderer imports.</li></ul>
+<h3 id="validation-criteria-7" class="anchor-heading"><a class="heading-link" href="#validation-criteria-7" aria-label="Link to Validation criteria">#</a>Validation criteria</h3>
+<ul class="content-list"><li>Mapper unit tests green and contain no DOM/Phaser setup.</li><li>Every visible public card maps exactly once.</li><li>Every field prompt target can resolve to stable board target or explicit non-field fallback.</li><li><code>npm run test:unit &amp;&amp; npm run typecheck</code> green.</li></ul>
+<hr>
+<h2 id="df-07-derive-discriminated-interactionspec" class="anchor-heading ticket-heading"><a class="heading-link" href="#df-07-derive-discriminated-interactionspec" aria-label="Link to DF-07 — Derive discriminated `InteractionSpec`">#</a>DF-07 — Derive discriminated <code>InteractionSpec</code></h2>
+<p><strong>Commit:</strong> <code>feat: derive field interaction specs</code></p>
+<h3 id="starting-requirements-and-inputs-8" class="anchor-heading"><a class="heading-link" href="#starting-requirements-and-inputs-8" aria-label="Link to Starting requirements and inputs">#</a>Starting requirements and inputs</h3>
+<ul class="content-list"><li>DF-02 merged.</li><li>Current <code>PlayerPrompt</code>, <code>promptControlFamily</code>, <code>validatePromptSelection</code>, prompt registry fixtures.</li><li>Physical zone IDs and card address resolver.</li></ul>
+<h3 id="tdd-style-steps-8" class="anchor-heading"><a class="heading-link" href="#tdd-style-steps-8" aria-label="Link to TDD-style steps">#</a>TDD-style steps</h3>
+<ol class="content-list"><li><strong>Red:</strong> add one spec fixture per prompt family: action, single card, multi/tribute/sum, unselect, place/disabled field, counter, order, non-field.</li><li>Assert multiple actions on same card remain distinct opaque choices.</li><li>Assert positional prompt cards resolve to public instance/physical target; unresolved targets route to semantic prompt fallback.</li><li>Assert spec contains no selected/order/allocation mutable state.</li><li>Assert malformed/unknown choices cannot become field targets.</li><li><strong>Green:</strong> implement discriminated spec mapper and <code>InteractionKey(workerGeneration, sessionGeneration, promptId)</code>.</li><li>Reuse existing control-family/validation logic; no duplicate min/max/sum legality algorithm.</li><li>Add readonly target maps for card/zone/global choices.</li></ol>
+<h3 id="outputs-8" class="anchor-heading"><a class="heading-link" href="#outputs-8" aria-label="Link to Outputs">#</a>Outputs</h3>
+<ul class="content-list"><li>Pure prompt-derived <code>InteractionSpec</code> union.</li><li>Explicit field-capable versus non-field prompt behavior.</li><li>Stable interaction key.</li></ul>
+<h3 id="validation-criteria-8" class="anchor-heading"><a class="heading-link" href="#validation-criteria-8" aria-label="Link to Validation criteria">#</a>Validation criteria</h3>
+<ul class="content-list"><li>All current <code>PromptKind</code> values classified exhaustively.</li><li>Existing prompt selection tests unchanged/green.</li><li>Spec serialization contains only domain IDs/data; no elements/functions.</li><li><code>npm run test:unit &amp;&amp; npm run typecheck</code> green.</li></ul>
+<hr>
+<h2 id="df-08-add-interactionsession-reducer-and-authoritative-pending-lifecycle" class="anchor-heading ticket-heading"><a class="heading-link" href="#df-08-add-interactionsession-reducer-and-authoritative-pending-lifecycle" aria-label="Link to DF-08 — Add `InteractionSession` reducer and authoritative pending lifecycle">#</a>DF-08 — Add <code>InteractionSession</code> reducer and authoritative pending lifecycle</h2>
+<p><strong>Commit:</strong> <code>feat: manage prompt interaction sessions</code></p>
+<h3 id="starting-requirements-and-inputs-9" class="anchor-heading"><a class="heading-link" href="#starting-requirements-and-inputs-9" aria-label="Link to Starting requirements and inputs">#</a>Starting requirements and inputs</h3>
+<ul class="content-list"><li>DF-07 merged.</li><li>Current store <code>responsePending</code> logic/generation context.</li><li>Existing stale prompt registry/client behavior.</li></ul>
+<h3 id="tdd-style-steps-9" class="anchor-heading"><a class="heading-link" href="#tdd-style-steps-9" aria-label="Link to TDD-style steps">#</a>TDD-style steps</h3>
+<ol class="content-list"><li><strong>Red:</strong> pure reducer tests for new key reset, target toggle, explicit confirm, cancel, allocation max/total, order, stale action ignored, menu open/close.</li><li>Add store reducer regression: valid response → pending; intermediate <code>state</code>/presentation event leaves pending true and prompt locked.</li><li>Add completion tests: new prompt key, result, recoverable invalid/stale response, terminal error, worker/session replacement.</li><li>Add duplicate submit test across field and <code>PromptControls</code>; exactly one Worker <code>respond</code> command.</li><li><strong>Green:</strong> implement pure session reducer and store/session adapter.</li><li>Keep pending authority in store; local session mirrors submitting only after store accepts response.</li><li>Ensure recoverable error restores editing draft/focus target where still valid; generation change discards all draft state.</li><li>Preserve current prompt validation before client call.</li></ol>
+<h3 id="outputs-9" class="anchor-heading"><a class="heading-link" href="#outputs-9" aria-label="Link to Outputs">#</a>Outputs</h3>
+<ul class="content-list"><li>Pure interaction draft reducer.</li><li>Explicit pending state machine keyed by runtime+prompt.</li><li>Double-submit/stale-action protection.</li></ul>
+<h3 id="validation-criteria-9" class="anchor-heading"><a class="heading-link" href="#validation-criteria-9" aria-label="Link to Validation criteria">#</a>Validation criteria</h3>
+<ul class="content-list"><li>Snapshot alone never unlocks submitted prompt.</li><li>Old prompt actions after new key produce no state/command.</li><li>Exactly one command per accepted submit.</li><li>Focused store/session tests, <code>npm run test:unit</code>, <code>npm run typecheck</code> green.</li></ul>
+<hr>
+<h2 id="df-09-render-static-semantic-dom-field" class="anchor-heading ticket-heading"><a class="heading-link" href="#df-09-render-static-semantic-dom-field" aria-label="Link to DF-09 — Render static semantic DOM field">#</a>DF-09 — Render static semantic DOM field</h2>
+<p><strong>Commit:</strong> <code>feat: render semantic DOM duel field</code></p>
+<h3 id="starting-requirements-and-inputs-10" class="anchor-heading"><a class="heading-link" href="#starting-requirements-and-inputs-10" aria-label="Link to Starting requirements and inputs">#</a>Starting requirements and inputs</h3>
+<ul class="content-list"><li>DF-06 merged.</li><li>Existing CSS tokens/card images.</li><li>Local wireframe plus <code>ST-01..04</code>/<code>VP-01..02</code> references.</li><li>DF-08 may proceed in parallel; no App wiring yet.</li></ul>
+<h3 id="tdd-style-steps-10" class="anchor-heading"><a class="heading-link" href="#tdd-style-steps-10" aria-label="Link to TDD-style steps">#</a>TDD-style steps</h3>
+<ol class="content-list"><li><strong>Red:</strong> add <code>DuelField</code> component test expecting named region, 34 stable physical zone nodes/labels, two shared EMZs, keyed visible/hidden cards, stack counts.</li><li>Assert no <code>&lt;canvas&gt;</code>, no duplicate EMZ controls, no hidden opponent card identity/alt text.</li><li>Assert defense/opponent orientation exposed by DOM class/data state plus readable accessible label.</li><li><strong>Green:</strong> create <code>FieldBoard</code>, <code>ZoneControl</code>, <code>CardControl</code>, <code>StackControl</code> focused components from <code>BoardViewModel</code>.</li><li>Use native buttons only where inspect/action exists; passive empty slots remain labelled unless prompt later makes actionable.</li><li>Position via CSS custom properties/percentages; define explicit layer tokens.</li><li>Render placeholder/back immediately; avoid image readiness dependency.</li><li>Keep component isolated from Worker/store; do not replace App&#x27;s Phaser host in this ticket.</li></ol>
+<h3 id="outputs-10" class="anchor-heading"><a class="heading-link" href="#outputs-10" aria-label="Link to Outputs">#</a>Outputs</h3>
+<ul class="content-list"><li>Testable static DOM field component tree.</li><li>Correct physical board, cards, stack summaries.</li><li>No runtime behavior change outside component harness.</li></ul>
+<h3 id="validation-criteria-10" class="anchor-heading"><a class="heading-link" href="#validation-criteria-10" aria-label="Link to Validation criteria">#</a>Validation criteria</h3>
+<ul class="content-list"><li><code>npm run test:component</code> green.</li><li>Testing Library finds card/stack/zone by role/name, not <code>data-testid</code> coordinates.</li><li>Component imports no Phaser/Worker modules.</li><li>Screenshot <code>ST-01..04</code> at VP-01/02 reviewed against wireframe/rule refs.</li></ul>
+<hr>
+<h2 id="df-10-connect-complete-pointer-field-workflows" class="anchor-heading ticket-heading"><a class="heading-link" href="#df-10-connect-complete-pointer-field-workflows" aria-label="Link to DF-10 — Connect complete pointer field workflows">#</a>DF-10 — Connect complete pointer field workflows</h2>
+<p><strong>Commit:</strong> <code>feat: connect duel field interactions</code></p>
+<h3 id="starting-requirements-and-inputs-11" class="anchor-heading"><a class="heading-link" href="#starting-requirements-and-inputs-11" aria-label="Link to Starting requirements and inputs">#</a>Starting requirements and inputs</h3>
+<ul class="content-list"><li>DF-08 + DF-09 merged.</li><li>Existing App/store/PromptControls response path.</li><li><code>InteractionSpec</code>/session reducer.</li><li><code>ST-05..07</code>, MD-02 comparison reference.</li></ul>
+<h3 id="tdd-style-steps-11" class="anchor-heading"><a class="heading-link" href="#tdd-style-steps-11" aria-label="Link to TDD-style steps">#</a>TDD-style steps</h3>
+<ol class="content-list"><li><strong>Red:</strong> component tests command-card action menus, zone selection, multi-select, sum, unselect, counter allocation, order, cancel/finish/pass.</li><li>Assert activation occurs on click/pointer-up, not <code>pointerdown</code>; movement-cancel fixture prevents accidental action.</li><li>Assert command-target cards expose anchored legal-action/Inspect menu even with one legal action; selection-family card activation toggles draft only and never hides inspection access.</li><li>Assert multi/place/counter/order workflows do not submit before explicit Confirm.</li><li>Assert Confirm disabled until <code>validatePromptSelection</code> passes; recoverable error unlocks without duplicate.</li><li><strong>Green:</strong> connect DOM controls to spec/session reducer and existing store callback.</li><li>Implement <code>FieldActionMenu</code> plus <code>SelectionDock</code>; anchor from target DOMRect and update on resize/scroll.</li><li>Wire new DOM field into <code>App.svelte</code>. Keep <code>PromptControls</code> for non-field prompts and semantic fallback.</li><li>Replace canvas pointer assertions in focused E2E with role/name/state assertions; leave Phaser source/dependency present until DF-17.</li></ol>
+<h3 id="outputs-11" class="anchor-heading"><a class="heading-link" href="#outputs-11" aria-label="Link to Outputs">#</a>Outputs</h3>
+<ul class="content-list"><li>Complete pointer-driven field response path.</li><li>Anchored action menu, explicit selection dock.</li><li>App uses DOM field; old Phaser files become dormant pending removal.</li></ul>
+<h3 id="validation-criteria-11" class="anchor-heading"><a class="heading-link" href="#validation-criteria-11" aria-label="Link to Validation criteria">#</a>Validation criteria</h3>
+<ul class="content-list"><li>Every reachable field-capable prompt family emits expected opaque choice list once.</li><li>Pointer and prompt panel share store validation/pending lock.</li><li><code>npm run test:component</code> plus focused Chromium E2E green.</li><li>No direct Worker import/call from field components.</li><li><code>ST-05..07</code>, <code>ST-11..12</code> semantic assertions green.</li></ul>
+<hr>
+<h2 id="df-11-add-hud-inspector-stacks-trays-rich-state" class="anchor-heading ticket-heading"><a class="heading-link" href="#df-11-add-hud-inspector-stacks-trays-rich-state" aria-label="Link to DF-11 — Add HUD, inspector, stacks/trays, rich state">#</a>DF-11 — Add HUD, inspector, stacks/trays, rich state</h2>
+<p><strong>Commit:</strong> <code>feat: add duel HUD inspector and trays</code></p>
+<h3 id="starting-requirements-and-inputs-12" class="anchor-heading"><a class="heading-link" href="#starting-requirements-and-inputs-12" aria-label="Link to Starting requirements and inputs">#</a>Starting requirements and inputs</h3>
+<ul class="content-list"><li>DF-04 + DF-05 + DF-09 merged.</li><li>Expanded public counters/materials/chain, bounded semantic log.</li><li>Existing App summary/inspector/log behavior.</li><li>LE-01/02 plus MD-01 hierarchy references.</li></ul>
+<h3 id="tdd-style-steps-12" class="anchor-heading"><a class="heading-link" href="#tdd-style-steps-12" aria-label="Link to TDD-style steps">#</a>TDD-style steps</h3>
+<ol class="content-list"><li><strong>Red:</strong> component tests for LP/turn/phase, chain provenance/status, counter/material badges, public inspector, stack tray open/close, log &gt;100 entries plus truncation marker.</li><li>Add privacy tests for hidden stack/card labels and image requests.</li><li>Add tray test with 60 controls: closed tray mounts none; open tray mounts bounded/page-visible content; focus enters/returns correctly (focus details completed DF-14).</li><li><strong>Green:</strong> create <code>DuelHud</code>, <code>CardInspector</code>, <code>CardTray</code>, chain/log components.</li><li>Move duplicated App field-adjacent summary into focused components only after parity tests.</li><li>Keep deck/hidden Extra as count-only; show contents only when public/owned contract permits.</li><li>Surface counters/materials without color-only meaning.</li><li>Preserve existing surrender/result/diagnostics outside field.</li></ol>
+<h3 id="outputs-12" class="anchor-heading"><a class="heading-link" href="#outputs-12" aria-label="Link to Outputs">#</a>Outputs</h3>
+<ul class="content-list"><li>Field-centric HUD/inspector/trays/log.</li><li>Rich contract data visible without invented values.</li><li>Large collections mounted on demand.</li></ul>
+<h3 id="validation-criteria-12" class="anchor-heading"><a class="heading-link" href="#validation-criteria-12" aria-label="Link to Validation criteria">#</a>Validation criteria</h3>
+<ul class="content-list"><li><code>npm run test:component &amp;&amp; npm run typecheck</code> green.</li><li>No identity leaks in DOM/accessibility tree/network capture.</li><li><code>ST-07..09</code> pass semantic assertions.</li><li>Visual hierarchy compared against MD-01 and LE-01/02, not pixel-copied.</li></ul>
+<hr>
+<h2 id="df-12-add-bounded-css-dom-svg-feedback" class="anchor-heading ticket-heading"><a class="heading-link" href="#df-12-add-bounded-css-dom-svg-feedback" aria-label="Link to DF-12 — Add bounded CSS/DOM/SVG feedback">#</a>DF-12 — Add bounded CSS/DOM/SVG feedback</h2>
+<p><strong>Commit:</strong> <code>feat: add bounded DOM field feedback</code></p>
+<h3 id="starting-requirements-and-inputs-13" class="anchor-heading"><a class="heading-link" href="#starting-requirements-and-inputs-13" aria-label="Link to Starting requirements and inputs">#</a>Starting requirements and inputs</h3>
+<ul class="content-list"><li>DF-09 merged.</li><li>Existing <code>presentation-command.ts</code> and sequenced bounded feedback queue.</li><li>Adjacent snapshots/stable card IDs.</li></ul>
+<h3 id="tdd-style-steps-13" class="anchor-heading"><a class="heading-link" href="#tdd-style-steps-13" aria-label="Link to TDD-style steps">#</a>TDD-style steps</h3>
+<ol class="content-list"><li><strong>Red:</strong> unit tests map move/summon/set/position/LP/chain/attack events to bounded DOM feedback; unknown endpoints degrade to notice.</li><li>Component tests assert final state, classes, ARIA-hidden SVG line, cancellation on new generation/restart.</li><li>Reduced-motion test requires duration 0/no movement while final highlight/text remains.</li><li><strong>Green:</strong> adapt presentation scheduler to DOM controller; use CSS transitions/WAAPI only for bounded commands.</li><li>Add pointer-transparent <code>FieldLines.svelte</code> for attack/target lines when both DOMRects resolve.</li><li>No permanent RAF; use transition/animation completion plus abort/generation token.</li><li>Ensure animation never blocks store/response path.</li></ol>
+<h3 id="outputs-13" class="anchor-heading"><a class="heading-link" href="#outputs-13" aria-label="Link to Outputs">#</a>Outputs</h3>
+<ul class="content-list"><li>Restrained movement/highlight/notice feedback.</li><li>Optional SVG lines, no Canvas/Phaser dependency.</li><li>Deterministic cancellation and reduced-motion behavior.</li></ul>
+<h3 id="validation-criteria-13" class="anchor-heading"><a class="heading-link" href="#validation-criteria-13" aria-label="Link to Validation criteria">#</a>Validation criteria</h3>
+<ul class="content-list"><li>Fake-timer tests leave zero active timers/animations after cancel.</li><li>SVG receives no pointer/focus and is <code>aria-hidden</code>.</li><li>Worker response timing unchanged.</li><li>Unit/component reduced-motion tests green.</li></ul>
+<hr>
+<h2 id="df-13-lease-image-urls-and-remove-image-input-gate" class="anchor-heading ticket-heading"><a class="heading-link" href="#df-13-lease-image-urls-and-remove-image-input-gate" aria-label="Link to DF-13 — Lease image URLs and remove image input gate">#</a>DF-13 — Lease image URLs and remove image input gate</h2>
+<p><strong>Commit:</strong> <code>fix: lease card image object URLs</code></p>
+<h3 id="starting-requirements-and-inputs-14" class="anchor-heading"><a class="heading-link" href="#starting-requirements-and-inputs-14" aria-label="Link to Starting requirements and inputs">#</a>Starting requirements and inputs</h3>
+<ul class="content-list"><li>DF-09 merged.</li><li>Existing verified blob/cache pipeline and <code>CardImageCache</code> eager object URLs.</li><li>Architecture rule: image I/O never blocks prompt.</li><li><code>ST-09</code>, <code>ST-10</code>, restart lifecycle.</li></ul>
+<h3 id="tdd-style-steps-14" class="anchor-heading"><a class="heading-link" href="#tdd-style-steps-14" aria-label="Link to TDD-style steps">#</a>TDD-style steps</h3>
+<ol class="content-list"><li><strong>Red:</strong> mock <code>URL.createObjectURL</code>/<code>revokeObjectURL</code>; mount/unmount/reopen tray/restart. Assert one URL per active code lease and final revocation.</li><li>Add slow/failed image test: prompt/field controls enabled immediately with placeholder/back.</li><li>Add privacy test: hidden opponent identities create no URL/request.</li><li>Add generation test: old snapshot URLs revoked; late image resolution cannot mutate new generation.</li><li><strong>Green:</strong> cache verified blobs/receipts; create object URLs lazily for mounted/soon-visible image leases.</li><li>Reference-count/deduplicate leases by snapshot+code; release on final consumer/unmount/restart.</li><li>Remove <code>imageLoading</code> from legal input disabled condition; image status remains diagnostic/UI only.</li><li>Use native <code>&lt;img&gt;</code> decoding/error fallback; preserve deterministic placeholder.</li></ol>
+<h3 id="outputs-14" class="anchor-heading"><a class="heading-link" href="#outputs-14" aria-label="Link to Outputs">#</a>Outputs</h3>
+<ul class="content-list"><li>Bounded mount-driven object URL lifecycle.</li><li>Immediate legal input independent of image loading.</li><li>No Phaser texture stage for active DOM field.</li></ul>
+<h3 id="validation-criteria-14" class="anchor-heading"><a class="heading-link" href="#validation-criteria-14" aria-label="Link to Validation criteria">#</a>Validation criteria</h3>
+<ul class="content-list"><li>Object URL count returns to baseline after tray close/restart/destroy.</li><li>Slow/failing image cannot delay Worker response.</li><li>Existing cache integrity/provider tests remain green.</li><li>Unit/component/E2E <code>ST-10</code> green.</li></ul>
+<hr>
+<h2 id="df-14-add-spatial-keyboard-and-screen-reader-behavior" class="anchor-heading ticket-heading"><a class="heading-link" href="#df-14-add-spatial-keyboard-and-screen-reader-behavior" aria-label="Link to DF-14 — Add spatial keyboard and screen-reader behavior">#</a>DF-14 — Add spatial keyboard and screen-reader behavior</h2>
+<p><strong>Commit:</strong> <code>feat: add spatial keyboard field navigation</code></p>
+<h3 id="starting-requirements-and-inputs-15" class="anchor-heading"><a class="heading-link" href="#starting-requirements-and-inputs-15" aria-label="Link to Starting requirements and inputs">#</a>Starting requirements and inputs</h3>
+<ul class="content-list"><li>DF-10 + DF-11 merged.</li><li>Board nav graph, all interactive components, APG grid guidance.</li><li>Existing keyboard-complete <code>PromptControls</code>.</li><li>A11Y-01 through A11Y-05.</li></ul>
+<h3 id="tdd-style-steps-15" class="anchor-heading"><a class="heading-link" href="#tdd-style-steps-15" aria-label="Link to TDD-style steps">#</a>TDD-style steps</h3>
+<ol class="content-list"><li><strong>Red:</strong> pure nav reducer tests for Arrow/Home/End across rows, stacks, shared EMZ, hands, empty/occupied/actionable changes.</li><li>Component tests: one field entry tab stop; Enter/Space equals click; visible focus class; menu Escape/return; tray enter/return; prompt change moves/retains focus intentionally.</li><li>Playwright keyboard-only tests complete full preset duel without pointer and assert one response each.</li><li>Add accessible name/state tests including controller, zone, position, legal, selected, counter/material state; avoid hidden identity.</li><li><strong>Green:</strong> implement roving <code>tabindex</code> adapter and focus side effects around pure nav state.</li><li>Use native focus and <code>:focus-visible</code>; do not use <code>role=&quot;application&quot;</code>.</li><li>Evaluate <code>role=&quot;grid&quot;</code> manually; omit if announcements are worse than named group/buttons.</li><li>Add persistent live announcements for prompt, submit, recoverable error, turn/phase/result.</li><li>Record NVDA/Firefox and VoiceOver/Safari manual review using template.</li></ol>
+<h3 id="outputs-15" class="anchor-heading"><a class="heading-link" href="#outputs-15" aria-label="Link to Outputs">#</a>Outputs</h3>
+<ul class="content-list"><li>Keyboard-complete spatial field.</li><li>Tested focus lifecycle and screen-reader labels.</li><li>Manual SR decision on role structure.</li></ul>
+<h3 id="validation-criteria-15" class="anchor-heading"><a class="heading-link" href="#validation-criteria-15" aria-label="Link to Validation criteria">#</a>Validation criteria</h3>
+<ul class="content-list"><li>Full duel keyboard E2E green in Chromium.</li><li>No keyboard trap; focus never lost to removed node.</li><li>Focus visible at 200% zoom, defense rotation, overlaps.</li><li>44×44 targets verified by browser bounding boxes.</li><li>Manual SR record has no blocker; defects create new tickets and block DF-16.</li></ul>
+<hr>
+<h2 id="df-15-recompose-field-across-supported-viewports" class="anchor-heading ticket-heading"><a class="heading-link" href="#df-15-recompose-field-across-supported-viewports" aria-label="Link to DF-15 — Recompose field across supported viewports">#</a>DF-15 — Recompose field across supported viewports</h2>
+<p><strong>Commit:</strong> <code>feat: adapt duel field across viewports</code></p>
+<h3 id="starting-requirements-and-inputs-16" class="anchor-heading"><a class="heading-link" href="#starting-requirements-and-inputs-16" aria-label="Link to Starting requirements and inputs">#</a>Starting requirements and inputs</h3>
+<ul class="content-list"><li>DF-10 + DF-11 merged.</li><li>VP-01 through VP-07 matrix.</li><li>Desktop-first board/wireframe; browser platform constraints.</li></ul>
+<h3 id="tdd-style-steps-16" class="anchor-heading"><a class="heading-link" href="#tdd-style-steps-16" aria-label="Link to TDD-style steps">#</a>TDD-style steps</h3>
+<ol class="content-list"><li><strong>Red:</strong> Playwright viewport assertions for no critical clipping, contained overflow, 44 px targets, menu/tray inside viewport, 200% zoom usability.</li><li>Add screenshot captures for ST-01/05/09 at VP-01/02/04/05/06/07.</li><li><strong>Green:</strong> use container/media queries to recompose HUD, inspector, action menu, tray, dock.</li><li>Preserve board aspect ratio on desktop. On narrow landscape, allow contained field scroll only if target/focus stays reachable.</li><li>Portrait may switch inspector/tray to modal sheet and stack HUD; preserve same DOM semantics/interaction reducer.</li><li>Update nav graph selection only if physical visual adjacency changes; add reducer fixtures.</li><li>Verify browser zoom/text expansion rather than transform-scaling entire UI.</li></ol>
+<h3 id="outputs-16" class="anchor-heading"><a class="heading-link" href="#outputs-16" aria-label="Link to Outputs">#</a>Outputs</h3>
+<ul class="content-list"><li>Supported desktop/narrow/portrait compositions.</li><li>Same semantic controls/state across layouts.</li><li>Capture set for visual review.</li></ul>
+<h3 id="validation-criteria-16" class="anchor-heading"><a class="heading-link" href="#validation-criteria-16" aria-label="Link to Validation criteria">#</a>Validation criteria</h3>
+<ul class="content-list"><li>VP matrix assertions green.</li><li>No page-wide horizontal overflow.</li><li>Focused target scrolls into view without hiding behind dock/menu.</li><li>200% zoom completes current prompt.</li><li>Mobile-first polish remains out of scope; semantic usability passes.</li></ul>
+<hr>
+<h2 id="df-16-prove-semantic-visual-browser-resource-and-performance-parity" class="anchor-heading ticket-heading"><a class="heading-link" href="#df-16-prove-semantic-visual-browser-resource-and-performance-parity" aria-label="Link to DF-16 — Prove semantic, visual, browser, resource, and performance parity">#</a>DF-16 — Prove semantic, visual, browser, resource, and performance parity</h2>
+<p><strong>Commit:</strong> <code>test: validate DOM field parity and budgets</code></p>
+<h3 id="starting-requirements-and-inputs-17" class="anchor-heading"><a class="heading-link" href="#starting-requirements-and-inputs-17" aria-label="Link to Starting requirements and inputs">#</a>Starting requirements and inputs</h3>
+<ul class="content-list"><li>DF-10 through DF-15 complete.</li><li>Validation catalog state/viewport matrix.</li><li>Current Phaser production build numbers retained as baseline.</li><li>Performance test device/profile documented.</li></ul>
+<h3 id="tdd-style-steps-17" class="anchor-heading"><a class="heading-link" href="#tdd-style-steps-17" aria-label="Link to TDD-style steps">#</a>TDD-style steps</h3>
+<ol class="content-list"><li><strong>Red:</strong> add first deterministic <code>ST-01</code> browser fixture/semantic test and artifact-path assertion; run it to fail because field fixture/capture harness is absent.</li><li><strong>Green:</strong> implement reusable fixture/capture harness, then add ST-01 through ST-14. Semantic assertions precede screenshots.</li><li>Run Chromium full flow; Firefox/WebKit production startup/privacy/image smoke.</li><li>Record update→next-paint p50/p95, long tasks &gt;50 ms, dropped frames, action latency for normal/pathological/60-card tray/burst workloads.</li><li>Record heap/object-URL/listener counts before/after repeated restart and tray cycles.</li><li>Compare captures against RULE/CORE/local wireframe and MD/LE hierarchy refs; record pass/fail rubric.</li><li>Run reduced motion, 200% zoom, keyboard-only, touch emulation, missing-image, recoverable error, stale generation.</li><li>Fix only test-harness omissions in this ticket. Product failures create focused defect tickets; DF-17 remains blocked.</li><li>Store private screenshots/traces as CI artifacts; commit metrics/rubric text without restricted card art.</li></ol>
+<h3 id="outputs-17" class="anchor-heading"><a class="heading-link" href="#outputs-17" aria-label="Link to Outputs">#</a>Outputs</h3>
+<ul class="content-list"><li>Reproducible browser/perf/resource harness.</li><li>Acceptance record with device/browser/workload/percentiles.</li><li>Explicit pass/fail decision for Phaser removal.</li></ul>
+<h3 id="validation-criteria-17" class="anchor-heading"><a class="heading-link" href="#validation-criteria-17" aria-label="Link to Validation criteria">#</a>Validation criteria</h3>
+<ul class="content-list"><li>Existing prompt affordance &lt;50 ms target met at recorded p95; input feedback &lt;100 ms on supported low-end profile.</li><li>No normal prompt update creates &gt;50 ms long task.</li><li>No object URL/listener growth after repeated restart.</li><li>Every rubric item passes; no privacy/a11y blocker.</li><li><code>npm run check</code> green.</li><li>Reviewer explicitly accepts removal gate.</li></ul>
+<hr>
+<h2 id="df-17-remove-phaser-renderer-and-obsolete-bridge" class="anchor-heading ticket-heading"><a class="heading-link" href="#df-17-remove-phaser-renderer-and-obsolete-bridge" aria-label="Link to DF-17 — Remove Phaser renderer and obsolete bridge">#</a>DF-17 — Remove Phaser renderer and obsolete bridge</h2>
+<p><strong>Commit:</strong> <code>refactor: remove Phaser field renderer</code></p>
+<h3 id="starting-requirements-and-inputs-18" class="anchor-heading"><a class="heading-link" href="#starting-requirements-and-inputs-18" aria-label="Link to Starting requirements and inputs">#</a>Starting requirements and inputs</h3>
+<ul class="content-list"><li>DF-16 accepted with evidence.</li><li>DOM field is production path.</li><li>Rollback point/tag for last green Phaser baseline.</li></ul>
+<h3 id="tdd-style-steps-18" class="anchor-heading"><a class="heading-link" href="#tdd-style-steps-18" aria-label="Link to TDD-style steps">#</a>TDD-style steps</h3>
+<ol class="content-list"><li><strong>Red:</strong> change build/dependency tests to require no <code>phaser</code> package/import/chunk/canvas field metadata; run and observe failure.</li><li>Delete <code>DuelScene.ts</code>, Phaser bridge, obsolete presentation bridge interface, renderer-specific tests/styles.</li><li>Remove <code>phaser</code> dependency/lock entries and lazy import.</li><li>Remove canvas <code>data-*</code> E2E assertions; keep semantic and screenshot tests.</li><li>Update bundle budgets/build verifier to reject reintroduced Phaser field chunk/import.</li><li>Mark ADR implementation complete; update topology/technology/context/tree and archive any migration-only docs notes.</li><li>Run clean install/build reproducibility to catch stale lock/bundle artifacts.</li><li><strong>Green:</strong> full headless/browser/build gates.</li></ol>
+<h3 id="outputs-18" class="anchor-heading"><a class="heading-link" href="#outputs-18" aria-label="Link to Outputs">#</a>Outputs</h3>
+<ul class="content-list"><li>Svelte/DOM-only duel field.</li><li>No Phaser runtime/dependency/chunk/scene lifecycle.</li><li>Current docs reflect implemented state, not migration target.</li></ul>
+<h3 id="validation-criteria-18" class="anchor-heading"><a class="heading-link" href="#validation-criteria-18" aria-label="Link to Validation criteria">#</a>Validation criteria</h3>
+<ul class="content-list"><li><code>grep -R</code> finds no current source import/reference requiring Phaser; historical archive/audit plans may retain history labels.</li><li><code>npm ls phaser</code> reports absent.</li><li>Production manifest contains no Phaser chunk and stays within revised budget.</li><li><code>npm run check</code>, reproducible build, Chromium full flow, Firefox/WebKit smoke green.</li><li>Clean checkout passes same gates.</li></ul>
+<h2 id="completion-definition" class="anchor-heading"><a class="heading-link" href="#completion-definition" aria-label="Link to Completion definition">#</a>Completion definition</h2>
+<p>Migration completes only when DF-17 merges. “DOM field visible” is not completion. Required final properties:</p>
+<ul class="content-list"><li>fixed-slot state correct;</li><li>physical Standard board correct;</li><li>all field/non-field prompts complete through same validator/store;</li><li>pointer/keyboard/SR workflows complete;</li><li>response pending authoritative;</li><li>rich public state truthful/privacy-safe;</li><li>images nonblocking/leak-free;</li><li>responsive/reduced-motion behavior validated;</li><li>perf/resource evidence recorded;</li><li>Phaser removed, not dormant.</li></ul>
+<h2 id="deferred-follow-up-decisions" class="anchor-heading"><a class="heading-link" href="#deferred-follow-up-decisions" aria-label="Link to Deferred follow-up decisions">#</a>Deferred follow-up decisions</h2>
+<p>Do not attach these to migration tickets:</p>
+<ul class="content-list"><li>Speed/Rush field formats;</li><li>Tag/more-than-two-player state;</li><li>duel clock/timer;</li><li>avatars/profile identity;</li><li>story/map renderer;</li><li>decorative canvas FX.</li></ul>
+<p>Each needs product/domain evidence plus separate ADR after Standard DOM field gate.</p></main></div>
+<footer>Generated from <a href="../docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md">docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md</a>. Markdown remains review source; HTML is human-readable projection.</footer>
+<script type="module">
+const diagrams = document.querySelectorAll('.mermaid');
+if (diagrams.length) {
+  try {
+    const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs');
+    const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+    mermaid.initialize({ startOnLoad: false, theme: dark ? 'dark' : 'neutral', securityLevel: 'strict', flowchart: { htmlLabels: true, curve: 'basis' } });
+    await mermaid.run({ nodes: diagrams });
+  } catch (error) {
+    console.warn('Mermaid unavailable; diagram source preserved.', error);
+  }
+}
+</script>
+
+<script>
+(function () {
+  var slug = "duel-field-dom-implementation-plan";
+  var es = new EventSource("/events");
+  es.addEventListener("reload", function (e) {
+    try { if (e.data === slug || e.data === "*") location.reload(); } catch (_) {}
+  });
+})();
+</script></body>
+</html>

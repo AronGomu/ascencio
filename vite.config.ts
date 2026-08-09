@@ -53,6 +53,14 @@ const activationSnapshotId = createHash("sha256")
 
 export default defineConfig({
   base: process.env.BASE_PATH ?? "/",
+  server: {
+    port: 4202,
+    strictPort: true,
+  },
+  preview: {
+    port: 4202,
+    strictPort: true,
+  },
   plugins: [
     syncOnlyVendoredCorePlugin(projectRoot),
     svelte(),

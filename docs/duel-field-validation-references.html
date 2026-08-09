@@ -410,23 +410,20 @@ test-results/duel-field/&lt;browser&gt;/&lt;viewport-id&gt;/&lt;state-id&gt;.tra
 <ul class="content-list"><li><span class="check" aria-hidden="true"></span>Board remains primary surface.</li><li><span class="check" aria-hidden="true"></span>LP/turn/phase/current decision visible without searching.</li><li><span class="check" aria-hidden="true"></span>Legal, selected, resolving, disabled, hidden states do not rely on color alone.</li><li><span class="check" aria-hidden="true"></span>Inspector/menu/tray preserve board context.</li><li><span class="check" aria-hidden="true"></span>Stack counts and open affordances remain clear.</li><li><span class="check" aria-hidden="true"></span>Motion communicates state change, never delays input.</li></ul>
 <h3 id="performance-resource-behavior" class="anchor-heading"><a class="heading-link" href="#performance-resource-behavior" aria-label="Link to Performance/resource behavior">#</a>Performance/resource behavior</h3>
 <ul class="content-list"><li><span class="check" aria-hidden="true"></span>No idle animation loop.</li><li><span class="check" aria-hidden="true"></span>Closed tray does not mount full collection.</li><li><span class="check" aria-hidden="true"></span>No long task caused by normal prompt target update.</li><li><span class="check" aria-hidden="true"></span>Object URL/DOM listener counts return to baseline after restart.</li><li><span class="check" aria-hidden="true"></span>Missing/slow images never block legal input.</li><li><span class="check" aria-hidden="true"></span>Final build contains no Phaser chunk after removal ticket.</li></ul>
-<h2 id="manual-review-record-template" class="anchor-heading"><a class="heading-link" href="#manual-review-record-template" aria-label="Link to Manual review record template">#</a>Manual review record template</h2>
-<pre class="code-block"><code class="language-md">### Review YYYY-MM-DD / commit &lt;sha&gt;
+<h2 id="automated-chromium-acceptance-record-template" class="anchor-heading"><a class="heading-link" href="#automated-chromium-acceptance-record-template" aria-label="Link to Automated Chromium acceptance record template">#</a>Automated Chromium acceptance record template</h2>
+<p><strong>During DF-00–DF-17:</strong> product gate is Chromium PWA family + automated Playwright Chromium evidence only. <strong>No manual testing</strong> until DF-17 feature complete. Post-DF-17 manual QA is optional and outside the migration serial path.</p>
+<pre class="code-block"><code class="language-md">### Automated gate YYYY-MM-DD / commit &lt;sha&gt;
 
-- Browser/OS:
-- Screen reader/input:
-- Viewport/DPR/zoom:
+- Engine: Playwright Chromium (PWA-capable family)
+- Commands/suites run:
+- Viewport/DPR/zoom covered:
 - Fixtures:
-- Reference IDs compared:
-- Rule correctness: pass/fail + evidence
-- Pointer flow: pass/fail + evidence
-- Keyboard/focus flow: pass/fail + evidence
-- Screen-reader output: pass/fail + evidence
+- Semantic assertions (rule/pointer/keyboard/a11y/privacy): pass/fail + log paths
 - Reduced motion: pass/fail + evidence
-- Visual hierarchy: pass/fail + evidence
-- Perf trace path:
+- Perf metrics path (p50/p95, long tasks, heap/object URL):
+- Screenshot/trace artifacts (non-blocking):
 - Defects/ticket IDs:
-- Reviewer:</code></pre>
+- Gate result: PASS/FAIL (automated only)</code></pre>
 <h2 id="copyright-and-retention" class="anchor-heading"><a class="heading-link" href="#copyright-and-retention" aria-label="Link to Copyright and retention">#</a>Copyright and retention</h2>
 <p>Yu-Gi-Oh! names/screenshots/card art belong to respective owners. External screenshots are linked for internal comparative review only. Do not copy them into source, product assets, test snapshots, or public docs without legal approval. Prefer placeholder art for committed visual fixtures. Generated CI screenshots containing bundled private-mode card art inherit existing distribution restrictions and remain short-lived private artifacts.</p></main></div>
 <footer>Generated from <a href="architecture/05-presentation/duel-field-validation-references.md">docs/architecture/05-presentation/duel-field-validation-references.md</a>. Markdown remains review source; HTML is human-readable projection.</footer>

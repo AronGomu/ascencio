@@ -8,7 +8,7 @@ This is the canonical architecture entry point. Detailed decisions are intention
 
 ## Navigation protocol
 
-1. Read root [`context.md`](../../context.md) for stack, repository shape, and file-design conventions.
+1. Read root [`AGENT.md`](../../AGENT.md) for stack, repository shape, and file-design conventions.
 2. Read this file for system-wide invariants and the decision map.
 3. Open only the detailed decision files relevant to the task.
 4. Read [`../DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`](../DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md) for current field work. [`../MVP_TECHNICAL_IMPLEMENTATION_PLAN.md`](../MVP_TECHNICAL_IMPLEMENTATION_PLAN.md) remains completed baseline history.

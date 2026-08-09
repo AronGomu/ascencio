@@ -1,0 +1,11 @@
+.pi-subagents/
+.pi/
+.agents/
+.agentsystem/
+.tmp/
+graphify-out/
+playwright-report/
+test-results/
+vendor/
+dist/
+generated/

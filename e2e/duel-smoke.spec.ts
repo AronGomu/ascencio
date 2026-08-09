@@ -1082,7 +1082,16 @@ test("responsive field compositions contain controls across supported viewports"
       .locator("[data-field-target][aria-label^='Legal action, Open actions']")
       .first();
     if ((await actionTarget.count()) > 0) {
-      await actionTarget.scrollIntoViewIfNeeded();
+      // scrollIntoViewIfNeeded() only scrolls far enough to make the element
+      // visible, parking it flush against a viewport edge. The chips are
+      // wider than the card and centred on it, so at narrow viewports that
+      // leaves them poking past the edge depending on which card is
+      // actionable. Centring the card first is what a user panning to it
+      // would actually do, and makes the chip-overflow assertion below
+      // deterministic instead of seed-dependent.
+      await actionTarget.evaluate((element) => {
+        element.scrollIntoView({ block: "center", inline: "center" });
+      });
       const cardId = (
         (await actionTarget.getAttribute("data-cy")) ?? ""
       ).replace(/^field-card-target-/, "");

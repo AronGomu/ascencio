@@ -226,7 +226,9 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   expect(Date.now() - startupBeganAt).toBeLessThan(15_000);
   await enableDuelHud(page);
   await expect(page.getByRole("heading", { name: "Your turn" })).toBeVisible();
-  await expect(page.locator('[data-cy="life-pill-p0"]')).toBeVisible();
+  await expect(
+    page.locator('[data-cy="duel-header-life-points-p0"]'),
+  ).toBeVisible();
   const field = page.getByRole("region", { name: "Duel field" });
   await expect(field).toBeVisible();
   await expect(field.locator("[data-zone-id]")).toHaveCount(34);
@@ -236,12 +238,12 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   await expect(field.locator('[data-cy="phase-pill"]')).toHaveText(
     /Main 1|Draw|Standby/,
   );
-  await expect(field.locator('[data-cy="life-pill-p0"]')).toHaveText(
-    "8,000 LP",
-  );
-  await expect(field.locator('[data-cy="life-pill-p1"]')).toHaveText(
-    "8,000 LP",
-  );
+  await expect(
+    page.locator('[data-cy="duel-header-life-points-p0"]'),
+  ).toHaveText("8,000 LP");
+  await expect(
+    page.locator('[data-cy="duel-header-life-points-p1"]'),
+  ).toHaveText("8,000 LP");
   await expect(
     field.getByRole("article", { name: /Hidden opponent hand card/ }).first(),
   ).toBeVisible();
@@ -1065,6 +1067,7 @@ test("responsive field compositions contain controls across supported viewports"
             fieldTop: fieldBox.top,
             fieldBottom: fieldBox.bottom,
             panelTop: panelBox.top,
+            panelBottom: panelBox.bottom,
           };
     });
     if (rowLayout === null)
@@ -1079,10 +1082,14 @@ test("responsive field compositions contain controls across supported viewports"
         `${viewportLabel} field yields its row to the panel`,
       ).toBeLessThan(rowLayout.rowWidth - 300);
     } else {
+      // The preview panel is the LEFT column of `.duel-row` (moved there
+      // ahead of this ticket), so it is first in DOM order and stacks
+      // above the field, not below it, once the row collapses to one
+      // column.
       expect(
-        rowLayout.panelTop,
-        `${viewportLabel} preview panel stacks below the field`,
-      ).toBeGreaterThanOrEqual(rowLayout.fieldBottom - 1);
+        rowLayout.fieldTop,
+        `${viewportLabel} field stacks below the preview panel`,
+      ).toBeGreaterThanOrEqual(rowLayout.panelBottom - 1);
       expect(
         Math.abs(rowLayout.fieldWidth - rowLayout.rowWidth),
         `${viewportLabel} stacked field is full width`,
@@ -2195,8 +2202,8 @@ async function assertSharesFieldRow(page: Page, label: string): Promise<void> {
           panelY: panelBox.y,
           fieldHeight: fieldBox.height,
           panelHeight: panelBox.height,
-          fieldRight: fieldBox.right,
-          panelLeft: panelBox.left,
+          fieldLeft: fieldBox.left,
+          panelRight: panelBox.right,
         };
   });
   if (boxes === null) throw new Error(`${label}: missing field or panel box`);
@@ -2208,10 +2215,13 @@ async function assertSharesFieldRow(page: Page, label: string): Promise<void> {
     Math.abs(boxes.fieldHeight - boxes.panelHeight),
     `${label} matches the field height (${boxes.fieldHeight} vs ${boxes.panelHeight})`,
   ).toBeLessThanOrEqual(2);
+  // The preview panel is the LEFT column of `.duel-row` (moved there ahead
+  // of this ticket); it must sit to the left of the field, not beside it on
+  // the right or over it.
   expect(
-    boxes.panelLeft,
-    `${label} sits beside the field, not over it`,
-  ).toBeGreaterThanOrEqual(boxes.fieldRight - 1);
+    boxes.panelRight,
+    `${label} sits left of the field, not over it`,
+  ).toBeLessThanOrEqual(boxes.fieldLeft + 1);
 }
 
 async function assertNoPageWideHorizontalOverflow(

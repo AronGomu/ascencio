@@ -41,6 +41,7 @@
   import PromptControls from "./prompts/PromptControls.svelte";
   import PromptDialog from "./components/PromptDialog.svelte";
   import { trivialPromptResponse } from "./prompts/auto-response.ts";
+  import { centralPlacementResponse } from "./prompts/auto-placement.ts";
   import { mapPromptToInteractionSpec } from "./prompts/interaction-spec.ts";
   import {
     cardPreviewForCode,
@@ -52,7 +53,10 @@
   import { previewStatusFor } from "./presentation/preview-status.ts";
   import { promptSurface } from "./prompts/prompt-surface.ts";
   import { createDuelStore } from "./stores/duel-store.ts";
-  import { createUiSettingsStore } from "./stores/ui-settings-store.ts";
+  import {
+    createUiSettingsStore,
+    type UiSettingsState,
+  } from "./stores/ui-settings-store.ts";
 
   const CURRENT_RUNTIME_SNAPSHOT_ID = snapshotId(__RUNTIME_SNAPSHOT_ID__);
   const CURRENT_ACTIVATION_SNAPSHOT_ID = snapshotId(__ACTIVATION_SNAPSHOT_ID__);
@@ -436,24 +440,23 @@
     queueMicrotask(() => duel.start());
   }
 
-  $: maybeAutoResolvePrompt(
-    $duel.prompt,
-    $duel.responsePending,
-    $uiSettings.autoResolveTrivialPrompts,
-  );
+  $: maybeAutoResolvePrompt($duel.prompt, $duel.responsePending, $uiSettings);
 
   function maybeAutoResolvePrompt(
     prompt: PlayerPrompt | null,
     responsePending: boolean,
-    enabled: boolean,
+    settings: UiSettingsState,
   ): void {
     if (prompt === null) {
       autoResolvedPromptId = null;
       return;
     }
-    if (!enabled || responsePending || autoResolvedPromptId === prompt.id)
-      return;
-    const choiceIds = trivialPromptResponse(prompt);
+    if (responsePending || autoResolvedPromptId === prompt.id) return;
+    const choiceIds =
+      (settings.autoResolveTrivialPrompts
+        ? trivialPromptResponse(prompt)
+        : null) ??
+      (settings.autoPlaceCards ? centralPlacementResponse(prompt) : null);
     if (choiceIds === null) return;
     autoResolvedPromptId = prompt.id;
     queueMicrotask(() => duel.respond(choiceIds));

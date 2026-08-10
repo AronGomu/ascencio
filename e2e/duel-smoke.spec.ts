@@ -1296,25 +1296,31 @@ test("responsive field compositions contain controls across supported viewports"
       await expect(chips).toBeHidden();
       await actionTarget.focus();
       await expect(chips).toBeVisible();
+      // A card offering exactly one action fires it directly on click (T5)
+      // instead of pinning the chip menu, so the pin/Escape round trip below
+      // only applies to a card that actually opens a menu.
+      const chipChoiceCount = await chips.locator("button").count();
       await actionTarget.evaluate((element: HTMLElement) => element.blur());
       await expect(chips).toBeHidden();
 
-      await actionTarget.click();
-      await expect(chips).toBeVisible();
-      await assertRectInsideViewport(
-        page,
-        chips,
-        `${viewport.id} card action chips`,
-      );
-      await captureResponsiveState(page, testInfo, viewport.id, "ST-05");
-      await page.keyboard.press("Escape");
-      // Escape unpins and hands focus back to the card target. Focus and the
-      // lingering pointer each keep the chips shown on their own, so drop both
-      // before asserting that the pinned state is really gone.
-      await expect(actionTarget).toBeFocused();
-      await page.mouse.move(0, 0);
-      await actionTarget.evaluate((element: HTMLElement) => element.blur());
-      await expect(chips).toBeHidden();
+      if (chipChoiceCount > 1) {
+        await actionTarget.click();
+        await expect(chips).toBeVisible();
+        await assertRectInsideViewport(
+          page,
+          chips,
+          `${viewport.id} card action chips`,
+        );
+        await captureResponsiveState(page, testInfo, viewport.id, "ST-05");
+        await page.keyboard.press("Escape");
+        // Escape unpins and hands focus back to the card target. Focus and the
+        // lingering pointer each keep the chips shown on their own, so drop both
+        // before asserting that the pinned state is really gone.
+        await expect(actionTarget).toBeFocused();
+        await page.mouse.move(0, 0);
+        await actionTarget.evaluate((element: HTMLElement) => element.blur());
+        await expect(chips).toBeHidden();
+      }
     }
 
     const trayButton = page
@@ -1598,8 +1604,11 @@ test("a full preset duel can be completed using keyboard controls only with one 
   // Pass, single-option, single-position) resolves those from a background
   // `queueMicrotask` and would race this walker's own async round trip for
   // the same prompts, so the walk turns the setting off first — exactly the
-  // choice a player who wants full manual control would make.
+  // choice a player who wants full manual control would make. T5's default-on
+  // auto-placement is the same class of race for `selectPlace` prompts the
+  // walker means to answer by hand, so it is turned off too.
   await disableAutoResolveTrivialPrompts(page);
+  await disableAutoPlaceCards(page);
   await expect(
     (await activePromptControls(page)).getByRole("button").first(),
   ).toBeEnabled({ timeout: 30_000 });
@@ -1889,7 +1898,20 @@ async function setHandMonsterWithKeyboard(
       "",
     );
     const chips = field.locator(`[data-cy="card-action-chips-${cardId}"]`);
-    if ((await chips.count()) === 0) continue;
+    const chipButtonCount = await chips.locator("button").count();
+    if (chipButtonCount === 0) continue;
+    if (chipButtonCount === 1) {
+      // A single-choice card fires that choice directly on activation (T5)
+      // instead of pinning a menu, so this helper only bothers activating it
+      // when the one choice on offer is the monster set it exists to produce.
+      if ((await chips.locator(MONSTER_SET_CHIP).count()) === 0) continue;
+      await keyboardActivate(page, opener);
+      // The response goes pending, which drops the card out of its
+      // actionable state and unmounts these chips with it. Waiting on that
+      // keeps the caller from racing the next prompt.
+      await expect(chips).toBeHidden();
+      return true;
+    }
     await keyboardActivate(page, opener);
     // Activating the card pins its chips and moves focus onto the first one;
     // waiting for that focus to land is what makes the arrow walk below
@@ -1941,12 +1963,19 @@ async function chooseValidFieldSubset(
   const confirm = field.getByRole("button", {
     name: /Confirm (selection|placement)/,
   });
-  if ((await confirm.count()) === 0) return false;
+  const choices = field.locator("[data-field-target][aria-pressed]");
+  if ((await confirm.count()) === 0) {
+    // A single-place prompt (auto-place off) submits the instant any one of
+    // its legal zones is clicked: no Confirm bar ever renders for it.
+    const count = await choices.count();
+    if (count === 0) return false;
+    await keyboardActivate(page, choices.first());
+    return true;
+  }
   if (await confirm.isEnabled()) {
     await keyboardActivate(page, confirm);
     return true;
   }
-  const choices = field.locator("[data-field-target][aria-pressed]");
   const count = await choices.count();
   if (count === 0 || count > 12) return false;
   for (let mask = 1; mask < 1 << count; mask += 1) {
@@ -2482,6 +2511,14 @@ async function enableDuelHud(page: Page): Promise<void> {
 async function disableAutoResolveTrivialPrompts(page: Page): Promise<void> {
   await openSettingsDialog(page);
   await page.locator('[data-cy="settings-auto-resolve-checkbox"]').uncheck();
+  await page.locator('[data-cy="settings-dialog-close-button"]').click();
+}
+
+async function disableAutoPlaceCards(page: Page): Promise<void> {
+  await openSettingsDialog(page);
+  await page
+    .locator('[data-cy="settings-auto-place-cards-checkbox"]')
+    .uncheck();
   await page.locator('[data-cy="settings-dialog-close-button"]').click();
 }
 

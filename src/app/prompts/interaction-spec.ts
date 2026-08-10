@@ -163,16 +163,22 @@ const PUBLIC_LOCATIONS = {
 } as const satisfies Readonly<Record<PublicLocation, true>>;
 const INACTIVE_SPEC = Object.freeze({ kind: "inactive" as const });
 
+function nonEndPhaseGlobalChoiceCount(spec: ActiveInteractionSpec): number {
+  return [...spec.globalChoices.values()].filter(
+    (choice) => choice.action !== "endPhase",
+  ).length;
+}
+
 export function fieldActionBarRequired(spec: ActiveInteractionSpec): boolean {
   if (spec.kind === "nonField") return false;
+  if (spec.kind === "placeSelection" && spec.constraints.maximum === 1)
+    return nonEndPhaseGlobalChoiceCount(spec) > 0;
   return (
     spec.kind === "cardSelection" ||
     spec.kind === "placeSelection" ||
     spec.kind === "counterAllocation" ||
     spec.kind === "order" ||
-    [...spec.globalChoices.values()].filter(
-      (choice) => choice.action !== "endPhase",
-    ).length > 0
+    nonEndPhaseGlobalChoiceCount(spec) > 0
   );
 }
 

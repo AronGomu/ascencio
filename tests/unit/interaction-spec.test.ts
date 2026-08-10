@@ -357,13 +357,45 @@ describe("fieldActionBarRequired", () => {
     expect(fieldActionBarRequired(spec)).toBe(true);
   });
 
-  it("is required for place selection", () => {
+  it("is required for a multi-place selection", () => {
     const spec = specFor(
       prompt("selectPlace", {
         choices: [
           choice(FIRST, {
             place: { player: 0, location: "monster", sequence: 0 },
           }),
+          choice(SECOND, {
+            place: { player: 0, location: "monster", sequence: 1 },
+          }),
+        ],
+        minimum: 2,
+        maximum: 2,
+      }),
+    );
+    expect(fieldActionBarRequired(spec)).toBe(true);
+  });
+
+  it("single placement needs no confirm bar", () => {
+    const spec = specFor(
+      prompt("selectPlace", {
+        choices: [
+          choice(FIRST, {
+            place: { player: 0, location: "monster", sequence: 0 },
+          }),
+        ],
+      }),
+    );
+    expect(fieldActionBarRequired(spec)).toBe(false);
+  });
+
+  it("single placement still shows the bar for global choices", () => {
+    const spec = specFor(
+      prompt("selectPlace", {
+        choices: [
+          choice(FIRST, {
+            place: { player: 0, location: "monster", sequence: 0 },
+          }),
+          choice(SECOND, { action: "pass" }),
         ],
       }),
     );

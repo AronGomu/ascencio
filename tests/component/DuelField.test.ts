@@ -476,6 +476,9 @@ describe("DuelField", () => {
     const user = userEvent.setup();
     const value = fieldPrompt("idleCommand", [
       mountedChoice("activate", "Activate effect", { action: "activate" }),
+      mountedChoice("set", "Set The Legendary Fisherman", {
+        action: "setMonster",
+      }),
     ]);
     const harness = renderInteractive(value);
     const card = screen.getByRole("button", {
@@ -574,6 +577,9 @@ describe("DuelField", () => {
   it("pins the chips on click, never pointerdown, and a moved pointer does not pin them", async () => {
     const value = fieldPrompt("idleCommand", [
       mountedChoice("activate", "Activate effect", { action: "activate" }),
+      mountedChoice("set", "Set The Legendary Fisherman", {
+        action: "setMonster",
+      }),
     ]);
     const harness = renderInteractive(value);
     const card = screen.getByRole("button", {
@@ -690,30 +696,13 @@ describe("DuelField", () => {
         { requiredTotal: 2, sumMode: "exact" },
       ],
       ["selectUnselectCard", mountedChoice("toggle", "Toggle monster"), {}],
-      [
-        "selectPlace",
-        promptChoice("place", "Your Main Monster 1", {
-          place: { player: 0, location: "monster", sequence: 0 },
-        }),
-        {},
-      ],
-      [
-        "selectDisabledField",
-        promptChoice("disabled", "Your Main Monster 1", {
-          place: { player: 0, location: "monster", sequence: 0 },
-        }),
-        {},
-      ],
     ] as const) {
       cleanup();
       const value = fieldPrompt(kind, [choice], overrides);
       const harness = renderInteractive(value);
-      const target =
-        kind === "selectPlace" || kind === "selectDisabledField"
-          ? screen.getByRole("button", { name: /Select Your Main Monster 1/ })
-          : screen.getByRole("button", {
-              name: /Select The Legendary Fisherman/,
-            });
+      const target = screen.getByRole("button", {
+        name: /Select The Legendary Fisherman/,
+      });
       await user.click(target);
       expect(harness.commands).toEqual([]);
       expect(
@@ -725,6 +714,23 @@ describe("DuelField", () => {
         [],
       );
       await user.click(screen.getByRole("button", { name: /Confirm/ }));
+      expect(harness.commands).toEqual([[choice.id]]);
+    }
+  });
+
+  it("zone click submits a single placement", async () => {
+    const user = userEvent.setup();
+    for (const kind of ["selectPlace", "selectDisabledField"] as const) {
+      cleanup();
+      const choice = promptChoice("place", "Your Main Monster 1", {
+        place: { player: 0, location: "monster", sequence: 0 },
+      });
+      const value = fieldPrompt(kind, [choice]);
+      const harness = renderInteractive(value);
+      expect(screen.queryByRole("button", { name: /Confirm/ })).toBeNull();
+      await user.click(
+        screen.getByRole("button", { name: /Select Your Main Monster 1/ }),
+      );
       expect(harness.commands).toEqual([[choice.id]]);
     }
   });
@@ -774,9 +780,123 @@ describe("DuelField", () => {
       ]);
       harness = renderInteractive(command);
       await user.click(screen.getByRole("button", { name: /Open actions/ }));
-      await user.click(screen.getByRole("button", { name: label }));
       expect(harness.commands).toEqual([[choiceId(label.toLowerCase())]]);
     }
+  });
+
+  it("single-choice card fires the action directly", async () => {
+    const user = userEvent.setup();
+    const value = fieldPrompt("idleCommand", [
+      mountedChoice("activate", "Activate effect", { action: "activate" }),
+    ]);
+    const harness = renderInteractive(value);
+    await user.click(
+      screen.getByRole("button", {
+        name: /Open actions for The Legendary Fisherman/,
+      }),
+    );
+    expect(harness.dispatch.mock.calls.map(([action]) => action.type)).toEqual([
+      "chooseChoice",
+    ]);
+    expect(harness.commands).toEqual([[choiceId("activate")]]);
+  });
+
+  it("multi-choice card still opens the menu", async () => {
+    const user = userEvent.setup();
+    const value = fieldPrompt("idleCommand", [
+      mountedChoice("activate", "Activate effect", { action: "activate" }),
+      mountedChoice("set", "Set The Legendary Fisherman", {
+        action: "setMonster",
+      }),
+    ]);
+    const harness = renderInteractive(value);
+    const card = screen.getByRole("button", {
+      name: /Open actions for The Legendary Fisherman/,
+    });
+    const targetId = card.getAttribute("data-field-target");
+    await user.click(card);
+    expect(harness.dispatch.mock.calls[0]?.[0]).toMatchObject({
+      type: "openMenu",
+      target: targetId,
+    });
+  });
+
+  it("outside click cancels a cancelable prompt", async () => {
+    const user = userEvent.setup();
+    const value = fieldPrompt(
+      "selectPlace",
+      [
+        promptChoice("place", "Your Main Monster 1", {
+          place: { player: 0, location: "monster", sequence: 0 },
+        }),
+      ],
+      { cancelable: true },
+    );
+    const harness = renderInteractive(value);
+    const surface = document.querySelector<HTMLElement>(
+      '[data-cy="duel-field-board-surface"]',
+    );
+    if (surface === null) throw new Error("Missing board surface");
+    await user.click(surface);
+    expect(harness.dispatch.mock.calls[0]?.[0]).toMatchObject({
+      type: "cancel",
+    });
+  });
+
+  it("outside click is inert when not cancelable", async () => {
+    const user = userEvent.setup();
+    const value = fieldPrompt(
+      "selectPlace",
+      [
+        promptChoice("place", "Your Main Monster 1", {
+          place: { player: 0, location: "monster", sequence: 0 },
+        }),
+      ],
+      { cancelable: false },
+    );
+    const harness = renderInteractive(value);
+    const surface = document.querySelector<HTMLElement>(
+      '[data-cy="duel-field-board-surface"]',
+    );
+    if (surface === null) throw new Error("Missing board surface");
+    await user.click(surface);
+    expect(harness.dispatch).not.toHaveBeenCalled();
+  });
+
+  it("outside click is inert for a single-choice prompt", async () => {
+    const user = userEvent.setup();
+    const value = fieldPrompt(
+      "chain",
+      [mountedChoice("pass", "Pass", { action: "pass" })],
+      { cancelable: true },
+    );
+    const harness = renderInteractive(value);
+    const surface = document.querySelector<HTMLElement>(
+      '[data-cy="duel-field-board-surface"]',
+    );
+    if (surface === null) throw new Error("Missing board surface");
+    await user.click(surface);
+    expect(harness.dispatch).not.toHaveBeenCalled();
+  });
+
+  it("outside click ignores clicks on targets", async () => {
+    const user = userEvent.setup();
+    const value = fieldPrompt(
+      "selectPlace",
+      [
+        promptChoice("place", "Your Main Monster 1", {
+          place: { player: 0, location: "monster", sequence: 0 },
+        }),
+      ],
+      { cancelable: true },
+    );
+    const harness = renderInteractive(value);
+    await user.click(
+      screen.getByRole("button", { name: /Select Your Main Monster 1/ }),
+    );
+    expect(
+      harness.dispatch.mock.calls.some(([action]) => action.type === "cancel"),
+    ).toBe(false);
   });
 
   it("contains render failure locally and remounts without exposing error detail", async () => {

@@ -266,12 +266,14 @@
 
   function activateCard(card: BoardCardView): void {
     if (spec === null) return;
-    const choices = spec.cardChoices.get(card.targetId);
-    const choice = choices?.[0];
+    const choices = spec.cardChoices.get(card.targetId) ?? [];
+    const choice = choices[0];
     if (choice === undefined) return;
     switch (spec.kind) {
       case "cardAction":
-        dispatch({ type: "openMenu", target: card.targetId });
+        if (choices.length === 1)
+          dispatch({ type: "chooseChoice", choiceId: choice.id });
+        else dispatch({ type: "openMenu", target: card.targetId });
         break;
       case "cardSelection":
         dispatch({ type: "toggleChoice", choiceId: choice.id });
@@ -290,8 +292,32 @@
   function activateZone(zone: BoardZoneView): void {
     if (spec === null) return;
     const choice = spec.zoneChoices.get(zone.targetId)?.[0];
-    if (choice !== undefined)
-      dispatch({ type: "toggleChoice", choiceId: choice.id });
+    if (choice === undefined) return;
+    if (spec.kind === "placeSelection" && spec.constraints.maximum === 1)
+      dispatch({ type: "chooseChoice", choiceId: choice.id });
+    else dispatch({ type: "toggleChoice", choiceId: choice.id });
+  }
+
+  const INTERACTIVE_SELECTOR =
+    "[data-field-target], .card-action-chips, .field-action-bar, .field-phase-strip, .field-end-turn";
+
+  function dismissOnOutsideClick(event: MouseEvent): void {
+    if (spec === null || pending) return;
+    if (!spec.constraints.cancelable) return;
+    /* A `single`-family prompt rejects an empty response outright
+       (`validatePromptSelection` requires exactly one choice for it, even when
+       the prompt is cancelable), so cancelling one would only raise
+       `invalid_response`. Chain prompts are the live example: they are
+       `single` and cancelable at the same time. T11 gives them their own
+       outside-click behaviour. */
+    if (spec.constraints.controlFamily === "single") return;
+    const origin = event.target;
+    if (
+      origin instanceof Element &&
+      origin.closest(INTERACTIVE_SELECTOR) !== null
+    )
+      return;
+    dispatch({ type: "cancel" });
   }
 
   /* The halo is a local guess at where the engine might accept this card. It
@@ -365,6 +391,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions (outside-click cancel is a passive surface handler; interactive controls inside it own all keyboard/pointer semantics) -->
+<!-- svelte-ignore a11y_click_events_have_key_events (outside-click cancel has no keyboard equivalent to mirror; every actionable control keeps its own key handling) -->
 <section
   class="duel-field"
   aria-label="Duel field"
@@ -376,6 +404,7 @@
   style:--field-action-bar-height={actionBarVisible
     ? `${actionBarHeight}px`
     : undefined}
+  onclick={dismissOnOutsideClick}
 >
   <div class="duel-field-stage" data-cy="duel-field-stage">
     <FieldBoard

@@ -147,3 +147,17 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 - [ ] Turn off `Skip prompts with a single answer` in Settings, then play a turn where a trivial chain (nothing to activate) would occur: the `Choose a chain response` dialog now appears and must be answered by hand (Pass).
 - [ ] Turn `Skip prompts with a single answer` back on mid-duel: from that point on, trivial prompts go back to resolving automatically without a click.
 - [ ] Reload the page: both new settings reset to their defaults (checked), matching the existing session-only behaviour of the other two toggles.
+
+## T5 auto-placement-and-single-click-actions
+
+- [ ] `npm run dev`, with `Place cards automatically` left on (the default): summon or set a monster — it lands directly in the centre-most legal zone with no follow-up "choose a zone" prompt of any kind. (manual check: auto-place ON)
+- [ ] Turn `Place cards automatically` off in Settings, then summon or set a monster: the legal zones halo, one click on any one of them plays the card immediately with no `Confirm placement` button anywhere, and one click on an empty part of the board (no card, no zone, no bar/strip/button) cancels the pending placement and returns you to the previous prompt. (manual check: auto-place OFF)
+- [ ] With auto-place on, repeatedly summon/set monsters across a duel and confirm the chosen zone always looks like the same "most central first" order a player would expect (centre main-monster zone before the edges, main row before the extra monster zones, your side before the opponent's).
+- [ ] With auto-place off, open a hand card that offers exactly one action (e.g. only `Activate`): clicking the card fires that action immediately — no chip menu ever appears for it.
+- [ ] With auto-place off, open a hand card that offers two or more actions: clicking the card still opens the chip menu exactly as before, and clicking a chip fires that one action.
+- [ ] With auto-place off, start a placement, then click a legal zone: the card is played immediately with no separate `Confirm placement` step.
+- [ ] With auto-place off, start a placement that is cancelable and click elsewhere on the empty board: the prompt cancels cleanly, no error/toast appears, and you're returned to the state before the placement started.
+- [ ] With auto-place off, start a placement that is *not* cancelable (if you can reach one) and click elsewhere on the empty board: nothing happens — the prompt stays open, no error appears.
+- [ ] Dragging a hand card onto a highlighted zone (T10) still plays it in one gesture and still wins over auto-placement — the drag never pops up a redundant place prompt regardless of the auto-place setting.
+- [ ] Play a full duel with auto-place on and `Skip prompts with a single answer` on (both defaults): the duel proceeds smoothly with the fewest possible prompts, and no click is ever swallowed by a stray Confirm bar that shouldn't be there.
+- [ ] Reload the page: `Place cards automatically` resets to checked (the default), matching the other settings' session-only behaviour.

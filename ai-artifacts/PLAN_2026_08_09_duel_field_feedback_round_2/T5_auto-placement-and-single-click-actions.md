@@ -167,19 +167,19 @@
 
 ## Impl steps
 
-- [ ] 1. Create `tests/unit/auto-placement.test.ts` with the eight `placementRank` / `centralPlacementResponse` cases.
-- [ ] 2. Add the two `fieldActionBarRequired` cases to `tests/unit/interaction-spec.test.ts`.
-- [ ] 3. Add the six `DuelField` cases to `tests/component/DuelField.test.ts`.
-- [ ] 4. Run `npm run test:unit && npm run test:component`; confirm the new cases fail.
-- [ ] 5. Create `src/app/prompts/auto-placement.ts` with `MAIN_CENTRALITY`, `placementRank` and `centralPlacementResponse` exactly as specified.
-- [ ] 6. In `src/app/App.svelte`, import `centralPlacementResponse` and `UiSettingsState`, change `maybeAutoResolvePrompt` to the three-argument settings form above, and change the reactive statement to pass `$uiSettings`.
-- [ ] 7. In `src/app/components/DuelField.svelte`, change `activateCard`'s `cardAction` branch to fire `chooseChoice` when there is exactly one choice.
-- [ ] 8. In `src/app/components/DuelField.svelte`, change `activateZone` to fire `chooseChoice` for a `placeSelection` spec with `maximum === 1`.
-- [ ] 9. In `src/app/components/DuelField.svelte`, add `INTERACTIVE_SELECTOR`, `dismissOnOutsideClick` and `onclick={dismissOnOutsideClick}` on the root section, with the a11y ignore comments.
-- [ ] 10. In `src/app/prompts/interaction-spec.ts`, extract `nonEndPhaseGlobalChoiceCount(spec)` and add the leading `placeSelection` branch to `fieldActionBarRequired`.
-- [ ] 11. In `src/app/components/duel-field/FieldActionBar.svelte`, extend the Confirm/Cancel block condition as specified.
-- [ ] 12. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`.
-- [ ] 13. Run the chromium e2e suite (see Validation). If a spec fails because a placement no longer needs `field-action-bar-confirm`, update the spec to the new one-click flow — that is the intended behaviour change.
+- [x] 1. Create `tests/unit/auto-placement.test.ts` with the eight `placementRank` / `centralPlacementResponse` cases.
+- [x] 2. Add the two `fieldActionBarRequired` cases to `tests/unit/interaction-spec.test.ts`.
+- [x] 3. Add the six `DuelField` cases to `tests/component/DuelField.test.ts`. (Added 7: the table's full set, plus fixed 4 pre-existing tests whose fixtures directly conflicted with the new one-click/auto-place behaviour — see report.)
+- [x] 4. Run `npm run test:unit && npm run test:component`; confirm the new cases fail. (Confirmed via targeted runs before each impl piece landed; see report for the exact failing-then-passing sequence.)
+- [x] 5. Create `src/app/prompts/auto-placement.ts` with `MAIN_CENTRALITY`, `placementRank` and `centralPlacementResponse` exactly as specified.
+- [x] 6. In `src/app/App.svelte`, import `centralPlacementResponse` and `UiSettingsState`, change `maybeAutoResolvePrompt` to the three-argument settings form above, and change the reactive statement to pass `$uiSettings`.
+- [x] 7. In `src/app/components/DuelField.svelte`, change `activateCard`'s `cardAction` branch to fire `chooseChoice` when there is exactly one choice.
+- [x] 8. In `src/app/components/DuelField.svelte`, change `activateZone` to fire `chooseChoice` for a `placeSelection` spec with `maximum === 1`.
+- [x] 9. In `src/app/components/DuelField.svelte`, add `INTERACTIVE_SELECTOR`, `dismissOnOutsideClick` and `onclick={dismissOnOutsideClick}` on the root section, with the a11y ignore comments. (`svelte-check` required both `a11y_no_noninteractive_element_interactions` and `a11y_click_events_have_key_events` for a `<section>`, not the `<div>` pairing used by SettingsDialog/MenuDialog — used the pair `svelte-check` actually demanded.)
+- [x] 10. In `src/app/prompts/interaction-spec.ts`, extract `nonEndPhaseGlobalChoiceCount(spec)` and add the leading `placeSelection` branch to `fieldActionBarRequired`.
+- [x] 11. In `src/app/components/duel-field/FieldActionBar.svelte`, extend the Confirm/Cancel block condition as specified.
+- [x] 12. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`. All exit 0 (520 unit, 150 component).
+- [x] 13. Run the chromium e2e suite (see Validation). If a spec fails because a placement no longer needs `field-action-bar-confirm`, update the spec to the new one-click flow — that is the intended behaviour change. (Full suite 18/18 green; the keyboard-only duel walker required disabling `settings-auto-place-cards-checkbox` alongside the existing auto-resolve toggle, and `chooseValidFieldSubset`/`setHandMonsterWithKeyboard` needed updating for the one-click zone/card-action path — see report.)
 
 ## Outputs
 
@@ -190,12 +190,12 @@
 
 ## Validation
 
-- [ ] `npm run format:check` exits 0
-- [ ] `npm run lint` exits 0
-- [ ] `npm run typecheck` exits 0
-- [ ] `npm run test:unit` exits 0
-- [ ] `npm run test:component` exits 0
-- [ ] chromium e2e exits 0:
+- [x] `npm run format:check` exits 0
+- [x] `npm run lint` exits 0
+- [x] `npm run typecheck` exits 0
+- [x] `npm run test:unit` exits 0 (520 passed)
+- [x] `npm run test:component` exits 0 (150 passed)
+- [x] chromium e2e exits 0: (18/18 passed; re-ran the two seed-random duel-walking specs — keyboard-only walker and drag-and-drop — an extra 2x each to confirm, plus one flaky unrelated hover assertion re-run clean; see report)
   ```bash
   cd /home/aron/projects/ascencio
   timeout 590 nix-shell -p playwright-driver.browsers glib gtk3 nss nspr dbus atk cups \

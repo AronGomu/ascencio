@@ -217,7 +217,7 @@
     </div>
   {/if}
 
-  {#if spec.kind !== "cardAction" && spec.kind !== "nonField"}
+  {#if spec.kind !== "cardAction" && spec.kind !== "nonField" && !(spec.kind === "placeSelection" && spec.constraints.maximum === 1)}
     <button
       type="button"
       disabled={disabled || !confirmValid}

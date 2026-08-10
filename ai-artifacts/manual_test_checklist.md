@@ -206,3 +206,9 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 - [ ] `npm run dev`; trigger a chain: no modal appears, the preview reads `Do you respond?` with pulsing dots, and every activatable source glows orange on the field or on its pile.
 - [ ] On a cancelable chain, click an activatable source to respond; trigger another chain and click empty field to pass. Both choices advance the duel exactly once.
 - [ ] Trigger a forced chain: clicking empty field does nothing, no `Pass` button appears, and clicking the required field or pile source answers it.
+
+## T12 result-dialog
+
+- [ ] `npm run dev`, surrender from the menu: a centred modal dialog announces `Duel surrendered`, focus lands on its heading, and `Start another duel` starts a clean duel.
+- [ ] Click the dialog backdrop and press Escape: the result dialog stays open; no close control appears, while restart and diagnostics remain reachable.
+- [ ] Complete a duel normally: the winner announcement appears without reflowing the page behind it, and diagnostics still download.

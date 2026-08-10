@@ -17,6 +17,7 @@
   import { zoneListsForBoard, type ZoneListEntry } from "../field/zone-list.ts";
   import type { PhysicalZoneId } from "../field/duel-field-layout.ts";
   import DuelHeaderBar from "./components/DuelHeaderBar.svelte";
+  import DuelResultDialog from "./components/DuelResultDialog.svelte";
   import MenuDialog from "./components/MenuDialog.svelte";
   import SettingsDialog from "./components/SettingsDialog.svelte";
   import CardPreviewPanel from "./components/CardPreviewPanel.svelte";
@@ -85,10 +86,8 @@
   let menubarTrigger: HTMLButtonElement | null = null;
   let generationContext = "";
   let promptPanel: HTMLElement;
-  let resultHeading: HTMLHeadingElement;
   let errorHeading: HTMLHeadingElement;
   let previousErrorKey = "";
-  let previousStatus = $duel.status;
   let imageLibrary: CardImageLibrary | null = null;
   let imageLibraryVerified = false;
   let imageLoading = true;
@@ -427,9 +426,6 @@
       : "";
     if (errorKey !== "" && errorKey !== previousErrorKey) errorHeading?.focus();
     previousErrorKey = errorKey;
-    if ($duel.status === "completed" && previousStatus !== "completed")
-      resultHeading?.focus();
-    previousStatus = $duel.status;
   });
 
   $: if (
@@ -847,75 +843,6 @@
     </section>
   {/if}
 
-  {#if $duel.result}
-    <section
-      class="message-panel result-panel"
-      role="status"
-      aria-live="polite"
-      aria-atomic="true"
-      aria-busy={$duel.status !== "completed"}
-      aria-labelledby="duel-result-heading"
-      data-cy="app-result-panel"
-    >
-      <div data-cy="app-result-body">
-        <p class="eyebrow" data-cy="app-result-eyebrow">Duel complete</p>
-        <h2
-          id="duel-result-heading"
-          tabindex="-1"
-          bind:this={resultHeading}
-          data-cy="app-result-heading"
-        >
-          {#if $duel.result.type === "completed"}
-            {$duel.result.winner === 0 ? "You won" : "Opponent won"}
-          {:else if $duel.result.type === "surrendered"}
-            Duel surrendered
-          {:else if $duel.result.type === "unsupported"}
-            Unsupported duel message
-          {:else}
-            Engine error
-          {/if}
-        </h2>
-        {#if $duel.result.type === "completed"}
-          <p data-cy="app-result-finish-reason">
-            Finish reason {$duel.result.reason}
-          </p>
-        {:else if $duel.result.type === "unsupported"}
-          <p data-cy="app-result-unsupported-detail">
-            {$duel.result.detail}
-          </p>
-        {:else if $duel.result.type === "engineError"}
-          <p data-cy="app-result-engine-error-detail">
-            {$duel.result.detail}
-          </p>
-        {/if}
-      </div>
-      <div class="button-row" data-cy="app-result-actions">
-        <button
-          type="button"
-          disabled={$duel.status !== "completed"}
-          data-cy="app-restart-duel-button"
-          onclick={() => void duel.restart()}
-          >{$duel.status === "completed"
-            ? "Start another duel"
-            : "Starting another duel…"}</button
-        >
-        <span class="sensitive-note" data-cy="app-result-sensitive-note"
-          >Contains the production seed.</span
-        >
-        <button
-          type="button"
-          class="secondary"
-          disabled={diagnosticPending}
-          data-cy="app-result-download-diagnostics-button"
-          onclick={requestDiagnostics}
-          >{diagnosticPending
-            ? "Preparing diagnostics…"
-            : "Download diagnostics"}</button
-        >
-      </div>
-    </section>
-  {/if}
-
   {#if diagnosticMessage}
     <p class="diagnostic-message" data-cy="app-diagnostic-message">
       {diagnosticMessage}
@@ -1072,6 +999,16 @@
       onautoplacecards={uiSettings.setAutoPlaceCards}
       onautoresolvetrivialprompts={uiSettings.setAutoResolveTrivialPrompts}
       onclose={() => void closeSettings()}
+    />
+  {/if}
+
+  {#if $duel.result}
+    <DuelResultDialog
+      result={$duel.result}
+      completed={$duel.status === "completed"}
+      {diagnosticPending}
+      onrestart={() => void duel.restart()}
+      ondownloaddiagnostics={requestDiagnostics}
     />
   {/if}
 </main>

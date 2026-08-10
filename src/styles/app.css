@@ -440,6 +440,12 @@ progress {
   border-color: #297f73;
 }
 
+.dialog-panel .result-panel {
+  padding: 0;
+  border: none;
+  background: none;
+}
+
 .phase-pill {
   color: #08101f;
   border-color: transparent;

@@ -144,6 +144,7 @@
     $duel.prompt,
     mappedInteractionSpec,
     $uiSettings.showWorkspace,
+    duelBoard !== null,
   );
   $: previewStatus = previewStatusFor($duel.prompt, $duel.responsePending);
   $: headerLifePoints =

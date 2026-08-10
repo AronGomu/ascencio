@@ -132,6 +132,16 @@ Ticket ids restart per plan, so sections are grouped by round. **Round 2 is the 
 - [ ] Click the dialog backdrop and press Escape: the result dialog stays open; no close control appears, while restart and diagnostics remain reachable.
 - [ ] Complete a duel normally: the winner announcement appears without reflowing the page behind it, and diagnostics still download.
 
+## R1 review-repairs
+
+- [ ] Trigger an optional chain, open a glowing graveyard pile, then click its Close button and a non-chip area of an entry tile in separate attempts: neither click passes the chain; clicking genuine empty field still passes exactly once.
+- [ ] During a cancelable multi-card pile selection, open the pile and click the zone-list header: the selection stays live and no cancel response is sent.
+- [ ] Reach or force a deck-located choice in a deck of known size: its chip and orange halo appear on the correct top-relative list position, and no unrevealed mirrored slot exposes a card name.
+- [ ] Trigger a chain while the duel field is unavailable through its render-failure path: the prompt dialog mounts and remains answerable under the field-error panel.
+- [ ] Open a non-empty pile with the mouse, leave focus on the pile button, then press Escape: the list closes; pressing Escape with no zone list open does not disturb chips or other dialogs.
+- [ ] Reach a field prompt that requires the field action bar, then resize across desktop and phone widths: the bar stays fully in the viewport and entirely below the duel board without covering hand clicks.
+- [ ] Play a full duel start to finish: every field, pile, chain, and dialog prompt remains answerable.
+
 ---
 
 # Round 1 — 2026-08-08 duel field UX overhaul (archive)

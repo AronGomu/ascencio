@@ -40,6 +40,7 @@ import {
   mapPromptToInteractionSpec,
   type ActiveInteractionSpec,
 } from "../../src/app/prompts/interaction-spec.ts";
+import { promptSurface } from "../../src/app/prompts/prompt-surface.ts";
 import {
   BOARD_CARD_TEXTS,
   BOARD_VIEW_MODEL_FIXTURES,
@@ -890,6 +891,18 @@ describe("DuelField", () => {
     expect(harness.commands).toEqual([[choiceId("c-pass")]]);
   });
 
+  it("routes a chain to the dialog when the field is not rendered", () => {
+    const value = fieldPrompt(
+      "chain",
+      [promptChoice("c-pass", "Pass", { action: "pass" })],
+      { cancelable: true },
+    );
+    const spec = activeSpec(value);
+    expect(spec.fieldCapable).toBe(false);
+
+    expect(promptSurface(value, spec, false, false)).toBe("dialog");
+  });
+
   it("outside click passes a chain", async () => {
     const user = userEvent.setup();
     const value = fieldPrompt(
@@ -955,6 +968,160 @@ describe("DuelField", () => {
           action.type === "chooseChoice" && action.choiceId === "c-pass",
       ),
     ).toBe(false);
+  });
+
+  it("does not pass a chain when the zone-list close button is clicked", async () => {
+    const user = userEvent.setup();
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    const value = fieldPrompt(
+      "chain",
+      [
+        mountedChoice("graveyard-chain", "Chain", {
+          card: {
+            instanceId: cardInstanceId("prompt-graveyard-chain"),
+            controller: 0,
+            location: "graveyard",
+            sequence: 0,
+            position: "faceUpAttack",
+          },
+        } as Partial<PromptChoice>),
+        promptChoice("c-pass", "Pass", { action: "pass" }),
+      ],
+      { cancelable: true },
+    );
+    const spec = mapPromptToInteractionSpec(
+      value,
+      STACK_ART_STATE,
+      stackBoard.value,
+      CONTEXT,
+    );
+    if (spec.kind === "inactive") throw new Error("Expected active field spec");
+    const oninteraction = vi.fn();
+    render(DuelField, {
+      board: stackBoard.value,
+      prompt: value,
+      spec,
+      session: createInteractionSession(spec),
+      pending: false,
+      zoneLists: zoneListsForBoard(
+        stackBoard.value,
+        STACK_ART_STATE,
+        BOARD_CARD_TEXTS,
+      ),
+      oninteraction,
+    });
+
+    await user.click(screen.getByRole("button", { name: /Your GY, 4 cards/ }));
+    oninteraction.mockClear();
+    await user.click(screen.getByRole("button", { name: "Close" }));
+
+    expect(oninteraction).not.toHaveBeenCalled();
+  });
+
+  it("does not pass a chain when a zone-list entry tile is clicked", async () => {
+    const user = userEvent.setup();
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    const value = fieldPrompt(
+      "chain",
+      [
+        mountedChoice("graveyard-chain", "Chain", {
+          card: {
+            instanceId: cardInstanceId("prompt-graveyard-chain"),
+            controller: 0,
+            location: "graveyard",
+            sequence: 0,
+            position: "faceUpAttack",
+          },
+        } as Partial<PromptChoice>),
+        promptChoice("c-pass", "Pass", { action: "pass" }),
+      ],
+      { cancelable: true },
+    );
+    const spec = mapPromptToInteractionSpec(
+      value,
+      STACK_ART_STATE,
+      stackBoard.value,
+      CONTEXT,
+    );
+    if (spec.kind === "inactive") throw new Error("Expected active field spec");
+    const oninteraction = vi.fn();
+    render(DuelField, {
+      board: stackBoard.value,
+      prompt: value,
+      spec,
+      session: createInteractionSession(spec),
+      pending: false,
+      zoneLists: zoneListsForBoard(
+        stackBoard.value,
+        STACK_ART_STATE,
+        BOARD_CARD_TEXTS,
+      ),
+      oninteraction,
+    });
+
+    await user.click(screen.getByRole("button", { name: /Your GY, 4 cards/ }));
+    oninteraction.mockClear();
+    const entry = document.querySelector<HTMLElement>(
+      ".zone-list-entry.is-actionable",
+    );
+    if (entry === null) throw new Error("Missing actionable zone-list entry");
+    await user.click(entry);
+
+    expect(oninteraction).not.toHaveBeenCalled();
+  });
+
+  it("does not cancel card selection when the zone-list header is clicked", async () => {
+    const user = userEvent.setup();
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    const value = fieldPrompt(
+      "selectCard",
+      [
+        mountedChoice("graveyard-select", "Select", {
+          card: {
+            instanceId: cardInstanceId("prompt-graveyard-select"),
+            controller: 0,
+            location: "graveyard",
+            sequence: 0,
+            position: "faceUpAttack",
+          },
+        } as Partial<PromptChoice>),
+      ],
+      { cancelable: true, maximum: 2 },
+    );
+    const spec = mapPromptToInteractionSpec(
+      value,
+      STACK_ART_STATE,
+      stackBoard.value,
+      CONTEXT,
+    );
+    if (spec.kind === "inactive") throw new Error("Expected active field spec");
+    const oninteraction = vi.fn();
+    render(DuelField, {
+      board: stackBoard.value,
+      prompt: value,
+      spec,
+      session: createInteractionSession(spec),
+      pending: false,
+      zoneLists: zoneListsForBoard(
+        stackBoard.value,
+        STACK_ART_STATE,
+        BOARD_CARD_TEXTS,
+      ),
+      oninteraction,
+    });
+
+    await user.click(screen.getByRole("button", { name: /Your GY, 4 cards/ }));
+    oninteraction.mockClear();
+    const header = document.querySelector<HTMLElement>(
+      '[data-cy="zone-list-dialog-header"]',
+    );
+    if (header === null) throw new Error("Missing zone-list header");
+    await user.click(header);
+
+    expect(oninteraction).not.toHaveBeenCalled();
   });
 
   it("contains render failure locally and remounts without exposing error detail", async () => {
@@ -1511,6 +1678,62 @@ describe("DuelField", () => {
     expect(document.querySelector('[data-cy="prompt-dialog"]')).toBeNull();
   });
 
+  it("maps an engine deck sequence to the matching top-relative list slot", async () => {
+    const user = userEvent.setup();
+    const snapshot = BOARD_VIEW_MODEL_FIXTURES["ST-05"];
+    const stackBoard = mapSnapshotToBoard(snapshot, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    const deckCount = snapshot.players[0].deckCount;
+    const topRelativeOffset = 1;
+    const value = fieldPrompt("idleCommand", [
+      promptChoice("deck-activate", "Activate deck card", {
+        action: "activate",
+        card: {
+          instanceId: cardInstanceId("prompt-deck-activate"),
+          controller: 0,
+          location: "deck",
+          sequence: deckCount - 1 - topRelativeOffset,
+          position: "faceDownAttack",
+        },
+      }),
+    ]);
+    const spec = mapPromptToInteractionSpec(
+      value,
+      snapshot,
+      stackBoard.value,
+      CONTEXT,
+    );
+    if (spec.kind === "inactive") throw new Error("Expected active field spec");
+    render(DuelField, {
+      board: stackBoard.value,
+      prompt: value,
+      spec,
+      session: createInteractionSession(spec),
+      pending: false,
+      zoneLists: zoneListsForBoard(
+        stackBoard.value,
+        snapshot,
+        BOARD_CARD_TEXTS,
+      ),
+    });
+
+    await user.click(
+      screen.getByRole("button", {
+        name: new RegExp(`Your Deck, ${deckCount} cards`),
+      }),
+    );
+    const expectedEntry = document.querySelector<HTMLElement>(
+      `[data-cy="zone-list-entry-p0:deck:${topRelativeOffset + 1}"]`,
+    );
+    if (expectedEntry === null) throw new Error("Missing expected deck entry");
+
+    expect(
+      within(expectedEntry).getByRole("button", {
+        name: "Activate deck card",
+      }),
+    ).not.toBeNull();
+  });
+
   it("answers a forced chain whose only source sits in a pile", async () => {
     const user = userEvent.setup();
     const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
@@ -1562,7 +1785,7 @@ describe("DuelField", () => {
     });
   });
 
-  it("stack stays non-interactive", () => {
+  it("an empty graveyard stays a non-interactive div", () => {
     const value = fieldPrompt("chain", [
       mountedChoice("graveyard-activate", "Activate", {
         card: {
@@ -1724,6 +1947,28 @@ describe("DuelField", () => {
     expect(
       document.querySelector('[data-cy="zone-list-dialog"]'),
     ).not.toBeNull();
+  });
+
+  it("Escape closes a pile list opened with the mouse", async () => {
+    const user = userEvent.setup();
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    const zoneLists = zoneListsForBoard(
+      stackBoard.value,
+      STACK_ART_STATE,
+      BOARD_CARD_TEXTS,
+    );
+    render(DuelField, { board: stackBoard.value, zoneLists });
+    const stack = screen.getByRole("button", { name: /Your GY, 4 cards/ });
+
+    await user.click(stack);
+    expect(document.activeElement).toBe(stack);
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog"]'),
+    ).not.toBeNull();
+    await fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(document.querySelector('[data-cy="zone-list-dialog"]')).toBeNull();
   });
 
   it("clicking the same pile closes it", async () => {

@@ -16,13 +16,25 @@
   export let onpreview: (entry: ZoneListEntry) => void = () => undefined;
   export let onclose: () => void = () => undefined;
 
+  function promptSequenceInListSpace(
+    choice: InteractionChoice,
+    entry: ZoneListEntry,
+  ): number | undefined {
+    const engineSequence = choice.cardAddress?.sequence;
+    if (engineSequence === undefined || entry.location !== "deck")
+      return engineSequence;
+    // Engine deck sequences are bottom-first; projected deck entries use a
+    // top-relative offset. `entries.length` comes from this same snapshot.
+    return entries.length - 1 - engineSequence;
+  }
+
   function entryChoices(entry: ZoneListEntry): readonly InteractionChoice[] {
     return choices.filter(
       (choice) =>
         choice.cardAddress !== undefined &&
         choice.cardAddress.controller === entry.controller &&
         choice.cardAddress.location === entry.location &&
-        choice.cardAddress.sequence === entry.sequence,
+        promptSequenceInListSpace(choice, entry) === entry.sequence,
     );
   }
 
@@ -34,13 +46,14 @@
   }
 </script>
 
+<svelte:document onkeydown={handleKeydown} />
+
 <div
   class="zone-list-dialog"
   role="dialog"
   aria-modal="false"
   aria-label={`${stack.label} contents${stack.zone === "deck" ? ", position 1 is the top of the deck" : ""}`}
   tabindex="-1"
-  onkeydown={handleKeydown}
   data-cy="zone-list-dialog"
 >
   <div class="zone-list-dialog__header" data-cy="zone-list-dialog-header">

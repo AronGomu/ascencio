@@ -314,7 +314,7 @@
   }
 
   const INTERACTIVE_SELECTOR =
-    "[data-field-target], .card-action-chips, .field-action-bar, .field-phase-strip, .field-end-turn";
+    "[data-field-target], .card-action-chips, .field-action-bar, .field-phase-strip, .field-end-turn, .zone-list-dialog";
 
   function chainPassChoice(): InteractionChoice | null {
     if (spec === null || spec.promptKind !== "chain") return null;

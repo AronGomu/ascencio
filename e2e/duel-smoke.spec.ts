@@ -1176,41 +1176,9 @@ test("responsive field compositions contain controls across supported viewports"
       })),
     ).toEqual({ focusVisible: true, outline: "solid" });
 
-    /* `fieldActionBarRequired` mounts the bar only when the current prompt
-       carries a non-`endPhase` global choice (e.g. Battle Phase). This test
-       never advances the duel past the opening idleCommand — it only resizes
-       the viewport — and turn 1 has no monster to attack with, so since the
-       removed "Shuffle Deck" idle command was the only global choice
-       guaranteed to exist that early, the bar no longer mounts at this point
-       in the flow at all. The geometry gate below is exercised instead by
-       `dragging a hand card onto a highlighted zone plays it`, which reaches
-       a real card-target action bar; here it only runs if a future idle
-       state happens to offer one. */
-    const dock = field.locator('[data-cy="field-action-bar"]');
-    if ((await dock.count()) > 0) {
-      await expect(dock).toBeVisible();
-      await dock.scrollIntoViewIfNeeded();
-      await assertRectInsideViewport(
-        page,
-        dock,
-        `${viewport.id} selection dock`,
-      );
-      // The bar is pinned inside the field, so it must live in a reserved
-      // gutter below the board. If its box ever re-enters the board box it
-      // starts swallowing clicks meant for the player's hand.
-      const barRect = await dock.evaluate((element) => {
-        const box = element.getBoundingClientRect();
-        return { top: box.top, bottom: box.bottom };
-      });
-      const boardRect = await board.evaluate((element) => {
-        const box = element.getBoundingClientRect();
-        return { top: box.top, bottom: box.bottom };
-      });
-      expect(
-        barRect.top,
-        `${viewportLabel} field action bar (top ${barRect.top}) must clear the duel board (bottom ${boardRect.bottom})`,
-      ).toBeGreaterThanOrEqual(boardRect.bottom - 1);
-    }
+    /* Opening idleCommand has no required action bar. Its geometry gate now
+       lives in the full-duel walker, which reaches a required bar, asserts its
+       geometry, then fails if no bar was exercised. */
 
     // Unlike the action bar, the End turn corner button is always mounted, so
     // this check runs unconditionally at every viewport.
@@ -1621,6 +1589,7 @@ test("a full preset duel can be completed using keyboard controls only with one 
   // focus-visibility assertion on rotated card art has something to focus.
   const setup = { needsDefense: true };
   let fieldResponses = 0;
+  let fieldActionBarGeometryChecks = 0;
   let defenseFocusVisible = false;
   for (let step = 0; step < 200; step += 1) {
     const result = page.locator(".result-panel");
@@ -1656,6 +1625,15 @@ test("a full preset duel can be completed using keyboard controls only with one 
       (command) =>
         command.type === "respond" && command.promptId === prompt.prompt.id,
     ).length;
+    const actionBar = field.locator('[data-cy="field-action-bar"]');
+    if (fieldActionBarGeometryChecks === 0 && (await actionBar.count()) > 0) {
+      await assertFieldActionBarGeometry(
+        page,
+        field,
+        `full-duel ${kind} prompt`,
+      );
+      fieldActionBarGeometryChecks += 1;
+    }
 
     if (
       (await answerPromptWithKeyboard(page, controls, kind, setup)) === "field"
@@ -1698,6 +1676,8 @@ test("a full preset duel can be completed using keyboard controls only with one 
 
   expect(answeredPromptIds.size).toBeGreaterThan(0);
   expect(fieldResponses).toBeGreaterThan(0);
+  // Prevent `count() > 0` from silently deleting the geometry gate.
+  expect(fieldActionBarGeometryChecks).toBeGreaterThan(0);
   expect(defenseFocusVisible).toBe(true);
   for (const promptId of answeredPromptIds) {
     expect(
@@ -1745,6 +1725,7 @@ test("a full preset duel can be completed using keyboard controls only with one 
         result: await result.getByRole("heading").textContent(),
         responses: answeredPromptIds.size,
         fieldResponses,
+        fieldActionBarGeometryChecks,
         duplicateResponses: 0,
         defenseFocusVisible,
       },
@@ -2374,6 +2355,30 @@ async function assertNoPageWideHorizontalOverflow(
     Math.max(metrics.bodyScrollWidth, metrics.rootScrollWidth),
     `${label} page-wide horizontal overflow`,
   ).toBeLessThanOrEqual(metrics.viewportWidth + 1);
+}
+
+async function assertFieldActionBarGeometry(
+  page: Page,
+  field: Locator,
+  label: string,
+): Promise<void> {
+  const bar = field.locator('[data-cy="field-action-bar"]');
+  await expect(bar).toBeVisible();
+  await bar.scrollIntoViewIfNeeded();
+  await assertRectInsideViewport(page, bar, `${label} field action bar`);
+  const board = field.getByRole("group", { name: "Standard duel board" });
+  const barRect = await bar.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    return { top: box.top, bottom: box.bottom };
+  });
+  const boardRect = await board.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    return { top: box.top, bottom: box.bottom };
+  });
+  expect(
+    barRect.top,
+    `${label} field action bar (top ${barRect.top}) must clear the duel board (bottom ${boardRect.bottom})`,
+  ).toBeGreaterThanOrEqual(boardRect.bottom - 1);
 }
 
 async function assertRectInsideViewport(

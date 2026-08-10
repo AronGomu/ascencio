@@ -10,6 +10,7 @@
   export let active = false;
   export let actionable = false;
   export let onpreview: () => void = () => undefined;
+  export let onactivate: () => void = () => undefined;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let placeholderUrl = "";
 
@@ -17,11 +18,23 @@
   let activeImageCode: number | undefined;
   let imageLease: CardImageLease | null = null;
   let renderedImageUrl = placeholderUrl;
+  let pointerOrigin: { readonly x: number; readonly y: number } | null = null;
+  let pointerMoved = false;
 
   $: positionStyle = `--field-x: ${stack.x * 100}%; --field-y: ${stack.y * 100}%; --field-width: ${stack.width * 100}%; --field-height: ${stack.height * 100}%;`;
   $: synchronizeImageLease(imageLibrary, stack.topCardCode, placeholderUrl);
+  $: clickable = stack.count > 0;
 
   onDestroy(() => imageLease?.release());
+
+  function activate(): void {
+    pointerOrigin = null;
+    if (pointerMoved) {
+      pointerMoved = false;
+      return;
+    }
+    onactivate();
+  }
 
   function synchronizeImageLease(
     library: Pick<CardImageLibrary, "lease"> | null,
@@ -45,12 +58,13 @@
   }
 </script>
 
-<!-- svelte-ignore a11y_no_noninteractive_tabindex (stack participates in spatial roving focus) -->
-<div
+<svelte:element
+  this={clickable ? "button" : "div"}
+  type={clickable ? "button" : undefined}
   class:is-navigation-active={active}
   class:is-actionable={actionable}
   class="duel-field-stack"
-  role="group"
+  role={clickable ? undefined : "group"}
   aria-label={stack.label}
   data-field-target={stack.targetId}
   tabindex={active ? 0 : -1}
@@ -59,6 +73,26 @@
   data-stack-zone={stack.zone}
   data-actionable={actionable ? "true" : undefined}
   style={positionStyle}
+  onpointerdown={clickable
+    ? (event: PointerEvent) => {
+        pointerOrigin = { x: event.clientX, y: event.clientY };
+        pointerMoved = false;
+      }
+    : undefined}
+  onpointermove={clickable
+    ? (event: PointerEvent) => {
+        if (
+          pointerOrigin !== null &&
+          Math.hypot(
+            event.clientX - pointerOrigin.x,
+            event.clientY - pointerOrigin.y,
+          ) > 8
+        ) {
+          pointerMoved = true;
+        }
+      }
+    : undefined}
+  onclick={clickable ? activate : undefined}
   onpointerenter={onpreview}
   onfocusin={onpreview}
   data-cy={`field-stack-${stack.id}`}
@@ -92,4 +126,4 @@
   >
     {stack.count}
   </strong>
-</div>
+</svelte:element>

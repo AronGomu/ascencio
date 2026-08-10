@@ -175,3 +175,16 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 - [ ] `npm run dev`, send a monster to the graveyard: the graveyard pile shows that card's art with `GY` and the count still readable on top of the art.
 - [ ] The deck and extra deck piles are unchanged (no art appears on the deck pile; the extra deck pile behaves as before).
 - [ ] Open and restart a duel twice while watching devtools memory for `blob:` URLs: no image lease leaks — the count of live `blob:` URLs does not keep growing across restarts.
+
+## T8 zone-list-dialog
+
+- [ ] `npm run dev`; click your graveyard: a centred list opens over the field, scrolls horizontally, numbers each card starting at 1, previews the hovered card in the left preview panel, and closes on Escape. (manual check)
+- [ ] Click the opponent's extra deck: every entry in the list is face-down (card back only, no name, no art) regardless of what you might otherwise infer from earlier play. (manual check)
+- [ ] Click your deck: the list shows one face-down placeholder per card in your deck count, with no real card identities leaking (T9/T10 will replace this with the real deck order later).
+- [ ] The dialog never shows a backdrop and never blocks the rest of the board — a legal-action card elsewhere on the field is still clickable while the dialog is open.
+- [ ] Reach a graveyard or banished-pile activation prompt (e.g. an effect that activates from the graveyard): the pile itself gets the orange actionable halo, and clicking it opens the list with an orange halo and action chips on the specific card the engine is offering — no separate modal "Choose a chain response" dialog appears for this case.
+- [ ] With that same list open, click the action chip on the actionable card: the action fires, the dialog closes, and the duel proceeds — the same as clicking a chip on a card on the board.
+- [ ] Click an already-open pile a second time: the list closes.
+- [ ] Trigger a new prompt (e.g. pass priority to the opponent) while a zone list is open: the list closes automatically without needing another click.
+- [ ] An empty pile (0 cards) is not clickable and shows no hover/focus affordance.
+- [ ] Keyboard only: tab to a non-empty pile, press Enter/Space to open its list, tab through the entries and any action chips, and confirm Escape closes the dialog and returns focus sensibly.

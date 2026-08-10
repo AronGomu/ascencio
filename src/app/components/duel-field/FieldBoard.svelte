@@ -46,6 +46,7 @@
   export let oncarddragend: (x: number, y: number) => void = () => undefined;
   export let oncardpreview: (card: BoardCardView) => void = () => undefined;
   export let onstackpreview: (stack: BoardStackView) => void = () => undefined;
+  export let onstackactivate: (stack: BoardStackView) => void = () => undefined;
 
   let boardElement: HTMLDivElement;
   let navigationState: FieldNavigationState = createFieldNavigationState();
@@ -186,6 +187,7 @@
       active={navigationState.activeTarget === stack.targetId}
       actionable={!disabled && spec?.stackChoices.has(stack.targetId) === true}
       onpreview={() => onstackpreview(stack)}
+      onactivate={() => onstackactivate(stack)}
       {imageLibrary}
       {placeholderUrl}
     />

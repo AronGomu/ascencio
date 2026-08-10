@@ -23,6 +23,8 @@
     fieldActionBarRequired,
     type ActiveInteractionSpec,
   } from "../prompts/interaction-spec.ts";
+  import type { ZoneListEntry } from "../../field/zone-list.ts";
+  import ZoneListDialog from "./duel-field/ZoneListDialog.svelte";
   import { dropChoiceForZone } from "../prompts/drop-target.ts";
   import { validatePromptSelection } from "../prompts/prompt-selection.ts";
   import { placementZoneCandidates } from "../../field/placement-candidates.ts";
@@ -75,7 +77,13 @@
     false;
   export let onpreview: (card: BoardCardView) => void = () => undefined;
   export let onstackpreview: (stack: BoardStackView) => void = () => undefined;
+  export let zoneLists: ReadonlyMap<PhysicalZoneId, readonly ZoneListEntry[]> =
+    new Map();
+  export let onzonelistpreview: (entry: ZoneListEntry) => void = () =>
+    undefined;
   export let phase: DuelPhase = "unknown";
+
+  let openStackId: PhysicalZoneId | null = null;
 
   if (injectFailure) throw new Error("Injected duel field component failure");
 
@@ -93,6 +101,7 @@
   let actionBarHeight = 0;
   let dragCard: BoardCardView | null = null;
   let dropCandidates: ReadonlySet<PhysicalZoneId> = EMPTY_ZONE_IDS;
+  let lastPromptKey: string | null = null;
 
   $: resolvedCardBackUrl = cardBackUrl || DEFAULT_CARD_BACK;
   $: effectiveReducedMotion = reducedMotion ?? mediaReducedMotion;
@@ -106,6 +115,11 @@
   $: resolvedPlaceholderUrl = placeholderUrl || DEFAULT_PLACEHOLDER;
   $: selectedTargets =
     spec === null ? EMPTY_TARGETS : targetSelections(spec, session);
+  $: resetOpenStackOnPromptChange(spec);
+  $: openStack =
+    openStackId === null
+      ? null
+      : (board.stacks.find((stack) => stack.id === openStackId) ?? null);
   $: submittedChoiceIds =
     spec === null ? [] : interactionSessionChoiceIds(session, spec);
   $: validation =
@@ -375,6 +389,20 @@
     return zoneElement.getAttribute("data-zone-id") as PhysicalZoneId | null;
   }
 
+  function resetOpenStackOnPromptChange(
+    value: ActiveInteractionSpec | null,
+  ): void {
+    const key = value?.key.promptId ?? null;
+    if (key !== lastPromptKey) {
+      lastPromptKey = key;
+      openStackId = null;
+    }
+  }
+
+  function activateStack(stack: BoardStackView): void {
+    openStackId = openStackId === stack.id ? null : stack.id;
+  }
+
   function targetSelections(
     value: ActiveInteractionSpec,
     draft: InteractionSession,
@@ -429,10 +457,30 @@
       oncarddragend={endCardDrag}
       oncardpreview={onpreview}
       {onstackpreview}
+      onstackactivate={activateStack}
     />
     <PhaseStrip {phase} {spec} disabled={pending} {oninteraction} />
     <EndTurnButton {spec} disabled={pending} {oninteraction} />
   </div>
+  {#if openStack !== null}
+    <ZoneListDialog
+      stack={openStack}
+      entries={zoneLists.get(openStack.id) ?? []}
+      choices={spec?.stackChoices.get(openStack.targetId) ?? []}
+      {imageLibrary}
+      cardBackUrl={resolvedCardBackUrl}
+      placeholderUrl={resolvedPlaceholderUrl}
+      disabled={pending}
+      onchoose={(choice) => {
+        dispatch({ type: "chooseChoice", choiceId: choice.id });
+        openStackId = null;
+      }}
+      onpreview={(entry) => onzonelistpreview(entry)}
+      onclose={() => {
+        openStackId = null;
+      }}
+    />
+  {/if}
   {#if feedbackState.line}
     <FieldLines line={feedbackState.line} />
   {/if}

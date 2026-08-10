@@ -181,23 +181,23 @@
 
 ## Impl steps
 
-- [ ] 1. Create `tests/unit/zone-list.test.ts` with the five `zoneListEntries` cases.
-- [ ] 2. Add the two `interaction-spec` cases to `tests/unit/interaction-spec.test.ts`.
-- [ ] 3. Create `tests/component/ZoneListDialog.test.ts` with the seven dialog cases.
-- [ ] 4. Add the four open/close cases to `tests/component/DuelField.test.ts`.
-- [ ] 5. Run `npm run test:unit && npm run test:component`; confirm every new case fails.
-- [ ] 6. In `src/app/prompts/interaction-spec.ts`, add `cardAddress` to `InteractionChoice` and populate it in `sanitizeChoice`.
-- [ ] 7. In the same file, change `fieldCapable` to include `stackChoices.size > 0` and replace the A9 comment.
-- [ ] 8. Create `src/field/zone-list.ts` with `ZoneListEntry`, `zoneListEntries` and `zoneListsForBoard` exactly as specified.
-- [ ] 9. Create `src/app/components/duel-field/ZoneListDialog.svelte` with the prop contract, the `entryChoices` filter, the `data-cy` values above, `Escape` handling via a `onkeydown` on the dialog root, and per-entry image leases released in `onDestroy`.
-- [ ] 10. In `src/app/components/duel-field/StackControl.svelte`, add `export let onactivate: () => void = () => undefined;` and switch the root to `<svelte:element this={stack.count > 0 ? "button" : "div"}>` with the `ZoneControl` pointer-move guard; keep every existing attribute and `data-cy`.
-- [ ] 11. In `src/app/components/duel-field/FieldBoard.svelte`, add `export let onstackactivate: (stack: BoardStackView) => void = () => undefined;` and pass `onactivate={() => onstackactivate(stack)}`.
-- [ ] 12. In `src/app/components/DuelField.svelte`, add `zoneLists`, `onzonelistpreview`, `openStackId`, the reset-on-prompt-change reactive statement, the `onstackactivate` handler and the `ZoneListDialog` render block.
-- [ ] 13. In `src/app/components/duel-field/DuelFieldErrorBoundary.svelte`, declare and forward `zoneLists` and `onzonelistpreview`.
-- [ ] 14. In `src/app/App.svelte`, add `zoneLists`, `previewZoneListEntry`, and pass both down.
-- [ ] 15. In `src/styles/app.css`, add the `.zone-list-dialog` rules: centred absolute positioning inside `.duel-field`, `z-index: var(--duel-field-layer-menu)`, `background: var(--surface-strong)`, `border: 1px solid var(--border)`, `border-radius: 0.9rem`, `box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.45)`, `padding: 0.75rem`; `.zone-list-dialog__entries { display: flex; gap: 0.5rem; overflow-x: auto; }`; `.zone-list-entry { position: relative; flex: 0 0 auto; width: 4.5rem; }`; `.zone-list-entry.is-actionable img { border-color: var(--warning); box-shadow: 0 0 0 2px rgb(255 213 128 / 0.55); }`; and reveal the chips with `.zone-list-entry:hover .card-action-chips, .zone-list-entry:focus-within .card-action-chips { display: flex; }`.
-- [ ] 16. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`.
-- [ ] 17. Run the chromium e2e suite (see Validation). If a spec still expects the `Choose a chain response` modal for a graveyard activation, update it — that modal is now correctly replaced by the field path.
+- [x] 1. Create `tests/unit/zone-list.test.ts` with the five `zoneListEntries` cases.
+- [x] 2. Add the two `interaction-spec` cases to `tests/unit/interaction-spec.test.ts`.
+- [x] 3. Create `tests/component/ZoneListDialog.test.ts` with the seven dialog cases.
+- [x] 4. Add the four open/close cases to `tests/component/DuelField.test.ts`.
+- [x] 5. Run `npm run test:unit && npm run test:component`; confirm every new case fails.
+- [x] 6. In `src/app/prompts/interaction-spec.ts`, add `cardAddress` to `InteractionChoice` and populate it in `sanitizeChoice`.
+- [x] 7. In the same file, change `fieldCapable` to include `stackChoices.size > 0` and replace the A9 comment.
+- [x] 8. Create `src/field/zone-list.ts` with `ZoneListEntry`, `zoneListEntries` and `zoneListsForBoard` exactly as specified.
+- [x] 9. Create `src/app/components/duel-field/ZoneListDialog.svelte` with the prop contract, the `entryChoices` filter, the `data-cy` values above, `Escape` handling via a `onkeydown` on the dialog root, and per-entry image leases released in `onDestroy`.
+- [x] 10. In `src/app/components/duel-field/StackControl.svelte`, add `export let onactivate: () => void = () => undefined;` and switch the root to `<svelte:element this={stack.count > 0 ? "button" : "div"}>` with the `ZoneControl` pointer-move guard; keep every existing attribute and `data-cy`.
+- [x] 11. In `src/app/components/duel-field/FieldBoard.svelte`, add `export let onstackactivate: (stack: BoardStackView) => void = () => undefined;` and pass `onactivate={() => onstackactivate(stack)}`.
+- [x] 12. In `src/app/components/DuelField.svelte`, add `zoneLists`, `onzonelistpreview`, `openStackId`, the reset-on-prompt-change reactive statement, the `onstackactivate` handler and the `ZoneListDialog` render block.
+- [x] 13. In `src/app/components/duel-field/DuelFieldErrorBoundary.svelte`, declare and forward `zoneLists` and `onzonelistpreview`.
+- [x] 14. In `src/app/App.svelte`, add `zoneLists`, `previewZoneListEntry`, and pass both down.
+- [x] 15. In `src/styles/app.css`, add the `.zone-list-dialog` rules: centred absolute positioning inside `.duel-field`, `z-index: var(--duel-field-layer-menu)`, `background: var(--surface-strong)`, `border: 1px solid var(--border)`, `border-radius: 0.9rem`, `box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.45)`, `padding: 0.75rem`; `.zone-list-dialog__entries { display: flex; gap: 0.5rem; overflow-x: auto; }`; `.zone-list-entry { position: relative; flex: 0 0 auto; width: 4.5rem; }`; `.zone-list-entry.is-actionable img { border-color: var(--warning); box-shadow: 0 0 0 2px rgb(255 213 128 / 0.55); }`; and reveal the chips with `.zone-list-entry:hover .card-action-chips, .zone-list-entry:focus-within .card-action-chips { display: flex; }`.
+- [x] 16. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`.
+- [x] 17. Run the chromium e2e suite (see Validation). If a spec still expects the `Choose a chain response` modal for a graveyard activation, update it — that modal is now correctly replaced by the field path.
 
 ## Outputs
 
@@ -213,12 +213,12 @@
 
 ## Validation
 
-- [ ] `npm run format:check` exits 0
-- [ ] `npm run lint` exits 0
-- [ ] `npm run typecheck` exits 0
-- [ ] `npm run test:unit` exits 0
-- [ ] `npm run test:component` exits 0
-- [ ] chromium e2e exits 0:
+- [x] `npm run format:check` exits 0
+- [x] `npm run lint` exits 0
+- [x] `npm run typecheck` exits 0
+- [x] `npm run test:unit` exits 0
+- [x] `npm run test:component` exits 0
+- [x] chromium e2e exits 0:
   ```bash
   cd /home/aron/projects/ascencio
   timeout 590 nix-shell -p playwright-driver.browsers glib gtk3 nss nspr dbus atk cups \
@@ -236,6 +236,6 @@
   - Run it in the **foreground**, blocking. Runs take 1-5 min; `webServer` builds and starts the preview itself, so do not hand-start `npm run preview`.
   - The duel seed is random per run (`crypto.getRandomValues`). A single pass of a duel-walking test proves little; if a duel-walking test is the one you changed, run the suite 3 times before calling it green.
 - [ ] manual check: `npm run dev`; click your graveyard — a centred list opens, scrolls horizontally, numbers each card, previews on hover, and closes on Escape. Click the opponent's extra deck — every entry is face-down.
-- [ ] app functional — the dialog never blocks the board (no backdrop) and a new prompt closes it
-- [ ] commit msg draft: `feat(field): open and act from a zone list dialog`
+- [x] app functional — the dialog never blocks the board (no backdrop) and a new prompt closes it
+- [x] commit msg draft: `feat(field): open and act from a zone list dialog`
 </content>

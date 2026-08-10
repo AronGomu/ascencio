@@ -25,6 +25,7 @@ import type {
   PromptKind,
 } from "../../src/duel/contracts/player-prompt.ts";
 import { mapSnapshotToBoard } from "../../src/field/board-view-model.ts";
+import { zoneListsForBoard } from "../../src/field/zone-list.ts";
 import {
   createInteractionSession,
   reduceInteractionSession,
@@ -273,11 +274,19 @@ describe("DuelField", () => {
     ).toEqual(
       new Set(["shared:extraMonster:left", "shared:extraMonster:right"]),
     );
-    // The always-mounted, disabled End turn corner button is the sole
-    // exception: it has no active prompt/spec to drive it here.
+    // The always-mounted, disabled End turn corner button has no active
+    // prompt/spec to drive it here; the two non-empty deck stacks (T8) are
+    // clickable regardless of any prompt.
     const buttons = within(field).queryAllByRole("button");
-    expect(buttons).toHaveLength(1);
-    expect(buttons[0]?.getAttribute("data-cy")).toBe("field-end-turn-button");
+    expect(
+      buttons.map((button) => button.getAttribute("data-cy")).sort(),
+    ).toEqual(
+      [
+        "field-end-turn-button",
+        "field-stack-p0:deck",
+        "field-stack-p1:deck",
+      ].sort(),
+    );
   });
 
   it("keeps visible and hidden card nodes keyed without exposing opponent identity", async () => {
@@ -318,16 +327,18 @@ describe("DuelField", () => {
   it("renders stack counts through named passive controls", () => {
     render(DuelField, { board: board("ST-08") });
 
+    /* Every stack rendered here has cards in it, so each is a clickable
+       button (T8) rather than a passive group. */
     expect(
-      screen.getByRole("group", { name: "Your Deck, 35 cards" }),
+      screen.getByRole("button", { name: "Your Deck, 35 cards" }),
     ).toBeTruthy();
     expect(
-      screen.getByRole("group", {
+      screen.getByRole("button", {
         name: "Your GY, 1 card, top card Blue-Eyes White Dragon",
       }),
     ).toBeTruthy();
     expect(
-      screen.getByRole("group", { name: "Opponent Deck, 31 cards" }),
+      screen.getByRole("button", { name: "Opponent Deck, 31 cards" }),
     ).toBeTruthy();
   });
 
@@ -1593,6 +1604,101 @@ describe("DuelField", () => {
     rendered.unmount();
 
     expect(release).toHaveBeenCalledTimes(2);
+  });
+
+  it("clicking a pile opens its list", async () => {
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    const zoneLists = zoneListsForBoard(
+      stackBoard.value,
+      STACK_ART_STATE,
+      BOARD_CARD_TEXTS,
+    );
+    render(DuelField, { board: stackBoard.value, zoneLists });
+
+    expect(document.querySelector('[data-cy="zone-list-dialog"]')).toBeNull();
+    const stack = document.querySelector<HTMLElement>(
+      '[data-cy="field-stack-p0:graveyard"]',
+    );
+    if (stack === null) throw new Error("Missing graveyard stack");
+    await fireEvent.click(stack);
+
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog"]'),
+    ).not.toBeNull();
+  });
+
+  it("clicking the same pile closes it", async () => {
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    const zoneLists = zoneListsForBoard(
+      stackBoard.value,
+      STACK_ART_STATE,
+      BOARD_CARD_TEXTS,
+    );
+    render(DuelField, { board: stackBoard.value, zoneLists });
+    const stack = document.querySelector<HTMLElement>(
+      '[data-cy="field-stack-p0:graveyard"]',
+    );
+    if (stack === null) throw new Error("Missing graveyard stack");
+    await fireEvent.click(stack);
+    await fireEvent.click(stack);
+
+    expect(document.querySelector('[data-cy="zone-list-dialog"]')).toBeNull();
+  });
+
+  it("an empty pile is not clickable", () => {
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    render(DuelField, { board: stackBoard.value });
+
+    const stack = document.querySelector('[data-cy="field-stack-p1:banished"]');
+    expect(stack?.tagName).toBe("DIV");
+  });
+
+  it("a new prompt closes an open list", async () => {
+    const valueBoard = board("ST-05");
+    const firstPrompt = fieldPrompt("idleCommand", [
+      mountedChoice("activate", "Activate effect", { action: "activate" }),
+    ]);
+    const firstSpec = activeSpec(firstPrompt);
+    const zoneLists = zoneListsForBoard(
+      valueBoard,
+      BOARD_VIEW_MODEL_FIXTURES["ST-05"],
+      BOARD_CARD_TEXTS,
+    );
+    const rendered = render(DuelField, {
+      board: valueBoard,
+      prompt: firstPrompt,
+      spec: firstSpec,
+      session: createInteractionSession(firstSpec),
+      pending: false,
+      zoneLists,
+    });
+    const stack = document.querySelector<HTMLElement>(
+      '[data-cy="field-stack-p0:deck"]',
+    );
+    if (stack === null) throw new Error("Missing deck stack");
+    await fireEvent.click(stack);
+
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog"]'),
+    ).not.toBeNull();
+
+    const nextPrompt = fieldPrompt("selectCard", [
+      mountedChoice("select", "Select monster"),
+    ]);
+    const nextSpec = activeSpec(nextPrompt);
+    await rendered.rerender({
+      board: valueBoard,
+      prompt: nextPrompt,
+      spec: nextSpec,
+      session: createInteractionSession(nextSpec),
+      pending: false,
+      zoneLists,
+    });
+
+    expect(document.querySelector('[data-cy="zone-list-dialog"]')).toBeNull();
   });
 });
 

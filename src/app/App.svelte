@@ -14,6 +14,8 @@
     type BoardCardView,
     type BoardStackView,
   } from "../field/board-view-model.ts";
+  import { zoneListsForBoard, type ZoneListEntry } from "../field/zone-list.ts";
+  import type { PhysicalZoneId } from "../field/duel-field-layout.ts";
   import DuelHeaderBar from "./components/DuelHeaderBar.svelte";
   import MenuDialog from "./components/MenuDialog.svelte";
   import SettingsDialog from "./components/SettingsDialog.svelte";
@@ -65,6 +67,10 @@
   const ACTIVE_CARD_TEXTS = new Map(
     __ACTIVE_CARD_TEXTS__.map((record) => [record.code, record] as const),
   );
+  const EMPTY_ZONE_LISTS: ReadonlyMap<
+    PhysicalZoneId,
+    readonly ZoneListEntry[]
+  > = new Map();
   const CURRENT_ARTIFACT_RECEIPTS: readonly SnapshotArtifactReceipt[] = [
     { id: "runtime-package", sha256: __RUNTIME_MANIFEST_SHA256__ },
     { id: "active-images", sha256: __ACTIVE_IMAGE_MANIFEST_SHA256__ },
@@ -122,6 +128,10 @@
       ? null
       : mapSnapshotToBoard($duel.snapshot, ACTIVE_CARD_TEXTS);
   $: duelBoard = boardResult?.ok === true ? boardResult.value : null;
+  $: zoneLists =
+    duelBoard === null
+      ? EMPTY_ZONE_LISTS
+      : zoneListsForBoard(duelBoard, $duel.snapshot, ACTIVE_CARD_TEXTS);
   $: mappedInteractionSpec = mapPromptToInteractionSpec(
     $duel.prompt,
     $duel.snapshot,
@@ -608,6 +618,14 @@
     if (next !== null) previewCard = next;
   }
 
+  function previewZoneListEntry(entry: ZoneListEntry): void {
+    previewCard =
+      entry.code === undefined
+        ? HIDDEN_CARD_PREVIEW
+        : (cardPreviewForCode(entry.code, ACTIVE_CARD_TEXTS) ??
+          HIDDEN_CARD_PREVIEW);
+  }
+
   /* Still wired to `DuelHud`'s `oninspect`, so the HUD and the card trays need
      no change: the trigger button they hand over is irrelevant now that the
      panel replaces the modal inspector. Unlike `BoardCardView.code`, a raw
@@ -930,6 +948,8 @@
             onplacementintent={duel.armPlacementIntent}
             onpreview={previewFieldCard}
             onstackpreview={previewStackCard}
+            {zoneLists}
+            onzonelistpreview={previewZoneListEntry}
             phase={$duel.snapshot?.phase ?? "unknown"}
           />
         {/key}

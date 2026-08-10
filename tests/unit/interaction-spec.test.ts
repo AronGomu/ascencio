@@ -230,7 +230,7 @@ describe("prompt interaction spec", () => {
     ]);
   });
 
-  it("stack choices do not make a prompt field capable", () => {
+  it("stack choices now make a prompt field capable", () => {
     const spec = specFor(
       prompt("chain", {
         choices: [
@@ -240,7 +240,34 @@ describe("prompt interaction spec", () => {
       }),
     );
 
-    expect(spec.fieldCapable).toBe(false);
+    expect(spec.fieldCapable).toBe(true);
+  });
+
+  it("choices carry their card address", () => {
+    const spec = specFor(
+      prompt("chain", {
+        choices: [
+          choice(FIRST, {
+            action: "activate",
+            label: "Activate",
+            card: {
+              instanceId: cardInstanceId("gy-seq-2"),
+              controller: 0,
+              location: "graveyard",
+              sequence: 2,
+              position: "faceUpAttack",
+            },
+          }),
+        ],
+      }),
+    );
+
+    const choices = spec.stackChoices.get("stack:p0:graveyard");
+    expect(choices?.[0]?.cardAddress).toEqual({
+      controller: 0,
+      location: "graveyard",
+      sequence: 2,
+    });
   });
 
   it("resolves public positional identity and routes unresolved cards to semantic fallback", () => {

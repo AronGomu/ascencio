@@ -7,6 +7,7 @@ import type {
   PromptKind,
 } from "../../duel/contracts/player-prompt.ts";
 import type {
+  PlayerIndex,
   PublicDuelState,
   PublicLocation,
 } from "../../duel/contracts/public-duel-state.ts";
@@ -38,6 +39,12 @@ export interface InteractionChoice {
   readonly value?: number | string;
   readonly toggleState?: "selected" | "unselected";
   readonly allocationMaximum?: number;
+  /** Engine-side address of the card this choice acts on, when it has one. */
+  readonly cardAddress?: {
+    readonly controller: PlayerIndex;
+    readonly location: PublicLocation;
+    readonly sequence: number;
+  };
 }
 
 export interface InteractionConstraints {
@@ -255,11 +262,10 @@ export function mapPromptToInteractionSpec(
   const zoneChoices = freezeChoiceMap(zoneEntries);
   const stackChoices = freezeChoiceMap(stackEntries);
   const globalChoices = Object.freeze(new Map(globalEntries));
-  // A9: stackChoices must NOT widen fieldCapable. A graveyard/banished/deck/
-  // extra-deck activation stays modal-only until T8 makes a stack clickable;
-  // folding stackChoices in here would stop the modal from opening while
-  // nothing on the field could answer the prompt, deadlocking the duel.
-  const fieldCapable = cardChoices.size > 0 || zoneChoices.size > 0;
+  // T8: the zone list dialog makes a stack clickable and able to answer a
+  // choice, so stackChoices now counts towards fieldCapable too.
+  const fieldCapable =
+    cardChoices.size > 0 || zoneChoices.size > 0 || stackChoices.size > 0;
   const base = {
     key: interactionKey(
       context.workerGeneration,
@@ -344,6 +350,15 @@ function sanitizeChoice(choice: PromptChoice): InteractionChoice | undefined {
     ...(choice.allocationMaximum === undefined
       ? {}
       : { allocationMaximum: choice.allocationMaximum }),
+    ...(isValidCardTarget(choice.card)
+      ? {
+          cardAddress: Object.freeze({
+            controller: choice.card!.controller,
+            location: choice.card!.location,
+            sequence: choice.card!.sequence,
+          }),
+        }
+      : {}),
   });
 }
 

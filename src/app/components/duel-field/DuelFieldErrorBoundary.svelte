@@ -9,6 +9,7 @@
     BoardViewModel,
   } from "../../../field/board-view-model.ts";
   import type { PhysicalZoneId } from "../../../field/duel-field-layout.ts";
+  import type { ZoneListEntry } from "../../../field/zone-list.ts";
   import type {
     InteractionSession,
     InteractionSessionAction,
@@ -40,6 +41,10 @@
     false;
   export let onpreview: (card: BoardCardView) => void = () => undefined;
   export let onstackpreview: (stack: BoardStackView) => void = () => undefined;
+  export let zoneLists: ReadonlyMap<PhysicalZoneId, readonly ZoneListEntry[]> =
+    new Map();
+  export let onzonelistpreview: (entry: ZoneListEntry) => void = () =>
+    undefined;
   export let phase: DuelPhase = "unknown";
 
   let shouldFail: boolean = injectFailure;
@@ -100,6 +105,8 @@
     {onplacementintent}
     {onpreview}
     {onstackpreview}
+    {zoneLists}
+    {onzonelistpreview}
     {phase}
   />
 </svelte:boundary>

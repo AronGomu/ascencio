@@ -1420,6 +1420,75 @@ describe("DuelField", () => {
     expect(field.querySelector('[data-cy="life-pill-p0"]')).toBeNull();
     expect(field.querySelector('[data-cy="life-pill-p1"]')).toBeNull();
   });
+
+  it("actionable stack renders the halo", () => {
+    const value = fieldPrompt("chain", [
+      mountedChoice("graveyard-activate", "Activate", {
+        card: {
+          instanceId: cardInstanceId("prompt-graveyard-activate"),
+          controller: 0,
+          location: "graveyard",
+          sequence: 0,
+          position: "faceUpAttack",
+        },
+      } as Partial<PromptChoice>),
+      promptChoice("pass-choice", "Pass", { action: "pass" }),
+    ]);
+    const spec = activeSpec(value);
+    const session = createInteractionSession(spec);
+    render(DuelField, {
+      board: board("ST-05"),
+      prompt: value,
+      spec,
+      session,
+      pending: false,
+    });
+
+    const stack = document.querySelector(
+      '[data-cy="field-stack-p0:graveyard"]',
+    );
+    expect(stack).not.toBeNull();
+    expect(stack?.classList.contains("is-actionable")).toBe(true);
+    expect(stack?.getAttribute("data-actionable")).toBe("true");
+  });
+
+  it("stack stays non-interactive", () => {
+    const value = fieldPrompt("chain", [
+      mountedChoice("graveyard-activate", "Activate", {
+        card: {
+          instanceId: cardInstanceId("prompt-graveyard-activate"),
+          controller: 0,
+          location: "graveyard",
+          sequence: 0,
+          position: "faceUpAttack",
+        },
+      } as Partial<PromptChoice>),
+      promptChoice("pass-choice", "Pass", { action: "pass" }),
+    ]);
+    const spec = activeSpec(value);
+    const session = createInteractionSession(spec);
+    const oninteraction = vi.fn();
+    render(DuelField, {
+      board: board("ST-05"),
+      prompt: value,
+      spec,
+      session,
+      pending: false,
+      oninteraction,
+    });
+
+    const stack = document.querySelector(
+      '[data-cy="field-stack-p0:graveyard"]',
+    );
+    expect(stack).not.toBeNull();
+    expect(stack?.tagName).toBe("DIV");
+    expect(stack?.getAttribute("role")).toBe("group");
+    expect(stack?.hasAttribute("onclick")).toBe(false);
+
+    (stack as HTMLElement).click();
+
+    expect(oninteraction).not.toHaveBeenCalled();
+  });
 });
 
 describe("FieldBoard", () => {

@@ -148,6 +148,14 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 - [ ] Turn `Skip prompts with a single answer` back on mid-duel: from that point on, trivial prompts go back to resolving automatically without a click.
 - [ ] Reload the page: both new settings reset to their defaults (checked), matching the existing session-only behaviour of the other two toggles.
 
+## T6 stack-interaction-targets
+
+- [ ] `npm run dev`; get the engine to offer a graveyard activation (e.g. an effect that can be activated from the graveyard): the graveyard pile glows with the same orange "you may act here" halo the field's actionable zones and cards use.
+- [ ] While that graveyard pile glows, the modal `PromptDialog` still opens and lets you take the activation exactly as before — clicking the pile itself does nothing (T8 wires that up later).
+- [ ] Clicking on a glowing stack does not throw a console error and does not change focus away from the modal.
+- [ ] Reach a banished-pile activation, an extra-deck activation, and a deck activation (if you can find/force one) in turn: each pile glows the same orange while the choice is live, and the modal remains the only way to answer it.
+- [ ] Confirm no previously reachable choice became unanswerable across a full duel: every prompt that used to resolve via the modal (including graveyard/banished/deck/extra activations) is still answerable start to finish.
+
 ## T5 auto-placement-and-single-click-actions
 
 - [ ] `npm run dev`, with `Place cards automatically` left on (the default): summon or set a monster — it lands directly in the centre-most legal zone with no follow-up "choose a zone" prompt of any kind. (manual check: auto-place ON)

@@ -56,6 +56,7 @@
       : [
           ...(spec?.cardChoices.keys() ?? []),
           ...(spec?.zoneChoices.keys() ?? []),
+          ...(spec?.stackChoices.keys() ?? []),
         ],
   );
   $: navigationContext =
@@ -183,6 +184,7 @@
     <StackControl
       {stack}
       active={navigationState.activeTarget === stack.targetId}
+      actionable={!disabled && spec?.stackChoices.has(stack.targetId) === true}
       onpreview={() => onstackpreview(stack)}
     />
   {/each}

@@ -59,6 +59,22 @@ function mountedCardChoice(
   });
 }
 
+function graveyardCardChoice(
+  id: ChoiceId,
+  overrides: Partial<PromptChoice> = {},
+): PromptChoice {
+  return choice(id, {
+    card: {
+      instanceId: cardInstanceId(`stack-${id}`),
+      controller: 0,
+      location: "graveyard",
+      sequence: 0,
+      position: "faceUpAttack",
+    },
+    ...overrides,
+  });
+}
+
 function prompt(
   kind: PromptKind,
   overrides: Partial<PlayerPrompt> = {},
@@ -197,6 +213,36 @@ describe("prompt interaction spec", () => {
     expect(validatePromptSelection(value, [SECOND])).toEqual({ valid: true });
   });
 
+  it("spec collects stack choices separately", () => {
+    const spec = specFor(
+      prompt("chain", {
+        choices: [
+          graveyardCardChoice(FIRST, { action: "activate", label: "Activate" }),
+          choice(SECOND, { action: "pass" }),
+        ],
+      }),
+    );
+
+    expect(spec.stackChoices.get("stack:p0:graveyard")).toHaveLength(1);
+    expect(spec.cardChoices.size).toBe(0);
+    expect([...spec.globalChoices.values()].map(({ id }) => id)).toEqual([
+      SECOND,
+    ]);
+  });
+
+  it("stack choices do not make a prompt field capable", () => {
+    const spec = specFor(
+      prompt("chain", {
+        choices: [
+          graveyardCardChoice(FIRST, { action: "activate", label: "Activate" }),
+          choice(SECOND, { action: "pass" }),
+        ],
+      }),
+    );
+
+    expect(spec.fieldCapable).toBe(false);
+  });
+
   it("resolves public positional identity and routes unresolved cards to semantic fallback", () => {
     const unresolved = choiceId("closed-stack-card");
     const spec = specFor(
@@ -205,10 +251,10 @@ describe("prompt interaction spec", () => {
           mountedCardChoice(FIRST),
           choice(unresolved, {
             card: {
-              instanceId: cardInstanceId("stale-graveyard-instance"),
+              instanceId: cardInstanceId("stale-monster-instance"),
               controller: 0,
-              location: "graveyard",
-              sequence: 0,
+              location: "monster",
+              sequence: 9,
               position: "faceUpAttack",
             },
           }),

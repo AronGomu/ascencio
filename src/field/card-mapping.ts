@@ -6,10 +6,14 @@ import type {
   PublicLocation,
 } from "../duel/contracts/public-duel-state.ts";
 import type { BoardTargetId, BoardViewModel } from "./board-view-model.ts";
-import { mapEngineFieldAddress } from "./duel-field-layout.ts";
+import {
+  mapEngineFieldAddress,
+  type PhysicalZoneId,
+} from "./duel-field-layout.ts";
 
 export type PromptChoiceBoardTargetResolution =
   | { readonly kind: "board"; readonly targetId: BoardTargetId }
+  | { readonly kind: "stack"; readonly targetId: `stack:${PhysicalZoneId}` }
   | {
       readonly kind: "nonField";
       readonly reason:
@@ -17,6 +21,15 @@ export type PromptChoiceBoardTargetResolution =
         | "unsupported_field_address"
         | "target_not_mounted";
     };
+
+const STACK_ZONE_BY_LOCATION: Partial<
+  Record<PublicLocation, "deck" | "extra" | "graveyard" | "banished">
+> = Object.freeze({
+  deck: "deck",
+  extra: "extra",
+  graveyard: "graveyard",
+  banished: "banished",
+});
 
 export function resolvePromptChoiceBoardTarget(
   choice: PromptChoice,
@@ -36,6 +49,16 @@ export function resolvePromptChoiceBoardTarget(
       : Object.freeze({ kind: "board", targetId: zone.targetId });
   }
   if (choice.card !== undefined) {
+    const stackZone = STACK_ZONE_BY_LOCATION[choice.card.location];
+    if (stackZone !== undefined) {
+      const stack = board.stacks.find(
+        (value) =>
+          value.player === choice.card!.controller && value.zone === stackZone,
+      );
+      return stack === undefined
+        ? Object.freeze({ kind: "nonField", reason: "target_not_mounted" })
+        : Object.freeze({ kind: "stack", targetId: stack.targetId });
+    }
     const publicCard = findPublicCard(snapshot, choice.card);
     const instanceId = publicCard?.instanceId ?? choice.card.instanceId;
     const card = board.cards.find(({ id }) => id === instanceId);

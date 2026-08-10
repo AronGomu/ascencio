@@ -50,6 +50,7 @@ function fieldCapableSpec(): ActiveInteractionSpec {
     },
     cardChoices: new Map(),
     zoneChoices: new Map(),
+    stackChoices: new Map(),
     globalChoices: new Map(),
   };
 }
@@ -76,6 +77,7 @@ function nonFieldSpec(): ActiveInteractionSpec {
     },
     cardChoices: new Map(),
     zoneChoices: new Map(),
+    stackChoices: new Map(),
     globalChoices: new Map(),
   };
 }

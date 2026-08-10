@@ -956,6 +956,11 @@ button.duel-field-zone,
   box-shadow: 0 0 0 2px rgb(255 213 128 / 0.55);
 }
 
+.duel-field-stack.is-actionable {
+  border-color: var(--warning);
+  box-shadow: 0 0 0 2px rgb(255 213 128 / 0.55);
+}
+
 /* A drag candidate wears the same orange as legality, filled in: the tint is
    what separates "you could drop here" from "you may act here". */
 .duel-field-zone.is-drop-candidate {

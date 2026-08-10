@@ -423,7 +423,7 @@ describe("semantic board view model", () => {
       ),
     ).toEqual([
       { kind: "board", targetId: "card:st08-chain-source" },
-      { kind: "nonField", reason: "target_not_mounted" },
+      { kind: "stack", targetId: "stack:p0:graveyard" },
       { kind: "board", targetId: "zone:p0:field" },
       { kind: "nonField", reason: "unsupported_field_address" },
       { kind: "nonField", reason: "choice_has_no_field_target" },

@@ -76,6 +76,10 @@ interface ActiveInteractionSpecBase<Kind extends ActiveInteractionKind> {
     BoardTargetId,
     readonly InteractionChoice[]
   >;
+  readonly stackChoices: ReadonlyMap<
+    BoardTargetId,
+    readonly InteractionChoice[]
+  >;
   readonly globalChoices: ReadonlyMap<ChoiceId, InteractionChoice>;
 }
 
@@ -215,6 +219,7 @@ export function mapPromptToInteractionSpec(
 
   const cardEntries = new Map<BoardTargetId, InteractionChoice[]>();
   const zoneEntries = new Map<BoardTargetId, InteractionChoice[]>();
+  const stackEntries = new Map<BoardTargetId, InteractionChoice[]>();
   const globalEntries = new Map<ChoiceId, InteractionChoice>();
   const duplicateIds = duplicateChoiceIds(prompt.choices);
 
@@ -238,13 +243,22 @@ export function mapPromptToInteractionSpec(
       globalEntries.set(choice.id, choice);
       continue;
     }
+    if (resolution.kind === "stack") {
+      appendChoice(stackEntries, resolution.targetId, choice);
+      continue;
+    }
     const entries = targetKind === "card" ? cardEntries : zoneEntries;
     appendChoice(entries, resolution.targetId, choice);
   }
 
   const cardChoices = freezeChoiceMap(cardEntries);
   const zoneChoices = freezeChoiceMap(zoneEntries);
+  const stackChoices = freezeChoiceMap(stackEntries);
   const globalChoices = Object.freeze(new Map(globalEntries));
+  // A9: stackChoices must NOT widen fieldCapable. A graveyard/banished/deck/
+  // extra-deck activation stays modal-only until T8 makes a stack clickable;
+  // folding stackChoices in here would stop the modal from opening while
+  // nothing on the field could answer the prompt, deadlocking the duel.
   const fieldCapable = cardChoices.size > 0 || zoneChoices.size > 0;
   const base = {
     key: interactionKey(
@@ -260,6 +274,7 @@ export function mapPromptToInteractionSpec(
     constraints: constraintsFor(prompt),
     cardChoices,
     zoneChoices,
+    stackChoices,
     globalChoices,
   };
 

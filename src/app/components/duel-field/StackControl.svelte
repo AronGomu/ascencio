@@ -3,6 +3,7 @@
 
   export let stack: BoardStackView;
   export let active = false;
+  export let actionable = false;
   export let onpreview: () => void = () => undefined;
 
   $: positionStyle = `--field-x: ${stack.x * 100}%; --field-y: ${stack.y * 100}%; --field-width: ${stack.width * 100}%; --field-height: ${stack.height * 100}%;`;
@@ -11,6 +12,7 @@
 <!-- svelte-ignore a11y_no_noninteractive_tabindex (stack participates in spatial roving focus) -->
 <div
   class:is-navigation-active={active}
+  class:is-actionable={actionable}
   class="duel-field-stack"
   role="group"
   aria-label={stack.label}
@@ -19,6 +21,7 @@
   data-player={stack.player}
   data-stack-id={stack.id}
   data-stack-zone={stack.zone}
+  data-actionable={actionable ? "true" : undefined}
   style={positionStyle}
   onpointerenter={onpreview}
   onfocusin={onpreview}

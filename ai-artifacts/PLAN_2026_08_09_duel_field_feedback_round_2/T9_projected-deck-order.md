@@ -148,20 +148,26 @@ Drive the projector directly, the way `tests/unit/duel-state-projector.test.ts` 
 
 ## Impl steps
 
-- [ ] 1. Create `tests/unit/deck-order-projection.test.ts` with the eleven projector cases, copying the projector construction style from `tests/unit/duel-state-projector.test.ts`.
-- [ ] 2. Add the `deck count` case to `tests/unit/contracts.test.ts`.
-- [ ] 3. Run `npm run test:unit`; confirm the new cases fail.
-- [ ] 4. In `src/worker/engine/engine-constants.ts`, add `CONFIRM_DECKTOP: 30`, `SWAP_GRAVE_DECK: 35`, `REVERSE_DECK: 37`, `DECK_TOP: 38` to `EngineMessageType` in numeric order.
-- [ ] 5. In `src/duel/contracts/public-duel-state.ts`, add `readonly deck: readonly PublicCard[];` to `PublicPlayerState` after `deckCount`.
-- [ ] 6. In `src/worker/projection/DuelStateProjector.ts`, add `deckReveals: Map<number, CardCode>` to `MutablePlayer` and initialise it in `mutablePlayer`.
-- [ ] 7. Add the five private deck-reveal methods.
-- [ ] 8. Add the `CONFIRM_DECKTOP`, `DECK_TOP`, `SWAP_GRAVE_DECK` and `REVERSE_DECK` cases to `apply()`.
-- [ ] 9. Extend the `DRAW`, `SHUFFLE_DECK` and `MOVE` cases as specified.
-- [ ] 10. Call `#truncateDeckReveals(0)` and `#truncateDeckReveals(1)` just before the revision bump at the end of `apply()`.
-- [ ] 11. Add `projectDeck` and wire `deck: projectDeck(value, index)` into `snapshot()`'s frozen player object.
-- [ ] 12. In `src/duel/contracts/duel-worker-event.ts`, add `"deck"` to the exact-keys list, to the zone loop, to `validLocation`, and add the length/sequence/owner assertions.
-- [ ] 13. Add `deckSlots(player, count)` to `tests/fixtures/board-public-states.ts` and add `deck:` to every fixture in the eight files listed under Inputs.
-- [ ] 14. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`, `npm run test:integration`, `npm run test:legacy`.
+- [x] 1. Create `tests/unit/deck-order-projection.test.ts` with the eleven projector cases, copying the projector construction style from `tests/unit/duel-state-projector.test.ts`.
+- [x] 2. Add the `deck count` case to `tests/unit/contracts.test.ts`.
+- [x] 3. Run `npm run test:unit`; confirm the new cases fail.
+- [x] 4. In `src/worker/engine/engine-constants.ts`, add `CONFIRM_DECKTOP: 30`, `SWAP_GRAVE_DECK: 35`, `REVERSE_DECK: 37`, `DECK_TOP: 38` to `EngineMessageType` in numeric order.
+- [x] 5. In `src/duel/contracts/public-duel-state.ts`, add `readonly deck: readonly PublicCard[];` to `PublicPlayerState` after `deckCount`.
+- [x] 6. In `src/worker/projection/DuelStateProjector.ts`, add `deckReveals: Map<number, CardCode>` to `MutablePlayer` and initialise it in `mutablePlayer`.
+- [x] 7. Add the five private deck-reveal methods.
+- [x] 8. Add the `CONFIRM_DECKTOP`, `DECK_TOP`, `SWAP_GRAVE_DECK` and `REVERSE_DECK` cases to `apply()`.
+- [x] 9. Extend the `DRAW`, `SHUFFLE_DECK` and `MOVE` cases as specified.
+- [x] 10. Call `#truncateDeckReveals(0)` and `#truncateDeckReveals(1)` just before the revision bump at the end of `apply()`.
+- [x] 11. Add `projectDeck` and wire `deck: projectDeck(value, index)` into `snapshot()`'s frozen player object.
+- [x] 12. In `src/duel/contracts/duel-worker-event.ts`, add `"deck"` to the exact-keys list, to the zone loop, to `validLocation`, and add the length/sequence/owner assertions.
+- [x] 13. Add `deckSlots(player, count)` to `tests/fixtures/board-public-states.ts` and add `deck:` to every fixture in the eight files listed under Inputs.
+- [x] 14. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`, `npm run test:integration`, `npm run test:legacy`.
+
+### Deviation (orchestrator-approved)
+
+Pinned vendor type `OcgMessageReverseDeck` has no `player` field and documents reversal of both players' decks, contradicting the ticket statement that it is player-scoped. Orchestrator approved clearing deck reveals for players 0 and 1 on one `REVERSE_DECK`; no `message.player` is cast or invented. `SWAP_GRAVE_DECK` remains player-scoped.
+
+Fixture list was stale because `tests/unit/zone-list.test.ts` postdates plan authoring. Orchestrator approved adding only its matching `deckSlots(index, 0)` fixture field.
 
 ## Outputs
 
@@ -177,14 +183,14 @@ Drive the projector directly, the way `tests/unit/duel-state-projector.test.ts` 
 
 ## Validation
 
-- [ ] `npm run format:check` exits 0
-- [ ] `npm run lint` exits 0
-- [ ] `npm run typecheck` exits 0
-- [ ] `npm run test:legacy` exits 0
-- [ ] `npm run test:unit` exits 0
-- [ ] `npm run test:component` exits 0
-- [ ] `npm run test:integration` exits 0 — including `tests/integration/real-wasm-smoke.test.ts`, which is the only place the real engine actually emits these messages
+- [x] `npm run format:check` exits 0
+- [x] `npm run lint` exits 0
+- [x] `npm run typecheck` exits 0
+- [x] `npm run test:legacy` exits 0
+- [x] `npm run test:unit` exits 0
+- [x] `npm run test:component` exits 0
+- [x] `npm run test:integration` exits 0 — including `tests/integration/real-wasm-smoke.test.ts`, which is the only place the real engine actually emits these messages
 - [ ] manual check: none possible yet (no UI renders `deck`); instead assert in a node REPL or a temporary log that a completed duel's final snapshot has `players[0].deck.length === players[0].deckCount`
-- [ ] app functional — the duel still runs end to end and the worker/UI contract validator does not throw
-- [ ] commit msg draft: `feat(worker): project deck order and track legitimate deck reveals`
+- [x] app functional — the duel still runs end to end and the worker/UI contract validator does not throw
+- [x] commit msg draft: `feat(worker): project deck order and track legitimate deck reveals`
 </content>

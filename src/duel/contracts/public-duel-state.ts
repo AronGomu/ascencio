@@ -55,6 +55,7 @@ export interface PublicPlayerState {
   readonly player: PlayerIndex;
   readonly lifePoints: number;
   readonly deckCount: number;
+  readonly deck: readonly PublicCard[];
   readonly extraDeckCount: number;
   readonly handCount: number;
   readonly hand: readonly PublicCard[];

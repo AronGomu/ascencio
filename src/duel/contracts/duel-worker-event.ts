@@ -513,6 +513,7 @@ function validatePublicPlayer(
       "player",
       "lifePoints",
       "deckCount",
+      "deck",
       "extraDeckCount",
       "handCount",
       "hand",
@@ -541,6 +542,7 @@ function validatePublicPlayer(
   }
   for (const zone of [
     "hand",
+    "deck",
     "extraDeck",
     "monsters",
     "spellsAndTraps",
@@ -559,6 +561,7 @@ function validatePublicPlayer(
       if (record.controller !== index) throw invalid(`${cardLabel}.controller`);
       const validLocation =
         (zone === "hand" && record.location === "hand") ||
+        (zone === "deck" && record.location === "deck") ||
         (zone === "extraDeck" && record.location === "extra") ||
         (zone === "monsters" && record.location === "monster") ||
         (zone === "spellsAndTraps" &&
@@ -566,6 +569,10 @@ function validatePublicPlayer(
         (zone === "graveyard" && record.location === "graveyard") ||
         (zone === "banished" && record.location === "banished");
       if (!validLocation) throw invalid(`${cardLabel}.location`);
+      if (zone === "deck" && record.sequence !== cardIndex)
+        throw invalid(`${cardLabel}.sequence order`);
+      if (zone === "deck" && record.owner !== index)
+        throw invalid(`${cardLabel}.owner`);
       if (zone === "extraDeck" && record.owner !== index)
         throw invalid(`${cardLabel}.owner`);
       if (zone === "extraDeck" && index === 0 && record.sequence !== cardIndex)
@@ -579,6 +586,8 @@ function validatePublicPlayer(
       }
     });
   }
+  const deck = requireArray(player.deck, `${label}.deck`, MAXIMUM_PUBLIC_CARDS);
+  if (deck.length !== player.deckCount) throw invalid(`${label}.deck count`);
   const extraDeck = requireArray(
     player.extraDeck,
     `${label}.extraDeck`,

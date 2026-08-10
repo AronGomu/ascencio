@@ -188,3 +188,7 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 - [ ] Trigger a new prompt (e.g. pass priority to the opponent) while a zone list is open: the list closes automatically without needing another click.
 - [ ] An empty pile (0 cards) is not clickable and shows no hover/focus affordance.
 - [ ] Keyboard only: tab to a non-empty pile, press Enter/Space to open its list, tab through the entries and any action chips, and confirm Escape closes the dialog and returns focus sensibly.
+
+## T9 projected-deck-order
+
+- [ ] Complete a duel, inspect final projected state, confirm `players[0].deck.length === players[0].deckCount`.

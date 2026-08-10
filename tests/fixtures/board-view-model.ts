@@ -16,6 +16,7 @@ import type {
   PublicDuelState,
   PublicPlayerState,
 } from "../../src/duel/contracts/public-duel-state.ts";
+import { deckSlots } from "./board-public-states.ts";
 
 export const BOARD_CARD_TEXTS = new Map([
   [97590747, { name: "The Legendary Fisherman" }],
@@ -53,6 +54,7 @@ function player(player: PlayerIndex): PublicPlayerState {
     player,
     lifePoints: 8000,
     deckCount: 35,
+    deck: deckSlots(player, 35),
     extraDeckCount: 0,
     handCount: 0,
     hand: [],
@@ -156,7 +158,7 @@ export const BOARD_VIEW_MODEL_FIXTURES = Object.freeze({
       ],
       graveyard: [card("st08-gy", 89631139, 0, "graveyard", 0)],
     },
-    { deckCount: 31, extraDeckCount: 1 },
+    { deckCount: 31, deck: deckSlots(1, 31), extraDeckCount: 1 },
     [
       {
         index: 1,
@@ -261,6 +263,7 @@ export const STACK_ART_STATE = state("stackart", {
   ],
   banished: [card("stackart-banished-first", 97590747, 0, "banished", 0)],
   deckCount: 40,
+  deck: deckSlots(0, 40),
 });
 
 export function promptChoice(id: string): PromptChoice {

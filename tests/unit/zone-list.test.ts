@@ -13,6 +13,7 @@ import type {
 } from "../../src/duel/contracts/public-duel-state.ts";
 import { mapSnapshotToBoard } from "../../src/field/board-view-model.ts";
 import { zoneListEntries } from "../../src/field/zone-list.ts";
+import { deckSlots } from "../fixtures/board-public-states.ts";
 
 const CARD_TEXTS = new Map([
   [97590747, { name: "The Legendary Fisherman" }],
@@ -47,6 +48,7 @@ function player(index: PlayerIndex): PublicPlayerState {
     player: index,
     lifePoints: 8000,
     deckCount: 0,
+    deck: deckSlots(index, 0),
     extraDeckCount: 0,
     handCount: 0,
     hand: [],

@@ -39,6 +39,27 @@ export const PUBLIC_STATE_CARD_TEXTS = new Map([
   ],
 ]);
 
+export function deckSlots(
+  player: PlayerIndex,
+  count: number,
+): readonly PublicCard[] {
+  return Object.freeze(
+    Array.from({ length: count }, (_, offset): PublicCard =>
+      Object.freeze({
+        instanceId: cardInstanceId(`deck-p${player}-${offset}`),
+        owner: player,
+        controller: player,
+        location: "deck",
+        sequence: offset,
+        position: "faceDownAttack",
+        faceUp: false,
+        counters: Object.freeze([]),
+        overlayMaterials: Object.freeze([]),
+      }),
+    ),
+  );
+}
+
 export function publicStateCard(
   id: string,
   code: number,
@@ -68,6 +89,7 @@ function player(player: PlayerIndex): PublicPlayerState {
     player,
     lifePoints: player === 0 ? 6200 : 3400,
     deckCount: player === 0 ? 28 : 31,
+    deck: deckSlots(player, player === 0 ? 28 : 31),
     extraDeckCount: player === 0 ? 2 : 2,
     handCount: player === 0 ? 1 : 2,
     hand: [],

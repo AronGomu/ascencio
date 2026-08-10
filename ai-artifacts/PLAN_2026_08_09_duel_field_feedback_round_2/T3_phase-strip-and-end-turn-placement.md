@@ -191,10 +191,17 @@ The only band with no zone outside the two extra monster zones is **y 51% – 64
   timeout 590 nix-shell -p playwright-driver.browsers glib gtk3 nss nspr dbus atk cups \
     libdrm expat libx11 libxcomposite libxdamage libxext libxfixes libxrandr mesa \
     alsa-lib at-spi2-atk at-spi2-core cairo pango xorg.xvfb --run '
+  export PLAYWRIGHT_BROWSERS_PATH=/home/aron/projects/ascencio/.tmp/pw-browsers
   npx playwright test --project=chromium
   '
   ```
-  Run from the repo root. `playwright-driver.browsers` and `xorg.xvfb` are both required in the `-p` list even though Xvfb is never launched; dropping either brings back `libglib-2.0.so.0: cannot open shared object file`. If the browsers are not found, set `PLAYWRIGHT_BROWSERS_PATH` to the directory that holds them before the `npx` line.
+  **This exact command was verified green by the orchestrator on 2026-08-10** (`1 passed` on `-g "production bundle initializes"`). Run it verbatim from the repo root.
+  - `PLAYWRIGHT_BROWSERS_PATH=.tmp/pw-browsers` is mandatory. That directory holds symlinks to the nix-patched browsers in `/nix/store/8ilw3r312xcs1ylxg4g274rhf2frp9z4-playwright-browsers` under the revision names playwright 1.61 expects (`chromium-1228 -> chromium-1217`). The mismatched revision numbers are deliberate and fine.
+  - Without the override, Playwright picks `~/.cache/ms-playwright`, whose binaries are unpatched and die with `libglib-2.0.so.0: cannot open shared object file`. That error means the override is missing, not that the `-p` list is wrong.
+  - `playwright-driver.browsers` and `xorg.xvfb` are both required in the `-p` list even though Xvfb is never launched. Do not simplify the list.
+  - If `.tmp/pw-browsers` is gone, recreate it: `S=/nix/store/8ilw3r312xcs1ylxg4g274rhf2frp9z4-playwright-browsers` (rebuild with `nix-build '<nixpkgs>' -A playwright-driver.browsers --no-out-link` if the path is garbage-collected), then `mkdir -p .tmp/pw-browsers && cd .tmp/pw-browsers && ln -sfn $S/chromium-1217 chromium-1228 && ln -sfn $S/chromium_headless_shell-1217 chromium_headless_shell-1228 && ln -sfn $S/ffmpeg-1011 ffmpeg-1011 && ln -sfn $S/firefox-1511 firefox-1532`.
+  - Run it in the **foreground**, blocking. Runs take 1-5 min; `webServer` builds and starts the preview itself, so do not hand-start `npm run preview`.
+  - The duel seed is random per run (`crypto.getRandomValues`). A single pass of a duel-walking test proves little; if a duel-walking test is the one you changed, run the suite 3 times before calling it green.
 - [ ] manual check: `npm run dev`; during your Main Phase 1 the `Main 1` chip has a blue halo, `Battle` and `End` are lit and clickable, `Draw` and `Standby` are grey, and End turn sits at the right edge level with the extra monster zones
 - [ ] app functional — clicking `Battle` advances the phase and the board stays fully clickable
 - [ ] commit msg draft: `feat(field): navigate phases from an in-field phase strip`

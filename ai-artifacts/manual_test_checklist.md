@@ -2,6 +2,12 @@
 
 Human-only checks that automated tests cannot cover. One section per plan ticket; never edit another ticket's section.
 
+## T1 land-round-2-on-main
+
+- [x] Chromium e2e completed 18/18 on merge commit `52eb619`; full keyboard-only preset duel finished with one response per prompt.
+- [x] Headless, component, unit, integration, legacy, and production-build gates passed on merged round-2 baseline.
+- [x] Current branch contains round-2 head `736b374`; `feedback.md` remained unstaged.
+
 Ticket ids restart per plan, so sections are grouped by round. **Round 2 is the current implementation.** Where a round 2 ticket replaced round 1 behaviour, the round 1 section is marked **SUPERSEDED** and must not be run — its steps describe UI that no longer exists.
 
 ---

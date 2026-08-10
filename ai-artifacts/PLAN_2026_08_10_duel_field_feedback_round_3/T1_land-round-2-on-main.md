@@ -56,14 +56,14 @@ The existing suite must run green on the merge result.
 
 - [x] 1. `cd /home/aron/projects/ascencio && git status --short && git diff --cached --quiet` — output contains only unstaged `feedback.md`, tracked ADR-010/docs-index amendments, and untracked named Round-3 plan/GRILL/ADR/HTML paths; nothing staged.
 - [x] 2. `git diff --name-only HEAD..feat/duel-field-round-2 -- docs/ADR/010_ADR_in_field_phase_navigation.md docs/README.md docs/architecture/architecture.md feedback.md` — prints nothing, proving round 2 does not overlap planning amendments.
-- [ ] 3. On `plan/duel-field-feedback-round-3`, stage only planning/docs paths listed in Outputs, explicitly excluding `feedback.md`; `git diff --cached --name-only` lists only those paths; commit `docs(plan): add duel field feedback round 3 plan`; record `git rev-parse HEAD`.
-- [ ] 4. `git branch --show-current` — prints `plan/duel-field-feedback-round-3`; `git status --short` shows only ` M feedback.md` after docs commit.
-- [ ] 5. `git log --oneline feat/duel-field-round-2..HEAD` — prints nothing, proving current base has no commits absent from round 2 before merge.
-- [ ] 6. `git merge --no-ff feat/duel-field-round-2 -m "merge: land duel field feedback round 2"` — completes without conflict on `plan/duel-field-feedback-round-3`.
-- [ ] 7. `npm run check:headless` — exits 0; capture output.
-- [ ] 8. `npm run test:component` — exits 0; capture output.
-- [ ] 9. `npm run build` — exits 0; capture output.
-- [ ] 10. Run chromium e2e, foreground, blocking; command exits 0 with all Chromium tests passing:
+- [x] 3. On `plan/duel-field-feedback-round-3`, stage only planning/docs paths listed in Outputs, explicitly excluding `feedback.md`; `git diff --cached --name-only` lists only those paths; commit `docs(plan): add duel field feedback round 3 plan`; record `git rev-parse HEAD`.
+- [x] 4. `git branch --show-current` — prints `plan/duel-field-feedback-round-3`; `git status --short` shows only ` M feedback.md` after docs commit.
+- [x] 5. `git log --oneline feat/duel-field-round-2..HEAD^` — prints nothing, proving pre-docs base has no commits absent from round 2 before merge.
+- [x] 6. `git merge --no-ff feat/duel-field-round-2 -m "merge: land duel field feedback round 2"` — completes without conflict on `plan/duel-field-feedback-round-3`.
+- [x] 7. `npm run check:headless` — exits 0; capture output.
+- [x] 8. `npm run test:component` — exits 0; capture output.
+- [x] 9. `npm run build` — exits 0; capture output.
+- [x] 10. Run chromium e2e, foreground, blocking; command exits 0 with all Chromium tests passing:
       ```bash
       cd /home/aron/projects/ascencio
       timeout 590 nix-shell -p playwright-driver.browsers glib gtk3 nss nspr dbus atk cups \
@@ -75,10 +75,10 @@ The existing suite must run green on the merge result.
       ```
       If it fails with `libglib-2.0.so.0: cannot open shared object file`, the `PLAYWRIGHT_BROWSERS_PATH` override is missing — it is not a `-p` list problem. Recreate the path with:
       `S=$(nix-build '<nixpkgs>' -A playwright-driver.browsers --no-out-link) && mkdir -p .tmp/pw-browsers && cd .tmp/pw-browsers && ln -sfn $S/chromium-1217 chromium-1228 && ln -sfn $S/chromium_headless_shell-1217 chromium_headless_shell-1228 && ln -sfn $S/ffmpeg-1011 ffmpeg-1011 && ln -sfn $S/firefox-1511 firefox-1532`
-- [ ] 11. If a duel-walking e2e test fails, re-run that single test twice with `-g "<test name>"`; criterion is both reruns captured before diagnosing. If none fails, mark complete from full Chromium pass because rerun is not applicable.
-- [ ] 12. `npm run test:unit` — exits 0; capture output.
-- [ ] 13. `npm run test:integration` — exits 0; capture output.
-- [ ] 14. `npm run test:legacy` — exits 0; capture output.
+- [x] 11. If a duel-walking e2e test fails, re-run that single test twice with `-g "<test name>"`; criterion is both reruns captured before diagnosing. If none fails, mark complete from full Chromium pass because rerun is not applicable.
+- [x] 12. `npm run test:unit` — exits 0; capture output.
+- [x] 13. `npm run test:integration` — exits 0; capture output.
+- [x] 14. `npm run test:legacy` — exits 0; capture output.
 - [ ] 15. `git merge-base --is-ancestor 736b374 HEAD && git branch --show-current && git status --short` — exits 0, prints `plan/duel-field-feedback-round-3`, and shows only unstaged `feedback.md`; plan docs exist on current branch.
 
 ## Outputs
@@ -90,14 +90,14 @@ The existing suite must run green on the merge result.
 
 ## Validation
 
-- [ ] `npm run check:headless` exits 0
-- [ ] `npm run test:component` exits 0
-- [ ] `npm run build` exits 0
-- [ ] chromium e2e passes 18/18 using the command in step 10
-- [ ] `git log --oneline -1` shows merge commit `merge: land duel field feedback round 2`
-- [ ] `git rev-parse --abbrev-ref HEAD` prints `plan/duel-field-feedback-round-3`
+- [x] `npm run check:headless` exits 0
+- [x] `npm run test:component` exits 0
+- [x] `npm run build` exits 0
+- [x] chromium e2e passes 18/18 using the command in step 10
+- [x] `git log --oneline --grep="^merge: land duel field feedback round 2$" -1` shows merge commit `52eb619`
+- [x] `git rev-parse --abbrev-ref HEAD` prints `plan/duel-field-feedback-round-3`
 - [ ] `git status --short` shows only ` M feedback.md`
-- [ ] `git merge-base --is-ancestor 736b374 HEAD` exits 0
+- [x] `git merge-base --is-ancestor 736b374 HEAD` exits 0
 - [ ] `git log --oneline origin/plan/duel-field-feedback-round-3..HEAD` prints nothing after push
-- [ ] app functional — Chromium command exits 0 with all tests passing; no broken path from merge
-- [ ] `git log --format=%s -2` contains `docs(plan): add duel field feedback round 3 plan` and `merge: land duel field feedback round 2`
+- [x] app functional — Chromium command exits 0 with all tests passing; no broken path from merge
+- [x] `git log --format=%s --all` contains `docs(plan): add duel field feedback round 3 plan` and `merge: land duel field feedback round 2`

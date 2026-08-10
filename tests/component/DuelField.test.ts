@@ -1543,6 +1543,39 @@ describe("DuelField", () => {
     expect(harness.onpreview).toHaveBeenCalledWith(card);
   });
 
+  it("keeps the caption for a visible card", () => {
+    renderDraggableHand();
+
+    expect(
+      handCardArticle().querySelector(".duel-field-card__label")?.textContent,
+    ).toContain("The Legendary Fisherman");
+  });
+
+  it("does not render a visible caption for a hidden card", () => {
+    renderDraggableHand();
+    const hidden = screen.getAllByRole("article", {
+      name: "Hidden opponent hand card",
+    })[0];
+    if (hidden === undefined) throw new Error("Missing hidden opponent card");
+
+    expect(hidden.getAttribute("aria-label")).toContain("Hidden");
+    expect(hidden.querySelector(".duel-field-card__label")).toBeNull();
+  });
+
+  it("marks only opponent stacks as opponent-facing", () => {
+    const value = DUEL_FIELD_PUBLIC_STATES["ST-01"];
+    render(DuelField, { board: value.board });
+
+    const playerStack = document.querySelector(
+      '.duel-field-stack[data-player="0"]',
+    );
+    const opponentStack = document.querySelector(
+      '.duel-field-stack[data-player="1"]',
+    );
+    expect(playerStack?.classList.contains("is-opponent")).toBe(false);
+    expect(opponentStack?.classList.contains("is-opponent")).toBe(true);
+  });
+
   it("press reports a visible card", async () => {
     const harness = renderDraggableHand();
 

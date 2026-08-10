@@ -29,6 +29,13 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 - [ ] Inspect opponent response diagnostics for one unchanged prompt; confirm first two reasons stay normal, then reason becomes `break_loop_alternative` or `break_loop_exit`.
 - [ ] Confirm every loop-break response id belongs to the current prompt, then play through next human prompt or duel result without an invalid-response error.
 
+## T5 preview-hover-and-opponent-art-inversion
+
+- [ ] Hover a passive field card, a player stack, an opponent stack, and one card in each open pile list; confirm persistent preview updates every time.
+- [ ] Compare player and opponent pile/list art; confirm only opponent images are upside down while labels, counts, position badges, halos, and action chips stay upright.
+- [ ] Inspect face-down cards on the board; confirm no visible `Hidden card` caption appears while screen-reader naming remains available.
+- [ ] Use existing action chips, click a card, and drag a playable hand card; confirm each flow still works without layout, halo, zoom, or projector changes.
+
 Ticket ids restart per plan, so sections are grouped by round. **Round 2 is the current implementation.** Where a round 2 ticket replaced round 1 behaviour, the round 1 section is marked **SUPERSEDED** and must not be run — its steps describe UI that no longer exists.
 
 ---

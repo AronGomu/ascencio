@@ -1140,6 +1140,28 @@ test("hovering a hand card fills the preview panel sharing the field row", async
   expect(await field.count()).toBe(1);
 });
 
+test("a passive opponent hand card receives a real hover", async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await page.goto("./");
+  await startPresetDuel(page);
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+
+  const card = page
+    .locator(
+      '.duel-field-card[data-card-zone-id="p1:hand"]:not(.is-actionable)',
+    )
+    .first();
+  await expect(card).toBeVisible();
+  await expect(card).toHaveCSS("pointer-events", "auto");
+  await card.hover();
+
+  await expect(page.locator('[data-cy="card-preview-name"]')).toHaveText(
+    "Face-down card",
+  );
+});
+
 test("responsive field compositions contain controls across supported viewports", async ({
   page,
 }, testInfo) => {

@@ -147,6 +147,23 @@ describe("ZoneListDialog", () => {
     expect(onpreview).toHaveBeenCalledWith(ENTRIES[0]);
   });
 
+  it("marks only opponent list entries as opponent-facing", () => {
+    const playerEntry = entry(1);
+    const opponentEntry = { ...entry(2), controller: 1 as const };
+    renderDialog({ entries: [playerEntry, opponentEntry] });
+
+    const player = document.querySelector(
+      `[data-cy="zone-list-entry-${playerEntry.id}"]`,
+    );
+    const opponent = document.querySelector(
+      `[data-cy="zone-list-entry-${opponentEntry.id}"]`,
+    );
+    expect(player?.getAttribute("data-controller")).toBe("0");
+    expect(player?.classList.contains("is-opponent")).toBe(false);
+    expect(opponent?.getAttribute("data-controller")).toBe("1");
+    expect(opponent?.classList.contains("is-opponent")).toBe(true);
+  });
+
   it("dialog closes on Escape", async () => {
     const user = userEvent.setup();
     const { onclose } = renderDialog();

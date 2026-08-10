@@ -1162,7 +1162,7 @@ button.duel-field-zone,
   min-width: 2.75rem;
   min-height: 2.75rem;
   margin: 0;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .duel-field-card__art {
@@ -1181,6 +1181,11 @@ button.duel-field-zone,
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.duel-field-stack.is-opponent .duel-field-stack__art img,
+.zone-list-entry.is-opponent > img {
+  transform: rotate(180deg);
 }
 
 .duel-field-card.is-sideways .duel-field-card__art {
@@ -1223,10 +1228,6 @@ button.duel-field-zone,
   border-radius: 0.3rem;
   background: transparent;
   cursor: pointer;
-}
-
-.duel-field-card.is-actionable {
-  pointer-events: auto;
 }
 
 /* Chips float above the card and deliberately overlap its top edge by

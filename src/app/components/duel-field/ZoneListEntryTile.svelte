@@ -52,7 +52,9 @@
 <div
   class="zone-list-entry"
   class:is-actionable={choices.length > 0}
+  class:is-opponent={entry.controller === 1}
   role="group"
+  data-controller={entry.controller}
   data-cy={`zone-list-entry-${entry.id}`}
   onpointerenter={onpreview}
   onfocusin={onpreview}

@@ -33,7 +33,7 @@
 - `tests/component/DuelField.test.ts:1540-1637` — synthetic preview tests; `:1572` and `:1606` cover hidden previews.
 - `tests/component/ZoneListDialog.test.ts:139-147` — list hover preview.
 - `e2e/duel-smoke.spec.ts:1001-1030` — existing real-browser hand-card hover test, but its selected hand card can be actionable and therefore does not expose the root bug.
-- **From Depends (T1):** all round-2 components/tests/CSS are present.
+- **From Depends (T1):** all round-2 components/tests/CSS are present on `plan/duel-field-feedback-round-3`; current pushed terminal before T5 is `c459bf059b633513f5e73dafb3413956e6e5fc9e`.
 
 ## TDD
 
@@ -61,20 +61,20 @@ Extend `e2e/duel-smoke.spec.ts` near the existing preview test:
 
 | Test | Input | Expect |
 | ---- | ---- | ---- |
-| `a passive opponent hand card receives a real hover` | start default duel; locator `.duel-field-card[data-card-zone-id="p1:hand"]:not(.is-actionable)` first; call Playwright `.hover()` without `{ force: true }` | hover succeeds; preview panel switches from empty to `card-preview-name === "Hidden card"`; computed `pointerEvents` for article is `"auto"` |
+| `a passive opponent hand card receives a real hover` | start default duel; locator `.duel-field-card[data-card-zone-id="p1:hand"]:not(.is-actionable)` first; call Playwright `.hover()` without `{ force: true }` | hover succeeds; preview panel switches from empty to existing runtime label `card-preview-name === "Face-down card"`; computed `pointerEvents` for article is `"auto"` |
 
 The e2e helper from T3 starts the selected default duel before locating the card. Wait for opponent hand count/card to exist; do not skip the assertion.
 
 ## Impl steps
 
-- [ ] 1. Add the three `DuelField`/`ZoneListDialog` component tests. Run `npm run test:component -- DuelField ZoneListDialog` — hidden-label/opponent-class checks fail.
-- [ ] 2. Add the passive opponent-hand e2e test. Run it alone with the chromium command in Validation and `-g "a passive opponent hand card"` — expect Playwright hover failure or unchanged preview because the root computes `pointer-events: none`.
-- [ ] 3. In `CardControl.svelte`, wrap lines 217-223 in `{#if !card.hidden}` and render `card.label` directly. Do not change `aria-label`, image `alt`, `aria-hidden`, preview handlers or target button.
-- [ ] 4. In `StackControl.svelte`, add `class:is-opponent={stack.player === 1}` to the root.
-- [ ] 5. In `ZoneListEntryTile.svelte`, add `class:is-opponent={entry.controller === 1}` and `data-controller={entry.controller}` to the root.
-- [ ] 6. In `src/styles/app.css`, change `.duel-field-card` from `pointer-events: none` to `pointer-events: auto`; delete the now-redundant `pointer-events: auto` declaration from `.duel-field-card.is-actionable` but keep the selector if other declarations remain.
-- [ ] 7. Add `.duel-field-stack.is-opponent .duel-field-stack__art img, .zone-list-entry.is-opponent > img { transform: rotate(180deg); }`. Apply transform to image only, never root.
-- [ ] 8. Re-run focused component and e2e tests. Verify action-chip hover, click and drag tests remain green — enabling the article must not intercept its child controls.
+- [x] 1. Add the three `DuelField`/`ZoneListDialog` component tests. Run `npm run test:component -- DuelField ZoneListDialog` — hidden-label/opponent-class checks fail.
+- [x] 2. Add the passive opponent-hand e2e test. Run it alone with the chromium command in Validation and `-g "a passive opponent hand card"` — expect Playwright hover failure or unchanged preview because the root computes `pointer-events: none`.
+- [x] 3. In `CardControl.svelte`, wrap lines 217-223 in `{#if !card.hidden}` and render `card.label` directly. Do not change `aria-label`, image `alt`, `aria-hidden`, preview handlers or target button.
+- [x] 4. In `StackControl.svelte`, add `class:is-opponent={stack.player === 1}` to the root.
+- [x] 5. In `ZoneListEntryTile.svelte`, add `class:is-opponent={entry.controller === 1}` and `data-controller={entry.controller}` to the root.
+- [x] 6. In `src/styles/app.css`, change `.duel-field-card` from `pointer-events: none` to `pointer-events: auto`; delete the now-redundant `pointer-events: auto` declaration from `.duel-field-card.is-actionable` but keep the selector if other declarations remain.
+- [x] 7. Add `.duel-field-stack.is-opponent .duel-field-stack__art img, .zone-list-entry.is-opponent > img { transform: rotate(180deg); }`. Apply transform to image only, never root.
+- [x] 8. Re-run focused component and e2e tests. Verify action-chip hover, click and drag tests remain green — enabling the article must not intercept its child controls.
 
 ## Outputs
 
@@ -85,10 +85,10 @@ The e2e helper from T3 starts the selected default duel before locating the card
 
 ## Validation
 
-- [ ] `npm run test:component -- DuelField ZoneListDialog` passes
-- [ ] `npm run typecheck`, `npm run lint`, `npm run format:check` pass
-- [ ] `npm run build` succeeds
-- [ ] focused chromium e2e passes, then full chromium project passes:
+- [x] `npm run test:component -- DuelField ZoneListDialog` passes
+- [x] `npm run typecheck`, `npm run lint`, `npm run format:check` pass
+- [x] `npm run build` succeeds
+- [x] focused chromium e2e passes, then full chromium project passes:
       ```bash
       cd /home/aron/projects/ascencio
       timeout 590 nix-shell -p playwright-driver.browsers glib gtk3 nss nspr dbus atk cups \
@@ -101,5 +101,5 @@ The e2e helper from T3 starts the selected default duel before locating the card
 - [ ] manual check: hover one passive field card, one player stack, one opponent stack and one card in each list; preview changes every time
 - [ ] manual check: opponent stack/list art is upside down while labels/chips remain upright
 - [ ] manual check: no face-down card shows a `Hidden card` caption on the board
-- [ ] app functional — no broken path from this slice
-- [ ] commit msg draft: `fix(field): restore passive card hover previews`
+- [x] app functional — no broken path from this slice
+- [x] commit msg draft: `fix(field): restore passive card hover previews`

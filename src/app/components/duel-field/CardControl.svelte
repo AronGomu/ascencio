@@ -214,13 +214,15 @@
       data-cy={`card-control-image-${card.id}`}
     />
   </div>
-  <span
-    class="duel-field-card__label"
-    aria-hidden="true"
-    data-cy={`card-control-label-${card.id}`}
-  >
-    {card.hidden ? "Hidden card" : card.label}
-  </span>
+  {#if !card.hidden}
+    <span
+      class="duel-field-card__label"
+      aria-hidden="true"
+      data-cy={`card-control-label-${card.id}`}
+    >
+      {card.label}
+    </span>
+  {/if}
   {#if actionable}
     <button
       type="button"

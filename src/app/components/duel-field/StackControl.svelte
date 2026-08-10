@@ -63,6 +63,7 @@
   type={clickable ? "button" : undefined}
   class:is-navigation-active={active}
   class:is-actionable={actionable}
+  class:is-opponent={stack.player === 1}
   class="duel-field-stack"
   role={clickable ? undefined : "group"}
   aria-label={stack.label}

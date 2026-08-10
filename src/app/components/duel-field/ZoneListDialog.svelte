@@ -38,7 +38,7 @@
   class="zone-list-dialog"
   role="dialog"
   aria-modal="false"
-  aria-label={`${stack.label} contents`}
+  aria-label={`${stack.label} contents${stack.zone === "deck" ? ", position 1 is the top of the deck" : ""}`}
   tabindex="-1"
   onkeydown={handleKeydown}
   data-cy="zone-list-dialog"

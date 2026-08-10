@@ -167,17 +167,78 @@ describe("zoneListEntries", () => {
     expect(entries.every((entry) => !entry.identityVisible)).toBe(true);
   });
 
-  it("synthesises face-down deck entries", () => {
-    const snapshot = state("deck40", { deckCount: 40 });
+  it("lists one entry per remaining deck card", () => {
+    const snapshot = state("deck5", {
+      deckCount: 5,
+      deck: deckSlots(0, 5),
+    });
     const stack = stackFor(snapshot, "p0:deck");
+
+    const entries = zoneListEntries(stack, snapshot, CARD_TEXTS);
+
+    expect(entries).toHaveLength(5);
+    expect(entries.map((entry) => entry.position)).toEqual([1, 2, 3, 4, 5]);
+    expect(entries.every((entry) => !entry.identityVisible)).toBe(true);
+    expect(entries.every((entry) => entry.label === "Face-down card")).toBe(
+      true,
+    );
+  });
+
+  it("shows a revealed deck position face up", () => {
+    const snapshot = state("deckReveal", {
+      deckCount: 5,
+      deck: [
+        card("deck-p0-0", 97590747, 0, "deck", 0),
+        ...deckSlots(0, 5).slice(1),
+      ],
+    });
+    const stack = stackFor(snapshot, "p0:deck");
+
+    const entries = zoneListEntries(stack, snapshot, CARD_TEXTS);
+
+    expect(entries[0]).toMatchObject({
+      position: 1,
+      code: cardCode(97590747),
+      identityVisible: true,
+      label: "The Legendary Fisherman",
+    });
+    expect(entries.slice(1).every((entry) => !entry.identityVisible)).toBe(
+      true,
+    );
+  });
+
+  it("never leaks an unrevealed own deck card", () => {
+    const snapshot = state("deckOwnHidden", {
+      deckCount: 1,
+      deck: deckSlots(0, 1),
+    });
+    const stack = stackFor(snapshot, "p0:deck");
+
+    const entries = zoneListEntries(stack, snapshot, CARD_TEXTS);
+
+    expect(entries[0]?.identityVisible).toBe(false);
+    expect(entries[0]?.code).toBeUndefined();
+  });
+
+  it("lists the opponent deck face-down", () => {
+    const snapshot = state(
+      "deckOpponent40",
+      {},
+      { deckCount: 40, deck: deckSlots(1, 40) },
+    );
+    const stack = stackFor(snapshot, "p1:deck");
 
     const entries = zoneListEntries(stack, snapshot, CARD_TEXTS);
 
     expect(entries).toHaveLength(40);
     expect(entries.every((entry) => !entry.identityVisible)).toBe(true);
-    expect(entries.map((entry) => entry.position).slice(0, 3)).toEqual([
-      1, 2, 3,
-    ]);
-    expect(entries.at(-1)?.position).toBe(40);
+    expect(entries.every((entry) => entry.code === undefined)).toBe(true);
+  });
+
+  it("reflects an empty deck", () => {
+    const snapshot = state("deckEmpty", { deckCount: 0, deck: [] });
+    const stack = stackFor(snapshot, "p0:deck");
+
+    expect(zoneListEntries(stack, snapshot, CARD_TEXTS)).toEqual([]);
   });
 });

@@ -84,15 +84,15 @@
 
 ## Impl steps
 
-- [ ] 1. Replace the deck case in `tests/unit/zone-list.test.ts` with the five deck cases from the table.
-- [ ] 2. Add the three `mapSnapshotToBoard` cases to `tests/unit/duel-field.test.ts`.
-- [ ] 3. Add the deck-label case to `tests/component/ZoneListDialog.test.ts`.
-- [ ] 4. Run `npm run test:unit && npm run test:component`; confirm the new cases fail.
-- [ ] 5. In `src/field/board-view-model.ts`, change `stackCollection`'s `case "deck":` to `return player.deck;`.
-- [ ] 6. In `createStacks`, compute `top` as `zone === "deck" ? undefined : publicCards.at(-1)` and leave the rest of the block as it is, so a deck stack keeps `publicCount` but gains neither `topCardLabel` nor `topCardCode`.
-- [ ] 7. In `src/field/zone-list.ts`, delete the synthetic deck branch and read `snapshot.players[stack.player].deck`, deriving `identityVisible` from `card.faceUp === true && card.code !== undefined` with the explanatory comment required under Inputs.
-- [ ] 8. In `src/app/components/duel-field/ZoneListDialog.svelte`, extend the `aria-label` expression with the deck wording.
-- [ ] 9. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`, `npm run test:integration`.
+- [x] 1. Replace the deck case in `tests/unit/zone-list.test.ts` with the five deck cases from the table.
+- [x] 2. Add the three `mapSnapshotToBoard` cases to `tests/unit/duel-field.test.ts`.
+- [x] 3. Add the deck-label case to `tests/component/ZoneListDialog.test.ts`.
+- [x] 4. Run `npm run test:unit && npm run test:component`; confirm the new cases fail.
+- [x] 5. In `src/field/board-view-model.ts`, change `stackCollection`'s `case "deck":` to `return player.deck;`.
+- [x] 6. In `createStacks`, compute `top` as `zone === "deck" ? undefined : publicCards.at(-1)` and leave the rest of the block as it is, so a deck stack keeps `publicCount` but gains neither `topCardLabel` nor `topCardCode`.
+- [x] 7. In `src/field/zone-list.ts`, delete the synthetic deck branch and read `snapshot.players[stack.player].deck`, deriving `identityVisible` from `card.faceUp === true && card.code !== undefined` with the explanatory comment required under Inputs.
+- [x] 8. In `src/app/components/duel-field/ZoneListDialog.svelte`, extend the `aria-label` expression with the deck wording.
+- [x] 9. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`, `npm run test:integration`.
 
 ## Outputs
 
@@ -102,13 +102,13 @@
 
 ## Validation
 
-- [ ] `npm run format:check` exits 0
-- [ ] `npm run lint` exits 0
-- [ ] `npm run typecheck` exits 0
-- [ ] `npm run test:unit` exits 0
-- [ ] `npm run test:component` exits 0
-- [ ] `npm run test:integration` exits 0
+- [x] `npm run format:check` exits 0
+- [x] `npm run lint` exits 0
+- [x] `npm run typecheck` exits 0
+- [x] `npm run test:unit` exits 0
+- [x] `npm run test:component` exits 0
+- [x] `npm run test:integration` exits 0
 - [ ] manual check: `npm run dev`; click your deck — the list shows one face-down entry per remaining card numbered from the top; click the opponent's deck — the same, all face-down. If the preset deck contains an excavate effect, resolve it and confirm the revealed positions come back face-up and go face-down again after a shuffle.
-- [ ] app functional — the deck pile on the board still shows only its name and count, never card art
-- [ ] commit msg draft: `feat(field): list real deck contents and revealed positions`
+- [x] app functional — the deck pile on the board still shows only its name and count, never card art
+- [x] commit msg draft: `feat(field): list real deck contents and revealed positions`
 </content>

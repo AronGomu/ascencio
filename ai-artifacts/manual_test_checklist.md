@@ -192,3 +192,11 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 ## T9 projected-deck-order
 
 - [ ] Complete a duel, inspect final projected state, confirm `players[0].deck.length === players[0].deckCount`.
+
+## T10 deck-list-in-zone-dialog
+
+- [ ] `npm run dev`; click your deck: the list shows one face-down entry per remaining card, numbered from the top with position 1 first.
+- [ ] Click the opponent's deck: every unrevealed entry stays face-down with no card name, code, or face art exposed.
+- [ ] If the preset deck contains an excavate effect, resolve it: legitimately revealed positions render face-up, then return face-down after a shuffle.
+- [ ] With either 40-card deck dialog open, scroll the list and click a legal card target elsewhere on the board: the dialog stays usable without intercepting unrelated board clicks.
+- [ ] Confirm the deck pile itself still shows only its name and count, never card art.

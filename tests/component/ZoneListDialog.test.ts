@@ -61,6 +61,7 @@ const ENTRIES: readonly ZoneListEntry[] = [
 
 function renderDialog(
   overrides: {
+    readonly stack?: BoardStackView;
     readonly entries?: readonly ZoneListEntry[];
     readonly choices?: readonly InteractionChoice[];
     readonly cardBackUrl?: string;
@@ -73,7 +74,7 @@ function renderDialog(
   const onpreview = overrides.onpreview ?? vi.fn();
   const onclose = overrides.onclose ?? vi.fn();
   const rendered = render(ZoneListDialog, {
-    stack: STACK,
+    stack: overrides.stack ?? STACK,
     entries: overrides.entries ?? ENTRIES,
     choices: overrides.choices ?? [],
     cardBackUrl: overrides.cardBackUrl ?? "back.png",
@@ -169,14 +170,52 @@ describe("ZoneListDialog", () => {
     expect(onclose).toHaveBeenCalledTimes(1);
   });
 
-  it("face-down entries use the card back", () => {
-    const faceDown = faceDownEntry(1);
-    renderDialog({ entries: [faceDown], cardBackUrl: "back.png" });
+  it("deck dialog explains its numbering", () => {
+    const deckStack: BoardStackView = {
+      ...STACK,
+      id: "p0:deck",
+      targetId: "stack:p0:deck",
+      zone: "deck",
+      count: 1,
+      publicCount: 0,
+      label: "Your Deck, 1 card",
+    };
+
+    renderDialog({ stack: deckStack, entries: [] });
+
+    expect(
+      document
+        .querySelector('[data-cy="zone-list-dialog"]')
+        ?.getAttribute("aria-label"),
+    ).toBe("Your Deck, 1 card contents, position 1 is the top of the deck");
+  });
+
+  it("face-down deck slots use the card back and expose no code in the DOM", () => {
+    const faceDown: ZoneListEntry = {
+      ...faceDownEntry(1),
+      id: "p0:deck:1",
+      location: "deck",
+    };
+    const deckStack: BoardStackView = {
+      ...STACK,
+      id: "p0:deck",
+      targetId: "stack:p0:deck",
+      zone: "deck",
+      count: 1,
+      publicCount: 0,
+      label: "Your Deck, 1 card",
+    };
+    renderDialog({
+      stack: deckStack,
+      entries: [faceDown],
+      cardBackUrl: "back.png",
+    });
 
     expect(
       document
         .querySelector(`[data-cy="zone-list-entry-image-${faceDown.id}"]`)
         ?.getAttribute("src"),
     ).toBe("back.png");
+    expect(document.body.innerHTML).not.toContain("97590747");
   });
 });

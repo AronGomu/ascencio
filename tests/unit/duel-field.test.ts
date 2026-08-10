@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { PublicDuelState } from "../../src/duel/contracts/public-duel-state.ts";
 import { resolvePromptChoiceBoardTarget } from "../../src/field/card-mapping.ts";
 import {
   mapSnapshotToBoard,
@@ -19,7 +20,11 @@ import {
   TWO_CARD_GRAVEYARD_STATE,
   promptChoice,
 } from "../fixtures/board-view-model.ts";
-import { RICH_PUBLIC_DUEL_STATE } from "../fixtures/board-public-states.ts";
+import {
+  deckSlots,
+  publicStateCard,
+  RICH_PUBLIC_DUEL_STATE,
+} from "../fixtures/board-public-states.ts";
 
 describe("duel field mapping", () => {
   it("creates 34 unique Standard physical controls with two shared EMZs", () => {
@@ -147,6 +152,23 @@ function mappedBoard(
   );
   if (!result.ok) throw new Error(`Fixture ${fixture} failed to map`);
   return result.value;
+}
+
+function revealedDeckSnapshot(): PublicDuelState {
+  return {
+    ...RICH_PUBLIC_DUEL_STATE,
+    players: [
+      {
+        ...RICH_PUBLIC_DUEL_STATE.players[0],
+        deckCount: 40,
+        deck: [
+          publicStateCard("deck-p0-0", 97590747, 0, "deck", 0, "faceUpAttack"),
+          ...deckSlots(0, 40).slice(1),
+        ],
+      },
+      RICH_PUBLIC_DUEL_STATE.players[1],
+    ],
+  };
 }
 
 describe("semantic board view model", () => {
@@ -324,7 +346,25 @@ describe("semantic board view model", () => {
     expect(JSON.stringify(board)).not.toContain("Card effect");
   });
 
-  it("stacks expose the top public card code", () => {
+  it("deck stacks still report their count and revealed public count", () => {
+    const result = mapSnapshotToBoard(revealedDeckSnapshot(), BOARD_CARD_TEXTS);
+    if (!result.ok) throw new Error("Fixture failed to map");
+
+    expect(
+      result.value.stacks.find(({ id }) => id === "p0:deck"),
+    ).toMatchObject({ count: 40, publicCount: 1 });
+  });
+
+  it("deck stacks never expose a top card", () => {
+    const result = mapSnapshotToBoard(revealedDeckSnapshot(), BOARD_CARD_TEXTS);
+    if (!result.ok) throw new Error("Fixture failed to map");
+    const deck = result.value.stacks.find(({ id }) => id === "p0:deck");
+
+    expect(deck?.topCardLabel).toBeUndefined();
+    expect(deck?.topCardCode).toBeUndefined();
+  });
+
+  it("graveyard stacks still expose their top card", () => {
     const result = mapSnapshotToBoard(
       TWO_CARD_GRAVEYARD_STATE,
       BOARD_CARD_TEXTS,
@@ -333,6 +373,8 @@ describe("semantic board view model", () => {
     const graveyard = result.value.stacks.find(
       ({ id }) => id === "p0:graveyard",
     );
+
+    expect(graveyard?.topCardLabel).toBe("Blue-Eyes White Dragon");
     expect(graveyard?.topCardCode).toBe(89631139);
   });
 

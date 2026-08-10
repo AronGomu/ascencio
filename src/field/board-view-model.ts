@@ -407,7 +407,7 @@ function createStacks(
       const collection = stackCollection(player, zone);
       const count = stackCount(player, zone, collection);
       const publicCards = collection.filter(cardIdentityVisible);
-      const top = publicCards.at(-1);
+      const top = zone === "deck" ? undefined : publicCards.at(-1);
       const topCardLabel =
         top === undefined ? undefined : cardName(top.code, cardTexts);
       stacks.push(
@@ -438,7 +438,7 @@ function stackCollection(
 ): readonly PublicCard[] {
   switch (zone) {
     case "deck":
-      return [];
+      return player.deck;
     case "extra":
       return player.extraDeck;
     case "graveyard":

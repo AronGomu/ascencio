@@ -37,7 +37,12 @@ export function zoneListEntries(
   snapshot: PublicDuelState,
   cardTexts: ReadonlyMap<number, BoardCardText>,
 ): readonly ZoneListEntry[] {
-  if (stack.zone === "deck") return syntheticDeckEntries(stack);
+  if (stack.zone === "deck")
+    return Object.freeze(
+      snapshot.players[stack.player].deck.map((card, index) =>
+        deckEntry(stack.id, index, card, cardTexts),
+      ),
+    );
   const player = snapshot.players[stack.player];
   const collection = sourceCollection(player, stack.zone);
   return Object.freeze(
@@ -63,20 +68,28 @@ export function zoneListsForBoard(
   );
 }
 
-function syntheticDeckEntries(stack: BoardStackView): readonly ZoneListEntry[] {
-  return Object.freeze(
-    Array.from({ length: stack.count }, (_, index) =>
-      Object.freeze({
-        id: `${stack.id}:${index + 1}`,
-        position: index + 1,
-        controller: stack.player,
-        location: "deck" as const,
-        sequence: index,
-        identityVisible: false,
-        label: "Face-down card",
-      }),
-    ),
-  );
+function deckEntry(
+  stackId: PhysicalZoneId,
+  index: number,
+  card: PublicCard,
+  cardTexts: ReadonlyMap<number, BoardCardText>,
+): ZoneListEntry {
+  // Generic visibility treats every local card as visible; deck identity must
+  // come only from projector-supplied face-up state and code.
+  const identityVisible = card.faceUp === true && card.code !== undefined;
+  const label = identityVisible
+    ? (cardTexts.get(card.code as CardCode)?.name ?? `Card ${card.code}`)
+    : "Face-down card";
+  return Object.freeze({
+    id: `${stackId}:${index + 1}`,
+    position: index + 1,
+    controller: card.controller,
+    location: card.location,
+    sequence: card.sequence,
+    identityVisible,
+    ...(identityVisible ? { code: card.code } : {}),
+    label,
+  });
 }
 
 function sourceCollection(

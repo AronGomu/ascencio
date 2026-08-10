@@ -31,7 +31,9 @@
 - `src/worker/diagnostics/duel-trace.ts:29` — stores `OpponentDecisionReason`; its union widens automatically when imported.
 - `src/duel/contracts/player-prompt.ts:75-84` — `PromptChoice`: `id`, `label`, `action`, optional `card`, `place`, `value`, `selected`, `allocationMaximum`; `:86-101` — prompt constraints.
 - `tests/unit/opponent-policy.test.ts:141-332` — all policy tests. It currently creates one policy for the describe block; breaker tests must create their own policy so history cannot leak.
-- **From Depends (T1):** round-2 `OpponentPolicy.ts`, controller and tests are present on the round-3 branch.
+- `tests/integration/programmed-duel.test.ts:55-85,455-457` — deterministic real-WASM replay runs each scenario twice, hashes the full trace, then checks human-response count, diagnostics, disposal and coverage.
+- `tests/fixtures/transcripts/basic-duel-v1.json:6` — `battle-and-chain` trace digest. T4 deterministically changes it from `d9640bf2ee18ff500b5e056eb97ce5d847e53fd6d9a739aca4be1142164f9a2c` to candidate `65ae688f7b31c7c9a1f049d24ace1d2a8e526bc955bf2ea69643ebcce2b9b20d`. Before accepting, capture a temporary base-vs-candidate trace diff: first divergence must be a legal `break_loop_alternative` or `break_loop_exit`, with no unrelated pre-divergence delta; remove diagnostics, update only the reviewed digest, then rerun full integration so later golden mismatches surface.
+- **From Depends (T1):** round-2 `OpponentPolicy.ts`, controller and tests are present on `plan/duel-field-feedback-round-3`; current branch terminal before T4 is pushed SHA `647e6e6ae8a446f78a00497e6c2235afb2923db3`.
 
 ## API / state design
 
@@ -123,28 +125,36 @@ Keep every existing test unchanged. Give every new test a fresh `new BasicOppone
 
 ## Impl steps
 
-- [ ] 1. Add the nine tests above to `tests/unit/opponent-policy.test.ts`. Run `npm run test:unit -- opponent-policy` — breaker tests fail because choice A repeats.
-- [ ] 2. In `src/worker/opponent/OpponentPolicy.ts`, add `break_loop_alternative` and `break_loop_exit` to `OpponentDecisionReason`.
-- [ ] 3. Extract the current body after the empty-choice guard into `#chooseNormally(prompt)`. Do not alter branch order or decisions.
-- [ ] 4. Add pure `semanticChoice(choice)`, `opponentPromptSignature(prompt)` and `opponentVisibleStateFingerprint(visibleState)` helpers with the exact fields above. Do not include private card description/name/code; the visible legal address and instance id are sufficient.
-- [ ] 5. Add `#loop` state and the eight-step wrapper logic above. Use immutable replacement for the state object and a copied `Set<string>` of semantic choice keys. Never compare numeric `visibleState.revision`.
-- [ ] 6. Run the focused test until all old and new policy tests pass.
-- [ ] 7. Run controller tests to prove the stateful policy still satisfies the `OpponentPolicy` interface.
+- [x] 1. Add the ten tests above to `tests/unit/opponent-policy.test.ts`. Run `npm run test:unit -- opponent-policy` — breaker tests fail because choice A repeats.
+- [x] 2. In `src/worker/opponent/OpponentPolicy.ts`, add `break_loop_alternative` and `break_loop_exit` to `OpponentDecisionReason`.
+- [x] 3. Extract the current body after the empty-choice guard into `#chooseNormally(prompt)`. Do not alter branch order or decisions.
+- [x] 4. Add pure `semanticChoice(choice)`, `opponentPromptSignature(prompt)` and `opponentVisibleStateFingerprint(visibleState)` helpers with the exact fields above. Do not include private card description/name/code; the visible legal address and instance id are sufficient.
+- [x] 5. Add `#loop` state and the eight-step wrapper logic above. Use immutable replacement for the state object and a copied `Set<string>` of semantic choice keys. Never compare numeric `visibleState.revision`.
+- [x] 6. Run the focused test until all old and new policy tests pass.
+- [x] 7. Run controller tests to prove the stateful policy still satisfies the `OpponentPolicy` interface.
 
 ## Outputs
 
-- Files edited: `src/worker/opponent/OpponentPolicy.ts`, `tests/unit/opponent-policy.test.ts`.
+- Files edited: `src/worker/opponent/OpponentPolicy.ts`, `tests/unit/opponent-policy.test.ts`, `tests/fixtures/transcripts/basic-duel-v1.json`, `tests/fixtures/transcripts/tribute-special-v1.json`, `tests/fixtures/transcripts/effects-recovery-v1.json`, `ai-artifacts/manual_test_checklist.md`.
 - Public API: `OpponentDecisionReason` gains two literals. No command/event/schema change.
 - Behaviour: only a three-call unchanged-prompt loop differs.
+- Reviewed golden: `battle-and-chain` trace digest `d9640bf2ee18ff500b5e056eb97ce5d847e53fd6d9a739aca4be1142164f9a2c` → `65ae688f7b31c7c9a1f049d24ace1d2a8e526bc955bf2ea69643ebcce2b9b20d`.
+- `battle-and-chain` trace evidence: both full traces contain 2,628 entries. Entries 1–65 are byte-equivalent. First divergence is entry 66 for current legal id `prompt-20-choice-0-pass`: base reason `decline_optional` → candidate reason `break_loop_exit`. `PromptRegistry.respond()` accepted that current prompt id. All 54 deltas are opponent response reasons to `break_loop_exit`; choice ids, entry count and every non-response entry are unchanged.
+- Reviewed later golden: `tribute-special-and-target` trace digest `362d20d431bf2639d1dfb17032a87180d967e4c7710dade3715b7d7289ed3242` → `b4e629367772d5d24253403e21f8939588640193c66ed6b3ba858395e2761225`.
+- `tribute-special-and-target` trace evidence: both full traces contain 1,480 entries. Entries 1–252 are byte-equivalent. First divergence is entry 253 for current legal id `prompt-75-choice-0-pass`: base reason `decline_optional` → candidate reason `break_loop_exit`. All 26 deltas are opponent response reasons to `break_loop_exit`; choice ids, entry count and every non-response entry are unchanged.
+- Reviewed later golden: `effects-recovery-and-position` trace digest `2f940dbe52d7c22385fe8c7957d9c9b0a2e8fbdf7d86deb2d8e0f65781bfcd4f` → `5b5de5159d9171cc3ebde2b7d8ff9c880678f7ba2e05f533e05d4e1ab0f26f20`.
+- `effects-recovery-and-position` trace evidence: both full traces contain 1,868 entries. Entries 1–441 are byte-equivalent. First divergence is entry 442 for current legal id `prompt-133-choice-0-pass`: base reason `decline_optional` → candidate reason `break_loop_exit`. All 41 deltas are opponent response reasons to `break_loop_exit`; choice ids, entry count and every non-response entry are unchanged.
+- Complete scenario review: the other four programmed traces have identical base/candidate digests and zero entry deltas.
+- Temporary trace diagnostics and detached worktree lived only under `/tmp`; no diagnostic source or trace artifact remains in tracked diff.
 - Migration / config: none.
 
 ## Validation
 
-- [ ] `npm run test:unit -- opponent-policy` passes
-- [ ] `npm run test:unit -- HeadlessDuelController` passes (use actual matching filename reported by `find tests -iname '*headless*'`)
-- [ ] `npm run typecheck`, `npm run lint`, `npm run format:check` pass
-- [ ] `npm run test:integration` passes
-- [ ] manual diagnostic probe: use the repeated-prompt unit fixture and confirm decision reasons sequence is normal, normal, `break_loop_alternative`, `break_loop_exit`
-- [ ] no scoring, randomness or card-effect inspection was added
-- [ ] app functional — no broken path from this slice
-- [ ] commit msg draft: `fix(opponent): break repeated unchanged prompt loops`
+- [x] `npm run test:unit -- opponent-policy` passes
+- [x] `npm run test:unit -- HeadlessDuelController` passes (use actual matching filename reported by `find tests -iname '*headless*'`)
+- [x] `npm run typecheck`, `npm run lint`, `npm run format:check` pass
+- [x] `npm run test:integration` passes — parent rerun after one flaky Vitest fork: 7/7 files and 20/20 tests passed in 2.63s
+- [x] manual diagnostic probe: use the repeated-prompt unit fixture and confirm decision reasons sequence is normal, normal, `break_loop_alternative`, `break_loop_exit`
+- [x] no scoring, randomness or card-effect inspection was added
+- [x] app functional — `npm run build` passed vendor/snapshot verification, Vite production build and browser-build verification
+- [x] commit msg draft: `fix(opponent): break repeated unchanged prompt loops`

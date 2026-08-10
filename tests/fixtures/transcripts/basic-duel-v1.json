@@ -3,7 +3,7 @@
   "scenarioId": "battle-and-chain",
   "responseCount": 182,
   "runCount": 52,
-  "expectedTraceSha256": "d9640bf2ee18ff500b5e056eb97ce5d847e53fd6d9a739aca4be1142164f9a2c",
+  "expectedTraceSha256": "65ae688f7b31c7c9a1f049d24ace1d2a8e526bc955bf2ea69643ebcce2b9b20d",
   "runs": [
     {
       "prompt": "idleCommand",

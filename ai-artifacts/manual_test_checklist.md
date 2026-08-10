@@ -23,6 +23,12 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 - [ ] Start chosen duel, surrender, press Change decks; confirm picker returns with same pair selected and no duel auto-starts.
 - [ ] Start another duel, surrender, press Start another duel; confirm replacement Worker starts same chosen pair after ready.
 
+## T4 opponent-policy-loop-breaker
+
+- [ ] Run a deterministic diagnostic duel that previously repeated one unchanged opponent prompt; confirm duel advances without reaching the 1,000-response controller fuse.
+- [ ] Inspect opponent response diagnostics for one unchanged prompt; confirm first two reasons stay normal, then reason becomes `break_loop_alternative` or `break_loop_exit`.
+- [ ] Confirm every loop-break response id belongs to the current prompt, then play through next human prompt or duel result without an invalid-response error.
+
 Ticket ids restart per plan, so sections are grouped by round. **Round 2 is the current implementation.** Where a round 2 ticket replaced round 1 behaviour, the round 1 section is marked **SUPERSEDED** and must not be run — its steps describe UI that no longer exists.
 
 ---

@@ -329,7 +329,175 @@ describe("BasicOpponentPolicy", () => {
       reason: "select_first_legal",
     });
   });
+
+  it("keeps the normal choice for the first two identical prompts", () => {
+    const policy = new BasicOpponentPolicy(dependencies);
+    const repeated = loopPrompt();
+    expect(policy.choose(repeated, opponentState)).toEqual({
+      choiceIds: [choiceId("loop-a")],
+      reason: "summon_first_legal",
+    });
+    expect(policy.choose(repeated, opponentState)).toEqual({
+      choiceIds: [choiceId("loop-a")],
+      reason: "summon_first_legal",
+    });
+  });
+
+  it("uses another legal choice on the third unchanged prompt", () => {
+    const policy = new BasicOpponentPolicy(dependencies);
+    const repeated = loopPrompt();
+    policy.choose(repeated, opponentState);
+    policy.choose(repeated, opponentState);
+    expect(policy.choose(repeated, opponentState)).toEqual({
+      choiceIds: [choiceId("loop-b")],
+      reason: "break_loop_alternative",
+    });
+  });
+
+  it("uses an exit after non-exit choices are exhausted", () => {
+    const policy = new BasicOpponentPolicy(dependencies);
+    const repeated = loopPrompt();
+    const decisions = Array.from({ length: 4 }, () =>
+      policy.choose(repeated, opponentState),
+    );
+    expect(decisions).toEqual([
+      {
+        choiceIds: [choiceId("loop-a")],
+        reason: "summon_first_legal",
+      },
+      {
+        choiceIds: [choiceId("loop-a")],
+        reason: "summon_first_legal",
+      },
+      {
+        choiceIds: [choiceId("loop-b")],
+        reason: "break_loop_alternative",
+      },
+      {
+        choiceIds: [choiceId("loop-end")],
+        reason: "break_loop_exit",
+      },
+    ]);
+  });
+
+  it("prefers pass before phase exits", () => {
+    const policy = new BasicOpponentPolicy(dependencies);
+    const repeated = prompt("idleCommand", [
+      { id: choiceId("exit-a"), label: "A", action: "summon" },
+      { id: choiceId("exit-main2"), label: "Main 2", action: "mainPhase2" },
+      { id: choiceId("exit-end"), label: "End", action: "endPhase" },
+      { id: choiceId("exit-pass"), label: "Pass", action: "pass" },
+    ]);
+    policy.choose(repeated, opponentState);
+    policy.choose(repeated, opponentState);
+    expect(policy.choose(repeated, opponentState)).toEqual({
+      choiceIds: [choiceId("exit-pass")],
+      reason: "break_loop_exit",
+    });
+  });
+
+  it("ignores prompt-only revision increments", () => {
+    const policy = new BasicOpponentPolicy(dependencies);
+    const repeated = loopPrompt();
+    const decision = [7, 8, 9].map((revision) =>
+      policy.choose(repeated, { ...opponentState, revision }),
+    )[2];
+    expect(decision).toEqual({
+      choiceIds: [choiceId("loop-b")],
+      reason: "break_loop_alternative",
+    });
+  });
+
+  it("resets when visible game state changes", () => {
+    const policy = new BasicOpponentPolicy(dependencies);
+    const repeated = loopPrompt();
+    policy.choose(repeated, opponentState);
+    policy.choose(repeated, opponentState);
+    const players = [
+      { ...opponentState.players[0], handCount: 6 },
+      opponentState.players[1],
+    ] as const;
+    expect(policy.choose(repeated, { ...opponentState, players })).toEqual({
+      choiceIds: [choiceId("loop-a")],
+      reason: "summon_first_legal",
+    });
+  });
+
+  it("resets when semantic choices change", () => {
+    const policy = new BasicOpponentPolicy(dependencies);
+    const repeated = loopPrompt();
+    policy.choose(repeated, opponentState);
+    policy.choose(repeated, opponentState);
+    const changed = prompt("idleCommand", [
+      repeated.choices[0]!,
+      { id: choiceId("loop-c"), label: "C", action: "setMonster" },
+      repeated.choices[2]!,
+    ]);
+    expect(policy.choose(changed, opponentState)).toEqual({
+      choiceIds: [choiceId("loop-a")],
+      reason: "summon_first_legal",
+    });
+  });
+
+  it("ignores regenerated prompt and choice ids in the signature", () => {
+    const policy = new BasicOpponentPolicy(dependencies);
+    const decisions = [1, 2, 3].map((call) => {
+      const regenerated = {
+        ...loopPrompt(),
+        id: promptId(`regenerated-${call}`),
+        choices: loopPrompt().choices.map((choice, index) => ({
+          ...choice,
+          id: choiceId(`regenerated-${call}-${index}`),
+        })),
+      };
+      return policy.choose(regenerated, opponentState);
+    });
+    expect(decisions[2]).toEqual({
+      choiceIds: [choiceId("regenerated-3-1")],
+      reason: "break_loop_alternative",
+    });
+  });
+
+  it("does not rewrite multi-choice decisions", () => {
+    const policy = new BasicOpponentPolicy(dependencies);
+    const repeated = {
+      ...prompt("selectCard", [
+        { id: choiceId("multi-a"), label: "A", action: "select" },
+        { id: choiceId("multi-b"), label: "B", action: "select" },
+        { id: choiceId("multi-c"), label: "C", action: "select" },
+      ]),
+      minimum: 2,
+      maximum: 2,
+    };
+    for (let call = 0; call < 4; call += 1) {
+      expect(policy.choose(repeated, opponentState)).toEqual({
+        choiceIds: [choiceId("multi-a"), choiceId("multi-b")],
+        reason: "select_first_legal",
+      });
+    }
+  });
+
+  it("falls back to normal when no alternative or exit exists", () => {
+    const policy = new BasicOpponentPolicy(dependencies);
+    const repeated = prompt("selectCard", [
+      { id: choiceId("mandatory"), label: "Required", action: "select" },
+    ]);
+    for (let call = 0; call < 4; call += 1) {
+      expect(policy.choose(repeated, opponentState)).toEqual({
+        choiceIds: [choiceId("mandatory")],
+        reason: "select_first_legal",
+      });
+    }
+  });
 });
+
+function loopPrompt(): PlayerPrompt {
+  return prompt("idleCommand", [
+    { id: choiceId("loop-a"), label: "A", action: "summon" },
+    { id: choiceId("loop-b"), label: "B", action: "activate" },
+    { id: choiceId("loop-end"), label: "End", action: "endPhase" },
+  ]);
+}
 
 function cardData(code: number, attack: number) {
   return {

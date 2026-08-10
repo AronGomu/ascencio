@@ -79,7 +79,7 @@ The existing suite must run green on the merge result.
 - [x] 12. `npm run test:unit` — exits 0; capture output.
 - [x] 13. `npm run test:integration` — exits 0; capture output.
 - [x] 14. `npm run test:legacy` — exits 0; capture output.
-- [ ] 15. `git merge-base --is-ancestor 736b374 HEAD && git branch --show-current && git status --short` — exits 0, prints `plan/duel-field-feedback-round-3`, and shows only unstaged `feedback.md`; plan docs exist on current branch.
+- [x] 15. `git merge-base --is-ancestor 736b374 HEAD && git branch --show-current && git status --short` — exits 0, prints `plan/duel-field-feedback-round-3`, and shows only unstaged `feedback.md`; plan docs exist on current branch.
 
 ## Outputs
 
@@ -96,7 +96,7 @@ The existing suite must run green on the merge result.
 - [x] chromium e2e passes 18/18 using the command in step 10
 - [x] `git log --oneline --grep="^merge: land duel field feedback round 2$" -1` shows merge commit `52eb619`
 - [x] `git rev-parse --abbrev-ref HEAD` prints `plan/duel-field-feedback-round-3`
-- [ ] `git status --short` shows only ` M feedback.md`
+- [x] `git status --short` shows only ` M feedback.md`
 - [x] `git merge-base --is-ancestor 736b374 HEAD` exits 0
 - [ ] `git log --oneline origin/plan/duel-field-feedback-round-3..HEAD` prints nothing after push
 - [x] app functional — Chromium command exits 0 with all tests passing; no broken path from merge

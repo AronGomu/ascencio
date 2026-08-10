@@ -53,4 +53,16 @@ The band **y 51% – 64%** is free of every zone except the two extra monster zo
 - `DuelField` and `DuelFieldErrorBoundary` drop their `hasPriority` and `lifePoints` props. `DuelField`'s public surface shrinks.
 - Phase transitions become discoverable without opening the action bar, and the action bar's global-choice row keeps them too — the same choice reachable two ways, which is acceptable for a navigation control.
 - `PHASE_SLOT_LABELS` is a second label table beside `DUEL_PHASE_LABELS`. They answer different questions (six navigation slots versus eleven engine phases) and are deliberately not merged.
-</content>
+
+## Round-3 amendment (planned 2026-08-10)
+
+Round-3 feedback changes placement; phase-choice authority remains engine-owned:
+
+- `Battle` joins `Draw`, `Standby`, `Main 1` in the left group.
+- Right group contains `Main 2` plus the existing yellow `EndTurnButton`.
+- Rendered `End` chip is removed; end-phase mapping remains for current-state/choice compatibility.
+- The separate absolute End button is removed, leaving one End control.
+- ADR-018 makes the central split conditional: Link pair uses MR5 with EMZs and split groups; Link-free pair uses MR3 without EMZs and one continuous strip.
+- Retired status pills remain retired; role labels move beside header life totals.
+
+ADR-018's pinned-core MR3/MR5 gate is mandatory: engine legality and rendered geometry must never disagree.

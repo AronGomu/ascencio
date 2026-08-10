@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Duel field feedback round 3 — scope, layout budget, and the deck epic</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b0a08; --panel:#17130d; --panel-2:#1f190f; --text:#fff7ed; --muted:#c9b99f; --line:#4a3b25; --accent:#fbbf24; --accent-2:#fb923c; --focus:#facc15; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    main { width:min(960px,calc(100% - 32px)); margin:0 auto; padding:48px 0 96px; }
+    header { display:grid; gap:12px; margin-bottom:32px; }
+    .eyebrow { color:var(--accent); font-size:.75rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+    h1,h2,p { margin:0; } h1 { font-size:clamp(2rem,5vw,3.5rem); line-height:1.08; letter-spacing:-.035em; }
+    .lede { max-width:70ch; color:var(--muted); }
+    .tree { display:flex; align-items:center; gap:8px; overflow:auto; padding:16px; margin:24px 0 32px; border:1px solid var(--line); border-radius:12px; background:var(--panel); color:var(--muted); white-space:nowrap; }
+    .tree b { color:var(--text); } .node { padding:6px 10px; border:1px solid var(--line); border-radius:999px; } .node.active { border-color:var(--accent); color:var(--accent); } .arrow { color:var(--line); }
+    .visuals { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:0 0 32px; }
+    figure { min-width:0; margin:0; padding:18px; border:1px solid var(--line); border-radius:14px; background:var(--panel); }
+    figcaption { margin-bottom:14px; color:var(--muted); font-size:.85rem; } figcaption b { display:block; color:var(--text); font-size:1rem; }
+    svg { display:block; width:100%; height:auto; } svg text { font-family:ui-sans-serif,system-ui,sans-serif; }
+    .svg-node { fill:var(--panel-2); stroke:var(--line); stroke-width:2; } .svg-node.active { stroke:var(--accent); } .svg-line { fill:none; stroke:var(--line); stroke-width:2; } .svg-arrow { fill:var(--line); } .svg-label { fill:var(--text); font-size:12px; } .svg-note { fill:var(--muted); font-size:10px; } .svg-accent { fill:var(--accent); }
+    form { display:grid; gap:20px; }
+    fieldset { min-width:0; margin:0; padding:24px; border:1px solid var(--line); border-radius:16px; background:var(--panel); }
+    legend { max-width:100%; padding:0 8px; font-size:1.15rem; font-weight:750; }
+    .why { margin:0 0 18px; color:var(--muted); font-size:.925rem; }
+    .choices { display:grid; gap:10px; }
+    .choice { display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:start; padding:14px; border:1px solid var(--line); border-radius:10px; background:var(--panel-2); cursor:pointer; }
+    .choice:has(input:checked) { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
+    input { width:18px; height:18px; margin-top:3px; accent-color:var(--accent); }
+    .rank { display:inline-block; margin-left:7px; color:var(--accent-2); font-size:.72rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+    .detail { display:block; margin-top:3px; color:var(--muted); font-size:.875rem; }
+    label.precision { display:block; margin-top:18px; font-size:.85rem; font-weight:700; color:var(--muted); }
+    textarea { width:100%; min-height:90px; margin-top:7px; padding:12px; resize:vertical; border:1px solid var(--line); border-radius:10px; background:#100d08; color:var(--text); font:inherit; }
+    input:focus-visible,textarea:focus-visible,button:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
+    .actions { position:sticky; bottom:16px; display:flex; gap:12px; align-items:center; justify-content:space-between; padding:14px; border:1px solid var(--line); border-radius:14px; background:rgba(19,23,28,.96); box-shadow:0 16px 40px #0008; backdrop-filter:blur(10px); }
+    button { padding:11px 16px; border:0; border-radius:9px; background:var(--accent); color:#211500; font:inherit; font-weight:800; cursor:pointer; }
+    #status { color:var(--muted); font-size:.875rem; }
+    .facts { margin:0 0 32px; padding:18px 22px; border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:12px; background:var(--panel); }
+    .facts h2 { font-size:1rem; margin-bottom:10px; }
+    .facts ul { margin:0; padding-left:20px; color:var(--muted); font-size:.9rem; }
+    .facts li { margin:6px 0; } .facts code { color:var(--text); font-size:.85em; }
+    @media (max-width:700px) { .visuals { grid-template-columns:1fr; } }
+    @media (max-width:600px) { main { width:min(100% - 20px,960px); padding-top:28px; } fieldset { padding:18px 14px; } .actions { align-items:flex-start; flex-direction:column; } button { width:100%; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="eyebrow">Grill me · Round 1 · Scope, layout budget, deck epic</span>
+    <h1>Duel field feedback round 3</h1>
+    <p class="lede">30 feedback items. Most are unambiguous and already planned. These 15 are the ones where two readings would produce materially different work — branch base, the viewport budget that several items fight over, the deck-import epic, and the drag-physics feasibility you asked for. Answer in the page, then hit <b>Copy answer summary</b>.</p>
+  </header>
+
+  <nav class="tree" aria-label="Design tree progress">
+    <span class="node active">Base &amp; scope</span><span class="arrow">→</span>
+    <span class="node active">Layout budget</span><span class="arrow">→</span>
+    <span class="node active">Interaction &amp; halos</span><span class="arrow">→</span>
+    <span class="node active">Deck epic</span><span class="arrow">→</span>
+    <span class="node">Ticket decomposition</span><span class="arrow">→</span>
+    <span class="node">Plan</span>
+  </nav>
+
+  <section class="facts" aria-label="Facts already resolved">
+    <h2>Facts already resolved — not asking you these</h2>
+    <ul>
+      <li><b>Round 2 is shipped but unmerged.</b> All 12 tickets live on <code>feat/duel-field-round-2</code> (16 commits ahead of <code>main</code>, head <code>736b374</code>). <code>main</code> only carries round 2's <i>docs</i>. Your feedback describes the branch build, not <code>main</code>.</li>
+      <li><b>Item 1 root cause found.</b> <code>src/styles/app.css</code> has <code>.duel-field-card { pointer-events: none; }</code> with <code>pointer-events: auto</code> only on <code>.is-actionable</code>. So <code>onpointerenter</code> never fires on a card that is not a legal target — opponent monsters never preview, your hand previews only while it is actionable. Stacks have no such rule, which is exactly why the graveyard works.</li>
+      <li><b>Item 10 and 11 are the same shape.</b> Attack targeting is a <code>selectCard</code> prompt with min=max=1 → it currently demands a Confirm click in the action bar. The battle-command prompt is <code>battleCommand</code> → <code>cardAction</code>, whose "Enter Main Phase 2" / "End Battle Phase" already exist as phase-strip chips. Both are fixed by trimming the action bar, not by new UI.</li>
+      <li><b>Item 12 is buildable offline.</b> The local snapshot holds 14,794 cards, 13,399 official scripts and 14,579 images. Every card I probed for Burning Abyss, Nekroz, Shaddoll and Spellbook resolves to a code <i>and</i> a bundled image. Nothing needs downloading.</li>
+      <li><b>Item 23 is computable.</b> <code>generated/assets/current/catalog/cards/*.json</code> carries <code>type</code> bits and <code>linkMarker</code> per card, so "does any extra deck hold a Link monster" is a build-time lookup — but the manifest shipped to the browser (<code>__ACTIVE_CARD_TEXTS__</code>) currently carries only code/name/description and would need one more field.</li>
+      <li><b>Item 19 needs no library.</b> Pointer-velocity tilt plus a spring settle is ~120 lines of hand-rolled <code>requestAnimationFrame</code> + CSS <code>transform</code>. Question 11 is about how far to take it, not whether it is possible.</li>
+    </ul>
+  </section>
+
+  <section class="visuals" aria-label="Technical context">
+    <figure>
+      <figcaption><b>Vertical budget at 1366×768</b>The items that fight each other</figcaption>
+      <svg viewBox="0 0 420 300" role="img" aria-labelledby="budget-title budget-desc">
+        <title id="budget-title">Vertical space budget of the duel view at a 768 pixel tall viewport</title>
+        <desc id="budget-desc">Today the header, the 16 by 9 board and the preview panel together need roughly 800 pixels, which exceeds the 768 pixel viewport, so something must shrink.</desc>
+        <rect x="8" y="8" width="180" height="284" class="svg-node"/>
+        <text x="98" y="26" class="svg-label" text-anchor="middle">Today (item 9 fails)</text>
+        <rect x="20" y="36" width="156" height="26" class="svg-node"/><text x="98" y="53" class="svg-note" text-anchor="middle">header bar 64px</text>
+        <rect x="20" y="68" width="156" height="150" class="svg-node active"/><text x="98" y="140" class="svg-label" text-anchor="middle">board 932×524</text>
+        <text x="98" y="158" class="svg-note" text-anchor="middle">min-width 52rem, 16:9</text>
+        <rect x="20" y="224" width="156" height="56" class="svg-node"/><text x="98" y="248" class="svg-note" text-anchor="middle">preview panel</text>
+        <text x="98" y="264" class="svg-note" text-anchor="middle">(left column today)</text>
+        <path d="M196 150 L228 150" class="svg-line"/><path d="M228 145 l10 5 -10 5 z" class="svg-arrow"/>
+        <rect x="244" y="8" width="168" height="284" class="svg-node"/>
+        <text x="328" y="26" class="svg-label" text-anchor="middle">Target (items 9, 21)</text>
+        <rect x="256" y="36" width="144" height="24" class="svg-node"/><text x="328" y="52" class="svg-note" text-anchor="middle">header + names (item 8)</text>
+        <rect x="256" y="66" width="144" height="132" class="svg-node active"/><text x="328" y="128" class="svg-label" text-anchor="middle">board, scaled to fit</text>
+        <text x="328" y="146" class="svg-note" text-anchor="middle">? 44px target floor ?</text>
+        <rect x="256" y="204" width="144" height="76" class="svg-node active"/>
+        <rect x="264" y="212" width="44" height="60" class="svg-node"/><text x="286" y="246" class="svg-note" text-anchor="middle">art</text>
+        <text x="356" y="238" class="svg-note" text-anchor="middle">name + text</text>
+        <text x="328" y="292" class="svg-accent" text-anchor="middle" font-size="10">no page scrollbar</text>
+      </svg>
+    </figure>
+    <figure>
+      <figcaption><b>Frontier</b>Which questions unblock which branch</figcaption>
+      <svg viewBox="0 0 420 300" role="img" aria-labelledby="frontier-title frontier-desc">
+        <title id="frontier-title">Design tree frontier for round three</title>
+        <desc id="frontier-desc">Four branches: base and scope, layout budget, interaction and halos, and the deck epic. Ticket decomposition depends on all four.</desc>
+        <rect x="150" y="10" width="120" height="30" rx="6" class="svg-node active"/><text x="210" y="30" class="svg-label" text-anchor="middle">30 feedback items</text>
+        <path d="M210 40 L210 58 M60 58 L360 58 M60 58 L60 76 M170 58 L170 76 M270 58 L270 76 M360 58 L360 76" class="svg-line"/>
+        <rect x="10" y="76" width="100" height="44" rx="6" class="svg-node active"/><text x="60" y="94" class="svg-label" text-anchor="middle">Base + scope</text><text x="60" y="110" class="svg-note" text-anchor="middle">Q1, Q2</text>
+        <rect x="120" y="76" width="100" height="44" rx="6" class="svg-node active"/><text x="170" y="94" class="svg-label" text-anchor="middle">Layout budget</text><text x="170" y="110" class="svg-note" text-anchor="middle">Q5–Q8, Q9, Q15</text>
+        <rect x="220" y="76" width="100" height="44" rx="6" class="svg-node active"/><text x="270" y="94" class="svg-label" text-anchor="middle">Interaction</text><text x="270" y="110" class="svg-note" text-anchor="middle">Q10–Q14</text>
+        <rect x="330" y="76" width="80" height="44" rx="6" class="svg-node active"/><text x="370" y="94" class="svg-label" text-anchor="middle">Deck epic</text><text x="370" y="110" class="svg-note" text-anchor="middle">Q3, Q4</text>
+        <path d="M60 120 L60 176 M170 120 L170 176 M270 120 L270 176 M370 120 L370 176 M60 176 L370 176 M210 176 L210 196" class="svg-line"/>
+        <rect x="140" y="196" width="140" height="34" rx="6" class="svg-node"/><text x="210" y="217" class="svg-label" text-anchor="middle">Ticket decomposition</text>
+        <path d="M210 230 L210 250" class="svg-line"/><path d="M205 250 l5 10 5 -10 z" class="svg-arrow"/>
+        <rect x="140" y="258" width="140" height="32" rx="6" class="svg-node"/><text x="210" y="278" class="svg-label" text-anchor="middle">PLAN + ADRs</text>
+      </svg>
+    </figure>
+  </section>
+
+  <form id="questions">
+
+    <fieldset data-question="What does round 3 branch off?">
+      <legend>1. What does round 3 branch off?</legend>
+      <p class="why">Round 2 is complete and pushed but never merged; every one of your 30 items describes that branch's build, so basing on <code>main</code> would make the plan unimplementable.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="New branch feat/duel-field-round-3 off feat/duel-field-round-2 (736b374), merge both later"><span><b>New branch <code>feat/duel-field-round-3</code> off <code>feat/duel-field-round-2</code></b><span class="rank">Recommended</span><span class="detail">Keeps round 2 reviewable on its own and gives round 3 a clean diff; the two merge to main together at the end.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Merge feat/duel-field-round-2 into main first, then branch round 3 off main"><span><b>Merge round 2 into <code>main</code> first, then branch off <code>main</code></b><span class="rank">Second</span><span class="detail">Simplest history, but it merges 16 commits whose manual checklist still has 22 unticked human-at-a-browser boxes.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Keep committing directly on feat/duel-field-round-2"><span><b>Keep committing on <code>feat/duel-field-round-2</code></b><span class="rank">Third</span><span class="detail">No branch churn, but round 2 and round 3 become one unreviewable 30+ commit diff.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. merge round 2 first, I already validated it manually"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Is item 12 (4 archetype decks + pre-duel deck selection) part of this plan or its own plan?">
+      <legend>2. Is item 12 — four archetype decks plus a pre-duel deck picker — part of this plan?</legend>
+      <p class="why">Item 12 is not a UI item. It touches the deck files, the reviewed card-pool gate, the Vite image manifest, the pre-duel flow, and it exposes the engine to Xyz/Ritual/Fusion/Pendulum summoning that the prompt UI has never once been driven through. On its own it is roughly the size of the other 29 items combined.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Separate plan, run after round 3 UI ships"><span><b>Its own plan, after the round 3 UI ships</b><span class="rank">Recommended</span><span class="detail">Round 3 stays a tight UI/UX pass you can validate in an afternoon; the deck epic gets the risk budget it actually needs.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Same plan, as the first tickets, so later UI work is exercised against real archetype decks"><span><b>Same plan, first tickets</b><span class="rank">Second</span><span class="detail">Every later UI ticket then gets tested against real Burning Abyss/Nekroz boards instead of 22 vanilla LOB cards — much better coverage, much slower start.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Same plan, as the last tickets"><span><b>Same plan, last tickets</b><span class="rank">Third</span><span class="detail">One plan to track, but the riskiest work lands when attention is lowest.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. same plan but only the deck picker; decks themselves later"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Who authors the four decklists?">
+      <legend>3. Who authors the four decklists?</legend>
+      <p class="why">"Burning Abyss from Duelist Alliance", "Necroz at its first extension release", "Shaddoll of Duelist Alliance", "Spellbook around the Duelist Alliance metagame" each have several defensible 2014–2015 builds, and the exact 40+15 matters for whether the duel is playable.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="I compose canonical 2014-2015 lists from the local catalog, you review the .ydk diff before it is committed"><span><b>I compose them from the local catalog, you review the <code>.ydk</code></b><span class="rank">Recommended</span><span class="detail">Card codes come out of the bundled snapshot so nothing can reference a missing card; you get a reviewable list per deck before it lands.</span></span></label>
+        <label class="choice"><input type="checkbox" value="You supply the four .ydk files yourself"><span><b>You supply the four <code>.ydk</code> files</b><span class="rank">Second</span><span class="detail">Exactly the lists you want, but the plan then carries a TODO(user) that blocks the ticket until the files exist.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Simplified consistency-first 40-card builds that avoid the least-supported effects"><span><b>Simplified, consistency-first builds</b><span class="rank">Third</span><span class="detail">Highest chance every duel completes, lowest fidelity to the real metagame decks.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. use the exact YCS Toronto 2015 Nekroz list; I'll paste it"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="What happens to the reviewed card-pool gate MVP_SUPPORTED_CARD_CODES?">
+      <legend>4. What happens to the reviewed card-pool gate?</legend>
+      <p class="why"><code>src/duel/presets/deck-parser.ts</code> hard-codes 22 approved card codes and <code>validateDeck</code> throws for anything outside them. Four archetype decks cannot load until this changes, and the gate exists deliberately to stop unreviewed effects entering the MVP.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Replace the hand-listed pool with the union of every bundled deck's codes, computed at build time"><span><b>Derive the pool from the bundled decks themselves</b><span class="rank">Recommended</span><span class="detail">The gate keeps its real job — "only cards that ship in a reviewed deck" — and stops being a list someone must hand-edit twice per deck.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Extend the hand-listed set with the four decks' codes"><span><b>Hand-extend the existing set</b><span class="rank">Second</span><span class="detail">Smallest diff, explicit review surface, but ~200 more literals to maintain and easy to desync from the <code>.ydk</code> files.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Drop the pool gate entirely and accept any card in the bundled catalog"><span><b>Drop the gate</b><span class="rank">Third</span><span class="detail">Frees deck editing later, but removes the only guard that keeps a duel from loading an effect nobody has driven through the UI.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder=""></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="When the duel view cannot fit 100% of the viewport height, what gives?">
+      <legend>5. Item 9 — when the view cannot fit 100&nbsp;% of the viewport height, what gives?</legend>
+      <p class="why">Round 1 pinned a rule that every field target stays ≥44&nbsp;px, which forces <code>.duel-field-board { min-width: 52rem }</code> and a 16:9 box. At 1366×768 that board is 932×524; add the header and a bottom preview panel and the column needs ~800&nbsp;px against 768. One of the two constraints has to yield, and this is the single decision the most items depend on.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Size the board from available height (aspect-ratio driven), let targets shrink below 44px on short viewports, keep a hard floor around 32px"><span><b>Size the board from the <i>height</i> left over; targets shrink, hard floor ~32&nbsp;px</b><span class="rank">Recommended</span><span class="detail">This is what makes item 9 literally true at any viewport. 44&nbsp;px is a touch guideline; this is a mouse-first desktop client and cards are already hover-magnified by item 17.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Keep the 44px target floor; if it does not fit, the preview panel collapses to a thin strip and the board keeps its size"><span><b>Keep 44&nbsp;px; the preview panel collapses instead</b><span class="rank">Second</span><span class="detail">Accessibility invariant survives, but on a 768&nbsp;px-tall screen the preview becomes almost useless — the opposite of items 20/21.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Keep both by scaling the whole stage with a CSS transform on short viewports"><span><b>CSS <code>transform: scale()</code> the whole stage</b><span class="rank">Third</span><span class="detail">One line to fit everything, but it blurs text and breaks the drop hit-testing that reads <code>document.elementFromPoint</code>.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Declare a minimum supported viewport (e.g. 1440x900) and let anything smaller scroll"><span><b>Declare a minimum supported viewport, smaller scrolls</b><span class="rank">Fourth</span><span class="detail">Honest and simple, but it means item 9 is false on the laptop you are most likely testing on.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. what viewport are you actually running? 1920x1080? 1366x768?"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Confirm the final preview panel placement (items 20 vs 21)">
+      <legend>6. Items 20 and 21 — confirm the final preview placement</legend>
+      <p class="why">Item 20 says give the unused left space to the preview; item 21 says there is not enough room beside the field at all, so move it to the bottom with the art on the left and the text on the right. They describe different layouts and 21 reads as the later thought.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Item 21 wins: preview is a full-width bottom band, art left, text right; item 20 is superseded"><span><b>21 wins — full-width bottom band, art left, text right</b><span class="rank">Recommended</span><span class="detail">Single layout, no leftover left column, and it is the shape that makes the 100&nbsp;% viewport fit solvable.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Keep the preview on the left but widen it into the empty space (item 20), do not move it to the bottom"><span><b>20 wins — stay left, absorb the empty space</b><span class="rank">Second</span><span class="detail">Fewer moved parts, but the board then loses horizontal room it already cannot spare.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Bottom band by default, but the leftover left space still goes to the board rather than staying empty"><span><b>Bottom band, and the freed left space goes to the <i>board</i></b><span class="rank">Third</span><span class="detail">Biggest board, but then item 20's literal request — give the space to the preview — is not honoured.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder=""></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Confirm the final hand band spec (items 6, 7, 13, 15)">
+      <legend>7. Items 6, 7, 13, 15 — the hand band, all four at once</legend>
+      <p class="why">Four items touch the hand and they pull in different directions: 6 deletes the hand zone rectangle, 13 says the hand should span exactly the five spell/trap zones, 15 says reduce the hand width so the GY/banished/deck column can attach to the fifth monster and spell/trap zones, and 7 caps it at 10 cards with arrows and a scrollbar.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="No hand rectangle; hand band spans exactly spell/trap zone 1 through 5; >10 cards paginate with left/right arrows plus a horizontal scrollbar; cards never overlap-fan tighter than one card width"><span><b>No rectangle · spans ST1→ST5 · 10 visible · arrows + scrollbar</b><span class="rank">Recommended</span><span class="detail">Reads all four items as one consistent spec: 13 sets the width, 15's narrowing falls out of it, 6 removes the frame, 7 handles overflow.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Same, but keep the fan overlap and let 10+ cards compress instead of paginating"><span><b>Same, but compress instead of paginating</b><span class="rank">Second</span><span class="detail">Simpler — no arrow state to manage — but a 15-card hand becomes unreadable slivers, which is the thing item 7 complains about.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Same, but the visible cap is a number I will give in Precision, not 10"><span><b>Same, different visible cap</b><span class="rank">Third</span><span class="detail">Pick the number in the box below.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. cap at 8; or: arrows only, no scrollbar"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Does the opponent hand get the same treatment as yours?">
+      <legend>8. Does the opponent's hand get the same treatment?</legend>
+      <p class="why">Item 6 and 7 are written from your side. The opponent's hand is a row of card backs in its own zone, and item 26 separately asks to delete the badge that currently sits at that position.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Yes, mirror it: no zone rectangle, same width, same 10-card cap and overflow behaviour"><span><b>Mirror it exactly</b><span class="rank">Recommended</span><span class="detail">Symmetric field, one code path, and the opponent's hand size stays readable at a glance.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Mirror the styling but never paginate the opponent hand - just compress the backs"><span><b>Mirror styling, compress instead of paginate</b><span class="rank">Second</span><span class="detail">You cannot inspect those cards anyway, so arrows there are dead controls.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Replace the opponent hand with a single card-back stack plus a count"><span><b>Collapse it to one card back + a count</b><span class="rank">Third</span><span class="detail">Frees real vertical space for item 9, but loses the visual read of a big opponent hand.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder=""></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="What decides whether the shared Extra Monster Zones are removed (item 23)?">
+      <legend>9. Item 23 — what decides that the Extra Monster Zones get removed?</legend>
+      <p class="why">"If none of the players have any Link monster, remove those zones." Your own extra deck is knowable; your opponent's extra deck is, strictly, hidden information — reading it to decide a layout leaks one bit ("they run Links").</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Decide at duel start from both chosen decklists; the layout is fixed for the whole duel"><span><b>Both decklists, decided once at duel start</b><span class="rank">Recommended</span><span class="detail">Stable layout, no mid-duel reflow, and the leaked bit is one you already chose when you picked the opponent's deck in the item 12 menu.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Decide from your own extra deck only"><span><b>Your extra deck only</b><span class="rank">Second</span><span class="detail">Zero information leak, but the zones vanish in a duel where the opponent can still legally Link-summon into them.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Author-declared flag per bundled deck (deck metadata says usesLinks: true/false)"><span><b>A flag on each bundled deck</b><span class="rank">Third</span><span class="detail">Explicit and cheap, but it can silently disagree with the deck's real contents.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Never remove the zones; only tighten the phase chip spacing"><span><b>Never remove them, just tighten the phase chips</b><span class="rank">Fourth</span><span class="detail">Honours the visual half of item 23 with none of the detection work.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder=""></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Confirm the full halo palette (item 25)">
+      <legend>10. Item 25 — confirm the whole halo palette, not just the two states you named</legend>
+      <p class="why">You set green = valid target and orange = selected/awaiting confirmation, and said it overrides earlier claims. Four other halo states already exist in the CSS and need a colour that does not collide: drop candidate (item 18 asks for green), keyboard-navigation focus, the animation "feedback target", and the hover state item 29 wants on list entries.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Green = any valid/legal target. Orange = selected or awaiting confirmation. Drop candidate = green, filled tint. Keyboard focus = white/neutral outline, never green or orange. Feedback animation = its own accent (teal). Hover on a list entry = orange, matching selection intent."><span><b>Green legal · orange selected · green-filled drop candidate · neutral focus ring · teal feedback</b><span class="rank">Recommended</span><span class="detail">Two colours carry meaning, everything else is deliberately colourless so legality and selection are never confusable.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Same, but keyboard focus also uses green so the focused legal target reads as one thing"><span><b>Same, but focus is green too</b><span class="rank">Second</span><span class="detail">Fewer colours, at the cost of not being able to tell "focused" from "legal" without moving.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Same as recommended, but hover on a list entry is a brighter green rather than orange"><span><b>Same, but list hover is bright green, not orange</b><span class="rank">Third</span><span class="detail">Keeps orange strictly for committed selection; item 29 explicitly asks for orange on hover though.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. exact hex values you want"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="How far do the drag physics go (items 18 and 19)?">
+      <legend>11. Items 18 and 19 — how far do the drag physics go?</legend>
+      <p class="why">You asked for the feasibility read before committing. Here it is: <b>no library is needed and none should be added.</b> A dragged card is one absolutely-positioned element; the whole effect is a <code>transform</code> string recomputed in a <code>requestAnimationFrame</code> loop that already runs only while a pointer is down. Cost below is honest implementation size, and every tier respects <code>prefers-reduced-motion</code>.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Tier 2: ghost follows cursor, tilt proportional to pointer velocity, spring settle on drop, subtle lift shadow and scale. ~120 lines, hand-rolled rAF, no dependency."><span><b>Tier 2 — velocity tilt + spring settle</b><span class="rank">Recommended</span><span class="detail">~120 lines, one <code>rAF</code> loop, zero dependencies. Reads as physical without ever being the reason a frame is dropped.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Tier 1: ghost follows the cursor with a fixed lift and a CSS transition on pick-up and drop. No velocity, no spring."><span><b>Tier 1 — follow + fixed lift, CSS transitions only</b><span class="rank">Second</span><span class="detail">~30 lines and nothing to tune. Delivers item 18 in full and item 19 only in spirit.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Tier 3: full 3D - perspective, two-axis rotation, parallax shadow, trailing inertia on the card's own mass."><span><b>Tier 3 — full 3D perspective and parallax shadow</b><span class="rank">Third</span><span class="detail">~250 lines plus real tuning time, and it starts competing with the board for attention on a screen that is already tight for space.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Import a spring/motion library and use it"><span><b>Import a motion library</b><span class="rank">Fourth</span><span class="detail">Not recommended and you already said you did not want it: this is one element and one transform, which is well under the weight of any library that would do it.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. tier 2 but no rotation, only scale and shadow"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Where does the floating confirm window remember its position (item 30)?">
+      <legend>12. Item 30 — where does the floating confirm window remember its position?</legend>
+      <p class="why">"Save its last position so that it reappears at the same spot." Round 2 settled that UI settings stay in memory for the session with no persistence, so this needs an explicit ruling rather than an inherited one.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="In memory for the session only; a page reload puts it back at its default spot"><span><b>Session memory only — reload resets it</b><span class="rank">Recommended</span><span class="detail">Consistent with every other UI setting in the app today, and no storage schema to migrate.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Persist to localStorage so it survives reloads"><span><b>Persist across reloads (<code>localStorage</code>)</b><span class="rank">Second</span><span class="detail">Literally what item 30 asks for, but it is the first persisted UI preference in the codebase and breaks the round 2 rule.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Persist it together with every other UI setting - make the whole settings store persistent in this round"><span><b>Make the whole settings store persistent now</b><span class="rank">Third</span><span class="detail">Fixes it for auto-place and auto-resolve too, but that is scope you did not ask for.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder=""></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Does the target-selection list dialog also replace on-field targeting (items 28, 29)?">
+      <legend>13. Items 28 and 29 — does the list dialog also replace on-field targeting?</legend>
+      <p class="why">Your example is Monster Reborn, whose targets all sit in a graveyard. Many effects target cards on the board instead, or a mix of both — and the field already highlights those in place.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="List dialog only for targets outside the field (GY, deck, banished, extra, hand); on-field targets keep in-place highlighting; a mixed prompt shows both at once"><span><b>Off-field targets in the dialog, on-field targets stay on the board</b><span class="rank">Recommended</span><span class="detail">You never lose sight of the board state, and it is the only reading where a mixed-zone effect stays answerable.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Every targeting prompt opens the list dialog, including targets that are on the field"><span><b>Every targeting prompt opens the dialog</b><span class="rank">Second</span><span class="detail">One consistent gesture for every effect, but it hides the board exactly when its state matters most.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Dialog only when the targets are in a zone you cannot see on the board at all (deck, extra, face-down); GY and banished stay as stack highlights"><span><b>Dialog only for genuinely invisible zones</b><span class="rank">Third</span><span class="detail">Smallest change, but leaves the graveyard case — your actual example — unfixed.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder=""></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="How far does 'face-down but known to me' identity tracking go (item 1)?">
+      <legend>14. Item 1 — how far does "face-down but I know what it is" go?</legend>
+      <p class="why">Your example — a monster your opponent Special Summoned face-down out of their graveyard — is genuinely public knowledge, and the projector currently strips its code. Making it previewable means the worker has to remember which face-down cards were publicly revealed, the same machinery round 2 built for deck reveals.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Track it properly in the worker: any card whose identity became public before it went face-down keeps its code for the local viewer, cleared whenever it leaves that zone or is shuffled away"><span><b>Track it properly in the projector</b><span class="rank">Recommended</span><span class="detail">Correct by construction and reuses the round 2 reveal pattern. It is a worker-side ticket with real tests, not a UI tweak — call it a third of this plan's engine work.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Only your own face-down cards - you always know your own sets - and leave the opponent's face-down cards hidden for now"><span><b>Your own face-down cards only</b><span class="rank">Second</span><span class="detail">Fixes most of the daily annoyance for a fraction of the cost; your opponent's face-down Special Summon stays a mystery until a later round.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Skip identity tracking this round; only fix the hover bug and drop the 'Hidden card' label"><span><b>Skip it — fix hover and the label only</b><span class="rank">Third</span><span class="detail">The rest of item 1 is a one-line CSS fix; this defers the expensive half entirely.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder=""></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="What text goes next to the life points (item 8)?">
+      <legend>15. Item 8 — what text goes next to the life points?</legend>
+      <p class="why">"Add the name or role of the player… indicating whether it's you or your opponent." What that string should be depends on whether the deck picker from item 12 exists yet.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Static role now: 'You' and 'Opponent'. If the deck picker ships, append the chosen deck name underneath."><span><b>"You" / "Opponent" now, deck name underneath once the picker exists</b><span class="rank">Recommended</span><span class="detail">Works today with no dependency on item 12, and grows into the deck name for free.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Deck name only, e.g. 'Burning Abyss' vs 'Shaddoll' - requires item 12 first"><span><b>Deck name only</b><span class="rank">Second</span><span class="detail">More flavourful, but it hard-blocks item 8 behind the whole deck epic.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Editable player name with a default, stored in settings"><span><b>An editable player name</b><span class="rank">Third</span><span class="detail">Scope you did not ask for, and the first persisted user string in the app.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder=""></textarea></label>
+    </fieldset>
+
+    <div class="actions">
+      <span id="status" role="status">Selections stay in this page until copied.</span>
+      <button type="button" id="copy-summary">Copy answer summary</button>
+    </div>
+  </form>
+</main>
+<script>
+  const button = document.querySelector('#copy-summary');
+  const status = document.querySelector('#status');
+
+  function buildSummary() {
+    const sections = [...document.querySelectorAll('fieldset[data-question]')].map((field, index) => {
+      const question = field.dataset.question;
+      const selected = [...field.querySelectorAll('input[type="checkbox"]:checked')].map(input => `- ${input.value}`);
+      const precision = field.querySelector('textarea').value.trim();
+      const answers = selected.length ? selected.join('\n') : '- No recommended answer selected';
+      return `${index + 1}. ${question}\n${answers}${precision ? `\nPrecision: ${precision}` : ''}`;
+    });
+    return `Round 1 · Scope, layout budget, deck epic — Duel field feedback round 3\n\n${sections.join('\n\n')}`;
+  }
+
+  button.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(buildSummary());
+      status.textContent = 'Summary copied to clipboard.';
+    } catch (_) {
+      const fallback = document.createElement('textarea');
+      fallback.value = buildSummary();
+      document.body.appendChild(fallback);
+      fallback.select();
+      document.execCommand('copy');
+      fallback.remove();
+      status.textContent = 'Summary copied to clipboard.';
+    }
+  });
+</script>
+</body>
+</html>

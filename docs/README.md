@@ -19,11 +19,22 @@ This directory contains current project documentation and historical context. Ro
 | [`ADR/008_ADR_projected_deck_order_and_reveals.md`](ADR/008_ADR_projected_deck_order_and_reveals.md)   | Accepted projected deck order with offset-based reveal tracking      |
 | [`ADR/009_ADR_automatic_prompt_resolution.md`](ADR/009_ADR_automatic_prompt_resolution.md)             | Accepted automatic placement and automatic answering of non-decisions |
 | [`ADR/010_ADR_in_field_phase_navigation.md`](ADR/010_ADR_in_field_phase_navigation.md)                 | Accepted in-field phase strip replacing the corner status pills      |
+| [`ADR/011_ADR_deck_registry_and_derived_card_pool.md`](ADR/011_ADR_deck_registry_and_derived_card_pool.md) | Accepted bundled deck registry and derived reviewed pool |
+| [`ADR/012_ADR_pre_duel_deck_selection.md`](ADR/012_ADR_pre_duel_deck_selection.md)                     | Accepted pre-duel pair selection and replacement lifecycle |
+| [`ADR/013_ADR_browser_persisted_ui_state.md`](ADR/013_ADR_browser_persisted_ui_state.md)               | Accepted versioned deck/window preference persistence |
+| [`ADR/014_ADR_public_knowledge_for_face_down_cards.md`](ADR/014_ADR_public_knowledge_for_face_down_cards.md) | Accepted conservative face-down public-knowledge tracking |
+| [`ADR/015_ADR_halo_semantics_legal_versus_selected.md`](ADR/015_ADR_halo_semantics_legal_versus_selected.md) | Accepted legal/selected/focus/feedback visual semantics |
+| [`ADR/016_ADR_dependency_free_drag_physics.md`](ADR/016_ADR_dependency_free_drag_physics.md)           | Accepted dependency-free drag ghost physics |
+| [`ADR/017_ADR_floating_field_windows_and_dismissal.md`](ADR/017_ADR_floating_field_windows_and_dismissal.md) | Accepted field-window bounds, persistence, and dismissal |
+| [`ADR/018_ADR_conditional_extra_monster_zones.md`](ADR/018_ADR_conditional_extra_monster_zones.md)     | Accepted Worker-owned MR3/MR5 conditional EMZ profile |
 | [`duel-field-architecture.html`](duel-field-architecture.html)                                         | Styled field architecture design                                     |
 | [`duel-field-interaction-shell.html`](duel-field-interaction-shell.html)                               | Styled interaction-shell design: surfaces, routing, drag, settings   |
-| [`duel-field-interaction-model-v2.html`](duel-field-interaction-model-v2.html)                         | Styled round-2 interaction model: stack targets, deck reveals, auto-resolution, overlay geometry |
+| [`duel-field-interaction-model-v2.html`](duel-field-interaction-model-v2.html)                         | Styled round-2 interaction baseline |
+| [`duel-field-interaction-model-v3.html`](duel-field-interaction-model-v3.html)                         | Styled round-3 interaction model: knowledge, semantics, motion, windows, target routing |
+| [`deck-selection-architecture.html`](deck-selection-architecture.html)                                 | Styled registry-to-picker-to-Worker deck-selection architecture |
 | [`../ai-artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md`](../ai-artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md) | Completed TDD ticket ledger for the duel-field UX overhaul |
-| [`../ai-artifacts/PLAN_2026_08_09_duel_field_feedback_round_2.md`](../ai-artifacts/PLAN_2026_08_09_duel_field_feedback_round_2.md) | Active TDD ticket ledger for duel-field feedback round 2 |
+| [`../ai-artifacts/PLAN_2026_08_09_duel_field_feedback_round_2.md`](../ai-artifacts/PLAN_2026_08_09_duel_field_feedback_round_2.md) | Round-2 TDD ticket ledger |
+| [`../ai-artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md`](../ai-artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md) | Round-3 implementation-ready ticket index |
 | [`duel-field-validation-references.html`](duel-field-validation-references.html)                       | Styled rule/visual/a11y validation catalog                           |
 | [`MVP_TECHNICAL_IMPLEMENTATION_PLAN.md`](MVP_TECHNICAL_IMPLEMENTATION_PLAN.md)                         | Completed MVP/Phaser baseline audit plan                             |
 | [`assets/asset-import-pipeline.md`](assets/asset-import-pipeline.md)                                   | Implemented asset acquisition, generation, and verification pipeline |

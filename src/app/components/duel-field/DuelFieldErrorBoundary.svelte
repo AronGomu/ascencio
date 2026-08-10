@@ -5,6 +5,7 @@
   import type { CardImageLibrary } from "../../images/card-image-cache.ts";
   import type {
     BoardCardView,
+    BoardStackView,
     BoardViewModel,
   } from "../../../field/board-view-model.ts";
   import type { PhysicalZoneId } from "../../../field/duel-field-layout.ts";
@@ -38,6 +39,7 @@
   export let onplacementintent: (zoneId: PhysicalZoneId) => unknown = () =>
     false;
   export let onpreview: (card: BoardCardView) => void = () => undefined;
+  export let onstackpreview: (stack: BoardStackView) => void = () => undefined;
   export let phase: DuelPhase = "unknown";
   export let hasPriority = false;
 
@@ -98,6 +100,7 @@
     {oninteraction}
     {onplacementintent}
     {onpreview}
+    {onstackpreview}
     {phase}
     {hasPriority}
   />

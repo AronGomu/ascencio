@@ -108,23 +108,23 @@ export function stackTopCode(
 
 ## Impl steps
 
-- [ ] 1. Create `tests/unit/preview-status.test.ts` with the three `previewStatusFor` cases.
-- [ ] 2. Add the four new `CardPreviewPanel` cases to `tests/component/CardPreviewPanel.test.ts`.
-- [ ] 3. Add the `HIDDEN_CARD_PREVIEW` and `stackTopCode` cases to `tests/unit/card-preview.test.ts`, and the `topCardCode` case to whichever test file covers `mapSnapshotToBoard` (`tests/unit/duel-field.test.ts`).
-- [ ] 4. Add the two hover cases to `tests/component/DuelField.test.ts`.
-- [ ] 5. Run `npm run test:unit && npm run test:component`; confirm the new cases fail.
-- [ ] 6. Create `src/app/presentation/preview-status.ts` with `CardPreviewStatus` and `previewStatusFor` exactly as specified.
-- [ ] 7. In `src/app/presentation/card-preview.ts`, add `HIDDEN_CARD_PREVIEW` and `stackTopCode`.
-- [ ] 8. In `src/field/board-view-model.ts`, add `readonly topCardCode?: CardCode;` to `BoardStackView` and spread `...(top?.code === undefined ? {} : { topCardCode: top.code })` into the frozen stack object in `createStacks`.
-- [ ] 9. In `src/app/components/CardPreviewPanel.svelte`, add the `status` prop, render the status block after `.card-preview-panel__copy` (and also when `preview === null`), and change `synchronizeImageLease` to treat `code === 0` as "no lease".
-- [ ] 10. In `src/app/components/duel-field/CardControl.svelte`, drop the `card.code !== undefined` guard inside `reportPreview()`.
-- [ ] 11. In `src/app/components/duel-field/StackControl.svelte`, add `export let onpreview: () => void = () => undefined;` and `onpointerenter={onpreview}` / `onfocusin={onpreview}` on the root `<div>`.
-- [ ] 12. In `src/app/components/duel-field/FieldBoard.svelte`, add `export let onstackpreview: (stack: BoardStackView) => void = () => undefined;` and pass `onpreview={() => onstackpreview(stack)}` in the stack loop.
-- [ ] 13. In `src/app/components/DuelField.svelte`, add `export let onstackpreview: (stack: BoardStackView) => void = () => undefined;` and forward it to `FieldBoard`.
-- [ ] 14. In `src/app/components/duel-field/DuelFieldErrorBoundary.svelte`, declare and forward `onstackpreview`.
-- [ ] 15. In `src/app/App.svelte`: import `HIDDEN_CARD_PREVIEW` and `previewStatusFor`; change `previewFieldCard` to set `HIDDEN_CARD_PREVIEW` when `card.code === undefined`; add `previewStackCard(stack: BoardStackView)`; add `$: previewStatus = previewStatusFor($duel.prompt, $duel.responsePending);` and pass `status={previewStatus}` to `CardPreviewPanel`; pass `onstackpreview={previewStackCard}`.
-- [ ] 16. In `src/app/App.svelte`, move the `<CardPreviewPanel … />` element so it is the **first** child of `<div class="duel-row">`.
-- [ ] 17. In `src/styles/app.css`, change `.duel-row` to `grid-template-columns: 22rem minmax(0, 1fr);`, and add:
+- [x] 1. Create `tests/unit/preview-status.test.ts` with the three `previewStatusFor` cases.
+- [x] 2. Add the four new `CardPreviewPanel` cases to `tests/component/CardPreviewPanel.test.ts`.
+- [x] 3. Add the `HIDDEN_CARD_PREVIEW` and `stackTopCode` cases to `tests/unit/card-preview.test.ts`, and the `topCardCode` case to whichever test file covers `mapSnapshotToBoard` (`tests/unit/duel-field.test.ts`).
+- [x] 4. Add the two hover cases to `tests/component/DuelField.test.ts`.
+- [x] 5. Run `npm run test:unit && npm run test:component`; confirm the new cases fail.
+- [x] 6. Create `src/app/presentation/preview-status.ts` with `CardPreviewStatus` and `previewStatusFor` exactly as specified.
+- [x] 7. In `src/app/presentation/card-preview.ts`, add `HIDDEN_CARD_PREVIEW` and `stackTopCode`.
+- [x] 8. In `src/field/board-view-model.ts`, add `readonly topCardCode?: CardCode;` to `BoardStackView` and spread `...(top?.code === undefined ? {} : { topCardCode: top.code })` into the frozen stack object in `createStacks`.
+- [x] 9. In `src/app/components/CardPreviewPanel.svelte`, add the `status` prop, render the status block after `.card-preview-panel__copy` (and also when `preview === null`), and change `synchronizeImageLease` to treat `code === 0` as "no lease".
+- [x] 10. In `src/app/components/duel-field/CardControl.svelte`, drop the `card.code !== undefined` guard inside `reportPreview()`.
+- [x] 11. In `src/app/components/duel-field/StackControl.svelte`, add `export let onpreview: () => void = () => undefined;` and `onpointerenter={onpreview}` / `onfocusin={onpreview}` on the root `<div>`.
+- [x] 12. In `src/app/components/duel-field/FieldBoard.svelte`, add `export let onstackpreview: (stack: BoardStackView) => void = () => undefined;` and pass `onpreview={() => onstackpreview(stack)}` in the stack loop.
+- [x] 13. In `src/app/components/DuelField.svelte`, add `export let onstackpreview: (stack: BoardStackView) => void = () => undefined;` and forward it to `FieldBoard`.
+- [x] 14. In `src/app/components/duel-field/DuelFieldErrorBoundary.svelte`, declare and forward `onstackpreview`.
+- [x] 15. In `src/app/App.svelte`: import `HIDDEN_CARD_PREVIEW` and `previewStatusFor`; change `previewFieldCard` to set `HIDDEN_CARD_PREVIEW` when `card.code === undefined`; add `previewStackCard(stack: BoardStackView)`; add `$: previewStatus = previewStatusFor($duel.prompt, $duel.responsePending);` and pass `status={previewStatus}` to `CardPreviewPanel`; pass `onstackpreview={previewStackCard}`.
+- [x] 16. In `src/app/App.svelte`, move the `<CardPreviewPanel … />` element so it is the **first** child of `<div class="duel-row">`.
+- [x] 17. In `src/styles/app.css`, change `.duel-row` to `grid-template-columns: 22rem minmax(0, 1fr);`, and add:
   ```css
   .card-preview-panel__status { margin: 0; display: flex; align-items: center; gap: 0.35rem; color: var(--muted); font-size: 0.82rem; }
   .card-preview-status-dots { display: inline-flex; gap: 0.15rem; }
@@ -135,7 +135,7 @@ export function stackTopCode(
   @media (prefers-reduced-motion: reduce) { .card-preview-status-dots span { animation: none; opacity: 0.6; } }
   ```
   Also change `.card-preview-panel` to `grid-template-rows: auto minmax(0, 1fr) auto;` so the status row sits at the bottom.
-- [ ] 18. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`.
+- [x] 18. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`.
 
 ## Outputs
 
@@ -152,11 +152,11 @@ export function stackTopCode(
 
 ## Validation
 
-- [ ] `npm run format:check` exits 0
-- [ ] `npm run lint` exits 0
-- [ ] `npm run typecheck` exits 0
-- [ ] `npm run test:unit` exits 0
-- [ ] `npm run test:component` exits 0
+- [x] `npm run format:check` exits 0
+- [x] `npm run lint` exits 0
+- [x] `npm run typecheck` exits 0
+- [x] `npm run test:unit` exits 0
+- [x] `npm run test:component` exits 0
 - [ ] manual check: `npm run dev`; the preview sits left of the board, hovering a face-down card shows `Face-down card`, hovering the graveyard shows its top card, and the status line reads the current prompt title
 - [ ] app functional — the board still renders and remains clickable at 1024px width (the preview column must not push a horizontal scrollbar)
 - [ ] commit msg draft: `feat(app): move the card preview left and follow every field hover`

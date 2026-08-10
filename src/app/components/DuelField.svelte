@@ -7,6 +7,7 @@
   import type { CardImageLibrary } from "../images/card-image-cache.ts";
   import type {
     BoardCardView,
+    BoardStackView,
     BoardTargetId,
     BoardViewModel,
     BoardZoneView,
@@ -73,6 +74,7 @@
   export let onplacementintent: (zoneId: PhysicalZoneId) => unknown = () =>
     false;
   export let onpreview: (card: BoardCardView) => void = () => undefined;
+  export let onstackpreview: (stack: BoardStackView) => void = () => undefined;
   export let phase: DuelPhase = "unknown";
   export let hasPriority = false;
 
@@ -397,6 +399,7 @@
     oncarddragmove={moveCardDrag}
     oncarddragend={endCardDrag}
     oncardpreview={onpreview}
+    {onstackpreview}
   />
   <FieldStatusPills {hasPriority} {phase} />
   {#if feedbackState.line}

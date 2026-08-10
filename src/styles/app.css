@@ -250,14 +250,14 @@ h4 {
    than making the row taller than the board. */
 .duel-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 22rem;
+  grid-template-columns: 22rem minmax(0, 1fr);
   gap: 1rem;
   align-items: stretch;
 }
 
 .card-preview-panel {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 0.75rem;
   min-width: 0;
   padding: 1rem;
@@ -287,6 +287,54 @@ h4 {
   padding-right: 0.4rem;
   color: var(--muted);
   white-space: pre-wrap;
+}
+
+.card-preview-panel__status {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.card-preview-status-dots {
+  display: inline-flex;
+  gap: 0.15rem;
+}
+
+.card-preview-status-dots span {
+  width: 0.28rem;
+  height: 0.28rem;
+  border-radius: 999px;
+  background: currentcolor;
+  animation: preview-status-dot 1.2s infinite ease-in-out;
+}
+
+.card-preview-status-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.card-preview-status-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes preview-status-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.15;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-preview-status-dots span {
+    animation: none;
+    opacity: 0.6;
+  }
 }
 
 /* Solving `mainWidth - 22rem panel - 1rem gap - 2rem field padding >= 52rem

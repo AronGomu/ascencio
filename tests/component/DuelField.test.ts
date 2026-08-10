@@ -1212,7 +1212,41 @@ describe("DuelField", () => {
     });
   });
 
-  it("hidden cards never report", async () => {
+  it("hovering a face-down field card previews the hidden card", async () => {
+    const harness = renderDraggableHand();
+    const hidden = screen.getAllByRole("article", {
+      name: "Hidden opponent hand card",
+    })[0];
+    if (hidden === undefined) throw new Error("Missing hidden opponent card");
+
+    await fireEvent.pointerEnter(hidden);
+
+    expect(harness.onpreview).toHaveBeenCalledTimes(1);
+    const previewed = harness.onpreview.mock.calls[0]?.[0];
+    expect(previewed).toMatchObject({
+      id: hidden.getAttribute("data-card-id"),
+    });
+    expect(previewed?.code).toBeUndefined();
+  });
+
+  it("hovering a stack previews it", async () => {
+    const value = DUEL_FIELD_PUBLIC_STATES["ST-01"];
+    const onstackpreview = vi.fn();
+    render(DuelField, { board: value.board, onstackpreview });
+
+    const stack = document.querySelector<HTMLElement>(
+      '[data-cy="field-stack-p0:graveyard"]',
+    );
+    if (stack === null) throw new Error("Missing graveyard stack");
+    await fireEvent.pointerEnter(stack);
+
+    expect(onstackpreview).toHaveBeenCalledTimes(1);
+    expect(onstackpreview.mock.calls[0]?.[0]).toMatchObject({
+      id: "p0:graveyard",
+    });
+  });
+
+  it("hidden cards report the hidden preview too", async () => {
     const harness = renderDraggableHand();
     const hidden = screen.getAllByRole("article", {
       name: "Hidden opponent hand card",
@@ -1222,7 +1256,13 @@ describe("DuelField", () => {
     await fireEvent.pointerEnter(hidden);
     await fireEvent.focusIn(hidden);
 
-    expect(harness.onpreview).not.toHaveBeenCalled();
+    expect(harness.onpreview).toHaveBeenCalledTimes(2);
+    for (const call of harness.onpreview.mock.calls) {
+      expect(call[0]).toMatchObject({
+        id: hidden.getAttribute("data-card-id"),
+      });
+      expect(call[0]?.code).toBeUndefined();
+    }
   });
 
   it("pointer leave keeps the panel", async () => {

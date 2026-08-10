@@ -1,12 +1,14 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
   import type { CardPreviewView } from "../presentation/card-preview.ts";
+  import type { CardPreviewStatus } from "../presentation/preview-status.ts";
   import type {
     CardImageLease,
     CardImageLibrary,
   } from "../images/card-image-cache.ts";
 
   export let preview: CardPreviewView | null = null;
+  export let status: CardPreviewStatus | null = null;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let placeholderUrl = "";
 
@@ -32,7 +34,9 @@
     activeImageLibrary = library;
     activeImageCode = code;
     imageLease =
-      library !== null && code !== undefined ? library.lease(code) : null;
+      library !== null && code !== undefined && code > 0
+        ? library.lease(code)
+        : null;
     leasedImageUrl = imageLease?.url;
   }
 
@@ -65,5 +69,20 @@
       <h2 data-cy="card-preview-name">{preview.name}</h2>
       <div data-cy="card-preview-text">{preview.description}</div>
     </div>
+  {/if}
+  {#if status !== null}
+    <p class="card-preview-panel__status" data-cy="card-preview-status">
+      <span data-cy="card-preview-status-text">{status.text}</span>
+      {#if status.thinking}
+        <span
+          class="card-preview-status-dots"
+          data-cy="card-preview-status-dots"
+        >
+          <span data-cy="card-preview-status-dot-1"></span>
+          <span data-cy="card-preview-status-dot-2"></span>
+          <span data-cy="card-preview-status-dot-3"></span>
+        </span>
+      {/if}
+    </p>
   {/if}
 </aside>

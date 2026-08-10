@@ -16,6 +16,7 @@ import {
   BOARD_TARGET_PROMPT,
   BOARD_VIEW_MODEL_FIXTURES,
   DUPLICATE_SHARED_OCCUPANCY,
+  TWO_CARD_GRAVEYARD_STATE,
   promptChoice,
 } from "../fixtures/board-view-model.ts";
 import { RICH_PUBLIC_DUEL_STATE } from "../fixtures/board-public-states.ts";
@@ -321,6 +322,18 @@ describe("semantic board view model", () => {
       },
     ]);
     expect(JSON.stringify(board)).not.toContain("Card effect");
+  });
+
+  it("stacks expose the top public card code", () => {
+    const result = mapSnapshotToBoard(
+      TWO_CARD_GRAVEYARD_STATE,
+      BOARD_CARD_TEXTS,
+    );
+    if (!result.ok) throw new Error("Fixture failed to map");
+    const graveyard = result.value.stacks.find(
+      ({ id }) => id === "p0:graveyard",
+    );
+    expect(graveyard?.topCardCode).toBe(89631139);
   });
 
   it("rejects duplicate physical occupancy instead of overwriting", () => {

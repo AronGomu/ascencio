@@ -239,6 +239,13 @@ export const BOARD_TARGET_PROMPT: PlayerPrompt = {
   ordered: false,
 };
 
+export const TWO_CARD_GRAVEYARD_STATE = state("gy2", {
+  graveyard: [
+    card("gy2-first", 97590747, 0, "graveyard", 0),
+    card("gy2-second", 89631139, 0, "graveyard", 1),
+  ],
+});
+
 export const DUPLICATE_SHARED_OCCUPANCY = state(
   "d",
   { monsters: [card("duplicate-left-a", 97590747, 0, "monster", 5)] },

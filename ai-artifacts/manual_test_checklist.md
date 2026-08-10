@@ -101,6 +101,20 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 - [ ] Surrender and start another duel: the panel resets to its empty state instead of holding the previous duel's card.
 - [ ] Play a full duel with the panel on screen: card art keeps loading correctly and the app never slows down or shows a broken image placeholder where art should be.
 
+## T2 preview-panel-left-and-hover-status
+
+- [ ] `npm run dev`, open on a wide desktop window: the card preview panel sits to the LEFT of the duel field (not the right), and the field is the right column.
+- [ ] Hover a face-down card of yours or a hidden opponent hand card: the preview panel now fills with a hidden-card view — art placeholder, name `Face-down card`, text `No information is available for this card.` — instead of leaving the previous card up or staying blank.
+- [ ] Hover any stack (deck, extra deck, graveyard, banished) with at least one public card in it: the panel fills with that stack's top public card.
+- [ ] Hover an empty or fully-private stack: the panel shows the hidden-card view, not the previous card.
+- [ ] Under the card art/text (or under the empty-state copy when nothing is previewed), a status line is visible.
+- [ ] While a response has just been sent and the engine hasn't answered yet, the status line reads `Waiting for the engine` with an animated three-dot indicator after it.
+- [ ] While it's the opponent's turn and you have no prompt, the status line reads `Opponent is acting` with the animated three-dot indicator.
+- [ ] While you have an active prompt, the status line echoes that prompt's title (e.g. `Choose a Main Phase action`) with no animated dots.
+- [ ] With OS-level "reduce motion" turned on, the three dots are still visible next to the status text but do not animate.
+- [ ] Resize the window down to 1024px wide: the board still renders and every board control remains clickable, and the preview column does not push a horizontal scrollbar onto the page.
+- [ ] Shrink further below the responsive breakpoint (~79rem/1264px): the preview panel stacks above the field (not beside it) rather than disappearing or overlapping.
+
 ## T8 status-and-life-pills
 
 - [ ] On your turn, the field's top-right corner reads `Choose Action - Main 1` (or the current phase) in two pills separated by a `-`, the left pill green.

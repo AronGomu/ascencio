@@ -116,7 +116,7 @@
      card whose identity the local player may already see. It never consumes
      the event and never touches the drag bookkeeping below. */
   function reportPreview(): void {
-    if (card.code !== undefined) onpreview(card);
+    onpreview(card);
   }
 
   function pointerDown(

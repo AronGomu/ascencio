@@ -92,6 +92,7 @@ export interface BoardStackView {
   readonly publicCount: number;
   readonly label: string;
   readonly topCardLabel?: string;
+  readonly topCardCode?: CardCode;
   readonly x: number;
   readonly y: number;
   readonly width: number;
@@ -419,6 +420,7 @@ function createStacks(
           publicCount: publicCards.length,
           label: `${layout.label}, ${count} ${count === 1 ? "card" : "cards"}${topCardLabel === undefined ? "" : `, top card ${topCardLabel}`}`,
           ...(topCardLabel === undefined ? {} : { topCardLabel }),
+          ...(top?.code === undefined ? {} : { topCardCode: top.code }),
           x: layout.x,
           y: layout.y,
           width: CARD_WIDTH_NORMALIZED,

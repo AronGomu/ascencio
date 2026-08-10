@@ -7,6 +7,7 @@
   import {
     mapSnapshotToBoard,
     type BoardCardView,
+    type BoardStackView,
   } from "../field/board-view-model.ts";
   import DuelHeaderBar from "./components/DuelHeaderBar.svelte";
   import MenuDialog from "./components/MenuDialog.svelte";
@@ -38,8 +39,11 @@
   import {
     cardPreviewForCode,
     cardPreviewForPublicCard,
+    HIDDEN_CARD_PREVIEW,
+    stackTopCode,
     type CardPreviewView,
   } from "./presentation/card-preview.ts";
+  import { previewStatusFor } from "./presentation/preview-status.ts";
   import { promptSurface } from "./prompts/prompt-surface.ts";
   import { hasDuelPriority } from "./prompts/duel-priority.ts";
   import { createDuelStore } from "./stores/duel-store.ts";
@@ -121,6 +125,7 @@
     mappedInteractionSpec,
     $uiSettings.showWorkspace,
   );
+  $: previewStatus = previewStatusFor($duel.prompt, $duel.responsePending);
   $: headerLifePoints =
     $duel.snapshot === null
       ? null
@@ -553,7 +558,21 @@
   }
 
   function previewFieldCard(card: BoardCardView): void {
+    if (card.code === undefined) {
+      previewCard = HIDDEN_CARD_PREVIEW;
+      return;
+    }
     const next = cardPreviewForCode(card.code, ACTIVE_CARD_TEXTS);
+    if (next !== null) previewCard = next;
+  }
+
+  function previewStackCard(stack: BoardStackView): void {
+    const code = stackTopCode(stack);
+    if (code === undefined) {
+      previewCard = HIDDEN_CARD_PREVIEW;
+      return;
+    }
+    const next = cardPreviewForCode(code, ACTIVE_CARD_TEXTS);
     if (next !== null) previewCard = next;
   }
 
@@ -854,6 +873,13 @@
 
   {#if duelBoard || $duel.snapshot}
     <div class="duel-row" data-cy="duel-row">
+      <CardPreviewPanel
+        preview={previewCard}
+        status={previewStatus}
+        imageLibrary={imagesMatchRuntime ? imageLibrary : null}
+        placeholderUrl={imageLibrary?.placeholderUrl ??
+          DEFAULT_CARD_PLACEHOLDER}
+      />
       {#if duelBoard}
         {#key `${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
           <DuelFieldErrorBoundary
@@ -871,6 +897,7 @@
             oninteraction={duel.dispatchInteraction}
             onplacementintent={duel.armPlacementIntent}
             onpreview={previewFieldCard}
+            onstackpreview={previewStackCard}
             phase={$duel.snapshot?.phase ?? "unknown"}
             hasPriority={hasDuelPriority($duel.prompt, $duel.responsePending)}
           />
@@ -887,12 +914,6 @@
           </p>
         </section>
       {/if}
-      <CardPreviewPanel
-        preview={previewCard}
-        imageLibrary={imagesMatchRuntime ? imageLibrary : null}
-        placeholderUrl={imageLibrary?.placeholderUrl ??
-          DEFAULT_CARD_PLACEHOLDER}
-      />
     </div>
   {/if}
 

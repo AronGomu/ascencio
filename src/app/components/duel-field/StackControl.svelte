@@ -3,6 +3,7 @@
 
   export let stack: BoardStackView;
   export let active = false;
+  export let onpreview: () => void = () => undefined;
 
   $: positionStyle = `--field-x: ${stack.x * 100}%; --field-y: ${stack.y * 100}%; --field-width: ${stack.width * 100}%; --field-height: ${stack.height * 100}%;`;
 </script>
@@ -19,6 +20,8 @@
   data-stack-id={stack.id}
   data-stack-zone={stack.zone}
   style={positionStyle}
+  onpointerenter={onpreview}
+  onfocusin={onpreview}
   data-cy={`field-stack-${stack.id}`}
 >
   <span

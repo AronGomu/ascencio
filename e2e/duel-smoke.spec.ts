@@ -1199,9 +1199,7 @@ test("opponent pile inversion rotates images only", async ({ page }) => {
         transform === "none"
           ? new DOMMatrixReadOnly()
           : new DOMMatrixReadOnly(transform);
-      return [matrix.a, matrix.b, matrix.c, matrix.d].map((value) =>
-        Math.abs(value) < 0.000_001 ? 0 : Math.round(value),
-      );
+      return [matrix.a, matrix.b, matrix.c, matrix.d];
     };
 
     return {
@@ -1248,7 +1246,7 @@ test("opponent pile inversion rotates images only", async ({ page }) => {
 
   const upright = [1, 0, 0, 1];
   const inverted = [-1, 0, 0, -1];
-  expect(orientations).toEqual({
+  const expectedOrientations = {
     playerStackRoot: upright,
     playerStackArt: upright,
     playerStackImage: upright,
@@ -1267,7 +1265,19 @@ test("opponent pile inversion rotates images only", async ({ page }) => {
     opponentEntryImage: inverted,
     opponentEntryPosition: upright,
     opponentEntryChips: upright,
-  });
+  } as const;
+
+  for (const [name, expectedOrientation] of Object.entries(
+    expectedOrientations,
+  )) {
+    const actualOrientation = orientations[name as keyof typeof orientations];
+    expect(actualOrientation, name).toHaveLength(expectedOrientation.length);
+    for (const [index, component] of expectedOrientation.entries())
+      expect(actualOrientation[index], `${name}[${index}]`).toBeCloseTo(
+        component,
+        6,
+      );
+  }
 });
 
 test("responsive field compositions contain controls across supported viewports", async ({

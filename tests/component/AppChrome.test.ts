@@ -257,12 +257,19 @@ describe("MenuDialog", () => {
 describe("SettingsDialog", () => {
   it("reflects the current settings state", () => {
     render(SettingsDialog, {
-      settings: { showDuelHud: true, showWorkspace: false },
+      settings: {
+        showDuelHud: true,
+        showWorkspace: false,
+        autoPlaceCards: true,
+        autoResolveTrivialPrompts: true,
+      },
       coreVersion: null,
       activeSnapshotId: null,
       fallbackSnapshotId: null,
       onshowduelhud: vi.fn(),
       onshowworkspace: vi.fn(),
+      onautoplacecards: vi.fn(),
+      onautoresolvetrivialprompts: vi.fn(),
       onclose: vi.fn(),
     });
 
@@ -276,16 +283,80 @@ describe("SettingsDialog", () => {
     expect(workspaceCheckbox.checked).toBe(false);
   });
 
+  it("exposes the auto-place and auto-resolve toggles", () => {
+    render(SettingsDialog, {
+      settings: {
+        showDuelHud: false,
+        showWorkspace: false,
+        autoPlaceCards: true,
+        autoResolveTrivialPrompts: true,
+      },
+      coreVersion: null,
+      activeSnapshotId: null,
+      fallbackSnapshotId: null,
+      onshowduelhud: vi.fn(),
+      onshowworkspace: vi.fn(),
+      onautoplacecards: vi.fn(),
+      onautoresolvetrivialprompts: vi.fn(),
+      onclose: vi.fn(),
+    });
+
+    const autoPlaceCheckbox = document.querySelector(
+      '[data-cy="settings-auto-place-cards-checkbox"]',
+    ) as HTMLInputElement;
+    const autoResolveCheckbox = document.querySelector(
+      '[data-cy="settings-auto-resolve-checkbox"]',
+    ) as HTMLInputElement;
+    expect(autoPlaceCheckbox.checked).toBe(true);
+    expect(autoResolveCheckbox.checked).toBe(true);
+  });
+
+  it("reports auto-resolve toggling through its callback", async () => {
+    const user = userEvent.setup();
+    const onautoresolvetrivialprompts = vi.fn();
+    render(SettingsDialog, {
+      settings: {
+        showDuelHud: false,
+        showWorkspace: false,
+        autoPlaceCards: true,
+        autoResolveTrivialPrompts: true,
+      },
+      coreVersion: null,
+      activeSnapshotId: null,
+      fallbackSnapshotId: null,
+      onshowduelhud: vi.fn(),
+      onshowworkspace: vi.fn(),
+      onautoplacecards: vi.fn(),
+      onautoresolvetrivialprompts,
+      onclose: vi.fn(),
+    });
+
+    await user.click(
+      document.querySelector(
+        '[data-cy="settings-auto-resolve-checkbox"]',
+      ) as HTMLInputElement,
+    );
+    expect(onautoresolvetrivialprompts).toHaveBeenCalledTimes(1);
+    expect(onautoresolvetrivialprompts).toHaveBeenCalledWith(false);
+  });
+
   it("reports toggles through callbacks", async () => {
     const user = userEvent.setup();
     const onshowworkspace = vi.fn();
     render(SettingsDialog, {
-      settings: { showDuelHud: false, showWorkspace: false },
+      settings: {
+        showDuelHud: false,
+        showWorkspace: false,
+        autoPlaceCards: true,
+        autoResolveTrivialPrompts: true,
+      },
       coreVersion: null,
       activeSnapshotId: null,
       fallbackSnapshotId: null,
       onshowduelhud: vi.fn(),
       onshowworkspace,
+      onautoplacecards: vi.fn(),
+      onautoresolvetrivialprompts: vi.fn(),
       onclose: vi.fn(),
     });
 
@@ -300,12 +371,19 @@ describe("SettingsDialog", () => {
 
   it("shows engine build and snapshot info", () => {
     render(SettingsDialog, {
-      settings: { showDuelHud: false, showWorkspace: false },
+      settings: {
+        showDuelHud: false,
+        showWorkspace: false,
+        autoPlaceCards: true,
+        autoResolveTrivialPrompts: true,
+      },
       coreVersion: [11, 0],
       activeSnapshotId: "abc123def456ghi",
       fallbackSnapshotId: null,
       onshowduelhud: vi.fn(),
       onshowworkspace: vi.fn(),
+      onautoplacecards: vi.fn(),
+      onautoresolvetrivialprompts: vi.fn(),
       onclose: vi.fn(),
     });
 

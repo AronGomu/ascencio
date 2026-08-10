@@ -73,6 +73,18 @@ describe("PromptRegistry", () => {
     });
   });
 
+  it("idle command no longer offers shuffle", () => {
+    const binding = buildEnginePrompt(
+      { ...idleMessage, shuffle: true },
+      1,
+      dependencies,
+    );
+    expect(binding).not.toBeNull();
+    expect(
+      binding?.prompt.choices.some((choice) => choice.action === "shuffle"),
+    ).toBe(false);
+  });
+
   it("rejects stale, duplicate, and unknown choices", () => {
     const registry = new PromptRegistry(dependencies);
     const prompt = registry.publish(idleMessage);

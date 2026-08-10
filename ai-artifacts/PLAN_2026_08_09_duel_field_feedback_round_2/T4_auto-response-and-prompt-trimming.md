@@ -124,17 +124,17 @@
 
 ## Impl steps
 
-- [ ] 1. Create `tests/unit/auto-response.test.ts` with the nine `trivialPromptResponse` cases from the table. Build prompts as plain literals typed `PlayerPrompt`, copying the fixture style already used in `tests/unit/interaction-spec.test.ts`.
-- [ ] 2. Add the `idle command no longer offers shuffle` case to `tests/unit/prompt-registry.test.ts`.
-- [ ] 3. Add the two settings cases to `tests/component/AppChrome.test.ts`.
-- [ ] 4. Run `npm run test:unit && npm run test:component`; confirm the new cases fail.
-- [ ] 5. In `src/app/stores/ui-settings-store.ts`, add `autoPlaceCards` and `autoResolveTrivialPrompts` to `UiSettingsState`, to `DEFAULT_UI_SETTINGS` (both `true`), to `UiSettingsStore`, and implement `setAutoPlaceCards` / `setAutoResolveTrivialPrompts`.
-- [ ] 6. In `src/app/components/SettingsDialog.svelte`, add `export let onautoplacecards: (value: boolean) => void;` and `export let onautoresolvetrivialprompts: (value: boolean) => void;`, two `handle…` functions and the two `<label>`/`<input>` blocks with the `data-cy` values above.
-- [ ] 7. In `src/app/App.svelte`, pass `onautoplacecards={uiSettings.setAutoPlaceCards}` and `onautoresolvetrivialprompts={uiSettings.setAutoResolveTrivialPrompts}` to `<SettingsDialog>`.
-- [ ] 8. Create `src/app/prompts/auto-response.ts` with `trivialPromptResponse` exactly as specified.
-- [ ] 9. In `src/app/App.svelte`, add the `autoResolvedPromptId` variable, the `maybeAutoResolvePrompt` function and the reactive statement exactly as specified, importing `trivialPromptResponse` and `PromptId`.
-- [ ] 10. In `src/worker/protocol/PromptRegistry.ts`, delete the two-line `if (message.shuffle)` block from the `SELECT_IDLE_COMMAND` case.
-- [ ] 11. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`, `npm run test:integration`.
+- [x] 1. Create `tests/unit/auto-response.test.ts` with the nine `trivialPromptResponse` cases from the table. Build prompts as plain literals typed `PlayerPrompt`, copying the fixture style already used in `tests/unit/interaction-spec.test.ts`.
+- [x] 2. Add the `idle command no longer offers shuffle` case to `tests/unit/prompt-registry.test.ts`.
+- [x] 3. Add the two settings cases to `tests/component/AppChrome.test.ts`.
+- [x] 4. Run `npm run test:unit && npm run test:component`; confirm the new cases fail.
+- [x] 5. In `src/app/stores/ui-settings-store.ts`, add `autoPlaceCards` and `autoResolveTrivialPrompts` to `UiSettingsState`, to `DEFAULT_UI_SETTINGS` (both `true`), to `UiSettingsStore`, and implement `setAutoPlaceCards` / `setAutoResolveTrivialPrompts`.
+- [x] 6. In `src/app/components/SettingsDialog.svelte`, add `export let onautoplacecards: (value: boolean) => void;` and `export let onautoresolvetrivialprompts: (value: boolean) => void;`, two `handle…` functions and the two `<label>`/`<input>` blocks with the `data-cy` values above.
+- [x] 7. In `src/app/App.svelte`, pass `onautoplacecards={uiSettings.setAutoPlaceCards}` and `onautoresolvetrivialprompts={uiSettings.setAutoResolveTrivialPrompts}` to `<SettingsDialog>`.
+- [x] 8. Create `src/app/prompts/auto-response.ts` with `trivialPromptResponse` exactly as specified.
+- [x] 9. In `src/app/App.svelte`, add the `autoResolvedPromptId` variable, the `maybeAutoResolvePrompt` function and the reactive statement exactly as specified, importing `trivialPromptResponse` and `PromptId`.
+- [x] 10. In `src/worker/protocol/PromptRegistry.ts`, delete the two-line `if (message.shuffle)` block from the `SELECT_IDLE_COMMAND` case.
+- [x] 11. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`, `npm run test:integration`.
 
 ## Outputs
 
@@ -150,12 +150,12 @@
 
 ## Validation
 
-- [ ] `npm run format:check` exits 0
-- [ ] `npm run lint` exits 0
-- [ ] `npm run typecheck` exits 0
-- [ ] `npm run test:unit` exits 0
-- [ ] `npm run test:component` exits 0
-- [ ] `npm run test:integration` exits 0 (the registry change is covered there too)
+- [x] `npm run format:check` exits 0
+- [x] `npm run lint` exits 0
+- [x] `npm run typecheck` exits 0
+- [x] `npm run test:unit` exits 0
+- [x] `npm run test:component` exits 0
+- [x] `npm run test:integration` exits 0 (the registry change is covered there too)
 - [ ] manual check: `npm run dev`, play a turn — no "Choose a chain response" dialog appears when you have nothing to chain, and the Main Phase action list no longer contains `Shuffle Deck`
 - [ ] app functional — a chain prompt that *does* offer an activation still reaches you
 - [ ] commit msg draft: `feat(app): auto-answer prompts that carry no decision`

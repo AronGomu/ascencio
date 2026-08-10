@@ -8,6 +8,8 @@
   export let fallbackSnapshotId: string | null = null;
   export let onshowduelhud: (value: boolean) => void;
   export let onshowworkspace: (value: boolean) => void;
+  export let onautoplacecards: (value: boolean) => void;
+  export let onautoresolvetrivialprompts: (value: boolean) => void;
   export let onclose: () => void;
 
   let panel: HTMLDivElement | undefined;
@@ -46,6 +48,16 @@
 
   function handleShowWorkspace(event: Event): void {
     onshowworkspace((event.currentTarget as HTMLInputElement).checked);
+  }
+
+  function handleAutoPlaceCards(event: Event): void {
+    onautoplacecards((event.currentTarget as HTMLInputElement).checked);
+  }
+
+  function handleAutoResolveTrivialPrompts(event: Event): void {
+    onautoresolvetrivialprompts(
+      (event.currentTarget as HTMLInputElement).checked,
+    );
   }
 </script>
 
@@ -86,6 +98,24 @@
         data-cy="settings-show-workspace-checkbox"
       />
       Show workspace panels
+    </label>
+    <label data-cy="settings-auto-place-cards-label">
+      <input
+        type="checkbox"
+        checked={settings.autoPlaceCards}
+        onchange={handleAutoPlaceCards}
+        data-cy="settings-auto-place-cards-checkbox"
+      />
+      Place cards automatically
+    </label>
+    <label data-cy="settings-auto-resolve-label">
+      <input
+        type="checkbox"
+        checked={settings.autoResolveTrivialPrompts}
+        onchange={handleAutoResolveTrivialPrompts}
+        data-cy="settings-auto-resolve-checkbox"
+      />
+      Skip prompts with a single answer
     </label>
     <p data-cy="settings-engine-version">{engineText}</p>
     <p data-cy="settings-active-snapshot">{snapshotText}</p>

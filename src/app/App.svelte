@@ -2,7 +2,12 @@
   import { afterUpdate, onMount, tick } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
   import type { DuelDiagnosticTrace } from "../duel/contracts/duel-diagnostics.ts";
-  import { snapshotId, type SnapshotId } from "../duel/contracts/ids.ts";
+  import type { PlayerPrompt } from "../duel/contracts/player-prompt.ts";
+  import {
+    snapshotId,
+    type PromptId,
+    type SnapshotId,
+  } from "../duel/contracts/ids.ts";
   import type { PublicCard } from "../duel/contracts/public-duel-state.ts";
   import {
     mapSnapshotToBoard,
@@ -35,6 +40,7 @@
   } from "../storage/snapshot-store.ts";
   import PromptControls from "./prompts/PromptControls.svelte";
   import PromptDialog from "./components/PromptDialog.svelte";
+  import { trivialPromptResponse } from "./prompts/auto-response.ts";
   import { mapPromptToInteractionSpec } from "./prompts/interaction-spec.ts";
   import {
     cardPreviewForCode,
@@ -89,6 +95,7 @@
   let imageProgress = 0;
   let imageWarning: string | null = null;
   let previewCard: CardPreviewView | null = null;
+  let autoResolvedPromptId: PromptId | null = null;
   let injectDuelFieldFailure = false;
   let diagnosticPending = false;
   let diagnosticMessage: string | null = null;
@@ -427,6 +434,29 @@
   ) {
     autoStartedWorkerGenerations.add($duel.context.workerGeneration);
     queueMicrotask(() => duel.start());
+  }
+
+  $: maybeAutoResolvePrompt(
+    $duel.prompt,
+    $duel.responsePending,
+    $uiSettings.autoResolveTrivialPrompts,
+  );
+
+  function maybeAutoResolvePrompt(
+    prompt: PlayerPrompt | null,
+    responsePending: boolean,
+    enabled: boolean,
+  ): void {
+    if (prompt === null) {
+      autoResolvedPromptId = null;
+      return;
+    }
+    if (!enabled || responsePending || autoResolvedPromptId === prompt.id)
+      return;
+    const choiceIds = trivialPromptResponse(prompt);
+    if (choiceIds === null) return;
+    autoResolvedPromptId = prompt.id;
+    queueMicrotask(() => duel.respond(choiceIds));
   }
 
   async function finalizeSnapshotActivation(): Promise<void> {
@@ -1014,6 +1044,8 @@
       fallbackSnapshotId={snapshotStorageStatus.fallbackSnapshotId}
       onshowduelhud={uiSettings.setShowDuelHud}
       onshowworkspace={uiSettings.setShowWorkspace}
+      onautoplacecards={uiSettings.setAutoPlaceCards}
+      onautoresolvetrivialprompts={uiSettings.setAutoResolveTrivialPrompts}
       onclose={() => void closeSettings()}
     />
   {/if}

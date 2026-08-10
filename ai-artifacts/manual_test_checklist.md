@@ -137,3 +137,13 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 - [ ] Resize the window across a few widths (desktop, ~1024px, phone width): the phase strip and End turn button stay inside the board's free band, do not overlap the banished zones or Extra Monster Zones, and every card/zone remains clickable at each size.
 - [ ] Keyboard only: tab through the field; the phase strip chips and the End turn button are each reachable and operable via keyboard, and tabbing does not get stuck inside the board region.
 - [ ] With a screen reader, each phase chip announces its phase name plus `current`/`available` state (e.g. "Battle phase, available"); the strip as a whole is one `Duel phases` group, not announced twice.
+
+## T4 auto-response-and-prompt-trimming
+
+- [ ] `npm run dev`, open Settings: two new checkboxes are present after the existing two, labelled `Place cards automatically` (checked by default) and `Skip prompts with a single answer` (checked by default).
+- [ ] Play a turn with default settings: no `Choose a chain response` dialog appears when you have nothing to chain (only a `Pass` option) — the duel proceeds straight past it.
+- [ ] Reach a chain prompt that genuinely offers you an activation (you have a card you could chain): the dialog still appears and waits for your click; it is not skipped.
+- [ ] Open the Main Phase action list (the field action bar, when it is showing, or the equivalent card-action chips): `Shuffle Deck` is never offered as an action, on any turn.
+- [ ] Turn off `Skip prompts with a single answer` in Settings, then play a turn where a trivial chain (nothing to activate) would occur: the `Choose a chain response` dialog now appears and must be answered by hand (Pass).
+- [ ] Turn `Skip prompts with a single answer` back on mid-duel: from that point on, trivial prompts go back to resolving automatically without a click.
+- [ ] Reload the page: both new settings reset to their defaults (checked), matching the existing session-only behaviour of the other two toggles.

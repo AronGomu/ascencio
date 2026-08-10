@@ -218,8 +218,16 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   const startupBeganAt = Date.now();
   await page.goto("./");
 
+  /* Without the removed "Shuffle Deck" idle command, an opening Main Phase
+     with no legal global action beyond ending the turn never mounts the
+     conditional field action bar (`fieldActionBarRequired`), so readiness is
+     asserted on the field's own prompt-kind marker and the preview panel's
+     status line instead of the bar's title node. */
   await expect(
-    page.locator('[data-cy="field-action-bar-title"]', {
+    page.locator('[data-cy="duel-field"][data-prompt-kind="idleCommand"]'),
+  ).toBeVisible({ timeout: 120_000 });
+  await expect(
+    page.locator('[data-cy="card-preview-status"]', {
       hasText: "Choose a Main Phase action",
     }),
   ).toBeVisible({ timeout: 120_000 });
@@ -250,7 +258,7 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   ).toBeVisible();
   await expect(field.getByRole("img").first()).toHaveAttribute("src", /.+/);
 
-  const promptTitle = page.locator('[data-cy="field-action-bar-title"]', {
+  const promptTitle = page.locator('[data-cy="card-preview-status"]', {
     hasText: "Choose a Main Phase action",
   });
   await expect(promptTitle).toBeVisible();
@@ -958,15 +966,19 @@ test("dragging a hand card onto a highlighted zone plays it", async ({
   ).toHaveCount(1, { timeout: 30_000 });
   await expect(targetZone).not.toHaveAttribute("data-drop-candidate", "true");
 
-  // One gesture, two responses: the chosen action, then the engine's own place
-  // prompt answered from the armed zone. Neither prompt may be answered twice.
+  // One gesture, two responses up front: the chosen action, then the engine's
+  // own place prompt answered from the armed zone. Trivial follow-on prompts
+  // (e.g. a chain nothing can answer but Pass) may auto-resolve afterward, so
+  // only the first two new responses are asserted in order; neither prompt
+  // may be answered twice.
   const capture = await readCapture(page);
   const responds = capture.commands.filter(
     (command) => command.type === "respond",
   );
-  expect(responds).toHaveLength(responsesBefore + 2);
-  const placeResponse = responds.at(-1);
-  expect(responds.at(-2)?.promptId).toBe(idlePromptId);
+  const newResponds = responds.slice(responsesBefore);
+  expect(newResponds.length).toBeGreaterThanOrEqual(2);
+  const placeResponse = newResponds[1];
+  expect(newResponds[0]?.promptId).toBe(idlePromptId);
   expect(placeResponse?.promptId).not.toBe(idlePromptId);
   const respondsByPrompt = new Map<unknown, number>();
   for (const command of responds)
@@ -1164,29 +1176,41 @@ test("responsive field compositions contain controls across supported viewports"
       })),
     ).toEqual({ focusVisible: true, outline: "solid" });
 
-    /* Unconditional: the first Main Phase `idleCommand` always carries a
-       non-`endPhase` global choice, so `fieldActionBarRequired` is true and the
-       bar is mounted. A `count() > 0` guard here would silently delete the
-       geometry gate below instead of failing when the bar goes missing. */
+    /* `fieldActionBarRequired` mounts the bar only when the current prompt
+       carries a non-`endPhase` global choice (e.g. Battle Phase). This test
+       never advances the duel past the opening idleCommand — it only resizes
+       the viewport — and turn 1 has no monster to attack with, so since the
+       removed "Shuffle Deck" idle command was the only global choice
+       guaranteed to exist that early, the bar no longer mounts at this point
+       in the flow at all. The geometry gate below is exercised instead by
+       `dragging a hand card onto a highlighted zone plays it`, which reaches
+       a real card-target action bar; here it only runs if a future idle
+       state happens to offer one. */
     const dock = field.locator('[data-cy="field-action-bar"]');
-    await expect(dock).toBeVisible();
-    await dock.scrollIntoViewIfNeeded();
-    await assertRectInsideViewport(page, dock, `${viewport.id} selection dock`);
-    // The bar is pinned inside the field, so it must live in a reserved
-    // gutter below the board. If its box ever re-enters the board box it
-    // starts swallowing clicks meant for the player's hand.
-    const barRect = await dock.evaluate((element) => {
-      const box = element.getBoundingClientRect();
-      return { top: box.top, bottom: box.bottom };
-    });
-    const boardRect = await board.evaluate((element) => {
-      const box = element.getBoundingClientRect();
-      return { top: box.top, bottom: box.bottom };
-    });
-    expect(
-      barRect.top,
-      `${viewportLabel} field action bar (top ${barRect.top}) must clear the duel board (bottom ${boardRect.bottom})`,
-    ).toBeGreaterThanOrEqual(boardRect.bottom - 1);
+    if ((await dock.count()) > 0) {
+      await expect(dock).toBeVisible();
+      await dock.scrollIntoViewIfNeeded();
+      await assertRectInsideViewport(
+        page,
+        dock,
+        `${viewport.id} selection dock`,
+      );
+      // The bar is pinned inside the field, so it must live in a reserved
+      // gutter below the board. If its box ever re-enters the board box it
+      // starts swallowing clicks meant for the player's hand.
+      const barRect = await dock.evaluate((element) => {
+        const box = element.getBoundingClientRect();
+        return { top: box.top, bottom: box.bottom };
+      });
+      const boardRect = await board.evaluate((element) => {
+        const box = element.getBoundingClientRect();
+        return { top: box.top, bottom: box.bottom };
+      });
+      expect(
+        barRect.top,
+        `${viewportLabel} field action bar (top ${barRect.top}) must clear the duel board (bottom ${boardRect.bottom})`,
+      ).toBeGreaterThanOrEqual(boardRect.bottom - 1);
+    }
 
     // Unlike the action bar, the End turn corner button is always mounted, so
     // this check runs unconditionally at every viewport.
@@ -1569,6 +1593,13 @@ test("a full preset duel can be completed using keyboard controls only with one 
   ).toBeVisible({
     timeout: 120_000,
   });
+  // This walker answers every prompt itself and asserts exactly one response
+  // per prompt id. T4's default-on auto-answer of trivial prompts (chain
+  // Pass, single-option, single-position) resolves those from a background
+  // `queueMicrotask` and would race this walker's own async round trip for
+  // the same prompts, so the walk turns the setting off first — exactly the
+  // choice a player who wants full manual control would make.
+  await disableAutoResolveTrivialPrompts(page);
   await expect(
     (await activePromptControls(page)).getByRole("button").first(),
   ).toBeEnabled({ timeout: 30_000 });
@@ -2445,6 +2476,12 @@ async function openSettingsDialog(page: Page): Promise<void> {
 async function enableDuelHud(page: Page): Promise<void> {
   await openSettingsDialog(page);
   await page.locator('[data-cy="settings-show-duel-hud-checkbox"]').check();
+  await page.locator('[data-cy="settings-dialog-close-button"]').click();
+}
+
+async function disableAutoResolveTrivialPrompts(page: Page): Promise<void> {
+  await openSettingsDialog(page);
+  await page.locator('[data-cy="settings-auto-resolve-checkbox"]').uncheck();
   await page.locator('[data-cy="settings-dialog-close-button"]').click();
 }
 

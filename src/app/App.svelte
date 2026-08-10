@@ -8,7 +8,7 @@
     mapSnapshotToBoard,
     type BoardCardView,
   } from "../field/board-view-model.ts";
-  import AppMenubar from "./components/AppMenubar.svelte";
+  import DuelHeaderBar from "./components/DuelHeaderBar.svelte";
   import MenuDialog from "./components/MenuDialog.svelte";
   import SettingsDialog from "./components/SettingsDialog.svelte";
   import CardPreviewPanel from "./components/CardPreviewPanel.svelte";
@@ -121,7 +121,7 @@
     mappedInteractionSpec,
     $uiSettings.showWorkspace,
   );
-  $: fieldLifePoints =
+  $: headerLifePoints =
     $duel.snapshot === null
       ? null
       : ([
@@ -627,7 +627,12 @@
   <title>Preset Duel · YGO Story Duel Simulator</title>
 </svelte:head>
 
-<AppMenubar onopensettings={openMenu} />
+<DuelHeaderBar
+  lifePoints={headerLifePoints}
+  selfAvatarUrl={imageLibrary?.cardBackUrl ?? ""}
+  opponentAvatarUrl={imageLibrary?.cardBackUrl ?? ""}
+  onopensettings={openMenu}
+/>
 
 <main data-cy="app-main">
   {#if imageLoading}
@@ -868,7 +873,6 @@
             onpreview={previewFieldCard}
             phase={$duel.snapshot?.phase ?? "unknown"}
             hasPriority={hasDuelPriority($duel.prompt, $duel.responsePending)}
-            lifePoints={fieldLifePoints}
           />
         {/key}
       {:else if $duel.snapshot}

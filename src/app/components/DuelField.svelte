@@ -38,7 +38,6 @@
   import FieldLines from "./duel-field/FieldLines.svelte";
   import EndTurnButton from "./duel-field/EndTurnButton.svelte";
   import FieldStatusPills from "./duel-field/FieldStatusPills.svelte";
-  import LifePointsPill from "./duel-field/LifePointsPill.svelte";
 
   const EMPTY_IMAGE_URLS: ReadonlyMap<number, string> = new Map();
   const EMPTY_TARGETS: ReadonlySet<BoardTargetId> = new Set();
@@ -76,7 +75,6 @@
   export let onpreview: (card: BoardCardView) => void = () => undefined;
   export let phase: DuelPhase = "unknown";
   export let hasPriority = false;
-  export let lifePoints: readonly [number, number] | null = null;
 
   if (injectFailure) throw new Error("Injected duel field component failure");
 
@@ -401,10 +399,6 @@
     oncardpreview={onpreview}
   />
   <FieldStatusPills {hasPriority} {phase} />
-  {#if lifePoints !== null}
-    <LifePointsPill player={1} lifePoints={lifePoints[1]} />
-    <LifePointsPill player={0} lifePoints={lifePoints[0]} />
-  {/if}
   {#if feedbackState.line}
     <FieldLines line={feedbackState.line} />
   {/if}

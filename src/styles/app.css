@@ -142,14 +142,44 @@ main {
   margin-inline: auto;
 }
 
-.app-menubar {
+.duel-header-bar {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 0.75rem;
   width: min(120rem, calc(100% - 2rem));
   margin-inline: auto;
   padding-block: 0.75rem;
+}
+
+.duel-header-bar__spacer {
+  flex: 1 1 auto;
+}
+
+.duel-header-bar__player {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.duel-header-bar__avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.duel-header-bar__life {
+  margin: 0;
+  color: var(--warning);
+  font-weight: 800;
+}
+
+.duel-header-bar__settings svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: currentcolor;
+  display: block;
 }
 
 .dialog-backdrop {
@@ -748,28 +778,6 @@ li + li {
 .field-phase-pill {
   color: #08101f;
   background: #cfe0f5;
-}
-
-.life-pill {
-  position: absolute;
-  z-index: var(--duel-field-layer-control);
-  left: 0.75rem;
-  margin: 0;
-  padding: 0.3rem 0.7rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: rgb(8 16 31 / 0.82);
-  color: var(--warning);
-  font-weight: 800;
-  pointer-events: none;
-}
-
-.life-pill.is-opponent {
-  top: 0.75rem;
-}
-
-.life-pill.is-self {
-  bottom: 0.75rem;
 }
 
 .duel-field-board {

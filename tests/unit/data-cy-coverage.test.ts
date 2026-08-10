@@ -343,7 +343,6 @@ describe("data-cy uniqueness in a rendered document", () => {
   it.each(fixtureIds)("%s renders no duplicate data-cy", (state) => {
     render(DuelField, {
       board: fixtureBoard(state),
-      lifePoints: [8000, 8000],
       hasPriority: true,
       phase: "main1",
     });
@@ -390,7 +389,6 @@ describe("data-cy uniqueness in a rendered document", () => {
         prompt: value,
         spec,
         session: createInteractionSession(spec),
-        lifePoints: [8000, 8000],
         oninteraction: vi.fn(),
       });
       expect(

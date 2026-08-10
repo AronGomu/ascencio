@@ -40,7 +40,6 @@
   export let onpreview: (card: BoardCardView) => void = () => undefined;
   export let phase: DuelPhase = "unknown";
   export let hasPriority = false;
-  export let lifePoints: readonly [number, number] | null = null;
 
   let shouldFail: boolean = injectFailure;
 
@@ -101,6 +100,5 @@
     {onpreview}
     {phase}
     {hasPriority}
-    {lifePoints}
   />
 </svelte:boundary>

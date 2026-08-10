@@ -3,7 +3,6 @@
 import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 import FieldStatusPills from "../../src/app/components/duel-field/FieldStatusPills.svelte";
-import LifePointsPill from "../../src/app/components/duel-field/LifePointsPill.svelte";
 
 afterEach(() => {
   cleanup();
@@ -42,13 +41,5 @@ describe("FieldStatusPills", () => {
     render(FieldStatusPills, { hasPriority: false, phase: "battle" });
     const group = document.querySelector('[data-cy="field-status-pills"]');
     expect(group?.getAttribute("aria-live")).toBe("polite");
-  });
-});
-
-describe("LifePointsPill", () => {
-  it("life pill formats thousands", () => {
-    render(LifePointsPill, { lifePoints: 8000, player: 0 });
-    const pill = document.querySelector('[data-cy="life-pill-p0"]');
-    expect(pill?.textContent).toBe("8,000 LP");
   });
 });

@@ -1,29 +1,12 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
+import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import AppMenubar from "../../src/app/components/AppMenubar.svelte";
 import MenuDialog from "../../src/app/components/MenuDialog.svelte";
 import SettingsDialog from "../../src/app/components/SettingsDialog.svelte";
 
 afterEach(() => cleanup());
-
-describe("AppMenubar", () => {
-  it("exposes one settings button", async () => {
-    const user = userEvent.setup();
-    const onopensettings = vi.fn();
-    render(AppMenubar, { onopensettings });
-
-    const button = screen.getByRole("button", { name: "Settings" });
-    expect(
-      document.querySelector('[data-cy="app-menubar-settings-button"]'),
-    ).toBe(button);
-
-    await user.click(button);
-    expect(onopensettings).toHaveBeenCalledTimes(1);
-  });
-});
 
 describe("MenuDialog", () => {
   it("offers settings and surrender", () => {

@@ -2,6 +2,17 @@
 
 Human-only checks that automated tests cannot cover. One section per plan ticket; never edit another ticket's section.
 
+## T1 header-bar-avatars-and-life-points
+
+- [ ] `npm run dev`, open the app: the top row shows a duel header bar with the opponent avatar + LP on the left, your avatar + LP on the right, and a gear-icon settings button on the far right — no `Settings` text button anywhere.
+- [ ] Both avatars show a placeholder circle image (or the card-back art once images finish loading) — never a broken image icon.
+- [ ] Before the first duel snapshot arrives, both life-point readouts show `—`; once the duel starts they switch to numbers formatted like `8,000 LP`.
+- [ ] Deal or take damage during a duel: both header LP readouts update to the new totals.
+- [ ] Click the gear icon: the same menu opens as before (Settings / Surrender), and closing the menu returns focus to the gear button.
+- [ ] The duel field itself no longer shows any life-point pills inside the board — only the header bar carries LP.
+- [ ] Resize the window from a wide desktop down to a phone width: the header bar stays on one row (or wraps sanely), avatars and LP stay legible, and the gear button stays reachable and clickable.
+- [ ] Keyboard only: tab to the gear button, confirm its accessible name announces as `Settings` and it activates with Enter/Space.
+
 ## T6 field-action-bar
 
 - [ ] Start a duel and reach a "select a card" prompt: a compact bar appears pinned to the bottom of the duel field, below the board, with the prompt title on it.

@@ -115,21 +115,21 @@ $: headerLifePoints =
 
 ## Impl steps
 
-- [ ] 1. Create `tests/component/DuelHeaderBar.test.ts` with the four `DuelHeaderBar` tests from the table, importing `DuelHeaderBar` from `../../src/app/components/DuelHeaderBar.svelte` and following the `render`/`@testing-library/svelte` style already used in `tests/component/AppChrome.test.ts`.
-- [ ] 2. In `tests/component/DuelField.test.ts`, delete the assertions that read `life-pill-p0` / `life-pill-p1` and add the `duel field no longer renders life pills` negative test.
-- [ ] 3. Run `npm run test:component` and confirm the new file fails for "cannot find module".
-- [ ] 4. Create `src/app/components/DuelHeaderBar.svelte` with the script contract above, a `const DEFAULT_AVATAR_PLACEHOLDER` data-URI SVG circle, and the markup carrying every `data-cy` in the table.
-- [ ] 5. Give the gear button `aria-label="Settings"`, `type="button"`, `class="secondary duel-header-bar__settings"`, and an inline `<svg viewBox="0 0 24 24" aria-hidden="true" data-cy="duel-header-settings-icon">` gear path.
-- [ ] 6. Delete `src/app/components/AppMenubar.svelte`.
-- [ ] 7. Delete `src/app/components/duel-field/LifePointsPill.svelte`.
-- [ ] 8. In `src/app/App.svelte`, replace the `AppMenubar` import with `DuelHeaderBar`, rename `fieldLifePoints` to `headerLifePoints`, replace `<AppMenubar onopensettings={openMenu} />` with the `DuelHeaderBar` call site shown above.
-- [ ] 9. In `src/app/App.svelte`, delete `lifePoints={fieldLifePoints}` from the `DuelFieldErrorBoundary` call site.
-- [ ] 10. In `src/app/components/duel-field/DuelFieldErrorBoundary.svelte`, delete the `lifePoints` prop declaration and its forwarding.
-- [ ] 11. In `src/app/components/DuelField.svelte`, delete the `LifePointsPill` import, the `export let lifePoints` declaration and the `{#if lifePoints !== null}` block.
-- [ ] 12. In `src/styles/app.css`, replace the `.app-menubar` rule with `.duel-header-bar` (`display: flex; align-items: center; gap: 0.75rem; width: min(120rem, calc(100% - 2rem)); margin-inline: auto; padding-block: 0.75rem;`) plus `.duel-header-bar__spacer { flex: 1 1 auto; }`, `.duel-header-bar__player { display: flex; align-items: center; gap: 0.5rem; }`, `.duel-header-bar__avatar { width: 2.5rem; height: 2.5rem; border-radius: 999px; object-fit: cover; border: 1px solid var(--border); }`, `.duel-header-bar__life { margin: 0; color: var(--warning); font-weight: 800; }`, `.duel-header-bar__settings svg { width: 1.1rem; height: 1.1rem; fill: currentcolor; display: block; }`.
-- [ ] 13. In `src/styles/app.css`, delete the `.life-pill`, `.life-pill.is-opponent` and `.life-pill.is-self` rules.
-- [ ] 14. Run `npm run format:check`, `npm run lint`, `npm run typecheck`.
-- [ ] 15. Run `npm run test:unit` and `npm run test:component`; fix any `data-cy` uniqueness failure by making the offending value unique.
+- [x] 1. Create `tests/component/DuelHeaderBar.test.ts` with the four `DuelHeaderBar` tests from the table, importing `DuelHeaderBar` from `../../src/app/components/DuelHeaderBar.svelte` and following the `render`/`@testing-library/svelte` style already used in `tests/component/AppChrome.test.ts`.
+- [x] 2. In `tests/component/DuelField.test.ts`, delete the assertions that read `life-pill-p0` / `life-pill-p1` and add the `duel field no longer renders life pills` negative test.
+- [x] 3. Run `npm run test:component` and confirm the new file fails for "cannot find module".
+- [x] 4. Create `src/app/components/DuelHeaderBar.svelte` with the script contract above, a `const DEFAULT_AVATAR_PLACEHOLDER` data-URI SVG circle, and the markup carrying every `data-cy` in the table.
+- [x] 5. Give the gear button `aria-label="Settings"`, `type="button"`, `class="secondary duel-header-bar__settings"`, and an inline `<svg viewBox="0 0 24 24" aria-hidden="true" data-cy="duel-header-settings-icon">` gear path.
+- [x] 6. Delete `src/app/components/AppMenubar.svelte`.
+- [x] 7. Delete `src/app/components/duel-field/LifePointsPill.svelte`.
+- [x] 8. In `src/app/App.svelte`, replace the `AppMenubar` import with `DuelHeaderBar`, rename `fieldLifePoints` to `headerLifePoints`, replace `<AppMenubar onopensettings={openMenu} />` with the `DuelHeaderBar` call site shown above.
+- [x] 9. In `src/app/App.svelte`, delete `lifePoints={fieldLifePoints}` from the `DuelFieldErrorBoundary` call site.
+- [x] 10. In `src/app/components/duel-field/DuelFieldErrorBoundary.svelte`, delete the `lifePoints` prop declaration and its forwarding.
+- [x] 11. In `src/app/components/DuelField.svelte`, delete the `LifePointsPill` import, the `export let lifePoints` declaration and the `{#if lifePoints !== null}` block.
+- [x] 12. In `src/styles/app.css`, replace the `.app-menubar` rule with `.duel-header-bar` (`display: flex; align-items: center; gap: 0.75rem; width: min(120rem, calc(100% - 2rem)); margin-inline: auto; padding-block: 0.75rem;`) plus `.duel-header-bar__spacer { flex: 1 1 auto; }`, `.duel-header-bar__player { display: flex; align-items: center; gap: 0.5rem; }`, `.duel-header-bar__avatar { width: 2.5rem; height: 2.5rem; border-radius: 999px; object-fit: cover; border: 1px solid var(--border); }`, `.duel-header-bar__life { margin: 0; color: var(--warning); font-weight: 800; }`, `.duel-header-bar__settings svg { width: 1.1rem; height: 1.1rem; fill: currentcolor; display: block; }`.
+- [x] 13. In `src/styles/app.css`, delete the `.life-pill`, `.life-pill.is-opponent` and `.life-pill.is-self` rules.
+- [x] 14. Run `npm run format:check`, `npm run lint`, `npm run typecheck`.
+- [x] 15. Run `npm run test:unit` and `npm run test:component`; fix any `data-cy` uniqueness failure by making the offending value unique.
 
 ## Outputs
 
@@ -142,12 +142,12 @@ $: headerLifePoints =
 
 ## Validation
 
-- [ ] `npm run format:check` exits 0
-- [ ] `npm run lint` exits 0
-- [ ] `npm run typecheck` exits 0
-- [ ] `npm run test:unit` exits 0 (includes the `data-cy` coverage gate)
-- [ ] `npm run test:component` exits 0, including the four new `DuelHeaderBar` tests
-- [ ] manual check: `npm run dev`, open the app, confirm two avatars and two LP readouts in the top row and a gear icon on the right that opens the menu
-- [ ] app functional — the duel still starts and the board still renders with no LP pills
-- [ ] commit msg draft: `feat(app): move life points and avatars into a duel header bar`
+- [x] `npm run format:check` exits 0
+- [x] `npm run lint` exits 0
+- [x] `npm run typecheck` exits 0
+- [x] `npm run test:unit` exits 0 (includes the `data-cy` coverage gate)
+- [x] `npm run test:component` exits 0, including the four new `DuelHeaderBar` tests
+- [ ] manual check: `npm run dev`, open the app, confirm two avatars and two LP readouts in the top row and a gear icon on the right that opens the menu (deferred — human manual step, see manual_test_checklist.md)
+- [x] app functional — the duel still starts and the board still renders with no LP pills
+- [x] commit msg draft: `feat(app): move life points and avatars into a duel header bar`
 </content>

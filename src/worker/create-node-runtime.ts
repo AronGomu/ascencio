@@ -4,8 +4,18 @@ import {
   buildActiveImageManifest,
 } from "../../scripts/lib/active-image-manifest.ts";
 import { DuelOperationError } from "../duel/contracts/duel-error.ts";
-import { uniqueDeckCodes, validateDeck } from "../duel/presets/deck-parser.ts";
-import { loadMvpPreset } from "../duel/presets/mvp-preset-node.ts";
+import { cardCode } from "../duel/contracts/ids.ts";
+import {
+  DEFAULT_OPPONENT_DECK_ID,
+  DEFAULT_PLAYER_DECK_ID,
+} from "../duel/presets/deck-catalog.ts";
+import {
+  MVP_DECK_CONSTRAINTS,
+  validateDeck,
+} from "../duel/presets/deck-parser.ts";
+import { loadDeckSources } from "../duel/presets/deck-sources-node.ts";
+import { createDuelPreset } from "../duel/presets/duel-preset.ts";
+import { reviewedCardPool } from "../duel/presets/reviewed-card-pool.ts";
 import { loadActiveDuelDependenciesNode } from "./assets/active-duel-dependencies-node.ts";
 import {
   buildRuntimeSnapshotManifest,
@@ -80,10 +90,17 @@ export function createNodeDuelWorkerRuntime(
         });
       }
       progress("preset", 0.5);
+      const deckSources = await loadDeckSources();
+      const reviewedPool = reviewedCardPool(deckSources);
       const preset = await runInitializationStage(
         "deck_validation_failed",
         "Unable to load the MVP preset decks",
-        loadMvpPreset,
+        async () =>
+          createDuelPreset(
+            DEFAULT_PLAYER_DECK_ID,
+            DEFAULT_OPPONENT_DECK_ID,
+            deckSources,
+          ),
       );
       signal.throwIfAborted();
       let dependencyGroupsLoaded = 0;
@@ -100,7 +117,7 @@ export function createNodeDuelWorkerRuntime(
         () =>
           loadActiveDuelDependenciesNode(
             assetRoot,
-            uniqueDeckCodes(preset.player, preset.opponent),
+            new Set([...reviewedPool].map(cardCode)),
             reportDependencyProgress,
           ),
       );
@@ -113,14 +130,16 @@ export function createNodeDuelWorkerRuntime(
           validateDeck(
             preset.player,
             catalogCodes,
-            undefined,
+            MVP_DECK_CONSTRAINTS,
             dependencies.cards,
+            reviewedPool,
           );
           validateDeck(
             preset.opponent,
             catalogCodes,
-            undefined,
+            MVP_DECK_CONSTRAINTS,
             dependencies.cards,
+            reviewedPool,
           );
         },
       );

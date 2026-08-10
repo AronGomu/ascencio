@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { DECK_CATALOG } from "../../src/duel/presets/deck-catalog.ts";
 
 export interface ActiveImageManifestRecord {
   readonly code: number;
@@ -26,16 +27,12 @@ export function buildActiveImageManifest(
     projectRoot,
     "generated/card-images/archive/full",
   );
-  const deckSources = [
+  const deckSources = DECK_CATALOG.map(({ fileName }) =>
     readFileSync(
-      path.join(projectRoot, "src/duel/presets/decks/player.ydk"),
+      path.join(projectRoot, "src/duel/presets/decks", fileName),
       "utf8",
     ),
-    readFileSync(
-      path.join(projectRoot, "src/duel/presets/decks/opponent.ydk"),
-      "utf8",
-    ),
-  ];
+  );
   const codes = [
     ...new Set(
       deckSources.flatMap((source) =>
@@ -71,6 +68,16 @@ export function buildActiveImageManifest(
     files: Object.freeze(files),
     missing: Object.freeze(missing),
   });
+}
+
+export function assertNoMissingActiveImages(
+  manifest: Pick<ActiveImageManifest, "missing">,
+): void {
+  if (manifest.missing.length > 0) {
+    throw new Error(
+      `Missing active card images for browser build: ${manifest.missing.join(", ")}`,
+    );
+  }
 }
 
 export function activeImageManifestSha256(

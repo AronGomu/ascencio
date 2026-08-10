@@ -9,7 +9,7 @@
 - Goal: ship the 30 items of `feedback.md`. Item 12 asks for a Burning Abyss, Nekroz, Shaddoll and Spellbook deck plus a pre-duel selection menu.
 - This slice: the data and build half of item 12. It adds the four decks, replaces the hand-written card-pool gate with one derived from the bundled decks, and widens the three build-side places that currently name `player.ydk` and `opponent.ydk` literally. The picker UI is the **next** ticket; this one must not change what the user sees.
 - Out of scope here: any UI, the deck picker, `localStorage`, `duel-store.ts`, `App.svelte`, the opponent policy, anything in `src/field/**` or `src/app/**`.
-- Assumptions in force: **A3** the four `.ydk` files are seeded here from the local catalog and the user may overwrite them later with no code change — deck files are `?raw` imports, pure data. **A4** the registry lists six decks and the two MVP decks stay the default so the e2e walkers keep a deterministic pool. **A5** deck acceptance is manual; no deck-specific automated tests. Structural behaviour here is still test-driven.
+- Assumptions in force: **A3** the four `.ydk` files are seeded here from the local catalog and the user may overwrite them later with no code change — deck files are `?raw` imports, pure data. **A4** the registry lists six decks and the two MVP decks stay the default so the e2e walkers keep a deterministic pool. **A5** deck acceptance is manual; no deck-specific automated tests. Structural behaviour here is still test-driven. **A6** six-deck payload caps are `19_000_000` active-image bytes, `22_000_000` active-runtime bytes, `41_000_000` aggregate cold-start bytes and `375_000` initial-JS bytes; the Worker-JS cap stays unchanged. These are minimal rounded caps above measured/projection values of `18_574_132`, `21_533_083`, approximately `40_522_355` and `351_234` bytes. Scout inspection attributes initial-JS growth to intentional main-thread active card text/image metadata; raw `.ydk` remains Worker-only. **A7** `loadActiveDuelDependencies*` requires `ReadonlySet<CardCode>`, so runtimes convert reviewed numeric codes with `cardCode` into a Set rather than passing the ticket's type-invalid array expression.
 
 ## Requirements
 
@@ -34,7 +34,7 @@
 - `scripts/verify-browser-build.ts:416-439` — derives expected image coverage from only `player.ydk`/`opponent.ydk`; `npm run build` invokes it via `build:verify`, so this must switch to the six-deck reviewed pool and reject `missing` explicitly.
 - `scripts/lib/active-card-text-manifest.ts` — `buildActiveCardTextManifest(projectRoot, codes)` throws `Missing active card text for browser build: <code>` for any code without an English text record. Every code below has one.
 - `tests/fixtures/fake-ocgcore-adapter.ts` imports `MVP_PRESET_ID`; leave that import working.
-- **From Depends (T1):** `feat/duel-field-round-3` is checked out from a `main` that already contains round 2. Nothing else from T1.
+- **From Depends (T1):** `plan/duel-field-feedback-round-3` is checked out, contains round-2 head `736b374` via merge commit `52eb619`, and is synced to origin at T1 terminal SHA `d715742`. `main` remains untouched per make-aron Git policy. Nothing else from T1.
 
 ## Deck data
 
@@ -216,30 +216,30 @@ New file `tests/unit/active-image-manifest.test.ts`:
 
 ## Impl steps
 
-- [ ] 1. Create `src/duel/presets/decks/burning-abyss.ydk` with the contents specified in **Deck data**.
-- [ ] 2. Create `src/duel/presets/decks/nekroz.ydk` with the contents specified in **Deck data**.
-- [ ] 3. Create `src/duel/presets/decks/shaddoll.ydk` with the contents specified in **Deck data**.
-- [ ] 4. Create `src/duel/presets/decks/spellbook.ydk` with the contents specified in **Deck data**.
-- [ ] 5. Verify each new file: `awk '/^#main$/{s=1;next}/^#extra$/{s=2;next}/^!side$/{s=3;next}s==1&&/^[0-9]+$/{m++}s==2&&/^[0-9]+$/{e++}END{print FILENAME, m+0, e+0}' src/duel/presets/decks/*.ydk` → `burning-abyss 40 15`, `nekroz 40 15`, `opponent 40 0`, `player 40 0`, `shaddoll 40 15`, `spellbook 40 15`.
-- [ ] 6. Write `tests/unit/deck-catalog.test.ts` per the test plan. Run `npm run test:unit -- deck-catalog` — must fail on a missing module.
-- [ ] 7. Create `src/duel/presets/deck-catalog.ts` with the exported surface above. Re-run — green.
-- [ ] 8. Write `tests/unit/deck-sources-node.test.ts` per the test plan. Run — fails.
-- [ ] 9. Create `src/duel/presets/deck-sources-node.ts`: read every `DECK_CATALOG` entry's `fileName` with `readFile(fileURLToPath(new URL(\`./decks/${fileName}\`, import.meta.url)), "utf8")` and return a frozen `Map`.
-- [ ] 10. Create `src/duel/presets/deck-sources-browser.ts`: one `import x from "./decks/<file>.ydk?raw"` per catalog entry, assembled into a frozen `Map<DeckId, string>` named `DECK_SOURCES`. Re-run step 8's test — green.
-- [ ] 11. Write `tests/unit/reviewed-card-pool.test.ts` per the test plan. Run — fails.
-- [ ] 12. Create `src/duel/presets/reviewed-card-pool.ts` implementing `reviewedCardPool`. It parses each source with `parseYdk` and unions `main`, `extra` and `side`. Re-run — green.
-- [ ] 13. Add the three `validateDeck` tests to `tests/unit/deck-parser.test.ts`. Run — fails.
-- [ ] 14. In `src/duel/presets/deck-parser.ts`: delete `MVP_SUPPORTED_CARD_CODES`; add overloads requiring `cardData` + `reviewedPool` together; throw when implementation receives `cardData` without pool; change unsupported filter to `cardData.get(code) === undefined || !reviewedPool.has(code)`. Update every four-argument caller. Re-run — green.
-- [ ] 15. Create `src/duel/presets/duel-preset.ts` with `DuelPreset` and `createDuelPreset` as specified. It throws `Unknown deck id: <id>` when a source is missing from the map.
-- [ ] 16. In `src/worker/create-browser-runtime.ts`: replace two `?raw` imports with `DECK_SOURCES`; build default preset through `createDuelPreset`; compute `const reviewedPool = reviewedCardPool(DECK_SOURCES)` once; pass it with card data to both `validateDeck` calls; pass `[...reviewedPool]` to `loadActiveDuelDependencies` instead of `uniqueDeckCodes(default pair)` so T3 selection needs no later fetch.
-- [ ] 17. In `src/worker/create-node-runtime.ts`: the same three changes, using `await loadDeckSources()`.
-- [ ] 18. Write `tests/unit/active-image-manifest.test.ts` per the test plan. Run — fails, because the manifest still enumerates two decks.
-- [ ] 19. In `scripts/lib/active-image-manifest.ts`: replace two-source array with every catalog entry. Export side-effect-free `assertNoMissingActiveImages(manifest: Pick<ActiveImageManifest,"missing">): void`; exact error lists codes. Unit test imports this lib only—never `scripts/verify-browser-build.ts`, whose top-level code inspects `dist/`. Re-run green.
-- [ ] 20. In `scripts/lib/active-runtime-files.ts`: retain async `readFile`; `await Promise.all(DECK_CATALOG.map(({ fileName }) => readFile(path.join(..., fileName), "utf8")))`, parse every result, then call `uniqueDeckCodes(...parsedDecks)`. Do not introduce undeclared `readFileSync`.
-- [ ] 21. In `scripts/verify-browser-build.ts`, replace direct player/opponent expectation with `loadDeckSources()` + `reviewedCardPool(...)`; call `assertNoMissingActiveImages(activeImageManifest)` from lib before coverage checks. Do not export/import verifier itself. Reject missing and extra coverage across all six decks.
-- [ ] 22. Add all touched scripts to `format`/`format:check` globs if absent. Existing globs already cover `verify-browser-build.ts` and both `scripts/lib/` files; confirm, no expected package change.
-- [ ] 23. Run pure missing-image guard + browser/Node parity tests, then `npm run build` — expect success/larger `dist/`. Record size. Use in-memory `{missing:[code]}` only; never mutate generated assets or require prebuilt `dist` for unit tests.
-- [ ] 24. `npm run test:integration` — update any four-argument validator call to pass the reviewed pool; the real-WASM smoke test still starts a duel on the MVP pair.
+- [x] 1. Create `src/duel/presets/decks/burning-abyss.ydk` with the contents specified in **Deck data**.
+- [x] 2. Create `src/duel/presets/decks/nekroz.ydk` with the contents specified in **Deck data**.
+- [x] 3. Create `src/duel/presets/decks/shaddoll.ydk` with the contents specified in **Deck data**.
+- [x] 4. Create `src/duel/presets/decks/spellbook.ydk` with the contents specified in **Deck data**.
+- [x] 5. Verify each new file: `awk 'FNR==1{if(NR>1)print f,m+0,e+0;f=FILENAME;m=e=s=0}/^#main$/{s=1;next}/^#extra$/{s=2;next}/^!side$/{s=3;next}s==1&&/^[0-9]+$/{m++}s==2&&/^[0-9]+$/{e++}END{print f,m+0,e+0}' src/duel/presets/decks/*.ydk` → `burning-abyss 40 15`, `nekroz 40 15`, `opponent 40 0`, `player 40 0`, `shaddoll 40 15`, `spellbook 40 15`.
+- [x] 6. Write `tests/unit/deck-catalog.test.ts` per the test plan. Run `npm run test:unit -- deck-catalog` — must fail on a missing module.
+- [x] 7. Create `src/duel/presets/deck-catalog.ts` with the exported surface above. Re-run — green.
+- [x] 8. Write `tests/unit/deck-sources-node.test.ts` per the test plan. Run `npm run test:unit -- deck-sources-node` — must fail on missing source-loader modules.
+- [x] 9. Create `src/duel/presets/deck-sources-node.ts`: read every `DECK_CATALOG` entry's `fileName` with `readFile(fileURLToPath(new URL(\`./decks/${fileName}\`, import.meta.url)), "utf8")` and return a frozen `Map`.
+- [x] 10. Create `src/duel/presets/deck-sources-browser.ts`: one `import x from "./decks/<file>.ydk?raw"` per catalog entry, assembled into a frozen `Map<DeckId, string>` named `DECK_SOURCES`. Re-run step 8's test — green.
+- [x] 11. Write `tests/unit/reviewed-card-pool.test.ts` per the test plan. Run `npm run test:unit -- reviewed-card-pool` — must fail on a missing module.
+- [x] 12. Create `src/duel/presets/reviewed-card-pool.ts` implementing `reviewedCardPool`. It parses each source with `parseYdk` and unions `main`, `extra` and `side`. Re-run — green.
+- [x] 13. Add the three runtime `validateDeck` tests plus the compile-time overload assertion to `tests/unit/deck-parser.test.ts`. Run `npm run test:unit -- deck-parser` — must fail because reviewed-pool behaviour is absent; `npm run typecheck` later proves the overload assertion.
+- [x] 14. In `src/duel/presets/deck-parser.ts`: delete `MVP_SUPPORTED_CARD_CODES`; add overloads requiring `cardData` + `reviewedPool` together; throw when implementation receives `cardData` without pool; change unsupported filter to `cardData.get(code) === undefined || !reviewedPool.has(code)`. Update every four-argument caller. Re-run — green.
+- [x] 15. Create `src/duel/presets/duel-preset.ts` with `DuelPreset` and `createDuelPreset` as specified. It throws `Unknown deck id: <id>` when a source is missing from the map.
+- [x] 16. In `src/worker/create-browser-runtime.ts`: replace two `?raw` imports with `DECK_SOURCES`; build default preset through `createDuelPreset`; compute `const reviewedPool = reviewedCardPool(DECK_SOURCES)` once; pass it with card data to both `validateDeck` calls; pass `[...reviewedPool]` to `loadActiveDuelDependencies` instead of `uniqueDeckCodes(default pair)` so T3 selection needs no later fetch.
+- [x] 17. In `src/worker/create-node-runtime.ts`: the same three changes, using `await loadDeckSources()`.
+- [x] 18. Write `tests/unit/active-image-manifest.test.ts` per the test plan. Run `npm run test:unit -- active-image-manifest` — must fail because the manifest still enumerates two decks and lacks the pure guard.
+- [x] 19. In `scripts/lib/active-image-manifest.ts`: replace two-source array with every catalog entry. Export side-effect-free `assertNoMissingActiveImages(manifest: Pick<ActiveImageManifest,"missing">): void`; exact error lists codes. Unit test imports this lib only—never `scripts/verify-browser-build.ts`, whose top-level code inspects `dist/`. Re-run `npm run test:unit -- active-image-manifest` — must pass.
+- [x] 20. In `scripts/lib/active-runtime-files.ts`: retain async `readFile`; `await Promise.all(DECK_CATALOG.map(({ fileName }) => readFile(path.join(..., fileName), "utf8")))`, parse every result, then call `uniqueDeckCodes(...parsedDecks)`. Do not introduce undeclared `readFileSync`.
+- [x] 21. In `scripts/verify-browser-build.ts`, replace direct player/opponent expectation with `loadDeckSources()` + `reviewedCardPool(...)`; call `assertNoMissingActiveImages(activeImageManifest)` from lib before coverage checks. Do not export/import verifier itself. Reject missing and extra coverage across all six decks.
+- [x] 22. Add all touched scripts to `format`/`format:check` globs if absent. Existing globs already cover `verify-browser-build.ts` and both `scripts/lib/` files; confirm, no expected package change.
+- [x] 23. Run pure missing-image guard + browser/Node parity tests, then `npm run build` — expect success/larger `dist/`. Record size. Use in-memory `{missing:[code]}` only; never mutate generated assets or require prebuilt `dist` for unit tests.
+- [x] 24. `npm run test:integration` — update any four-argument validator call to pass the reviewed pool; the real-WASM smoke test still starts a duel on the MVP pair.
 
 ## Outputs
 
@@ -250,14 +250,21 @@ New file `tests/unit/active-image-manifest.test.ts`:
 
 ## Validation
 
-- [ ] `npm run test:unit` passes, including the four new files
-- [ ] `npm run test:integration` passes
-- [ ] `npm run test:legacy` passes
-- [ ] `npm run typecheck` passes with 0 errors and 0 warnings
-- [ ] `npm run lint` and `npm run format:check` pass
-- [ ] `npm run build` succeeds; verifier proves six-deck image coverage and `missing.length === 0`
-- [ ] `grep -rn "MVP_SUPPORTED_CARD_CODES" src/ tests/ scripts/` returns nothing
-- [ ] the awk command in step 5 prints the six expected counts
-- [ ] manual check: `npm run dev`, start a duel, confirm it still plays the MVP pair and nothing in the UI has changed
-- [ ] app functional — no broken path from this slice
-- [ ] commit msg draft: `feat(presets): add four archetype decks behind a deck registry`
+- [x] `npm run test:unit` passes, including the four new files
+- [x] `npm run test:integration` passes
+- [x] `npm run test:legacy` passes
+- [x] `npm run typecheck` passes with 0 errors and 0 warnings
+- [x] `npm run lint` and `npm run format:check` pass
+- [x] `npm run build` succeeds; verifier proves six-deck image coverage and `missing.length === 0`
+- [x] `grep -rn "MVP_SUPPORTED_CARD_CODES" src/ tests/ scripts/` returns nothing
+- [x] the awk command in step 5 prints the six expected counts
+- [x] manual check: `npm run dev`, start a duel, confirm it still plays the MVP pair and nothing in the UI has changed
+- [x] app functional — no broken path from this slice
+- [x] commit msg draft: `feat(presets): add four archetype decks behind a deck registry`
+
+### Validation evidence
+
+- Local repair gates: unit 57 files / 580 tests, integration 7 files / 20 tests, legacy 21 tests, TypeScript plus Svelte 0 errors / 0 warnings, lint clean, Prettier clean, production build verifier `status: ok` with 243 runtime files, removed-constant grep empty, and all six deck counts exact.
+- A22 pinned-Nix Chromium full run: tests 1–17 passed; only the random full-duel walker timed out. This directly observed default-MVP startup and unchanged browser behaviour.
+- A23 walker retries: first retry timed out; second retry passed in 3.9 minutes. The mandated retry policy accepts the walker as intermittent.
+- Residual risk: random-seed full-duel walker remains timing-sensitive despite passing on the second mandated retry; no deterministic T2 failure was observed.

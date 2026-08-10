@@ -1,8 +1,16 @@
 import { DuelOperationError } from "../duel/contracts/duel-error.ts";
-import { uniqueDeckCodes, validateDeck } from "../duel/presets/deck-parser.ts";
-import { createMvpPreset } from "../duel/presets/mvp-preset.ts";
-import opponentDeckSource from "../duel/presets/decks/opponent.ydk?raw";
-import playerDeckSource from "../duel/presets/decks/player.ydk?raw";
+import { cardCode } from "../duel/contracts/ids.ts";
+import {
+  DEFAULT_OPPONENT_DECK_ID,
+  DEFAULT_PLAYER_DECK_ID,
+} from "../duel/presets/deck-catalog.ts";
+import {
+  MVP_DECK_CONSTRAINTS,
+  validateDeck,
+} from "../duel/presets/deck-parser.ts";
+import { DECK_SOURCES } from "../duel/presets/deck-sources-browser.ts";
+import { createDuelPreset } from "../duel/presets/duel-preset.ts";
+import { reviewedCardPool } from "../duel/presets/reviewed-card-pool.ts";
 import { loadActiveDuelDependencies } from "./assets/active-duel-dependencies.ts";
 import {
   loadBrowserRuntimeAssets,
@@ -17,6 +25,8 @@ import {
 import { DuelWorkerRuntime } from "./DuelWorkerRuntime.ts";
 import { OcgCoreAdapter } from "./engine/OcgCoreAdapter.ts";
 import { runDuelRuntimeInitializationStage } from "./runtime-initialization.ts";
+
+const REVIEWED_CARD_POOL = reviewedCardPool(DECK_SOURCES);
 
 export interface BrowserDuelWorkerRuntimeOptions {
   readonly applicationBaseUrl?: string;
@@ -164,7 +174,12 @@ export function createBrowserDuelWorkerRuntime(
       const preset = await runDuelRuntimeInitializationStage(
         "deck_validation_failed",
         "Unable to load the MVP preset decks",
-        async () => createMvpPreset(playerDeckSource, opponentDeckSource),
+        async () =>
+          createDuelPreset(
+            DEFAULT_PLAYER_DECK_ID,
+            DEFAULT_OPPONENT_DECK_ID,
+            DECK_SOURCES,
+          ),
       );
       signal.throwIfAborted();
       let dependencyGroupsLoaded = 0;
@@ -182,7 +197,7 @@ export function createBrowserDuelWorkerRuntime(
         () =>
           loadActiveDuelDependencies(
             assets,
-            uniqueDeckCodes(preset.player, preset.opponent),
+            new Set([...REVIEWED_CARD_POOL].map(cardCode)),
             reportDependencyProgress,
           ),
       );
@@ -194,14 +209,16 @@ export function createBrowserDuelWorkerRuntime(
           validateDeck(
             preset.player,
             catalogCodes,
-            undefined,
+            MVP_DECK_CONSTRAINTS,
             dependencies.cards,
+            REVIEWED_CARD_POOL,
           );
           validateDeck(
             preset.opponent,
             catalogCodes,
-            undefined,
+            MVP_DECK_CONSTRAINTS,
             dependencies.cards,
+            REVIEWED_CARD_POOL,
           );
         },
       );

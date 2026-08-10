@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  MVP_DECK_CONSTRAINTS,
   parseYdk,
   uniqueDeckCodes,
   validateDeck,
+  type DeckConstraints,
+  type ParsedDeck,
 } from "../../src/duel/presets/deck-parser.ts";
 import { loadMvpPreset } from "../../src/duel/presets/mvp-preset-node.ts";
 
@@ -49,18 +52,64 @@ describe("YDK parsing", () => {
     expect(() => validateDeck(deck, new Set())).toThrow(/123/);
   });
 
-  it("rejects cards outside the reviewed preset pool", () => {
-    const deck = parseYdk(
-      `#main\n${Array.from({ length: 40 }, () => "123").join("\n")}\n#extra\n!side`,
-    );
+  it("validateDeck accepts a code inside the supplied reviewed pool", () => {
+    const deck = fortyCardDeck(1);
+
     expect(() =>
       validateDeck(
         deck,
-        new Set([123]),
-        undefined,
-        new Map([[123, { type: 0x40 }]]),
+        new Set([1]),
+        MVP_DECK_CONSTRAINTS,
+        new Map([[1, { type: 0x40 }]]),
+        new Set([1]),
       ),
-    ).toThrow(/outside the reviewed MVP pool/);
+    ).not.toThrow();
+  });
+
+  it("validateDeck rejects a code outside the supplied reviewed pool", () => {
+    const deck = fortyCardDeck(1);
+
+    expect(() =>
+      validateDeck(
+        deck,
+        new Set([1]),
+        MVP_DECK_CONSTRAINTS,
+        new Map([[1, { type: 0x40 }]]),
+        new Set([2]),
+      ),
+    ).toThrow(/outside the reviewed MVP pool: 1/);
+  });
+
+  it("validateDeck rejects card data without a reviewed pool", () => {
+    const deck = fortyCardDeck(1);
+    const implementation = validateDeck as unknown as (
+      deck: ParsedDeck,
+      catalogCodes: ReadonlySet<number>,
+      constraints: DeckConstraints,
+      cardData: ReadonlyMap<number, { readonly type: number }>,
+    ) => void;
+
+    expect(() =>
+      implementation(
+        deck,
+        new Set([1]),
+        MVP_DECK_CONSTRAINTS,
+        new Map([[1, { type: 0x40 }]]),
+      ),
+    ).toThrow(/Reviewed card pool is required/);
+  });
+
+  it("validateDeck overload rejects a four-argument call", () => {
+    const compileOnly = () => {
+      // @ts-expect-error card data requires a reviewed pool
+      validateDeck(
+        fortyCardDeck(1),
+        new Set([1]),
+        MVP_DECK_CONSTRAINTS,
+        new Map([[1, { type: 0x40 }]]),
+      );
+    };
+    expect(compileOnly).toBeTypeOf("function");
   });
 
   it("rejects unsupported Side Deck content", () => {
@@ -70,3 +119,9 @@ describe("YDK parsing", () => {
     expect(() => validateDeck(deck, new Set([123, 456]))).toThrow(/Side Deck/);
   });
 });
+
+function fortyCardDeck(code: number): ParsedDeck {
+  return parseYdk(
+    `#main\n${Array.from({ length: 40 }, () => code).join("\n")}\n#extra\n!side`,
+  );
+}

@@ -8,6 +8,12 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 - [x] Headless, component, unit, integration, legacy, and production-build gates passed on merged round-2 baseline.
 - [x] Current branch contains round-2 head `736b374`; `feedback.md` remained unstaged.
 
+## T2 deck-registry-and-derived-card-pool
+
+- [ ] Start app in Chromium: duel auto-starts with Starter (Player) against Starter (Opponent), with no deck picker or other new visible control.
+- [ ] Play opening turn of default duel: original MVP cards, prompts, field, and opponent behaviour remain unchanged.
+- [ ] Open each new `.ydk` in a compatible deck viewer: Burning Abyss, Nekroz, Shaddoll, and Spellbook lists match intended archetypes and contain full 15-card Extra Decks.
+
 Ticket ids restart per plan, so sections are grouped by round. **Round 2 is the current implementation.** Where a round 2 ticket replaced round 1 behaviour, the round 1 section is marked **SUPERSEDED** and must not be run — its steps describe UI that no longer exists.
 
 ---

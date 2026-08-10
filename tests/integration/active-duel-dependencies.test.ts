@@ -2,10 +2,13 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { loadActiveDuelDependenciesNode } from "../../src/worker/assets/active-duel-dependencies-node.ts";
 import {
+  MVP_DECK_CONSTRAINTS,
   uniqueDeckCodes,
   validateDeck,
 } from "../../src/duel/presets/deck-parser.ts";
+import { loadDeckSources } from "../../src/duel/presets/deck-sources-node.ts";
 import { loadMvpPreset } from "../../src/duel/presets/mvp-preset-node.ts";
+import { reviewedCardPool } from "../../src/duel/presets/reviewed-card-pool.ts";
 
 describe("real MVP dependency snapshot", () => {
   it("resolves every preset card, text, image, global, and available card script", async () => {
@@ -16,8 +19,21 @@ describe("real MVP dependency snapshot", () => {
       codes,
     );
     const catalogCodes = new Set(dependencies.cards.keys());
-    validateDeck(preset.player, catalogCodes, undefined, dependencies.cards);
-    validateDeck(preset.opponent, catalogCodes, undefined, dependencies.cards);
+    const reviewedPool = reviewedCardPool(await loadDeckSources());
+    validateDeck(
+      preset.player,
+      catalogCodes,
+      MVP_DECK_CONSTRAINTS,
+      dependencies.cards,
+      reviewedPool,
+    );
+    validateDeck(
+      preset.opponent,
+      catalogCodes,
+      MVP_DECK_CONSTRAINTS,
+      dependencies.cards,
+      reviewedPool,
+    );
 
     expect(dependencies.counts.cards).toBeGreaterThanOrEqual(codes.size);
     expect(dependencies.counts.texts).toBe(dependencies.counts.cards);

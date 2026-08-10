@@ -110,6 +110,8 @@ describe("typed duel Worker runtime", () => {
       const unknown = await runtime.handle({
         type: "startDuel",
         duelId: duelId("unknown"),
+        playerDeckId: "mvp-player",
+        opponentDeckId: "mvp-opponent",
       });
       expect(unknown).toEqual([
         expect.objectContaining({
@@ -120,7 +122,9 @@ describe("typed duel Worker runtime", () => {
 
       const started = await runtime.handle({
         type: "startDuel",
-        duelId: duelId("mvp-preset-v1"),
+        duelId: duelId("bundled-v1:mvp-player:vs:mvp-opponent"),
+        playerDeckId: "mvp-player",
+        opponentDeckId: "mvp-opponent",
       });
       expect(started.some((event) => event.type === "state")).toBe(true);
       const promptEvent = started.find((event) => event.type === "prompt");
@@ -150,7 +154,9 @@ describe("typed duel Worker runtime", () => {
 
       const restarted = await runtime.handle({
         type: "startDuel",
-        duelId: duelId("mvp-preset-v1"),
+        duelId: duelId("bundled-v1:mvp-player:vs:mvp-opponent"),
+        playerDeckId: "mvp-player",
+        opponentDeckId: "mvp-opponent",
       });
       const restartedPrompt = restarted.find(
         (event) => event.type === "prompt",
@@ -182,7 +188,9 @@ describe("typed duel Worker runtime", () => {
         await replacementRuntime.handle({ type: "initialize" });
         const replacementStarted = await replacementRuntime.handle({
           type: "startDuel",
-          duelId: duelId("mvp-preset-v1"),
+          duelId: duelId("bundled-v1:mvp-player:vs:mvp-opponent"),
+          playerDeckId: "mvp-player",
+          opponentDeckId: "mvp-opponent",
         });
         const replacementPrompt = replacementStarted.find(
           (event) => event.type === "prompt",

@@ -157,6 +157,7 @@ class FakeDuelClient implements DuelClient {
     readonly promptId: string;
     readonly choiceIds: readonly string[];
   }> = [];
+  readonly startCalls: Parameters<DuelClient["startDuel"]>[] = [];
 
   subscribe(listener: (event: DuelClientEvent) => void): () => void {
     this.#listeners.add(listener);
@@ -172,7 +173,8 @@ class FakeDuelClient implements DuelClient {
     return this.initializeResult;
   }
 
-  startDuel(): DuelClientContext {
+  startDuel(...args: Parameters<DuelClient["startDuel"]>): DuelClientContext {
+    this.startCalls.push(args);
     this.context = {
       ...this.context,
       sessionGeneration: this.context.sessionGeneration + 1,
@@ -211,6 +213,48 @@ class FakeDuelClient implements DuelClient {
 }
 
 describe("duel view-state reducer", () => {
+  it("start forwards pair identity and both deck ids to the client", () => {
+    const client = new FakeDuelClient();
+    const store = createDuelStore(client);
+
+    expect(store.start("nekroz", "spellbook")).toBe(true);
+    expect(client.startCalls).toEqual([
+      ["bundled-v1:nekroz:vs:spellbook", "nekroz", "spellbook"],
+    ]);
+  });
+
+  it("restart replays the last started pair after replacement readiness", async () => {
+    const client = new FakeDuelClient();
+    const store = createDuelStore(client);
+    expect(store.start("nekroz", "spellbook")).toBe(true);
+
+    await expect(store.restart()).resolves.toBe(true);
+    expect(client.startCalls).toHaveLength(1);
+
+    client.emit({ type: "ready", coreVersion: [11, 0] });
+    expect(client.startCalls).toEqual([
+      ["bundled-v1:nekroz:vs:spellbook", "nekroz", "spellbook"],
+      ["bundled-v1:nekroz:vs:spellbook", "nekroz", "spellbook"],
+    ]);
+  });
+
+  it("reset replaces the worker without starting", async () => {
+    const client = new FakeDuelClient();
+    const store = createDuelStore(client);
+    let current = createInitialDuelViewState(client.context);
+    const unsubscribe = store.subscribe((state) => {
+      current = state;
+    });
+    expect(store.start("nekroz", "spellbook")).toBe(true);
+
+    await expect(store.reset()).resolves.toBe(true);
+    client.emit({ type: "ready", coreVersion: [11, 0] });
+
+    expect(current).toMatchObject({ status: "idle", coreVersion: [11, 0] });
+    expect(client.startCalls).toHaveLength(1);
+    unsubscribe();
+  });
+
   it("projects ordered Worker events into loading, active, input, and result states", () => {
     let view = createInitialDuelViewState(CONTEXT);
     view = apply(view, { type: "loading", stage: "engine", progress: 0.5 });
@@ -477,7 +521,7 @@ describe("duel view-state reducer", () => {
     });
     expect(current.duelLog).toHaveLength(1);
 
-    expect(store.start()).toBe(true);
+    expect(store.start("mvp-player", "mvp-opponent")).toBe(true);
     expect(current).toMatchObject({
       presentationEvents: [],
       duelLog: [],
@@ -587,7 +631,7 @@ describe("duel view-state reducer", () => {
     const unsubscribe = store.subscribe((state) => {
       current = state;
     });
-    expect(store.start()).toBe(true);
+    expect(store.start("mvp-player", "mvp-opponent")).toBe(true);
     client.emit(PROMPT_EVENT);
     const key = current.interactionSession.key;
     if (key === null) throw new Error("Expected active interaction key");
@@ -637,7 +681,7 @@ describe("duel view-state reducer", () => {
     const unsubscribe = store.subscribe((state) => {
       current = state;
     });
-    store.start();
+    store.start("mvp-player", "mvp-opponent");
     client.emit(PROMPT_EVENT);
     const firstKey = current.interactionSession.key;
     if (firstKey === null) throw new Error("Expected active interaction key");
@@ -719,7 +763,7 @@ describe("duel view-state reducer", () => {
     const unsubscribe = store.subscribe((state) => {
       current = state;
     });
-    store.start();
+    store.start("mvp-player", "mvp-opponent");
     client.emit({ type: "state", state: STATE });
     client.emit(IDLE_PROMPT_EVENT);
 
@@ -738,7 +782,7 @@ describe("duel view-state reducer", () => {
     const unsubscribe = store.subscribe((state) => {
       current = state;
     });
-    store.start();
+    store.start("mvp-player", "mvp-opponent");
     client.emit({ type: "state", state: STATE });
     client.emit(IDLE_PROMPT_EVENT);
     expect(store.armPlacementIntent("p0:mainMonster:1")).toBe(true);
@@ -766,7 +810,7 @@ describe("duel view-state reducer", () => {
     const unsubscribe = store.subscribe((state) => {
       current = state;
     });
-    store.start();
+    store.start("mvp-player", "mvp-opponent");
     client.emit({ type: "state", state: STATE });
     client.emit(IDLE_PROMPT_EVENT);
     expect(store.armPlacementIntent("p0:mainMonster:4")).toBe(true);
@@ -802,7 +846,7 @@ describe("duel view-state reducer", () => {
       const unsubscribe = store.subscribe((state) => {
         current = state;
       });
-      store.start();
+      store.start("mvp-player", "mvp-opponent");
       client.emit({ type: "state", state: STATE });
       client.emit(IDLE_PROMPT_EVENT);
       expect(store.armPlacementIntent("p0:mainMonster:0")).toBe(true);
@@ -830,7 +874,7 @@ describe("duel view-state reducer", () => {
       const unsubscribe = store.subscribe((state) => {
         current = state;
       });
-      store.start();
+      store.start("mvp-player", "mvp-opponent");
       client.emit({ type: "state", state: STATE });
       client.emit(IDLE_PROMPT_EVENT);
       expect(store.armPlacementIntent("p0:mainMonster:2")).toBe(true);

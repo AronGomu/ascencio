@@ -17,6 +17,7 @@
   import { zoneListsForBoard, type ZoneListEntry } from "../field/zone-list.ts";
   import type { PhysicalZoneId } from "../field/duel-field-layout.ts";
   import DuelHeaderBar from "./components/DuelHeaderBar.svelte";
+  import DeckPicker from "./components/DeckPicker.svelte";
   import DuelResultDialog from "./components/DuelResultDialog.svelte";
   import MenuDialog from "./components/MenuDialog.svelte";
   import SettingsDialog from "./components/SettingsDialog.svelte";
@@ -56,7 +57,12 @@
   import { previewStatusFor } from "./presentation/preview-status.ts";
   import { hasDuelPriority } from "./prompts/duel-priority.ts";
   import { promptSurface } from "./prompts/prompt-surface.ts";
+  import { DECK_CATALOG } from "../duel/presets/deck-catalog.ts";
   import { createDuelStore } from "./stores/duel-store.ts";
+  import {
+    readPersistedUiState,
+    writePersistedUiState,
+  } from "./stores/persisted-ui-state.ts";
   import {
     createUiSettingsStore,
     type UiSettingsState,
@@ -80,7 +86,8 @@
   const client = new DuelWorkerClient();
   const duel = createDuelStore(client);
   const uiSettings = createUiSettingsStore();
-  const autoStartedWorkerGenerations = new SvelteSet<number>();
+  let persistedUi = readPersistedUiState();
+  let pickerOpen = true;
   let menuOpen = false;
   let settingsOpen = false;
   let menubarTrigger: HTMLButtonElement | null = null;
@@ -439,15 +446,6 @@
     handleDiagnosticsDownload($duel.diagnostics);
   }
 
-  $: if (
-    $duel.status === "idle" &&
-    $duel.coreVersion !== null &&
-    !autoStartedWorkerGenerations.has($duel.context.workerGeneration)
-  ) {
-    autoStartedWorkerGenerations.add($duel.context.workerGeneration);
-    queueMicrotask(() => duel.start());
-  }
-
   $: maybeAutoResolvePrompt($duel.prompt, $duel.responsePending, $uiSettings);
 
   function maybeAutoResolvePrompt(
@@ -595,6 +593,27 @@
     diagnosticPending = duel.requestDiagnostics();
     if (!diagnosticPending)
       diagnosticMessage = "Diagnostics are unavailable for this session.";
+  }
+
+  function selectDecks(
+    player: typeof persistedUi.decks.player,
+    opponent: typeof persistedUi.decks.opponent,
+  ): void {
+    persistedUi = {
+      ...persistedUi,
+      decks: { player, opponent },
+    };
+    writePersistedUiState(persistedUi);
+  }
+
+  function startSelectedDuel(): void {
+    pickerOpen = false;
+    duel.start(persistedUi.decks.player, persistedUi.decks.opponent);
+  }
+
+  async function changeDecks(): Promise<void> {
+    pickerOpen = true;
+    await duel.reset();
   }
 
   function previewFieldCard(card: BoardCardView): void {
@@ -850,6 +869,16 @@
     </p>
   {/if}
 
+  {#if pickerOpen && $duel.status === "idle" && $duel.coreVersion !== null && !$duel.snapshot}
+    <DeckPicker
+      decks={DECK_CATALOG}
+      playerDeckId={persistedUi.decks.player}
+      opponentDeckId={persistedUi.decks.opponent}
+      onselect={selectDecks}
+      onstart={startSelectedDuel}
+    />
+  {/if}
+
   {#if duelBoard || $duel.snapshot}
     <div class="duel-row" data-cy="duel-row">
       <CardPreviewPanel
@@ -1009,6 +1038,7 @@
       completed={$duel.status === "completed"}
       {diagnosticPending}
       onrestart={() => void duel.restart()}
+      onchangedecks={() => void changeDecks()}
       ondownloaddiagnostics={requestDiagnostics}
     />
   {/if}

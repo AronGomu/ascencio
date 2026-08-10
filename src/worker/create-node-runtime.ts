@@ -6,10 +6,6 @@ import {
 import { DuelOperationError } from "../duel/contracts/duel-error.ts";
 import { cardCode } from "../duel/contracts/ids.ts";
 import {
-  DEFAULT_OPPONENT_DECK_ID,
-  DEFAULT_PLAYER_DECK_ID,
-} from "../duel/presets/deck-catalog.ts";
-import {
   MVP_DECK_CONSTRAINTS,
   validateDeck,
 } from "../duel/presets/deck-parser.ts";
@@ -92,16 +88,6 @@ export function createNodeDuelWorkerRuntime(
       progress("preset", 0.5);
       const deckSources = await loadDeckSources();
       const reviewedPool = reviewedCardPool(deckSources);
-      const preset = await runInitializationStage(
-        "deck_validation_failed",
-        "Unable to load the MVP preset decks",
-        async () =>
-          createDuelPreset(
-            DEFAULT_PLAYER_DECK_ID,
-            DEFAULT_OPPONENT_DECK_ID,
-            deckSources,
-          ),
-      );
       signal.throwIfAborted();
       let dependencyGroupsLoaded = 0;
       const reportDependencyProgress = (group: string): void => {
@@ -123,31 +109,36 @@ export function createNodeDuelWorkerRuntime(
       );
       signal.throwIfAborted();
       const catalogCodes = new Set(dependencies.cards.keys());
-      await runInitializationStage(
-        "deck_validation_failed",
-        "The MVP preset decks failed validation",
-        async () => {
-          validateDeck(
-            preset.player,
-            catalogCodes,
-            MVP_DECK_CONSTRAINTS,
-            dependencies.cards,
-            reviewedPool,
-          );
-          validateDeck(
-            preset.opponent,
-            catalogCodes,
-            MVP_DECK_CONSTRAINTS,
-            dependencies.cards,
-            reviewedPool,
-          );
-        },
-      );
+      const createPreset = (
+        playerDeckId: Parameters<typeof createDuelPreset>[0],
+        opponentDeckId: Parameters<typeof createDuelPreset>[1],
+      ) => {
+        const preset = createDuelPreset(
+          playerDeckId,
+          opponentDeckId,
+          deckSources,
+        );
+        validateDeck(
+          preset.player,
+          catalogCodes,
+          MVP_DECK_CONSTRAINTS,
+          dependencies.cards,
+          reviewedPool,
+        );
+        validateDeck(
+          preset.opponent,
+          catalogCodes,
+          MVP_DECK_CONSTRAINTS,
+          dependencies.cards,
+          reviewedPool,
+        );
+        return preset;
+      };
       progress("ready", 1);
       return {
         adapter,
         dependencies,
-        preset,
+        createPreset,
         snapshotId: manifest.snapshotId,
         revisions: {
           babelCdb: manifest.assets.babelCdbRevision,

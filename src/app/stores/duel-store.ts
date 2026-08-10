@@ -5,7 +5,8 @@ import type { DuelPresentationEvent } from "../../duel/contracts/duel-presentati
 import type { DuelResult } from "../../duel/contracts/duel-result.ts";
 import type { PlayerPrompt } from "../../duel/contracts/player-prompt.ts";
 import type { PublicDuelState } from "../../duel/contracts/public-duel-state.ts";
-import { MVP_PRESET_ID } from "../../duel/presets/mvp-preset.ts";
+import type { DeckId } from "../../duel/presets/deck-catalog.ts";
+import { duelPresetId } from "../../duel/presets/duel-preset.ts";
 import type {
   DuelClient,
   DuelClientContext,
@@ -102,7 +103,7 @@ export interface DuelViewState {
 
 export interface DuelStore extends Readable<DuelViewState> {
   initialize(): boolean;
-  start(): boolean;
+  start(playerDeckId: DeckId, opponentDeckId: DeckId): boolean;
   respond(choiceIds: readonly ChoiceId[]): boolean;
   dispatchInteraction(action: InteractionSessionAction): boolean;
   armPlacementIntent(zoneId: PhysicalZoneId): boolean;
@@ -110,6 +111,7 @@ export interface DuelStore extends Readable<DuelViewState> {
   requestDiagnostics(): boolean;
   retry(): Promise<boolean>;
   restart(): Promise<boolean>;
+  reset(): Promise<boolean>;
   clearError(): void;
   destroy(): Promise<void>;
 }
@@ -301,10 +303,24 @@ export function createDuelStore(client: DuelClient): DuelStore {
     current = next;
     state.set(next);
   };
+  type DeckPair = Readonly<{
+    playerDeckId: DeckId;
+    opponentDeckId: DeckId;
+  }>;
   let replacementOperation: Promise<boolean> | null = null;
-  const startCurrentDuel = (): boolean => {
-    const context = client.startDuel(MVP_PRESET_ID);
+  let lastStartedDecks: DeckPair | null = null;
+  let pendingReplacementStart: DeckPair | null = null;
+  const startCurrentDuel = (
+    playerDeckId: DeckId,
+    opponentDeckId: DeckId,
+  ): boolean => {
+    const context = client.startDuel(
+      duelPresetId(playerDeckId, opponentDeckId),
+      playerDeckId,
+      opponentDeckId,
+    );
     if (context === null) return false;
+    lastStartedDecks = Object.freeze({ playerDeckId, opponentDeckId });
     set(
       freezeState({
         ...createInitialDuelViewState(context),
@@ -397,14 +413,24 @@ export function createDuelStore(client: DuelClient): DuelStore {
     const previous = current;
     const next = reduceDuelViewState(previous, received);
     set(next);
-    if (received.event.type !== "prompt" || next === previous) return;
+    if (next === previous) return;
+    if (received.event.type === "ready") {
+      const pair = pendingReplacementStart;
+      pendingReplacementStart = null;
+      if (pair !== null)
+        startCurrentDuel(pair.playerDeckId, pair.opponentDeckId);
+      return;
+    }
+    if (received.event.type !== "prompt") return;
     const placementChoiceId = resolvePendingPlacementChoice(
       received.event.prompt,
       previous.pendingPlacement,
     );
     if (placementChoiceId !== null) acceptResponse([placementChoiceId]);
   });
-  const replaceAndInitialize = (): Promise<boolean> => {
+  const replaceAndInitialize = (
+    pendingPair: DeckPair | null,
+  ): Promise<boolean> => {
     if (replacementOperation !== null) return replacementOperation;
     set(
       freezeState({
@@ -429,12 +455,14 @@ export function createDuelStore(client: DuelClient): DuelStore {
     replacementOperation = (async () => {
       try {
         await client.replace();
+        pendingReplacementStart = pendingPair;
         const next = freezeState({
           ...createInitialDuelViewState(client.context),
           status: "initializing" as const,
         });
         set(next);
         if (client.initialize()) return true;
+        pendingReplacementStart = null;
         set(
           freezeState({
             ...next,
@@ -447,6 +475,7 @@ export function createDuelStore(client: DuelClient): DuelStore {
           }),
         );
       } catch (error) {
+        pendingReplacementStart = null;
         set(
           freezeState({
             ...createInitialDuelViewState(client.context),
@@ -535,8 +564,12 @@ export function createDuelStore(client: DuelClient): DuelStore {
       return true;
     },
     requestDiagnostics: () => client.requestDiagnostics(),
-    retry: replaceAndInitialize,
-    restart: replaceAndInitialize,
+    retry: () => replaceAndInitialize(lastStartedDecks),
+    restart: () =>
+      lastStartedDecks === null
+        ? Promise.resolve(false)
+        : replaceAndInitialize(lastStartedDecks),
+    reset: () => replaceAndInitialize(null),
     clearError: () => {
       if (current.error?.recoverable !== true) return;
       set(freezeState({ ...current, error: null }));

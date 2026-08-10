@@ -22,6 +22,7 @@ function renderDialog(
     completed: overrides.completed ?? true,
     diagnosticPending: overrides.diagnosticPending ?? false,
     onrestart: vi.fn(),
+    onchangedecks: vi.fn(),
     ondownloaddiagnostics: vi.fn(),
   });
 }
@@ -73,19 +74,23 @@ describe("DuelResultDialog", () => {
   it("restart and diagnostics fire their callbacks", async () => {
     const user = userEvent.setup();
     const onrestart = vi.fn();
+    const onchangedecks = vi.fn();
     const ondownloaddiagnostics = vi.fn();
     render(DuelResultDialog, {
       result: COMPLETED_RESULT,
       completed: true,
       diagnosticPending: false,
       onrestart,
+      onchangedecks,
       ondownloaddiagnostics,
     });
 
     await user.click(element("app-restart-duel-button"));
+    await user.click(element("duel-result-change-decks-button"));
     await user.click(element("app-result-download-diagnostics-button"));
 
     expect(onrestart).toHaveBeenCalledTimes(1);
+    expect(onchangedecks).toHaveBeenCalledTimes(1);
     expect(ondownloaddiagnostics).toHaveBeenCalledTimes(1);
   });
 

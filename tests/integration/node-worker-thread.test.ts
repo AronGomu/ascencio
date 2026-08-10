@@ -29,7 +29,9 @@ describe("real Node duel Worker thread", () => {
     const startCursor = harness.cursor;
     harness.post({
       type: "startDuel",
-      duelId: duelId("mvp-preset-v1"),
+      duelId: duelId("bundled-v1:mvp-player:vs:mvp-opponent"),
+      playerDeckId: "mvp-player",
+      opponentDeckId: "mvp-opponent",
     });
     await expect(
       harness.waitForMessage(hasWorkerEventType("state"), {
@@ -63,7 +65,9 @@ describe("real Node duel Worker thread", () => {
     const restartCursor = harness.cursor;
     harness.post({
       type: "startDuel",
-      duelId: duelId("mvp-preset-v1"),
+      duelId: duelId("bundled-v1:mvp-player:vs:mvp-opponent"),
+      playerDeckId: "mvp-player",
+      opponentDeckId: "mvp-opponent",
     });
     await harness.waitForMessage(hasWorkerEventType("prompt"), {
       afterSequence: restartCursor,
@@ -141,7 +145,9 @@ describe("real Node duel Worker thread", () => {
     const startCursor = harness.cursor;
     harness.post({
       type: "startDuel",
-      duelId: duelId("mvp-preset-v1"),
+      duelId: duelId("bundled-v1:mvp-player:vs:mvp-opponent"),
+      playerDeckId: "mvp-player",
+      opponentDeckId: "mvp-opponent",
     });
     await harness.waitForMessage(hasWorkerEventType("prompt"), {
       afterSequence: startCursor,

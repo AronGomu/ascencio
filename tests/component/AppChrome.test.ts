@@ -3,10 +3,133 @@
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+const workerClientSpies = vi.hoisted(() => {
+  const runtimeSnapshotId = "a".repeat(64);
+  Object.assign(globalThis, {
+    __RUNTIME_SNAPSHOT_ID__: runtimeSnapshotId,
+    __ACTIVATION_SNAPSHOT_ID__: runtimeSnapshotId,
+    __ACTIVE_CARD_TEXTS__: [],
+    __RUNTIME_MANIFEST_SHA256__: "b".repeat(64),
+    __ACTIVE_IMAGE_MANIFEST_SHA256__: "c".repeat(64),
+    __RUNTIME_REVISIONS__: {},
+    __ACTIVE_IMAGE_MANIFEST__: {
+      snapshotId: runtimeSnapshotId,
+      files: [],
+      missing: [],
+    },
+    __APP_BUILD_ID__: "component-test",
+  });
+  return { startDuel: vi.fn() };
+});
+
+vi.mock("../../src/app/DuelWorkerClient.ts", () => ({
+  DuelWorkerClient: class {
+    context = { workerGeneration: 1, sessionGeneration: 0 };
+    listeners = new Set<(received: unknown) => void>();
+
+    subscribe(listener: (received: unknown) => void) {
+      this.listeners.add(listener);
+      return () => this.listeners.delete(listener);
+    }
+
+    initialize() {
+      queueMicrotask(() => {
+        for (const listener of this.listeners)
+          listener({
+            context: this.context,
+            event: { type: "ready", coreVersion: [11, 0] },
+          });
+      });
+      return true;
+    }
+
+    startDuel(...args: unknown[]) {
+      workerClientSpies.startDuel(...args);
+      this.context = { ...this.context, sessionGeneration: 1 };
+      return this.context;
+    }
+
+    respond() {
+      return false;
+    }
+
+    surrender() {
+      return false;
+    }
+
+    requestDiagnostics() {
+      return false;
+    }
+
+    async replace() {
+      this.context = {
+        workerGeneration: this.context.workerGeneration + 1,
+        sessionGeneration: 0,
+      };
+      return { graceful: true };
+    }
+
+    async dispose() {
+      return { graceful: true };
+    }
+  },
+}));
+
+import App from "../../src/app/App.svelte";
 import MenuDialog from "../../src/app/components/MenuDialog.svelte";
 import SettingsDialog from "../../src/app/components/SettingsDialog.svelte";
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  localStorage.clear();
+  workerClientSpies.startDuel.mockReset();
+});
+
+async function renderReadyApp() {
+  const rendered = render(App);
+  await vi.waitFor(() =>
+    expect(document.querySelector('[data-cy="deck-picker"]')).not.toBeNull(),
+  );
+  return rendered;
+}
+
+describe("App", () => {
+  it("shows the deck picker instead of auto-starting", async () => {
+    await renderReadyApp();
+
+    expect(document.querySelector('[data-cy="deck-picker"]')).not.toBeNull();
+    expect(workerClientSpies.startDuel).not.toHaveBeenCalled();
+  });
+
+  it("starting from the picker passes pair-derived preset id and both deck ids", async () => {
+    const user = userEvent.setup();
+    await renderReadyApp();
+
+    await user.click(
+      document.querySelector(
+        '[data-cy="deck-picker-option-player-burning-abyss"]',
+      ) as HTMLButtonElement,
+    );
+    await user.click(
+      document.querySelector(
+        '[data-cy="deck-picker-option-opponent-shaddoll"]',
+      ) as HTMLButtonElement,
+    );
+    await user.click(
+      document.querySelector(
+        '[data-cy="deck-picker-start-button"]',
+      ) as HTMLButtonElement,
+    );
+
+    expect(workerClientSpies.startDuel).toHaveBeenCalledOnce();
+    expect(workerClientSpies.startDuel).toHaveBeenCalledWith(
+      "bundled-v1:burning-abyss:vs:shaddoll",
+      "burning-abyss",
+      "shaddoll",
+    );
+  });
+});
 
 describe("MenuDialog", () => {
   it("offers settings and surrender", () => {

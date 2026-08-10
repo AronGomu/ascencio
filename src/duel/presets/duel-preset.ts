@@ -1,7 +1,6 @@
-import type { DuelId } from "../contracts/ids.ts";
+import { duelId, type DuelId } from "../contracts/ids.ts";
 import type { DeckId } from "./deck-catalog.ts";
 import { parseYdk, type ParsedDeck } from "./deck-parser.ts";
-import { MVP_PRESET_ID } from "./mvp-preset.ts";
 
 export interface DuelPreset {
   readonly id: DuelId;
@@ -9,6 +8,13 @@ export interface DuelPreset {
   readonly opponentDeckId: DeckId;
   readonly player: ParsedDeck;
   readonly opponent: ParsedDeck;
+}
+
+export function duelPresetId(
+  playerDeckId: DeckId,
+  opponentDeckId: DeckId,
+): DuelId {
+  return duelId(`bundled-v1:${playerDeckId}:vs:${opponentDeckId}`);
 }
 
 export function createDuelPreset(
@@ -25,7 +31,7 @@ export function createDuelPreset(
     throw new Error(`Unknown deck id: ${opponentDeckId}`);
   }
   return Object.freeze({
-    id: MVP_PRESET_ID,
+    id: duelPresetId(playerDeckId, opponentDeckId),
     playerDeckId,
     opponentDeckId,
     player: parseYdk(playerSource),

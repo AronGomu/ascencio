@@ -10,7 +10,8 @@ import {
 } from "../duel/contracts/duel-error.ts";
 import type { DuelWorkerEvent } from "../duel/contracts/duel-worker-event.ts";
 import type { SnapshotId } from "../duel/contracts/ids.ts";
-import type { MvpPreset } from "../duel/presets/mvp-preset.ts";
+import type { DeckId } from "../duel/presets/deck-catalog.ts";
+import type { DuelPreset } from "../duel/presets/duel-preset.ts";
 import type { ActiveDuelDependencies } from "./assets/active-duel-dependencies.ts";
 import {
   BoundedDuelTrace,
@@ -48,7 +49,10 @@ export interface DuelRuntimeRevisionMetadata {
 export interface DuelRuntimeResources {
   readonly adapter: OcgCoreAdapter;
   readonly dependencies: ActiveDuelDependencies;
-  readonly preset: MvpPreset;
+  readonly createPreset: (
+    playerDeckId: DeckId,
+    opponentDeckId: DeckId,
+  ) => DuelPreset;
   readonly snapshotId: SnapshotId;
   readonly revisions?: DuelRuntimeRevisionMetadata;
 }
@@ -217,7 +221,12 @@ export class DuelWorkerRuntime {
           break;
         }
         case "startDuel":
-          this.#startDuel(command.duelId, events);
+          this.#startDuel(
+            command.duelId,
+            command.playerDeckId,
+            command.opponentDeckId,
+            events,
+          );
           break;
         case "respond": {
           const controller = this.#requireController();
@@ -311,7 +320,12 @@ export class DuelWorkerRuntime {
     }
   }
 
-  #startDuel(duelId: string, events: DuelWorkerEvent[]): void {
+  #startDuel(
+    duelId: string,
+    playerDeckId: DeckId,
+    opponentDeckId: DeckId,
+    events: DuelWorkerEvent[],
+  ): void {
     const resources = this.#requireResources();
     if (this.#controller !== null) {
       throw duelOperationError(
@@ -319,18 +333,15 @@ export class DuelWorkerRuntime {
         "A duel session is already active",
       );
     }
-    if (duelId !== resources.preset.id) {
+    const preset = resources.createPreset(playerDeckId, opponentDeckId);
+    if (duelId !== preset.id) {
       throw duelOperationError(
         "invalid_command",
         `Unknown preset duel: ${duelId}`,
       );
     }
     const seed = createProductionSeed();
-    const trace = new BoundedDuelTrace(
-      resources.preset.id,
-      resources.snapshotId,
-      seed,
-    );
+    const trace = new BoundedDuelTrace(preset.id, resources.snapshotId, seed);
     trace.record({ kind: "lifecycle", detail: "session creation started" });
     this.#lastTrace = trace.snapshot();
     let session: DuelSession;
@@ -338,8 +349,8 @@ export class DuelWorkerRuntime {
       session = DuelSession.create({
         adapter: resources.adapter,
         dependencies: resources.dependencies,
-        playerDeck: resources.preset.player,
-        opponentDeck: resources.preset.opponent,
+        playerDeck: preset.player,
+        opponentDeck: preset.opponent,
         configuration: { mode: "production", seed },
         onEngineDiagnostic: ({ type, message, error }) => {
           trace.record({
@@ -387,14 +398,11 @@ export class DuelWorkerRuntime {
         session,
         dependencies: resources.dependencies,
         snapshotId: resources.snapshotId,
-        presetId: resources.preset.id,
-        deckCounts: [
-          resources.preset.player.main.length,
-          resources.preset.opponent.main.length,
-        ],
+        presetId: preset.id,
+        deckCounts: [preset.player.main.length, preset.opponent.main.length],
         extraDeckCounts: [
-          resources.preset.player.extra.length,
-          resources.preset.opponent.extra.length,
+          preset.player.extra.length,
+          preset.opponent.extra.length,
         ],
         promptIdNamespace: `${this.#runtimeId}-duel-${++this.#nextDuelSequence}`,
         trace,

@@ -14,6 +14,15 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 - [ ] Play opening turn of default duel: original MVP cards, prompts, field, and opponent behaviour remain unchanged.
 - [ ] Open each new `.ydk` in a compatible deck viewer: Burning Abyss, Nekroz, Shaddoll, and Spellbook lists match intended archetypes and contain full 15-card Extra Decks.
 
+## T3 pre-duel-deck-picker-and-persistence
+
+- [ ] Run `npm run dev`, open app in Chromium, confirm deck picker appears before any duel starts.
+- [ ] Choose Burning Abyss for your deck, Shaddoll for opponent, press Start, confirm duel field opens.
+- [ ] Reload page, confirm picker reopens with Burning Abyss and Shaddoll still selected.
+- [ ] In DevTools, run `localStorage.getItem("ygo.ui.v1")`; confirm JSON has `"version":1` and chosen deck ids.
+- [ ] Start chosen duel, surrender, press Change decks; confirm picker returns with same pair selected and no duel auto-starts.
+- [ ] Start another duel, surrender, press Start another duel; confirm replacement Worker starts same chosen pair after ready.
+
 Ticket ids restart per plan, so sections are grouped by round. **Round 2 is the current implementation.** Where a round 2 ticket replaced round 1 behaviour, the round 1 section is marked **SUPERSEDED** and must not be run — its steps describe UI that no longer exists.
 
 ---

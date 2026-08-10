@@ -6,6 +6,7 @@
   export let completed = false;
   export let diagnosticPending = false;
   export let onrestart: () => void;
+  export let onchangedecks: () => void;
   export let ondownloaddiagnostics: () => void;
 
   let heading: HTMLHeadingElement | undefined;
@@ -70,6 +71,13 @@
           data-cy="app-restart-duel-button"
           onclick={onrestart}
           >{completed ? "Start another duel" : "Starting another duel…"}</button
+        >
+        <button
+          type="button"
+          class="secondary"
+          disabled={!completed}
+          data-cy="duel-result-change-decks-button"
+          onclick={onchangedecks}>Change decks</button
         >
         <span class="sensitive-note" data-cy="app-result-sensitive-note"
           >Contains the production seed.</span

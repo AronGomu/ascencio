@@ -20,7 +20,12 @@ import { deckSlots } from "../fixtures/board-public-states.ts";
 
 const examples: readonly (DuelCommand | DuelWorkerEvent)[] = [
   { type: "initialize" },
-  { type: "startDuel", duelId: duelId("mvp-preset-v1") },
+  {
+    type: "startDuel",
+    duelId: duelId("mvp-preset-v1"),
+    playerDeckId: "mvp-player",
+    opponentDeckId: "mvp-opponent",
+  },
   {
     type: "respond",
     promptId: promptId("prompt-1"),
@@ -235,6 +240,39 @@ describe("Worker contracts", () => {
         duplicate: true,
       }),
     ).toThrow("presentation event.duplicate");
+  });
+
+  it("parses a startDuel command with deck ids", () => {
+    expect(
+      parseDuelCommand({
+        type: "startDuel",
+        duelId: "mvp-preset-v1",
+        playerDeckId: "nekroz",
+        opponentDeckId: "shaddoll",
+      }),
+    ).toEqual({
+      type: "startDuel",
+      duelId: "mvp-preset-v1",
+      playerDeckId: "nekroz",
+      opponentDeckId: "shaddoll",
+    });
+  });
+
+  it("rejects a startDuel command with an unknown deck id", () => {
+    expect(() =>
+      parseDuelCommand({
+        type: "startDuel",
+        duelId: "mvp-preset-v1",
+        playerDeckId: "evil",
+        opponentDeckId: "shaddoll",
+      }),
+    ).toThrow("Duel startDuel command deck id is not a bundled deck");
+  });
+
+  it("rejects a startDuel command missing the deck ids", () => {
+    expect(() =>
+      parseDuelCommand({ type: "startDuel", duelId: "mvp-preset-v1" }),
+    ).toThrow();
   });
 
   it("validates untrusted Worker commands and bounds response selections", () => {

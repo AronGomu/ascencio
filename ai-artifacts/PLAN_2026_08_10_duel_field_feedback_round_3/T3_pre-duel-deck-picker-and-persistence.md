@@ -39,7 +39,7 @@
 - `src/worker/create-node-runtime.ts` — the same three call sites.
 - `src/app/components/DuelResultDialog.svelte` — has `onrestart` and a diagnostics button.
 - `e2e/duel-smoke.spec.ts` — every test currently assumes a duel is already starting when the page loads.
-- **From Depends (T2):** `src/duel/presets/deck-catalog.ts` exports `type DeckId = "mvp-player" | "mvp-opponent" | "burning-abyss" | "nekroz" | "shaddoll" | "spellbook"`, `interface DeckMetadata { id, name, fileName }`, `DECK_CATALOG: readonly DeckMetadata[]`, `deckMetadata(id)`, `isDeckId(value): value is DeckId`, `DEFAULT_PLAYER_DECK_ID = "mvp-player"`, `DEFAULT_OPPONENT_DECK_ID = "mvp-opponent"`. `src/duel/presets/deck-sources-browser.ts` exports `DECK_SOURCES: ReadonlyMap<DeckId, string>`. `src/duel/presets/deck-sources-node.ts` exports `loadDeckSources(): Promise<ReadonlyMap<DeckId, string>>`. `src/duel/presets/reviewed-card-pool.ts` exports `reviewedCardPool(sources): ReadonlySet<number>` — 120 codes for the bundled decks. `src/duel/presets/duel-preset.ts` exports `interface DuelPreset { id, playerDeckId, opponentDeckId, player, opponent }` and `createDuelPreset(playerDeckId, opponentDeckId, sources): DuelPreset`, whose id is still the temporary `MVP_PRESET_ID`. T3 replaces it with pair-derived identity. `validateDeck` requires `reviewedPool: ReadonlySet<number>` whenever card data is supplied.
+- **From Depends (T2):** terminal commit `171253b97a04ac62789eb3ddce0b2bc048e43f3d` is pushed on `plan/duel-field-feedback-round-3`. `src/duel/presets/deck-catalog.ts` exports `type DeckId = "mvp-player" | "mvp-opponent" | "burning-abyss" | "nekroz" | "shaddoll" | "spellbook"`, `interface DeckMetadata { id, name, fileName }`, `DECK_CATALOG: readonly DeckMetadata[]`, `deckMetadata(id)`, `isDeckId(value): value is DeckId`, `DEFAULT_PLAYER_DECK_ID = "mvp-player"`, `DEFAULT_OPPONENT_DECK_ID = "mvp-opponent"`. `src/duel/presets/deck-sources-browser.ts` exports `DECK_SOURCES: ReadonlyMap<DeckId, string>`. `src/duel/presets/deck-sources-node.ts` exports `loadDeckSources(): Promise<ReadonlyMap<DeckId, string>>`. `src/duel/presets/reviewed-card-pool.ts` exports `reviewedCardPool(sources): ReadonlySet<number>` — 120 codes for the bundled decks. `src/duel/presets/duel-preset.ts` exports `interface DuelPreset { id, playerDeckId, opponentDeckId, player, opponent }` and `createDuelPreset(playerDeckId, opponentDeckId, sources): DuelPreset`, whose id is still the temporary `MVP_PRESET_ID`. T3 replaces it with pair-derived identity. `validateDeck` requires `reviewedPool: ReadonlySet<number>` whenever card data is supplied.
 
 ## API surface this ticket creates
 
@@ -203,23 +203,23 @@ Extend `tests/unit/duel-store.test.ts`:
 
 ## Impl steps
 
-- [ ] 1. Write `tests/unit/persisted-ui-state.test.ts`. Run `npm run test:unit -- persisted-ui-state` — fails on the missing module.
-- [ ] 2. Create `src/app/stores/persisted-ui-state.ts` with the surface and validation rules above. Re-run — green.
-- [ ] 3. Add the three parser tests. Run — fails.
-- [ ] 4. Edit `src/duel/contracts/duel-command.ts`: extend the `startDuel` variant with `playerDeckId` and `opponentDeckId`, and its parser branch with `requireOnlyKeys(command, ["type","duelId","playerDeckId","opponentDeckId"])` plus two `isDeckId` guards. Re-run — green.
-- [ ] 5. Edit `src/app/DuelWorkerClient.ts`: widen `startDuel` on the interface and the class to `(duelId, playerDeckId, opponentDeckId)`, and post all three fields.
-- [ ] 6. Add `duelPresetId` to `duel-preset.ts` with exact pair-derived value and change `createDuelPreset.id` to use it. Edit `src/worker/DuelWorkerRuntime.ts`: replace `readonly preset: MvpPreset` with `readonly createPreset: (playerDeckId: DeckId, opponentDeckId: DeckId) => DuelPreset`; change `case "startDuel"` to pass `command.playerDeckId` and `command.opponentDeckId`; in `#startDuel`, call `createPreset` once into local `preset` and replace every `resources.preset` read at lines ~322, ~330, ~341-342 and ~390-397 with it. The command `duelId` must equal pair-derived `preset.id`; mismatch remains `Unknown preset duel`. A `createPreset` throw is reported through existing `deck_validation_failed` path.
-- [ ] 7. Edit `src/worker/create-browser-runtime.ts`: retain T2's whole-reviewed-pool dependencies. Move both `validateDeck` calls into a `createPreset` closure that builds the preset with `createDuelPreset(playerDeckId, opponentDeckId, DECK_SOURCES)` and validates both decks against `catalogCodes`, `dependencies.cards` and `reviewedCardPool(DECK_SOURCES)`. Return `createPreset` in the resources object in place of `preset`.
-- [ ] 8. Edit `src/worker/create-node-runtime.ts` the same way, using `await loadDeckSources()` captured once during initialization.
-- [ ] 9. Add the two `duel-store` tests. Run — fails.
-- [ ] 10. Edit `src/app/stores/duel-store.ts`: change `start()` to `start(playerDeckId: DeckId, opponentDeckId: DeckId)`; have `startCurrentDuel` take the pair, remember it in module-local `lastStartedDecks`, and call `client.startDuel(duelPresetId(playerDeckId, opponentDeckId), playerDeckId, opponentDeckId)`. Generalize `replaceAndInitialize(pendingPair)` with module-local `pendingReplacementStart`. `restart()` requires `lastStartedDecks`, stores that pair, then replaces/initializes; `reset()` stores null, then replaces/initializes. In the existing client-event subscriber, after reducing an accepted replacement `ready` event, consume `pendingReplacementStart` once and call `startCurrentDuel(pair)` only when non-null. Clear pending state before calling Start so duplicate/stale ready events cannot double-start. Re-run — green.
-- [ ] 11. Write `tests/component/DeckPicker.test.ts`. Run — fails.
-- [ ] 12. Create `src/app/components/DeckPicker.svelte` with the props and `data-cy` values above. Two columns of option buttons plus a Start button. Re-run — green.
-- [ ] 13. Edit `src/app/App.svelte`: read `let persistedUi = readPersistedUiState()` once; add `let pickerOpen = true`; delete auto-start block/generation set; render picker when ready with no snapshot; on select replace only `persistedUi.decks` and call `writePersistedUiState`; on Start close picker and call `duel.start(persistedUi.decks.player, persistedUi.decks.opponent)`. T14 may wrap these pure functions in a store when window positions become mutable.
-- [ ] 14. Edit `src/app/components/DuelResultDialog.svelte`: add a `onchangedecks: () => void` prop and a button with `data-cy="duel-result-change-decks-button"` labelled `Change decks`. Wire rematch to `duel.restart()`; wire Change decks to set `pickerOpen = true` and `await duel.reset()`. Replacement `ready` must leave the picker open and issue no start. Pick retained persisted pair remains highlighted.
-- [ ] 15. Add the two `AppChrome` tests. Run — adjust until green.
-- [ ] 16. Update `e2e/duel-smoke.spec.ts`: add a shared helper `async function startPresetDuel(page)` that waits for `[data-cy="deck-picker-start-button"]` to be enabled and clicks it, and call it at the top of every test that previously relied on auto-start. Do not change any other assertion.
-- [ ] 17. Run the chromium e2e suite (command in Validation) and fix only the drift this ticket caused.
+- [x] 1. Write `tests/unit/persisted-ui-state.test.ts`. Run `npm run test:unit -- persisted-ui-state` — fails on the missing module.
+- [x] 2. Create `src/app/stores/persisted-ui-state.ts` with the surface and validation rules above. Re-run — green.
+- [x] 3. Add the three parser tests. Run — fails.
+- [x] 4. Edit `src/duel/contracts/duel-command.ts`: extend the `startDuel` variant with `playerDeckId` and `opponentDeckId`, and its parser branch with `requireOnlyKeys(command, ["type","duelId","playerDeckId","opponentDeckId"])` plus two `isDeckId` guards. Re-run — green.
+- [x] 5. Edit `src/app/DuelWorkerClient.ts`: widen `startDuel` on the interface and the class to `(duelId, playerDeckId, opponentDeckId)`, and post all three fields.
+- [x] 6. Add `duelPresetId` to `duel-preset.ts` with exact pair-derived value and change `createDuelPreset.id` to use it. Edit `src/worker/DuelWorkerRuntime.ts`: replace `readonly preset: MvpPreset` with `readonly createPreset: (playerDeckId: DeckId, opponentDeckId: DeckId) => DuelPreset`; change `case "startDuel"` to pass `command.playerDeckId` and `command.opponentDeckId`; in `#startDuel`, call `createPreset` once into local `preset` and replace every `resources.preset` read at lines ~322, ~330, ~341-342 and ~390-397 with it. The command `duelId` must equal pair-derived `preset.id`; mismatch remains `Unknown preset duel`. A `createPreset` throw is reported through existing `deck_validation_failed` path.
+- [x] 7. Edit `src/worker/create-browser-runtime.ts`: retain T2's whole-reviewed-pool dependencies. Move both `validateDeck` calls into a `createPreset` closure that builds the preset with `createDuelPreset(playerDeckId, opponentDeckId, DECK_SOURCES)` and validates both decks against `catalogCodes`, `dependencies.cards` and `reviewedCardPool(DECK_SOURCES)`. Return `createPreset` in the resources object in place of `preset`.
+- [x] 8. Edit `src/worker/create-node-runtime.ts` the same way, using `await loadDeckSources()` captured once during initialization.
+- [x] 9. Add the two `duel-store` tests. Run — fails.
+- [x] 10. Edit `src/app/stores/duel-store.ts`: change `start()` to `start(playerDeckId: DeckId, opponentDeckId: DeckId)`; have `startCurrentDuel` take the pair, remember it in module-local `lastStartedDecks`, and call `client.startDuel(duelPresetId(playerDeckId, opponentDeckId), playerDeckId, opponentDeckId)`. Generalize `replaceAndInitialize(pendingPair)` with module-local `pendingReplacementStart`. `restart()` requires `lastStartedDecks`, stores that pair, then replaces/initializes; `reset()` stores null, then replaces/initializes. In the existing client-event subscriber, after reducing an accepted replacement `ready` event, consume `pendingReplacementStart` once and call `startCurrentDuel(pair)` only when non-null. Clear pending state before calling Start so duplicate/stale ready events cannot double-start. Re-run — green.
+- [x] 11. Write `tests/component/DeckPicker.test.ts`. Run — fails.
+- [x] 12. Create `src/app/components/DeckPicker.svelte` with the props and `data-cy` values above. Two columns of option buttons plus a Start button. Re-run — green.
+- [x] 13. Edit `src/app/App.svelte`: read `let persistedUi = readPersistedUiState()` once; add `let pickerOpen = true`; delete auto-start block/generation set; render picker when ready with no snapshot; on select replace only `persistedUi.decks` and call `writePersistedUiState`; on Start close picker and call `duel.start(persistedUi.decks.player, persistedUi.decks.opponent)`. T14 may wrap these pure functions in a store when window positions become mutable.
+- [x] 14. Edit `src/app/components/DuelResultDialog.svelte`: add a `onchangedecks: () => void` prop and a button with `data-cy="duel-result-change-decks-button"` labelled `Change decks`. Wire rematch to `duel.restart()`; wire Change decks to set `pickerOpen = true` and `await duel.reset()`. Replacement `ready` must leave the picker open and issue no start. Pick retained persisted pair remains highlighted.
+- [x] 15. Add the two `AppChrome` tests. Run — adjust until green.
+- [x] 16. Update `e2e/duel-smoke.spec.ts`: add a shared helper `async function startPresetDuel(page)` that waits for `[data-cy="deck-picker-start-button"]` to be enabled and clicks it, and call it at the top of every test that previously relied on auto-start. Do not change any other assertion.
+- [x] 17. Run the chromium e2e suite (command in Validation) and fix only the drift this ticket caused.
 
 ## Outputs
 
@@ -230,12 +230,12 @@ Extend `tests/unit/duel-store.test.ts`:
 
 ## Validation
 
-- [ ] `npm run test:unit` passes
-- [ ] `npm run test:component` passes
-- [ ] `npm run test:integration` passes
-- [ ] `npm run typecheck`, `npm run lint`, `npm run format:check` pass
-- [ ] `npm run build` succeeds
-- [ ] chromium e2e passes, run foreground with:
+- [x] `npm run test:unit` passes
+- [x] `npm run test:component` passes
+- [x] `npm run test:integration` passes
+- [x] `npm run typecheck`, `npm run lint`, `npm run format:check` pass
+- [x] `npm run build` succeeds
+- [x] chromium e2e passes, run foreground with:
       ```bash
       cd /home/aron/projects/ascencio
       timeout 590 nix-shell -p playwright-driver.browsers glib gtk3 nss nspr dbus atk cups \
@@ -245,9 +245,9 @@ Extend `tests/unit/duel-store.test.ts`:
       npx playwright test --project=chromium
       '
       ```
-- [ ] manual check: `npm run dev`, confirm the picker appears instead of a duel, pick Burning Abyss vs Shaddoll, press Start, confirm the duel opens with those decks
-- [ ] manual check: reload the page and confirm the picker reopens with Burning Abyss and Shaddoll still selected
-- [ ] manual check: `localStorage.getItem("ygo.ui.v1")` in the devtools console returns a JSON string with `"version":1`
-- [ ] manual check: finish or surrender a duel, press **Change decks**, confirm the picker returns
-- [ ] app functional — no broken path from this slice
-- [ ] commit msg draft: `feat(app): choose both decks before the duel starts`
+- [x] manual check: `npm run dev`, confirm the picker appears instead of a duel, pick Burning Abyss vs Shaddoll, press Start, confirm the duel opens with those decks
+- [x] manual check: reload the page and confirm the picker reopens with Burning Abyss and Shaddoll still selected
+- [x] manual check: `localStorage.getItem("ygo.ui.v1")` in the devtools console returns a JSON string with `"version":1`
+- [x] manual check: finish or surrender a duel, press **Change decks**, confirm the picker returns
+- [x] app functional — no broken path from this slice
+- [x] commit msg draft: `feat(app): choose both decks before the duel starts`

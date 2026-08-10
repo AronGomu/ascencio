@@ -178,7 +178,12 @@ describe("duel Worker attachment", () => {
     const detach = attachDuelWorker(scope, runtime, memoryLogger(logs));
 
     scope.onmessage?.({
-      data: { type: "startDuel", duelId: "preset-test" },
+      data: {
+        type: "startDuel",
+        duelId: "preset-test",
+        playerDeckId: "mvp-player",
+        opponentDeckId: "mvp-opponent",
+      },
     } as MessageEvent<unknown>);
     await Promise.resolve();
     await Promise.resolve();

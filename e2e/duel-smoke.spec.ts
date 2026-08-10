@@ -1162,6 +1162,114 @@ test("a passive opponent hand card receives a real hover", async ({ page }) => {
   );
 });
 
+test("opponent pile inversion rotates images only", async ({ page }) => {
+  await page.goto("./");
+
+  const orientations = await page.evaluate(() => {
+    const fixture = document.createElement("div");
+    fixture.innerHTML = `
+      <div class="duel-field-stack" data-test-stack="player">
+        <div class="duel-field-stack__art"><img alt="" /></div>
+        <span class="duel-field-stack__name">Deck</span>
+        <strong class="duel-field-stack__count">40</strong>
+      </div>
+      <div class="duel-field-stack is-opponent" data-test-stack="opponent">
+        <div class="duel-field-stack__art"><img alt="" /></div>
+        <span class="duel-field-stack__name">Deck</span>
+        <strong class="duel-field-stack__count">40</strong>
+      </div>
+      <div class="zone-list-entry" data-test-entry="player">
+        <img alt="" />
+        <span class="zone-list-entry__position">1</span>
+        <div class="card-action-chips"></div>
+      </div>
+      <div class="zone-list-entry is-opponent" data-test-entry="opponent">
+        <img alt="" />
+        <span class="zone-list-entry__position">1</span>
+        <div class="card-action-chips"></div>
+      </div>
+    `;
+    document.body.append(fixture);
+
+    const orientation = (selector: string): readonly number[] => {
+      const element = fixture.querySelector(selector);
+      if (element === null) throw new Error(`Missing CSS fixture: ${selector}`);
+      const transform = getComputedStyle(element).transform;
+      const matrix =
+        transform === "none"
+          ? new DOMMatrixReadOnly()
+          : new DOMMatrixReadOnly(transform);
+      return [matrix.a, matrix.b, matrix.c, matrix.d].map((value) =>
+        Math.abs(value) < 0.000_001 ? 0 : Math.round(value),
+      );
+    };
+
+    return {
+      playerStackRoot: orientation('[data-test-stack="player"]'),
+      playerStackArt: orientation(
+        '[data-test-stack="player"] .duel-field-stack__art',
+      ),
+      playerStackImage: orientation('[data-test-stack="player"] img'),
+      playerStackName: orientation(
+        '[data-test-stack="player"] .duel-field-stack__name',
+      ),
+      playerStackCount: orientation(
+        '[data-test-stack="player"] .duel-field-stack__count',
+      ),
+      opponentStackRoot: orientation('[data-test-stack="opponent"]'),
+      opponentStackArt: orientation(
+        '[data-test-stack="opponent"] .duel-field-stack__art',
+      ),
+      opponentStackImage: orientation('[data-test-stack="opponent"] img'),
+      opponentStackName: orientation(
+        '[data-test-stack="opponent"] .duel-field-stack__name',
+      ),
+      opponentStackCount: orientation(
+        '[data-test-stack="opponent"] .duel-field-stack__count',
+      ),
+      playerEntryRoot: orientation('[data-test-entry="player"]'),
+      playerEntryImage: orientation('[data-test-entry="player"] > img'),
+      playerEntryPosition: orientation(
+        '[data-test-entry="player"] .zone-list-entry__position',
+      ),
+      playerEntryChips: orientation(
+        '[data-test-entry="player"] .card-action-chips',
+      ),
+      opponentEntryRoot: orientation('[data-test-entry="opponent"]'),
+      opponentEntryImage: orientation('[data-test-entry="opponent"] > img'),
+      opponentEntryPosition: orientation(
+        '[data-test-entry="opponent"] .zone-list-entry__position',
+      ),
+      opponentEntryChips: orientation(
+        '[data-test-entry="opponent"] .card-action-chips',
+      ),
+    };
+  });
+
+  const upright = [1, 0, 0, 1];
+  const inverted = [-1, 0, 0, -1];
+  expect(orientations).toEqual({
+    playerStackRoot: upright,
+    playerStackArt: upright,
+    playerStackImage: upright,
+    playerStackName: upright,
+    playerStackCount: upright,
+    opponentStackRoot: upright,
+    opponentStackArt: upright,
+    opponentStackImage: inverted,
+    opponentStackName: upright,
+    opponentStackCount: upright,
+    playerEntryRoot: upright,
+    playerEntryImage: upright,
+    playerEntryPosition: upright,
+    playerEntryChips: upright,
+    opponentEntryRoot: upright,
+    opponentEntryImage: inverted,
+    opponentEntryPosition: upright,
+    opponentEntryChips: upright,
+  });
+});
+
 test("responsive field compositions contain controls across supported viewports", async ({
   page,
 }, testInfo) => {

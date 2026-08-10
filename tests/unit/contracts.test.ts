@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  DuelCommandValidationError,
   parseDuelCommand,
   type DuelCommand,
 } from "../../src/duel/contracts/duel-command.ts";
@@ -256,6 +257,18 @@ describe("Worker contracts", () => {
       playerDeckId: "nekroz",
       opponentDeckId: "shaddoll",
     });
+  });
+
+  it("rejects an unexpected startDuel command field", () => {
+    expect(() =>
+      parseDuelCommand({
+        type: "startDuel",
+        duelId: "mvp-preset-v1",
+        playerDeckId: "nekroz",
+        opponentDeckId: "shaddoll",
+        seed: 42,
+      }),
+    ).toThrow(DuelCommandValidationError);
   });
 
   it("rejects a startDuel command with an unknown deck id", () => {

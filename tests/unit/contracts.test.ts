@@ -16,6 +16,7 @@ import {
   snapshotId,
 } from "../../src/duel/contracts/ids.ts";
 import { assertStructuredCloneSafe } from "../../src/duel/contracts/structured-clone.ts";
+import { deckSlots } from "../fixtures/board-public-states.ts";
 
 const examples: readonly (DuelCommand | DuelWorkerEvent)[] = [
   { type: "initialize" },
@@ -44,6 +45,7 @@ const examples: readonly (DuelCommand | DuelWorkerEvent)[] = [
           player: 0,
           lifePoints: 8000,
           deckCount: 35,
+          deck: deckSlots(0, 35),
           extraDeckCount: 0,
           handCount: 0,
           hand: [],
@@ -57,6 +59,7 @@ const examples: readonly (DuelCommand | DuelWorkerEvent)[] = [
           player: 1,
           lifePoints: 8000,
           deckCount: 35,
+          deck: deckSlots(1, 35),
           extraDeckCount: 0,
           handCount: 5,
           hand: [],
@@ -153,10 +156,48 @@ const nonCloneableFunctionCommand: DuelCommand = {
 void nonCloneableBigIntCommand;
 void nonCloneableFunctionCommand;
 
+function contractPlayer(player: 0 | 1, deckCount: number) {
+  return {
+    player,
+    lifePoints: 8000,
+    deckCount,
+    deck: deckSlots(player, deckCount),
+    extraDeckCount: 0,
+    handCount: 0,
+    hand: [],
+    extraDeck: [],
+    monsters: [],
+    spellsAndTraps: [],
+    graveyard: [],
+    banished: [],
+  };
+}
+
 describe("Worker contracts", () => {
   it.each(examples)("survives structured cloning: $type", (example) => {
     expect(() => assertStructuredCloneSafe(example)).not.toThrow();
     expect(structuredClone(example)).toEqual(example);
+  });
+
+  it("rejects a mismatched deck length", () => {
+    const player = contractPlayer(0, 40);
+    expect(() =>
+      parseDuelWorkerEvent({
+        type: "state",
+        state: {
+          snapshotId: "a".repeat(64),
+          revision: 0,
+          turn: 0,
+          turnPlayer: 0,
+          phase: "unknown",
+          players: [
+            { ...player, deck: player.deck.slice(0, 39) },
+            contractPlayer(1, 40),
+          ],
+          chain: [],
+        },
+      }),
+    ).toThrow("deck count");
   });
 
   it("requires a positive safe presentation event sequence", () => {

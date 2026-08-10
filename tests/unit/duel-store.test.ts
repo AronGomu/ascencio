@@ -17,6 +17,7 @@ import {
   createInitialDuelViewState,
   reduceDuelViewState,
 } from "../../src/app/stores/duel-store.ts";
+import { deckSlots } from "../fixtures/board-public-states.ts";
 
 const CONTEXT: DuelClientContext = {
   workerGeneration: 2,
@@ -34,6 +35,7 @@ const STATE: PublicDuelState = {
       player: 0,
       lifePoints: 8000,
       deckCount: 35,
+      deck: deckSlots(0, 35),
       extraDeckCount: 0,
       handCount: 5,
       hand: [
@@ -59,6 +61,7 @@ const STATE: PublicDuelState = {
       player: 1,
       lifePoints: 8000,
       deckCount: 35,
+      deck: deckSlots(1, 35),
       extraDeckCount: 0,
       handCount: 5,
       hand: [],

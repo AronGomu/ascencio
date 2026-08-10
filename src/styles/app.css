@@ -142,14 +142,44 @@ main {
   margin-inline: auto;
 }
 
-.app-menubar {
+.duel-header-bar {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 0.75rem;
   width: min(120rem, calc(100% - 2rem));
   margin-inline: auto;
   padding-block: 0.75rem;
+}
+
+.duel-header-bar__spacer {
+  flex: 1 1 auto;
+}
+
+.duel-header-bar__player {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.duel-header-bar__avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.duel-header-bar__life {
+  margin: 0;
+  color: var(--warning);
+  font-weight: 800;
+}
+
+.duel-header-bar__settings svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: currentcolor;
+  display: block;
 }
 
 .dialog-backdrop {
@@ -220,14 +250,14 @@ h4 {
    than making the row taller than the board. */
 .duel-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 22rem;
+  grid-template-columns: 22rem minmax(0, 1fr);
   gap: 1rem;
   align-items: stretch;
 }
 
 .card-preview-panel {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 0.75rem;
   min-width: 0;
   padding: 1rem;
@@ -257,6 +287,54 @@ h4 {
   padding-right: 0.4rem;
   color: var(--muted);
   white-space: pre-wrap;
+}
+
+.card-preview-panel__status {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.card-preview-status-dots {
+  display: inline-flex;
+  gap: 0.15rem;
+}
+
+.card-preview-status-dots span {
+  width: 0.28rem;
+  height: 0.28rem;
+  border-radius: 999px;
+  background: currentcolor;
+  animation: preview-status-dot 1.2s infinite ease-in-out;
+}
+
+.card-preview-status-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.card-preview-status-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes preview-status-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.15;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-preview-status-dots span {
+    animation: none;
+    opacity: 0.6;
+  }
 }
 
 /* Solving `mainWidth - 22rem panel - 1rem gap - 2rem field padding >= 52rem
@@ -360,6 +438,12 @@ progress {
 
 .result-panel {
   border-color: #297f73;
+}
+
+.dialog-panel .result-panel {
+  padding: 0;
+  border: none;
+  background: none;
 }
 
 .phase-pill {
@@ -715,61 +799,76 @@ li + li {
   );
 }
 
-.field-status-pills {
+/* The ticket's board-geometry table gave zone extents as center + full
+   width/height instead of center −/+ half (the zones themselves are
+   rendered with `transform: translate(-50%, -50%)`), so every stated range
+   was shifted low/right by half the zone's own size. Measured directly
+   against the rendered DOM at a 1366px viewport (board 932x524):
+   shared extra monster left true x [42.90%, 49.30%], right true x
+   [50.70%, 57.10%], both true y [42.11%, 57.92%]; p1 banished true y
+   [26.75%, 42.65%]; p0 banished true y [57.36%, 73.10%]. The free gap
+   between the two banished zones is true y [42.65%, 57.36%]. These
+   constants are chosen to sit inside that gap and clear of the extra
+   monster zone columns, verified with the chromium e2e's
+   `responsive field compositions...` overlap check and the pointer-
+   interception specs. */
+.field-phase-strip {
   position: absolute;
   z-index: var(--duel-field-layer-control);
-  top: 0.75rem;
-  right: 0.75rem;
+  top: 43.5%;
+  right: 0;
+  left: 0;
+  height: 13%;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
   pointer-events: none;
 }
-
-.prio-pill,
-.field-phase-pill {
-  padding: 0.25rem 0.6rem;
+.field-phase-strip__group {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  position: absolute;
+}
+.field-phase-strip__group--left {
+  right: 60.6%;
+}
+.field-phase-strip__group--right {
+  left: 60.6%;
+}
+.field-phase-chip {
+  pointer-events: none;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid transparent;
   border-radius: 999px;
-  font-size: 0.72rem;
+  background: rgb(8 16 31 / 0.72);
+  color: color-mix(in srgb, var(--muted) 70%, transparent);
+  font-size: 0.68rem;
   font-weight: 800;
   white-space: nowrap;
 }
-
-.prio-pill {
-  color: #2b1d00;
-  background: var(--warning);
+button.field-phase-chip {
+  pointer-events: auto;
+  cursor: pointer;
+}
+.field-phase-chip.is-available {
+  color: var(--ink);
+  border-color: var(--border);
+}
+.field-phase-chip.is-current {
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 0 0.6rem var(--accent);
+  color: var(--ink);
 }
 
-.prio-pill.is-priority {
-  color: #04210f;
-  background: var(--success);
-}
-
-.field-phase-pill {
-  color: #08101f;
-  background: #cfe0f5;
-}
-
-.life-pill {
-  position: absolute;
-  z-index: var(--duel-field-layer-control);
-  left: 0.75rem;
-  margin: 0;
-  padding: 0.3rem 0.7rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: rgb(8 16 31 / 0.82);
-  color: var(--warning);
-  font-weight: 800;
-  pointer-events: none;
-}
-
-.life-pill.is-opponent {
-  top: 0.75rem;
-}
-
-.life-pill.is-self {
-  bottom: 0.75rem;
+/* Must track `.duel-field-board`'s own `min-width: 52rem` (below) so this
+   stage's box always matches the board's rendered box exactly, even when
+   the board overflows its column and `.duel-field`'s `overflow-x: auto`
+   kicks in — otherwise the phase strip/End turn percentages below resolve
+   against a narrower box than the board they need to align with. */
+.duel-field-stage {
+  position: relative;
+  min-width: 52rem;
 }
 
 .duel-field-board {
@@ -859,6 +958,11 @@ button.duel-field-zone,
    state from legality and the two must never be confusable. */
 .duel-field-zone.is-actionable,
 .duel-field-card.is-actionable .duel-field-card__art {
+  border-color: var(--warning);
+  box-shadow: 0 0 0 2px rgb(255 213 128 / 0.55);
+}
+
+.duel-field-stack.is-actionable {
   border-color: var(--warning);
   box-shadow: 0 0 0 2px rgb(255 213 128 / 0.55);
 }
@@ -955,6 +1059,51 @@ button.duel-field-zone,
   border-color: var(--accent);
 }
 
+.zone-list-dialog {
+  position: absolute;
+  inset: auto;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: var(--duel-field-layer-menu);
+  max-width: 80%;
+  max-height: 70%;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.45);
+  padding: 0.75rem;
+}
+
+.zone-list-dialog__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.zone-list-dialog__entries {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+}
+
+.zone-list-entry {
+  position: relative;
+  flex: 0 0 auto;
+  width: 4.5rem;
+}
+
+.zone-list-entry.is-actionable img {
+  border-color: var(--warning);
+  box-shadow: 0 0 0 2px rgb(255 213 128 / 0.55);
+}
+
+.zone-list-entry:hover .card-action-chips,
+.zone-list-entry:focus-within .card-action-chips {
+  display: flex;
+}
+
 .duel-field-stack {
   z-index: var(--duel-field-layer-stack);
   display: grid;
@@ -970,6 +1119,29 @@ button.duel-field-zone,
     linear-gradient(145deg, rgb(159 141 235 / 0.24), transparent 65%), #201d35;
   color: #e8edf8;
   text-transform: capitalize;
+  overflow: hidden;
+}
+
+.duel-field-stack__art {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  opacity: 0.85;
+}
+
+.duel-field-stack__art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0.35rem;
+  display: block;
+}
+
+.duel-field-stack__name,
+.duel-field-stack__count {
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 1px 2px rgb(4 9 18 / 0.9);
 }
 
 .duel-field-stack__name {
@@ -1099,11 +1271,15 @@ button.card-action-chip:hover:not(:disabled) {
   background: #ffc75c;
 }
 
+/* top: 50% (not the ticket's 57.5%, which sat inside p0 banished's true
+   range) centers the button in the same measured free gap as the phase
+   strip above. */
 .field-end-turn {
   position: absolute;
   z-index: var(--duel-field-layer-control);
-  right: 0.75rem;
-  bottom: 0.75rem;
+  right: 1%;
+  top: 50%;
+  transform: translateY(-50%);
   min-height: 2.75rem;
   padding: 0.55rem 1rem;
 }

@@ -7,6 +7,7 @@ import type {
   PromptKind,
 } from "../../duel/contracts/player-prompt.ts";
 import type {
+  PlayerIndex,
   PublicDuelState,
   PublicLocation,
 } from "../../duel/contracts/public-duel-state.ts";
@@ -38,6 +39,12 @@ export interface InteractionChoice {
   readonly value?: number | string;
   readonly toggleState?: "selected" | "unselected";
   readonly allocationMaximum?: number;
+  /** Engine-side address of the card this choice acts on, when it has one. */
+  readonly cardAddress?: {
+    readonly controller: PlayerIndex;
+    readonly location: PublicLocation;
+    readonly sequence: number;
+  };
 }
 
 export interface InteractionConstraints {
@@ -73,6 +80,10 @@ interface ActiveInteractionSpecBase<Kind extends ActiveInteractionKind> {
     readonly InteractionChoice[]
   >;
   readonly zoneChoices: ReadonlyMap<
+    BoardTargetId,
+    readonly InteractionChoice[]
+  >;
+  readonly stackChoices: ReadonlyMap<
     BoardTargetId,
     readonly InteractionChoice[]
   >;
@@ -163,16 +174,22 @@ const PUBLIC_LOCATIONS = {
 } as const satisfies Readonly<Record<PublicLocation, true>>;
 const INACTIVE_SPEC = Object.freeze({ kind: "inactive" as const });
 
+function nonEndPhaseGlobalChoiceCount(spec: ActiveInteractionSpec): number {
+  return [...spec.globalChoices.values()].filter(
+    (choice) => choice.action !== "endPhase",
+  ).length;
+}
+
 export function fieldActionBarRequired(spec: ActiveInteractionSpec): boolean {
   if (spec.kind === "nonField") return false;
+  if (spec.kind === "placeSelection" && spec.constraints.maximum === 1)
+    return nonEndPhaseGlobalChoiceCount(spec) > 0;
   return (
     spec.kind === "cardSelection" ||
     spec.kind === "placeSelection" ||
     spec.kind === "counterAllocation" ||
     spec.kind === "order" ||
-    [...spec.globalChoices.values()].filter(
-      (choice) => choice.action !== "endPhase",
-    ).length > 0
+    nonEndPhaseGlobalChoiceCount(spec) > 0
   );
 }
 
@@ -209,6 +226,7 @@ export function mapPromptToInteractionSpec(
 
   const cardEntries = new Map<BoardTargetId, InteractionChoice[]>();
   const zoneEntries = new Map<BoardTargetId, InteractionChoice[]>();
+  const stackEntries = new Map<BoardTargetId, InteractionChoice[]>();
   const globalEntries = new Map<ChoiceId, InteractionChoice>();
   const duplicateIds = duplicateChoiceIds(prompt.choices);
 
@@ -232,14 +250,22 @@ export function mapPromptToInteractionSpec(
       globalEntries.set(choice.id, choice);
       continue;
     }
+    if (resolution.kind === "stack") {
+      appendChoice(stackEntries, resolution.targetId, choice);
+      continue;
+    }
     const entries = targetKind === "card" ? cardEntries : zoneEntries;
     appendChoice(entries, resolution.targetId, choice);
   }
 
   const cardChoices = freezeChoiceMap(cardEntries);
   const zoneChoices = freezeChoiceMap(zoneEntries);
+  const stackChoices = freezeChoiceMap(stackEntries);
   const globalChoices = Object.freeze(new Map(globalEntries));
-  const fieldCapable = cardChoices.size > 0 || zoneChoices.size > 0;
+  // T8: the zone list dialog makes a stack clickable and able to answer a
+  // choice, so stackChoices now counts towards fieldCapable too.
+  const fieldCapable =
+    cardChoices.size > 0 || zoneChoices.size > 0 || stackChoices.size > 0;
   const base = {
     key: interactionKey(
       context.workerGeneration,
@@ -254,6 +280,7 @@ export function mapPromptToInteractionSpec(
     constraints: constraintsFor(prompt),
     cardChoices,
     zoneChoices,
+    stackChoices,
     globalChoices,
   };
 
@@ -323,6 +350,15 @@ function sanitizeChoice(choice: PromptChoice): InteractionChoice | undefined {
     ...(choice.allocationMaximum === undefined
       ? {}
       : { allocationMaximum: choice.allocationMaximum }),
+    ...(isValidCardTarget(choice.card)
+      ? {
+          cardAddress: Object.freeze({
+            controller: choice.card!.controller,
+            location: choice.card!.location,
+            sequence: choice.card!.sequence,
+          }),
+        }
+      : {}),
   });
 }
 

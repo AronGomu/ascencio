@@ -155,7 +155,6 @@ export async function loadProgrammedScenarios(): Promise<
         preset.opponent.main.slice(0, 5),
       ],
       choices: [
-        { prompt: "idleCommand", action: "shuffle" },
         { prompt: "idleCommand", action: "battlePhase" },
         { prompt: "battleCommand", action: "attack" },
         { prompt: "sortChain", action: "select" },

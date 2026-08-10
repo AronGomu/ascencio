@@ -14,7 +14,7 @@ function choice(id: string, label: string): PromptChoice {
   return { id: choiceId(id), label, action: "select" };
 }
 
-function prompt(): PlayerPrompt {
+function prompt(overrides: Partial<PlayerPrompt> = {}): PlayerPrompt {
   return {
     id: promptId("surface-prompt"),
     kind: "yesNo",
@@ -25,6 +25,7 @@ function prompt(): PlayerPrompt {
     maximum: 1,
     cancelable: false,
     ordered: false,
+    ...overrides,
   };
 }
 
@@ -50,6 +51,7 @@ function fieldCapableSpec(): ActiveInteractionSpec {
     },
     cardChoices: new Map(),
     zoneChoices: new Map(),
+    stackChoices: new Map(),
     globalChoices: new Map(),
   };
 }
@@ -76,6 +78,7 @@ function nonFieldSpec(): ActiveInteractionSpec {
     },
     cardChoices: new Map(),
     zoneChoices: new Map(),
+    stackChoices: new Map(),
     globalChoices: new Map(),
   };
 }
@@ -94,7 +97,19 @@ describe("promptSurface", () => {
     expect(promptSurface(prompt(), fieldCapableSpec(), false)).toBe("field");
   });
 
-  it("non-field prompt opens the dialog", () => {
+  it("chain prompts never open the dialog", () => {
+    expect(
+      promptSurface(prompt({ kind: "chain" }), nonFieldSpec(), false),
+    ).toBe("field");
+  });
+
+  it("chain prompts still dock in the workspace", () => {
+    expect(promptSurface(prompt({ kind: "chain" }), nonFieldSpec(), true)).toBe(
+      "docked",
+    );
+  });
+
+  it("other non-field prompts still open the dialog", () => {
     expect(promptSurface(prompt(), nonFieldSpec(), false)).toBe("dialog");
   });
 

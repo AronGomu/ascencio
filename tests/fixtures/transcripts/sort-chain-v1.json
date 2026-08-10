@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "scenarioId": "shuffle-and-sort-chain",
-  "responseCount": 5,
-  "runCount": 5,
+  "responseCount": 4,
+  "runCount": 4,
   "runs": [
     {
       "prompt": "selectPlace",
@@ -14,14 +14,6 @@
             "location": "monster",
             "sequence": 0
           }
-        }
-      ]
-    },
-    {
-      "prompt": "idleCommand",
-      "selections": [
-        {
-          "action": "shuffle"
         }
       ]
     },
@@ -73,5 +65,5 @@
       ]
     }
   ],
-  "expectedTraceSha256": "a26596c4ab817daa7165e8c7f55913e260a411fbe7b592969cab66410a2f422e"
+  "expectedTraceSha256": "048fd488d9f0a64992a457cc174c06c41dd5ce099a3b3283de3d95d9e2b1114a"
 }

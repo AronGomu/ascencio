@@ -59,6 +59,22 @@ function mountedCardChoice(
   });
 }
 
+function graveyardCardChoice(
+  id: ChoiceId,
+  overrides: Partial<PromptChoice> = {},
+): PromptChoice {
+  return choice(id, {
+    card: {
+      instanceId: cardInstanceId(`stack-${id}`),
+      controller: 0,
+      location: "graveyard",
+      sequence: 0,
+      position: "faceUpAttack",
+    },
+    ...overrides,
+  });
+}
+
 function prompt(
   kind: PromptKind,
   overrides: Partial<PlayerPrompt> = {},
@@ -197,6 +213,63 @@ describe("prompt interaction spec", () => {
     expect(validatePromptSelection(value, [SECOND])).toEqual({ valid: true });
   });
 
+  it("spec collects stack choices separately", () => {
+    const spec = specFor(
+      prompt("chain", {
+        choices: [
+          graveyardCardChoice(FIRST, { action: "activate", label: "Activate" }),
+          choice(SECOND, { action: "pass" }),
+        ],
+      }),
+    );
+
+    expect(spec.stackChoices.get("stack:p0:graveyard")).toHaveLength(1);
+    expect(spec.cardChoices.size).toBe(0);
+    expect([...spec.globalChoices.values()].map(({ id }) => id)).toEqual([
+      SECOND,
+    ]);
+  });
+
+  it("stack choices now make a prompt field capable", () => {
+    const spec = specFor(
+      prompt("chain", {
+        choices: [
+          graveyardCardChoice(FIRST, { action: "activate", label: "Activate" }),
+          choice(SECOND, { action: "pass" }),
+        ],
+      }),
+    );
+
+    expect(spec.fieldCapable).toBe(true);
+  });
+
+  it("choices carry their card address", () => {
+    const spec = specFor(
+      prompt("chain", {
+        choices: [
+          choice(FIRST, {
+            action: "activate",
+            label: "Activate",
+            card: {
+              instanceId: cardInstanceId("gy-seq-2"),
+              controller: 0,
+              location: "graveyard",
+              sequence: 2,
+              position: "faceUpAttack",
+            },
+          }),
+        ],
+      }),
+    );
+
+    const choices = spec.stackChoices.get("stack:p0:graveyard");
+    expect(choices?.[0]?.cardAddress).toEqual({
+      controller: 0,
+      location: "graveyard",
+      sequence: 2,
+    });
+  });
+
   it("resolves public positional identity and routes unresolved cards to semantic fallback", () => {
     const unresolved = choiceId("closed-stack-card");
     const spec = specFor(
@@ -205,10 +278,10 @@ describe("prompt interaction spec", () => {
           mountedCardChoice(FIRST),
           choice(unresolved, {
             card: {
-              instanceId: cardInstanceId("stale-graveyard-instance"),
+              instanceId: cardInstanceId("stale-monster-instance"),
               controller: 0,
-              location: "graveyard",
-              sequence: 0,
+              location: "monster",
+              sequence: 9,
               position: "faceUpAttack",
             },
           }),
@@ -357,13 +430,45 @@ describe("fieldActionBarRequired", () => {
     expect(fieldActionBarRequired(spec)).toBe(true);
   });
 
-  it("is required for place selection", () => {
+  it("is required for a multi-place selection", () => {
     const spec = specFor(
       prompt("selectPlace", {
         choices: [
           choice(FIRST, {
             place: { player: 0, location: "monster", sequence: 0 },
           }),
+          choice(SECOND, {
+            place: { player: 0, location: "monster", sequence: 1 },
+          }),
+        ],
+        minimum: 2,
+        maximum: 2,
+      }),
+    );
+    expect(fieldActionBarRequired(spec)).toBe(true);
+  });
+
+  it("single placement needs no confirm bar", () => {
+    const spec = specFor(
+      prompt("selectPlace", {
+        choices: [
+          choice(FIRST, {
+            place: { player: 0, location: "monster", sequence: 0 },
+          }),
+        ],
+      }),
+    );
+    expect(fieldActionBarRequired(spec)).toBe(false);
+  });
+
+  it("single placement still shows the bar for global choices", () => {
+    const spec = specFor(
+      prompt("selectPlace", {
+        choices: [
+          choice(FIRST, {
+            place: { player: 0, location: "monster", sequence: 0 },
+          }),
+          choice(SECOND, { action: "pass" }),
         ],
       }),
     );

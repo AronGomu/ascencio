@@ -42,7 +42,7 @@ describe("programmed response transcripts", () => {
 
     const sortChain = await loadProgrammedTranscript("sort-chain-v1");
     expect(sortChain.scenarioId).toBe("shuffle-and-sort-chain");
-    expect(expandProgrammedResponses(sortChain)).toHaveLength(5);
+    expect(expandProgrammedResponses(sortChain)).toHaveLength(4);
 
     const surrender = await loadProgrammedTranscript("surrender-v1");
     expect(surrender.scenarioId).toBe("surrender-at-opening");

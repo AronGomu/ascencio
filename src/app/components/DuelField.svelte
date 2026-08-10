@@ -7,6 +7,7 @@
   import type { CardImageLibrary } from "../images/card-image-cache.ts";
   import type {
     BoardCardView,
+    BoardStackView,
     BoardTargetId,
     BoardViewModel,
     BoardZoneView,
@@ -21,7 +22,10 @@
   import {
     fieldActionBarRequired,
     type ActiveInteractionSpec,
+    type InteractionChoice,
   } from "../prompts/interaction-spec.ts";
+  import type { ZoneListEntry } from "../../field/zone-list.ts";
+  import ZoneListDialog from "./duel-field/ZoneListDialog.svelte";
   import { dropChoiceForZone } from "../prompts/drop-target.ts";
   import { validatePromptSelection } from "../prompts/prompt-selection.ts";
   import { placementZoneCandidates } from "../../field/placement-candidates.ts";
@@ -37,8 +41,7 @@
   import FieldBoard from "./duel-field/FieldBoard.svelte";
   import FieldLines from "./duel-field/FieldLines.svelte";
   import EndTurnButton from "./duel-field/EndTurnButton.svelte";
-  import FieldStatusPills from "./duel-field/FieldStatusPills.svelte";
-  import LifePointsPill from "./duel-field/LifePointsPill.svelte";
+  import PhaseStrip from "./duel-field/PhaseStrip.svelte";
 
   const EMPTY_IMAGE_URLS: ReadonlyMap<number, string> = new Map();
   const EMPTY_TARGETS: ReadonlySet<BoardTargetId> = new Set();
@@ -74,9 +77,14 @@
   export let onplacementintent: (zoneId: PhysicalZoneId) => unknown = () =>
     false;
   export let onpreview: (card: BoardCardView) => void = () => undefined;
+  export let onstackpreview: (stack: BoardStackView) => void = () => undefined;
+  export let zoneLists: ReadonlyMap<PhysicalZoneId, readonly ZoneListEntry[]> =
+    new Map();
+  export let onzonelistpreview: (entry: ZoneListEntry) => void = () =>
+    undefined;
   export let phase: DuelPhase = "unknown";
-  export let hasPriority = false;
-  export let lifePoints: readonly [number, number] | null = null;
+
+  let openStackId: PhysicalZoneId | null = null;
 
   if (injectFailure) throw new Error("Injected duel field component failure");
 
@@ -94,6 +102,7 @@
   let actionBarHeight = 0;
   let dragCard: BoardCardView | null = null;
   let dropCandidates: ReadonlySet<PhysicalZoneId> = EMPTY_ZONE_IDS;
+  let lastPromptKey: string | null = null;
 
   $: resolvedCardBackUrl = cardBackUrl || DEFAULT_CARD_BACK;
   $: effectiveReducedMotion = reducedMotion ?? mediaReducedMotion;
@@ -107,6 +116,11 @@
   $: resolvedPlaceholderUrl = placeholderUrl || DEFAULT_PLACEHOLDER;
   $: selectedTargets =
     spec === null ? EMPTY_TARGETS : targetSelections(spec, session);
+  $: resetOpenStackOnPromptChange(spec);
+  $: openStack =
+    openStackId === null
+      ? null
+      : (board.stacks.find((stack) => stack.id === openStackId) ?? null);
   $: submittedChoiceIds =
     spec === null ? [] : interactionSessionChoiceIds(session, spec);
   $: validation =
@@ -116,7 +130,7 @@
   $: actionBarVisible =
     prompt !== null &&
     spec !== null &&
-    spec.fieldCapable &&
+    (spec.fieldCapable || spec.promptKind === "chain") &&
     fieldActionBarRequired(spec);
   onMount(() => {
     const motionQuery = globalThis.matchMedia?.(
@@ -267,12 +281,14 @@
 
   function activateCard(card: BoardCardView): void {
     if (spec === null) return;
-    const choices = spec.cardChoices.get(card.targetId);
-    const choice = choices?.[0];
+    const choices = spec.cardChoices.get(card.targetId) ?? [];
+    const choice = choices[0];
     if (choice === undefined) return;
     switch (spec.kind) {
       case "cardAction":
-        dispatch({ type: "openMenu", target: card.targetId });
+        if (choices.length === 1)
+          dispatch({ type: "chooseChoice", choiceId: choice.id });
+        else dispatch({ type: "openMenu", target: card.targetId });
         break;
       case "cardSelection":
         dispatch({ type: "toggleChoice", choiceId: choice.id });
@@ -291,8 +307,50 @@
   function activateZone(zone: BoardZoneView): void {
     if (spec === null) return;
     const choice = spec.zoneChoices.get(zone.targetId)?.[0];
-    if (choice !== undefined)
-      dispatch({ type: "toggleChoice", choiceId: choice.id });
+    if (choice === undefined) return;
+    if (spec.kind === "placeSelection" && spec.constraints.maximum === 1)
+      dispatch({ type: "chooseChoice", choiceId: choice.id });
+    else dispatch({ type: "toggleChoice", choiceId: choice.id });
+  }
+
+  const INTERACTIVE_SELECTOR =
+    "[data-field-target], .card-action-chips, .field-action-bar, .field-phase-strip, .field-end-turn, .zone-list-dialog";
+
+  function chainPassChoice(): InteractionChoice | null {
+    if (spec === null || spec.promptKind !== "chain") return null;
+    for (const choice of spec.globalChoices.values())
+      if (choice.action === "pass") return choice;
+    return null;
+  }
+
+  function dismissOnOutsideClick(event: MouseEvent): void {
+    if (spec === null || pending) return;
+    const pass = chainPassChoice();
+    if (pass !== null) {
+      const origin = event.target;
+      if (
+        origin instanceof Element &&
+        origin.closest(INTERACTIVE_SELECTOR) !== null
+      )
+        return;
+      dispatch({ type: "chooseChoice", choiceId: pass.id });
+      return;
+    }
+    if (!spec.constraints.cancelable) return;
+    /* A `single`-family prompt rejects an empty response outright
+       (`validatePromptSelection` requires exactly one choice for it, even when
+       the prompt is cancelable), so cancelling one would only raise
+       `invalid_response`. Chain prompts are the live example: they are
+       `single` and cancelable at the same time. T11 gives them their own
+       outside-click behaviour. */
+    if (spec.constraints.controlFamily === "single") return;
+    const origin = event.target;
+    if (
+      origin instanceof Element &&
+      origin.closest(INTERACTIVE_SELECTOR) !== null
+    )
+      return;
+    dispatch({ type: "cancel" });
   }
 
   /* The halo is a local guess at where the engine might accept this card. It
@@ -350,6 +408,20 @@
     return zoneElement.getAttribute("data-zone-id") as PhysicalZoneId | null;
   }
 
+  function resetOpenStackOnPromptChange(
+    value: ActiveInteractionSpec | null,
+  ): void {
+    const key = value?.key.promptId ?? null;
+    if (key !== lastPromptKey) {
+      lastPromptKey = key;
+      openStackId = null;
+    }
+  }
+
+  function activateStack(stack: BoardStackView): void {
+    openStackId = openStackId === stack.id ? null : stack.id;
+  }
+
   function targetSelections(
     value: ActiveInteractionSpec,
     draft: InteractionSession,
@@ -366,6 +438,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions (outside-click cancel is a passive surface handler; interactive controls inside it own all keyboard/pointer semantics) -->
+<!-- svelte-ignore a11y_click_events_have_key_events (outside-click cancel has no keyboard equivalent to mirror; every actionable control keeps its own key handling) -->
 <section
   class="duel-field"
   aria-label="Duel field"
@@ -377,33 +451,54 @@
   style:--field-action-bar-height={actionBarVisible
     ? `${actionBarHeight}px`
     : undefined}
+  onclick={dismissOnOutsideClick}
 >
-  <FieldBoard
-    {board}
-    {imageUrls}
-    {imageLibrary}
-    cardBackUrl={resolvedCardBackUrl}
-    placeholderUrl={resolvedPlaceholderUrl}
-    {spec}
-    {selectedTargets}
-    disabled={pending}
-    pinnedTarget={session.menuTarget}
-    {dropCandidates}
-    oncardactivate={activateCard}
-    onzoneactivate={activateZone}
-    oncardchoose={(choice) => {
-      dispatch({ type: "chooseChoice", choiceId: choice.id });
-    }}
-    oncarddismiss={() => dispatch({ type: "closeMenu" })}
-    oncarddragstart={startCardDrag}
-    oncarddragmove={moveCardDrag}
-    oncarddragend={endCardDrag}
-    oncardpreview={onpreview}
-  />
-  <FieldStatusPills {hasPriority} {phase} />
-  {#if lifePoints !== null}
-    <LifePointsPill player={1} lifePoints={lifePoints[1]} />
-    <LifePointsPill player={0} lifePoints={lifePoints[0]} />
+  <div class="duel-field-stage" data-cy="duel-field-stage">
+    <FieldBoard
+      {board}
+      {imageUrls}
+      {imageLibrary}
+      cardBackUrl={resolvedCardBackUrl}
+      placeholderUrl={resolvedPlaceholderUrl}
+      {spec}
+      {selectedTargets}
+      disabled={pending}
+      pinnedTarget={session.menuTarget}
+      {dropCandidates}
+      oncardactivate={activateCard}
+      onzoneactivate={activateZone}
+      oncardchoose={(choice) => {
+        dispatch({ type: "chooseChoice", choiceId: choice.id });
+      }}
+      oncarddismiss={() => dispatch({ type: "closeMenu" })}
+      oncarddragstart={startCardDrag}
+      oncarddragmove={moveCardDrag}
+      oncarddragend={endCardDrag}
+      oncardpreview={onpreview}
+      {onstackpreview}
+      onstackactivate={activateStack}
+    />
+    <PhaseStrip {phase} {spec} disabled={pending} {oninteraction} />
+    <EndTurnButton {spec} disabled={pending} {oninteraction} />
+  </div>
+  {#if openStack !== null}
+    <ZoneListDialog
+      stack={openStack}
+      entries={zoneLists.get(openStack.id) ?? []}
+      choices={spec?.stackChoices.get(openStack.targetId) ?? []}
+      {imageLibrary}
+      cardBackUrl={resolvedCardBackUrl}
+      placeholderUrl={resolvedPlaceholderUrl}
+      disabled={pending}
+      onchoose={(choice) => {
+        dispatch({ type: "chooseChoice", choiceId: choice.id });
+        openStackId = null;
+      }}
+      onpreview={(entry) => onzonelistpreview(entry)}
+      onclose={() => {
+        openStackId = null;
+      }}
+    />
   {/if}
   {#if feedbackState.line}
     <FieldLines line={feedbackState.line} />
@@ -434,5 +529,4 @@
       {oninteraction}
     />
   {/if}
-  <EndTurnButton {spec} disabled={pending} {oninteraction} />
 </section>

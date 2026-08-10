@@ -85,6 +85,7 @@ interface OverlayMoveUpdate {
 interface MutablePlayer {
   lifePoints: number;
   deckCount: number;
+  deckReveals: Map<number, CardCode>;
   extraDeckCount: number;
   handCount: number;
   hand: MutableCard[];
@@ -222,8 +223,45 @@ export class DuelStateProjector {
         this.#phase = phase(message.phase);
         events.push({ type: "phaseChanged", phase: this.#phase });
         break;
+      case EngineMessageType.CONFIRM_DECKTOP: {
+        const owner = asPlayer(message.player);
+        if (
+          message.cards.every(
+            (entry) =>
+              entry.controller === owner &&
+              (entry.location & ~EngineLocation.OVERLAY) ===
+                EngineLocation.DECK &&
+              entry.code > 0,
+          )
+        ) {
+          this.#revealDeckTop(
+            owner,
+            message.cards.map((entry) => cardCode(entry.code)),
+          );
+        }
+        break;
+      }
+      case EngineMessageType.DECK_TOP:
+        if (message.code > 0)
+          this.#revealDeckPosition(
+            asPlayer(message.player),
+            message.count,
+            cardCode(message.code),
+          );
+        break;
+      case EngineMessageType.SWAP_GRAVE_DECK:
+        this.#clearDeckReveals(asPlayer(message.player));
+        break;
+      case EngineMessageType.REVERSE_DECK:
+        this.#clearDeckReveals(0);
+        this.#clearDeckReveals(1);
+        break;
       case EngineMessageType.DRAW:
         this.#draw(asPlayer(message.player), message.drawn);
+        this.#shiftDeckRevealsAfterDraw(
+          asPlayer(message.player),
+          message.drawn.length,
+        );
         events.push({
           type: "cardDrawn",
           player: asPlayer(message.player),
@@ -235,6 +273,7 @@ export class DuelStateProjector {
         const player = asPlayer(message.player);
         if (message.type === EngineMessageType.SHUFFLE_HAND)
           this.#shuffleHand(player, message.cards);
+        else this.#clearDeckReveals(player);
         events.push({
           type: "cardsShuffled",
           player,
@@ -252,6 +291,10 @@ export class DuelStateProjector {
         const moved =
           overlayUpdate?.moved ??
           this.#move(message.card, message.from, message.to);
+        if (engineLocation(message.from.location) === "deck")
+          this.#clearDeckReveals(asPlayer(message.from.controller));
+        if (engineLocation(message.to.location) === "deck")
+          this.#clearDeckReveals(asPlayer(message.to.controller));
         reconciliationFailure = overlayUpdate?.failure;
         reconciliationRequests.push(
           ...reconciliationRequestsForMove(message.from, message.to),
@@ -428,6 +471,8 @@ export class DuelStateProjector {
         break;
     }
 
+    this.#truncateDeckReveals(0);
+    this.#truncateDeckReveals(1);
     if (reconciliationFailure === undefined && !deferRevision)
       this.#revision += 1;
     const requests = Object.freeze(reconciliationRequests);
@@ -626,6 +671,42 @@ export class DuelStateProjector {
         this.#chain.map((link): PublicChainLink => Object.freeze({ ...link })),
       ),
     });
+  }
+
+  #clearDeckReveals(player: PlayerIndex): void {
+    this.#players[player].deckReveals.clear();
+  }
+
+  #shiftDeckRevealsAfterDraw(player: PlayerIndex, drawn: number): void {
+    const state = this.#players[player];
+    state.deckReveals = new Map(
+      [...state.deckReveals].flatMap(([offset, code]) =>
+        offset >= drawn ? [[offset - drawn, code] as const] : [],
+      ),
+    );
+  }
+
+  #revealDeckTop(player: PlayerIndex, codes: readonly CardCode[]): void {
+    const state = this.#players[player];
+    codes.forEach((code, offset) => state.deckReveals.set(offset, code));
+  }
+
+  #revealDeckPosition(
+    player: PlayerIndex,
+    offset: number,
+    code: CardCode,
+  ): void {
+    const state = this.#players[player];
+    if (offset >= 0 && offset < state.deckCount)
+      state.deckReveals.set(offset, code);
+  }
+
+  #truncateDeckReveals(player: PlayerIndex): void {
+    const state = this.#players[player];
+    for (const offset of state.deckReveals.keys()) {
+      if (offset < 0 || offset >= state.deckCount)
+        state.deckReveals.delete(offset);
+    }
   }
 
   #draw(
@@ -1266,6 +1347,7 @@ function mutablePlayer(
   return {
     lifePoints: 8000,
     deckCount,
+    deckReveals: new Map(),
     extraDeckCount,
     handCount: 0,
     hand: [],
@@ -1277,6 +1359,33 @@ function mutablePlayer(
   };
 }
 
+function projectDeck(
+  player: MutablePlayer,
+  index: PlayerIndex,
+): readonly PublicCard[] {
+  const slots: PublicCard[] = [];
+  for (let offset = 0; offset < player.deckCount; offset += 1) {
+    const code = player.deckReveals.get(offset);
+    slots.push(
+      Object.freeze({
+        instanceId: cardInstanceId(`deck-p${index}-${offset}`),
+        ...(code === undefined ? {} : { code }),
+        owner: index,
+        controller: index,
+        location: "deck" as const,
+        sequence: offset,
+        position: (code === undefined
+          ? "faceDownAttack"
+          : "faceUpAttack") as CardPosition,
+        faceUp: code !== undefined,
+        counters: Object.freeze([]),
+        overlayMaterials: Object.freeze([]),
+      }),
+    );
+  }
+  return Object.freeze(slots);
+}
+
 function immutablePlayer(
   player: PlayerIndex,
   value: MutablePlayer,
@@ -1286,6 +1395,7 @@ function immutablePlayer(
     player,
     lifePoints: value.lifePoints,
     deckCount: value.deckCount,
+    deck: projectDeck(value, player),
     extraDeckCount: value.extraDeckCount,
     handCount: value.handCount,
     hand: Object.freeze(

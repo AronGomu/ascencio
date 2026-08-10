@@ -17,6 +17,20 @@ export interface CardPreviewView {
   readonly description: string;
 }
 
+/** Shown when a face-down/hidden board card is hovered: no code to lease. */
+export const HIDDEN_CARD_PREVIEW: CardPreviewView = Object.freeze({
+  code: 0 as CardCode,
+  name: "Face-down card",
+  description: "No information is available for this card.",
+});
+
+/** The code of the last public card in a stack, or `undefined` when nothing in it is public. */
+export function stackTopCode(stack: {
+  readonly topCardCode?: CardCode;
+}): CardCode | undefined {
+  return stack.topCardCode;
+}
+
 /**
  * Resolves the panel's copy for one card code. A missing code means the card's
  * identity is hidden from the local viewer, so there is nothing to preview and

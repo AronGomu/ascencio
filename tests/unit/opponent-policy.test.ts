@@ -13,6 +13,7 @@ import {
   BasicOpponentPolicy,
   toOpponentVisibleState,
 } from "../../src/worker/opponent/OpponentPolicy.ts";
+import { deckSlots } from "../fixtures/board-public-states.ts";
 
 const dependencies: ActiveDuelDependencies = {
   cards: new Map([
@@ -36,6 +37,7 @@ const state = {
       player: 0,
       lifePoints: 8000,
       deckCount: 35,
+      deck: deckSlots(0, 35),
       extraDeckCount: 1,
       handCount: 5,
       hand: [
@@ -95,6 +97,7 @@ const state = {
       player: 1,
       lifePoints: 8000,
       deckCount: 35,
+      deck: deckSlots(1, 35),
       extraDeckCount: 0,
       handCount: 5,
       hand: [],

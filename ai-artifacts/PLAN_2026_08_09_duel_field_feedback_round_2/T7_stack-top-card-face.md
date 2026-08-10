@@ -86,10 +86,10 @@
 
 ## Impl steps
 
-- [ ] 1. Add the five cases to `tests/component/DuelField.test.ts`, extending the board fixture in `tests/fixtures/board-view-model.ts` with `topCardCode` values where the table needs them.
-- [ ] 2. Run `npm run test:component`; confirm the new cases fail.
-- [ ] 3. In `src/app/components/duel-field/StackControl.svelte`, add the `imageLibrary` and `placeholderUrl` props, the four lease variables, the `synchronizeImageLease` reactive call, `onDestroy(() => imageLease?.release())` and `useFallbackImage`.
-- [ ] 4. In the same file, render, as the **first** child of the root `<div>`:
+- [x] 1. Add the five cases to `tests/component/DuelField.test.ts`, extending the board fixture in `tests/fixtures/board-view-model.ts` with `topCardCode` values where the table needs them.
+- [x] 2. Run `npm run test:component`; confirm the new cases fail.
+- [x] 3. In `src/app/components/duel-field/StackControl.svelte`, add the `imageLibrary` and `placeholderUrl` props, the four lease variables, the `synchronizeImageLease` reactive call, `onDestroy(() => imageLease?.release())` and `useFallbackImage`.
+- [x] 4. In the same file, render, as the **first** child of the root `<div>`:
   ```svelte
   {#if stack.topCardCode !== undefined}
     <div class="duel-field-stack__art" data-cy={`stack-control-art-${stack.id}`}>
@@ -104,8 +104,8 @@
     </div>
   {/if}
   ```
-- [ ] 5. In `src/app/components/duel-field/FieldBoard.svelte`, pass `{imageLibrary}` and `{placeholderUrl}` to `StackControl`.
-- [ ] 6. In `src/styles/app.css`, add:
+- [x] 5. In `src/app/components/duel-field/FieldBoard.svelte`, pass `{imageLibrary}` and `{placeholderUrl}` to `StackControl`.
+- [x] 6. In `src/styles/app.css`, add:
   ```css
   .duel-field-stack { position: absolute; overflow: hidden; }
   .duel-field-stack__art { position: absolute; z-index: 0; inset: 0; opacity: 0.85; }
@@ -114,7 +114,7 @@
   .duel-field-stack__count { position: relative; z-index: 1; text-shadow: 0 1px 2px rgb(4 9 18 / 0.9); }
   ```
   (`.duel-field-stack` already gets `position: absolute` from the shared `.duel-field-stack, .duel-field-card` rule — add only `overflow: hidden` there rather than duplicating the position.)
-- [ ] 7. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`.
+- [x] 7. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`.
 
 ## Outputs
 
@@ -124,11 +124,11 @@
 
 ## Validation
 
-- [ ] `npm run format:check` exits 0
-- [ ] `npm run lint` exits 0
-- [ ] `npm run typecheck` exits 0
-- [ ] `npm run test:unit` exits 0
-- [ ] `npm run test:component` exits 0
+- [x] `npm run format:check` exits 0
+- [x] `npm run lint` exits 0
+- [x] `npm run typecheck` exits 0
+- [x] `npm run test:unit` exits 0
+- [x] `npm run test:component` exits 0
 - [ ] manual check: `npm run dev`, send a monster to the graveyard — the graveyard pile shows that card's art with `GY` and the count still readable on top
 - [ ] app functional — the deck and extra deck piles are unchanged, and no image lease leaks (open and restart a duel twice, watch for growing `blob:` URLs in devtools memory)
 - [ ] commit msg draft: `feat(field): show the last public card on graveyard and banished piles`

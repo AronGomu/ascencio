@@ -49,6 +49,7 @@ function spec(
     },
     cardChoices: new Map([[TARGET, [choice(FIRST), choice(SECOND)]]]),
     zoneChoices: new Map(),
+    stackChoices: new Map(),
     globalChoices: new Map([[THIRD, choice(THIRD)]]),
     ...overrides,
   } as ActiveInteractionSpec;
@@ -157,6 +158,7 @@ describe("interaction session reducer", () => {
         [TARGET, [choice(FIRST, 2)]],
         [OTHER_TARGET, [choice(SECOND, 3)]],
       ]),
+      stackChoices: new Map(),
       globalChoices: new Map(),
     });
     let session = createInteractionSession(counter);

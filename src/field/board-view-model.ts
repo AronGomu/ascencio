@@ -92,6 +92,7 @@ export interface BoardStackView {
   readonly publicCount: number;
   readonly label: string;
   readonly topCardLabel?: string;
+  readonly topCardCode?: CardCode;
   readonly x: number;
   readonly y: number;
   readonly width: number;
@@ -406,7 +407,7 @@ function createStacks(
       const collection = stackCollection(player, zone);
       const count = stackCount(player, zone, collection);
       const publicCards = collection.filter(cardIdentityVisible);
-      const top = publicCards.at(-1);
+      const top = zone === "deck" ? undefined : publicCards.at(-1);
       const topCardLabel =
         top === undefined ? undefined : cardName(top.code, cardTexts);
       stacks.push(
@@ -419,6 +420,7 @@ function createStacks(
           publicCount: publicCards.length,
           label: `${layout.label}, ${count} ${count === 1 ? "card" : "cards"}${topCardLabel === undefined ? "" : `, top card ${topCardLabel}`}`,
           ...(topCardLabel === undefined ? {} : { topCardLabel }),
+          ...(top?.code === undefined ? {} : { topCardCode: top.code }),
           x: layout.x,
           y: layout.y,
           width: CARD_WIDTH_NORMALIZED,
@@ -436,7 +438,7 @@ function stackCollection(
 ): readonly PublicCard[] {
   switch (zone) {
     case "deck":
-      return [];
+      return player.deck;
     case "extra":
       return player.extraDeck;
     case "graveyard":

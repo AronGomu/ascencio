@@ -218,36 +218,47 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   const startupBeganAt = Date.now();
   await page.goto("./");
 
+  /* Without the removed "Shuffle Deck" idle command, an opening Main Phase
+     with no legal global action beyond ending the turn never mounts the
+     conditional field action bar (`fieldActionBarRequired`), so readiness is
+     asserted on the field's own prompt-kind marker and the preview panel's
+     status line instead of the bar's title node. */
   await expect(
-    page.locator('[data-cy="field-action-bar-title"]', {
+    page.locator('[data-cy="duel-field"][data-prompt-kind="idleCommand"]'),
+  ).toBeVisible({ timeout: 120_000 });
+  await expect(
+    page.locator('[data-cy="card-preview-status"]', {
       hasText: "Choose a Main Phase action",
     }),
   ).toBeVisible({ timeout: 120_000 });
   expect(Date.now() - startupBeganAt).toBeLessThan(15_000);
   await enableDuelHud(page);
   await expect(page.getByRole("heading", { name: "Your turn" })).toBeVisible();
-  await expect(page.locator('[data-cy="life-pill-p0"]')).toBeVisible();
+  await expect(
+    page.locator('[data-cy="duel-header-life-points-p0"]'),
+  ).toBeVisible();
   const field = page.getByRole("region", { name: "Duel field" });
   await expect(field).toBeVisible();
   await expect(field.locator("[data-zone-id]")).toHaveCount(34);
-  await expect(field.locator('[data-cy="prio-pill"]')).toHaveText(
-    "Choose Action",
+  // The top-right status pills (T3) are gone; the in-field phase strip is
+  // the current-phase indicator now.
+  await expect(field.locator('[data-cy="field-phase-strip"]')).toBeVisible();
+  const currentPhaseChip = field.locator(
+    '[data-cy="field-phase-chip-draw"].is-current, [data-cy="field-phase-chip-standby"].is-current, [data-cy="field-phase-chip-main1"].is-current',
   );
-  await expect(field.locator('[data-cy="phase-pill"]')).toHaveText(
-    /Main 1|Draw|Standby/,
-  );
-  await expect(field.locator('[data-cy="life-pill-p0"]')).toHaveText(
-    "8,000 LP",
-  );
-  await expect(field.locator('[data-cy="life-pill-p1"]')).toHaveText(
-    "8,000 LP",
-  );
+  await expect(currentPhaseChip).toHaveCount(1);
+  await expect(
+    page.locator('[data-cy="duel-header-life-points-p0"]'),
+  ).toHaveText("8,000 LP");
+  await expect(
+    page.locator('[data-cy="duel-header-life-points-p1"]'),
+  ).toHaveText("8,000 LP");
   await expect(
     field.getByRole("article", { name: /Hidden opponent hand card/ }).first(),
   ).toBeVisible();
   await expect(field.getByRole("img").first()).toHaveAttribute("src", /.+/);
 
-  const promptTitle = page.locator('[data-cy="field-action-bar-title"]', {
+  const promptTitle = page.locator('[data-cy="card-preview-status"]', {
     hasText: "Choose a Main Phase action",
   });
   await expect(promptTitle).toBeVisible();
@@ -955,15 +966,19 @@ test("dragging a hand card onto a highlighted zone plays it", async ({
   ).toHaveCount(1, { timeout: 30_000 });
   await expect(targetZone).not.toHaveAttribute("data-drop-candidate", "true");
 
-  // One gesture, two responses: the chosen action, then the engine's own place
-  // prompt answered from the armed zone. Neither prompt may be answered twice.
+  // One gesture, two responses up front: the chosen action, then the engine's
+  // own place prompt answered from the armed zone. Trivial follow-on prompts
+  // (e.g. a chain nothing can answer but Pass) may auto-resolve afterward, so
+  // only the first two new responses are asserted in order; neither prompt
+  // may be answered twice.
   const capture = await readCapture(page);
   const responds = capture.commands.filter(
     (command) => command.type === "respond",
   );
-  expect(responds).toHaveLength(responsesBefore + 2);
-  const placeResponse = responds.at(-1);
-  expect(responds.at(-2)?.promptId).toBe(idlePromptId);
+  const newResponds = responds.slice(responsesBefore);
+  expect(newResponds.length).toBeGreaterThanOrEqual(2);
+  const placeResponse = newResponds[1];
+  expect(newResponds[0]?.promptId).toBe(idlePromptId);
   expect(placeResponse?.promptId).not.toBe(idlePromptId);
   const respondsByPrompt = new Map<unknown, number>();
   for (const command of responds)
@@ -1065,6 +1080,7 @@ test("responsive field compositions contain controls across supported viewports"
             fieldTop: fieldBox.top,
             fieldBottom: fieldBox.bottom,
             panelTop: panelBox.top,
+            panelBottom: panelBox.bottom,
           };
     });
     if (rowLayout === null)
@@ -1079,10 +1095,14 @@ test("responsive field compositions contain controls across supported viewports"
         `${viewportLabel} field yields its row to the panel`,
       ).toBeLessThan(rowLayout.rowWidth - 300);
     } else {
+      // The preview panel is the LEFT column of `.duel-row` (moved there
+      // ahead of this ticket), so it is first in DOM order and stacks
+      // above the field, not below it, once the row collapses to one
+      // column.
       expect(
-        rowLayout.panelTop,
-        `${viewportLabel} preview panel stacks below the field`,
-      ).toBeGreaterThanOrEqual(rowLayout.fieldBottom - 1);
+        rowLayout.fieldTop,
+        `${viewportLabel} field stacks below the preview panel`,
+      ).toBeGreaterThanOrEqual(rowLayout.panelBottom - 1);
       expect(
         Math.abs(rowLayout.fieldWidth - rowLayout.rowWidth),
         `${viewportLabel} stacked field is full width`,
@@ -1156,29 +1176,9 @@ test("responsive field compositions contain controls across supported viewports"
       })),
     ).toEqual({ focusVisible: true, outline: "solid" });
 
-    /* Unconditional: the first Main Phase `idleCommand` always carries a
-       non-`endPhase` global choice, so `fieldActionBarRequired` is true and the
-       bar is mounted. A `count() > 0` guard here would silently delete the
-       geometry gate below instead of failing when the bar goes missing. */
-    const dock = field.locator('[data-cy="field-action-bar"]');
-    await expect(dock).toBeVisible();
-    await dock.scrollIntoViewIfNeeded();
-    await assertRectInsideViewport(page, dock, `${viewport.id} selection dock`);
-    // The bar is pinned inside the field, so it must live in a reserved
-    // gutter below the board. If its box ever re-enters the board box it
-    // starts swallowing clicks meant for the player's hand.
-    const barRect = await dock.evaluate((element) => {
-      const box = element.getBoundingClientRect();
-      return { top: box.top, bottom: box.bottom };
-    });
-    const boardRect = await board.evaluate((element) => {
-      const box = element.getBoundingClientRect();
-      return { top: box.top, bottom: box.bottom };
-    });
-    expect(
-      barRect.top,
-      `${viewportLabel} field action bar (top ${barRect.top}) must clear the duel board (bottom ${boardRect.bottom})`,
-    ).toBeGreaterThanOrEqual(boardRect.bottom - 1);
+    /* Opening idleCommand has no required action bar. Its geometry gate now
+       lives in the full-duel walker, which reaches a required bar, asserts its
+       geometry, then fails if no bar was exercised. */
 
     // Unlike the action bar, the End turn corner button is always mounted, so
     // this check runs unconditionally at every viewport.
@@ -1193,23 +1193,36 @@ test("responsive field compositions contain controls across supported viewports"
         right: box.right,
       };
     });
-    const boardBoxForButton = await board.evaluate((element) => {
-      const box = element.getBoundingClientRect();
-      return {
-        top: box.top,
-        left: box.left,
-        bottom: box.bottom,
-        right: box.right,
-      };
-    });
-    const buttonIntersectsBoard =
-      endTurnRect.left < boardBoxForButton.right &&
-      endTurnRect.right > boardBoxForButton.left &&
-      endTurnRect.top < boardBoxForButton.bottom &&
-      endTurnRect.bottom > boardBoxForButton.top;
+    // T3 moved End turn from a bottom-pinned corner outside the board into
+    // the board's free band between the two banished zones (by design, per
+    // the ticket's geometry table), so it now legitimately sits inside the
+    // board's bounding rect. The check that still matters is that it never
+    // sits over a playable target, so it can never swallow a click meant
+    // for a card or a zone.
+    const targetRects = await field
+      .locator("[data-field-target]")
+      .evaluateAll((elements) =>
+        elements.map((element) => {
+          const box = element.getBoundingClientRect();
+          return {
+            top: box.top,
+            left: box.left,
+            bottom: box.bottom,
+            right: box.right,
+          };
+        }),
+      );
+    expect(targetRects.length).toBeGreaterThan(0);
+    const buttonOverlapsATarget = targetRects.some(
+      (rect) =>
+        endTurnRect.left < rect.right &&
+        endTurnRect.right > rect.left &&
+        endTurnRect.top < rect.bottom &&
+        endTurnRect.bottom > rect.top,
+    );
     expect(
-      buttonIntersectsBoard,
-      `${viewportLabel} End turn corner button (rect ${JSON.stringify(endTurnRect)}) must not overlap the duel board (rect ${JSON.stringify(boardBoxForButton)})`,
+      buttonOverlapsATarget,
+      `${viewportLabel} End turn corner button (rect ${JSON.stringify(endTurnRect)}) must not overlap any playable field target`,
     ).toBe(false);
 
     await captureResponsiveState(page, testInfo, viewport.id, "ST-01");
@@ -1251,25 +1264,31 @@ test("responsive field compositions contain controls across supported viewports"
       await expect(chips).toBeHidden();
       await actionTarget.focus();
       await expect(chips).toBeVisible();
+      // A card offering exactly one action fires it directly on click (T5)
+      // instead of pinning the chip menu, so the pin/Escape round trip below
+      // only applies to a card that actually opens a menu.
+      const chipChoiceCount = await chips.locator("button").count();
       await actionTarget.evaluate((element: HTMLElement) => element.blur());
       await expect(chips).toBeHidden();
 
-      await actionTarget.click();
-      await expect(chips).toBeVisible();
-      await assertRectInsideViewport(
-        page,
-        chips,
-        `${viewport.id} card action chips`,
-      );
-      await captureResponsiveState(page, testInfo, viewport.id, "ST-05");
-      await page.keyboard.press("Escape");
-      // Escape unpins and hands focus back to the card target. Focus and the
-      // lingering pointer each keep the chips shown on their own, so drop both
-      // before asserting that the pinned state is really gone.
-      await expect(actionTarget).toBeFocused();
-      await page.mouse.move(0, 0);
-      await actionTarget.evaluate((element: HTMLElement) => element.blur());
-      await expect(chips).toBeHidden();
+      if (chipChoiceCount > 1) {
+        await actionTarget.click();
+        await expect(chips).toBeVisible();
+        await assertRectInsideViewport(
+          page,
+          chips,
+          `${viewport.id} card action chips`,
+        );
+        await captureResponsiveState(page, testInfo, viewport.id, "ST-05");
+        await page.keyboard.press("Escape");
+        // Escape unpins and hands focus back to the card target. Focus and the
+        // lingering pointer each keep the chips shown on their own, so drop both
+        // before asserting that the pinned state is really gone.
+        await expect(actionTarget).toBeFocused();
+        await page.mouse.move(0, 0);
+        await actionTarget.evaluate((element: HTMLElement) => element.blur());
+        await expect(chips).toBeHidden();
+      }
     }
 
     const trayButton = page
@@ -1542,12 +1561,23 @@ test("spatial field navigation has one visible 44px keyboard entry without a tra
 test("a full preset duel can be completed using keyboard controls only with one response per prompt", async ({
   page,
 }, testInfo) => {
+  test.setTimeout(300_000);
   await page.goto("./");
   await expect(
     page.locator('[data-cy="duel-field"][data-prompt-kind]'),
   ).toBeVisible({
     timeout: 120_000,
   });
+  // This walker answers every prompt itself and asserts exactly one response
+  // per prompt id. T4's default-on auto-answer of trivial prompts (chain
+  // Pass, single-option, single-position) resolves those from a background
+  // `queueMicrotask` and would race this walker's own async round trip for
+  // the same prompts, so the walk turns the setting off first — exactly the
+  // choice a player who wants full manual control would make. T5's default-on
+  // auto-placement is the same class of race for `selectPlace` prompts the
+  // walker means to answer by hand, so it is turned off too.
+  await disableAutoResolveTrivialPrompts(page);
+  await disableAutoPlaceCards(page);
   await expect(
     (await activePromptControls(page)).getByRole("button").first(),
   ).toBeEnabled({ timeout: 30_000 });
@@ -1559,6 +1589,7 @@ test("a full preset duel can be completed using keyboard controls only with one 
   // focus-visibility assertion on rotated card art has something to focus.
   const setup = { needsDefense: true };
   let fieldResponses = 0;
+  let fieldActionBarGeometryChecks = 0;
   let defenseFocusVisible = false;
   for (let step = 0; step < 200; step += 1) {
     const result = page.locator(".result-panel");
@@ -1594,6 +1625,15 @@ test("a full preset duel can be completed using keyboard controls only with one 
       (command) =>
         command.type === "respond" && command.promptId === prompt.prompt.id,
     ).length;
+    const actionBar = field.locator('[data-cy="field-action-bar"]');
+    if (fieldActionBarGeometryChecks === 0 && (await actionBar.count()) > 0) {
+      await assertFieldActionBarGeometry(
+        page,
+        field,
+        `full-duel ${kind} prompt`,
+      );
+      fieldActionBarGeometryChecks += 1;
+    }
 
     if (
       (await answerPromptWithKeyboard(page, controls, kind, setup)) === "field"
@@ -1636,6 +1676,8 @@ test("a full preset duel can be completed using keyboard controls only with one 
 
   expect(answeredPromptIds.size).toBeGreaterThan(0);
   expect(fieldResponses).toBeGreaterThan(0);
+  // Prevent `count() > 0` from silently deleting the geometry gate.
+  expect(fieldActionBarGeometryChecks).toBeGreaterThan(0);
   expect(defenseFocusVisible).toBe(true);
   for (const promptId of answeredPromptIds) {
     expect(
@@ -1683,6 +1725,7 @@ test("a full preset duel can be completed using keyboard controls only with one 
         result: await result.getByRole("heading").textContent(),
         responses: answeredPromptIds.size,
         fieldResponses,
+        fieldActionBarGeometryChecks,
         duplicateResponses: 0,
         defenseFocusVisible,
       },
@@ -1737,12 +1780,14 @@ async function answerPromptWithKeyboard(
       await activatePreferredButton(page, controls, ["No"]);
       return "prompt";
     case "chain":
-      if (await hasEnabledButton(field, "Pass")) {
-        await activatePreferredButton(page, field, ["Pass"]);
-        return "field";
-      }
-      await activatePreferredButton(page, controls, ["Pass"]);
-      return "prompt";
+      await expect(page.locator('[data-cy="prompt-dialog"]')).toHaveCount(0);
+      await expect(
+        page.locator('[data-cy="card-preview-status"]', {
+          hasText: "Do you respond?",
+        }),
+      ).toHaveAttribute("data-has-priority", "true");
+      await answerChainOnField(page, field);
+      return "field";
     case "selectUnselectCard":
       if (
         (await hasEnabledButton(field, "Finish")) ||
@@ -1837,7 +1882,20 @@ async function setHandMonsterWithKeyboard(
       "",
     );
     const chips = field.locator(`[data-cy="card-action-chips-${cardId}"]`);
-    if ((await chips.count()) === 0) continue;
+    const chipButtonCount = await chips.locator("button").count();
+    if (chipButtonCount === 0) continue;
+    if (chipButtonCount === 1) {
+      // A single-choice card fires that choice directly on activation (T5)
+      // instead of pinning a menu, so this helper only bothers activating it
+      // when the one choice on offer is the monster set it exists to produce.
+      if ((await chips.locator(MONSTER_SET_CHIP).count()) === 0) continue;
+      await keyboardActivate(page, opener);
+      // The response goes pending, which drops the card out of its
+      // actionable state and unmounts these chips with it. Waiting on that
+      // keeps the caller from racing the next prompt.
+      await expect(chips).toBeHidden();
+      return true;
+    }
     await keyboardActivate(page, opener);
     // Activating the card pins its chips and moves focus onto the first one;
     // waiting for that focus to land is what makes the arrow walk below
@@ -1882,6 +1940,63 @@ async function hasEnabledButton(
   );
 }
 
+async function answerChainOnField(page: Page, field: Locator): Promise<void> {
+  if (await hasEnabledButton(field, "Pass")) {
+    await activatePreferredButton(page, field, ["Pass"]);
+    return;
+  }
+
+  const globalChoice = field
+    .locator('[data-cy^="field-action-bar-choice-"]:enabled')
+    .first();
+  if ((await globalChoice.count()) > 0) {
+    await keyboardActivate(page, globalChoice);
+    return;
+  }
+
+  const cardTarget = field
+    .locator("[data-field-target][aria-label^='Legal action']")
+    .first();
+  if ((await cardTarget.count()) > 0) {
+    const cardId = ((await cardTarget.getAttribute("data-cy")) ?? "").replace(
+      /^field-card-target-/,
+      "",
+    );
+    const chips = field.locator(`[data-cy="card-action-chips-${cardId}"]`);
+    const chipButtons = chips.getByRole("button");
+    const choiceCount = await chipButtons.count();
+    await keyboardActivate(page, cardTarget);
+    if (choiceCount > 1) {
+      await expect(chips).toBeVisible();
+      await keyboardActivate(page, chipButtons.first());
+    }
+    return;
+  }
+
+  const stack = field
+    .locator('[data-cy^="field-stack-"].is-actionable')
+    .first();
+  if ((await stack.count()) > 0) {
+    await keyboardActivate(page, stack);
+    const dialog = page.locator('[data-cy="zone-list-dialog"]');
+    await expect(dialog).toBeVisible();
+    const buttons = dialog.getByRole("button");
+    for (let index = 0; index < (await buttons.count()); index += 1) {
+      const button = buttons.nth(index);
+      const name =
+        (await button.getAttribute("aria-label")) ??
+        (await button.textContent()) ??
+        "";
+      if (!/^Close\b/.test(name.trim()) && (await button.isEnabled())) {
+        await keyboardActivate(page, button);
+        return;
+      }
+    }
+  }
+
+  throw new Error("Inline chain prompt has no enabled field response");
+}
+
 async function chooseValidFieldSubset(
   page: Page,
   field: Locator,
@@ -1889,12 +2004,19 @@ async function chooseValidFieldSubset(
   const confirm = field.getByRole("button", {
     name: /Confirm (selection|placement)/,
   });
-  if ((await confirm.count()) === 0) return false;
+  const choices = field.locator("[data-field-target][aria-pressed]");
+  if ((await confirm.count()) === 0) {
+    // A single-place prompt (auto-place off) submits the instant any one of
+    // its legal zones is clicked: no Confirm bar ever renders for it.
+    const count = await choices.count();
+    if (count === 0) return false;
+    await keyboardActivate(page, choices.first());
+    return true;
+  }
   if (await confirm.isEnabled()) {
     await keyboardActivate(page, confirm);
     return true;
   }
-  const choices = field.locator("[data-field-target][aria-pressed]");
   const count = await choices.count();
   if (count === 0 || count > 12) return false;
   for (let mask = 1; mask < 1 << count; mask += 1) {
@@ -2195,8 +2317,8 @@ async function assertSharesFieldRow(page: Page, label: string): Promise<void> {
           panelY: panelBox.y,
           fieldHeight: fieldBox.height,
           panelHeight: panelBox.height,
-          fieldRight: fieldBox.right,
-          panelLeft: panelBox.left,
+          fieldLeft: fieldBox.left,
+          panelRight: panelBox.right,
         };
   });
   if (boxes === null) throw new Error(`${label}: missing field or panel box`);
@@ -2208,10 +2330,13 @@ async function assertSharesFieldRow(page: Page, label: string): Promise<void> {
     Math.abs(boxes.fieldHeight - boxes.panelHeight),
     `${label} matches the field height (${boxes.fieldHeight} vs ${boxes.panelHeight})`,
   ).toBeLessThanOrEqual(2);
+  // The preview panel is the LEFT column of `.duel-row` (moved there ahead
+  // of this ticket); it must sit to the left of the field, not beside it on
+  // the right or over it.
   expect(
-    boxes.panelLeft,
-    `${label} sits beside the field, not over it`,
-  ).toBeGreaterThanOrEqual(boxes.fieldRight - 1);
+    boxes.panelRight,
+    `${label} sits left of the field, not over it`,
+  ).toBeLessThanOrEqual(boxes.fieldLeft + 1);
 }
 
 async function assertNoPageWideHorizontalOverflow(
@@ -2230,6 +2355,30 @@ async function assertNoPageWideHorizontalOverflow(
     Math.max(metrics.bodyScrollWidth, metrics.rootScrollWidth),
     `${label} page-wide horizontal overflow`,
   ).toBeLessThanOrEqual(metrics.viewportWidth + 1);
+}
+
+async function assertFieldActionBarGeometry(
+  page: Page,
+  field: Locator,
+  label: string,
+): Promise<void> {
+  const bar = field.locator('[data-cy="field-action-bar"]');
+  await expect(bar).toBeVisible();
+  await bar.scrollIntoViewIfNeeded();
+  await assertRectInsideViewport(page, bar, `${label} field action bar`);
+  const board = field.getByRole("group", { name: "Standard duel board" });
+  const barRect = await bar.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    return { top: box.top, bottom: box.bottom };
+  });
+  const boardRect = await board.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    return { top: box.top, bottom: box.bottom };
+  });
+  expect(
+    barRect.top,
+    `${label} field action bar (top ${barRect.top}) must clear the duel board (bottom ${boardRect.bottom})`,
+  ).toBeGreaterThanOrEqual(boardRect.bottom - 1);
 }
 
 async function assertRectInsideViewport(
@@ -2421,6 +2570,20 @@ async function openSettingsDialog(page: Page): Promise<void> {
 async function enableDuelHud(page: Page): Promise<void> {
   await openSettingsDialog(page);
   await page.locator('[data-cy="settings-show-duel-hud-checkbox"]').check();
+  await page.locator('[data-cy="settings-dialog-close-button"]').click();
+}
+
+async function disableAutoResolveTrivialPrompts(page: Page): Promise<void> {
+  await openSettingsDialog(page);
+  await page.locator('[data-cy="settings-auto-resolve-checkbox"]').uncheck();
+  await page.locator('[data-cy="settings-dialog-close-button"]').click();
+}
+
+async function disableAutoPlaceCards(page: Page): Promise<void> {
+  await openSettingsDialog(page);
+  await page
+    .locator('[data-cy="settings-auto-place-cards-checkbox"]')
+    .uncheck();
   await page.locator('[data-cy="settings-dialog-close-button"]').click();
 }
 

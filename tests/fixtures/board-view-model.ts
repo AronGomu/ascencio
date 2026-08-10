@@ -16,6 +16,7 @@ import type {
   PublicDuelState,
   PublicPlayerState,
 } from "../../src/duel/contracts/public-duel-state.ts";
+import { deckSlots } from "./board-public-states.ts";
 
 export const BOARD_CARD_TEXTS = new Map([
   [97590747, { name: "The Legendary Fisherman" }],
@@ -53,6 +54,7 @@ function player(player: PlayerIndex): PublicPlayerState {
     player,
     lifePoints: 8000,
     deckCount: 35,
+    deck: deckSlots(player, 35),
     extraDeckCount: 0,
     handCount: 0,
     hand: [],
@@ -156,7 +158,7 @@ export const BOARD_VIEW_MODEL_FIXTURES = Object.freeze({
       ],
       graveyard: [card("st08-gy", 89631139, 0, "graveyard", 0)],
     },
-    { deckCount: 31, extraDeckCount: 1 },
+    { deckCount: 31, deck: deckSlots(1, 31), extraDeckCount: 1 },
     [
       {
         index: 1,
@@ -239,11 +241,30 @@ export const BOARD_TARGET_PROMPT: PlayerPrompt = {
   ordered: false,
 };
 
+export const TWO_CARD_GRAVEYARD_STATE = state("gy2", {
+  graveyard: [
+    card("gy2-first", 97590747, 0, "graveyard", 0),
+    card("gy2-second", 89631139, 0, "graveyard", 1),
+  ],
+});
+
 export const DUPLICATE_SHARED_OCCUPANCY = state(
   "d",
   { monsters: [card("duplicate-left-a", 97590747, 0, "monster", 5)] },
   { monsters: [card("duplicate-left-b", 89631139, 1, "monster", 6)] },
 );
+
+export const STACK_ART_STATE = state("stackart", {
+  graveyard: [
+    card("stackart-gy-first", 97590747, 0, "graveyard", 0),
+    card("stackart-gy-second", 5053103, 0, "graveyard", 1),
+    card("stackart-gy-third", 46986414, 0, "graveyard", 2),
+    card("stackart-gy-fourth", 89631139, 0, "graveyard", 3),
+  ],
+  banished: [card("stackart-banished-first", 97590747, 0, "banished", 0)],
+  deckCount: 40,
+  deck: deckSlots(0, 40),
+});
 
 export function promptChoice(id: string): PromptChoice {
   const choice = BOARD_TARGET_PROMPT.choices.find((value) => value.id === id);

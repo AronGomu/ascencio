@@ -167,19 +167,19 @@
 
 ## Impl steps
 
-- [ ] 1. Create `tests/unit/auto-placement.test.ts` with the eight `placementRank` / `centralPlacementResponse` cases.
-- [ ] 2. Add the two `fieldActionBarRequired` cases to `tests/unit/interaction-spec.test.ts`.
-- [ ] 3. Add the six `DuelField` cases to `tests/component/DuelField.test.ts`.
-- [ ] 4. Run `npm run test:unit && npm run test:component`; confirm the new cases fail.
-- [ ] 5. Create `src/app/prompts/auto-placement.ts` with `MAIN_CENTRALITY`, `placementRank` and `centralPlacementResponse` exactly as specified.
-- [ ] 6. In `src/app/App.svelte`, import `centralPlacementResponse` and `UiSettingsState`, change `maybeAutoResolvePrompt` to the three-argument settings form above, and change the reactive statement to pass `$uiSettings`.
-- [ ] 7. In `src/app/components/DuelField.svelte`, change `activateCard`'s `cardAction` branch to fire `chooseChoice` when there is exactly one choice.
-- [ ] 8. In `src/app/components/DuelField.svelte`, change `activateZone` to fire `chooseChoice` for a `placeSelection` spec with `maximum === 1`.
-- [ ] 9. In `src/app/components/DuelField.svelte`, add `INTERACTIVE_SELECTOR`, `dismissOnOutsideClick` and `onclick={dismissOnOutsideClick}` on the root section, with the a11y ignore comments.
-- [ ] 10. In `src/app/prompts/interaction-spec.ts`, extract `nonEndPhaseGlobalChoiceCount(spec)` and add the leading `placeSelection` branch to `fieldActionBarRequired`.
-- [ ] 11. In `src/app/components/duel-field/FieldActionBar.svelte`, extend the Confirm/Cancel block condition as specified.
-- [ ] 12. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`.
-- [ ] 13. Run the chromium e2e suite (see Validation). If a spec fails because a placement no longer needs `field-action-bar-confirm`, update the spec to the new one-click flow — that is the intended behaviour change.
+- [x] 1. Create `tests/unit/auto-placement.test.ts` with the eight `placementRank` / `centralPlacementResponse` cases.
+- [x] 2. Add the two `fieldActionBarRequired` cases to `tests/unit/interaction-spec.test.ts`.
+- [x] 3. Add the six `DuelField` cases to `tests/component/DuelField.test.ts`. (Added 7: the table's full set, plus fixed 4 pre-existing tests whose fixtures directly conflicted with the new one-click/auto-place behaviour — see report.)
+- [x] 4. Run `npm run test:unit && npm run test:component`; confirm the new cases fail. (Confirmed via targeted runs before each impl piece landed; see report for the exact failing-then-passing sequence.)
+- [x] 5. Create `src/app/prompts/auto-placement.ts` with `MAIN_CENTRALITY`, `placementRank` and `centralPlacementResponse` exactly as specified.
+- [x] 6. In `src/app/App.svelte`, import `centralPlacementResponse` and `UiSettingsState`, change `maybeAutoResolvePrompt` to the three-argument settings form above, and change the reactive statement to pass `$uiSettings`.
+- [x] 7. In `src/app/components/DuelField.svelte`, change `activateCard`'s `cardAction` branch to fire `chooseChoice` when there is exactly one choice.
+- [x] 8. In `src/app/components/DuelField.svelte`, change `activateZone` to fire `chooseChoice` for a `placeSelection` spec with `maximum === 1`.
+- [x] 9. In `src/app/components/DuelField.svelte`, add `INTERACTIVE_SELECTOR`, `dismissOnOutsideClick` and `onclick={dismissOnOutsideClick}` on the root section, with the a11y ignore comments. (`svelte-check` required both `a11y_no_noninteractive_element_interactions` and `a11y_click_events_have_key_events` for a `<section>`, not the `<div>` pairing used by SettingsDialog/MenuDialog — used the pair `svelte-check` actually demanded.)
+- [x] 10. In `src/app/prompts/interaction-spec.ts`, extract `nonEndPhaseGlobalChoiceCount(spec)` and add the leading `placeSelection` branch to `fieldActionBarRequired`.
+- [x] 11. In `src/app/components/duel-field/FieldActionBar.svelte`, extend the Confirm/Cancel block condition as specified.
+- [x] 12. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`. All exit 0 (520 unit, 150 component).
+- [x] 13. Run the chromium e2e suite (see Validation). If a spec fails because a placement no longer needs `field-action-bar-confirm`, update the spec to the new one-click flow — that is the intended behaviour change. (Full suite 18/18 green; the keyboard-only duel walker required disabling `settings-auto-place-cards-checkbox` alongside the existing auto-resolve toggle, and `chooseValidFieldSubset`/`setHandMonsterWithKeyboard` needed updating for the one-click zone/card-action path — see report.)
 
 ## Outputs
 
@@ -190,21 +190,28 @@
 
 ## Validation
 
-- [ ] `npm run format:check` exits 0
-- [ ] `npm run lint` exits 0
-- [ ] `npm run typecheck` exits 0
-- [ ] `npm run test:unit` exits 0
-- [ ] `npm run test:component` exits 0
-- [ ] chromium e2e exits 0:
+- [x] `npm run format:check` exits 0
+- [x] `npm run lint` exits 0
+- [x] `npm run typecheck` exits 0
+- [x] `npm run test:unit` exits 0 (520 passed)
+- [x] `npm run test:component` exits 0 (150 passed)
+- [x] chromium e2e exits 0: (18/18 passed; re-ran the two seed-random duel-walking specs — keyboard-only walker and drag-and-drop — an extra 2x each to confirm, plus one flaky unrelated hover assertion re-run clean; see report)
   ```bash
   cd /home/aron/projects/ascencio
   timeout 590 nix-shell -p playwright-driver.browsers glib gtk3 nss nspr dbus atk cups \
     libdrm expat libx11 libxcomposite libxdamage libxext libxfixes libxrandr mesa \
     alsa-lib at-spi2-atk at-spi2-core cairo pango xorg.xvfb --run '
+  export PLAYWRIGHT_BROWSERS_PATH=/home/aron/projects/ascencio/.tmp/pw-browsers
   npx playwright test --project=chromium
   '
   ```
-  Run from the repo root; keep the full `-p` list.
+  **This exact command was verified green by the orchestrator on 2026-08-10** (`1 passed` on `-g "production bundle initializes"`). Run it verbatim from the repo root.
+  - `PLAYWRIGHT_BROWSERS_PATH=.tmp/pw-browsers` is mandatory. That directory holds symlinks to the nix-patched browsers in `/nix/store/8ilw3r312xcs1ylxg4g274rhf2frp9z4-playwright-browsers` under the revision names playwright 1.61 expects (`chromium-1228 -> chromium-1217`). The mismatched revision numbers are deliberate and fine.
+  - Without the override, Playwright picks `~/.cache/ms-playwright`, whose binaries are unpatched and die with `libglib-2.0.so.0: cannot open shared object file`. That error means the override is missing, not that the `-p` list is wrong.
+  - `playwright-driver.browsers` and `xorg.xvfb` are both required in the `-p` list even though Xvfb is never launched. Do not simplify the list.
+  - If `.tmp/pw-browsers` is gone, recreate it: `S=/nix/store/8ilw3r312xcs1ylxg4g274rhf2frp9z4-playwright-browsers` (rebuild with `nix-build '<nixpkgs>' -A playwright-driver.browsers --no-out-link` if the path is garbage-collected), then `mkdir -p .tmp/pw-browsers && cd .tmp/pw-browsers && ln -sfn $S/chromium-1217 chromium-1228 && ln -sfn $S/chromium_headless_shell-1217 chromium_headless_shell-1228 && ln -sfn $S/ffmpeg-1011 ffmpeg-1011 && ln -sfn $S/firefox-1511 firefox-1532`.
+  - Run it in the **foreground**, blocking. Runs take 1-5 min; `webServer` builds and starts the preview itself, so do not hand-start `npm run preview`.
+  - The duel seed is random per run (`crypto.getRandomValues`). A single pass of a duel-walking test proves little; if a duel-walking test is the one you changed, run the suite 3 times before calling it green.
 - [ ] manual check with auto-place **on**: `npm run dev`, summon a monster — it lands in the centre zone with no second prompt
 - [ ] manual check with auto-place **off**: summon a monster — the legal zones halo, one click on a zone plays the card, one click on empty field cancels
 - [ ] app functional — dragging a hand card onto a zone still works and still wins over auto-placement

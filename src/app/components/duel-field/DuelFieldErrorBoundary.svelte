@@ -5,9 +5,11 @@
   import type { CardImageLibrary } from "../../images/card-image-cache.ts";
   import type {
     BoardCardView,
+    BoardStackView,
     BoardViewModel,
   } from "../../../field/board-view-model.ts";
   import type { PhysicalZoneId } from "../../../field/duel-field-layout.ts";
+  import type { ZoneListEntry } from "../../../field/zone-list.ts";
   import type {
     InteractionSession,
     InteractionSessionAction,
@@ -38,9 +40,12 @@
   export let onplacementintent: (zoneId: PhysicalZoneId) => unknown = () =>
     false;
   export let onpreview: (card: BoardCardView) => void = () => undefined;
+  export let onstackpreview: (stack: BoardStackView) => void = () => undefined;
+  export let zoneLists: ReadonlyMap<PhysicalZoneId, readonly ZoneListEntry[]> =
+    new Map();
+  export let onzonelistpreview: (entry: ZoneListEntry) => void = () =>
+    undefined;
   export let phase: DuelPhase = "unknown";
-  export let hasPriority = false;
-  export let lifePoints: readonly [number, number] | null = null;
 
   let shouldFail: boolean = injectFailure;
 
@@ -99,8 +104,9 @@
     {oninteraction}
     {onplacementintent}
     {onpreview}
+    {onstackpreview}
+    {zoneLists}
+    {onzonelistpreview}
     {phase}
-    {hasPriority}
-    {lifePoints}
   />
 </svelte:boundary>

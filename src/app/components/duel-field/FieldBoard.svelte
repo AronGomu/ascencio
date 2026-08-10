@@ -2,6 +2,7 @@
   import { tick } from "svelte";
   import type {
     BoardCardView,
+    BoardStackView,
     BoardTargetId,
     BoardViewModel,
     BoardZoneView,
@@ -44,6 +45,8 @@
   export let oncarddragmove: (x: number, y: number) => void = () => undefined;
   export let oncarddragend: (x: number, y: number) => void = () => undefined;
   export let oncardpreview: (card: BoardCardView) => void = () => undefined;
+  export let onstackpreview: (stack: BoardStackView) => void = () => undefined;
+  export let onstackactivate: (stack: BoardStackView) => void = () => undefined;
 
   let boardElement: HTMLDivElement;
   let navigationState: FieldNavigationState = createFieldNavigationState();
@@ -54,6 +57,7 @@
       : [
           ...(spec?.cardChoices.keys() ?? []),
           ...(spec?.zoneChoices.keys() ?? []),
+          ...(spec?.stackChoices.keys() ?? []),
         ],
   );
   $: navigationContext =
@@ -181,6 +185,11 @@
     <StackControl
       {stack}
       active={navigationState.activeTarget === stack.targetId}
+      actionable={!disabled && spec?.stackChoices.has(stack.targetId) === true}
+      onpreview={() => onstackpreview(stack)}
+      onactivate={() => onstackactivate(stack)}
+      {imageLibrary}
+      {placeholderUrl}
     />
   {/each}
   {#each board.cards as card (card.id)}

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   cardPreviewForCode,
   cardPreviewForPublicCard,
+  HIDDEN_CARD_PREVIEW,
+  stackTopCode,
   type CardPreviewText,
   type PreviewablePublicCard,
 } from "../../src/app/presentation/card-preview.ts";
@@ -121,5 +123,25 @@ describe("cardPreviewForPublicCard", () => {
         TEXTS,
       ),
     ).toBeNull();
+  });
+});
+
+describe("HIDDEN_CARD_PREVIEW", () => {
+  it("describes a face-down card with no lease-able code", () => {
+    expect(HIDDEN_CARD_PREVIEW).toEqual({
+      code: 0,
+      name: "Face-down card",
+      description: "No information is available for this card.",
+    });
+  });
+});
+
+describe("stackTopCode", () => {
+  it("returns the stack's top card code", () => {
+    expect(stackTopCode({ topCardCode: KNOWN })).toBe(KNOWN);
+  });
+
+  it("returns undefined when nothing in the stack is public", () => {
+    expect(stackTopCode({})).toBeUndefined();
   });
 });

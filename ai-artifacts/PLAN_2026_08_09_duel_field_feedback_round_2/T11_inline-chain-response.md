@@ -109,18 +109,18 @@
 
 ## Impl steps
 
-- [ ] 1. Add the three `promptSurface` cases (create `tests/unit/prompt-surface.test.ts` if it does not exist).
-- [ ] 2. Add the two chain cases to `tests/unit/preview-status.test.ts`.
-- [ ] 3. Add the three outside-click cases and the halo regression case to `tests/component/DuelField.test.ts`.
-- [ ] 4. Add the two priority cases to `tests/component/CardPreviewPanel.test.ts`.
-- [ ] 5. Run `npm run test:unit && npm run test:component`; confirm the new cases fail.
-- [ ] 6. In `src/app/prompts/prompt-surface.ts`, add the `prompt.kind === "chain"` branch before the `fieldCapable` branch.
-- [ ] 7. In `src/app/presentation/preview-status.ts`, add the chain rule between the `prompt === null` rule and the fallback.
-- [ ] 8. In `src/app/components/DuelField.svelte`, add `chainPassChoice()` and the pass branch at the top of `dismissOnOutsideClick`.
-- [ ] 9. In `src/app/components/CardPreviewPanel.svelte`, add `export let hasPriority = false;` and `data-has-priority={hasPriority ? "true" : undefined}` on the status wrapper.
-- [ ] 10. In `src/app/App.svelte`, import `hasDuelPriority` and pass `hasPriority={hasDuelPriority($duel.prompt, $duel.responsePending)}` to `CardPreviewPanel`.
-- [ ] 11. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`.
-- [ ] 12. Run the chromium e2e suite (see Validation). Update any spec that waited for `prompt-dialog` on a chain — that path is gone by design. Do not weaken any assertion that a chain is answerable.
+- [x] 1. Add the three `promptSurface` cases (create `tests/unit/prompt-surface.test.ts` if it does not exist).
+- [x] 2. Add the two chain cases to `tests/unit/preview-status.test.ts`.
+- [x] 3. Add the three outside-click cases and the halo regression case to `tests/component/DuelField.test.ts`.
+- [x] 4. Add the two priority cases to `tests/component/CardPreviewPanel.test.ts`.
+- [x] 5. Run `npm run test:unit && npm run test:component`; confirm the new cases fail.
+- [x] 6. In `src/app/prompts/prompt-surface.ts`, add the `prompt.kind === "chain"` branch before the `fieldCapable` branch.
+- [x] 7. In `src/app/presentation/preview-status.ts`, add the chain rule between the `prompt === null` rule and the fallback.
+- [x] 8. In `src/app/components/DuelField.svelte`, add `chainPassChoice()` and the pass branch at the top of `dismissOnOutsideClick`.
+- [x] 9. In `src/app/components/CardPreviewPanel.svelte`, add `export let hasPriority = false;` and `data-has-priority={hasPriority ? "true" : undefined}` on the status wrapper.
+- [x] 10. In `src/app/App.svelte`, import `hasDuelPriority` and pass `hasPriority={hasDuelPriority($duel.prompt, $duel.responsePending)}` to `CardPreviewPanel`.
+- [x] 11. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`.
+- [x] 12. Run the chromium e2e suite (see Validation). Update any spec that waited for `prompt-dialog` on a chain — that path is gone by design. Do not weaken any assertion that a chain is answerable.
 
 ## Outputs
 
@@ -130,22 +130,29 @@
 
 ## Validation
 
-- [ ] `npm run format:check` exits 0
-- [ ] `npm run lint` exits 0
-- [ ] `npm run typecheck` exits 0
-- [ ] `npm run test:unit` exits 0
-- [ ] `npm run test:component` exits 0
-- [ ] chromium e2e exits 0:
+- [x] `npm run format:check` exits 0
+- [x] `npm run lint` exits 0
+- [x] `npm run typecheck` exits 0
+- [x] `npm run test:unit` exits 0
+- [x] `npm run test:component` exits 0
+- [x] chromium e2e exits 0:
   ```bash
   cd /home/aron/projects/ascencio
   timeout 590 nix-shell -p playwright-driver.browsers glib gtk3 nss nspr dbus atk cups \
     libdrm expat libx11 libxcomposite libxdamage libxext libxfixes libxrandr mesa \
     alsa-lib at-spi2-atk at-spi2-core cairo pango xorg.xvfb --run '
+  export PLAYWRIGHT_BROWSERS_PATH=/home/aron/projects/ascencio/.tmp/pw-browsers
   npx playwright test --project=chromium
   '
   ```
-  Run from the repo root; keep the full `-p` list.
+  **This exact command was verified green by the orchestrator on 2026-08-10** (`1 passed` on `-g "production bundle initializes"`). Run it verbatim from the repo root.
+  - `PLAYWRIGHT_BROWSERS_PATH=.tmp/pw-browsers` is mandatory. That directory holds symlinks to the nix-patched browsers in `/nix/store/8ilw3r312xcs1ylxg4g274rhf2frp9z4-playwright-browsers` under the revision names playwright 1.61 expects (`chromium-1228 -> chromium-1217`). The mismatched revision numbers are deliberate and fine.
+  - Without the override, Playwright picks `~/.cache/ms-playwright`, whose binaries are unpatched and die with `libglib-2.0.so.0: cannot open shared object file`. That error means the override is missing, not that the `-p` list is wrong.
+  - `playwright-driver.browsers` and `xorg.xvfb` are both required in the `-p` list even though Xvfb is never launched. Do not simplify the list.
+  - If `.tmp/pw-browsers` is gone, recreate it: `S=/nix/store/8ilw3r312xcs1ylxg4g274rhf2frp9z4-playwright-browsers` (rebuild with `nix-build '<nixpkgs>' -A playwright-driver.browsers --no-out-link` if the path is garbage-collected), then `mkdir -p .tmp/pw-browsers && cd .tmp/pw-browsers && ln -sfn $S/chromium-1217 chromium-1228 && ln -sfn $S/chromium_headless_shell-1217 chromium_headless_shell-1228 && ln -sfn $S/ffmpeg-1011 ffmpeg-1011 && ln -sfn $S/firefox-1511 firefox-1532`.
+  - Run it in the **foreground**, blocking. Runs take 1-5 min; `webServer` builds and starts the preview itself, so do not hand-start `npm run preview`.
+  - The duel seed is random per run (`crypto.getRandomValues`). A single pass of a duel-walking test proves little; if a duel-walking test is the one you changed, run the suite 3 times before calling it green.
 - [ ] manual check: `npm run dev`; trigger a chain — no modal appears, the preview reads "Do you respond?" with pulsing dots, the activatable source glows orange, clicking it activates and clicking empty field passes
-- [ ] app functional — a forced chain still demands an answer and cannot be dismissed by clicking away
-- [ ] commit msg draft: `feat(field): answer chains inline instead of in a modal`
+- [x] app functional — a forced chain still demands an answer and cannot be dismissed by clicking away
+- [x] commit msg draft: `feat(field): answer chains inline instead of in a modal`
 </content>

@@ -2,7 +2,156 @@
 
 Human-only checks that automated tests cannot cover. One section per plan ticket; never edit another ticket's section.
 
-## T6 field-action-bar
+Ticket ids restart per plan, so sections are grouped by round. **Round 2 is the current implementation.** Where a round 2 ticket replaced round 1 behaviour, the round 1 section is marked **SUPERSEDED** and must not be run — its steps describe UI that no longer exists.
+
+---
+
+# Round 2 — 2026-08-09 duel field feedback (current)
+
+## T1 header-bar-avatars-and-life-points
+
+
+- [ ] `npm run dev`, open the app: the top row shows a duel header bar with the opponent avatar + LP on the left, your avatar + LP on the right, and a gear-icon settings button on the far right — no `Settings` text button anywhere.
+- [ ] Both avatars show a placeholder circle image (or the card-back art once images finish loading) — never a broken image icon.
+- [ ] Before the first duel snapshot arrives, both life-point readouts show `—`; once the duel starts they switch to numbers formatted like `8,000 LP`.
+- [ ] Deal or take damage during a duel: both header LP readouts update to the new totals.
+- [ ] Click the gear icon: the same menu opens as before (Settings / Surrender), and closing the menu returns focus to the gear button.
+- [ ] The duel field itself no longer shows any life-point pills inside the board — only the header bar carries LP.
+- [ ] Resize the window from a wide desktop down to a phone width: the header bar stays on one row (or wraps sanely), avatars and LP stay legible, and the gear button stays reachable and clickable.
+- [ ] Keyboard only: tab to the gear button, confirm its accessible name announces as `Settings` and it activates with Enter/Space.
+
+## T2 preview-panel-left-and-hover-status
+
+
+- [ ] `npm run dev`, open on a wide desktop window: the card preview panel sits to the LEFT of the duel field (not the right), and the field is the right column.
+- [ ] Hover a face-down card of yours or a hidden opponent hand card: the preview panel now fills with a hidden-card view — art placeholder, name `Face-down card`, text `No information is available for this card.` — instead of leaving the previous card up or staying blank.
+- [ ] Hover any stack (deck, extra deck, graveyard, banished) with at least one public card in it: the panel fills with that stack's top public card.
+- [ ] Hover an empty or fully-private stack: the panel shows the hidden-card view, not the previous card.
+- [ ] Under the card art/text (or under the empty-state copy when nothing is previewed), a status line is visible.
+- [ ] While a response has just been sent and the engine hasn't answered yet, the status line reads `Waiting for the engine` with an animated three-dot indicator after it.
+- [ ] While it's the opponent's turn and you have no prompt, the status line reads `Opponent is acting` with the animated three-dot indicator.
+- [ ] While you have an active prompt, the status line echoes that prompt's title (e.g. `Choose a Main Phase action`) with no animated dots.
+- [ ] With OS-level "reduce motion" turned on, the three dots are still visible next to the status text but do not animate.
+- [ ] Resize the window down to 1024px wide: the board still renders and every board control remains clickable, and the preview column does not push a horizontal scrollbar onto the page.
+- [ ] Shrink further below the responsive breakpoint (~79rem/1264px): the preview panel stacks above the field (not beside it) rather than disappearing or overlapping.
+
+## T3 phase-strip-and-end-turn-placement
+
+
+- [ ] `npm run dev`, reach a Main Phase 1 idle-command prompt: an in-field phase strip is visible in the free centre band of the board, split into a left group (`Draw`, `Standby`, `Main 1`) and a right group (`Battle`, `Main 2`, `End`), and it does not visually overlap either shared Extra Monster Zone.
+- [ ] During Main Phase 1, the `Main 1` chip has a blue halo (the current-phase highlight), `Battle` and `End` are lit and clickable, and `Draw`/`Standby`/`Main 2` are greyed and not clickable.
+- [ ] Click the `Battle` chip: the duel advances into the Battle Phase, the `Battle` chip now carries the blue halo, and the board (cards, zones) stays fully clickable — no click is swallowed by the strip.
+- [ ] Progress through Draw, Standby, both Main Phases, Battle Start/Step/Damage/Damage Calculation and End: exactly one chip carries the current-phase halo at a time, and every battle sub-phase (`battleStart`, `battleStep`, `damage`, `damageCalculation`, `battle`) lights the single `Battle` chip.
+- [ ] The `End turn` button sits at the right edge of the board, roughly level with the two banished zones (between them vertically), and stays clickable and functional exactly as before (ends your turn when clicked).
+- [ ] The top-right status pills (`Choose Action`/`Waiting Opponent` and the old phase pill) are gone; nothing at the top-right corner of the field displays that text or blocks clicks there.
+- [ ] Resize the window across a few widths (desktop, ~1024px, phone width): the phase strip and End turn button stay inside the board's free band, do not overlap the banished zones or Extra Monster Zones, and every card/zone remains clickable at each size.
+- [ ] Keyboard only: tab through the field; the phase strip chips and the End turn button are each reachable and operable via keyboard, and tabbing does not get stuck inside the board region.
+- [ ] With a screen reader, each phase chip announces its phase name plus `current`/`available` state (e.g. "Battle phase, available"); the strip as a whole is one `Duel phases` group, not announced twice.
+
+## T4 auto-response-and-prompt-trimming
+
+
+- [ ] `npm run dev`, open Settings: two new checkboxes are present after the existing two, labelled `Place cards automatically` (checked by default) and `Skip prompts with a single answer` (checked by default).
+- [ ] Play a turn with default settings: no `Choose a chain response` dialog appears when you have nothing to chain (only a `Pass` option) — the duel proceeds straight past it.
+- [ ] Reach a chain prompt that genuinely offers you an activation (you have a card you could chain): the dialog still appears and waits for your click; it is not skipped.
+- [ ] Open the Main Phase action list (the field action bar, when it is showing, or the equivalent card-action chips): `Shuffle Deck` is never offered as an action, on any turn.
+- [ ] Turn off `Skip prompts with a single answer` in Settings, then play a turn where a trivial chain (nothing to activate) would occur: the `Choose a chain response` dialog now appears and must be answered by hand (Pass).
+- [ ] Turn `Skip prompts with a single answer` back on mid-duel: from that point on, trivial prompts go back to resolving automatically without a click.
+- [ ] Reload the page: both new settings reset to their defaults (checked), matching the existing session-only behaviour of the other two toggles.
+
+## T5 auto-placement-and-single-click-actions
+
+
+- [ ] `npm run dev`, with `Place cards automatically` left on (the default): summon or set a monster — it lands directly in the centre-most legal zone with no follow-up "choose a zone" prompt of any kind. (manual check: auto-place ON)
+- [ ] Turn `Place cards automatically` off in Settings, then summon or set a monster: the legal zones halo, one click on any one of them plays the card immediately with no `Confirm placement` button anywhere, and one click on an empty part of the board (no card, no zone, no bar/strip/button) cancels the pending placement and returns you to the previous prompt. (manual check: auto-place OFF)
+- [ ] With auto-place on, repeatedly summon/set monsters across a duel and confirm the chosen zone always looks like the same "most central first" order a player would expect (centre main-monster zone before the edges, main row before the extra monster zones, your side before the opponent's).
+- [ ] With auto-place off, open a hand card that offers exactly one action (e.g. only `Activate`): clicking the card fires that action immediately — no chip menu ever appears for it.
+- [ ] With auto-place off, open a hand card that offers two or more actions: clicking the card still opens the chip menu exactly as before, and clicking a chip fires that one action.
+- [ ] With auto-place off, start a placement, then click a legal zone: the card is played immediately with no separate `Confirm placement` step.
+- [ ] With auto-place off, start a placement that is cancelable and click elsewhere on the empty board: the prompt cancels cleanly, no error/toast appears, and you're returned to the state before the placement started.
+- [ ] With auto-place off, start a placement that is *not* cancelable (if you can reach one) and click elsewhere on the empty board: nothing happens — the prompt stays open, no error appears.
+- [ ] Dragging a hand card onto a highlighted zone (T10) still plays it in one gesture and still wins over auto-placement — the drag never pops up a redundant place prompt regardless of the auto-place setting.
+- [ ] Play a full duel with auto-place on and `Skip prompts with a single answer` on (both defaults): the duel proceeds smoothly with the fewest possible prompts, and no click is ever swallowed by a stray Confirm bar that shouldn't be there.
+- [ ] Reload the page: `Place cards automatically` resets to checked (the default), matching the other settings' session-only behaviour.
+
+## T6 stack-interaction-targets
+
+
+- [ ] `npm run dev`; get the engine to offer a graveyard activation (e.g. an effect that can be activated from the graveyard): the graveyard pile glows with the same orange "you may act here" halo the field's actionable zones and cards use.
+- [ ] ~~While that graveyard pile glows, the modal `PromptDialog` still opens — clicking the pile itself does nothing.~~ **Superseded by T8 and T11:** the pile is now clickable and opens its zone list, and the chain modal is gone. Verify instead via the T8 and T11 sections.
+- [ ] Clicking on a glowing stack does not throw a console error.
+- [ ] Reach a banished-pile activation, an extra-deck activation, and a deck activation (if you can find/force one) in turn: each pile glows the same orange while the choice is live, and each is answerable by clicking the pile and acting from its list.
+- [ ] Confirm no previously reachable choice became unanswerable across a full duel: every prompt that used to resolve via the modal (including graveyard/banished/deck/extra activations) is still answerable start to finish.
+
+## T7 stack-top-card-face
+
+
+- [ ] `npm run dev`, send a monster to the graveyard: the graveyard pile shows that card's art with `GY` and the count still readable on top of the art.
+- [ ] The deck and extra deck piles are unchanged (no art appears on the deck pile; the extra deck pile behaves as before).
+- [ ] Open and restart a duel twice while watching devtools memory for `blob:` URLs: no image lease leaks — the count of live `blob:` URLs does not keep growing across restarts.
+
+## T8 zone-list-dialog
+
+
+- [ ] `npm run dev`; click your graveyard: a centred list opens over the field, scrolls horizontally, numbers each card starting at 1, previews the hovered card in the left preview panel, and closes on Escape. (manual check)
+- [ ] Click the opponent's extra deck: every entry in the list is face-down (card back only, no name, no art) regardless of what you might otherwise infer from earlier play. (manual check)
+- [ ] ~~Click your deck: the list shows one face-down placeholder per card in your deck count.~~ **Superseded by T10:** the deck list now renders the real projected deck order. Verify via the T10 section.
+- [ ] The dialog never shows a backdrop and never blocks the rest of the board — a legal-action card elsewhere on the field is still clickable while the dialog is open.
+- [ ] Reach a graveyard or banished-pile activation prompt (e.g. an effect that activates from the graveyard): the pile itself gets the orange actionable halo, and clicking it opens the list with an orange halo and action chips on the specific card the engine is offering — no separate modal "Choose a chain response" dialog appears for this case.
+- [ ] With that same list open, click the action chip on the actionable card: the action fires, the dialog closes, and the duel proceeds — the same as clicking a chip on a card on the board.
+- [ ] Click an already-open pile a second time: the list closes.
+- [ ] Trigger a new prompt (e.g. pass priority to the opponent) while a zone list is open: the list closes automatically without needing another click.
+- [ ] An empty pile (0 cards) is not clickable and shows no hover/focus affordance.
+- [ ] Keyboard only: tab to a non-empty pile, press Enter/Space to open its list, tab through the entries and any action chips, and confirm Escape closes the dialog and returns focus sensibly.
+
+## T9 projected-deck-order
+
+
+- [ ] Complete a duel, inspect final projected state, confirm `players[0].deck.length === players[0].deckCount`.
+
+## T10 deck-list-in-zone-dialog
+
+
+- [ ] `npm run dev`; click your deck: the list shows one face-down entry per remaining card, numbered from the top with position 1 first.
+- [ ] Click the opponent's deck: every unrevealed entry stays face-down with no card name, code, or face art exposed.
+- [ ] If the preset deck contains an excavate effect, resolve it: legitimately revealed positions render face-up, then return face-down after a shuffle.
+- [ ] With either 40-card deck dialog open, scroll the list and click a legal card target elsewhere on the board: the dialog stays usable without intercepting unrelated board clicks.
+- [ ] Confirm the deck pile itself still shows only its name and count, never card art.
+
+## T11 inline-chain-response
+
+
+- [ ] `npm run dev`; trigger a chain: no modal appears, the preview reads `Do you respond?` with pulsing dots, and every activatable source glows orange on the field or on its pile.
+- [ ] On a cancelable chain, click an activatable source to respond; trigger another chain and click empty field to pass. Both choices advance the duel exactly once.
+- [ ] Trigger a forced chain: clicking empty field does nothing, no `Pass` button appears, and clicking the required field or pile source answers it.
+
+## T12 result-dialog
+
+
+- [ ] `npm run dev`, surrender from the menu: a centred modal dialog announces `Duel surrendered`, focus lands on its heading, and `Start another duel` starts a clean duel.
+- [ ] Click the dialog backdrop and press Escape: the result dialog stays open; no close control appears, while restart and diagnostics remain reachable.
+- [ ] Complete a duel normally: the winner announcement appears without reflowing the page behind it, and diagnostics still download.
+
+## R1 review-repairs
+
+- [ ] Trigger an optional chain, open a glowing graveyard pile, then click its Close button and a non-chip area of an entry tile in separate attempts: neither click passes the chain; clicking genuine empty field still passes exactly once.
+- [ ] During a cancelable multi-card pile selection, open the pile and click the zone-list header: the selection stays live and no cancel response is sent.
+- [ ] Reach or force a deck-located choice in a deck of known size: its chip and orange halo appear on the correct top-relative list position, and no unrevealed mirrored slot exposes a card name.
+- [ ] Trigger a chain while the duel field is unavailable through its render-failure path: the prompt dialog mounts and remains answerable under the field-error panel.
+- [ ] Open a non-empty pile with the mouse, leave focus on the pile button, then press Escape: the list closes; pressing Escape with no zone list open does not disturb chips or other dialogs.
+- [ ] Reach a field prompt that requires the field action bar, then resize across desktop and phone widths: the bar stays fully in the viewport and entirely below the duel board without covering hand clicks.
+- [ ] Play a full duel start to finish: every field, pile, chain, and dialog prompt remains answerable.
+
+---
+
+# Round 1 — 2026-08-08 duel field UX overhaul (archive)
+
+Kept for history. Read the SUPERSEDED banners before running anything here.
+
+## R1-T6 field-action-bar — SUPERSEDED
+
+
+> Superseded by round 2. `Shuffle Deck` no longer exists as an action (round 2 T4), the bar's `End turn` moved into the board's phase strip (round 2 T3), and single-action cards now fire on one click without a `Confirm` step (round 2 T5). Do not run this section; use round 2 T3, T4 and T5 instead.
 
 - [ ] Start a duel and reach a "select a card" prompt: a compact bar appears pinned to the bottom of the duel field, below the board, with the prompt title on it.
 - [ ] The bar sits in its own strip under the board — it does not cover the player's hand, and no empty strip is left under the board once the bar disappears.
@@ -20,7 +169,10 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 - [ ] Keyboard only: tab from the board into the bar, operate every control, and confirm — focus outlines stay visible throughout.
 - [ ] With a screen reader, the bar announces as the `Field decision` region and the validation text is read out when confirm is blocked.
 
-## T7 end-turn-corner-button
+## R1-T7 end-turn-corner-button — SUPERSEDED
+
+
+> Superseded by round 2 T3: `End turn` no longer sits in the bottom-right corner outside the board. It now sits at the board's right edge, level with the banished zones, deliberately inside the board's bounding box. The "never sits on top of the board" step below is no longer the intended design. Do not run this section; use round 2 T3.
 
 - [ ] An orange `End turn` button sits fixed in the bottom-right corner of the duel field at all times, whether or not any other prompt is on screen.
 - [ ] In Main Phase with nothing else to do, the button is enabled and reads `End turn`; clicking it ends the phase.
@@ -33,7 +185,10 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 - [ ] Double-clicking the corner button quickly (or clicking again while a response is pending) only ends the phase once.
 - [ ] Keyboard only: tab to the corner button, confirm it announces its current label (`End turn` or `End Battle Phase`) and its disabled state is announced when it's not usable.
 
-## T9 card-action-chips
+## R1-T9 card-action-chips — PARTLY SUPERSEDED
+
+
+> Round 2 T5 changed chip behaviour: a card offering exactly one action now fires it on a single click and never opens a chip menu, and placement no longer has a `Confirm placement` step. The multi-action chip steps below still hold. Prefer round 2 T5 for anything about clicking a card.
 
 - [ ] Reach a Main Phase idle-command prompt: every card you can act on wears an orange halo, and cards you cannot act on wear none.
 - [ ] Actionable zones (e.g. a place-selection prompt) wear the same orange halo; a card you have _selected_ keeps its distinct lime highlight, so legality and selection never look alike.
@@ -55,7 +210,10 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 - [ ] Play a full duel using only the chips for card actions: every Main Phase, Battle Phase and chain decision stays answerable to the end of the duel.
 - [ ] With a screen reader, a chip announces the full engine label (e.g. `Activate Mystical Space Typhoon`), not the short word, and the chip group announces as `<card name> actions`.
 
-## T10 hand-drag-and-drop
+## R1-T10 hand-drag-and-drop
+
+
+> Still current. Round 2 T5 added auto-placement but drag still wins over it — see the corresponding step in round 2 T5.
 
 - [ ] Reach a Main Phase idle-command prompt and press-and-drag a summonable monster out of your hand: after roughly 8px of movement the card fades slightly and the empty Main Monster zones fill with an orange tint that is clearly different from the plain orange legality halo.
 - [ ] While that drag is live, no Spell/Trap zone, no Field zone, no opponent zone and no already-occupied monster zone lights up.
@@ -72,7 +230,10 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 - [ ] Keyboard only, with no mouse touched: the whole duel is still playable and no drag behaviour interferes.
 - [ ] Rare case, if you can reach it: play a card whose zone the engine refuses (e.g. a summon that must go to a specific zone). The normal zone-selection prompt appears with its own highlighted zones and you pick one by hand — the mis-guess costs you nothing.
 
-## T11 card-preview-panel
+## R1-T11 card-preview-panel — SUPERSEDED
+
+
+> Superseded by round 2 T2: the preview panel moved to the LEFT column, hovering a face-down card now fills the panel with a hidden-card view instead of leaving it unchanged, and the panel gained a status line. Do not run this section; use round 2 T2.
 
 - [ ] Open the app on a wide desktop window (wider than ~1264px): a `22rem` panel sits to the right of the duel field, its top edge level with the field's and its bottom edge level with the field's, and the board is still fully visible with no horizontal scrollbar anywhere.
 - [ ] Before you touch anything, the panel reads `Hover a card to see its details.` and shows no image, no name and no effect text.
@@ -90,7 +251,10 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 - [ ] Surrender and start another duel: the panel resets to its empty state instead of holding the previous duel's card.
 - [ ] Play a full duel with the panel on screen: card art keeps loading correctly and the app never slows down or shows a broken image placeholder where art should be.
 
-## T8 status-and-life-pills
+## R1-T8 status-and-life-pills — SUPERSEDED
+
+
+> Superseded by round 2. The in-field life-point pills were deleted and life points moved to the header bar (round 2 T1); the top-right priority/phase pills were deleted and replaced by the in-field phase strip (round 2 T3). Nothing in this section still exists. Do not run it; use round 2 T1 and T3.
 
 - [ ] On your turn, the field's top-right corner reads `Choose Action - Main 1` (or the current phase) in two pills separated by a `-`, the left pill green.
 - [ ] While the opponent is acting (your response has been sent and you have no prompt), the left pill turns orange and reads `Waiting Opponent`; the phase pill still updates.

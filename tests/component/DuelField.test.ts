@@ -25,6 +25,7 @@ import type {
   PromptKind,
 } from "../../src/duel/contracts/player-prompt.ts";
 import { mapSnapshotToBoard } from "../../src/field/board-view-model.ts";
+import { zoneListsForBoard } from "../../src/field/zone-list.ts";
 import {
   createInteractionSession,
   reduceInteractionSession,
@@ -39,9 +40,11 @@ import {
   mapPromptToInteractionSpec,
   type ActiveInteractionSpec,
 } from "../../src/app/prompts/interaction-spec.ts";
+import { promptSurface } from "../../src/app/prompts/prompt-surface.ts";
 import {
   BOARD_CARD_TEXTS,
   BOARD_VIEW_MODEL_FIXTURES,
+  STACK_ART_STATE,
 } from "../fixtures/board-view-model.ts";
 import {
   DUEL_FIELD_PUBLIC_STATE_MATRIX,
@@ -163,6 +166,18 @@ describe("DuelField", () => {
     expect(document.body.innerHTML).not.toContain("46986414");
   });
 
+  it("duel field no longer renders the status pills", () => {
+    const value = DUEL_FIELD_PUBLIC_STATES["ST-01"];
+    render(DuelField, { board: value.board });
+
+    expect(document.querySelector('[data-cy="field-status-pills"]')).toBeNull();
+    expect(document.querySelector('[data-cy="prio-pill"]')).toBeNull();
+    expect(document.querySelector('[data-cy="phase-pill"]')).toBeNull();
+    expect(
+      document.querySelector('[data-cy="field-phase-strip"]'),
+    ).not.toBeNull();
+  });
+
   it.each(DUEL_FIELD_PUBLIC_STATE_MATRIX)(
     "DF-16 validates %s semantic/layout acceptance assertions",
     ({ id, board: value, assertions }) => {
@@ -260,11 +275,19 @@ describe("DuelField", () => {
     ).toEqual(
       new Set(["shared:extraMonster:left", "shared:extraMonster:right"]),
     );
-    // The always-mounted, disabled End turn corner button is the sole
-    // exception: it has no active prompt/spec to drive it here.
+    // The always-mounted, disabled End turn corner button has no active
+    // prompt/spec to drive it here; the two non-empty deck stacks (T8) are
+    // clickable regardless of any prompt.
     const buttons = within(field).queryAllByRole("button");
-    expect(buttons).toHaveLength(1);
-    expect(buttons[0]?.getAttribute("data-cy")).toBe("field-end-turn-button");
+    expect(
+      buttons.map((button) => button.getAttribute("data-cy")).sort(),
+    ).toEqual(
+      [
+        "field-end-turn-button",
+        "field-stack-p0:deck",
+        "field-stack-p1:deck",
+      ].sort(),
+    );
   });
 
   it("keeps visible and hidden card nodes keyed without exposing opponent identity", async () => {
@@ -305,16 +328,18 @@ describe("DuelField", () => {
   it("renders stack counts through named passive controls", () => {
     render(DuelField, { board: board("ST-08") });
 
+    /* Every stack rendered here has cards in it, so each is a clickable
+       button (T8) rather than a passive group. */
     expect(
-      screen.getByRole("group", { name: "Your Deck, 35 cards" }),
+      screen.getByRole("button", { name: "Your Deck, 35 cards" }),
     ).toBeTruthy();
     expect(
-      screen.getByRole("group", {
+      screen.getByRole("button", {
         name: "Your GY, 1 card, top card Blue-Eyes White Dragon",
       }),
     ).toBeTruthy();
     expect(
-      screen.getByRole("group", { name: "Opponent Deck, 31 cards" }),
+      screen.getByRole("button", { name: "Opponent Deck, 31 cards" }),
     ).toBeTruthy();
   });
 
@@ -464,6 +489,9 @@ describe("DuelField", () => {
     const user = userEvent.setup();
     const value = fieldPrompt("idleCommand", [
       mountedChoice("activate", "Activate effect", { action: "activate" }),
+      mountedChoice("set", "Set The Legendary Fisherman", {
+        action: "setMonster",
+      }),
     ]);
     const harness = renderInteractive(value);
     const card = screen.getByRole("button", {
@@ -562,6 +590,9 @@ describe("DuelField", () => {
   it("pins the chips on click, never pointerdown, and a moved pointer does not pin them", async () => {
     const value = fieldPrompt("idleCommand", [
       mountedChoice("activate", "Activate effect", { action: "activate" }),
+      mountedChoice("set", "Set The Legendary Fisherman", {
+        action: "setMonster",
+      }),
     ]);
     const harness = renderInteractive(value);
     const card = screen.getByRole("button", {
@@ -678,30 +709,13 @@ describe("DuelField", () => {
         { requiredTotal: 2, sumMode: "exact" },
       ],
       ["selectUnselectCard", mountedChoice("toggle", "Toggle monster"), {}],
-      [
-        "selectPlace",
-        promptChoice("place", "Your Main Monster 1", {
-          place: { player: 0, location: "monster", sequence: 0 },
-        }),
-        {},
-      ],
-      [
-        "selectDisabledField",
-        promptChoice("disabled", "Your Main Monster 1", {
-          place: { player: 0, location: "monster", sequence: 0 },
-        }),
-        {},
-      ],
     ] as const) {
       cleanup();
       const value = fieldPrompt(kind, [choice], overrides);
       const harness = renderInteractive(value);
-      const target =
-        kind === "selectPlace" || kind === "selectDisabledField"
-          ? screen.getByRole("button", { name: /Select Your Main Monster 1/ })
-          : screen.getByRole("button", {
-              name: /Select The Legendary Fisherman/,
-            });
+      const target = screen.getByRole("button", {
+        name: /Select The Legendary Fisherman/,
+      });
       await user.click(target);
       expect(harness.commands).toEqual([]);
       expect(
@@ -713,6 +727,23 @@ describe("DuelField", () => {
         [],
       );
       await user.click(screen.getByRole("button", { name: /Confirm/ }));
+      expect(harness.commands).toEqual([[choice.id]]);
+    }
+  });
+
+  it("zone click submits a single placement", async () => {
+    const user = userEvent.setup();
+    for (const kind of ["selectPlace", "selectDisabledField"] as const) {
+      cleanup();
+      const choice = promptChoice("place", "Your Main Monster 1", {
+        place: { player: 0, location: "monster", sequence: 0 },
+      });
+      const value = fieldPrompt(kind, [choice]);
+      const harness = renderInteractive(value);
+      expect(screen.queryByRole("button", { name: /Confirm/ })).toBeNull();
+      await user.click(
+        screen.getByRole("button", { name: /Select Your Main Monster 1/ }),
+      );
       expect(harness.commands).toEqual([[choice.id]]);
     }
   });
@@ -762,9 +793,335 @@ describe("DuelField", () => {
       ]);
       harness = renderInteractive(command);
       await user.click(screen.getByRole("button", { name: /Open actions/ }));
-      await user.click(screen.getByRole("button", { name: label }));
       expect(harness.commands).toEqual([[choiceId(label.toLowerCase())]]);
     }
+  });
+
+  it("single-choice card fires the action directly", async () => {
+    const user = userEvent.setup();
+    const value = fieldPrompt("idleCommand", [
+      mountedChoice("activate", "Activate effect", { action: "activate" }),
+    ]);
+    const harness = renderInteractive(value);
+    await user.click(
+      screen.getByRole("button", {
+        name: /Open actions for The Legendary Fisherman/,
+      }),
+    );
+    expect(harness.dispatch.mock.calls.map(([action]) => action.type)).toEqual([
+      "chooseChoice",
+    ]);
+    expect(harness.commands).toEqual([[choiceId("activate")]]);
+  });
+
+  it("multi-choice card still opens the menu", async () => {
+    const user = userEvent.setup();
+    const value = fieldPrompt("idleCommand", [
+      mountedChoice("activate", "Activate effect", { action: "activate" }),
+      mountedChoice("set", "Set The Legendary Fisherman", {
+        action: "setMonster",
+      }),
+    ]);
+    const harness = renderInteractive(value);
+    const card = screen.getByRole("button", {
+      name: /Open actions for The Legendary Fisherman/,
+    });
+    const targetId = card.getAttribute("data-field-target");
+    await user.click(card);
+    expect(harness.dispatch.mock.calls[0]?.[0]).toMatchObject({
+      type: "openMenu",
+      target: targetId,
+    });
+  });
+
+  it("outside click cancels a cancelable prompt", async () => {
+    const user = userEvent.setup();
+    const value = fieldPrompt(
+      "selectPlace",
+      [
+        promptChoice("place", "Your Main Monster 1", {
+          place: { player: 0, location: "monster", sequence: 0 },
+        }),
+      ],
+      { cancelable: true },
+    );
+    const harness = renderInteractive(value);
+    const surface = document.querySelector<HTMLElement>(
+      '[data-cy="duel-field-board-surface"]',
+    );
+    if (surface === null) throw new Error("Missing board surface");
+    await user.click(surface);
+    expect(harness.dispatch.mock.calls[0]?.[0]).toMatchObject({
+      type: "cancel",
+    });
+  });
+
+  it("outside click is inert when not cancelable", async () => {
+    const user = userEvent.setup();
+    const value = fieldPrompt(
+      "selectPlace",
+      [
+        promptChoice("place", "Your Main Monster 1", {
+          place: { player: 0, location: "monster", sequence: 0 },
+        }),
+      ],
+      { cancelable: false },
+    );
+    const harness = renderInteractive(value);
+    const surface = document.querySelector<HTMLElement>(
+      '[data-cy="duel-field-board-surface"]',
+    );
+    if (surface === null) throw new Error("Missing board surface");
+    await user.click(surface);
+    expect(harness.dispatch).not.toHaveBeenCalled();
+  });
+
+  it("a pass-only chain remains answerable inline", async () => {
+    const user = userEvent.setup();
+    const value = fieldPrompt(
+      "chain",
+      [promptChoice("c-pass", "Pass", { action: "pass" })],
+      { cancelable: true },
+    );
+    const harness = renderInteractive(value);
+    expect(harness.spec.fieldCapable).toBe(false);
+
+    await user.click(screen.getByRole("button", { name: "Pass" }));
+
+    expect(harness.commands).toEqual([[choiceId("c-pass")]]);
+  });
+
+  it("routes a chain to the dialog when the field is not rendered", () => {
+    const value = fieldPrompt(
+      "chain",
+      [promptChoice("c-pass", "Pass", { action: "pass" })],
+      { cancelable: true },
+    );
+    const spec = activeSpec(value);
+    expect(spec.fieldCapable).toBe(false);
+
+    expect(promptSurface(value, spec, false, false)).toBe("dialog");
+  });
+
+  it("outside click passes a chain", async () => {
+    const user = userEvent.setup();
+    const value = fieldPrompt(
+      "chain",
+      [promptChoice("c-pass", "Pass", { action: "pass" })],
+      { cancelable: true },
+    );
+    const harness = renderInteractive(value);
+    const surface = document.querySelector<HTMLElement>(
+      '[data-cy="duel-field-board-surface"]',
+    );
+    if (surface === null) throw new Error("Missing board surface");
+    await user.click(surface);
+    expect(harness.dispatch.mock.calls[0]?.[0]).toMatchObject({
+      type: "chooseChoice",
+      choiceId: "c-pass",
+      key: harness.spec.key,
+    });
+  });
+
+  it("outside click cannot pass a forced chain, which remains answerable", async () => {
+    const user = userEvent.setup();
+    const value = fieldPrompt(
+      "chain",
+      [mountedChoice("activate", "Chain", { action: "activate" })],
+      { cancelable: false },
+    );
+    const harness = renderInteractive(value);
+    const surface = document.querySelector<HTMLElement>(
+      '[data-cy="duel-field-board-surface"]',
+    );
+    if (surface === null) throw new Error("Missing board surface");
+    await user.click(surface);
+    expect(harness.dispatch).not.toHaveBeenCalled();
+
+    await user.click(
+      screen.getByRole("button", {
+        name: /Open actions for The Legendary Fisherman/,
+      }),
+    );
+    expect(harness.commands).toEqual([[choiceId("activate")]]);
+  });
+
+  it("outside click on a card target does not pass a chain", async () => {
+    const user = userEvent.setup();
+    const value = fieldPrompt(
+      "chain",
+      [
+        mountedChoice("activate", "Chain", { action: "activate" }),
+        promptChoice("c-pass", "Pass", { action: "pass" }),
+      ],
+      { cancelable: true },
+    );
+    const harness = renderInteractive(value);
+    await user.click(
+      screen.getByRole("button", {
+        name: /Open actions for The Legendary Fisherman/,
+      }),
+    );
+    expect(
+      harness.dispatch.mock.calls.some(
+        ([action]) =>
+          action.type === "chooseChoice" && action.choiceId === "c-pass",
+      ),
+    ).toBe(false);
+  });
+
+  it("does not pass a chain when the zone-list close button is clicked", async () => {
+    const user = userEvent.setup();
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    const value = fieldPrompt(
+      "chain",
+      [
+        mountedChoice("graveyard-chain", "Chain", {
+          card: {
+            instanceId: cardInstanceId("prompt-graveyard-chain"),
+            controller: 0,
+            location: "graveyard",
+            sequence: 0,
+            position: "faceUpAttack",
+          },
+        } as Partial<PromptChoice>),
+        promptChoice("c-pass", "Pass", { action: "pass" }),
+      ],
+      { cancelable: true },
+    );
+    const spec = mapPromptToInteractionSpec(
+      value,
+      STACK_ART_STATE,
+      stackBoard.value,
+      CONTEXT,
+    );
+    if (spec.kind === "inactive") throw new Error("Expected active field spec");
+    const oninteraction = vi.fn();
+    render(DuelField, {
+      board: stackBoard.value,
+      prompt: value,
+      spec,
+      session: createInteractionSession(spec),
+      pending: false,
+      zoneLists: zoneListsForBoard(
+        stackBoard.value,
+        STACK_ART_STATE,
+        BOARD_CARD_TEXTS,
+      ),
+      oninteraction,
+    });
+
+    await user.click(screen.getByRole("button", { name: /Your GY, 4 cards/ }));
+    oninteraction.mockClear();
+    await user.click(screen.getByRole("button", { name: "Close" }));
+
+    expect(oninteraction).not.toHaveBeenCalled();
+  });
+
+  it("does not pass a chain when a zone-list entry tile is clicked", async () => {
+    const user = userEvent.setup();
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    const value = fieldPrompt(
+      "chain",
+      [
+        mountedChoice("graveyard-chain", "Chain", {
+          card: {
+            instanceId: cardInstanceId("prompt-graveyard-chain"),
+            controller: 0,
+            location: "graveyard",
+            sequence: 0,
+            position: "faceUpAttack",
+          },
+        } as Partial<PromptChoice>),
+        promptChoice("c-pass", "Pass", { action: "pass" }),
+      ],
+      { cancelable: true },
+    );
+    const spec = mapPromptToInteractionSpec(
+      value,
+      STACK_ART_STATE,
+      stackBoard.value,
+      CONTEXT,
+    );
+    if (spec.kind === "inactive") throw new Error("Expected active field spec");
+    const oninteraction = vi.fn();
+    render(DuelField, {
+      board: stackBoard.value,
+      prompt: value,
+      spec,
+      session: createInteractionSession(spec),
+      pending: false,
+      zoneLists: zoneListsForBoard(
+        stackBoard.value,
+        STACK_ART_STATE,
+        BOARD_CARD_TEXTS,
+      ),
+      oninteraction,
+    });
+
+    await user.click(screen.getByRole("button", { name: /Your GY, 4 cards/ }));
+    oninteraction.mockClear();
+    const entry = document.querySelector<HTMLElement>(
+      ".zone-list-entry.is-actionable",
+    );
+    if (entry === null) throw new Error("Missing actionable zone-list entry");
+    await user.click(entry);
+
+    expect(oninteraction).not.toHaveBeenCalled();
+  });
+
+  it("does not cancel card selection when the zone-list header is clicked", async () => {
+    const user = userEvent.setup();
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    const value = fieldPrompt(
+      "selectCard",
+      [
+        mountedChoice("graveyard-select", "Select", {
+          card: {
+            instanceId: cardInstanceId("prompt-graveyard-select"),
+            controller: 0,
+            location: "graveyard",
+            sequence: 0,
+            position: "faceUpAttack",
+          },
+        } as Partial<PromptChoice>),
+      ],
+      { cancelable: true, maximum: 2 },
+    );
+    const spec = mapPromptToInteractionSpec(
+      value,
+      STACK_ART_STATE,
+      stackBoard.value,
+      CONTEXT,
+    );
+    if (spec.kind === "inactive") throw new Error("Expected active field spec");
+    const oninteraction = vi.fn();
+    render(DuelField, {
+      board: stackBoard.value,
+      prompt: value,
+      spec,
+      session: createInteractionSession(spec),
+      pending: false,
+      zoneLists: zoneListsForBoard(
+        stackBoard.value,
+        STACK_ART_STATE,
+        BOARD_CARD_TEXTS,
+      ),
+      oninteraction,
+    });
+
+    await user.click(screen.getByRole("button", { name: /Your GY, 4 cards/ }));
+    oninteraction.mockClear();
+    const header = document.querySelector<HTMLElement>(
+      '[data-cy="zone-list-dialog-header"]',
+    );
+    if (header === null) throw new Error("Missing zone-list header");
+    await user.click(header);
+
+    expect(oninteraction).not.toHaveBeenCalled();
   });
 
   it("contains render failure locally and remounts without exposing error detail", async () => {
@@ -1212,7 +1569,41 @@ describe("DuelField", () => {
     });
   });
 
-  it("hidden cards never report", async () => {
+  it("hovering a face-down field card previews the hidden card", async () => {
+    const harness = renderDraggableHand();
+    const hidden = screen.getAllByRole("article", {
+      name: "Hidden opponent hand card",
+    })[0];
+    if (hidden === undefined) throw new Error("Missing hidden opponent card");
+
+    await fireEvent.pointerEnter(hidden);
+
+    expect(harness.onpreview).toHaveBeenCalledTimes(1);
+    const previewed = harness.onpreview.mock.calls[0]?.[0];
+    expect(previewed).toMatchObject({
+      id: hidden.getAttribute("data-card-id"),
+    });
+    expect(previewed?.code).toBeUndefined();
+  });
+
+  it("hovering a stack previews it", async () => {
+    const value = DUEL_FIELD_PUBLIC_STATES["ST-01"];
+    const onstackpreview = vi.fn();
+    render(DuelField, { board: value.board, onstackpreview });
+
+    const stack = document.querySelector<HTMLElement>(
+      '[data-cy="field-stack-p0:graveyard"]',
+    );
+    if (stack === null) throw new Error("Missing graveyard stack");
+    await fireEvent.pointerEnter(stack);
+
+    expect(onstackpreview).toHaveBeenCalledTimes(1);
+    expect(onstackpreview.mock.calls[0]?.[0]).toMatchObject({
+      id: "p0:graveyard",
+    });
+  });
+
+  it("hidden cards report the hidden preview too", async () => {
     const harness = renderDraggableHand();
     const hidden = screen.getAllByRole("article", {
       name: "Hidden opponent hand card",
@@ -1222,7 +1613,13 @@ describe("DuelField", () => {
     await fireEvent.pointerEnter(hidden);
     await fireEvent.focusIn(hidden);
 
-    expect(harness.onpreview).not.toHaveBeenCalled();
+    expect(harness.onpreview).toHaveBeenCalledTimes(2);
+    for (const call of harness.onpreview.mock.calls) {
+      expect(call[0]).toMatchObject({
+        id: hidden.getAttribute("data-card-id"),
+      });
+      expect(call[0]?.code).toBeUndefined();
+    }
   });
 
   it("pointer leave keeps the panel", async () => {
@@ -1241,21 +1638,410 @@ describe("DuelField", () => {
     ).toBe(true);
   });
 
-  it("field mounts pills and both life pills", () => {
+  it("duel field no longer renders life pills", () => {
     const value = DUEL_FIELD_PUBLIC_STATES["ST-01"];
-    render(DuelField, { board: value.board, lifePoints: [8000, 7500] });
-    const field = screen.getByRole("region", { name: "Duel field" });
-    expect(field.querySelector('[data-cy="field-status-pills"]')).toBeTruthy();
-    expect(field.querySelector('[data-cy="life-pill-p0"]')).toBeTruthy();
-    expect(field.querySelector('[data-cy="life-pill-p1"]')).toBeTruthy();
-  });
-
-  it("field omits life pills without a snapshot", () => {
-    const value = DUEL_FIELD_PUBLIC_STATES["ST-01"];
-    render(DuelField, { board: value.board, lifePoints: null });
+    render(DuelField, { board: value.board });
     const field = screen.getByRole("region", { name: "Duel field" });
     expect(field.querySelector('[data-cy="life-pill-p0"]')).toBeNull();
     expect(field.querySelector('[data-cy="life-pill-p1"]')).toBeNull();
+  });
+
+  it("actionable stack renders the halo", () => {
+    const value = fieldPrompt("chain", [
+      mountedChoice("graveyard-activate", "Activate", {
+        card: {
+          instanceId: cardInstanceId("prompt-graveyard-activate"),
+          controller: 0,
+          location: "graveyard",
+          sequence: 0,
+          position: "faceUpAttack",
+        },
+      } as Partial<PromptChoice>),
+      promptChoice("pass-choice", "Pass", { action: "pass" }),
+    ]);
+    const spec = activeSpec(value);
+    const session = createInteractionSession(spec);
+    render(DuelField, {
+      board: board("ST-05"),
+      prompt: value,
+      spec,
+      session,
+      pending: false,
+    });
+
+    const stack = document.querySelector(
+      '[data-cy="field-stack-p0:graveyard"]',
+    );
+    expect(stack).not.toBeNull();
+    expect(stack?.classList.contains("is-actionable")).toBe(true);
+    expect(stack?.getAttribute("data-actionable")).toBe("true");
+    expect(document.querySelector('[data-cy="prompt-dialog"]')).toBeNull();
+  });
+
+  it("maps an engine deck sequence to the matching top-relative list slot", async () => {
+    const user = userEvent.setup();
+    const snapshot = BOARD_VIEW_MODEL_FIXTURES["ST-05"];
+    const stackBoard = mapSnapshotToBoard(snapshot, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    const deckCount = snapshot.players[0].deckCount;
+    const topRelativeOffset = 1;
+    const value = fieldPrompt("idleCommand", [
+      promptChoice("deck-activate", "Activate deck card", {
+        action: "activate",
+        card: {
+          instanceId: cardInstanceId("prompt-deck-activate"),
+          controller: 0,
+          location: "deck",
+          sequence: deckCount - 1 - topRelativeOffset,
+          position: "faceDownAttack",
+        },
+      }),
+    ]);
+    const spec = mapPromptToInteractionSpec(
+      value,
+      snapshot,
+      stackBoard.value,
+      CONTEXT,
+    );
+    if (spec.kind === "inactive") throw new Error("Expected active field spec");
+    render(DuelField, {
+      board: stackBoard.value,
+      prompt: value,
+      spec,
+      session: createInteractionSession(spec),
+      pending: false,
+      zoneLists: zoneListsForBoard(
+        stackBoard.value,
+        snapshot,
+        BOARD_CARD_TEXTS,
+      ),
+    });
+
+    await user.click(
+      screen.getByRole("button", {
+        name: new RegExp(`Your Deck, ${deckCount} cards`),
+      }),
+    );
+    const expectedEntry = document.querySelector<HTMLElement>(
+      `[data-cy="zone-list-entry-p0:deck:${topRelativeOffset + 1}"]`,
+    );
+    if (expectedEntry === null) throw new Error("Missing expected deck entry");
+
+    expect(
+      within(expectedEntry).getByRole("button", {
+        name: "Activate deck card",
+      }),
+    ).not.toBeNull();
+  });
+
+  it("answers a forced chain whose only source sits in a pile", async () => {
+    const user = userEvent.setup();
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    const value = fieldPrompt(
+      "chain",
+      [
+        mountedChoice("graveyard-activate", "Chain", {
+          card: {
+            instanceId: cardInstanceId("prompt-graveyard-activate"),
+            controller: 0,
+            location: "graveyard",
+            sequence: 0,
+            position: "faceUpAttack",
+          },
+        } as Partial<PromptChoice>),
+      ],
+      { cancelable: false },
+    );
+    const spec = mapPromptToInteractionSpec(
+      value,
+      STACK_ART_STATE,
+      stackBoard.value,
+      CONTEXT,
+    );
+    if (spec.kind === "inactive") throw new Error("Expected active field spec");
+    const oninteraction = vi.fn();
+    render(DuelField, {
+      board: stackBoard.value,
+      prompt: value,
+      spec,
+      session: createInteractionSession(spec),
+      pending: false,
+      zoneLists: zoneListsForBoard(
+        stackBoard.value,
+        STACK_ART_STATE,
+        BOARD_CARD_TEXTS,
+      ),
+      oninteraction,
+    });
+
+    await user.click(screen.getByRole("button", { name: /Your GY, 4 cards/ }));
+    await user.click(screen.getByRole("button", { name: "Chain" }));
+
+    expect(oninteraction).toHaveBeenCalledWith({
+      type: "chooseChoice",
+      choiceId: choiceId("graveyard-activate"),
+      key: spec.key,
+    });
+  });
+
+  it("an empty graveyard stays a non-interactive div", () => {
+    const value = fieldPrompt("chain", [
+      mountedChoice("graveyard-activate", "Activate", {
+        card: {
+          instanceId: cardInstanceId("prompt-graveyard-activate"),
+          controller: 0,
+          location: "graveyard",
+          sequence: 0,
+          position: "faceUpAttack",
+        },
+      } as Partial<PromptChoice>),
+      promptChoice("pass-choice", "Pass", { action: "pass" }),
+    ]);
+    const spec = activeSpec(value);
+    const session = createInteractionSession(spec);
+    const oninteraction = vi.fn();
+    render(DuelField, {
+      board: board("ST-05"),
+      prompt: value,
+      spec,
+      session,
+      pending: false,
+      oninteraction,
+    });
+
+    const stack = document.querySelector(
+      '[data-cy="field-stack-p0:graveyard"]',
+    );
+    expect(stack).not.toBeNull();
+    expect(stack?.tagName).toBe("DIV");
+    expect(stack?.getAttribute("role")).toBe("group");
+    expect(stack?.hasAttribute("onclick")).toBe(false);
+
+    (stack as HTMLElement).click();
+
+    expect(oninteraction).not.toHaveBeenCalled();
+  });
+
+  it("graveyard shows its last public card", () => {
+    const lease = vi.fn((code: number) => ({
+      url: `blob:${code}`,
+      release: vi.fn(),
+    }));
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    render(DuelField, {
+      board: stackBoard.value,
+      imageLibrary: { lease },
+      placeholderUrl: "/cards/placeholder.webp",
+    });
+
+    expect(
+      document
+        .querySelector('[data-cy="stack-control-image-p0:graveyard"]')
+        ?.getAttribute("src"),
+    ).toBe("blob:89631139");
+    expect(
+      document.querySelector('[data-cy="stack-control-name-p0:graveyard"]')
+        ?.textContent,
+    ).toBe("GY");
+    expect(
+      document.querySelector('[data-cy="stack-control-count-p0:graveyard"]')
+        ?.textContent,
+    ).toBe("4");
+  });
+
+  it("banished shows its last public card", () => {
+    const lease = vi.fn((code: number) => ({
+      url: `blob:${code}`,
+      release: vi.fn(),
+    }));
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    render(DuelField, {
+      board: stackBoard.value,
+      imageLibrary: { lease },
+      placeholderUrl: "/cards/placeholder.webp",
+    });
+
+    expect(
+      document.querySelector('[data-cy="stack-control-image-p0:banished"]'),
+    ).not.toBeNull();
+  });
+
+  it("an empty pile shows no art", () => {
+    const lease = vi.fn((code: number) => ({
+      url: `blob:${code}`,
+      release: vi.fn(),
+    }));
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    render(DuelField, {
+      board: stackBoard.value,
+      imageLibrary: { lease },
+      placeholderUrl: "/cards/placeholder.webp",
+    });
+
+    expect(
+      document.querySelector('[data-cy="stack-control-art-p1:graveyard"]'),
+    ).toBeNull();
+  });
+
+  it("the deck never shows art", () => {
+    const lease = vi.fn((code: number) => ({
+      url: `blob:${code}`,
+      release: vi.fn(),
+    }));
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    render(DuelField, {
+      board: stackBoard.value,
+      imageLibrary: { lease },
+      placeholderUrl: "/cards/placeholder.webp",
+    });
+
+    expect(
+      document.querySelector('[data-cy="stack-control-art-p0:deck"]'),
+    ).toBeNull();
+  });
+
+  it("the lease is released on destroy", () => {
+    const release = vi.fn();
+    const lease = vi.fn((code: number) => ({
+      url: `blob:${code}`,
+      release,
+    }));
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    const rendered = render(DuelField, {
+      board: stackBoard.value,
+      imageLibrary: { lease },
+      placeholderUrl: "/cards/placeholder.webp",
+    });
+
+    expect(
+      document.querySelector('[data-cy="stack-control-art-p0:graveyard"]'),
+    ).not.toBeNull();
+    rendered.unmount();
+
+    expect(release).toHaveBeenCalledTimes(2);
+  });
+
+  it("clicking a pile opens its list", async () => {
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    const zoneLists = zoneListsForBoard(
+      stackBoard.value,
+      STACK_ART_STATE,
+      BOARD_CARD_TEXTS,
+    );
+    render(DuelField, { board: stackBoard.value, zoneLists });
+
+    expect(document.querySelector('[data-cy="zone-list-dialog"]')).toBeNull();
+    const stack = document.querySelector<HTMLElement>(
+      '[data-cy="field-stack-p0:graveyard"]',
+    );
+    if (stack === null) throw new Error("Missing graveyard stack");
+    await fireEvent.click(stack);
+
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog"]'),
+    ).not.toBeNull();
+  });
+
+  it("Escape closes a pile list opened with the mouse", async () => {
+    const user = userEvent.setup();
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    const zoneLists = zoneListsForBoard(
+      stackBoard.value,
+      STACK_ART_STATE,
+      BOARD_CARD_TEXTS,
+    );
+    render(DuelField, { board: stackBoard.value, zoneLists });
+    const stack = screen.getByRole("button", { name: /Your GY, 4 cards/ });
+
+    await user.click(stack);
+    expect(document.activeElement).toBe(stack);
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog"]'),
+    ).not.toBeNull();
+    await fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(document.querySelector('[data-cy="zone-list-dialog"]')).toBeNull();
+  });
+
+  it("clicking the same pile closes it", async () => {
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    const zoneLists = zoneListsForBoard(
+      stackBoard.value,
+      STACK_ART_STATE,
+      BOARD_CARD_TEXTS,
+    );
+    render(DuelField, { board: stackBoard.value, zoneLists });
+    const stack = document.querySelector<HTMLElement>(
+      '[data-cy="field-stack-p0:graveyard"]',
+    );
+    if (stack === null) throw new Error("Missing graveyard stack");
+    await fireEvent.click(stack);
+    await fireEvent.click(stack);
+
+    expect(document.querySelector('[data-cy="zone-list-dialog"]')).toBeNull();
+  });
+
+  it("an empty pile is not clickable", () => {
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    render(DuelField, { board: stackBoard.value });
+
+    const stack = document.querySelector('[data-cy="field-stack-p1:banished"]');
+    expect(stack?.tagName).toBe("DIV");
+  });
+
+  it("a new prompt closes an open list", async () => {
+    const valueBoard = board("ST-05");
+    const firstPrompt = fieldPrompt("idleCommand", [
+      mountedChoice("activate", "Activate effect", { action: "activate" }),
+    ]);
+    const firstSpec = activeSpec(firstPrompt);
+    const zoneLists = zoneListsForBoard(
+      valueBoard,
+      BOARD_VIEW_MODEL_FIXTURES["ST-05"],
+      BOARD_CARD_TEXTS,
+    );
+    const rendered = render(DuelField, {
+      board: valueBoard,
+      prompt: firstPrompt,
+      spec: firstSpec,
+      session: createInteractionSession(firstSpec),
+      pending: false,
+      zoneLists,
+    });
+    const stack = document.querySelector<HTMLElement>(
+      '[data-cy="field-stack-p0:deck"]',
+    );
+    if (stack === null) throw new Error("Missing deck stack");
+    await fireEvent.click(stack);
+
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog"]'),
+    ).not.toBeNull();
+
+    const nextPrompt = fieldPrompt("selectCard", [
+      mountedChoice("select", "Select monster"),
+    ]);
+    const nextSpec = activeSpec(nextPrompt);
+    await rendered.rerender({
+      board: valueBoard,
+      prompt: nextPrompt,
+      spec: nextSpec,
+      session: createInteractionSession(nextSpec),
+      pending: false,
+      zoneLists,
+    });
+
+    expect(document.querySelector('[data-cy="zone-list-dialog"]')).toBeNull();
   });
 });
 

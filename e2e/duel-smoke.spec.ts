@@ -232,12 +232,13 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   const field = page.getByRole("region", { name: "Duel field" });
   await expect(field).toBeVisible();
   await expect(field.locator("[data-zone-id]")).toHaveCount(34);
-  await expect(field.locator('[data-cy="prio-pill"]')).toHaveText(
-    "Choose Action",
+  // The top-right status pills (T3) are gone; the in-field phase strip is
+  // the current-phase indicator now.
+  await expect(field.locator('[data-cy="field-phase-strip"]')).toBeVisible();
+  const currentPhaseChip = field.locator(
+    '[data-cy="field-phase-chip-draw"].is-current, [data-cy="field-phase-chip-standby"].is-current, [data-cy="field-phase-chip-main1"].is-current',
   );
-  await expect(field.locator('[data-cy="phase-pill"]')).toHaveText(
-    /Main 1|Draw|Standby/,
-  );
+  await expect(currentPhaseChip).toHaveCount(1);
   await expect(
     page.locator('[data-cy="duel-header-life-points-p0"]'),
   ).toHaveText("8,000 LP");
@@ -1200,23 +1201,36 @@ test("responsive field compositions contain controls across supported viewports"
         right: box.right,
       };
     });
-    const boardBoxForButton = await board.evaluate((element) => {
-      const box = element.getBoundingClientRect();
-      return {
-        top: box.top,
-        left: box.left,
-        bottom: box.bottom,
-        right: box.right,
-      };
-    });
-    const buttonIntersectsBoard =
-      endTurnRect.left < boardBoxForButton.right &&
-      endTurnRect.right > boardBoxForButton.left &&
-      endTurnRect.top < boardBoxForButton.bottom &&
-      endTurnRect.bottom > boardBoxForButton.top;
+    // T3 moved End turn from a bottom-pinned corner outside the board into
+    // the board's free band between the two banished zones (by design, per
+    // the ticket's geometry table), so it now legitimately sits inside the
+    // board's bounding rect. The check that still matters is that it never
+    // sits over a playable target, so it can never swallow a click meant
+    // for a card or a zone.
+    const targetRects = await field
+      .locator("[data-field-target]")
+      .evaluateAll((elements) =>
+        elements.map((element) => {
+          const box = element.getBoundingClientRect();
+          return {
+            top: box.top,
+            left: box.left,
+            bottom: box.bottom,
+            right: box.right,
+          };
+        }),
+      );
+    expect(targetRects.length).toBeGreaterThan(0);
+    const buttonOverlapsATarget = targetRects.some(
+      (rect) =>
+        endTurnRect.left < rect.right &&
+        endTurnRect.right > rect.left &&
+        endTurnRect.top < rect.bottom &&
+        endTurnRect.bottom > rect.top,
+    );
     expect(
-      buttonIntersectsBoard,
-      `${viewportLabel} End turn corner button (rect ${JSON.stringify(endTurnRect)}) must not overlap the duel board (rect ${JSON.stringify(boardBoxForButton)})`,
+      buttonOverlapsATarget,
+      `${viewportLabel} End turn corner button (rect ${JSON.stringify(endTurnRect)}) must not overlap any playable field target`,
     ).toBe(false);
 
     await captureResponsiveState(page, testInfo, viewport.id, "ST-01");

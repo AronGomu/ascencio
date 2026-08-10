@@ -343,7 +343,6 @@ describe("data-cy uniqueness in a rendered document", () => {
   it.each(fixtureIds)("%s renders no duplicate data-cy", (state) => {
     render(DuelField, {
       board: fixtureBoard(state),
-      hasPriority: true,
       phase: "main1",
     });
     expect(duplicateRenderedValues()).toEqual([]);

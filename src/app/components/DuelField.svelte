@@ -38,7 +38,7 @@
   import FieldBoard from "./duel-field/FieldBoard.svelte";
   import FieldLines from "./duel-field/FieldLines.svelte";
   import EndTurnButton from "./duel-field/EndTurnButton.svelte";
-  import FieldStatusPills from "./duel-field/FieldStatusPills.svelte";
+  import PhaseStrip from "./duel-field/PhaseStrip.svelte";
 
   const EMPTY_IMAGE_URLS: ReadonlyMap<number, string> = new Map();
   const EMPTY_TARGETS: ReadonlySet<BoardTargetId> = new Set();
@@ -76,7 +76,6 @@
   export let onpreview: (card: BoardCardView) => void = () => undefined;
   export let onstackpreview: (stack: BoardStackView) => void = () => undefined;
   export let phase: DuelPhase = "unknown";
-  export let hasPriority = false;
 
   if (injectFailure) throw new Error("Injected duel field component failure");
 
@@ -378,30 +377,33 @@
     ? `${actionBarHeight}px`
     : undefined}
 >
-  <FieldBoard
-    {board}
-    {imageUrls}
-    {imageLibrary}
-    cardBackUrl={resolvedCardBackUrl}
-    placeholderUrl={resolvedPlaceholderUrl}
-    {spec}
-    {selectedTargets}
-    disabled={pending}
-    pinnedTarget={session.menuTarget}
-    {dropCandidates}
-    oncardactivate={activateCard}
-    onzoneactivate={activateZone}
-    oncardchoose={(choice) => {
-      dispatch({ type: "chooseChoice", choiceId: choice.id });
-    }}
-    oncarddismiss={() => dispatch({ type: "closeMenu" })}
-    oncarddragstart={startCardDrag}
-    oncarddragmove={moveCardDrag}
-    oncarddragend={endCardDrag}
-    oncardpreview={onpreview}
-    {onstackpreview}
-  />
-  <FieldStatusPills {hasPriority} {phase} />
+  <div class="duel-field-stage" data-cy="duel-field-stage">
+    <FieldBoard
+      {board}
+      {imageUrls}
+      {imageLibrary}
+      cardBackUrl={resolvedCardBackUrl}
+      placeholderUrl={resolvedPlaceholderUrl}
+      {spec}
+      {selectedTargets}
+      disabled={pending}
+      pinnedTarget={session.menuTarget}
+      {dropCandidates}
+      oncardactivate={activateCard}
+      onzoneactivate={activateZone}
+      oncardchoose={(choice) => {
+        dispatch({ type: "chooseChoice", choiceId: choice.id });
+      }}
+      oncarddismiss={() => dispatch({ type: "closeMenu" })}
+      oncarddragstart={startCardDrag}
+      oncarddragmove={moveCardDrag}
+      oncarddragend={endCardDrag}
+      oncardpreview={onpreview}
+      {onstackpreview}
+    />
+    <PhaseStrip {phase} {spec} disabled={pending} {oninteraction} />
+    <EndTurnButton {spec} disabled={pending} {oninteraction} />
+  </div>
   {#if feedbackState.line}
     <FieldLines line={feedbackState.line} />
   {/if}
@@ -431,5 +433,4 @@
       {oninteraction}
     />
   {/if}
-  <EndTurnButton {spec} disabled={pending} {oninteraction} />
 </section>

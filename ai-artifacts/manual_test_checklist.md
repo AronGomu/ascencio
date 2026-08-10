@@ -125,3 +125,15 @@ Human-only checks that automated tests cannot cover. One section per plan ticket
 - [ ] The status pills and both life pills never block a click — a card underneath any of them (top-right corner, top-left corner, bottom-left corner) is still clickable/draggable exactly as if the pill were not there.
 - [ ] With a screen reader, the priority/phase pill group announces once per change (not once per unrelated re-render) as a single `polite` region; the `-` separator itself is not announced.
 - [ ] There is no `Inspect` button in the Duel HUD pointing at a missing `card-inspector` id — Inspect buttons still open the card preview panel with no console error.
+
+## T3 phase-strip-and-end-turn-placement
+
+- [ ] `npm run dev`, reach a Main Phase 1 idle-command prompt: an in-field phase strip is visible in the free centre band of the board, split into a left group (`Draw`, `Standby`, `Main 1`) and a right group (`Battle`, `Main 2`, `End`), and it does not visually overlap either shared Extra Monster Zone.
+- [ ] During Main Phase 1, the `Main 1` chip has a blue halo (the current-phase highlight), `Battle` and `End` are lit and clickable, and `Draw`/`Standby`/`Main 2` are greyed and not clickable.
+- [ ] Click the `Battle` chip: the duel advances into the Battle Phase, the `Battle` chip now carries the blue halo, and the board (cards, zones) stays fully clickable — no click is swallowed by the strip.
+- [ ] Progress through Draw, Standby, both Main Phases, Battle Start/Step/Damage/Damage Calculation and End: exactly one chip carries the current-phase halo at a time, and every battle sub-phase (`battleStart`, `battleStep`, `damage`, `damageCalculation`, `battle`) lights the single `Battle` chip.
+- [ ] The `End turn` button sits at the right edge of the board, roughly level with the two banished zones (between them vertically), and stays clickable and functional exactly as before (ends your turn when clicked).
+- [ ] The top-right status pills (`Choose Action`/`Waiting Opponent` and the old phase pill) are gone; nothing at the top-right corner of the field displays that text or blocks clicks there.
+- [ ] Resize the window across a few widths (desktop, ~1024px, phone width): the phase strip and End turn button stay inside the board's free band, do not overlap the banished zones or Extra Monster Zones, and every card/zone remains clickable at each size.
+- [ ] Keyboard only: tab through the field; the phase strip chips and the End turn button are each reachable and operable via keyboard, and tabbing does not get stuck inside the board region.
+- [ ] With a screen reader, each phase chip announces its phase name plus `current`/`available` state (e.g. "Battle phase, available"); the strip as a whole is one `Duel phases` group, not announced twice.

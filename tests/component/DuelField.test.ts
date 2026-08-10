@@ -163,6 +163,18 @@ describe("DuelField", () => {
     expect(document.body.innerHTML).not.toContain("46986414");
   });
 
+  it("duel field no longer renders the status pills", () => {
+    const value = DUEL_FIELD_PUBLIC_STATES["ST-01"];
+    render(DuelField, { board: value.board });
+
+    expect(document.querySelector('[data-cy="field-status-pills"]')).toBeNull();
+    expect(document.querySelector('[data-cy="prio-pill"]')).toBeNull();
+    expect(document.querySelector('[data-cy="phase-pill"]')).toBeNull();
+    expect(
+      document.querySelector('[data-cy="field-phase-strip"]'),
+    ).not.toBeNull();
+  });
+
   it.each(DUEL_FIELD_PUBLIC_STATE_MATRIX)(
     "DF-16 validates %s semantic/layout acceptance assertions",
     ({ id, board: value, assertions }) => {

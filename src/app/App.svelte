@@ -45,7 +45,6 @@
   } from "./presentation/card-preview.ts";
   import { previewStatusFor } from "./presentation/preview-status.ts";
   import { promptSurface } from "./prompts/prompt-surface.ts";
-  import { hasDuelPriority } from "./prompts/duel-priority.ts";
   import { createDuelStore } from "./stores/duel-store.ts";
   import { createUiSettingsStore } from "./stores/ui-settings-store.ts";
 
@@ -899,7 +898,6 @@
             onpreview={previewFieldCard}
             onstackpreview={previewStackCard}
             phase={$duel.snapshot?.phase ?? "unknown"}
-            hasPriority={hasDuelPriority($duel.prompt, $duel.responsePending)}
           />
         {/key}
       {:else if $duel.snapshot}

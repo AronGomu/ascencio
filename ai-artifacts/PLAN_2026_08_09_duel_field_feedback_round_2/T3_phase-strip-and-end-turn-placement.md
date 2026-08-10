@@ -123,19 +123,19 @@ The only band with no zone outside the two extra monster zones is **y 51% – 64
 
 ## Impl steps
 
-- [ ] 1. Create `tests/unit/phase-transitions.test.ts` with the three unit cases from the table.
-- [ ] 2. Create `tests/component/PhaseStrip.test.ts` with the six component cases, following the render style in `tests/component/EndTurnButton.test.ts` (it already builds an `ActiveInteractionSpec` by hand — copy that builder).
-- [ ] 3. Delete `tests/component/FieldStatusPills.test.ts`.
-- [ ] 4. Add the `duel field no longer renders the status pills` case to `tests/component/DuelField.test.ts` and delete any existing assertions there that read `field-status-pills`, `prio-pill` or `phase-pill`.
-- [ ] 5. Run `npm run test:unit && npm run test:component`; confirm the new files fail.
-- [ ] 6. Create `src/app/prompts/phase-transitions.ts` with the exact exports above.
-- [ ] 7. Create `src/app/components/duel-field/PhaseStrip.svelte` with the exact prop contract and `data-cy` values above. Use `<svelte:element this={available ? "button" : "span"}>` for the chip, mirroring the pattern already used in `src/app/components/duel-field/ZoneControl.svelte`.
-- [ ] 8. In `src/app/components/DuelField.svelte`: delete the `FieldStatusPills` import and its render line, delete `export let hasPriority = false;`, import `PhaseStrip` and render `<PhaseStrip {phase} {spec} disabled={pending} {oninteraction} />` immediately after `<FieldBoard … />`.
-- [ ] 9. Delete `src/app/components/duel-field/FieldStatusPills.svelte`.
-- [ ] 10. In `src/app/components/duel-field/DuelFieldErrorBoundary.svelte`, delete the `hasPriority` prop declaration and its forwarding.
-- [ ] 11. In `src/app/App.svelte`, delete `hasPriority={…}` from the `DuelFieldErrorBoundary` call site and delete the now-unused `hasDuelPriority` import. Do **not** delete `src/app/prompts/duel-priority.ts`.
-- [ ] 12. In `src/styles/app.css`, delete the `.field-status-pills`, `.field-status-pills-separator`, `.prio-pill`, `.prio-pill.is-priority` and `.field-phase-pill` rules (both occurrences of `.field-phase-pill`).
-- [ ] 13. In `src/styles/app.css`, add:
+- [x] 1. Create `tests/unit/phase-transitions.test.ts` with the three unit cases from the table.
+- [x] 2. Create `tests/component/PhaseStrip.test.ts` with the six component cases, following the render style in `tests/component/EndTurnButton.test.ts` (it already builds an `ActiveInteractionSpec` by hand — copy that builder).
+- [x] 3. Delete `tests/component/FieldStatusPills.test.ts`.
+- [x] 4. Add the `duel field no longer renders the status pills` case to `tests/component/DuelField.test.ts` and delete any existing assertions there that read `field-status-pills`, `prio-pill` or `phase-pill`.
+- [x] 5. Run `npm run test:unit && npm run test:component`; confirm the new files fail.
+- [x] 6. Create `src/app/prompts/phase-transitions.ts` with the exact exports above.
+- [x] 7. Create `src/app/components/duel-field/PhaseStrip.svelte` with the exact prop contract and `data-cy` values above. Use `<svelte:element this={available ? "button" : "span"}>` for the chip, mirroring the pattern already used in `src/app/components/duel-field/ZoneControl.svelte`.
+- [x] 8. In `src/app/components/DuelField.svelte`: delete the `FieldStatusPills` import and its render line, delete `export let hasPriority = false;`, import `PhaseStrip` and render `<PhaseStrip {phase} {spec} disabled={pending} {oninteraction} />` immediately after `<FieldBoard … />`.
+- [x] 9. Delete `src/app/components/duel-field/FieldStatusPills.svelte`.
+- [x] 10. In `src/app/components/duel-field/DuelFieldErrorBoundary.svelte`, delete the `hasPriority` prop declaration and its forwarding.
+- [x] 11. In `src/app/App.svelte`, delete `hasPriority={…}` from the `DuelFieldErrorBoundary` call site and delete the now-unused `hasDuelPriority` import. Do **not** delete `src/app/prompts/duel-priority.ts`.
+- [x] 12. In `src/styles/app.css`, delete the `.field-status-pills`, `.field-status-pills-separator`, `.prio-pill`, `.prio-pill.is-priority` and `.field-phase-pill` rules (both occurrences of `.field-phase-pill`).
+- [x] 13. In `src/styles/app.css`, add:
   ```css
   .field-phase-strip {
     position: absolute;
@@ -166,9 +166,17 @@ The only band with no zone outside the two extra monster zones is **y 51% – 64
   .field-phase-chip.is-available { color: var(--ink); border-color: var(--border); }
   .field-phase-chip.is-current { box-shadow: 0 0 0 2px var(--accent), 0 0 0.6rem var(--accent); color: var(--ink); }
   ```
-- [ ] 14. In `src/styles/app.css`, replace the `.field-end-turn` positioning rule with `position: absolute; z-index: var(--duel-field-layer-control); right: 1%; top: 57.5%; transform: translateY(-50%);` keeping its existing colour/size declarations.
-- [ ] 15. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`.
-- [ ] 16. Run the chromium e2e suite (see Validation) and fix any pointer-interception failure by shrinking the chips or the band, never by relaxing the test.
+- [x] 14. In `src/styles/app.css`, replace the `.field-end-turn` positioning rule with `position: absolute; z-index: var(--duel-field-layer-control); right: 1%; top: 57.5%; transform: translateY(-50%);` keeping its existing colour/size declarations.
+- [x] 15. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`.
+- [x] 16. Run the chromium e2e suite (see Validation) and fix any pointer-interception failure by shrinking the chips or the band, never by relaxing the test.
+
+### Deviation (orchestrator-approved)
+
+Steps 3/8's literal DOM placement (render `PhaseStrip`/`EndTurnButton` as siblings of `<FieldBoard>` inside `.duel-field`) was replaced by wrapping `<FieldBoard>` together with `<PhaseStrip>`/`<EndTurnButton>` in a new, padding-free `<div class="duel-field-stage" data-cy="duel-field-stage">` inside `.duel-field`. Reason, measured directly against the rendered DOM: `.duel-field` carries its own padding (1rem top/left/right, plus a dynamic bottom gutter reserved for `FieldActionBar`, ~87px when visible), so `.duel-field`'s box (measured 966x628 at a 1366px viewport) is not the board's own box (measured 932x524, matching the `aspect-ratio: 16/9` board). Percentages on `.field-phase-strip`/`.field-end-turn` resolved against `.duel-field` landed 8-13 points off the ticket's own geometry table; End turn (top:57.5%) measurably overlapped `p0:banished`'s target rect by ~25px, confirmed by the `responsive field compositions...` e2e check. `.duel-field-stage` has no padding and (like `.duel-field-board`) tracks the board's `min-width: 52rem` floor, so its box always equals the board's rendered box, matching what `ZoneControl`'s own `--field-x`/`--field-y` percentages already resolve against.
+
+Separately, the ticket's board-geometry table itself proved to have a systematic error: it reported each zone's extent as `center` to `center + full width/height`, but zones render with `transform: translate(-50%, -50%)`, so every true extent is the table's span shifted up/left by half the zone's own size (true_top = stated_top − height/2). Measured true extents at a 1366px viewport (board 932x524): shared extra monster left x [42.90%, 49.30%], right x [50.70%, 57.10%], both y [42.11%, 57.92%]; p1 banished true y [26.75%, 42.65%]; p0 banished true y [57.36%, 73.10%]. The true free gap between the two banished zones is y [42.65%, 57.36%], not the table's stated [51%, 64%]. `.field-phase-strip`'s `top` was changed from the ticket's `51%` to `43.5%` (height stays the ticket's `13%`) and its group boundaries from `54.5%`/`61%` to `60.6%`/`60.6%`; `.field-end-turn`'s `top` was changed from the ticket's `57.5%` to `50%` (all other declarations, including `right: 1%`, unchanged) — all chosen to sit inside the measured true free gap and clear of the true extra-monster-zone columns. Verified green against `responsive field compositions...` (End turn/target overlap check) and the pointer-interception specs, chromium e2e project, 2 consecutive full-suite runs.
+
+All chip labels, `data-cy` values, classes, click behaviour, and component props are unchanged from the ticket's spec; only the containing element and the numeric geometry constants noted above differ.
 
 ## Outputs
 
@@ -180,12 +188,12 @@ The only band with no zone outside the two extra monster zones is **y 51% – 64
 
 ## Validation
 
-- [ ] `npm run format:check` exits 0
-- [ ] `npm run lint` exits 0
-- [ ] `npm run typecheck` exits 0
-- [ ] `npm run test:unit` exits 0
-- [ ] `npm run test:component` exits 0
-- [ ] chromium e2e exits 0 — the strip must not intercept pointer events aimed at card targets:
+- [x] `npm run format:check` exits 0
+- [x] `npm run lint` exits 0
+- [x] `npm run typecheck` exits 0
+- [x] `npm run test:unit` exits 0
+- [x] `npm run test:component` exits 0
+- [x] chromium e2e exits 0 — the strip must not intercept pointer events aimed at card targets:
   ```bash
   cd /home/aron/projects/ascencio
   timeout 590 nix-shell -p playwright-driver.browsers glib gtk3 nss nspr dbus atk cups \
@@ -203,6 +211,6 @@ The only band with no zone outside the two extra monster zones is **y 51% – 64
   - Run it in the **foreground**, blocking. Runs take 1-5 min; `webServer` builds and starts the preview itself, so do not hand-start `npm run preview`.
   - The duel seed is random per run (`crypto.getRandomValues`). A single pass of a duel-walking test proves little; if a duel-walking test is the one you changed, run the suite 3 times before calling it green.
 - [ ] manual check: `npm run dev`; during your Main Phase 1 the `Main 1` chip has a blue halo, `Battle` and `End` are lit and clickable, `Draw` and `Standby` are grey, and End turn sits at the right edge level with the extra monster zones
-- [ ] app functional — clicking `Battle` advances the phase and the board stays fully clickable
+- [ ] manual check: `npm run dev`; app functional — clicking `Battle` advances the phase and the board stays fully clickable
 - [ ] commit msg draft: `feat(field): navigate phases from an in-field phase strip`
 </content>

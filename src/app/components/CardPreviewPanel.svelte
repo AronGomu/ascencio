@@ -9,6 +9,7 @@
 
   export let preview: CardPreviewView | null = null;
   export let status: CardPreviewStatus | null = null;
+  export let hasPriority = false;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let placeholderUrl = "";
 
@@ -71,7 +72,11 @@
     </div>
   {/if}
   {#if status !== null}
-    <p class="card-preview-panel__status" data-cy="card-preview-status">
+    <p
+      class="card-preview-panel__status"
+      data-has-priority={hasPriority ? "true" : undefined}
+      data-cy="card-preview-status"
+    >
       <span data-cy="card-preview-status-text">{status.text}</span>
       {#if status.thinking}
         <span

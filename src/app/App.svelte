@@ -53,6 +53,7 @@
     type CardPreviewView,
   } from "./presentation/card-preview.ts";
   import { previewStatusFor } from "./presentation/preview-status.ts";
+  import { hasDuelPriority } from "./prompts/duel-priority.ts";
   import { promptSurface } from "./prompts/prompt-surface.ts";
   import { createDuelStore } from "./stores/duel-store.ts";
   import {
@@ -926,6 +927,7 @@
       <CardPreviewPanel
         preview={previewCard}
         status={previewStatus}
+        hasPriority={hasDuelPriority($duel.prompt, $duel.responsePending)}
         imageLibrary={imagesMatchRuntime ? imageLibrary : null}
         placeholderUrl={imageLibrary?.placeholderUrl ??
           DEFAULT_CARD_PLACEHOLDER}

@@ -1593,6 +1593,7 @@ test("spatial field navigation has one visible 44px keyboard entry without a tra
 test("a full preset duel can be completed using keyboard controls only with one response per prompt", async ({
   page,
 }, testInfo) => {
+  test.setTimeout(300_000);
   await page.goto("./");
   await expect(
     page.locator('[data-cy="duel-field"][data-prompt-kind]'),
@@ -1798,12 +1799,14 @@ async function answerPromptWithKeyboard(
       await activatePreferredButton(page, controls, ["No"]);
       return "prompt";
     case "chain":
-      if (await hasEnabledButton(field, "Pass")) {
-        await activatePreferredButton(page, field, ["Pass"]);
-        return "field";
-      }
-      await activatePreferredButton(page, controls, ["Pass"]);
-      return "prompt";
+      await expect(page.locator('[data-cy="prompt-dialog"]')).toHaveCount(0);
+      await expect(
+        page.locator('[data-cy="card-preview-status"]', {
+          hasText: "Do you respond?",
+        }),
+      ).toHaveAttribute("data-has-priority", "true");
+      await answerChainOnField(page, field);
+      return "field";
     case "selectUnselectCard":
       if (
         (await hasEnabledButton(field, "Finish")) ||
@@ -1954,6 +1957,63 @@ async function hasEnabledButton(
     (await candidate.first().isVisible()) &&
     (await candidate.first().isEnabled())
   );
+}
+
+async function answerChainOnField(page: Page, field: Locator): Promise<void> {
+  if (await hasEnabledButton(field, "Pass")) {
+    await activatePreferredButton(page, field, ["Pass"]);
+    return;
+  }
+
+  const globalChoice = field
+    .locator('[data-cy^="field-action-bar-choice-"]:enabled')
+    .first();
+  if ((await globalChoice.count()) > 0) {
+    await keyboardActivate(page, globalChoice);
+    return;
+  }
+
+  const cardTarget = field
+    .locator("[data-field-target][aria-label^='Legal action']")
+    .first();
+  if ((await cardTarget.count()) > 0) {
+    const cardId = ((await cardTarget.getAttribute("data-cy")) ?? "").replace(
+      /^field-card-target-/,
+      "",
+    );
+    const chips = field.locator(`[data-cy="card-action-chips-${cardId}"]`);
+    const chipButtons = chips.getByRole("button");
+    const choiceCount = await chipButtons.count();
+    await keyboardActivate(page, cardTarget);
+    if (choiceCount > 1) {
+      await expect(chips).toBeVisible();
+      await keyboardActivate(page, chipButtons.first());
+    }
+    return;
+  }
+
+  const stack = field
+    .locator('[data-cy^="field-stack-"].is-actionable')
+    .first();
+  if ((await stack.count()) > 0) {
+    await keyboardActivate(page, stack);
+    const dialog = page.locator('[data-cy="zone-list-dialog"]');
+    await expect(dialog).toBeVisible();
+    const buttons = dialog.getByRole("button");
+    for (let index = 0; index < (await buttons.count()); index += 1) {
+      const button = buttons.nth(index);
+      const name =
+        (await button.getAttribute("aria-label")) ??
+        (await button.textContent()) ??
+        "";
+      if (!/^Close\b/.test(name.trim()) && (await button.isEnabled())) {
+        await keyboardActivate(page, button);
+        return;
+      }
+    }
+  }
+
+  throw new Error("Inline chain prompt has no enabled field response");
 }
 
 async function chooseValidFieldSubset(

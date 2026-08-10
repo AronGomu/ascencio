@@ -875,11 +875,26 @@ describe("DuelField", () => {
     expect(harness.dispatch).not.toHaveBeenCalled();
   });
 
-  it("outside click is inert for a single-choice prompt", async () => {
+  it("a pass-only chain remains answerable inline", async () => {
     const user = userEvent.setup();
     const value = fieldPrompt(
       "chain",
-      [mountedChoice("pass", "Pass", { action: "pass" })],
+      [promptChoice("c-pass", "Pass", { action: "pass" })],
+      { cancelable: true },
+    );
+    const harness = renderInteractive(value);
+    expect(harness.spec.fieldCapable).toBe(false);
+
+    await user.click(screen.getByRole("button", { name: "Pass" }));
+
+    expect(harness.commands).toEqual([[choiceId("c-pass")]]);
+  });
+
+  it("outside click passes a chain", async () => {
+    const user = userEvent.setup();
+    const value = fieldPrompt(
+      "chain",
+      [promptChoice("c-pass", "Pass", { action: "pass" })],
       { cancelable: true },
     );
     const harness = renderInteractive(value);
@@ -888,26 +903,57 @@ describe("DuelField", () => {
     );
     if (surface === null) throw new Error("Missing board surface");
     await user.click(surface);
-    expect(harness.dispatch).not.toHaveBeenCalled();
+    expect(harness.dispatch.mock.calls[0]?.[0]).toMatchObject({
+      type: "chooseChoice",
+      choiceId: "c-pass",
+      key: harness.spec.key,
+    });
   });
 
-  it("outside click ignores clicks on targets", async () => {
+  it("outside click cannot pass a forced chain, which remains answerable", async () => {
     const user = userEvent.setup();
     const value = fieldPrompt(
-      "selectPlace",
+      "chain",
+      [mountedChoice("activate", "Chain", { action: "activate" })],
+      { cancelable: false },
+    );
+    const harness = renderInteractive(value);
+    const surface = document.querySelector<HTMLElement>(
+      '[data-cy="duel-field-board-surface"]',
+    );
+    if (surface === null) throw new Error("Missing board surface");
+    await user.click(surface);
+    expect(harness.dispatch).not.toHaveBeenCalled();
+
+    await user.click(
+      screen.getByRole("button", {
+        name: /Open actions for The Legendary Fisherman/,
+      }),
+    );
+    expect(harness.commands).toEqual([[choiceId("activate")]]);
+  });
+
+  it("outside click on a card target does not pass a chain", async () => {
+    const user = userEvent.setup();
+    const value = fieldPrompt(
+      "chain",
       [
-        promptChoice("place", "Your Main Monster 1", {
-          place: { player: 0, location: "monster", sequence: 0 },
-        }),
+        mountedChoice("activate", "Chain", { action: "activate" }),
+        promptChoice("c-pass", "Pass", { action: "pass" }),
       ],
       { cancelable: true },
     );
     const harness = renderInteractive(value);
     await user.click(
-      screen.getByRole("button", { name: /Select Your Main Monster 1/ }),
+      screen.getByRole("button", {
+        name: /Open actions for The Legendary Fisherman/,
+      }),
     );
     expect(
-      harness.dispatch.mock.calls.some(([action]) => action.type === "cancel"),
+      harness.dispatch.mock.calls.some(
+        ([action]) =>
+          action.type === "chooseChoice" && action.choiceId === "c-pass",
+      ),
     ).toBe(false);
   });
 
@@ -1462,6 +1508,58 @@ describe("DuelField", () => {
     expect(stack).not.toBeNull();
     expect(stack?.classList.contains("is-actionable")).toBe(true);
     expect(stack?.getAttribute("data-actionable")).toBe("true");
+    expect(document.querySelector('[data-cy="prompt-dialog"]')).toBeNull();
+  });
+
+  it("answers a forced chain whose only source sits in a pile", async () => {
+    const user = userEvent.setup();
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    const value = fieldPrompt(
+      "chain",
+      [
+        mountedChoice("graveyard-activate", "Chain", {
+          card: {
+            instanceId: cardInstanceId("prompt-graveyard-activate"),
+            controller: 0,
+            location: "graveyard",
+            sequence: 0,
+            position: "faceUpAttack",
+          },
+        } as Partial<PromptChoice>),
+      ],
+      { cancelable: false },
+    );
+    const spec = mapPromptToInteractionSpec(
+      value,
+      STACK_ART_STATE,
+      stackBoard.value,
+      CONTEXT,
+    );
+    if (spec.kind === "inactive") throw new Error("Expected active field spec");
+    const oninteraction = vi.fn();
+    render(DuelField, {
+      board: stackBoard.value,
+      prompt: value,
+      spec,
+      session: createInteractionSession(spec),
+      pending: false,
+      zoneLists: zoneListsForBoard(
+        stackBoard.value,
+        STACK_ART_STATE,
+        BOARD_CARD_TEXTS,
+      ),
+      oninteraction,
+    });
+
+    await user.click(screen.getByRole("button", { name: /Your GY, 4 cards/ }));
+    await user.click(screen.getByRole("button", { name: "Chain" }));
+
+    expect(oninteraction).toHaveBeenCalledWith({
+      type: "chooseChoice",
+      choiceId: choiceId("graveyard-activate"),
+      key: spec.key,
+    });
   });
 
   it("stack stays non-interactive", () => {

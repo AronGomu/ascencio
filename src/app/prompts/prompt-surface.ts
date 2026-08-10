@@ -10,6 +10,7 @@ export function promptSurface(
 ): PromptSurface {
   if (prompt === null) return "none";
   if (showWorkspace) return "docked";
+  if (prompt.kind === "chain") return "field";
   if (spec !== null && spec.kind !== "inactive" && spec.fieldCapable)
     return "field";
   return "dialog";

@@ -141,6 +141,32 @@ describe("CardPreviewPanel", () => {
     ).not.toBeNull();
   });
 
+  it("panel exposes priority", () => {
+    render(CardPreviewPanel, {
+      status: { text: "Do you respond?", thinking: true },
+      hasPriority: true,
+    });
+
+    expect(
+      document
+        .querySelector('[data-cy="card-preview-status"]')
+        ?.getAttribute("data-has-priority"),
+    ).toBe("true");
+  });
+
+  it("panel omits priority when waiting", () => {
+    render(CardPreviewPanel, {
+      status: { text: "Waiting for the engine", thinking: true },
+      hasPriority: false,
+    });
+
+    expect(
+      document
+        .querySelector('[data-cy="card-preview-status"]')
+        ?.hasAttribute("data-has-priority"),
+    ).toBe(false);
+  });
+
   it("panel renders the status with no card previewed", () => {
     render(CardPreviewPanel, {
       preview: null,

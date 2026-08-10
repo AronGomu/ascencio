@@ -30,6 +30,20 @@ describe("previewStatusFor", () => {
     });
   });
 
+  it("chain status asks the question", () => {
+    expect(previewStatusFor({ ...SOME_PROMPT, kind: "chain" }, false)).toEqual({
+      text: "Do you respond?",
+      thinking: true,
+    });
+  });
+
+  it("a sent chain response reports the wait", () => {
+    expect(previewStatusFor({ ...SOME_PROMPT, kind: "chain" }, true)).toEqual({
+      text: "Waiting for the engine",
+      thinking: true,
+    });
+  });
+
   it("previewStatusFor echoes the prompt title", () => {
     expect(previewStatusFor(SOME_PROMPT, false)).toEqual({
       text: "Choose a Main Phase action",

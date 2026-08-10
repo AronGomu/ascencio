@@ -13,5 +13,7 @@ export function previewStatusFor(
   if (responsePending)
     return { text: "Waiting for the engine", thinking: true };
   if (prompt === null) return { text: "Opponent is acting", thinking: true };
+  if (prompt.kind === "chain")
+    return { text: "Do you respond?", thinking: true };
   return { text: prompt.title, thinking: false };
 }

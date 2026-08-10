@@ -22,6 +22,7 @@
   import {
     fieldActionBarRequired,
     type ActiveInteractionSpec,
+    type InteractionChoice,
   } from "../prompts/interaction-spec.ts";
   import type { ZoneListEntry } from "../../field/zone-list.ts";
   import ZoneListDialog from "./duel-field/ZoneListDialog.svelte";
@@ -129,7 +130,7 @@
   $: actionBarVisible =
     prompt !== null &&
     spec !== null &&
-    spec.fieldCapable &&
+    (spec.fieldCapable || spec.promptKind === "chain") &&
     fieldActionBarRequired(spec);
   onMount(() => {
     const motionQuery = globalThis.matchMedia?.(
@@ -315,8 +316,26 @@
   const INTERACTIVE_SELECTOR =
     "[data-field-target], .card-action-chips, .field-action-bar, .field-phase-strip, .field-end-turn";
 
+  function chainPassChoice(): InteractionChoice | null {
+    if (spec === null || spec.promptKind !== "chain") return null;
+    for (const choice of spec.globalChoices.values())
+      if (choice.action === "pass") return choice;
+    return null;
+  }
+
   function dismissOnOutsideClick(event: MouseEvent): void {
     if (spec === null || pending) return;
+    const pass = chainPassChoice();
+    if (pass !== null) {
+      const origin = event.target;
+      if (
+        origin instanceof Element &&
+        origin.closest(INTERACTIVE_SELECTOR) !== null
+      )
+        return;
+      dispatch({ type: "chooseChoice", choiceId: pass.id });
+      return;
+    }
     if (!spec.constraints.cancelable) return;
     /* A `single`-family prompt rejects an empty response outright
        (`validatePromptSelection` requires exactly one choice for it, even when

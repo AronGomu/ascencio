@@ -98,6 +98,6 @@ The existing suite must run green on the merge result.
 - [x] `git rev-parse --abbrev-ref HEAD` prints `plan/duel-field-feedback-round-3`
 - [x] `git status --short` shows only ` M feedback.md`
 - [x] `git merge-base --is-ancestor 736b374 HEAD` exits 0
-- [ ] `git log --oneline origin/plan/duel-field-feedback-round-3..HEAD` prints nothing after push
+- [x] `git log --oneline origin/plan/duel-field-feedback-round-3..HEAD` prints nothing after push
 - [x] app functional — Chromium command exits 0 with all tests passing; no broken path from merge
 - [x] `git log --format=%s --all` contains `docs(plan): add duel field feedback round 3 plan` and `merge: land duel field feedback round 2`

@@ -42,6 +42,7 @@ import {
 import {
   BOARD_CARD_TEXTS,
   BOARD_VIEW_MODEL_FIXTURES,
+  STACK_ART_STATE,
 } from "../fixtures/board-view-model.ts";
 import {
   DUEL_FIELD_PUBLIC_STATE_MATRIX,
@@ -1488,6 +1489,110 @@ describe("DuelField", () => {
     (stack as HTMLElement).click();
 
     expect(oninteraction).not.toHaveBeenCalled();
+  });
+
+  it("graveyard shows its last public card", () => {
+    const lease = vi.fn((code: number) => ({
+      url: `blob:${code}`,
+      release: vi.fn(),
+    }));
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    render(DuelField, {
+      board: stackBoard.value,
+      imageLibrary: { lease },
+      placeholderUrl: "/cards/placeholder.webp",
+    });
+
+    expect(
+      document
+        .querySelector('[data-cy="stack-control-image-p0:graveyard"]')
+        ?.getAttribute("src"),
+    ).toBe("blob:89631139");
+    expect(
+      document.querySelector('[data-cy="stack-control-name-p0:graveyard"]')
+        ?.textContent,
+    ).toBe("GY");
+    expect(
+      document.querySelector('[data-cy="stack-control-count-p0:graveyard"]')
+        ?.textContent,
+    ).toBe("4");
+  });
+
+  it("banished shows its last public card", () => {
+    const lease = vi.fn((code: number) => ({
+      url: `blob:${code}`,
+      release: vi.fn(),
+    }));
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    render(DuelField, {
+      board: stackBoard.value,
+      imageLibrary: { lease },
+      placeholderUrl: "/cards/placeholder.webp",
+    });
+
+    expect(
+      document.querySelector('[data-cy="stack-control-image-p0:banished"]'),
+    ).not.toBeNull();
+  });
+
+  it("an empty pile shows no art", () => {
+    const lease = vi.fn((code: number) => ({
+      url: `blob:${code}`,
+      release: vi.fn(),
+    }));
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    render(DuelField, {
+      board: stackBoard.value,
+      imageLibrary: { lease },
+      placeholderUrl: "/cards/placeholder.webp",
+    });
+
+    expect(
+      document.querySelector('[data-cy="stack-control-art-p1:graveyard"]'),
+    ).toBeNull();
+  });
+
+  it("the deck never shows art", () => {
+    const lease = vi.fn((code: number) => ({
+      url: `blob:${code}`,
+      release: vi.fn(),
+    }));
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    render(DuelField, {
+      board: stackBoard.value,
+      imageLibrary: { lease },
+      placeholderUrl: "/cards/placeholder.webp",
+    });
+
+    expect(
+      document.querySelector('[data-cy="stack-control-art-p0:deck"]'),
+    ).toBeNull();
+  });
+
+  it("the lease is released on destroy", () => {
+    const release = vi.fn();
+    const lease = vi.fn((code: number) => ({
+      url: `blob:${code}`,
+      release,
+    }));
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    const rendered = render(DuelField, {
+      board: stackBoard.value,
+      imageLibrary: { lease },
+      placeholderUrl: "/cards/placeholder.webp",
+    });
+
+    expect(
+      document.querySelector('[data-cy="stack-control-art-p0:graveyard"]'),
+    ).not.toBeNull();
+    rendered.unmount();
+
+    expect(release).toHaveBeenCalledTimes(2);
   });
 });
 

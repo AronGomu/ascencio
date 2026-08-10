@@ -252,6 +252,17 @@ export const DUPLICATE_SHARED_OCCUPANCY = state(
   { monsters: [card("duplicate-left-b", 89631139, 1, "monster", 6)] },
 );
 
+export const STACK_ART_STATE = state("stackart", {
+  graveyard: [
+    card("stackart-gy-first", 97590747, 0, "graveyard", 0),
+    card("stackart-gy-second", 5053103, 0, "graveyard", 1),
+    card("stackart-gy-third", 46986414, 0, "graveyard", 2),
+    card("stackart-gy-fourth", 89631139, 0, "graveyard", 3),
+  ],
+  banished: [card("stackart-banished-first", 97590747, 0, "banished", 0)],
+  deckCount: 40,
+});
+
 export function promptChoice(id: string): PromptChoice {
   const choice = BOARD_TARGET_PROMPT.choices.find((value) => value.id === id);
   if (choice === undefined) throw new Error(`Missing prompt choice: ${id}`);

@@ -186,6 +186,8 @@
       active={navigationState.activeTarget === stack.targetId}
       actionable={!disabled && spec?.stackChoices.has(stack.targetId) === true}
       onpreview={() => onstackpreview(stack)}
+      {imageLibrary}
+      {placeholderUrl}
     />
   {/each}
   {#each board.cards as card (card.id)}

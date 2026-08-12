@@ -3175,6 +3175,42 @@ async function answerChainOnField(page: Page, field: Locator): Promise<void> {
   throw new Error("Inline chain prompt has no enabled field response");
 }
 
+/**
+ * Every control that can answer the live selection on the field: the mounted
+ * targets plus, since T16, the aggregate off-field target window. A hand card
+ * that owns an off-field choice is only a launcher for that window — its own
+ * activation toggles the list instead of answering — so it is skipped while
+ * the list is up, and the list entry answers for it.
+ */
+async function fieldSelectionControls(
+  page: Page,
+  field: Locator,
+): Promise<readonly Locator[]> {
+  const targetChoices = page.locator(
+    '[data-cy^="zone-list-entry-target-choice-"]',
+  );
+  const targetCount = await targetChoices.count();
+  const controls: Locator[] = [];
+  for (let index = 0; index < targetCount; index += 1)
+    controls.push(targetChoices.nth(index));
+  const mounted = field.locator("[data-field-target][aria-pressed]");
+  const mountedCount = await mounted.count();
+  for (let index = 0; index < mountedCount; index += 1) {
+    const control = mounted.nth(index);
+    if (
+      targetCount > 0 &&
+      (await control.evaluate(
+        (element) =>
+          element.closest('[data-cy^="field-hand-band-"]') !== null ||
+          element.closest('[data-cy^="field-hand-p"]') !== null,
+      ))
+    )
+      continue;
+    controls.push(control);
+  }
+  return controls;
+}
+
 async function chooseValidFieldSubset(
   page: Page,
   field: Locator,
@@ -3182,24 +3218,26 @@ async function chooseValidFieldSubset(
   const confirm = field.getByRole("button", {
     name: /Confirm (selection|placement)/,
   });
-  const choices = field.locator("[data-field-target][aria-pressed]");
+  const choices = await fieldSelectionControls(page, field);
   if ((await confirm.count()) === 0) {
-    // A single-place prompt (auto-place off) submits the instant any one of
-    // its legal zones is clicked: no Confirm bar ever renders for it.
-    const count = await choices.count();
-    if (count === 0) return false;
-    await keyboardActivate(page, choices.first());
+    // A single-place prompt (auto-place off) and an exact one-of-one target
+    // both submit the instant any one legal control is activated: no Confirm
+    // ever renders for them.
+    const first = choices[0];
+    if (first === undefined) return false;
+    await keyboardActivate(page, first);
     return true;
   }
   if (await confirm.isEnabled()) {
     await keyboardActivate(page, confirm);
     return true;
   }
-  const count = await choices.count();
+  const count = choices.length;
   if (count === 0 || count > 12) return false;
   for (let mask = 1; mask < 1 << count; mask += 1) {
     for (let index = 0; index < count; index += 1) {
-      const choice = choices.nth(index);
+      const choice = choices[index];
+      if (choice === undefined) continue;
       const desired = (mask & (1 << index)) !== 0;
       if (((await choice.getAttribute("aria-pressed")) === "true") !== desired)
         await keyboardActivate(page, choice);

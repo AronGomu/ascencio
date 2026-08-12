@@ -1383,6 +1383,64 @@ button.duel-field-zone,
   display: flex;
 }
 
+/* T16 target mode. The badge names the pile the entry came from, since one
+   list mixes HAND/GY/DECK/BAN/EXTRA. */
+.zone-list-entry__zone {
+  position: absolute;
+  top: 0.15rem;
+  left: 0.15rem;
+  padding: 0.05rem 0.28rem;
+  border-radius: 0.25rem;
+  background: var(--surface-strong);
+  color: var(--ink);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.zone-list-entry__targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  margin-top: 0.2rem;
+}
+
+/* Every answer button keeps the 44px minimum target the rest of the field
+   uses; the single-choice case covers the whole tile instead of adding a
+   second control the player has to aim at. */
+.zone-list-entry__target {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.2rem 0.35rem;
+  font-size: 0.7rem;
+}
+
+.zone-list-entry__targets.is-single {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+}
+
+.zone-list-entry__targets.is-single .zone-list-entry__target {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+}
+
+.zone-list-dialog__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 1.75rem 0.2rem;
+}
+
+.zone-list-dialog__footer output {
+  font-weight: 700;
+}
+
 .duel-field-stack {
   z-index: var(--duel-field-layer-stack);
   display: grid;

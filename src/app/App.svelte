@@ -15,6 +15,10 @@
     type BoardStackView,
   } from "../field/board-view-model.ts";
   import { zoneListsForBoard, type ZoneListEntry } from "../field/zone-list.ts";
+  import {
+    offFieldTargetEntries,
+    type OffFieldTargetEntry,
+  } from "../field/off-field-target-list.ts";
   import type { PhysicalZoneId } from "../field/duel-field-layout.ts";
   import DuelHeaderBar from "./components/DuelHeaderBar.svelte";
   import DeckPicker from "./components/DeckPicker.svelte";
@@ -77,6 +81,7 @@
     PhysicalZoneId,
     readonly ZoneListEntry[]
   > = new Map();
+  const EMPTY_OFF_FIELD_TARGETS: readonly OffFieldTargetEntry[] = [];
   const CURRENT_ARTIFACT_RECEIPTS: readonly SnapshotArtifactReceipt[] = [
     { id: "runtime-package", sha256: __RUNTIME_MANIFEST_SHA256__ },
     { id: "active-images", sha256: __ACTIVE_IMAGE_MANIFEST_SHA256__ },
@@ -159,6 +164,17 @@
   );
   $: fieldInteractionSpec =
     mappedInteractionSpec.kind === "inactive" ? null : mappedInteractionSpec;
+  /* T16: the target list is joined here, once, from the same sanitized
+     snapshot the board came from. `fieldInteractionSpec` is derived from
+     `effectivePrompt`, so the layout-conflict gate still holds. */
+  $: offFieldTargets =
+    fieldInteractionSpec === null || $duel.snapshot === null
+      ? EMPTY_OFF_FIELD_TARGETS
+      : offFieldTargetEntries(
+          fieldInteractionSpec,
+          $duel.snapshot,
+          ACTIVE_CARD_TEXTS,
+        );
   $: currentPromptSurface = promptSurface(
     effectivePrompt,
     mappedInteractionSpec,
@@ -947,6 +963,7 @@
             onpreview={previewFieldCard}
             onstackpreview={previewStackCard}
             {zoneLists}
+            {offFieldTargets}
             onzonelistpreview={previewZoneListEntry}
             phase={$duel.snapshot?.phase ?? "unknown"}
             zoneListWindowPosition={$persistedUi.windows.zoneList}

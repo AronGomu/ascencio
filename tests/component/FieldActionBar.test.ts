@@ -96,7 +96,6 @@ describe("FieldActionBar", () => {
     const spec = specFor(value);
     const session = createInteractionSession(spec);
     render(FieldActionBar, {
-      prompt: value,
       spec,
       session,
       oninteraction: vi.fn(),
@@ -123,7 +122,6 @@ describe("FieldActionBar", () => {
     const spec = specFor(value);
     const session = createInteractionSession(spec);
     render(FieldActionBar, {
-      prompt: value,
       spec,
       session,
       confirmValid: true,
@@ -145,7 +143,6 @@ describe("FieldActionBar", () => {
     const session = createInteractionSession(spec);
     const oninteraction = vi.fn();
     render(FieldActionBar, {
-      prompt: value,
       spec,
       session,
       confirmValid: true,
@@ -173,7 +170,6 @@ describe("FieldActionBar", () => {
     const spec = specFor(value);
     const session = createInteractionSession(spec);
     render(FieldActionBar, {
-      prompt: value,
       spec,
       session,
       confirmValid: false,
@@ -203,7 +199,6 @@ describe("FieldActionBar", () => {
     const spec = specFor(value);
     const session = createInteractionSession(spec);
     render(FieldActionBar, {
-      prompt: value,
       spec,
       session,
       confirmValid: true,
@@ -225,7 +220,6 @@ describe("FieldActionBar", () => {
     const session = createInteractionSession(spec);
     const oninteraction = vi.fn();
     render(FieldActionBar, {
-      prompt: value,
       spec,
       session,
       oninteraction,
@@ -254,7 +248,6 @@ describe("FieldActionBar", () => {
     const spec = specFor(value);
     const session = createInteractionSession(spec);
     render(FieldActionBar, {
-      prompt: value,
       spec,
       session,
       oninteraction: vi.fn(),
@@ -276,7 +269,6 @@ describe("FieldActionBar", () => {
     const session = createInteractionSession(spec);
     const oninteraction = vi.fn();
     render(FieldActionBar, {
-      prompt: value,
       spec,
       session,
       oninteraction,
@@ -305,7 +297,6 @@ describe("FieldActionBar", () => {
     const session = createInteractionSession(spec);
     const oninteraction = vi.fn();
     render(FieldActionBar, {
-      prompt: value,
       spec,
       session,
       oninteraction,
@@ -336,7 +327,6 @@ describe("FieldActionBar", () => {
       selectedChoiceIds: [choiceId("c1"), choiceId("c2")],
     };
     render(FieldActionBar, {
-      prompt: value,
       spec,
       session,
       oninteraction: vi.fn(),

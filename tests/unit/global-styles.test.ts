@@ -172,6 +172,17 @@ describe("global styles", () => {
     expect(zoomBlock).toContain("transform: none");
   });
 
+  /* T16: a target answer button is the only control on a list entry in target
+     mode, so it carries the field-wide 44px minimum itself. */
+  it("off-field target buttons keep the 44px minimum and a single choice fills its tile", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const button = ruleBlock(css, ".zone-list-entry__target {");
+    expect(button).toContain("min-width: 2.75rem");
+    expect(button).toContain("min-height: 2.75rem");
+    const single = ruleBlock(css, ".zone-list-entry__targets.is-single {");
+    expect(single).toContain("inset: 0");
+  });
+
   it("hovered/focused/pinned card parent rises above normal card/stack/zone siblings", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     const block = ruleBlock(

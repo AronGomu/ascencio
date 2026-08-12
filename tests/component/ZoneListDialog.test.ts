@@ -6,8 +6,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import ZoneListDialog from "../../src/app/components/duel-field/ZoneListDialog.svelte";
 import ZoneListEntryTile from "../../src/app/components/duel-field/ZoneListEntryTile.svelte";
 import { cardCode, choiceId } from "../../src/duel/contracts/ids.ts";
+import type { ChoiceId } from "../../src/duel/contracts/ids.ts";
 import type { InteractionChoice } from "../../src/app/prompts/interaction-spec.ts";
 import type { ZoneListEntry } from "../../src/field/zone-list.ts";
+import type { OffFieldTargetEntry } from "../../src/field/off-field-target-list.ts";
 import type { BoardStackView } from "../../src/field/board-view-model.ts";
 
 afterEach(() => {
@@ -86,6 +88,303 @@ function renderDialog(
   });
   return { rendered, onchoose, onpreview, onclose };
 }
+
+function targetChoice(id: string, label = "Select"): InteractionChoice {
+  return {
+    id: choiceId(id),
+    label,
+    action: "select",
+    cardAddress: { controller: 0, location: "graveyard", sequence: 0 },
+  };
+}
+
+function targetEntry(
+  overrides: Partial<OffFieldTargetEntry> = {},
+): OffFieldTargetEntry {
+  return {
+    id: "target:0:graveyard:0",
+    position: 1,
+    controller: 0,
+    location: "graveyard",
+    sequence: 0,
+    identityVisible: true,
+    code: cardCode(97590747),
+    label: "The Legendary Fisherman",
+    zoneBadge: "GY",
+    zoneLabel: "Your Graveyard",
+    choices: [targetChoice("gy-0")],
+    ...overrides,
+  };
+}
+
+/** A target the projector could never attest: no code, no name, still legal. */
+function hiddenTargetEntry(): OffFieldTargetEntry {
+  return {
+    id: "target:1:banished:2",
+    position: 3,
+    controller: 1,
+    location: "banished",
+    sequence: 2,
+    identityVisible: false,
+    label: "Face-down card",
+    zoneBadge: "BAN",
+    zoneLabel: "Opponent Banished",
+    choices: [targetChoice("ban-2")],
+  };
+}
+
+function renderTargetDialog(
+  overrides: {
+    readonly targetEntries?: readonly OffFieldTargetEntry[];
+    readonly selectedChoiceIds?: readonly ChoiceId[];
+    readonly minimum?: number;
+    readonly maximum?: number;
+    readonly confirmValid?: boolean;
+    readonly validationMessage?: string;
+    readonly cancelable?: boolean;
+    readonly title?: string;
+  } = {},
+) {
+  const ontargetchoice = vi.fn();
+  const onconfirm = vi.fn();
+  const oncancel = vi.fn();
+  const onclose = vi.fn();
+  const rendered = render(ZoneListDialog, {
+    mode: "target",
+    stack: null,
+    targetEntries: overrides.targetEntries ?? [targetEntry()],
+    selectedChoiceIds: overrides.selectedChoiceIds ?? [],
+    minimum: overrides.minimum ?? 1,
+    maximum: overrides.maximum ?? 1,
+    confirmValid: overrides.confirmValid ?? false,
+    validationMessage: overrides.validationMessage ?? "",
+    cancelable: overrides.cancelable ?? false,
+    ...(overrides.title === undefined ? {} : { title: overrides.title }),
+    cardBackUrl: "back.png",
+    ontargetchoice,
+    onconfirm,
+    oncancel,
+    onclose,
+  });
+  return { rendered, ontargetchoice, onconfirm, oncancel, onclose };
+}
+
+describe("ZoneListDialog target mode", () => {
+  it("lists only the provided legal targets, each with its zone badge", () => {
+    const entries = [targetEntry(), hiddenTargetEntry()];
+    renderTargetDialog({ targetEntries: entries });
+
+    expect(
+      document.querySelectorAll('[data-cy^="zone-list-entry-target-choice-"]'),
+    ).toHaveLength(2);
+    expect(
+      [...document.querySelectorAll('[data-cy^="zone-list-entry-zone-"]')].map(
+        (element) => element.textContent?.trim(),
+      ),
+    ).toEqual(["GY", "BAN"]);
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-count"]')?.textContent,
+    ).toBe("2");
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-title"]')?.textContent,
+    ).toBe("Select targets");
+    // Privacy: an unattested target carries no code, name or art URL.
+    const hidden = document.querySelector(
+      '[data-cy="zone-list-entry-target:1:banished:2"]',
+    );
+    expect(hidden?.outerHTML).not.toContain("97590747");
+    expect(hidden?.outerHTML).not.toContain("Legendary");
+    expect(
+      document
+        .querySelector('[data-cy="zone-list-entry-image-target:1:banished:2"]')
+        ?.getAttribute("src"),
+    ).toBe("back.png");
+  });
+
+  it("marks a legal entry actionable and a selected one selected", () => {
+    const selected = targetEntry({
+      id: "target:0:graveyard:1",
+      sequence: 1,
+      choices: [targetChoice("gy-1")],
+    });
+    renderTargetDialog({
+      targetEntries: [targetEntry(), selected],
+      selectedChoiceIds: [choiceId("gy-1")],
+      minimum: 1,
+      maximum: 2,
+    });
+
+    const legal = document.querySelector(
+      '[data-cy="zone-list-entry-target:0:graveyard:0"]',
+    );
+    const chosen = document.querySelector(
+      '[data-cy="zone-list-entry-target:0:graveyard:1"]',
+    );
+    expect(legal?.classList.contains("is-actionable")).toBe(true);
+    expect(legal?.classList.contains("is-selected")).toBe(false);
+    expect(chosen?.classList.contains("is-selected")).toBe(true);
+    expect(
+      document
+        .querySelector(
+          '[data-cy="zone-list-entry-target-choice-target:0:graveyard:1-gy-1"]',
+        )
+        ?.getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(
+      document
+        .querySelector(
+          '[data-cy="zone-list-entry-target-choice-target:0:graveyard:0-gy-0"]',
+        )
+        ?.getAttribute("aria-pressed"),
+    ).toBe("false");
+  });
+
+  it("a single-choice entry answers with that choice, naming its zone", async () => {
+    const user = userEvent.setup();
+    const harness = renderTargetDialog();
+
+    const button = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-entry-target-choice-target:0:graveyard:0-gy-0"]',
+    );
+    if (button === null) throw new Error("Missing target button");
+    expect(button.getAttribute("aria-label")).toBe(
+      "The Legendary Fisherman in Your Graveyard",
+    );
+    await user.click(button);
+
+    expect(harness.ontargetchoice).toHaveBeenCalledTimes(1);
+    expect(harness.ontargetchoice.mock.calls[0]?.[0]).toMatchObject({
+      id: choiceId("gy-0"),
+    });
+  });
+
+  it("duplicate choices for one address stay individually answerable", async () => {
+    const user = userEvent.setup();
+    const harness = renderTargetDialog({
+      targetEntries: [
+        targetEntry({
+          choices: [
+            targetChoice("gy-banish", "Banish"),
+            targetChoice("gy-shuffle", "Shuffle back"),
+          ],
+        }),
+      ],
+    });
+
+    const second = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-entry-target-choice-target:0:graveyard:0-gy-shuffle"]',
+    );
+    if (second === null) throw new Error("Missing duplicate target button");
+    expect(second.textContent?.trim()).toBe("Shuffle back");
+    expect(second.getAttribute("aria-label")).toBe(
+      "Shuffle back: The Legendary Fisherman in Your Graveyard",
+    );
+    await user.click(second);
+
+    expect(harness.ontargetchoice.mock.calls[0]?.[0]).toMatchObject({
+      id: choiceId("gy-shuffle"),
+    });
+  });
+
+  it("counts a fixed selection as selected of maximum", () => {
+    renderTargetDialog({
+      minimum: 2,
+      maximum: 2,
+      selectedChoiceIds: [choiceId("gy-0")],
+    });
+
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
+        ?.textContent,
+    ).toBe("1 / 2 selected");
+  });
+
+  it("counts a range selection with its allowed span", () => {
+    renderTargetDialog({
+      minimum: 1,
+      maximum: 3,
+      selectedChoiceIds: [choiceId("gy-0"), choiceId("other")],
+    });
+
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
+        ?.textContent,
+    ).toBe("2 selected · 1–3 allowed");
+  });
+
+  it("has no Confirm for an exact one-of-one target", () => {
+    renderTargetDialog({ minimum: 1, maximum: 1 });
+
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-confirm-button"]'),
+    ).toBeNull();
+  });
+
+  it("enables Confirm only when the selection validates", async () => {
+    const user = userEvent.setup();
+    const invalid = renderTargetDialog({ minimum: 1, maximum: 2 });
+    const disabledConfirm = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-dialog-confirm-button"]',
+    );
+    expect(disabledConfirm?.disabled).toBe(true);
+    await user.click(disabledConfirm as HTMLButtonElement);
+    expect(invalid.onconfirm).not.toHaveBeenCalled();
+    cleanup();
+
+    const valid = renderTargetDialog({
+      minimum: 1,
+      maximum: 2,
+      confirmValid: true,
+      selectedChoiceIds: [choiceId("gy-0")],
+    });
+    const confirm = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-dialog-confirm-button"]',
+    );
+    if (confirm === null) throw new Error("Missing confirm button");
+    expect(confirm.disabled).toBe(false);
+    await user.click(confirm);
+
+    expect(valid.onconfirm).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows the validation message and only offers Cancel when the engine allows it", async () => {
+    const user = userEvent.setup();
+    const harness = renderTargetDialog({
+      minimum: 1,
+      maximum: 2,
+      validationMessage: "Select at least 1 card",
+      cancelable: true,
+    });
+
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-validation"]')
+        ?.textContent,
+    ).toContain("Select at least 1 card");
+    const cancel = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-dialog-cancel-button"]',
+    );
+    if (cancel === null) throw new Error("Missing cancel button");
+    await user.click(cancel);
+    expect(harness.oncancel).toHaveBeenCalledTimes(1);
+    cleanup();
+
+    renderTargetDialog({ minimum: 1, maximum: 2, cancelable: false });
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-cancel-button"]'),
+    ).toBeNull();
+  });
+
+  it("an outside press closes the window without cancelling anything", async () => {
+    const harness = renderTargetDialog({ cancelable: true });
+
+    await fireEvent.pointerDown(document.body);
+
+    expect(harness.onclose).toHaveBeenCalledTimes(1);
+    expect(harness.oncancel).not.toHaveBeenCalled();
+    expect(harness.onconfirm).not.toHaveBeenCalled();
+    expect(harness.ontargetchoice).not.toHaveBeenCalled();
+  });
+});
 
 describe("ZoneListDialog", () => {
   it("dialog lists every entry", () => {

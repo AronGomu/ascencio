@@ -18,8 +18,10 @@ import {
   isImmediateSingleSelection,
   isPhaseTransitionChoice,
   mapPromptToInteractionSpec,
+  OFF_FIELD_TARGET_LOCATIONS,
   type ActiveInteractionSpec,
 } from "../../src/app/prompts/interaction-spec.ts";
+import type { PublicLocation } from "../../src/duel/contracts/public-duel-state.ts";
 import { validatePromptSelection } from "../../src/app/prompts/prompt-selection.ts";
 import { mapSnapshotToBoard } from "../../src/field/board-view-model.ts";
 import { BOARD_VIEW_MODEL_FIXTURES } from "../fixtures/board-view-model.ts";
@@ -72,6 +74,24 @@ function graveyardCardChoice(
       location: "graveyard",
       sequence: 0,
       position: "faceUpAttack",
+    },
+    ...overrides,
+  });
+}
+
+function offFieldCardChoice(
+  id: ChoiceId,
+  location: PublicLocation,
+  sequence = 0,
+  overrides: Partial<PromptChoice> = {},
+): PromptChoice {
+  return choice(id, {
+    card: {
+      instanceId: cardInstanceId(`offfield-${id}`),
+      controller: 0,
+      location,
+      sequence,
+      position: "faceDownDefense",
     },
     ...overrides,
   });
@@ -405,7 +425,180 @@ describe("prompt interaction spec", () => {
   });
 });
 
+describe("off-field target collection", () => {
+  it("names exactly the five off-field locations", () => {
+    expect([...OFF_FIELD_TARGET_LOCATIONS].sort()).toEqual([
+      "banished",
+      "deck",
+      "extra",
+      "graveyard",
+      "hand",
+    ]);
+  });
+
+  it("collects a card selection target from every off-field location", () => {
+    const locations = [
+      "hand",
+      "graveyard",
+      "deck",
+      "banished",
+      "extra",
+    ] as const;
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: locations.map((location) =>
+          offFieldCardChoice(choiceId(location), location),
+        ),
+        minimum: 1,
+        maximum: 5,
+      }),
+    );
+
+    expect(spec.offFieldChoices.map(({ id }) => id)).toEqual(
+      locations.map((location) => choiceId(location)),
+    );
+    expect(Object.isFrozen(spec.offFieldChoices)).toBe(true);
+  });
+
+  it("never collects a mounted monster, spell/trap or field target", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [
+          mountedCardChoice(FIRST),
+          offFieldCardChoice(choiceId("spell-trap"), "spellTrap"),
+          offFieldCardChoice(choiceId("field-zone"), "field"),
+        ],
+        minimum: 1,
+        maximum: 3,
+      }),
+    );
+
+    expect(spec.offFieldChoices).toEqual([]);
+  });
+
+  it("leaves a cardAction graveyard choice out of the off-field list", () => {
+    const spec = specFor(
+      prompt("chain", {
+        choices: [
+          graveyardCardChoice(FIRST, { action: "activate", label: "Activate" }),
+          choice(SECOND, { action: "pass" }),
+        ],
+      }),
+    );
+
+    expect(spec.kind).toBe("cardAction");
+    expect(spec.offFieldChoices).toEqual([]);
+    expect(spec.stackChoices.get("stack:p0:graveyard")).toHaveLength(1);
+  });
+
+  it("keeps an off-field target in its launcher map as well", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [offFieldCardChoice(FIRST, "graveyard")],
+      }),
+    );
+
+    expect(spec.offFieldChoices.map(({ id }) => id)).toEqual([FIRST]);
+    expect(
+      spec.stackChoices.get("stack:p0:graveyard")?.map(({ id }) => id),
+    ).toEqual([FIRST]);
+  });
+
+  it("keeps mounted and off-field targets of one mixed prompt side by side", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [
+          mountedCardChoice(FIRST),
+          offFieldCardChoice(SECOND, "graveyard"),
+        ],
+        minimum: 1,
+        maximum: 2,
+      }),
+    );
+
+    expect(spec.cardChoices.get("card:st08-chain-source")?.[0]?.id).toBe(FIRST);
+    expect(spec.offFieldChoices.map(({ id }) => id)).toEqual([SECOND]);
+  });
+
+  it("is field capable with an off-field target alone", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [offFieldCardChoice(FIRST, "hand", 3)],
+      }),
+    );
+
+    expect(spec.fieldCapable).toBe(true);
+  });
+
+  it("keeps choiceOrder in raw prompt order and drops only invalid choices", () => {
+    const invalid = choiceId("ambiguous");
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [
+          offFieldCardChoice(choiceId("gy"), "graveyard"),
+          malformedChoice({
+            ...mountedCardChoice(invalid),
+            place: { player: 0, location: "monster", sequence: 0 },
+          }),
+          mountedCardChoice(FIRST),
+          offFieldCardChoice(SECOND, "deck", 4),
+        ],
+        minimum: 1,
+        maximum: 3,
+      }),
+    );
+
+    expect(spec.choiceOrder).toEqual([choiceId("gy"), FIRST, SECOND]);
+    expect(Object.isFrozen(spec.choiceOrder)).toBe(true);
+  });
+});
+
 describe("fieldActionBarRequired", () => {
+  it("is not required when the target list owns the confirmation", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [
+          offFieldCardChoice(FIRST, "graveyard"),
+          offFieldCardChoice(SECOND, "graveyard", 1),
+        ],
+        minimum: 1,
+        maximum: 2,
+      }),
+    );
+
+    expect(fieldActionBarRequired(spec)).toBe(false);
+  });
+
+  it("is not required for a mixed prompt either", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [
+          mountedCardChoice(FIRST),
+          offFieldCardChoice(SECOND, "banished"),
+        ],
+        minimum: 1,
+        maximum: 2,
+      }),
+    );
+
+    expect(fieldActionBarRequired(spec)).toBe(false);
+  });
+
+  /* Answerability outranks the suppression: a Finish/Cancel choice has no
+     field control of its own, so target mode must not hide its window. */
+  it("is still required when a genuine global choice accompanies the targets", () => {
+    const spec = specFor(
+      prompt("selectUnselectCard", {
+        choices: [
+          offFieldCardChoice(FIRST, "graveyard"),
+          choice(choiceId("finish"), { action: "finish", label: "Finish" }),
+        ],
+      }),
+    );
+
+    expect(fieldActionBarRequired(spec)).toBe(true);
+  });
+
   it("is not required for an exact singleton card selection", () => {
     const spec = specFor(
       prompt("selectCard", { choices: [mountedCardChoice(FIRST)] }),

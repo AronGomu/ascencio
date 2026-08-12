@@ -419,3 +419,20 @@ Kept for history. Read the SUPERSEDED banners before running anything here.
 - [ ] Reach a counter-allocation or ordering prompt: the Decision window and its Confirm step still appear exactly as before, even though the total picked count could be one — these two kinds always keep the window.
 - [ ] Rapidly double-click (or double-tap) a single legal target in an exact one-target prompt: only one response reaches the engine — the second click lands after the response is pending and does nothing (no error, no duplicate answer).
 - [ ] Play a full duel end-to-end: no click is ever swallowed by a stray empty Decision window, no phase transition or attack pops up a redundant dialog, and multi-select/cancel/counter/order decisions all still work exactly as before this change.
+
+## T16 off-field-target-list-dialog (round 3)
+
+- [ ] `npm run dev`, start a duel and reach any effect that targets a card outside the field (hand discard cost, a Graveyard/Banished/Deck/Extra Deck target — e.g. play Monster Hunter Bound, the effect that could not be answered before this change): a floating target window opens by itself, listing only the legal cards, and the effect can be completed to the end.
+- [ ] Check the list contains only legal targets: a pile that holds ten cards but offers one legal target shows exactly that one card, not the whole pile.
+- [ ] Check each entry carries the small zone badge naming where it came from — `HAND`, `GY`, `DECK`, `BAN` or `EXTRA` — and that a prompt spanning several zones shows them all in one window.
+- [ ] Exactly one legal target (choose 1 of 1): clicking it submits immediately — no Confirm step, no separate "Decision" window.
+- [ ] Multi-select off-field prompt: clicking entries turns them orange and the counter in the window updates (`2 / 3 selected` when the count is fixed, `2 selected · 1–3 allowed` for a range). `Confirm selection` stays disabled until the selection is legal, then submits it.
+- [ ] Mixed prompt (a legal target on the field plus one off-field): the on-field card keeps its green halo and stays clickable behind the window, selecting it turns it orange and updates the same counter in the target window, and one Confirm submits both.
+- [ ] Close the target window with its red `×`, by pressing Escape, or by clicking empty board space: the window only hides — nothing is cancelled and your orange selections are kept.
+- [ ] Reopen it by clicking the highlighted pile (or the highlighted hand card) the targets came from: the window comes back with the same selections still orange. Clicking that same launcher again hides it.
+- [ ] Cancellable off-field prompt: the window's `Cancel` button appears only when the engine allows cancelling, and pressing it cancels the whole prompt exactly once.
+- [ ] While an off-field target prompt is live, click around the board, the preview panel and the phase strip: the duel never answers the prompt by itself, and nothing is submitted twice.
+- [ ] Privacy inspection: reach a prompt that targets a card you are not allowed to identify (an opponent hand or face-down banished card). It must still be listed and clickable, showing the card back and a neutral label. Open DevTools, inspect that entry's element (and its `img` src) and search the page HTML: no card code, no card name and no card art URL for it anywhere.
+- [ ] Browse mode is unchanged: clicking a pile with no legal target in it (or any pile outside a targeting prompt) still opens the ordinary pile-browsing list, showing that pile's full contents with Deck position 1 at the top.
+- [ ] Every button in the target window is comfortably clickable (44px minimum), including the entry buttons, `Confirm selection`, `Cancel` and the red `×`.
+- [ ] Play one full duel per deck — Burning Abyss, Nekroz, Shaddoll and Spellbook — using this build. Any off-field or mixed target you meet must be answerable and completable in the UI, and the duel must reach its result dialog with no console errors. Note which effects and zones you actually encountered: an effect you never met is not evidence.

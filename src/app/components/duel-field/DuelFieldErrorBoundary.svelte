@@ -10,6 +10,7 @@
   } from "../../../field/board-view-model.ts";
   import type { PhysicalZoneId } from "../../../field/duel-field-layout.ts";
   import type { ZoneListEntry } from "../../../field/zone-list.ts";
+  import type { OffFieldTargetEntry } from "../../../field/off-field-target-list.ts";
   import type {
     InteractionSession,
     InteractionSessionAction,
@@ -44,6 +45,7 @@
   export let onstackpreview: (stack: BoardStackView) => void = () => undefined;
   export let zoneLists: ReadonlyMap<PhysicalZoneId, readonly ZoneListEntry[]> =
     new Map();
+  export let offFieldTargets: readonly OffFieldTargetEntry[] = [];
   export let onzonelistpreview: (entry: ZoneListEntry) => void = () =>
     undefined;
   export let phase: DuelPhase = "unknown";
@@ -115,6 +117,7 @@
     {onpreview}
     {onstackpreview}
     {zoneLists}
+    {offFieldTargets}
     {onzonelistpreview}
     {phase}
     {zoneListWindowPosition}

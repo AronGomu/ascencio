@@ -34,6 +34,7 @@ import type {
 } from "../../src/duel/contracts/public-duel-state.ts";
 import { mapSnapshotToBoard } from "../../src/field/board-view-model.ts";
 import { zoneListsForBoard } from "../../src/field/zone-list.ts";
+import { offFieldTargetEntries } from "../../src/field/off-field-target-list.ts";
 import {
   createInteractionSession,
   reduceInteractionSession,
@@ -60,6 +61,8 @@ import {
   DUEL_FIELD_PUBLIC_STATES,
 } from "../fixtures/duel-field-public-events.ts";
 import {
+  concealedStateCard,
+  publicStateCard,
   PUBLIC_STATE_CARD_TEXTS,
   SIXTY_PUBLIC_CARDS,
 } from "../fixtures/board-public-states.ts";
@@ -151,6 +154,19 @@ function bigHandStubCard(
 }
 
 const CONTEXT = { workerGeneration: 1, sessionGeneration: 2 } as const;
+
+/** STACK_ART_STATE plus one mounted monster, so a selection prompt can keep
+    every target on the field while the piles stay browsable. */
+const WINDOW_STATE: PublicDuelState = {
+  ...STACK_ART_STATE,
+  players: [
+    {
+      ...STACK_ART_STATE.players[0],
+      monsters: [publicStateCard("window-monster", 97590747, 0, "monster", 0)],
+    },
+    STACK_ART_STATE.players[1],
+  ],
+};
 
 function promptChoice(
   id: string,
@@ -2724,33 +2740,25 @@ describe("DuelField", () => {
   });
 
   /* T14/ADR-017: the zone list and the confirm surface are two independent
-     windows over the still field root. */
+     windows over the still field root. T16 moved off-field confirmation into
+     the target list itself, so this suite selects a mounted monster: an
+     on-field-only multi selection is what still owns a separate window. */
   function renderWindows(
     overrides: {
       readonly zoneListWindowPosition?: { x: number; y: number } | null;
       readonly confirmWindowPosition?: { x: number; y: number } | null;
     } = {},
   ) {
-    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    const stackBoard = mapSnapshotToBoard(WINDOW_STATE, BOARD_CARD_TEXTS);
     if (!stackBoard.ok) throw new Error("Fixture mapping failed");
     const value = fieldPrompt(
       "selectCard",
-      [
-        mountedChoice("graveyard-select", "Select", {
-          card: {
-            instanceId: cardInstanceId("prompt-graveyard-select"),
-            controller: 0,
-            location: "graveyard",
-            sequence: 0,
-            position: "faceUpAttack",
-          },
-        } as Partial<PromptChoice>),
-      ],
+      [mountedChoice("monster-select", "Select")],
       { cancelable: true, minimum: 1, maximum: 2 },
     );
     const spec = mapPromptToInteractionSpec(
       value,
-      STACK_ART_STATE,
+      WINDOW_STATE,
       stackBoard.value,
       CONTEXT,
     );
@@ -2766,7 +2774,7 @@ describe("DuelField", () => {
       pending: false,
       zoneLists: zoneListsForBoard(
         stackBoard.value,
-        STACK_ART_STATE,
+        WINDOW_STATE,
         BOARD_CARD_TEXTS,
       ),
       oninteraction,
@@ -2966,7 +2974,7 @@ describe("DuelField", () => {
     ]);
     const nextSpec = mapPromptToInteractionSpec(
       nextPrompt,
-      STACK_ART_STATE,
+      WINDOW_STATE,
       harness.board,
       CONTEXT,
     );
@@ -2985,6 +2993,460 @@ describe("DuelField", () => {
 
     await openGraveyardList();
     expect(windowRoot("zoneList")?.classList.contains("is-active")).toBe(true);
+  });
+});
+
+/* T16: every legal off-field target of one prompt in a single window. */
+describe("DuelField off-field target list", () => {
+  const TARGET_STATE: PublicDuelState = {
+    snapshotId: snapshotId("c".repeat(64)),
+    revision: 2,
+    turn: 3,
+    turnPlayer: 0,
+    phase: "main1",
+    layout: { extraMonsterZones: true },
+    players: [
+      {
+        player: 0,
+        lifePoints: 8000,
+        deckCount: 3,
+        deck: [
+          publicStateCard("target-deck-0", 97590747, 0, "deck", 0),
+          publicStateCard("target-deck-1", 5053103, 0, "deck", 1),
+          publicStateCard("target-deck-2", 89631139, 0, "deck", 2),
+        ],
+        extraDeckCount: 0,
+        handCount: 2,
+        hand: [
+          publicStateCard("target-hand-0", 97590747, 0, "hand", 0),
+          publicStateCard("target-hand-1", 5053103, 0, "hand", 1),
+        ],
+        extraDeck: [],
+        monsters: [
+          publicStateCard("target-monster", 46986414, 0, "monster", 0),
+        ],
+        spellsAndTraps: [],
+        graveyard: [
+          publicStateCard("target-gy-0", 89631139, 0, "graveyard", 0),
+          publicStateCard("target-gy-1", 5053103, 0, "graveyard", 1),
+          publicStateCard("target-gy-2", 97590747, 0, "graveyard", 2),
+        ],
+        banished: [],
+      },
+      {
+        player: 1,
+        lifePoints: 8000,
+        deckCount: 1,
+        deck: deckStubs(),
+        extraDeckCount: 0,
+        handCount: 1,
+        hand: [concealedStateCard("target-opponent-hand", 1, "hand", 0)],
+        extraDeck: [],
+        monsters: [],
+        spellsAndTraps: [],
+        graveyard: [],
+        banished: [
+          concealedStateCard("target-opponent-banished", 1, "banished", 0),
+        ],
+      },
+    ],
+    chain: [],
+  };
+
+  function deckStubs(): readonly PublicCard[] {
+    return [
+      {
+        instanceId: cardInstanceId("target-opponent-deck-0"),
+        owner: 1,
+        controller: 1,
+        location: "deck",
+        sequence: 0,
+        position: "faceDownAttack",
+        faceUp: false,
+        counters: [],
+        overlayMaterials: [],
+      },
+    ];
+  }
+
+  function targetBoard() {
+    const mapped = mapSnapshotToBoard(TARGET_STATE, BOARD_CARD_TEXTS);
+    if (!mapped.ok) throw new Error("Target fixture mapping failed");
+    return mapped.value;
+  }
+
+  function offFieldChoice(
+    id: string,
+    location: PublicCard["location"],
+    sequence: number,
+    controller: PlayerIndex = 0,
+    label = "Select",
+  ): PromptChoice {
+    return promptChoice(id, label, {
+      card: {
+        instanceId: cardInstanceId(`target-choice-${id}`),
+        controller,
+        location,
+        sequence,
+        position: "faceDownDefense",
+      },
+    } as Partial<PromptChoice>);
+  }
+
+  function renderTargets(value: PlayerPrompt) {
+    const valueBoard = targetBoard();
+    const mapped = mapPromptToInteractionSpec(
+      value,
+      TARGET_STATE,
+      valueBoard,
+      CONTEXT,
+    );
+    if (mapped.kind === "inactive")
+      throw new Error("Expected active field spec");
+    const spec = mapped;
+    let session: InteractionSession = createInteractionSession(spec);
+    const commands: string[][] = [];
+    const dispatch = vi.fn(async (action: InteractionSessionAction) => {
+      const reduction = reduceInteractionSession(session, spec, action);
+      session = reduction.session;
+      if (reduction.command !== null)
+        commands.push([...reduction.command.choiceIds]);
+      await rendered.rerender({ session });
+      return reduction.command !== null;
+    });
+    const rendered = render(DuelField, {
+      board: valueBoard,
+      prompt: value,
+      spec,
+      session,
+      pending: false,
+      zoneLists: zoneListsForBoard(valueBoard, TARGET_STATE, BOARD_CARD_TEXTS),
+      offFieldTargets: offFieldTargetEntries(
+        spec,
+        TARGET_STATE,
+        BOARD_CARD_TEXTS,
+      ),
+      oninteraction: dispatch,
+    });
+    return {
+      rendered,
+      spec,
+      board: valueBoard,
+      commands,
+      dispatch,
+      getSession: () => session,
+    };
+  }
+
+  function targetButton(entryId: string, choice: string): HTMLButtonElement {
+    const button = document.querySelector<HTMLButtonElement>(
+      `[data-cy="zone-list-entry-target-choice-${entryId}-${choice}"]`,
+    );
+    if (button === null)
+      throw new Error(`Missing target button ${entryId}/${choice}`);
+    return button;
+  }
+
+  it("opens the target window once for a list-only prompt", async () => {
+    renderTargets(
+      fieldPrompt("selectCard", [offFieldChoice("gy-1", "graveyard", 1)]),
+    );
+
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelectorAll('[data-cy="floating-field-window-zoneList"]'),
+    ).toHaveLength(1);
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-close-button"]'),
+    ).not.toBeNull();
+  });
+
+  it("lists only the legal cards of a pile, never the whole pile", () => {
+    renderTargets(
+      fieldPrompt("selectCard", [offFieldChoice("gy-1", "graveyard", 1)]),
+    );
+
+    expect(
+      [...document.querySelectorAll('[data-cy^="zone-list-entry-target:"]')]
+        .map((element) => element.getAttribute("data-cy"))
+        .filter((value) => value?.startsWith("zone-list-entry-target:")),
+    ).toEqual(["zone-list-entry-target:0:graveyard:1"]);
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-count"]')?.textContent,
+    ).toBe("1");
+  });
+
+  it("aggregates hand, graveyard, deck and an unknown opponent card", () => {
+    renderTargets(
+      fieldPrompt(
+        "selectCard",
+        [
+          offFieldChoice("hand-0", "hand", 0),
+          offFieldChoice("gy-0", "graveyard", 0),
+          offFieldChoice("deck-2", "deck", 2),
+          offFieldChoice("opp-ban", "banished", 0, 1),
+        ],
+        { minimum: 1, maximum: 4 },
+      ),
+    );
+
+    expect(
+      [...document.querySelectorAll('[data-cy^="zone-list-entry-zone-"]')].map(
+        (element) => element.textContent?.trim(),
+      ),
+    ).toEqual(["HAND", "GY", "DECK", "BAN"]);
+    const hidden = document.querySelector(
+      '[data-cy="zone-list-entry-target:1:banished:0"]',
+    );
+    expect(hidden).not.toBeNull();
+    expect(hidden?.outerHTML).not.toContain("46986414");
+    expect(hidden?.outerHTML).not.toContain("Dark Magician");
+  });
+
+  it("submits an exact one-of-one target on the first click, with no confirm window", async () => {
+    const user = userEvent.setup();
+    const harness = renderTargets(
+      fieldPrompt("selectCard", [offFieldChoice("gy-0", "graveyard", 0)]),
+    );
+
+    await user.click(targetButton("target:0:graveyard:0", "gy-0"));
+
+    expect(harness.commands).toEqual([["gy-0"]]);
+    expect(
+      document.querySelector('[data-cy="floating-field-window-confirm"]'),
+    ).toBeNull();
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-confirm-button"]'),
+    ).toBeNull();
+  });
+
+  it("toggles a multi selection, counts it and confirms in raw prompt order", async () => {
+    const user = userEvent.setup();
+    const harness = renderTargets(
+      fieldPrompt(
+        "selectCard",
+        [
+          offFieldChoice("gy-0", "graveyard", 0),
+          offFieldChoice("hand-1", "hand", 1),
+        ],
+        { minimum: 1, maximum: 2 },
+      ),
+    );
+
+    await user.click(targetButton("target:0:hand:1", "hand-1"));
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
+        ?.textContent,
+    ).toBe("1 selected · 1–2 allowed");
+
+    await user.click(targetButton("target:0:graveyard:0", "gy-0"));
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
+        ?.textContent,
+    ).toBe("2 selected · 1–2 allowed");
+
+    const confirm = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-dialog-confirm-button"]',
+    );
+    if (confirm === null) throw new Error("Missing confirm button");
+    await user.click(confirm);
+
+    expect(harness.commands).toEqual([["gy-0", "hand-1"]]);
+  });
+
+  it("keeps a mounted target live beside the list and counts both", async () => {
+    const user = userEvent.setup();
+    renderTargets(
+      fieldPrompt(
+        "selectCard",
+        [
+          mountedChoice("monster-select", "Select monster"),
+          offFieldChoice("gy-0", "graveyard", 0),
+        ],
+        { minimum: 1, maximum: 2 },
+      ),
+    );
+
+    const card = document.querySelector<HTMLElement>(
+      '[data-cy="field-card-target-target-monster"]',
+    );
+    if (card === null) throw new Error("Missing mounted target");
+    await user.click(card);
+
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
+        ?.textContent,
+    ).toBe("1 selected · 1–2 allowed");
+
+    await user.click(targetButton("target:0:graveyard:0", "gy-0"));
+
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
+        ?.textContent,
+    ).toBe("2 selected · 1–2 allowed");
+  });
+
+  it("reopens the hidden list from its pile launcher without losing the draft", async () => {
+    const user = userEvent.setup();
+    renderTargets(
+      fieldPrompt(
+        "selectCard",
+        [
+          offFieldChoice("gy-0", "graveyard", 0),
+          offFieldChoice("gy-1", "graveyard", 1),
+        ],
+        { minimum: 1, maximum: 2 },
+      ),
+    );
+    await user.click(targetButton("target:0:graveyard:0", "gy-0"));
+
+    const close = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-dialog-close-button"]',
+    );
+    if (close === null) throw new Error("Missing close button");
+    await user.click(close);
+    expect(document.querySelector('[data-cy="zone-list-dialog"]')).toBeNull();
+
+    await fireEvent.click(
+      document.querySelector<HTMLElement>(
+        '[data-cy="field-stack-p0:graveyard"]',
+      ) as HTMLElement,
+    );
+
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
+        ?.textContent,
+    ).toBe("1 selected · 1–2 allowed");
+    expect(
+      targetButton("target:0:graveyard:0", "gy-0").getAttribute("aria-pressed"),
+    ).toBe("true");
+  });
+
+  it("reopens the hidden list from a hand launcher instead of toggling it", async () => {
+    const user = userEvent.setup();
+    const harness = renderTargets(
+      fieldPrompt(
+        "selectCard",
+        [
+          offFieldChoice("hand-0", "hand", 0),
+          offFieldChoice("hand-1", "hand", 1),
+        ],
+        { minimum: 1, maximum: 2 },
+      ),
+    );
+    const close = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-dialog-close-button"]',
+    );
+    if (close === null) throw new Error("Missing close button");
+    await user.click(close);
+    expect(document.querySelector('[data-cy="zone-list-dialog"]')).toBeNull();
+
+    const handCard = document.querySelector<HTMLElement>(
+      '[data-cy="field-card-target-target-hand-0"]',
+    );
+    if (handCard === null) throw new Error("Missing hand launcher");
+    await user.click(handCard);
+
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog"]'),
+    ).not.toBeNull();
+    expect(harness.commands).toEqual([]);
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
+        ?.textContent,
+    ).toBe("0 selected · 1–2 allowed");
+  });
+
+  it("keeps a browse list stack-specific for a pile with no legal target", async () => {
+    renderTargets(
+      fieldPrompt("selectCard", [offFieldChoice("gy-0", "graveyard", 0)]),
+    );
+
+    await fireEvent.click(
+      document.querySelector<HTMLElement>(
+        '[data-cy="field-stack-p0:deck"]',
+      ) as HTMLElement,
+    );
+
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-title"]')?.textContent,
+    ).toContain("Deck");
+    expect(
+      document.querySelectorAll('[data-cy^="zone-list-entry-p0:deck:"]'),
+    ).toHaveLength(3);
+    expect(
+      document.querySelector(
+        '[data-cy="zone-list-entry-target:0:graveyard:0"]',
+      ),
+    ).toBeNull();
+  });
+
+  it("closes the previous target list and opens only the new prompt's", async () => {
+    const harness = renderTargets(
+      fieldPrompt("selectCard", [offFieldChoice("gy-0", "graveyard", 0)]),
+    );
+    expect(
+      document.querySelector(
+        '[data-cy="zone-list-entry-target:0:graveyard:0"]',
+      ),
+    ).not.toBeNull();
+
+    const nextPrompt = fieldPrompt(
+      "selectCard",
+      [offFieldChoice("hand-1", "hand", 1)],
+      { id: promptId("second-target-prompt") },
+    );
+    const nextSpec = mapPromptToInteractionSpec(
+      nextPrompt,
+      TARGET_STATE,
+      harness.board,
+      CONTEXT,
+    );
+    if (nextSpec.kind === "inactive")
+      throw new Error("Expected active field spec");
+    await harness.rendered.rerender({
+      prompt: nextPrompt,
+      spec: nextSpec,
+      session: createInteractionSession(nextSpec),
+      offFieldTargets: offFieldTargetEntries(
+        nextSpec,
+        TARGET_STATE,
+        BOARD_CARD_TEXTS,
+      ),
+    });
+
+    expect(
+      document.querySelector(
+        '[data-cy="zone-list-entry-target:0:graveyard:0"]',
+      ),
+    ).toBeNull();
+    expect(
+      document.querySelector('[data-cy="zone-list-entry-target:0:hand:1"]'),
+    ).not.toBeNull();
+
+    const thirdPrompt = fieldPrompt(
+      "idleCommand",
+      [promptChoice("end", "End turn", { action: "endPhase" })],
+      { id: promptId("third-prompt") },
+    );
+    const thirdSpec = mapPromptToInteractionSpec(
+      thirdPrompt,
+      TARGET_STATE,
+      harness.board,
+      CONTEXT,
+    );
+    if (thirdSpec.kind === "inactive")
+      throw new Error("Expected active field spec");
+    await harness.rendered.rerender({
+      prompt: thirdPrompt,
+      spec: thirdSpec,
+      session: createInteractionSession(thirdSpec),
+      offFieldTargets: [],
+    });
+
+    expect(document.querySelector('[data-cy="zone-list-dialog"]')).toBeNull();
   });
 });
 

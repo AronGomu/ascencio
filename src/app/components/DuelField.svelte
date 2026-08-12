@@ -26,6 +26,7 @@
     type InteractionChoice,
   } from "../prompts/interaction-spec.ts";
   import type { ZoneListEntry } from "../../field/zone-list.ts";
+  import type { OffFieldTargetEntry } from "../../field/off-field-target-list.ts";
   import ZoneListDialog from "./duel-field/ZoneListDialog.svelte";
   import { dropChoiceForZone } from "../prompts/drop-target.ts";
   import { validatePromptSelection } from "../prompts/prompt-selection.ts";
@@ -59,6 +60,7 @@
   const EMPTY_IMAGE_URLS: ReadonlyMap<number, string> = new Map();
   const EMPTY_TARGETS: ReadonlySet<BoardTargetId> = new Set();
   const EMPTY_ZONE_IDS: ReadonlySet<PhysicalZoneId> = new Set();
+  const EMPTY_TARGET_ENTRIES: readonly OffFieldTargetEntry[] = [];
   const DEFAULT_CARD_BACK =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 104'%3E%3Crect width='72' height='104' rx='5' fill='%2314263c'/%3E%3Cpath d='M8 8h56v88H8z' fill='none' stroke='%2373daca' stroke-width='3'/%3E%3Cpath d='m12 84 48-64M12 60l32-40M28 92l32-40' stroke='%2346637f' stroke-width='4'/%3E%3C/svg%3E";
   const DEFAULT_PLACEHOLDER =
@@ -93,6 +95,11 @@
   export let onstackpreview: (stack: BoardStackView) => void = () => undefined;
   export let zoneLists: ReadonlyMap<PhysicalZoneId, readonly ZoneListEntry[]> =
     new Map();
+  /* T16: the legal off-field targets of the live prompt, already joined against
+     the sanitized projection by the App seam. The field never re-derives an
+     identity from a prompt choice. */
+  export let offFieldTargets: readonly OffFieldTargetEntry[] =
+    EMPTY_TARGET_ENTRIES;
   export let onzonelistpreview: (entry: ZoneListEntry) => void = () =>
     undefined;
   export let phase: DuelPhase = "unknown";
@@ -105,14 +112,24 @@
     position: PersistedWindowPosition,
   ) => void = () => undefined;
 
-  let openStackId: PhysicalZoneId | null = null;
+  /* Exactly one list window: either one browsed pile, or the aggregate target
+     list of one prompt. */
+  type ZoneListState =
+    | { readonly mode: "browse"; readonly stackId: PhysicalZoneId }
+    | { readonly mode: "target"; readonly promptKey: string }
+    | null;
+
+  let zoneListState: ZoneListState = null;
   /* Ephemeral, never persisted (ADR-017): the last window the player touched
      is the one that rises. */
   let activeWindowId: FieldWindowId | null = null;
   /* Single-shot marker: the outside pointerdown that closed a list happened on
      the very pile control whose click is about to toggle it, so that click
      must leave the list closed instead of reopening it. */
-  let outsideDismissedStackId: PhysicalZoneId | null = null;
+  let outsideDismissedTargetId: BoardTargetId | null = null;
+  /* The prompt whose target list the player closed by hand, so an unrelated
+     rerender never reopens it. */
+  let dismissedTargetPromptKey: string | null = null;
 
   if (injectFailure) throw new Error("Injected duel field component failure");
 
@@ -154,12 +171,11 @@
   $: resolvedPlaceholderUrl = placeholderUrl || DEFAULT_PLACEHOLDER;
   $: selectedTargets =
     spec === null ? EMPTY_TARGETS : targetSelections(spec, session);
-  $: resetOpenStackOnPromptChange(spec);
+  $: targetLaunchers = targetLauncherIds(spec);
+  $: synchronizeZoneList(spec, offFieldTargets);
   $: cancelDragGhostOnPromptChange(spec);
-  $: openStack =
-    openStackId === null
-      ? null
-      : (board.stacks.find((stack) => stack.id === openStackId) ?? null);
+  $: openStack = browsedStack(zoneListState, board);
+  $: targetListOpen = zoneListState?.mode === "target";
   $: submittedChoiceIds =
     spec === null ? [] : interactionSessionChoiceIds(session, spec);
   $: validation =
@@ -328,6 +344,12 @@
     const choices = spec.cardChoices.get(card.targetId) ?? [];
     const choice = choices[0];
     if (choice === undefined) return;
+    /* T16: an off-field card (a hand card) answers through the target list, so
+       its mounted control only opens that list. */
+    if (targetLaunchers.has(card.targetId)) {
+      toggleTargetList();
+      return;
+    }
     switch (spec.kind) {
       case "cardAction":
         if (choices.length === 1)
@@ -376,6 +398,10 @@
        with a cancel, not with a chain pass. The window's own Cancel/Pass
        controls stay the only way out. */
     if (actionBarVisible) return;
+    /* T16: in target mode the list window owns the live decision the same way
+       the confirm window does, so an incidental field click must not cancel
+       it. Closing the list only hides it. */
+    if (targetLaunchers.size > 0) return;
     const pass = chainPassChoice();
     if (pass !== null) {
       const origin = event.target;
@@ -606,26 +632,87 @@
     return zoneElement.getAttribute("data-zone-id") as PhysicalZoneId | null;
   }
 
-  function resetOpenStackOnPromptChange(
+  function browsedStack(
+    state: ZoneListState,
+    value: BoardViewModel,
+  ): BoardStackView | null {
+    if (state === null || state.mode !== "browse") return null;
+    return value.stacks.find((stack) => stack.id === state.stackId) ?? null;
+  }
+
+  function promptKeyOf(value: ActiveInteractionSpec | null): string | null {
+    return value === null
+      ? null
+      : `${value.key.workerGeneration}:${value.key.sessionGeneration}:${value.key.promptId}`;
+  }
+
+  /* Every mounted control that can reopen the target list: the pile or hand
+     card that also carries one of the off-field choices. */
+  function targetLauncherIds(
     value: ActiveInteractionSpec | null,
+  ): ReadonlySet<BoardTargetId> {
+    const launchers = new SvelteSet<BoardTargetId>();
+    if (value === null || value.kind !== "cardSelection") return launchers;
+    const offField = new SvelteSet(value.offFieldChoices.map(({ id }) => id));
+    if (offField.size === 0) return launchers;
+    for (const [targetId, choices] of [
+      ...value.cardChoices,
+      ...value.stackChoices,
+    ]) {
+      if (choices.some(({ id }) => offField.has(id))) launchers.add(targetId);
+    }
+    return launchers;
+  }
+
+  /* One auto-open per prompt: a replacement prompt closes whatever was open,
+     and a prompt that has off-field targets opens its list once. */
+  function synchronizeZoneList(
+    value: ActiveInteractionSpec | null,
+    targets: readonly OffFieldTargetEntry[],
   ): void {
-    const key = value?.key.promptId ?? null;
+    const key = promptKeyOf(value);
     if (key !== lastPromptKey) {
       lastPromptKey = key;
-      openStackId = null;
-      outsideDismissedStackId = null;
+      zoneListState = null;
+      outsideDismissedTargetId = null;
+      dismissedTargetPromptKey = null;
       activeWindowId = null;
+    }
+    if (key === null || targets.length === 0) return;
+    if (zoneListState === null && dismissedTargetPromptKey !== key) {
+      zoneListState = { mode: "target", promptKey: key };
+      activateWindow("zoneList");
     }
   }
 
-  function activateStack(stack: BoardStackView): void {
-    if (outsideDismissedStackId === stack.id) {
-      outsideDismissedStackId = null;
+  function toggleTargetList(): void {
+    const key = promptKeyOf(spec);
+    if (key === null) return;
+    if (zoneListState?.mode === "target") {
+      dismissedTargetPromptKey = key;
+      closeZoneList();
       return;
     }
-    outsideDismissedStackId = null;
-    openStackId = openStackId === stack.id ? null : stack.id;
-    if (openStackId !== null) activateWindow("zoneList");
+    dismissedTargetPromptKey = null;
+    zoneListState = { mode: "target", promptKey: key };
+    activateWindow("zoneList");
+  }
+
+  function activateStack(stack: BoardStackView): void {
+    if (outsideDismissedTargetId === stack.targetId) {
+      outsideDismissedTargetId = null;
+      return;
+    }
+    outsideDismissedTargetId = null;
+    if (targetLaunchers.has(stack.targetId)) {
+      toggleTargetList();
+      return;
+    }
+    zoneListState =
+      zoneListState?.mode === "browse" && zoneListState.stackId === stack.id
+        ? null
+        : { mode: "browse", stackId: stack.id };
+    if (zoneListState !== null) activateWindow("zoneList");
   }
 
   function activateWindow(id: FieldWindowId): void {
@@ -633,20 +720,65 @@
   }
 
   function closeZoneList(): void {
-    openStackId = null;
+    zoneListState = null;
     if (activeWindowId === "zoneList") activeWindowId = null;
   }
 
+  /* Closing hides the list only; the draft selection stays untouched and any
+     launcher reopens it. */
   function dismissZoneList(event?: Event): void {
-    const stackId = openStackId;
     const origin = event?.target;
-    outsideDismissedStackId =
-      stackId !== null &&
-      origin instanceof Element &&
-      origin.closest(`[data-cy="field-stack-${stackId}"]`) !== null
-        ? stackId
+    const pressed =
+      origin instanceof Element
+        ? (origin
+            .closest("[data-field-target]")
+            ?.getAttribute("data-field-target") as BoardTargetId | null)
         : null;
+    /* A mounted target of the same prompt is part of this decision, not
+       outside it: selecting one must not hide the window that carries the
+       shared counter and Confirm. Its launchers still toggle the list. */
+    if (
+      zoneListState?.mode === "target" &&
+      pressed !== null &&
+      !targetLaunchers.has(pressed) &&
+      isMountedDecisionTarget(pressed)
+    ) {
+      return;
+    }
+    outsideDismissedTargetId =
+      pressed !== null && isZoneListLauncher(pressed) ? pressed : null;
+    if (zoneListState?.mode === "target")
+      dismissedTargetPromptKey = zoneListState.promptKey;
     closeZoneList();
+  }
+
+  function isMountedDecisionTarget(targetId: BoardTargetId): boolean {
+    return (
+      spec !== null &&
+      (spec.cardChoices.has(targetId) || spec.zoneChoices.has(targetId))
+    );
+  }
+
+  /* Only the control that renders the open list swallows the click that
+     dismissed it; pressing any other pile still opens that pile. */
+  function isZoneListLauncher(targetId: BoardTargetId): boolean {
+    const state = zoneListState;
+    if (state === null) return false;
+    return state.mode === "browse"
+      ? board.stacks.some(
+          (stack) => stack.id === state.stackId && stack.targetId === targetId,
+        )
+      : targetLaunchers.has(targetId);
+  }
+
+  /* One response per decision: the same reducer the mounted controls use.
+     Exact one-of-one submits on click, everything else drafts a toggle that
+     the list's own Confirm submits. */
+  function chooseTargetChoice(choice: InteractionChoice): void {
+    if (spec === null) return;
+    if (isImmediateSingleSelection(spec))
+      dispatch({ type: "chooseChoice", choiceId: choice.id });
+    else dispatch({ type: "toggleChoice", choiceId: choice.id });
   }
 
   function targetSelections(
@@ -725,7 +857,33 @@
       reducedMotion={effectiveReducedMotion}
     />
   {/if}
-  {#if openStack !== null}
+  {#if targetListOpen && spec !== null}
+    <ZoneListDialog
+      mode="target"
+      title={spec.title}
+      targetEntries={offFieldTargets}
+      selectedChoiceIds={session.selectedChoiceIds}
+      minimum={spec.constraints.minimum}
+      maximum={spec.constraints.maximum}
+      confirmValid={validation.valid}
+      validationMessage={validation.valid ? "" : validation.message}
+      cancelable={spec.constraints.cancelable}
+      {imageLibrary}
+      cardBackUrl={resolvedCardBackUrl}
+      placeholderUrl={resolvedPlaceholderUrl}
+      disabled={pending}
+      boundaryElement={fieldRoot}
+      windowPosition={zoneListWindowPosition}
+      active={activeWindowId === "zoneList"}
+      onactivate={activateWindow}
+      onwindowpositionchange={onzoneListWindowPositionChange}
+      ontargetchoice={chooseTargetChoice}
+      onconfirm={() => dispatch({ type: "confirm" })}
+      oncancel={() => dispatch({ type: "cancel" })}
+      onpreview={(entry) => onzonelistpreview(entry)}
+      onclose={dismissZoneList}
+    />
+  {:else if openStack !== null}
     <ZoneListDialog
       stack={openStack}
       entries={zoneLists.get(openStack.id) ?? []}
@@ -760,7 +918,6 @@
     >
       <span slot="handle" data-cy="field-confirm-window-title">Decision</span>
       <FieldActionBar
-        {prompt}
         {spec}
         {session}
         disabled={pending}

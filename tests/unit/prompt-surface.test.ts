@@ -53,6 +53,8 @@ function fieldCapableSpec(): ActiveInteractionSpec {
     zoneChoices: new Map(),
     stackChoices: new Map(),
     globalChoices: new Map(),
+    offFieldChoices: [],
+    choiceOrder: [],
   };
 }
 
@@ -80,6 +82,8 @@ function nonFieldSpec(): ActiveInteractionSpec {
     zoneChoices: new Map(),
     stackChoices: new Map(),
     globalChoices: new Map(),
+    offFieldChoices: [],
+    choiceOrder: [],
   };
 }
 
@@ -107,6 +111,8 @@ function battleCommandSpec(fieldCapable: boolean): ActiveInteractionSpec {
     zoneChoices: new Map(),
     stackChoices: new Map(),
     globalChoices: new Map(),
+    offFieldChoices: [],
+    choiceOrder: [],
   };
 }
 

@@ -1,18 +1,17 @@
 <script lang="ts">
-  import type { PlayerPrompt } from "../../../duel/contracts/player-prompt.ts";
   import type {
     InteractionSession,
     InteractionSessionAction,
     UnkeyedInteractionSessionAction,
   } from "../../prompts/interaction-session.ts";
   import {
+    interactionChoicesInPromptOrder,
     isImmediateSingleSelection,
     isPhaseTransitionChoice,
     type ActiveInteractionSpec,
     type InteractionChoice,
   } from "../../prompts/interaction-spec.ts";
 
-  export let prompt: PlayerPrompt;
   export let spec: ActiveInteractionSpec;
   export let session: InteractionSession;
   export let disabled = false;
@@ -22,7 +21,7 @@
 
   const LIST_DATA_CY = "field-action-bar-list";
 
-  $: allChoices = choicesInPromptOrder(spec);
+  $: allChoices = interactionChoicesInPromptOrder(spec);
   $: choicesById = new Map(allChoices.map((choice) => [choice.id, choice]));
   $: globalChoices = [...spec.globalChoices.values()].filter(
     (choice) => !isPhaseTransitionChoice(choice),
@@ -59,25 +58,6 @@
       case "nonField":
         return "Confirm";
     }
-  }
-
-  function choicesInPromptOrder(
-    value: ActiveInteractionSpec,
-  ): readonly InteractionChoice[] {
-    const byId = new Map(prompt.choices.map((choice) => [choice.id, choice]));
-    const mapped = new Map(
-      [
-        ...value.cardChoices.values(),
-        ...value.zoneChoices.values(),
-        value.globalChoices.values(),
-      ]
-        .flatMap((choices) => [...choices])
-        .map((choice) => [choice.id, choice]),
-    );
-    return prompt.choices.flatMap((choice) => {
-      const sanitized = mapped.get(choice.id);
-      return byId.has(choice.id) && sanitized !== undefined ? [sanitized] : [];
-    });
   }
 </script>
 

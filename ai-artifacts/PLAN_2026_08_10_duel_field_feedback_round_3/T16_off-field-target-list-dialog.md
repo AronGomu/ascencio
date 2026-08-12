@@ -33,10 +33,20 @@
 
 ## Inputs
 
-- **From Depends (T6):** `PublicCard.code`/zone-list identity is projector-attested; target aggregation never re-infers hidden codes.
-- **From Depends (T12):** `ZoneListEntryTile.selected`, palette/zoom.
-- **From Depends (T14):** `FloatingFieldWindow` wrapper, list dismissal/wheel/position, independent confirm window.
-- **From Depends (T15):** `isImmediateSingleSelection`; exact singleton target dispatch; phase filtering.
+- **From Depends (T6), shipped `ced9383`:** identity is decided by `isProjectedCardIdentityKnown(card)` (presence of `PublicCard.code`), which means "known to the local viewer", independent of face orientation. `grep -Rni "isCardIdentityVisible" src/app src/field` must stay empty. Never read a code out of a prompt choice. `tests/fixtures/board-public-states` has a `concealedStateCard` helper for cards the projector could never attest — use it for opponent-hidden fixtures instead of inventing a code.
+- **From Depends (T12), shipped `69ef913`:** `ZoneListEntryTile` already has the `selected` prop this ticket wires. Green = legal, orange = selected **and** list hover (they intentionally render the same `var(--warning)`; hover is a `:hover`-only rule and never mutates `is-selected`). Hover zoom is `1.35`/`120ms`, scoped `:not(.is-pinned)`. `--ink` is defined in `:root`.
+- **From Depends (T14), shipped `a9b4c31`:** `FloatingFieldWindow.svelte` is the shared shell; **`ZoneListDialog` owns the primitive** and `DuelField` passes window props (`zoneListWindowPosition`, `confirmWindowPosition`, plus change callbacks, threaded through `DuelFieldErrorBoundary`). `data-cy="zone-list-dialog"` now sits on the list **body**; `role=dialog` and `aria-label` live on the window root (`floating-field-window-zoneList`). Positions persist through `src/app/stores/persisted-ui-store.ts` under `ygo.ui.v1`. `ondismiss` takes an optional event arg so pressing the pile that opened the list still toggles it. `.duel-field` no longer scrolls — `.duel-field-scroll-region` does, and window roots plus the drag ghost live outside it. The confirm window is immune to outside click and Escape.
+- **From Depends (T15), shipped `88dbc04`:** `isImmediateSingleSelection(spec)` is `constraints.minimum === 1 && constraints.maximum === 1` and applies to any `cardSelection`/`placeSelection`, not just one prompt kind. `isPhaseTransitionChoice` covers `battlePhase`/`mainPhase2`/`endPhase`, and `nonPhaseGlobalChoiceCount` replaced `nonEndPhaseGlobalChoiceCount`. **When `fieldActionBarRequired` is false, no confirm window mounts at all** — so Impl step 9's suppression must assert the absence of `floating-field-window-confirm`, not merely of `field-action-bar`. Fixtures that used `battlePhase` as a stand-in "genuine global choice" were migrated to `pass`; keep that convention.
+- **From T11, shipped `033af59`:** `mapSnapshotToBoard(snapshot, cardTexts?, prompt?)` may fail with `layout_profile_conflict`; App then nulls `effectivePrompt` and renders a blocking alert. Every App prompt read goes through `effectivePrompt` — if you add an App-level seam for `snapshot`/`cardTexts` (Impl step 5), it must respect that gate and not resurrect a raw `$duel.prompt` read. Link-free duels (all six bundled decks) render 32 zones with no `shared:extraMonster:*`.
+
+### Environment facts for validation
+
+- Playwright is chromium-only on this host. Run browser checks as:
+  `PLAYWRIGHT_BROWSERS_PATH=/home/aron/projects/ascencio/.tmp/pw-browsers npx playwright test --project=chromium`
+  Bare `npm run check` cannot exit 0 here (`playwright.config.ts` includes an unsupported `webkit-smoke` project). Use `npm run check:headless` plus the explicit Chromium invocation.
+- Known flake: Vitest integration occasionally dies with `Worker exited unexpectedly`. Re-run once before diagnosing.
+- Known flake: the duel seed is random per run; re-run a failing Chromium walker twice before diagnosing.
+- Validation line "manual one duel per Burning Abyss/Nekroz/Shaddoll/Spellbook" is a **human** gate owed by the user. Leave it unchecked and publish it to the manual checklist; do not attempt to satisfy it yourself.
 - `src/app/prompts/interaction-spec.ts:70-91` — base maps; `:214-285` — prompt loop/mapping; stack locations resolve via `card-mapping.ts`.
 - `src/field/card-mapping.ts:25-31` — stack location table; `:51-67` — stack/card resolution.
 - `src/app/prompts/interaction-session.ts:230-256` — choice enumeration omits stack choices and category-merges rather than explicit prompt order.
@@ -192,18 +202,30 @@ E2E: run full random walker as regression only; do **not** add deck-specific mat
 
 ## Impl steps
 
-- [ ] 1. Add fields/constant/order helper in `interaction-spec.ts`; add tests. Keep offField choices duplicated in launcher maps by design.
-- [ ] 2. Replace private choice enumeration in `interaction-session.ts` and FieldActionBar with exported helper. Dedupe by id and sort via choiceOrder.
-- [ ] 3. Add model tests/module. Implement projected collection join; deck reversal exact.
-- [ ] 4. Add target-mode props/markup to ZoneListEntryTile and ZoneListDialog within T14 shell. Browse branch stays unchanged.
-- [ ] 5. In DuelField derive `offFieldTargetEntries(spec,snapshot,cardTexts)`; therefore add `snapshot`/`cardTexts` props or pass precomputed entries from App. Prefer precompute in App if it avoids widening ErrorBoundary; choose one seam and test it. No global catalog lookup inside tile.
-- [ ] 6. Replace `openStackId` with explicit list state `{mode:"browse",stackId}|{mode:"target",promptKey}|null`. Reactive prompt-key sync auto-opens target once; manual close records dismissed key so unrelated rerender does not reopen.
-- [ ] 7. `activateStack`/off-field hand `activateCard`: when current cardSelection has matching offField choice, open target mode; do not toggle directly. Normal browse/card-action path unchanged.
-- [ ] 8. Target callback: exact singleton→chooseChoice; multi→toggleChoice. Confirm/cancel dispatch existing reducer actions. Selected ids/counter/validation come from complete session.
-- [ ] 9. Change `actionBarVisible/fieldActionBarRequired` so any target-mode cardSelection suppresses T14 confirm window. On-field-only multi keeps it.
-- [ ] 10. Add badge/footer/target-button CSS with T12 precedence; keep wheel scroll/T9 image cap.
-- [ ] 11. Run focused/full tests and four manual deck duels. Record effects/zones encountered; absence of a specific effect is not automated proof.
-- [ ] 12. Generate/update `docs/duel-field-interaction-model-v3.html`; reference ADR-007–010 and 014–017.
+- [x] 1. Add fields/constant/order helper in `interaction-spec.ts`; add tests. Keep offField choices duplicated in launcher maps by design. — criterion: `npm run test:unit -- interaction-spec` green with off-field collection/order cases (55 tests passed)
+- [x] 2. Replace private choice enumeration in `interaction-session.ts` and FieldActionBar with exported helper. Dedupe by id and sort via choiceOrder. — criterion: `interaction-session` suite green incl. stack/offField acceptance (13 tests passed); no `choicesInPromptOrder` copy left (`grep` shows only the exported helper)
+- [x] 3. Add model tests/module. Implement projected collection join; deck reversal exact. — criterion: `tests/unit/off-field-target-list.test.ts` exists and passes (11 tests; deck join case asserts engine sequence 2 → position 1 and sequence 0 → position 3 in a 3-card deck)
+- [x] 4. Add target-mode props/markup to ZoneListEntryTile and ZoneListDialog within T14 shell. Browse branch stays unchanged. — criterion: `npm run test:component -- ZoneListDialog` green (25 tests: 10 new target-mode + the unchanged browse suite)
+- [x] 5. In DuelField derive `offFieldTargetEntries(spec,snapshot,cardTexts)`; seam chosen = precompute in App (`App.svelte` reactive `offFieldTargets`, threaded as one prop through `DuelFieldErrorBoundary`), so no `snapshot`/`cardTexts` widening and no catalog lookup in the tile. — criterion met: `npm run test:component -- DuelField` green (130 tests incl. the new off-field suite driven through the same prop)
+- [x] 6. Replace `openStackId` with explicit list state `{mode:"browse",stackId}|{mode:"target",promptKey}|null`. Reactive prompt-key sync auto-opens target once; manual close records dismissed key so unrelated rerender does not reopen. — criterion: DuelField tests "opens the target window once for a list-only prompt" (asserts exactly one `floating-field-window-zoneList`) and "reopens the hidden list from a hand launcher…" (closed list stays closed across the rerenders that follow)
+- [x] 7. `activateStack`/off-field hand `activateCard`: when current cardSelection has matching offField choice, open target mode; do not toggle directly. Normal browse/card-action path unchanged. — criterion: DuelField tests "reopens the hidden list from its pile launcher without losing the draft" (`aria-pressed=true` survives) and "reopens the hidden list from a hand launcher instead of toggling it" (`commands` stays empty); "keeps a browse list stack-specific for a pile with no legal target" proves browse is untouched
+- [x] 8. Target callback: exact singleton→chooseChoice; multi→toggleChoice. Confirm/cancel dispatch existing reducer actions. Selected ids/counter/validation come from complete session. — criterion: DuelField tests "submits an exact one-of-one target on the first click" (`commands === [["gy-0"]]`) and "toggles a multi selection, counts it and confirms in raw prompt order" (`commands === [["gy-0","hand-1"]]` after clicking hand first); "keeps a mounted target live beside the list and counts both" proves the counter reads the complete session
+- [x] 9. Change `actionBarVisible/fieldActionBarRequired` so any target-mode cardSelection suppresses T14 confirm window. On-field-only multi keeps it. — criterion: DuelField test asserts `floating-field-window-confirm` is absent in target mode; the migrated T14 window suite (on-field-only multi selection) still asserts the confirm window exists. Deviation logged below.
+- [x] 10. Add badge/footer/target-button CSS with T12 precedence; keep wheel scroll/T9 image cap. — criterion: `npm run test:unit -- global-styles` green (21 tests) incl. the new `.zone-list-entry__target` 44px rule; wheel-scroll and `max-height: 50svh` rules untouched (browse wheel tests still pass)
+- [x] 11. Run focused/full tests and four manual deck duels. — criterion: every automatable gate green (see Validation). The four-deck duels stay a human gate and are published to `ai-artifacts/manual_test_checklist.md`; no automated run may stand in for them.
+- [x] 12. Generate/update `docs/duel-field-interaction-model-v3.html`; reference ADR-007–010 and 014–017. — criterion: doc now names `interactionChoicesInPromptOrder`, `offFieldChoices`, `choiceOrder`, the HAND/GY/DECK/BAN/EXTRA badges, both counter formats and the new `data-cy` hooks; ADR-007–010 and 014–018 links unchanged
+
+### Deviation from the ticket contract (Impl step 9)
+
+The Spec/order contract says `fieldActionBarRequired` returns false for any
+`cardSelection` with off-field choices. Implemented as: the existing
+`nonPhaseGlobalChoiceCount(spec) > 0` check runs first, so a prompt that also
+carries a genuine global choice keeps its confirm window. `selectUnselectCard`
+emits `Finish`/`Cancel` as global choices (`PromptRegistry.ts:460-470`) and
+nothing else on the field can answer them — suppressing that window would make
+an engine choice unreachable, which is the exact defect this ticket exists to
+fix. Covered by the new test "is still required when a genuine global choice
+accompanies the targets".
 
 ## Outputs
 
@@ -214,13 +236,13 @@ E2E: run full random walker as regression only; do **not** add deck-specific mat
 
 ## Validation
 
-- [ ] `npm run test:unit -- interaction-spec interaction-session off-field-target-list global-styles` passes
-- [ ] `npm run test:component -- ZoneListDialog DuelField FieldActionBar` passes
-- [ ] `npm run test:unit`, `npm run test:component`, `npm run test:integration`, `npm run test:legacy` pass
-- [ ] `npm run typecheck`, `npm run lint`, `npm run format:check` pass
-- [ ] `npm run build` succeeds
-- [ ] full chromium e2e passes with pinned command from T5
-- [ ] manual one duel per Burning Abyss/Nekroz/Shaddoll/Spellbook; any encountered off-field/mixed target remains answerable
-- [ ] privacy inspection: unknown opponent target DOM/snapshot has no code/name/art URL
-- [ ] app functional — browse lists, mixed target, cancel, singleton, multi all answerable
-- [ ] commit msg draft: `feat(field): select off-field targets from one floating list`
+- [x] `npm run test:unit -- interaction-spec interaction-session off-field-target-list global-styles` passes — 66 files / 764 tests passed
+- [x] `npm run test:component -- ZoneListDialog DuelField FieldActionBar` passes — 17 files / 291 tests passed
+- [x] `npm run test:unit`, `npm run test:component`, `npm run test:integration`, `npm run test:legacy` pass — unit 764, component 291, integration 23, legacy green
+- [x] `npm run typecheck`, `npm run lint`, `npm run format:check` pass — `svelte-check found 0 errors and 0 warnings`, eslint clean, prettier clean (all inside `npm run check:headless`)
+- [x] `npm run build` succeeds — `build:verify` `{"status":"ok", runtimeFiles: 243}` after the parent-authorized `initial JavaScript` budget raise 375,000 → 400,000 (measured 382,753; baseline at 88dbc04 = 374,953)
+- [x] full chromium e2e passes with pinned command from T5 — `PLAYWRIGHT_BROWSERS_PATH=… npx playwright test --project=chromium` → 27 passed (2.6m), including the full-duel keyboard walker, twice on different random seeds
+- [ ] manual one duel per Burning Abyss/Nekroz/Shaddoll/Spellbook; any encountered off-field/mixed target remains answerable — human gate, published to `ai-artifacts/manual_test_checklist.md`
+- [x] privacy inspection: unknown opponent target DOM/snapshot has no code/name/art URL — ZoneListDialog test asserts the unattested `target:1:banished:2` tile's `outerHTML` carries no code and no card name and its image src is the card back; DuelField test asserts the same for `target:1:banished:0` (no `46986414`, no `Dark Magician`)
+- [ ] app functional — browse lists, mixed target, cancel, singleton, multi all answerable — human gate in a live duel, published to `ai-artifacts/manual_test_checklist.md` (automation covers singleton/multi/mixed/browse structurally, but not a live cancel of an engine-cancelable off-field prompt)
+- [x] commit msg draft: `feat(field): select off-field targets from one floating list`

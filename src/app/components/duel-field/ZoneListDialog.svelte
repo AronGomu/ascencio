@@ -1,5 +1,7 @@
 <script lang="ts">
+  import type { ChoiceId } from "../../../duel/contracts/ids.ts";
   import type { BoardStackView } from "../../../field/board-view-model.ts";
+  import type { OffFieldTargetEntry } from "../../../field/off-field-target-list.ts";
   import type { ZoneListEntry } from "../../../field/zone-list.ts";
   import type { CardImageLibrary } from "../../images/card-image-cache.ts";
   import type { InteractionChoice } from "../../prompts/interaction-spec.ts";
@@ -8,9 +10,20 @@
   import FloatingFieldWindow from "./FloatingFieldWindow.svelte";
   import ZoneListEntryTile from "./ZoneListEntryTile.svelte";
 
-  export let stack: BoardStackView;
+  /* Browse lists one pile as it is; target lists only the legal off-field
+     choices of the live prompt, wherever they live (T16). */
+  export let mode: "browse" | "target" = "browse";
+  export let stack: BoardStackView | null = null;
   export let entries: readonly ZoneListEntry[] = [];
   export let choices: readonly InteractionChoice[] = [];
+  export let title = "";
+  export let targetEntries: readonly OffFieldTargetEntry[] = [];
+  export let selectedChoiceIds: readonly ChoiceId[] = [];
+  export let minimum = 0;
+  export let maximum = 0;
+  export let confirmValid = false;
+  export let validationMessage = "";
+  export let cancelable = false;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let cardBackUrl = "";
   export let placeholderUrl = "";
@@ -25,12 +38,30 @@
     position: PersistedWindowPosition,
   ) => void = () => undefined;
   export let onchoose: (choice: InteractionChoice) => void = () => undefined;
+  export let ontargetchoice: (choice: InteractionChoice) => void = () =>
+    undefined;
+  export let onconfirm: () => void = () => undefined;
+  export let oncancel: () => void = () => undefined;
   export let onpreview: (entry: ZoneListEntry) => void = () => undefined;
   export let onclose: (event?: Event) => void = () => undefined;
 
   let entriesElement: HTMLElement | null = null;
 
-  $: label = `${stack.label} contents${stack.zone === "deck" ? ", position 1 is the top of the deck" : ""}`;
+  $: targetMode = mode === "target";
+  $: headerTitle = targetMode
+    ? title || "Select targets"
+    : (stack?.label ?? "");
+  $: count = targetMode ? targetEntries.length : entries.length;
+  $: label = targetMode
+    ? headerTitle
+    : `${headerTitle} contents${stack?.zone === "deck" ? ", position 1 is the top of the deck" : ""}`;
+  $: selectedCount = selectedChoiceIds.length;
+  /* An exact one-of-one target answers on click, so it owns no Confirm. */
+  $: exactSingle = minimum === 1 && maximum === 1;
+  $: selectionCountLabel =
+    minimum === maximum
+      ? `${selectedCount} / ${maximum} selected`
+      : `${selectedCount} selected · ${minimum}–${maximum} allowed`;
 
   function promptSequenceInListSpace(
     choice: InteractionChoice,
@@ -52,6 +83,10 @@
         choice.cardAddress.location === entry.location &&
         promptSequenceInListSpace(choice, entry) === entry.sequence,
     );
+  }
+
+  function targetSelected(entry: OffFieldTargetEntry): boolean {
+    return entry.choices.some(({ id }) => selectedChoiceIds.includes(id));
   }
 
   /* The list is a single horizontal run, so a plain vertical wheel is the
@@ -91,12 +126,12 @@
     slot="handle"
     data-cy="zone-list-dialog-header"
   >
-    <span data-cy="zone-list-dialog-title">{stack.label}</span>
-    <strong data-cy="zone-list-dialog-count">{entries.length}</strong>
+    <span data-cy="zone-list-dialog-title">{headerTitle}</span>
+    <strong data-cy="zone-list-dialog-count">{count}</strong>
     <button
       type="button"
       class="danger zone-list-dialog__close"
-      aria-label={`Close ${stack.label}`}
+      aria-label={`Close ${headerTitle}`}
       onclick={() => onclose()}
       data-cy="zone-list-dialog-close-button">×</button
     >
@@ -108,18 +143,74 @@
       onwheel={wheelToHorizontal}
       data-cy="zone-list-dialog-entries"
     >
-      {#each entries as entry (entry.id)}
-        <ZoneListEntryTile
-          {entry}
-          choices={entryChoices(entry)}
-          {imageLibrary}
-          {cardBackUrl}
-          {placeholderUrl}
-          {disabled}
-          {onchoose}
-          onpreview={() => onpreview(entry)}
-        />
-      {/each}
+      {#if targetMode}
+        {#each targetEntries as entry (entry.id)}
+          <ZoneListEntryTile
+            {entry}
+            mode="target"
+            choices={entry.choices}
+            zoneBadge={entry.zoneBadge}
+            zoneLabel={entry.zoneLabel}
+            selected={targetSelected(entry)}
+            {selectedChoiceIds}
+            {imageLibrary}
+            {cardBackUrl}
+            {placeholderUrl}
+            {disabled}
+            {ontargetchoice}
+            onpreview={() => onpreview(entry)}
+          />
+        {/each}
+      {:else}
+        {#each entries as entry (entry.id)}
+          <ZoneListEntryTile
+            {entry}
+            choices={entryChoices(entry)}
+            {imageLibrary}
+            {cardBackUrl}
+            {placeholderUrl}
+            {disabled}
+            {onchoose}
+            onpreview={() => onpreview(entry)}
+          />
+        {/each}
+      {/if}
     </div>
+    {#if targetMode}
+      <div class="zone-list-dialog__footer" data-cy="zone-list-dialog-footer">
+        <output data-cy="zone-list-dialog-selection-count"
+          >{selectionCountLabel}</output
+        >
+        {#if !exactSingle}
+          <button
+            type="button"
+            disabled={disabled || !confirmValid}
+            aria-describedby={!confirmValid && validationMessage
+              ? "zone-list-dialog-validation"
+              : undefined}
+            onclick={() => onconfirm()}
+            data-cy="zone-list-dialog-confirm-button">Confirm selection</button
+          >
+        {/if}
+        {#if cancelable}
+          <button
+            type="button"
+            class="secondary"
+            {disabled}
+            onclick={() => oncancel()}
+            data-cy="zone-list-dialog-cancel-button">Cancel</button
+          >
+        {/if}
+        {#if !confirmValid && validationMessage}
+          <p
+            id="zone-list-dialog-validation"
+            class="validation"
+            data-cy="zone-list-dialog-validation"
+          >
+            {validationMessage}
+          </p>
+        {/if}
+      </div>
+    {/if}
   </div>
 </FloatingFieldWindow>

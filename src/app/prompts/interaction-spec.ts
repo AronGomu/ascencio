@@ -88,6 +88,14 @@ interface ActiveInteractionSpecBase<Kind extends ActiveInteractionKind> {
     readonly InteractionChoice[]
   >;
   readonly globalChoices: ReadonlyMap<ChoiceId, InteractionChoice>;
+  /* T16: every card-selection choice that lives off the mounted field, in raw
+     prompt order. The same choice also stays in its launcher map (card or
+     stack) so the hand card or pile that owns it can reopen the target list. */
+  readonly offFieldChoices: readonly InteractionChoice[];
+  /* Raw prompt order of every choice this spec kept, whatever category it
+     landed in. The single authority for submission order and for the reducer's
+     "is this id answerable" test. */
+  readonly choiceOrder: readonly ChoiceId[];
 }
 
 export type CardActionSpec = ActiveInteractionSpecBase<"cardAction">;
@@ -172,6 +180,12 @@ const PUBLIC_LOCATIONS = {
   banished: true,
   extra: true,
 } as const satisfies Readonly<Record<PublicLocation, true>>;
+/** T16: the exact locations whose targets answer through the aggregate list. */
+export const OFF_FIELD_TARGET_LOCATIONS: ReadonlySet<PublicLocation> =
+  Object.freeze(
+    new Set<PublicLocation>(["hand", "graveyard", "deck", "banished", "extra"]),
+  );
+
 const INACTIVE_SPEC = Object.freeze({ kind: "inactive" as const });
 
 const PHASE_TRANSITION_ACTIONS = new Set<ChoiceAction>([
@@ -192,6 +206,36 @@ export function isImmediateSingleSelection(
   return spec.constraints.minimum === 1 && spec.constraints.maximum === 1;
 }
 
+/**
+ * Every choice this spec kept, in raw prompt order, deduped by id. Card, zone,
+ * stack, global and off-field categories all flow through here, so a stack or
+ * list-only choice can never be rejected as unknown by the session reducer.
+ */
+export function interactionChoicesInPromptOrder(
+  spec: ActiveInteractionSpec,
+): readonly InteractionChoice[] {
+  const byId = new Map<ChoiceId, InteractionChoice>();
+  for (const choices of [
+    ...spec.cardChoices.values(),
+    ...spec.zoneChoices.values(),
+    ...spec.stackChoices.values(),
+    spec.globalChoices.values(),
+    spec.offFieldChoices,
+  ]) {
+    for (const choice of choices)
+      if (!byId.has(choice.id)) byId.set(choice.id, choice);
+  }
+  const ordered: InteractionChoice[] = [];
+  const seen = new Set<ChoiceId>();
+  for (const choiceId of spec.choiceOrder) {
+    const choice = byId.get(choiceId);
+    if (choice === undefined || seen.has(choiceId)) continue;
+    seen.add(choiceId);
+    ordered.push(choice);
+  }
+  return Object.freeze(ordered);
+}
+
 function nonPhaseGlobalChoiceCount(spec: ActiveInteractionSpec): number {
   return [...spec.globalChoices.values()].filter(
     (choice) => !isPhaseTransitionChoice(choice),
@@ -200,7 +244,15 @@ function nonPhaseGlobalChoiceCount(spec: ActiveInteractionSpec): number {
 
 export function fieldActionBarRequired(spec: ActiveInteractionSpec): boolean {
   if (spec.kind === "nonField") return false;
+  /* A genuine global choice (Finish, Cancel, Pass) has no field control of its
+     own, so it keeps the window even in target mode: suppressing it would make
+     an engine choice unanswerable, which is the exact defect T16 exists to
+     fix. Phase transitions have the phase strip and never count. */
   if (nonPhaseGlobalChoiceCount(spec) > 0) return true;
+  /* T16: otherwise the target window owns the counter, Confirm and Cancel for
+     any selection with off-field targets, so no separate confirm window. */
+  if (spec.kind === "cardSelection" && spec.offFieldChoices.length > 0)
+    return false;
   switch (spec.kind) {
     case "cardAction":
       return false;
@@ -248,6 +300,8 @@ export function mapPromptToInteractionSpec(
   const zoneEntries = new Map<BoardTargetId, InteractionChoice[]>();
   const stackEntries = new Map<BoardTargetId, InteractionChoice[]>();
   const globalEntries = new Map<ChoiceId, InteractionChoice>();
+  const offFieldEntries: InteractionChoice[] = [];
+  const orderedIds: ChoiceId[] = [];
   const duplicateIds = duplicateChoiceIds(prompt.choices);
 
   for (const rawChoice of prompt.choices) {
@@ -256,6 +310,16 @@ export function mapPromptToInteractionSpec(
 
     const targetKind = targetKindFor(kind, rawChoice);
     if (targetKind === "invalid") continue;
+    orderedIds.push(choice.id);
+    /* An off-field target is collected here and still resolved below, so the
+       hand card or pile holding it keeps its halo and stays a launcher. */
+    if (
+      kind === "cardSelection" &&
+      choice.cardAddress !== undefined &&
+      OFF_FIELD_TARGET_LOCATIONS.has(choice.cardAddress.location)
+    ) {
+      offFieldEntries.push(choice);
+    }
     if (targetKind === "global" || board === null) {
       globalEntries.set(choice.id, choice);
       continue;
@@ -282,10 +346,16 @@ export function mapPromptToInteractionSpec(
   const zoneChoices = freezeChoiceMap(zoneEntries);
   const stackChoices = freezeChoiceMap(stackEntries);
   const globalChoices = Object.freeze(new Map(globalEntries));
+  const offFieldChoices = Object.freeze([...offFieldEntries]);
+  const choiceOrder = Object.freeze([...orderedIds]);
   // T8: the zone list dialog makes a stack clickable and able to answer a
   // choice, so stackChoices now counts towards fieldCapable too.
+  // T16: a target reachable only through the aggregate list counts as well.
   const fieldCapable =
-    cardChoices.size > 0 || zoneChoices.size > 0 || stackChoices.size > 0;
+    cardChoices.size > 0 ||
+    zoneChoices.size > 0 ||
+    stackChoices.size > 0 ||
+    offFieldChoices.length > 0;
   const base = {
     key: interactionKey(
       context.workerGeneration,
@@ -302,6 +372,8 @@ export function mapPromptToInteractionSpec(
     zoneChoices,
     stackChoices,
     globalChoices,
+    offFieldChoices,
+    choiceOrder,
   };
 
   switch (kind) {

@@ -702,12 +702,24 @@ describe("DuelField", () => {
       name: /Legal.*Select The Legendary Fisherman.*face-up attack/,
     });
     card.focus();
+    expect(
+      card.closest(".duel-field-card")?.classList.contains("is-actionable"),
+    ).toBe(true);
+    expect(
+      card.closest(".duel-field-card")?.classList.contains("is-selected"),
+    ).toBe(false);
     await user.keyboard("{Enter}");
     expect(card.getAttribute("aria-pressed")).toBe("true");
     expect(harness.commands).toEqual([]);
+    expect(
+      card.closest(".duel-field-card")?.classList.contains("is-selected"),
+    ).toBe(true);
     await user.keyboard(" ");
     expect(card.getAttribute("aria-pressed")).toBe("false");
     expect(harness.commands).toEqual([]);
+    expect(
+      card.closest(".duel-field-card")?.classList.contains("is-selected"),
+    ).toBe(false);
   });
 
   it("pins the chips on Enter, walks them, and returns focus on Escape", async () => {

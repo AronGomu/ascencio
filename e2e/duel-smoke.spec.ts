@@ -1397,6 +1397,158 @@ test("a passive opponent hand card receives a real hover", async ({ page }) => {
   );
 });
 
+test("T12: field/hand cards zoom 1.35x on hover, halo/art scale with the root, chips stay hit-testable, and reduced motion disables the zoom", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await page.goto("./");
+  await startPresetDuel(page);
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+
+  const handCard = page
+    .locator(
+      '[data-cy="duel-field"] .duel-field-card[data-card-zone-id="p0:hand"]',
+    )
+    .first();
+  await expect(handCard).toBeVisible();
+
+  const before = await handCard.evaluate((element) => {
+    const root = element.getBoundingClientRect();
+    const art = element
+      .querySelector(".duel-field-card__art")
+      ?.getBoundingClientRect();
+    return { width: root.width, height: root.height, artWidth: art?.width };
+  });
+  await handCard.hover();
+  await page.waitForTimeout(200);
+  const after = await handCard.evaluate((element) => {
+    const root = element.getBoundingClientRect();
+    const art = element
+      .querySelector(".duel-field-card__art")
+      ?.getBoundingClientRect();
+    return { width: root.width, height: root.height, artWidth: art?.width };
+  });
+  const ratio = after.width / before.width;
+  expect(ratio, "hand card root scales ~1.35x on hover").toBeGreaterThan(
+    1.35 * 0.98,
+  );
+  expect(ratio).toBeLessThan(1.35 * 1.02);
+  expect(
+    after.height / before.height,
+    "hand card root height scales ~1.35x on hover",
+  ).toBeGreaterThan(1.35 * 0.98);
+  if (before.artWidth !== undefined && after.artWidth !== undefined) {
+    expect(
+      after.artWidth / before.artWidth,
+      "art scales with the root, not independently",
+    ).toBeGreaterThan(1.35 * 0.98);
+  }
+
+  // Chips remain hit-testable above every visible card once its parent's
+  // z-index is raised on hover/focus (T12 impl step 10).
+  const actionTarget = page
+    .locator("[data-field-target][aria-label^='Legal action, Open actions']")
+    .first();
+  if ((await actionTarget.count()) > 0) {
+    await actionTarget.evaluate((element) => {
+      element.scrollIntoView({ block: "center", inline: "center" });
+    });
+    const cardId = ((await actionTarget.getAttribute("data-cy")) ?? "").replace(
+      /^field-card-target-/,
+      "",
+    );
+    const chips = page.locator(`[data-cy="card-action-chips-${cardId}"]`);
+    await actionTarget.hover();
+    await expect(chips).toBeVisible();
+    const chipButtons = chips.locator("button");
+    const chipCount = await chipButtons.count();
+    for (let index = 0; index < chipCount; index += 1) {
+      const chip = chipButtons.nth(index);
+      const resolvesToChip = await chip.evaluate((element) => {
+        const box = element.getBoundingClientRect();
+        const hit = document.elementFromPoint(
+          box.left + box.width / 2,
+          box.top + box.height / 2,
+        );
+        return hit !== null && element.contains(hit);
+      });
+      expect(
+        resolvesToChip,
+        `chip ${index} centre resolves to itself/a descendant, not a later sibling card`,
+      ).toBe(true);
+    }
+  }
+
+  // Reduced motion: bounds unchanged within 1px, chips still usable.
+  await page.mouse.move(0, 0);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const restRect = await handCard.evaluate((element) =>
+    element.getBoundingClientRect(),
+  );
+  await handCard.hover();
+  await page.waitForTimeout(200);
+  const hoveredReducedRect = await handCard.evaluate((element) =>
+    element.getBoundingClientRect(),
+  );
+  expect(
+    Math.abs(hoveredReducedRect.width - restRect.width),
+    "reduced motion keeps hand card bounds unchanged on hover",
+  ).toBeLessThanOrEqual(1);
+  expect(
+    Math.abs(hoveredReducedRect.height - restRect.height),
+    "reduced motion keeps hand card bounds unchanged on hover",
+  ).toBeLessThanOrEqual(1);
+  if ((await actionTarget.count()) > 0) {
+    const cardId = ((await actionTarget.getAttribute("data-cy")) ?? "").replace(
+      /^field-card-target-/,
+      "",
+    );
+    const chips = page.locator(`[data-cy="card-action-chips-${cardId}"]`);
+    await actionTarget.hover();
+    await expect(chips).toBeVisible();
+  }
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+
+  // Zone-list entry hover turns orange (computed border colour) and grows.
+  const trayButton = page
+    .getByRole("button", { name: /Open Your (Extra Deck|GY|Banished) tray/ })
+    .first();
+  if ((await trayButton.count()) > 0) {
+    await trayButton.scrollIntoViewIfNeeded();
+    await trayButton.click();
+    const entry = page.locator(".zone-list-entry").first();
+    await expect(entry).toBeVisible();
+    const entryBefore = await entry.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const img = element.querySelector("img");
+      return {
+        width: rect.width,
+        borderColor: img === null ? "" : getComputedStyle(img).borderColor,
+      };
+    });
+    await entry.hover();
+    await page.waitForTimeout(200);
+    const entryAfter = await entry.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const img = element.querySelector("img");
+      return {
+        width: rect.width,
+        borderColor: img === null ? "" : getComputedStyle(img).borderColor,
+      };
+    });
+    expect(
+      entryAfter.width / entryBefore.width,
+      "zone-list entry grows on hover",
+    ).toBeGreaterThan(1.35 * 0.98);
+    expect(
+      entryAfter.borderColor,
+      "zone-list entry hover border is orange (--warning)",
+    ).toBe("rgb(255, 213, 128)");
+  }
+});
+
 test("opponent pile inversion rotates images only", async ({ page }) => {
   await page.goto("./");
 

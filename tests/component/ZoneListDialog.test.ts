@@ -4,6 +4,7 @@ import { cleanup, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import ZoneListDialog from "../../src/app/components/duel-field/ZoneListDialog.svelte";
+import ZoneListEntryTile from "../../src/app/components/duel-field/ZoneListEntryTile.svelte";
 import { cardCode, choiceId } from "../../src/duel/contracts/ids.ts";
 import type { InteractionChoice } from "../../src/app/prompts/interaction-spec.ts";
 import type { ZoneListEntry } from "../../src/field/zone-list.ts";
@@ -157,6 +158,46 @@ describe("ZoneListDialog", () => {
     await element.dispatchEvent(new Event("pointerenter", { bubbles: true }));
 
     expect(onpreview).toHaveBeenCalledWith(ENTRIES[0]);
+  });
+
+  it("selected tile gets is-selected plus is-actionable when choices exist", () => {
+    const choice: InteractionChoice = {
+      id: choiceId("activate-2"),
+      label: "Activate",
+      action: "activate",
+      cardAddress: { controller: 0, location: "graveyard", sequence: 1 },
+    };
+    render(ZoneListEntryTile, {
+      entry: entry(2),
+      choices: [choice],
+      selected: true,
+      cardBackUrl: "back.png",
+    });
+    const element = document.querySelector(
+      `[data-cy="zone-list-entry-${entry(2).id}"]`,
+    );
+    expect(element?.classList.contains("is-selected")).toBe(true);
+    expect(element?.classList.contains("is-actionable")).toBe(true);
+  });
+
+  it("unselected legal tile gets only is-actionable", () => {
+    const choice: InteractionChoice = {
+      id: choiceId("activate-2"),
+      label: "Activate",
+      action: "activate",
+      cardAddress: { controller: 0, location: "graveyard", sequence: 1 },
+    };
+    render(ZoneListEntryTile, {
+      entry: entry(2),
+      choices: [choice],
+      selected: false,
+      cardBackUrl: "back.png",
+    });
+    const element = document.querySelector(
+      `[data-cy="zone-list-entry-${entry(2).id}"]`,
+    );
+    expect(element?.classList.contains("is-actionable")).toBe(true);
+    expect(element?.classList.contains("is-selected")).toBe(false);
   });
 
   it("marks only opponent list entries as opponent-facing", () => {

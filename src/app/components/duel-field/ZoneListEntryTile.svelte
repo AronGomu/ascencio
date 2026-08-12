@@ -10,6 +10,7 @@
 
   export let entry: ZoneListEntry;
   export let choices: readonly InteractionChoice[] = [];
+  export let selected = false;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let cardBackUrl = "";
   export let placeholderUrl = "";
@@ -52,6 +53,7 @@
 <div
   class="zone-list-entry"
   class:is-actionable={choices.length > 0}
+  class:is-selected={selected}
   class:is-opponent={entry.controller === 1}
   role="group"
   data-controller={entry.controller}

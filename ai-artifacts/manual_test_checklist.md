@@ -366,3 +366,17 @@ Kept for history. Read the SUPERSEDED banners before running anything here.
 - [ ] Use Rematch from the result dialog: the rematch keeps the same deck pair and the same board layout (still no shared Extra Monster Zones), and the duel plays normally.
 - [ ] Use Change decks, pick a different pair and start again: the new duel recomputes its own layout, still shows no shared Extra Monster Zones for bundled (Link-free) decks, and no stale zones or phase-strip spacing survive from the previous duel.
 - [ ] Keyboard-only pass: with arrow keys alone, reach every remaining field target (both hands, all monster/spell-trap zones, field zones, and all four pile columns per player) — nothing is stranded and no arrow move lands on an invisible zone.
+
+## T12 halo-palette-hover-zoom-and-chip-layer (round 3)
+
+- [ ] `npm run dev`, start a duel: legal/actionable cards, zones, stacks and list entries show a **green** halo (not orange); selecting a target (e.g. a multi-target effect) switches that target's halo to **orange**, and the green never reappears underneath while it stays selected.
+- [ ] Drag a hand card toward a legal zone: the drop-candidate zone shows a **green** outline with a visible translucent green fill, distinct at a glance from a plain (unfilled) legal-green zone.
+- [ ] Tab to any field target with the keyboard: the focus ring is a neutral white/high-contrast outline, never green or orange, regardless of whether that target is also legal or selected.
+- [ ] Trigger a transient feedback highlight (e.g. an effect/summon feedback pulse) and the non-attack targeting line: both render **teal**, not orange. Trigger an attack: the attack line stays **red**. Trigger LP damage feedback: it stays **red**.
+- [ ] Hover (pointer) over a zone-list dialog entry that is *not* legal: it still turns **orange** on hover. Confirm hovering never toggles or leaves behind a selected/actionable class change once the pointer leaves.
+- [ ] Hover a player hand card: it visibly grows (~1.35×) growing **upward** from its bottom edge; halo/art grow together, not just the art. Move the mouse away: it shrinks back over a short, smooth transition.
+- [ ] Hover an opponent hand card: it grows **downward** from its top edge (opposite direction from the player's hand).
+- [ ] Hover a placed field card (monster/spell-trap zone) and a zone-list dialog entry: both zoom from their **centre**, halo intact, no visible clipping by the hand/list scroll viewport at a normal window size.
+- [ ] With an actionable card's chip menu open (hover, keyboard focus, or pinned via Enter+click), confirm every visible chip button is still clickable — clicking lands on the chip, not on a neighbouring card or zone underneath.
+- [ ] OS/browser "reduce motion" enabled (e.g. `prefers-reduced-motion: reduce`): hovering/focusing a card or list entry shows no zoom animation and no size change at all; halo colours (green/orange/teal/neutral-focus) are still all correct and static.
+- [ ] Resize the window down to a narrow/short viewport and repeat the hand-card hover check: the zoomed card is not clipped by the hand's own horizontal scrollbar, and normal scrolling of the hand still works.

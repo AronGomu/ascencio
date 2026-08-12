@@ -20,10 +20,12 @@
   --danger: #ff8c9b;
   --warning: #ffd580;
   --success: #7ee2a8;
+  --ink: #ffffff;
   --duel-field-layer-surface: 0;
   --duel-field-layer-zone: 10;
   --duel-field-layer-stack: 20;
   --duel-field-layer-card: 30;
+  --duel-field-layer-card-raised: 35;
   --duel-field-layer-label: 40;
   --duel-field-layer-control: 50;
   --duel-field-layer-menu: 100;
@@ -1115,26 +1117,26 @@ button.duel-field-zone,
   cursor: pointer;
 }
 
-/* Orange is the "you may act here" colour across the field. The lime
-   `.is-selected` treatment below stays as it is: selection is a different
-   state from legality and the two must never be confusable. */
+/* Green is the "you may act here" colour across the field. Orange is
+   reserved for selection below: selection is a different state from
+   legality and the two must never be confusable. */
 .duel-field-zone.is-actionable,
 .duel-field-card.is-actionable .duel-field-card__art {
-  border-color: var(--warning);
-  box-shadow: 0 0 0 2px rgb(255 213 128 / 0.55);
+  border-color: var(--success);
+  box-shadow: 0 0 0 2px rgb(126 226 168 / 0.55);
 }
 
 .duel-field-stack.is-actionable {
-  border-color: var(--warning);
-  box-shadow: 0 0 0 2px rgb(255 213 128 / 0.55);
+  border-color: var(--success);
+  box-shadow: 0 0 0 2px rgb(126 226 168 / 0.55);
 }
 
-/* A drag candidate wears the same orange as legality, filled in: the tint is
+/* A drop candidate wears the same green as legality, filled in: the tint is
    what separates "you could drop here" from "you may act here". */
 .duel-field-zone.is-drop-candidate {
-  border-color: var(--warning);
-  background: rgb(255 213 128 / 0.14);
-  box-shadow: 0 0 0 3px rgb(255 213 128 / 0.7);
+  border-color: var(--success);
+  background: rgb(126 226 168 / 0.16);
+  box-shadow: 0 0 0 3px rgb(126 226 168 / 0.75);
 }
 
 .duel-field-card.is-dragging {
@@ -1149,17 +1151,22 @@ button.duel-field-zone,
   pointer-events: none;
 }
 
+/* Selected overrides plain legal green: same orange used for the list-hover
+   affordance below, but selection is a persisted class, never a :hover
+   pseudo-class, so the two never actually collide on screen. */
 .duel-field-zone.is-selected,
 .duel-field-card.is-selected .duel-field-card__art {
-  border-color: #dfffb5;
-  box-shadow: 0 0 0 3px rgb(175 232 112 / 0.78);
+  border-color: var(--warning);
+  box-shadow: 0 0 0 3px rgb(255 213 128 / 0.78);
 }
 
+/* Keyboard focus is a neutral high-contrast ring, independent of the
+   legal/selected palette above. */
 .duel-field-zone.is-navigation-active:focus-visible,
 .duel-field-stack.is-navigation-active:focus-visible,
 .duel-field-card.is-navigation-active:focus-visible,
 .duel-field-card.is-navigation-active:focus-within .duel-field-card__art {
-  outline: 3px solid #f6c177;
+  outline: 3px solid var(--ink);
   outline-offset: 2px;
   box-shadow: 0 0 0 5px rgb(8 17 31 / 0.9);
 }
@@ -1167,8 +1174,8 @@ button.duel-field-zone,
 .duel-field-card.is-feedback-target .duel-field-card__art,
 .duel-field-zone.is-feedback-target,
 .duel-field-stack.is-feedback-target {
-  border-color: var(--warning);
-  box-shadow: 0 0 0 3px rgb(255 213 128 / 0.72);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgb(115 218 202 / 0.72);
 }
 
 .field-lines {
@@ -1182,7 +1189,7 @@ button.duel-field-zone,
 }
 
 .field-lines line {
-  stroke: var(--warning);
+  stroke: var(--accent);
   stroke-width: 3;
   stroke-linecap: round;
   stroke-dasharray: 7 5;
@@ -1202,7 +1209,7 @@ button.duel-field-zone,
   max-width: min(28rem, calc(100% - 3rem));
   margin: 0;
   padding: 0.45rem 0.75rem;
-  border: 1px solid var(--warning);
+  border: 1px solid var(--accent);
   border-radius: 999px;
   background: rgb(8 16 31 / 0.9);
   box-shadow: 0 0.5rem 1.2rem rgb(0 0 0 / 0.36);
@@ -1247,6 +1254,8 @@ button.duel-field-zone,
 .zone-list-dialog__entries {
   display: flex;
   gap: 0.5rem;
+  padding: 0.15rem 1.75rem 2.5rem;
+  scroll-padding-inline: 1.75rem;
   overflow-x: auto;
 }
 
@@ -1254,11 +1263,32 @@ button.duel-field-zone,
   position: relative;
   flex: 0 0 auto;
   width: 4.5rem;
+  transition: transform 120ms ease-out;
+  transform-origin: center;
 }
 
 .zone-list-entry.is-actionable img {
+  border-color: var(--success);
+  box-shadow: 0 0 0 2px rgb(126 226 168 / 0.55);
+}
+
+/* Selected overrides plain legal green with the same orange the pointer
+   hover rule below uses; hover never mutates this class. */
+.zone-list-entry.is-selected img {
+  border-color: var(--warning);
+  box-shadow: 0 0 0 3px rgb(255 213 128 / 0.78);
+}
+
+/* List pointer hover is orange regardless of legality, and never persists
+   as a class: same specificity as the two rules above, source order last
+   so it wins for the duration of the hover only. */
+.zone-list-entry:hover img {
   border-color: var(--warning);
   box-shadow: 0 0 0 2px rgb(255 213 128 / 0.55);
+}
+
+.zone-list-entry:is(:hover, :focus-within) {
+  transform: scale(1.35);
 }
 
 .zone-list-entry > img {
@@ -1330,6 +1360,34 @@ button.duel-field-zone,
   min-height: 2.75rem;
   margin: 0;
   pointer-events: auto;
+  transform-origin: center;
+  transition: transform 120ms ease-out;
+}
+
+/* Hovered/focused/pinned card parent rises above normal card/stack/zone
+   siblings (all z-index 30/20/10): with `.duel-field-board { isolation:
+   isolate }`, a chip's own z-index only ranks it among its own card's
+   children, never against a whole sibling card painted later in the DOM. */
+.duel-field-card:is(:hover, :focus-within),
+.duel-field-card.is-pinned {
+  z-index: var(--duel-field-layer-card-raised);
+}
+
+/* Field/zone cards are absolutely centred via `translate(-50%, -50%)`
+   (shared rule above); the zoom scale composes onto that same transform so
+   the halo/art (which fills the card root) scales with it, origin centre.
+   `:not(.is-pinned)` deliberately excludes the pin flow, which moves focus
+   onto a `card-action-chips` button just above the card's own top edge;
+   zooming the card while that chip holds focus would amplify the chip's
+   offset from the transform origin and can push it above the (non-
+   scrolling) viewport, which `assertRectInsideViewport` in e2e correctly
+   rejects. A `:has()`-based fix (matching only the card's own target button)
+   was tried first and reverted: `:has()` invalidation cost measurably slowed
+   the keyboard-walker e2e's hundreds of focus moves past its time budget.
+   Pin/menu z-layering (above) is unaffected — only the visual scale is
+   skipped while pinned. */
+.duel-field-card:not(.is-hand-item):not(.is-pinned):is(:hover, :focus-within) {
+  transform: translate(-50%, -50%) scale(1.35);
 }
 
 /* Hand cards live in normal document flow inside a HandBand's scrolling
@@ -1346,6 +1404,18 @@ button.duel-field-zone,
   aspect-ratio: 72 / 104;
   height: auto;
   transform: none;
+  /* Player hand grows inward/upward from its bottom edge; opponent hand
+     (below) grows downward from its top edge instead. */
+  transform-origin: center bottom;
+}
+
+.duel-field-card.is-hand-item.is-opponent {
+  transform-origin: center top;
+}
+
+/* Same pin exclusion as the field/zone rule above. */
+.duel-field-card.is-hand-item:not(.is-pinned):is(:hover, :focus-within) {
+  transform: scale(1.35);
 }
 
 .duel-field-hand-band {
@@ -1368,15 +1438,25 @@ button.duel-field-zone,
   width: 100%;
 }
 
+/* Padding/scroll-padding give a 1.35x-zoomed hand card room to grow without
+   being clipped by this viewport's own auto overflow box; scrolling stays
+   intact, only the reserved edge margin grows. Player cards grow upward
+   from their bottom origin, so the extra room goes on top; opponent cards
+   grow downward from their top origin, so it goes on the bottom instead. */
 .duel-field-hand-band__viewport {
   display: flex;
   flex: 1 1 auto;
   gap: 0.35rem;
   min-width: 0;
-  padding: 0.15rem;
+  padding: 2.9rem 1.75rem 0.15rem;
+  scroll-padding-inline: 1.75rem;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scrollbar-width: thin;
+}
+
+.duel-field-hand-band.is-opponent .duel-field-hand-band__viewport {
+  padding: 0.15rem 1.75rem 2.9rem;
 }
 
 .duel-field-hand-band.is-opponent .duel-field-hand-band__viewport {
@@ -1609,5 +1689,34 @@ button.card-action-chip:hover:not(:disabled) {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+}
+
+/* T12: the global reduced-motion block above only zeroes transition
+   *duration* (a11y baseline for every animated property in the app); the
+   1.35x hover/focus zoom also needs its transform disabled outright, or a
+   reduced-motion user still jumps to the scaled size instantly. Static
+   halos (border-color/box-shadow above) are untouched. Opponent/sideways
+   art rotation lives on `.duel-field-card__art`, a different element, so it
+   is never touched here and stays oriented. */
+@media (prefers-reduced-motion: reduce) {
+  .duel-field-card,
+  .zone-list-entry {
+    transition: none;
+  }
+
+  .duel-field-card:not(.is-hand-item):not(.is-pinned):is(
+      :hover,
+      :focus-within
+    ) {
+    transform: translate(-50%, -50%);
+  }
+
+  .duel-field-card.is-hand-item:not(.is-pinned):is(:hover, :focus-within) {
+    transform: none;
+  }
+
+  .zone-list-entry:is(:hover, :focus-within) {
+    transform: none;
   }
 }

@@ -173,6 +173,7 @@ export const RICH_PUBLIC_DUEL_STATE: PublicDuelState = {
   turn: 4,
   turnPlayer: 1,
   phase: "battleStep",
+  layout: { extraMonsterZones: true },
   players: [
     {
       ...player(0),

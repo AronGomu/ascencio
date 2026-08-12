@@ -99,6 +99,7 @@ describe("headless duel handle lifecycle", () => {
         opponentDeck: EMPTY_DECK,
         configuration: {
           mode: "programmed",
+          rules: "mr5",
           seed: [1n, 2n, 3n, 4n],
           playerDeckOrder: EMPTY_DECK.main,
           opponentDeckOrder: EMPTY_DECK.main,
@@ -214,6 +215,7 @@ async function createController(
     opponentDeck: EMPTY_DECK,
     configuration: {
       mode: "programmed",
+      rules: "mr5",
       seed: [1n, 2n, 3n, 4n],
       playerDeckOrder: EMPTY_DECK.main,
       opponentDeckOrder: EMPTY_DECK.main,
@@ -227,6 +229,7 @@ async function createController(
     presetId: "fake-preset",
     deckCounts: [0, 0],
     extraDeckCounts: [0, 0],
+    extraMonsterZones: true,
   });
   return { controller, session, harness };
 }

@@ -451,6 +451,7 @@ function validatePublicState(value: unknown): void {
       "turn",
       "turnPlayer",
       "phase",
+      "layout",
       "players",
       "chain",
     ],
@@ -466,6 +467,10 @@ function validatePublicState(value: unknown): void {
   requireSafeInteger(state.turn, "state.turn", 0, Number.MAX_SAFE_INTEGER);
   requirePlayer(state.turnPlayer, "state.turnPlayer");
   requireEnum(state.phase, PHASES, "state.phase");
+  const layout = requireRecord(state.layout, "state.layout");
+  requireExactKeys(layout, ["extraMonsterZones"], "state.layout");
+  if (typeof layout.extraMonsterZones !== "boolean")
+    throw invalid("state.layout.extraMonsterZones");
   const players = requireArray(state.players, "state.players", 2);
   if (players.length !== 2) throw invalid("state.players length");
   const instances = {

@@ -82,12 +82,18 @@ export interface PublicChainLink {
   readonly outcome: PublicChainOutcome;
 }
 
+/** Immutable geometry chosen with the duel's engine rules profile. */
+export interface PublicDuelLayout {
+  readonly extraMonsterZones: boolean;
+}
+
 export interface PublicDuelState {
   readonly snapshotId: SnapshotId;
   readonly revision: number;
   readonly turn: number;
   readonly turnPlayer: PlayerIndex;
   readonly phase: DuelPhase;
+  readonly layout: PublicDuelLayout;
   readonly players: readonly [PublicPlayerState, PublicPlayerState];
   readonly chain: readonly PublicChainLink[];
 }

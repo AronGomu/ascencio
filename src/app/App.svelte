@@ -133,9 +133,19 @@
   $: boardResult =
     $duel.snapshot === null
       ? null
-      : mapSnapshotToBoard($duel.snapshot, ACTIVE_CARD_TEXTS);
+      : mapSnapshotToBoard($duel.snapshot, ACTIVE_CARD_TEXTS, $duel.prompt);
   $: duelBoard = boardResult?.ok === true ? boardResult.value : null;
+  /* Engine legality and visible geometry disagree about the shared Extra
+     Monster Zones. Nothing may hide, auto-answer or generically recover from
+     that: the whole prompt path is gated off until it is fixed. */
+  $: layoutProfileConflict =
+    boardResult?.ok === false &&
+    boardResult.error.type === "layout_profile_conflict"
+      ? boardResult.error
+      : null;
+  $: effectivePrompt = layoutProfileConflict === null ? $duel.prompt : null;
   $: duelViewportOnly =
+    layoutProfileConflict === null &&
     (duelBoard !== null || $duel.snapshot !== null) &&
     !$uiSettings.showDuelHud &&
     !$uiSettings.showWorkspace;
@@ -144,7 +154,7 @@
       ? EMPTY_ZONE_LISTS
       : zoneListsForBoard(duelBoard, $duel.snapshot, ACTIVE_CARD_TEXTS);
   $: mappedInteractionSpec = mapPromptToInteractionSpec(
-    $duel.prompt,
+    effectivePrompt,
     $duel.snapshot,
     duelBoard,
     $duel.context,
@@ -152,12 +162,12 @@
   $: fieldInteractionSpec =
     mappedInteractionSpec.kind === "inactive" ? null : mappedInteractionSpec;
   $: currentPromptSurface = promptSurface(
-    $duel.prompt,
+    effectivePrompt,
     mappedInteractionSpec,
     $uiSettings.showWorkspace,
     duelBoard !== null,
   );
-  $: previewStatus = previewStatusFor($duel.prompt, $duel.responsePending);
+  $: previewStatus = previewStatusFor(effectivePrompt, $duel.responsePending);
   $: headerLifePoints =
     $duel.snapshot === null
       ? null
@@ -450,7 +460,11 @@
     handleDiagnosticsDownload($duel.diagnostics);
   }
 
-  $: maybeAutoResolvePrompt($duel.prompt, $duel.responsePending, $uiSettings);
+  $: maybeAutoResolvePrompt(
+    effectivePrompt,
+    $duel.responsePending,
+    $uiSettings,
+  );
 
   function maybeAutoResolvePrompt(
     prompt: PlayerPrompt | null,
@@ -892,19 +906,37 @@
       <CardPreviewPanel
         preview={previewCard}
         status={previewStatus}
-        hasPriority={hasDuelPriority($duel.prompt, $duel.responsePending)}
+        hasPriority={hasDuelPriority(effectivePrompt, $duel.responsePending)}
         imageLibrary={imagesMatchRuntime ? imageLibrary : null}
         placeholderUrl={imageLibrary?.placeholderUrl ??
           DEFAULT_CARD_PLACEHOLDER}
       />
-      {#if duelBoard}
+      {#if layoutProfileConflict}
+        <section
+          class="field-error"
+          role="alert"
+          data-cy="layout-profile-conflict"
+          data-conflict-zone-id={layoutProfileConflict.zoneId}
+          data-conflict-source={layoutProfileConflict.source}
+        >
+          <h2 data-cy="layout-profile-conflict-heading">
+            Duel field and rules disagree
+          </h2>
+          <p data-cy="layout-profile-conflict-copy">
+            This duel runs without shared Extra Monster Zones, but the engine
+            still offers {layoutProfileConflict.zoneId} ({layoutProfileConflict.source}).
+            Decisions are paused so no legal choice is hidden or answered for
+            you.
+          </p>
+        </section>
+      {:else if duelBoard}
         {#key `${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
           <DuelFieldErrorBoundary
             board={duelBoard}
             imageLibrary={imagesMatchRuntime ? imageLibrary : null}
             cardBackUrl={imageLibrary?.cardBackUrl ?? ""}
             placeholderUrl={imageLibrary?.placeholderUrl ?? ""}
-            prompt={$duel.prompt}
+            prompt={effectivePrompt}
             spec={fieldInteractionSpec}
             session={$duel.interactionSession}
             pending={$duel.responsePending}
@@ -935,10 +967,10 @@
     </div>
   {/if}
 
-  {#if currentPromptSurface === "dialog" && $duel.prompt}
-    {#key $duel.prompt.id}
+  {#if currentPromptSurface === "dialog" && effectivePrompt}
+    {#key effectivePrompt.id}
       <PromptDialog
-        prompt={$duel.prompt}
+        prompt={effectivePrompt}
         disabled={$duel.responsePending}
         imageLibrary={imagesMatchRuntime ? imageLibrary : null}
         placeholderUrl={imageLibrary?.placeholderUrl ??
@@ -985,10 +1017,10 @@
         bind:this={promptPanel}
         data-cy="prompt-panel"
       >
-        {#if $duel.prompt}
-          {#key $duel.prompt.id}
+        {#if effectivePrompt}
+          {#key effectivePrompt.id}
             <PromptControls
-              prompt={$duel.prompt}
+              prompt={effectivePrompt}
               disabled={$duel.responsePending}
               onsubmit={duel.respond}
               imageLibrary={imagesMatchRuntime ? imageLibrary : null}

@@ -32,6 +32,7 @@ const state = {
   turn: 1,
   turnPlayer: 1,
   phase: "main1",
+  layout: { extraMonsterZones: true },
   players: [
     {
       player: 0,

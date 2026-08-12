@@ -152,6 +152,7 @@ interface ProjectionCheckpoint {
 
 export class DuelStateProjector {
   readonly #snapshotId: SnapshotId;
+  readonly #layout: PublicDuelState["layout"];
   readonly #players: [MutablePlayer, MutablePlayer];
   #revision = 0;
   #turn = 0;
@@ -167,6 +168,7 @@ export class DuelStateProjector {
     snapshotId: SnapshotId,
     deckCounts: readonly [number, number],
     extraDeckCounts: readonly [number, number],
+    layout: PublicDuelState["layout"],
     initialExtraDeckOrders: readonly [
       readonly CardCode[],
       readonly CardCode[],
@@ -174,6 +176,11 @@ export class DuelStateProjector {
     textDependencies?: Pick<ActiveDuelDependencies, "texts" | "strings">,
   ) {
     this.#snapshotId = snapshotId;
+    /* The layout profile is chosen once at duel start; no message, checkpoint
+       or restore can change it. */
+    this.#layout = Object.freeze({
+      extraMonsterZones: layout.extraMonsterZones,
+    });
     this.#textDependencies = textDependencies;
     this.#players = [
       mutablePlayer(deckCounts[0], extraDeckCounts[0]),
@@ -692,6 +699,7 @@ export class DuelStateProjector {
       turn: this.#turn,
       turnPlayer: this.#turnPlayer,
       phase: this.#phase,
+      layout: this.#layout,
       players: Object.freeze(players),
       chain: Object.freeze(
         this.#chain.map((link): PublicChainLink => Object.freeze({ ...link })),

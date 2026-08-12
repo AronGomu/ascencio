@@ -27,6 +27,9 @@ export const EnginePosition = {
 export const EngineDuelFlag = {
   ATTACK_FIRST_TURN: 0x02n,
   PSEUDO_SHUFFLE: 0x10n,
+  /** Pinned `OcgDuelMode.MODE_MR3`: no Extra Monster Zones. */
+  MODE_MR3: 0xd1800n,
+  /** Pinned `OcgDuelMode.MODE_MR5`: shared Extra Monster Zones. */
   MODE_MR5: 0x2e800n,
 } as const;
 

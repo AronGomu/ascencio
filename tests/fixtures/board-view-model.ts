@@ -71,6 +71,7 @@ function state(
   player0: Partial<PublicPlayerState> = {},
   player1: Partial<PublicPlayerState> = {},
   chain: PublicDuelState["chain"] = [],
+  layout: PublicDuelState["layout"] = { extraMonsterZones: true },
 ): PublicDuelState {
   return {
     snapshotId: snapshotId(id.padEnd(64, id.at(-1) ?? "0").slice(0, 64)),
@@ -78,6 +79,7 @@ function state(
     turn: 1,
     turnPlayer: 0,
     phase: "main1",
+    layout,
     players: [
       { ...player(0), ...player0, player: 0 },
       { ...player(1), ...player1, player: 1 },
@@ -264,6 +266,59 @@ export const STACK_ART_STATE = state("stackart", {
   banished: [card("stackart-banished-first", 97590747, 0, "banished", 0)],
   deckCount: 40,
   deck: deckSlots(0, 40),
+});
+
+/* Link-free profile: Master Rule 3, so the shared Extra Monster Zones exist
+   in neither the engine nor the rendered board. */
+export const LINK_FREE_STATE = state(
+  "linkfree",
+  { monsters: [mainZero, mainFour] },
+  {},
+  [],
+  { extraMonsterZones: false },
+);
+
+export const LINK_FREE_OCCUPIED_SHARED_STATE = state(
+  "linkfreeoccupied",
+  { monsters: [card("linkfree-shared-left", 97590747, 0, "monster", 5)] },
+  {},
+  [],
+  { extraMonsterZones: false },
+);
+
+function sharedZonePrompt(id: string, choice: PromptChoice): PlayerPrompt {
+  return {
+    id: promptId(id),
+    kind: "selectPlace",
+    player: 0,
+    title: "Select field location(s)",
+    choices: [choice],
+    minimum: 1,
+    maximum: 1,
+    cancelable: false,
+    ordered: false,
+  };
+}
+
+export const SHARED_PLACE_PROMPT = sharedZonePrompt("shared-place-prompt", {
+  id: choiceId("shared-place-sequence-5"),
+  label: "Shared Extra Monster Zone left",
+  action: "select",
+  place: { player: 0, location: "monster", sequence: 5 },
+});
+
+export const SHARED_CARD_PROMPT = sharedZonePrompt("shared-card-prompt", {
+  id: choiceId("shared-card-sequence-6"),
+  label: "Card in a shared Extra Monster Zone",
+  action: "select",
+  card: {
+    instanceId: cardInstanceId("shared-card-sequence-6"),
+    code: cardCode(89631139),
+    controller: 0,
+    location: "monster",
+    sequence: 6,
+    position: "faceUpAttack",
+  },
 });
 
 export function promptChoice(id: string): PromptChoice {

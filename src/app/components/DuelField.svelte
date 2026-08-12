@@ -126,6 +126,9 @@
     prompt === null || spec === null
       ? { valid: false as const, message: "No active field decision" }
       : validatePromptSelection(prompt, submittedChoiceIds);
+  /* Derived from the projected board itself, so the strip can never disagree
+     with the zones the mapper actually produced. */
+  $: extraMonsterZones = board.zones.some(({ player }) => player === "shared");
   $: actionBarVisible =
     prompt !== null &&
     spec !== null &&
@@ -485,7 +488,13 @@
       {onstackpreview}
       onstackactivate={activateStack}
     />
-    <PhaseStrip {phase} {spec} disabled={pending} {oninteraction} />
+    <PhaseStrip
+      {phase}
+      {spec}
+      disabled={pending}
+      {extraMonsterZones}
+      {oninteraction}
+    />
     {#if actionBarVisible && prompt && spec}
       <FieldActionBar
         {prompt}

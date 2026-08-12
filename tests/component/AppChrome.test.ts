@@ -20,7 +20,7 @@ const workerClientSpies = vi.hoisted(() => {
     },
     __APP_BUILD_ID__: "component-test",
   });
-  return { startDuel: vi.fn() };
+  return { startDuel: vi.fn(), respond: vi.fn() };
 });
 
 vi.mock("../../src/app/DuelWorkerClient.ts", () => {
@@ -55,7 +55,8 @@ vi.mock("../../src/app/DuelWorkerClient.ts", () => {
       return this.context;
     }
 
-    respond() {
+    respond(...args: unknown[]) {
+      workerClientSpies.respond(...args);
       return false;
     }
 
@@ -87,7 +88,12 @@ import App from "../../src/app/App.svelte";
 import { DuelWorkerClient as MockedDuelWorkerClient } from "../../src/app/DuelWorkerClient.ts";
 import MenuDialog from "../../src/app/components/MenuDialog.svelte";
 import SettingsDialog from "../../src/app/components/SettingsDialog.svelte";
-import { snapshotId } from "../../src/duel/contracts/ids.ts";
+import {
+  choiceId,
+  promptId,
+  snapshotId,
+} from "../../src/duel/contracts/ids.ts";
+import type { PlayerPrompt } from "../../src/duel/contracts/player-prompt.ts";
 import type { PublicDuelState } from "../../src/duel/contracts/public-duel-state.ts";
 
 interface MockedWorkerInstance {
@@ -105,6 +111,7 @@ afterEach(() => {
   cleanup();
   localStorage.clear();
   workerClientSpies.startDuel.mockReset();
+  workerClientSpies.respond.mockReset();
   mockedWorkerClientCtor.instances.length = 0;
 });
 
@@ -142,6 +149,7 @@ const EMPTY_SNAPSHOT: PublicDuelState = {
   turn: 1,
   turnPlayer: 0,
   phase: "main1",
+  layout: { extraMonsterZones: true },
   players: [
     {
       player: 0,
@@ -185,6 +193,55 @@ function emitDuelState(state: PublicDuelState): void {
     listener({ context: worker.context, event: { type: "state", state } });
 }
 
+function emitPrompt(prompt: PlayerPrompt): void {
+  const worker =
+    mockedWorkerClientCtor.instances[
+      mockedWorkerClientCtor.instances.length - 1
+    ];
+  if (worker === undefined) throw new Error("No mocked worker client instance");
+  for (const listener of worker.listeners)
+    listener({ context: worker.context, event: { type: "prompt", prompt } });
+}
+
+const LINK_FREE_SNAPSHOT: PublicDuelState = {
+  ...EMPTY_SNAPSHOT,
+  layout: { extraMonsterZones: false },
+};
+
+const SHARED_ZONE_PLACE_PROMPT: PlayerPrompt = {
+  id: promptId("shared-zone-place"),
+  kind: "selectPlace",
+  player: 0,
+  title: "Select field location(s)",
+  choices: [
+    {
+      id: choiceId("shared-zone-place-5"),
+      label: "Shared Extra Monster Zone left",
+      action: "select",
+      place: { player: 0, location: "monster", sequence: 5 },
+    },
+  ],
+  minimum: 1,
+  maximum: 1,
+  cancelable: false,
+  ordered: false,
+};
+
+async function startLinkFreeConflict(
+  user: ReturnType<typeof userEvent.setup>,
+): Promise<void> {
+  await startDuelFromPicker(user);
+  emitDuelState(LINK_FREE_SNAPSHOT);
+  emitPrompt(SHARED_ZONE_PLACE_PROMPT);
+  await vi.waitFor(() =>
+    expect(
+      document.querySelector('[data-cy="layout-profile-conflict"]'),
+    ).not.toBeNull(),
+  );
+  await new Promise<void>((resolve) => queueMicrotask(resolve));
+  await new Promise<void>((resolve) => queueMicrotask(resolve));
+}
+
 describe("App", () => {
   it("shows the deck picker instead of auto-starting", async () => {
     await renderReadyApp();
@@ -219,6 +276,82 @@ describe("App", () => {
       "burning-abyss",
       "shaddoll",
     );
+  });
+
+  it("blocks the duel view when a prompt still reaches an omitted shared zone", async () => {
+    const user = userEvent.setup();
+    await renderReadyApp();
+    await startLinkFreeConflict(user);
+
+    const alert = document.querySelector(
+      '[data-cy="layout-profile-conflict"]',
+    ) as HTMLElement;
+    expect(alert.getAttribute("role")).toBe("alert");
+    expect(alert.getAttribute("data-conflict-zone-id")).toBe(
+      "shared:extraMonster:left",
+    );
+    expect(alert.getAttribute("data-conflict-source")).toBe("prompt");
+    expect(document.querySelector('[data-cy="duel-field"]')).toBeNull();
+    expect(document.querySelector('[data-cy="prompt-dialog"]')).toBeNull();
+    expect(
+      document.querySelector('[data-cy="app-field-error-panel"]'),
+    ).toBeNull();
+    expect(workerClientSpies.respond).not.toHaveBeenCalled();
+    expect(
+      document
+        .querySelector('[data-cy="app-main"]')
+        ?.getAttribute("data-duel-viewport"),
+    ).toBeNull();
+  });
+
+  it("suppresses workspace prompt controls during a layout profile conflict", async () => {
+    const user = userEvent.setup();
+    await renderReadyApp();
+    await user.click(
+      document.querySelector(
+        '[data-cy="app-menubar-settings-button"]',
+      ) as HTMLButtonElement,
+    );
+    await user.click(
+      document.querySelector(
+        '[data-cy="menu-dialog-settings-button"]',
+      ) as HTMLButtonElement,
+    );
+    await user.click(
+      document.querySelector(
+        '[data-cy="settings-show-workspace-checkbox"]',
+      ) as HTMLInputElement,
+    );
+    await user.click(
+      document.querySelector(
+        '[data-cy="settings-dialog-close-button"]',
+      ) as HTMLButtonElement,
+    );
+    await startLinkFreeConflict(user);
+
+    expect(document.querySelector('[data-cy="workspace-grid"]')).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="prompt-controls-panel"]'),
+    ).toBeNull();
+    expect(
+      document.querySelector('[data-cy="prompt-panel-heading"]')?.textContent,
+    ).toContain("No decision pending");
+    expect(workerClientSpies.respond).not.toHaveBeenCalled();
+  });
+
+  it("keeps the normal prompt path when the layout and rules agree", async () => {
+    const user = userEvent.setup();
+    await renderReadyApp();
+    await startDuelFromPicker(user);
+    emitDuelState(EMPTY_SNAPSHOT);
+    emitPrompt(SHARED_ZONE_PLACE_PROMPT);
+    await vi.waitFor(() =>
+      expect(workerClientSpies.respond).toHaveBeenCalledTimes(1),
+    );
+
+    expect(
+      document.querySelector('[data-cy="layout-profile-conflict"]'),
+    ).toBeNull();
   });
 
   it("marks default board mode as viewport constrained", async () => {

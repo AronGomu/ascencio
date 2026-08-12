@@ -991,6 +991,22 @@ li + li {
 .field-phase-strip__group--right {
   right: 1%;
 }
+/* Link-free (Master Rule 3) duels have no shared Extra Monster Zones, so the
+   two semantic groups no longer have to straddle them: they flow as one run
+   with a single uniform chip gap, keeping the shipped Draw → Standby →
+   Main 1 → Battle → Main 2 → End turn order. The run stays anchored at the
+   same 1% right inset the End turn button already used, because that is the
+   only place in this band where a 44px-tall control clears both monster
+   rows and every pile column at every supported viewport. */
+.field-phase-strip.is-continuous {
+  justify-content: flex-end;
+  gap: 0.3rem;
+  padding-right: 1%;
+}
+.field-phase-strip.is-continuous .field-phase-strip__group {
+  position: static;
+  right: auto;
+}
 .field-phase-chip {
   pointer-events: none;
   padding: 0.2rem 0.5rem;

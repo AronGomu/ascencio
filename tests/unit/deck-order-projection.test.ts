@@ -15,6 +15,7 @@ function projector(deckCounts: readonly [number, number] = [40, 40]) {
     snapshotId("deck-order-projection"),
     deckCounts,
     [0, 0],
+    { extraMonsterZones: true },
   );
 }
 

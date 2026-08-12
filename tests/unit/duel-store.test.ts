@@ -30,6 +30,7 @@ const STATE: PublicDuelState = {
   turn: 1,
   turnPlayer: 0,
   phase: "main1",
+  layout: { extraMonsterZones: true },
   players: [
     {
       player: 0,

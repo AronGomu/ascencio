@@ -79,6 +79,7 @@ async function controllerWithQuery(
     opponentDeck: EMPTY_DECK,
     configuration: {
       mode: "programmed",
+      rules: "mr5",
       seed: [1n, 2n, 3n, 4n],
       playerDeckOrder: [],
       opponentDeckOrder: [],
@@ -94,6 +95,7 @@ async function controllerWithQuery(
       presetId: "reconcile",
       deckCounts: [0, 0],
       extraDeckCounts: [1, 0],
+      extraMonsterZones: true,
     }),
   };
 }
@@ -164,6 +166,7 @@ async function controllerWithOverlayQuery(
     opponentDeck: EMPTY_DECK,
     configuration: {
       mode: "programmed",
+      rules: "mr5",
       seed: [1n, 2n, 3n, 4n],
       playerDeckOrder: [],
       opponentDeckOrder: [],
@@ -179,6 +182,7 @@ async function controllerWithOverlayQuery(
       presetId: "overlay-failure",
       deckCounts: player === 0 ? [2, 0] : [0, 2],
       extraDeckCounts: [0, 0],
+      extraMonsterZones: true,
     }),
   };
 }
@@ -287,6 +291,7 @@ describe("HeadlessDuelController reconciliation", () => {
       opponentDeck: EMPTY_DECK,
       configuration: {
         mode: "programmed",
+        rules: "mr5",
         seed: [1n, 2n, 3n, 4n],
         playerDeckOrder: [],
         opponentDeckOrder: [],
@@ -299,6 +304,7 @@ describe("HeadlessDuelController reconciliation", () => {
       presetId: "reversed-extra",
       deckCounts: [0, 0],
       extraDeckCounts: [2, 0],
+      extraMonsterZones: true,
     });
 
     const state = controller.advance().state.players[0];
@@ -394,6 +400,7 @@ describe("HeadlessDuelController reconciliation", () => {
       opponentDeck: EMPTY_DECK,
       configuration: {
         mode: "programmed",
+        rules: "mr5",
         seed: [1n, 2n, 3n, 4n],
         playerDeckOrder: [],
         opponentDeckOrder: [],
@@ -406,6 +413,7 @@ describe("HeadlessDuelController reconciliation", () => {
       presetId: "overlay",
       deckCounts: [2, 0],
       extraDeckCounts: [0, 0],
+      extraMonsterZones: true,
     });
 
     const advance = controller.advance();
@@ -456,6 +464,7 @@ describe("HeadlessDuelController reconciliation", () => {
       opponentDeck: EMPTY_DECK,
       configuration: {
         mode: "programmed",
+        rules: "mr5",
         seed: [1n, 2n, 3n, 4n],
         playerDeckOrder: [],
         opponentDeckOrder: [],
@@ -468,6 +477,7 @@ describe("HeadlessDuelController reconciliation", () => {
       presetId: "overlay-invariant",
       deckCounts: [1, 0],
       extraDeckCounts: [0, 0],
+      extraMonsterZones: true,
     });
 
     expect(() => controller.advance()).toThrow(
@@ -708,6 +718,7 @@ describe("HeadlessDuelController reconciliation", () => {
       opponentDeck: EMPTY_DECK,
       configuration: {
         mode: "programmed",
+        rules: "mr5",
         seed: [1n, 2n, 3n, 4n],
         playerDeckOrder: [],
         opponentDeckOrder: [],
@@ -720,6 +731,7 @@ describe("HeadlessDuelController reconciliation", () => {
       presetId: "counter-reconcile",
       deckCounts: [1, 0],
       extraDeckCounts: [0, 0],
+      extraMonsterZones: true,
     });
 
     const advance = controller.advance();
@@ -797,6 +809,7 @@ describe("HeadlessDuelController reconciliation", () => {
       opponentDeck: EMPTY_DECK,
       configuration: {
         mode: "programmed",
+        rules: "mr5",
         seed: [1n, 2n, 3n, 4n],
         playerDeckOrder: [],
         opponentDeckOrder: [],
@@ -809,6 +822,7 @@ describe("HeadlessDuelController reconciliation", () => {
       presetId: "counter-multi-address",
       deckCounts: [2, 0],
       extraDeckCounts: [0, 0],
+      extraMonsterZones: true,
     });
 
     const advance = controller.advance();
@@ -885,6 +899,7 @@ describe("HeadlessDuelController reconciliation", () => {
         opponentDeck: EMPTY_DECK,
         configuration: {
           mode: "programmed",
+          rules: "mr5",
           seed: [1n, 2n, 3n, 4n],
           playerDeckOrder: [],
           opponentDeckOrder: [],
@@ -900,6 +915,7 @@ describe("HeadlessDuelController reconciliation", () => {
         presetId: "counter-failure",
         deckCounts: [0, 0],
         extraDeckCounts: [0, 0],
+        extraMonsterZones: true,
         opponentPolicy: { choose },
       });
 

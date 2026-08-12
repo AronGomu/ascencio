@@ -246,9 +246,14 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   ).toBeVisible();
   const field = page.getByRole("region", { name: "Duel field" });
   await expect(field).toBeVisible();
-  // T8: hand zones paint no ZoneControl/`data-zone-id`; 34 physical zones
-  // minus the 2 hand zones leaves 32 painted ones.
-  await expect(field.locator("[data-zone-id]")).toHaveCount(32);
+  // T8: hand zones paint no ZoneControl/`data-zone-id`. T11: the bundled
+  // pairs are Link-free, so the duel runs under Master Rule 3 with no shared
+  // Extra Monster Zones at all — 32 physical zones minus the 2 hand zones
+  // leaves 30 painted ones.
+  await expect(field.locator("[data-zone-id]")).toHaveCount(30);
+  await expect(
+    field.locator('[data-zone-id^="shared:extraMonster"]'),
+  ).toHaveCount(0);
   // The top-right status pills (T3) are gone; the in-field phase strip is
   // the current-phase indicator now.
   await expect(field.locator('[data-cy="field-phase-strip"]')).toBeVisible();
@@ -1801,10 +1806,11 @@ test("responsive field compositions contain controls across supported viewports"
       `${viewportLabel} End turn corner button (rect ${JSON.stringify(endTurnRect)}) must not overlap any playable field target`,
     ).toBe(false);
 
-    // Round 3 (T10): the retired End chip must never come back, End turn
-    // meets the same 44x44 floor every field control does, and the left
-    // (draw/standby/main1/battle)/right (main2/End) phase groups still clear
-    // the shared extra monster zones the way the old six-chip strip did.
+    // Round 3 (T10): the retired End chip must never come back and End turn
+    // meets the same 44x44 floor every field control does. Round 3 (T11):
+    // with no shared extra monster zones to straddle, the same semantic
+    // groups flow continuously as one right-anchored run with one uniform
+    // gap between neighbours.
     await expect(field.locator('[data-cy="field-phase-chip-end"]')).toHaveCount(
       0,
     );
@@ -1817,6 +1823,9 @@ test("responsive field compositions contain controls across supported viewports"
       `${viewportLabel} End turn button meets the 44px height floor`,
     ).toBeGreaterThanOrEqual(44);
 
+    await expect(
+      field.locator('[data-cy="field-phase-strip"]'),
+    ).toHaveAttribute("data-extra-monster-zones", "false");
     const phaseGeometry = await page.evaluate(() => {
       const rect = (selector: string): DOMRect | null =>
         document.querySelector(selector)?.getBoundingClientRect() ?? null;
@@ -1825,27 +1834,44 @@ test("responsive field compositions contain controls across supported viewports"
         right: rect('[data-cy="field-phase-strip-right"]'),
         battle: rect('[data-cy="field-phase-chip-battle"]'),
         main2: rect('[data-cy="field-phase-chip-main2"]'),
-        emzLeft: rect('[data-zone-id="shared:extraMonster:left"]'),
-        emzRight: rect('[data-zone-id="shared:extraMonster:right"]'),
+        flow: [
+          ...document.querySelectorAll(
+            '[data-cy="field-phase-strip"] [data-cy^="field-phase-chip-"], [data-cy="field-phase-strip"] [data-cy="field-end-turn-button"]',
+          ),
+        ].map((element) => ({
+          id: element.getAttribute("data-cy"),
+          rect: element.getBoundingClientRect(),
+        })),
       };
     });
     if (
       phaseGeometry.left === null ||
       phaseGeometry.right === null ||
       phaseGeometry.battle === null ||
-      phaseGeometry.main2 === null ||
-      phaseGeometry.emzLeft === null ||
-      phaseGeometry.emzRight === null
+      phaseGeometry.main2 === null
     )
       throw new Error(`${viewportLabel} phase strip geometry hooks missing`);
     expect(
-      phaseGeometry.left.right,
-      `${viewportLabel} left phase group clears the shared left EMZ`,
-    ).toBeLessThanOrEqual(phaseGeometry.emzLeft.left - 1);
+      phaseGeometry.flow.map(({ id }) => id),
+      `${viewportLabel} continuous phase flow keeps the shipped order`,
+    ).toEqual([
+      "field-phase-chip-draw",
+      "field-phase-chip-standby",
+      "field-phase-chip-main1",
+      "field-phase-chip-battle",
+      "field-phase-chip-main2",
+      "field-end-turn-button",
+    ]);
+    const adjacentGaps = phaseGeometry.flow
+      .slice(1)
+      .map(
+        (entry, index) =>
+          entry.rect.left - phaseGeometry.flow[index]!.rect.right,
+      );
     expect(
-      phaseGeometry.right.left,
-      `${viewportLabel} right phase group clears the shared right EMZ`,
-    ).toBeGreaterThanOrEqual(phaseGeometry.emzRight.right + 1);
+      Math.max(...adjacentGaps) - Math.min(...adjacentGaps),
+      `${viewportLabel} continuous phase controls keep uniform adjacent gaps (${JSON.stringify(adjacentGaps)})`,
+    ).toBeLessThanOrEqual(1.5);
     expect(
       phaseGeometry.battle.left >= phaseGeometry.left.left - 1 &&
         phaseGeometry.battle.right <= phaseGeometry.left.right + 1,

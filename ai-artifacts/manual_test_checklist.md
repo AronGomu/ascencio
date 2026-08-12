@@ -351,8 +351,18 @@ Kept for history. Read the SUPERSEDED banners before running anything here.
 ## T10 phase-strip-end-turn-and-role-labels (round 3)
 
 - [ ] `npm run dev`, start a duel at a normal desktop window size: the phase strip shows exactly four chips on the left (Draw, Standby, Main 1, Battle) and Main 2 plus one yellow "End turn"-style button on the right — no separate End chip, no second End Turn button anywhere on the field.
-- [ ] Confirm the left group's right edge stays left of, and the right group's left edge stays right of, the shared Extra Monster Zones at a few different window sizes; nothing in the phase strip ever visually overlaps a card, zone, or pile.
+- [ ] Confirm nothing in the phase strip ever visually overlaps a card, zone, or pile at a few different window sizes. (Round 3 T11: with the bundled Link-free decks there are no shared Extra Monster Zones any more, so the two groups now flow as one continuous run anchored at the right instead of straddling those zones.)
 - [ ] Click the End turn button when it's enabled: the turn ends exactly once, matching its previous behaviour before this change.
 - [ ] Confirm the header shows exactly two labels next to the life point totals: "Opponent" next to the top/opponent LP and "You" next to your own LP — no deck or archetype name appears anywhere in the header or on the field.
 - [ ] Confirm no old-style status pills (priority pill, phase pill, or an opponent-hand status badge) have reappeared anywhere on the duel field.
 - [ ] Play a full duel end-to-end, including reaching and using End turn from both the idle command menu and the field action bar's Battle/Main 2 buttons: no broken path, no console errors, and the app remains fully functional through to the result dialog.
+
+## T11 link-detection-and-extra-monster-zones (round 3)
+
+- [ ] `npm run dev`, start a duel with any bundled deck pair: the board shows no shared Extra Monster Zones at all — the central band between the two monster rows is empty, and no "Shared Extra Monster Zone" control can be focused or clicked.
+- [ ] With that same duel, confirm the phase strip reads Draw, Standby, Main 1, Battle, Main 2, End turn in one continuous run with even spacing between neighbours, and that the End turn button stays comfortably clickable and clear of every card, zone and pile.
+- [ ] Summon an Extra Deck monster (Fusion/Synchro/Xyz) during that duel: the placement prompt only ever offers the five main Monster Zones — no choice points at a zone that is not drawn on the board, and no prompt is silently skipped or answered for you.
+- [ ] Play a full duel to the result dialog with a bundled pair: no error banner, no "Duel field and rules disagree" alert, no worker restart, and every decision the engine asks for is reachable on screen.
+- [ ] Use Rematch from the result dialog: the rematch keeps the same deck pair and the same board layout (still no shared Extra Monster Zones), and the duel plays normally.
+- [ ] Use Change decks, pick a different pair and start again: the new duel recomputes its own layout, still shows no shared Extra Monster Zones for bundled (Link-free) decks, and no stale zones or phase-strip spacing survive from the previous duel.
+- [ ] Keyboard-only pass: with arrow keys alone, reach every remaining field target (both hands, all monster/spell-trap zones, field zones, and all four pile columns per player) — nothing is stranded and no arrow move lands on an invisible zone.

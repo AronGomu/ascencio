@@ -11,6 +11,7 @@ import {
 import {
   BOARD_CARD_TEXTS,
   BOARD_VIEW_MODEL_FIXTURES,
+  LINK_FREE_STATE,
 } from "../fixtures/board-view-model.ts";
 
 function board(state: keyof typeof BOARD_VIEW_MODEL_FIXTURES) {
@@ -21,6 +22,41 @@ function board(state: keyof typeof BOARD_VIEW_MODEL_FIXTURES) {
   if (!result.ok)
     throw new Error(`Fixture mapping failed: ${result.error.type}`);
   return result.value;
+}
+
+function linkFreeBoard(): BoardViewModel {
+  const result = mapSnapshotToBoard(LINK_FREE_STATE, BOARD_CARD_TEXTS);
+  if (!result.ok)
+    throw new Error(`Link-free mapping failed: ${result.error.type}`);
+  return result.value;
+}
+
+function reachableTargets(value: BoardViewModel): ReadonlySet<BoardTargetId> {
+  const targets = [...value.nav.keys()];
+  const start = targets[0];
+  if (start === undefined) throw new Error("Empty nav map");
+  const reached = new Set<BoardTargetId>([start]);
+  const queue: BoardTargetId[] = [start];
+  for (let index = 0; index < queue.length; index += 1) {
+    const from = queue[index]!;
+    for (const key of [
+      "ArrowLeft",
+      "ArrowRight",
+      "ArrowUp",
+      "ArrowDown",
+    ] as const) {
+      const moved = reduceFieldNavigation(synchronize(value, [from]), {
+        type: "move",
+        board: value,
+        key,
+      }).activeTarget;
+      if (moved !== null && !reached.has(moved)) {
+        reached.add(moved);
+        queue.push(moved);
+      }
+    }
+  }
+  return reached;
 }
 
 function synchronize(
@@ -195,35 +231,23 @@ describe("field navigation", () => {
     for (const fixture of ["ST-01", "ST-03", "ST-08"] as const) {
       const value = board(fixture);
       const targets = [...value.nav.keys()];
-      const start = targets[0];
-      if (start === undefined) throw new Error(`Empty nav map: ${fixture}`);
-      const reached = new Set<BoardTargetId>([start]);
-      const queue: BoardTargetId[] = [start];
-      for (let index = 0; index < queue.length; index += 1) {
-        const from = queue[index]!;
-        for (const key of [
-          "ArrowLeft",
-          "ArrowRight",
-          "ArrowUp",
-          "ArrowDown",
-        ] as const) {
-          const moved = reduceFieldNavigation(synchronize(value, [from]), {
-            type: "move",
-            board: value,
-            key,
-          }).activeTarget;
-          if (moved !== null && !reached.has(moved)) {
-            reached.add(moved);
-            queue.push(moved);
-          }
-        }
-      }
+      const reached = reachableTargets(value);
       expect({
         fixture,
         unreachable: targets.filter((target) => !reached.has(target)),
       }).toEqual({ fixture, unreachable: [] });
       expect(sharedExtraMonsterTargets(value).length).toBe(2);
     }
+  });
+
+  it("keeps every remaining target reachable when the shared zones are gone", () => {
+    const value = linkFreeBoard();
+    const targets = [...value.nav.keys()];
+    const reached = reachableTargets(value);
+
+    expect(targets).toHaveLength(32);
+    expect(targets.filter((target) => !reached.has(target))).toEqual([]);
+    expect(sharedExtraMonsterTargets(value)).toEqual([]);
   });
 
   it("keeps responsive composition separate from physical nav adjacency", () => {

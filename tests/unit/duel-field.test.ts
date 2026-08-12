@@ -19,6 +19,10 @@ import {
   BOARD_TARGET_PROMPT,
   BOARD_VIEW_MODEL_FIXTURES,
   DUPLICATE_SHARED_OCCUPANCY,
+  LINK_FREE_OCCUPIED_SHARED_STATE,
+  LINK_FREE_STATE,
+  SHARED_CARD_PROMPT,
+  SHARED_PLACE_PROMPT,
   TWO_CARD_GRAVEYARD_STATE,
   promptChoice,
 } from "../fixtures/board-view-model.ts";
@@ -546,6 +550,99 @@ describe("semantic board view model", () => {
 
     expect(graveyard?.topCardLabel).toBe("Blue-Eyes White Dragon");
     expect(graveyard?.topCardCode).toBe(89631139);
+  });
+
+  it("keeps 34 zones with both shared EMZs for a Link profile", () => {
+    const result = mapSnapshotToBoard(
+      BOARD_VIEW_MODEL_FIXTURES["ST-03"],
+      BOARD_CARD_TEXTS,
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.value.zones).toHaveLength(34);
+    expect(
+      result.value.zones.filter(({ player }) => player === "shared"),
+    ).toHaveLength(2);
+    expect(result.value.nav.has("card:st03-shared-left")).toBe(true);
+  });
+
+  it("drops both shared EMZs from zones, cards and nav for a Link-free profile", () => {
+    const result = mapSnapshotToBoard(LINK_FREE_STATE, BOARD_CARD_TEXTS);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.value.zones).toHaveLength(32);
+    expect(
+      result.value.zones.filter(({ player }) => player === "shared"),
+    ).toEqual([]);
+    expect(
+      result.value.cards.filter(({ zoneId }) =>
+        zoneId.startsWith("shared:extraMonster"),
+      ),
+    ).toEqual([]);
+    expect(
+      [...result.value.nav.keys()].filter((target) =>
+        target.includes("shared:extraMonster"),
+      ),
+    ).toEqual([]);
+    for (const neighbors of result.value.nav.values()) {
+      for (const neighbor of Object.values(neighbors))
+        expect(neighbor).not.toContain("shared:extraMonster");
+    }
+  });
+
+  it("reports an occupied shared zone under a Link-free profile as a conflict", () => {
+    expect(
+      mapSnapshotToBoard(LINK_FREE_OCCUPIED_SHARED_STATE, BOARD_CARD_TEXTS),
+    ).toEqual({
+      ok: false,
+      error: {
+        type: "layout_profile_conflict",
+        zoneId: "shared:extraMonster:left",
+        source: "occupied",
+      },
+    });
+  });
+
+  it("reports a prompt that can still reach a shared zone as a conflict", () => {
+    expect(
+      mapSnapshotToBoard(
+        LINK_FREE_STATE,
+        BOARD_CARD_TEXTS,
+        SHARED_PLACE_PROMPT,
+      ),
+    ).toEqual({
+      ok: false,
+      error: {
+        type: "layout_profile_conflict",
+        zoneId: "shared:extraMonster:left",
+        source: "prompt",
+      },
+    });
+    expect(
+      mapSnapshotToBoard(LINK_FREE_STATE, BOARD_CARD_TEXTS, SHARED_CARD_PROMPT),
+    ).toEqual({
+      ok: false,
+      error: {
+        type: "layout_profile_conflict",
+        zoneId: "shared:extraMonster:right",
+        source: "prompt",
+      },
+    });
+  });
+
+  it("leaves a Link profile board untouched by the same prompts", () => {
+    for (const prompt of [SHARED_PLACE_PROMPT, SHARED_CARD_PROMPT]) {
+      const result = mapSnapshotToBoard(
+        BOARD_VIEW_MODEL_FIXTURES["ST-02"],
+        BOARD_CARD_TEXTS,
+        prompt,
+      );
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.value.zones).toHaveLength(34);
+    }
   });
 
   it("rejects duplicate physical occupancy instead of overwriting", () => {

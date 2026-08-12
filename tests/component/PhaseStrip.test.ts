@@ -145,6 +145,60 @@ describe("PhaseStrip", () => {
     );
   });
 
+  it("splits the groups and marks Extra Monster Zones when they exist", () => {
+    render(PhaseStrip, {
+      phase: "main1",
+      spec: null,
+      extraMonsterZones: true,
+      oninteraction: vi.fn(),
+    });
+
+    const strip = document.querySelector('[data-cy="field-phase-strip"]');
+    expect(strip?.getAttribute("data-extra-monster-zones")).toBe("true");
+    expect(strip?.classList.contains("is-continuous")).toBe(false);
+    expect(
+      document.querySelector('[data-cy="field-phase-strip-left"]')?.children
+        .length,
+    ).toBe(4);
+    expect(
+      document.querySelector('[data-cy="field-phase-strip-right"]')?.children
+        .length,
+    ).toBe(2);
+  });
+
+  it("flows continuously without Extra Monster Zones, in the shipped order", () => {
+    render(PhaseStrip, {
+      phase: "main1",
+      spec: null,
+      extraMonsterZones: false,
+      oninteraction: vi.fn(),
+    });
+
+    const strip = document.querySelector('[data-cy="field-phase-strip"]');
+    expect(strip?.getAttribute("data-extra-monster-zones")).toBe("false");
+    expect(strip?.classList.contains("is-continuous")).toBe(true);
+    expect(
+      document.querySelector('[data-cy="field-phase-strip-left"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="field-phase-strip-right"]'),
+    ).not.toBeNull();
+    expect(
+      [
+        ...(strip?.querySelectorAll(
+          "[data-cy^='field-phase-chip-'], [data-cy='field-end-turn-button']",
+        ) ?? []),
+      ].map((element) => element.getAttribute("data-cy")),
+    ).toEqual([
+      "field-phase-chip-draw",
+      "field-phase-chip-standby",
+      "field-phase-chip-main1",
+      "field-phase-chip-battle",
+      "field-phase-chip-main2",
+      "field-end-turn-button",
+    ]);
+  });
+
   it("End button dispatches the endPhase choice", async () => {
     const spec = endOfferedSpec();
     const oninteraction = vi.fn();

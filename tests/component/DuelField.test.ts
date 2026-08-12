@@ -51,6 +51,7 @@ import { promptSurface } from "../../src/app/prompts/prompt-surface.ts";
 import {
   BOARD_CARD_TEXTS,
   BOARD_VIEW_MODEL_FIXTURES,
+  LINK_FREE_STATE,
   STACK_ART_STATE,
 } from "../fixtures/board-view-model.ts";
 import {
@@ -90,6 +91,7 @@ function bigHandBoard(playerHandCount: number, opponentHandCount: number) {
     turn: 1,
     turnPlayer: 0,
     phase: "main1",
+    layout: { extraMonsterZones: true },
     players: [
       {
         player: 0,
@@ -262,6 +264,53 @@ describe("DuelField", () => {
     expect(value.artifactPath).toBe("test-results/df-16-ST-01.json");
     expect(document.body.textContent).not.toContain("Dark Magician");
     expect(document.body.innerHTML).not.toContain("46986414");
+  });
+
+  it("omits both shared EMZs and splits nothing for a Link-free board", () => {
+    const result = mapSnapshotToBoard(LINK_FREE_STATE, BOARD_CARD_TEXTS);
+    if (!result.ok) throw new Error("Link-free mapping failed");
+    render(DuelField, { board: result.value });
+
+    const field = screen.getByRole("region", { name: "Duel field" });
+    expect(
+      field.querySelectorAll('[data-zone-id^="shared:extraMonster"]'),
+    ).toHaveLength(0);
+    expect(field.querySelectorAll("[data-zone-id]")).toHaveLength(30);
+    expect(
+      within(field).queryAllByRole("group", {
+        name: /^Shared Extra Monster Zone/,
+      }),
+    ).toEqual([]);
+
+    const strip = field.querySelector('[data-cy="field-phase-strip"]');
+    expect(strip?.getAttribute("data-extra-monster-zones")).toBe("false");
+    expect(strip?.classList.contains("is-continuous")).toBe(true);
+    expect(
+      [
+        ...(strip?.querySelectorAll(
+          "[data-cy^='field-phase-chip-'], [data-cy='field-end-turn-button']",
+        ) ?? []),
+      ].map((element) => element.getAttribute("data-cy")),
+    ).toEqual([
+      "field-phase-chip-draw",
+      "field-phase-chip-standby",
+      "field-phase-chip-main1",
+      "field-phase-chip-battle",
+      "field-phase-chip-main2",
+      "field-end-turn-button",
+    ]);
+  });
+
+  it("keeps both shared EMZs and the split strip for a Link board", () => {
+    render(DuelField, { board: board("ST-01") });
+
+    const field = screen.getByRole("region", { name: "Duel field" });
+    expect(
+      field.querySelectorAll('[data-zone-id^="shared:extraMonster"]'),
+    ).toHaveLength(2);
+    const strip = field.querySelector('[data-cy="field-phase-strip"]');
+    expect(strip?.getAttribute("data-extra-monster-zones")).toBe("true");
+    expect(strip?.classList.contains("is-continuous")).toBe(false);
   });
 
   it("duel field no longer renders the status pills", () => {

@@ -1,5 +1,6 @@
 import { isProjectedCardIdentityKnown } from "../duel/card-visibility.ts";
 import type { CardCode, CardInstanceId } from "../duel/contracts/ids.ts";
+import type { PlayerPrompt } from "../duel/contracts/player-prompt.ts";
 import type {
   CardPosition,
   PlayerIndex,
@@ -134,6 +135,11 @@ export type BoardMappingError =
   | {
       readonly type: "duplicate_card_instance";
       readonly cardId: string;
+    }
+  | {
+      readonly type: "layout_profile_conflict";
+      readonly zoneId: "shared:extraMonster:left" | "shared:extraMonster:right";
+      readonly source: "occupied" | "prompt";
     };
 
 export type BoardMappingResult =
@@ -158,9 +164,21 @@ const NAV_ALIGNMENT_EPSILON = 1 / Math.max(DUEL_FIELD_WIDTH, DUEL_FIELD_HEIGHT);
 export function mapSnapshotToBoard(
   snapshot: PublicDuelState,
   cardTexts: ReadonlyMap<number, BoardCardText> = new Map(),
+  prompt?: PlayerPrompt | null,
 ): BoardMappingResult {
+  const sharedZonesOmitted = !snapshot.layout.extraMonsterZones;
+  if (sharedZonesOmitted && prompt !== undefined && prompt !== null) {
+    /* A prompt that can still reach an omitted zone is a rules/layout
+       disagreement, never something to hide or answer on the player's
+       behalf. Checked before the board exists so no caller can act on a
+       board that silently dropped a legal target. */
+    const conflict = promptLayoutConflict(prompt);
+    if (conflict !== undefined) return failure(conflict);
+  }
   const zones = Object.freeze(
-    STANDARD_DUEL_FIELD_LAYOUT.map((layout) =>
+    STANDARD_DUEL_FIELD_LAYOUT.filter(
+      (layout) => !(sharedZonesOmitted && isSharedExtraMonsterZone(layout.id)),
+    ).map((layout) =>
       Object.freeze({
         ...layout,
         targetId: `zone:${layout.id}` as const,
@@ -183,6 +201,12 @@ export function mapSnapshotToBoard(
         controller: card.controller,
         location: card.location,
         sequence: card.sequence,
+      });
+    if (sharedZonesOmitted && isSharedExtraMonsterZone(mapping.zoneId))
+      return failure({
+        type: "layout_profile_conflict",
+        zoneId: mapping.zoneId,
+        source: "occupied",
       });
     const occupied = occupancy.get(mapping.zoneId);
     if (occupied !== undefined)
@@ -255,6 +279,57 @@ export function mapSnapshotToBoard(
     nav: createNavigation(zones, immutableCards, stacks),
   });
   return Object.freeze({ ok: true, value: board });
+}
+
+function isSharedExtraMonsterZone(
+  zoneId: PhysicalZoneId,
+): zoneId is "shared:extraMonster:left" | "shared:extraMonster:right" {
+  return (
+    zoneId === "shared:extraMonster:left" ||
+    zoneId === "shared:extraMonster:right"
+  );
+}
+
+function promptLayoutConflict(
+  prompt: PlayerPrompt,
+):
+  | Extract<BoardMappingError, { readonly type: "layout_profile_conflict" }>
+  | undefined {
+  for (const choice of prompt.choices) {
+    const addresses = [
+      ...(choice.place === undefined
+        ? []
+        : [
+            {
+              player: choice.place.player,
+              location: choice.place.location,
+              sequence: choice.place.sequence,
+            },
+          ]),
+      ...(choice.card === undefined ||
+      (choice.card.location !== "monster" &&
+        choice.card.location !== "spellTrap" &&
+        choice.card.location !== "field")
+        ? []
+        : [
+            {
+              player: choice.card.controller,
+              location: choice.card.location,
+              sequence: choice.card.sequence,
+            },
+          ]),
+    ];
+    for (const address of addresses) {
+      const mapping = mapEngineFieldAddress(address);
+      if (mapping.ok && isSharedExtraMonsterZone(mapping.zoneId))
+        return {
+          type: "layout_profile_conflict",
+          zoneId: mapping.zoneId,
+          source: "prompt",
+        };
+    }
+  }
+  return undefined;
 }
 
 function fixedCardsIn(snapshot: PublicDuelState): readonly (PublicCard & {

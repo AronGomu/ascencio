@@ -71,6 +71,7 @@ function state(
     turn: 1,
     turnPlayer: 0,
     phase: "main1",
+    layout: { extraMonsterZones: true },
     players: [
       { ...player(0), ...player0, player: 0 },
       { ...player(1), ...player1, player: 1 },

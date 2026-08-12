@@ -31,7 +31,19 @@
 ## Inputs
 
 - **From Depends (T3):** strict selected player/opponent `DeckId` command, pair-built `DuelPreset`, replacement-worker lifecycle, rematch/change-decks flow.
-- **From Depends (T10):** left phase group Draw→Battle, right group Main 2 + End turn.
+- **From Depends (T10), as actually shipped in `c8e007b`:** `PHASE_SLOTS_LEFT` is exactly `draw,standby,main1,battle`; `PHASE_SLOTS_RIGHT` is exactly `main2`; `EndTurnButton` is now rendered *inside* `PhaseStrip` after the Main 2 chip, and `DuelField.svelte` no longer renders it. There is no `field-phase-chip-end`. The strip root carries `data-current-phase`. `.field-phase-strip__group--right` is anchored with `right: 1%` (anchoring it from the left pushed it over the banished/deck targets). The narrow-viewport 4rem action-bar gutter was deleted. `DuelHeaderBar` now wraps role + life in a `.duel-header-bar__meta` column. Your continuous-flow mode must preserve the shipped order Draw, Standby, Main 1, Battle, Main 2, End turn, and must keep the End button ≥44×44 px and non-overlapping with every `[data-field-target]`.
+- **From T7 (`1e87e63`) — affects zone filtering and nav:** vertical arrow alignment uses horizontal span overlap (`|Δx| < (wA+wB)/2`), not exact-column equality; horizontal moves still require an exact row. The shared EMZs are the only reason several routes exist. `tests/unit/field-navigation.test.ts` has `keeps every field target reachable with arrow keys alone`, currently proving 42/42 targets. When `extraMonsterZones` is false that count legitimately drops — update the expectation to the new total and keep the property (every remaining target reachable, zero unreachable). Do not delete the test.
+- **From T8 (`3f0e437`):** hands render through `HandBand.svelte`, not `ZoneControl`; hand zone rectangles no longer exist. Deck/GY x `925/1280`, Banished x `1020/1280`, hand width `462/1280`. Board fixtures live in `tests/fixtures/board-public-states`.
+- **From T9 (`eb431e9`):** the duel runs in a fixed `100svh` shell (`<main>.is-duel-viewport`, `overflow:hidden`); `.duel-field` may be `overflow:auto`; the responsive stacking breakpoint is **79rem**; `.field-action-bar` lives on `.duel-field-stage`. A blocking `layout_profile_conflict` alert must be reachable in that shell — render it where the duel view would be, and make sure it is not clipped.
+- **From T6 (`ced9383`):** presentation decides identity via `isProjectedCardIdentityKnown`; `grep -Rni "isCardIdentityVisible" src/app src/field` must stay empty. `PublicCard.code` means "known to the local viewer", independent of face orientation.
+
+### Environment facts for validation
+
+- Playwright is chromium-only on this host. Run browser checks as:
+  `PLAYWRIGHT_BROWSERS_PATH=/home/aron/projects/ascencio/.tmp/pw-browsers npx playwright test --project=chromium`
+  Bare `npm run check` cannot exit 0 here (`playwright.config.ts` includes an unsupported `webkit-smoke` project). Use `npm run check:headless` plus the explicit Chromium invocation.
+- Known flake: Vitest integration occasionally dies with `Worker exited unexpectedly`. Re-run once before diagnosing.
+- Known flake: the duel seed is random per run; re-run a failing Chromium walker twice before diagnosing.
 - `src/worker/engine/DuelSession.ts:27-52,104-133` — duel configurations and hardcoded MR5 flags.
 - `src/worker/engine/engine-constants.ts:27-31` — add pinned `MODE_MR3:0xd1800n`; retain MR5.
 - `vendor/ocgcore-wasm/0.1.2/dist/index.d.ts:394-401` — pinned adapter exposes `OcgDuelMode.MODE_MR3/MR5`.
@@ -151,16 +163,16 @@ E2E default pair: no shared nodes; continuous phase controls have uniform adjace
 
 ## Impl steps
 
-- [ ] 1. Add exact MR3/MR5 flag contract tests; add `EngineDuelFlag.MODE_MR3 = 0xd1800n`; make `DuelConfiguration.rules` explicit; select flag in `DuelSession.create`. Run focused session tests.
-- [ ] 2. Build mandatory real-core MR3/MR5 placement fixture. Run red/characterization before UI work. If MR3 emits sequence 5/6, stop: pinned core violates assumed mode; do not implement visual omission.
-- [ ] 3. Add profile tests and `duel-rules-profile.ts`. Use parsed T3 preset decks + active dependency card types. No active-text-manifest join.
-- [ ] 4. In browser/node runtime start path, compute profile once after selected preset validation; pass `rules` to session and `extraMonsterZones` through `HeadlessDuelController` into projector.
-- [ ] 5. Add required public-state `layout` contract; update projector snapshot, validator, fake snapshots/fixtures. Keep profile readonly outside checkpoint state.
-- [ ] 6. Add mapper tests and optional `prompt` argument. For false profile, scan prompt choices through `mapEngineFieldAddress` before filtering; return `source:"prompt"` for place/card sequence 5/6, then separately guard occupied snapshot. Pass `$duel.prompt` from App. Do not alter `resolvePromptChoiceBoardTarget` fallback semantics for normal layouts.
-- [ ] 7. Add App fixture: derive `layoutProfileConflict`, then replace all 12 baseline raw `$duel.prompt` reads with one null `effectivePrompt` (mapping, surface, status, priority, field, dialog condition/key/prop, workspace condition/key/prop, auto-resolver). Render blocking alert. Test default UI and `showWorkspace=true`; flush microtasks; assert no field/dialog/workspace prompt controls and zero dispatch. Other mapping failures retain existing behavior unless same safety argument applies.
-- [ ] 8. Derive PhaseStrip prop only from projected board/profile. Add continuous class/data/CSS; keep semantic group order.
-- [ ] 9. Verify rematch reuses same worker/profile; Change decks calls T3 reset; next Start creates worker/profile from new pair.
-- [ ] 10. Update e2e selectors/counts; run focused/full gates.
+- [x] 1. Add exact MR3/MR5 flag contract tests; add `EngineDuelFlag.MODE_MR3 = 0xd1800n`; make `DuelConfiguration.rules` explicit; select flag in `DuelSession.create`. Run focused session tests. — criterion: `npx vitest run tests/unit/duel-session.test.ts` passes with exact `0xd1800n`/`0x2e800n` flag assertions.
+- [x] 2. Build mandatory real-core MR3/MR5 placement fixture. Run red/characterization before UI work. If MR3 emits sequence 5/6, stop: pinned core violates assumed mode; do not implement visual omission. — criterion: integration fixture run prints MR3 legal monster sequences without 5/6 and MR5 with them.
+- [x] 3. Add profile tests and `duel-rules-profile.ts`. Use parsed T3 preset decks + active dependency card types. No active-text-manifest join. — criterion: `npx vitest run tests/unit/duel-rules-profile.test.ts` passes including the 36-pair bundled matrix.
+- [x] 4. In browser/node runtime start path, compute profile once after selected preset validation; pass `rules` to session and `extraMonsterZones` through `HeadlessDuelController` into projector. — criterion: `npm run test:integration` worker-runtime/headless suites pass and no second profile computation exists (`grep -Rn "selectedDeckPairRulesProfile" src` shows one caller).
+- [x] 5. Add required public-state `layout` contract; update projector snapshot, validator, fake snapshots/fixtures. Keep profile readonly outside checkpoint state. — criterion: `npx vitest run tests/unit/duel-state-projector.test.ts tests/unit/contracts.test.ts` passes with missing/non-boolean layout rejected.
+- [x] 6. Add mapper tests and optional `prompt` argument. For false profile, scan prompt choices through `mapEngineFieldAddress` before filtering; return `source:"prompt"` for place/card sequence 5/6, then separately guard occupied snapshot. Pass `$duel.prompt` from App. Do not alter `resolvePromptChoiceBoardTarget` fallback semantics for normal layouts. — criterion: `npx vitest run tests/unit/duel-field.test.ts tests/unit/field-navigation.test.ts` passes with 32-zone/no-shared and both `layout_profile_conflict` sources.
+- [x] 7. Add App fixture: derive `layoutProfileConflict`, then replace all 12 baseline raw `$duel.prompt` reads with one null `effectivePrompt` (mapping, surface, status, priority, field, dialog condition/key/prop, workspace condition/key/prop, auto-resolver). Render blocking alert. Test default UI and `showWorkspace=true`; flush microtasks; assert no field/dialog/workspace prompt controls and zero dispatch. Other mapping failures retain existing behavior unless same safety argument applies. — criterion: `npx vitest run tests/component/AppChrome.test.ts` passes and the only remaining `$duel.prompt` reads in `src/app/App.svelte` are the mapper argument plus the single `effectivePrompt` derivation.
+- [x] 8. Derive PhaseStrip prop only from projected board/profile. Add continuous class/data/CSS; keep semantic group order. — criterion: `npx vitest run tests/component/PhaseStrip.test.ts tests/component/DuelField.test.ts` passes with continuous strip in shipped T10 order.
+- [x] 9. Verify rematch reuses same worker/profile; Change decks calls T3 reset; next Start creates worker/profile from new pair. — criterion: worker-runtime integration test proves rematch reuses one profile and change-decks recomputes it.
+- [x] 10. Update e2e selectors/counts; run focused/full gates. — criterion: `npm run check:headless`, `npm run test:component`, `npm run build` and the pinned Chromium e2e command all exit 0.
 
 ## Outputs
 
@@ -171,14 +183,14 @@ E2E default pair: no shared nodes; continuous phase controls have uniform adjace
 
 ## Validation
 
-- [ ] real pinned-core MR3 placement fixture proves no sequence 5/6
-- [ ] `npm run test:unit -- duel-rules-profile duel-session duel-state-projector contracts duel-field` passes
-- [ ] `npm run test:component -- PhaseStrip DuelField AppChrome` passes
-- [ ] `npm run test:integration` passes with MR3/MR5 fixture
-- [ ] `npm run typecheck`, `npm run lint`, `npm run format:check` pass
-- [ ] `npm run build` succeeds
-- [ ] full chromium e2e passes using pinned command from T5
-- [ ] manual default pair: no EMZ, continuous phase strip, no inaccessible choice
-- [ ] synthetic Link fixture: MR5, both EMZs, split strip
-- [ ] app functional — engine legality, projected profile, rendered zones agree
-- [ ] commit msg draft: `feat(field): align conditional extra zones with engine rules`
+- [x] real pinned-core MR3 placement fixture proves no sequence 5/6 (MR3 mask `0b…11100000` → monster sequences 0-4 only; MR5 mask `0b…10000000` → 0-6) — criterion: MR3 fixture asserts zero monster sequence 5/6 in the decoded legal mask
+- [x] `npm run test:unit -- duel-rules-profile duel-session duel-state-projector contracts duel-field` passes — criterion: covered by `npm run test:unit` (62 files, 681 tests) inside `npm run check:headless`
+- [x] `npm run test:component -- PhaseStrip DuelField AppChrome` passes — criterion: `npm run test:component` 16 files / 233 tests, exit 0
+- [x] `npm run test:integration` passes with MR3/MR5 fixture — criterion: 8 files / 23 tests inside `npm run check:headless`, exit 0
+- [x] `npm run typecheck`, `npm run lint`, `npm run format:check` pass — criterion: covered by `npm run check:headless` exiting 0
+- [x] `npm run build` succeeds — criterion: command exits 0 (`build:verify` status ok)
+- [x] full chromium e2e passes using pinned command from T5 — criterion: `PLAYWRIGHT_BROWSERS_PATH=/home/aron/projects/ascencio/.tmp/pw-browsers npx playwright test --project=chromium` — 24 passed
+- [ ] manual default pair: no EMZ, continuous phase strip, no inaccessible choice — criterion: manual browser session (manual checklist)
+- [x] synthetic Link fixture: MR5, both EMZs, split strip — criterion: `duel-field.test.ts` Link profile keeps 34 zones/two shared, `DuelField.test.ts` keeps two shared zone nodes plus split strip, `PhaseStrip.test.ts` split groups
+- [ ] app functional — engine legality, projected profile, rendered zones agree — criterion: manual browser session (manual checklist)
+- [x] commit msg draft: `feat(field): align conditional extra zones with engine rules` — criterion: commit `53188cf` created with that exact subject

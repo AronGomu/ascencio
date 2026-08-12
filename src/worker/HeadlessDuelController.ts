@@ -50,6 +50,8 @@ export interface HeadlessDuelControllerOptions {
   readonly presetId: string;
   readonly deckCounts: readonly [number, number];
   readonly extraDeckCounts: readonly [number, number];
+  /** Immutable layout half of the duel's rules profile. */
+  readonly extraMonsterZones: boolean;
   readonly opponentPolicy?: OpponentPolicy;
   readonly maximumAutomaticResponses?: number;
   readonly promptIdNamespace?: string;
@@ -72,6 +74,7 @@ export class HeadlessDuelController {
       options.snapshotId,
       options.deckCounts,
       options.extraDeckCounts,
+      { extraMonsterZones: options.extraMonsterZones },
       [options.session.initialExtraDeckOrder(0), []],
       options.dependencies,
     );

@@ -8,8 +8,15 @@ import {
 } from "../../src/worker/engine/engine-constants.ts";
 import { DuelStateProjector } from "../../src/worker/projection/DuelStateProjector.ts";
 
-function projector(): DuelStateProjector {
-  return new DuelStateProjector(snapshotId("a".repeat(64)), [40, 40], [0, 0]);
+function projector(
+  layout: { readonly extraMonsterZones: boolean } = { extraMonsterZones: true },
+): DuelStateProjector {
+  return new DuelStateProjector(
+    snapshotId("a".repeat(64)),
+    [40, 40],
+    [0, 0],
+    layout,
+  );
 }
 
 function queriedExtra(code: number) {
@@ -64,6 +71,35 @@ function revealOpponentCard(
 }
 
 describe("DuelStateProjector", () => {
+  it.each([true, false])(
+    "projects the chosen immutable layout: %s",
+    (extraMonsterZones) => {
+      const value = projector({ extraMonsterZones });
+
+      const snapshot = value.snapshot();
+      expect(snapshot.layout).toEqual({ extraMonsterZones });
+      expect(Object.isFrozen(snapshot.layout)).toBe(true);
+    },
+  );
+
+  it("keeps the layout across checkpoint, mutation, and restore", () => {
+    const value = projector({ extraMonsterZones: false });
+    const checkpoint = value.checkpoint();
+    value.apply({
+      type: EngineMessageType.DRAW,
+      player: 0,
+      drawn: [{ code: 97590747, position: EnginePosition.FACE_DOWN_DEFENSE }],
+    });
+    expect(value.snapshot().layout).toEqual({ extraMonsterZones: false });
+
+    value.restore(checkpoint);
+
+    expect(value.snapshot().layout).toEqual({ extraMonsterZones: false });
+    expect(
+      Object.hasOwn(checkpoint as unknown as Record<string, unknown>, "layout"),
+    ).toBe(false);
+  });
+
   it("projects human hand identities but strips opponent hidden identities", () => {
     const value = projector();
     value.apply({
@@ -1388,6 +1424,7 @@ describe("DuelStateProjector", () => {
       snapshotId("a".repeat(64)),
       [40, 40],
       [2, 1],
+      { extraMonsterZones: true },
       [[cardCode(97590747), cardCode(5053103)], []],
     );
     const initial = value.snapshot().players[0].extraDeck;
@@ -1472,6 +1509,7 @@ describe("DuelStateProjector", () => {
       snapshotId("a".repeat(64)),
       [40, 40],
       [0, 2],
+      { extraMonsterZones: true },
     );
     value.reconcileExtraDeck(1, [
       {
@@ -2023,6 +2061,7 @@ describe("DuelStateProjector", () => {
       snapshotId("sparse-public-extra"),
       [40, 40],
       [0, 2],
+      { extraMonsterZones: true },
     );
     publicMove.reconcileExtraDeck(1, records);
     const publicId = publicMove.snapshot().players[1].extraDeck[0]?.instanceId;
@@ -2058,6 +2097,7 @@ describe("DuelStateProjector", () => {
       snapshotId("sparse-hidden-extra"),
       [40, 40],
       [0, 2],
+      { extraMonsterZones: true },
     );
     hiddenMove.apply({
       type: EngineMessageType.MOVE,
@@ -2121,6 +2161,7 @@ describe("DuelStateProjector", () => {
       snapshotId("same-extra"),
       [40, 40],
       [1, 0],
+      { extraMonsterZones: true },
       [[cardCode(97590747)], []],
     );
     expect(
@@ -2146,6 +2187,7 @@ describe("DuelStateProjector", () => {
       snapshotId("distinct-extra"),
       [40, 40],
       [1, 1],
+      { extraMonsterZones: true },
       [[cardCode(97590747)], []],
     );
     expect(
@@ -2428,6 +2470,7 @@ describe("DuelStateProjector", () => {
               snapshotId("missing-overlay-code-extra"),
               [40, 40],
               [1, 0],
+              { extraMonsterZones: true },
               [[cardCode(5053103)], []],
             )
           : projector();
@@ -2572,6 +2615,7 @@ describe("DuelStateProjector", () => {
         snapshotId("atomic-extra"),
         [40, 40],
         [1, 0],
+        { extraMonsterZones: true },
         [[cardCode(97590747)], []],
       );
     const failedExtra = extra();
@@ -2755,6 +2799,7 @@ describe("DuelStateProjector", () => {
       snapshotId("counter-projection"),
       [40, 40],
       [0, 0],
+      { extraMonsterZones: true },
       [[], []],
       {
         texts: new Map(),
@@ -3230,6 +3275,7 @@ describe("DuelStateProjector", () => {
       snapshotId("counter-text-bound"),
       [40, 40],
       [0, 0],
+      { extraMonsterZones: true },
       [[], []],
       {
         texts: new Map(),
@@ -3313,6 +3359,7 @@ describe("DuelStateProjector", () => {
       snapshotId("chain-projection"),
       [40, 40],
       [0, 0],
+      { extraMonsterZones: true },
       [[], []],
       {
         texts: new Map([
@@ -3589,6 +3636,7 @@ describe("DuelStateProjector", () => {
       snapshotId("hidden-chain"),
       [40, 40],
       [0, 0],
+      { extraMonsterZones: true },
       [[], []],
       {
         texts: new Map([

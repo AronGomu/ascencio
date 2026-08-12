@@ -1,6 +1,7 @@
 import { duelOperationError } from "../../duel/contracts/duel-error.ts";
 import type { CardCode } from "../../duel/contracts/ids.ts";
 import type { ParsedDeck } from "../../duel/presets/deck-parser.ts";
+import type { EngineMasterRule } from "../../duel/presets/duel-rules-profile.ts";
 import {
   normalizeRequestedScriptName,
   type ActiveDuelDependencies,
@@ -35,6 +36,7 @@ export interface CoreStartupScript {
 
 export interface ProgrammedDuelConfiguration {
   readonly mode: "programmed";
+  readonly rules: EngineMasterRule;
   readonly seed: DuelSeed;
   readonly playerDeckOrder: readonly CardCode[];
   readonly opponentDeckOrder: readonly CardCode[];
@@ -44,6 +46,7 @@ export interface ProgrammedDuelConfiguration {
 
 export interface ProductionDuelConfiguration {
   readonly mode: "production";
+  readonly rules: EngineMasterRule;
   /** Worker-internal seam used to create diagnostics before core startup. */
   readonly seed?: DuelSeed;
 }
@@ -120,7 +123,7 @@ export class DuelSession {
     const missingInputs: string[] = [];
     const handle = options.adapter.createDuel({
       flags:
-        EngineDuelFlag.MODE_MR5 |
+        masterRuleFlag(options.configuration.rules) |
         (options.configuration.mode === "programmed"
           ? EngineDuelFlag.PSEUDO_SHUFFLE |
             (options.configuration.allowFirstTurnAttack === true
@@ -307,6 +310,10 @@ export class DuelSession {
   #assertActive(): void {
     if (this.#disposed) throw new Error("Duel session has been disposed");
   }
+}
+
+function masterRuleFlag(rules: EngineMasterRule): bigint {
+  return rules === "mr3" ? EngineDuelFlag.MODE_MR3 : EngineDuelFlag.MODE_MR5;
 }
 
 const PRODUCTION_SHUFFLE_SCRIPT: CoreStartupScript = Object.freeze({

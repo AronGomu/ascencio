@@ -15,6 +15,9 @@
   export let phase: DuelPhase = "unknown";
   export let spec: ActiveInteractionSpec | null = null;
   export let disabled = false;
+  /* Without shared Extra Monster Zones there is no central gap to straddle,
+     so the same semantic groups flow continuously instead of splitting. */
+  export let extraMonsterZones = true;
   export let oninteraction: (
     action: InteractionSessionAction,
   ) => unknown = () => false;
@@ -43,10 +46,12 @@
 
 <div
   class="field-phase-strip"
+  class:is-continuous={!extraMonsterZones}
   data-cy="field-phase-strip"
   role="group"
   aria-label="Duel phases"
   data-current-phase={currentSlot ?? undefined}
+  data-extra-monster-zones={extraMonsterZones ? "true" : "false"}
 >
   <div
     class="field-phase-strip__group field-phase-strip__group--left"

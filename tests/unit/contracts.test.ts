@@ -46,6 +46,7 @@ const examples: readonly (DuelCommand | DuelWorkerEvent)[] = [
       turn: 1,
       turnPlayer: 0,
       phase: "main1",
+      layout: { extraMonsterZones: true },
       players: [
         {
           player: 0,
@@ -196,6 +197,7 @@ describe("Worker contracts", () => {
           turn: 0,
           turnPlayer: 0,
           phase: "unknown",
+          layout: { extraMonsterZones: true },
           players: [
             { ...player, deck: player.deck.slice(0, 39) },
             contractPlayer(1, 40),
@@ -205,6 +207,50 @@ describe("Worker contracts", () => {
       }),
     ).toThrow("deck count");
   });
+
+  it.each([
+    ["missing", undefined],
+    ["non-boolean", { extraMonsterZones: "false" }],
+    ["empty", {}],
+    ["extended", { extraMonsterZones: true, rules: "mr5" }],
+  ])("rejects a %s projected layout", (_label, layout) => {
+    expect(() =>
+      parseDuelWorkerEvent({
+        type: "state",
+        state: {
+          snapshotId: "a".repeat(64),
+          revision: 0,
+          turn: 0,
+          turnPlayer: 0,
+          phase: "unknown",
+          ...(layout === undefined ? {} : { layout }),
+          players: [contractPlayer(0, 40), contractPlayer(1, 40)],
+          chain: [],
+        },
+      }),
+    ).toThrow(/invalid|layout/);
+  });
+
+  it.each([true, false])(
+    "accepts either immutable Extra Monster Zone layout: %s",
+    (extraMonsterZones) => {
+      const event = {
+        type: "state" as const,
+        state: {
+          snapshotId: "a".repeat(64),
+          revision: 0,
+          turn: 0,
+          turnPlayer: 0 as const,
+          phase: "unknown" as const,
+          layout: { extraMonsterZones },
+          players: [contractPlayer(0, 40), contractPlayer(1, 40)],
+          chain: [],
+        },
+      };
+
+      expect(parseDuelWorkerEvent(event)).toEqual(event);
+    },
+  );
 
   it("requires a positive safe presentation event sequence", () => {
     expect(
@@ -344,6 +390,7 @@ describe("Worker contracts", () => {
         turn: 1,
         turnPlayer: 0,
         phase: "main1",
+        layout: { extraMonsterZones: true },
         players: [null, null],
         chain: [],
       },

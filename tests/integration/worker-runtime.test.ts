@@ -127,6 +127,13 @@ describe("typed duel Worker runtime", () => {
         opponentDeckId: "mvp-opponent",
       });
       expect(started.some((event) => event.type === "state")).toBe(true);
+      /* Every bundled pair is Link-free, so the worker's own profile decision
+         must reach the projected snapshot as MR3 geometry. */
+      expect(
+        started.flatMap((event) =>
+          event.type === "state" ? [event.state.layout] : [],
+        ),
+      ).toContainEqual({ extraMonsterZones: false });
       const promptEvent = started.find((event) => event.type === "prompt");
       if (promptEvent?.type !== "prompt")
         throw new Error("Expected the production duel to request human input");
@@ -164,6 +171,12 @@ describe("typed duel Worker runtime", () => {
       if (restartedPrompt?.type !== "prompt")
         throw new Error("Expected the restarted duel to request human input");
       expect(restartedPrompt.prompt.id).not.toBe(promptEvent.prompt.id);
+      /* A rematch keeps the same pair, so it keeps the same profile. */
+      expect(
+        restarted.flatMap((event) =>
+          event.type === "state" ? [event.state.layout] : [],
+        ),
+      ).toContainEqual({ extraMonsterZones: false });
 
       const stale = await runtime.handle({
         type: "respond",
@@ -179,6 +192,22 @@ describe("typed duel Worker runtime", () => {
           }),
         }),
       ]);
+      expect(
+        (await runtime.handle({ type: "surrender" })).at(-1),
+      ).toMatchObject({ type: "result" });
+
+      /* Changing decks recomputes the profile from the new pair. */
+      const otherPair = await runtime.handle({
+        type: "startDuel",
+        duelId: duelId("bundled-v1:shaddoll:vs:nekroz"),
+        playerDeckId: "shaddoll",
+        opponentDeckId: "nekroz",
+      });
+      expect(
+        otherPair.flatMap((event) =>
+          event.type === "state" ? [event.state.layout] : [],
+        ),
+      ).toContainEqual({ extraMonsterZones: false });
       expect(
         (await runtime.handle({ type: "surrender" })).at(-1),
       ).toMatchObject({ type: "result" });

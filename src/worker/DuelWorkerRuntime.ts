@@ -12,6 +12,7 @@ import type { DuelWorkerEvent } from "../duel/contracts/duel-worker-event.ts";
 import type { SnapshotId } from "../duel/contracts/ids.ts";
 import type { DeckId } from "../duel/presets/deck-catalog.ts";
 import type { DuelPreset } from "../duel/presets/duel-preset.ts";
+import { selectedDeckPairRulesProfile } from "../duel/presets/duel-rules-profile.ts";
 import type { ActiveDuelDependencies } from "./assets/active-duel-dependencies.ts";
 import {
   BoundedDuelTrace,
@@ -340,6 +341,13 @@ export class DuelWorkerRuntime {
         `Unknown preset duel: ${duelId}`,
       );
     }
+    /* One immutable rules/layout decision per selected pair: the engine mode
+       and the visible geometry can never disagree about Extra Monster Zones. */
+    const profile = selectedDeckPairRulesProfile(
+      preset.player,
+      preset.opponent,
+      resources.dependencies.cards,
+    );
     const seed = createProductionSeed();
     const trace = new BoundedDuelTrace(preset.id, resources.snapshotId, seed);
     trace.record({ kind: "lifecycle", detail: "session creation started" });
@@ -351,7 +359,7 @@ export class DuelWorkerRuntime {
         dependencies: resources.dependencies,
         playerDeck: preset.player,
         opponentDeck: preset.opponent,
-        configuration: { mode: "production", seed },
+        configuration: { mode: "production", rules: profile.rules, seed },
         onEngineDiagnostic: ({ type, message, error }) => {
           trace.record({
             kind: "engineDiagnostic",
@@ -404,6 +412,7 @@ export class DuelWorkerRuntime {
           preset.player.extra.length,
           preset.opponent.extra.length,
         ],
+        extraMonsterZones: profile.extraMonsterZones,
         promptIdNamespace: `${this.#runtimeId}-duel-${++this.#nextDuelSequence}`,
         trace,
       });

@@ -309,3 +309,15 @@ Kept for history. Read the SUPERSEDED banners before running anything here.
 - [ ] Arrow-key around the whole field by hand: both shared Extra Monster Zones are reachable (press Up from your Monster Zone 2/3/4, or Down from the opponent's), and no zone, pile, or hand card is stranded with no way in.
 - [ ] Arrow navigation still feels sane after the shared zones joined the vertical path: pressing Up twice from your monster row lands on the opponent's row via the shared zone rather than jumping somewhere unrelated.
 - [ ] Play a short duel: summoning, setting, dragging from hand, and opening a pile's list all still land on the intended zone — the tighter columns did not shift any hit target off its card.
+
+## T6 face-down-public-knowledge (round 3)
+
+- [ ] `npm run dev` and start a duel. Let the opponent summon a monster face-up, then wait for it to be flipped/set face-down in the same zone (or force it with a card that changes position): the board still paints the card back, but hovering it fills the preview panel with that monster's art, name and effect text.
+- [ ] Focus that same face-down opponent monster with the keyboard: the screen reader announces the known card name and its zone, not `Hidden card`.
+- [ ] Privacy check — the opponent sets a card straight out of its hand (nothing revealed it first): the board paints a card back, hovering it leaves the preview panel on `Face-down card` with no art, no name and no effect text, and keyboard focus announces no card name.
+- [ ] Still on that set-from-hand card: open Settings → download diagnostics (or the result dialog's `Download diagnostics`) and search the file for that card's name and passcode — neither appears anywhere in the snapshot or event log.
+- [ ] Opponent GY/Banished trays: a face-up card in an opponent pile is still named and inspectable; an unrevealed opponent Extra Deck entry is still unnamed and shows only a card back.
+- [ ] Watch a known face-down opponent card get destroyed or sent to the GY: it appears in the GY named, and the preview panel resolves it from the GY as usual.
+- [ ] Watch a known face-down opponent card leave the field for the hand or deck (a card that returns it): once it is back in a hidden zone it is no longer identified, and a later set of that same card is unnamed again.
+- [ ] Your own cards are unchanged: your hand, your set spells/traps and your face-down monsters all still hover-preview with full art, name and effect text.
+- [ ] Play a full duel to the result dialog: no error banner, no worker restart, and the field never shows an identified card in a zone that should be secret.

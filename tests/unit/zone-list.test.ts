@@ -109,19 +109,44 @@ describe("zoneListEntries", () => {
     expect(entries[3]?.code).toBe(cardCode(89631139));
   });
 
-  it("hides opponent face-down banished cards", () => {
+  it("trusts projected code for known face-down identity", () => {
     const snapshot = state(
-      "ban1",
+      "knownBanished",
       {},
       {
         banished: [
-          card("ban-0", 46986414, 1, "banished", 0, "faceDownDefense"),
+          card("ban-known", 5053103, 1, "banished", 0, "faceDownDefense"),
         ],
       },
     );
-    const stack = stackFor(snapshot, "p1:banished");
+    const entries = zoneListEntries(
+      stackFor(snapshot, "p1:banished"),
+      snapshot,
+      CARD_TEXTS,
+    );
 
-    const entries = zoneListEntries(stack, snapshot, CARD_TEXTS);
+    expect(entries[0]).toMatchObject({
+      identityVisible: true,
+      code: cardCode(5053103),
+      label: "Axe Raider",
+    });
+  });
+
+  it("keeps unknown face-down identity hidden", () => {
+    const snapshot = state(
+      "unknownBanished",
+      {},
+      {
+        banished: [
+          card("ban-unknown", undefined, 1, "banished", 0, "faceDownDefense"),
+        ],
+      },
+    );
+    const entries = zoneListEntries(
+      stackFor(snapshot, "p1:banished"),
+      snapshot,
+      CARD_TEXTS,
+    );
 
     expect(entries).toHaveLength(1);
     expect(entries[0]?.identityVisible).toBe(false);

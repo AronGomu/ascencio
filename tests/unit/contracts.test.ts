@@ -419,6 +419,78 @@ describe("Worker contracts", () => {
     ).toThrow(/identity privacy/);
   });
 
+  it("accepts projector-attested code on an opponent face-down fixed field card", () => {
+    const event = structuredClone(
+      examples.find((example) => example.type === "state"),
+    );
+    if (event?.type !== "state") throw new Error("State fixture missing");
+    const opponent = event.state.players[1] as unknown as Record<
+      string,
+      unknown
+    >;
+    const hiddenCard = (
+      location: "monster" | "spellTrap",
+      sequence: number,
+    ) => ({
+      instanceId: cardInstanceId(`known-${location}`),
+      code: cardCode(5053103),
+      owner: 1,
+      controller: 1,
+      location,
+      sequence,
+      position: "faceDownDefense",
+      faceUp: false,
+      counters: [],
+      overlayMaterials: [],
+    });
+    opponent.monsters = [hiddenCard("monster", 0)];
+    opponent.spellsAndTraps = [hiddenCard("spellTrap", 0)];
+
+    expect(() => parseDuelWorkerEvent(event)).not.toThrow();
+  });
+
+  it.each(["deck", "hand", "extraDeck", "banished"] as const)(
+    "still rejects code in concealed opponent %s",
+    (zone) => {
+      const event = structuredClone(
+        examples.find((example) => example.type === "state"),
+      );
+      if (event?.type !== "state") throw new Error("State fixture missing");
+      const opponent = event.state.players[1] as unknown as Record<
+        string,
+        unknown
+      >;
+      const locations = {
+        deck: "deck",
+        hand: "hand",
+        extraDeck: "extra",
+        banished: "banished",
+      } as const;
+      const hidden = {
+        instanceId: cardInstanceId(`private-${zone}`),
+        code: cardCode(5053103),
+        owner: 1,
+        controller: 1,
+        location: locations[zone],
+        sequence: 0,
+        position: "faceDownDefense",
+        faceUp: false,
+        counters: [],
+        overlayMaterials: [],
+      };
+      if (zone === "deck") {
+        opponent.deckCount = 1;
+        opponent.deck = [hidden];
+      } else {
+        if (zone === "hand") opponent.handCount = 1;
+        if (zone === "extraDeck") opponent.extraDeckCount = 1;
+        opponent[zone] = [hidden];
+      }
+
+      expect(() => parseDuelWorkerEvent(event)).toThrow(/code privacy/);
+    },
+  );
+
   it("enforces Extra/material privacy, uniqueness, shallow shape, and global bounds", () => {
     const baseEvent = structuredClone(
       examples.find((example) => example.type === "state"),

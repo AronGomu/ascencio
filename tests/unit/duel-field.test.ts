@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { cardCode } from "../../src/duel/contracts/ids.ts";
 import type { PublicDuelState } from "../../src/duel/contracts/public-duel-state.ts";
 import { resolvePromptChoiceBoardTarget } from "../../src/field/card-mapping.ts";
 import {
@@ -22,6 +23,7 @@ import {
   promptChoice,
 } from "../fixtures/board-view-model.ts";
 import {
+  concealedStateCard,
   deckSlots,
   publicStateCard,
   RICH_PUBLIC_DUEL_STATE,
@@ -377,6 +379,66 @@ describe("semantic board view model", () => {
     ).toEqual(["shared:extraMonster:left", "shared:extraMonster:right"]);
   });
 
+  it("carries known code while rendering a face-down card back", () => {
+    const knownCard = publicStateCard(
+      "known-face-down",
+      5053103,
+      1,
+      "monster",
+      0,
+      "faceDownDefense",
+    );
+    const known: PublicDuelState = {
+      ...RICH_PUBLIC_DUEL_STATE,
+      players: [
+        RICH_PUBLIC_DUEL_STATE.players[0],
+        { ...RICH_PUBLIC_DUEL_STATE.players[1], monsters: [knownCard] },
+      ],
+    };
+    const result = mapSnapshotToBoard(known, BOARD_CARD_TEXTS);
+    if (!result.ok) throw new Error("Known face-down fixture failed to map");
+    const mapped = result.value.cards.find(
+      ({ id }) => id === knownCard.instanceId,
+    );
+
+    expect(mapped).toMatchObject({
+      code: cardCode(5053103),
+      hidden: true,
+      image: { kind: "back" },
+      label: expect.stringContaining("Axe Raider"),
+      position: "faceDownDefense",
+    });
+  });
+
+  it("renders an unknown face-down card with back art", () => {
+    const unknownCard = concealedStateCard(
+      "unknown-face-down",
+      1,
+      "monster",
+      0,
+    );
+    const unknown: PublicDuelState = {
+      ...RICH_PUBLIC_DUEL_STATE,
+      players: [
+        RICH_PUBLIC_DUEL_STATE.players[0],
+        { ...RICH_PUBLIC_DUEL_STATE.players[1], monsters: [unknownCard] },
+      ],
+    };
+    const result = mapSnapshotToBoard(unknown, BOARD_CARD_TEXTS);
+    if (!result.ok) throw new Error("Unknown face-down fixture failed to map");
+    const mapped = result.value.cards.find(
+      ({ id }) => id === unknownCard.instanceId,
+    );
+
+    expect(mapped).toMatchObject({
+      hidden: true,
+      image: { kind: "back" },
+      position: "faceDownDefense",
+    });
+    expect(mapped).not.toHaveProperty("code");
+    expect(mapped?.label).not.toContain("Axe Raider");
+  });
+
   it("maps ST-04 positions and privacy-safe accessible labels", () => {
     const board = mappedBoard("ST-04");
     expect(
@@ -393,10 +455,10 @@ describe("semantic board view model", () => {
     ]);
     expect(board.cards[0]?.label).toContain("face-up attack");
     expect(board.cards[2]?.label).toBe(
-      "Hidden card in Your Monster Zone 3, face-down attack",
+      "Dark Magician in Your Monster Zone 3, face-down attack",
     );
-    expect(board.cards[2]?.label).not.toContain("Dark Magician");
-    expect(JSON.stringify(board.cards[2])).not.toContain("46986414");
+    expect(board.cards[2]?.image).toEqual({ kind: "back" });
+    expect(board.cards[2]?.code).toBe(cardCode(46986414));
   });
 
   it("maps ST-07 counter and visibility-safe material details", () => {

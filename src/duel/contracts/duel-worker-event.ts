@@ -581,7 +581,13 @@ function validatePublicPlayer(
         const concealed =
           record.position === "faceDownAttack" ||
           record.position === "faceDownDefense";
-        if (concealed && record.code !== undefined)
+        const projectorAttestedFixedCard =
+          zone === "monsters" || zone === "spellsAndTraps";
+        if (
+          concealed &&
+          record.code !== undefined &&
+          !projectorAttestedFixedCard
+        )
           throw invalid(`${cardLabel}.code privacy`);
       }
     });

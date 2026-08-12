@@ -40,6 +40,7 @@ export interface PublicCounter {
 
 export interface PublicCard {
   readonly instanceId: CardInstanceId;
+  /** Identity known to local viewer, independent of current face orientation. */
   readonly code?: CardCode;
   readonly owner: PlayerIndex;
   readonly controller: PlayerIndex;

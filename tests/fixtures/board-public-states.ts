@@ -84,6 +84,31 @@ export function publicStateCard(
   };
 }
 
+/**
+ * A card the local viewer cannot identify. The projector emits no `code` for
+ * a concealed opponent card outside a fixed field slot, so neither may a
+ * fixture that claims to be a projected state.
+ */
+export function concealedStateCard(
+  id: string,
+  controller: PlayerIndex,
+  location: PublicCard["location"],
+  sequence: number,
+  position: CardPosition = "faceDownDefense",
+): PublicCard {
+  return {
+    instanceId: cardInstanceId(id),
+    owner: controller,
+    controller,
+    location,
+    sequence,
+    position,
+    faceUp: false,
+    counters: [],
+    overlayMaterials: [],
+  };
+}
+
 function player(player: PlayerIndex): PublicPlayerState {
   return {
     player,
@@ -127,13 +152,11 @@ const richHost = publicStateCard(
   },
 );
 
-const privateOpponentExtra = publicStateCard(
+const privateOpponentExtra = concealedStateCard(
   "private-opponent-extra",
-  46986414,
   1,
   "extra",
   0,
-  "faceDownDefense",
 );
 const publicOpponentExtra = publicStateCard(
   "public-opponent-extra",
@@ -179,26 +202,10 @@ export const RICH_PUBLIC_DUEL_STATE: PublicDuelState = {
     },
     {
       ...player(1),
-      hand: [
-        publicStateCard(
-          "private-opponent-hand",
-          46986414,
-          1,
-          "hand",
-          0,
-          "faceDownDefense",
-        ),
-      ],
+      hand: [concealedStateCard("private-opponent-hand", 1, "hand", 0)],
       extraDeck: [privateOpponentExtra, publicOpponentExtra],
       banished: [
-        publicStateCard(
-          "private-opponent-banished",
-          46986414,
-          1,
-          "banished",
-          0,
-          "faceDownDefense",
-        ),
+        concealedStateCard("private-opponent-banished", 1, "banished", 0),
       ],
     },
   ],

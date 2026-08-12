@@ -76,6 +76,13 @@ interface MovedCard {
   readonly instanceId?: CardInstanceId;
 }
 
+interface PendingPublicReveal {
+  readonly controller: PlayerIndex;
+  readonly location: PublicLocation;
+  readonly sequence: number;
+  readonly code: CardCode;
+}
+
 interface OverlayMoveUpdate {
   readonly moved: MovedCard;
   readonly failure?:
@@ -140,6 +147,7 @@ interface ProjectionCheckpoint {
   readonly phase: DuelPhase;
   readonly chain: MutableChainLink[];
   readonly cardSequence: number;
+  readonly pendingPublicReveals: Map<string, PendingPublicReveal>;
 }
 
 export class DuelStateProjector {
@@ -151,6 +159,7 @@ export class DuelStateProjector {
   #phase: DuelPhase = "unknown";
   #chain: MutableChainLink[] = [];
   #cardSequence = 0;
+  #pendingPublicReveals = new Map<string, PendingPublicReveal>();
   readonly #textDependencies:
     Pick<ActiveDuelDependencies, "texts" | "strings"> | undefined;
 
@@ -184,6 +193,7 @@ export class DuelStateProjector {
       phase: this.#phase,
       chain: this.#chain,
       cardSequence: this.#cardSequence,
+      pendingPublicReveals: this.#pendingPublicReveals,
     });
   }
 
@@ -197,6 +207,7 @@ export class DuelStateProjector {
     this.#phase = restored.phase;
     this.#chain = restored.chain;
     this.#cardSequence = restored.cardSequence;
+    this.#pendingPublicReveals = restored.pendingPublicReveals;
   }
 
   apply(message: EngineMessage): ProjectionUpdate {
@@ -211,6 +222,7 @@ export class DuelStateProjector {
         events.push({ type: "duelStarted" });
         break;
       case EngineMessageType.NEW_TURN:
+        this.#pendingPublicReveals.clear();
         this.#turn += 1;
         this.#turnPlayer = asPlayer(message.player);
         events.push({
@@ -220,8 +232,12 @@ export class DuelStateProjector {
         });
         break;
       case EngineMessageType.NEW_PHASE:
+        this.#pendingPublicReveals.clear();
         this.#phase = phase(message.phase);
         events.push({ type: "phaseChanged", phase: this.#phase });
+        break;
+      case EngineMessageType.CONFIRM_CARDS:
+        this.#recordPendingPublicReveals(message.player, message.cards);
         break;
       case EngineMessageType.CONFIRM_DECKTOP: {
         const owner = asPlayer(message.player);
@@ -250,9 +266,11 @@ export class DuelStateProjector {
           );
         break;
       case EngineMessageType.SWAP_GRAVE_DECK:
+        this.#pendingPublicReveals.clear();
         this.#clearDeckReveals(asPlayer(message.player));
         break;
       case EngineMessageType.REVERSE_DECK:
+        this.#pendingPublicReveals.clear();
         this.#clearDeckReveals(0);
         this.#clearDeckReveals(1);
         break;
@@ -273,7 +291,10 @@ export class DuelStateProjector {
         const player = asPlayer(message.player);
         if (message.type === EngineMessageType.SHUFFLE_HAND)
           this.#shuffleHand(player, message.cards);
-        else this.#clearDeckReveals(player);
+        else {
+          this.#clearPendingPublicReveals(player, "deck");
+          this.#clearDeckReveals(player);
+        }
         events.push({
           type: "cardsShuffled",
           player,
@@ -282,6 +303,9 @@ export class DuelStateProjector {
         });
         break;
       }
+      case EngineMessageType.SHUFFLE_SET_CARD:
+        this.#shuffleSetCards(message.cards);
+        break;
       case EngineMessageType.MOVE: {
         const overlayMove =
           isOverlayAddress(message.from) || isOverlayAddress(message.to);
@@ -291,6 +315,8 @@ export class DuelStateProjector {
         const moved =
           overlayUpdate?.moved ??
           this.#move(message.card, message.from, message.to);
+        if (overlayMove)
+          this.#clearPendingPublicRevealsForMove(message.from, message.to);
         if (engineLocation(message.from.location) === "deck")
           this.#clearDeckReveals(asPlayer(message.from.controller));
         if (engineLocation(message.to.location) === "deck")
@@ -673,6 +699,110 @@ export class DuelStateProjector {
     });
   }
 
+  #recordPendingPublicReveals(
+    recipient: number,
+    cards: readonly {
+      readonly code: number;
+      readonly controller: 0 | 1;
+      readonly location: number;
+      readonly sequence: number;
+    }[],
+  ): void {
+    if (recipient !== 0) return;
+    for (const entry of cards) {
+      if (
+        !Number.isSafeInteger(entry.code) ||
+        entry.code <= 0 ||
+        !Number.isSafeInteger(entry.sequence) ||
+        entry.sequence < 0 ||
+        entry.sequence > 255 ||
+        (entry.location & EngineLocation.OVERLAY) !== 0
+      )
+        continue;
+      const controller = asPlayer(entry.controller);
+      const location = engineLocation(entry.location);
+      if (location === "deck") continue;
+      const reveal = {
+        controller,
+        location,
+        sequence: entry.sequence,
+        code: cardCode(entry.code),
+      } satisfies PendingPublicReveal;
+      this.#pendingPublicReveals.set(publicRevealKey(reveal), reveal);
+      const stored = findPublicCard(
+        this.#players[controller],
+        location,
+        entry.sequence,
+      );
+      /* A reveal token is projector-private. Only a fixed field slot may carry
+         attested knowledge into the opponent's projected state; every other
+         concealed opponent zone rejects a code by contract, so there the token
+         alone preserves identity through a later set. */
+      if (
+        stored !== undefined &&
+        (controller === 0 || isFixedLocation(location))
+      )
+        stored.code = reveal.code;
+    }
+  }
+
+  #consumePendingPublicReveal(
+    address: {
+      readonly controller: 0 | 1;
+      readonly location: number;
+      readonly sequence: number;
+    },
+    rawCode: number,
+  ): CardCode | undefined {
+    const revealAddress = {
+      controller: asPlayer(address.controller),
+      location: engineLocation(address.location),
+      sequence: address.sequence,
+    };
+    const key = publicRevealKey(revealAddress);
+    const reveal = this.#pendingPublicReveals.get(key);
+    if (reveal === undefined) return undefined;
+    this.#pendingPublicReveals.delete(key);
+    return reveal.code === rawCode ? reveal.code : undefined;
+  }
+
+  #clearPendingPublicReveals(
+    controller: PlayerIndex,
+    location: PublicLocation,
+  ): void {
+    for (const [key, reveal] of this.#pendingPublicReveals) {
+      if (reveal.controller === controller && reveal.location === location)
+        this.#pendingPublicReveals.delete(key);
+    }
+  }
+
+  #clearPendingPublicRevealsForMove(
+    from: {
+      readonly controller: 0 | 1;
+      readonly location: number;
+      readonly sequence: number;
+    },
+    to: {
+      readonly controller: 0 | 1;
+      readonly location: number;
+      readonly sequence: number;
+    },
+  ): void {
+    for (const endpoint of [from, to]) {
+      const controller = asPlayer(endpoint.controller);
+      const location = engineLocation(endpoint.location);
+      if (isFixedLocation(location)) {
+        this.#pendingPublicReveals.delete(
+          publicRevealKey({
+            controller,
+            location,
+            sequence: endpoint.sequence,
+          }),
+        );
+      } else this.#clearPendingPublicReveals(controller, location);
+    }
+  }
+
   #clearDeckReveals(player: PlayerIndex): void {
     this.#players[player].deckReveals.clear();
   }
@@ -730,7 +860,14 @@ export class DuelStateProjector {
   }
 
   #shuffleHand(player: PlayerIndex, codes: readonly number[]): void {
-    if (player !== 0) return;
+    this.#clearPendingPublicReveals(player, "hand");
+    if (player !== 0) {
+      for (const card of this.#players[player].hand) {
+        this.#rotatePublicIdentity(card);
+        delete card.code;
+      }
+      return;
+    }
     const hand = this.#players[player].hand;
     if (codes.length !== hand.length) return;
 
@@ -750,6 +887,99 @@ export class DuelStateProjector {
     });
     hand.splice(0, hand.length, ...reordered);
     resequence(hand);
+  }
+
+  #shuffleSetCards(
+    permutations: readonly {
+      readonly from: {
+        readonly controller: 0 | 1;
+        readonly location: number;
+        readonly sequence: number;
+        readonly position: number;
+      };
+      readonly to: {
+        readonly controller: 0 | 1;
+        readonly location: number;
+        readonly sequence: number;
+        readonly position: number;
+      };
+    }[],
+  ): void {
+    const entries = permutations.map(({ from, to }) => {
+      const fromAddress = {
+        controller: asPlayer(from.controller),
+        location: engineLocation(from.location),
+        sequence: from.sequence,
+      };
+      const toAddress = {
+        controller: asPlayer(to.controller),
+        location: engineLocation(to.location),
+        sequence: to.sequence,
+      };
+      if (
+        !isFixedLocation(fromAddress.location) ||
+        !isFixedLocation(toAddress.location)
+      )
+        throw new Error("SHUFFLE_SET_CARD endpoint is not a fixed field slot");
+      const card = findPublicCard(
+        this.#players[fromAddress.controller],
+        fromAddress.location,
+        fromAddress.sequence,
+      );
+      if (card === undefined)
+        throw new Error("SHUFFLE_SET_CARD source slot is empty");
+      return { to, fromAddress, toAddress, card };
+    });
+    const sourceKeys = entries.map(({ fromAddress }) =>
+      publicRevealKey(fromAddress),
+    );
+    if (new Set(sourceKeys).size !== sourceKeys.length)
+      throw new Error("SHUFFLE_SET_CARD source slot is duplicated");
+    const destinationKeys = entries.map(({ toAddress }) =>
+      publicRevealKey(toAddress),
+    );
+    if (new Set(destinationKeys).size !== destinationKeys.length)
+      throw new Error("SHUFFLE_SET_CARD destination slot is duplicated");
+    const sourceKeySet = new Set(sourceKeys);
+    for (const { toAddress } of entries) {
+      const occupant = findPublicCard(
+        this.#players[toAddress.controller],
+        toAddress.location,
+        toAddress.sequence,
+      );
+      if (
+        occupant !== undefined &&
+        !sourceKeySet.has(publicRevealKey(toAddress))
+      )
+        throw new Error("SHUFFLE_SET_CARD destination slot is occupied");
+    }
+
+    for (const { fromAddress } of entries) {
+      removePublicCard(
+        this.#players[fromAddress.controller],
+        fromAddress.location,
+        fromAddress.sequence,
+      );
+    }
+    for (const { to, fromAddress, toAddress, card } of entries) {
+      this.#pendingPublicReveals.delete(publicRevealKey(fromAddress));
+      this.#pendingPublicReveals.delete(publicRevealKey(toAddress));
+      if (toAddress.controller === 1) {
+        this.#rotatePublicIdentity(card);
+        delete card.code;
+      }
+      card.controller = toAddress.controller;
+      card.location = toAddress.location;
+      card.sequence = toAddress.sequence;
+      card.position = enginePosition(to.position);
+      card.faceUp = isFaceUp(to.position);
+      insertPublicCard(
+        this.#players[toAddress.controller],
+        toAddress.location,
+        toAddress.sequence,
+        card,
+      );
+    }
   }
 
   #move(
@@ -807,18 +1037,40 @@ export class DuelStateProjector {
     }
     if (fromLocation === "extra")
       fromPlayer.extraDeckCount = Math.max(0, fromPlayer.extraDeckCount - 1);
+    const confirmedCode = this.#consumePendingPublicReveal(from, rawCode);
+    const confirmedForMove = confirmedCode !== undefined;
+    if (confirmedCode !== undefined) card.code = confirmedCode;
+    this.#clearPendingPublicRevealsForMove(from, to);
+
     const priorInstanceId = card.instanceId;
     const priorCode = card.code;
+    const sourceWasKnown = card.code !== undefined;
+    const preservesKnownIdentity =
+      (fromVisible || confirmedForMove) &&
+      !toVisible &&
+      sourceWasKnown &&
+      isFixedLocation(toLocation) &&
+      isFaceDown(to.position);
+    const staleHiddenCorrelation =
+      !fromVisible && sourceWasKnown && !confirmedForMove;
 
+    if (
+      staleHiddenCorrelation ||
+      ((fromVisible || confirmedForMove) &&
+        !toVisible &&
+        !preservesKnownIdentity)
+    ) {
+      this.#rotatePublicIdentity(card);
+      delete card.code;
+    }
     if (countersResetOnMove(fromLocation, toLocation)) card.counters = [];
-    if (fromVisible && !toVisible) this.#rotatePublicIdentity(card);
     card.controller = to.controller;
     card.location = toLocation;
     card.sequence = to.sequence;
     card.position = enginePosition(to.position);
     card.faceUp = isFaceUp(to.position);
-    if (rawCode > 0 && toVisible) card.code = cardCode(rawCode);
-    else delete card.code;
+    if (toVisible && rawCode > 0) card.code = cardCode(rawCode);
+    else if (!preservesKnownIdentity) delete card.code;
 
     const stored = insertPublicCard(toPlayer, toLocation, to.sequence, card);
     if (!stored && toLocation === "deck") toPlayer.deckCount += 1;
@@ -830,10 +1082,10 @@ export class DuelStateProjector {
         ? card.code === undefined
           ? {}
           : { card: card.code }
-        : fromVisible && priorCode !== undefined
+        : (fromVisible || confirmedForMove) && priorCode !== undefined
           ? { card: priorCode }
           : {}),
-      ...(fromVisible
+      ...(fromVisible || confirmedForMove
         ? { instanceId: priorInstanceId }
         : toVisible
           ? { instanceId: card.instanceId }
@@ -1049,12 +1301,6 @@ export class DuelStateProjector {
         );
       return;
     }
-    const wasVisible = isCardIdentityVisible(
-      0,
-      playerIndex,
-      publicLocation,
-      card.position,
-    );
     const nextPosition = enginePosition(position);
     const visible = isCardIdentityVisible(
       0,
@@ -1062,11 +1308,9 @@ export class DuelStateProjector {
       publicLocation,
       nextPosition,
     );
-    if (wasVisible && !visible) this.#rotatePublicIdentity(card);
     card.position = nextPosition;
     card.faceUp = isFaceUp(position);
     if (visible && rawCode > 0) card.code = cardCode(rawCode);
-    else if (!visible) delete card.code;
   }
 
   #updateCounter(
@@ -1541,6 +1785,14 @@ function isFixedLocation(location: PublicLocation): boolean {
   );
 }
 
+function publicRevealKey(address: {
+  readonly controller: PlayerIndex;
+  readonly location: PublicLocation;
+  readonly sequence: number;
+}): string {
+  return `${address.controller}:${address.location}:${address.sequence}`;
+}
+
 function countersResetOnMove(
   from: PublicLocation,
   to: PublicLocation,
@@ -1623,6 +1875,14 @@ function isFaceUp(value: number): boolean {
   return (
     (value &
       (EnginePosition.FACE_UP_ATTACK | EnginePosition.FACE_UP_DEFENSE)) !==
+    0
+  );
+}
+
+function isFaceDown(value: number): boolean {
+  return (
+    (value &
+      (EnginePosition.FACE_DOWN_ATTACK | EnginePosition.FACE_DOWN_DEFENSE)) !==
     0
   );
 }

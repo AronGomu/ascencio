@@ -1,5 +1,5 @@
 import type { CardCode } from "../duel/contracts/ids.ts";
-import { isCardIdentityVisible } from "../duel/card-visibility.ts";
+import { isProjectedCardIdentityKnown } from "../duel/card-visibility.ts";
 import type {
   PlayerIndex,
   PublicCard,
@@ -12,9 +12,6 @@ import type {
   BoardStackView,
   BoardViewModel,
 } from "./board-view-model.ts";
-
-/** Identity resolution is always for the local human viewer. */
-const LOCAL_VIEWER: PlayerIndex = 0;
 
 export interface ZoneListEntry {
   /** Stable within one rendered list: `${stackId}:${position}`. */
@@ -74,9 +71,7 @@ function deckEntry(
   card: PublicCard,
   cardTexts: ReadonlyMap<number, BoardCardText>,
 ): ZoneListEntry {
-  // Generic visibility treats every local card as visible; deck identity must
-  // come only from projector-supplied face-up state and code.
-  const identityVisible = card.faceUp === true && card.code !== undefined;
+  const identityVisible = isProjectedCardIdentityKnown(card);
   const label = identityVisible
     ? (cardTexts.get(card.code as CardCode)?.name ?? `Card ${card.code}`)
     : "Face-down card";
@@ -112,13 +107,7 @@ function sourcedEntry(
   card: PublicCard,
   cardTexts: ReadonlyMap<number, BoardCardText>,
 ): ZoneListEntry {
-  const identityVisible =
-    isCardIdentityVisible(
-      LOCAL_VIEWER,
-      card.controller,
-      card.location,
-      card.position,
-    ) && card.code !== undefined;
+  const identityVisible = isProjectedCardIdentityKnown(card);
   const label = identityVisible
     ? (cardTexts.get(card.code as CardCode)?.name ?? `Card ${card.code}`)
     : "Face-down card";

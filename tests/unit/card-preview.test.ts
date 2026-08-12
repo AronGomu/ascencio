@@ -91,19 +91,7 @@ describe("cardPreviewForPublicCard", () => {
     ).not.toBeNull();
   });
 
-  /* A code that leaked onto a card whose identity is hidden from player 0 must
-     never reach the panel, whatever the caller pre-filtered. */
-  it("refuses a card whose identity is hidden from the local player", () => {
-    expect(
-      cardPreviewForPublicCard(
-        publicCard({
-          controller: 1,
-          location: "hand",
-          position: "faceDownAttack",
-        }),
-        TEXTS,
-      ),
-    ).toBeNull();
+  it("previews projector-known face-down fixed-field identity", () => {
     expect(
       cardPreviewForPublicCard(
         publicCard({
@@ -111,6 +99,23 @@ describe("cardPreviewForPublicCard", () => {
           location: "monster",
           position: "faceDownDefense",
         }),
+        TEXTS,
+      ),
+    ).toEqual({
+      code: KNOWN,
+      name: "The Legendary Fisherman",
+      description: "This card is unaffected by Spell effects.",
+    });
+  });
+
+  it("keeps unknown concealed opponent identity private", () => {
+    expect(
+      cardPreviewForPublicCard(
+        {
+          controller: 1,
+          location: "hand",
+          position: "faceDownAttack",
+        },
         TEXTS,
       ),
     ).toBeNull();

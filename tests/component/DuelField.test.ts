@@ -15,6 +15,7 @@ import DuelFieldErrorBoundary from "../../src/app/components/duel-field/DuelFiel
 import FieldBoard from "../../src/app/components/duel-field/FieldBoard.svelte";
 import CardTray from "../../src/app/components/duel-field/CardTray.svelte";
 import {
+  cardCode,
   cardInstanceId,
   choiceId,
   promptId,
@@ -1320,7 +1321,7 @@ describe("DuelField", () => {
       name: /The Legendary Fisherman in Your Monster Zone 1/,
     });
     const hidden = screen.getByRole("article", {
-      name: /Hidden card in Your Monster Zone 3/,
+      name: /Dark Magician in Your Monster Zone 3/,
     });
     expect(within(visible).getByRole("img").getAttribute("src")).toBe(
       "/cards/placeholder.webp",
@@ -1629,6 +1630,41 @@ describe("DuelField", () => {
     expect(harness.onpreview.mock.calls[0]?.[0]).toMatchObject({
       id: HAND_CARD_ID,
     });
+  });
+
+  it("hovering a known face-down board card reports code while rendering back art", async () => {
+    const base = board("ST-04");
+    const hiddenIndex = base.cards.findIndex(
+      ({ hidden, zoneId }) => hidden && zoneId.includes("mainMonster"),
+    );
+    const hidden = base.cards[hiddenIndex];
+    if (hidden === undefined) throw new Error("Missing face-down field card");
+    const known = {
+      ...hidden,
+      code: cardCode(5053103),
+      label: "Axe Raider in Your Monster Zone 3, face-down attack",
+      image: { kind: "back" as const },
+    };
+    const knownBoard = {
+      ...base,
+      cards: base.cards.with(hiddenIndex, known),
+    };
+    const onpreview = vi.fn();
+    render(DuelField, {
+      board: knownBoard,
+      cardBackUrl: "/cards/back.webp",
+      onpreview,
+    });
+
+    const card = screen.getByRole("article", { name: /Axe Raider.*face-down/ });
+    await fireEvent.pointerEnter(card);
+
+    expect(onpreview).toHaveBeenCalledWith(
+      expect.objectContaining({ code: 5053103 }),
+    );
+    expect(card.querySelector("img")?.getAttribute("src")).toBe(
+      "/cards/back.webp",
+    );
   });
 
   it("hovering a face-down field card previews the hidden card", async () => {

@@ -1,3 +1,4 @@
+import { isProjectedCardIdentityKnown } from "../duel/card-visibility.ts";
 import type { CardCode, CardInstanceId } from "../duel/contracts/ids.ts";
 import type {
   CardPosition,
@@ -285,8 +286,9 @@ function addCard(
       cardId: card.instanceId,
     });
   cardIds.add(card.instanceId);
-  const identityVisible = cardIdentityVisible(card);
-  const displayName = identityVisible
+  const identityKnown = isProjectedCardIdentityKnown(card);
+  const faceVisible = cardFaceVisible(card);
+  const displayName = identityKnown
     ? cardName(card.code, cardTexts)
     : undefined;
   const counters = Object.freeze(
@@ -338,16 +340,14 @@ function addCard(
       id: card.instanceId,
       targetId: `card:${card.instanceId}` as const,
       instanceId: card.instanceId,
-      ...(identityVisible && card.code !== undefined
-        ? { code: card.code }
-        : {}),
+      ...(identityKnown && card.code !== undefined ? { code: card.code } : {}),
       player: card.controller,
       owner: card.owner,
       zoneId: layout.id,
       position: card.position,
       orientation: orientationFor(card.position),
       facing: card.controller === 0 ? "self" : "opponent",
-      hidden: !identityVisible,
+      hidden: !faceVisible,
       label,
       x: layout.x + xOffset,
       y: layout.y,
@@ -357,7 +357,7 @@ function addCard(
       materials,
       chainLinks,
       image: Object.freeze(
-        identityVisible && card.code !== undefined
+        faceVisible && identityKnown && card.code !== undefined
           ? { kind: "face" as const, code: card.code }
           : { kind: "back" as const },
       ),
@@ -411,7 +411,7 @@ function createStacks(
       if (layout === undefined) continue;
       const collection = stackCollection(player, zone);
       const count = stackCount(player, zone, collection);
-      const publicCards = collection.filter(cardIdentityVisible);
+      const publicCards = collection.filter(isProjectedCardIdentityKnown);
       const top = zone === "deck" ? undefined : publicCards.at(-1);
       const topCardLabel =
         top === undefined ? undefined : cardName(top.code, cardTexts);
@@ -555,8 +555,7 @@ function neighborInDirection(
   return neighbor === undefined ? {} : { [direction]: neighbor.targetId };
 }
 
-function cardIdentityVisible(card: PublicCard): boolean {
-  if (card.code === undefined) return false;
+function cardFaceVisible(card: PublicCard): boolean {
   if (card.location === "hand") return card.controller === 0;
   if (card.location === "extra") return card.controller === 0 || card.faceUp;
   return card.faceUp;

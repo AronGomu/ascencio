@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onMount } from "svelte";
   import type { PlayerPrompt } from "../../../duel/contracts/player-prompt.ts";
   import type {
     InteractionSession,
@@ -18,16 +17,8 @@
   export let confirmValid = false;
   export let validationMessage = "";
   export let oninteraction: (action: InteractionSessionAction) => unknown;
-  /* Read-only outward binding: `DuelField` reserves a gutter this tall below
-     the board so the bar never overlaps a field target. Measured here rather
-     than through `bind:clientHeight` so the component still mounts where
-     `ResizeObserver` is missing. */
-  export let clientHeight = 0;
 
   const LIST_DATA_CY = "field-action-bar-list";
-
-  let barElement: HTMLElement;
-  let sizeObserver: ResizeObserver | null = null;
 
   $: allChoices = choicesInPromptOrder(spec);
   $: choicesById = new Map(allChoices.map((choice) => [choice.id, choice]));
@@ -38,19 +29,6 @@
     (total, amount) => total + amount,
     0,
   );
-
-  onMount(() => {
-    clientHeight = barElement.clientHeight;
-    if (typeof ResizeObserver === "undefined") return;
-    sizeObserver = new ResizeObserver(() => {
-      clientHeight = barElement.clientHeight;
-    });
-    sizeObserver.observe(barElement);
-    return () => {
-      sizeObserver?.disconnect();
-      sizeObserver = null;
-    };
-  });
 
   function dispatch(action: UnkeyedInteractionSessionAction): void {
     oninteraction({ ...action, key: spec.key } as InteractionSessionAction);
@@ -105,7 +83,6 @@
   class="field-action-bar"
   aria-label="Field decision"
   aria-busy={disabled}
-  bind:this={barElement}
   data-cy="field-action-bar"
 >
   <p data-cy="field-action-bar-title">{spec.title}</p>

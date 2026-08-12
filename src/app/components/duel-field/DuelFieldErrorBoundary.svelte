@@ -15,6 +15,7 @@
     InteractionSessionAction,
   } from "../../prompts/interaction-session.ts";
   import type { ActiveInteractionSpec } from "../../prompts/interaction-spec.ts";
+  import type { PersistedWindowPosition } from "../../stores/persisted-ui-state.ts";
   import DuelField from "../DuelField.svelte";
 
   const EMPTY_IMAGE_URLS: ReadonlyMap<number, string> = new Map();
@@ -46,6 +47,14 @@
   export let onzonelistpreview: (entry: ZoneListEntry) => void = () =>
     undefined;
   export let phase: DuelPhase = "unknown";
+  export let zoneListWindowPosition: PersistedWindowPosition | null = null;
+  export let confirmWindowPosition: PersistedWindowPosition | null = null;
+  export let onzoneListWindowPositionChange: (
+    position: PersistedWindowPosition,
+  ) => void = () => undefined;
+  export let onconfirmWindowPositionChange: (
+    position: PersistedWindowPosition,
+  ) => void = () => undefined;
 
   let shouldFail: boolean = injectFailure;
 
@@ -108,5 +117,9 @@
     {zoneLists}
     {onzonelistpreview}
     {phase}
+    {zoneListWindowPosition}
+    {confirmWindowPosition}
+    {onzoneListWindowPositionChange}
+    {onconfirmWindowPositionChange}
   />
 </svelte:boundary>

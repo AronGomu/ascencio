@@ -31,7 +31,22 @@
 ## Inputs
 
 - **From Depends (T3):** `PersistedUiState`, `PersistedWindowPosition`, `readPersistedUiState`, `writePersistedUiState`, exact `ygo.ui.v1` schema; App currently persists deck selection through these pure functions.
-- **From Depends (T9):** non-scrolling viewport shell, responsive field/preview tracks, zone-list image cap.
+- **From Depends (T9), as actually shipped in `eb431e9`:** `#app` is `height:100svh`; `<main>` gains `.is-duel-viewport` with `overflow:hidden` in default duel mode; `.duel-row` stacks below **79rem** (not 80rem — measured, 80rem broke the field at 1280×720); on short viewports the preview collapses to thumbnail + name + scrolling text; `.zone-list-entry > img` is capped `max-height:50svh; object-fit:contain`. **`.duel-field` is now itself `overflow:auto` in constrained mode, so Impl step 10 applies — the window boundary must be a non-scrolling root, not the scroll container.** Also from T9: `.field-action-bar` was moved onto `.duel-field-stage` because `.duel-field`'s box can be clipped shorter than the board; when you make the bar normal-flow inside the confirm window (Impl steps 7–8), remove that stage-level positioning and its `assertFieldActionBarGeometry` e2e expectations coherently rather than leaving two owners.
+- **Later tickets already on the branch that touch the same surfaces:**
+  - T10 `c8e007b` — `EndTurnButton` now lives inside `PhaseStrip`'s right group, anchored `right:1%`; the narrow-viewport 4rem action-bar gutter was already deleted; `DuelHeaderBar` wraps role + life in `.duel-header-bar__meta`.
+  - T11 `033af59` — `PhaseStrip` takes `extraMonsterZones`; link-free duels (all six bundled decks) render 32 zones, no `shared:extraMonster:*`, and a continuous right-anchored strip. `mapSnapshotToBoard` takes an optional `prompt` argument and can fail with `layout_profile_conflict`, in which case App forces a blocking alert and nulls `effectivePrompt`.
+  - T12 `69ef913` — green = legal, orange = selected/list-hover, teal = feedback, neutral focus; hover zoom `1.35`/`120ms` scoped `:not(.is-pinned)`; hovered/pinned card parents raised; `ZoneListEntryTile` already has a `selected` prop awaiting T16.
+  - T13 `e69564e` — a `position:fixed` drag ghost mounts at `.duel-field` level (sibling of `.duel-field-stage`) to escape the board's `isolation:isolate`, on layer var `--duel-field-layer-drag-ghost: 150`, above `--duel-field-layer-menu: 100`. Your window layer must coexist: the ghost is meant to float above field windows, and it is `pointer-events:none` so it never steals outside-click detection. If you introduce `.duel-field-scroll-region`, keep the ghost mount point outside it.
+  - T8 `3f0e437` — hands are `HandBand.svelte` scroll viewports; the band root uses `data-feedback-zone-id`. `INTERACTIVE_SELECTOR` work must not accidentally swallow hand-band arrows.
+
+### Environment facts for validation
+
+- Playwright is chromium-only on this host. Run browser checks as:
+  `PLAYWRIGHT_BROWSERS_PATH=/home/aron/projects/ascencio/.tmp/pw-browsers npx playwright test --project=chromium`
+  Bare `npm run check` cannot exit 0 here (`playwright.config.ts` includes an unsupported `webkit-smoke` project). Use `npm run check:headless` plus the explicit Chromium invocation.
+- Known flake: Vitest integration occasionally dies with `Worker exited unexpectedly`. Re-run once before diagnosing.
+- Known flake: the duel seed is random per run; re-run a failing Chromium walker twice before diagnosing.
+- The app opens on a deck picker (T3); e2e must go through it as the existing specs do.
 - `src/app/components/DuelField.svelte:91` — `fieldRoot`; `:316-354` — interactive selector/outside cancel; `:441-455` root; `:484-502` list; `:520-530` action bar.
 - `src/app/components/duel-field/ZoneListDialog.svelte:41-49` — Escape; `:51-81` centred content/header/Close/entries.
 - `src/app/components/duel-field/FieldActionBar.svelte` — decision content and bound `clientHeight`; remove positioning responsibility, not logic.
@@ -154,19 +169,19 @@ E2E:
 
 ## Impl steps
 
-- [ ] 1. Add `persisted-ui-store.test.ts` red; create store over T3 read/write functions; migrate App's deck selection to store without behaviour change; run green.
-- [ ] 2. Add clamp tests/module.
-- [ ] 3. Add primitive component tests/component; use document pointerdown/keydown listeners installed on mount and removed on destroy; handle pointer capture; ResizeObserver both boundary/window.
-- [ ] 4. Add ephemeral `activeWindowId` in DuelField; pass active/onactivate.
-- [ ] 5. Refactor ZoneListDialog to render inside primitive (or accept wrapper props from DuelField, choose one owner only). Header is handle, red X is excluded interactive child, list content unchanged. Avoid duplicate document outside/Escape listeners.
-- [ ] 6. Add wheel-to-horizontal handler to entries; consume only when `scrollWidth>clientWidth` and movement is possible.
-- [ ] 7. Wrap FieldActionBar in confirm primitive. Make bar normal-flow; remove absolute bottom/transform/max positioning from it.
-- [ ] 8. Delete action-bar height CSS var/padding measurement if no longer used. Keep confirmation validation/content logic untouched.
-- [ ] 9. Change DuelField generic outside-click: when confirm visible, never dispatch cancel/pass from outside. Keep interactions inside all windows in `INTERACTIVE_SELECTOR`.
-- [ ] 10. If `.duel-field` scrolls after T9, move stage into `.duel-field-scroll-region { overflow:auto; min-width:0; min-height:0 }`, root `overflow:hidden`; keep window roots/feedback outside scroll child. Update T9 e2e selector to pan child.
-- [ ] 11. Thread four props/callbacks through ErrorBoundary and App; App reads/writes this ticket's persisted store.
-- [ ] 12. Run integration/e2e; verify positions field-local across page reload and worker rematch.
-- [ ] 13. Create ADR-017 with dismissal matrix and coordinate contract; reference ADR-007/009/010.
+- [x] 1. Add `persisted-ui-store.test.ts` red; create store over T3 read/write functions; migrate App's deck selection to store without behaviour change; run green. — criterion: `npx vitest run tests/unit/persisted-ui-store.test.ts` green (8/8) and `AppChrome`/`DeckPicker` component tests still green (28/28) after App uses `createPersistedUiStore`.
+- [x] 2. Add clamp tests/module. — criterion: `npx vitest run tests/unit/floating-window-position.test.ts` green (7/7).
+- [x] 3. Add primitive component tests/component; use document pointerdown/keydown listeners installed on mount and removed on destroy; handle pointer capture; ResizeObserver both boundary/window. — criterion: `npx vitest run tests/component/FloatingFieldWindow.test.ts` green (14/14), covering capture, destroy-time listener removal and both observed boxes.
+- [x] 4. Add ephemeral `activeWindowId` in DuelField; pass active/onactivate. — criterion: DuelField test `each window reports only its own position` asserts `is-active` follows the last pressed window and is never persisted.
+- [x] 5. Refactor ZoneListDialog to render inside primitive (or accept wrapper props from DuelField, choose one owner only). Header is handle, red X is excluded interactive child, list content unchanged. Avoid duplicate document outside/Escape listeners. — criterion: ZoneListDialog owns the primitive, its own `svelte:document` Escape listener is gone, and `tests/component/ZoneListDialog.test.ts` green (17/17) including red-X placement/name and outside-press cases.
+- [x] 6. Add wheel-to-horizontal handler to entries; consume only when `scrollWidth>clientWidth` and movement is possible. — criterion: ZoneListDialog tests `a vertical wheel over the entries scrolls them horizontally` and `a wheel over a list that cannot scroll is never consumed` green.
+- [x] 7. Wrap FieldActionBar in confirm primitive. Make bar normal-flow; remove absolute bottom/transform/max positioning from it. — criterion: `.field-action-bar` CSS has no `position/bottom/left/transform`; DuelField test `renders the action bar inside the confirm window, outside the board scroll region` green.
+- [x] 8. Delete action-bar height CSS var/padding measurement if no longer used. Keep confirmation validation/content logic untouched. — criterion: `--field-action-bar-height`, `data-field-action-bar`, the stage gutter margin and FieldActionBar's `clientHeight`/ResizeObserver are gone (`grep` clean); FieldActionBar component tests unchanged and green.
+- [x] 9. Change DuelField generic outside-click: when confirm visible, never dispatch cancel/pass from outside. Keep interactions inside all windows in `INTERACTIVE_SELECTOR`. — criterion: DuelField tests `outside click never passes a chain while the confirm window is up`, `Escape never answers the live decision in the confirm window` and `an outside press closes the list only and answers nothing` green; `INTERACTIVE_SELECTOR` covers `.floating-field-window`.
+- [x] 10. If `.duel-field` scrolls after T9, move stage into `.duel-field-scroll-region { overflow:auto; min-width:0; min-height:0 }`, root `overflow:hidden`; keep window roots/feedback outside scroll child. Update T9 e2e selector to pan child. — criterion: `tests/unit/global-styles.test.ts` proves root `overflow: hidden` + child `overflow: auto`, and the chromium e2e viewport/pan specs pass against the scroll child.
+- [x] 11. Thread four props/callbacks through ErrorBoundary and App; App reads/writes this ticket's persisted store. — criterion: `npm run typecheck` clean with the four props forwarded in `DuelFieldErrorBoundary.svelte` and App wiring `$persistedUi.windows.*` to `persistedUi.setWindowPosition`.
+- [x] 12. Run integration/e2e; verify positions field-local across page reload and worker rematch. — criterion: full chromium e2e green including a new window spec that drags both windows to the edges, reloads and re-measures.
+- [x] 13. Create ADR-017 with dismissal matrix and coordinate contract; reference ADR-007/009/010. — criterion: `docs/ADR/017_ADR_floating_field_windows_and_dismissal.md` states the shipped dismissal matrix, coordinate contract and the scroll-region outcome.
 
 ## Outputs
 
@@ -177,12 +192,12 @@ E2E:
 
 ## Validation
 
-- [ ] `npm run test:unit -- floating-window-position persisted-ui-store` passes
-- [ ] `npm run test:component -- FloatingFieldWindow ZoneListDialog DuelField` passes
-- [ ] `npm run typecheck`, `npm run lint`, `npm run format:check` pass
-- [ ] `npm run build` succeeds
-- [ ] full chromium e2e passes with pinned command from T5
-- [ ] manual drag/reload/resize for both windows; no out-of-bounds rect
-- [ ] outside/Escape dismissal matrix exact; no live decision lost
-- [ ] app functional — narrow board pan never moves windows offscreen
-- [ ] commit msg draft: `feat(field): persist constrained floating windows`
+- [x] `npx vitest run tests/unit/floating-window-position.test.ts tests/unit/persisted-ui-store.test.ts` passes (15 tests; the `--` filter form is not wired in this repo's script)
+- [x] `npm run test:component` passes (17 files / 267 tests, including FloatingFieldWindow, ZoneListDialog and DuelField)
+- [x] `npm run typecheck`, `npm run lint`, `npm run format:check` pass (inside `npm run check:headless`, exit 0, svelte-check 0 errors/0 warnings)
+- [x] `npm run build` succeeds (`build:verify` status ok, snapshot `a562f5ad…`)
+- [x] full chromium e2e passes with pinned command from T5 (`PLAYWRIGHT_BROWSERS_PATH=… npx playwright test --project=chromium` → 27 passed in 2.8m)
+- [x] manual drag/reload/resize for both windows; no out-of-bounds rect — measured by the e2e spec `floating field windows stay inside the field, persist and never lose a decision` (four-corner drags, reload restore, 900×600 reclamp, all rects contained ±1)
+- [x] outside/Escape dismissal matrix exact; no live decision lost — e2e asserts the respond-command count is unchanged across outside press + Escape, plus DuelField component tests for chain pass/cancel suppression
+- [x] app functional — narrow board pan never moves windows offscreen (e2e scrolls `.duel-field-scroll-region` to both extremes; confirm window rect moves ≤1px)
+- [x] commit msg draft: `feat(field): persist constrained floating windows`

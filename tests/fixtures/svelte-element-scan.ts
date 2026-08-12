@@ -7,6 +7,10 @@ export interface SvelteElementTag {
   readonly index: number;
 }
 
+/* `<slot>` is a compile-time placeholder for whatever the parent passes, not
+   a rendered element, so it has no DOM node to carry a `data-cy` (ADR-002). */
+const IGNORED_PLACEHOLDER_TAGS = new Set(["slot"]);
+
 const IGNORED_SVELTE_SPECIALS = new Set([
   "svelte:window",
   "svelte:body",
@@ -93,7 +97,11 @@ export function scanSvelteElements(
         tagName !== "svelte:element" &&
         IGNORED_SVELTE_SPECIALS.has(tagName);
 
-      if (!isComponent && !isIgnoredSpecial) {
+      if (
+        !isComponent &&
+        !isIgnoredSpecial &&
+        !IGNORED_PLACEHOLDER_TAGS.has(tagName)
+      ) {
         tags.push({ tag: tagName, attributes, index: tagStart });
       }
 

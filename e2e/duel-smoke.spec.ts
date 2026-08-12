@@ -918,12 +918,16 @@ test("mobile layout preserves controls and honors reduced motion", async ({
   });
   const fieldRegion = page.getByRole("region", { name: "Duel field" });
   await expect(fieldRegion).toBeVisible();
-  const dimensions = await fieldRegion.evaluate((element) => ({
-    clientWidth: element.clientWidth,
-    scrollWidth: element.scrollWidth,
-    bodyWidth: document.body.scrollWidth,
-    viewportWidth: window.innerWidth,
-  }));
+  // T14: the field root is the still window boundary; its scroll child owns
+  // the board pan.
+  const dimensions = await fieldRegion
+    .locator('[data-cy="duel-field-scroll-region"]')
+    .evaluate((element) => ({
+      clientWidth: element.clientWidth,
+      scrollWidth: element.scrollWidth,
+      bodyWidth: document.body.scrollWidth,
+      viewportWidth: window.innerWidth,
+    }));
   expect(dimensions.scrollWidth).toBeGreaterThan(dimensions.clientWidth);
   expect(dimensions.bodyWidth).toBeLessThanOrEqual(dimensions.viewportWidth);
   const firstDecision = page.locator("[data-prompt-kind] button").first();
@@ -1129,6 +1133,246 @@ test("short-height duel keeps the compact preview thumbnail, name and scrolling 
   if (textMetrics.scrollHeight > textMetrics.clientHeight)
     expect(textMetrics.scrollHeight).toBeGreaterThan(textMetrics.clientHeight);
 });
+
+/* T14/ADR-017: both field windows are dragged by their handles, clamped to
+   the visible duel field, remembered across a reload, and — for the confirm
+   window — never dismissed or answered by an outside press or Escape. */
+test("floating field windows stay inside the field, persist and never lose a decision", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("./");
+  await startPresetDuel(page);
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+  const field = page.locator('[data-cy="duel-field"]');
+  await expect(field).toBeVisible();
+  // Auto-answered prompts would replace the live decision (and close the zone
+  // list with it) mid-measurement, exactly as they race the keyboard walker.
+  await disableAutoResolveTrivialPrompts(page);
+  await disableAutoPlaceCards(page);
+  const confirmWindow = page.locator(
+    '[data-cy="floating-field-window-confirm"]',
+  );
+  const listWindow = page.locator('[data-cy="floating-field-window-zoneList"]');
+  await waitForConfirmWindow(page);
+  await openZoneList(page);
+
+  const responsesBefore = await countResponses(page);
+  const corners = [
+    { x: -600, y: -600 },
+    { x: 4000, y: -600 },
+    { x: 4000, y: 4000 },
+    { x: -600, y: 4000 },
+  ] as const;
+  /* One window at a time: a press both raises and drags, so a window buried
+     under another cannot be grabbed — exactly what a player sees. */
+  for (const corner of corners) {
+    await dragFieldWindow(page, "zoneList", corner);
+    await assertWindowInsideField(page, "zoneList", "zone list drag");
+  }
+  const draggedList = await windowOffset(page, "zoneList");
+  await page.keyboard.press("Escape");
+  await expect(listWindow).toHaveCount(0);
+  for (const corner of corners) {
+    await dragFieldWindow(page, "confirm", corner);
+    await assertWindowInsideField(page, "confirm", "confirm drag");
+  }
+  const draggedConfirm = await windowOffset(page, "confirm");
+  expect(await countResponses(page)).toBe(responsesBefore);
+
+  expect(
+    await page.evaluate(() =>
+      JSON.parse(localStorage.getItem("ygo.ui.v1") ?? "null"),
+    ),
+  ).toMatchObject({
+    version: 1,
+    windows: { zoneList: draggedList, confirm: draggedConfirm },
+  });
+
+  // Panning the board must not move a window: the pan lives on the field's
+  // scroll child, the windows on the still field root.
+  const before = await windowRect(page, "confirm");
+  await field
+    .locator('[data-cy="duel-field-scroll-region"]')
+    .evaluate((element) => {
+      element.scrollLeft = element.scrollWidth;
+      element.scrollTop = element.scrollHeight;
+    });
+  const after = await windowRect(page, "confirm");
+  expect(Math.abs(after.left - before.left)).toBeLessThanOrEqual(1);
+  expect(Math.abs(after.top - before.top)).toBeLessThanOrEqual(1);
+
+  // A vertical wheel over the horizontal entry run travels it sideways.
+  await openZoneList(page);
+  const entries = page.locator('[data-cy="zone-list-dialog-entries"]');
+  const entriesBox = await entries.boundingBox();
+  if (entriesBox === null) throw new Error("Zone list entries have no box");
+  await page.mouse.move(
+    entriesBox.x + entriesBox.width / 2,
+    entriesBox.y + entriesBox.height / 2,
+  );
+  await page.mouse.wheel(0, 300);
+  await expect
+    .poll(async () => entries.evaluate((element) => element.scrollLeft))
+    .toBeGreaterThan(0);
+
+  // Dismissal matrix: an outside press closes the list and leaves the live
+  // decision untouched; Escape does the same.
+  await page
+    .locator('[data-cy="duel-field-board-surface"]')
+    .click({ position: { x: 5, y: 5 }, force: true });
+  await expect(listWindow).toHaveCount(0);
+  await expect(confirmWindow).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(confirmWindow).toBeVisible();
+  expect(await countResponses(page)).toBe(responsesBefore);
+
+  // A narrower viewport reclamps both windows back inside the field.
+  await openZoneList(page);
+  await page.setViewportSize({ width: 900, height: 600 });
+  await assertWindowInsideField(page, "zoneList", "narrow reclamp");
+  await assertWindowInsideField(page, "confirm", "narrow reclamp");
+
+  // Positions survive a reload of the whole app.
+  await page.setViewportSize({ width: 1280, height: 800 });
+  const restored = (await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("ygo.ui.v1") ?? "null"),
+  )) as { readonly windows: { zoneList: unknown; confirm: unknown } };
+  await page.reload();
+  await startPresetDuel(page);
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+  await disableAutoResolveTrivialPrompts(page);
+  await disableAutoPlaceCards(page);
+  await waitForConfirmWindow(page);
+  await openZoneList(page);
+  expect(await windowOffset(page, "confirm")).toEqual(restored.windows.confirm);
+  expect(await windowOffset(page, "zoneList")).toEqual(
+    restored.windows.zoneList,
+  );
+});
+
+/* The opening Main Phase 1 offers no Battle Phase (no battle on the first
+   turn), so its only global choice is End turn and no confirm window renders.
+   Ending turns walks the duel to the first decision that does render one. */
+async function waitForConfirmWindow(page: Page): Promise<void> {
+  const confirmWindow = page.locator(
+    '[data-cy="floating-field-window-confirm"]',
+  );
+  const endTurn = page.locator('[data-cy="field-end-turn-button"]');
+  for (let step = 0; step < 12; step += 1) {
+    if ((await confirmWindow.count()) > 0) break;
+    if ((await endTurn.count()) > 0 && (await endTurn.isEnabled()))
+      await endTurn.click();
+    await page.waitForTimeout(750);
+  }
+  await expect(confirmWindow).toBeVisible({ timeout: 60_000 });
+}
+
+async function openZoneList(page: Page): Promise<void> {
+  const listWindow = page.locator('[data-cy="floating-field-window-zoneList"]');
+  await expect
+    .poll(
+      async () => {
+        if ((await listWindow.count()) > 0) return true;
+        await page.locator('[data-cy="field-stack-p0:deck"]').click();
+        return (await listWindow.count()) > 0;
+      },
+      { timeout: 30_000 },
+    )
+    .toBe(true);
+  await expect(listWindow).toBeVisible();
+}
+
+async function countResponses(page: Page): Promise<number> {
+  return (await readCapture(page)).commands.filter(
+    (command) => command.type === "respond",
+  ).length;
+}
+
+async function windowOffset(
+  page: Page,
+  windowId: "zoneList" | "confirm",
+): Promise<{ readonly x: number; readonly y: number }> {
+  return page
+    .locator(`[data-cy="floating-field-window-${windowId}"]`)
+    .evaluate((element) => ({
+      x: Number.parseFloat(
+        (element as HTMLElement).style.getPropertyValue("--window-x"),
+      ),
+      y: Number.parseFloat(
+        (element as HTMLElement).style.getPropertyValue("--window-y"),
+      ),
+    }));
+}
+
+async function windowRect(
+  page: Page,
+  windowId: "zoneList" | "confirm",
+): Promise<{ readonly left: number; readonly top: number }> {
+  return page
+    .locator(`[data-cy="floating-field-window-${windowId}"]`)
+    .evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      return { left: box.left, top: box.top };
+    });
+}
+
+async function dragFieldWindow(
+  page: Page,
+  windowId: "zoneList" | "confirm",
+  to: { readonly x: number; readonly y: number },
+): Promise<void> {
+  const handle = page.locator(
+    `[data-cy="floating-field-window-${windowId}-handle"]`,
+  );
+  const box = await handle.boundingBox();
+  if (box === null) throw new Error(`${windowId} handle has no box`);
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(to.x, to.y, { steps: 8 });
+  await page.mouse.up();
+}
+
+/* The reclamp after a resize runs from a ResizeObserver callback, so
+   containment is polled rather than sampled once. */
+async function assertWindowInsideField(
+  page: Page,
+  windowId: "zoneList" | "confirm",
+  label: string,
+): Promise<void> {
+  await expect
+    .poll(
+      async () =>
+        page.locator('[data-cy="duel-field"]').evaluate((element, id) => {
+          const windowElement = element.querySelector(
+            `[data-cy="floating-field-window-${id}"]`,
+          );
+          if (windowElement === null) return "missing field window";
+          const field = element.getBoundingClientRect();
+          const box = windowElement.getBoundingClientRect();
+          const outside = [
+            box.left < field.left - 1 ? `left ${box.left} < ${field.left}` : "",
+            box.top < field.top - 1 ? `top ${box.top} < ${field.top}` : "",
+            box.right > field.right + 1
+              ? `right ${box.right} > ${field.right}`
+              : "",
+            box.bottom > field.bottom + 1
+              ? `bottom ${box.bottom} > ${field.bottom}`
+              : "",
+          ].filter((entry) => entry !== "");
+          return outside.length === 0 ? "inside" : outside.join(", ");
+        }, windowId),
+      {
+        timeout: 10_000,
+        message: `${label} ${windowId} inside the duel field`,
+      },
+    )
+    .toBe("inside");
+}
 
 test("zone-list preview image never exceeds half the viewport height", async ({
   page,
@@ -1853,14 +2097,24 @@ test("responsive field compositions contain controls across supported viewports"
 
     const field = page.getByRole("region", { name: "Duel field" });
     await expect(field).toBeVisible();
-    const fieldMetrics = await field.evaluate((element) => ({
-      clientWidth: element.clientWidth,
-      scrollWidth: element.scrollWidth,
-      clientHeight: element.clientHeight,
-      scrollHeight: element.scrollHeight,
-      overflowX: getComputedStyle(element).overflowX,
-      overflowY: getComputedStyle(element).overflowY,
-    }));
+    // T14: overflow ownership moved from the field root onto this child so a
+    // board pan can never carry a floating window offscreen (ADR-017).
+    const fieldMetrics = await field
+      .locator('[data-cy="duel-field-scroll-region"]')
+      .evaluate((element) => ({
+        clientWidth: element.clientWidth,
+        scrollWidth: element.scrollWidth,
+        clientHeight: element.clientHeight,
+        scrollHeight: element.scrollHeight,
+        overflowX: getComputedStyle(element).overflowX,
+        overflowY: getComputedStyle(element).overflowY,
+        rootOverflowX: getComputedStyle(element.parentElement as HTMLElement)
+          .overflowX,
+        rootOverflowY: getComputedStyle(element.parentElement as HTMLElement)
+          .overflowY,
+      }));
+    expect(fieldMetrics.rootOverflowX).toBe("hidden");
+    expect(fieldMetrics.rootOverflowY).toBe("hidden");
     expect(fieldMetrics.scrollWidth).toBeGreaterThanOrEqual(
       fieldMetrics.clientWidth,
     );
@@ -2513,7 +2767,7 @@ test("a full preset duel can be completed using keyboard controls only with one 
   // focus-visibility assertion on rotated card art has something to focus.
   const setup = { needsDefense: true };
   let fieldResponses = 0;
-  let fieldActionBarGeometryChecks = 0;
+  let confirmWindowGeometryChecks = 0;
   let defenseFocusVisible = false;
   for (let step = 0; step < 200; step += 1) {
     const result = page.locator(".result-panel");
@@ -2550,13 +2804,13 @@ test("a full preset duel can be completed using keyboard controls only with one 
         command.type === "respond" && command.promptId === prompt.prompt.id,
     ).length;
     const actionBar = field.locator('[data-cy="field-action-bar"]');
-    if (fieldActionBarGeometryChecks === 0 && (await actionBar.count()) > 0) {
-      await assertFieldActionBarGeometry(
+    if (confirmWindowGeometryChecks === 0 && (await actionBar.count()) > 0) {
+      await assertConfirmWindowGeometry(
         page,
         field,
         `full-duel ${kind} prompt`,
       );
-      fieldActionBarGeometryChecks += 1;
+      confirmWindowGeometryChecks += 1;
     }
 
     if (
@@ -2601,7 +2855,7 @@ test("a full preset duel can be completed using keyboard controls only with one 
   expect(answeredPromptIds.size).toBeGreaterThan(0);
   expect(fieldResponses).toBeGreaterThan(0);
   // Prevent `count() > 0` from silently deleting the geometry gate.
-  expect(fieldActionBarGeometryChecks).toBeGreaterThan(0);
+  expect(confirmWindowGeometryChecks).toBeGreaterThan(0);
   expect(defenseFocusVisible).toBe(true);
   for (const promptId of answeredPromptIds) {
     expect(
@@ -2649,7 +2903,7 @@ test("a full preset duel can be completed using keyboard controls only with one 
         result: await result.getByRole("heading").textContent(),
         responses: answeredPromptIds.size,
         fieldResponses,
-        fieldActionBarGeometryChecks,
+        confirmWindowGeometryChecks,
         duplicateResponses: 0,
         defenseFocusVisible,
       },
@@ -3281,28 +3535,26 @@ async function assertNoPageWideHorizontalOverflow(
   ).toBeLessThanOrEqual(metrics.viewportWidth + 1);
 }
 
-async function assertFieldActionBarGeometry(
+/* T14/ADR-017: the live decision rides in the confirm window, which is
+   clamped inside the visible duel field rather than pinned under the board. */
+async function assertConfirmWindowGeometry(
   page: Page,
   field: Locator,
   label: string,
 ): Promise<void> {
-  const bar = field.locator('[data-cy="field-action-bar"]');
-  await expect(bar).toBeVisible();
-  await bar.scrollIntoViewIfNeeded();
-  await assertRectInsideViewport(page, bar, `${label} field action bar`);
-  const board = field.getByRole("group", { name: "Standard duel board" });
-  const barRect = await bar.evaluate((element) => {
-    const box = element.getBoundingClientRect();
-    return { top: box.top, bottom: box.bottom };
-  });
-  const boardRect = await board.evaluate((element) => {
-    const box = element.getBoundingClientRect();
-    return { top: box.top, bottom: box.bottom };
-  });
-  expect(
-    barRect.top,
-    `${label} field action bar (top ${barRect.top}) must clear the duel board (bottom ${boardRect.bottom})`,
-  ).toBeGreaterThanOrEqual(boardRect.bottom - 1);
+  const confirmWindow = field.locator(
+    '[data-cy="floating-field-window-confirm"]',
+  );
+  await expect(confirmWindow).toBeVisible();
+  await expect(
+    confirmWindow.locator('[data-cy="field-action-bar"]'),
+  ).toBeVisible();
+  await assertRectInsideViewport(
+    page,
+    confirmWindow,
+    `${label} confirm window`,
+  );
+  await assertWindowInsideField(page, "confirm", label);
 }
 
 async function assertRectInsideViewport(

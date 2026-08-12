@@ -30,7 +30,18 @@ describe("global styles", () => {
   it("board keeps a min-width that holds field targets at 44px", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     expect(ruleBlock(css, ".duel-field-board {")).toContain("min-width: 52rem");
-    expect(duelFieldBlock(css)).toContain("overflow-x: auto");
+    // T14: the pan moved off the field root onto its scroll child so the root
+    // can stay a still boundary for the floating windows (ADR-017).
+    expect(ruleBlock(css, ".duel-field-scroll-region {")).toContain(
+      "overflow: auto",
+    );
+  });
+
+  it("the duel field root never scrolls, so windows cannot be panned away", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const block = duelFieldBlock(css);
+    expect(block).toContain("overflow: hidden");
+    expect(block).toContain("position: relative");
   });
 
   it("the actionable halo is green, not orange", () => {

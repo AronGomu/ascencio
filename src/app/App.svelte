@@ -57,12 +57,10 @@
   import { previewStatusFor } from "./presentation/preview-status.ts";
   import { hasDuelPriority } from "./prompts/duel-priority.ts";
   import { promptSurface } from "./prompts/prompt-surface.ts";
-  import { DECK_CATALOG } from "../duel/presets/deck-catalog.ts";
+  import { DECK_CATALOG, type DeckId } from "../duel/presets/deck-catalog.ts";
   import { createDuelStore } from "./stores/duel-store.ts";
-  import {
-    readPersistedUiState,
-    writePersistedUiState,
-  } from "./stores/persisted-ui-state.ts";
+  import type { PersistedWindowPosition } from "./stores/persisted-ui-state.ts";
+  import { createPersistedUiStore } from "./stores/persisted-ui-store.ts";
   import {
     createUiSettingsStore,
     type UiSettingsState,
@@ -86,7 +84,7 @@
   const client = new DuelWorkerClient();
   const duel = createDuelStore(client);
   const uiSettings = createUiSettingsStore();
-  let persistedUi = readPersistedUiState();
+  const persistedUi = createPersistedUiStore();
   let pickerOpen = true;
   let menuOpen = false;
   let settingsOpen = false;
@@ -613,20 +611,21 @@
       diagnosticMessage = "Diagnostics are unavailable for this session.";
   }
 
-  function selectDecks(
-    player: typeof persistedUi.decks.player,
-    opponent: typeof persistedUi.decks.opponent,
-  ): void {
-    persistedUi = {
-      ...persistedUi,
-      decks: { player, opponent },
-    };
-    writePersistedUiState(persistedUi);
+  function selectDecks(player: DeckId, opponent: DeckId): void {
+    persistedUi.setDecks(player, opponent);
+  }
+
+  function moveZoneListWindow(position: PersistedWindowPosition): void {
+    persistedUi.setWindowPosition("zoneList", position);
+  }
+
+  function moveConfirmWindow(position: PersistedWindowPosition): void {
+    persistedUi.setWindowPosition("confirm", position);
   }
 
   function startSelectedDuel(): void {
     pickerOpen = false;
-    duel.start(persistedUi.decks.player, persistedUi.decks.opponent);
+    duel.start($persistedUi.decks.player, $persistedUi.decks.opponent);
   }
 
   async function changeDecks(): Promise<void> {
@@ -894,8 +893,8 @@
   {#if pickerOpen && $duel.status === "idle" && $duel.coreVersion !== null && !$duel.snapshot}
     <DeckPicker
       decks={DECK_CATALOG}
-      playerDeckId={persistedUi.decks.player}
-      opponentDeckId={persistedUi.decks.opponent}
+      playerDeckId={$persistedUi.decks.player}
+      opponentDeckId={$persistedUi.decks.opponent}
       onselect={selectDecks}
       onstart={startSelectedDuel}
     />
@@ -950,6 +949,10 @@
             {zoneLists}
             onzonelistpreview={previewZoneListEntry}
             phase={$duel.snapshot?.phase ?? "unknown"}
+            zoneListWindowPosition={$persistedUi.windows.zoneList}
+            confirmWindowPosition={$persistedUi.windows.confirm}
+            onzoneListWindowPositionChange={moveZoneListWindow}
+            onconfirmWindowPositionChange={moveConfirmWindow}
           />
         {/key}
       {:else if $duel.snapshot}

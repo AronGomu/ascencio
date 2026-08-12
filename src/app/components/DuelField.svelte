@@ -37,6 +37,8 @@
     type DomFeedbackState,
   } from "../presentation/dom-feedback-controller.ts";
   import { presentationCommandForDomEvent } from "../presentation/presentation-command.ts";
+  import type { FieldWindowId } from "../presentation/floating-window-position.ts";
+  import type { PersistedWindowPosition } from "../stores/persisted-ui-state.ts";
   import {
     dragFrameForPointer,
     dragGhostSettled,
@@ -48,6 +50,7 @@
   } from "../presentation/drag-ghost-physics.ts";
   import DragGhost from "./duel-field/DragGhost.svelte";
   import FieldActionBar from "./duel-field/FieldActionBar.svelte";
+  import FloatingFieldWindow from "./duel-field/FloatingFieldWindow.svelte";
   import FieldBoard from "./duel-field/FieldBoard.svelte";
   import FieldLines from "./duel-field/FieldLines.svelte";
   import PhaseStrip from "./duel-field/PhaseStrip.svelte";
@@ -92,8 +95,23 @@
   export let onzonelistpreview: (entry: ZoneListEntry) => void = () =>
     undefined;
   export let phase: DuelPhase = "unknown";
+  export let zoneListWindowPosition: PersistedWindowPosition | null = null;
+  export let confirmWindowPosition: PersistedWindowPosition | null = null;
+  export let onzoneListWindowPositionChange: (
+    position: PersistedWindowPosition,
+  ) => void = () => undefined;
+  export let onconfirmWindowPositionChange: (
+    position: PersistedWindowPosition,
+  ) => void = () => undefined;
 
   let openStackId: PhysicalZoneId | null = null;
+  /* Ephemeral, never persisted (ADR-017): the last window the player touched
+     is the one that rises. */
+  let activeWindowId: FieldWindowId | null = null;
+  /* Single-shot marker: the outside pointerdown that closed a list happened on
+     the very pile control whose click is about to toggle it, so that click
+     must leave the list closed instead of reopening it. */
+  let outsideDismissedStackId: PhysicalZoneId | null = null;
 
   if (injectFailure) throw new Error("Injected duel field component failure");
 
@@ -108,7 +126,6 @@
   let lastPresentationSequence = 0;
   let appliedReducedMotion: boolean | null = null;
   let feedbackSyncSequence = 0;
-  let actionBarHeight = 0;
   let dragCard: BoardCardView | null = null;
   let dropCandidates: ReadonlySet<PhysicalZoneId> = EMPTY_ZONE_IDS;
   let lastPromptKey: string | null = null;
@@ -340,7 +357,7 @@
   }
 
   const INTERACTIVE_SELECTOR =
-    "[data-field-target], .card-action-chips, .field-action-bar, .field-phase-strip, .field-end-turn, .zone-list-dialog";
+    "[data-field-target], .card-action-chips, .field-action-bar, .field-phase-strip, .field-end-turn, .floating-field-window";
 
   function chainPassChoice(): InteractionChoice | null {
     if (spec === null || spec.promptKind !== "chain") return null;
@@ -351,6 +368,11 @@
 
   function dismissOnOutsideClick(event: MouseEvent): void {
     if (spec === null || pending) return;
+    /* ADR-017: while the confirm window is up, a live decision is on screen.
+       An incidental click anywhere on the field must never answer it — not
+       with a cancel, not with a chain pass. The window's own Cancel/Pass
+       controls stay the only way out. */
+    if (actionBarVisible) return;
     const pass = chainPassChoice();
     if (pass !== null) {
       const origin = event.target;
@@ -588,11 +610,40 @@
     if (key !== lastPromptKey) {
       lastPromptKey = key;
       openStackId = null;
+      outsideDismissedStackId = null;
+      activeWindowId = null;
     }
   }
 
   function activateStack(stack: BoardStackView): void {
+    if (outsideDismissedStackId === stack.id) {
+      outsideDismissedStackId = null;
+      return;
+    }
+    outsideDismissedStackId = null;
     openStackId = openStackId === stack.id ? null : stack.id;
+    if (openStackId !== null) activateWindow("zoneList");
+  }
+
+  function activateWindow(id: FieldWindowId): void {
+    activeWindowId = id;
+  }
+
+  function closeZoneList(): void {
+    openStackId = null;
+    if (activeWindowId === "zoneList") activeWindowId = null;
+  }
+
+  function dismissZoneList(event?: Event): void {
+    const stackId = openStackId;
+    const origin = event?.target;
+    outsideDismissedStackId =
+      stackId !== null &&
+      origin instanceof Element &&
+      origin.closest(`[data-cy="field-stack-${stackId}"]`) !== null
+        ? stackId
+        : null;
+    closeZoneList();
   }
 
   function targetSelections(
@@ -622,62 +673,46 @@
   data-prompt-kind={prompt === null ? undefined : prompt.kind}
   onclick={dismissOnOutsideClick}
 >
-  <!-- The action bar's reserved bottom gutter and bottom-pinned position
-       live on the stage (never externally height-clipped: its box is always
-       the board's own natural aspect-ratio-driven size), not on `.duel-field`
-       itself, which a constrained (`.is-duel-viewport`) narrow-mode row can
-       shrink below the stage's natural height and scroll internally (T9). -->
-  <div
-    class="duel-field-stage"
-    data-cy="duel-field-stage"
-    data-field-action-bar={actionBarVisible ? "true" : undefined}
-    style:--field-action-bar-height={actionBarVisible
-      ? `${actionBarHeight}px`
-      : undefined}
-  >
-    <FieldBoard
-      {board}
-      {imageUrls}
-      {imageLibrary}
-      cardBackUrl={resolvedCardBackUrl}
-      placeholderUrl={resolvedPlaceholderUrl}
-      {spec}
-      {selectedTargets}
-      disabled={pending}
-      pinnedTarget={session.menuTarget}
-      {dropCandidates}
-      oncardactivate={activateCard}
-      onzoneactivate={activateZone}
-      oncardchoose={(choice) => {
-        dispatch({ type: "chooseChoice", choiceId: choice.id });
-      }}
-      oncarddismiss={() => dispatch({ type: "closeMenu" })}
-      oncarddragstart={startCardDrag}
-      oncarddragmove={moveCardDrag}
-      oncarddragend={endCardDrag}
-      oncardpreview={onpreview}
-      {onstackpreview}
-      onstackactivate={activateStack}
-    />
-    <PhaseStrip
-      {phase}
-      {spec}
-      disabled={pending}
-      {extraMonsterZones}
-      {oninteraction}
-    />
-    {#if actionBarVisible && prompt && spec}
-      <FieldActionBar
-        {prompt}
+  <!-- The board pans inside its own scroll child so `.duel-field` itself
+       stays a still, non-scrolling boundary for the floating windows: a
+       horizontal board pan must never carry a live decision offscreen
+       (ADR-017). The stage keeps its natural (board aspect-ratio-driven)
+       size inside it, which is the coordinate system PhaseStrip's
+       percentages are calibrated against. -->
+  <div class="duel-field-scroll-region" data-cy="duel-field-scroll-region">
+    <div class="duel-field-stage" data-cy="duel-field-stage">
+      <FieldBoard
+        {board}
+        {imageUrls}
+        {imageLibrary}
+        cardBackUrl={resolvedCardBackUrl}
+        placeholderUrl={resolvedPlaceholderUrl}
         {spec}
-        {session}
+        {selectedTargets}
         disabled={pending}
-        confirmValid={validation.valid}
-        validationMessage={validation.valid ? "" : validation.message}
-        bind:clientHeight={actionBarHeight}
+        pinnedTarget={session.menuTarget}
+        {dropCandidates}
+        oncardactivate={activateCard}
+        onzoneactivate={activateZone}
+        oncardchoose={(choice) => {
+          dispatch({ type: "chooseChoice", choiceId: choice.id });
+        }}
+        oncarddismiss={() => dispatch({ type: "closeMenu" })}
+        oncarddragstart={startCardDrag}
+        oncarddragmove={moveCardDrag}
+        oncarddragend={endCardDrag}
+        oncardpreview={onpreview}
+        {onstackpreview}
+        onstackactivate={activateStack}
+      />
+      <PhaseStrip
+        {phase}
+        {spec}
+        disabled={pending}
+        {extraMonsterZones}
         {oninteraction}
       />
-    {/if}
+    </div>
   </div>
   {#if ghostOrigin !== null && ghostFrame !== null}
     <DragGhost
@@ -696,15 +731,41 @@
       cardBackUrl={resolvedCardBackUrl}
       placeholderUrl={resolvedPlaceholderUrl}
       disabled={pending}
+      boundaryElement={fieldRoot}
+      windowPosition={zoneListWindowPosition}
+      active={activeWindowId === "zoneList"}
+      onactivate={activateWindow}
+      onwindowpositionchange={onzoneListWindowPositionChange}
       onchoose={(choice) => {
         dispatch({ type: "chooseChoice", choiceId: choice.id });
-        openStackId = null;
+        closeZoneList();
       }}
       onpreview={(entry) => onzonelistpreview(entry)}
-      onclose={() => {
-        openStackId = null;
-      }}
+      onclose={dismissZoneList}
     />
+  {/if}
+  {#if actionBarVisible && prompt && spec}
+    <FloatingFieldWindow
+      windowId="confirm"
+      ariaLabel="Field decision window"
+      boundaryElement={fieldRoot}
+      position={confirmWindowPosition}
+      active={activeWindowId === "confirm"}
+      disabled={pending}
+      onactivate={activateWindow}
+      onpositionchange={onconfirmWindowPositionChange}
+    >
+      <span slot="handle" data-cy="field-confirm-window-title">Decision</span>
+      <FieldActionBar
+        {prompt}
+        {spec}
+        {session}
+        disabled={pending}
+        confirmValid={validation.valid}
+        validationMessage={validation.valid ? "" : validation.message}
+        {oninteraction}
+      />
+    </FloatingFieldWindow>
   {/if}
   {#if feedbackState.line}
     <FieldLines line={feedbackState.line} />

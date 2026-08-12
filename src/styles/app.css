@@ -29,6 +29,11 @@
   --duel-field-layer-label: 40;
   --duel-field-layer-control: 50;
   --duel-field-layer-menu: 100;
+  /* Floating field windows sit above menus and below the drag ghost, which
+     is meant to fly over them (T13). The raised layer is ephemeral: the last
+     window the player pressed takes it (ADR-017). */
+  --duel-field-layer-window: 110;
+  --duel-field-layer-window-active: 120;
   --duel-field-layer-drag-ghost: 150;
 }
 
@@ -904,52 +909,34 @@ li + li {
 .duel-field {
   container: duel-field / inline-size;
   position: relative;
+  /* One row, so the scroll child claims the field's whole inner height while
+     the field's own box never scrolls: T14 makes it the still boundary every
+     floating window is measured and clamped inside (ADR-017). */
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
   min-width: 0;
   min-height: 0;
   max-width: 100%;
   padding: 1rem;
-  /* Horizontal only here: the board keeps a min-width so field targets stay
-     >=44px, so wide/desktop viewports must be able to pan. The narrow
-     (<=79rem) rule below additionally owns y overflow, because a
-     constrained (`.is-duel-viewport`) single-column row can be shorter than
-     the board's aspect-ratio-driven height there — never the page. */
-  overflow-x: auto;
-  scroll-padding: clamp(0.75rem, 4vw, 2rem);
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 0.9rem;
   background: linear-gradient(180deg, #0b1728, #08111f);
   box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.18);
 }
 
-/* Below 79rem the single-column row can be shorter than the board's
-   aspect-ratio-driven height, so the field — never the page — owns any
-   leftover y overflow here too. */
-@media (max-width: 79rem) {
-  .duel-field {
-    overflow: auto;
-  }
-}
-
-/* T9: the gutter reservation and the action bar itself (DuelField.svelte)
-   both moved from `.duel-field` onto `.duel-field-stage`, as a `margin`, not
-   `padding` — padding here would grow the stage's own padding box, which is
-   the percentage-position coordinate system PhaseStrip is calibrated
-   against, shifting it off the board. A stretched, scrolled `.duel-field`
-   (narrow `.is-duel-viewport` rows) can be shorter than the stage's natural
-   (board aspect-ratio-driven) height; the stage itself never is, so the bar
-   it reserves room for always stays pinned to the board's true bottom edge.
-   The 2.75rem term is the field action bar's own control-height floor (the
-   same 44px minimum target every field control uses), kept as the minimum
-   before the bar's first measurement lands. Round 3 folded the End turn
-   button into the phase strip, so it no longer anchors this gutter at all. */
-.duel-field-stage {
-  margin-bottom: calc(1rem + 2.75rem + 0.75rem);
-}
-
-.duel-field-stage[data-field-action-bar="true"] {
-  margin-bottom: calc(
-    1rem + max(2.75rem, var(--field-action-bar-height, 0px)) + 0.75rem
-  );
+/* The board keeps a min-width so field targets stay >=44px, so narrow
+   viewports must be able to pan it horizontally; below 79rem a constrained
+   (`.is-duel-viewport`) single-column row can also be shorter than the
+   board's aspect-ratio-driven height, so this child owns the y overflow too.
+   Neither axis is ever owned by the page, and — unlike before T14 — neither is
+   owned by `.duel-field` itself, so panning the board cannot carry a floating
+   window offscreen. */
+.duel-field-scroll-region {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  scroll-padding: clamp(0.75rem, 4vw, 2rem);
 }
 
 /* The ticket's board-geometry table gave zone extents as center + full
@@ -1265,27 +1252,85 @@ button.duel-field-zone,
   border-color: var(--accent);
 }
 
-.zone-list-dialog {
+/* T14 (ADR-017): a field window is absolutely positioned in the field root's
+   padding box — the same coordinate system its persisted `{x, y}` lives in —
+   and translated rather than inset, so dragging never triggers layout. Both
+   caps are relative to that same box, so a window can never start out wider
+   or taller than the boundary it is clamped inside. */
+.floating-field-window {
   position: absolute;
-  inset: auto;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  z-index: var(--duel-field-layer-menu);
-  max-width: 80%;
-  max-height: 70%;
-  background: var(--surface-strong);
+  left: 0;
+  top: 0;
+  z-index: var(--duel-field-layer-window);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  max-width: 100%;
+  max-height: 100%;
   border: 1px solid var(--border);
   border-radius: 0.9rem;
+  background: var(--surface-strong);
   box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.45);
-  padding: 0.75rem;
+  transform: translate(var(--window-x, 0px), var(--window-y, 0px));
+}
+
+/* Ephemeral: the last window the player touched sits above the other one,
+   and both stay below the drag ghost. */
+.floating-field-window.is-active {
+  z-index: var(--duel-field-layer-window-active);
+}
+
+.floating-field-window__handle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0.9rem 0.9rem 0 0;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 750;
+  cursor: grab;
+  /* The drag is pointer-captured, so the browser must not claim the gesture
+     for panning first. */
+  touch-action: none;
+  user-select: none;
+}
+
+.floating-field-window.is-dragging .floating-field-window__handle {
+  cursor: grabbing;
+}
+
+.floating-field-window__content {
+  min-width: 0;
+  min-height: 0;
+  padding: 0.6rem;
+  overflow: auto;
+}
+
+.floating-field-window[data-window-id="zoneList"] {
+  max-width: min(80%, 64rem);
+}
+
+.zone-list-dialog {
+  min-width: 0;
 }
 
 .zone-list-dialog__header {
   display: flex;
+  width: 100%;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.5rem;
+}
+
+/* Rightmost control in the handle, kept at the 44px minimum target every
+   other field control uses. */
+.zone-list-dialog__close {
+  min-width: 2.75rem;
+  margin-left: auto;
+  padding: 0.35rem 0.6rem;
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .zone-list-dialog__entries {
@@ -1647,28 +1692,14 @@ button.card-action-chip:hover:not(:disabled) {
   padding: 0.55rem 1rem;
 }
 
+/* T14: the bar is normal flow inside the confirm window (ADR-017), which
+   owns placement, so the bar itself only describes its own content box. */
 .field-action-bar {
-  position: absolute;
-  z-index: var(--duel-field-layer-control);
-  /* T9: the stage has no bottom padding (see `.duel-field-stage` above), so
-     this reaches negative — into the stage's `margin-bottom` gutter — to
-     land 1rem below the board with the same 0.75rem trailing clearance the
-     margin's own base term reserves. This offset is the same at every
-     viewport: only the trailing clearance term (this bar's distance from the
-     gutter's own true bottom) changes narrower below. */
-  bottom: calc(-1rem - max(2.75rem, var(--field-action-bar-height, 0px)));
-  left: 50%;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
-  max-width: min(52rem, calc(100% - 2rem));
-  padding: 0.45rem 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: 0.7rem;
-  background: color-mix(in srgb, var(--surface-strong) 94%, transparent);
-  box-shadow: 0 0.6rem 1.6rem rgb(0 0 0 / 0.4);
-  transform: translateX(-50%);
+  max-width: min(52rem, 100%);
 }
 
 .field-action-bar p {

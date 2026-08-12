@@ -345,7 +345,7 @@ Kept for history. Read the SUPERSEDED banners before running anything here.
 - [ ] Hover/focus a card with a long effect text description at that short window height: confirm you can scroll just the effect-text box (e.g. with the wheel while hovering it) to read the rest, without the page or panel moving.
 - [ ] Open a deck/GY/Extra Deck/Banished pile list (the zone-list dialog): every card image in the list is clearly full-sized but never taller than roughly half the window — no image explodes to fill the whole screen.
 - [ ] With the Duel HUD or workspace panel enabled (Settings), confirm the page goes back to scrolling normally (this is the one case where a page scrollbar is expected) and nothing is trapped off-screen — you can still reach the HUD and workspace content by scrolling.
-- [ ] Play a full duel end-to-end at a normal window size, including dragging a hand card onto a highlighted zone and finishing a turn with the action bar visible: the action bar and End Turn button always sit clear of the board, never overlapping a card or zone, at every window size you tried above.
+- [ ] Play a full duel end-to-end at a normal window size, including dragging a hand card onto a highlighted zone and finishing a turn with the action bar visible: the End Turn button always sits clear of the board, never overlapping a card or zone, at every window size you tried above. (Round 3 T14: the action bar now rides in a draggable "Decision" window that floats over the board on purpose — judge it by whether you can move it clear, not by whether it starts clear.)
 - [ ] Resize the window between wide, narrow, and short repeatedly while a duel is in progress: layout reflows cleanly each time with no leftover scrollbar, no stuck/cut-off content, and no console errors.
 
 ## T10 phase-strip-end-turn-and-role-labels (round 3)
@@ -392,3 +392,20 @@ Kept for history. Read the SUPERSEDED banners before running anything here.
 - [ ] OS/browser "reduce motion" enabled (`prefers-reduced-motion: reduce`): dragging still shows a ghost that follows the cursor, but it never tilts and never lifts/scales up; releasing (valid or invalid) removes the ghost instantly with no springing/settling animation at all.
 - [ ] Open a fresh prompt or otherwise interrupt an in-progress drag (e.g. trigger a chain or another prompt mid-drag if possible): the ghost disappears cleanly rather than freezing on screen or continuing to animate against stale state.
 - [ ] Play a full duel end-to-end using at least one hand-card drag to place a card: the drag/drop still behaves exactly as before this change functionally (one legal placement per drop, no double responses), just with the new visual ghost/tilt/spring polish layered on top.
+
+## T14 floating-window-primitive-and-zone-list-dialog (round 3)
+
+- [ ] `npm run dev`, start a duel and open a Deck/GY/Extra/Banished pile: the list appears as a window with a header showing the pile name, its card count, and a red `×` button at the far right of that header. The `×` closes it.
+- [ ] Drag the list window by its header to each corner and past every edge of the duel field: it follows the pointer smoothly and always stops with its whole box inside the field's dark panel — never half off the edge, never over the header bar or the preview panel.
+- [ ] Start a drag on the header and keep the mouse button held while sweeping far outside the browser window, then come back and release: the window keeps following the pointer the whole time and lands where you release it.
+- [ ] Press the red `×` (or anywhere on the header text) without moving: pressing the `×` closes the list, and pressing the header alone starts a drag rather than closing anything.
+- [ ] Wheel-scroll (normal vertical scroll) with the pointer over the row of list entries: the entries travel sideways. At either end of the row, one more wheel notch does nothing else weird — the page still does not scroll.
+- [ ] With the list open, click anywhere on the empty board: the list closes. Press Escape with the list open: it closes too.
+- [ ] Reach a decision that shows the "Decision" window (e.g. a multi-select effect, a chain response, or a Main Phase with a Battle Phase option): drag it around by its "Decision" header the same way; it also stays fully inside the field.
+- [ ] With the Decision window on screen, click repeatedly on empty board space, on cards, and on the preview panel, and press Escape several times: the Decision window never disappears and the duel never advances by itself. Only its own Confirm/Cancel/Pass buttons answer.
+- [ ] With both windows open at once, press each in turn: the one you pressed comes to the front. Pressing the Decision window also closes the zone list (it counts as clicking outside it), while the Decision window itself stays.
+- [ ] Drag the list and Decision windows to two clearly different places, then reload the page (F5) and start a duel again: each window comes back at the place you left it, independently of the other.
+- [ ] With windows parked near the field edges, resize the browser window much narrower and shorter: both windows slide back inside the field instead of being cut off, and stay usable.
+- [ ] At a narrow window where the board is wider than the field (a horizontal scrollbar appears inside the field): scroll the board sideways and up/down — the two windows stay exactly where they are on screen while the board moves under them.
+- [ ] Check every button in both windows is still comfortably clickable (at least a fingertip — 44px — tall/wide), including the red `×`.
+- [ ] Play a full duel to the result dialog using the Decision window for confirmations and cancels: nothing is answered twice, no decision is lost, and no console errors appear.

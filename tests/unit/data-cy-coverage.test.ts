@@ -51,6 +51,12 @@ describe("scanSvelteElements", () => {
     expect(tags[0]!.attributes).toContain("class");
   });
 
+  it("ignores a slot placeholder, which renders no element of its own", () => {
+    expect(scanSvelteElements('<slot name="handle" /><slot />')).toHaveLength(
+      0,
+    );
+  });
+
   it("survives > inside an expression attribute", () => {
     const tags = scanSvelteElements(
       '<button onclick={() => go()} data-cy="go">x</button>',

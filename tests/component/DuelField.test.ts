@@ -1208,7 +1208,10 @@ describe("DuelField", () => {
     expect(promptSurface(value, spec, false, false)).toBe("dialog");
   });
 
-  it("outside click passes a chain", async () => {
+  /* T14/ADR-017 supersedes round 2's "outside click passes a chain": the Pass
+     now lives in the confirm window, and a live decision must never be
+     answered by an incidental click on the field. */
+  it("outside click never passes a chain while the confirm window is up", async () => {
     const user = userEvent.setup();
     const value = fieldPrompt(
       "chain",
@@ -1216,16 +1219,39 @@ describe("DuelField", () => {
       { cancelable: true },
     );
     const harness = renderInteractive(value);
+    expect(
+      document.querySelector('[data-cy="floating-field-window-confirm"]'),
+    ).not.toBeNull();
     const surface = document.querySelector<HTMLElement>(
       '[data-cy="duel-field-board-surface"]',
     );
     if (surface === null) throw new Error("Missing board surface");
     await user.click(surface);
+    expect(harness.dispatch).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Pass" }));
     expect(harness.dispatch.mock.calls[0]?.[0]).toMatchObject({
       type: "chooseChoice",
       choiceId: "c-pass",
       key: harness.spec.key,
     });
+  });
+
+  it("Escape never answers the live decision in the confirm window", async () => {
+    const user = userEvent.setup();
+    const value = fieldPrompt(
+      "chain",
+      [promptChoice("c-pass", "Pass", { action: "pass" })],
+      { cancelable: true },
+    );
+    const harness = renderInteractive(value);
+
+    await user.keyboard("{Escape}");
+
+    expect(harness.dispatch).not.toHaveBeenCalled();
+    expect(
+      document.querySelector('[data-cy="floating-field-window-confirm"]'),
+    ).not.toBeNull();
   });
 
   it("outside click cannot pass a forced chain, which remains answerable", async () => {
@@ -1321,7 +1347,9 @@ describe("DuelField", () => {
       screen.getByRole("button", { name: /Your Graveyard, 4 cards/ }),
     );
     oninteraction.mockClear();
-    await user.click(screen.getByRole("button", { name: "Close" }));
+    await user.click(
+      screen.getByRole("button", { name: /^Close GY, 4 cards/ }),
+    );
 
     expect(oninteraction).not.toHaveBeenCalled();
   });
@@ -1624,28 +1652,38 @@ describe("DuelField", () => {
     expect(field.querySelector(".selection-dock")).toBeNull();
   });
 
-  it("flags the field so it reserves a gutter while the action bar renders", () => {
+  it("renders the action bar inside the confirm window, outside the board scroll region", () => {
     const value = fieldPrompt("selectCard", [
       mountedChoice("select", "Select monster"),
     ]);
     renderInteractive(value);
 
     const field = screen.getByRole("region", { name: "Duel field" });
+    const confirmWindow = field.querySelector(
+      '[data-cy="floating-field-window-confirm"]',
+    );
+    if (confirmWindow === null) throw new Error("Missing confirm window");
+    // T14: the window layer hangs off the still field root, never off the
+    // scroll region a board pan moves, and the old reserved gutter is gone.
+    expect(
+      confirmWindow.querySelector('[data-cy="field-action-bar"]'),
+    ).not.toBeNull();
+    expect(
+      field
+        .querySelector('[data-cy="duel-field-scroll-region"]')
+        ?.contains(confirmWindow),
+    ).toBe(false);
     const stage = field.querySelector('[data-cy="duel-field-stage"]');
     if (stage === null) throw new Error("Missing duel field stage");
-    // The gutter attribute/height live on the stage (T9): its box is always
-    // the board's own natural size, never externally height-clipped by a
-    // constrained viewport row, so the action bar the gutter reserves room
-    // for always stays pinned to the board's true bottom edge.
-    expect(stage.getAttribute("data-field-action-bar")).toBe("true");
+    expect(stage.hasAttribute("data-field-action-bar")).toBe(false);
     expect(
       (stage as HTMLElement).style.getPropertyValue(
         "--field-action-bar-height",
       ),
-    ).toMatch(/^\d+px$/);
+    ).toBe("");
   });
 
-  it("reserves no gutter when a card action spec renders no action bar", () => {
+  it("mounts no confirm window when a card action spec renders no action bar", () => {
     const value = fieldPrompt("idleCommand", [
       mountedChoice("activate", "Activate effect", { action: "activate" }),
     ]);
@@ -1654,15 +1692,10 @@ describe("DuelField", () => {
     expect(harness.spec.kind).toBe("cardAction");
     expect(harness.spec.globalChoices.size).toBe(0);
     const field = screen.getByRole("region", { name: "Duel field" });
-    const stage = field.querySelector('[data-cy="duel-field-stage"]');
-    if (stage === null) throw new Error("Missing duel field stage");
     expect(field.querySelector('[data-cy="field-action-bar"]')).toBeNull();
-    expect(stage.hasAttribute("data-field-action-bar")).toBe(false);
     expect(
-      (stage as HTMLElement).style.getPropertyValue(
-        "--field-action-bar-height",
-      ),
-    ).toBe("");
+      field.querySelector('[data-cy="floating-field-window-confirm"]'),
+    ).toBeNull();
   });
 
   it("hides the endPhase choice from the action bar", () => {
@@ -2611,6 +2644,270 @@ describe("DuelField", () => {
     });
 
     expect(document.querySelector('[data-cy="zone-list-dialog"]')).toBeNull();
+  });
+
+  /* T14/ADR-017: the zone list and the confirm surface are two independent
+     windows over the still field root. */
+  function renderWindows(
+    overrides: {
+      readonly zoneListWindowPosition?: { x: number; y: number } | null;
+      readonly confirmWindowPosition?: { x: number; y: number } | null;
+    } = {},
+  ) {
+    const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    const value = fieldPrompt(
+      "selectCard",
+      [
+        mountedChoice("graveyard-select", "Select", {
+          card: {
+            instanceId: cardInstanceId("prompt-graveyard-select"),
+            controller: 0,
+            location: "graveyard",
+            sequence: 0,
+            position: "faceUpAttack",
+          },
+        } as Partial<PromptChoice>),
+      ],
+      { cancelable: true },
+    );
+    const spec = mapPromptToInteractionSpec(
+      value,
+      STACK_ART_STATE,
+      stackBoard.value,
+      CONTEXT,
+    );
+    if (spec.kind === "inactive") throw new Error("Expected active field spec");
+    const oninteraction = vi.fn();
+    const onzoneListWindowPositionChange = vi.fn();
+    const onconfirmWindowPositionChange = vi.fn();
+    const rendered = render(DuelField, {
+      board: stackBoard.value,
+      prompt: value,
+      spec,
+      session: createInteractionSession(spec),
+      pending: false,
+      zoneLists: zoneListsForBoard(
+        stackBoard.value,
+        STACK_ART_STATE,
+        BOARD_CARD_TEXTS,
+      ),
+      oninteraction,
+      zoneListWindowPosition: overrides.zoneListWindowPosition ?? null,
+      confirmWindowPosition: overrides.confirmWindowPosition ?? null,
+      onzoneListWindowPositionChange,
+      onconfirmWindowPositionChange,
+    });
+    return {
+      rendered,
+      spec,
+      board: stackBoard.value,
+      prompt: value,
+      oninteraction,
+      onzoneListWindowPositionChange,
+      onconfirmWindowPositionChange,
+    };
+  }
+
+  async function openGraveyardList(): Promise<void> {
+    const stack = document.querySelector<HTMLElement>(
+      '[data-cy="field-stack-p0:graveyard"]',
+    );
+    if (stack === null) throw new Error("Missing graveyard stack");
+    await fireEvent.click(stack);
+  }
+
+  function windowRoot(id: "zoneList" | "confirm"): HTMLElement | null {
+    return document.querySelector<HTMLElement>(
+      `[data-cy="floating-field-window-${id}"]`,
+    );
+  }
+
+  it("renders both windows at their own persisted positions", async () => {
+    renderWindows({
+      zoneListWindowPosition: { x: 12, y: 34 },
+      confirmWindowPosition: { x: 56, y: 78 },
+    });
+    await openGraveyardList();
+
+    const list = windowRoot("zoneList");
+    const confirm = windowRoot("confirm");
+    expect(list?.style.getPropertyValue("--window-x")).toBe("12px");
+    expect(list?.style.getPropertyValue("--window-y")).toBe("34px");
+    expect(confirm?.style.getPropertyValue("--window-x")).toBe("56px");
+    expect(confirm?.style.getPropertyValue("--window-y")).toBe("78px");
+  });
+
+  it("each window reports only its own position", async () => {
+    const harness = renderWindows({
+      zoneListWindowPosition: { x: 10, y: 10 },
+      confirmWindowPosition: { x: 20, y: 20 },
+    });
+    await openGraveyardList();
+
+    const listHandle = document.querySelector<HTMLElement>(
+      '[data-cy="floating-field-window-zoneList-handle"]',
+    );
+    const confirmHandle = document.querySelector<HTMLElement>(
+      '[data-cy="floating-field-window-confirm-handle"]',
+    );
+    if (listHandle === null || confirmHandle === null)
+      throw new Error("Missing window handle");
+
+    await fireEvent.pointerDown(listHandle, {
+      clientX: 40,
+      clientY: 40,
+      pointerId: 1,
+    });
+    await fireEvent.pointerMove(listHandle, {
+      clientX: 60,
+      clientY: 50,
+      pointerId: 1,
+    });
+    await fireEvent.pointerUp(listHandle, {
+      clientX: 60,
+      clientY: 50,
+      pointerId: 1,
+    });
+
+    expect(harness.onzoneListWindowPositionChange).toHaveBeenCalledTimes(1);
+    expect(harness.onzoneListWindowPositionChange).toHaveBeenCalledWith({
+      x: 30,
+      y: 20,
+    });
+    expect(harness.onconfirmWindowPositionChange).not.toHaveBeenCalled();
+    expect(windowRoot("zoneList")?.classList.contains("is-active")).toBe(true);
+    expect(windowRoot("confirm")?.classList.contains("is-active")).toBe(false);
+
+    await fireEvent.pointerDown(confirmHandle, {
+      clientX: 40,
+      clientY: 40,
+      pointerId: 2,
+    });
+    await fireEvent.pointerMove(confirmHandle, {
+      clientX: 45,
+      clientY: 60,
+      pointerId: 2,
+    });
+    await fireEvent.pointerUp(confirmHandle, {
+      clientX: 45,
+      clientY: 60,
+      pointerId: 2,
+    });
+
+    expect(harness.onconfirmWindowPositionChange).toHaveBeenCalledTimes(1);
+    expect(harness.onconfirmWindowPositionChange).toHaveBeenCalledWith({
+      x: 25,
+      y: 40,
+    });
+    expect(harness.onzoneListWindowPositionChange).toHaveBeenCalledTimes(1);
+    expect(windowRoot("confirm")?.classList.contains("is-active")).toBe(true);
+    // Pressing the confirm window counts as outside the list, so the list is
+    // gone by now while the confirm window keeps the live decision.
+    expect(windowRoot("zoneList")).toBeNull();
+  });
+
+  it("an outside press closes the list only and answers nothing", async () => {
+    const user = userEvent.setup();
+    const harness = renderWindows();
+    await openGraveyardList();
+    expect(windowRoot("zoneList")).not.toBeNull();
+
+    const surface = document.querySelector<HTMLElement>(
+      '[data-cy="duel-field-board-surface"]',
+    );
+    if (surface === null) throw new Error("Missing board surface");
+    await user.click(surface);
+
+    expect(windowRoot("zoneList")).toBeNull();
+    expect(windowRoot("confirm")).not.toBeNull();
+    expect(harness.oninteraction).not.toHaveBeenCalled();
+  });
+
+  it("pressing the confirm window closes the list but keeps the decision", async () => {
+    const harness = renderWindows();
+    await openGraveyardList();
+
+    const confirmWindow = windowRoot("confirm");
+    if (confirmWindow === null) throw new Error("Missing confirm window");
+    await fireEvent.pointerDown(confirmWindow);
+
+    expect(windowRoot("zoneList")).toBeNull();
+    expect(windowRoot("confirm")).not.toBeNull();
+    expect(harness.oninteraction).not.toHaveBeenCalled();
+  });
+
+  it("Escape closes the list only", async () => {
+    const harness = renderWindows();
+    await openGraveyardList();
+
+    await fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(windowRoot("zoneList")).toBeNull();
+    expect(windowRoot("confirm")).not.toBeNull();
+    expect(harness.oninteraction).not.toHaveBeenCalled();
+  });
+
+  it("keeps Cancel and Confirm reducer-owned inside the confirm window", async () => {
+    const user = userEvent.setup();
+    const harness = renderWindows();
+
+    const cancel = document.querySelector<HTMLButtonElement>(
+      '[data-cy="field-action-bar-cancel"]',
+    );
+    if (cancel === null) throw new Error("Missing cancel button");
+    await user.click(cancel);
+
+    expect(harness.oninteraction).toHaveBeenCalledTimes(1);
+    expect(harness.oninteraction.mock.calls[0]?.[0]).toMatchObject({
+      type: "cancel",
+      key: harness.spec.key,
+    });
+  });
+
+  it("a replacement prompt closes both window surfaces and clears the raised window", async () => {
+    const harness = renderWindows();
+    await openGraveyardList();
+    const listHandle = document.querySelector<HTMLElement>(
+      '[data-cy="floating-field-window-zoneList-handle"]',
+    );
+    if (listHandle === null) throw new Error("Missing list handle");
+    await fireEvent.pointerDown(listHandle, {
+      clientX: 10,
+      clientY: 10,
+      pointerId: 5,
+    });
+    await fireEvent.pointerUp(listHandle, {
+      clientX: 10,
+      clientY: 10,
+      pointerId: 5,
+    });
+    expect(windowRoot("zoneList")?.classList.contains("is-active")).toBe(true);
+
+    const nextPrompt = fieldPrompt("idleCommand", [
+      promptChoice("end", "End turn", { action: "endPhase" }),
+    ]);
+    const nextSpec = mapPromptToInteractionSpec(
+      nextPrompt,
+      STACK_ART_STATE,
+      harness.board,
+      CONTEXT,
+    );
+    if (nextSpec.kind === "inactive")
+      throw new Error("Expected active field spec");
+    await harness.rendered.rerender({
+      board: harness.board,
+      prompt: nextPrompt,
+      spec: nextSpec,
+      session: createInteractionSession(nextSpec),
+      pending: false,
+    });
+
+    expect(windowRoot("zoneList")).toBeNull();
+    expect(windowRoot("confirm")).toBeNull();
+
+    await openGraveyardList();
+    expect(windowRoot("zoneList")?.classList.contains("is-active")).toBe(true);
   });
 });
 

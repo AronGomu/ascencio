@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render } from "@testing-library/svelte";
+import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import ZoneListDialog from "../../src/app/components/duel-field/ZoneListDialog.svelte";
@@ -220,7 +220,9 @@ describe("ZoneListDialog", () => {
   it("dialog closes on Escape", async () => {
     const user = userEvent.setup();
     const { onclose } = renderDialog();
-    const dialog = document.querySelector('[data-cy="zone-list-dialog"]');
+    const dialog = document.querySelector(
+      '[data-cy="floating-field-window-zoneList"]',
+    );
     if (dialog === null) throw new Error("Missing dialog");
     (dialog as HTMLElement).focus();
     await user.keyboard("{Escape}");
@@ -228,16 +230,98 @@ describe("ZoneListDialog", () => {
     expect(onclose).toHaveBeenCalledTimes(1);
   });
 
-  it("dialog closes on the close button", async () => {
+  it("dialog closes on an outside pointerdown, never on an inside one", async () => {
+    const { onclose } = renderDialog();
+    const entries = document.querySelector<HTMLElement>(
+      '[data-cy="zone-list-dialog-entries"]',
+    );
+    const header = document.querySelector<HTMLElement>(
+      '[data-cy="zone-list-dialog-header"]',
+    );
+    if (entries === null || header === null)
+      throw new Error("Missing dialog body");
+
+    await fireEvent.pointerDown(entries);
+    await fireEvent.pointerDown(header);
+    expect(onclose).not.toHaveBeenCalled();
+
+    await fireEvent.pointerDown(document.body);
+    expect(onclose).toHaveBeenCalledTimes(1);
+  });
+
+  it("dialog closes on the red X, which names the zone it closes", async () => {
     const user = userEvent.setup();
     const { onclose } = renderDialog();
     const button = document.querySelector<HTMLButtonElement>(
       '[data-cy="zone-list-dialog-close-button"]',
     );
     if (button === null) throw new Error("Missing close button");
+    expect(button.textContent?.trim()).toBe("×");
+    expect(button.classList.contains("danger")).toBe(true);
+    expect(button.getAttribute("aria-label")).toBe("Close GY, 4 cards");
+    // Rightmost control of the header, which is also the window's drag handle.
+    const header = button.closest('[data-cy="zone-list-dialog-header"]');
+    expect(header?.lastElementChild).toBe(button);
+    expect(
+      header?.closest('[data-cy="floating-field-window-zoneList-handle"]'),
+    ).not.toBeNull();
     await user.click(button);
 
     expect(onclose).toHaveBeenCalledTimes(1);
+  });
+
+  it("a vertical wheel over the entries scrolls them horizontally", async () => {
+    renderDialog();
+    const entries = document.querySelector<HTMLElement>(
+      '[data-cy="zone-list-dialog-entries"]',
+    );
+    if (entries === null) throw new Error("Missing entries");
+    Object.defineProperty(entries, "clientWidth", {
+      configurable: true,
+      value: 200,
+    });
+    Object.defineProperty(entries, "scrollWidth", {
+      configurable: true,
+      value: 500,
+    });
+
+    const consumed = new WheelEvent("wheel", {
+      deltaY: 120,
+      bubbles: true,
+      cancelable: true,
+    });
+    entries.dispatchEvent(consumed);
+    expect(entries.scrollLeft).toBe(120);
+    expect(consumed.defaultPrevented).toBe(true);
+
+    // At the far edge there is no movement left to consume, so the page/field
+    // keeps its own scroll.
+    entries.scrollLeft = 300;
+    const unconsumed = new WheelEvent("wheel", {
+      deltaY: 120,
+      bubbles: true,
+      cancelable: true,
+    });
+    entries.dispatchEvent(unconsumed);
+    expect(entries.scrollLeft).toBe(300);
+    expect(unconsumed.defaultPrevented).toBe(false);
+  });
+
+  it("a wheel over a list that cannot scroll is never consumed", () => {
+    renderDialog();
+    const entries = document.querySelector<HTMLElement>(
+      '[data-cy="zone-list-dialog-entries"]',
+    );
+    if (entries === null) throw new Error("Missing entries");
+
+    const event = new WheelEvent("wheel", {
+      deltaY: 120,
+      bubbles: true,
+      cancelable: true,
+    });
+    entries.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(false);
   });
 
   it("deck dialog explains its numbering", () => {
@@ -255,7 +339,7 @@ describe("ZoneListDialog", () => {
 
     expect(
       document
-        .querySelector('[data-cy="zone-list-dialog"]')
+        .querySelector('[data-cy="floating-field-window-zoneList"]')
         ?.getAttribute("aria-label"),
     ).toBe("Your Deck, 1 card contents, position 1 is the top of the deck");
   });

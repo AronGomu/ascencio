@@ -907,7 +907,152 @@ test("mobile layout preserves controls and honors reduced motion", async ({
   expect(box?.width).toBeGreaterThanOrEqual(44);
 });
 
-test("wheel over the duel field scrolls the page", async ({ page }) => {
+test("wheel over the duel field never scrolls the default duel page", async ({
+  page,
+}) => {
+  // Narrow (<80rem) and short (<=48rem) at once: the combined constrained
+  // layout the ticket's requirements name explicitly.
+  await page.setViewportSize({ width: 900, height: 420 });
+  await page.goto("./");
+  await startPresetDuel(page);
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+  const main = page.locator('[data-cy="app-main"]');
+  await expect(main).toHaveAttribute("data-duel-viewport", "true");
+  const field = page.locator('[data-cy="duel-field"]');
+  await expect(field).toBeVisible();
+  const box = await field.boundingBox();
+  if (box === null) throw new Error("Duel field has no bounding box");
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.wheel(0, 400);
+  // A wheel over the field may still scroll the field's own internal
+  // overflow (asserted elsewhere); it must never move the page itself.
+  await page.waitForTimeout(200);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+});
+
+test("default duel occupies exactly one viewport at every supported viewport", async ({
+  page,
+}) => {
+  await page.goto("./");
+  await startPresetDuel(page);
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+  const main = page.locator('[data-cy="app-main"]');
+  const field = page.locator('[data-cy="duel-field"]');
+
+  // 1280×720 is Playwright's own default viewport (unexercised by
+  // `RESPONSIVE_VIEWPORTS`) and sits exactly on the wide/narrow breakpoint
+  // (79rem = 1264px), so it gets its own explicit check alongside the named
+  // viewport table.
+  const viewportsUnderTest = [
+    { id: "VP-DEFAULT", width: 1280, height: 720 },
+    ...RESPONSIVE_VIEWPORTS,
+  ] as const;
+
+  for (const viewport of viewportsUnderTest) {
+    await page.setViewportSize({
+      width: viewport.width,
+      height: viewport.height,
+    });
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const label =
+      "zoomEquivalent" in viewport
+        ? `${viewport.id} ${viewport.zoomEquivalent}`
+        : viewport.id;
+    await expect(main).toHaveAttribute("data-duel-viewport", "true");
+
+    const metrics = await page.evaluate(() => ({
+      documentScrollHeight: document.documentElement.scrollHeight,
+      bodyScrollHeight: document.body.scrollHeight,
+      innerHeight: window.innerHeight,
+    }));
+    expect(
+      metrics.documentScrollHeight,
+      `${label} document must not overflow the viewport`,
+    ).toBeLessThanOrEqual(metrics.innerHeight + 1);
+    expect(
+      metrics.bodyScrollHeight,
+      `${label} body must not overflow the viewport`,
+    ).toBeLessThanOrEqual(metrics.innerHeight + 1);
+
+    await expect(field).toBeVisible();
+    const box = await field.boundingBox();
+    if (box === null)
+      throw new Error(`${label} duel field has no bounding box`);
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.wheel(0, 400);
+    await page.waitForTimeout(100);
+    expect(
+      await page.evaluate(() => window.scrollY),
+      `${label} wheel over the field must not move the page`,
+    ).toBe(0);
+
+    // T9: the elastic 0.45fr:1fr split needs 79rem (1264px) of row width
+    // (52rem field + 22rem preview + 1rem gap + 2rem field padding + 2rem
+    // main margin); below it the field renders first (visually) with the
+    // panel as a horizontal band underneath.
+    const rowLayout = await page.evaluate(() => {
+      const rect = (selector: string): DOMRect | null =>
+        document.querySelector(selector)?.getBoundingClientRect() ?? null;
+      const fieldBox = rect('[data-cy="duel-field"]');
+      const panelBox = rect('[data-cy="card-preview-panel"]');
+      return fieldBox === null || panelBox === null
+        ? null
+        : {
+            fieldTop: fieldBox.top,
+            fieldBottom: fieldBox.bottom,
+            fieldLeft: fieldBox.left,
+            fieldWidth: fieldBox.width,
+            panelTop: panelBox.top,
+            panelBottom: panelBox.bottom,
+            panelRight: panelBox.right,
+            panelWidth: panelBox.width,
+            innerHeight: window.innerHeight,
+          };
+    });
+    if (rowLayout === null) throw new Error(`${label} duel row is not mounted`);
+    if (viewport.width >= 1264) {
+      expect(
+        rowLayout.panelRight,
+        `${label} preview sits left of the field`,
+      ).toBeLessThanOrEqual(rowLayout.fieldLeft + 1);
+      expect(
+        Math.abs(rowLayout.panelTop - rowLayout.fieldTop),
+        `${label} preview and field share the same top`,
+      ).toBeLessThanOrEqual(2);
+      expect(
+        rowLayout.panelWidth,
+        `${label} preview keeps its 22rem floor`,
+      ).toBeGreaterThanOrEqual(352 - 1);
+      expect(
+        rowLayout.fieldWidth,
+        `${label} field keeps its 52rem floor`,
+      ).toBeGreaterThanOrEqual(832 - 1);
+    } else {
+      expect(
+        rowLayout.fieldTop,
+        `${label} field top sits above the preview top`,
+      ).toBeLessThan(rowLayout.panelTop);
+      expect(
+        rowLayout.panelTop,
+        `${label} preview renders below the field`,
+      ).toBeGreaterThanOrEqual(rowLayout.fieldBottom - 1);
+      expect(
+        rowLayout.panelBottom,
+        `${label} preview bottom stays inside the viewport`,
+      ).toBeLessThanOrEqual(rowLayout.innerHeight + 1);
+    }
+
+    await page.mouse.wheel(0, -400);
+  }
+});
+
+test("short-height duel keeps the compact preview thumbnail, name and scrolling text", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 900, height: 420 });
   await page.goto("./");
   await startPresetDuel(page);
@@ -916,13 +1061,76 @@ test("wheel over the duel field scrolls the page", async ({ page }) => {
   });
   const field = page.locator('[data-cy="duel-field"]');
   await expect(field).toBeVisible();
-  const box = await field.boundingBox();
-  if (box === null) throw new Error("Duel field has no bounding box");
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  await page.mouse.wheel(0, 400);
-  await expect
-    .poll(() => page.evaluate(() => window.scrollY))
-    .toBeGreaterThan(0);
+  const panel = page.locator('[data-cy="card-preview-panel"]');
+
+  // Hover every rendered card once, keeping whichever preview shows the
+  // longest description, so the scrolling-text assertion below is exercised
+  // with real card text rather than a synthetic fixture (the seed is random
+  // per run, so no fixed card is guaranteed to be on the field).
+  const cards = field.locator(".duel-field-card");
+  const cardCount = await cards.count();
+  let longest = { length: -1, index: -1 };
+  for (let index = 0; index < cardCount; index += 1) {
+    await cards.nth(index).hover({ force: true });
+    const length = await page
+      .locator('[data-cy="card-preview-text"]')
+      .evaluate((element) => element.textContent?.length ?? 0);
+    if (length > longest.length) longest = { length, index };
+  }
+  expect(
+    longest.index,
+    "no card preview ever populated a description",
+  ).toBeGreaterThanOrEqual(0);
+  await cards.nth(longest.index).hover({ force: true });
+
+  await expect(panel.locator('[data-cy="card-preview-name"]')).toBeVisible();
+
+  // Requirement: short-height art shrinks to `clamp(3rem,8svh,5rem)`; at a
+  // 420px-tall viewport that resolves to the 3rem (48px) floor since 8svh
+  // (33.6px) is smaller. A few px of tolerance covers layout rounding.
+  const artBox = await panel
+    .locator('[data-cy="card-preview-image"]')
+    .boundingBox();
+  if (artBox !== null) expect(artBox.height).toBeLessThanOrEqual(48 + 4);
+
+  const textMetrics = await panel
+    .locator('[data-cy="card-preview-text"]')
+    .evaluate((element) => ({
+      clientHeight: element.clientHeight,
+      scrollHeight: element.scrollHeight,
+      overflowY: getComputedStyle(element).overflowY,
+    }));
+  expect(textMetrics.overflowY).toMatch(/auto|scroll/);
+  if (textMetrics.scrollHeight > textMetrics.clientHeight)
+    expect(textMetrics.scrollHeight).toBeGreaterThan(textMetrics.clientHeight);
+});
+
+test("zone-list preview image never exceeds half the viewport height", async ({
+  page,
+}) => {
+  await page.goto("./");
+  await startPresetDuel(page);
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+  const field = page.locator('[data-cy="duel-field"]');
+  await expect(field).toBeVisible();
+
+  const deckStack = field.locator('[data-cy="field-stack-p0:deck"]');
+  await deckStack.scrollIntoViewIfNeeded();
+  await deckStack.click();
+  const dialog = page.locator('[data-cy="zone-list-dialog"]');
+  await expect(dialog).toBeVisible();
+
+  const innerHeight = await page.evaluate(() => window.innerHeight);
+  const heights = await dialog
+    .locator(".zone-list-entry > img")
+    .evaluateAll((elements) =>
+      elements.map((element) => element.getBoundingClientRect().height),
+    );
+  expect(heights.length).toBeGreaterThan(0);
+  for (const height of heights)
+    expect(height).toBeLessThanOrEqual(innerHeight * 0.5 + 1);
 });
 
 test("dragging a hand card onto a highlighted zone plays it", async ({
@@ -1334,6 +1542,9 @@ test("responsive field compositions contain controls across supported viewports"
     });
     if (rowLayout === null)
       throw new Error(`${viewportLabel} duel row is not mounted`);
+    // T9: the elastic 0.45fr:1fr split needs the same 79rem (1264px) floor
+    // as before — the panel's 22rem floor plus the field's 52rem floor plus
+    // gap/padding, unchanged by the elastic `fr` distribution above it.
     if (viewport.width >= 1264) {
       expect(
         rowLayout.panelTop,
@@ -1344,14 +1555,13 @@ test("responsive field compositions contain controls across supported viewports"
         `${viewportLabel} field yields its row to the panel`,
       ).toBeLessThan(rowLayout.rowWidth - 300);
     } else {
-      // The preview panel is the LEFT column of `.duel-row` (moved there
-      // ahead of this ticket), so it is first in DOM order and stacks
-      // above the field, not below it, once the row collapses to one
-      // column.
+      // T9 moved the panel below the field (item 20/21): the field now
+      // renders first visually via `grid-row`, even though the panel stays
+      // first in the DOM for screen-reader continuity.
       expect(
-        rowLayout.fieldTop,
-        `${viewportLabel} field stacks below the preview panel`,
-      ).toBeGreaterThanOrEqual(rowLayout.panelBottom - 1);
+        rowLayout.panelTop,
+        `${viewportLabel} field stacks above the preview panel`,
+      ).toBeGreaterThanOrEqual(rowLayout.fieldBottom - 1);
       expect(
         Math.abs(rowLayout.fieldWidth - rowLayout.rowWidth),
         `${viewportLabel} stacked field is full width`,

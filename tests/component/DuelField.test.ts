@@ -1552,10 +1552,18 @@ describe("DuelField", () => {
     renderInteractive(value);
 
     const field = screen.getByRole("region", { name: "Duel field" });
-    expect(field.getAttribute("data-field-action-bar")).toBe("true");
-    expect(field.style.getPropertyValue("--field-action-bar-height")).toMatch(
-      /^\d+px$/,
-    );
+    const stage = field.querySelector('[data-cy="duel-field-stage"]');
+    if (stage === null) throw new Error("Missing duel field stage");
+    // The gutter attribute/height live on the stage (T9): its box is always
+    // the board's own natural size, never externally height-clipped by a
+    // constrained viewport row, so the action bar the gutter reserves room
+    // for always stays pinned to the board's true bottom edge.
+    expect(stage.getAttribute("data-field-action-bar")).toBe("true");
+    expect(
+      (stage as HTMLElement).style.getPropertyValue(
+        "--field-action-bar-height",
+      ),
+    ).toMatch(/^\d+px$/);
   });
 
   it("reserves no gutter when a card action spec renders no action bar", () => {
@@ -1567,9 +1575,15 @@ describe("DuelField", () => {
     expect(harness.spec.kind).toBe("cardAction");
     expect(harness.spec.globalChoices.size).toBe(0);
     const field = screen.getByRole("region", { name: "Duel field" });
+    const stage = field.querySelector('[data-cy="duel-field-stage"]');
+    if (stage === null) throw new Error("Missing duel field stage");
     expect(field.querySelector('[data-cy="field-action-bar"]')).toBeNull();
-    expect(field.hasAttribute("data-field-action-bar")).toBe(false);
-    expect(field.style.getPropertyValue("--field-action-bar-height")).toBe("");
+    expect(stage.hasAttribute("data-field-action-bar")).toBe(false);
+    expect(
+      (stage as HTMLElement).style.getPropertyValue(
+        "--field-action-bar-height",
+      ),
+    ).toBe("");
   });
 
   it("hides the endPhase choice from the action bar", () => {

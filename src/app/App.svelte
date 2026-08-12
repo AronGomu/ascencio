@@ -135,6 +135,10 @@
       ? null
       : mapSnapshotToBoard($duel.snapshot, ACTIVE_CARD_TEXTS);
   $: duelBoard = boardResult?.ok === true ? boardResult.value : null;
+  $: duelViewportOnly =
+    (duelBoard !== null || $duel.snapshot !== null) &&
+    !$uiSettings.showDuelHud &&
+    !$uiSettings.showWorkspace;
   $: zoneLists =
     duelBoard === null
       ? EMPTY_ZONE_LISTS
@@ -720,7 +724,11 @@
   onopensettings={openMenu}
 />
 
-<main data-cy="app-main">
+<main
+  data-cy="app-main"
+  class:is-duel-viewport={duelViewportOnly}
+  data-duel-viewport={duelViewportOnly ? "true" : undefined}
+>
   {#if imageLoading}
     <LoadingOverlay
       label="Preparing active card images"

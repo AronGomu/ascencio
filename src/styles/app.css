@@ -35,10 +35,20 @@
 
 body {
   min-width: 320px;
-  min-height: 100vh;
+  min-height: 100svh;
   margin: 0;
   background:
     radial-gradient(circle at 15% -10%, #1e3a5f 0, transparent 35rem), #08101f;
+}
+
+/* The app root is a fixed-height two-row grid (header, main) so the default
+   duel view can be pinned to exactly one viewport below. Outside duel-only
+   mode `main` does not clip, so overflowing content (picker/errors/HUD) still
+   grows `body`'s natural scrollable area past this box. */
+#app {
+  height: 100svh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
 button,
@@ -140,6 +150,31 @@ button:disabled {
 main {
   width: min(120rem, calc(100% - 2rem));
   margin-inline: auto;
+  display: grid;
+  gap: 1rem;
+  padding-bottom: 3rem;
+}
+
+/* Applied only while a board/snapshot renders and neither optional HUD nor
+   workspace is shown (see `duelViewportOnly` in App.svelte). It pins the
+   default duel to the `#app` main row's exact height, so nothing here can
+   push a scrollbar onto the page; `.duel-field` owns any residual x/y
+   overflow instead (see below). */
+main.is-duel-viewport {
+  /* Flex, not grid: the duel row is the only track that must claim leftover
+     height while every other conditional sibling (hidden announcement,
+     warnings, diagnostic message) keeps its natural size. */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding-bottom: clamp(0.5rem, 1svh, 1rem);
+  overflow: hidden;
+}
+
+main.is-duel-viewport > .duel-row {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .duel-header-bar {
@@ -247,10 +282,14 @@ h4 {
 
 /* The duel field and the card preview panel share one row, and the panel is
    stretched to the field's height so the effect text scrolls inside it rather
-   than making the row taller than the board. */
+   than making the row taller than the board. Preview grows past its 22rem
+   floor with whatever width the field doesn't need; the field's own 52rem
+   floor plus the .45fr:1fr split keeps its rendered (aspect-ratio-driven)
+   height inside a normal desktop viewport at every width up to the 120rem
+   `main` cap — verified in the responsive e2e at 1366×768 and 1920×1080. */
 .duel-row {
   display: grid;
-  grid-template-columns: 22rem minmax(0, 1fr);
+  grid-template-columns: minmax(22rem, 0.45fr) minmax(52rem, 1fr);
   gap: 1rem;
   align-items: stretch;
 }
@@ -260,6 +299,7 @@ h4 {
   grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 0.75rem;
   min-width: 0;
+  min-height: 0;
   padding: 1rem;
   border: 1px solid var(--border);
   border-radius: 0.9rem;
@@ -337,17 +377,89 @@ h4 {
   }
 }
 
-/* Solving `mainWidth - 22rem panel - 1rem gap - 2rem field padding >= 52rem
-   board min-width` gives a 1264px floor. Below it the panel must stack, or the
-   board's min-width would push a horizontal scrollbar onto the page at the
-   1024px viewport the responsive e2e gate forbids it at. */
+/* Below 79rem (1264px) the elastic .45fr:1fr split can no longer give the
+   field its 52rem floor alongside the panel's 22rem floor plus gap/padding
+   (52+22+1rem gap+2rem field padding+2rem main margin = 79rem, the same
+   floor the pre-T9 fixed-width layout used), so the row collapses to one
+   column. The field must render first (it needs the leftover height) with
+   the panel as a fixed-height horizontal band underneath it — but the panel
+   stays first in the DOM (see App.svelte) for screen-reader continuity, so
+   the visual order is CSS-only via `grid-row`. */
 @media (max-width: 79rem) {
   .duel-row {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
   }
 
+  .duel-row > .card-preview-panel {
+    grid-row: 2;
+  }
+
+  .duel-row > .duel-field,
+  .duel-row > .field-error {
+    grid-row: 1;
+  }
+
+  /* Horizontal band: fixed-width art column left, name/effect text right,
+     status spanning the full width underneath. */
   .card-preview-panel {
-    max-height: 18rem;
+    grid-template-columns: clamp(4rem, 20vw, 8rem) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas: "art copy" "status status";
+    max-height: clamp(6rem, 22svh, 12rem);
+  }
+
+  .card-preview-panel__art {
+    grid-area: art;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .card-preview-panel__art img {
+    height: 100%;
+    max-height: none;
+  }
+
+  .card-preview-panel__copy {
+    grid-area: copy;
+  }
+
+  .card-preview-panel__status {
+    grid-area: status;
+  }
+}
+
+/* Short viewports: the art shrinks to a `clamp(3rem,8svh,5rem)`-tall
+   thumbnail (decoupled from the row's own height, which would otherwise
+   stretch it), and the whole compact preview is capped, so a tall
+   effect-text fixture scrolls inside the panel instead of growing it past
+   the field. */
+@media (max-width: 79rem) and (max-height: 48rem) {
+  .card-preview-panel {
+    max-height: clamp(5rem, 18svh, 8rem);
+  }
+
+  .card-preview-panel__art {
+    display: flex;
+    align-items: center;
+    height: auto;
+  }
+
+  .card-preview-panel__art img {
+    height: clamp(3rem, 8svh, 5rem);
+    max-height: clamp(3rem, 8svh, 5rem);
+    width: auto;
+    max-width: 100%;
+  }
+
+  .card-preview-panel__copy {
+    grid-template-rows: auto minmax(0, 1fr);
+    min-height: 0;
+  }
+
+  .card-preview-panel [data-cy="card-preview-text"] {
+    min-height: 0;
+    overflow-y: auto;
   }
 }
 
@@ -360,12 +472,6 @@ h4 {
 .snapshot-state {
   margin-top: 0.35rem;
   font-size: 0.78rem;
-}
-
-main {
-  display: grid;
-  gap: 1rem;
-  padding-bottom: 3rem;
 }
 
 .message-panel,
@@ -771,14 +877,14 @@ li + li {
   container: duel-field / inline-size;
   position: relative;
   min-width: 0;
+  min-height: 0;
   max-width: 100%;
-  /* The End turn corner button is always mounted (unlike the action bar), so
-     the bottom gutter has an unconditional floor sized to hold it clear of
-     the board: base padding + the button's own height + its own inset. */
-  padding: 1rem 1rem calc(1rem + 2.75rem + 0.75rem);
-  /* Horizontal only: the board keeps a min-width so field targets stay >=44px,
-     so narrow viewports must be able to pan. Vertical overflow stays visible and
-     overscroll chaining stays default so the wheel always scrolls the page. */
+  padding: 1rem;
+  /* Horizontal only here: the board keeps a min-width so field targets stay
+     >=44px, so wide/desktop viewports must be able to pan. The narrow
+     (<=79rem) rule below additionally owns y overflow, because a
+     constrained (`.is-duel-viewport`) single-column row can be shorter than
+     the board's aspect-ratio-driven height there — never the page. */
   overflow-x: auto;
   scroll-padding: clamp(0.75rem, 4vw, 2rem);
   border: 1px solid var(--border);
@@ -787,14 +893,31 @@ li + li {
   box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.18);
 }
 
-/* The action bar is pinned to the bottom of the field too, and it can grow
-   taller than the always-present End turn button's floor above. When it
-   renders, its measured height (DuelField.svelte binds it into
-   --field-action-bar-height) wins if it needs more room than the floor
-   already reserves. The 2.75rem term keeps the same minimum before the first
-   measurement lands. */
-.duel-field[data-field-action-bar="true"] {
-  padding-bottom: calc(
+/* Below 79rem the single-column row can be shorter than the board's
+   aspect-ratio-driven height, so the field — never the page — owns any
+   leftover y overflow here too. */
+@media (max-width: 79rem) {
+  .duel-field {
+    overflow: auto;
+  }
+}
+
+/* T9: the gutter reservation and the action bar itself (DuelField.svelte)
+   both moved from `.duel-field` onto `.duel-field-stage`, as a `margin`, not
+   `padding` — padding here would grow the stage's own padding box, which is
+   the percentage-position coordinate system PhaseStrip/EndTurnButton (T3/T7)
+   are calibrated against, shifting them off the board. A stretched, scrolled
+   `.duel-field` (narrow `.is-duel-viewport` rows) can be shorter than the
+   stage's natural (board aspect-ratio-driven) height; the stage itself never
+   is, so the bar it reserves room for always stays pinned to the board's
+   true bottom edge. The 2.75rem term is the End turn button's own floor,
+   kept as the minimum before the bar's first measurement lands. */
+.duel-field-stage {
+  margin-bottom: calc(1rem + 2.75rem + 0.75rem);
+}
+
+.duel-field-stage[data-field-action-bar="true"] {
+  margin-bottom: calc(
     1rem + max(2.75rem, var(--field-action-bar-height, 0px)) + 0.75rem
   );
 }
@@ -1089,6 +1212,11 @@ button.duel-field-zone,
   box-shadow: 0 0 0 2px rgb(255 213 128 / 0.55);
 }
 
+.zone-list-entry > img {
+  max-height: 50svh;
+  object-fit: contain;
+}
+
 .zone-list-entry:hover .card-action-chips,
 .zone-list-entry:focus-within .card-action-chips {
   display: flex;
@@ -1357,7 +1485,13 @@ button.card-action-chip:hover:not(:disabled) {
 .field-action-bar {
   position: absolute;
   z-index: var(--duel-field-layer-control);
-  bottom: 0.75rem;
+  /* T9: the stage has no bottom padding (see `.duel-field-stage` above), so
+     this reaches negative — into the stage's `margin-bottom` gutter — to
+     land 1rem below the board with the same 0.75rem trailing clearance the
+     margin's own base term reserves. This offset is the same at every
+     viewport: only the trailing clearance term (this bar's distance from the
+     gutter's own true bottom) changes narrower below. */
+  bottom: calc(-1rem - max(2.75rem, var(--field-action-bar-height, 0px)));
   left: 50%;
   display: flex;
   flex-wrap: wrap;
@@ -1391,24 +1525,16 @@ button.card-action-chip:hover:not(:disabled) {
 }
 
 /* Below 40rem the bar's max-width (100% - 2rem) leaves too little clearance
-   beside the always-present, right-anchored End turn button, so the two would
-   overlap. Stack the bar above the button instead, and grow the reserved
-   gutter to match: the bottom offset moving from 0.75rem to 4rem needs the
-   same increase added to the padding-bottom floor below.
-   This must be a viewport media query, not a `@container` query on
-   `.duel-field` itself: a container query cannot style the container element
-   against its own size, only descendants (`.field-action-bar` below is a
-   descendant of `.duel-field`, so its container-query rule works fine — the
-   padding-bottom rule targets `.duel-field` itself, which cannot self-query).
+   beside the always-present, right-anchored End turn button, so the reserved
+   gutter below the bar grows from 0.75rem to 4rem to hold it clear. The
+   bar's own position (`.field-action-bar` above) is unchanged — it is fixed
+   1rem below the board regardless of viewport — only the trailing clearance
+   between the bar and the stage's gutter's own true bottom grows.
    48rem comfortably covers this field's supported narrow viewports (down to
    ~23.4rem) while excluding the desktop ones, which never get this close. */
 @media (max-width: 48rem) {
-  .field-action-bar {
-    bottom: 4rem;
-  }
-
-  .duel-field[data-field-action-bar="true"] {
-    padding-bottom: calc(
+  .duel-field-stage[data-field-action-bar="true"] {
+    margin-bottom: calc(
       1rem + max(2.75rem, var(--field-action-bar-height, 0px)) + 4rem
     );
   }

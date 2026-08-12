@@ -98,6 +98,17 @@ describe("ZoneListDialog", () => {
     ).toBe("4");
   });
 
+  it("exposes each entry image as a direct child of its zone-list-entry for the height cap", () => {
+    renderDialog();
+    for (const value of ENTRIES) {
+      const entry = document.querySelector(
+        `[data-cy="zone-list-entry-${value.id}"]`,
+      );
+      expect(entry?.classList.contains("zone-list-entry")).toBe(true);
+      expect(entry?.querySelector(":scope > img")).not.toBeNull();
+    }
+  });
+
   it("dialog haloes only the actionable entry", () => {
     const choice: InteractionChoice = {
       id: choiceId("activate-2"),

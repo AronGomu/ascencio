@@ -445,15 +445,23 @@
   aria-label="Duel field"
   bind:this={fieldRoot}
   data-cy="duel-field"
-  data-field-action-bar={actionBarVisible ? "true" : undefined}
   data-dragging={dragCard === null ? undefined : "true"}
   data-prompt-kind={prompt === null ? undefined : prompt.kind}
-  style:--field-action-bar-height={actionBarVisible
-    ? `${actionBarHeight}px`
-    : undefined}
   onclick={dismissOnOutsideClick}
 >
-  <div class="duel-field-stage" data-cy="duel-field-stage">
+  <!-- The action bar's reserved bottom gutter and bottom-pinned position
+       live on the stage (never externally height-clipped: its box is always
+       the board's own natural aspect-ratio-driven size), not on `.duel-field`
+       itself, which a constrained (`.is-duel-viewport`) narrow-mode row can
+       shrink below the stage's natural height and scroll internally (T9). -->
+  <div
+    class="duel-field-stage"
+    data-cy="duel-field-stage"
+    data-field-action-bar={actionBarVisible ? "true" : undefined}
+    style:--field-action-bar-height={actionBarVisible
+      ? `${actionBarHeight}px`
+      : undefined}
+  >
     <FieldBoard
       {board}
       {imageUrls}
@@ -480,6 +488,18 @@
     />
     <PhaseStrip {phase} {spec} disabled={pending} {oninteraction} />
     <EndTurnButton {spec} disabled={pending} {oninteraction} />
+    {#if actionBarVisible && prompt && spec}
+      <FieldActionBar
+        {prompt}
+        {spec}
+        {session}
+        disabled={pending}
+        confirmValid={validation.valid}
+        validationMessage={validation.valid ? "" : validation.message}
+        bind:clientHeight={actionBarHeight}
+        {oninteraction}
+      />
+    {/if}
   </div>
   {#if openStack !== null}
     <ZoneListDialog
@@ -516,17 +536,5 @@
     >
       {feedbackState.label}
     </p>
-  {/if}
-  {#if actionBarVisible && prompt && spec}
-    <FieldActionBar
-      {prompt}
-      {spec}
-      {session}
-      disabled={pending}
-      confirmValid={validation.valid}
-      validationMessage={validation.valid ? "" : validation.message}
-      bind:clientHeight={actionBarHeight}
-      {oninteraction}
-    />
   {/if}
 </section>

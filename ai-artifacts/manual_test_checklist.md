@@ -335,3 +335,15 @@ Kept for history. Read the SUPERSEDED banners before running anything here.
 - [ ] Visually confirm each player's Deck/GY and Banished piles sit snugly next to the Spell/Trap row and Monster row respectively, with the same visual gap as between any two adjacent central-column zones — no crowding or odd extra whitespace around the pile column.
 - [ ] Drag a hand card onto a highlighted zone as usual (e.g. Summon/Set): the drag still works exactly as before paging was added, from any page.
 - [ ] Play a full duel to completion: no console errors, no broken path, and the hand always remains usable (draw, discard, play from any page) throughout.
+
+## T9 viewport-fit-and-preview-collapse (round 3)
+
+- [ ] `npm run dev`, start a duel at a normal desktop window size (e.g. maximized, 1920×1080 or 1366×768): the whole page has no scrollbar at all — the duel field, header and preview panel all fit in the window together, and scrolling the mouse wheel over the page does nothing.
+- [ ] Slowly shrink the window width down past ~1264px: the preview panel moves from beside the duel field to a horizontal strip underneath it (card art on the left, name/text on the right), and the field stays above the panel, never below.
+- [ ] Keep shrinking to a phone-sized window (e.g. 375×667): the page still never scrolls vertically; if the board is too wide to fit, the duel field itself scrolls sideways (not the page) to reach every zone.
+- [ ] Shrink the window height down to something short (e.g. resize to ~420px tall, or use a laptop with a small viewport plus browser chrome): the preview panel's card art shrinks to a small thumbnail, the card name stays fully visible, and long effect text scrolls inside its own little box instead of pushing the panel taller.
+- [ ] Hover/focus a card with a long effect text description at that short window height: confirm you can scroll just the effect-text box (e.g. with the wheel while hovering it) to read the rest, without the page or panel moving.
+- [ ] Open a deck/GY/Extra Deck/Banished pile list (the zone-list dialog): every card image in the list is clearly full-sized but never taller than roughly half the window — no image explodes to fill the whole screen.
+- [ ] With the Duel HUD or workspace panel enabled (Settings), confirm the page goes back to scrolling normally (this is the one case where a page scrollbar is expected) and nothing is trapped off-screen — you can still reach the HUD and workspace content by scrolling.
+- [ ] Play a full duel end-to-end at a normal window size, including dragging a hand card onto a highlighted zone and finishing a turn with the action bar visible: the action bar and End Turn button always sit clear of the board, never overlapping a card or zone, at every window size you tried above.
+- [ ] Resize the window between wide, narrow, and short repeatedly while a duel is in progress: layout reflows cleanly each time with no leftover scrollbar, no stuck/cut-off content, and no console errors.

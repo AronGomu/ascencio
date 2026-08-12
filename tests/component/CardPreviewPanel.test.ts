@@ -198,6 +198,24 @@ describe("CardPreviewPanel", () => {
     ).toBe("/placeholder.webp");
   });
 
+  it("keeps art, copy and status as direct panel descendants for compact CSS targeting", () => {
+    render(CardPreviewPanel, {
+      preview: preview(),
+      status: { text: "Choose", thinking: false },
+    });
+
+    const panel = document.querySelector('[data-cy="card-preview-panel"]');
+    expect(
+      panel?.querySelector(':scope > [data-cy="card-preview-art"]'),
+    ).not.toBeNull();
+    expect(
+      panel?.querySelector(':scope > [data-cy="card-preview-copy"]'),
+    ).not.toBeNull();
+    expect(
+      panel?.querySelector(':scope > [data-cy="card-preview-status"]'),
+    ).not.toBeNull();
+  });
+
   it("panel is inert", () => {
     const { library } = leaseLibrary();
     render(CardPreviewPanel, { preview: preview(), imageLibrary: library });

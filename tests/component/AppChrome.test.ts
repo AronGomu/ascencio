@@ -23,10 +23,15 @@ const workerClientSpies = vi.hoisted(() => {
   return { startDuel: vi.fn() };
 });
 
-vi.mock("../../src/app/DuelWorkerClient.ts", () => ({
-  DuelWorkerClient: class {
+vi.mock("../../src/app/DuelWorkerClient.ts", () => {
+  class DuelWorkerClientMock {
+    static instances: DuelWorkerClientMock[] = [];
     context = { workerGeneration: 1, sessionGeneration: 0 };
     listeners = new Set<(received: unknown) => void>();
+
+    constructor() {
+      DuelWorkerClientMock.instances.push(this);
+    }
 
     subscribe(listener: (received: unknown) => void) {
       this.listeners.add(listener);
@@ -73,17 +78,34 @@ vi.mock("../../src/app/DuelWorkerClient.ts", () => ({
     async dispose() {
       return { graceful: true };
     }
-  },
-}));
+  }
+
+  return { DuelWorkerClient: DuelWorkerClientMock };
+});
 
 import App from "../../src/app/App.svelte";
+import { DuelWorkerClient as MockedDuelWorkerClient } from "../../src/app/DuelWorkerClient.ts";
 import MenuDialog from "../../src/app/components/MenuDialog.svelte";
 import SettingsDialog from "../../src/app/components/SettingsDialog.svelte";
+import { snapshotId } from "../../src/duel/contracts/ids.ts";
+import type { PublicDuelState } from "../../src/duel/contracts/public-duel-state.ts";
+
+interface MockedWorkerInstance {
+  readonly context: { workerGeneration: number; sessionGeneration: number };
+  readonly listeners: Set<(received: unknown) => void>;
+}
+interface MockedWorkerClientCtor {
+  instances: MockedWorkerInstance[];
+}
+
+const mockedWorkerClientCtor =
+  MockedDuelWorkerClient as unknown as MockedWorkerClientCtor;
 
 afterEach(() => {
   cleanup();
   localStorage.clear();
   workerClientSpies.startDuel.mockReset();
+  mockedWorkerClientCtor.instances.length = 0;
 });
 
 async function renderReadyApp() {
@@ -92,6 +114,75 @@ async function renderReadyApp() {
     expect(document.querySelector('[data-cy="deck-picker"]')).not.toBeNull(),
   );
   return rendered;
+}
+
+async function startDuelFromPicker(
+  user: ReturnType<typeof userEvent.setup>,
+): Promise<void> {
+  await user.click(
+    document.querySelector(
+      '[data-cy="deck-picker-option-player-burning-abyss"]',
+    ) as HTMLButtonElement,
+  );
+  await user.click(
+    document.querySelector(
+      '[data-cy="deck-picker-option-opponent-shaddoll"]',
+    ) as HTMLButtonElement,
+  );
+  await user.click(
+    document.querySelector(
+      '[data-cy="deck-picker-start-button"]',
+    ) as HTMLButtonElement,
+  );
+}
+
+const EMPTY_SNAPSHOT: PublicDuelState = {
+  snapshotId: snapshotId("d".repeat(64)),
+  revision: 1,
+  turn: 1,
+  turnPlayer: 0,
+  phase: "main1",
+  players: [
+    {
+      player: 0,
+      lifePoints: 8000,
+      deckCount: 40,
+      deck: [],
+      extraDeckCount: 0,
+      handCount: 0,
+      hand: [],
+      extraDeck: [],
+      monsters: [],
+      spellsAndTraps: [],
+      graveyard: [],
+      banished: [],
+    },
+    {
+      player: 1,
+      lifePoints: 8000,
+      deckCount: 40,
+      deck: [],
+      extraDeckCount: 0,
+      handCount: 0,
+      hand: [],
+      extraDeck: [],
+      monsters: [],
+      spellsAndTraps: [],
+      graveyard: [],
+      banished: [],
+    },
+  ],
+  chain: [],
+};
+
+function emitDuelState(state: PublicDuelState): void {
+  const worker =
+    mockedWorkerClientCtor.instances[
+      mockedWorkerClientCtor.instances.length - 1
+    ];
+  if (worker === undefined) throw new Error("No mocked worker client instance");
+  for (const listener of worker.listeners)
+    listener({ context: worker.context, event: { type: "state", state } });
 }
 
 describe("App", () => {
@@ -128,6 +219,105 @@ describe("App", () => {
       "burning-abyss",
       "shaddoll",
     );
+  });
+
+  it("marks default board mode as viewport constrained", async () => {
+    const user = userEvent.setup();
+    await renderReadyApp();
+    await startDuelFromPicker(user);
+    emitDuelState(EMPTY_SNAPSHOT);
+
+    await vi.waitFor(() =>
+      expect(
+        document
+          .querySelector('[data-cy="app-main"]')
+          ?.getAttribute("data-duel-viewport"),
+      ).toBe("true"),
+    );
+    const main = document.querySelector('[data-cy="app-main"]');
+    expect(main?.classList.contains("is-duel-viewport")).toBe(true);
+  });
+
+  it("restores document mode for optional HUD", async () => {
+    const user = userEvent.setup();
+    await renderReadyApp();
+    await startDuelFromPicker(user);
+    emitDuelState(EMPTY_SNAPSHOT);
+    await vi.waitFor(() =>
+      expect(
+        document
+          .querySelector('[data-cy="app-main"]')
+          ?.getAttribute("data-duel-viewport"),
+      ).toBe("true"),
+    );
+
+    await user.click(
+      document.querySelector(
+        '[data-cy="app-menubar-settings-button"]',
+      ) as HTMLButtonElement,
+    );
+    await user.click(
+      document.querySelector(
+        '[data-cy="menu-dialog-settings-button"]',
+      ) as HTMLButtonElement,
+    );
+    await user.click(
+      document.querySelector(
+        '[data-cy="settings-show-duel-hud-checkbox"]',
+      ) as HTMLInputElement,
+    );
+    await user.click(
+      document.querySelector(
+        '[data-cy="settings-dialog-close-button"]',
+      ) as HTMLButtonElement,
+    );
+
+    const main = document.querySelector('[data-cy="app-main"]');
+    await vi.waitFor(() =>
+      expect(main?.getAttribute("data-duel-viewport")).toBeNull(),
+    );
+    expect(main?.classList.contains("is-duel-viewport")).toBe(false);
+  });
+
+  it("restores document mode for workspace", async () => {
+    const user = userEvent.setup();
+    await renderReadyApp();
+    await startDuelFromPicker(user);
+    emitDuelState(EMPTY_SNAPSHOT);
+    await vi.waitFor(() =>
+      expect(
+        document
+          .querySelector('[data-cy="app-main"]')
+          ?.getAttribute("data-duel-viewport"),
+      ).toBe("true"),
+    );
+
+    await user.click(
+      document.querySelector(
+        '[data-cy="app-menubar-settings-button"]',
+      ) as HTMLButtonElement,
+    );
+    await user.click(
+      document.querySelector(
+        '[data-cy="menu-dialog-settings-button"]',
+      ) as HTMLButtonElement,
+    );
+    await user.click(
+      document.querySelector(
+        '[data-cy="settings-show-workspace-checkbox"]',
+      ) as HTMLInputElement,
+    );
+    await user.click(
+      document.querySelector(
+        '[data-cy="settings-dialog-close-button"]',
+      ) as HTMLButtonElement,
+    );
+
+    const main = document.querySelector('[data-cy="app-main"]');
+    await vi.waitFor(() =>
+      expect(main?.getAttribute("data-duel-viewport")).toBeNull(),
+    );
+    expect(main?.classList.contains("is-duel-viewport")).toBe(false);
   });
 });
 

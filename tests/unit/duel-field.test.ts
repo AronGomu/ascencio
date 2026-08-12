@@ -7,6 +7,10 @@ import {
   type BoardViewModel,
 } from "../../src/field/board-view-model.ts";
 import {
+  CARD_HEIGHT,
+  CARD_WIDTH,
+  DUEL_FIELD_HEIGHT,
+  DUEL_FIELD_WIDTH,
   fieldZoneAccessibleName,
   fieldZoneId,
   mapEngineFieldAddress,
@@ -100,6 +104,63 @@ describe("duel field mapping", () => {
       "Shared Extra Monster Zone left",
       "Shared Extra Monster Zone right",
     ]);
+  });
+
+  /* R1/F7 property, not a restatement of the constants: no painted zone may
+     collide with another.
+
+     Scope decision (evidence, not preference): `p{n}:hand` is excluded because
+     T8 made it a virtual, navigation-only rectangle. `FieldBoard.svelte:59`
+     filters `kind === "hand"` out of the painted `ZoneControl`s, and
+     `.duel-field-hand-band` consumes `--field-x/--field-y/--field-width` only
+     — it never reads `--field-height` and paints no border or background. The
+     record survives solely to place the band and to anchor spatial navigation,
+     so its 462x72 box overlapping the backrow by 5 design px paints nothing.
+
+     For every painted zone the property is strict, and it is stated on the
+     card footprint each box exists to hold: `CARD_WIDTH x CARD_HEIGHT` at the
+     zone centre. Each layout box adds a 5px chrome halo per side, so "card
+     footprint gap >= 0" is exactly "boxes overlap by no more than the chrome
+     they add". The shared EMZ row is centred between the two main-monster rows
+     (110px away from each, against the 114px box height), so its halo does
+     overlap those rows by 4px — chrome only; the cards keep a 6px gap. Item
+     16's accepted spacing (column pitch 95, row pitch 120) must not be moved
+     to erase a chrome seam. */
+  it("no painted zone footprint overlaps another", () => {
+    const painted = STANDARD_DUEL_FIELD_LAYOUT.filter(
+      ({ kind }) => kind !== "hand",
+    );
+    expect(painted).toHaveLength(32);
+
+    const footprint = (zone: (typeof painted)[number]) => ({
+      id: zone.id,
+      left: zone.x * DUEL_FIELD_WIDTH - CARD_WIDTH / 2,
+      right: zone.x * DUEL_FIELD_WIDTH + CARD_WIDTH / 2,
+      top: zone.y * DUEL_FIELD_HEIGHT - CARD_HEIGHT / 2,
+      bottom: zone.y * DUEL_FIELD_HEIGHT + CARD_HEIGHT / 2,
+    });
+    const boxes = painted.map(footprint);
+    const collisions: string[] = [];
+    for (let index = 0; index < boxes.length; index += 1) {
+      for (let other = index + 1; other < boxes.length; other += 1) {
+        const left = boxes[index]!;
+        const right = boxes[other]!;
+        const horizontalGap = Math.max(
+          left.left - right.right,
+          right.left - left.right,
+        );
+        const verticalGap = Math.max(
+          left.top - right.bottom,
+          right.top - left.bottom,
+        );
+        if (horizontalGap < 0 && verticalGap < 0)
+          collisions.push(
+            `${left.id} x ${right.id} (${-horizontalGap}px by ${-verticalGap}px)`,
+          );
+      }
+    }
+
+    expect(collisions).toEqual([]);
   });
 
   it("retains owner-aware accessible names", () => {

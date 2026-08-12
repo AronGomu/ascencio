@@ -692,6 +692,7 @@ export class DuelStateProjector {
       throw new Error("Public state exceeds 1024 counter entries");
     if (this.#stateTextUnits() > 262_144)
       throw new Error("Public state exceeds text limit");
+    assertConcealedOpponentIdentities(players[1]);
 
     return Object.freeze({
       snapshotId: this.#snapshotId,
@@ -1785,6 +1786,33 @@ function assertFixedDestinationAvailable(
   throw new Error(
     `Fixed slot ${location} ${sequence} for player ${controller} is already occupied`,
   );
+}
+
+/**
+ * ADR-014: the human may only learn a concealed opponent identity for a card
+ * in a fixed field slot, where the projector attested it itself. The client
+ * validator rejects anything else, and that rejection terminates the Worker
+ * mid-duel — so the producer asserts its own output first and fails closed.
+ */
+function assertConcealedOpponentIdentities(player: PublicPlayerState): void {
+  const zones = [
+    player.hand,
+    player.deck,
+    player.extraDeck,
+    player.monsters,
+    player.spellsAndTraps,
+    player.graveyard,
+    player.banished,
+  ];
+  for (const cards of zones) {
+    for (const card of cards) {
+      if (card.faceUp || card.code === undefined) continue;
+      if (!isFixedLocation(card.location))
+        throw new Error(
+          "Concealed opponent card outside a fixed field slot carries a code",
+        );
+    }
+  }
 }
 
 function isFixedLocation(location: PublicLocation): boolean {

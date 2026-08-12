@@ -110,13 +110,17 @@ describe("zoneListEntries", () => {
     expect(entries[3]?.code).toBe(cardCode(89631139));
   });
 
-  it("trusts projected code for known face-down identity", () => {
+  /* ADR-014 rule 10: a concealed opponent card may only carry a code in a
+     fixed field slot, so a face-down opponent *pile* card with a code is a
+     state the projector now refuses to emit and the client validator rejects.
+     The reachable pile case is a public, face-up banished card. */
+  it("trusts projected code for a public banished identity", () => {
     const snapshot = state(
       "knownBanished",
       {},
       {
         banished: [
-          card("ban-known", 5053103, 1, "banished", 0, "faceDownDefense"),
+          card("ban-known", 5053103, 1, "banished", 0, "faceUpAttack"),
         ],
       },
     );
@@ -131,6 +135,52 @@ describe("zoneListEntries", () => {
       code: cardCode(5053103),
       label: "Axe Raider",
     });
+  });
+
+  /* The genuinely reachable attested-identity case: a fixed field slot. The
+     board keeps the projected code (preview, accessibility) while the card
+     stays face-down and painted with back art. */
+  it("keeps an attested face-down opponent field card known but back-facing", () => {
+    for (const location of ["monster", "spellTrap"] as const) {
+      const snapshot = state(
+        `attested-${location}`,
+        {},
+        location === "monster"
+          ? {
+              monsters: [
+                card(
+                  "set-monster",
+                  5053103,
+                  1,
+                  "monster",
+                  0,
+                  "faceDownDefense",
+                ),
+              ],
+            }
+          : {
+              spellsAndTraps: [
+                card("set-spell", 5053103, 1, "spellTrap", 0, "faceDownAttack"),
+              ],
+            },
+      );
+      const mapped = mapSnapshotToBoard(snapshot, CARD_TEXTS);
+      if (!mapped.ok)
+        throw new Error(`Fixture mapping failed: ${mapped.error.type}`);
+      const boardCard = mapped.value.cards.find(
+        (value) => value.player === 1 && value.zoneId.startsWith("p1:"),
+      );
+
+      expect(boardCard).toMatchObject({
+        code: cardCode(5053103),
+        // Identity is known while the face stays down: back art, and the
+        // orientation is spoken alongside the attested name.
+        hidden: true,
+        image: { kind: "back" },
+      });
+      expect(boardCard?.label).toContain("Axe Raider");
+      expect(boardCard?.label).toContain("face-down");
+    }
   });
 
   it("keeps unknown face-down identity hidden", () => {

@@ -678,9 +678,10 @@
 
   /* Still wired to `DuelHud`'s `oninspect`, so the HUD and the card trays need
      no change: the trigger button they hand over is irrelevant now that the
-     panel replaces the modal inspector. Unlike `BoardCardView.code`, a raw
-     `PublicCard.code` is not already gated on identity visibility, so the
-     preview re-checks it here. */
+     panel replaces the modal inspector. ADR-014: a projected `PublicCard.code`
+     is itself the projector-attested local-viewer capability, so
+     `cardPreviewForPublicCard` reads that attestation instead of re-deriving
+     identity visibility from face orientation. */
   function previewHudCard(card: PublicCard): void {
     const next = cardPreviewForPublicCard(card, ACTIVE_CARD_TEXTS);
     if (next !== null) previewCard = next;

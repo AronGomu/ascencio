@@ -381,8 +381,12 @@
     else dispatch({ type: "toggleChoice", choiceId: choice.id });
   }
 
+  /* The hand band root, not its arrows: every control T8 put inside the band
+     — page arrows, the scrolling viewport, the page-status live region —
+     drives navigation only, so none of them may ever reach the outside-click
+     dismissal that answers the live decision. */
   const INTERACTIVE_SELECTOR =
-    "[data-field-target], .card-action-chips, .field-action-bar, .field-phase-strip, .field-end-turn, .floating-field-window";
+    "[data-field-target], .card-action-chips, .field-action-bar, .field-phase-strip, .field-end-turn, .floating-field-window, .duel-field-hand-band";
 
   function chainPassChoice(): InteractionChoice | null {
     if (spec === null || spec.promptKind !== "chain") return null;
@@ -727,6 +731,12 @@
   /* Closing hides the list only; the draft selection stays untouched and any
      launcher reopens it. */
   function dismissZoneList(event?: Event): void {
+    /* R1/F3: when every off-field choice failed to mount a launcher (opponent
+       hand addresses, which the projector emits as placeholders), this window
+       is the only surface that can answer the prompt. Hiding it would set
+       `dismissedTargetPromptKey`, which `synchronizeZoneList` then honours
+       forever, so the decision would have no surface at all. */
+    if (zoneListState?.mode === "target" && targetLaunchers.size === 0) return;
     const origin = event?.target;
     const pressed =
       origin instanceof Element

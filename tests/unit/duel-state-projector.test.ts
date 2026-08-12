@@ -195,6 +195,42 @@ describe("DuelStateProjector", () => {
     });
   });
 
+  /* ADR-014: only a fixed field slot may carry an attested code for a
+     concealed opponent card. `#changePosition` keeps the code it already had
+     when the engine flips a public banished card face-down, so the projector
+     has to fail on its own output rather than let the client validator kill
+     the Worker after the leak has already been posted. */
+  it("fails closed when a concealed opponent card outside a fixed slot keeps a code", () => {
+    const value = projector();
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.DECK,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.BANISHED,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    );
+    expect(value.snapshot().players[1].banished[0]?.code).toBe(5053103);
+
+    value.apply({
+      type: EngineMessageType.POSITION_CHANGE,
+      code: 5053103,
+      controller: 1,
+      location: EngineLocation.BANISHED,
+      sequence: 0,
+      prev_position: EnginePosition.FACE_UP_ATTACK,
+      position: EnginePosition.FACE_DOWN_DEFENSE,
+    });
+
+    expect(() => value.snapshot()).toThrow(
+      "Concealed opponent card outside a fixed field slot carries a code",
+    );
+  });
+
   it.each([
     ["graveyard", EngineLocation.GRAVEYARD, EngineLocation.SPELL_TRAP],
     ["face-up banished", EngineLocation.BANISHED, EngineLocation.MONSTER],

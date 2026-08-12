@@ -83,8 +83,14 @@ function board(state: keyof typeof BOARD_VIEW_MODEL_FIXTURES) {
 }
 
 /** A board with an oversized player and/or opponent hand, for T8 pagination
- * and cross-page keyboard-nav tests. Every other zone stays empty. */
-function bigHandBoard(playerHandCount: number, opponentHandCount: number) {
+ * and cross-page keyboard-nav tests. Every other zone stays empty unless a
+ * mounted monster is asked for (R1/F2 needs a live on-field decision while the
+ * hand is paginated). */
+function bigHandBoard(
+  playerHandCount: number,
+  opponentHandCount: number,
+  playerMonster = false,
+) {
   const playerHand: PublicCard[] = Array.from(
     { length: playerHandCount },
     (_, sequence) => bigHandStubCard(`big-p0-${sequence}`, 0, sequence),
@@ -106,7 +112,9 @@ function bigHandBoard(playerHandCount: number, opponentHandCount: number) {
         handCount: playerHandCount,
         hand: playerHand,
         extraDeck: [],
-        monsters: [],
+        monsters: playerMonster
+          ? [publicStateCard("big-hand-monster", 97590747, 0, "monster", 0)]
+          : [],
         spellsAndTraps: [],
         graveyard: [],
         banished: [],
@@ -559,6 +567,80 @@ describe("DuelField", () => {
     expect(
       container.querySelector('[data-card-id="big-p0-10"]'),
     ).not.toBeNull();
+  });
+
+  /* R1/F2: the hand band arrows arrived in T8 but never reached
+     `INTERACTIVE_SELECTOR`, so paging an 11-card hand while a decision was
+     live answered that decision with a cancel (and, for a chain, a pass). */
+  it("paging the hand never answers the live decision", async () => {
+    const user = userEvent.setup();
+    const value = bigHandBoard(11, 0, true);
+    const live = fieldPrompt(
+      "selectCard",
+      [
+        promptChoice("select-monster", "Select", {
+          card: {
+            instanceId: cardInstanceId("big-hand-monster"),
+            controller: 0,
+            location: "monster",
+            sequence: 0,
+            position: "faceUpAttack",
+          },
+        } as Partial<PromptChoice>),
+      ],
+      { cancelable: true },
+    );
+    const spec = mapPromptToInteractionSpec(live, null, value, CONTEXT);
+    if (spec.kind === "inactive")
+      throw new Error("Expected an active field spec");
+    const dispatch = vi.fn(
+      async (action: InteractionSessionAction) => action.type !== "cancel",
+    );
+    render(DuelField, {
+      board: value,
+      prompt: live,
+      spec,
+      session: createInteractionSession(spec),
+      pending: false,
+      oninteraction: dispatch,
+    });
+    /* No action bar and no target launcher: exactly the state in which an
+       incidental field click is allowed to cancel. */
+    expect(
+      document.querySelector('[data-cy="floating-field-window-confirm"]'),
+    ).toBeNull();
+
+    const next = document.querySelector<HTMLButtonElement>(
+      '[data-cy="field-hand-p0-next"]',
+    );
+    if (next === null) throw new Error("Missing hand next arrow");
+    await user.click(next);
+    expect(document.querySelector('[data-card-id="big-p0-10"]')).not.toBeNull();
+
+    const previous = document.querySelector<HTMLButtonElement>(
+      '[data-cy="field-hand-p0-previous"]',
+    );
+    const viewport = document.querySelector<HTMLElement>(
+      '[data-cy="field-hand-p0-viewport"]',
+    );
+    const pageStatus = document.querySelector<HTMLElement>(
+      '[data-cy="field-hand-p0-page-status"]',
+    );
+    if (previous === null || viewport === null || pageStatus === null)
+      throw new Error("Missing hand band controls");
+    await user.click(previous);
+    await fireEvent.click(viewport);
+    await fireEvent.click(pageStatus);
+
+    expect(dispatch).not.toHaveBeenCalled();
+
+    // The same click outside the band still cancels, so the guard is scoped.
+    const surface = document.querySelector<HTMLElement>(
+      '[data-cy="duel-field-board-surface"]',
+    );
+    if (surface === null) throw new Error("Missing board surface");
+    await user.click(surface);
+    expect(dispatch.mock.calls[0]?.[0]).toMatchObject({ type: "cancel" });
   });
 
   it("keyboard navigation follows mirrored opponent direction", async () => {
@@ -3070,7 +3152,11 @@ describe("DuelField off-field target list", () => {
   }
 
   function targetBoard() {
-    const mapped = mapSnapshotToBoard(TARGET_STATE, BOARD_CARD_TEXTS);
+    return boardFor(TARGET_STATE);
+  }
+
+  function boardFor(state: PublicDuelState) {
+    const mapped = mapSnapshotToBoard(state, BOARD_CARD_TEXTS);
     if (!mapped.ok) throw new Error("Target fixture mapping failed");
     return mapped.value;
   }
@@ -3093,11 +3179,22 @@ describe("DuelField off-field target list", () => {
     } as Partial<PromptChoice>);
   }
 
-  function renderTargets(value: PlayerPrompt) {
-    const valueBoard = targetBoard();
+  /* The projector never emits opponent hand identities, so an opponent-hand
+     choice has no card to mount: `resolvePromptChoiceBoardTarget` returns
+     `target_not_mounted` and the prompt owns no launcher at all. */
+  const UNMOUNTED_TARGET_STATE: PublicDuelState = {
+    ...TARGET_STATE,
+    players: [
+      TARGET_STATE.players[0],
+      { ...TARGET_STATE.players[1], handCount: 2, hand: [] },
+    ],
+  };
+
+  function renderTargets(value: PlayerPrompt, state = TARGET_STATE) {
+    const valueBoard = state === TARGET_STATE ? targetBoard() : boardFor(state);
     const mapped = mapPromptToInteractionSpec(
       value,
-      TARGET_STATE,
+      state,
       valueBoard,
       CONTEXT,
     );
@@ -3120,12 +3217,8 @@ describe("DuelField off-field target list", () => {
       spec,
       session,
       pending: false,
-      zoneLists: zoneListsForBoard(valueBoard, TARGET_STATE, BOARD_CARD_TEXTS),
-      offFieldTargets: offFieldTargetEntries(
-        spec,
-        TARGET_STATE,
-        BOARD_CARD_TEXTS,
-      ),
+      zoneLists: zoneListsForBoard(valueBoard, state, BOARD_CARD_TEXTS),
+      offFieldTargets: offFieldTargetEntries(spec, state, BOARD_CARD_TEXTS),
       oninteraction: dispatch,
     });
     return {
@@ -3357,6 +3450,72 @@ describe("DuelField off-field target list", () => {
       document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
         ?.textContent,
     ).toBe("0 selected · 1–2 allowed");
+  });
+
+  /* R1/F3: with every target unmounted the list is the only surface that can
+     answer, and dismissing it recorded `dismissedTargetPromptKey`, which then
+     refused every reopen — a `minimum: 2` prompt became unanswerable on the
+     first pointerdown outside the window. */
+  it("a launcher-less target list refuses to be dismissed", async () => {
+    const harness = renderTargets(
+      fieldPrompt(
+        "selectCard",
+        [
+          offFieldChoice("opp-hand-0", "hand", 0, 1),
+          offFieldChoice("opp-hand-1", "hand", 1, 1),
+        ],
+        { minimum: 2, maximum: 2 },
+      ),
+      UNMOUNTED_TARGET_STATE,
+    );
+    expect(harness.spec.offFieldChoices).toHaveLength(2);
+    expect(
+      document.querySelectorAll('[data-cy^="zone-list-entry-target:1:hand"]'),
+    ).toHaveLength(2);
+
+    const surface = document.querySelector<HTMLElement>(
+      '[data-cy="duel-field-board-surface"]',
+    );
+    if (surface === null) throw new Error("Missing board surface");
+    await fireEvent.pointerDown(surface);
+    await fireEvent.click(surface);
+    await fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog"]'),
+    ).not.toBeNull();
+    expect(harness.dispatch).not.toHaveBeenCalled();
+  });
+
+  it("still dismisses a target list that keeps a mounted launcher", async () => {
+    const harness = renderTargets(
+      fieldPrompt(
+        "selectCard",
+        [
+          offFieldChoice("gy-0", "graveyard", 0),
+          offFieldChoice("gy-1", "graveyard", 1),
+        ],
+        { minimum: 2, maximum: 2 },
+      ),
+    );
+
+    const surface = document.querySelector<HTMLElement>(
+      '[data-cy="duel-field-board-surface"]',
+    );
+    if (surface === null) throw new Error("Missing board surface");
+    await fireEvent.pointerDown(surface);
+
+    expect(document.querySelector('[data-cy="zone-list-dialog"]')).toBeNull();
+    expect(harness.dispatch).not.toHaveBeenCalled();
+
+    await fireEvent.click(
+      document.querySelector<HTMLElement>(
+        '[data-cy="field-stack-p0:graveyard"]',
+      ) as HTMLElement,
+    );
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog"]'),
+    ).not.toBeNull();
   });
 
   it("keeps a browse list stack-specific for a pile with no legal target", async () => {

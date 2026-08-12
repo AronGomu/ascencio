@@ -1530,11 +1530,38 @@ async function locateDraggablePlacement(page: Page): Promise<{
   return { field, dragTarget, targetZone, targetZoneId, cardBox, from, to };
 }
 
+/**
+ * A `null` placement is only a legitimate seed outcome while the hand is
+ * actually mounted and actionable. Chips that stopped rendering, a changed
+ * `data-cy` scheme, hand cards that stopped being actionable and a hand band
+ * that stopped mounting all produce the same `null` — and would silently
+ * delete both of T13's only real-browser pointer proofs. Assert the
+ * preconditions first; only an actionable hand may skip.
+ */
+async function assertHandCouldOfferAPlacement(page: Page): Promise<void> {
+  const field = page.getByRole("region", { name: "Duel field" });
+  const handCards = field.locator(
+    '.duel-field-card[data-card-zone-id="p0:hand"]',
+  );
+  expect(
+    await handCards.count(),
+    "the player hand band must mount at least one card before a drag test may skip",
+  ).toBeGreaterThan(0);
+  const actionableHandCards = field.locator(
+    '.duel-field-card.is-actionable[data-card-zone-id="p0:hand"]',
+  );
+  expect(
+    await actionableHandCards.count(),
+    "at least one mounted hand card must be actionable before a drag test may skip",
+  ).toBeGreaterThan(0);
+}
+
 test("dragging a hand card onto a highlighted zone plays it", async ({
   page,
 }) => {
   const placement = await locateDraggablePlacement(page);
   if (placement === null) {
+    await assertHandCouldOfferAPlacement(page);
     test.skip(
       true,
       "opening hand offers no summon, no monster set and no settable spell or trap — there is no placement of any kind to drag",
@@ -1660,6 +1687,7 @@ test("reduced motion drags follow the pointer with no tilt and settle with no li
   await page.emulateMedia({ reducedMotion: "reduce" });
   const placement = await locateDraggablePlacement(page);
   if (placement === null) {
+    await assertHandCouldOfferAPlacement(page);
     test.skip(
       true,
       "opening hand offers no summon, no monster set and no settable spell or trap — there is no placement of any kind to drag",

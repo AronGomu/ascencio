@@ -228,8 +228,6 @@ function buildRawEnginePrompt(
       if (message.to_bp)
         addSimpleChoice(bindings, id, "battlePhase", "Enter Battle Phase");
       if (message.to_ep) addSimpleChoice(bindings, id, "endPhase", "End turn");
-      if (message.shuffle)
-        addSimpleChoice(bindings, id, "shuffle", "Shuffle Deck");
       return binding(
         prompt(
           id,

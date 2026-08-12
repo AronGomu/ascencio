@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { isCardIdentityVisible } from "../../../duel/card-visibility.ts";
+  import { isProjectedCardIdentityKnown } from "../../../duel/card-visibility.ts";
   import type {
     PublicCard,
     PublicDuelState,
@@ -33,10 +33,7 @@
   );
 
   function canReveal(card: PublicCard): boolean {
-    return (
-      card.code !== undefined &&
-      isCardIdentityVisible(0, card.controller, card.location, card.position)
-    );
+    return isProjectedCardIdentityKnown(card);
   }
 
   function cardName(card: PublicCard): string {

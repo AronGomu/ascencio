@@ -7,13 +7,19 @@ import {
   type DuelId,
   type PromptId,
 } from "./ids.ts";
+import { isDeckId, type DeckId } from "../presets/deck-catalog.ts";
 
 const MAX_ID_LENGTH = 512;
 const MAX_RESPONSE_CHOICES = 256;
 
 export type DuelCommand =
   | { readonly type: "initialize" }
-  | { readonly type: "startDuel"; readonly duelId: DuelId }
+  | {
+      readonly type: "startDuel";
+      readonly duelId: DuelId;
+      readonly playerDeckId: DeckId;
+      readonly opponentDeckId: DeckId;
+    }
   | {
       readonly type: "respond";
       readonly promptId: PromptId;
@@ -44,10 +50,33 @@ export function parseDuelCommand(value: unknown): DuelCommand {
       requireOnlyKeys(command, ["type"]);
       return { type: commandType };
     case "startDuel":
-      requireOnlyKeys(command, ["type", "duelId"]);
+      requireOnlyKeys(command, [
+        "type",
+        "duelId",
+        "playerDeckId",
+        "opponentDeckId",
+      ]);
+      if (
+        typeof command.playerDeckId !== "string" ||
+        !isDeckId(command.playerDeckId)
+      ) {
+        throw new DuelCommandValidationError(
+          "Duel startDuel command deck id is not a bundled deck",
+        );
+      }
+      if (
+        typeof command.opponentDeckId !== "string" ||
+        !isDeckId(command.opponentDeckId)
+      ) {
+        throw new DuelCommandValidationError(
+          "Duel startDuel command deck id is not a bundled deck",
+        );
+      }
       return {
         type: "startDuel",
         duelId: duelId(requireId(command.duelId, "duelId")),
+        playerDeckId: command.playerDeckId,
+        opponentDeckId: command.opponentDeckId,
       };
     case "respond": {
       requireOnlyKeys(command, ["type", "promptId", "choiceIds"]);

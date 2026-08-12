@@ -6,16 +6,19 @@ import {
   reduceInteractionSession,
   synchronizeInteractionSession,
 } from "../../src/app/prompts/interaction-session.ts";
-import type {
-  ActiveInteractionSpec,
-  InteractionChoice,
+import {
+  interactionChoicesInPromptOrder,
+  type ActiveInteractionSpec,
+  type InteractionChoice,
 } from "../../src/app/prompts/interaction-spec.ts";
 
 const FIRST = choiceId("first");
 const SECOND = choiceId("second");
 const THIRD = choiceId("third");
+const FOURTH = choiceId("fourth");
 const TARGET = "card:first" as BoardTargetId;
 const OTHER_TARGET = "card:second" as BoardTargetId;
+const STACK_TARGET = "stack:p0:graveyard" as BoardTargetId;
 
 function choice(
   id: typeof FIRST,
@@ -49,12 +52,87 @@ function spec(
     },
     cardChoices: new Map([[TARGET, [choice(FIRST), choice(SECOND)]]]),
     zoneChoices: new Map(),
+    stackChoices: new Map(),
     globalChoices: new Map([[THIRD, choice(THIRD)]]),
+    offFieldChoices: [],
+    choiceOrder: [FIRST, SECOND, THIRD],
     ...overrides,
   } as ActiveInteractionSpec;
 }
 
+/* T16: an off-field target lives in the aggregate list and, by design, also
+   in the stack that launches it. */
+function mixedSpec(): ActiveInteractionSpec {
+  return spec({
+    cardChoices: new Map([[TARGET, [choice(SECOND)]]]),
+    stackChoices: new Map([[STACK_TARGET, [choice(FIRST), choice(FOURTH)]]]),
+    globalChoices: new Map([[THIRD, choice(THIRD)]]),
+    offFieldChoices: [choice(FIRST), choice(FOURTH)],
+    choiceOrder: [FIRST, SECOND, THIRD, FOURTH],
+    constraints: { ...spec().constraints, minimum: 1, maximum: 4 },
+  });
+}
+
+describe("interactionChoicesInPromptOrder", () => {
+  it("includes stack and off-field choices, deduped, in raw prompt order", () => {
+    expect(
+      interactionChoicesInPromptOrder(mixedSpec()).map(({ id }) => id),
+    ).toEqual([FIRST, SECOND, THIRD, FOURTH]);
+  });
+
+  it("ignores an id the spec no longer carries", () => {
+    const stale = spec({ choiceOrder: [FIRST, choiceId("stale"), THIRD] });
+    expect(interactionChoicesInPromptOrder(stale).map(({ id }) => id)).toEqual([
+      FIRST,
+      THIRD,
+    ]);
+  });
+});
+
 describe("interaction session reducer", () => {
+  it("accepts an off-field id and submits every category in prompt order", () => {
+    const active = mixedSpec();
+    let session = createInteractionSession(active);
+    for (const selected of [FOURTH, SECOND, FIRST]) {
+      session = reduceInteractionSession(session, active, {
+        type: "toggleChoice",
+        key: active.key,
+        choiceId: selected,
+      }).session;
+    }
+
+    expect(
+      reduceInteractionSession(session, active, {
+        type: "confirm",
+        key: active.key,
+      }).command?.choiceIds,
+    ).toEqual([FIRST, SECOND, FOURTH]);
+  });
+
+  it("submits an off-field id immediately on chooseChoice", () => {
+    const active = mixedSpec();
+    expect(
+      reduceInteractionSession(createInteractionSession(active), active, {
+        type: "chooseChoice",
+        key: active.key,
+        choiceId: FOURTH,
+      }).command,
+    ).toEqual({ type: "submit", key: active.key, choiceIds: [FOURTH] });
+  });
+
+  it("still rejects an unknown id in a mixed spec", () => {
+    const active = mixedSpec();
+    const session = createInteractionSession(active);
+    const rejected = reduceInteractionSession(session, active, {
+      type: "toggleChoice",
+      key: active.key,
+      choiceId: choiceId("unknown"),
+    });
+
+    expect(rejected.session).toBe(session);
+    expect(rejected.command).toBeNull();
+  });
+
   it("resets every draft field for a new interaction key", () => {
     const firstSpec = spec();
     let session = createInteractionSession(firstSpec);
@@ -157,6 +235,7 @@ describe("interaction session reducer", () => {
         [TARGET, [choice(FIRST, 2)]],
         [OTHER_TARGET, [choice(SECOND, 3)]],
       ]),
+      stackChoices: new Map(),
       globalChoices: new Map(),
     });
     let session = createInteractionSession(counter);

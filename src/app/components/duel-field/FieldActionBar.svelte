@@ -1,56 +1,35 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-  import type { PlayerPrompt } from "../../../duel/contracts/player-prompt.ts";
   import type {
     InteractionSession,
     InteractionSessionAction,
     UnkeyedInteractionSessionAction,
   } from "../../prompts/interaction-session.ts";
-  import type {
-    ActiveInteractionSpec,
-    InteractionChoice,
+  import {
+    interactionChoicesInPromptOrder,
+    isImmediateSingleSelection,
+    isPhaseTransitionChoice,
+    type ActiveInteractionSpec,
+    type InteractionChoice,
   } from "../../prompts/interaction-spec.ts";
 
-  export let prompt: PlayerPrompt;
   export let spec: ActiveInteractionSpec;
   export let session: InteractionSession;
   export let disabled = false;
   export let confirmValid = false;
   export let validationMessage = "";
   export let oninteraction: (action: InteractionSessionAction) => unknown;
-  /* Read-only outward binding: `DuelField` reserves a gutter this tall below
-     the board so the bar never overlaps a field target. Measured here rather
-     than through `bind:clientHeight` so the component still mounts where
-     `ResizeObserver` is missing. */
-  export let clientHeight = 0;
 
   const LIST_DATA_CY = "field-action-bar-list";
 
-  let barElement: HTMLElement;
-  let sizeObserver: ResizeObserver | null = null;
-
-  $: allChoices = choicesInPromptOrder(spec);
+  $: allChoices = interactionChoicesInPromptOrder(spec);
   $: choicesById = new Map(allChoices.map((choice) => [choice.id, choice]));
   $: globalChoices = [...spec.globalChoices.values()].filter(
-    (choice) => choice.action !== "endPhase",
+    (choice) => !isPhaseTransitionChoice(choice),
   );
   $: allocatedTotal = [...session.allocations.values()].reduce(
     (total, amount) => total + amount,
     0,
   );
-
-  onMount(() => {
-    clientHeight = barElement.clientHeight;
-    if (typeof ResizeObserver === "undefined") return;
-    sizeObserver = new ResizeObserver(() => {
-      clientHeight = barElement.clientHeight;
-    });
-    sizeObserver.observe(barElement);
-    return () => {
-      sizeObserver?.disconnect();
-      sizeObserver = null;
-    };
-  });
 
   function dispatch(action: UnkeyedInteractionSessionAction): void {
     oninteraction({ ...action, key: spec.key } as InteractionSessionAction);
@@ -80,32 +59,12 @@
         return "Confirm";
     }
   }
-
-  function choicesInPromptOrder(
-    value: ActiveInteractionSpec,
-  ): readonly InteractionChoice[] {
-    const byId = new Map(prompt.choices.map((choice) => [choice.id, choice]));
-    const mapped = new Map(
-      [
-        ...value.cardChoices.values(),
-        ...value.zoneChoices.values(),
-        value.globalChoices.values(),
-      ]
-        .flatMap((choices) => [...choices])
-        .map((choice) => [choice.id, choice]),
-    );
-    return prompt.choices.flatMap((choice) => {
-      const sanitized = mapped.get(choice.id);
-      return byId.has(choice.id) && sanitized !== undefined ? [sanitized] : [];
-    });
-  }
 </script>
 
 <section
   class="field-action-bar"
   aria-label="Field decision"
   aria-busy={disabled}
-  bind:this={barElement}
   data-cy="field-action-bar"
 >
   <p data-cy="field-action-bar-title">{spec.title}</p>
@@ -217,7 +176,7 @@
     </div>
   {/if}
 
-  {#if spec.kind !== "cardAction" && spec.kind !== "nonField"}
+  {#if spec.kind !== "cardAction" && spec.kind !== "nonField" && !((spec.kind === "placeSelection" || spec.kind === "cardSelection") && isImmediateSingleSelection(spec))}
     <button
       type="button"
       disabled={disabled || !confirmValid}

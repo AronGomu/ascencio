@@ -1,4 +1,6 @@
+import { isProjectedCardIdentityKnown } from "../duel/card-visibility.ts";
 import type { CardCode, CardInstanceId } from "../duel/contracts/ids.ts";
+import type { PlayerPrompt } from "../duel/contracts/player-prompt.ts";
 import type {
   CardPosition,
   PlayerIndex,
@@ -13,6 +15,7 @@ import {
   CARD_WIDTH,
   DUEL_FIELD_HEIGHT,
   DUEL_FIELD_WIDTH,
+  fieldZoneAccessibleName,
   mapEngineFieldAddress,
   STANDARD_DUEL_FIELD_LAYOUT,
   type FieldZoneKind,
@@ -34,6 +37,7 @@ export interface BoardZoneView {
   readonly kind: FieldZoneKind;
   readonly sequence: number;
   readonly label: string;
+  readonly accessibleLabel: string;
   readonly x: number;
   readonly y: number;
   readonly width: number;
@@ -65,6 +69,7 @@ export interface BoardCardView {
   readonly player: PlayerIndex;
   readonly owner?: PlayerIndex;
   readonly zoneId: PhysicalZoneId;
+  readonly sequence: number;
   readonly position: CardPosition;
   readonly orientation: "upright" | "sideways";
   readonly facing: "self" | "opponent";
@@ -91,7 +96,9 @@ export interface BoardStackView {
   readonly count: number;
   readonly publicCount: number;
   readonly label: string;
+  readonly accessibleLabel: string;
   readonly topCardLabel?: string;
+  readonly topCardCode?: CardCode;
   readonly x: number;
   readonly y: number;
   readonly width: number;
@@ -128,6 +135,11 @@ export type BoardMappingError =
   | {
       readonly type: "duplicate_card_instance";
       readonly cardId: string;
+    }
+  | {
+      readonly type: "layout_profile_conflict";
+      readonly zoneId: "shared:extraMonster:left" | "shared:extraMonster:right";
+      readonly source: "occupied" | "prompt";
     };
 
 export type BoardMappingResult =
@@ -138,6 +150,7 @@ interface NavControl {
   readonly targetId: BoardTargetId;
   readonly x: number;
   readonly y: number;
+  readonly width: number;
 }
 
 const LAYOUT_BY_ID = new Map(
@@ -151,12 +164,25 @@ const NAV_ALIGNMENT_EPSILON = 1 / Math.max(DUEL_FIELD_WIDTH, DUEL_FIELD_HEIGHT);
 export function mapSnapshotToBoard(
   snapshot: PublicDuelState,
   cardTexts: ReadonlyMap<number, BoardCardText> = new Map(),
+  prompt?: PlayerPrompt | null,
 ): BoardMappingResult {
+  const sharedZonesOmitted = !snapshot.layout.extraMonsterZones;
+  if (sharedZonesOmitted && prompt !== undefined && prompt !== null) {
+    /* A prompt that can still reach an omitted zone is a rules/layout
+       disagreement, never something to hide or answer on the player's
+       behalf. Checked before the board exists so no caller can act on a
+       board that silently dropped a legal target. */
+    const conflict = promptLayoutConflict(prompt);
+    if (conflict !== undefined) return failure(conflict);
+  }
   const zones = Object.freeze(
-    STANDARD_DUEL_FIELD_LAYOUT.map((layout) =>
+    STANDARD_DUEL_FIELD_LAYOUT.filter(
+      (layout) => !(sharedZonesOmitted && isSharedExtraMonsterZone(layout.id)),
+    ).map((layout) =>
       Object.freeze({
         ...layout,
         targetId: `zone:${layout.id}` as const,
+        accessibleLabel: fieldZoneAccessibleName(layout),
       }),
     ),
   );
@@ -175,6 +201,12 @@ export function mapSnapshotToBoard(
         controller: card.controller,
         location: card.location,
         sequence: card.sequence,
+      });
+    if (sharedZonesOmitted && isSharedExtraMonsterZone(mapping.zoneId))
+      return failure({
+        type: "layout_profile_conflict",
+        zoneId: mapping.zoneId,
+        source: "occupied",
       });
     const occupied = occupancy.get(mapping.zoneId);
     if (occupied !== undefined)
@@ -198,7 +230,7 @@ export function mapSnapshotToBoard(
           LAYOUT_BY_ID.get("p0:hand"),
           snapshot,
           cardTexts,
-          handOffset(card.sequence, player.handCount),
+          handNavigationOffset(card.sequence, player.handCount),
         );
         if (duplicate !== undefined) return failure(duplicate);
       }
@@ -249,6 +281,57 @@ export function mapSnapshotToBoard(
   return Object.freeze({ ok: true, value: board });
 }
 
+function isSharedExtraMonsterZone(
+  zoneId: PhysicalZoneId,
+): zoneId is "shared:extraMonster:left" | "shared:extraMonster:right" {
+  return (
+    zoneId === "shared:extraMonster:left" ||
+    zoneId === "shared:extraMonster:right"
+  );
+}
+
+function promptLayoutConflict(
+  prompt: PlayerPrompt,
+):
+  | Extract<BoardMappingError, { readonly type: "layout_profile_conflict" }>
+  | undefined {
+  for (const choice of prompt.choices) {
+    const addresses = [
+      ...(choice.place === undefined
+        ? []
+        : [
+            {
+              player: choice.place.player,
+              location: choice.place.location,
+              sequence: choice.place.sequence,
+            },
+          ]),
+      ...(choice.card === undefined ||
+      (choice.card.location !== "monster" &&
+        choice.card.location !== "spellTrap" &&
+        choice.card.location !== "field")
+        ? []
+        : [
+            {
+              player: choice.card.controller,
+              location: choice.card.location,
+              sequence: choice.card.sequence,
+            },
+          ]),
+    ];
+    for (const address of addresses) {
+      const mapping = mapEngineFieldAddress(address);
+      if (mapping.ok && isSharedExtraMonsterZone(mapping.zoneId))
+        return {
+          type: "layout_profile_conflict",
+          zoneId: mapping.zoneId,
+          source: "prompt",
+        };
+    }
+  }
+  return undefined;
+}
+
 function fixedCardsIn(snapshot: PublicDuelState): readonly (PublicCard & {
   readonly location: "monster" | "spellTrap" | "field";
 })[] {
@@ -279,8 +362,9 @@ function addCard(
       cardId: card.instanceId,
     });
   cardIds.add(card.instanceId);
-  const identityVisible = cardIdentityVisible(card);
-  const displayName = identityVisible
+  const identityKnown = isProjectedCardIdentityKnown(card);
+  const faceVisible = cardFaceVisible(card);
+  const displayName = identityKnown
     ? cardName(card.code, cardTexts)
     : undefined;
   const counters = Object.freeze(
@@ -322,7 +406,7 @@ function addCard(
   );
   const label = cardAccessibleLabel(
     displayName,
-    layout.label,
+    fieldZoneAccessibleName(layout),
     card.position,
     counters,
     materials.length,
@@ -332,16 +416,15 @@ function addCard(
       id: card.instanceId,
       targetId: `card:${card.instanceId}` as const,
       instanceId: card.instanceId,
-      ...(identityVisible && card.code !== undefined
-        ? { code: card.code }
-        : {}),
+      ...(identityKnown && card.code !== undefined ? { code: card.code } : {}),
       player: card.controller,
       owner: card.owner,
       zoneId: layout.id,
+      sequence: card.sequence,
       position: card.position,
       orientation: orientationFor(card.position),
       facing: card.controller === 0 ? "self" : "opponent",
-      hidden: !identityVisible,
+      hidden: !faceVisible,
       label,
       x: layout.x + xOffset,
       y: layout.y,
@@ -351,7 +434,7 @@ function addCard(
       materials,
       chainLinks,
       image: Object.freeze(
-        identityVisible && card.code !== undefined
+        faceVisible && identityKnown && card.code !== undefined
           ? { kind: "face" as const, code: card.code }
           : { kind: "back" as const },
       ),
@@ -376,13 +459,14 @@ function addHiddenHandPlaceholder(
       targetId: `card:${id}` as const,
       player,
       zoneId: layout.id,
+      sequence,
       position: "faceDownAttack" as const,
       orientation: "upright" as const,
       facing: player === 0 ? ("self" as const) : ("opponent" as const),
       hidden: true,
       label:
         player === 0 ? "Hidden card in your hand" : "Hidden opponent hand card",
-      x: layout.x + handOffset(sequence, count),
+      x: layout.x + handNavigationOffset(sequence, count),
       y: layout.y,
       width: CARD_WIDTH_NORMALIZED,
       height: CARD_HEIGHT_NORMALIZED,
@@ -405,10 +489,11 @@ function createStacks(
       if (layout === undefined) continue;
       const collection = stackCollection(player, zone);
       const count = stackCount(player, zone, collection);
-      const publicCards = collection.filter(cardIdentityVisible);
-      const top = publicCards.at(-1);
+      const publicCards = collection.filter(isProjectedCardIdentityKnown);
+      const top = zone === "deck" ? undefined : publicCards.at(-1);
       const topCardLabel =
         top === undefined ? undefined : cardName(top.code, cardTexts);
+      const detail = `${count} ${count === 1 ? "card" : "cards"}${topCardLabel === undefined ? "" : `, top card ${topCardLabel}`}`;
       stacks.push(
         Object.freeze({
           id: layout.id,
@@ -417,8 +502,10 @@ function createStacks(
           zone,
           count,
           publicCount: publicCards.length,
-          label: `${layout.label}, ${count} ${count === 1 ? "card" : "cards"}${topCardLabel === undefined ? "" : `, top card ${topCardLabel}`}`,
+          label: `${layout.label}, ${detail}`,
+          accessibleLabel: `${fieldZoneAccessibleName(layout)}, ${detail}`,
           ...(topCardLabel === undefined ? {} : { topCardLabel }),
+          ...(top?.code === undefined ? {} : { topCardCode: top.code }),
           x: layout.x,
           y: layout.y,
           width: CARD_WIDTH_NORMALIZED,
@@ -436,7 +523,7 @@ function stackCollection(
 ): readonly PublicCard[] {
   switch (zone) {
     case "deck":
-      return [];
+      return player.deck;
     case "extra":
       return player.extraDeck;
     case "graveyard":
@@ -486,17 +573,67 @@ function createNavigation(
     }
     controls.push(cardByZone.get(zone.id) ?? zone);
   }
+  const handOverrides = handHorizontalOverrides(zones, cards);
   return new ImmutableReadonlyMap(
-    controls.map((control) => [
-      control.targetId,
-      Object.freeze({
-        ...neighborInDirection(control, controls, "left"),
-        ...neighborInDirection(control, controls, "right"),
-        ...neighborInDirection(control, controls, "up"),
-        ...neighborInDirection(control, controls, "down"),
-      }),
-    ]),
+    controls.map((control) => {
+      const isHandCard = handOverrides.has(control.targetId);
+      return [
+        control.targetId,
+        Object.freeze({
+          ...(isHandCard ? {} : neighborInDirection(control, controls, "left")),
+          ...(isHandCard
+            ? {}
+            : neighborInDirection(control, controls, "right")),
+          ...neighborInDirection(control, controls, "up"),
+          ...neighborInDirection(control, controls, "down"),
+          ...handOverrides.get(control.targetId),
+        }),
+      ] as const;
+    }),
   );
+}
+
+/**
+ * Hand cards keep explicit sequence neighbors instead of the generic spatial
+ * scoring above: player ArrowLeft/Right move sequence -1/+1, and the
+ * mirrored opponent hand moves sequence +1/-1, so its visual left/right
+ * stays intuitive even though its DOM/sequence order does not change.
+ */
+function handHorizontalOverrides(
+  zones: readonly BoardZoneView[],
+  cards: readonly BoardCardView[],
+): ReadonlyMap<BoardTargetId, Partial<SpatialNeighbors>> {
+  const overrides = new Map<BoardTargetId, Partial<SpatialNeighbors>>();
+  for (const zone of zones) {
+    if (zone.kind !== "hand") continue;
+    const handCards = cards
+      .filter((card) => card.zoneId === zone.id)
+      .toSorted((left, right) => left.sequence - right.sequence);
+    const mirrored = zone.player === 1;
+    const leftDelta = mirrored ? 1 : -1;
+    const rightDelta = mirrored ? -1 : 1;
+    for (let index = 0; index < handCards.length; index += 1) {
+      const card = handCards[index]!;
+      const leftIndex = index + leftDelta;
+      const rightIndex = index + rightDelta;
+      const left =
+        leftIndex >= 0 && leftIndex < handCards.length
+          ? handCards[leftIndex]!.targetId
+          : undefined;
+      const right =
+        rightIndex >= 0 && rightIndex < handCards.length
+          ? handCards[rightIndex]!.targetId
+          : undefined;
+      overrides.set(
+        card.targetId,
+        Object.freeze({
+          ...(left === undefined ? {} : { left }),
+          ...(right === undefined ? {} : { right }),
+        }),
+      );
+    }
+  }
+  return overrides;
 }
 
 function neighborInDirection(
@@ -513,10 +650,15 @@ function neighborInDirection(
     return candidate.y > origin.y;
   });
   if (candidates.length === 0) return {};
+  // Rows are exact, so horizontal moves stay row-local on an exact match.
+  // Columns are not: the shared Extra Monster Zones sit between the monster
+  // rows and off every column centre, so vertical alignment is span overlap.
+  // Column pitch stays wider than a control, so neighbouring columns still
+  // never count as aligned.
   const aligned = candidates.filter((candidate) =>
     horizontal
       ? Math.abs(candidate.y - origin.y) < NAV_ALIGNMENT_EPSILON
-      : Math.abs(candidate.x - origin.x) < NAV_ALIGNMENT_EPSILON,
+      : Math.abs(candidate.x - origin.x) < (origin.width + candidate.width) / 2,
   );
   if (horizontal && aligned.length === 0) return {};
   const pool = aligned.length > 0 ? aligned : candidates;
@@ -541,8 +683,7 @@ function neighborInDirection(
   return neighbor === undefined ? {} : { [direction]: neighbor.targetId };
 }
 
-function cardIdentityVisible(card: PublicCard): boolean {
-  if (card.code === undefined) return false;
+function cardFaceVisible(card: PublicCard): boolean {
   if (card.location === "hand") return card.controller === 0;
   if (card.location === "extra") return card.controller === 0 || card.faceUp;
   return card.faceUp;
@@ -595,7 +736,12 @@ function orientationFor(position: CardPosition): "upright" | "sideways" {
     : "upright";
 }
 
-function handOffset(sequence: number, count: number): number {
+/**
+ * Hand cards no longer paint from these coordinates (HandBand renders them
+ * in normal document flow instead), but spatial up/down navigation still
+ * needs distinct virtual x positions per hand card, so this stays.
+ */
+function handNavigationOffset(sequence: number, count: number): number {
   const pixels =
     (sequence - (count - 1) / 2) * Math.min(58, 600 / Math.max(count, 1));
   return pixels / DUEL_FIELD_WIDTH;

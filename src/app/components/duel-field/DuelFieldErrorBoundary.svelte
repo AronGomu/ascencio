@@ -5,14 +5,18 @@
   import type { CardImageLibrary } from "../../images/card-image-cache.ts";
   import type {
     BoardCardView,
+    BoardStackView,
     BoardViewModel,
   } from "../../../field/board-view-model.ts";
   import type { PhysicalZoneId } from "../../../field/duel-field-layout.ts";
+  import type { ZoneListEntry } from "../../../field/zone-list.ts";
+  import type { OffFieldTargetEntry } from "../../../field/off-field-target-list.ts";
   import type {
     InteractionSession,
     InteractionSessionAction,
   } from "../../prompts/interaction-session.ts";
   import type { ActiveInteractionSpec } from "../../prompts/interaction-spec.ts";
+  import type { PersistedWindowPosition } from "../../stores/persisted-ui-state.ts";
   import DuelField from "../DuelField.svelte";
 
   const EMPTY_IMAGE_URLS: ReadonlyMap<number, string> = new Map();
@@ -38,9 +42,21 @@
   export let onplacementintent: (zoneId: PhysicalZoneId) => unknown = () =>
     false;
   export let onpreview: (card: BoardCardView) => void = () => undefined;
+  export let onstackpreview: (stack: BoardStackView) => void = () => undefined;
+  export let zoneLists: ReadonlyMap<PhysicalZoneId, readonly ZoneListEntry[]> =
+    new Map();
+  export let offFieldTargets: readonly OffFieldTargetEntry[] = [];
+  export let onzonelistpreview: (entry: ZoneListEntry) => void = () =>
+    undefined;
   export let phase: DuelPhase = "unknown";
-  export let hasPriority = false;
-  export let lifePoints: readonly [number, number] | null = null;
+  export let zoneListWindowPosition: PersistedWindowPosition | null = null;
+  export let confirmWindowPosition: PersistedWindowPosition | null = null;
+  export let onzoneListWindowPositionChange: (
+    position: PersistedWindowPosition,
+  ) => void = () => undefined;
+  export let onconfirmWindowPositionChange: (
+    position: PersistedWindowPosition,
+  ) => void = () => undefined;
 
   let shouldFail: boolean = injectFailure;
 
@@ -99,8 +115,14 @@
     {oninteraction}
     {onplacementintent}
     {onpreview}
+    {onstackpreview}
+    {zoneLists}
+    {offFieldTargets}
+    {onzonelistpreview}
     {phase}
-    {hasPriority}
-    {lifePoints}
+    {zoneListWindowPosition}
+    {confirmWindowPosition}
+    {onzoneListWindowPositionChange}
+    {onconfirmWindowPositionChange}
   />
 </svelte:boundary>

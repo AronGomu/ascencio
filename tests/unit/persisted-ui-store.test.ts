@@ -1,0 +1,139 @@
+import { get } from "svelte/store";
+import { describe, expect, it, vi } from "vitest";
+import { PERSISTED_UI_STATE_KEY } from "../../src/app/stores/persisted-ui-state.ts";
+import { createPersistedUiStore } from "../../src/app/stores/persisted-ui-store.ts";
+
+function memoryStorage(seed: string | null = null) {
+  let value = seed;
+  const setItem = vi.fn((key: string, next: string) => {
+    if (key === PERSISTED_UI_STATE_KEY) value = next;
+  });
+  return {
+    getItem: (key: string) => (key === PERSISTED_UI_STATE_KEY ? value : null),
+    setItem,
+    read: () => (value === null ? null : (JSON.parse(value) as unknown)),
+  };
+}
+
+const SEED = JSON.stringify({
+  version: 1,
+  windows: { zoneList: { x: 12, y: 34 }, confirm: { x: 56, y: 78 } },
+  decks: { player: "nekroz", opponent: "shaddoll" },
+});
+
+describe("persisted UI store", () => {
+  it("initializes from the persisted reader", () => {
+    const storage = memoryStorage(SEED);
+    const store = createPersistedUiStore(storage);
+
+    expect(get(store)).toEqual({
+      version: 1,
+      windows: { zoneList: { x: 12, y: 34 }, confirm: { x: 56, y: 78 } },
+      decks: { player: "nekroz", opponent: "shaddoll" },
+    });
+    expect(storage.setItem).not.toHaveBeenCalled();
+  });
+
+  it("initializes to defaults when storage is unavailable", () => {
+    const store = createPersistedUiStore(null);
+
+    expect(get(store).decks).toEqual({
+      player: "mvp-player",
+      opponent: "mvp-opponent",
+    });
+    expect(get(store).windows).toEqual({ zoneList: null, confirm: null });
+  });
+
+  it("setDecks preserves both window positions and writes once", () => {
+    const storage = memoryStorage(SEED);
+    const store = createPersistedUiStore(storage);
+
+    store.setDecks("shaddoll", "nekroz");
+
+    expect(get(store).decks).toEqual({
+      player: "shaddoll",
+      opponent: "nekroz",
+    });
+    expect(get(store).windows).toEqual({
+      zoneList: { x: 12, y: 34 },
+      confirm: { x: 56, y: 78 },
+    });
+    expect(storage.setItem).toHaveBeenCalledTimes(1);
+    expect(storage.read()).toEqual(get(store));
+  });
+
+  it("setWindowPosition preserves the deck pair and the other window", () => {
+    const storage = memoryStorage(SEED);
+    const store = createPersistedUiStore(storage);
+
+    store.setWindowPosition("zoneList", { x: 5, y: 6 });
+
+    expect(get(store).windows).toEqual({
+      zoneList: { x: 5, y: 6 },
+      confirm: { x: 56, y: 78 },
+    });
+    expect(get(store).decks).toEqual({
+      player: "nekroz",
+      opponent: "shaddoll",
+    });
+    expect(storage.setItem).toHaveBeenCalledTimes(1);
+    expect(storage.read()).toEqual(get(store));
+  });
+
+  it("each window keeps its own position", () => {
+    const storage = memoryStorage();
+    const store = createPersistedUiStore(storage);
+
+    store.setWindowPosition("confirm", { x: 1, y: 2 });
+    store.setWindowPosition("zoneList", { x: 3, y: 4 });
+
+    expect(get(store).windows).toEqual({
+      zoneList: { x: 3, y: 4 },
+      confirm: { x: 1, y: 2 },
+    });
+    expect(storage.setItem).toHaveBeenCalledTimes(2);
+  });
+
+  it("clears a window position back to null", () => {
+    const storage = memoryStorage(SEED);
+    const store = createPersistedUiStore(storage);
+
+    store.setWindowPosition("confirm", null);
+
+    expect(get(store).windows.confirm).toBeNull();
+    expect(get(store).windows.zoneList).toEqual({ x: 12, y: 34 });
+  });
+
+  it("writes the complete v1 state on every setter", () => {
+    const storage = memoryStorage();
+    const store = createPersistedUiStore(storage);
+
+    store.setWindowPosition("zoneList", { x: 7, y: 8 });
+
+    expect(storage.read()).toEqual({
+      version: 1,
+      windows: { zoneList: { x: 7, y: 8 }, confirm: null },
+      decks: { player: "mvp-player", opponent: "mvp-opponent" },
+    });
+  });
+
+  it("a throwing storage never escapes a setter", () => {
+    const store = createPersistedUiStore({
+      getItem: () => {
+        throw new DOMException("Blocked", "SecurityError");
+      },
+      setItem: () => {
+        throw new DOMException("Storage full", "QuotaExceededError");
+      },
+    });
+
+    expect(() => store.setDecks("nekroz", "shaddoll")).not.toThrow();
+    expect(() =>
+      store.setWindowPosition("zoneList", { x: 1, y: 1 }),
+    ).not.toThrow();
+    expect(get(store).decks).toEqual({
+      player: "nekroz",
+      opponent: "shaddoll",
+    });
+  });
+});

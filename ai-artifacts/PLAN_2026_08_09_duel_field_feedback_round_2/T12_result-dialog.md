@@ -80,14 +80,14 @@
 
 ## Impl steps
 
-- [ ] 1. Create `tests/component/DuelResultDialog.test.ts` with the nine cases from the table.
-- [ ] 2. Run `npm run test:component`; confirm it fails.
-- [ ] 3. Create `src/app/components/DuelResultDialog.svelte` with the prop contract above, the backdrop/panel structure copied from `SettingsDialog.svelte` (minus its dismiss handlers), an `onMount` heading focus, and the result markup moved verbatim from `App.svelte` including every existing `data-cy`.
-- [ ] 4. In `src/app/App.svelte`, delete the inline `{#if $duel.result}` section and add the `DuelResultDialog` block next to `{#if menuOpen}` / `{#if settingsOpen}`.
-- [ ] 5. In `src/app/App.svelte`, delete `resultHeading` and the `afterUpdate` focus lines for it; delete `previousStatus` too if nothing else reads it.
-- [ ] 6. In `src/styles/app.css`, add the nested `.dialog-panel .result-panel` reset if the border double-draws.
-- [ ] 7. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`.
-- [ ] 8. Run the chromium e2e suite (see Validation). The existing end-of-duel assertions should pass unchanged because every `data-cy` was preserved; if one fails on visibility, it is because the dialog needs a higher `z-index` than the field — fix the CSS, not the test.
+- [x] 1. Create `tests/component/DuelResultDialog.test.ts` with the nine cases from the table.
+- [x] 2. Run `npm run test:component`; confirm it fails.
+- [x] 3. Create `src/app/components/DuelResultDialog.svelte` with the prop contract above, the backdrop/panel structure copied from `SettingsDialog.svelte` (minus its dismiss handlers), an `onMount` heading focus, and the result markup moved verbatim from `App.svelte` including every existing `data-cy`.
+- [x] 4. In `src/app/App.svelte`, delete the inline `{#if $duel.result}` section and add the `DuelResultDialog` block next to `{#if menuOpen}` / `{#if settingsOpen}`.
+- [x] 5. In `src/app/App.svelte`, delete `resultHeading` and the `afterUpdate` focus lines for it; delete `previousStatus` too if nothing else reads it.
+- [x] 6. In `src/styles/app.css`, add the nested `.dialog-panel .result-panel` reset if the border double-draws.
+- [x] 7. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`.
+- [x] 8. Run the chromium e2e suite (see Validation). The existing end-of-duel assertions should pass unchanged because every `data-cy` was preserved; if one fails on visibility, it is because the dialog needs a higher `z-index` than the field — fix the CSS, not the test.
 
 ## Outputs
 
@@ -98,22 +98,29 @@
 
 ## Validation
 
-- [ ] `npm run format:check` exits 0
-- [ ] `npm run lint` exits 0
-- [ ] `npm run typecheck` exits 0
-- [ ] `npm run test:unit` exits 0
-- [ ] `npm run test:component` exits 0
-- [ ] chromium e2e exits 0:
+- [x] `npm run format:check` exits 0
+- [x] `npm run lint` exits 0
+- [x] `npm run typecheck` exits 0
+- [x] `npm run test:unit` exits 0
+- [x] `npm run test:component` exits 0
+- [x] chromium e2e exits 0:
   ```bash
   cd /home/aron/projects/ascencio
   timeout 590 nix-shell -p playwright-driver.browsers glib gtk3 nss nspr dbus atk cups \
     libdrm expat libx11 libxcomposite libxdamage libxext libxfixes libxrandr mesa \
     alsa-lib at-spi2-atk at-spi2-core cairo pango xorg.xvfb --run '
+  export PLAYWRIGHT_BROWSERS_PATH=/home/aron/projects/ascencio/.tmp/pw-browsers
   npx playwright test --project=chromium
   '
   ```
-  Run from the repo root; keep the full `-p` list.
+  **This exact command was verified green by the orchestrator on 2026-08-10** (`1 passed` on `-g "production bundle initializes"`). Run it verbatim from the repo root.
+  - `PLAYWRIGHT_BROWSERS_PATH=.tmp/pw-browsers` is mandatory. That directory holds symlinks to the nix-patched browsers in `/nix/store/8ilw3r312xcs1ylxg4g274rhf2frp9z4-playwright-browsers` under the revision names playwright 1.61 expects (`chromium-1228 -> chromium-1217`). The mismatched revision numbers are deliberate and fine.
+  - Without the override, Playwright picks `~/.cache/ms-playwright`, whose binaries are unpatched and die with `libglib-2.0.so.0: cannot open shared object file`. That error means the override is missing, not that the `-p` list is wrong.
+  - `playwright-driver.browsers` and `xorg.xvfb` are both required in the `-p` list even though Xvfb is never launched. Do not simplify the list.
+  - If `.tmp/pw-browsers` is gone, recreate it: `S=/nix/store/8ilw3r312xcs1ylxg4g274rhf2frp9z4-playwright-browsers` (rebuild with `nix-build '<nixpkgs>' -A playwright-driver.browsers --no-out-link` if the path is garbage-collected), then `mkdir -p .tmp/pw-browsers && cd .tmp/pw-browsers && ln -sfn $S/chromium-1217 chromium-1228 && ln -sfn $S/chromium_headless_shell-1217 chromium_headless_shell-1228 && ln -sfn $S/ffmpeg-1011 ffmpeg-1011 && ln -sfn $S/firefox-1511 firefox-1532`.
+  - Run it in the **foreground**, blocking. Runs take 1-5 min; `webServer` builds and starts the preview itself, so do not hand-start `npm run preview`.
+  - The duel seed is random per run (`crypto.getRandomValues`). A single pass of a duel-walking test proves little; if a duel-walking test is the one you changed, run the suite 3 times before calling it green.
 - [ ] manual check: `npm run dev`, surrender from the menu — a centred dialog announces the outcome, focus lands on its heading, and "Start another duel" works
-- [ ] app functional — the page no longer reflows when a duel ends, and the error panel still renders inline
-- [ ] commit msg draft: `feat(app): present the duel result in a centred dialog`
+- [x] app functional — the page no longer reflows when a duel ends, and the error panel still renders inline
+- [x] commit msg draft: `feat(app): present the duel result in a centred dialog`
 </content>

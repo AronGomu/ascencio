@@ -51,6 +51,12 @@ describe("scanSvelteElements", () => {
     expect(tags[0]!.attributes).toContain("class");
   });
 
+  it("ignores a slot placeholder, which renders no element of its own", () => {
+    expect(scanSvelteElements('<slot name="handle" /><slot />')).toHaveLength(
+      0,
+    );
+  });
+
   it("survives > inside an expression attribute", () => {
     const tags = scanSvelteElements(
       '<button onclick={() => go()} data-cy="go">x</button>',
@@ -343,8 +349,6 @@ describe("data-cy uniqueness in a rendered document", () => {
   it.each(fixtureIds)("%s renders no duplicate data-cy", (state) => {
     render(DuelField, {
       board: fixtureBoard(state),
-      lifePoints: [8000, 8000],
-      hasPriority: true,
       phase: "main1",
     });
     expect(duplicateRenderedValues()).toEqual([]);
@@ -356,9 +360,9 @@ describe("data-cy uniqueness in a rendered document", () => {
       fieldPrompt("idleCommand", [
         mountedChoice("activate", "Activate effect", { action: "activate" }),
         {
-          id: choiceId("battle"),
-          label: "Enter Battle Phase",
-          action: "battlePhase",
+          id: choiceId("pass"),
+          label: "Pass",
+          action: "pass",
         } as PromptChoice,
       ]),
       0,
@@ -390,7 +394,6 @@ describe("data-cy uniqueness in a rendered document", () => {
         prompt: value,
         spec,
         session: createInteractionSession(spec),
-        lifePoints: [8000, 8000],
         oninteraction: vi.fn(),
       });
       expect(

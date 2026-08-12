@@ -84,6 +84,32 @@ describe("DuelHud", () => {
     expect(
       resolveCardImage.mock.calls.some(([card]) => card.code === 46986414),
     ).toBe(false);
+    /* Positive half of the same invariant: the concealed cards carry no code
+       at all, so the tray must count two and mount exactly one inspectable
+       card. Resolving an identity the HUD does not hold would show two. */
+    const extraTray = screen.getByRole("region", {
+      name: "Opponent Extra Deck tray",
+    });
+    expect(
+      within(extraTray).getAllByRole("button", { name: /^Inspect / }),
+    ).toHaveLength(1);
+    expect(
+      extraTray.querySelector('[data-cy="card-tray-page-count-1-extra"]')
+        ?.textContent,
+    ).toBe("1\u20131 of 1");
+    expect(
+      document.querySelector('[data-cy="card-tray-count-1-extra"]')
+        ?.textContent,
+    ).toBe("2");
+    /* The opponent's concealed banished card has no identity to open at all. */
+    expect(
+      document.querySelector('[data-cy="card-tray-count-only-1-banished"]')
+        ?.textContent,
+    ).toBe("Count only");
+    expect(
+      document.querySelector('[data-cy="card-tray-count-1-banished"]')
+        ?.textContent,
+    ).toBe("1");
   });
 
   it("keeps deck count-only and mounts bounded tray pages on demand with focus return", async () => {

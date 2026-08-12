@@ -39,6 +39,27 @@ export const PUBLIC_STATE_CARD_TEXTS = new Map([
   ],
 ]);
 
+export function deckSlots(
+  player: PlayerIndex,
+  count: number,
+): readonly PublicCard[] {
+  return Object.freeze(
+    Array.from({ length: count }, (_, offset): PublicCard =>
+      Object.freeze({
+        instanceId: cardInstanceId(`deck-p${player}-${offset}`),
+        owner: player,
+        controller: player,
+        location: "deck",
+        sequence: offset,
+        position: "faceDownAttack",
+        faceUp: false,
+        counters: Object.freeze([]),
+        overlayMaterials: Object.freeze([]),
+      }),
+    ),
+  );
+}
+
 export function publicStateCard(
   id: string,
   code: number,
@@ -63,11 +84,37 @@ export function publicStateCard(
   };
 }
 
+/**
+ * A card the local viewer cannot identify. The projector emits no `code` for
+ * a concealed opponent card outside a fixed field slot, so neither may a
+ * fixture that claims to be a projected state.
+ */
+export function concealedStateCard(
+  id: string,
+  controller: PlayerIndex,
+  location: PublicCard["location"],
+  sequence: number,
+  position: CardPosition = "faceDownDefense",
+): PublicCard {
+  return {
+    instanceId: cardInstanceId(id),
+    owner: controller,
+    controller,
+    location,
+    sequence,
+    position,
+    faceUp: false,
+    counters: [],
+    overlayMaterials: [],
+  };
+}
+
 function player(player: PlayerIndex): PublicPlayerState {
   return {
     player,
     lifePoints: player === 0 ? 6200 : 3400,
     deckCount: player === 0 ? 28 : 31,
+    deck: deckSlots(player, player === 0 ? 28 : 31),
     extraDeckCount: player === 0 ? 2 : 2,
     handCount: player === 0 ? 1 : 2,
     hand: [],
@@ -105,13 +152,11 @@ const richHost = publicStateCard(
   },
 );
 
-const privateOpponentExtra = publicStateCard(
+const privateOpponentExtra = concealedStateCard(
   "private-opponent-extra",
-  46986414,
   1,
   "extra",
   0,
-  "faceDownDefense",
 );
 const publicOpponentExtra = publicStateCard(
   "public-opponent-extra",
@@ -128,6 +173,7 @@ export const RICH_PUBLIC_DUEL_STATE: PublicDuelState = {
   turn: 4,
   turnPlayer: 1,
   phase: "battleStep",
+  layout: { extraMonsterZones: true },
   players: [
     {
       ...player(0),
@@ -157,26 +203,10 @@ export const RICH_PUBLIC_DUEL_STATE: PublicDuelState = {
     },
     {
       ...player(1),
-      hand: [
-        publicStateCard(
-          "private-opponent-hand",
-          46986414,
-          1,
-          "hand",
-          0,
-          "faceDownDefense",
-        ),
-      ],
+      hand: [concealedStateCard("private-opponent-hand", 1, "hand", 0)],
       extraDeck: [privateOpponentExtra, publicOpponentExtra],
       banished: [
-        publicStateCard(
-          "private-opponent-banished",
-          46986414,
-          1,
-          "banished",
-          0,
-          "faceDownDefense",
-        ),
+        concealedStateCard("private-opponent-banished", 1, "banished", 0),
       ],
     },
   ],

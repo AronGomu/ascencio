@@ -195,6 +195,7 @@ function playProgrammedDuel(
     opponentDeck: preset.opponent,
     configuration: {
       mode: "programmed",
+      rules: "mr5",
       seed: scenario.seed,
       playerDeckOrder: scenario.deckOrder[0],
       opponentDeckOrder: scenario.deckOrder[1],
@@ -215,6 +216,7 @@ function playProgrammedDuel(
     presetId: preset.id,
     deckCounts: [40, 40],
     extraDeckCounts: [0, 0],
+    extraMonsterZones: true,
     maximumAutomaticResponses: 5_000,
   });
   let humanResponses = 0;

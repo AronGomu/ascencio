@@ -1,10 +1,11 @@
 import type { ChoiceId } from "../../duel/contracts/ids.ts";
 import type { BoardTargetId } from "../../field/board-view-model.ts";
-import type {
-  ActiveInteractionSpec,
-  InteractionChoice,
-  InteractionKey,
-  InteractionSpec,
+import {
+  interactionChoicesInPromptOrder,
+  type ActiveInteractionSpec,
+  type InteractionChoice,
+  type InteractionKey,
+  type InteractionSpec,
 } from "./interaction-spec.ts";
 
 export interface InteractionSession {
@@ -87,7 +88,7 @@ export function createInteractionSession(
     key: spec.key,
     status: "editing",
     selectedChoiceIds: Object.freeze(
-      choicesInPromptOrder(spec)
+      interactionChoicesInPromptOrder(spec)
         .filter(({ toggleState }) => toggleState === "selected")
         .map(({ id }) => id),
     ),
@@ -231,34 +232,17 @@ function choicesById(
   spec: ActiveInteractionSpec,
 ): ReadonlyMap<ChoiceId, InteractionChoice> {
   const choices = new Map<ChoiceId, InteractionChoice>();
-  for (const choice of choicesInPromptOrder(spec))
+  for (const choice of interactionChoicesInPromptOrder(spec))
     choices.set(choice.id, choice);
-  return choices;
-}
-
-function choicesInPromptOrder(
-  spec: ActiveInteractionSpec,
-): readonly InteractionChoice[] {
-  const choices: InteractionChoice[] = [];
-  const seen = new Set<ChoiceId>();
-  for (const targetChoices of [
-    ...spec.cardChoices.values(),
-    ...spec.zoneChoices.values(),
-    spec.globalChoices.values(),
-  ]) {
-    for (const choice of targetChoices) {
-      if (seen.has(choice.id)) continue;
-      seen.add(choice.id);
-      choices.push(choice);
-    }
-  }
   return choices;
 }
 
 function choiceIdsInPromptOrder(
   spec: ActiveInteractionSpec,
 ): readonly ChoiceId[] {
-  return Object.freeze(choicesInPromptOrder(spec).map(({ id }) => id));
+  return Object.freeze(
+    interactionChoicesInPromptOrder(spec).map(({ id }) => id),
+  );
 }
 
 export function interactionSessionChoiceIds(

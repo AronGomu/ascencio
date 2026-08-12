@@ -9,9 +9,11 @@
     ActiveInteractionSpec,
     InteractionChoice,
   } from "../../prompts/interaction-spec.ts";
+  import type { CardDragOrigin } from "../../presentation/drag-ghost-physics.ts";
   import CardActionChips from "./CardActionChips.svelte";
 
   export let card: BoardCardView;
+  export let layout: "field" | "hand" = "field";
   export let imageUrl: string;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let interactionKind: ActiveInteractionSpec["kind"] | null = null;
@@ -25,7 +27,7 @@
   export let onactivate: (element: HTMLButtonElement) => void = () => undefined;
   export let onchoose: (choice: InteractionChoice) => void = () => undefined;
   export let ondismiss: () => void = () => undefined;
-  export let ondragstart: () => void = () => undefined;
+  export let ondragstart: (origin: CardDragOrigin) => void = () => undefined;
   export let ondragmove: (x: number, y: number) => void = () => undefined;
   export let ondragend: (x: number, y: number) => void = () => undefined;
   export let onpreview: (card: BoardCardView) => void = () => undefined;
@@ -48,7 +50,10 @@
     card.image.kind === "face" ? card.image.code : undefined,
     imageUrl,
   );
-  $: positionStyle = `--field-x: ${card.x * 100}%; --field-y: ${card.y * 100}%; --field-width: ${card.width * 100}%; --field-height: ${card.height * 100}%;`;
+  $: positionStyle =
+    layout === "field"
+      ? `--field-x: ${card.x * 100}%; --field-y: ${card.y * 100}%; --field-width: ${card.width * 100}%; --field-height: ${card.height * 100}%;`
+      : undefined;
   $: accessibleLabel =
     card.facing === "opponent" &&
     !card.label.toLocaleLowerCase().includes("opponent")
@@ -116,7 +121,7 @@
      card whose identity the local player may already see. It never consumes
      the event and never touches the drag bookkeeping below. */
   function reportPreview(): void {
-    if (card.code !== undefined) onpreview(card);
+    onpreview(card);
   }
 
   function pointerDown(
@@ -131,7 +136,9 @@
     reportPreview();
   }
 
-  function pointerMove(event: PointerEvent): void {
+  function pointerMove(
+    event: PointerEvent & { currentTarget: HTMLButtonElement },
+  ): void {
     if (pointerOrigin === null) return;
     if (
       Math.hypot(
@@ -144,9 +151,37 @@
     if (!pointerMoved || !draggable) return;
     if (!dragging) {
       dragging = true;
-      ondragstart();
+      ondragstart(buildDragOrigin(event));
     }
     ondragmove(event.clientX, event.clientY);
+  }
+
+  /* First-threshold-crossing snapshot: article rect + pointer grab offset
+     relative to that rect, plus the currently rendered art (back art for a
+     hidden card, never the known face). `performance.now()` — not the event
+     timestamp, which jsdom never populates and which is clock-origin
+     dependent across browsers — anchors the physics module's first frame. */
+  function buildDragOrigin(
+    event: PointerEvent & { currentTarget: HTMLButtonElement },
+  ): CardDragOrigin {
+    const article =
+      event.currentTarget.closest<HTMLElement>(".duel-field-card") ??
+      event.currentTarget;
+    const rect = article.getBoundingClientRect();
+    return {
+      pointer: {
+        x: event.clientX,
+        y: event.clientY,
+        timeMs: performance.now(),
+      },
+      sourceLeft: rect.left,
+      sourceTop: rect.top,
+      width: rect.width,
+      height: rect.height,
+      pointerOffsetX: event.clientX - rect.left,
+      pointerOffsetY: event.clientY - rect.top,
+      imageUrl: renderedImageUrl,
+    };
   }
 
   function pointerUp(
@@ -190,6 +225,7 @@
   class:is-pinned={pinned}
   class:is-selected={selected}
   class:is-navigation-active={active}
+  class:is-hand-item={layout === "hand"}
   class="duel-field-card"
   aria-label={accessibleLabel}
   data-card-id={card.id}
@@ -214,13 +250,15 @@
       data-cy={`card-control-image-${card.id}`}
     />
   </div>
-  <span
-    class="duel-field-card__label"
-    aria-hidden="true"
-    data-cy={`card-control-label-${card.id}`}
-  >
-    {card.hidden ? "Hidden card" : card.label}
-  </span>
+  {#if !card.hidden}
+    <span
+      class="duel-field-card__label"
+      aria-hidden="true"
+      data-cy={`card-control-label-${card.id}`}
+    >
+      {card.label}
+    </span>
+  {/if}
   {#if actionable}
     <button
       type="button"

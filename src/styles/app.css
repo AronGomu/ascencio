@@ -20,13 +20,21 @@
   --danger: #ff8c9b;
   --warning: #ffd580;
   --success: #7ee2a8;
+  --ink: #ffffff;
   --duel-field-layer-surface: 0;
   --duel-field-layer-zone: 10;
   --duel-field-layer-stack: 20;
   --duel-field-layer-card: 30;
+  --duel-field-layer-card-raised: 35;
   --duel-field-layer-label: 40;
   --duel-field-layer-control: 50;
   --duel-field-layer-menu: 100;
+  /* Floating field windows sit above menus and below the drag ghost, which
+     is meant to fly over them (T13). The raised layer is ephemeral: the last
+     window the player pressed takes it (ADR-017). */
+  --duel-field-layer-window: 110;
+  --duel-field-layer-window-active: 120;
+  --duel-field-layer-drag-ghost: 150;
 }
 
 * {
@@ -35,10 +43,20 @@
 
 body {
   min-width: 320px;
-  min-height: 100vh;
+  min-height: 100svh;
   margin: 0;
   background:
     radial-gradient(circle at 15% -10%, #1e3a5f 0, transparent 35rem), #08101f;
+}
+
+/* The app root is a fixed-height two-row grid (header, main) so the default
+   duel view can be pinned to exactly one viewport below. Outside duel-only
+   mode `main` does not clip, so overflowing content (picker/errors/HUD) still
+   grows `body`'s natural scrollable area past this box. */
+#app {
+  height: 100svh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
 button,
@@ -140,16 +158,96 @@ button:disabled {
 main {
   width: min(120rem, calc(100% - 2rem));
   margin-inline: auto;
+  display: grid;
+  gap: 1rem;
+  padding-bottom: 3rem;
 }
 
-.app-menubar {
+/* Applied only while a board/snapshot renders and neither optional HUD nor
+   workspace is shown (see `duelViewportOnly` in App.svelte). It pins the
+   default duel to the `#app` main row's exact height, so nothing here can
+   push a scrollbar onto the page; `.duel-field` owns any residual x/y
+   overflow instead (see below). */
+main.is-duel-viewport {
+  /* Flex, not grid: the duel row is the only track that must claim leftover
+     height while every other conditional sibling (hidden announcement,
+     warnings, diagnostic message) keeps its natural size. */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding-bottom: clamp(0.5rem, 1svh, 1rem);
+  overflow: hidden;
+}
+
+main.is-duel-viewport > .duel-row {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.duel-header-bar {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 0.75rem;
-  width: min(120rem, calc(100% - 2rem));
+  width: 100%;
+  max-width: 120rem;
   margin-inline: auto;
-  padding-block: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.duel-header-bar__spacer {
+  flex: 1 1 auto;
+}
+
+.duel-header-bar__player {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.duel-header-bar__avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.duel-header-bar__meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.duel-header-bar__role {
+  overflow: hidden;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.duel-header-bar__life {
+  overflow: hidden;
+  min-width: 0;
+  margin: 0;
+  color: var(--warning);
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.duel-header-bar__settings svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: currentcolor;
+  display: block;
 }
 
 .dialog-backdrop {
@@ -217,19 +315,24 @@ h4 {
 
 /* The duel field and the card preview panel share one row, and the panel is
    stretched to the field's height so the effect text scrolls inside it rather
-   than making the row taller than the board. */
+   than making the row taller than the board. Preview grows past its 22rem
+   floor with whatever width the field doesn't need; the field's own 52rem
+   floor plus the .45fr:1fr split keeps its rendered (aspect-ratio-driven)
+   height inside a normal desktop viewport at every width up to the 120rem
+   `main` cap — verified in the responsive e2e at 1366×768 and 1920×1080. */
 .duel-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 22rem;
+  grid-template-columns: minmax(22rem, 0.45fr) minmax(52rem, 1fr);
   gap: 1rem;
   align-items: stretch;
 }
 
 .card-preview-panel {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 0.75rem;
   min-width: 0;
+  min-height: 0;
   padding: 1rem;
   border: 1px solid var(--border);
   border-radius: 0.9rem;
@@ -259,17 +362,137 @@ h4 {
   white-space: pre-wrap;
 }
 
-/* Solving `mainWidth - 22rem panel - 1rem gap - 2rem field padding >= 52rem
-   board min-width` gives a 1264px floor. Below it the panel must stack, or the
-   board's min-width would push a horizontal scrollbar onto the page at the
-   1024px viewport the responsive e2e gate forbids it at. */
+.card-preview-panel__status {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.card-preview-status-dots {
+  display: inline-flex;
+  gap: 0.15rem;
+}
+
+.card-preview-status-dots span {
+  width: 0.28rem;
+  height: 0.28rem;
+  border-radius: 999px;
+  background: currentcolor;
+  animation: preview-status-dot 1.2s infinite ease-in-out;
+}
+
+.card-preview-status-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.card-preview-status-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes preview-status-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.15;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-preview-status-dots span {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* Below 79rem (1264px) the elastic .45fr:1fr split can no longer give the
+   field its 52rem floor alongside the panel's 22rem floor plus gap/padding
+   (52+22+1rem gap+2rem field padding+2rem main margin = 79rem, the same
+   floor the pre-T9 fixed-width layout used), so the row collapses to one
+   column. The field must render first (it needs the leftover height) with
+   the panel as a fixed-height horizontal band underneath it — but the panel
+   stays first in the DOM (see App.svelte) for screen-reader continuity, so
+   the visual order is CSS-only via `grid-row`. */
 @media (max-width: 79rem) {
   .duel-row {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
   }
 
+  .duel-row > .card-preview-panel {
+    grid-row: 2;
+  }
+
+  .duel-row > .duel-field,
+  .duel-row > .field-error {
+    grid-row: 1;
+  }
+
+  /* Horizontal band: fixed-width art column left, name/effect text right,
+     status spanning the full width underneath. */
   .card-preview-panel {
-    max-height: 18rem;
+    grid-template-columns: clamp(4rem, 20vw, 8rem) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas: "art copy" "status status";
+    max-height: clamp(6rem, 22svh, 12rem);
+  }
+
+  .card-preview-panel__art {
+    grid-area: art;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .card-preview-panel__art img {
+    height: 100%;
+    max-height: none;
+  }
+
+  .card-preview-panel__copy {
+    grid-area: copy;
+  }
+
+  .card-preview-panel__status {
+    grid-area: status;
+  }
+}
+
+/* Short viewports: the art shrinks to a `clamp(3rem,8svh,5rem)`-tall
+   thumbnail (decoupled from the row's own height, which would otherwise
+   stretch it), and the whole compact preview is capped, so a tall
+   effect-text fixture scrolls inside the panel instead of growing it past
+   the field. */
+@media (max-width: 79rem) and (max-height: 48rem) {
+  .card-preview-panel {
+    max-height: clamp(5rem, 18svh, 8rem);
+  }
+
+  .card-preview-panel__art {
+    display: flex;
+    align-items: center;
+    height: auto;
+  }
+
+  .card-preview-panel__art img {
+    height: clamp(3rem, 8svh, 5rem);
+    max-height: clamp(3rem, 8svh, 5rem);
+    width: auto;
+    max-width: 100%;
+  }
+
+  .card-preview-panel__copy {
+    grid-template-rows: auto minmax(0, 1fr);
+    min-height: 0;
+  }
+
+  .card-preview-panel [data-cy="card-preview-text"] {
+    min-height: 0;
+    overflow-y: auto;
   }
 }
 
@@ -282,12 +505,6 @@ h4 {
 .snapshot-state {
   margin-top: 0.35rem;
   font-size: 0.78rem;
-}
-
-main {
-  display: grid;
-  gap: 1rem;
-  padding-bottom: 3rem;
 }
 
 .message-panel,
@@ -360,6 +577,12 @@ progress {
 
 .result-panel {
   border-color: #297f73;
+}
+
+.dialog-panel .result-panel {
+  padding: 0;
+  border: none;
+  background: none;
 }
 
 .phase-pill {
@@ -686,90 +909,128 @@ li + li {
 .duel-field {
   container: duel-field / inline-size;
   position: relative;
+  /* One row, so the scroll child claims the field's whole inner height while
+     the field's own box never scrolls: T14 makes it the still boundary every
+     floating window is measured and clamped inside (ADR-017). */
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
   min-width: 0;
+  min-height: 0;
   max-width: 100%;
-  /* The End turn corner button is always mounted (unlike the action bar), so
-     the bottom gutter has an unconditional floor sized to hold it clear of
-     the board: base padding + the button's own height + its own inset. */
-  padding: 1rem 1rem calc(1rem + 2.75rem + 0.75rem);
-  /* Horizontal only: the board keeps a min-width so field targets stay >=44px,
-     so narrow viewports must be able to pan. Vertical overflow stays visible and
-     overscroll chaining stays default so the wheel always scrolls the page. */
-  overflow-x: auto;
-  scroll-padding: clamp(0.75rem, 4vw, 2rem);
+  padding: 1rem;
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 0.9rem;
   background: linear-gradient(180deg, #0b1728, #08111f);
   box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.18);
 }
 
-/* The action bar is pinned to the bottom of the field too, and it can grow
-   taller than the always-present End turn button's floor above. When it
-   renders, its measured height (DuelField.svelte binds it into
-   --field-action-bar-height) wins if it needs more room than the floor
-   already reserves. The 2.75rem term keeps the same minimum before the first
-   measurement lands. */
-.duel-field[data-field-action-bar="true"] {
-  padding-bottom: calc(
-    1rem + max(2.75rem, var(--field-action-bar-height, 0px)) + 0.75rem
-  );
+/* The board keeps a min-width so field targets stay >=44px, so narrow
+   viewports must be able to pan it horizontally; below 79rem a constrained
+   (`.is-duel-viewport`) single-column row can also be shorter than the
+   board's aspect-ratio-driven height, so this child owns the y overflow too.
+   Neither axis is ever owned by the page, and — unlike before T14 — neither is
+   owned by `.duel-field` itself, so panning the board cannot carry a floating
+   window offscreen. */
+.duel-field-scroll-region {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  scroll-padding: clamp(0.75rem, 4vw, 2rem);
 }
 
-.field-status-pills {
+/* The ticket's board-geometry table gave zone extents as center + full
+   width/height instead of center −/+ half (the zones themselves are
+   rendered with `transform: translate(-50%, -50%)`), so every stated range
+   was shifted low/right by half the zone's own size. Measured directly
+   against the rendered DOM at a 1366px viewport (board 932x524):
+   shared extra monster left true x [42.90%, 49.30%], right true x
+   [50.70%, 57.10%], both true y [42.11%, 57.92%]; p1 banished true y
+   [26.75%, 42.65%]; p0 banished true y [57.36%, 73.10%]. The free gap
+   between the two banished zones is true y [42.65%, 57.36%]. These
+   constants are chosen to sit inside that gap and clear of the extra
+   monster zone columns, verified with the chromium e2e's
+   `responsive field compositions...` overlap check and the pointer-
+   interception specs. */
+.field-phase-strip {
   position: absolute;
   z-index: var(--duel-field-layer-control);
-  top: 0.75rem;
-  right: 0.75rem;
+  top: 43.5%;
+  right: 0;
+  left: 0;
+  height: 13%;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
   pointer-events: none;
 }
-
-.prio-pill,
-.field-phase-pill {
-  padding: 0.25rem 0.6rem;
+.field-phase-strip__group {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  position: absolute;
+}
+.field-phase-strip__group--left {
+  right: 60.6%;
+}
+/* Anchored from the right (not the left, unlike the left group) at the same
+   1% inset the old absolutely positioned End turn button used, so folding
+   End into this group (Round 3) keeps its right edge exactly where it was
+   already proven clear of the banished piles/deck column further out on
+   the board — the group grows leftward as Main 2 + End's combined width
+   demands, well inside the free pocket right of the shared EMZ (x > 60.3%). */
+.field-phase-strip__group--right {
+  right: 1%;
+}
+/* Link-free (Master Rule 3) duels have no shared Extra Monster Zones, so the
+   two semantic groups no longer have to straddle them: they flow as one run
+   with a single uniform chip gap, keeping the shipped Draw → Standby →
+   Main 1 → Battle → Main 2 → End turn order. The run stays anchored at the
+   same 1% right inset the End turn button already used, because that is the
+   only place in this band where a 44px-tall control clears both monster
+   rows and every pile column at every supported viewport. */
+.field-phase-strip.is-continuous {
+  justify-content: flex-end;
+  gap: 0.3rem;
+  padding-right: 1%;
+}
+.field-phase-strip.is-continuous .field-phase-strip__group {
+  position: static;
+  right: auto;
+}
+.field-phase-chip {
+  pointer-events: none;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid transparent;
   border-radius: 999px;
-  font-size: 0.72rem;
+  background: rgb(8 16 31 / 0.72);
+  color: color-mix(in srgb, var(--muted) 70%, transparent);
+  font-size: 0.68rem;
   font-weight: 800;
   white-space: nowrap;
 }
-
-.prio-pill {
-  color: #2b1d00;
-  background: var(--warning);
+button.field-phase-chip {
+  pointer-events: auto;
+  cursor: pointer;
+}
+.field-phase-chip.is-available {
+  color: var(--ink);
+  border-color: var(--border);
+}
+.field-phase-chip.is-current {
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 0 0.6rem var(--accent);
+  color: var(--ink);
 }
 
-.prio-pill.is-priority {
-  color: #04210f;
-  background: var(--success);
-}
-
-.field-phase-pill {
-  color: #08101f;
-  background: #cfe0f5;
-}
-
-.life-pill {
-  position: absolute;
-  z-index: var(--duel-field-layer-control);
-  left: 0.75rem;
-  margin: 0;
-  padding: 0.3rem 0.7rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: rgb(8 16 31 / 0.82);
-  color: var(--warning);
-  font-weight: 800;
-  pointer-events: none;
-}
-
-.life-pill.is-opponent {
-  top: 0.75rem;
-}
-
-.life-pill.is-self {
-  bottom: 0.75rem;
+/* Must track `.duel-field-board`'s own `min-width: 52rem` (below) so this
+   stage's box always matches the board's rendered box exactly, even when
+   the board overflows its column and `.duel-field`'s `overflow-x: auto`
+   kicks in — otherwise the phase strip/End turn percentages below resolve
+   against a narrower box than the board they need to align with. */
+.duel-field-stage {
+  position: relative;
+  min-width: 52rem;
 }
 
 .duel-field-board {
@@ -833,16 +1094,6 @@ li + li {
   text-align: center;
 }
 
-.duel-field-zone[data-zone-kind="hand"] {
-  border-style: dashed;
-  background: rgb(28 79 66 / 0.45);
-}
-
-.duel-field-zone[data-zone-id="p1:hand"] {
-  border-color: transparent;
-  background: transparent;
-}
-
 .duel-field-zone--shared {
   border: 2px solid var(--accent);
   background: rgb(19 69 66 / 0.72);
@@ -854,25 +1105,84 @@ button.duel-field-zone,
   cursor: pointer;
 }
 
-/* Orange is the "you may act here" colour across the field. The lime
-   `.is-selected` treatment below stays as it is: selection is a different
-   state from legality and the two must never be confusable. */
+/* Green is the "you may act here" colour across the field. Orange is
+   reserved for selection below: selection is a different state from
+   legality and the two must never be confusable. */
 .duel-field-zone.is-actionable,
 .duel-field-card.is-actionable .duel-field-card__art {
-  border-color: var(--warning);
-  box-shadow: 0 0 0 2px rgb(255 213 128 / 0.55);
+  border-color: var(--success);
+  box-shadow: 0 0 0 2px rgb(126 226 168 / 0.55);
 }
 
-/* A drag candidate wears the same orange as legality, filled in: the tint is
-   what separates "you could drop here" from "you may act here". */
+.duel-field-stack.is-actionable {
+  border-color: var(--success);
+  box-shadow: 0 0 0 2px rgb(126 226 168 / 0.55);
+}
+
+/* A drop candidate wears the same green as legality, filled in: the tint is
+   what separates "you could drop here" from "you may act here". Item 18
+   fades this halo in/out (120ms ease-out, matching T12's hover-zoom
+   duration) rather than snapping every candidate on at once, and the
+   hovered candidate underneath the dragged card gets a distinct, brighter
+   emphasis on top of it. */
 .duel-field-zone.is-drop-candidate {
-  border-color: var(--warning);
-  background: rgb(255 213 128 / 0.14);
-  box-shadow: 0 0 0 3px rgb(255 213 128 / 0.7);
+  border-color: var(--success);
+  background: rgb(126 226 168 / 0.16);
+  box-shadow: 0 0 0 3px rgb(126 226 168 / 0.75);
+  transition:
+    background 120ms ease-out,
+    box-shadow 120ms ease-out;
+}
+
+.duel-field-zone.is-drop-candidate.is-drop-hovered {
+  background: rgb(126 226 168 / 0.34);
+  box-shadow: 0 0 0 4px rgb(126 226 168 / 0.95);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .duel-field-zone.is-drop-candidate {
+    transition: none;
+  }
 }
 
 .duel-field-card.is-dragging {
   opacity: 0.72;
+}
+
+/* The ghost is `position:fixed` in viewport coordinates (T9: the app shell
+   itself never scrolls, so this is safe) and stays above every card/chip/
+   field-window layer (menu tops out at 100) but below any future app-level
+   modal/backdrop, which would need a layer above this one. It never
+   receives pointer events, so it cannot poison `elementFromPoint` hit
+   testing while a drag is live. Position/size/rotation are driven inline by
+   the component per pointer frame; the lift scale (1.08) and drop shadow
+   are owned here so a reduced-motion user gets them removed in one place. */
+.drag-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--duel-field-layer-drag-ghost);
+  pointer-events: none;
+  width: var(--drag-ghost-width);
+  height: var(--drag-ghost-height);
+  transform: translate3d(var(--drag-ghost-x), var(--drag-ghost-y), 0)
+    rotate(var(--drag-ghost-rotate, 0deg))
+    scale(var(--drag-ghost-lift-scale, 1.08));
+  box-shadow: 0 1.5rem 2.5rem rgb(0 0 0 / 0.55);
+}
+
+.drag-ghost__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drag-ghost {
+    transition: none;
+    transform: translate3d(var(--drag-ghost-x), var(--drag-ghost-y), 0);
+  }
 }
 
 /* Chips float above the zones and stay visible while their card is hovered,
@@ -883,17 +1193,22 @@ button.duel-field-zone,
   pointer-events: none;
 }
 
+/* Selected overrides plain legal green: same orange used for the list-hover
+   affordance below, but selection is a persisted class, never a :hover
+   pseudo-class, so the two never actually collide on screen. */
 .duel-field-zone.is-selected,
 .duel-field-card.is-selected .duel-field-card__art {
-  border-color: #dfffb5;
-  box-shadow: 0 0 0 3px rgb(175 232 112 / 0.78);
+  border-color: var(--warning);
+  box-shadow: 0 0 0 3px rgb(255 213 128 / 0.78);
 }
 
+/* Keyboard focus is a neutral high-contrast ring, independent of the
+   legal/selected palette above. */
 .duel-field-zone.is-navigation-active:focus-visible,
 .duel-field-stack.is-navigation-active:focus-visible,
 .duel-field-card.is-navigation-active:focus-visible,
 .duel-field-card.is-navigation-active:focus-within .duel-field-card__art {
-  outline: 3px solid #f6c177;
+  outline: 3px solid var(--ink);
   outline-offset: 2px;
   box-shadow: 0 0 0 5px rgb(8 17 31 / 0.9);
 }
@@ -901,8 +1216,8 @@ button.duel-field-zone,
 .duel-field-card.is-feedback-target .duel-field-card__art,
 .duel-field-zone.is-feedback-target,
 .duel-field-stack.is-feedback-target {
-  border-color: var(--warning);
-  box-shadow: 0 0 0 3px rgb(255 213 128 / 0.72);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgb(115 218 202 / 0.72);
 }
 
 .field-lines {
@@ -916,7 +1231,7 @@ button.duel-field-zone,
 }
 
 .field-lines line {
-  stroke: var(--warning);
+  stroke: var(--accent);
   stroke-width: 3;
   stroke-linecap: round;
   stroke-dasharray: 7 5;
@@ -928,31 +1243,193 @@ button.duel-field-zone,
   stroke-width: 4;
 }
 
-.duel-field-feedback {
+/* T14 (ADR-017): a field window is absolutely positioned in the field root's
+   padding box — the same coordinate system its persisted `{x, y}` lives in —
+   and translated rather than inset, so dragging never triggers layout. Both
+   caps are relative to that same box, so a window can never start out wider
+   or taller than the boundary it is clamped inside. */
+.floating-field-window {
   position: absolute;
-  z-index: var(--duel-field-layer-control);
-  top: 1.5rem;
-  left: 50%;
-  max-width: min(28rem, calc(100% - 3rem));
+  left: 0;
+  top: 0;
+  z-index: var(--duel-field-layer-window);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  max-width: 100%;
+  max-height: 100%;
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  background: var(--surface-strong);
+  box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.45);
+  transform: translate(var(--window-x, 0px), var(--window-y, 0px));
+}
+
+/* Ephemeral: the last window the player touched sits above the other one,
+   and both stay below the drag ghost. */
+.floating-field-window.is-active {
+  z-index: var(--duel-field-layer-window-active);
+}
+
+.floating-field-window__handle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0.9rem 0.9rem 0 0;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 750;
+  cursor: grab;
+  /* The drag is pointer-captured, so the browser must not claim the gesture
+     for panning first. */
+  touch-action: none;
+  user-select: none;
+}
+
+.floating-field-window.is-dragging .floating-field-window__handle {
+  cursor: grabbing;
+}
+
+.floating-field-window__content {
+  min-width: 0;
+  min-height: 0;
+  padding: 0.6rem;
+  overflow: auto;
+}
+
+.floating-field-window[data-window-id="zoneList"] {
+  max-width: min(80%, 64rem);
+}
+
+.zone-list-dialog {
+  min-width: 0;
+}
+
+.zone-list-dialog__header {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Rightmost control in the handle, kept at the 44px minimum target every
+   other field control uses. */
+.zone-list-dialog__close {
+  min-width: 2.75rem;
+  margin-left: auto;
+  padding: 0.35rem 0.6rem;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.zone-list-dialog__entries {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.15rem 1.75rem 2.5rem;
+  scroll-padding-inline: 1.75rem;
+  overflow-x: auto;
+}
+
+.zone-list-entry {
+  position: relative;
+  flex: 0 0 auto;
+  width: 4.5rem;
+  transition: transform 120ms ease-out;
+  transform-origin: center;
+}
+
+.zone-list-entry.is-actionable img {
+  border-color: var(--success);
+  box-shadow: 0 0 0 2px rgb(126 226 168 / 0.55);
+}
+
+/* Selected overrides plain legal green with the same orange the pointer
+   hover rule below uses; hover never mutates this class. */
+.zone-list-entry.is-selected img {
+  border-color: var(--warning);
+  box-shadow: 0 0 0 3px rgb(255 213 128 / 0.78);
+}
+
+/* List pointer hover is orange regardless of legality, and never persists
+   as a class: same specificity as the two rules above, source order last
+   so it wins for the duration of the hover only. */
+.zone-list-entry:hover img {
+  border-color: var(--warning);
+  box-shadow: 0 0 0 2px rgb(255 213 128 / 0.55);
+}
+
+.zone-list-entry:is(:hover, :focus-within) {
+  transform: scale(1.35);
+}
+
+.zone-list-entry > img {
+  max-height: 50svh;
+  object-fit: contain;
+}
+
+.zone-list-entry:hover .card-action-chips,
+.zone-list-entry:focus-within .card-action-chips {
+  display: flex;
+}
+
+/* T16 target mode. The badge names the pile the entry came from, since one
+   list mixes HAND/GY/DECK/BAN/EXTRA. */
+.zone-list-entry__zone {
+  position: absolute;
+  top: 0.15rem;
+  left: 0.15rem;
+  padding: 0.05rem 0.28rem;
+  border-radius: 0.25rem;
+  background: var(--surface-strong);
+  color: var(--ink);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.zone-list-entry__targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  margin-top: 0.2rem;
+}
+
+/* Every answer button keeps the 44px minimum target the rest of the field
+   uses; the single-choice case covers the whole tile instead of adding a
+   second control the player has to aim at. */
+.zone-list-entry__target {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.2rem 0.35rem;
+  font-size: 0.7rem;
+}
+
+.zone-list-entry__targets.is-single {
+  position: absolute;
+  inset: 0;
   margin: 0;
-  padding: 0.45rem 0.75rem;
-  border: 1px solid var(--warning);
-  border-radius: 999px;
-  background: rgb(8 16 31 / 0.9);
-  box-shadow: 0 0.5rem 1.2rem rgb(0 0 0 / 0.36);
-  color: #ffffff;
-  font-weight: 800;
-  pointer-events: none;
-  text-align: center;
-  transform: translateX(-50%);
 }
 
-.duel-field-feedback.is-life-points {
-  border-color: var(--danger);
+.zone-list-entry__targets.is-single .zone-list-entry__target {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
 }
 
-.duel-field-feedback.is-chain {
-  border-color: var(--accent);
+.zone-list-dialog__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 1.75rem 0.2rem;
+}
+
+.zone-list-dialog__footer output {
+  font-weight: 700;
 }
 
 .duel-field-stack {
@@ -970,6 +1447,29 @@ button.duel-field-zone,
     linear-gradient(145deg, rgb(159 141 235 / 0.24), transparent 65%), #201d35;
   color: #e8edf8;
   text-transform: capitalize;
+  overflow: hidden;
+}
+
+.duel-field-stack__art {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  opacity: 0.85;
+}
+
+.duel-field-stack__art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0.35rem;
+  display: block;
+}
+
+.duel-field-stack__name,
+.duel-field-stack__count {
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 1px 2px rgb(4 9 18 / 0.9);
 }
 
 .duel-field-stack__name {
@@ -990,7 +1490,139 @@ button.duel-field-zone,
   min-width: 2.75rem;
   min-height: 2.75rem;
   margin: 0;
-  pointer-events: none;
+  pointer-events: auto;
+  transform-origin: center;
+  transition: transform 120ms ease-out;
+}
+
+/* Hovered/focused/pinned card parent rises above normal card/stack/zone
+   siblings (all z-index 30/20/10): with `.duel-field-board { isolation:
+   isolate }`, a chip's own z-index only ranks it among its own card's
+   children, never against a whole sibling card painted later in the DOM. */
+.duel-field-card:is(:hover, :focus-within),
+.duel-field-card.is-pinned {
+  z-index: var(--duel-field-layer-card-raised);
+}
+
+/* Field/zone cards are absolutely centred via `translate(-50%, -50%)`
+   (shared rule above); the zoom scale composes onto that same transform so
+   the halo/art (which fills the card root) scales with it, origin centre.
+   `:not(.is-pinned)` deliberately excludes the pin flow, which moves focus
+   onto a `card-action-chips` button just above the card's own top edge;
+   zooming the card while that chip holds focus would amplify the chip's
+   offset from the transform origin and can push it above the (non-
+   scrolling) viewport, which `assertRectInsideViewport` in e2e correctly
+   rejects. A `:has()`-based fix (matching only the card's own target button)
+   was tried first and reverted: `:has()` invalidation cost measurably slowed
+   the keyboard-walker e2e's hundreds of focus moves past its time budget.
+   Pin/menu z-layering (above) is unaffected — only the visual scale is
+   skipped while pinned. */
+.duel-field-card:not(.is-hand-item):not(.is-pinned):is(:hover, :focus-within) {
+  transform: translate(-50%, -50%) scale(1.35);
+}
+
+/* Hand cards live in normal document flow inside a HandBand's scrolling
+   viewport, not absolutely positioned by board coordinates. Two classes
+   outweigh the shared `.duel-field-zone, .duel-field-stack, .duel-field-card`
+   group above (one class each), so this always wins regardless of source
+   order. */
+.duel-field-card.is-hand-item {
+  position: relative;
+  top: auto;
+  left: auto;
+  flex: 0 0 max(2.75rem, 4.5rem);
+  width: max(2.75rem, 4.5rem);
+  aspect-ratio: 72 / 104;
+  height: auto;
+  transform: none;
+  /* Player hand grows inward/upward from its bottom edge; opponent hand
+     (below) grows downward from its top edge instead. */
+  transform-origin: center bottom;
+}
+
+.duel-field-card.is-hand-item.is-opponent {
+  transform-origin: center top;
+}
+
+/* Same pin exclusion as the field/zone rule above. */
+.duel-field-card.is-hand-item:not(.is-pinned):is(:hover, :focus-within) {
+  transform: scale(1.35);
+}
+
+/* Item 5: the hand and its action chips must never be painted over by a
+   field card, zone, stack or the phase strip. This box creates its own
+   stacking context (position + z-index), so its z-index must outrank every
+   field-layer token up through --duel-field-layer-control (phase strip) —
+   the child chip's own --duel-field-layer-menu z-index only orders siblings
+   inside this context, it cannot rescue a lower-z-index parent. */
+.duel-field-hand-band {
+  position: absolute;
+  left: var(--field-x);
+  top: var(--field-y);
+  width: var(--field-width);
+  z-index: var(--duel-field-layer-menu);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  transform: translate(-50%, -50%);
+}
+
+.duel-field-hand-band__row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+/* Padding/scroll-padding give a 1.35x-zoomed hand card room to grow without
+   being clipped by this viewport's own auto overflow box; scrolling stays
+   intact, only the reserved edge margin grows. Player cards grow upward
+   from their bottom origin, so the extra room goes on top; opponent cards
+   grow downward from their top origin, so it goes on the bottom instead. */
+.duel-field-hand-band__viewport {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 2.9rem 1.75rem 0.15rem;
+  scroll-padding-inline: 1.75rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.duel-field-hand-band.is-opponent .duel-field-hand-band__viewport {
+  padding: 0.15rem 1.75rem 2.9rem;
+  flex-direction: row-reverse;
+}
+
+.duel-field-hand-band__arrow {
+  flex: 0 0 2.75rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  border: 1px solid rgb(183 220 207 / 0.48);
+  border-radius: 0.35rem;
+  background: rgb(8 26 25 / 0.28);
+  color: rgb(232 237 248 / 0.85);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+/* DOM order is viewport, previous, next (see the markup comment); these
+   restore the previous/viewport/next visual layout without moving either
+   arrow ahead of the viewport in source order. */
+.duel-field-hand-band__arrow--previous {
+  order: -1;
+}
+
+.duel-field-hand-band__arrow--next {
+  order: 1;
+}
+
+.duel-field-hand-band__arrow:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
 }
 
 .duel-field-card__art {
@@ -1009,6 +1641,11 @@ button.duel-field-zone,
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.duel-field-stack.is-opponent .duel-field-stack__art img,
+.zone-list-entry.is-opponent > img {
+  transform: rotate(180deg);
 }
 
 .duel-field-card.is-sideways .duel-field-card__art {
@@ -1053,10 +1690,6 @@ button.duel-field-zone,
   cursor: pointer;
 }
 
-.duel-field-card.is-actionable {
-  pointer-events: auto;
-}
-
 /* Chips float above the card and deliberately overlap its top edge by
    0.35rem, so a pointer travelling from the card to a chip never crosses a
    gap that would drop the `:hover` that reveals them. */
@@ -1099,31 +1732,30 @@ button.card-action-chip:hover:not(:disabled) {
   background: #ffc75c;
 }
 
+/* Round 3 folds the End turn button into the phase strip's right group as
+   a normal-flow sibling of the Main 2 chip, replacing the retired End chip.
+   It keeps its own min target size but no longer needs independent
+   absolute positioning — the group's own placement (below) already clears
+   the shared extra monster zones. `pointer-events: auto` is required
+   because it inherits `pointer-events: none` from `.field-phase-strip`. */
+/* Item 24: shrink toward the phase-chip scale horizontally (padding +
+   font-size) while the 44px pointer-target floor (A7) never yields — only
+   `min-height` still enforces that floor, unchanged. */
 .field-end-turn {
-  position: absolute;
-  z-index: var(--duel-field-layer-control);
-  right: 0.75rem;
-  bottom: 0.75rem;
+  pointer-events: auto;
   min-height: 2.75rem;
-  padding: 0.55rem 1rem;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.8rem;
 }
 
+/* T14: the bar is normal flow inside the confirm window (ADR-017), which
+   owns placement, so the bar itself only describes its own content box. */
 .field-action-bar {
-  position: absolute;
-  z-index: var(--duel-field-layer-control);
-  bottom: 0.75rem;
-  left: 50%;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
-  max-width: min(52rem, calc(100% - 2rem));
-  padding: 0.45rem 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: 0.7rem;
-  background: color-mix(in srgb, var(--surface-strong) 94%, transparent);
-  box-shadow: 0 0.6rem 1.6rem rgb(0 0 0 / 0.4);
-  transform: translateX(-50%);
+  max-width: min(52rem, 100%);
 }
 
 .field-action-bar p {
@@ -1142,30 +1774,6 @@ button.card-action-chip:hover:not(:disabled) {
 .field-action-bar [data-cy="field-action-bar-validation"] {
   color: var(--danger);
   width: 100%;
-}
-
-/* Below 40rem the bar's max-width (100% - 2rem) leaves too little clearance
-   beside the always-present, right-anchored End turn button, so the two would
-   overlap. Stack the bar above the button instead, and grow the reserved
-   gutter to match: the bottom offset moving from 0.75rem to 4rem needs the
-   same increase added to the padding-bottom floor below.
-   This must be a viewport media query, not a `@container` query on
-   `.duel-field` itself: a container query cannot style the container element
-   against its own size, only descendants (`.field-action-bar` below is a
-   descendant of `.duel-field`, so its container-query rule works fine — the
-   padding-bottom rule targets `.duel-field` itself, which cannot self-query).
-   48rem comfortably covers this field's supported narrow viewports (down to
-   ~23.4rem) while excluding the desktop ones, which never get this close. */
-@media (max-width: 48rem) {
-  .field-action-bar {
-    bottom: 4rem;
-  }
-
-  .duel-field[data-field-action-bar="true"] {
-    padding-bottom: calc(
-      1rem + max(2.75rem, var(--field-action-bar-height, 0px)) + 4rem
-    );
-  }
 }
 
 .field-error {
@@ -1205,5 +1813,34 @@ button.card-action-chip:hover:not(:disabled) {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+}
+
+/* T12: the global reduced-motion block above only zeroes transition
+   *duration* (a11y baseline for every animated property in the app); the
+   1.35x hover/focus zoom also needs its transform disabled outright, or a
+   reduced-motion user still jumps to the scaled size instantly. Static
+   halos (border-color/box-shadow above) are untouched. Opponent/sideways
+   art rotation lives on `.duel-field-card__art`, a different element, so it
+   is never touched here and stays oriented. */
+@media (prefers-reduced-motion: reduce) {
+  .duel-field-card,
+  .zone-list-entry {
+    transition: none;
+  }
+
+  .duel-field-card:not(.is-hand-item):not(.is-pinned):is(
+      :hover,
+      :focus-within
+    ) {
+    transform: translate(-50%, -50%);
+  }
+
+  .duel-field-card.is-hand-item:not(.is-pinned):is(:hover, :focus-within) {
+    transform: none;
+  }
+
+  .zone-list-entry:is(:hover, :focus-within) {
+    transform: none;
   }
 }

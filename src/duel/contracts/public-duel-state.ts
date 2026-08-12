@@ -40,6 +40,7 @@ export interface PublicCounter {
 
 export interface PublicCard {
   readonly instanceId: CardInstanceId;
+  /** Identity known to local viewer, independent of current face orientation. */
   readonly code?: CardCode;
   readonly owner: PlayerIndex;
   readonly controller: PlayerIndex;
@@ -55,6 +56,7 @@ export interface PublicPlayerState {
   readonly player: PlayerIndex;
   readonly lifePoints: number;
   readonly deckCount: number;
+  readonly deck: readonly PublicCard[];
   readonly extraDeckCount: number;
   readonly handCount: number;
   readonly hand: readonly PublicCard[];
@@ -80,12 +82,18 @@ export interface PublicChainLink {
   readonly outcome: PublicChainOutcome;
 }
 
+/** Immutable geometry chosen with the duel's engine rules profile. */
+export interface PublicDuelLayout {
+  readonly extraMonsterZones: boolean;
+}
+
 export interface PublicDuelState {
   readonly snapshotId: SnapshotId;
   readonly revision: number;
   readonly turn: number;
   readonly turnPlayer: PlayerIndex;
   readonly phase: DuelPhase;
+  readonly layout: PublicDuelLayout;
   readonly players: readonly [PublicPlayerState, PublicPlayerState];
   readonly chain: readonly PublicChainLink[];
 }

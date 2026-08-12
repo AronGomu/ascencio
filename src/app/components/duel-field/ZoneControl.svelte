@@ -9,6 +9,9 @@
   /* Presentation only: a local guess at where a dragged card could land. It
      never gates a response — the engine's own place prompt does that. */
   export let dropCandidate = false;
+  /* Item 18: distinct emphasis for the candidate directly under the dragged
+     card, with its own fade transition (declared in app.css). */
+  export let dropHovered = false;
   export let onactivate: () => void = () => undefined;
 
   let pointerOrigin: { readonly x: number; readonly y: number } | null = null;
@@ -31,16 +34,20 @@
   class:duel-field-zone--shared={zone.player === "shared"}
   class:is-actionable={actionable}
   class:is-drop-candidate={dropCandidate}
+  class:is-drop-hovered={dropHovered}
   class:is-selected={selected}
   class:is-navigation-active={active}
   class="duel-field-zone"
   role={actionable ? undefined : "group"}
-  aria-label={actionable ? `Legal placement, Select ${zone.label}` : zone.label}
+  aria-label={actionable
+    ? `Legal placement, Select ${zone.accessibleLabel}`
+    : zone.accessibleLabel}
   aria-pressed={actionable ? selected : undefined}
   data-zone-id={zone.id}
   data-player={zone.player}
   data-zone-kind={zone.kind}
   data-drop-candidate={dropCandidate ? "true" : undefined}
+  data-drop-hovered={dropHovered ? "true" : undefined}
   data-field-target={zone.targetId}
   tabindex={active ? 0 : -1}
   style={positionStyle}

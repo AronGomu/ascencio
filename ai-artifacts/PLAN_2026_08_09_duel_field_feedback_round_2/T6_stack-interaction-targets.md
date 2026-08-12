@@ -113,16 +113,16 @@
 
 ## Impl steps
 
-- [ ] 1. Add the six `resolvePromptChoiceBoardTarget` cases to the test file that already covers it (`tests/unit/interaction-spec.test.ts` builds the boards; if a dedicated card-mapping test file does not exist, create `tests/unit/card-mapping.test.ts` and put them there).
-- [ ] 2. Add the two `mapPromptToInteractionSpec` cases to `tests/unit/interaction-spec.test.ts`.
-- [ ] 3. Add the two `DuelField` cases to `tests/component/DuelField.test.ts`.
-- [ ] 4. Run `npm run test:unit && npm run test:component`; confirm the new cases fail.
-- [ ] 5. In `src/field/card-mapping.ts`, add `STACK_ZONE_BY_LOCATION`, widen `PromptChoiceBoardTargetResolution` with the `stack` member, and insert the stack branch before the `board.cards.find` lookup. Import `PhysicalZoneId` from `./duel-field-layout.ts` if it is not already imported.
-- [ ] 6. In `src/app/prompts/interaction-spec.ts`, add `stackChoices` to `ActiveInteractionSpecBase`, create `stackEntries`, route `resolution.kind === "stack"` into it, freeze it into `stackChoices`, add it to `base`, and add the A9 comment above the unchanged `fieldCapable` expression.
-- [ ] 7. In `src/app/components/duel-field/StackControl.svelte`, add `export let actionable = false;`, `class:is-actionable={actionable}` and `data-actionable={actionable ? "true" : undefined}`.
-- [ ] 8. In `src/app/components/duel-field/FieldBoard.svelte`, pass `actionable` in the stack loop and add the `stackChoices` keys to `actionableTargets`.
-- [ ] 9. In `src/styles/app.css`, add the `.duel-field-stack.is-actionable` rule next to the existing orange legality rule.
-- [ ] 10. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`, `npm run test:integration`.
+- [x] 1. Add the six `resolvePromptChoiceBoardTarget` cases to the test file that already covers it (`tests/unit/interaction-spec.test.ts` builds the boards; if a dedicated card-mapping test file does not exist, create `tests/unit/card-mapping.test.ts` and put them there).
+- [x] 2. Add the two `mapPromptToInteractionSpec` cases to `tests/unit/interaction-spec.test.ts`.
+- [x] 3. Add the two `DuelField` cases to `tests/component/DuelField.test.ts`.
+- [x] 4. Run `npm run test:unit && npm run test:component`; confirm the new cases fail.
+- [x] 5. In `src/field/card-mapping.ts`, add `STACK_ZONE_BY_LOCATION`, widen `PromptChoiceBoardTargetResolution` with the `stack` member, and insert the stack branch before the `board.cards.find` lookup. Import `PhysicalZoneId` from `./duel-field-layout.ts` if it is not already imported.
+- [x] 6. In `src/app/prompts/interaction-spec.ts`, add `stackChoices` to `ActiveInteractionSpecBase`, create `stackEntries`, route `resolution.kind === "stack"` into it, freeze it into `stackChoices`, add it to `base`, and add the A9 comment above the unchanged `fieldCapable` expression.
+- [x] 7. In `src/app/components/duel-field/StackControl.svelte`, add `export let actionable = false;`, `class:is-actionable={actionable}` and `data-actionable={actionable ? "true" : undefined}`.
+- [x] 8. In `src/app/components/duel-field/FieldBoard.svelte`, pass `actionable` in the stack loop and add the `stackChoices` keys to `actionableTargets`.
+- [x] 9. In `src/styles/app.css`, add the `.duel-field-stack.is-actionable` rule next to the existing orange legality rule.
+- [x] 10. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:component`, `npm run test:integration`.
 
 ## Outputs
 
@@ -137,13 +137,13 @@
 
 ## Validation
 
-- [ ] `npm run format:check` exits 0
-- [ ] `npm run lint` exits 0
-- [ ] `npm run typecheck` exits 0
-- [ ] `npm run test:unit` exits 0
-- [ ] `npm run test:component` exits 0
-- [ ] `npm run test:integration` exits 0
+- [x] `npm run format:check` exits 0
+- [x] `npm run lint` exits 0
+- [x] `npm run typecheck` exits 0
+- [x] `npm run test:unit` exits 0
+- [x] `npm run test:component` exits 0
+- [x] `npm run test:integration` exits 0
 - [ ] manual check: `npm run dev`; when the engine offers a graveyard activation the graveyard pile glows orange **and** the existing modal still lets you take it (the modal dies in T11, not here)
-- [ ] app functional — no prompt becomes unanswerable; every previously reachable choice is still reachable
-- [ ] commit msg draft: `feat(field): resolve stack-located choices to their pile target`
+- [x] app functional — no prompt becomes unanswerable; every previously reachable choice is still reachable
+- [x] commit msg draft: `feat(field): resolve stack-located choices to their pile target`
 </content>

@@ -180,9 +180,19 @@ function targetElement(
       : kind === "zone"
         ? "data-zone-id"
         : "data-stack-id";
+  const direct = [...root.querySelectorAll(`[${attribute}]`)].find(
+    (element) => element.getAttribute(attribute) === value,
+  );
+  if (direct !== undefined) return direct;
+  /* The hand band paints no `ZoneControl` (T8), so a hand zone has no
+     `[data-zone-id]` element — that attribute stays reserved for the drag
+     drop-target hit test, which must never resolve a hand card's action
+     chip to an enclosing zone. `[data-feedback-zone-id]` is HandBand's own,
+     narrower anchor for exactly this line/highlight lookup. */
+  if (kind !== "zone") return null;
   return (
-    [...root.querySelectorAll(`[${attribute}]`)].find(
-      (element) => element.getAttribute(attribute) === value,
+    [...root.querySelectorAll("[data-feedback-zone-id]")].find(
+      (element) => element.getAttribute("data-feedback-zone-id") === value,
     ) ?? null
   );
 }

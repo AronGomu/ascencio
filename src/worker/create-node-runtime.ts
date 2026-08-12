@@ -4,8 +4,14 @@ import {
   buildActiveImageManifest,
 } from "../../scripts/lib/active-image-manifest.ts";
 import { DuelOperationError } from "../duel/contracts/duel-error.ts";
-import { uniqueDeckCodes, validateDeck } from "../duel/presets/deck-parser.ts";
-import { loadMvpPreset } from "../duel/presets/mvp-preset-node.ts";
+import { cardCode } from "../duel/contracts/ids.ts";
+import {
+  MVP_DECK_CONSTRAINTS,
+  validateDeck,
+} from "../duel/presets/deck-parser.ts";
+import { loadDeckSources } from "../duel/presets/deck-sources-node.ts";
+import { createDuelPreset } from "../duel/presets/duel-preset.ts";
+import { reviewedCardPool } from "../duel/presets/reviewed-card-pool.ts";
 import { loadActiveDuelDependenciesNode } from "./assets/active-duel-dependencies-node.ts";
 import {
   buildRuntimeSnapshotManifest,
@@ -80,11 +86,8 @@ export function createNodeDuelWorkerRuntime(
         });
       }
       progress("preset", 0.5);
-      const preset = await runInitializationStage(
-        "deck_validation_failed",
-        "Unable to load the MVP preset decks",
-        loadMvpPreset,
-      );
+      const deckSources = await loadDeckSources();
+      const reviewedPool = reviewedCardPool(deckSources);
       signal.throwIfAborted();
       let dependencyGroupsLoaded = 0;
       const reportDependencyProgress = (group: string): void => {
@@ -100,35 +103,42 @@ export function createNodeDuelWorkerRuntime(
         () =>
           loadActiveDuelDependenciesNode(
             assetRoot,
-            uniqueDeckCodes(preset.player, preset.opponent),
+            new Set([...reviewedPool].map(cardCode)),
             reportDependencyProgress,
           ),
       );
       signal.throwIfAborted();
       const catalogCodes = new Set(dependencies.cards.keys());
-      await runInitializationStage(
-        "deck_validation_failed",
-        "The MVP preset decks failed validation",
-        async () => {
-          validateDeck(
-            preset.player,
-            catalogCodes,
-            undefined,
-            dependencies.cards,
-          );
-          validateDeck(
-            preset.opponent,
-            catalogCodes,
-            undefined,
-            dependencies.cards,
-          );
-        },
-      );
+      const createPreset = (
+        playerDeckId: Parameters<typeof createDuelPreset>[0],
+        opponentDeckId: Parameters<typeof createDuelPreset>[1],
+      ) => {
+        const preset = createDuelPreset(
+          playerDeckId,
+          opponentDeckId,
+          deckSources,
+        );
+        validateDeck(
+          preset.player,
+          catalogCodes,
+          MVP_DECK_CONSTRAINTS,
+          dependencies.cards,
+          reviewedPool,
+        );
+        validateDeck(
+          preset.opponent,
+          catalogCodes,
+          MVP_DECK_CONSTRAINTS,
+          dependencies.cards,
+          reviewedPool,
+        );
+        return preset;
+      };
       progress("ready", 1);
       return {
         adapter,
         dependencies,
-        preset,
+        createPreset,
         snapshotId: manifest.snapshotId,
         revisions: {
           babelCdb: manifest.assets.babelCdbRevision,

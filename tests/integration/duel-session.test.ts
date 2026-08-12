@@ -45,6 +45,7 @@ describe("real ocgcore duel session", () => {
       opponentDeck: preset.opponent,
       configuration: {
         mode: "programmed",
+        rules: "mr5",
         seed: [1n, 2n, 3n, 4n],
         playerDeckOrder: preset.player.main,
         opponentDeckOrder: preset.opponent.main,
@@ -105,6 +106,7 @@ describe("real ocgcore duel session", () => {
       opponentDeck: preset.opponent,
       configuration: {
         mode: "programmed",
+        rules: "mr5",
         seed: [5n, 6n, 7n, 8n],
         playerDeckOrder: playerDeck.main,
         opponentDeckOrder: preset.opponent.main,
@@ -146,6 +148,7 @@ describe("real ocgcore duel session", () => {
       opponentDeck: preset.opponent,
       configuration: {
         mode: "programmed",
+        rules: "mr5",
         seed: [9n, 10n, 11n, 12n],
         playerDeckOrder: preset.player.main,
         opponentDeckOrder: preset.opponent.main,
@@ -180,6 +183,7 @@ Duel.RegisterEffect(overlay_query, 0)`,
         preset.player.extra.length,
         preset.opponent.extra.length,
       ],
+      extraMonsterZones: true,
     });
 
     let advance = controller.advance();
@@ -228,6 +232,7 @@ Duel.RegisterEffect(overlay_query, 0)`,
         opponentDeck: preset.opponent,
         configuration: {
           mode: "programmed",
+          rules: "mr5",
           seed: [1n, 2n, 3n, BigInt(index + 4)],
           playerDeckOrder: preset.player.main,
           opponentDeckOrder: preset.opponent.main,
@@ -287,6 +292,6 @@ function createProductionSession(): DuelSession {
     dependencies,
     playerDeck: preset.player,
     opponentDeck: preset.opponent,
-    configuration: { mode: "production" },
+    configuration: { mode: "production", rules: "mr5" },
   });
 }

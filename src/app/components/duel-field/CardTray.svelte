@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onDestroy, tick } from "svelte";
   import { SvelteMap } from "svelte/reactivity";
-  import { isCardIdentityVisible } from "../../../duel/card-visibility.ts";
+  import { isProjectedCardIdentityKnown } from "../../../duel/card-visibility.ts";
   import type {
     PlayerIndex,
     PublicCard,
@@ -111,11 +111,7 @@
   }
 
   function canRevealCard(card: PublicCard): boolean {
-    return (
-      zone !== "deck" &&
-      card.code !== undefined &&
-      isCardIdentityVisible(0, card.controller, card.location, card.position)
-    );
+    return zone !== "deck" && isProjectedCardIdentityKnown(card);
   }
 
   function cardName(card: PublicCard): string {

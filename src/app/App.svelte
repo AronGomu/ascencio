@@ -2,13 +2,27 @@
   import { afterUpdate, onMount, tick } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
   import type { DuelDiagnosticTrace } from "../duel/contracts/duel-diagnostics.ts";
-  import { snapshotId, type SnapshotId } from "../duel/contracts/ids.ts";
+  import type { PlayerPrompt } from "../duel/contracts/player-prompt.ts";
+  import {
+    snapshotId,
+    type PromptId,
+    type SnapshotId,
+  } from "../duel/contracts/ids.ts";
   import type { PublicCard } from "../duel/contracts/public-duel-state.ts";
   import {
     mapSnapshotToBoard,
     type BoardCardView,
+    type BoardStackView,
   } from "../field/board-view-model.ts";
-  import AppMenubar from "./components/AppMenubar.svelte";
+  import { zoneListsForBoard, type ZoneListEntry } from "../field/zone-list.ts";
+  import {
+    offFieldTargetEntries,
+    type OffFieldTargetEntry,
+  } from "../field/off-field-target-list.ts";
+  import type { PhysicalZoneId } from "../field/duel-field-layout.ts";
+  import DuelHeaderBar from "./components/DuelHeaderBar.svelte";
+  import DeckPicker from "./components/DeckPicker.svelte";
+  import DuelResultDialog from "./components/DuelResultDialog.svelte";
   import MenuDialog from "./components/MenuDialog.svelte";
   import SettingsDialog from "./components/SettingsDialog.svelte";
   import CardPreviewPanel from "./components/CardPreviewPanel.svelte";
@@ -34,16 +48,27 @@
   } from "../storage/snapshot-store.ts";
   import PromptControls from "./prompts/PromptControls.svelte";
   import PromptDialog from "./components/PromptDialog.svelte";
+  import { trivialPromptResponse } from "./prompts/auto-response.ts";
+  import { centralPlacementResponse } from "./prompts/auto-placement.ts";
   import { mapPromptToInteractionSpec } from "./prompts/interaction-spec.ts";
   import {
     cardPreviewForCode,
     cardPreviewForPublicCard,
+    HIDDEN_CARD_PREVIEW,
+    stackTopCode,
     type CardPreviewView,
   } from "./presentation/card-preview.ts";
-  import { promptSurface } from "./prompts/prompt-surface.ts";
+  import { previewStatusFor } from "./presentation/preview-status.ts";
   import { hasDuelPriority } from "./prompts/duel-priority.ts";
+  import { promptSurface } from "./prompts/prompt-surface.ts";
+  import { DECK_CATALOG, type DeckId } from "../duel/presets/deck-catalog.ts";
   import { createDuelStore } from "./stores/duel-store.ts";
-  import { createUiSettingsStore } from "./stores/ui-settings-store.ts";
+  import type { PersistedWindowPosition } from "./stores/persisted-ui-state.ts";
+  import { createPersistedUiStore } from "./stores/persisted-ui-store.ts";
+  import {
+    createUiSettingsStore,
+    type UiSettingsState,
+  } from "./stores/ui-settings-store.ts";
 
   const CURRENT_RUNTIME_SNAPSHOT_ID = snapshotId(__RUNTIME_SNAPSHOT_ID__);
   const CURRENT_ACTIVATION_SNAPSHOT_ID = snapshotId(__ACTIVATION_SNAPSHOT_ID__);
@@ -52,6 +77,11 @@
   const ACTIVE_CARD_TEXTS = new Map(
     __ACTIVE_CARD_TEXTS__.map((record) => [record.code, record] as const),
   );
+  const EMPTY_ZONE_LISTS: ReadonlyMap<
+    PhysicalZoneId,
+    readonly ZoneListEntry[]
+  > = new Map();
+  const EMPTY_OFF_FIELD_TARGETS: readonly OffFieldTargetEntry[] = [];
   const CURRENT_ARTIFACT_RECEIPTS: readonly SnapshotArtifactReceipt[] = [
     { id: "runtime-package", sha256: __RUNTIME_MANIFEST_SHA256__ },
     { id: "active-images", sha256: __ACTIVE_IMAGE_MANIFEST_SHA256__ },
@@ -59,16 +89,15 @@
   const client = new DuelWorkerClient();
   const duel = createDuelStore(client);
   const uiSettings = createUiSettingsStore();
-  const autoStartedWorkerGenerations = new SvelteSet<number>();
+  const persistedUi = createPersistedUiStore();
+  let pickerOpen = true;
   let menuOpen = false;
   let settingsOpen = false;
   let menubarTrigger: HTMLButtonElement | null = null;
   let generationContext = "";
   let promptPanel: HTMLElement;
-  let resultHeading: HTMLHeadingElement;
   let errorHeading: HTMLHeadingElement;
   let previousErrorKey = "";
-  let previousStatus = $duel.status;
   let imageLibrary: CardImageLibrary | null = null;
   let imageLibraryVerified = false;
   let imageLoading = true;
@@ -86,6 +115,7 @@
   let imageProgress = 0;
   let imageWarning: string | null = null;
   let previewCard: CardPreviewView | null = null;
+  let autoResolvedPromptId: PromptId | null = null;
   let injectDuelFieldFailure = false;
   let diagnosticPending = false;
   let diagnosticMessage: string | null = null;
@@ -106,22 +136,53 @@
   $: boardResult =
     $duel.snapshot === null
       ? null
-      : mapSnapshotToBoard($duel.snapshot, ACTIVE_CARD_TEXTS);
+      : mapSnapshotToBoard($duel.snapshot, ACTIVE_CARD_TEXTS, $duel.prompt);
   $: duelBoard = boardResult?.ok === true ? boardResult.value : null;
+  /* Engine legality and visible geometry disagree about the shared Extra
+     Monster Zones. Nothing may hide, auto-answer or generically recover from
+     that: the whole prompt path is gated off until it is fixed. */
+  $: layoutProfileConflict =
+    boardResult?.ok === false &&
+    boardResult.error.type === "layout_profile_conflict"
+      ? boardResult.error
+      : null;
+  $: effectivePrompt = layoutProfileConflict === null ? $duel.prompt : null;
+  $: duelViewportOnly =
+    layoutProfileConflict === null &&
+    (duelBoard !== null || $duel.snapshot !== null) &&
+    !$uiSettings.showDuelHud &&
+    !$uiSettings.showWorkspace;
+  $: zoneLists =
+    duelBoard === null
+      ? EMPTY_ZONE_LISTS
+      : zoneListsForBoard(duelBoard, $duel.snapshot, ACTIVE_CARD_TEXTS);
   $: mappedInteractionSpec = mapPromptToInteractionSpec(
-    $duel.prompt,
+    effectivePrompt,
     $duel.snapshot,
     duelBoard,
     $duel.context,
   );
   $: fieldInteractionSpec =
     mappedInteractionSpec.kind === "inactive" ? null : mappedInteractionSpec;
+  /* T16: the target list is joined here, once, from the same sanitized
+     snapshot the board came from. `fieldInteractionSpec` is derived from
+     `effectivePrompt`, so the layout-conflict gate still holds. */
+  $: offFieldTargets =
+    fieldInteractionSpec === null || $duel.snapshot === null
+      ? EMPTY_OFF_FIELD_TARGETS
+      : offFieldTargetEntries(
+          fieldInteractionSpec,
+          $duel.snapshot,
+          ACTIVE_CARD_TEXTS,
+        );
   $: currentPromptSurface = promptSurface(
-    $duel.prompt,
+    effectivePrompt,
     mappedInteractionSpec,
     $uiSettings.showWorkspace,
+    duelBoard !== null,
   );
-  $: fieldLifePoints =
+  $: previewStatus = previewStatusFor(effectivePrompt, $duel.responsePending);
+  $: headerLifePoints =
     $duel.snapshot === null
       ? null
       : ([
@@ -401,9 +462,6 @@
       : "";
     if (errorKey !== "" && errorKey !== previousErrorKey) errorHeading?.focus();
     previousErrorKey = errorKey;
-    if ($duel.status === "completed" && previousStatus !== "completed")
-      resultHeading?.focus();
-    previousStatus = $duel.status;
   });
 
   $: if (
@@ -416,13 +474,30 @@
     handleDiagnosticsDownload($duel.diagnostics);
   }
 
-  $: if (
-    $duel.status === "idle" &&
-    $duel.coreVersion !== null &&
-    !autoStartedWorkerGenerations.has($duel.context.workerGeneration)
-  ) {
-    autoStartedWorkerGenerations.add($duel.context.workerGeneration);
-    queueMicrotask(() => duel.start());
+  $: maybeAutoResolvePrompt(
+    effectivePrompt,
+    $duel.responsePending,
+    $uiSettings,
+  );
+
+  function maybeAutoResolvePrompt(
+    prompt: PlayerPrompt | null,
+    responsePending: boolean,
+    settings: UiSettingsState,
+  ): void {
+    if (prompt === null) {
+      autoResolvedPromptId = null;
+      return;
+    }
+    if (responsePending || autoResolvedPromptId === prompt.id) return;
+    const choiceIds =
+      (settings.autoResolveTrivialPrompts
+        ? trivialPromptResponse(prompt)
+        : null) ??
+      (settings.autoPlaceCards ? centralPlacementResponse(prompt) : null);
+    if (choiceIds === null) return;
+    autoResolvedPromptId = prompt.id;
+    queueMicrotask(() => duel.respond(choiceIds));
   }
 
   async function finalizeSnapshotActivation(): Promise<void> {
@@ -552,16 +627,61 @@
       diagnosticMessage = "Diagnostics are unavailable for this session.";
   }
 
+  function selectDecks(player: DeckId, opponent: DeckId): void {
+    persistedUi.setDecks(player, opponent);
+  }
+
+  function moveZoneListWindow(position: PersistedWindowPosition): void {
+    persistedUi.setWindowPosition("zoneList", position);
+  }
+
+  function moveConfirmWindow(position: PersistedWindowPosition): void {
+    persistedUi.setWindowPosition("confirm", position);
+  }
+
+  function startSelectedDuel(): void {
+    pickerOpen = false;
+    duel.start($persistedUi.decks.player, $persistedUi.decks.opponent);
+  }
+
+  async function changeDecks(): Promise<void> {
+    pickerOpen = true;
+    await duel.reset();
+  }
+
   function previewFieldCard(card: BoardCardView): void {
+    if (card.code === undefined) {
+      previewCard = HIDDEN_CARD_PREVIEW;
+      return;
+    }
     const next = cardPreviewForCode(card.code, ACTIVE_CARD_TEXTS);
     if (next !== null) previewCard = next;
   }
 
+  function previewStackCard(stack: BoardStackView): void {
+    const code = stackTopCode(stack);
+    if (code === undefined) {
+      previewCard = HIDDEN_CARD_PREVIEW;
+      return;
+    }
+    const next = cardPreviewForCode(code, ACTIVE_CARD_TEXTS);
+    if (next !== null) previewCard = next;
+  }
+
+  function previewZoneListEntry(entry: ZoneListEntry): void {
+    previewCard =
+      entry.code === undefined
+        ? HIDDEN_CARD_PREVIEW
+        : (cardPreviewForCode(entry.code, ACTIVE_CARD_TEXTS) ??
+          HIDDEN_CARD_PREVIEW);
+  }
+
   /* Still wired to `DuelHud`'s `oninspect`, so the HUD and the card trays need
      no change: the trigger button they hand over is irrelevant now that the
-     panel replaces the modal inspector. Unlike `BoardCardView.code`, a raw
-     `PublicCard.code` is not already gated on identity visibility, so the
-     preview re-checks it here. */
+     panel replaces the modal inspector. ADR-014: a projected `PublicCard.code`
+     is itself the projector-attested local-viewer capability, so
+     `cardPreviewForPublicCard` reads that attestation instead of re-deriving
+     identity visibility from face orientation. */
   function previewHudCard(card: PublicCard): void {
     const next = cardPreviewForPublicCard(card, ACTIVE_CARD_TEXTS);
     if (next !== null) previewCard = next;
@@ -627,9 +747,18 @@
   <title>Preset Duel · YGO Story Duel Simulator</title>
 </svelte:head>
 
-<AppMenubar onopensettings={openMenu} />
+<DuelHeaderBar
+  lifePoints={headerLifePoints}
+  selfAvatarUrl={imageLibrary?.cardBackUrl ?? ""}
+  opponentAvatarUrl={imageLibrary?.cardBackUrl ?? ""}
+  onopensettings={openMenu}
+/>
 
-<main data-cy="app-main">
+<main
+  data-cy="app-main"
+  class:is-duel-viewport={duelViewportOnly}
+  data-duel-viewport={duelViewportOnly ? "true" : undefined}
+>
   {#if imageLoading}
     <LoadingOverlay
       label="Preparing active card images"
@@ -772,91 +901,58 @@
     </section>
   {/if}
 
-  {#if $duel.result}
-    <section
-      class="message-panel result-panel"
-      role="status"
-      aria-live="polite"
-      aria-atomic="true"
-      aria-busy={$duel.status !== "completed"}
-      aria-labelledby="duel-result-heading"
-      data-cy="app-result-panel"
-    >
-      <div data-cy="app-result-body">
-        <p class="eyebrow" data-cy="app-result-eyebrow">Duel complete</p>
-        <h2
-          id="duel-result-heading"
-          tabindex="-1"
-          bind:this={resultHeading}
-          data-cy="app-result-heading"
-        >
-          {#if $duel.result.type === "completed"}
-            {$duel.result.winner === 0 ? "You won" : "Opponent won"}
-          {:else if $duel.result.type === "surrendered"}
-            Duel surrendered
-          {:else if $duel.result.type === "unsupported"}
-            Unsupported duel message
-          {:else}
-            Engine error
-          {/if}
-        </h2>
-        {#if $duel.result.type === "completed"}
-          <p data-cy="app-result-finish-reason">
-            Finish reason {$duel.result.reason}
-          </p>
-        {:else if $duel.result.type === "unsupported"}
-          <p data-cy="app-result-unsupported-detail">
-            {$duel.result.detail}
-          </p>
-        {:else if $duel.result.type === "engineError"}
-          <p data-cy="app-result-engine-error-detail">
-            {$duel.result.detail}
-          </p>
-        {/if}
-      </div>
-      <div class="button-row" data-cy="app-result-actions">
-        <button
-          type="button"
-          disabled={$duel.status !== "completed"}
-          data-cy="app-restart-duel-button"
-          onclick={() => void duel.restart()}
-          >{$duel.status === "completed"
-            ? "Start another duel"
-            : "Starting another duel…"}</button
-        >
-        <span class="sensitive-note" data-cy="app-result-sensitive-note"
-          >Contains the production seed.</span
-        >
-        <button
-          type="button"
-          class="secondary"
-          disabled={diagnosticPending}
-          data-cy="app-result-download-diagnostics-button"
-          onclick={requestDiagnostics}
-          >{diagnosticPending
-            ? "Preparing diagnostics…"
-            : "Download diagnostics"}</button
-        >
-      </div>
-    </section>
-  {/if}
-
   {#if diagnosticMessage}
     <p class="diagnostic-message" data-cy="app-diagnostic-message">
       {diagnosticMessage}
     </p>
   {/if}
 
+  {#if pickerOpen && $duel.status === "idle" && $duel.coreVersion !== null && !$duel.snapshot}
+    <DeckPicker
+      decks={DECK_CATALOG}
+      playerDeckId={$persistedUi.decks.player}
+      opponentDeckId={$persistedUi.decks.opponent}
+      onselect={selectDecks}
+      onstart={startSelectedDuel}
+    />
+  {/if}
+
   {#if duelBoard || $duel.snapshot}
     <div class="duel-row" data-cy="duel-row">
-      {#if duelBoard}
+      <CardPreviewPanel
+        preview={previewCard}
+        status={previewStatus}
+        hasPriority={hasDuelPriority(effectivePrompt, $duel.responsePending)}
+        imageLibrary={imagesMatchRuntime ? imageLibrary : null}
+        placeholderUrl={imageLibrary?.placeholderUrl ??
+          DEFAULT_CARD_PLACEHOLDER}
+      />
+      {#if layoutProfileConflict}
+        <section
+          class="field-error"
+          role="alert"
+          data-cy="layout-profile-conflict"
+          data-conflict-zone-id={layoutProfileConflict.zoneId}
+          data-conflict-source={layoutProfileConflict.source}
+        >
+          <h2 data-cy="layout-profile-conflict-heading">
+            Duel field and rules disagree
+          </h2>
+          <p data-cy="layout-profile-conflict-copy">
+            This duel runs without shared Extra Monster Zones, but the engine
+            still offers {layoutProfileConflict.zoneId} ({layoutProfileConflict.source}).
+            Decisions are paused so no legal choice is hidden or answered for
+            you.
+          </p>
+        </section>
+      {:else if duelBoard}
         {#key `${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
           <DuelFieldErrorBoundary
             board={duelBoard}
             imageLibrary={imagesMatchRuntime ? imageLibrary : null}
             cardBackUrl={imageLibrary?.cardBackUrl ?? ""}
             placeholderUrl={imageLibrary?.placeholderUrl ?? ""}
-            prompt={$duel.prompt}
+            prompt={effectivePrompt}
             spec={fieldInteractionSpec}
             session={$duel.interactionSession}
             pending={$duel.responsePending}
@@ -866,9 +962,15 @@
             oninteraction={duel.dispatchInteraction}
             onplacementintent={duel.armPlacementIntent}
             onpreview={previewFieldCard}
+            onstackpreview={previewStackCard}
+            {zoneLists}
+            {offFieldTargets}
+            onzonelistpreview={previewZoneListEntry}
             phase={$duel.snapshot?.phase ?? "unknown"}
-            hasPriority={hasDuelPriority($duel.prompt, $duel.responsePending)}
-            lifePoints={fieldLifePoints}
+            zoneListWindowPosition={$persistedUi.windows.zoneList}
+            confirmWindowPosition={$persistedUi.windows.confirm}
+            onzoneListWindowPositionChange={moveZoneListWindow}
+            onconfirmWindowPositionChange={moveConfirmWindow}
           />
         {/key}
       {:else if $duel.snapshot}
@@ -883,19 +985,13 @@
           </p>
         </section>
       {/if}
-      <CardPreviewPanel
-        preview={previewCard}
-        imageLibrary={imagesMatchRuntime ? imageLibrary : null}
-        placeholderUrl={imageLibrary?.placeholderUrl ??
-          DEFAULT_CARD_PLACEHOLDER}
-      />
     </div>
   {/if}
 
-  {#if currentPromptSurface === "dialog" && $duel.prompt}
-    {#key $duel.prompt.id}
+  {#if currentPromptSurface === "dialog" && effectivePrompt}
+    {#key effectivePrompt.id}
       <PromptDialog
-        prompt={$duel.prompt}
+        prompt={effectivePrompt}
         disabled={$duel.responsePending}
         imageLibrary={imagesMatchRuntime ? imageLibrary : null}
         placeholderUrl={imageLibrary?.placeholderUrl ??
@@ -942,10 +1038,10 @@
         bind:this={promptPanel}
         data-cy="prompt-panel"
       >
-        {#if $duel.prompt}
-          {#key $duel.prompt.id}
+        {#if effectivePrompt}
+          {#key effectivePrompt.id}
             <PromptControls
-              prompt={$duel.prompt}
+              prompt={effectivePrompt}
               disabled={$duel.responsePending}
               onsubmit={duel.respond}
               imageLibrary={imagesMatchRuntime ? imageLibrary : null}
@@ -991,7 +1087,20 @@
       fallbackSnapshotId={snapshotStorageStatus.fallbackSnapshotId}
       onshowduelhud={uiSettings.setShowDuelHud}
       onshowworkspace={uiSettings.setShowWorkspace}
+      onautoplacecards={uiSettings.setAutoPlaceCards}
+      onautoresolvetrivialprompts={uiSettings.setAutoResolveTrivialPrompts}
       onclose={() => void closeSettings()}
+    />
+  {/if}
+
+  {#if $duel.result}
+    <DuelResultDialog
+      result={$duel.result}
+      completed={$duel.status === "completed"}
+      {diagnosticPending}
+      onrestart={() => void duel.restart()}
+      onchangedecks={() => void changeDecks()}
+      ondownloaddiagnostics={requestDiagnostics}
     />
   {/if}
 </main>

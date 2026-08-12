@@ -30,17 +30,169 @@ describe("global styles", () => {
   it("board keeps a min-width that holds field targets at 44px", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     expect(ruleBlock(css, ".duel-field-board {")).toContain("min-width: 52rem");
-    expect(duelFieldBlock(css)).toContain("overflow-x: auto");
+    // T14: the pan moved off the field root onto its scroll child so the root
+    // can stay a still boundary for the floating windows (ADR-017).
+    expect(ruleBlock(css, ".duel-field-scroll-region {")).toContain(
+      "overflow: auto",
+    );
   });
 
-  it("the actionable halo is orange", () => {
+  it("the duel field root never scrolls, so windows cannot be panned away", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const block = duelFieldBlock(css);
+    expect(block).toContain("overflow: hidden");
+    expect(block).toContain("position: relative");
+  });
+
+  it("the actionable halo is green, not orange", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     const block = ruleBlock(
       css,
       ".duel-field-zone.is-actionable,\n.duel-field-card.is-actionable .duel-field-card__art {",
     );
-    expect(block).toContain("border-color: var(--warning)");
-    expect(block).not.toContain("--accent");
+    expect(block).toContain("var(--success)");
+    expect(block).not.toContain("var(--warning)");
+  });
+
+  it("actionable stack and list halos are green too", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const stack = ruleBlock(css, ".duel-field-stack.is-actionable {");
+    expect(stack).toContain("var(--success)");
+    expect(stack).not.toContain("var(--warning)");
+    const list = ruleBlock(css, ".zone-list-entry.is-actionable img {");
+    expect(list).toContain("var(--success)");
+    expect(list).not.toContain("var(--warning)");
+  });
+
+  it("selected halos are orange, overriding legal green", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const field = ruleBlock(
+      css,
+      ".duel-field-zone.is-selected,\n.duel-field-card.is-selected .duel-field-card__art {",
+    );
+    expect(field).toContain("var(--warning)");
+    expect(field).not.toContain("var(--success)");
+    const list = ruleBlock(css, ".zone-list-entry.is-selected img {");
+    expect(list).toContain("var(--warning)");
+    expect(list).not.toContain("var(--success)");
+  });
+
+  it("drop candidate is green with a translucent fill, distinct from plain legal", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const block = ruleBlock(css, ".duel-field-zone.is-drop-candidate {");
+    expect(block).toContain("border-color: var(--success)");
+    expect(block).toMatch(/background: rgb\(126 226 168 \/ 0\.\d+\)/);
+    expect(block).toContain("box-shadow");
+  });
+
+  it("keyboard focus is a neutral outline, independent of legal/selected colours", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const block = ruleBlock(
+      css,
+      ".duel-field-zone.is-navigation-active:focus-visible,",
+    );
+    expect(block).toContain("outline: 3px solid var(--ink)");
+    expect(block).toContain("outline-offset: 2px");
+    expect(block).not.toContain("var(--success)");
+    expect(block).not.toContain("var(--warning)");
+  });
+
+  it("feedback target and default field line are teal; attack stays danger", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const target = ruleBlock(
+      css,
+      ".duel-field-card.is-feedback-target .duel-field-card__art,",
+    );
+    expect(target).toContain("var(--accent)");
+    expect(target).not.toContain("var(--warning)");
+    const line = ruleBlock(css, ".field-lines line {");
+    expect(line).toContain("stroke: var(--accent)");
+    const attackLine = ruleBlock(css, ".field-lines.is-attack line {");
+    expect(attackLine).toContain("var(--danger)");
+  });
+
+  it("the action/phase badge at the opponent hand position (item 26) is gone from the stylesheet", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    expect(css).not.toContain(".duel-field-feedback");
+  });
+
+  it("card and list entries transition transform 120ms ease-out and hover-scale 1.35", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const card = ruleBlock(
+      css,
+      ".duel-field-card {\n  z-index: var(--duel-field-layer-card);",
+    );
+    expect(card).toContain("transition: transform 120ms ease-out");
+    const list = ruleBlock(css, ".zone-list-entry {");
+    expect(list).toContain("transition: transform 120ms ease-out");
+    const fieldHover = ruleBlock(
+      css,
+      ".duel-field-card:not(.is-hand-item):not(.is-pinned):is(:hover, :focus-within) {",
+    );
+    expect(fieldHover).toContain("scale(1.35)");
+    const handHover = ruleBlock(
+      css,
+      ".duel-field-card.is-hand-item:not(.is-pinned):is(:hover, :focus-within) {",
+    );
+    expect(handHover).toContain("scale(1.35)");
+    const listHover = ruleBlock(
+      css,
+      ".zone-list-entry:is(:hover, :focus-within) {",
+    );
+    expect(listHover).toContain("scale(1.35)");
+  });
+
+  it("hand item transform-origin is bottom for player, top for opponent; field origin is centre", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const card = ruleBlock(
+      css,
+      ".duel-field-card {\n  z-index: var(--duel-field-layer-card);",
+    );
+    expect(card).toContain("transform-origin: center");
+    const handItem = ruleBlock(css, ".duel-field-card.is-hand-item {");
+    expect(handItem).toContain("transform-origin: center bottom");
+    const opponentHand = ruleBlock(
+      css,
+      ".duel-field-card.is-hand-item.is-opponent {",
+    );
+    expect(opponentHand).toContain("transform-origin: center top");
+  });
+
+  it("reduced motion disables card/list zoom transform and transition", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const blocks = [
+      ...css.matchAll(
+        /@media \(prefers-reduced-motion: reduce\) \{[\s\S]*?\n\}\n/g,
+      ),
+    ].map((match) => match[0]);
+    const zoomBlock = blocks.find((block) =>
+      block.includes(".duel-field-card,"),
+    );
+    expect(zoomBlock).toBeDefined();
+    expect(zoomBlock).toContain("transition: none");
+    expect(zoomBlock).toContain("transform: none");
+  });
+
+  /* T16: a target answer button is the only control on a list entry in target
+     mode, so it carries the field-wide 44px minimum itself. */
+  it("off-field target buttons keep the 44px minimum and a single choice fills its tile", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const button = ruleBlock(css, ".zone-list-entry__target {");
+    expect(button).toContain("min-width: 2.75rem");
+    expect(button).toContain("min-height: 2.75rem");
+    const single = ruleBlock(css, ".zone-list-entry__targets.is-single {");
+    expect(single).toContain("inset: 0");
+  });
+
+  it("hovered/focused/pinned card parent rises above normal card/stack/zone siblings", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const block = ruleBlock(
+      css,
+      ".duel-field-card:is(:hover, :focus-within),\n.duel-field-card.is-pinned {",
+    );
+    expect(block).toContain("var(--duel-field-layer-card-raised)");
+    expect(css).toContain("--duel-field-layer-card-raised: 35");
+    expect(css).toContain("--duel-field-layer-card: 30");
   });
 
   /* jsdom loads no stylesheet, so no component test can observe `display`, and
@@ -56,16 +208,45 @@ describe("global styles", () => {
     expect(reveal).toContain("display: flex");
   });
 
-  it("opponent hand zone is plain", () => {
+  // T8: both hands render through HandBand, which paints no border,
+  // background or ZoneControl at all — there is no dashed hand-zone
+  // treatment left to make transparent for the opponent specifically.
+  it("hand band paints no border or background", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
-    expect(css).toContain(
-      '.duel-field-zone[data-zone-id="p1:hand"] {\n  border-color: transparent;\n  background: transparent;\n}',
+    expect(css).not.toContain('.duel-field-zone[data-zone-kind="hand"]');
+    expect(css).not.toContain('.duel-field-zone[data-zone-id="p1:hand"]');
+    const block = ruleBlock(css, ".duel-field-hand-band {");
+    expect(block).not.toContain("border");
+    expect(block).not.toContain("background");
+  });
+
+  it("drag ghost is fixed, pointer-transparent and layered above field windows", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    expect(css).toContain("--duel-field-layer-drag-ghost: 150");
+    const block = ruleBlock(css, ".drag-ghost {");
+    expect(block).toContain("position: fixed");
+    expect(block).toContain("pointer-events: none");
+    expect(block).toContain("z-index: var(--duel-field-layer-drag-ghost)");
+    expect(block).toContain("scale(var(--drag-ghost-lift-scale, 1.08))");
+    expect(block).toContain("box-shadow");
+  });
+
+  it("reduced motion strips the drag ghost's lift transform", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const reducedMotionBlockStart = css.indexOf(
+      "@media (prefers-reduced-motion: reduce) {\n  .drag-ghost {",
     );
+    expect(reducedMotionBlockStart).toBeGreaterThan(-1);
+    const block = ruleBlock(css, ".drag-ghost {", reducedMotionBlockStart);
+    expect(block).toContain(
+      "transform: translate3d(var(--drag-ghost-x), var(--drag-ghost-y), 0)",
+    );
+    expect(block).not.toContain("scale(");
   });
 });
 
-function ruleBlock(css: string, selectorStart: string): string {
-  const start = css.indexOf(selectorStart);
+function ruleBlock(css: string, selectorStart: string, fromIndex = 0): string {
+  const start = css.indexOf(selectorStart, fromIndex);
   if (start === -1) throw new Error(`Selector not found: ${selectorStart}`);
   const end = css.indexOf("}", start);
   return css.slice(start, end + 1);

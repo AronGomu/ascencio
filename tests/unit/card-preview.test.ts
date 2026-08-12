@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   cardPreviewForCode,
   cardPreviewForPublicCard,
+  HIDDEN_CARD_PREVIEW,
+  stackTopCode,
   type CardPreviewText,
   type PreviewablePublicCard,
 } from "../../src/app/presentation/card-preview.ts";
@@ -89,19 +91,7 @@ describe("cardPreviewForPublicCard", () => {
     ).not.toBeNull();
   });
 
-  /* A code that leaked onto a card whose identity is hidden from player 0 must
-     never reach the panel, whatever the caller pre-filtered. */
-  it("refuses a card whose identity is hidden from the local player", () => {
-    expect(
-      cardPreviewForPublicCard(
-        publicCard({
-          controller: 1,
-          location: "hand",
-          position: "faceDownAttack",
-        }),
-        TEXTS,
-      ),
-    ).toBeNull();
+  it("previews projector-known face-down fixed-field identity", () => {
     expect(
       cardPreviewForPublicCard(
         publicCard({
@@ -109,6 +99,23 @@ describe("cardPreviewForPublicCard", () => {
           location: "monster",
           position: "faceDownDefense",
         }),
+        TEXTS,
+      ),
+    ).toEqual({
+      code: KNOWN,
+      name: "The Legendary Fisherman",
+      description: "This card is unaffected by Spell effects.",
+    });
+  });
+
+  it("keeps unknown concealed opponent identity private", () => {
+    expect(
+      cardPreviewForPublicCard(
+        {
+          controller: 1,
+          location: "hand",
+          position: "faceDownAttack",
+        },
         TEXTS,
       ),
     ).toBeNull();
@@ -121,5 +128,25 @@ describe("cardPreviewForPublicCard", () => {
         TEXTS,
       ),
     ).toBeNull();
+  });
+});
+
+describe("HIDDEN_CARD_PREVIEW", () => {
+  it("describes a face-down card with no lease-able code", () => {
+    expect(HIDDEN_CARD_PREVIEW).toEqual({
+      code: 0,
+      name: "Face-down card",
+      description: "No information is available for this card.",
+    });
+  });
+});
+
+describe("stackTopCode", () => {
+  it("returns the stack's top card code", () => {
+    expect(stackTopCode({ topCardCode: KNOWN })).toBe(KNOWN);
+  });
+
+  it("returns undefined when nothing in the stack is public", () => {
+    expect(stackTopCode({})).toBeUndefined();
   });
 });

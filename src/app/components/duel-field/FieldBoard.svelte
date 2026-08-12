@@ -2,6 +2,7 @@
   import { tick } from "svelte";
   import type {
     BoardCardView,
+    BoardStackView,
     BoardTargetId,
     BoardViewModel,
     BoardZoneView,
@@ -18,7 +19,9 @@
     ActiveInteractionSpec,
     InteractionChoice,
   } from "../../prompts/interaction-spec.ts";
+  import type { CardDragOrigin } from "../../presentation/drag-ghost-physics.ts";
   import CardControl from "./CardControl.svelte";
+  import HandBand from "./HandBand.svelte";
   import StackControl from "./StackControl.svelte";
   import ZoneControl from "./ZoneControl.svelte";
 
@@ -32,6 +35,9 @@
   export let disabled = false;
   export let pinnedTarget: BoardTargetId | null = null;
   export let dropCandidates: ReadonlySet<PhysicalZoneId> = new Set();
+  /* Item 18: the candidate zone directly under the dragged card, distinct
+     from the rest of `dropCandidates`, so it can carry its own emphasis. */
+  export let dropHoveredZoneId: PhysicalZoneId | null = null;
   export let oncardactivate: (
     card: BoardCardView,
     element: HTMLButtonElement,
@@ -40,13 +46,29 @@
   export let oncardchoose: (choice: InteractionChoice) => void = () =>
     undefined;
   export let oncarddismiss: () => void = () => undefined;
-  export let oncarddragstart: (card: BoardCardView) => void = () => undefined;
+  export let oncarddragstart: (
+    card: BoardCardView,
+    origin: CardDragOrigin,
+  ) => void = () => undefined;
   export let oncarddragmove: (x: number, y: number) => void = () => undefined;
   export let oncarddragend: (x: number, y: number) => void = () => undefined;
   export let oncardpreview: (card: BoardCardView) => void = () => undefined;
+  export let onstackpreview: (stack: BoardStackView) => void = () => undefined;
+  export let onstackactivate: (stack: BoardStackView) => void = () => undefined;
 
   let boardElement: HTMLDivElement;
   let navigationState: FieldNavigationState = createFieldNavigationState();
+
+  $: fieldZones = board.zones.filter((zone) => zone.kind !== "hand");
+  $: fieldCards = board.cards.filter(
+    (card) => card.zoneId !== "p0:hand" && card.zoneId !== "p1:hand",
+  );
+  $: playerHandZone = board.zones.find((zone) => zone.id === "p0:hand");
+  $: opponentHandZone = board.zones.find((zone) => zone.id === "p1:hand");
+  $: playerHandCards = board.cards.filter((card) => card.zoneId === "p0:hand");
+  $: opponentHandCards = board.cards.filter(
+    (card) => card.zoneId === "p1:hand",
+  );
 
   $: actionableTargets = new Set<BoardTargetId>(
     disabled
@@ -54,6 +76,7 @@
       : [
           ...(spec?.cardChoices.keys() ?? []),
           ...(spec?.zoneChoices.keys() ?? []),
+          ...(spec?.stackChoices.keys() ?? []),
         ],
   );
   $: navigationContext =
@@ -166,7 +189,7 @@
     aria-hidden="true"
     data-cy="duel-field-board-surface"
   ></div>
-  {#each board.zones as zone (zone.id)}
+  {#each fieldZones as zone (zone.id)}
     <ZoneControl
       {zone}
       actionable={!disabled && spec?.zoneChoices.has(zone.targetId) === true}
@@ -174,16 +197,68 @@
       active={navigationState.activeTarget === zone.targetId}
       {disabled}
       dropCandidate={dropCandidates.has(zone.id)}
+      dropHovered={dropHoveredZoneId === zone.id}
       onactivate={() => onzoneactivate(zone)}
     />
   {/each}
+  {#if playerHandZone !== undefined}
+    <HandBand
+      player={0}
+      cards={playerHandCards}
+      zone={playerHandZone}
+      {imageUrls}
+      {imageLibrary}
+      {cardBackUrl}
+      {placeholderUrl}
+      {spec}
+      {selectedTargets}
+      activeTarget={navigationState.activeTarget}
+      {disabled}
+      {pinnedTarget}
+      {oncardactivate}
+      {oncardchoose}
+      {oncarddismiss}
+      {oncarddragstart}
+      {oncarddragmove}
+      {oncarddragend}
+      {oncardpreview}
+    />
+  {/if}
+  {#if opponentHandZone !== undefined}
+    <HandBand
+      player={1}
+      cards={opponentHandCards}
+      zone={opponentHandZone}
+      {imageUrls}
+      {imageLibrary}
+      {cardBackUrl}
+      {placeholderUrl}
+      {spec}
+      {selectedTargets}
+      activeTarget={navigationState.activeTarget}
+      {disabled}
+      {pinnedTarget}
+      {oncardactivate}
+      {oncardchoose}
+      {oncarddismiss}
+      {oncarddragstart}
+      {oncarddragmove}
+      {oncarddragend}
+      {oncardpreview}
+    />
+  {/if}
   {#each board.stacks as stack (stack.targetId)}
     <StackControl
       {stack}
       active={navigationState.activeTarget === stack.targetId}
+      actionable={!disabled && spec?.stackChoices.has(stack.targetId) === true}
+      onpreview={() => onstackpreview(stack)}
+      onactivate={() => onstackactivate(stack)}
+      {imageLibrary}
+      {placeholderUrl}
     />
   {/each}
-  {#each board.cards as card (card.id)}
+  {#each fieldCards as card (card.id)}
     <CardControl
       {card}
       imageUrl={cardImageUrl(card)}
@@ -198,14 +273,11 @@
       {disabled}
       choices={spec?.cardChoices.get(card.targetId) ?? []}
       pinned={pinnedTarget === card.targetId}
-      draggable={!disabled &&
-        spec?.kind === "cardAction" &&
-        spec.cardChoices.has(card.targetId) &&
-        card.zoneId === "p0:hand"}
+      draggable={false}
       onactivate={(element) => oncardactivate(card, element)}
       onchoose={oncardchoose}
       ondismiss={oncarddismiss}
-      ondragstart={() => oncarddragstart(card)}
+      ondragstart={(origin) => oncarddragstart(card, origin)}
       ondragmove={oncarddragmove}
       ondragend={oncarddragend}
       onpreview={() => oncardpreview(card)}

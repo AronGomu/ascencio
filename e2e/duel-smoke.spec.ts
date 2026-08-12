@@ -54,6 +54,12 @@ interface CapturedPromptEvent {
   readonly prompt: { readonly id: string; readonly kind: string };
 }
 
+async function startPresetDuel(page: Page): Promise<void> {
+  const start = page.locator('[data-cy="deck-picker-start-button"]');
+  await expect(start).toBeEnabled({ timeout: 120_000 });
+  await start.click();
+}
+
 const RESPONSIVE_VIEWPORTS = [
   { id: "VP-01", width: 1366, height: 768 },
   { id: "VP-02", width: 1920, height: 1080 },
@@ -217,37 +223,76 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   page.on("request", (request) => requests.push(request.url()));
   const startupBeganAt = Date.now();
   await page.goto("./");
+  await startPresetDuel(page);
 
+  /* Without the removed "Shuffle Deck" idle command, an opening Main Phase
+     with no legal global action beyond ending the turn never mounts the
+     conditional field action bar (`fieldActionBarRequired`), so readiness is
+     asserted on the field's own prompt-kind marker and the preview panel's
+     status line instead of the bar's title node. */
   await expect(
-    page.locator('[data-cy="field-action-bar-title"]', {
+    page.locator('[data-cy="duel-field"][data-prompt-kind="idleCommand"]'),
+  ).toBeVisible({ timeout: 120_000 });
+  await expect(
+    page.locator('[data-cy="card-preview-status"]', {
       hasText: "Choose a Main Phase action",
     }),
   ).toBeVisible({ timeout: 120_000 });
   expect(Date.now() - startupBeganAt).toBeLessThan(15_000);
   await enableDuelHud(page);
   await expect(page.getByRole("heading", { name: "Your turn" })).toBeVisible();
-  await expect(page.locator('[data-cy="life-pill-p0"]')).toBeVisible();
+  await expect(
+    page.locator('[data-cy="duel-header-life-points-p0"]'),
+  ).toBeVisible();
   const field = page.getByRole("region", { name: "Duel field" });
   await expect(field).toBeVisible();
-  await expect(field.locator("[data-zone-id]")).toHaveCount(34);
-  await expect(field.locator('[data-cy="prio-pill"]')).toHaveText(
-    "Choose Action",
+  // T8: hand zones paint no ZoneControl/`data-zone-id`. T11: the bundled
+  // pairs are Link-free, so the duel runs under Master Rule 3 with no shared
+  // Extra Monster Zones at all — 32 physical zones minus the 2 hand zones
+  // leaves 30 painted ones.
+  await expect(field.locator("[data-zone-id]")).toHaveCount(30);
+  await expect(
+    field.locator('[data-zone-id^="shared:extraMonster"]'),
+  ).toHaveCount(0);
+  // The top-right status pills (T3) are gone; the in-field phase strip is
+  // the current-phase indicator now.
+  await expect(field.locator('[data-cy="field-phase-strip"]')).toBeVisible();
+  const currentPhaseChip = field.locator(
+    '[data-cy="field-phase-chip-draw"].is-current, [data-cy="field-phase-chip-standby"].is-current, [data-cy="field-phase-chip-main1"].is-current',
   );
-  await expect(field.locator('[data-cy="phase-pill"]')).toHaveText(
-    /Main 1|Draw|Standby/,
+  await expect(currentPhaseChip).toHaveCount(1);
+  await expect(
+    page.locator('[data-cy="duel-header-life-points-p0"]'),
+  ).toHaveText("8,000 LP");
+  await expect(
+    page.locator('[data-cy="duel-header-life-points-p1"]'),
+  ).toHaveText("8,000 LP");
+  // Round 3 (T10): the header labels each life total by role, not deck/
+  // archetype name — those never render anywhere in the header or field.
+  await expect(page.locator('[data-cy="duel-header-role-p0"]')).toHaveText(
+    "You",
   );
-  await expect(field.locator('[data-cy="life-pill-p0"]')).toHaveText(
-    "8,000 LP",
+  await expect(page.locator('[data-cy="duel-header-role-p1"]')).toHaveText(
+    "Opponent",
   );
-  await expect(field.locator('[data-cy="life-pill-p1"]')).toHaveText(
-    "8,000 LP",
-  );
+  const headerText = await page
+    .locator('[data-cy="duel-header-bar"]')
+    .textContent();
+  for (const catalogName of [
+    "Blue-Eyes White Dragon",
+    "Dark Magician",
+    "Red-Eyes Black Dragon",
+    "Elemental HERO Sparkman",
+    "Cyber Dragon",
+    "Blackwing Armor Master",
+  ])
+    expect(headerText ?? "").not.toContain(catalogName);
   await expect(
     field.getByRole("article", { name: /Hidden opponent hand card/ }).first(),
   ).toBeVisible();
   await expect(field.getByRole("img").first()).toHaveAttribute("src", /.+/);
 
-  const promptTitle = page.locator('[data-cy="field-action-bar-title"]', {
+  const promptTitle = page.locator('[data-cy="card-preview-status"]', {
     hasText: "Choose a Main Phase action",
   });
   await expect(promptTitle).toBeVisible();
@@ -329,8 +374,95 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   );
 });
 
+test("deck picker persists a chosen pair and Change decks returns without auto-start", async ({
+  page,
+}) => {
+  await page.goto("./");
+  const picker = page.locator('[data-cy="deck-picker"]');
+  await expect(picker).toBeVisible({ timeout: 120_000 });
+  expect(
+    (await readCapture(page)).commands.filter(
+      (command) => command.type === "startDuel",
+    ),
+  ).toHaveLength(0);
+
+  await page
+    .locator('[data-cy="deck-picker-option-player-burning-abyss"]')
+    .click();
+  await page
+    .locator('[data-cy="deck-picker-option-opponent-shaddoll"]')
+    .click();
+  await expect(
+    page.locator('[data-cy="deck-picker-option-player-burning-abyss"]'),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    page.locator('[data-cy="deck-picker-option-opponent-shaddoll"]'),
+  ).toHaveAttribute("aria-pressed", "true");
+  expect(
+    await page.evaluate(() =>
+      JSON.parse(localStorage.getItem("ygo.ui.v1") ?? "null"),
+    ),
+  ).toEqual({
+    version: 1,
+    windows: { zoneList: null, confirm: null },
+    decks: { player: "burning-abyss", opponent: "shaddoll" },
+  });
+
+  await page.locator('[data-cy="deck-picker-start-button"]').click();
+  await expect(page.locator('[data-cy="duel-field"]')).toBeVisible({
+    timeout: 120_000,
+  });
+  expect(
+    (await readCapture(page)).commands.filter(
+      (command) => command.type === "startDuel",
+    ),
+  ).toEqual([
+    {
+      type: "startDuel",
+      duelId: "bundled-v1:burning-abyss:vs:shaddoll",
+      playerDeckId: "burning-abyss",
+      opponentDeckId: "shaddoll",
+    },
+  ]);
+
+  await page.reload();
+  await expect(picker).toBeVisible({ timeout: 120_000 });
+  await expect(
+    page.locator('[data-cy="deck-picker-option-player-burning-abyss"]'),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    page.locator('[data-cy="deck-picker-option-opponent-shaddoll"]'),
+  ).toHaveAttribute("aria-pressed", "true");
+
+  await page.locator('[data-cy="deck-picker-start-button"]').click();
+  await expect(page.locator('[data-cy="duel-field"]')).toBeVisible({
+    timeout: 120_000,
+  });
+  await surrenderThroughMenu(page);
+  await expect(
+    page.getByRole("heading", { name: "Duel surrendered" }),
+  ).toBeVisible();
+  await page.locator('[data-cy="duel-result-change-decks-button"]').click();
+  await expect(picker).toBeVisible({ timeout: 120_000 });
+  await expect(
+    page.locator('[data-cy="deck-picker-option-player-burning-abyss"]'),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    page.locator('[data-cy="deck-picker-option-opponent-shaddoll"]'),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect
+    .poll(
+      async () =>
+        (await readCapture(page)).commands.filter(
+          (command) => command.type === "startDuel",
+        ).length,
+    )
+    .toBe(1);
+});
+
 test("panels stay hidden until settings enable them", async ({ page }) => {
   await page.goto("./");
+  await startPresetDuel(page);
   await expect(
     page.locator('[data-cy="duel-field"][data-prompt-kind]'),
   ).toBeVisible({ timeout: 120_000 });
@@ -354,6 +486,7 @@ test("duel HUD keeps hidden stacks count-only and tray image work mounted on dem
       imageRequests.push(request.url());
   });
   await page.goto("./");
+  await startPresetDuel(page);
   await enableDuelHud(page);
 
   const hud = page.getByRole("region", { name: "Duel HUD" });
@@ -419,6 +552,7 @@ test("repeated restart replaces the Worker and clears presentation state", async
   page,
 }) => {
   await page.goto("./");
+  await startPresetDuel(page);
   for (let cycle = 1; cycle <= 2; cycle += 1) {
     await expect(
       page.locator('[data-cy="duel-field"][data-prompt-kind]'),
@@ -491,6 +625,7 @@ test("refresh during loading and after completion starts a clean duel", async ({
   const reloadDuringLoading = page.reload();
   releaseManifest();
   await reloadDuringLoading;
+  await startPresetDuel(page);
   await expect(
     page.locator('[data-cy="duel-field"][data-prompt-kind]'),
   ).toBeVisible({
@@ -516,6 +651,7 @@ test("refresh during loading and after completion starts a clean duel", async ({
   };
   expect(diagnostic.trace.sensitivity).toBe("contains-production-seed");
   await page.reload();
+  await startPresetDuel(page);
   await expect(
     page.locator('[data-cy="duel-field"][data-prompt-kind]'),
   ).toBeVisible({
@@ -530,6 +666,7 @@ test("mounted card image leases return to baseline across tray, restart, and des
   page,
 }, testInfo) => {
   await page.goto("./");
+  await startPresetDuel(page);
   await enableDuelHud(page);
   await expect(
     page.locator('[data-cy="duel-field"][data-prompt-kind]'),
@@ -629,6 +766,7 @@ test("slow image preload cannot delay a legal Worker response", async ({
   });
 
   await page.goto("./");
+  await startPresetDuel(page);
   await blocked;
   const controls = page.locator('[data-cy="duel-field"][data-prompt-kind]');
   await expect(controls).toBeVisible({ timeout: 120_000 });
@@ -682,6 +820,7 @@ test("missing active images use deterministic placeholders without blocking inpu
     route.abort("failed"),
   );
   await page.goto("./");
+  await startPresetDuel(page);
   const controls = page.locator('[data-cy="duel-field"][data-prompt-kind]');
   await expect(controls).toBeVisible({ timeout: 120_000 });
   await expect(
@@ -724,6 +863,7 @@ test("injected DOM field failure preserves fallback controls and one opaque resp
   page,
 }) => {
   await page.goto(duelFieldRenderFailureUrl());
+  await startPresetDuel(page);
   await expect(
     page.getByRole("heading", { name: "Interactive field could not render" }),
   ).toBeVisible({ timeout: 120_000 });
@@ -772,17 +912,22 @@ test("mobile layout preserves controls and honors reduced motion", async ({
   await page.setViewportSize({ width: 375, height: 812 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("./");
+  await startPresetDuel(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
   });
   const fieldRegion = page.getByRole("region", { name: "Duel field" });
   await expect(fieldRegion).toBeVisible();
-  const dimensions = await fieldRegion.evaluate((element) => ({
-    clientWidth: element.clientWidth,
-    scrollWidth: element.scrollWidth,
-    bodyWidth: document.body.scrollWidth,
-    viewportWidth: window.innerWidth,
-  }));
+  // T14: the field root is the still window boundary; its scroll child owns
+  // the board pan.
+  const dimensions = await fieldRegion
+    .locator('[data-cy="duel-field-scroll-region"]')
+    .evaluate((element) => ({
+      clientWidth: element.clientWidth,
+      scrollWidth: element.scrollWidth,
+      bodyWidth: document.body.scrollWidth,
+      viewportWidth: window.innerWidth,
+    }));
   expect(dimensions.scrollWidth).toBeGreaterThan(dimensions.clientWidth);
   expect(dimensions.bodyWidth).toBeLessThanOrEqual(dimensions.viewportWidth);
   const firstDecision = page.locator("[data-prompt-kind] button").first();
@@ -791,32 +936,497 @@ test("mobile layout preserves controls and honors reduced motion", async ({
   expect(box?.width).toBeGreaterThanOrEqual(44);
 });
 
-test("wheel over the duel field scrolls the page", async ({ page }) => {
+test("wheel over the duel field never scrolls the default duel page", async ({
+  page,
+}) => {
+  // Narrow (<80rem) and short (<=48rem) at once: the combined constrained
+  // layout the ticket's requirements name explicitly.
   await page.setViewportSize({ width: 900, height: 420 });
   await page.goto("./");
+  await startPresetDuel(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
   });
+  const main = page.locator('[data-cy="app-main"]');
+  await expect(main).toHaveAttribute("data-duel-viewport", "true");
   const field = page.locator('[data-cy="duel-field"]');
   await expect(field).toBeVisible();
   const box = await field.boundingBox();
   if (box === null) throw new Error("Duel field has no bounding box");
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.wheel(0, 400);
-  await expect
-    .poll(() => page.evaluate(() => window.scrollY))
-    .toBeGreaterThan(0);
+  // A wheel over the field may still scroll the field's own internal
+  // overflow (asserted elsewhere); it must never move the page itself.
+  await page.waitForTimeout(200);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
 });
 
-test("dragging a hand card onto a highlighted zone plays it", async ({
+test("default duel occupies exactly one viewport at every supported viewport", async ({
   page,
 }) => {
+  await page.goto("./");
+  await startPresetDuel(page);
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+  const main = page.locator('[data-cy="app-main"]');
+  const field = page.locator('[data-cy="duel-field"]');
+
+  // 1280×720 is Playwright's own default viewport (unexercised by
+  // `RESPONSIVE_VIEWPORTS`) and sits exactly on the wide/narrow breakpoint
+  // (79rem = 1264px), so it gets its own explicit check alongside the named
+  // viewport table.
+  const viewportsUnderTest = [
+    { id: "VP-DEFAULT", width: 1280, height: 720 },
+    ...RESPONSIVE_VIEWPORTS,
+  ] as const;
+
+  for (const viewport of viewportsUnderTest) {
+    await page.setViewportSize({
+      width: viewport.width,
+      height: viewport.height,
+    });
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const label =
+      "zoomEquivalent" in viewport
+        ? `${viewport.id} ${viewport.zoomEquivalent}`
+        : viewport.id;
+    await expect(main).toHaveAttribute("data-duel-viewport", "true");
+
+    const metrics = await page.evaluate(() => ({
+      documentScrollHeight: document.documentElement.scrollHeight,
+      bodyScrollHeight: document.body.scrollHeight,
+      innerHeight: window.innerHeight,
+    }));
+    expect(
+      metrics.documentScrollHeight,
+      `${label} document must not overflow the viewport`,
+    ).toBeLessThanOrEqual(metrics.innerHeight + 1);
+    expect(
+      metrics.bodyScrollHeight,
+      `${label} body must not overflow the viewport`,
+    ).toBeLessThanOrEqual(metrics.innerHeight + 1);
+
+    await expect(field).toBeVisible();
+    const box = await field.boundingBox();
+    if (box === null)
+      throw new Error(`${label} duel field has no bounding box`);
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.wheel(0, 400);
+    await page.waitForTimeout(100);
+    expect(
+      await page.evaluate(() => window.scrollY),
+      `${label} wheel over the field must not move the page`,
+    ).toBe(0);
+
+    // T9: the elastic 0.45fr:1fr split needs 79rem (1264px) of row width
+    // (52rem field + 22rem preview + 1rem gap + 2rem field padding + 2rem
+    // main margin); below it the field renders first (visually) with the
+    // panel as a horizontal band underneath.
+    const rowLayout = await page.evaluate(() => {
+      const rect = (selector: string): DOMRect | null =>
+        document.querySelector(selector)?.getBoundingClientRect() ?? null;
+      const fieldBox = rect('[data-cy="duel-field"]');
+      const panelBox = rect('[data-cy="card-preview-panel"]');
+      return fieldBox === null || panelBox === null
+        ? null
+        : {
+            fieldTop: fieldBox.top,
+            fieldBottom: fieldBox.bottom,
+            fieldLeft: fieldBox.left,
+            fieldWidth: fieldBox.width,
+            panelTop: panelBox.top,
+            panelBottom: panelBox.bottom,
+            panelRight: panelBox.right,
+            panelWidth: panelBox.width,
+            innerHeight: window.innerHeight,
+          };
+    });
+    if (rowLayout === null) throw new Error(`${label} duel row is not mounted`);
+    if (viewport.width >= 1264) {
+      expect(
+        rowLayout.panelRight,
+        `${label} preview sits left of the field`,
+      ).toBeLessThanOrEqual(rowLayout.fieldLeft + 1);
+      expect(
+        Math.abs(rowLayout.panelTop - rowLayout.fieldTop),
+        `${label} preview and field share the same top`,
+      ).toBeLessThanOrEqual(2);
+      expect(
+        rowLayout.panelWidth,
+        `${label} preview keeps its 22rem floor`,
+      ).toBeGreaterThanOrEqual(352 - 1);
+      expect(
+        rowLayout.fieldWidth,
+        `${label} field keeps its 52rem floor`,
+      ).toBeGreaterThanOrEqual(832 - 1);
+    } else {
+      expect(
+        rowLayout.fieldTop,
+        `${label} field top sits above the preview top`,
+      ).toBeLessThan(rowLayout.panelTop);
+      expect(
+        rowLayout.panelTop,
+        `${label} preview renders below the field`,
+      ).toBeGreaterThanOrEqual(rowLayout.fieldBottom - 1);
+      expect(
+        rowLayout.panelBottom,
+        `${label} preview bottom stays inside the viewport`,
+      ).toBeLessThanOrEqual(rowLayout.innerHeight + 1);
+    }
+
+    await page.mouse.wheel(0, -400);
+  }
+});
+
+test("short-height duel keeps the compact preview thumbnail, name and scrolling text", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 900, height: 420 });
+  await page.goto("./");
+  await startPresetDuel(page);
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+  const field = page.locator('[data-cy="duel-field"]');
+  await expect(field).toBeVisible();
+  const panel = page.locator('[data-cy="card-preview-panel"]');
+
+  // Hover every rendered card once, keeping whichever preview shows the
+  // longest description, so the scrolling-text assertion below is exercised
+  // with real card text rather than a synthetic fixture (the seed is random
+  // per run, so no fixed card is guaranteed to be on the field).
+  const cards = field.locator(".duel-field-card");
+  const cardCount = await cards.count();
+  let longest = { length: -1, index: -1 };
+  for (let index = 0; index < cardCount; index += 1) {
+    await cards.nth(index).hover({ force: true });
+    const length = await page
+      .locator('[data-cy="card-preview-text"]')
+      .evaluate((element) => element.textContent?.length ?? 0);
+    if (length > longest.length) longest = { length, index };
+  }
+  expect(
+    longest.index,
+    "no card preview ever populated a description",
+  ).toBeGreaterThanOrEqual(0);
+  await cards.nth(longest.index).hover({ force: true });
+
+  await expect(panel.locator('[data-cy="card-preview-name"]')).toBeVisible();
+
+  // Requirement: short-height art shrinks to `clamp(3rem,8svh,5rem)`; at a
+  // 420px-tall viewport that resolves to the 3rem (48px) floor since 8svh
+  // (33.6px) is smaller. A few px of tolerance covers layout rounding.
+  const artBox = await panel
+    .locator('[data-cy="card-preview-image"]')
+    .boundingBox();
+  if (artBox !== null) expect(artBox.height).toBeLessThanOrEqual(48 + 4);
+
+  const textMetrics = await panel
+    .locator('[data-cy="card-preview-text"]')
+    .evaluate((element) => ({
+      clientHeight: element.clientHeight,
+      scrollHeight: element.scrollHeight,
+      overflowY: getComputedStyle(element).overflowY,
+    }));
+  expect(textMetrics.overflowY).toMatch(/auto|scroll/);
+  if (textMetrics.scrollHeight > textMetrics.clientHeight)
+    expect(textMetrics.scrollHeight).toBeGreaterThan(textMetrics.clientHeight);
+});
+
+/* T14/ADR-017: both field windows are dragged by their handles, clamped to
+   the visible duel field, remembered across a reload, and — for the confirm
+   window — never dismissed or answered by an outside press or Escape. */
+test("floating field windows stay inside the field, persist and never lose a decision", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("./");
+  await startPresetDuel(page);
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+  const field = page.locator('[data-cy="duel-field"]');
+  await expect(field).toBeVisible();
+  // Auto-answered prompts would replace the live decision (and close the zone
+  // list with it) mid-measurement, exactly as they race the keyboard walker.
+  await disableAutoResolveTrivialPrompts(page);
+  await disableAutoPlaceCards(page);
+  const confirmWindow = page.locator(
+    '[data-cy="floating-field-window-confirm"]',
+  );
+  const listWindow = page.locator('[data-cy="floating-field-window-zoneList"]');
+  await waitForConfirmWindow(page);
+  await openZoneList(page);
+
+  const responsesBefore = await countResponses(page);
+  const corners = [
+    { x: -600, y: -600 },
+    { x: 4000, y: -600 },
+    { x: 4000, y: 4000 },
+    { x: -600, y: 4000 },
+  ] as const;
+  /* One window at a time: a press both raises and drags, so a window buried
+     under another cannot be grabbed — exactly what a player sees. */
+  for (const corner of corners) {
+    await dragFieldWindow(page, "zoneList", corner);
+    await assertWindowInsideField(page, "zoneList", "zone list drag");
+  }
+  const draggedList = await windowOffset(page, "zoneList");
+  await page.keyboard.press("Escape");
+  await expect(listWindow).toHaveCount(0);
+  for (const corner of corners) {
+    await dragFieldWindow(page, "confirm", corner);
+    await assertWindowInsideField(page, "confirm", "confirm drag");
+  }
+  const draggedConfirm = await windowOffset(page, "confirm");
+  expect(await countResponses(page)).toBe(responsesBefore);
+
+  expect(
+    await page.evaluate(() =>
+      JSON.parse(localStorage.getItem("ygo.ui.v1") ?? "null"),
+    ),
+  ).toMatchObject({
+    version: 1,
+    windows: { zoneList: draggedList, confirm: draggedConfirm },
+  });
+
+  // Panning the board must not move a window: the pan lives on the field's
+  // scroll child, the windows on the still field root.
+  const before = await windowRect(page, "confirm");
+  await field
+    .locator('[data-cy="duel-field-scroll-region"]')
+    .evaluate((element) => {
+      element.scrollLeft = element.scrollWidth;
+      element.scrollTop = element.scrollHeight;
+    });
+  const after = await windowRect(page, "confirm");
+  expect(Math.abs(after.left - before.left)).toBeLessThanOrEqual(1);
+  expect(Math.abs(after.top - before.top)).toBeLessThanOrEqual(1);
+
+  // A vertical wheel over the horizontal entry run travels it sideways.
+  await openZoneList(page);
+  const entries = page.locator('[data-cy="zone-list-dialog-entries"]');
+  const entriesBox = await entries.boundingBox();
+  if (entriesBox === null) throw new Error("Zone list entries have no box");
+  await page.mouse.move(
+    entriesBox.x + entriesBox.width / 2,
+    entriesBox.y + entriesBox.height / 2,
+  );
+  await page.mouse.wheel(0, 300);
+  await expect
+    .poll(async () => entries.evaluate((element) => element.scrollLeft))
+    .toBeGreaterThan(0);
+
+  // Dismissal matrix: an outside press closes the list and leaves the live
+  // decision untouched; Escape does the same.
+  await page
+    .locator('[data-cy="duel-field-board-surface"]')
+    .click({ position: { x: 5, y: 5 }, force: true });
+  await expect(listWindow).toHaveCount(0);
+  await expect(confirmWindow).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(confirmWindow).toBeVisible();
+  expect(await countResponses(page)).toBe(responsesBefore);
+
+  // A narrower viewport reclamps both windows back inside the field.
+  await openZoneList(page);
+  await page.setViewportSize({ width: 900, height: 600 });
+  await assertWindowInsideField(page, "zoneList", "narrow reclamp");
+  await assertWindowInsideField(page, "confirm", "narrow reclamp");
+
+  // Positions survive a reload of the whole app.
+  await page.setViewportSize({ width: 1280, height: 800 });
+  const restored = (await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("ygo.ui.v1") ?? "null"),
+  )) as { readonly windows: { zoneList: unknown; confirm: unknown } };
+  await page.reload();
+  await startPresetDuel(page);
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+  await disableAutoResolveTrivialPrompts(page);
+  await disableAutoPlaceCards(page);
+  await waitForConfirmWindow(page);
+  await openZoneList(page);
+  expect(await windowOffset(page, "confirm")).toEqual(restored.windows.confirm);
+  expect(await windowOffset(page, "zoneList")).toEqual(
+    restored.windows.zoneList,
+  );
+});
+
+/* The opening Main Phase 1 offers no Battle Phase (no battle on the first
+   turn), so its only global choice is End turn and no confirm window renders.
+   Ending turns walks the duel to the first decision that does render one. */
+async function waitForConfirmWindow(page: Page): Promise<void> {
+  const confirmWindow = page.locator(
+    '[data-cy="floating-field-window-confirm"]',
+  );
+  const endTurn = page.locator('[data-cy="field-end-turn-button"]');
+  for (let step = 0; step < 12; step += 1) {
+    if ((await confirmWindow.count()) > 0) break;
+    if ((await endTurn.count()) > 0 && (await endTurn.isEnabled()))
+      await endTurn.click();
+    await page.waitForTimeout(750);
+  }
+  await expect(confirmWindow).toBeVisible({ timeout: 60_000 });
+}
+
+async function openZoneList(page: Page): Promise<void> {
+  const listWindow = page.locator('[data-cy="floating-field-window-zoneList"]');
+  await expect
+    .poll(
+      async () => {
+        if ((await listWindow.count()) > 0) return true;
+        await page.locator('[data-cy="field-stack-p0:deck"]').click();
+        return (await listWindow.count()) > 0;
+      },
+      { timeout: 30_000 },
+    )
+    .toBe(true);
+  await expect(listWindow).toBeVisible();
+}
+
+async function countResponses(page: Page): Promise<number> {
+  return (await readCapture(page)).commands.filter(
+    (command) => command.type === "respond",
+  ).length;
+}
+
+async function windowOffset(
+  page: Page,
+  windowId: "zoneList" | "confirm",
+): Promise<{ readonly x: number; readonly y: number }> {
+  return page
+    .locator(`[data-cy="floating-field-window-${windowId}"]`)
+    .evaluate((element) => ({
+      x: Number.parseFloat(
+        (element as HTMLElement).style.getPropertyValue("--window-x"),
+      ),
+      y: Number.parseFloat(
+        (element as HTMLElement).style.getPropertyValue("--window-y"),
+      ),
+    }));
+}
+
+async function windowRect(
+  page: Page,
+  windowId: "zoneList" | "confirm",
+): Promise<{ readonly left: number; readonly top: number }> {
+  return page
+    .locator(`[data-cy="floating-field-window-${windowId}"]`)
+    .evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      return { left: box.left, top: box.top };
+    });
+}
+
+async function dragFieldWindow(
+  page: Page,
+  windowId: "zoneList" | "confirm",
+  to: { readonly x: number; readonly y: number },
+): Promise<void> {
+  const handle = page.locator(
+    `[data-cy="floating-field-window-${windowId}-handle"]`,
+  );
+  const box = await handle.boundingBox();
+  if (box === null) throw new Error(`${windowId} handle has no box`);
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(to.x, to.y, { steps: 8 });
+  await page.mouse.up();
+}
+
+/* The reclamp after a resize runs from a ResizeObserver callback, so
+   containment is polled rather than sampled once. */
+async function assertWindowInsideField(
+  page: Page,
+  windowId: "zoneList" | "confirm",
+  label: string,
+): Promise<void> {
+  await expect
+    .poll(
+      async () =>
+        page.locator('[data-cy="duel-field"]').evaluate((element, id) => {
+          const windowElement = element.querySelector(
+            `[data-cy="floating-field-window-${id}"]`,
+          );
+          if (windowElement === null) return "missing field window";
+          const field = element.getBoundingClientRect();
+          const box = windowElement.getBoundingClientRect();
+          const outside = [
+            box.left < field.left - 1 ? `left ${box.left} < ${field.left}` : "",
+            box.top < field.top - 1 ? `top ${box.top} < ${field.top}` : "",
+            box.right > field.right + 1
+              ? `right ${box.right} > ${field.right}`
+              : "",
+            box.bottom > field.bottom + 1
+              ? `bottom ${box.bottom} > ${field.bottom}`
+              : "",
+          ].filter((entry) => entry !== "");
+          return outside.length === 0 ? "inside" : outside.join(", ");
+        }, windowId),
+      {
+        timeout: 10_000,
+        message: `${label} ${windowId} inside the duel field`,
+      },
+    )
+    .toBe("inside");
+}
+
+test("zone-list preview image never exceeds half the viewport height", async ({
+  page,
+}) => {
+  await page.goto("./");
+  await startPresetDuel(page);
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+  const field = page.locator('[data-cy="duel-field"]');
+  await expect(field).toBeVisible();
+
+  const deckStack = field.locator('[data-cy="field-stack-p0:deck"]');
+  await deckStack.scrollIntoViewIfNeeded();
+  await deckStack.click();
+  const dialog = page.locator('[data-cy="zone-list-dialog"]');
+  await expect(dialog).toBeVisible();
+
+  const innerHeight = await page.evaluate(() => window.innerHeight);
+  const heights = await dialog
+    .locator(".zone-list-entry > img")
+    .evaluateAll((elements) =>
+      elements.map((element) => element.getBoundingClientRect().height),
+    );
+  expect(heights.length).toBeGreaterThan(0);
+  for (const height of heights)
+    expect(height).toBeLessThanOrEqual(innerHeight * 0.5 + 1);
+});
+
+/* Shared by the pointer-drag tests below: sets up the field, finds a
+   draggable hand card with a legal placement and returns pointer-drag
+   geometry, or `null` when the opening hand offers no placement to drag
+   (the caller must then skip). */
+async function locateDraggablePlacement(page: Page): Promise<{
+  readonly field: Locator;
+  readonly dragTarget: Locator;
+  readonly targetZone: Locator;
+  readonly targetZoneId: string;
+  readonly cardBox: {
+    readonly x: number;
+    readonly y: number;
+    readonly width: number;
+    readonly height: number;
+  };
+  readonly from: { readonly x: number; readonly y: number };
+  readonly to: { readonly x: number; readonly y: number };
+} | null> {
   /* A pointer gesture is driven in viewport coordinates, so the whole board —
      the hand row and the monster row at once — has to be on screen. The
      default 720px-tall viewport puts the hand below the fold, where
      `elementFromPoint` returns null and every synthetic move is a no-op. */
   await page.setViewportSize({ width: 1440, height: 1400 });
   await page.goto("./");
+  await startPresetDuel(page);
   await expect(
     page.locator('[data-cy="duel-field"][data-prompt-kind="idleCommand"]'),
   ).toBeVisible({ timeout: 120_000 });
@@ -886,13 +1496,7 @@ test("dragging a hand card onto a highlighted zone plays it", async ({
     }
     if (chosen !== null) break;
   }
-  if (chosen === null) {
-    test.skip(
-      true,
-      "opening hand offers no summon, no monster set and no settable spell or trap — there is no placement of any kind to drag",
-    );
-    return;
-  }
+  if (chosen === null) return null;
 
   const { chip, zoneId: targetZoneId } = chosen;
   const cardId = await chip.evaluate(
@@ -923,6 +1527,50 @@ test("dragging a hand card onto a highlighted zone plays it", async ({
     y: zoneBox.y + zoneBox.height / 2,
   };
 
+  return { field, dragTarget, targetZone, targetZoneId, cardBox, from, to };
+}
+
+/**
+ * A `null` placement is only a legitimate seed outcome while the hand is
+ * actually mounted and actionable. Chips that stopped rendering, a changed
+ * `data-cy` scheme, hand cards that stopped being actionable and a hand band
+ * that stopped mounting all produce the same `null` — and would silently
+ * delete both of T13's only real-browser pointer proofs. Assert the
+ * preconditions first; only an actionable hand may skip.
+ */
+async function assertHandCouldOfferAPlacement(page: Page): Promise<void> {
+  const field = page.getByRole("region", { name: "Duel field" });
+  const handCards = field.locator(
+    '.duel-field-card[data-card-zone-id="p0:hand"]',
+  );
+  expect(
+    await handCards.count(),
+    "the player hand band must mount at least one card before a drag test may skip",
+  ).toBeGreaterThan(0);
+  const actionableHandCards = field.locator(
+    '.duel-field-card.is-actionable[data-card-zone-id="p0:hand"]',
+  );
+  expect(
+    await actionableHandCards.count(),
+    "at least one mounted hand card must be actionable before a drag test may skip",
+  ).toBeGreaterThan(0);
+}
+
+test("dragging a hand card onto a highlighted zone plays it", async ({
+  page,
+}) => {
+  const placement = await locateDraggablePlacement(page);
+  if (placement === null) {
+    await assertHandCouldOfferAPlacement(page);
+    test.skip(
+      true,
+      "opening hand offers no summon, no monster set and no settable spell or trap — there is no placement of any kind to drag",
+    );
+    return;
+  }
+  const { field, dragTarget, targetZone, targetZoneId, cardBox, from, to } =
+    placement;
+
   const before = await readCapture(page);
   const idlePrompt = [...before.events]
     .reverse()
@@ -947,6 +1595,51 @@ test("dragging a hand card onto a highlighted zone plays it", async ({
     { steps: 4 },
   );
   await expect(targetZone).toHaveAttribute("data-drop-candidate", "true");
+
+  const ghost = page.locator('[data-cy="drag-ghost"]');
+  await expect(ghost).toBeVisible();
+  const sourceArticle = dragTarget.locator("xpath=ancestor::article[1]");
+  await expect(sourceArticle).toHaveAttribute("data-dragging", "true");
+  /* The card never moves in the DOM (still the same hand-band article, same
+     roving-focus order) and stays dimmed; hover/focus zoom transform (T12,
+     unrelated to this ticket) can still legitimately resize its rendered
+     box while the pointer capture keeps it focused mid-drag, so this only
+     asserts the identity and dimming, not the exact rendered rect. */
+  const sourceOpacity = await sourceArticle.evaluate(
+    (element) => getComputedStyle(element).opacity,
+  );
+  expect(Number(sourceOpacity)).toBeCloseTo(0.72, 1);
+  const ghostBoxMidDrag = await ghost.boundingBox();
+  expect(ghostBoxMidDrag).not.toBeNull();
+  if (ghostBoxMidDrag !== null) {
+    const ghostCentreX = ghostBoxMidDrag.x + ghostBoxMidDrag.width / 2;
+    const ghostCentreY = ghostBoxMidDrag.y + ghostBoxMidDrag.height / 2;
+    const midX = from.x + ((to.x - from.x) * 2) / 3;
+    const midY = from.y + ((to.y - from.y) * 2) / 3;
+    /* Ghost centre tracks the cursor within the grab-offset tolerance —
+       it is not pinned exactly to the pointer, which grabbed some point
+       inside the card, not necessarily its centre. */
+    expect(Math.abs(ghostCentreX - midX)).toBeLessThanOrEqual(
+      cardBox.width / 2 + 8,
+    );
+    expect(Math.abs(ghostCentreY - midY)).toBeLessThanOrEqual(
+      cardBox.height / 2 + 8,
+    );
+    const underGhost = await page.evaluate(
+      ([x, y]) => {
+        const element = document.elementFromPoint(x, y);
+        return element === null
+          ? null
+          : {
+              isGhost: element.closest('[data-cy="drag-ghost"]') !== null,
+              hasZoneAncestor: element.closest("[data-zone-id]") !== null,
+            };
+      },
+      [ghostCentreX, ghostCentreY] as const,
+    );
+    expect(underGhost?.isGhost).toBe(false);
+  }
+
   await page.mouse.move(to.x, to.y, { steps: 4 });
   await page.mouse.up();
 
@@ -954,16 +1647,21 @@ test("dragging a hand card onto a highlighted zone plays it", async ({
     field.locator(`.duel-field-card[data-card-zone-id="${targetZoneId}"]`),
   ).toHaveCount(1, { timeout: 30_000 });
   await expect(targetZone).not.toHaveAttribute("data-drop-candidate", "true");
+  await expect(ghost).toHaveCount(0, { timeout: 650 });
 
-  // One gesture, two responses: the chosen action, then the engine's own place
-  // prompt answered from the armed zone. Neither prompt may be answered twice.
+  // One gesture, two responses up front: the chosen action, then the engine's
+  // own place prompt answered from the armed zone. Trivial follow-on prompts
+  // (e.g. a chain nothing can answer but Pass) may auto-resolve afterward, so
+  // only the first two new responses are asserted in order; neither prompt
+  // may be answered twice.
   const capture = await readCapture(page);
   const responds = capture.commands.filter(
     (command) => command.type === "respond",
   );
-  expect(responds).toHaveLength(responsesBefore + 2);
-  const placeResponse = responds.at(-1);
-  expect(responds.at(-2)?.promptId).toBe(idlePromptId);
+  const newResponds = responds.slice(responsesBefore);
+  expect(newResponds.length).toBeGreaterThanOrEqual(2);
+  const placeResponse = newResponds[1];
+  expect(newResponds[0]?.promptId).toBe(idlePromptId);
   expect(placeResponse?.promptId).not.toBe(idlePromptId);
   const respondsByPrompt = new Map<unknown, number>();
   for (const command of responds)
@@ -983,6 +1681,92 @@ test("dragging a hand card onto a highlighted zone plays it", async ({
   expect(placePrompt?.prompt.kind).toBe("selectPlace");
 });
 
+test("item 18: the hovered drop candidate gets its own emphasis, distinct from unhovered candidates, and clears on release", async ({
+  page,
+}) => {
+  const placement = await locateDraggablePlacement(page);
+  if (placement === null) {
+    await assertHandCouldOfferAPlacement(page);
+    test.skip(
+      true,
+      "opening hand offers no summon, no monster set and no settable spell or trap — there is no placement of any kind to drag",
+    );
+    return;
+  }
+  const { field, targetZone, targetZoneId, from, to } = placement;
+
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(
+    from.x + ((to.x - from.x) * 2) / 3,
+    from.y + ((to.y - from.y) * 2) / 3,
+    { steps: 4 },
+  );
+  await page.mouse.move(to.x, to.y, { steps: 4 });
+  await expect(targetZone).toHaveAttribute("data-drop-candidate", "true");
+  await expect(targetZone).toHaveAttribute("data-drop-hovered", "true");
+
+  // Any other legal candidate zone stays a plain (unhovered) candidate while
+  // the pointer sits over `targetZone` — proving the emphasis follows the
+  // specific hovered zone, not every candidate the walker could have found.
+  const otherCandidates = field.locator(
+    `[data-drop-candidate="true"]:not([data-zone-id="${targetZoneId}"])`,
+  );
+  const otherCount = await otherCandidates.count();
+  for (let index = 0; index < otherCount; index += 1) {
+    await expect(otherCandidates.nth(index)).not.toHaveAttribute(
+      "data-drop-hovered",
+      "true",
+    );
+  }
+
+  // Moving off every candidate clears the hovered emphasis.
+  await page.mouse.move(0, 0, { steps: 4 });
+  await expect(targetZone).not.toHaveAttribute("data-drop-hovered", "true");
+
+  // Releasing over the zone still completes the drop and clears the
+  // candidate/hover attributes with it (endCardDrag resets both).
+  await page.mouse.move(to.x, to.y, { steps: 4 });
+  await page.mouse.up();
+  await expect(targetZone).not.toHaveAttribute("data-drop-candidate", "true");
+  await expect(targetZone).not.toHaveAttribute("data-drop-hovered", "true");
+});
+
+test("reduced motion drags follow the pointer with no tilt and settle with no lingering ghost", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const placement = await locateDraggablePlacement(page);
+  if (placement === null) {
+    await assertHandCouldOfferAPlacement(page);
+    test.skip(
+      true,
+      "opening hand offers no summon, no monster set and no settable spell or trap — there is no placement of any kind to drag",
+    );
+    return;
+  }
+  const { from, to } = placement;
+
+  const ghost = page.locator('[data-cy="drag-ghost"]');
+
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(
+    from.x + (to.x - from.x) / 3,
+    from.y + (to.y - from.y) / 3,
+    { steps: 4 },
+  );
+  await expect(ghost).toBeVisible();
+  const style = await ghost.getAttribute("style");
+  expect(style).toContain("--drag-ghost-rotate: 0deg");
+
+  await page.mouse.up();
+
+  // Reduced motion removes the ghost immediately on release — no spring, so
+  // no lingering ghost even a single animation frame later.
+  await expect(ghost).toHaveCount(0, { timeout: 100 });
+});
+
 test("hovering a hand card fills the preview panel sharing the field row", async ({
   page,
 }) => {
@@ -990,6 +1774,7 @@ test("hovering a hand card fills the preview panel sharing the field row", async
   // beside the field here; below it the panel drops under the board instead.
   await page.setViewportSize({ width: 1366, height: 768 });
   await page.goto("./");
+  await startPresetDuel(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
   });
@@ -1019,10 +1804,437 @@ test("hovering a hand card fills the preview panel sharing the field row", async
   expect(await field.count()).toBe(1);
 });
 
+test("a passive opponent hand card receives a real hover", async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await page.goto("./");
+  await startPresetDuel(page);
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+
+  const card = page
+    .locator(
+      '.duel-field-card[data-card-zone-id="p1:hand"]:not(.is-actionable)',
+    )
+    .first();
+  await expect(card).toBeVisible();
+  await expect(card).toHaveCSS("pointer-events", "auto");
+  await card.hover();
+
+  await expect(page.locator('[data-cy="card-preview-name"]')).toHaveText(
+    "Face-down card",
+  );
+});
+
+test("T12: field/hand cards zoom 1.35x on hover, halo/art scale with the root, chips stay hit-testable, and reduced motion disables the zoom", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await page.goto("./");
+  await startPresetDuel(page);
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+
+  const handCard = page
+    .locator(
+      '[data-cy="duel-field"] .duel-field-card[data-card-zone-id="p0:hand"]',
+    )
+    .first();
+  await expect(handCard).toBeVisible();
+
+  const before = await handCard.evaluate((element) => {
+    const root = element.getBoundingClientRect();
+    const art = element
+      .querySelector(".duel-field-card__art")
+      ?.getBoundingClientRect();
+    return { width: root.width, height: root.height, artWidth: art?.width };
+  });
+  await handCard.hover();
+  await page.waitForTimeout(200);
+  const after = await handCard.evaluate((element) => {
+    const root = element.getBoundingClientRect();
+    const art = element
+      .querySelector(".duel-field-card__art")
+      ?.getBoundingClientRect();
+    return { width: root.width, height: root.height, artWidth: art?.width };
+  });
+  const ratio = after.width / before.width;
+  expect(ratio, "hand card root scales ~1.35x on hover").toBeGreaterThan(
+    1.35 * 0.98,
+  );
+  expect(ratio).toBeLessThan(1.35 * 1.02);
+  expect(
+    after.height / before.height,
+    "hand card root height scales ~1.35x on hover",
+  ).toBeGreaterThan(1.35 * 0.98);
+  if (before.artWidth !== undefined && after.artWidth !== undefined) {
+    expect(
+      after.artWidth / before.artWidth,
+      "art scales with the root, not independently",
+    ).toBeGreaterThan(1.35 * 0.98);
+  }
+
+  // Chips remain hit-testable above every visible card once its parent's
+  // z-index is raised on hover/focus (T12 impl step 10).
+  const actionTarget = page
+    .locator("[data-field-target][aria-label^='Legal action, Open actions']")
+    .first();
+  if ((await actionTarget.count()) > 0) {
+    await actionTarget.evaluate((element) => {
+      element.scrollIntoView({ block: "center", inline: "center" });
+    });
+    const cardId = ((await actionTarget.getAttribute("data-cy")) ?? "").replace(
+      /^field-card-target-/,
+      "",
+    );
+    const chips = page.locator(`[data-cy="card-action-chips-${cardId}"]`);
+    await actionTarget.hover();
+    await expect(chips).toBeVisible();
+    const chipButtons = chips.locator("button");
+    const chipCount = await chipButtons.count();
+    for (let index = 0; index < chipCount; index += 1) {
+      const chip = chipButtons.nth(index);
+      const resolvesToChip = await chip.evaluate((element) => {
+        const box = element.getBoundingClientRect();
+        const hit = document.elementFromPoint(
+          box.left + box.width / 2,
+          box.top + box.height / 2,
+        );
+        return hit !== null && element.contains(hit);
+      });
+      expect(
+        resolvesToChip,
+        `chip ${index} centre resolves to itself/a descendant, not a later sibling card`,
+      ).toBe(true);
+    }
+  }
+
+  // Reduced motion: bounds unchanged within 1px, chips still usable.
+  await page.mouse.move(0, 0);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const restRect = await handCard.evaluate((element) =>
+    element.getBoundingClientRect(),
+  );
+  await handCard.hover();
+  await page.waitForTimeout(200);
+  const hoveredReducedRect = await handCard.evaluate((element) =>
+    element.getBoundingClientRect(),
+  );
+  expect(
+    Math.abs(hoveredReducedRect.width - restRect.width),
+    "reduced motion keeps hand card bounds unchanged on hover",
+  ).toBeLessThanOrEqual(1);
+  expect(
+    Math.abs(hoveredReducedRect.height - restRect.height),
+    "reduced motion keeps hand card bounds unchanged on hover",
+  ).toBeLessThanOrEqual(1);
+  if ((await actionTarget.count()) > 0) {
+    const cardId = ((await actionTarget.getAttribute("data-cy")) ?? "").replace(
+      /^field-card-target-/,
+      "",
+    );
+    const chips = page.locator(`[data-cy="card-action-chips-${cardId}"]`);
+    await actionTarget.hover();
+    await expect(chips).toBeVisible();
+  }
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+
+  // Zone-list entry hover turns orange (computed border colour) and grows.
+  const trayButton = page
+    .getByRole("button", { name: /Open Your (Extra Deck|GY|Banished) tray/ })
+    .first();
+  if ((await trayButton.count()) > 0) {
+    await trayButton.scrollIntoViewIfNeeded();
+    await trayButton.click();
+    const entry = page.locator(".zone-list-entry").first();
+    await expect(entry).toBeVisible();
+    const entryBefore = await entry.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const img = element.querySelector("img");
+      return {
+        width: rect.width,
+        borderColor: img === null ? "" : getComputedStyle(img).borderColor,
+      };
+    });
+    await entry.hover();
+    await page.waitForTimeout(200);
+    const entryAfter = await entry.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const img = element.querySelector("img");
+      return {
+        width: rect.width,
+        borderColor: img === null ? "" : getComputedStyle(img).borderColor,
+      };
+    });
+    expect(
+      entryAfter.width / entryBefore.width,
+      "zone-list entry grows on hover",
+    ).toBeGreaterThan(1.35 * 0.98);
+    expect(
+      entryAfter.borderColor,
+      "zone-list entry hover border is orange (--warning)",
+    ).toBe("rgb(255, 213, 128)");
+  }
+});
+
+test("item 5: hand action chips win over a field card that genuinely overlaps the hand band", async ({
+  page,
+}) => {
+  // Full board on screen: the hand row and the spellTrap row must both be
+  // reachable so a placed backrow card's box can be measured against the
+  // hand band's box in real layout, not a scrolled-away approximation.
+  await page.setViewportSize({ width: 1440, height: 1400 });
+  await page.goto("./");
+  await startPresetDuel(page);
+  await expect(
+    page.locator('[data-cy="duel-field"][data-prompt-kind="idleCommand"]'),
+  ).toBeVisible({ timeout: 120_000 });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  const field = page.getByRole("region", { name: "Duel field" });
+
+  // Count-and-assert guard (R1 pattern): the hand must actually be mounted
+  // and actionable before a spell/trap-set miss is allowed to skip this
+  // seed, so a broken chip/data-cy scheme cannot silently pass as a skip.
+  await assertHandCouldOfferAPlacement(page);
+
+  const placed = await setHandSpellTrapWithKeyboard(page, field);
+  test.skip(
+    !placed,
+    "this seed's opening hand offers no spell/trap set to place a genuinely overlapping field card",
+  );
+
+  await expect(
+    page.locator('[data-cy="duel-field"][data-prompt-kind="idleCommand"]'),
+  ).toBeVisible({ timeout: 30_000 });
+
+  const spellTrapCard = field
+    .locator('.duel-field-card[data-card-zone-id^="p0:spellTrap:"]')
+    .first();
+  await expect(spellTrapCard).toBeVisible();
+  const fieldCardBox = await spellTrapCard.boundingBox();
+  if (fieldCardBox === null) throw new Error("Missing field card geometry");
+
+  const handBand = field.locator('[data-cy="field-hand-band-p0"]');
+  const handBandBox = await handBand.boundingBox();
+  if (handBandBox === null) throw new Error("Missing hand band geometry");
+
+  // This is the fact the fix depends on, proven in real layout rather than
+  // assumed from the design-grid arithmetic in the ticket: the placed
+  // spellTrap card's box genuinely overlaps the hand band's box.
+  const overlapsBand =
+    fieldCardBox.x < handBandBox.x + handBandBox.width &&
+    fieldCardBox.x + fieldCardBox.width > handBandBox.x &&
+    fieldCardBox.y < handBandBox.y + handBandBox.height &&
+    fieldCardBox.y + fieldCardBox.height > handBandBox.y;
+  expect(
+    overlapsBand,
+    `placed spellTrap card box ${JSON.stringify(fieldCardBox)} must overlap the hand band box ${JSON.stringify(handBandBox)}`,
+  ).toBe(true);
+
+  // Now hover any actionable hand card in that same overlapping band and
+  // prove its chips still win the hit test — not merely the first
+  // actionable card the walker happens to find, but one whose enclosing
+  // band is a proven, measured overlap with a real field card.
+  const opener = field
+    .getByRole("button", {
+      name: /^Legal action, Open actions for .+ in Your Hand$/,
+    })
+    .first();
+  await expect(opener).toBeVisible();
+  const cardId = ((await opener.getAttribute("data-cy")) ?? "").replace(
+    /^field-card-target-/,
+    "",
+  );
+  const chips = field.locator(`[data-cy="card-action-chips-${cardId}"]`);
+  await opener.hover();
+  await expect(chips).toBeVisible();
+  const chipButtons = chips.locator("button");
+  const chipCount = await chipButtons.count();
+  expect(chipCount).toBeGreaterThan(0);
+  for (let index = 0; index < chipCount; index += 1) {
+    const chip = chipButtons.nth(index);
+    const resolvesToChip = await chip.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      const hit = document.elementFromPoint(
+        box.left + box.width / 2,
+        box.top + box.height / 2,
+      );
+      return hit !== null && element.contains(hit);
+    });
+    expect(
+      resolvesToChip,
+      `chip ${index} centre must resolve to itself/a descendant while a real field card overlaps the hand band (item 5)`,
+    ).toBe(true);
+  }
+});
+
+test("item 24: End turn button is measurably smaller while keeping the 44px pointer-target floor", async ({
+  page,
+}) => {
+  await page.goto("./");
+  await startPresetDuel(page);
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+  const endTurn = page.locator('[data-cy="field-end-turn-button"]');
+  await expect(endTurn).toBeVisible();
+
+  const after = await endTurn.boundingBox();
+  if (after === null) throw new Error("Missing End turn geometry");
+
+  // "Before" reproduces T10's shipped-but-unreduced rule (padding: .55rem
+  // 1rem, no explicit font-size override) as a scoped style override on the
+  // same live button, so the comparison is a real rendered rect, not an
+  // arithmetic guess about box-model composition.
+  await page.addStyleTag({
+    content:
+      '[data-cy="field-end-turn-button"] { padding: .55rem 1rem !important; font-size: 1rem !important; }',
+  });
+  const before = await endTurn.boundingBox();
+  if (before === null) throw new Error("Missing End turn 'before' geometry");
+
+  expect(
+    after.width,
+    `after width ${after.width} must be smaller than before width ${before.width}`,
+  ).toBeLessThan(before.width);
+  expect(after.height, "height stays at the 44px floor").toBeGreaterThanOrEqual(
+    44,
+  );
+  expect(
+    after.width,
+    "width stays at or above the 44px pointer target",
+  ).toBeGreaterThanOrEqual(44);
+
+  // Evidence for the ticket report: a real rendered before/after rect pair.
+  console.log(
+    `item 24 End turn rect: before=${JSON.stringify(before)} after=${JSON.stringify(after)}`,
+  );
+});
+
+test("opponent pile inversion rotates images only", async ({ page }) => {
+  await page.goto("./");
+
+  const orientations = await page.evaluate(() => {
+    const fixture = document.createElement("div");
+    fixture.innerHTML = `
+      <div class="duel-field-stack" data-test-stack="player">
+        <div class="duel-field-stack__art"><img alt="" /></div>
+        <span class="duel-field-stack__name">Deck</span>
+        <strong class="duel-field-stack__count">40</strong>
+      </div>
+      <div class="duel-field-stack is-opponent" data-test-stack="opponent">
+        <div class="duel-field-stack__art"><img alt="" /></div>
+        <span class="duel-field-stack__name">Deck</span>
+        <strong class="duel-field-stack__count">40</strong>
+      </div>
+      <div class="zone-list-entry" data-test-entry="player">
+        <img alt="" />
+        <span class="zone-list-entry__position">1</span>
+        <div class="card-action-chips"></div>
+      </div>
+      <div class="zone-list-entry is-opponent" data-test-entry="opponent">
+        <img alt="" />
+        <span class="zone-list-entry__position">1</span>
+        <div class="card-action-chips"></div>
+      </div>
+    `;
+    document.body.append(fixture);
+
+    const orientation = (selector: string): readonly number[] => {
+      const element = fixture.querySelector(selector);
+      if (element === null) throw new Error(`Missing CSS fixture: ${selector}`);
+      const transform = getComputedStyle(element).transform;
+      const matrix =
+        transform === "none"
+          ? new DOMMatrixReadOnly()
+          : new DOMMatrixReadOnly(transform);
+      return [matrix.a, matrix.b, matrix.c, matrix.d];
+    };
+
+    return {
+      playerStackRoot: orientation('[data-test-stack="player"]'),
+      playerStackArt: orientation(
+        '[data-test-stack="player"] .duel-field-stack__art',
+      ),
+      playerStackImage: orientation('[data-test-stack="player"] img'),
+      playerStackName: orientation(
+        '[data-test-stack="player"] .duel-field-stack__name',
+      ),
+      playerStackCount: orientation(
+        '[data-test-stack="player"] .duel-field-stack__count',
+      ),
+      opponentStackRoot: orientation('[data-test-stack="opponent"]'),
+      opponentStackArt: orientation(
+        '[data-test-stack="opponent"] .duel-field-stack__art',
+      ),
+      opponentStackImage: orientation('[data-test-stack="opponent"] img'),
+      opponentStackName: orientation(
+        '[data-test-stack="opponent"] .duel-field-stack__name',
+      ),
+      opponentStackCount: orientation(
+        '[data-test-stack="opponent"] .duel-field-stack__count',
+      ),
+      playerEntryRoot: orientation('[data-test-entry="player"]'),
+      playerEntryImage: orientation('[data-test-entry="player"] > img'),
+      playerEntryPosition: orientation(
+        '[data-test-entry="player"] .zone-list-entry__position',
+      ),
+      playerEntryChips: orientation(
+        '[data-test-entry="player"] .card-action-chips',
+      ),
+      opponentEntryRoot: orientation('[data-test-entry="opponent"]'),
+      opponentEntryImage: orientation('[data-test-entry="opponent"] > img'),
+      opponentEntryPosition: orientation(
+        '[data-test-entry="opponent"] .zone-list-entry__position',
+      ),
+      opponentEntryChips: orientation(
+        '[data-test-entry="opponent"] .card-action-chips',
+      ),
+    };
+  });
+
+  const upright = [1, 0, 0, 1];
+  const inverted = [-1, 0, 0, -1];
+  const expectedOrientations = {
+    playerStackRoot: upright,
+    playerStackArt: upright,
+    playerStackImage: upright,
+    playerStackName: upright,
+    playerStackCount: upright,
+    opponentStackRoot: upright,
+    opponentStackArt: upright,
+    opponentStackImage: inverted,
+    opponentStackName: upright,
+    opponentStackCount: upright,
+    playerEntryRoot: upright,
+    playerEntryImage: upright,
+    playerEntryPosition: upright,
+    playerEntryChips: upright,
+    opponentEntryRoot: upright,
+    opponentEntryImage: inverted,
+    opponentEntryPosition: upright,
+    opponentEntryChips: upright,
+  } as const;
+
+  for (const [name, expectedOrientation] of Object.entries(
+    expectedOrientations,
+  )) {
+    const actualOrientation = orientations[name as keyof typeof orientations];
+    expect(actualOrientation, name).toHaveLength(expectedOrientation.length);
+    for (const [index, component] of expectedOrientation.entries())
+      expect(actualOrientation[index], `${name}[${index}]`).toBeCloseTo(
+        component,
+        6,
+      );
+  }
+});
+
 test("responsive field compositions contain controls across supported viewports", async ({
   page,
 }, testInfo) => {
   await page.goto("./");
+  await startPresetDuel(page);
   await enableDuelHud(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
@@ -1065,10 +2277,14 @@ test("responsive field compositions contain controls across supported viewports"
             fieldTop: fieldBox.top,
             fieldBottom: fieldBox.bottom,
             panelTop: panelBox.top,
+            panelBottom: panelBox.bottom,
           };
     });
     if (rowLayout === null)
       throw new Error(`${viewportLabel} duel row is not mounted`);
+    // T9: the elastic 0.45fr:1fr split needs the same 79rem (1264px) floor
+    // as before — the panel's 22rem floor plus the field's 52rem floor plus
+    // gap/padding, unchanged by the elastic `fr` distribution above it.
     if (viewport.width >= 1264) {
       expect(
         rowLayout.panelTop,
@@ -1079,9 +2295,12 @@ test("responsive field compositions contain controls across supported viewports"
         `${viewportLabel} field yields its row to the panel`,
       ).toBeLessThan(rowLayout.rowWidth - 300);
     } else {
+      // T9 moved the panel below the field (item 20/21): the field now
+      // renders first visually via `grid-row`, even though the panel stays
+      // first in the DOM for screen-reader continuity.
       expect(
         rowLayout.panelTop,
-        `${viewportLabel} preview panel stacks below the field`,
+        `${viewportLabel} field stacks above the preview panel`,
       ).toBeGreaterThanOrEqual(rowLayout.fieldBottom - 1);
       expect(
         Math.abs(rowLayout.fieldWidth - rowLayout.rowWidth),
@@ -1091,14 +2310,24 @@ test("responsive field compositions contain controls across supported viewports"
 
     const field = page.getByRole("region", { name: "Duel field" });
     await expect(field).toBeVisible();
-    const fieldMetrics = await field.evaluate((element) => ({
-      clientWidth: element.clientWidth,
-      scrollWidth: element.scrollWidth,
-      clientHeight: element.clientHeight,
-      scrollHeight: element.scrollHeight,
-      overflowX: getComputedStyle(element).overflowX,
-      overflowY: getComputedStyle(element).overflowY,
-    }));
+    // T14: overflow ownership moved from the field root onto this child so a
+    // board pan can never carry a floating window offscreen (ADR-017).
+    const fieldMetrics = await field
+      .locator('[data-cy="duel-field-scroll-region"]')
+      .evaluate((element) => ({
+        clientWidth: element.clientWidth,
+        scrollWidth: element.scrollWidth,
+        clientHeight: element.clientHeight,
+        scrollHeight: element.scrollHeight,
+        overflowX: getComputedStyle(element).overflowX,
+        overflowY: getComputedStyle(element).overflowY,
+        rootOverflowX: getComputedStyle(element.parentElement as HTMLElement)
+          .overflowX,
+        rootOverflowY: getComputedStyle(element.parentElement as HTMLElement)
+          .overflowY,
+      }));
+    expect(fieldMetrics.rootOverflowX).toBe("hidden");
+    expect(fieldMetrics.rootOverflowY).toBe("hidden");
     expect(fieldMetrics.scrollWidth).toBeGreaterThanOrEqual(
       fieldMetrics.clientWidth,
     );
@@ -1139,6 +2368,103 @@ test("responsive field compositions contain controls across supported viewports"
       boxes.every(({ width, height }) => width >= 44 && height >= 44),
     ).toBe(true);
 
+    // T8: both hand bands span exactly S/T1's left edge through S/T5's right
+    // edge, the pile column keeps the same edge-to-edge gap as the adjacent
+    // central-zone spacing, both arrows stay >=44px, and the hand viewport
+    // can scroll past its clientWidth.
+    for (const player of [0, 1] as const) {
+      const geometry = await page.evaluate((currentPlayer: 0 | 1) => {
+        const rect = (selector: string): DOMRect | null =>
+          document.querySelector(selector)?.getBoundingClientRect() ?? null;
+        return {
+          spellTrap1: rect(`[data-zone-id="p${currentPlayer}:spellTrap:0"]`),
+          spellTrap4: rect(`[data-zone-id="p${currentPlayer}:spellTrap:3"]`),
+          spellTrap5: rect(`[data-zone-id="p${currentPlayer}:spellTrap:4"]`),
+          monster4: rect(`[data-zone-id="p${currentPlayer}:mainMonster:3"]`),
+          hand: rect(`[data-cy="field-hand-band-p${currentPlayer}"]`),
+          deck: rect(`[data-cy="field-stack-p${currentPlayer}:deck"]`),
+          gy: rect(`[data-cy="field-stack-p${currentPlayer}:graveyard"]`),
+          banished: rect(`[data-cy="field-stack-p${currentPlayer}:banished"]`),
+          monster5: rect(`[data-zone-id="p${currentPlayer}:mainMonster:4"]`),
+          previous: rect(`[data-cy="field-hand-p${currentPlayer}-previous"]`),
+          next: rect(`[data-cy="field-hand-p${currentPlayer}-next"]`),
+          viewport: (() => {
+            const element = document.querySelector(
+              `[data-cy="field-hand-p${currentPlayer}-viewport"]`,
+            );
+            return element === null
+              ? null
+              : {
+                  scrollWidth: element.scrollWidth,
+                  clientWidth: element.clientWidth,
+                };
+          })(),
+        };
+      }, player);
+      if (
+        geometry.spellTrap1 === null ||
+        geometry.spellTrap4 === null ||
+        geometry.spellTrap5 === null ||
+        geometry.monster4 === null ||
+        geometry.hand === null ||
+        geometry.deck === null ||
+        geometry.gy === null ||
+        geometry.banished === null ||
+        geometry.monster5 === null ||
+        geometry.previous === null ||
+        geometry.next === null ||
+        geometry.viewport === null
+      )
+        throw new Error(
+          `${viewportLabel} p${player} hand/pile geometry hooks missing`,
+        );
+      expect(
+        Math.abs(geometry.hand.left - geometry.spellTrap1.left),
+        `${viewportLabel} p${player} hand band left edge tracks S/T1`,
+      ).toBeLessThanOrEqual(2);
+      expect(
+        Math.abs(geometry.hand.right - geometry.spellTrap5.right),
+        `${viewportLabel} p${player} hand band right edge tracks S/T5`,
+      ).toBeLessThanOrEqual(2);
+      // Piles render narrower than a full zone slot (StackControl fills a
+      // card's own footprint, not the zone chrome's), so edges alone are not
+      // comparable across a zone/stack pair — center-to-center pitch is,
+      // and is what "same spacing as adjacent central zones" (T8) means:
+      // every pile column sits exactly one more 95-design-px step out.
+      const center = (rect: { left: number; right: number }): number =>
+        (rect.left + rect.right) / 2;
+      const spellTrapPitch =
+        center(geometry.spellTrap5) - center(geometry.spellTrap4);
+      const monsterPitch =
+        center(geometry.monster5) - center(geometry.monster4);
+      expect(
+        Math.abs(
+          center(geometry.deck) - center(geometry.spellTrap5) - spellTrapPitch,
+        ),
+        `${viewportLabel} p${player} S/T5\u2192Deck centre pitch matches central-zone spacing`,
+      ).toBeLessThanOrEqual(2);
+      expect(
+        Math.abs(
+          center(geometry.gy) - center(geometry.monster5) - monsterPitch,
+        ),
+        `${viewportLabel} p${player} M5\u2192GY centre pitch matches central-zone spacing`,
+      ).toBeLessThanOrEqual(2);
+      expect(
+        Math.abs(
+          center(geometry.banished) - center(geometry.gy) - monsterPitch,
+        ),
+        `${viewportLabel} p${player} GY\u2192Banished centre pitch matches central-zone spacing`,
+      ).toBeLessThanOrEqual(2);
+      expect(geometry.previous.width).toBeGreaterThanOrEqual(44);
+      expect(geometry.previous.height).toBeGreaterThanOrEqual(44);
+      expect(geometry.next.width).toBeGreaterThanOrEqual(44);
+      expect(geometry.next.height).toBeGreaterThanOrEqual(44);
+      expect(
+        geometry.viewport.scrollWidth,
+        `${viewportLabel} p${player} hand viewport can scroll to reach every card`,
+      ).toBeGreaterThanOrEqual(geometry.viewport.clientWidth);
+    }
+
     const entry = field.locator("[data-field-target][tabindex='0']");
     await keyboardFocus(page, entry);
     await entry.evaluate((element) =>
@@ -1156,29 +2482,9 @@ test("responsive field compositions contain controls across supported viewports"
       })),
     ).toEqual({ focusVisible: true, outline: "solid" });
 
-    /* Unconditional: the first Main Phase `idleCommand` always carries a
-       non-`endPhase` global choice, so `fieldActionBarRequired` is true and the
-       bar is mounted. A `count() > 0` guard here would silently delete the
-       geometry gate below instead of failing when the bar goes missing. */
-    const dock = field.locator('[data-cy="field-action-bar"]');
-    await expect(dock).toBeVisible();
-    await dock.scrollIntoViewIfNeeded();
-    await assertRectInsideViewport(page, dock, `${viewport.id} selection dock`);
-    // The bar is pinned inside the field, so it must live in a reserved
-    // gutter below the board. If its box ever re-enters the board box it
-    // starts swallowing clicks meant for the player's hand.
-    const barRect = await dock.evaluate((element) => {
-      const box = element.getBoundingClientRect();
-      return { top: box.top, bottom: box.bottom };
-    });
-    const boardRect = await board.evaluate((element) => {
-      const box = element.getBoundingClientRect();
-      return { top: box.top, bottom: box.bottom };
-    });
-    expect(
-      barRect.top,
-      `${viewportLabel} field action bar (top ${barRect.top}) must clear the duel board (bottom ${boardRect.bottom})`,
-    ).toBeGreaterThanOrEqual(boardRect.bottom - 1);
+    /* Opening idleCommand has no required action bar. Its geometry gate now
+       lives in the full-duel walker, which reaches a required bar, asserts its
+       geometry, then fails if no bar was exercised. */
 
     // Unlike the action bar, the End turn corner button is always mounted, so
     // this check runs unconditionally at every viewport.
@@ -1193,24 +2499,119 @@ test("responsive field compositions contain controls across supported viewports"
         right: box.right,
       };
     });
-    const boardBoxForButton = await board.evaluate((element) => {
-      const box = element.getBoundingClientRect();
+    // T3 moved End turn from a bottom-pinned corner outside the board into
+    // the board's free band between the two banished zones (by design, per
+    // the ticket's geometry table), so it now legitimately sits inside the
+    // board's bounding rect. The check that still matters is that it never
+    // sits over a playable target, so it can never swallow a click meant
+    // for a card or a zone.
+    const targetRects = await field
+      .locator("[data-field-target]")
+      .evaluateAll((elements) =>
+        elements.map((element) => {
+          const box = element.getBoundingClientRect();
+          return {
+            top: box.top,
+            left: box.left,
+            bottom: box.bottom,
+            right: box.right,
+          };
+        }),
+      );
+    expect(targetRects.length).toBeGreaterThan(0);
+    const buttonOverlapsATarget = targetRects.some(
+      (rect) =>
+        endTurnRect.left < rect.right &&
+        endTurnRect.right > rect.left &&
+        endTurnRect.top < rect.bottom &&
+        endTurnRect.bottom > rect.top,
+    );
+    expect(
+      buttonOverlapsATarget,
+      `${viewportLabel} End turn corner button (rect ${JSON.stringify(endTurnRect)}) must not overlap any playable field target`,
+    ).toBe(false);
+
+    // Round 3 (T10): the retired End chip must never come back and End turn
+    // meets the same 44x44 floor every field control does. Round 3 (T11):
+    // with no shared extra monster zones to straddle, the same semantic
+    // groups flow continuously as one right-anchored run with one uniform
+    // gap between neighbours.
+    await expect(field.locator('[data-cy="field-phase-chip-end"]')).toHaveCount(
+      0,
+    );
+    expect(
+      endTurnRect.right - endTurnRect.left,
+      `${viewportLabel} End turn button meets the 44px width floor`,
+    ).toBeGreaterThanOrEqual(44);
+    expect(
+      endTurnRect.bottom - endTurnRect.top,
+      `${viewportLabel} End turn button meets the 44px height floor`,
+    ).toBeGreaterThanOrEqual(44);
+
+    await expect(
+      field.locator('[data-cy="field-phase-strip"]'),
+    ).toHaveAttribute("data-extra-monster-zones", "false");
+    const phaseGeometry = await page.evaluate(() => {
+      const rect = (selector: string): DOMRect | null =>
+        document.querySelector(selector)?.getBoundingClientRect() ?? null;
       return {
-        top: box.top,
-        left: box.left,
-        bottom: box.bottom,
-        right: box.right,
+        left: rect('[data-cy="field-phase-strip-left"]'),
+        right: rect('[data-cy="field-phase-strip-right"]'),
+        battle: rect('[data-cy="field-phase-chip-battle"]'),
+        main2: rect('[data-cy="field-phase-chip-main2"]'),
+        flow: [
+          ...document.querySelectorAll(
+            '[data-cy="field-phase-strip"] [data-cy^="field-phase-chip-"], [data-cy="field-phase-strip"] [data-cy="field-end-turn-button"]',
+          ),
+        ].map((element) => ({
+          id: element.getAttribute("data-cy"),
+          rect: element.getBoundingClientRect(),
+        })),
       };
     });
-    const buttonIntersectsBoard =
-      endTurnRect.left < boardBoxForButton.right &&
-      endTurnRect.right > boardBoxForButton.left &&
-      endTurnRect.top < boardBoxForButton.bottom &&
-      endTurnRect.bottom > boardBoxForButton.top;
+    if (
+      phaseGeometry.left === null ||
+      phaseGeometry.right === null ||
+      phaseGeometry.battle === null ||
+      phaseGeometry.main2 === null
+    )
+      throw new Error(`${viewportLabel} phase strip geometry hooks missing`);
     expect(
-      buttonIntersectsBoard,
-      `${viewportLabel} End turn corner button (rect ${JSON.stringify(endTurnRect)}) must not overlap the duel board (rect ${JSON.stringify(boardBoxForButton)})`,
-    ).toBe(false);
+      phaseGeometry.flow.map(({ id }) => id),
+      `${viewportLabel} continuous phase flow keeps the shipped order`,
+    ).toEqual([
+      "field-phase-chip-draw",
+      "field-phase-chip-standby",
+      "field-phase-chip-main1",
+      "field-phase-chip-battle",
+      "field-phase-chip-main2",
+      "field-end-turn-button",
+    ]);
+    const adjacentGaps = phaseGeometry.flow
+      .slice(1)
+      .map(
+        (entry, index) =>
+          entry.rect.left - phaseGeometry.flow[index]!.rect.right,
+      );
+    expect(
+      Math.max(...adjacentGaps) - Math.min(...adjacentGaps),
+      `${viewportLabel} continuous phase controls keep uniform adjacent gaps (${JSON.stringify(adjacentGaps)})`,
+    ).toBeLessThanOrEqual(1.5);
+    expect(
+      phaseGeometry.battle.left >= phaseGeometry.left.left - 1 &&
+        phaseGeometry.battle.right <= phaseGeometry.left.right + 1,
+      `${viewportLabel} Battle chip belongs to the left group`,
+    ).toBe(true);
+    expect(
+      phaseGeometry.main2.left >= phaseGeometry.right.left - 1 &&
+        phaseGeometry.main2.right <= phaseGeometry.right.right + 1,
+      `${viewportLabel} Main2 chip belongs to the right group`,
+    ).toBe(true);
+    expect(
+      endTurnRect.left >= phaseGeometry.right.left - 1 &&
+        endTurnRect.right <= phaseGeometry.right.right + 1,
+      `${viewportLabel} End turn button belongs to the right group`,
+    ).toBe(true);
 
     await captureResponsiveState(page, testInfo, viewport.id, "ST-01");
 
@@ -1251,25 +2652,31 @@ test("responsive field compositions contain controls across supported viewports"
       await expect(chips).toBeHidden();
       await actionTarget.focus();
       await expect(chips).toBeVisible();
+      // A card offering exactly one action fires it directly on click (T5)
+      // instead of pinning the chip menu, so the pin/Escape round trip below
+      // only applies to a card that actually opens a menu.
+      const chipChoiceCount = await chips.locator("button").count();
       await actionTarget.evaluate((element: HTMLElement) => element.blur());
       await expect(chips).toBeHidden();
 
-      await actionTarget.click();
-      await expect(chips).toBeVisible();
-      await assertRectInsideViewport(
-        page,
-        chips,
-        `${viewport.id} card action chips`,
-      );
-      await captureResponsiveState(page, testInfo, viewport.id, "ST-05");
-      await page.keyboard.press("Escape");
-      // Escape unpins and hands focus back to the card target. Focus and the
-      // lingering pointer each keep the chips shown on their own, so drop both
-      // before asserting that the pinned state is really gone.
-      await expect(actionTarget).toBeFocused();
-      await page.mouse.move(0, 0);
-      await actionTarget.evaluate((element: HTMLElement) => element.blur());
-      await expect(chips).toBeHidden();
+      if (chipChoiceCount > 1) {
+        await actionTarget.click();
+        await expect(chips).toBeVisible();
+        await assertRectInsideViewport(
+          page,
+          chips,
+          `${viewport.id} card action chips`,
+        );
+        await captureResponsiveState(page, testInfo, viewport.id, "ST-05");
+        await page.keyboard.press("Escape");
+        // Escape unpins and hands focus back to the card target. Focus and the
+        // lingering pointer each keep the chips shown on their own, so drop both
+        // before asserting that the pinned state is really gone.
+        await expect(actionTarget).toBeFocused();
+        await page.mouse.move(0, 0);
+        await actionTarget.evaluate((element: HTMLElement) => element.blur());
+        await expect(chips).toBeHidden();
+      }
     }
 
     const trayButton = page
@@ -1313,6 +2720,7 @@ test("DF-16 Chromium pinned parity/perf/resource gate records automated evidence
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto("./");
+  await startPresetDuel(page);
   await enableDuelHud(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
@@ -1449,6 +2857,7 @@ test("spatial field navigation has one visible 44px keyboard entry without a tra
   page,
 }, testInfo) => {
   await page.goto("./");
+  await startPresetDuel(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
   });
@@ -1542,12 +2951,24 @@ test("spatial field navigation has one visible 44px keyboard entry without a tra
 test("a full preset duel can be completed using keyboard controls only with one response per prompt", async ({
   page,
 }, testInfo) => {
+  test.setTimeout(300_000);
   await page.goto("./");
+  await startPresetDuel(page);
   await expect(
     page.locator('[data-cy="duel-field"][data-prompt-kind]'),
   ).toBeVisible({
     timeout: 120_000,
   });
+  // This walker answers every prompt itself and asserts exactly one response
+  // per prompt id. T4's default-on auto-answer of trivial prompts (chain
+  // Pass, single-option, single-position) resolves those from a background
+  // `queueMicrotask` and would race this walker's own async round trip for
+  // the same prompts, so the walk turns the setting off first — exactly the
+  // choice a player who wants full manual control would make. T5's default-on
+  // auto-placement is the same class of race for `selectPlace` prompts the
+  // walker means to answer by hand, so it is turned off too.
+  await disableAutoResolveTrivialPrompts(page);
+  await disableAutoPlaceCards(page);
   await expect(
     (await activePromptControls(page)).getByRole("button").first(),
   ).toBeEnabled({ timeout: 30_000 });
@@ -1559,6 +2980,7 @@ test("a full preset duel can be completed using keyboard controls only with one 
   // focus-visibility assertion on rotated card art has something to focus.
   const setup = { needsDefense: true };
   let fieldResponses = 0;
+  let confirmWindowGeometryChecks = 0;
   let defenseFocusVisible = false;
   for (let step = 0; step < 200; step += 1) {
     const result = page.locator(".result-panel");
@@ -1594,6 +3016,15 @@ test("a full preset duel can be completed using keyboard controls only with one 
       (command) =>
         command.type === "respond" && command.promptId === prompt.prompt.id,
     ).length;
+    const actionBar = field.locator('[data-cy="field-action-bar"]');
+    if (confirmWindowGeometryChecks === 0 && (await actionBar.count()) > 0) {
+      await assertConfirmWindowGeometry(
+        page,
+        field,
+        `full-duel ${kind} prompt`,
+      );
+      confirmWindowGeometryChecks += 1;
+    }
 
     if (
       (await answerPromptWithKeyboard(page, controls, kind, setup)) === "field"
@@ -1636,6 +3067,8 @@ test("a full preset duel can be completed using keyboard controls only with one 
 
   expect(answeredPromptIds.size).toBeGreaterThan(0);
   expect(fieldResponses).toBeGreaterThan(0);
+  // Prevent `count() > 0` from silently deleting the geometry gate.
+  expect(confirmWindowGeometryChecks).toBeGreaterThan(0);
   expect(defenseFocusVisible).toBe(true);
   for (const promptId of answeredPromptIds) {
     expect(
@@ -1683,6 +3116,7 @@ test("a full preset duel can be completed using keyboard controls only with one 
         result: await result.getByRole("heading").textContent(),
         responses: answeredPromptIds.size,
         fieldResponses,
+        confirmWindowGeometryChecks,
         duplicateResponses: 0,
         defenseFocusVisible,
       },
@@ -1737,12 +3171,14 @@ async function answerPromptWithKeyboard(
       await activatePreferredButton(page, controls, ["No"]);
       return "prompt";
     case "chain":
-      if (await hasEnabledButton(field, "Pass")) {
-        await activatePreferredButton(page, field, ["Pass"]);
-        return "field";
-      }
-      await activatePreferredButton(page, controls, ["Pass"]);
-      return "prompt";
+      await expect(page.locator('[data-cy="prompt-dialog"]')).toHaveCount(0);
+      await expect(
+        page.locator('[data-cy="card-preview-status"]', {
+          hasText: "Do you respond?",
+        }),
+      ).toHaveAttribute("data-has-priority", "true");
+      await answerChainOnField(page, field);
+      return "field";
     case "selectUnselectCard":
       if (
         (await hasEnabledButton(field, "Finish")) ||
@@ -1813,6 +3249,13 @@ async function answerPromptWithKeyboard(
 // `card-action-chip-${choice.id}`, so both still end in `-setMonster`.
 const MONSTER_SET_ACTION = "setMonster";
 const MONSTER_SET_CHIP = `[data-cy$="-${MONSTER_SET_ACTION}"]`;
+// Item 5's regression proof needs a genuine field card in a spellTrap zone
+// (spellY 590/720, which the layout deliberately overlaps the hand band's
+// y-range) rather than a monster-zone card (spellY 470/720, which does not
+// overlap), so this mirrors MONSTER_SET_ACTION/MONSTER_SET_CHIP for the
+// spellTrap set action instead.
+const SPELLTRAP_SET_ACTION = "setSpellTrap";
+const SPELLTRAP_SET_CHIP = `[data-cy$="-${SPELLTRAP_SET_ACTION}"]`;
 
 /**
  * Sets one hand monster face-down using only the keyboard, so the board gains a
@@ -1837,7 +3280,20 @@ async function setHandMonsterWithKeyboard(
       "",
     );
     const chips = field.locator(`[data-cy="card-action-chips-${cardId}"]`);
-    if ((await chips.count()) === 0) continue;
+    const chipButtonCount = await chips.locator("button").count();
+    if (chipButtonCount === 0) continue;
+    if (chipButtonCount === 1) {
+      // A single-choice card fires that choice directly on activation (T5)
+      // instead of pinning a menu, so this helper only bothers activating it
+      // when the one choice on offer is the monster set it exists to produce.
+      if ((await chips.locator(MONSTER_SET_CHIP).count()) === 0) continue;
+      await keyboardActivate(page, opener);
+      // The response goes pending, which drops the card out of its
+      // actionable state and unmounts these chips with it. Waiting on that
+      // keeps the caller from racing the next prompt.
+      await expect(chips).toBeHidden();
+      return true;
+    }
     await keyboardActivate(page, opener);
     // Activating the card pins its chips and moves focus onto the first one;
     // waiting for that focus to land is what makes the arrow walk below
@@ -1870,6 +3326,59 @@ async function setHandMonsterWithKeyboard(
   return false;
 }
 
+/**
+ * Sets one hand spell/trap card face-down using only the keyboard, so the
+ * board gains a genuine backrow card in a spellTrap zone — the only zone
+ * kind whose box actually overlaps the player's own hand band (item 5).
+ * Mirrors `setHandMonsterWithKeyboard` for the `setSpellTrap` action.
+ * Returns false when no hand card offers a spell/trap set.
+ */
+async function setHandSpellTrapWithKeyboard(
+  page: Page,
+  field: Locator,
+): Promise<boolean> {
+  const openers = field.getByRole("button", {
+    name: /^Legal action, Open actions for .+ in Your Hand$/,
+  });
+  for (let index = 0; index < (await openers.count()); index += 1) {
+    const opener = openers.nth(index);
+    if (!(await opener.isEnabled())) continue;
+    const cardId = ((await opener.getAttribute("data-cy")) ?? "").replace(
+      /^field-card-target-/,
+      "",
+    );
+    const chips = field.locator(`[data-cy="card-action-chips-${cardId}"]`);
+    const chipButtonCount = await chips.locator("button").count();
+    if (chipButtonCount === 0) continue;
+    if (chipButtonCount === 1) {
+      if ((await chips.locator(SPELLTRAP_SET_CHIP).count()) === 0) continue;
+      await keyboardActivate(page, opener);
+      await expect(chips).toBeHidden();
+      return true;
+    }
+    await keyboardActivate(page, opener);
+    await expect(chips).toBeVisible();
+    await expect(chips.locator(":focus")).toHaveCount(1);
+    if ((await chips.locator(SPELLTRAP_SET_CHIP).count()) > 0) {
+      const items = chips.locator("button");
+      for (let move = 0; move < (await items.count()); move += 1) {
+        const focused = chips.locator(":focus");
+        if ((await focused.count()) === 0) break;
+        const focusedId = (await focused.getAttribute("data-cy")) ?? "";
+        if (focusedId.endsWith(`-${SPELLTRAP_SET_ACTION}`)) {
+          await page.keyboard.press("Enter");
+          await expect(chips).toBeHidden();
+          return true;
+        }
+        await page.keyboard.press("ArrowRight");
+      }
+    }
+    await page.keyboard.press("Escape");
+    await expect(opener).toBeFocused();
+  }
+  return false;
+}
+
 async function hasEnabledButton(
   scope: Locator,
   label: string,
@@ -1882,6 +3391,99 @@ async function hasEnabledButton(
   );
 }
 
+async function answerChainOnField(page: Page, field: Locator): Promise<void> {
+  if (await hasEnabledButton(field, "Pass")) {
+    await activatePreferredButton(page, field, ["Pass"]);
+    return;
+  }
+
+  const globalChoice = field
+    .locator('[data-cy^="field-action-bar-choice-"]:enabled')
+    .first();
+  if ((await globalChoice.count()) > 0) {
+    await keyboardActivate(page, globalChoice);
+    return;
+  }
+
+  const cardTarget = field
+    .locator("[data-field-target][aria-label^='Legal action']")
+    .first();
+  if ((await cardTarget.count()) > 0) {
+    const cardId = ((await cardTarget.getAttribute("data-cy")) ?? "").replace(
+      /^field-card-target-/,
+      "",
+    );
+    const chips = field.locator(`[data-cy="card-action-chips-${cardId}"]`);
+    const chipButtons = chips.getByRole("button");
+    const choiceCount = await chipButtons.count();
+    await keyboardActivate(page, cardTarget);
+    if (choiceCount > 1) {
+      await expect(chips).toBeVisible();
+      await keyboardActivate(page, chipButtons.first());
+    }
+    return;
+  }
+
+  const stack = field
+    .locator('[data-cy^="field-stack-"].is-actionable')
+    .first();
+  if ((await stack.count()) > 0) {
+    await keyboardActivate(page, stack);
+    const dialog = page.locator('[data-cy="zone-list-dialog"]');
+    await expect(dialog).toBeVisible();
+    const buttons = dialog.getByRole("button");
+    for (let index = 0; index < (await buttons.count()); index += 1) {
+      const button = buttons.nth(index);
+      const name =
+        (await button.getAttribute("aria-label")) ??
+        (await button.textContent()) ??
+        "";
+      if (!/^Close\b/.test(name.trim()) && (await button.isEnabled())) {
+        await keyboardActivate(page, button);
+        return;
+      }
+    }
+  }
+
+  throw new Error("Inline chain prompt has no enabled field response");
+}
+
+/**
+ * Every control that can answer the live selection on the field: the mounted
+ * targets plus, since T16, the aggregate off-field target window. A hand card
+ * that owns an off-field choice is only a launcher for that window — its own
+ * activation toggles the list instead of answering — so it is skipped while
+ * the list is up, and the list entry answers for it.
+ */
+async function fieldSelectionControls(
+  page: Page,
+  field: Locator,
+): Promise<readonly Locator[]> {
+  const targetChoices = page.locator(
+    '[data-cy^="zone-list-entry-target-choice-"]',
+  );
+  const targetCount = await targetChoices.count();
+  const controls: Locator[] = [];
+  for (let index = 0; index < targetCount; index += 1)
+    controls.push(targetChoices.nth(index));
+  const mounted = field.locator("[data-field-target][aria-pressed]");
+  const mountedCount = await mounted.count();
+  for (let index = 0; index < mountedCount; index += 1) {
+    const control = mounted.nth(index);
+    if (
+      targetCount > 0 &&
+      (await control.evaluate(
+        (element) =>
+          element.closest('[data-cy^="field-hand-band-"]') !== null ||
+          element.closest('[data-cy^="field-hand-p"]') !== null,
+      ))
+    )
+      continue;
+    controls.push(control);
+  }
+  return controls;
+}
+
 async function chooseValidFieldSubset(
   page: Page,
   field: Locator,
@@ -1889,17 +3491,26 @@ async function chooseValidFieldSubset(
   const confirm = field.getByRole("button", {
     name: /Confirm (selection|placement)/,
   });
-  if ((await confirm.count()) === 0) return false;
+  const choices = await fieldSelectionControls(page, field);
+  if ((await confirm.count()) === 0) {
+    // A single-place prompt (auto-place off) and an exact one-of-one target
+    // both submit the instant any one legal control is activated: no Confirm
+    // ever renders for them.
+    const first = choices[0];
+    if (first === undefined) return false;
+    await keyboardActivate(page, first);
+    return true;
+  }
   if (await confirm.isEnabled()) {
     await keyboardActivate(page, confirm);
     return true;
   }
-  const choices = field.locator("[data-field-target][aria-pressed]");
-  const count = await choices.count();
+  const count = choices.length;
   if (count === 0 || count > 12) return false;
   for (let mask = 1; mask < 1 << count; mask += 1) {
     for (let index = 0; index < count; index += 1) {
-      const choice = choices.nth(index);
+      const choice = choices[index];
+      if (choice === undefined) continue;
       const desired = (mask & (1 << index)) !== 0;
       if (((await choice.getAttribute("aria-pressed")) === "true") !== desired)
         await keyboardActivate(page, choice);
@@ -2195,8 +3806,8 @@ async function assertSharesFieldRow(page: Page, label: string): Promise<void> {
           panelY: panelBox.y,
           fieldHeight: fieldBox.height,
           panelHeight: panelBox.height,
-          fieldRight: fieldBox.right,
-          panelLeft: panelBox.left,
+          fieldLeft: fieldBox.left,
+          panelRight: panelBox.right,
         };
   });
   if (boxes === null) throw new Error(`${label}: missing field or panel box`);
@@ -2208,10 +3819,13 @@ async function assertSharesFieldRow(page: Page, label: string): Promise<void> {
     Math.abs(boxes.fieldHeight - boxes.panelHeight),
     `${label} matches the field height (${boxes.fieldHeight} vs ${boxes.panelHeight})`,
   ).toBeLessThanOrEqual(2);
+  // The preview panel is the LEFT column of `.duel-row` (moved there ahead
+  // of this ticket); it must sit to the left of the field, not beside it on
+  // the right or over it.
   expect(
-    boxes.panelLeft,
-    `${label} sits beside the field, not over it`,
-  ).toBeGreaterThanOrEqual(boxes.fieldRight - 1);
+    boxes.panelRight,
+    `${label} sits left of the field, not over it`,
+  ).toBeLessThanOrEqual(boxes.fieldLeft + 1);
 }
 
 async function assertNoPageWideHorizontalOverflow(
@@ -2230,6 +3844,28 @@ async function assertNoPageWideHorizontalOverflow(
     Math.max(metrics.bodyScrollWidth, metrics.rootScrollWidth),
     `${label} page-wide horizontal overflow`,
   ).toBeLessThanOrEqual(metrics.viewportWidth + 1);
+}
+
+/* T14/ADR-017: the live decision rides in the confirm window, which is
+   clamped inside the visible duel field rather than pinned under the board. */
+async function assertConfirmWindowGeometry(
+  page: Page,
+  field: Locator,
+  label: string,
+): Promise<void> {
+  const confirmWindow = field.locator(
+    '[data-cy="floating-field-window-confirm"]',
+  );
+  await expect(confirmWindow).toBeVisible();
+  await expect(
+    confirmWindow.locator('[data-cy="field-action-bar"]'),
+  ).toBeVisible();
+  await assertRectInsideViewport(
+    page,
+    confirmWindow,
+    `${label} confirm window`,
+  );
+  await assertWindowInsideField(page, "confirm", label);
 }
 
 async function assertRectInsideViewport(
@@ -2421,6 +4057,20 @@ async function openSettingsDialog(page: Page): Promise<void> {
 async function enableDuelHud(page: Page): Promise<void> {
   await openSettingsDialog(page);
   await page.locator('[data-cy="settings-show-duel-hud-checkbox"]').check();
+  await page.locator('[data-cy="settings-dialog-close-button"]').click();
+}
+
+async function disableAutoResolveTrivialPrompts(page: Page): Promise<void> {
+  await openSettingsDialog(page);
+  await page.locator('[data-cy="settings-auto-resolve-checkbox"]').uncheck();
+  await page.locator('[data-cy="settings-dialog-close-button"]').click();
+}
+
+async function disableAutoPlaceCards(page: Page): Promise<void> {
+  await openSettingsDialog(page);
+  await page
+    .locator('[data-cy="settings-auto-place-cards-checkbox"]')
+    .uncheck();
   await page.locator('[data-cy="settings-dialog-close-button"]').click();
 }
 

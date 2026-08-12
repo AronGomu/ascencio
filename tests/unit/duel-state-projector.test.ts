@@ -8,8 +8,15 @@ import {
 } from "../../src/worker/engine/engine-constants.ts";
 import { DuelStateProjector } from "../../src/worker/projection/DuelStateProjector.ts";
 
-function projector(): DuelStateProjector {
-  return new DuelStateProjector(snapshotId("a".repeat(64)), [40, 40], [0, 0]);
+function projector(
+  layout: { readonly extraMonsterZones: boolean } = { extraMonsterZones: true },
+): DuelStateProjector {
+  return new DuelStateProjector(
+    snapshotId("a".repeat(64)),
+    [40, 40],
+    [0, 0],
+    layout,
+  );
 }
 
 function queriedExtra(code: number) {
@@ -26,7 +33,73 @@ function queriedCard(code: number) {
   return { code, identityVisible: true };
 }
 
+function moveOpponent(
+  value: DuelStateProjector,
+  code: number,
+  from: { location: number; sequence?: number; position: number },
+  to: { location: number; sequence?: number; position: number },
+) {
+  return value.apply({
+    type: EngineMessageType.MOVE,
+    card: code,
+    from: {
+      controller: 1,
+      location: from.location as never,
+      sequence: from.sequence ?? 0,
+      position: from.position as never,
+    },
+    to: {
+      controller: 1,
+      location: to.location as never,
+      sequence: to.sequence ?? 0,
+      position: to.position as never,
+    },
+  });
+}
+
+function revealOpponentCard(
+  value: DuelStateProjector,
+  code: number,
+  location: number,
+  sequence = 0,
+) {
+  value.apply({
+    type: EngineMessageType.CONFIRM_CARDS,
+    player: 0,
+    cards: [{ code, controller: 1, location: location as never, sequence }],
+  });
+}
+
 describe("DuelStateProjector", () => {
+  it.each([true, false])(
+    "projects the chosen immutable layout: %s",
+    (extraMonsterZones) => {
+      const value = projector({ extraMonsterZones });
+
+      const snapshot = value.snapshot();
+      expect(snapshot.layout).toEqual({ extraMonsterZones });
+      expect(Object.isFrozen(snapshot.layout)).toBe(true);
+    },
+  );
+
+  it("keeps the layout across checkpoint, mutation, and restore", () => {
+    const value = projector({ extraMonsterZones: false });
+    const checkpoint = value.checkpoint();
+    value.apply({
+      type: EngineMessageType.DRAW,
+      player: 0,
+      drawn: [{ code: 97590747, position: EnginePosition.FACE_DOWN_DEFENSE }],
+    });
+    expect(value.snapshot().layout).toEqual({ extraMonsterZones: false });
+
+    value.restore(checkpoint);
+
+    expect(value.snapshot().layout).toEqual({ extraMonsterZones: false });
+    expect(
+      Object.hasOwn(checkpoint as unknown as Record<string, unknown>, "layout"),
+    ).toBe(false);
+  });
+
   it("projects human hand identities but strips opponent hidden identities", () => {
     const value = projector();
     value.apply({
@@ -88,63 +161,819 @@ describe("DuelStateProjector", () => {
     );
   });
 
-  it("rotates public identity when an opponent card crosses a concealed zone", () => {
+  it("keeps identity when a face-up opponent monster turns face-down", () => {
+    const value = projector();
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.DECK,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.MONSTER,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    );
+    const before = value.snapshot().players[1].monsters[0];
+
+    value.apply({
+      type: EngineMessageType.POSITION_CHANGE,
+      code: 5053103,
+      controller: 1,
+      location: EngineLocation.MONSTER,
+      sequence: 0,
+      prev_position: EnginePosition.FACE_UP_ATTACK,
+      position: EnginePosition.FACE_DOWN_DEFENSE,
+    });
+
+    expect(value.snapshot().players[1].monsters[0]).toMatchObject({
+      instanceId: before?.instanceId,
+      code: 5053103,
+      faceUp: false,
+      position: "faceDownDefense",
+    });
+  });
+
+  /* ADR-014: only a fixed field slot may carry an attested code for a
+     concealed opponent card. `#changePosition` keeps the code it already had
+     when the engine flips a public banished card face-down, so the projector
+     has to fail on its own output rather than let the client validator kill
+     the Worker after the leak has already been posted. */
+  it("fails closed when a concealed opponent card outside a fixed slot keeps a code", () => {
+    const value = projector();
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.DECK,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.BANISHED,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    );
+    expect(value.snapshot().players[1].banished[0]?.code).toBe(5053103);
+
+    value.apply({
+      type: EngineMessageType.POSITION_CHANGE,
+      code: 5053103,
+      controller: 1,
+      location: EngineLocation.BANISHED,
+      sequence: 0,
+      prev_position: EnginePosition.FACE_UP_ATTACK,
+      position: EnginePosition.FACE_DOWN_DEFENSE,
+    });
+
+    expect(() => value.snapshot()).toThrow(
+      "Concealed opponent card outside a fixed field slot carries a code",
+    );
+  });
+
+  it.each([
+    ["graveyard", EngineLocation.GRAVEYARD, EngineLocation.SPELL_TRAP],
+    ["face-up banished", EngineLocation.BANISHED, EngineLocation.MONSTER],
+  ] as const)(
+    "keeps identity when a public %s card is set",
+    (_name, source, destination) => {
+      const value = projector();
+      moveOpponent(
+        value,
+        5053103,
+        {
+          location: EngineLocation.DECK,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+        { location: source, position: EnginePosition.FACE_UP_ATTACK },
+      );
+      const before =
+        source === EngineLocation.GRAVEYARD
+          ? value.snapshot().players[1].graveyard[0]
+          : value.snapshot().players[1].banished[0];
+
+      moveOpponent(
+        value,
+        5053103,
+        { location: source, position: EnginePosition.FACE_UP_ATTACK },
+        { location: destination, position: EnginePosition.FACE_DOWN_DEFENSE },
+      );
+      const after =
+        destination === EngineLocation.MONSTER
+          ? value.snapshot().players[1].monsters[0]
+          : value.snapshot().players[1].spellsAndTraps[0];
+
+      expect(after).toMatchObject({
+        instanceId: before?.instanceId,
+        code: 5053103,
+        faceUp: false,
+      });
+    },
+  );
+
+  it("keeps an effect-revealed hand card when it is set", () => {
+    const value = projector();
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.DECK,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.HAND,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+    revealOpponentCard(value, 5053103, EngineLocation.HAND);
+
+    const moved = moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.HAND,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.SPELL_TRAP,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+    const card = value.snapshot().players[1].spellsAndTraps[0];
+
+    expect(card).toMatchObject({ code: 5053103, faceUp: false });
+    expect(moved.events[0]).toMatchObject({
+      card: 5053103,
+      instanceId: card?.instanceId,
+    });
+  });
+
+  it("ignores a reveal shown only to the opponent", () => {
+    const value = projector();
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.DECK,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.HAND,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+    value.apply({
+      type: EngineMessageType.CONFIRM_CARDS,
+      player: 1,
+      cards: [
+        {
+          code: 5053103,
+          controller: 1,
+          location: EngineLocation.HAND,
+          sequence: 0,
+        },
+      ],
+    });
+
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.HAND,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.SPELL_TRAP,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+    expect(value.snapshot().players[1].spellsAndTraps[0]).not.toHaveProperty(
+      "code",
+    );
+  });
+
+  it("keeps a concealed-zone reveal out of the projected opponent state", () => {
+    const value = projector();
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.DECK,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.EXTRA,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+    revealOpponentCard(value, 5053103, EngineLocation.EXTRA);
+
+    /* The contract rejects a code on a concealed opponent Extra card, so the
+       reveal stays a projector-private token until the card reaches a fixed
+       field slot. */
+    expect(value.snapshot().players[1].extraDeck[0]).not.toHaveProperty("code");
+    expect(() =>
+      parseDuelWorkerEvent({ type: "state", state: value.snapshot() }),
+    ).not.toThrow();
+
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.EXTRA,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.MONSTER,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+    expect(value.snapshot().players[1].monsters[0]).toMatchObject({
+      code: 5053103,
+      faceUp: false,
+    });
+  });
+
+  it("does not treat an overlay reveal as host-card knowledge", () => {
+    const value = projector();
+    moveOpponent(
+      value,
+      97590747,
+      {
+        location: EngineLocation.DECK,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.MONSTER,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+    value.apply({
+      type: EngineMessageType.CONFIRM_CARDS,
+      player: 0,
+      cards: [
+        {
+          code: 5053103,
+          controller: 1,
+          location: (EngineLocation.MONSTER | EngineLocation.OVERLAY) as never,
+          sequence: 0,
+        },
+      ],
+    });
+
+    expect(value.snapshot().players[1].monsters[0]).not.toHaveProperty("code");
+  });
+
+  it("rejects stale or mismatched reveal correlation", () => {
+    const value = projector();
+    moveOpponent(
+      value,
+      46986414,
+      {
+        location: EngineLocation.DECK,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.HAND,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+    revealOpponentCard(value, 5053103, EngineLocation.HAND);
+
+    const moved = moveOpponent(
+      value,
+      46986414,
+      {
+        location: EngineLocation.HAND,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.SPELL_TRAP,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+
+    expect(value.snapshot().players[1].spellsAndTraps[0]).not.toHaveProperty(
+      "code",
+    );
+    expect(moved.events[0]).not.toHaveProperty("card");
+    expect(moved.events[0]).not.toHaveProperty("instanceId");
+  });
+
+  it("checkpoint restore preserves a pending reveal token", () => {
+    const value = projector();
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.DECK,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.HAND,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+    revealOpponentCard(value, 5053103, EngineLocation.HAND);
+    const checkpoint = value.checkpoint();
+    value.apply({ type: EngineMessageType.NEW_PHASE, phase: 4 });
+    value.restore(checkpoint);
+
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.HAND,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.SPELL_TRAP,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+    expect(value.snapshot().players[1].spellsAndTraps[0]?.code).toBe(5053103);
+  });
+
+  it("does not learn an unrevealed opponent set from hand", () => {
+    const value = projector();
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.DECK,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.HAND,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+    const moved = moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.HAND,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.SPELL_TRAP,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+
+    expect(value.snapshot().players[1].spellsAndTraps[0]).not.toHaveProperty(
+      "code",
+    );
+    expect(moved.events[0]).not.toHaveProperty("card");
+    expect(moved.events[0]).not.toHaveProperty("instanceId");
+  });
+
+  it("does not learn a face-down summon from deck", () => {
+    const value = projector();
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.DECK,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.MONSTER,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+    expect(value.snapshot().players[1].monsters[0]).not.toHaveProperty("code");
+  });
+
+  it("forgets a known face-down card when it changes address", () => {
+    const value = projector();
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.DECK,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.GRAVEYARD,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    );
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.GRAVEYARD,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+      {
+        location: EngineLocation.MONSTER,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+    const known = value.snapshot().players[1].monsters[0];
+
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.MONSTER,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.MONSTER,
+        sequence: 1,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+    const moved = value.snapshot().players[1].monsters[0];
+    expect(moved?.instanceId).not.toBe(known?.instanceId);
+    expect(moved).not.toHaveProperty("code");
+  });
+
+  it("re-establishes a new public identity when a known face-down card moves public", () => {
+    const value = projector();
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.DECK,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.GRAVEYARD,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    );
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.GRAVEYARD,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+      {
+        location: EngineLocation.MONSTER,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+    const known = value.snapshot().players[1].monsters[0];
+
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.MONSTER,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.GRAVEYARD,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    );
+    const publicCard = value.snapshot().players[1].graveyard[0];
+    expect(publicCard?.instanceId).not.toBe(known?.instanceId);
+    expect(publicCard?.code).toBe(5053103);
+  });
+
+  it("opponent hand shuffle clears remembered hidden identity", () => {
+    const value = projector();
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.DECK,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.HAND,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+    revealOpponentCard(value, 5053103, EngineLocation.HAND);
+    value.apply({
+      type: EngineMessageType.SHUFFLE_HAND,
+      player: 1,
+      cards: [5053103],
+    });
+
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.HAND,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.SPELL_TRAP,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+    expect(value.snapshot().players[1].spellsAndTraps[0]).not.toHaveProperty(
+      "code",
+    );
+  });
+
+  it("set-card shuffle clears known opponent set identities and follows permutation", () => {
+    const value = projector();
+    for (const [sequence, code] of [5053103, 46986414].entries()) {
+      moveOpponent(
+        value,
+        code,
+        {
+          location: EngineLocation.DECK,
+          sequence,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+        {
+          location: EngineLocation.GRAVEYARD,
+          sequence,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+      );
+    }
+    for (const code of [5053103, 46986414]) {
+      moveOpponent(
+        value,
+        code,
+        {
+          location: EngineLocation.GRAVEYARD,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+        {
+          location: EngineLocation.MONSTER,
+          sequence: code === 5053103 ? 0 : 1,
+          position:
+            code === 5053103
+              ? EnginePosition.FACE_DOWN_DEFENSE
+              : EnginePosition.FACE_DOWN_ATTACK,
+        },
+      );
+    }
+    const oldIds = value
+      .snapshot()
+      .players[1].monsters.map(({ instanceId }) => instanceId);
+
+    value.apply({
+      type: EngineMessageType.SHUFFLE_SET_CARD,
+      location: EngineLocation.MONSTER,
+      cards: [
+        {
+          from: {
+            controller: 1,
+            location: EngineLocation.MONSTER,
+            sequence: 0,
+            position: EnginePosition.FACE_DOWN_DEFENSE,
+          },
+          to: {
+            controller: 1,
+            location: EngineLocation.MONSTER,
+            sequence: 1,
+            position: EnginePosition.FACE_DOWN_DEFENSE,
+          },
+        },
+        {
+          from: {
+            controller: 1,
+            location: EngineLocation.MONSTER,
+            sequence: 1,
+            position: EnginePosition.FACE_DOWN_ATTACK,
+          },
+          to: {
+            controller: 1,
+            location: EngineLocation.MONSTER,
+            sequence: 0,
+            position: EnginePosition.FACE_DOWN_ATTACK,
+          },
+        },
+      ],
+    });
+    const shuffled = value
+      .snapshot()
+      .players[1].monsters.toSorted((a, b) => a.sequence - b.sequence);
+    expect(shuffled.map(({ position }) => position)).toEqual([
+      "faceDownAttack",
+      "faceDownDefense",
+    ]);
+    expect(
+      shuffled.every(({ instanceId }) => !oldIds.includes(instanceId)),
+    ).toBe(true);
+    expect(shuffled.every(({ code }) => code === undefined)).toBe(true);
+  });
+
+  it("set-card shuffle preserves own card knowledge", () => {
+    const value = projector();
+    for (const [sequence, code] of [97590747, 5053103].entries()) {
+      value.apply({
+        type: EngineMessageType.MOVE,
+        card: code,
+        from: {
+          controller: 0,
+          location: EngineLocation.DECK,
+          sequence,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+        to: {
+          controller: 0,
+          location: EngineLocation.SPELL_TRAP,
+          sequence,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+      });
+    }
+    const before = value.snapshot().players[0].spellsAndTraps;
+    value.apply({
+      type: EngineMessageType.SHUFFLE_SET_CARD,
+      location: EngineLocation.SPELL_TRAP,
+      cards: [
+        {
+          from: {
+            controller: 0,
+            location: EngineLocation.SPELL_TRAP,
+            sequence: 0,
+            position: EnginePosition.FACE_DOWN_DEFENSE,
+          },
+          to: {
+            controller: 0,
+            location: EngineLocation.SPELL_TRAP,
+            sequence: 1,
+            position: EnginePosition.FACE_DOWN_DEFENSE,
+          },
+        },
+        {
+          from: {
+            controller: 0,
+            location: EngineLocation.SPELL_TRAP,
+            sequence: 1,
+            position: EnginePosition.FACE_DOWN_DEFENSE,
+          },
+          to: {
+            controller: 0,
+            location: EngineLocation.SPELL_TRAP,
+            sequence: 0,
+            position: EnginePosition.FACE_DOWN_DEFENSE,
+          },
+        },
+      ],
+    });
+    const after = value
+      .snapshot()
+      .players[0].spellsAndTraps.toSorted((a, b) => a.sequence - b.sequence);
+    expect(after.map(({ code }) => code)).toEqual([5053103, 97590747]);
+    expect(new Set(after.map(({ instanceId }) => instanceId))).toEqual(
+      new Set(before.map(({ instanceId }) => instanceId)),
+    );
+  });
+
+  it("rejects malformed set-card permutations without mutating state", () => {
     const value = projector();
     value.apply({
       type: EngineMessageType.MOVE,
-      card: 5053103,
+      card: 97590747,
       from: {
-        controller: 1,
+        controller: 0,
         location: EngineLocation.DECK,
         sequence: 0,
         position: EnginePosition.FACE_DOWN_DEFENSE,
       },
       to: {
-        controller: 1,
-        location: EngineLocation.GRAVEYARD,
-        sequence: 0,
-        position: EnginePosition.FACE_UP_ATTACK,
-      },
-    });
-    const knownId = value.snapshot().players[1].graveyard[0]?.instanceId;
-    expect(knownId).toBeDefined();
-    value.apply({
-      type: EngineMessageType.MOVE,
-      card: 5053103,
-      from: {
-        controller: 1,
-        location: EngineLocation.GRAVEYARD,
-        sequence: 0,
-        position: EnginePosition.FACE_UP_ATTACK,
-      },
-      to: {
-        controller: 1,
-        location: EngineLocation.HAND,
+        controller: 0,
+        location: EngineLocation.MONSTER,
         sequence: 0,
         position: EnginePosition.FACE_DOWN_DEFENSE,
       },
     });
-    const concealedMove = value.apply({
-      type: EngineMessageType.MOVE,
-      card: 5053103,
-      from: {
-        controller: 1,
-        location: EngineLocation.HAND,
-        sequence: 0,
-        position: EnginePosition.FACE_DOWN_DEFENSE,
-      },
-      to: {
-        controller: 1,
-        location: EngineLocation.SPELL_TRAP,
-        sequence: 0,
-        position: EnginePosition.FACE_DOWN_DEFENSE,
-      },
-    });
-    const setCard = value.snapshot().players[1].spellsAndTraps[0];
+    const before = value.snapshot();
+    expect(() =>
+      value.apply({
+        type: EngineMessageType.SHUFFLE_SET_CARD,
+        location: EngineLocation.MONSTER,
+        cards: [
+          {
+            from: {
+              controller: 0,
+              location: EngineLocation.MONSTER,
+              sequence: 0,
+              position: EnginePosition.FACE_DOWN_DEFENSE,
+            },
+            to: {
+              controller: 0,
+              location: EngineLocation.MONSTER,
+              sequence: 1,
+              position: EnginePosition.FACE_DOWN_DEFENSE,
+            },
+          },
+          {
+            from: {
+              controller: 0,
+              location: EngineLocation.MONSTER,
+              sequence: 9,
+              position: EnginePosition.FACE_DOWN_DEFENSE,
+            },
+            to: {
+              controller: 0,
+              location: EngineLocation.MONSTER,
+              sequence: 1,
+              position: EnginePosition.FACE_DOWN_DEFENSE,
+            },
+          },
+        ],
+      }),
+    ).toThrow();
+    expect(value.snapshot()).toEqual(before);
+  });
 
-    expect(concealedMove.events[0]).not.toHaveProperty("instanceId");
-    expect(setCard?.instanceId).not.toBe(knownId);
-    expect(setCard).not.toHaveProperty("code");
+  it("checkpoint restore keeps a known face-down card known", () => {
+    const value = projector();
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.DECK,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.GRAVEYARD,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    );
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.GRAVEYARD,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+      {
+        location: EngineLocation.MONSTER,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+    const known = value.snapshot().players[1].monsters[0];
+    const checkpoint = value.checkpoint();
+    value.apply({
+      type: EngineMessageType.POSITION_CHANGE,
+      code: 5053103,
+      controller: 1,
+      location: EngineLocation.MONSTER,
+      sequence: 0,
+      prev_position: EnginePosition.FACE_DOWN_DEFENSE,
+      position: EnginePosition.FACE_UP_ATTACK,
+    });
+    value.restore(checkpoint);
+    expect(value.snapshot().players[1].monsters[0]).toMatchObject({
+      instanceId: known?.instanceId,
+      code: 5053103,
+      faceUp: false,
+    });
+  });
+
+  it("public to hand rotates and forgets identity", () => {
+    const value = projector();
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.DECK,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.GRAVEYARD,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    );
+    const knownId = value.snapshot().players[1].graveyard[0]?.instanceId;
+    moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.GRAVEYARD,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+      {
+        location: EngineLocation.HAND,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+    const set = moveOpponent(
+      value,
+      5053103,
+      {
+        location: EngineLocation.HAND,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.SPELL_TRAP,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+    expect(set.events[0]).not.toHaveProperty("instanceId");
+    expect(value.snapshot().players[1].spellsAndTraps[0]?.instanceId).not.toBe(
+      knownId,
+    );
+    expect(value.snapshot().players[1].spellsAndTraps[0]).not.toHaveProperty(
+      "code",
+    );
   });
 
   it("redacts face-down opponent banished cards", () => {
@@ -631,6 +1460,7 @@ describe("DuelStateProjector", () => {
       snapshotId("a".repeat(64)),
       [40, 40],
       [2, 1],
+      { extraMonsterZones: true },
       [[cardCode(97590747), cardCode(5053103)], []],
     );
     const initial = value.snapshot().players[0].extraDeck;
@@ -715,6 +1545,7 @@ describe("DuelStateProjector", () => {
       snapshotId("a".repeat(64)),
       [40, 40],
       [0, 2],
+      { extraMonsterZones: true },
     );
     value.reconcileExtraDeck(1, [
       {
@@ -1266,6 +2097,7 @@ describe("DuelStateProjector", () => {
       snapshotId("sparse-public-extra"),
       [40, 40],
       [0, 2],
+      { extraMonsterZones: true },
     );
     publicMove.reconcileExtraDeck(1, records);
     const publicId = publicMove.snapshot().players[1].extraDeck[0]?.instanceId;
@@ -1301,6 +2133,7 @@ describe("DuelStateProjector", () => {
       snapshotId("sparse-hidden-extra"),
       [40, 40],
       [0, 2],
+      { extraMonsterZones: true },
     );
     hiddenMove.apply({
       type: EngineMessageType.MOVE,
@@ -1364,6 +2197,7 @@ describe("DuelStateProjector", () => {
       snapshotId("same-extra"),
       [40, 40],
       [1, 0],
+      { extraMonsterZones: true },
       [[cardCode(97590747)], []],
     );
     expect(
@@ -1389,6 +2223,7 @@ describe("DuelStateProjector", () => {
       snapshotId("distinct-extra"),
       [40, 40],
       [1, 1],
+      { extraMonsterZones: true },
       [[cardCode(97590747)], []],
     );
     expect(
@@ -1671,6 +2506,7 @@ describe("DuelStateProjector", () => {
               snapshotId("missing-overlay-code-extra"),
               [40, 40],
               [1, 0],
+              { extraMonsterZones: true },
               [[cardCode(5053103)], []],
             )
           : projector();
@@ -1815,6 +2651,7 @@ describe("DuelStateProjector", () => {
         snapshotId("atomic-extra"),
         [40, 40],
         [1, 0],
+        { extraMonsterZones: true },
         [[cardCode(97590747)], []],
       );
     const failedExtra = extra();
@@ -1998,6 +2835,7 @@ describe("DuelStateProjector", () => {
       snapshotId("counter-projection"),
       [40, 40],
       [0, 0],
+      { extraMonsterZones: true },
       [[], []],
       {
         texts: new Map(),
@@ -2473,6 +3311,7 @@ describe("DuelStateProjector", () => {
       snapshotId("counter-text-bound"),
       [40, 40],
       [0, 0],
+      { extraMonsterZones: true },
       [[], []],
       {
         texts: new Map(),
@@ -2556,6 +3395,7 @@ describe("DuelStateProjector", () => {
       snapshotId("chain-projection"),
       [40, 40],
       [0, 0],
+      { extraMonsterZones: true },
       [[], []],
       {
         texts: new Map([
@@ -2832,6 +3672,7 @@ describe("DuelStateProjector", () => {
       snapshotId("hidden-chain"),
       [40, 40],
       [0, 0],
+      { extraMonsterZones: true },
       [[], []],
       {
         texts: new Map([

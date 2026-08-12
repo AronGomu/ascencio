@@ -8,6 +8,7 @@ import {
   type DuelWorkerEvent,
 } from "../duel/contracts/duel-worker-event.ts";
 import type { ChoiceId, DuelId, PromptId } from "../duel/contracts/ids.ts";
+import type { DeckId } from "../duel/presets/deck-catalog.ts";
 
 const DEFAULT_DISPOSAL_TIMEOUT_MS = 1_000;
 const DEFAULT_INITIALIZATION_TIMEOUT_MS = 120_000;
@@ -62,7 +63,11 @@ export interface DuelClient {
   readonly context: DuelClientContext;
   subscribe(listener: DuelClientListener): () => void;
   initialize(): boolean;
-  startDuel(duelId: DuelId): DuelClientContext | null;
+  startDuel(
+    duelId: DuelId,
+    playerDeckId: DeckId,
+    opponentDeckId: DeckId,
+  ): DuelClientContext | null;
   respond(promptId: PromptId, choiceIds: readonly ChoiceId[]): boolean;
   surrender(): boolean;
   requestDiagnostics(): boolean;
@@ -160,7 +165,11 @@ export class DuelWorkerClient implements DuelClient {
     return true;
   }
 
-  startDuel(duelId: DuelId): DuelClientContext | null {
+  startDuel(
+    duelId: DuelId,
+    playerDeckId: DeckId,
+    opponentDeckId: DeckId,
+  ): DuelClientContext | null {
     if (
       this.#closed ||
       this.#worker === null ||
@@ -176,7 +185,14 @@ export class DuelWorkerClient implements DuelClient {
     this.#currentPromptId = null;
     this.#lastResponsePromptId = null;
     this.#respondedPromptIds = new Set();
-    if (!this.#post({ type: "startDuel", duelId })) {
+    if (
+      !this.#post({
+        type: "startDuel",
+        duelId,
+        playerDeckId,
+        opponentDeckId,
+      })
+    ) {
       this.#active = false;
       return null;
     }

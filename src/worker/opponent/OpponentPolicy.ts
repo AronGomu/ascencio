@@ -22,7 +22,9 @@ export type OpponentDecisionReason =
   | "answer_mandatory"
   | "select_first_legal"
   | "select_valid_sum"
-  | "preserve_order";
+  | "preserve_order"
+  | "break_loop_alternative"
+  | "break_loop_exit";
 
 export interface OpponentDecision {
   readonly choiceIds: readonly ChoiceId[];
@@ -94,6 +96,12 @@ export function toOpponentVisibleState(
 
 export class BasicOpponentPolicy implements OpponentPolicy {
   readonly #dependencies: ActiveDuelDependencies;
+  #loop: {
+    stateFingerprint: string;
+    promptSignature: string;
+    consecutive: number;
+    tried: ReadonlySet<string>;
+  } | null = null;
 
   constructor(dependencies: ActiveDuelDependencies) {
     this.#dependencies = dependencies;
@@ -103,7 +111,60 @@ export class BasicOpponentPolicy implements OpponentPolicy {
     prompt: PlayerPrompt,
     visibleState: OpponentVisibleDuelState,
   ): OpponentDecision {
-    void visibleState;
+    const normal = this.#chooseNormally(prompt);
+    const promptSignature = opponentPromptSignature(prompt);
+    const stateFingerprint = opponentVisibleStateFingerprint(visibleState);
+    if (
+      this.#loop?.promptSignature !== promptSignature ||
+      this.#loop.stateFingerprint !== stateFingerprint
+    ) {
+      this.#loop = {
+        stateFingerprint,
+        promptSignature,
+        consecutive: 1,
+        tried: new Set(normalChoiceKeys(prompt, normal)),
+      };
+      return normal;
+    }
+
+    const tried = new Set(this.#loop.tried);
+    for (const key of normalChoiceKeys(prompt, normal)) tried.add(key);
+    this.#loop = {
+      stateFingerprint,
+      promptSignature,
+      consecutive: this.#loop.consecutive + 1,
+      tried,
+    };
+    if (
+      this.#loop.consecutive < 3 ||
+      normal.choiceIds.length !== 1 ||
+      prompt.maximum !== 1
+    ) {
+      return normal;
+    }
+
+    const alternative = prompt.choices.find(
+      (choice) =>
+        !tried.has(semanticChoiceKey(choice)) && !isExitAction(choice.action),
+    );
+    if (alternative !== undefined) {
+      tried.add(semanticChoiceKey(alternative));
+      this.#loop = { ...this.#loop, tried };
+      return {
+        choiceIds: [alternative.id],
+        reason: "break_loop_alternative",
+      };
+    }
+
+    for (const action of exitActions) {
+      const exit = prompt.choices.find((choice) => choice.action === action);
+      if (exit !== undefined)
+        return { choiceIds: [exit.id], reason: "break_loop_exit" };
+    }
+    return normal;
+  }
+
+  #chooseNormally(prompt: PlayerPrompt): OpponentDecision {
     if (prompt.choices.length === 0)
       throw new Error(`Prompt ${prompt.kind} has no legal choices`);
 
@@ -221,6 +282,87 @@ export class BasicOpponentPolicy implements OpponentPolicy {
       ? 0
       : (this.#dependencies.cards.get(code)?.attack ?? 0);
   }
+}
+
+const exitActions = [
+  "pass",
+  "mainPhase2",
+  "endPhase",
+  "finish",
+  "cancel",
+] as const satisfies readonly PromptChoice["action"][];
+
+function semanticChoice(choice: PromptChoice) {
+  return {
+    action: choice.action,
+    card:
+      choice.card === undefined
+        ? null
+        : {
+            instanceId: choice.card.instanceId,
+            controller: choice.card.controller,
+            location: choice.card.location,
+            sequence: choice.card.sequence,
+            position: choice.card.position ?? null,
+          },
+    place: choice.place ?? null,
+    value: choice.value ?? null,
+    selected: choice.selected ?? null,
+    allocationMaximum: choice.allocationMaximum ?? null,
+  };
+}
+
+function semanticChoiceKey(choice: PromptChoice): string {
+  return JSON.stringify(semanticChoice(choice));
+}
+
+function opponentPromptSignature(prompt: PlayerPrompt): string {
+  return JSON.stringify({
+    kind: prompt.kind,
+    minimum: prompt.minimum,
+    maximum: prompt.maximum,
+    cancelable: prompt.cancelable,
+    ordered: prompt.ordered,
+    requiredTotal: prompt.requiredTotal ?? null,
+    sumMode: prompt.sumMode ?? null,
+    choices: prompt.choices.map(semanticChoice),
+  });
+}
+
+function opponentVisibleStateFingerprint(
+  visibleState: OpponentVisibleDuelState,
+): string {
+  return JSON.stringify({
+    turn: visibleState.turn,
+    turnPlayer: visibleState.turnPlayer,
+    phase: visibleState.phase,
+    players: visibleState.players.map((player) => ({
+      player: player.player,
+      lifePoints: player.lifePoints,
+      deckCount: player.deckCount,
+      extraDeckCount: player.extraDeckCount,
+      handCount: player.handCount,
+      monsterCount: player.monsterCount,
+      spellTrapCount: player.spellTrapCount,
+      graveyardCount: player.graveyardCount,
+      banishedCount: player.banishedCount,
+    })),
+    chainSize: visibleState.chainSize,
+  });
+}
+
+function normalChoiceKeys(
+  prompt: PlayerPrompt,
+  decision: OpponentDecision,
+): readonly string[] {
+  const ids = new Set(decision.choiceIds);
+  return prompt.choices
+    .filter((choice) => ids.has(choice.id))
+    .map(semanticChoiceKey);
+}
+
+function isExitAction(action: PromptChoice["action"]): boolean {
+  return exitActions.some((exitAction) => exitAction === action);
 }
 
 function prefer(

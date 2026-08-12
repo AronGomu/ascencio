@@ -1,10 +1,17 @@
 import { describe, expect, it } from "vitest";
+import { cardCode } from "../../src/duel/contracts/ids.ts";
+import type { PublicDuelState } from "../../src/duel/contracts/public-duel-state.ts";
 import { resolvePromptChoiceBoardTarget } from "../../src/field/card-mapping.ts";
 import {
   mapSnapshotToBoard,
   type BoardViewModel,
 } from "../../src/field/board-view-model.ts";
 import {
+  CARD_HEIGHT,
+  CARD_WIDTH,
+  DUEL_FIELD_HEIGHT,
+  DUEL_FIELD_WIDTH,
+  fieldZoneAccessibleName,
   fieldZoneId,
   mapEngineFieldAddress,
   STANDARD_DUEL_FIELD_LAYOUT,
@@ -16,9 +23,19 @@ import {
   BOARD_TARGET_PROMPT,
   BOARD_VIEW_MODEL_FIXTURES,
   DUPLICATE_SHARED_OCCUPANCY,
+  LINK_FREE_OCCUPIED_SHARED_STATE,
+  LINK_FREE_STATE,
+  SHARED_CARD_PROMPT,
+  SHARED_PLACE_PROMPT,
+  TWO_CARD_GRAVEYARD_STATE,
   promptChoice,
 } from "../fixtures/board-view-model.ts";
-import { RICH_PUBLIC_DUEL_STATE } from "../fixtures/board-public-states.ts";
+import {
+  concealedStateCard,
+  deckSlots,
+  publicStateCard,
+  RICH_PUBLIC_DUEL_STATE,
+} from "../fixtures/board-public-states.ts";
 
 describe("duel field mapping", () => {
   it("creates 34 unique Standard physical controls with two shared EMZs", () => {
@@ -42,12 +59,176 @@ describe("duel field mapping", () => {
     expect(layout).toContainEqual(
       expect.objectContaining({
         id: "p0:mainMonster:0",
-        x: 440 / 1280,
+        x: 450 / 1280,
         y: 470 / 720,
         width: 82 / 1280,
         height: 114 / 720,
       }),
     );
+  });
+
+  it("uses requested owner-neutral visible labels", () => {
+    const playerZones = STANDARD_DUEL_FIELD_LAYOUT.filter(
+      ({ player }) => player !== "shared",
+    );
+    expect(
+      playerZones.some(({ label }) => /^(Your|Opponent) /.test(label)),
+    ).toBe(false);
+    expect(
+      playerZones
+        .filter(({ player, kind }) => player === 0 && kind === "monster")
+        .map(({ label }) => label),
+    ).toEqual([
+      "Monster Zone 1",
+      "Monster Zone 2",
+      "Monster Zone 3",
+      "Monster Zone 4",
+      "Monster Zone 5",
+    ]);
+    expect(
+      playerZones
+        .filter(({ player, kind }) => player === 0 && kind === "spellTrap")
+        .map(({ label }) => label),
+    ).toEqual([
+      "Spell/Trap Zone 1",
+      "Spell/Trap Zone 2",
+      "Spell/Trap Zone 3",
+      "Spell/Trap Zone 4",
+      "Spell/Trap Zone 5",
+    ]);
+    expect(
+      STANDARD_DUEL_FIELD_LAYOUT.filter(
+        ({ player }) => player === "shared",
+      ).map(({ label }) => label),
+    ).toEqual([
+      "Shared Extra Monster Zone left",
+      "Shared Extra Monster Zone right",
+    ]);
+  });
+
+  /* R1/F7 property, not a restatement of the constants: no painted zone may
+     collide with another.
+
+     Scope decision (evidence, not preference): `p{n}:hand` is excluded because
+     T8 made it a virtual, navigation-only rectangle. `FieldBoard.svelte:59`
+     filters `kind === "hand"` out of the painted `ZoneControl`s, and
+     `.duel-field-hand-band` consumes `--field-x/--field-y/--field-width` only
+     — it never reads `--field-height` and paints no border or background. The
+     record survives solely to place the band and to anchor spatial navigation,
+     so its 462x72 box overlapping the backrow by 5 design px paints nothing.
+
+     For every painted zone the property is strict, and it is stated on the
+     card footprint each box exists to hold: `CARD_WIDTH x CARD_HEIGHT` at the
+     zone centre. Each layout box adds a 5px chrome halo per side, so "card
+     footprint gap >= 0" is exactly "boxes overlap by no more than the chrome
+     they add". The shared EMZ row is centred between the two main-monster rows
+     (110px away from each, against the 114px box height), so its halo does
+     overlap those rows by 4px — chrome only; the cards keep a 6px gap. Item
+     16's accepted spacing (column pitch 95, row pitch 120) must not be moved
+     to erase a chrome seam. */
+  it("no painted zone footprint overlaps another", () => {
+    const painted = STANDARD_DUEL_FIELD_LAYOUT.filter(
+      ({ kind }) => kind !== "hand",
+    );
+    expect(painted).toHaveLength(32);
+
+    const footprint = (zone: (typeof painted)[number]) => ({
+      id: zone.id,
+      left: zone.x * DUEL_FIELD_WIDTH - CARD_WIDTH / 2,
+      right: zone.x * DUEL_FIELD_WIDTH + CARD_WIDTH / 2,
+      top: zone.y * DUEL_FIELD_HEIGHT - CARD_HEIGHT / 2,
+      bottom: zone.y * DUEL_FIELD_HEIGHT + CARD_HEIGHT / 2,
+    });
+    const boxes = painted.map(footprint);
+    const collisions: string[] = [];
+    for (let index = 0; index < boxes.length; index += 1) {
+      for (let other = index + 1; other < boxes.length; other += 1) {
+        const left = boxes[index]!;
+        const right = boxes[other]!;
+        const horizontalGap = Math.max(
+          left.left - right.right,
+          right.left - left.right,
+        );
+        const verticalGap = Math.max(
+          left.top - right.bottom,
+          right.top - left.bottom,
+        );
+        if (horizontalGap < 0 && verticalGap < 0)
+          collisions.push(
+            `${left.id} x ${right.id} (${-horizontalGap}px by ${-verticalGap}px)`,
+          );
+      }
+    }
+
+    expect(collisions).toEqual([]);
+  });
+
+  it("retains owner-aware accessible names", () => {
+    const byId = new Map(
+      STANDARD_DUEL_FIELD_LAYOUT.map((zone) => [zone.id, zone]),
+    );
+    expect(fieldZoneAccessibleName(byId.get("p0:mainMonster:0")!)).toBe(
+      "Your Monster Zone 1",
+    );
+    expect(fieldZoneAccessibleName(byId.get("p1:spellTrap:4")!)).toBe(
+      "Opponent Spell and Trap Zone 5",
+    );
+    expect(fieldZoneAccessibleName(byId.get("shared:extraMonster:left")!)).toBe(
+      "Shared Extra Monster Zone left",
+    );
+    expect(fieldZoneAccessibleName(byId.get("p0:graveyard")!)).toBe(
+      "Your Graveyard",
+    );
+  });
+
+  it("uses denser columns and wider row gaps", () => {
+    const byId = new Map(
+      STANDARD_DUEL_FIELD_LAYOUT.map((zone) => [zone.id, zone]),
+    );
+    for (const player of [0, 1] as const) {
+      expect(
+        [0, 1, 4].map(
+          (sequence) =>
+            byId.get(`p${player}:mainMonster:${sequence}` as PhysicalZoneId)?.x,
+        ),
+      ).toEqual([450 / 1280, 545 / 1280, 830 / 1280]);
+    }
+    expect(byId.get("p0:spellTrap:0")?.y).toBe(590 / 720);
+    expect(byId.get("p1:spellTrap:0")?.y).toBe(130 / 720);
+    expect(byId.get("p0:mainMonster:0")?.y).toBe(470 / 720);
+  });
+
+  it("aligns each Extra Deck under its Field Zone", () => {
+    const byId = new Map(
+      STANDARD_DUEL_FIELD_LAYOUT.map((zone) => [zone.id, zone]),
+    );
+    for (const player of [0, 1] as const) {
+      expect(byId.get(`p${player}:extra`)?.x).toBe(330 / 1280);
+      expect(byId.get(`p${player}:extra`)?.x).toBe(
+        byId.get(`p${player}:field`)?.x,
+      );
+    }
+    expect(byId.get("p0:extra")?.y).toBe(590 / 720);
+    expect(byId.get("p1:extra")?.y).toBe(130 / 720);
+  });
+
+  it("keeps dimensions, ids and shared EMZ coordinates stable", () => {
+    expect(
+      new Set(STANDARD_DUEL_FIELD_LAYOUT.map(({ id }) => id)),
+    ).toHaveLength(34);
+    expect(
+      STANDARD_DUEL_FIELD_LAYOUT.filter(({ kind }) => kind !== "hand").every(
+        ({ width, height }) => width === 82 / 1280 && height === 114 / 720,
+      ),
+    ).toBe(true);
+    expect(
+      STANDARD_DUEL_FIELD_LAYOUT.filter(
+        ({ player }) => player === "shared",
+      ).map(({ x, y }) => [x, y]),
+    ).toEqual([
+      [590 / 1280, 360 / 720],
+      [690 / 1280, 360 / 720],
+    ]);
   });
 
   it.each<readonly [EngineFieldAddress, PhysicalZoneId]>([
@@ -148,6 +329,23 @@ function mappedBoard(
   return result.value;
 }
 
+function revealedDeckSnapshot(): PublicDuelState {
+  return {
+    ...RICH_PUBLIC_DUEL_STATE,
+    players: [
+      {
+        ...RICH_PUBLIC_DUEL_STATE.players[0],
+        deckCount: 40,
+        deck: [
+          publicStateCard("deck-p0-0", 97590747, 0, "deck", 0, "faceUpAttack"),
+          ...deckSlots(0, 40).slice(1),
+        ],
+      },
+      RICH_PUBLIC_DUEL_STATE.players[1],
+    ],
+  };
+}
+
 describe("semantic board view model", () => {
   it.each(Object.entries(BOARD_VIEW_MODEL_FIXTURES))(
     "maps %s with stable normalized physical controls",
@@ -246,6 +444,66 @@ describe("semantic board view model", () => {
     ).toEqual(["shared:extraMonster:left", "shared:extraMonster:right"]);
   });
 
+  it("carries known code while rendering a face-down card back", () => {
+    const knownCard = publicStateCard(
+      "known-face-down",
+      5053103,
+      1,
+      "monster",
+      0,
+      "faceDownDefense",
+    );
+    const known: PublicDuelState = {
+      ...RICH_PUBLIC_DUEL_STATE,
+      players: [
+        RICH_PUBLIC_DUEL_STATE.players[0],
+        { ...RICH_PUBLIC_DUEL_STATE.players[1], monsters: [knownCard] },
+      ],
+    };
+    const result = mapSnapshotToBoard(known, BOARD_CARD_TEXTS);
+    if (!result.ok) throw new Error("Known face-down fixture failed to map");
+    const mapped = result.value.cards.find(
+      ({ id }) => id === knownCard.instanceId,
+    );
+
+    expect(mapped).toMatchObject({
+      code: cardCode(5053103),
+      hidden: true,
+      image: { kind: "back" },
+      label: expect.stringContaining("Axe Raider"),
+      position: "faceDownDefense",
+    });
+  });
+
+  it("renders an unknown face-down card with back art", () => {
+    const unknownCard = concealedStateCard(
+      "unknown-face-down",
+      1,
+      "monster",
+      0,
+    );
+    const unknown: PublicDuelState = {
+      ...RICH_PUBLIC_DUEL_STATE,
+      players: [
+        RICH_PUBLIC_DUEL_STATE.players[0],
+        { ...RICH_PUBLIC_DUEL_STATE.players[1], monsters: [unknownCard] },
+      ],
+    };
+    const result = mapSnapshotToBoard(unknown, BOARD_CARD_TEXTS);
+    if (!result.ok) throw new Error("Unknown face-down fixture failed to map");
+    const mapped = result.value.cards.find(
+      ({ id }) => id === unknownCard.instanceId,
+    );
+
+    expect(mapped).toMatchObject({
+      hidden: true,
+      image: { kind: "back" },
+      position: "faceDownDefense",
+    });
+    expect(mapped).not.toHaveProperty("code");
+    expect(mapped?.label).not.toContain("Axe Raider");
+  });
+
   it("maps ST-04 positions and privacy-safe accessible labels", () => {
     const board = mappedBoard("ST-04");
     expect(
@@ -262,10 +520,10 @@ describe("semantic board view model", () => {
     ]);
     expect(board.cards[0]?.label).toContain("face-up attack");
     expect(board.cards[2]?.label).toBe(
-      "Hidden card in Your Main Monster 3, face-down attack",
+      "Dark Magician in Your Monster Zone 3, face-down attack",
     );
-    expect(board.cards[2]?.label).not.toContain("Dark Magician");
-    expect(JSON.stringify(board.cards[2])).not.toContain("46986414");
+    expect(board.cards[2]?.image).toEqual({ kind: "back" });
+    expect(board.cards[2]?.code).toBe(cardCode(46986414));
   });
 
   it("maps ST-07 counter and visibility-safe material details", () => {
@@ -321,6 +579,131 @@ describe("semantic board view model", () => {
       },
     ]);
     expect(JSON.stringify(board)).not.toContain("Card effect");
+  });
+
+  it("deck stacks still report their count and revealed public count", () => {
+    const result = mapSnapshotToBoard(revealedDeckSnapshot(), BOARD_CARD_TEXTS);
+    if (!result.ok) throw new Error("Fixture failed to map");
+
+    expect(
+      result.value.stacks.find(({ id }) => id === "p0:deck"),
+    ).toMatchObject({ count: 40, publicCount: 1 });
+  });
+
+  it("deck stacks never expose a top card", () => {
+    const result = mapSnapshotToBoard(revealedDeckSnapshot(), BOARD_CARD_TEXTS);
+    if (!result.ok) throw new Error("Fixture failed to map");
+    const deck = result.value.stacks.find(({ id }) => id === "p0:deck");
+
+    expect(deck?.topCardLabel).toBeUndefined();
+    expect(deck?.topCardCode).toBeUndefined();
+  });
+
+  it("graveyard stacks still expose their top card", () => {
+    const result = mapSnapshotToBoard(
+      TWO_CARD_GRAVEYARD_STATE,
+      BOARD_CARD_TEXTS,
+    );
+    if (!result.ok) throw new Error("Fixture failed to map");
+    const graveyard = result.value.stacks.find(
+      ({ id }) => id === "p0:graveyard",
+    );
+
+    expect(graveyard?.topCardLabel).toBe("Blue-Eyes White Dragon");
+    expect(graveyard?.topCardCode).toBe(89631139);
+  });
+
+  it("keeps 34 zones with both shared EMZs for a Link profile", () => {
+    const result = mapSnapshotToBoard(
+      BOARD_VIEW_MODEL_FIXTURES["ST-03"],
+      BOARD_CARD_TEXTS,
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.value.zones).toHaveLength(34);
+    expect(
+      result.value.zones.filter(({ player }) => player === "shared"),
+    ).toHaveLength(2);
+    expect(result.value.nav.has("card:st03-shared-left")).toBe(true);
+  });
+
+  it("drops both shared EMZs from zones, cards and nav for a Link-free profile", () => {
+    const result = mapSnapshotToBoard(LINK_FREE_STATE, BOARD_CARD_TEXTS);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.value.zones).toHaveLength(32);
+    expect(
+      result.value.zones.filter(({ player }) => player === "shared"),
+    ).toEqual([]);
+    expect(
+      result.value.cards.filter(({ zoneId }) =>
+        zoneId.startsWith("shared:extraMonster"),
+      ),
+    ).toEqual([]);
+    expect(
+      [...result.value.nav.keys()].filter((target) =>
+        target.includes("shared:extraMonster"),
+      ),
+    ).toEqual([]);
+    for (const neighbors of result.value.nav.values()) {
+      for (const neighbor of Object.values(neighbors))
+        expect(neighbor).not.toContain("shared:extraMonster");
+    }
+  });
+
+  it("reports an occupied shared zone under a Link-free profile as a conflict", () => {
+    expect(
+      mapSnapshotToBoard(LINK_FREE_OCCUPIED_SHARED_STATE, BOARD_CARD_TEXTS),
+    ).toEqual({
+      ok: false,
+      error: {
+        type: "layout_profile_conflict",
+        zoneId: "shared:extraMonster:left",
+        source: "occupied",
+      },
+    });
+  });
+
+  it("reports a prompt that can still reach a shared zone as a conflict", () => {
+    expect(
+      mapSnapshotToBoard(
+        LINK_FREE_STATE,
+        BOARD_CARD_TEXTS,
+        SHARED_PLACE_PROMPT,
+      ),
+    ).toEqual({
+      ok: false,
+      error: {
+        type: "layout_profile_conflict",
+        zoneId: "shared:extraMonster:left",
+        source: "prompt",
+      },
+    });
+    expect(
+      mapSnapshotToBoard(LINK_FREE_STATE, BOARD_CARD_TEXTS, SHARED_CARD_PROMPT),
+    ).toEqual({
+      ok: false,
+      error: {
+        type: "layout_profile_conflict",
+        zoneId: "shared:extraMonster:right",
+        source: "prompt",
+      },
+    });
+  });
+
+  it("leaves a Link profile board untouched by the same prompts", () => {
+    for (const prompt of [SHARED_PLACE_PROMPT, SHARED_CARD_PROMPT]) {
+      const result = mapSnapshotToBoard(
+        BOARD_VIEW_MODEL_FIXTURES["ST-02"],
+        BOARD_CARD_TEXTS,
+        prompt,
+      );
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.value.zones).toHaveLength(34);
+    }
   });
 
   it("rejects duplicate physical occupancy instead of overwriting", () => {
@@ -410,7 +793,7 @@ describe("semantic board view model", () => {
       ),
     ).toEqual([
       { kind: "board", targetId: "card:st08-chain-source" },
-      { kind: "nonField", reason: "target_not_mounted" },
+      { kind: "stack", targetId: "stack:p0:graveyard" },
       { kind: "board", targetId: "zone:p0:field" },
       { kind: "nonField", reason: "unsupported_field_address" },
       { kind: "nonField", reason: "choice_has_no_field_target" },

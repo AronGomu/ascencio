@@ -33,6 +33,7 @@ describe("HeadlessDuelController", () => {
       opponentDeck: preset.opponent,
       configuration: {
         mode: "programmed",
+        rules: "mr5",
         seed: [1n, 2n, 3n, 4n],
         playerDeckOrder: preset.player.main,
         opponentDeckOrder: preset.opponent.main,
@@ -48,6 +49,7 @@ describe("HeadlessDuelController", () => {
         preset.player.extra.length,
         preset.opponent.extra.length,
       ],
+      extraMonsterZones: true,
     });
 
     try {
@@ -90,7 +92,7 @@ describe("HeadlessDuelController", () => {
         dependencies,
         playerDeck: preset.player,
         opponentDeck: preset.opponent,
-        configuration: { mode: "production" },
+        configuration: { mode: "production", rules: "mr5" },
       });
       const controller = new HeadlessDuelController({
         session,
@@ -102,6 +104,7 @@ describe("HeadlessDuelController", () => {
           preset.player.extra.length,
           preset.opponent.extra.length,
         ],
+        extraMonsterZones: true,
       });
       try {
         const first = controller.advance();
@@ -130,7 +133,7 @@ describe("HeadlessDuelController", () => {
       dependencies,
       playerDeck: preset.player,
       opponentDeck: preset.opponent,
-      configuration: { mode: "production" },
+      configuration: { mode: "production", rules: "mr5" },
     });
     const controller = new HeadlessDuelController({
       session,
@@ -139,6 +142,7 @@ describe("HeadlessDuelController", () => {
       presetId: preset.id,
       deckCounts: [40, 40],
       extraDeckCounts: [0, 0],
+      extraMonsterZones: true,
     });
     expect(controller.surrender().result).toEqual({
       type: "surrendered",

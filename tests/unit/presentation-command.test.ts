@@ -39,6 +39,7 @@ const MOVED_CARD: BoardCardView = {
   player: 0,
   owner: 0,
   zoneId: "p0:mainMonster:0",
+  sequence: 0,
   position: "faceUpAttack",
   orientation: "upright",
   facing: "self",

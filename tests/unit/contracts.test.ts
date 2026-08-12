@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  DuelCommandValidationError,
   parseDuelCommand,
   type DuelCommand,
 } from "../../src/duel/contracts/duel-command.ts";
@@ -16,10 +17,16 @@ import {
   snapshotId,
 } from "../../src/duel/contracts/ids.ts";
 import { assertStructuredCloneSafe } from "../../src/duel/contracts/structured-clone.ts";
+import { deckSlots } from "../fixtures/board-public-states.ts";
 
 const examples: readonly (DuelCommand | DuelWorkerEvent)[] = [
   { type: "initialize" },
-  { type: "startDuel", duelId: duelId("mvp-preset-v1") },
+  {
+    type: "startDuel",
+    duelId: duelId("mvp-preset-v1"),
+    playerDeckId: "mvp-player",
+    opponentDeckId: "mvp-opponent",
+  },
   {
     type: "respond",
     promptId: promptId("prompt-1"),
@@ -39,11 +46,13 @@ const examples: readonly (DuelCommand | DuelWorkerEvent)[] = [
       turn: 1,
       turnPlayer: 0,
       phase: "main1",
+      layout: { extraMonsterZones: true },
       players: [
         {
           player: 0,
           lifePoints: 8000,
           deckCount: 35,
+          deck: deckSlots(0, 35),
           extraDeckCount: 0,
           handCount: 0,
           hand: [],
@@ -57,6 +66,7 @@ const examples: readonly (DuelCommand | DuelWorkerEvent)[] = [
           player: 1,
           lifePoints: 8000,
           deckCount: 35,
+          deck: deckSlots(1, 35),
           extraDeckCount: 0,
           handCount: 5,
           hand: [],
@@ -153,11 +163,94 @@ const nonCloneableFunctionCommand: DuelCommand = {
 void nonCloneableBigIntCommand;
 void nonCloneableFunctionCommand;
 
+function contractPlayer(player: 0 | 1, deckCount: number) {
+  return {
+    player,
+    lifePoints: 8000,
+    deckCount,
+    deck: deckSlots(player, deckCount),
+    extraDeckCount: 0,
+    handCount: 0,
+    hand: [],
+    extraDeck: [],
+    monsters: [],
+    spellsAndTraps: [],
+    graveyard: [],
+    banished: [],
+  };
+}
+
 describe("Worker contracts", () => {
   it.each(examples)("survives structured cloning: $type", (example) => {
     expect(() => assertStructuredCloneSafe(example)).not.toThrow();
     expect(structuredClone(example)).toEqual(example);
   });
+
+  it("rejects a mismatched deck length", () => {
+    const player = contractPlayer(0, 40);
+    expect(() =>
+      parseDuelWorkerEvent({
+        type: "state",
+        state: {
+          snapshotId: "a".repeat(64),
+          revision: 0,
+          turn: 0,
+          turnPlayer: 0,
+          phase: "unknown",
+          layout: { extraMonsterZones: true },
+          players: [
+            { ...player, deck: player.deck.slice(0, 39) },
+            contractPlayer(1, 40),
+          ],
+          chain: [],
+        },
+      }),
+    ).toThrow("deck count");
+  });
+
+  it.each([
+    ["missing", undefined],
+    ["non-boolean", { extraMonsterZones: "false" }],
+    ["empty", {}],
+    ["extended", { extraMonsterZones: true, rules: "mr5" }],
+  ])("rejects a %s projected layout", (_label, layout) => {
+    expect(() =>
+      parseDuelWorkerEvent({
+        type: "state",
+        state: {
+          snapshotId: "a".repeat(64),
+          revision: 0,
+          turn: 0,
+          turnPlayer: 0,
+          phase: "unknown",
+          ...(layout === undefined ? {} : { layout }),
+          players: [contractPlayer(0, 40), contractPlayer(1, 40)],
+          chain: [],
+        },
+      }),
+    ).toThrow(/invalid|layout/);
+  });
+
+  it.each([true, false])(
+    "accepts either immutable Extra Monster Zone layout: %s",
+    (extraMonsterZones) => {
+      const event = {
+        type: "state" as const,
+        state: {
+          snapshotId: "a".repeat(64),
+          revision: 0,
+          turn: 0,
+          turnPlayer: 0 as const,
+          phase: "unknown" as const,
+          layout: { extraMonsterZones },
+          players: [contractPlayer(0, 40), contractPlayer(1, 40)],
+          chain: [],
+        },
+      };
+
+      expect(parseDuelWorkerEvent(event)).toEqual(event);
+    },
+  );
 
   it("requires a positive safe presentation event sequence", () => {
     expect(
@@ -194,6 +287,51 @@ describe("Worker contracts", () => {
         duplicate: true,
       }),
     ).toThrow("presentation event.duplicate");
+  });
+
+  it("parses a startDuel command with deck ids", () => {
+    expect(
+      parseDuelCommand({
+        type: "startDuel",
+        duelId: "mvp-preset-v1",
+        playerDeckId: "nekroz",
+        opponentDeckId: "shaddoll",
+      }),
+    ).toEqual({
+      type: "startDuel",
+      duelId: "mvp-preset-v1",
+      playerDeckId: "nekroz",
+      opponentDeckId: "shaddoll",
+    });
+  });
+
+  it("rejects an unexpected startDuel command field", () => {
+    expect(() =>
+      parseDuelCommand({
+        type: "startDuel",
+        duelId: "mvp-preset-v1",
+        playerDeckId: "nekroz",
+        opponentDeckId: "shaddoll",
+        seed: 42,
+      }),
+    ).toThrow(DuelCommandValidationError);
+  });
+
+  it("rejects a startDuel command with an unknown deck id", () => {
+    expect(() =>
+      parseDuelCommand({
+        type: "startDuel",
+        duelId: "mvp-preset-v1",
+        playerDeckId: "evil",
+        opponentDeckId: "shaddoll",
+      }),
+    ).toThrow("Duel startDuel command deck id is not a bundled deck");
+  });
+
+  it("rejects a startDuel command missing the deck ids", () => {
+    expect(() =>
+      parseDuelCommand({ type: "startDuel", duelId: "mvp-preset-v1" }),
+    ).toThrow();
   });
 
   it("validates untrusted Worker commands and bounds response selections", () => {
@@ -252,6 +390,7 @@ describe("Worker contracts", () => {
         turn: 1,
         turnPlayer: 0,
         phase: "main1",
+        layout: { extraMonsterZones: true },
         players: [null, null],
         chain: [],
       },
@@ -326,6 +465,78 @@ describe("Worker contracts", () => {
       }),
     ).toThrow(/identity privacy/);
   });
+
+  it("accepts projector-attested code on an opponent face-down fixed field card", () => {
+    const event = structuredClone(
+      examples.find((example) => example.type === "state"),
+    );
+    if (event?.type !== "state") throw new Error("State fixture missing");
+    const opponent = event.state.players[1] as unknown as Record<
+      string,
+      unknown
+    >;
+    const hiddenCard = (
+      location: "monster" | "spellTrap",
+      sequence: number,
+    ) => ({
+      instanceId: cardInstanceId(`known-${location}`),
+      code: cardCode(5053103),
+      owner: 1,
+      controller: 1,
+      location,
+      sequence,
+      position: "faceDownDefense",
+      faceUp: false,
+      counters: [],
+      overlayMaterials: [],
+    });
+    opponent.monsters = [hiddenCard("monster", 0)];
+    opponent.spellsAndTraps = [hiddenCard("spellTrap", 0)];
+
+    expect(() => parseDuelWorkerEvent(event)).not.toThrow();
+  });
+
+  it.each(["deck", "hand", "extraDeck", "banished"] as const)(
+    "still rejects code in concealed opponent %s",
+    (zone) => {
+      const event = structuredClone(
+        examples.find((example) => example.type === "state"),
+      );
+      if (event?.type !== "state") throw new Error("State fixture missing");
+      const opponent = event.state.players[1] as unknown as Record<
+        string,
+        unknown
+      >;
+      const locations = {
+        deck: "deck",
+        hand: "hand",
+        extraDeck: "extra",
+        banished: "banished",
+      } as const;
+      const hidden = {
+        instanceId: cardInstanceId(`private-${zone}`),
+        code: cardCode(5053103),
+        owner: 1,
+        controller: 1,
+        location: locations[zone],
+        sequence: 0,
+        position: "faceDownDefense",
+        faceUp: false,
+        counters: [],
+        overlayMaterials: [],
+      };
+      if (zone === "deck") {
+        opponent.deckCount = 1;
+        opponent.deck = [hidden];
+      } else {
+        if (zone === "hand") opponent.handCount = 1;
+        if (zone === "extraDeck") opponent.extraDeckCount = 1;
+        opponent[zone] = [hidden];
+      }
+
+      expect(() => parseDuelWorkerEvent(event)).toThrow(/code privacy/);
+    },
+  );
 
   it("enforces Extra/material privacy, uniqueness, shallow shape, and global bounds", () => {
     const baseEvent = structuredClone(

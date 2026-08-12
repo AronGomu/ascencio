@@ -133,6 +133,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     const firstStart = runtime.handle({
       type: "startDuel",
       duelId: FAKE_PRESET.id,
+      playerDeckId: "mvp-player",
+      opponentDeckId: "mvp-opponent",
     });
 
     await Promise.resolve();
@@ -163,6 +165,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     const restarted = await runtime.handle({
       type: "startDuel",
       duelId: FAKE_PRESET.id,
+      playerDeckId: "mvp-player",
+      opponentDeckId: "mvp-opponent",
     });
     expect(restarted.at(-1)).toEqual({
       type: "result",
@@ -193,6 +197,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     const first = await runtime.handle({
       type: "startDuel",
       duelId: FAKE_PRESET.id,
+      playerDeckId: "mvp-player",
+      opponentDeckId: "mvp-opponent",
     });
     expect(
       first
@@ -203,6 +209,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     const second = await runtime.handle({
       type: "startDuel",
       duelId: FAKE_PRESET.id,
+      playerDeckId: "mvp-player",
+      opponentDeckId: "mvp-opponent",
     });
     expect(
       second
@@ -285,7 +293,12 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     await runtime.handle({ type: "initialize" });
 
     await expect(
-      runtime.handle({ type: "startDuel", duelId: FAKE_PRESET.id }),
+      runtime.handle({
+        type: "startDuel",
+        duelId: FAKE_PRESET.id,
+        playerDeckId: "mvp-player",
+        opponentDeckId: "mvp-opponent",
+      }),
     ).resolves.toEqual([]);
     expect(logger.warn).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -321,7 +334,12 @@ describe("DuelWorkerRuntime command lifecycle", () => {
       },
     );
     await runtime.handle({ type: "initialize" });
-    await runtime.handle({ type: "startDuel", duelId: FAKE_PRESET.id });
+    await runtime.handle({
+      type: "startDuel",
+      duelId: FAKE_PRESET.id,
+      playerDeckId: "mvp-player",
+      opponentDeckId: "mvp-opponent",
+    });
 
     const [diagnostics] = await runtime.handle({ type: "requestDiagnostics" });
     expect(diagnostics).toMatchObject({
@@ -370,7 +388,12 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     await runtime.handle({ type: "initialize" });
 
     await expect(
-      runtime.handle({ type: "startDuel", duelId: FAKE_PRESET.id }),
+      runtime.handle({
+        type: "startDuel",
+        duelId: FAKE_PRESET.id,
+        playerDeckId: "mvp-player",
+        opponentDeckId: "mvp-opponent",
+      }),
     ).resolves.toEqual([]);
     expect(logger.warn).toHaveBeenCalledWith(
       expect.objectContaining({ message: "process diagnostic" }),
@@ -410,7 +433,12 @@ describe("DuelWorkerRuntime command lifecycle", () => {
       { logger },
     );
     await runtime.handle({ type: "initialize" });
-    await runtime.handle({ type: "startDuel", duelId: FAKE_PRESET.id });
+    await runtime.handle({
+      type: "startDuel",
+      duelId: FAKE_PRESET.id,
+      playerDeckId: "mvp-player",
+      opponentDeckId: "mvp-opponent",
+    });
 
     expect(() => runtime.dispose()).toThrow(cleanupError);
     expect(logger.error).toHaveBeenCalledWith(
@@ -437,6 +465,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     const failed = await runtime.handle({
       type: "startDuel",
       duelId: FAKE_PRESET.id,
+      playerDeckId: "mvp-player",
+      opponentDeckId: "mvp-opponent",
     });
     expect(failed).toEqual([
       expect.objectContaining({
@@ -446,7 +476,12 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     ]);
     expect(runtime.replacementRequired).toBe(true);
     await expect(
-      runtime.handle({ type: "startDuel", duelId: FAKE_PRESET.id }),
+      runtime.handle({
+        type: "startDuel",
+        duelId: FAKE_PRESET.id,
+        playerDeckId: "mvp-player",
+        opponentDeckId: "mvp-opponent",
+      }),
     ).resolves.toEqual([]);
   });
 
@@ -529,7 +564,12 @@ describe("DuelWorkerRuntime command lifecycle", () => {
       },
     }));
     await runtime.handle({ type: "initialize" });
-    await runtime.handle({ type: "startDuel", duelId: FAKE_PRESET.id });
+    await runtime.handle({
+      type: "startDuel",
+      duelId: FAKE_PRESET.id,
+      playerDeckId: "mvp-player",
+      opponentDeckId: "mvp-opponent",
+    });
 
     const [diagnostics] = await runtime.handle({ type: "requestDiagnostics" });
     expect(diagnostics).toMatchObject({
@@ -570,7 +610,12 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     await internalRuntime.handle({ type: "initialize" });
     let internalFailure: unknown;
     const internalEvents = await internalRuntime.handle(
-      { type: "startDuel", duelId: FAKE_PRESET.id },
+      {
+        type: "startDuel",
+        duelId: FAKE_PRESET.id,
+        playerDeckId: "mvp-player",
+        opponentDeckId: "mvp-opponent",
+      },
       undefined,
       (error) => {
         internalFailure = error;
@@ -599,6 +644,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     const publicEvents = await loggedRuntime.handle({
       type: "startDuel",
       duelId: FAKE_PRESET.id,
+      playerDeckId: "mvp-player",
+      opponentDeckId: "mvp-opponent",
     });
     const publicTrace = await loggedRuntime.handle({
       type: "requestDiagnostics",
@@ -644,7 +691,12 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     await internalRuntime.handle({ type: "initialize" });
     let internalFailure: unknown;
     const internalEvents = await internalRuntime.handle(
-      { type: "startDuel", duelId: FAKE_PRESET.id },
+      {
+        type: "startDuel",
+        duelId: FAKE_PRESET.id,
+        playerDeckId: "mvp-player",
+        opponentDeckId: "mvp-opponent",
+      },
       undefined,
       (error) => {
         internalFailure = error;
@@ -689,6 +741,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     const publicEvents = await loggedRuntime.handle({
       type: "startDuel",
       duelId: FAKE_PRESET.id,
+      playerDeckId: "mvp-player",
+      opponentDeckId: "mvp-opponent",
     });
     const publicTrace = await loggedRuntime.handle({
       type: "requestDiagnostics",
@@ -746,6 +800,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
       {
         type: "startDuel",
         duelId: FAKE_PRESET.id,
+        playerDeckId: "mvp-player",
+        opponentDeckId: "mvp-opponent",
       },
       undefined,
       (error, context) => failures.push({ error, code: context.code }),
@@ -764,6 +820,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     const restarted = await runtime.handle({
       type: "startDuel",
       duelId: FAKE_PRESET.id,
+      playerDeckId: "mvp-player",
+      opponentDeckId: "mvp-opponent",
     });
     expect(restarted.at(-1)).toEqual({
       type: "result",
@@ -780,7 +838,11 @@ function createResources(
   return {
     adapter,
     dependencies: FAKE_DEPENDENCIES,
-    preset: FAKE_PRESET,
+    createPreset: () => ({
+      ...FAKE_PRESET,
+      playerDeckId: "mvp-player",
+      opponentDeckId: "mvp-opponent",
+    }),
     snapshotId: FAKE_SNAPSHOT_ID,
   };
 }

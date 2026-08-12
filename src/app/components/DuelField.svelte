@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, tick } from "svelte";
+  import { onDestroy, onMount, tick } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
   import type { DuelPresentationEvent } from "../../duel/contracts/duel-presentation-event.ts";
   import type { PlayerPrompt } from "../../duel/contracts/player-prompt.ts";
@@ -7,6 +7,7 @@
   import type { CardImageLibrary } from "../images/card-image-cache.ts";
   import type {
     BoardCardView,
+    BoardStackView,
     BoardTargetId,
     BoardViewModel,
     BoardZoneView,
@@ -20,8 +21,13 @@
   } from "../prompts/interaction-session.ts";
   import {
     fieldActionBarRequired,
+    isImmediateSingleSelection,
     type ActiveInteractionSpec,
+    type InteractionChoice,
   } from "../prompts/interaction-spec.ts";
+  import type { ZoneListEntry } from "../../field/zone-list.ts";
+  import type { OffFieldTargetEntry } from "../../field/off-field-target-list.ts";
+  import ZoneListDialog from "./duel-field/ZoneListDialog.svelte";
   import { dropChoiceForZone } from "../prompts/drop-target.ts";
   import { validatePromptSelection } from "../prompts/prompt-selection.ts";
   import { placementZoneCandidates } from "../../field/placement-candidates.ts";
@@ -33,16 +39,28 @@
     type DomFeedbackState,
   } from "../presentation/dom-feedback-controller.ts";
   import { presentationCommandForDomEvent } from "../presentation/presentation-command.ts";
+  import type { FieldWindowId } from "../presentation/floating-window-position.ts";
+  import type { PersistedWindowPosition } from "../stores/persisted-ui-state.ts";
+  import {
+    dragFrameForPointer,
+    dragGhostSettled,
+    settleDragGhostFrame,
+    DRAG_SETTLE_TIMEOUT_MS,
+    type CardDragOrigin,
+    type DragGhostFrame,
+    type DragPointerSample,
+  } from "../presentation/drag-ghost-physics.ts";
+  import DragGhost from "./duel-field/DragGhost.svelte";
   import FieldActionBar from "./duel-field/FieldActionBar.svelte";
+  import FloatingFieldWindow from "./duel-field/FloatingFieldWindow.svelte";
   import FieldBoard from "./duel-field/FieldBoard.svelte";
   import FieldLines from "./duel-field/FieldLines.svelte";
-  import EndTurnButton from "./duel-field/EndTurnButton.svelte";
-  import FieldStatusPills from "./duel-field/FieldStatusPills.svelte";
-  import LifePointsPill from "./duel-field/LifePointsPill.svelte";
+  import PhaseStrip from "./duel-field/PhaseStrip.svelte";
 
   const EMPTY_IMAGE_URLS: ReadonlyMap<number, string> = new Map();
   const EMPTY_TARGETS: ReadonlySet<BoardTargetId> = new Set();
   const EMPTY_ZONE_IDS: ReadonlySet<PhysicalZoneId> = new Set();
+  const EMPTY_TARGET_ENTRIES: readonly OffFieldTargetEntry[] = [];
   const DEFAULT_CARD_BACK =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 104'%3E%3Crect width='72' height='104' rx='5' fill='%2314263c'/%3E%3Cpath d='M8 8h56v88H8z' fill='none' stroke='%2373daca' stroke-width='3'/%3E%3Cpath d='m12 84 48-64M12 60l32-40M28 92l32-40' stroke='%2346637f' stroke-width='4'/%3E%3C/svg%3E";
   const DEFAULT_PLACEHOLDER =
@@ -74,9 +92,44 @@
   export let onplacementintent: (zoneId: PhysicalZoneId) => unknown = () =>
     false;
   export let onpreview: (card: BoardCardView) => void = () => undefined;
+  export let onstackpreview: (stack: BoardStackView) => void = () => undefined;
+  export let zoneLists: ReadonlyMap<PhysicalZoneId, readonly ZoneListEntry[]> =
+    new Map();
+  /* T16: the legal off-field targets of the live prompt, already joined against
+     the sanitized projection by the App seam. The field never re-derives an
+     identity from a prompt choice. */
+  export let offFieldTargets: readonly OffFieldTargetEntry[] =
+    EMPTY_TARGET_ENTRIES;
+  export let onzonelistpreview: (entry: ZoneListEntry) => void = () =>
+    undefined;
   export let phase: DuelPhase = "unknown";
-  export let hasPriority = false;
-  export let lifePoints: readonly [number, number] | null = null;
+  export let zoneListWindowPosition: PersistedWindowPosition | null = null;
+  export let confirmWindowPosition: PersistedWindowPosition | null = null;
+  export let onzoneListWindowPositionChange: (
+    position: PersistedWindowPosition,
+  ) => void = () => undefined;
+  export let onconfirmWindowPositionChange: (
+    position: PersistedWindowPosition,
+  ) => void = () => undefined;
+
+  /* Exactly one list window: either one browsed pile, or the aggregate target
+     list of one prompt. */
+  type ZoneListState =
+    | { readonly mode: "browse"; readonly stackId: PhysicalZoneId }
+    | { readonly mode: "target"; readonly promptKey: string }
+    | null;
+
+  let zoneListState: ZoneListState = null;
+  /* Ephemeral, never persisted (ADR-017): the last window the player touched
+     is the one that rises. */
+  let activeWindowId: FieldWindowId | null = null;
+  /* Single-shot marker: the outside pointerdown that closed a list happened on
+     the very pile control whose click is about to toggle it, so that click
+     must leave the list closed instead of reopening it. */
+  let outsideDismissedTargetId: BoardTargetId | null = null;
+  /* The prompt whose target list the player closed by hand, so an unrelated
+     rerender never reopens it. */
+  let dismissedTargetPromptKey: string | null = null;
 
   if (injectFailure) throw new Error("Injected duel field component failure");
 
@@ -91,9 +144,26 @@
   let lastPresentationSequence = 0;
   let appliedReducedMotion: boolean | null = null;
   let feedbackSyncSequence = 0;
-  let actionBarHeight = 0;
   let dragCard: BoardCardView | null = null;
   let dropCandidates: ReadonlySet<PhysicalZoneId> = EMPTY_ZONE_IDS;
+  /* Item 18: which candidate zone is directly under the dragged card right
+     now. Computed in `moveCardDrag` (a pointermove handler, not the rAF
+     ghost-animation loop) with the existing `zoneIdAtPoint` hit test — never
+     a second hit-testing implementation, and never a DOM read inside
+     `tickGhostFrame`. */
+  let dropHoveredZoneId: PhysicalZoneId | null = null;
+  let lastPromptKey: string | null = null;
+  let ghostOrigin: CardDragOrigin | null = null;
+  let ghostFrame: DragGhostFrame | null = null;
+  let ghostPhase: "idle" | "dragging" | "settling" = "idle";
+  let ghostLatestSample: DragPointerSample | null = null;
+  let ghostPreviousSample: DragPointerSample | null = null;
+  let ghostSettleTarget: { readonly x: number; readonly y: number } | null =
+    null;
+  let ghostSettleElapsedMs = 0;
+  let ghostRafHandle: number | null = null;
+  let ghostLastTickMs = 0;
+  let ghostPromptKey: string | null = null;
 
   $: resolvedCardBackUrl = cardBackUrl || DEFAULT_CARD_BACK;
   $: effectiveReducedMotion = reducedMotion ?? mediaReducedMotion;
@@ -107,17 +177,27 @@
   $: resolvedPlaceholderUrl = placeholderUrl || DEFAULT_PLACEHOLDER;
   $: selectedTargets =
     spec === null ? EMPTY_TARGETS : targetSelections(spec, session);
+  $: targetLaunchers = targetLauncherIds(spec);
+  $: synchronizeZoneList(spec, offFieldTargets);
+  $: cancelDragGhostOnPromptChange(spec);
+  $: openStack = browsedStack(zoneListState, board);
+  $: targetListOpen = zoneListState?.mode === "target";
   $: submittedChoiceIds =
     spec === null ? [] : interactionSessionChoiceIds(session, spec);
   $: validation =
     prompt === null || spec === null
       ? { valid: false as const, message: "No active field decision" }
       : validatePromptSelection(prompt, submittedChoiceIds);
+  /* Derived from the projected board itself, so the strip can never disagree
+     with the zones the mapper actually produced. */
+  $: extraMonsterZones = board.zones.some(({ player }) => player === "shared");
   $: actionBarVisible =
     prompt !== null &&
     spec !== null &&
-    spec.fieldCapable &&
+    (spec.fieldCapable || spec.promptKind === "chain") &&
     fieldActionBarRequired(spec);
+  onDestroy(removeGhost);
+
   onMount(() => {
     const motionQuery = globalThis.matchMedia?.(
       "(prefers-reduced-motion: reduce)",
@@ -267,15 +347,25 @@
 
   function activateCard(card: BoardCardView): void {
     if (spec === null) return;
-    const choices = spec.cardChoices.get(card.targetId);
-    const choice = choices?.[0];
+    const choices = spec.cardChoices.get(card.targetId) ?? [];
+    const choice = choices[0];
     if (choice === undefined) return;
+    /* T16: an off-field card (a hand card) answers through the target list, so
+       its mounted control only opens that list. */
+    if (targetLaunchers.has(card.targetId)) {
+      toggleTargetList();
+      return;
+    }
     switch (spec.kind) {
       case "cardAction":
-        dispatch({ type: "openMenu", target: card.targetId });
+        if (choices.length === 1)
+          dispatch({ type: "chooseChoice", choiceId: choice.id });
+        else dispatch({ type: "openMenu", target: card.targetId });
         break;
       case "cardSelection":
-        dispatch({ type: "toggleChoice", choiceId: choice.id });
+        if (isImmediateSingleSelection(spec))
+          dispatch({ type: "chooseChoice", choiceId: choice.id });
+        else dispatch({ type: "toggleChoice", choiceId: choice.id });
         break;
       case "counterAllocation":
         dispatch({ type: "adjustAllocation", choiceId: choice.id, delta: 1 });
@@ -291,14 +381,71 @@
   function activateZone(zone: BoardZoneView): void {
     if (spec === null) return;
     const choice = spec.zoneChoices.get(zone.targetId)?.[0];
-    if (choice !== undefined)
-      dispatch({ type: "toggleChoice", choiceId: choice.id });
+    if (choice === undefined) return;
+    if (spec.kind === "placeSelection" && isImmediateSingleSelection(spec))
+      dispatch({ type: "chooseChoice", choiceId: choice.id });
+    else dispatch({ type: "toggleChoice", choiceId: choice.id });
+  }
+
+  /* The hand band root, not its arrows: every control T8 put inside the band
+     — page arrows, the scrolling viewport, the page-status live region —
+     drives navigation only, so none of them may ever reach the outside-click
+     dismissal that answers the live decision. */
+  const INTERACTIVE_SELECTOR =
+    "[data-field-target], .card-action-chips, .field-action-bar, .field-phase-strip, .field-end-turn, .floating-field-window, .duel-field-hand-band";
+
+  function chainPassChoice(): InteractionChoice | null {
+    if (spec === null || spec.promptKind !== "chain") return null;
+    for (const choice of spec.globalChoices.values())
+      if (choice.action === "pass") return choice;
+    return null;
+  }
+
+  function dismissOnOutsideClick(event: MouseEvent): void {
+    if (spec === null || pending) return;
+    /* ADR-017: while the confirm window is up, a live decision is on screen.
+       An incidental click anywhere on the field must never answer it — not
+       with a cancel, not with a chain pass. The window's own Cancel/Pass
+       controls stay the only way out. */
+    if (actionBarVisible) return;
+    /* T16: in target mode the list window owns the live decision the same way
+       the confirm window does, so an incidental field click must not cancel
+       it. Closing the list only hides it. */
+    if (targetLaunchers.size > 0) return;
+    const pass = chainPassChoice();
+    if (pass !== null) {
+      const origin = event.target;
+      if (
+        origin instanceof Element &&
+        origin.closest(INTERACTIVE_SELECTOR) !== null
+      )
+        return;
+      dispatch({ type: "chooseChoice", choiceId: pass.id });
+      return;
+    }
+    if (!spec.constraints.cancelable) return;
+    /* A `single`-family prompt rejects an empty response outright
+       (`validatePromptSelection` requires exactly one choice for it, even when
+       the prompt is cancelable), so cancelling one would only raise
+       `invalid_response`. Chain prompts are the live example: they are
+       `single` and cancelable at the same time. T11 gives them their own
+       outside-click behaviour. */
+    if (spec.constraints.controlFamily === "single") return;
+    const origin = event.target;
+    if (
+      origin instanceof Element &&
+      origin.closest(INTERACTIVE_SELECTOR) !== null
+    )
+      return;
+    dispatch({ type: "cancel" });
   }
 
   /* The halo is a local guess at where the engine might accept this card. It
      is presentation only and never gates a response: the follow-up place
-     prompt stays authoritative. */
-  function startCardDrag(card: BoardCardView): void {
+     prompt stays authoritative. The ghost is presentation only too — it
+     never delays or authorizes the single placement intent + chooseChoice
+     dispatch in `endCardDrag`, it only starts springing after that fires. */
+  function startCardDrag(card: BoardCardView, origin: CardDragOrigin): void {
     if (spec === null || spec.kind !== "cardAction") return;
     if (card.zoneId !== "p0:hand") return;
     const candidates = new SvelteSet<PhysicalZoneId>();
@@ -308,35 +455,190 @@
     }
     dragCard = card;
     dropCandidates = candidates;
+    dropHoveredZoneId = null;
+    /* A new drag always wins over a settle still in flight for the previous
+       card ("new drag first cancels prior settle"). */
+    cancelGhostFrame();
+    ghostOrigin = origin;
+    ghostPreviousSample = origin.pointer;
+    ghostLatestSample = null;
+    ghostSettleTarget = null;
+    ghostSettleElapsedMs = 0;
+    ghostPhase = "dragging";
+    ghostFrame = Object.freeze({
+      x: origin.pointer.x - origin.pointerOffsetX,
+      y: origin.pointer.y - origin.pointerOffsetY,
+      velocityX: 0,
+      velocityY: 0,
+      tiltDegrees: 0,
+    });
   }
 
-  /* Deliberately inert: the halo does not track the pointer in this slice, so
-     a drag does no per-move DOM work. The signature stays so the gesture can
-     grow a follower later without touching CardControl. */
+  /* Coalescing: stores the latest sample and asks for a frame only when none
+     is already pending, so a burst of pointermove events never stacks up
+     more than one rAF callback. */
   function moveCardDrag(x: number, y: number): void {
-    void x;
-    void y;
+    if (ghostPhase !== "dragging") return;
+    ghostLatestSample = { x, y, timeMs: performance.now() };
+    scheduleGhostFrame();
+    /* Reuses the existing hit test, run here (a pointermove handler) rather
+       than inside the rAF ghost loop, so hovering the emphasis never adds a
+       second hit-testing implementation or a layout read per animation
+       frame. Leaving every candidate (pointer over no zone, or a zone that
+       is not a legal candidate) clears the emphasis. */
+    const zoneId = zoneIdAtPoint(x, y);
+    dropHoveredZoneId =
+      zoneId !== null && dropCandidates.has(zoneId) ? zoneId : null;
   }
 
+  function scheduleGhostFrame(): void {
+    if (ghostRafHandle !== null) return;
+    ghostRafHandle = requestAnimationFrame(tickGhostFrame);
+  }
+
+  function cancelGhostFrame(): void {
+    if (ghostRafHandle !== null) {
+      cancelAnimationFrame(ghostRafHandle);
+      ghostRafHandle = null;
+    }
+  }
+
+  function tickGhostFrame(now: number): void {
+    ghostRafHandle = null;
+    if (ghostPhase === "dragging") {
+      const sample = ghostLatestSample;
+      const previous = ghostPreviousSample;
+      const origin = ghostOrigin;
+      const frame = ghostFrame;
+      if (
+        sample === null ||
+        previous === null ||
+        origin === null ||
+        frame === null
+      )
+        return;
+      ghostFrame = effectiveReducedMotion
+        ? Object.freeze({
+            x: sample.x - origin.pointerOffsetX,
+            y: sample.y - origin.pointerOffsetY,
+            velocityX: 0,
+            velocityY: 0,
+            tiltDegrees: 0,
+          })
+        : dragFrameForPointer(frame, previous, sample, origin);
+      ghostPreviousSample = sample;
+      return;
+    }
+    if (ghostPhase === "settling") {
+      const target = ghostSettleTarget;
+      const frame = ghostFrame;
+      if (target === null || frame === null) {
+        removeGhost();
+        return;
+      }
+      const elapsedMs = ghostLastTickMs === 0 ? 16 : now - ghostLastTickMs;
+      ghostLastTickMs = now;
+      ghostSettleElapsedMs += elapsedMs;
+      ghostFrame = settleDragGhostFrame(frame, target, elapsedMs);
+      if (
+        dragGhostSettled(ghostFrame, target) ||
+        ghostSettleElapsedMs >= DRAG_SETTLE_TIMEOUT_MS
+      ) {
+        removeGhost();
+        return;
+      }
+      scheduleGhostFrame();
+    }
+  }
+
+  function removeGhost(): void {
+    cancelGhostFrame();
+    ghostOrigin = null;
+    ghostFrame = null;
+    ghostPhase = "idle";
+    ghostSettleTarget = null;
+    ghostSettleElapsedMs = 0;
+    ghostLastTickMs = 0;
+    ghostLatestSample = null;
+    ghostPreviousSample = null;
+  }
+
+  function cancelDragGhostOnPromptChange(
+    value: ActiveInteractionSpec | null,
+  ): void {
+    const key = value?.key.promptId ?? null;
+    if (key === ghostPromptKey) return;
+    ghostPromptKey = key;
+    if (ghostOrigin !== null) removeGhost();
+  }
+
+  /* The ghost's home/target rect is read live from the DOM only here, at
+     release — never on every animation frame — because the hand viewport can
+     scroll under a long drag (T8). */
   function endCardDrag(x: number, y: number): void {
     const card = dragCard;
     const candidates = dropCandidates;
+    const origin = ghostOrigin;
     dragCard = null;
     dropCandidates = EMPTY_ZONE_IDS;
-    if (card === null || spec === null) return;
+    dropHoveredZoneId = null;
+    if (card === null || spec === null || origin === null) {
+      removeGhost();
+      return;
+    }
     /* `pointercancel` reports NaN: the gesture was abandoned, not dropped. */
-    if (Number.isNaN(x) || Number.isNaN(y)) return;
-    const zoneId = zoneIdAtPoint(x, y);
-    if (zoneId === null || !candidates.has(zoneId)) return;
-    const zone = board.zones.find((value) => value.id === zoneId);
-    if (zone === undefined) return;
-    const choice = dropChoiceForZone(
-      zone,
-      spec.cardChoices.get(card.targetId) ?? [],
-    );
-    if (choice === null) return;
-    onplacementintent(zone.id);
-    dispatch({ type: "chooseChoice", choiceId: choice.id });
+    const cancelled = Number.isNaN(x) || Number.isNaN(y);
+    let target: { readonly x: number; readonly y: number } | null = null;
+    if (!cancelled) {
+      const zoneId = zoneIdAtPoint(x, y);
+      if (zoneId !== null && candidates.has(zoneId)) {
+        const zone = board.zones.find((value) => value.id === zoneId);
+        const choice =
+          zone === undefined
+            ? null
+            : dropChoiceForZone(
+                zone,
+                spec.cardChoices.get(card.targetId) ?? [],
+              );
+        if (zone !== undefined && choice !== null) {
+          /* Exactly one placement intent + one chooseChoice, dispatched before
+             any ghost animation starts — the spring never delays or
+             authorizes this. */
+          onplacementintent(zone.id);
+          dispatch({ type: "chooseChoice", choiceId: choice.id });
+          const zoneElement = fieldRoot.querySelector<HTMLElement>(
+            `[data-zone-id="${zone.id}"]`,
+          );
+          const rect = zoneElement?.getBoundingClientRect();
+          if (rect !== undefined) {
+            target = {
+              x: rect.left + rect.width / 2 - origin.width / 2,
+              y: rect.top + rect.height / 2 - origin.height / 2,
+            };
+          }
+        }
+      }
+    }
+    if (target === null) {
+      const sourceElement = fieldRoot.querySelector<HTMLElement>(
+        `[data-card-id="${card.id}"]`,
+      );
+      const rect = sourceElement?.getBoundingClientRect();
+      target =
+        rect === undefined
+          ? { x: origin.sourceLeft, y: origin.sourceTop }
+          : { x: rect.left, y: rect.top };
+    }
+    if (effectiveReducedMotion) {
+      removeGhost();
+      return;
+    }
+    cancelGhostFrame();
+    ghostPhase = "settling";
+    ghostSettleTarget = target;
+    ghostSettleElapsedMs = 0;
+    ghostLastTickMs = 0;
+    scheduleGhostFrame();
   }
 
   /* Never trust the topmost element: action chips sit above the zones and can
@@ -348,6 +650,161 @@
     const zoneElement = hit.closest("[data-zone-id]");
     if (zoneElement === null) return null;
     return zoneElement.getAttribute("data-zone-id") as PhysicalZoneId | null;
+  }
+
+  function browsedStack(
+    state: ZoneListState,
+    value: BoardViewModel,
+  ): BoardStackView | null {
+    if (state === null || state.mode !== "browse") return null;
+    return value.stacks.find((stack) => stack.id === state.stackId) ?? null;
+  }
+
+  function promptKeyOf(value: ActiveInteractionSpec | null): string | null {
+    return value === null
+      ? null
+      : `${value.key.workerGeneration}:${value.key.sessionGeneration}:${value.key.promptId}`;
+  }
+
+  /* Every mounted control that can reopen the target list: the pile or hand
+     card that also carries one of the off-field choices. */
+  function targetLauncherIds(
+    value: ActiveInteractionSpec | null,
+  ): ReadonlySet<BoardTargetId> {
+    const launchers = new SvelteSet<BoardTargetId>();
+    if (value === null || value.kind !== "cardSelection") return launchers;
+    const offField = new SvelteSet(value.offFieldChoices.map(({ id }) => id));
+    if (offField.size === 0) return launchers;
+    for (const [targetId, choices] of [
+      ...value.cardChoices,
+      ...value.stackChoices,
+    ]) {
+      if (choices.some(({ id }) => offField.has(id))) launchers.add(targetId);
+    }
+    return launchers;
+  }
+
+  /* One auto-open per prompt: a replacement prompt closes whatever was open,
+     and a prompt that has off-field targets opens its list once. */
+  function synchronizeZoneList(
+    value: ActiveInteractionSpec | null,
+    targets: readonly OffFieldTargetEntry[],
+  ): void {
+    const key = promptKeyOf(value);
+    if (key !== lastPromptKey) {
+      lastPromptKey = key;
+      zoneListState = null;
+      outsideDismissedTargetId = null;
+      dismissedTargetPromptKey = null;
+      activeWindowId = null;
+    }
+    if (key === null || targets.length === 0) return;
+    if (zoneListState === null && dismissedTargetPromptKey !== key) {
+      zoneListState = { mode: "target", promptKey: key };
+      activateWindow("zoneList");
+    }
+  }
+
+  function toggleTargetList(): void {
+    const key = promptKeyOf(spec);
+    if (key === null) return;
+    if (zoneListState?.mode === "target") {
+      dismissedTargetPromptKey = key;
+      closeZoneList();
+      return;
+    }
+    dismissedTargetPromptKey = null;
+    zoneListState = { mode: "target", promptKey: key };
+    activateWindow("zoneList");
+  }
+
+  function activateStack(stack: BoardStackView): void {
+    if (outsideDismissedTargetId === stack.targetId) {
+      outsideDismissedTargetId = null;
+      return;
+    }
+    outsideDismissedTargetId = null;
+    if (targetLaunchers.has(stack.targetId)) {
+      toggleTargetList();
+      return;
+    }
+    zoneListState =
+      zoneListState?.mode === "browse" && zoneListState.stackId === stack.id
+        ? null
+        : { mode: "browse", stackId: stack.id };
+    if (zoneListState !== null) activateWindow("zoneList");
+  }
+
+  function activateWindow(id: FieldWindowId): void {
+    activeWindowId = id;
+  }
+
+  function closeZoneList(): void {
+    zoneListState = null;
+    if (activeWindowId === "zoneList") activeWindowId = null;
+  }
+
+  /* Closing hides the list only; the draft selection stays untouched and any
+     launcher reopens it. */
+  function dismissZoneList(event?: Event): void {
+    /* R1/F3: when every off-field choice failed to mount a launcher (opponent
+       hand addresses, which the projector emits as placeholders), this window
+       is the only surface that can answer the prompt. Hiding it would set
+       `dismissedTargetPromptKey`, which `synchronizeZoneList` then honours
+       forever, so the decision would have no surface at all. */
+    if (zoneListState?.mode === "target" && targetLaunchers.size === 0) return;
+    const origin = event?.target;
+    const pressed =
+      origin instanceof Element
+        ? (origin
+            .closest("[data-field-target]")
+            ?.getAttribute("data-field-target") as BoardTargetId | null)
+        : null;
+    /* A mounted target of the same prompt is part of this decision, not
+       outside it: selecting one must not hide the window that carries the
+       shared counter and Confirm. Its launchers still toggle the list. */
+    if (
+      zoneListState?.mode === "target" &&
+      pressed !== null &&
+      !targetLaunchers.has(pressed) &&
+      isMountedDecisionTarget(pressed)
+    ) {
+      return;
+    }
+    outsideDismissedTargetId =
+      pressed !== null && isZoneListLauncher(pressed) ? pressed : null;
+    if (zoneListState?.mode === "target")
+      dismissedTargetPromptKey = zoneListState.promptKey;
+    closeZoneList();
+  }
+
+  function isMountedDecisionTarget(targetId: BoardTargetId): boolean {
+    return (
+      spec !== null &&
+      (spec.cardChoices.has(targetId) || spec.zoneChoices.has(targetId))
+    );
+  }
+
+  /* Only the control that renders the open list swallows the click that
+     dismissed it; pressing any other pile still opens that pile. */
+  function isZoneListLauncher(targetId: BoardTargetId): boolean {
+    const state = zoneListState;
+    if (state === null) return false;
+    return state.mode === "browse"
+      ? board.stacks.some(
+          (stack) => stack.id === state.stackId && stack.targetId === targetId,
+        )
+      : targetLaunchers.has(targetId);
+  }
+
+  /* One response per decision: the same reducer the mounted controls use.
+     Exact one-of-one submits on click, everything else drafts a toggle that
+     the list's own Confirm submits. */
+  function chooseTargetChoice(choice: InteractionChoice): void {
+    if (spec === null) return;
+    if (isImmediateSingleSelection(spec))
+      dispatch({ type: "chooseChoice", choiceId: choice.id });
+    else dispatch({ type: "toggleChoice", choiceId: choice.id });
   }
 
   function targetSelections(
@@ -366,73 +823,138 @@
   }
 </script>
 
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions (outside-click cancel is a passive surface handler; interactive controls inside it own all keyboard/pointer semantics) -->
+<!-- svelte-ignore a11y_click_events_have_key_events (outside-click cancel has no keyboard equivalent to mirror; every actionable control keeps its own key handling) -->
 <section
   class="duel-field"
   aria-label="Duel field"
   bind:this={fieldRoot}
   data-cy="duel-field"
-  data-field-action-bar={actionBarVisible ? "true" : undefined}
   data-dragging={dragCard === null ? undefined : "true"}
   data-prompt-kind={prompt === null ? undefined : prompt.kind}
-  style:--field-action-bar-height={actionBarVisible
-    ? `${actionBarHeight}px`
-    : undefined}
+  onclick={dismissOnOutsideClick}
 >
-  <FieldBoard
-    {board}
-    {imageUrls}
-    {imageLibrary}
-    cardBackUrl={resolvedCardBackUrl}
-    placeholderUrl={resolvedPlaceholderUrl}
-    {spec}
-    {selectedTargets}
-    disabled={pending}
-    pinnedTarget={session.menuTarget}
-    {dropCandidates}
-    oncardactivate={activateCard}
-    onzoneactivate={activateZone}
-    oncardchoose={(choice) => {
-      dispatch({ type: "chooseChoice", choiceId: choice.id });
-    }}
-    oncarddismiss={() => dispatch({ type: "closeMenu" })}
-    oncarddragstart={startCardDrag}
-    oncarddragmove={moveCardDrag}
-    oncarddragend={endCardDrag}
-    oncardpreview={onpreview}
-  />
-  <FieldStatusPills {hasPriority} {phase} />
-  {#if lifePoints !== null}
-    <LifePointsPill player={1} lifePoints={lifePoints[1]} />
-    <LifePointsPill player={0} lifePoints={lifePoints[0]} />
+  <!-- The board pans inside its own scroll child so `.duel-field` itself
+       stays a still, non-scrolling boundary for the floating windows: a
+       horizontal board pan must never carry a live decision offscreen
+       (ADR-017). The stage keeps its natural (board aspect-ratio-driven)
+       size inside it, which is the coordinate system PhaseStrip's
+       percentages are calibrated against. -->
+  <div class="duel-field-scroll-region" data-cy="duel-field-scroll-region">
+    <div class="duel-field-stage" data-cy="duel-field-stage">
+      <FieldBoard
+        {board}
+        {imageUrls}
+        {imageLibrary}
+        cardBackUrl={resolvedCardBackUrl}
+        placeholderUrl={resolvedPlaceholderUrl}
+        {spec}
+        {selectedTargets}
+        disabled={pending}
+        pinnedTarget={session.menuTarget}
+        {dropCandidates}
+        {dropHoveredZoneId}
+        oncardactivate={activateCard}
+        onzoneactivate={activateZone}
+        oncardchoose={(choice) => {
+          dispatch({ type: "chooseChoice", choiceId: choice.id });
+        }}
+        oncarddismiss={() => dispatch({ type: "closeMenu" })}
+        oncarddragstart={startCardDrag}
+        oncarddragmove={moveCardDrag}
+        oncarddragend={endCardDrag}
+        oncardpreview={onpreview}
+        {onstackpreview}
+        onstackactivate={activateStack}
+      />
+      <PhaseStrip
+        {phase}
+        {spec}
+        disabled={pending}
+        {extraMonsterZones}
+        {oninteraction}
+      />
+    </div>
+  </div>
+  {#if ghostOrigin !== null && ghostFrame !== null}
+    <DragGhost
+      frame={ghostFrame}
+      origin={ghostOrigin}
+      settling={ghostPhase === "settling"}
+      reducedMotion={effectiveReducedMotion}
+    />
+  {/if}
+  {#if targetListOpen && spec !== null}
+    <ZoneListDialog
+      mode="target"
+      title={spec.title}
+      targetEntries={offFieldTargets}
+      selectedChoiceIds={session.selectedChoiceIds}
+      minimum={spec.constraints.minimum}
+      maximum={spec.constraints.maximum}
+      confirmValid={validation.valid}
+      validationMessage={validation.valid ? "" : validation.message}
+      cancelable={spec.constraints.cancelable}
+      {imageLibrary}
+      cardBackUrl={resolvedCardBackUrl}
+      placeholderUrl={resolvedPlaceholderUrl}
+      disabled={pending}
+      boundaryElement={fieldRoot}
+      windowPosition={zoneListWindowPosition}
+      active={activeWindowId === "zoneList"}
+      onactivate={activateWindow}
+      onwindowpositionchange={onzoneListWindowPositionChange}
+      ontargetchoice={chooseTargetChoice}
+      onconfirm={() => dispatch({ type: "confirm" })}
+      oncancel={() => dispatch({ type: "cancel" })}
+      onpreview={(entry) => onzonelistpreview(entry)}
+      onclose={dismissZoneList}
+    />
+  {:else if openStack !== null}
+    <ZoneListDialog
+      stack={openStack}
+      entries={zoneLists.get(openStack.id) ?? []}
+      choices={spec?.stackChoices.get(openStack.targetId) ?? []}
+      {imageLibrary}
+      cardBackUrl={resolvedCardBackUrl}
+      placeholderUrl={resolvedPlaceholderUrl}
+      disabled={pending}
+      boundaryElement={fieldRoot}
+      windowPosition={zoneListWindowPosition}
+      active={activeWindowId === "zoneList"}
+      onactivate={activateWindow}
+      onwindowpositionchange={onzoneListWindowPositionChange}
+      onchoose={(choice) => {
+        dispatch({ type: "chooseChoice", choiceId: choice.id });
+        closeZoneList();
+      }}
+      onpreview={(entry) => onzonelistpreview(entry)}
+      onclose={dismissZoneList}
+    />
+  {/if}
+  {#if actionBarVisible && prompt && spec}
+    <FloatingFieldWindow
+      windowId="confirm"
+      ariaLabel="Field decision window"
+      boundaryElement={fieldRoot}
+      position={confirmWindowPosition}
+      active={activeWindowId === "confirm"}
+      disabled={pending}
+      onactivate={activateWindow}
+      onpositionchange={onconfirmWindowPositionChange}
+    >
+      <span slot="handle" data-cy="field-confirm-window-title">Decision</span>
+      <FieldActionBar
+        {spec}
+        {session}
+        disabled={pending}
+        confirmValid={validation.valid}
+        validationMessage={validation.valid ? "" : validation.message}
+        {oninteraction}
+      />
+    </FloatingFieldWindow>
   {/if}
   {#if feedbackState.line}
     <FieldLines line={feedbackState.line} />
   {/if}
-  {#if feedbackState.kind !== null}
-    <p
-      class="duel-field-feedback"
-      class:is-life-points={feedbackState.kind === "life-points"}
-      class:is-chain={feedbackState.kind === "chain"}
-      role="status"
-      aria-live="polite"
-      data-feedback-kind={feedbackState.kind}
-      data-feedback-duration={feedbackState.durationMs}
-      data-cy="duel-field-feedback"
-    >
-      {feedbackState.label}
-    </p>
-  {/if}
-  {#if actionBarVisible && prompt && spec}
-    <FieldActionBar
-      {prompt}
-      {spec}
-      {session}
-      disabled={pending}
-      confirmValid={validation.valid}
-      validationMessage={validation.valid ? "" : validation.message}
-      bind:clientHeight={actionBarHeight}
-      {oninteraction}
-    />
-  {/if}
-  <EndTurnButton {spec} disabled={pending} {oninteraction} />
 </section>

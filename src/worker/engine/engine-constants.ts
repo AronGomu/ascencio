@@ -27,6 +27,9 @@ export const EnginePosition = {
 export const EngineDuelFlag = {
   ATTACK_FIRST_TURN: 0x02n,
   PSEUDO_SHUFFLE: 0x10n,
+  /** Pinned `OcgDuelMode.MODE_MR3`: no Extra Monster Zones. */
+  MODE_MR3: 0xd1800n,
+  /** Pinned `OcgDuelMode.MODE_MR5`: shared Extra Monster Zones. */
   MODE_MR5: 0x2e800n,
 } as const;
 
@@ -61,8 +64,14 @@ export const EngineMessageType = {
   SELECT_DISABLED_FIELD: 24,
   SORT_CARD: 25,
   SELECT_UNSELECT_CARD: 26,
+  CONFIRM_DECKTOP: 30,
+  CONFIRM_CARDS: 31,
   SHUFFLE_DECK: 32,
   SHUFFLE_HAND: 33,
+  SWAP_GRAVE_DECK: 35,
+  SHUFFLE_SET_CARD: 36,
+  REVERSE_DECK: 37,
+  DECK_TOP: 38,
   NEW_TURN: 40,
   NEW_PHASE: 41,
   MOVE: 50,

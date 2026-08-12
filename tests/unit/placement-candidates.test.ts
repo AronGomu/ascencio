@@ -14,6 +14,7 @@ import {
   type BoardViewModel,
 } from "../../src/field/board-view-model.ts";
 import { placementZoneCandidates } from "../../src/field/placement-candidates.ts";
+import { deckSlots } from "../fixtures/board-public-states.ts";
 
 function occupant(
   location: "monster" | "spellTrap" | "field",
@@ -38,6 +39,7 @@ function player(index: 0 | 1): PublicPlayerState {
     player: index,
     lifePoints: 8000,
     deckCount: 35,
+    deck: deckSlots(index, 35),
     extraDeckCount: 0,
     handCount: 0,
     hand: [],
@@ -58,6 +60,7 @@ function boardWith(occupants: readonly PublicCard[]): BoardViewModel {
     turn: 1,
     turnPlayer: 0,
     phase: "main1",
+    layout: { extraMonsterZones: true },
     players: [
       {
         ...player(0),

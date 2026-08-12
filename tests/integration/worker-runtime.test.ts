@@ -2,10 +2,64 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { choiceId, duelId } from "../../src/duel/contracts/ids.ts";
+import { choiceId, duelId, snapshotId } from "../../src/duel/contracts/ids.ts";
+import { uniqueDeckCodes } from "../../src/duel/presets/deck-parser.ts";
+import { loadDeckSources } from "../../src/duel/presets/deck-sources-node.ts";
+import { createDuelPreset } from "../../src/duel/presets/duel-preset.ts";
+import { TYPE_LINK } from "../../src/duel/presets/duel-rules-profile.ts";
+import { loadActiveDuelDependenciesNode } from "../../src/worker/assets/active-duel-dependencies-node.ts";
 import { createNodeDuelWorkerRuntime } from "../../src/worker/create-node-runtime.ts";
+import { DuelWorkerRuntime } from "../../src/worker/DuelWorkerRuntime.ts";
+import { loadVendoredCoreNode } from "../../src/worker/engine/load-vendored-core-node.ts";
 
 describe("typed duel Worker runtime", () => {
+  /* Every bundled deck pair is Link-free, so a hard-coded MR3 layout would
+     satisfy each assertion below. One synthetic Link-typed catalog entry for a
+     card the selected pair actually plays is the only falsifiable proof that
+     the profile is computed from the pair and reaches the projected snapshot. */
+  it("projects the Link profile when the selected pair plays a Link monster", async () => {
+    const adapter = await loadVendoredCoreNode();
+    const deckSources = await loadDeckSources();
+    const preset = createDuelPreset("mvp-player", "mvp-opponent", deckSources);
+    const dependencies = await loadActiveDuelDependenciesNode(
+      path.resolve("generated/assets/current"),
+      uniqueDeckCodes(preset.player, preset.opponent),
+    );
+    const linkCode = preset.player.main[0];
+    const catalogEntry =
+      linkCode === undefined ? undefined : dependencies.cards.get(linkCode);
+    if (linkCode === undefined || catalogEntry === undefined)
+      throw new Error("Expected a catalog entry for the first main-deck card");
+    const cards = new Map(dependencies.cards);
+    cards.set(linkCode, {
+      ...catalogEntry,
+      type: catalogEntry.type | TYPE_LINK,
+    });
+
+    const runtime = new DuelWorkerRuntime(async () => ({
+      adapter,
+      dependencies: { ...dependencies, cards },
+      createPreset: () => preset,
+      snapshotId: snapshotId("a".repeat(64)),
+    }));
+    try {
+      await runtime.handle({ type: "initialize" });
+      const started = await runtime.handle({
+        type: "startDuel",
+        duelId: duelId(preset.id),
+        playerDeckId: "mvp-player",
+        opponentDeckId: "mvp-opponent",
+      });
+      expect(
+        started.flatMap((event) =>
+          event.type === "state" ? [event.state.layout] : [],
+        ),
+      ).toContainEqual({ extraMonsterZones: true });
+    } finally {
+      runtime.dispose();
+    }
+  });
+
   it("classifies a missing runtime snapshot during initialization", async () => {
     const runtime = createNodeDuelWorkerRuntime(
       path.resolve("tests/fixtures/missing-runtime-root"),
@@ -110,6 +164,8 @@ describe("typed duel Worker runtime", () => {
       const unknown = await runtime.handle({
         type: "startDuel",
         duelId: duelId("unknown"),
+        playerDeckId: "mvp-player",
+        opponentDeckId: "mvp-opponent",
       });
       expect(unknown).toEqual([
         expect.objectContaining({
@@ -120,9 +176,18 @@ describe("typed duel Worker runtime", () => {
 
       const started = await runtime.handle({
         type: "startDuel",
-        duelId: duelId("mvp-preset-v1"),
+        duelId: duelId("bundled-v1:mvp-player:vs:mvp-opponent"),
+        playerDeckId: "mvp-player",
+        opponentDeckId: "mvp-opponent",
       });
       expect(started.some((event) => event.type === "state")).toBe(true);
+      /* Every bundled pair is Link-free, so the worker's own profile decision
+         must reach the projected snapshot as MR3 geometry. */
+      expect(
+        started.flatMap((event) =>
+          event.type === "state" ? [event.state.layout] : [],
+        ),
+      ).toContainEqual({ extraMonsterZones: false });
       const promptEvent = started.find((event) => event.type === "prompt");
       if (promptEvent?.type !== "prompt")
         throw new Error("Expected the production duel to request human input");
@@ -150,7 +215,9 @@ describe("typed duel Worker runtime", () => {
 
       const restarted = await runtime.handle({
         type: "startDuel",
-        duelId: duelId("mvp-preset-v1"),
+        duelId: duelId("bundled-v1:mvp-player:vs:mvp-opponent"),
+        playerDeckId: "mvp-player",
+        opponentDeckId: "mvp-opponent",
       });
       const restartedPrompt = restarted.find(
         (event) => event.type === "prompt",
@@ -158,6 +225,12 @@ describe("typed duel Worker runtime", () => {
       if (restartedPrompt?.type !== "prompt")
         throw new Error("Expected the restarted duel to request human input");
       expect(restartedPrompt.prompt.id).not.toBe(promptEvent.prompt.id);
+      /* A rematch keeps the same pair, so it keeps the same profile. */
+      expect(
+        restarted.flatMap((event) =>
+          event.type === "state" ? [event.state.layout] : [],
+        ),
+      ).toContainEqual({ extraMonsterZones: false });
 
       const stale = await runtime.handle({
         type: "respond",
@@ -177,12 +250,30 @@ describe("typed duel Worker runtime", () => {
         (await runtime.handle({ type: "surrender" })).at(-1),
       ).toMatchObject({ type: "result" });
 
+      /* Changing decks recomputes the profile from the new pair. */
+      const otherPair = await runtime.handle({
+        type: "startDuel",
+        duelId: duelId("bundled-v1:shaddoll:vs:nekroz"),
+        playerDeckId: "shaddoll",
+        opponentDeckId: "nekroz",
+      });
+      expect(
+        otherPair.flatMap((event) =>
+          event.type === "state" ? [event.state.layout] : [],
+        ),
+      ).toContainEqual({ extraMonsterZones: false });
+      expect(
+        (await runtime.handle({ type: "surrender" })).at(-1),
+      ).toMatchObject({ type: "result" });
+
       const replacementRuntime = createNodeDuelWorkerRuntime();
       try {
         await replacementRuntime.handle({ type: "initialize" });
         const replacementStarted = await replacementRuntime.handle({
           type: "startDuel",
-          duelId: duelId("mvp-preset-v1"),
+          duelId: duelId("bundled-v1:mvp-player:vs:mvp-opponent"),
+          playerDeckId: "mvp-player",
+          opponentDeckId: "mvp-opponent",
         });
         const replacementPrompt = replacementStarted.find(
           (event) => event.type === "prompt",

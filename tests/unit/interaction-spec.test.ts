@@ -15,9 +15,13 @@ import {
   fieldActionBarRequired,
   INTERACTION_SPEC_KINDS,
   interactionKey,
+  isImmediateSingleSelection,
+  isPhaseTransitionChoice,
   mapPromptToInteractionSpec,
+  OFF_FIELD_TARGET_LOCATIONS,
   type ActiveInteractionSpec,
 } from "../../src/app/prompts/interaction-spec.ts";
+import type { PublicLocation } from "../../src/duel/contracts/public-duel-state.ts";
 import { validatePromptSelection } from "../../src/app/prompts/prompt-selection.ts";
 import { mapSnapshotToBoard } from "../../src/field/board-view-model.ts";
 import { BOARD_VIEW_MODEL_FIXTURES } from "../fixtures/board-view-model.ts";
@@ -54,6 +58,40 @@ function mountedCardChoice(
       location: "monster",
       sequence: 2,
       position: "faceUpAttack",
+    },
+    ...overrides,
+  });
+}
+
+function graveyardCardChoice(
+  id: ChoiceId,
+  overrides: Partial<PromptChoice> = {},
+): PromptChoice {
+  return choice(id, {
+    card: {
+      instanceId: cardInstanceId(`stack-${id}`),
+      controller: 0,
+      location: "graveyard",
+      sequence: 0,
+      position: "faceUpAttack",
+    },
+    ...overrides,
+  });
+}
+
+function offFieldCardChoice(
+  id: ChoiceId,
+  location: PublicLocation,
+  sequence = 0,
+  overrides: Partial<PromptChoice> = {},
+): PromptChoice {
+  return choice(id, {
+    card: {
+      instanceId: cardInstanceId(`offfield-${id}`),
+      controller: 0,
+      location,
+      sequence,
+      position: "faceDownDefense",
     },
     ...overrides,
   });
@@ -197,6 +235,63 @@ describe("prompt interaction spec", () => {
     expect(validatePromptSelection(value, [SECOND])).toEqual({ valid: true });
   });
 
+  it("spec collects stack choices separately", () => {
+    const spec = specFor(
+      prompt("chain", {
+        choices: [
+          graveyardCardChoice(FIRST, { action: "activate", label: "Activate" }),
+          choice(SECOND, { action: "pass" }),
+        ],
+      }),
+    );
+
+    expect(spec.stackChoices.get("stack:p0:graveyard")).toHaveLength(1);
+    expect(spec.cardChoices.size).toBe(0);
+    expect([...spec.globalChoices.values()].map(({ id }) => id)).toEqual([
+      SECOND,
+    ]);
+  });
+
+  it("stack choices now make a prompt field capable", () => {
+    const spec = specFor(
+      prompt("chain", {
+        choices: [
+          graveyardCardChoice(FIRST, { action: "activate", label: "Activate" }),
+          choice(SECOND, { action: "pass" }),
+        ],
+      }),
+    );
+
+    expect(spec.fieldCapable).toBe(true);
+  });
+
+  it("choices carry their card address", () => {
+    const spec = specFor(
+      prompt("chain", {
+        choices: [
+          choice(FIRST, {
+            action: "activate",
+            label: "Activate",
+            card: {
+              instanceId: cardInstanceId("gy-seq-2"),
+              controller: 0,
+              location: "graveyard",
+              sequence: 2,
+              position: "faceUpAttack",
+            },
+          }),
+        ],
+      }),
+    );
+
+    const choices = spec.stackChoices.get("stack:p0:graveyard");
+    expect(choices?.[0]?.cardAddress).toEqual({
+      controller: 0,
+      location: "graveyard",
+      sequence: 2,
+    });
+  });
+
   it("resolves public positional identity and routes unresolved cards to semantic fallback", () => {
     const unresolved = choiceId("closed-stack-card");
     const spec = specFor(
@@ -205,10 +300,10 @@ describe("prompt interaction spec", () => {
           mountedCardChoice(FIRST),
           choice(unresolved, {
             card: {
-              instanceId: cardInstanceId("stale-graveyard-instance"),
+              instanceId: cardInstanceId("stale-monster-instance"),
               controller: 0,
-              location: "graveyard",
-              sequence: 0,
+              location: "monster",
+              sequence: 9,
               position: "faceUpAttack",
             },
           }),
@@ -330,10 +425,194 @@ describe("prompt interaction spec", () => {
   });
 });
 
+describe("off-field target collection", () => {
+  it("names exactly the five off-field locations", () => {
+    expect([...OFF_FIELD_TARGET_LOCATIONS].sort()).toEqual([
+      "banished",
+      "deck",
+      "extra",
+      "graveyard",
+      "hand",
+    ]);
+  });
+
+  it("collects a card selection target from every off-field location", () => {
+    const locations = [
+      "hand",
+      "graveyard",
+      "deck",
+      "banished",
+      "extra",
+    ] as const;
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: locations.map((location) =>
+          offFieldCardChoice(choiceId(location), location),
+        ),
+        minimum: 1,
+        maximum: 5,
+      }),
+    );
+
+    expect(spec.offFieldChoices.map(({ id }) => id)).toEqual(
+      locations.map((location) => choiceId(location)),
+    );
+    expect(Object.isFrozen(spec.offFieldChoices)).toBe(true);
+  });
+
+  it("never collects a mounted monster, spell/trap or field target", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [
+          mountedCardChoice(FIRST),
+          offFieldCardChoice(choiceId("spell-trap"), "spellTrap"),
+          offFieldCardChoice(choiceId("field-zone"), "field"),
+        ],
+        minimum: 1,
+        maximum: 3,
+      }),
+    );
+
+    expect(spec.offFieldChoices).toEqual([]);
+  });
+
+  it("leaves a cardAction graveyard choice out of the off-field list", () => {
+    const spec = specFor(
+      prompt("chain", {
+        choices: [
+          graveyardCardChoice(FIRST, { action: "activate", label: "Activate" }),
+          choice(SECOND, { action: "pass" }),
+        ],
+      }),
+    );
+
+    expect(spec.kind).toBe("cardAction");
+    expect(spec.offFieldChoices).toEqual([]);
+    expect(spec.stackChoices.get("stack:p0:graveyard")).toHaveLength(1);
+  });
+
+  it("keeps an off-field target in its launcher map as well", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [offFieldCardChoice(FIRST, "graveyard")],
+      }),
+    );
+
+    expect(spec.offFieldChoices.map(({ id }) => id)).toEqual([FIRST]);
+    expect(
+      spec.stackChoices.get("stack:p0:graveyard")?.map(({ id }) => id),
+    ).toEqual([FIRST]);
+  });
+
+  it("keeps mounted and off-field targets of one mixed prompt side by side", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [
+          mountedCardChoice(FIRST),
+          offFieldCardChoice(SECOND, "graveyard"),
+        ],
+        minimum: 1,
+        maximum: 2,
+      }),
+    );
+
+    expect(spec.cardChoices.get("card:st08-chain-source")?.[0]?.id).toBe(FIRST);
+    expect(spec.offFieldChoices.map(({ id }) => id)).toEqual([SECOND]);
+  });
+
+  it("is field capable with an off-field target alone", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [offFieldCardChoice(FIRST, "hand", 3)],
+      }),
+    );
+
+    expect(spec.fieldCapable).toBe(true);
+  });
+
+  it("keeps choiceOrder in raw prompt order and drops only invalid choices", () => {
+    const invalid = choiceId("ambiguous");
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [
+          offFieldCardChoice(choiceId("gy"), "graveyard"),
+          malformedChoice({
+            ...mountedCardChoice(invalid),
+            place: { player: 0, location: "monster", sequence: 0 },
+          }),
+          mountedCardChoice(FIRST),
+          offFieldCardChoice(SECOND, "deck", 4),
+        ],
+        minimum: 1,
+        maximum: 3,
+      }),
+    );
+
+    expect(spec.choiceOrder).toEqual([choiceId("gy"), FIRST, SECOND]);
+    expect(Object.isFrozen(spec.choiceOrder)).toBe(true);
+  });
+});
+
 describe("fieldActionBarRequired", () => {
-  it("is required for card selection", () => {
+  it("is not required when the target list owns the confirmation", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [
+          offFieldCardChoice(FIRST, "graveyard"),
+          offFieldCardChoice(SECOND, "graveyard", 1),
+        ],
+        minimum: 1,
+        maximum: 2,
+      }),
+    );
+
+    expect(fieldActionBarRequired(spec)).toBe(false);
+  });
+
+  it("is not required for a mixed prompt either", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [
+          mountedCardChoice(FIRST),
+          offFieldCardChoice(SECOND, "banished"),
+        ],
+        minimum: 1,
+        maximum: 2,
+      }),
+    );
+
+    expect(fieldActionBarRequired(spec)).toBe(false);
+  });
+
+  /* Answerability outranks the suppression: a Finish/Cancel choice has no
+     field control of its own, so target mode must not hide its window. */
+  it("is still required when a genuine global choice accompanies the targets", () => {
+    const spec = specFor(
+      prompt("selectUnselectCard", {
+        choices: [
+          offFieldCardChoice(FIRST, "graveyard"),
+          choice(choiceId("finish"), { action: "finish", label: "Finish" }),
+        ],
+      }),
+    );
+
+    expect(fieldActionBarRequired(spec)).toBe(true);
+  });
+
+  it("is not required for an exact singleton card selection", () => {
     const spec = specFor(
       prompt("selectCard", { choices: [mountedCardChoice(FIRST)] }),
+    );
+    expect(fieldActionBarRequired(spec)).toBe(false);
+  });
+
+  it("is required for a multi card selection", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [mountedCardChoice(FIRST), mountedCardChoice(SECOND)],
+        minimum: 1,
+        maximum: 2,
+      }),
     );
     expect(fieldActionBarRequired(spec)).toBe(true);
   });
@@ -357,13 +636,45 @@ describe("fieldActionBarRequired", () => {
     expect(fieldActionBarRequired(spec)).toBe(true);
   });
 
-  it("is required for place selection", () => {
+  it("is required for a multi-place selection", () => {
     const spec = specFor(
       prompt("selectPlace", {
         choices: [
           choice(FIRST, {
             place: { player: 0, location: "monster", sequence: 0 },
           }),
+          choice(SECOND, {
+            place: { player: 0, location: "monster", sequence: 1 },
+          }),
+        ],
+        minimum: 2,
+        maximum: 2,
+      }),
+    );
+    expect(fieldActionBarRequired(spec)).toBe(true);
+  });
+
+  it("single placement needs no confirm bar", () => {
+    const spec = specFor(
+      prompt("selectPlace", {
+        choices: [
+          choice(FIRST, {
+            place: { player: 0, location: "monster", sequence: 0 },
+          }),
+        ],
+      }),
+    );
+    expect(fieldActionBarRequired(spec)).toBe(false);
+  });
+
+  it("single placement still shows the bar for global choices", () => {
+    const spec = specFor(
+      prompt("selectPlace", {
+        choices: [
+          choice(FIRST, {
+            place: { player: 0, location: "monster", sequence: 0 },
+          }),
+          choice(SECOND, { action: "pass" }),
         ],
       }),
     );
@@ -409,7 +720,7 @@ describe("fieldActionBarRequired", () => {
     expect(fieldActionBarRequired(spec)).toBe(false);
   });
 
-  it("is still required with another global choice alongside endPhase", () => {
+  it("is not required when only phase-transition globals accompany a card action", () => {
     const spec = specFor(
       prompt("idleCommand", {
         choices: [
@@ -419,10 +730,91 @@ describe("fieldActionBarRequired", () => {
             action: "battlePhase",
             label: "Enter Battle Phase",
           }),
+          choice(choiceId("main-phase-2"), {
+            action: "mainPhase2",
+            label: "Enter Main Phase 2",
+          }),
+        ],
+      }),
+    );
+    expect(fieldActionBarRequired(spec)).toBe(false);
+  });
+
+  it("is required when a genuine global choice accompanies the phase transitions", () => {
+    const spec = specFor(
+      prompt("idleCommand", {
+        choices: [
+          mountedCardChoice(FIRST),
+          choice(SECOND, { action: "endPhase", label: "End turn" }),
+          choice(choiceId("battle-phase"), {
+            action: "battlePhase",
+            label: "Enter Battle Phase",
+          }),
+          choice(choiceId("pass"), { action: "pass", label: "Pass" }),
         ],
       }),
     );
     expect(fieldActionBarRequired(spec)).toBe(true);
+  });
+});
+
+describe("isImmediateSingleSelection", () => {
+  it("is true for an exact 1/1 constraint", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [mountedCardChoice(FIRST)],
+        minimum: 1,
+        maximum: 1,
+      }),
+    );
+    expect(isImmediateSingleSelection(spec)).toBe(true);
+  });
+
+  it("is false for 0/1", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [mountedCardChoice(FIRST)],
+        minimum: 0,
+        maximum: 1,
+      }),
+    );
+    expect(isImmediateSingleSelection(spec)).toBe(false);
+  });
+
+  it("is false for 1/2", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [mountedCardChoice(FIRST), mountedCardChoice(SECOND)],
+        minimum: 1,
+        maximum: 2,
+      }),
+    );
+    expect(isImmediateSingleSelection(spec)).toBe(false);
+  });
+
+  it("is false for 2/2", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [mountedCardChoice(FIRST), mountedCardChoice(SECOND)],
+        minimum: 2,
+        maximum: 2,
+      }),
+    );
+    expect(isImmediateSingleSelection(spec)).toBe(false);
+  });
+});
+
+describe("isPhaseTransitionChoice", () => {
+  it("is true for battlePhase, mainPhase2 and endPhase", () => {
+    expect(isPhaseTransitionChoice({ action: "battlePhase" })).toBe(true);
+    expect(isPhaseTransitionChoice({ action: "mainPhase2" })).toBe(true);
+    expect(isPhaseTransitionChoice({ action: "endPhase" })).toBe(true);
+  });
+
+  it("is false for attack, select and pass", () => {
+    expect(isPhaseTransitionChoice({ action: "attack" })).toBe(false);
+    expect(isPhaseTransitionChoice({ action: "select" })).toBe(false);
+    expect(isPhaseTransitionChoice({ action: "pass" })).toBe(false);
   });
 });
 

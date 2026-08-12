@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { DECK_CATALOG } from "../../src/duel/presets/deck-catalog.ts";
 import {
   parseYdk,
   uniqueDeckCodes,
@@ -25,19 +26,15 @@ export async function resolveActiveRuntimeFiles(
       ) as T;
     },
   };
-  const [playerSource, opponentSource] = await Promise.all([
-    readFile(
-      path.join(projectRoot, "src/duel/presets/decks/player.ydk"),
-      "utf8",
+  const deckSources = await Promise.all(
+    DECK_CATALOG.map(({ fileName }) =>
+      readFile(
+        path.join(projectRoot, "src/duel/presets/decks", fileName),
+        "utf8",
+      ),
     ),
-    readFile(
-      path.join(projectRoot, "src/duel/presets/decks/opponent.ydk"),
-      "utf8",
-    ),
-  ]);
-  await loadActiveDuelDependencies(
-    reader,
-    uniqueDeckCodes(parseYdk(playerSource), parseYdk(opponentSource)),
   );
+  const parsedDecks = deckSources.map(parseYdk);
+  await loadActiveDuelDependencies(reader, uniqueDeckCodes(...parsedDecks));
   return Object.freeze([...requested].sort());
 }

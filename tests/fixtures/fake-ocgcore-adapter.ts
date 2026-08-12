@@ -54,6 +54,7 @@ export interface FakeOcgCoreAdapterOptions {
 export interface FakeOcgCoreAdapterHarness {
   readonly adapter: OcgCoreAdapter;
   readonly counters: FakeCoreCounters;
+  readonly createdDuelOptions: readonly EngineDuelOptions[];
   readonly cardQueries: readonly EngineCardQuery[];
   readonly locationQueries: readonly EngineLocationQuery[];
   readonly activeHandles: () => number;
@@ -108,6 +109,7 @@ export async function createFakeOcgCoreAdapter(
   options: FakeOcgCoreAdapterOptions = {},
 ): Promise<FakeOcgCoreAdapterHarness> {
   const counters: FakeCoreCounters = { createDuel: 0, destroyDuel: 0 };
+  const createdDuelOptions: EngineDuelOptions[] = [];
   const cardQueries: EngineCardQuery[] = [];
   const locationQueries: EngineLocationQuery[] = [];
   const handles = new Map<EngineDuelHandle, FakeHandleState>();
@@ -117,6 +119,7 @@ export async function createFakeOcgCoreAdapter(
     getVersion: () => [11, 0] as const,
     createDuel: (duelOptions: EngineDuelOptions) => {
       counters.createDuel += 1;
+      createdDuelOptions.push(duelOptions);
       if (options.createDiagnostic !== undefined) {
         duelOptions.errorHandler?.(
           options.createDiagnostic.type,
@@ -185,6 +188,7 @@ export async function createFakeOcgCoreAdapter(
   return {
     adapter,
     counters,
+    createdDuelOptions,
     cardQueries,
     locationQueries,
     activeHandles: () => handles.size,

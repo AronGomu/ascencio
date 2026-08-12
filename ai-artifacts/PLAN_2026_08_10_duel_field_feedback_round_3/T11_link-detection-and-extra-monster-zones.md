@@ -193,4 +193,4 @@ E2E default pair: no shared nodes; continuous phase controls have uniform adjace
 - [ ] manual default pair: no EMZ, continuous phase strip, no inaccessible choice — criterion: manual browser session (manual checklist)
 - [x] synthetic Link fixture: MR5, both EMZs, split strip — criterion: `duel-field.test.ts` Link profile keeps 34 zones/two shared, `DuelField.test.ts` keeps two shared zone nodes plus split strip, `PhaseStrip.test.ts` split groups
 - [ ] app functional — engine legality, projected profile, rendered zones agree — criterion: manual browser session (manual checklist)
-- [x] commit msg draft: `feat(field): align conditional extra zones with engine rules` — criterion: commit `53188cf` created with that exact subject
+- [x] commit msg draft: `feat(field): align conditional extra zones with engine rules` — criterion: commit `033af59` created with that exact subject

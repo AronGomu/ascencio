@@ -10,6 +10,7 @@
     phaseSlotForDuelPhase,
     type PhaseSlot,
   } from "../../prompts/phase-transitions.ts";
+  import EndTurnButton from "./EndTurnButton.svelte";
 
   export let phase: DuelPhase = "unknown";
   export let spec: ActiveInteractionSpec | null = null;
@@ -45,6 +46,7 @@
   data-cy="field-phase-strip"
   role="group"
   aria-label="Duel phases"
+  data-current-phase={currentSlot ?? undefined}
 >
   <div
     class="field-phase-strip__group field-phase-strip__group--left"
@@ -89,5 +91,6 @@
         {PHASE_SLOT_LABELS[slot]}
       </svelte:element>
     {/each}
+    <EndTurnButton {spec} {disabled} {oninteraction} />
   </div>
 </div>

@@ -101,19 +101,91 @@ function endOfferedSpec(): ActiveInteractionSpec {
   );
 }
 
+function battleAndEndOfferedSpec(): ActiveInteractionSpec {
+  return specFor(
+    fieldPrompt("idleCommand", [
+      mountedChoice("activate", "Activate"),
+      promptChoice("battle", "Enter Battle Phase", { action: "battlePhase" }),
+      promptChoice("end", "End turn", { action: "endPhase" }),
+    ]),
+  );
+}
+
 describe("PhaseStrip", () => {
-  it("renders six chips", () => {
+  it("renders five phase chips and one End turn button", () => {
     render(PhaseStrip, { phase: "main1", spec: null, oninteraction: vi.fn() });
 
-    for (const slot of ["draw", "standby", "main1", "battle", "main2", "end"])
+    for (const slot of ["draw", "standby", "main1", "battle", "main2"])
       expect(
         document.querySelector(`[data-cy="field-phase-chip-${slot}"]`),
       ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="field-phase-chip-end"]'),
+    ).toBeNull();
+
+    const endButton = document.querySelector(
+      '[data-cy="field-end-turn-button"]',
+    ) as HTMLButtonElement | null;
+    expect(endButton).not.toBeNull();
+    expect(endButton?.disabled).toBe(true);
+  });
+
+  it("places Battle in left and Main 2 plus End in right", () => {
+    render(PhaseStrip, { phase: "main1", spec: null, oninteraction: vi.fn() });
 
     const left = document.querySelector('[data-cy="field-phase-strip-left"]');
     const right = document.querySelector('[data-cy="field-phase-strip-right"]');
-    expect(left?.children.length).toBe(3);
-    expect(right?.children.length).toBe(3);
+    expect(left?.children.length).toBe(4);
+    expect(right?.children.length).toBe(2);
+    expect(right?.children[0]?.getAttribute("data-cy")).toBe(
+      "field-phase-chip-main2",
+    );
+    expect(right?.children[1]?.getAttribute("data-cy")).toBe(
+      "field-end-turn-button",
+    );
+  });
+
+  it("End button dispatches the endPhase choice", async () => {
+    const spec = endOfferedSpec();
+    const oninteraction = vi.fn();
+    render(PhaseStrip, { phase: "main1", spec, oninteraction });
+
+    const endButton = document.querySelector(
+      '[data-cy="field-end-turn-button"]',
+    ) as HTMLButtonElement;
+    await fireEvent.click(endButton);
+
+    expect(oninteraction).toHaveBeenCalledOnce();
+    expect(oninteraction).toHaveBeenCalledWith({
+      type: "chooseChoice",
+      choiceId: choiceId("end"),
+      key: spec.key,
+    });
+  });
+
+  it("disabled blocks phase and End controls", async () => {
+    const spec = battleAndEndOfferedSpec();
+    const oninteraction = vi.fn();
+    render(PhaseStrip, {
+      phase: "main1",
+      spec,
+      disabled: true,
+      oninteraction,
+    });
+
+    const battleChip = document.querySelector(
+      '[data-cy="field-phase-chip-battle"]',
+    );
+    expect(battleChip?.tagName).toBe("SPAN");
+    await fireEvent.click(battleChip as Element);
+
+    const endButton = document.querySelector(
+      '[data-cy="field-end-turn-button"]',
+    ) as HTMLButtonElement;
+    expect(endButton.disabled).toBe(true);
+    await fireEvent.click(endButton);
+
+    expect(oninteraction).not.toHaveBeenCalled();
   });
 
   it("marks the current phase", () => {
@@ -157,37 +229,22 @@ describe("PhaseStrip", () => {
     ).toBe("SPAN");
   });
 
-  it("clicking an offered chip dispatches its choice", async () => {
+  it("no end chip is current and the strip surfaces end as an accessible status; End button stays an ordinary action", () => {
     const spec = endOfferedSpec();
-    const oninteraction = vi.fn();
-    render(PhaseStrip, { phase: "main1", spec, oninteraction });
+    render(PhaseStrip, { phase: "end", spec, oninteraction: vi.fn() });
 
-    const chip = document.querySelector(
-      '[data-cy="field-phase-chip-end"]',
-    ) as HTMLButtonElement;
-    await fireEvent.click(chip);
+    expect(
+      document.querySelector('[data-cy="field-phase-chip-end"]'),
+    ).toBeNull();
+    expect(
+      document
+        .querySelector('[data-cy="field-phase-strip"]')
+        ?.getAttribute("data-current-phase"),
+    ).toBe("end");
 
-    expect(oninteraction).toHaveBeenCalledOnce();
-    expect(oninteraction).toHaveBeenCalledWith({
-      type: "chooseChoice",
-      choiceId: choiceId("end"),
-      key: spec.key,
-    });
-  });
-
-  it("disabled suppresses the buttons", async () => {
-    const spec = battleOfferedSpec();
-    const oninteraction = vi.fn();
-    render(PhaseStrip, {
-      phase: "main1",
-      spec,
-      disabled: true,
-      oninteraction,
-    });
-
-    const chip = document.querySelector('[data-cy="field-phase-chip-battle"]');
-    expect(chip?.tagName).toBe("SPAN");
-    await fireEvent.click(chip as Element);
-    expect(oninteraction).not.toHaveBeenCalled();
+    const endButton = document.querySelector(
+      '[data-cy="field-end-turn-button"]',
+    );
+    expect(endButton?.classList.contains("is-current")).toBe(false);
   });
 });

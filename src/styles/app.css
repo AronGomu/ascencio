@@ -178,12 +178,14 @@ main.is-duel-viewport > .duel-row {
 }
 
 .duel-header-bar {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  width: min(120rem, calc(100% - 2rem));
+  width: 100%;
+  max-width: 120rem;
   margin-inline: auto;
-  padding-block: 0.75rem;
+  padding: 0.75rem 1rem;
 }
 
 .duel-header-bar__spacer {
@@ -194,6 +196,8 @@ main.is-duel-viewport > .duel-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .duel-header-bar__avatar {
@@ -204,10 +208,31 @@ main.is-duel-viewport > .duel-row {
   border: 1px solid var(--border);
 }
 
+.duel-header-bar__meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.duel-header-bar__role {
+  overflow: hidden;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .duel-header-bar__life {
+  overflow: hidden;
+  min-width: 0;
   margin: 0;
   color: var(--warning);
   font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .duel-header-bar__settings svg {
@@ -905,13 +930,15 @@ li + li {
 /* T9: the gutter reservation and the action bar itself (DuelField.svelte)
    both moved from `.duel-field` onto `.duel-field-stage`, as a `margin`, not
    `padding` — padding here would grow the stage's own padding box, which is
-   the percentage-position coordinate system PhaseStrip/EndTurnButton (T3/T7)
-   are calibrated against, shifting them off the board. A stretched, scrolled
-   `.duel-field` (narrow `.is-duel-viewport` rows) can be shorter than the
-   stage's natural (board aspect-ratio-driven) height; the stage itself never
-   is, so the bar it reserves room for always stays pinned to the board's
-   true bottom edge. The 2.75rem term is the End turn button's own floor,
-   kept as the minimum before the bar's first measurement lands. */
+   the percentage-position coordinate system PhaseStrip is calibrated
+   against, shifting it off the board. A stretched, scrolled `.duel-field`
+   (narrow `.is-duel-viewport` rows) can be shorter than the stage's natural
+   (board aspect-ratio-driven) height; the stage itself never is, so the bar
+   it reserves room for always stays pinned to the board's true bottom edge.
+   The 2.75rem term is the field action bar's own control-height floor (the
+   same 44px minimum target every field control uses), kept as the minimum
+   before the bar's first measurement lands. Round 3 folded the End turn
+   button into the phase strip, so it no longer anchors this gutter at all. */
 .duel-field-stage {
   margin-bottom: calc(1rem + 2.75rem + 0.75rem);
 }
@@ -955,8 +982,14 @@ li + li {
 .field-phase-strip__group--left {
   right: 60.6%;
 }
+/* Anchored from the right (not the left, unlike the left group) at the same
+   1% inset the old absolutely positioned End turn button used, so folding
+   End into this group (Round 3) keeps its right edge exactly where it was
+   already proven clear of the banished piles/deck column further out on
+   the board — the group grows leftward as Main 2 + End's combined width
+   demands, well inside the free pocket right of the shared EMZ (x > 60.3%). */
 .field-phase-strip__group--right {
-  left: 60.6%;
+  right: 1%;
 }
 .field-phase-chip {
   pointer-events: none;
@@ -1469,15 +1502,14 @@ button.card-action-chip:hover:not(:disabled) {
   background: #ffc75c;
 }
 
-/* top: 50% (not the ticket's 57.5%, which sat inside p0 banished's true
-   range) centers the button in the same measured free gap as the phase
-   strip above. */
+/* Round 3 folds the End turn button into the phase strip's right group as
+   a normal-flow sibling of the Main 2 chip, replacing the retired End chip.
+   It keeps its own min target size but no longer needs independent
+   absolute positioning — the group's own placement (below) already clears
+   the shared extra monster zones. `pointer-events: auto` is required
+   because it inherits `pointer-events: none` from `.field-phase-strip`. */
 .field-end-turn {
-  position: absolute;
-  z-index: var(--duel-field-layer-control);
-  right: 1%;
-  top: 50%;
-  transform: translateY(-50%);
+  pointer-events: auto;
   min-height: 2.75rem;
   padding: 0.55rem 1rem;
 }
@@ -1522,22 +1554,6 @@ button.card-action-chip:hover:not(:disabled) {
 .field-action-bar [data-cy="field-action-bar-validation"] {
   color: var(--danger);
   width: 100%;
-}
-
-/* Below 40rem the bar's max-width (100% - 2rem) leaves too little clearance
-   beside the always-present, right-anchored End turn button, so the reserved
-   gutter below the bar grows from 0.75rem to 4rem to hold it clear. The
-   bar's own position (`.field-action-bar` above) is unchanged — it is fixed
-   1rem below the board regardless of viewport — only the trailing clearance
-   between the bar and the stage's gutter's own true bottom grows.
-   48rem comfortably covers this field's supported narrow viewports (down to
-   ~23.4rem) while excluding the desktop ones, which never get this close. */
-@media (max-width: 48rem) {
-  .duel-field-stage[data-field-action-bar="true"] {
-    margin-bottom: calc(
-      1rem + max(2.75rem, var(--field-action-bar-height, 0px)) + 4rem
-    );
-  }
 }
 
 .field-error {

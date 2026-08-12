@@ -276,6 +276,23 @@ describe("DuelField", () => {
     ).not.toBeNull();
   });
 
+  it("renders exactly one End turn button, folded into the phase strip", () => {
+    const value = DUEL_FIELD_PUBLIC_STATES["ST-01"];
+    render(DuelField, { board: value.board });
+
+    expect(
+      document.querySelectorAll('[data-cy="field-end-turn-button"]'),
+    ).toHaveLength(1);
+    expect(
+      document.querySelector('[data-cy="field-phase-chip-end"]'),
+    ).toBeNull();
+    expect(
+      document
+        .querySelector('[data-cy="field-phase-strip"]')
+        ?.contains(document.querySelector('[data-cy="field-end-turn-button"]')),
+    ).toBe(true);
+  });
+
   it.each(DUEL_FIELD_PUBLIC_STATE_MATRIX)(
     "DF-16 validates %s semantic/layout acceptance assertions",
     ({ id, board: value, assertions }) => {

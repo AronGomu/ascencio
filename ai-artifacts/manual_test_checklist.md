@@ -347,3 +347,12 @@ Kept for history. Read the SUPERSEDED banners before running anything here.
 - [ ] With the Duel HUD or workspace panel enabled (Settings), confirm the page goes back to scrolling normally (this is the one case where a page scrollbar is expected) and nothing is trapped off-screen — you can still reach the HUD and workspace content by scrolling.
 - [ ] Play a full duel end-to-end at a normal window size, including dragging a hand card onto a highlighted zone and finishing a turn with the action bar visible: the action bar and End Turn button always sit clear of the board, never overlapping a card or zone, at every window size you tried above.
 - [ ] Resize the window between wide, narrow, and short repeatedly while a duel is in progress: layout reflows cleanly each time with no leftover scrollbar, no stuck/cut-off content, and no console errors.
+
+## T10 phase-strip-end-turn-and-role-labels (round 3)
+
+- [ ] `npm run dev`, start a duel at a normal desktop window size: the phase strip shows exactly four chips on the left (Draw, Standby, Main 1, Battle) and Main 2 plus one yellow "End turn"-style button on the right — no separate End chip, no second End Turn button anywhere on the field.
+- [ ] Confirm the left group's right edge stays left of, and the right group's left edge stays right of, the shared Extra Monster Zones at a few different window sizes; nothing in the phase strip ever visually overlaps a card, zone, or pile.
+- [ ] Click the End turn button when it's enabled: the turn ends exactly once, matching its previous behaviour before this change.
+- [ ] Confirm the header shows exactly two labels next to the life point totals: "Opponent" next to the top/opponent LP and "You" next to your own LP — no deck or archetype name appears anywhere in the header or on the field.
+- [ ] Confirm no old-style status pills (priority pill, phase pill, or an opponent-hand status badge) have reappeared anywhere on the duel field.
+- [ ] Play a full duel end-to-end, including reaching and using End turn from both the idle command menu and the field action bar's Battle/Main 2 buttons: no broken path, no console errors, and the app remains fully functional through to the result dialog.

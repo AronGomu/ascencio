@@ -40,7 +40,6 @@
   import FieldActionBar from "./duel-field/FieldActionBar.svelte";
   import FieldBoard from "./duel-field/FieldBoard.svelte";
   import FieldLines from "./duel-field/FieldLines.svelte";
-  import EndTurnButton from "./duel-field/EndTurnButton.svelte";
   import PhaseStrip from "./duel-field/PhaseStrip.svelte";
 
   const EMPTY_IMAGE_URLS: ReadonlyMap<number, string> = new Map();
@@ -487,7 +486,6 @@
       onstackactivate={activateStack}
     />
     <PhaseStrip {phase} {spec} disabled={pending} {oninteraction} />
-    <EndTurnButton {spec} disabled={pending} {oninteraction} />
     {#if actionBarVisible && prompt && spec}
       <FieldActionBar
         {prompt}

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  PHASE_SLOTS_LEFT,
+  PHASE_SLOTS_RIGHT,
+  PHASE_SLOT_LABELS,
   phaseSlotChoices,
   phaseSlotForDuelPhase,
 } from "../../src/app/prompts/phase-transitions.ts";
@@ -38,6 +41,31 @@ describe("phaseSlotForDuelPhase", () => {
     for (const [phase, slot] of Object.entries(PHASE_TO_SLOT)) {
       expect(phaseSlotForDuelPhase(phase as DuelPhase)).toBe(slot);
     }
+  });
+});
+
+describe("rendered slot partition", () => {
+  it("puts draw/standby/main1/battle on the left", () => {
+    expect(PHASE_SLOTS_LEFT).toEqual(["draw", "standby", "main1", "battle"]);
+  });
+
+  it("puts only main2 on the right", () => {
+    expect(PHASE_SLOTS_RIGHT).toEqual(["main2"]);
+  });
+});
+
+describe("end compatibility", () => {
+  it("keeps the end slot label for EndTurnButton/current-phase compatibility", () => {
+    expect(PHASE_SLOT_LABELS.end).toBe("End");
+  });
+
+  it("still maps the engine's end phase to the end slot", () => {
+    expect(phaseSlotForDuelPhase("end")).toBe("end");
+  });
+
+  it("still maps the endPhase choice to the end slot", () => {
+    const spec = specWithGlobalChoices([["end", "endPhase"]]);
+    expect(phaseSlotChoices(spec).get("end")?.id).toBe(choiceId("end"));
   });
 });
 

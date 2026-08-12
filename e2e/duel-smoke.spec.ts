@@ -262,6 +262,26 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   await expect(
     page.locator('[data-cy="duel-header-life-points-p1"]'),
   ).toHaveText("8,000 LP");
+  // Round 3 (T10): the header labels each life total by role, not deck/
+  // archetype name — those never render anywhere in the header or field.
+  await expect(page.locator('[data-cy="duel-header-role-p0"]')).toHaveText(
+    "You",
+  );
+  await expect(page.locator('[data-cy="duel-header-role-p1"]')).toHaveText(
+    "Opponent",
+  );
+  const headerText = await page
+    .locator('[data-cy="duel-header-bar"]')
+    .textContent();
+  for (const catalogName of [
+    "Blue-Eyes White Dragon",
+    "Dark Magician",
+    "Red-Eyes Black Dragon",
+    "Elemental HERO Sparkman",
+    "Cyber Dragon",
+    "Blackwing Armor Master",
+  ])
+    expect(headerText ?? "").not.toContain(catalogName);
   await expect(
     field.getByRole("article", { name: /Hidden opponent hand card/ }).first(),
   ).toBeVisible();
@@ -1780,6 +1800,67 @@ test("responsive field compositions contain controls across supported viewports"
       buttonOverlapsATarget,
       `${viewportLabel} End turn corner button (rect ${JSON.stringify(endTurnRect)}) must not overlap any playable field target`,
     ).toBe(false);
+
+    // Round 3 (T10): the retired End chip must never come back, End turn
+    // meets the same 44x44 floor every field control does, and the left
+    // (draw/standby/main1/battle)/right (main2/End) phase groups still clear
+    // the shared extra monster zones the way the old six-chip strip did.
+    await expect(field.locator('[data-cy="field-phase-chip-end"]')).toHaveCount(
+      0,
+    );
+    expect(
+      endTurnRect.right - endTurnRect.left,
+      `${viewportLabel} End turn button meets the 44px width floor`,
+    ).toBeGreaterThanOrEqual(44);
+    expect(
+      endTurnRect.bottom - endTurnRect.top,
+      `${viewportLabel} End turn button meets the 44px height floor`,
+    ).toBeGreaterThanOrEqual(44);
+
+    const phaseGeometry = await page.evaluate(() => {
+      const rect = (selector: string): DOMRect | null =>
+        document.querySelector(selector)?.getBoundingClientRect() ?? null;
+      return {
+        left: rect('[data-cy="field-phase-strip-left"]'),
+        right: rect('[data-cy="field-phase-strip-right"]'),
+        battle: rect('[data-cy="field-phase-chip-battle"]'),
+        main2: rect('[data-cy="field-phase-chip-main2"]'),
+        emzLeft: rect('[data-zone-id="shared:extraMonster:left"]'),
+        emzRight: rect('[data-zone-id="shared:extraMonster:right"]'),
+      };
+    });
+    if (
+      phaseGeometry.left === null ||
+      phaseGeometry.right === null ||
+      phaseGeometry.battle === null ||
+      phaseGeometry.main2 === null ||
+      phaseGeometry.emzLeft === null ||
+      phaseGeometry.emzRight === null
+    )
+      throw new Error(`${viewportLabel} phase strip geometry hooks missing`);
+    expect(
+      phaseGeometry.left.right,
+      `${viewportLabel} left phase group clears the shared left EMZ`,
+    ).toBeLessThanOrEqual(phaseGeometry.emzLeft.left - 1);
+    expect(
+      phaseGeometry.right.left,
+      `${viewportLabel} right phase group clears the shared right EMZ`,
+    ).toBeGreaterThanOrEqual(phaseGeometry.emzRight.right + 1);
+    expect(
+      phaseGeometry.battle.left >= phaseGeometry.left.left - 1 &&
+        phaseGeometry.battle.right <= phaseGeometry.left.right + 1,
+      `${viewportLabel} Battle chip belongs to the left group`,
+    ).toBe(true);
+    expect(
+      phaseGeometry.main2.left >= phaseGeometry.right.left - 1 &&
+        phaseGeometry.main2.right <= phaseGeometry.right.right + 1,
+      `${viewportLabel} Main2 chip belongs to the right group`,
+    ).toBe(true);
+    expect(
+      endTurnRect.left >= phaseGeometry.right.left - 1 &&
+        endTurnRect.right <= phaseGeometry.right.right + 1,
+      `${viewportLabel} End turn button belongs to the right group`,
+    ).toBe(true);
 
     await captureResponsiveState(page, testInfo, viewport.id, "ST-01");
 

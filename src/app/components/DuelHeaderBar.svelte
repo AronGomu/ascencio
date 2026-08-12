@@ -17,9 +17,14 @@
       aria-hidden="true"
       data-cy="duel-header-avatar-p1"
     />
-    <p class="duel-header-bar__life" data-cy="duel-header-life-points-p1">
-      {lifePoints === null ? "—" : `${lifePoints[1].toLocaleString()} LP`}
-    </p>
+    <div class="duel-header-bar__meta" data-cy="duel-header-meta-p1">
+      <span class="duel-header-bar__role" data-cy="duel-header-role-p1"
+        >Opponent</span
+      >
+      <p class="duel-header-bar__life" data-cy="duel-header-life-points-p1">
+        {lifePoints === null ? "—" : `${lifePoints[1].toLocaleString()} LP`}
+      </p>
+    </div>
   </div>
 
   <div class="duel-header-bar__spacer" data-cy="duel-header-spacer"></div>
@@ -32,9 +37,14 @@
       aria-hidden="true"
       data-cy="duel-header-avatar-p0"
     />
-    <p class="duel-header-bar__life" data-cy="duel-header-life-points-p0">
-      {lifePoints === null ? "—" : `${lifePoints[0].toLocaleString()} LP`}
-    </p>
+    <div class="duel-header-bar__meta" data-cy="duel-header-meta-p0">
+      <span class="duel-header-bar__role" data-cy="duel-header-role-p0"
+        >You</span
+      >
+      <p class="duel-header-bar__life" data-cy="duel-header-life-points-p0">
+        {lifePoints === null ? "—" : `${lifePoints[0].toLocaleString()} LP`}
+      </p>
+    </div>
   </div>
 
   <button

@@ -196,10 +196,34 @@ describe("global styles", () => {
     expect(block).not.toContain("border");
     expect(block).not.toContain("background");
   });
+
+  it("drag ghost is fixed, pointer-transparent and layered above field windows", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    expect(css).toContain("--duel-field-layer-drag-ghost: 150");
+    const block = ruleBlock(css, ".drag-ghost {");
+    expect(block).toContain("position: fixed");
+    expect(block).toContain("pointer-events: none");
+    expect(block).toContain("z-index: var(--duel-field-layer-drag-ghost)");
+    expect(block).toContain("scale(var(--drag-ghost-lift-scale, 1.08))");
+    expect(block).toContain("box-shadow");
+  });
+
+  it("reduced motion strips the drag ghost's lift transform", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const reducedMotionBlockStart = css.indexOf(
+      "@media (prefers-reduced-motion: reduce) {\n  .drag-ghost {",
+    );
+    expect(reducedMotionBlockStart).toBeGreaterThan(-1);
+    const block = ruleBlock(css, ".drag-ghost {", reducedMotionBlockStart);
+    expect(block).toContain(
+      "transform: translate3d(var(--drag-ghost-x), var(--drag-ghost-y), 0)",
+    );
+    expect(block).not.toContain("scale(");
+  });
 });
 
-function ruleBlock(css: string, selectorStart: string): string {
-  const start = css.indexOf(selectorStart);
+function ruleBlock(css: string, selectorStart: string, fromIndex = 0): string {
+  const start = css.indexOf(selectorStart, fromIndex);
   if (start === -1) throw new Error(`Selector not found: ${selectorStart}`);
   const end = css.indexOf("}", start);
   return css.slice(start, end + 1);

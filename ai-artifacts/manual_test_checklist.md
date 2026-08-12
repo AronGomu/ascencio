@@ -380,3 +380,15 @@ Kept for history. Read the SUPERSEDED banners before running anything here.
 - [ ] With an actionable card's chip menu open (hover, keyboard focus, or pinned via Enter+click), confirm every visible chip button is still clickable — clicking lands on the chip, not on a neighbouring card or zone underneath.
 - [ ] OS/browser "reduce motion" enabled (e.g. `prefers-reduced-motion: reduce`): hovering/focusing a card or list entry shows no zoom animation and no size change at all; halo colours (green/orange/teal/neutral-focus) are still all correct and static.
 - [ ] Resize the window down to a narrow/short viewport and repeat the hand-card hover check: the zoomed card is not clipped by the hand's own horizontal scrollbar, and normal scrolling of the hand still works.
+
+## T13 drag-ghost-physics (round 3)
+
+- [ ] `npm run dev`, start a duel, drag a legal hand card (summon/set) fast to the right: a floating card ghost appears under the cursor above the field, tilts visibly clockwise (leaning right) while moving fast, and does not tilt while nearly still.
+- [ ] Drag the same card fast to the left: the ghost tilts the other way (leaning left).
+- [ ] While dragging, confirm the ghost sits above every card, zone, chip and floating field window, and the source card in the hand stays exactly where it was (same slot, same scroll position), just visibly dimmed — it never jumps or moves in the hand row.
+- [ ] Drop the card on a highlighted (green, filled) candidate zone: the card is placed immediately (no waiting on any animation) and the ghost visibly springs to the dropped zone before disappearing.
+- [ ] Start a drag and release the pointer somewhere with no legal zone underneath (e.g. empty space or a non-candidate zone): nothing is played, and the ghost visibly springs back to the hand card's own position before disappearing.
+- [ ] Start a drag and press Escape or otherwise cancel the pointer (e.g. drag the mouse out of the browser window and release outside it, or use a touch cancel if testing on a touchscreen): nothing is played and the ghost springs home the same way as a miss.
+- [ ] OS/browser "reduce motion" enabled (`prefers-reduced-motion: reduce`): dragging still shows a ghost that follows the cursor, but it never tilts and never lifts/scales up; releasing (valid or invalid) removes the ghost instantly with no springing/settling animation at all.
+- [ ] Open a fresh prompt or otherwise interrupt an in-progress drag (e.g. trigger a chain or another prompt mid-drag if possible): the ghost disappears cleanly rather than freezing on screen or continuing to animate against stale state.
+- [ ] Play a full duel end-to-end using at least one hand-card drag to place a card: the drag/drop still behaves exactly as before this change functionally (one legal placement per drop, no double responses), just with the new visual ghost/tilt/spring polish layered on top.

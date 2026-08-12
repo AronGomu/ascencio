@@ -9,6 +9,7 @@ import {
   within,
 } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
+import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import DuelField from "../../src/app/components/DuelField.svelte";
 import DuelFieldErrorBoundary from "../../src/app/components/duel-field/DuelFieldErrorBoundary.svelte";
@@ -1856,6 +1857,178 @@ describe("DuelField", () => {
     ).toBeNull();
   });
 
+  it("mounts a drag ghost only after crossing the 8px threshold", async () => {
+    renderDraggableHand();
+    const target = handDragTarget();
+    await fireEvent.pointerDown(target, { clientX: 10, clientY: 10 });
+    await fireEvent.pointerMove(target, { clientX: 13, clientY: 10 });
+    expect(dragGhost()).toBeNull();
+
+    await fireEvent.pointerMove(target, { clientX: 30, clientY: 30 });
+    const ghost = dragGhost();
+    expect(ghost).not.toBeNull();
+    expect(ghost?.querySelector('[data-cy="drag-ghost-image"]')).not.toBeNull();
+  });
+
+  it("coalesces a burst of pointer moves into a single pending frame", async () => {
+    const rafStub = stubRaf();
+    try {
+      renderDraggableHand();
+      await startHandDrag();
+      const target = handDragTarget();
+      expect(rafStub.raf).toHaveBeenCalledTimes(1);
+      await fireEvent.pointerMove(target, { clientX: 40, clientY: 30 });
+      await fireEvent.pointerMove(target, { clientX: 50, clientY: 30 });
+      // The frame from the threshold crossing itself is still pending, so
+      // both further moves must coalesce onto it rather than scheduling more.
+      expect(rafStub.raf).toHaveBeenCalledTimes(1);
+      expect(rafStub.pendingCount()).toBe(1);
+    } finally {
+      rafStub.restore();
+    }
+  });
+
+  it("dispatches the single intent/choice immediately, then springs the ghost to the target and unmounts it", async () => {
+    const rafStub = stubRaf();
+    try {
+      const harness = renderDraggableHand();
+      await startHandDrag();
+      const zone = zoneElement("p0:mainMonster:3");
+      vi.spyOn(zone, "getBoundingClientRect").mockReturnValue({
+        left: 400,
+        top: 300,
+        width: 72,
+        height: 104,
+        right: 472,
+        bottom: 404,
+        x: 400,
+        y: 300,
+        toJSON: () => ({}),
+      });
+
+      await dropAt(harness, zone);
+
+      // Exactly one placement intent + one chooseChoice, dispatched before
+      // any settle frame runs.
+      expect(harness.onplacementintent).toHaveBeenCalledTimes(1);
+      expect(harness.dispatch).toHaveBeenCalledTimes(1);
+      expect(dragGhost()).not.toBeNull();
+
+      let now = performance.now();
+      for (let i = 0; i < 100; i += 1) {
+        now += 16;
+        rafStub.flush(now);
+      }
+      await tick();
+
+      expect(dragGhost()).toBeNull();
+      // The spring never re-fires the command.
+      expect(harness.onplacementintent).toHaveBeenCalledTimes(1);
+      expect(harness.dispatch).toHaveBeenCalledTimes(1);
+    } finally {
+      rafStub.restore();
+    }
+  });
+
+  it("springs a cancelled drag home and unmounts without dispatching", async () => {
+    const rafStub = stubRaf();
+    try {
+      const harness = renderDraggableHand();
+      const target = await startHandDrag();
+      expect(dragGhost()).not.toBeNull();
+
+      await fireEvent.pointerCancel(target);
+
+      expect(harness.onplacementintent).not.toHaveBeenCalled();
+      expect(harness.dispatch).not.toHaveBeenCalled();
+      expect(dragGhost()).not.toBeNull();
+
+      let now = performance.now();
+      for (let i = 0; i < 100; i += 1) {
+        now += 16;
+        rafStub.flush(now);
+      }
+      await tick();
+
+      expect(dragGhost()).toBeNull();
+    } finally {
+      rafStub.restore();
+    }
+  });
+
+  it("reduced motion follows the pointer with zero tilt and removes the ghost immediately on release", async () => {
+    const rafStub = stubRaf();
+    try {
+      const harness = renderDraggableHand({ reducedMotion: true });
+      const target = await startHandDrag();
+      await fireEvent.pointerMove(target, { clientX: 500, clientY: 30 });
+      rafStub.flush();
+      const ghost = dragGhost();
+      expect(ghost).not.toBeNull();
+      expect(ghost?.getAttribute("style")).toContain(
+        "--drag-ghost-rotate: 0deg",
+      );
+
+      await dropAt(harness, null);
+
+      expect(dragGhost()).toBeNull();
+    } finally {
+      rafStub.restore();
+    }
+  });
+
+  it("cancels the pending frame and removes the ghost on a prompt replacement", async () => {
+    const rafStub = stubRaf();
+    try {
+      const harness = renderDraggableHand();
+      await startHandDrag();
+      expect(dragGhost()).not.toBeNull();
+
+      const nextPrompt = fieldPrompt(
+        "idleCommand",
+        [
+          handChoice("summon", "Summon The Legendary Fisherman", {
+            action: "summon",
+          }),
+        ],
+        { id: promptId("idleCommand-field-component-replacement") },
+      );
+      const nextSpec = mapPromptToInteractionSpec(
+        nextPrompt,
+        BOARD_VIEW_MODEL_FIXTURES["ST-01"],
+        harness.board,
+        CONTEXT,
+      );
+      if (nextSpec.kind === "inactive")
+        throw new Error("Expected active field spec");
+      await harness.rendered.rerender({
+        prompt: nextPrompt,
+        spec: nextSpec,
+        session: createInteractionSession(nextSpec),
+      });
+      await tick();
+
+      expect(dragGhost()).toBeNull();
+    } finally {
+      rafStub.restore();
+    }
+  });
+
+  it("cancels the pending frame and removes the ghost on unmount", async () => {
+    const rafStub = stubRaf();
+    try {
+      const harness = renderDraggableHand();
+      await startHandDrag();
+      expect(dragGhost()).not.toBeNull();
+
+      harness.rendered.unmount();
+
+      expect(dragGhost()).toBeNull();
+    } finally {
+      rafStub.restore();
+    }
+  });
+
   it("hover reports a visible card", async () => {
     const harness = renderDraggableHand();
     const card = harness.board.cards.find(({ id }) => id === HAND_CARD_ID);
@@ -2497,9 +2670,41 @@ function handChoice(
   } as Partial<PromptChoice>);
 }
 
+/** Manual rAF queue: rAF calls never run until `flush` fires them, so a
+    component test can assert scheduling counts and drive the ghost's
+    animation loop frame-by-frame deterministically. */
+function stubRaf() {
+  let queue: Array<{ id: number; callback: FrameRequestCallback }> = [];
+  let nextId = 0;
+  const raf = vi.fn((callback: FrameRequestCallback) => {
+    nextId += 1;
+    queue.push({ id: nextId, callback });
+    return nextId;
+  });
+  const caf = vi.fn((id: number) => {
+    queue = queue.filter((entry) => entry.id !== id);
+  });
+  vi.stubGlobal("requestAnimationFrame", raf);
+  vi.stubGlobal("cancelAnimationFrame", caf);
+  return {
+    raf,
+    caf,
+    pendingCount: () => queue.length,
+    flush: (now = performance.now()) => {
+      const callbacks = queue;
+      queue = [];
+      for (const entry of callbacks) entry.callback(now);
+    },
+    restore: () => vi.unstubAllGlobals(),
+  };
+}
+
 /** ST-01 gives player 0 one visible hand card and an otherwise empty field. */
 function renderDraggableHand(
-  options: { readonly occupiedZoneId?: string } = {},
+  options: {
+    readonly occupiedZoneId?: string;
+    readonly reducedMotion?: boolean;
+  } = {},
 ) {
   const base = board("ST-01");
   const occupant = base.cards[0];
@@ -2544,6 +2749,7 @@ function renderDraggableHand(
     spec,
     session: createInteractionSession(spec),
     pending: false,
+    reducedMotion: options.reducedMotion ?? false,
     oninteraction: dispatch,
     onplacementintent,
     onpreview,
@@ -2559,6 +2765,10 @@ function renderDraggableHand(
       hit = element;
     },
   };
+}
+
+function dragGhost(): HTMLElement | null {
+  return document.querySelector<HTMLElement>('[data-cy="drag-ghost"]');
 }
 
 function handCardArticle(): HTMLElement {

@@ -12,6 +12,7 @@
     ActiveInteractionSpec,
     InteractionChoice,
   } from "../../prompts/interaction-spec.ts";
+  import type { CardDragOrigin } from "../../presentation/drag-ghost-physics.ts";
   import CardControl from "./CardControl.svelte";
 
   export let player: PlayerIndex;
@@ -33,7 +34,10 @@
   export let oncardchoose: (choice: InteractionChoice) => void = () =>
     undefined;
   export let oncarddismiss: () => void = () => undefined;
-  export let oncarddragstart: (card: BoardCardView) => void = () => undefined;
+  export let oncarddragstart: (
+    card: BoardCardView,
+    origin: CardDragOrigin,
+  ) => void = () => undefined;
   export let oncarddragmove: (x: number, y: number) => void = () => undefined;
   export let oncarddragend: (x: number, y: number) => void = () => undefined;
   export let oncardpreview: (card: BoardCardView) => void = () => undefined;
@@ -163,7 +167,7 @@
           onactivate={(element) => oncardactivate(card, element)}
           onchoose={oncardchoose}
           ondismiss={oncarddismiss}
-          ondragstart={() => oncarddragstart(card)}
+          ondragstart={(origin) => oncarddragstart(card, origin)}
           ondragmove={oncarddragmove}
           ondragend={oncarddragend}
           onpreview={() => oncardpreview(card)}

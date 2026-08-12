@@ -1158,9 +1158,24 @@ test("zone-list preview image never exceeds half the viewport height", async ({
     expect(height).toBeLessThanOrEqual(innerHeight * 0.5 + 1);
 });
 
-test("dragging a hand card onto a highlighted zone plays it", async ({
-  page,
-}) => {
+/* Shared by the pointer-drag tests below: sets up the field, finds a
+   draggable hand card with a legal placement and returns pointer-drag
+   geometry, or `null` when the opening hand offers no placement to drag
+   (the caller must then skip). */
+async function locateDraggablePlacement(page: Page): Promise<{
+  readonly field: Locator;
+  readonly dragTarget: Locator;
+  readonly targetZone: Locator;
+  readonly targetZoneId: string;
+  readonly cardBox: {
+    readonly x: number;
+    readonly y: number;
+    readonly width: number;
+    readonly height: number;
+  };
+  readonly from: { readonly x: number; readonly y: number };
+  readonly to: { readonly x: number; readonly y: number };
+} | null> {
   /* A pointer gesture is driven in viewport coordinates, so the whole board —
      the hand row and the monster row at once — has to be on screen. The
      default 720px-tall viewport puts the hand below the fold, where
@@ -1237,13 +1252,7 @@ test("dragging a hand card onto a highlighted zone plays it", async ({
     }
     if (chosen !== null) break;
   }
-  if (chosen === null) {
-    test.skip(
-      true,
-      "opening hand offers no summon, no monster set and no settable spell or trap — there is no placement of any kind to drag",
-    );
-    return;
-  }
+  if (chosen === null) return null;
 
   const { chip, zoneId: targetZoneId } = chosen;
   const cardId = await chip.evaluate(
@@ -1274,6 +1283,23 @@ test("dragging a hand card onto a highlighted zone plays it", async ({
     y: zoneBox.y + zoneBox.height / 2,
   };
 
+  return { field, dragTarget, targetZone, targetZoneId, cardBox, from, to };
+}
+
+test("dragging a hand card onto a highlighted zone plays it", async ({
+  page,
+}) => {
+  const placement = await locateDraggablePlacement(page);
+  if (placement === null) {
+    test.skip(
+      true,
+      "opening hand offers no summon, no monster set and no settable spell or trap — there is no placement of any kind to drag",
+    );
+    return;
+  }
+  const { field, dragTarget, targetZone, targetZoneId, cardBox, from, to } =
+    placement;
+
   const before = await readCapture(page);
   const idlePrompt = [...before.events]
     .reverse()
@@ -1298,6 +1324,51 @@ test("dragging a hand card onto a highlighted zone plays it", async ({
     { steps: 4 },
   );
   await expect(targetZone).toHaveAttribute("data-drop-candidate", "true");
+
+  const ghost = page.locator('[data-cy="drag-ghost"]');
+  await expect(ghost).toBeVisible();
+  const sourceArticle = dragTarget.locator("xpath=ancestor::article[1]");
+  await expect(sourceArticle).toHaveAttribute("data-dragging", "true");
+  /* The card never moves in the DOM (still the same hand-band article, same
+     roving-focus order) and stays dimmed; hover/focus zoom transform (T12,
+     unrelated to this ticket) can still legitimately resize its rendered
+     box while the pointer capture keeps it focused mid-drag, so this only
+     asserts the identity and dimming, not the exact rendered rect. */
+  const sourceOpacity = await sourceArticle.evaluate(
+    (element) => getComputedStyle(element).opacity,
+  );
+  expect(Number(sourceOpacity)).toBeCloseTo(0.72, 1);
+  const ghostBoxMidDrag = await ghost.boundingBox();
+  expect(ghostBoxMidDrag).not.toBeNull();
+  if (ghostBoxMidDrag !== null) {
+    const ghostCentreX = ghostBoxMidDrag.x + ghostBoxMidDrag.width / 2;
+    const ghostCentreY = ghostBoxMidDrag.y + ghostBoxMidDrag.height / 2;
+    const midX = from.x + ((to.x - from.x) * 2) / 3;
+    const midY = from.y + ((to.y - from.y) * 2) / 3;
+    /* Ghost centre tracks the cursor within the grab-offset tolerance —
+       it is not pinned exactly to the pointer, which grabbed some point
+       inside the card, not necessarily its centre. */
+    expect(Math.abs(ghostCentreX - midX)).toBeLessThanOrEqual(
+      cardBox.width / 2 + 8,
+    );
+    expect(Math.abs(ghostCentreY - midY)).toBeLessThanOrEqual(
+      cardBox.height / 2 + 8,
+    );
+    const underGhost = await page.evaluate(
+      ([x, y]) => {
+        const element = document.elementFromPoint(x, y);
+        return element === null
+          ? null
+          : {
+              isGhost: element.closest('[data-cy="drag-ghost"]') !== null,
+              hasZoneAncestor: element.closest("[data-zone-id]") !== null,
+            };
+      },
+      [ghostCentreX, ghostCentreY] as const,
+    );
+    expect(underGhost?.isGhost).toBe(false);
+  }
+
   await page.mouse.move(to.x, to.y, { steps: 4 });
   await page.mouse.up();
 
@@ -1305,6 +1376,7 @@ test("dragging a hand card onto a highlighted zone plays it", async ({
     field.locator(`.duel-field-card[data-card-zone-id="${targetZoneId}"]`),
   ).toHaveCount(1, { timeout: 30_000 });
   await expect(targetZone).not.toHaveAttribute("data-drop-candidate", "true");
+  await expect(ghost).toHaveCount(0, { timeout: 650 });
 
   // One gesture, two responses up front: the chosen action, then the engine's
   // own place prompt answered from the armed zone. Trivial follow-on prompts
@@ -1336,6 +1408,40 @@ test("dragging a hand card onto a highlighted zone plays it", async ({
         placeResponse?.promptId,
   ) as unknown as CapturedPromptEvent | undefined;
   expect(placePrompt?.prompt.kind).toBe("selectPlace");
+});
+
+test("reduced motion drags follow the pointer with no tilt and settle with no lingering ghost", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const placement = await locateDraggablePlacement(page);
+  if (placement === null) {
+    test.skip(
+      true,
+      "opening hand offers no summon, no monster set and no settable spell or trap — there is no placement of any kind to drag",
+    );
+    return;
+  }
+  const { from, to } = placement;
+
+  const ghost = page.locator('[data-cy="drag-ghost"]');
+
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(
+    from.x + (to.x - from.x) / 3,
+    from.y + (to.y - from.y) / 3,
+    { steps: 4 },
+  );
+  await expect(ghost).toBeVisible();
+  const style = await ghost.getAttribute("style");
+  expect(style).toContain("--drag-ghost-rotate: 0deg");
+
+  await page.mouse.up();
+
+  // Reduced motion removes the ghost immediately on release — no spring, so
+  // no lingering ghost even a single animation frame later.
+  await expect(ghost).toHaveCount(0, { timeout: 100 });
 });
 
 test("hovering a hand card fills the preview panel sharing the field row", async ({

@@ -29,6 +29,7 @@
   --duel-field-layer-label: 40;
   --duel-field-layer-control: 50;
   --duel-field-layer-menu: 100;
+  --duel-field-layer-drag-ghost: 150;
 }
 
 * {
@@ -1141,6 +1142,42 @@ button.duel-field-zone,
 
 .duel-field-card.is-dragging {
   opacity: 0.72;
+}
+
+/* The ghost is `position:fixed` in viewport coordinates (T9: the app shell
+   itself never scrolls, so this is safe) and stays above every card/chip/
+   field-window layer (menu tops out at 100) but below any future app-level
+   modal/backdrop, which would need a layer above this one. It never
+   receives pointer events, so it cannot poison `elementFromPoint` hit
+   testing while a drag is live. Position/size/rotation are driven inline by
+   the component per pointer frame; the lift scale (1.08) and drop shadow
+   are owned here so a reduced-motion user gets them removed in one place. */
+.drag-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--duel-field-layer-drag-ghost);
+  pointer-events: none;
+  width: var(--drag-ghost-width);
+  height: var(--drag-ghost-height);
+  transform: translate3d(var(--drag-ghost-x), var(--drag-ghost-y), 0)
+    rotate(var(--drag-ghost-rotate, 0deg))
+    scale(var(--drag-ghost-lift-scale, 1.08));
+  box-shadow: 0 1.5rem 2.5rem rgb(0 0 0 / 0.55);
+}
+
+.drag-ghost__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drag-ghost {
+    transition: none;
+    transform: translate3d(var(--drag-ghost-x), var(--drag-ghost-y), 0);
+  }
 }
 
 /* Chips float above the zones and stay visible while their card is hovered,

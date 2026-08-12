@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, tick } from "svelte";
+  import { onDestroy, onMount, tick } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
   import type { DuelPresentationEvent } from "../../duel/contracts/duel-presentation-event.ts";
   import type { PlayerPrompt } from "../../duel/contracts/player-prompt.ts";
@@ -37,6 +37,16 @@
     type DomFeedbackState,
   } from "../presentation/dom-feedback-controller.ts";
   import { presentationCommandForDomEvent } from "../presentation/presentation-command.ts";
+  import {
+    dragFrameForPointer,
+    dragGhostSettled,
+    settleDragGhostFrame,
+    DRAG_SETTLE_TIMEOUT_MS,
+    type CardDragOrigin,
+    type DragGhostFrame,
+    type DragPointerSample,
+  } from "../presentation/drag-ghost-physics.ts";
+  import DragGhost from "./duel-field/DragGhost.svelte";
   import FieldActionBar from "./duel-field/FieldActionBar.svelte";
   import FieldBoard from "./duel-field/FieldBoard.svelte";
   import FieldLines from "./duel-field/FieldLines.svelte";
@@ -102,6 +112,17 @@
   let dragCard: BoardCardView | null = null;
   let dropCandidates: ReadonlySet<PhysicalZoneId> = EMPTY_ZONE_IDS;
   let lastPromptKey: string | null = null;
+  let ghostOrigin: CardDragOrigin | null = null;
+  let ghostFrame: DragGhostFrame | null = null;
+  let ghostPhase: "idle" | "dragging" | "settling" = "idle";
+  let ghostLatestSample: DragPointerSample | null = null;
+  let ghostPreviousSample: DragPointerSample | null = null;
+  let ghostSettleTarget: { readonly x: number; readonly y: number } | null =
+    null;
+  let ghostSettleElapsedMs = 0;
+  let ghostRafHandle: number | null = null;
+  let ghostLastTickMs = 0;
+  let ghostPromptKey: string | null = null;
 
   $: resolvedCardBackUrl = cardBackUrl || DEFAULT_CARD_BACK;
   $: effectiveReducedMotion = reducedMotion ?? mediaReducedMotion;
@@ -116,6 +137,7 @@
   $: selectedTargets =
     spec === null ? EMPTY_TARGETS : targetSelections(spec, session);
   $: resetOpenStackOnPromptChange(spec);
+  $: cancelDragGhostOnPromptChange(spec);
   $: openStack =
     openStackId === null
       ? null
@@ -134,6 +156,8 @@
     spec !== null &&
     (spec.fieldCapable || spec.promptKind === "chain") &&
     fieldActionBarRequired(spec);
+  onDestroy(removeGhost);
+
   onMount(() => {
     const motionQuery = globalThis.matchMedia?.(
       "(prefers-reduced-motion: reduce)",
@@ -357,8 +381,10 @@
 
   /* The halo is a local guess at where the engine might accept this card. It
      is presentation only and never gates a response: the follow-up place
-     prompt stays authoritative. */
-  function startCardDrag(card: BoardCardView): void {
+     prompt stays authoritative. The ghost is presentation only too — it
+     never delays or authorizes the single placement intent + chooseChoice
+     dispatch in `endCardDrag`, it only starts springing after that fires. */
+  function startCardDrag(card: BoardCardView, origin: CardDragOrigin): void {
     if (spec === null || spec.kind !== "cardAction") return;
     if (card.zoneId !== "p0:hand") return;
     const candidates = new SvelteSet<PhysicalZoneId>();
@@ -368,35 +394,180 @@
     }
     dragCard = card;
     dropCandidates = candidates;
+    /* A new drag always wins over a settle still in flight for the previous
+       card ("new drag first cancels prior settle"). */
+    cancelGhostFrame();
+    ghostOrigin = origin;
+    ghostPreviousSample = origin.pointer;
+    ghostLatestSample = null;
+    ghostSettleTarget = null;
+    ghostSettleElapsedMs = 0;
+    ghostPhase = "dragging";
+    ghostFrame = Object.freeze({
+      x: origin.pointer.x - origin.pointerOffsetX,
+      y: origin.pointer.y - origin.pointerOffsetY,
+      velocityX: 0,
+      velocityY: 0,
+      tiltDegrees: 0,
+    });
   }
 
-  /* Deliberately inert: the halo does not track the pointer in this slice, so
-     a drag does no per-move DOM work. The signature stays so the gesture can
-     grow a follower later without touching CardControl. */
+  /* Coalescing: stores the latest sample and asks for a frame only when none
+     is already pending, so a burst of pointermove events never stacks up
+     more than one rAF callback. */
   function moveCardDrag(x: number, y: number): void {
-    void x;
-    void y;
+    if (ghostPhase !== "dragging") return;
+    ghostLatestSample = { x, y, timeMs: performance.now() };
+    scheduleGhostFrame();
   }
 
+  function scheduleGhostFrame(): void {
+    if (ghostRafHandle !== null) return;
+    ghostRafHandle = requestAnimationFrame(tickGhostFrame);
+  }
+
+  function cancelGhostFrame(): void {
+    if (ghostRafHandle !== null) {
+      cancelAnimationFrame(ghostRafHandle);
+      ghostRafHandle = null;
+    }
+  }
+
+  function tickGhostFrame(now: number): void {
+    ghostRafHandle = null;
+    if (ghostPhase === "dragging") {
+      const sample = ghostLatestSample;
+      const previous = ghostPreviousSample;
+      const origin = ghostOrigin;
+      const frame = ghostFrame;
+      if (
+        sample === null ||
+        previous === null ||
+        origin === null ||
+        frame === null
+      )
+        return;
+      ghostFrame = effectiveReducedMotion
+        ? Object.freeze({
+            x: sample.x - origin.pointerOffsetX,
+            y: sample.y - origin.pointerOffsetY,
+            velocityX: 0,
+            velocityY: 0,
+            tiltDegrees: 0,
+          })
+        : dragFrameForPointer(frame, previous, sample, origin);
+      ghostPreviousSample = sample;
+      return;
+    }
+    if (ghostPhase === "settling") {
+      const target = ghostSettleTarget;
+      const frame = ghostFrame;
+      if (target === null || frame === null) {
+        removeGhost();
+        return;
+      }
+      const elapsedMs = ghostLastTickMs === 0 ? 16 : now - ghostLastTickMs;
+      ghostLastTickMs = now;
+      ghostSettleElapsedMs += elapsedMs;
+      ghostFrame = settleDragGhostFrame(frame, target, elapsedMs);
+      if (
+        dragGhostSettled(ghostFrame, target) ||
+        ghostSettleElapsedMs >= DRAG_SETTLE_TIMEOUT_MS
+      ) {
+        removeGhost();
+        return;
+      }
+      scheduleGhostFrame();
+    }
+  }
+
+  function removeGhost(): void {
+    cancelGhostFrame();
+    ghostOrigin = null;
+    ghostFrame = null;
+    ghostPhase = "idle";
+    ghostSettleTarget = null;
+    ghostSettleElapsedMs = 0;
+    ghostLastTickMs = 0;
+    ghostLatestSample = null;
+    ghostPreviousSample = null;
+  }
+
+  function cancelDragGhostOnPromptChange(
+    value: ActiveInteractionSpec | null,
+  ): void {
+    const key = value?.key.promptId ?? null;
+    if (key === ghostPromptKey) return;
+    ghostPromptKey = key;
+    if (ghostOrigin !== null) removeGhost();
+  }
+
+  /* The ghost's home/target rect is read live from the DOM only here, at
+     release — never on every animation frame — because the hand viewport can
+     scroll under a long drag (T8). */
   function endCardDrag(x: number, y: number): void {
     const card = dragCard;
     const candidates = dropCandidates;
+    const origin = ghostOrigin;
     dragCard = null;
     dropCandidates = EMPTY_ZONE_IDS;
-    if (card === null || spec === null) return;
+    if (card === null || spec === null || origin === null) {
+      removeGhost();
+      return;
+    }
     /* `pointercancel` reports NaN: the gesture was abandoned, not dropped. */
-    if (Number.isNaN(x) || Number.isNaN(y)) return;
-    const zoneId = zoneIdAtPoint(x, y);
-    if (zoneId === null || !candidates.has(zoneId)) return;
-    const zone = board.zones.find((value) => value.id === zoneId);
-    if (zone === undefined) return;
-    const choice = dropChoiceForZone(
-      zone,
-      spec.cardChoices.get(card.targetId) ?? [],
-    );
-    if (choice === null) return;
-    onplacementintent(zone.id);
-    dispatch({ type: "chooseChoice", choiceId: choice.id });
+    const cancelled = Number.isNaN(x) || Number.isNaN(y);
+    let target: { readonly x: number; readonly y: number } | null = null;
+    if (!cancelled) {
+      const zoneId = zoneIdAtPoint(x, y);
+      if (zoneId !== null && candidates.has(zoneId)) {
+        const zone = board.zones.find((value) => value.id === zoneId);
+        const choice =
+          zone === undefined
+            ? null
+            : dropChoiceForZone(
+                zone,
+                spec.cardChoices.get(card.targetId) ?? [],
+              );
+        if (zone !== undefined && choice !== null) {
+          /* Exactly one placement intent + one chooseChoice, dispatched before
+             any ghost animation starts — the spring never delays or
+             authorizes this. */
+          onplacementintent(zone.id);
+          dispatch({ type: "chooseChoice", choiceId: choice.id });
+          const zoneElement = fieldRoot.querySelector<HTMLElement>(
+            `[data-zone-id="${zone.id}"]`,
+          );
+          const rect = zoneElement?.getBoundingClientRect();
+          if (rect !== undefined) {
+            target = {
+              x: rect.left + rect.width / 2 - origin.width / 2,
+              y: rect.top + rect.height / 2 - origin.height / 2,
+            };
+          }
+        }
+      }
+    }
+    if (target === null) {
+      const sourceElement = fieldRoot.querySelector<HTMLElement>(
+        `[data-card-id="${card.id}"]`,
+      );
+      const rect = sourceElement?.getBoundingClientRect();
+      target =
+        rect === undefined
+          ? { x: origin.sourceLeft, y: origin.sourceTop }
+          : { x: rect.left, y: rect.top };
+    }
+    if (effectiveReducedMotion) {
+      removeGhost();
+      return;
+    }
+    cancelGhostFrame();
+    ghostPhase = "settling";
+    ghostSettleTarget = target;
+    ghostSettleElapsedMs = 0;
+    ghostLastTickMs = 0;
+    scheduleGhostFrame();
   }
 
   /* Never trust the topmost element: action chips sit above the zones and can
@@ -508,6 +679,14 @@
       />
     {/if}
   </div>
+  {#if ghostOrigin !== null && ghostFrame !== null}
+    <DragGhost
+      frame={ghostFrame}
+      origin={ghostOrigin}
+      settling={ghostPhase === "settling"}
+      reducedMotion={effectiveReducedMotion}
+    />
+  {/if}
   {#if openStack !== null}
     <ZoneListDialog
       stack={openStack}

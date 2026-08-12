@@ -298,3 +298,14 @@ Kept for history. Read the SUPERSEDED banners before running anything here.
 - [ ] The status pills and both life pills never block a click — a card underneath any of them (top-right corner, top-left corner, bottom-left corner) is still clickable/draggable exactly as if the pill were not there.
 - [ ] With a screen reader, the priority/phase pill group announces once per change (not once per unrelated re-render) as a single `polite` region; the `-` separator itself is not announced.
 - [ ] There is no `Inspect` button in the Duel HUD pointing at a missing `card-inspector` id — Inspect buttons still open the card preview panel with no console error.
+
+## T7 zone-naming-and-field-geometry (round 3)
+
+- [ ] `npm run dev` at a 1280×720-ish window: every painted zone label is short and owner-neutral — `Monster Zone 1…5`, `Spell/Trap Zone 1…5`, `Field Zone`, `Deck`, `Extra Deck`, `GY`, `Banished`, `Hand` — with no `Your`/`Opponent` prefix anywhere on the board, and only the two shared zones still read `Shared Extra Monster Zone left/right`.
+- [ ] Eyeball the five central columns: cards sit visibly closer together horizontally than before, and the two rows on each side sit visibly further apart vertically, without any card overlapping its neighbour.
+- [ ] Eyeball both outer columns: each player's Extra Deck pile sits directly under (opponent: over) that player's Field Zone, sharing the same vertical line.
+- [ ] With a screen reader on, tab into the field and arrow around: player-0 controls announce `Your …`, player-1 controls announce `Opponent …`, the shared zones announce `Shared Extra Monster Zone left/right`, `Spell/Trap` is spoken as `Spell and Trap`, and `GY` is spoken as `Graveyard`.
+- [ ] With a screen reader on, focus a card on the field: it announces the owner-aware zone (e.g. `The Legendary Fisherman in Your Monster Zone 2`) while the painted zone underneath still reads `Monster Zone 2`.
+- [ ] Arrow-key around the whole field by hand: both shared Extra Monster Zones are reachable (press Up from your Monster Zone 2/3/4, or Down from the opponent's), and no zone, pile, or hand card is stranded with no way in.
+- [ ] Arrow navigation still feels sane after the shared zones joined the vertical path: pressing Up twice from your monster row lands on the opponent's row via the shared zone rather than jumping somewhere unrelated.
+- [ ] Play a short duel: summoning, setting, dragging from hand, and opening a pile's list all still land on the intended zone — the tighter columns did not shift any hit target off its card.

@@ -66,7 +66,7 @@
   class:is-opponent={stack.player === 1}
   class="duel-field-stack"
   role={clickable ? undefined : "group"}
-  aria-label={stack.label}
+  aria-label={stack.accessibleLabel}
   data-field-target={stack.targetId}
   tabindex={active ? 0 : -1}
   data-player={stack.player}

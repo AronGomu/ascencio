@@ -48,6 +48,31 @@
 - `tests/component/DuelField.test.ts` contains many accessible-name expectations with `Your Main Monster`, `Your GY`, `Opponent Deck`; update only assertions whose source is the changed layout/ARIA contract.
 - **From Depends (T1):** standard round-2 physical field and tests are present.
 
+## Repair state (parent-inlined 2026-08-12, authorized extra repair)
+
+A previous worker implemented this ticket almost completely, then exhausted its repair budget on one failure. The user has authorized exactly one extra repair attempt. Do not restart from scratch.
+
+- Preserved candidate code: git ref `refs/candidates/t7-zone-geometry` (commit `04341dd`), snapshotted on base `676d191`. Also `stash@{0}` — do not drop it.
+- Current branch HEAD is `7eb8830`; it adds only two test commits over `676d191`. `git merge-tree --write-tree HEAD refs/candidates/t7-zone-geometry` was re-verified on 2026-08-12: merges clean.
+- Restore the candidate into the working tree first:
+  ```
+  git restore --source=refs/candidates/t7-zone-geometry --worktree -- .
+  git status --short
+  ```
+  Never stage `feedback.md` — it is user-owned and intentionally dirty.
+- Candidate evidence already achieved: unit 609/609, component 202/202, typecheck/lint/format/build green. Browser measurement at 1280×720 already correct: horizontal gap 13 design px, vertical gaps 6 design px both sides, 34/34 exact labels, Field↔Extra x delta 0 for both players.
+- **The single remaining failure:** keyboard arrow navigation reaches 40 of 42 targets. Both shared Extra Monster Zones have no inbound arrow route after the column x centres moved to `450,545,640,735,830` while the shared EMZs stayed at x `590/690`.
+- Fix location named by the previous worker: `src/field/board-view-model.ts:524-530`, the neighbour/nav graph derivation. Per Impl step 10, neighbour maps must remain *usable*, not byte-identical — a tie may legitimately resolve to a different neighbour.
+- After fixing, re-run every Validation box below, including the Chromium geometry and keyboard sweep. Do not trust the candidate's prior green output for suites your fix touches.
+
+### Environment facts for validation
+
+- Playwright is chromium-only on this host. Run browser checks as:
+  `PLAYWRIGHT_BROWSERS_PATH=/home/aron/projects/ascencio/.tmp/pw-browsers npx playwright test --project=chromium`
+  Bare `npm run check` cannot exit 0 here because `playwright.config.ts` includes a `webkit-smoke` project unsupported on this machine. Use `npm run check:headless` plus the explicit Chromium invocation instead.
+- Known flake: Vitest integration occasionally dies with `Worker exited unexpectedly` and no assertion failure. Re-run once before diagnosing.
+- Known flake: the duel seed is random per run; re-run a failing Chromium walker twice before diagnosing.
+
 ## API design
 
 Add to `src/field/duel-field-layout.ts`:
@@ -98,16 +123,17 @@ Update existing exact coordinate expectation at line 51 from `440/1280` to `450/
 
 ## Impl steps
 
-- [ ] 1. Add the six unit tests and two component tests. Run `npm run test:unit -- duel-field` and `npm run test:component -- DuelField` — expect label/coordinate/API failures.
-- [ ] 2. In `duel-field-layout.ts`, replace base/step x with the exact array `[450, 545, 640, 735, 830]`; set spell y `mirrored ? 130 : 590`; move Extra x to `330`.
-- [ ] 3. Replace `zone`'s label construction with a pure owner-neutral label switch using the exact table above. Keep shared labels explicit.
-- [ ] 4. Implement/export `fieldZoneAccessibleName` with exhaustive `FieldZoneKind` handling and shared-id branch. No string parsing of the visible label.
-- [ ] 5. Add `accessibleLabel` to `BoardZoneView` and `BoardStackView`. In `mapSnapshotToBoard`, map it from layout; in `createStacks`, append current count/top-card suffix to the expanded name while keeping short `label` + suffix for dialog/title display.
-- [ ] 6. In `addCard`, pass the expanded name to `cardAccessibleLabel`.
-- [ ] 7. In `ZoneControl.svelte`, use `zone.accessibleLabel` in `aria-label` and keep `zone.label` in the visible span. In `StackControl.svelte`, use `stack.accessibleLabel` for `aria-label`.
-- [ ] 8. Update fixtures typed as `BoardZoneView` / `BoardStackView` to include `accessibleLabel`; do not change unrelated fixture geometry.
-- [ ] 9. Update exact affected assertions (`Your Main Monster` → accessible `Your Monster Zone`, painted text per table). Do not mass-replace human-facing prompt-choice fixture labels — engine prompt labels are independent of painted layout.
-- [ ] 10. Re-run focused suites; run field navigation tests because coordinates drive neighbours. Assert neighbour maps remain usable rather than byte-identical if a tie resolves differently.
+- [x] 1. Add the six unit tests and two component tests. Run `npm run test:unit -- duel-field` and `npm run test:component -- DuelField` — expect label/coordinate/API failures. (criterion: the six unit + two component tests exist and pass; red-first evidence preserved in `refs/candidates/t7-zone-geometry`)
+- [x] 2. In `duel-field-layout.ts`, replace base/step x with the exact array `[450, 545, 640, 735, 830]`; set spell y `mirrored ? 130 : 590`; move Extra x to `330`. (criterion: `uses denser columns and wider row gaps` + `aligns each Extra Deck under its Field Zone` pass)
+- [x] 3. Replace `zone`'s label construction with a pure owner-neutral label switch using the exact table above. Keep shared labels explicit. (criterion: `uses requested owner-neutral visible labels` passes)
+- [x] 4. Implement/export `fieldZoneAccessibleName` with exhaustive `FieldZoneKind` handling and shared-id branch. No string parsing of the visible label. (criterion: `retains owner-aware accessible names` passes and `npm run typecheck` proves the switch exhaustive)
+- [x] 5. Add `accessibleLabel` to `BoardZoneView` and `BoardStackView`. In `mapSnapshotToBoard`, map it from layout; in `createStacks`, append current count/top-card suffix to the expanded name while keeping short `label` + suffix for dialog/title display. (criterion: board mapping test asserts `Monster Zone 1` / `Your Monster Zone 1` and `Deck` / `Opponent Deck` split)
+- [x] 6. In `addCard`, pass the expanded name to `cardAccessibleLabel`. (criterion: card label test expects `Hidden card in Your Monster Zone 3`)
+- [x] 7. In `ZoneControl.svelte`, use `zone.accessibleLabel` in `aria-label` and keep `zone.label` in the visible span. In `StackControl.svelte`, use `stack.accessibleLabel` for `aria-label`. (criterion: `paints owner-neutral labels but announces ownership` and `keeps stack ownership in accessible names` pass)
+- [x] 8. Update fixtures typed as `BoardZoneView` / `BoardStackView` to include `accessibleLabel`; do not change unrelated fixture geometry. (criterion: `npm run typecheck` clean with no fixture coordinate diffs)
+- [x] 9. Update exact affected assertions (`Your Main Monster` → accessible `Your Monster Zone`, painted text per table). Do not mass-replace human-facing prompt-choice fixture labels — engine prompt labels are independent of painted layout. (criterion: `npm run test:component` 202/202 with no edits to prompt-choice fixture labels)
+- [x] 10. Re-run focused suites; run field navigation tests because coordinates drive neighbours. Assert neighbour maps remain usable rather than byte-identical if a tie resolves differently. (criterion: `npm run test:unit -- duel-field field-navigation placement-candidates` passes)
+  - [x] 10.1 Repair the vertical nav graph so the shared Extra Monster Zones keep inbound arrow routes: vertical alignment is horizontal-span overlap, not exact-column. (criterion: new `keeps every field target reachable with arrow keys alone` test fails before the change and passes after)
 
 ## Outputs
 
@@ -118,12 +144,12 @@ Update existing exact coordinate expectation at line 51 from `440/1280` to `450/
 
 ## Validation
 
-- [ ] `npm run test:unit -- duel-field field-navigation placement-candidates` passes
-- [ ] `npm run test:component -- DuelField` passes
-- [ ] `npm run typecheck`, `npm run lint`, `npm run format:check` pass
-- [ ] `npm run build` succeeds
-- [ ] manual check at 1280×720 design ratio: labels match table; columns visibly closer; row gaps visibly larger; Extra aligns vertically with Field for both players
-- [ ] manual keyboard check: arrow navigation still reaches every field target
-- [ ] browser measurement: central card edge gap = 13 design px horizontally; monster↔spell edge gap = 6 design px vertically
-- [ ] app functional — no broken path from this slice
-- [ ] commit msg draft: `refactor(field): tighten zone labels and geometry`
+- [x] `npm run test:unit -- duel-field field-navigation placement-candidates` passes (58 files / 611 tests passed)
+- [x] `npm run test:component -- DuelField` passes (`npm run test:component`: 15 files / 202 tests passed)
+- [x] `npm run typecheck`, `npm run lint`, `npm run format:check` pass (all three inside `npm run check:headless`, exit 0)
+- [x] `npm run build` succeeds (`build:verify` status ok)
+- [x] manual check at 1280×720 design ratio: labels match table; columns visibly closer; row gaps visibly larger; Extra aligns vertically with Field for both players (criterion: Chromium probe at 1280×720 dumps all 34 visible labels matching the table and Field↔Extra x delta 0 for both players)
+- [x] manual keyboard check: arrow navigation still reaches every field target (criterion: Chromium arrow-key sweep reaches 42/42 nav targets, 0 unreachable, both shared EMZs with inbound routes)
+- [x] browser measurement: central card edge gap = 13 design px horizontally; monster↔spell edge gap = 6 design px vertically (criterion: measured 12.98 design px horizontally ×4 gaps and 6.00 design px vertically on both sides)
+- [x] app functional — no broken path from this slice (criterion: `PLAYWRIGHT_BROWSERS_PATH=… npx playwright test --project=chromium` 21/21 passed, including the full keyboard-only preset duel)
+- [x] commit msg draft: `refactor(field): tighten zone labels and geometry` (criterion: branch head carries that exact subject)

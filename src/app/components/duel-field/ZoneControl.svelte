@@ -35,7 +35,9 @@
   class:is-navigation-active={active}
   class="duel-field-zone"
   role={actionable ? undefined : "group"}
-  aria-label={actionable ? `Legal placement, Select ${zone.label}` : zone.label}
+  aria-label={actionable
+    ? `Legal placement, Select ${zone.accessibleLabel}`
+    : zone.accessibleLabel}
   aria-pressed={actionable ? selected : undefined}
   data-zone-id={zone.id}
   data-player={zone.player}

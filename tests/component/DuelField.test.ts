@@ -150,6 +150,27 @@ function renderInteractive(value: PlayerPrompt) {
 }
 
 describe("DuelField", () => {
+  it("paints owner-neutral labels but announces ownership", () => {
+    render(DuelField, { board: board("ST-01") });
+
+    expect(
+      document.querySelector('[data-cy="zone-control-label-p0:mainMonster:0"]')
+        ?.textContent,
+    ).toBe("Monster Zone 1");
+    expect(
+      screen.getByRole("group", { name: "Your Monster Zone 1" }),
+    ).toBeTruthy();
+  });
+
+  it("keeps stack ownership in accessible names", () => {
+    render(DuelField, { board: board("ST-01") });
+
+    expect(screen.getByRole("button", { name: /^Your Deck, / })).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: /^Opponent Deck, / }),
+    ).toBeTruthy();
+  });
+
   it("DF-16 validates ST-01 public fixture through parse/store/component seam", () => {
     const value = DUEL_FIELD_PUBLIC_STATES["ST-01"];
     const view = reduceDuelViewState(createInitialDuelViewState(CONTEXT), {
@@ -262,7 +283,9 @@ describe("DuelField", () => {
     expect(field.querySelectorAll("[data-zone-id]")).toHaveLength(34);
 
     for (const zone of value.zones) {
-      const node = within(field).getByRole("group", { name: zone.label });
+      const node = within(field).getByRole("group", {
+        name: zone.accessibleLabel,
+      });
       expect(node.getAttribute("data-zone-id")).toBe(zone.id);
     }
 
@@ -335,7 +358,7 @@ describe("DuelField", () => {
     ).toBeTruthy();
     expect(
       screen.getByRole("button", {
-        name: "Your GY, 1 card, top card Blue-Eyes White Dragon",
+        name: "Your Graveyard, 1 card, top card Blue-Eyes White Dragon",
       }),
     ).toBeTruthy();
     expect(
@@ -347,7 +370,7 @@ describe("DuelField", () => {
     render(DuelField, { board: board("ST-04") });
 
     const defense = screen.getByRole("article", {
-      name: /Axe Raider in Your Main Monster 2, face-up defense/,
+      name: /Axe Raider in Your Monster Zone 2, face-up defense/,
     });
     expect(defense.getAttribute("data-orientation")).toBe("sideways");
     expect(defense.classList.contains("is-sideways")).toBe(true);
@@ -538,7 +561,7 @@ describe("DuelField", () => {
     });
     await waitFor(() =>
       expect(document.activeElement).toBe(
-        screen.getByRole("button", { name: /Select Your Main Monster 5/ }),
+        screen.getByRole("button", { name: /Select Your Monster Zone 5/ }),
       ),
     );
 
@@ -557,7 +580,7 @@ describe("DuelField", () => {
   it("exposes public controller, zone, position, counters, and materials", () => {
     render(DuelField, { board: board("ST-07") });
     const rich = screen.getByRole("article", {
-      name: /The Legendary Fisherman in Your Main Monster 2, face-up attack, 3 Spell Counters, 2 materials/,
+      name: /The Legendary Fisherman in Your Monster Zone 2, face-up attack, 3 Spell Counters, 2 materials/,
     });
     expect(rich.getAttribute("data-facing")).toBe("self");
     expect(document.body.innerHTML).not.toContain("46986414");
@@ -742,7 +765,7 @@ describe("DuelField", () => {
       const harness = renderInteractive(value);
       expect(screen.queryByRole("button", { name: /Confirm/ })).toBeNull();
       await user.click(
-        screen.getByRole("button", { name: /Select Your Main Monster 1/ }),
+        screen.getByRole("button", { name: /Select Your Monster Zone 1/ }),
       );
       expect(harness.commands).toEqual([[choice.id]]);
     }
@@ -1012,7 +1035,9 @@ describe("DuelField", () => {
       oninteraction,
     });
 
-    await user.click(screen.getByRole("button", { name: /Your GY, 4 cards/ }));
+    await user.click(
+      screen.getByRole("button", { name: /Your Graveyard, 4 cards/ }),
+    );
     oninteraction.mockClear();
     await user.click(screen.getByRole("button", { name: "Close" }));
 
@@ -1061,7 +1086,9 @@ describe("DuelField", () => {
       oninteraction,
     });
 
-    await user.click(screen.getByRole("button", { name: /Your GY, 4 cards/ }));
+    await user.click(
+      screen.getByRole("button", { name: /Your Graveyard, 4 cards/ }),
+    );
     oninteraction.mockClear();
     const entry = document.querySelector<HTMLElement>(
       ".zone-list-entry.is-actionable",
@@ -1113,7 +1140,9 @@ describe("DuelField", () => {
       oninteraction,
     });
 
-    await user.click(screen.getByRole("button", { name: /Your GY, 4 cards/ }));
+    await user.click(
+      screen.getByRole("button", { name: /Your Graveyard, 4 cards/ }),
+    );
     oninteraction.mockClear();
     const header = document.querySelector<HTMLElement>(
       '[data-cy="zone-list-dialog-header"]',
@@ -1288,10 +1317,10 @@ describe("DuelField", () => {
     });
 
     const visible = screen.getByRole("article", {
-      name: /The Legendary Fisherman in Your Main Monster 1/,
+      name: /The Legendary Fisherman in Your Monster Zone 1/,
     });
     const hidden = screen.getByRole("article", {
-      name: /Hidden card in Your Main Monster 3/,
+      name: /Hidden card in Your Monster Zone 3/,
     });
     expect(within(visible).getByRole("img").getAttribute("src")).toBe(
       "/cards/placeholder.webp",
@@ -1808,7 +1837,9 @@ describe("DuelField", () => {
       oninteraction,
     });
 
-    await user.click(screen.getByRole("button", { name: /Your GY, 4 cards/ }));
+    await user.click(
+      screen.getByRole("button", { name: /Your Graveyard, 4 cards/ }),
+    );
     await user.click(screen.getByRole("button", { name: "Chain" }));
 
     expect(oninteraction).toHaveBeenCalledWith({
@@ -1992,7 +2023,9 @@ describe("DuelField", () => {
       BOARD_CARD_TEXTS,
     );
     render(DuelField, { board: stackBoard.value, zoneLists });
-    const stack = screen.getByRole("button", { name: /Your GY, 4 cards/ });
+    const stack = screen.getByRole("button", {
+      name: /Your Graveyard, 4 cards/,
+    });
 
     await user.click(stack);
     expect(document.activeElement).toBe(stack);

@@ -3,7 +3,11 @@ import {
   createFieldNavigationState,
   reduceFieldNavigation,
 } from "../../src/app/prompts/field-navigation.ts";
-import { mapSnapshotToBoard } from "../../src/field/board-view-model.ts";
+import {
+  mapSnapshotToBoard,
+  type BoardTargetId,
+  type BoardViewModel,
+} from "../../src/field/board-view-model.ts";
 import {
   BOARD_CARD_TEXTS,
   BOARD_VIEW_MODEL_FIXTURES,
@@ -34,6 +38,20 @@ function synchronize(
     board: value,
     actionableTargets: new Set(actionableTargets),
     context,
+  });
+}
+
+function sharedExtraMonsterTargets(
+  value: BoardViewModel,
+): readonly BoardTargetId[] {
+  return [...value.nav.keys()].filter((target) => {
+    const zone = value.zones.find(({ targetId }) => targetId === target);
+    if (zone !== undefined) return zone.player === "shared";
+    return (
+      value.cards
+        .find(({ targetId }) => targetId === target)
+        ?.zoneId.startsWith("shared:") === true
+    );
   });
 }
 
@@ -167,6 +185,41 @@ describe("field navigation", () => {
       context: "prompt-3",
     });
     expect(state.activeTarget).toBe("zone:p0:mainMonster:4");
+  });
+
+  it("keeps every field target reachable with arrow keys alone", () => {
+    for (const fixture of ["ST-01", "ST-03", "ST-08"] as const) {
+      const value = board(fixture);
+      const targets = [...value.nav.keys()];
+      const start = targets[0];
+      if (start === undefined) throw new Error(`Empty nav map: ${fixture}`);
+      const reached = new Set<BoardTargetId>([start]);
+      const queue: BoardTargetId[] = [start];
+      for (let index = 0; index < queue.length; index += 1) {
+        const from = queue[index]!;
+        for (const key of [
+          "ArrowLeft",
+          "ArrowRight",
+          "ArrowUp",
+          "ArrowDown",
+        ] as const) {
+          const moved = reduceFieldNavigation(synchronize(value, [from]), {
+            type: "move",
+            board: value,
+            key,
+          }).activeTarget;
+          if (moved !== null && !reached.has(moved)) {
+            reached.add(moved);
+            queue.push(moved);
+          }
+        }
+      }
+      expect({
+        fixture,
+        unreachable: targets.filter((target) => !reached.has(target)),
+      }).toEqual({ fixture, unreachable: [] });
+      expect(sharedExtraMonsterTargets(value).length).toBe(2);
+    }
   });
 
   it("keeps responsive composition separate from physical nav adjacency", () => {

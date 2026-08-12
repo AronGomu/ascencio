@@ -6,6 +6,7 @@ import {
   type BoardViewModel,
 } from "../../src/field/board-view-model.ts";
 import {
+  fieldZoneAccessibleName,
   fieldZoneId,
   mapEngineFieldAddress,
   STANDARD_DUEL_FIELD_LAYOUT,
@@ -48,12 +49,119 @@ describe("duel field mapping", () => {
     expect(layout).toContainEqual(
       expect.objectContaining({
         id: "p0:mainMonster:0",
-        x: 440 / 1280,
+        x: 450 / 1280,
         y: 470 / 720,
         width: 82 / 1280,
         height: 114 / 720,
       }),
     );
+  });
+
+  it("uses requested owner-neutral visible labels", () => {
+    const playerZones = STANDARD_DUEL_FIELD_LAYOUT.filter(
+      ({ player }) => player !== "shared",
+    );
+    expect(
+      playerZones.some(({ label }) => /^(Your|Opponent) /.test(label)),
+    ).toBe(false);
+    expect(
+      playerZones
+        .filter(({ player, kind }) => player === 0 && kind === "monster")
+        .map(({ label }) => label),
+    ).toEqual([
+      "Monster Zone 1",
+      "Monster Zone 2",
+      "Monster Zone 3",
+      "Monster Zone 4",
+      "Monster Zone 5",
+    ]);
+    expect(
+      playerZones
+        .filter(({ player, kind }) => player === 0 && kind === "spellTrap")
+        .map(({ label }) => label),
+    ).toEqual([
+      "Spell/Trap Zone 1",
+      "Spell/Trap Zone 2",
+      "Spell/Trap Zone 3",
+      "Spell/Trap Zone 4",
+      "Spell/Trap Zone 5",
+    ]);
+    expect(
+      STANDARD_DUEL_FIELD_LAYOUT.filter(
+        ({ player }) => player === "shared",
+      ).map(({ label }) => label),
+    ).toEqual([
+      "Shared Extra Monster Zone left",
+      "Shared Extra Monster Zone right",
+    ]);
+  });
+
+  it("retains owner-aware accessible names", () => {
+    const byId = new Map(
+      STANDARD_DUEL_FIELD_LAYOUT.map((zone) => [zone.id, zone]),
+    );
+    expect(fieldZoneAccessibleName(byId.get("p0:mainMonster:0")!)).toBe(
+      "Your Monster Zone 1",
+    );
+    expect(fieldZoneAccessibleName(byId.get("p1:spellTrap:4")!)).toBe(
+      "Opponent Spell and Trap Zone 5",
+    );
+    expect(fieldZoneAccessibleName(byId.get("shared:extraMonster:left")!)).toBe(
+      "Shared Extra Monster Zone left",
+    );
+    expect(fieldZoneAccessibleName(byId.get("p0:graveyard")!)).toBe(
+      "Your Graveyard",
+    );
+  });
+
+  it("uses denser columns and wider row gaps", () => {
+    const byId = new Map(
+      STANDARD_DUEL_FIELD_LAYOUT.map((zone) => [zone.id, zone]),
+    );
+    for (const player of [0, 1] as const) {
+      expect(
+        [0, 1, 4].map(
+          (sequence) =>
+            byId.get(`p${player}:mainMonster:${sequence}` as PhysicalZoneId)?.x,
+        ),
+      ).toEqual([450 / 1280, 545 / 1280, 830 / 1280]);
+    }
+    expect(byId.get("p0:spellTrap:0")?.y).toBe(590 / 720);
+    expect(byId.get("p1:spellTrap:0")?.y).toBe(130 / 720);
+    expect(byId.get("p0:mainMonster:0")?.y).toBe(470 / 720);
+  });
+
+  it("aligns each Extra Deck under its Field Zone", () => {
+    const byId = new Map(
+      STANDARD_DUEL_FIELD_LAYOUT.map((zone) => [zone.id, zone]),
+    );
+    for (const player of [0, 1] as const) {
+      expect(byId.get(`p${player}:extra`)?.x).toBe(330 / 1280);
+      expect(byId.get(`p${player}:extra`)?.x).toBe(
+        byId.get(`p${player}:field`)?.x,
+      );
+    }
+    expect(byId.get("p0:extra")?.y).toBe(590 / 720);
+    expect(byId.get("p1:extra")?.y).toBe(130 / 720);
+  });
+
+  it("keeps dimensions, ids and shared EMZ coordinates stable", () => {
+    expect(
+      new Set(STANDARD_DUEL_FIELD_LAYOUT.map(({ id }) => id)),
+    ).toHaveLength(34);
+    expect(
+      STANDARD_DUEL_FIELD_LAYOUT.filter(({ kind }) => kind !== "hand").every(
+        ({ width, height }) => width === 82 / 1280 && height === 114 / 720,
+      ),
+    ).toBe(true);
+    expect(
+      STANDARD_DUEL_FIELD_LAYOUT.filter(
+        ({ player }) => player === "shared",
+      ).map(({ x, y }) => [x, y]),
+    ).toEqual([
+      [590 / 1280, 360 / 720],
+      [690 / 1280, 360 / 720],
+    ]);
   });
 
   it.each<readonly [EngineFieldAddress, PhysicalZoneId]>([
@@ -285,7 +393,7 @@ describe("semantic board view model", () => {
     ]);
     expect(board.cards[0]?.label).toContain("face-up attack");
     expect(board.cards[2]?.label).toBe(
-      "Hidden card in Your Main Monster 3, face-down attack",
+      "Hidden card in Your Monster Zone 3, face-down attack",
     );
     expect(board.cards[2]?.label).not.toContain("Dark Magician");
     expect(JSON.stringify(board.cards[2])).not.toContain("46986414");

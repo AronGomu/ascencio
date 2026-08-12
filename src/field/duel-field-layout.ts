@@ -107,6 +107,9 @@ export function fieldZoneId(
   return `p${player}:${kind}`;
 }
 
+/* Design-grid x centres of the five central monster/spell columns. */
+const CENTRAL_COLUMN_X = [450, 545, 640, 735, 830] as const;
+
 export const STANDARD_DUEL_FIELD_LAYOUT: readonly StandardFieldZoneLayout[] =
   createStandardDuelFieldLayout();
 
@@ -115,23 +118,19 @@ function createStandardDuelFieldLayout(): readonly StandardFieldZoneLayout[] {
   for (const player of [0, 1] as const) {
     const mirrored = player === 1;
     const monsterY = mirrored ? 250 : 470;
-    const spellY = mirrored ? 135 : 585;
+    const spellY = mirrored ? 130 : 590;
     for (let sequence = 0; sequence < 5; sequence += 1) {
-      const x = 440 + sequence * 100;
-      zones.push(
-        zone(player, "monster", sequence, x, monsterY, "Main Monster"),
-      );
-      zones.push(
-        zone(player, "spellTrap", sequence, x, spellY, "Spell / Trap"),
-      );
+      const x = CENTRAL_COLUMN_X[sequence]!;
+      zones.push(zone(player, "monster", sequence, x, monsterY));
+      zones.push(zone(player, "spellTrap", sequence, x, spellY));
     }
-    zones.push(zone(player, "field", 0, 330, monsterY, "Field"));
-    zones.push(zone(player, "deck", 0, 1030, spellY, "Deck"));
-    zones.push(zone(player, "extra", 0, 230, spellY, "Extra Deck"));
-    zones.push(zone(player, "graveyard", 0, 1030, monsterY, "GY"));
-    zones.push(zone(player, "banished", 0, 1130, monsterY, "Banished"));
+    zones.push(zone(player, "field", 0, 330, monsterY));
+    zones.push(zone(player, "deck", 0, 1030, spellY));
+    zones.push(zone(player, "extra", 0, 330, spellY));
+    zones.push(zone(player, "graveyard", 0, 1030, monsterY));
+    zones.push(zone(player, "banished", 0, 1130, monsterY));
     zones.push({
-      ...zone(player, "hand", 0, 640, mirrored ? 42 : 678, "Hand"),
+      ...zone(player, "hand", 0, 640, mirrored ? 42 : 678),
       width: 720 / DUEL_FIELD_WIDTH,
       height: 72 / DUEL_FIELD_HEIGHT,
     });
@@ -149,7 +148,6 @@ function zone(
   sequence: number,
   x: number,
   y: number,
-  label: string,
 ): StandardFieldZoneLayout {
   return {
     id: fieldZoneId(player, kind, sequence),
@@ -160,8 +158,46 @@ function zone(
     y: y / DUEL_FIELD_HEIGHT,
     width: (CARD_WIDTH + 10) / DUEL_FIELD_WIDTH,
     height: (CARD_HEIGHT + 10) / DUEL_FIELD_HEIGHT,
-    label: `${player === 0 ? "Your" : "Opponent"} ${label}${kind === "monster" || kind === "spellTrap" ? ` ${sequence + 1}` : ""}`,
+    label: visibleZoneLabel(kind, sequence),
   };
+}
+
+function visibleZoneLabel(kind: FieldZoneKind, sequence: number): string {
+  switch (kind) {
+    case "monster":
+      return `Monster Zone ${sequence + 1}`;
+    case "spellTrap":
+      return `Spell/Trap Zone ${sequence + 1}`;
+    case "field":
+      return "Field Zone";
+    case "deck":
+      return "Deck";
+    case "extra":
+      return "Extra Deck";
+    case "graveyard":
+      return "GY";
+    case "banished":
+      return "Banished";
+    case "hand":
+      return "Hand";
+  }
+}
+
+export function fieldZoneAccessibleName(
+  zone: Pick<StandardFieldZoneLayout, "player" | "kind" | "sequence" | "id">,
+): string {
+  if (zone.player === "shared")
+    return zone.id === "shared:extraMonster:left"
+      ? "Shared Extra Monster Zone left"
+      : "Shared Extra Monster Zone right";
+  const owner = zone.player === 0 ? "Your" : "Opponent";
+  const spoken =
+    zone.kind === "spellTrap"
+      ? `Spell and Trap Zone ${zone.sequence + 1}`
+      : zone.kind === "graveyard"
+        ? "Graveyard"
+        : visibleZoneLabel(zone.kind, zone.sequence);
+  return `${owner} ${spoken}`;
 }
 
 function sharedExtraMonsterZone(

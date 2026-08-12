@@ -13,6 +13,7 @@ import {
   CARD_WIDTH,
   DUEL_FIELD_HEIGHT,
   DUEL_FIELD_WIDTH,
+  fieldZoneAccessibleName,
   mapEngineFieldAddress,
   STANDARD_DUEL_FIELD_LAYOUT,
   type FieldZoneKind,
@@ -34,6 +35,7 @@ export interface BoardZoneView {
   readonly kind: FieldZoneKind;
   readonly sequence: number;
   readonly label: string;
+  readonly accessibleLabel: string;
   readonly x: number;
   readonly y: number;
   readonly width: number;
@@ -91,6 +93,7 @@ export interface BoardStackView {
   readonly count: number;
   readonly publicCount: number;
   readonly label: string;
+  readonly accessibleLabel: string;
   readonly topCardLabel?: string;
   readonly topCardCode?: CardCode;
   readonly x: number;
@@ -139,6 +142,7 @@ interface NavControl {
   readonly targetId: BoardTargetId;
   readonly x: number;
   readonly y: number;
+  readonly width: number;
 }
 
 const LAYOUT_BY_ID = new Map(
@@ -158,6 +162,7 @@ export function mapSnapshotToBoard(
       Object.freeze({
         ...layout,
         targetId: `zone:${layout.id}` as const,
+        accessibleLabel: fieldZoneAccessibleName(layout),
       }),
     ),
   );
@@ -323,7 +328,7 @@ function addCard(
   );
   const label = cardAccessibleLabel(
     displayName,
-    layout.label,
+    fieldZoneAccessibleName(layout),
     card.position,
     counters,
     materials.length,
@@ -410,6 +415,7 @@ function createStacks(
       const top = zone === "deck" ? undefined : publicCards.at(-1);
       const topCardLabel =
         top === undefined ? undefined : cardName(top.code, cardTexts);
+      const detail = `${count} ${count === 1 ? "card" : "cards"}${topCardLabel === undefined ? "" : `, top card ${topCardLabel}`}`;
       stacks.push(
         Object.freeze({
           id: layout.id,
@@ -418,7 +424,8 @@ function createStacks(
           zone,
           count,
           publicCount: publicCards.length,
-          label: `${layout.label}, ${count} ${count === 1 ? "card" : "cards"}${topCardLabel === undefined ? "" : `, top card ${topCardLabel}`}`,
+          label: `${layout.label}, ${detail}`,
+          accessibleLabel: `${fieldZoneAccessibleName(layout)}, ${detail}`,
           ...(topCardLabel === undefined ? {} : { topCardLabel }),
           ...(top?.code === undefined ? {} : { topCardCode: top.code }),
           x: layout.x,
@@ -515,10 +522,15 @@ function neighborInDirection(
     return candidate.y > origin.y;
   });
   if (candidates.length === 0) return {};
+  // Rows are exact, so horizontal moves stay row-local on an exact match.
+  // Columns are not: the shared Extra Monster Zones sit between the monster
+  // rows and off every column centre, so vertical alignment is span overlap.
+  // Column pitch stays wider than a control, so neighbouring columns still
+  // never count as aligned.
   const aligned = candidates.filter((candidate) =>
     horizontal
       ? Math.abs(candidate.y - origin.y) < NAV_ALIGNMENT_EPSILON
-      : Math.abs(candidate.x - origin.x) < NAV_ALIGNMENT_EPSILON,
+      : Math.abs(candidate.x - origin.x) < (origin.width + candidate.width) / 2,
   );
   if (horizontal && aligned.length === 0) return {};
   const pool = aligned.length > 0 ? aligned : candidates;

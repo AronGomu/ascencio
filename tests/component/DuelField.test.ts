@@ -693,33 +693,46 @@ describe("DuelField", () => {
     ).toBe(true);
   });
 
-  it("makes native Enter and Space activation equal click and exposes legal/selected state", async () => {
+  it("makes native Enter and Space activation submit an exact singleton choice directly", async () => {
     const user = userEvent.setup();
-    const value = fieldPrompt("selectCard", [
+    const enterValue = fieldPrompt("selectCard", [
       mountedChoice("select", "Select monster"),
     ]);
-    const harness = renderInteractive(value);
-    const card = screen.getByRole("button", {
+    const enterHarness = renderInteractive(enterValue);
+    const enterCard = screen.getByRole("button", {
       name: /Legal.*Select The Legendary Fisherman.*face-up attack/,
     });
-    card.focus();
+    enterCard.focus();
     expect(
-      card.closest(".duel-field-card")?.classList.contains("is-actionable"),
+      enterCard
+        .closest(".duel-field-card")
+        ?.classList.contains("is-actionable"),
     ).toBe(true);
     expect(
-      card.closest(".duel-field-card")?.classList.contains("is-selected"),
+      enterCard.closest(".duel-field-card")?.classList.contains("is-selected"),
     ).toBe(false);
     await user.keyboard("{Enter}");
-    expect(card.getAttribute("aria-pressed")).toBe("true");
-    expect(harness.commands).toEqual([]);
+    expect(enterHarness.commands).toEqual([["select"]]);
     expect(
-      card.closest(".duel-field-card")?.classList.contains("is-selected"),
-    ).toBe(true);
+      enterCard.closest(".duel-field-card")?.classList.contains("is-selected"),
+    ).toBe(false);
+    expect(
+      document.querySelector('[data-cy="floating-field-window-confirm"]'),
+    ).toBeNull();
+    cleanup();
+
+    const spaceValue = fieldPrompt("selectCard", [
+      mountedChoice("select", "Select monster"),
+    ]);
+    const spaceHarness = renderInteractive(spaceValue);
+    const spaceCard = screen.getByRole("button", {
+      name: /Legal.*Select The Legendary Fisherman.*face-up attack/,
+    });
+    spaceCard.focus();
     await user.keyboard(" ");
-    expect(card.getAttribute("aria-pressed")).toBe("false");
-    expect(harness.commands).toEqual([]);
+    expect(spaceHarness.commands).toEqual([["select"]]);
     expect(
-      card.closest(".duel-field-card")?.classList.contains("is-selected"),
+      spaceCard.closest(".duel-field-card")?.classList.contains("is-selected"),
     ).toBe(false);
   });
 
@@ -986,7 +999,7 @@ describe("DuelField", () => {
     expect(rendered.container.querySelector('[role="menu"]')).toBeNull();
   });
 
-  it("toggles multi, sum, unselect, and place drafts without submitting before explicit Confirm", async () => {
+  it("toggles multi and optional-unselect drafts without submitting before explicit Confirm", async () => {
     const user = userEvent.setup();
     for (const [kind, choice, overrides] of [
       [
@@ -995,25 +1008,10 @@ describe("DuelField", () => {
         { minimum: 1, maximum: 2 },
       ],
       [
-        "selectTribute",
-        mountedChoice("tribute", "Tribute monster"),
-        { minimum: 1, maximum: 1 },
+        "selectUnselectCard",
+        mountedChoice("toggle", "Toggle monster"),
+        { minimum: 0, maximum: 1 },
       ],
-      [
-        "selectSum",
-        mountedChoice("sum", "Tribute monster", {
-          card: {
-            instanceId: cardInstanceId("prompt-sum"),
-            controller: 0,
-            location: "monster",
-            sequence: 0,
-            position: "faceUpAttack",
-            contribution: 2,
-          },
-        }),
-        { requiredTotal: 2, sumMode: "exact" },
-      ],
-      ["selectUnselectCard", mountedChoice("toggle", "Toggle monster"), {}],
     ] as const) {
       cleanup();
       const value = fieldPrompt(kind, [choice], overrides);
@@ -1036,6 +1034,76 @@ describe("DuelField", () => {
     }
   });
 
+  it("submits an exact singleton card selection immediately, with no draft/Confirm step", async () => {
+    const user = userEvent.setup();
+    for (const [kind, choice] of [
+      ["selectCard", mountedChoice("attack-target", "Select monster")],
+      ["selectTribute", mountedChoice("tribute", "Tribute monster")],
+      [
+        "selectSum",
+        mountedChoice("sum", "Tribute monster", {
+          card: {
+            instanceId: cardInstanceId("prompt-sum"),
+            controller: 0,
+            location: "monster",
+            sequence: 0,
+            position: "faceUpAttack",
+            contribution: 2,
+          },
+        }),
+      ],
+    ] as const) {
+      cleanup();
+      const value = fieldPrompt(kind, [choice], {
+        minimum: 1,
+        maximum: 1,
+        ...(kind === "selectSum" ? { requiredTotal: 2, sumMode: "exact" } : {}),
+      });
+      const harness = renderInteractive(value);
+      const target = screen.getByRole("button", {
+        name: /Select The Legendary Fisherman/,
+      });
+      await user.click(target);
+      expect(harness.commands).toEqual([[choice.id]]);
+      expect(
+        target.closest(".duel-field-card")?.classList.contains("is-selected"),
+      ).toBe(false);
+      expect(screen.queryByRole("button", { name: /Confirm/ })).toBeNull();
+      expect(
+        document.querySelector('[data-cy="floating-field-window-confirm"]'),
+      ).toBeNull();
+    }
+  });
+
+  it("dispatches exactly one chooseChoice on a double click while pending", async () => {
+    const value = fieldPrompt("selectCard", [
+      mountedChoice("select", "Select monster"),
+    ]);
+    const spec = activeSpec(value);
+    const session = createInteractionSession(spec);
+    const oninteraction = vi.fn();
+    const rendered = render(DuelField, {
+      board: board("ST-05"),
+      prompt: value,
+      spec,
+      session,
+      pending: false,
+      oninteraction,
+    });
+    const card = screen.getByRole("button", {
+      name: /Legal.*Select The Legendary Fisherman.*face-up attack/,
+    });
+    await fireEvent.click(card);
+    await rendered.rerender({ pending: true });
+    await fireEvent.click(card);
+    expect(oninteraction).toHaveBeenCalledTimes(1);
+    expect(oninteraction).toHaveBeenCalledWith({
+      type: "chooseChoice",
+      choiceId: choiceId("select"),
+      key: spec.key,
+    });
+  });
+
   it("zone click submits a single placement", async () => {
     const user = userEvent.setup();
     for (const kind of ["selectPlace", "selectDisabledField"] as const) {
@@ -1046,6 +1114,9 @@ describe("DuelField", () => {
       const value = fieldPrompt(kind, [choice]);
       const harness = renderInteractive(value);
       expect(screen.queryByRole("button", { name: /Confirm/ })).toBeNull();
+      expect(
+        document.querySelector('[data-cy="floating-field-window-confirm"]'),
+      ).toBeNull();
       await user.click(
         screen.getByRole("button", { name: /Select Your Monster Zone 1/ }),
       );
@@ -1642,9 +1713,11 @@ describe("DuelField", () => {
   });
 
   it("renders the field action bar inside the field and never a selection dock", () => {
-    const value = fieldPrompt("selectCard", [
-      mountedChoice("select", "Select monster"),
-    ]);
+    const value = fieldPrompt(
+      "selectCard",
+      [mountedChoice("select", "Select monster")],
+      { minimum: 1, maximum: 2 },
+    );
     renderInteractive(value);
 
     const field = screen.getByRole("region", { name: "Duel field" });
@@ -1653,9 +1726,11 @@ describe("DuelField", () => {
   });
 
   it("renders the action bar inside the confirm window, outside the board scroll region", () => {
-    const value = fieldPrompt("selectCard", [
-      mountedChoice("select", "Select monster"),
-    ]);
+    const value = fieldPrompt(
+      "selectCard",
+      [mountedChoice("select", "Select monster")],
+      { minimum: 1, maximum: 2 },
+    );
     renderInteractive(value);
 
     const field = screen.getByRole("region", { name: "Duel field" });
@@ -1698,11 +1773,13 @@ describe("DuelField", () => {
     ).toBeNull();
   });
 
-  it("hides the endPhase choice from the action bar", () => {
+  it("hides all phase-transition choices from the action bar", () => {
     const value = fieldPrompt("idleCommand", [
       mountedChoice("activate", "Activate", { action: "activate" }),
       promptChoice("battle", "Enter Battle Phase", { action: "battlePhase" }),
+      promptChoice("main2", "Enter Main Phase 2", { action: "mainPhase2" }),
       promptChoice("end", "End turn", { action: "endPhase" }),
+      promptChoice("pass", "Pass", { action: "pass" }),
     ]);
     renderInteractive(value);
 
@@ -1712,7 +1789,7 @@ describe("DuelField", () => {
     );
     expect(barChoices).toHaveLength(1);
     expect(barChoices[0]?.getAttribute("data-cy")).toBe(
-      "field-action-bar-choice-battle",
+      "field-action-bar-choice-pass",
     );
   });
 
@@ -2669,7 +2746,7 @@ describe("DuelField", () => {
           },
         } as Partial<PromptChoice>),
       ],
-      { cancelable: true },
+      { cancelable: true, minimum: 1, maximum: 2 },
     );
     const spec = mapPromptToInteractionSpec(
       value,

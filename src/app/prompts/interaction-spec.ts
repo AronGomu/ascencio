@@ -174,23 +174,43 @@ const PUBLIC_LOCATIONS = {
 } as const satisfies Readonly<Record<PublicLocation, true>>;
 const INACTIVE_SPEC = Object.freeze({ kind: "inactive" as const });
 
-function nonEndPhaseGlobalChoiceCount(spec: ActiveInteractionSpec): number {
+const PHASE_TRANSITION_ACTIONS = new Set<ChoiceAction>([
+  "battlePhase",
+  "mainPhase2",
+  "endPhase",
+]);
+
+export function isPhaseTransitionChoice(
+  choice: Pick<InteractionChoice, "action">,
+): boolean {
+  return PHASE_TRANSITION_ACTIONS.has(choice.action);
+}
+
+export function isImmediateSingleSelection(
+  spec: ActiveInteractionSpec,
+): boolean {
+  return spec.constraints.minimum === 1 && spec.constraints.maximum === 1;
+}
+
+function nonPhaseGlobalChoiceCount(spec: ActiveInteractionSpec): number {
   return [...spec.globalChoices.values()].filter(
-    (choice) => choice.action !== "endPhase",
+    (choice) => !isPhaseTransitionChoice(choice),
   ).length;
 }
 
 export function fieldActionBarRequired(spec: ActiveInteractionSpec): boolean {
   if (spec.kind === "nonField") return false;
-  if (spec.kind === "placeSelection" && spec.constraints.maximum === 1)
-    return nonEndPhaseGlobalChoiceCount(spec) > 0;
-  return (
-    spec.kind === "cardSelection" ||
-    spec.kind === "placeSelection" ||
-    spec.kind === "counterAllocation" ||
-    spec.kind === "order" ||
-    nonEndPhaseGlobalChoiceCount(spec) > 0
-  );
+  if (nonPhaseGlobalChoiceCount(spec) > 0) return true;
+  switch (spec.kind) {
+    case "cardAction":
+      return false;
+    case "cardSelection":
+    case "placeSelection":
+      return !isImmediateSingleSelection(spec);
+    case "counterAllocation":
+    case "order":
+      return true;
+  }
 }
 
 export function endPhaseChoice(

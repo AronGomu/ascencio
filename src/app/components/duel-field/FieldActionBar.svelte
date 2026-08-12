@@ -5,9 +5,11 @@
     InteractionSessionAction,
     UnkeyedInteractionSessionAction,
   } from "../../prompts/interaction-session.ts";
-  import type {
-    ActiveInteractionSpec,
-    InteractionChoice,
+  import {
+    isImmediateSingleSelection,
+    isPhaseTransitionChoice,
+    type ActiveInteractionSpec,
+    type InteractionChoice,
   } from "../../prompts/interaction-spec.ts";
 
   export let prompt: PlayerPrompt;
@@ -23,7 +25,7 @@
   $: allChoices = choicesInPromptOrder(spec);
   $: choicesById = new Map(allChoices.map((choice) => [choice.id, choice]));
   $: globalChoices = [...spec.globalChoices.values()].filter(
-    (choice) => choice.action !== "endPhase",
+    (choice) => !isPhaseTransitionChoice(choice),
   );
   $: allocatedTotal = [...session.allocations.values()].reduce(
     (total, amount) => total + amount,
@@ -194,7 +196,7 @@
     </div>
   {/if}
 
-  {#if spec.kind !== "cardAction" && spec.kind !== "nonField" && !(spec.kind === "placeSelection" && spec.constraints.maximum === 1)}
+  {#if spec.kind !== "cardAction" && spec.kind !== "nonField" && !((spec.kind === "placeSelection" || spec.kind === "cardSelection") && isImmediateSingleSelection(spec))}
     <button
       type="button"
       disabled={disabled || !confirmValid}

@@ -21,6 +21,7 @@
   } from "../prompts/interaction-session.ts";
   import {
     fieldActionBarRequired,
+    isImmediateSingleSelection,
     type ActiveInteractionSpec,
     type InteractionChoice,
   } from "../prompts/interaction-spec.ts";
@@ -334,7 +335,9 @@
         else dispatch({ type: "openMenu", target: card.targetId });
         break;
       case "cardSelection":
-        dispatch({ type: "toggleChoice", choiceId: choice.id });
+        if (isImmediateSingleSelection(spec))
+          dispatch({ type: "chooseChoice", choiceId: choice.id });
+        else dispatch({ type: "toggleChoice", choiceId: choice.id });
         break;
       case "counterAllocation":
         dispatch({ type: "adjustAllocation", choiceId: choice.id, delta: 1 });
@@ -351,7 +354,7 @@
     if (spec === null) return;
     const choice = spec.zoneChoices.get(zone.targetId)?.[0];
     if (choice === undefined) return;
-    if (spec.kind === "placeSelection" && spec.constraints.maximum === 1)
+    if (spec.kind === "placeSelection" && isImmediateSingleSelection(spec))
       dispatch({ type: "chooseChoice", choiceId: choice.id });
     else dispatch({ type: "toggleChoice", choiceId: choice.id });
   }

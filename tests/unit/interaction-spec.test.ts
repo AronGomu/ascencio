@@ -15,6 +15,8 @@ import {
   fieldActionBarRequired,
   INTERACTION_SPEC_KINDS,
   interactionKey,
+  isImmediateSingleSelection,
+  isPhaseTransitionChoice,
   mapPromptToInteractionSpec,
   type ActiveInteractionSpec,
 } from "../../src/app/prompts/interaction-spec.ts";
@@ -404,9 +406,20 @@ describe("prompt interaction spec", () => {
 });
 
 describe("fieldActionBarRequired", () => {
-  it("is required for card selection", () => {
+  it("is not required for an exact singleton card selection", () => {
     const spec = specFor(
       prompt("selectCard", { choices: [mountedCardChoice(FIRST)] }),
+    );
+    expect(fieldActionBarRequired(spec)).toBe(false);
+  });
+
+  it("is required for a multi card selection", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [mountedCardChoice(FIRST), mountedCardChoice(SECOND)],
+        minimum: 1,
+        maximum: 2,
+      }),
     );
     expect(fieldActionBarRequired(spec)).toBe(true);
   });
@@ -514,7 +527,7 @@ describe("fieldActionBarRequired", () => {
     expect(fieldActionBarRequired(spec)).toBe(false);
   });
 
-  it("is still required with another global choice alongside endPhase", () => {
+  it("is not required when only phase-transition globals accompany a card action", () => {
     const spec = specFor(
       prompt("idleCommand", {
         choices: [
@@ -524,10 +537,91 @@ describe("fieldActionBarRequired", () => {
             action: "battlePhase",
             label: "Enter Battle Phase",
           }),
+          choice(choiceId("main-phase-2"), {
+            action: "mainPhase2",
+            label: "Enter Main Phase 2",
+          }),
+        ],
+      }),
+    );
+    expect(fieldActionBarRequired(spec)).toBe(false);
+  });
+
+  it("is required when a genuine global choice accompanies the phase transitions", () => {
+    const spec = specFor(
+      prompt("idleCommand", {
+        choices: [
+          mountedCardChoice(FIRST),
+          choice(SECOND, { action: "endPhase", label: "End turn" }),
+          choice(choiceId("battle-phase"), {
+            action: "battlePhase",
+            label: "Enter Battle Phase",
+          }),
+          choice(choiceId("pass"), { action: "pass", label: "Pass" }),
         ],
       }),
     );
     expect(fieldActionBarRequired(spec)).toBe(true);
+  });
+});
+
+describe("isImmediateSingleSelection", () => {
+  it("is true for an exact 1/1 constraint", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [mountedCardChoice(FIRST)],
+        minimum: 1,
+        maximum: 1,
+      }),
+    );
+    expect(isImmediateSingleSelection(spec)).toBe(true);
+  });
+
+  it("is false for 0/1", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [mountedCardChoice(FIRST)],
+        minimum: 0,
+        maximum: 1,
+      }),
+    );
+    expect(isImmediateSingleSelection(spec)).toBe(false);
+  });
+
+  it("is false for 1/2", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [mountedCardChoice(FIRST), mountedCardChoice(SECOND)],
+        minimum: 1,
+        maximum: 2,
+      }),
+    );
+    expect(isImmediateSingleSelection(spec)).toBe(false);
+  });
+
+  it("is false for 2/2", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [mountedCardChoice(FIRST), mountedCardChoice(SECOND)],
+        minimum: 2,
+        maximum: 2,
+      }),
+    );
+    expect(isImmediateSingleSelection(spec)).toBe(false);
+  });
+});
+
+describe("isPhaseTransitionChoice", () => {
+  it("is true for battlePhase, mainPhase2 and endPhase", () => {
+    expect(isPhaseTransitionChoice({ action: "battlePhase" })).toBe(true);
+    expect(isPhaseTransitionChoice({ action: "mainPhase2" })).toBe(true);
+    expect(isPhaseTransitionChoice({ action: "endPhase" })).toBe(true);
+  });
+
+  it("is false for attack, select and pass", () => {
+    expect(isPhaseTransitionChoice({ action: "attack" })).toBe(false);
+    expect(isPhaseTransitionChoice({ action: "select" })).toBe(false);
+    expect(isPhaseTransitionChoice({ action: "pass" })).toBe(false);
   });
 });
 

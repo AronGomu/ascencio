@@ -83,6 +83,33 @@ function nonFieldSpec(): ActiveInteractionSpec {
   };
 }
 
+function battleCommandSpec(fieldCapable: boolean): ActiveInteractionSpec {
+  return {
+    kind: "cardAction",
+    key: {
+      workerGeneration: 1,
+      sessionGeneration: 1,
+      promptId: promptId("surface-prompt"),
+    },
+    promptKind: "battleCommand",
+    player: 0,
+    title: "Test prompt",
+    fieldCapable,
+    constraints: {
+      controlFamily: "single",
+      minimum: 1,
+      maximum: 1,
+      cancelable: false,
+      ordered: false,
+      mandatoryContributions: [],
+    },
+    cardChoices: new Map(),
+    zoneChoices: new Map(),
+    stackChoices: new Map(),
+    globalChoices: new Map(),
+  };
+}
+
 describe("promptSurface", () => {
   it("no prompt means no surface", () => {
     expect(promptSurface(null, null, false)).toBe("none");
@@ -107,6 +134,50 @@ describe("promptSurface", () => {
     expect(promptSurface(prompt({ kind: "chain" }), nonFieldSpec(), true)).toBe(
       "docked",
     );
+  });
+
+  it("phase-only battleCommand stays on the field when field is rendered", () => {
+    expect(
+      promptSurface(
+        prompt({ kind: "battleCommand" }),
+        battleCommandSpec(false),
+        false,
+        true,
+      ),
+    ).toBe("field");
+  });
+
+  it("battleCommand with attack targets stays on the field", () => {
+    expect(
+      promptSurface(
+        prompt({ kind: "battleCommand" }),
+        battleCommandSpec(true),
+        false,
+        true,
+      ),
+    ).toBe("field");
+  });
+
+  it("battleCommand opens the dialog when field is unavailable", () => {
+    expect(
+      promptSurface(
+        prompt({ kind: "battleCommand" }),
+        battleCommandSpec(false),
+        false,
+        false,
+      ),
+    ).toBe("dialog");
+  });
+
+  it("battleCommand still docks in the workspace", () => {
+    expect(
+      promptSurface(
+        prompt({ kind: "battleCommand" }),
+        battleCommandSpec(false),
+        true,
+        true,
+      ),
+    ).toBe("docked");
   });
 
   it("other non-field prompts still open the dialog", () => {

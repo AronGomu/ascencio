@@ -360,9 +360,9 @@ describe("data-cy uniqueness in a rendered document", () => {
       fieldPrompt("idleCommand", [
         mountedChoice("activate", "Activate effect", { action: "activate" }),
         {
-          id: choiceId("battle"),
-          label: "Enter Battle Phase",
-          action: "battlePhase",
+          id: choiceId("pass"),
+          label: "Pass",
+          action: "pass",
         } as PromptChoice,
       ]),
       0,

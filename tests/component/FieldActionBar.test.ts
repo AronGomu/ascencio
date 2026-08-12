@@ -85,10 +85,62 @@ function specFor(value: PlayerPrompt): ActiveInteractionSpec {
 }
 
 describe("FieldActionBar", () => {
-  it("confirm dispatches with the spec key", async () => {
+  it("never renders phase-transition choices in the global choice group, but a genuine global does", () => {
+    const value = fieldPrompt("idleCommand", [
+      mountedChoice("activate", "Activate effect", { action: "activate" }),
+      promptChoice("battle", "Enter Battle Phase", { action: "battlePhase" }),
+      promptChoice("main2", "Enter Main Phase 2", { action: "mainPhase2" }),
+      promptChoice("end", "End turn", { action: "endPhase" }),
+      promptChoice("pass", "Pass", { action: "pass" }),
+    ]);
+    const spec = specFor(value);
+    const session = createInteractionSession(spec);
+    render(FieldActionBar, {
+      prompt: value,
+      spec,
+      session,
+      oninteraction: vi.fn(),
+    });
+
+    expect(
+      document.querySelector('[data-cy="field-action-bar-choice-battle"]'),
+    ).toBeNull();
+    expect(
+      document.querySelector('[data-cy="field-action-bar-choice-main2"]'),
+    ).toBeNull();
+    expect(
+      document.querySelector('[data-cy="field-action-bar-choice-end"]'),
+    ).toBeNull();
+    expect(
+      document.querySelector('[data-cy="field-action-bar-choice-pass"]'),
+    ).not.toBeNull();
+  });
+
+  it("does not render Confirm for an exact singleton card selection, even if mounted directly", () => {
     const value = fieldPrompt("selectCard", [
       mountedChoice("select", "Select monster"),
     ]);
+    const spec = specFor(value);
+    const session = createInteractionSession(spec);
+    render(FieldActionBar, {
+      prompt: value,
+      spec,
+      session,
+      confirmValid: true,
+      oninteraction: vi.fn(),
+    });
+
+    expect(
+      document.querySelector('[data-cy="field-action-bar-confirm"]'),
+    ).toBeNull();
+  });
+
+  it("confirm dispatches with the spec key", async () => {
+    const value = fieldPrompt(
+      "selectCard",
+      [mountedChoice("select", "Select monster")],
+      { minimum: 1, maximum: 2 },
+    );
     const spec = specFor(value);
     const session = createInteractionSession(spec);
     const oninteraction = vi.fn();
@@ -113,9 +165,11 @@ describe("FieldActionBar", () => {
   });
 
   it("confirm blocked while invalid", () => {
-    const value = fieldPrompt("selectCard", [
-      mountedChoice("select", "Select monster"),
-    ]);
+    const value = fieldPrompt(
+      "selectCard",
+      [mountedChoice("select", "Select monster")],
+      { minimum: 1, maximum: 2 },
+    );
     const spec = specFor(value);
     const session = createInteractionSession(spec);
     render(FieldActionBar, {
@@ -245,7 +299,7 @@ describe("FieldActionBar", () => {
   it("global choices are buttons", async () => {
     const value = fieldPrompt("idleCommand", [
       mountedChoice("activate", "Activate effect", { action: "activate" }),
-      promptChoice("g1", "Enter Battle Phase", { action: "battlePhase" }),
+      promptChoice("g1", "Pass", { action: "pass" }),
     ]);
     const spec = specFor(value);
     const session = createInteractionSession(spec);

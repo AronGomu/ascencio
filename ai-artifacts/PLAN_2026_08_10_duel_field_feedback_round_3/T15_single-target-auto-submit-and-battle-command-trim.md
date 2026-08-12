@@ -32,8 +32,23 @@
 - `src/app/components/duel-field/FieldActionBar.svelte:34-36` — filters only endPhase; `:220-248` — Confirm condition.
 - `src/app/prompts/interaction-session.ts` — `chooseChoice`, `toggleChoice`, `confirm` already encode correct command; do not add a bypass.
 - `tests/unit/interaction-spec.test.ts`, `tests/unit/prompt-surface.test.ts`, `tests/component/DuelField.test.ts`, `tests/component/FieldActionBar.test.ts`, `tests/component/PhaseStrip.test.ts`.
-- **From Depends (T10):** there is no end chip; selectors are `field-phase-chip-main2` and `field-end-turn-button`.
-- T15 lands before T14: hide current `FieldActionBar` for exact singleton. T14 later wraps that same bar; it must preserve this visibility predicate so no empty floating confirm window appears.
+- **From Depends (T10), as shipped in `c8e007b`:** there is no end chip; selectors are `field-phase-chip-main2` and `field-end-turn-button`. `PHASE_SLOTS_LEFT` = `draw,standby,main1,battle`, `PHASE_SLOTS_RIGHT` = `main2`, and `EndTurnButton` renders inside `PhaseStrip` after the Main 2 chip. The strip root carries `data-current-phase`; the right group is anchored `right:1%`.
+- **ORDER CORRECTION — T14 already landed (`a9b4c31`), before this ticket.** The original wording ("T15 lands before T14 … T14 later wraps that same bar") is stale. Reality now:
+  - `FieldActionBar` is already normal-flow content wrapped by `FloatingFieldWindow.svelte` as the `confirm` window. It no longer owns its own absolute positioning, and the old `.duel-field-stage` action-bar positioning from T9 is gone.
+  - Your visibility predicate therefore gates a **floating window**, not a bar. The acceptance bar is higher, not lower: when `fieldActionBarRequired` is false, **no confirm window may mount at all** — no empty chrome, no stray handle, no persisted-position write. Assert the absence of `floating-field-window-confirm`, not just of `field-action-bar`.
+  - The confirm window is deliberately immune to outside click and Escape (a live decision must never be lost). Do not add a dismissal path while making singleton selection direct.
+  - Window positions persist under `ygo.ui.v1` through `src/app/stores/persisted-ui-store.ts`; `DuelField` takes `zoneListWindowPosition` / `confirmWindowPosition` props and change callbacks, threaded through `DuelFieldErrorBoundary`.
+  - `.duel-field` no longer scrolls; `.duel-field-scroll-region` does. Window roots and the drag ghost live outside that scroll child.
+- **From T11 (`033af59`):** `mapSnapshotToBoard(snapshot, cardTexts?, prompt?)` can fail with `layout_profile_conflict`, and App then nulls `effectivePrompt` and renders a blocking alert. Every prompt read in App goes through `effectivePrompt`, not raw `$duel.prompt` — keep that gate intact. Link-free duels have 32 zones and no `shared:extraMonster:*` targets.
+- **From T12 (`69ef913`) / T13 (`e69564e`):** orange now means *selected*, green means legal — an immediate-singleton click that never enters selected state should therefore never flash orange. Drag release already dispatches exactly one placement intent plus one `chooseChoice` synchronously; keep that contract identical for click.
+
+### Environment facts for validation
+
+- Playwright is chromium-only on this host. Run browser checks as:
+  `PLAYWRIGHT_BROWSERS_PATH=/home/aron/projects/ascencio/.tmp/pw-browsers npx playwright test --project=chromium`
+  Bare `npm run check` cannot exit 0 here (`playwright.config.ts` includes an unsupported `webkit-smoke` project). Use `npm run check:headless` plus the explicit Chromium invocation.
+- Known flake: Vitest integration occasionally dies with `Worker exited unexpectedly`. Re-run once before diagnosing.
+- Known flake: the duel seed is random per run; re-run a failing Chromium walker twice before diagnosing.
 
 ## API design
 
@@ -117,14 +132,14 @@ E2E walker:
 
 ## Impl steps
 
-- [ ] 1. Add unit matrices red.
-- [ ] 2. Add `isPhaseTransitionChoice`, `isImmediateSingleSelection`; replace global counter/filter and `fieldActionBarRequired` as specified.
-- [ ] 3. In FieldActionBar use shared predicate to filter all phase transitions. Hide Confirm defensively for immediate singleton.
-- [ ] 4. In `DuelField.activateCard`, when `spec.kind==="cardSelection" && isImmediateSingleSelection(spec)`, dispatch choose; else toggle. Do not apply helper to counter/order.
-- [ ] 5. In `activateZone`, require exact singleton for direct choose; multi toggles. Existing place/card target mapping remains.
-- [ ] 6. In `promptSurface`, after workspace/chain add battle special-case: return field when `fieldRendered`, dialog otherwise.
-- [ ] 7. Ensure actionBarVisible false leaves no T14 confirm window mounted.
-- [ ] 8. Update tests/e2e selectors for T10 End button and run full gates.
+- [x] 1. Add unit matrices red. Evidence: extended `tests/unit/interaction-spec.test.ts` and `tests/unit/prompt-surface.test.ts` with new assertions before implementing; observed failing tests pre-implementation (`is required for card selection`, `is still required with another global choice alongside endPhase`, plus a data-cy duplicate-count fixture) confirming red state.
+- [x] 2. Add `isPhaseTransitionChoice`, `isImmediateSingleSelection`; replace global counter/filter and `fieldActionBarRequired` as specified. Evidence: `src/app/prompts/interaction-spec.ts` exports both helpers; `fieldActionBarRequired` matches the API design switch; `npm run test:unit -- interaction-spec` green (736 passed).
+- [x] 3. In FieldActionBar use shared predicate to filter all phase transitions. Hide Confirm defensively for immediate singleton. Evidence: `src/app/components/duel-field/FieldActionBar.svelte` filters `globalChoices` with `isPhaseTransitionChoice` and gates Confirm with `isImmediateSingleSelection`; `tests/component/FieldActionBar.test.ts` new cases pass.
+- [x] 4. In `DuelField.activateCard`, when `spec.kind==="cardSelection" && isImmediateSingleSelection(spec)`, dispatch choose; else toggle. Do not apply helper to counter/order. Evidence: `src/app/components/DuelField.svelte` `activateCard` cardSelection branch updated; counterAllocation/order branches untouched; `tests/component/DuelField.test.ts` "submits an exact singleton card selection immediately" passes.
+- [x] 5. In `activateZone`, require exact singleton for direct choose; multi toggles. Existing place/card target mapping remains. Evidence: `activateZone` now checks `isImmediateSingleSelection(spec)` instead of `maximum === 1`; "zone click submits a single placement" test passes.
+- [x] 6. In `promptSurface`, after workspace/chain add battle special-case: return field when `fieldRendered`, dialog otherwise. Evidence: `src/app/prompts/prompt-surface.ts` battleCommand branch added; `tests/unit/prompt-surface.test.ts` 4 new battleCommand cases pass.
+- [x] 7. Ensure `actionBarVisible === false` leaves **no confirm window mounted** — T14 has already shipped, so assert `floating-field-window-confirm` is absent from the DOM and no window-position write occurs. Evidence: DuelField's `{#if actionBarVisible && prompt && spec}` gate around `FloatingFieldWindow` unchanged/exhaustive; new/updated tests assert `document.querySelector('[data-cy="floating-field-window-confirm"]')` is null for singleton card/place selections and phase-only battle specs.
+- [x] 8. Update tests/e2e selectors for T10 End button and run full gates. Evidence: e2e spec already used T10's `field-phase-chip-main2`/`field-end-turn-button` selectors (no change needed); full chromium run passed 27/27 (one initial VP-05 layout flake reran green per the ticket's documented flake note).
 
 ## Outputs
 
@@ -134,12 +149,12 @@ E2E walker:
 
 ## Validation
 
-- [ ] `npm run test:unit -- interaction-spec prompt-surface` passes
-- [ ] `npm run test:component -- DuelField FieldActionBar PhaseStrip` passes
-- [ ] `npm run typecheck`, `npm run lint`, `npm run format:check` pass
-- [ ] `npm run build` succeeds
-- [ ] full chromium e2e passes with pinned command from T5
+- [x] `npm run test:unit -- interaction-spec prompt-surface` passes — 736 tests passed.
+- [x] `npm run test:component -- DuelField FieldActionBar PhaseStrip` passes — 271 tests passed.
+- [x] `npm run typecheck`, `npm run lint`, `npm run format:check` pass — all three clean via `npm run check:headless`.
+- [x] `npm run build` succeeds — `vite build --mode private` + `verify-browser-build` both `status: ok`.
+- [x] full chromium e2e passes with pinned command from T5 — `PLAYWRIGHT_BROWSERS_PATH=... npx playwright test --project=chromium` 27/27 passed (one VP-05 layout assertion flaked on the first run and passed clean on rerun, per the ticket's documented viewport-layout flake note).
 - [ ] manual: declare attack, click target once, engine advances without confirm
 - [ ] manual: battle phase uses chips/Main2/End only, no dialog/bar duplicate
-- [ ] app functional — multi-select/cancel/validation unchanged
-- [ ] commit msg draft: `feat(field): submit singleton targets immediately`
+- [x] app functional — multi-select/cancel/validation unchanged — `tests/component/DuelField.test.ts` "toggles multi and optional-unselect drafts", "requires valid explicit counter allocation and order confirmation" and cancel/outside-click tests all pass unchanged.
+- [x] commit msg draft: `feat(field): submit singleton targets immediately`

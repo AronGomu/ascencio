@@ -12,6 +12,8 @@ export function promptSurface(
   if (prompt === null) return "none";
   if (showWorkspace) return "docked";
   if (prompt.kind === "chain") return fieldRendered ? "field" : "dialog";
+  if (prompt.kind === "battleCommand")
+    return fieldRendered ? "field" : "dialog";
   if (spec !== null && spec.kind !== "inactive" && spec.fieldCapable)
     return "field";
   return "dialog";

@@ -246,7 +246,9 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   ).toBeVisible();
   const field = page.getByRole("region", { name: "Duel field" });
   await expect(field).toBeVisible();
-  await expect(field.locator("[data-zone-id]")).toHaveCount(34);
+  // T8: hand zones paint no ZoneControl/`data-zone-id`; 34 physical zones
+  // minus the 2 hand zones leaves 32 painted ones.
+  await expect(field.locator("[data-zone-id]")).toHaveCount(32);
   // The top-right status pills (T3) are gone; the in-field phase strip is
   // the current-phase indicator now.
   await expect(field.locator('[data-cy="field-phase-strip"]')).toBeVisible();
@@ -1405,6 +1407,103 @@ test("responsive field compositions contain controls across supported viewports"
     expect(
       boxes.every(({ width, height }) => width >= 44 && height >= 44),
     ).toBe(true);
+
+    // T8: both hand bands span exactly S/T1's left edge through S/T5's right
+    // edge, the pile column keeps the same edge-to-edge gap as the adjacent
+    // central-zone spacing, both arrows stay >=44px, and the hand viewport
+    // can scroll past its clientWidth.
+    for (const player of [0, 1] as const) {
+      const geometry = await page.evaluate((currentPlayer: 0 | 1) => {
+        const rect = (selector: string): DOMRect | null =>
+          document.querySelector(selector)?.getBoundingClientRect() ?? null;
+        return {
+          spellTrap1: rect(`[data-zone-id="p${currentPlayer}:spellTrap:0"]`),
+          spellTrap4: rect(`[data-zone-id="p${currentPlayer}:spellTrap:3"]`),
+          spellTrap5: rect(`[data-zone-id="p${currentPlayer}:spellTrap:4"]`),
+          monster4: rect(`[data-zone-id="p${currentPlayer}:mainMonster:3"]`),
+          hand: rect(`[data-cy="field-hand-band-p${currentPlayer}"]`),
+          deck: rect(`[data-cy="field-stack-p${currentPlayer}:deck"]`),
+          gy: rect(`[data-cy="field-stack-p${currentPlayer}:graveyard"]`),
+          banished: rect(`[data-cy="field-stack-p${currentPlayer}:banished"]`),
+          monster5: rect(`[data-zone-id="p${currentPlayer}:mainMonster:4"]`),
+          previous: rect(`[data-cy="field-hand-p${currentPlayer}-previous"]`),
+          next: rect(`[data-cy="field-hand-p${currentPlayer}-next"]`),
+          viewport: (() => {
+            const element = document.querySelector(
+              `[data-cy="field-hand-p${currentPlayer}-viewport"]`,
+            );
+            return element === null
+              ? null
+              : {
+                  scrollWidth: element.scrollWidth,
+                  clientWidth: element.clientWidth,
+                };
+          })(),
+        };
+      }, player);
+      if (
+        geometry.spellTrap1 === null ||
+        geometry.spellTrap4 === null ||
+        geometry.spellTrap5 === null ||
+        geometry.monster4 === null ||
+        geometry.hand === null ||
+        geometry.deck === null ||
+        geometry.gy === null ||
+        geometry.banished === null ||
+        geometry.monster5 === null ||
+        geometry.previous === null ||
+        geometry.next === null ||
+        geometry.viewport === null
+      )
+        throw new Error(
+          `${viewportLabel} p${player} hand/pile geometry hooks missing`,
+        );
+      expect(
+        Math.abs(geometry.hand.left - geometry.spellTrap1.left),
+        `${viewportLabel} p${player} hand band left edge tracks S/T1`,
+      ).toBeLessThanOrEqual(2);
+      expect(
+        Math.abs(geometry.hand.right - geometry.spellTrap5.right),
+        `${viewportLabel} p${player} hand band right edge tracks S/T5`,
+      ).toBeLessThanOrEqual(2);
+      // Piles render narrower than a full zone slot (StackControl fills a
+      // card's own footprint, not the zone chrome's), so edges alone are not
+      // comparable across a zone/stack pair — center-to-center pitch is,
+      // and is what "same spacing as adjacent central zones" (T8) means:
+      // every pile column sits exactly one more 95-design-px step out.
+      const center = (rect: { left: number; right: number }): number =>
+        (rect.left + rect.right) / 2;
+      const spellTrapPitch =
+        center(geometry.spellTrap5) - center(geometry.spellTrap4);
+      const monsterPitch =
+        center(geometry.monster5) - center(geometry.monster4);
+      expect(
+        Math.abs(
+          center(geometry.deck) - center(geometry.spellTrap5) - spellTrapPitch,
+        ),
+        `${viewportLabel} p${player} S/T5\u2192Deck centre pitch matches central-zone spacing`,
+      ).toBeLessThanOrEqual(2);
+      expect(
+        Math.abs(
+          center(geometry.gy) - center(geometry.monster5) - monsterPitch,
+        ),
+        `${viewportLabel} p${player} M5\u2192GY centre pitch matches central-zone spacing`,
+      ).toBeLessThanOrEqual(2);
+      expect(
+        Math.abs(
+          center(geometry.banished) - center(geometry.gy) - monsterPitch,
+        ),
+        `${viewportLabel} p${player} GY\u2192Banished centre pitch matches central-zone spacing`,
+      ).toBeLessThanOrEqual(2);
+      expect(geometry.previous.width).toBeGreaterThanOrEqual(44);
+      expect(geometry.previous.height).toBeGreaterThanOrEqual(44);
+      expect(geometry.next.width).toBeGreaterThanOrEqual(44);
+      expect(geometry.next.height).toBeGreaterThanOrEqual(44);
+      expect(
+        geometry.viewport.scrollWidth,
+        `${viewportLabel} p${player} hand viewport can scroll to reach every card`,
+      ).toBeGreaterThanOrEqual(geometry.viewport.clientWidth);
+    }
 
     const entry = field.locator("[data-field-target][tabindex='0']");
     await keyboardFocus(page, entry);

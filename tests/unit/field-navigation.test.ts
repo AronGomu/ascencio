@@ -109,6 +109,10 @@ describe("field navigation", () => {
       .filter(({ zoneId }) => zoneId === "p1:hand")
       .map(({ targetId }) => targetId);
     expect(opponentHand).toHaveLength(2);
+    // Opponent hand nav is mirrored (T8): nav-model "right" walks toward a
+    // lower engine sequence for player 1, so starting at sequence 0 already
+    // sits at that row edge and End is a no-op; Home walks the other way,
+    // toward the higher sequence 1.
     let state = synchronize(value, [opponentHand[0]!]);
 
     state = reduceFieldNavigation(state, {
@@ -116,13 +120,13 @@ describe("field navigation", () => {
       board: value,
       key: "End",
     });
-    expect(state.activeTarget).toBe(opponentHand[1]);
+    expect(state.activeTarget).toBe(opponentHand[0]);
     state = reduceFieldNavigation(state, {
       type: "move",
       board: value,
       key: "Home",
     });
-    expect(state.activeTarget).toBe(opponentHand[0]);
+    expect(state.activeTarget).toBe(opponentHand[1]);
   });
 
   it("keeps horizontal movement row-local so vertical keys reach hand defense cards", () => {

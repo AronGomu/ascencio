@@ -321,3 +321,17 @@ Kept for history. Read the SUPERSEDED banners before running anything here.
 - [ ] Watch a known face-down opponent card leave the field for the hand or deck (a card that returns it): once it is back in a hidden zone it is no longer identified, and a later set of that same card is unnamed again.
 - [ ] Your own cards are unchanged: your hand, your set spells/traps and your face-down monsters all still hover-preview with full art, name and effect text.
 - [ ] Play a full duel to the result dialog: no error banner, no worker restart, and the field never shows an identified card in a zone that should be secret.
+
+## T8 hand-band-and-pagination (round 3)
+
+- [ ] `npm run dev`, start a duel with 11+ cards in your hand (e.g. via a diagnostic/test deck or by drawing extra cards): only 10 cards are visible at once, a `Page 1 of 2` status is present, and the 11th+ card is reachable only after paging.
+- [ ] With that 11+ hand, use keyboard-only play: focus card sequence 9 (10th card) and press ArrowRight — sequence 10 becomes focused and the page visibly turns to page 2. From sequence 10, press ArrowLeft — sequence 9 becomes focused again and the page turns back to page 1. No duplicate cards, no lost focus.
+- [ ] Mirror the same crossing for the opponent's hand if it also holds 11+ cards: ArrowLeft moves forward across the page boundary, ArrowRight moves back (mirrored direction from the player's).
+- [ ] Click the previous/next arrows directly with the mouse: the page changes by 10 cards, the correct arrow disables at each end (page 1 has no previous, the last page has no next), and both arrow buttons are comfortably clickable (not tiny/finicky targets).
+- [ ] With a hand wider than the viewport at a page's card count, use the mouse wheel or trackpad over the hand row: it scrolls horizontally to reach cards within the current page without needing the arrows.
+- [ ] Visually confirm neither hand shows a bordered/dashed rectangle behind the cards any more — cards sit directly on the plain board background.
+- [ ] Visually confirm the opponent's hand still mirrors the player's hand: card backs face the same way as before, and the left-to-right visual order looks like a mirror image of your own hand's order.
+- [ ] Visually confirm both hands span exactly the five Spell/Trap zone columns (S/T1 through S/T5) — the hand's left/right edges line up with the outer edges of the leftmost and rightmost Spell/Trap zones, not wider or narrower.
+- [ ] Visually confirm each player's Deck/GY and Banished piles sit snugly next to the Spell/Trap row and Monster row respectively, with the same visual gap as between any two adjacent central-column zones — no crowding or odd extra whitespace around the pile column.
+- [ ] Drag a hand card onto a highlighted zone as usual (e.g. Summon/Set): the drag still works exactly as before paging was added, from any page.
+- [ ] Play a full duel to completion: no console errors, no broken path, and the hand always remains usable (draw, discard, play from any page) throughout.

@@ -12,6 +12,7 @@
   import CardActionChips from "./CardActionChips.svelte";
 
   export let card: BoardCardView;
+  export let layout: "field" | "hand" = "field";
   export let imageUrl: string;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let interactionKind: ActiveInteractionSpec["kind"] | null = null;
@@ -48,7 +49,10 @@
     card.image.kind === "face" ? card.image.code : undefined,
     imageUrl,
   );
-  $: positionStyle = `--field-x: ${card.x * 100}%; --field-y: ${card.y * 100}%; --field-width: ${card.width * 100}%; --field-height: ${card.height * 100}%;`;
+  $: positionStyle =
+    layout === "field"
+      ? `--field-x: ${card.x * 100}%; --field-y: ${card.y * 100}%; --field-width: ${card.width * 100}%; --field-height: ${card.height * 100}%;`
+      : undefined;
   $: accessibleLabel =
     card.facing === "opponent" &&
     !card.label.toLocaleLowerCase().includes("opponent")
@@ -190,6 +194,7 @@
   class:is-pinned={pinned}
   class:is-selected={selected}
   class:is-navigation-active={active}
+  class:is-hand-item={layout === "hand"}
   class="duel-field-card"
   aria-label={accessibleLabel}
   data-card-id={card.id}

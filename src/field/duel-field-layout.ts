@@ -125,13 +125,13 @@ function createStandardDuelFieldLayout(): readonly StandardFieldZoneLayout[] {
       zones.push(zone(player, "spellTrap", sequence, x, spellY));
     }
     zones.push(zone(player, "field", 0, 330, monsterY));
-    zones.push(zone(player, "deck", 0, 1030, spellY));
+    zones.push(zone(player, "deck", 0, 925, spellY));
     zones.push(zone(player, "extra", 0, 330, spellY));
-    zones.push(zone(player, "graveyard", 0, 1030, monsterY));
-    zones.push(zone(player, "banished", 0, 1130, monsterY));
+    zones.push(zone(player, "graveyard", 0, 925, monsterY));
+    zones.push(zone(player, "banished", 0, 1020, monsterY));
     zones.push({
       ...zone(player, "hand", 0, 640, mirrored ? 42 : 678),
-      width: 720 / DUEL_FIELD_WIDTH,
+      width: 462 / DUEL_FIELD_WIDTH,
       height: 72 / DUEL_FIELD_HEIGHT,
     });
   }

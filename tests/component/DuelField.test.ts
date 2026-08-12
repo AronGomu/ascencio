@@ -19,12 +19,18 @@ import {
   cardInstanceId,
   choiceId,
   promptId,
+  snapshotId,
 } from "../../src/duel/contracts/ids.ts";
 import type {
   PlayerPrompt,
   PromptChoice,
   PromptKind,
 } from "../../src/duel/contracts/player-prompt.ts";
+import type {
+  PlayerIndex,
+  PublicCard,
+  PublicDuelState,
+} from "../../src/duel/contracts/public-duel-state.ts";
 import { mapSnapshotToBoard } from "../../src/field/board-view-model.ts";
 import { zoneListsForBoard } from "../../src/field/zone-list.ts";
 import {
@@ -69,6 +75,76 @@ function board(state: keyof typeof BOARD_VIEW_MODEL_FIXTURES) {
   if (!result.ok)
     throw new Error(`Fixture mapping failed: ${result.error.type}`);
   return result.value;
+}
+
+/** A board with an oversized player and/or opponent hand, for T8 pagination
+ * and cross-page keyboard-nav tests. Every other zone stays empty. */
+function bigHandBoard(playerHandCount: number, opponentHandCount: number) {
+  const playerHand: PublicCard[] = Array.from(
+    { length: playerHandCount },
+    (_, sequence) => bigHandStubCard(`big-p0-${sequence}`, 0, sequence),
+  );
+  const state: PublicDuelState = {
+    snapshotId: snapshotId("b".repeat(64)),
+    revision: 1,
+    turn: 1,
+    turnPlayer: 0,
+    phase: "main1",
+    players: [
+      {
+        player: 0,
+        lifePoints: 8000,
+        deckCount: 35,
+        deck: [],
+        extraDeckCount: 0,
+        handCount: playerHandCount,
+        hand: playerHand,
+        extraDeck: [],
+        monsters: [],
+        spellsAndTraps: [],
+        graveyard: [],
+        banished: [],
+      },
+      {
+        player: 1,
+        lifePoints: 8000,
+        deckCount: 35,
+        deck: [],
+        extraDeckCount: 0,
+        handCount: opponentHandCount,
+        hand: [],
+        extraDeck: [],
+        monsters: [],
+        spellsAndTraps: [],
+        graveyard: [],
+        banished: [],
+      },
+    ],
+    chain: [],
+  };
+  const result = mapSnapshotToBoard(state, BOARD_CARD_TEXTS);
+  if (!result.ok)
+    throw new Error(`bigHandBoard mapping failed: ${result.error.type}`);
+  return result.value;
+}
+
+function bigHandStubCard(
+  id: string,
+  controller: PlayerIndex,
+  sequence: number,
+): PublicCard {
+  return {
+    instanceId: cardInstanceId(id),
+    code: cardCode(97590747),
+    owner: controller,
+    controller,
+    location: "hand",
+    sequence,
+    position: "faceDownDefense",
+    faceUp: false,
+    counters: [],
+    overlayMaterials: [],
+  };
 }
 
 const CONTEXT = { workerGeneration: 1, sessionGeneration: 2 } as const;
@@ -182,7 +258,7 @@ describe("DuelField", () => {
     render(DuelField, { board: value.board });
 
     const field = screen.getByRole("region", { name: "Duel field" });
-    expect(field.querySelectorAll("[data-zone-id]")).toHaveLength(34);
+    expect(field.querySelectorAll("[data-zone-id]")).toHaveLength(32);
     expect(value.artifactPath).toBe("test-results/df-16-ST-01.json");
     expect(document.body.textContent).not.toContain("Dark Magician");
     expect(document.body.innerHTML).not.toContain("46986414");
@@ -205,7 +281,7 @@ describe("DuelField", () => {
     ({ id, board: value, assertions }) => {
       render(DuelField, { board: value });
       const field = screen.getByRole("region", { name: "Duel field" });
-      expect(field.querySelectorAll("[data-zone-id]")).toHaveLength(34);
+      expect(field.querySelectorAll("[data-zone-id]")).toHaveLength(32);
       expect(value.nav.size).toBeGreaterThan(0);
       expect(assertions.length).toBeGreaterThan(0);
 
@@ -281,13 +357,20 @@ describe("DuelField", () => {
     render(DuelField, { board: value });
 
     const field = screen.getByRole("region", { name: "Duel field" });
-    expect(field.querySelectorAll("[data-zone-id]")).toHaveLength(34);
+    expect(field.querySelectorAll("[data-zone-id]")).toHaveLength(32);
 
     for (const zone of value.zones) {
       const node = within(field).getByRole("group", {
         name: zone.accessibleLabel,
       });
-      expect(node.getAttribute("data-zone-id")).toBe(zone.id);
+      // Hand zones (T8) paint no ZoneControl/`data-zone-id`; HandBand's own
+      // root still exposes the same accessible group name, anchored by
+      // `data-feedback-zone-id` instead.
+      expect(
+        node.getAttribute(
+          zone.kind === "hand" ? "data-feedback-zone-id" : "data-zone-id",
+        ),
+      ).toBe(zone.id);
     }
 
     const sharedZones = within(field).getAllByRole("group", {
@@ -301,7 +384,8 @@ describe("DuelField", () => {
     );
     // The always-mounted, disabled End turn corner button has no active
     // prompt/spec to drive it here; the two non-empty deck stacks (T8) are
-    // clickable regardless of any prompt.
+    // clickable regardless of any prompt. Each hand band's previous/next
+    // page arrows (T8) are always mounted too, disabled or not.
     const buttons = within(field).queryAllByRole("button");
     expect(
       buttons.map((button) => button.getAttribute("data-cy")).sort(),
@@ -310,8 +394,126 @@ describe("DuelField", () => {
         "field-end-turn-button",
         "field-stack-p0:deck",
         "field-stack-p1:deck",
+        "field-hand-p0-previous",
+        "field-hand-p0-next",
+        "field-hand-p1-previous",
+        "field-hand-p1-next",
       ].sort(),
     );
+  });
+
+  it("renders hands through bands and no hand ZoneControl", () => {
+    const value = board("ST-01");
+    render(DuelField, { board: value });
+
+    const field = screen.getByRole("region", { name: "Duel field" });
+    expect(
+      within(field)
+        .getByRole("group", { name: "Your Hand" })
+        .getAttribute("data-cy"),
+    ).toBe("field-hand-band-p0");
+    expect(
+      within(field)
+        .getByRole("group", { name: "Opponent Hand" })
+        .getAttribute("data-cy"),
+    ).toBe("field-hand-band-p1");
+    expect(
+      field.querySelector('[data-cy="zone-control-label-p0:hand"]'),
+    ).toBeNull();
+    expect(
+      field.querySelector('[data-cy="zone-control-label-p1:hand"]'),
+    ).toBeNull();
+    expect(
+      field.querySelector('.duel-field-zone[data-zone-kind="hand"]'),
+    ).toBeNull();
+  });
+
+  it("attaches pile columns with central-zone spacing", () => {
+    const value = board("ST-01");
+
+    for (const player of [0, 1] as const) {
+      const spellTrapFive = value.zones.find(
+        (zone) => zone.id === `p${player}:spellTrap:4`,
+      );
+      const deck = value.stacks.find((stack) => stack.id === `p${player}:deck`);
+      const banished = value.stacks.find(
+        (stack) => stack.id === `p${player}:banished`,
+      );
+      if (
+        spellTrapFive === undefined ||
+        deck === undefined ||
+        banished === undefined
+      )
+        throw new Error("Missing pile fixture zones");
+      expect(deck.x).toBeCloseTo(925 / 1280, 10);
+      expect(banished.x).toBeCloseTo(1020 / 1280, 10);
+      expect(deck.x - spellTrapFive.x).toBeCloseTo(95 / 1280, 10);
+      expect(banished.x - deck.x).toBeCloseTo(95 / 1280, 10);
+    }
+  });
+
+  it("keyboard navigation crosses player hand page boundary", async () => {
+    const value = bigHandBoard(11, 2);
+    const { container } = render(FieldBoard, {
+      board: value,
+      imageUrls: new Map(),
+      cardBackUrl: "",
+      placeholderUrl: "",
+    });
+
+    const nine = container.querySelector<HTMLElement>(
+      '[data-field-target="card:big-p0-9"]',
+    );
+    if (nine === null) throw new Error("Missing sequence 9 hand card");
+    nine.focus();
+    await fireEvent.keyDown(nine, { key: "ArrowRight" });
+
+    await waitFor(() => {
+      expect(document.activeElement?.getAttribute("data-field-target")).toBe(
+        "card:big-p0-10",
+      );
+    });
+    expect(
+      container.querySelector('[data-card-id="big-p0-10"]'),
+    ).not.toBeNull();
+  });
+
+  it("keyboard navigation follows mirrored opponent direction", async () => {
+    const value = bigHandBoard(2, 11);
+    const opponentHand = value.cards
+      .filter(({ zoneId }) => zoneId === "p1:hand")
+      .toSorted((left, right) => left.sequence - right.sequence);
+    const nineTarget = opponentHand[9]?.targetId;
+    const tenTarget = opponentHand[10]?.targetId;
+    if (nineTarget === undefined || tenTarget === undefined)
+      throw new Error("Missing opponent sequence 9/10 hand cards");
+    const { container } = render(FieldBoard, {
+      board: value,
+      imageUrls: new Map(),
+      cardBackUrl: "",
+      placeholderUrl: "",
+    });
+
+    const nine = container.querySelector<HTMLElement>(
+      `[data-field-target="${nineTarget}"]`,
+    );
+    if (nine === null) throw new Error("Missing opponent sequence 9 hand card");
+    nine.focus();
+    await fireEvent.keyDown(nine, { key: "ArrowLeft" });
+
+    await waitFor(() => {
+      expect(document.activeElement?.getAttribute("data-field-target")).toBe(
+        tenTarget,
+      );
+    });
+
+    const ten = document.activeElement as HTMLElement;
+    await fireEvent.keyDown(ten, { key: "ArrowRight" });
+    await waitFor(() => {
+      expect(document.activeElement?.getAttribute("data-field-target")).toBe(
+        nineTarget,
+      );
+    });
   });
 
   it("keeps visible and hidden card nodes keyed without exposing opponent identity", async () => {

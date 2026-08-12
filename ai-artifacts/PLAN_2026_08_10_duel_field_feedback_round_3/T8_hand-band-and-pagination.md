@@ -27,7 +27,18 @@
 
 ## Inputs
 
-- **From Depends (T7):** central x centres `450,545,640,735,830`; card/zone width `82` design units; `BoardZoneView.accessibleLabel` exists; visible hand label is `Hand`.
+- **From Depends (T7), as actually shipped in `1e87e63`:** central x centres `450,545,640,735,830` (hoisted to module const `CENTRAL_COLUMN_X` in `duel-field-layout.ts`); card/zone width `82` design units; `BoardZoneView.accessibleLabel` and `BoardStackView.accessibleLabel` exist and carry the owner-aware spoken name while `label` carries the short visible text; visible hand label is `Hand`; Extra x is `330`, matching Field x.
+- **Also from T7, affects Impl step 8:** `neighborInDirection` in `board-view-model.ts` no longer uses `NAV_ALIGNMENT_EPSILON` for *vertical* moves. Vertical alignment is now horizontal span overlap, `|Δx| < (widthOrigin + widthCandidate) / 2`; horizontal moves still require an exact row match. That is what makes the shared Extra Monster Zones reachable (42/42 targets). Your hand-sequence horizontal override must not regress that — re-run `npm run test:unit -- field-navigation` and keep the `keeps every field target reachable with arrow keys alone` test green.
+- **From T6, as shipped in `ced9383`:** `board-view-model.ts`, `zone-list.ts`, `card-preview.ts`, `CardTray.svelte` and `DuelHud.svelte` now decide identity through `isProjectedCardIdentityKnown(card)` (code presence) rather than geometric `isCardIdentityVisible`. A known face-down card still renders `hidden: true` with back art. Do not reintroduce geometric visibility checks in presentation code — `grep -Rni "isCardIdentityVisible" src/app src/field` must stay empty.
+- Board fixtures live in `tests/fixtures/board-public-states`; T6 added a `concealedStateCard` helper there for cards the projector could never attest. Any hand fixture you add for an opponent must use it, not a raw code.
+
+### Environment facts for validation
+
+- Playwright is chromium-only on this host. Run browser checks as:
+  `PLAYWRIGHT_BROWSERS_PATH=/home/aron/projects/ascencio/.tmp/pw-browsers npx playwright test --project=chromium`
+  Bare `npm run check` cannot exit 0 here because `playwright.config.ts` includes a `webkit-smoke` project unsupported on this machine. Use `npm run check:headless` plus the explicit Chromium invocation instead.
+- Known flake: Vitest integration occasionally dies with `Worker exited unexpectedly` and no assertion failure. Re-run once before diagnosing.
+- Known flake: the duel seed is random per run; re-run a failing Chromium walker twice before diagnosing.
 - `src/field/duel-field-layout.ts:129-136` before T7 — Deck/GY x `1030`, Banished x `1130`; hand x `640`, y `42/678`, width `720/1280`, height `72/720`. T7 leaves pile/hand positions for this ticket.
 - `src/field/board-view-model.ts:190-229` — maps player and opponent hand cards; player uses `handOffset(card.sequence, handCount)` and opponent placeholders use the same helper; `:483-486` adds hand cards to spatial nav.
 - `board-view-model.ts` near bottom — `handOffset(sequence,count)` gives distinct virtual x values. HandBand no longer renders from them, but spatial up/down nav still needs virtual geometry; rename to `handNavigationOffset` or retain with a comment.
@@ -129,19 +140,19 @@ Extend responsive chromium e2e in `e2e/duel-smoke.spec.ts`: at each existing vie
 
 ## Impl steps
 
-- [ ] 1. Write `tests/unit/hand-pagination.test.ts`; run `npm run test:unit -- hand-pagination` red.
-- [ ] 2. Create `src/field/hand-pagination.ts` with exact rules; re-run green.
-- [ ] 3. Write `tests/component/HandBand.test.ts`; run red.
-- [ ] 4. Add `layout` prop/`.is-hand-item` mode to `CardControl.svelte`; field mode must render byte-for-byte equivalent DOM/style.
-- [ ] 5. Create `HandBand.svelte`. Sort input by the original `card.sequence` encoded in board order — `BoardCardView` currently lacks `sequence`, so add `readonly sequence:number` to `BoardCardView` and set it from `PublicCard.sequence`/placeholder sequence in `board-view-model.ts`. Do not sort by generated id.
-- [ ] 6. Keep page in local component state; reactive `handPage(cards,page)` clamps it; on clamp, assign returned page back once. When `activeTarget` matches a card, set page to `floor(sortedIndex/HAND_PAGE_SIZE)` in the same reactive update. After page change, set viewport `scrollLeft` to player start (0) or opponent mirrored end.
-- [ ] 7. In `FieldBoard.svelte`, derive `fieldCards`, `playerHandCards`, `opponentHandCards`, and two hand zones. Skip hand zones in the `ZoneControl` loop; render two `HandBand`s; render only `fieldCards` in the existing `CardControl` loop.
-- [ ] 8. Pass active navigation target/callbacks through HandBand. Keep one navigation state in FieldBoard. In `createNavigation`, override horizontal neighbors among same-owner hand cards by sequence: p0 left/right `-1/+1`; p1 left/right `+1/-1` for mirrored visual flow. Leave vertical neighbor scoring spatial. Add both 9↔10 boundary tests proving existing `await tick(); querySelector(...).focus()` sees newly mounted card.
-- [ ] 9. In `duel-field-layout.ts`, change hand width to `462/1280`; retain x/y/height. Move both players' Deck and GY x to `925`, Banished x to `1020`; keep y values. Its hand layout record remains for band placement/nav, not painted `ZoneControl`.
-- [ ] 10. Stop using hand x/y for DOM placement, but keep distinct virtual coordinates in `BoardCardView` for up/down spatial nav (`handNavigationOffset`). HandBand ignores these coordinates. Do not collapse every hand card to equal x.
-- [ ] 11. Add CSS: normal-flow hand cards; flex viewport; mirrored visual direction; fixed arrows; visible scrollbar; no band paint. Delete the `[data-zone-kind="hand"]` rules.
-- [ ] 12. Run unit/component tests. Update helpers to locate cards inside HandBand without changing behavioural expectations.
-- [ ] 13. Add e2e geometry/min-target assertions and run full chromium project.
+- [x] 1. Write `tests/unit/hand-pagination.test.ts`; run `npm run test:unit -- hand-pagination` red. Evidence: test file created before implementation; ran red then green (see step 2).
+- [x] 2. Create `src/field/hand-pagination.ts` with exact rules; re-run green. Evidence: `npx vitest run tests/unit/hand-pagination.test.ts` → 6 passed.
+- [x] 3. Write `tests/component/HandBand.test.ts`; run red. Evidence: written before `HandBand.svelte` existed; ran red, then green after implementation (8 passed).
+- [x] 4. Add `layout` prop/`.is-hand-item` mode to `CardControl.svelte`; field mode must render byte-for-byte equivalent DOM/style. Evidence: `layout` defaults to `"field"`, `positionStyle`/class list unchanged for that branch; full existing `DuelField.test.ts`/`HandBand.test.ts` suites (100+8) stayed green with no field-mode assertions changed.
+- [x] 5. Create `HandBand.svelte`. Sort input by `card.sequence`; `BoardCardView.sequence` added and set from `PublicCard.sequence`/placeholder sequence in `board-view-model.ts`. Evidence: `src/app/components/duel-field/HandBand.svelte` created; `sortedCards = [...cards].sort((l,r)=>l.sequence-r.sequence)`; `BoardCardView.sequence` field added, set in `addCard`/`addHiddenHandPlaceholder`.
+- [x] 6. Page kept in local component state (`requestedPage`); reactive `handPage(sortedCards, requestedPage)` clamps via `pageResult`; `activeTarget` match sets `requestedPage = floor(sortedIndex/HAND_PAGE_SIZE)` in `syncPageWithActiveTarget`; `resetScrollOnPageChange` sets `viewportElement.scrollLeft` to `0` (player) or `scrollWidth-clientWidth` (mirrored opponent) after each page change. Evidence: `HandBand.test.ts` "clamps when cards shrink", "follows active target across a page boundary" pass.
+- [x] 7. `FieldBoard.svelte` derives `fieldCards`, `playerHandCards`, `opponentHandCards`, `playerHandZone`, `opponentHandZone`; `ZoneControl` loop uses `fieldZones` (hand excluded); two `HandBand`s render; `CardControl` loop uses only `fieldCards`. Evidence: `DuelField.test.ts` "renders hands through bands and no hand ZoneControl" passes.
+- [x] 8. Active navigation target/callbacks passed through `HandBand`; one `navigationState` stays in `FieldBoard`. `createNavigation`'s `handHorizontalOverrides` overrides left/right by sequence: p0 `-1/+1`, p1 (mirrored) `+1/-1`; vertical neighbors stay spatial (unchanged `neighborInDirection`). Evidence: `DuelField.test.ts` "keyboard navigation crosses player hand page boundary" and "...follows mirrored opponent direction" (both add explicit 9↔10 boundary assertions) pass; `field-navigation.test.ts` "keeps every field target reachable with arrow keys alone" still passes.
+- [x] 9. `duel-field-layout.ts`: hand width now `462/1280`, x/y/height retained; both players' Deck/GY x moved to `925`, Banished x to `1020`, y values unchanged. Evidence: `tests/unit/duel-field.test.ts` (68 tests) passes; `DuelField.test.ts` "attaches pile columns with central-zone spacing" passes (925/1280, 1020/1280, 95-unit step asserted directly).
+- [x] 10. Hand x/y no longer used for DOM placement (`HandBand` ignores `card.x`/`card.y`, using CSS flex flow instead); `handNavigationOffset` (renamed from `handOffset`) keeps distinct virtual x per card for up/down spatial nav. Evidence: `board-view-model.ts` `handNavigationOffset` retains per-sequence offset formula; `field-navigation.test.ts` vertical-nav tests (e.g. "keeps horizontal movement row-local so vertical keys reach hand defense cards") pass.
+- [x] 11. CSS added: `.duel-field-card.is-hand-item` (normal-flow), `.duel-field-hand-band`/`__row`/`__viewport`/`__arrow` (flex viewport, mirrored `row-reverse`, fixed 44px arrows, `scrollbar-width:thin`); `[data-zone-kind="hand"]` and `[data-zone-id="p1:hand"]` rules deleted. Evidence: `grep -c 'data-zone-kind="hand"' src/styles/app.css` → 0; `tests/unit/global-styles.test.ts` "hand band paints no border or background" passes.
+- [x] 12. Unit/component suites run; `DuelField.test.ts` helpers (`handCardArticle`/`handDragTarget`) unchanged and still locate cards correctly inside `HandBand`. Evidence: `npm run test:component` → 215/215 passed (16 files); `npm run test:unit` → 646/646 passed (60 files).
+- [x] 13. e2e geometry/min-target assertions added to the responsive-viewport walker (hand-band edges vs S/T1–S/T5, pile centre-pitch vs adjacent central zones, both arrows ≥44px, `scrollWidth>=clientWidth`); full chromium project run. Evidence: `PLAYWRIGHT_BROWSERS_PATH=... npx playwright test --project=chromium` → 21/21 passed.
 
 ## Outputs
 
@@ -152,13 +163,13 @@ Extend responsive chromium e2e in `e2e/duel-smoke.spec.ts`: at each existing vie
 
 ## Validation
 
-- [ ] `npm run test:unit -- hand-pagination duel-field field-navigation` passes
-- [ ] `npm run test:component -- HandBand DuelField` passes
-- [ ] `npm run typecheck`, `npm run lint`, `npm run format:check` pass
-- [ ] `npm run build` succeeds
-- [ ] full chromium e2e passes with standard pinned nix/`PLAYWRIGHT_BROWSERS_PATH` command from T5
+- [x] `npm run test:unit -- hand-pagination duel-field field-navigation` passes — 5 files, 189 passed.
+- [x] `npm run test:component -- HandBand DuelField` passes — 2 files, 100+8=108 passed (via targeted `vitest run`; `npm run test:component` full run also green at 16/215).
+- [x] `npm run typecheck`, `npm run lint`, `npm run format:check` pass — all three exit 0, no errors/warnings.
+- [x] `npm run build` succeeds — `vite build --mode private` + `build:verify` both `"status":"ok"`.
+- [x] full chromium e2e passes with standard pinned nix/`PLAYWRIGHT_BROWSERS_PATH` command from T5 — 21/21 passed.
 - [ ] manual check: 11+ fixture; p0 ArrowRight and p1 ArrowLeft cross card 10→11 onto next page; reverse keys return; arrows/wheel work; no duplicates/focus loss
 - [ ] manual check: opponent hand mirrors player hand; cards/backs remain inverted as before
 - [ ] manual check: both bands align exactly to S/T1–S/T5; Deck/GY/Banished attach with same margin as central zones
-- [ ] app functional — no broken path from this slice
-- [ ] commit msg draft: `feat(field): render paged hands across the spell trap row`
+- [x] app functional — no broken path from this slice. Evidence: full `check:headless` gate green (format/lint/typecheck/legacy/unit 646/integration 20/vendor/assets/snapshot), `npm run build` green, full chromium e2e 21/21 green.
+- [x] commit msg draft: `feat(field): render paged hands across the spell trap row`

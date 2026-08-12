@@ -20,6 +20,7 @@
     InteractionChoice,
   } from "../../prompts/interaction-spec.ts";
   import CardControl from "./CardControl.svelte";
+  import HandBand from "./HandBand.svelte";
   import StackControl from "./StackControl.svelte";
   import ZoneControl from "./ZoneControl.svelte";
 
@@ -50,6 +51,17 @@
 
   let boardElement: HTMLDivElement;
   let navigationState: FieldNavigationState = createFieldNavigationState();
+
+  $: fieldZones = board.zones.filter((zone) => zone.kind !== "hand");
+  $: fieldCards = board.cards.filter(
+    (card) => card.zoneId !== "p0:hand" && card.zoneId !== "p1:hand",
+  );
+  $: playerHandZone = board.zones.find((zone) => zone.id === "p0:hand");
+  $: opponentHandZone = board.zones.find((zone) => zone.id === "p1:hand");
+  $: playerHandCards = board.cards.filter((card) => card.zoneId === "p0:hand");
+  $: opponentHandCards = board.cards.filter(
+    (card) => card.zoneId === "p1:hand",
+  );
 
   $: actionableTargets = new Set<BoardTargetId>(
     disabled
@@ -170,7 +182,7 @@
     aria-hidden="true"
     data-cy="duel-field-board-surface"
   ></div>
-  {#each board.zones as zone (zone.id)}
+  {#each fieldZones as zone (zone.id)}
     <ZoneControl
       {zone}
       actionable={!disabled && spec?.zoneChoices.has(zone.targetId) === true}
@@ -181,6 +193,52 @@
       onactivate={() => onzoneactivate(zone)}
     />
   {/each}
+  {#if playerHandZone !== undefined}
+    <HandBand
+      player={0}
+      cards={playerHandCards}
+      zone={playerHandZone}
+      {imageUrls}
+      {imageLibrary}
+      {cardBackUrl}
+      {placeholderUrl}
+      {spec}
+      {selectedTargets}
+      activeTarget={navigationState.activeTarget}
+      {disabled}
+      {pinnedTarget}
+      {oncardactivate}
+      {oncardchoose}
+      {oncarddismiss}
+      {oncarddragstart}
+      {oncarddragmove}
+      {oncarddragend}
+      {oncardpreview}
+    />
+  {/if}
+  {#if opponentHandZone !== undefined}
+    <HandBand
+      player={1}
+      cards={opponentHandCards}
+      zone={opponentHandZone}
+      {imageUrls}
+      {imageLibrary}
+      {cardBackUrl}
+      {placeholderUrl}
+      {spec}
+      {selectedTargets}
+      activeTarget={navigationState.activeTarget}
+      {disabled}
+      {pinnedTarget}
+      {oncardactivate}
+      {oncardchoose}
+      {oncarddismiss}
+      {oncarddragstart}
+      {oncarddragmove}
+      {oncarddragend}
+      {oncardpreview}
+    />
+  {/if}
   {#each board.stacks as stack (stack.targetId)}
     <StackControl
       {stack}
@@ -192,7 +250,7 @@
       {placeholderUrl}
     />
   {/each}
-  {#each board.cards as card (card.id)}
+  {#each fieldCards as card (card.id)}
     <CardControl
       {card}
       imageUrl={cardImageUrl(card)}
@@ -207,10 +265,7 @@
       {disabled}
       choices={spec?.cardChoices.get(card.targetId) ?? []}
       pinned={pinnedTarget === card.targetId}
-      draggable={!disabled &&
-        spec?.kind === "cardAction" &&
-        spec.cardChoices.has(card.targetId) &&
-        card.zoneId === "p0:hand"}
+      draggable={false}
       onactivate={(element) => oncardactivate(card, element)}
       onchoose={oncardchoose}
       ondismiss={oncarddismiss}

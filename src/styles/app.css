@@ -932,16 +932,6 @@ button.field-phase-chip {
   text-align: center;
 }
 
-.duel-field-zone[data-zone-kind="hand"] {
-  border-style: dashed;
-  background: rgb(28 79 66 / 0.45);
-}
-
-.duel-field-zone[data-zone-id="p1:hand"] {
-  border-color: transparent;
-  background: transparent;
-}
-
 .duel-field-zone--shared {
   border: 2px solid var(--accent);
   background: rgb(19 69 66 / 0.72);
@@ -1163,6 +1153,85 @@ button.duel-field-zone,
   min-height: 2.75rem;
   margin: 0;
   pointer-events: auto;
+}
+
+/* Hand cards live in normal document flow inside a HandBand's scrolling
+   viewport, not absolutely positioned by board coordinates. Two classes
+   outweigh the shared `.duel-field-zone, .duel-field-stack, .duel-field-card`
+   group above (one class each), so this always wins regardless of source
+   order. */
+.duel-field-card.is-hand-item {
+  position: relative;
+  top: auto;
+  left: auto;
+  flex: 0 0 max(2.75rem, 4.5rem);
+  width: max(2.75rem, 4.5rem);
+  aspect-ratio: 72 / 104;
+  height: auto;
+  transform: none;
+}
+
+.duel-field-hand-band {
+  position: absolute;
+  left: var(--field-x);
+  top: var(--field-y);
+  width: var(--field-width);
+  z-index: var(--duel-field-layer-card);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  transform: translate(-50%, -50%);
+}
+
+.duel-field-hand-band__row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+.duel-field-hand-band__viewport {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.15rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.duel-field-hand-band.is-opponent .duel-field-hand-band__viewport {
+  flex-direction: row-reverse;
+}
+
+.duel-field-hand-band__arrow {
+  flex: 0 0 2.75rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  border: 1px solid rgb(183 220 207 / 0.48);
+  border-radius: 0.35rem;
+  background: rgb(8 26 25 / 0.28);
+  color: rgb(232 237 248 / 0.85);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+/* DOM order is viewport, previous, next (see the markup comment); these
+   restore the previous/viewport/next visual layout without moving either
+   arrow ahead of the viewport in source order. */
+.duel-field-hand-band__arrow--previous {
+  order: -1;
+}
+
+.duel-field-hand-band__arrow--next {
+  order: 1;
+}
+
+.duel-field-hand-band__arrow:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
 }
 
 .duel-field-card__art {

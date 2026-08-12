@@ -68,6 +68,7 @@ export interface BoardCardView {
   readonly player: PlayerIndex;
   readonly owner?: PlayerIndex;
   readonly zoneId: PhysicalZoneId;
+  readonly sequence: number;
   readonly position: CardPosition;
   readonly orientation: "upright" | "sideways";
   readonly facing: "self" | "opponent";
@@ -205,7 +206,7 @@ export function mapSnapshotToBoard(
           LAYOUT_BY_ID.get("p0:hand"),
           snapshot,
           cardTexts,
-          handOffset(card.sequence, player.handCount),
+          handNavigationOffset(card.sequence, player.handCount),
         );
         if (duplicate !== undefined) return failure(duplicate);
       }
@@ -344,6 +345,7 @@ function addCard(
       player: card.controller,
       owner: card.owner,
       zoneId: layout.id,
+      sequence: card.sequence,
       position: card.position,
       orientation: orientationFor(card.position),
       facing: card.controller === 0 ? "self" : "opponent",
@@ -382,13 +384,14 @@ function addHiddenHandPlaceholder(
       targetId: `card:${id}` as const,
       player,
       zoneId: layout.id,
+      sequence,
       position: "faceDownAttack" as const,
       orientation: "upright" as const,
       facing: player === 0 ? ("self" as const) : ("opponent" as const),
       hidden: true,
       label:
         player === 0 ? "Hidden card in your hand" : "Hidden opponent hand card",
-      x: layout.x + handOffset(sequence, count),
+      x: layout.x + handNavigationOffset(sequence, count),
       y: layout.y,
       width: CARD_WIDTH_NORMALIZED,
       height: CARD_HEIGHT_NORMALIZED,
@@ -495,17 +498,67 @@ function createNavigation(
     }
     controls.push(cardByZone.get(zone.id) ?? zone);
   }
+  const handOverrides = handHorizontalOverrides(zones, cards);
   return new ImmutableReadonlyMap(
-    controls.map((control) => [
-      control.targetId,
-      Object.freeze({
-        ...neighborInDirection(control, controls, "left"),
-        ...neighborInDirection(control, controls, "right"),
-        ...neighborInDirection(control, controls, "up"),
-        ...neighborInDirection(control, controls, "down"),
-      }),
-    ]),
+    controls.map((control) => {
+      const isHandCard = handOverrides.has(control.targetId);
+      return [
+        control.targetId,
+        Object.freeze({
+          ...(isHandCard ? {} : neighborInDirection(control, controls, "left")),
+          ...(isHandCard
+            ? {}
+            : neighborInDirection(control, controls, "right")),
+          ...neighborInDirection(control, controls, "up"),
+          ...neighborInDirection(control, controls, "down"),
+          ...handOverrides.get(control.targetId),
+        }),
+      ] as const;
+    }),
   );
+}
+
+/**
+ * Hand cards keep explicit sequence neighbors instead of the generic spatial
+ * scoring above: player ArrowLeft/Right move sequence -1/+1, and the
+ * mirrored opponent hand moves sequence +1/-1, so its visual left/right
+ * stays intuitive even though its DOM/sequence order does not change.
+ */
+function handHorizontalOverrides(
+  zones: readonly BoardZoneView[],
+  cards: readonly BoardCardView[],
+): ReadonlyMap<BoardTargetId, Partial<SpatialNeighbors>> {
+  const overrides = new Map<BoardTargetId, Partial<SpatialNeighbors>>();
+  for (const zone of zones) {
+    if (zone.kind !== "hand") continue;
+    const handCards = cards
+      .filter((card) => card.zoneId === zone.id)
+      .toSorted((left, right) => left.sequence - right.sequence);
+    const mirrored = zone.player === 1;
+    const leftDelta = mirrored ? 1 : -1;
+    const rightDelta = mirrored ? -1 : 1;
+    for (let index = 0; index < handCards.length; index += 1) {
+      const card = handCards[index]!;
+      const leftIndex = index + leftDelta;
+      const rightIndex = index + rightDelta;
+      const left =
+        leftIndex >= 0 && leftIndex < handCards.length
+          ? handCards[leftIndex]!.targetId
+          : undefined;
+      const right =
+        rightIndex >= 0 && rightIndex < handCards.length
+          ? handCards[rightIndex]!.targetId
+          : undefined;
+      overrides.set(
+        card.targetId,
+        Object.freeze({
+          ...(left === undefined ? {} : { left }),
+          ...(right === undefined ? {} : { right }),
+        }),
+      );
+    }
+  }
+  return overrides;
 }
 
 function neighborInDirection(
@@ -608,7 +661,12 @@ function orientationFor(position: CardPosition): "upright" | "sideways" {
     : "upright";
 }
 
-function handOffset(sequence: number, count: number): number {
+/**
+ * Hand cards no longer paint from these coordinates (HandBand renders them
+ * in normal document flow instead), but spatial up/down navigation still
+ * needs distinct virtual x positions per hand card, so this stays.
+ */
+function handNavigationOffset(sequence: number, count: number): number {
   const pixels =
     (sequence - (count - 1) / 2) * Math.min(58, 600 / Math.max(count, 1));
   return pixels / DUEL_FIELD_WIDTH;

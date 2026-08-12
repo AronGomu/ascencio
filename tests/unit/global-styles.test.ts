@@ -56,11 +56,16 @@ describe("global styles", () => {
     expect(reveal).toContain("display: flex");
   });
 
-  it("opponent hand zone is plain", () => {
+  // T8: both hands render through HandBand, which paints no border,
+  // background or ZoneControl at all — there is no dashed hand-zone
+  // treatment left to make transparent for the opponent specifically.
+  it("hand band paints no border or background", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
-    expect(css).toContain(
-      '.duel-field-zone[data-zone-id="p1:hand"] {\n  border-color: transparent;\n  background: transparent;\n}',
-    );
+    expect(css).not.toContain('.duel-field-zone[data-zone-kind="hand"]');
+    expect(css).not.toContain('.duel-field-zone[data-zone-id="p1:hand"]');
+    const block = ruleBlock(css, ".duel-field-hand-band {");
+    expect(block).not.toContain("border");
+    expect(block).not.toContain("background");
   });
 });
 

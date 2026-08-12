@@ -97,7 +97,7 @@ describe("global styles", () => {
     expect(block).not.toContain("var(--warning)");
   });
 
-  it("feedback target/badge and default field line are teal; attack/LP stay danger", () => {
+  it("feedback target and default field line are teal; attack stays danger", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     const target = ruleBlock(
       css,
@@ -109,10 +109,11 @@ describe("global styles", () => {
     expect(line).toContain("stroke: var(--accent)");
     const attackLine = ruleBlock(css, ".field-lines.is-attack line {");
     expect(attackLine).toContain("var(--danger)");
-    const badge = ruleBlock(css, ".duel-field-feedback {");
-    expect(badge).toContain("border: 1px solid var(--accent)");
-    const lp = ruleBlock(css, ".duel-field-feedback.is-life-points {");
-    expect(lp).toContain("var(--danger)");
+  });
+
+  it("the action/phase badge at the opponent hand position (item 26) is gone from the stylesheet", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    expect(css).not.toContain(".duel-field-feedback");
   });
 
   it("card and list entries transition transform 120ms ease-out and hover-scale 1.35", () => {

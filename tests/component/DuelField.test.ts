@@ -350,6 +350,16 @@ describe("DuelField", () => {
     ).not.toBeNull();
   });
 
+  it("duel field no longer renders the action/phase badge at the opponent hand position (item 26)", () => {
+    const value = DUEL_FIELD_PUBLIC_STATES["ST-01"];
+    render(DuelField, { board: value.board });
+
+    expect(
+      document.querySelector('[data-cy="duel-field-feedback"]'),
+    ).toBeNull();
+    expect(document.querySelector(".duel-field-feedback")).toBeNull();
+  });
+
   it("renders exactly one End turn button, folded into the phase strip", () => {
     const value = DUEL_FIELD_PUBLIC_STATES["ST-01"];
     render(DuelField, { board: value.board });
@@ -1700,7 +1710,9 @@ describe("DuelField", () => {
 
     await rendered.rerender({ board: current });
 
-    expect(screen.getByRole("status").textContent).toContain("Card moved");
+    // Item 26: the action/phase badge is gone; the highlight and line stay
+    // (ADR-010/round 2 assigned current-action status to the preview panel).
+    expect(screen.queryByRole("status")).toBeNull();
     expect(
       document.querySelector(`[data-card-id="${moved.id}"]`)?.classList,
     ).toContain("is-feedback-target");
@@ -1728,7 +1740,10 @@ describe("DuelField", () => {
     });
     await rendered.rerender({ presentationEvents });
     await rendered.rerender({ board: value });
-    expect(screen.getByRole("status").textContent).toBe("Normal Summon");
+    // Item 26: no badge; the highlight is the surviving evidence of the
+    // summon feedback that this test cancels below.
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(document.querySelector(".is-feedback-target")).not.toBeNull();
 
     await rendered.rerender({
       feedbackGeneration: "2:0",
@@ -1780,7 +1795,8 @@ describe("DuelField", () => {
     await rendered.rerender({ board: { ...valueBoard } });
 
     expect(animate).not.toHaveBeenCalled();
-    expect(screen.getByRole("status").textContent).toBe("Normal Summon");
+    // Item 26: no badge; the highlight still fires under reduced motion.
+    expect(screen.queryByRole("status")).toBeNull();
     expect(document.querySelector(".is-feedback-target")).not.toBeNull();
     await userEvent
       .setup()

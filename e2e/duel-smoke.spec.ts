@@ -1681,6 +1681,57 @@ test("dragging a hand card onto a highlighted zone plays it", async ({
   expect(placePrompt?.prompt.kind).toBe("selectPlace");
 });
 
+test("item 18: the hovered drop candidate gets its own emphasis, distinct from unhovered candidates, and clears on release", async ({
+  page,
+}) => {
+  const placement = await locateDraggablePlacement(page);
+  if (placement === null) {
+    await assertHandCouldOfferAPlacement(page);
+    test.skip(
+      true,
+      "opening hand offers no summon, no monster set and no settable spell or trap — there is no placement of any kind to drag",
+    );
+    return;
+  }
+  const { field, targetZone, targetZoneId, from, to } = placement;
+
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(
+    from.x + ((to.x - from.x) * 2) / 3,
+    from.y + ((to.y - from.y) * 2) / 3,
+    { steps: 4 },
+  );
+  await page.mouse.move(to.x, to.y, { steps: 4 });
+  await expect(targetZone).toHaveAttribute("data-drop-candidate", "true");
+  await expect(targetZone).toHaveAttribute("data-drop-hovered", "true");
+
+  // Any other legal candidate zone stays a plain (unhovered) candidate while
+  // the pointer sits over `targetZone` — proving the emphasis follows the
+  // specific hovered zone, not every candidate the walker could have found.
+  const otherCandidates = field.locator(
+    `[data-drop-candidate="true"]:not([data-zone-id="${targetZoneId}"])`,
+  );
+  const otherCount = await otherCandidates.count();
+  for (let index = 0; index < otherCount; index += 1) {
+    await expect(otherCandidates.nth(index)).not.toHaveAttribute(
+      "data-drop-hovered",
+      "true",
+    );
+  }
+
+  // Moving off every candidate clears the hovered emphasis.
+  await page.mouse.move(0, 0, { steps: 4 });
+  await expect(targetZone).not.toHaveAttribute("data-drop-hovered", "true");
+
+  // Releasing over the zone still completes the drop and clears the
+  // candidate/hover attributes with it (endCardDrag resets both).
+  await page.mouse.move(to.x, to.y, { steps: 4 });
+  await page.mouse.up();
+  await expect(targetZone).not.toHaveAttribute("data-drop-candidate", "true");
+  await expect(targetZone).not.toHaveAttribute("data-drop-hovered", "true");
+});
+
 test("reduced motion drags follow the pointer with no tilt and settle with no lingering ghost", async ({
   page,
 }) => {
@@ -1925,6 +1976,140 @@ test("T12: field/hand cards zoom 1.35x on hover, halo/art scale with the root, c
       "zone-list entry hover border is orange (--warning)",
     ).toBe("rgb(255, 213, 128)");
   }
+});
+
+test("item 5: hand action chips win over a field card that genuinely overlaps the hand band", async ({
+  page,
+}) => {
+  // Full board on screen: the hand row and the spellTrap row must both be
+  // reachable so a placed backrow card's box can be measured against the
+  // hand band's box in real layout, not a scrolled-away approximation.
+  await page.setViewportSize({ width: 1440, height: 1400 });
+  await page.goto("./");
+  await startPresetDuel(page);
+  await expect(
+    page.locator('[data-cy="duel-field"][data-prompt-kind="idleCommand"]'),
+  ).toBeVisible({ timeout: 120_000 });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  const field = page.getByRole("region", { name: "Duel field" });
+
+  // Count-and-assert guard (R1 pattern): the hand must actually be mounted
+  // and actionable before a spell/trap-set miss is allowed to skip this
+  // seed, so a broken chip/data-cy scheme cannot silently pass as a skip.
+  await assertHandCouldOfferAPlacement(page);
+
+  const placed = await setHandSpellTrapWithKeyboard(page, field);
+  test.skip(
+    !placed,
+    "this seed's opening hand offers no spell/trap set to place a genuinely overlapping field card",
+  );
+
+  await expect(
+    page.locator('[data-cy="duel-field"][data-prompt-kind="idleCommand"]'),
+  ).toBeVisible({ timeout: 30_000 });
+
+  const spellTrapCard = field
+    .locator('.duel-field-card[data-card-zone-id^="p0:spellTrap:"]')
+    .first();
+  await expect(spellTrapCard).toBeVisible();
+  const fieldCardBox = await spellTrapCard.boundingBox();
+  if (fieldCardBox === null) throw new Error("Missing field card geometry");
+
+  const handBand = field.locator('[data-cy="field-hand-band-p0"]');
+  const handBandBox = await handBand.boundingBox();
+  if (handBandBox === null) throw new Error("Missing hand band geometry");
+
+  // This is the fact the fix depends on, proven in real layout rather than
+  // assumed from the design-grid arithmetic in the ticket: the placed
+  // spellTrap card's box genuinely overlaps the hand band's box.
+  const overlapsBand =
+    fieldCardBox.x < handBandBox.x + handBandBox.width &&
+    fieldCardBox.x + fieldCardBox.width > handBandBox.x &&
+    fieldCardBox.y < handBandBox.y + handBandBox.height &&
+    fieldCardBox.y + fieldCardBox.height > handBandBox.y;
+  expect(
+    overlapsBand,
+    `placed spellTrap card box ${JSON.stringify(fieldCardBox)} must overlap the hand band box ${JSON.stringify(handBandBox)}`,
+  ).toBe(true);
+
+  // Now hover any actionable hand card in that same overlapping band and
+  // prove its chips still win the hit test — not merely the first
+  // actionable card the walker happens to find, but one whose enclosing
+  // band is a proven, measured overlap with a real field card.
+  const opener = field
+    .getByRole("button", {
+      name: /^Legal action, Open actions for .+ in Your Hand$/,
+    })
+    .first();
+  await expect(opener).toBeVisible();
+  const cardId = ((await opener.getAttribute("data-cy")) ?? "").replace(
+    /^field-card-target-/,
+    "",
+  );
+  const chips = field.locator(`[data-cy="card-action-chips-${cardId}"]`);
+  await opener.hover();
+  await expect(chips).toBeVisible();
+  const chipButtons = chips.locator("button");
+  const chipCount = await chipButtons.count();
+  expect(chipCount).toBeGreaterThan(0);
+  for (let index = 0; index < chipCount; index += 1) {
+    const chip = chipButtons.nth(index);
+    const resolvesToChip = await chip.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      const hit = document.elementFromPoint(
+        box.left + box.width / 2,
+        box.top + box.height / 2,
+      );
+      return hit !== null && element.contains(hit);
+    });
+    expect(
+      resolvesToChip,
+      `chip ${index} centre must resolve to itself/a descendant while a real field card overlaps the hand band (item 5)`,
+    ).toBe(true);
+  }
+});
+
+test("item 24: End turn button is measurably smaller while keeping the 44px pointer-target floor", async ({
+  page,
+}) => {
+  await page.goto("./");
+  await startPresetDuel(page);
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+  const endTurn = page.locator('[data-cy="field-end-turn-button"]');
+  await expect(endTurn).toBeVisible();
+
+  const after = await endTurn.boundingBox();
+  if (after === null) throw new Error("Missing End turn geometry");
+
+  // "Before" reproduces T10's shipped-but-unreduced rule (padding: .55rem
+  // 1rem, no explicit font-size override) as a scoped style override on the
+  // same live button, so the comparison is a real rendered rect, not an
+  // arithmetic guess about box-model composition.
+  await page.addStyleTag({
+    content:
+      '[data-cy="field-end-turn-button"] { padding: .55rem 1rem !important; font-size: 1rem !important; }',
+  });
+  const before = await endTurn.boundingBox();
+  if (before === null) throw new Error("Missing End turn 'before' geometry");
+
+  expect(
+    after.width,
+    `after width ${after.width} must be smaller than before width ${before.width}`,
+  ).toBeLessThan(before.width);
+  expect(after.height, "height stays at the 44px floor").toBeGreaterThanOrEqual(
+    44,
+  );
+  expect(
+    after.width,
+    "width stays at or above the 44px pointer target",
+  ).toBeGreaterThanOrEqual(44);
+
+  // Evidence for the ticket report: a real rendered before/after rect pair.
+  console.log(
+    `item 24 End turn rect: before=${JSON.stringify(before)} after=${JSON.stringify(after)}`,
+  );
 });
 
 test("opponent pile inversion rotates images only", async ({ page }) => {
@@ -3064,6 +3249,13 @@ async function answerPromptWithKeyboard(
 // `card-action-chip-${choice.id}`, so both still end in `-setMonster`.
 const MONSTER_SET_ACTION = "setMonster";
 const MONSTER_SET_CHIP = `[data-cy$="-${MONSTER_SET_ACTION}"]`;
+// Item 5's regression proof needs a genuine field card in a spellTrap zone
+// (spellY 590/720, which the layout deliberately overlaps the hand band's
+// y-range) rather than a monster-zone card (spellY 470/720, which does not
+// overlap), so this mirrors MONSTER_SET_ACTION/MONSTER_SET_CHIP for the
+// spellTrap set action instead.
+const SPELLTRAP_SET_ACTION = "setSpellTrap";
+const SPELLTRAP_SET_CHIP = `[data-cy$="-${SPELLTRAP_SET_ACTION}"]`;
 
 /**
  * Sets one hand monster face-down using only the keyboard, so the board gains a
@@ -3128,6 +3320,59 @@ async function setHandMonsterWithKeyboard(
     // Escape unpins and returns focus to the card target. The chips stay
     // mounted and stay shown while that target holds focus, so the check is
     // that focus came home, not that anything was removed.
+    await page.keyboard.press("Escape");
+    await expect(opener).toBeFocused();
+  }
+  return false;
+}
+
+/**
+ * Sets one hand spell/trap card face-down using only the keyboard, so the
+ * board gains a genuine backrow card in a spellTrap zone — the only zone
+ * kind whose box actually overlaps the player's own hand band (item 5).
+ * Mirrors `setHandMonsterWithKeyboard` for the `setSpellTrap` action.
+ * Returns false when no hand card offers a spell/trap set.
+ */
+async function setHandSpellTrapWithKeyboard(
+  page: Page,
+  field: Locator,
+): Promise<boolean> {
+  const openers = field.getByRole("button", {
+    name: /^Legal action, Open actions for .+ in Your Hand$/,
+  });
+  for (let index = 0; index < (await openers.count()); index += 1) {
+    const opener = openers.nth(index);
+    if (!(await opener.isEnabled())) continue;
+    const cardId = ((await opener.getAttribute("data-cy")) ?? "").replace(
+      /^field-card-target-/,
+      "",
+    );
+    const chips = field.locator(`[data-cy="card-action-chips-${cardId}"]`);
+    const chipButtonCount = await chips.locator("button").count();
+    if (chipButtonCount === 0) continue;
+    if (chipButtonCount === 1) {
+      if ((await chips.locator(SPELLTRAP_SET_CHIP).count()) === 0) continue;
+      await keyboardActivate(page, opener);
+      await expect(chips).toBeHidden();
+      return true;
+    }
+    await keyboardActivate(page, opener);
+    await expect(chips).toBeVisible();
+    await expect(chips.locator(":focus")).toHaveCount(1);
+    if ((await chips.locator(SPELLTRAP_SET_CHIP).count()) > 0) {
+      const items = chips.locator("button");
+      for (let move = 0; move < (await items.count()); move += 1) {
+        const focused = chips.locator(":focus");
+        if ((await focused.count()) === 0) break;
+        const focusedId = (await focused.getAttribute("data-cy")) ?? "";
+        if (focusedId.endsWith(`-${SPELLTRAP_SET_ACTION}`)) {
+          await page.keyboard.press("Enter");
+          await expect(chips).toBeHidden();
+          return true;
+        }
+        await page.keyboard.press("ArrowRight");
+      }
+    }
     await page.keyboard.press("Escape");
     await expect(opener).toBeFocused();
   }

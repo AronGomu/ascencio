@@ -1120,11 +1120,29 @@ button.duel-field-zone,
 }
 
 /* A drop candidate wears the same green as legality, filled in: the tint is
-   what separates "you could drop here" from "you may act here". */
+   what separates "you could drop here" from "you may act here". Item 18
+   fades this halo in/out (120ms ease-out, matching T12's hover-zoom
+   duration) rather than snapping every candidate on at once, and the
+   hovered candidate underneath the dragged card gets a distinct, brighter
+   emphasis on top of it. */
 .duel-field-zone.is-drop-candidate {
   border-color: var(--success);
   background: rgb(126 226 168 / 0.16);
   box-shadow: 0 0 0 3px rgb(126 226 168 / 0.75);
+  transition:
+    background 120ms ease-out,
+    box-shadow 120ms ease-out;
+}
+
+.duel-field-zone.is-drop-candidate.is-drop-hovered {
+  background: rgb(126 226 168 / 0.34);
+  box-shadow: 0 0 0 4px rgb(126 226 168 / 0.95);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .duel-field-zone.is-drop-candidate {
+    transition: none;
+  }
 }
 
 .duel-field-card.is-dragging {
@@ -1223,33 +1241,6 @@ button.duel-field-zone,
 .field-lines.is-attack line {
   stroke: var(--danger);
   stroke-width: 4;
-}
-
-.duel-field-feedback {
-  position: absolute;
-  z-index: var(--duel-field-layer-control);
-  top: 1.5rem;
-  left: 50%;
-  max-width: min(28rem, calc(100% - 3rem));
-  margin: 0;
-  padding: 0.45rem 0.75rem;
-  border: 1px solid var(--accent);
-  border-radius: 999px;
-  background: rgb(8 16 31 / 0.9);
-  box-shadow: 0 0.5rem 1.2rem rgb(0 0 0 / 0.36);
-  color: #ffffff;
-  font-weight: 800;
-  pointer-events: none;
-  text-align: center;
-  transform: translateX(-50%);
-}
-
-.duel-field-feedback.is-life-points {
-  border-color: var(--danger);
-}
-
-.duel-field-feedback.is-chain {
-  border-color: var(--accent);
 }
 
 /* T14 (ADR-017): a field window is absolutely positioned in the field root's
@@ -1558,12 +1549,18 @@ button.duel-field-zone,
   transform: scale(1.35);
 }
 
+/* Item 5: the hand and its action chips must never be painted over by a
+   field card, zone, stack or the phase strip. This box creates its own
+   stacking context (position + z-index), so its z-index must outrank every
+   field-layer token up through --duel-field-layer-control (phase strip) —
+   the child chip's own --duel-field-layer-menu z-index only orders siblings
+   inside this context, it cannot rescue a lower-z-index parent. */
 .duel-field-hand-band {
   position: absolute;
   left: var(--field-x);
   top: var(--field-y);
   width: var(--field-width);
-  z-index: var(--duel-field-layer-card);
+  z-index: var(--duel-field-layer-menu);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1597,9 +1594,6 @@ button.duel-field-zone,
 
 .duel-field-hand-band.is-opponent .duel-field-hand-band__viewport {
   padding: 0.15rem 1.75rem 2.9rem;
-}
-
-.duel-field-hand-band.is-opponent .duel-field-hand-band__viewport {
   flex-direction: row-reverse;
 }
 
@@ -1744,10 +1738,14 @@ button.card-action-chip:hover:not(:disabled) {
    absolute positioning — the group's own placement (below) already clears
    the shared extra monster zones. `pointer-events: auto` is required
    because it inherits `pointer-events: none` from `.field-phase-strip`. */
+/* Item 24: shrink toward the phase-chip scale horizontally (padding +
+   font-size) while the 44px pointer-target floor (A7) never yields — only
+   `min-height` still enforces that floor, unchanged. */
 .field-end-turn {
   pointer-events: auto;
   min-height: 2.75rem;
-  padding: 0.55rem 1rem;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.8rem;
 }
 
 /* T14: the bar is normal flow inside the confirm window (ADR-017), which

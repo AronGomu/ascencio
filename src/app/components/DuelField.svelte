@@ -146,6 +146,12 @@
   let feedbackSyncSequence = 0;
   let dragCard: BoardCardView | null = null;
   let dropCandidates: ReadonlySet<PhysicalZoneId> = EMPTY_ZONE_IDS;
+  /* Item 18: which candidate zone is directly under the dragged card right
+     now. Computed in `moveCardDrag` (a pointermove handler, not the rAF
+     ghost-animation loop) with the existing `zoneIdAtPoint` hit test — never
+     a second hit-testing implementation, and never a DOM read inside
+     `tickGhostFrame`. */
+  let dropHoveredZoneId: PhysicalZoneId | null = null;
   let lastPromptKey: string | null = null;
   let ghostOrigin: CardDragOrigin | null = null;
   let ghostFrame: DragGhostFrame | null = null;
@@ -449,6 +455,7 @@
     }
     dragCard = card;
     dropCandidates = candidates;
+    dropHoveredZoneId = null;
     /* A new drag always wins over a settle still in flight for the previous
        card ("new drag first cancels prior settle"). */
     cancelGhostFrame();
@@ -474,6 +481,14 @@
     if (ghostPhase !== "dragging") return;
     ghostLatestSample = { x, y, timeMs: performance.now() };
     scheduleGhostFrame();
+    /* Reuses the existing hit test, run here (a pointermove handler) rather
+       than inside the rAF ghost loop, so hovering the emphasis never adds a
+       second hit-testing implementation or a layout read per animation
+       frame. Leaving every candidate (pointer over no zone, or a zone that
+       is not a legal candidate) clears the emphasis. */
+    const zoneId = zoneIdAtPoint(x, y);
+    dropHoveredZoneId =
+      zoneId !== null && dropCandidates.has(zoneId) ? zoneId : null;
   }
 
   function scheduleGhostFrame(): void {
@@ -566,6 +581,7 @@
     const origin = ghostOrigin;
     dragCard = null;
     dropCandidates = EMPTY_ZONE_IDS;
+    dropHoveredZoneId = null;
     if (card === null || spec === null || origin === null) {
       removeGhost();
       return;
@@ -837,6 +853,7 @@
         disabled={pending}
         pinnedTarget={session.menuTarget}
         {dropCandidates}
+        {dropHoveredZoneId}
         oncardactivate={activateCard}
         onzoneactivate={activateZone}
         oncardchoose={(choice) => {
@@ -939,19 +956,5 @@
   {/if}
   {#if feedbackState.line}
     <FieldLines line={feedbackState.line} />
-  {/if}
-  {#if feedbackState.kind !== null}
-    <p
-      class="duel-field-feedback"
-      class:is-life-points={feedbackState.kind === "life-points"}
-      class:is-chain={feedbackState.kind === "chain"}
-      role="status"
-      aria-live="polite"
-      data-feedback-kind={feedbackState.kind}
-      data-feedback-duration={feedbackState.durationMs}
-      data-cy="duel-field-feedback"
-    >
-      {feedbackState.label}
-    </p>
   {/if}
 </section>

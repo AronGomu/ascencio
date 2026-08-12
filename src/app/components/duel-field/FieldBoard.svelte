@@ -35,6 +35,9 @@
   export let disabled = false;
   export let pinnedTarget: BoardTargetId | null = null;
   export let dropCandidates: ReadonlySet<PhysicalZoneId> = new Set();
+  /* Item 18: the candidate zone directly under the dragged card, distinct
+     from the rest of `dropCandidates`, so it can carry its own emphasis. */
+  export let dropHoveredZoneId: PhysicalZoneId | null = null;
   export let oncardactivate: (
     card: BoardCardView,
     element: HTMLButtonElement,
@@ -194,6 +197,7 @@
       active={navigationState.activeTarget === zone.targetId}
       {disabled}
       dropCandidate={dropCandidates.has(zone.id)}
+      dropHovered={dropHoveredZoneId === zone.id}
       onactivate={() => onzoneactivate(zone)}
     />
   {/each}

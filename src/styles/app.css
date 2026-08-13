@@ -185,70 +185,6 @@ main.is-duel-viewport > .duel-row {
   min-height: 0;
 }
 
-.duel-header-bar {
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  width: 100%;
-  max-width: 120rem;
-  margin-inline: auto;
-  padding: 0.75rem 1rem;
-}
-
-.duel-header-bar__spacer {
-  flex: 1 1 auto;
-}
-
-.duel-header-bar__player {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-width: 0;
-  flex-shrink: 1;
-}
-
-.duel-header-bar__avatar {
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 999px;
-  object-fit: cover;
-  border: 1px solid var(--border);
-}
-
-.duel-header-bar__meta {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.duel-header-bar__role {
-  overflow: hidden;
-  min-width: 0;
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 750;
-  text-transform: uppercase;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.duel-header-bar__life {
-  overflow: hidden;
-  min-width: 0;
-  margin: 0;
-  color: var(--warning);
-  font-weight: 800;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.duel-header-bar__settings svg {
-  width: 1.1rem;
-  height: 1.1rem;
-  fill: currentcolor;
-  display: block;
-}
 
 .dialog-backdrop {
   position: fixed;
@@ -322,14 +258,14 @@ h4 {
    `main` cap — verified in the responsive e2e at 1366×768 and 1920×1080. */
 .duel-row {
   display: grid;
-  grid-template-columns: minmax(22rem, 0.45fr) minmax(52rem, 1fr);
+  grid-template-columns: minmax(22rem, 0.45fr) minmax(52rem, 1fr) minmax(12rem, 0.3fr);
   gap: 1rem;
   align-items: stretch;
 }
 
 .card-preview-panel {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 0.75rem;
   min-width: 0;
   min-height: 0;
@@ -362,37 +298,28 @@ h4 {
   white-space: pre-wrap;
 }
 
-.card-preview-panel__status {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  color: var(--muted);
-  font-size: 0.82rem;
+.duel-right-rail {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  min-width: 0;
 }
+.duel-right-rail__top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.duel-right-rail__top strong { font-size: 0.95rem; font-weight: 800; }
+.duel-right-rail__options { width: 2.5rem; height: 2.5rem; padding: 0; flex: 0 0 2.5rem; }
+.duel-right-rail__identity { border: 2px solid transparent; }
+.duel-right-rail__identity.active { border-color: var(--accent); }
+.duel-right-rail__identity img { display: block; width: 100%; aspect-ratio: 1; max-height: 26svh; object-fit: cover; }
+.duel-right-rail__identity p { margin: 0.35rem 0; color: var(--warning); font-weight: 800; }
+.duel-right-rail__status { align-self: center; min-width: 0; }
+.duel-right-rail__status h2 { font-size: clamp(1.05rem, 2vw, 1.6rem); text-wrap: balance; }
+.duel-right-rail__status p { color: var(--muted); }
+.duel-right-rail__dots { display: inline-flex; gap: 0.15rem; }
+.duel-right-rail__dots i { width: 0.28rem; height: 0.28rem; border-radius: 999px; background: currentcolor; animation: duel-rail-dot 1.2s infinite ease-in-out; }
+.duel-right-rail__dots i:nth-child(2) { animation-delay: 0.2s; }
+.duel-right-rail__dots i:nth-child(3) { animation-delay: 0.4s; }
 
-.card-preview-status-dots {
-  display: inline-flex;
-  gap: 0.15rem;
-}
-
-.card-preview-status-dots span {
-  width: 0.28rem;
-  height: 0.28rem;
-  border-radius: 999px;
-  background: currentcolor;
-  animation: preview-status-dot 1.2s infinite ease-in-out;
-}
-
-.card-preview-status-dots span:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.card-preview-status-dots span:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-@keyframes preview-status-dot {
+@keyframes duel-rail-dot {
   0%,
   80%,
   100% {
@@ -404,7 +331,7 @@ h4 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card-preview-status-dots span {
+  .duel-right-rail__dots i {
     animation: none;
     opacity: 0.6;
   }
@@ -457,9 +384,6 @@ h4 {
     grid-area: copy;
   }
 
-  .card-preview-panel__status {
-    grid-area: status;
-  }
 }
 
 /* Short viewports: the art shrinks to a `clamp(3rem,8svh,5rem)`-tall

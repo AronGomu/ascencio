@@ -30,3 +30,9 @@
 - [ ] Confirm no-EMZ phases form one centered Draw→Standby→Main 1→Battle→Main 2 run.
 - [ ] Confirm End turn aligns board inner-right edge in both profiles.
 - [ ] Use keyboard to reach each legal phase control plus End turn; confirm each activates same offered choice.
+
+## T6 right-rail-replaces-header
+
+- [ ] Confirm right-rail Options opens menu/settings during active duel.
+- [ ] Confirm rail status stays additive; active prompt remains sole decision UI.
+- [ ] Confirm reduced-motion mode keeps three waiting dots visible and static.

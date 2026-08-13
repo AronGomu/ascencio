@@ -93,14 +93,14 @@ Stable selectors: `duel-right-rail`, `duel-right-rail-turn-phase`, `duel-right-r
 
 ## Impl steps
 
-- [ ] 1. Add `tests/unit/duel-rail-status.test.ts` + `tests/component/DuelRail.test.ts`; update AppChrome/preview tests; run red.
-- [ ] 2. Implement pure status mapping from existing facts.
-- [ ] 3. Add `DuelRail.svelte` with exact props/selectors/order/a11y/dots.
-- [ ] 4. Mount rail in current `App.svelte` row; route existing options callback, LP/avatar/turn/phase/status.
-- [ ] 5. Remove status props/DOM from CardPreviewPanel + call sites; preserve image lease.
-- [ ] 6. Delete `DuelHeaderBar.svelte`, test, `preview-status.ts`, test after `rg` proves new owners.
-- [ ] 7. Update old header selectors/assertions in `e2e/duel-smoke.spec.ts` to rail selectors.
-- [ ] 8. Add reduced-motion CSS/browser assertion; run focused/full component gates.
+- [x] 1. Add `tests/unit/duel-rail-status.test.ts` + `tests/component/DuelRail.test.ts`; update AppChrome/preview tests; run red.
+- [x] 2. Implement pure status mapping from existing facts.
+- [x] 3. Add `DuelRail.svelte` with exact props/selectors/order/a11y/dots.
+- [x] 4. Mount rail in current `App.svelte` row; route existing options callback, LP/avatar/turn/phase/status.
+- [x] 5. Remove status props/DOM from CardPreviewPanel + call sites; preserve image lease.
+- [x] 6. Delete `DuelHeaderBar.svelte`, test, `preview-status.ts`, test after `rg` proves new owners.
+- [x] 7. Update old header selectors/assertions in `e2e/duel-smoke.spec.ts` to rail selectors.
+- [x] 8. Add reduced-motion CSS/browser assertion; run focused/full component gates.
 
 ## Outputs
 
@@ -111,10 +111,10 @@ Stable selectors: `duel-right-rail`, `duel-right-rail-turn-phase`, `duel-right-r
 
 ## Validation
 
-- [ ] `npx vitest run tests/unit/duel-rail-status.test.ts tests/component/DuelRail.test.ts tests/component/AppChrome.test.ts tests/component/CardPreviewPanel.test.ts` → exit 0.
-- [ ] `test -z "$(rg -l 'DuelHeaderBar|duel-header-|previewStatusFor|CardPreviewStatus' src tests e2e || true)"` → success.
-- [ ] `npm run typecheck && npm run lint` → exit 0.
-- [ ] `npx playwright test e2e/duel-smoke.spec.ts --project=chromium --grep "production bundle initializes|life points|rail"` → exit 0.
+- [x] `npx vitest run tests/unit/duel-rail-status.test.ts tests/component/DuelRail.test.ts tests/component/AppChrome.test.ts tests/component/CardPreviewPanel.test.ts` → exit 0.
+- [x] `test -z "$(rg -l 'DuelHeaderBar|duel-header-|previewStatusFor|CardPreviewStatus' src tests e2e || true)"` → success.
+- [x] `npm run typecheck && npm run lint` → exit 0.
+- [x] `npx playwright test e2e/duel-smoke.spec.ts --project=chromium --grep "production bundle initializes|life points|rail"` → exit 0.
 - [ ] manual check — options opens settings; status never replaces prompt UI.
-- [ ] app functional — `npm run build` exits 0.
+- [x] app functional — `npm run build` exits 0.
 - [ ] commit msg draft: `feat(shell): replace duel header with status rail`

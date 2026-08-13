@@ -20,7 +20,7 @@
     type OffFieldTargetEntry,
   } from "../field/off-field-target-list.ts";
   import type { PhysicalZoneId } from "../field/duel-field-layout.ts";
-  import DuelHeaderBar from "./components/DuelHeaderBar.svelte";
+  import DuelRail from "./components/DuelRail.svelte";
   import DeckPicker from "./components/DeckPicker.svelte";
   import DuelResultDialog from "./components/DuelResultDialog.svelte";
   import MenuDialog from "./components/MenuDialog.svelte";
@@ -58,8 +58,7 @@
     stackTopCode,
     type CardPreviewView,
   } from "./presentation/card-preview.ts";
-  import { previewStatusFor } from "./presentation/preview-status.ts";
-  import { hasDuelPriority } from "./prompts/duel-priority.ts";
+  import { duelRailStatusFor } from "./presentation/duel-rail-status.ts";
   import { promptSurface } from "./prompts/prompt-surface.ts";
   import { DECK_CATALOG, type DeckId } from "../duel/presets/deck-catalog.ts";
   import { createDuelStore } from "./stores/duel-store.ts";
@@ -182,14 +181,11 @@
     $uiSettings.showWorkspace,
     duelBoard !== null,
   );
-  $: previewStatus = previewStatusFor(effectivePrompt, $duel.responsePending);
-  $: headerLifePoints =
-    $duel.snapshot === null
-      ? null
-      : ([
-          $duel.snapshot.players[0].lifePoints,
-          $duel.snapshot.players[1].lifePoints,
-        ] as const);
+  $: railStatus = duelRailStatusFor({
+    prompt: effectivePrompt,
+    snapshot: $duel.snapshot,
+    responsePending: $duel.responsePending,
+  });
   $: appAnnouncement =
     storageWarning ??
     imageWarning ??
@@ -391,7 +387,7 @@
       void loadImages({ snapshotId: snapshot, manifestSha256 });
 
     menubarTrigger = document.querySelector<HTMLButtonElement>(
-      '[data-cy="app-menubar-settings-button"]',
+      '[data-cy="duel-right-rail-options"]',
     );
 
     duel.initialize();
@@ -748,13 +744,6 @@
   <title>Preset Duel · YGO Story Duel Simulator</title>
 </svelte:head>
 
-<DuelHeaderBar
-  lifePoints={headerLifePoints}
-  selfAvatarUrl={imageLibrary?.cardBackUrl ?? ""}
-  opponentAvatarUrl={imageLibrary?.cardBackUrl ?? ""}
-  onopensettings={openMenu}
-/>
-
 <main
   data-cy="app-main"
   class:is-duel-viewport={duelViewportOnly}
@@ -922,8 +911,6 @@
     <div class="duel-row" data-cy="duel-row">
       <CardPreviewPanel
         preview={previewCard}
-        status={previewStatus}
-        hasPriority={hasDuelPriority(effectivePrompt, $duel.responsePending)}
         imageLibrary={imagesMatchRuntime ? imageLibrary : null}
         placeholderUrl={imageLibrary?.placeholderUrl ??
           DEFAULT_CARD_PLACEHOLDER}
@@ -992,6 +979,18 @@
             Prompt controls remain available.
           </p>
         </section>
+      {/if}
+      {#if $duel.snapshot}
+        <DuelRail
+          turn={$duel.snapshot.turn}
+          phase={$duel.snapshot.phase}
+          turnPlayer={$duel.snapshot.turnPlayer}
+          lifePoints={[$duel.snapshot.players[0].lifePoints, $duel.snapshot.players[1].lifePoints]}
+          playerAvatarUrl={imageLibrary?.cardBackUrl ?? ""}
+          opponentAvatarUrl={imageLibrary?.cardBackUrl ?? ""}
+          status={railStatus}
+          onopensettings={openMenu}
+        />
       {/if}
     </div>
   {/if}

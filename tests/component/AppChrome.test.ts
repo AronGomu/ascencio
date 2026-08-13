@@ -307,9 +307,16 @@ describe("App", () => {
   it("suppresses workspace prompt controls during a layout profile conflict", async () => {
     const user = userEvent.setup();
     await renderReadyApp();
+    await startDuelFromPicker(user);
+    emitDuelState(LINK_FREE_SNAPSHOT);
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector('[data-cy="duel-right-rail-options"]'),
+      ).not.toBeNull(),
+    );
     await user.click(
       document.querySelector(
-        '[data-cy="app-menubar-settings-button"]',
+        '[data-cy="duel-right-rail-options"]',
       ) as HTMLButtonElement,
     );
     await user.click(
@@ -327,7 +334,12 @@ describe("App", () => {
         '[data-cy="settings-dialog-close-button"]',
       ) as HTMLButtonElement,
     );
-    await startLinkFreeConflict(user);
+    emitPrompt(SHARED_ZONE_PLACE_PROMPT);
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector('[data-cy="layout-profile-conflict"]'),
+      ).not.toBeNull(),
+    );
 
     expect(document.querySelector('[data-cy="workspace-grid"]')).not.toBeNull();
     expect(
@@ -386,7 +398,7 @@ describe("App", () => {
 
     await user.click(
       document.querySelector(
-        '[data-cy="app-menubar-settings-button"]',
+        '[data-cy="duel-right-rail-options"]',
       ) as HTMLButtonElement,
     );
     await user.click(
@@ -427,7 +439,7 @@ describe("App", () => {
 
     await user.click(
       document.querySelector(
-        '[data-cy="app-menubar-settings-button"]',
+        '[data-cy="duel-right-rail-options"]',
       ) as HTMLButtonElement,
     );
     await user.click(

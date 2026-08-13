@@ -234,7 +234,7 @@ test("production bundle initializes the real Worker and sends one opaque choice 
     page.locator('[data-cy="duel-field"][data-prompt-kind="idleCommand"]'),
   ).toBeVisible({ timeout: 120_000 });
   await expect(
-    page.locator('[data-cy="card-preview-status"]', {
+    page.locator('[data-cy="duel-right-rail-status-title"]', {
       hasText: "Choose a Main Phase action",
     }),
   ).toBeVisible({ timeout: 120_000 });
@@ -242,7 +242,7 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   await enableDuelHud(page);
   await expect(page.getByRole("heading", { name: "Your turn" })).toBeVisible();
   await expect(
-    page.locator('[data-cy="duel-header-life-points-p0"]'),
+    page.locator('[data-cy="duel-right-rail-life-points-0"]'),
   ).toBeVisible();
   const field = page.getByRole("region", { name: "Duel field" });
   await expect(field).toBeVisible();
@@ -262,21 +262,15 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   );
   await expect(currentPhaseChip).toHaveCount(1);
   await expect(
-    page.locator('[data-cy="duel-header-life-points-p0"]'),
+    page.locator('[data-cy="duel-right-rail-life-points-0"]'),
   ).toHaveText("8,000 LP");
   await expect(
-    page.locator('[data-cy="duel-header-life-points-p1"]'),
+    page.locator('[data-cy="duel-right-rail-life-points-1"]'),
   ).toHaveText("8,000 LP");
   // Round 3 (T10): the header labels each life total by role, not deck/
   // archetype name — those never render anywhere in the header or field.
-  await expect(page.locator('[data-cy="duel-header-role-p0"]')).toHaveText(
-    "You",
-  );
-  await expect(page.locator('[data-cy="duel-header-role-p1"]')).toHaveText(
-    "Opponent",
-  );
   const headerText = await page
-    .locator('[data-cy="duel-header-bar"]')
+    .locator('[data-cy="duel-right-rail"]')
     .textContent();
   for (const catalogName of [
     "Blue-Eyes White Dragon",
@@ -292,12 +286,12 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   ).toBeVisible();
   await expect(field.getByRole("img").first()).toHaveAttribute("src", /.+/);
 
-  const promptTitle = page.locator('[data-cy="card-preview-status"]', {
+  const promptTitle = page.locator('[data-cy="duel-right-rail-status-title"]', {
     hasText: "Choose a Main Phase action",
   });
   await expect(promptTitle).toBeVisible();
 
-  await page.locator('[data-cy="app-menubar-settings-button"]').click();
+  await page.locator('[data-cy="duel-right-rail-options"]').click();
   await page.locator('[data-cy="menu-dialog-settings-button"]').click();
   await expect(page.locator('[data-cy="settings-engine-version"]')).toHaveText(
     /ocgcore 11\.0/,
@@ -560,7 +554,7 @@ test("repeated restart replaces the Worker and clears presentation state", async
       timeout: 120_000,
     });
     if (cycle === 1) {
-      await page.locator('[data-cy="app-menubar-settings-button"]').click();
+      await page.locator('[data-cy="duel-right-rail-options"]').click();
       await page.locator('[data-cy="menu-dialog-surrender-button"]').click();
       await page
         .locator('[data-cy="menu-dialog-surrender-cancel-button"]')
@@ -870,7 +864,7 @@ test("injected DOM field failure preserves fallback controls and one opaque resp
   await expect(
     page.getByText("Injected duel field component failure"),
   ).toHaveCount(0);
-  await page.locator('[data-cy="app-menubar-settings-button"]').click();
+  await page.locator('[data-cy="duel-right-rail-options"]').click();
   await expect(
     page.locator('[data-cy="menu-dialog-surrender-button"]'),
   ).toBeVisible();
@@ -3173,7 +3167,7 @@ async function answerPromptWithKeyboard(
     case "chain":
       await expect(page.locator('[data-cy="prompt-dialog"]')).toHaveCount(0);
       await expect(
-        page.locator('[data-cy="card-preview-status"]', {
+        page.locator('[data-cy="duel-right-rail-status-title"]', {
           hasText: "Do you respond?",
         }),
       ).toHaveAttribute("data-has-priority", "true");
@@ -4050,7 +4044,7 @@ function publicResourceSnapshot(
 }
 
 async function openSettingsDialog(page: Page): Promise<void> {
-  await page.locator('[data-cy="app-menubar-settings-button"]').click();
+  await page.locator('[data-cy="duel-right-rail-options"]').click();
   await page.locator('[data-cy="menu-dialog-settings-button"]').click();
 }
 
@@ -4081,7 +4075,7 @@ async function enableWorkspace(page: Page): Promise<void> {
 }
 
 async function surrenderThroughMenu(page: Page): Promise<void> {
-  await page.locator('[data-cy="app-menubar-settings-button"]').click();
+  await page.locator('[data-cy="duel-right-rail-options"]').click();
   await page.locator('[data-cy="menu-dialog-surrender-button"]').click();
   await page
     .locator('[data-cy="menu-dialog-surrender-confirm-button"]')

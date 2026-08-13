@@ -37,6 +37,10 @@ The client already has one precedent for answering on the player's behalf: `pend
 - **Compute centrality arithmetically** (`|sequence - 2|`). Produces `2, 3, 1, 4, 0`, which prefers the right side over the left for no reason. An explicit table is one line and reads as the decision it is.
 - **Cancel a chain on outside click.** Rejected by `validatePromptSelection`; see decision 7.
 
+## Card-list carveout (accepted 2026-08-13)
+
+ADR-021 target-list cards always edit a draft, including exact 1/1. Card click never auto-submits there; `Validate selection` submits through existing validator. Mounted-field immediate-single behavior remains unchanged. ADR-020 does not persist this ADR's 2 automation settings.
+
 ## Consequences
 
 - The player can no longer decline a formality they never saw. That is the point, and the setting turns it off.

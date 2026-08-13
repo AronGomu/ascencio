@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Define card-list edge behavior</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b0a08; --panel:#17130d; --panel-2:#1f190f; --text:#fff7ed; --muted:#c9b99f; --line:#4a3b25; --accent:#fbbf24; --accent-2:#fb923c; --focus:#facc15; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    main { width:min(960px,calc(100% - 32px)); margin:0 auto; padding:48px 0 96px; }
+    header { display:grid; gap:12px; margin-bottom:32px; }
+    .eyebrow { color:var(--accent); font-size:.75rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+    h1,h2,p { margin:0; } h1 { font-size:clamp(2rem,5vw,3.5rem); line-height:1.08; letter-spacing:-.035em; }
+    .lede { max-width:70ch; color:var(--muted); }
+    .tree { display:flex; align-items:center; gap:8px; overflow:auto; padding:16px; margin:24px 0 32px; border:1px solid var(--line); border-radius:12px; background:var(--panel); color:var(--muted); white-space:nowrap; }
+    .tree b { color:var(--text); } .node { padding:6px 10px; border:1px solid var(--line); border-radius:999px; } .node.active { border-color:var(--accent); color:var(--accent); } .arrow { color:var(--line); }
+    .visuals { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:0 0 32px; }
+    figure { min-width:0; margin:0; padding:18px; border:1px solid var(--line); border-radius:14px; background:var(--panel); }
+    figcaption { margin-bottom:14px; color:var(--muted); font-size:.85rem; } figcaption b { display:block; color:var(--text); font-size:1rem; }
+    svg { display:block; width:100%; height:auto; } svg text { font-family:ui-sans-serif,system-ui,sans-serif; }
+    .svg-node { fill:var(--panel-2); stroke:var(--line); stroke-width:2; } .svg-node.active { stroke:var(--accent); } .svg-line { fill:none; stroke:var(--line); stroke-width:2; } .svg-arrow { fill:var(--line); } .svg-label { fill:var(--text); font-size:12px; } .svg-note { fill:var(--muted); font-size:10px; } .svg-accent { fill:var(--accent); }
+    form { display:grid; gap:20px; }
+    fieldset { min-width:0; margin:0; padding:24px; border:1px solid var(--line); border-radius:16px; background:var(--panel); }
+    legend { max-width:100%; padding:0 8px; font-size:1.15rem; font-weight:750; }
+    .why { margin:0 0 18px; color:var(--muted); font-size:.925rem; }
+    .choices { display:grid; gap:10px; }
+    .choice { display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:start; padding:14px; border:1px solid var(--line); border-radius:10px; background:var(--panel-2); cursor:pointer; }
+    .choice:has(input:checked) { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
+    input { width:18px; height:18px; margin-top:3px; accent-color:var(--accent); }
+    .rank { display:inline-block; margin-left:7px; color:var(--accent-2); font-size:.72rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+    .detail { display:block; margin-top:3px; color:var(--muted); font-size:.875rem; }
+    label.precision { display:block; margin-top:18px; font-size:.85rem; font-weight:700; color:var(--muted); }
+    textarea { width:100%; min-height:90px; margin-top:7px; padding:12px; resize:vertical; border:1px solid var(--line); border-radius:10px; background:#100d08; color:var(--text); font:inherit; }
+    input:focus-visible,textarea:focus-visible,button:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
+    .actions { position:sticky; bottom:16px; display:flex; gap:12px; align-items:center; justify-content:space-between; padding:14px; border:1px solid var(--line); border-radius:14px; background:rgba(19,23,28,.96); box-shadow:0 16px 40px #0008; backdrop-filter:blur(10px); }
+    button { padding:11px 16px; border:0; border-radius:9px; background:var(--accent); color:#211500; font:inherit; font-weight:800; cursor:pointer; }
+    #status { color:var(--muted); font-size:.875rem; }
+    @media (max-width:700px) { .visuals { grid-template-columns:1fr; } }
+    @media (max-width:600px) { main { width:min(100% - 20px,960px); padding-top:28px; } fieldset { padding:18px 14px; } .actions { align-items:flex-start; flex-direction:column; } button { width:100%; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="eyebrow">Grill me · Round 3 · Prompt compatibility</span>
+    <h1>Define card-list edge behavior</h1>
+    <p class="lede">Deep source audit found three current engine-facing cases absent from frozen prototype scenarios. Choose compatibility policy; geometry, visual tokens, and approved exact-count behavior remain closed.</p>
+  </header>
+
+  <nav class="tree" aria-label="Design tree progress"><span class="node"><b>Plan goal</b></span><span class="arrow">→</span><span class="node">Prototype scope</span><span class="arrow">→</span><span class="node">Field policy</span><span class="arrow">→</span><span class="node active">Range counts</span><span class="node active">Hand targets</span><span class="node active">Duplicate choices</span><span class="arrow">→</span><span class="node">Tickets</span></nav>
+
+  <section class="visuals" aria-label="Technical context">
+    <!-- Prefer inline SVG. Every image needs role="img", aria-labelledby, title, and desc. -->
+    <figure>
+      <figcaption><b>Compatibility frontier</b>Approved scenarios are exact-count; current prompt model is broader.</figcaption>
+      <svg viewBox="0 0 400 230" role="img" aria-labelledby="compat-title compat-desc">
+        <title id="compat-title">Card-list compatibility decision tree</title><desc id="compat-desc">Current interaction prompt fans out to range counts, hand targets, and duplicate choices on one card, then converges on production dialog behavior.</desc>
+        <defs><marker id="compat-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path class="svg-arrow" d="M0 0L8 4L0 8Z"/></marker></defs>
+        <rect class="svg-node" x="14" y="88" width="92" height="54" rx="10"/><text class="svg-label" x="60" y="110" text-anchor="middle">Prompt</text><text class="svg-note" x="60" y="126" text-anchor="middle">Worker-owned</text>
+        <path class="svg-line" d="M106 115H132M132 115V42H154M132 115H154M132 115V188H154"/>
+        <rect class="svg-node active" x="154" y="20" width="126" height="44" rx="10"/><text class="svg-label" x="217" y="39" text-anchor="middle">Range count</text><text class="svg-note" x="217" y="53" text-anchor="middle">min ≠ max</text>
+        <rect class="svg-node active" x="154" y="93" width="126" height="44" rx="10"/><text class="svg-label" x="217" y="112" text-anchor="middle">Hand source</text><text class="svg-note" x="217" y="126" text-anchor="middle">current support</text>
+        <rect class="svg-node active" x="154" y="166" width="126" height="44" rx="10"/><text class="svg-label" x="217" y="185" text-anchor="middle">Many choices</text><text class="svg-note" x="217" y="199" text-anchor="middle">one address</text>
+        <path class="svg-line" d="M280 42H302V115M280 115H302M280 188H302V115H320" marker-end="url(#compat-arrow)"/>
+        <rect class="svg-node" x="320" y="88" width="68" height="54" rx="10"/><text class="svg-label" x="354" y="110" text-anchor="middle">Dialog</text><text class="svg-note" x="354" y="126" text-anchor="middle">policy</text>
+      </svg>
+    </figure>
+    <figure>
+      <figcaption><b>Current data contract</b>Entries group by card address; answer identity remains <code>ChoiceId</code>.</figcaption>
+      <svg viewBox="0 0 400 230" role="img" aria-labelledby="data-title data-desc">
+        <title id="data-title">Off-field target data flow</title><desc id="data-desc">Worker choices flow through interaction spec, group into off-field entries by card address, render as physical card tiles, and return opaque choice identifiers through validation.</desc>
+        <rect class="svg-node" x="10" y="86" width="84" height="58" rx="10"/><text class="svg-label" x="52" y="108" text-anchor="middle">Worker</text><text class="svg-note" x="52" y="124" text-anchor="middle">choices</text>
+        <rect class="svg-node" x="116" y="86" width="86" height="58" rx="10"/><text class="svg-label" x="159" y="108" text-anchor="middle">Spec</text><text class="svg-note" x="159" y="124" text-anchor="middle">ChoiceId</text>
+        <rect class="svg-node active" x="224" y="66" width="88" height="98" rx="10"/><text class="svg-label" x="268" y="93" text-anchor="middle">Entry</text><text class="svg-note" x="268" y="110" text-anchor="middle">1 address</text><text class="svg-note" x="268" y="127" text-anchor="middle">1..N choices</text><text class="svg-note" x="268" y="144" text-anchor="middle">full zone</text>
+        <rect class="svg-node" x="334" y="86" width="56" height="58" rx="10"/><text class="svg-label" x="362" y="108" text-anchor="middle">Tile</text><text class="svg-note" x="362" y="124" text-anchor="middle">UI</text>
+        <path class="svg-line" d="M94 115H109M202 115H217M312 115H327"/><circle class="svg-accent" cx="105" cy="115" r="3"/><circle class="svg-accent" cx="213" cy="115" r="3"/><circle class="svg-accent" cx="323" cy="115" r="3"/>
+        <path class="svg-line" d="M362 144V201H159V151"/><text class="svg-note" x="260" y="217" text-anchor="middle">validated opaque ChoiceId response</text>
+      </svg>
+    </figure>
+  </section>
+
+  <form id="questions">
+    <!-- Repeat one fieldset per frontier question. Keep data-question unique. -->
+    <fieldset data-question="How should redesigned card list handle variable-count target prompts where minimum differs from maximum?">
+      <legend>1. How should redesigned card list handle variable-count target prompts where minimum differs from maximum?</legend>
+      <p class="why">Engine contract supports ranges; approved prototype specifies exact counts only.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Support ranges in the redesigned dialog"><span><b>Support ranges in redesigned dialog</b><span class="rank">Recommended</span><span class="detail">Preserve current capability: show <code>X selected · choose min–max</code>, lock at max, enable Validate whenever existing validator accepts count.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Use redesigned dialog only for exact-count prompts"><span><b>Use redesigned dialog only for exact-count prompts</b><span class="rank">Second</span><span class="detail">Strict prototype scope; route variable-count prompts through existing generic prompt surface.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="Range wording, validation, routing constraints…"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="How should mixed target notice and badges handle Hand entries?">
+      <legend>2. How should mixed target notice and badges handle Hand entries?</legend>
+      <p class="why">Current contract includes Hand; approved four-zone demo omits it.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Use dynamic full source names including Hand"><span><b>Use dynamic full source names including Hand</b><span class="rank">Recommended</span><span class="detail">Preserve all legal targets; notice lists represented sources in fixed order using <code>HAND</code>, <code>EXTRA DECK</code>, <code>GRAVEYARD</code>, <code>BANISHED</code>, <code>DECK</code>.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Exclude Hand from redesigned mixed lists"><span><b>Exclude Hand from redesigned mixed lists</b><span class="rank">Second</span><span class="detail">Match prototype scenarios literally; Hand targets stay on existing hand-card interaction surface.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="Exact notice wording or source ordering…"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="How should one card tile expose multiple legal ChoiceIds for the same card address?">
+      <legend>3. How should one card tile expose multiple legal <code>ChoiceId</code>s for same card address?</legend>
+      <p class="why">Current grouping preserves several legal answers on one physical card; tile click alone is ambiguous.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="One tile with a projected choice menu"><span><b>One tile with projected choice menu</b><span class="rank">Recommended</span><span class="detail">Single-choice tile click toggles directly; multi-choice tile opens labelled choice controls, preserving every Worker-projected answer.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Render one physical tile per ChoiceId"><span><b>Render one physical tile per <code>ChoiceId</code></b><span class="rank">Second</span><span class="detail">Direct click per answer; duplicates same physical card image and conflicts one-copy visual rule.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Route duplicate-choice prompts to generic prompt UI"><span><b>Route duplicate-choice prompts to generic prompt UI</b><span class="rank">Third</span><span class="detail">Avoid new tile menu; redesigned list handles only one-choice-per-address prompts.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="Menu labels, keyboard behavior, selection constraints…"></textarea></label>
+    </fieldset>
+
+    <div class="actions">
+      <span id="status" role="status">Selections stay in this page until copied.</span>
+      <button type="button" id="copy-summary">Copy answer summary</button>
+    </div>
+  </form>
+</main>
+<script>
+  const button = document.querySelector('#copy-summary');
+  const status = document.querySelector('#status');
+
+  function buildSummary() {
+    const sections = [...document.querySelectorAll('fieldset[data-question]')].map((field, index) => {
+      const question = field.dataset.question;
+      const selected = [...field.querySelectorAll('input[type="checkbox"]:checked')].map(input => `- ${input.value}`);
+      const precision = field.querySelector('textarea').value.trim();
+      const answers = selected.length ? selected.join('\n') : '- No recommended answer selected';
+      return `${index + 1}. ${question}\n${answers}${precision ? `\nPrecision: ${precision}` : ''}`;
+    });
+    return `Round 3 · Prompt compatibility — Define card-list edge behavior\n\n${sections.join('\n\n')}`;
+  }
+
+  button.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(buildSummary());
+      status.textContent = 'Summary copied to clipboard.';
+    } catch (_) {
+      const fallback = document.createElement('textarea');
+      fallback.value = buildSummary();
+      document.body.appendChild(fallback);
+      fallback.select();
+      document.execCommand('copy');
+      fallback.remove();
+      status.textContent = 'Summary copied to clipboard.';
+    }
+  });
+</script>
+</body>
+</html>

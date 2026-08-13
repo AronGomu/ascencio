@@ -49,6 +49,10 @@ flowchart TD
 - **Treat missing metadata as non-Link.** Unsafe false omission.
 - **Always show EMZs.** Contradicts confirmed product decision.
 
+## Full-height geometry ownership (accepted 2026-08-13)
+
+This ADR remains sole authority for EMZ presence + MR3/MR5 profile. ADR-019 maps projected profile to px rows/phase band; UI never recomputes deck/rule mode.
+
 ## Consequences
 
 - Duel rule mode now depends on selected pair; engine legality and field geometry share one Worker profile.

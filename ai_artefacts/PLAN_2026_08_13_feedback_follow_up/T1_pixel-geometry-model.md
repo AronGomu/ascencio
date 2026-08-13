@@ -131,13 +131,13 @@ Invalid budget policy: if either input is nonfinite or ≤0, return geometry wit
 
 ## Impl steps
 
-- [ ] 1. Add `tests/unit/duel-field-geometry.test.ts` with exact tests above; run focused cmd; confirm module/test fails for intended missing API.
-- [ ] 2. Add constants/interfaces/formula to `src/field/duel-field-geometry.ts` using design `MARGIN=.15`, `BAND=.55`, `SLOT_PAD=6`, `COLS=8`.
-- [ ] 3. Add `createFieldRenderLayout`; construct frozen `ReadonlyMap<PhysicalZoneId, FieldPlacement>` with row/column mapping above.
-- [ ] 4. Add finite-input guard; zero/invalid budgets return finite zero geometry + empty placements.
-- [ ] 5. Update comments/tests in `src/field/duel-field-layout.ts` + `tests/unit/duel-field.test.ts` only where they incorrectly call normalized coordinates production render authority.
-- [ ] 6. Add navigation regression in `tests/unit/field-navigation.test.ts`; no `BoardViewModel` public type change.
-- [ ] 7. Run focused + type/lint gates; inspect `git diff --check`.
+- [x] 1. Add `tests/unit/duel-field-geometry.test.ts` with exact tests above; validation: focused Vitest run fails only because `duel-field-geometry.ts` API is missing.
+- [x] 2. Add constants/interfaces/formula to `src/field/duel-field-geometry.ts` using design `MARGIN=.15`, `BAND=.55`, `SLOT_PAD=6`, `COLS=8`; validation: geometry formula tests pass for all listed budgets.
+- [x] 3. Add `createFieldRenderLayout`; construct frozen `ReadonlyMap<PhysicalZoneId, FieldPlacement>` with row/column mapping above; validation: placement tests map all 34 EMZ IDs, all 32 no-EMZ IDs, correct centres/sizes.
+- [x] 4. Add finite-input guard; zero/invalid budgets return finite zero geometry + empty placements; validation: invalid-budget tests prove frozen finite zero output plus empty placements.
+- [x] 5. Update comments/tests in `src/field/duel-field-layout.ts` + `tests/unit/duel-field.test.ts` only where they incorrectly call normalized coordinates production render authority; validation: focused regression suite passes with comments naming nav-only geometry.
+- [x] 6. Add navigation regression in `tests/unit/field-navigation.test.ts`; no `BoardViewModel` public type change; validation: test proves two render budgets leave same board nav unchanged.
+- [x] 7. Run focused + type/lint gates; inspect `git diff --check`; validation: every command under Validation exits 0.
 
 ## Outputs
 
@@ -148,9 +148,9 @@ Invalid budget policy: if either input is nonfinite or ≤0, return geometry wit
 
 ## Validation
 
-- [ ] `npx vitest run tests/unit/duel-field-geometry.test.ts tests/unit/duel-field.test.ts tests/unit/field-navigation.test.ts` → exit 0.
-- [ ] `npm run typecheck` → 0 errors/warnings.
-- [ ] `npm run lint` → exit 0.
-- [ ] `git diff --check` → no whitespace errors.
-- [ ] app functional — `npm run build:app` exits 0; current old renderer unchanged.
-- [ ] commit msg draft: `feat(field): add viewport-independent pixel geometry`
+- [x] `npx vitest run tests/unit/duel-field-geometry.test.ts tests/unit/duel-field.test.ts tests/unit/field-navigation.test.ts` → validation: exit 0.
+- [x] `npm run typecheck` → validation: exit 0 with 0 errors/warnings.
+- [x] `npm run lint` → validation: exit 0.
+- [x] `git diff --check` → validation: exit 0 with no whitespace errors.
+- [x] app functional — validation: `npm run build:app` exits 0; current old renderer unchanged.
+- [x] commit msg draft: validation: commit exists with exact subject `feat(field): add viewport-independent pixel geometry`.

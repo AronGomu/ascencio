@@ -19,12 +19,15 @@ import {
 } from "../../src/app/prompts/interaction-spec.ts";
 import { mapSnapshotToBoard } from "../../src/field/board-view-model.ts";
 import { BOARD_VIEW_MODEL_FIXTURES } from "../fixtures/board-view-model.ts";
+import { computeFieldGeometry } from "../../src/field/duel-field-geometry.ts";
 
 afterEach(() => {
   cleanup();
 });
 
 const CONTEXT = { workerGeneration: 1, sessionGeneration: 2 } as const;
+const GEOMETRY = computeFieldGeometry(true, 900, 735);
+const NO_EMZ_GEOMETRY = computeFieldGeometry(false, 900, 735);
 
 function board() {
   const result = mapSnapshotToBoard(BOARD_VIEW_MODEL_FIXTURES["ST-05"]);
@@ -112,8 +115,96 @@ function battleAndEndOfferedSpec(): ActiveInteractionSpec {
 }
 
 describe("PhaseStrip", () => {
+  it("anchors split groups around EMZ placements", () => {
+    render(PhaseStrip, {
+      geometry: GEOMETRY,
+      phase: "main1",
+      spec: null,
+      extraMonsterZones: true,
+      oninteraction: vi.fn(),
+    });
+
+    const strip = document.querySelector(
+      '[data-cy="field-phase-strip"]',
+    ) as HTMLElement;
+    expect(strip.style.getPropertyValue("--phase-y")).toBe(
+      `${GEOMETRY.bandY}px`,
+    );
+    expect(strip.style.getPropertyValue("--phase-left-emz")).toBe(
+      `${GEOMETRY.emzX[0] - GEOMETRY.box / 2}px`,
+    );
+    expect(strip.style.getPropertyValue("--phase-right-emz")).toBe(
+      `${GEOMETRY.emzX[1] + GEOMETRY.box / 2}px`,
+    );
+  });
+
+  it("centers continuous no-EMZ run", () => {
+    render(PhaseStrip, {
+      geometry: NO_EMZ_GEOMETRY,
+      phase: "main1",
+      spec: null,
+      extraMonsterZones: false,
+      oninteraction: vi.fn(),
+    });
+
+    const strip = document.querySelector(
+      '[data-cy="field-phase-strip"]',
+    ) as HTMLElement;
+    expect(strip.classList.contains("is-continuous")).toBe(true);
+    expect(strip.style.getPropertyValue("--phase-right-edge")).toBe(
+      `${NO_EMZ_GEOMETRY.width - NO_EMZ_GEOMETRY.margin}px`,
+    );
+  });
+
+  it("anchors End turn independently", () => {
+    render(PhaseStrip, {
+      geometry: GEOMETRY,
+      phase: "main1",
+      spec: endOfferedSpec(),
+      oninteraction: vi.fn(),
+    });
+
+    expect(
+      document
+        .querySelector('[data-cy="field-end-turn-button"]')
+        ?.parentElement?.getAttribute("data-cy"),
+    ).toBe("field-phase-strip-end");
+  });
+
+  it("preserves offered-choice semantics", async () => {
+    const spec = battleAndEndOfferedSpec();
+    const oninteraction = vi.fn();
+    render(PhaseStrip, {
+      geometry: GEOMETRY,
+      phase: "main1",
+      spec,
+      oninteraction,
+    });
+    await fireEvent.click(
+      document.querySelector('[data-cy="field-phase-chip-battle"]')!,
+    );
+    await fireEvent.click(
+      document.querySelector('[data-cy="field-end-turn-button"]')!,
+    );
+    expect(oninteraction).toHaveBeenNthCalledWith(1, {
+      type: "chooseChoice",
+      choiceId: choiceId("battle"),
+      key: spec.key,
+    });
+    expect(oninteraction).toHaveBeenNthCalledWith(2, {
+      type: "chooseChoice",
+      choiceId: choiceId("end"),
+      key: spec.key,
+    });
+  });
+
   it("renders five phase chips and one End turn button", () => {
-    render(PhaseStrip, { phase: "main1", spec: null, oninteraction: vi.fn() });
+    render(PhaseStrip, {
+      geometry: GEOMETRY,
+      phase: "main1",
+      spec: null,
+      oninteraction: vi.fn(),
+    });
 
     for (const slot of ["draw", "standby", "main1", "battle", "main2"])
       expect(
@@ -130,23 +221,31 @@ describe("PhaseStrip", () => {
     expect(endButton?.disabled).toBe(true);
   });
 
-  it("places Battle in left and Main 2 plus End in right", () => {
-    render(PhaseStrip, { phase: "main1", spec: null, oninteraction: vi.fn() });
+  it("places Battle left, Main 2 right, and End independently", () => {
+    render(PhaseStrip, {
+      geometry: GEOMETRY,
+      phase: "main1",
+      spec: null,
+      oninteraction: vi.fn(),
+    });
 
     const left = document.querySelector('[data-cy="field-phase-strip-left"]');
     const right = document.querySelector('[data-cy="field-phase-strip-right"]');
     expect(left?.children.length).toBe(4);
-    expect(right?.children.length).toBe(2);
+    expect(right?.children.length).toBe(1);
     expect(right?.children[0]?.getAttribute("data-cy")).toBe(
       "field-phase-chip-main2",
     );
-    expect(right?.children[1]?.getAttribute("data-cy")).toBe(
-      "field-end-turn-button",
-    );
+    expect(
+      document
+        .querySelector('[data-cy="field-phase-strip-end"]')
+        ?.children[0]?.getAttribute("data-cy"),
+    ).toBe("field-end-turn-button");
   });
 
   it("splits the groups and marks Extra Monster Zones when they exist", () => {
     render(PhaseStrip, {
+      geometry: GEOMETRY,
       phase: "main1",
       spec: null,
       extraMonsterZones: true,
@@ -163,11 +262,12 @@ describe("PhaseStrip", () => {
     expect(
       document.querySelector('[data-cy="field-phase-strip-right"]')?.children
         .length,
-    ).toBe(2);
+    ).toBe(1);
   });
 
   it("flows continuously without Extra Monster Zones, in the shipped order", () => {
     render(PhaseStrip, {
+      geometry: GEOMETRY,
       phase: "main1",
       spec: null,
       extraMonsterZones: false,
@@ -202,7 +302,12 @@ describe("PhaseStrip", () => {
   it("End button dispatches the endPhase choice", async () => {
     const spec = endOfferedSpec();
     const oninteraction = vi.fn();
-    render(PhaseStrip, { phase: "main1", spec, oninteraction });
+    render(PhaseStrip, {
+      geometry: GEOMETRY,
+      phase: "main1",
+      spec,
+      oninteraction,
+    });
 
     const endButton = document.querySelector(
       '[data-cy="field-end-turn-button"]',
@@ -221,6 +326,7 @@ describe("PhaseStrip", () => {
     const spec = battleAndEndOfferedSpec();
     const oninteraction = vi.fn();
     render(PhaseStrip, {
+      geometry: GEOMETRY,
       phase: "main1",
       spec,
       disabled: true,
@@ -243,7 +349,12 @@ describe("PhaseStrip", () => {
   });
 
   it("marks the current phase", () => {
-    render(PhaseStrip, { phase: "main1", spec: null, oninteraction: vi.fn() });
+    render(PhaseStrip, {
+      geometry: GEOMETRY,
+      phase: "main1",
+      spec: null,
+      oninteraction: vi.fn(),
+    });
 
     expect(
       document
@@ -259,6 +370,7 @@ describe("PhaseStrip", () => {
 
   it("battle-family phases light the battle chip", () => {
     render(PhaseStrip, {
+      geometry: GEOMETRY,
       phase: "damageCalculation",
       spec: null,
       oninteraction: vi.fn(),
@@ -273,7 +385,12 @@ describe("PhaseStrip", () => {
 
   it("only offered transitions are buttons", () => {
     const spec = battleOfferedSpec();
-    render(PhaseStrip, { phase: "main1", spec, oninteraction: vi.fn() });
+    render(PhaseStrip, {
+      geometry: GEOMETRY,
+      phase: "main1",
+      spec,
+      oninteraction: vi.fn(),
+    });
 
     expect(
       document.querySelector('[data-cy="field-phase-chip-battle"]')?.tagName,
@@ -285,7 +402,12 @@ describe("PhaseStrip", () => {
 
   it("no end chip is current and the strip surfaces end as an accessible status; End button stays an ordinary action", () => {
     const spec = endOfferedSpec();
-    render(PhaseStrip, { phase: "end", spec, oninteraction: vi.fn() });
+    render(PhaseStrip, {
+      geometry: GEOMETRY,
+      phase: "end",
+      spec,
+      oninteraction: vi.fn(),
+    });
 
     expect(
       document.querySelector('[data-cy="field-phase-chip-end"]'),

@@ -914,6 +914,7 @@
         onstackactivate={activateStack}
       />
       <PhaseStrip
+        geometry={renderLayout.geometry}
         {phase}
         {spec}
         disabled={pending}

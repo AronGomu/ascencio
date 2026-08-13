@@ -945,72 +945,56 @@ li + li {
   scroll-padding: clamp(0.75rem, 4vw, 2rem);
 }
 
-/* The ticket's board-geometry table gave zone extents as center + full
-   width/height instead of center −/+ half (the zones themselves are
-   rendered with `transform: translate(-50%, -50%)`), so every stated range
-   was shifted low/right by half the zone's own size. Measured directly
-   against the rendered DOM at a 1366px viewport (board 932x524):
-   shared extra monster left true x [42.90%, 49.30%], right true x
-   [50.70%, 57.10%], both true y [42.11%, 57.92%]; p1 banished true y
-   [26.75%, 42.65%]; p0 banished true y [57.36%, 73.10%]. The free gap
-   between the two banished zones is true y [42.65%, 57.36%]. These
-   constants are chosen to sit inside that gap and clear of the extra
-   monster zone columns, verified with the chromium e2e's
-   `responsive field compositions...` overlap check and the pointer-
-   interception specs. */
 .field-phase-strip {
   position: absolute;
   z-index: var(--duel-field-layer-control);
-  top: 43.5%;
+  top: var(--phase-y);
   right: 0;
   left: 0;
-  height: 13%;
   display: flex;
   align-items: center;
+  justify-content: center;
+  transform: translateY(-50%);
   pointer-events: none;
 }
 .field-phase-strip__group {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
   position: absolute;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--phase-gap);
+  pointer-events: none;
 }
 .field-phase-strip__group--left {
-  right: 60.6%;
+  right: calc(100% - var(--phase-left-emz));
 }
-/* Anchored from the right (not the left, unlike the left group) at the same
-   1% inset the old absolutely positioned End turn button used, so folding
-   End into this group (Round 3) keeps its right edge exactly where it was
-   already proven clear of the banished piles/deck column further out on
-   the board — the group grows leftward as Main 2 + End's combined width
-   demands, well inside the free pocket right of the shared EMZ (x > 60.3%). */
 .field-phase-strip__group--right {
-  right: 1%;
+  left: var(--phase-right-emz);
 }
-/* Link-free (Master Rule 3) duels have no shared Extra Monster Zones, so the
-   two semantic groups no longer have to straddle them: they flow as one run
-   with a single uniform chip gap, keeping the shipped Draw → Standby →
-   Main 1 → Battle → Main 2 → End turn order. The run stays anchored at the
-   same 1% right inset the End turn button already used, because that is the
-   only place in this band where a 44px-tall control clears both monster
-   rows and every pile column at every supported viewport. */
+.field-phase-strip__end {
+  position: absolute;
+  left: var(--phase-right-edge);
+  transform: translateX(-100%);
+  pointer-events: none;
+}
 .field-phase-strip.is-continuous {
-  justify-content: flex-end;
-  gap: 0.3rem;
-  padding-right: 1%;
+  gap: var(--phase-gap);
 }
 .field-phase-strip.is-continuous .field-phase-strip__group {
   position: static;
-  right: auto;
 }
 .field-phase-chip {
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  display: inline-grid;
+  place-items: center;
   pointer-events: none;
   padding: 0.2rem 0.5rem;
   border: 1px solid transparent;
   border-radius: 999px;
   background: rgb(8 16 31 / 0.72);
   color: color-mix(in srgb, var(--muted) 70%, transparent);
-  font-size: 0.68rem;
+  font-size: var(--label-size);
   font-weight: 800;
   white-space: nowrap;
 }
@@ -1760,20 +1744,14 @@ button.card-action-chip:hover:not(:disabled) {
   background: #ffc75c;
 }
 
-/* Round 3 folds the End turn button into the phase strip's right group as
-   a normal-flow sibling of the Main 2 chip, replacing the retired End chip.
-   It keeps its own min target size but no longer needs independent
-   absolute positioning — the group's own placement (below) already clears
-   the shared extra monster zones. `pointer-events: auto` is required
-   because it inherits `pointer-events: none` from `.field-phase-strip`. */
-/* Item 24: shrink toward the phase-chip scale horizontally (padding +
-   font-size) while the 44px pointer-target floor (A7) never yields — only
-   `min-height` still enforces that floor, unchanged. */
 .field-end-turn {
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  display: inline-grid;
+  place-items: center;
   pointer-events: auto;
-  min-height: 2.75rem;
   padding: 0.5rem 0.65rem;
-  font-size: 0.8rem;
+  font-size: var(--chip-size);
 }
 
 /* T14: the bar is normal flow inside the confirm window (ADR-017), which

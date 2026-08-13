@@ -55,25 +55,25 @@ Preserve all existing props. Root inline vars:
 
 ## Test plan
 
-| Test | Input | Expect |
-| ---- | ----- | ------ |
-| `anchors split groups around EMZ placements` | EMZ geometry | group edges outside pair; no overlap |
-| `centers continuous no-EMZ run` | no-EMZ | visual order exact; one run in band |
-| `anchors End turn independently` | both | right edge≈inner board edge |
-| `preserves offered-choice semantics` | battle/main2/end choices | only offered transitions buttons; exact IDs dispatched |
-| `keeps controls clear of zones/stacks` | 3 viewports×2 profiles | no rect intersections |
-| `keeps actionable controls at least forty-four pixels` | 1366×768 | width,height≥44 |
-| `reduced motion changes no semantics` | media reduce | same controls/text/order |
+| Test                                                   | Input                    | Expect                                                 |
+| ------------------------------------------------------ | ------------------------ | ------------------------------------------------------ |
+| `anchors split groups around EMZ placements`           | EMZ geometry             | group edges outside pair; no overlap                   |
+| `centers continuous no-EMZ run`                        | no-EMZ                   | visual order exact; one run in band                    |
+| `anchors End turn independently`                       | both                     | right edge≈inner board edge                            |
+| `preserves offered-choice semantics`                   | battle/main2/end choices | only offered transitions buttons; exact IDs dispatched |
+| `keeps controls clear of zones/stacks`                 | 3 viewports×2 profiles   | no rect intersections                                  |
+| `keeps actionable controls at least forty-four pixels` | 1366×768                 | width,height≥44                                        |
+| `reduced motion changes no semantics`                  | media reduce             | same controls/text/order                               |
 
 ## Impl steps
 
-- [ ] 1. Extend `PhaseStrip.test.ts` + acceptance spec with exact names above; prove current fixed anchors fail.
-- [ ] 2. Add `geometry` prop/import; pass from `DuelField` render layout.
-- [ ] 3. Compute inline CSS vars only from geometry; keep current phase/choice maps untouched.
-- [ ] 4. Update profile CSS: split EMZ groups; continuous no-EMZ flex run; separate End turn anchor.
-- [ ] 5. Update EndTurnButton styles only; no callback/API change.
-- [ ] 6. Remove stale percent anchors/fixed 16:9 assumptions from phase rules.
-- [ ] 7. Run component/unit + viewport Chromium matrix.
+- [x] 1. Extend `PhaseStrip.test.ts` + acceptance spec with exact names above; prove current fixed anchors fail.
+- [x] 2. Add `geometry` prop/import; pass from `DuelField` render layout.
+- [x] 3. Compute inline CSS vars only from geometry; keep current phase/choice maps untouched.
+- [x] 4. Update profile CSS: split EMZ groups; continuous no-EMZ flex run; separate End turn anchor.
+- [x] 5. Update EndTurnButton styles only; no callback/API change.
+- [x] 6. Remove stale percent anchors/fixed 16:9 assumptions from phase rules.
+- [x] 7. Run component/unit + viewport Chromium matrix.
 
 ## Outputs
 
@@ -83,9 +83,9 @@ Preserve all existing props. Root inline vars:
 
 ## Validation
 
-- [ ] `npx vitest run tests/component/PhaseStrip.test.ts tests/component/EndTurnButton.test.ts tests/unit/phase-transitions.test.ts` → exit 0.
-- [ ] `npm run typecheck && npm run lint` → exit 0.
-- [ ] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/full-height-field.spec.ts --grep "phase|End turn"` → exit 0.
+- [x] `npx vitest run tests/component/PhaseStrip.test.ts tests/component/EndTurnButton.test.ts tests/unit/phase-transitions.test.ts` → exit 0.
+- [x] `npm run typecheck && npm run lint` → exit 0.
+- [x] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/full-height-field.spec.ts --grep "phase|End turn"` → exit 0.
 - [ ] manual keyboard check — each legal phase button + End turn reachable/activates same `ChoiceId`.
-- [ ] app functional — `npm run build` exits 0.
+- [x] app functional — `npm run build` exits 0.
 - [ ] commit msg draft: `feat(field): anchor phase controls to pixel geometry`

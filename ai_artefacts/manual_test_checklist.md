@@ -23,3 +23,10 @@
 - [ ] Use Arrow navigation to reach offscreen hand cards; confirm focus scrolls them into view.
 - [ ] Drag an actionable hand card after scrolling; confirm drag still starts and completes.
 - [ ] Drag the overlay thumb; confirm the hand viewport scrolls without changing card height.
+
+## T5 geometry-anchored-phases
+
+- [ ] Confirm EMZ phase groups flank both shared zones without overlap.
+- [ ] Confirm no-EMZ phases form one centered Draw→Standby→Main 1→Battle→Main 2 run.
+- [ ] Confirm End turn aligns board inner-right edge in both profiles.
+- [ ] Use keyboard to reach each legal phase control plus End turn; confirm each activates same offered choice.

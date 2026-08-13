@@ -268,6 +268,66 @@ test("six and twenty card hands keep height with conditional overlay scrollbar",
   expect(countZ).toBeGreaterThan(cardZ);
 });
 
+test("preview bounds text with stable width and vertical overlay", async ({
+  page,
+}) => {
+  await page.goto("?scenario=preview-short");
+  const shortText = page.locator('[data-cy="card-preview-text"]');
+  const shortWidth = await shortText.evaluate(
+    (element) => element.getBoundingClientRect().width,
+  );
+  await expect(
+    page.locator('[data-cy="card-preview-text-scrollbar"]'),
+  ).toBeHidden();
+
+  await page.goto("?scenario=preview-long");
+  const panel = page.locator('[data-cy="card-preview-panel"]');
+  const text = page.locator('[data-cy="card-preview-text"]');
+  const region = page.locator('[data-cy="card-preview-text-region"]');
+  const scrollbar = page.locator('[data-cy="card-preview-text-scrollbar"]');
+  const thumb = page.locator('[data-cy="card-preview-text-scrollbar-thumb"]');
+  await expect(scrollbar).toBeVisible();
+  const metrics = await text.evaluate((element) => ({
+    clientHeight: element.clientHeight,
+    scrollHeight: element.scrollHeight,
+    width: element.getBoundingClientRect().width,
+    paddingRight: Number.parseFloat(getComputedStyle(element).paddingRight),
+  }));
+  expect(metrics.scrollHeight).toBeGreaterThan(metrics.clientHeight);
+  expect(metrics.width).toBeCloseTo(shortWidth, 1);
+  expect(metrics.paddingRight).toBe(10);
+  const panelBox = await rect(panel);
+  const textBox = await rect(text);
+  expect(textBox.y + textBox.height).toBeLessThanOrEqual(
+    panelBox.y + panelBox.height + 0.5,
+  );
+  await text.focus();
+  await expect(text).toBeFocused();
+  await page.keyboard.press("End");
+  expect(await text.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  const firstThumbBox = await rect(thumb);
+  await page.keyboard.press("Home");
+  await expect
+    .poll(async () => (await rect(thumb)).y)
+    .toBeLessThan(firstThumbBox.y);
+  await page.keyboard.press("PageDown");
+  expect(await text.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  expect(await region.locator("[tabindex]").count()).toBe(1);
+  await page.keyboard.press("Home");
+  const thumbBox = await rect(thumb);
+  await page.mouse.move(
+    thumbBox.x + thumbBox.width / 2,
+    thumbBox.y + thumbBox.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    thumbBox.x + thumbBox.width / 2,
+    thumbBox.y + thumbBox.height / 2 + 40,
+  );
+  await page.mouse.up();
+  expect(await text.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+});
+
 test("opponent twenty-card overlay uses negative row-reverse scrolling", async ({
   page,
 }) => {

@@ -3,7 +3,9 @@ export type AcceptanceScenarioId =
   | "field-no-emz"
   | "field-defense"
   | "field-hand-6"
-  | "field-hand-20";
+  | "field-hand-20"
+  | "preview-short"
+  | "preview-long";
 
 const SCENARIOS: ReadonlySet<string> = new Set<AcceptanceScenarioId>([
   "field-emz",
@@ -11,6 +13,8 @@ const SCENARIOS: ReadonlySet<string> = new Set<AcceptanceScenarioId>([
   "field-defense",
   "field-hand-6",
   "field-hand-20",
+  "preview-short",
+  "preview-long",
 ]);
 
 export function acceptanceScenarioId(

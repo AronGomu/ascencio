@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
+  import OverlayScrollbar from "./OverlayScrollbar.svelte";
   import type { CardPreviewView } from "../presentation/card-preview.ts";
   import type {
     CardImageLease,
@@ -14,6 +15,7 @@
   let activeImageCode: number | undefined;
   let imageLease: CardImageLease | null = null;
   let leasedImageUrl: string | undefined;
+  let textScroller: HTMLElement | null = null;
 
   $: synchronizeImageLease(imageLibrary, preview?.code);
   $: imageUrl = leasedImageUrl ?? (placeholderUrl || undefined);
@@ -44,6 +46,17 @@
     if (placeholderUrl) image.src = placeholderUrl;
     else image.remove();
   }
+
+  function scrollTextByKeyboard(event: KeyboardEvent): void {
+    const scroller = event.currentTarget as HTMLElement;
+    if (event.key === "Home") scroller.scrollTop = 0;
+    else if (event.key === "End") scroller.scrollTop = scroller.scrollHeight;
+    else if (event.key === "PageUp") scroller.scrollTop -= scroller.clientHeight;
+    else if (event.key === "PageDown")
+      scroller.scrollTop += scroller.clientHeight;
+    else return;
+    event.preventDefault();
+  }
 </script>
 
 <aside
@@ -63,9 +76,29 @@
           data-cy="card-preview-image"
         />{/if}
     </div>
-    <div class="card-preview-panel__copy" data-cy="card-preview-copy">
+    <div class="card-preview-panel__body" data-cy="card-preview-body">
       <h2 data-cy="card-preview-name">{preview.name}</h2>
-      <div data-cy="card-preview-text">{preview.description}</div>
+      <div
+        class="card-preview-panel__text-region"
+        data-cy="card-preview-text-region"
+      >
+        <!-- svelte-ignore a11y_no_noninteractive_tabindex a11y_no_noninteractive_element_interactions (native effect-text scroller is intentionally keyboard reachable) -->
+        <div
+          class="card-preview-panel__text"
+          tabindex="0"
+          role="region"
+          aria-label="Card effect text"
+          onkeydown={scrollTextByKeyboard}
+          bind:this={textScroller}
+          data-cy="card-preview-text"
+        >{preview.description}</div>
+        <OverlayScrollbar
+          axis="vertical"
+          scrollElement={textScroller}
+          contentSizeKey={`${preview.code}:${preview.description.length}`}
+          dataCyPrefix="card-preview-text"
+        />
+      </div>
     </div>
   {/if}
 </aside>

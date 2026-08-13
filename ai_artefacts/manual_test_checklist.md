@@ -42,3 +42,9 @@
 - [ ] Confirm preview, field, rail fill one viewport-height row with no page scrollbar.
 - [ ] Resize among 1366×768, 1920×1080, 2560×1440; confirm field stays centered between preview and rail.
 - [ ] Drag floating field windows to each edge, resize narrower; confirm windows reclamp inside field.
+
+## T8 preview-overlay-scrollbar
+
+- [ ] Focus effect text; confirm PageDown and End scroll it, focus ring stays visible, and overlay thumb is absent from Tab order.
+- [ ] Compare short and long effect text; confirm paragraph width stays fixed and overlay thumb appears only for long text.
+- [ ] Drag overlay thumb; confirm effect text scrolls while panel remains inside one viewport-height row.

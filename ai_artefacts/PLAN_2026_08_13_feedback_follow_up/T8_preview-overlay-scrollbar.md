@@ -64,13 +64,13 @@ New selectors: `card-preview-body`, `card-preview-text-region`, `card-preview-te
 
 ## Impl steps
 
-- [ ] 1. Replace obsolete direct-child/inert assertions in CardPreviewPanel tests with exact structure/focus/lifecycle tests; prove red.
-- [ ] 2. Extend field acceptance scenarios with `preview-short` + `preview-long`; add Chromium metric/keyboard/drag tests; prove red.
-- [ ] 3. Add body/text-region wrappers with unique `data-cy`; bind real text scroller.
-- [ ] 4. Mount shared `OverlayScrollbar axis="vertical"`, prefix `card-preview-text`, content key from preview code+description length.
-- [ ] 5. Add bounded grid, hidden native chrome, fixed 10px inline gutter; preserve art/name sizing.
-- [ ] 6. Remove old native scrollbar styling + any direct-descendant CSS assumptions.
-- [ ] 7. Run component + acceptance; verify keyboard in Chromium.
+- [x] 1. Replace obsolete direct-child/inert assertions in CardPreviewPanel tests with exact structure/focus/lifecycle tests; prove red.
+- [x] 2. Extend field acceptance scenarios with `preview-short` + `preview-long`; add Chromium metric/keyboard/drag tests; prove red.
+- [x] 3. Add body/text-region wrappers with unique `data-cy`; bind real text scroller.
+- [x] 4. Mount shared `OverlayScrollbar axis="vertical"`, prefix `card-preview-text`, content key from preview code+description length.
+- [x] 5. Add bounded grid, hidden native chrome, fixed 10px inline gutter; preserve art/name sizing.
+- [x] 6. Remove old native scrollbar styling + any direct-descendant CSS assumptions.
+- [x] 7. Run component + acceptance; verify keyboard in Chromium.
 
 ## Outputs
 
@@ -80,9 +80,9 @@ New selectors: `card-preview-body`, `card-preview-text-region`, `card-preview-te
 
 ## Validation
 
-- [ ] `npx vitest run tests/component/CardPreviewPanel.test.ts tests/component/OverlayScrollbar.test.ts tests/unit/card-preview.test.ts` → exit 0.
-- [ ] `npm run typecheck && npm run lint` → exit 0.
-- [ ] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/full-height-field.spec.ts --grep "preview"` → exit 0.
+- [x] `npx vitest run tests/component/CardPreviewPanel.test.ts tests/component/OverlayScrollbar.test.ts tests/unit/card-preview.test.ts` → exit 0.
+- [x] `npm run typecheck && npm run lint` → exit 0.
+- [x] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/full-height-field.spec.ts --grep "preview"` → exit 0.
 - [ ] manual keyboard check — focus effect text, PageDown/End scroll; focus ring visible; overlay absent from Tab order.
-- [ ] app functional — `npm run build` exits 0.
-- [ ] commit msg draft: `fix(preview): bound effect text with overlay scroll`
+- [x] app functional — `npm run build` exits 0.
+- [x] commit msg draft: `fix(preview): bound effect text with overlay scroll`

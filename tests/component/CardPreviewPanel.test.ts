@@ -54,15 +54,35 @@ describe("CardPreviewPanel", () => {
     expect(document.querySelector('[data-cy="card-preview-art"]')).toBeNull();
   });
 
-  it("panel shows name and text", () => {
+  it("renders bounded body around art name and effect text", () => {
     render(CardPreviewPanel, { preview: preview() });
 
+    const panel = document.querySelector('[data-cy="card-preview-panel"]');
+    const art = document.querySelector('[data-cy="card-preview-art"]');
+    const body = document.querySelector('[data-cy="card-preview-body"]');
+    const name = document.querySelector('[data-cy="card-preview-name"]');
+    const region = document.querySelector(
+      '[data-cy="card-preview-text-region"]',
+    );
+    const text = document.querySelector('[data-cy="card-preview-text"]');
+    expect(panel?.children).toEqual(expect.objectContaining({ length: 2 }));
+    expect(panel?.children[0]).toBe(art);
+    expect(panel?.children[1]).toBe(body);
+    expect(body?.children[0]).toBe(name);
+    expect(body?.children[1]).toBe(region);
+    expect(region?.children[0]).toBe(text);
+    expect(name?.textContent).toContain("The Legendary Fisherman");
+    expect(text?.textContent).toContain(
+      "This card is unaffected by Spell effects.",
+    );
+    expect(text?.getAttribute("tabindex")).toBe("0");
+    expect(text?.getAttribute("aria-label")).toBe("Card effect text");
     expect(
-      document.querySelector('[data-cy="card-preview-name"]')?.textContent,
-    ).toContain("The Legendary Fisherman");
+      region?.querySelector('[data-cy="card-preview-text-scrollbar"]'),
+    ).not.toBeNull();
     expect(
-      document.querySelector('[data-cy="card-preview-text"]')?.textContent,
-    ).toContain("This card is unaffected by Spell effects.");
+      region?.querySelector('[data-cy="card-preview-text-scrollbar-thumb"]'),
+    ).not.toBeNull();
     expect(document.querySelector('[data-cy="card-preview-empty"]')).toBeNull();
   });
 
@@ -125,15 +145,22 @@ describe("CardPreviewPanel", () => {
     ).toBe("/placeholder.webp");
   });
 
-  it("panel is inert", () => {
+  it("keeps only the real text scroller keyboard focusable", () => {
     const { library } = leaseLibrary();
     render(CardPreviewPanel, { preview: preview(), imageLibrary: library });
 
     const panel = document.querySelector('[data-cy="card-preview-panel"]');
+    const text = document.querySelector('[data-cy="card-preview-text"]');
     expect(panel).not.toBeNull();
     expect(panel?.querySelectorAll("button")).toHaveLength(0);
     expect(panel?.querySelectorAll("a")).toHaveLength(0);
-    expect(panel?.querySelectorAll("[tabindex]")).toHaveLength(0);
+    expect(panel?.querySelectorAll("[tabindex]")).toHaveLength(1);
+    expect(panel?.querySelector("[tabindex]")).toBe(text);
     expect(panel?.hasAttribute("tabindex")).toBe(false);
+    expect(
+      document
+        .querySelector('[data-cy="card-preview-text-scrollbar"]')
+        ?.getAttribute("aria-hidden"),
+    ).toBe("true");
   });
 });

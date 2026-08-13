@@ -275,19 +275,30 @@ h4 {
   border-radius: 0.5rem;
 }
 
-.card-preview-panel__copy {
+.card-preview-panel__body {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 0.35rem;
   min-height: 0;
 }
 
-.card-preview-panel [data-cy="card-preview-text"] {
+.card-preview-panel__text-region {
+  position: relative;
+  min-height: 0;
+}
+
+.card-preview-panel__text {
+  height: 100%;
   min-height: 0;
   overflow-y: auto;
-  padding-right: 0.4rem;
+  padding-inline-end: 10px;
   color: var(--muted);
+  scrollbar-width: none;
   white-space: pre-wrap;
+}
+
+.card-preview-panel__text::-webkit-scrollbar {
+  display: none;
 }
 
 .duel-right-rail {

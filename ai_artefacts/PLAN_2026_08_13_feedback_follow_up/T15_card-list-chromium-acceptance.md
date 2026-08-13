@@ -34,6 +34,7 @@
 - `e2e-acceptance/card-list-dialog.spec.ts`, `src/app/acceptance/card-list-dialog-scenarios.ts`, `AcceptanceHarness.svelte`, dedicated config.
 - T10–T14 production components/model/styles + all focused tests.
 - `docs/ADR/021_ADR_card_list_dialog_modes_and_selection.md`.
+- `ai_artefacts/manual_test_checklist.md` — append/update only T15 human checks; preserve all other sections.
 - **From Depends:** exact/range UI green; target sorting/dismiss/collapse; physical tiles/actions/menu; browse scenarios already automated.
 
 ## Acceptance matrix

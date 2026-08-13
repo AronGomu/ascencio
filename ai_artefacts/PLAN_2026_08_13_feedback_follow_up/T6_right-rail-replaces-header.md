@@ -26,6 +26,7 @@
 - `tests/component/DuelHeaderBar.test.ts`, `AppChrome.test.ts`, `CardPreviewPanel.test.ts`, `tests/unit/preview-status.test.ts`, `e2e/duel-smoke.spec.ts` header selectors.
 - `ai-artifacts/DESIGN_2026_08_13_full_height_duel_field.md` §7.
 - `docs/ADR/019_ADR_full_height_duel_shell_and_pixel_geometry.md`.
+- `ai_artefacts/manual_test_checklist.md` — append/update only T6 human checks; preserve all other sections.
 - **From Depends:** pixel board/hands/phases functional in current shell; phase/current turn state already available in `App.svelte`.
 
 ## Required API

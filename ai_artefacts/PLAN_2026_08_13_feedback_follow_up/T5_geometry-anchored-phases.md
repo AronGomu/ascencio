@@ -27,6 +27,7 @@
 - `src/app/components/duel-field/PhaseStrip.svelte`, `EndTurnButton.svelte`.
 - `src/app/prompts/phase-transitions.ts`; `tests/component/PhaseStrip.test.ts`, `EndTurnButton.test.ts`; `tests/unit/phase-transitions.test.ts`.
 - `docs/ADR/010_ADR_in_field_phase_navigation.md`, `018_ADR_conditional_extra_monster_zones.md`, `019_ADR_full_height_duel_shell_and_pixel_geometry.md`.
+- `ai_artefacts/manual_test_checklist.md` — append/update only T5 human checks; preserve all other sections.
 - **From Depends:** `FieldRenderLayout.geometry` includes `pitch`, `margin`, `width`, `bandY`, `emzX`; `DuelField` owns current render layout.
 
 ## API

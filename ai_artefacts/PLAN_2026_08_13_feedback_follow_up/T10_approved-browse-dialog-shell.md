@@ -28,6 +28,7 @@
 - `docs/ADR/017_ADR_floating_field_windows_and_dismissal.md`, `021_ADR_card_list_dialog_modes_and_selection.md`.
 - `src/app/components/duel-field/ZoneListDialog.svelte`, `FloatingFieldWindow.svelte`, `src/field/off-field-target-list.ts`, `src/styles/app.css`.
 - `tests/component/ZoneListDialog.test.ts`, `FloatingFieldWindow.test.ts`; `tests/unit/off-field-target-list.test.ts`, `zone-list.test.ts`.
+- `ai_artefacts/manual_test_checklist.md` — append/update only T10 human checks; preserve all other sections.
 - **From Depends:** full-height field boundary/clamp functional; settings/persistence stable; acceptance harness union currently field scenarios + dedicated config.
 
 ## Exact model API

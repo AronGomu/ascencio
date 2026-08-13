@@ -28,6 +28,7 @@
 - `src/app/components/SettingsDialog.svelte`, `DuelFieldErrorBoundary.svelte`, `DuelField.svelte`, `duel-field/FieldBoard.svelte`.
 - `tests/unit/ui-settings-store.test.ts`, `persisted-ui-state.test.ts`, `persisted-ui-store.test.ts`; `tests/component/AppChrome.test.ts`, `DuelField.test.ts`.
 - `docs/ADR/020_ADR_browser_persisted_ui_state_v2.md`.
+- `ai_artefacts/manual_test_checklist.md` — append/update only T9 human checks; preserve all other sections.
 - **From Depends:** FieldBoard renders square zones, stack count `.duel-field-stack__count`, hand count selectors; full shell + acceptance harness/reload scenario functional.
 
 ## Exact API

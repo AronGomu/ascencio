@@ -29,6 +29,7 @@
 - `src/app/presentation/card-list-dialog-model.ts`, `src/app/prompts/interaction-session.ts`.
 - `tests/component/ZoneListDialog.test.ts`, `DuelField.test.ts`, `ProjectedChoiceMenu.test.ts`, `tests/unit/global-styles.test.ts`.
 - `docs/ADR/021_ADR_card_list_dialog_modes_and_selection.md`.
+- `ai_artefacts/manual_test_checklist.md` — append/update only T14 human checks; preserve all other sections.
 - **From Depends:** `cardListSelectionState` exact API/algorithm; target chrome/sorting/collapse/no-dismiss; physical tiles + menu; selected IDs opaque.
 
 ## Exact callback replacement

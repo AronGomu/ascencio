@@ -25,6 +25,7 @@
 - `src/app/components/CardPreviewPanel.svelte`, `tests/component/CardPreviewPanel.test.ts`, `src/styles/app.css`.
 - `src/app/presentation/card-preview.ts` — `CardPreviewView` fields are code/name/description only.
 - `docs/ADR/006_ADR_preview_panel_replaces_card_inspector.md`, `019_ADR_full_height_duel_shell_and_pixel_geometry.md`.
+- `ai_artefacts/manual_test_checklist.md` — append/update only T8 human checks; preserve all other sections.
 - **From Depends:** `OverlayScrollbar.svelte` exact props; shell gives preview fixed full height; rail owns status so preview props are content/image only.
 
 ## DOM contract

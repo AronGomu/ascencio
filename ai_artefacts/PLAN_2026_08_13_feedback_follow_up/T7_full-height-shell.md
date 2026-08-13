@@ -27,6 +27,7 @@
 - `src/app/App.svelte`, `src/app/components/DuelField.svelte`, `src/styles/app.css`.
 - `tests/component/AppChrome.test.ts`, `tests/unit/global-styles.test.ts`, `e2e/duel-smoke.spec.ts` (`assertSharesFieldRow`, `duel-row`).
 - `ai-artifacts/DESIGN_2026_08_13_full_height_duel_field.md` §§2,10,13.
+- `ai_artefacts/manual_test_checklist.md` — append/update only T7 human checks; preserve all other sections.
 - **From Depends:** `.duel-field-slot[data-cy="duel-field-slot"]` is observed budget owner; inner `.duel-field` is geometry-sized floating-window boundary; `FieldGeometry`; functional preview/field/rail; no header; acceptance scenarios/config.
 
 ## DOM/CSS contract

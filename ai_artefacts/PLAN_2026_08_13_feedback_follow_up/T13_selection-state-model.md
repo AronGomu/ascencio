@@ -25,6 +25,7 @@
 - `src/app/presentation/card-list-dialog-model.ts`, `src/field/off-field-target-list.ts`.
 - `tests/unit/card-list-dialog-model.test.ts`, `src/app/prompts/prompt-selection.ts` for existing validity semantics.
 - `docs/ADR/021_ADR_card_list_dialog_modes_and_selection.md` decisions 6–9.
+- `ai_artefacts/manual_test_checklist.md` — append/update only T13 human checks; preserve all other sections.
 - **From Depends:** model already exports stable display order/title/alphabetical/source notice; `OffFieldTargetEntry.choices` groups every projected ID/address; target sort/dismiss/collapse complete.
 
 ## Exact API

@@ -29,6 +29,7 @@
 - `src/app/presentation/card-list-dialog-model.ts`, `src/field/off-field-target-list.ts`.
 - `tests/component/FloatingFieldWindow.test.ts`, `ZoneListDialog.test.ts`; acceptance card-list scenarios.
 - `docs/ADR/017_ADR_floating_field_windows_and_dismissal.md`, `021_ADR_card_list_dialog_modes_and_selection.md`.
+- `ai_artefacts/manual_test_checklist.md` — append/update only T12 human checks; preserve all other sections.
 - **From Depends:** approved browse branch/dismissal; physical tile + projected menu; full uppercase `zoneBadge`; stable sort + field-local cap; `src/app/acceptance/card-list-dialog-scenarios.ts` is scenario source to extend.
 
 ## Exact API

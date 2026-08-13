@@ -28,6 +28,7 @@
 - `tests/component/ZoneListDialog.test.ts`, `CardActionChips.test.ts`; image-cache/lease fixtures.
 - `docs/ADR/015_ADR_halo_semantics_legal_versus_selected.md`, `021_ADR_card_list_dialog_modes_and_selection.md`.
 - `ai-artifacts/PROTOTYPE_SPEC_card-list-dialog.md` §§4.4–4.8,5.
+- `ai_artefacts/manual_test_checklist.md` — append/update only T11 human checks; preserve all other sections.
 - **From Depends:** browse shell owns ordering/first-last positions; `OffFieldTargetEntry.choices` groups multiple IDs/address; `src/app/acceptance/card-list-dialog-scenarios.ts` exports browse fixtures + resolver; dedicated acceptance config.
 
 ## Exact APIs

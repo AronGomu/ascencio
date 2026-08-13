@@ -97,4 +97,4 @@ New selectors: `zone-list-dialog-filter-notice`, `zone-list-dialog-collapse-butt
 - [x] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/card-list-dialog.spec.ts --grep "target chrome|collapse|dismiss|notice"` → exit 0.
 - [ ] manual check — target draft survives outside/Escape/collapse; browse still dismisses.
 - [x] app functional — `npm run build` exits 0.
-- [ ] commit msg draft: `feat(card-list): split target chrome and stable collapse`
+- [x] commit msg draft: `feat(card-list): split target chrome and stable collapse`

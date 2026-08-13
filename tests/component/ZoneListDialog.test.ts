@@ -271,14 +271,16 @@ describe("ZoneListDialog target mode", () => {
       ],
     });
 
+    const trigger = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-entry-choice-menu-trigger-target:0:graveyard:0"]',
+    );
+    if (trigger === null) throw new Error("Missing choice-menu trigger");
+    await user.click(trigger);
     const second = document.querySelector<HTMLButtonElement>(
-      '[data-cy="zone-list-entry-target-choice-target:0:graveyard:0-gy-shuffle"]',
+      '[data-cy="projected-choice-target:0:graveyard:0-gy-shuffle"]',
     );
     if (second === null) throw new Error("Missing duplicate target button");
     expect(second.textContent?.trim()).toBe("Shuffle back");
-    expect(second.getAttribute("aria-label")).toBe(
-      "Shuffle back: The Legendary Fisherman in Your Graveyard",
-    );
     await user.click(second);
 
     expect(harness.ontargetchoice.mock.calls[0]?.[0]).toMatchObject({

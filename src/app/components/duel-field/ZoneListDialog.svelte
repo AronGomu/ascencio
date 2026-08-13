@@ -155,9 +155,11 @@
       data-cy="zone-list-dialog-entries"
     >
       {#if targetMode}
-        {#each targetEntries as entry (entry.id)}
+        {#each targetEntries as entry, index (entry.id)}
           <ZoneListEntryTile
             {entry}
+            first={index === 0}
+            last={index === targetEntries.length - 1}
             mode="target"
             choices={entry.choices}
             zoneBadge={entry.zoneBadge}
@@ -175,15 +177,18 @@
       {:else if displayEntries.length === 0}
         <p class="zone-list-dialog__empty" data-cy="zone-list-dialog-empty">No cards available</p>
       {:else}
-        {#each displayEntries as entry (entry.id)}
+        {#each displayEntries as entry, index (entry.id)}
           <ZoneListEntryTile
             {entry}
+            first={index === 0}
+            last={index === displayEntries.length - 1}
             choices={entryChoices(entry)}
             {imageLibrary}
             {cardBackUrl}
             {placeholderUrl}
             {disabled}
             {onchoose}
+            ondetails={() => onpreview(entry)}
             onpreview={() => onpreview(entry)}
           />
         {/each}

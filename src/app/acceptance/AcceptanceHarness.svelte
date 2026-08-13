@@ -36,6 +36,7 @@
     <ZoneListDialog
       stack={cardList.stack}
       entries={cardList.entries}
+      choices={cardList.choices}
       boundaryElement={fieldSlot}
       cardBackUrl="/card-back.svg"
     />

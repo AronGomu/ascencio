@@ -1,4 +1,5 @@
-import { cardCode } from "../../duel/contracts/ids.ts";
+import { cardCode, choiceId } from "../../duel/contracts/ids.ts";
+import type { InteractionChoice } from "../prompts/interaction-spec.ts";
 import type { BoardStackView } from "../../field/board-view-model.ts";
 import type { ZoneListEntry } from "../../field/zone-list.ts";
 import type { AcceptanceScenarioId } from "./acceptance-scenario.ts";
@@ -7,6 +8,7 @@ export interface CardListAcceptanceScenario {
   readonly id: AcceptanceScenarioId;
   readonly stack: BoardStackView;
   readonly entries: readonly ZoneListEntry[];
+  readonly choices: readonly InteractionChoice[];
 }
 
 const stack: BoardStackView = Object.freeze({
@@ -39,7 +41,13 @@ function entries(count: number): readonly ZoneListEntry[] {
 }
 
 function scenario(id: AcceptanceScenarioId, count: number): CardListAcceptanceScenario {
-  return Object.freeze({ id, stack: Object.freeze({ ...stack, count, publicCount: count }), entries: entries(count) });
+  const choices: readonly InteractionChoice[] = count === 0 ? [] : [Object.freeze({
+    id: choiceId("acceptance-activate"),
+    label: "Activate Alpha effect",
+    action: "activate",
+    cardAddress: Object.freeze({ controller: 0, location: "graveyard", sequence: 0 }),
+  })];
+  return Object.freeze({ id, stack: Object.freeze({ ...stack, count, publicCount: count }), entries: entries(count), choices });
 }
 
 export const CARD_LIST_BROWSE_SIX = scenario("card-list-browse-six", 6);

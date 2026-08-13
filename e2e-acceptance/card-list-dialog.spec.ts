@@ -47,3 +47,26 @@ test("empty browse and responsive shell stay inside field", async ({ page }) => 
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
   }
 });
+
+test("tile geometry, zoom and projected action seam stay usable", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await open(page, "card-list-browse-six");
+  const tile = page.locator(".zone-list-entry").first();
+  await page.mouse.move(0, 0);
+  const base = await tile.boundingBox();
+  expect(base?.width).toBeCloseTo(144, 0);
+  await tile.hover();
+  await page.waitForTimeout(150);
+  const zoomed = await tile.boundingBox();
+  expect(zoomed!.width / base!.width).toBeCloseTo(1.6, 1);
+  await expect(tile.locator(".zone-list-entry__name")).toHaveCSS("opacity", "0");
+  const image = tile.locator("img");
+  const menu = tile.locator(".card-action-chips");
+  const imageBox = await image.boundingBox();
+  const menuBox = await menu.boundingBox();
+  const seam = menuBox!.y - (imageBox!.y + imageBox!.height);
+  expect(seam).toBeGreaterThanOrEqual(-4);
+  expect(seam).toBeLessThanOrEqual(0);
+  await expect(menu.getByRole("button", { name: "Activate Alpha effect" })).toHaveText("Activate effect");
+  await expect(menu.getByRole("button", { name: "Details" })).toBeVisible();
+});

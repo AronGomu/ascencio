@@ -82,14 +82,14 @@ Menu: natural Tab entry, ArrowUp/Down, Home/End, Escape returns focus to tile tr
 
 ## Impl steps
 
-- [ ] 1. Add `ProjectedChoiceMenu.test.ts`; extend tile/chips component tests; prove red.
-- [ ] 2. Implement menu with focused trigger ref contract + unique dynamic `data-cy` per choice.
-- [ ] 3. Add narrow `variant/ondetails` to CardActionChips; retain default field output.
-- [ ] 4. Restructure ZoneListEntryTile: badge, art, checkmark, name, browse action area; preserve lease/fallback/privacy.
-- [ ] 5. For target 1 choice, keep direct target button. For >1, tile trigger opens ProjectedChoiceMenu; pass all IDs.
-- [ ] 6. Pass first/last from display order in ZoneListDialog; wire Details to existing preview callback only.
-- [ ] 7. Replace tile/list action CSS with exact dimensions/origins/zoom/seam; scope all list overrides.
-- [ ] 8. Add duplicate/action/edge acceptance scenarios + Chromium tests.
+- [x] 1. Add `ProjectedChoiceMenu.test.ts`; extend tile/chips component tests; prove red.
+- [x] 2. Implement menu with focused trigger ref contract + unique dynamic `data-cy` per choice.
+- [x] 3. Add narrow `variant/ondetails` to CardActionChips; retain default field output.
+- [x] 4. Restructure ZoneListEntryTile: badge, art, checkmark, name, browse action area; preserve lease/fallback/privacy.
+- [x] 5. For target 1 choice, keep direct target button. For >1, tile trigger opens ProjectedChoiceMenu; pass all IDs.
+- [x] 6. Pass first/last from display order in ZoneListDialog; wire Details to existing preview callback only.
+- [x] 7. Replace tile/list action CSS with exact dimensions/origins/zoom/seam; scope all list overrides.
+- [x] 8. Add duplicate/action/edge acceptance scenarios + Chromium tests.
 
 ## Outputs
 
@@ -100,9 +100,9 @@ Menu: natural Tab entry, ArrowUp/Down, Home/End, Escape returns focus to tile tr
 
 ## Validation
 
-- [ ] `npx vitest run tests/component/ProjectedChoiceMenu.test.ts tests/component/CardActionChips.test.ts tests/component/ZoneListDialog.test.ts` → exit 0.
-- [ ] `npm run typecheck && npm run lint` → exit 0.
-- [ ] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/card-list-dialog.spec.ts --grep "tile|action|choice menu|zoom"` → exit 0.
+- [x] `npx vitest run tests/component/ProjectedChoiceMenu.test.ts tests/component/CardActionChips.test.ts tests/component/ZoneListDialog.test.ts` → exit 0.
+- [x] `npm run typecheck && npm run lint` → exit 0.
+- [x] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/card-list-dialog.spec.ts --grep "tile|action|choice menu|zoom"` → exit 0.
 - [ ] manual keyboard check — duplicate menu reaches every choice, Escape returns focus, Details emits no response.
-- [ ] app functional — `npm run build` exits 0; existing field action-chip smoke green.
+- [x] app functional — `npm run build` exits 0; existing field action-chip smoke green.
 - [ ] commit msg draft: `feat(card-list): render physical cards and projected choice menu`

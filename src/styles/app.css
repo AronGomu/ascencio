@@ -1309,11 +1309,15 @@ button.duel-field-zone,
 
 .zone-list-entry {
   position: relative;
-  flex: 0 0 auto;
-  width: 4.5rem;
+  flex: 0 0 144px;
+  width: 144px;
   transition: transform 120ms ease-out;
-  transform-origin: center;
+  transform-origin: center 42%;
 }
+
+.zone-list-entry.is-first { transform-origin: left 42%; }
+.zone-list-entry.is-last { transform-origin: right 42%; }
+.zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open) { z-index: 500; }
 
 .zone-list-entry.is-actionable img {
   border-color: var(--success);
@@ -1335,32 +1339,89 @@ button.duel-field-zone,
   box-shadow: 0 0 0 2px rgb(255 213 128 / 0.55);
 }
 
-.zone-list-entry:is(:hover, :focus-within) {
-  transform: scale(1.35);
+.zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open) {
+  transform: scale(1.6);
 }
 
 .zone-list-entry > img {
-  max-height: 50svh;
-  object-fit: contain;
+  display: block;
+  width: 144px;
+  aspect-ratio: 421 / 614;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  object-fit: cover;
+  box-shadow: 0 7px 18px rgb(0 0 0 / 0.34);
 }
 
+.zone-list-entry__name {
+  display: block;
+  margin-top: 8px;
+  overflow: hidden;
+  font-size: 0.72rem;
+  font-weight: 750;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: opacity 120ms ease-out;
+}
+
+.zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open) .zone-list-entry__name { opacity: 0; }
+
 .zone-list-entry:hover .card-action-chips,
-.zone-list-entry:focus-within .card-action-chips {
-  display: flex;
+.zone-list-entry:focus-within .card-action-chips,
+.zone-list-entry.is-menu-open .card-action-chips { display: flex; }
+
+.zone-list-entry .card-action-chips,
+.projected-choice-menu {
+  top: calc(144px * 614 / 421 - 2px);
+  bottom: auto;
+  z-index: 10;
+  min-width: 100%;
+  min-height: 34px;
+  border: 1px solid #53627e;
+  border-radius: 6px;
+  background: rgb(8 16 31 / 0.96);
+}
+.zone-list-entry.is-first .card-action-chips { left: 0; transform: none; }
+.zone-list-entry.is-last .card-action-chips { right: 0; left: auto; transform: none; }
+.zone-list-entry .card-action-chip { min-height: 34px; height: 34px; font-size: 0.65rem; font-weight: 850; }
+
+.projected-choice-menu {
+  position: absolute;
+  left: 0;
+  display: grid;
+  width: 100%;
+  padding: 2px;
+}
+.projected-choice-menu button { min-height: 34px; font-size: 0.65rem; }
+.zone-list-entry__check {
+  position: absolute;
+  z-index: 4;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--warning);
+  color: #2b1d00;
+  font-weight: 900;
 }
 
 /* T16 target mode. The badge names the pile the entry came from, since one
    list mixes HAND/GY/DECK/BAN/EXTRA. */
 .zone-list-entry__zone {
   position: absolute;
-  top: 0.15rem;
-  left: 0.15rem;
-  padding: 0.05rem 0.28rem;
-  border-radius: 0.25rem;
-  background: var(--surface-strong);
+  bottom: calc(100% + 5px);
+  left: 0;
+  padding: 3px 6px;
+  border: 1px solid #8ba0bf;
+  border-radius: 4px;
+  background: rgb(8 16 31 / 0.9);
   color: var(--ink);
-  font-size: 0.6rem;
-  font-weight: 700;
+  font-size: 0.58rem;
+  font-weight: 850;
   letter-spacing: 0.04em;
 }
 
@@ -1829,7 +1890,4 @@ button.card-action-chip:hover:not(:disabled) {
     transform: none;
   }
 
-  .zone-list-entry:is(:hover, :focus-within) {
-    transform: none;
-  }
 }

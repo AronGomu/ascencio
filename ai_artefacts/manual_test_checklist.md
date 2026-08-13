@@ -62,3 +62,10 @@
 - [ ] Confirm alphabetical sorting never requests or reveals hidden card art or identity.
 - [ ] Confirm browse dismisses through outside press, Escape, header ×, and footer Cancel.
 - [ ] Confirm 6-card row centers; overflow row retains 8px edges at field widths.
+
+## T11 card-tiles-projected-choice-menu
+
+- [ ] Confirm duplicate menu reaches every choice with Tab, Arrow keys, Home, and End; Escape returns focus to tile trigger.
+- [ ] Confirm Details previews card without emitting an engine response.
+- [ ] Confirm hidden cards reveal no identity in art alt text, labels, or menus.
+- [ ] Confirm first and last zoomed card menus remain clickable inside dialog.

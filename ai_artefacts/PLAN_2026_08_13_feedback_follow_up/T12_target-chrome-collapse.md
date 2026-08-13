@@ -3,6 +3,7 @@
 **Plan:** `./ai_artefacts/PLAN_2026_08_13_feedback_follow_up.md`
 **Depends:** T11
 **Commit outcome:** Target list has dynamic full-source notice, target-only controls, no outside/Escape loss, stable 58×58 collapse/expand anchor.
+**Evidence:** `0431136` (`feat(card-list): split target chrome and stable collapse`).
 
 ## Context (self-contained)
 

@@ -48,3 +48,10 @@
 - [ ] Focus effect text; confirm PageDown and End scroll it, focus ring stays visible, and overlay thumb is absent from Tab order.
 - [ ] Compare short and long effect text; confirm paragraph width stays fixed and overlay thumb appears only for long text.
 - [ ] Drag overlay thumb; confirm effect text scrolls while panel remains inside one viewport-height row.
+
+## T9 persisted-display-settings-v2
+
+- [ ] Toggle zone outlines and counts off; confirm zone names, focus, legality, selection, and drop halos remain intact.
+- [ ] Reload; confirm both display choices remain off.
+- [ ] Reset settings; reload; confirm both display choices return on.
+- [ ] Clear site data; confirm display settings, decks, and floating-window positions return to defaults.

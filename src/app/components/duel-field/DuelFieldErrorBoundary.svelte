@@ -52,6 +52,8 @@
   export let phase: DuelPhase = "unknown";
   export let zoneListWindowPosition: PersistedWindowPosition | null = null;
   export let confirmWindowPosition: PersistedWindowPosition | null = null;
+  export let showZoneOutlines = true;
+  export let showZoneCounts = true;
   export let onzoneListWindowPositionChange: (
     position: PersistedWindowPosition,
   ) => void = () => undefined;
@@ -124,6 +126,8 @@
     {phase}
     {zoneListWindowPosition}
     {confirmWindowPosition}
+    {showZoneOutlines}
+    {showZoneCounts}
     {onzoneListWindowPositionChange}
     {onconfirmWindowPositionChange}
   />

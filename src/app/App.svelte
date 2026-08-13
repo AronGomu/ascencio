@@ -62,10 +62,14 @@
   import { promptSurface } from "./prompts/prompt-surface.ts";
   import { DECK_CATALOG, type DeckId } from "../duel/presets/deck-catalog.ts";
   import { createDuelStore } from "./stores/duel-store.ts";
-  import type { PersistedWindowPosition } from "./stores/persisted-ui-state.ts";
+  import {
+    DEFAULT_PERSISTED_UI_STATE,
+    type PersistedWindowPosition,
+  } from "./stores/persisted-ui-state.ts";
   import { createPersistedUiStore } from "./stores/persisted-ui-store.ts";
   import {
     createUiSettingsStore,
+    DEFAULT_UI_SETTINGS,
     type UiSettingsState,
   } from "./stores/ui-settings-store.ts";
 
@@ -87,8 +91,11 @@
   ];
   const client = new DuelWorkerClient();
   const duel = createDuelStore(client);
-  const uiSettings = createUiSettingsStore();
   const persistedUi = createPersistedUiStore();
+  const uiSettings = createUiSettingsStore({
+    ...DEFAULT_UI_SETTINGS,
+    ...$persistedUi.settings,
+  });
   let pickerOpen = true;
   let duelFieldSlot: HTMLElement | null = null;
   let menuOpen = false;
@@ -637,6 +644,27 @@
     persistedUi.setWindowPosition("confirm", position);
   }
 
+  function setShowZoneOutlines(value: boolean): void {
+    uiSettings.setShowZoneOutlines(value);
+    persistedUi.setDisplaySettings({
+      ...$persistedUi.settings,
+      showZoneOutlines: value,
+    });
+  }
+
+  function setShowZoneCounts(value: boolean): void {
+    uiSettings.setShowZoneCounts(value);
+    persistedUi.setDisplaySettings({
+      ...$persistedUi.settings,
+      showZoneCounts: value,
+    });
+  }
+
+  function resetUiSettings(): void {
+    uiSettings.reset();
+    persistedUi.setDisplaySettings(DEFAULT_PERSISTED_UI_STATE.settings);
+  }
+
   function startSelectedDuel(): void {
     pickerOpen = false;
     duel.start($persistedUi.decks.player, $persistedUi.decks.opponent);
@@ -948,34 +976,36 @@
           data-cy="duel-field-slot"
           bind:this={duelFieldSlot}
         >
-        {#key `${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
-          <DuelFieldErrorBoundary
-            board={duelBoard}
-            layoutBoundaryElement={duelFieldSlot}
-            imageLibrary={imagesMatchRuntime ? imageLibrary : null}
-            cardBackUrl={imageLibrary?.cardBackUrl ?? ""}
-            placeholderUrl={imageLibrary?.placeholderUrl ?? ""}
-            prompt={effectivePrompt}
-            spec={fieldInteractionSpec}
-            session={$duel.interactionSession}
-            pending={$duel.responsePending}
-            presentationEvents={$duel.presentationEvents}
-            feedbackGeneration={`${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
-            injectFailure={injectDuelFieldFailure}
-            oninteraction={duel.dispatchInteraction}
-            onplacementintent={duel.armPlacementIntent}
-            onpreview={previewFieldCard}
-            onstackpreview={previewStackCard}
-            {zoneLists}
-            {offFieldTargets}
-            onzonelistpreview={previewZoneListEntry}
-            phase={$duel.snapshot?.phase ?? "unknown"}
-            zoneListWindowPosition={$persistedUi.windows.zoneList}
-            confirmWindowPosition={$persistedUi.windows.confirm}
-            onzoneListWindowPositionChange={moveZoneListWindow}
-            onconfirmWindowPositionChange={moveConfirmWindow}
-          />
-        {/key}
+          {#key `${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
+            <DuelFieldErrorBoundary
+              board={duelBoard}
+              layoutBoundaryElement={duelFieldSlot}
+              imageLibrary={imagesMatchRuntime ? imageLibrary : null}
+              cardBackUrl={imageLibrary?.cardBackUrl ?? ""}
+              placeholderUrl={imageLibrary?.placeholderUrl ?? ""}
+              prompt={effectivePrompt}
+              spec={fieldInteractionSpec}
+              session={$duel.interactionSession}
+              pending={$duel.responsePending}
+              presentationEvents={$duel.presentationEvents}
+              feedbackGeneration={`${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
+              injectFailure={injectDuelFieldFailure}
+              oninteraction={duel.dispatchInteraction}
+              onplacementintent={duel.armPlacementIntent}
+              onpreview={previewFieldCard}
+              onstackpreview={previewStackCard}
+              {zoneLists}
+              {offFieldTargets}
+              onzonelistpreview={previewZoneListEntry}
+              phase={$duel.snapshot?.phase ?? "unknown"}
+              zoneListWindowPosition={$persistedUi.windows.zoneList}
+              confirmWindowPosition={$persistedUi.windows.confirm}
+              showZoneOutlines={$uiSettings.showZoneOutlines}
+              showZoneCounts={$uiSettings.showZoneCounts}
+              onzoneListWindowPositionChange={moveZoneListWindow}
+              onconfirmWindowPositionChange={moveConfirmWindow}
+            />
+          {/key}
         </div>
       {:else if $duel.snapshot}
         <section
@@ -994,7 +1024,10 @@
           turn={$duel.snapshot.turn}
           phase={$duel.snapshot.phase}
           turnPlayer={$duel.snapshot.turnPlayer}
-          lifePoints={[$duel.snapshot.players[0].lifePoints, $duel.snapshot.players[1].lifePoints]}
+          lifePoints={[
+            $duel.snapshot.players[0].lifePoints,
+            $duel.snapshot.players[1].lifePoints,
+          ]}
           playerAvatarUrl={imageLibrary?.cardBackUrl ?? ""}
           opponentAvatarUrl={imageLibrary?.cardBackUrl ?? ""}
           status={railStatus}
@@ -1105,6 +1138,9 @@
       onshowworkspace={uiSettings.setShowWorkspace}
       onautoplacecards={uiSettings.setAutoPlaceCards}
       onautoresolvetrivialprompts={uiSettings.setAutoResolveTrivialPrompts}
+      onshowzoneoutlines={setShowZoneOutlines}
+      onshowzonecounts={setShowZoneCounts}
+      onreset={resetUiSettings}
       onclose={() => void closeSettings()}
     />
   {/if}

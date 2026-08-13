@@ -465,7 +465,9 @@ describe("App", () => {
     emitDuelError();
 
     await vi.waitFor(() =>
-      expect(document.querySelector('[data-cy="app-error-panel"]')).not.toBeNull(),
+      expect(
+        document.querySelector('[data-cy="app-error-panel"]'),
+      ).not.toBeNull(),
     );
     const main = document.querySelector('[data-cy="app-main"]');
     expect(main?.getAttribute("data-duel-viewport")).toBeNull();
@@ -788,6 +790,53 @@ describe("MenuDialog", () => {
 });
 
 describe("SettingsDialog", () => {
+  it("renders exact display rows and reports independent toggles", async () => {
+    const user = userEvent.setup();
+    const onshowzoneoutlines = vi.fn();
+    const onshowzonecounts = vi.fn();
+    render(SettingsDialog, {
+      settings: {
+        showDuelHud: false,
+        showWorkspace: false,
+        autoPlaceCards: true,
+        autoResolveTrivialPrompts: true,
+        showZoneOutlines: true,
+        showZoneCounts: false,
+      },
+      onshowduelhud: vi.fn(),
+      onshowworkspace: vi.fn(),
+      onautoplacecards: vi.fn(),
+      onautoresolvetrivialprompts: vi.fn(),
+      onshowzoneoutlines,
+      onshowzonecounts,
+      onreset: vi.fn(),
+      onclose: vi.fn(),
+    });
+    expect(
+      document.querySelector('[data-cy="settings-show-zone-outlines-label"]')
+        ?.textContent,
+    ).toContain("Draw the dashed square footprint of every zone.");
+    expect(
+      document.querySelector(
+        '[data-cy="settings-show-zone-counts-description"]',
+      )?.textContent,
+    ).toBe(
+      "Show the number of cards in Deck, Extra Deck, GY, Banished and both hands.",
+    );
+    await user.click(
+      document.querySelector(
+        '[data-cy="settings-show-zone-outlines-checkbox"]',
+      ) as HTMLInputElement,
+    );
+    await user.click(
+      document.querySelector(
+        '[data-cy="settings-show-zone-counts-checkbox"]',
+      ) as HTMLInputElement,
+    );
+    expect(onshowzoneoutlines).toHaveBeenCalledWith(false);
+    expect(onshowzonecounts).toHaveBeenCalledWith(true);
+  });
+
   it("reflects the current settings state", () => {
     render(SettingsDialog, {
       settings: {
@@ -795,6 +844,8 @@ describe("SettingsDialog", () => {
         showWorkspace: false,
         autoPlaceCards: true,
         autoResolveTrivialPrompts: true,
+        showZoneOutlines: true,
+        showZoneCounts: true,
       },
       coreVersion: null,
       activeSnapshotId: null,
@@ -803,6 +854,9 @@ describe("SettingsDialog", () => {
       onshowworkspace: vi.fn(),
       onautoplacecards: vi.fn(),
       onautoresolvetrivialprompts: vi.fn(),
+      onshowzoneoutlines: vi.fn(),
+      onshowzonecounts: vi.fn(),
+      onreset: vi.fn(),
       onclose: vi.fn(),
     });
 
@@ -823,6 +877,8 @@ describe("SettingsDialog", () => {
         showWorkspace: false,
         autoPlaceCards: true,
         autoResolveTrivialPrompts: true,
+        showZoneOutlines: true,
+        showZoneCounts: true,
       },
       coreVersion: null,
       activeSnapshotId: null,
@@ -831,6 +887,9 @@ describe("SettingsDialog", () => {
       onshowworkspace: vi.fn(),
       onautoplacecards: vi.fn(),
       onautoresolvetrivialprompts: vi.fn(),
+      onshowzoneoutlines: vi.fn(),
+      onshowzonecounts: vi.fn(),
+      onreset: vi.fn(),
       onclose: vi.fn(),
     });
 
@@ -853,6 +912,8 @@ describe("SettingsDialog", () => {
         showWorkspace: false,
         autoPlaceCards: true,
         autoResolveTrivialPrompts: true,
+        showZoneOutlines: true,
+        showZoneCounts: true,
       },
       coreVersion: null,
       activeSnapshotId: null,
@@ -861,6 +922,9 @@ describe("SettingsDialog", () => {
       onshowworkspace: vi.fn(),
       onautoplacecards: vi.fn(),
       onautoresolvetrivialprompts,
+      onshowzoneoutlines: vi.fn(),
+      onshowzonecounts: vi.fn(),
+      onreset: vi.fn(),
       onclose: vi.fn(),
     });
 
@@ -882,6 +946,8 @@ describe("SettingsDialog", () => {
         showWorkspace: false,
         autoPlaceCards: true,
         autoResolveTrivialPrompts: true,
+        showZoneOutlines: true,
+        showZoneCounts: true,
       },
       coreVersion: null,
       activeSnapshotId: null,
@@ -890,6 +956,9 @@ describe("SettingsDialog", () => {
       onshowworkspace,
       onautoplacecards: vi.fn(),
       onautoresolvetrivialprompts: vi.fn(),
+      onshowzoneoutlines: vi.fn(),
+      onshowzonecounts: vi.fn(),
+      onreset: vi.fn(),
       onclose: vi.fn(),
     });
 
@@ -909,6 +978,8 @@ describe("SettingsDialog", () => {
         showWorkspace: false,
         autoPlaceCards: true,
         autoResolveTrivialPrompts: true,
+        showZoneOutlines: true,
+        showZoneCounts: true,
       },
       coreVersion: [11, 0],
       activeSnapshotId: "abc123def456ghi",
@@ -917,6 +988,9 @@ describe("SettingsDialog", () => {
       onshowworkspace: vi.fn(),
       onautoplacecards: vi.fn(),
       onautoresolvetrivialprompts: vi.fn(),
+      onshowzoneoutlines: vi.fn(),
+      onshowzonecounts: vi.fn(),
+      onreset: vi.fn(),
       onclose: vi.fn(),
     });
 

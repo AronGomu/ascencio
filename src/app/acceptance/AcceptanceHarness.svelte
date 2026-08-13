@@ -4,7 +4,9 @@
   import { cardCode } from "../../duel/contracts/ids.ts";
   import { acceptanceScenarioId } from "./acceptance-scenario.ts";
   import { fullHeightFieldScenario } from "./full-height-field-scenarios.ts";
+  import { createPersistedUiStore } from "../stores/persisted-ui-store.ts";
 
+  const persistedUi = createPersistedUiStore();
   const scenarioId = acceptanceScenarioId(window.location.search);
   const previewScenario =
     scenarioId === "preview-short" || scenarioId === "preview-long";
@@ -48,12 +50,18 @@
     data-zone-count={scenario.board.zones.length}
   >
     <aside data-cy="acceptance-preview"></aside>
-    <div class="duel-field-slot" data-cy="acceptance-field-slot" bind:this={fieldSlot}>
+    <div
+      class="duel-field-slot"
+      data-cy="acceptance-field-slot"
+      bind:this={fieldSlot}
+    >
       <DuelField
         board={scenario.board}
         layoutBoundaryElement={fieldSlot}
         spec={scenario.phaseSpec}
         phase="main1"
+        showZoneOutlines={$persistedUi.settings.showZoneOutlines}
+        showZoneCounts={$persistedUi.settings.showZoneCounts}
       />
     </div>
     <aside data-cy="acceptance-rail"></aside>

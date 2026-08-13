@@ -9,12 +9,13 @@ import {
 
 function validState(): PersistedUiState {
   return {
-    version: 1,
+    version: 2,
     windows: {
       zoneList: { x: 12, y: 34 },
       confirm: { x: 56, y: 78 },
     },
     decks: { player: "nekroz", opponent: "shaddoll" },
+    settings: { showZoneOutlines: false, showZoneCounts: true },
   };
 }
 
@@ -38,9 +39,31 @@ describe("persisted UI state", () => {
   it("returns defaults for a wrong version", () => {
     expect(
       readPersistedUiState({
-        getItem: () => JSON.stringify({ ...validState(), version: 2 }),
+        getItem: () => JSON.stringify({ ...validState(), version: 3 }),
       }),
     ).toEqual(DEFAULT_PERSISTED_UI_STATE);
+  });
+
+  it("loads legacy v1 payload as complete defaults", () => {
+    expect(
+      readPersistedUiState({
+        getItem: () => JSON.stringify({ ...validState(), version: 1 }),
+      }),
+    ).toEqual(DEFAULT_PERSISTED_UI_STATE);
+  });
+
+  it("falls back malformed setting leaves independently", () => {
+    const state = readPersistedUiState({
+      getItem: () =>
+        JSON.stringify({
+          ...validState(),
+          settings: { showZoneOutlines: "no", showZoneCounts: false },
+        }),
+    });
+    expect(state.settings).toEqual({
+      showZoneOutlines: true,
+      showZoneCounts: false,
+    });
   });
 
   it("falls back per field for an unknown deck id", () => {

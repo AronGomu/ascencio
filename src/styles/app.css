@@ -179,7 +179,6 @@ main.is-duel-viewport {
   overflow: hidden;
 }
 
-
 .dialog-backdrop {
   position: fixed;
   z-index: var(--duel-field-layer-menu);
@@ -254,7 +253,6 @@ h4 {
   overflow: hidden;
 }
 
-
 .card-preview-panel {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
@@ -307,20 +305,69 @@ h4 {
   gap: 0.75rem;
   min-width: 0;
 }
-.duel-right-rail__top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
-.duel-right-rail__top strong { font-size: 0.95rem; font-weight: 800; }
-.duel-right-rail__options { width: 2.5rem; height: 2.5rem; padding: 0; flex: 0 0 2.5rem; }
-.duel-right-rail__identity { border: 2px solid transparent; }
-.duel-right-rail__identity.active { border-color: var(--accent); }
-.duel-right-rail__identity img { display: block; width: 100%; aspect-ratio: 1; max-height: 26svh; object-fit: cover; }
-.duel-right-rail__identity p { margin: 0.35rem 0; color: var(--warning); font-weight: 800; }
-.duel-right-rail__status { align-self: center; min-width: 0; }
-.duel-right-rail__status h2 { font-size: clamp(1.05rem, 2vw, 1.6rem); text-wrap: balance; }
-.duel-right-rail__status p { color: var(--muted); }
-.duel-right-rail__dots { display: inline-flex; gap: 0.15rem; }
-.duel-right-rail__dots i { width: 0.28rem; height: 0.28rem; border-radius: 999px; background: currentcolor; opacity: 1; animation: duel-rail-dot 1.2s infinite ease-in-out; }
-.duel-right-rail__dots i:nth-child(2) { animation-delay: 0.2s; }
-.duel-right-rail__dots i:nth-child(3) { animation-delay: 0.4s; }
+.duel-right-rail__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.duel-right-rail__top strong {
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+.duel-right-rail__options {
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  flex: 0 0 2.5rem;
+}
+.duel-right-rail__identity {
+  border: 2px solid transparent;
+}
+.duel-right-rail__identity.active {
+  border-color: var(--accent);
+}
+.duel-right-rail__identity img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  max-height: 26svh;
+  object-fit: cover;
+}
+.duel-right-rail__identity p {
+  margin: 0.35rem 0;
+  color: var(--warning);
+  font-weight: 800;
+}
+.duel-right-rail__status {
+  align-self: center;
+  min-width: 0;
+}
+.duel-right-rail__status h2 {
+  font-size: clamp(1.05rem, 2vw, 1.6rem);
+  text-wrap: balance;
+}
+.duel-right-rail__status p {
+  color: var(--muted);
+}
+.duel-right-rail__dots {
+  display: inline-flex;
+  gap: 0.15rem;
+}
+.duel-right-rail__dots i {
+  width: 0.28rem;
+  height: 0.28rem;
+  border-radius: 999px;
+  background: currentcolor;
+  opacity: 1;
+  animation: duel-rail-dot 1.2s infinite ease-in-out;
+}
+.duel-right-rail__dots i:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.duel-right-rail__dots i:nth-child(3) {
+  animation-delay: 0.4s;
+}
 
 @keyframes duel-rail-dot {
   0%,
@@ -924,7 +971,7 @@ button.field-phase-chip {
   display: grid;
   place-items: center;
   padding: 0.2rem;
-  border: 1px solid rgb(183 220 207 / 0.48);
+  border: 1px dashed var(--zone-outline-color, rgb(183 220 207 / 0.48));
   border-radius: 0.35rem;
   background: rgb(8 26 25 / 0.28);
   color: rgb(232 237 248 / 0.7);
@@ -934,9 +981,18 @@ button.field-phase-chip {
 }
 
 .duel-field-zone--shared {
-  border: 2px solid var(--accent);
+  border: 2px dashed var(--zone-outline-color, var(--accent));
   background: rgb(19 69 66 / 0.72);
   color: #e8edf8;
+}
+
+.duel-field-board[data-zone-outlines="false"] {
+  --zone-outline-color: transparent;
+}
+
+.duel-field-board[data-zone-counts="false"] .duel-field-stack__count,
+.duel-field-board[data-zone-counts="false"] .duel-field-hand-band__count {
+  display: none;
 }
 
 .duel-field-zone__slot {

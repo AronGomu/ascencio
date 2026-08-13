@@ -13,6 +13,8 @@ describe("createUiSettingsStore", () => {
       showWorkspace: false,
       autoPlaceCards: true,
       autoResolveTrivialPrompts: true,
+      showZoneOutlines: true,
+      showZoneCounts: true,
     });
   });
 
@@ -24,6 +26,8 @@ describe("createUiSettingsStore", () => {
       showWorkspace: false,
       autoPlaceCards: true,
       autoResolveTrivialPrompts: true,
+      showZoneOutlines: true,
+      showZoneCounts: true,
     });
   });
 
@@ -35,6 +39,8 @@ describe("createUiSettingsStore", () => {
       showWorkspace: true,
       autoPlaceCards: true,
       autoResolveTrivialPrompts: true,
+      showZoneOutlines: true,
+      showZoneCounts: true,
     });
   });
 
@@ -46,6 +52,8 @@ describe("createUiSettingsStore", () => {
       showWorkspace: false,
       autoPlaceCards: false,
       autoResolveTrivialPrompts: true,
+      showZoneOutlines: true,
+      showZoneCounts: true,
     });
   });
 
@@ -57,6 +65,23 @@ describe("createUiSettingsStore", () => {
       showWorkspace: false,
       autoPlaceCards: true,
       autoResolveTrivialPrompts: false,
+      showZoneOutlines: true,
+      showZoneCounts: true,
+    });
+  });
+
+  it("sets each UI display flag independently", () => {
+    const store = createUiSettingsStore();
+    store.setShowZoneOutlines(false);
+    expect(get(store)).toMatchObject({
+      showZoneOutlines: false,
+      showZoneCounts: true,
+    });
+    expect(Object.isFrozen(get(store))).toBe(true);
+    store.setShowZoneCounts(false);
+    expect(get(store)).toMatchObject({
+      showZoneOutlines: false,
+      showZoneCounts: false,
     });
   });
 

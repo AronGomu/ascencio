@@ -88,15 +88,15 @@ Settings copy exact:
 
 ## Impl steps
 
-- [ ] 1. Rewrite persisted/UI/store unit fixtures to v2; add all red cases, including unsupported version=3.
-- [ ] 2. Add `PersistedDisplaySettings`, v2 default/key/parser/writer; legacy key intentionally unread.
-- [ ] 3. Add `setDisplaySettings`; preserve immutable full-state writes + storage failure swallowing.
-- [ ] 4. Extend UiSettings state/defaults/store setters.
-- [ ] 5. Hydrate UI display leaves from initial `$persistedUi.settings`; add paired handlers in App.
-- [ ] 6. Add SettingsDialog props/rows + exact copy; wire paired App callbacks + synchronized reset handler.
-- [ ] 7. Thread two flags through ErrorBoundary→DuelField→FieldBoard; add exact data attrs.
-- [ ] 8. Add scoped CSS using actual `.duel-field-stack__count` + hand count classes; never hide semantic root/label.
-- [ ] 9. Add component + acceptance reload tests; clear both v1/v2 keys in test cleanup.
+- [x] 1. Rewrite persisted/UI/store unit fixtures to v2; add all red cases, including unsupported version=3.
+- [x] 2. Add `PersistedDisplaySettings`, v2 default/key/parser/writer; legacy key intentionally unread.
+- [x] 3. Add `setDisplaySettings`; preserve immutable full-state writes + storage failure swallowing.
+- [x] 4. Extend UiSettings state/defaults/store setters.
+- [x] 5. Hydrate UI display leaves from initial `$persistedUi.settings`; add paired handlers in App.
+- [x] 6. Add SettingsDialog props/rows + exact copy; wire paired App callbacks + synchronized reset handler.
+- [x] 7. Thread two flags through ErrorBoundary→DuelField→FieldBoard; add exact data attrs.
+- [x] 8. Add scoped CSS using actual `.duel-field-stack__count` + hand count classes; never hide semantic root/label.
+- [x] 9. Add component + acceptance reload tests; clear both v1/v2 keys in test cleanup.
 
 ## Outputs
 
@@ -106,10 +106,10 @@ Settings copy exact:
 
 ## Validation
 
-- [ ] `npx vitest run tests/unit/ui-settings-store.test.ts tests/unit/persisted-ui-state.test.ts tests/unit/persisted-ui-store.test.ts` → exit 0.
-- [ ] `npx vitest run tests/component/AppChrome.test.ts tests/component/DuelField.test.ts tests/unit/data-cy-coverage.test.ts` → exit 0.
-- [ ] `npm run typecheck && npm run lint` → exit 0.
-- [ ] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/full-height-field.spec.ts --grep "zone settings"` → exit 0.
+- [x] `npx vitest run tests/unit/ui-settings-store.test.ts tests/unit/persisted-ui-state.test.ts tests/unit/persisted-ui-store.test.ts` → exit 0.
+- [x] `npx vitest run tests/component/AppChrome.test.ts tests/component/DuelField.test.ts tests/unit/data-cy-coverage.test.ts` → exit 0.
+- [x] `npm run typecheck && npm run lint` → exit 0.
+- [x] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/full-height-field.spec.ts --grep "zone settings"` → exit 0.
 - [ ] manual check — toggles leave focus/legality/zone names intact; reset via site data works.
-- [ ] app functional — `npm run build` exits 0.
-- [ ] commit msg draft: `feat(settings): persist field display toggles in v2`
+- [x] app functional — `npm run build` exits 0.
+- [x] commit msg draft: `feat(settings): persist field display toggles in v2`

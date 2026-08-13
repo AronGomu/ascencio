@@ -16,9 +16,10 @@ function memoryStorage(seed: string | null = null) {
 }
 
 const SEED = JSON.stringify({
-  version: 1,
+  version: 2,
   windows: { zoneList: { x: 12, y: 34 }, confirm: { x: 56, y: 78 } },
   decks: { player: "nekroz", opponent: "shaddoll" },
+  settings: { showZoneOutlines: false, showZoneCounts: true },
 });
 
 describe("persisted UI store", () => {
@@ -27,9 +28,10 @@ describe("persisted UI store", () => {
     const store = createPersistedUiStore(storage);
 
     expect(get(store)).toEqual({
-      version: 1,
+      version: 2,
       windows: { zoneList: { x: 12, y: 34 }, confirm: { x: 56, y: 78 } },
       decks: { player: "nekroz", opponent: "shaddoll" },
+      settings: { showZoneOutlines: false, showZoneCounts: true },
     });
     expect(storage.setItem).not.toHaveBeenCalled();
   });
@@ -80,6 +82,22 @@ describe("persisted UI store", () => {
     expect(storage.read()).toEqual(get(store));
   });
 
+  it("setDisplaySettings preserves decks and windows and writes once", () => {
+    const storage = memoryStorage(SEED);
+    const store = createPersistedUiStore(storage);
+    store.setDisplaySettings({ showZoneOutlines: true, showZoneCounts: false });
+    expect(get(store).settings).toEqual({
+      showZoneOutlines: true,
+      showZoneCounts: false,
+    });
+    expect(get(store).decks).toEqual({
+      player: "nekroz",
+      opponent: "shaddoll",
+    });
+    expect(get(store).windows.zoneList).toEqual({ x: 12, y: 34 });
+    expect(storage.setItem).toHaveBeenCalledTimes(1);
+  });
+
   it("each window keeps its own position", () => {
     const storage = memoryStorage();
     const store = createPersistedUiStore(storage);
@@ -104,16 +122,17 @@ describe("persisted UI store", () => {
     expect(get(store).windows.zoneList).toEqual({ x: 12, y: 34 });
   });
 
-  it("writes the complete v1 state on every setter", () => {
+  it("writes the complete v2 state on every setter", () => {
     const storage = memoryStorage();
     const store = createPersistedUiStore(storage);
 
     store.setWindowPosition("zoneList", { x: 7, y: 8 });
 
     expect(storage.read()).toEqual({
-      version: 1,
+      version: 2,
       windows: { zoneList: { x: 7, y: 8 }, confirm: null },
       decks: { player: "mvp-player", opponent: "mvp-opponent" },
+      settings: { showZoneOutlines: true, showZoneCounts: true },
     });
   });
 

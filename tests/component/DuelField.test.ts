@@ -256,6 +256,22 @@ function renderInteractive(value: PlayerPrompt) {
 }
 
 describe("DuelField", () => {
+  it("threads display flags without removing semantic field content", () => {
+    render(DuelField, {
+      board: board("ST-08"),
+      showZoneOutlines: false,
+      showZoneCounts: false,
+    });
+    const value = document.querySelector('[data-cy="duel-field-board"]');
+    expect(value?.getAttribute("data-zone-outlines")).toBe("false");
+    expect(value?.getAttribute("data-zone-counts")).toBe("false");
+    expect(value?.querySelectorAll("[data-zone-id]").length).toBeGreaterThan(0);
+    expect(value?.querySelector(".duel-field-stack__count")).not.toBeNull();
+    expect(
+      value?.querySelector('[data-cy="field-hand-p0-count"]'),
+    ).not.toBeNull();
+  });
+
   it("renders square px zones with concentric slots and aligned field occupants", () => {
     render(DuelField, { board: board("ST-04") });
 
@@ -265,7 +281,8 @@ describe("DuelField", () => {
     const card = document.querySelector<HTMLElement>(
       '[data-card-zone-id="p0:mainMonster:1"]',
     );
-    if (zone === null || card === null) throw new Error("Missing occupied zone");
+    if (zone === null || card === null)
+      throw new Error("Missing occupied zone");
     expect(zone.style.getPropertyValue("--field-x")).toMatch(/px$/);
     expect(zone.style.getPropertyValue("--field-width")).toBe(
       zone.style.getPropertyValue("--field-height"),
@@ -330,7 +347,8 @@ describe("DuelField", () => {
 
     const placementSignature = (selector: string): string => {
       const element = document.querySelector<HTMLElement>(selector);
-      if (element === null) throw new Error(`Missing placement owner ${selector}`);
+      if (element === null)
+        throw new Error(`Missing placement owner ${selector}`);
       return ["--field-x", "--field-y", "--field-width", "--field-height"]
         .map((property) => element.style.getPropertyValue(property))
         .join("|");
@@ -352,9 +370,12 @@ describe("DuelField", () => {
     await tick();
     const resized = selectors.map(placementSignature);
     expect(
-      document.querySelector<HTMLElement>('[data-cy="duel-field"]')?.style.width,
+      document.querySelector<HTMLElement>('[data-cy="duel-field"]')?.style
+        .width,
     ).not.toBe(initialFieldWidth);
-    resized.forEach((signature, index) => expect(signature).not.toBe(initial[index]));
+    resized.forEach((signature, index) =>
+      expect(signature).not.toBe(initial[index]),
+    );
 
     const noEmzBoard = {
       ...emzBoard,
@@ -363,7 +384,9 @@ describe("DuelField", () => {
     await rendered.rerender({ board: noEmzBoard });
     await tick();
     const profiled = selectors.map(placementSignature);
-    profiled.forEach((signature, index) => expect(signature).not.toBe(resized[index]));
+    profiled.forEach((signature, index) =>
+      expect(signature).not.toBe(resized[index]),
+    );
 
     rendered.unmount();
     expect(boundaryObserver?.disconnect).toHaveBeenCalledOnce();
@@ -602,7 +625,11 @@ describe("DuelField", () => {
     expect(
       buttons.map((button) => button.getAttribute("data-cy")).sort(),
     ).toEqual(
-      ["field-end-turn-button", "field-stack-p0:deck", "field-stack-p1:deck"].sort(),
+      [
+        "field-end-turn-button",
+        "field-stack-p0:deck",
+        "field-stack-p1:deck",
+      ].sort(),
     );
   });
 
@@ -692,10 +719,18 @@ describe("DuelField", () => {
       cardBackUrl: "",
       placeholderUrl: "",
     });
-    expect(container.querySelectorAll('[data-card-zone-id="p0:hand"]')).toHaveLength(20);
-    expect(container.querySelector('[data-cy="field-hand-p0-count"]')?.textContent?.trim()).toBe("20");
     expect(
-      container.querySelector('[data-cy^="field-hand-p0-"][data-cy$="page-status"]'),
+      container.querySelectorAll('[data-card-zone-id="p0:hand"]'),
+    ).toHaveLength(20);
+    expect(
+      container
+        .querySelector('[data-cy="field-hand-p0-count"]')
+        ?.textContent?.trim(),
+    ).toBe("20");
+    expect(
+      container.querySelector(
+        '[data-cy^="field-hand-p0-"][data-cy$="page-status"]',
+      ),
     ).toBeNull();
   });
 

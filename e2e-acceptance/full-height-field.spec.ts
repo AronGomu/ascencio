@@ -19,22 +19,76 @@ function intersects(
   );
 }
 
+test("zone settings persist across reload and reset to defaults", async ({
+  page,
+}) => {
+  await page.goto("?scenario=field-emz");
+  await page.evaluate(() =>
+    localStorage.setItem(
+      "ygo.ui.v2",
+      JSON.stringify({
+        version: 2,
+        windows: { zoneList: null, confirm: null },
+        decks: { player: "mvp-player", opponent: "mvp-opponent" },
+        settings: { showZoneOutlines: false, showZoneCounts: false },
+      }),
+    ),
+  );
+  await page.reload();
+  const board = page.locator('[data-cy="duel-field-board"]');
+  await expect(board).toHaveAttribute("data-zone-outlines", "false");
+  await expect(board).toHaveAttribute("data-zone-counts", "false");
+  await page.evaluate(() => {
+    localStorage.removeItem("ygo.ui.v1");
+    localStorage.removeItem("ygo.ui.v2");
+  });
+  await page.reload();
+  await expect(board).toHaveAttribute("data-zone-outlines", "true");
+  await expect(board).toHaveAttribute("data-zone-counts", "true");
+});
+
 async function openField(page: Page, scenario: "field-emz" | "field-no-emz") {
   await page.goto(`?scenario=${scenario}`);
   await expect(page.locator('[data-cy="field-phase-strip"]')).toHaveCount(1);
 }
 
 const BOARD_MATRIX = [
-  { viewport: { width: 1920, height: 1080 }, scenario: "field-emz", board: { width: 1229, height: 1080 } },
-  { viewport: { width: 1920, height: 1080 }, scenario: "field-no-emz", board: { width: 1304, height: 1080 } },
-  { viewport: { width: 2560, height: 1440 }, scenario: "field-emz", board: { width: 1638, height: 1440 } },
-  { viewport: { width: 2560, height: 1440 }, scenario: "field-no-emz", board: { width: 1740, height: 1440 } },
-  { viewport: { width: 1366, height: 768 }, scenario: "field-emz", board: { width: 874, height: 768 } },
-  { viewport: { width: 1366, height: 768 }, scenario: "field-no-emz", board: { width: 886, height: 735 } },
+  {
+    viewport: { width: 1920, height: 1080 },
+    scenario: "field-emz",
+    board: { width: 1229, height: 1080 },
+  },
+  {
+    viewport: { width: 1920, height: 1080 },
+    scenario: "field-no-emz",
+    board: { width: 1304, height: 1080 },
+  },
+  {
+    viewport: { width: 2560, height: 1440 },
+    scenario: "field-emz",
+    board: { width: 1638, height: 1440 },
+  },
+  {
+    viewport: { width: 2560, height: 1440 },
+    scenario: "field-no-emz",
+    board: { width: 1740, height: 1440 },
+  },
+  {
+    viewport: { width: 1366, height: 768 },
+    scenario: "field-emz",
+    board: { width: 874, height: 768 },
+  },
+  {
+    viewport: { width: 1366, height: 768 },
+    scenario: "field-no-emz",
+    board: { width: 886, height: 735 },
+  },
 ] as const;
 
 for (const entry of BOARD_MATRIX) {
-  test(`full-height shell matches ${entry.viewport.width}x${entry.viewport.height} ${entry.scenario}`, async ({ page }) => {
+  test(`full-height shell matches ${entry.viewport.width}x${entry.viewport.height} ${entry.scenario}`, async ({
+    page,
+  }) => {
     await page.setViewportSize(entry.viewport);
     await openField(page, entry.scenario);
     const board = await rect(page.locator('[data-cy="duel-field"]'));
@@ -196,12 +250,12 @@ test("Defense and Set rotate inner art without moving outer placement", async ({
   await expect(cards[1]!.card.locator("img")).toHaveAttribute("alt", "");
 
   for (const { card, zone } of cards) {
-    const matrix = await card.locator(".duel-field-card__art").evaluate(
-      (element) => {
+    const matrix = await card
+      .locator(".duel-field-card__art")
+      .evaluate((element) => {
         const transform = new DOMMatrix(getComputedStyle(element).transform);
         return [transform.a, transform.b, transform.c, transform.d];
-      },
-    );
+      });
     expect(Math.abs(matrix[0]!)).toBeLessThan(0.001);
     expect(Math.abs(matrix[1]!)).toBeCloseTo(1, 3);
     expect(Math.abs(matrix[2]!)).toBeCloseTo(1, 3);
@@ -210,12 +264,24 @@ test("Defense and Set rotate inner art without moving outer placement", async ({
 
     const zoneBox = await rect(zone);
     const rest = await rect(card);
-    expect(rest.x + rest.width / 2).toBeCloseTo(zoneBox.x + zoneBox.width / 2, 1);
-    expect(rest.y + rest.height / 2).toBeCloseTo(zoneBox.y + zoneBox.height / 2, 1);
+    expect(rest.x + rest.width / 2).toBeCloseTo(
+      zoneBox.x + zoneBox.width / 2,
+      1,
+    );
+    expect(rest.y + rest.height / 2).toBeCloseTo(
+      zoneBox.y + zoneBox.height / 2,
+      1,
+    );
     await card.hover();
     const hovered = await rect(card);
-    expect(hovered.x + hovered.width / 2).toBeCloseTo(rest.x + rest.width / 2, 1);
-    expect(hovered.y + hovered.height / 2).toBeCloseTo(rest.y + rest.height / 2, 1);
+    expect(hovered.x + hovered.width / 2).toBeCloseTo(
+      rest.x + rest.width / 2,
+      1,
+    );
+    expect(hovered.y + hovered.height / 2).toBeCloseTo(
+      rest.y + rest.height / 2,
+      1,
+    );
   }
 });
 
@@ -304,14 +370,18 @@ test("preview bounds text with stable width and vertical overlay", async ({
   await text.focus();
   await expect(text).toBeFocused();
   await page.keyboard.press("End");
-  expect(await text.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  expect(await text.evaluate((element) => element.scrollTop)).toBeGreaterThan(
+    0,
+  );
   const firstThumbBox = await rect(thumb);
   await page.keyboard.press("Home");
   await expect
     .poll(async () => (await rect(thumb)).y)
     .toBeLessThan(firstThumbBox.y);
   await page.keyboard.press("PageDown");
-  expect(await text.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  expect(await text.evaluate((element) => element.scrollTop)).toBeGreaterThan(
+    0,
+  );
   expect(await region.locator("[tabindex]").count()).toBe(1);
   await page.keyboard.press("Home");
   const thumbBox = await rect(thumb);
@@ -325,7 +395,9 @@ test("preview bounds text with stable width and vertical overlay", async ({
     thumbBox.y + thumbBox.height / 2 + 40,
   );
   await page.mouse.up();
-  expect(await text.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  expect(await text.evaluate((element) => element.scrollTop)).toBeGreaterThan(
+    0,
+  );
 });
 
 test("opponent twenty-card overlay uses negative row-reverse scrolling", async ({
@@ -336,7 +408,9 @@ test("opponent twenty-card overlay uses negative row-reverse scrolling", async (
   await expect(cards).toHaveCount(20);
   const viewport = page.locator('[data-cy="field-hand-p1-viewport"]');
   expect(
-    await viewport.evaluate((element) => element.scrollWidth > element.clientWidth),
+    await viewport.evaluate(
+      (element) => element.scrollWidth > element.clientWidth,
+    ),
   ).toBe(true);
   const track = page.locator('[data-cy="field-hand-p1-scrollbar"]');
   const thumb = page.locator('[data-cy="field-hand-p1-scrollbar-thumb"]');
@@ -352,7 +426,9 @@ test("opponent twenty-card overlay uses negative row-reverse scrolling", async (
     thumbBox.y + thumbBox.height / 2,
   );
   await page.mouse.up();
-  expect(await viewport.evaluate((element) => element.scrollLeft)).toBeLessThan(0);
+  expect(await viewport.evaluate((element) => element.scrollLeft)).toBeLessThan(
+    0,
+  );
 
   const trackBox = await rect(track);
   const movedThumbBox = await rect(thumb);

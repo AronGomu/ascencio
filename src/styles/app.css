@@ -1547,13 +1547,12 @@ button.duel-field-zone,
   position: relative;
   top: auto;
   left: auto;
-  flex: 0 0 max(2.75rem, 4.5rem);
-  width: max(2.75rem, 4.5rem);
-  aspect-ratio: 72 / 104;
-  height: auto;
+  flex: 0 0 calc(var(--field-height) * 72 / 104);
+  width: calc(var(--field-height) * 72 / 104);
+  height: var(--field-height);
+  min-width: 0;
+  min-height: 0;
   transform: none;
-  /* Player hand grows inward/upward from its bottom edge; opponent hand
-     (below) grows downward from its top edge instead. */
   transform-origin: center bottom;
 }
 
@@ -1576,70 +1575,81 @@ button.duel-field-zone,
   position: absolute;
   left: var(--field-x);
   top: var(--field-y);
-  width: var(--field-width);
   z-index: var(--duel-field-layer-menu);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.2rem;
+  width: var(--field-width);
+  height: var(--field-height);
   transform: translate(-50%, -50%);
 }
 
-.duel-field-hand-band__row {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  width: 100%;
-}
-
-/* Padding/scroll-padding give a 1.35x-zoomed hand card room to grow without
-   being clipped by this viewport's own auto overflow box; scrolling stays
-   intact, only the reserved edge margin grows. Player cards grow upward
-   from their bottom origin, so the extra room goes on top; opponent cards
-   grow downward from their top origin, so it goes on the bottom instead. */
 .duel-field-hand-band__viewport {
   display: flex;
-  flex: 1 1 auto;
-  gap: 0.35rem;
+  gap: var(--zone-gap);
+  width: 100%;
+  height: 100%;
   min-width: 0;
-  padding: 2.9rem 1.75rem 0.15rem;
-  scroll-padding-inline: 1.75rem;
   overflow-x: auto;
+  overflow-y: hidden;
   overscroll-behavior-x: contain;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+}
+
+.duel-field-hand-band__viewport::-webkit-scrollbar {
+  display: none;
 }
 
 .duel-field-hand-band.is-opponent .duel-field-hand-band__viewport {
-  padding: 0.15rem 1.75rem 2.9rem;
   flex-direction: row-reverse;
 }
 
-.duel-field-hand-band__arrow {
-  flex: 0 0 2.75rem;
-  min-width: 2.75rem;
-  min-height: 2.75rem;
-  border: 1px solid rgb(183 220 207 / 0.48);
-  border-radius: 0.35rem;
-  background: rgb(8 26 25 / 0.28);
-  color: rgb(232 237 248 / 0.85);
-  font-size: 1.1rem;
-  cursor: pointer;
+.duel-field-hand-band__count {
+  position: absolute;
+  right: 0.15rem;
+  bottom: 0.15rem;
+  z-index: var(--duel-field-layer-label);
+  min-width: 1.25rem;
+  padding: 0.05rem 0.3rem;
+  border-radius: 999px;
+  pointer-events: none;
+  background: rgb(8 16 31 / 0.88);
+  color: var(--ink);
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-align: center;
 }
 
-/* DOM order is viewport, previous, next (see the markup comment); these
-   restore the previous/viewport/next visual layout without moving either
-   arrow ahead of the viewport in source order. */
-.duel-field-hand-band__arrow--previous {
-  order: -1;
+.overlay-scrollbar {
+  position: absolute;
+  z-index: var(--duel-field-layer-control);
+  pointer-events: none;
 }
 
-.duel-field-hand-band__arrow--next {
-  order: 1;
+.overlay-scrollbar.is-horizontal {
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 0.3rem;
 }
 
-.duel-field-hand-band__arrow:disabled {
-  cursor: not-allowed;
-  opacity: 0.4;
+.overlay-scrollbar.is-vertical {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 0.3rem;
+}
+
+.overlay-scrollbar__thumb {
+  border-radius: 999px;
+  pointer-events: auto;
+  touch-action: none;
+  background: color-mix(in srgb, var(--accent) 75%, transparent);
+}
+
+.overlay-scrollbar.is-horizontal .overlay-scrollbar__thumb {
+  height: 100%;
+}
+
+.overlay-scrollbar.is-vertical .overlay-scrollbar__thumb {
+  width: 100%;
 }
 
 .duel-field-card__art {

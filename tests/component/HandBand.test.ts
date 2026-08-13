@@ -14,6 +14,9 @@ import {
   fieldZoneAccessibleName,
   STANDARD_DUEL_FIELD_LAYOUT,
 } from "../../src/field/duel-field-layout.ts";
+import type { FieldPlacement } from "../../src/field/duel-field-geometry.ts";
+
+const PLACEMENT: FieldPlacement = { x: 400, y: 600, width: 760, height: 80 };
 
 afterEach(() => {
   cleanup();
@@ -81,6 +84,7 @@ function renderBand(
   const player = props.player ?? 0;
   return render(HandBand, {
     zone: zoneFor(player),
+    placement: PLACEMENT,
     imageUrls: new Map(),
     imageLibrary: null,
     cardBackUrl: "/back.webp",
@@ -100,74 +104,25 @@ function cardArticles(): readonly HTMLElement[] {
 }
 
 describe("HandBand", () => {
-  it("mounts at most ten cards", () => {
-    renderBand({ cards: handCards(0, 12) });
+  it("mounts every sorted card with count and no page controls", () => {
+    renderBand({ cards: handCards(0, 20).toReversed() });
 
-    expect(cardArticles()).toHaveLength(10);
-    expect(
-      document.querySelector('[data-cy="field-hand-p0-page-status"]')
-        ?.textContent,
-    ).toBe("Page 1 of 2");
+    expect(cardArticles()).toHaveLength(20);
+    expect(cardArticles().map((card) => card.dataset.cardId)).toEqual(
+      Array.from({ length: 20 }, (_, index) => `p0-hand-${index}`),
+    );
+    expect(document.querySelector('[data-cy="field-hand-p0-count"]')?.textContent?.trim()).toBe("20");
+    expect(document.querySelector('[data-cy="field-hand-p0-next"]')).toBeNull();
+    expect(document.querySelector('[data-cy="field-hand-p0-page-status"]')).toBeNull();
+    expect(document.querySelector('[data-cy="field-hand-p0-scrollbar"]')).not.toBeNull();
   });
 
-  it("next and previous page preserve card ids", async () => {
-    renderBand({ cards: handCards(0, 12) });
-
-    await fireEvent.click(
-      document.querySelector('[data-cy="field-hand-p0-next"]')!,
-    );
-    let ids = cardArticles().map((article) =>
-      article.getAttribute("data-card-id"),
-    );
-    expect(ids).toEqual(["p0-hand-10", "p0-hand-11"]);
-
-    await fireEvent.click(
-      document.querySelector('[data-cy="field-hand-p0-previous"]')!,
-    );
-    ids = cardArticles().map((article) => article.getAttribute("data-card-id"));
-    expect(ids).toEqual(
-      Array.from({ length: 10 }, (_, index) => `p0-hand-${index}`),
-    );
-  });
-
-  it("disables arrows at boundaries", () => {
-    renderBand({ cards: handCards(0, 12) });
-
-    const previous = document.querySelector<HTMLButtonElement>(
-      '[data-cy="field-hand-p0-previous"]',
-    );
-    const next = document.querySelector<HTMLButtonElement>(
-      '[data-cy="field-hand-p0-next"]',
-    );
-    expect(previous?.disabled).toBe(true);
-    expect(next?.disabled).toBe(false);
-  });
-
-  it("clamps when cards shrink", async () => {
-    const rendered = renderBand({ cards: handCards(0, 12) });
-    await fireEvent.click(
-      document.querySelector('[data-cy="field-hand-p0-next"]')!,
-    );
-    expect(cardArticles()).toHaveLength(2);
-
-    await rendered.rerender({ cards: handCards(0, 2) });
-
-    expect(
-      document.querySelector('[data-cy="field-hand-p0-page-status"]')
-        ?.textContent,
-    ).toBe("Page 1 of 1");
-    expect(cardArticles()).toHaveLength(2);
-  });
-
-  it("follows active target across a page boundary", async () => {
-    const rendered = renderBand({ cards: handCards(0, 11) });
-    expect(cardArticles()).toHaveLength(10);
-
-    await rendered.rerender({ activeTarget: "card:p0-hand-10" });
-
-    expect(
-      cardArticles().map((article) => article.getAttribute("data-card-id")),
-    ).toEqual(["p0-hand-10"]);
+  it("uses px placement and preserves feedback-only hand zone", () => {
+    renderBand({ cards: handCards(0, 1) });
+    const root = document.querySelector<HTMLElement>('[data-cy="field-hand-band-p0"]')!;
+    expect(root.style.getPropertyValue("--field-height")).toBe("80px");
+    expect(root.dataset.feedbackZoneId).toBe("p0:hand");
+    expect(root.hasAttribute("data-zone-id")).toBe(false);
   });
 
   it("mirrors opponent visual flow without changing DOM sequence", () => {
@@ -208,16 +163,10 @@ describe("HandBand", () => {
     expect(onactivate).toHaveBeenCalled();
   });
 
-  it("keeps both arrow targets at least 44px by contract", () => {
-    renderBand({ cards: handCards(0, 12) });
-
-    const previous = document.querySelector(
-      '[data-cy="field-hand-p0-previous"]',
-    );
-    const next = document.querySelector('[data-cy="field-hand-p0-next"]');
-    expect(previous?.classList.contains("duel-field-hand-band__arrow")).toBe(
-      true,
-    );
-    expect(next?.classList.contains("duel-field-hand-band__arrow")).toBe(true);
+  it("updates count when cards change", async () => {
+    const rendered = renderBand({ cards: handCards(0, 6) });
+    expect(document.querySelector('[data-cy="field-hand-p0-count"]')?.textContent?.trim()).toBe("6");
+    await rendered.rerender({ cards: handCards(0, 20) });
+    expect(document.querySelector('[data-cy="field-hand-p0-count"]')?.textContent?.trim()).toBe("20");
   });
 });

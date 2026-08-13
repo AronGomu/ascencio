@@ -14,9 +14,10 @@
     type FieldNavigationState,
   } from "../../prompts/field-navigation.ts";
   import type { PhysicalZoneId } from "../../../field/duel-field-layout.ts";
-  import type {
-    FieldPlacement,
-    FieldRenderLayout,
+  import {
+    ZONE_GAP,
+    type FieldPlacement,
+    type FieldRenderLayout,
   } from "../../../field/duel-field-geometry.ts";
   import type { CardImageLibrary } from "../../images/card-image-cache.ts";
   import type {
@@ -186,6 +187,7 @@
   bind:this={boardElement}
   onfocusin={focusTarget}
   onkeydown={navigate}
+  style={`--zone-gap: ${ZONE_GAP}px;`}
   data-cy="duel-field-board"
 >
   <span
@@ -219,6 +221,7 @@
       player={0}
       cards={playerHandCards}
       zone={playerHandZone}
+      placement={placementFor(playerHandZone.id)}
       {imageUrls}
       {imageLibrary}
       {cardBackUrl}
@@ -242,6 +245,7 @@
       player={1}
       cards={opponentHandCards}
       zone={opponentHandZone}
+      placement={placementFor(opponentHandZone.id)}
       {imageUrls}
       {imageLibrary}
       {cardBackUrl}

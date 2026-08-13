@@ -1,0 +1,138 @@
+<script lang="ts">
+  import { onDestroy, tick } from "svelte";
+
+  export let axis: "horizontal" | "vertical";
+  export let scrollElement: HTMLElement | null = null;
+  export let contentSizeKey: string | number = 0;
+  export let dataCyPrefix: string;
+
+  let trackElement: HTMLDivElement;
+  let thumbElement: HTMLDivElement;
+  let observedScrollElement: HTMLElement | null = null;
+  let observer: ResizeObserver | null = null;
+  let hidden = true;
+  let thumbSize = 0;
+  let thumbOffset = 0;
+  let drag: { pointerId: number; start: number; scroll: number } | null = null;
+
+  $: synchronizeContent(contentSizeKey);
+  $: reconnect(scrollElement);
+
+  onDestroy(disconnect);
+
+  function synchronizeContent(key: string | number): void {
+    String(key);
+    void tick().then(sync);
+  }
+
+  function reconnect(element: HTMLElement | null): void {
+    if (element === observedScrollElement) return;
+    disconnect();
+    observedScrollElement = element;
+    if (element === null) return;
+    element.addEventListener("scroll", sync, { passive: true });
+    window.addEventListener("resize", sync, { passive: true });
+    if (typeof ResizeObserver !== "undefined") {
+      observer = new ResizeObserver(sync);
+      observer.observe(element);
+    }
+    void tick().then(() => {
+      if (trackElement !== undefined) observer?.observe(trackElement);
+      sync();
+    });
+  }
+
+  function disconnect(): void {
+    observedScrollElement?.removeEventListener("scroll", sync);
+    window.removeEventListener("resize", sync);
+    observer?.disconnect();
+    observer = null;
+    observedScrollElement = null;
+    if (drag !== null && thumbElement !== undefined)
+      thumbElement.releasePointerCapture?.(drag.pointerId);
+    drag = null;
+  }
+
+  function values() {
+    const element = observedScrollElement;
+    if (element === null || trackElement === undefined) return null;
+    const viewport = axis === "horizontal" ? element.clientWidth : element.clientHeight;
+    const content = axis === "horizontal" ? element.scrollWidth : element.scrollHeight;
+    const measuredTrack = axis === "horizontal" ? trackElement.clientWidth : trackElement.clientHeight;
+    const track = measuredTrack > 0 ? measuredTrack : viewport;
+    const scroll = axis === "horizontal" ? element.scrollLeft : element.scrollTop;
+    const scrollTravel = Math.max(0, content - viewport);
+    const trackTravel = Math.max(0, track - thumbSize);
+    return { element, viewport, content, track, scroll, scrollTravel, trackTravel };
+  }
+
+  function sync(): void {
+    const current = values();
+    if (current === null) return;
+    hidden = current.content <= current.viewport || current.track <= 0;
+    thumbSize = current.content > 0
+      ? Math.min(current.track, current.track * (current.viewport / current.content))
+      : current.track;
+    const trackTravel = Math.max(0, current.track - thumbSize);
+    thumbOffset = current.scrollTravel > 0
+      ? (current.scroll / current.scrollTravel) * trackTravel
+      : 0;
+  }
+
+  function pointerCoordinate(event: PointerEvent): number {
+    return axis === "horizontal" ? event.clientX : event.clientY;
+  }
+
+  function pointerDown(event: PointerEvent): void {
+    if (observedScrollElement === null) return;
+    drag = {
+      pointerId: event.pointerId,
+      start: pointerCoordinate(event),
+      scroll: axis === "horizontal"
+        ? observedScrollElement.scrollLeft
+        : observedScrollElement.scrollTop,
+    };
+    thumbElement.setPointerCapture(event.pointerId);
+  }
+
+  function pointerMove(event: PointerEvent): void {
+    if (drag === null || drag.pointerId !== event.pointerId) return;
+    const current = values();
+    if (current === null) return;
+    const trackTravel = Math.max(0, current.track - thumbSize);
+    const next = trackTravel > 0
+      ? drag.scroll + ((pointerCoordinate(event) - drag.start) / trackTravel) * current.scrollTravel
+      : drag.scroll;
+    if (axis === "horizontal") current.element.scrollLeft = next;
+    else current.element.scrollTop = next;
+    sync();
+  }
+
+  function pointerEnd(event: PointerEvent): void {
+    if (drag === null || drag.pointerId !== event.pointerId) return;
+    thumbElement.releasePointerCapture(event.pointerId);
+    drag = null;
+  }
+</script>
+
+<div
+  class="overlay-scrollbar"
+  class:is-horizontal={axis === "horizontal"}
+  class:is-vertical={axis === "vertical"}
+  aria-hidden="true"
+  {hidden}
+  bind:this={trackElement}
+  data-cy={`${dataCyPrefix}-scrollbar`}
+>
+  <!-- svelte-ignore a11y_no_static_element_interactions (aria-hidden custom thumb mirrors native viewport scrolling) -->
+  <div
+    class="overlay-scrollbar__thumb"
+    style={`${axis === "horizontal" ? "width" : "height"}: ${thumbSize}px; transform: translate${axis === "horizontal" ? "X" : "Y"}(${thumbOffset}px);`}
+    bind:this={thumbElement}
+    onpointerdown={pointerDown}
+    onpointermove={pointerMove}
+    onpointerup={pointerEnd}
+    onpointercancel={pointerEnd}
+    data-cy={`${dataCyPrefix}-scrollbar-thumb`}
+  ></div>
+</div>

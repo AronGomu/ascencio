@@ -25,6 +25,7 @@
 - `src/app/components/duel-field/HandBand.svelte`, `FieldBoard.svelte`, `CardControl.svelte`.
 - `src/field/hand-pagination.ts`, `tests/unit/hand-pagination.test.ts` — delete after zero-consumer grep.
 - `tests/component/HandBand.test.ts`, `tests/component/DuelField.test.ts`, `src/styles/app.css`.
+- `ai_artefacts/manual_test_checklist.md` — append/update only T4 human checks; preserve all other sections.
 - **From Depends:** `FieldBoard` has `renderLayout`; field cards use px placements; `FieldPlacement`; acceptance field scenarios/config.
 
 ## Required API
@@ -71,15 +72,15 @@ Hand stable selectors:
 
 ## Impl steps
 
-- [ ] 1. Add `tests/component/OverlayScrollbar.test.ts`; mock `ResizeObserver`, element dimensions, pointer capture; prove red.
-- [ ] 2. Replace paging tests in `HandBand.test.ts` with all-card/overlay/count/lifecycle tests; prove red.
-- [ ] 3. Implement axis-aware `OverlayScrollbar.svelte`; passive scroll listener, observer, content-key reactive sync, pointer drag.
-- [ ] 4. Update `HandBand.svelte`: accept `placement:FieldPlacement`; delete page state/arrows/status; render all sorted cards inside bound viewport.
-- [ ] 5. Add count + `OverlayScrollbar`; pass `contentSizeKey` combining card IDs + geometry width.
-- [ ] 6. Thread hand placement from `FieldBoard.renderLayout`; keep `data-feedback-zone-id` + drag/nav callbacks unchanged.
-- [ ] 7. Replace hand CSS with fixed wrapper, hidden native bar, overlay/count layers, card gap=`--zone-gap`.
-- [ ] 8. `rg "handPage|HAND_PAGE_SIZE|hand-pagination" src tests`; when zero runtime/test consumers remain, delete `src/field/hand-pagination.ts` + test.
-- [ ] 9. Add 6/20 scenarios + Chromium tests; verify thumb drag.
+- [x] 1. Add `tests/component/OverlayScrollbar.test.ts`; mock `ResizeObserver`, element dimensions, pointer capture; prove red. Criterion: targeted test initially fails because component import is missing.
+- [x] 2. Replace paging tests in `HandBand.test.ts` with all-card/overlay/count/lifecycle tests; prove red. Criterion: tests assert 20 mounted cards, count, stable selectors, no paging controls.
+- [x] 3. Implement axis-aware `OverlayScrollbar.svelte`; passive scroll listener, observer, content-key reactive sync, pointer drag. Criterion: `OverlayScrollbar.test.ts` exits 0.
+- [x] 4. Update `HandBand.svelte`: accept `placement:FieldPlacement`; delete page state/arrows/status; render all sorted cards inside bound viewport. Criterion: `HandBand.test.ts` exits 0.
+- [x] 5. Add count + `OverlayScrollbar`; pass `contentSizeKey` combining card IDs + geometry width. Criterion: count and scrollbar selectors exist in component tests.
+- [x] 6. Thread hand placement from `FieldBoard.renderLayout`; keep `data-feedback-zone-id` + drag/nav callbacks unchanged. Criterion: `DuelField.test.ts` exits 0.
+- [x] 7. Replace hand CSS with fixed wrapper, hidden native bar, overlay/count layers, card gap=`--zone-gap`. Criterion: Chromium 6/20 metrics test exits 0.
+- [x] 8. `rg "handPage|HAND_PAGE_SIZE|hand-pagination" src tests`; when zero runtime/test consumers remain, delete `src/field/hand-pagination.ts` + test. Criterion: residue command returns empty.
+- [x] 9. Add 6/20 scenarios + Chromium tests; verify thumb drag. Criterion: ticket Playwright command exits 0.
 
 ## Outputs
 
@@ -90,10 +91,10 @@ Hand stable selectors:
 
 ## Validation
 
-- [ ] `npx vitest run tests/component/OverlayScrollbar.test.ts tests/component/HandBand.test.ts tests/component/DuelField.test.ts` → exit 0.
-- [ ] `test -z "$(rg -l 'handPage|HAND_PAGE_SIZE|hand-pagination' src tests || true)"` → success after deletion.
-- [ ] `npm run typecheck && npm run lint` → exit 0.
-- [ ] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/full-height-field.spec.ts --grep "hand|scrollbar"` → exit 0.
-- [ ] manual check — wheel/trackpad + Arrow navigation reach offscreen hand cards; drag still starts.
-- [ ] app functional — `npm run build` exits 0.
-- [ ] commit msg draft: `feat(field): replace hand paging with overlay scroll`
+- [x] `npx vitest run tests/component/OverlayScrollbar.test.ts tests/component/HandBand.test.ts tests/component/DuelField.test.ts` → exit 0.
+- [x] `test -z "$(rg -l 'handPage|HAND_PAGE_SIZE|hand-pagination' src tests || true)"` → success after deletion.
+- [x] `npm run typecheck && npm run lint` → exit 0.
+- [x] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/full-height-field.spec.ts --grep "hand|scrollbar"` → exit 0.
+- [ ] manual check — wheel/trackpad + Arrow navigation reach offscreen hand cards; drag still starts. Criterion: human observes all three interactions in real duel.
+- [x] app functional — `npm run build` exits 0.
+- [x] commit msg draft: `feat(field): replace hand paging with overlay scroll` — Criterion: staged commit uses exact message.

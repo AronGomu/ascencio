@@ -21,6 +21,7 @@ export function fullHeightFieldScenario(
   id: AcceptanceScenarioId,
 ): FullHeightFieldScenario {
   const extraMonsterZones = id !== "field-no-emz";
+  const handCount = id === "field-hand-6" ? 6 : id === "field-hand-20" ? 20 : 0;
   const snapshot = state(
     id,
     extraMonsterZones,
@@ -44,6 +45,9 @@ export function fullHeightFieldScenario(
           ),
         ]
       : [],
+    Array.from({ length: handCount }, (_, sequence) =>
+      card(`acceptance-hand-${sequence}`, 97590747, 0, "hand", sequence, "faceDownDefense"),
+    ),
   );
   const result = mapSnapshotToBoard(snapshot);
   if (!result.ok)
@@ -55,6 +59,7 @@ function state(
   id: string,
   extraMonsterZones: boolean,
   monsters: readonly PublicCard[],
+  hand: readonly PublicCard[],
 ): PublicDuelState {
   return {
     snapshotId: snapshotId(id.padEnd(64, "0").slice(0, 64)),
@@ -63,7 +68,7 @@ function state(
     turnPlayer: 0,
     phase: "main1",
     layout: { extraMonsterZones },
-    players: [player(0, monsters), player(1, [])],
+    players: [player(0, monsters, hand), player(1, [], [])],
     chain: [],
   };
 }
@@ -71,6 +76,7 @@ function state(
 function player(
   playerIndex: PlayerIndex,
   monsters: readonly PublicCard[],
+  hand: readonly PublicCard[],
 ): PublicPlayerState {
   return {
     player: playerIndex,
@@ -78,8 +84,8 @@ function player(
     deckCount: 0,
     deck: [],
     extraDeckCount: 0,
-    handCount: 0,
-    hand: [],
+    handCount: hand.length,
+    hand,
     extraDeck: [],
     monsters,
     spellsAndTraps: [],

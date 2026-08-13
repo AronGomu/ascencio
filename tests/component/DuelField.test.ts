@@ -516,23 +516,11 @@ describe("DuelField", () => {
     ).toEqual(
       new Set(["shared:extraMonster:left", "shared:extraMonster:right"]),
     );
-    // The always-mounted, disabled End turn corner button has no active
-    // prompt/spec to drive it here; the two non-empty deck stacks (T8) are
-    // clickable regardless of any prompt. Each hand band's previous/next
-    // page arrows (T8) are always mounted too, disabled or not.
     const buttons = within(field).queryAllByRole("button");
     expect(
       buttons.map((button) => button.getAttribute("data-cy")).sort(),
     ).toEqual(
-      [
-        "field-end-turn-button",
-        "field-stack-p0:deck",
-        "field-stack-p1:deck",
-        "field-hand-p0-previous",
-        "field-hand-p0-next",
-        "field-hand-p1-previous",
-        "field-hand-p1-next",
-      ].sort(),
+      ["field-end-turn-button", "field-stack-p0:deck", "field-stack-p1:deck"].sort(),
     );
   });
 
@@ -586,7 +574,7 @@ describe("DuelField", () => {
     }
   });
 
-  it("keyboard navigation crosses player hand page boundary", async () => {
+  it("keyboard navigation reaches an offscreen player hand card", async () => {
     const value = bigHandBoard(11, 2);
     const { container } = render(FieldBoard, {
       board: value,
@@ -613,78 +601,18 @@ describe("DuelField", () => {
     ).not.toBeNull();
   });
 
-  /* R1/F2: the hand band arrows arrived in T8 but never reached
-     `INTERACTIVE_SELECTOR`, so paging an 11-card hand while a decision was
-     live answered that decision with a cancel (and, for a chain, a pass). */
-  it("paging the hand never answers the live decision", async () => {
-    const user = userEvent.setup();
-    const value = bigHandBoard(11, 0, true);
-    const live = fieldPrompt(
-      "selectCard",
-      [
-        promptChoice("select-monster", "Select", {
-          card: {
-            instanceId: cardInstanceId("big-hand-monster"),
-            controller: 0,
-            location: "monster",
-            sequence: 0,
-            position: "faceUpAttack",
-          },
-        } as Partial<PromptChoice>),
-      ],
-      { cancelable: true },
-    );
-    const spec = mapPromptToInteractionSpec(live, null, value, CONTEXT);
-    if (spec.kind === "inactive")
-      throw new Error("Expected an active field spec");
-    const dispatch = vi.fn(
-      async (action: InteractionSessionAction) => action.type !== "cancel",
-    );
-    render(DuelField, {
+  it("mounts the full oversized hand without page controls", () => {
+    const value = bigHandBoard(20, 0, true);
+    const { container } = render(FieldBoard, {
       board: value,
-      prompt: live,
-      spec,
-      session: createInteractionSession(spec),
-      pending: false,
-      oninteraction: dispatch,
+      renderLayout: createFieldRenderLayout(true, 1280, 720),
+      imageUrls: new Map(),
+      cardBackUrl: "",
+      placeholderUrl: "",
     });
-    /* No action bar and no target launcher: exactly the state in which an
-       incidental field click is allowed to cancel. */
-    expect(
-      document.querySelector('[data-cy="floating-field-window-confirm"]'),
-    ).toBeNull();
-
-    const next = document.querySelector<HTMLButtonElement>(
-      '[data-cy="field-hand-p0-next"]',
-    );
-    if (next === null) throw new Error("Missing hand next arrow");
-    await user.click(next);
-    expect(document.querySelector('[data-card-id="big-p0-10"]')).not.toBeNull();
-
-    const previous = document.querySelector<HTMLButtonElement>(
-      '[data-cy="field-hand-p0-previous"]',
-    );
-    const viewport = document.querySelector<HTMLElement>(
-      '[data-cy="field-hand-p0-viewport"]',
-    );
-    const pageStatus = document.querySelector<HTMLElement>(
-      '[data-cy="field-hand-p0-page-status"]',
-    );
-    if (previous === null || viewport === null || pageStatus === null)
-      throw new Error("Missing hand band controls");
-    await user.click(previous);
-    await fireEvent.click(viewport);
-    await fireEvent.click(pageStatus);
-
-    expect(dispatch).not.toHaveBeenCalled();
-
-    // The same click outside the band still cancels, so the guard is scoped.
-    const surface = document.querySelector<HTMLElement>(
-      '[data-cy="duel-field-board-surface"]',
-    );
-    if (surface === null) throw new Error("Missing board surface");
-    await user.click(surface);
-    expect(dispatch.mock.calls[0]?.[0]).toMatchObject({ type: "cancel" });
+    expect(container.querySelectorAll('[data-card-zone-id="p0:hand"]')).toHaveLength(20);
+    expect(container.querySelector('[data-cy="field-hand-p0-count"]')?.textContent?.trim()).toBe("20");
+    expect(container.querySelector('[data-cy="field-hand-p0-next"]')).toBeNull();
   });
 
   it("keyboard navigation follows mirrored opponent direction", async () => {

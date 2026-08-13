@@ -33,3 +33,34 @@ test("Defense and Set rotate inner art without moving outer placement", async ({
     /matrix/,
   );
 });
+
+test("six and twenty card hands keep height with conditional overlay scrollbar", async ({ page }) => {
+  await page.goto("?scenario=field-hand-6");
+  const sixCard = page.locator('[data-card-zone-id="p0:hand"]').first();
+  const sixHeight = await sixCard.evaluate((element) => element.getBoundingClientRect().height);
+  await expect(page.locator('[data-cy="field-hand-p0-count"]')).toHaveText("6");
+  await expect(page.locator('[data-cy="field-hand-p0-scrollbar"]')).toBeHidden();
+
+  await page.goto("?scenario=field-hand-20");
+  const cards = page.locator('[data-card-zone-id="p0:hand"]');
+  await expect(cards).toHaveCount(20);
+  const twentyHeight = await cards.first().evaluate((element) => element.getBoundingClientRect().height);
+  expect(twentyHeight).toBeCloseTo(sixHeight, 1);
+  const viewport = page.locator('[data-cy="field-hand-p0-viewport"]');
+  expect(await viewport.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(true);
+  const scrollbar = page.locator('[data-cy="field-hand-p0-scrollbar"]');
+  await expect(scrollbar).toBeVisible();
+
+  const thumb = page.locator('[data-cy="field-hand-p0-scrollbar-thumb"]');
+  const box = await thumb.boundingBox();
+  expect(box).not.toBeNull();
+  await thumb.hover();
+  await page.mouse.down();
+  await page.mouse.move(box!.x + box!.width + 40, box!.y + box!.height / 2);
+  await page.mouse.up();
+  expect(await viewport.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
+
+  const countZ = await page.locator('[data-cy="field-hand-p0-count"]').evaluate((element) => Number(getComputedStyle(element).zIndex));
+  const cardZ = await cards.first().evaluate((element) => Number(getComputedStyle(element).zIndex));
+  expect(countZ).toBeGreaterThan(cardZ);
+});

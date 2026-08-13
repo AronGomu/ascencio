@@ -16,3 +16,10 @@
 - [ ] Resize duel boundary; confirm board recomputes without oscillation or clipped floating windows.
 - [ ] Hover face-up Defense plus face-down Set cards; confirm art rotates while outer card centre plus hover scale stay fixed.
 - [ ] Use keyboard focus, card actions, stack preview, hand drag; confirm controls remain actionable.
+
+## T4 full-hands-overlay-scrollbar
+
+- [ ] Use wheel/trackpad to reach offscreen cards in a 20-card hand.
+- [ ] Use Arrow navigation to reach offscreen hand cards; confirm focus scrolls them into view.
+- [ ] Drag an actionable hand card after scrolling; confirm drag still starts and completes.
+- [ ] Drag the overlay thumb; confirm the hand viewport scrolls without changing card height.

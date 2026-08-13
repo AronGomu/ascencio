@@ -114,4 +114,4 @@ Create `src/app/acceptance/card-list-dialog-scenarios.ts` exporting `CARD_LIST_B
 - [x] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/card-list-dialog.spec.ts --grep "browse|empty|responsive"` → exit 0.
 - [ ] manual check — browse actions remain usable; sorting never requests/reveals hidden art.
 - [x] app functional — `npm run build` exits 0.
-- [ ] commit msg draft: `feat(card-list): ship approved browse shell and ordering`
+- [x] commit msg draft: `feat(card-list): ship approved browse shell and ordering` — feature SHA `61b764429ffad32115117e342be518bda6155cae`

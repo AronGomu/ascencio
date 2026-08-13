@@ -105,4 +105,4 @@ Menu: natural Tab entry, ArrowUp/Down, Home/End, Escape returns focus to tile tr
 - [x] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/card-list-dialog.spec.ts --grep "tile|action|choice menu|zoom"` → exit 0.
 - [ ] manual keyboard check — duplicate menu reaches every choice, Escape returns focus, Details emits no response.
 - [x] app functional — `npm run build` exits 0; existing field action-chip smoke green.
-- [ ] commit msg draft: `feat(card-list): render physical cards and projected choice menu`
+- [x] commit msg draft: `feat(card-list): render physical cards and projected choice menu` (`a1a356f7da3799f25887dd675828f7eff7d93707`)

@@ -13,6 +13,8 @@
   } from "../../prompts/phase-transitions.ts";
   import EndTurnButton from "./EndTurnButton.svelte";
 
+  const PHASE_ZONE_CLEARANCE_PX = 2;
+
   export let geometry: FieldGeometry;
   export let phase: DuelPhase = "unknown";
   export let spec: ActiveInteractionSpec | null = null;
@@ -28,8 +30,8 @@
   $: choices = phaseSlotChoices(spec);
   $: phaseStyle = [
     `--phase-y:${geometry.bandY}px`,
-    `--phase-left-emz:${geometry.emzX[0] - geometry.box / 2}px`,
-    `--phase-right-emz:${geometry.emzX[1] + geometry.box / 2}px`,
+    `--phase-left-emz:${geometry.emzX[0] - geometry.box / 2 - PHASE_ZONE_CLEARANCE_PX}px`,
+    `--phase-right-emz:${geometry.emzX[1] + geometry.box / 2 + PHASE_ZONE_CLEARANCE_PX}px`,
     `--phase-right-edge:${geometry.width - geometry.margin}px`,
     `--chip-size:${Math.max(9, geometry.pitch * 0.1)}px`,
     `--label-size:${Math.max(7, geometry.pitch * 0.085)}px`,

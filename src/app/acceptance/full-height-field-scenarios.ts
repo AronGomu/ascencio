@@ -1,4 +1,11 @@
-import { cardCode, cardInstanceId, snapshotId } from "../../duel/contracts/ids.ts";
+import {
+  cardCode,
+  cardInstanceId,
+  choiceId,
+  promptId,
+  snapshotId,
+} from "../../duel/contracts/ids.ts";
+import type { PlayerPrompt } from "../../duel/contracts/player-prompt.ts";
 import type {
   PlayerIndex,
   PublicCard,
@@ -9,12 +16,17 @@ import {
   mapSnapshotToBoard,
   type BoardViewModel,
 } from "../../field/board-view-model.ts";
+import {
+  mapPromptToInteractionSpec,
+  type ActiveInteractionSpec,
+} from "../prompts/interaction-spec.ts";
 import type { AcceptanceScenarioId } from "./acceptance-scenario.ts";
 
 export interface FullHeightFieldScenario {
   readonly id: AcceptanceScenarioId;
   readonly extraMonsterZones: boolean;
   readonly board: BoardViewModel;
+  readonly phaseSpec: ActiveInteractionSpec;
 }
 
 export function fullHeightFieldScenario(
@@ -46,13 +58,36 @@ export function fullHeightFieldScenario(
         ]
       : [],
     Array.from({ length: handCount }, (_, sequence) =>
-      card(`acceptance-hand-${sequence}`, 97590747, 0, "hand", sequence, "faceDownDefense"),
+      card(
+        `acceptance-hand-${sequence}`,
+        97590747,
+        0,
+        "hand",
+        sequence,
+        "faceDownDefense",
+      ),
+    ),
+    Array.from({ length: handCount }, (_, sequence) =>
+      card(
+        `acceptance-opponent-hand-${sequence}`,
+        97590747,
+        1,
+        "hand",
+        sequence,
+        "faceDownDefense",
+      ),
     ),
   );
   const result = mapSnapshotToBoard(snapshot);
   if (!result.ok)
     throw new Error(`Acceptance scenario failed board mapping: ${result.error.type}`);
-  return Object.freeze({ id, extraMonsterZones, board: result.value });
+  const phaseSpec = acceptancePhaseSpec(snapshot, result.value);
+  return Object.freeze({
+    id,
+    extraMonsterZones,
+    board: result.value,
+    phaseSpec,
+  });
 }
 
 function state(
@@ -60,6 +95,7 @@ function state(
   extraMonsterZones: boolean,
   monsters: readonly PublicCard[],
   hand: readonly PublicCard[],
+  opponentHand: readonly PublicCard[],
 ): PublicDuelState {
   return {
     snapshotId: snapshotId(id.padEnd(64, "0").slice(0, 64)),
@@ -68,7 +104,7 @@ function state(
     turnPlayer: 0,
     phase: "main1",
     layout: { extraMonsterZones },
-    players: [player(0, monsters, hand), player(1, [], [])],
+    players: [player(0, monsters, hand), player(1, [], opponentHand)],
     chain: [],
   };
 }
@@ -92,6 +128,41 @@ function player(
     graveyard: [],
     banished: [],
   };
+}
+
+function acceptancePhaseSpec(
+  snapshot: PublicDuelState,
+  board: BoardViewModel,
+): ActiveInteractionSpec {
+  const prompt: PlayerPrompt = {
+    id: promptId("acceptance-phase-choices"),
+    kind: "idleCommand",
+    player: 0,
+    title: "Choose a phase",
+    choices: [
+      {
+        id: choiceId("acceptance-battle-phase"),
+        label: "Enter Battle Phase",
+        action: "battlePhase",
+      },
+      {
+        id: choiceId("acceptance-end-phase"),
+        label: "End turn",
+        action: "endPhase",
+      },
+    ],
+    minimum: 1,
+    maximum: 1,
+    cancelable: false,
+    ordered: false,
+  };
+  const spec = mapPromptToInteractionSpec(prompt, snapshot, board, {
+    workerGeneration: 1,
+    sessionGeneration: 1,
+  });
+  if (spec.kind === "inactive")
+    throw new Error("Acceptance phase choices did not map to field controls");
+  return spec;
 }
 
 function card(

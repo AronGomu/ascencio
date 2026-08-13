@@ -20,11 +20,24 @@ describe("global styles", () => {
     expect(css).not.toContain("max-height: calc(100svh - 1rem)");
   });
 
-  it("board is full width", () => {
+  it("uses one full-height three-column shell", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const shell = ruleBlock(css, ".duel-shell {");
+    expect(shell).toContain("height: 100svh");
+    expect(shell).toContain(
+      "grid-template-columns: var(--preview-w) auto minmax(var(--rail-min), 1fr)",
+    );
+    expect(shell).toContain("overflow: hidden");
+    expect(css).toContain("--preview-w: 22rem");
+    expect(css).toContain("--rail-min: 15rem");
+  });
+
+  it("board is explicit geometry without width-only stretch", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     const block = ruleBlock(css, ".duel-field-board {");
     expect(block).toContain("width: 100%");
-    expect(block).not.toContain("calc((100vh - 4rem) * 16 / 9)");
+    expect(block).toContain("height: 100%");
+    expect(block).not.toContain("aspect-ratio");
   });
 
   it("board uses explicit geometry while interaction controls keep 44px floors", () => {
@@ -34,7 +47,7 @@ describe("global styles", () => {
       "min-width: max(100%, 2.75rem)",
     );
     expect(ruleBlock(css, ".duel-field-scroll-region {")).toContain(
-      "overflow: auto",
+      "overflow: hidden",
     );
   });
 

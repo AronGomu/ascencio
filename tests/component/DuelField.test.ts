@@ -70,6 +70,7 @@ import {
 
 afterEach(() => {
   cleanup();
+  vi.unstubAllGlobals();
   Reflect.deleteProperty(Element.prototype, "animate");
 });
 
@@ -285,6 +286,87 @@ describe("DuelField", () => {
     expect(field?.style.width).toMatch(/px$/);
     expect(field?.style.height).toMatch(/px$/);
     expect(Number.parseFloat(field?.style.width ?? "NaN")).toBeGreaterThan(0);
+  });
+
+  it("updates all placement owners on boundary/profile resize and disconnects", async () => {
+    let width = 1280;
+    let height = 720;
+    const observers: Array<{
+      readonly callback: ResizeObserverCallback;
+      readonly observe: ReturnType<typeof vi.fn>;
+      readonly disconnect: ReturnType<typeof vi.fn>;
+    }> = [];
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        readonly observe = vi.fn();
+        readonly disconnect = vi.fn();
+        readonly unobserve = vi.fn();
+
+        constructor(callback: ResizeObserverCallback) {
+          observers.push({
+            callback,
+            observe: this.observe,
+            disconnect: this.disconnect,
+          });
+        }
+      },
+    );
+    const boundary = document.createElement("div");
+    Object.defineProperties(boundary, {
+      clientWidth: { configurable: true, get: () => width },
+      clientHeight: { configurable: true, get: () => height },
+    });
+    const emzBoard = board("ST-04");
+    const rendered = render(DuelField, {
+      board: emzBoard,
+      layoutBoundaryElement: boundary,
+    });
+    await tick();
+    const boundaryObserver = observers.find(({ observe }) =>
+      observe.mock.calls.some(([element]) => element === boundary),
+    );
+    expect(boundaryObserver).toBeDefined();
+
+    const placementSignature = (selector: string): string => {
+      const element = document.querySelector<HTMLElement>(selector);
+      if (element === null) throw new Error(`Missing placement owner ${selector}`);
+      return ["--field-x", "--field-y", "--field-width", "--field-height"]
+        .map((property) => element.style.getPropertyValue(property))
+        .join("|");
+    };
+    const selectors = [
+      '[data-zone-id="p0:mainMonster:1"]',
+      '[data-card-zone-id="p0:mainMonster:1"]',
+      '[data-cy="field-stack-p0:deck"]',
+      '[data-cy="field-hand-band-p0"]',
+    ];
+    const initial = selectors.map(placementSignature);
+    const initialFieldWidth = document.querySelector<HTMLElement>(
+      '[data-cy="duel-field"]',
+    )?.style.width;
+
+    width = 900;
+    height = 600;
+    boundaryObserver?.callback([], {} as ResizeObserver);
+    await tick();
+    const resized = selectors.map(placementSignature);
+    expect(
+      document.querySelector<HTMLElement>('[data-cy="duel-field"]')?.style.width,
+    ).not.toBe(initialFieldWidth);
+    resized.forEach((signature, index) => expect(signature).not.toBe(initial[index]));
+
+    const noEmzBoard = {
+      ...emzBoard,
+      zones: emzBoard.zones.filter(({ player }) => player !== "shared"),
+    };
+    await rendered.rerender({ board: noEmzBoard });
+    await tick();
+    const profiled = selectors.map(placementSignature);
+    profiled.forEach((signature, index) => expect(signature).not.toBe(resized[index]));
+
+    rendered.unmount();
+    expect(boundaryObserver?.disconnect).toHaveBeenCalledOnce();
   });
 
   it("paints owner-neutral labels but announces ownership", () => {
@@ -612,7 +694,9 @@ describe("DuelField", () => {
     });
     expect(container.querySelectorAll('[data-card-zone-id="p0:hand"]')).toHaveLength(20);
     expect(container.querySelector('[data-cy="field-hand-p0-count"]')?.textContent?.trim()).toBe("20");
-    expect(container.querySelector('[data-cy="field-hand-p0-next"]')).toBeNull();
+    expect(
+      container.querySelector('[data-cy^="field-hand-p0-"][data-cy$="page-status"]'),
+    ).toBeNull();
   });
 
   it("keyboard navigation follows mirrored opponent direction", async () => {

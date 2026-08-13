@@ -6,6 +6,7 @@
   const scenarioId = acceptanceScenarioId(window.location.search);
   const scenario =
     scenarioId === null ? null : fullHeightFieldScenario(scenarioId);
+  let fieldSlot: HTMLElement | null = null;
 </script>
 
 {#if scenario === null}
@@ -14,17 +15,21 @@
   </main>
 {:else}
   <main
+    class="duel-shell"
     data-cy="acceptance-scenario"
     data-acceptance-scenario={scenario.id}
     data-extra-monster-zones={scenario.extraMonsterZones}
     data-zone-count={scenario.board.zones.length}
   >
-    <DuelField board={scenario.board} />
+    <aside data-cy="acceptance-preview"></aside>
+    <div class="duel-field-slot" data-cy="acceptance-field-slot" bind:this={fieldSlot}>
+      <DuelField
+        board={scenario.board}
+        layoutBoundaryElement={fieldSlot}
+        spec={scenario.phaseSpec}
+        phase="main1"
+      />
+    </div>
+    <aside data-cy="acceptance-rail"></aside>
   </main>
 {/if}
-
-<style>
-  main[data-cy="acceptance-scenario"] {
-    min-height: 100svh;
-  }
-</style>

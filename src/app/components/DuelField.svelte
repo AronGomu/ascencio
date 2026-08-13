@@ -879,12 +879,8 @@
   style={`width: ${renderLayout.geometry.width}px; height: ${renderLayout.geometry.height}px;`}
   onclick={dismissOnOutsideClick}
 >
-  <!-- The board pans inside its own scroll child so `.duel-field` itself
-       stays a still, non-scrolling boundary for the floating windows: a
-       horizontal board pan must never carry a live decision offscreen
-       (ADR-017). The stage keeps its natural (board aspect-ratio-driven)
-       size inside it, which is the coordinate system PhaseStrip's
-       percentages are calibrated against. -->
+  <!-- Inner field is exact geometry-sized position/clamp boundary.
+       Wrapper remains non-scrolling; floating windows stay field-local. -->
   <div class="duel-field-scroll-region" data-cy="duel-field-scroll-region">
     <div class="duel-field-stage" data-cy="duel-field-stage">
       <FieldBoard

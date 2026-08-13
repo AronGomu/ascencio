@@ -21,6 +21,8 @@
   --warning: #ffd580;
   --success: #7ee2a8;
   --ink: #ffffff;
+  --preview-w: 22rem;
+  --rail-min: 15rem;
   --duel-field-layer-surface: 0;
   --duel-field-layer-zone: 10;
   --duel-field-layer-stack: 20;
@@ -169,20 +171,12 @@ main {
    push a scrollbar onto the page; `.duel-field` owns any residual x/y
    overflow instead (see below). */
 main.is-duel-viewport {
-  /* Flex, not grid: the duel row is the only track that must claim leftover
-     height while every other conditional sibling (hidden announcement,
-     warnings, diagnostic message) keeps its natural size. */
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+  width: 100%;
+  height: 100svh;
   min-height: 0;
-  padding-bottom: clamp(0.5rem, 1svh, 1rem);
+  margin: 0;
+  padding: 0;
   overflow: hidden;
-}
-
-main.is-duel-viewport > .duel-row {
-  flex: 1 1 auto;
-  min-height: 0;
 }
 
 
@@ -249,19 +243,17 @@ h4 {
   white-space: nowrap;
 }
 
-/* The duel field and the card preview panel share one row, and the panel is
-   stretched to the field's height so the effect text scrolls inside it rather
-   than making the row taller than the board. Preview grows past its 22rem
-   floor with whatever width the field doesn't need; the field's own 52rem
-   floor plus the .45fr:1fr split keeps its rendered (aspect-ratio-driven)
-   height inside a normal desktop viewport at every width up to the 120rem
-   `main` cap — verified in the responsive e2e at 1366×768 and 1920×1080. */
-.duel-row {
+.duel-shell {
+  width: 100%;
+  height: 100svh;
+  margin: 0;
   display: grid;
-  grid-template-columns: minmax(22rem, 0.45fr) minmax(52rem, 1fr) minmax(12rem, 0.3fr);
-  gap: 1rem;
+  grid-template-columns: var(--preview-w) auto minmax(var(--rail-min), 1fr);
   align-items: stretch;
+  padding: 0;
+  overflow: hidden;
 }
+
 
 .card-preview-panel {
   display: grid;
@@ -315,7 +307,7 @@ h4 {
 .duel-right-rail__status h2 { font-size: clamp(1.05rem, 2vw, 1.6rem); text-wrap: balance; }
 .duel-right-rail__status p { color: var(--muted); }
 .duel-right-rail__dots { display: inline-flex; gap: 0.15rem; }
-.duel-right-rail__dots i { width: 0.28rem; height: 0.28rem; border-radius: 999px; background: currentcolor; animation: duel-rail-dot 1.2s infinite ease-in-out; }
+.duel-right-rail__dots i { width: 0.28rem; height: 0.28rem; border-radius: 999px; background: currentcolor; opacity: 1; animation: duel-rail-dot 1.2s infinite ease-in-out; }
 .duel-right-rail__dots i:nth-child(2) { animation-delay: 0.2s; }
 .duel-right-rail__dots i:nth-child(3) { animation-delay: 0.4s; }
 
@@ -332,91 +324,16 @@ h4 {
 
 @media (prefers-reduced-motion: reduce) {
   .duel-right-rail__dots i {
-    animation: none;
-    opacity: 0.6;
+    animation-name: none !important;
+    animation-duration: 0s !important;
+    opacity: 1 !important;
   }
 }
 
-/* Below 79rem (1264px) the elastic .45fr:1fr split can no longer give the
-   field its 52rem floor alongside the panel's 22rem floor plus gap/padding
-   (52+22+1rem gap+2rem field padding+2rem main margin = 79rem, the same
-   floor the pre-T9 fixed-width layout used), so the row collapses to one
-   column. The field must render first (it needs the leftover height) with
-   the panel as a fixed-height horizontal band underneath it — but the panel
-   stays first in the DOM (see App.svelte) for screen-reader continuity, so
-   the visual order is CSS-only via `grid-row`. */
-@media (max-width: 79rem) {
-  .duel-row {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) auto;
-  }
-
-  .duel-row > .card-preview-panel {
-    grid-row: 2;
-  }
-
-  .duel-row > .duel-field-slot,
-  .duel-row > .field-error {
-    grid-row: 1;
-  }
-
-  /* Horizontal band: fixed-width art column left, name/effect text right,
-     status spanning the full width underneath. */
-  .card-preview-panel {
-    grid-template-columns: clamp(4rem, 20vw, 8rem) minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) auto;
-    grid-template-areas: "art copy" "status status";
-    max-height: clamp(6rem, 22svh, 12rem);
-  }
-
-  .card-preview-panel__art {
-    grid-area: art;
-    height: 100%;
-    min-height: 0;
-  }
-
-  .card-preview-panel__art img {
-    height: 100%;
-    max-height: none;
-  }
-
-  .card-preview-panel__copy {
-    grid-area: copy;
-  }
-
-}
-
-/* Short viewports: the art shrinks to a `clamp(3rem,8svh,5rem)`-tall
-   thumbnail (decoupled from the row's own height, which would otherwise
-   stretch it), and the whole compact preview is capped, so a tall
-   effect-text fixture scrolls inside the panel instead of growing it past
-   the field. */
-@media (max-width: 79rem) and (max-height: 48rem) {
-  .card-preview-panel {
-    max-height: clamp(5rem, 18svh, 8rem);
-  }
-
-  .card-preview-panel__art {
-    display: flex;
-    align-items: center;
-    height: auto;
-  }
-
-  .card-preview-panel__art img {
-    height: clamp(3rem, 8svh, 5rem);
-    max-height: clamp(3rem, 8svh, 5rem);
-    width: auto;
-    max-width: 100%;
-  }
-
-  .card-preview-panel__copy {
-    grid-template-rows: auto minmax(0, 1fr);
-    min-height: 0;
-  }
-
-  .card-preview-panel [data-cy="card-preview-text"] {
-    min-height: 0;
-    overflow-y: auto;
+@media (max-width: 1500px) {
+  :root {
+    --preview-w: 18rem;
+    --rail-min: 12rem;
   }
 }
 
@@ -831,9 +748,12 @@ li + li {
 }
 
 .duel-field-slot {
+  width: calc(100vw - var(--preview-w) - var(--rail-min));
   min-width: 0;
   min-height: 0;
-  overflow: auto;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
 }
 
 .duel-field {
@@ -865,8 +785,7 @@ li + li {
 .duel-field-scroll-region {
   min-width: 0;
   min-height: 0;
-  overflow: auto;
-  scroll-padding: clamp(0.75rem, 4vw, 2rem);
+  overflow: hidden;
 }
 
 .field-phase-strip {
@@ -937,11 +856,7 @@ button.field-phase-chip {
   color: var(--ink);
 }
 
-/* Must track `.duel-field-board`'s own `min-width: 52rem` (below) so this
-   stage's box always matches the board's rendered box exactly, even when
-   the board overflows its column and `.duel-field`'s `overflow-x: auto`
-   kicks in — otherwise the phase strip/End turn percentages below resolve
-   against a narrower box than the board they need to align with. */
+/* Stage uses exact geometry-sized field coordinates. */
 .duel-field-stage {
   position: relative;
   width: 100%;
@@ -1685,7 +1600,7 @@ button.card-action-chip:hover:not(:disabled) {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
-  max-width: min(52rem, 100%);
+  max-width: 100%;
 }
 
 .field-action-bar p {

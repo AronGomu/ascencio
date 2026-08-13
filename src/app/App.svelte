@@ -150,6 +150,11 @@
   $: duelViewportOnly =
     layoutProfileConflict === null &&
     (duelBoard !== null || $duel.snapshot !== null) &&
+    storageWarning === null &&
+    !snapshotActivationPending &&
+    imageWarning === null &&
+    $duel.error === null &&
+    diagnosticMessage === null &&
     !$uiSettings.showDuelHud &&
     !$uiSettings.showWorkspace;
   $: zoneLists =
@@ -385,10 +390,6 @@
     };
     requestFallbackImages = (snapshot, manifestSha256) =>
       void loadImages({ snapshotId: snapshot, manifestSha256 });
-
-    menubarTrigger = document.querySelector<HTMLButtonElement>(
-      '[data-cy="duel-right-rail-options"]',
-    );
 
     duel.initialize();
     trackStorageOperation("initialize", initializeStorage());
@@ -720,6 +721,14 @@
   }
 
   function openMenu(): void {
+    const activeElement = document.activeElement;
+    menubarTrigger =
+      activeElement instanceof HTMLButtonElement &&
+      activeElement.matches('[data-cy="duel-right-rail-options"]')
+        ? activeElement
+        : document.querySelector<HTMLButtonElement>(
+            '[data-cy="duel-right-rail-options"]',
+          );
     menuOpen = true;
   }
 
@@ -908,7 +917,7 @@
   {/if}
 
   {#if duelBoard || $duel.snapshot}
-    <div class="duel-row" data-cy="duel-row">
+    <div class="duel-shell" data-cy="duel-shell">
       <CardPreviewPanel
         preview={previewCard}
         imageLibrary={imagesMatchRuntime ? imageLibrary : null}

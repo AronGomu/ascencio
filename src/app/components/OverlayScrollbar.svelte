@@ -60,10 +60,13 @@
     const content = axis === "horizontal" ? element.scrollWidth : element.scrollHeight;
     const measuredTrack = axis === "horizontal" ? trackElement.clientWidth : trackElement.clientHeight;
     const track = measuredTrack > 0 ? measuredTrack : viewport;
-    const scroll = axis === "horizontal" ? element.scrollLeft : element.scrollTop;
+    const reverse =
+      axis === "horizontal" && getComputedStyle(element).flexDirection === "row-reverse";
+    const rawScroll = axis === "horizontal" ? element.scrollLeft : element.scrollTop;
     const scrollTravel = Math.max(0, content - viewport);
+    const scroll = Math.min(scrollTravel, Math.max(0, reverse ? -rawScroll : rawScroll));
     const trackTravel = Math.max(0, track - thumbSize);
-    return { element, viewport, content, track, scroll, scrollTravel, trackTravel };
+    return { element, viewport, content, track, scroll, scrollTravel, trackTravel, reverse };
   }
 
   function sync(): void {
@@ -84,13 +87,12 @@
   }
 
   function pointerDown(event: PointerEvent): void {
-    if (observedScrollElement === null) return;
+    const current = values();
+    if (current === null) return;
     drag = {
       pointerId: event.pointerId,
       start: pointerCoordinate(event),
-      scroll: axis === "horizontal"
-        ? observedScrollElement.scrollLeft
-        : observedScrollElement.scrollTop,
+      scroll: current.scroll,
     };
     thumbElement.setPointerCapture(event.pointerId);
   }
@@ -101,9 +103,18 @@
     if (current === null) return;
     const trackTravel = Math.max(0, current.track - thumbSize);
     const next = trackTravel > 0
-      ? drag.scroll + ((pointerCoordinate(event) - drag.start) / trackTravel) * current.scrollTravel
+      ? Math.min(
+          current.scrollTravel,
+          Math.max(
+            0,
+            drag.scroll +
+              ((pointerCoordinate(event) - drag.start) / trackTravel) *
+                current.scrollTravel,
+          ),
+        )
       : drag.scroll;
-    if (axis === "horizontal") current.element.scrollLeft = next;
+    if (axis === "horizontal")
+      current.element.scrollLeft = current.reverse ? -next : next;
     else current.element.scrollTop = next;
     sync();
   }

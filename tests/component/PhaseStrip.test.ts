@@ -131,10 +131,10 @@ describe("PhaseStrip", () => {
       `${GEOMETRY.bandY}px`,
     );
     expect(strip.style.getPropertyValue("--phase-left-emz")).toBe(
-      `${GEOMETRY.emzX[0] - GEOMETRY.box / 2}px`,
+      `${GEOMETRY.emzX[0] - GEOMETRY.box / 2 - 2}px`,
     );
     expect(strip.style.getPropertyValue("--phase-right-emz")).toBe(
-      `${GEOMETRY.emzX[1] + GEOMETRY.box / 2}px`,
+      `${GEOMETRY.emzX[1] + GEOMETRY.box / 2 + 2}px`,
     );
   });
 

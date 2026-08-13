@@ -24,7 +24,7 @@
   <div class="duel-right-rail__status" aria-live="polite" aria-atomic="true" data-cy="duel-right-rail-status">
     <h2 data-cy="duel-right-rail-status-title">{status.title}</h2>
     <p data-cy="duel-right-rail-status-subtitle">{status.subtitle}</p>
-    {#if status.thinking}<span class="duel-right-rail__dots" aria-hidden="true" data-cy="duel-right-rail-status-dots"><i data-cy="duel-right-rail-status-dot-1"></i><i data-cy="duel-right-rail-status-dot-2"></i><i data-cy="duel-right-rail-status-dot-3"></i></span>{/if}
+    {#if status.thinking}<span class="duel-right-rail__dots" aria-hidden="true" data-cy="duel-right-rail-status-dots"><i style="opacity: 1" data-cy="duel-right-rail-status-dot-1"></i><i style="opacity: 1" data-cy="duel-right-rail-status-dot-2"></i><i style="opacity: 1" data-cy="duel-right-rail-status-dot-3"></i></span>{/if}
   </div>
   <div class:active={turnPlayer === 0} class="duel-right-rail__identity" data-cy="duel-right-rail-player">
     <p data-cy="duel-right-rail-life-points-0">{lifePoints[0].toLocaleString()} LP</p>

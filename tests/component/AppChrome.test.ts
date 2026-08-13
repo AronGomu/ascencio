@@ -203,6 +203,26 @@ function emitPrompt(prompt: PlayerPrompt): void {
     listener({ context: worker.context, event: { type: "prompt", prompt } });
 }
 
+function emitDuelError(): void {
+  const worker =
+    mockedWorkerClientCtor.instances[
+      mockedWorkerClientCtor.instances.length - 1
+    ];
+  if (worker === undefined) throw new Error("No mocked worker client instance");
+  for (const listener of worker.listeners)
+    listener({
+      context: worker.context,
+      event: {
+        type: "error",
+        error: {
+          code: "worker_error",
+          message: "Injected component error",
+          recoverable: false,
+        },
+      },
+    });
+}
+
 const LINK_FREE_SNAPSHOT: PublicDuelState = {
   ...EMPTY_SNAPSHOT,
   layout: { extraMonsterZones: false },
@@ -366,7 +386,59 @@ describe("App", () => {
     ).toBeNull();
   });
 
-  it("marks default board mode as viewport constrained", async () => {
+  it("uses one full-height shell in preview, field, rail order", async () => {
+    const user = userEvent.setup();
+    await renderReadyApp();
+    await startDuelFromPicker(user);
+    emitDuelState(EMPTY_SNAPSHOT);
+
+    await vi.waitFor(() =>
+      expect(document.querySelector('[data-cy="duel-shell"]')).not.toBeNull(),
+    );
+    const shell = document.querySelector('[data-cy="duel-shell"]');
+    expect(
+      Array.from(shell?.children ?? []).map((child) =>
+        child.getAttribute("data-cy"),
+      ),
+    ).toEqual(["card-preview-panel", "duel-field-slot", "duel-right-rail"]);
+  });
+
+  it("returns focus to the live rail options trigger after Menu and Settings close", async () => {
+    const user = userEvent.setup();
+    await renderReadyApp();
+    await startDuelFromPicker(user);
+    emitDuelState(EMPTY_SNAPSHOT);
+
+    const options = await vi.waitFor(() => {
+      const element = document.querySelector<HTMLButtonElement>(
+        '[data-cy="duel-right-rail-options"]',
+      );
+      expect(element).not.toBeNull();
+      return element!;
+    });
+    await user.click(options);
+    await user.click(
+      document.querySelector(
+        '[data-cy="menu-dialog-close-button"]',
+      ) as HTMLButtonElement,
+    );
+    expect(document.activeElement).toBe(options);
+
+    await user.click(options);
+    await user.click(
+      document.querySelector(
+        '[data-cy="menu-dialog-settings-button"]',
+      ) as HTMLButtonElement,
+    );
+    await user.click(
+      document.querySelector(
+        '[data-cy="settings-dialog-close-button"]',
+      ) as HTMLButtonElement,
+    );
+    expect(document.activeElement).toBe(options);
+  });
+
+  it("keeps startup warning content in document-scroll mode", async () => {
     const user = userEvent.setup();
     await renderReadyApp();
     await startDuelFromPicker(user);
@@ -374,13 +446,30 @@ describe("App", () => {
 
     await vi.waitFor(() =>
       expect(
-        document
-          .querySelector('[data-cy="app-main"]')
-          ?.getAttribute("data-duel-viewport"),
-      ).toBe("true"),
+        document.querySelector(
+          '[data-cy="app-storage-warning-panel"], [data-cy="app-image-warning-panel"]',
+        ),
+      ).not.toBeNull(),
     );
     const main = document.querySelector('[data-cy="app-main"]');
-    expect(main?.classList.contains("is-duel-viewport")).toBe(true);
+    expect(main?.getAttribute("data-duel-viewport")).toBeNull();
+    expect(main?.classList.contains("is-duel-viewport")).toBe(false);
+  });
+
+  it("restores document scrolling while an in-flow error panel renders", async () => {
+    const user = userEvent.setup();
+    await renderReadyApp();
+    await startDuelFromPicker(user);
+    emitDuelState(EMPTY_SNAPSHOT);
+
+    emitDuelError();
+
+    await vi.waitFor(() =>
+      expect(document.querySelector('[data-cy="app-error-panel"]')).not.toBeNull(),
+    );
+    const main = document.querySelector('[data-cy="app-main"]');
+    expect(main?.getAttribute("data-duel-viewport")).toBeNull();
+    expect(main?.classList.contains("is-duel-viewport")).toBe(false);
   });
 
   it("restores document mode for optional HUD", async () => {
@@ -388,13 +477,6 @@ describe("App", () => {
     await renderReadyApp();
     await startDuelFromPicker(user);
     emitDuelState(EMPTY_SNAPSHOT);
-    await vi.waitFor(() =>
-      expect(
-        document
-          .querySelector('[data-cy="app-main"]')
-          ?.getAttribute("data-duel-viewport"),
-      ).toBe("true"),
-    );
 
     await user.click(
       document.querySelector(
@@ -429,13 +511,6 @@ describe("App", () => {
     await renderReadyApp();
     await startDuelFromPicker(user);
     emitDuelState(EMPTY_SNAPSHOT);
-    await vi.waitFor(() =>
-      expect(
-        document
-          .querySelector('[data-cy="app-main"]')
-          ?.getAttribute("data-duel-viewport"),
-      ).toBe("true"),
-    );
 
     await user.click(
       document.querySelector(

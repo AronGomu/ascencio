@@ -112,8 +112,9 @@ describe("HandBand", () => {
       Array.from({ length: 20 }, (_, index) => `p0-hand-${index}`),
     );
     expect(document.querySelector('[data-cy="field-hand-p0-count"]')?.textContent?.trim()).toBe("20");
-    expect(document.querySelector('[data-cy="field-hand-p0-next"]')).toBeNull();
-    expect(document.querySelector('[data-cy="field-hand-p0-page-status"]')).toBeNull();
+    expect(
+      document.querySelector('[data-cy^="field-hand-p0-"][data-cy$="page-status"]'),
+    ).toBeNull();
     expect(document.querySelector('[data-cy="field-hand-p0-scrollbar"]')).not.toBeNull();
   });
 

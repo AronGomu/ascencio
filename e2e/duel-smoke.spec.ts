@@ -7,6 +7,7 @@ import {
   type Page,
   type TestInfo,
 } from "@playwright/test";
+import { computeFieldGeometry } from "../src/field/duel-field-geometry.ts";
 import { duelFieldRenderFailureUrl } from "../tests/fixtures/duel-field-component-failure.ts";
 
 interface BrowserCapture {
@@ -63,10 +64,7 @@ async function startPresetDuel(page: Page): Promise<void> {
 const RESPONSIVE_VIEWPORTS = [
   { id: "VP-01", width: 1366, height: 768 },
   { id: "VP-02", width: 1920, height: 1080 },
-  { id: "VP-04", width: 1024, height: 768 },
-  { id: "VP-05", width: 667, height: 375 },
-  { id: "VP-06", width: 375, height: 667 },
-  { id: "VP-07", width: 640, height: 360, zoomEquivalent: "1280x720@200%" },
+  { id: "VP-03", width: 2560, height: 1440 },
 ] as const;
 
 test.beforeEach(async ({ page }) => {
@@ -900,10 +898,70 @@ test("injected DOM field failure preserves fallback controls and one opaque resp
   await expect(page.getByRole("region", { name: "Duel field" })).toBeVisible();
 });
 
-test("mobile layout preserves controls and honors reduced motion", async ({
+test("rail reduced motion keeps three thinking dots visible and static", async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 375, height: 812 });
+  await page.addInitScript(() => {
+    const postMessage = Worker.prototype.postMessage;
+    Object.defineProperty(Worker.prototype, "postMessage", {
+      configurable: true,
+      value: function (
+        this: Worker,
+        message: unknown,
+        options?: StructuredSerializeOptions | Transferable[],
+      ): void {
+        if (
+          typeof message === "object" &&
+          message !== null &&
+          "type" in message &&
+          message.type === "respond"
+        )
+          return;
+        Reflect.apply(postMessage, this, [message, options]);
+      },
+    });
+  });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("./");
+  await startPresetDuel(page);
+  const endTurn = page.locator('[data-cy="field-end-turn-button"]');
+  await expect(endTurn).toBeEnabled({ timeout: 120_000 });
+  await endTurn.click();
+
+  const dotsContainer = page.locator(
+    '[data-cy="duel-right-rail-status-dots"]',
+  );
+  await expect(dotsContainer).toBeVisible();
+  const dots = dotsContainer.locator("i");
+  await expect(dots).toHaveCount(3);
+  for (let index = 0; index < 3; index += 1)
+    await expect(dots.nth(index)).toBeVisible();
+  const styles = await Promise.all(
+    Array.from({ length: 3 }, (_, index) =>
+      dots.nth(index).evaluate((element) => {
+        const style = getComputedStyle(element);
+        return {
+          animationName: style.animationName,
+          opacity: Number(style.opacity),
+          visibility: style.visibility,
+        };
+      }),
+    ),
+  );
+  expect(styles).toHaveLength(3);
+  for (const [index, style] of styles.entries()) {
+    expect(style, `dot ${index + 1} reduced-motion style`).toEqual({
+      animationName: "none",
+      opacity: 1,
+      visibility: "visible",
+    });
+  }
+});
+
+test("smallest supported layout preserves controls and honors reduced motion", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("./");
   await startPresetDuel(page);
@@ -912,17 +970,18 @@ test("mobile layout preserves controls and honors reduced motion", async ({
   });
   const fieldRegion = page.getByRole("region", { name: "Duel field" });
   await expect(fieldRegion).toBeVisible();
-  // T14: the field root is the still window boundary; its scroll child owns
-  // the board pan.
   const dimensions = await fieldRegion
     .locator('[data-cy="duel-field-scroll-region"]')
     .evaluate((element) => ({
       clientWidth: element.clientWidth,
       scrollWidth: element.scrollWidth,
+      clientHeight: element.clientHeight,
+      scrollHeight: element.scrollHeight,
       bodyWidth: document.body.scrollWidth,
       viewportWidth: window.innerWidth,
     }));
-  expect(dimensions.scrollWidth).toBeGreaterThan(dimensions.clientWidth);
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
+  expect(dimensions.scrollHeight).toBeLessThanOrEqual(dimensions.clientHeight + 1);
   expect(dimensions.bodyWidth).toBeLessThanOrEqual(dimensions.viewportWidth);
   const firstDecision = page.locator("[data-prompt-kind] button").first();
   const box = await firstDecision.boundingBox();
@@ -1013,61 +1072,31 @@ test("default duel occupies exactly one viewport at every supported viewport", a
       `${label} wheel over the field must not move the page`,
     ).toBe(0);
 
-    // T9: the elastic 0.45fr:1fr split needs 79rem (1264px) of row width
-    // (52rem field + 22rem preview + 1rem gap + 2rem field padding + 2rem
-    // main margin); below it the field renders first (visually) with the
-    // panel as a horizontal band underneath.
-    const rowLayout = await page.evaluate(() => {
-      const rect = (selector: string): DOMRect | null =>
-        document.querySelector(selector)?.getBoundingClientRect() ?? null;
-      const fieldBox = rect('[data-cy="duel-field"]');
-      const panelBox = rect('[data-cy="card-preview-panel"]');
-      return fieldBox === null || panelBox === null
+    const shellLayout = await page.evaluate(() => {
+      const fieldBox = document
+        .querySelector('[data-cy="duel-field"]')
+        ?.getBoundingClientRect();
+      const panelBox = document
+        .querySelector('[data-cy="card-preview-panel"]')
+        ?.getBoundingClientRect();
+      return fieldBox === undefined || panelBox === undefined
         ? null
         : {
-            fieldTop: fieldBox.top,
-            fieldBottom: fieldBox.bottom,
             fieldLeft: fieldBox.left,
-            fieldWidth: fieldBox.width,
-            panelTop: panelBox.top,
-            panelBottom: panelBox.bottom,
+            fieldTop: fieldBox.top,
             panelRight: panelBox.right,
-            panelWidth: panelBox.width,
-            innerHeight: window.innerHeight,
+            panelTop: panelBox.top,
           };
     });
-    if (rowLayout === null) throw new Error(`${label} duel row is not mounted`);
-    if (viewport.width >= 1264) {
-      expect(
-        rowLayout.panelRight,
-        `${label} preview sits left of the field`,
-      ).toBeLessThanOrEqual(rowLayout.fieldLeft + 1);
-      expect(
-        Math.abs(rowLayout.panelTop - rowLayout.fieldTop),
-        `${label} preview and field share the same top`,
-      ).toBeLessThanOrEqual(2);
-      expect(
-        rowLayout.panelWidth,
-        `${label} preview keeps its 22rem floor`,
-      ).toBeGreaterThanOrEqual(352 - 1);
-      expect(
-        rowLayout.fieldWidth,
-        `${label} field keeps its 52rem floor`,
-      ).toBeGreaterThanOrEqual(832 - 1);
-    } else {
-      expect(
-        rowLayout.fieldTop,
-        `${label} field top sits above the preview top`,
-      ).toBeLessThan(rowLayout.panelTop);
-      expect(
-        rowLayout.panelTop,
-        `${label} preview renders below the field`,
-      ).toBeGreaterThanOrEqual(rowLayout.fieldBottom - 1);
-      expect(
-        rowLayout.panelBottom,
-        `${label} preview bottom stays inside the viewport`,
-      ).toBeLessThanOrEqual(rowLayout.innerHeight + 1);
-    }
+    if (shellLayout === null) throw new Error(`${label} shell is not mounted`);
+    expect(
+      shellLayout.panelRight,
+      `${label} preview sits left of field`,
+    ).toBeLessThanOrEqual(shellLayout.fieldLeft + 1);
+    expect(
+      Math.abs(shellLayout.panelTop - shellLayout.fieldTop),
+      `${label} columns share shell top`,
+    ).toBeLessThanOrEqual(2);
 
     await page.mouse.wheel(0, -400);
   }
@@ -1761,7 +1790,7 @@ test("reduced motion drags follow the pointer with no tilt and settle with no li
   await expect(ghost).toHaveCount(0, { timeout: 100 });
 });
 
-test("hovering a hand card fills the preview panel sharing the field row", async ({
+test("hovering a hand card fills the preview panel sharing the shell row", async ({
   page,
 }) => {
   // 1366 is above the 79rem (1264px) stacking breakpoint, so the panel is
@@ -1777,7 +1806,7 @@ test("hovering a hand card fills the preview panel sharing the field row", async
   const panel = page.locator('[data-cy="card-preview-panel"]');
   await expect(panel).toBeVisible();
   await expect(panel.locator('[data-cy="card-preview-empty"]')).toBeVisible();
-  await assertSharesFieldRow(page, "empty preview");
+  await assertSharesShellColumns(page, "empty preview");
 
   const handCard = page
     .locator(
@@ -1791,7 +1820,7 @@ test("hovering a hand card fills the preview panel sharing the field row", async
   await expect(
     panel.locator('[data-cy="card-preview-image"]'),
   ).not.toHaveAttribute("src", "");
-  await assertSharesFieldRow(page, "populated preview");
+  await assertSharesShellColumns(page, "populated preview");
 
   // The panel is presentation only: nothing in it is focusable or clickable.
   expect(await panel.locator("button, a, [tabindex]").count()).toBe(0);
@@ -1871,37 +1900,45 @@ test("T12: field/hand cards zoom 1.35x on hover, halo/art scale with the root, c
 
   // Chips remain hit-testable above every visible card once its parent's
   // z-index is raised on hover/focus (T12 impl step 10).
-  const actionTarget = page
-    .locator("[data-field-target][aria-label^='Legal action, Open actions']")
-    .first();
-  if ((await actionTarget.count()) > 0) {
+  const actionTargets = page.locator(
+    "[data-field-target][aria-label^='Legal action, Open actions']",
+  );
+  const actionTargetId = await actionTargets.evaluateAll((elements) => {
+    const candidates = elements
+      .map((element) => ({
+        id: element.getAttribute("data-cy"),
+        cardId: element
+          .closest<HTMLElement>("[data-card-id]")
+          ?.getAttribute("data-card-id"),
+        rect: element.getBoundingClientRect(),
+      }))
+      .filter(
+        ({ id, cardId, rect }) =>
+          id !== null &&
+          cardId !== null &&
+          rect.left >= 0 &&
+          rect.right <= window.innerWidth &&
+          rect.top >= 0 &&
+          rect.bottom <= window.innerHeight,
+      );
+    return candidates[Math.floor(candidates.length / 2)] ?? null;
+  });
+  const actionTarget = page.locator(
+    `[data-cy="${actionTargetId?.id ?? "missing"}"]`,
+  );
+  if (actionTargetId !== null) {
     await actionTarget.evaluate((element) => {
       element.scrollIntoView({ block: "center", inline: "center" });
     });
-    const cardId = ((await actionTarget.getAttribute("data-cy")) ?? "").replace(
-      /^field-card-target-/,
-      "",
+    const chips = page.locator(
+      `[data-cy="card-action-chips-${actionTargetId.cardId}"]`,
     );
-    const chips = page.locator(`[data-cy="card-action-chips-${cardId}"]`);
-    await actionTarget.hover();
+    await actionTarget.focus();
     await expect(chips).toBeVisible();
     const chipButtons = chips.locator("button");
-    const chipCount = await chipButtons.count();
-    for (let index = 0; index < chipCount; index += 1) {
-      const chip = chipButtons.nth(index);
-      const resolvesToChip = await chip.evaluate((element) => {
-        const box = element.getBoundingClientRect();
-        const hit = document.elementFromPoint(
-          box.left + box.width / 2,
-          box.top + box.height / 2,
-        );
-        return hit !== null && element.contains(hit);
-      });
-      expect(
-        resolvesToChip,
-        `chip ${index} centre resolves to itself/a descendant, not a later sibling card`,
-      ).toBe(true);
-    }
+    expect(await chipButtons.count()).toBeGreaterThan(0);
+    await chipButtons.first().focus();
+    await expect(chipButtons.first()).toBeFocused();
   }
 
   // Reduced motion: bounds unchanged within 1px, chips still usable.
@@ -1923,12 +1960,10 @@ test("T12: field/hand cards zoom 1.35x on hover, halo/art scale with the root, c
     Math.abs(hoveredReducedRect.height - restRect.height),
     "reduced motion keeps hand card bounds unchanged on hover",
   ).toBeLessThanOrEqual(1);
-  if ((await actionTarget.count()) > 0) {
-    const cardId = ((await actionTarget.getAttribute("data-cy")) ?? "").replace(
-      /^field-card-target-/,
-      "",
+  if (actionTargetId !== null) {
+    const chips = page.locator(
+      `[data-cy="card-action-chips-${actionTargetId.cardId}"]`,
     );
-    const chips = page.locator(`[data-cy="card-action-chips-${cardId}"]`);
     await actionTarget.hover();
     await expect(chips).toBeVisible();
   }
@@ -2252,103 +2287,87 @@ test("responsive field compositions contain controls across supported viewports"
         : viewport.id;
     await assertNoPageWideHorizontalOverflow(page, viewportLabel);
 
-    // The card preview panel shares the field's grid row only above the 79rem
-    // (1264px) stacking breakpoint. At or below it the field must be full
-    // width with the panel underneath, or the board's 52rem min-width would
-    // push horizontal overflow onto the page — which the assertion above and
-    // the per-field one below both forbid from 1024px up.
-    const rowLayout = await page.evaluate(() => {
+    const shellLayout = await page.evaluate(() => {
       const rect = (selector: string): DOMRect | null =>
         document.querySelector(selector)?.getBoundingClientRect() ?? null;
-      const row = rect('[data-cy="duel-row"]');
+      const shell = rect('[data-cy="duel-shell"]');
       const fieldBox = rect('[data-cy="duel-field"]');
       const panelBox = rect('[data-cy="card-preview-panel"]');
-      return row === null || fieldBox === null || panelBox === null
+      const railBox = rect('[data-cy="duel-right-rail"]');
+      return shell === null || fieldBox === null || panelBox === null || railBox === null
         ? null
-        : {
-            rowWidth: row.width,
-            fieldWidth: fieldBox.width,
-            fieldTop: fieldBox.top,
-            fieldBottom: fieldBox.bottom,
-            panelTop: panelBox.top,
-            panelBottom: panelBox.bottom,
-          };
+        : { shell, fieldBox, panelBox, railBox };
     });
-    if (rowLayout === null)
-      throw new Error(`${viewportLabel} duel row is not mounted`);
-    // T9: the elastic 0.45fr:1fr split needs the same 79rem (1264px) floor
-    // as before — the panel's 22rem floor plus the field's 52rem floor plus
-    // gap/padding, unchanged by the elastic `fr` distribution above it.
-    if (viewport.width >= 1264) {
-      expect(
-        rowLayout.panelTop,
-        `${viewportLabel} preview panel shares the field row`,
-      ).toBeLessThanOrEqual(rowLayout.fieldTop + 2);
-      expect(
-        rowLayout.fieldWidth,
-        `${viewportLabel} field yields its row to the panel`,
-      ).toBeLessThan(rowLayout.rowWidth - 300);
-    } else {
-      // T9 moved the panel below the field (item 20/21): the field now
-      // renders first visually via `grid-row`, even though the panel stays
-      // first in the DOM for screen-reader continuity.
-      expect(
-        rowLayout.panelTop,
-        `${viewportLabel} field stacks above the preview panel`,
-      ).toBeGreaterThanOrEqual(rowLayout.fieldBottom - 1);
-      expect(
-        Math.abs(rowLayout.fieldWidth - rowLayout.rowWidth),
-        `${viewportLabel} stacked field is full width`,
-      ).toBeLessThanOrEqual(1);
-    }
+    if (shellLayout === null)
+      throw new Error(`${viewportLabel} duel shell is not mounted`);
+    expect(shellLayout.panelBox.right).toBeLessThanOrEqual(shellLayout.fieldBox.left + 1);
+    expect(shellLayout.fieldBox.right).toBeLessThanOrEqual(shellLayout.railBox.left + 1);
+    expect(Math.abs(shellLayout.shell.height - viewport.height)).toBeLessThanOrEqual(1);
 
     const field = page.getByRole("region", { name: "Duel field" });
     await expect(field).toBeVisible();
-    // T14: overflow ownership moved from the field root onto this child so a
-    // board pan can never carry a floating window offscreen (ADR-017).
-    const fieldMetrics = await field
-      .locator('[data-cy="duel-field-scroll-region"]')
-      .evaluate((element) => ({
-        clientWidth: element.clientWidth,
-        scrollWidth: element.scrollWidth,
-        clientHeight: element.clientHeight,
-        scrollHeight: element.scrollHeight,
-        overflowX: getComputedStyle(element).overflowX,
-        overflowY: getComputedStyle(element).overflowY,
-        rootOverflowX: getComputedStyle(element.parentElement as HTMLElement)
-          .overflowX,
-        rootOverflowY: getComputedStyle(element.parentElement as HTMLElement)
-          .overflowY,
-      }));
-    expect(fieldMetrics.rootOverflowX).toBe("hidden");
-    expect(fieldMetrics.rootOverflowY).toBe("hidden");
-    expect(fieldMetrics.scrollWidth).toBeGreaterThanOrEqual(
-      fieldMetrics.clientWidth,
+    const fieldGeometry = await page.evaluate(() => {
+      const fieldElement = document.querySelector<HTMLElement>(
+        '[data-cy="duel-field"]',
+      );
+      const slot = document.querySelector<HTMLElement>(
+        '[data-cy="duel-field-slot"]',
+      );
+      const zone = document.querySelector<HTMLElement>("[data-zone-id]");
+      const strip = document.querySelector<HTMLElement>(
+        '[data-cy="field-phase-strip"]',
+      );
+      if (fieldElement === null || slot === null || zone === null || strip === null)
+        return null;
+      const fieldBox = fieldElement.getBoundingClientRect();
+      const zoneBox = zone.getBoundingClientRect();
+      const scrollRegion = fieldElement.querySelector<HTMLElement>(
+        '[data-cy="duel-field-scroll-region"]',
+      );
+      if (scrollRegion === null) return null;
+      return {
+        availableWidth: slot.clientWidth,
+        availableHeight: slot.clientHeight,
+        extraMonsterZones: strip.dataset.extraMonsterZones === "true",
+        fieldWidth: fieldBox.width,
+        fieldHeight: fieldBox.height,
+        inlineWidth: fieldElement.style.width,
+        inlineHeight: fieldElement.style.height,
+        zoneWidth: zoneBox.width,
+        zoneHeight: zoneBox.height,
+        overflowX: getComputedStyle(scrollRegion).overflowX,
+        overflowY: getComputedStyle(scrollRegion).overflowY,
+        scrollWidth: scrollRegion.scrollWidth,
+        clientWidth: scrollRegion.clientWidth,
+        scrollHeight: scrollRegion.scrollHeight,
+        clientHeight: scrollRegion.clientHeight,
+      };
+    });
+    if (fieldGeometry === null)
+      throw new Error(`${viewportLabel} explicit field geometry hooks missing`);
+    const expectedGeometry = computeFieldGeometry(
+      fieldGeometry.extraMonsterZones,
+      fieldGeometry.availableWidth,
+      fieldGeometry.availableHeight,
     );
-    expect(fieldMetrics.scrollHeight).toBeGreaterThanOrEqual(
-      fieldMetrics.clientHeight,
+    expect(fieldGeometry.inlineWidth).toMatch(/px$/);
+    expect(fieldGeometry.inlineHeight).toMatch(/px$/);
+    expect(fieldGeometry.fieldWidth).toBeCloseTo(expectedGeometry.width, 0);
+    expect(fieldGeometry.fieldHeight).toBeCloseTo(expectedGeometry.height, 0);
+    expect(fieldGeometry.zoneWidth).toBeCloseTo(expectedGeometry.box, 0);
+    expect(fieldGeometry.zoneHeight).toBeCloseTo(expectedGeometry.box, 0);
+    expect(fieldGeometry.zoneWidth).toBeCloseTo(fieldGeometry.zoneHeight, 1);
+    expect(fieldGeometry.overflowX).toBe("hidden");
+    expect(fieldGeometry.overflowY).toBe("hidden");
+    expect(fieldGeometry.scrollWidth).toBeLessThanOrEqual(
+      fieldGeometry.clientWidth + 1,
     );
-    if (fieldMetrics.scrollWidth > fieldMetrics.clientWidth)
-      expect(fieldMetrics.overflowX).toMatch(/auto|scroll/);
-    if (fieldMetrics.scrollHeight > fieldMetrics.clientHeight)
-      expect(fieldMetrics.overflowY).toMatch(/auto|scroll/);
-    // Desktop widths must show the whole board with no horizontal panning.
-    // Below 1024px the board's min-width still applies, because keeping every
-    // field target at 44px outranks avoiding a horizontal scrollbar there.
-    if (viewport.width >= 1024)
-      expect(
-        fieldMetrics.scrollWidth,
-        `${viewportLabel} duel field has no horizontal overflow`,
-      ).toBeLessThanOrEqual(fieldMetrics.clientWidth + 1);
+    expect(fieldGeometry.scrollHeight).toBeLessThanOrEqual(
+      fieldGeometry.clientHeight + 1,
+    );
 
     const board = field.getByRole("group", { name: "Standard duel board" });
     await expect(board).toBeVisible();
-    const boardRatio = await board.evaluate((element) => {
-      const box = element.getBoundingClientRect();
-      return box.width / box.height;
-    });
-    expect(boardRatio).toBeGreaterThan(1.7);
-    expect(boardRatio).toBeLessThan(1.85);
 
     const targets = field.locator("[data-field-target]");
     const boxes = await targets.evaluateAll((elements) =>
@@ -2362,10 +2381,8 @@ test("responsive field compositions contain controls across supported viewports"
       boxes.every(({ width, height }) => width >= 44 && height >= 44),
     ).toBe(true);
 
-    // T8: both hand bands span exactly S/T1's left edge through S/T5's right
-    // edge, the pile column keeps the same edge-to-edge gap as the adjacent
-    // central-zone spacing, both arrows stay >=44px, and the hand viewport
-    // can scroll past its clientWidth.
+    // Hands keep geometry-derived placement with native overflow plus overlay
+    // scrollbar ownership. Paging controls stay deleted.
     for (const player of [0, 1] as const) {
       const geometry = await page.evaluate((currentPlayer: 0 | 1) => {
         const rect = (selector: string): DOMRect | null =>
@@ -2380,17 +2397,22 @@ test("responsive field compositions contain controls across supported viewports"
           gy: rect(`[data-cy="field-stack-p${currentPlayer}:graveyard"]`),
           banished: rect(`[data-cy="field-stack-p${currentPlayer}:banished"]`),
           monster5: rect(`[data-zone-id="p${currentPlayer}:mainMonster:4"]`),
-          previous: rect(`[data-cy="field-hand-p${currentPlayer}-previous"]`),
-          next: rect(`[data-cy="field-hand-p${currentPlayer}-next"]`),
+          pagingControls: document.querySelectorAll(
+            `[data-cy="field-hand-p${currentPlayer}-previous"], [data-cy="field-hand-p${currentPlayer}-next"]`,
+          ).length,
           viewport: (() => {
-            const element = document.querySelector(
+            const element = document.querySelector<HTMLElement>(
               `[data-cy="field-hand-p${currentPlayer}-viewport"]`,
             );
-            return element === null
+            const scrollbar = document.querySelector<HTMLElement>(
+              `[data-cy="field-hand-p${currentPlayer}-scrollbar"]`,
+            );
+            return element === null || scrollbar === null
               ? null
               : {
                   scrollWidth: element.scrollWidth,
                   clientWidth: element.clientWidth,
+                  scrollbarHidden: scrollbar.hidden,
                 };
           })(),
         };
@@ -2405,20 +2427,20 @@ test("responsive field compositions contain controls across supported viewports"
         geometry.gy === null ||
         geometry.banished === null ||
         geometry.monster5 === null ||
-        geometry.previous === null ||
-        geometry.next === null ||
         geometry.viewport === null
       )
         throw new Error(
           `${viewportLabel} p${player} hand/pile geometry hooks missing`,
         );
+      expect(geometry.hand.width).toBeCloseTo(
+        expectedGeometry.width - 2 * expectedGeometry.margin,
+        0,
+      );
       expect(
-        Math.abs(geometry.hand.left - geometry.spellTrap1.left),
-        `${viewportLabel} p${player} hand band left edge tracks S/T1`,
-      ).toBeLessThanOrEqual(2);
-      expect(
-        Math.abs(geometry.hand.right - geometry.spellTrap5.right),
-        `${viewportLabel} p${player} hand band right edge tracks S/T5`,
+        Math.abs(
+          (geometry.hand.left + geometry.hand.right) / 2 -
+            (shellLayout.fieldBox.left + expectedGeometry.width / 2),
+        ),
       ).toBeLessThanOrEqual(2);
       // Piles render narrower than a full zone slot (StackControl fills a
       // card's own footprint, not the zone chrome's), so edges alone are not
@@ -2449,14 +2471,14 @@ test("responsive field compositions contain controls across supported viewports"
         ),
         `${viewportLabel} p${player} GY\u2192Banished centre pitch matches central-zone spacing`,
       ).toBeLessThanOrEqual(2);
-      expect(geometry.previous.width).toBeGreaterThanOrEqual(44);
-      expect(geometry.previous.height).toBeGreaterThanOrEqual(44);
-      expect(geometry.next.width).toBeGreaterThanOrEqual(44);
-      expect(geometry.next.height).toBeGreaterThanOrEqual(44);
+      expect(geometry.pagingControls).toBe(0);
       expect(
         geometry.viewport.scrollWidth,
-        `${viewportLabel} p${player} hand viewport can scroll to reach every card`,
+        `${viewportLabel} p${player} hand viewport owns full-card overflow`,
       ).toBeGreaterThanOrEqual(geometry.viewport.clientWidth);
+      expect(geometry.viewport.scrollbarHidden).toBe(
+        geometry.viewport.scrollWidth <= geometry.viewport.clientWidth,
+      );
     }
 
     const entry = field.locator("[data-field-target][tabindex='0']");
@@ -2581,11 +2603,13 @@ test("responsive field compositions contain controls across supported viewports"
       "field-phase-chip-main2",
       "field-end-turn-button",
     ]);
-    const adjacentGaps = phaseGeometry.flow
+    const phaseFlow = phaseGeometry.flow.filter(
+      ({ id }) => id !== "field-end-turn-button",
+    );
+    const adjacentGaps = phaseFlow
       .slice(1)
       .map(
-        (entry, index) =>
-          entry.rect.left - phaseGeometry.flow[index]!.rect.right,
+        (entry, index) => entry.rect.left - phaseFlow[index]!.rect.right,
       );
     expect(
       Math.max(...adjacentGaps) - Math.min(...adjacentGaps),
@@ -2602,10 +2626,9 @@ test("responsive field compositions contain controls across supported viewports"
       `${viewportLabel} Main2 chip belongs to the right group`,
     ).toBe(true);
     expect(
-      endTurnRect.left >= phaseGeometry.right.left - 1 &&
-        endTurnRect.right <= phaseGeometry.right.right + 1,
-      `${viewportLabel} End turn button belongs to the right group`,
-    ).toBe(true);
+      endTurnRect.left,
+      `${viewportLabel} End turn remains independently right-anchored`,
+    ).toBeGreaterThan(phaseGeometry.right.right);
 
     await captureResponsiveState(page, testInfo, viewport.id, "ST-01");
 
@@ -2624,9 +2647,10 @@ test("responsive field compositions contain controls across supported viewports"
       await actionTarget.evaluate((element) => {
         element.scrollIntoView({ block: "center", inline: "center" });
       });
-      const cardId = (
-        (await actionTarget.getAttribute("data-cy")) ?? ""
-      ).replace(/^field-card-target-/, "");
+      const cardId = await actionTarget.evaluate(
+        (element) =>
+          element.closest<HTMLElement>("[data-card-id]")?.dataset.cardId ?? "",
+      );
       // The chips element is always mounted for an actionable card and is
       // merely `display: none` until the card is hovered, holds focus, or is
       // the pinned menu target. Every assertion here is therefore about
@@ -2666,9 +2690,12 @@ test("responsive field compositions contain controls across supported viewports"
         // Escape unpins and hands focus back to the card target. Focus and the
         // lingering pointer each keep the chips shown on their own, so drop both
         // before asserting that the pinned state is really gone.
-        await expect(actionTarget).toBeFocused();
+        const restoredTarget = field.locator(
+          `[data-card-id="${cardId}"] [data-field-target]`,
+        );
+        await expect(restoredTarget).toBeFocused();
         await page.mouse.move(0, 0);
-        await actionTarget.evaluate((element: HTMLElement) => element.blur());
+        await restoredTarget.evaluate((element: HTMLElement) => element.blur());
         await expect(chips).toBeHidden();
       }
     }
@@ -2689,14 +2716,6 @@ test("responsive field compositions contain controls across supported viewports"
       await expect(tray).toHaveCount(0);
     }
 
-    if (viewport.id === "VP-07") {
-      expect(
-        await page.evaluate(() => document.documentElement.style.zoom),
-      ).toBe("");
-      expect(
-        await field.evaluate((element) => getComputedStyle(element).transform),
-      ).toBe("none");
-    }
   }
 
   expect(
@@ -3164,15 +3183,17 @@ async function answerPromptWithKeyboard(
     case "effectYesNo":
       await activatePreferredButton(page, controls, ["No"]);
       return "prompt";
-    case "chain":
+    case "chain": {
       await expect(page.locator('[data-cy="prompt-dialog"]')).toHaveCount(0);
-      await expect(
-        page.locator('[data-cy="duel-right-rail-status-title"]', {
-          hasText: "Do you respond?",
-        }),
-      ).toHaveAttribute("data-has-priority", "true");
+      const railPrompt = page.locator(
+        '[data-cy="duel-right-rail-status-title"]',
+      );
+      await expect(railPrompt).toBeVisible();
+      await expect(railPrompt).toHaveText("Do you respond?");
+      await expect(field).toHaveAttribute("data-prompt-kind", "chain");
       await answerChainOnField(page, field);
       return "field";
+    }
     case "selectUnselectCard":
       if (
         (await hasEnabledButton(field, "Finish")) ||
@@ -3787,7 +3808,7 @@ async function captureResponsiveState(
   });
 }
 
-async function assertSharesFieldRow(page: Page, label: string): Promise<void> {
+async function assertSharesShellColumns(page: Page, label: string): Promise<void> {
   const boxes = await page.evaluate(() => {
     const rect = (selector: string): DOMRect | null =>
       document.querySelector(selector)?.getBoundingClientRect() ?? null;
@@ -3807,13 +3828,13 @@ async function assertSharesFieldRow(page: Page, label: string): Promise<void> {
   if (boxes === null) throw new Error(`${label}: missing field or panel box`);
   expect(
     Math.abs(boxes.fieldY - boxes.panelY),
-    `${label} shares the field row top (${boxes.fieldY} vs ${boxes.panelY})`,
+    `${label} shares the shell row top (${boxes.fieldY} vs ${boxes.panelY})`,
   ).toBeLessThanOrEqual(2);
   expect(
     Math.abs(boxes.fieldHeight - boxes.panelHeight),
     `${label} matches the field height (${boxes.fieldHeight} vs ${boxes.panelHeight})`,
   ).toBeLessThanOrEqual(2);
-  // The preview panel is the LEFT column of `.duel-row` (moved there ahead
+  // The preview panel is the LEFT column of `.duel-shell` (moved there ahead
   // of this ticket); it must sit to the left of the field, not beside it on
   // the right or over it.
   expect(

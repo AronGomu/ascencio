@@ -88,14 +88,14 @@ Expected measured board matrix (≤1px browser rounding):
 
 ## Impl steps
 
-- [ ] 1. Update `global-styles.test.ts`, AppChrome test, acceptance matrix; prove old shell fails.
-- [ ] 2. Replace App row markup with exact `duel-shell` order while preserving T3 `.duel-field-slot` wrapper/binding.
-- [ ] 3. Add CSS tokens/grid/100svh/overflow; retain field as window containing block.
-- [ ] 4. Remove old board min-width/aspect/pan rules; let ResizeObserver calculate middle budget.
-- [ ] 5. Update acceptance harness wrapper to production shell tokens without duplicating geometry decisions.
-- [ ] 6. Replace `duel-row` assertions/helpers/comments in `e2e/duel-smoke.spec.ts` with shell/column relations.
-- [ ] 7. Run full 6-case acceptance; adjust only rounding/tokens, never profile formula.
-- [ ] 8. Run real-duel responsive/floating-window smoke.
+- [x] 1. Update `global-styles.test.ts`, AppChrome test, acceptance matrix; prove old shell fails.
+- [x] 2. Replace App row markup with exact `duel-shell` order while preserving T3 `.duel-field-slot` wrapper/binding.
+- [x] 3. Add CSS tokens/grid/100svh/overflow; retain field as window containing block.
+- [x] 4. Remove old board min-width/aspect/pan rules; let ResizeObserver calculate middle budget.
+- [x] 5. Update acceptance harness wrapper to production shell tokens without duplicating geometry decisions.
+- [x] 6. Replace `duel-row` assertions/helpers/comments in `e2e/duel-smoke.spec.ts` with shell/column relations.
+- [x] 7. Run full 6-case acceptance; adjust only rounding/tokens, never profile formula.
+- [x] 8. Run real-duel responsive/floating-window smoke.
 
 ## Outputs
 
@@ -105,10 +105,10 @@ Expected measured board matrix (≤1px browser rounding):
 
 ## Validation
 
-- [ ] `npx vitest run tests/component/AppChrome.test.ts tests/unit/global-styles.test.ts tests/unit/data-cy-coverage.test.ts` → exit 0.
-- [ ] `npm run typecheck && npm run lint` → exit 0.
-- [ ] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/full-height-field.spec.ts` → all 6 matrix cases pass.
-- [ ] `npx playwright test e2e/duel-smoke.spec.ts --project=chromium --grep "responsive|floating field windows|production bundle"` → exit 0.
-- [ ] `rg "duel-row|DuelHeaderBar|52rem" src tests e2e` → no stale shell authority.
-- [ ] app functional — `npm run build` exits 0.
-- [ ] commit msg draft: `feat(shell): fill viewport with preview field and rail`
+- [x] `npx vitest run tests/component/AppChrome.test.ts tests/unit/global-styles.test.ts tests/unit/data-cy-coverage.test.ts` → exit 0.
+- [x] `npm run typecheck && npm run lint` → exit 0.
+- [x] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/full-height-field.spec.ts` → all 6 matrix cases pass.
+- [x] `npx playwright test e2e/duel-smoke.spec.ts --project=chromium --grep "responsive|floating field windows|production bundle"` → exit 0.
+- [x] `rg "duel-row|DuelHeaderBar|52rem" src tests e2e` → no stale shell authority.
+- [x] app functional — `npm run build` exits 0.
+- [ ] commit msg draft: `fix(field): close full-height shell review findings`

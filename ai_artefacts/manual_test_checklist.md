@@ -36,3 +36,9 @@
 - [ ] Confirm right-rail Options opens menu/settings during active duel.
 - [ ] Confirm rail status stays additive; active prompt remains sole decision UI.
 - [ ] Confirm reduced-motion mode keeps three waiting dots visible and static.
+
+## T7 full-height-shell
+
+- [ ] Confirm preview, field, rail fill one viewport-height row with no page scrollbar.
+- [ ] Resize among 1366×768, 1920×1080, 2560×1440; confirm field stays centered between preview and rail.
+- [ ] Drag floating field windows to each edge, resize narrower; confirm windows reclamp inside field.

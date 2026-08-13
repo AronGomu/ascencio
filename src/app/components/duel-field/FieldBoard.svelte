@@ -91,8 +91,11 @@
       : `${spec.key.workerGeneration}:${spec.key.sessionGeneration}:${spec.key.promptId}`;
   $: synchronizeNavigation(board, actionableTargets, navigationContext);
 
-  function placementFor(zoneId: PhysicalZoneId): FieldPlacement {
-    const placement = renderLayout.zones.get(zoneId);
+  function placementFor(
+    layout: FieldRenderLayout,
+    zoneId: PhysicalZoneId,
+  ): FieldPlacement {
+    const placement = layout.zones.get(zoneId);
     if (placement === undefined)
       throw new Error(`Missing field render placement for ${zoneId}`);
     return placement;
@@ -206,7 +209,7 @@
   {#each fieldZones as zone (zone.id)}
     <ZoneControl
       {zone}
-      placement={placementFor(zone.id)}
+      placement={placementFor(renderLayout, zone.id)}
       actionable={!disabled && spec?.zoneChoices.has(zone.targetId) === true}
       selected={selectedTargets.has(zone.targetId)}
       active={navigationState.activeTarget === zone.targetId}
@@ -221,7 +224,7 @@
       player={0}
       cards={playerHandCards}
       zone={playerHandZone}
-      placement={placementFor(playerHandZone.id)}
+      placement={placementFor(renderLayout, playerHandZone.id)}
       {imageUrls}
       {imageLibrary}
       {cardBackUrl}
@@ -245,7 +248,7 @@
       player={1}
       cards={opponentHandCards}
       zone={opponentHandZone}
-      placement={placementFor(opponentHandZone.id)}
+      placement={placementFor(renderLayout, opponentHandZone.id)}
       {imageUrls}
       {imageLibrary}
       {cardBackUrl}
@@ -267,7 +270,7 @@
   {#each board.stacks as stack (stack.targetId)}
     <StackControl
       {stack}
-      placement={placementFor(stack.id)}
+      placement={placementFor(renderLayout, stack.id)}
       active={navigationState.activeTarget === stack.targetId}
       actionable={!disabled && spec?.stackChoices.has(stack.targetId) === true}
       onpreview={() => onstackpreview(stack)}
@@ -279,7 +282,7 @@
   {#each fieldCards as card (card.id)}
     <CardControl
       {card}
-      placement={placementFor(card.zoneId)}
+      placement={placementFor(renderLayout, card.zoneId)}
       imageUrl={cardImageUrl(card)}
       {imageLibrary}
       interactionKind={!disabled &&

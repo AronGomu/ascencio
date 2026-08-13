@@ -1,4 +1,5 @@
 import type { BoardStackView } from "../../field/board-view-model.ts";
+import type { OffFieldTargetEntry } from "../../field/off-field-target-list.ts";
 
 export function cardListDisplayEntries<
   T extends {
@@ -31,6 +32,25 @@ export function cardListBrowseTitle(
     case "banished":
       return "Banished";
   }
+}
+
+export function cardListSourceNotice(
+  entries: readonly Pick<OffFieldTargetEntry, "location">[],
+): string {
+  const sources = [
+    ["hand", "Hand"],
+    ["extra", "Extra Deck"],
+    ["graveyard", "Graveyard"],
+    ["banished", "Banished"],
+    ["deck", "Deck"],
+  ] as const;
+  const represented = sources
+    .filter(([location]) => entries.some((entry) => entry.location === location))
+    .map(([, label]) => label);
+  if (represented.length <= 1) return "Filtered: legal targets only";
+  if (represented.length === 2)
+    return `Filtered: legal targets from ${represented[0]} and ${represented[1]}`;
+  return `Filtered: legal targets from ${represented.slice(0, -1).join(", ")}, and ${represented.at(-1)}`;
 }
 
 export function cardListAlphabeticalAllowed(

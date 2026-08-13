@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from "svelte";
   import type { ChoiceId } from "../../../duel/contracts/ids.ts";
   import type { BoardStackView } from "../../../field/board-view-model.ts";
   import type { OffFieldTargetEntry } from "../../../field/off-field-target-list.ts";
@@ -11,6 +12,7 @@
     cardListAlphabeticalAllowed,
     cardListBrowseTitle,
     cardListDisplayEntries,
+    cardListSourceNotice,
   } from "../../presentation/card-list-dialog-model.ts";
   import FloatingFieldWindow from "./FloatingFieldWindow.svelte";
   import ZoneListEntryTile from "./ZoneListEntryTile.svelte";
@@ -52,11 +54,21 @@
 
   let entriesElement: HTMLElement | null = null;
   let alphabetical = false;
+  let collapsed = false;
+  let collapseButton: HTMLButtonElement | null = null;
+  let expandButton: HTMLButtonElement | null = null;
 
   $: targetMode = mode === "target";
-  $: alphabeticalAllowed = cardListAlphabeticalAllowed(entries);
+  $: if (!targetMode) collapsed = false;
+  $: sourceEntries = targetMode ? targetEntries : entries;
+  $: alphabeticalAllowed = cardListAlphabeticalAllowed(sourceEntries);
   $: if (!alphabeticalAllowed) alphabetical = false;
   $: displayEntries = cardListDisplayEntries(entries, alphabetical);
+  $: displayTargetEntries = cardListDisplayEntries(
+    targetEntries,
+    alphabeticalAllowed && alphabetical,
+  );
+  $: filterNotice = cardListSourceNotice(targetEntries);
   $: headerTitle = targetMode
     ? title || "Select targets"
     : stack === null
@@ -71,6 +83,12 @@
     minimum === maximum
       ? `${selectedCount} / ${maximum} selected`
       : `${selectedCount} selected · ${minimum}–${maximum} allowed`;
+
+  async function setCollapsed(value: boolean): Promise<void> {
+    collapsed = value;
+    await tick();
+    (value ? expandButton : collapseButton)?.focus();
+  }
 
   function promptSequenceInListSpace(
     choice: InteractionChoice,
@@ -129,14 +147,41 @@
   {onactivate}
   onpositionchange={onwindowpositionchange}
   ondismiss={onclose}
+  {collapsed}
+  {mode}
 >
   <div
     class="zone-list-dialog__header"
     slot="handle"
     data-cy="zone-list-dialog-header"
   >
-    <span data-cy="zone-list-dialog-title">{headerTitle}</span>
-    <strong data-cy="zone-list-dialog-count">{count}</strong>
+    {#if targetMode && collapsed}
+      <button
+        type="button"
+        class="zone-list-dialog__collapse"
+        aria-label="Expand target list"
+        bind:this={expandButton}
+        onclick={() => setCollapsed(false)}
+        data-cy="zone-list-dialog-expand-button">+</button
+      >
+    {:else}
+      {#if targetMode}
+        <button
+          type="button"
+          class="zone-list-dialog__collapse"
+          aria-label="Collapse target list"
+          bind:this={collapseButton}
+          onclick={() => setCollapsed(true)}
+          data-cy="zone-list-dialog-collapse-button">−</button
+        >
+      {/if}
+      <span data-cy="zone-list-dialog-title">{headerTitle}</span>
+      <strong data-cy="zone-list-dialog-count">{count}</strong>
+      {#if targetMode}
+        <span class="zone-list-dialog__notice" data-cy="zone-list-dialog-filter-notice"
+          >{filterNotice}</span
+        >
+      {/if}
     {#if !targetMode}
       <button
         type="button"
@@ -145,9 +190,11 @@
         onclick={() => onclose()}
         data-cy="zone-list-dialog-close-button">×</button
       >
+      {/if}
     {/if}
   </div>
-  <div class="zone-list-dialog" data-cy="zone-list-dialog">
+  {#if !collapsed}
+  <div class="zone-list-dialog" data-mode={mode} data-collapsed="false" data-cy="zone-list-dialog">
     <div
       class="zone-list-dialog__entries"
       bind:this={entriesElement}
@@ -155,11 +202,11 @@
       data-cy="zone-list-dialog-entries"
     >
       {#if targetMode}
-        {#each targetEntries as entry, index (entry.id)}
+        {#each displayTargetEntries as entry, index (entry.id)}
           <ZoneListEntryTile
             {entry}
             first={index === 0}
-            last={index === targetEntries.length - 1}
+            last={index === displayTargetEntries.length - 1}
             mode="target"
             choices={entry.choices}
             zoneBadge={entry.zoneBadge}
@@ -199,6 +246,15 @@
         <output data-cy="zone-list-dialog-selection-count"
           >{selectionCountLabel}</output
         >
+        <label class="zone-list-dialog__sort" data-cy="zone-list-dialog-target-sort-label">
+          <input
+            type="checkbox"
+            bind:checked={alphabetical}
+            disabled={!alphabeticalAllowed}
+            data-cy="zone-list-dialog-alphabetical-checkbox"
+          />
+          Alphabetical
+        </label>
         {#if !exactSingle}
           <button
             type="button"
@@ -207,7 +263,7 @@
               ? "zone-list-dialog-validation"
               : undefined}
             onclick={() => onconfirm()}
-            data-cy="zone-list-dialog-confirm-button">Confirm selection</button
+            data-cy="zone-list-dialog-confirm-button">Validate selection</button
           >
         {/if}
         {#if cancelable}
@@ -249,4 +305,5 @@
       </div>
     {/if}
   </div>
+  {/if}
 </FloatingFieldWindow>

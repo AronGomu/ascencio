@@ -3,6 +3,7 @@ import {
   cardListAlphabeticalAllowed,
   cardListBrowseTitle,
   cardListDisplayEntries,
+  cardListSourceNotice,
 } from "../../src/app/presentation/card-list-dialog-model.ts";
 
 const entries = Object.freeze([
@@ -33,6 +34,30 @@ describe("card-list dialog model", () => {
     expect(cardListAlphabeticalAllowed(hidden)).toBe(false);
     expect(cardListDisplayEntries(hidden, true)).toBe(hidden);
     expect(cardListAlphabeticalAllowed(entries.slice(0, 1))).toBe(false);
+  });
+
+  it("builds privacy-safe target notices in fixed source order", () => {
+    expect(
+      cardListSourceNotice([
+        { location: "deck" },
+        { location: "banished" },
+        { location: "graveyard" },
+        { location: "extra" },
+        { location: "graveyard" },
+      ]),
+    ).toBe(
+      "Filtered: legal targets from Extra Deck, Graveyard, Banished, and Deck",
+    );
+    expect(
+      cardListSourceNotice([
+        { location: "deck" },
+        { location: "hand" },
+        { location: "graveyard" },
+      ]),
+    ).toBe("Filtered: legal targets from Hand, Graveyard, and Deck");
+    expect(cardListSourceNotice([{ location: "hand" }])).toBe(
+      "Filtered: legal targets only",
+    );
   });
 
   it("maps browse zones to approved titles", () => {

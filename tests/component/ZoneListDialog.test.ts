@@ -170,6 +170,48 @@ function renderTargetDialog(
 }
 
 describe("ZoneListDialog target mode", () => {
+  it("renders target notice, collapse chrome, and mode state", async () => {
+    const user = userEvent.setup();
+    renderTargetDialog({
+      targetEntries: [
+        targetEntry({ location: "deck", zoneBadge: "DECK" }),
+        targetEntry({ id: "target:0:hand:0", location: "hand", zoneBadge: "HAND" }),
+        targetEntry({ id: "target:0:graveyard:1", sequence: 1 }),
+      ],
+    });
+    const root = document.querySelector<HTMLElement>(
+      '[data-cy="floating-field-window-zoneList"]',
+    );
+    expect(root?.dataset.mode).toBe("target");
+    expect(root?.dataset.collapsed).toBe("false");
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-filter-notice"]')
+        ?.textContent,
+    ).toBe("Filtered: legal targets from Hand, Graveyard, and Deck");
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-close-button"]'),
+    ).toBeNull();
+
+    const collapse = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-dialog-collapse-button"]',
+    );
+    if (collapse === null) throw new Error("Missing collapse button");
+    await user.click(collapse);
+    expect(root?.dataset.collapsed).toBe("true");
+    expect(document.querySelector('[data-cy="zone-list-dialog-title"]')).toBeNull();
+    expect(document.querySelector('[data-cy="zone-list-dialog-entries"]')).toBeNull();
+    const expand = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-dialog-expand-button"]',
+    );
+    if (expand === null) throw new Error("Missing expand button");
+    expect(document.activeElement).toBe(expand);
+    await user.click(expand);
+    expect(root?.dataset.collapsed).toBe("false");
+    expect(document.activeElement).toBe(
+      document.querySelector('[data-cy="zone-list-dialog-collapse-button"]'),
+    );
+  });
+
   it("lists only the provided legal targets, each with its zone badge", () => {
     const entries = [targetEntry(), hiddenTargetEntry()];
     renderTargetDialog({ targetEntries: entries });
@@ -376,10 +418,60 @@ describe("ZoneListDialog target mode", () => {
     ).toBeNull();
   });
 
-  it("an outside press preserves the target window and draft", async () => {
+  it("sorts target display without changing selected choice IDs", async () => {
+    const user = userEvent.setup();
+    renderTargetDialog({
+      targetEntries: [
+        targetEntry({ id: "target:b", label: "Beta" }),
+        targetEntry({
+          id: "target:a",
+          label: "Alpha",
+          sequence: 1,
+          choices: [targetChoice("gy-1")],
+        }),
+      ],
+      selectedChoiceIds: [choiceId("gy-0")],
+      minimum: 1,
+      maximum: 2,
+    });
+    const checkbox = document.querySelector<HTMLInputElement>(
+      '[data-cy="zone-list-dialog-alphabetical-checkbox"]',
+    );
+    if (checkbox === null) throw new Error("Missing target sort checkbox");
+    await user.click(checkbox);
+    expect(
+      [...document.querySelectorAll(".zone-list-entry")].map((element) =>
+        element.getAttribute("data-cy"),
+      ),
+    ).toEqual(["zone-list-entry-target:a", "zone-list-entry-target:b"]);
+    expect(
+      document.querySelector('[aria-pressed="true"]')?.closest(".zone-list-entry")
+        ?.getAttribute("data-cy"),
+    ).toBe("zone-list-entry-target:b");
+  });
+
+  it("disables and resets target sorting when identity is hidden", async () => {
+    const user = userEvent.setup();
+    const harness = renderTargetDialog({
+      targetEntries: [targetEntry(), targetEntry({ id: "target:visible:2", label: "A" })],
+    });
+    const checkbox = document.querySelector<HTMLInputElement>(
+      '[data-cy="zone-list-dialog-alphabetical-checkbox"]',
+    );
+    if (checkbox === null) throw new Error("Missing target sort checkbox");
+    await user.click(checkbox);
+    await harness.rendered.rerender({
+      targetEntries: [targetEntry(), hiddenTargetEntry()],
+    });
+    expect(checkbox.disabled).toBe(true);
+    expect(checkbox.checked).toBe(false);
+  });
+
+  it("outside and Escape preserve the target window and draft", async () => {
     const harness = renderTargetDialog({ cancelable: true });
 
     await fireEvent.pointerDown(document.body);
+    await fireEvent.keyDown(document, { key: "Escape" });
 
     expect(harness.onclose).not.toHaveBeenCalled();
     expect(harness.oncancel).not.toHaveBeenCalled();

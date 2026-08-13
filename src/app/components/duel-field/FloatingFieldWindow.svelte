@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
   import {
     clampFieldWindowPosition,
     type FieldWindowId,
@@ -17,6 +17,8 @@
   export let dismissOnOutsideClick = false;
   export let dismissOnEscape = false;
   export let active = false;
+  export let collapsed = false;
+  export let mode: "browse" | "target" | undefined = undefined;
   /* Blocks the drag gesture only. Window content owns its own disabled state,
      and dismissal policy is never suspended by a pending response. */
   export let disabled = false;
@@ -46,8 +48,11 @@
   let dragOffsetY = 0;
   let sizeObserver: ResizeObserver | null = null;
   let observedBoundary: HTMLElement | null = null;
+  let lastCollapsed = collapsed;
+  let expandedAnchor: PersistedWindowPosition | null = null;
 
   $: syncPlacement(position, dragging);
+  $: syncCollapsed(collapsed);
   $: adoptBoundary(boundaryElement);
 
   onMount(() => {
@@ -93,7 +98,21 @@
     if (isDragging || samePoint(value, lastProp)) return;
     lastProp = value;
     current = value;
+    expandedAnchor = null;
     place();
+  }
+
+  function syncCollapsed(value: boolean): void {
+    if (value === lastCollapsed) return;
+    if (value) expandedAnchor = Object.freeze({ x, y });
+    else if (expandedAnchor !== null) {
+      x = expandedAnchor.x;
+      y = expandedAnchor.y;
+    }
+    lastCollapsed = value;
+    void tick().then(() => {
+      place();
+    });
   }
 
   function samePoint(
@@ -113,6 +132,20 @@
     if (element === null) return;
     const boundary = boundarySize(boundaryElement);
     const value = current;
+    if (collapsed) {
+      if (boundary === null) return;
+      const clamped = clampFieldWindowPosition({ x, y }, boundary, windowSize(element));
+      x = clamped.x;
+      y = clamped.y;
+      return;
+    }
+    if (expandedAnchor !== null) {
+      if (boundary === null) return;
+      const clamped = clampFieldWindowPosition(expandedAnchor, boundary, windowSize(element));
+      x = clamped.x;
+      y = clamped.y;
+      return;
+    }
     if (value === null) {
       if (boundary === null) return;
       const size = windowSize(element);
@@ -170,6 +203,7 @@
       origin.closest(HANDLE_INTERACTIVE_SELECTOR) !== null
     )
       return;
+    expandedAnchor = null;
     dragging = true;
     dragPointerId = event.pointerId;
     dragOffsetX = event.clientX - x;
@@ -232,6 +266,8 @@
   style:--window-x={`${x}px`}
   style:--window-y={`${y}px`}
   data-window-id={windowId}
+  data-mode={mode}
+  data-collapsed={String(collapsed)}
   data-cy={`floating-field-window-${windowId}`}
 >
   <!-- svelte-ignore a11y_no_static_element_interactions (pointer dragging is a

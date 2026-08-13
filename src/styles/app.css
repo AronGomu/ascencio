@@ -1229,6 +1229,28 @@ button.duel-field-zone,
   padding: 6px 8px 6px 18px;
 }
 
+.floating-field-window[data-window-id="zoneList"][data-mode="target"] > .floating-field-window__handle {
+  padding-left: 6px;
+}
+
+.floating-field-window[data-window-id="zoneList"][data-collapsed="true"] {
+  width: 58px;
+  height: 58px;
+  max-width: 58px;
+  max-height: 58px;
+  grid-template-rows: 58px;
+}
+
+.floating-field-window[data-window-id="zoneList"][data-collapsed="true"] > .floating-field-window__handle {
+  padding: 6px;
+  border-bottom-color: transparent;
+  border-radius: 14px;
+}
+
+.floating-field-window[data-window-id="zoneList"][data-collapsed="true"] > .floating-field-window__content {
+  display: none;
+}
+
 .floating-field-window[data-window-id="zoneList"] > .floating-field-window__content {
   padding: 0;
   overflow: hidden;
@@ -1269,6 +1291,13 @@ button.duel-field-zone,
   background: #0c1728;
 }
 
+.zone-list-dialog__notice {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.zone-list-dialog__collapse,
 .zone-list-dialog__close {
   min-width: 44px;
   min-height: 44px;
@@ -1276,6 +1305,19 @@ button.duel-field-zone,
   padding: 0;
   font-size: 1.2rem;
   line-height: 1;
+}
+
+.zone-list-dialog__collapse {
+  flex: 0 0 44px;
+  margin-left: 0;
+  border-color: #486078;
+  background: #0c1728;
+  color: var(--ink);
+}
+
+.zone-list-dialog__close {
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .zone-list-dialog__entries {

@@ -69,3 +69,10 @@
 - [ ] Confirm Details previews card without emitting an engine response.
 - [ ] Confirm hidden cards reveal no identity in art alt text, labels, or menus.
 - [ ] Confirm first and last zoomed card menus remain clickable inside dialog.
+
+## T12 target-chrome-collapse
+
+- [ ] Confirm target draft survives outside press, Escape, collapse, and expansion.
+- [ ] Confirm target collapse stays anchored and expansion remains inside resized field boundary.
+- [ ] Confirm target shows no ×, conditional Cancel, dynamic source notice, and privacy-safe sorting.
+- [ ] Confirm browse still dismisses through outside press, Escape, ×, and Cancel.

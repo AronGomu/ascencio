@@ -74,14 +74,14 @@ New selectors: `zone-list-dialog-filter-notice`, `zone-list-dialog-collapse-butt
 
 ## Impl steps
 
-- [ ] 1. Add pure notice tests + component/primitive collapse/dismiss tests; prove red.
-- [ ] 2. Implement location-only `cardListSourceNotice`; dedupe sources + fixed order; no identity access.
-- [ ] 3. Add `collapsed` mechanics to FloatingFieldWindow with ephemeral expanded anchor; do not alter persisted `position` contract.
-- [ ] 4. Add target local collapsed state + header minus/plus structure; hide title/count/notice/body/footer when collapsed.
-- [ ] 5. Set `dismissOnOutsideClick=false`, `dismissOnEscape=false` in target mode; retain true in browse.
-- [ ] 6. Add target footer/control matrix + filter notice; wire exact target sorting/privacy reset rules above; keep current Validate callback behavior until T13.
-- [ ] 7. Add exact/dynamic/collapse acceptance scenarios + Chromium coordinate/visibility assertions.
-- [ ] 8. Run target + browse regression suites.
+- [x] 1. Add pure notice tests + component/primitive collapse/dismiss tests; prove red.
+- [x] 2. Implement location-only `cardListSourceNotice`; dedupe sources + fixed order; no identity access.
+- [x] 3. Add `collapsed` mechanics to FloatingFieldWindow with ephemeral expanded anchor; do not alter persisted `position` contract.
+- [x] 4. Add target local collapsed state + header minus/plus structure; hide title/count/notice/body/footer when collapsed.
+- [x] 5. Set `dismissOnOutsideClick=false`, `dismissOnEscape=false` in target mode; retain true in browse.
+- [x] 6. Add target footer/control matrix + filter notice; wire exact target sorting/privacy reset rules above; keep current Validate callback behavior until T13.
+- [x] 7. Add exact/dynamic/collapse acceptance scenarios + Chromium coordinate/visibility assertions.
+- [x] 8. Run target + browse regression suites.
 
 ## Outputs
 
@@ -91,9 +91,9 @@ New selectors: `zone-list-dialog-filter-notice`, `zone-list-dialog-collapse-butt
 
 ## Validation
 
-- [ ] `npx vitest run tests/unit/card-list-dialog-model.test.ts tests/component/FloatingFieldWindow.test.ts tests/component/ZoneListDialog.test.ts` → exit 0.
-- [ ] `npm run typecheck && npm run lint` → exit 0.
-- [ ] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/card-list-dialog.spec.ts --grep "target chrome|collapse|dismiss|notice"` → exit 0.
+- [x] `npx vitest run tests/unit/card-list-dialog-model.test.ts tests/component/FloatingFieldWindow.test.ts tests/component/ZoneListDialog.test.ts` → exit 0.
+- [x] `npm run typecheck && npm run lint` → exit 0.
+- [x] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/card-list-dialog.spec.ts --grep "target chrome|collapse|dismiss|notice"` → exit 0.
 - [ ] manual check — target draft survives outside/Escape/collapse; browse still dismisses.
-- [ ] app functional — `npm run build` exits 0.
+- [x] app functional — `npm run build` exits 0.
 - [ ] commit msg draft: `feat(card-list): split target chrome and stable collapse`

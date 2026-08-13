@@ -37,6 +37,11 @@
       stack={cardList.stack}
       entries={cardList.entries}
       choices={cardList.choices}
+      mode={cardList.mode ?? "browse"}
+      targetEntries={cardList.targetEntries ?? []}
+      minimum={cardList.minimum ?? 0}
+      maximum={cardList.maximum ?? 0}
+      cancelable={cardList.cancelable ?? false}
       boundaryElement={fieldSlot}
       cardBackUrl="/card-back.svg"
     />

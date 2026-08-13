@@ -87,6 +87,7 @@ function renderWindow(
     dismissOnEscape: boolean;
     active: boolean;
     disabled: boolean;
+    collapsed: boolean;
     onactivate: (id: string) => void;
     onpositionchange: (position: { x: number; y: number }) => void;
     ondismiss: () => void;
@@ -105,6 +106,7 @@ function renderWindow(
     dismissOnEscape: props.dismissOnEscape ?? false,
     active: props.active ?? false,
     disabled: props.disabled ?? false,
+    collapsed: props.collapsed ?? false,
     onactivate,
     onpositionchange,
     ondismiss,
@@ -352,6 +354,43 @@ describe("FloatingFieldWindow", () => {
     await tick();
 
     expect(onpositionchange).toHaveBeenCalledWith({ x: 100, y: 100 });
+  });
+
+  it("freezes its anchor while collapsed without persistence writes", async () => {
+    const field = boundary(800, 600);
+    const { rendered, root, onpositionchange } = renderWindow({
+      boundaryElement: field,
+      position: null,
+    });
+    triggerResize();
+    await tick();
+    expect(offset(root)).toEqual({ x: "300px", y: "250px" });
+
+    stubSize(root, { width: 58, height: 58 });
+    await rendered.rerender({
+      collapsed: true,
+      boundaryElement: field,
+      position: null,
+    });
+    triggerResize();
+    await tick();
+    expect(offset(root)).toEqual({ x: "300px", y: "250px" });
+
+    stubSize(field, { width: 320, height: 260 });
+    triggerResize();
+    await tick();
+    expect(offset(root)).toEqual({ x: "262px", y: "202px" });
+
+    stubSize(root, { width: 200, height: 100 });
+    await rendered.rerender({
+      collapsed: false,
+      boundaryElement: field,
+      position: null,
+    });
+    triggerResize();
+    await tick();
+    expect(offset(root)).toEqual({ x: "120px", y: "160px" });
+    expect(onpositionchange).not.toHaveBeenCalled();
   });
 
   it("outside pointerdown dismisses only when the policy allows it", async () => {

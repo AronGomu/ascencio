@@ -48,6 +48,41 @@ test("empty browse and responsive shell stay inside field", async ({ page }) => 
   }
 });
 
+test("target chrome collapse dismiss notice stays anchor-stable", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const dialog = await open(page, "card-list-target-chrome");
+  await expect(dialog).toHaveAttribute("data-mode", "target");
+  await expect(page.locator('[data-cy="zone-list-dialog-filter-notice"]')).toHaveText(
+    "Filtered: legal targets from Extra Deck, Graveyard, Banished, and Deck",
+  );
+  await expect(page.locator('[data-cy="zone-list-dialog-close-button"]')).toHaveCount(0);
+  await expect(page.locator('[data-cy="zone-list-dialog-target-cancel-button"]')).toBeVisible();
+
+  const collapse = page.locator('[data-cy="zone-list-dialog-collapse-button"]');
+  const minusBox = await collapse.boundingBox();
+  await collapse.click();
+  await expect(dialog).toHaveAttribute("data-collapsed", "true");
+  const collapsedBox = await dialog.boundingBox();
+  expect(collapsedBox?.width).toBeCloseTo(58, 0);
+  expect(collapsedBox?.height).toBeCloseTo(58, 0);
+  const expand = page.locator('[data-cy="zone-list-dialog-expand-button"]');
+  await expect(expand).toBeVisible();
+  const plusBox = await expand.boundingBox();
+  expect(plusBox!.x).toBeCloseTo(minusBox!.x, 0);
+  expect(plusBox!.y).toBeCloseTo(minusBox!.y, 0);
+
+  await page.keyboard.press("Escape");
+  await page.mouse.click(0, 0);
+  await expect(dialog).toBeVisible();
+  await page.setViewportSize({ width: 780, height: 700 });
+  await expand.click();
+  const expandedBox = await dialog.boundingBox();
+  expect(expandedBox!.x).toBeGreaterThanOrEqual(0);
+  expect(expandedBox!.y).toBeGreaterThanOrEqual(0);
+  expect(expandedBox!.x + expandedBox!.width).toBeLessThanOrEqual(780);
+  expect(expandedBox!.y + expandedBox!.height).toBeLessThanOrEqual(700);
+});
+
 test("tile geometry, zoom and projected action seam stay usable", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await open(page, "card-list-browse-six");

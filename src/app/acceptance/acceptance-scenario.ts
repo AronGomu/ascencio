@@ -8,7 +8,8 @@ export type AcceptanceScenarioId =
   | "preview-long"
   | "card-list-browse-six"
   | "card-list-browse-overflow"
-  | "card-list-empty";
+  | "card-list-empty"
+  | "card-list-target-chrome";
 
 const SCENARIOS: ReadonlySet<string> = new Set<AcceptanceScenarioId>([
   "field-emz",
@@ -21,6 +22,7 @@ const SCENARIOS: ReadonlySet<string> = new Set<AcceptanceScenarioId>([
   "card-list-browse-six",
   "card-list-browse-overflow",
   "card-list-empty",
+  "card-list-target-chrome",
 ]);
 
 export function acceptanceScenarioId(

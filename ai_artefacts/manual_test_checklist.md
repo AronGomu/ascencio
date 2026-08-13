@@ -55,3 +55,10 @@
 - [ ] Reload; confirm both display choices remain off.
 - [ ] Reset settings; reload; confirm both display choices return on.
 - [ ] Clear site data; confirm display settings, decks, and floating-window positions return to defaults.
+
+## T10 approved-browse-dialog-shell
+
+- [ ] Confirm browse actions remain usable through approved shell.
+- [ ] Confirm alphabetical sorting never requests or reveals hidden card art or identity.
+- [ ] Confirm browse dismisses through outside press, Escape, header ×, and footer Cancel.
+- [ ] Confirm 6-card row centers; overflow row retains 8px edges at field widths.

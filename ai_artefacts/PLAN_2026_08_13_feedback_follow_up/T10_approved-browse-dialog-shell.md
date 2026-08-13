@@ -91,14 +91,14 @@ Create `src/app/acceptance/card-list-dialog-scenarios.ts` exporting `CARD_LIST_B
 
 ## Impl steps
 
-- [ ] 1. Add pure model tests + source-label test updates; prove red.
-- [ ] 2. Implement stable order/title/alphabetical helpers + full badge values/order.
-- [ ] 3. Rewrite browse mode header/body/footer in ZoneListDialog; local alphabetical state; exact empty state/copy/data-cy.
-- [ ] 4. Keep target branch behavior compiling unchanged; do not alter exact-single callbacks yet.
-- [ ] 5. Add shell grid/size cap/body scroller/centering/edge CSS scoped to zone-list window.
-- [ ] 6. Preserve FloatingFieldWindow drag + browse outside/Escape; route footer Cancel to same dismiss callback.
-- [ ] 7. Extend acceptance harness/scenario union; add browse/empty/overflow Chromium spec.
-- [ ] 8. Run source/unit/component/browser tests + privacy check.
+- [x] 1. Add pure model tests + source-label test updates; prove red.
+- [x] 2. Implement stable order/title/alphabetical helpers + full badge values/order.
+- [x] 3. Rewrite browse mode header/body/footer in ZoneListDialog; local alphabetical state; exact empty state/copy/data-cy.
+- [x] 4. Keep target branch behavior compiling unchanged; do not alter exact-single callbacks yet.
+- [x] 5. Add shell grid/size cap/body scroller/centering/edge CSS scoped to zone-list window.
+- [x] 6. Preserve FloatingFieldWindow drag + browse outside/Escape; route footer Cancel to same dismiss callback.
+- [x] 7. Extend acceptance harness/scenario union; add browse/empty/overflow Chromium spec.
+- [x] 8. Run source/unit/component/browser tests + privacy check.
 
 ## Outputs
 
@@ -108,10 +108,10 @@ Create `src/app/acceptance/card-list-dialog-scenarios.ts` exporting `CARD_LIST_B
 
 ## Validation
 
-- [ ] `npx vitest run tests/unit/card-list-dialog-model.test.ts tests/unit/off-field-target-list.test.ts tests/unit/zone-list.test.ts` → exit 0.
-- [ ] `npx vitest run tests/component/ZoneListDialog.test.ts tests/component/FloatingFieldWindow.test.ts tests/unit/data-cy-coverage.test.ts` → exit 0.
-- [ ] `npm run typecheck && npm run lint` → exit 0.
-- [ ] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/card-list-dialog.spec.ts --grep "browse|empty|responsive"` → exit 0.
+- [x] `npx vitest run tests/unit/card-list-dialog-model.test.ts tests/unit/off-field-target-list.test.ts tests/unit/zone-list.test.ts` → exit 0.
+- [x] `npx vitest run tests/component/ZoneListDialog.test.ts tests/component/FloatingFieldWindow.test.ts tests/unit/data-cy-coverage.test.ts` → exit 0.
+- [x] `npm run typecheck && npm run lint` → exit 0.
+- [x] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/card-list-dialog.spec.ts --grep "browse|empty|responsive"` → exit 0.
 - [ ] manual check — browse actions remain usable; sorting never requests/reveals hidden art.
-- [ ] app functional — `npm run build` exits 0.
+- [x] app functional — `npm run build` exits 0.
 - [ ] commit msg draft: `feat(card-list): ship approved browse shell and ordering`

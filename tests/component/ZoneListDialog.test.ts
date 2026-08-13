@@ -110,7 +110,7 @@ function targetEntry(
     identityVisible: true,
     code: cardCode(97590747),
     label: "The Legendary Fisherman",
-    zoneBadge: "GY",
+    zoneBadge: "GRAVEYARD",
     zoneLabel: "Your Graveyard",
     choices: [targetChoice("gy-0")],
     ...overrides,
@@ -127,7 +127,7 @@ function hiddenTargetEntry(): OffFieldTargetEntry {
     sequence: 2,
     identityVisible: false,
     label: "Face-down card",
-    zoneBadge: "BAN",
+    zoneBadge: "BANISHED",
     zoneLabel: "Opponent Banished",
     choices: [targetChoice("ban-2")],
   };
@@ -181,7 +181,7 @@ describe("ZoneListDialog target mode", () => {
       [...document.querySelectorAll('[data-cy^="zone-list-entry-zone-"]')].map(
         (element) => element.textContent?.trim(),
       ),
-    ).toEqual(["GY", "BAN"]);
+    ).toEqual(["GRAVEYARD", "BANISHED"]);
     expect(
       document.querySelector('[data-cy="zone-list-dialog-count"]')?.textContent,
     ).toBe("2");
@@ -361,7 +361,7 @@ describe("ZoneListDialog target mode", () => {
         ?.textContent,
     ).toContain("Select at least 1 card");
     const cancel = document.querySelector<HTMLButtonElement>(
-      '[data-cy="zone-list-dialog-cancel-button"]',
+      '[data-cy="zone-list-dialog-target-cancel-button"]',
     );
     if (cancel === null) throw new Error("Missing cancel button");
     await user.click(cancel);
@@ -370,16 +370,16 @@ describe("ZoneListDialog target mode", () => {
 
     renderTargetDialog({ minimum: 1, maximum: 2, cancelable: false });
     expect(
-      document.querySelector('[data-cy="zone-list-dialog-cancel-button"]'),
+      document.querySelector('[data-cy="zone-list-dialog-target-cancel-button"]'),
     ).toBeNull();
   });
 
-  it("an outside press closes the window without cancelling anything", async () => {
+  it("an outside press preserves the target window and draft", async () => {
     const harness = renderTargetDialog({ cancelable: true });
 
     await fireEvent.pointerDown(document.body);
 
-    expect(harness.onclose).toHaveBeenCalledTimes(1);
+    expect(harness.onclose).not.toHaveBeenCalled();
     expect(harness.oncancel).not.toHaveBeenCalled();
     expect(harness.onconfirm).not.toHaveBeenCalled();
     expect(harness.ontargetchoice).not.toHaveBeenCalled();
@@ -387,6 +387,15 @@ describe("ZoneListDialog target mode", () => {
 });
 
 describe("ZoneListDialog", () => {
+  it("renders approved browse chrome and physical copies", () => {
+    renderDialog();
+    expect(document.querySelector('[data-cy="zone-list-dialog-title"]')?.textContent).toBe("Graveyard");
+    expect(document.querySelectorAll('[data-cy^="zone-list-entry-p0:"]')).toHaveLength(4);
+    expect(document.querySelector('[data-cy="zone-list-dialog-alphabetical-checkbox"]')).not.toBeNull();
+    expect(document.querySelector('[data-cy="zone-list-dialog-cancel-button"]')?.textContent).toContain("Cancel");
+    expect(document.querySelector('[data-cy="zone-list-dialog-confirm-button"]')).toBeNull();
+  });
+
   it("dialog lists every entry", () => {
     renderDialog();
     for (const value of ENTRIES)
@@ -557,7 +566,7 @@ describe("ZoneListDialog", () => {
     if (button === null) throw new Error("Missing close button");
     expect(button.textContent?.trim()).toBe("×");
     expect(button.classList.contains("danger")).toBe(true);
-    expect(button.getAttribute("aria-label")).toBe("Close GY, 4 cards");
+    expect(button.getAttribute("aria-label")).toBe("Close Graveyard");
     // Rightmost control of the header, which is also the window's drag handle.
     const header = button.closest('[data-cy="zone-list-dialog-header"]');
     expect(header?.lastElementChild).toBe(button);
@@ -623,7 +632,33 @@ describe("ZoneListDialog", () => {
     expect(event.defaultPrevented).toBe(false);
   });
 
-  it("deck dialog explains its numbering", () => {
+  it("sorts alphabetically and restores source order", async () => {
+    const user = userEvent.setup();
+    renderDialog({ entries: [entry(3), entry(1), entry(2)] });
+    const checkbox = document.querySelector<HTMLInputElement>('[data-cy="zone-list-dialog-alphabetical-checkbox"]');
+    if (checkbox === null) throw new Error("Missing alphabetical checkbox");
+    await user.click(checkbox);
+    expect([...document.querySelectorAll('.zone-list-entry')].map((element) => element.getAttribute('data-cy'))).toEqual([
+      'zone-list-entry-p0:graveyard:1',
+      'zone-list-entry-p0:graveyard:2',
+      'zone-list-entry-p0:graveyard:3',
+    ]);
+    await user.click(checkbox);
+    expect([...document.querySelectorAll('.zone-list-entry')].map((element) => element.getAttribute('data-cy'))).toEqual([
+      'zone-list-entry-p0:graveyard:3',
+      'zone-list-entry-p0:graveyard:1',
+      'zone-list-entry-p0:graveyard:2',
+    ]);
+  });
+
+  it("renders empty state and disables sorting", () => {
+    renderDialog({ entries: [] });
+    expect(document.querySelector('[data-cy="zone-list-dialog-empty"]')?.textContent).toBe("No cards available");
+    expect(document.querySelector<HTMLInputElement>('[data-cy="zone-list-dialog-alphabetical-checkbox"]')?.disabled).toBe(true);
+    expect(document.querySelector('[data-cy="zone-list-dialog-count"]')?.textContent).toBe("0");
+  });
+
+  it("deck dialog uses privacy-safe browse label", () => {
     const deckStack: BoardStackView = {
       ...STACK,
       id: "p0:deck",
@@ -640,7 +675,7 @@ describe("ZoneListDialog", () => {
       document
         .querySelector('[data-cy="floating-field-window-zoneList"]')
         ?.getAttribute("aria-label"),
-    ).toBe("Your Deck, 1 card contents, position 1 is the top of the deck");
+    ).toBe("Deck card browser");
   });
 
   it("face-down deck slots use the card back and expose no code in the DOM", () => {

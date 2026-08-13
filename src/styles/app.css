@@ -170,6 +170,14 @@ main {
    default duel to the `#app` main row's exact height, so nothing here can
    push a scrollbar onto the page; `.duel-field` owns any residual x/y
    overflow instead (see below). */
+.acceptance-card-list-field {
+  position: relative;
+  width: 100vw;
+  height: 100svh;
+  margin: 0;
+  overflow: hidden;
+}
+
 main.is-duel-viewport {
   width: 100%;
   height: 100svh;
@@ -1207,36 +1215,96 @@ button.duel-field-zone,
 }
 
 .floating-field-window[data-window-id="zoneList"] {
-  max-width: min(80%, 64rem);
+  width: min(1320px, calc(100% - 16px));
+  height: min(600px, calc(100% - 16px));
+  max-width: calc(100% - 16px);
+  max-height: calc(100% - 16px);
+  grid-template-rows: 58px minmax(0, 1fr);
+  overflow: hidden;
+  border-radius: 14px;
+  box-shadow: 0 28px 80px rgb(0 0 0 / 0.58);
+}
+
+.floating-field-window[data-window-id="zoneList"] > .floating-field-window__handle {
+  padding: 6px 8px 6px 18px;
+}
+
+.floating-field-window[data-window-id="zoneList"] > .floating-field-window__content {
+  padding: 0;
+  overflow: hidden;
 }
 
 .zone-list-dialog {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) 64px;
   min-width: 0;
+  height: 100%;
 }
 
 .zone-list-dialog__header {
   display: flex;
   width: 100%;
+  min-width: 0;
   align-items: center;
-  gap: 0.5rem;
+  gap: 10px;
 }
 
-/* Rightmost control in the handle, kept at the 44px minimum target every
-   other field control uses. */
+.zone-list-dialog__header > span {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 0.96rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zone-list-dialog__header > strong {
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding-inline: 8px;
+  border: 1px solid #486078;
+  border-radius: 999px;
+  background: #0c1728;
+}
+
 .zone-list-dialog__close {
-  min-width: 2.75rem;
+  min-width: 44px;
+  min-height: 44px;
   margin-left: auto;
-  padding: 0.35rem 0.6rem;
-  font-size: 1rem;
+  padding: 0;
+  font-size: 1.2rem;
   line-height: 1;
 }
 
 .zone-list-dialog__entries {
   display: flex;
-  gap: 0.5rem;
-  padding: 0.15rem 1.75rem 2.5rem;
-  scroll-padding-inline: 1.75rem;
+  align-items: flex-start;
+  justify-content: safe center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  padding: 92px 8px 42px;
   overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-inline: contain;
+  background: #101a2d;
+  scrollbar-color: #73829d #0b1424;
+  scrollbar-width: thin;
+}
+
+.zone-list-dialog__entries::-webkit-scrollbar { height: 12px; }
+.zone-list-dialog__entries::-webkit-scrollbar-track { background: #0b1424; }
+.zone-list-dialog__entries::-webkit-scrollbar-thumb {
+  border: 3px solid #0b1424;
+  border-radius: 999px;
+  background: #73829d;
+}
+
+.zone-list-dialog__empty {
+  margin: auto;
+  color: var(--muted);
 }
 
 .zone-list-entry {
@@ -1329,15 +1397,24 @@ button.duel-field-zone,
 
 .zone-list-dialog__footer {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.3rem 1.75rem 0.2rem;
+  gap: 12px;
+  min-width: 0;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
 }
 
-.zone-list-dialog__footer output {
-  font-weight: 700;
+.zone-list-dialog__footer output { font-weight: 700; }
+.zone-list-dialog__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.75rem;
 }
+.zone-list-dialog__sort input { width: 18px; height: 18px; }
+.zone-list-dialog__cancel { min-height: 44px; }
 
 .duel-field-stack {
   z-index: var(--duel-field-layer-stack);

@@ -33,6 +33,7 @@ import type {
   PublicDuelState,
 } from "../../src/duel/contracts/public-duel-state.ts";
 import { mapSnapshotToBoard } from "../../src/field/board-view-model.ts";
+import { createFieldRenderLayout } from "../../src/field/duel-field-geometry.ts";
 import { zoneListsForBoard } from "../../src/field/zone-list.ts";
 import { offFieldTargetEntries } from "../../src/field/off-field-target-list.ts";
 import {
@@ -254,6 +255,38 @@ function renderInteractive(value: PlayerPrompt) {
 }
 
 describe("DuelField", () => {
+  it("renders square px zones with concentric slots and aligned field occupants", () => {
+    render(DuelField, { board: board("ST-04") });
+
+    const zone = document.querySelector<HTMLElement>(
+      '[data-zone-id="p0:mainMonster:1"]',
+    );
+    const card = document.querySelector<HTMLElement>(
+      '[data-card-zone-id="p0:mainMonster:1"]',
+    );
+    if (zone === null || card === null) throw new Error("Missing occupied zone");
+    expect(zone.style.getPropertyValue("--field-x")).toMatch(/px$/);
+    expect(zone.style.getPropertyValue("--field-width")).toBe(
+      zone.style.getPropertyValue("--field-height"),
+    );
+    expect(
+      zone.querySelector('[data-cy="field-zone-slot-p0:mainMonster:1"]'),
+    ).not.toBeNull();
+    expect(card.style.getPropertyValue("--field-x")).toBe(
+      zone.style.getPropertyValue("--field-x"),
+    );
+    expect(card.classList.contains("is-defense")).toBe(true);
+    expect(card.querySelector(".duel-field-card__art")).not.toBeNull();
+  });
+
+  it("uses finite fallback px geometry before boundary measurement", () => {
+    render(DuelField, { board: board("ST-01") });
+    const field = document.querySelector<HTMLElement>('[data-cy="duel-field"]');
+    expect(field?.style.width).toMatch(/px$/);
+    expect(field?.style.height).toMatch(/px$/);
+    expect(Number.parseFloat(field?.style.width ?? "NaN")).toBeGreaterThan(0);
+  });
+
   it("paints owner-neutral labels but announces ownership", () => {
     render(DuelField, { board: board("ST-01") });
 
@@ -557,6 +590,7 @@ describe("DuelField", () => {
     const value = bigHandBoard(11, 2);
     const { container } = render(FieldBoard, {
       board: value,
+      renderLayout: createFieldRenderLayout(true, 1280, 720),
       imageUrls: new Map(),
       cardBackUrl: "",
       placeholderUrl: "",
@@ -664,6 +698,7 @@ describe("DuelField", () => {
       throw new Error("Missing opponent sequence 9/10 hand cards");
     const { container } = render(FieldBoard, {
       board: value,
+      renderLayout: createFieldRenderLayout(true, 1280, 720),
       imageUrls: new Map(),
       cardBackUrl: "",
       placeholderUrl: "",
@@ -3639,6 +3674,7 @@ describe("FieldBoard", () => {
     try {
       const rendered = render(FieldBoard, {
         board: board("ST-05"),
+        renderLayout: createFieldRenderLayout(true, 1280, 720),
         imageUrls: new Map<number, string>(),
         cardBackUrl: "card-back.png",
         placeholderUrl: "placeholder.png",

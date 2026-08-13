@@ -27,11 +27,12 @@ describe("global styles", () => {
     expect(block).not.toContain("calc((100vh - 4rem) * 16 / 9)");
   });
 
-  it("board keeps a min-width that holds field targets at 44px", () => {
+  it("board uses explicit geometry while interaction controls keep 44px floors", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
-    expect(ruleBlock(css, ".duel-field-board {")).toContain("min-width: 52rem");
-    // T14: the pan moved off the field root onto its scroll child so the root
-    // can stay a still boundary for the floating windows (ADR-017).
+    expect(ruleBlock(css, ".duel-field-board {")).toContain("height: 100%");
+    expect(ruleBlock(css, ".duel-field-card__target {")).toContain(
+      "min-width: max(100%, 2.75rem)",
+    );
     expect(ruleBlock(css, ".duel-field-scroll-region {")).toContain(
       "overflow: auto",
     );
@@ -42,6 +43,13 @@ describe("global styles", () => {
     const block = duelFieldBlock(css);
     expect(block).toContain("overflow: hidden");
     expect(block).toContain("position: relative");
+  });
+
+  it("declares concentric px zone slots six pixels wider than cards", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const slot = ruleBlock(css, ".duel-field-zone__slot {");
+    expect(slot).toContain("+ 6px");
+    expect(slot).toContain("translate(-50%, -50%)");
   });
 
   it("the actionable halo is green, not orange", () => {

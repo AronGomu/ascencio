@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onDestroy, tick } from "svelte";
   import type { BoardCardView } from "../../../field/board-view-model.ts";
+  import type { FieldPlacement } from "../../../field/duel-field-geometry.ts";
   import type {
     CardImageLease,
     CardImageLibrary,
@@ -14,6 +15,7 @@
 
   export let card: BoardCardView;
   export let layout: "field" | "hand" = "field";
+  export let placement: FieldPlacement | null = null;
   export let imageUrl: string;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let interactionKind: ActiveInteractionSpec["kind"] | null = null;
@@ -50,10 +52,8 @@
     card.image.kind === "face" ? card.image.code : undefined,
     imageUrl,
   );
-  $: positionStyle =
-    layout === "field"
-      ? `--field-x: ${card.x * 100}%; --field-y: ${card.y * 100}%; --field-width: ${card.width * 100}%; --field-height: ${card.height * 100}%;`
-      : undefined;
+  $: positionStyle = fieldPositionStyle(layout, placement);
+
   $: accessibleLabel =
     card.facing === "opponent" &&
     !card.label.toLocaleLowerCase().includes("opponent")
@@ -70,6 +70,16 @@
   $: if (pinned !== wasPinned) synchronizePinnedFocus(pinned);
 
   onDestroy(() => imageLease?.release());
+
+  function fieldPositionStyle(
+    value: "field" | "hand",
+    valuePlacement: FieldPlacement | null,
+  ): string | undefined {
+    if (value === "hand") return undefined;
+    if (valuePlacement === null)
+      throw new Error(`Missing field render placement for card ${card.id}`);
+    return `--field-x: ${valuePlacement.x}px; --field-y: ${valuePlacement.y}px; --field-width: ${valuePlacement.width * (72 / 104)}px; --field-height: ${valuePlacement.height}px;`;
+  }
 
   function synchronizePinnedFocus(next: boolean): void {
     wasPinned = next;
@@ -220,6 +230,8 @@
   class:is-hidden={card.hidden}
   class:is-opponent={card.facing === "opponent"}
   class:is-sideways={card.orientation === "sideways"}
+  class:is-defense={card.position === "faceUpDefense"}
+  class:is-set={card.position === "faceDownDefense"}
   class:is-actionable={actionable}
   class:is-dragging={dragging}
   class:is-pinned={pinned}

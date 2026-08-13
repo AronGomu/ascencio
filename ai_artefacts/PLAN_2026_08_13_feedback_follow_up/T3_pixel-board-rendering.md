@@ -68,14 +68,14 @@ export let placement: FieldPlacement;
 
 ## Impl steps
 
-- [ ] 1. Extend `tests/component/DuelField.test.ts` + `e2e-acceptance/full-height-field.spec.ts`; run red.
-- [ ] 2. Add `.duel-field-slot` wrapper in App/current shell; bind slot element into DuelField via exact prop `export let layoutBoundaryElement:HTMLElement|null=null` (forward through ErrorBoundary). Observe slot, not inner field; disconnect on destroy; recompute profile change.
-- [ ] 3. Thread `renderLayout` into `FieldBoard`; map each non-hand zone/card/stack by stable physical ID.
-- [ ] 4. Replace `ZoneControl` percent style with px placement; add `.duel-field-zone__slot` with unique `data-cy` per zone.
-- [ ] 5. Add optional `placement` to `CardControl`; for `layout="field"` require it; compose scale outer + rotation inner.
-- [ ] 6. Add required placement to `StackControl`; keep image lease/click/preview behavior.
-- [ ] 7. Replace conflicting field CSS only; preserve 44px focus/interaction layers.
-- [ ] 8. Extend acceptance scenarios with explicit occupied Defense/Set cards; run Chromium metrics.
+- [x] 1. Extend `tests/component/DuelField.test.ts` + `e2e-acceptance/full-height-field.spec.ts`; run red. Criterion: focused Vitest/Playwright assertions fail before production edits.
+- [x] 2. Add `.duel-field-slot` wrapper in App/current shell; bind slot element into DuelField via exact prop `export let layoutBoundaryElement:HTMLElement|null=null` (forward through ErrorBoundary). Observe slot, not inner field; disconnect on destroy; recompute profile change. Criterion: component test observes one boundary observer, fallback geometry, resize recompute, disconnect.
+- [x] 3. Thread `renderLayout` into `FieldBoard`; map each non-hand zone/card/stack by stable physical ID. Criterion: component assertions show matching physical IDs share px centres; missing placement throws visibly.
+- [x] 4. Replace `ZoneControl` percent style with px placement; add `.duel-field-zone__slot` with unique `data-cy` per zone. Criterion: every painted zone has one uniquely identified concentric slot plus px inline vars.
+- [x] 5. Add optional `placement` to `CardControl`; for `layout="field"` require it; compose scale outer + rotation inner. Criterion: Defense/Set tests show `is-defense`/`is-set` on article, inner-art rotation, stable outer centre.
+- [x] 6. Add required placement to `StackControl`; keep image lease/click/preview behavior. Criterion: component tests retain stack attrs/events/image while centre matches zone placement.
+- [x] 7. Replace conflicting field CSS only; preserve 44px focus/interaction layers. Criterion: global-style tests assert px geometry, square zones, concentric slots, outer scale, inner rotation, 44px controls.
+- [x] 8. Extend acceptance scenarios with explicit occupied Defense/Set cards; run Chromium metrics. Criterion: ticket Playwright command passes gap, slot delta, rotation, ratio, resize checks.
 
 ## Outputs
 
@@ -86,10 +86,10 @@ export let placement: FieldPlacement;
 
 ## Validation
 
-- [ ] `npx vitest run tests/component/DuelField.test.ts tests/unit/global-styles.test.ts tests/unit/data-cy-coverage.test.ts` → exit 0.
-- [ ] `npm run typecheck && npm run lint` → exit 0.
-- [ ] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/full-height-field.spec.ts --grep "pixel board|Defense|Set|ratio"` → exit 0.
-- [ ] `npm run build` → production verifier exit 0; harness excluded.
-- [ ] manual check — current real duel remains actionable; focus + drag still work.
-- [ ] app functional — existing focused smoke `npx playwright test e2e/duel-smoke.spec.ts --project=chromium --grep "production bundle initializes"` passes.
-- [ ] commit msg draft: `feat(field): render square zones from pixel geometry`
+- [x] `npx vitest run tests/component/DuelField.test.ts tests/unit/global-styles.test.ts tests/unit/data-cy-coverage.test.ts` → exit 0.
+- [x] `npm run typecheck && npm run lint` → exit 0.
+- [x] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/full-height-field.spec.ts --grep "pixel board|Defense|Set|ratio"` → exit 0.
+- [x] `npm run build` → production verifier exit 0; harness excluded.
+- [ ] manual check — current real duel remains actionable; focus + drag still work. Criterion: human verifies pointer action, keyboard focus, hand drag in real duel.
+- [x] app functional — existing focused smoke `npx playwright test e2e/duel-smoke.spec.ts --project=chromium --grep "production bundle initializes"` passes. Criterion: command exits 0.
+- [x] commit msg draft: `feat(field): render square zones from pixel geometry`. Criterion: final commit subject matches exactly.

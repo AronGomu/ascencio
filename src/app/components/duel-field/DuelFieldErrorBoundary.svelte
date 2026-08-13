@@ -22,6 +22,7 @@
   const EMPTY_IMAGE_URLS: ReadonlyMap<number, string> = new Map();
 
   export let board: BoardViewModel;
+  export let layoutBoundaryElement: HTMLElement | null = null;
   export let imageUrls: ReadonlyMap<number, string> = EMPTY_IMAGE_URLS;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let cardBackUrl: string;
@@ -101,6 +102,7 @@
 <svelte:boundary {failed}>
   <DuelField
     {board}
+    {layoutBoundaryElement}
     {imageUrls}
     {imageLibrary}
     {cardBackUrl}

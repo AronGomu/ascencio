@@ -428,7 +428,7 @@ h4 {
     grid-row: 2;
   }
 
-  .duel-row > .duel-field,
+  .duel-row > .duel-field-slot,
   .duel-row > .field-error {
     grid-row: 1;
   }
@@ -906,6 +906,12 @@ li + li {
   }
 }
 
+.duel-field-slot {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
 .duel-field {
   container: duel-field / inline-size;
   position: relative;
@@ -917,7 +923,7 @@ li + li {
   min-width: 0;
   min-height: 0;
   max-width: 100%;
-  padding: 1rem;
+  padding: 0;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 0.9rem;
@@ -1030,17 +1036,16 @@ button.field-phase-chip {
    against a narrower box than the board they need to align with. */
 .duel-field-stage {
   position: relative;
-  min-width: 52rem;
+  width: 100%;
+  height: 100%;
 }
 
 .duel-field-board {
   position: relative;
   isolation: isolate;
   width: 100%;
-  /* 52rem keeps the 72/1280-unit card wider than the 44px minimum target. */
-  min-width: 52rem;
+  height: 100%;
   margin-inline: auto;
-  aspect-ratio: 16 / 9;
   overflow: hidden;
   border: 1px solid #436558;
   border-radius: 0.8rem;
@@ -1098,6 +1103,18 @@ button.field-phase-chip {
   border: 2px solid var(--accent);
   background: rgb(19 69 66 / 0.72);
   color: #e8edf8;
+}
+
+.duel-field-zone__slot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--field-width) * 0.6923076923 + 6px);
+  height: var(--field-height);
+  border: 1px solid rgb(235 243 255 / 0.4);
+  border-radius: 0.28rem;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
 
 button.duel-field-zone,
@@ -1648,16 +1665,17 @@ button.duel-field-zone,
   transform: rotate(180deg);
 }
 
-.duel-field-card.is-sideways .duel-field-card__art {
-  transform: rotate(90deg) scale(0.69, 1.45);
+.duel-field-card.is-defense .duel-field-card__art,
+.duel-field-card.is-set .duel-field-card__art {
+  transform: rotate(90deg);
 }
 
 .duel-field-card.is-opponent:not(.is-sideways) .duel-field-card__art {
   transform: rotate(180deg);
 }
 
-.duel-field-card.is-opponent.is-sideways .duel-field-card__art {
-  transform: rotate(270deg) scale(0.69, 1.45);
+.duel-field-card.is-opponent:is(.is-defense, .is-set) .duel-field-card__art {
+  transform: rotate(270deg);
 }
 
 .duel-field-card__label {

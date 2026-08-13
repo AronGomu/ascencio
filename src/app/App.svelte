@@ -91,6 +91,7 @@
   const uiSettings = createUiSettingsStore();
   const persistedUi = createPersistedUiStore();
   let pickerOpen = true;
+  let duelFieldSlot: HTMLElement | null = null;
   let menuOpen = false;
   let settingsOpen = false;
   let menubarTrigger: HTMLButtonElement | null = null;
@@ -946,9 +947,15 @@
           </p>
         </section>
       {:else if duelBoard}
+        <div
+          class="duel-field-slot"
+          data-cy="duel-field-slot"
+          bind:this={duelFieldSlot}
+        >
         {#key `${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
           <DuelFieldErrorBoundary
             board={duelBoard}
+            layoutBoundaryElement={duelFieldSlot}
             imageLibrary={imagesMatchRuntime ? imageLibrary : null}
             cardBackUrl={imageLibrary?.cardBackUrl ?? ""}
             placeholderUrl={imageLibrary?.placeholderUrl ?? ""}
@@ -973,6 +980,7 @@
             onconfirmWindowPositionChange={moveConfirmWindow}
           />
         {/key}
+        </div>
       {:else if $duel.snapshot}
         <section
           class="field-error"

@@ -34,6 +34,14 @@ export function fullHeightFieldScenario(
             2,
             "faceUpDefense",
           ),
+          card(
+            "acceptance-set",
+            97590747,
+            0,
+            "monster",
+            3,
+            "faceDownDefense",
+          ),
         ]
       : [],
   );
@@ -96,7 +104,7 @@ function card(
     location,
     sequence,
     position,
-    faceUp: true,
+    faceUp: position !== "faceDownDefense",
     counters: [],
     overlayMaterials: [],
   };

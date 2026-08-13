@@ -33,6 +33,10 @@
   import { placementZoneCandidates } from "../../field/placement-candidates.ts";
   import type { PhysicalZoneId } from "../../field/duel-field-layout.ts";
   import {
+    createFieldRenderLayout,
+    type FieldRenderLayout,
+  } from "../../field/duel-field-geometry.ts";
+  import {
     createDomFeedbackController,
     EMPTY_DOM_FEEDBACK_STATE,
     type DomFeedbackController,
@@ -67,6 +71,7 @@
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 104'%3E%3Crect width='72' height='104' rx='5' fill='%2318243b'/%3E%3Cpath d='M8 8h56v88H8z' fill='none' stroke='%23697895' stroke-width='2'/%3E%3Ctext x='36' y='57' fill='%23a9b5ca' font-size='28' text-anchor='middle'%3E?%3C/text%3E%3C/svg%3E";
 
   export let board: BoardViewModel;
+  export let layoutBoundaryElement: HTMLElement | null = null;
   export let imageUrls: ReadonlyMap<number, string> = EMPTY_IMAGE_URLS;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let cardBackUrl = DEFAULT_CARD_BACK;
@@ -134,6 +139,9 @@
   if (injectFailure) throw new Error("Injected duel field component failure");
 
   let fieldRoot: HTMLElement;
+  let renderLayout: FieldRenderLayout;
+  let resizeObserver: ResizeObserver | null = null;
+  let observedLayoutBoundary: HTMLElement | null = null;
   let feedbackController: DomFeedbackController | null = null;
   let feedbackState: DomFeedbackState = EMPTY_DOM_FEEDBACK_STATE;
   let mediaReducedMotion = false;
@@ -191,12 +199,48 @@
   /* Derived from the projected board itself, so the strip can never disagree
      with the zones the mapper actually produced. */
   $: extraMonsterZones = board.zones.some(({ player }) => player === "shared");
+  $: renderLayout = measuredRenderLayout(
+    layoutBoundaryElement,
+    extraMonsterZones,
+  );
+  $: observeLayoutBoundary(layoutBoundaryElement);
   $: actionBarVisible =
     prompt !== null &&
     spec !== null &&
     (spec.fieldCapable || spec.promptKind === "chain") &&
     fieldActionBarRequired(spec);
-  onDestroy(removeGhost);
+  onDestroy(() => {
+    removeGhost();
+    resizeObserver?.disconnect();
+  });
+
+  function measuredRenderLayout(
+    boundary: HTMLElement | null,
+    profile: boolean,
+  ): FieldRenderLayout {
+    const width = boundary?.clientWidth ?? 0;
+    const height = boundary?.clientHeight ?? 0;
+    return createFieldRenderLayout(
+      profile,
+      width > 0 ? width : 1280,
+      height > 0 ? height : 720,
+    );
+  }
+
+  function observeLayoutBoundary(boundary: HTMLElement | null): void {
+    if (boundary === observedLayoutBoundary) return;
+    resizeObserver?.disconnect();
+    observedLayoutBoundary = boundary;
+    if (boundary === null || typeof ResizeObserver === "undefined") return;
+    resizeObserver = new ResizeObserver(() => {
+      renderLayout = createFieldRenderLayout(
+        extraMonsterZones,
+        boundary.clientWidth,
+        boundary.clientHeight,
+      );
+    });
+    resizeObserver.observe(boundary);
+  }
 
   onMount(() => {
     const motionQuery = globalThis.matchMedia?.(
@@ -832,6 +876,7 @@
   data-cy="duel-field"
   data-dragging={dragCard === null ? undefined : "true"}
   data-prompt-kind={prompt === null ? undefined : prompt.kind}
+  style={`width: ${renderLayout.geometry.width}px; height: ${renderLayout.geometry.height}px;`}
   onclick={dismissOnOutsideClick}
 >
   <!-- The board pans inside its own scroll child so `.duel-field` itself
@@ -844,6 +889,7 @@
     <div class="duel-field-stage" data-cy="duel-field-stage">
       <FieldBoard
         {board}
+        {renderLayout}
         {imageUrls}
         {imageLibrary}
         cardBackUrl={resolvedCardBackUrl}

@@ -1,7 +1,9 @@
 <script lang="ts">
   import type { BoardZoneView } from "../../../field/board-view-model.ts";
+  import type { FieldPlacement } from "../../../field/duel-field-geometry.ts";
 
   export let zone: BoardZoneView;
+  export let placement: FieldPlacement;
   export let actionable = false;
   export let selected = false;
   export let active = false;
@@ -16,7 +18,7 @@
 
   let pointerOrigin: { readonly x: number; readonly y: number } | null = null;
   let pointerMoved = false;
-  $: positionStyle = `--field-x: ${zone.x * 100}%; --field-y: ${zone.y * 100}%; --field-width: ${zone.width * 100}%; --field-height: ${zone.height * 100}%;`;
+  $: positionStyle = `--field-x: ${placement.x}px; --field-y: ${placement.y}px; --field-width: ${placement.width}px; --field-height: ${placement.height}px;`;
 
   function activate(): void {
     pointerOrigin = null;
@@ -70,6 +72,11 @@
   onclick={actionable ? activate : undefined}
   data-cy={`field-zone-${zone.id}`}
 >
+  <span
+    class="duel-field-zone__slot"
+    aria-hidden="true"
+    data-cy={`field-zone-slot-${zone.id}`}
+  ></span>
   <span aria-hidden="true" data-cy={`zone-control-label-${zone.id}`}
     >{zone.label}</span
   >

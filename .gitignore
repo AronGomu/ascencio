@@ -33,6 +33,3 @@ graphify-out/
 # every run; the transcripts also carry opaque session tokens.
 .pi-subagents/
 .tmp/
-
-# Local working feedback backlog (not source of truth for git)
-feedback.md

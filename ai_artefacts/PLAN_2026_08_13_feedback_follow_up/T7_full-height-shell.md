@@ -111,4 +111,4 @@ Expected measured board matrix (≤1px browser rounding):
 - [x] `npx playwright test e2e/duel-smoke.spec.ts --project=chromium --grep "responsive|floating field windows|production bundle"` → exit 0.
 - [x] `rg "duel-row|DuelHeaderBar|52rem" src tests e2e` → no stale shell authority.
 - [x] app functional — `npm run build` exits 0.
-- [ ] commit msg draft: `fix(field): close full-height shell review findings`
+- [x] commit msg draft: `fix(field): close full-height shell review findings` — code commit `200a1ac`

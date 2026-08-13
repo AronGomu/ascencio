@@ -117,4 +117,4 @@ Stable selectors: `duel-right-rail`, `duel-right-rail-turn-phase`, `duel-right-r
 - [x] `npx playwright test e2e/duel-smoke.spec.ts --project=chromium --grep "production bundle initializes|life points|rail"` → exit 0.
 - [ ] manual check — options opens settings; status never replaces prompt UI.
 - [x] app functional — `npm run build` exits 0.
-- [ ] commit msg draft: `feat(shell): replace duel header with status rail`
+- [x] commit msg draft: `feat(shell): replace duel header with status rail` — code commit `4cb0957`

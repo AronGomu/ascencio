@@ -88,4 +88,4 @@ Preserve all existing props. Root inline vars:
 - [x] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/full-height-field.spec.ts --grep "phase|End turn"` → exit 0.
 - [ ] manual keyboard check — each legal phase button + End turn reachable/activates same `ChoiceId`.
 - [x] app functional — `npm run build` exits 0.
-- [ ] commit msg draft: `feat(field): anchor phase controls to pixel geometry`
+- [x] commit msg draft: `feat(field): anchor phase controls to pixel geometry`

@@ -6,6 +6,6 @@
 
 ## T2 conditional-chromium-acceptance-harness
 
-- [x] Unknown or missing scenario shows explicit failure marker without fallback board (automated Chromium equivalent passed).
-- [x] Normal production build keeps `index.html` behavior and excludes acceptance entry/scenario IDs.
-- [x] Dedicated Chromium harness renders real field components for EMZ, no-EMZ, and Defense scenarios.
+- [ ] Open an unknown or missing acceptance scenario and confirm a visible error appears with no fallback board.
+- [ ] Open the normal app and confirm its startup and duel experience remain unchanged.
+- [ ] Open the deterministic EMZ, no-EMZ, and Defense harness scenarios and confirm each field renders visually as expected.

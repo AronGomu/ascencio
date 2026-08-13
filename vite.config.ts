@@ -90,6 +90,15 @@ export default defineConfig({
   build: {
     target: "es2023",
     chunkSizeWarningLimit: 500,
+    rollupOptions: {
+      input:
+        process.env.ACCEPTANCE_SCENARIOS === "1"
+          ? {
+              index: path.join(projectRoot, "index.html"),
+              acceptance: path.join(projectRoot, "acceptance.html"),
+            }
+          : path.join(projectRoot, "index.html"),
+    },
   },
   worker: {
     format: "es",

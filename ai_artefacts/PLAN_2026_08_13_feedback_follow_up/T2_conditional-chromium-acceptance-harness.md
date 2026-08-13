@@ -26,6 +26,7 @@
 - `src/app/components/DuelField.svelte`, `src/app/components/duel-field/FieldBoard.svelte` — real render targets.
 - `docs/ADR/019_ADR_full_height_duel_shell_and_pixel_geometry.md` — Chromium evidence authority.
 - **From Depends:** `src/field/duel-field-geometry.ts` exports `computeFieldGeometry`, `createFieldRenderLayout`, `FieldRenderLayout`; no DOM consumes them yet.
+- **Plan-defect fact (scouted):** `src/field/board-view-model.ts` exports `mapSnapshotToBoard(snapshot: PublicDuelState, cardTexts: ReadonlyMap<number, BoardCardText> = new Map(), prompt?: PlayerPrompt | null): BoardMappingResult`. Narrow `result.ok`; `result.value` is the `BoardViewModel` passed to `DuelField`. `tests/fixtures/duel-field-public-events.ts:85-102` is the existing fixture pattern. No extra adapter/dependency object is required; supply local acceptance card texts only when stable names matter.
 
 ## Required files + contract
 
@@ -81,13 +82,13 @@ export function acceptanceScenarioId(search: string): AcceptanceScenarioId | nul
 
 ## Impl steps
 
-- [ ] 1. Create `e2e-acceptance/harness.spec.ts` + placeholder `full-height-field.spec.ts`; run dedicated config; confirm missing page/config failure.
-- [ ] 2. Add `acceptance.html`, `src/acceptance-main.ts`, scenario parser, deterministic field fixture builders.
-- [ ] 3. Add `AcceptanceHarness.svelte`; mount real field components + global CSS; emit scenario/error hooks only in acceptance entry.
-- [ ] 4. Add conditional multi-page input in `vite.config.ts`; normal input remains only `index.html`.
-- [ ] 5. Add `playwright.acceptance.config.ts` on port 4203; leave `playwright.config.ts` unchanged.
-- [ ] 6. Run normal build first; assert `dist/acceptance.html` absent + built JS contains no acceptance scenario IDs.
-- [ ] 7. Run dedicated acceptance suite; then run `data-cy` coverage.
+- [x] 1. Create `e2e-acceptance/harness.spec.ts` + placeholder `full-height-field.spec.ts`; validation: dedicated Playwright invocation fails because config/page is missing. Evidence: command exited 1 with `playwright.acceptance.config.ts does not exist`.
+- [x] 2. Add `acceptance.html`, `src/acceptance-main.ts`, scenario parser, deterministic field fixture builders; validation: files exist and `npm run typecheck` accepts their contracts. Evidence: `npm run typecheck` found 0 errors and 0 warnings.
+- [x] 3. Add `AcceptanceHarness.svelte`; mount real field components + global CSS; emit scenario/error hooks only in acceptance entry; validation: dedicated harness spec observes scenario/error selectors. Evidence: 5 Chromium specs passed.
+- [x] 4. Add conditional multi-page input in `vite.config.ts`; normal input remains only `index.html`; validation: normal build omits `dist/acceptance.html` and acceptance build emits it. Evidence: normal exclusion passed; post-acceptance `test -e dist/acceptance.html` passed.
+- [x] 5. Add `playwright.acceptance.config.ts` on port 4203; leave `playwright.config.ts` unchanged; validation: dedicated Chromium command starts preview on port 4203 and passes. Evidence: exact command completed with 5 passed.
+- [x] 6. Run normal build first; validation: `test ! -e dist/acceptance.html` and `! grep -R "field-defense" dist/assets dist/index.html` both exit 0. Evidence: combined command exited 0; verifier returned `status: ok`.
+- [x] 7. Run dedicated acceptance suite; then run `data-cy` coverage; validation: both exact commands in Validation exit 0. Evidence: Chromium 5 passed; Vitest 30 passed.
 
 ## Outputs
 
@@ -98,11 +99,11 @@ export function acceptanceScenarioId(search: string): AcceptanceScenarioId | nul
 
 ## Validation
 
-- [ ] `rm -rf dist && npm run build` → exit 0; `test ! -e dist/acceptance.html`.
-- [ ] `npx vitest run tests/unit/data-cy-coverage.test.ts` → exit 0.
-- [ ] `! grep -R "field-defense" dist/assets dist/index.html` after normal build → exit 0.
-- [ ] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/harness.spec.ts` → exit 0.
-- [ ] `npm run typecheck && npm run lint` → exit 0.
-- [ ] manual check — unknown scenario shows explicit error; normal app URL unchanged.
-- [ ] app functional — normal `npm run build` + production verifier pass.
-- [ ] commit msg draft: `test(browser): add isolated acceptance scenarios`
+- [x] `rm -rf dist && npm run build` → exit 0; `test ! -e dist/acceptance.html`. Evidence: combined command exited 0.
+- [x] `npx vitest run tests/unit/data-cy-coverage.test.ts` → exit 0. Evidence: 1 file, 30 tests passed.
+- [x] `! grep -R "field-defense" dist/assets dist/index.html` after normal build → exit 0. Evidence: combined normal-build command exited 0.
+- [x] `npx playwright test --config=playwright.acceptance.config.ts --project=chromium e2e-acceptance/harness.spec.ts` → exit 0. Evidence: 5 passed in 3.4s.
+- [x] `npm run typecheck && npm run lint` → exit 0. Evidence: 0 Svelte errors/warnings; ESLint exited 0.
+- [x] manual check — automated equivalent: Playwright unknown-scenario assertion passes and normal `index.html` production build remains unchanged. Evidence: unknown + missing scenario specs passed; normal build exclusion passed.
+- [x] app functional — `rm -rf dist && npm run build` exits 0, including production verifier. Evidence: verifier returned `status: ok`, snapshot ID, 243 runtime files.
+- [x] commit msg draft: commit exists with exact subject `test(browser): add isolated acceptance scenarios`; validation: `git log -1 --pretty=%s` matches. Evidence: commit `be99dd9` created with exact subject.

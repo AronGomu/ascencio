@@ -124,6 +124,55 @@ describe("AppShell", () => {
     expect(stage?.getAttribute("data-stage-mode")).toBe("mobile-portrait");
   });
 
+  /* T15: the quarter turn itself is a media query in `src/styles/app.css`, and
+     applies to the duel region rather than the whole stage — the deck editor,
+     story and home hub share this stage and read upright in portrait. What the
+     shell publishes here is the mode: `src/app/presentation/stage-frame.ts`
+     still reads the live transform before mapping a single coordinate. */
+  it("marks a portrait phone's stage as rotated", () => {
+    setViewport(400, 900);
+    renderAt("#/duel");
+    const stage = document.querySelector('[data-cy="app-stage"]');
+    expect(stage?.getAttribute("data-stage-rotated")).toBe("true");
+    expect(stage?.getAttribute("data-stage-mode")).toBe("mobile-portrait");
+  });
+
+  it("leaves desktop and small-landscape stages unrotated", () => {
+    setViewport(900, 400);
+    renderAt("#/duel");
+    expect(
+      document
+        .querySelector('[data-cy="app-stage"]')
+        ?.getAttribute("data-stage-rotated"),
+    ).toBeNull();
+    cleanup();
+    setViewport(1600, 900);
+    renderAt("#/duel");
+    expect(
+      document
+        .querySelector('[data-cy="app-stage"]')
+        ?.getAttribute("data-stage-rotated"),
+    ).toBeNull();
+  });
+
+  /* The rotation must not reorder anything: it is a transform on one box, so
+     the duel's controls keep the DOM order — and therefore the tab order —
+     they have in landscape. */
+  it("renders the same duel region markup rotated and unrotated", () => {
+    setViewport(900, 400);
+    renderAt("#/duel");
+    const landscape = document.querySelector(
+      '[data-cy="shell-region-duel"]',
+    )?.innerHTML;
+    cleanup();
+    setViewport(400, 900);
+    renderAt("#/duel");
+    const portrait = document.querySelector(
+      '[data-cy="shell-region-duel"]',
+    )?.innerHTML;
+    expect(portrait).toBe(landscape);
+  });
+
   it("letterboxes a desktop viewport into a 16:9 stage", () => {
     setViewport(1920, 1200);
     renderAt("#/");

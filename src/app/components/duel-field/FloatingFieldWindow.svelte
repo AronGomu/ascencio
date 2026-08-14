@@ -5,6 +5,12 @@
     type FieldWindowId,
     type Size,
   } from "../../presentation/floating-window-position.ts";
+  import {
+    readStageFrame,
+    toFrameDelta,
+    UNROTATED_FRAME,
+    type StageFrame,
+  } from "../../presentation/stage-frame.ts";
   import type { PersistedWindowPosition } from "../../stores/persisted-ui-state.ts";
 
   export let windowId: FieldWindowId;
@@ -44,8 +50,15 @@
   let y = 0;
   let dragging = false;
   let dragPointerId: number | null = null;
-  let dragOffsetX = 0;
-  let dragOffsetY = 0;
+  /* The gesture is tracked as a delta from where it started rather than as a
+     pointer-minus-position offset: on a portrait phone the field is turned a
+     quarter turn, so a viewport delta has to be turned with it before it can
+     be added to a position that lives in the field's own coordinates. */
+  let dragPointerStartX = 0;
+  let dragPointerStartY = 0;
+  let dragWindowStartX = 0;
+  let dragWindowStartY = 0;
+  let dragStageFrame: StageFrame = UNROTATED_FRAME;
   let sizeObserver: ResizeObserver | null = null;
   let observedBoundary: HTMLElement | null = null;
   let lastCollapsed = collapsed;
@@ -214,8 +227,11 @@
     expandedAnchor = null;
     dragging = true;
     dragPointerId = event.pointerId;
-    dragOffsetX = event.clientX - x;
-    dragOffsetY = event.clientY - y;
+    dragStageFrame = readStageFrame(boundaryElement ?? event.currentTarget);
+    dragPointerStartX = event.clientX;
+    dragPointerStartY = event.clientY;
+    dragWindowStartX = x;
+    dragWindowStartY = y;
     /* Capture keeps move/up on the handle once the pointer travels over the
        board. jsdom implements neither capture method, hence optional calls. */
     event.currentTarget.setPointerCapture?.(event.pointerId);
@@ -224,9 +240,14 @@
 
   function moveDrag(event: PointerEvent): void {
     if (!dragging || event.pointerId !== dragPointerId) return;
+    const moved = toFrameDelta(
+      dragStageFrame,
+      event.clientX - dragPointerStartX,
+      event.clientY - dragPointerStartY,
+    );
     const next = {
-      x: event.clientX - dragOffsetX,
-      y: event.clientY - dragOffsetY,
+      x: dragWindowStartX + moved.x,
+      y: dragWindowStartY + moved.y,
     };
     const boundary = boundarySize(boundaryElement);
     const clamped =

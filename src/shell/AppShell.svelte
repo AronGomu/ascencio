@@ -89,10 +89,14 @@
   });
 </script>
 
+<!-- `data-stage-rotated` reports the mode, not a measurement: the quarter turn
+     itself lives in `src/styles/app.css` so it lands in the same layout pass as
+     the viewport change. -->
 <div
   class="app-stage"
   data-cy="app-stage"
   data-stage-mode={box.mode}
+  data-stage-rotated={box.rotated ? "true" : undefined}
   bind:this={stage}
 >
   {#if route.kind === "home"}
@@ -135,7 +139,16 @@
         </p>
       {/if}
       {#await loaders.duel() then module}
-        <svelte:component this={module.BattleFacade} request={null} />
+        <!-- The duel is rotated by the stylesheet, so the notice explaining it
+             belongs to the duel; its one-time dismissal is a shell setting, so
+             the flag and its setter cross the boundary as plain props. -->
+        <svelte:component
+          this={module.BattleFacade}
+          request={null}
+          rotated={box.rotated}
+          rotationNoticeDismissed={$settings.rotationNoticeDismissed}
+          onrotationnoticedismiss={() => settings.dismissRotationNotice()}
+        />
       {/await}
     </div>
   {/if}

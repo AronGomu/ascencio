@@ -13,6 +13,14 @@ export interface StageBox {
   readonly offsetX: number;
   readonly offsetY: number;
   readonly mode: StageMode;
+  /** True only in `mobile-portrait`: a phone held vertically plays the duel on
+      a stage the stylesheet turns a quarter turn clockwise, rather than on a
+      16:9 board squeezed into a tall viewport. Presentation only — legality,
+      prompts and Worker traffic never see it. The box above stays the upright
+      stage box, because the rotation is applied to the duel region inside the
+      stage and not to the stage itself: the deck editor shares this stage and
+      keeps the unrotated portrait layout it got in T14. */
+  readonly rotated: boolean;
 }
 
 const EMPTY_BOX: StageBox = Object.freeze({
@@ -21,6 +29,7 @@ const EMPTY_BOX: StageBox = Object.freeze({
   offsetX: 0,
   offsetY: 0,
   mode: "stage",
+  rotated: false,
 });
 
 function isUsable(value: number): boolean {
@@ -51,6 +60,7 @@ export function computeStageBox(
       offsetX: 0,
       offsetY: 0,
       mode,
+      rotated: true,
     });
   }
 
@@ -70,5 +80,6 @@ export function computeStageBox(
     offsetX: Math.floor((viewportWidth - width) / 2),
     offsetY: Math.floor((viewportHeight - height) / 2),
     mode,
+    rotated: false,
   });
 }

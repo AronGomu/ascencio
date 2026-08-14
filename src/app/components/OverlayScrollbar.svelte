@@ -1,5 +1,10 @@
 <script lang="ts">
   import { onDestroy, tick } from "svelte";
+  import {
+    readStageFrame,
+    toFrameDelta,
+    type StageFrame,
+  } from "../presentation/stage-frame.ts";
 
   export let axis: "horizontal" | "vertical";
   export let scrollElement: HTMLElement | null = null;
@@ -13,7 +18,12 @@
   let hidden = true;
   let thumbSize = 0;
   let thumbOffset = 0;
-  let drag: { pointerId: number; start: number; scroll: number } | null = null;
+  let drag: {
+    pointerId: number;
+    start: number;
+    scroll: number;
+    frame: StageFrame;
+  } | null = null;
 
   $: synchronizeContent(contentSizeKey);
   $: reconnect(scrollElement);
@@ -106,17 +116,26 @@
         : 0;
   }
 
-  function pointerCoordinate(event: PointerEvent): number {
-    return axis === "horizontal" ? event.clientX : event.clientY;
+  /* The thumb travels along its own axis, which a portrait phone turns a
+     quarter turn away from the viewport axis of the same name: dragging the
+     finger *down* the screen then has to scroll a horizontal band. Only the
+     difference against `drag.start` is ever used, so mapping the raw pointer
+     through the frame is enough — and unrotated it is the plain client
+     coordinate this always read. */
+  function pointerCoordinate(event: PointerEvent, frame: StageFrame): number {
+    const point = toFrameDelta(frame, event.clientX, event.clientY);
+    return axis === "horizontal" ? point.x : point.y;
   }
 
   function pointerDown(event: PointerEvent): void {
     const current = values();
     if (current === null) return;
+    const frame = readStageFrame(thumbElement);
     drag = {
       pointerId: event.pointerId,
-      start: pointerCoordinate(event),
+      start: pointerCoordinate(event, frame),
       scroll: current.scroll,
+      frame,
     };
     thumbElement.setPointerCapture(event.pointerId);
   }
@@ -133,7 +152,8 @@
             Math.max(
               0,
               drag.scroll +
-                ((pointerCoordinate(event) - drag.start) / trackTravel) *
+                ((pointerCoordinate(event, drag.frame) - drag.start) /
+                  trackTravel) *
                   current.scrollTravel,
             ),
           )

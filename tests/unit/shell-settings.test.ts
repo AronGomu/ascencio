@@ -61,6 +61,7 @@ describe("shell settings", () => {
       version: 3,
       fullscreenPreferred: true,
       fullscreenTipDismissed: true,
+      rotationNoticeDismissed: true,
       display: { showZoneOutlines: false, showZoneCounts: true },
     };
     writeShellSettings(
@@ -72,6 +73,27 @@ describe("shell settings", () => {
       value,
     );
     expect(readShellSettings(storageOf(entries))).toEqual(value);
+  });
+
+  /* T15: the duel's one-time rotation notice. A payload written before this
+     flag existed must keep showing the notice once rather than crash or
+     suppress it, so the parser defaults it rather than requiring it. */
+  it("defaults the rotation notice to undismissed, including on an older v3 payload", () => {
+    expect(DEFAULT_SHELL_SETTINGS.rotationNoticeDismissed).toBe(false);
+    expect(readShellSettings(storageOf({})).rotationNoticeDismissed).toBe(
+      false,
+    );
+    const withoutFlag = JSON.stringify({
+      version: 3,
+      fullscreenPreferred: true,
+      fullscreenTipDismissed: true,
+      display: { showZoneOutlines: true, showZoneCounts: true },
+    });
+    expect(
+      readShellSettings(storageOf({ [SHELL_SETTINGS_KEY]: withoutFlag }))
+        .rotationNoticeDismissed,
+    ).toBe(false);
+    expect(migrateFromV2(null).rotationNoticeDismissed).toBe(false);
   });
 
   it("prefers the v3 payload over a stale v2 payload", () => {

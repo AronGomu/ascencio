@@ -1,5 +1,6 @@
 import type { BoardTargetId } from "../../field/board-view-model.ts";
 import type { DomPresentationCommand } from "./presentation-command.ts";
+import { readStageFrame, toFrameDelta, toFrameRect } from "./stage-frame.ts";
 
 const MAXIMUM_FEEDBACK_DURATION_MS = 600;
 
@@ -105,12 +106,17 @@ export function createDomFeedbackController(
         if (command.kind === "card-move") {
           const fromRect = from.getBoundingClientRect();
           const toRect = to.getBoundingClientRect();
+          /* The rects are viewport-space but the translate lands inside the
+             field, which a portrait phone turns a quarter turn (T15). */
+          const travel = toFrameDelta(
+            readStageFrame(root),
+            centerX(fromRect) - centerX(toRect),
+            centerY(fromRect) - centerY(toRect),
+          );
           animate(
             to.querySelector(".duel-field-card__art") ?? to,
             [
-              {
-                translate: `${centerX(fromRect) - centerX(toRect)}px ${centerY(fromRect) - centerY(toRect)}px`,
-              },
+              { translate: `${travel.x}px ${travel.y}px` },
               { translate: "0 0" },
             ],
             durationMs,
@@ -203,9 +209,15 @@ function lineBetween(
   to: Element,
   kind: FieldFeedbackLine["kind"],
 ): FieldFeedbackLine {
-  const rootRect = root.getBoundingClientRect();
-  const fromRect = from.getBoundingClientRect();
-  const toRect = to.getBoundingClientRect();
+  /* The line is drawn in `root`'s own coordinate system, so every viewport
+     rect below is mapped into the frame first: on a portrait phone the field
+     is turned a quarter turn and a raw viewport difference would draw the
+     line across the wrong axis. Unrotated, `toFrameRect` is the identity and
+     this is the plain rect arithmetic it has always been. */
+  const frame = readStageFrame(root);
+  const rootRect = toFrameRect(frame, root.getBoundingClientRect());
+  const fromRect = toFrameRect(frame, from.getBoundingClientRect());
+  const toRect = toFrameRect(frame, to.getBoundingClientRect());
   return {
     kind,
     x1: centerX(fromRect) - rootRect.left,
@@ -215,10 +227,10 @@ function lineBetween(
   };
 }
 
-function centerX(rect: DOMRect): number {
+function centerX(rect: { left: number; width: number }): number {
   return rect.left + rect.width / 2;
 }
 
-function centerY(rect: DOMRect): number {
+function centerY(rect: { top: number; height: number }): number {
   return rect.top + rect.height / 2;
 }

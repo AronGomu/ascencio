@@ -13,6 +13,7 @@ describe("computeStageBox", () => {
       offsetX: 0,
       offsetY: 0,
       mode: "stage",
+      rotated: false,
     });
   });
 
@@ -50,6 +51,7 @@ describe("computeStageBox", () => {
       offsetX: 0,
       offsetY: 0,
       mode: "mobile-portrait",
+      rotated: true,
     });
   });
 
@@ -74,9 +76,34 @@ describe("computeStageBox", () => {
         offsetX: 0,
         offsetY: 0,
         mode: "stage",
+        rotated: false,
       });
       expect(Object.isFrozen(box)).toBe(true);
     }
+  });
+
+  /* Only a portrait viewport below the breakpoint plays the duel on a rotated
+     stage; every other mode keeps the upright 16:9 box. The flag is what the
+     shell mirrors onto `data-stage-rotated`, and the pixel numbers stay
+     exactly what the stylesheet derives for `.app-stage` in each mode — the
+     rotation is applied to the duel region inside the stage, not to the stage
+     itself, so the deck editor keeps its own portrait layout (T14). */
+  it("only mobile-portrait is rotated", () => {
+    expect(computeStageBox(400, 900).rotated).toBe(true);
+    expect(computeStageBox(400, 900).mode).toBe("mobile-portrait");
+    expect(computeStageBox(900, 400).rotated).toBe(false);
+    expect(computeStageBox(900, 400).mode).toBe("mobile-landscape");
+    expect(computeStageBox(1600, 900).rotated).toBe(false);
+    expect(computeStageBox(1600, 900).mode).toBe("stage");
+    expect(computeStageBox(0, 0).rotated).toBe(false);
+  });
+
+  /* A square viewport is portrait by the same `height >= width` rule the
+     stylesheet's `orientation: portrait` uses, so the two agree on the one
+     input where a stricter `>` would not. */
+  it("a square viewport below the breakpoint rotates", () => {
+    expect(computeStageBox(600, 600).mode).toBe("mobile-portrait");
+    expect(computeStageBox(600, 600).rotated).toBe(true);
   });
 
   it("every returned box is frozen", () => {

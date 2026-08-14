@@ -80,6 +80,52 @@ body {
   grid-template-rows: auto minmax(0, 1fr);
 }
 
+/* T15: a phone held vertically plays the duel a quarter turn clockwise rather
+   than on a 16:9 board squeezed into a tall viewport. Landscape below the
+   breakpoint keeps the scaled stage, which is why this query carries
+   `orientation: portrait` on top of the same 1023.98px edge `.app-stage` uses
+   (and `selectStageMode` mirrors as `STAGE_BREAKPOINT_PX` / `height >= width`).
+
+   Only the duel region rotates — not `.app-stage` — because the stage is shared
+   with the deck editor, the story and the home hub, all of which read upright
+   in portrait already (T14). Redeclaring `--stage-w`/`--stage-h` here is what
+   re-points every descendant that sizes itself against the stage box
+   (`main.is-duel-viewport`, `.duel-shell`, `.duel-field-slot`) at the rotated
+   box, so the field geometry is derived from the long axis of the screen.
+
+   The box is still derived in CSS rather than published from `AppShell`, for
+   the same reason `.app-stage` is: a JS-published box trails a viewport change
+   by at least a frame. `AppShell` only mirrors the flag on `data-stage-rotated`.
+
+   `position: absolute` + a centred quarter turn (rather than
+   `transform-origin: top left` plus a pixel translation) keeps the rotated box
+   centred with no measured number anywhere. It also makes this element the
+   containing block for the duel's `fixed` children — dialog backdrops, card
+   trays, the drag ghost — so they rotate with the board instead of escaping to
+   the viewport; `src/app/presentation/stage-frame.ts` maps the viewport
+   coordinates those children are driven by into this frame. */
+@media (max-width: 1023.98px) and (orientation: portrait) {
+  .shell-region--duel {
+    --stage-w: min(100svh, calc(100vw * 16 / 9));
+    --stage-h: min(100vw, calc(100svh * 9 / 16));
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--stage-w);
+    transform: translate(-50%, -50%) rotate(90deg);
+
+    /* The duel itself is pinned to `--stage-h` and never overflows, so this
+       scroller stays inert during play (`main.is-duel-viewport` and
+       `.duel-shell` are both exactly the stage's height). It exists for the
+       screen *before* the duel: the deck picker is a document-shaped page, and
+       a turned stage is only ~390px along this axis on a phone, so without it
+       the Start button is clipped out of reach. Same treatment the deck editor
+       region already gets — the scroll belongs to the region, never the page. */
+    overflow: auto;
+  }
+}
+
 .shell-region--home {
   width: 100%;
   height: 100%;

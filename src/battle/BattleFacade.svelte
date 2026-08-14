@@ -5,6 +5,7 @@
     BattleFacadeResult,
     BattleRequest,
   } from "./battle-contracts.ts";
+  import RotationNotice from "./components/RotationNotice.svelte";
   import { settleOnce } from "./settle-once.ts";
 
   /* `null` is standalone mode: the duel renders its own deck picker, owns the
@@ -14,6 +15,12 @@
      session still starts from the picker. */
   export let request: BattleRequest | null = null;
   export let oncomplete: (result: BattleFacadeResult) => void = () => undefined;
+  /* T15: the stylesheet turns the duel a quarter turn on a portrait phone. The
+     host tells the duel that happened, and owns the one-time dismissal, so the
+     duel never has to read a shell setting or measure the viewport itself. */
+  export let rotated = false;
+  export let rotationNoticeDismissed = false;
+  export let onrotationnoticedismiss: () => void = () => undefined;
 
   const settle = settleOnce<BattleFacadeResult>((result) => oncomplete(result));
 
@@ -30,6 +37,9 @@
 
 <div class="battle-root" data-cy="battle-root">
   <App onbattlecomplete={hosted ? settle : undefined} />
+  {#if rotated && !rotationNoticeDismissed}
+    <RotationNotice ondismiss={onrotationnoticedismiss} />
+  {/if}
 </div>
 
 <style>

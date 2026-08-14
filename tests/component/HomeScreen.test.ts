@@ -34,6 +34,7 @@ function settingsOf(seed: Partial<ShellSettings>): {
     version: 3,
     fullscreenPreferred: false,
     fullscreenTipDismissed: false,
+    rotationNoticeDismissed: false,
     display: { showZoneOutlines: true, showZoneCounts: true },
     ...seed,
   });

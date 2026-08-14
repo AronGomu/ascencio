@@ -54,6 +54,13 @@
     type DragGhostFrame,
     type DragPointerSample,
   } from "../presentation/drag-ghost-physics.ts";
+  import {
+    readStageFrame,
+    toFramePoint,
+    toFrameRect,
+    UNROTATED_FRAME,
+    type StageFrame,
+  } from "../presentation/stage-frame.ts";
   import DragGhost from "./duel-field/DragGhost.svelte";
   import FieldActionBar from "./duel-field/FieldActionBar.svelte";
   import FloatingFieldWindow from "./duel-field/FloatingFieldWindow.svelte";
@@ -174,6 +181,11 @@
   let ghostRafHandle: number | null = null;
   let ghostLastTickMs = 0;
   let ghostPromptKey: string | null = null;
+  /* T15: the ghost is `position: fixed`, so a portrait phone lays it out
+     against the rotated duel region instead of the viewport. Read once per
+     gesture — the frame cannot turn mid-drag — so `CardControl` keeps
+     reporting plain viewport coordinates and the physics module stays pure. */
+  let dragStageFrame: StageFrame = UNROTATED_FRAME;
 
   $: resolvedCardBackUrl = cardBackUrl || DEFAULT_CARD_BACK;
   $: effectiveReducedMotion = reducedMotion ?? mediaReducedMotion;
@@ -505,19 +517,48 @@
     /* A new drag always wins over a settle still in flight for the previous
        card ("new drag first cancels prior settle"). */
     cancelGhostFrame();
-    ghostOrigin = origin;
-    ghostPreviousSample = origin.pointer;
+    dragStageFrame = readStageFrame(fieldRoot);
+    const framed = originInStageFrame(origin, dragStageFrame);
+    ghostOrigin = framed;
+    ghostPreviousSample = framed.pointer;
     ghostLatestSample = null;
     ghostSettleTarget = null;
     ghostSettleElapsedMs = 0;
     ghostPhase = "dragging";
     ghostFrame = Object.freeze({
-      x: origin.pointer.x - origin.pointerOffsetX,
-      y: origin.pointer.y - origin.pointerOffsetY,
+      x: framed.pointer.x - framed.pointerOffsetX,
+      y: framed.pointer.y - framed.pointerOffsetY,
       velocityX: 0,
       velocityY: 0,
       tiltDegrees: 0,
     });
+  }
+
+  /* Turns the viewport-space snapshot `CardControl` took into the coordinate
+     system the ghost is actually positioned in. Unrotated this is the
+     identity, which is why desktop drags keep their exact pixel behavior. */
+  function originInStageFrame(
+    origin: CardDragOrigin,
+    frame: StageFrame,
+  ): CardDragOrigin {
+    if (!frame.rotated) return origin;
+    const rect = toFrameRect(frame, {
+      left: origin.sourceLeft,
+      top: origin.sourceTop,
+      width: origin.width,
+      height: origin.height,
+    });
+    const pointer = toFramePoint(frame, origin.pointer.x, origin.pointer.y);
+    return {
+      ...origin,
+      pointer: { x: pointer.x, y: pointer.y, timeMs: origin.pointer.timeMs },
+      sourceLeft: rect.left,
+      sourceTop: rect.top,
+      width: rect.width,
+      height: rect.height,
+      pointerOffsetX: pointer.x - rect.left,
+      pointerOffsetY: pointer.y - rect.top,
+    };
   }
 
   /* Coalescing: stores the latest sample and asks for a frame only when none
@@ -525,7 +566,11 @@
      more than one rAF callback. */
   function moveCardDrag(x: number, y: number): void {
     if (ghostPhase !== "dragging") return;
-    ghostLatestSample = { x, y, timeMs: performance.now() };
+    /* The ghost follows the pointer in the frame's coordinates; the hit test
+       below keeps the raw viewport ones, because `elementFromPoint` resolves
+       through the rotation itself. */
+    const sample = toFramePoint(dragStageFrame, x, y);
+    ghostLatestSample = { x: sample.x, y: sample.y, timeMs: performance.now() };
     scheduleGhostFrame();
     /* Reuses the existing hit test, run here (a pointermove handler) rather
        than inside the rAF ghost loop, so hovering the emphasis never adds a
@@ -599,6 +644,7 @@
 
   function removeGhost(): void {
     cancelGhostFrame();
+    dragStageFrame = UNROTATED_FRAME;
     ghostOrigin = null;
     ghostFrame = null;
     ghostPhase = "idle";
@@ -657,9 +703,10 @@
           );
           const rect = zoneElement?.getBoundingClientRect();
           if (rect !== undefined) {
+            const framed = toFrameRect(dragStageFrame, rect);
             target = {
-              x: rect.left + rect.width / 2 - origin.width / 2,
-              y: rect.top + rect.height / 2 - origin.height / 2,
+              x: framed.left + framed.width / 2 - origin.width / 2,
+              y: framed.top + framed.height / 2 - origin.height / 2,
             };
           }
         }
@@ -670,10 +717,12 @@
         `[data-card-id="${card.id}"]`,
       );
       const rect = sourceElement?.getBoundingClientRect();
-      target =
-        rect === undefined
-          ? { x: origin.sourceLeft, y: origin.sourceTop }
-          : { x: rect.left, y: rect.top };
+      if (rect === undefined)
+        target = { x: origin.sourceLeft, y: origin.sourceTop };
+      else {
+        const framed = toFrameRect(dragStageFrame, rect);
+        target = { x: framed.left, y: framed.top };
+      }
     }
     if (effectiveReducedMotion) {
       removeGhost();

@@ -9,6 +9,8 @@ export interface ShellSettings {
   readonly version: 3;
   readonly fullscreenPreferred: boolean;
   readonly fullscreenTipDismissed: boolean;
+  /** The duel's one-time "this board is rotated" notice on a portrait phone. */
+  readonly rotationNoticeDismissed: boolean;
   /** Carried over from the v2 payload so display choices survive the bump. */
   readonly display: PersistedDisplaySettings;
 }
@@ -22,6 +24,7 @@ export const DEFAULT_SHELL_SETTINGS: ShellSettings = Object.freeze({
   version: 3,
   fullscreenPreferred: false,
   fullscreenTipDismissed: false,
+  rotationNoticeDismissed: false,
   display: DEFAULT_DISPLAY,
 });
 
@@ -59,6 +62,7 @@ export function migrateFromV2(raw: string | null): ShellSettings {
     version: 3,
     fullscreenPreferred: false,
     fullscreenTipDismissed: false,
+    rotationNoticeDismissed: false,
     display: display(parsed.settings),
   });
 }
@@ -71,6 +75,7 @@ function parseV3(serialized: string): ShellSettings {
     version: 3,
     fullscreenPreferred: boolean(parsed.fullscreenPreferred, false),
     fullscreenTipDismissed: boolean(parsed.fullscreenTipDismissed, false),
+    rotationNoticeDismissed: boolean(parsed.rotationNoticeDismissed, false),
     display: display(parsed.display),
   });
 }

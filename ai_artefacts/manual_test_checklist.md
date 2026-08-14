@@ -694,3 +694,101 @@ Desktop is untouched (1440x900)
 - [ ] Resize from 1440 wide down past 1024 and back up without reloading — the
       editor swaps between panels and tabs each way, keeping the open deck and
       its edits.
+
+## T15 duel-portrait-rotation
+
+Below 1024px CSS width, a **portrait** viewport now plays the duel on a stage
+turned a quarter turn clockwise. Landscape below the breakpoint, and every
+desktop size, are deliberately unchanged.
+
+Setup
+
+- [ ] Use a real phone if you have one (or Chrome DevTools device toolbar,
+      iPhone 12 Pro / 390x844). Hold it **upright**.
+- [ ] Clear site data first, so the one-time rotation notice is still pending.
+- [ ] Open `#/duel`.
+
+Portrait: the turn itself (390x844)
+
+- [ ] The deck picker is reachable: scroll the duel area if needed and press
+      Start. Nothing is clipped out of reach.
+- [ ] Once the duel loads, the board runs **down** the long axis of the phone —
+      the player's side is on one long edge, the opponent's on the other. To
+      read it you tilt your head (or the phone), not squint at a shrunken board.
+- [ ] The board is centred: neither end of the field is cropped by the screen
+      edge, and there are equal bars above and below it.
+- [ ] The page itself never scrolls in any direction — no page scrollbar, and
+      dragging a finger on the background does not move the page.
+
+Portrait: taps land where you look (this is the row that matters)
+
+- [ ] Tap a monster zone. The zone **you touched** reacts — not the one that
+      would be there if the board were unturned (that would be a zone roughly a
+      quarter turn away).
+- [ ] Tap several cards in your hand, one at a time. Each time, the card under
+      your finger is the one that previews/selects. Work along the whole hand,
+      including the cards nearest each screen edge.
+- [ ] Tap a graveyard/deck pile. The pile under your finger opens.
+- [ ] Tap an action chip on a card. The chip under your finger fires, and not a
+      neighbouring one.
+
+Portrait: dragging, hands, dialogs and overlays
+
+- [ ] Drag a card from your hand onto a highlighted zone. Two things must both
+      be true: the ghost card **stays under your finger** the whole way (it must
+      not shoot off at right angles to your movement), and the card is played
+      into the zone you dropped it on.
+- [ ] Drag a card and release it over nothing. The ghost settles back onto the
+      card it came from, not onto some other part of the board.
+- [ ] Swipe the hand band sideways (along the hand's own direction, as drawn).
+      It scrolls, and the overlay scrollbar thumb tracks your finger rather than
+      running the opposite way.
+- [ ] Drag the overlay scrollbar thumb itself. The band scrolls the way you
+      drag it.
+- [ ] Open the zone-list / decision window and drag it by its handle. It follows
+      your finger; it does not travel at right angles to the drag, and it stays
+      clamped inside the board.
+- [ ] Open a dialog/backdrop (e.g. a duel result or prompt dialog). It covers
+      the board and reads the same way up as the board, not the phone.
+- [ ] Trigger a target/attack line (attack or target something). The line is
+      drawn between the two cards involved, not across the board at a right
+      angle.
+
+Portrait: the rotation notice
+
+- [ ] The one-time notice explaining the turn is visible when you first arrive.
+- [ ] It does not block play: tap the board *through* the notice's background —
+      the card/zone underneath still responds. Only its "Got it" button
+      intercepts a tap.
+- [ ] Press "Got it". The notice disappears.
+- [ ] Reload the page in portrait. The notice does not come back.
+
+Keyboard (portrait, with a bluetooth keyboard or in DevTools)
+
+- [ ] Tab through the duel controls. The order is the same as on desktop — the
+      turn changed nothing about the sequence.
+- [ ] Arrow-key navigation across the field still moves between controls, and
+      the focus ring is visible on the control that has focus.
+
+Reduced motion
+
+- [ ] Enable "reduce motion" in the OS/browser. Reload in portrait. Nothing
+      animates the turn, and the rotation notice appears without a fade.
+
+Unchanged: small landscape (844x390)
+
+- [ ] Turn the phone sideways (or set 844x390). The board is **not** turned — it
+      is the ordinary 16:9 stage, scaled down, exactly as before this ticket.
+- [ ] No rotation notice appears in landscape.
+- [ ] (Known, pre-existing and out of scope: at this size the deck picker screen
+      is taller than the stage, so Start can sit below the visible area. This is
+      unchanged by this ticket — only portrait gained a scrollable duel region.)
+
+Unchanged: desktop (1440x900 and 1920x1080)
+
+- [ ] The duel looks and behaves exactly as before: same field size, same
+      spacing, same preview panel and right rail.
+- [ ] Drag a card onto a zone — ghost, drop and settle behave exactly as before.
+- [ ] Drag the decision window by its handle — it follows the pointer exactly
+      as before.
+- [ ] Target/attack lines are drawn exactly as before.

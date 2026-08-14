@@ -9,6 +9,7 @@ import {
 export interface ShellSettingsStore extends Readable<ShellSettings> {
   setFullscreenPreferred(preferred: boolean): void;
   dismissFullscreenTip(): void;
+  dismissRotationNotice(): void;
 }
 
 /* One live owner for shell settings: every setter writes the complete state,
@@ -38,6 +39,11 @@ export function createShellSettingsStore(
     dismissFullscreenTip(): void {
       persist((state) =>
         Object.freeze({ ...state, fullscreenTipDismissed: true }),
+      );
+    },
+    dismissRotationNotice(): void {
+      persist((state) =>
+        Object.freeze({ ...state, rotationNoticeDismissed: true }),
       );
     },
   };

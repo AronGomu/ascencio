@@ -110,7 +110,7 @@ function targetEntry(
     identityVisible: true,
     code: cardCode(97590747),
     label: "The Legendary Fisherman",
-    zoneBadge: "GY",
+    zoneBadge: "GRAVEYARD",
     zoneLabel: "Your Graveyard",
     choices: [targetChoice("gy-0")],
     ...overrides,
@@ -127,7 +127,7 @@ function hiddenTargetEntry(): OffFieldTargetEntry {
     sequence: 2,
     identityVisible: false,
     label: "Face-down card",
-    zoneBadge: "BAN",
+    zoneBadge: "BANISHED",
     zoneLabel: "Opponent Banished",
     choices: [targetChoice("ban-2")],
   };
@@ -170,6 +170,67 @@ function renderTargetDialog(
 }
 
 describe("ZoneListDialog target mode", () => {
+  it("renders target notice, collapse chrome, and mode state", async () => {
+    const user = userEvent.setup();
+    renderTargetDialog({
+      targetEntries: [
+        targetEntry({ location: "deck", zoneBadge: "DECK" }),
+        targetEntry({
+          id: "target:0:hand:0",
+          location: "hand",
+          zoneBadge: "HAND",
+        }),
+        targetEntry({ id: "target:0:graveyard:1", sequence: 1 }),
+      ],
+    });
+    const root = document.querySelector<HTMLElement>(
+      '[data-cy="floating-field-window-zoneList"]',
+    );
+    expect(root?.dataset.mode).toBe("target");
+    expect(root?.dataset.collapsed).toBe("false");
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-filter-notice"]')
+        ?.textContent,
+    ).toBe("Filtered: legal targets from Hand, Graveyard, and Deck");
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-close-button"]'),
+    ).toBeNull();
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-target-footer"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-target-sort-label"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelectorAll(
+        '[data-cy="zone-list-dialog-alphabetical-checkbox"]',
+      ),
+    ).toHaveLength(1);
+
+    const collapse = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-dialog-collapse-button"]',
+    );
+    if (collapse === null) throw new Error("Missing collapse button");
+    await user.click(collapse);
+    expect(root?.dataset.collapsed).toBe("true");
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-title"]'),
+    ).toBeNull();
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-entries"]'),
+    ).toBeNull();
+    const expand = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-dialog-expand-button"]',
+    );
+    if (expand === null) throw new Error("Missing expand button");
+    expect(document.activeElement).toBe(expand);
+    await user.click(expand);
+    expect(root?.dataset.collapsed).toBe("false");
+    expect(document.activeElement).toBe(
+      document.querySelector('[data-cy="zone-list-dialog-collapse-button"]'),
+    );
+  });
+
   it("lists only the provided legal targets, each with its zone badge", () => {
     const entries = [targetEntry(), hiddenTargetEntry()];
     renderTargetDialog({ targetEntries: entries });
@@ -181,7 +242,7 @@ describe("ZoneListDialog target mode", () => {
       [...document.querySelectorAll('[data-cy^="zone-list-entry-zone-"]')].map(
         (element) => element.textContent?.trim(),
       ),
-    ).toEqual(["GY", "BAN"]);
+    ).toEqual(["GRAVEYARD", "BANISHED"]);
     expect(
       document.querySelector('[data-cy="zone-list-dialog-count"]')?.textContent,
     ).toBe("2");
@@ -271,14 +332,16 @@ describe("ZoneListDialog target mode", () => {
       ],
     });
 
+    const trigger = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-entry-choice-menu-trigger-target:0:graveyard:0"]',
+    );
+    if (trigger === null) throw new Error("Missing choice-menu trigger");
+    await user.click(trigger);
     const second = document.querySelector<HTMLButtonElement>(
-      '[data-cy="zone-list-entry-target-choice-target:0:graveyard:0-gy-shuffle"]',
+      '[data-cy="projected-choice-target:0:graveyard:0-gy-shuffle"]',
     );
     if (second === null) throw new Error("Missing duplicate target button");
     expect(second.textContent?.trim()).toBe("Shuffle back");
-    expect(second.getAttribute("aria-label")).toBe(
-      "Shuffle back: The Legendary Fisherman in Your Graveyard",
-    );
     await user.click(second);
 
     expect(harness.ontargetchoice.mock.calls[0]?.[0]).toMatchObject({
@@ -309,15 +372,22 @@ describe("ZoneListDialog target mode", () => {
     expect(
       document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
         ?.textContent,
-    ).toBe("2 selected · 1–3 allowed");
+    ).toBe("2 selected · choose 1–3");
   });
 
-  it("has no Confirm for an exact one-of-one target", () => {
-    renderTargetDialog({ minimum: 1, maximum: 1 });
+  it("always renders Validate for an exact one-of-one target", async () => {
+    const harness = renderTargetDialog({ minimum: 1, maximum: 1 });
+    const confirm = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-dialog-confirm-button"]',
+    );
+    if (confirm === null) throw new Error("Missing confirm button");
+    expect(confirm.disabled).toBe(true);
 
-    expect(
-      document.querySelector('[data-cy="zone-list-dialog-confirm-button"]'),
-    ).toBeNull();
+    await harness.rendered.rerender({
+      selectedChoiceIds: [choiceId("gy-0")],
+      confirmValid: true,
+    });
+    expect(confirm.disabled).toBe(false);
   });
 
   it("enables Confirm only when the selection validates", async () => {
@@ -347,6 +417,161 @@ describe("ZoneListDialog target mode", () => {
     expect(valid.onconfirm).toHaveBeenCalledTimes(1);
   });
 
+  it.each([1, 2, 3])(
+    "enables range Validate inclusively at count %i",
+    (selectedCount) => {
+      const targetEntries = Array.from({ length: 3 }, (_, index) =>
+        targetEntry({
+          id: `target:range:${index}`,
+          sequence: index,
+          choices: [targetChoice(`range-${index}`)],
+        }),
+      );
+      renderTargetDialog({
+        targetEntries,
+        minimum: 1,
+        maximum: 3,
+        selectedChoiceIds: targetEntries
+          .slice(0, selectedCount)
+          .map(({ choices }) => choices[0]!.id),
+        confirmValid: true,
+      });
+
+      expect(
+        document.querySelector<HTMLButtonElement>(
+          '[data-cy="zone-list-dialog-confirm-button"]',
+        )?.disabled,
+      ).toBe(false);
+    },
+  );
+
+  it("fails closed when prompt validation includes a stale choice ID", () => {
+    renderTargetDialog({
+      selectedChoiceIds: [choiceId("stale")],
+      confirmValid: true,
+    });
+
+    expect(
+      document.querySelector<HTMLButtonElement>(
+        '[data-cy="zone-list-dialog-confirm-button"]',
+      )?.disabled,
+    ).toBe(true);
+  });
+
+  it("hard-locks unselected choices at maximum but keeps selected choices removable", async () => {
+    const user = userEvent.setup();
+    const harness = renderTargetDialog({
+      targetEntries: [
+        targetEntry(),
+        targetEntry({
+          id: "target:0:graveyard:1",
+          sequence: 1,
+          choices: [targetChoice("gy-1")],
+        }),
+      ],
+      selectedChoiceIds: [choiceId("gy-0")],
+      minimum: 1,
+      maximum: 1,
+      confirmValid: true,
+    });
+    const selected = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-entry-target-choice-target:0:graveyard:0-gy-0"]',
+    );
+    const unavailable = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-entry-target-choice-target:0:graveyard:1-gy-1"]',
+    );
+    const unavailableTile = unavailable?.closest(".zone-list-entry");
+    expect(selected?.disabled).toBe(false);
+    expect(selected?.getAttribute("aria-disabled")).toBe("false");
+    expect(unavailable?.disabled).toBe(true);
+    expect(unavailable?.getAttribute("aria-disabled")).toBe("true");
+    expect(unavailableTile?.classList.contains("is-unavailable")).toBe(true);
+
+    await user.click(unavailable as HTMLButtonElement);
+    expect(harness.ontargetchoice).not.toHaveBeenCalled();
+    await user.click(selected as HTMLButtonElement);
+    expect(harness.ontargetchoice).toHaveBeenCalledWith(
+      expect.objectContaining({ id: choiceId("gy-0") }),
+    );
+  });
+
+  it("reacts to a new maximum lock while an unselected tile stays mounted", async () => {
+    const choice = targetChoice("gy-reactive");
+    const ontargetchoice = vi.fn();
+    const rendered = render(ZoneListEntryTile, {
+      entry: targetEntry({ choices: [choice] }),
+      mode: "target",
+      choices: [choice],
+      selected: false,
+      selectedChoiceIds: [],
+      unavailableChoiceIds: new Set<ChoiceId>(),
+      cardBackUrl: "back.png",
+      ontargetchoice,
+    });
+    const button = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-entry-target-choice-target:0:graveyard:0-gy-reactive"]',
+    );
+    if (button === null) throw new Error("Missing reactive target button");
+    expect(button.disabled).toBe(false);
+    expect(button.getAttribute("aria-disabled")).toBe("false");
+
+    await rendered.rerender({
+      selected: false,
+      unavailableChoiceIds: new Set<ChoiceId>([choice.id]),
+    });
+    expect(button.disabled).toBe(true);
+    expect(button.getAttribute("aria-disabled")).toBe("true");
+    expect(
+      button.closest(".zone-list-entry")?.classList.contains("is-unavailable"),
+    ).toBe(true);
+
+    await rendered.rerender({
+      selected: true,
+      selectedChoiceIds: [choice.id],
+      unavailableChoiceIds: new Set<ChoiceId>(),
+    });
+    expect(button.disabled).toBe(false);
+    expect(button.getAttribute("aria-disabled")).toBe("false");
+
+    await rendered.rerender({
+      selected: true,
+      selectedChoiceIds: [choice.id],
+      unavailableChoiceIds: new Set<ChoiceId>([choice.id]),
+    });
+    expect(button.disabled).toBe(false);
+    expect(button.getAttribute("aria-disabled")).toBe("false");
+    await userEvent.setup().click(button);
+    expect(ontargetchoice).toHaveBeenCalledWith(choice);
+  });
+
+  it("keeps a selected dialog tile removable when its draft reaches maximum", async () => {
+    const second = targetEntry({
+      id: "target:0:graveyard:1",
+      sequence: 1,
+      choices: [targetChoice("gy-1")],
+    });
+    const harness = renderTargetDialog({
+      targetEntries: [targetEntry(), second],
+      minimum: 1,
+      maximum: 1,
+    });
+
+    await harness.rendered.rerender({
+      selectedChoiceIds: [choiceId("gy-0")],
+      confirmValid: true,
+    });
+    const selected = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-entry-target-choice-target:0:graveyard:0-gy-0"]',
+    );
+    const unavailable = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-entry-target-choice-target:0:graveyard:1-gy-1"]',
+    );
+    expect(selected?.disabled).toBe(false);
+    expect(selected?.getAttribute("aria-disabled")).toBe("false");
+    expect(unavailable?.disabled).toBe(true);
+    expect(unavailable?.getAttribute("aria-disabled")).toBe("true");
+  });
+
   it("shows the validation message and only offers Cancel when the engine allows it", async () => {
     const user = userEvent.setup();
     const harness = renderTargetDialog({
@@ -361,25 +586,138 @@ describe("ZoneListDialog target mode", () => {
         ?.textContent,
     ).toContain("Select at least 1 card");
     const cancel = document.querySelector<HTMLButtonElement>(
-      '[data-cy="zone-list-dialog-cancel-button"]',
+      '[data-cy="zone-list-dialog-target-cancel-button"]',
     );
     if (cancel === null) throw new Error("Missing cancel button");
+    expect(cancel.classList.contains("danger")).toBe(true);
     await user.click(cancel);
     expect(harness.oncancel).toHaveBeenCalledTimes(1);
     cleanup();
 
     renderTargetDialog({ minimum: 1, maximum: 2, cancelable: false });
     expect(
-      document.querySelector('[data-cy="zone-list-dialog-cancel-button"]'),
+      document.querySelector(
+        '[data-cy="zone-list-dialog-target-cancel-button"]',
+      ),
     ).toBeNull();
   });
 
-  it("an outside press closes the window without cancelling anything", async () => {
+  it("sorts target display without changing selected choice IDs", async () => {
+    const user = userEvent.setup();
+    renderTargetDialog({
+      targetEntries: [
+        targetEntry({ id: "target:b", label: "Beta" }),
+        targetEntry({
+          id: "target:a",
+          label: "Alpha",
+          sequence: 1,
+          choices: [targetChoice("gy-1")],
+        }),
+      ],
+      selectedChoiceIds: [choiceId("gy-0")],
+      minimum: 1,
+      maximum: 2,
+    });
+    const checkbox = document.querySelector<HTMLInputElement>(
+      '[data-cy="zone-list-dialog-alphabetical-checkbox"]',
+    );
+    if (checkbox === null) throw new Error("Missing target sort checkbox");
+    await user.click(checkbox);
+    expect(
+      [...document.querySelectorAll(".zone-list-entry")].map((element) =>
+        element.getAttribute("data-cy"),
+      ),
+    ).toEqual(["zone-list-entry-target:a", "zone-list-entry-target:b"]);
+    expect(
+      document
+        .querySelector('[aria-pressed="true"]')
+        ?.closest(".zone-list-entry")
+        ?.getAttribute("data-cy"),
+    ).toBe("zone-list-entry-target:b");
+  });
+
+  it("disables and resets target sorting when identity is hidden", async () => {
+    const user = userEvent.setup();
+    const harness = renderTargetDialog({
+      targetEntries: [
+        targetEntry(),
+        targetEntry({ id: "target:visible:2", label: "A" }),
+      ],
+    });
+    const checkbox = document.querySelector<HTMLInputElement>(
+      '[data-cy="zone-list-dialog-alphabetical-checkbox"]',
+    );
+    if (checkbox === null) throw new Error("Missing target sort checkbox");
+    await user.click(checkbox);
+    await harness.rendered.rerender({
+      targetEntries: [targetEntry(), hiddenTargetEntry()],
+    });
+    expect(checkbox.disabled).toBe(true);
+    expect(checkbox.checked).toBe(false);
+  });
+
+  it("suppresses zoom after final tile unselect until pointerleave", async () => {
+    const user = userEvent.setup();
+    render(ZoneListEntryTile, {
+      entry: targetEntry(),
+      mode: "target",
+      choices: [targetChoice("gy-0")],
+      selected: true,
+      selectedChoiceIds: [choiceId("gy-0")],
+      cardBackUrl: "back.png",
+      ontargetchoice: vi.fn(),
+    });
+    const tile = document.querySelector<HTMLElement>(
+      '[data-cy="zone-list-entry-target:0:graveyard:0"]',
+    );
+    const button = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-entry-target-choice-target:0:graveyard:0-gy-0"]',
+    );
+    if (tile === null || button === null)
+      throw new Error("Missing target tile");
+
+    await user.click(button);
+    expect(tile.classList.contains("is-hover-suppressed")).toBe(true);
+    await fireEvent.pointerLeave(tile);
+    expect(tile.classList.contains("is-hover-suppressed")).toBe(false);
+  });
+
+  it("keeps zoom when another opaque choice on the tile remains selected", async () => {
+    const user = userEvent.setup();
+    render(ZoneListEntryTile, {
+      entry: targetEntry(),
+      mode: "target",
+      choices: [targetChoice("gy-0"), targetChoice("gy-1")],
+      selected: true,
+      selectedChoiceIds: [choiceId("gy-0"), choiceId("gy-1")],
+      cardBackUrl: "back.png",
+      ontargetchoice: vi.fn(),
+    });
+    const tile = document.querySelector<HTMLElement>(
+      '[data-cy="zone-list-entry-target:0:graveyard:0"]',
+    );
+    const trigger = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-entry-choice-menu-trigger-target:0:graveyard:0"]',
+    );
+    if (tile === null || trigger === null)
+      throw new Error("Missing target tile");
+    await user.click(trigger);
+    const selectedChoice = document.querySelector<HTMLButtonElement>(
+      '[data-cy="projected-choice-target:0:graveyard:0-gy-0"]',
+    );
+    if (selectedChoice === null) throw new Error("Missing selected choice");
+
+    await user.click(selectedChoice);
+    expect(tile.classList.contains("is-hover-suppressed")).toBe(false);
+  });
+
+  it("outside and Escape preserve the target window and draft", async () => {
     const harness = renderTargetDialog({ cancelable: true });
 
     await fireEvent.pointerDown(document.body);
+    await fireEvent.keyDown(document, { key: "Escape" });
 
-    expect(harness.onclose).toHaveBeenCalledTimes(1);
+    expect(harness.onclose).not.toHaveBeenCalled();
     expect(harness.oncancel).not.toHaveBeenCalled();
     expect(harness.onconfirm).not.toHaveBeenCalled();
     expect(harness.ontargetchoice).not.toHaveBeenCalled();
@@ -387,6 +725,34 @@ describe("ZoneListDialog target mode", () => {
 });
 
 describe("ZoneListDialog", () => {
+  it("renders approved browse chrome and physical copies", () => {
+    renderDialog();
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-title"]')?.textContent,
+    ).toBe("Graveyard");
+    expect(
+      document.querySelectorAll('[data-cy^="zone-list-entry-p0:"]'),
+    ).toHaveLength(4);
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-footer"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-sort-label"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelectorAll(
+        '[data-cy="zone-list-dialog-alphabetical-checkbox"]',
+      ),
+    ).toHaveLength(1);
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-cancel-button"]')
+        ?.textContent,
+    ).toContain("Cancel");
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-confirm-button"]'),
+    ).toBeNull();
+  });
+
   it("dialog lists every entry", () => {
     renderDialog();
     for (const value of ENTRIES)
@@ -557,7 +923,7 @@ describe("ZoneListDialog", () => {
     if (button === null) throw new Error("Missing close button");
     expect(button.textContent?.trim()).toBe("×");
     expect(button.classList.contains("danger")).toBe(true);
-    expect(button.getAttribute("aria-label")).toBe("Close GY, 4 cards");
+    expect(button.getAttribute("aria-label")).toBe("Close Graveyard");
     // Rightmost control of the header, which is also the window's drag handle.
     const header = button.closest('[data-cy="zone-list-dialog-header"]');
     expect(header?.lastElementChild).toBe(button);
@@ -623,7 +989,51 @@ describe("ZoneListDialog", () => {
     expect(event.defaultPrevented).toBe(false);
   });
 
-  it("deck dialog explains its numbering", () => {
+  it("sorts alphabetically and restores source order", async () => {
+    const user = userEvent.setup();
+    renderDialog({ entries: [entry(3), entry(1), entry(2)] });
+    const checkbox = document.querySelector<HTMLInputElement>(
+      '[data-cy="zone-list-dialog-alphabetical-checkbox"]',
+    );
+    if (checkbox === null) throw new Error("Missing alphabetical checkbox");
+    await user.click(checkbox);
+    expect(
+      [...document.querySelectorAll(".zone-list-entry")].map((element) =>
+        element.getAttribute("data-cy"),
+      ),
+    ).toEqual([
+      "zone-list-entry-p0:graveyard:1",
+      "zone-list-entry-p0:graveyard:2",
+      "zone-list-entry-p0:graveyard:3",
+    ]);
+    await user.click(checkbox);
+    expect(
+      [...document.querySelectorAll(".zone-list-entry")].map((element) =>
+        element.getAttribute("data-cy"),
+      ),
+    ).toEqual([
+      "zone-list-entry-p0:graveyard:3",
+      "zone-list-entry-p0:graveyard:1",
+      "zone-list-entry-p0:graveyard:2",
+    ]);
+  });
+
+  it("renders empty state and disables sorting", () => {
+    renderDialog({ entries: [] });
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-empty"]')?.textContent,
+    ).toBe("No cards available");
+    expect(
+      document.querySelector<HTMLInputElement>(
+        '[data-cy="zone-list-dialog-alphabetical-checkbox"]',
+      )?.disabled,
+    ).toBe(true);
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-count"]')?.textContent,
+    ).toBe("0");
+  });
+
+  it("deck dialog uses privacy-safe browse label", () => {
     const deckStack: BoardStackView = {
       ...STACK,
       id: "p0:deck",
@@ -640,7 +1050,7 @@ describe("ZoneListDialog", () => {
       document
         .querySelector('[data-cy="floating-field-window-zoneList"]')
         ?.getAttribute("aria-label"),
-    ).toBe("Your Deck, 1 card contents, position 1 is the top of the deck");
+    ).toBe("Deck card browser");
   });
 
   it("face-down deck slots use the card back and expose no code in the DOM", () => {

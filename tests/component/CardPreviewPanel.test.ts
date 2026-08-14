@@ -54,15 +54,35 @@ describe("CardPreviewPanel", () => {
     expect(document.querySelector('[data-cy="card-preview-art"]')).toBeNull();
   });
 
-  it("panel shows name and text", () => {
+  it("renders bounded body around art name and effect text", () => {
     render(CardPreviewPanel, { preview: preview() });
 
+    const panel = document.querySelector('[data-cy="card-preview-panel"]');
+    const art = document.querySelector('[data-cy="card-preview-art"]');
+    const body = document.querySelector('[data-cy="card-preview-body"]');
+    const name = document.querySelector('[data-cy="card-preview-name"]');
+    const region = document.querySelector(
+      '[data-cy="card-preview-text-region"]',
+    );
+    const text = document.querySelector('[data-cy="card-preview-text"]');
+    expect(panel?.children).toEqual(expect.objectContaining({ length: 2 }));
+    expect(panel?.children[0]).toBe(art);
+    expect(panel?.children[1]).toBe(body);
+    expect(body?.children[0]).toBe(name);
+    expect(body?.children[1]).toBe(region);
+    expect(region?.children[0]).toBe(text);
+    expect(name?.textContent).toContain("The Legendary Fisherman");
+    expect(text?.textContent).toContain(
+      "This card is unaffected by Spell effects.",
+    );
+    expect(text?.getAttribute("tabindex")).toBe("0");
+    expect(text?.getAttribute("aria-label")).toBe("Card effect text");
     expect(
-      document.querySelector('[data-cy="card-preview-name"]')?.textContent,
-    ).toContain("The Legendary Fisherman");
+      region?.querySelector('[data-cy="card-preview-text-scrollbar"]'),
+    ).not.toBeNull();
     expect(
-      document.querySelector('[data-cy="card-preview-text"]')?.textContent,
-    ).toContain("This card is unaffected by Spell effects.");
+      region?.querySelector('[data-cy="card-preview-text-scrollbar-thumb"]'),
+    ).not.toBeNull();
     expect(document.querySelector('[data-cy="card-preview-empty"]')).toBeNull();
   });
 
@@ -109,79 +129,6 @@ describe("CardPreviewPanel", () => {
     expect(releaseFor(FISHERMAN)).toHaveBeenCalledTimes(1);
   });
 
-  it("panel renders the status under the card text", () => {
-    render(CardPreviewPanel, {
-      preview: preview(),
-      status: { text: "Choose", thinking: false },
-    });
-
-    expect(
-      document.querySelector('[data-cy="card-preview-status-text"]')
-        ?.textContent,
-    ).toBe("Choose");
-    expect(
-      document.querySelector('[data-cy="card-preview-status-dots"]'),
-    ).toBeNull();
-  });
-
-  it("panel renders thinking dots", () => {
-    render(CardPreviewPanel, {
-      preview: preview(),
-      status: { text: "Do you respond?", thinking: true },
-    });
-
-    expect(
-      document.querySelector('[data-cy="card-preview-status-dot-1"]'),
-    ).not.toBeNull();
-    expect(
-      document.querySelector('[data-cy="card-preview-status-dot-2"]'),
-    ).not.toBeNull();
-    expect(
-      document.querySelector('[data-cy="card-preview-status-dot-3"]'),
-    ).not.toBeNull();
-  });
-
-  it("panel exposes priority", () => {
-    render(CardPreviewPanel, {
-      status: { text: "Do you respond?", thinking: true },
-      hasPriority: true,
-    });
-
-    expect(
-      document
-        .querySelector('[data-cy="card-preview-status"]')
-        ?.getAttribute("data-has-priority"),
-    ).toBe("true");
-  });
-
-  it("panel omits priority when waiting", () => {
-    render(CardPreviewPanel, {
-      status: { text: "Waiting for the engine", thinking: true },
-      hasPriority: false,
-    });
-
-    expect(
-      document
-        .querySelector('[data-cy="card-preview-status"]')
-        ?.hasAttribute("data-has-priority"),
-    ).toBe(false);
-  });
-
-  it("panel renders the status with no card previewed", () => {
-    render(CardPreviewPanel, {
-      preview: null,
-      status: { text: "Opponent is acting", thinking: true },
-    });
-
-    expect(
-      document.querySelector('[data-cy="card-preview-empty"]'),
-    ).not.toBeNull();
-    expect(
-      document.querySelector('[data-cy="card-preview-status-text"]')
-        ?.textContent,
-    ).toBe("Opponent is acting");
-  });
-
   it("panel does not lease an image for the hidden preview", () => {
     const { library, lease } = leaseLibrary();
     render(CardPreviewPanel, {
@@ -198,33 +145,22 @@ describe("CardPreviewPanel", () => {
     ).toBe("/placeholder.webp");
   });
 
-  it("keeps art, copy and status as direct panel descendants for compact CSS targeting", () => {
-    render(CardPreviewPanel, {
-      preview: preview(),
-      status: { text: "Choose", thinking: false },
-    });
-
-    const panel = document.querySelector('[data-cy="card-preview-panel"]');
-    expect(
-      panel?.querySelector(':scope > [data-cy="card-preview-art"]'),
-    ).not.toBeNull();
-    expect(
-      panel?.querySelector(':scope > [data-cy="card-preview-copy"]'),
-    ).not.toBeNull();
-    expect(
-      panel?.querySelector(':scope > [data-cy="card-preview-status"]'),
-    ).not.toBeNull();
-  });
-
-  it("panel is inert", () => {
+  it("keeps only the real text scroller keyboard focusable", () => {
     const { library } = leaseLibrary();
     render(CardPreviewPanel, { preview: preview(), imageLibrary: library });
 
     const panel = document.querySelector('[data-cy="card-preview-panel"]');
+    const text = document.querySelector('[data-cy="card-preview-text"]');
     expect(panel).not.toBeNull();
     expect(panel?.querySelectorAll("button")).toHaveLength(0);
     expect(panel?.querySelectorAll("a")).toHaveLength(0);
-    expect(panel?.querySelectorAll("[tabindex]")).toHaveLength(0);
+    expect(panel?.querySelectorAll("[tabindex]")).toHaveLength(1);
+    expect(panel?.querySelector("[tabindex]")).toBe(text);
     expect(panel?.hasAttribute("tabindex")).toBe(false);
+    expect(
+      document
+        .querySelector('[data-cy="card-preview-text-scrollbar"]')
+        ?.getAttribute("aria-hidden"),
+    ).toBe("true");
   });
 });

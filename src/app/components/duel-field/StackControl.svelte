@@ -1,12 +1,14 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
   import type { BoardStackView } from "../../../field/board-view-model.ts";
+  import type { FieldPlacement } from "../../../field/duel-field-geometry.ts";
   import type {
     CardImageLease,
     CardImageLibrary,
   } from "../../images/card-image-cache.ts";
 
   export let stack: BoardStackView;
+  export let placement: FieldPlacement;
   export let active = false;
   export let actionable = false;
   export let onpreview: () => void = () => undefined;
@@ -21,7 +23,7 @@
   let pointerOrigin: { readonly x: number; readonly y: number } | null = null;
   let pointerMoved = false;
 
-  $: positionStyle = `--field-x: ${stack.x * 100}%; --field-y: ${stack.y * 100}%; --field-width: ${stack.width * 100}%; --field-height: ${stack.height * 100}%;`;
+  $: positionStyle = `--field-x: ${placement.x}px; --field-y: ${placement.y}px; --field-width: ${placement.width * (72 / 104)}px; --field-height: ${placement.height}px;`;
   $: synchronizeImageLease(imageLibrary, stack.topCardCode, placeholderUrl);
   $: clickable = stack.count > 0;
 

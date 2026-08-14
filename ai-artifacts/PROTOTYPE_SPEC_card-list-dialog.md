@@ -69,6 +69,16 @@ Implementation remains Svelte DOM. Main thread must not infer legality. Worker-p
 
 All new Svelte-rendered elements require unique `data-cy` values per project HTML-element contract.
 
+### 2.1 Production compatibility decisions
+
+ADR-021 resolves current engine-facing cases outside the 4 prototype scenarios without changing frozen visual values:
+
+- Field-local `FloatingFieldWindow` boundary/clamp wins over prototype viewport positioning; 1320×600 is cap when boundary permits.
+- Variable min/max off-field card-selection prompts use redesigned dialog; existing validator controls valid range.
+- Mixed-source notices/badges support Hand, then Extra Deck, Graveyard, Banished, Deck in fixed order with full names.
+- One physical tile renders per card address. Multiple projected `ChoiceId`s open keyboard-reachable choice menu; every ID stays answerable.
+- Sum/order/counter prompt families remain on existing surfaces.
+
 ## 3. Screens, components, hierarchy
 
 ```text
@@ -122,10 +132,11 @@ No variable remains unresolved.
 
 ### 4.2 Dialog
 
-- Position: fixed, viewport centered in initial expanded state.
-- Width: `min(1320px, calc(100vw - 48px))`.
-- Height: `min(600px, calc(100svh - 48px))`.
-- Desktop minimum: `min(680px, calc(100vw - 24px))` wide and `min(430px, calc(100svh - 24px))` high.
+- Prototype-only positioning: fixed + viewport centered.
+- Production positioning: absolute inside visible `.duel-field`; initial/restored top-left + clamping follow ADR-017.
+- Production width: cap at 1320px with 8px field-boundary inset; shrink to available field boundary.
+- Production height: cap at 600px with 8px field-boundary inset; shrink to available field boundary.
+- Prototype desktop minimum remains 680×430 where viewport permits; production field boundary may require smaller responsive size.
 - Grid rows: `58px minmax(0, 1fr) 64px`.
 - Border: 1 px `#697895`.
 - Radius: 14 px.
@@ -430,8 +441,8 @@ Production:
 
 ### Stale selection
 
-- If selected id disappears after state projection, remove stale UI selection or mark validation invalid before response.
-- Validation fails closed until exact valid set exists.
+- If selected id disappears after state projection, preserve draft + mark validation invalid before response.
+- Never trim, replace, or submit stale ids. Validation fails closed until projection/prompt replacement resolves them.
 
 ### Not enough targets
 
@@ -452,7 +463,8 @@ Production:
 ## 11. PDDR references
 
 - Scope: Decisions 1, 17.
-- Filtered face-up/full-width cards: Decisions 2, 8, 19.
+- Filtered visible/full-width scope: Decisions 2, 19. Decision 2 duplicate-count detail is historical.
+- Physical duplicate representation: Decisions 8, 31.
 - Geometry: Decisions 3, 11, 12, 30, 31.
 - Selection and zoom: Decisions 4, 9, 20, 21, 26–29.
 - Action placement: Decisions 5, 13.
@@ -462,7 +474,7 @@ Production:
 - Mixed-zone labels and notice: Decisions 23, 25.
 - Browse text reduction: Decision 24.
 
-Prototype is acceptance authority when wording and rendering differ.
+Fixed prototype is acceptance authority only for frozen visual values + 4 approved fixtures. ADR-021, Worker privacy/legality contracts, field-boundary rules, accessibility requirements govern production compatibility cases + override prototype behavior.
 
 ## 12. Implementation acceptance checks
 

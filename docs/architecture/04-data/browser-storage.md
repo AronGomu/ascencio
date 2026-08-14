@@ -10,6 +10,10 @@ Store snapshot metadata, active/previous snapshot pointers, preferences, and bou
 
 Store card images and verified runtime artifacts in snapshot/revision-aware namespaces. Bytes enter a cache only after manifest, length, digest, image-dimension, and decode checks as applicable. Cache state is an optimization and cannot determine whether a snapshot is active.
 
+## Local UI preferences
+
+Tiny browser UI prefs use `localStorage`, not IndexedDB. Current accepted successor is [`ADR-020`](../../ADR/020_ADR_browser_persisted_ui_state_v2.md): key `ygo.ui.v2`, deck pair, 2 field-window positions, zone-outline/count flags. Reads/writes are best-effort + never duel authority. Old v1 state resets to complete v2 defaults.
+
 ## Reliability rules
 
 - Startup validates schema and revision compatibility.

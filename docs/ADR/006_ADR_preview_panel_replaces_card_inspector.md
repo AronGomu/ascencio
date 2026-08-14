@@ -28,6 +28,10 @@ The overhaul removes the first two entry points: the field inspect button and th
 - **Clear the panel on pointer leave.** Always reflects the pointer exactly, and makes the text unreadable — moving the pointer toward the panel empties it.
 - **Fluid percentage width.** Card text at 25% of a 1024px viewport is a two-word column. A fixed `22rem` reads the same at every desktop size.
 
+## Full-height amendment (accepted 2026-08-13)
+
+ADR-019 keeps preview fixed-width beside field. Effect text now lives in bounded `minmax(0,1fr)` real vertical scroller. Native scrollbar chrome is hidden; decorative custom overlay thumb mirrors/pointer-controls scroll. Permanent 10px inline gutter prevents text reflow. Real scroller stays keyboard/wheel reachable; overlay adds no Tab stop. Image lease/stickiness/privacy rules below remain.
+
 ## Consequences
 
 - Counters and overlay materials leave the detail view. They remain in the HUD's rich card list and in the field's own badges.

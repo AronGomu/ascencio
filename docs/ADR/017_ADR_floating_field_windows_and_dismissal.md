@@ -18,23 +18,25 @@ Round-2 `ZoneListDialog` is centred absolute UI and multi-select confirmation is
 5. Persist final clamped position on pointerup and changed reclamp on resize. Zone-list and confirm keys remain independent under ADR-013.
 6. Last activated window rises in ephemeral memory; z-order is not persisted.
 7. Windows are `aria-modal=false`, have no backdrop, and may coexist with mounted field targets.
-8. Zone list closes via red X, Escape or outside pointerdown. Wheel over list scrolls its horizontal body.
-9. Confirm never closes/cancels/passes via outside pointerdown or Escape. It closes only after accepted submit, prompt replacement/result, or explicit engine-valid Cancel.
-10. Pointerdown inside either window never triggers that window's outside dismissal. Clicking confirm may close list because it is outside list; confirm remains.
-11. Target-list mode may put its counter/Confirm inside zone-list window and suppress separate confirm window. On-field-only multi-select uses confirm window.
+8. Browse list closes via header X, footer Cancel, Escape or outside pointerdown. Wheel over list scrolls its horizontal body.
+9. Target list has no X. Outside pointerdown/Escape preserve window + draft. Explicit Cancel exists only when engine prompt is cancelable. Visual collapse is allowed; collapsed/open state is not persisted.
+10. Confirm never closes/cancels/passes via outside pointerdown or Escape. It closes only after accepted submit, prompt replacement/result, or explicit engine-valid Cancel.
+11. Pointerdown inside any window never triggers that window's outside dismissal. Clicking confirm may close browse list because it is outside browse list; confirm remains.
+12. Target-list mode owns its counter/Validate/conditional Cancel and suppresses separate confirm window. On-field-only multi-select uses confirm window. ADR-021 owns list contents/selection; this ADR owns shell mechanics.
 
 ## Dismissal matrix
 
-| Event | Zone list | Confirm |
-| --- | --- | --- |
-| red X | close | n/a |
-| outside pointerdown | close | stay; no response |
-| Escape | close | stay; no response |
-| prompt replacement/result | close | close |
-| accepted submit | close | close |
-| explicit valid Cancel | close | close |
-| drag past edge | clamp | clamp |
-| wheel over body | horizontal scroll | normal content scroll if needed |
+| Event | Browse list | Target list | Confirm |
+| --- | --- | --- | --- |
+| header X | close | absent | n/a |
+| footer Cancel | close | close only when prompt cancelable | close only when prompt cancelable |
+| outside pointerdown | close | stay; preserve draft | stay; no response |
+| Escape | close | stay; preserve draft | stay; no response |
+| collapse | absent | 58×58 visual state; preserve draft/anchor | absent |
+| prompt replacement/result | close | close | close |
+| accepted submit | close | close | close |
+| drag past edge | clamp | clamp | clamp |
+| wheel over body | horizontal scroll | horizontal scroll | normal content scroll if needed |
 
 ## Alternatives rejected
 

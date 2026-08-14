@@ -1,9 +1,10 @@
 # ADR-013: Browser-Persisted Duel UI State
 
-> Status: accepted; planned
+> Status: superseded by [`ADR-020`](020_ADR_browser_persisted_ui_state_v2.md)
 > Decided: 2026-08-10
+> Superseded: 2026-08-13
 > Owners: browser UI state architecture
-> Plan: [`../../ai-artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md`](../../ai-artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md) — T3, T14
+> Historical plan: [`../../ai-artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md`](../../ai-artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md) — T3, T14
 
 ## Context
 

@@ -66,3 +66,7 @@ Round-3 feedback changes placement; phase-choice authority remains engine-owned:
 - Retired status pills remain retired; role labels move beside header life totals.
 
 ADR-018's pinned-core MR3/MR5 gate is mandatory: engine legality and rendered geometry must never disagree.
+
+## Full-height geometry amendment (accepted 2026-08-13)
+
+ADR-019 replaces fixed percentages. `PhaseStrip` consumes Worker-selected `FieldGeometry.bandY`, `emzX`, pitch, margin. EMZ profile splits groups around pair; no-EMZ profile renders one centred run. End turn anchors independently at board inner-right edge. Rail owns turn/current-phase summary; field band owns legal phase controls. Choice mapping/dispatch above remains unchanged.

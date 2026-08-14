@@ -16,6 +16,7 @@ import type {
 import { mapPromptToInteractionSpec } from "../../src/app/prompts/interaction-spec.ts";
 import { mapSnapshotToBoard } from "../../src/field/board-view-model.ts";
 import {
+  OFF_FIELD_ZONE_DISPLAY_ORDER,
   offFieldTargetEntries,
   offFieldZoneBadge,
 } from "../../src/field/off-field-target-list.ts";
@@ -127,13 +128,20 @@ function entriesFor(
 describe("offFieldZoneBadge", () => {
   it("names the five off-field zones and nothing else", () => {
     expect(offFieldZoneBadge("hand")).toBe("HAND");
-    expect(offFieldZoneBadge("graveyard")).toBe("GY");
+    expect(offFieldZoneBadge("graveyard")).toBe("GRAVEYARD");
     expect(offFieldZoneBadge("deck")).toBe("DECK");
-    expect(offFieldZoneBadge("banished")).toBe("BAN");
-    expect(offFieldZoneBadge("extra")).toBe("EXTRA");
+    expect(offFieldZoneBadge("banished")).toBe("BANISHED");
+    expect(offFieldZoneBadge("extra")).toBe("EXTRA DECK");
     expect(offFieldZoneBadge("monster")).toBeNull();
     expect(offFieldZoneBadge("spellTrap")).toBeNull();
     expect(offFieldZoneBadge("field")).toBeNull();
+    expect(OFF_FIELD_ZONE_DISPLAY_ORDER).toEqual([
+      "HAND",
+      "EXTRA DECK",
+      "GRAVEYARD",
+      "BANISHED",
+      "DECK",
+    ]);
   });
 });
 
@@ -148,11 +156,11 @@ describe("offFieldTargetEntries", () => {
     ]);
 
     expect(entries.map(({ zoneBadge }) => zoneBadge)).toEqual([
-      "GY",
+      "GRAVEYARD",
       "HAND",
       "DECK",
-      "BAN",
-      "EXTRA",
+      "BANISHED",
+      "EXTRA DECK",
     ]);
     expect(entries.map(({ id }) => id)).toEqual([
       "target:0:graveyard:1",

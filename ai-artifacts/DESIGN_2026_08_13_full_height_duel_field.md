@@ -1,9 +1,10 @@
 # Design — Full-height duel field, right rail, defense-capable zones
 
-Status: **validated prototype, ready to implement**
+Status: **validated prototype; implementation planned**
+Plan: [`../ai_artefacts/PLAN_2026_08_13_feedback_follow_up.md`](../ai_artefacts/PLAN_2026_08_13_feedback_follow_up.md)
 Date: 2026-08-13
 Prototype: [`ai-artifacts/PROTO_2026_08_12_full_height_field.html`](PROTO_2026_08_12_full_height_field.html) (standalone, no build, no engine)
-Supersedes the field geometry in `src/field/duel-field-layout.ts` and the app chrome in `docs/ADR/003_ADR_field_first_application_chrome.md`.
+ADR-019 adopts this design + supersedes ADR-003. Implementation plan will replace production render geometry currently rooted in `src/field/duel-field-layout.ts`.
 
 The goal is a **one-to-one replication of the prototype** in the simulator. Every number in this document was measured against the prototype in Chromium, not estimated.
 
@@ -349,14 +350,14 @@ art placeholder → name → meta chips → scrolling effect text.
 .card-preview__text {
   min-height: 0;
   overflow-y: auto;
-  scrollbar-gutter: stable;   /* text never reflows when the bar appears */
-  scrollbar-width: thin;
+  padding-inline-end: 10px; /* permanent text gutter */
+  scrollbar-width: none;   /* custom overlay paints chrome */
 }
 ```
 
 The wrapper **must** be a grid with `minmax(0,1fr)`. A block wrapper sizes to its content, so the text box never gets a bounded height and nothing scrolls — that was the shipped bug.
 
-`scrollbar-gutter: stable` reserves 10px permanently: measured paragraph width is identical (309.00px) for a one-line card and a wall-of-text card.
+Resolved choice: real text scroller keeps wheel/keyboard semantics; native chrome is hidden; shared custom vertical overlay thumb mirrors + pointer-controls `scrollTop`. Permanent 10px inline gutter keeps short/long paragraph width identical. Overlay is decorative + adds no Tab stop.
 
 ---
 
@@ -398,7 +399,7 @@ Add `setShowZoneOutlines` / `setShowZoneCounts` following the existing setter sh
 .duel-field-board[data-zone-counts="false"] .duel-field-card__count { display: none; }
 ```
 
-Persistence: `UiSettingsState` is currently in-memory only. To persist, bump `PersistedUiState` to `version: 2`, add a `settings` branch, and have `readPersistedUiState` fall back to defaults for any missing or malformed key — same defensive shape as the existing `decks` branch. A v1 payload must load as "all defaults", never as an error.
+Persistence is required by ADR-020: use new `ygo.ui.v2`, add `settings.showZoneOutlines` + `settings.showZoneCounts`, validate leaves independently. Old `ygo.ui.v1`/v1 payload loads complete v2 defaults, never an error. Other UI settings remain session-only.
 
 Accessibility: hiding the dashed outline is presentation only. Zone `aria-label`s, `data-zone-id`, `data-field-target` and focus rings are untouched by both toggles.
 
@@ -502,8 +503,8 @@ T1–T3 are one shippable slice; T4–T5 the second; T6–T9 the third.
 
 ---
 
-## 13. Open decisions
+## 13. Resolved decisions
 
-1. **1366×768, no-EMZ** lands at 95.7% of viewport height. Options: shrink `--preview-w` further below 1500px, let the rail go under 12rem, or accept it. Recommendation: accept — 4% at the smallest supported viewport, in the rarer profile.
-2. **Preview scrollbar styling.** Currently native + reserved gutter. If you want it visually identical to the hand's, reuse `wireOverlayScrollbar` on the vertical axis.
-3. **Counts persistence.** `PersistedUiState` v2 is proposed, not required. Without it, both toggles reset every reload.
+1. **1366×768, no-EMZ:** accept 95.7% viewport height. Keep preview ≥18rem + rail ≥12rem.
+2. **Preview scrollbar:** shared custom vertical overlay thumb over real semantic scroller; permanent 10px text gutter.
+3. **Counts/outlines persistence:** required `PersistedUiState` v2 under `ygo.ui.v2`; both default on + survive reload.

@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Choose prototype scope</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b0a08; --panel:#17130d; --panel-2:#1f190f; --text:#fff7ed; --muted:#c9b99f; --line:#4a3b25; --accent:#fbbf24; --accent-2:#fb923c; --focus:#facc15; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    main { width:min(960px,calc(100% - 32px)); margin:0 auto; padding:48px 0 96px; }
+    header { display:grid; gap:12px; margin-bottom:32px; }
+    .eyebrow { color:var(--accent); font-size:.75rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+    h1,h2,p { margin:0; } h1 { font-size:clamp(2rem,5vw,3.5rem); line-height:1.08; letter-spacing:-.035em; }
+    .lede { max-width:70ch; color:var(--muted); }
+    .tree { display:flex; align-items:center; gap:8px; overflow:auto; padding:16px; margin:24px 0 32px; border:1px solid var(--line); border-radius:12px; background:var(--panel); color:var(--muted); white-space:nowrap; }
+    .tree b { color:var(--text); } .node { padding:6px 10px; border:1px solid var(--line); border-radius:999px; } .node.active { border-color:var(--accent); color:var(--accent); } .arrow { color:var(--line); }
+    .visuals { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:0 0 32px; }
+    figure { min-width:0; margin:0; padding:18px; border:1px solid var(--line); border-radius:14px; background:var(--panel); }
+    figcaption { margin-bottom:14px; color:var(--muted); font-size:.85rem; } figcaption b { display:block; color:var(--text); font-size:1rem; }
+    svg { display:block; width:100%; height:auto; } svg text { font-family:ui-sans-serif,system-ui,sans-serif; }
+    .svg-node { fill:var(--panel-2); stroke:var(--line); stroke-width:2; } .svg-node.active { stroke:var(--accent); } .svg-line { fill:none; stroke:var(--line); stroke-width:2; } .svg-arrow { fill:var(--line); } .svg-label { fill:var(--text); font-size:12px; } .svg-note { fill:var(--muted); font-size:10px; } .svg-accent { fill:var(--accent); }
+    form { display:grid; gap:20px; }
+    fieldset { min-width:0; margin:0; padding:24px; border:1px solid var(--line); border-radius:16px; background:var(--panel); }
+    legend { max-width:100%; padding:0 8px; font-size:1.15rem; font-weight:750; }
+    .why { margin:0 0 18px; color:var(--muted); font-size:.925rem; }
+    .choices { display:grid; gap:10px; }
+    .choice { display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:start; padding:14px; border:1px solid var(--line); border-radius:10px; background:var(--panel-2); cursor:pointer; }
+    .choice:has(input:checked) { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
+    input { width:18px; height:18px; margin-top:3px; accent-color:var(--accent); }
+    .rank { display:inline-block; margin-left:7px; color:var(--accent-2); font-size:.72rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+    .detail { display:block; margin-top:3px; color:var(--muted); font-size:.875rem; }
+    label.precision { display:block; margin-top:18px; font-size:.85rem; font-weight:700; color:var(--muted); }
+    textarea { width:100%; min-height:90px; margin-top:7px; padding:12px; resize:vertical; border:1px solid var(--line); border-radius:10px; background:#100d08; color:var(--text); font:inherit; }
+    input:focus-visible,textarea:focus-visible,button:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
+    .actions { position:sticky; bottom:16px; display:flex; gap:12px; align-items:center; justify-content:space-between; padding:14px; border:1px solid var(--line); border-radius:14px; background:rgba(19,23,28,.96); box-shadow:0 16px 40px #0008; backdrop-filter:blur(10px); }
+    button { padding:11px 16px; border:0; border-radius:9px; background:var(--accent); color:#211500; font:inherit; font-weight:800; cursor:pointer; }
+    #status { color:var(--muted); font-size:.875rem; }
+    @media (max-width:700px) { .visuals { grid-template-columns:1fr; } }
+    @media (max-width:600px) { main { width:min(100% - 20px,960px); padding-top:28px; } fieldset { padding:18px 14px; } .actions { align-items:flex-start; flex-direction:column; } button { width:100%; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="eyebrow">Grill me · Round 1 · Scope authority</span>
+    <h1>Choose prototype scope</h1>
+    <p class="lede">Repo contains two valid readings of “2 prototypes.” Pick intended scope. Feature-specific decisions stay blocked until this choice lands.</p>
+  </header>
+
+  <nav class="tree" aria-label="Design tree progress"><span class="node"><b>Plan goal</b></span><span class="arrow">→</span><span class="node active">Prototype scope</span><span class="arrow">→</span><span class="node">Feature decisions</span><span class="arrow">→</span><span class="node">Tickets</span></nav>
+
+  <section class="visuals" aria-label="Technical context">
+    <!-- Prefer inline SVG. Every image needs role="img", aria-labelledby, title, and desc. -->
+    <figure>
+      <figcaption><b>Decision frontier</b>One scope choice unlocks correct requirement tree.</figcaption>
+      <svg viewBox="0 0 400 220" role="img" aria-labelledby="scope-tree-title scope-tree-desc">
+        <title id="scope-tree-title">Prototype scope decision graph</title><desc id="scope-tree-desc">Plan goal leads to active prototype scope decision, then branches to blocked feature decisions and implementation tickets.</desc>
+        <defs><marker id="scope-arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path class="svg-arrow" d="M0 0L8 4L0 8Z"/></marker></defs>
+        <rect class="svg-node" x="18" y="82" width="76" height="54" rx="10"/><text class="svg-label" x="56" y="105" text-anchor="middle">Plan</text><text class="svg-note" x="56" y="121" text-anchor="middle">goal</text>
+        <rect class="svg-node active" x="136" y="75" width="106" height="68" rx="10"/><text class="svg-label" x="189" y="103" text-anchor="middle">Prototype</text><text class="svg-label" x="189" y="120" text-anchor="middle">scope</text>
+        <rect class="svg-node" x="288" y="20" width="96" height="54" rx="10"/><text class="svg-label" x="336" y="43" text-anchor="middle">Feature</text><text class="svg-note" x="336" y="59" text-anchor="middle">decisions</text>
+        <rect class="svg-node" x="288" y="146" width="96" height="54" rx="10"/><text class="svg-label" x="336" y="169" text-anchor="middle">Tickets</text><text class="svg-note" x="336" y="185" text-anchor="middle">blocked</text>
+        <path class="svg-line" marker-end="url(#scope-arrowhead)" d="M94 109H129"/><path class="svg-line" marker-end="url(#scope-arrowhead)" d="M242 97L281 58"/><path class="svg-line" marker-end="url(#scope-arrowhead)" d="M336 74V139"/>
+        <circle class="svg-accent" cx="189" cy="151" r="4"/><text class="svg-note" x="189" y="171" text-anchor="middle">active frontier</text>
+      </svg>
+    </figure>
+    <figure>
+      <figcaption><b>Artifact map</b>Two feature concepts; card-list concept holds two approved-state variants.</figcaption>
+      <svg viewBox="0 0 400 220" role="img" aria-labelledby="artifact-map-title artifact-map-desc">
+        <title id="artifact-map-title">Current prototype artifact map</title><desc id="artifact-map-desc">One full-height field prototype stands beside one card-list feature. Card-list feature contains working evaluator and fixed approved HTML variants.</desc>
+        <rect class="svg-node active" x="16" y="73" width="144" height="74" rx="12"/><text class="svg-label" x="88" y="101" text-anchor="middle">Full-height field</text><text class="svg-note" x="88" y="119" text-anchor="middle">1 feature prototype</text><text class="svg-note" x="88" y="134" text-anchor="middle">not implemented</text>
+        <rect class="svg-node active" x="224" y="18" width="160" height="184" rx="12"/><text class="svg-label" x="304" y="45" text-anchor="middle">Card-list dialog</text><text class="svg-note" x="304" y="62" text-anchor="middle">1 feature · 2 variants</text>
+        <rect class="svg-node" x="246" y="84" width="116" height="42" rx="9"/><text class="svg-label" x="304" y="102" text-anchor="middle">Working</text><text class="svg-note" x="304" y="116" text-anchor="middle">evaluator</text>
+        <rect class="svg-node" x="246" y="142" width="116" height="42" rx="9"/><text class="svg-label" x="304" y="160" text-anchor="middle">Fixed</text><text class="svg-note" x="304" y="174" text-anchor="middle">approved state</text>
+        <path class="svg-line" d="M224 105H178V110H160"/><circle class="svg-accent" cx="196" cy="105" r="4"/>
+      </svg>
+    </figure>
+  </section>
+
+  <form id="questions">
+    <!-- Repeat one fieldset per frontier question. Keep data-question unique. -->
+    <fieldset data-question="Which prototype scope should the implementation plan cover?">
+      <legend>1. Which prototype scope should the implementation plan cover?</legend>
+      <p class="why">Artifact count changes feature scope, dependencies, ADR updates, ticket count, and acceptance gates.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Full-height duel field + approved card-list dialog"><span><b>Full-height duel field + approved card-list dialog</b><span class="rank">Recommended</span><span class="detail">One implementation plan for two distinct feature prototypes; card-list working/fixed files act as one approved design source.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Card-list dialog only: working + fixed variants"><span><b>Card-list dialog only: working + fixed variants</b><span class="rank">Second</span><span class="detail">Plan production redesign of <code>ZoneListDialog</code>; exclude full-height field.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Full-height duel field only"><span><b>Full-height duel field only</b><span class="rank">Third</span><span class="detail">Plan viewport-height field migration; exclude card-list redesign.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Another pair or outcome"><span><b>Another pair or outcome</b><span class="rank">Fourth</span><span class="detail">Name exact artifact paths plus desired production outcome below.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="Exact prototype paths, exclusions, desired outcome…"></textarea></label>
+    </fieldset>
+
+    <div class="actions">
+      <span id="status" role="status">Selections stay in this page until copied.</span>
+      <button type="button" id="copy-summary">Copy answer summary</button>
+    </div>
+  </form>
+</main>
+<script>
+  const button = document.querySelector('#copy-summary');
+  const status = document.querySelector('#status');
+
+  function buildSummary() {
+    const sections = [...document.querySelectorAll('fieldset[data-question]')].map((field, index) => {
+      const question = field.dataset.question;
+      const selected = [...field.querySelectorAll('input[type="checkbox"]:checked')].map(input => `- ${input.value}`);
+      const precision = field.querySelector('textarea').value.trim();
+      const answers = selected.length ? selected.join('\n') : '- No recommended answer selected';
+      return `${index + 1}. ${question}\n${answers}${precision ? `\nPrecision: ${precision}` : ''}`;
+    });
+    return `Round 1 · Scope authority — Choose prototype scope\n\n${sections.join('\n\n')}`;
+  }
+
+  button.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(buildSummary());
+      status.textContent = 'Summary copied to clipboard.';
+    } catch (_) {
+      const fallback = document.createElement('textarea');
+      fallback.value = buildSummary();
+      document.body.appendChild(fallback);
+      fallback.select();
+      document.execCommand('copy');
+      fallback.remove();
+      status.textContent = 'Summary copied to clipboard.';
+    }
+  });
+</script>
+</body>
+</html>

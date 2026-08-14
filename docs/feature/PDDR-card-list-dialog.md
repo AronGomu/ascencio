@@ -10,7 +10,9 @@
 
 ## Decision 2: Search-result contents
 
-- CHOSEN: Show only legal matching cards, face-up, full card width. Put duplicate count on each card.
+> Duplicate-count representation below is superseded by Decisions 8 + 31. Retained scope decision: filtered legal/visible cards at full width.
+
+- CHOSEN (historical): Show only legal matching cards, face-up, full card width. Put duplicate count on each card.
 - WHY: Searcher must identify valid card without opening whole Deck or parsing overlapped copies.
 - NOT CHOSEN: Full Deck face-down; overlapping duplicate cards; one tile per physical copy.
 - PARAMS: Default scenario `Deck search`; 8 result tiles; quantity badge on; scenarios `Deck search`, `Graveyard browse`, `Extra Deck browse`.

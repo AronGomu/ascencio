@@ -33,6 +33,10 @@
   import { placementZoneCandidates } from "../../field/placement-candidates.ts";
   import type { PhysicalZoneId } from "../../field/duel-field-layout.ts";
   import {
+    createFieldRenderLayout,
+    type FieldRenderLayout,
+  } from "../../field/duel-field-geometry.ts";
+  import {
     createDomFeedbackController,
     EMPTY_DOM_FEEDBACK_STATE,
     type DomFeedbackController,
@@ -57,6 +61,7 @@
   import FieldLines from "./duel-field/FieldLines.svelte";
   import PhaseStrip from "./duel-field/PhaseStrip.svelte";
 
+  const noop = (): void => undefined;
   const EMPTY_IMAGE_URLS: ReadonlyMap<number, string> = new Map();
   const EMPTY_TARGETS: ReadonlySet<BoardTargetId> = new Set();
   const EMPTY_ZONE_IDS: ReadonlySet<PhysicalZoneId> = new Set();
@@ -67,6 +72,7 @@
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 104'%3E%3Crect width='72' height='104' rx='5' fill='%2318243b'/%3E%3Cpath d='M8 8h56v88H8z' fill='none' stroke='%23697895' stroke-width='2'/%3E%3Ctext x='36' y='57' fill='%23a9b5ca' font-size='28' text-anchor='middle'%3E?%3C/text%3E%3C/svg%3E";
 
   export let board: BoardViewModel;
+  export let layoutBoundaryElement: HTMLElement | null = null;
   export let imageUrls: ReadonlyMap<number, string> = EMPTY_IMAGE_URLS;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let cardBackUrl = DEFAULT_CARD_BACK;
@@ -91,8 +97,8 @@
     document.elementFromPoint(x, y);
   export let onplacementintent: (zoneId: PhysicalZoneId) => unknown = () =>
     false;
-  export let onpreview: (card: BoardCardView) => void = () => undefined;
-  export let onstackpreview: (stack: BoardStackView) => void = () => undefined;
+  export let onpreview: (card: BoardCardView) => void = noop;
+  export let onstackpreview: (stack: BoardStackView) => void = noop;
   export let zoneLists: ReadonlyMap<PhysicalZoneId, readonly ZoneListEntry[]> =
     new Map();
   /* T16: the legal off-field targets of the live prompt, already joined against
@@ -100,17 +106,18 @@
      identity from a prompt choice. */
   export let offFieldTargets: readonly OffFieldTargetEntry[] =
     EMPTY_TARGET_ENTRIES;
-  export let onzonelistpreview: (entry: ZoneListEntry) => void = () =>
-    undefined;
+  export let onzonelistpreview: (entry: ZoneListEntry) => void = noop;
   export let phase: DuelPhase = "unknown";
   export let zoneListWindowPosition: PersistedWindowPosition | null = null;
   export let confirmWindowPosition: PersistedWindowPosition | null = null;
+  export let showZoneOutlines = true;
+  export let showZoneCounts = true;
   export let onzoneListWindowPositionChange: (
     position: PersistedWindowPosition,
-  ) => void = () => undefined;
+  ) => void = noop;
   export let onconfirmWindowPositionChange: (
     position: PersistedWindowPosition,
-  ) => void = () => undefined;
+  ) => void = noop;
 
   /* Exactly one list window: either one browsed pile, or the aggregate target
      list of one prompt. */
@@ -134,6 +141,9 @@
   if (injectFailure) throw new Error("Injected duel field component failure");
 
   let fieldRoot: HTMLElement;
+  let renderLayout: FieldRenderLayout;
+  let resizeObserver: ResizeObserver | null = null;
+  let observedLayoutBoundary: HTMLElement | null = null;
   let feedbackController: DomFeedbackController | null = null;
   let feedbackState: DomFeedbackState = EMPTY_DOM_FEEDBACK_STATE;
   let mediaReducedMotion = false;
@@ -191,12 +201,48 @@
   /* Derived from the projected board itself, so the strip can never disagree
      with the zones the mapper actually produced. */
   $: extraMonsterZones = board.zones.some(({ player }) => player === "shared");
+  $: renderLayout = measuredRenderLayout(
+    layoutBoundaryElement,
+    extraMonsterZones,
+  );
+  $: observeLayoutBoundary(layoutBoundaryElement);
   $: actionBarVisible =
     prompt !== null &&
     spec !== null &&
     (spec.fieldCapable || spec.promptKind === "chain") &&
     fieldActionBarRequired(spec);
-  onDestroy(removeGhost);
+  onDestroy(() => {
+    removeGhost();
+    resizeObserver?.disconnect();
+  });
+
+  function measuredRenderLayout(
+    boundary: HTMLElement | null,
+    profile: boolean,
+  ): FieldRenderLayout {
+    const width = boundary?.clientWidth ?? 0;
+    const height = boundary?.clientHeight ?? 0;
+    return createFieldRenderLayout(
+      profile,
+      width > 0 ? width : 1280,
+      height > 0 ? height : 720,
+    );
+  }
+
+  function observeLayoutBoundary(boundary: HTMLElement | null): void {
+    if (boundary === observedLayoutBoundary) return;
+    resizeObserver?.disconnect();
+    observedLayoutBoundary = boundary;
+    if (boundary === null || typeof ResizeObserver === "undefined") return;
+    resizeObserver = new ResizeObserver(() => {
+      renderLayout = createFieldRenderLayout(
+        extraMonsterZones,
+        boundary.clientWidth,
+        boundary.clientHeight,
+      );
+    });
+    resizeObserver.observe(boundary);
+  }
 
   onMount(() => {
     const motionQuery = globalThis.matchMedia?.(
@@ -797,14 +843,13 @@
       : targetLaunchers.has(targetId);
   }
 
-  /* One response per decision: the same reducer the mounted controls use.
-     Exact one-of-one submits on click, everything else drafts a toggle that
-     the list's own Confirm submits. */
   function chooseTargetChoice(choice: InteractionChoice): void {
     if (spec === null) return;
-    if (isImmediateSingleSelection(spec))
-      dispatch({ type: "chooseChoice", choiceId: choice.id });
-    else dispatch({ type: "toggleChoice", choiceId: choice.id });
+    oninteraction({
+      type: "toggleChoice",
+      choiceId: choice.id,
+      key: spec.key,
+    });
   }
 
   function targetSelections(
@@ -832,18 +877,16 @@
   data-cy="duel-field"
   data-dragging={dragCard === null ? undefined : "true"}
   data-prompt-kind={prompt === null ? undefined : prompt.kind}
+  style={`width: ${renderLayout.geometry.width}px; height: ${renderLayout.geometry.height}px;`}
   onclick={dismissOnOutsideClick}
 >
-  <!-- The board pans inside its own scroll child so `.duel-field` itself
-       stays a still, non-scrolling boundary for the floating windows: a
-       horizontal board pan must never carry a live decision offscreen
-       (ADR-017). The stage keeps its natural (board aspect-ratio-driven)
-       size inside it, which is the coordinate system PhaseStrip's
-       percentages are calibrated against. -->
+  <!-- Inner field is exact geometry-sized position/clamp boundary.
+       Wrapper remains non-scrolling; floating windows stay field-local. -->
   <div class="duel-field-scroll-region" data-cy="duel-field-scroll-region">
     <div class="duel-field-stage" data-cy="duel-field-stage">
       <FieldBoard
         {board}
+        {renderLayout}
         {imageUrls}
         {imageLibrary}
         cardBackUrl={resolvedCardBackUrl}
@@ -854,6 +897,8 @@
         pinnedTarget={session.menuTarget}
         {dropCandidates}
         {dropHoveredZoneId}
+        {showZoneOutlines}
+        {showZoneCounts}
         oncardactivate={activateCard}
         onzoneactivate={activateZone}
         oncardchoose={(choice) => {
@@ -868,6 +913,7 @@
         onstackactivate={activateStack}
       />
       <PhaseStrip
+        geometry={renderLayout.geometry}
         {phase}
         {spec}
         disabled={pending}
@@ -889,6 +935,9 @@
       mode="target"
       title={spec.title}
       targetEntries={offFieldTargets}
+      choices={spec.kind === "cardSelection"
+        ? [...spec.cardChoices.values(), ...spec.zoneChoices.values()].flat()
+        : []}
       selectedChoiceIds={session.selectedChoiceIds}
       minimum={spec.constraints.minimum}
       maximum={spec.constraints.maximum}

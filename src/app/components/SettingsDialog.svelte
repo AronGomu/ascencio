@@ -2,6 +2,9 @@
   import { onMount } from "svelte";
   import type { UiSettingsState } from "../stores/ui-settings-store.ts";
 
+  const SHOW_ZONE_COUNTS_DESCRIPTION =
+    "Show the number of cards in Deck, Extra Deck, GY, Banished and both hands.";
+
   export let settings: UiSettingsState;
   export let coreVersion: readonly [number, number] | null = null;
   export let activeSnapshotId: string | null = null;
@@ -10,6 +13,9 @@
   export let onshowworkspace: (value: boolean) => void;
   export let onautoplacecards: (value: boolean) => void;
   export let onautoresolvetrivialprompts: (value: boolean) => void;
+  export let onshowzoneoutlines: (value: boolean) => void;
+  export let onshowzonecounts: (value: boolean) => void;
+  export let onreset: () => void;
   export let onclose: () => void;
 
   let panel: HTMLDivElement | undefined;
@@ -58,6 +64,14 @@
     onautoresolvetrivialprompts(
       (event.currentTarget as HTMLInputElement).checked,
     );
+  }
+
+  function handleShowZoneOutlines(event: Event): void {
+    onshowzoneoutlines((event.currentTarget as HTMLInputElement).checked);
+  }
+
+  function handleShowZoneCounts(event: Event): void {
+    onshowzonecounts((event.currentTarget as HTMLInputElement).checked);
   }
 </script>
 
@@ -117,6 +131,36 @@
       />
       Skip prompts with a single answer
     </label>
+    <label data-cy="settings-show-zone-outlines-label">
+      <input
+        type="checkbox"
+        checked={settings.showZoneOutlines}
+        onchange={handleShowZoneOutlines}
+        data-cy="settings-show-zone-outlines-checkbox"
+      />
+      <span data-cy="settings-show-zone-outlines-copy">Show zone outlines</span>
+      <span data-cy="settings-show-zone-outlines-description"
+        >Draw the dashed square footprint of every zone.</span
+      >
+    </label>
+    <label data-cy="settings-show-zone-counts-label">
+      <input
+        type="checkbox"
+        checked={settings.showZoneCounts}
+        onchange={handleShowZoneCounts}
+        data-cy="settings-show-zone-counts-checkbox"
+      />
+      <span data-cy="settings-show-zone-counts-copy">Show card counts</span>
+      <span data-cy="settings-show-zone-counts-description"
+        >{SHOW_ZONE_COUNTS_DESCRIPTION}</span
+      >
+    </label>
+    <button
+      type="button"
+      class="secondary"
+      data-cy="settings-reset-button"
+      onclick={onreset}>Reset settings</button
+    >
     <p data-cy="settings-engine-version">{engineText}</p>
     <p data-cy="settings-active-snapshot">{snapshotText}</p>
     <button

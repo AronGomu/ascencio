@@ -125,6 +125,26 @@ describe("CardActionChips", () => {
     for (const chip of chips()) expect(chip.disabled).toBe(true);
   });
 
+  it("renders list actions plus local Details without fabricating a choice", async () => {
+    const onchoose = vi.fn();
+    const ondetails = vi.fn();
+    render(CardActionChips, {
+      cardId: "card-1",
+      cardLabel: "Mystical Space Typhoon",
+      choices: [ACTIVATE],
+      variant: "list",
+      ondetails,
+      onchoose,
+      ondismiss: vi.fn(),
+    });
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: ACTIVATE.label }));
+    await user.click(screen.getByRole("button", { name: "Details" }));
+    expect(onchoose).toHaveBeenCalledWith(ACTIVATE);
+    expect(ondetails).toHaveBeenCalledOnce();
+    expect(onchoose).toHaveBeenCalledOnce();
+  });
+
   it("focuses the first chip through the instance binding", async () => {
     const { rendered } = renderChips();
     (

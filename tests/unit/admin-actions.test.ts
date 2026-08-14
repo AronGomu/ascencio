@@ -43,9 +43,9 @@ describe("admin storage targets", () => {
     expect(target("duel-snapshots").name).toBe("ygo-story-duel");
   });
 
-  it("resets story progress under the production storage key", () => {
-    expect(target("story-progress").kind).toBe("localstorage");
-    expect(target("story-progress").name).toBe("ygo.story.v1");
+  it("resets story saves under the production database name", () => {
+    expect(target("story-saves").kind).toBe("indexeddb");
+    expect(target("story-saves").name).toBe("ygo-story-saves");
   });
 });
 

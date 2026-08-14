@@ -224,8 +224,21 @@ describe("public domain APIs are frozen", () => {
       name: "story",
       entry: "src/story/index.ts",
       namespace: story,
-      values: ["STORY_STORAGE_KEY", "default"],
-      types: ["EncounterId", "StoryState"],
+      values: [
+        "STORY_SAVES_DATABASE_NAME",
+        "createStorySaveRepository",
+        "default",
+      ],
+      types: [
+        "EncounterId",
+        "StorySaveEnvelope",
+        "StorySaveReadResult",
+        "StorySaveRepository",
+        "StorySaveSummary",
+        "StorySaveWriteResult",
+        "StorySlotKey",
+        "StoryState",
+      ],
     },
     {
       name: "shell",

@@ -213,7 +213,7 @@ Run `npm run dev`. The console is a developer surface: it is never linked from t
 - [ ] Click "Cancel": the row returns to a single "Reset…" button. Visit `#/decks` — "Admin test deck" is STILL there. A single stray click must never delete data.
 - [ ] Back on `#/admin`, click "Reset…" on "Deck library", then click "Reset…" on "Shell settings": only ONE row is armed at a time — the deck-library confirm disappears.
 - [ ] Press Cancel, then arm "Deck library" again and click "Delete for good": the status line reads "Cleared Deck library." Visit `#/decks` — the library shows "No local decks".
-- [ ] Repeat the arm-then-confirm flow for each remaining row (Duel snapshots, Shell settings, Story progress): each one asks for a separate confirmation and reports "Cleared …" when done. (Corrected by T7: the row is now labelled "Story progress" and clears `ygo.story.v1`.)
+- [ ] Repeat the arm-then-confirm flow for each remaining row (Duel snapshots, Shell settings, Story saves): each one asks for a separate confirmation and reports "Cleared …" when done. (Corrected by T7: the story row exists. Corrected by T13: it is now labelled "Story saves" and deletes the `ygo-story-saves` database, not a local-storage key.)
 - [ ] After clearing "Shell settings", check devtools Application → Local Storage: the `ygo.ui.v3` entry is gone, and reloading the hub shows default settings.
 - [ ] After clearing "Duel snapshots", start a duel from `#/duel` and play a turn: the duel still works (the snapshot store rebuilds itself).
 - [ ] Reload `#/admin` after every reset: the console still loads and normal play from the hub is unaffected.
@@ -255,7 +255,7 @@ Nothing else regressed
 
 - [ ] Open `#/duel` and play a few actions — the duel looks and behaves exactly as before; story styling has not leaked into its buttons or background.
 - [ ] Open `#/decks`, create and edit a deck — the deck editor looks and behaves exactly as before.
-- [ ] Open `#/admin` — the storage list shows a "Story progress" row; arm and confirm its reset, then check DevTools Application → Local Storage: `ygo.story.v1` is gone and `#/story` starts from a fresh title screen with no Continue.
+- [ ] Open `#/admin` — the storage list shows a "Story saves" row; arm and confirm its reset, then check DevTools Application → IndexedDB: `ygo-story-saves` is gone and `#/story` starts from a fresh title screen with no Continue. (Corrected by T13: story progress moved out of local storage into IndexedDB, so this row and this DevTools panel replaced the old `ygo.story.v1` key.)
 - [ ] Confirm the browser console is empty across all of the above.
 
 ## T8 deck-editor-domain-migration
@@ -521,4 +521,101 @@ Nothing else regressed
 - [ ] Deck create / rename / duplicate / delete / import YDK / export YDK all
       behave exactly as in T8.
 - [ ] Open `#/duel` and `#/story` — unchanged; neither reads the deck database.
+- [ ] The browser console stays empty across all of the above.
+
+## T13 story-saves-repository
+
+Story progress moved out of the single `ygo.story.v1` local-storage record into
+an IndexedDB database, `ygo-story-saves`, holding one versioned record per
+slot. Prototype progress under the old key is deliberately **not** migrated: a
+player who used the story before this ticket starts from a fresh title screen,
+and a leftover `ygo.story.v1` entry is expected and harmless.
+
+The save/load overlays are unchanged, so they still drive the single manual
+slot — which is now stored as `manual:1`. The store also carries `manual:2`,
+`manual:3` and `checkpoint:pre-duel`; nothing writes those three yet (the duel
+handoff is T19), so an empty `manual:2` in DevTools is correct.
+
+Machine-verified: `tests/unit/story/story-save-repository.test.ts` covers the
+round trip, revision increments, stale-write refusal, unknown schema version,
+corrupt records, a quota failure, a write that aborts mid-transaction, and an
+unusable IndexedDB. `e2e/story.spec.ts` covers save → reload → load and
+corrupt-slot recovery in Chromium. The checks below are the ones a machine
+cannot make: that the DevTools panel shows what you expect and that the app
+still feels right.
+
+Run `npm run dev` and use `http://localhost:5173` (or the port Vite prints).
+
+Where to look in DevTools
+
+- [ ] Open DevTools → Application → Storage → IndexedDB. Before touching the
+      story there is no `ygo-story-saves` database (delete it first if a
+      previous run left one).
+- [ ] Open `#/story` and let the title screen render. Refresh the IndexedDB
+      panel — `ygo-story-saves` now exists with one object store, `saves`,
+      and no records. Opening the story must never create a save on its own.
+
+A save survives a reload
+
+- [ ] Click "New Game", advance a few beats with Enter, and note the line of
+      dialogue currently on screen.
+- [ ] Click "Save", then "Confirm overwrite" — the overlay reports "Save
+      complete. Manual slot 1 updated."
+- [ ] In DevTools → IndexedDB → `ygo-story-saves` → `saves`, refresh: there is
+      exactly one record, keyed `manual:1`. Expand it — it has
+      `schemaVersion: 1`, `slot: "manual:1"`, `revision: 1`, a `savedAt`
+      timestamp, and a `state` object whose `narrativeIndex` matches how far
+      you advanced.
+- [ ] Reload the page (F5). The title screen now offers "Continue".
+- [ ] Click "Load", then "Load manual slot 1" — you land on the same beat you
+      noted above, not back at the start.
+- [ ] Save again from the same spot and re-check the record: still exactly one
+      `manual:1` record, now `revision: 2`. A second record, or a record list
+      that keeps growing, is the failure to watch for.
+
+The autosave slot is separate
+
+- [ ] Play through to a duel (map → Old Arena → Start Duel → Simulate Player
+      Win → Continue story). The reward screen reports "Autosave complete at
+      stable story boundary."
+- [ ] In DevTools there are now two records: `manual:1` and `autosave`. Neither
+      `manual:2`, `manual:3` nor `checkpoint:pre-duel` exists.
+- [ ] Reload and click "Continue" — you resume from the autosave (the updated
+      map), because it was written more recently than the manual save.
+
+A corrupt save costs you the slot, not the app
+
+- [ ] With the story open, paste this into the DevTools console:
+      `indexedDB.open("ygo-story-saves",1).onsuccess=e=>{const d=e.target.result;d.transaction("saves","readwrite").objectStore("saves").put("garbage","manual:1");}`
+- [ ] Reload the page. A red banner appears naming `manual:1` and the reason;
+      the title screen still renders and "New Game" still plays. A blank screen
+      or a thrown error in the console is the failure to watch for.
+- [ ] Click "Reset prototype storage" in that banner — the banner clears and
+      DevTools shows the `saves` store is empty again.
+
+Admin console clears it
+
+- [ ] Open `#/admin`. The storage list has a "Story saves" row (there is no
+      longer a "Story progress" row).
+- [ ] Save some story progress first, then arm and confirm the "Story saves"
+      reset. The console reports it cleared.
+- [ ] In DevTools → Application → IndexedDB, `ygo-story-saves` is gone — not
+      merely empty. Open `#/story`: the title screen has no "Continue".
+- [ ] Do the same reset **while `#/story` is open in a second tab**, then
+      switch to that tab and reload — it comes up on a fresh title screen
+      rather than hanging. A tab that holds the database open must not block
+      the reset indefinitely.
+
+Nothing else regressed
+
+- [ ] Play the prologue end to end once: title → narrative → choice → map →
+      Old Arena → duel mock → outcome → reward → updated map → End prototype.
+- [ ] Open the pause menu, History, Settings, Save and Load overlays — each
+      opens, traps focus, closes on Escape, and returns focus to the button
+      that opened it.
+- [ ] Open Load and delete manual slot 1 — the confirmation closes, the slot
+      reads "Manual slot 1 · Empty", and the `manual:1` record is gone from
+      DevTools while `autosave` is untouched.
+- [ ] Open `#/duel` and play a few actions, and `#/decks` and edit a deck —
+      both behave exactly as before; neither reads or writes `ygo-story-saves`.
 - [ ] The browser console stays empty across all of the above.

@@ -23,15 +23,25 @@
   import RewardScreen from "./screens/RewardScreen.svelte";
   import TitleScreen from "./screens/TitleScreen.svelte";
   import {
-    loadStorySlots,
-    resetStoryStorage,
-    saveStoryState,
-  } from "./storage/story-storage.ts";
+    STORY_SLOT_KEYS,
+    type StorySaveReadResult,
+    type StorySaveWriteResult,
+    type StorySlotKey,
+  } from "./saves/story-save-contracts.ts";
+  import { createStorySaveRepository } from "./saves/story-save-repository.ts";
   /* Scoped to `.story-app`, so it travels with the component instead of
      leaking into the duel and deck editor the shell mounts beside it. */
   import "./styles.css";
 
   type Overlay = "history" | "settings" | "pause" | "save" | "load" | null;
+
+  /* The overlays expose one manual slot and the autosave stream; the store
+     carries three manual slots and the pre-duel checkpoint for the duel
+     handoff, which writes them without going through this screen. */
+  const MANUAL_SLOT: StorySlotKey = "manual:1";
+  const AUTOSAVE_SLOT: StorySlotKey = "autosave";
+  const saves = createStorySaveRepository(globalThis.indexedDB);
+
   let state = createInitialStoryState();
   let manualState: StoryState | null = null;
   let autosaveState: StoryState | null = null;
@@ -48,15 +58,62 @@
   let root: HTMLElement;
 
   onMount(() => {
-    const loaded = loadStorySlots();
-    if (loaded.ok) {
-      manualState = loaded.slots.manual;
-      autosaveState = loaded.slots.autosave;
-      latestSaveSlot = loaded.slots.latest;
-      if (manualState !== null || autosaveState !== null)
-        state = { ...state, progressExists: true };
-    } else storageOperationError = loaded.message;
+    /* Safe to call on every mount: reading never writes, and a slot this build
+       cannot parse resolves to "no save" rather than a thrown mount. */
+    void hydrate();
   });
+
+  /** Re-reads both player-visible slots and rebuilds what the title screen
+      offers. Returns whether storage answered cleanly. */
+  async function hydrate(): Promise<boolean> {
+    const [manual, autosave] = await Promise.all([
+      saves.read(MANUAL_SLOT),
+      saves.read(AUTOSAVE_SLOT),
+    ]);
+    manualState = manual.kind === "ready" ? manual.envelope.state : null;
+    autosaveState = autosave.kind === "ready" ? autosave.envelope.state : null;
+    latestSaveSlot = newerSlot(manual, autosave);
+    storageOperationError = readProblem(manual) ?? readProblem(autosave);
+    state = {
+      ...state,
+      progressExists:
+        manualState !== null || autosaveState !== null || state.progressExists,
+    };
+    return storageOperationError === null;
+  }
+
+  /** Which slot Continue should resume, decided by when each was written so
+      the store never has to keep a "latest" pointer of its own. */
+  function newerSlot(
+    manual: StorySaveReadResult,
+    autosave: StorySaveReadResult,
+  ): "manual" | "autosave" | null {
+    if (manual.kind !== "ready")
+      return autosave.kind === "ready" ? "autosave" : null;
+    if (autosave.kind !== "ready") return "manual";
+    return autosave.envelope.savedAt >= manual.envelope.savedAt
+      ? "autosave"
+      : "manual";
+  }
+
+  function readProblem(result: StorySaveReadResult): string | null {
+    if (result.kind === "corrupt") return `${result.slot}: ${result.reason}`;
+    if (result.kind === "incompatible")
+      return `${result.slot}: save was written by a newer version (schema ${String(result.found)})`;
+    return null;
+  }
+
+  function writeProblem(result: StorySaveWriteResult): string {
+    if (result.kind === "stale")
+      return `Save was changed elsewhere (revision ${String(result.currentRevision)})`;
+    if (result.kind === "failed")
+      return result.reason === "quota"
+        ? "Storage is full"
+        : result.reason === "unavailable"
+          ? "Storage is unavailable"
+          : "Storage write failed";
+    return "";
+  }
 
   afterUpdate(() => {
     if (state.screen === previousScreen) return;
@@ -119,10 +176,11 @@
       dirty = false;
     }
   }
-  function deleteManualSave(): boolean {
-    const result = resetStoryStorage(undefined, "manual");
-    if (!result.ok) {
-      storageOperationError = `Delete failed: ${result.message}`;
+  async function deleteManualSave(): Promise<boolean> {
+    try {
+      await saves.clear(MANUAL_SLOT);
+    } catch (error) {
+      storageOperationError = `Delete failed: ${errorMessage(error)}`;
       return false;
     }
     manualState = null;
@@ -168,70 +226,63 @@
   function closeOverlay(): void {
     overlay = null;
   }
-  function retryStorageAccess(): boolean {
-    const loaded = loadStorySlots();
-    if (!loaded.ok) {
-      storageOperationError = loaded.message;
-      return false;
-    }
-    manualState = loaded.slots.manual;
-    autosaveState = loaded.slots.autosave;
-    latestSaveSlot = loaded.slots.latest;
-    storageOperationError = null;
-    state = {
-      ...state,
-      progressExists:
-        manualState !== null || autosaveState !== null || state.progressExists,
-    };
-    return true;
+  async function retryStorageAccess(): Promise<boolean> {
+    return await hydrate();
   }
-  function manualSave(): void {
+  /* Both save paths overwrite unconditionally: the overlay already asked the
+     player to confirm, and this screen is the only writer of these two slots.
+     T19's checkpoint writes its own slot with an expected revision. */
+  async function manualSave(): Promise<void> {
     if (storageOperationError !== null) {
       saveMode = "failure";
       return;
     }
     const snapshot = { ...state, savedScreen: state.screen };
-    const result = saveStoryState(snapshot, undefined, "manual");
-    saveMode = result.ok ? "success" : "failure";
-    if (result.ok) {
+    saveMode = "saving";
+    const result = await saves.write(MANUAL_SLOT, snapshot, null);
+    saveMode = result.kind === "written" ? "success" : "failure";
+    if (result.kind === "written") {
       manualState = snapshot;
       latestSaveSlot = "manual";
       dirty = false;
-    } else storageOperationError = result.message;
+    } else storageOperationError = writeProblem(result);
   }
-  function retryManualSave(): void {
-    if (storageOperationError !== null && !retryStorageAccess()) return;
-    manualSave();
+  async function retryManualSave(): Promise<void> {
+    if (storageOperationError !== null && !(await retryStorageAccess())) return;
+    await manualSave();
   }
-  function autosaveReward(): void {
+  async function autosaveReward(): Promise<void> {
     if (storageOperationError !== null) {
       autosaveStatus = "failure";
       return;
     }
     const snapshot = { ...state, savedScreen: "reward" as const };
-    const result = saveStoryState(snapshot, undefined, "autosave");
-    autosaveStatus = result.ok ? "success" : "failure";
-    if (result.ok) {
+    const result = await saves.write(AUTOSAVE_SLOT, snapshot, null);
+    autosaveStatus = result.kind === "written" ? "success" : "failure";
+    if (result.kind === "written") {
       autosaveState = snapshot;
       latestSaveSlot = "autosave";
       dirty = false;
-    } else storageOperationError = result.message;
+    } else storageOperationError = writeProblem(result);
   }
-  function retryAutosave(): void {
-    if (storageOperationError !== null && !retryStorageAccess()) return;
-    autosaveReward();
+  async function retryAutosave(): Promise<void> {
+    if (storageOperationError !== null && !(await retryStorageAccess())) return;
+    await autosaveReward();
   }
   function continueOutcome(): void {
     dispatch({ type: "continue-outcome" });
-    if (state.screen === "reward") autosaveReward();
+    if (state.screen === "reward") void autosaveReward();
   }
   function acknowledgeReward(): void {
     dispatch({ type: "acknowledge-reward" });
   }
-  function reset(): void {
-    const result = resetStoryStorage();
-    if (!result.ok) {
-      storageOperationError = `Reset failed: ${result.message}`;
+  async function reset(): Promise<void> {
+    try {
+      /* Every slot, not just the two this screen writes: a reset that left the
+         duel checkpoint behind would resume a duel the story no longer has. */
+      await Promise.all(STORY_SLOT_KEYS.map((slot) => saves.clear(slot)));
+    } catch (error) {
+      storageOperationError = `Reset failed: ${errorMessage(error)}`;
       return;
     }
     state = createInitialStoryState();
@@ -243,6 +294,9 @@
     autosaveStatus = "idle";
     saveMode = "idle";
     overlay = null;
+  }
+  function errorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : "Storage request failed";
   }
   function recoverOutcome(action: "retry" | "return"): void {
     state = {
@@ -278,7 +332,7 @@
         type="button"
         class="secondary"
         data-cy="story-storage-error-reset"
-        onclick={reset}>Reset prototype storage</button
+        onclick={() => void reset()}>Reset prototype storage</button
       >
     </section>
   {/if}
@@ -360,7 +414,7 @@
   {:else if state.screen === "reward"}
     <RewardScreen
       {autosaveStatus}
-      onretry={retryAutosave}
+      onretry={() => void retryAutosave()}
       oncontinue={acknowledgeReward}
     />
   {:else}
@@ -372,8 +426,10 @@
         updated map.
       </p>
       <div data-cy="story-end-actions">
-        <button type="button" data-cy="story-end-replay" onclick={reset}
-          >Replay from the title</button
+        <button
+          type="button"
+          data-cy="story-end-replay"
+          onclick={() => void reset()}>Replay from the title</button
         ><button
           type="button"
           class="secondary"
@@ -417,8 +473,8 @@
   {:else if overlay === "save"}<SaveLoadOverlay
       mode={saveMode}
       onclose={closeOverlay}
-      onsave={manualSave}
-      onretry={retryManualSave}
+      onsave={() => void manualSave()}
+      onretry={() => void retryManualSave()}
       oncontinue={closeOverlay}
       restoreFocusTo={overlayTrigger}
     />

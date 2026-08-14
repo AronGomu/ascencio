@@ -16,20 +16,27 @@ and the same `#/story` route.
 
 ## Boundaries
 
-- Public contract is `index.ts`: the domain root component plus `StoryState`
-  and `EncounterId`. Nothing outside `src/story/` deep-imports past it.
+- Public contract is `index.ts`: the domain root component, `StoryState`,
+  `EncounterId`, and the save store (`createStorySaveRepository` plus its
+  types and the database name). Nothing outside `src/story/` deep-imports past
+  it.
 - The domain imports no production duel domain (`app`, `duel`, `field`,
   `storage`, `worker`); `tests/unit/story/story-boundaries.test.ts` enforces it.
 - `styles.css` is scoped to `.story-app` so it cannot repaint the duel or deck
   editor that the shell mounts in the same document.
-- Progress lives in one `localStorage` record under `ygo.story.v1`. The
-  developer console at `#/admin` can reset it.
+- Progress lives in the `ygo-story-saves` IndexedDB, one record per slot:
+  `manual:1`–`manual:3`, `autosave`, and `checkpoint:pre-duel` for the duel
+  handoff. Each record is a versioned envelope; a record this build cannot
+  parse reads as "no save" instead of failing the mount. The developer console
+  at `#/admin` resets the database. Prototype progress written under the old
+  key is not migrated.
 
 ## Known limits
 
 - Battle is an explicit mock boundary; no Worker, WASM, or real duel
   integration yet.
-- Save data is one `localStorage` record, not the production save schema.
+- The save screens still render fixed placeholder slot summaries; only the
+  backing store is real.
 - Auto and Skip are labeled experiments, not functional automation.
 - Audio is absent; disabled controls reserve evaluation space only.
 - Story, names, visuals, title, rewards, and state are provisional

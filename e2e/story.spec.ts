@@ -172,6 +172,86 @@ test("manual save and delete only touch the manual slot", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Continue" })).toHaveCount(0);
 });
 
+/** The slot keys the story database actually holds, read from outside the app
+    so a passing save cannot be one the component only remembers. */
+async function storySaveSlots(page: Page): Promise<readonly string[]> {
+  return await page.evaluate(async () => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open("ygo-story-saves", 1);
+      request.onupgradeneeded = () => request.result.createObjectStore("saves");
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const transaction = database.transaction("saves", "readonly");
+    const keys = transaction.objectStore("saves").getAllKeys();
+    await new Promise((resolve) => {
+      transaction.oncomplete = resolve;
+    });
+    database.close();
+    return keys.result.map(String);
+  });
+}
+
+/* The reload is the whole point: the manual slot has to come back out of
+   IndexedDB through the Load screen, not out of the component's memory. */
+test("a manual save is reloadable from the Load screen after a reload", async ({
+  page,
+}) => {
+  await reachMap(page);
+  await page.getByRole("button", { name: "Open pause menu" }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByRole("button", { name: "Confirm overwrite" }).click();
+  await expect(page.getByText(/Save complete/)).toBeVisible();
+  await page.getByRole("button", { name: "Close Save and load" }).click();
+
+  expect(await storySaveSlots(page)).toContain("manual:1");
+
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "Echoes of the Draw" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Load", exact: true }).click();
+  await page.getByRole("button", { name: "Load manual slot 1" }).click();
+  await expect(
+    page.getByRole("heading", { name: "City signal map" }),
+  ).toBeVisible();
+  await expect(page.getByText(/Earlier choice:/)).toBeVisible();
+});
+
+/* A record this build cannot read costs the player that slot and nothing
+   else. The failure this guards against is a blank screen on mount. */
+test("a corrupt slot degrades to no save and the story still plays", async ({
+  page,
+}) => {
+  await openStory(page);
+  await page.evaluate(async () => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open("ygo-story-saves", 1);
+      request.onupgradeneeded = () => request.result.createObjectStore("saves");
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const transaction = database.transaction("saves", "readwrite");
+    transaction.objectStore("saves").put("not a save", "manual:1");
+    await new Promise((resolve) => {
+      transaction.oncomplete = resolve;
+    });
+    database.close();
+  });
+
+  await page.reload();
+  await expect(page.getByRole("alert")).toContainText("manual:1");
+  await expect(page.getByRole("button", { name: "Continue" })).toHaveCount(0);
+  await page.getByRole("button", { name: "New Game" }).click();
+  await expect(page.getByText(/Rain turned/)).toBeVisible();
+
+  /* The banner's reset clears every slot, so the next save writes cleanly on
+     top of the record that could not be read. */
+  await page.getByRole("button", { name: "Reset prototype storage" }).click();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  expect(await storySaveSlots(page)).toEqual([]);
+});
+
 test("every story overlay opens, traps focus, and restores it on close", async ({
   page,
 }) => {

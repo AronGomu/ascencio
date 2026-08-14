@@ -4,7 +4,7 @@
 
   export let showCorrupt = false;
   export let onload: (slot: "manual" | "autosave") => void = () => undefined;
-  export let ondelete: () => boolean = () => true;
+  export let ondelete: () => boolean | Promise<boolean> = () => true;
   export let onclose: () => void = () => undefined;
   export let restoreFocusTo: HTMLElement | null = null;
   let confirmationOpen = false;

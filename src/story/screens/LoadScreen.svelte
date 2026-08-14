@@ -4,7 +4,9 @@
 
   export let showCorrupt = false;
   export let onload: (slot: "manual" | "autosave") => void = () => undefined;
-  export let ondelete: () => boolean = () => true;
+  /* Deleting a save is a round trip to IndexedDB now, so the caller may answer
+     asynchronously; the slot only reads as empty once the delete confirms. */
+  export let ondelete: () => boolean | Promise<boolean> = () => true;
   export let onconfirmchange: (open: boolean) => void = () => undefined;
   export let onback: () => void = () => undefined;
   let confirmingDelete = false;
@@ -25,10 +27,12 @@
     await tick();
     deleteTrigger.focus();
   }
-  function confirmDelete(): void {
-    if (ondelete()) manualDeleted = true;
+  async function confirmDelete(): Promise<void> {
+    /* The confirmation closes first: leaving it up while the delete is in
+       flight would trap focus behind a dialog the player already dismissed. */
     confirmingDelete = false;
     onconfirmchange(false);
+    if (await ondelete()) manualDeleted = true;
   }
   function handleDeleteKeydown(event: KeyboardEvent): void {
     if (!confirmingDelete) return;
@@ -165,7 +169,7 @@
           type="button"
           class="danger"
           data-cy="story-load-delete-confirm"
-          onclick={confirmDelete}>Delete save</button
+          onclick={() => void confirmDelete()}>Delete save</button
         ><button
           type="button"
           class="secondary"

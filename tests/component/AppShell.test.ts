@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, render } from "@testing-library/svelte";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import AppShell from "../../src/shell/AppShell.svelte";
 import type { DomainLoaders } from "../../src/shell/domain-loaders.ts";
 import { createShellStore } from "../../src/shell/shell-store.ts";
@@ -70,11 +70,15 @@ describe("AppShell", () => {
     expect(placeholder?.textContent).toBe("Not available yet");
   });
 
-  it("shows the placeholder for the admin route", () => {
+  it("mounts the admin console region for the admin route", async () => {
     renderAt("#/admin");
     expect(
-      document.querySelector('[data-cy="shell-placeholder"]')?.textContent,
-    ).toBe("Not available yet");
+      document.querySelector('[data-cy="shell-region-admin"]'),
+    ).not.toBeNull();
+    expect(document.querySelector('[data-cy="shell-placeholder"]')).toBeNull();
+    await vi.waitFor(() =>
+      expect(document.querySelector('[data-cy="admin-title"]')).not.toBeNull(),
+    );
   });
 
   it("publishes the stage mode on the stage element", () => {

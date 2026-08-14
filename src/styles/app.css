@@ -93,6 +93,14 @@ body {
   overflow: auto;
 }
 
+/* The developer console is a long list of controls, so it scrolls inside the
+   stage on the same terms as the deck editor. */
+.shell-region--admin {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
 button,
 input,
 select {

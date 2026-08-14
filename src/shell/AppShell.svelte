@@ -105,7 +105,13 @@
         <svelte:component this={module.default} />
       {/await}
     </div>
-  {:else if route.kind === "story" || route.kind === "admin"}
+  {:else if route.kind === "admin"}
+    <div class="shell-region shell-region--admin" data-cy="shell-region-admin">
+      {#await import("./admin/AdminConsole.svelte") then module}
+        <svelte:component this={module.default} {store} />
+      {/await}
+    </div>
+  {:else if route.kind === "story"}
     <p class="shell-placeholder" data-cy="shell-placeholder">
       Not available yet
     </p>

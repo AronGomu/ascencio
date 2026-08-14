@@ -2,7 +2,7 @@ import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import type { SnapshotId } from "../duel/contracts/ids.ts";
 
 const DATABASE_VERSION = 2;
-const DEFAULT_DATABASE_NAME = "ygo-story-duel";
+export const SNAPSHOT_DATABASE_NAME = "ygo-story-duel";
 const MAXIMUM_DEBUG_RUNS = 20;
 
 export type SnapshotStatus = "staged" | "active" | "previous";
@@ -101,7 +101,7 @@ export class SnapshotStore {
   }
 
   static async open(
-    databaseName = DEFAULT_DATABASE_NAME,
+    databaseName = SNAPSHOT_DATABASE_NAME,
     now: () => Date = () => new Date(),
   ): Promise<SnapshotStore> {
     const database = await openDB<SnapshotDatabase>(

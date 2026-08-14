@@ -194,3 +194,26 @@ Run `npm run dev` and open `http://localhost:4300/` (no hash) for every item.
 - [ ] With fullscreen preferred and the tip showing, click "Not now" instead: the tip disappears and does not return after a reload.
 - [ ] In devtools Application → Local Storage, confirm a `ygo.ui.v3` entry exists after changing a setting.
 - [ ] Zone outlines/counts you set previously inside the duel settings are still what you left them (the v2 display settings carry forward).
+
+## T6 admin-console
+
+Run `npm run dev`. The console is a developer surface: it is never linked from the game, so it is reached only by typing the URL.
+
+- [ ] From the hub at `http://localhost:4300/`, look over the whole screen and open Settings: there is NO Admin/Console/Developer button anywhere.
+- [ ] Press Tab repeatedly through the hub and the settings dialog: focus never lands on an admin control.
+- [ ] Do the same sweep inside `#/duel` and `#/decks`: no admin control appears there either.
+- [ ] Type `http://localhost:4300/#/admin` in the address bar: a "Developer console" screen loads with a warning line and three sections — Routes, State jumps, Resets.
+- [ ] The console stays inside the 16:9 stage (letterbox bars are untouched) and scrolls with its own scrollbar if the window is short; the page itself never scrolls.
+- [ ] In Routes, click `#/` → the hub loads. Type `#/admin` again, click `#/duel` → the deck picker loads. Type `#/admin` again, click `#/decks` → the deck editor loads. Type `#/admin` again, click `#/story` → the "Not available yet" placeholder shows.
+- [ ] Back on `#/admin`, click "Seed test deck & open decks": the deck editor opens and the library lists a deck named "Admin test deck".
+- [ ] Open that deck: it holds 40 Main-deck cards.
+- [ ] Return to `#/admin` and click "Launch preset duel": the duel route opens with the normal deck picker, and no extra deck was written to the library.
+- [ ] Return to `#/admin` and click "Open story": the story placeholder shows.
+- [ ] Click "Reset…" next to "Deck library": nothing is deleted yet — a "Delete for good" button and a "Cancel" button appear in its place.
+- [ ] Click "Cancel": the row returns to a single "Reset…" button. Visit `#/decks` — "Admin test deck" is STILL there. A single stray click must never delete data.
+- [ ] Back on `#/admin`, click "Reset…" on "Deck library", then click "Reset…" on "Shell settings": only ONE row is armed at a time — the deck-library confirm disappears.
+- [ ] Press Cancel, then arm "Deck library" again and click "Delete for good": the status line reads "Cleared Deck library." Visit `#/decks` — the library shows "No local decks".
+- [ ] Repeat the arm-then-confirm flow for each remaining row (Duel snapshots, Shell settings, Story prototype saves): each one asks for a separate confirmation and reports "Cleared …" when done.
+- [ ] After clearing "Shell settings", check devtools Application → Local Storage: the `ygo.ui.v3` entry is gone, and reloading the hub shows default settings.
+- [ ] After clearing "Duel snapshots", start a duel from `#/duel` and play a turn: the duel still works (the snapshot store rebuilds itself).
+- [ ] Reload `#/admin` after every reset: the console still loads and normal play from the hub is unaffected.

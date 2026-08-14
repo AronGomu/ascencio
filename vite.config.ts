@@ -89,6 +89,12 @@ export default defineConfig({
   },
   build: {
     target: "es2023",
+    rollupOptions: {
+      input: {
+        app: path.join(projectRoot, "index.html"),
+        prototype: path.join(projectRoot, "prototype.html"),
+      },
+    },
     chunkSizeWarningLimit: 500,
   },
   worker: {

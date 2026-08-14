@@ -53,7 +53,7 @@ body {
    duel view can be pinned to exactly one viewport below. Outside duel-only
    mode `main` does not clip, so overflowing content (picker/errors/HUD) still
    grows `body`'s natural scrollable area past this box. */
-#app {
+#app[data-app-entry="duel"] {
   height: 100svh;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);

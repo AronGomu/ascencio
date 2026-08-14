@@ -262,8 +262,8 @@ test("reset returns pristine launcher", async ({ page }) => {
   expect(new URL(page.url()).search).toBe("");
 });
 
-test("root remains direct-duel entry", async ({ page }) => {
-  await page.goto("./");
+test("the duel route remains the direct-duel entry", async ({ page }) => {
+  await page.goto("./#/duel");
   await expect(page.getByRole("heading", { name: "Choose decks" })).toBeVisible(
     { timeout: 120_000 },
   );

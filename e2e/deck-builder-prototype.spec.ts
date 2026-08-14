@@ -2,11 +2,9 @@ import { expect, test } from "@playwright/test";
 
 const prototypeUrl = "./#/decks";
 
-test("default route still starts direct duel", async ({ page }) => {
+test("default route shows the home hub", async ({ page }) => {
   await page.goto("./");
-  await expect(
-    page.getByRole("heading", { name: "Choose decks" }),
-  ).toBeVisible();
+  await expect(page.locator('[data-cy="home-entry-decks"]')).toBeVisible();
   await expect(page.getByText("Deck Builder prototype")).toHaveCount(0);
 });
 

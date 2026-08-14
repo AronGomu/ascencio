@@ -40,7 +40,7 @@ test("isolated visual novel prototype entry loads without changing root duel", a
     false,
   );
 
-  await page.goto("./");
+  await page.goto("./#/duel");
   await expect(page.getByRole("heading", { name: "Choose decks" })).toBeVisible(
     { timeout: 120_000 },
   );

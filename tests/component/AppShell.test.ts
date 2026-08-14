@@ -37,11 +37,15 @@ afterEach(() => {
 });
 
 describe("AppShell", () => {
-  it("mounts the duel region for the home route", () => {
+  it("mounts the home hub for the home route", () => {
     renderAt("#/");
     expect(
-      document.querySelector('[data-cy="shell-region-duel"]'),
+      document.querySelector('[data-cy="shell-region-home"]'),
     ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="home-entry-duel"]'),
+    ).not.toBeNull();
+    expect(document.querySelector('[data-cy="shell-region-duel"]')).toBeNull();
     expect(document.querySelector('[data-cy="shell-region-decks"]')).toBeNull();
   });
 

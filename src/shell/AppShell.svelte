@@ -5,8 +5,14 @@
     DEFAULT_DOMAIN_LOADERS,
     type DomainLoaders,
   } from "./domain-loaders.ts";
+  import { isFullscreen, requestAppFullscreen } from "./fullscreen.ts";
   import { STAGE_CONTEXT_KEY } from "./index.ts";
   import type { AppRoute } from "./routes.ts";
+  import HomeScreen from "./screens/HomeScreen.svelte";
+  import {
+    createShellSettingsStore,
+    type ShellSettingsStore,
+  } from "./settings/shell-settings-store.ts";
   import { createShellStore, type ShellStore } from "./shell-store.ts";
   import { computeStageBox, type StageBox } from "./stage-layout.ts";
 
@@ -17,6 +23,9 @@
     },
   );
   export let loaders: DomainLoaders = DEFAULT_DOMAIN_LOADERS;
+  export let settings: ShellSettingsStore = createShellSettingsStore();
+
+  let stage: HTMLElement | undefined;
 
   let route: AppRoute;
   const unsubscribe = store.subscribe((state) => {
@@ -39,6 +48,20 @@
     const syncFromLocation = () => store.syncFromHash(globalThis.location.hash);
     globalThis.addEventListener("hashchange", syncFromLocation);
 
+    /* A stored fullscreen preference can only be honoured from inside a user
+       gesture, so the shell waits for the first one and then stops listening.
+       The helper already resolves a rejected request to `false`. */
+    const onFirstGesture = () => {
+      let preferred = false;
+      settings.subscribe((state) => {
+        preferred = state.fullscreenPreferred;
+      })();
+      if (!preferred || stage === undefined || isFullscreen(document)) return;
+      void requestAppFullscreen(stage);
+    };
+    globalThis.addEventListener("pointerdown", onFirstGesture, { once: true });
+    globalThis.addEventListener("keydown", onFirstGesture, { once: true });
+
     const measure = () => stageBox.set(readViewportBox());
     measure();
     /* `ResizeObserver` also fires for viewport changes a `resize` event misses
@@ -52,6 +75,8 @@
     else observer.observe(document.documentElement);
 
     return () => {
+      globalThis.removeEventListener("pointerdown", onFirstGesture);
+      globalThis.removeEventListener("keydown", onFirstGesture);
       observer?.disconnect();
       globalThis.removeEventListener("resize", measure);
       globalThis.removeEventListener("hashchange", syncFromLocation);
@@ -66,8 +91,13 @@
   data-cy="app-stage"
   data-stage-mode={box.mode}
   style="--stage-w: {box.width}px; --stage-h: {box.height}px"
+  bind:this={stage}
 >
-  {#if route.kind === "decks" || route.kind === "deck"}
+  {#if route.kind === "home"}
+    <div class="shell-region shell-region--home" data-cy="shell-region-home">
+      <HomeScreen {store} {settings} />
+    </div>
+  {:else if route.kind === "decks" || route.kind === "deck"}
     <div class="shell-region shell-region--decks" data-cy="shell-region-decks">
       {#await loaders.decks() then module}
         <svelte:component this={module.default} />

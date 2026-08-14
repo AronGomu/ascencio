@@ -174,3 +174,23 @@ Run `npm run dev` and open `http://localhost:4300/#/duel` for every item.
 - [ ] Open the card-list dialog by clicking a zone with a pile at 1920x1200: the dialog stays inside the stage and can still be dragged/collapsed/closed.
 - [ ] Open `http://localhost:4300/#/decks` and resize between the sizes above: the deck editor scrolls INSIDE the stage (its own scrollbar), and the page itself still never scrolls.
 - [ ] Drag the window edge slowly across the 1024px boundary: the mode switches once, cleanly, with no flicker or stuck bars.
+
+## T5 home-hub-and-settings
+
+Run `npm run dev` and open `http://localhost:4300/` (no hash) for every item.
+
+- [ ] The first screen is the hub: a "YGO Story Duel Simulator" title with four buttons — Story, Decks, Duel, Settings. NO deck picker and NO duel appear here.
+- [ ] Click Duel: the URL becomes `#/duel` and the deck picker loads; start a duel and play a turn — the duel behaves exactly as before.
+- [ ] Press the browser Back button from the duel: you return to the hub and the duel is gone.
+- [ ] Click Decks: the URL becomes `#/decks` and the deck editor loads.
+- [ ] Click Story: the URL becomes `#/story` and the "Not available yet" placeholder shows (the visual novel moves here in a later ticket).
+- [ ] Type `http://localhost:4300/#/nonsense` in the address bar: you land back on the hub, not on an error.
+- [ ] Click Settings on the hub: a settings dialog opens with a Fullscreen switch reading "Off" and a Close button.
+- [ ] Click the Fullscreen switch: it reads "On". Close the dialog, reopen it — it still reads "On" (the choice is remembered).
+- [ ] Reload the page: the browser does NOT jump to fullscreen on its own, and a tip appears on the hub explaining that fullscreen needs one click.
+- [ ] Click "Go fullscreen" in the tip: the browser enters fullscreen.
+- [ ] Leave fullscreen (Esc) and reload: the tip does NOT come back. Any first click or keypress in the app now re-applies fullscreen.
+- [ ] Turn the Fullscreen switch back to "Off" in Settings and reload: no tip, and clicking around never forces fullscreen.
+- [ ] With fullscreen preferred and the tip showing, click "Not now" instead: the tip disappears and does not return after a reload.
+- [ ] In devtools Application → Local Storage, confirm a `ygo.ui.v3` entry exists after changing a setting.
+- [ ] Zone outlines/counts you set previously inside the duel settings are still what you left them (the v2 display settings carry forward).

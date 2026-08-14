@@ -27,9 +27,17 @@ describe("global styles", () => {
     expect(shell).toContain(
       "grid-template-columns: var(--preview-w) auto minmax(var(--rail-min), 1fr)",
     );
+    expect(shell).toContain("grid-template-rows: minmax(0, 1fr)");
     expect(shell).toContain("overflow: hidden");
     expect(css).toContain("--preview-w: 22rem");
     expect(css).toContain("--rail-min: 15rem");
+  });
+
+  it("bounds preview art by viewport height so effect text keeps scroll space", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const art = ruleBlock(css, ".card-preview-panel__art img {");
+    expect(art).toContain("max-height: min(22rem, 60svh)");
+    expect(art).toContain("object-fit: contain");
   });
 
   it("board is explicit geometry without width-only stretch", () => {
@@ -106,7 +114,8 @@ describe("global styles", () => {
     );
     expect(unavailable).toContain(":hover img");
     expect(unavailable).toContain(":focus-within img");
-    expect(unavailable).toContain("var(--danger)");
+    expect(unavailable).toContain("border-color: #ff455d");
+    expect(unavailable).toContain("rgb(255 69 93 / 0.78)");
     expect(unavailable).not.toContain("var(--warning)");
   });
 
@@ -240,6 +249,12 @@ describe("global styles", () => {
   it("chips are hidden until hover, focus or a pin reveals them", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     expect(ruleBlock(css, "\n.card-action-chips {")).toContain("display: none");
+    const handChips = ruleBlock(
+      css,
+      ".duel-field-card.is-hand-item .card-action-chips {",
+    );
+    expect(handChips).toContain("top: calc(var(--field-height) * 0.26)");
+    expect(handChips).toContain("bottom: auto");
     const reveal = ruleBlock(
       css,
       ".duel-field-card.is-actionable:hover .card-action-chips,\n.duel-field-card.is-actionable:focus-within .card-action-chips,\n.duel-field-card.is-pinned .card-action-chips {",

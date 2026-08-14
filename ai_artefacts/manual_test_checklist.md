@@ -84,3 +84,9 @@
 - [ ] Confirm selected duplicate choices remain removable one opaque ID at a time; final tile unselect suppresses zoom until pointerleave.
 - [ ] Confirm sorting, collapse, outside press, and Escape preserve target draft without answering prompt.
 - [ ] Confirm hidden opponent targets expose no identity or art while unavailable/selected state remains perceivable without color alone.
+
+## T15 card-list-chromium-acceptance
+
+- [x] Confirm attached wide browse, mixed target, max-locked target, and 320px responsive screenshots are readable.
+- [x] Confirm keyboard route focus remains visible and no hidden card identity appears.
+- [x] Confirm startup, duel actions, browse, target Validate, and reload settings remain functional.

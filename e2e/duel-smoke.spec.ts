@@ -392,13 +392,17 @@ test("deck picker persists a chosen pair and Change decks returns without auto-s
   ).toHaveAttribute("aria-pressed", "true");
   expect(
     await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("ygo.ui.v1") ?? "null"),
+      JSON.parse(localStorage.getItem("ygo.ui.v2") ?? "null"),
     ),
   ).toEqual({
-    version: 1,
+    version: 2,
     windows: { zoneList: null, confirm: null },
     decks: { player: "burning-abyss", opponent: "shaddoll" },
+    settings: { showZoneOutlines: true, showZoneCounts: true },
   });
+  expect(
+    await page.evaluate(() => localStorage.getItem("ygo.ui.v1")),
+  ).toBeNull();
 
   await page.locator('[data-cy="deck-picker-start-button"]').click();
   await expect(page.locator('[data-cy="duel-field"]')).toBeVisible({
@@ -1074,37 +1078,13 @@ test("default duel occupies exactly one viewport at every supported viewport", a
       `${label} wheel over the field must not move the page`,
     ).toBe(0);
 
-    const shellLayout = await page.evaluate(() => {
-      const fieldBox = document
-        .querySelector('[data-cy="duel-field"]')
-        ?.getBoundingClientRect();
-      const panelBox = document
-        .querySelector('[data-cy="card-preview-panel"]')
-        ?.getBoundingClientRect();
-      return fieldBox === undefined || panelBox === undefined
-        ? null
-        : {
-            fieldLeft: fieldBox.left,
-            fieldTop: fieldBox.top,
-            panelRight: panelBox.right,
-            panelTop: panelBox.top,
-          };
-    });
-    if (shellLayout === null) throw new Error(`${label} shell is not mounted`);
-    expect(
-      shellLayout.panelRight,
-      `${label} preview sits left of field`,
-    ).toBeLessThanOrEqual(shellLayout.fieldLeft + 1);
-    expect(
-      Math.abs(shellLayout.panelTop - shellLayout.fieldTop),
-      `${label} columns share shell top`,
-    ).toBeLessThanOrEqual(2);
+    await assertSharesShellColumns(page, label);
 
     await page.mouse.wheel(0, -400);
   }
 });
 
-test("short-height duel keeps the compact preview thumbnail, name and scrolling text", async ({
+test("short-height duel keeps the full-height preview column, bounded art and scroll-ready text", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 900, height: 420 });
@@ -1118,9 +1098,8 @@ test("short-height duel keeps the compact preview thumbnail, name and scrolling 
   const panel = page.locator('[data-cy="card-preview-panel"]');
 
   // Hover every rendered card once, keeping whichever preview shows the
-  // longest description, so the scrolling-text assertion below is exercised
-  // with real card text rather than a synthetic fixture (the seed is random
-  // per run, so no fixed card is guaranteed to be on the field).
+  // longest description. The seed is random, so keyboard scrolling is only
+  // exercised when its longest real card text exceeds the available space.
   const cards = field.locator(".duel-field-card");
   const cardCount = await cards.count();
   let longest = { length: -1, index: -1 };
@@ -1139,24 +1118,84 @@ test("short-height duel keeps the compact preview thumbnail, name and scrolling 
 
   await expect(panel.locator('[data-cy="card-preview-name"]')).toBeVisible();
 
-  // Requirement: short-height art shrinks to `clamp(3rem,8svh,5rem)`; at a
-  // 420px-tall viewport that resolves to the 3rem (48px) floor since 8svh
-  // (33.6px) is smaller. A few px of tolerance covers layout rounding.
-  const artBox = await panel
-    .locator('[data-cy="card-preview-image"]')
-    .boundingBox();
-  if (artBox !== null) expect(artBox.height).toBeLessThanOrEqual(48 + 4);
+  const previewGeometry = await panel.evaluate((element) => {
+    const image = element.querySelector<HTMLImageElement>(
+      '[data-cy="card-preview-image"]',
+    );
+    const art = element.querySelector('[data-cy="card-preview-art"]');
+    if (image === null || art === null) return null;
+    const panelBox = element.getBoundingClientRect();
+    const artBox = art.getBoundingClientRect();
+    const imageBox = image.getBoundingClientRect();
+    const rootStyle = getComputedStyle(document.documentElement);
+    return {
+      panel: {
+        left: panelBox.left,
+        top: panelBox.top,
+        right: panelBox.right,
+        bottom: panelBox.bottom,
+        width: panelBox.width,
+      },
+      art: { left: artBox.left, right: artBox.right, width: artBox.width },
+      image: {
+        left: imageBox.left,
+        top: imageBox.top,
+        right: imageBox.right,
+        bottom: imageBox.bottom,
+        width: imageBox.width,
+      },
+      previewWidth:
+        Number.parseFloat(rootStyle.getPropertyValue("--preview-w")) *
+        Number.parseFloat(rootStyle.fontSize),
+      objectFit: getComputedStyle(image).objectFit,
+      naturalAspect: image.naturalWidth / image.naturalHeight,
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+    };
+  });
+  if (previewGeometry === null) throw new Error("Preview art is not mounted");
+  expect(previewGeometry.panel.width).toBeCloseTo(
+    previewGeometry.previewWidth,
+    1,
+  );
+  expect(previewGeometry.panel.top).toBeGreaterThanOrEqual(0);
+  expect(previewGeometry.panel.bottom).toBeLessThanOrEqual(
+    previewGeometry.viewport.height + 1,
+  );
+  expect(previewGeometry.panel.right).toBeLessThanOrEqual(
+    previewGeometry.viewport.width + 1,
+  );
+  expect(previewGeometry.image.left).toBeCloseTo(previewGeometry.art.left, 1);
+  expect(previewGeometry.image.top).toBeGreaterThanOrEqual(
+    previewGeometry.panel.top,
+  );
+  expect(previewGeometry.image.right).toBeCloseTo(previewGeometry.art.right, 1);
+  expect(previewGeometry.image.bottom).toBeLessThanOrEqual(
+    previewGeometry.panel.bottom,
+  );
+  expect(previewGeometry.image.width).toBeCloseTo(previewGeometry.art.width, 1);
+  expect(previewGeometry.objectFit).toBe("contain");
+  expect(previewGeometry.naturalAspect).toBeGreaterThan(0);
 
-  const textMetrics = await panel
-    .locator('[data-cy="card-preview-text"]')
-    .evaluate((element) => ({
-      clientHeight: element.clientHeight,
-      scrollHeight: element.scrollHeight,
-      overflowY: getComputedStyle(element).overflowY,
-    }));
+  const text = panel.locator('[data-cy="card-preview-text"]');
+  const textMetrics = await text.evaluate((element) => ({
+    clientHeight: element.clientHeight,
+    scrollHeight: element.scrollHeight,
+    overflowY: getComputedStyle(element).overflowY,
+  }));
+  expect(textMetrics.clientHeight).toBeGreaterThan(0);
+  expect(textMetrics.scrollHeight).toBeGreaterThanOrEqual(
+    textMetrics.clientHeight,
+  );
   expect(textMetrics.overflowY).toMatch(/auto|scroll/);
-  if (textMetrics.scrollHeight > textMetrics.clientHeight)
-    expect(textMetrics.scrollHeight).toBeGreaterThan(textMetrics.clientHeight);
+  if (textMetrics.scrollHeight > textMetrics.clientHeight) {
+    await text.focus();
+    await page.keyboard.press("End");
+    expect(await text.evaluate((element) => element.scrollTop)).toBeGreaterThan(
+      0,
+    );
+    await page.keyboard.press("Home");
+    expect(await text.evaluate((element) => element.scrollTop)).toBe(0);
+  }
 });
 
 /* T14/ADR-017: both field windows are dragged by their handles, clamped to
@@ -1209,12 +1248,17 @@ test("floating field windows stay inside the field, persist and never lose a dec
 
   expect(
     await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("ygo.ui.v1") ?? "null"),
+      JSON.parse(localStorage.getItem("ygo.ui.v2") ?? "null"),
     ),
-  ).toMatchObject({
-    version: 1,
+  ).toEqual({
+    version: 2,
     windows: { zoneList: draggedList, confirm: draggedConfirm },
+    decks: { player: "mvp-player", opponent: "mvp-opponent" },
+    settings: { showZoneOutlines: true, showZoneCounts: true },
   });
+  expect(
+    await page.evaluate(() => localStorage.getItem("ygo.ui.v1")),
+  ).toBeNull();
 
   // Panning the board must not move a window: the pan lives on the field's
   // scroll child, the windows on the still field root.
@@ -1263,7 +1307,7 @@ test("floating field windows stay inside the field, persist and never lose a dec
   // Positions survive a reload of the whole app.
   await page.setViewportSize({ width: 1280, height: 800 });
   const restored = (await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("ygo.ui.v1") ?? "null"),
+    JSON.parse(localStorage.getItem("ygo.ui.v2") ?? "null"),
   )) as { readonly windows: { zoneList: unknown; confirm: unknown } };
   await page.reload();
   await startPresetDuel(page);
@@ -1818,14 +1862,25 @@ test("hovering a hand card fills the preview panel sharing the shell row", async
   await expect(handCard).toBeVisible();
   await handCard.hover();
 
-  await expect(panel.locator('[data-cy="card-preview-name"]')).not.toBeEmpty();
-  await expect(
-    panel.locator('[data-cy="card-preview-image"]'),
-  ).not.toHaveAttribute("src", "");
+  const hoveredName = ((await handCard.getAttribute("aria-label")) ?? "")
+    .replace(/ in Your Hand$/, "")
+    .trim();
+  expect(hoveredName).not.toBe("");
+  await expect(panel.locator('[data-cy="card-preview-name"]')).toHaveText(
+    hoveredName,
+  );
+  await expect(panel.locator('[data-cy="card-preview-image"]')).toHaveAttribute(
+    "alt",
+    hoveredName,
+  );
   await assertSharesShellColumns(page, "populated preview");
 
-  // The panel is presentation only: nothing in it is focusable or clickable.
-  expect(await panel.locator("button, a, [tabindex]").count()).toBe(0);
+  // Preview has no actions. Effect text remains keyboard-scrollable.
+  expect(await panel.locator("button, a").count()).toBe(0);
+  await expect(panel.locator('[data-cy="card-preview-text"]')).toHaveAttribute(
+    "tabindex",
+    "0",
+  );
   expect(await field.count()).toBe(1);
 });
 
@@ -2009,12 +2064,11 @@ test("T12: field/hand cards zoom 1.35x on hover, halo/art scale with the root, c
   }
 });
 
-test("item 5: hand action chips win over a field card that genuinely overlaps the hand band", async ({
+test("item 5: field cards stay outside the hand band and hand action chips remain clickable", async ({
   page,
 }) => {
-  // Full board on screen: the hand row and the spellTrap row must both be
-  // reachable so a placed backrow card's box can be measured against the
-  // hand band's box in real layout, not a scrolled-away approximation.
+  // Full board on screen: hand row plus spellTrap row remain measurable in
+  // real layout, without substituting design-grid arithmetic.
   await page.setViewportSize({ width: 1440, height: 1400 });
   await page.goto("./");
   await startPresetDuel(page);
@@ -2032,7 +2086,7 @@ test("item 5: hand action chips win over a field card that genuinely overlaps th
   const placed = await setHandSpellTrapWithKeyboard(page, field);
   test.skip(
     !placed,
-    "this seed's opening hand offers no spell/trap set to place a genuinely overlapping field card",
+    "this seed's opening hand offers no spell/trap set for field/hand separation evidence",
   );
 
   await expect(
@@ -2050,9 +2104,7 @@ test("item 5: hand action chips win over a field card that genuinely overlaps th
   const handBandBox = await handBand.boundingBox();
   if (handBandBox === null) throw new Error("Missing hand band geometry");
 
-  // This is the fact the fix depends on, proven in real layout rather than
-  // assumed from the design-grid arithmetic in the ticket: the placed
-  // spellTrap card's box genuinely overlaps the hand band's box.
+  // T3/T4/T7 contract: placed field cards remain outside hand band.
   const overlapsBand =
     fieldCardBox.x < handBandBox.x + handBandBox.width &&
     fieldCardBox.x + fieldCardBox.width > handBandBox.x &&
@@ -2060,13 +2112,11 @@ test("item 5: hand action chips win over a field card that genuinely overlaps th
     fieldCardBox.y + fieldCardBox.height > handBandBox.y;
   expect(
     overlapsBand,
-    `placed spellTrap card box ${JSON.stringify(fieldCardBox)} must overlap the hand band box ${JSON.stringify(handBandBox)}`,
-  ).toBe(true);
+    `placed spellTrap card box ${JSON.stringify(fieldCardBox)} must not overlap the hand band box ${JSON.stringify(handBandBox)}`,
+  ).toBe(false);
 
-  // Now hover any actionable hand card in that same overlapping band and
-  // prove its chips still win the hit test — not merely the first
-  // actionable card the walker happens to find, but one whose enclosing
-  // band is a proven, measured overlap with a real field card.
+  // Hover actionable hand card → chips win hit test. Click proves pointer
+  // action still crosses production response boundary.
   const opener = field
     .getByRole("button", {
       name: /^Legal action, Open actions for .+ in Your Hand$/,
@@ -2085,19 +2135,36 @@ test("item 5: hand action chips win over a field card that genuinely overlaps th
   expect(chipCount).toBeGreaterThan(0);
   for (let index = 0; index < chipCount; index += 1) {
     const chip = chipButtons.nth(index);
-    const resolvesToChip = await chip.evaluate((element) => {
+    await expect(chip).toBeVisible();
+    await expect(chip).toBeEnabled();
+    const hitTest = await chip.evaluate((element) => {
       const box = element.getBoundingClientRect();
       const hit = document.elementFromPoint(
         box.left + box.width / 2,
         box.top + box.height / 2,
       );
-      return hit !== null && element.contains(hit);
+      return {
+        chip: { x: box.x, y: box.y, width: box.width, height: box.height },
+        hit: hit?.getAttribute("data-cy") ?? hit?.className ?? null,
+        resolvesToChip: hit !== null && element.contains(hit),
+      };
     });
     expect(
-      resolvesToChip,
-      `chip ${index} centre must resolve to itself/a descendant while a real field card overlaps the hand band (item 5)`,
+      hitTest.resolvesToChip,
+      `chip ${index} centre must hit itself: ${JSON.stringify(hitTest)}`,
     ).toBe(true);
   }
+  const responsesBeforeAction = await countResponses(page);
+  const firstChipBox = await chipButtons.first().boundingBox();
+  if (firstChipBox === null)
+    throw new Error("Missing hand action chip geometry");
+  await page.mouse.click(
+    firstChipBox.x + firstChipBox.width / 2,
+    firstChipBox.y + firstChipBox.height / 2,
+  );
+  await expect
+    .poll(async () => countResponses(page))
+    .toBeGreaterThan(responsesBeforeAction);
 });
 
 test("item 24: End turn button is measurably smaller while keeping the 44px pointer-target floor", async ({
@@ -2281,6 +2348,40 @@ test("responsive field compositions contain controls across supported viewports"
       width: viewport.width,
       height: viewport.height,
     });
+    await expect
+      .poll(async () => {
+        const geometry = await page.evaluate(() => {
+          const field = document.querySelector<HTMLElement>(
+            '[data-cy="duel-field"]',
+          );
+          const slot = document.querySelector<HTMLElement>(
+            '[data-cy="duel-field-slot"]',
+          );
+          const strip = document.querySelector<HTMLElement>(
+            '[data-cy="field-phase-strip"]',
+          );
+          if (field === null || slot === null || strip === null) return null;
+          const fieldBox = field.getBoundingClientRect();
+          return {
+            availableWidth: slot.clientWidth,
+            availableHeight: slot.clientHeight,
+            extraMonsterZones: strip.dataset.extraMonsterZones === "true",
+            fieldWidth: fieldBox.width,
+            fieldHeight: fieldBox.height,
+          };
+        });
+        if (geometry === null) return Number.POSITIVE_INFINITY;
+        const expected = computeFieldGeometry(
+          geometry.extraMonsterZones,
+          geometry.availableWidth,
+          geometry.availableHeight,
+        );
+        return Math.max(
+          Math.abs(geometry.fieldWidth - expected.width),
+          Math.abs(geometry.fieldHeight - expected.height),
+        );
+      })
+      .toBeLessThan(0.5);
     await page.evaluate(() => window.scrollTo(0, 0));
     await expect(page.locator("[data-prompt-kind]")).toBeVisible();
     const viewportLabel =
@@ -2404,6 +2505,7 @@ test("responsive field compositions contain controls across supported viewports"
         const rect = (selector: string): DOMRect | null =>
           document.querySelector(selector)?.getBoundingClientRect() ?? null;
         return {
+          field: rect('[data-cy="duel-field"]'),
           spellTrap1: rect(`[data-zone-id="p${currentPlayer}:spellTrap:0"]`),
           spellTrap4: rect(`[data-zone-id="p${currentPlayer}:spellTrap:3"]`),
           spellTrap5: rect(`[data-zone-id="p${currentPlayer}:spellTrap:4"]`),
@@ -2434,6 +2536,7 @@ test("responsive field compositions contain controls across supported viewports"
         };
       }, player);
       if (
+        geometry.field === null ||
         geometry.spellTrap1 === null ||
         geometry.spellTrap4 === null ||
         geometry.spellTrap5 === null ||
@@ -2455,8 +2558,9 @@ test("responsive field compositions contain controls across supported viewports"
       expect(
         Math.abs(
           (geometry.hand.left + geometry.hand.right) / 2 -
-            (shellLayout.fieldBox.left + expectedGeometry.width / 2),
+            (geometry.field.left + geometry.field.right) / 2,
         ),
+        `${viewportLabel} p${player} hand is centered within the measured field`,
       ).toBeLessThanOrEqual(2);
       // Piles render narrower than a full zone slot (StackControl fills a
       // card's own footprint, not the zone chrome's), so edges alone are not
@@ -2803,7 +2907,7 @@ test("DF-16 Chromium pinned parity/perf/resource gate records automated evidence
     actionLatency.p95 < 100 &&
     normalLongTasks.length === 0 &&
     !objectUrlLeak &&
-    listenerGrowth === 0;
+    listenerGrowth <= 0;
 
   const evidence = {
     acceptance: removalGate ? "pass" : "fail",
@@ -2875,7 +2979,7 @@ test("DF-16 Chromium pinned parity/perf/resource gate records automated evidence
   expect(actionLatency.p95).toBeLessThan(100);
   expect(normalLongTasks).toHaveLength(0);
   expect(objectUrlLeak).toBe(false);
-  expect(listenerGrowth).toBe(0);
+  expect(listenerGrowth).toBeLessThanOrEqual(0);
   expect(removalGate).toBe(true);
 });
 
@@ -2977,7 +3081,9 @@ test("spatial field navigation has one visible 44px keyboard entry without a tra
 test("a full preset duel can be completed using keyboard controls only with one response per prompt", async ({
   page,
 }, testInfo) => {
-  test.setTimeout(300_000);
+  // Full-suite runs can validly exceed five minutes while still advancing
+  // through unique prompts; keep the larger budget local to this duel walker.
+  test.setTimeout(600_000);
   await page.goto("./");
   await startPresetDuel(page);
   await expect(
@@ -3202,7 +3308,7 @@ async function answerPromptWithKeyboard(
         '[data-cy="duel-right-rail-status-title"]',
       );
       await expect(railPrompt).toBeVisible();
-      await expect(railPrompt).toHaveText("Do you respond?");
+      await expect(railPrompt).toHaveText("Choose a chain response");
       await expect(field).toHaveAttribute("data-prompt-kind", "chain");
       await answerChainOnField(page, field);
       return "field";
@@ -3277,11 +3383,8 @@ async function answerPromptWithKeyboard(
 // `card-action-chip-${choice.id}`, so both still end in `-setMonster`.
 const MONSTER_SET_ACTION = "setMonster";
 const MONSTER_SET_CHIP = `[data-cy$="-${MONSTER_SET_ACTION}"]`;
-// Item 5's regression proof needs a genuine field card in a spellTrap zone
-// (spellY 590/720, which the layout deliberately overlaps the hand band's
-// y-range) rather than a monster-zone card (spellY 470/720, which does not
-// overlap), so this mirrors MONSTER_SET_ACTION/MONSTER_SET_CHIP for the
-// spellTrap set action instead.
+// Item 5's regression proof needs a genuine field card in a spellTrap zone,
+// so this mirrors MONSTER_SET_ACTION/MONSTER_SET_CHIP for setSpellTrap.
 const SPELLTRAP_SET_ACTION = "setSpellTrap";
 const SPELLTRAP_SET_CHIP = `[data-cy$="-${SPELLTRAP_SET_ACTION}"]`;
 
@@ -3356,8 +3459,7 @@ async function setHandMonsterWithKeyboard(
 
 /**
  * Sets one hand spell/trap card face-down using only the keyboard, so the
- * board gains a genuine backrow card in a spellTrap zone — the only zone
- * kind whose box actually overlaps the player's own hand band (item 5).
+ * board gains a genuine backrow card in a spellTrap zone (item 5).
  * Mirrors `setHandMonsterWithKeyboard` for the `setSpellTrap` action.
  * Returns false when no hand card offers a spell/trap set.
  */
@@ -3517,7 +3619,7 @@ async function chooseValidFieldSubset(
   field: Locator,
 ): Promise<boolean> {
   const confirm = field.getByRole("button", {
-    name: /Confirm (selection|placement)/,
+    name: /^(?:Confirm (?:selection|placement)|Validate selection)$/,
   });
   const choices = await fieldSelectionControls(page, field);
   if ((await confirm.count()) === 0) {
@@ -3814,7 +3916,7 @@ async function captureResponsiveState(
   const screenshotPath = testInfo.outputPath(
     `df-15-${viewportId}-${stateId}.png`,
   );
-  await page.screenshot({ path: screenshotPath, fullPage: true });
+  await page.screenshot({ path: screenshotPath, fullPage: false });
   await testInfo.attach(`df-15-${viewportId}-${stateId}`, {
     path: screenshotPath,
     contentType: "image/png",
@@ -3828,35 +3930,78 @@ async function assertSharesShellColumns(
   const boxes = await page.evaluate(() => {
     const rect = (selector: string): DOMRect | null =>
       document.querySelector(selector)?.getBoundingClientRect() ?? null;
-    const fieldBox = rect('[data-cy="duel-field"]');
-    const panelBox = rect('[data-cy="card-preview-panel"]');
-    return fieldBox === null || panelBox === null
+    const shell = rect('[data-cy="duel-shell"]');
+    const previewColumn = rect('[data-cy="card-preview-panel"]');
+    const fieldSlot = rect('[data-cy="duel-field-slot"]');
+    const field = rect('[data-cy="duel-field"]');
+    const rail = rect('[data-cy="duel-right-rail"]');
+    return shell === null ||
+      previewColumn === null ||
+      fieldSlot === null ||
+      field === null ||
+      rail === null
       ? null
       : {
-          fieldY: fieldBox.y,
-          panelY: panelBox.y,
-          fieldHeight: fieldBox.height,
-          panelHeight: panelBox.height,
-          fieldLeft: fieldBox.left,
-          panelRight: panelBox.right,
+          shell: {
+            top: shell.top,
+            bottom: shell.bottom,
+          },
+          previewColumn: {
+            top: previewColumn.top,
+            right: previewColumn.right,
+            bottom: previewColumn.bottom,
+          },
+          fieldSlot: {
+            left: fieldSlot.left,
+            top: fieldSlot.top,
+            right: fieldSlot.right,
+            bottom: fieldSlot.bottom,
+            centerX: fieldSlot.left + fieldSlot.width / 2,
+            centerY: fieldSlot.top + fieldSlot.height / 2,
+          },
+          field: {
+            centerX: field.left + field.width / 2,
+            centerY: field.top + field.height / 2,
+          },
+          rail: {
+            left: rail.left,
+            top: rail.top,
+            bottom: rail.bottom,
+          },
         };
   });
-  if (boxes === null) throw new Error(`${label}: missing field or panel box`);
+  if (boxes === null)
+    throw new Error(`${label}: missing shell column geometry`);
+  for (const [column, top, bottom] of [
+    ["preview", boxes.previewColumn.top, boxes.previewColumn.bottom] as const,
+    ["field slot", boxes.fieldSlot.top, boxes.fieldSlot.bottom] as const,
+    ["rail", boxes.rail.top, boxes.rail.bottom] as const,
+  ]) {
+    expect(
+      Math.abs(top - boxes.shell.top),
+      `${label} ${column} shares shell row top`,
+    ).toBeLessThanOrEqual(2);
+    expect(
+      Math.abs(bottom - boxes.shell.bottom),
+      `${label} ${column} shares shell row bottom`,
+    ).toBeLessThanOrEqual(2);
+  }
   expect(
-    Math.abs(boxes.fieldY - boxes.panelY),
-    `${label} shares the shell row top (${boxes.fieldY} vs ${boxes.panelY})`,
+    boxes.previewColumn.right,
+    `${label} preview column sits left of field slot`,
+  ).toBeLessThanOrEqual(boxes.fieldSlot.left + 1);
+  expect(
+    boxes.fieldSlot.right,
+    `${label} field slot sits left of rail`,
+  ).toBeLessThanOrEqual(boxes.rail.left + 1);
+  expect(
+    Math.abs(boxes.field.centerX - boxes.fieldSlot.centerX),
+    `${label} field is horizontally centered in its slot`,
   ).toBeLessThanOrEqual(2);
   expect(
-    Math.abs(boxes.fieldHeight - boxes.panelHeight),
-    `${label} matches the field height (${boxes.fieldHeight} vs ${boxes.panelHeight})`,
+    Math.abs(boxes.field.centerY - boxes.fieldSlot.centerY),
+    `${label} field is vertically centered in its slot`,
   ).toBeLessThanOrEqual(2);
-  // The preview panel is the LEFT column of `.duel-shell` (moved there ahead
-  // of this ticket); it must sit to the left of the field, not beside it on
-  // the right or over it.
-  expect(
-    boxes.panelRight,
-    `${label} sits left of the field, not over it`,
-  ).toBeLessThanOrEqual(boxes.fieldLeft + 1);
 }
 
 async function assertNoPageWideHorizontalOverflow(

@@ -106,10 +106,6 @@
     });
   }
 
-  function targetSelected(entry: OffFieldTargetEntry): boolean {
-    return entry.choices.some(({ id }) => selectedChoiceIds.includes(id));
-  }
-
   /* The list is a single horizontal run, so a plain vertical wheel is the
      natural way to travel it. The page/field scroll is only suppressed while
      this list can still consume the movement, so a wheel at either end still
@@ -211,7 +207,9 @@
               choices={entry.choices}
               zoneBadge={entry.zoneBadge}
               zoneLabel={entry.zoneLabel}
-              selected={targetSelected(entry)}
+              selected={entry.choices.some(({ id }) =>
+                selectedChoiceIds.includes(id),
+              )}
               {selectedChoiceIds}
               unavailableChoiceIds={selectionState.unavailableChoiceIds}
               {imageLibrary}
@@ -283,7 +281,7 @@
           {#if cancelable}
             <button
               type="button"
-              class="secondary"
+              class="danger"
               {disabled}
               onclick={() => oncancel()}
               data-cy="zone-list-dialog-target-cancel-button">Cancel</button

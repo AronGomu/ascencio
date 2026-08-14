@@ -9,7 +9,14 @@ export type AcceptanceScenarioId =
   | "card-list-browse-six"
   | "card-list-browse-overflow"
   | "card-list-empty"
-  | "card-list-target-chrome";
+  | "card-list-target-chrome"
+  | "card-list-single"
+  | "card-list-multiple"
+  | "card-list-mixed"
+  | "card-list-range"
+  | "card-list-hand-mixed"
+  | "card-list-duplicate"
+  | "card-list-stale";
 
 const SCENARIOS: ReadonlySet<string> = new Set<AcceptanceScenarioId>([
   "field-emz",
@@ -23,6 +30,13 @@ const SCENARIOS: ReadonlySet<string> = new Set<AcceptanceScenarioId>([
   "card-list-browse-overflow",
   "card-list-empty",
   "card-list-target-chrome",
+  "card-list-single",
+  "card-list-multiple",
+  "card-list-mixed",
+  "card-list-range",
+  "card-list-hand-mixed",
+  "card-list-duplicate",
+  "card-list-stale",
 ]);
 
 export function acceptanceScenarioId(

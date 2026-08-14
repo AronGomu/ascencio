@@ -42,6 +42,7 @@
   let hoverSuppressed = false;
 
   $: synchronizeImageLease(imageLibrary, entry.code, cardBackUrl);
+  $: targetUnavailable = !selected && unavailableChoiceIds.size > 0;
 
   onDestroy(() => imageLease?.release());
 
@@ -58,10 +59,6 @@
         library !== null && code !== undefined ? library.lease(code) : null;
     }
     renderedImageUrl = imageLease?.url ?? fallbackUrl;
-  }
-
-  function targetUnavailable(): boolean {
-    return !selected && unavailableChoiceIds.size > 0;
   }
 
   function chooseTargetChoice(choice: InteractionChoice): void {
@@ -94,7 +91,7 @@
   class:is-first={first}
   class:is-last={last}
   class:is-menu-open={menuOpen}
-  class:is-unavailable={targetUnavailable()}
+  class:is-unavailable={targetUnavailable}
   class:is-hover-suppressed={hoverSuppressed}
   role="group"
   data-controller={entry.controller}
@@ -133,12 +130,11 @@
       data-cy={`zone-list-entry-targets-${entry.id}`}
     >
       {#if choices.length === 1}
-        {@const choiceDisabled = disabled || targetUnavailable()}
         <button
           type="button"
           class="zone-list-entry__target"
-          disabled={choiceDisabled}
-          aria-disabled={choiceDisabled}
+          disabled={disabled || targetUnavailable}
+          aria-disabled={disabled || targetUnavailable}
           aria-pressed={selectedChoiceIds.includes(choices[0]!.id)}
           aria-label={`${entry.label} in ${zoneLabel}`}
           onclick={() => chooseTargetChoice(choices[0]!)}
@@ -150,7 +146,7 @@
           class="zone-list-entry__target zone-list-entry__menu-trigger"
           aria-expanded={menuOpen}
           aria-label={`Choose action for ${entry.label} in ${zoneLabel}`}
-          disabled={disabled || targetUnavailable()}
+          disabled={disabled || targetUnavailable}
           bind:this={menuTrigger}
           onclick={() => (menuOpen = !menuOpen)}
           data-cy={`zone-list-entry-choice-menu-trigger-${entry.id}`}

@@ -495,6 +495,83 @@ describe("ZoneListDialog target mode", () => {
     );
   });
 
+  it("reacts to a new maximum lock while an unselected tile stays mounted", async () => {
+    const choice = targetChoice("gy-reactive");
+    const ontargetchoice = vi.fn();
+    const rendered = render(ZoneListEntryTile, {
+      entry: targetEntry({ choices: [choice] }),
+      mode: "target",
+      choices: [choice],
+      selected: false,
+      selectedChoiceIds: [],
+      unavailableChoiceIds: new Set<ChoiceId>(),
+      cardBackUrl: "back.png",
+      ontargetchoice,
+    });
+    const button = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-entry-target-choice-target:0:graveyard:0-gy-reactive"]',
+    );
+    if (button === null) throw new Error("Missing reactive target button");
+    expect(button.disabled).toBe(false);
+    expect(button.getAttribute("aria-disabled")).toBe("false");
+
+    await rendered.rerender({
+      selected: false,
+      unavailableChoiceIds: new Set<ChoiceId>([choice.id]),
+    });
+    expect(button.disabled).toBe(true);
+    expect(button.getAttribute("aria-disabled")).toBe("true");
+    expect(
+      button.closest(".zone-list-entry")?.classList.contains("is-unavailable"),
+    ).toBe(true);
+
+    await rendered.rerender({
+      selected: true,
+      selectedChoiceIds: [choice.id],
+      unavailableChoiceIds: new Set<ChoiceId>(),
+    });
+    expect(button.disabled).toBe(false);
+    expect(button.getAttribute("aria-disabled")).toBe("false");
+
+    await rendered.rerender({
+      selected: true,
+      selectedChoiceIds: [choice.id],
+      unavailableChoiceIds: new Set<ChoiceId>([choice.id]),
+    });
+    expect(button.disabled).toBe(false);
+    expect(button.getAttribute("aria-disabled")).toBe("false");
+    await userEvent.setup().click(button);
+    expect(ontargetchoice).toHaveBeenCalledWith(choice);
+  });
+
+  it("keeps a selected dialog tile removable when its draft reaches maximum", async () => {
+    const second = targetEntry({
+      id: "target:0:graveyard:1",
+      sequence: 1,
+      choices: [targetChoice("gy-1")],
+    });
+    const harness = renderTargetDialog({
+      targetEntries: [targetEntry(), second],
+      minimum: 1,
+      maximum: 1,
+    });
+
+    await harness.rendered.rerender({
+      selectedChoiceIds: [choiceId("gy-0")],
+      confirmValid: true,
+    });
+    const selected = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-entry-target-choice-target:0:graveyard:0-gy-0"]',
+    );
+    const unavailable = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-entry-target-choice-target:0:graveyard:1-gy-1"]',
+    );
+    expect(selected?.disabled).toBe(false);
+    expect(selected?.getAttribute("aria-disabled")).toBe("false");
+    expect(unavailable?.disabled).toBe(true);
+    expect(unavailable?.getAttribute("aria-disabled")).toBe("true");
+  });
+
   it("shows the validation message and only offers Cancel when the engine allows it", async () => {
     const user = userEvent.setup();
     const harness = renderTargetDialog({
@@ -512,6 +589,7 @@ describe("ZoneListDialog target mode", () => {
       '[data-cy="zone-list-dialog-target-cancel-button"]',
     );
     if (cancel === null) throw new Error("Missing cancel button");
+    expect(cancel.classList.contains("danger")).toBe(true);
     await user.click(cancel);
     expect(harness.oncancel).toHaveBeenCalledTimes(1);
     cleanup();

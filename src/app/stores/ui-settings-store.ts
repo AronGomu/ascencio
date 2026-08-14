@@ -5,6 +5,8 @@ export interface UiSettingsState {
   readonly showWorkspace: boolean;
   readonly autoPlaceCards: boolean;
   readonly autoResolveTrivialPrompts: boolean;
+  readonly showZoneOutlines: boolean;
+  readonly showZoneCounts: boolean;
 }
 
 export interface UiSettingsStore extends Readable<UiSettingsState> {
@@ -12,6 +14,8 @@ export interface UiSettingsStore extends Readable<UiSettingsState> {
   setShowWorkspace(value: boolean): void;
   setAutoPlaceCards(value: boolean): void;
   setAutoResolveTrivialPrompts(value: boolean): void;
+  setShowZoneOutlines(value: boolean): void;
+  setShowZoneCounts(value: boolean): void;
   reset(): void;
 }
 
@@ -20,6 +24,8 @@ export const DEFAULT_UI_SETTINGS: UiSettingsState = Object.freeze({
   showWorkspace: false,
   autoPlaceCards: true,
   autoResolveTrivialPrompts: true,
+  showZoneOutlines: true,
+  showZoneCounts: true,
 });
 
 export function createUiSettingsStore(
@@ -44,6 +50,12 @@ export function createUiSettingsStore(
       update((state) =>
         Object.freeze({ ...state, autoResolveTrivialPrompts: value }),
       );
+    },
+    setShowZoneOutlines(value: boolean): void {
+      update((state) => Object.freeze({ ...state, showZoneOutlines: value }));
+    },
+    setShowZoneCounts(value: boolean): void {
+      update((state) => Object.freeze({ ...state, showZoneCounts: value }));
     },
     reset(): void {
       set(DEFAULT_UI_SETTINGS);

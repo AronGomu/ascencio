@@ -21,6 +21,8 @@
   --warning: #ffd580;
   --success: #7ee2a8;
   --ink: #ffffff;
+  --preview-w: 22rem;
+  --rail-min: 15rem;
   --duel-field-layer-surface: 0;
   --duel-field-layer-zone: 10;
   --duel-field-layer-stack: 20;
@@ -169,85 +171,12 @@ main {
    push a scrollbar onto the page; `.duel-field` owns any residual x/y
    overflow instead (see below). */
 main.is-duel-viewport {
-  /* Flex, not grid: the duel row is the only track that must claim leftover
-     height while every other conditional sibling (hidden announcement,
-     warnings, diagnostic message) keeps its natural size. */
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
-  padding-bottom: clamp(0.5rem, 1svh, 1rem);
-  overflow: hidden;
-}
-
-main.is-duel-viewport > .duel-row {
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-.duel-header-bar {
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
   width: 100%;
-  max-width: 120rem;
-  margin-inline: auto;
-  padding: 0.75rem 1rem;
-}
-
-.duel-header-bar__spacer {
-  flex: 1 1 auto;
-}
-
-.duel-header-bar__player {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-width: 0;
-  flex-shrink: 1;
-}
-
-.duel-header-bar__avatar {
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 999px;
-  object-fit: cover;
-  border: 1px solid var(--border);
-}
-
-.duel-header-bar__meta {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.duel-header-bar__role {
-  overflow: hidden;
-  min-width: 0;
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 750;
-  text-transform: uppercase;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.duel-header-bar__life {
-  overflow: hidden;
-  min-width: 0;
+  height: 100svh;
+  min-height: 0;
   margin: 0;
-  color: var(--warning);
-  font-weight: 800;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.duel-header-bar__settings svg {
-  width: 1.1rem;
-  height: 1.1rem;
-  fill: currentcolor;
-  display: block;
+  padding: 0;
+  overflow: hidden;
 }
 
 .dialog-backdrop {
@@ -313,23 +242,21 @@ h4 {
   white-space: nowrap;
 }
 
-/* The duel field and the card preview panel share one row, and the panel is
-   stretched to the field's height so the effect text scrolls inside it rather
-   than making the row taller than the board. Preview grows past its 22rem
-   floor with whatever width the field doesn't need; the field's own 52rem
-   floor plus the .45fr:1fr split keeps its rendered (aspect-ratio-driven)
-   height inside a normal desktop viewport at every width up to the 120rem
-   `main` cap — verified in the responsive e2e at 1366×768 and 1920×1080. */
-.duel-row {
+.duel-shell {
+  width: 100%;
+  height: 100svh;
+  margin: 0;
   display: grid;
-  grid-template-columns: minmax(22rem, 0.45fr) minmax(52rem, 1fr);
-  gap: 1rem;
+  grid-template-columns: var(--preview-w) auto minmax(var(--rail-min), 1fr);
+  grid-template-rows: minmax(0, 1fr);
   align-items: stretch;
+  padding: 0;
+  overflow: hidden;
 }
 
 .card-preview-panel {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 0.75rem;
   min-width: 0;
   min-height: 0;
@@ -342,57 +269,108 @@ h4 {
 .card-preview-panel__art img {
   display: block;
   width: 100%;
-  max-height: 22rem;
+  max-height: min(22rem, 60svh);
   object-fit: contain;
   border-radius: 0.5rem;
 }
 
-.card-preview-panel__copy {
+.card-preview-panel__body {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 0.35rem;
   min-height: 0;
 }
 
-.card-preview-panel [data-cy="card-preview-text"] {
+.card-preview-panel__text-region {
+  position: relative;
+  min-height: 0;
+}
+
+.card-preview-panel__text {
+  height: 100%;
   min-height: 0;
   overflow-y: auto;
-  padding-right: 0.4rem;
+  padding-inline-end: 10px;
   color: var(--muted);
+  scrollbar-width: none;
   white-space: pre-wrap;
 }
 
-.card-preview-panel__status {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  color: var(--muted);
-  font-size: 0.82rem;
+.card-preview-panel__text::-webkit-scrollbar {
+  display: none;
 }
 
-.card-preview-status-dots {
+.duel-right-rail {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.duel-right-rail__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.duel-right-rail__top strong {
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+.duel-right-rail__options {
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  flex: 0 0 2.5rem;
+}
+.duel-right-rail__identity {
+  border: 2px solid transparent;
+}
+.duel-right-rail__identity.active {
+  border-color: var(--accent);
+}
+.duel-right-rail__identity img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  max-height: 26svh;
+  object-fit: cover;
+}
+.duel-right-rail__identity p {
+  margin: 0.35rem 0;
+  color: var(--warning);
+  font-weight: 800;
+}
+.duel-right-rail__status {
+  align-self: center;
+  min-width: 0;
+}
+.duel-right-rail__status h2 {
+  font-size: clamp(1.05rem, 2vw, 1.6rem);
+  text-wrap: balance;
+}
+.duel-right-rail__status p {
+  color: var(--muted);
+}
+.duel-right-rail__dots {
   display: inline-flex;
   gap: 0.15rem;
 }
-
-.card-preview-status-dots span {
+.duel-right-rail__dots i {
   width: 0.28rem;
   height: 0.28rem;
   border-radius: 999px;
   background: currentcolor;
-  animation: preview-status-dot 1.2s infinite ease-in-out;
+  opacity: 1;
+  animation: duel-rail-dot 1.2s infinite ease-in-out;
 }
-
-.card-preview-status-dots span:nth-child(2) {
+.duel-right-rail__dots i:nth-child(2) {
   animation-delay: 0.2s;
 }
-
-.card-preview-status-dots span:nth-child(3) {
+.duel-right-rail__dots i:nth-child(3) {
   animation-delay: 0.4s;
 }
 
-@keyframes preview-status-dot {
+@keyframes duel-rail-dot {
   0%,
   80%,
   100% {
@@ -404,95 +382,17 @@ h4 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card-preview-status-dots span {
-    animation: none;
-    opacity: 0.6;
+  .duel-right-rail__dots i {
+    animation-name: none !important;
+    animation-duration: 0s !important;
+    opacity: 1 !important;
   }
 }
 
-/* Below 79rem (1264px) the elastic .45fr:1fr split can no longer give the
-   field its 52rem floor alongside the panel's 22rem floor plus gap/padding
-   (52+22+1rem gap+2rem field padding+2rem main margin = 79rem, the same
-   floor the pre-T9 fixed-width layout used), so the row collapses to one
-   column. The field must render first (it needs the leftover height) with
-   the panel as a fixed-height horizontal band underneath it — but the panel
-   stays first in the DOM (see App.svelte) for screen-reader continuity, so
-   the visual order is CSS-only via `grid-row`. */
-@media (max-width: 79rem) {
-  .duel-row {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) auto;
-  }
-
-  .duel-row > .card-preview-panel {
-    grid-row: 2;
-  }
-
-  .duel-row > .duel-field,
-  .duel-row > .field-error {
-    grid-row: 1;
-  }
-
-  /* Horizontal band: fixed-width art column left, name/effect text right,
-     status spanning the full width underneath. */
-  .card-preview-panel {
-    grid-template-columns: clamp(4rem, 20vw, 8rem) minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) auto;
-    grid-template-areas: "art copy" "status status";
-    max-height: clamp(6rem, 22svh, 12rem);
-  }
-
-  .card-preview-panel__art {
-    grid-area: art;
-    height: 100%;
-    min-height: 0;
-  }
-
-  .card-preview-panel__art img {
-    height: 100%;
-    max-height: none;
-  }
-
-  .card-preview-panel__copy {
-    grid-area: copy;
-  }
-
-  .card-preview-panel__status {
-    grid-area: status;
-  }
-}
-
-/* Short viewports: the art shrinks to a `clamp(3rem,8svh,5rem)`-tall
-   thumbnail (decoupled from the row's own height, which would otherwise
-   stretch it), and the whole compact preview is capped, so a tall
-   effect-text fixture scrolls inside the panel instead of growing it past
-   the field. */
-@media (max-width: 79rem) and (max-height: 48rem) {
-  .card-preview-panel {
-    max-height: clamp(5rem, 18svh, 8rem);
-  }
-
-  .card-preview-panel__art {
-    display: flex;
-    align-items: center;
-    height: auto;
-  }
-
-  .card-preview-panel__art img {
-    height: clamp(3rem, 8svh, 5rem);
-    max-height: clamp(3rem, 8svh, 5rem);
-    width: auto;
-    max-width: 100%;
-  }
-
-  .card-preview-panel__copy {
-    grid-template-rows: auto minmax(0, 1fr);
-    min-height: 0;
-  }
-
-  .card-preview-panel [data-cy="card-preview-text"] {
-    min-height: 0;
-    overflow-y: auto;
+@media (max-width: 1500px) {
+  :root {
+    --preview-w: 18rem;
+    --rail-min: 12rem;
   }
 }
 
@@ -906,6 +806,15 @@ li + li {
   }
 }
 
+.duel-field-slot {
+  width: calc(100vw - var(--preview-w) - var(--rail-min));
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
 .duel-field {
   container: duel-field / inline-size;
   position: relative;
@@ -917,7 +826,7 @@ li + li {
   min-width: 0;
   min-height: 0;
   max-width: 100%;
-  padding: 1rem;
+  padding: 0;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 0.9rem;
@@ -935,76 +844,59 @@ li + li {
 .duel-field-scroll-region {
   min-width: 0;
   min-height: 0;
-  overflow: auto;
-  scroll-padding: clamp(0.75rem, 4vw, 2rem);
+  overflow: hidden;
 }
 
-/* The ticket's board-geometry table gave zone extents as center + full
-   width/height instead of center −/+ half (the zones themselves are
-   rendered with `transform: translate(-50%, -50%)`), so every stated range
-   was shifted low/right by half the zone's own size. Measured directly
-   against the rendered DOM at a 1366px viewport (board 932x524):
-   shared extra monster left true x [42.90%, 49.30%], right true x
-   [50.70%, 57.10%], both true y [42.11%, 57.92%]; p1 banished true y
-   [26.75%, 42.65%]; p0 banished true y [57.36%, 73.10%]. The free gap
-   between the two banished zones is true y [42.65%, 57.36%]. These
-   constants are chosen to sit inside that gap and clear of the extra
-   monster zone columns, verified with the chromium e2e's
-   `responsive field compositions...` overlap check and the pointer-
-   interception specs. */
 .field-phase-strip {
   position: absolute;
   z-index: var(--duel-field-layer-control);
-  top: 43.5%;
+  top: var(--phase-y);
   right: 0;
   left: 0;
-  height: 13%;
   display: flex;
   align-items: center;
+  justify-content: center;
+  transform: translateY(-50%);
   pointer-events: none;
 }
 .field-phase-strip__group {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
   position: absolute;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--phase-gap);
+  pointer-events: none;
 }
 .field-phase-strip__group--left {
-  right: 60.6%;
+  right: calc(100% - var(--phase-left-emz));
 }
-/* Anchored from the right (not the left, unlike the left group) at the same
-   1% inset the old absolutely positioned End turn button used, so folding
-   End into this group (Round 3) keeps its right edge exactly where it was
-   already proven clear of the banished piles/deck column further out on
-   the board — the group grows leftward as Main 2 + End's combined width
-   demands, well inside the free pocket right of the shared EMZ (x > 60.3%). */
 .field-phase-strip__group--right {
-  right: 1%;
+  left: var(--phase-right-emz);
 }
-/* Link-free (Master Rule 3) duels have no shared Extra Monster Zones, so the
-   two semantic groups no longer have to straddle them: they flow as one run
-   with a single uniform chip gap, keeping the shipped Draw → Standby →
-   Main 1 → Battle → Main 2 → End turn order. The run stays anchored at the
-   same 1% right inset the End turn button already used, because that is the
-   only place in this band where a 44px-tall control clears both monster
-   rows and every pile column at every supported viewport. */
+.field-phase-strip__end {
+  position: absolute;
+  left: var(--phase-right-edge);
+  transform: translateX(-100%);
+  pointer-events: none;
+}
 .field-phase-strip.is-continuous {
-  justify-content: flex-end;
-  gap: 0.3rem;
-  padding-right: 1%;
+  gap: var(--phase-gap);
 }
 .field-phase-strip.is-continuous .field-phase-strip__group {
   position: static;
-  right: auto;
 }
 .field-phase-chip {
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  display: inline-grid;
+  place-items: center;
   pointer-events: none;
   padding: 0.2rem 0.5rem;
   border: 1px solid transparent;
   border-radius: 999px;
   background: rgb(8 16 31 / 0.72);
   color: color-mix(in srgb, var(--muted) 70%, transparent);
-  font-size: 0.68rem;
+  font-size: var(--label-size);
   font-weight: 800;
   white-space: nowrap;
 }
@@ -1023,24 +915,19 @@ button.field-phase-chip {
   color: var(--ink);
 }
 
-/* Must track `.duel-field-board`'s own `min-width: 52rem` (below) so this
-   stage's box always matches the board's rendered box exactly, even when
-   the board overflows its column and `.duel-field`'s `overflow-x: auto`
-   kicks in — otherwise the phase strip/End turn percentages below resolve
-   against a narrower box than the board they need to align with. */
+/* Stage uses exact geometry-sized field coordinates. */
 .duel-field-stage {
   position: relative;
-  min-width: 52rem;
+  width: 100%;
+  height: 100%;
 }
 
 .duel-field-board {
   position: relative;
   isolation: isolate;
   width: 100%;
-  /* 52rem keeps the 72/1280-unit card wider than the 44px minimum target. */
-  min-width: 52rem;
+  height: 100%;
   margin-inline: auto;
-  aspect-ratio: 16 / 9;
   overflow: hidden;
   border: 1px solid #436558;
   border-radius: 0.8rem;
@@ -1085,7 +972,7 @@ button.field-phase-chip {
   display: grid;
   place-items: center;
   padding: 0.2rem;
-  border: 1px solid rgb(183 220 207 / 0.48);
+  border: 1px dashed var(--zone-outline-color, rgb(183 220 207 / 0.48));
   border-radius: 0.35rem;
   background: rgb(8 26 25 / 0.28);
   color: rgb(232 237 248 / 0.7);
@@ -1095,9 +982,30 @@ button.field-phase-chip {
 }
 
 .duel-field-zone--shared {
-  border: 2px solid var(--accent);
+  border: 2px dashed var(--zone-outline-color, var(--accent));
   background: rgb(19 69 66 / 0.72);
   color: #e8edf8;
+}
+
+.duel-field-board[data-zone-outlines="false"] {
+  --zone-outline-color: transparent;
+}
+
+.duel-field-board[data-zone-counts="false"] .duel-field-stack__count,
+.duel-field-board[data-zone-counts="false"] .duel-field-hand-band__count {
+  display: none;
+}
+
+.duel-field-zone__slot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--field-width) * 0.6923076923 + 6px);
+  height: var(--field-height);
+  border: 1px solid rgb(235 243 255 / 0.4);
+  border-radius: 0.28rem;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
 
 button.duel-field-zone,
@@ -1300,44 +1208,165 @@ button.duel-field-zone,
 }
 
 .floating-field-window[data-window-id="zoneList"] {
-  max-width: min(80%, 64rem);
+  width: min(1320px, calc(100% - 16px));
+  height: min(600px, calc(100% - 16px));
+  max-width: calc(100% - 16px);
+  max-height: calc(100% - 16px);
+  grid-template-rows: 58px minmax(0, 1fr);
+  overflow: hidden;
+  border-radius: 14px;
+  box-shadow: 0 28px 80px rgb(0 0 0 / 0.58);
+}
+
+.floating-field-window[data-window-id="zoneList"]
+  > .floating-field-window__handle {
+  padding: 6px 8px 6px 18px;
+}
+
+.floating-field-window[data-window-id="zoneList"][data-mode="target"]
+  > .floating-field-window__handle {
+  padding-left: 6px;
+}
+
+.floating-field-window[data-window-id="zoneList"][data-collapsed="true"] {
+  width: 58px;
+  height: 58px;
+  max-width: 58px;
+  max-height: 58px;
+  grid-template-rows: 58px;
+}
+
+.floating-field-window[data-window-id="zoneList"][data-collapsed="true"]
+  > .floating-field-window__handle {
+  padding: 6px;
+  border-bottom-color: transparent;
+  border-radius: 14px;
+}
+
+.floating-field-window[data-window-id="zoneList"][data-collapsed="true"]
+  > .floating-field-window__content {
+  display: none;
+}
+
+.floating-field-window[data-window-id="zoneList"]
+  > .floating-field-window__content {
+  padding: 0;
+  overflow: hidden;
 }
 
 .zone-list-dialog {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) 64px;
   min-width: 0;
+  height: 100%;
 }
 
 .zone-list-dialog__header {
   display: flex;
   width: 100%;
+  min-width: 0;
   align-items: center;
-  gap: 0.5rem;
+  gap: 10px;
 }
 
-/* Rightmost control in the handle, kept at the 44px minimum target every
-   other field control uses. */
+.zone-list-dialog__header > span {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 0.96rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zone-list-dialog__header > strong {
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding-inline: 8px;
+  border: 1px solid #486078;
+  border-radius: 999px;
+  background: #0c1728;
+}
+
+.zone-list-dialog__notice {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.zone-list-dialog__collapse,
 .zone-list-dialog__close {
-  min-width: 2.75rem;
+  min-width: 44px;
+  min-height: 44px;
   margin-left: auto;
-  padding: 0.35rem 0.6rem;
-  font-size: 1rem;
+  padding: 0;
+  font-size: 1.2rem;
   line-height: 1;
+}
+
+.zone-list-dialog__collapse {
+  flex: 0 0 44px;
+  margin-left: 0;
+  border-color: #486078;
+  background: #0c1728;
+  color: var(--ink);
+}
+
+.zone-list-dialog__close {
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .zone-list-dialog__entries {
   display: flex;
-  gap: 0.5rem;
-  padding: 0.15rem 1.75rem 2.5rem;
-  scroll-padding-inline: 1.75rem;
+  align-items: flex-start;
+  justify-content: safe center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  padding: 92px 8px 42px;
   overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-inline: contain;
+  background: #101a2d;
+  scrollbar-color: #73829d #0b1424;
+  scrollbar-width: thin;
+}
+
+.zone-list-dialog__entries::-webkit-scrollbar {
+  height: 12px;
+}
+.zone-list-dialog__entries::-webkit-scrollbar-track {
+  background: #0b1424;
+}
+.zone-list-dialog__entries::-webkit-scrollbar-thumb {
+  border: 3px solid #0b1424;
+  border-radius: 999px;
+  background: #73829d;
+}
+
+.zone-list-dialog__empty {
+  margin: auto;
+  color: var(--muted);
 }
 
 .zone-list-entry {
   position: relative;
-  flex: 0 0 auto;
-  width: 4.5rem;
+  flex: 0 0 144px;
+  width: 144px;
   transition: transform 120ms ease-out;
-  transform-origin: center;
+  transform-origin: center 42%;
+}
+
+.zone-list-entry.is-first {
+  transform-origin: left 42%;
+}
+.zone-list-entry.is-last {
+  transform-origin: right 42%;
+}
+.zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open) {
+  z-index: 500;
 }
 
 .zone-list-entry.is-actionable img {
@@ -1360,32 +1389,123 @@ button.duel-field-zone,
   box-shadow: 0 0 0 2px rgb(255 213 128 / 0.55);
 }
 
-.zone-list-entry:is(:hover, :focus-within) {
-  transform: scale(1.35);
+/* Unavailable exceeds hover/focus specificity so hard-locked choices stay
+   visibly red. Selected tiles never match and retain removable orange state. */
+.zone-list-entry.is-unavailable:not(.is-selected) img,
+.zone-list-entry.is-unavailable:not(.is-selected):hover img,
+.zone-list-entry.is-unavailable:not(.is-selected):focus-within img {
+  border-color: #ff455d;
+  box-shadow: 0 0 0 3px rgb(255 69 93 / 0.78);
+}
+
+.zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open) {
+  transform: scale(1.6);
+}
+
+.zone-list-entry.is-hover-suppressed {
+  transition: none;
+  transform: none;
 }
 
 .zone-list-entry > img {
-  max-height: 50svh;
-  object-fit: contain;
+  display: block;
+  width: 144px;
+  aspect-ratio: 421 / 614;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  object-fit: cover;
+  box-shadow: 0 7px 18px rgb(0 0 0 / 0.34);
+}
+
+.zone-list-entry__name {
+  display: block;
+  margin-top: 8px;
+  overflow: hidden;
+  font-size: 0.72rem;
+  font-weight: 750;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: opacity 120ms ease-out;
+}
+
+.zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open)
+  .zone-list-entry__name {
+  opacity: 0;
 }
 
 .zone-list-entry:hover .card-action-chips,
-.zone-list-entry:focus-within .card-action-chips {
+.zone-list-entry:focus-within .card-action-chips,
+.zone-list-entry.is-menu-open .card-action-chips {
   display: flex;
+}
+
+.zone-list-entry .card-action-chips,
+.projected-choice-menu {
+  top: calc(144px * 614 / 421 - 2px);
+  bottom: auto;
+  z-index: 10;
+  min-width: 100%;
+  min-height: 34px;
+  border: 1px solid #53627e;
+  border-radius: 6px;
+  background: rgb(8 16 31 / 0.96);
+}
+.zone-list-entry.is-first .card-action-chips {
+  left: 0;
+  transform: none;
+}
+.zone-list-entry.is-last .card-action-chips {
+  right: 0;
+  left: auto;
+  transform: none;
+}
+.zone-list-entry .card-action-chip {
+  min-height: 34px;
+  height: 34px;
+  font-size: 0.65rem;
+  font-weight: 850;
+}
+
+.projected-choice-menu {
+  position: absolute;
+  left: 0;
+  display: grid;
+  width: 100%;
+  padding: 2px;
+}
+.projected-choice-menu button {
+  min-height: 34px;
+  font-size: 0.65rem;
+}
+.zone-list-entry__check {
+  position: absolute;
+  z-index: 4;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--warning);
+  color: #2b1d00;
+  font-weight: 900;
 }
 
 /* T16 target mode. The badge names the pile the entry came from, since one
    list mixes HAND/GY/DECK/BAN/EXTRA. */
 .zone-list-entry__zone {
   position: absolute;
-  top: 0.15rem;
-  left: 0.15rem;
-  padding: 0.05rem 0.28rem;
-  border-radius: 0.25rem;
-  background: var(--surface-strong);
+  bottom: calc(100% + 4px);
+  left: 0;
+  padding: 3px 6px;
+  border: 1px solid #8ba0bf;
+  border-radius: 4px;
+  background: rgb(8 16 31 / 0.9);
   color: var(--ink);
-  font-size: 0.6rem;
-  font-weight: 700;
+  font-size: 0.58rem;
+  font-weight: 850;
   letter-spacing: 0.04em;
 }
 
@@ -1422,14 +1542,30 @@ button.duel-field-zone,
 
 .zone-list-dialog__footer {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.3rem 1.75rem 0.2rem;
+  gap: 12px;
+  min-width: 0;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
 }
 
 .zone-list-dialog__footer output {
   font-weight: 700;
+}
+.zone-list-dialog__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.zone-list-dialog__sort input {
+  width: 18px;
+  height: 18px;
+}
+.zone-list-dialog__cancel {
+  min-height: 44px;
 }
 
 .duel-field-stack {
@@ -1530,13 +1666,12 @@ button.duel-field-zone,
   position: relative;
   top: auto;
   left: auto;
-  flex: 0 0 max(2.75rem, 4.5rem);
-  width: max(2.75rem, 4.5rem);
-  aspect-ratio: 72 / 104;
-  height: auto;
+  flex: 0 0 calc(var(--field-height) * 72 / 104);
+  width: calc(var(--field-height) * 72 / 104);
+  height: var(--field-height);
+  min-width: 0;
+  min-height: 0;
   transform: none;
-  /* Player hand grows inward/upward from its bottom edge; opponent hand
-     (below) grows downward from its top edge instead. */
   transform-origin: center bottom;
 }
 
@@ -1559,70 +1694,81 @@ button.duel-field-zone,
   position: absolute;
   left: var(--field-x);
   top: var(--field-y);
-  width: var(--field-width);
   z-index: var(--duel-field-layer-menu);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.2rem;
+  width: var(--field-width);
+  height: var(--field-height);
   transform: translate(-50%, -50%);
 }
 
-.duel-field-hand-band__row {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  width: 100%;
-}
-
-/* Padding/scroll-padding give a 1.35x-zoomed hand card room to grow without
-   being clipped by this viewport's own auto overflow box; scrolling stays
-   intact, only the reserved edge margin grows. Player cards grow upward
-   from their bottom origin, so the extra room goes on top; opponent cards
-   grow downward from their top origin, so it goes on the bottom instead. */
 .duel-field-hand-band__viewport {
   display: flex;
-  flex: 1 1 auto;
-  gap: 0.35rem;
+  gap: var(--zone-gap);
+  width: 100%;
+  height: 100%;
   min-width: 0;
-  padding: 2.9rem 1.75rem 0.15rem;
-  scroll-padding-inline: 1.75rem;
   overflow-x: auto;
+  overflow-y: hidden;
   overscroll-behavior-x: contain;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+}
+
+.duel-field-hand-band__viewport::-webkit-scrollbar {
+  display: none;
 }
 
 .duel-field-hand-band.is-opponent .duel-field-hand-band__viewport {
-  padding: 0.15rem 1.75rem 2.9rem;
   flex-direction: row-reverse;
 }
 
-.duel-field-hand-band__arrow {
-  flex: 0 0 2.75rem;
-  min-width: 2.75rem;
-  min-height: 2.75rem;
-  border: 1px solid rgb(183 220 207 / 0.48);
-  border-radius: 0.35rem;
-  background: rgb(8 26 25 / 0.28);
-  color: rgb(232 237 248 / 0.85);
-  font-size: 1.1rem;
-  cursor: pointer;
+.duel-field-hand-band__count {
+  position: absolute;
+  right: 0.15rem;
+  bottom: 0.15rem;
+  z-index: var(--duel-field-layer-label);
+  min-width: 1.25rem;
+  padding: 0.05rem 0.3rem;
+  border-radius: 999px;
+  pointer-events: none;
+  background: rgb(8 16 31 / 0.88);
+  color: var(--ink);
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-align: center;
 }
 
-/* DOM order is viewport, previous, next (see the markup comment); these
-   restore the previous/viewport/next visual layout without moving either
-   arrow ahead of the viewport in source order. */
-.duel-field-hand-band__arrow--previous {
-  order: -1;
+.overlay-scrollbar {
+  position: absolute;
+  z-index: var(--duel-field-layer-control);
+  pointer-events: none;
 }
 
-.duel-field-hand-band__arrow--next {
-  order: 1;
+.overlay-scrollbar.is-horizontal {
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 0.3rem;
 }
 
-.duel-field-hand-band__arrow:disabled {
-  cursor: not-allowed;
-  opacity: 0.4;
+.overlay-scrollbar.is-vertical {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 0.3rem;
+}
+
+.overlay-scrollbar__thumb {
+  border-radius: 999px;
+  pointer-events: auto;
+  touch-action: none;
+  background: color-mix(in srgb, var(--accent) 75%, transparent);
+}
+
+.overlay-scrollbar.is-horizontal .overlay-scrollbar__thumb {
+  height: 100%;
+}
+
+.overlay-scrollbar.is-vertical .overlay-scrollbar__thumb {
+  width: 100%;
 }
 
 .duel-field-card__art {
@@ -1648,16 +1794,17 @@ button.duel-field-zone,
   transform: rotate(180deg);
 }
 
-.duel-field-card.is-sideways .duel-field-card__art {
-  transform: rotate(90deg) scale(0.69, 1.45);
+.duel-field-card.is-defense .duel-field-card__art,
+.duel-field-card.is-set .duel-field-card__art {
+  transform: rotate(90deg);
 }
 
 .duel-field-card.is-opponent:not(.is-sideways) .duel-field-card__art {
   transform: rotate(180deg);
 }
 
-.duel-field-card.is-opponent.is-sideways .duel-field-card__art {
-  transform: rotate(270deg) scale(0.69, 1.45);
+.duel-field-card.is-opponent:is(.is-defense, .is-set) .duel-field-card__art {
+  transform: rotate(270deg);
 }
 
 .duel-field-card__label {
@@ -1706,6 +1853,14 @@ button.duel-field-zone,
   transform: translateX(-50%);
 }
 
+/* Hand cards live inside a horizontal scrollport whose vertical overflow is
+   clipped. Offset their chips by the 1.35x bottom-origin hover lift, keeping
+   every visible chip inside the hand band and pointer reachable. */
+.duel-field-card.is-hand-item .card-action-chips {
+  top: calc(var(--field-height) * 0.26);
+  bottom: auto;
+}
+
 /* Always mounted for an actionable card, merely hidden: assertions about
    dismissal must test visibility, never element count. */
 .duel-field-card.is-actionable:hover .card-action-chips,
@@ -1732,20 +1887,14 @@ button.card-action-chip:hover:not(:disabled) {
   background: #ffc75c;
 }
 
-/* Round 3 folds the End turn button into the phase strip's right group as
-   a normal-flow sibling of the Main 2 chip, replacing the retired End chip.
-   It keeps its own min target size but no longer needs independent
-   absolute positioning — the group's own placement (below) already clears
-   the shared extra monster zones. `pointer-events: auto` is required
-   because it inherits `pointer-events: none` from `.field-phase-strip`. */
-/* Item 24: shrink toward the phase-chip scale horizontally (padding +
-   font-size) while the 44px pointer-target floor (A7) never yields — only
-   `min-height` still enforces that floor, unchanged. */
 .field-end-turn {
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  display: inline-grid;
+  place-items: center;
   pointer-events: auto;
-  min-height: 2.75rem;
   padding: 0.5rem 0.65rem;
-  font-size: 0.8rem;
+  font-size: var(--chip-size);
 }
 
 /* T14: the bar is normal flow inside the confirm window (ADR-017), which
@@ -1755,7 +1904,7 @@ button.card-action-chip:hover:not(:disabled) {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
-  max-width: min(52rem, 100%);
+  max-width: 100%;
 }
 
 .field-action-bar p {
@@ -1837,10 +1986,6 @@ button.card-action-chip:hover:not(:disabled) {
   }
 
   .duel-field-card.is-hand-item:not(.is-pinned):is(:hover, :focus-within) {
-    transform: none;
-  }
-
-  .zone-list-entry:is(:hover, :focus-within) {
     transform: none;
   }
 }

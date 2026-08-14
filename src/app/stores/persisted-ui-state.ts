@@ -5,15 +5,20 @@ import {
   type DeckId,
 } from "../../duel/presets/deck-catalog.ts";
 
-export const PERSISTED_UI_STATE_KEY = "ygo.ui.v1";
+export const PERSISTED_UI_STATE_KEY = "ygo.ui.v2";
 
 export interface PersistedWindowPosition {
   readonly x: number;
   readonly y: number;
 }
 
+export interface PersistedDisplaySettings {
+  readonly showZoneOutlines: boolean;
+  readonly showZoneCounts: boolean;
+}
+
 export interface PersistedUiState {
-  readonly version: 1;
+  readonly version: 2;
   readonly windows: {
     readonly zoneList: PersistedWindowPosition | null;
     readonly confirm: PersistedWindowPosition | null;
@@ -22,15 +27,17 @@ export interface PersistedUiState {
     readonly player: DeckId;
     readonly opponent: DeckId;
   };
+  readonly settings: PersistedDisplaySettings;
 }
 
 export const DEFAULT_PERSISTED_UI_STATE: PersistedUiState = Object.freeze({
-  version: 1,
+  version: 2,
   windows: Object.freeze({ zoneList: null, confirm: null }),
   decks: Object.freeze({
     player: DEFAULT_PLAYER_DECK_ID,
     opponent: DEFAULT_OPPONENT_DECK_ID,
   }),
+  settings: Object.freeze({ showZoneOutlines: true, showZoneCounts: true }),
 });
 
 export function readPersistedUiState(
@@ -41,12 +48,13 @@ export function readPersistedUiState(
     const serialized = storage.getItem(PERSISTED_UI_STATE_KEY);
     if (serialized === null) return DEFAULT_PERSISTED_UI_STATE;
     const parsed: unknown = JSON.parse(serialized);
-    if (!isPlainObject(parsed) || parsed.version !== 1)
+    if (!isPlainObject(parsed) || parsed.version !== 2)
       return DEFAULT_PERSISTED_UI_STATE;
     const decks = isPlainObject(parsed.decks) ? parsed.decks : {};
     const windows = isPlainObject(parsed.windows) ? parsed.windows : {};
+    const settings = isPlainObject(parsed.settings) ? parsed.settings : {};
     return Object.freeze({
-      version: 1,
+      version: 2,
       windows: Object.freeze({
         zoneList: windowPosition(windows.zoneList),
         confirm: windowPosition(windows.confirm),
@@ -60,6 +68,16 @@ export function readPersistedUiState(
           typeof decks.opponent === "string" && isDeckId(decks.opponent)
             ? decks.opponent
             : DEFAULT_OPPONENT_DECK_ID,
+      }),
+      settings: Object.freeze({
+        showZoneOutlines:
+          typeof settings.showZoneOutlines === "boolean"
+            ? settings.showZoneOutlines
+            : true,
+        showZoneCounts:
+          typeof settings.showZoneCounts === "boolean"
+            ? settings.showZoneCounts
+            : true,
       }),
     });
   } catch {

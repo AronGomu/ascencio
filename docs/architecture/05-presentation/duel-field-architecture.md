@@ -1,9 +1,14 @@
 # DOM Duel-Field Architecture
 
-> Status: implemented
-> Last updated: 2026-08-02
+> Status: implemented baseline; full-height successor accepted/planned
+> Last updated: 2026-08-13
 > Renderer decision: [`../../ADR/001_ADR_semantic_dom_duel_field_rendering.md`](../../ADR/001_ADR_semantic_dom_duel_field_rendering.md)
-> Human-readable view: [`../../duel-field-architecture.html`](../../duel-field-architecture.html)
+> Full-height decision: [`../../ADR/019_ADR_full_height_duel_shell_and_pixel_geometry.md`](../../ADR/019_ADR_full_height_duel_shell_and_pixel_geometry.md)
+> Human-readable successor view: [`../../duel-field-architecture.html`](../../duel-field-architecture.html)
+
+## Planned full-height successor
+
+ADR-019 + current implementation plan replace fixed normalized production rendering with viewport-derived `FieldRenderLayout`, square 5px-gap footprints, full hands, geometry-anchored phases, right rail, bounded preview overlay scrolling. Stable IDs, projection, interaction, nav, privacy, resource lifetime, failure behavior below remain binding. Until implementation completes, fixed-layout prose below describes shipped baseline only; it cannot override ADR-019.
 
 ## Scope
 

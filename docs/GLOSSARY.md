@@ -28,7 +28,9 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 | presentation | Event → DOM feedback commands, scheduler | `src/app/presentation/presentation-command.ts` (`PresentationScheduler`) |
 | feedback | Non-authoritative CSS/SVG field feedback state | `src/app/presentation/dom-feedback-controller.ts`, `src/app/components/duel-field/FieldLines.svelte` |
 | log | Duel event log formatting + panel | `src/app/presentation/format-duel-log-entry.ts`, `src/app/components/duel-field/DuelLog.svelte` |
-| preview | Hovered/focused card art + text panel | `src/app/components/CardPreviewPanel.svelte`, `src/app/presentation/card-preview.ts` |
+| preview | Sticky card art + bounded scroll text column | `src/app/components/CardPreviewPanel.svelte`, `src/app/presentation/card-preview.ts` |
+| rail | Right-side LP, turn, phase, status column | planned `src/app/components/DuelRail.svelte`, `docs/ADR/019_ADR_full_height_duel_shell_and_pixel_geometry.md` |
+| cardlist | Browse/target floating physical-card window | `src/app/components/duel-field/ZoneListDialog.svelte`, `docs/ADR/021_ADR_card_list_dialog_modes_and_selection.md` |
 | images | Card art cache, leases, placeholders | `src/app/images/card-image-cache.ts` (`CardImageLibrary`, `CardImageLease`) |
 | styles | Single global stylesheet | `src/styles/app.css` |
 | boundary | Field render error boundary | `src/app/components/duel-field/DuelFieldErrorBoundary.svelte` |

@@ -93,13 +93,19 @@ export default defineConfig({
   },
   build: {
     target: "es2023",
-    rollupOptions: {
-      input: {
-        app: path.join(projectRoot, "index.html"),
-        prototype: path.join(projectRoot, "prototype.html"),
-      },
-    },
     chunkSizeWarningLimit: 500,
+    rollupOptions: {
+      input:
+        process.env.ACCEPTANCE_SCENARIOS === "1"
+          ? {
+              index: path.join(projectRoot, "index.html"),
+              acceptance: path.join(projectRoot, "acceptance.html"),
+            }
+          : {
+              app: path.join(projectRoot, "index.html"),
+              prototype: path.join(projectRoot, "prototype.html"),
+            },
+    },
   },
   worker: {
     format: "es",

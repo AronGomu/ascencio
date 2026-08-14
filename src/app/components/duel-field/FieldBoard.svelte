@@ -14,6 +14,11 @@
     type FieldNavigationState,
   } from "../../prompts/field-navigation.ts";
   import type { PhysicalZoneId } from "../../../field/duel-field-layout.ts";
+  import {
+    ZONE_GAP,
+    type FieldPlacement,
+    type FieldRenderLayout,
+  } from "../../../field/duel-field-geometry.ts";
   import type { CardImageLibrary } from "../../images/card-image-cache.ts";
   import type {
     ActiveInteractionSpec,
@@ -26,6 +31,7 @@
   import ZoneControl from "./ZoneControl.svelte";
 
   export let board: BoardViewModel;
+  export let renderLayout: FieldRenderLayout;
   export let imageUrls: ReadonlyMap<number, string>;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let cardBackUrl: string;
@@ -38,6 +44,8 @@
   /* Item 18: the candidate zone directly under the dragged card, distinct
      from the rest of `dropCandidates`, so it can carry its own emphasis. */
   export let dropHoveredZoneId: PhysicalZoneId | null = null;
+  export let showZoneOutlines = true;
+  export let showZoneCounts = true;
   export let oncardactivate: (
     card: BoardCardView,
     element: HTMLButtonElement,
@@ -84,6 +92,16 @@
       ? "inactive"
       : `${spec.key.workerGeneration}:${spec.key.sessionGeneration}:${spec.key.promptId}`;
   $: synchronizeNavigation(board, actionableTargets, navigationContext);
+
+  function placementFor(
+    layout: FieldRenderLayout,
+    zoneId: PhysicalZoneId,
+  ): FieldPlacement {
+    const placement = layout.zones.get(zoneId);
+    if (placement === undefined)
+      throw new Error(`Missing field render placement for ${zoneId}`);
+    return placement;
+  }
 
   function cardImageUrl(card: BoardViewModel["cards"][number]): string {
     if (card.image.kind === "back") return cardBackUrl;
@@ -174,7 +192,10 @@
   bind:this={boardElement}
   onfocusin={focusTarget}
   onkeydown={navigate}
+  style={`--zone-gap: ${ZONE_GAP}px;`}
   data-cy="duel-field-board"
+  data-zone-outlines={showZoneOutlines ? "true" : "false"}
+  data-zone-counts={showZoneCounts ? "true" : "false"}
 >
   <span
     id="duel-field-keyboard-help"
@@ -192,6 +213,7 @@
   {#each fieldZones as zone (zone.id)}
     <ZoneControl
       {zone}
+      placement={placementFor(renderLayout, zone.id)}
       actionable={!disabled && spec?.zoneChoices.has(zone.targetId) === true}
       selected={selectedTargets.has(zone.targetId)}
       active={navigationState.activeTarget === zone.targetId}
@@ -206,6 +228,7 @@
       player={0}
       cards={playerHandCards}
       zone={playerHandZone}
+      placement={placementFor(renderLayout, playerHandZone.id)}
       {imageUrls}
       {imageLibrary}
       {cardBackUrl}
@@ -229,6 +252,7 @@
       player={1}
       cards={opponentHandCards}
       zone={opponentHandZone}
+      placement={placementFor(renderLayout, opponentHandZone.id)}
       {imageUrls}
       {imageLibrary}
       {cardBackUrl}
@@ -250,6 +274,7 @@
   {#each board.stacks as stack (stack.targetId)}
     <StackControl
       {stack}
+      placement={placementFor(renderLayout, stack.id)}
       active={navigationState.activeTarget === stack.targetId}
       actionable={!disabled && spec?.stackChoices.has(stack.targetId) === true}
       onpreview={() => onstackpreview(stack)}
@@ -261,6 +286,7 @@
   {#each fieldCards as card (card.id)}
     <CardControl
       {card}
+      placement={placementFor(renderLayout, card.zoneId)}
       imageUrl={cardImageUrl(card)}
       {imageLibrary}
       interactionKind={!disabled &&

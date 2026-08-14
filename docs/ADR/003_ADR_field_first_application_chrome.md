@@ -1,9 +1,10 @@
 # ADR-003: Field-First Application Chrome
 
-> Status: accepted; planned
+> Status: superseded by [`ADR-019`](019_ADR_full_height_duel_shell_and_pixel_geometry.md)
 > Decided: 2026-08-08
+> Superseded: 2026-08-13
 > Owners: presentation architecture
-> Plan: [`../../ai-artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md`](../../ai-artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md) — T2, T3, T4, T5, T8
+> Historical plan: [`../../ai-artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md`](../../ai-artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md) — T2, T3, T4, T5, T8
 
 ## Context
 

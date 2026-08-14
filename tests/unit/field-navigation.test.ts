@@ -8,6 +8,7 @@ import {
   type BoardTargetId,
   type BoardViewModel,
 } from "../../src/field/board-view-model.ts";
+import { createFieldRenderLayout } from "../../src/field/duel-field-geometry.ts";
 import {
   BOARD_CARD_TEXTS,
   BOARD_VIEW_MODEL_FIXTURES,
@@ -248,6 +249,15 @@ describe("field navigation", () => {
     expect(targets).toHaveLength(32);
     expect(targets.filter((target) => !reached.has(target))).toEqual([]);
     expect(sharedExtraMonsterTargets(value)).toEqual([]);
+  });
+
+  it("keeps navigation stable across render viewport sizes", () => {
+    createFieldRenderLayout(true, 886, 768);
+    const small = board("ST-05");
+    createFieldRenderLayout(true, 1872, 1440);
+    const large = board("ST-05");
+
+    expect([...small.nav]).toEqual([...large.nav]);
   });
 
   it("keeps responsive composition separate from physical nav adjacency", () => {

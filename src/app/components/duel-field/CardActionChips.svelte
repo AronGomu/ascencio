@@ -8,6 +8,8 @@
   export let disabled = false;
   export let onchoose: (choice: InteractionChoice) => void;
   export let ondismiss: () => void;
+  export let variant: "field" | "list" = "field";
+  export let ondetails: (() => void) | null = null;
 
   let chipsElement: HTMLDivElement | undefined;
 
@@ -63,12 +65,23 @@
       class="card-action-chip"
       title={choice.label}
       aria-label={choice.label}
-      tabindex="-1"
+      tabindex={variant === "field" ? -1 : 0}
       {disabled}
       onclick={() => onchoose(choice)}
       onkeydown={handleKeydown}
       data-cy={`card-action-chip-${choice.id}`}
-      >{cardActionLabel(choice.action)}</button
+      >{variant === "list" && choice.action === "activate"
+        ? "Activate effect"
+        : cardActionLabel(choice.action)}</button
     >
   {/each}
+  {#if variant === "list" && ondetails !== null}
+    <button
+      type="button"
+      class="card-action-chip card-action-chip--details"
+      onclick={ondetails}
+      onkeydown={handleKeydown}
+      data-cy={`card-action-details-${cardId}`}>Details</button
+    >
+  {/if}
 </div>

@@ -14,7 +14,11 @@ import {
 import type { BoardCardText } from "./board-view-model.ts";
 import type { ZoneListEntry } from "./zone-list.ts";
 
-export type OffFieldZoneBadge = "HAND" | "GY" | "DECK" | "BAN" | "EXTRA";
+export type OffFieldZoneBadge =
+  "HAND" | "EXTRA DECK" | "GRAVEYARD" | "BANISHED" | "DECK";
+
+export const OFF_FIELD_ZONE_DISPLAY_ORDER: readonly OffFieldZoneBadge[] =
+  Object.freeze(["HAND", "EXTRA DECK", "GRAVEYARD", "BANISHED", "DECK"]);
 
 export interface OffFieldTargetEntry extends ZoneListEntry {
   readonly zoneBadge: OffFieldZoneBadge;
@@ -26,18 +30,18 @@ export interface OffFieldTargetEntry extends ZoneListEntry {
 const ZONE_BADGES: Partial<Record<PublicLocation, OffFieldZoneBadge>> =
   Object.freeze({
     hand: "HAND",
-    graveyard: "GY",
+    graveyard: "GRAVEYARD",
     deck: "DECK",
-    banished: "BAN",
-    extra: "EXTRA",
+    banished: "BANISHED",
+    extra: "EXTRA DECK",
   });
 
 const ZONE_NAMES: Readonly<Record<OffFieldZoneBadge, string>> = Object.freeze({
   HAND: "Hand",
-  GY: "Graveyard",
+  "EXTRA DECK": "Extra Deck",
+  GRAVEYARD: "Graveyard",
+  BANISHED: "Banished",
   DECK: "Deck",
-  BAN: "Banished",
-  EXTRA: "Extra Deck",
 });
 
 export function offFieldZoneBadge(

@@ -107,7 +107,7 @@ export function fieldZoneId(
   return `p${player}:${kind}`;
 }
 
-/* Design-grid x centres of the five central monster/spell columns. */
+/* Viewport-independent semantic nav grid. Rendering uses pixel geometry. */
 const CENTRAL_COLUMN_X = [450, 545, 640, 735, 830] as const;
 
 export const STANDARD_DUEL_FIELD_LAYOUT: readonly StandardFieldZoneLayout[] =

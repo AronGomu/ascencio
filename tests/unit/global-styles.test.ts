@@ -8,6 +8,15 @@ describe("global styles", () => {
     expect(css).toContain("clip: rect(0 0 0 0)");
   });
 
+  it("keeps acceptance-only field sizing out of the production stylesheet", () => {
+    const productionCss = readFileSync("src/styles/app.css", "utf8");
+    const acceptanceCss = readFileSync("src/styles/acceptance.css", "utf8");
+    const acceptanceEntry = readFileSync("src/acceptance-main.ts", "utf8");
+    expect(productionCss).not.toContain(".acceptance-card-list-field");
+    expect(acceptanceCss).toContain(".acceptance-card-list-field");
+    expect(acceptanceEntry).toContain('import "./styles/acceptance.css"');
+  });
+
   it("duel field does not contain overscroll", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     const block = duelFieldBlock(css);
@@ -20,20 +29,42 @@ describe("global styles", () => {
     expect(css).not.toContain("max-height: calc(100svh - 1rem)");
   });
 
-  it("board is full width", () => {
+  it("uses one full-height three-column shell", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const shell = ruleBlock(css, ".duel-shell {");
+    expect(shell).toContain("height: 100svh");
+    expect(shell).toContain(
+      "grid-template-columns: var(--preview-w) auto minmax(var(--rail-min), 1fr)",
+    );
+    expect(shell).toContain("grid-template-rows: minmax(0, 1fr)");
+    expect(shell).toContain("overflow: hidden");
+    expect(css).toContain("--preview-w: 22rem");
+    expect(css).toContain("--rail-min: 15rem");
+  });
+
+  it("bounds preview art by viewport height so effect text keeps scroll space", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const art = ruleBlock(css, ".card-preview-panel__art img {");
+    expect(art).toContain("max-height: min(22rem, 60svh)");
+    expect(art).toContain("object-fit: contain");
+  });
+
+  it("board is explicit geometry without width-only stretch", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     const block = ruleBlock(css, ".duel-field-board {");
     expect(block).toContain("width: 100%");
-    expect(block).not.toContain("calc((100vh - 4rem) * 16 / 9)");
+    expect(block).toContain("height: 100%");
+    expect(block).not.toContain("aspect-ratio");
   });
 
-  it("board keeps a min-width that holds field targets at 44px", () => {
+  it("board uses explicit geometry while interaction controls keep 44px floors", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
-    expect(ruleBlock(css, ".duel-field-board {")).toContain("min-width: 52rem");
-    // T14: the pan moved off the field root onto its scroll child so the root
-    // can stay a still boundary for the floating windows (ADR-017).
+    expect(ruleBlock(css, ".duel-field-board {")).toContain("height: 100%");
+    expect(ruleBlock(css, ".duel-field-card__target {")).toContain(
+      "min-width: max(100%, 2.75rem)",
+    );
     expect(ruleBlock(css, ".duel-field-scroll-region {")).toContain(
-      "overflow: auto",
+      "overflow: hidden",
     );
   });
 
@@ -42,6 +73,13 @@ describe("global styles", () => {
     const block = duelFieldBlock(css);
     expect(block).toContain("overflow: hidden");
     expect(block).toContain("position: relative");
+  });
+
+  it("declares concentric px zone slots six pixels wider than cards", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const slot = ruleBlock(css, ".duel-field-zone__slot {");
+    expect(slot).toContain("+ 6px");
+    expect(slot).toContain("translate(-50%, -50%)");
   });
 
   it("the actionable halo is green, not orange", () => {
@@ -75,6 +113,19 @@ describe("global styles", () => {
     const list = ruleBlock(css, ".zone-list-entry.is-selected img {");
     expect(list).toContain("var(--warning)");
     expect(list).not.toContain("var(--success)");
+  });
+
+  it("unavailable target halos stay red through hover and focus", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const unavailable = ruleBlock(
+      css,
+      ".zone-list-entry.is-unavailable:not(.is-selected) img,",
+    );
+    expect(unavailable).toContain(":hover img");
+    expect(unavailable).toContain(":focus-within img");
+    expect(unavailable).toContain("border-color: #ff455d");
+    expect(unavailable).toContain("rgb(255 69 93 / 0.78)");
+    expect(unavailable).not.toContain("var(--warning)");
   });
 
   it("drop candidate is green with a translucent fill, distinct from plain legal", () => {
@@ -116,7 +167,7 @@ describe("global styles", () => {
     expect(css).not.toContain(".duel-field-feedback");
   });
 
-  it("card and list entries transition transform 120ms ease-out and hover-scale 1.35", () => {
+  it("card entries hover-scale 1.35 and list interaction states scale 1.6", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     const card = ruleBlock(
       css,
@@ -135,11 +186,17 @@ describe("global styles", () => {
       ".duel-field-card.is-hand-item:not(.is-pinned):is(:hover, :focus-within) {",
     );
     expect(handHover).toContain("scale(1.35)");
-    const listHover = ruleBlock(
+    const listSelector =
+      ".zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open) {";
+    const listZoom = ruleBlock(
       css,
-      ".zone-list-entry:is(:hover, :focus-within) {",
+      listSelector,
+      css.indexOf(listSelector) + listSelector.length,
     );
-    expect(listHover).toContain("scale(1.35)");
+    expect(listZoom).toContain("scale(1.6)");
+    expect(ruleBlock(css, ".zone-list-entry.is-hover-suppressed {")).toContain(
+      "transform: none",
+    );
   });
 
   it("hand item transform-origin is bottom for player, top for opponent; field origin is centre", () => {
@@ -201,6 +258,12 @@ describe("global styles", () => {
   it("chips are hidden until hover, focus or a pin reveals them", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     expect(ruleBlock(css, "\n.card-action-chips {")).toContain("display: none");
+    const handChips = ruleBlock(
+      css,
+      ".duel-field-card.is-hand-item .card-action-chips {",
+    );
+    expect(handChips).toContain("top: calc(var(--field-height) * 0.26)");
+    expect(handChips).toContain("bottom: auto");
     const reveal = ruleBlock(
       css,
       ".duel-field-card.is-actionable:hover .card-action-chips,\n.duel-field-card.is-actionable:focus-within .card-action-chips,\n.duel-field-card.is-pinned .card-action-chips {",

@@ -26,8 +26,9 @@ describe("quantity-limit badge", () => {
         name: new RegExp(`${label}, maximum ${limit}`),
       }),
     ).toBeTruthy();
-    expect(container.querySelector(`.limit-${limit}`)?.textContent).toBe(
-      String(limit),
-    );
+    expect(
+      container.querySelector(`[data-cy="deck-tile-limit-${card.code}"]`)
+        ?.textContent,
+    ).toBe(String(limit));
   });
 });

@@ -30,7 +30,9 @@ describe("DeckZoneGrid", () => {
     ).toHaveLength(3);
     expect(container.querySelector('[data-slots="40"]')).toBeTruthy();
     expect(container.querySelector('[data-columns="10"]')).toBeTruthy();
-    expect(container.querySelectorAll(".empty-slot")).toHaveLength(37);
+    expect(
+      container.querySelectorAll('[data-cy^="deck-zone-empty-slot-main-"]'),
+    ).toHaveLength(37);
   });
 
   it("switches to 60 slots at card 41", () => {

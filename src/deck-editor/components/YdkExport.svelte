@@ -46,38 +46,63 @@
   tabindex="-1"
   aria-modal="true"
   aria-labelledby="ydk-export-heading"
+  data-cy="deck-ydk-export"
   onkeydown={(event) => handleModalKeydown(event, oncancel)}
 >
-  <header>
-    <div>
-      <p>YDK export</p>
-      <h2 id="ydk-export-heading" tabindex="-1" bind:this={heading}>
+  <header data-cy="deck-ydk-export-header">
+    <div data-cy="deck-ydk-export-titles">
+      <p data-cy="deck-ydk-export-eyebrow">YDK export</p>
+      <h2
+        id="ydk-export-heading"
+        tabindex="-1"
+        data-cy="deck-ydk-export-heading"
+        bind:this={heading}
+      >
         Export {deck.name}
       </h2>
     </div>
-    <button type="button" class="secondary" onclick={oncancel}>Close</button>
+    <button
+      type="button"
+      class="secondary"
+      data-cy="deck-ydk-export-close"
+      onclick={oncancel}>Close</button
+    >
   </header>
-  <p>
+  <p data-cy="deck-ydk-export-counts">
     Main {deck.main.length} · Extra {deck.extra.length} · Side {deck.side
       .length}
   </p>
   {#if deck.validation.status === "errors"}
-    <p class="warning" role="alert">
+    <p class="warning" role="alert" data-cy="deck-ydk-export-warning">
       Deck is invalid. Export is allowed, but VN deck resolution will reject it.
     </p>
   {/if}
-  <label>
-    <span>Filename</span>
-    <input value={filename} readonly />
+  <label data-cy="deck-ydk-export-filename-field">
+    <span data-cy="deck-ydk-export-filename-label">Filename</span>
+    <input value={filename} readonly data-cy="deck-ydk-export-filename-input" />
   </label>
-  <textarea rows="12" readonly value={source} aria-label="YDK text"></textarea>
-  <div class="actions">
-    <button type="button" onclick={() => void copyText()}>Copy YDK text</button>
-    <button type="button" class="secondary" onclick={download}
-      >Download .ydk</button
+  <textarea
+    rows="12"
+    readonly
+    value={source}
+    aria-label="YDK text"
+    data-cy="deck-ydk-export-text"></textarea>
+  <div class="actions" data-cy="deck-ydk-export-actions">
+    <button
+      type="button"
+      data-cy="deck-ydk-export-copy"
+      onclick={() => void copyText()}>Copy YDK text</button
+    >
+    <button
+      type="button"
+      class="secondary"
+      data-cy="deck-ydk-export-download"
+      onclick={download}>Download .ydk</button
     >
   </div>
-  {#if message}<p role="status">{message}</p>{/if}
+  {#if message}<p role="status" data-cy="deck-ydk-export-status">
+      {message}
+    </p>{/if}
 </div>
 
 <style>

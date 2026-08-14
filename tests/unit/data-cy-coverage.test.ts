@@ -139,7 +139,28 @@ describe("dataCyDeclaration", () => {
 
 /* Resolved from the working directory rather than `import.meta.url`: under the
    jsdom environment this file needs, `import.meta.url` is an http URL. */
-const appDirectory = resolve(process.cwd(), "src/app");
+const CONTRACT_ROOTS = [
+  "src/app",
+  "src/shell",
+  "src/deck-editor",
+  "src/story",
+] as const;
+
+function contractFiles(): readonly string[] {
+  return CONTRACT_ROOTS.flatMap((root) =>
+    svelteFilesUnder(resolve(process.cwd(), root)),
+  );
+}
+
+const KEBAB_CASE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+/* A per-item value such as `` `deck-tile-${card.code}` `` is only as readable
+   as its literal chunks, so those chunks — the template with every `${…}`
+   removed — must still spell kebab-case characters and nothing else. */
+const KEBAB_CASE_SKELETON = /^[a-z0-9-]+$/;
+
+function templateSkeleton(expression: string): string {
+  return expression.replace(/^`|`$/g, "").replace(/\$\{[^}]*\}/g, "");
+}
 
 interface ScannedValue {
   readonly value: string;
@@ -181,6 +202,31 @@ function staticValues(source: string, relativePath: string): ScannedValue[] {
   return values;
 }
 
+function namingViolations(source: string, relativePath: string): string[] {
+  const constants = scriptStringConstants(source);
+  const violations: string[] = [];
+  for (const { tag, attributes, index } of scanSvelteElements(source)) {
+    const declaration = dataCyDeclaration(attributes, constants);
+    if (declaration.kind === "static" && !KEBAB_CASE.test(declaration.value))
+      violations.push(
+        `${relativePath}:${tag}@${index} data-cy "${declaration.value}" is not kebab-case`,
+      );
+    /* Only a template literal carries a readable prefix; a ternary between two
+       literals is already covered by the kebab-case rule on each branch. */
+    if (
+      declaration.kind === "dynamic" &&
+      declaration.expression.startsWith("`")
+    ) {
+      const skeleton = templateSkeleton(declaration.expression);
+      if (!KEBAB_CASE_SKELETON.test(skeleton))
+        violations.push(
+          `${relativePath}:${tag}@${index} data-cy template "${skeleton}" is not kebab-case`,
+        );
+    }
+  }
+  return violations;
+}
+
 function duplicateStaticValues(scanned: readonly ScannedValue[]): string[] {
   const seen = new Map<string, string[]>();
   for (const { value, location } of scanned) {
@@ -200,10 +246,10 @@ function duplicateStaticValues(scanned: readonly ScannedValue[]): string[] {
     .map(([value, locations]) => `${value}: ${locations.join(", ")}`);
 }
 
-describe("data-cy coverage across src/app", () => {
-  it("every src/app svelte element declares a non-empty data-cy", () => {
+describe("data-cy coverage across the production domains", () => {
+  it("every contract-root svelte element declares a non-empty data-cy", () => {
     const violations: string[] = [];
-    for (const file of svelteFilesUnder(appDirectory)) {
+    for (const file of contractFiles()) {
       violations.push(
         ...presenceViolations(
           readFileSync(file, "utf8"),
@@ -223,9 +269,42 @@ describe("data-cy coverage across src/app", () => {
     ]);
   });
 
-  it("static data-cy values are unique across src/app", () => {
+  it("every contract-root data-cy value is kebab-case", () => {
+    const violations: string[] = [];
+    for (const file of contractFiles()) {
+      violations.push(
+        ...namingViolations(
+          readFileSync(file, "utf8"),
+          relative(process.cwd(), file),
+        ),
+      );
+    }
+    expect(violations).toEqual([]);
+  });
+
+  it("accepts a per-item template value and validates its prefix", () => {
+    expect(
+      namingViolations(
+        "<b data-cy={`deck-tile-${card.code}`}></b>",
+        "synthetic.svelte",
+      ),
+    ).toEqual([]);
+    expect(
+      namingViolations(
+        "<b data-cy={`deckTile${card.code}`}></b>",
+        "synthetic.svelte",
+      ),
+    ).toEqual([
+      'synthetic.svelte:b@0 data-cy template "deckTile" is not kebab-case',
+    ]);
+    expect(
+      namingViolations('<b data-cy="Deck_Tile"></b>', "synthetic.svelte"),
+    ).toEqual(['synthetic.svelte:b@0 data-cy "Deck_Tile" is not kebab-case']);
+  });
+
+  it("static data-cy values are unique across the contract roots", () => {
     const scanned: ScannedValue[] = [];
-    for (const file of svelteFilesUnder(appDirectory)) {
+    for (const file of contractFiles()) {
       scanned.push(
         ...staticValues(
           readFileSync(file, "utf8"),

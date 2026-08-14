@@ -40,19 +40,39 @@
   {restoreFocusTo}
   controlsSuspended={confirmTitle}
 >
-  <nav aria-label="Pause actions" inert={confirmTitle}>
-    <button type="button" onclick={() => onaction("resume")}>Resume</button>
-    <button type="button" class="secondary" onclick={() => onaction("save")}
-      >Save</button
+  <nav
+    aria-label="Pause actions"
+    inert={confirmTitle}
+    data-cy="story-pause-menu"
+  >
+    <button
+      type="button"
+      data-cy="story-pause-resume"
+      onclick={() => onaction("resume")}>Resume</button
     >
-    <button type="button" class="secondary" onclick={() => onaction("load")}
-      >Load</button
+    <button
+      type="button"
+      class="secondary"
+      data-cy="story-pause-save"
+      onclick={() => onaction("save")}>Save</button
     >
-    <button type="button" class="secondary" onclick={() => onaction("settings")}
-      >Settings</button
+    <button
+      type="button"
+      class="secondary"
+      data-cy="story-pause-load"
+      onclick={() => onaction("load")}>Load</button
     >
-    <button type="button" class="secondary" onclick={() => void requestTitle()}
-      >Return to Title</button
+    <button
+      type="button"
+      class="secondary"
+      data-cy="story-pause-settings"
+      onclick={() => onaction("settings")}>Settings</button
+    >
+    <button
+      type="button"
+      class="secondary"
+      data-cy="story-pause-return-title"
+      onclick={() => void requestTitle()}>Return to Title</button
     >
   </nav>
   {#if confirmTitle}<div
@@ -60,15 +80,23 @@
       role="alertdialog"
       aria-labelledby="return-title"
       tabindex="-1"
+      data-cy="story-pause-return-confirm"
       bind:this={confirmationDialog}
     >
-      <h3 id="return-title">Return without saving?</h3>
-      <p>Progress since last mock save will be lost.</p>
-      <button type="button" onclick={() => onaction("title")}
-        >Return without saving</button
+      <h3 id="return-title" data-cy="story-pause-return-confirm-heading">
+        Return without saving?
+      </h3>
+      <p data-cy="story-pause-return-confirm-message">
+        Progress since last mock save will be lost.
+      </p>
+      <button
+        type="button"
+        data-cy="story-pause-return-confirm-accept"
+        onclick={() => onaction("title")}>Return without saving</button
       ><button
         type="button"
         class="secondary"
+        data-cy="story-pause-return-confirm-stay"
         bind:this={stayButton}
         onclick={() => (confirmTitle = false)}>Stay in story</button
       >

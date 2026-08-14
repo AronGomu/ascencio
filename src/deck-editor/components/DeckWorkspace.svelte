@@ -84,17 +84,21 @@
 <section
   class="workspace"
   aria-labelledby="workspace-heading"
+  data-cy="deck-workspace"
   bind:this={workspaceElement}
 >
-  <header class="workspace-header">
-    <div>
-      <p>Deck workspace</p>
-      <h2 id="workspace-heading">Build deck</h2>
+  <header class="workspace-header" data-cy="deck-workspace-header">
+    <div data-cy="deck-workspace-titles">
+      <p data-cy="deck-workspace-eyebrow">Deck workspace</p>
+      <h2 id="workspace-heading" data-cy="deck-workspace-heading">
+        Build deck
+      </h2>
     </div>
     {#if picked && picked.source !== "catalog"}
       <button
         type="button"
         class="danger remove"
+        data-cy="deck-workspace-remove-picked"
         ondragover={(event) => event.preventDefault()}
         ondrop={(event) => {
           event.preventDefault();
@@ -124,7 +128,7 @@
     ondropzone={(zone) => void dropAndRestoreFocus(zone)}
   />
 
-  <div class="secondary-zones">
+  <div class="secondary-zones" data-cy="deck-workspace-secondary-zones">
     <DeckZoneGrid
       zone="extra"
       label="Extra Deck"

@@ -31,17 +31,29 @@
   $: emptyCount = Math.max(0, plan.slots - codes.length);
 </script>
 
-<section class="zone" aria-labelledby={`${zone}-heading`}>
-  <header>
-    <h3 id={`${zone}-heading`} tabindex="-1">{label}</h3>
-    <span class:error={codes.length > plan.slots}
-      >{codes.length}/{plan.slots}</span
+<section
+  class="zone"
+  aria-labelledby={`${zone}-heading`}
+  data-cy={`deck-zone-${zone}`}
+>
+  <header data-cy={`deck-zone-header-${zone}`}>
+    <h3
+      id={`${zone}-heading`}
+      tabindex="-1"
+      data-cy={`deck-zone-heading-${zone}`}
+    >
+      {label}
+    </h3>
+    <span
+      class:error={codes.length > plan.slots}
+      data-cy={`deck-zone-count-${zone}`}>{codes.length}/{plan.slots}</span
     >
   </header>
   {#if picked}
     <button
       type="button"
       class="keyboard-drop"
+      data-cy={`deck-zone-drop-button-${zone}`}
       onclick={() => ondropzone(zone)}
     >
       Drop picked card in {label}
@@ -52,6 +64,7 @@
     class="drop-zone"
     role="group"
     aria-label={`${label} drop area`}
+    data-cy={`deck-zone-drop-area-${zone}`}
     ondragover={(event) => event.preventDefault()}
     ondrop={(event) => {
       event.preventDefault();
@@ -66,6 +79,7 @@
       data-rows={plan.rows}
       data-slots={plan.slots}
       aria-label={`${label}: ${codes.length} cards in ${plan.slots} slots`}
+      data-cy={`deck-zone-grid-${zone}`}
     >
       {#each codes as code, index (`${code}-${index}`)}
         <CardTile
@@ -87,12 +101,13 @@
           class="empty-slot"
           data-empty-slot={slot === undefined ? index : slot}
           aria-hidden="true"
+          data-cy={`deck-zone-empty-slot-${zone}-${index}`}
         ></span>
       {/each}
     </div>
   </div>
   {#if codes.length > plan.slots}
-    <p class="overflow" role="alert">
+    <p class="overflow" role="alert" data-cy={`deck-zone-overflow-${zone}`}>
       {codes.length - plan.slots} overflow card(s) remain invalid.
     </p>
   {/if}

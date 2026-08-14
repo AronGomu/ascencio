@@ -17,31 +17,56 @@
   }
 </script>
 
-<section class="handoff" aria-labelledby="handoff-heading">
-  <div class="transition-mark" aria-hidden="true">DUEL</div>
-  <div>
-    <p class="eyebrow">Mock boundary · no duel runtime loaded</p>
-    <h1 id="handoff-heading">Existing duel experience placeholder</h1>
-    <p>
+<section
+  class="handoff"
+  aria-labelledby="handoff-heading"
+  data-cy="story-handoff-screen"
+>
+  <div class="transition-mark" aria-hidden="true" data-cy="story-handoff-mark">
+    DUEL
+  </div>
+  <div data-cy="story-handoff-intro">
+    <p class="eyebrow" data-cy="story-handoff-eyebrow">
+      Mock boundary · no duel runtime loaded
+    </p>
+    <h1 id="handoff-heading" data-cy="story-handoff-heading">
+      Existing duel experience placeholder
+    </h1>
+    <p data-cy="story-handoff-body">
       This frame validates story-to-duel language only. Reviewer picks a
       normalized outcome below.
     </p>
   </div>
-  <section class="reviewer-controls" aria-label="Reviewer-only battle controls">
-    <h2>Reviewer battle outcome</h2>
-    <p>
-      <strong>Non-player tooling:</strong> these controls never appear as production
-      duel actions.
+  <section
+    class="reviewer-controls"
+    aria-label="Reviewer-only battle controls"
+    data-cy="story-handoff-reviewer-controls"
+  >
+    <h2 data-cy="story-handoff-reviewer-heading">Reviewer battle outcome</h2>
+    <p data-cy="story-handoff-reviewer-note">
+      <strong data-cy="story-handoff-reviewer-note-label"
+        >Non-player tooling:</strong
+      > these controls never appear as production duel actions.
     </p>
-    <div class="controls">
-      <button type="button" onclick={() => select("win")}
-        >Simulate Player Win</button
-      ><button type="button" onclick={() => select("loss")}
-        >Simulate Player Loss</button
-      ><button type="button" class="secondary" onclick={() => select("abort")}
-        >Simulate Abort</button
-      ><button type="button" class="secondary" onclick={() => select("failure")}
-        >Simulate Technical Failure</button
+    <div class="controls" data-cy="story-handoff-outcome-actions">
+      <button
+        type="button"
+        data-cy="story-handoff-simulate-win"
+        onclick={() => select("win")}>Simulate Player Win</button
+      ><button
+        type="button"
+        data-cy="story-handoff-simulate-loss"
+        onclick={() => select("loss")}>Simulate Player Loss</button
+      ><button
+        type="button"
+        class="secondary"
+        data-cy="story-handoff-simulate-abort"
+        onclick={() => select("abort")}>Simulate Abort</button
+      ><button
+        type="button"
+        class="secondary"
+        data-cy="story-handoff-simulate-failure"
+        onclick={() => select("failure")}>Simulate Technical Failure</button
       >
     </div>
   </section>
@@ -49,12 +74,20 @@
       class:failure={result === "failure"}
       class="result"
       role="status"
+      data-cy="story-handoff-result"
     >
-      <p>{messages[result]}</p>
-      {#if result === "abort" || result === "failure"}<div class="controls">
-          <button type="button" onclick={onretry}>Retry mock duel</button
-          ><button type="button" class="secondary" onclick={onreturn}
-            >Return to map</button
+      <p data-cy="story-handoff-result-message">{messages[result]}</p>
+      {#if result === "abort" || result === "failure"}<div
+          class="controls"
+          data-cy="story-handoff-result-actions"
+        >
+          <button type="button" data-cy="story-handoff-retry" onclick={onretry}
+            >Retry mock duel</button
+          ><button
+            type="button"
+            class="secondary"
+            data-cy="story-handoff-return"
+            onclick={onreturn}>Return to map</button
           >
         </div>{/if}
     </div>{/if}

@@ -14,15 +14,16 @@
   {onclose}
   {restoreFocusTo}
 >
-  <p>Current scene · oldest to newest</p>
-  {#if entries.length === 0}<p class="empty">
+  <p data-cy="story-history-caption">Current scene · oldest to newest</p>
+  {#if entries.length === 0}<p class="empty" data-cy="story-history-empty">
       No dialogue in this scene yet.
-    </p>{:else}<ol>
+    </p>{:else}<ol data-cy="story-history-list">
       {#each entries as entry, index (`${entry.speaker}-${entry.text}-${index}`)}<li
+          data-cy={`story-history-entry-${index}`}
         >
-          <strong>{entry.speaker ?? "Narration"}</strong><span
-            >{entry.text}</span
-          >
+          <strong data-cy={`story-history-speaker-${index}`}
+            >{entry.speaker ?? "Narration"}</strong
+          ><span data-cy={`story-history-text-${index}`}>{entry.text}</span>
         </li>{/each}
     </ol>{/if}
 </OverlayShell>

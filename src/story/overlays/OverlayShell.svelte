@@ -44,25 +44,33 @@
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
-<div class="overlay-backdrop">
+<div class="overlay-backdrop" data-cy={`story-overlay-backdrop-${labelId}`}>
   <div
     class="overlay"
     role="dialog"
     aria-modal="true"
     aria-labelledby={labelId}
     tabindex="-1"
+    data-cy={`story-overlay-${labelId}`}
     bind:this={dialog}
   >
-    <header inert={controlsSuspended} aria-hidden={controlsSuspended}>
-      <h2 id={labelId}>{title}</h2>
+    <header
+      inert={controlsSuspended}
+      aria-hidden={controlsSuspended}
+      data-cy={`story-overlay-header-${labelId}`}
+    >
+      <h2 id={labelId} data-cy={`story-overlay-heading-${labelId}`}>{title}</h2>
       <button
         type="button"
         class="secondary"
         aria-label={`Close ${title}`}
+        data-cy={`story-overlay-close-${labelId}`}
         onclick={() => void close()}>Close</button
       >
     </header>
-    <div class="overlay-content"><slot /></div>
+    <div class="overlay-content" data-cy={`story-overlay-content-${labelId}`}>
+      <slot />
+    </div>
   </div>
 </div>
 

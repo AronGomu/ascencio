@@ -10,46 +10,61 @@
   }
 </script>
 
-<section class="briefing" aria-labelledby="briefing-heading">
+<section
+  class="briefing"
+  aria-labelledby="briefing-heading"
+  data-cy="story-briefing-screen"
+>
   <div
     class="opponent-art"
     role="img"
     aria-label="Provisional silhouette of Rin's Echo"
+    data-cy="story-briefing-opponent-art"
   >
     RE
   </div>
-  <div class="briefing-copy">
-    <p class="eyebrow">Pre-battle briefing</p>
-    <h1 id="briefing-heading">Rin's Echo</h1>
-    <p>
+  <div class="briefing-copy" data-cy="story-briefing-copy">
+    <p class="eyebrow" data-cy="story-briefing-eyebrow">Pre-battle briefing</p>
+    <h1 id="briefing-heading" data-cy="story-briefing-heading">Rin's Echo</h1>
+    <p data-cy="story-briefing-body">
       The arena transmitter shaped Rin's warning into an opponent. Win or lose,
       finish the duel to decode its challenge.
     </p>
-    <dl>
-      <div>
-        <dt>Your deck</dt>
-        <dd>Signal Deck</dd>
+    <dl data-cy="story-briefing-facts">
+      <div data-cy="story-briefing-player-deck-row">
+        <dt data-cy="story-briefing-player-deck-term">Your deck</dt>
+        <dd data-cy="story-briefing-player-deck-value">Signal Deck</dd>
       </div>
-      <div>
-        <dt>Opponent deck</dt>
-        <dd>Relay Deck</dd>
+      <div data-cy="story-briefing-opponent-deck-row">
+        <dt data-cy="story-briefing-opponent-deck-term">Opponent deck</dt>
+        <dd data-cy="story-briefing-opponent-deck-value">Relay Deck</dd>
       </div>
-      <div>
-        <dt>Format</dt>
-        <dd>Single duel · prototype rules</dd>
+      <div data-cy="story-briefing-format-row">
+        <dt data-cy="story-briefing-format-term">Format</dt>
+        <dd data-cy="story-briefing-format-value">
+          Single duel · prototype rules
+        </dd>
       </div>
-      <div>
-        <dt>Objective</dt>
-        <dd>Decode the challenge signal</dd>
+      <div data-cy="story-briefing-objective-row">
+        <dt data-cy="story-briefing-objective-term">Objective</dt>
+        <dd data-cy="story-briefing-objective-value">
+          Decode the challenge signal
+        </dd>
       </div>
     </dl>
-    <p class="checkpoint" role="status">Mock checkpoint saved before battle.</p>
-    <div class="actions">
-      <button type="button" disabled={started} onclick={start}
-        >{started ? "Entering duel…" : "Start Duel"}</button
+    <p class="checkpoint" role="status" data-cy="story-briefing-checkpoint">
+      Mock checkpoint saved before battle.
+    </p>
+    <div class="actions" data-cy="story-briefing-actions">
+      <button
+        type="button"
+        disabled={started}
+        data-cy="story-briefing-start"
+        onclick={start}>{started ? "Entering duel…" : "Start Duel"}</button
       >{#if allowReturn}<button
           type="button"
           class="secondary"
+          data-cy="story-briefing-return"
           onclick={onreturn}>Return to Map</button
         >{/if}
     </div>

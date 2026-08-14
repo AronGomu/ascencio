@@ -9,21 +9,35 @@
 </script>
 
 {#if validation.issues.length > 0}
-  <section class="validation" aria-labelledby="validation-heading">
-    <header>
-      <h3 id="validation-heading">Deck checks</h3>
-      <span>{validation.issues.length} issue(s)</span>
+  <section
+    class="validation"
+    aria-labelledby="validation-heading"
+    data-cy="deck-validation"
+  >
+    <header data-cy="deck-validation-header">
+      <h3 id="validation-heading" data-cy="deck-validation-heading">
+        Deck checks
+      </h3>
+      <span data-cy="deck-validation-count"
+        >{validation.issues.length} issue(s)</span
+      >
     </header>
-    <ul>
+    <ul data-cy="deck-validation-list">
       {#each validation.issues as issue (issue.id)}
-        <li class:error={issue.severity === "error"}>
+        <li
+          class:error={issue.severity === "error"}
+          data-cy={`deck-validation-issue-${issue.id}`}
+        >
           <button
             type="button"
             class="issue"
+            data-cy={`deck-validation-issue-button-${issue.id}`}
             onclick={() =>
               onfocusissue(issue.cardCode ?? null, issue.zone ?? null)}
           >
-            <span aria-hidden="true"
+            <span
+              aria-hidden="true"
+              data-cy={`deck-validation-issue-icon-${issue.id}`}
               >{issue.severity === "error" ? "×" : "!"}</span
             >
             {issue.message}

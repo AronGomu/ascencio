@@ -173,23 +173,29 @@
 </svelte:head>
 
 {#if state.mode === "error"}
-  <main class="loading error" role="alert">
-    <p>Deck Editor stopped</p>
-    <h1>{state.message}</h1>
-    <button type="button" onclick={() => location.reload()}>Retry</button>
+  <main class="loading error" role="alert" data-cy="deck-editor-error">
+    <p data-cy="deck-editor-error-eyebrow">Deck Editor stopped</p>
+    <h1 data-cy="deck-editor-error-message">{state.message}</h1>
+    <button
+      type="button"
+      data-cy="deck-editor-error-retry"
+      onclick={() => location.reload()}>Retry</button
+    >
   </main>
 {:else if notFound !== null}
   <main class="loading" data-cy="deck-not-found">
-    <p>Deck Editor</p>
-    <h1>Deck not found</h1>
-    <p>No local deck is stored under “{notFound}”.</p>
+    <p data-cy="deck-not-found-eyebrow">Deck Editor</p>
+    <h1 data-cy="deck-not-found-heading">Deck not found</h1>
+    <p data-cy="deck-not-found-message">
+      No local deck is stored under “{notFound}”.
+    </p>
     <a href="#/decks" data-cy="deck-not-found-back">Back to Deck Library</a>
   </main>
 {:else if !routeApplied || state.mode === "loading"}
-  <main class="loading" aria-busy="true">
-    <p>Deck Editor</p>
-    <h1>Loading local decks…</h1>
-    <div class="skeleton"></div>
+  <main class="loading" aria-busy="true" data-cy="deck-editor-loading">
+    <p data-cy="deck-editor-loading-eyebrow">Deck Editor</p>
+    <h1 data-cy="deck-editor-loading-heading">Loading local decks…</h1>
+    <div class="skeleton" data-cy="deck-editor-loading-skeleton"></div>
   </main>
 {:else if deckId === null}
   <DeckLibrary
@@ -222,15 +228,19 @@
     onpreservecopy={() => void runAndSync(controller?.preserveCurrentAsCopy())}
   />
 {:else}
-  <main class="loading" aria-busy="true">
-    <p>Deck Editor</p>
-    <h1>Opening deck…</h1>
-    <div class="skeleton"></div>
+  <main class="loading" aria-busy="true" data-cy="deck-editor-opening">
+    <p data-cy="deck-editor-opening-eyebrow">Deck Editor</p>
+    <h1 data-cy="deck-editor-opening-heading">Opening deck…</h1>
+    <div class="skeleton" data-cy="deck-editor-opening-skeleton"></div>
   </main>
 {/if}
 
 {#if showLibraryImport}
-  <div class="backdrop" aria-hidden="true"></div>
+  <div
+    class="backdrop"
+    aria-hidden="true"
+    data-cy="deck-library-import-backdrop"
+  ></div>
   <YdkImport
     requireName={true}
     catalogCodes={new Set(catalog.keys())}
@@ -241,7 +251,11 @@
 {/if}
 
 {#if libraryExport}
-  <div class="backdrop" aria-hidden="true"></div>
+  <div
+    class="backdrop"
+    aria-hidden="true"
+    data-cy="deck-library-export-backdrop"
+  ></div>
   <YdkExport deck={libraryExport} oncancel={() => void closeLibraryModal()} />
 {/if}
 

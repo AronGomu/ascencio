@@ -254,24 +254,31 @@
   }
 </script>
 
-<div class="story-app" bind:this={root}>
+<div class="story-app" data-cy="story-app" bind:this={root}>
   {#if storageOperationError}
     <section
       class="storage-error"
       role="alert"
       aria-labelledby="storage-error-heading"
+      data-cy="story-storage-error"
     >
-      <div>
-        <h2 id="storage-error-heading">Prototype storage needs attention</h2>
-        <p>{storageOperationError}</p>
+      <div data-cy="story-storage-error-copy">
+        <h2 id="storage-error-heading" data-cy="story-storage-error-heading">
+          Prototype storage needs attention
+        </h2>
+        <p data-cy="story-storage-error-message">{storageOperationError}</p>
       </div>
       <button
         type="button"
         class="secondary"
+        data-cy="story-storage-error-retry"
         onclick={() => void retryStorageAccess()}>Retry storage</button
       >
-      <button type="button" class="secondary" onclick={reset}
-        >Reset prototype storage</button
+      <button
+        type="button"
+        class="secondary"
+        data-cy="story-storage-error-reset"
+        onclick={reset}>Reset prototype storage</button
       >
     </section>
   {/if}
@@ -314,14 +321,21 @@
     {#if state.rewardAcknowledged}<section
         class="completion-panel"
         aria-label="Progression complete"
+        data-cy="story-completion-panel"
       >
-        <p>
-          <strong>Updated map:</strong> Old Arena completed. Archive available.
+        <p data-cy="story-completion-message">
+          <strong data-cy="story-completion-message-label">Updated map:</strong> Old
+          Arena completed. Archive available.
         </p>
-        <button type="button" onclick={() => openOverlay("save")}
-          >Save progress</button
-        ><button type="button" class="secondary" onclick={() => go("end")}
-          >End prototype</button
+        <button
+          type="button"
+          data-cy="story-completion-save"
+          onclick={() => openOverlay("save")}>Save progress</button
+        ><button
+          type="button"
+          class="secondary"
+          data-cy="story-completion-end"
+          onclick={() => go("end")}>End prototype</button
         >
       </section>{/if}
   {:else if state.screen === "pre-battle"}
@@ -350,17 +364,21 @@
       oncontinue={acknowledgeReward}
     />
   {:else}
-    <main class="end-screen">
-      <p class="eyebrow">End of the prologue</p>
-      <h1>Prototype complete</h1>
-      <p>
+    <main class="end-screen" data-cy="story-end-screen">
+      <p class="eyebrow" data-cy="story-end-eyebrow">End of the prologue</p>
+      <h1 data-cy="story-end-heading">Prototype complete</h1>
+      <p data-cy="story-end-body">
         The authored prologue stops here. Later chapters continue from the
         updated map.
       </p>
-      <div>
-        <button type="button" onclick={reset}>Replay from the title</button
-        ><button type="button" class="secondary" onclick={() => go("map")}
-          >Return to the updated map</button
+      <div data-cy="story-end-actions">
+        <button type="button" data-cy="story-end-replay" onclick={reset}
+          >Replay from the title</button
+        ><button
+          type="button"
+          class="secondary"
+          data-cy="story-end-return-map"
+          onclick={() => go("map")}>Return to the updated map</button
         >
       </div>
     </main>
@@ -370,6 +388,7 @@
     <button
       type="button"
       class="global-pause secondary"
+      data-cy="story-global-pause"
       onclick={(event) => openOverlay("pause", event)}>Open pause menu</button
     >
   {/if}

@@ -15,30 +15,57 @@
   {onclose}
   {restoreFocusTo}
 >
-  <p>
+  <p data-cy="story-save-load-note">
     Prototype-local state only. Auto and Skip are experimental, not fully
     functional.
   </p>
-  {#if mode === "saving"}<p role="status" aria-busy="true">
+  {#if mode === "saving"}<p
+      role="status"
+      aria-busy="true"
+      data-cy="story-save-load-saving"
+    >
       Saving prototype state…
     </p>
-  {:else if mode === "success"}<p role="status">
+  {:else if mode === "success"}<p
+      role="status"
+      data-cy="story-save-load-success"
+    >
       Save complete. Manual slot 1 updated.
     </p>
-  {:else if mode === "overwrite"}<div role="alert">
-      <h3>Overwrite manual slot?</h3>
-      <p>Replace its mock progress with current state.</p>
-      <button type="button" onclick={onsave}>Confirm overwrite</button>
+  {:else if mode === "overwrite"}<div
+      role="alert"
+      data-cy="story-save-load-overwrite"
+    >
+      <h3 data-cy="story-save-load-overwrite-heading">
+        Overwrite manual slot?
+      </h3>
+      <p data-cy="story-save-load-overwrite-message">
+        Replace its mock progress with current state.
+      </p>
+      <button
+        type="button"
+        data-cy="story-save-load-overwrite-confirm"
+        onclick={onsave}>Confirm overwrite</button
+      >
     </div>
-  {:else if mode === "failure"}<div role="alert">
-      <h3>Storage unavailable</h3>
-      <p>Current in-memory story remains playable.</p>
-      <button type="button" onclick={onretry}>Retry save</button><button
+  {:else if mode === "failure"}<div
+      role="alert"
+      data-cy="story-save-load-failure"
+    >
+      <h3 data-cy="story-save-load-failure-heading">Storage unavailable</h3>
+      <p data-cy="story-save-load-failure-message">
+        Current in-memory story remains playable.
+      </p>
+      <button type="button" data-cy="story-save-load-retry" onclick={onretry}
+        >Retry save</button
+      ><button
         type="button"
         class="secondary"
+        data-cy="story-save-load-continue"
         onclick={oncontinue}>Continue Without Saving</button
       >
     </div>
-  {:else}<button type="button" onclick={onsave}>Save to manual slot 1</button
+  {:else}<button type="button" data-cy="story-save-load-save" onclick={onsave}
+      >Save to manual slot 1</button
     >{/if}
 </OverlayShell>

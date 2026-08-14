@@ -372,3 +372,22 @@ Nothing else regressed
 
 - [ ] Open `#/duel`, `#/decks` and `#/story` in turn — all three still mount and behave
       exactly as in T7–T9; the browser console stays empty.
+
+## T11 data-cy-contract-extension
+
+Machine-verified: `tests/unit/data-cy-coverage.test.ts` now scans `src/app/`, `src/shell/`,
+`src/deck-editor/` and `src/story/` for presence, kebab-case and uniqueness.
+
+Confirm the uniqueness check bites
+
+- [ ] Change one `data-cy` in `src/story/screens/TitleScreen.svelte` to duplicate another in
+      the same file (e.g. `story-title-tagline` → `story-title-heading`).
+- [ ] Run `npx vitest run tests/unit/data-cy-coverage.test.ts` — `static data-cy values are
+      unique across the contract roots` fails with
+      `story-title-heading: src/story/screens/TitleScreen.svelte, src/story/screens/TitleScreen.svelte`.
+- [ ] Revert the change and re-run — 32 tests pass.
+
+Nothing else regressed
+
+- [ ] Open `#/`, `#/decks`, `#/story` and `#/admin` — layout, styling and behaviour are
+      unchanged; `data-cy` is a test hook only.

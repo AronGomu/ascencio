@@ -105,20 +105,26 @@
   data-cy="deck-library"
   aria-labelledby="deck-library-heading"
 >
-  <header>
-    <div>
-      <p>Local decks</p>
-      <h1 id="deck-library-heading">Deck Library</h1>
-      <span
+  <header data-cy="deck-library-header">
+    <div data-cy="deck-library-titles">
+      <p data-cy="deck-library-eyebrow">Local decks</p>
+      <h1 id="deck-library-heading" data-cy="deck-library-heading">
+        Deck Library
+      </h1>
+      <span data-cy="deck-library-subtitle"
         >Visual Novel chooses a deck ID. This module stores and resolves decks.</span
       >
     </div>
-    <div class="actions">
-      <button type="button" class="secondary" onclick={onimport}
-        >Import YDK</button
+    <div class="actions" data-cy="deck-library-actions">
+      <button
+        type="button"
+        class="secondary"
+        data-cy="deck-library-import"
+        onclick={onimport}>Import YDK</button
       >
       <button
         type="button"
+        data-cy="deck-library-create"
         onclick={() => {
           creating = true;
           createName = "";
@@ -128,28 +134,42 @@
     </div>
   </header>
 
-  {#if message}<p class="message" role="status">{message}</p>{/if}
+  {#if message}<p class="message" role="status" data-cy="deck-library-message">
+      {message}
+    </p>{/if}
 
-  <div class="tools">
-    <label>
-      <span>Search decks</span>
-      <input type="search" bind:value={search} placeholder="Deck name" />
+  <div class="tools" data-cy="deck-library-tools">
+    <label data-cy="deck-library-search-field">
+      <span data-cy="deck-library-search-label">Search decks</span>
+      <input
+        type="search"
+        bind:value={search}
+        placeholder="Deck name"
+        data-cy="deck-library-search-input"
+      />
     </label>
-    <label>
-      <span>Sort</span>
-      <select bind:value={sort}>
-        <option value="modified">Last modified</option>
-        <option value="name">Name</option>
+    <label data-cy="deck-library-sort-field">
+      <span data-cy="deck-library-sort-label">Sort</span>
+      <select bind:value={sort} data-cy="deck-library-sort-select">
+        <option value="modified" data-cy="deck-library-sort-option-modified"
+          >Last modified</option
+        >
+        <option value="name" data-cy="deck-library-sort-option-name"
+          >Name</option
+        >
       </select>
     </label>
   </div>
 
   {#if decks.length === 0}
-    <div class="empty">
-      <h2>No local decks</h2>
-      <p>Create a blank deck or import YDK text.</p>
+    <div class="empty" data-cy="deck-library-empty">
+      <h2 data-cy="deck-library-empty-heading">No local decks</h2>
+      <p data-cy="deck-library-empty-message">
+        Create a blank deck or import YDK text.
+      </p>
       <button
         type="button"
+        data-cy="deck-library-empty-create"
         onclick={() => {
           creating = true;
           void focusDialog();
@@ -157,35 +177,48 @@
       >
     </div>
   {:else if filtered.length === 0}
-    <div class="empty">
-      <h2>No matching decks</h2>
-      <button type="button" class="secondary" onclick={() => (search = "")}
-        >Clear search</button
+    <div class="empty" data-cy="deck-library-no-matches">
+      <h2 data-cy="deck-library-no-matches-heading">No matching decks</h2>
+      <button
+        type="button"
+        class="secondary"
+        data-cy="deck-library-clear-search"
+        onclick={() => (search = "")}>Clear search</button
       >
     </div>
   {:else}
-    <ul class="deck-list">
+    <ul class="deck-list" data-cy="deck-library-list">
       {#each filtered as deck (deck.id)}
-        <li>
+        <li data-cy={`deck-library-row-${deck.id}`}>
           <button
             type="button"
             class="deck-open"
+            data-cy={`deck-library-open-${deck.id}`}
             onclick={() => onopen(deck.id)}
           >
-            <strong>{deck.name}</strong>
-            <span
+            <strong data-cy={`deck-library-name-${deck.id}`}>{deck.name}</strong
+            >
+            <span data-cy={`deck-library-counts-${deck.id}`}
               >Main {deck.main.length} · Extra {deck.extra.length} · Side {deck
                 .side.length}</span
             >
-            <span class:error={deck.validation.status === "errors"}
+            <span
+              class:error={deck.validation.status === "errors"}
+              data-cy={`deck-library-status-${deck.id}`}
               >{deck.validation.status}</span
             >
-            <small>Updated {new Date(deck.updatedAt).toLocaleString()}</small>
+            <small data-cy={`deck-library-updated-${deck.id}`}
+              >Updated {new Date(deck.updatedAt).toLocaleString()}</small
+            >
           </button>
-          <div class="row-actions">
+          <div
+            class="row-actions"
+            data-cy={`deck-library-row-actions-${deck.id}`}
+          >
             <button
               type="button"
               class="secondary"
+              data-cy={`deck-library-rename-${deck.id}`}
               onclick={() => {
                 renaming = deck;
                 renameName = deck.name;
@@ -195,16 +228,19 @@
             <button
               type="button"
               class="secondary"
+              data-cy={`deck-library-duplicate-${deck.id}`}
               onclick={() => onduplicate(deck.id)}>Duplicate</button
             >
             <button
               type="button"
               class="secondary"
+              data-cy={`deck-library-export-${deck.id}`}
               onclick={() => onexport(deck)}>Export</button
             >
             <button
               type="button"
               class="danger"
+              data-cy={`deck-library-delete-${deck.id}`}
               onclick={() => {
                 deleting = deck;
                 void focusDialog();
@@ -224,46 +260,62 @@
     tabindex="-1"
     aria-modal="true"
     aria-labelledby="create-heading"
+    data-cy="deck-library-create-dialog"
     onkeydown={(event) =>
       handleModalKeydown(
         event,
         () => void closeDialog(() => (creating = false)),
       )}
   >
-    <h2 id="create-heading" tabindex="-1" bind:this={dialogHeading}>
+    <h2
+      id="create-heading"
+      tabindex="-1"
+      data-cy="deck-library-create-heading"
+      bind:this={dialogHeading}
+    >
       Create blank deck
     </h2>
     <form
       aria-busy={dialogBusy}
+      data-cy="deck-library-create-form"
       onsubmit={(event) => {
         event.preventDefault();
         void submitCreate();
       }}
     >
-      <label
-        ><span>Deck name</span><input
+      <label data-cy="deck-library-create-name-field"
+        ><span data-cy="deck-library-create-name-label">Deck name</span><input
+          data-cy="deck-library-create-name-input"
           bind:this={dialogInput}
           bind:value={createName}
           maxlength={MAXIMUM_DECK_NAME_LENGTH}
         /></label
       >
       {#if createNameDuplicate}
-        <p class="name-warning" role="status">
+        <p
+          class="name-warning"
+          role="status"
+          data-cy="deck-library-create-duplicate-name"
+        >
           Another deck already uses this name. IDs remain independent.
         </p>
       {/if}
-      <div class="actions">
-        <small>Enter to create · Esc to cancel</small>
+      <div class="actions" data-cy="deck-library-create-actions">
+        <small data-cy="deck-library-create-hint"
+          >Enter to create · Esc to cancel</small
+        >
         <button
           type="button"
           class="secondary"
           disabled={dialogBusy}
+          data-cy="deck-library-create-cancel"
           onclick={() => void closeDialog(() => (creating = false))}
           >Cancel</button
         >
         <button
           type="submit"
           disabled={dialogBusy || createName.trim().length === 0}
+          data-cy="deck-library-create-submit"
           >{dialogBusy ? "Creating…" : "Create"}</button
         >
       </div>
@@ -278,46 +330,62 @@
     tabindex="-1"
     aria-modal="true"
     aria-labelledby="rename-heading"
+    data-cy="deck-library-rename-dialog"
     onkeydown={(event) =>
       handleModalKeydown(
         event,
         () => void closeDialog(() => (renaming = null)),
       )}
   >
-    <h2 id="rename-heading" tabindex="-1" bind:this={dialogHeading}>
+    <h2
+      id="rename-heading"
+      tabindex="-1"
+      data-cy="deck-library-rename-heading"
+      bind:this={dialogHeading}
+    >
       Rename {renaming.name}
     </h2>
     <form
       aria-busy={dialogBusy}
+      data-cy="deck-library-rename-form"
       onsubmit={(event) => {
         event.preventDefault();
         void submitRename();
       }}
     >
-      <label
-        ><span>Deck name</span><input
+      <label data-cy="deck-library-rename-name-field"
+        ><span data-cy="deck-library-rename-name-label">Deck name</span><input
+          data-cy="deck-library-rename-name-input"
           bind:this={dialogInput}
           bind:value={renameName}
           maxlength={MAXIMUM_DECK_NAME_LENGTH}
         /></label
       >
       {#if renameNameDuplicate}
-        <p class="name-warning" role="status">
+        <p
+          class="name-warning"
+          role="status"
+          data-cy="deck-library-rename-duplicate-name"
+        >
           Another deck already uses this name. IDs remain independent.
         </p>
       {/if}
-      <div class="actions">
-        <small>Enter to rename · Esc to cancel</small>
+      <div class="actions" data-cy="deck-library-rename-actions">
+        <small data-cy="deck-library-rename-hint"
+          >Enter to rename · Esc to cancel</small
+        >
         <button
           type="button"
           class="secondary"
           disabled={dialogBusy}
+          data-cy="deck-library-rename-cancel"
           onclick={() => void closeDialog(() => (renaming = null))}
           >Cancel</button
         >
         <button
           type="submit"
           disabled={dialogBusy || renameName.trim().length === 0}
+          data-cy="deck-library-rename-submit"
           >{dialogBusy ? "Renaming…" : "Rename"}</button
         >
       </div>
@@ -333,27 +401,37 @@
     aria-modal="true"
     aria-busy={dialogBusy}
     aria-labelledby="delete-heading"
+    data-cy="deck-library-delete-dialog"
     onkeydown={(event) =>
       handleModalKeydown(
         event,
         () => void closeDialog(() => (deleting = null)),
       )}
   >
-    <h2 id="delete-heading" tabindex="-1" bind:this={dialogHeading}>
+    <h2
+      id="delete-heading"
+      tabindex="-1"
+      data-cy="deck-library-delete-heading"
+      bind:this={dialogHeading}
+    >
       Delete {deleting.name}?
     </h2>
-    <p>Local deck and retained history will be removed.</p>
-    <div class="actions">
+    <p data-cy="deck-library-delete-message">
+      Local deck and retained history will be removed.
+    </p>
+    <div class="actions" data-cy="deck-library-delete-actions">
       <button
         type="button"
         class="secondary"
         disabled={dialogBusy}
+        data-cy="deck-library-delete-cancel"
         onclick={() => void closeDialog(() => (deleting = null))}>Cancel</button
       >
       <button
         type="button"
         class="danger"
         disabled={dialogBusy}
+        data-cy="deck-library-delete-confirm"
         onclick={() => void confirmDelete()}
         >{dialogBusy ? "Deleting…" : `Delete ${deleting.name}`}</button
       >

@@ -77,6 +77,7 @@
 <section
   class="narrative-stage"
   data-testid="narrative-stage"
+  data-cy="story-narrative-stage"
   aria-label="Narrative scene"
   onclick={handleStageClick}
 >
@@ -84,6 +85,7 @@
     class="background"
     class:fallback={missingAssets}
     data-testid="narrative-background"
+    data-cy="story-narrative-background"
     data-background={beat.background}
     data-fallback={missingAssets}
     role="img"
@@ -92,7 +94,11 @@
       : `${beat.background} background`}
   ></div>
 
-  <div class="characters" aria-label="Characters present">
+  <div
+    class="characters"
+    aria-label="Characters present"
+    data-cy="story-narrative-characters"
+  >
     {#each beat.characters as character, index (`${character}-${index}`)}
       <div
         class:missing={missingAssets}
@@ -102,84 +108,120 @@
           ? `Missing character art: ${characterName(character)}`
           : characterName(character)}
         data-expression={character}
+        data-cy={`story-narrative-character-${character}-${index}`}
       >
-        <span aria-hidden="true"
+        <span
+          aria-hidden="true"
+          data-cy={`story-narrative-character-glyph-${character}-${index}`}
           >{missingAssets ? "?" : character.startsWith("rin") ? "R" : "K"}</span
         >
       </div>
     {/each}
   </div>
 
-  <div class="utility-bar" aria-label="Narrative utilities">
+  <div
+    class="utility-bar"
+    aria-label="Narrative utilities"
+    data-cy="story-narrative-utilities"
+  >
     <button
       type="button"
       class="secondary compact"
+      data-cy="story-narrative-history"
       onclick={() => onutility("history")}>History</button
     >
     <button
       type="button"
       class="secondary compact"
+      data-cy="story-narrative-auto"
       title="Experimental; not functional">Auto · experimental</button
     >
     <button
       type="button"
       class="secondary compact"
+      data-cy="story-narrative-skip"
       title="Experimental; not functional">Skip · experimental</button
     >
     <button
       type="button"
       class="secondary compact"
+      data-cy="story-narrative-hide-ui"
       onclick={() => (uiHidden = true)}>Hide UI</button
     >
     <button
       type="button"
       class="secondary compact"
+      data-cy="story-narrative-save"
       onclick={() => onutility("save")}>Save</button
     >
     <button
       type="button"
       class="secondary compact"
+      data-cy="story-narrative-load"
       onclick={() => onutility("load")}>Load</button
     >
     <button
       type="button"
       class="secondary compact"
+      data-cy="story-narrative-settings"
       onclick={() => onutility("settings")}>Settings</button
     >
     <button
       type="button"
       class="secondary compact"
+      data-cy="story-narrative-pause"
       onclick={() => onutility("pause")}>Pause</button
     >
   </div>
 
   {#if uiHidden}
-    <button type="button" class="show-ui" onclick={() => (uiHidden = false)}
-      >Show UI</button
+    <button
+      type="button"
+      class="show-ui"
+      data-cy="story-narrative-show-ui"
+      onclick={() => (uiHidden = false)}>Show UI</button
     >
   {:else}
     <article
       class="dialogue"
       data-kind={beat.kind}
       aria-label="Current dialogue"
+      data-cy="story-narrative-dialogue"
     >
-      {#if beat.speaker}<p class="speaker">{beat.speaker}</p>{/if}
-      <p class="line" aria-live="off">{beat.text}</p>
-      <span class="advance-cue" aria-hidden="true">◆</span>
-      <span class="visually-hidden">Press Enter, Space, or tap to advance.</span
+      {#if beat.speaker}<p class="speaker" data-cy="story-narrative-speaker">
+          {beat.speaker}
+        </p>{/if}
+      <p class="line" aria-live="off" data-cy="story-narrative-text">
+        {beat.text}
+      </p>
+      <span class="advance-cue" aria-hidden="true" data-cy="story-narrative-cue"
+        >◆</span
       >
-      <span data-testid="narrative-cursor" class="cursor"
-        >Beat {narrativeIndex + 1}</span
+      <span class="visually-hidden" data-cy="story-narrative-advance-hint"
+        >Press Enter, Space, or tap to advance.</span
+      >
+      <span
+        data-testid="narrative-cursor"
+        class="cursor"
+        data-cy="story-narrative-cursor">Beat {narrativeIndex + 1}</span
       >
     </article>
 
     {#if choices.length > 0}
-      <div class="choices" role="group" aria-labelledby="choice-heading">
-        <h2 id="choice-heading">Choose your response</h2>
+      <div
+        class="choices"
+        role="group"
+        aria-labelledby="choice-heading"
+        data-cy="story-narrative-choices"
+      >
+        <h2 id="choice-heading" data-cy="story-narrative-choices-heading">
+          Choose your response
+        </h2>
         {#each choices as choice, index (choice.id)}
           {#if index === 0}
             <button
               type="button"
+              data-cy={`story-choice-${choice.id}`}
               bind:this={firstChoice}
               aria-pressed={selectedChoice === choice.id}
               onclick={() => onchoose(choice.id)}>{choice.label}</button
@@ -187,6 +229,7 @@
           {:else}
             <button
               type="button"
+              data-cy={`story-choice-${choice.id}`}
               aria-pressed={selectedChoice === choice.id}
               onclick={() => onchoose(choice.id)}>{choice.label}</button
             >
@@ -194,7 +237,11 @@
         {/each}
       </div>
     {/if}
-    {#if choiceResponse}<p class="choice-response" role="status">
+    {#if choiceResponse}<p
+        class="choice-response"
+        role="status"
+        data-cy="story-narrative-choice-response"
+      >
         {choiceResponse}
       </p>{/if}
   {/if}

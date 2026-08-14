@@ -10,39 +10,64 @@
   }
 </script>
 
-<section class="reward-screen" aria-labelledby="reward-heading">
-  <p class="eyebrow">Progress updated</p>
-  <div class="reward-icon" aria-hidden="true">◇</div>
-  <h1 id="reward-heading">Signal Cipher</h1>
-  <p>
+<section
+  class="reward-screen"
+  aria-labelledby="reward-heading"
+  data-cy="story-reward-screen"
+>
+  <p class="eyebrow" data-cy="story-reward-eyebrow">Progress updated</p>
+  <div class="reward-icon" aria-hidden="true" data-cy="story-reward-icon">
+    ◇
+  </div>
+  <h1 id="reward-heading" data-cy="story-reward-heading">Signal Cipher</h1>
+  <p data-cy="story-reward-body">
     You decoded a route key. The Archive route can now be inspected from the
     city map.
   </p>
-  <dl>
-    <div>
-      <dt>Old Arena</dt>
-      <dd>Completed · remains available</dd>
+  <dl data-cy="story-reward-facts">
+    <div data-cy="story-reward-location-row">
+      <dt data-cy="story-reward-location-term">Old Arena</dt>
+      <dd data-cy="story-reward-location-value">
+        Completed · remains available
+      </dd>
     </div>
-    <div>
-      <dt>Objective</dt>
-      <dd>Inspect the opened Archive route</dd>
+    <div data-cy="story-reward-objective-row">
+      <dt data-cy="story-reward-objective-term">Objective</dt>
+      <dd data-cy="story-reward-objective-value">
+        Inspect the opened Archive route
+      </dd>
     </div>
   </dl>
   {#if autosaveStatus === "success"}
-    <p role="status" class="autosave">
+    <p role="status" class="autosave" data-cy="story-reward-autosave-success">
       Autosave complete at stable story boundary.
     </p>
   {:else if autosaveStatus === "failure"}
-    <div class="autosave failure" role="alert">
-      <p>Autosave failed. In-memory progress remains playable.</p>
-      <button type="button" class="secondary" onclick={onretry}
-        >Retry autosave</button
+    <div
+      class="autosave failure"
+      role="alert"
+      data-cy="story-reward-autosave-failure"
+    >
+      <p data-cy="story-reward-autosave-failure-message">
+        Autosave failed. In-memory progress remains playable.
+      </p>
+      <button
+        type="button"
+        class="secondary"
+        data-cy="story-reward-autosave-retry"
+        onclick={onretry}>Retry autosave</button
       >
     </div>
   {:else}
-    <p role="status" class="autosave">Autosave pending.</p>
+    <p role="status" class="autosave" data-cy="story-reward-autosave-pending">
+      Autosave pending.
+    </p>
   {/if}
-  <button type="button" disabled={continued} onclick={proceed}
+  <button
+    type="button"
+    disabled={continued}
+    data-cy="story-reward-continue"
+    onclick={proceed}
     >{continued ? "Opening map…" : "Continue to updated map"}</button
   >
 </section>

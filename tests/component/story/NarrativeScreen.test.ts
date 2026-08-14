@@ -106,4 +106,11 @@ describe("NarrativeScreen", () => {
     expect(screen.getByTestId("narrative-cursor").textContent).toContain("8");
     expect(screen.getByText(/You came/).getAttribute("aria-live")).toBe("off");
   });
+
+  it("exposes the narrative line through its data-cy", () => {
+    const { container } = render(NarrativeScreen, { beat: PROLOGUE.beats[0]! });
+    expect(
+      container.querySelector('[data-cy="story-narrative-text"]')?.textContent,
+    ).toContain("Rain turned");
+  });
 });

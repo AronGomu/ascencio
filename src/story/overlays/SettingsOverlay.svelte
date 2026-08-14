@@ -20,50 +20,68 @@
   {onclose}
   {restoreFocusTo}
 >
-  <div class="settings">
-    <label
+  <div class="settings" data-cy="story-settings">
+    <label data-cy="story-settings-text-speed-field"
       >Text speed <input
         aria-label="Text speed"
         type="number"
         min="0"
         max="100"
+        data-cy="story-settings-text-speed"
         bind:value={textSpeed}
       /></label
     >
-    <label
+    <label data-cy="story-settings-auto-speed-field"
       >Auto speed <input
         aria-label="Auto speed"
         type="range"
         min="1"
         max="8"
+        data-cy="story-settings-auto-speed"
         bind:value={autoSpeed}
       /></label
     >
-    <label
-      >Transitions <select aria-label="Transitions" bind:value={transitions}
-        ><option value="standard">Standard</option><option value="reduced"
+    <label data-cy="story-settings-transitions-field"
+      >Transitions <select
+        aria-label="Transitions"
+        data-cy="story-settings-transitions"
+        bind:value={transitions}
+        ><option value="standard" data-cy="story-settings-transitions-standard"
+          >Standard</option
+        ><option value="reduced" data-cy="story-settings-transitions-reduced"
           >Reduced</option
-        ><option value="off">Off</option></select
+        ><option value="off" data-cy="story-settings-transitions-off"
+          >Off</option
+        ></select
       ></label
     >
-    <label
+    <label data-cy="story-settings-music-volume-field"
       >Music volume <input
         aria-label="Music volume"
         type="range"
         disabled
+        data-cy="story-settings-music-volume"
       /></label
     >
-    <label
+    <label data-cy="story-settings-sound-volume-field"
       >Sound volume <input
         aria-label="Sound volume"
         type="range"
         disabled
+        data-cy="story-settings-sound-volume"
       /></label
     >
-    <p>Audio not included in this prototype.</p>
-    <p>Fullscreen {fullscreenSupported ? "supported" : "unavailable"}</p>
-    <button type="button" class="secondary" onclick={reset}
-      >Reset settings</button
+    <p data-cy="story-settings-audio-note">
+      Audio not included in this prototype.
+    </p>
+    <p data-cy="story-settings-fullscreen-support">
+      Fullscreen {fullscreenSupported ? "supported" : "unavailable"}
+    </p>
+    <button
+      type="button"
+      class="secondary"
+      data-cy="story-settings-reset"
+      onclick={reset}>Reset settings</button
     >
   </div>
 </OverlayShell>

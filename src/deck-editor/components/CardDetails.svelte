@@ -23,95 +23,142 @@
           : "Unlimited";
 </script>
 
-<aside class="details" aria-labelledby="card-details-heading">
-  <p class="section-label">Pinned card details</p>
+<aside
+  class="details"
+  aria-labelledby="card-details-heading"
+  data-cy="deck-card-details"
+>
+  <p class="section-label" data-cy="deck-card-details-eyebrow">
+    Pinned card details
+  </p>
   {#if card === null && missingCode !== null}
-    <h2 id="card-details-heading">Unknown card #{missingCode}</h2>
-    <div class="missing-details" role="alert">
-      <p class="section-label">Missing catalog entry</p>
-      <p class="muted">
+    <h2 id="card-details-heading" data-cy="deck-card-details-missing-heading">
+      Unknown card #{missingCode}
+    </h2>
+    <div
+      class="missing-details"
+      role="alert"
+      data-cy="deck-card-details-missing"
+    >
+      <p class="section-label" data-cy="deck-card-details-missing-label">
+        Missing catalog entry
+      </p>
+      <p class="muted" data-cy="deck-card-details-missing-message">
         Card data, text, and art are unavailable. Remove placeholder from its
         deck zone or restore catalog data.
       </p>
-      <dl>
-        <div>
-          <dt>Code</dt>
-          <dd>{missingCode}</dd>
+      <dl data-cy="deck-card-details-missing-facts">
+        <div data-cy="deck-card-details-missing-code-row">
+          <dt data-cy="deck-card-details-missing-code-term">Code</dt>
+          <dd data-cy="deck-card-details-missing-code-value">{missingCode}</dd>
         </div>
-        <div>
-          <dt>Copies</dt>
-          <dd>
+        <div data-cy="deck-card-details-missing-copies-row">
+          <dt data-cy="deck-card-details-missing-copies-term">Copies</dt>
+          <dd data-cy="deck-card-details-missing-copies-value">
             {copies.main} Main · {copies.extra} Extra · {copies.side} Side
           </dd>
         </div>
       </dl>
     </div>
   {:else if card === null}
-    <h2 id="card-details-heading">Select a card</h2>
-    <p class="muted">
+    <h2 id="card-details-heading" data-cy="deck-card-details-empty-heading">
+      Select a card
+    </h2>
+    <p class="muted" data-cy="deck-card-details-empty-message">
       Choose a catalog or deck tile to inspect full card text.
     </p>
   {:else}
-    <div class="art">
+    <div class="art" data-cy="deck-card-details-art">
       {#if card.imageUrl}
-        <img src={card.imageUrl} alt={card.name} />
+        <img
+          src={card.imageUrl}
+          alt={card.name}
+          data-cy="deck-card-details-image"
+        />
       {:else}
-        <span aria-hidden="true">{card.family.slice(0, 1).toUpperCase()}</span>
-        <small>Artwork unavailable</small>
+        <span aria-hidden="true" data-cy="deck-card-details-art-glyph"
+          >{card.family.slice(0, 1).toUpperCase()}</span
+        >
+        <small data-cy="deck-card-details-art-fallback"
+          >Artwork unavailable</small
+        >
       {/if}
-      <span class={`limit limit-${limit}`}>{limit}</span>
+      <span
+        class={`limit limit-${limit}`}
+        data-cy="deck-card-details-limit-badge">{limit}</span
+      >
     </div>
-    <h2 id="card-details-heading">{card.name}</h2>
-    <p class="type-line">{[card.family, ...card.subtypes].join(" · ")}</p>
-    <dl>
-      <div>
-        <dt>Code</dt>
-        <dd>{card.code}</dd>
+    <h2 id="card-details-heading" data-cy="deck-card-details-heading">
+      {card.name}
+    </h2>
+    <p class="type-line" data-cy="deck-card-details-type-line">
+      {[card.family, ...card.subtypes].join(" · ")}
+    </p>
+    <dl data-cy="deck-card-details-facts">
+      <div data-cy="deck-card-details-code-row">
+        <dt data-cy="deck-card-details-code-term">Code</dt>
+        <dd data-cy="deck-card-details-code-value">{card.code}</dd>
       </div>
-      {#if card.attribute}<div>
-          <dt>Attribute</dt>
-          <dd>{card.attribute}</dd>
+      {#if card.attribute}<div data-cy="deck-card-details-attribute-row">
+          <dt data-cy="deck-card-details-attribute-term">Attribute</dt>
+          <dd data-cy="deck-card-details-attribute-value">{card.attribute}</dd>
         </div>{/if}
-      {#if card.race}<div>
-          <dt>Monster type</dt>
-          <dd>{card.race}</dd>
+      {#if card.race}<div data-cy="deck-card-details-race-row">
+          <dt data-cy="deck-card-details-race-term">Monster type</dt>
+          <dd data-cy="deck-card-details-race-value">{card.race}</dd>
         </div>{/if}
-      {#if card.ratingLabel}<div>
-          <dt>{card.ratingLabel}</dt>
-          <dd>{card.levelRankLink}</dd>
+      {#if card.ratingLabel}<div data-cy="deck-card-details-rating-row">
+          <dt data-cy="deck-card-details-rating-term">{card.ratingLabel}</dt>
+          <dd data-cy="deck-card-details-rating-value">{card.levelRankLink}</dd>
         </div>{/if}
-      {#if card.attack !== null}<div>
-          <dt>ATK</dt>
-          <dd>{card.attack}</dd>
+      {#if card.attack !== null}<div data-cy="deck-card-details-attack-row">
+          <dt data-cy="deck-card-details-attack-term">ATK</dt>
+          <dd data-cy="deck-card-details-attack-value">{card.attack}</dd>
         </div>{/if}
-      {#if card.defense !== null}<div>
-          <dt>DEF</dt>
-          <dd>{card.defense}</dd>
+      {#if card.defense !== null}<div data-cy="deck-card-details-defense-row">
+          <dt data-cy="deck-card-details-defense-term">DEF</dt>
+          <dd data-cy="deck-card-details-defense-value">{card.defense}</dd>
         </div>{/if}
-      {#if card.pendulumScales}<div>
-          <dt>Scales</dt>
-          <dd>{card.pendulumScales.join(" / ")}</dd>
+      {#if card.pendulumScales}<div data-cy="deck-card-details-scales-row">
+          <dt data-cy="deck-card-details-scales-term">Scales</dt>
+          <dd data-cy="deck-card-details-scales-value">
+            {card.pendulumScales.join(" / ")}
+          </dd>
         </div>{/if}
-      {#if card.linkMarkers.length > 0}<div>
-          <dt>Markers</dt>
-          <dd>{card.linkMarkers.join(", ")}</dd>
+      {#if card.linkMarkers.length > 0}<div
+          data-cy="deck-card-details-markers-row"
+        >
+          <dt data-cy="deck-card-details-markers-term">Markers</dt>
+          <dd data-cy="deck-card-details-markers-value">
+            {card.linkMarkers.join(", ")}
+          </dd>
         </div>{/if}
-      <div>
-        <dt>Target</dt>
-        <dd>{card.canonicalZone === "main" ? "Main Deck" : "Extra Deck"}</dd>
+      <div data-cy="deck-card-details-target-row">
+        <dt data-cy="deck-card-details-target-term">Target</dt>
+        <dd data-cy="deck-card-details-target-value">
+          {card.canonicalZone === "main" ? "Main Deck" : "Extra Deck"}
+        </dd>
       </div>
-      <div>
-        <dt>Limit</dt>
-        <dd>{limitLabel} ({limit})</dd>
+      <div data-cy="deck-card-details-limit-row">
+        <dt data-cy="deck-card-details-limit-term">Limit</dt>
+        <dd data-cy="deck-card-details-limit-value">{limitLabel} ({limit})</dd>
       </div>
-      <div>
-        <dt>Copies</dt>
-        <dd>{copies.main} Main · {copies.extra} Extra · {copies.side} Side</dd>
+      <div data-cy="deck-card-details-copies-row">
+        <dt data-cy="deck-card-details-copies-term">Copies</dt>
+        <dd data-cy="deck-card-details-copies-value">
+          {copies.main} Main · {copies.extra} Extra · {copies.side} Side
+        </dd>
       </div>
     </dl>
-    <section class="effect-text" aria-label="Card text">
-      <h3>Card text</h3>
-      <p>{card.description || "No card text is available."}</p>
+    <section
+      class="effect-text"
+      aria-label="Card text"
+      data-cy="deck-card-details-text"
+    >
+      <h3 data-cy="deck-card-details-text-heading">Card text</h3>
+      <p data-cy="deck-card-details-text-body">
+        {card.description || "No card text is available."}
+      </p>
     </section>
   {/if}
 </aside>

@@ -35,6 +35,7 @@
   {draggable}
   aria-label={`${name}. ${limitLabel}, maximum ${limit}. ${currentCopies} copies in deck.`}
   aria-pressed={selected}
+  data-cy={`deck-tile-${code}`}
   data-card-code={code}
   data-deck-zone={zone}
   onclick={onselect}
@@ -48,15 +49,25 @@
     }
   }}
 >
-  <span class={`limit-badge limit-${limit}`} aria-hidden="true">{limit}</span>
+  <span
+    class={`limit-badge limit-${limit}`}
+    aria-hidden="true"
+    data-cy={`deck-tile-limit-${code}`}>{limit}</span
+  >
   {#if card?.imageUrl}
-    <img src={card.imageUrl} alt="" />
+    <img src={card.imageUrl} alt="" data-cy={`deck-tile-image-${code}`} />
   {:else}
-    <span class="art-placeholder" aria-hidden="true">
-      <span>{card === null ? "!" : card.family.slice(0, 1).toUpperCase()}</span>
+    <span
+      class="art-placeholder"
+      aria-hidden="true"
+      data-cy={`deck-tile-art-${code}`}
+    >
+      <span data-cy={`deck-tile-art-glyph-${code}`}
+        >{card === null ? "!" : card.family.slice(0, 1).toUpperCase()}</span
+      >
     </span>
   {/if}
-  <span class="card-name">{name}</span>
+  <span class="card-name" data-cy={`deck-tile-name-${code}`}>{name}</span>
 </button>
 
 <style>

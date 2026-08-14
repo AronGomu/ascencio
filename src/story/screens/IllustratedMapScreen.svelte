@@ -63,22 +63,45 @@
   }
 </script>
 
-<section class="map-screen" aria-labelledby="map-heading">
-  <header>
-    <p class="eyebrow">Chapter 1 · River district</p>
-    <h1 id="map-heading">City signal map</h1>
-    <p class="objective"><strong>Objective:</strong> {objective}</p>
+<section
+  class="map-screen"
+  aria-labelledby="map-heading"
+  data-cy="story-map-screen"
+>
+  <header data-cy="story-map-header">
+    <p class="eyebrow" data-cy="story-map-eyebrow">
+      Chapter 1 · River district
+    </p>
+    <h1 id="map-heading" data-cy="story-map-heading">City signal map</h1>
+    <p class="objective" data-cy="story-map-objective">
+      <strong data-cy="story-map-objective-label">Objective:</strong>
+      {objective}
+    </p>
     {#if choiceAcknowledgment}
-      <p class="choice-acknowledgment" role="status">
-        <strong>Earlier choice:</strong>
+      <p
+        class="choice-acknowledgment"
+        role="status"
+        data-cy="story-map-choice-acknowledgment"
+      >
+        <strong data-cy="story-map-choice-acknowledgment-label"
+          >Earlier choice:</strong
+        >
         {choiceAcknowledgment}
       </p>
     {/if}
   </header>
-  <div class="map-layout">
-    <div class="map-art">
-      <img src={mapAsset} alt="Illustrated city map of the river district" />
-      <div class="hotspots" aria-label="Map hotspots">
+  <div class="map-layout" data-cy="story-map-layout">
+    <div class="map-art" data-cy="story-map-art">
+      <img
+        src={mapAsset}
+        alt="Illustrated city map of the river district"
+        data-cy="story-map-image"
+      />
+      <div
+        class="hotspots"
+        aria-label="Map hotspots"
+        data-cy="story-map-hotspots"
+      >
         {#each visibleLocations as location (location.id)}
           <button
             type="button"
@@ -88,13 +111,16 @@
             style:left={details[location.id].x}
             style:top={details[location.id].y}
             data-location-id={location.id}
+            data-cy={`story-map-hotspot-${location.id}`}
             aria-label={label(location)}
             aria-disabled={location.access !== "available"}
             aria-pressed={selectedId === location.id}
             onfocus={() => inspect(location)}
             onmouseenter={() => inspect(location)}
             onclick={() => activate(location)}
-            ><span aria-hidden="true"
+            ><span
+              aria-hidden="true"
+              data-cy={`story-map-hotspot-marker-${location.id}`}
               >{location.access === "locked"
                 ? "◆"
                 : location.completed
@@ -105,22 +131,25 @@
         {/each}
       </div>
     </div>
-    <div class="map-sidebar">
-      <ul aria-label="Location list">
+    <div class="map-sidebar" data-cy="story-map-sidebar">
+      <ul aria-label="Location list" data-cy="story-map-location-list">
         {#each visibleLocations as location (location.id)}
-          <li>
+          <li data-cy={`story-map-location-row-${location.id}`}>
             <button
               type="button"
               class:locked={location.access === "locked"}
               class:completed={location.completed}
               data-location-id={location.id}
+              data-cy={`story-map-location-${location.id}`}
               aria-label={label(location)}
               aria-disabled={location.access !== "available"}
               aria-pressed={selectedId === location.id}
               onfocus={() => inspect(location)}
               onmouseenter={() => inspect(location)}
               onclick={() => activate(location)}
-              ><strong>{details[location.id].name}</strong><span
+              ><strong data-cy={`story-map-location-name-${location.id}`}
+                >{details[location.id].name}</strong
+              ><span data-cy={`story-map-location-status-${location.id}`}
                 >{details[location.id].marker} · {location.access}{location.completed
                   ? " · completed"
                   : ""}</span
@@ -130,19 +159,29 @@
         {/each}
       </ul>
       {#if selectedId}
-        <section class="detail" aria-label="Location detail">
-          <h2>{details[selectedId].name}</h2>
-          <p>{details[selectedId].summary}</p>
+        <section
+          class="detail"
+          aria-label="Location detail"
+          data-cy="story-map-detail"
+        >
+          <h2 data-cy="story-map-detail-heading">{details[selectedId].name}</h2>
+          <p data-cy="story-map-detail-summary">
+            {details[selectedId].summary}
+          </p>
           {#if locations.find(({ id }) => id === selectedId)?.access === "locked"}<p
               class="locked-reason"
+              data-cy="story-map-detail-locked-reason"
             >
               Locked: {details[selectedId].lockedReason ??
                 "Unavailable in this story state."}
             </p>{/if}
         </section>
       {/if}
-      {#if allowBack}<button type="button" class="secondary" onclick={onback}
-          >Back</button
+      {#if allowBack}<button
+          type="button"
+          class="secondary"
+          data-cy="story-map-back"
+          onclick={onback}>Back</button
         >{/if}
     </div>
   </div>

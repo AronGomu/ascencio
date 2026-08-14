@@ -107,15 +107,21 @@
   aria-modal="true"
   aria-labelledby="ydk-import-heading"
   aria-busy={isImporting}
+  data-cy="deck-ydk-import"
   onkeydown={(event) =>
     handleModalKeydown(event, () => {
       if (!isImporting) oncancel();
     })}
 >
-  <header>
-    <div>
-      <p>YDK import</p>
-      <h2 id="ydk-import-heading" tabindex="-1" bind:this={heading}>
+  <header data-cy="deck-ydk-import-header">
+    <div data-cy="deck-ydk-import-titles">
+      <p data-cy="deck-ydk-import-eyebrow">YDK import</p>
+      <h2
+        id="ydk-import-heading"
+        tabindex="-1"
+        data-cy="deck-ydk-import-heading"
+        bind:this={heading}
+      >
         Import deck list
       </h2>
     </div>
@@ -123,23 +129,26 @@
       type="button"
       class="secondary"
       disabled={isImporting}
+      data-cy="deck-ydk-import-cancel"
       onclick={oncancel}>Cancel</button
     >
   </header>
   {#if requireName}
-    <label>
-      <span>Deck name</span>
+    <label data-cy="deck-ydk-import-name-field">
+      <span data-cy="deck-ydk-import-name-label">Deck name</span>
       <input
         bind:value={deckName}
         maxlength={MAXIMUM_DECK_NAME_LENGTH}
         disabled={isImporting}
+        data-cy="deck-ydk-import-name-input"
       />
     </label>
   {/if}
-  <label>
-    <span>Choose .ydk file</span>
+  <label data-cy="deck-ydk-import-file-field">
+    <span data-cy="deck-ydk-import-file-label">Choose .ydk file</span>
     <input
       type="file"
+      data-cy="deck-ydk-import-file-input"
       accept=".ydk,text/plain"
       disabled={isImporting}
       aria-invalid={result?.type === "invalid"}
@@ -149,9 +158,10 @@
       onchange={(event) => void loadFile(event)}
     />
   </label>
-  <label>
-    <span>Or paste YDK text</span>
+  <label data-cy="deck-ydk-import-source-field">
+    <span data-cy="deck-ydk-import-source-label">Or paste YDK text</span>
     <textarea
+      data-cy="deck-ydk-import-source-input"
       bind:value={source}
       oninput={sourceChanged}
       rows="12"
@@ -165,43 +175,65 @@
   <button
     type="button"
     disabled={isImporting || source.trim().length === 0}
+    data-cy="deck-ydk-import-preview"
     onclick={preview}>Preview import</button
   >
 
   {#if result?.type === "invalid"}
-    <div id="ydk-import-error" class="error" role="alert">
-      <h3>Import could not be parsed</h3>
-      <p>{result.message}</p>
-      {#if result.line !== null}<p>Check line {result.line}.</p>{/if}
+    <div
+      id="ydk-import-error"
+      class="error"
+      role="alert"
+      data-cy="deck-ydk-import-error"
+    >
+      <h3 data-cy="deck-ydk-import-error-heading">
+        Import could not be parsed
+      </h3>
+      <p data-cy="deck-ydk-import-error-message">{result.message}</p>
+      {#if result.line !== null}<p data-cy="deck-ydk-import-error-line">
+          Check line {result.line}.
+        </p>{/if}
     </div>
   {:else if result?.type === "ready"}
-    <div class="preview">
-      <h3>Import preview</h3>
+    <div class="preview" data-cy="deck-ydk-import-preview-panel">
+      <h3 data-cy="deck-ydk-import-preview-heading">Import preview</h3>
       {#if selectedFilename !== null}
-        <p><strong>File:</strong> {selectedFilename}</p>
+        <p data-cy="deck-ydk-import-preview-file">
+          <strong data-cy="deck-ydk-import-preview-file-label">File:</strong>
+          {selectedFilename}
+        </p>
       {/if}
-      <p>
+      <p data-cy="deck-ydk-import-preview-counts">
         Main {result.cards.main.length} · Extra {result.cards.extra.length} · Side
         {result.cards.side.length}
       </p>
       {#if duplicateName}
-        <p class="error" role="status">
+        <p class="error" role="status" data-cy="deck-ydk-import-duplicate-name">
           Another local deck already uses this name. Import creates a separate
           deck ID.
         </p>
       {/if}
       {#if unknownCodes.length > 0}
-        <div class="error" role="status">
-          <strong>Unknown card codes</strong>
-          <p>{unknownCodes.join(", ")}</p>
+        <div
+          class="error"
+          role="status"
+          data-cy="deck-ydk-import-unknown-codes"
+        >
+          <strong data-cy="deck-ydk-import-unknown-codes-label"
+            >Unknown card codes</strong
+          >
+          <p data-cy="deck-ydk-import-unknown-codes-list">
+            {unknownCodes.join(", ")}
+          </p>
         </div>
       {/if}
-      <p>
+      <p data-cy="deck-ydk-import-preview-note">
         Unknown or misplaced cards remain visible as validation errors. Nothing
         is repaired silently.
       </p>
       <button
         type="button"
+        data-cy="deck-ydk-import-commit"
         disabled={isImporting ||
           (requireName &&
             (deckName.trim().length === 0 ||
@@ -211,7 +243,13 @@
       >
     </div>
   {/if}
-  {#if importError !== null}<p class="error" role="alert">{importError}</p>{/if}
+  {#if importError !== null}<p
+      class="error"
+      role="alert"
+      data-cy="deck-ydk-import-commit-error"
+    >
+      {importError}
+    </p>{/if}
 </div>
 
 <style>

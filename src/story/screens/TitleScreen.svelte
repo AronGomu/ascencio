@@ -10,19 +10,43 @@
   onMount(() => primary.focus());
 </script>
 
-<section class="screen title-screen" aria-labelledby="title-heading">
-  <p class="eyebrow">Private visual novel prototype · v0.1</p>
-  <h1 id="title-heading" tabindex="-1">Echoes of the Draw</h1>
-  <p>One signal. One duel. More than one way forward.</p>
-  <nav aria-label="Title menu">
-    <button type="button" bind:this={primary} onclick={onnewgame}
-      >New Game</button
+<section
+  class="screen title-screen"
+  aria-labelledby="title-heading"
+  data-cy="story-title-screen"
+>
+  <p class="eyebrow" data-cy="story-title-eyebrow">
+    Private visual novel prototype · v0.1
+  </p>
+  <h1 id="title-heading" tabindex="-1" data-cy="story-title-heading">
+    Echoes of the Draw
+  </h1>
+  <p data-cy="story-title-tagline">
+    One signal. One duel. More than one way forward.
+  </p>
+  <nav aria-label="Title menu" data-cy="story-title-menu">
+    <button
+      type="button"
+      data-cy="story-title-new-game"
+      bind:this={primary}
+      onclick={onnewgame}>New Game</button
     >
-    {#if hasProgress}<button type="button" onclick={oncontinue}>Continue</button
+    {#if hasProgress}<button
+        type="button"
+        data-cy="story-title-continue"
+        onclick={oncontinue}>Continue</button
       >{/if}
-    <button type="button" class="secondary" onclick={onload}>Load</button>
-    <button type="button" class="secondary" onclick={onsettings}
-      >Settings</button
+    <button
+      type="button"
+      class="secondary"
+      data-cy="story-title-load"
+      onclick={onload}>Load</button
+    >
+    <button
+      type="button"
+      class="secondary"
+      data-cy="story-title-settings"
+      onclick={onsettings}>Settings</button
     >
   </nav>
 </section>

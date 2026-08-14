@@ -166,12 +166,15 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if deck}
-  <header class="editor-header">
-    <button type="button" class="secondary" onclick={onlibrary}
-      >Deck Library</button
+  <header class="editor-header" data-cy="deck-editor-header">
+    <button
+      type="button"
+      class="secondary"
+      data-cy="deck-editor-library-link"
+      onclick={onlibrary}>Deck Library</button
     >
-    <label class="name-field">
-      <span>Deck name</span>
+    <label class="name-field" data-cy="deck-editor-name-field">
+      <span data-cy="deck-editor-name-label">Deck name</span>
       <input
         id="deck-name"
         data-cy="deck-name-input"
@@ -183,27 +186,36 @@
         }}
       />
     </label>
-    <dl class="counts" aria-label="Deck counts">
-      <div>
-        <dt>Main</dt>
-        <dd>{deck.main.length}</dd>
+    <dl class="counts" aria-label="Deck counts" data-cy="deck-editor-counts">
+      <div data-cy="deck-editor-count-main">
+        <dt data-cy="deck-editor-count-main-term">Main</dt>
+        <dd data-cy="deck-editor-count-main-value">{deck.main.length}</dd>
       </div>
-      <div>
-        <dt>Extra</dt>
-        <dd>{deck.extra.length}</dd>
+      <div data-cy="deck-editor-count-extra">
+        <dt data-cy="deck-editor-count-extra-term">Extra</dt>
+        <dd data-cy="deck-editor-count-extra-value">{deck.extra.length}</dd>
       </div>
-      <div>
-        <dt>Side</dt>
-        <dd>{deck.side.length}</dd>
+      <div data-cy="deck-editor-count-side">
+        <dt data-cy="deck-editor-count-side-term">Side</dt>
+        <dd data-cy="deck-editor-count-side-value">{deck.side.length}</dd>
       </div>
     </dl>
-    <div class={`status status-${deck.validation.status}`}>
-      <span>Deck</span>
-      <strong>{deck.validation.status}</strong>
+    <div
+      class={`status status-${deck.validation.status}`}
+      data-cy="deck-editor-validation-status"
+    >
+      <span data-cy="deck-editor-validation-status-label">Deck</span>
+      <strong data-cy="deck-editor-validation-status-value"
+        >{deck.validation.status}</strong
+      >
     </div>
-    <div class={`status save-${state.saveState}`} aria-live="polite">
-      <span>Autosave</span>
-      <strong
+    <div
+      class={`status save-${state.saveState}`}
+      aria-live="polite"
+      data-cy="deck-editor-save-status"
+    >
+      <span data-cy="deck-editor-save-status-label">Autosave</span>
+      <strong data-cy="deck-editor-save-status-value"
         >{state.saveState === "saved"
           ? "Saved locally"
           : state.saveState}</strong
@@ -213,6 +225,7 @@
       type="button"
       class="secondary"
       disabled={state.current?.history.undo.length === 0}
+      data-cy="deck-editor-undo"
       onclick={onundo}
       aria-keyshortcuts="Control+Z">Undo</button
     >
@@ -220,35 +233,62 @@
       type="button"
       class="secondary"
       disabled={state.current?.history.redo.length === 0}
+      data-cy="deck-editor-redo"
       onclick={onredo}
       aria-keyshortcuts="Control+Shift+Z">Redo</button
     >
-    <button type="button" class="secondary" onclick={() => openModal("import")}
-      >Import</button
+    <button
+      type="button"
+      class="secondary"
+      data-cy="deck-editor-import"
+      onclick={() => openModal("import")}>Import</button
     >
-    <button type="button" class="secondary" onclick={() => openModal("export")}
-      >Export</button
+    <button
+      type="button"
+      class="secondary"
+      data-cy="deck-editor-export"
+      onclick={() => openModal("export")}>Export</button
     >
   </header>
 
   {#if state.saveState === "failed"}
-    <section class="message error" role="alert">
-      <p>{state.message}</p>
-      <button type="button" onclick={onretrysave}>Retry autosave</button>
-      <button type="button" class="secondary" onclick={onreload}
-        >Reload saved deck</button
+    <section
+      class="message error"
+      role="alert"
+      data-cy="deck-editor-save-failed"
+    >
+      <p data-cy="deck-editor-save-failed-message">{state.message}</p>
+      <button
+        type="button"
+        data-cy="deck-editor-retry-save"
+        onclick={onretrysave}>Retry autosave</button
+      >
+      <button
+        type="button"
+        class="secondary"
+        data-cy="deck-editor-reload-saved"
+        onclick={onreload}>Reload saved deck</button
       >
     </section>
   {:else if state.saveState === "conflict"}
-    <section class="message error" role="alert">
-      <p>{state.message}</p>
-      <button type="button" onclick={onreload}>Reload newer revision</button>
-      <button type="button" class="secondary" onclick={onpreservecopy}
-        >Preserve local edits as copy</button
+    <section class="message error" role="alert" data-cy="deck-editor-conflict">
+      <p data-cy="deck-editor-conflict-message">{state.message}</p>
+      <button
+        type="button"
+        data-cy="deck-editor-reload-revision"
+        onclick={onreload}>Reload newer revision</button
+      >
+      <button
+        type="button"
+        class="secondary"
+        data-cy="deck-editor-preserve-copy"
+        onclick={onpreservecopy}>Preserve local edits as copy</button
       >
     </section>
   {:else if state.message}
-    <p class="message" role="status">{state.message}</p>
+    <p class="message" role="status" data-cy="deck-editor-message">
+      {state.message}
+    </p>
   {/if}
 
   <p
@@ -256,11 +296,16 @@
     role="status"
     aria-live="polite"
     aria-atomic="true"
+    data-cy="deck-editor-announcement"
   >
     {announcement}
   </p>
 
-  <main class="editor-layout" aria-busy={state.saveState === "saving"}>
+  <main
+    class="editor-layout"
+    aria-busy={state.saveState === "saving"}
+    data-cy="deck-editor-layout"
+  >
     <CardCatalog
       {cards}
       {ruleset}
@@ -300,16 +345,31 @@
     />
   </main>
 
-  <div class="desktop-required" role="note">
-    <h2>Desktop viewport required</h2>
-    <p>The Deck Editor targets screens at least 1024 px wide.</p>
-    <button type="button" class="secondary" onclick={onlibrary}
-      >Return to Deck Library</button
+  <div
+    class="desktop-required"
+    role="note"
+    data-cy="deck-editor-desktop-required"
+  >
+    <h2 data-cy="deck-editor-desktop-required-heading">
+      Desktop viewport required
+    </h2>
+    <p data-cy="deck-editor-desktop-required-message">
+      The Deck Editor targets screens at least 1024 px wide.
+    </p>
+    <button
+      type="button"
+      class="secondary"
+      data-cy="deck-editor-desktop-required-back"
+      onclick={onlibrary}>Return to Deck Library</button
     >
   </div>
 
   {#if showImport}
-    <div class="backdrop" aria-hidden="true"></div>
+    <div
+      class="backdrop"
+      aria-hidden="true"
+      data-cy="deck-editor-import-backdrop"
+    ></div>
     <YdkImport
       catalogCodes={new Set(catalog.keys())}
       oncancel={() => void closeModal()}
@@ -321,7 +381,11 @@
     />
   {/if}
   {#if showExport}
-    <div class="backdrop" aria-hidden="true"></div>
+    <div
+      class="backdrop"
+      aria-hidden="true"
+      data-cy="deck-editor-export-backdrop"
+    ></div>
     <YdkExport {deck} oncancel={() => void closeModal()} />
   {/if}
 {/if}

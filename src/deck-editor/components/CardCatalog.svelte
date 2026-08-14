@@ -38,29 +38,35 @@
   }
 </script>
 
-<section class="catalog" aria-labelledby="catalog-heading">
-  <header>
-    <div>
-      <p class="section-label">Card catalog</p>
-      <h2 id="catalog-heading">Find cards</h2>
+<section
+  class="catalog"
+  aria-labelledby="catalog-heading"
+  data-cy="deck-catalog"
+>
+  <header data-cy="deck-catalog-header">
+    <div data-cy="deck-catalog-titles">
+      <p class="section-label" data-cy="deck-catalog-eyebrow">Card catalog</p>
+      <h2 id="catalog-heading" data-cy="deck-catalog-heading">Find cards</h2>
     </div>
-    <span>{results.length} results</span>
+    <span data-cy="deck-catalog-result-count">{results.length} results</span>
   </header>
 
-  <label>
-    <span>Name</span>
+  <label data-cy="deck-catalog-name-field">
+    <span data-cy="deck-catalog-name-label">Name</span>
     <input
       type="search"
       value={filters.name}
       placeholder="Filter by card name"
+      data-cy="deck-catalog-name-input"
       oninput={(event) => setFilter("name", event.currentTarget.value)}
     />
   </label>
 
-  <div class="filters">
-    <label>
-      <span>Card type</span>
+  <div class="filters" data-cy="deck-catalog-filters">
+    <label data-cy="deck-catalog-family-field">
+      <span data-cy="deck-catalog-family-label">Card type</span>
       <select
+        data-cy="deck-catalog-family-select"
         value={filters.family ?? ""}
         onchange={(event) =>
           setFilter(
@@ -68,59 +74,78 @@
             (event.currentTarget.value || null) as DeckCatalogFilters["family"],
           )}
       >
-        <option value="">All</option>
-        <option value="monster">Monster</option>
-        <option value="spell">Spell</option>
-        <option value="trap">Trap</option>
+        <option value="" data-cy="deck-catalog-family-option-all">All</option>
+        <option value="monster" data-cy="deck-catalog-family-option-monster"
+          >Monster</option
+        >
+        <option value="spell" data-cy="deck-catalog-family-option-spell"
+          >Spell</option
+        >
+        <option value="trap" data-cy="deck-catalog-family-option-trap"
+          >Trap</option
+        >
       </select>
     </label>
-    <label>
-      <span>Subtype</span>
+    <label data-cy="deck-catalog-subtype-field">
+      <span data-cy="deck-catalog-subtype-label">Subtype</span>
       <select
+        data-cy="deck-catalog-subtype-select"
         value={filters.subtype ?? ""}
         onchange={(event) =>
           setFilter("subtype", event.currentTarget.value || null)}
       >
-        <option value="">All</option>
+        <option value="" data-cy="deck-catalog-subtype-option-all">All</option>
         {#each options.subtypes as option (option)}
-          <option value={option}>{option}</option>
+          <option
+            value={option}
+            data-cy={`deck-catalog-subtype-option-${option}`}>{option}</option
+          >
         {/each}
       </select>
     </label>
-    <label>
-      <span>Attribute</span>
+    <label data-cy="deck-catalog-attribute-field">
+      <span data-cy="deck-catalog-attribute-label">Attribute</span>
       <select
+        data-cy="deck-catalog-attribute-select"
         value={filters.attribute ?? ""}
         onchange={(event) =>
           setFilter("attribute", event.currentTarget.value || null)}
       >
-        <option value="">All</option>
+        <option value="" data-cy="deck-catalog-attribute-option-all">All</option
+        >
         {#each options.attributes as option (option)}
-          <option value={option}>{option}</option>
+          <option
+            value={option}
+            data-cy={`deck-catalog-attribute-option-${option}`}>{option}</option
+          >
         {/each}
       </select>
     </label>
-    <label>
-      <span>Monster type</span>
+    <label data-cy="deck-catalog-race-field">
+      <span data-cy="deck-catalog-race-label">Monster type</span>
       <select
+        data-cy="deck-catalog-race-select"
         value={filters.race ?? ""}
         onchange={(event) =>
           setFilter("race", event.currentTarget.value || null)}
       >
-        <option value="">All</option>
+        <option value="" data-cy="deck-catalog-race-option-all">All</option>
         {#each options.races as option (option)}
-          <option value={option}>{option}</option>
+          <option value={option} data-cy={`deck-catalog-race-option-${option}`}
+            >{option}</option
+          >
         {/each}
       </select>
     </label>
   </div>
 
   {#if filters.name || filters.family || filters.subtype || filters.attribute || filters.race}
-    <div class="filter-summary">
-      <span>Filters active</span>
+    <div class="filter-summary" data-cy="deck-catalog-filter-summary">
+      <span data-cy="deck-catalog-filter-summary-label">Filters active</span>
       <button
         type="button"
         class="secondary small"
+        data-cy="deck-catalog-clear-all"
         onclick={() => (filters = { ...EMPTY_CATALOG_FILTERS })}
         >Clear all</button
       >
@@ -128,17 +153,24 @@
   {/if}
 
   {#if results.length === 0}
-    <div class="empty-state">
-      <h3>No matching cards</h3>
-      <p>Clear filters or try another card name.</p>
+    <div class="empty-state" data-cy="deck-catalog-empty">
+      <h3 data-cy="deck-catalog-empty-heading">No matching cards</h3>
+      <p data-cy="deck-catalog-empty-message">
+        Clear filters or try another card name.
+      </p>
       <button
         type="button"
+        data-cy="deck-catalog-clear-filters"
         onclick={() => (filters = { ...EMPTY_CATALOG_FILTERS })}
         >Clear filters</button
       >
     </div>
   {:else}
-    <div class="results" aria-label="Card catalog results">
+    <div
+      class="results"
+      aria-label="Card catalog results"
+      data-cy="deck-catalog-results"
+    >
       {#each results as card (card.code)}
         <CardTile
           {card}

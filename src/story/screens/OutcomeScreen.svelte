@@ -10,44 +10,84 @@
   class:recovery={outcome === "abort" || outcome === "failure"}
   class="outcome-screen"
   aria-labelledby="outcome-heading"
+  data-cy="story-outcome-screen"
 >
-  <p class="eyebrow">Authored outcome · {outcome}</p>
-  {#if outcome === "win"}<h1 id="outcome-heading">Signal broken</h1>
-    <p>
+  <p class="eyebrow" data-cy="story-outcome-eyebrow">
+    Authored outcome · {outcome}
+  </p>
+  {#if outcome === "win"}<h1
+      id="outcome-heading"
+      data-cy="story-outcome-win-heading"
+    >
+      Signal broken
+    </h1>
+    <p data-cy="story-outcome-win-body">
       The final attack cuts through the false arena. Rin catches the decoded
       pulse before it fades.
     </p>
-    <p>
+    <p data-cy="story-outcome-win-quote">
       “You won us an answer,” she says. “Now we find who asked the question.”
     </p>
-    <button type="button" onclick={oncontinue}>Continue story</button>
-  {:else if outcome === "loss"}<h1 id="outcome-heading">Signal endures</h1>
-    <p>
+    <button
+      type="button"
+      data-cy="story-outcome-win-continue"
+      onclick={oncontinue}>Continue story</button
+    >
+  {:else if outcome === "loss"}<h1
+      id="outcome-heading"
+      data-cy="story-outcome-loss-heading"
+    >
+      Signal endures
+    </h1>
+    <p data-cy="story-outcome-loss-body">
       Your last card falls, but the arena does not close. The opponent lowers
       its duel disk.
     </p>
-    <p>
+    <p data-cy="story-outcome-loss-quote">
       Rin smiles. “It wanted a complete duel, not a victory. We still have its
       answer.”
     </p>
-    <button type="button" onclick={oncontinue}>Continue story</button>
-  {:else if outcome === "abort"}<h1 id="outcome-heading">Duel paused</h1>
-    <p>No story progress changed. Resume when ready or return safely.</p>
-    <div>
-      <button type="button" onclick={onretry}>Retry duel</button><button
+    <button
+      type="button"
+      data-cy="story-outcome-loss-continue"
+      onclick={oncontinue}>Continue story</button
+    >
+  {:else if outcome === "abort"}<h1
+      id="outcome-heading"
+      data-cy="story-outcome-abort-heading"
+    >
+      Duel paused
+    </h1>
+    <p data-cy="story-outcome-abort-body">
+      No story progress changed. Resume when ready or return safely.
+    </p>
+    <div data-cy="story-outcome-abort-actions">
+      <button
+        type="button"
+        data-cy="story-outcome-abort-retry"
+        onclick={onretry}>Retry duel</button
+      ><button
         type="button"
         class="secondary"
+        data-cy="story-outcome-abort-return"
         onclick={onreturn}>Return to map</button
       >
     </div>
-  {:else}<h1 id="outcome-heading">Connection interrupted</h1>
-    <p>
+  {:else}<h1 id="outcome-heading" data-cy="story-outcome-error-heading">
+      Connection interrupted
+    </h1>
+    <p data-cy="story-outcome-error-body">
       Technical failure stopped the mock duel. This is not an authored loss.
     </p>
-    <div>
-      <button type="button" onclick={onretry}>Retry duel</button><button
+    <div data-cy="story-outcome-error-actions">
+      <button
+        type="button"
+        data-cy="story-outcome-error-retry"
+        onclick={onretry}>Retry duel</button
+      ><button
         type="button"
         class="secondary"
+        data-cy="story-outcome-error-return"
         onclick={onreturn}>Return to map</button
       >
     </div>{/if}

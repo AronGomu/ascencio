@@ -6,7 +6,7 @@
 
 ## Purpose
 
-This handoff defines a Yu-Gi-Oh!-specific visual-novel campaign around the completed Svelte + Phaser duel client. It converts the exploratory proposal into an implementation-ready target and phased migration plan.
+This handoff defines a Yu-Gi-Oh!-specific visual-novel campaign around the completed Svelte semantic-DOM duel client. It converts the exploratory proposal into an implementation-ready target and phased migration plan.
 
 Current architecture under [`../architecture/`](../architecture/) remains the source of truth for shipped code. During migration:
 
@@ -19,7 +19,7 @@ Current architecture under [`../architecture/`](../architecture/) remains the so
 
 - Yu-Gi-Oh!-specific product; generalize internal seams only when useful.
 - Visual-novel presentation for narrative, campaign, maps, menus, and transitions.
-- Existing Svelte controls + Phaser duel field remain the battle presentation.
+- Existing Svelte controls + semantic DOM duel field remain the battle presentation.
 - Authored chapter campaign with gated illustrated map hubs.
 - Single Svelte/Vite application package with enforced domain boundaries.
 - Pure campaign reducer, deterministic narrative cursor, validated JSON content.
@@ -65,7 +65,7 @@ Deck-editor UI and background pack-download UI are later phases. First slice use
 - Dedicated Duel Worker remains sole owner of WASM, raw protocol, scripts, response indexes, handles, and opponent policy.
 - Main thread receives clone-safe typed messages and privacy-filtered immutable state.
 - Opponent hidden identities remain absent outside Worker.
-- Phaser remains presentation-only.
+- Svelte DOM/CSS/SVG presentation remains non-authoritative.
 - Engine, catalog, scripts, strings, and image manifest remain one verified atomic duel snapshot.
 - Production randomness, diagnostic sensitivity, deterministic compatibility fixtures, bounded failure handling, and handle cleanup remain unchanged.
 - Existing headless, unit, component, integration, build, reproducibility, and browser gates remain mandatory.

@@ -31,7 +31,7 @@ Visual-novel presentation applies to:
 - deck-library entry and transition screens;
 - errors, recovery, content installation, and PWA updates.
 
-Battle presentation remains the existing accessible Svelte prompt UI plus non-authoritative Phaser duel field. Story work must not recreate or bypass that duel surface.
+Battle presentation remains the existing accessible Svelte prompt UI plus non-authoritative semantic DOM duel field. Story work must not recreate or bypass that duel surface.
 
 ## Target features
 

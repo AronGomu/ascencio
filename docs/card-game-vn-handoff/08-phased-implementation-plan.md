@@ -72,7 +72,7 @@ Wrap completed duel as one feature without changing duel behavior.
 
 - Add `src/battle/index.ts` and facade contracts.
 - Extract current duel page composition from oversized app shell into battle-owned screen/component while preserving UI semantics.
-- Keep existing `DuelWorkerClient`, store, prompts, Phaser field, image cache, diagnostics, snapshot storage, and Worker internals behavior-identical.
+- Keep existing `DuelWorkerClient`, store, prompts, semantic DOM field, image cache, diagnostics, snapshot storage, and Worker internals behavior-identical.
 - Add immutable discriminated request parser.
 - Add versioned built-in deck provider for current preset.
 - Add battle readiness API as sole public source of active/fallback runtime snapshot, activation snapshot, image digest, and battle capabilities.
@@ -91,7 +91,7 @@ Wrap completed duel as one feature without changing duel behavior.
 - Mount/unmount/retry/replacement cleanup and completion-after-disposal ordering.
 - Exact preset request acceptance plus mismatched snapshot/deck/request rejection.
 - Draw-capability absent/present validation.
-- Existing full prompt, Phaser, image, diagnostics, restart, privacy, and browser tests unchanged or equivalently routed.
+- Existing full prompt, semantic DOM field, image, diagnostics, restart, privacy, and browser tests unchanged or equivalently routed.
 
 ### Verification
 

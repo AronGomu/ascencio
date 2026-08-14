@@ -20,7 +20,7 @@ Browser main thread
 ├── Battle Feature Facade
 │   ├── existing DuelWorkerClient + duel store
 │   ├── existing Svelte prompt/result UI
-│   └── existing Phaser field
+│   └── existing semantic DOM field
 ├── Deck Library
 ├── Save Repository
 ├── ContentManager
@@ -226,7 +226,7 @@ Campaign evaluates map conditions and supplies immutable `EvaluatedMapView`. Map
 
 ## Battle ownership
 
-Battle facade is self-contained. Its readiness API is sole public source for active/fallback `DuelSnapshotRef` used by New Game, saves, packs, and battle requests. It mounts into shell-provided host and owns existing Worker client, duel store, prompt UI, Phaser field, image handling, diagnostics, restart/surrender/result controls, and cleanup for one invocation. Restart stays inside battle session. Explicit Continue/Return settles normalized completion only after facade disposal.
+Battle facade is self-contained. Its readiness API is sole public source for active/fallback `DuelSnapshotRef` used by New Game, saves, packs, and battle requests. It mounts into shell-provided host and owns existing Worker client, duel store, prompt UI, semantic DOM field, image handling, diagnostics, restart/surrender/result controls, and cleanup for one invocation. Restart stays inside battle session. Explicit Continue/Return settles normalized completion only after facade disposal.
 
 First slice accepts exact built-in preset request matching current Worker contract. Arbitrary validated deck request remains unavailable until deck phase extends Worker start contract. Current Worker contracts remain internal to battle domain. Campaign never subscribes to duel events or imports `DuelResult`.
 

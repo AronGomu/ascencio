@@ -13,6 +13,10 @@ import { browserRuntimeAssetsPlugin } from "./scripts/lib/vite-runtime-assets.ts
 import { syncOnlyVendoredCorePlugin } from "./scripts/lib/vite-sync-core.ts";
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
+const developmentPort = Number(process.env.DEV_PORT ?? "4202");
+if (!Number.isSafeInteger(developmentPort) || developmentPort <= 0) {
+  throw new Error("DEV_PORT must be a positive integer");
+}
 const runtimeManifestBytes = readFileSync(
   path.join(projectRoot, "generated/runtime/current/manifest.json"),
 );
@@ -54,11 +58,11 @@ const activationSnapshotId = createHash("sha256")
 export default defineConfig({
   base: process.env.BASE_PATH ?? "/",
   server: {
-    port: 4202,
+    port: developmentPort,
     strictPort: true,
   },
   preview: {
-    port: 4202,
+    port: developmentPort,
     strictPort: true,
   },
   plugins: [

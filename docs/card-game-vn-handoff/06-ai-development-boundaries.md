@@ -251,7 +251,7 @@ Use ESLint `no-restricted-imports` or equivalent project-local rule:
 
 - cross-domain imports must target `src/<domain>/index.ts` or approved alias;
 - importing `src/<other-domain>/<internal-path>` fails lint;
-- campaign/narrative pure cores cannot import Svelte, Phaser, `idb`, service-worker code, Worker clients, or browser globals;
+- campaign/narrative pure cores cannot import Svelte, `idb`, service-worker code, Worker clients, or browser globals;
 - only existing Worker-owned adapter may import vendored engine;
 - only battle facade may bridge campaign shell to current duel internals.
 

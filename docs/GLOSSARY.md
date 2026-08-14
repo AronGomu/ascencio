@@ -9,7 +9,12 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 
 | word | short description | ref in code |
 | ---- | ----------------- | ----------- |
-| app | Svelte root shell, wires store + worker client | `src/app/App.svelte`, `src/main.ts` |
+| app | One browser product; current entry selects production duel or isolated prototype while shell migration is pending | `src/main.ts`, `src/app/select-app-entry.ts` |
+| shell | Future thin composition/router layer owning transitions among three lazy UI domains | ADR-022, future `src/shell/` |
+| duel simulator | Production battle UI plus Worker-owned rules runtime | `src/app/`, `src/duel/`, `src/field/`, `src/worker/` |
+| deck editor | Local deck library/editor domain; currently integrated as isolated prototype | `src/decks/`, `src/prototypes/deck-builder/` |
+| visual novel | Narrative/map/campaign domain; currently integrated as isolated prototype | `src/prototype/`, future `src/story/` |
+| facade | Narrow domain-owned public lifecycle/contract boundary used by shell | future `src/battle/index.ts`, `src/decks/index.ts`, future `src/story/index.ts` |
 | store | Typed duel view state store + reducer | `src/app/stores/duel-store.ts` (`createDuelStore`, `reduceDuelViewState`, `DuelViewState`) |
 | client | Main-thread typed Worker client/port | `src/app/DuelWorkerClient.ts` (`DuelWorkerClient`, `DuelWorkerPort`) |
 | field | Semantic DOM duel field component | `src/app/components/DuelField.svelte`, `src/app/components/duel-field/FieldBoard.svelte` |
@@ -39,7 +44,7 @@ Worker, engine, and asset pipeline are "backend" here — nothing runs on a serv
 | headless | Non-UI duel driver used by tests/tools | `src/worker/HeadlessDuelController.ts` |
 | session | Per-duel engine session lifecycle | `src/worker/engine/DuelSession.ts` (`DuelConfiguration`, `DuelProcessBoundary`) |
 | adapter | ocgcore WASM binding layer | `src/worker/engine/OcgCoreAdapter.ts` (`EngineDuelHandle`, `EngineMessage`) |
-| core | Vendored `ocgcore.sync.wasm` + loader | `vendor/ocgcore-wasm/`, `src/worker/engine/load-vendored-core-node.ts` |
+| core | Permanently frozen vendored `ocgcore.sync.wasm` 0.1.2 + loader | `vendor/ocgcore-wasm/0.1.2/`, `src/worker/engine/load-vendored-core-node.ts` |
 | protocol | Engine message parsing/classification | `src/worker/protocol/message-classification.ts` (`classifyEngineMessage`) |
 | registry | Prompt binding + response encoding | `src/worker/protocol/PromptRegistry.ts` (`buildEnginePrompt`) |
 | projector | Engine queries → public duel state | `src/worker/projection/DuelStateProjector.ts` (`ProjectionUpdate`, `QueriedPublicCard`) |
@@ -77,6 +82,8 @@ Worker, engine, and asset pipeline are "backend" here — nothing runs on a serv
 | transcripts | Recorded deterministic duel goldens | `tests/fixtures/transcripts/*.json` |
 | lua | Test card scripts driving the engine | `tests/fixtures/core-scripts/*.lua` |
 | architecture | Atomic numbered decision docs | `docs/architecture/architecture.md` and subfolders |
+| domain | One owned UI/business module with public `index.ts`; no cross-domain deep imports | ADR-022 |
+| worktree | Isolated checkout for one UI branch; integration config/contracts stay centrally owned | ADR-022 |
 | adr | Accepted architecture decision records | `docs/ADR/` |
 | guide | Generated HTML developer guide | `docs/developer-guide/` |
 | checks | Aggregate quality gate npm scripts | `package.json` (`check`, `check:headless`, `check:browser`) |

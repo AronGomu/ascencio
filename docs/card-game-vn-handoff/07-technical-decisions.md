@@ -9,7 +9,7 @@
 - Product remains Yu-Gi-Oh!-specific.
 - Generalize internal seams only when it reduces coupling.
 - Visual-novel presentation covers non-battle game modes.
-- Existing Svelte prompt UI + Phaser duel field remains battle presentation.
+- Existing Svelte prompt UI + semantic DOM duel field remains battle presentation.
 - Campaign uses authored chapters with gated illustrated map hubs.
 - Map provides positioned hotspots plus equivalent accessible location list.
 - No free movement or world simulation.
@@ -54,7 +54,7 @@
 ### Battle
 
 - Shell opens self-contained battle facade.
-- Facade owns current Worker client, store, prompts, Phaser, restart/result/diagnostics UI, and disposal for one mounted interactive session.
+- Facade owns current Worker client, store, prompts, semantic DOM field, restart/result/diagnostics UI, and disposal for one mounted interactive session.
 - Facade completion settles exactly once only after explicit Continue/Return or teardown cleanup; abort/dispose cannot strand completion.
 - Battle readiness API is sole public source for default-active/fallback or exact required runtime snapshot, activation snapshot, image-manifest revision, and battle capabilities.
 - Facade accepts validated immutable preset/deck request matching readiness data.

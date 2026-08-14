@@ -1,8 +1,8 @@
 # Architecture
 
 > Status: accepted and current
-> Last consolidated: 2026-08-10
-> Scope: browser-based offline duel MVP plus implemented semantic DOM duel field
+> Last consolidated: 2026-08-14
+> Scope: offline duel client, integrated experience prototypes, and accepted three-domain application topology
 
 This is the canonical architecture entry point. Detailed decisions are intentionally atomic and grouped by concern so humans and AI can load only the context needed for a task.
 
@@ -38,6 +38,7 @@ This is the canonical architecture entry point. Detailed decisions are intention
 | Errors, traces, or reproducibility                                       | [`06-quality/diagnostics.md`](06-quality/diagnostics.md)                                                                                                             |
 | Trust boundaries or untrusted input                                      | [`07-governance/security.md`](07-governance/security.md)                                                                                                             |
 | Licensing, card-art distribution, or deployment                          | [`07-governance/licensing-and-distribution.md`](07-governance/licensing-and-distribution.md)                                                                         |
+| Three UI domains, shell, public module boundaries, or worktree ownership | [`../ADR/022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md`](../ADR/022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md), [`../card-game-vn-handoff/02-system-architecture.md`](../card-game-vn-handoff/02-system-architecture.md) |
 | Post-MVP systems                                                         | [`07-governance/extension-path.md`](07-governance/extension-path.md)                                                                                                 |
 
 ## System at a glance
@@ -46,18 +47,23 @@ Current implemented topology:
 
 ```text
 Browser main thread
-├── Svelte application, semantic DOM duel field, and typed duel store
-├── CSS/SVG non-authoritative field feedback
-└── typed Worker client
-    ↕ structured-clone domain commands/events
+├── production Svelte duel application
+│   ├── semantic DOM duel field and typed duel store
+│   ├── CSS/SVG non-authoritative field feedback
+│   └── typed Worker client
+├── isolated deck-editor prototype route
+└── isolated visual-novel prototype entry
+    ↕ structured-clone domain commands/events (duel only)
 Dedicated Duel Worker
 ├── session controller and public-state projector
 ├── protocol parser/response encoder
 ├── deterministic preset-deck opponent
 ├── preloaded card/script maps
-└── vendored ocgcore.sync.wasm
+└── frozen vendored ocgcore.sync.wasm
     └── Project Ignis CardScripts
 ```
+
+Target topology is one shell with three lazy-loaded domain roots. Prototype merge is not production integration; ADR-022 governs migration.
 
 ## System-wide invariants
 
@@ -67,7 +73,8 @@ Dedicated Duel Worker
 - Svelte owns all interactive application/field UI; presentation state never determines legality.
 - CSS/SVG feedback is non-authoritative. Future canvas may be pointer-transparent decoration only after separate measured decision.
 - Core callbacks are synchronous and read only preloaded memory.
-- Core, catalog, scripts, strings, and image metadata form one pinned, verified snapshot; browser activation occurs only after runtime and active-image receipts match.
+- Vendored OCG Core is permanently frozen at `vendor/ocgcore-wasm/0.1.2`; no feature updates its binary, loader resolution, or vendor manifest.
+- Catalog, scripts, strings, image metadata, and their frozen-core compatibility form one pinned, verified runtime snapshot; browser activation occurs only after runtime and active-image receipts match.
 - Production duels shuffle normally; deterministic inputs are restricted to tests and diagnostics.
 - Every duel can be reproduced from revision metadata, seed, and ordered responses.
 - Headless real-WASM coverage must remain green; production packaging and **Chromium (PWA-capable)** browser gates are required for the release candidate. Firefox/WebKit smoke is optional hygiene, not DOM-field acceptance.

@@ -27,6 +27,7 @@ This directory contains current project documentation and historical context. Ro
 | [`ADR/016_ADR_dependency_free_drag_physics.md`](ADR/016_ADR_dependency_free_drag_physics.md)           | Accepted dependency-free drag ghost physics |
 | [`ADR/017_ADR_floating_field_windows_and_dismissal.md`](ADR/017_ADR_floating_field_windows_and_dismissal.md) | Accepted field-window bounds, persistence, and dismissal |
 | [`ADR/018_ADR_conditional_extra_monster_zones.md`](ADR/018_ADR_conditional_extra_monster_zones.md)     | Accepted Worker-owned MR3/MR5 conditional EMZ profile |
+| [`ADR/022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md`](ADR/022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md) | Accepted single-app topology and parallel UI ownership |
 | [`duel-field-architecture.html`](duel-field-architecture.html)                                         | Styled field architecture design                                     |
 | [`duel-field-interaction-shell.html`](duel-field-interaction-shell.html)                               | Styled interaction-shell design: surfaces, routing, drag, settings   |
 | [`duel-field-interaction-model-v2.html`](duel-field-interaction-model-v2.html)                         | Styled round-2 interaction baseline |

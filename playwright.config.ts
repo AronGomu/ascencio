@@ -1,7 +1,11 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const basePath = "/ygo-story-duel/";
-const baseURL = `http://127.0.0.1:4202${basePath}`;
+const playwrightPort = Number(process.env.PLAYWRIGHT_PORT ?? "4202");
+if (!Number.isSafeInteger(playwrightPort) || playwrightPort <= 0) {
+  throw new Error("PLAYWRIGHT_PORT must be a positive integer");
+}
+const baseURL = `http://127.0.0.1:${playwrightPort}${basePath}`;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -34,8 +38,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command:
-      "npm run vendor:verify && npm run snapshot:verify && npm run build:app -- --base=/ygo-story-duel/ && npm run build:verify && npm run preview -- --host 127.0.0.1 --port 4202 --strictPort --base=/ygo-story-duel/",
+    command: `npm run vendor:verify && npm run snapshot:verify && npm run build:app -- --base=/ygo-story-duel/ && npm run build:verify && npm run preview -- --host 127.0.0.1 --port ${playwrightPort} --strictPort --base=/ygo-story-duel/`,
     url: baseURL,
     reuseExistingServer: false,
     timeout: 180_000,

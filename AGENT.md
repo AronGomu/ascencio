@@ -29,7 +29,7 @@ Applies to Claude Code, Codex, and pi; each has the `graphify` skill installed g
 
 YGO Story Duel Simulator is a browser-first, offline Yu-Gi-Oh! duel client. The MVP launches directly into one human-versus-computer duel using bundled preset decks. Project Ignis `ygopro-core` is the sole authority for rules, legal actions, effects, and results.
 
-The private browser MVP baseline and semantic Svelte DOM duel-field migration are complete. Product browser = Chromium PWA family. Field acceptance uses automated Chromium evidence only.
+The private browser MVP baseline and semantic Svelte DOM duel-field migration are complete. Deck-editor and visual-novel prototypes are merged but remain isolated, non-production surfaces. Product browser = Chromium PWA family. Field acceptance uses automated Chromium evidence only.
 
 ## Documentation routing
 
@@ -55,8 +55,19 @@ The private browser MVP baseline and semantic Svelte DOM duel-field migration ar
 | Tests | Node test runner, Vitest, Testing Library, Playwright | Unit, component, integration, and browser coverage |
 | Quality | TypeScript, ESLint, Prettier, CI | Types, lint, format, compatibility, assets, and build gates |
 
+## Three-domain application direction
+
+- Product is one modular-monolith Svelte app: Duel Simulator, Deck Editor, Visual Novel.
+- One shell owns routing/composition; domains expose narrow public `index.ts` contracts.
+- Cross-domain imports target public entry points only; no deep imports.
+- Recommended parallel topology: Integration worktree plus `ui/duel`, `ui/decks`, `ui/story` worktrees.
+- Exclusive ownership: Duel → `src/app/`, `src/duel/`, `src/field/`, `src/worker/`; Deck → `src/decks/` + deck UI; Story → future `src/story/`; Integration → `src/main.ts`, future `src/shell/`, root config/contracts/E2E.
+- Domain contract changes land in Integration first; affected UI branches rebase before continuing.
+- Read [`docs/ADR/022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md`](docs/ADR/022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md) before cross-domain work.
+
 ## Core architecture rules
 
+- `vendor/ocgcore-wasm/0.1.2/` is permanently frozen; never update engine binary, loader resolution, or vendor manifest.
 - The main thread never imports or calls the engine.
 - Raw core messages/indexes remain in the Worker; the UI receives clone-safe typed domain data.
 - Opponent hidden information is removed before crossing the Worker boundary.

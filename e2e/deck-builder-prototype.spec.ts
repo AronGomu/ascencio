@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const prototypeUrl = "./#/prototype/deck-builder";
+const prototypeUrl = "./#/decks";
 
 test("default route still starts direct duel", async ({ page }) => {
   await page.goto("./");

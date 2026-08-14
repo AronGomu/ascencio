@@ -1,21 +1,13 @@
 import { mount } from "svelte";
-import { selectAppEntry } from "./app/select-app-entry.ts";
+import AppShell from "./shell/AppShell.svelte";
 import "./styles/app.css";
 
 const target = document.querySelector<HTMLElement>("#app");
 if (target === null) throw new Error("Application mount point is missing");
 
 try {
-  const appEntry = selectAppEntry(globalThis.location.hash);
-  target.dataset.appEntry = appEntry;
-  if (appEntry === "deck-builder-prototype") {
-    const { default: DeckBuilderPrototype } =
-      await import("./prototypes/deck-builder/DeckBuilderPrototype.svelte");
-    mount(DeckBuilderPrototype, { target });
-  } else {
-    const { default: App } = await import("./app/App.svelte");
-    mount(App, { target });
-  }
+  target.dataset.appShell = "ready";
+  mount(AppShell, { target });
 } catch (error) {
   target.replaceChildren();
   const main = document.createElement("main");

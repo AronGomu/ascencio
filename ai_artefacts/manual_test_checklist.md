@@ -99,7 +99,25 @@
 - [ ] Confirm the whole duel fits exactly one viewport (no page scrollbar) at your normal window size, then resize taller/shorter and confirm it still fits.
 - [ ] Open a stack zone (Deck / Graveyard / Banished) to raise the card-list dialog; confirm cards render as tiles, sorting/browse chrome appears, and Escape closes it.
 - [ ] Open Settings, toggle a field-display option, reload the page, and confirm the toggle survived (persisted display settings v2).
-- [ ] Open `http://localhost:4300/#/prototype/deck-builder` — the deck-builder prototype renders and the duel does not start.
+- [ ] Open `http://localhost:4300/#/decks` — the deck-builder prototype renders and the duel does not start. (Route renamed from `#/prototype/deck-builder` by T2.)
 - [ ] Open `http://localhost:4300/prototype.html` — the visual-novel prototype title screen renders.
 - [ ] Run `npm run build` and confirm it exits 0 — this proves the repaired `vite.config.ts` still emits BOTH the `app` (`index.html`) and `prototype` (`prototype.html`) bundles.
 - [ ] Confirm `dist/prototype.html` exists after that build.
+
+## T2 shell-routes-and-mount
+
+- [ ] Run `npm run dev` (default `DEV_PORT=4300`). Open `http://localhost:4300/#/` — the duel starts directly, exactly as before, with no "Application could not start" alert.
+- [ ] Open `http://localhost:4300/#/duel` — the duel starts here too.
+- [ ] Confirm the duel still fills exactly one viewport height with no page scrollbar (the `100svh` grid moved from `#app[data-app-entry="duel"]` to `.shell-region--duel`).
+- [ ] Open `http://localhost:4300/#/decks` — the deck-builder prototype renders and no duel starts.
+- [ ] Open `http://localhost:4300/#/story` — the page shows only the text `Not available yet`.
+- [ ] Open `http://localhost:4300/#/admin` — the page shows only the text `Not available yet`.
+- [ ] Open `http://localhost:4300/#/nope` — it falls back to home, which currently renders the duel.
+- [ ] Open `http://localhost:4300/#/prototype/deck-builder` — this old route is gone; it must now fall back to the duel, NOT the deck builder.
+- [ ] From the duel, edit the address-bar hash to `#/decks` and press Enter without reloading — the shell swaps to the deck builder in place (hashchange routing).
+- [ ] Then edit the hash back to `#/duel` without reloading — the shell swaps back to the duel.
+- [ ] Play a few actions in the duel (draw/summon/end turn) and confirm it is fully usable with an empty browser console (no errors).
+- [ ] Create and edit a deck in the deck builder, reload, and confirm the edit persisted and the console is empty.
+- [ ] Open `http://localhost:4300/prototype.html` — the visual-novel prototype title screen still renders (story has not moved into the shell yet).
+- [ ] In DevTools, confirm `document.querySelector("#app").dataset.appShell === "ready"`.
+- [ ] Run `npm run build` and confirm it exits 0.

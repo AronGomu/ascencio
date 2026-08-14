@@ -8,6 +8,15 @@ describe("global styles", () => {
     expect(css).toContain("clip: rect(0 0 0 0)");
   });
 
+  it("scopes the full-height duel grid to the shell region, not an app entry attribute", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    expect(css).not.toContain('#app[data-app-entry="duel"]');
+    const region = ruleBlock(css, ".shell-region--duel {");
+    expect(region).toContain("height: 100svh");
+    expect(region).toContain("display: grid");
+    expect(region).toContain("grid-template-rows: auto minmax(0, 1fr)");
+  });
+
   it("keeps acceptance-only field sizing out of the production stylesheet", () => {
     const productionCss = readFileSync("src/styles/app.css", "utf8");
     const acceptanceCss = readFileSync("src/styles/acceptance.css", "utf8");

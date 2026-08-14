@@ -56,6 +56,24 @@ describe("AppShell", () => {
     ).not.toBeNull();
   });
 
+  /* A story handoff has no request to dispatch yet, so the session route runs
+     the same standalone duel and only marks itself as pending. */
+  it("marks the duel-session route as pending inside the duel region", () => {
+    renderAt("#/duel/session/opening-duel");
+    const region = document.querySelector('[data-cy="shell-region-duel"]');
+    expect(region).not.toBeNull();
+    expect(
+      region?.querySelector('[data-cy="battle-session-pending"]'),
+    ).not.toBeNull();
+  });
+
+  it("leaves the plain duel route unmarked", () => {
+    renderAt("#/duel");
+    expect(
+      document.querySelector('[data-cy="battle-session-pending"]'),
+    ).toBeNull();
+  });
+
   it("mounts the deck editor region for the decks route", () => {
     renderAt("#/decks");
     expect(

@@ -306,3 +306,40 @@ Nothing else regressed
 - [ ] Open `#/duel` and play a few actions — the duel looks and behaves exactly as before.
 - [ ] Open `#/story` and click through a couple of beats — unchanged.
 - [ ] Confirm the browser console is empty across all of the above.
+
+## T9 battle-facade
+
+The duel now mounts through `src/battle/index.ts` instead of being imported
+directly by the shell. Nothing about the duel itself changed, so every check
+below is a "did the indirection cost anything?" check.
+
+Reach the duel through the facade
+
+- [ ] Run `npm run dev` (default `DEV_PORT=4300`) and open `http://localhost:4300/#/duel` — the deck picker appears exactly as before.
+- [ ] Open DevTools → Elements and confirm `[data-cy="shell-region-duel"]` contains `[data-cy="battle-root"]`, which contains `[data-cy="app-main"]`.
+- [ ] Confirm the duel field, right rail and card preview column sit in exactly the same places as before this ticket — the facade must not have moved a single pixel.
+- [ ] Navigate from the home hub's "Duel" entry instead of the URL — same result.
+
+Play a full duel unchanged
+
+- [ ] Pick a non-default pair (e.g. Burning Abyss vs Shaddoll), click "Start duel" — the duel loads and the first prompt arrives.
+- [ ] Play several actions, including a placement and an End turn — responses are accepted, one per prompt, with no double-submits.
+- [ ] Open the right rail's options → Settings, toggle "Show duel HUD" and "Show workspace" on and off — both still work and the layout returns to normal.
+
+End-of-duel paths still work
+
+- [ ] Finish or force a duel to a result — the result dialog appears; click "Restart" and a fresh duel starts with the same decks.
+- [ ] Start another duel, open options → Menu → Surrender and confirm — the duel ends and the result dialog appears.
+- [ ] From the result dialog click "Change decks" — the deck picker returns.
+- [ ] From the result dialog click "Download diagnostics" — a diagnostics file downloads and the "Diagnostics downloaded" message appears.
+
+No leaked or duplicated Worker
+
+- [ ] With a duel running, open DevTools → Sources → Threads (or the Performance panel's thread list) and note exactly ONE duel worker.
+- [ ] Navigate away to `#/` (home), then back to `#/duel` — still exactly one duel worker, not two; the previous one is gone.
+- [ ] Repeat the leave/return cycle three times — the worker count stays at one and memory does not climb with each cycle.
+- [ ] Confirm the browser console is empty across all of the above.
+
+Story-handoff placeholder
+
+- [ ] Open `http://localhost:4300/#/duel/session/anything` — the standalone duel (deck picker) renders, and DevTools shows a visually hidden `[data-cy="battle-session-pending"]` marker inside the duel region. This is the placeholder T19 replaces with a real handoff; it is expected to look identical to `#/duel`.

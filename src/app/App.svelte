@@ -61,7 +61,12 @@
   import { duelRailStatusFor } from "./presentation/duel-rail-status.ts";
   import { promptSurface } from "./prompts/prompt-surface.ts";
   import { DECK_CATALOG, type DeckId } from "../duel/presets/deck-catalog.ts";
-  import { createDuelStore } from "./stores/duel-store.ts";
+  import {
+    battleFacadeFailure,
+    battleResultForDuelResult,
+    type BattleFacadeResult,
+  } from "../battle/battle-contracts.ts";
+  import { createDuelStore, type DuelViewState } from "./stores/duel-store.ts";
   import {
     DEFAULT_PERSISTED_UI_STATE,
     type PersistedWindowPosition,
@@ -72,6 +77,12 @@
     DEFAULT_UI_SETTINGS,
     type UiSettingsState,
   } from "./stores/ui-settings-store.ts";
+
+  /* Set by the battle facade when a host is waiting for this duel's outcome.
+     Left undefined in standalone mode, where the duel reports nothing
+     outwards and behaves exactly as it did before the facade existed. */
+  export let onbattlecomplete:
+    ((result: BattleFacadeResult) => void) | undefined = undefined;
 
   const CURRENT_RUNTIME_SNAPSHOT_ID = snapshotId(__RUNTIME_SNAPSHOT_ID__);
   const CURRENT_ACTIVATION_SNAPSHOT_ID = snapshotId(__ACTIVATION_SNAPSHOT_ID__);
@@ -139,6 +150,11 @@
   let snapshotActivationPending = false;
   let snapshotActivationAttempted = false;
   let appDisposed = false;
+  let battleCompletionReported = false;
+  /* Subscribed rather than derived with `$:`: reactive statements run once per
+     flush, so two results arriving in the same tick would report the later
+     one. The host is promised the first ending the duel reached. */
+  const stopBattleCompletionReports = duel.subscribe(reportBattleCompletion);
   const pendingStorageOperations = new SvelteSet<Promise<unknown>>();
   $: boardResult =
     $duel.snapshot === null
@@ -404,6 +420,7 @@
     return () => {
       disposed = true;
       appDisposed = true;
+      stopBattleCompletionReports();
       imageAbortController?.abort(
         new DOMException("Application disposed", "AbortError"),
       );
@@ -484,6 +501,23 @@
     $duel.responsePending,
     $uiSettings,
   );
+
+  /* The duel already ends in exactly two places — a result from the engine and
+     a fatal error — so the outward report hangs off those, not off any new
+     lifecycle of its own. A stop the engine never finished stays a failure:
+     reporting it as a loss would advance a host past a duel that never ran. */
+  function reportBattleCompletion(state: DuelViewState): void {
+    if (onbattlecomplete === undefined || battleCompletionReported) return;
+    const completion =
+      state.result !== null
+        ? battleResultForDuelResult(state.result)
+        : state.status === "failed" && state.error !== null
+          ? battleFacadeFailure(state.error.message)
+          : null;
+    if (completion === null) return;
+    battleCompletionReported = true;
+    onbattlecomplete(completion);
+  }
 
   function maybeAutoResolvePrompt(
     prompt: PlayerPrompt | null,

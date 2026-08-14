@@ -126,8 +126,16 @@
     </div>
   {:else}
     <div class="shell-region shell-region--duel" data-cy="shell-region-duel">
+      {#if route.kind === "duel-session"}
+        <!-- A story handoff addresses a duel the shell cannot build a request
+             for yet, so the session route runs the standalone duel and only
+             marks itself as pending. T19 turns this into a real request. -->
+        <p class="visually-hidden" data-cy="battle-session-pending">
+          Preparing the story duel
+        </p>
+      {/if}
       {#await loaders.duel() then module}
-        <svelte:component this={module.default} />
+        <svelte:component this={module.BattleFacade} request={null} />
       {/await}
     </div>
   {/if}

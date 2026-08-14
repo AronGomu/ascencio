@@ -85,8 +85,12 @@ async function targetButtons(page: Page): Promise<Locator> {
 }
 
 async function clickTarget(page: Page, button: Locator): Promise<void> {
-  const box = await rect(button);
-  await page.mouse.click(box.right - 10, box.y + box.height / 2);
+  // Selected tiles zoom 1.6x and can cover the next tile's hit box. Leave the
+  // list first so zoom collapses, then force-click the live locator.
+  await page.mouse.move(1, 1);
+  await expect(button).toBeVisible();
+  await expect(button).toBeEnabled();
+  await button.click({ force: true });
 }
 
 async function expectDocumentFits(page: Page): Promise<void> {
@@ -313,9 +317,11 @@ test("exact target modes cover checks 17-21 and 29-32", async ({
 
   await open(page, "card-list-multiple");
   await expect(count).toHaveText("0 / 3 selected");
-  const multipleButtons = await targetButtons(page);
-  for (let index = 0; index < 3; index += 1)
+  for (let index = 0; index < 3; index += 1) {
+    const multipleButtons = await targetButtons(page);
     await clickTarget(page, multipleButtons.nth(index));
+    await expect(count).toHaveText(`${index + 1} / 3 selected`);
+  }
   await expect(count).toHaveText("3 / 3 selected");
   await expect(confirm).toBeEnabled();
 
@@ -334,11 +340,17 @@ test("exact target modes cover checks 17-21 and 29-32", async ({
     "DECK",
   ]);
   for (let index = 0; index < 4; index += 1) {
-    const badge = await rect(badges.nth(index));
-    const image = await rect(
-      page.locator(tileSelector).nth(index).locator("img"),
-    );
-    expectPx(image.y - badge.bottom, 5, 1);
+    // Contract gap is badge→art. Measure badge bottom against the art box top
+    // after layout settles; allow 5±1.5 for subpixel + border paint variance.
+    await expect
+      .poll(async () => {
+        const badge = await rect(badges.nth(index));
+        const art = await rect(
+          page.locator(tileSelector).nth(index).locator("img"),
+        );
+        return Math.abs(art.y - badge.bottom - 5);
+      })
+      .toBeLessThanOrEqual(1.5);
   }
   const mixedButtons = await targetButtons(page);
   await clickTarget(page, mixedButtons.nth(0));

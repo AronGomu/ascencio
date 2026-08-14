@@ -67,6 +67,21 @@ The private browser MVP baseline and semantic Svelte DOM duel-field migration ar
 - Domain contract changes land in Integration first; affected UI branches rebase before continuing.
 - Read [`docs/ADR/022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md`](docs/ADR/022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md) before cross-domain work.
 
+## Boundary rules
+
+The ADR-022 boundaries above are machine-enforced, not conventions. Two checks run in `npm run check:headless`:
+
+- `eslint.config.js` — `no-restricted-imports` zones give inline feedback while editing. Each message names the public entry to use instead.
+- [`tests/unit/domain-boundaries.test.ts`](tests/unit/domain-boundaries.test.ts) — resolves real paths, so it catches what a specifier glob cannot, and freezes the exported names of every public entry.
+
+What the rules encode:
+
+- Public entries are `src/shell/index.ts`, `src/story/index.ts`, `src/deck-editor/index.ts`, `src/battle/index.ts` and `src/decks/index.ts`. A cross-domain import targets one of those and nothing deeper.
+- The duel's source still lives in `src/app/`, `src/duel/`, `src/field/`, `src/worker/` and `src/storage/`. Those are battle internals, reachable only through `src/battle/index.ts`, until they are relocated.
+- `src/decks/` is the shared deck-data library rather than a lazy UI domain, so its modules stay importable; only the shape of its index is frozen.
+- Widening a public API means editing the frozen list in the test on purpose. A silent widening is a failing test.
+- A handful of duel identifiers have no legal path yet, because the only entry that could carry them also exports `BattleFacade` and a static import of it would make the duel eager. Each is allowed against one named file in both checks, with the reason recorded there, and disappears when the duel source moves.
+
 ## Core architecture rules
 
 - `vendor/ocgcore-wasm/0.1.2/` is permanently frozen; never update engine binary, loader resolution, or vendor manifest.

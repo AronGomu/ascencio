@@ -343,3 +343,32 @@ No leaked or duplicated Worker
 Story-handoff placeholder
 
 - [ ] Open `http://localhost:4300/#/duel/session/anything` — the standalone duel (deck picker) renders, and DevTools shows a visually hidden `[data-cy="battle-session-pending"]` marker inside the duel region. This is the placeholder T19 replaces with a real handoff; it is expected to look identical to `#/duel`.
+
+## T10 domain-boundary-enforcement
+
+This ticket adds no UI. It makes the ADR-022 domain boundaries machine-enforced,
+so the only thing to confirm by hand is that the rules actually bite.
+
+Confirm the rule fails on a real violation
+
+- [ ] Create `src/deck-editor/__probe.ts` containing a single line:
+      `import TitleScreen from "../story/screens/TitleScreen.svelte";`
+- [ ] Run `npm run lint` — it exits non-zero and names the file with
+      "Reach the visual novel through `src/story/index.ts` (ADR-022 domain boundary)".
+- [ ] Run `npx vitest run tests/unit/domain-boundaries.test.ts` — `no deep cross-domain imports`
+      fails and lists `src/deck-editor/__probe.ts -> src/story/screens/TitleScreen.svelte`.
+- [ ] Delete `src/deck-editor/__probe.ts`, re-run both commands — both exit 0.
+- [ ] In your editor, confirm the ESLint error also appears inline on the import line
+      while the probe file exists.
+
+Confirm a public API cannot widen silently
+
+- [ ] Add `export const scratch = 1;` to `src/story/index.ts`.
+- [ ] Run `npx vitest run tests/unit/domain-boundaries.test.ts` — `story public API is exact`
+      fails, showing `scratch` as an unexpected export.
+- [ ] Remove the line and re-run — 9 tests pass.
+
+Nothing else regressed
+
+- [ ] Open `#/duel`, `#/decks` and `#/story` in turn — all three still mount and behave
+      exactly as in T7–T9; the browser console stays empty.

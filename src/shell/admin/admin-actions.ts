@@ -2,7 +2,7 @@ import { deckId, type DeckId } from "../../decks/index.ts";
 import { PROTOTYPE_DECK_DATABASE_NAME } from "../../decks/indexeddb-deck-repository.ts";
 import { parseYdk } from "../../duel/presets/deck-parser.ts";
 import { DECK_SOURCES } from "../../duel/presets/deck-sources-browser.ts";
-import { STORY_STORAGE_KEY } from "../../story/storage/story-storage.ts";
+import { STORY_STORAGE_KEY } from "../../story/index.ts";
 import { SNAPSHOT_DATABASE_NAME } from "../../storage/snapshot-store.ts";
 import type { AppRoute } from "../routes.ts";
 import { SHELL_SETTINGS_KEY } from "../settings/shell-settings.ts";

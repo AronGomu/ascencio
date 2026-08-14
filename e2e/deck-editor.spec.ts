@@ -366,13 +366,103 @@ test("a prototype deck database is migrated on first load", async ({
   await expect(page.getByLabel("Deck counts")).toContainText("Main 1");
 });
 
-test("the deck editor declares desktop-only viewport", async ({ page }) => {
-  await page.setViewportSize({ width: 900, height: 800 });
+test("the deck editor builds a deck by tap on a small screen", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+
   await page.getByRole("button", { name: "Create deck" }).click();
-  await page.getByLabel("Deck name").fill("Desktop only");
+  await page.getByLabel("Deck name").fill("Portrait Build");
   await page.getByRole("button", { name: "Create", exact: true }).click();
+
+  /* One pane at a time, and the counts stay on screen in every one of them. */
+  const counts = page.getByLabel("Deck counts");
+  await expect(counts).toBeVisible();
+  await expect(page.locator('[data-cy="deck-pane-deck"]')).toBeVisible();
+  await expect(page.locator('[data-cy="deck-pane-catalog"]')).toHaveCount(0);
+
+  await page.locator('[data-cy="deck-tab-catalog"]').click();
+  await expect(counts).toBeVisible();
+  await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
+  await page
+    .getByRole("button", { name: /Blue-Eyes White Dragon/ })
+    .first()
+    .click();
+  await expect(counts).toContainText("Main 1");
+  /* Adding leaves the catalog open, so the next card is one tap away. */
+  await expect(page.locator('[data-cy="deck-pane-catalog"]')).toBeVisible();
+  await expect(page.getByText("Saved locally")).toBeVisible();
+
+  await page.locator('[data-cy="deck-tab-deck"]').click();
+  /* The tile itself, not the validation issue that also names the card. */
+  const deckTile = page.locator(
+    '[data-cy="deck-pane-deck"] [data-cy="deck-tile-89631139"]',
+  );
+  await deckTile.click();
+  await expect(page.locator('[data-cy="deck-tap-menu"]')).toBeVisible();
+  await expect(page.locator('[data-cy="deck-tap-target-main"]')).toHaveCount(0);
   await expect(
-    page.getByRole("heading", { name: "Desktop viewport required" }),
-  ).toBeVisible();
+    page.locator('[data-cy="deck-tap-target-extra"]'),
+  ).toBeDisabled();
+  await page.locator('[data-cy="deck-tap-target-side"]').click();
+  await expect(counts).toContainText("Side 1");
+  await expect(counts).toContainText("Main 0");
+
+  await deckTile.click();
+  await page.locator('[data-cy="deck-tap-target-remove"]').click();
+  await expect(counts).toContainText("Side 0");
+
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(counts).toContainText("Side 1");
+  await expect(page.getByText("Saved locally")).toBeVisible();
+  await page.reload();
+  await expect(page.getByLabel("Deck name")).toHaveValue("Portrait Build");
+  await expect(counts).toContainText("Side 1");
+
+  /* No sideways scroll at any of the sizes the editor now has to serve. */
+  for (const size of [
+    { width: 360, height: 640 },
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+  ]) {
+    await page.setViewportSize(size);
+    await expect(page.locator('[data-cy="deck-editor-layout"]')).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+      `page overflows at ${size.width}x${size.height}`,
+    ).toBe(true);
+    expect(
+      await page.evaluate(() => {
+        const layout = document.querySelector('[data-cy="deck-editor-layout"]');
+        return layout === null || layout.scrollWidth <= layout.clientWidth;
+      }),
+      `editor layout overflows at ${size.width}x${size.height}`,
+    ).toBe(true);
+  }
+});
+
+test("the deck editor keeps its three panels above the breakpoint", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.getByLabel("Deck name").fill("Desktop Panels");
+  await page.getByRole("button", { name: "Create", exact: true }).click();
+
+  for (const pane of ["catalog", "deck", "details"])
+    await expect(page.locator(`[data-cy="deck-pane-${pane}"]`)).toHaveCount(1);
+  await expect(page.getByRole("tablist")).toHaveCount(0);
+  /* A click above the breakpoint still only selects: no tap menu, no add. */
+  await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
+  await page.getByRole("button", { name: /Blue-Eyes White Dragon/ }).click();
+  await expect(page.locator('[data-cy="deck-tap-menu"]')).toHaveCount(0);
+  await expect(page.getByLabel("Deck counts")).toContainText("Main 0");
 });

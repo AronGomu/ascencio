@@ -1,6 +1,12 @@
 <script lang="ts">
-  import { afterUpdate, onMount, tick } from "svelte";
-  import { get } from "svelte/store";
+  import { afterUpdate, getContext, onMount, tick } from "svelte";
+  import { get, readable, type Readable } from "svelte/store";
+  import {
+    computeStageBox,
+    STAGE_CONTEXT_KEY,
+    type StageBox,
+  } from "../shell/index.ts";
+  import { selectEditorLayoutMode } from "./layout/editor-layout.ts";
   import type {
     DeckCardLists,
     DeckId,
@@ -31,6 +37,14 @@
   export let onnavigate: (route: DeckEditorRoute) => void = () => undefined;
 
   const catalog = catalogByCode(PROTOTYPE_CATALOG);
+  /* The shell is the only surface that measures the viewport: the editor reads
+     the published stage once here and passes the resulting layout mode down,
+     so no component below reads the stage a second time. The fallback keeps a
+     harness that mounts the domain without the shell on the desktop layout. */
+  const stage: Readable<StageBox> =
+    getContext<Readable<StageBox> | undefined>(STAGE_CONTEXT_KEY) ??
+    readable(computeStageBox(globalThis.innerWidth, globalThis.innerHeight));
+  $: layoutMode = selectEditorLayoutMode($stage.mode);
   let state: DeckBuilderState = {
     mode: "loading",
     decks: [],
@@ -244,6 +258,7 @@
     cards={PROTOTYPE_CATALOG}
     {catalog}
     ruleset={PROTOTYPE_RULESET}
+    {layoutMode}
     onlibrary={() => void runAndSync(controller?.showLibrary())}
     onrename={(name) => void controller?.rename(name)}
     onmutate={(command) => controller?.mutate(command)}

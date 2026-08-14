@@ -1,0 +1,199 @@
+// @vitest-environment jsdom
+
+import { cleanup, render, screen } from "@testing-library/svelte";
+import { userEvent } from "@testing-library/user-event";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import DeckEditor from "../../../src/deck-editor/components/DeckEditor.svelte";
+import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
+import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
+import type { EditorLayoutMode } from "../../../src/deck-editor/layout/editor-layout.ts";
+import {
+  prototypeCatalogMap,
+  stateFixture,
+} from "../../fixtures/deck-editor.ts";
+
+afterEach(() => cleanup());
+
+function renderEditor(
+  layoutMode: EditorLayoutMode,
+  onmutate = vi.fn(),
+  mainCount = 1,
+) {
+  render(DeckEditor, {
+    state: stateFixture(mainCount),
+    cards: PROTOTYPE_CATALOG,
+    catalog: prototypeCatalogMap,
+    ruleset: PROTOTYPE_RULESET,
+    layoutMode,
+    onlibrary: vi.fn(),
+    onrename: vi.fn(),
+    onmutate,
+    onundo: vi.fn(),
+    onredo: vi.fn(),
+    onretrysave: vi.fn(),
+    onreload: vi.fn(),
+    onpreservecopy: vi.fn(),
+  });
+  return onmutate;
+}
+
+const pane = (name: string) =>
+  document.querySelector(`[data-cy="deck-pane-${name}"]`);
+
+async function openCatalog(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(document.querySelector('[data-cy="deck-tab-catalog"]')!);
+}
+
+describe("deck editor portrait layout", () => {
+  it("renders exactly one pane at a time below the breakpoint", () => {
+    renderEditor("tabs");
+    expect(pane("deck")).not.toBeNull();
+    expect(pane("catalog")).toBeNull();
+    expect(pane("details")).toBeNull();
+    expect(
+      screen.getByRole("tablist", { name: "Deck editor panes" }),
+    ).toBeTruthy();
+  });
+
+  it("switches panes from the tab list", async () => {
+    const user = userEvent.setup();
+    renderEditor("tabs");
+    await openCatalog(user);
+    expect(pane("catalog")).not.toBeNull();
+    expect(pane("deck")).toBeNull();
+    const tab = document.querySelector('[data-cy="deck-tab-catalog"]')!;
+    expect(tab.getAttribute("aria-selected")).toBe("true");
+  });
+
+  it("moves between tabs with the arrow keys", async () => {
+    const user = userEvent.setup();
+    renderEditor("tabs");
+    (
+      document.querySelector('[data-cy="deck-tab-deck"]') as HTMLElement
+    ).focus();
+    await user.keyboard("{ArrowRight}");
+    expect(document.activeElement).toBe(
+      document.querySelector('[data-cy="deck-tab-details"]'),
+    );
+    expect(pane("details")).not.toBeNull();
+  });
+
+  it("adds a tapped catalog card to its canonical zone and stays on the catalog", async () => {
+    const user = userEvent.setup();
+    const onmutate = renderEditor("tabs");
+    await openCatalog(user);
+    await user.click(
+      screen.getByRole("button", { name: /Blue-Eyes White Dragon/ }),
+    );
+    expect(onmutate).toHaveBeenCalledWith({ type: "add", cardCode: 89631139 });
+    expect(pane("catalog")).not.toBeNull();
+    expect(screen.getByLabelText("Deck counts").textContent).toContain("Main");
+  });
+
+  it("announces the reason instead of adding a card at its copy limit", async () => {
+    const user = userEvent.setup();
+    const base = stateFixture();
+    const state = {
+      ...base,
+      current: {
+        ...base.current!,
+        deck: {
+          ...base.current!.deck,
+          main: [89631139, 89631139, 89631139],
+        },
+      },
+    };
+    const onmutate = vi.fn();
+    render(DeckEditor, {
+      state,
+      cards: PROTOTYPE_CATALOG,
+      catalog: prototypeCatalogMap,
+      ruleset: PROTOTYPE_RULESET,
+      layoutMode: "tabs" satisfies EditorLayoutMode,
+      onlibrary: vi.fn(),
+      onrename: vi.fn(),
+      onmutate,
+      onundo: vi.fn(),
+      onredo: vi.fn(),
+      onretrysave: vi.fn(),
+      onreload: vi.fn(),
+      onpreservecopy: vi.fn(),
+    });
+    await openCatalog(user);
+    await user.click(
+      screen.getAllByRole("button", { name: /Blue-Eyes White Dragon/ })[0]!,
+    );
+    expect(onmutate).not.toHaveBeenCalled();
+    expect(screen.getByRole("status").textContent).toContain(
+      "Copy limit 3 reached",
+    );
+    expect(pane("details")).not.toBeNull();
+  });
+
+  it("opens a target menu with the legal targets only when a deck card is tapped", async () => {
+    const user = userEvent.setup();
+    const onmutate = renderEditor("tabs");
+    await user.click(
+      screen.getAllByRole("button", { name: /Blue-Eyes White Dragon/ })[0]!,
+    );
+    const menu = document.querySelector('[data-cy="deck-tap-menu"]');
+    expect(menu).not.toBeNull();
+    expect(menu!.querySelector('[data-cy="deck-tap-target-main"]')).toBeNull();
+    expect(
+      menu!
+        .querySelector('[data-cy="deck-tap-target-extra"]')
+        ?.hasAttribute("disabled"),
+    ).toBe(true);
+    await user.click(menu!.querySelector('[data-cy="deck-tap-target-side"]')!);
+    expect(onmutate).toHaveBeenCalledWith({
+      type: "move",
+      cardCode: 89631139,
+      from: "main",
+      to: "side",
+    });
+    expect(document.querySelector('[data-cy="deck-tap-menu"]')).toBeNull();
+  });
+
+  it("removes a deck card from the target menu", async () => {
+    const user = userEvent.setup();
+    const onmutate = renderEditor("tabs");
+    await user.click(
+      screen.getAllByRole("button", { name: /Blue-Eyes White Dragon/ })[0]!,
+    );
+    await user.click(
+      document.querySelector('[data-cy="deck-tap-target-remove"]')!,
+    );
+    expect(onmutate).toHaveBeenCalledWith({
+      type: "remove",
+      cardCode: 89631139,
+      zone: "main",
+    });
+  });
+
+  it("closes the target menu on Escape without mutating", async () => {
+    const user = userEvent.setup();
+    const onmutate = renderEditor("tabs");
+    await user.click(
+      screen.getAllByRole("button", { name: /Blue-Eyes White Dragon/ })[0]!,
+    );
+    await user.keyboard("{Escape}");
+    expect(document.querySelector('[data-cy="deck-tap-menu"]')).toBeNull();
+    expect(onmutate).not.toHaveBeenCalled();
+  });
+
+  it("keeps all three panels and no tabs above the breakpoint", async () => {
+    const user = userEvent.setup();
+    const onmutate = renderEditor("panels");
+    expect(pane("catalog")).not.toBeNull();
+    expect(pane("deck")).not.toBeNull();
+    expect(pane("details")).not.toBeNull();
+    expect(screen.queryByRole("tablist")).toBeNull();
+    /* A desktop click still only selects: the tap model never reaches the
+       store above the breakpoint. */
+    await user.click(
+      screen.getAllByRole("button", { name: /Blue-Eyes White Dragon/ })[0]!,
+    );
+    expect(document.querySelector('[data-cy="deck-tap-menu"]')).toBeNull();
+    expect(onmutate).not.toHaveBeenCalled();
+  });
+});

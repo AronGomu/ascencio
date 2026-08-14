@@ -27,6 +27,7 @@
   export let ondragcancel: () => void = () => undefined;
   export let onpickup: (code: number, zone: DeckZone) => void = () => undefined;
   export let ondropzone: (zone: DeckZone) => void = () => undefined;
+  export let ontap: ((code: number, zone: DeckZone) => void) | null = null;
 
   $: emptyCount = Math.max(0, plan.slots - codes.length);
 </script>
@@ -91,6 +92,7 @@
           selected={selectedCode === code}
           compact={plan.compact}
           onselect={() => onselect(catalog.get(code) ?? null, code)}
+          ontap={ontap === null ? null : () => ontap(code, zone)}
           ondragcard={(event) => ondragcard(code, zone, event)}
           {ondragcancel}
           onpickup={() => onpickup(code, zone)}

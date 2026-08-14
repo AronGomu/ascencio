@@ -10,6 +10,10 @@
   export let compact = false;
   export let zone: string | null = null;
   export let onselect: () => void = () => undefined;
+  /* Touch reuses the tile itself as the gesture: where a tap means something
+     other than "show me this card", the pane hands in that meaning. `null`
+     keeps the pointer/keyboard model exactly as it is. */
+  export let ontap: (() => void) | null = null;
   export let ondragcard: (event: DragEvent) => void = () => undefined;
   export let ondragcancel: () => void = () => undefined;
   export let onpickup: () => void = () => undefined;
@@ -38,7 +42,7 @@
   data-cy={`deck-tile-${code}`}
   data-card-code={code}
   data-deck-zone={zone}
-  onclick={onselect}
+  onclick={() => (ontap === null ? onselect() : ontap())}
   ondragstart={ondragcard}
   ondragend={ondragcancel}
   onkeydown={(event) => {

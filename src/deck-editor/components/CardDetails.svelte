@@ -11,6 +11,8 @@
     side: 0,
   };
   export let ruleset: PinnedDeckRuleset;
+  /* Its own pane below the breakpoint: the stage scrolls it, not an inner box. */
+  export let filled = false;
 
   $: limit = card === null ? 3 : quantityLimit(ruleset, card.code);
   $: limitLabel =
@@ -25,6 +27,7 @@
 
 <aside
   class="details"
+  class:filled
   aria-labelledby="card-details-heading"
   data-cy="deck-card-details"
 >
@@ -172,6 +175,11 @@
     border: 1px solid var(--border);
     border-radius: 0.8rem;
     background: var(--surface);
+  }
+
+  .details.filled {
+    height: auto;
+    overflow-y: visible;
   }
 
   h2,

@@ -30,6 +30,9 @@
   export let onpickup: (code: number, zone: DeckZone) => void = () => undefined;
   export let ondropzone: (zone: DeckZone) => void = () => undefined;
   export let onremove: () => void = () => undefined;
+  export let ontap: ((code: number, zone: DeckZone) => void) | null = null;
+  /* Its own pane below the breakpoint: the stage scrolls it, not an inner box. */
+  export let filled = false;
 
   let workspaceElement: HTMLElement;
   $: totalCopies = countCopies(deck);
@@ -83,6 +86,7 @@
 
 <section
   class="workspace"
+  class:filled
   aria-labelledby="workspace-heading"
   data-cy="deck-workspace"
   bind:this={workspaceElement}
@@ -125,6 +129,7 @@
     {ondragcard}
     {ondragcancel}
     {onpickup}
+    {ontap}
     ondropzone={(zone) => void dropAndRestoreFocus(zone)}
   />
 
@@ -143,6 +148,7 @@
       {ondragcard}
       {ondragcancel}
       {onpickup}
+      {ontap}
       ondropzone={(zone) => void dropAndRestoreFocus(zone)}
     />
     <DeckZoneGrid
@@ -159,6 +165,7 @@
       {ondragcard}
       {ondragcancel}
       {onpickup}
+      {ontap}
       ondropzone={(zone) => void dropAndRestoreFocus(zone)}
     />
   </div>
@@ -178,6 +185,11 @@
     border: 1px solid var(--border);
     border-radius: 0.8rem;
     background: var(--surface);
+  }
+
+  .workspace.filled {
+    height: auto;
+    overflow-y: visible;
   }
 
   .workspace-header {
@@ -209,5 +221,9 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.75rem;
     margin-top: 0.8rem;
+  }
+
+  .filled .secondary-zones {
+    grid-template-columns: minmax(0, 1fr);
   }
 </style>

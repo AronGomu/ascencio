@@ -13,6 +13,20 @@
   import CardCatalog from "./CardCatalog.svelte";
   import CardDetails from "./CardDetails.svelte";
   import DeckWorkspace from "./DeckWorkspace.svelte";
+  import EditorTabs from "./EditorTabs.svelte";
+  import TapTargetMenu from "./TapTargetMenu.svelte";
+  import {
+    defaultPane,
+    paneAfterAdd,
+    paneAfterSelect,
+    type EditorLayoutMode,
+    type EditorPane,
+  } from "../layout/editor-layout.ts";
+  import {
+    catalogTapZone,
+    deckTapTargets,
+    type TapTarget,
+  } from "../layout/tap-targets.ts";
   import type { PickedCard } from "../drag-state.ts";
   import YdkExport from "./YdkExport.svelte";
   import YdkImport from "./YdkImport.svelte";
@@ -21,6 +35,10 @@
   export let cards: readonly DeckBuilderCardView[];
   export let catalog: ReadonlyMap<number, DeckBuilderCardView>;
   export let ruleset: PinnedDeckRuleset;
+  /* `panels` is the three-column desktop editor; `tabs` shows one pane at a
+     time below the stage breakpoint. The shell decides which, so no component
+     below here reads the stage a second time. */
+  export let layoutMode: EditorLayoutMode = "panels";
   export let onlibrary: () => void;
   export let onrename: (name: string) => void;
   export let onmutate: (
@@ -40,8 +58,13 @@
   let showExport = false;
   let modalOpener: HTMLElement | null = null;
   let deckName = state.current?.deck.name ?? "";
+  let pane: EditorPane = defaultPane();
+  let tapped: { code: number; zone: DeckZone } | null = null;
+  let tapOpener: HTMLElement | null = null;
 
+  $: tabs = layoutMode === "tabs";
   $: deck = state.current?.deck ?? null;
+  $: tapTargets = tapped === null ? [] : targetsFor(tapped.code, tapped.zone);
   $: if (
     deck !== null &&
     deck.name !== deckName &&
@@ -63,6 +86,72 @@
     for (const code of [...value.main, ...value.extra, ...value.side])
       result.set(code, (result.get(code) ?? 0) + 1);
     return result;
+  }
+
+  /* Every tap runs the same command the drag and keyboard paths run, so undo,
+     redo and autosave cannot tell the three apart. */
+  function tapCatalogCard(card: DeckBuilderCardView): void {
+    selected = card;
+    selectedCode = card.code;
+    onmutate({ type: "add", cardCode: card.code });
+    announcement = `${card.name} added to ${catalogTapZone(card) === "main" ? "Main Deck" : "Extra Deck"}.`;
+    pane = paneAfterAdd(pane);
+  }
+
+  function tapDeckCard(code: number, zone: DeckZone): void {
+    selectCard(catalog.get(code) ?? null, code);
+    tapOpener = document.activeElement as HTMLElement | null;
+    tapped = { code, zone };
+  }
+
+  function targetsFor(code: number, zone: DeckZone): readonly TapTarget[] {
+    const card = catalog.get(code);
+    const counts =
+      deck === null
+        ? { main: 0, extra: 0, side: 0 }
+        : {
+            main: deck.main.length,
+            extra: deck.extra.length,
+            side: deck.side.length,
+          };
+    /* A card the pinned catalog no longer knows cannot be placed anywhere, so
+       removal is the only honest offer. */
+    if (card === undefined)
+      return [
+        {
+          zone: "remove",
+          label: "Remove from deck",
+          enabled: true,
+          reason: null,
+        },
+      ];
+    return deckTapTargets(card, zone, counts, ruleset);
+  }
+
+  async function chooseTapTarget(target: DeckZone | "remove"): Promise<void> {
+    const active = tapped;
+    if (active === null) return;
+    const name = catalog.get(active.code)?.name ?? `Card ${active.code}`;
+    if (target === "remove") {
+      onmutate({ type: "remove", cardCode: active.code, zone: active.zone });
+      announcement = `${name} removed.`;
+    } else {
+      onmutate({
+        type: "move",
+        cardCode: active.code,
+        from: active.zone,
+        to: target,
+      });
+      announcement = `${name} moved to ${target}.`;
+    }
+    await closeTapMenu();
+  }
+
+  async function closeTapMenu(): Promise<void> {
+    tapped = null;
+    await tick();
+    tapOpener?.focus();
+    tapOpener = null;
   }
 
   function selectCard(card: DeckBuilderCardView | null, code: number): void {
@@ -156,6 +245,9 @@
     if (showImport || showExport) {
       void closeModal();
       announcement = "Dialog closed.";
+    } else if (tapped !== null) {
+      void closeTapMenu();
+      announcement = "Card move cancelled.";
     } else if (picked !== null) {
       picked = null;
       announcement = "Card move cancelled.";
@@ -303,66 +395,97 @@
 
   <main
     class="editor-layout"
+    class:tabs
     aria-busy={state.saveState === "saving"}
     data-cy="deck-editor-layout"
   >
-    <CardCatalog
-      {cards}
-      {ruleset}
-      {selectedCode}
-      {copies}
-      onselect={(card) => {
-        selected = card;
-        selectedCode = card.code;
-      }}
-      ondragcard={(card, event) => startCatalogDrag(card, event)}
-      ondragcancel={cancelPicked}
-      onpickup={(card) => startCatalogDrag(card)}
-      onblocked={(card, reason) => {
-        selected = card;
-        selectedCode = card.code;
-        announcement = `${card.name}: ${reason}`;
-      }}
-    />
-    <DeckWorkspace
-      {deck}
-      {catalog}
-      {ruleset}
-      {selectedCode}
-      {picked}
-      onselect={selectCard}
-      ondragcard={(code, zone, event) => startZoneDrag(code, zone, event)}
-      ondragcancel={cancelPicked}
-      onpickup={(code, zone) => startZoneDrag(code, zone)}
-      ondropzone={dropInZone}
-      onremove={removePicked}
-    />
-    <CardDetails
-      card={selected}
-      missingCode={selected === null ? selectedCode : null}
-      copies={selectedCopies}
-      {ruleset}
-    />
+    {#if tabs}
+      <EditorTabs {pane} onselectpane={(next) => (pane = next)} />
+    {/if}
+
+    {#if !tabs || pane === "catalog"}
+      <div
+        class="pane"
+        id="deck-pane-catalog"
+        role={tabs ? "tabpanel" : undefined}
+        data-cy="deck-pane-catalog"
+      >
+        <CardCatalog
+          {cards}
+          {ruleset}
+          {selectedCode}
+          {copies}
+          filled={tabs}
+          onselect={(card) => {
+            selected = card;
+            selectedCode = card.code;
+          }}
+          ontap={tabs ? tapCatalogCard : null}
+          ondragcard={(card, event) => startCatalogDrag(card, event)}
+          ondragcancel={cancelPicked}
+          onpickup={(card) => startCatalogDrag(card)}
+          onblocked={(card, reason) => {
+            selected = card;
+            selectedCode = card.code;
+            announcement = `${card.name}: ${reason}`;
+            pane = paneAfterSelect(pane, layoutMode);
+          }}
+        />
+      </div>
+    {/if}
+
+    {#if !tabs || pane === "deck"}
+      <div
+        class="pane"
+        id="deck-pane-deck"
+        role={tabs ? "tabpanel" : undefined}
+        data-cy="deck-pane-deck"
+      >
+        <DeckWorkspace
+          {deck}
+          {catalog}
+          {ruleset}
+          {selectedCode}
+          {picked}
+          filled={tabs}
+          onselect={selectCard}
+          ontap={tabs ? tapDeckCard : null}
+          ondragcard={(code, zone, event) => startZoneDrag(code, zone, event)}
+          ondragcancel={cancelPicked}
+          onpickup={(code, zone) => startZoneDrag(code, zone)}
+          ondropzone={dropInZone}
+          onremove={removePicked}
+        />
+      </div>
+    {/if}
+
+    {#if !tabs || pane === "details"}
+      <div
+        class="pane"
+        id="deck-pane-details"
+        role={tabs ? "tabpanel" : undefined}
+        data-cy="deck-pane-details"
+      >
+        <CardDetails
+          card={selected}
+          missingCode={selected === null ? selectedCode : null}
+          copies={selectedCopies}
+          {ruleset}
+          filled={tabs}
+        />
+      </div>
+    {/if}
   </main>
 
-  <div
-    class="desktop-required"
-    role="note"
-    data-cy="deck-editor-desktop-required"
-  >
-    <h2 data-cy="deck-editor-desktop-required-heading">
-      Desktop viewport required
-    </h2>
-    <p data-cy="deck-editor-desktop-required-message">
-      The Deck Editor targets screens at least 1024 px wide.
-    </p>
-    <button
-      type="button"
-      class="secondary"
-      data-cy="deck-editor-desktop-required-back"
-      onclick={onlibrary}>Return to Deck Library</button
-    >
-  </div>
+  {#if tapped !== null}
+    <div class="backdrop" aria-hidden="true" data-cy="deck-tap-backdrop"></div>
+    <TapTargetMenu
+      cardName={catalog.get(tapped.code)?.name ?? `Card ${tapped.code}`}
+      targets={tapTargets}
+      onchoose={(target) => void chooseTapTarget(target)}
+      oncancel={() => void closeTapMenu()}
+    />
+  {/if}
 
   {#if showImport}
     <div
@@ -477,6 +600,24 @@
     padding-bottom: 0.75rem;
   }
 
+  /* Above the breakpoint the pane wrapper is not a box at all: the three
+     sections stay the grid's own children, so the desktop layout is the same
+     layout it was before the panes existed. */
+  .pane {
+    display: contents;
+  }
+
+  .editor-layout.tabs {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    gap: 0.55rem;
+  }
+
+  .editor-layout.tabs .pane {
+    display: block;
+    min-width: 0;
+  }
+
   .message {
     width: min(118rem, calc(100% - 1.5rem));
     margin: 0 auto 0.6rem;
@@ -502,26 +643,26 @@
     background: rgb(0 0 0 / 0.68);
   }
 
-  .desktop-required {
-    display: none;
-    width: min(34rem, calc(100% - 2rem));
-    margin: 4rem auto;
-    padding: 1.25rem;
-    border: 1px solid var(--border);
-    border-radius: 0.7rem;
-    background: var(--surface);
-    text-align: center;
-  }
-
-  @media (max-width: 1023px) {
-    .editor-header,
-    .editor-layout,
-    .message {
-      display: none;
+  /* T14: below the stage breakpoint the header stops being a fixed nine-column
+     strip and wraps instead, so deck name, counts and both status readouts stay
+     on screen in every tab without pushing the page sideways. The width matches
+     `STAGE_BREAKPOINT_PX` in `src/shell/stage-layout.ts`. */
+  @media (max-width: 1023.98px) {
+    .editor-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      width: calc(100% - 1rem);
+      padding-block: 0.5rem;
     }
 
-    .desktop-required {
-      display: block;
+    .name-field {
+      flex: 1 1 9rem;
+    }
+
+    .editor-layout,
+    .message {
+      width: calc(100% - 1rem);
     }
   }
 

@@ -619,3 +619,78 @@ Nothing else regressed
 - [ ] Open `#/duel` and play a few actions, and `#/decks` and edit a deck —
       both behave exactly as before; neither reads or writes `ygo-story-saves`.
 - [ ] The browser console stays empty across all of the above.
+
+## T14 deck-editor-portrait-layout
+
+Below 1024px CSS width the deck editor is no longer a dead end: it drops the
+three-column desktop grid for a single tabbed pane (Catalog / Deck / Details)
+with a persistent header, and adds a touch model — tap a catalog card to add
+it, tap a deck card to open a move/remove menu. At and above 1024px absolutely
+nothing changes; that is the main thing to confirm.
+
+Use a real browser window resize or DevTools device toolbar. The breakpoint is
+CSS width, so a landscape phone under 1024px also gets tabs.
+
+Tabs and the persistent header (390x844)
+
+- [ ] Open `#/decks`, create a deck named "Portrait Manual", and shrink the
+      window to 390x844. The editor opens on the **Deck** tab; the "Desktop
+      viewport required" screen is gone for good.
+- [ ] The header above the tabs shows deck name, Main/Extra/Side counts, the
+      deck status and the autosave status. Switch to Catalog and then Details —
+      the header stays put and keeps showing the same counts on every tab.
+- [ ] Exactly one pane is on screen at a time: on Catalog the deck grid is
+      absent, not merely scrolled away.
+- [ ] Tab the keyboard focus into the tab strip and press Left/Right arrows —
+      the selection follows focus through Catalog, Deck, Details and wraps.
+
+Tap to add (390x844)
+
+- [ ] On the Catalog tab, filter by "Blue-Eyes" and tap the card. The Main
+      count goes to 1, the autosave reads "Saved locally", and you are still on
+      the Catalog tab so the next card is one tap away.
+- [ ] Tap the same card twice more (Main 3), then tap it a fourth time. Nothing
+      is added; the app announces "Copy limit 3 reached" and shows you the card
+      on the Details tab.
+- [ ] Filter for "Gate Guardians Combined" (a Fusion monster) and tap it — it
+      lands in the **Extra** Deck, not the Main Deck.
+
+Tap to move and remove (390x844)
+
+- [ ] On the Deck tab, tap a card sitting in the Main Deck. A menu opens naming
+      the card. It offers Side Deck (enabled), Extra Deck (disabled, with a
+      reason) and Remove; it does **not** offer Main Deck.
+- [ ] Choose Side Deck — Main drops by one, Side rises by one.
+- [ ] Tap the card in the Side Deck: this time Main Deck is enabled (its home
+      zone) and Extra is not. Press Escape instead of choosing — the menu closes
+      and nothing moved.
+- [ ] Tap it again and choose Remove — the count drops. Press Undo in the
+      header: it comes back. Press Redo: it goes again. Autosave keeps saying
+      "Saved locally" throughout.
+
+Layout at the sizes that matter
+
+- [ ] At 360x640, 390x844 and 768x1024 in turn: no horizontal scrollbar and no
+      content clipped at the right edge, on all three tabs. The header wraps
+      onto more rows rather than pushing the page sideways.
+- [ ] Rotate to landscape under 1024px wide (e.g. 844x390) — still tabs, still
+      no sideways scroll.
+- [ ] Tap targets are comfortable: tabs, menu items and card tiles are all
+      easily hit with a thumb (44px floor).
+- [ ] Import and Export still open from the header at 390x844 and still work.
+
+Desktop is untouched (1440x900)
+
+- [ ] Widen to 1440x900. All three panels are back side by side, with no tab
+      strip anywhere.
+- [ ] Click a catalog card — it only **selects** (details fill the right panel).
+      No card is added and no tap menu appears. Adding is still drag or the
+      keyboard pick-and-drop path.
+- [ ] Drag a card from the catalog into the Main Deck drop area — works as
+      before. Focus a card, press Space, then click "Drop picked card in Side
+      Deck" — works as before.
+- [ ] Undo/redo, import, export, rename and the Deck Library round trip all
+      behave exactly as they did before this ticket.
+- [ ] Resize from 1440 wide down past 1024 and back up without reloading — the
+      editor swaps between panels and tabs each way, keeping the open deck and
+      its edits.

@@ -25,10 +25,24 @@
     card: DeckBuilderCardView,
     reason: string,
   ) => void = () => undefined;
+  /* `null` above the breakpoint, where a tile click only selects. */
+  export let ontap: ((card: DeckBuilderCardView) => void) | null = null;
+  /* The catalog is a pane of its own below the breakpoint, so it fills the
+     stage instead of reserving room for the two panels beside it. */
+  export let filled = false;
 
   let filters: DeckCatalogFilters = { ...EMPTY_CATALOG_FILTERS };
   $: options = catalogFilterOptions(cards);
   $: results = filterDeckCatalog(cards, filters);
+
+  function addable(card: DeckBuilderCardView): boolean {
+    return (copies.get(card.code) ?? 0) < quantityLimit(ruleset, card.code);
+  }
+
+  function blockedReason(card: DeckBuilderCardView): string {
+    const limit = quantityLimit(ruleset, card.code);
+    return limit === 0 ? "Card is forbidden." : `Copy limit ${limit} reached.`;
+  }
 
   function setFilter<Key extends keyof DeckCatalogFilters>(
     key: Key,
@@ -40,6 +54,7 @@
 
 <section
   class="catalog"
+  class:filled
   aria-labelledby="catalog-heading"
   data-cy="deck-catalog"
 >
@@ -181,16 +196,16 @@
           draggable={(copies.get(card.code) ?? 0) <
             quantityLimit(ruleset, card.code)}
           onselect={() => onselect(card)}
+          ontap={ontap === null
+            ? null
+            : () =>
+                addable(card)
+                  ? ontap(card)
+                  : onblocked(card, blockedReason(card))}
           ondragcard={(event) => ondragcard(card, event)}
           {ondragcancel}
           onpickup={() => onpickup(card)}
-          onblocked={() =>
-            onblocked(
-              card,
-              quantityLimit(ruleset, card.code) === 0
-                ? "Card is forbidden."
-                : `Copy limit ${quantityLimit(ruleset, card.code)} reached.`,
-            )}
+          onblocked={() => onblocked(card, blockedReason(card))}
         />
       {/each}
     </div>
@@ -206,6 +221,11 @@
     border: 1px solid var(--border);
     border-radius: 0.8rem;
     background: var(--surface);
+  }
+
+  .catalog.filled {
+    height: auto;
+    overflow: visible;
   }
 
   header,
@@ -268,6 +288,12 @@
     max-height: calc(100vh - 29rem);
     overflow-y: auto;
     padding: 0.2rem 0.35rem 0.5rem 0.1rem;
+  }
+
+  .filled .results {
+    grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+    max-height: none;
+    overflow-y: visible;
   }
 
   .empty-state {

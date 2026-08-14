@@ -3,6 +3,7 @@
 **Plan:** `./ai_artefacts/PLAN_2026_08_13_feedback_follow_up.md`
 **Depends:** T12
 **Commit outcome:** Pure exact/range/max/stale selection model exists with exhaustive frozen-state tests; production UI still behaves as before.
+**Evidence:** `12882e9` (`feat(card-list): define exact and range selection state`).
 
 ## Context (self-contained)
 
@@ -102,4 +103,4 @@ Implementation algorithm exact:
 - [x] `npm run build:app` → exit 0; production UI unchanged.
 - [x] manual check not needed — pure model only; unit matrix is behavior evidence.
 - [x] app functional — existing `npx vitest run tests/component/ZoneListDialog.test.ts tests/component/DuelField.test.ts` remains green.
-- [ ] commit msg draft: `feat(card-list): define exact and range selection state`
+- [x] commit msg draft: `feat(card-list): define exact and range selection state`

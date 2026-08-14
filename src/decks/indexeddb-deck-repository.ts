@@ -1,4 +1,4 @@
-import { openDB, type DBSchema, type IDBPDatabase } from "idb";
+import { openDB, unwrap, type DBSchema, type IDBPDatabase } from "idb";
 import type {
   DeckHistory,
   DeckId,
@@ -6,13 +6,33 @@ import type {
   StoredDeck,
 } from "./deck-contracts.ts";
 import { deckId } from "./deck-contracts.ts";
+import {
+  createDeckStores,
+  DECK_DATABASE_NAME,
+  DECK_DATABASE_VERSION,
+  migrateLegacyDeckDatabase,
+  type DeckMigrationReport,
+} from "./deck-database.ts";
 import { MAXIMUM_DECK_UPDATES } from "./deck-history.ts";
 import type { DeckRepository } from "./deck-repository.ts";
 
-const DATABASE_VERSION = 1;
-export const PROTOTYPE_DECK_DATABASE_NAME =
-  "ygo-story-duel-deck-builder-prototype";
 const LAST_OPENED_KEY = "last-opened-deck";
+
+/* One migration per page load, shared by every caller: the deck editor and the
+   admin console both open the repository and the copy must not run twice. A
+   rejection drops the cache so a retry starts over rather than replaying the
+   same failure forever. */
+let migration: Promise<DeckMigrationReport> | null = null;
+
+function migrateOnce(): Promise<DeckMigrationReport> {
+  migration ??= migrateLegacyDeckDatabase(globalThis.indexedDB).catch(
+    (error: unknown) => {
+      migration = null;
+      throw error;
+    },
+  );
+  return migration;
+}
 
 interface DeckDatabase extends DBSchema {
   decks: {
@@ -57,20 +77,21 @@ export class IndexedDbDeckRepository implements DeckRepository {
   }
 
   static async open(
-    databaseName = PROTOTYPE_DECK_DATABASE_NAME,
+    databaseName = DECK_DATABASE_NAME,
     now: () => Date = () => new Date(),
   ): Promise<IndexedDbDeckRepository> {
+    /* Before the first read, and only for the database that has a prototype
+       predecessor: a caller naming its own database gets no migration. A
+       `DeckMigrationError` is deliberately not wrapped as a `DeckStorageError`,
+       because the deck editor answers it with its own blocking state. */
+    if (databaseName === DECK_DATABASE_NAME) await migrateOnce();
     try {
       const database = await openDB<DeckDatabase>(
         databaseName,
-        DATABASE_VERSION,
+        DECK_DATABASE_VERSION,
         {
           upgrade(db) {
-            const decks = db.createObjectStore("decks", { keyPath: "id" });
-            decks.createIndex("updatedAt", "updatedAt");
-            decks.createIndex("name", "name");
-            db.createObjectStore("histories", { keyPath: "deckId" });
-            db.createObjectStore("preferences", { keyPath: "key" });
+            createDeckStores(unwrap(db));
           },
         },
       );

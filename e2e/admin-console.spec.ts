@@ -1,18 +1,17 @@
 import { expect, test, type Page } from "@playwright/test";
+import { DECK_DATABASE_NAME } from "../src/decks/deck-database.ts";
 
 const adminUrl = "./#/admin";
 
 async function deleteDeckDatabase(page: Page) {
-  await page.evaluate(async () => {
+  await page.evaluate(async (name: string) => {
     await new Promise<void>((resolve, reject) => {
-      const request = indexedDB.deleteDatabase(
-        "ygo-story-duel-deck-builder-prototype",
-      );
+      const request = indexedDB.deleteDatabase(name);
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
       request.onblocked = () => resolve();
     });
-  });
+  }, DECK_DATABASE_NAME);
 }
 
 test("the admin console ships in the production bundle", async ({ page }) => {

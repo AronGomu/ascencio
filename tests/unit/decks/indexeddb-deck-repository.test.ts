@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import "fake-indexeddb/auto";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { deleteDB } from "idb";
 import { deckId } from "../../../src/decks/deck-contracts.ts";
 import {
@@ -11,10 +11,17 @@ import {
 import { createBlankDeck } from "../../../src/decks/deck-model.ts";
 import { validateDeckDraft } from "../../../src/decks/deck-validation.ts";
 import {
+  DECK_DATABASE_NAME,
+  LEGACY_DECK_DATABASE_NAME,
+} from "../../../src/decks/deck-database.ts";
+import {
+  deckDatabaseNames,
+  seedDeckDatabase,
+} from "../../fixtures/deck-database.ts";
+import {
   DeckRevisionConflictError,
   DeckStorageError,
   IndexedDbDeckRepository,
-  PROTOTYPE_DECK_DATABASE_NAME,
 } from "../../../src/decks/indexeddb-deck-repository.ts";
 import {
   catalogByCode,
@@ -27,6 +34,8 @@ const catalog = catalogByCode(PROTOTYPE_CATALOG);
 
 afterEach(async () => {
   await Promise.all(names.splice(0).map((name) => deleteDB(name)));
+  await deleteDB(LEGACY_DECK_DATABASE_NAME);
+  await deleteDB(DECK_DATABASE_NAME);
 });
 
 async function repository(name: string): Promise<IndexedDbDeckRepository> {
@@ -38,8 +47,45 @@ async function repository(name: string): Promise<IndexedDbDeckRepository> {
 }
 
 describe("IndexedDbDeckRepository", () => {
-  it("uses an isolated prototype database name", () => {
-    expect(PROTOTYPE_DECK_DATABASE_NAME).not.toBe("ygo-story-duel");
+  it("defaults to the production deck database", async () => {
+    expect(DECK_DATABASE_NAME).toBe("ygo-story-decks");
+    const repo = await IndexedDbDeckRepository.open();
+    repo.close();
+    expect((await indexedDB.databases()).map(({ name }) => name)).toContain(
+      DECK_DATABASE_NAME,
+    );
+  });
+
+  /* The one place the migration and the repository meet: opening the default
+     database has to move a prototype player's decks across before the first
+     read, or the library renders empty and the player thinks they lost them.
+     The repository caches its migration for the lifetime of the module, which
+     is what a page load wants and what a second test in the same file does not,
+     so this one runs against a freshly-registered module. */
+  it("migrates a prototype database before the first read", async () => {
+    const draft = createBlankDeck(
+      "Prototype Deck",
+      catalog,
+      PROTOTYPE_RULESET,
+      {
+        id: "prototype-deck",
+        now: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    );
+    await seedDeckDatabase(LEGACY_DECK_DATABASE_NAME, {
+      decks: [{ ...draft, revision: 1 }],
+    });
+
+    vi.resetModules();
+    const { IndexedDbDeckRepository: FreshRepository } =
+      await import("../../../src/decks/indexeddb-deck-repository.ts");
+    const repo = await FreshRepository.open();
+    expect((await repo.list()).map(({ name }) => name)).toEqual([
+      "Prototype Deck",
+    ]);
+    expect((await repo.load(draft.id))?.history.undo).toEqual([]);
+    repo.close();
+    expect(await deckDatabaseNames()).not.toContain(LEGACY_DECK_DATABASE_NAME);
   });
 
   it("atomically creates, saves, lists, reloads, and deletes deck plus history", async () => {

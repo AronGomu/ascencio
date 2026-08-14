@@ -6,6 +6,7 @@
     DeckId,
     DeckRecord,
   } from "../decks/deck-contracts.ts";
+  import { DeckMigrationError } from "../decks/index.ts";
   import { IndexedDbDeckRepository } from "../decks/indexeddb-deck-repository.ts";
   import {
     catalogByCode,
@@ -48,6 +49,11 @@
   let appliedDeckId: DeckId | null = null;
   let notFound: DeckId | null = null;
   let routing = false;
+  /* A failed migration is not a failed load: the decks still exist, in the
+     database the migration refused to delete. Nothing may be edited until the
+     copy completes, or a second editor session would write into the database
+     the next attempt is about to overwrite. */
+  let migrationError: DeckMigrationError | null = null;
 
   /* Applying the route reads IndexedDB, so it is watched here rather than
      from a reactive statement: `routing` keeps one application in flight and
@@ -86,6 +92,10 @@
         await controller.initialize();
       })
       .catch((error: unknown) => {
+        if (error instanceof DeckMigrationError) {
+          migrationError = error;
+          return;
+        }
         state = {
           ...state,
           mode: "error",
@@ -172,7 +182,23 @@
   <title>Deck Editor · YGO Story Duel Simulator</title>
 </svelte:head>
 
-{#if state.mode === "error"}
+{#if migrationError !== null}
+  <main class="loading error" role="alert" data-cy="deck-migration-error">
+    <p data-cy="deck-migration-error-eyebrow">Deck Editor stopped</p>
+    <h1 data-cy="deck-migration-error-heading">Your decks were not moved</h1>
+    <p data-cy="deck-migration-error-message">
+      {migrationError.message}
+    </p>
+    <p data-cy="deck-migration-error-reassurance">
+      Nothing was deleted. Close any other tab running this app and try again.
+    </p>
+    <button
+      type="button"
+      data-cy="deck-migration-retry"
+      onclick={() => location.reload()}>Retry</button
+    >
+  </main>
+{:else if state.mode === "error"}
   <main class="loading error" role="alert" data-cy="deck-editor-error">
     <p data-cy="deck-editor-error-eyebrow">Deck Editor stopped</p>
     <h1 data-cy="deck-editor-error-message">{state.message}</h1>

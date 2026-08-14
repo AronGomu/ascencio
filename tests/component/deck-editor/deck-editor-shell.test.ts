@@ -9,7 +9,7 @@ import DeckEditorApp from "../../../src/deck-editor/index.ts";
 import DeckEditor from "../../../src/deck-editor/components/DeckEditor.svelte";
 import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
 import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
-import { PROTOTYPE_DECK_DATABASE_NAME } from "../../../src/decks/indexeddb-deck-repository.ts";
+import { DECK_DATABASE_NAME } from "../../../src/decks/deck-database.ts";
 import {
   prototypeCatalogMap,
   stateFixture,
@@ -17,7 +17,7 @@ import {
 
 afterEach(async () => {
   cleanup();
-  await deleteDB(PROTOTYPE_DECK_DATABASE_NAME);
+  await deleteDB(DECK_DATABASE_NAME);
 });
 
 function renderEditor(mainCount = 0) {

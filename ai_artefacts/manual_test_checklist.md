@@ -391,3 +391,134 @@ Nothing else regressed
 
 - [ ] Open `#/`, `#/decks`, `#/story` and `#/admin` — layout, styling and behaviour are
       unchanged; `data-cy` is a test hook only.
+
+## T12 deck-production-database
+
+The deck store moved from `ygo-story-duel-deck-builder-prototype` to
+`ygo-story-decks`. On the first load after this ticket, any decks a player
+already built are copied across, verified, and only then is the old database
+deleted. That copy only ever runs against data that already exists, so it
+cannot be exercised by opening a clean browser profile — every check below
+needs a seeded prototype database.
+
+Machine-verified: `tests/unit/decks/deck-database-migration.test.ts` covers the
+absent / already-migrated / interrupted / diverged / empty / copy-failure /
+verify-failure / delete-failure states, and
+`e2e/deck-editor.spec.ts` → `a prototype deck database is migrated on first
+load` runs the happy path in real Chromium. What follows is the human pass over
+a real profile with real DevTools.
+
+Seed a prototype deck database (pick ONE path)
+
+- [ ] Path A — faithful. In a scratch worktree at the pre-ticket commit
+      (`git worktree add /tmp/pre-t12 5ab14b8 && cd /tmp/pre-t12 && npm ci`),
+      run `npm run dev` on the SAME port this branch uses (default
+      `DEV_PORT=4300`, so same origin), open `http://localhost:4300/#/decks`,
+      create a deck named `Survivor`, drag one Blue-Eyes White Dragon into the
+      Main Deck, and wait for "Saved locally". Stop that dev server.
+- [ ] Path B — fast. Run `npm run dev` on this branch, open
+      `http://localhost:4300/#/decks`, and paste this into the DevTools console
+      (it writes the OLD database with the OLD schema directly):
+
+      ```js
+      await (async () => {
+        const db = await new Promise((res, rej) => {
+          const r = indexedDB.open("ygo-story-duel-deck-builder-prototype", 1);
+          r.onupgradeneeded = () => {
+            const d = r.result.createObjectStore("decks", { keyPath: "id" });
+            d.createIndex("updatedAt", "updatedAt");
+            d.createIndex("name", "name");
+            r.result.createObjectStore("histories", { keyPath: "deckId" });
+            r.result.createObjectStore("preferences", { keyPath: "key" });
+          };
+          r.onsuccess = () => res(r.result);
+          r.onerror = () => rej(r.error);
+        });
+        const t = db.transaction(["decks", "histories", "preferences"], "readwrite");
+        t.objectStore("decks").put({
+          schemaVersion: 1, id: "survivor", revision: 1, name: "Survivor",
+          main: [89631139], extra: [], side: [],
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+          validation: { status: "errors", issues: [], rulesetRevision: "prototype-2026-01" },
+          importedNeedsReview: false,
+        });
+        t.objectStore("histories").put({
+          deckId: "survivor", history: { undo: [], redo: [], nextSequence: 1 },
+        });
+        t.objectStore("preferences").put({ key: "last-opened-deck", value: "survivor" });
+        await new Promise((res, rej) => { t.oncomplete = res; t.onerror = () => rej(t.error); });
+        db.close();
+      })();
+      ```
+
+- [ ] Before reloading, open DevTools → Application → IndexedDB and confirm you
+      can see `ygo-story-duel-deck-builder-prototype`. If `ygo-story-decks` is
+      also listed with decks in it, right-click → Delete database first: a
+      populated target is the "already migrated" case, not the one under test.
+
+Confirm the decks survived the rename
+
+- [ ] Run `npm run dev` on THIS branch and open `http://localhost:4300/#/decks`
+      (a reload is enough if the server was already running).
+- [ ] The Deck Library lists `Survivor`. It must NOT say "No local decks" —
+      that would mean the decks were stranded in the old database.
+- [ ] Click `Survivor` — the editor opens, "Deck name" reads `Survivor` and
+      Deck counts shows `Main 1`. Opening the deck reads its history record, so
+      this also proves the migration copied more than the deck row.
+- [ ] Press Undo — it is disabled or a no-op (the seeded history is empty) and
+      nothing errors.
+- [ ] DevTools → Application → IndexedDB: `ygo-story-decks` is present and
+      `ygo-story-duel-deck-builder-prototype` is GONE. Use the refresh button on
+      the IndexedDB node if the tree looks stale.
+- [ ] In the console, `(await indexedDB.databases()).map((d) => d.name)` lists
+      `ygo-story-decks` and does not list the prototype name.
+
+Confirm it does not run twice
+
+- [ ] Reload the page — `Survivor` is still listed exactly once. A second
+      `Survivor` row would mean the migration re-ran and duplicated.
+- [ ] Create a second deck named `After Migration`, reload — both decks are
+      listed once each, and the prototype database has not reappeared.
+
+Confirm a failed migration blocks instead of losing decks (optional, ~2 min)
+
+- [ ] Re-seed the prototype database with Path B above, and this time also
+      delete `ygo-story-decks` in DevTools.
+- [ ] In a SECOND tab on the same origin, paste this and leave the tab open —
+      it holds the old database open, which is what blocks its deletion:
+
+      ```js
+      window.hold = await new Promise((res, rej) => {
+        const r = indexedDB.open("ygo-story-duel-deck-builder-prototype", 1);
+        r.onsuccess = () => res(r.result);
+        r.onerror = () => rej(r.error);
+      });
+      ```
+
+- [ ] Back in the first tab, load `#/decks`. Instead of the library you get a
+      blocking panel headed "Your decks were not moved", explaining the
+      prototype database could not be deleted, reassuring you nothing was
+      deleted, and offering a "Retry" button.
+- [ ] DevTools: BOTH databases exist, and `ygo-story-decks` already contains
+      `Survivor`. Nothing was lost.
+- [ ] Close the second tab, click "Retry" in the first — the library renders
+      with `Survivor`, and the prototype database is now gone.
+
+Admin console follows the rename
+
+- [ ] Open `http://localhost:4300/#/admin`, click "Seed test deck & open it" —
+      the editor opens on "Admin test deck". DevTools shows that deck inside
+      `ygo-story-decks`, and no prototype database was created.
+- [ ] Back on `#/admin`, arm and confirm the "Deck library" reset, then open
+      `#/decks` — the library says "No local decks", and DevTools shows
+      `ygo-story-decks` is gone. Before this ticket this button cleared the
+      prototype database, so a reset that leaves your decks in place is the
+      failure to watch for.
+
+Nothing else regressed
+
+- [ ] Deck create / rename / duplicate / delete / import YDK / export YDK all
+      behave exactly as in T8.
+- [ ] Open `#/duel` and `#/story` — unchanged; neither reads the deck database.
+- [ ] The browser console stays empty across all of the above.

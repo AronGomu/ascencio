@@ -12,15 +12,13 @@ import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts"
 import { deckId, type DeckId } from "../../../src/decks/deck-contracts.ts";
 import { emptyDeckHistory } from "../../../src/decks/deck-history.ts";
 import { createBlankDeck } from "../../../src/decks/deck-model.ts";
-import {
-  IndexedDbDeckRepository,
-  PROTOTYPE_DECK_DATABASE_NAME,
-} from "../../../src/decks/indexeddb-deck-repository.ts";
+import { DECK_DATABASE_NAME } from "../../../src/decks/deck-database.ts";
+import { IndexedDbDeckRepository } from "../../../src/decks/indexeddb-deck-repository.ts";
 import { prototypeCatalogMap } from "../../fixtures/deck-editor.ts";
 
 afterEach(async () => {
   cleanup();
-  await deleteDB(PROTOTYPE_DECK_DATABASE_NAME);
+  await deleteDB(DECK_DATABASE_NAME);
 });
 
 /* The route is the only input the shell gives the domain, so every case here

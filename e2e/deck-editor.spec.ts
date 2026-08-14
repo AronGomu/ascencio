@@ -1,18 +1,26 @@
 import { expect, test, type Page } from "@playwright/test";
+import {
+  DECK_DATABASE_NAME,
+  LEGACY_DECK_DATABASE_NAME,
+} from "../src/decks/deck-database.ts";
 
 const libraryUrl = "./#/decks";
 
+/* Both names, so a scenario that seeds the prototype database cannot leave one
+   behind for the next scenario to migrate. */
 async function deleteDeckDatabase(page: Page) {
-  await page.evaluate(async () => {
-    await new Promise<void>((resolve, reject) => {
-      const request = indexedDB.deleteDatabase(
-        "ygo-story-duel-deck-builder-prototype",
-      );
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-      request.onblocked = () => resolve();
-    });
-  });
+  await page.evaluate(
+    async (names: readonly string[]) => {
+      for (const name of names)
+        await new Promise<void>((resolve, reject) => {
+          const request = indexedDB.deleteDatabase(name);
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+          request.onblocked = () => resolve();
+        });
+    },
+    [DECK_DATABASE_NAME, LEGACY_DECK_DATABASE_NAME],
+  );
 }
 
 test("default route shows the home hub", async ({ page }) => {
@@ -280,6 +288,82 @@ test("the deck editor recovers real save failures and revision conflicts", async
   await expect(second.getByLabel("Deck name")).toHaveValue(
     "Recovery E2E Recovered Copy",
   );
+});
+
+test("a prototype deck database is migrated on first load", async ({
+  page,
+}) => {
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+
+  /* The schema is spelled out rather than imported because this fixture has to
+     be what the *previous* build wrote: a page cannot import project modules,
+     and pinning the old shape here is the point of the scenario. */
+  await page.evaluate(async (name: string) => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open(name, 1);
+      request.onupgradeneeded = () => {
+        const decks = request.result.createObjectStore("decks", {
+          keyPath: "id",
+        });
+        decks.createIndex("updatedAt", "updatedAt");
+        decks.createIndex("name", "name");
+        request.result.createObjectStore("histories", { keyPath: "deckId" });
+        request.result.createObjectStore("preferences", { keyPath: "key" });
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const transaction = database.transaction(
+      ["decks", "histories", "preferences"],
+      "readwrite",
+    );
+    transaction.objectStore("decks").put({
+      schemaVersion: 1,
+      id: "prototype-deck",
+      revision: 1,
+      name: "Prototype Survivor",
+      main: [89631139],
+      extra: [],
+      side: [],
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+      validation: {
+        status: "errors",
+        issues: [],
+        rulesetRevision: "prototype-2026-01",
+      },
+      importedNeedsReview: false,
+    });
+    transaction.objectStore("histories").put({
+      deckId: "prototype-deck",
+      history: { undo: [], redo: [], nextSequence: 1 },
+    });
+    transaction
+      .objectStore("preferences")
+      .put({ key: "last-opened-deck", value: "prototype-deck" });
+    await new Promise<void>((resolve, reject) => {
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+    database.close();
+  }, LEGACY_DECK_DATABASE_NAME);
+
+  await page.reload();
+  const migrated = page.getByRole("button", { name: /Prototype Survivor/ });
+  await expect(migrated).toBeVisible();
+
+  const names = await page.evaluate(async () =>
+    (await indexedDB.databases()).map(({ name }) => name ?? ""),
+  );
+  expect(names).toContain(DECK_DATABASE_NAME);
+  expect(names).not.toContain(LEGACY_DECK_DATABASE_NAME);
+
+  /* Opening the deck reads its history record too, so this also proves the
+     migration copied more than the deck row. */
+  await migrated.click();
+  await expect(page.getByLabel("Deck name")).toHaveValue("Prototype Survivor");
+  await expect(page.getByLabel("Deck counts")).toContainText("Main 1");
 });
 
 test("the deck editor declares desktop-only viewport", async ({ page }) => {

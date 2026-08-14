@@ -198,7 +198,12 @@ describe("public domain APIs are frozen", () => {
       name: "decks",
       entry: "src/decks/index.ts",
       namespace: decks,
-      values: ["deckId", "resolveDeck"],
+      values: [
+        "DECK_DATABASE_NAME",
+        "DeckMigrationError",
+        "deckId",
+        "resolveDeck",
+      ],
       types: [
         "DeckId",
         "DeckRecord",

@@ -1,5 +1,4 @@
-import { deckId, type DeckId } from "../../decks/index.ts";
-import { PROTOTYPE_DECK_DATABASE_NAME } from "../../decks/indexeddb-deck-repository.ts";
+import { DECK_DATABASE_NAME, deckId, type DeckId } from "../../decks/index.ts";
 import { parseYdk } from "../../duel/presets/deck-parser.ts";
 import { DECK_SOURCES } from "../../duel/presets/deck-sources-browser.ts";
 import { STORY_STORAGE_KEY } from "../../story/index.ts";
@@ -23,7 +22,7 @@ export const ADMIN_STORAGE_TARGETS: readonly AdminStorageTarget[] =
       id: "decks",
       label: "Deck library",
       kind: "indexeddb",
-      name: PROTOTYPE_DECK_DATABASE_NAME,
+      name: DECK_DATABASE_NAME,
     } as const),
     Object.freeze({
       id: "duel-snapshots",

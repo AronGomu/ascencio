@@ -84,9 +84,40 @@ describe("global styles", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     expect(css).not.toContain('#app[data-app-entry="duel"]');
     const region = ruleBlock(css, ".shell-region--duel {");
-    expect(region).toContain("height: 100svh");
+    expect(region).toContain("height: var(--stage-h, 100svh)");
     expect(region).toContain("display: grid");
     expect(region).toContain("grid-template-rows: auto minmax(0, 1fr)");
+  });
+
+  /* T4: the stage is the app's single layout box — centred inside `#app`,
+     clipping its own overflow so `body` never scrolls in any mode. */
+  it("centres a letterboxed stage that owns every axis of overflow", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    expect(ruleBlock(css, "\nbody {")).toContain("overflow: hidden");
+    const root = ruleBlock(css, "\n#app {");
+    expect(root).toContain("height: 100svh");
+    expect(root).toContain("display: grid");
+    expect(root).toContain("place-items: center");
+    expect(root).toContain("background: var(--bg)");
+    const stage = ruleBlock(css, ".app-stage {");
+    expect(stage).toContain("width: var(--stage-w)");
+    expect(stage).toContain("height: var(--stage-h)");
+    expect(stage).toContain("overflow: hidden");
+    expect(ruleBlock(css, ".shell-region--decks {")).toContain(
+      "overflow: auto",
+    );
+  });
+
+  /* The duel must measure the stage, not the viewport, or it keeps its old
+     full-viewport height inside a letterboxed box. */
+  it("sizes the duel against the stage box with a viewport fallback", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    expect(ruleBlock(css, "main.is-duel-viewport {")).toContain(
+      "height: var(--stage-h, 100svh)",
+    );
+    expect(ruleBlock(css, ".duel-field-slot {")).toContain(
+      "width: calc(var(--stage-w, 100vw) - var(--preview-w) - var(--rail-min))",
+    );
   });
 
   it("keeps acceptance-only field sizing out of the production stylesheet", () => {
@@ -113,7 +144,7 @@ describe("global styles", () => {
   it("uses one full-height three-column shell", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     const shell = ruleBlock(css, ".duel-shell {");
-    expect(shell).toContain("height: 100svh");
+    expect(shell).toContain("height: var(--stage-h, 100svh)");
     expect(shell).toContain(
       "grid-template-columns: var(--preview-w) auto minmax(var(--rail-min), 1fr)",
     );

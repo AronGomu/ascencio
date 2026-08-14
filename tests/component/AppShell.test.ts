@@ -18,8 +18,22 @@ function renderAt(hash: string) {
   });
 }
 
+function setViewport(width: number, height: number) {
+  Object.defineProperty(window, "innerWidth", { value: width, writable: true });
+  Object.defineProperty(window, "innerHeight", {
+    value: height,
+    writable: true,
+  });
+}
+
+const defaultViewport = {
+  width: window.innerWidth,
+  height: window.innerHeight,
+};
+
 afterEach(() => {
   cleanup();
+  setViewport(defaultViewport.width, defaultViewport.height);
 });
 
 describe("AppShell", () => {
@@ -57,6 +71,23 @@ describe("AppShell", () => {
     expect(
       document.querySelector('[data-cy="shell-placeholder"]')?.textContent,
     ).toBe("Not available yet");
+  });
+
+  it("publishes the stage mode on the stage element", () => {
+    setViewport(800, 1000);
+    renderAt("#/");
+    const stage = document.querySelector('[data-cy="app-stage"]');
+    expect(stage?.getAttribute("data-stage-mode")).toBe("mobile-portrait");
+    expect(stage?.getAttribute("style")).toContain("--stage-w: 800px");
+    expect(stage?.getAttribute("style")).toContain("--stage-h: 1000px");
+  });
+
+  it("letterboxes a desktop viewport into a 16:9 stage", () => {
+    setViewport(1920, 1200);
+    renderAt("#/");
+    const stage = document.querySelector('[data-cy="app-stage"]');
+    expect(stage?.getAttribute("data-stage-mode")).toBe("stage");
+    expect(stage?.getAttribute("style")).toContain("--stage-h: 1080px");
   });
 
   it("follows store navigation without a remount", async () => {

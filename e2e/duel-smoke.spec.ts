@@ -1166,6 +1166,70 @@ test("default duel occupies exactly one viewport at every supported viewport", a
   }
 });
 
+/* T4: above the 1024px breakpoint the app is a centred 16:9 stage, so a
+   viewport that is not itself 16:9 gets `--bg` bars instead of a stretched
+   duel — and the page still never scrolls. */
+test("the shell letterboxes the app to a 16:9 stage above the breakpoint", async ({
+  page,
+}) => {
+  await page.goto("./");
+  await startPresetDuel(page);
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+  const stage = page.locator('[data-cy="app-stage"]');
+  const field = page.locator('[data-cy="duel-field"]');
+
+  for (const viewport of [
+    { id: "VP-BARS-Y", width: 1920, height: 1200 },
+    { id: "VP-BARS-X", width: 1280, height: 600 },
+  ] as const) {
+    await page.setViewportSize({
+      width: viewport.width,
+      height: viewport.height,
+    });
+    await expect(stage).toHaveAttribute("data-stage-mode", "stage");
+
+    const box = await stage.boundingBox();
+    if (box === null) throw new Error(`${viewport.id} stage has no box`);
+    expect(
+      Math.abs(box.width - (box.height * 16) / 9),
+      `${viewport.id} stage must be 16:9 (got ${box.width}x${box.height})`,
+    ).toBeLessThanOrEqual(1);
+    expect(box.width).toBeLessThanOrEqual(viewport.width);
+    expect(box.height).toBeLessThanOrEqual(viewport.height);
+
+    const metrics = await page.evaluate(() => ({
+      scrollHeight: document.scrollingElement!.scrollHeight,
+      innerHeight: window.innerHeight,
+      bodyOverflow: getComputedStyle(document.body).overflowY,
+    }));
+    expect(
+      metrics.scrollHeight,
+      `${viewport.id} page must not scroll`,
+    ).toBeLessThanOrEqual(metrics.innerHeight + 1);
+    expect(metrics.bodyOverflow).toBe("hidden");
+
+    // The duel renders inside the stage, never outside its bars.
+    const fieldBox = await field.boundingBox();
+    if (fieldBox === null) throw new Error(`${viewport.id} field has no box`);
+    expect(fieldBox.y).toBeGreaterThanOrEqual(box.y - 1);
+    expect(fieldBox.y + fieldBox.height).toBeLessThanOrEqual(
+      box.y + box.height + 1,
+    );
+  }
+
+  // The duel measures the stage, not the viewport, so it fills the box.
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  const stageBox = await stage.boundingBox();
+  const regionBox = await page
+    .locator('[data-cy="shell-region-duel"]')
+    .boundingBox();
+  if (stageBox === null || regionBox === null)
+    throw new Error("stage or duel region has no bounding box");
+  expect(Math.abs(regionBox.height - stageBox.height)).toBeLessThanOrEqual(1);
+});
+
 test("short-height duel keeps the full-height preview column, bounded art and scroll-ready text", async ({
   page,
 }) => {

@@ -25,23 +25,49 @@ body {
   min-width: 320px;
   min-height: 100svh;
   margin: 0;
+  /* The stage — never the page — owns every axis of overflow, so no mode can
+     put a scrollbar on `body`. */
+  overflow: hidden;
   background:
     radial-gradient(circle at 15% -10%, var(--field-glow) 0, transparent 35rem),
     var(--bg);
 }
 
-/* The app root is a fixed-height two-row grid (header, main) so the default
-   duel view can be pinned to exactly one viewport below. Outside duel-only
-   mode `main` does not clip, so overflowing content (picker/errors/HUD) still
-   grows `body`'s natural scrollable area past this box. */
+/* The app root fills the viewport and centres the stage inside it; the
+   leftover space on either axis is the `--bg` letterbox bar. */
 #app {
-  min-height: 100svh;
+  height: 100svh;
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+}
+
+/* T4: one layout law for the whole product. Above 1024px the app is a
+   centred 16:9 rectangle; below it the shell publishes a mobile mode and the
+   box is sized by `AppShell` instead. Domains measure `--stage-h`/`--stage-w`
+   rather than the viewport, so the duel keeps its `100svh`-equivalent
+   behavior relative to the stage. The fallbacks keep every rule below correct
+   in surfaces that mount a domain without the shell (the acceptance
+   harness), where the stage box is simply the viewport. */
+.app-stage {
+  position: relative;
+  width: var(--stage-w);
+  height: var(--stage-h);
+  overflow: hidden;
 }
 
 .shell-region--duel {
-  height: 100svh;
+  height: var(--stage-h, 100svh);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
+}
+
+/* The deck editor is a document-shaped domain, so it keeps its own scroll
+   inside the stage rather than pushing one onto the page. */
+.shell-region--decks {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
 }
 
 button,
@@ -155,7 +181,7 @@ main {
    overflow instead (see below). */
 main.is-duel-viewport {
   width: 100%;
-  height: 100svh;
+  height: var(--stage-h, 100svh);
   min-height: 0;
   margin: 0;
   padding: 0;
@@ -227,7 +253,7 @@ h4 {
 
 .duel-shell {
   width: 100%;
-  height: 100svh;
+  height: var(--stage-h, 100svh);
   margin: 0;
   display: grid;
   grid-template-columns: var(--preview-w) auto minmax(var(--rail-min), 1fr);
@@ -794,7 +820,7 @@ li + li {
 }
 
 .duel-field-slot {
-  width: calc(100vw - var(--preview-w) - var(--rail-min));
+  width: calc(var(--stage-w, 100vw) - var(--preview-w) - var(--rail-min));
   min-width: 0;
   min-height: 0;
   display: grid;

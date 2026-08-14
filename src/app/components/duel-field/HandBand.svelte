@@ -28,10 +28,17 @@
   export let activeTarget: BoardTargetId | null = null;
   export let disabled = false;
   export let pinnedTarget: BoardTargetId | null = null;
-  export let oncardactivate: (card: BoardCardView, element: HTMLButtonElement) => void = () => undefined;
-  export let oncardchoose: (choice: InteractionChoice) => void = () => undefined;
+  export let oncardactivate: (
+    card: BoardCardView,
+    element: HTMLButtonElement,
+  ) => void = () => undefined;
+  export let oncardchoose: (choice: InteractionChoice) => void = () =>
+    undefined;
   export let oncarddismiss: () => void = () => undefined;
-  export let oncarddragstart: (card: BoardCardView, origin: CardDragOrigin) => void = () => undefined;
+  export let oncarddragstart: (
+    card: BoardCardView,
+    origin: CardDragOrigin,
+  ) => void = () => undefined;
   export let oncarddragmove: (x: number, y: number) => void = () => undefined;
   export let oncarddragend: (x: number, y: number) => void = () => undefined;
   export let oncardpreview: (card: BoardCardView) => void = () => undefined;
@@ -39,7 +46,9 @@
   const mirrored = player === 1;
   let viewportElement: HTMLDivElement | null = null;
 
-  $: sortedCards = [...cards].sort((left, right) => left.sequence - right.sequence);
+  $: sortedCards = [...cards].sort(
+    (left, right) => left.sequence - right.sequence,
+  );
   $: contentSizeKey = `${placement.width}:${sortedCards.map((card) => card.id).join(",")}`;
 
   function cardImageUrl(card: BoardCardView): string {
@@ -70,14 +79,20 @@
         layout="hand"
         imageUrl={cardImageUrl(card)}
         {imageLibrary}
-        interactionKind={!disabled && spec?.cardChoices.has(card.targetId) === true ? spec.kind : null}
+        interactionKind={!disabled &&
+        spec?.cardChoices.has(card.targetId) === true
+          ? spec.kind
+          : null}
         actionable={!disabled && spec?.cardChoices.has(card.targetId) === true}
         selected={selectedTargets.has(card.targetId)}
         active={activeTarget === card.targetId}
         {disabled}
         choices={spec?.cardChoices.get(card.targetId) ?? []}
         pinned={pinnedTarget === card.targetId}
-        draggable={!disabled && spec?.kind === "cardAction" && spec.cardChoices.has(card.targetId) && card.zoneId === zone.id}
+        draggable={!disabled &&
+          spec?.kind === "cardAction" &&
+          spec.cardChoices.has(card.targetId) &&
+          card.zoneId === zone.id}
         onactivate={(element) => oncardactivate(card, element)}
         onchoose={oncardchoose}
         ondismiss={oncarddismiss}
@@ -88,7 +103,10 @@
       />
     {/each}
   </div>
-  <span class="duel-field-hand-band__count" data-cy={`field-hand-p${player}-count`}>
+  <span
+    class="duel-field-hand-band__count"
+    data-cy={`field-hand-p${player}-count`}
+  >
     {sortedCards.length}
   </span>
   <OverlayScrollbar

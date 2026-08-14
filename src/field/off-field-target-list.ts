@@ -15,11 +15,7 @@ import type { BoardCardText } from "./board-view-model.ts";
 import type { ZoneListEntry } from "./zone-list.ts";
 
 export type OffFieldZoneBadge =
-  | "HAND"
-  | "EXTRA DECK"
-  | "GRAVEYARD"
-  | "BANISHED"
-  | "DECK";
+  "HAND" | "EXTRA DECK" | "GRAVEYARD" | "BANISHED" | "DECK";
 
 export const OFF_FIELD_ZONE_DISPLAY_ORDER: readonly OffFieldZoneBadge[] =
   Object.freeze(["HAND", "EXTRA DECK", "GRAVEYARD", "BANISHED", "DECK"]);

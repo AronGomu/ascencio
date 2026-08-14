@@ -56,30 +56,54 @@
   function values() {
     const element = observedScrollElement;
     if (element === null || trackElement === undefined) return null;
-    const viewport = axis === "horizontal" ? element.clientWidth : element.clientHeight;
-    const content = axis === "horizontal" ? element.scrollWidth : element.scrollHeight;
-    const measuredTrack = axis === "horizontal" ? trackElement.clientWidth : trackElement.clientHeight;
+    const viewport =
+      axis === "horizontal" ? element.clientWidth : element.clientHeight;
+    const content =
+      axis === "horizontal" ? element.scrollWidth : element.scrollHeight;
+    const measuredTrack =
+      axis === "horizontal"
+        ? trackElement.clientWidth
+        : trackElement.clientHeight;
     const track = measuredTrack > 0 ? measuredTrack : viewport;
     const reverse =
-      axis === "horizontal" && getComputedStyle(element).flexDirection === "row-reverse";
-    const rawScroll = axis === "horizontal" ? element.scrollLeft : element.scrollTop;
+      axis === "horizontal" &&
+      getComputedStyle(element).flexDirection === "row-reverse";
+    const rawScroll =
+      axis === "horizontal" ? element.scrollLeft : element.scrollTop;
     const scrollTravel = Math.max(0, content - viewport);
-    const scroll = Math.min(scrollTravel, Math.max(0, reverse ? -rawScroll : rawScroll));
+    const scroll = Math.min(
+      scrollTravel,
+      Math.max(0, reverse ? -rawScroll : rawScroll),
+    );
     const trackTravel = Math.max(0, track - thumbSize);
-    return { element, viewport, content, track, scroll, scrollTravel, trackTravel, reverse };
+    return {
+      element,
+      viewport,
+      content,
+      track,
+      scroll,
+      scrollTravel,
+      trackTravel,
+      reverse,
+    };
   }
 
   function sync(): void {
     const current = values();
     if (current === null) return;
     hidden = current.content <= current.viewport || current.track <= 0;
-    thumbSize = current.content > 0
-      ? Math.min(current.track, current.track * (current.viewport / current.content))
-      : current.track;
+    thumbSize =
+      current.content > 0
+        ? Math.min(
+            current.track,
+            current.track * (current.viewport / current.content),
+          )
+        : current.track;
     const trackTravel = Math.max(0, current.track - thumbSize);
-    thumbOffset = current.scrollTravel > 0
-      ? (current.scroll / current.scrollTravel) * trackTravel
-      : 0;
+    thumbOffset =
+      current.scrollTravel > 0
+        ? (current.scroll / current.scrollTravel) * trackTravel
+        : 0;
   }
 
   function pointerCoordinate(event: PointerEvent): number {
@@ -102,17 +126,18 @@
     const current = values();
     if (current === null) return;
     const trackTravel = Math.max(0, current.track - thumbSize);
-    const next = trackTravel > 0
-      ? Math.min(
-          current.scrollTravel,
-          Math.max(
-            0,
-            drag.scroll +
-              ((pointerCoordinate(event) - drag.start) / trackTravel) *
-                current.scrollTravel,
-          ),
-        )
-      : drag.scroll;
+    const next =
+      trackTravel > 0
+        ? Math.min(
+            current.scrollTravel,
+            Math.max(
+              0,
+              drag.scroll +
+                ((pointerCoordinate(event) - drag.start) / trackTravel) *
+                  current.scrollTravel,
+            ),
+          )
+        : drag.scroll;
     if (axis === "horizontal")
       current.element.scrollLeft = current.reverse ? -next : next;
     else current.element.scrollTop = next;

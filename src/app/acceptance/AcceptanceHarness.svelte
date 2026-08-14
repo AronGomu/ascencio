@@ -17,9 +17,10 @@
     scenarioId === null || previewScenario || cardListScenario
       ? null
       : fullHeightFieldScenario(scenarioId);
-  const cardList = cardListScenario && scenarioId !== null
-    ? cardListAcceptanceScenario(scenarioId)
-    : null;
+  const cardList =
+    cardListScenario && scenarioId !== null
+      ? cardListAcceptanceScenario(scenarioId)
+      : null;
   const previewDescription =
     scenarioId === "preview-long"
       ? Array.from(
@@ -32,7 +33,11 @@
 </script>
 
 {#if cardList !== null}
-  <main class="acceptance-card-list-field" bind:this={fieldSlot} data-cy="acceptance-card-list-scenario">
+  <main
+    class="acceptance-card-list-field"
+    bind:this={fieldSlot}
+    data-cy="acceptance-card-list-scenario"
+  >
     <ZoneListDialog
       stack={cardList.stack}
       entries={cardList.entries}

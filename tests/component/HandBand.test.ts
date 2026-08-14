@@ -111,16 +111,26 @@ describe("HandBand", () => {
     expect(cardArticles().map((card) => card.dataset.cardId)).toEqual(
       Array.from({ length: 20 }, (_, index) => `p0-hand-${index}`),
     );
-    expect(document.querySelector('[data-cy="field-hand-p0-count"]')?.textContent?.trim()).toBe("20");
     expect(
-      document.querySelector('[data-cy^="field-hand-p0-"][data-cy$="page-status"]'),
+      document
+        .querySelector('[data-cy="field-hand-p0-count"]')
+        ?.textContent?.trim(),
+    ).toBe("20");
+    expect(
+      document.querySelector(
+        '[data-cy^="field-hand-p0-"][data-cy$="page-status"]',
+      ),
     ).toBeNull();
-    expect(document.querySelector('[data-cy="field-hand-p0-scrollbar"]')).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="field-hand-p0-scrollbar"]'),
+    ).not.toBeNull();
   });
 
   it("uses px placement and preserves feedback-only hand zone", () => {
     renderBand({ cards: handCards(0, 1) });
-    const root = document.querySelector<HTMLElement>('[data-cy="field-hand-band-p0"]')!;
+    const root = document.querySelector<HTMLElement>(
+      '[data-cy="field-hand-band-p0"]',
+    )!;
     expect(root.style.getPropertyValue("--field-height")).toBe("80px");
     expect(root.dataset.feedbackZoneId).toBe("p0:hand");
     expect(root.hasAttribute("data-zone-id")).toBe(false);
@@ -166,8 +176,16 @@ describe("HandBand", () => {
 
   it("updates count when cards change", async () => {
     const rendered = renderBand({ cards: handCards(0, 6) });
-    expect(document.querySelector('[data-cy="field-hand-p0-count"]')?.textContent?.trim()).toBe("6");
+    expect(
+      document
+        .querySelector('[data-cy="field-hand-p0-count"]')
+        ?.textContent?.trim(),
+    ).toBe("6");
     await rendered.rerender({ cards: handCards(0, 20) });
-    expect(document.querySelector('[data-cy="field-hand-p0-count"]')?.textContent?.trim()).toBe("20");
+    expect(
+      document
+        .querySelector('[data-cy="field-hand-p0-count"]')
+        ?.textContent?.trim(),
+    ).toBe("20");
   });
 });

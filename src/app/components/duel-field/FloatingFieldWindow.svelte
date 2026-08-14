@@ -134,14 +134,22 @@
     const value = current;
     if (collapsed) {
       if (boundary === null) return;
-      const clamped = clampFieldWindowPosition({ x, y }, boundary, windowSize(element));
+      const clamped = clampFieldWindowPosition(
+        { x, y },
+        boundary,
+        windowSize(element),
+      );
       x = clamped.x;
       y = clamped.y;
       return;
     }
     if (expandedAnchor !== null) {
       if (boundary === null) return;
-      const clamped = clampFieldWindowPosition(expandedAnchor, boundary, windowSize(element));
+      const clamped = clampFieldWindowPosition(
+        expandedAnchor,
+        boundary,
+        windowSize(element),
+      );
       x = clamped.x;
       y = clamped.y;
       return;

@@ -104,7 +104,9 @@ export function cardListSourceNotice(
     ["deck", "Deck"],
   ] as const;
   const represented = sources
-    .filter(([location]) => entries.some((entry) => entry.location === location))
+    .filter(([location]) =>
+      entries.some((entry) => entry.location === location),
+    )
     .map(([, label]) => label);
   if (represented.length <= 1) return "Filtered: legal targets only";
   if (represented.length === 2)
@@ -115,5 +117,8 @@ export function cardListSourceNotice(
 export function cardListAlphabeticalAllowed(
   entries: readonly { readonly identityVisible: boolean }[],
 ): boolean {
-  return entries.length >= 2 && entries.every(({ identityVisible }) => identityVisible);
+  return (
+    entries.length >= 2 &&
+    entries.every(({ identityVisible }) => identityVisible)
+  );
 }

@@ -42,16 +42,28 @@ function dimension(element: Element, name: string, value: number): void {
 async function mounted(axis: "horizontal" | "vertical", overflow = true) {
   const scrollElement = document.createElement("div");
   document.body.append(scrollElement);
-  dimension(scrollElement, axis === "horizontal" ? "clientWidth" : "clientHeight", 100);
-  dimension(scrollElement, axis === "horizontal" ? "scrollWidth" : "scrollHeight", overflow ? 400 : 100);
+  dimension(
+    scrollElement,
+    axis === "horizontal" ? "clientWidth" : "clientHeight",
+    100,
+  );
+  dimension(
+    scrollElement,
+    axis === "horizontal" ? "scrollWidth" : "scrollHeight",
+    overflow ? 400 : 100,
+  );
   const rendered = render(OverlayScrollbar, {
     axis,
     scrollElement,
     contentSizeKey: 1,
     dataCyPrefix: "test",
   });
-  const track = rendered.container.querySelector<HTMLElement>('[data-cy="test-scrollbar"]')!;
-  const thumb = rendered.container.querySelector<HTMLElement>('[data-cy="test-scrollbar-thumb"]')!;
+  const track = rendered.container.querySelector<HTMLElement>(
+    '[data-cy="test-scrollbar"]',
+  )!;
+  const thumb = rendered.container.querySelector<HTMLElement>(
+    '[data-cy="test-scrollbar-thumb"]',
+  )!;
   dimension(track, axis === "horizontal" ? "clientWidth" : "clientHeight", 80);
   observers.forEach(({ callback }) => callback([], {} as ResizeObserver));
   await Promise.resolve();
@@ -110,15 +122,24 @@ describe("OverlayScrollbar", () => {
     const release = vi.fn();
     thumb.setPointerCapture = vi.fn();
     thumb.releasePointerCapture = release;
-    const removeElementListener = vi.spyOn(scrollElement, "removeEventListener");
+    const removeElementListener = vi.spyOn(
+      scrollElement,
+      "removeEventListener",
+    );
     const removeWindowListener = vi.spyOn(window, "removeEventListener");
     await fireEvent.pointerDown(thumb, { pointerId: 11, clientX: 10 });
 
     rendered.unmount();
 
     expect(observers[0]?.disconnect).toHaveBeenCalledOnce();
-    expect(removeElementListener).toHaveBeenCalledWith("scroll", expect.any(Function));
-    expect(removeWindowListener).toHaveBeenCalledWith("resize", expect.any(Function));
+    expect(removeElementListener).toHaveBeenCalledWith(
+      "scroll",
+      expect.any(Function),
+    );
+    expect(removeWindowListener).toHaveBeenCalledWith(
+      "resize",
+      expect.any(Function),
+    );
     expect(release).toHaveBeenCalledWith(11);
 
     let scrollWidthReads = 0;

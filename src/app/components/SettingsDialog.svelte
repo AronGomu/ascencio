@@ -148,7 +148,10 @@
         data-cy="settings-show-zone-counts-checkbox"
       />
       <span data-cy="settings-show-zone-counts-copy">Show card counts</span>
-      <span data-cy="settings-show-zone-counts-description">Show the number of cards in Deck, Extra Deck, GY, Banished and both hands.</span>
+      <span data-cy="settings-show-zone-counts-description"
+        >Show the number of cards in Deck, Extra Deck, GY, Banished and both
+        hands.</span
+      >
     </label>
     <button
       type="button"

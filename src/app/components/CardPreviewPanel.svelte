@@ -51,7 +51,8 @@
     const scroller = event.currentTarget as HTMLElement;
     if (event.key === "Home") scroller.scrollTop = 0;
     else if (event.key === "End") scroller.scrollTop = scroller.scrollHeight;
-    else if (event.key === "PageUp") scroller.scrollTop -= scroller.clientHeight;
+    else if (event.key === "PageUp")
+      scroller.scrollTop -= scroller.clientHeight;
     else if (event.key === "PageDown")
       scroller.scrollTop += scroller.clientHeight;
     else return;
@@ -91,7 +92,9 @@
           onkeydown={scrollTextByKeyboard}
           bind:this={textScroller}
           data-cy="card-preview-text"
-        >{preview.description}</div>
+        >
+          {preview.description}
+        </div>
         <OverlayScrollbar
           axis="vertical"
           scrollElement={textScroller}

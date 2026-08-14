@@ -29,10 +29,15 @@ export class ImmutableChoiceIdSet implements ReadonlySet<ChoiceId> {
   }
 
   forEach(
-    callbackfn: (value: ChoiceId, value2: ChoiceId, set: ReadonlySet<ChoiceId>) => void,
+    callbackfn: (
+      value: ChoiceId,
+      value2: ChoiceId,
+      set: ReadonlySet<ChoiceId>,
+    ) => void,
     thisArg?: unknown,
   ): void {
-    for (const value of this.#values) callbackfn.call(thisArg, value, value, this);
+    for (const value of this.#values)
+      callbackfn.call(thisArg, value, value, this);
   }
 
   [Symbol.iterator](): SetIterator<ChoiceId> {

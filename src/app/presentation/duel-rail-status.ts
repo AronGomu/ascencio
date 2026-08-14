@@ -14,12 +14,32 @@ export function duelRailStatusFor(input: {
   readonly responsePending: boolean;
 }): DuelRailStatus {
   if (input.responsePending)
-    return { title: "Waiting for the engine", subtitle: "Your response is being processed.", thinking: true };
+    return {
+      title: "Waiting for the engine",
+      subtitle: "Your response is being processed.",
+      thinking: true,
+    };
   if (input.snapshot === null)
-    return { title: "Preparing duel", subtitle: "Loading current duel state.", thinking: true };
+    return {
+      title: "Preparing duel",
+      subtitle: "Loading current duel state.",
+      thinking: true,
+    };
   if (input.prompt !== null)
-    return { title: input.prompt.title, subtitle: "Choose in the active prompt.", thinking: false };
+    return {
+      title: input.prompt.title,
+      subtitle: "Choose in the active prompt.",
+      thinking: false,
+    };
   if (input.snapshot.turnPlayer === 1)
-    return { title: "Opponent is thinking", subtitle: "Waiting for the opponent's next action.", thinking: true };
-  return { title: "Your move", subtitle: `${DUEL_PHASE_LABELS[input.snapshot.phase] ?? "Unknown phase"} · ${input.snapshot.players[0].handCount} cards in hand`, thinking: false };
+    return {
+      title: "Opponent is thinking",
+      subtitle: "Waiting for the opponent's next action.",
+      thinking: true,
+    };
+  return {
+    title: "Your move",
+    subtitle: `${DUEL_PHASE_LABELS[input.snapshot.phase] ?? "Unknown phase"} · ${input.snapshot.players[0].handCount} cards in hand`,
+    thinking: false,
+  };
 }

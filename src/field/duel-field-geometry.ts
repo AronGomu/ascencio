@@ -131,26 +131,102 @@ export function createFieldRenderLayout(
     return Object.freeze({ geometry, zones: Object.freeze(zones) });
 
   const playerRows = extraMonsterZones
-    ? { 1: { hand: 0, spellTrap: 1, monster: 2 }, 0: { monster: 4, spellTrap: 5, hand: 6 } }
-    : { 1: { hand: 0, spellTrap: 1, monster: 2 }, 0: { monster: 3, spellTrap: 4, hand: 5 } };
+    ? {
+        1: { hand: 0, spellTrap: 1, monster: 2 },
+        0: { monster: 4, spellTrap: 5, hand: 6 },
+      }
+    : {
+        1: { hand: 0, spellTrap: 1, monster: 2 },
+        0: { monster: 3, spellTrap: 4, hand: 5 },
+      };
 
   for (const player of [0, 1] as const) {
     const rows = playerRows[player];
     for (let sequence = 0; sequence < 5; sequence += 1) {
-      addZone(zones, `p${player}:mainMonster:${sequence as 0 | 1 | 2 | 3 | 4}`, geometry.columnX[sequence + 1]!, geometry.rowY[rows.monster]!, geometry.box, geometry.box);
-      addZone(zones, `p${player}:spellTrap:${sequence as 0 | 1 | 2 | 3 | 4}`, geometry.columnX[sequence + 1]!, geometry.rowY[rows.spellTrap]!, geometry.box, geometry.box);
+      addZone(
+        zones,
+        `p${player}:mainMonster:${sequence as 0 | 1 | 2 | 3 | 4}`,
+        geometry.columnX[sequence + 1]!,
+        geometry.rowY[rows.monster]!,
+        geometry.box,
+        geometry.box,
+      );
+      addZone(
+        zones,
+        `p${player}:spellTrap:${sequence as 0 | 1 | 2 | 3 | 4}`,
+        geometry.columnX[sequence + 1]!,
+        geometry.rowY[rows.spellTrap]!,
+        geometry.box,
+        geometry.box,
+      );
     }
-    addZone(zones, `p${player}:field`, geometry.columnX[0]!, geometry.rowY[rows.monster]!, geometry.box, geometry.box);
-    addZone(zones, `p${player}:graveyard`, geometry.columnX[6]!, geometry.rowY[rows.monster]!, geometry.box, geometry.box);
-    addZone(zones, `p${player}:banished`, geometry.columnX[7]!, geometry.rowY[rows.monster]!, geometry.box, geometry.box);
-    addZone(zones, `p${player}:extra`, geometry.columnX[0]!, geometry.rowY[rows.spellTrap]!, geometry.box, geometry.box);
-    addZone(zones, `p${player}:deck`, geometry.columnX[6]!, geometry.rowY[rows.spellTrap]!, geometry.box, geometry.box);
-    addZone(zones, `p${player}:hand`, geometry.width / 2, geometry.rowY[rows.hand]!, geometry.width - 2 * geometry.margin, geometry.box);
+    addZone(
+      zones,
+      `p${player}:field`,
+      geometry.columnX[0]!,
+      geometry.rowY[rows.monster]!,
+      geometry.box,
+      geometry.box,
+    );
+    addZone(
+      zones,
+      `p${player}:graveyard`,
+      geometry.columnX[6]!,
+      geometry.rowY[rows.monster]!,
+      geometry.box,
+      geometry.box,
+    );
+    addZone(
+      zones,
+      `p${player}:banished`,
+      geometry.columnX[7]!,
+      geometry.rowY[rows.monster]!,
+      geometry.box,
+      geometry.box,
+    );
+    addZone(
+      zones,
+      `p${player}:extra`,
+      geometry.columnX[0]!,
+      geometry.rowY[rows.spellTrap]!,
+      geometry.box,
+      geometry.box,
+    );
+    addZone(
+      zones,
+      `p${player}:deck`,
+      geometry.columnX[6]!,
+      geometry.rowY[rows.spellTrap]!,
+      geometry.box,
+      geometry.box,
+    );
+    addZone(
+      zones,
+      `p${player}:hand`,
+      geometry.width / 2,
+      geometry.rowY[rows.hand]!,
+      geometry.width - 2 * geometry.margin,
+      geometry.box,
+    );
   }
 
   if (extraMonsterZones) {
-    addZone(zones, "shared:extraMonster:left", geometry.emzX[0], geometry.rowY[3]!, geometry.box, geometry.box);
-    addZone(zones, "shared:extraMonster:right", geometry.emzX[1], geometry.rowY[3]!, geometry.box, geometry.box);
+    addZone(
+      zones,
+      "shared:extraMonster:left",
+      geometry.emzX[0],
+      geometry.rowY[3]!,
+      geometry.box,
+      geometry.box,
+    );
+    addZone(
+      zones,
+      "shared:extraMonster:right",
+      geometry.emzX[1],
+      geometry.rowY[3]!,
+      geometry.box,
+      geometry.box,
+    );
   }
 
   return Object.freeze({ geometry, zones: Object.freeze(zones) });

@@ -73,7 +73,9 @@ describe("card-list dialog model", () => {
   const id = (value: string) => value as ChoiceId;
   const rendered = (...values: string[]) => [
     {
-      choices: values.map((value) => ({ id: id(value) })) as unknown as OffFieldTargetEntry["choices"],
+      choices: values.map((value) => ({
+        id: id(value),
+      })) as unknown as OffFieldTargetEntry["choices"],
     },
   ];
   const state = (
@@ -115,7 +117,10 @@ describe("card-list dialog model", () => {
   });
 
   it("fails closed for stale and duplicate selected ids", () => {
-    for (const selected of [["a", "stale"], ["a", "a"]]) {
+    for (const selected of [
+      ["a", "stale"],
+      ["a", "a"],
+    ]) {
       const result = state(selected, 1, 3);
       expect(result.renderedSelectionValid).toBe(false);
       expect(result.validateEnabled).toBe(false);

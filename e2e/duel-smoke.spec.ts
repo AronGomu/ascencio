@@ -928,9 +928,7 @@ test("rail reduced motion keeps three thinking dots visible and static", async (
   await expect(endTurn).toBeEnabled({ timeout: 120_000 });
   await endTurn.click();
 
-  const dotsContainer = page.locator(
-    '[data-cy="duel-right-rail-status-dots"]',
-  );
+  const dotsContainer = page.locator('[data-cy="duel-right-rail-status-dots"]');
   await expect(dotsContainer).toBeVisible();
   const dots = dotsContainer.locator("i");
   await expect(dots).toHaveCount(3);
@@ -980,8 +978,12 @@ test("smallest supported layout preserves controls and honors reduced motion", a
       bodyWidth: document.body.scrollWidth,
       viewportWidth: window.innerWidth,
     }));
-  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
-  expect(dimensions.scrollHeight).toBeLessThanOrEqual(dimensions.clientHeight + 1);
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(
+    dimensions.clientWidth + 1,
+  );
+  expect(dimensions.scrollHeight).toBeLessThanOrEqual(
+    dimensions.clientHeight + 1,
+  );
   expect(dimensions.bodyWidth).toBeLessThanOrEqual(dimensions.viewportWidth);
   const firstDecision = page.locator("[data-prompt-kind] button").first();
   const box = await firstDecision.boundingBox();
@@ -2294,15 +2296,24 @@ test("responsive field compositions contain controls across supported viewports"
       const fieldBox = rect('[data-cy="duel-field"]');
       const panelBox = rect('[data-cy="card-preview-panel"]');
       const railBox = rect('[data-cy="duel-right-rail"]');
-      return shell === null || fieldBox === null || panelBox === null || railBox === null
+      return shell === null ||
+        fieldBox === null ||
+        panelBox === null ||
+        railBox === null
         ? null
         : { shell, fieldBox, panelBox, railBox };
     });
     if (shellLayout === null)
       throw new Error(`${viewportLabel} duel shell is not mounted`);
-    expect(shellLayout.panelBox.right).toBeLessThanOrEqual(shellLayout.fieldBox.left + 1);
-    expect(shellLayout.fieldBox.right).toBeLessThanOrEqual(shellLayout.railBox.left + 1);
-    expect(Math.abs(shellLayout.shell.height - viewport.height)).toBeLessThanOrEqual(1);
+    expect(shellLayout.panelBox.right).toBeLessThanOrEqual(
+      shellLayout.fieldBox.left + 1,
+    );
+    expect(shellLayout.fieldBox.right).toBeLessThanOrEqual(
+      shellLayout.railBox.left + 1,
+    );
+    expect(
+      Math.abs(shellLayout.shell.height - viewport.height),
+    ).toBeLessThanOrEqual(1);
 
     const field = page.getByRole("region", { name: "Duel field" });
     await expect(field).toBeVisible();
@@ -2317,7 +2328,12 @@ test("responsive field compositions contain controls across supported viewports"
       const strip = document.querySelector<HTMLElement>(
         '[data-cy="field-phase-strip"]',
       );
-      if (fieldElement === null || slot === null || zone === null || strip === null)
+      if (
+        fieldElement === null ||
+        slot === null ||
+        zone === null ||
+        strip === null
+      )
         return null;
       const fieldBox = fieldElement.getBoundingClientRect();
       const zoneBox = zone.getBoundingClientRect();
@@ -2608,9 +2624,7 @@ test("responsive field compositions contain controls across supported viewports"
     );
     const adjacentGaps = phaseFlow
       .slice(1)
-      .map(
-        (entry, index) => entry.rect.left - phaseFlow[index]!.rect.right,
-      );
+      .map((entry, index) => entry.rect.left - phaseFlow[index]!.rect.right);
     expect(
       Math.max(...adjacentGaps) - Math.min(...adjacentGaps),
       `${viewportLabel} continuous phase controls keep uniform adjacent gaps (${JSON.stringify(adjacentGaps)})`,
@@ -2715,7 +2729,6 @@ test("responsive field compositions contain controls across supported viewports"
       await tray.getByRole("button", { name: /^Close / }).click();
       await expect(tray).toHaveCount(0);
     }
-
   }
 
   expect(
@@ -3808,7 +3821,10 @@ async function captureResponsiveState(
   });
 }
 
-async function assertSharesShellColumns(page: Page, label: string): Promise<void> {
+async function assertSharesShellColumns(
+  page: Page,
+  label: string,
+): Promise<void> {
   const boxes = await page.evaluate(() => {
     const rect = (selector: string): DOMRect | null =>
       document.querySelector(selector)?.getBoundingClientRect() ?? null;

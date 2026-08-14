@@ -47,14 +47,7 @@ export function fullHeightFieldScenario(
             2,
             "faceUpDefense",
           ),
-          card(
-            "acceptance-set",
-            97590747,
-            0,
-            "monster",
-            3,
-            "faceDownDefense",
-          ),
+          card("acceptance-set", 97590747, 0, "monster", 3, "faceDownDefense"),
         ]
       : [],
     Array.from({ length: handCount }, (_, sequence) =>
@@ -80,7 +73,9 @@ export function fullHeightFieldScenario(
   );
   const result = mapSnapshotToBoard(snapshot);
   if (!result.ok)
-    throw new Error(`Acceptance scenario failed board mapping: ${result.error.type}`);
+    throw new Error(
+      `Acceptance scenario failed board mapping: ${result.error.type}`,
+    );
   const phaseSpec = acceptancePhaseSpec(snapshot, result.value);
   return Object.freeze({
     id,

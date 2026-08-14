@@ -1,7 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const baseURL =
-  "http://127.0.0.1:4203/ygo-story-duel/acceptance.html";
+const baseURL = "http://127.0.0.1:4203/ygo-story-duel/acceptance.html";
 
 export default defineConfig({
   testDir: "./e2e-acceptance",

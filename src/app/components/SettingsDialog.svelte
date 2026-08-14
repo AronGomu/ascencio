@@ -2,6 +2,9 @@
   import { onMount } from "svelte";
   import type { UiSettingsState } from "../stores/ui-settings-store.ts";
 
+  const SHOW_ZONE_COUNTS_DESCRIPTION =
+    "Show the number of cards in Deck, Extra Deck, GY, Banished and both hands.";
+
   export let settings: UiSettingsState;
   export let coreVersion: readonly [number, number] | null = null;
   export let activeSnapshotId: string | null = null;
@@ -149,8 +152,7 @@
       />
       <span data-cy="settings-show-zone-counts-copy">Show card counts</span>
       <span data-cy="settings-show-zone-counts-description"
-        >Show the number of cards in Deck, Extra Deck, GY, Banished and both
-        hands.</span
+        >{SHOW_ZONE_COUNTS_DESCRIPTION}</span
       >
     </label>
     <button

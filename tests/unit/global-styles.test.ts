@@ -1,6 +1,78 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
+const REQUIRED_TOKENS = [
+  "--bg",
+  "--surface",
+  "--surface-raised",
+  "--border",
+  "--text",
+  "--muted",
+  "--accent",
+  "--accent-strong",
+  "--legal",
+  "--selected",
+  "--danger",
+  "--warning",
+  "--focus-ring",
+  "--space-1",
+  "--space-2",
+  "--space-3",
+  "--space-4",
+  "--space-5",
+  "--space-6",
+  "--radius-sm",
+  "--radius-md",
+  "--radius-lg",
+  "--font-ui",
+  "--text-xs",
+  "--text-sm",
+  "--text-md",
+  "--text-lg",
+  "--motion-fast",
+  "--motion-base",
+  "--duel-field-layer-surface",
+  "--duel-field-layer-label",
+  "--duel-field-layer-control",
+  "--duel-field-layer-menu",
+];
+
+describe("design tokens", () => {
+  it("token file declares every required token exactly once", () => {
+    const tokens = readFileSync("src/styles/tokens.css", "utf8");
+    for (const token of REQUIRED_TOKENS) {
+      const declarations = tokens.match(new RegExp(`^\\s*${token}:`, "gm"));
+      expect(declarations, `${token} declaration count`).toHaveLength(1);
+    }
+  });
+
+  it("app stylesheet has no raw colors", () => {
+    const css = stripComments(readFileSync("src/styles/app.css", "utf8"));
+    expect(css.match(/#[0-9a-fA-F]{3,8}\b/g)).toBeNull();
+    expect(css.match(/\brgba?\(/g)).toBeNull();
+    expect(css.match(/\bhsla?\(/g)).toBeNull();
+  });
+
+  it("app stylesheet imports tokens first", () => {
+    const css = stripComments(readFileSync("src/styles/app.css", "utf8"));
+    const firstStatement = css
+      .split("\n")
+      .map((line) => line.trim())
+      .find((line) => line.length > 0);
+    expect(firstStatement).toBe('@import "./tokens.css";');
+  });
+
+  it("semantic tokens are distinct", () => {
+    const tokens = readFileSync("src/styles/tokens.css", "utf8");
+    const values = ["--legal", "--selected", "--focus-ring"].map((token) => {
+      const match = tokens.match(new RegExp(`^\\s*${token}:\\s*([^;]+);`, "m"));
+      expect(match, `${token} value`).not.toBeNull();
+      return match![1]!.trim();
+    });
+    expect(new Set(values).size).toBe(3);
+  });
+});
+
 describe("global styles", () => {
   it("declares a global .visually-hidden clip utility", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
@@ -132,8 +204,10 @@ describe("global styles", () => {
     );
     expect(unavailable).toContain(":hover img");
     expect(unavailable).toContain(":focus-within img");
-    expect(unavailable).toContain("border-color: #ff455d");
-    expect(unavailable).toContain("rgb(255 69 93 / 0.78)");
+    expect(unavailable).toContain("border-color: var(--danger-strong)");
+    expect(unavailable).toContain(
+      "color-mix(in srgb, var(--danger-strong) 78%, transparent)",
+    );
     expect(unavailable).not.toContain("var(--warning)");
   });
 
@@ -141,7 +215,9 @@ describe("global styles", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     const block = ruleBlock(css, ".duel-field-zone.is-drop-candidate {");
     expect(block).toContain("border-color: var(--success)");
-    expect(block).toMatch(/background: rgb\(126 226 168 \/ 0\.\d+\)/);
+    expect(block).toMatch(
+      /background: color-mix\(in srgb, var\(--legal\) \d+%, transparent\)/,
+    );
     expect(block).toContain("box-shadow");
   });
 
@@ -257,8 +333,9 @@ describe("global styles", () => {
       ".duel-field-card:is(:hover, :focus-within),\n.duel-field-card.is-pinned {",
     );
     expect(block).toContain("var(--duel-field-layer-card-raised)");
-    expect(css).toContain("--duel-field-layer-card-raised: 35");
-    expect(css).toContain("--duel-field-layer-card: 30");
+    const tokens = readFileSync("src/styles/tokens.css", "utf8");
+    expect(tokens).toContain("--duel-field-layer-card-raised: 35");
+    expect(tokens).toContain("--duel-field-layer-card: 30");
   });
 
   /* jsdom loads no stylesheet, so no component test can observe `display`, and
@@ -294,7 +371,9 @@ describe("global styles", () => {
 
   it("drag ghost is fixed, pointer-transparent and layered above field windows", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
-    expect(css).toContain("--duel-field-layer-drag-ghost: 150");
+    expect(readFileSync("src/styles/tokens.css", "utf8")).toContain(
+      "--duel-field-layer-drag-ghost: 150",
+    );
     const block = ruleBlock(css, ".drag-ghost {");
     expect(block).toContain("position: fixed");
     expect(block).toContain("pointer-events: none");
@@ -316,6 +395,10 @@ describe("global styles", () => {
     expect(block).not.toContain("scale(");
   });
 });
+
+function stripComments(css: string): string {
+  return css.replace(/\/\*[\s\S]*?\*\//g, "");
+}
 
 function ruleBlock(css: string, selectorStart: string, fromIndex = 0): string {
   const start = css.indexOf(selectorStart, fromIndex);

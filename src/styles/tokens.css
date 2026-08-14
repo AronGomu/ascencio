@@ -1,0 +1,105 @@
+/* Integration-owned design tokens (T3).
+   Every value here is copied byte-for-byte from the pre-token `src/styles/app.css`
+   duel palette; nothing is invented. `app.css` imports this file first and holds
+   no raw colour literals of its own, so the three UI domains (duel, deck editor,
+   visual novel) restyle onto one source of truth in T16. */
+:root {
+  /* surface */
+  --bg: #08101f;
+  --bg-deep: #040912;
+  --bg-deeper: #040d16;
+  --surface: #111b2f;
+  --surface-raised: #18243b;
+  --surface-strong: var(--surface-raised);
+  --surface-sunken: #0b1424;
+  --surface-inset: #0c1728;
+  --surface-panel: #101a2d;
+  --surface-deep: #08111f;
+  --surface-field-top: #0b1728;
+  --surface-chain: #0d1729;
+  --border: #697895;
+  --border-strong: #486078;
+  --border-soft: #53627e;
+  --border-light: #8ba0bf;
+  --scrollbar-thumb: #73829d;
+
+  /* text */
+  --text: #e8edf8;
+  --muted: #a9b5ca;
+  --ink: #ffffff;
+  --ink-on-accent: #06111d;
+  --ink-on-danger: #24060b;
+  --ink-on-warning: #2b1d00;
+  --text-accent-soft: #dffbf3;
+
+  /* brand + state */
+  --accent: #73daca;
+  --accent-strong: #42c9b5;
+  --accent-deep: #297f73;
+  --legal: #7ee2a8;
+  --success: var(--legal);
+  --selected: #ffd580;
+  --warning: var(--selected);
+  --selected-strong: #ffc75c;
+  --danger: #ff8c9b;
+  --danger-strong: #ff455d;
+  --danger-border: #a43b50;
+  --danger-surface: #321825;
+  --danger-deep: #561b2a;
+  --warning-border: #896b28;
+  --warning-surface: #2e2819;
+  --neutral: #33405a;
+  --neutral-hover: #3f4e6c;
+  --focus-ring: #f6c177;
+  --shadow: #000000;
+
+  /* duel field palette */
+  --field-glow: #1e3a5f;
+  --field-border: #436558;
+  --field-surface: #153d35;
+  --field-gradient-from: #173f36;
+  --field-gradient-to: #102e2a;
+  --field-hud-border: #4e8b72;
+  --field-hud-glow: #1f5b46;
+  --field-sheen: #d5f0e6;
+  --field-zone-outline: #b7dccf;
+  --field-zone-fill: #081a19;
+  --field-zone-shared: #134542;
+  --field-card-edge: #ebf3ff;
+  --stack-accent: #9f8deb;
+  --stack-surface: #201d35;
+
+  /* scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --radius-sm: 0.35rem;
+  --radius-md: 0.6rem;
+  --radius-lg: 0.9rem;
+  --font-ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --text-xs: 0.72rem;
+  --text-sm: 0.85rem;
+  --text-md: 1rem;
+  --text-lg: 1.25rem;
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+
+  /* layers — moved verbatim from app.css */
+  --duel-field-layer-surface: 0;
+  --duel-field-layer-zone: 10;
+  --duel-field-layer-stack: 20;
+  --duel-field-layer-card: 30;
+  --duel-field-layer-card-raised: 35;
+  --duel-field-layer-label: 40;
+  --duel-field-layer-control: 50;
+  --duel-field-layer-menu: 100;
+  /* Floating field windows sit above menus and below the drag ghost, which
+     is meant to fly over them (T13). The raised layer is ephemeral: the last
+     window the player pressed takes it (ADR-017). */
+  --duel-field-layer-window: 110;
+  --duel-field-layer-window-active: 120;
+  --duel-field-layer-drag-ghost: 150;
+}

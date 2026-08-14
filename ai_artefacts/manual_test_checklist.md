@@ -121,3 +121,27 @@
 - [ ] Open `http://localhost:4300/prototype.html` — the visual-novel prototype title screen still renders (story has not moved into the shell yet).
 - [ ] In DevTools, confirm `document.querySelector("#app").dataset.appShell === "ready"`.
 - [ ] Run `npm run build` and confirm it exits 0.
+
+## T3 design-tokens
+
+T3 is a pure indirection refactor: every colour, radius and font-size in
+`src/styles/app.css` now resolves from `src/styles/tokens.css`. Nothing may
+look different. Every item below is a "did it stay the same" check — take a
+screenshot before checking out this branch if you want a strict A/B.
+
+- [ ] Run `npm run dev` and open `http://localhost:4300/#/duel`. The page background is still the dark navy with the blue radial glow in the top-left corner.
+- [ ] The duel field board is still the dark green felt with its diagonal gradient and centre radial sheen — not flat, not a different hue.
+- [ ] Empty zones still show their dashed pale-green outlines; zone count badges still read in off-white.
+- [ ] Hover a card in your hand: the halo/zoom behaves as before and the card art border is still the pale near-white hairline.
+- [ ] Trigger a legal action (e.g. summon): actionable zones and cards still show the GREEN halo, not orange.
+- [ ] Select a card in a prompt: the selected halo is still ORANGE and overrides the green.
+- [ ] Tab to a field control and confirm the keyboard focus ring is still the warm amber outline (`--focus-ring`), visually distinct from both green and orange.
+- [ ] Drag a card over a legal drop zone: the drop-candidate fill is still translucent green and darkens on hover.
+- [ ] Open the card-list dialog (click a zone with a pile): header, body, footer, scrollbar thumb/track colours and the tile borders are all unchanged.
+- [ ] In the card-list dialog, hover a tile (orange border) and confirm an unavailable target tile still shows RED through hover and focus.
+- [ ] Open the card preview panel: panel background, art frame and effect-text colours are unchanged; art is still bounded by viewport height.
+- [ ] Check the status rail and the phase strip / End turn button: chip fills, text colours and the amber "warning" button hover are unchanged.
+- [ ] Force an error (or view a known error/result panel): the error panel is still red-bordered on dark maroon, the recoverable variant still amber-bordered, the result panel still teal-bordered.
+- [ ] Confirm no element has visibly different CORNER ROUNDING — `border-radius` values of 0.35/0.6/0.9rem were swapped for `--radius-sm/md/lg`.
+- [ ] Confirm no label or badge changed SIZE — font sizes of 0.72/0.85/1.25rem were swapped for `--text-xs/sm/lg`.
+- [ ] Play one full turn and confirm the browser console stays empty (no missing-variable or CSS parse warnings).

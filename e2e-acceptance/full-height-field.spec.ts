@@ -443,3 +443,67 @@ test("opponent twenty-card overlay uses negative row-reverse scrolling", async (
     trackBox.x + trackBox.width + 1,
   );
 });
+
+/* T3: the token layer is a pure indirection over the duel palette, so these
+   are the pre-extraction literals, not new design decisions. If one of them
+   moves, a token was re-pointed and the duel look changed. */
+test("duel colors resolve from tokens", async ({ page }) => {
+  await openField(page, "field-emz");
+
+  const tokens = await page.evaluate(() => {
+    const root = getComputedStyle(document.documentElement);
+    const read = (name: string) => root.getPropertyValue(name).trim();
+    return {
+      legal: read("--legal"),
+      selected: read("--selected"),
+      focusRing: read("--focus-ring"),
+      accent: read("--accent"),
+      dangerStrong: read("--danger-strong"),
+    };
+  });
+  expect(tokens).toEqual({
+    legal: "#7ee2a8",
+    selected: "#ffd580",
+    focusRing: "#f6c177",
+    accent: "#73daca",
+    dangerStrong: "#ff455d",
+  });
+
+  const halos = await page.evaluate(() => {
+    const zones = document.querySelectorAll(".duel-field-zone");
+    const legalZone = zones[0];
+    const selectedZone = zones[1];
+    if (!legalZone || !selectedZone) throw new Error("no zones on the field");
+    legalZone.classList.add("is-actionable");
+    selectedZone.classList.add("is-selected");
+    const legalStyle = getComputedStyle(legalZone);
+    const selectedStyle = getComputedStyle(selectedZone);
+    const result = {
+      legalBorder: legalStyle.borderTopColor,
+      legalShadow: legalStyle.boxShadow,
+      selectedBorder: selectedStyle.borderTopColor,
+      selectedShadow: selectedStyle.boxShadow,
+    };
+    legalZone.classList.remove("is-actionable");
+    selectedZone.classList.remove("is-selected");
+    return result;
+  });
+  expect(halos.legalBorder).toBe("rgb(126, 226, 168)");
+  expect(halos.selectedBorder).toBe("rgb(255, 213, 128)");
+  /* Chromium serializes `color-mix()` as `color(srgb r g b / a)` with 0-1
+     channels, so compare sRGB channels rather than the literal string the
+     pre-token `rgb(126 226 168 / 0.55)` used to print. */
+  expect(sRgbChannels(halos.legalShadow)).toEqual([126, 226, 168, 0.55]);
+  expect(sRgbChannels(halos.selectedShadow)).toEqual([255, 213, 128, 0.78]);
+});
+
+function sRgbChannels(value: string): [number, number, number, number] {
+  const match = value.match(
+    /color\(srgb ([0-9.]+) ([0-9.]+) ([0-9.]+) \/ ([0-9.]+)\)/,
+  );
+  expect(match, `no color(srgb ...) in ${value}`).not.toBeNull();
+  const [red, green, blue] = match!
+    .slice(1, 4)
+    .map((channel) => Math.round(Number(channel) * 255));
+  return [red, green, blue, Number(match![4])];
+}

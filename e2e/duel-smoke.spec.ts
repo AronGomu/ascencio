@@ -473,6 +473,88 @@ test("panels stay hidden until settings enable them", async ({ page }) => {
   await expect(page.locator('[data-cy="workspace-grid"]')).toBeVisible();
 });
 
+test("zone visuals persist through reload and Reset settings restores defaults", async ({
+  page,
+}) => {
+  const board = page.locator('[data-cy="duel-field-board"]');
+  const zone = board
+    .locator(".duel-field-zone:not(.is-actionable):not(.is-selected)")
+    .first();
+  const count = board.locator(".duel-field-stack__count").first();
+
+  await page.goto("./");
+  await startPresetDuel(page);
+  await expect(board).toBeVisible({ timeout: 120_000 });
+  await expect(zone).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(count).toBeVisible();
+
+  await openSettingsDialog(page);
+  await page
+    .locator('[data-cy="settings-show-zone-outlines-checkbox"]')
+    .uncheck();
+  await page
+    .locator('[data-cy="settings-show-zone-counts-checkbox"]')
+    .uncheck();
+  await expect(board).toHaveAttribute("data-zone-outlines", "false");
+  await expect(board).toHaveAttribute("data-zone-counts", "false");
+  await expect(zone).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(count).toBeHidden();
+  await page.locator('[data-cy="settings-dialog-close-button"]').click();
+  expect(
+    await page.evaluate(() =>
+      JSON.parse(localStorage.getItem("ygo.ui.v2") ?? "null"),
+    ),
+  ).toEqual({
+    version: 2,
+    windows: { zoneList: null, confirm: null },
+    decks: { player: "mvp-player", opponent: "mvp-opponent" },
+    settings: { showZoneOutlines: false, showZoneCounts: false },
+  });
+
+  await page.reload();
+  await startPresetDuel(page);
+  await expect(board).toBeVisible({ timeout: 120_000 });
+  await expect(board).toHaveAttribute("data-zone-outlines", "false");
+  await expect(board).toHaveAttribute("data-zone-counts", "false");
+  await expect(zone).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(count).toBeHidden();
+
+  await openSettingsDialog(page);
+  await page.locator('[data-cy="settings-reset-button"]').click();
+  await expect(
+    page.locator('[data-cy="settings-show-zone-outlines-checkbox"]'),
+  ).toBeChecked();
+  await expect(
+    page.locator('[data-cy="settings-show-zone-counts-checkbox"]'),
+  ).toBeChecked();
+  await expect(board).toHaveAttribute("data-zone-outlines", "true");
+  await expect(board).toHaveAttribute("data-zone-counts", "true");
+  await expect(zone).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(count).toBeVisible();
+  await page.locator('[data-cy="settings-dialog-close-button"]').click();
+  expect(
+    await page.evaluate(() =>
+      JSON.parse(localStorage.getItem("ygo.ui.v2") ?? "null"),
+    ),
+  ).toEqual({
+    version: 2,
+    windows: { zoneList: null, confirm: null },
+    decks: { player: "mvp-player", opponent: "mvp-opponent" },
+    settings: { showZoneOutlines: true, showZoneCounts: true },
+  });
+  expect(
+    await page.evaluate(() => localStorage.getItem("ygo.ui.v1")),
+  ).toBeNull();
+
+  await page.reload();
+  await startPresetDuel(page);
+  await expect(board).toBeVisible({ timeout: 120_000 });
+  await expect(board).toHaveAttribute("data-zone-outlines", "true");
+  await expect(board).toHaveAttribute("data-zone-counts", "true");
+  await expect(zone).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(count).toBeVisible();
+});
+
 test("duel HUD keeps hidden stacks count-only and tray image work mounted on demand", async ({
   page,
 }, testInfo) => {

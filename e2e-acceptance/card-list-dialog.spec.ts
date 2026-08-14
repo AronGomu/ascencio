@@ -99,11 +99,28 @@ async function expectDocumentFits(page: Page): Promise<void> {
   ).toBe(true);
 }
 
-async function tabDataCy(page: Page): Promise<string | null> {
-  await page.keyboard.press("Tab");
-  return page.evaluate(
-    () => document.activeElement?.getAttribute("data-cy") ?? null,
-  );
+async function tabRoute(page: Page, length: number): Promise<string[]> {
+  const route: string[] = [];
+  for (let index = 0; index < length; index += 1) {
+    await page.keyboard.press("Tab");
+    const active = await page.evaluate(() => {
+      const element = document.activeElement;
+      return {
+        dataCy: element?.getAttribute("data-cy") ?? null,
+        outlineWidth:
+          element instanceof Element
+            ? getComputedStyle(element).outlineWidth
+            : "0px",
+      };
+    });
+    expect(active.dataCy).not.toBeNull();
+    expect(
+      active.outlineWidth,
+      `${active.dataCy} must show keyboard focus`,
+    ).not.toBe("0px");
+    route.push(active.dataCy!);
+  }
+  return route;
 }
 
 test("approved browse metrics cover checks 1-16", async ({
@@ -481,32 +498,42 @@ test("responsive overflow and keyboard cover checks 33-36", async ({
   await page.setViewportSize({ width: 780, height: 900 });
   await open(page, "card-list-browse-six");
   await page.locator("body").click({ position: { x: 1, y: 1 } });
-  const browseOrder = [
-    await tabDataCy(page),
-    await tabDataCy(page),
-    await tabDataCy(page),
-    await tabDataCy(page),
-  ];
-  expect(browseOrder).toEqual([
+  expect(await tabRoute(page, 13)).toEqual([
     "zone-list-dialog-close-button",
     "zone-list-entry-acceptance:graveyard:0",
     "card-action-chip-acceptance-activate-first",
     "card-action-details-acceptance:graveyard:0",
+    "zone-list-entry-acceptance:graveyard:1",
+    "zone-list-entry-acceptance:graveyard:2",
+    "zone-list-entry-acceptance:graveyard:3",
+    "zone-list-entry-acceptance:graveyard:4",
+    "zone-list-entry-acceptance:graveyard:5",
+    "card-action-chip-acceptance-activate-last",
+    "card-action-details-acceptance:graveyard:5",
+    "zone-list-dialog-alphabetical-checkbox",
+    "zone-list-dialog-cancel-button",
   ]);
 
-  await open(page, "card-list-single");
-  const target = (await targetButtons(page)).first();
-  await clickTarget(page, target);
-  const collapse = page.locator('[data-cy="zone-list-dialog-collapse-button"]');
-  await collapse.focus();
-  expect(await computed(collapse, "outline-width")).not.toBe("0px");
-  const targetOrder: string[] = [];
-  for (let index = 0; index < 8; index += 1) {
-    const value = await tabDataCy(page);
-    if (value !== null) targetOrder.push(value);
-  }
-  expect(targetOrder).toContain("zone-list-dialog-alphabetical-checkbox");
-  expect(targetOrder).toContain("zone-list-dialog-confirm-button");
+  await open(page, "card-list-mixed");
+  const targets = await targetButtons(page);
+  await clickTarget(page, targets.nth(0));
+  await clickTarget(page, targets.nth(1));
+  await expect(
+    page.locator('[data-cy="zone-list-dialog-confirm-button"]'),
+  ).toBeEnabled();
+  await page.locator("body").click({ position: { x: 1, y: 1 } });
+  expect(await tabRoute(page, 10)).toEqual([
+    "zone-list-dialog-collapse-button",
+    "zone-list-entry-acceptance:mixed:0",
+    "zone-list-entry-target-choice-acceptance:mixed:0-acceptance-mixed-0",
+    "zone-list-entry-acceptance:mixed:1",
+    "zone-list-entry-target-choice-acceptance:mixed:1-acceptance-mixed-1",
+    "zone-list-entry-acceptance:mixed:2",
+    "zone-list-entry-acceptance:mixed:3",
+    "zone-list-dialog-alphabetical-checkbox",
+    "zone-list-dialog-confirm-button",
+    "zone-list-dialog-target-cancel-button",
+  ]);
 });
 
 test("range compatibility enables inclusive Validate and locks at three", async ({

@@ -8,6 +8,15 @@ describe("global styles", () => {
     expect(css).toContain("clip: rect(0 0 0 0)");
   });
 
+  it("keeps acceptance-only field sizing out of the production stylesheet", () => {
+    const productionCss = readFileSync("src/styles/app.css", "utf8");
+    const acceptanceCss = readFileSync("src/styles/acceptance.css", "utf8");
+    const acceptanceEntry = readFileSync("src/acceptance-main.ts", "utf8");
+    expect(productionCss).not.toContain(".acceptance-card-list-field");
+    expect(acceptanceCss).toContain(".acceptance-card-list-field");
+    expect(acceptanceEntry).toContain('import "./styles/acceptance.css"');
+  });
+
   it("duel field does not contain overscroll", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     const block = duelFieldBlock(css);

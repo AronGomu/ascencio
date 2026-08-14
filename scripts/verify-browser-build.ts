@@ -22,6 +22,7 @@ const runtimeRoot = path.join(outputRoot, "runtime");
 const assetRoot = path.join(runtimeRoot, "assets/current");
 await stat(path.join(outputRoot, "index.html"));
 await verifyNoRemovedPhaserResidue();
+await verifyNoAcceptanceHarnessResidue();
 
 const runtimeManifestBytes = await readFile(
   path.join(runtimeRoot, "current/manifest.json"),
@@ -249,6 +250,30 @@ async function verifyNoRemovedPhaserResidue(): Promise<void> {
         `Browser build ${relative} contains removed Phaser marker: ${bundleMarker}`,
       );
     }
+  }
+}
+
+async function verifyNoAcceptanceHarnessResidue(): Promise<void> {
+  const forbiddenFiles = new Set(["acceptance.html"]);
+  const forbiddenMarkers = [
+    ".acceptance-card-list-field",
+    "acceptance-card-list-scenario",
+    "card-list-browse-six",
+    "field-emz",
+  ];
+  for (const file of await findFiles(outputRoot)) {
+    const relative = path.relative(outputRoot, file).replaceAll("\\", "/");
+    if (forbiddenFiles.has(relative))
+      throw new Error(
+        `Browser build contains acceptance-only file: ${relative}`,
+      );
+    if (!/\.(?:html|js|css)$/.test(relative)) continue;
+    const source = await readFile(file, "utf8");
+    const marker = forbiddenMarkers.find((value) => source.includes(value));
+    if (marker !== undefined)
+      throw new Error(
+        `Browser build ${relative} contains acceptance-only marker: ${marker}`,
+      );
   }
 }
 

@@ -1,0 +1,7 @@
+.acceptance-card-list-field {
+  position: relative;
+  width: 100vw;
+  height: 100svh;
+  margin: 0;
+  overflow: hidden;
+}

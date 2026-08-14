@@ -19,7 +19,7 @@ function intersects(
   );
 }
 
-test("zone settings persist across reload and reset to defaults", async ({
+test("seeded v2 zone settings hydrate visual state and missing state uses defaults", async ({
   page,
 }) => {
   await page.goto("?scenario=field-emz");
@@ -36,8 +36,12 @@ test("zone settings persist across reload and reset to defaults", async ({
   );
   await page.reload();
   const board = page.locator('[data-cy="duel-field-board"]');
+  const zone = board.locator(".duel-field-zone").first();
+  const count = board.locator(".duel-field-stack__count").first();
   await expect(board).toHaveAttribute("data-zone-outlines", "false");
   await expect(board).toHaveAttribute("data-zone-counts", "false");
+  await expect(zone).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(count).toBeHidden();
   await page.evaluate(() => {
     localStorage.removeItem("ygo.ui.v1");
     localStorage.removeItem("ygo.ui.v2");
@@ -45,6 +49,8 @@ test("zone settings persist across reload and reset to defaults", async ({
   await page.reload();
   await expect(board).toHaveAttribute("data-zone-outlines", "true");
   await expect(board).toHaveAttribute("data-zone-counts", "true");
+  await expect(zone).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(count).toBeVisible();
 });
 
 async function openField(page: Page, scenario: "field-emz" | "field-no-emz") {

@@ -6,12 +6,12 @@ import { deleteDB } from "idb";
 import { get } from "svelte/store";
 import { importYdk } from "../../../src/decks/ydk-adapter.ts";
 import { IndexedDbDeckRepository } from "../../../src/decks/indexeddb-deck-repository.ts";
-import { DeckBuilderController } from "../../../src/prototypes/deck-builder/deck-builder-store.ts";
+import { DeckBuilderController } from "../../../src/deck-editor/deck-editor-store.ts";
 import {
   catalogByCode,
   PROTOTYPE_RULESET,
 } from "../../../src/decks/catalog/pinned-ruleset.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/prototypes/deck-builder/fixtures/catalog.ts";
+import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
 
 const names: string[] = [];
 afterEach(async () =>

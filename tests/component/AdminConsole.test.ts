@@ -94,7 +94,7 @@ describe("AdminConsole", () => {
     const created: DeckRecord[] = [];
     mount({ hashes, created });
     await fireEvent.click(query("admin-jump-seed-deck")!);
-    await vi.waitFor(() => expect(hashes).toEqual(["#/decks"]));
+    await vi.waitFor(() => expect(hashes).toEqual(["#/decks/admin-test-deck"]));
     expect(created).toHaveLength(1);
     expect(created[0]!.id).toBe("admin-test-deck");
     expect(created[0]!.main).toHaveLength(40);

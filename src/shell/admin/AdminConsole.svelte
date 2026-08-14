@@ -76,7 +76,7 @@
       busy = false;
     }
     status = "Seeded the test deck.";
-    store.navigate({ kind: "decks" });
+    store.navigate({ kind: "deck", deckId: ADMIN_TEST_DECK_ID });
   }
 
   async function runReset(target: AdminStorageTarget): Promise<void> {
@@ -125,7 +125,7 @@
         type="button"
         disabled={busy}
         data-cy="admin-jump-seed-deck"
-        onclick={seedTestDeck}>Seed test deck &amp; open decks</button
+        onclick={seedTestDeck}>Seed test deck &amp; open it</button
       >
       <button
         type="button"

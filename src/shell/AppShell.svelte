@@ -102,7 +102,14 @@
   {:else if route.kind === "decks" || route.kind === "deck"}
     <div class="shell-region shell-region--decks" data-cy="shell-region-decks">
       {#await loaders.decks() then module}
-        <svelte:component this={module.default} />
+        <svelte:component
+          this={module.default}
+          deckId={route.kind === "deck" ? route.deckId : null}
+          onnavigate={({ deckId }) =>
+            store.navigate(
+              deckId === null ? { kind: "decks" } : { kind: "deck", deckId },
+            )}
+        />
       {/await}
     </div>
   {:else if route.kind === "admin"}

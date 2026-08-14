@@ -3,7 +3,7 @@ import {
   EMPTY_CATALOG_FILTERS,
   filterDeckCatalog,
 } from "../../../src/decks/catalog/deck-catalog.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/prototypes/deck-builder/fixtures/catalog.ts";
+import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
 
 describe("deck catalog filters", () => {
   it("filters case-insensitive names", () => {

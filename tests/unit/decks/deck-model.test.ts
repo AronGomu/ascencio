@@ -7,7 +7,7 @@ import {
   catalogByCode,
   PROTOTYPE_RULESET,
 } from "../../../src/decks/catalog/pinned-ruleset.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/prototypes/deck-builder/fixtures/catalog.ts";
+import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
 
 const catalog = catalogByCode(PROTOTYPE_CATALOG);
 const empty = {

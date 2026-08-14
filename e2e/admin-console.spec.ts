@@ -52,11 +52,13 @@ test("seeding fills the deck library and a confirmed reset empties it", async ({
   await deleteDeckDatabase(page);
   await page.reload();
 
+  /* The seed jump deep-links at the deck it just wrote, so success is the
+     editor open on that deck rather than the library listing it. */
   await page.locator('[data-cy="admin-jump-seed-deck"]').click();
-  await expect(
-    page.getByRole("heading", { name: "Deck Library" }),
-  ).toBeVisible();
-  await expect(page.getByText("Admin test deck")).toBeVisible();
+  await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
+    "Admin test deck",
+  );
+  expect(new URL(page.url()).hash).toBe("#/decks/admin-test-deck");
 
   await page.goto(adminUrl);
   /* The first click only arms the delete: nothing is removed until the

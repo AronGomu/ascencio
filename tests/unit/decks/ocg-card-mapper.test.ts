@@ -5,9 +5,9 @@ import {
   OCG_RACE,
   OCG_TYPE,
 } from "../../../src/decks/catalog/ocg-mask.ts";
-import { PROTOTYPE_CATALOG_RECORDS } from "../../../src/prototypes/deck-builder/fixtures/catalog.ts";
+import { PROTOTYPE_CATALOG_RECORDS } from "../../../src/deck-editor/fixtures/catalog.ts";
 
-describe("OCG deck-builder card mapping", () => {
+describe("OCG deck-editor card mapping", () => {
   it("derives card families, labels, attributes, races, and canonical zones", () => {
     const cards = PROTOTYPE_CATALOG_RECORDS.map(mapDeckBuilderCard);
     const fusion = cards.find(

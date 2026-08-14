@@ -99,7 +99,7 @@
 - [ ] Confirm the whole duel fits exactly one viewport (no page scrollbar) at your normal window size, then resize taller/shorter and confirm it still fits.
 - [ ] Open a stack zone (Deck / Graveyard / Banished) to raise the card-list dialog; confirm cards render as tiles, sorting/browse chrome appears, and Escape closes it.
 - [ ] Open Settings, toggle a field-display option, reload the page, and confirm the toggle survived (persisted display settings v2).
-- [ ] Open `http://localhost:4300/#/decks` — the deck-builder prototype renders and the duel does not start. (Route renamed from `#/prototype/deck-builder` by T2.)
+- [ ] Open `http://localhost:4300/#/decks` — the Deck Editor library renders and the duel does not start. (Route renamed from `#/prototype/deck-builder` by T2; the surface was renamed from "deck-builder prototype" to "Deck Editor" by T8.)
 - [ ] Open `http://localhost:4300/#/story` — the visual-novel title screen renders. (Corrected by T7: this was `prototype.html`, which no longer exists.)
 - [ ] Run `npm run build` and confirm it exits 0 — this proves the repaired `vite.config.ts` still emits the `app` (`index.html`) bundle. (Corrected by T7: the `prototype` input was removed, so only one bundle is expected now.)
 - [ ] Confirm `dist/index.html` exists after that build and `dist/prototype.html` does NOT. (Corrected by T7.)
@@ -109,7 +109,7 @@
 - [ ] Run `npm run dev` (default `DEV_PORT=4300`). Open `http://localhost:4300/#/` — the duel starts directly, exactly as before, with no "Application could not start" alert.
 - [ ] Open `http://localhost:4300/#/duel` — the duel starts here too.
 - [ ] Confirm the duel still fills exactly one viewport height with no page scrollbar (the `100svh` grid moved from `#app[data-app-entry="duel"]` to `.shell-region--duel`).
-- [ ] Open `http://localhost:4300/#/decks` — the deck-builder prototype renders and no duel starts.
+- [ ] Open `http://localhost:4300/#/decks` — the Deck Editor library renders and no duel starts. (Corrected by T8: this used to say "deck-builder prototype".)
 - [ ] Open `http://localhost:4300/#/story` — the visual-novel title screen renders. (Corrected by T7: this used to be the `Not available yet` placeholder.)
 - [ ] Open `http://localhost:4300/#/admin` — the page shows only the text `Not available yet`.
 - [ ] Open `http://localhost:4300/#/nope` — it falls back to home, which currently renders the duel.
@@ -256,4 +256,53 @@ Nothing else regressed
 - [ ] Open `#/duel` and play a few actions — the duel looks and behaves exactly as before; story styling has not leaked into its buttons or background.
 - [ ] Open `#/decks`, create and edit a deck — the deck editor looks and behaves exactly as before.
 - [ ] Open `#/admin` — the storage list shows a "Story progress" row; arm and confirm its reset, then check DevTools Application → Local Storage: `ygo.story.v1` is gone and `#/story` starts from a fresh title screen with no Continue.
+- [ ] Confirm the browser console is empty across all of the above.
+
+## T8 deck-editor-domain-migration
+
+Reach the Deck Editor
+
+- [ ] Run `npm run dev` (default `DEV_PORT=4300`) and open `http://localhost:4300/#/` — the home hub appears; click its "Decks" entry and the URL becomes `#/decks`.
+- [ ] Open `http://localhost:4300/#/decks` directly — the "Deck Library" heading renders (an empty library says "No local decks"). The browser tab title reads "Deck Editor · YGO Story Duel Simulator", not "Deck Builder Prototype".
+- [ ] Confirm there is NO "Prototype review states" panel in the bottom-right corner and no "State fixture" dropdown anywhere in the deck editor.
+- [ ] Confirm the deck editor still looks exactly as it did before this ticket — this was a move, not a restyle.
+
+Build and save a deck
+
+- [ ] Click "Create deck", name it `Manual T8`, confirm — the editor opens with Catalog / Build deck / Select a card panels.
+- [ ] Check the address bar: the URL is now `#/decks/<some-id>`, NOT `#/decks`.
+- [ ] Type `Blue-Eyes` into the catalog Name search, drag "Blue-Eyes White Dragon" onto the Main Deck drop area — Deck counts shows `Main 1` and the Autosave chip reads "Saved locally".
+- [ ] Press Undo then Redo — the count goes 0 then back to 1, and the deck stays "Saved locally".
+- [ ] Focus the Main Deck card, press Space, then click "Drop picked card in Side Deck" — the card moves and the counts follow.
+- [ ] Edit the "Deck name" field to `Manual T8 Renamed` and click elsewhere to blur — the name sticks.
+
+Deep link, reload and Back
+
+- [ ] Copy the `#/decks/<id>` URL, reload the page — the same deck reopens directly, without bouncing through the library.
+- [ ] Press the browser Back button — you land on the library at `#/decks` and the editor is gone.
+- [ ] Press Forward — the same deck reopens.
+- [ ] Open `http://localhost:4300/#/decks/no-such-deck` — a "Deck not found" page appears with a "Back to Deck Library" link; click it and the library at `#/decks` renders with your decks intact.
+
+Import and export
+
+- [ ] From the library, click "Import YDK", set the deck name to `Manual T8 Import`, paste `#main` / `99999999` / `#extra` / `!side` (one per line) into "Or paste YDK text", click "Preview import" then "Replace deck cards" — the editor opens on the imported deck and shows a "Missing card 99999999" tile.
+- [ ] Confirm the URL moved to that imported deck's `#/decks/<id>`, then reload — the missing-card tile is still there.
+- [ ] Click "Export" in the editor — the dialog warns the deck is invalid; copy to clipboard, then Close.
+- [ ] Back in the library, use the per-row "Export" action on another deck — the YDK text dialog opens for that deck and Close returns focus to the row.
+
+Library CRUD
+
+- [ ] From the library, "Duplicate" a deck — the copy opens in the editor and the URL points at the copy, not the original.
+- [ ] Return to the library, "Rename" a deck — the renamed deck opens and the URL points at it.
+- [ ] Return to the library, "Delete" a deck, confirm in the dialog — the row disappears; reload and confirm it stays gone.
+
+Admin console jump
+
+- [ ] Open `http://localhost:4300/#/admin`, click "Seed test deck & open it" — the editor opens directly on the seeded deck (name "Admin test deck") and the URL is `#/decks/admin-test-deck`.
+- [ ] Back on `#/admin`, arm and confirm the "Deck library" reset, then click the `#/decks` route button — the library shows "No local decks".
+
+Nothing else regressed
+
+- [ ] Open `#/duel` and play a few actions — the duel looks and behaves exactly as before.
+- [ ] Open `#/story` and click through a couple of beats — unchanged.
 - [ ] Confirm the browser console is empty across all of the above.

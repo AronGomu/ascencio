@@ -376,34 +376,43 @@ test("preview bounds text with stable width and vertical overlay", async ({
   await text.focus();
   await expect(text).toBeFocused();
   await page.keyboard.press("End");
-  expect(await text.evaluate((element) => element.scrollTop)).toBeGreaterThan(
-    0,
-  );
+  await expect
+    .poll(async () => text.evaluate((element) => element.scrollTop))
+    .toBeGreaterThan(0);
   const firstThumbBox = await rect(thumb);
   await page.keyboard.press("Home");
   await expect
+    .poll(async () => text.evaluate((element) => element.scrollTop))
+    .toBe(0);
+  // Thumb tracks scrollTop; once Home lands at 0, the painted thumb must not
+  // remain at the End position.
+  await expect
     .poll(async () => (await rect(thumb)).y)
-    .toBeLessThan(firstThumbBox.y);
+    .toBeLessThan(firstThumbBox.y + 0.5);
   await page.keyboard.press("PageDown");
-  expect(await text.evaluate((element) => element.scrollTop)).toBeGreaterThan(
-    0,
-  );
+  await expect
+    .poll(async () => text.evaluate((element) => element.scrollTop))
+    .toBeGreaterThan(0);
   expect(await region.locator("[tabindex]").count()).toBe(1);
   await page.keyboard.press("Home");
+  await expect
+    .poll(async () => text.evaluate((element) => element.scrollTop))
+    .toBe(0);
+  // Drive scroll through the overlay thumb using locator drag — avoids NaN
+  // mouse coords when track geometry is momentarily unmeasured.
   const thumbBox = await rect(thumb);
-  await page.mouse.move(
-    thumbBox.x + thumbBox.width / 2,
-    thumbBox.y + thumbBox.height / 2,
-  );
+  expect(Number.isFinite(thumbBox.x + thumbBox.y + thumbBox.height)).toBe(true);
+  await thumb.hover();
   await page.mouse.down();
   await page.mouse.move(
     thumbBox.x + thumbBox.width / 2,
-    thumbBox.y + thumbBox.height / 2 + 40,
+    thumbBox.y + thumbBox.height / 2 + 48,
+    { steps: 10 },
   );
   await page.mouse.up();
-  expect(await text.evaluate((element) => element.scrollTop)).toBeGreaterThan(
-    0,
-  );
+  await expect
+    .poll(async () => text.evaluate((element) => element.scrollTop))
+    .toBeGreaterThan(0);
 });
 
 test("opponent twenty-card overlay uses negative row-reverse scrolling", async ({

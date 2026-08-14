@@ -73,14 +73,14 @@ function chooseTargetChoice(choice: InteractionChoice): void {
 
 ## Impl steps
 
-- [ ] 1. Rewrite conflicting ZoneListDialog/DuelField tests; add exact range/max/menu/unselect table; prove red.
-- [ ] 2. Derive state once in ZoneListDialog via `cardListSelectionState`; render exact label/Validate/unavailable props.
-- [ ] 3. Extend tile/menu props with `unavailableChoiceIds`; native-disable + ARIA each choice correctly.
-- [ ] 4. Add tile selected/unavailable aggregate classes + checkmark behavior; preserve privacy/image lifecycle.
-- [ ] 5. Add exact `chooseTargetChoice` callback above in DuelField; leave mounted-field path + global helper untouched.
-- [ ] 6. Add hover suppression on final tile unselect; clear pointerleave; pass existing selected set transitions.
-- [ ] 7. Add red-priority CSS + actual disabled semantics assertions; keep field/list green/orange regressions.
-- [ ] 8. Run focused unit/component/type/lint/build gates.
+- [x] 1. Rewrite conflicting ZoneListDialog/DuelField tests; add exact range/max/menu/unselect table; prove red.
+- [x] 2. Derive state once in ZoneListDialog via `cardListSelectionState`; render exact label/Validate/unavailable props.
+- [x] 3. Extend tile/menu props with `unavailableChoiceIds`; native-disable + ARIA each choice correctly.
+- [x] 4. Add tile selected/unavailable aggregate classes + checkmark behavior; preserve privacy/image lifecycle.
+- [x] 5. Add exact `chooseTargetChoice` callback above in DuelField; leave mounted-field path + global helper untouched.
+- [x] 6. Add hover suppression on final tile unselect; clear pointerleave; pass existing selected set transitions.
+- [x] 7. Add red-priority CSS + actual disabled semantics assertions; keep field/list green/orange regressions.
+- [x] 8. Run focused unit/component/type/lint/build gates.
 
 ## Outputs
 
@@ -90,9 +90,9 @@ function chooseTargetChoice(choice: InteractionChoice): void {
 
 ## Validation
 
-- [ ] `npx vitest run tests/unit/card-list-dialog-model.test.ts tests/unit/prompt-selection.test.ts tests/unit/interaction-session.test.ts` → exit 0.
-- [ ] `npx vitest run tests/component/ProjectedChoiceMenu.test.ts tests/component/ZoneListDialog.test.ts tests/component/DuelField.test.ts tests/unit/global-styles.test.ts` → exit 0.
-- [ ] `npm run typecheck && npm run lint && npm run format:check` → exit 0.
+- [x] `npx vitest run tests/unit/card-list-dialog-model.test.ts tests/unit/prompt-selection.test.ts tests/unit/interaction-session.test.ts` → exit 0.
+- [x] `npx vitest run tests/component/ProjectedChoiceMenu.test.ts tests/component/ZoneListDialog.test.ts tests/component/DuelField.test.ts tests/unit/global-styles.test.ts` → exit 0.
+- [x] `npm run typecheck && npm run lint && npm run format:check` → exit 0.
 - [ ] manual component check — singleton click drafts; Validate submits; mounted field unchanged.
-- [ ] app functional — `npm run build` exits 0; real-duel startup smoke passes.
-- [ ] commit msg draft: `feat(card-list): integrate exact and range target drafts`
+- [x] app functional — `npm run build` exits 0; real-duel startup smoke passes.
+- [x] commit msg draft: `feat(card-list): integrate exact and range target drafts`

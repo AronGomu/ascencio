@@ -98,6 +98,18 @@ describe("global styles", () => {
     expect(list).not.toContain("var(--success)");
   });
 
+  it("unavailable target halos stay red through hover and focus", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const unavailable = ruleBlock(
+      css,
+      ".zone-list-entry.is-unavailable:not(.is-selected) img,",
+    );
+    expect(unavailable).toContain(":hover img");
+    expect(unavailable).toContain(":focus-within img");
+    expect(unavailable).toContain("var(--danger)");
+    expect(unavailable).not.toContain("var(--warning)");
+  });
+
   it("drop candidate is green with a translucent fill, distinct from plain legal", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     const block = ruleBlock(css, ".duel-field-zone.is-drop-candidate {");
@@ -164,6 +176,9 @@ describe("global styles", () => {
       css.indexOf(listSelector) + listSelector.length,
     );
     expect(listZoom).toContain("scale(1.6)");
+    expect(ruleBlock(css, ".zone-list-entry.is-hover-suppressed {")).toContain(
+      "transform: none",
+    );
   });
 
   it("hand item transform-origin is bottom for player, top for opponent; field origin is centre", () => {

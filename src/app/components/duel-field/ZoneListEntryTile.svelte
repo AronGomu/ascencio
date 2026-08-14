@@ -10,6 +10,8 @@
   import CardActionChips from "./CardActionChips.svelte";
   import ProjectedChoiceMenu from "./ProjectedChoiceMenu.svelte";
 
+  const noop = (): void => undefined;
+
   export let entry: ZoneListEntry;
   export let choices: readonly InteractionChoice[] = [];
   export let selected = false;
@@ -19,18 +21,17 @@
   export let zoneBadge = "";
   export let zoneLabel = "";
   export let selectedChoiceIds: readonly ChoiceId[] = [];
-  export let disabledChoiceIds: ReadonlySet<ChoiceId> = new Set();
+  export let unavailableChoiceIds: ReadonlySet<ChoiceId> = new Set();
   export let first = false;
   export let last = false;
   export let ondetails: (() => void) | null = null;
-  export let ontargetchoice: (choice: InteractionChoice) => void = () =>
-    undefined;
+  export let ontargetchoice: (choice: InteractionChoice) => void = noop;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let cardBackUrl = "";
   export let placeholderUrl = "";
   export let disabled = false;
-  export let onchoose: (choice: InteractionChoice) => void = () => undefined;
-  export let onpreview: () => void = () => undefined;
+  export let onchoose: (choice: InteractionChoice) => void = noop;
+  export let onpreview: () => void = noop;
 
   let activeImageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   let activeImageCode: number | undefined;
@@ -38,6 +39,7 @@
   let renderedImageUrl = cardBackUrl;
   let menuOpen = false;
   let menuTrigger: HTMLButtonElement | undefined;
+  let hoverSuppressed = false;
 
   $: synchronizeImageLease(imageLibrary, entry.code, cardBackUrl);
 
@@ -58,9 +60,16 @@
     renderedImageUrl = imageLease?.url ?? fallbackUrl;
   }
 
-  function targetLabel(choice: InteractionChoice): string {
-    const address = `${entry.label} in ${zoneLabel}`;
-    return choices.length === 1 ? address : `${choice.label}: ${address}`;
+  function targetUnavailable(): boolean {
+    return !selected && unavailableChoiceIds.size > 0;
+  }
+
+  function chooseTargetChoice(choice: InteractionChoice): void {
+    const removingFinalTileChoice =
+      selectedChoiceIds.includes(choice.id) &&
+      choices.filter(({ id }) => selectedChoiceIds.includes(id)).length === 1;
+    ontargetchoice(choice);
+    if (removingFinalTileChoice) hoverSuppressed = true;
   }
 
   function dismissMenu(): void {
@@ -85,10 +94,13 @@
   class:is-first={first}
   class:is-last={last}
   class:is-menu-open={menuOpen}
+  class:is-unavailable={targetUnavailable()}
+  class:is-hover-suppressed={hoverSuppressed}
   role="group"
   data-controller={entry.controller}
   data-cy={`zone-list-entry-${entry.id}`}
   onpointerenter={onpreview}
+  onpointerleave={() => (hoverSuppressed = false)}
   onfocusin={onpreview}
   tabindex="0"
 >
@@ -101,7 +113,11 @@
     data-cy={`zone-list-entry-image-${entry.id}`}
   />
   {#if selected}
-    <span class="zone-list-entry__check" aria-hidden="true" data-cy={`zone-list-entry-check-${entry.id}`}>✓</span>
+    <span
+      class="zone-list-entry__check"
+      aria-hidden="true"
+      data-cy={`zone-list-entry-check-${entry.id}`}>✓</span
+    >
   {/if}
   {#if mode === "target"}
     <span
@@ -117,13 +133,15 @@
       data-cy={`zone-list-entry-targets-${entry.id}`}
     >
       {#if choices.length === 1}
+        {@const choiceDisabled = disabled || targetUnavailable()}
         <button
           type="button"
           class="zone-list-entry__target"
-          {disabled}
+          disabled={choiceDisabled}
+          aria-disabled={choiceDisabled}
           aria-pressed={selectedChoiceIds.includes(choices[0]!.id)}
-          aria-label={targetLabel(choices[0]!)}
-          onclick={() => ontargetchoice(choices[0]!)}
+          aria-label={`${entry.label} in ${zoneLabel}`}
+          onclick={() => chooseTargetChoice(choices[0]!)}
           data-cy={`zone-list-entry-target-choice-${entry.id}-${choices[0]!.id}`}
         ></button>
       {:else if choices.length > 1}
@@ -132,7 +150,7 @@
           class="zone-list-entry__target zone-list-entry__menu-trigger"
           aria-expanded={menuOpen}
           aria-label={`Choose action for ${entry.label} in ${zoneLabel}`}
-          {disabled}
+          disabled={disabled || targetUnavailable()}
           bind:this={menuTrigger}
           onclick={() => (menuOpen = !menuOpen)}
           data-cy={`zone-list-entry-choice-menu-trigger-${entry.id}`}
@@ -146,8 +164,9 @@
         {zoneLabel}
         {choices}
         {selectedChoiceIds}
-        {disabledChoiceIds}
-        onchoose={ontargetchoice}
+        {unavailableChoiceIds}
+        {disabled}
+        onchoose={chooseTargetChoice}
         ondismiss={dismissMenu}
       />
     {/if}
@@ -164,6 +183,9 @@
     />
   {/if}
   {#if entry.identityVisible}
-    <span class="zone-list-entry__name" data-cy={`zone-list-entry-name-${entry.id}`}>{entry.label}</span>
+    <span
+      class="zone-list-entry__name"
+      data-cy={`zone-list-entry-name-${entry.id}`}>{entry.label}</span
+    >
   {/if}
 </div>

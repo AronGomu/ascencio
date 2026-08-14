@@ -175,7 +175,11 @@ describe("ZoneListDialog target mode", () => {
     renderTargetDialog({
       targetEntries: [
         targetEntry({ location: "deck", zoneBadge: "DECK" }),
-        targetEntry({ id: "target:0:hand:0", location: "hand", zoneBadge: "HAND" }),
+        targetEntry({
+          id: "target:0:hand:0",
+          location: "hand",
+          zoneBadge: "HAND",
+        }),
         targetEntry({ id: "target:0:graveyard:1", sequence: 1 }),
       ],
     });
@@ -209,8 +213,12 @@ describe("ZoneListDialog target mode", () => {
     if (collapse === null) throw new Error("Missing collapse button");
     await user.click(collapse);
     expect(root?.dataset.collapsed).toBe("true");
-    expect(document.querySelector('[data-cy="zone-list-dialog-title"]')).toBeNull();
-    expect(document.querySelector('[data-cy="zone-list-dialog-entries"]')).toBeNull();
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-title"]'),
+    ).toBeNull();
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-entries"]'),
+    ).toBeNull();
     const expand = document.querySelector<HTMLButtonElement>(
       '[data-cy="zone-list-dialog-expand-button"]',
     );
@@ -364,15 +372,22 @@ describe("ZoneListDialog target mode", () => {
     expect(
       document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
         ?.textContent,
-    ).toBe("2 selected · 1–3 allowed");
+    ).toBe("2 selected · choose 1–3");
   });
 
-  it("has no Confirm for an exact one-of-one target", () => {
-    renderTargetDialog({ minimum: 1, maximum: 1 });
+  it("always renders Validate for an exact one-of-one target", async () => {
+    const harness = renderTargetDialog({ minimum: 1, maximum: 1 });
+    const confirm = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-dialog-confirm-button"]',
+    );
+    if (confirm === null) throw new Error("Missing confirm button");
+    expect(confirm.disabled).toBe(true);
 
-    expect(
-      document.querySelector('[data-cy="zone-list-dialog-confirm-button"]'),
-    ).toBeNull();
+    await harness.rendered.rerender({
+      selectedChoiceIds: [choiceId("gy-0")],
+      confirmValid: true,
+    });
+    expect(confirm.disabled).toBe(false);
   });
 
   it("enables Confirm only when the selection validates", async () => {
@@ -402,6 +417,84 @@ describe("ZoneListDialog target mode", () => {
     expect(valid.onconfirm).toHaveBeenCalledTimes(1);
   });
 
+  it.each([1, 2, 3])(
+    "enables range Validate inclusively at count %i",
+    (selectedCount) => {
+      const targetEntries = Array.from({ length: 3 }, (_, index) =>
+        targetEntry({
+          id: `target:range:${index}`,
+          sequence: index,
+          choices: [targetChoice(`range-${index}`)],
+        }),
+      );
+      renderTargetDialog({
+        targetEntries,
+        minimum: 1,
+        maximum: 3,
+        selectedChoiceIds: targetEntries
+          .slice(0, selectedCount)
+          .map(({ choices }) => choices[0]!.id),
+        confirmValid: true,
+      });
+
+      expect(
+        document.querySelector<HTMLButtonElement>(
+          '[data-cy="zone-list-dialog-confirm-button"]',
+        )?.disabled,
+      ).toBe(false);
+    },
+  );
+
+  it("fails closed when prompt validation includes a stale choice ID", () => {
+    renderTargetDialog({
+      selectedChoiceIds: [choiceId("stale")],
+      confirmValid: true,
+    });
+
+    expect(
+      document.querySelector<HTMLButtonElement>(
+        '[data-cy="zone-list-dialog-confirm-button"]',
+      )?.disabled,
+    ).toBe(true);
+  });
+
+  it("hard-locks unselected choices at maximum but keeps selected choices removable", async () => {
+    const user = userEvent.setup();
+    const harness = renderTargetDialog({
+      targetEntries: [
+        targetEntry(),
+        targetEntry({
+          id: "target:0:graveyard:1",
+          sequence: 1,
+          choices: [targetChoice("gy-1")],
+        }),
+      ],
+      selectedChoiceIds: [choiceId("gy-0")],
+      minimum: 1,
+      maximum: 1,
+      confirmValid: true,
+    });
+    const selected = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-entry-target-choice-target:0:graveyard:0-gy-0"]',
+    );
+    const unavailable = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-entry-target-choice-target:0:graveyard:1-gy-1"]',
+    );
+    const unavailableTile = unavailable?.closest(".zone-list-entry");
+    expect(selected?.disabled).toBe(false);
+    expect(selected?.getAttribute("aria-disabled")).toBe("false");
+    expect(unavailable?.disabled).toBe(true);
+    expect(unavailable?.getAttribute("aria-disabled")).toBe("true");
+    expect(unavailableTile?.classList.contains("is-unavailable")).toBe(true);
+
+    await user.click(unavailable as HTMLButtonElement);
+    expect(harness.ontargetchoice).not.toHaveBeenCalled();
+    await user.click(selected as HTMLButtonElement);
+    expect(harness.ontargetchoice).toHaveBeenCalledWith(
+      expect.objectContaining({ id: choiceId("gy-0") }),
+    );
+  });
+
   it("shows the validation message and only offers Cancel when the engine allows it", async () => {
     const user = userEvent.setup();
     const harness = renderTargetDialog({
@@ -425,7 +518,9 @@ describe("ZoneListDialog target mode", () => {
 
     renderTargetDialog({ minimum: 1, maximum: 2, cancelable: false });
     expect(
-      document.querySelector('[data-cy="zone-list-dialog-target-cancel-button"]'),
+      document.querySelector(
+        '[data-cy="zone-list-dialog-target-cancel-button"]',
+      ),
     ).toBeNull();
   });
 
@@ -456,7 +551,9 @@ describe("ZoneListDialog target mode", () => {
       ),
     ).toEqual(["zone-list-entry-target:a", "zone-list-entry-target:b"]);
     expect(
-      document.querySelector('[aria-pressed="true"]')?.closest(".zone-list-entry")
+      document
+        .querySelector('[aria-pressed="true"]')
+        ?.closest(".zone-list-entry")
         ?.getAttribute("data-cy"),
     ).toBe("zone-list-entry-target:b");
   });
@@ -464,7 +561,10 @@ describe("ZoneListDialog target mode", () => {
   it("disables and resets target sorting when identity is hidden", async () => {
     const user = userEvent.setup();
     const harness = renderTargetDialog({
-      targetEntries: [targetEntry(), targetEntry({ id: "target:visible:2", label: "A" })],
+      targetEntries: [
+        targetEntry(),
+        targetEntry({ id: "target:visible:2", label: "A" }),
+      ],
     });
     const checkbox = document.querySelector<HTMLInputElement>(
       '[data-cy="zone-list-dialog-alphabetical-checkbox"]',
@@ -476,6 +576,61 @@ describe("ZoneListDialog target mode", () => {
     });
     expect(checkbox.disabled).toBe(true);
     expect(checkbox.checked).toBe(false);
+  });
+
+  it("suppresses zoom after final tile unselect until pointerleave", async () => {
+    const user = userEvent.setup();
+    render(ZoneListEntryTile, {
+      entry: targetEntry(),
+      mode: "target",
+      choices: [targetChoice("gy-0")],
+      selected: true,
+      selectedChoiceIds: [choiceId("gy-0")],
+      cardBackUrl: "back.png",
+      ontargetchoice: vi.fn(),
+    });
+    const tile = document.querySelector<HTMLElement>(
+      '[data-cy="zone-list-entry-target:0:graveyard:0"]',
+    );
+    const button = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-entry-target-choice-target:0:graveyard:0-gy-0"]',
+    );
+    if (tile === null || button === null)
+      throw new Error("Missing target tile");
+
+    await user.click(button);
+    expect(tile.classList.contains("is-hover-suppressed")).toBe(true);
+    await fireEvent.pointerLeave(tile);
+    expect(tile.classList.contains("is-hover-suppressed")).toBe(false);
+  });
+
+  it("keeps zoom when another opaque choice on the tile remains selected", async () => {
+    const user = userEvent.setup();
+    render(ZoneListEntryTile, {
+      entry: targetEntry(),
+      mode: "target",
+      choices: [targetChoice("gy-0"), targetChoice("gy-1")],
+      selected: true,
+      selectedChoiceIds: [choiceId("gy-0"), choiceId("gy-1")],
+      cardBackUrl: "back.png",
+      ontargetchoice: vi.fn(),
+    });
+    const tile = document.querySelector<HTMLElement>(
+      '[data-cy="zone-list-entry-target:0:graveyard:0"]',
+    );
+    const trigger = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-entry-choice-menu-trigger-target:0:graveyard:0"]',
+    );
+    if (tile === null || trigger === null)
+      throw new Error("Missing target tile");
+    await user.click(trigger);
+    const selectedChoice = document.querySelector<HTMLButtonElement>(
+      '[data-cy="projected-choice-target:0:graveyard:0-gy-0"]',
+    );
+    if (selectedChoice === null) throw new Error("Missing selected choice");
+
+    await user.click(selectedChoice);
+    expect(tile.classList.contains("is-hover-suppressed")).toBe(false);
   });
 
   it("outside and Escape preserve the target window and draft", async () => {
@@ -494,13 +649,30 @@ describe("ZoneListDialog target mode", () => {
 describe("ZoneListDialog", () => {
   it("renders approved browse chrome and physical copies", () => {
     renderDialog();
-    expect(document.querySelector('[data-cy="zone-list-dialog-title"]')?.textContent).toBe("Graveyard");
-    expect(document.querySelectorAll('[data-cy^="zone-list-entry-p0:"]')).toHaveLength(4);
-    expect(document.querySelector('[data-cy="zone-list-dialog-footer"]')).not.toBeNull();
-    expect(document.querySelector('[data-cy="zone-list-dialog-sort-label"]')).not.toBeNull();
-    expect(document.querySelectorAll('[data-cy="zone-list-dialog-alphabetical-checkbox"]')).toHaveLength(1);
-    expect(document.querySelector('[data-cy="zone-list-dialog-cancel-button"]')?.textContent).toContain("Cancel");
-    expect(document.querySelector('[data-cy="zone-list-dialog-confirm-button"]')).toBeNull();
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-title"]')?.textContent,
+    ).toBe("Graveyard");
+    expect(
+      document.querySelectorAll('[data-cy^="zone-list-entry-p0:"]'),
+    ).toHaveLength(4);
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-footer"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-sort-label"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelectorAll(
+        '[data-cy="zone-list-dialog-alphabetical-checkbox"]',
+      ),
+    ).toHaveLength(1);
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-cancel-button"]')
+        ?.textContent,
+    ).toContain("Cancel");
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-confirm-button"]'),
+    ).toBeNull();
   });
 
   it("dialog lists every entry", () => {
@@ -742,27 +914,45 @@ describe("ZoneListDialog", () => {
   it("sorts alphabetically and restores source order", async () => {
     const user = userEvent.setup();
     renderDialog({ entries: [entry(3), entry(1), entry(2)] });
-    const checkbox = document.querySelector<HTMLInputElement>('[data-cy="zone-list-dialog-alphabetical-checkbox"]');
+    const checkbox = document.querySelector<HTMLInputElement>(
+      '[data-cy="zone-list-dialog-alphabetical-checkbox"]',
+    );
     if (checkbox === null) throw new Error("Missing alphabetical checkbox");
     await user.click(checkbox);
-    expect([...document.querySelectorAll('.zone-list-entry')].map((element) => element.getAttribute('data-cy'))).toEqual([
-      'zone-list-entry-p0:graveyard:1',
-      'zone-list-entry-p0:graveyard:2',
-      'zone-list-entry-p0:graveyard:3',
+    expect(
+      [...document.querySelectorAll(".zone-list-entry")].map((element) =>
+        element.getAttribute("data-cy"),
+      ),
+    ).toEqual([
+      "zone-list-entry-p0:graveyard:1",
+      "zone-list-entry-p0:graveyard:2",
+      "zone-list-entry-p0:graveyard:3",
     ]);
     await user.click(checkbox);
-    expect([...document.querySelectorAll('.zone-list-entry')].map((element) => element.getAttribute('data-cy'))).toEqual([
-      'zone-list-entry-p0:graveyard:3',
-      'zone-list-entry-p0:graveyard:1',
-      'zone-list-entry-p0:graveyard:2',
+    expect(
+      [...document.querySelectorAll(".zone-list-entry")].map((element) =>
+        element.getAttribute("data-cy"),
+      ),
+    ).toEqual([
+      "zone-list-entry-p0:graveyard:3",
+      "zone-list-entry-p0:graveyard:1",
+      "zone-list-entry-p0:graveyard:2",
     ]);
   });
 
   it("renders empty state and disables sorting", () => {
     renderDialog({ entries: [] });
-    expect(document.querySelector('[data-cy="zone-list-dialog-empty"]')?.textContent).toBe("No cards available");
-    expect(document.querySelector<HTMLInputElement>('[data-cy="zone-list-dialog-alphabetical-checkbox"]')?.disabled).toBe(true);
-    expect(document.querySelector('[data-cy="zone-list-dialog-count"]')?.textContent).toBe("0");
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-empty"]')?.textContent,
+    ).toBe("No cards available");
+    expect(
+      document.querySelector<HTMLInputElement>(
+        '[data-cy="zone-list-dialog-alphabetical-checkbox"]',
+      )?.disabled,
+    ).toBe(true);
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-count"]')?.textContent,
+    ).toBe("0");
   });
 
   it("deck dialog uses privacy-safe browse label", () => {

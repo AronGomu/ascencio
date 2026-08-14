@@ -7,15 +7,12 @@
   export let zoneLabel: string;
   export let choices: readonly InteractionChoice[];
   export let selectedChoiceIds: readonly ChoiceId[];
-  export let disabledChoiceIds: ReadonlySet<ChoiceId>;
+  export let unavailableChoiceIds: ReadonlySet<ChoiceId>;
+  export let disabled = false;
   export let onchoose: (choice: InteractionChoice) => void;
   export let ondismiss: () => void;
 
   let menuElement: HTMLDivElement | undefined;
-
-  function buttons(): HTMLButtonElement[] {
-    return menuElement === undefined ? [] : [...menuElement.querySelectorAll<HTMLButtonElement>("button")];
-  }
 
   function handleKeydown(event: KeyboardEvent): void {
     if (event.key === "Escape") {
@@ -23,16 +20,25 @@
       ondismiss();
       return;
     }
-    const items = buttons();
+    const items = [
+      ...(menuElement?.querySelectorAll<HTMLButtonElement>("button:enabled") ??
+        []),
+    ];
+    if (items.length === 0) return;
     const current = items.indexOf(document.activeElement as HTMLButtonElement);
-    let destination: number | null = null;
-    if (event.key === "ArrowDown") destination = (current + 1) % items.length;
-    else if (event.key === "ArrowUp") destination = (current - 1 + items.length) % items.length;
-    else if (event.key === "Home") destination = 0;
-    else if (event.key === "End") destination = items.length - 1;
-    if (destination === null || items.length === 0) return;
+    const destination =
+      event.key === "ArrowDown"
+        ? (current + 1) % items.length
+        : event.key === "ArrowUp"
+          ? (current - 1 + items.length) % items.length
+          : event.key === "Home"
+            ? 0
+            : event.key === "End"
+              ? items.length - 1
+              : -1;
+    if (destination < 0) return;
     event.preventDefault();
-    items[destination]?.focus({ preventScroll: true });
+    items[destination]!.focus({ preventScroll: true });
   }
 </script>
 
@@ -44,13 +50,16 @@
   data-cy={`projected-choice-menu-${entryId}`}
 >
   {#each choices as choice (choice.id)}
+    {@const choiceDisabled = disabled || unavailableChoiceIds.has(choice.id)}
     <button
       type="button"
       aria-pressed={selectedChoiceIds.includes(choice.id)}
-      disabled={disabledChoiceIds.has(choice.id)}
+      disabled={choiceDisabled}
+      aria-disabled={choiceDisabled}
       onclick={() => onchoose(choice)}
       onkeydown={handleKeydown}
       data-cy={`projected-choice-${entryId}-${choice.id}`}
-    >{choice.label}</button>
+      >{choice.label}</button
+    >
   {/each}
 </div>

@@ -12,10 +12,13 @@
     cardListAlphabeticalAllowed,
     cardListBrowseTitle,
     cardListDisplayEntries,
+    cardListSelectionState,
     cardListSourceNotice,
   } from "../../presentation/card-list-dialog-model.ts";
   import FloatingFieldWindow from "./FloatingFieldWindow.svelte";
   import ZoneListEntryTile from "./ZoneListEntryTile.svelte";
+
+  const noop = (): void => undefined;
 
   /* Browse lists one pile as it is; target lists only the legal off-field
      choices of the live prompt, wherever they live (T16). */
@@ -40,17 +43,16 @@
   export let boundaryElement: HTMLElement | null = null;
   export let windowPosition: PersistedWindowPosition | null = null;
   export let active = false;
-  export let onactivate: (id: FieldWindowId) => void = () => undefined;
+  export let onactivate: (id: FieldWindowId) => void = noop;
   export let onwindowpositionchange: (
     position: PersistedWindowPosition,
-  ) => void = () => undefined;
-  export let onchoose: (choice: InteractionChoice) => void = () => undefined;
-  export let ontargetchoice: (choice: InteractionChoice) => void = () =>
-    undefined;
-  export let onconfirm: () => void = () => undefined;
-  export let oncancel: () => void = () => undefined;
-  export let onpreview: (entry: ZoneListEntry) => void = () => undefined;
-  export let onclose: (event?: Event) => void = () => undefined;
+  ) => void = noop;
+  export let onchoose: (choice: InteractionChoice) => void = noop;
+  export let ontargetchoice: (choice: InteractionChoice) => void = noop;
+  export let onconfirm: () => void = noop;
+  export let oncancel: () => void = noop;
+  export let onpreview: (entry: ZoneListEntry) => void = noop;
+  export let onclose: (event?: Event) => void = noop;
 
   let entriesElement: HTMLElement | null = null;
   let alphabetical = false;
@@ -76,13 +78,13 @@
       : cardListBrowseTitle(stack.zone);
   $: count = targetMode ? targetEntries.length : entries.length;
   $: label = targetMode ? headerTitle : `${headerTitle} card browser`;
-  $: selectedCount = selectedChoiceIds.length;
-  /* An exact one-of-one target answers on click, so it owns no Confirm. */
-  $: exactSingle = minimum === 1 && maximum === 1;
-  $: selectionCountLabel =
-    minimum === maximum
-      ? `${selectedCount} / ${maximum} selected`
-      : `${selectedCount} selected · ${minimum}–${maximum} allowed`;
+  $: selectionState = cardListSelectionState({
+    selectedChoiceIds,
+    entries: [...targetEntries, { choices }],
+    minimum,
+    maximum,
+    promptValid: confirmValid,
+  });
 
   async function setCollapsed(value: boolean): Promise<void> {
     collapsed = value;
@@ -90,26 +92,18 @@
     (value ? expandButton : collapseButton)?.focus();
   }
 
-  function promptSequenceInListSpace(
-    choice: InteractionChoice,
-    entry: ZoneListEntry,
-  ): number | undefined {
-    const engineSequence = choice.cardAddress?.sequence;
-    if (engineSequence === undefined || entry.location !== "deck")
-      return engineSequence;
-    // Engine deck sequences are bottom-first; projected deck entries use a
-    // top-relative offset. `entries.length` comes from this same snapshot.
-    return entries.length - 1 - engineSequence;
-  }
-
   function entryChoices(entry: ZoneListEntry): readonly InteractionChoice[] {
-    return choices.filter(
-      (choice) =>
-        choice.cardAddress !== undefined &&
-        choice.cardAddress.controller === entry.controller &&
-        choice.cardAddress.location === entry.location &&
-        promptSequenceInListSpace(choice, entry) === entry.sequence,
-    );
+    return choices.filter((choice) => {
+      const address = choice.cardAddress;
+      return (
+        address !== undefined &&
+        address.controller === entry.controller &&
+        address.location === entry.location &&
+        (entry.location === "deck"
+          ? entries.length - 1 - address.sequence
+          : address.sequence) === entry.sequence
+      );
+    });
   }
 
   function targetSelected(entry: OffFieldTargetEntry): boolean {
@@ -178,133 +172,141 @@
       <span data-cy="zone-list-dialog-title">{headerTitle}</span>
       <strong data-cy="zone-list-dialog-count">{count}</strong>
       {#if targetMode}
-        <span class="zone-list-dialog__notice" data-cy="zone-list-dialog-filter-notice"
-          >{filterNotice}</span
+        <span
+          class="zone-list-dialog__notice"
+          data-cy="zone-list-dialog-filter-notice">{filterNotice}</span
         >
       {/if}
-    {#if !targetMode}
-      <button
-        type="button"
-        class="danger zone-list-dialog__close"
-        aria-label={`Close ${headerTitle}`}
-        onclick={() => onclose()}
-        data-cy="zone-list-dialog-close-button">×</button
-      >
+      {#if !targetMode}
+        <button
+          type="button"
+          class="danger zone-list-dialog__close"
+          aria-label={`Close ${headerTitle}`}
+          onclick={() => onclose()}
+          data-cy="zone-list-dialog-close-button">×</button
+        >
       {/if}
     {/if}
   </div>
   {#if !collapsed}
-  <div class="zone-list-dialog" data-mode={mode} data-collapsed="false" data-cy="zone-list-dialog">
     <div
-      class="zone-list-dialog__entries"
-      bind:this={entriesElement}
-      onwheel={wheelToHorizontal}
-      data-cy="zone-list-dialog-entries"
+      class="zone-list-dialog"
+      data-mode={mode}
+      data-collapsed="false"
+      data-cy="zone-list-dialog"
     >
-      {#if targetMode}
-        {#each displayTargetEntries as entry, index (entry.id)}
-          <ZoneListEntryTile
-            {entry}
-            first={index === 0}
-            last={index === displayTargetEntries.length - 1}
-            mode="target"
-            choices={entry.choices}
-            zoneBadge={entry.zoneBadge}
-            zoneLabel={entry.zoneLabel}
-            selected={targetSelected(entry)}
-            {selectedChoiceIds}
-            {imageLibrary}
-            {cardBackUrl}
-            {placeholderUrl}
-            {disabled}
-            {ontargetchoice}
-            onpreview={() => onpreview(entry)}
-          />
-        {/each}
-      {:else if displayEntries.length === 0}
-        <p class="zone-list-dialog__empty" data-cy="zone-list-dialog-empty">No cards available</p>
-      {:else}
-        {#each displayEntries as entry, index (entry.id)}
-          <ZoneListEntryTile
-            {entry}
-            first={index === 0}
-            last={index === displayEntries.length - 1}
-            choices={entryChoices(entry)}
-            {imageLibrary}
-            {cardBackUrl}
-            {placeholderUrl}
-            {disabled}
-            {onchoose}
-            ondetails={() => onpreview(entry)}
-            onpreview={() => onpreview(entry)}
-          />
-        {/each}
-      {/if}
-    </div>
-    <div
-      class="zone-list-dialog__footer"
-      data-cy={targetMode
-        ? "zone-list-dialog-target-footer"
-        : "zone-list-dialog-footer"}
-    >
-      {#if targetMode}
-        <output data-cy="zone-list-dialog-selection-count"
-          >{selectionCountLabel}</output
-        >
-      {/if}
-      <label
-        class="zone-list-dialog__sort"
-        data-cy={targetMode
-          ? "zone-list-dialog-target-sort-label"
-          : "zone-list-dialog-sort-label"}
+      <div
+        class="zone-list-dialog__entries"
+        bind:this={entriesElement}
+        onwheel={wheelToHorizontal}
+        data-cy="zone-list-dialog-entries"
       >
-        <input
-          type="checkbox"
-          bind:checked={alphabetical}
-          disabled={!alphabeticalAllowed}
-          data-cy="zone-list-dialog-alphabetical-checkbox"
-        />
-        Alphabetical
-      </label>
-      {#if targetMode}
-        {#if !exactSingle}
+        {#if targetMode}
+          {#each displayTargetEntries as entry, index (entry.id)}
+            <ZoneListEntryTile
+              {entry}
+              first={index === 0}
+              last={index === displayTargetEntries.length - 1}
+              mode="target"
+              choices={entry.choices}
+              zoneBadge={entry.zoneBadge}
+              zoneLabel={entry.zoneLabel}
+              selected={targetSelected(entry)}
+              {selectedChoiceIds}
+              unavailableChoiceIds={selectionState.unavailableChoiceIds}
+              {imageLibrary}
+              {cardBackUrl}
+              {placeholderUrl}
+              {disabled}
+              {ontargetchoice}
+              onpreview={() => onpreview(entry)}
+            />
+          {/each}
+        {:else if displayEntries.length === 0}
+          <p class="zone-list-dialog__empty" data-cy="zone-list-dialog-empty">
+            No cards available
+          </p>
+        {:else}
+          {#each displayEntries as entry, index (entry.id)}
+            <ZoneListEntryTile
+              {entry}
+              first={index === 0}
+              last={index === displayEntries.length - 1}
+              choices={entryChoices(entry)}
+              {imageLibrary}
+              {cardBackUrl}
+              {placeholderUrl}
+              {disabled}
+              {onchoose}
+              ondetails={() => onpreview(entry)}
+              onpreview={() => onpreview(entry)}
+            />
+          {/each}
+        {/if}
+      </div>
+      <div
+        class="zone-list-dialog__footer"
+        data-cy={targetMode
+          ? "zone-list-dialog-target-footer"
+          : "zone-list-dialog-footer"}
+      >
+        {#if targetMode}
+          <output data-cy="zone-list-dialog-selection-count"
+            >{selectionState.countLabel}</output
+          >
+        {/if}
+        <label
+          class="zone-list-dialog__sort"
+          data-cy={targetMode
+            ? "zone-list-dialog-target-sort-label"
+            : "zone-list-dialog-sort-label"}
+        >
+          <input
+            type="checkbox"
+            bind:checked={alphabetical}
+            disabled={!alphabeticalAllowed}
+            data-cy="zone-list-dialog-alphabetical-checkbox"
+          />
+          Alphabetical
+        </label>
+        {#if targetMode}
           <button
             type="button"
-            disabled={disabled || !confirmValid}
-            aria-describedby={!confirmValid && validationMessage
+            disabled={disabled || !selectionState.validateEnabled}
+            aria-describedby={!selectionState.validateEnabled &&
+            validationMessage
               ? "zone-list-dialog-validation"
               : undefined}
             onclick={() => onconfirm()}
             data-cy="zone-list-dialog-confirm-button">Validate selection</button
           >
-        {/if}
-        {#if cancelable}
+          {#if cancelable}
+            <button
+              type="button"
+              class="secondary"
+              {disabled}
+              onclick={() => oncancel()}
+              data-cy="zone-list-dialog-target-cancel-button">Cancel</button
+            >
+          {/if}
+          {#if !confirmValid && validationMessage}
+            <p
+              id="zone-list-dialog-validation"
+              class="validation"
+              data-cy="zone-list-dialog-validation"
+            >
+              {validationMessage}
+            </p>
+          {/if}
+        {:else}
           <button
             type="button"
-            class="secondary"
-            {disabled}
-            onclick={() => oncancel()}
-            data-cy="zone-list-dialog-target-cancel-button">Cancel</button
+            class="danger zone-list-dialog__cancel"
+            onclick={() => onclose()}
+            data-cy="zone-list-dialog-cancel-button">Cancel</button
           >
         {/if}
-        {#if !confirmValid && validationMessage}
-          <p
-            id="zone-list-dialog-validation"
-            class="validation"
-            data-cy="zone-list-dialog-validation"
-          >
-            {validationMessage}
-          </p>
-        {/if}
-      {:else}
-        <button
-          type="button"
-          class="danger zone-list-dialog__cancel"
-          onclick={() => onclose()}
-          data-cy="zone-list-dialog-cancel-button">Cancel</button
-        >
-      {/if}
+      </div>
     </div>
-  </div>
   {/if}
 </FloatingFieldWindow>

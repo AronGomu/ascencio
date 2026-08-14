@@ -61,6 +61,7 @@
   import FieldLines from "./duel-field/FieldLines.svelte";
   import PhaseStrip from "./duel-field/PhaseStrip.svelte";
 
+  const noop = (): void => undefined;
   const EMPTY_IMAGE_URLS: ReadonlyMap<number, string> = new Map();
   const EMPTY_TARGETS: ReadonlySet<BoardTargetId> = new Set();
   const EMPTY_ZONE_IDS: ReadonlySet<PhysicalZoneId> = new Set();
@@ -96,8 +97,8 @@
     document.elementFromPoint(x, y);
   export let onplacementintent: (zoneId: PhysicalZoneId) => unknown = () =>
     false;
-  export let onpreview: (card: BoardCardView) => void = () => undefined;
-  export let onstackpreview: (stack: BoardStackView) => void = () => undefined;
+  export let onpreview: (card: BoardCardView) => void = noop;
+  export let onstackpreview: (stack: BoardStackView) => void = noop;
   export let zoneLists: ReadonlyMap<PhysicalZoneId, readonly ZoneListEntry[]> =
     new Map();
   /* T16: the legal off-field targets of the live prompt, already joined against
@@ -105,8 +106,7 @@
      identity from a prompt choice. */
   export let offFieldTargets: readonly OffFieldTargetEntry[] =
     EMPTY_TARGET_ENTRIES;
-  export let onzonelistpreview: (entry: ZoneListEntry) => void = () =>
-    undefined;
+  export let onzonelistpreview: (entry: ZoneListEntry) => void = noop;
   export let phase: DuelPhase = "unknown";
   export let zoneListWindowPosition: PersistedWindowPosition | null = null;
   export let confirmWindowPosition: PersistedWindowPosition | null = null;
@@ -114,10 +114,10 @@
   export let showZoneCounts = true;
   export let onzoneListWindowPositionChange: (
     position: PersistedWindowPosition,
-  ) => void = () => undefined;
+  ) => void = noop;
   export let onconfirmWindowPositionChange: (
     position: PersistedWindowPosition,
-  ) => void = () => undefined;
+  ) => void = noop;
 
   /* Exactly one list window: either one browsed pile, or the aggregate target
      list of one prompt. */
@@ -843,14 +843,13 @@
       : targetLaunchers.has(targetId);
   }
 
-  /* One response per decision: the same reducer the mounted controls use.
-     Exact one-of-one submits on click, everything else drafts a toggle that
-     the list's own Confirm submits. */
   function chooseTargetChoice(choice: InteractionChoice): void {
     if (spec === null) return;
-    if (isImmediateSingleSelection(spec))
-      dispatch({ type: "chooseChoice", choiceId: choice.id });
-    else dispatch({ type: "toggleChoice", choiceId: choice.id });
+    oninteraction({
+      type: "toggleChoice",
+      choiceId: choice.id,
+      key: spec.key,
+    });
   }
 
   function targetSelections(
@@ -936,6 +935,9 @@
       mode="target"
       title={spec.title}
       targetEntries={offFieldTargets}
+      choices={spec.kind === "cardSelection"
+        ? [...spec.cardChoices.values(), ...spec.zoneChoices.values()].flat()
+        : []}
       selectedChoiceIds={session.selectedChoiceIds}
       minimum={spec.constraints.minimum}
       maximum={spec.constraints.maximum}

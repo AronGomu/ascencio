@@ -76,3 +76,11 @@
 - [ ] Confirm target collapse stays anchored and expansion remains inside resized field boundary.
 - [ ] Confirm target shows no ×, conditional Cancel, dynamic source notice, and privacy-safe sorting.
 - [ ] Confirm browse still dismisses through outside press, Escape, ×, and Cancel.
+
+## T14 selection-ui-integration
+
+- [ ] Confirm off-field exact-single clicks draft only, then Validate submits; mounted-field exact-single still submits immediately.
+- [ ] Confirm range Validate enables inclusively, while maximum lock disables only unselected opaque choices.
+- [ ] Confirm selected duplicate choices remain removable one opaque ID at a time; final tile unselect suppresses zoom until pointerleave.
+- [ ] Confirm sorting, collapse, outside press, and Escape preserve target draft without answering prompt.
+- [ ] Confirm hidden opponent targets expose no identity or art while unavailable/selected state remains perceivable without color alone.

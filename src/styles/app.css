@@ -1225,11 +1225,13 @@ button.duel-field-zone,
   box-shadow: 0 28px 80px rgb(0 0 0 / 0.58);
 }
 
-.floating-field-window[data-window-id="zoneList"] > .floating-field-window__handle {
+.floating-field-window[data-window-id="zoneList"]
+  > .floating-field-window__handle {
   padding: 6px 8px 6px 18px;
 }
 
-.floating-field-window[data-window-id="zoneList"][data-mode="target"] > .floating-field-window__handle {
+.floating-field-window[data-window-id="zoneList"][data-mode="target"]
+  > .floating-field-window__handle {
   padding-left: 6px;
 }
 
@@ -1241,17 +1243,20 @@ button.duel-field-zone,
   grid-template-rows: 58px;
 }
 
-.floating-field-window[data-window-id="zoneList"][data-collapsed="true"] > .floating-field-window__handle {
+.floating-field-window[data-window-id="zoneList"][data-collapsed="true"]
+  > .floating-field-window__handle {
   padding: 6px;
   border-bottom-color: transparent;
   border-radius: 14px;
 }
 
-.floating-field-window[data-window-id="zoneList"][data-collapsed="true"] > .floating-field-window__content {
+.floating-field-window[data-window-id="zoneList"][data-collapsed="true"]
+  > .floating-field-window__content {
   display: none;
 }
 
-.floating-field-window[data-window-id="zoneList"] > .floating-field-window__content {
+.floating-field-window[data-window-id="zoneList"]
+  > .floating-field-window__content {
   padding: 0;
   overflow: hidden;
 }
@@ -1336,8 +1341,12 @@ button.duel-field-zone,
   scrollbar-width: thin;
 }
 
-.zone-list-dialog__entries::-webkit-scrollbar { height: 12px; }
-.zone-list-dialog__entries::-webkit-scrollbar-track { background: #0b1424; }
+.zone-list-dialog__entries::-webkit-scrollbar {
+  height: 12px;
+}
+.zone-list-dialog__entries::-webkit-scrollbar-track {
+  background: #0b1424;
+}
 .zone-list-dialog__entries::-webkit-scrollbar-thumb {
   border: 3px solid #0b1424;
   border-radius: 999px;
@@ -1357,9 +1366,15 @@ button.duel-field-zone,
   transform-origin: center 42%;
 }
 
-.zone-list-entry.is-first { transform-origin: left 42%; }
-.zone-list-entry.is-last { transform-origin: right 42%; }
-.zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open) { z-index: 500; }
+.zone-list-entry.is-first {
+  transform-origin: left 42%;
+}
+.zone-list-entry.is-last {
+  transform-origin: right 42%;
+}
+.zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open) {
+  z-index: 500;
+}
 
 .zone-list-entry.is-actionable img {
   border-color: var(--success);
@@ -1381,8 +1396,21 @@ button.duel-field-zone,
   box-shadow: 0 0 0 2px rgb(255 213 128 / 0.55);
 }
 
+/* Unavailable exceeds hover/focus specificity so hard-locked choices stay
+   visibly red. Selected tiles never match and retain removable orange state. */
+.zone-list-entry.is-unavailable:not(.is-selected) img,
+.zone-list-entry.is-unavailable:not(.is-selected):hover img,
+.zone-list-entry.is-unavailable:not(.is-selected):focus-within img {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgb(255 107 107 / 0.78);
+}
+
 .zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open) {
   transform: scale(1.6);
+}
+
+.zone-list-entry.is-hover-suppressed {
+  transform: none;
 }
 
 .zone-list-entry > img {
@@ -1407,11 +1435,16 @@ button.duel-field-zone,
   transition: opacity 120ms ease-out;
 }
 
-.zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open) .zone-list-entry__name { opacity: 0; }
+.zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open)
+  .zone-list-entry__name {
+  opacity: 0;
+}
 
 .zone-list-entry:hover .card-action-chips,
 .zone-list-entry:focus-within .card-action-chips,
-.zone-list-entry.is-menu-open .card-action-chips { display: flex; }
+.zone-list-entry.is-menu-open .card-action-chips {
+  display: flex;
+}
 
 .zone-list-entry .card-action-chips,
 .projected-choice-menu {
@@ -1424,9 +1457,21 @@ button.duel-field-zone,
   border-radius: 6px;
   background: rgb(8 16 31 / 0.96);
 }
-.zone-list-entry.is-first .card-action-chips { left: 0; transform: none; }
-.zone-list-entry.is-last .card-action-chips { right: 0; left: auto; transform: none; }
-.zone-list-entry .card-action-chip { min-height: 34px; height: 34px; font-size: 0.65rem; font-weight: 850; }
+.zone-list-entry.is-first .card-action-chips {
+  left: 0;
+  transform: none;
+}
+.zone-list-entry.is-last .card-action-chips {
+  right: 0;
+  left: auto;
+  transform: none;
+}
+.zone-list-entry .card-action-chip {
+  min-height: 34px;
+  height: 34px;
+  font-size: 0.65rem;
+  font-weight: 850;
+}
 
 .projected-choice-menu {
   position: absolute;
@@ -1435,7 +1480,10 @@ button.duel-field-zone,
   width: 100%;
   padding: 2px;
 }
-.projected-choice-menu button { min-height: 34px; font-size: 0.65rem; }
+.projected-choice-menu button {
+  min-height: 34px;
+  font-size: 0.65rem;
+}
 .zone-list-entry__check {
   position: absolute;
   z-index: 4;
@@ -1507,7 +1555,9 @@ button.duel-field-zone,
   border-top: 1px solid var(--border);
 }
 
-.zone-list-dialog__footer output { font-weight: 700; }
+.zone-list-dialog__footer output {
+  font-weight: 700;
+}
 .zone-list-dialog__sort {
   display: inline-flex;
   align-items: center;
@@ -1516,8 +1566,13 @@ button.duel-field-zone,
   color: var(--muted);
   font-size: 0.75rem;
 }
-.zone-list-dialog__sort input { width: 18px; height: 18px; }
-.zone-list-dialog__cancel { min-height: 44px; }
+.zone-list-dialog__sort input {
+  width: 18px;
+  height: 18px;
+}
+.zone-list-dialog__cancel {
+  min-height: 44px;
+}
 
 .duel-field-stack {
   z-index: var(--duel-field-layer-stack);
@@ -1931,5 +1986,4 @@ button.card-action-chip:hover:not(:disabled) {
   .duel-field-card.is-hand-item:not(.is-pinned):is(:hover, :focus-within) {
     transform: none;
   }
-
 }

@@ -19,20 +19,21 @@ export function cardListSelectionState(input: {
   readonly maximum: number;
   readonly promptValid: boolean;
 }): CardListSelectionState {
+  const { entries, selectedChoiceIds, minimum, maximum, promptValid } = input;
   const renderedIds = new Set(
-    input.entries.flatMap((entry) => entry.choices.map((choice) => choice.id)),
+    entries.flatMap((entry) => entry.choices.map((choice) => choice.id)),
   );
-  const uniqueSelected = new Set(input.selectedChoiceIds);
-  const selectedCount = input.selectedChoiceIds.length;
+  const uniqueSelected = new Set(selectedChoiceIds);
+  const selectedCount = selectedChoiceIds.length;
   const renderedSelectionValid =
     uniqueSelected.size === selectedCount &&
-    input.selectedChoiceIds.every((id) => renderedIds.has(id));
+    selectedChoiceIds.every((id) => renderedIds.has(id));
   const validBounds =
-    Number.isInteger(input.minimum) &&
-    Number.isInteger(input.maximum) &&
-    input.minimum >= 0 &&
-    input.maximum >= input.minimum;
-  const maximumReached = validBounds && selectedCount >= input.maximum;
+    Number.isInteger(minimum) &&
+    Number.isInteger(maximum) &&
+    minimum >= 0 &&
+    maximum >= minimum;
+  const maximumReached = validBounds && selectedCount >= maximum;
   const unavailableChoiceIds = new ImmutableChoiceIdSet(
     maximumReached
       ? [...renderedIds].filter((id) => !uniqueSelected.has(id))
@@ -40,15 +41,15 @@ export function cardListSelectionState(input: {
   );
   const validateEnabled =
     validBounds &&
-    input.promptValid &&
+    promptValid &&
     renderedSelectionValid &&
-    selectedCount >= input.minimum &&
-    selectedCount <= input.maximum;
+    selectedCount >= minimum &&
+    selectedCount <= maximum;
   const countLabel = !validBounds
     ? `${selectedCount} selected · invalid requirement`
-    : input.minimum === input.maximum
-      ? `${selectedCount} / ${input.maximum} selected`
-      : `${selectedCount} selected · choose ${input.minimum}–${input.maximum}`;
+    : minimum === maximum
+      ? `${selectedCount} / ${maximum} selected`
+      : `${selectedCount} selected · choose ${minimum}–${maximum}`;
 
   return Object.freeze({
     selectedCount,
@@ -68,50 +69,35 @@ export function cardListDisplayEntries<
   },
 >(entries: readonly T[], alphabetical: boolean): readonly T[] {
   if (!alphabetical || !cardListAlphabeticalAllowed(entries)) return entries;
-  return entries
-    .map((entry, sourceIndex) => ({ entry, sourceIndex }))
-    .sort(
-      (left, right) =>
-        left.entry.label.localeCompare(right.entry.label) ||
-        left.sourceIndex - right.sourceIndex,
-    )
-    .map(({ entry }) => entry);
+  return [...entries].sort((left, right) =>
+    left.label.localeCompare(right.label),
+  );
 }
+
+const CARD_LIST_SOURCE_LABELS = {
+  hand: "Hand",
+  extra: "Extra Deck",
+  graveyard: "Graveyard",
+  banished: "Banished",
+  deck: "Deck",
+} as const;
 
 export function cardListBrowseTitle(
   zone: BoardStackView["zone"],
 ): "Deck" | "Extra Deck" | "Graveyard" | "Banished" {
-  switch (zone) {
-    case "deck":
-      return "Deck";
-    case "extra":
-      return "Extra Deck";
-    case "graveyard":
-      return "Graveyard";
-    case "banished":
-      return "Banished";
-  }
+  return CARD_LIST_SOURCE_LABELS[zone];
 }
 
 export function cardListSourceNotice(
   entries: readonly Pick<OffFieldTargetEntry, "location">[],
 ): string {
-  const sources = [
-    ["hand", "Hand"],
-    ["extra", "Extra Deck"],
-    ["graveyard", "Graveyard"],
-    ["banished", "Banished"],
-    ["deck", "Deck"],
-  ] as const;
-  const represented = sources
-    .filter(([location]) =>
-      entries.some((entry) => entry.location === location),
-    )
-    .map(([, label]) => label);
+  const represented = Object.entries(CARD_LIST_SOURCE_LABELS).flatMap(
+    ([location, label]) =>
+      entries.some((entry) => entry.location === location) ? [label] : [],
+  );
   if (represented.length <= 1) return "Filtered: legal targets only";
-  if (represented.length === 2)
-    return `Filtered: legal targets from ${represented[0]} and ${represented[1]}`;
-  return `Filtered: legal targets from ${represented.slice(0, -1).join(", ")}, and ${represented.at(-1)}`;
+  const last = represented.pop();
+  return `Filtered: legal targets from ${represented.join(", ")}${represented.length > 1 ? "," : ""} and ${last}`;
 }
 
 export function cardListAlphabeticalAllowed(

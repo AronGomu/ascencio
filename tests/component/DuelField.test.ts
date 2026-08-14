@@ -3398,24 +3398,34 @@ describe("DuelField off-field target list", () => {
     expect(hidden?.outerHTML).not.toContain("Dark Magician");
   });
 
-  it("submits an exact one-of-one target on the first click, with no confirm window", async () => {
+  it("drafts an exact one-of-one target, then Validate submits it", async () => {
     const user = userEvent.setup();
     const harness = renderTargets(
       fieldPrompt("selectCard", [offFieldChoice("gy-0", "graveyard", 0)]),
     );
+    const confirm = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-dialog-confirm-button"]',
+    );
+    if (confirm === null) throw new Error("Missing confirm button");
+    expect(confirm.disabled).toBe(true);
 
     await user.click(targetButton("target:0:graveyard:0", "gy-0"));
 
+    expect(harness.commands).toEqual([]);
+    expect(harness.dispatch.mock.calls[0]?.[0]).toEqual({
+      type: "toggleChoice",
+      choiceId: choiceId("gy-0"),
+      key: harness.spec.key,
+    });
+    expect(confirm.disabled).toBe(false);
+    await user.click(confirm);
     expect(harness.commands).toEqual([["gy-0"]]);
     expect(
       document.querySelector('[data-cy="floating-field-window-confirm"]'),
     ).toBeNull();
-    expect(
-      document.querySelector('[data-cy="zone-list-dialog-confirm-button"]'),
-    ).toBeNull();
   });
 
-  it("toggles a multi selection, counts it and confirms in raw prompt order", async () => {
+  it("toggles a range selection, counts it and confirms in prompt order", async () => {
     const user = userEvent.setup();
     const harness = renderTargets(
       fieldPrompt(
@@ -3432,13 +3442,13 @@ describe("DuelField off-field target list", () => {
     expect(
       document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
         ?.textContent,
-    ).toBe("1 selected · 1–2 allowed");
+    ).toBe("1 selected · choose 1–2");
 
     await user.click(targetButton("target:0:graveyard:0", "gy-0"));
     expect(
       document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
         ?.textContent,
-    ).toBe("2 selected · 1–2 allowed");
+    ).toBe("2 selected · choose 1–2");
 
     const confirm = document.querySelector<HTMLButtonElement>(
       '[data-cy="zone-list-dialog-confirm-button"]',
@@ -3447,6 +3457,47 @@ describe("DuelField off-field target list", () => {
     await user.click(confirm);
 
     expect(harness.commands).toEqual([["gy-0", "hand-1"]]);
+  });
+
+  it("unselects only the pressed opaque ID from a duplicate-choice tile", async () => {
+    const user = userEvent.setup();
+    const harness = renderTargets(
+      fieldPrompt(
+        "selectCard",
+        [
+          offFieldChoice("gy-banish", "graveyard", 0, 0, "Banish"),
+          offFieldChoice("gy-shuffle", "graveyard", 0, 0, "Shuffle back"),
+        ],
+        { minimum: 1, maximum: 2 },
+      ),
+    );
+    const trigger = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-entry-choice-menu-trigger-target:0:graveyard:0"]',
+    );
+    if (trigger === null) throw new Error("Missing choice-menu trigger");
+    await user.click(trigger);
+    const banish = document.querySelector<HTMLButtonElement>(
+      '[data-cy="projected-choice-target:0:graveyard:0-gy-banish"]',
+    );
+    const shuffle = document.querySelector<HTMLButtonElement>(
+      '[data-cy="projected-choice-target:0:graveyard:0-gy-shuffle"]',
+    );
+    if (banish === null || shuffle === null)
+      throw new Error("Missing duplicate choices");
+    await user.click(banish);
+    await user.click(shuffle);
+    expect(harness.getSession().selectedChoiceIds).toEqual([
+      choiceId("gy-banish"),
+      choiceId("gy-shuffle"),
+    ]);
+
+    await user.click(banish);
+
+    expect(harness.getSession().selectedChoiceIds).toEqual([
+      choiceId("gy-shuffle"),
+    ]);
+    expect(shuffle.getAttribute("aria-pressed")).toBe("true");
+    expect(harness.commands).toEqual([]);
   });
 
   it("keeps a mounted target live beside the list and counts both", async () => {
@@ -3471,14 +3522,19 @@ describe("DuelField off-field target list", () => {
     expect(
       document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
         ?.textContent,
-    ).toBe("1 selected · 1–2 allowed");
+    ).toBe("1 selected · choose 1–2");
 
     await user.click(targetButton("target:0:graveyard:0", "gy-0"));
 
     expect(
       document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
         ?.textContent,
-    ).toBe("2 selected · 1–2 allowed");
+    ).toBe("2 selected · choose 1–2");
+    expect(
+      document.querySelector<HTMLButtonElement>(
+        '[data-cy="zone-list-dialog-confirm-button"]',
+      )?.disabled,
+    ).toBe(false);
   });
 
   it("preserves a pile-target draft across collapse and expand", async () => {
@@ -3516,7 +3572,7 @@ describe("DuelField off-field target list", () => {
     expect(
       document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
         ?.textContent,
-    ).toBe("1 selected · 1–2 allowed");
+    ).toBe("1 selected · choose 1–2");
     expect(
       targetButton("target:0:graveyard:0", "gy-0").getAttribute("aria-pressed"),
     ).toBe("true");
@@ -3558,7 +3614,7 @@ describe("DuelField off-field target list", () => {
     expect(
       document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
         ?.textContent,
-    ).toBe("1 selected · 1–2 allowed");
+    ).toBe("1 selected · choose 1–2");
     expect(
       targetButton("target:0:hand:0", "hand-0").getAttribute("aria-pressed"),
     ).toBe("true");

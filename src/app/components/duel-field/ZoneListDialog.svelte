@@ -241,20 +241,32 @@
         {/each}
       {/if}
     </div>
-    {#if targetMode}
-      <div class="zone-list-dialog__footer" data-cy="zone-list-dialog-target-footer">
+    <div
+      class="zone-list-dialog__footer"
+      data-cy={targetMode
+        ? "zone-list-dialog-target-footer"
+        : "zone-list-dialog-footer"}
+    >
+      {#if targetMode}
         <output data-cy="zone-list-dialog-selection-count"
           >{selectionCountLabel}</output
         >
-        <label class="zone-list-dialog__sort" data-cy="zone-list-dialog-target-sort-label">
-          <input
-            type="checkbox"
-            bind:checked={alphabetical}
-            disabled={!alphabeticalAllowed}
-            data-cy="zone-list-dialog-alphabetical-checkbox"
-          />
-          Alphabetical
-        </label>
+      {/if}
+      <label
+        class="zone-list-dialog__sort"
+        data-cy={targetMode
+          ? "zone-list-dialog-target-sort-label"
+          : "zone-list-dialog-sort-label"}
+      >
+        <input
+          type="checkbox"
+          bind:checked={alphabetical}
+          disabled={!alphabeticalAllowed}
+          data-cy="zone-list-dialog-alphabetical-checkbox"
+        />
+        Alphabetical
+      </label>
+      {#if targetMode}
         {#if !exactSingle}
           <button
             type="button"
@@ -284,26 +296,15 @@
             {validationMessage}
           </p>
         {/if}
-      </div>
-    {:else}
-      <div class="zone-list-dialog__footer" data-cy="zone-list-dialog-footer">
-        <label class="zone-list-dialog__sort" data-cy="zone-list-dialog-sort-label">
-          <input
-            type="checkbox"
-            bind:checked={alphabetical}
-            disabled={!alphabeticalAllowed}
-            data-cy="zone-list-dialog-alphabetical-checkbox"
-          />
-          Alphabetical
-        </label>
+      {:else}
         <button
           type="button"
           class="danger zone-list-dialog__cancel"
           onclick={() => onclose()}
           data-cy="zone-list-dialog-cancel-button">Cancel</button
         >
-      </div>
-    {/if}
+      {/if}
+    </div>
   </div>
   {/if}
 </FloatingFieldWindow>

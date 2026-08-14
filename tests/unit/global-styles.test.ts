@@ -137,7 +137,7 @@ describe("global styles", () => {
     expect(css).not.toContain(".duel-field-feedback");
   });
 
-  it("card and list entries transition transform 120ms ease-out and hover-scale 1.35", () => {
+  it("card entries hover-scale 1.35 and list interaction states scale 1.6", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     const card = ruleBlock(
       css,
@@ -156,11 +156,14 @@ describe("global styles", () => {
       ".duel-field-card.is-hand-item:not(.is-pinned):is(:hover, :focus-within) {",
     );
     expect(handHover).toContain("scale(1.35)");
-    const listHover = ruleBlock(
+    const listSelector =
+      ".zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open) {";
+    const listZoom = ruleBlock(
       css,
-      ".zone-list-entry:is(:hover, :focus-within) {",
+      listSelector,
+      css.indexOf(listSelector) + listSelector.length,
     );
-    expect(listHover).toContain("scale(1.35)");
+    expect(listZoom).toContain("scale(1.6)");
   });
 
   it("hand item transform-origin is bottom for player, top for opponent; field origin is centre", () => {

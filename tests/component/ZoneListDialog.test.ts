@@ -191,6 +191,17 @@ describe("ZoneListDialog target mode", () => {
     expect(
       document.querySelector('[data-cy="zone-list-dialog-close-button"]'),
     ).toBeNull();
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-target-footer"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-target-sort-label"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelectorAll(
+        '[data-cy="zone-list-dialog-alphabetical-checkbox"]',
+      ),
+    ).toHaveLength(1);
 
     const collapse = document.querySelector<HTMLButtonElement>(
       '[data-cy="zone-list-dialog-collapse-button"]',
@@ -485,7 +496,9 @@ describe("ZoneListDialog", () => {
     renderDialog();
     expect(document.querySelector('[data-cy="zone-list-dialog-title"]')?.textContent).toBe("Graveyard");
     expect(document.querySelectorAll('[data-cy^="zone-list-entry-p0:"]')).toHaveLength(4);
-    expect(document.querySelector('[data-cy="zone-list-dialog-alphabetical-checkbox"]')).not.toBeNull();
+    expect(document.querySelector('[data-cy="zone-list-dialog-footer"]')).not.toBeNull();
+    expect(document.querySelector('[data-cy="zone-list-dialog-sort-label"]')).not.toBeNull();
+    expect(document.querySelectorAll('[data-cy="zone-list-dialog-alphabetical-checkbox"]')).toHaveLength(1);
     expect(document.querySelector('[data-cy="zone-list-dialog-cancel-button"]')?.textContent).toContain("Cancel");
     expect(document.querySelector('[data-cy="zone-list-dialog-confirm-button"]')).toBeNull();
   });

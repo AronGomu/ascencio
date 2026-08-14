@@ -43,17 +43,35 @@ body {
 }
 
 /* T4: one layout law for the whole product. Above 1024px the app is a
-   centred 16:9 rectangle; below it the shell publishes a mobile mode and the
-   box is sized by `AppShell` instead. Domains measure `--stage-h`/`--stage-w`
-   rather than the viewport, so the duel keeps its `100svh`-equivalent
-   behavior relative to the stage. The fallbacks keep every rule below correct
-   in surfaces that mount a domain without the shell (the acceptance
-   harness), where the stage box is simply the viewport. */
+   centred 16:9 rectangle; below it a portrait viewport fills instead. Domains
+   measure `--stage-h`/`--stage-w` rather than the viewport, so the duel keeps
+   its `100svh`-equivalent behavior relative to the stage. The fallbacks keep
+   every rule below correct in surfaces that mount a domain without the shell
+   (the acceptance harness), where the stage box is simply the viewport.
+
+   The box is derived here rather than published from `AppShell`, so it is
+   recomputed by the same layout pass that applies a viewport change: anything
+   measuring straight after a resize reads the new stage, never the previous
+   one. `AppShell` still publishes the equivalent box on `STAGE_CONTEXT_KEY`
+   and the mode on `data-stage-mode`; `selectStageMode` and the query below
+   encode the same rule (`STAGE_BREAKPOINT_PX`) and must stay in sync. */
 .app-stage {
+  --stage-w: min(100vw, calc(100svh * 16 / 9));
+  --stage-h: min(100svh, calc(100vw * 9 / 16));
+
   position: relative;
   width: var(--stage-w);
   height: var(--stage-h);
   overflow: hidden;
+}
+
+/* `mobile-portrait`: below the breakpoint a viewport at least as tall as it is
+   wide drops the letterbox and takes the whole viewport. */
+@media (max-width: 1023.98px) and (orientation: portrait) {
+  .app-stage {
+    --stage-w: 100vw;
+    --stage-h: 100svh;
+  }
 }
 
 .shell-region--duel {

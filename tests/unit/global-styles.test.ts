@@ -103,6 +103,14 @@ describe("global styles", () => {
     expect(stage).toContain("width: var(--stage-w)");
     expect(stage).toContain("height: var(--stage-h)");
     expect(stage).toContain("overflow: hidden");
+    /* The box must be derived in CSS, not published from `AppShell`: a
+       JS-published box trails a viewport change by at least a frame, so
+       anything measuring right after a resize reads the previous stage. */
+    expect(stage).toContain("--stage-w: min(100vw, calc(100svh * 16 / 9))");
+    expect(stage).toContain("--stage-h: min(100svh, calc(100vw * 9 / 16))");
+    expect(css).toContain(
+      "@media (max-width: 1023.98px) and (orientation: portrait)",
+    );
     expect(ruleBlock(css, ".shell-region--decks {")).toContain(
       "overflow: auto",
     );

@@ -36,7 +36,10 @@
     computeStageBox(globalThis.innerWidth, globalThis.innerHeight);
 
   /* The shell is the only place the viewport is measured: domains read the
-     resulting box through `STAGE_CONTEXT_KEY` instead of measuring again. */
+     resulting box through `STAGE_CONTEXT_KEY` instead of measuring again. The
+     stage's own pixel box is not taken from here — `.app-stage` derives it in
+     CSS so it lands in the same layout pass as the resize, and this store only
+     mirrors it for domains and for `data-stage-mode`. */
   const stageBox = writable<StageBox>(readViewportBox());
   setContext(STAGE_CONTEXT_KEY, readonly(stageBox));
   let box: StageBox;
@@ -90,7 +93,6 @@
   class="app-stage"
   data-cy="app-stage"
   data-stage-mode={box.mode}
-  style="--stage-w: {box.width}px; --stage-h: {box.height}px"
   bind:this={stage}
 >
   {#if route.kind === "home"}

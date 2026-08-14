@@ -82,8 +82,6 @@ describe("AppShell", () => {
     renderAt("#/");
     const stage = document.querySelector('[data-cy="app-stage"]');
     expect(stage?.getAttribute("data-stage-mode")).toBe("mobile-portrait");
-    expect(stage?.getAttribute("style")).toContain("--stage-w: 800px");
-    expect(stage?.getAttribute("style")).toContain("--stage-h: 1000px");
   });
 
   it("letterboxes a desktop viewport into a 16:9 stage", () => {
@@ -91,7 +89,18 @@ describe("AppShell", () => {
     renderAt("#/");
     const stage = document.querySelector('[data-cy="app-stage"]');
     expect(stage?.getAttribute("data-stage-mode")).toBe("stage");
-    expect(stage?.getAttribute("style")).toContain("--stage-h: 1080px");
+  });
+
+  /* The pixel box belongs to `.app-stage` in CSS so it is applied by the same
+     layout pass as the viewport change. Re-publishing it inline from here
+     would win over the stylesheet and reintroduce a box that trails the
+     viewport by at least a frame; the numbers stay covered by
+     `tests/unit/stage-layout.test.ts` and `tests/unit/global-styles.test.ts`. */
+  it("leaves the stage pixel box to the stylesheet", () => {
+    setViewport(1920, 1200);
+    renderAt("#/");
+    const stage = document.querySelector('[data-cy="app-stage"]');
+    expect(stage?.getAttribute("style")).toBeNull();
   });
 
   it("follows store navigation without a remount", async () => {

@@ -1,5 +1,64 @@
+import type { ChoiceId } from "../../duel/contracts/ids.ts";
 import type { BoardStackView } from "../../field/board-view-model.ts";
 import type { OffFieldTargetEntry } from "../../field/off-field-target-list.ts";
+import { ImmutableChoiceIdSet } from "./immutable-choice-id-set.ts";
+
+export interface CardListSelectionState {
+  readonly selectedCount: number;
+  readonly maximumReached: boolean;
+  readonly renderedSelectionValid: boolean;
+  readonly validateEnabled: boolean;
+  readonly countLabel: string;
+  readonly unavailableChoiceIds: ReadonlySet<ChoiceId>;
+}
+
+export function cardListSelectionState(input: {
+  readonly selectedChoiceIds: readonly ChoiceId[];
+  readonly entries: readonly Pick<OffFieldTargetEntry, "choices">[];
+  readonly minimum: number;
+  readonly maximum: number;
+  readonly promptValid: boolean;
+}): CardListSelectionState {
+  const renderedIds = new Set(
+    input.entries.flatMap((entry) => entry.choices.map((choice) => choice.id)),
+  );
+  const uniqueSelected = new Set(input.selectedChoiceIds);
+  const selectedCount = input.selectedChoiceIds.length;
+  const renderedSelectionValid =
+    uniqueSelected.size === selectedCount &&
+    input.selectedChoiceIds.every((id) => renderedIds.has(id));
+  const validBounds =
+    Number.isInteger(input.minimum) &&
+    Number.isInteger(input.maximum) &&
+    input.minimum >= 0 &&
+    input.maximum >= input.minimum;
+  const maximumReached = validBounds && selectedCount >= input.maximum;
+  const unavailableChoiceIds = new ImmutableChoiceIdSet(
+    maximumReached
+      ? [...renderedIds].filter((id) => !uniqueSelected.has(id))
+      : [],
+  );
+  const validateEnabled =
+    validBounds &&
+    input.promptValid &&
+    renderedSelectionValid &&
+    selectedCount >= input.minimum &&
+    selectedCount <= input.maximum;
+  const countLabel = !validBounds
+    ? `${selectedCount} selected · invalid requirement`
+    : input.minimum === input.maximum
+      ? `${selectedCount} / ${input.maximum} selected`
+      : `${selectedCount} selected · choose ${input.minimum}–${input.maximum}`;
+
+  return Object.freeze({
+    selectedCount,
+    maximumReached,
+    renderedSelectionValid,
+    validateEnabled,
+    countLabel,
+    unavailableChoiceIds,
+  });
+}
 
 export function cardListDisplayEntries<
   T extends {

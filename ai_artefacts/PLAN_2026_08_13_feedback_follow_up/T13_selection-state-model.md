@@ -82,11 +82,11 @@ Implementation algorithm exact:
 
 ## Impl steps
 
-- [ ] 1. Extend `tests/unit/card-list-dialog-model.test.ts` with exact table above; run focused red.
-- [ ] 2. Add interface + fn using exact 7-step algorithm.
-- [ ] 3. Add focused `src/app/presentation/immutable-choice-id-set.ts` exporting `ImmutableChoiceIdSet implements ReadonlySet<ChoiceId>` with constructor(iterable), `size`, `has`, `entries`, `keys`, `values`, `forEach`, `[Symbol.iterator]`, readonly internal copied Set. Use it for `unavailableChoiceIds`; do not expose/cast mutable Set.
-- [ ] 4. Add invalid-number tests for NaN/Infinity/noninteger bounds.
-- [ ] 5. Run focused + type/lint/build gates; UI untouched.
+- [x] 1. Extend `tests/unit/card-list-dialog-model.test.ts` with exact table above; run focused red.
+- [x] 2. Add interface + fn using exact 7-step algorithm.
+- [x] 3. Add focused `src/app/presentation/immutable-choice-id-set.ts` exporting `ImmutableChoiceIdSet implements ReadonlySet<ChoiceId>` with constructor(iterable), `size`, `has`, `entries`, `keys`, `values`, `forEach`, `[Symbol.iterator]`, readonly internal copied Set. Use it for `unavailableChoiceIds`; do not expose/cast mutable Set.
+- [x] 4. Add invalid-number tests for NaN/Infinity/noninteger bounds.
+- [x] 5. Run focused + type/lint/build gates; UI untouched.
 
 ## Outputs
 
@@ -97,9 +97,9 @@ Implementation algorithm exact:
 
 ## Validation
 
-- [ ] `npx vitest run tests/unit/immutable-choice-id-set.test.ts tests/unit/card-list-dialog-model.test.ts tests/unit/prompt-selection.test.ts` → exit 0.
-- [ ] `npm run typecheck && npm run lint` → exit 0.
-- [ ] `npm run build:app` → exit 0; production UI unchanged.
-- [ ] manual check not needed — pure model only; unit matrix is behavior evidence.
-- [ ] app functional — existing `npx vitest run tests/component/ZoneListDialog.test.ts tests/component/DuelField.test.ts` remains green.
+- [x] `npx vitest run tests/unit/immutable-choice-id-set.test.ts tests/unit/card-list-dialog-model.test.ts tests/unit/prompt-selection.test.ts` → exit 0.
+- [x] `npm run typecheck && npm run lint` → exit 0.
+- [x] `npm run build:app` → exit 0; production UI unchanged.
+- [x] manual check not needed — pure model only; unit matrix is behavior evidence.
+- [x] app functional — existing `npx vitest run tests/component/ZoneListDialog.test.ts tests/component/DuelField.test.ts` remains green.
 - [ ] commit msg draft: `feat(card-list): define exact and range selection state`

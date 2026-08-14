@@ -1562,7 +1562,7 @@ describe("DuelField", () => {
     ).toBe(false);
   });
 
-  it("does not pass a chain when the zone-list close button is clicked", async () => {
+  it("does not pass a chain when the browse list is dismissed", async () => {
     const user = userEvent.setup();
     const stackBoard = mapSnapshotToBoard(STACK_ART_STATE, BOARD_CARD_TEXTS);
     if (!stackBoard.ok) throw new Error("Fixture mapping failed");
@@ -1608,11 +1608,10 @@ describe("DuelField", () => {
       screen.getByRole("button", { name: /Your Graveyard, 4 cards/ }),
     );
     oninteraction.mockClear();
-    await user.click(
-      screen.getByRole("button", { name: /^Close GY, 4 cards/ }),
-    );
+    await fireEvent.keyDown(document, { key: "Escape" });
 
     expect(oninteraction).not.toHaveBeenCalled();
+    expect(document.querySelector('[data-cy="zone-list-dialog"]')).toBeNull();
   });
 
   it("does not pass a chain when a zone-list entry tile is clicked", async () => {
@@ -3351,6 +3350,9 @@ describe("DuelField off-field target list", () => {
     ).toHaveLength(1);
     expect(
       document.querySelector('[data-cy="zone-list-dialog-close-button"]'),
+    ).toBeNull();
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-collapse-button"]'),
     ).not.toBeNull();
   });
 
@@ -3387,7 +3389,7 @@ describe("DuelField off-field target list", () => {
       [...document.querySelectorAll('[data-cy^="zone-list-entry-zone-"]')].map(
         (element) => element.textContent?.trim(),
       ),
-    ).toEqual(["HAND", "GY", "DECK", "BAN"]);
+    ).toEqual(["HAND", "GRAVEYARD", "DECK", "BANISHED"]);
     const hidden = document.querySelector(
       '[data-cy="zone-list-entry-target:1:banished:0"]',
     );
@@ -3479,9 +3481,9 @@ describe("DuelField off-field target list", () => {
     ).toBe("2 selected · 1–2 allowed");
   });
 
-  it("reopens the hidden list from its pile launcher without losing the draft", async () => {
+  it("preserves a pile-target draft across collapse and expand", async () => {
     const user = userEvent.setup();
-    renderTargets(
+    const harness = renderTargets(
       fieldPrompt(
         "selectCard",
         [
@@ -3493,18 +3495,23 @@ describe("DuelField off-field target list", () => {
     );
     await user.click(targetButton("target:0:graveyard:0", "gy-0"));
 
-    const close = document.querySelector<HTMLButtonElement>(
-      '[data-cy="zone-list-dialog-close-button"]',
+    const collapse = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-dialog-collapse-button"]',
     );
-    if (close === null) throw new Error("Missing close button");
-    await user.click(close);
-    expect(document.querySelector('[data-cy="zone-list-dialog"]')).toBeNull();
+    if (collapse === null) throw new Error("Missing collapse button");
+    await user.click(collapse);
 
-    await fireEvent.click(
-      document.querySelector<HTMLElement>(
-        '[data-cy="field-stack-p0:graveyard"]',
-      ) as HTMLElement,
+    const collapsedRoot = document.querySelector(
+      '[data-cy="floating-field-window-zoneList"]',
     );
+    expect(collapsedRoot).not.toBeNull();
+    expect(collapsedRoot?.getAttribute("data-collapsed")).toBe("true");
+
+    const expand = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-dialog-expand-button"]',
+    );
+    if (expand === null) throw new Error("Missing expand button");
+    await user.click(expand);
 
     expect(
       document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
@@ -3513,9 +3520,10 @@ describe("DuelField off-field target list", () => {
     expect(
       targetButton("target:0:graveyard:0", "gy-0").getAttribute("aria-pressed"),
     ).toBe("true");
+    expect(harness.commands).toEqual([]);
   });
 
-  it("reopens the hidden list from a hand launcher instead of toggling it", async () => {
+  it("preserves a hand-target draft across collapse and expand", async () => {
     const user = userEvent.setup();
     const harness = renderTargets(
       fieldPrompt(
@@ -3527,27 +3535,34 @@ describe("DuelField off-field target list", () => {
         { minimum: 1, maximum: 2 },
       ),
     );
-    const close = document.querySelector<HTMLButtonElement>(
-      '[data-cy="zone-list-dialog-close-button"]',
-    );
-    if (close === null) throw new Error("Missing close button");
-    await user.click(close);
-    expect(document.querySelector('[data-cy="zone-list-dialog"]')).toBeNull();
+    await user.click(targetButton("target:0:hand:0", "hand-0"));
 
-    const handCard = document.querySelector<HTMLElement>(
-      '[data-cy="field-card-target-target-hand-0"]',
+    const collapse = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-dialog-collapse-button"]',
     );
-    if (handCard === null) throw new Error("Missing hand launcher");
-    await user.click(handCard);
+    if (collapse === null) throw new Error("Missing collapse button");
+    await user.click(collapse);
 
-    expect(
-      document.querySelector('[data-cy="zone-list-dialog"]'),
-    ).not.toBeNull();
-    expect(harness.commands).toEqual([]);
+    const collapsedRoot = document.querySelector(
+      '[data-cy="floating-field-window-zoneList"]',
+    );
+    expect(collapsedRoot).not.toBeNull();
+    expect(collapsedRoot?.getAttribute("data-collapsed")).toBe("true");
+
+    const expand = document.querySelector<HTMLButtonElement>(
+      '[data-cy="zone-list-dialog-expand-button"]',
+    );
+    if (expand === null) throw new Error("Missing expand button");
+    await user.click(expand);
+
     expect(
       document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
         ?.textContent,
-    ).toBe("0 selected · 1–2 allowed");
+    ).toBe("1 selected · 1–2 allowed");
+    expect(
+      targetButton("target:0:hand:0", "hand-0").getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(harness.commands).toEqual([]);
   });
 
   /* R1/F3: with every target unmounted the list is the only surface that can
@@ -3585,7 +3600,7 @@ describe("DuelField off-field target list", () => {
     expect(harness.dispatch).not.toHaveBeenCalled();
   });
 
-  it("still dismisses a target list that keeps a mounted launcher", async () => {
+  it("keeps a target list open when it has a mounted launcher", async () => {
     const harness = renderTargets(
       fieldPrompt(
         "selectCard",
@@ -3603,17 +3618,10 @@ describe("DuelField off-field target list", () => {
     if (surface === null) throw new Error("Missing board surface");
     await fireEvent.pointerDown(surface);
 
-    expect(document.querySelector('[data-cy="zone-list-dialog"]')).toBeNull();
-    expect(harness.dispatch).not.toHaveBeenCalled();
-
-    await fireEvent.click(
-      document.querySelector<HTMLElement>(
-        '[data-cy="field-stack-p0:graveyard"]',
-      ) as HTMLElement,
-    );
     expect(
       document.querySelector('[data-cy="zone-list-dialog"]'),
     ).not.toBeNull();
+    expect(harness.dispatch).not.toHaveBeenCalled();
   });
 
   it("keeps a browse list stack-specific for a pile with no legal target", async () => {

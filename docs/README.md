@@ -28,6 +28,12 @@ This directory contains current project documentation and historical context. Ro
 | [`ADR/017_ADR_floating_field_windows_and_dismissal.md`](ADR/017_ADR_floating_field_windows_and_dismissal.md) | Accepted field-window bounds, persistence, and dismissal |
 | [`ADR/018_ADR_conditional_extra_monster_zones.md`](ADR/018_ADR_conditional_extra_monster_zones.md)     | Accepted Worker-owned MR3/MR5 conditional EMZ profile |
 | [`ADR/022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md`](ADR/022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md) | Accepted single-app topology and parallel UI ownership |
+| [`ADR/023_ADR_single_entry_shell_and_hash_routes.md`](ADR/023_ADR_single_entry_shell_and_hash_routes.md) | Accepted one entry document, hash route table and shell ownership |
+| [`ADR/024_ADR_responsive_stage_and_portrait_strategy.md`](ADR/024_ADR_responsive_stage_and_portrait_strategy.md) | Accepted 16:9 stage, 1024px breakpoint and portrait strategies |
+| [`ADR/025_ADR_validated_card_list_duel_start.md`](ADR/025_ADR_validated_card_list_duel_start.md) | Accepted card-list start contract with strict snapshot validation |
+| [`ADR/026_ADR_domain_storage_ownership.md`](ADR/026_ADR_domain_storage_ownership.md) | Accepted one durable store per domain and deck migration policy |
+| [`ADR/027_ADR_story_duel_handoff_saga.md`](ADR/027_ADR_story_duel_handoff_saga.md) | Accepted checkpointed story-to-duel handoff and recovery rules |
+| [`three-ui-architecture.html`](three-ui-architecture.html) | Target three-domain architecture map |
 | [`duel-field-architecture.html`](duel-field-architecture.html)                                         | Styled field architecture design                                     |
 | [`duel-field-interaction-shell.html`](duel-field-interaction-shell.html)                               | Styled interaction-shell design: surfaces, routing, drag, settings   |
 | [`duel-field-interaction-model-v2.html`](duel-field-interaction-model-v2.html)                         | Styled round-2 interaction baseline |

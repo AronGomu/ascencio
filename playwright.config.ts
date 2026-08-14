@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const basePath = "/ygo-story-duel/";
-const playwrightPort = Number(process.env.PLAYWRIGHT_PORT ?? "4202");
+const playwrightPort = Number(process.env.PLAYWRIGHT_PORT ?? "4300");
 if (!Number.isSafeInteger(playwrightPort) || playwrightPort <= 0) {
   throw new Error("PLAYWRIGHT_PORT must be a positive integer");
 }

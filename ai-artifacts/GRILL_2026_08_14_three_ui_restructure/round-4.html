@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portrait layouts, visual language, handoff recovery</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b0a08; --panel:#17130d; --panel-2:#1f190f; --text:#fff7ed; --muted:#c9b99f; --line:#4a3b25; --accent:#fbbf24; --accent-2:#fb923c; --focus:#facc15; --danger:#f87171; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    main { width:min(960px,calc(100% - 32px)); margin:0 auto; padding:48px 0 96px; }
+    header { display:grid; gap:12px; margin-bottom:32px; }
+    .eyebrow { color:var(--accent); font-size:.75rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+    h1,h2,p { margin:0; } h1 { font-size:clamp(2rem,5vw,3.5rem); line-height:1.08; letter-spacing:-.035em; }
+    .lede { max-width:70ch; color:var(--muted); }
+    .tree { display:flex; align-items:center; gap:8px; overflow:auto; padding:16px; margin:24px 0 32px; border:1px solid var(--line); border-radius:12px; background:var(--panel); color:var(--muted); white-space:nowrap; }
+    .tree b { color:var(--text); } .node { padding:6px 10px; border:1px solid var(--line); border-radius:999px; } .node.active { border-color:var(--accent); color:var(--accent); } .arrow { color:var(--line); }
+    .visuals { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:0 0 24px; }
+    figure { min-width:0; margin:0; padding:18px; border:1px solid var(--line); border-radius:14px; background:var(--panel); }
+    figcaption { margin-bottom:14px; color:var(--muted); font-size:.85rem; } figcaption b { display:block; color:var(--text); font-size:1rem; }
+    svg { display:block; width:100%; height:auto; } svg text { font-family:ui-sans-serif,system-ui,sans-serif; }
+    .svg-node { fill:var(--panel-2); stroke:var(--line); stroke-width:2; } .svg-node.active { stroke:var(--accent); } .svg-line { fill:none; stroke:var(--line); stroke-width:2; } .svg-label { fill:var(--text); font-size:12px; } .svg-note { fill:var(--muted); font-size:10px; } .svg-accent { fill:var(--accent); font-size:10px; } .svg-danger { fill:var(--danger); font-size:10px; }
+    .settled { padding:18px; margin:0 0 24px; border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:12px; background:var(--panel); }
+    .settled h2 { font-size:1rem; margin-bottom:10px; }
+    .settled ul { margin:0; padding-left:20px; color:var(--muted); font-size:.9rem; } .settled b { color:var(--text); }
+    code { padding:1px 5px; border-radius:5px; background:#100d08; color:var(--accent); font-size:.9em; }
+    form { display:grid; gap:20px; }
+    fieldset { min-width:0; margin:0; padding:24px; border:1px solid var(--line); border-radius:16px; background:var(--panel); }
+    legend { max-width:100%; padding:0 8px; font-size:1.15rem; font-weight:750; }
+    .why { margin:0 0 18px; color:var(--muted); font-size:.925rem; }
+    .choices { display:grid; gap:10px; }
+    .choice { display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:start; padding:14px; border:1px solid var(--line); border-radius:10px; background:var(--panel-2); cursor:pointer; }
+    .choice:has(input:checked) { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
+    input { width:18px; height:18px; margin-top:3px; accent-color:var(--accent); }
+    .rank { display:inline-block; margin-left:7px; color:var(--accent-2); font-size:.72rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+    .detail { display:block; margin-top:3px; color:var(--muted); font-size:.875rem; }
+    label.precision { display:block; margin-top:18px; font-size:.85rem; font-weight:700; color:var(--muted); }
+    textarea { width:100%; min-height:90px; margin-top:7px; padding:12px; resize:vertical; border:1px solid var(--line); border-radius:10px; background:#100d08; color:var(--text); font:inherit; }
+    input:focus-visible,textarea:focus-visible,button:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
+    .actions { position:sticky; bottom:16px; display:flex; gap:12px; align-items:center; justify-content:space-between; padding:14px; border:1px solid var(--line); border-radius:14px; background:rgba(19,23,28,.96); box-shadow:0 16px 40px #0008; backdrop-filter:blur(10px); }
+    button { padding:11px 16px; border:0; border-radius:9px; background:var(--accent); color:#211500; font:inherit; font-weight:800; cursor:pointer; }
+    #status { color:var(--muted); font-size:.875rem; }
+    @media (max-width:700px) { .visuals { grid-template-columns:1fr; } }
+    @media (max-width:600px) { main { width:min(100% - 20px,960px); padding-top:28px; } fieldset { padding:18px 14px; } .actions { align-items:flex-start; flex-direction:column; } button { width:100%; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="eyebrow">Grill me · Round 4 · Portrait, visual language, recovery</span>
+    <h1>Portrait layouts, visual language, handoff recovery</h1>
+    <p class="lede">Round 3 added two big projects to this plan: a <b>vertical duel field</b> and a <b>unified visual language</b>. Both collide with duel acceptance evidence that is already locked. Last round of questions — after this the plan gets written.</p>
+  </header>
+
+  <nav class="tree" aria-label="Design tree progress">
+    <span class="node"><b>R1 scope</b></span>
+    <span class="arrow">→</span>
+    <span class="node"><b>R2 mechanics</b></span>
+    <span class="arrow">→</span>
+    <span class="node"><b>R3 integration</b></span>
+    <span class="arrow">→</span>
+    <span class="node active">Portrait design</span>
+    <span class="arrow">→</span>
+    <span class="node active">Visual language</span>
+    <span class="arrow">→</span>
+    <span class="node active">Recovery + lanes</span>
+    <span class="arrow">→</span>
+    <span class="node">Ticket plan</span>
+  </nav>
+
+  <section class="settled">
+    <h2>Settled — not re-asked</h2>
+    <ul>
+      <li><b>T1 = merge</b> <code>plan/feedback-follow-up</code> into main, full <code>npm run check</code>, then restructure on top.</li>
+      <li>Dev branches: <code>duel-simulator</code>, <code>deckbuilder</code>, <code>vn</code>, one per worktree, reset to the merged main.</li>
+      <li>16:9 stage above 1024px wide; below 1024px a vertical mobile layout regardless of orientation. All three domains get portrait.</li>
+      <li><code>#/admin</code> hidden hash route shipped in production: route index, state jumps, seed deck, launch preset duel, open story chapter, reset each DB.</li>
+      <li>Story duels reuse the existing deck picker — the player chooses both sides.</li>
+      <li>Fullscreen preference persisted; restored via a one-click prompt on home.</li>
+      <li>Tokens <b>plus</b> a unified visual language applied to all three domains in this plan.</li>
+      <li>Correctness gates stay; only JS byte budgets and obsolete prototype-entry checks are suspended.</li>
+    </ul>
+  </section>
+
+  <section class="visuals" aria-label="Technical context">
+    <figure>
+      <figcaption><b>Duel board today</b>8-column pixel geometry, built for landscape</figcaption>
+      <svg viewBox="0 0 320 200" role="img" aria-labelledby="board-title board-desc">
+        <title id="board-title">Landscape duel geometry</title>
+        <desc id="board-desc">computeFieldGeometry lays out eight columns and four rows plus a hand band, sized from available width and height; a portrait viewport has to change this profile.</desc>
+        <text class="svg-note" x="4" y="12">computeFieldGeometry(emz, width, height) · COLS = 8</text>
+        <rect class="svg-node" x="6" y="20" width="308" height="120" rx="6"/>
+        <g>
+          <rect class="svg-node" x="18" y="28" width="26" height="22" rx="3"/><rect class="svg-node" x="50" y="28" width="26" height="22" rx="3"/><rect class="svg-node" x="82" y="28" width="26" height="22" rx="3"/><rect class="svg-node" x="114" y="28" width="26" height="22" rx="3"/><rect class="svg-node" x="146" y="28" width="26" height="22" rx="3"/><rect class="svg-node" x="178" y="28" width="26" height="22" rx="3"/><rect class="svg-node" x="210" y="28" width="26" height="22" rx="3"/><rect class="svg-node" x="242" y="28" width="26" height="22" rx="3"/>
+          <rect class="svg-node" x="18" y="56" width="26" height="22" rx="3"/><rect class="svg-node" x="50" y="56" width="26" height="22" rx="3"/><rect class="svg-node" x="82" y="56" width="26" height="22" rx="3"/><rect class="svg-node" x="114" y="56" width="26" height="22" rx="3"/><rect class="svg-node" x="146" y="56" width="26" height="22" rx="3"/><rect class="svg-node" x="178" y="56" width="26" height="22" rx="3"/><rect class="svg-node" x="210" y="56" width="26" height="22" rx="3"/><rect class="svg-node" x="242" y="56" width="26" height="22" rx="3"/>
+          <rect class="svg-node active" x="18" y="88" width="250" height="20" rx="3"/><text class="svg-note" x="26" y="102">hand band, horizontal overlay scroll</text>
+          <rect class="svg-node" x="276" y="28" width="30" height="80" rx="4"/><text class="svg-note" x="279" y="70">rail</text>
+        </g>
+        <text class="svg-note" x="18" y="128">phase strip anchored to geometry · EMZ conditional (ADR-018)</text>
+        <text class="svg-danger" x="6" y="158">Portrait must re-answer: column count, row order, hand placement,</text>
+        <text class="svg-danger" x="6" y="172">rail position, phase controls, drag targets, keyboard navigation.</text>
+        <text class="svg-note" x="6" y="190">Locked evidence: DF-16 parity gate, ADR-015 halo semantics, 6-case acceptance matrix.</text>
+      </svg>
+    </figure>
+    <figure>
+      <figcaption><b>Portrait options</b>three ways to fit a wide board on a tall screen</figcaption>
+      <svg viewBox="0 0 320 200" role="img" aria-labelledby="portrait-title portrait-desc">
+        <title id="portrait-title">Portrait strategies</title>
+        <desc id="portrait-desc">Option A rotates the landscape board ninety degrees inside the portrait viewport; option B scales the landscape board down and stacks controls; option C is a native vertical layout with reordered rows.</desc>
+        <rect class="svg-node active" x="8" y="16" width="80" height="140" rx="8"/>
+        <text class="svg-accent" x="12" y="34">A · rotate 90°</text>
+        <g transform="rotate(90 48 96)"><rect class="svg-node" x="10" y="80" width="76" height="32" rx="3"/></g>
+        <text class="svg-note" x="12" y="140">board unchanged,</text><text class="svg-note" x="12" y="152">player tilts head</text>
+        <rect class="svg-node active" x="120" y="16" width="80" height="140" rx="8"/>
+        <text class="svg-accent" x="124" y="34">B · scale + stack</text>
+        <rect class="svg-node" x="126" y="44" width="68" height="38" rx="3"/>
+        <rect class="svg-node" x="126" y="88" width="68" height="18" rx="3"/>
+        <rect class="svg-node" x="126" y="112" width="68" height="18" rx="3"/>
+        <text class="svg-note" x="124" y="146">tiny cards</text>
+        <rect class="svg-node active" x="232" y="16" width="80" height="140" rx="8"/>
+        <text class="svg-accent" x="236" y="34">C · native vertical</text>
+        <rect class="svg-node" x="238" y="42" width="68" height="26" rx="3"/>
+        <rect class="svg-node" x="238" y="72" width="68" height="26" rx="3"/>
+        <rect class="svg-node" x="238" y="102" width="68" height="20" rx="3"/>
+        <rect class="svg-node" x="238" y="126" width="68" height="16" rx="3"/>
+        <text class="svg-note" x="236" y="156">new geometry</text>
+        <text class="svg-note" x="8" y="180">All three keep the Worker authoritative — this is presentation only.</text>
+        <text class="svg-note" x="8" y="194">Cost rises A → B → C; fidelity rises A → C.</text>
+      </svg>
+    </figure>
+  </section>
+
+  <form id="questions">
+    <fieldset data-question="Portrait duel field strategy">
+      <legend>1. Portrait duel field strategy</legend>
+      <p class="why">Below 1024px the duel must render vertically. The board is an 8-column pixel geometry with a horizontal hand band, a side rail and geometry-anchored phase controls.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Native vertical geometry profile: reordered rows, hand as a bottom sheet, rail collapsed into a top bar, phase controls as a bottom action row"><span><b>C · native vertical</b><span class="rank">Recommended</span><span class="detail">Actually playable on a phone; adds a second geometry profile plus its own acceptance matrix, but reuses all existing Worker/state code.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Scale the existing landscape board down to fit portrait width and stack rail/phases beneath it"><span><b>B · scale and stack</b><span class="rank">Second</span><span class="detail">Much cheaper, single geometry; cards become very small and drag targets fall under the 44px floor.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Rotate the landscape stage 90 degrees inside portrait viewports"><span><b>A · rotate</b><span class="rank">Third</span><span class="detail">Almost free; awkward to use, breaks text reading and native scrolling expectations.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Portrait shows a rotate-your-device screen; real vertical duel deferred"><span><b>Defer duel portrait</b><span class="rank">Fourth</span><span class="detail">Contradicts round 3, but keeps the plan half the size if you want mobile duel later.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. native vertical, opponent rows on top, my hand pinned bottom"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Portrait deck editor strategy">
+      <legend>2. Portrait deck editor strategy</legend>
+      <p class="why">The editor is a three-panel desktop layout (catalog · deck workspace · card details) with drag and drop; portrait has room for one panel.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Single-panel tabs: Catalog / Deck / Details, with tap-to-add and tap-to-move replacing drag on touch"><span><b>Tabs + tap actions</b><span class="rank">Recommended</span><span class="detail">Reuses the existing keyboard pick-and-drop model, so touch gets a tested interaction path instead of fragile drag.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Deck grid always visible with catalog and details as bottom sheets"><span><b>Deck + bottom sheets</b><span class="rank">Second</span><span class="detail">Keeps the deck in view while browsing; sheet focus management is more work to get right.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Vertical stack: catalog above, deck below, details on selection, page scrolls"><span><b>Vertical scroll stack</b><span class="rank">Third</span><span class="detail">Simplest; long scrolling makes moving a card between zones tedious.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. tabs, and tap-add always targets Main unless the card is Extra-only"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Does the restyle change duel field visuals that carry locked acceptance evidence?">
+      <legend>3. Does the restyle change duel field visuals that carry locked acceptance evidence?</legend>
+      <p class="why">The duel field's colors and geometry are pinned by ADR-015 halo semantics, the DF-16 Chromium parity gate and a six-case acceptance matrix that just went green on the branch you are merging first.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Restyle re-points duel colors at tokens but preserves every semantic distinction; acceptance assertions updated to read token values, never relaxed"><span><b>Token swap, semantics frozen</b><span class="rank">Recommended</span><span class="detail">One visual language without losing the legal/selected/focus distinctions that duel tests assert.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Full duel visual redesign; regenerate the acceptance matrix and DF-16 evidence against the new look"><span><b>Redesign + re-baseline</b><span class="rank">Second</span><span class="detail">Best-looking result; invalidates and re-records the evidence you just finished producing.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Duel field is excluded from the restyle; only shell, story and deck editor adopt the visual language"><span><b>Exclude the duel field</b><span class="rank">Third</span><span class="detail">Zero risk to duel evidence; the product's main screen stays visually apart from the rest.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. token swap now, duel visual redesign as its own later plan"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Where does the visual language come from?">
+      <legend>4. Where does the visual language come from?</legend>
+      <p class="why">Three palettes exist today: duel dark blue, VN prototype (with authored direction boards), deck editor slate. One has to win.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Derive from the VN visual direction boards, since story sets the product identity; duel and decks adopt it"><span><b>VN direction leads</b><span class="rank">Recommended</span><span class="detail">The story screens already have an authored art direction; the other two domains are functional UI that can follow it.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Derive from the duel field palette, since it is the most mature and evidence-backed surface"><span><b>Duel palette leads</b><span class="rank">Second</span><span class="detail">Least churn for the riskiest domain; story loses some of its authored mood.</span></span></label>
+        <label class="choice"><input type="checkbox" value="New neutral token set defined from scratch, all three domains re-point to it"><span><b>New token set</b><span class="rank">Third</span><span class="detail">Cleanest system; every domain changes appearance at once, maximum review surface.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. VN direction leads, keep duel's green/orange legality colors as semantic tokens"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Does the deck picker list local decks for story and standalone duels?">
+      <legend>5. Does the deck picker list local decks for story and standalone duels?</legend>
+      <p class="why">Story duels reuse the deck picker, and the plan dispatches local decks to the Worker — so the picker becomes the place where bundled and local decks meet.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Picker shows bundled decks and valid local decks in two labelled groups; invalid or unsupported local decks are listed but disabled with a reason"><span><b>Both, invalid shown disabled</b><span class="rank">Recommended</span><span class="detail">Player sees why a deck cannot be used instead of it silently vanishing; matches the strict Worker validation already chosen.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Picker shows bundled decks plus only valid local decks; invalid ones are hidden"><span><b>Both, hide invalid</b><span class="rank">Second</span><span class="detail">Cleaner list; players wonder where their deck went.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Player side may be local, opponent side stays bundled-only"><span><b>Local for player only</b><span class="rank">Third</span><span class="detail">Keeps opponent behavior predictable; contradicts round 3 where the player picks both sides freely.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. both groups, disabled entries show the first blocking validation issue"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="What happens on reload during a story duel?">
+      <legend>6. What happens on reload during a story duel?</legend>
+      <p class="why">The Worker dies on reload, so an in-progress duel cannot resume. The route <code>#/duel/session/:handoffId</code> will be sitting in the address bar.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Restore the pre-duel checkpoint and offer Retry duel or Return to story; never auto-restart and never infer a result"><span><b>Checkpoint + explicit choice</b><span class="rank">Recommended</span><span class="detail">Progress is never lost or faked; matches the rule that a technical failure is not a player loss.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Automatically restart the same encounter from the checkpoint"><span><b>Auto-restart</b><span class="rank">Second</span><span class="detail">Fewest clicks; a player who reloaded to escape a duel is dropped straight back into it.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Return to the story map and mark the encounter unattempted"><span><b>Return to map</b><span class="rank">Third</span><span class="detail">Simple; loses the just-started encounter context entirely.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. checkpoint + choice; standalone duels just return to the duel setup"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Worktree to branch mapping and integration ownership">
+      <legend>7. Worktree to branch mapping and integration ownership</legend>
+      <p class="why">Three named branches exist, but shell, routes, tokens, contracts and config need a single owner or three lanes will fight over them.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="main is the integration lane (shell, routes, tokens, contracts, config, cross-domain e2e); duel-simulator, deckbuilder and vn own only their domain paths"><span><b>main integrates</b><span class="rank">Recommended</span><span class="detail">Matches ADR-022 without a fourth worktree; every shared change is a deliberate main commit that lanes rebase onto.</span></span></label>
+        <label class="choice"><input type="checkbox" value="duel-simulator doubles as the integration lane; main only receives merges"><span><b>Duel lane integrates</b><span class="rank">Second</span><span class="detail">Keeps shell work next to the riskiest domain; mixes shared and duel commits in one history.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Add a fourth integration worktree separate from all three domains"><span><b>Fourth lane</b><span class="rank">Third</span><span class="detail">Cleanest separation; another checkout and node_modules to maintain.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. main integrates; I work the three lanes and merge into main myself"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="How much of the restructure lands before the three lanes fork?">
+      <legend>8. How much of the restructure lands before the three lanes fork?</legend>
+      <p class="why">Parallel work only pays off once the shared surface is stable; forking too early means three lanes rebasing on every shell change.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Fork after the shared foundation lands on main: merge, shell, routes, tokens, contracts, boundaries, admin page, stage/responsive rules"><span><b>Fork after foundation</b><span class="rank">Recommended</span><span class="detail">Lanes then touch almost only their own paths; the expensive shared churn happens once, on main.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Fork immediately after the branch merge; build the shell on the duel lane while others start"><span><b>Fork immediately</b><span class="rank">Second</span><span class="detail">Parallel work starts sooner; guarantees repeated rebases while shell and tokens move under them.</span></span></label>
+        <label class="choice"><input type="checkbox" value="No forking: run the whole plan sequentially on main, use lanes only afterwards"><span><b>Sequential</b><span class="rank">Third</span><span class="detail">Simplest to execute and review; no parallelism, which was the point of the worktrees.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. fork after foundation; tell me exactly which ticket is the fork point"></textarea></label>
+    </fieldset>
+
+    <div class="actions">
+      <span id="status" role="status">Selections stay in this page until copied.</span>
+      <button type="button" id="copy-summary">Copy answer summary</button>
+    </div>
+  </form>
+</main>
+<script>
+  const button = document.querySelector('#copy-summary');
+  const status = document.querySelector('#status');
+
+  function buildSummary() {
+    const sections = [...document.querySelectorAll('fieldset[data-question]')].map((field, index) => {
+      const question = field.dataset.question;
+      const selected = [...field.querySelectorAll('input[type="checkbox"]:checked')].map(input => `- ${input.value}`);
+      const precision = field.querySelector('textarea').value.trim();
+      const answers = selected.length ? selected.join('\n') : '- No recommended answer selected';
+      return `${index + 1}. ${question}\n${answers}${precision ? `\nPrecision: ${precision}` : ''}`;
+    });
+    return `Round 4 · Portrait, visual language, recovery — Portrait layouts, visual language, handoff recovery\n\n${sections.join('\n\n')}`;
+  }
+
+  button.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(buildSummary());
+      status.textContent = 'Summary copied to clipboard.';
+    } catch (_) {
+      const fallback = document.createElement('textarea');
+      fallback.value = buildSummary();
+      document.body.appendChild(fallback);
+      fallback.select();
+      document.execCommand('copy');
+      fallback.remove();
+      status.textContent = 'Summary copied to clipboard.';
+    }
+  });
+</script>
+</body>
+</html>

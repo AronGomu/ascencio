@@ -153,7 +153,13 @@ All UI branches start from same integration-baseline commit. Domain branches nev
 4. rebase all affected UI branches;
 5. resume against same contract.
 
-Each worktree uses unique ports, for example 4202/4203/4204. Focused tests run in domain worktrees; full build/E2E runs after each integration merge. If only three total worktrees are allowed, Duel worktree may temporarily double as Integration, but shell/config commits must remain separate from duel feature commits.
+Each worktree uses unique ports:
+
+- Duel Simulator: `4300`
+- Deck Editor: `4301`
+- Visual Novel: `4302`
+
+Override with `DEV_PORT` / `PLAYWRIGHT_PORT`. Focused tests run in domain worktrees; full build/E2E runs after each integration merge. If only three total worktrees are allowed, Duel worktree may temporarily double as Integration, but shell/config commits must remain separate from duel feature commits.
 
 ## Merge policy
 

@@ -38,7 +38,12 @@ This is the canonical architecture entry point. Detailed decisions are intention
 | Errors, traces, or reproducibility                                       | [`06-quality/diagnostics.md`](06-quality/diagnostics.md)                                                                                                             |
 | Trust boundaries or untrusted input                                      | [`07-governance/security.md`](07-governance/security.md)                                                                                                             |
 | Licensing, card-art distribution, or deployment                          | [`07-governance/licensing-and-distribution.md`](07-governance/licensing-and-distribution.md)                                                                         |
-| Three UI domains, shell, public module boundaries, or worktree ownership | [`../ADR/022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md`](../ADR/022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md), [`../card-game-vn-handoff/02-system-architecture.md`](../card-game-vn-handoff/02-system-architecture.md) |
+| Three UI domains, shell, public module boundaries, or worktree ownership | [`../ADR/022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md`](../ADR/022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md), [`../three-ui-architecture.html`](../three-ui-architecture.html) |
+| Application entry, route table, or navigation ownership | [`../ADR/023_ADR_single_entry_shell_and_hash_routes.md`](../ADR/023_ADR_single_entry_shell_and_hash_routes.md) |
+| Viewport stage, breakpoints, portrait layouts, or rotation | [`../ADR/024_ADR_responsive_stage_and_portrait_strategy.md`](../ADR/024_ADR_responsive_stage_and_portrait_strategy.md) |
+| Duel start contract, local decks, or supported-card validation | [`../ADR/025_ADR_validated_card_list_duel_start.md`](../ADR/025_ADR_validated_card_list_duel_start.md) |
+| Databases, save envelopes, or storage migrations | [`../ADR/026_ADR_domain_storage_ownership.md`](../ADR/026_ADR_domain_storage_ownership.md) |
+| Story-to-duel handoff, checkpoints, or result routing | [`../ADR/027_ADR_story_duel_handoff_saga.md`](../ADR/027_ADR_story_duel_handoff_saga.md) |
 | Post-MVP systems                                                         | [`07-governance/extension-path.md`](07-governance/extension-path.md)                                                                                                 |
 
 ## System at a glance

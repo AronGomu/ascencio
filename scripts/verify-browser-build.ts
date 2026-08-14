@@ -21,7 +21,7 @@ const outputRoot = path.join(projectRoot, "dist");
 const runtimeRoot = path.join(outputRoot, "runtime");
 const assetRoot = path.join(runtimeRoot, "assets/current");
 await stat(path.join(outputRoot, "index.html"));
-await stat(path.join(outputRoot, "prototype.html"));
+await verifySingleHtmlEntry();
 await verifyNoRemovedPhaserResidue();
 await verifyNoAcceptanceHarnessResidue();
 
@@ -148,7 +148,6 @@ if (workerFile === undefined) {
   throw new Error("Browser build did not emit the dedicated duel Worker");
 }
 await verifySizeBudgets(javaScriptFiles, workerFile);
-await verifyPrototypeIsolation(javaScriptFiles);
 const workerSource = await readFile(workerFile, "utf8");
 if (!workerSource.includes(runtimeManifestSha256)) {
   throw new Error("Browser Worker does not embed the packaged manifest digest");
@@ -195,6 +194,22 @@ console.log(
     2,
   ),
 );
+
+/* The visual novel used to ship as a second entry document, gated here by a
+   `prototype.html` stat plus its own isolation scan and byte budget. It is now
+   a lazily-imported domain of the single app, so the guarantee inverts: the
+   build must emit exactly one HTML document. Its runtime isolation from the
+   duel Worker/WASM is no longer statically derivable from an entry closure and
+   is proven at runtime by `e2e/story.spec.ts` instead. */
+async function verifySingleHtmlEntry(): Promise<void> {
+  const documents = (await findFiles(outputRoot))
+    .map((file) => path.relative(outputRoot, file).replaceAll("\\", "/"))
+    .filter((file) => file.endsWith(".html"));
+  if (documents.join("\n") !== "index.html")
+    throw new Error(
+      `Browser build must ship exactly one entry document: ${documents.join(", ")}`,
+    );
+}
 
 async function verifyNoRemovedPhaserResidue(): Promise<void> {
   const packageJson = JSON.parse(
@@ -346,15 +361,7 @@ async function verifySizeBudgets(
     "index.html",
     javaScriptFiles,
   );
-  const prototypeInitialFiles = await staticHtmlScriptClosure(
-    "prototype.html",
-    javaScriptFiles,
-  );
   const initialScriptBytes = appInitialFiles.reduce(
-    (total, file) => total + (sizes.get(file) ?? 0),
-    0,
-  );
-  const prototypeScriptBytes = prototypeInitialFiles.reduce(
     (total, file) => total + (sizes.get(file) ?? 0),
     0,
   );
@@ -375,7 +382,6 @@ async function verifySizeBudgets(
        against unnoticed drift, so it keeps a visible ceiling above the
        measured size rather than tracking it. */
     ["initial JavaScript", initialScriptBytes, 400_000],
-    ["prototype initial JavaScript", prototypeScriptBytes, 200_000],
     ["Duel Worker JavaScript", sizes.get(workerFile) ?? 0, 200_000],
     ["active runtime closure", runtimeBytes, 22_000_000],
     ["active card images", imageBytes, 19_000_000],
@@ -417,31 +423,6 @@ async function staticHtmlScriptClosure(
   if (closure.size === 0)
     throw new Error(`Browser build ${htmlName} has no module entry script`);
   return [...closure];
-}
-
-async function verifyPrototypeIsolation(
-  javaScriptFiles: readonly string[],
-): Promise<void> {
-  const files = await staticHtmlScriptClosure(
-    "prototype.html",
-    javaScriptFiles,
-  );
-  const forbiddenPrototypeMarkers = [
-    "duel.worker-browser",
-    "runtime/current/manifest.json",
-    "ocgcore.sync.wasm",
-    "new Worker(",
-  ];
-  for (const file of files) {
-    const source = await readFile(file, "utf8");
-    const marker = forbiddenPrototypeMarkers.find((value) =>
-      source.includes(value),
-    );
-    if (marker !== undefined)
-      throw new Error(
-        `Prototype initial bundle ${path.basename(file)} contains duel runtime marker: ${marker}`,
-      );
-  }
 }
 
 async function totalFileBytes(root: string): Promise<number> {

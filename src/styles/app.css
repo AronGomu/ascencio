@@ -101,6 +101,18 @@ body {
   overflow: auto;
 }
 
+/* The story pins its pause control and overlay backdrops with `position:
+   fixed`, which resolves against the viewport and would escape the letterbox
+   into the stage's bars. `contain: layout` makes this region their containing
+   block, so they stay inside the stage without the domain having to know the
+   shell exists. */
+.shell-region--story {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  contain: layout;
+}
+
 button,
 input,
 select {

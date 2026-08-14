@@ -112,9 +112,11 @@
       {/await}
     </div>
   {:else if route.kind === "story"}
-    <p class="shell-placeholder" data-cy="shell-placeholder">
-      Not available yet
-    </p>
+    <div class="shell-region shell-region--story" data-cy="shell-region-story">
+      {#await loaders.story() then module}
+        <svelte:component this={module.default} />
+      {/await}
+    </div>
   {:else}
     <div class="shell-region shell-region--duel" data-cy="shell-region-duel">
       {#await loaders.duel() then module}

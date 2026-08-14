@@ -13,8 +13,8 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 | shell | Future thin composition/router layer owning transitions among three lazy UI domains | ADR-022, future `src/shell/` |
 | duel simulator | Production battle UI plus Worker-owned rules runtime | `src/app/`, `src/duel/`, `src/field/`, `src/worker/` |
 | deck editor | Local deck library/editor domain; currently integrated as isolated prototype | `src/decks/`, `src/prototypes/deck-builder/` |
-| visual novel | Narrative/map/campaign domain; currently integrated as isolated prototype | `src/prototype/`, future `src/story/` |
-| facade | Narrow domain-owned public lifecycle/contract boundary used by shell | future `src/battle/index.ts`, `src/decks/index.ts`, future `src/story/index.ts` |
+| visual novel | Narrative/map/campaign domain reached at `#/story` | `src/story/` |
+| facade | Narrow domain-owned public lifecycle/contract boundary used by shell | future `src/battle/index.ts`, `src/decks/index.ts`, `src/story/index.ts` |
 | store | Typed duel view state store + reducer | `src/app/stores/duel-store.ts` (`createDuelStore`, `reduceDuelViewState`, `DuelViewState`) |
 | client | Main-thread typed Worker client/port | `src/app/DuelWorkerClient.ts` (`DuelWorkerClient`, `DuelWorkerPort`) |
 | field | Semantic DOM duel field component | `src/app/components/DuelField.svelte`, `src/app/components/duel-field/FieldBoard.svelte` |

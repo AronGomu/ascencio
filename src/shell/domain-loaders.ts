@@ -8,10 +8,14 @@ export type DomainLoader = () => Promise<{
 export interface DomainLoaders {
   readonly duel: DomainLoader;
   readonly decks: DomainLoader;
+  readonly story: DomainLoader;
 }
 
 export const DEFAULT_DOMAIN_LOADERS: DomainLoaders = {
   duel: async () => await import("../app/App.svelte"),
   decks: async () =>
     await import("../prototypes/deck-builder/DeckBuilderPrototype.svelte"),
+  /* The story domain is reached through its public entry, never by deep
+     import of `StoryApp.svelte`. */
+  story: async () => await import("../story/index.ts"),
 };

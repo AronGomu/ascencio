@@ -95,16 +95,15 @@ export default defineConfig({
     target: "es2023",
     chunkSizeWarningLimit: 500,
     rollupOptions: {
+      /* The product ships one document. The acceptance harness is the only
+         reason a second input exists, and it is opt-in per run. */
       input:
         process.env.ACCEPTANCE_SCENARIOS === "1"
           ? {
               index: path.join(projectRoot, "index.html"),
               acceptance: path.join(projectRoot, "acceptance.html"),
             }
-          : {
-              app: path.join(projectRoot, "index.html"),
-              prototype: path.join(projectRoot, "prototype.html"),
-            },
+          : { app: path.join(projectRoot, "index.html") },
     },
   },
   worker: {

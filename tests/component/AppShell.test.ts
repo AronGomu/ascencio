@@ -9,7 +9,7 @@ import { createShellStore } from "../../src/shell/shell-store.ts";
 /* The domain roots boot a duel worker and IndexedDB, neither of which this
    test needs: it only asserts which region the shell renders. */
 const never = () => new Promise<never>(() => {});
-const loaders: DomainLoaders = { duel: never, decks: never };
+const loaders: DomainLoaders = { duel: never, decks: never, story: never };
 
 function renderAt(hash: string) {
   return render(AppShell, {
@@ -64,10 +64,28 @@ describe("AppShell", () => {
     expect(document.querySelector('[data-cy="shell-region-duel"]')).toBeNull();
   });
 
-  it("shows the placeholder for the story route", () => {
+  it("mounts the story region for the story route", () => {
     renderAt("#/story");
-    const placeholder = document.querySelector('[data-cy="shell-placeholder"]');
-    expect(placeholder?.textContent).toBe("Not available yet");
+    expect(
+      document.querySelector('[data-cy="shell-region-story"]'),
+    ).not.toBeNull();
+    expect(document.querySelector('[data-cy="shell-placeholder"]')).toBeNull();
+    expect(document.querySelector('[data-cy="shell-region-duel"]')).toBeNull();
+  });
+
+  it("loads the real story domain root through its public entry", async () => {
+    render(AppShell, {
+      store: createShellStore("#/story", () => {}),
+      loaders: {
+        ...loaders,
+        story: async () => await import("../../src/story/index.ts"),
+      },
+    });
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector('[data-cy="shell-region-story"] .story-app'),
+      ).not.toBeNull(),
+    );
   });
 
   it("mounts the admin console region for the admin route", async () => {

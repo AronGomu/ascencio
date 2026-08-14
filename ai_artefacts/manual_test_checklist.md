@@ -100,9 +100,9 @@
 - [ ] Open a stack zone (Deck / Graveyard / Banished) to raise the card-list dialog; confirm cards render as tiles, sorting/browse chrome appears, and Escape closes it.
 - [ ] Open Settings, toggle a field-display option, reload the page, and confirm the toggle survived (persisted display settings v2).
 - [ ] Open `http://localhost:4300/#/decks` — the deck-builder prototype renders and the duel does not start. (Route renamed from `#/prototype/deck-builder` by T2.)
-- [ ] Open `http://localhost:4300/prototype.html` — the visual-novel prototype title screen renders.
-- [ ] Run `npm run build` and confirm it exits 0 — this proves the repaired `vite.config.ts` still emits BOTH the `app` (`index.html`) and `prototype` (`prototype.html`) bundles.
-- [ ] Confirm `dist/prototype.html` exists after that build.
+- [ ] Open `http://localhost:4300/#/story` — the visual-novel title screen renders. (Corrected by T7: this was `prototype.html`, which no longer exists.)
+- [ ] Run `npm run build` and confirm it exits 0 — this proves the repaired `vite.config.ts` still emits the `app` (`index.html`) bundle. (Corrected by T7: the `prototype` input was removed, so only one bundle is expected now.)
+- [ ] Confirm `dist/index.html` exists after that build and `dist/prototype.html` does NOT. (Corrected by T7.)
 
 ## T2 shell-routes-and-mount
 
@@ -110,7 +110,7 @@
 - [ ] Open `http://localhost:4300/#/duel` — the duel starts here too.
 - [ ] Confirm the duel still fills exactly one viewport height with no page scrollbar (the `100svh` grid moved from `#app[data-app-entry="duel"]` to `.shell-region--duel`).
 - [ ] Open `http://localhost:4300/#/decks` — the deck-builder prototype renders and no duel starts.
-- [ ] Open `http://localhost:4300/#/story` — the page shows only the text `Not available yet`.
+- [ ] Open `http://localhost:4300/#/story` — the visual-novel title screen renders. (Corrected by T7: this used to be the `Not available yet` placeholder.)
 - [ ] Open `http://localhost:4300/#/admin` — the page shows only the text `Not available yet`.
 - [ ] Open `http://localhost:4300/#/nope` — it falls back to home, which currently renders the duel.
 - [ ] Open `http://localhost:4300/#/prototype/deck-builder` — this old route is gone; it must now fall back to the duel, NOT the deck builder.
@@ -118,7 +118,7 @@
 - [ ] Then edit the hash back to `#/duel` without reloading — the shell swaps back to the duel.
 - [ ] Play a few actions in the duel (draw/summon/end turn) and confirm it is fully usable with an empty browser console (no errors).
 - [ ] Create and edit a deck in the deck builder, reload, and confirm the edit persisted and the console is empty.
-- [ ] Open `http://localhost:4300/prototype.html` — the visual-novel prototype title screen still renders (story has not moved into the shell yet).
+- [ ] Open `http://localhost:4300/#/story` — the visual novel is served from `index.html` like every other domain. (Corrected by T7: this line used to point at `prototype.html`, which T7 deleted.)
 - [ ] In DevTools, confirm `document.querySelector("#app").dataset.appShell === "ready"`.
 - [ ] Run `npm run build` and confirm it exits 0.
 
@@ -208,12 +208,52 @@ Run `npm run dev`. The console is a developer surface: it is never linked from t
 - [ ] Back on `#/admin`, click "Seed test deck & open decks": the deck editor opens and the library lists a deck named "Admin test deck".
 - [ ] Open that deck: it holds 40 Main-deck cards.
 - [ ] Return to `#/admin` and click "Launch preset duel": the duel route opens with the normal deck picker, and no extra deck was written to the library.
-- [ ] Return to `#/admin` and click "Open story": the story placeholder shows.
+- [ ] Return to `#/admin` and click "Open story": the visual-novel title screen shows. (Corrected by T7: this used to land on the placeholder.)
 - [ ] Click "Reset…" next to "Deck library": nothing is deleted yet — a "Delete for good" button and a "Cancel" button appear in its place.
 - [ ] Click "Cancel": the row returns to a single "Reset…" button. Visit `#/decks` — "Admin test deck" is STILL there. A single stray click must never delete data.
 - [ ] Back on `#/admin`, click "Reset…" on "Deck library", then click "Reset…" on "Shell settings": only ONE row is armed at a time — the deck-library confirm disappears.
 - [ ] Press Cancel, then arm "Deck library" again and click "Delete for good": the status line reads "Cleared Deck library." Visit `#/decks` — the library shows "No local decks".
-- [ ] Repeat the arm-then-confirm flow for each remaining row (Duel snapshots, Shell settings, Story prototype saves): each one asks for a separate confirmation and reports "Cleared …" when done.
+- [ ] Repeat the arm-then-confirm flow for each remaining row (Duel snapshots, Shell settings, Story progress): each one asks for a separate confirmation and reports "Cleared …" when done. (Corrected by T7: the row is now labelled "Story progress" and clears `ygo.story.v1`.)
 - [ ] After clearing "Shell settings", check devtools Application → Local Storage: the `ygo.ui.v3` entry is gone, and reloading the hub shows default settings.
 - [ ] After clearing "Duel snapshots", start a duel from `#/duel` and play a turn: the duel still works (the snapshot store rebuilds itself).
 - [ ] Reload `#/admin` after every reset: the console still loads and normal play from the hub is unaffected.
+
+## T7 story-domain-migration
+
+Reach the story
+
+- [ ] Run `npm run dev` (default `DEV_PORT=4300`) and open `http://localhost:4300/#/` — the home hub appears; click its Visual novel entry and the URL becomes `#/story`.
+- [ ] Open `http://localhost:4300/#/story` directly — the title screen "Echoes of the Draw" renders with New Game / Load / Settings, and focus starts on New Game.
+- [ ] Confirm there is NO "Start full flow" screen, no "Jump to screen or state" button, and no "Reviewer tools" drawer anywhere in the story.
+- [ ] Open `http://localhost:4300/prototype.html` — it must NOT serve the visual novel any more (the second entry document is deleted).
+- [ ] With DevTools Network open, load `#/story` and confirm no `.wasm` request and no `runtime/` request fires, and no Worker appears under Application → Workers. The story must not boot the duel engine.
+
+Walk the prologue
+
+- [ ] Click New Game — the first narrative beat ("Rain turned …") renders with the utility bar (History, Save, Load, Settings, Pause).
+- [ ] Press Enter repeatedly (about 13 times) until "Choose your response" appears, and confirm the first choice button takes focus on its own.
+- [ ] Pick "I trust you" — the acknowledgment about earning trust appears.
+- [ ] Press Enter until the "City signal map" heading appears, and confirm the earlier-choice line mentions your trust.
+- [ ] Select Old Arena from the location list — the "Rin's Echo" briefing appears. Go back and select it again from the map hotspots — the same briefing appears.
+- [ ] Click Start Duel — the mock "Existing duel experience placeholder" appears. This is expected: the real duel handoff is a later ticket.
+- [ ] Click Simulate Player Win → "Signal broken" → Continue story → "Signal Cipher" reward, with an "Autosave complete" status.
+- [ ] Click Continue to updated map — the map now says "Archive available".
+- [ ] Click Save progress → Confirm overwrite — "Save complete" appears; close the dialog.
+- [ ] Reload the page — the title screen offers Continue; click it and you land back on the updated map.
+- [ ] Click End prototype — the end screen appears; confirm its buttons read "Replay from the title" and "Return to the updated map" (there is no launcher any more), and that Replay returns you to the title screen.
+
+Overlays and layout
+
+- [ ] From a narrative beat, open History, Settings, Save and Load in turn: each opens a dialog, focus lands on its Close button, Escape closes it, and focus returns to the button you opened it from.
+- [ ] Confirm the Settings dialog no longer shows a "Reviewer state: …" line.
+- [ ] Open the pause menu, press Shift+Tab then Tab — focus cycles inside the dialog and never escapes to the page behind it.
+- [ ] Open Load, click "Delete manual slot 1" — the confirmation is the only modal on screen; Escape dismisses it and leaves the Load dialog open.
+- [ ] Resize the window to a tall/narrow shape (about 375×667) on the map screen — no horizontal scrollbar, and every location button is at least 44×44 px.
+- [ ] Resize to a wide window that is NOT 16:9 (for example 1920×1200) — the story stays inside the letterboxed stage; the "Open pause menu" button and any overlay must not spill into the black bars above or below the stage.
+
+Nothing else regressed
+
+- [ ] Open `#/duel` and play a few actions — the duel looks and behaves exactly as before; story styling has not leaked into its buttons or background.
+- [ ] Open `#/decks`, create and edit a deck — the deck editor looks and behaves exactly as before.
+- [ ] Open `#/admin` — the storage list shows a "Story progress" row; arm and confirm its reset, then check DevTools Application → Local Storage: `ygo.story.v1` is gone and `#/story` starts from a fresh title screen with no Continue.
+- [ ] Confirm the browser console is empty across all of the above.

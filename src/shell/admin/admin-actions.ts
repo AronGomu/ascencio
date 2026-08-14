@@ -2,7 +2,7 @@ import { deckId, type DeckId } from "../../decks/index.ts";
 import { PROTOTYPE_DECK_DATABASE_NAME } from "../../decks/indexeddb-deck-repository.ts";
 import { parseYdk } from "../../duel/presets/deck-parser.ts";
 import { DECK_SOURCES } from "../../duel/presets/deck-sources-browser.ts";
-import { PROTOTYPE_STORAGE_KEY } from "../../prototype/storage/prototype-storage.ts";
+import { STORY_STORAGE_KEY } from "../../story/storage/story-storage.ts";
 import { SNAPSHOT_DATABASE_NAME } from "../../storage/snapshot-store.ts";
 import type { AppRoute } from "../routes.ts";
 import { SHELL_SETTINGS_KEY } from "../settings/shell-settings.ts";
@@ -38,10 +38,10 @@ export const ADMIN_STORAGE_TARGETS: readonly AdminStorageTarget[] =
       name: SHELL_SETTINGS_KEY,
     } as const),
     Object.freeze({
-      id: "story-prototype",
-      label: "Story prototype saves",
+      id: "story-progress",
+      label: "Story progress",
       kind: "localstorage",
-      name: PROTOTYPE_STORAGE_KEY,
+      name: STORY_STORAGE_KEY,
     } as const),
   ]);
 

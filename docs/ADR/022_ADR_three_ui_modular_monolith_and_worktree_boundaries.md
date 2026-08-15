@@ -136,30 +136,50 @@ No cross-database atomicity assumption. Cross-domain operations use persisted co
 
 ## Worktree workflow
 
+> Fork point: commit tagged `restructure-complete` (T21, 2026-08-15).
+> All domain branches start from this commit.
+
 Recommended topology: one Integration worktree plus three UI worktrees.
 
 ```text
-integration/main  # shell, contracts, merges, aggregate E2E
-ui/duel           # Duel Simulator ownership paths only
-ui/decks          # Deck Editor ownership paths only
-ui/story          # Visual Novel ownership paths only
+main            # Integration — shell, contracts, merges, aggregate E2E
+duel-simulator  # Duel Simulator ownership paths only  (port 4300)
+deckbuilder     # Deck Editor ownership paths only     (port 4301)
+vn              # Visual Novel ownership paths only    (port 4302)
 ```
 
-All UI branches start from same integration-baseline commit. Domain branches never merge each other. If one domain needs a contract change:
+To open a domain lane from the fork point:
+
+```sh
+# from the integration repo
+git worktree add -b duel-simulator ../ui-duel restructure-complete
+git worktree add -b deckbuilder    ../ui-decks restructure-complete
+git worktree add -b vn             ../ui-story restructure-complete
+```
+
+Domain branches must never merge each other. If a domain needs a contract change:
 
 1. stop domain implementation;
-2. change contract in Integration worktree;
-3. validate and commit;
-4. rebase all affected UI branches;
-5. resume against same contract.
+2. land the contract change in `main` (Integration worktree);
+3. validate — `npm run check:headless` + full build — and commit;
+4. rebase affected domain branches onto the new `main` tip;
+5. resume against the updated contract.
 
-Each worktree uses unique ports:
+Each worktree binds a fixed port via `DEV_PORT` / `PLAYWRIGHT_PORT`:
 
-- Duel Simulator: `4300`
-- Deck Editor: `4301`
-- Visual Novel: `4302`
+- Duel Simulator: `4300` — `DEV_PORT=4300 npm run dev`
+- Deck Editor: `4301` — `DEV_PORT=4301 npm run dev`
+- Visual Novel: `4302` — `DEV_PORT=4302 npm run dev`
 
-Override with `DEV_PORT` / `PLAYWRIGHT_PORT`. Focused tests run in domain worktrees; full build/E2E runs after each integration merge. If only three total worktrees are allowed, Duel worktree may temporarily double as Integration, but shell/config commits must remain separate from duel feature commits.
+Focused tests run in domain worktrees; `npm run build` and E2E run only in the Integration worktree after each merge. Byte budgets are enforced by `npm run build:verify`: one ceiling for the shell cold-start closure and one per lazy domain chunk, measured in `scripts/lib/domain-chunk-closure.ts` and gated in `scripts/verify-browser-build.ts`. A domain's number is what visiting its route costs on top of the shell, so chunks the shell already loaded are not charged twice.
+
+A breach fails the build with the domain named:
+
+```
+Error: battle domain closure exceeds its production budget: 501234 > 488750 bytes
+```
+
+A lane that outgrows its ceiling raises it in the Integration worktree with a fresh measurement, the same way a contract change lands. Run `npm run build:verify` after every integration merge to catch chunk growth. If only three total worktrees are allowed, the Duel worktree may temporarily double as Integration, but shell/config commits must remain separate from duel feature commits.
 
 ## Merge policy
 

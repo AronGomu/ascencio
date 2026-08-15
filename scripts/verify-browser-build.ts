@@ -12,6 +12,11 @@ import {
 } from "../src/battle/worker/assets/runtime-snapshot-node.ts";
 import { assertNoMissingActiveImages } from "./lib/active-image-manifest.ts";
 import { resolveActiveRuntimeFiles } from "./lib/active-runtime-files.ts";
+import {
+  DOMAIN_BUDGET_BYTES,
+  measureDomainChunks,
+  staticHtmlScriptClosure,
+} from "./lib/domain-chunk-closure.ts";
 
 const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -147,7 +152,6 @@ const workerFile = javaScriptFiles.find((file) =>
 if (workerFile === undefined) {
   throw new Error("Browser build did not emit the dedicated duel Worker");
 }
-await verifySizeBudgets(javaScriptFiles, workerFile);
 const workerSource = await readFile(workerFile, "utf8");
 if (!workerSource.includes(runtimeManifestSha256)) {
   throw new Error("Browser Worker does not embed the packaged manifest digest");
@@ -182,6 +186,7 @@ for (const file of javaScriptFiles) {
 if (!activationIdentityEmbedded)
   throw new Error("Browser build does not embed the composite activation ID");
 
+const sizeSummary = await verifySizeBudgets(javaScriptFiles, workerFile);
 console.log(
   JSON.stringify(
     {
@@ -189,6 +194,7 @@ console.log(
       snapshotId: manifest.snapshotId,
       runtimeFiles: activeRuntimePaths.length,
       worker: path.basename(workerFile),
+      chunkBytes: sizeSummary,
     },
     null,
     2,
@@ -350,18 +356,23 @@ async function verifyThirdPartyLicenses(): Promise<void> {
 async function verifySizeBudgets(
   javaScriptFiles: readonly string[],
   workerFile: string,
-): Promise<void> {
+): Promise<Record<string, number>> {
   const sizes = new Map<string, number>();
   await Promise.all(
     javaScriptFiles.map(async (file) => {
       sizes.set(file, (await stat(file)).size);
     }),
   );
-  const appInitialFiles = await staticHtmlScriptClosure(
+  /* The Worker is budgeted on its own line below and is never reached by a
+     static import, so it stays out of both closures. */
+  const routableFiles = javaScriptFiles.filter((file) => file !== workerFile);
+  const shellFiles = await staticHtmlScriptClosure(
+    outputRoot,
     "index.html",
-    javaScriptFiles,
+    routableFiles,
   );
-  const initialScriptBytes = appInitialFiles.reduce(
+  const shellClosure = new Set(shellFiles);
+  const shellBytes = shellFiles.reduce(
     (total, file) => total + (sizes.get(file) ?? 0),
     0,
   );
@@ -370,59 +381,48 @@ async function verifySizeBudgets(
   );
   const imageBytes = await totalFileBytes(path.join(runtimeRoot, "images"));
   const coldStartBytes =
-    initialScriptBytes +
-    (sizes.get(workerFile) ?? 0) +
-    runtimeBytes +
-    imageBytes;
-  const budgets = [
+    shellBytes + (sizes.get(workerFile) ?? 0) + runtimeBytes + imageBytes;
+
+  /* Each domain is reached only through its own dynamic import, so its bytes
+     are what visiting that route costs on top of the shell. Chunks the shell
+     already paid for are excluded, and a missing domain chunk throws. */
+  const domainReports = await measureDomainChunks(
+    outputRoot,
+    routableFiles,
+    shellClosure,
+  );
+  const budgets: ReadonlyArray<readonly [string, number, number]> = [
     ["aggregate cold-start transfer", coldStartBytes, 41_000_000],
-    /* Raised 2026-08-10 for T16 (off-field target list): the aggregate target
-       window measured 382,753 bytes of initial JavaScript, over the previous
-       375,000 line that had 47 bytes of headroom left. The budget guards
-       against unnoticed drift, so it keeps a visible ceiling above the
-       measured size rather than tracking it. */
-    ["initial JavaScript", initialScriptBytes, 400_000],
+    /* T21 2026-08-15: replaces the "initial JavaScript" 400,000 ceiling, which
+       covered the two-entry build and went unmeasured per domain. Measured
+       shell closure 78,142 bytes → ceil(78142/25_000) = 4 → 100,000 * 1.15.
+       The ceiling is what catches a domain turning eager: a static import of
+       `src/battle/index.ts` from the shell moved the entry chunk from 2.62 kB
+       to 339.73 kB, which this line rejects. */
+    ["shell initial JavaScript", shellBytes, 115_000],
     ["Duel Worker JavaScript", sizes.get(workerFile) ?? 0, 200_000],
     ["active runtime closure", runtimeBytes, 22_000_000],
     ["active card images", imageBytes, 19_000_000],
-  ] as const;
+    ...domainReports.map(
+      ({ domain, bytes }) =>
+        [
+          `${domain} domain closure`,
+          bytes,
+          DOMAIN_BUDGET_BYTES[domain],
+        ] as const,
+    ),
+  ];
   const exceeded = budgets.find(([, actual, maximum]) => actual > maximum);
   if (exceeded !== undefined)
     throw new Error(
       `${exceeded[0]} exceeds its production budget: ${exceeded[1]} > ${exceeded[2]} bytes`,
     );
-}
-
-async function staticHtmlScriptClosure(
-  htmlName: string,
-  javaScriptFiles: readonly string[],
-): Promise<string[]> {
-  const html = await readFile(path.join(outputRoot, htmlName), "utf8");
-  const byName = new Map(
-    javaScriptFiles.map((file) => [path.basename(file), file] as const),
-  );
-  const pending = [
-    ...html.matchAll(/<script[^>]+src=["'][^"']*\/([^/"']+\.js)["']/g),
-  ]
-    .map((match) => byName.get(match[1]!))
-    .filter((file): file is string => file !== undefined);
-  const closure = new Set<string>();
-  while (pending.length > 0) {
-    const file = pending.pop()!;
-    if (closure.has(file)) continue;
-    closure.add(file);
-    const source = await readFile(file, "utf8");
-    for (const match of source.matchAll(
-      /(?:from\s*|import\s*)["']\.\/([^"']+\.js)["']/g,
-    )) {
-      const dependency = byName.get(match[1]!);
-      if (dependency !== undefined && !closure.has(dependency))
-        pending.push(dependency);
-    }
-  }
-  if (closure.size === 0)
-    throw new Error(`Browser build ${htmlName} has no module entry script`);
-  return [...closure];
+  return {
+    shell: shellBytes,
+    ...Object.fromEntries(
+      domainReports.map(({ domain, bytes }) => [domain, bytes]),
+    ),
+  };
 }
 
 async function totalFileBytes(root: string): Promise<number> {

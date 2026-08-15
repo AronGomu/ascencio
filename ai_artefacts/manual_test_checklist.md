@@ -996,3 +996,20 @@ Pure file move: the duel's source now lives under `src/battle/` (`app/`, `duel/`
       and confirm the deterministic field renders.
 - [ ] DevTools → Network on a fresh load of `#/`: the duel chunk is **not**
       downloaded until you open `#/duel`.
+
+## T21 restore-build-budgets
+
+Build-gate change only; nothing in the app moved. The whole check is one command.
+
+- [ ] `npm run build` finishes green and its last block prints the four
+      measurements, e.g. `"chunkBytes": { "shell": 78142, "battle": 405950,
+      "deck-editor": 101881, "story": 60195 }`. `npm run build:verify` alone
+      re-checks an existing `dist/` without rebuilding.
+- [ ] A breach fails the build with the offending budget named and both numbers
+      shown, e.g.
+      `Error: battle domain closure exceeds its production budget: 501234 > 488750 bytes`.
+      A domain chunk missing from the build fails the same way rather than
+      counting as zero: `Browser build did not emit the story domain chunk`.
+- [ ] The ceilings live in `scripts/lib/domain-chunk-closure.ts` (per domain)
+      and `scripts/verify-browser-build.ts` (shell). Raising one means
+      re-measuring from a clean build, not nudging the number until it passes.

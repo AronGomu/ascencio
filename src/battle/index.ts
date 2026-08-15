@@ -12,3 +12,9 @@ export type {
 } from "./battle-contracts.ts";
 export { parseBattleRequest, BattleRequestError } from "./battle-contracts.ts";
 export { settleOnce } from "./settle-once.ts";
+export type { SelectableDeck } from "./decks/selectable-decks.ts";
+export {
+  listSelectableDecks,
+  findSelectableDeck,
+  supportedDuelCardCodes,
+} from "./decks/selectable-decks.ts";

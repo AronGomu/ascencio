@@ -128,12 +128,12 @@ async function startDuelFromPicker(
 ): Promise<void> {
   await user.click(
     document.querySelector(
-      '[data-cy="deck-picker-option-player-burning-abyss"]',
+      '[data-cy="deck-picker-option-player-preset:burning-abyss"]',
     ) as HTMLButtonElement,
   );
   await user.click(
     document.querySelector(
-      '[data-cy="deck-picker-option-opponent-shaddoll"]',
+      '[data-cy="deck-picker-option-opponent-preset:shaddoll"]',
     ) as HTMLButtonElement,
   );
   await user.click(
@@ -276,12 +276,12 @@ describe("App", () => {
 
     await user.click(
       document.querySelector(
-        '[data-cy="deck-picker-option-player-burning-abyss"]',
+        '[data-cy="deck-picker-option-player-preset:burning-abyss"]',
       ) as HTMLButtonElement,
     );
     await user.click(
       document.querySelector(
-        '[data-cy="deck-picker-option-opponent-shaddoll"]',
+        '[data-cy="deck-picker-option-opponent-preset:shaddoll"]',
       ) as HTMLButtonElement,
     );
     await user.click(

@@ -5,7 +5,8 @@ import type { DuelPresentationEvent } from "../../duel/contracts/duel-presentati
 import type { DuelResult } from "../../duel/contracts/duel-result.ts";
 import type { PlayerPrompt } from "../../duel/contracts/player-prompt.ts";
 import type { PublicDuelState } from "../../duel/contracts/public-duel-state.ts";
-import type { DeckId } from "../../duel/presets/deck-catalog.ts";
+import { duelId, type DuelId } from "../../duel/contracts/ids.ts";
+import type { DuelDeckSelection } from "../../duel/contracts/duel-deck-selection.ts";
 import { duelPresetId } from "../../duel/presets/duel-preset.ts";
 import type {
   DuelClient,
@@ -103,7 +104,7 @@ export interface DuelViewState {
 
 export interface DuelStore extends Readable<DuelViewState> {
   initialize(): boolean;
-  start(playerDeckId: DeckId, opponentDeckId: DeckId): boolean;
+  start(player: DuelDeckSelection, opponent: DuelDeckSelection): boolean;
   respond(choiceIds: readonly ChoiceId[]): boolean;
   dispatchInteraction(action: InteractionSessionAction): boolean;
   armPlacementIntent(zoneId: PhysicalZoneId): boolean;
@@ -296,6 +297,22 @@ export function reduceDuelViewState(
   }
 }
 
+/* A bundled pair keeps the id the Worker derives for itself and checks the
+   command against. Any other pair has no id the Worker can verify, so this
+   one is only a label: it names the seats rather than the lists, because the
+   id reaches the Worker's logs and a deck the player built is theirs. It is
+   derived rather than random so two runs of the same choice read alike. */
+function duelIdForPair(
+  player: DuelDeckSelection,
+  opponent: DuelDeckSelection,
+): DuelId {
+  if (player.kind === "preset" && opponent.kind === "preset")
+    return duelPresetId(player.deckId, opponent.deckId);
+  const seat = (selection: DuelDeckSelection): string =>
+    selection.kind === "preset" ? selection.deckId : "local";
+  return duelId(`local-v1:${seat(player)}:vs:${seat(opponent)}`);
+}
+
 export function createDuelStore(client: DuelClient): DuelStore {
   let current = createInitialDuelViewState(client.context);
   const state = writable(current);
@@ -304,23 +321,23 @@ export function createDuelStore(client: DuelClient): DuelStore {
     state.set(next);
   };
   type DeckPair = Readonly<{
-    playerDeckId: DeckId;
-    opponentDeckId: DeckId;
+    player: DuelDeckSelection;
+    opponent: DuelDeckSelection;
   }>;
   let replacementOperation: Promise<boolean> | null = null;
   let lastStartedDecks: DeckPair | null = null;
   let pendingReplacementStart: DeckPair | null = null;
   const startCurrentDuel = (
-    playerDeckId: DeckId,
-    opponentDeckId: DeckId,
+    player: DuelDeckSelection,
+    opponent: DuelDeckSelection,
   ): boolean => {
     const context = client.startDuel(
-      duelPresetId(playerDeckId, opponentDeckId),
-      { kind: "preset", deckId: playerDeckId },
-      { kind: "preset", deckId: opponentDeckId },
+      duelIdForPair(player, opponent),
+      player,
+      opponent,
     );
     if (context === null) return false;
-    lastStartedDecks = Object.freeze({ playerDeckId, opponentDeckId });
+    lastStartedDecks = Object.freeze({ player, opponent });
     set(
       freezeState({
         ...createInitialDuelViewState(context),
@@ -417,8 +434,7 @@ export function createDuelStore(client: DuelClient): DuelStore {
     if (received.event.type === "ready") {
       const pair = pendingReplacementStart;
       pendingReplacementStart = null;
-      if (pair !== null)
-        startCurrentDuel(pair.playerDeckId, pair.opponentDeckId);
+      if (pair !== null) startCurrentDuel(pair.player, pair.opponent);
       return;
     }
     if (received.event.type !== "prompt") return;

@@ -1,5 +1,4 @@
 import { writable, type Readable } from "svelte/store";
-import type { DeckId } from "../../duel/presets/deck-catalog.ts";
 import {
   readPersistedUiState,
   writePersistedUiState,
@@ -9,7 +8,7 @@ import {
 } from "./persisted-ui-state.ts";
 
 export interface PersistedUiStore extends Readable<PersistedUiState> {
-  setDecks(player: DeckId, opponent: DeckId): void;
+  setDecks(playerKey: string, opponentKey: string): void;
   setDisplaySettings(settings: PersistedDisplaySettings): void;
   setWindowPosition(
     window: "zoneList" | "confirm",
@@ -36,11 +35,11 @@ export function createPersistedUiStore(
 
   return {
     subscribe,
-    setDecks(player: DeckId, opponent: DeckId): void {
+    setDecks(playerKey: string, opponentKey: string): void {
       persist((state) =>
         Object.freeze({
           ...state,
-          decks: Object.freeze({ player, opponent }),
+          decks: Object.freeze({ playerKey, opponentKey }),
         }),
       );
     },

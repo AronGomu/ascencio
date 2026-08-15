@@ -1,6 +1,7 @@
 <script lang="ts">
   import { afterUpdate, onMount, tick } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
+  import type { DuelDeckSelection } from "../duel/contracts/duel-deck-selection.ts";
   import type { DuelDiagnosticTrace } from "../duel/contracts/duel-diagnostics.ts";
   import type { PlayerPrompt } from "../duel/contracts/player-prompt.ts";
   import {
@@ -60,10 +61,24 @@
   } from "./presentation/card-preview.ts";
   import { duelRailStatusFor } from "./presentation/duel-rail-status.ts";
   import { promptSurface } from "./prompts/prompt-surface.ts";
-  import { DECK_CATALOG, type DeckId } from "../duel/presets/deck-catalog.ts";
+  import { DECK_CATALOG } from "../duel/presets/deck-catalog.ts";
+  import {
+    findSelectableDeck,
+    listSelectableDecks,
+    presetSelectableDecks,
+    supportedDuelCardCodes,
+    type SelectableDeck,
+  } from "../battle/decks/selectable-decks.ts";
+  import {
+    catalogByCode,
+    PROTOTYPE_RULESET,
+  } from "../decks/catalog/pinned-ruleset.ts";
+  import { PROTOTYPE_CATALOG } from "../decks/catalog/prototype-catalog.ts";
+  import { IndexedDbDeckRepository } from "../decks/indexeddb-deck-repository.ts";
   import {
     battleFacadeFailure,
     battleResultForDuelResult,
+    toDuelDeckSelection,
     type BattleFacadeResult,
   } from "../battle/battle-contracts.ts";
   import { createDuelStore, type DuelViewState } from "./stores/duel-store.ts";
@@ -100,6 +115,9 @@
     { id: "runtime-package", sha256: __RUNTIME_MANIFEST_SHA256__ },
     { id: "active-images", sha256: __ACTIVE_IMAGE_MANIFEST_SHA256__ },
   ];
+  /* The pinned catalog every local deck is validated against. Built once: it
+     is the same 24 cards for the life of the build. */
+  const DECK_BUILDER_CATALOG = catalogByCode(PROTOTYPE_CATALOG);
   const client = new DuelWorkerClient();
   const duel = createDuelStore(client);
   const persistedUi = createPersistedUiStore();
@@ -417,9 +435,11 @@
     duel.initialize();
     trackStorageOperation("initialize", initializeStorage());
     void loadImages();
+    void refreshSelectableDecks();
     return () => {
       disposed = true;
       appDisposed = true;
+      deckListingGeneration += 1;
       stopBattleCompletionReports();
       imageAbortController?.abort(
         new DOMException("Application disposed", "AbortError"),
@@ -666,8 +686,76 @@
       diagnosticMessage = "Diagnostics are unavailable for this session.";
   }
 
-  function selectDecks(player: DeckId, opponent: DeckId): void {
-    persistedUi.setDecks(player, opponent);
+  /* Seeded with the bundled decks so the picker is never briefly empty and
+     Start is never briefly dead: reading the local library is what takes a
+     moment, and it only ever adds rows. */
+  let selectableDecks: readonly SelectableDeck[] =
+    presetSelectableDecks(DECK_CATALOG);
+  let pickerFallbackNotice = false;
+  let pickerStartError: string | null = null;
+  /* Every refresh is racing the one before it — the picker reopens while a
+     mount-time listing is still reading IndexedDB — and only the newest may
+     write, or a deck deleted a second ago comes back on screen. */
+  let deckListingGeneration = 0;
+
+  async function refreshSelectableDecks(): Promise<void> {
+    const generation = (deckListingGeneration += 1);
+    const listed = await listDecksOrBundledOnly();
+    if (generation !== deckListingGeneration) return;
+    selectableDecks = listed;
+    reconcilePersistedDeckKeys();
+  }
+
+  /**
+   * Re-reads the local deck library and drops anything this build could not
+   * play. Nothing is repaired: a deck that misses the ruleset by one card is
+   * simply absent, and stays exactly as its owner saved it.
+   *
+   * A library that will not open, or will not read, is not an error here. The
+   * bundled decks are compiled into this build, so the picker still works; the
+   * player just does not see decks the browser would not hand over.
+   */
+  async function listDecksOrBundledOnly(): Promise<readonly SelectableDeck[]> {
+    let repository: IndexedDbDeckRepository | null = null;
+    try {
+      repository = await IndexedDbDeckRepository.open();
+      return await listSelectableDecks(
+        DECK_CATALOG,
+        repository,
+        DECK_BUILDER_CATALOG,
+        PROTOTYPE_RULESET,
+        supportedDuelCardCodes(),
+      );
+    } catch {
+      return presetSelectableDecks(DECK_CATALOG);
+    } finally {
+      repository?.close();
+    }
+  }
+
+  /* A persisted key names a deck and the revision it had. Deleting or editing
+     that deck makes the key unresolvable, and the honest answer is the pair
+     this build can always play plus one sentence saying why — not a selection
+     that looks intact until Start refuses it. */
+  function reconcilePersistedDeckKeys(): void {
+    if (selectableDecks.length === 0) return;
+    const { playerKey, opponentKey } = $persistedUi.decks;
+    if (
+      findSelectableDeck(selectableDecks, playerKey) !== null &&
+      findSelectableDeck(selectableDecks, opponentKey) !== null
+    )
+      return;
+    pickerFallbackNotice = true;
+    persistedUi.setDecks(
+      DEFAULT_PERSISTED_UI_STATE.decks.playerKey,
+      DEFAULT_PERSISTED_UI_STATE.decks.opponentKey,
+    );
+  }
+
+  function selectDecks(playerKey: string, opponentKey: string): void {
+    pickerFallbackNotice = false;
+    pickerStartError = null;
+    persistedUi.setDecks(playerKey, opponentKey);
   }
 
   function moveZoneListWindow(position: PersistedWindowPosition): void {
@@ -700,13 +788,53 @@
   }
 
   function startSelectedDuel(): void {
+    pickerFallbackNotice = false;
+    pickerStartError = null;
+    const player = findSelectableDeck(
+      selectableDecks,
+      $persistedUi.decks.playerKey,
+    );
+    const opponent = findSelectableDeck(
+      selectableDecks,
+      $persistedUi.decks.opponentKey,
+    );
+    /* Reachable when the library changed in another tab between the listing
+       and this click. Re-listing is what turns it back into a live choice. */
+    if (player === null || opponent === null) {
+      pickerStartError =
+        "A deck you chose is no longer available. Choose another deck.";
+      void refreshSelectableDecks();
+      return;
+    }
+    let seats: readonly [DuelDeckSelection, DuelDeckSelection];
+    /* Defensive, and expected to stay that way: the picker only offers decks
+       `resolveDeck` called ready, and the Worker's own deck rules are the ones
+       that ruleset enforces. If the two ever drift apart, the player gets the
+       broken rule by name here instead of a duel that dies on creation. */
+    try {
+      seats = [
+        toDuelDeckSelection(player.selection),
+        toDuelDeckSelection(opponent.selection),
+      ];
+    } catch (error) {
+      pickerStartError =
+        error instanceof Error
+          ? `That deck cannot be played: ${error.message}`
+          : "That deck cannot be played.";
+      return;
+    }
+    const [playerSeat, opponentSeat] = seats;
     pickerOpen = false;
-    duel.start($persistedUi.decks.player, $persistedUi.decks.opponent);
+    if (duel.start(playerSeat, opponentSeat)) return;
+    pickerOpen = true;
+    pickerStartError = "The duel could not be started. Try again.";
   }
 
   async function changeDecks(): Promise<void> {
     pickerOpen = true;
+    pickerStartError = null;
     await duel.reset();
+    await refreshSelectableDecks();
   }
 
   function previewFieldCard(card: BoardCardView): void {
@@ -970,9 +1098,11 @@
 
   {#if pickerOpen && $duel.status === "idle" && $duel.coreVersion !== null && !$duel.snapshot}
     <DeckPicker
-      decks={DECK_CATALOG}
-      playerDeckId={$persistedUi.decks.player}
-      opponentDeckId={$persistedUi.decks.opponent}
+      decks={selectableDecks}
+      playerKey={$persistedUi.decks.playerKey}
+      opponentKey={$persistedUi.decks.opponentKey}
+      fallbackNotice={pickerFallbackNotice}
+      startError={pickerStartError}
       onselect={selectDecks}
       onstart={startSelectedDuel}
     />

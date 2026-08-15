@@ -7,6 +7,15 @@ import {
   type Page,
   type TestInfo,
 } from "@playwright/test";
+import {
+  PROTOTYPE_RULESET,
+  quantityLimit,
+} from "../src/decks/catalog/pinned-ruleset.ts";
+import { PROTOTYPE_CATALOG } from "../src/decks/catalog/prototype-catalog.ts";
+import {
+  DECK_DATABASE_NAME,
+  LEGACY_DECK_DATABASE_NAME,
+} from "../src/decks/deck-database.ts";
 import { computeFieldGeometry } from "../src/field/duel-field-geometry.ts";
 import { duelFieldRenderFailureUrl } from "../tests/fixtures/duel-field-component-failure.ts";
 
@@ -53,6 +62,38 @@ interface CapturedStateEvent {
 interface CapturedPromptEvent {
   readonly type: "prompt";
   readonly prompt: { readonly id: string; readonly kind: string };
+}
+
+const LOCAL_DECK_NAME = "E2E Local Deck";
+
+/* Derived from the pinned catalog rather than written out, so a catalog change
+   cannot leave this deck quietly illegal and the scenario quietly vacuous. */
+const LOCAL_DECK_MAIN: readonly number[] = (() => {
+  const codes = PROTOTYPE_CATALOG.filter(
+    (card) =>
+      card.canonicalZone === "main" &&
+      quantityLimit(PROTOTYPE_RULESET, card.code) === 3,
+  ).map(({ code }) => code);
+  return Array.from({ length: 40 }, (_, index) => codes[index % codes.length]!);
+})();
+
+function ydkSource(main: readonly number[]): string {
+  return ["#main", ...main.map(String), "#extra", "!side", ""].join("\n");
+}
+
+async function deleteDeckDatabases(page: Page): Promise<void> {
+  await page.evaluate(
+    async (names: readonly string[]) => {
+      for (const name of names)
+        await new Promise<void>((resolve) => {
+          const request = indexedDB.deleteDatabase(name);
+          request.onsuccess = () => resolve();
+          request.onerror = () => resolve();
+          request.onblocked = () => resolve();
+        });
+    },
+    [DECK_DATABASE_NAME, LEGACY_DECK_DATABASE_NAME],
+  );
 }
 
 async function startPresetDuel(page: Page): Promise<void> {
@@ -403,16 +444,16 @@ test("deck picker persists a chosen pair and Change decks returns without auto-s
   ).toHaveLength(0);
 
   await page
-    .locator('[data-cy="deck-picker-option-player-burning-abyss"]')
+    .locator('[data-cy="deck-picker-option-player-preset:burning-abyss"]')
     .click();
   await page
-    .locator('[data-cy="deck-picker-option-opponent-shaddoll"]')
+    .locator('[data-cy="deck-picker-option-opponent-preset:shaddoll"]')
     .click();
   await expect(
-    page.locator('[data-cy="deck-picker-option-player-burning-abyss"]'),
+    page.locator('[data-cy="deck-picker-option-player-preset:burning-abyss"]'),
   ).toHaveAttribute("aria-pressed", "true");
   await expect(
-    page.locator('[data-cy="deck-picker-option-opponent-shaddoll"]'),
+    page.locator('[data-cy="deck-picker-option-opponent-preset:shaddoll"]'),
   ).toHaveAttribute("aria-pressed", "true");
   expect(
     await page.evaluate(() =>
@@ -421,7 +462,10 @@ test("deck picker persists a chosen pair and Change decks returns without auto-s
   ).toEqual({
     version: 2,
     windows: { zoneList: null, confirm: null },
-    decks: { player: "burning-abyss", opponent: "shaddoll" },
+    decks: {
+      playerKey: "preset:burning-abyss",
+      opponentKey: "preset:shaddoll",
+    },
     settings: { showZoneOutlines: true, showZoneCounts: true },
   });
   expect(
@@ -448,10 +492,10 @@ test("deck picker persists a chosen pair and Change decks returns without auto-s
   await page.reload();
   await expect(picker).toBeVisible({ timeout: 120_000 });
   await expect(
-    page.locator('[data-cy="deck-picker-option-player-burning-abyss"]'),
+    page.locator('[data-cy="deck-picker-option-player-preset:burning-abyss"]'),
   ).toHaveAttribute("aria-pressed", "true");
   await expect(
-    page.locator('[data-cy="deck-picker-option-opponent-shaddoll"]'),
+    page.locator('[data-cy="deck-picker-option-opponent-preset:shaddoll"]'),
   ).toHaveAttribute("aria-pressed", "true");
 
   await page.locator('[data-cy="deck-picker-start-button"]').click();
@@ -465,10 +509,10 @@ test("deck picker persists a chosen pair and Change decks returns without auto-s
   await page.locator('[data-cy="duel-result-change-decks-button"]').click();
   await expect(picker).toBeVisible({ timeout: 120_000 });
   await expect(
-    page.locator('[data-cy="deck-picker-option-player-burning-abyss"]'),
+    page.locator('[data-cy="deck-picker-option-player-preset:burning-abyss"]'),
   ).toHaveAttribute("aria-pressed", "true");
   await expect(
-    page.locator('[data-cy="deck-picker-option-opponent-shaddoll"]'),
+    page.locator('[data-cy="deck-picker-option-opponent-preset:shaddoll"]'),
   ).toHaveAttribute("aria-pressed", "true");
   await expect
     .poll(
@@ -478,6 +522,105 @@ test("deck picker persists a chosen pair and Change decks returns without auto-s
         ).length,
     )
     .toBe(1);
+});
+
+test("a ruleset-valid local deck stays hidden while its art is unpackaged", async ({
+  page,
+}) => {
+  await page.goto("./#/decks");
+  await deleteDeckDatabases(page);
+  await page.reload();
+
+  /* Imported through the library rather than seeded through `#/admin`: the
+     admin console's test deck is drawn from a bundled preset, so most of its
+     codes are outside the pinned catalog and `resolveDeck` calls it invalid
+     before art coverage is even consulted. This is the shortest path a player
+     could also walk to a deck the ruleset accepts. */
+  await page.locator('[data-cy="deck-library-import"]').click();
+  await page
+    .locator('[data-cy="deck-ydk-import-name-input"]')
+    .fill(LOCAL_DECK_NAME);
+  await page
+    .locator('[data-cy="deck-ydk-import-source-input"]')
+    .fill(ydkSource(LOCAL_DECK_MAIN));
+  await page.locator('[data-cy="deck-ydk-import-preview"]').click();
+  /* The editor's own catalog knows every one of these codes, which is what
+     makes this deck legal and the omission below a packaging fact rather than
+     a validation one. */
+  await expect(
+    page.locator('[data-cy="deck-ydk-import-unknown-codes"]'),
+  ).toHaveCount(0);
+  await page.locator('[data-cy="deck-ydk-import-commit"]').click();
+  await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
+    LOCAL_DECK_NAME,
+  );
+  await expect(page.getByText("Saved locally")).toBeVisible();
+
+  await page.goto("./#/duel");
+  await expect(page.locator('[data-cy="deck-picker"]')).toBeVisible({
+    timeout: 120_000,
+  });
+
+  /* This build packages art only for the six bundled decks, so no deck the
+     editor can assemble reaches 40 Main cards the duel could draw. The picker
+     omitting it silently is the contract: offering it would put the refusal
+     after the choice instead of before it. `local deck coverage tripwire` in
+     `tests/unit/battle/selectable-decks.test.ts` fails the day that changes,
+     and this scenario is what it points at. */
+  await expect(page.locator('[data-cy="deck-picker-group-local"]')).toHaveCount(
+    0,
+  );
+  await expect(
+    page.locator('[data-cy^="deck-picker-option-player-local:"]'),
+  ).toHaveCount(0);
+
+  await page.locator('[data-cy="deck-picker-start-button"]').click();
+  await expect(page.locator('[data-cy="duel-field"]')).toBeVisible({
+    timeout: 120_000,
+  });
+  const startCommands = (await readCapture(page)).commands.filter(
+    (command) => command.type === "startDuel",
+  );
+  expect(startCommands).toHaveLength(1);
+  expect(startCommands[0]?.player).toEqual({
+    kind: "preset",
+    deckId: "mvp-player",
+  });
+});
+
+test("a local deck the pinned ruleset refuses is never offered", async ({
+  page,
+}) => {
+  await page.goto("./#/decks");
+  await deleteDeckDatabases(page);
+  await page.reload();
+
+  await page.locator('[data-cy="deck-library-import"]').click();
+  await page
+    .locator('[data-cy="deck-ydk-import-name-input"]')
+    .fill("Thirty Nine");
+  await page
+    .locator('[data-cy="deck-ydk-import-source-input"]')
+    .fill(ydkSource(LOCAL_DECK_MAIN.slice(0, 39)));
+  await page.locator('[data-cy="deck-ydk-import-preview"]').click();
+  await page.locator('[data-cy="deck-ydk-import-commit"]').click();
+  await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
+    "Thirty Nine",
+  );
+
+  await page.goto("./#/duel");
+  await expect(page.locator('[data-cy="deck-picker"]')).toBeVisible({
+    timeout: 120_000,
+  });
+  await expect(
+    page.locator('[data-cy="deck-picker-group-preset"]'),
+  ).toBeVisible();
+  await expect(page.locator('[data-cy="deck-picker-group-local"]')).toHaveCount(
+    0,
+  );
+  await expect(
+    page.locator('[data-cy^="deck-picker-option-player-local:"]'),
+  ).toHaveCount(0);
 });
 
 test("panels stay hidden until settings enable them", async ({ page }) => {
@@ -531,7 +674,10 @@ test("zone visuals persist through reload and Reset settings restores defaults",
   ).toEqual({
     version: 2,
     windows: { zoneList: null, confirm: null },
-    decks: { player: "mvp-player", opponent: "mvp-opponent" },
+    decks: {
+      playerKey: "preset:mvp-player",
+      opponentKey: "preset:mvp-opponent",
+    },
     settings: { showZoneOutlines: false, showZoneCounts: false },
   });
 
@@ -563,7 +709,10 @@ test("zone visuals persist through reload and Reset settings restores defaults",
   ).toEqual({
     version: 2,
     windows: { zoneList: null, confirm: null },
-    decks: { player: "mvp-player", opponent: "mvp-opponent" },
+    decks: {
+      playerKey: "preset:mvp-player",
+      opponentKey: "preset:mvp-opponent",
+    },
     settings: { showZoneOutlines: true, showZoneCounts: true },
   });
   expect(
@@ -1423,7 +1572,10 @@ test("floating field windows stay inside the field, persist and never lose a dec
   ).toEqual({
     version: 2,
     windows: { zoneList: draggedList, confirm: draggedConfirm },
-    decks: { player: "mvp-player", opponent: "mvp-opponent" },
+    decks: {
+      playerKey: "preset:mvp-player",
+      opponentKey: "preset:mvp-opponent",
+    },
     settings: { showZoneOutlines: true, showZoneCounts: true },
   });
   expect(

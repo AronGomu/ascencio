@@ -18,7 +18,7 @@ function memoryStorage(seed: string | null = null) {
 const SEED = JSON.stringify({
   version: 2,
   windows: { zoneList: { x: 12, y: 34 }, confirm: { x: 56, y: 78 } },
-  decks: { player: "nekroz", opponent: "shaddoll" },
+  decks: { playerKey: "preset:nekroz", opponentKey: "preset:shaddoll" },
   settings: { showZoneOutlines: false, showZoneCounts: true },
 });
 
@@ -30,7 +30,7 @@ describe("persisted UI store", () => {
     expect(get(store)).toEqual({
       version: 2,
       windows: { zoneList: { x: 12, y: 34 }, confirm: { x: 56, y: 78 } },
-      decks: { player: "nekroz", opponent: "shaddoll" },
+      decks: { playerKey: "preset:nekroz", opponentKey: "preset:shaddoll" },
       settings: { showZoneOutlines: false, showZoneCounts: true },
     });
     expect(storage.setItem).not.toHaveBeenCalled();
@@ -40,8 +40,8 @@ describe("persisted UI store", () => {
     const store = createPersistedUiStore(null);
 
     expect(get(store).decks).toEqual({
-      player: "mvp-player",
-      opponent: "mvp-opponent",
+      playerKey: "preset:mvp-player",
+      opponentKey: "preset:mvp-opponent",
     });
     expect(get(store).windows).toEqual({ zoneList: null, confirm: null });
   });
@@ -50,11 +50,11 @@ describe("persisted UI store", () => {
     const storage = memoryStorage(SEED);
     const store = createPersistedUiStore(storage);
 
-    store.setDecks("shaddoll", "nekroz");
+    store.setDecks("preset:shaddoll", "local:built-deck:2");
 
     expect(get(store).decks).toEqual({
-      player: "shaddoll",
-      opponent: "nekroz",
+      playerKey: "preset:shaddoll",
+      opponentKey: "local:built-deck:2",
     });
     expect(get(store).windows).toEqual({
       zoneList: { x: 12, y: 34 },
@@ -75,8 +75,8 @@ describe("persisted UI store", () => {
       confirm: { x: 56, y: 78 },
     });
     expect(get(store).decks).toEqual({
-      player: "nekroz",
-      opponent: "shaddoll",
+      playerKey: "preset:nekroz",
+      opponentKey: "preset:shaddoll",
     });
     expect(storage.setItem).toHaveBeenCalledTimes(1);
     expect(storage.read()).toEqual(get(store));
@@ -91,8 +91,8 @@ describe("persisted UI store", () => {
       showZoneCounts: false,
     });
     expect(get(store).decks).toEqual({
-      player: "nekroz",
-      opponent: "shaddoll",
+      playerKey: "preset:nekroz",
+      opponentKey: "preset:shaddoll",
     });
     expect(get(store).windows.zoneList).toEqual({ x: 12, y: 34 });
     expect(storage.setItem).toHaveBeenCalledTimes(1);
@@ -131,7 +131,10 @@ describe("persisted UI store", () => {
     expect(storage.read()).toEqual({
       version: 2,
       windows: { zoneList: { x: 7, y: 8 }, confirm: null },
-      decks: { player: "mvp-player", opponent: "mvp-opponent" },
+      decks: {
+        playerKey: "preset:mvp-player",
+        opponentKey: "preset:mvp-opponent",
+      },
       settings: { showZoneOutlines: true, showZoneCounts: true },
     });
   });
@@ -146,13 +149,15 @@ describe("persisted UI store", () => {
       },
     });
 
-    expect(() => store.setDecks("nekroz", "shaddoll")).not.toThrow();
+    expect(() =>
+      store.setDecks("preset:nekroz", "preset:shaddoll"),
+    ).not.toThrow();
     expect(() =>
       store.setWindowPosition("zoneList", { x: 1, y: 1 }),
     ).not.toThrow();
     expect(get(store).decks).toEqual({
-      player: "nekroz",
-      opponent: "shaddoll",
+      playerKey: "preset:nekroz",
+      opponentKey: "preset:shaddoll",
     });
   });
 });

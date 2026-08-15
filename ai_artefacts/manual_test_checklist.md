@@ -887,3 +887,52 @@ in the packaged snapshot, run `npm run dev`, open `#/duel`, and press Start:
 
 ### Hidden information
 - [ ] With a duel running, nothing in the DevTools console, network tab, or Worker message log shows the opponent's deck list — only counts (deck size, extra-deck size) and cards the opponent has actually revealed on the field.
+
+## T18 deck-picker-local-decks
+
+The pre-duel picker now offers bundled decks **plus every local deck this build
+can actually play**, and starting a local deck dispatches its card list to the
+Worker instead of a preset id.
+
+Read this before running the checks: **on this build no local deck can qualify,
+and that is the correct behaviour, not a bug.** The packaged art manifest is
+built from the six bundled `.ydk` decks only (120 codes), while the deck editor
+builds from a 24-card pinned catalog. Exactly 8 cards are in both, and the
+ruleset's copy limits cap those 8 at 21 cards — below the 40-card Main minimum.
+So a deck you build in `#/decks` is legal but undrawable, and the picker hides
+it rather than offering a deck the Worker would refuse after you chose it.
+Widening art coverage was explicitly out of scope for this slice. The unit test
+`local deck coverage tripwire` fails the day that changes.
+
+### `#/duel` Bundled flow unchanged
+- [ ] Open `#/duel`. The picker appears with a **Bundled decks** group holding all six decks in both columns, and no empty "Your decks" heading anywhere.
+- [ ] The picker is never briefly empty and Start is never briefly disabled while the page settles.
+- [ ] Pick a pair, press Start — the duel initializes and reaches the first prompt exactly as before.
+- [ ] Reload with a pair already chosen — the same pair is still selected.
+- [ ] Surrender, then Change decks — the picker returns with the same pair selected and does not auto-start.
+
+### Build a deck and duel with it
+- [ ] Go to `#/decks`, create or import a deck, and fill the Main Deck to 40 legal cards so the editor reports no errors.
+- [ ] Go to `#/duel`. **Expected on this build:** the deck is *not* offered — only the Bundled decks group renders. No error, no warning, no disabled row.
+- [ ] Press Start anyway — the bundled pair duels normally.
+- [ ] (Only once art coverage is widened) The deck appears under **Your decks**, can be picked for either or both seats, and Start runs a duel whose opening hand is drawn from those cards.
+
+### A deck the ruleset refuses is never offered
+- [ ] In `#/decks`, build a deck with only 39 Main cards (or 4 copies of one card).
+- [ ] Go to `#/duel` — the deck is absent from the picker. It is not shown greyed out, and there is no message about it.
+- [ ] Return to `#/decks` — the deck is exactly as you left it. Nothing was renamed, repaired, re-saved, or deleted to make it playable.
+
+### No local decks at all
+- [ ] Open `#/admin`, click **Reset Deck library** and confirm, so no local deck exists.
+- [ ] Go to `#/duel` — only the Bundled decks group renders. There is no "Your decks" heading, no empty list, and Start still works.
+
+### A chosen deck that disappears
+- [ ] With a local deck selected in the picker (requires art coverage; otherwise seed the same effect by editing `ygo.ui.v2` in localStorage and setting `decks.playerKey` to `local:no-such-deck:1`), reload `#/duel`.
+- [ ] The picker falls back to the default bundled pair, and a single notice explains that a deck you had chosen is no longer available.
+- [ ] The notice appears **once** — clicking any deck clears it, and it does not come back on the next click.
+- [ ] Start then runs the bundled pair normally.
+
+### Persistence shape
+- [ ] After choosing a pair, `localStorage["ygo.ui.v2"]` holds `decks: { playerKey: "preset:…", opponentKey: "preset:…" }` — keys, not bare deck ids, and never a copy of any card list.
+- [ ] A payload written by an older build (`decks: { player: "nekroz", opponent: "shaddoll" }`) still loads with that pair selected.
+- [ ] Display settings survive: toggle zone outlines off in `#/duel`, reload, and confirm they are still off (the payload version stays `2` precisely so the shell's settings migration keeps working).

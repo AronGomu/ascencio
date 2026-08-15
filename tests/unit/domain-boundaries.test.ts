@@ -184,14 +184,18 @@ describe("public domain APIs are frozen", () => {
       values: [
         "BattleFacade",
         "BattleRequestError",
+        "findSelectableDeck",
+        "listSelectableDecks",
         "parseBattleRequest",
         "settleOnce",
+        "supportedDuelCardCodes",
       ],
       types: [
         "BattleDeckSelection",
         "BattleFacadeResult",
         "BattleOutcome",
         "BattleRequest",
+        "SelectableDeck",
       ],
     },
     {

@@ -1,8 +1,6 @@
 import {
   DEFAULT_OPPONENT_DECK_ID,
   DEFAULT_PLAYER_DECK_ID,
-  isDeckId,
-  type DeckId,
 } from "../../duel/presets/deck-catalog.ts";
 
 export const PERSISTED_UI_STATE_KEY = "ygo.ui.v2";
@@ -23,9 +21,14 @@ export interface PersistedUiState {
     readonly zoneList: PersistedWindowPosition | null;
     readonly confirm: PersistedWindowPosition | null;
   };
+  /* Selectable-deck keys rather than bundled deck ids, so a seat can name a
+     deck the player built. A key records which deck and which revision, never
+     a copy of its cards: the deck itself is re-read and re-validated on every
+     load, and a deck edited since the last duel resolves to a new key rather
+     than silently playing a list nobody assembled. */
   readonly decks: {
-    readonly player: DeckId;
-    readonly opponent: DeckId;
+    readonly playerKey: string;
+    readonly opponentKey: string;
   };
   readonly settings: PersistedDisplaySettings;
 }
@@ -34,8 +37,8 @@ export const DEFAULT_PERSISTED_UI_STATE: PersistedUiState = Object.freeze({
   version: 2,
   windows: Object.freeze({ zoneList: null, confirm: null }),
   decks: Object.freeze({
-    player: DEFAULT_PLAYER_DECK_ID,
-    opponent: DEFAULT_OPPONENT_DECK_ID,
+    playerKey: `preset:${DEFAULT_PLAYER_DECK_ID}`,
+    opponentKey: `preset:${DEFAULT_OPPONENT_DECK_ID}`,
   }),
   settings: Object.freeze({ showZoneOutlines: true, showZoneCounts: true }),
 });
@@ -60,14 +63,16 @@ export function readPersistedUiState(
         confirm: windowPosition(windows.confirm),
       }),
       decks: Object.freeze({
-        player:
-          typeof decks.player === "string" && isDeckId(decks.player)
-            ? decks.player
-            : DEFAULT_PLAYER_DECK_ID,
-        opponent:
-          typeof decks.opponent === "string" && isDeckId(decks.opponent)
-            ? decks.opponent
-            : DEFAULT_OPPONENT_DECK_ID,
+        playerKey: deckKey(
+          decks.playerKey,
+          decks.player,
+          DEFAULT_PERSISTED_UI_STATE.decks.playerKey,
+        ),
+        opponentKey: deckKey(
+          decks.opponentKey,
+          decks.opponent,
+          DEFAULT_PERSISTED_UI_STATE.decks.opponentKey,
+        ),
       }),
       settings: Object.freeze({
         showZoneOutlines:
@@ -95,6 +100,20 @@ export function writePersistedUiState(
   } catch {
     // Persistence is best-effort; unavailable storage never blocks play.
   }
+}
+
+/* The payload version stays 2 while the deck leaf gains keys: the shell's v3
+   settings migrate from this same record and only read `settings`, so bumping
+   the version here would make an existing player's display choices look like
+   an unknown payload and drop them. A bundled id written by an earlier build
+   is read as the preset key it always meant; the id is not validated against
+   the catalog, because an unknown key is caught where it matters — the picker
+   drops back to the default pair and says so. */
+function deckKey(key: unknown, legacyId: unknown, fallback: string): string {
+  if (typeof key === "string" && key.length > 0) return key;
+  if (typeof legacyId === "string" && legacyId.length > 0)
+    return `preset:${legacyId}`;
+  return fallback;
 }
 
 function defaultStorage(): Storage | null {

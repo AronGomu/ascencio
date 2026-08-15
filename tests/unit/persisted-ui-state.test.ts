@@ -14,7 +14,7 @@ function validState(): PersistedUiState {
       zoneList: { x: 12, y: 34 },
       confirm: { x: 56, y: 78 },
     },
-    decks: { player: "nekroz", opponent: "shaddoll" },
+    decks: { playerKey: "preset:nekroz", opponentKey: "local:built-deck:3" },
     settings: { showZoneOutlines: false, showZoneCounts: true },
   };
 }
@@ -39,7 +39,7 @@ describe("persisted UI state", () => {
   it("returns defaults for a wrong version", () => {
     expect(
       readPersistedUiState({
-        getItem: () => JSON.stringify({ ...validState(), version: 3 }),
+        getItem: () => JSON.stringify({ ...validState(), version: 4 }),
       }),
     ).toEqual(DEFAULT_PERSISTED_UI_STATE);
   });
@@ -66,14 +66,45 @@ describe("persisted UI state", () => {
     });
   });
 
-  it("falls back per field for an unknown deck id", () => {
+  it("reads a bundled pair written by an earlier build as preset keys", () => {
     const persisted = {
       ...validState(),
-      decks: { player: "not-a-deck", opponent: "nekroz" },
+      decks: { player: "burning-abyss", opponent: "nekroz" },
     };
     expect(
       readPersistedUiState({ getItem: () => JSON.stringify(persisted) }).decks,
-    ).toEqual({ player: "mvp-player", opponent: "nekroz" });
+    ).toEqual({
+      playerKey: "preset:burning-abyss",
+      opponentKey: "preset:nekroz",
+    });
+  });
+
+  it("falls back per field for a missing deck key", () => {
+    const persisted = {
+      ...validState(),
+      decks: { opponentKey: "local:built-deck:3" },
+    };
+    expect(
+      readPersistedUiState({ getItem: () => JSON.stringify(persisted) }).decks,
+    ).toEqual({
+      playerKey: "preset:mvp-player",
+      opponentKey: "local:built-deck:3",
+    });
+  });
+
+  /* An unknown key is kept, not repaired: only the picker knows which decks
+     resolve today, and it is the surface that explains the fallback. */
+  it("keeps a deck key it cannot interpret", () => {
+    const persisted = {
+      ...validState(),
+      decks: { playerKey: "local:deleted-deck:9", opponentKey: "preset:x" },
+    };
+    expect(
+      readPersistedUiState({ getItem: () => JSON.stringify(persisted) }).decks,
+    ).toEqual({
+      playerKey: "local:deleted-deck:9",
+      opponentKey: "preset:x",
+    });
   });
 
   it("drops a window position with a non-finite coordinate", () => {

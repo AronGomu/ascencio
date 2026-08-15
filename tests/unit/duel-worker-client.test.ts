@@ -13,6 +13,12 @@ import {
 } from "../../src/app/DuelWorkerClient.ts";
 import { createDuelStore } from "../../src/app/stores/duel-store.ts";
 import type { InteractionKey } from "../../src/app/prompts/interaction-spec.ts";
+import type { DuelDeckSelection } from "../../src/duel/contracts/duel-deck-selection.ts";
+import type { DeckId } from "../../src/duel/presets/deck-catalog.ts";
+
+function preset(id: DeckId): DuelDeckSelection {
+  return { kind: "preset", deckId: id };
+}
 
 class FakeWorkerPort implements DuelWorkerPort {
   onmessage: ((event: MessageEvent<unknown>) => void) | null = null;
@@ -152,7 +158,9 @@ describe("DuelWorkerClient", () => {
     });
     client.initialize();
     worker.emit({ type: "ready", coreVersion: [11, 0] });
-    expect(store.start("mvp-player", "mvp-opponent")).toBe(true);
+    expect(store.start(preset("mvp-player"), preset("mvp-opponent"))).toBe(
+      true,
+    );
     worker.emit(promptEvent);
     if (key === null) throw new Error("Expected active interaction key");
 

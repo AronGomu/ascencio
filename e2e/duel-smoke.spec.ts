@@ -440,8 +440,8 @@ test("deck picker persists a chosen pair and Change decks returns without auto-s
     {
       type: "startDuel",
       duelId: "bundled-v1:burning-abyss:vs:shaddoll",
-      playerDeckId: "burning-abyss",
-      opponentDeckId: "shaddoll",
+      player: { kind: "preset", deckId: "burning-abyss" },
+      opponent: { kind: "preset", deckId: "shaddoll" },
     },
   ]);
 

@@ -8,6 +8,7 @@ import {
   duelOperationError,
   type DuelError,
 } from "../duel/contracts/duel-error.ts";
+import type { DuelDeckSelection } from "../duel/contracts/duel-deck-selection.ts";
 import type { DuelWorkerEvent } from "../duel/contracts/duel-worker-event.ts";
 import type { SnapshotId } from "../duel/contracts/ids.ts";
 import type { DeckId } from "../duel/presets/deck-catalog.ts";
@@ -19,6 +20,7 @@ import {
   type DuelTrace,
   type DuelTraceEntry,
 } from "./diagnostics/duel-trace.ts";
+import { resolveDuelDecks } from "./decks/resolve-duel-decks.ts";
 import { DuelSession } from "./engine/DuelSession.ts";
 import { createProductionSeed } from "./engine/duel-seed.ts";
 import type { OcgCoreAdapter } from "./engine/OcgCoreAdapter.ts";
@@ -224,8 +226,8 @@ export class DuelWorkerRuntime {
         case "startDuel":
           this.#startDuel(
             command.duelId,
-            command.playerDeckId,
-            command.opponentDeckId,
+            command.player,
+            command.opponent,
             events,
           );
           break;
@@ -323,8 +325,8 @@ export class DuelWorkerRuntime {
 
   #startDuel(
     duelId: string,
-    playerDeckId: DeckId,
-    opponentDeckId: DeckId,
+    player: DuelDeckSelection,
+    opponent: DuelDeckSelection,
     events: DuelWorkerEvent[],
   ): void {
     const resources = this.#requireResources();
@@ -334,22 +336,28 @@ export class DuelWorkerRuntime {
         "A duel session is already active",
       );
     }
-    const preset = resources.createPreset(playerDeckId, opponentDeckId);
-    if (duelId !== preset.id) {
+    /* Resolution and card support are settled before any core session exists,
+       so a refused deck leaves the runtime exactly as it found it. */
+    const decks = resolveDuelDecks(player, opponent, resources);
+    /* Only a preset pair has an id the Worker can derive and check. A duel
+       built from an explicit list carries whatever id its caller chose, and
+       there is nothing on this side to compare it against. */
+    if (decks.presetId !== null && duelId !== decks.presetId) {
       throw duelOperationError(
         "invalid_command",
         `Unknown preset duel: ${duelId}`,
       );
     }
+    const traceId = decks.presetId ?? duelId;
     /* One immutable rules/layout decision per selected pair: the engine mode
        and the visible geometry can never disagree about Extra Monster Zones. */
     const profile = selectedDeckPairRulesProfile(
-      preset.player,
-      preset.opponent,
+      decks.player,
+      decks.opponent,
       resources.dependencies.cards,
     );
     const seed = createProductionSeed();
-    const trace = new BoundedDuelTrace(preset.id, resources.snapshotId, seed);
+    const trace = new BoundedDuelTrace(traceId, resources.snapshotId, seed);
     trace.record({ kind: "lifecycle", detail: "session creation started" });
     this.#lastTrace = trace.snapshot();
     let session: DuelSession;
@@ -357,8 +365,8 @@ export class DuelWorkerRuntime {
       session = DuelSession.create({
         adapter: resources.adapter,
         dependencies: resources.dependencies,
-        playerDeck: preset.player,
-        opponentDeck: preset.opponent,
+        playerDeck: decks.player,
+        opponentDeck: decks.opponent,
         configuration: { mode: "production", rules: profile.rules, seed },
         onEngineDiagnostic: ({ type, message, error }) => {
           trace.record({
@@ -406,11 +414,11 @@ export class DuelWorkerRuntime {
         session,
         dependencies: resources.dependencies,
         snapshotId: resources.snapshotId,
-        presetId: preset.id,
-        deckCounts: [preset.player.main.length, preset.opponent.main.length],
+        presetId: traceId,
+        deckCounts: [decks.player.main.length, decks.opponent.main.length],
         extraDeckCounts: [
-          preset.player.extra.length,
-          preset.opponent.extra.length,
+          decks.player.extra.length,
+          decks.opponent.extra.length,
         ],
         extraMonsterZones: profile.extraMonsterZones,
         promptIdNamespace: `${this.#runtimeId}-duel-${++this.#nextDuelSequence}`,

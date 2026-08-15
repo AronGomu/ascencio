@@ -849,3 +849,41 @@ Unchanged: desktop (1440x900 and 1920x1080)
 ### Cross-domain coherence check
 - [ ] Navigating `#/ → #/story → #/decks → #/duel → #/admin` feels like one product — consistent dark palette, button style, focus ring, typography throughout.
 - [ ] No jarring colour shifts between domain transitions.
+
+## T17 worker-card-list-start-contract
+
+The Worker now starts a duel from an explicit validated card list as well as
+from a bundled preset. No UI produces a card list yet (the deck picker is a
+later slice), so the checks below are: the preset path must be indistinguishable
+from before, and a forged illegal list must fail visibly instead of starting a
+broken duel.
+
+### `#/duel` Preset duel unchanged
+- [ ] Pick any deck pair in the picker and press Start — the duel initializes and the first prompt appears exactly as before.
+- [ ] Play a few prompts, then Restart — the duel restarts and reaches a first prompt again.
+- [ ] Surrender — the duel ends with the usual surrender result, no error banner.
+- [ ] Reload the page with a pair already chosen — the duel auto-starts as before.
+
+### Invalid card list fails visibly
+No UI can build a card list yet, and the app exposes no console handle on the
+duel Worker, so this check needs one temporary edit. In
+`src/app/stores/duel-store.ts`, inside `startCurrentDuel`, replace the player
+argument passed to `client.startDuel` with a forged list whose last code is not
+in the packaged snapshot, run `npm run dev`, open `#/duel`, and press Start:
+
+```ts
+// TEMPORARY — revert after this check
+{
+  kind: "cards",
+  main: [...Array.from({ length: 39 }, (_, i) => 46986414 + (i % 3)), 909090],
+  extra: [],
+  side: [],
+}
+```
+- [ ] The duel does **not** start: no field appears and no prompt arrives.
+- [ ] A visible error is shown (not a silent no-op, not a blank screen, not a stuck loading state).
+- [ ] The error text names the offending code `909090` and says the card is outside the active snapshot.
+- [ ] After the refusal, revert the edit, reload, choose a normal preset pair and press Start — it still works, and the Worker was not left wedged.
+
+### Hidden information
+- [ ] With a duel running, nothing in the DevTools console, network tab, or Worker message log shows the opponent's deck list — only counts (deck size, extra-deck size) and cards the opponent has actually revealed on the field.

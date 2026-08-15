@@ -220,7 +220,11 @@ describe("duel view-state reducer", () => {
 
     expect(store.start("nekroz", "spellbook")).toBe(true);
     expect(client.startCalls).toEqual([
-      ["bundled-v1:nekroz:vs:spellbook", "nekroz", "spellbook"],
+      [
+        "bundled-v1:nekroz:vs:spellbook",
+        { kind: "preset", deckId: "nekroz" },
+        { kind: "preset", deckId: "spellbook" },
+      ],
     ]);
   });
 
@@ -234,8 +238,16 @@ describe("duel view-state reducer", () => {
 
     client.emit({ type: "ready", coreVersion: [11, 0] });
     expect(client.startCalls).toEqual([
-      ["bundled-v1:nekroz:vs:spellbook", "nekroz", "spellbook"],
-      ["bundled-v1:nekroz:vs:spellbook", "nekroz", "spellbook"],
+      [
+        "bundled-v1:nekroz:vs:spellbook",
+        { kind: "preset", deckId: "nekroz" },
+        { kind: "preset", deckId: "spellbook" },
+      ],
+      [
+        "bundled-v1:nekroz:vs:spellbook",
+        { kind: "preset", deckId: "nekroz" },
+        { kind: "preset", deckId: "spellbook" },
+      ],
     ]);
   });
 

@@ -316,8 +316,8 @@ export function createDuelStore(client: DuelClient): DuelStore {
   ): boolean => {
     const context = client.startDuel(
       duelPresetId(playerDeckId, opponentDeckId),
-      playerDeckId,
-      opponentDeckId,
+      { kind: "preset", deckId: playerDeckId },
+      { kind: "preset", deckId: opponentDeckId },
     );
     if (context === null) return false;
     lastStartedDecks = Object.freeze({ playerDeckId, opponentDeckId });

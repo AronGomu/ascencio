@@ -2,13 +2,13 @@ import {
   parseDuelCommand,
   type DuelCommand,
 } from "../duel/contracts/duel-command.ts";
+import type { DuelDeckSelection } from "../duel/contracts/duel-deck-selection.ts";
 import type { NonRecoverableDuelErrorCode } from "../duel/contracts/duel-error.ts";
 import {
   parseDuelWorkerEvent,
   type DuelWorkerEvent,
 } from "../duel/contracts/duel-worker-event.ts";
 import type { ChoiceId, DuelId, PromptId } from "../duel/contracts/ids.ts";
-import type { DeckId } from "../duel/presets/deck-catalog.ts";
 
 const DEFAULT_DISPOSAL_TIMEOUT_MS = 1_000;
 const DEFAULT_INITIALIZATION_TIMEOUT_MS = 120_000;
@@ -65,8 +65,8 @@ export interface DuelClient {
   initialize(): boolean;
   startDuel(
     duelId: DuelId,
-    playerDeckId: DeckId,
-    opponentDeckId: DeckId,
+    player: DuelDeckSelection,
+    opponent: DuelDeckSelection,
   ): DuelClientContext | null;
   respond(promptId: PromptId, choiceIds: readonly ChoiceId[]): boolean;
   surrender(): boolean;
@@ -167,8 +167,8 @@ export class DuelWorkerClient implements DuelClient {
 
   startDuel(
     duelId: DuelId,
-    playerDeckId: DeckId,
-    opponentDeckId: DeckId,
+    player: DuelDeckSelection,
+    opponent: DuelDeckSelection,
   ): DuelClientContext | null {
     if (
       this.#closed ||
@@ -189,8 +189,8 @@ export class DuelWorkerClient implements DuelClient {
       !this.#post({
         type: "startDuel",
         duelId,
-        playerDeckId,
-        opponentDeckId,
+        player,
+        opponent,
       })
     ) {
       this.#active = false;

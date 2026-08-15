@@ -47,8 +47,8 @@ describe("typed duel Worker runtime", () => {
       const started = await runtime.handle({
         type: "startDuel",
         duelId: duelId(preset.id),
-        playerDeckId: "mvp-player",
-        opponentDeckId: "mvp-opponent",
+        player: { kind: "preset", deckId: "mvp-player" },
+        opponent: { kind: "preset", deckId: "mvp-opponent" },
       });
       expect(
         started.flatMap((event) =>
@@ -164,8 +164,8 @@ describe("typed duel Worker runtime", () => {
       const unknown = await runtime.handle({
         type: "startDuel",
         duelId: duelId("unknown"),
-        playerDeckId: "mvp-player",
-        opponentDeckId: "mvp-opponent",
+        player: { kind: "preset", deckId: "mvp-player" },
+        opponent: { kind: "preset", deckId: "mvp-opponent" },
       });
       expect(unknown).toEqual([
         expect.objectContaining({
@@ -177,8 +177,8 @@ describe("typed duel Worker runtime", () => {
       const started = await runtime.handle({
         type: "startDuel",
         duelId: duelId("bundled-v1:mvp-player:vs:mvp-opponent"),
-        playerDeckId: "mvp-player",
-        opponentDeckId: "mvp-opponent",
+        player: { kind: "preset", deckId: "mvp-player" },
+        opponent: { kind: "preset", deckId: "mvp-opponent" },
       });
       expect(started.some((event) => event.type === "state")).toBe(true);
       /* Every bundled pair is Link-free, so the worker's own profile decision
@@ -216,8 +216,8 @@ describe("typed duel Worker runtime", () => {
       const restarted = await runtime.handle({
         type: "startDuel",
         duelId: duelId("bundled-v1:mvp-player:vs:mvp-opponent"),
-        playerDeckId: "mvp-player",
-        opponentDeckId: "mvp-opponent",
+        player: { kind: "preset", deckId: "mvp-player" },
+        opponent: { kind: "preset", deckId: "mvp-opponent" },
       });
       const restartedPrompt = restarted.find(
         (event) => event.type === "prompt",
@@ -254,8 +254,8 @@ describe("typed duel Worker runtime", () => {
       const otherPair = await runtime.handle({
         type: "startDuel",
         duelId: duelId("bundled-v1:shaddoll:vs:nekroz"),
-        playerDeckId: "shaddoll",
-        opponentDeckId: "nekroz",
+        player: { kind: "preset", deckId: "shaddoll" },
+        opponent: { kind: "preset", deckId: "nekroz" },
       });
       expect(
         otherPair.flatMap((event) =>
@@ -272,8 +272,8 @@ describe("typed duel Worker runtime", () => {
         const replacementStarted = await replacementRuntime.handle({
           type: "startDuel",
           duelId: duelId("bundled-v1:mvp-player:vs:mvp-opponent"),
-          playerDeckId: "mvp-player",
-          opponentDeckId: "mvp-opponent",
+          player: { kind: "preset", deckId: "mvp-player" },
+          opponent: { kind: "preset", deckId: "mvp-opponent" },
         });
         const replacementPrompt = replacementStarted.find(
           (event) => event.type === "prompt",

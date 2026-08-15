@@ -270,7 +270,7 @@ describe("App", () => {
     expect(workerClientSpies.startDuel).not.toHaveBeenCalled();
   });
 
-  it("starting from the picker passes pair-derived preset id and both deck ids", async () => {
+  it("starting from the picker passes pair-derived preset id and both preset selections", async () => {
     const user = userEvent.setup();
     await renderReadyApp();
 
@@ -293,8 +293,8 @@ describe("App", () => {
     expect(workerClientSpies.startDuel).toHaveBeenCalledOnce();
     expect(workerClientSpies.startDuel).toHaveBeenCalledWith(
       "bundled-v1:burning-abyss:vs:shaddoll",
-      "burning-abyss",
-      "shaddoll",
+      { kind: "preset", deckId: "burning-abyss" },
+      { kind: "preset", deckId: "shaddoll" },
     );
   });
 

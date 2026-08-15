@@ -4,7 +4,9 @@ import {
   battleResultForDuelResult,
   BattleRequestError,
   parseBattleRequest,
+  toDuelDeckSelection,
 } from "../../src/battle/battle-contracts.ts";
+import { DuelCommandValidationError } from "../../src/duel/contracts/duel-command.ts";
 
 const LOCAL_DECK = {
   ref: { type: "local", deckId: "starter", revision: 3 },
@@ -197,5 +199,57 @@ describe("battleResultForDuelResult", () => {
       ),
     ).toBe(true);
     expect(Object.isFrozen(battleFacadeFailure("boom"))).toBe(true);
+  });
+});
+
+describe("toDuelDeckSelection", () => {
+  const MAIN_40 = Array.from({ length: 40 }, (_, index) => 1_000 + index);
+
+  function snapshot(overrides: Record<string, unknown> = {}) {
+    return parseBattleRequest({
+      player: {
+        kind: "local",
+        deck: {
+          ...LOCAL_DECK,
+          main: MAIN_40,
+          extra: [],
+          side: [],
+          ...overrides,
+        },
+      },
+      opponent: { kind: "preset", deckId: "shaddoll" },
+    }).player;
+  }
+
+  it("passes a preset through unchanged", () => {
+    expect(
+      toDuelDeckSelection({ kind: "preset", deckId: "burning-abyss" }),
+    ).toEqual({ kind: "preset", deckId: "burning-abyss" });
+  });
+
+  it("turns a deck the player built into an explicit card list", () => {
+    const selection = toDuelDeckSelection(snapshot());
+    expect(selection).toEqual({
+      kind: "cards",
+      main: MAIN_40,
+      extra: [],
+      side: [],
+    });
+    expect(Object.isFrozen(selection)).toBe(true);
+  });
+
+  /* The battle request's own bounds are looser than the duel's on purpose: a
+     stored deck can be legal to hold and still illegal to duel with. */
+  it("refuses a stored deck that is too small to duel with", () => {
+    expect(() =>
+      toDuelDeckSelection(snapshot({ main: MAIN_40.slice(1) })),
+    ).toThrow(DuelCommandValidationError);
+  });
+
+  it("refuses a stored deck holding a fourth copy", () => {
+    const main = [...MAIN_40.slice(0, 37), 7_777, 7_777, 7_777];
+    expect(() =>
+      toDuelDeckSelection(snapshot({ main, extra: [7_777] })),
+    ).toThrow(DuelCommandValidationError);
   });
 });

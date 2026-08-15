@@ -1,5 +1,8 @@
 import { describe, expect, it, onTestFinished } from "vitest";
+import { parseDuelDeckSelection } from "../../src/duel/contracts/duel-deck-selection.ts";
 import { duelId } from "../../src/duel/contracts/ids.ts";
+import { loadDeckSources } from "../../src/duel/presets/deck-sources-node.ts";
+import { createDuelPreset } from "../../src/duel/presets/duel-preset.ts";
 import {
   hasWorkerEventType,
   NodeDuelWorkerHarness,
@@ -30,8 +33,8 @@ describe("real Node duel Worker thread", () => {
     harness.post({
       type: "startDuel",
       duelId: duelId("bundled-v1:mvp-player:vs:mvp-opponent"),
-      playerDeckId: "mvp-player",
-      opponentDeckId: "mvp-opponent",
+      player: { kind: "preset", deckId: "mvp-player" },
+      opponent: { kind: "preset", deckId: "mvp-opponent" },
     });
     await expect(
       harness.waitForMessage(hasWorkerEventType("state"), {
@@ -66,8 +69,8 @@ describe("real Node duel Worker thread", () => {
     harness.post({
       type: "startDuel",
       duelId: duelId("bundled-v1:mvp-player:vs:mvp-opponent"),
-      playerDeckId: "mvp-player",
-      opponentDeckId: "mvp-opponent",
+      player: { kind: "preset", deckId: "mvp-player" },
+      opponent: { kind: "preset", deckId: "mvp-opponent" },
     });
     await harness.waitForMessage(hasWorkerEventType("prompt"), {
       afterSequence: restartCursor,
@@ -98,6 +101,68 @@ describe("real Node duel Worker thread", () => {
       }),
     );
     expect(JSON.stringify(failure)).not.toContain("missing-runtime-root");
+    await expect(harness.disposeGracefully()).resolves.toBe(0);
+  });
+
+  it("starts from a card list posted across the real Worker boundary", async () => {
+    const harness = new NodeDuelWorkerHarness();
+    onTestFinished(async () => {
+      await harness.terminate();
+    });
+
+    const initializeCursor = harness.cursor;
+    harness.post({ type: "initialize" });
+    await harness.waitForMessage(hasWorkerEventType("ready"), {
+      afterSequence: initializeCursor,
+    });
+
+    /* The parser's own output is what a caller would post, so this is the
+       empirical check that a frozen plain object of frozen arrays survives
+       `postMessage` intact — a class instance or a getter would not. */
+    const preset = createDuelPreset(
+      "mvp-player",
+      "mvp-opponent",
+      await loadDeckSources(),
+    );
+    const player = parseDuelDeckSelection({
+      kind: "cards",
+      main: [...preset.player.main],
+      extra: [...preset.player.extra],
+      side: [],
+    });
+    const startCursor = harness.cursor;
+    harness.post({
+      type: "startDuel",
+      duelId: duelId("custom-v1:node-worker-thread"),
+      player,
+      opponent: { kind: "preset", deckId: "mvp-opponent" },
+    });
+    await expect(
+      harness.waitForMessage(hasWorkerEventType("state"), {
+        afterSequence: startCursor,
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({ type: "state", state: expect.any(Object) }),
+    );
+
+    /* The opponent seat was named, never listed, and the Worker must not send
+       its resolved list back across the same boundary. Codes the player also
+       holds are excluded: those can legitimately appear in the player's own
+       visible hand and prove nothing either way. */
+    const outbound = JSON.stringify(harness.messages);
+    const playerCodes = new Set(preset.player.main);
+    const opponentOnly = preset.opponent.main.filter(
+      (code) => !playerCodes.has(code),
+    );
+    expect(opponentOnly.length).toBeGreaterThan(0);
+    for (const code of opponentOnly) {
+      const anywhere = new RegExp(`(?<!\\d)${code}(?!\\d)`);
+      /* The matcher has teeth: it finds the same code in a control string, so
+         a clean sweep below means absence rather than a broken pattern. */
+      expect(JSON.stringify([code])).toMatch(anywhere);
+      expect(outbound).not.toMatch(anywhere);
+    }
+
     await expect(harness.disposeGracefully()).resolves.toBe(0);
   });
 
@@ -146,8 +211,8 @@ describe("real Node duel Worker thread", () => {
     harness.post({
       type: "startDuel",
       duelId: duelId("bundled-v1:mvp-player:vs:mvp-opponent"),
-      playerDeckId: "mvp-player",
-      opponentDeckId: "mvp-opponent",
+      player: { kind: "preset", deckId: "mvp-player" },
+      opponent: { kind: "preset", deckId: "mvp-opponent" },
     });
     await harness.waitForMessage(hasWorkerEventType("prompt"), {
       afterSequence: startCursor,

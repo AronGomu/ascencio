@@ -24,8 +24,8 @@ const examples: readonly (DuelCommand | DuelWorkerEvent)[] = [
   {
     type: "startDuel",
     duelId: duelId("mvp-preset-v1"),
-    playerDeckId: "mvp-player",
-    opponentDeckId: "mvp-opponent",
+    player: { kind: "preset", deckId: "mvp-player" },
+    opponent: { kind: "cards", main: [46986414], extra: [], side: [] },
   },
   {
     type: "respond",
@@ -289,19 +289,19 @@ describe("Worker contracts", () => {
     ).toThrow("presentation event.duplicate");
   });
 
-  it("parses a startDuel command with deck ids", () => {
+  it("parses a startDuel command with preset selections", () => {
     expect(
       parseDuelCommand({
         type: "startDuel",
         duelId: "mvp-preset-v1",
-        playerDeckId: "nekroz",
-        opponentDeckId: "shaddoll",
+        player: { kind: "preset", deckId: "nekroz" },
+        opponent: { kind: "preset", deckId: "shaddoll" },
       }),
     ).toEqual({
       type: "startDuel",
       duelId: "mvp-preset-v1",
-      playerDeckId: "nekroz",
-      opponentDeckId: "shaddoll",
+      player: { kind: "preset", deckId: "nekroz" },
+      opponent: { kind: "preset", deckId: "shaddoll" },
     });
   });
 
@@ -310,8 +310,8 @@ describe("Worker contracts", () => {
       parseDuelCommand({
         type: "startDuel",
         duelId: "mvp-preset-v1",
-        playerDeckId: "nekroz",
-        opponentDeckId: "shaddoll",
+        player: { kind: "preset", deckId: "nekroz" },
+        opponent: { kind: "preset", deckId: "shaddoll" },
         seed: 42,
       }),
     ).toThrow(DuelCommandValidationError);
@@ -322,13 +322,13 @@ describe("Worker contracts", () => {
       parseDuelCommand({
         type: "startDuel",
         duelId: "mvp-preset-v1",
-        playerDeckId: "evil",
-        opponentDeckId: "shaddoll",
+        player: { kind: "preset", deckId: "evil" },
+        opponent: { kind: "preset", deckId: "shaddoll" },
       }),
-    ).toThrow("Duel startDuel command deck id is not a bundled deck");
+    ).toThrow("Duel deck selection deckId is not a bundled deck");
   });
 
-  it("rejects a startDuel command missing the deck ids", () => {
+  it("rejects a startDuel command missing the deck selections", () => {
     expect(() =>
       parseDuelCommand({ type: "startDuel", duelId: "mvp-preset-v1" }),
     ).toThrow();

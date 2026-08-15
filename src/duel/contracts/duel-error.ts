@@ -2,6 +2,7 @@ export type DuelErrorCode =
   | "engine_initialization_failed"
   | "snapshot_validation_failed"
   | "deck_validation_failed"
+  | "unsupported_card"
   | "dependency_resolution_failed"
   | "duel_already_active"
   | "duel_not_active"
@@ -17,12 +18,16 @@ export type DuelErrorCode =
   | "worker_unexpected_exit"
   | "invalid_worker_event";
 
+/* `unsupported_card` is recoverable: the start was refused before any core
+   session existed, so the Worker is still healthy and the caller only has to
+   pick a different deck. */
 export type RecoverableDuelErrorCode =
   | "duel_already_active"
   | "duel_not_active"
   | "invalid_command"
   | "invalid_response"
-  | "stale_prompt";
+  | "stale_prompt"
+  | "unsupported_card";
 
 interface DuelErrorBase {
   readonly message: string;
@@ -48,6 +53,7 @@ const DUEL_ERROR_CODES: ReadonlySet<DuelErrorCode> = new Set([
   "engine_initialization_failed",
   "snapshot_validation_failed",
   "deck_validation_failed",
+  "unsupported_card",
   "dependency_resolution_failed",
   "duel_already_active",
   "duel_not_active",
@@ -71,6 +77,7 @@ const RECOVERABLE_DUEL_ERROR_CODES: ReadonlySet<RecoverableDuelErrorCode> =
     "invalid_command",
     "invalid_response",
     "stale_prompt",
+    "unsupported_card",
   ]);
 
 export function isDuelErrorCode(value: unknown): value is DuelErrorCode {

@@ -102,15 +102,19 @@ describe("DuelWorkerClient", () => {
 
     const session = client.startDuel(
       duelId("mvp-preset-v1"),
-      "mvp-player",
-      "mvp-opponent",
+      { kind: "preset", deckId: "mvp-player" },
+      { kind: "preset", deckId: "mvp-opponent" },
     );
     expect(session).toMatchObject({
       workerGeneration: 1,
       sessionGeneration: 1,
     });
     expect(
-      client.startDuel(duelId("mvp-preset-v1"), "mvp-player", "mvp-opponent"),
+      client.startDuel(
+        duelId("mvp-preset-v1"),
+        { kind: "preset", deckId: "mvp-player" },
+        { kind: "preset", deckId: "mvp-opponent" },
+      ),
     ).toBeNull();
 
     worker.emit(promptEvent);
@@ -127,8 +131,8 @@ describe("DuelWorkerClient", () => {
       {
         type: "startDuel",
         duelId: "mvp-preset-v1",
-        playerDeckId: "mvp-player",
-        opponentDeckId: "mvp-opponent",
+        player: { kind: "preset", deckId: "mvp-player" },
+        opponent: { kind: "preset", deckId: "mvp-opponent" },
       },
       {
         type: "respond",
@@ -184,7 +188,11 @@ describe("DuelWorkerClient", () => {
       const worker = workers[0]!;
       client.initialize();
       worker.emit({ type: "ready", coreVersion: [11, 0] });
-      client.startDuel(duelId("mvp-preset-v1"), "mvp-player", "mvp-opponent");
+      client.startDuel(
+        duelId("mvp-preset-v1"),
+        { kind: "preset", deckId: "mvp-player" },
+        { kind: "preset", deckId: "mvp-opponent" },
+      );
       worker.emit(promptEvent);
 
       expect(client.respond(promptEvent.prompt.id, [choiceId("yes")])).toBe(
@@ -212,7 +220,11 @@ describe("DuelWorkerClient", () => {
     const worker = workers[0]!;
     client.initialize();
     worker.emit({ type: "ready", coreVersion: [11, 0] });
-    client.startDuel(duelId("mvp-preset-v1"), "mvp-player", "mvp-opponent");
+    client.startDuel(
+      duelId("mvp-preset-v1"),
+      { kind: "preset", deckId: "mvp-player" },
+      { kind: "preset", deckId: "mvp-opponent" },
+    );
     worker.emit({
       type: "result",
       result: { type: "surrendered", winner: 1, loser: 0 },
@@ -263,7 +275,11 @@ describe("DuelWorkerClient", () => {
       client.subscribe(({ event }) => received.push(event));
       client.initialize();
       workers[0]?.emit({ type: "ready", coreVersion: [11, 0] });
-      client.startDuel(duelId("mvp-preset-v1"), "mvp-player", "mvp-opponent");
+      client.startDuel(
+        duelId("mvp-preset-v1"),
+        { kind: "preset", deckId: "mvp-player" },
+        { kind: "preset", deckId: "mvp-opponent" },
+      );
       workers[0]?.emit({
         type: "result",
         result: { type: "surrendered", winner: 1, loser: 0 },
@@ -405,7 +421,11 @@ describe("DuelWorkerClient", () => {
     worker.postError = new Error("post failed");
 
     expect(
-      client.startDuel(duelId("mvp-preset-v1"), "mvp-player", "mvp-opponent"),
+      client.startDuel(
+        duelId("mvp-preset-v1"),
+        { kind: "preset", deckId: "mvp-player" },
+        { kind: "preset", deckId: "mvp-opponent" },
+      ),
     ).toBeNull();
     expect(received.at(-1)).toMatchObject({
       sessionGeneration: 0,

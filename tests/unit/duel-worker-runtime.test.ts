@@ -5,6 +5,7 @@ import {
   duelOperationError,
   type DuelErrorCode,
 } from "../../src/duel/contracts/duel-error.ts";
+import { duelId } from "../../src/duel/contracts/ids.ts";
 import {
   createFakeOcgCoreAdapter,
   FAKE_DEPENDENCIES,
@@ -133,8 +134,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     const firstStart = runtime.handle({
       type: "startDuel",
       duelId: FAKE_PRESET.id,
-      playerDeckId: "mvp-player",
-      opponentDeckId: "mvp-opponent",
+      player: { kind: "preset", deckId: "mvp-player" },
+      opponent: { kind: "preset", deckId: "mvp-opponent" },
     });
 
     await Promise.resolve();
@@ -165,8 +166,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     const restarted = await runtime.handle({
       type: "startDuel",
       duelId: FAKE_PRESET.id,
-      playerDeckId: "mvp-player",
-      opponentDeckId: "mvp-opponent",
+      player: { kind: "preset", deckId: "mvp-player" },
+      opponent: { kind: "preset", deckId: "mvp-opponent" },
     });
     expect(restarted.at(-1)).toEqual({
       type: "result",
@@ -197,8 +198,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     const first = await runtime.handle({
       type: "startDuel",
       duelId: FAKE_PRESET.id,
-      playerDeckId: "mvp-player",
-      opponentDeckId: "mvp-opponent",
+      player: { kind: "preset", deckId: "mvp-player" },
+      opponent: { kind: "preset", deckId: "mvp-opponent" },
     });
     expect(
       first
@@ -209,8 +210,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     const second = await runtime.handle({
       type: "startDuel",
       duelId: FAKE_PRESET.id,
-      playerDeckId: "mvp-player",
-      opponentDeckId: "mvp-opponent",
+      player: { kind: "preset", deckId: "mvp-player" },
+      opponent: { kind: "preset", deckId: "mvp-opponent" },
     });
     expect(
       second
@@ -296,8 +297,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
       runtime.handle({
         type: "startDuel",
         duelId: FAKE_PRESET.id,
-        playerDeckId: "mvp-player",
-        opponentDeckId: "mvp-opponent",
+        player: { kind: "preset", deckId: "mvp-player" },
+        opponent: { kind: "preset", deckId: "mvp-opponent" },
       }),
     ).resolves.toEqual([]);
     expect(logger.warn).toHaveBeenCalledWith(
@@ -337,8 +338,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     await runtime.handle({
       type: "startDuel",
       duelId: FAKE_PRESET.id,
-      playerDeckId: "mvp-player",
-      opponentDeckId: "mvp-opponent",
+      player: { kind: "preset", deckId: "mvp-player" },
+      opponent: { kind: "preset", deckId: "mvp-opponent" },
     });
 
     const [diagnostics] = await runtime.handle({ type: "requestDiagnostics" });
@@ -391,8 +392,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
       runtime.handle({
         type: "startDuel",
         duelId: FAKE_PRESET.id,
-        playerDeckId: "mvp-player",
-        opponentDeckId: "mvp-opponent",
+        player: { kind: "preset", deckId: "mvp-player" },
+        opponent: { kind: "preset", deckId: "mvp-opponent" },
       }),
     ).resolves.toEqual([]);
     expect(logger.warn).toHaveBeenCalledWith(
@@ -436,8 +437,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     await runtime.handle({
       type: "startDuel",
       duelId: FAKE_PRESET.id,
-      playerDeckId: "mvp-player",
-      opponentDeckId: "mvp-opponent",
+      player: { kind: "preset", deckId: "mvp-player" },
+      opponent: { kind: "preset", deckId: "mvp-opponent" },
     });
 
     expect(() => runtime.dispose()).toThrow(cleanupError);
@@ -465,8 +466,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     const failed = await runtime.handle({
       type: "startDuel",
       duelId: FAKE_PRESET.id,
-      playerDeckId: "mvp-player",
-      opponentDeckId: "mvp-opponent",
+      player: { kind: "preset", deckId: "mvp-player" },
+      opponent: { kind: "preset", deckId: "mvp-opponent" },
     });
     expect(failed).toEqual([
       expect.objectContaining({
@@ -479,8 +480,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
       runtime.handle({
         type: "startDuel",
         duelId: FAKE_PRESET.id,
-        playerDeckId: "mvp-player",
-        opponentDeckId: "mvp-opponent",
+        player: { kind: "preset", deckId: "mvp-player" },
+        opponent: { kind: "preset", deckId: "mvp-opponent" },
       }),
     ).resolves.toEqual([]);
   });
@@ -567,8 +568,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     await runtime.handle({
       type: "startDuel",
       duelId: FAKE_PRESET.id,
-      playerDeckId: "mvp-player",
-      opponentDeckId: "mvp-opponent",
+      player: { kind: "preset", deckId: "mvp-player" },
+      opponent: { kind: "preset", deckId: "mvp-opponent" },
     });
 
     const [diagnostics] = await runtime.handle({ type: "requestDiagnostics" });
@@ -613,8 +614,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
       {
         type: "startDuel",
         duelId: FAKE_PRESET.id,
-        playerDeckId: "mvp-player",
-        opponentDeckId: "mvp-opponent",
+        player: { kind: "preset", deckId: "mvp-player" },
+        opponent: { kind: "preset", deckId: "mvp-opponent" },
       },
       undefined,
       (error) => {
@@ -644,8 +645,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     const publicEvents = await loggedRuntime.handle({
       type: "startDuel",
       duelId: FAKE_PRESET.id,
-      playerDeckId: "mvp-player",
-      opponentDeckId: "mvp-opponent",
+      player: { kind: "preset", deckId: "mvp-player" },
+      opponent: { kind: "preset", deckId: "mvp-opponent" },
     });
     const publicTrace = await loggedRuntime.handle({
       type: "requestDiagnostics",
@@ -694,8 +695,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
       {
         type: "startDuel",
         duelId: FAKE_PRESET.id,
-        playerDeckId: "mvp-player",
-        opponentDeckId: "mvp-opponent",
+        player: { kind: "preset", deckId: "mvp-player" },
+        opponent: { kind: "preset", deckId: "mvp-opponent" },
       },
       undefined,
       (error) => {
@@ -741,8 +742,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     const publicEvents = await loggedRuntime.handle({
       type: "startDuel",
       duelId: FAKE_PRESET.id,
-      playerDeckId: "mvp-player",
-      opponentDeckId: "mvp-opponent",
+      player: { kind: "preset", deckId: "mvp-player" },
+      opponent: { kind: "preset", deckId: "mvp-opponent" },
     });
     const publicTrace = await loggedRuntime.handle({
       type: "requestDiagnostics",
@@ -800,8 +801,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
       {
         type: "startDuel",
         duelId: FAKE_PRESET.id,
-        playerDeckId: "mvp-player",
-        opponentDeckId: "mvp-opponent",
+        player: { kind: "preset", deckId: "mvp-player" },
+        opponent: { kind: "preset", deckId: "mvp-opponent" },
       },
       undefined,
       (error, context) => failures.push({ error, code: context.code }),
@@ -820,8 +821,8 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     const restarted = await runtime.handle({
       type: "startDuel",
       duelId: FAKE_PRESET.id,
-      playerDeckId: "mvp-player",
-      opponentDeckId: "mvp-opponent",
+      player: { kind: "preset", deckId: "mvp-player" },
+      opponent: { kind: "preset", deckId: "mvp-opponent" },
     });
     expect(restarted.at(-1)).toEqual({
       type: "result",
@@ -832,16 +833,162 @@ describe("DuelWorkerRuntime command lifecycle", () => {
   });
 });
 
+describe("duels started from an explicit card list", () => {
+  it("starts a duel from card lists and never checks a preset id", async () => {
+    const harness = await createFakeOcgCoreAdapter(winImmediately);
+    const runtime = new DuelWorkerRuntime(async () =>
+      createCardListResources(harness.adapter),
+    );
+    await runtime.handle({ type: "initialize" });
+
+    const started = await runtime.handle({
+      type: "startDuel",
+      /* Nothing derives this id, so a preset-shaped assertion would refuse a
+         duel that is otherwise entirely legal. */
+      duelId: duelId("custom-v1:anything"),
+      player: { kind: "cards", main: PLAYER_MAIN, extra: [], side: [] },
+      opponent: { kind: "cards", main: OPPONENT_MAIN, extra: [], side: [] },
+    });
+
+    expect(started.some(({ type }) => type === "error")).toBe(false);
+    expect(harness.counters.createDuel).toBe(1);
+    runtime.dispose();
+  });
+
+  it("keeps the opponent card list out of every event it sends back", async () => {
+    const harness = await createFakeOcgCoreAdapter(winImmediately);
+    const runtime = new DuelWorkerRuntime(async () =>
+      createCardListResources(harness.adapter),
+    );
+    await runtime.handle({ type: "initialize" });
+
+    const started = await runtime.handle({
+      type: "startDuel",
+      duelId: duelId("custom-v1:hidden"),
+      player: { kind: "cards", main: PLAYER_MAIN, extra: [], side: [] },
+      opponent: { kind: "cards", main: OPPONENT_MAIN, extra: [], side: [] },
+    });
+    const diagnostics = await runtime.handle({ type: "requestDiagnostics" });
+
+    /* The opponent's codes are disjoint from the player's, so any appearance
+       in the Worker's outbound traffic is the Worker disclosing a deck the
+       main thread is not meant to read. */
+    const outbound = JSON.stringify([...started, ...diagnostics]);
+    for (const code of OPPONENT_MAIN) {
+      expect(outbound).not.toContain(String(code));
+    }
+    runtime.dispose();
+  });
+
+  it("refuses an unsupported code without creating a core session", async () => {
+    const harness = await createFakeOcgCoreAdapter(winImmediately);
+    const runtime = new DuelWorkerRuntime(async () =>
+      createCardListResources(harness.adapter),
+    );
+    await runtime.handle({ type: "initialize" });
+
+    const refused = await runtime.handle({
+      type: "startDuel",
+      duelId: duelId("custom-v1:unsupported"),
+      player: {
+        kind: "cards",
+        main: [...PLAYER_MAIN.slice(1), 909_090],
+        extra: [],
+        side: [],
+      },
+      opponent: { kind: "cards", main: OPPONENT_MAIN, extra: [], side: [] },
+    });
+
+    expect(refused).toEqual([
+      {
+        type: "error",
+        error: {
+          code: "unsupported_card",
+          message: expect.stringContaining("909090"),
+          recoverable: true,
+        },
+      },
+    ]);
+    expect(harness.counters).toEqual({ createDuel: 0, destroyDuel: 0 });
+    runtime.dispose();
+  });
+
+  it("still refuses a preset pair whose duel id does not match", async () => {
+    const harness = await createFakeOcgCoreAdapter(winImmediately);
+    const runtime = new DuelWorkerRuntime(async () =>
+      createResources(harness.adapter),
+    );
+    await runtime.handle({ type: "initialize" });
+
+    expect(
+      await runtime.handle({
+        type: "startDuel",
+        duelId: duelId("custom-v1:forged"),
+        player: { kind: "preset", deckId: "mvp-player" },
+        opponent: { kind: "preset", deckId: "mvp-opponent" },
+      }),
+    ).toEqual([
+      {
+        type: "error",
+        error: expect.objectContaining({ code: "invalid_command" }),
+      },
+    ]);
+    expect(harness.counters).toEqual({ createDuel: 0, destroyDuel: 0 });
+    runtime.dispose();
+  });
+});
+
+const PLAYER_MAIN = Array.from({ length: 40 }, (_, index) => 11_000 + index);
+const OPPONENT_MAIN = Array.from({ length: 40 }, (_, index) => 22_000 + index);
+
+const winImmediately = () => ({
+  steps: [{ status: EngineProcess.END, messages: [WIN_MESSAGE] }],
+});
+
+function createCardListResources(
+  adapter: DuelRuntimeResources["adapter"],
+): DuelRuntimeResources {
+  const codes = [...PLAYER_MAIN, ...OPPONENT_MAIN];
+  return {
+    ...createResources(adapter),
+    dependencies: {
+      ...FAKE_DEPENDENCIES,
+      cards: new Map(
+        codes.map((code) => [
+          code,
+          {
+            code,
+            alias: 0,
+            setcodes: [],
+            type: 0x1,
+            level: 4,
+            attribute: 1,
+            race: 1n,
+            attack: 0,
+            defense: 0,
+            lscale: 0,
+            rscale: 0,
+            link_marker: 0,
+          },
+        ]),
+      ),
+      images: new Map(
+        codes.map((code) => [code, { code, full: "", cropped: "" }]),
+      ),
+    },
+  };
+}
+
 function createResources(
   adapter: DuelRuntimeResources["adapter"],
 ): DuelRuntimeResources {
   return {
     adapter,
     dependencies: FAKE_DEPENDENCIES,
-    createPreset: () => ({
+    createPreset: (playerDeckId, opponentDeckId) => ({
       ...FAKE_PRESET,
-      playerDeckId: "mvp-player",
-      opponentDeckId: "mvp-opponent",
+      playerDeckId,
+      opponentDeckId,
     }),
     snapshotId: FAKE_SNAPSHOT_ID,
   };

@@ -1,4 +1,8 @@
 import { deckId, type ValidatedDeckSnapshot } from "../decks/index.ts";
+import {
+  parseDuelDeckSelection,
+  type DuelDeckSelection,
+} from "../duel/contracts/duel-deck-selection.ts";
 import type { DuelResult } from "../duel/contracts/duel-result.ts";
 import { isDeckId, type DeckId } from "../duel/presets/deck-catalog.ts";
 
@@ -64,6 +68,30 @@ export function battleResultForDuelResult(
 
 export function battleFacadeFailure(message: string): BattleFacadeResult {
   return Object.freeze({ kind: "failed" as const, message });
+}
+
+/** Maps a host's seat choice onto the Worker's start contract: a preset stays
+    a preset, a deck the player built becomes an explicit card list.
+
+    Routing both through the Worker's own parser is the point. A stored deck
+    can have been written under an older ruleset, or edited to 39 cards after
+    the handoff was recorded, and the caller learns that here — with the rule
+    it broke named — instead of watching a duel start and then die. */
+export function toDuelDeckSelection(
+  selection: BattleDeckSelection,
+): DuelDeckSelection {
+  if (selection.kind === "preset")
+    return parseDuelDeckSelection({
+      kind: "preset",
+      deckId: selection.deckId,
+    });
+  const { main, extra, side } = selection.deck;
+  return parseDuelDeckSelection({
+    kind: "cards",
+    main: [...main],
+    extra: [...extra],
+    side: [...side],
+  });
 }
 
 function parseSelection(value: unknown, field: string): BattleDeckSelection {

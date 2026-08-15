@@ -181,8 +181,8 @@ describe("duel Worker attachment", () => {
       data: {
         type: "startDuel",
         duelId: "preset-test",
-        playerDeckId: "mvp-player",
-        opponentDeckId: "mvp-opponent",
+        player: { kind: "preset", deckId: "mvp-player" },
+        opponent: { kind: "preset", deckId: "mvp-opponent" },
       },
     } as MessageEvent<unknown>);
     await Promise.resolve();

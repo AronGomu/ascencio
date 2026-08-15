@@ -1,17 +1,15 @@
-/* The story used to own its own HTML document, so this sheet could style
-   `:root`, `body`, `button` and `h1` globally. It now loads into the single
-   app alongside the duel and deck editor, so every rule is scoped to the
-   domain root: a bare `button` rule here would repaint the duel field.
-   The palette is unchanged from the prototype on purpose — unifying the
-   visual language with `src/styles/tokens.css` is a separate ticket. */
+/* Story domain styles scoped to .story-app (T16: all colour values now
+   resolve from src/styles/tokens.css — the local --story-* aliases below are
+   kept so existing component style blocks continue to work without per-file
+   refactors; the aliases derive from the shared token set, not from literals). */
 
 .story-app {
-  --story-bg: #07111f;
-  --story-panel: #10243a;
-  --story-text: #f4f8fb;
-  --story-muted: #b9cad8;
-  --story-accent: #47d7cc;
-  --story-border: #b9cad8;
+  --story-bg: var(--bg);
+  --story-panel: var(--surface-raised);
+  --story-text: var(--text);
+  --story-muted: var(--muted);
+  --story-accent: var(--accent);
+  --story-border: var(--border-light);
 
   color-scheme: dark;
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
@@ -31,7 +29,7 @@
   border: 1px solid var(--story-accent);
   border-radius: 0.5rem;
   background: var(--story-accent);
-  color: #041216;
+  color: var(--ink-on-accent);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
@@ -41,7 +39,7 @@
   color: var(--story-text);
 }
 .story-app button:focus-visible {
-  outline: 3px solid #fff;
+  outline: 3px solid var(--focus-ring);
   outline-offset: 3px;
 }
 .story-app .eyebrow {

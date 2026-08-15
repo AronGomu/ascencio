@@ -85,7 +85,7 @@
       max(1rem, env(safe-area-inset-right))
       max(1rem, env(safe-area-inset-bottom))
       max(1rem, env(safe-area-inset-left));
-    background: #01050bd9;
+    background: color-mix(in srgb, var(--bg-deeper) 85%, transparent);
   }
   .overlay {
     width: min(42rem, 100%);
@@ -95,7 +95,7 @@
     border: 1px solid var(--story-border);
     border-radius: 0.8rem;
     background: var(--story-panel);
-    box-shadow: 0 2rem 6rem #000c;
+    box-shadow: 0 2rem 6rem color-mix(in srgb, var(--shadow) 80%, transparent);
   }
   .overlay:focus {
     outline: 2px solid var(--story-accent);

@@ -84,24 +84,24 @@
     aspect-ratio: 59 / 86;
     padding: 0;
     overflow: hidden;
-    color: #eef3ff;
-    border: 1px solid #697895;
+    color: var(--text);
+    border: 1px solid var(--border);
     border-radius: 0.38rem;
-    background: #18243b;
+    background: var(--surface-raised);
     font-weight: 650;
     isolation: isolate;
   }
 
   .card-tile:hover:not(:disabled),
   .card-tile.selected {
-    border-color: #73daca;
-    background: #22324e;
+    border-color: var(--accent);
+    background: var(--surface-highlight);
   }
 
   .card-tile.missing {
     border-style: dashed;
-    border-color: #ff8c9b;
-    background: #321825;
+    border-color: var(--danger);
+    background: var(--danger-surface);
   }
 
   .art-placeholder {
@@ -109,12 +109,17 @@
     min-height: 0;
     place-items: center;
     background:
-      linear-gradient(145deg, rgb(115 218 202 / 0.16), transparent 52%), #101a2c;
+      linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--accent) 16%, transparent),
+        transparent 52%
+      ),
+      var(--surface-panel);
     font-size: clamp(1rem, 2vw, 2rem);
   }
 
   .missing .art-placeholder {
-    background: #321825;
+    background: var(--danger-surface);
   }
 
   .card-name {
@@ -145,26 +150,26 @@
     place-items: center;
     border: 2px solid currentColor;
     border-radius: 999px;
-    color: #08101f;
-    background: #e8edf8;
+    color: var(--bg);
+    background: var(--text);
     font-size: 0.72rem;
     font-weight: 900;
   }
 
   .limit-0 {
-    color: #fff;
-    background: #b52140;
+    color: var(--ink);
+    background: var(--danger-border);
   }
 
   .limit-1 {
-    background: #ff8c9b;
+    background: var(--danger);
   }
 
   .limit-2 {
-    background: #ffd580;
+    background: var(--selected);
   }
 
   .limit-3 {
-    background: #73daca;
+    background: var(--accent);
   }
 </style>

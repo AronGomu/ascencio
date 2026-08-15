@@ -111,9 +111,9 @@
   .nested {
     margin-top: 1rem;
     padding: 1rem;
-    border: 1px solid #f6b1b8;
+    border: 1px solid var(--danger);
     border-radius: 0.5rem;
-    background: #26141d;
+    background: var(--danger-surface);
   }
   .nested button {
     margin: 0.25rem;

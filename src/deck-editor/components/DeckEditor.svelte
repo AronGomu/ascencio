@@ -546,10 +546,10 @@
   .name-field input {
     min-height: 2.45rem;
     padding: 0.45rem 0.6rem;
-    color: #e8edf8;
+    color: var(--text);
     border: 1px solid var(--border);
     border-radius: 0.5rem;
-    background: #0d1729;
+    background: var(--surface-chain);
     font-weight: 750;
   }
 
@@ -580,12 +580,12 @@
   .status-errors,
   .save-failed,
   .save-conflict {
-    border-color: #a43b50;
+    border-color: var(--danger-border);
   }
 
   .status-warnings,
   .save-saving {
-    border-color: #896b28;
+    border-color: var(--warning-border);
   }
 
   .editor-layout {
@@ -628,8 +628,8 @@
   }
 
   .message.error {
-    border-color: #a43b50;
-    background: #321825;
+    border-color: var(--danger-border);
+    background: var(--danger-surface);
   }
 
   .message p {
@@ -640,7 +640,7 @@
     position: fixed;
     z-index: 20;
     inset: 0;
-    background: rgb(0 0 0 / 0.68);
+    background: color-mix(in srgb, var(--shadow) 68%, transparent);
   }
 
   /* T14: below the stage breakpoint the header stops being a fixed nine-column

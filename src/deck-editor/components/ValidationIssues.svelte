@@ -52,9 +52,9 @@
   .validation {
     margin-top: 0.75rem;
     padding: 0.75rem;
-    border: 1px solid #896b28;
+    border: 1px solid var(--warning-border);
     border-radius: 0.55rem;
-    background: #2e2819;
+    background: var(--warning-surface);
   }
 
   header {
@@ -86,7 +86,7 @@
     min-height: 2rem;
     justify-content: flex-start;
     padding: 0.35rem 0.5rem;
-    color: #e8edf8;
+    color: var(--text);
     border-color: transparent;
     background: transparent;
     text-align: left;
@@ -95,6 +95,6 @@
   }
 
   li.error .issue {
-    color: #ffd6dc;
+    color: var(--danger);
   }
 </style>

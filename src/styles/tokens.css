@@ -11,6 +11,7 @@
   --surface: #111b2f;
   --surface-raised: #18243b;
   --surface-strong: var(--surface-raised);
+  --surface-highlight: #22324e;
   --surface-sunken: #0b1424;
   --surface-inset: #0c1728;
   --surface-panel: #101a2d;

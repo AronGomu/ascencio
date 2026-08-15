@@ -191,7 +191,7 @@
   .map-screen {
     min-height: 100svh;
     padding: clamp(1rem, 4vw, 3rem);
-    background: #07111f;
+    background: var(--bg);
   }
   header {
     display: flex;
@@ -209,10 +209,10 @@
     max-width: 32rem;
     padding: 0.75rem 1rem;
     border-left: 3px solid var(--story-accent);
-    background: #10243a;
+    background: var(--surface-raised);
   }
   .choice-acknowledgment {
-    border-left-color: #a78bfa;
+    border-left-color: var(--stack-accent);
   }
   .map-layout {
     display: grid;
@@ -242,15 +242,15 @@
     padding: 0;
     border-radius: 50%;
     transform: translate(-50%, -50%);
-    box-shadow: 0 0 0 8px #47d7cc33;
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 20%, transparent);
   }
   .hotspot.locked {
-    background: #334657;
-    color: #fff;
-    border-color: #b9cad8;
+    background: var(--neutral);
+    color: var(--ink);
+    border-color: var(--muted);
   }
   .completed {
-    box-shadow: inset 0 0 0 3px #fff;
+    box-shadow: inset 0 0 0 3px var(--ink);
   }
   .map-sidebar {
     min-width: 0;
@@ -267,13 +267,13 @@
     display: grid;
     gap: 0.25rem;
     text-align: left;
-    background: #10243a;
+    background: var(--surface-raised);
     color: var(--story-text);
     border-color: var(--story-border);
   }
   li button[aria-pressed="true"] {
     border-color: var(--story-accent);
-    background: #173d51;
+    background: var(--field-glow);
   }
   li span {
     color: var(--story-muted);
@@ -284,10 +284,10 @@
     padding: 1rem;
     border: 1px solid var(--story-border);
     border-radius: 0.6rem;
-    background: #0b1b2c;
+    background: var(--surface-chain);
   }
   .locked-reason {
-    color: #ffd2a3;
+    color: var(--selected);
   }
   @media (max-width: 48rem) {
     .map-layout {

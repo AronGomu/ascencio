@@ -100,11 +100,11 @@
     align-content: center;
     gap: 1.5rem;
     padding: clamp(1rem, 6vw, 5rem);
-    background: linear-gradient(135deg, #07111f 40%, #1d3953);
+    background: linear-gradient(135deg, var(--bg) 40%, var(--field-glow));
   }
   .transition-mark {
     font: 900 clamp(4rem, 20vw, 13rem)/0.75 sans-serif;
-    color: #47d7cc18;
+    color: color-mix(in srgb, var(--accent) 9%, transparent);
     position: absolute;
     right: 2vw;
     top: 10vh;
@@ -117,9 +117,9 @@
   }
   .reviewer-controls {
     padding: 1.2rem;
-    border: 2px dashed #e6ba69;
+    border: 2px dashed var(--selected);
     border-radius: 0.6rem;
-    background: #201b19;
+    background: var(--warning-surface);
   }
   .controls {
     display: flex;
@@ -129,10 +129,10 @@
   .result {
     padding: 1rem;
     border-left: 4px solid var(--story-accent);
-    background: #10243a;
+    background: var(--surface-raised);
   }
   .result.failure {
-    border-color: #ff9ba5;
+    border-color: var(--danger);
   }
   @media (prefers-reduced-motion: no-preference) {
     .handoff {

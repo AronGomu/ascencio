@@ -260,10 +260,10 @@
     width: 100%;
     min-height: 2.5rem;
     padding: 0.5rem 0.65rem;
-    color: #e8edf8;
+    color: var(--text);
     border: 1px solid var(--border);
     border-radius: 0.5rem;
-    background: #0d1729;
+    background: var(--surface-chain);
   }
 
   .filters {

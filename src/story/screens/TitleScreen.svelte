@@ -59,8 +59,8 @@
     justify-items: start;
     padding: clamp(1rem, 8vw, 6rem);
     background:
-      radial-gradient(circle at 70% 30%, #214b68, transparent 35%),
-      linear-gradient(120deg, #08111c, #122b44);
+      radial-gradient(circle at 70% 30%, var(--field-glow), transparent 35%),
+      linear-gradient(120deg, var(--bg), var(--surface-raised));
   }
   h1 {
     max-width: 8ch;

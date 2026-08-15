@@ -60,7 +60,7 @@
   button {
     min-height: 2.75rem;
     padding: 0.5rem 0.4rem;
-    color: #e8edf8;
+    color: var(--text);
     border: 1px solid transparent;
     background: transparent;
   }

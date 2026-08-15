@@ -1,0 +1,59 @@
+/* Shared UI primitives (T16). Imported by app.css after tokens.css.
+   Every rule here uses only var() references — no raw colour literals.
+   Components opt in via class names; per-domain overrides may add modifiers. */
+
+.ui-button {
+  min-height: 2.75rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-family: var(--font-ui);
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.ui-button--primary {
+  color: var(--ink-on-accent);
+  background: var(--accent);
+}
+
+.ui-button--primary:hover:not(:disabled) {
+  background: var(--accent-strong);
+}
+
+.ui-button--secondary {
+  color: var(--text);
+  background: transparent;
+  border-color: var(--border);
+}
+
+.ui-button--danger {
+  color: var(--ink-on-danger);
+  background: var(--danger);
+}
+
+.ui-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.ui-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.ui-overlay {
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+}
+
+.ui-field {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.ui-focusable:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}

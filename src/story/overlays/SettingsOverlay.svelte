@@ -102,7 +102,7 @@
     padding: 0.5rem;
     border: 1px solid var(--story-border);
     border-radius: 0.35rem;
-    background: #071522;
+    background: var(--bg);
     color: var(--story-text);
   }
 </style>

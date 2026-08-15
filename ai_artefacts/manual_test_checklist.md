@@ -792,3 +792,60 @@ Unchanged: desktop (1440x900 and 1920x1080)
 - [ ] Drag the decision window by its handle — it follows the pointer exactly
       as before.
 - [ ] Target/attack lines are drawn exactly as before.
+
+## T16 unified-visual-restyle
+
+### `#/` Home screen — desktop (1920×1080)
+- [ ] Home screen background and typography match the duel dark-blue-teal palette; no white or light-mode remnants.
+- [ ] Buttons use the consistent token-driven style (teal primary, transparent secondary).
+- [ ] Focus ring is amber (`--focus-ring: #f6c177`) when tabbing through navigation links.
+
+### `#/` Home screen — portrait (390×844)
+- [ ] Layout remains readable; colours and typography unchanged from desktop palette.
+
+### `#/story` Visual novel — desktop
+- [ ] Background gradients derive from the duel palette (dark navy blues and teals); no bright alien colours.
+- [ ] Dialogue box uses `var(--bg)` with ~91% opacity — dark background, legible white text.
+- [ ] Speaker name tag has dark `var(--surface-chain)` background and `var(--accent)` teal text.
+- [ ] Thought-bubble left border is purple (`var(--stack-accent): #9f8deb`).
+- [ ] Story buttons match global style: teal fill, dark text, amber focus ring.
+- [ ] Pause/overlay backdrop is near-black with slight transparency.
+- [ ] Overlay panel uses `var(--surface-raised)` — same dark-navy as duel side panels.
+
+### `#/story` Visual novel — portrait (390×844)
+- [ ] Dialogue box fills width correctly; text remains legible on dark background.
+- [ ] Choice buttons stack and are fully tappable (≥44px targets).
+
+### `#/decks` Deck editor — desktop
+- [ ] Card tiles: normal state uses dark navy (`var(--surface-raised)`), hover/selected uses slightly lighter `var(--surface-highlight)` with teal border.
+- [ ] Card limit badges: 0-limit is burgundy (`var(--danger-border)`), 1-limit is pink (`var(--danger)`), 2-limit is gold (`var(--selected)`), 3-limit is teal (`var(--accent)`).
+- [ ] Filter/search inputs have dark navy background (`var(--surface-chain)`) with legible white text.
+- [ ] Validation warning panel uses `var(--warning-surface)` background with `var(--warning-border)` border (amber tones).
+- [ ] Error states (missing card, import error) use `var(--danger-surface)` background.
+- [ ] Dialog panels use `var(--surface)` background with dark shadow.
+
+### `#/decks` Deck editor — portrait (390×844)
+- [ ] Tab mode (card catalog / workspace / zones) switches work; pane heights correct.
+- [ ] No colour regressions in portrait tab layout.
+
+### `#/duel` Duel field — desktop
+- [ ] Field geometry (card sizes, zone sizes, spacing, gaps) unchanged from pre-T16 baseline.
+- [ ] Legal zones are green (`var(--legal): #7ee2a8` border + glow).
+- [ ] Selected zones/cards are amber-gold (`var(--selected): #ffd580` border + glow).
+- [ ] Keyboard nav focus ring is white (`var(--ink)`), distinct from legal/selected.
+- [ ] Feedback halos are teal (`var(--accent)`).
+- [ ] Attack lines are red (`var(--danger)`), default lines are teal (`var(--accent)`).
+- [ ] Card limit badge colours on field cards look right (green/pink/gold/teal).
+
+### `#/duel` Duel field — portrait (390×844)
+- [ ] Field rotates 90° clockwise (T15 behaviour preserved).
+- [ ] Field geometry in rotated mode unchanged; zone targets remain tappable.
+- [ ] Semantic colours (legal/selected) unchanged in rotated mode.
+
+### `#/admin` Admin console — desktop
+- [ ] Panel renders with dark-blue token-driven background; no visual regressions.
+- [ ] Inputs and buttons consistent with the rest of the product.
+
+### Cross-domain coherence check
+- [ ] Navigating `#/ → #/story → #/decks → #/duel → #/admin` feels like one product — consistent dark palette, button style, focus ring, typography throughout.
+- [ ] No jarring colour shifts between domain transitions.

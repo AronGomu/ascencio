@@ -81,18 +81,18 @@
     gap: 0.8rem;
     padding: 1rem;
     text-align: center;
-    background: radial-gradient(circle, #244e5e, #07111f 55%);
+    background: radial-gradient(circle, var(--field-glow), var(--bg) 55%);
   }
   .reward-icon {
     width: 8rem;
     aspect-ratio: 1;
     display: grid;
     place-items: center;
-    border: 2px solid #f0d17b;
+    border: 2px solid var(--selected);
     border-radius: 50%;
     font-size: 5rem;
-    color: #f0d17b;
-    box-shadow: 0 0 3rem #f0d17455;
+    color: var(--selected);
+    box-shadow: 0 0 3rem color-mix(in srgb, var(--selected) 33%, transparent);
   }
   .reward-screen p {
     max-width: 40rem;
@@ -106,7 +106,7 @@
   }
   dl div {
     padding: 0.8rem 1rem;
-    background: #10243a;
+    background: var(--surface-raised);
   }
   dt {
     color: var(--story-muted);
@@ -116,9 +116,9 @@
     font-weight: 800;
   }
   .autosave {
-    color: #8ef1e9;
+    color: var(--accent);
   }
   .autosave.failure {
-    color: #ffd2d7;
+    color: var(--danger);
   }
 </style>

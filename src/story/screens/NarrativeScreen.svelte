@@ -252,29 +252,38 @@
     position: relative;
     min-height: 100svh;
     overflow: hidden;
-    background: #08111c;
+    background: var(--bg);
   }
   .background {
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(circle at 65% 25%, #5c7990, transparent 16%),
-      linear-gradient(155deg, #1b4059, #08111d 75%);
+      radial-gradient(circle at 65% 25%, var(--border), transparent 16%),
+      linear-gradient(155deg, var(--field-glow), var(--bg) 75%);
     transition: opacity 220ms ease;
   }
   .background[data-background="concourse"] {
-    background: linear-gradient(115deg, #172436, #355f74 45%, #0c1825);
+    background: linear-gradient(
+      115deg,
+      var(--surface),
+      var(--border-strong) 45%,
+      var(--bg-deep)
+    );
   }
   .background[data-background="arena"] {
     background:
-      radial-gradient(ellipse at 50% 70%, #39708d 0 18%, transparent 19%),
-      linear-gradient(#08101c, #142c45);
+      radial-gradient(
+        ellipse at 50% 70%,
+        var(--border-strong) 0 18%,
+        transparent 19%
+      ),
+      linear-gradient(var(--bg), var(--field-glow));
   }
   .background.fallback {
     background: repeating-linear-gradient(
       135deg,
-      #152435 0 16px,
-      #1d3146 16px 32px
+      var(--surface-chain) 0 16px,
+      var(--surface) 16px 32px
     );
   }
   .characters {
@@ -291,21 +300,23 @@
     height: min(68vh, 37rem);
     display: grid;
     place-items: center;
-    border: 2px solid #8db3c8;
+    border: 2px solid var(--border-light);
     border-radius: 48% 48% 16% 16%;
-    background: linear-gradient(#426d86, #172a3a);
+    background: linear-gradient(var(--border-strong), var(--surface-chain));
     font:
       800 clamp(3rem, 12vw, 8rem) Georgia,
       serif;
-    color: #dcecf4;
-    filter: drop-shadow(0 1rem 2rem #000b);
+    color: var(--text);
+    filter: drop-shadow(
+      0 1rem 2rem color-mix(in srgb, var(--shadow) 73%, transparent)
+    );
   }
   .character[data-expression="rin-smile"] {
-    background: linear-gradient(#4c8290, #29324b);
+    background: linear-gradient(var(--border-strong), var(--surface));
   }
   .character.missing {
     border-style: dashed;
-    background: #19283b;
+    background: var(--surface-raised);
   }
   .utility-bar {
     position: absolute;
@@ -321,7 +332,7 @@
   .compact {
     min-height: 44px;
     padding: 0.5rem 0.7rem;
-    background: #07111dcc;
+    background: color-mix(in srgb, var(--bg) 80%, transparent);
   }
   .dialogue {
     position: absolute;
@@ -331,26 +342,26 @@
     bottom: max(1rem, env(safe-area-inset-bottom));
     min-height: 9rem;
     padding: 1.2rem 3rem 1.2rem 1.2rem;
-    border: 1px solid #6d93aa;
+    border: 1px solid var(--border);
     border-radius: 0.75rem;
-    background: #06111de8;
-    box-shadow: 0 1rem 3rem #0009;
+    background: color-mix(in srgb, var(--bg) 91%, transparent);
+    box-shadow: 0 1rem 3rem color-mix(in srgb, var(--shadow) 60%, transparent);
   }
   .dialogue[data-kind="thought"] {
-    border-left: 0.35rem solid #a78bfa;
+    border-left: 0.35rem solid var(--stack-accent);
     font-style: italic;
   }
   .dialogue[data-kind="narration"] {
-    background: #06111dcc;
+    background: color-mix(in srgb, var(--bg) 80%, transparent);
   }
   .speaker {
     width: fit-content;
     margin: -2.2rem 0 0.7rem;
     padding: 0.35rem 0.8rem;
-    border: 1px solid #6d93aa;
+    border: 1px solid var(--border);
     border-radius: 0.35rem;
-    background: #102a40;
-    color: #8ef1e9;
+    background: var(--surface-chain);
+    color: var(--accent);
     font-weight: 800;
   }
   .line {
@@ -386,7 +397,7 @@
   .choices h2 {
     margin: 0;
     text-align: center;
-    text-shadow: 0 2px 5px #000;
+    text-shadow: 0 2px 5px var(--shadow);
   }
   .choices button {
     width: min(36rem, calc(100vw - 2rem));
@@ -396,7 +407,7 @@
     z-index: 5;
     inset: auto 1rem 12rem;
     padding: 1rem;
-    background: #0b2033;
+    background: var(--surface-chain);
   }
   .show-ui {
     position: absolute;

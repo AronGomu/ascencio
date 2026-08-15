@@ -80,7 +80,8 @@
     gap: clamp(1rem, 5vw, 5rem);
     padding: clamp(1rem, 6vw, 5rem);
     background:
-      radial-gradient(circle at 20% 50%, #284b63, transparent 25%), #07111f;
+      radial-gradient(circle at 20% 50%, var(--field-glow), transparent 25%),
+      var(--bg);
   }
   .opponent-art {
     aspect-ratio: 3/4;
@@ -88,9 +89,9 @@
     place-items: center;
     border: 1px solid var(--story-border);
     border-radius: 45% 45% 12% 12%;
-    background: linear-gradient(#31566d, #0d1825);
+    background: linear-gradient(var(--border-strong), var(--surface-chain));
     font: 800 clamp(4rem, 15vw, 10rem) Georgia;
-    color: #b9d8e8;
+    color: var(--text);
   }
   .briefing-copy {
     max-width: 42rem;
@@ -102,7 +103,7 @@
   }
   dl div {
     padding: 0.8rem;
-    background: #10243a;
+    background: var(--surface-raised);
   }
   dt {
     color: var(--story-muted);

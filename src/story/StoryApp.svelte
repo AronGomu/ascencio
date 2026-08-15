@@ -507,9 +507,9 @@
     align-items: center;
     gap: 0.6rem;
     padding: 0.75rem;
-    border: 2px solid #ff9ba5;
+    border: 2px solid var(--danger);
     border-radius: 0.5rem;
-    background: #35151df2;
+    background: color-mix(in srgb, var(--danger-surface) 95%, transparent);
   }
   .storage-error div {
     flex: 1 1 16rem;
@@ -523,7 +523,7 @@
     z-index: 25;
     left: max(0.5rem, env(safe-area-inset-left));
     top: max(0.5rem, env(safe-area-inset-top));
-    background: #07111ddd;
+    background: color-mix(in srgb, var(--bg) 87%, transparent);
   }
   .completion-panel {
     position: fixed;
@@ -535,8 +535,8 @@
     padding: 1rem;
     border: 1px solid var(--story-accent);
     border-radius: 0.6rem;
-    background: #07111ff2;
-    box-shadow: 0 1rem 3rem #000b;
+    background: color-mix(in srgb, var(--bg) 95%, transparent);
+    box-shadow: 0 1rem 3rem color-mix(in srgb, var(--shadow) 73%, transparent);
   }
   .completion-panel button {
     margin-right: 0.5rem;
@@ -549,7 +549,8 @@
     gap: 1rem;
     padding: clamp(1rem, 8vw, 7rem);
     background:
-      radial-gradient(circle at 60% 30%, #28586a, transparent 30%), #07111f;
+      radial-gradient(circle at 60% 30%, var(--field-glow), transparent 30%),
+      var(--bg);
   }
   .end-screen p {
     max-width: 50ch;

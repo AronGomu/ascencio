@@ -332,16 +332,16 @@
 
   .error {
     padding: 1rem;
-    border: 1px solid #a43b50;
+    border: 1px solid var(--danger-border);
     border-radius: 0.8rem;
-    background: #321825;
+    background: var(--danger-surface);
   }
 
   .backdrop {
     position: fixed;
     z-index: 20;
     inset: 0;
-    background: rgb(0 0 0 / 0.68);
+    background: color-mix(in srgb, var(--shadow) 68%, transparent);
   }
 
   @keyframes loading {

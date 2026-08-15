@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const REQUIRED_TOKENS = [
@@ -449,3 +450,84 @@ function ruleBlock(css: string, selectorStart: string, fromIndex = 0): string {
 function duelFieldBlock(css: string): string {
   return ruleBlock(css, ".duel-field {");
 }
+
+/* T16: raw colour ban across the three restyled domains. */
+describe("domain raw colour ban (T16)", () => {
+  const RAW_COLOUR_RE = /#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/;
+  const DOMAIN_ROOTS = ["src/shell", "src/deck-editor", "src/story"];
+
+  const collectFiles = (dir: string): string[] => {
+    const entries = readdirSync(dir, { withFileTypes: true });
+    return entries.flatMap((e) => {
+      const fullPath = join(dir, e.name);
+      if (e.isDirectory()) return collectFiles(fullPath);
+      if (e.isFile() && (e.name.endsWith(".svelte") || e.name.endsWith(".css")))
+        return [fullPath];
+      return [];
+    });
+  };
+
+  it("no raw hex / rgb / hsl literals in shell, deck-editor or story styles", () => {
+    const hits: string[] = [];
+    for (const root of DOMAIN_ROOTS) {
+      for (const file of collectFiles(root)) {
+        const source = readFileSync(file, "utf8");
+        const styleMatch = source.match(/<style[^>]*>([\s\S]*?)<\/style>/g);
+        const blocks = styleMatch
+          ? styleMatch.map((b) =>
+              b.replace(/<style[^>]*>/, "").replace(/<\/style>/, ""),
+            )
+          : file.endsWith(".css")
+            ? [source]
+            : [];
+        for (const block of blocks) {
+          const stripped = block.replace(/\/\*[\s\S]*?\*\//g, "");
+          const lines = stripped.split("\n");
+          for (let i = 0; i < lines.length; i++) {
+            if (RAW_COLOUR_RE.test(lines[i]!)) {
+              hits.push(`${file}:${i + 1}: ${lines[i]!.trim()}`);
+            }
+          }
+        }
+      }
+    }
+    expect(hits, "raw colours found").toEqual([]);
+  });
+});
+
+describe("primitives.css (T16)", () => {
+  const PRIMITIVE_CLASSES = [
+    ".ui-button",
+    ".ui-button--primary",
+    ".ui-button--secondary",
+    ".ui-button--danger",
+    ".ui-panel",
+    ".ui-overlay",
+    ".ui-field",
+    ".ui-focusable:focus-visible",
+  ];
+
+  it("primitives.css declares each .ui-* class at least once", () => {
+    const css = readFileSync("src/styles/primitives.css", "utf8");
+    for (const cls of PRIMITIVE_CLASSES) {
+      expect(css, `${cls} not found in primitives.css`).toContain(cls);
+    }
+  });
+
+  it("primitives.css contains no raw colour literals", () => {
+    const css = readFileSync("src/styles/primitives.css", "utf8");
+    const stripped = css.replace(/\/\*[\s\S]*?\*\//g, "");
+    expect(stripped.match(/#[0-9a-fA-F]{3,8}\b/g)).toBeNull();
+    expect(stripped.match(/\brgba?\(/g)).toBeNull();
+    expect(stripped.match(/\bhsla?\(/g)).toBeNull();
+  });
+
+  it("app.css imports primitives.css after tokens.css", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const tokensIdx = css.indexOf('@import "./tokens.css"');
+    const primitivesIdx = css.indexOf('@import "./primitives.css"');
+    expect(tokensIdx, "tokens.css import missing").toBeGreaterThan(-1);
+    expect(primitivesIdx, "primitives.css import missing").toBeGreaterThan(-1);
+    expect(primitivesIdx).toBeGreaterThan(tokensIdx);
+  });
+});

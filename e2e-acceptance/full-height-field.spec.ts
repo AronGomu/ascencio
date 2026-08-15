@@ -497,14 +497,29 @@ test("duel colors resolve from tokens", async ({ page }) => {
     selectedZone.classList.remove("is-selected");
     return result;
   });
-  expect(halos.legalBorder).toBe("rgb(126, 226, 168)");
-  expect(halos.selectedBorder).toBe("rgb(255, 213, 128)");
+  /* T16: derive the expected rgb from the already-read token value so a
+     token change causes exactly one assertion to fail (the toEqual above),
+     not a second redundant one here. */
+  expect(halos.legalBorder).toBe(hexToRgb(tokens.legal));
+  expect(halos.selectedBorder).toBe(hexToRgb(tokens.selected));
   /* Chromium serializes `color-mix()` as `color(srgb r g b / a)` with 0-1
      channels, so compare sRGB channels rather than the literal string the
      pre-token `rgb(126 226 168 / 0.55)` used to print. */
-  expect(sRgbChannels(halos.legalShadow)).toEqual([126, 226, 168, 0.55]);
-  expect(sRgbChannels(halos.selectedShadow)).toEqual([255, 213, 128, 0.78]);
+  expect(sRgbChannels(halos.legalShadow)).toEqual([...hexToChannels(tokens.legal), 0.55]);
+  expect(sRgbChannels(halos.selectedShadow)).toEqual([...hexToChannels(tokens.selected), 0.78]);
 });
+
+function hexToRgb(hex: string): string {
+  const [r, g, b] = hex.slice(1).match(/.{2}/g)!.map((h) => parseInt(h, 16));
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function hexToChannels(hex: string): [number, number, number] {
+  return hex
+    .slice(1)
+    .match(/.{2}/g)!
+    .map((h) => parseInt(h, 16)) as [number, number, number];
+}
 
 function sRgbChannels(value: string): [number, number, number, number] {
   const match = value.match(

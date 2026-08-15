@@ -102,11 +102,13 @@
     gap: 0.75rem;
     padding: clamp(1rem, 8vw, 7rem);
     background:
-      radial-gradient(circle at 70% 50%, #3c796b, transparent 25%), #07111f;
+      radial-gradient(circle at 70% 50%, var(--accent-deep), transparent 25%),
+      var(--bg);
   }
   .outcome-screen.recovery {
     background:
-      radial-gradient(circle at 70% 50%, #60445c, transparent 25%), #07111f;
+      radial-gradient(circle at 70% 50%, var(--stack-surface), transparent 25%),
+      var(--bg);
   }
   .outcome-screen p {
     max-width: 55ch;

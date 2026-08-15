@@ -211,7 +211,7 @@
     overflow: hidden;
     border: 1px solid var(--border);
     border-radius: 0.55rem;
-    background: #0d1729;
+    background: var(--surface-chain);
     font-size: 3rem;
   }
 
@@ -235,21 +235,21 @@
     place-items: center;
     border: 2px solid currentColor;
     border-radius: 999px;
-    color: #08101f;
-    background: #73daca;
+    color: var(--ink-on-accent);
+    background: var(--accent);
     font-size: 0.78rem;
     font-weight: 900;
   }
 
   .limit-0 {
-    color: #fff;
-    background: #b52140;
+    color: var(--ink);
+    background: var(--danger-border);
   }
   .limit-1 {
-    background: #ff8c9b;
+    background: var(--danger);
   }
   .limit-2 {
-    background: #ffd580;
+    background: var(--selected);
   }
 
   dl {

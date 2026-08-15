@@ -117,8 +117,8 @@
     transform: translate(-50%, -50%);
     border: 1px solid var(--border);
     border-radius: 0.85rem;
-    background: #111b2f;
-    box-shadow: 0 1.5rem 5rem rgb(0 0 0 / 0.55);
+    background: var(--surface);
+    box-shadow: 0 1.5rem 5rem color-mix(in srgb, var(--shadow) 55%, transparent);
   }
 
   header,
@@ -150,10 +150,10 @@
   textarea {
     width: 100%;
     padding: 0.6rem;
-    color: #e8edf8;
+    color: var(--text);
     border: 1px solid var(--border);
     border-radius: 0.5rem;
-    background: #08101f;
+    background: var(--bg);
   }
 
   textarea {
@@ -163,8 +163,8 @@
 
   .warning {
     padding: 0.7rem;
-    border: 1px solid #896b28;
+    border: 1px solid var(--warning-border);
     border-radius: 0.5rem;
-    background: #2e2819;
+    background: var(--warning-surface);
   }
 </style>

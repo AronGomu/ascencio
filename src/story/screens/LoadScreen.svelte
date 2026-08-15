@@ -203,7 +203,11 @@
     display: grid;
     place-items: center;
     border-radius: 0.4rem;
-    background: linear-gradient(135deg, #234a63, #101724);
+    background: linear-gradient(
+      135deg,
+      var(--field-glow),
+      var(--surface-chain)
+    );
     color: var(--story-muted);
   }
   .actions {
@@ -215,7 +219,7 @@
     opacity: 0.8;
   }
   .error {
-    border-color: #f5a3a3;
+    border-color: var(--danger);
   }
   .dialog-backdrop {
     position: fixed;
@@ -224,7 +228,7 @@
     display: grid;
     place-items: center;
     padding: 1rem;
-    background: #000b;
+    background: color-mix(in srgb, var(--shadow) 73%, transparent);
   }
   .dialog {
     width: min(30rem, 100%);
@@ -234,8 +238,8 @@
     background: var(--story-panel);
   }
   .danger {
-    background: #d85d6a;
-    border-color: #ff9ba5;
-    color: #fff;
+    background: var(--danger-strong);
+    border-color: var(--danger);
+    color: var(--ink);
   }
 </style>

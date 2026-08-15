@@ -490,10 +490,10 @@
   select {
     min-height: 2.5rem;
     padding: 0.5rem 0.65rem;
-    color: #e8edf8;
+    color: var(--text);
     border: 1px solid var(--border);
     border-radius: 0.5rem;
-    background: #0d1729;
+    background: var(--surface-chain);
   }
 
   .deck-list {
@@ -516,13 +516,13 @@
   .deck-open {
     display: grid;
     min-width: 0;
-    color: #e8edf8;
+    color: var(--text);
     background: transparent;
     text-align: left;
   }
 
   .deck-open:hover {
-    background: #18243b;
+    background: var(--surface-raised);
   }
 
   .deck-open .error {
@@ -552,8 +552,8 @@
     transform: translate(-50%, -50%);
     border: 1px solid var(--border);
     border-radius: 0.8rem;
-    background: #111b2f;
-    box-shadow: 0 1.5rem 5rem rgb(0 0 0 / 0.55);
+    background: var(--surface);
+    box-shadow: 0 1.5rem 5rem color-mix(in srgb, var(--shadow) 55%, transparent);
   }
 
   .dialog label {

@@ -149,7 +149,7 @@
     padding: 0.4rem;
     border: 1px solid var(--border);
     border-radius: 0.55rem;
-    background: #0a1425;
+    background: var(--surface-sunken);
   }
 
   .keyboard-drop {
@@ -160,7 +160,7 @@
   .drop-zone:hover,
   .drop-zone.picked {
     border-color: var(--accent);
-    background: #0d1b2e;
+    background: var(--surface-chain);
   }
 
   .grid {
@@ -175,9 +175,9 @@
 
   .empty-slot {
     aspect-ratio: 59 / 86;
-    border: 1px dashed rgb(105 120 149 / 0.55);
+    border: 1px dashed color-mix(in srgb, var(--border) 55%, transparent);
     border-radius: 0.32rem;
-    background: rgb(255 255 255 / 0.018);
+    background: color-mix(in srgb, var(--ink) 2%, transparent);
   }
 
   .overflow {

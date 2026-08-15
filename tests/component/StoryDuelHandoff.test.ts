@@ -90,7 +90,10 @@ vi.mock("../../src/battle/app/DuelWorkerClient.ts", () => {
 import { DuelWorkerClient as MockedDuelWorkerClient } from "../../src/battle/app/DuelWorkerClient.ts";
 import AppShell from "../../src/shell/AppShell.svelte";
 import type { DomainLoaders } from "../../src/shell/domain-loaders.ts";
-import { createShellStore } from "../../src/shell/shell-store.ts";
+import {
+  createShellStore,
+  type ShellStore,
+} from "../../src/shell/shell-store.ts";
 import { createInitialStoryState } from "../../src/story/model/story-state.ts";
 import { STORY_SAVES_DATABASE_NAME } from "../../src/story/saves/story-save-contracts.ts";
 import type {
@@ -138,14 +141,13 @@ function failableSaves(inner: StorySaveRepository): StorySaveRepository {
   };
 }
 
+let store: ShellStore;
+
 function renderShell() {
-  return render(AppShell, {
-    store: createShellStore(hash, (next) => {
-      hash = next;
-    }),
-    loaders,
-    saves,
+  store = createShellStore(hash, (next) => {
+    hash = next;
   });
+  return render(AppShell, { store, loaders, saves });
 }
 
 function region(name: string): Element | null {
@@ -331,6 +333,22 @@ describe("story duel handoff", () => {
 
     cleanup();
 
+    expect(hash).toBe("#/story");
+    await vi.waitFor(async () =>
+      expect((await saves.read("checkpoint:pre-duel")).kind).toBe("empty"),
+    );
+  });
+
+  /* The same debt, owed on the route the player actually leaves by: browser
+     Back changes the route first and tears the duel region down afterwards,
+     so the result the facade owes the story has to survive that ordering. */
+  it("settles a story duel left by a route change as an abort", async () => {
+    await reachEncounter();
+    await waitForCy("battle-root");
+
+    store.syncFromHash("#/story");
+
+    await waitForCy("story-outcome-abort-heading");
     expect(hash).toBe("#/story");
     await vi.waitFor(async () =>
       expect((await saves.read("checkpoint:pre-duel")).kind).toBe("empty"),

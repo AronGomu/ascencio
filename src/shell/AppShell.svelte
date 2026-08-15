@@ -71,6 +71,11 @@
   } | null = null;
   let sessionHandoffId: string | null = null;
   let sessionReady = false;
+  /* The session the mounted duel belongs to. `syncSession` below runs as a
+     pre-effect, so the route has already left the session by the time the duel
+     region is torn down; this holds the id until that teardown result has been
+     handed over, and only `settleSession` or a new session clears it. */
+  let hostedHandoffId: string | null = null;
 
   const handoff = createHandoffCoordinator({
     saves: saves ?? lazySaves,
@@ -97,7 +102,9 @@
   }
 
   function settleSession(result: BattleFacadeResult): void {
-    if (sessionHandoffId !== null) handoff.settle(sessionHandoffId, result);
+    const settled = hostedHandoffId;
+    hostedHandoffId = null;
+    if (settled !== null) handoff.settle(settled, result);
   }
 
   /* A duel only mounts once its checkpoint has been found, so a route nobody
@@ -107,6 +114,11 @@
     if (current.kind !== "duel-session") {
       sessionHandoffId = null;
       sessionReady = false;
+      /* The standalone duel route keeps the same facade mounted rather than
+         tearing it down, and it is unhosted there, so its result would belong
+         to nobody. Every other route unmounts the region, and that teardown
+         still owes the story its abort. */
+      if (current.kind === "duel") hostedHandoffId = null;
       return;
     }
     if (sessionHandoffId === current.handoffId) return;
@@ -114,7 +126,9 @@
     sessionHandoffId = requested;
     sessionReady = false;
     void handoff.resume(requested).then((outcome) => {
-      if (sessionHandoffId === requested) sessionReady = outcome === "restored";
+      if (sessionHandoffId !== requested) return;
+      sessionReady = outcome === "restored";
+      if (sessionReady) hostedHandoffId = requested;
     });
   }
 

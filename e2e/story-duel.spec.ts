@@ -126,6 +126,31 @@ test("surrendering a story duel returns to the abort branch without a reward", a
   ).toBeVisible();
 });
 
+/* Back is the other way out of a duel, and the one that changes the route
+   before the duel region is torn down: the story is still owed its result. */
+test("browser back out of a story duel reaches the abort branch", async ({
+  page,
+}) => {
+  await reachEncounter(page);
+  await startPickedDuel(page);
+
+  await page.goBack();
+
+  await expect(
+    page.getByRole("heading", { name: "Duel paused" }),
+  ).toBeVisible();
+  await expect(page).toHaveURL(/#\/story$/);
+  await expect(page.locator(DUEL_REGION)).toHaveCount(0);
+
+  /* Forward leads back to a session whose duel has already been settled, so it
+     has to correct itself to the story rather than strand the player there. */
+  await page.goForward();
+
+  await expect(page.locator(STORY_REGION)).toBeVisible();
+  await expect(page).toHaveURL(/#\/story$/);
+  await expect(page.locator(DUEL_REGION)).toHaveCount(0);
+});
+
 /* The crash-safety property: the tab can die at any point of a duel, and what
    comes back has to be the same encounter rather than a blank screen. */
 test("a reload mid-duel restarts the same encounter from the checkpoint", async ({

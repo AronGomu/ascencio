@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pruneRevisionCaches } from "../../src/storage/revision-cache-cleanup.ts";
+import { pruneRevisionCaches } from "../../src/battle/storage/revision-cache-cleanup.ts";
 
 class NamedCacheStorage {
   readonly names: Set<string>;

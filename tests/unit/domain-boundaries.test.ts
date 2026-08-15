@@ -10,8 +10,9 @@ import * as story from "../../src/story/index.ts";
 
 /* ADR-022 boundaries, checked against resolved paths rather than specifier
    text. `eslint.config.js` carries the same rules for inline feedback, but a
-   specifier glob cannot tell `src/story/storage/` from `src/storage/`, so this
-   file is the airtight half of the pair. Both run in `npm run check:headless`. */
+   specifier glob reads the text a file wrote rather than the file it reaches,
+   so this file is the airtight half of the pair. Both run in
+   `npm run check:headless`. */
 
 const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -20,18 +21,6 @@ const projectRoot = path.resolve(
 const sourceRoot = path.join(projectRoot, "src");
 
 type Domain = "main" | "shell" | "story" | "deck-editor" | "battle" | "decks";
-
-/* The duel's source has not been relocated under `src/battle/` yet, so these
-   directories are battle's internals today and are reachable only through
-   `src/battle/index.ts`. `src/acceptance-main.ts` is the build entry for the
-   duel acceptance harness that lives in `src/app/acceptance/`. */
-const BATTLE_INTERNAL_ROOTS = [
-  "src/app",
-  "src/duel",
-  "src/field",
-  "src/worker",
-  "src/storage",
-] as const;
 
 const PUBLIC_ENTRY: Readonly<Record<Domain, string | null>> = Object.freeze({
   main: null,
@@ -46,25 +35,25 @@ const PUBLIC_ENTRY: Readonly<Record<Domain, string | null>> = Object.freeze({
 });
 
 /* Allowed per importing file, never per domain, and mirrored in
-   `eslint.config.js`. All of these exist because the duel's source has not been
-   relocated yet, and the only entry that could legally carry them —
-   `src/battle/index.ts` — also exports `BattleFacade`: a static import of it
-   from the shell makes the duel an eager dependency and takes the entry chunk
-   from 2.62 kB to 339.73 kB. Each allowance disappears when the duel moves. */
+   `eslint.config.js`. All of these exist because the only entry that could
+   legally carry them — `src/battle/index.ts` — also exports `BattleFacade`: a
+   static import of it from the shell makes the duel an eager dependency and
+   takes the entry chunk from 2.62 kB to 339.73 kB. Each allowance disappears
+   when its module gets a legal home. */
 const ALLOWANCES: Readonly<Record<string, readonly string[]>> = Object.freeze({
   "src/shell/admin/admin-actions.ts": [
     /* Deck-format and preset asset modules. `src/decks/index.ts` cannot carry
        them either: it is reached eagerly from `src/shell/routes.ts`, so six raw
        `.ydk` payloads would land in the entry chunk. */
-    "src/duel/presets/deck-parser.ts",
-    "src/duel/presets/deck-sources-browser.ts",
+    "src/battle/duel/presets/deck-parser.ts",
+    "src/battle/duel/presets/deck-sources-browser.ts",
     /* The duel's snapshot database name, so the console can reset it. */
-    "src/storage/snapshot-store.ts",
+    "src/battle/storage/snapshot-store.ts",
   ],
   /* The duel's v2 UI-state key and shape, which the shell's v3 settings migrate
      from on first load. */
   "src/shell/settings/shell-settings.ts": [
-    "src/app/stores/persisted-ui-state.ts",
+    "src/battle/app/stores/persisted-ui-state.ts",
   ],
   /* The story's duel-handoff vocabulary. `src/story/index.ts` also exports
      `StoryApp`, so a static import of it from the shell would make the visual
@@ -72,9 +61,11 @@ const ALLOWANCES: Readonly<Record<string, readonly string[]>> = Object.freeze({
   "src/shell/handoff/handoff-coordinator.ts": [
     "src/story/handoff/story-handoff.ts",
   ],
-  "src/decks/ydk-adapter.ts": ["src/duel/presets/deck-parser.ts"],
+  "src/decks/ydk-adapter.ts": ["src/battle/duel/presets/deck-parser.ts"],
 });
 
+/* `src/acceptance-main.ts` is the build entry for the duel acceptance harness
+   that lives in `src/battle/app/acceptance/`, so it belongs to battle. */
 function domainOf(file: string): Domain {
   if (file === "src/main.ts") return "main";
   if (file === "src/acceptance-main.ts") return "battle";
@@ -83,8 +74,6 @@ function domainOf(file: string): Domain {
   if (file.startsWith("src/deck-editor/")) return "deck-editor";
   if (file.startsWith("src/decks/")) return "decks";
   if (file.startsWith("src/battle/")) return "battle";
-  if (BATTLE_INTERNAL_ROOTS.some((root) => file.startsWith(`${root}/`)))
-    return "battle";
   throw new Error(
     `${file} belongs to no declared domain; classify it in tests/unit/domain-boundaries.test.ts`,
   );
@@ -299,7 +288,7 @@ describe("domain imports", () => {
       .filter((file) => domainOf(file) !== "battle")
       .flatMap((file) =>
         importsOf(file)
-          .filter((target) => target.startsWith("src/worker/"))
+          .filter((target) => target.startsWith("src/battle/worker/"))
           .map((target) => `${file} -> ${target}`),
       );
     expect(violations).toEqual([]);

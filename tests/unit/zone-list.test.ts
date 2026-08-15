@@ -3,16 +3,16 @@ import {
   cardCode,
   cardInstanceId,
   snapshotId,
-} from "../../src/duel/contracts/ids.ts";
+} from "../../src/battle/duel/contracts/ids.ts";
 import type {
   CardPosition,
   PlayerIndex,
   PublicCard,
   PublicDuelState,
   PublicPlayerState,
-} from "../../src/duel/contracts/public-duel-state.ts";
-import { mapSnapshotToBoard } from "../../src/field/board-view-model.ts";
-import { zoneListEntries } from "../../src/field/zone-list.ts";
+} from "../../src/battle/duel/contracts/public-duel-state.ts";
+import { mapSnapshotToBoard } from "../../src/battle/field/board-view-model.ts";
+import { zoneListEntries } from "../../src/battle/field/zone-list.ts";
 import { deckSlots } from "../fixtures/board-public-states.ts";
 
 const CARD_TEXTS = new Map([

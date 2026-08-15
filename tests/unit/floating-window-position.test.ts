@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clampFieldWindowPosition } from "../../src/app/presentation/floating-window-position.ts";
+import { clampFieldWindowPosition } from "../../src/battle/app/presentation/floating-window-position.ts";
 
 const BOUNDARY = { width: 800, height: 600 };
 const WINDOW = { width: 200, height: 100 };

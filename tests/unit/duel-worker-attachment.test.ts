@@ -1,20 +1,20 @@
 import { inspect } from "node:util";
 import { describe, expect, it, vi } from "vitest";
-import { DuelOperationError } from "../../src/duel/contracts/duel-error.ts";
-import type { DuelWorkerEvent } from "../../src/duel/contracts/duel-worker-event.ts";
+import { DuelOperationError } from "../../src/battle/duel/contracts/duel-error.ts";
+import type { DuelWorkerEvent } from "../../src/battle/duel/contracts/duel-worker-event.ts";
 import {
   DuelWorkerRuntime,
   toDuelError,
-} from "../../src/worker/DuelWorkerRuntime.ts";
-import { routineLogError } from "../../src/worker/duel-errors.ts";
+} from "../../src/battle/worker/DuelWorkerRuntime.ts";
+import { routineLogError } from "../../src/battle/worker/duel-errors.ts";
 import {
   attachDuelWorker,
   type DuelWorkerScope,
-} from "../../src/worker/duel.worker.ts";
+} from "../../src/battle/worker/duel.worker.ts";
 import type {
   WorkerLogEntry,
   WorkerLogger,
-} from "../../src/worker/diagnostics/worker-log.ts";
+} from "../../src/battle/worker/diagnostics/worker-log.ts";
 
 describe("duel Worker attachment", () => {
   it("rejects malformed commands at the Worker boundary", () => {

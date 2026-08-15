@@ -16,7 +16,7 @@ import {
   DECK_DATABASE_NAME,
   LEGACY_DECK_DATABASE_NAME,
 } from "../src/decks/deck-database.ts";
-import { computeFieldGeometry } from "../src/field/duel-field-geometry.ts";
+import { computeFieldGeometry } from "../src/battle/field/duel-field-geometry.ts";
 import { duelFieldRenderFailureUrl } from "../tests/fixtures/duel-field-component-failure.ts";
 
 interface BrowserCapture {

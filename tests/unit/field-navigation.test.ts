@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   createFieldNavigationState,
   reduceFieldNavigation,
-} from "../../src/app/prompts/field-navigation.ts";
+} from "../../src/battle/app/prompts/field-navigation.ts";
 import {
   mapSnapshotToBoard,
   type BoardTargetId,
   type BoardViewModel,
-} from "../../src/field/board-view-model.ts";
-import { createFieldRenderLayout } from "../../src/field/duel-field-geometry.ts";
+} from "../../src/battle/field/board-view-model.ts";
+import { createFieldRenderLayout } from "../../src/battle/field/duel-field-geometry.ts";
 import {
   BOARD_CARD_TEXTS,
   BOARD_VIEW_MODEL_FIXTURES,

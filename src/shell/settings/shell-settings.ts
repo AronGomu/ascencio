@@ -1,7 +1,7 @@
 import {
   PERSISTED_UI_STATE_KEY,
   type PersistedDisplaySettings,
-} from "../../app/stores/persisted-ui-state.ts";
+} from "../../battle/app/stores/persisted-ui-state.ts";
 
 export const SHELL_SETTINGS_KEY = "ygo.ui.v3";
 

@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildRuntimeSnapshotManifest } from "../src/worker/assets/runtime-snapshot-node.ts";
+import { buildRuntimeSnapshotManifest } from "../src/battle/worker/assets/runtime-snapshot-node.ts";
 
 const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

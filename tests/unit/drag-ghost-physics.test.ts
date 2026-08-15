@@ -7,7 +7,7 @@ import {
   type CardDragOrigin,
   type DragGhostFrame,
   type DragPointerSample,
-} from "../../src/app/presentation/drag-ghost-physics.ts";
+} from "../../src/battle/app/presentation/drag-ghost-physics.ts";
 
 const ORIGIN: CardDragOrigin = Object.freeze({
   pointer: { x: 100, y: 100, timeMs: 0 },

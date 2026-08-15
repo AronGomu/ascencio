@@ -3,10 +3,10 @@
 import { cleanup, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import DeckPicker from "../../src/app/components/DeckPicker.svelte";
+import DeckPicker from "../../src/battle/app/components/DeckPicker.svelte";
 import type { SelectableDeck } from "../../src/battle/decks/selectable-decks.ts";
 import { deckId } from "../../src/decks/index.ts";
-import { DECK_CATALOG } from "../../src/duel/presets/deck-catalog.ts";
+import { DECK_CATALOG } from "../../src/battle/duel/presets/deck-catalog.ts";
 
 afterEach(() => cleanup());
 

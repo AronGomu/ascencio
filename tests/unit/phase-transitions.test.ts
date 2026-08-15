@@ -5,10 +5,10 @@ import {
   PHASE_SLOT_LABELS,
   phaseSlotChoices,
   phaseSlotForDuelPhase,
-} from "../../src/app/prompts/phase-transitions.ts";
-import { choiceId } from "../../src/duel/contracts/ids.ts";
-import type { ActiveInteractionSpec } from "../../src/app/prompts/interaction-spec.ts";
-import type { DuelPhase } from "../../src/duel/contracts/public-duel-state.ts";
+} from "../../src/battle/app/prompts/phase-transitions.ts";
+import { choiceId } from "../../src/battle/duel/contracts/ids.ts";
+import type { ActiveInteractionSpec } from "../../src/battle/app/prompts/interaction-spec.ts";
+import type { DuelPhase } from "../../src/battle/duel/contracts/public-duel-state.ts";
 
 const PHASE_TO_SLOT: Readonly<Record<DuelPhase, string | null>> = {
   draw: "draw",

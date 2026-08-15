@@ -3,12 +3,12 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { parseRuntimeSnapshotManifest } from "../../src/worker/assets/runtime-manifest.ts";
+import { parseRuntimeSnapshotManifest } from "../../src/battle/worker/assets/runtime-manifest.ts";
 import {
   runtimeAssetContentSha256,
   safeArtifactPath,
   verifyRuntimeSnapshotFiles,
-} from "../../src/worker/assets/runtime-snapshot-node.ts";
+} from "../../src/battle/worker/assets/runtime-snapshot-node.ts";
 
 const digest = "a".repeat(64);
 

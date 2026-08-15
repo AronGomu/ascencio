@@ -6,8 +6,8 @@ import {
   stackTopCode,
   type CardPreviewText,
   type PreviewablePublicCard,
-} from "../../src/app/presentation/card-preview.ts";
-import { cardCode } from "../../src/duel/contracts/ids.ts";
+} from "../../src/battle/app/presentation/card-preview.ts";
+import { cardCode } from "../../src/battle/duel/contracts/ids.ts";
 
 const KNOWN = cardCode(97590747);
 const UNKNOWN = cardCode(46986414);

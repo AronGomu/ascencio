@@ -197,7 +197,7 @@ reset()                 -> defaults</pre></div>
 <p>New colour tokens: <code>--success</code> for the priority pill. <code>--warning</code> gains three jobs — actionable halo, drop-candidate halo, end-turn button — replacing <code>--accent</code> on the actionable halo so orange means "you can act on this".</p>
 
 <h2 id="selectors">Selector contract</h2>
-<p>Every element rendered under <code>src/app/</code> carries a unique <code>data-cy</code> acting as its variable name. Structural tests select by <code>data-cy</code>; accessibility tests keep selecting by role and accessible name. A static scan of <code>src/app/**/*.svelte</code> fails the suite on a missing or duplicated value. Full rationale in <a href="ADR/002_ADR_universal_data_cy_selector_contract.md">ADR-002</a>.</p>
+<p>Every element rendered under <code>src/battle/app/</code> carries a unique <code>data-cy</code> acting as its variable name. Structural tests select by <code>data-cy</code>; accessibility tests keep selecting by role and accessible name. A static scan of <code>src/battle/app/**/*.svelte</code> fails the suite on a missing or duplicated value. Full rationale in <a href="ADR/002_ADR_universal_data_cy_selector_contract.md">ADR-002</a>.</p>
 
 <h2 id="tests">Test architecture</h2>
 <ul class="content-list">

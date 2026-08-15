@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { cardCode } from "../../src/duel/contracts/ids.ts";
+import { cardCode } from "../../src/battle/duel/contracts/ids.ts";
 import {
   loadActiveDuelDependencies,
   normalizeRequestedScriptName,
   type ActiveDuelAssetReader,
-} from "../../src/worker/assets/active-duel-dependencies.ts";
+} from "../../src/battle/worker/assets/active-duel-dependencies.ts";
 
 describe("active duel dependency resolver", () => {
   it("normalizes only supported pinned script names", () => {

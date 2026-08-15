@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import type { DeckId } from "../../src/duel/presets/deck-catalog.ts";
-import { parseYdk } from "../../src/duel/presets/deck-parser.ts";
-import { loadDeckSources } from "../../src/duel/presets/deck-sources-node.ts";
-import { reviewedCardPool } from "../../src/duel/presets/reviewed-card-pool.ts";
+import type { DeckId } from "../../src/battle/duel/presets/deck-catalog.ts";
+import { parseYdk } from "../../src/battle/duel/presets/deck-parser.ts";
+import { loadDeckSources } from "../../src/battle/duel/presets/deck-sources-node.ts";
+import { reviewedCardPool } from "../../src/battle/duel/presets/reviewed-card-pool.ts";
 
 describe("reviewed card pool", () => {
   it("pool is the union of every supplied deck", () => {

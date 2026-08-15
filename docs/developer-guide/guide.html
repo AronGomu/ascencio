@@ -531,14 +531,14 @@ nav a.is-active { color: var(--ink); background: var(--surface-2); box-shadow: i
     <table>
       <thead><tr><th>Area</th><th>Responsibility</th><th>Primary paths</th><th>Change risk</th></tr></thead>
       <tbody>
-        <tr><td>App shell</td><td>Lifecycle, status/error/result UI, local snapshot/image coordination</td><td class="path">src/app/App.svelte</td><td><span class="tag red">high coupling</span></td></tr>
-        <tr><td>Typed client/store</td><td>Worker lifecycle, watchdogs, event reduction, stale-context rejection</td><td class="path">src/app/DuelWorkerClient.ts<br>src/app/stores/duel-store.ts</td><td><span class="tag gold">boundary</span></td></tr>
-        <tr><td>Domain contracts</td><td>Clone-safe public commands, events, state, prompts, diagnostics</td><td class="path">src/duel/contracts/</td><td><span class="tag gold">cross-cutting</span></td></tr>
-        <tr><td>Worker orchestration</td><td>Command queue, init, session/controller ownership, result/error dispatch</td><td class="path">src/worker/DuelWorkerRuntime.ts<br>src/worker/duel.worker.ts</td><td><span class="tag red">critical</span></td></tr>
-        <tr><td>Engine/protocol</td><td>WASM adapter, duel handle, message→prompt/response mapping</td><td class="path">src/worker/engine/<br>src/worker/protocol/</td><td><span class="tag red">critical</span></td></tr>
-        <tr><td>Projection/opponent</td><td>Privacy-safe immutable state; deterministic legal-action policy</td><td class="path">src/worker/projection/<br>src/worker/opponent/</td><td><span class="tag red">privacy</span></td></tr>
-        <tr><td>Presentation</td><td>Svelte semantic controls; lazy Phaser visual field</td><td class="path">src/app/prompts/<br>src/field/</td><td><span class="tag">contained</span></td></tr>
-        <tr><td>Storage/assets</td><td>Verified runtime fetch/cache, image cache, IndexedDB activation/rollback</td><td class="path">src/storage/<br>src/worker/assets/<br>src/app/images/</td><td><span class="tag gold">integrity</span></td></tr>
+        <tr><td>App shell</td><td>Lifecycle, status/error/result UI, local snapshot/image coordination</td><td class="path">src/battle/app/App.svelte</td><td><span class="tag red">high coupling</span></td></tr>
+        <tr><td>Typed client/store</td><td>Worker lifecycle, watchdogs, event reduction, stale-context rejection</td><td class="path">src/battle/app/DuelWorkerClient.ts<br>src/battle/app/stores/duel-store.ts</td><td><span class="tag gold">boundary</span></td></tr>
+        <tr><td>Domain contracts</td><td>Clone-safe public commands, events, state, prompts, diagnostics</td><td class="path">src/battle/duel/contracts/</td><td><span class="tag gold">cross-cutting</span></td></tr>
+        <tr><td>Worker orchestration</td><td>Command queue, init, session/controller ownership, result/error dispatch</td><td class="path">src/battle/worker/DuelWorkerRuntime.ts<br>src/battle/worker/duel.worker.ts</td><td><span class="tag red">critical</span></td></tr>
+        <tr><td>Engine/protocol</td><td>WASM adapter, duel handle, message→prompt/response mapping</td><td class="path">src/battle/worker/engine/<br>src/battle/worker/protocol/</td><td><span class="tag red">critical</span></td></tr>
+        <tr><td>Projection/opponent</td><td>Privacy-safe immutable state; deterministic legal-action policy</td><td class="path">src/battle/worker/projection/<br>src/battle/worker/opponent/</td><td><span class="tag red">privacy</span></td></tr>
+        <tr><td>Presentation</td><td>Svelte semantic controls; lazy Phaser visual field</td><td class="path">src/battle/app/prompts/<br>src/battle/field/</td><td><span class="tag">contained</span></td></tr>
+        <tr><td>Storage/assets</td><td>Verified runtime fetch/cache, image cache, IndexedDB activation/rollback</td><td class="path">src/battle/storage/<br>src/battle/worker/assets/<br>src/battle/app/images/</td><td><span class="tag gold">integrity</span></td></tr>
         <tr><td>Build/tooling</td><td>Asset sync, snapshot generation, Vite packaging, independent verification</td><td class="path">scripts/<br>vite.config.ts</td><td><span class="tag gold">release</span></td></tr>
         <tr><td>Quality</td><td>Unit, component, real-WASM, Worker-thread, production browser gates</td><td class="path">tests/<br>e2e/<br>.github/workflows/ci.yml</td><td><span class="tag">broad</span></td></tr>
       </tbody>
@@ -598,11 +598,11 @@ nav a.is-active { color: var(--ink); background: var(--surface-2); box-shadow: i
       <svg viewBox="0 0 1160 760" role="img" aria-labelledby="architecture--layers-title architecture--layers-desc">
         <title id="architecture--layers-title">Logical architecture layers</title><desc id="architecture--layers-desc">Svelte and Phaser presentation use app orchestration and shared duel contracts. Worker boundary validates communication. Worker application layer uses protocol, projection, opponent, engine session, adapter and verified assets.</desc>
         <defs></defs>
-        <rect class="box" x="60" y="50" width="470" height="95" rx="12"/><text class="label" x="295" y="83" text-anchor="middle">Semantic presentation · Svelte</text><text class="small" x="295" y="108" text-anchor="middle">App · PromptControls · DuelField shell · focus/a11y</text><text class="tiny" x="295" y="128" text-anchor="middle">src/app/</text>
-        <rect class="box" x="630" y="50" width="470" height="95" rx="12"/><text class="label" x="865" y="83" text-anchor="middle">Spatial presentation · Phaser</text><text class="small" x="865" y="108" text-anchor="middle">DuelScene · card mapping · presentation bridge</text><text class="tiny" x="865" y="128" text-anchor="middle">src/field/</text>
+        <rect class="box" x="60" y="50" width="470" height="95" rx="12"/><text class="label" x="295" y="83" text-anchor="middle">Semantic presentation · Svelte</text><text class="small" x="295" y="108" text-anchor="middle">App · PromptControls · DuelField shell · focus/a11y</text><text class="tiny" x="295" y="128" text-anchor="middle">src/battle/app/</text>
+        <rect class="box" x="630" y="50" width="470" height="95" rx="12"/><text class="label" x="865" y="83" text-anchor="middle">Spatial presentation · Phaser</text><text class="small" x="865" y="108" text-anchor="middle">DuelScene · card mapping · presentation bridge</text><text class="tiny" x="865" y="128" text-anchor="middle">src/battle/field/</text>
         <rect class="box-accent" x="60" y="195" width="470" height="100" rx="12"/><text class="label" x="295" y="229" text-anchor="middle">Main-thread application</text><text class="small" x="295" y="254" text-anchor="middle">DuelWorkerClient · duel store · image/snapshot coordination</text><text class="tiny" x="295" y="276" text-anchor="middle">watchdogs · context generations · recovery</text>
-        <rect class="box" x="630" y="195" width="470" height="100" rx="12"/><text class="label" x="865" y="229" text-anchor="middle">Shared domain contracts</text><text class="small" x="865" y="254" text-anchor="middle">commands · events · prompts · public state · errors · IDs</text><text class="tiny" x="865" y="276" text-anchor="middle">src/duel/contracts/ · structured-clone validation</text>
-        <rect class="box-accent" x="60" y="345" width="1040" height="95" rx="12"/><text class="label" x="580" y="378" text-anchor="middle">Worker boundary + application runtime</text><text class="small" x="580" y="403" text-anchor="middle">attachDuelWorker → serialized DuelWorkerRuntime → HeadlessDuelController</text><text class="tiny" x="580" y="423" text-anchor="middle">src/worker/duel.worker.ts · DuelWorkerRuntime.ts · HeadlessDuelController.ts</text>
+        <rect class="box" x="630" y="195" width="470" height="100" rx="12"/><text class="label" x="865" y="229" text-anchor="middle">Shared domain contracts</text><text class="small" x="865" y="254" text-anchor="middle">commands · events · prompts · public state · errors · IDs</text><text class="tiny" x="865" y="276" text-anchor="middle">src/battle/duel/contracts/ · structured-clone validation</text>
+        <rect class="box-accent" x="60" y="345" width="1040" height="95" rx="12"/><text class="label" x="580" y="378" text-anchor="middle">Worker boundary + application runtime</text><text class="small" x="580" y="403" text-anchor="middle">attachDuelWorker → serialized DuelWorkerRuntime → HeadlessDuelController</text><text class="tiny" x="580" y="423" text-anchor="middle">src/battle/worker/duel.worker.ts · DuelWorkerRuntime.ts · HeadlessDuelController.ts</text>
         <rect class="box" x="60" y="495" width="225" height="105" rx="12"/><text class="label" x="172" y="528" text-anchor="middle">Protocol</text><text class="small" x="172" y="551" text-anchor="middle">PromptRegistry</text><text class="small" x="172" y="570" text-anchor="middle">sum selection · classification</text><text class="tiny" x="172" y="589" text-anchor="middle">raw ↔ domain</text>
         <rect class="box" x="330" y="495" width="225" height="105" rx="12"/><text class="label" x="442" y="528" text-anchor="middle">Projection</text><text class="small" x="442" y="551" text-anchor="middle">DuelStateProjector</text><text class="small" x="442" y="570" text-anchor="middle">immutable public snapshots</text><text class="tiny" x="442" y="589" text-anchor="middle">privacy redaction</text>
         <rect class="box" x="605" y="495" width="225" height="105" rx="12"/><text class="label" x="717" y="528" text-anchor="middle">Opponent</text><text class="small" x="717" y="551" text-anchor="middle">BasicOpponentPolicy</text><text class="small" x="717" y="570" text-anchor="middle">legal deterministic priorities</text><text class="tiny" x="717" y="589" text-anchor="middle">visible state only</text>
@@ -635,11 +635,11 @@ nav a.is-active { color: var(--ink); background: var(--surface-2); box-shadow: i
   <section id="architecture--modules">
     <h2>Module inventory</h2>
     <div class="grid-2">
-      <div class="panel"><h3><code>src/app/</code> · 12 files / 4,369 lines</h3><ul><li><strong>App.svelte:</strong> root composition, storage/image lifecycle, diagnostics, UI states.</li><li><strong>DuelWorkerClient:</strong> Worker port, command guards, watchdogs, replacement.</li><li><strong>duel-store:</strong> pure event reducer + user action facade.</li><li><strong>PromptControls:</strong> exhaustive prompt-family controls and focus.</li><li><strong>DuelField:</strong> lazy Phaser boundary and semantic fallback.</li></ul></div>
-      <div class="panel"><h3><code>src/duel/</code> · 16 files / 2,105 lines</h3><ul><li><strong>contracts:</strong> runtime-validated command/event/state/prompt/result/error.</li><li><strong>presets:</strong> fixed deck parsing and MVP preset construction.</li><li><strong>card visibility:</strong> one policy for hidden identity.</li><li><strong>prompt sum:</strong> shared contribution-selection rules.</li></ul></div>
-      <div class="panel"><h3><code>src/worker/</code> · 28 files / 6,334 lines</h3><ul><li><strong>runtime:</strong> serialized cmd queue, init, session lifecycle.</li><li><strong>engine:</strong> adapter, handle owner, constants, production seed.</li><li><strong>protocol:</strong> all supported core prompt families.</li><li><strong>projection:</strong> engine message→public snapshot/event.</li><li><strong>assets:</strong> browser/Node runtime loaders and manifest validation.</li><li><strong>diagnostics:</strong> bounded trace + safe structured logging.</li></ul></div>
-      <div class="panel"><h3><code>src/field/</code> · 4 files / 929 lines</h3><ul><li><strong>DuelScene:</strong> Phaser scene, textures, card/stack reconciliation.</li><li><strong>card-mapping:</strong> immutable state→field view model; intent targets.</li><li><strong>bridge:</strong> lazy game startup, scheduler, reduced motion, disposal.</li><li><strong>layout:</strong> desktop field geometry.</li></ul></div>
-      <div class="panel"><h3><code>src/storage/</code> · 2 files / 768 lines</h3><ul><li><strong>SnapshotStore:</strong> IndexedDB schema, staging, receipt verification, CAS activation, rollback, debug-run retention.</li><li><strong>revision cleanup:</strong> Web Lock and Cache Storage namespace pruning.</li></ul></div>
+      <div class="panel"><h3><code>src/battle/app/</code> · 12 files / 4,369 lines</h3><ul><li><strong>App.svelte:</strong> root composition, storage/image lifecycle, diagnostics, UI states.</li><li><strong>DuelWorkerClient:</strong> Worker port, command guards, watchdogs, replacement.</li><li><strong>duel-store:</strong> pure event reducer + user action facade.</li><li><strong>PromptControls:</strong> exhaustive prompt-family controls and focus.</li><li><strong>DuelField:</strong> lazy Phaser boundary and semantic fallback.</li></ul></div>
+      <div class="panel"><h3><code>src/battle/duel/</code> · 16 files / 2,105 lines</h3><ul><li><strong>contracts:</strong> runtime-validated command/event/state/prompt/result/error.</li><li><strong>presets:</strong> fixed deck parsing and MVP preset construction.</li><li><strong>card visibility:</strong> one policy for hidden identity.</li><li><strong>prompt sum:</strong> shared contribution-selection rules.</li></ul></div>
+      <div class="panel"><h3><code>src/battle/worker/</code> · 28 files / 6,334 lines</h3><ul><li><strong>runtime:</strong> serialized cmd queue, init, session lifecycle.</li><li><strong>engine:</strong> adapter, handle owner, constants, production seed.</li><li><strong>protocol:</strong> all supported core prompt families.</li><li><strong>projection:</strong> engine message→public snapshot/event.</li><li><strong>assets:</strong> browser/Node runtime loaders and manifest validation.</li><li><strong>diagnostics:</strong> bounded trace + safe structured logging.</li></ul></div>
+      <div class="panel"><h3><code>src/battle/field/</code> · 4 files / 929 lines</h3><ul><li><strong>DuelScene:</strong> Phaser scene, textures, card/stack reconciliation.</li><li><strong>card-mapping:</strong> immutable state→field view model; intent targets.</li><li><strong>bridge:</strong> lazy game startup, scheduler, reduced motion, disposal.</li><li><strong>layout:</strong> desktop field geometry.</li></ul></div>
+      <div class="panel"><h3><code>src/battle/storage/</code> · 2 files / 768 lines</h3><ul><li><strong>SnapshotStore:</strong> IndexedDB schema, staging, receipt verification, CAS activation, rollback, debug-run retention.</li><li><strong>revision cleanup:</strong> Web Lock and Cache Storage namespace pruning.</li></ul></div>
       <div class="panel"><h3><code>scripts/</code> · 29 files / 3,595 lines</h3><ul><li>Acquire pinned engine/upstream data/images.</li><li>Transform deterministic shards/manifests.</li><li>Generate runtime root snapshot.</li><li>Package active closure through Vite plugin.</li><li>Independently verify dist, hashes, licenses, budgets, reproducibility.</li></ul></div>
     </div>
   </section>
@@ -655,12 +655,12 @@ nav a.is-active { color: var(--ink); background: var(--surface-2); box-shadow: i
       choiceIds: readonly ChoiceId[] }
   | { type: "surrender" }
   | { type: "requestDiagnostics" }
-  | { type: "dispose" };</code></pre><p class="source-ref">Source: src/duel/contracts/duel-command.ts</p></div>
+  | { type: "dispose" };</code></pre><p class="source-ref">Source: src/battle/duel/contracts/duel-command.ts</p></div>
       <div><h3>Events: Worker → main</h3><pre><code>type DuelWorkerEvent =
   | Ready | Loading | State
   | PresentationEvent | Prompt
   | Result | Diagnostics | Error
-  | Disposed;</code></pre><p>Every event parsed by <code>parseDuelWorkerEvent</code> before store. Parser enforces clone bounds, exact keys, dense arrays, prompt player, public-state privacy.</p><p class="source-ref">Source: src/duel/contracts/duel-worker-event.ts</p></div>
+  | Disposed;</code></pre><p>Every event parsed by <code>parseDuelWorkerEvent</code> before store. Parser enforces clone bounds, exact keys, dense arrays, prompt player, public-state privacy.</p><p class="source-ref">Source: src/battle/duel/contracts/duel-worker-event.ts</p></div>
     </div>
     <h3>Boundary defense layers</h3>
     <ol class="flow-list"><li><strong>Sender validation.</strong> Client passes every command through <code>parseDuelCommand</code> before <code>postMessage</code>.</li><li><strong>Receiver validation.</strong> Worker parses untrusted message again before queueing.</li><li><strong>Session validation.</strong> Runtime checks initialized/active state and preset ID.</li><li><strong>Prompt validation.</strong> Only current prompt ID resolves; selection count/order/sum/place rules checked.</li><li><strong>Engine validation.</strong> Encoded response goes through vendored core.</li><li><strong>Outbound validation.</strong> Client parses every event; malformed/privacy-breaking event terminates Worker.</li><li><strong>Context validation.</strong> Store rejects events from old Worker/session generations.</li></ol>
@@ -668,7 +668,7 @@ nav a.is-active { color: var(--ink); background: var(--surface-2); box-shadow: i
 
   <section id="architecture--states">
     <h2>State machines</h2>
-    <figure class="diagram"><header><h3>Main-thread duel view state</h3><p>reducer in src/app/stores/duel-store.ts</p></header>
+    <figure class="diagram"><header><h3>Main-thread duel view state</h3><p>reducer in src/battle/app/stores/duel-store.ts</p></header>
       <svg viewBox="0 0 1160 420" role="img" aria-labelledby="architecture--state-title"><title id="architecture--state-title">Duel view state machine</title><defs></defs>
       <rect class="box" x="55" y="80" width="135" height="65" rx="32"/><text class="label" x="122" y="118" text-anchor="middle">idle</text>
       <rect class="box" x="250" y="80" width="160" height="65" rx="32"/><text class="label" x="330" y="118" text-anchor="middle">initializing</text>
@@ -689,7 +689,7 @@ nav a.is-active { color: var(--ink); background: var(--surface-2); box-shadow: i
     <h2>Privacy path</h2>
     <div class="notice danger"><strong>Critical invariant.</strong> Opponent hidden card identity must never cross Worker boundary. Rendering a card back is insufficient if code/name remains in JS object.</div>
     <ol class="flow-list"><li>Raw core message may contain card code and field location inside Worker.</li><li><code>DuelStateProjector</code> applies visibility policy. Opponent hand gets <code>handCount</code>, but public <code>hand</code> array is empty.</li><li>When visible card becomes hidden, projector rotates public instance ID and deletes code.</li><li><code>PromptRegistry</code> redacts prompt card code/name/description when viewer cannot see identity.</li><li>Outbound event parser rechecks public state: opponent hand identity array must remain empty.</li><li>Svelte/Phaser receive hidden cards without identity; Phaser selects card-back texture from <code>hidden</code>.</li><li>E2E captures real Worker events and asserts opponent hand objects remain empty.</li></ol>
-    <p class="source-ref">Key files: src/duel/card-visibility.ts · src/worker/projection/DuelStateProjector.ts · src/worker/protocol/PromptRegistry.ts · src/duel/contracts/duel-worker-event.ts · e2e/duel-smoke.spec.ts</p>
+    <p class="source-ref">Key files: src/battle/duel/card-visibility.ts · src/battle/worker/projection/DuelStateProjector.ts · src/battle/worker/protocol/PromptRegistry.ts · src/battle/duel/contracts/duel-worker-event.ts · e2e/duel-smoke.spec.ts</p>
   </section>
 
   <section id="architecture--direction">
@@ -710,14 +710,14 @@ nav a.is-active { color: var(--ink); background: var(--surface-2); box-shadow: i
   <section id="architecture--landmarks">
     <h2>Source landmarks</h2>
     <table><thead><tr><th>Question</th><th>Start here</th><th>Then read</th></tr></thead><tbody>
-      <tr><td>How does UI action reach engine?</td><td class="path">src/app/stores/duel-store.ts</td><td class="path">DuelWorkerClient.ts → duel.worker.ts → DuelWorkerRuntime.ts</td></tr>
-      <tr><td>How is prompt encoded?</td><td class="path">src/worker/protocol/PromptRegistry.ts</td><td class="path">player-prompt.ts · prompt-selection.ts · sum-selection.ts</td></tr>
-      <tr><td>How is state projected/redacted?</td><td class="path">src/worker/projection/DuelStateProjector.ts</td><td class="path">card-visibility.ts · public-duel-state.ts</td></tr>
-      <tr><td>How does core start/process?</td><td class="path">src/worker/engine/DuelSession.ts</td><td class="path">OcgCoreAdapter.ts · HeadlessDuelController.ts</td></tr>
-      <tr><td>How does opponent choose?</td><td class="path">src/worker/opponent/OpponentPolicy.ts</td><td class="path">tests/unit/opponent-policy.test.ts</td></tr>
-      <tr><td>How does visual field update?</td><td class="path">src/app/components/DuelField.svelte</td><td class="path">create-phaser-presentation-bridge.ts → DuelScene.ts</td></tr>
-      <tr><td>How are runtime assets trusted?</td><td class="path">src/worker/assets/browser-runtime-assets.ts</td><td class="path">runtime-manifest.ts · vite-runtime-assets.ts · verify-browser-build.ts</td></tr>
-      <tr><td>How does rollback work?</td><td class="path">src/storage/snapshot-store.ts</td><td class="path">revision-cache-cleanup.ts · browser-snapshot-pointer.ts</td></tr>
+      <tr><td>How does UI action reach engine?</td><td class="path">src/battle/app/stores/duel-store.ts</td><td class="path">DuelWorkerClient.ts → duel.worker.ts → DuelWorkerRuntime.ts</td></tr>
+      <tr><td>How is prompt encoded?</td><td class="path">src/battle/worker/protocol/PromptRegistry.ts</td><td class="path">player-prompt.ts · prompt-selection.ts · sum-selection.ts</td></tr>
+      <tr><td>How is state projected/redacted?</td><td class="path">src/battle/worker/projection/DuelStateProjector.ts</td><td class="path">card-visibility.ts · public-duel-state.ts</td></tr>
+      <tr><td>How does core start/process?</td><td class="path">src/battle/worker/engine/DuelSession.ts</td><td class="path">OcgCoreAdapter.ts · HeadlessDuelController.ts</td></tr>
+      <tr><td>How does opponent choose?</td><td class="path">src/battle/worker/opponent/OpponentPolicy.ts</td><td class="path">tests/unit/opponent-policy.test.ts</td></tr>
+      <tr><td>How does visual field update?</td><td class="path">src/battle/app/components/DuelField.svelte</td><td class="path">create-phaser-presentation-bridge.ts → DuelScene.ts</td></tr>
+      <tr><td>How are runtime assets trusted?</td><td class="path">src/battle/worker/assets/browser-runtime-assets.ts</td><td class="path">runtime-manifest.ts · vite-runtime-assets.ts · verify-browser-build.ts</td></tr>
+      <tr><td>How does rollback work?</td><td class="path">src/battle/storage/snapshot-store.ts</td><td class="path">revision-cache-cleanup.ts · browser-snapshot-pointer.ts</td></tr>
       <tr><td>What proves production behavior?</td><td class="path">e2e/duel-smoke.spec.ts</td><td class="path">tests/integration/node-worker-thread.test.ts · programmed-duel.test.ts</td></tr>
     </tbody></table>
   </section>
@@ -746,7 +746,7 @@ nav a.is-active { color: var(--ink); background: var(--surface-2); box-shadow: i
       </svg>
     </figure>
     <h3>Fallback order during Worker asset load</h3><ol class="flow-list"><li>Fetch current packaged runtime with expected manifest SHA.</li><li>If network/static load fails, open current snapshot from verified Cache Storage.</li><li>If current cache fails, read active/previous snapshot pointers from IndexedDB.</li><li>Attempt each fallback runtime cache using stored runtime manifest + image digests.</li><li>If all fail, emit sanitized initialization error. Client watchdog also bounds no-response case.</li></ol>
-    <p class="source-ref">Sources: src/app/App.svelte:114–300 · src/app/DuelWorkerClient.ts:142–158 · src/worker/create-browser-runtime.ts · src/worker/DuelWorkerRuntime.ts:181–214</p>
+    <p class="source-ref">Sources: src/battle/app/App.svelte:114–300 · src/battle/app/DuelWorkerClient.ts:142–158 · src/battle/worker/create-browser-runtime.ts · src/battle/worker/DuelWorkerRuntime.ts:181–214</p>
   </section>
 
   <section id="runtime-flows--duel">
@@ -768,7 +768,7 @@ nav a.is-active { color: var(--ink); background: var(--surface-2); box-shadow: i
       </svg>
     </figure>
     <div class="notice"><strong>Double-submit defense.</strong> Store marks <code>responsePending</code>; client records responded prompt IDs and clears current prompt before posting. E2E double-clicks same button, asserts one <code>respond</code> cmd.</div>
-    <p class="source-ref">Sources: src/app/prompts/PromptControls.svelte · src/app/stores/duel-store.ts:274–325 · src/app/DuelWorkerClient.ts:187–212 · src/worker/HeadlessDuelController.ts:183–206 · src/worker/protocol/PromptRegistry.ts</p>
+    <p class="source-ref">Sources: src/battle/app/prompts/PromptControls.svelte · src/battle/app/stores/duel-store.ts:274–325 · src/battle/app/DuelWorkerClient.ts:187–212 · src/battle/worker/HeadlessDuelController.ts:183–206 · src/battle/worker/protocol/PromptRegistry.ts</p>
   </section>
 
   <section id="runtime-flows--opponent">
@@ -795,7 +795,7 @@ nav a.is-active { color: var(--ink); background: var(--surface-2); box-shadow: i
     <h2>Diagnostics flow</h2>
     <div class="notice danger"><strong>Sensitive artifact.</strong> Download contains production seed. UI permits diagnostics only after inactive session, labels sensitivity, warns before sharing.</div>
     <ol class="flow-list"><li>Bounded Worker trace records lifecycle, process status, core msg type, presentation event, prompt, response IDs, opponent reason, result/error.</li><li>After result/failure, user requests diagnostics. Client enforces initialized + prior session + inactive + single-flight.</li><li>Runtime combines trace with core version and pinned revision metadata; computes pending prompt/last msg.</li><li>Worker emits validated <code>diagnostics</code> event.</li><li>App combines trace with build ID, browser info, active/fallback snapshot IDs, image cache summary.</li><li>Downloader serializes schema v2 JSON to Blob, triggers local file download.</li><li>App stores bounded metadata only (max 20 debug runs) in IndexedDB, not raw sensitive trace.</li></ol>
-    <p class="source-ref">Sources: src/worker/diagnostics/duel-trace.ts · src/worker/DuelWorkerRuntime.ts:461–528 · src/app/diagnostics/download-diagnostics.ts · src/app/App.svelte:457–509</p>
+    <p class="source-ref">Sources: src/battle/worker/diagnostics/duel-trace.ts · src/battle/worker/DuelWorkerRuntime.ts:461–528 · src/battle/app/diagnostics/download-diagnostics.ts · src/battle/app/App.svelte:457–509</p>
   </section>
 
   <section id="runtime-flows--recovery">

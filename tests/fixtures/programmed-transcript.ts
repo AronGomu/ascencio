@@ -1,15 +1,15 @@
 import { readFile } from "node:fs/promises";
-import type { ChoiceId } from "../../src/duel/contracts/ids.ts";
+import type { ChoiceId } from "../../src/battle/duel/contracts/ids.ts";
 import type {
   ChoiceAction,
   PlayerPrompt,
   PromptChoice,
   PromptKind,
-} from "../../src/duel/contracts/player-prompt.ts";
+} from "../../src/battle/duel/contracts/player-prompt.ts";
 import type {
   PlayerIndex,
   PublicLocation,
-} from "../../src/duel/contracts/public-duel-state.ts";
+} from "../../src/battle/duel/contracts/public-duel-state.ts";
 import { MVP_PROMPT_FAMILIES } from "./action-coverage.ts";
 
 const CHOICE_ACTIONS: readonly ChoiceAction[] = [

@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { choiceId, promptId } from "../../src/duel/contracts/ids.ts";
+import { choiceId, promptId } from "../../src/battle/duel/contracts/ids.ts";
 import type {
   PlayerPrompt,
   PromptChoice,
   PromptKind,
   PromptPlace,
-} from "../../src/duel/contracts/player-prompt.ts";
+} from "../../src/battle/duel/contracts/player-prompt.ts";
 import {
   centralPlacementResponse,
   placementRank,
-} from "../../src/app/prompts/auto-placement.ts";
+} from "../../src/battle/app/prompts/auto-placement.ts";
 
 function placeChoice(id: string, place: PromptPlace): PromptChoice {
   return { id: choiceId(id), label: id, action: "select", place };

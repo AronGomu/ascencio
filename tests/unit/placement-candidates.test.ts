@@ -3,17 +3,17 @@ import {
   cardCode,
   cardInstanceId,
   snapshotId,
-} from "../../src/duel/contracts/ids.ts";
+} from "../../src/battle/duel/contracts/ids.ts";
 import type {
   PublicCard,
   PublicDuelState,
   PublicPlayerState,
-} from "../../src/duel/contracts/public-duel-state.ts";
+} from "../../src/battle/duel/contracts/public-duel-state.ts";
 import {
   mapSnapshotToBoard,
   type BoardViewModel,
-} from "../../src/field/board-view-model.ts";
-import { placementZoneCandidates } from "../../src/field/placement-candidates.ts";
+} from "../../src/battle/field/board-view-model.ts";
+import { placementZoneCandidates } from "../../src/battle/field/placement-candidates.ts";
 import { deckSlots } from "../fixtures/board-public-states.ts";
 
 function occupant(

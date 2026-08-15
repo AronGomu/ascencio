@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { ImmutableChoiceIdSet } from "../../src/app/presentation/immutable-choice-id-set.ts";
-import type { ChoiceId } from "../../src/duel/contracts/ids.ts";
+import { ImmutableChoiceIdSet } from "../../src/battle/app/presentation/immutable-choice-id-set.ts";
+import type { ChoiceId } from "../../src/battle/duel/contracts/ids.ts";
 
 const id = (value: string) => value as ChoiceId;
 

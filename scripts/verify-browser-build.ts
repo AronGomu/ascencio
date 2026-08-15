@@ -2,14 +2,14 @@ import { createHash } from "node:crypto";
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadDeckSources } from "../src/duel/presets/deck-sources-node.ts";
-import { reviewedCardPool } from "../src/duel/presets/reviewed-card-pool.ts";
-import { parseRuntimeSnapshotManifest } from "../src/worker/assets/runtime-manifest.ts";
+import { loadDeckSources } from "../src/battle/duel/presets/deck-sources-node.ts";
+import { reviewedCardPool } from "../src/battle/duel/presets/reviewed-card-pool.ts";
+import { parseRuntimeSnapshotManifest } from "../src/battle/worker/assets/runtime-manifest.ts";
 import {
   deriveRuntimeSnapshotId,
   runtimeAssetContentSha256,
   verifyRuntimeSnapshotFiles,
-} from "../src/worker/assets/runtime-snapshot-node.ts";
+} from "../src/battle/worker/assets/runtime-snapshot-node.ts";
 import { assertNoMissingActiveImages } from "./lib/active-image-manifest.ts";
 import { resolveActiveRuntimeFiles } from "./lib/active-runtime-files.ts";
 

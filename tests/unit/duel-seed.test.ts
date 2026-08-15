@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   createProductionSeed,
   validateProgrammedSeed,
-} from "../../src/worker/engine/duel-seed.ts";
+} from "../../src/battle/worker/engine/duel-seed.ts";
 
 describe("duel seeds", () => {
   it("repairs an all-zero random source", () => {

@@ -1,14 +1,14 @@
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { loadActiveDuelDependenciesNode } from "../../src/worker/assets/active-duel-dependencies-node.ts";
+import { loadActiveDuelDependenciesNode } from "../../src/battle/worker/assets/active-duel-dependencies-node.ts";
 import {
   MVP_DECK_CONSTRAINTS,
   uniqueDeckCodes,
   validateDeck,
-} from "../../src/duel/presets/deck-parser.ts";
-import { loadDeckSources } from "../../src/duel/presets/deck-sources-node.ts";
-import { loadMvpPreset } from "../../src/duel/presets/mvp-preset-node.ts";
-import { reviewedCardPool } from "../../src/duel/presets/reviewed-card-pool.ts";
+} from "../../src/battle/duel/presets/deck-parser.ts";
+import { loadDeckSources } from "../../src/battle/duel/presets/deck-sources-node.ts";
+import { loadMvpPreset } from "../../src/battle/duel/presets/mvp-preset-node.ts";
+import { reviewedCardPool } from "../../src/battle/duel/presets/reviewed-card-pool.ts";
 
 describe("real MVP dependency snapshot", () => {
   it("resolves every preset card, text, image, global, and available card script", async () => {

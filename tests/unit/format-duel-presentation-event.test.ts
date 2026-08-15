@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { DuelPresentationEvent } from "../../src/duel/contracts/duel-presentation-event.ts";
-import { cardCode, cardInstanceId } from "../../src/duel/contracts/ids.ts";
-import { formatDuelLogEntry } from "../../src/app/presentation/format-duel-log-entry.ts";
-import { formatDuelPresentationEvent } from "../../src/app/presentation/format-duel-presentation-event.ts";
+import type { DuelPresentationEvent } from "../../src/battle/duel/contracts/duel-presentation-event.ts";
+import {
+  cardCode,
+  cardInstanceId,
+} from "../../src/battle/duel/contracts/ids.ts";
+import { formatDuelLogEntry } from "../../src/battle/app/presentation/format-duel-log-entry.ts";
+import { formatDuelPresentationEvent } from "../../src/battle/app/presentation/format-duel-presentation-event.ts";
 
 const EVENTS: readonly DuelPresentationEvent[] = [
   { type: "duelStarted" },

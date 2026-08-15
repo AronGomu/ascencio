@@ -50,7 +50,7 @@ Never write production behavior before failing test. Visual-only details must st
 - [x] Keep prototype commit plan isolated from unrelated cleanup, architecture migration, and duel changes.
 - [x] Keep current `index.html` direct-duel entry behavior unchanged.
 - [x] Keep prototype code under `src/prototype/` except required root/config/test/doc files.
-- [x] Do not import from `src/duel/`, `src/worker/`, `src/field/`, or `src/storage/`.
+- [x] Do not import from `src/battle/duel/`, `src/battle/worker/`, `src/battle/field/`, or `src/battle/storage/`.
 - [x] Do not add runtime deps unless implementation cannot proceed with existing Svelte/Vite/Vitest/Playwright stack.
 - [x] Keep private-distribution safeguards intact.
 - [x] Retain suggested conventional messages for deferred `/commit` workflow.

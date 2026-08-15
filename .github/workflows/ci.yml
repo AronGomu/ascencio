@@ -31,7 +31,7 @@ jobs:
           path: |
             .cache/upstream
             generated
-          key: mvp-assets-${{ runner.os }}-${{ hashFiles('package-lock.json', 'scripts/sync-*.ts', 'scripts/download-images.ts', 'src/duel/presets/decks/*.ydk') }}
+          key: mvp-assets-${{ runner.os }}-${{ hashFiles('package-lock.json', 'scripts/sync-*.ts', 'scripts/download-images.ts', 'src/battle/duel/presets/decks/*.ydk') }}
           restore-keys: |
             mvp-assets-${{ runner.os }}-
 

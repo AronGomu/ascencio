@@ -1,24 +1,24 @@
 import { describe, expect, it } from "vitest";
-import type { DuelWorkerEvent } from "../../src/duel/contracts/duel-worker-event.ts";
+import type { DuelWorkerEvent } from "../../src/battle/duel/contracts/duel-worker-event.ts";
 import {
   cardInstanceId,
   choiceId,
   promptId,
   snapshotId,
-} from "../../src/duel/contracts/ids.ts";
-import type { DuelDeckSelection } from "../../src/duel/contracts/duel-deck-selection.ts";
-import type { DeckId } from "../../src/duel/presets/deck-catalog.ts";
-import type { PublicDuelState } from "../../src/duel/contracts/public-duel-state.ts";
+} from "../../src/battle/duel/contracts/ids.ts";
+import type { DuelDeckSelection } from "../../src/battle/duel/contracts/duel-deck-selection.ts";
+import type { DeckId } from "../../src/battle/duel/presets/deck-catalog.ts";
+import type { PublicDuelState } from "../../src/battle/duel/contracts/public-duel-state.ts";
 import type {
   DuelClient,
   DuelClientContext,
   DuelClientEvent,
-} from "../../src/app/DuelWorkerClient.ts";
+} from "../../src/battle/app/DuelWorkerClient.ts";
 import {
   createDuelStore,
   createInitialDuelViewState,
   reduceDuelViewState,
-} from "../../src/app/stores/duel-store.ts";
+} from "../../src/battle/app/stores/duel-store.ts";
 import { deckSlots } from "../fixtures/board-public-states.ts";
 
 /** One seat named as a bundled preset, which is what every scenario below

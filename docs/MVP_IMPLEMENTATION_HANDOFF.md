@@ -34,7 +34,7 @@ The mandatory pre-visual isolated `npm ci --offline && npm run check:headless` g
 ### Runtime and lifecycle
 
 - `OcgCoreAdapter` loads only the checked-in synchronous `ocgcore-wasm@0.1.2` payload.
-- `src/worker/duel.worker-node.ts` derives the trusted project root from its own module URL, creates the real Node runtime inside `node:worker_threads`, and connects it to `attachDuelWorker`; the parent test process never imports the engine.
+- `src/battle/worker/duel.worker-node.ts` derives the trusted project root from its own module URL, creates the real Node runtime inside `node:worker_threads`, and connects it to `attachDuelWorker`; the parent test process never imports the engine.
 - Runtime initialization verifies every declared snapshot file's byte length and SHA-256 before loading the engine.
 - `DuelSession` owns exactly one native handle and destroys it once after completion, surrender, failure, timeout, unsupported waiting behavior, or disposal.
 - Worker commands pass runtime validation and execute in a bounded arrival-order queue.
@@ -171,11 +171,11 @@ Expected implementation surfaces:
 index.html
 vite.config.ts
 src/main.ts
-src/app/App.svelte
-src/app/DuelWorkerClient.ts
-src/app/stores/duel-store.ts
-src/worker/duel.worker-browser.ts
-src/worker/create-browser-runtime.ts
+src/battle/app/App.svelte
+src/battle/app/DuelWorkerClient.ts
+src/battle/app/stores/duel-store.ts
+src/battle/worker/duel.worker-browser.ts
+src/battle/worker/create-browser-runtime.ts
 ```
 
 Exact filenames may follow the conventions established by the Svelte/Vite setup, but responsibilities must remain separate:
@@ -262,7 +262,7 @@ Do not pull later milestones forward:
 
 ### Release verification evidence
 
-Firefox exposed an IndexedDB ownership race during the first release gate: a late-open cleanup callback closed a successfully accepted `SnapshotStore` before its first transaction. `src/app/App.svelte` now closes the database only when an open operation was actually abandoned. The complete local and isolated gates subsequently passed all ten browser cases, including Firefox.
+Firefox exposed an IndexedDB ownership race during the first release gate: a late-open cleanup callback closed a successfully accepted `SnapshotStore` before its first transaction. `src/battle/app/App.svelte` now closes the database only when an open operation was actually abandoned. The complete local and isolated gates subsequently passed all ten browser cases, including Firefox.
 
 ### Deliberate MVP limits
 

@@ -7,7 +7,7 @@ import {
   toFrameRect,
   UNROTATED_FRAME,
   type StageFrame,
-} from "../../src/app/presentation/stage-frame.ts";
+} from "../../src/battle/app/presentation/stage-frame.ts";
 
 /* A 390x844 phone: the rotated duel frame is 693.33x390 in its own space, so
    on screen it is 390 wide and 693.33 tall, centred vertically. */

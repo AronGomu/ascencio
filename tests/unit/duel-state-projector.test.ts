@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { parseDuelWorkerEvent } from "../../src/duel/contracts/duel-worker-event.ts";
-import { cardCode, snapshotId } from "../../src/duel/contracts/ids.ts";
+import { parseDuelWorkerEvent } from "../../src/battle/duel/contracts/duel-worker-event.ts";
+import { cardCode, snapshotId } from "../../src/battle/duel/contracts/ids.ts";
 import {
   EngineLocation,
   EngineMessageType,
   EnginePosition,
-} from "../../src/worker/engine/engine-constants.ts";
-import { DuelStateProjector } from "../../src/worker/projection/DuelStateProjector.ts";
+} from "../../src/battle/worker/engine/engine-constants.ts";
+import { DuelStateProjector } from "../../src/battle/worker/projection/DuelStateProjector.ts";
 
 function projector(
   layout: { readonly extraMonsterZones: boolean } = { extraMonsterZones: true },

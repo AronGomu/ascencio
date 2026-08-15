@@ -2,7 +2,7 @@
 import { cleanup, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import DuelRail from "../../src/app/components/DuelRail.svelte";
+import DuelRail from "../../src/battle/app/components/DuelRail.svelte";
 afterEach(cleanup);
 const props = {
   turn: 3,

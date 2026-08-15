@@ -11,46 +11,46 @@ import {
 import { userEvent } from "@testing-library/user-event";
 import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import DuelField from "../../src/app/components/DuelField.svelte";
-import DuelFieldErrorBoundary from "../../src/app/components/duel-field/DuelFieldErrorBoundary.svelte";
-import FieldBoard from "../../src/app/components/duel-field/FieldBoard.svelte";
-import CardTray from "../../src/app/components/duel-field/CardTray.svelte";
+import DuelField from "../../src/battle/app/components/DuelField.svelte";
+import DuelFieldErrorBoundary from "../../src/battle/app/components/duel-field/DuelFieldErrorBoundary.svelte";
+import FieldBoard from "../../src/battle/app/components/duel-field/FieldBoard.svelte";
+import CardTray from "../../src/battle/app/components/duel-field/CardTray.svelte";
 import {
   cardCode,
   cardInstanceId,
   choiceId,
   promptId,
   snapshotId,
-} from "../../src/duel/contracts/ids.ts";
+} from "../../src/battle/duel/contracts/ids.ts";
 import type {
   PlayerPrompt,
   PromptChoice,
   PromptKind,
-} from "../../src/duel/contracts/player-prompt.ts";
+} from "../../src/battle/duel/contracts/player-prompt.ts";
 import type {
   PlayerIndex,
   PublicCard,
   PublicDuelState,
-} from "../../src/duel/contracts/public-duel-state.ts";
-import { mapSnapshotToBoard } from "../../src/field/board-view-model.ts";
-import { createFieldRenderLayout } from "../../src/field/duel-field-geometry.ts";
-import { zoneListsForBoard } from "../../src/field/zone-list.ts";
-import { offFieldTargetEntries } from "../../src/field/off-field-target-list.ts";
+} from "../../src/battle/duel/contracts/public-duel-state.ts";
+import { mapSnapshotToBoard } from "../../src/battle/field/board-view-model.ts";
+import { createFieldRenderLayout } from "../../src/battle/field/duel-field-geometry.ts";
+import { zoneListsForBoard } from "../../src/battle/field/zone-list.ts";
+import { offFieldTargetEntries } from "../../src/battle/field/off-field-target-list.ts";
 import {
   createInteractionSession,
   reduceInteractionSession,
   type InteractionSession,
   type InteractionSessionAction,
-} from "../../src/app/prompts/interaction-session.ts";
+} from "../../src/battle/app/prompts/interaction-session.ts";
 import {
   createInitialDuelViewState,
   reduceDuelViewState,
-} from "../../src/app/stores/duel-store.ts";
+} from "../../src/battle/app/stores/duel-store.ts";
 import {
   mapPromptToInteractionSpec,
   type ActiveInteractionSpec,
-} from "../../src/app/prompts/interaction-spec.ts";
-import { promptSurface } from "../../src/app/prompts/prompt-surface.ts";
+} from "../../src/battle/app/prompts/interaction-spec.ts";
+import { promptSurface } from "../../src/battle/app/prompts/prompt-surface.ts";
 import {
   BOARD_CARD_TEXTS,
   BOARD_VIEW_MODEL_FIXTURES,

@@ -89,7 +89,7 @@ src/
 └── pwa/
 ```
 
-Existing `src/app/`, `src/duel/`, `src/field/`, `src/worker/`, and relevant `src/storage/` files remain in place initially. `src/battle/index.ts` wraps them. Move existing duel files only in a later behavior-preserving phase with full parity gates; no move is required for first slice.
+The duel's files — `src/battle/app/`, `src/battle/duel/`, `src/battle/field/`, `src/battle/worker/` and `src/battle/storage/` — sit under the battle domain, and `src/battle/index.ts` wraps them. The first slice wrapped them where they stood; the behavior-preserving move under `src/battle/` happened in a later phase with full parity gates.
 
 Authored content lives outside runtime code:
 

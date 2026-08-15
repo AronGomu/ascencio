@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { SelectableDeck } from "../../battle/decks/selectable-decks.ts";
+  import type { SelectableDeck } from "../../decks/selectable-decks.ts";
 
   export let decks: readonly SelectableDeck[] = [];
   export let playerKey = "";

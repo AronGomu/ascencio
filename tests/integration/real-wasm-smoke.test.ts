@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadVendoredCoreNode } from "../../src/worker/engine/load-vendored-core-node.ts";
+import { loadVendoredCoreNode } from "../../src/battle/worker/engine/load-vendored-core-node.ts";
 
 describe("vendored synchronous ocgcore", () => {
   it("loads the real local WASM and exposes the pinned core version", async () => {

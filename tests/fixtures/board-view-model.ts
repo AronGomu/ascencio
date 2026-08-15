@@ -4,18 +4,18 @@ import {
   choiceId,
   promptId,
   snapshotId,
-} from "../../src/duel/contracts/ids.ts";
+} from "../../src/battle/duel/contracts/ids.ts";
 import type {
   PlayerPrompt,
   PromptChoice,
-} from "../../src/duel/contracts/player-prompt.ts";
+} from "../../src/battle/duel/contracts/player-prompt.ts";
 import type {
   CardPosition,
   PlayerIndex,
   PublicCard,
   PublicDuelState,
   PublicPlayerState,
-} from "../../src/duel/contracts/public-duel-state.ts";
+} from "../../src/battle/duel/contracts/public-duel-state.ts";
 import { deckSlots } from "./board-public-states.ts";
 
 export const BOARD_CARD_TEXTS = new Map([

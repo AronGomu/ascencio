@@ -28,7 +28,7 @@ vi.hoisted(() => {
   });
 });
 
-vi.mock("../../src/app/DuelWorkerClient.ts", () => {
+vi.mock("../../src/battle/app/DuelWorkerClient.ts", () => {
   class DuelWorkerClientMock {
     static instances: DuelWorkerClientMock[] = [];
     context = { workerGeneration: 1, sessionGeneration: 0 };
@@ -87,7 +87,7 @@ vi.mock("../../src/app/DuelWorkerClient.ts", () => {
   return { DuelWorkerClient: DuelWorkerClientMock };
 });
 
-import { DuelWorkerClient as MockedDuelWorkerClient } from "../../src/app/DuelWorkerClient.ts";
+import { DuelWorkerClient as MockedDuelWorkerClient } from "../../src/battle/app/DuelWorkerClient.ts";
 import AppShell from "../../src/shell/AppShell.svelte";
 import type { DomainLoaders } from "../../src/shell/domain-loaders.ts";
 import { createShellStore } from "../../src/shell/shell-store.ts";

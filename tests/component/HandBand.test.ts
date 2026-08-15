@@ -2,19 +2,19 @@
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import HandBand from "../../src/app/components/duel-field/HandBand.svelte";
-import { cardInstanceId } from "../../src/duel/contracts/ids.ts";
-import type { ActiveInteractionSpec } from "../../src/app/prompts/interaction-spec.ts";
+import HandBand from "../../src/battle/app/components/duel-field/HandBand.svelte";
+import { cardInstanceId } from "../../src/battle/duel/contracts/ids.ts";
+import type { ActiveInteractionSpec } from "../../src/battle/app/prompts/interaction-spec.ts";
 import type {
   BoardCardView,
   BoardTargetId,
   BoardZoneView,
-} from "../../src/field/board-view-model.ts";
+} from "../../src/battle/field/board-view-model.ts";
 import {
   fieldZoneAccessibleName,
   STANDARD_DUEL_FIELD_LAYOUT,
-} from "../../src/field/duel-field-layout.ts";
-import type { FieldPlacement } from "../../src/field/duel-field-geometry.ts";
+} from "../../src/battle/field/duel-field-layout.ts";
+import type { FieldPlacement } from "../../src/battle/field/duel-field-geometry.ts";
 
 const PLACEMENT: FieldPlacement = { x: 400, y: 600, width: 760, height: 80 };
 

@@ -7,12 +7,12 @@ import {
   choiceId,
   promptId,
   type ChoiceId,
-} from "../../src/duel/contracts/ids.ts";
+} from "../../src/battle/duel/contracts/ids.ts";
 import type {
   PlayerPrompt,
   PromptChoice,
-} from "../../src/duel/contracts/player-prompt.ts";
-import PromptDialog from "../../src/app/components/PromptDialog.svelte";
+} from "../../src/battle/duel/contracts/player-prompt.ts";
+import PromptDialog from "../../src/battle/app/components/PromptDialog.svelte";
 
 afterEach(() => cleanup());
 

@@ -4,16 +4,16 @@ import {
   choiceId,
   promptId,
   type ChoiceId,
-} from "../../src/duel/contracts/ids.ts";
+} from "../../src/battle/duel/contracts/ids.ts";
 import type {
   PlayerPrompt,
   PromptChoice,
   PromptKind,
-} from "../../src/duel/contracts/player-prompt.ts";
+} from "../../src/battle/duel/contracts/player-prompt.ts";
 import {
   describePromptConstraints,
   validatePromptSelection,
-} from "../../src/app/prompts/prompt-selection.ts";
+} from "../../src/battle/app/prompts/prompt-selection.ts";
 
 const FIRST = choiceId("choice-1");
 const SECOND = choiceId("choice-2");

@@ -1,12 +1,12 @@
 import { readFile } from "node:fs/promises";
-import type { CardCode } from "../../src/duel/contracts/ids.ts";
-import type { CoreStartupScript } from "../../src/worker/engine/DuelSession.ts";
+import type { CardCode } from "../../src/battle/duel/contracts/ids.ts";
+import type { CoreStartupScript } from "../../src/battle/worker/engine/DuelSession.ts";
 import type {
   ChoiceAction,
   PromptKind,
-} from "../../src/duel/contracts/player-prompt.ts";
-import type { PlayerIndex } from "../../src/duel/contracts/public-duel-state.ts";
-import { loadMvpPreset } from "../../src/duel/presets/mvp-preset-node.ts";
+} from "../../src/battle/duel/contracts/player-prompt.ts";
+import type { PlayerIndex } from "../../src/battle/duel/contracts/public-duel-state.ts";
+import { loadMvpPreset } from "../../src/battle/duel/presets/mvp-preset-node.ts";
 import type { ProgrammedTranscriptId } from "./programmed-transcript.ts";
 
 export interface ProgrammedChoice {

@@ -219,11 +219,11 @@ A successful unified run writes `status: "ready"` to `generated/mvp-assets-statu
 
 The Worker IPC boundary emits structured warning/error/completion objects to the browser Worker console (or the Node console in a headless host). A caller can inject a debug logger for receive/dispatch traces. Grep/filter the stable `duel.worker.*` event prefix:
 
-- `duel.worker.command.*` — receive, rejection, failure, completion, or intentional skip at `src/worker/duel.worker.ts`;
-- `duel.worker.event.*` — event dispatch and posting failures at `src/worker/duel.worker.ts`;
-- `duel.worker.detached` — attachment teardown at `src/worker/duel.worker.ts`;
+- `duel.worker.command.*` — receive, rejection, failure, completion, or intentional skip at `src/battle/worker/duel.worker.ts`;
+- `duel.worker.event.*` — event dispatch and posting failures at `src/battle/worker/duel.worker.ts`;
+- `duel.worker.detached` — attachment teardown at `src/battle/worker/duel.worker.ts`;
 - `duel.worker.node.*` — Node Worker bootstrap, message-deserialization, and thread-boundary failures;
-- `duel.worker.logging.failed` — injected logger failure fallback at `src/worker/diagnostics/worker-log.ts`.
+- `duel.worker.logging.failed` — injected logger failure fallback at `src/battle/worker/diagnostics/worker-log.ts`.
 
 Per-duel bounded traces record revisions, process/message ordering, public events, opaque responses, opponent reasons, terminal state, and the production seed. Error/result surfaces can download a schema-versioned JSON diagnostic. These files are explicitly marked `contains-production-seed`; treat them as sensitive and share them only with an authorized debugger.
 

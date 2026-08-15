@@ -2,7 +2,7 @@
 
 import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
-import LoadingOverlay from "../../src/app/components/LoadingOverlay.svelte";
+import LoadingOverlay from "../../src/battle/app/components/LoadingOverlay.svelte";
 
 afterEach(() => {
   cleanup();

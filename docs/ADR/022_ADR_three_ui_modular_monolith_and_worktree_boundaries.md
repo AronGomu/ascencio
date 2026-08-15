@@ -47,7 +47,7 @@ src/main.ts
 
 | Owner | Exclusive production paths | Transitional paths |
 | --- | --- | --- |
-| Duel Simulator | `src/battle/`, `src/app/`, `src/duel/`, `src/field/`, `src/worker/`, duel-owned storage/tests | none |
+| Duel Simulator | `src/battle/` (`app/`, `duel/`, `field/`, `worker/`, `storage/`), duel-owned tests | none |
 | Deck Editor | `src/decks/`, future `src/deck-editor/`, deck tests | `src/prototypes/deck-builder/` |
 | Visual Novel | future `src/story/`, story content/tests | `src/prototype/` |
 | Integration | `src/main.ts`, `src/shell/`, route table, root design tokens, build/package/ESLint/Playwright config, cross-domain E2E, canonical architecture docs | `prototype.html` |
@@ -112,7 +112,7 @@ Story-to-duel flow:
 5. Facade returns normalized resolved/aborted/failed result.
 6. Story accepts result only when `handoffId` matches; technical failure never becomes player loss.
 
-Custom decks extend duel-owned Worker start wrapper only. Deck Editor and Visual Novel never import `src/worker/**`.
+Custom decks extend duel-owned Worker start wrapper only. Deck Editor and Visual Novel never import `src/battle/worker/**`.
 
 ## Persistence
 

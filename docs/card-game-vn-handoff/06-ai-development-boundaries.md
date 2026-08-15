@@ -128,7 +128,7 @@ Forbidden:
 
 ```text
 src/battle/
-public surfaces of existing src/app/, src/duel/, src/field/, src/worker/
+public surfaces of existing src/battle/app/, src/battle/duel/, src/battle/field/, src/battle/worker/
 ```
 
 Allowed:

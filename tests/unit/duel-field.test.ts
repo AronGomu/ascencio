@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { cardCode } from "../../src/duel/contracts/ids.ts";
-import type { PublicDuelState } from "../../src/duel/contracts/public-duel-state.ts";
-import { resolvePromptChoiceBoardTarget } from "../../src/field/card-mapping.ts";
+import { cardCode } from "../../src/battle/duel/contracts/ids.ts";
+import type { PublicDuelState } from "../../src/battle/duel/contracts/public-duel-state.ts";
+import { resolvePromptChoiceBoardTarget } from "../../src/battle/field/card-mapping.ts";
 import {
   mapSnapshotToBoard,
   type BoardViewModel,
-} from "../../src/field/board-view-model.ts";
+} from "../../src/battle/field/board-view-model.ts";
 import {
   CARD_HEIGHT,
   CARD_WIDTH,
@@ -17,7 +17,7 @@ import {
   STANDARD_DUEL_FIELD_LAYOUT,
   type EngineFieldAddress,
   type PhysicalZoneId,
-} from "../../src/field/duel-field-layout.ts";
+} from "../../src/battle/field/duel-field-layout.ts";
 import {
   BOARD_CARD_TEXTS,
   BOARD_TARGET_PROMPT,

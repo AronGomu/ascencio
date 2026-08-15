@@ -2,13 +2,13 @@
 
 import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import CardPreviewPanel from "../../src/app/components/CardPreviewPanel.svelte";
+import CardPreviewPanel from "../../src/battle/app/components/CardPreviewPanel.svelte";
 import {
   HIDDEN_CARD_PREVIEW,
   type CardPreviewView,
-} from "../../src/app/presentation/card-preview.ts";
-import type { CardImageLease } from "../../src/app/images/card-image-cache.ts";
-import { cardCode } from "../../src/duel/contracts/ids.ts";
+} from "../../src/battle/app/presentation/card-preview.ts";
+import type { CardImageLease } from "../../src/battle/app/images/card-image-cache.ts";
+import { cardCode } from "../../src/battle/duel/contracts/ids.ts";
 
 afterEach(() => cleanup());
 

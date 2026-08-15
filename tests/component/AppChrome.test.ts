@@ -23,7 +23,7 @@ const workerClientSpies = vi.hoisted(() => {
   return { startDuel: vi.fn(), respond: vi.fn() };
 });
 
-vi.mock("../../src/app/DuelWorkerClient.ts", () => {
+vi.mock("../../src/battle/app/DuelWorkerClient.ts", () => {
   class DuelWorkerClientMock {
     static instances: DuelWorkerClientMock[] = [];
     context = { workerGeneration: 1, sessionGeneration: 0 };
@@ -84,17 +84,17 @@ vi.mock("../../src/app/DuelWorkerClient.ts", () => {
   return { DuelWorkerClient: DuelWorkerClientMock };
 });
 
-import App from "../../src/app/App.svelte";
-import { DuelWorkerClient as MockedDuelWorkerClient } from "../../src/app/DuelWorkerClient.ts";
-import MenuDialog from "../../src/app/components/MenuDialog.svelte";
-import SettingsDialog from "../../src/app/components/SettingsDialog.svelte";
+import App from "../../src/battle/app/App.svelte";
+import { DuelWorkerClient as MockedDuelWorkerClient } from "../../src/battle/app/DuelWorkerClient.ts";
+import MenuDialog from "../../src/battle/app/components/MenuDialog.svelte";
+import SettingsDialog from "../../src/battle/app/components/SettingsDialog.svelte";
 import {
   choiceId,
   promptId,
   snapshotId,
-} from "../../src/duel/contracts/ids.ts";
-import type { PlayerPrompt } from "../../src/duel/contracts/player-prompt.ts";
-import type { PublicDuelState } from "../../src/duel/contracts/public-duel-state.ts";
+} from "../../src/battle/duel/contracts/ids.ts";
+import type { PlayerPrompt } from "../../src/battle/duel/contracts/player-prompt.ts";
+import type { PublicDuelState } from "../../src/battle/duel/contracts/public-duel-state.ts";
 
 interface MockedWorkerInstance {
   readonly context: { workerGeneration: number; sessionGeneration: number };

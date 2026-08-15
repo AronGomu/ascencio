@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
-  import App from "../app/App.svelte";
+  import App from "./app/App.svelte";
   import type {
     BattleFacadeResult,
     BattleRequest,

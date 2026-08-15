@@ -548,7 +548,7 @@ Prototype will not include:
 - voice acting, final music, cinematics, or final artwork;
 - public deployment;
 - final story canon;
-- architecture changes under `src/duel`, `src/worker`, `src/field`, or `src/storage`.
+- architecture changes under `src/battle/duel`, `src/battle/worker`, `src/battle/field`, or `src/battle/storage`.
 
 ## 13. Prototype deliverables
 

@@ -10,7 +10,7 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 import type { Plugin, ResolvedConfig, ViteDevServer } from "vite";
-import { parseRuntimeSnapshotManifest } from "../../src/worker/assets/runtime-manifest.ts";
+import { parseRuntimeSnapshotManifest } from "../../src/battle/worker/assets/runtime-manifest.ts";
 import { buildActiveImageManifest } from "./active-image-manifest.ts";
 import { resolveActiveRuntimeFiles } from "./active-runtime-files.ts";
 

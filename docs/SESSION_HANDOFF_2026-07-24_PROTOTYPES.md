@@ -68,7 +68,7 @@ Evidence:
 - `src/prototypes/deck-builder/DeckBuilderPrototype.svelte`
 - `src/prototypes/deck-builder/deck-builder-store.ts`
 - `src/decks/`
-- `src/app/select-app-entry.ts`
+- `src/battle/app/select-app-entry.ts`
 - `docs/DECK_BUILDER_PROTOTYPE_SCOPE.md`
 - `docs/DECK_BUILDER_PROTOTYPE_IMPLEMENTATION_PLAN.md`
 

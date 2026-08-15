@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { cardInstanceId, choiceId } from "../../src/duel/contracts/ids.ts";
-import type { PromptChoice } from "../../src/duel/contracts/player-prompt.ts";
-import { resolvePromptChoiceBoardTarget } from "../../src/field/card-mapping.ts";
-import { mapSnapshotToBoard } from "../../src/field/board-view-model.ts";
+import {
+  cardInstanceId,
+  choiceId,
+} from "../../src/battle/duel/contracts/ids.ts";
+import type { PromptChoice } from "../../src/battle/duel/contracts/player-prompt.ts";
+import { resolvePromptChoiceBoardTarget } from "../../src/battle/field/card-mapping.ts";
+import { mapSnapshotToBoard } from "../../src/battle/field/board-view-model.ts";
 import { BOARD_VIEW_MODEL_FIXTURES } from "../fixtures/board-view-model.ts";
 
 const SNAPSHOT = BOARD_VIEW_MODEL_FIXTURES["ST-08"];

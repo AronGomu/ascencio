@@ -1,8 +1,8 @@
 import { describe, expect, it, onTestFinished } from "vitest";
-import { parseDuelDeckSelection } from "../../src/duel/contracts/duel-deck-selection.ts";
-import { duelId } from "../../src/duel/contracts/ids.ts";
-import { loadDeckSources } from "../../src/duel/presets/deck-sources-node.ts";
-import { createDuelPreset } from "../../src/duel/presets/duel-preset.ts";
+import { parseDuelDeckSelection } from "../../src/battle/duel/contracts/duel-deck-selection.ts";
+import { duelId } from "../../src/battle/duel/contracts/ids.ts";
+import { loadDeckSources } from "../../src/battle/duel/presets/deck-sources-node.ts";
+import { createDuelPreset } from "../../src/battle/duel/presets/duel-preset.ts";
 import {
   hasWorkerEventType,
   NodeDuelWorkerHarness,

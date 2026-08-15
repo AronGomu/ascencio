@@ -32,7 +32,7 @@
       </svg>
     </figure>
     <h3>Fallback order during Worker asset load</h3><ol class="flow-list"><li>Fetch current packaged runtime with expected manifest SHA.</li><li>If network/static load fails, open current snapshot from verified Cache Storage.</li><li>If current cache fails, read active/previous snapshot pointers from IndexedDB.</li><li>Attempt each fallback runtime cache using stored runtime manifest + image digests.</li><li>If all fail, emit sanitized initialization error. Client watchdog also bounds no-response case.</li></ol>
-    <p class="source-ref">Sources: src/app/App.svelte:114–300 · src/app/DuelWorkerClient.ts:142–158 · src/worker/create-browser-runtime.ts · src/worker/DuelWorkerRuntime.ts:181–214</p>
+    <p class="source-ref">Sources: src/battle/app/App.svelte:114–300 · src/battle/app/DuelWorkerClient.ts:142–158 · src/battle/worker/create-browser-runtime.ts · src/battle/worker/DuelWorkerRuntime.ts:181–214</p>
   </section>
 
   <section id="duel">
@@ -54,7 +54,7 @@
       </svg>
     </figure>
     <div class="notice"><strong>Double-submit defense.</strong> Store marks <code>responsePending</code>; client records responded prompt IDs and clears current prompt before posting. E2E double-clicks same button, asserts one <code>respond</code> cmd.</div>
-    <p class="source-ref">Sources: src/app/prompts/PromptControls.svelte · src/app/stores/duel-store.ts:274–325 · src/app/DuelWorkerClient.ts:187–212 · src/worker/HeadlessDuelController.ts:183–206 · src/worker/protocol/PromptRegistry.ts</p>
+    <p class="source-ref">Sources: src/battle/app/prompts/PromptControls.svelte · src/battle/app/stores/duel-store.ts:274–325 · src/battle/app/DuelWorkerClient.ts:187–212 · src/battle/worker/HeadlessDuelController.ts:183–206 · src/battle/worker/protocol/PromptRegistry.ts</p>
   </section>
 
   <section id="opponent">
@@ -81,7 +81,7 @@
     <h2>Diagnostics flow</h2>
     <div class="notice danger"><strong>Sensitive artifact.</strong> Download contains production seed. UI permits diagnostics only after inactive session, labels sensitivity, warns before sharing.</div>
     <ol class="flow-list"><li>Bounded Worker trace records lifecycle, process status, core msg type, presentation event, prompt, response IDs, opponent reason, result/error.</li><li>After result/failure, user requests diagnostics. Client enforces initialized + prior session + inactive + single-flight.</li><li>Runtime combines trace with core version and pinned revision metadata; computes pending prompt/last msg.</li><li>Worker emits validated <code>diagnostics</code> event.</li><li>App combines trace with build ID, browser info, active/fallback snapshot IDs, image cache summary.</li><li>Downloader serializes schema v2 JSON to Blob, triggers local file download.</li><li>App stores bounded metadata only (max 20 debug runs) in IndexedDB, not raw sensitive trace.</li></ol>
-    <p class="source-ref">Sources: src/worker/diagnostics/duel-trace.ts · src/worker/DuelWorkerRuntime.ts:461–528 · src/app/diagnostics/download-diagnostics.ts · src/app/App.svelte:457–509</p>
+    <p class="source-ref">Sources: src/battle/worker/diagnostics/duel-trace.ts · src/battle/worker/DuelWorkerRuntime.ts:461–528 · src/battle/app/diagnostics/download-diagnostics.ts · src/battle/app/App.svelte:457–509</p>
   </section>
 
   <section id="recovery">

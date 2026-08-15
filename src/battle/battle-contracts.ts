@@ -2,9 +2,9 @@ import { deckId, type ValidatedDeckSnapshot } from "../decks/index.ts";
 import {
   parseDuelDeckSelection,
   type DuelDeckSelection,
-} from "../duel/contracts/duel-deck-selection.ts";
-import type { DuelResult } from "../duel/contracts/duel-result.ts";
-import { isDeckId, type DeckId } from "../duel/presets/deck-catalog.ts";
+} from "./duel/contracts/duel-deck-selection.ts";
+import type { DuelResult } from "./duel/contracts/duel-result.ts";
+import { isDeckId, type DeckId } from "./duel/presets/deck-catalog.ts";
 
 /** Which deck a seat brings: a bundled preset, or a deck the player built. */
 export type BattleDeckSelection =

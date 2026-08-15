@@ -4,8 +4,8 @@ import {
   assertNoMissingActiveImages,
   buildActiveImageManifest,
 } from "../../scripts/lib/active-image-manifest.ts";
-import { loadDeckSources } from "../../src/duel/presets/deck-sources-node.ts";
-import { reviewedCardPool } from "../../src/duel/presets/reviewed-card-pool.ts";
+import { loadDeckSources } from "../../src/battle/duel/presets/deck-sources-node.ts";
+import { reviewedCardPool } from "../../src/battle/duel/presets/reviewed-card-pool.ts";
 
 const projectRoot = path.resolve(".");
 

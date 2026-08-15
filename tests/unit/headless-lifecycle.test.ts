@@ -6,12 +6,12 @@ import {
   FAKE_SNAPSHOT_ID,
   type FakeDuelProgram,
 } from "../fixtures/fake-ocgcore-adapter.ts";
-import { DuelSession } from "../../src/worker/engine/DuelSession.ts";
+import { DuelSession } from "../../src/battle/worker/engine/DuelSession.ts";
 import {
   EngineMessageType,
   EngineProcess,
-} from "../../src/worker/engine/engine-constants.ts";
-import { HeadlessDuelController } from "../../src/worker/HeadlessDuelController.ts";
+} from "../../src/battle/worker/engine/engine-constants.ts";
+import { HeadlessDuelController } from "../../src/battle/worker/HeadlessDuelController.ts";
 
 const WIN_MESSAGE = {
   type: EngineMessageType.WIN,

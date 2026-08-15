@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { vendoredMessageTypes } from "../../src/worker/engine/OcgCoreAdapter.ts";
+import { vendoredMessageTypes } from "../../src/battle/worker/engine/OcgCoreAdapter.ts";
 import {
   classifyEngineMessage,
   INTERNAL_MESSAGE_RATIONALE,
   PINNED_MESSAGE_CLASSIFICATION,
   PINNED_MESSAGE_TYPES,
-} from "../../src/worker/protocol/message-classification.ts";
+} from "../../src/battle/worker/protocol/message-classification.ts";
 
 describe("pinned protocol compatibility inventory", () => {
   it("classifies every message exported by the vendored adapter exactly once", () => {

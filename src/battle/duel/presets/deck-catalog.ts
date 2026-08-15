@@ -9,7 +9,7 @@ export type DeckId =
 export interface DeckMetadata {
   readonly id: DeckId;
   readonly name: string;
-  /** File name inside `src/duel/presets/decks/`. */
+  /** File name inside `src/battle/duel/presets/decks/`. */
   readonly fileName: string;
 }
 

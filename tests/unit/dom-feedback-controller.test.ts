@@ -5,8 +5,8 @@ import {
   createDomFeedbackController,
   EMPTY_DOM_FEEDBACK_STATE,
   type DomFeedbackState,
-} from "../../src/app/presentation/dom-feedback-controller.ts";
-import type { DomPresentationCommand } from "../../src/app/presentation/presentation-command.ts";
+} from "../../src/battle/app/presentation/dom-feedback-controller.ts";
+import type { DomPresentationCommand } from "../../src/battle/app/presentation/presentation-command.ts";
 
 function rect(left: number, top: number, width = 40, height = 60): DOMRect {
   return {

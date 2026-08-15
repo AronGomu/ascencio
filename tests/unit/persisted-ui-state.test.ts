@@ -5,7 +5,7 @@ import {
   readPersistedUiState,
   writePersistedUiState,
   type PersistedUiState,
-} from "../../src/app/stores/persisted-ui-state.ts";
+} from "../../src/battle/app/stores/persisted-ui-state.ts";
 
 function validState(): PersistedUiState {
   return {

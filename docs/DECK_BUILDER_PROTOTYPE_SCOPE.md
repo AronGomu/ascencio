@@ -810,8 +810,8 @@ Prototype is review-ready when:
 - `docs/card-game-vn-handoff/03-modules-and-contracts.md`
 - `docs/card-game-vn-handoff/07-technical-decisions.md`
 - `docs/card-game-vn-handoff/08-phased-implementation-plan.md`
-- `src/duel/presets/deck-parser.ts`
-- `src/worker/engine/OcgCoreAdapter.ts`
-- `src/worker/assets/active-duel-dependencies.ts`
+- `src/battle/duel/presets/deck-parser.ts`
+- `src/battle/worker/engine/OcgCoreAdapter.ts`
+- `src/battle/worker/assets/active-duel-dependencies.ts`
 - `vendor/ocgcore-wasm/0.1.2/dist/index.d.ts`
 - `src/styles/app.css`

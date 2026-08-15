@@ -15,7 +15,7 @@ import type { DeckRecord, DeckRepository } from "../../../src/decks/index.ts";
 import { emptyDeckHistory } from "../../../src/decks/deck-history.ts";
 import { createBlankDeck } from "../../../src/decks/deck-model.ts";
 import { validateDeckDraft } from "../../../src/decks/deck-validation.ts";
-import { DECK_CATALOG } from "../../../src/duel/presets/deck-catalog.ts";
+import { DECK_CATALOG } from "../../../src/battle/duel/presets/deck-catalog.ts";
 
 const catalog = catalogByCode(PROTOTYPE_CATALOG);
 const mainCodes = PROTOTYPE_CATALOG.filter(

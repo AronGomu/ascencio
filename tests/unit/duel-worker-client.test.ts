@@ -1,20 +1,20 @@
 import { describe, expect, it, vi } from "vitest";
-import type { DuelCommand } from "../../src/duel/contracts/duel-command.ts";
-import type { DuelWorkerEvent } from "../../src/duel/contracts/duel-worker-event.ts";
+import type { DuelCommand } from "../../src/battle/duel/contracts/duel-command.ts";
+import type { DuelWorkerEvent } from "../../src/battle/duel/contracts/duel-worker-event.ts";
 import {
   choiceId,
   duelId,
   promptId,
   snapshotId,
-} from "../../src/duel/contracts/ids.ts";
+} from "../../src/battle/duel/contracts/ids.ts";
 import {
   DuelWorkerClient,
   type DuelWorkerPort,
-} from "../../src/app/DuelWorkerClient.ts";
-import { createDuelStore } from "../../src/app/stores/duel-store.ts";
-import type { InteractionKey } from "../../src/app/prompts/interaction-spec.ts";
-import type { DuelDeckSelection } from "../../src/duel/contracts/duel-deck-selection.ts";
-import type { DeckId } from "../../src/duel/presets/deck-catalog.ts";
+} from "../../src/battle/app/DuelWorkerClient.ts";
+import { createDuelStore } from "../../src/battle/app/stores/duel-store.ts";
+import type { InteractionKey } from "../../src/battle/app/prompts/interaction-spec.ts";
+import type { DuelDeckSelection } from "../../src/battle/duel/contracts/duel-deck-selection.ts";
+import type { DeckId } from "../../src/battle/duel/presets/deck-catalog.ts";
 
 function preset(id: DeckId): DuelDeckSelection {
   return { kind: "preset", deckId: id };

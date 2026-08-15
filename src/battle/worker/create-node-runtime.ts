@@ -2,7 +2,7 @@ import path from "node:path";
 import {
   activeImageManifestSha256,
   buildActiveImageManifest,
-} from "../../scripts/lib/active-image-manifest.ts";
+} from "../../../scripts/lib/active-image-manifest.ts";
 import { DuelOperationError } from "../duel/contracts/duel-error.ts";
 import { cardCode } from "../duel/contracts/ids.ts";
 import {

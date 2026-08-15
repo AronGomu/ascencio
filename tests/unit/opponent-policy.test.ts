@@ -5,14 +5,14 @@ import {
   choiceId,
   promptId,
   snapshotId,
-} from "../../src/duel/contracts/ids.ts";
-import type { PlayerPrompt } from "../../src/duel/contracts/player-prompt.ts";
-import type { PublicDuelState } from "../../src/duel/contracts/public-duel-state.ts";
-import type { ActiveDuelDependencies } from "../../src/worker/assets/active-duel-dependencies.ts";
+} from "../../src/battle/duel/contracts/ids.ts";
+import type { PlayerPrompt } from "../../src/battle/duel/contracts/player-prompt.ts";
+import type { PublicDuelState } from "../../src/battle/duel/contracts/public-duel-state.ts";
+import type { ActiveDuelDependencies } from "../../src/battle/worker/assets/active-duel-dependencies.ts";
 import {
   BasicOpponentPolicy,
   toOpponentVisibleState,
-} from "../../src/worker/opponent/OpponentPolicy.ts";
+} from "../../src/battle/worker/opponent/OpponentPolicy.ts";
 import { deckSlots } from "../fixtures/board-public-states.ts";
 
 const dependencies: ActiveDuelDependencies = {

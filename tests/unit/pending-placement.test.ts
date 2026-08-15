@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { choiceId, promptId } from "../../src/duel/contracts/ids.ts";
+import { choiceId, promptId } from "../../src/battle/duel/contracts/ids.ts";
 import type {
   PlayerPrompt,
   PromptChoice,
   PromptPlace,
-} from "../../src/duel/contracts/player-prompt.ts";
-import type { PhysicalZoneId } from "../../src/field/duel-field-layout.ts";
+} from "../../src/battle/duel/contracts/player-prompt.ts";
+import type { PhysicalZoneId } from "../../src/battle/field/duel-field-layout.ts";
 import {
   resolvePendingPlacementChoice,
   type PendingPlacement,
-} from "../../src/app/prompts/pending-placement.ts";
+} from "../../src/battle/app/prompts/pending-placement.ts";
 
 const ARMED_AT = promptId("prompt-idle");
 const FOLLOW_UP = promptId("prompt-place");

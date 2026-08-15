@@ -5,9 +5,9 @@ import {
   cardListDisplayEntries,
   cardListSourceNotice,
   cardListSelectionState,
-} from "../../src/app/presentation/card-list-dialog-model.ts";
-import type { ChoiceId } from "../../src/duel/contracts/ids.ts";
-import type { OffFieldTargetEntry } from "../../src/field/off-field-target-list.ts";
+} from "../../src/battle/app/presentation/card-list-dialog-model.ts";
+import type { ChoiceId } from "../../src/battle/duel/contracts/ids.ts";
+import type { OffFieldTargetEntry } from "../../src/battle/field/off-field-target-list.ts";
 
 const entries = Object.freeze([
   Object.freeze({ id: "1", label: "Beta", identityVisible: true }),

@@ -6,7 +6,7 @@ import {
   parseBattleRequest,
   toDuelDeckSelection,
 } from "../../src/battle/battle-contracts.ts";
-import { DuelCommandValidationError } from "../../src/duel/contracts/duel-command.ts";
+import { DuelCommandValidationError } from "../../src/battle/duel/contracts/duel-command.ts";
 
 const LOCAL_DECK = {
   ref: { type: "local", deckId: "starter", revision: 3 },

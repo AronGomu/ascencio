@@ -10,7 +10,7 @@ export async function loadVendoredCoreNode(
 ): Promise<OcgCoreAdapter> {
   const wasmPath = fileURLToPath(
     new URL(
-      "../../../vendor/ocgcore-wasm/0.1.2/lib/ocgcore.sync.wasm",
+      "../../../../vendor/ocgcore-wasm/0.1.2/lib/ocgcore.sync.wasm",
       import.meta.url,
     ),
   );

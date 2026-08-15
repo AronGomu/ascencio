@@ -221,7 +221,7 @@ describe("AppShell", () => {
   /* T15: the quarter turn itself is a media query in `src/styles/app.css`, and
      applies to the duel region rather than the whole stage — the deck editor,
      story and home hub share this stage and read upright in portrait. What the
-     shell publishes here is the mode: `src/app/presentation/stage-frame.ts`
+     shell publishes here is the mode: `src/battle/app/presentation/stage-frame.ts`
      still reads the live transform before mapping a single coordinate. */
   it("marks a portrait phone's stage as rotated", () => {
     setViewport(400, 900);

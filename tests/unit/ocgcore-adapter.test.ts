@@ -7,12 +7,12 @@ import {
   type EngineCardQuery,
   type EngineDuelHandle,
   type EngineLocationQuery,
-} from "../../src/worker/engine/OcgCoreAdapter.ts";
+} from "../../src/battle/worker/engine/OcgCoreAdapter.ts";
 import {
   EngineMessageType,
   EngineQueryFlag,
   EngineResponseType,
-} from "../../src/worker/engine/engine-constants.ts";
+} from "../../src/battle/worker/engine/engine-constants.ts";
 
 function fakeCore(version: readonly [number, number]): OcgCoreSync {
   return { getVersion: () => version } as OcgCoreSync;

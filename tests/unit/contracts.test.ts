@@ -3,11 +3,11 @@ import {
   DuelCommandValidationError,
   parseDuelCommand,
   type DuelCommand,
-} from "../../src/duel/contracts/duel-command.ts";
+} from "../../src/battle/duel/contracts/duel-command.ts";
 import {
   parseDuelWorkerEvent,
   type DuelWorkerEvent,
-} from "../../src/duel/contracts/duel-worker-event.ts";
+} from "../../src/battle/duel/contracts/duel-worker-event.ts";
 import {
   cardCode,
   cardInstanceId,
@@ -15,8 +15,8 @@ import {
   duelId,
   promptId,
   snapshotId,
-} from "../../src/duel/contracts/ids.ts";
-import { assertStructuredCloneSafe } from "../../src/duel/contracts/structured-clone.ts";
+} from "../../src/battle/duel/contracts/ids.ts";
+import { assertStructuredCloneSafe } from "../../src/battle/duel/contracts/structured-clone.ts";
 import { deckSlots } from "../fixtures/board-public-states.ts";
 
 const examples: readonly (DuelCommand | DuelWorkerEvent)[] = [

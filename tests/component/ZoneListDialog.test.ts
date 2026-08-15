@@ -3,14 +3,14 @@
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import ZoneListDialog from "../../src/app/components/duel-field/ZoneListDialog.svelte";
-import ZoneListEntryTile from "../../src/app/components/duel-field/ZoneListEntryTile.svelte";
-import { cardCode, choiceId } from "../../src/duel/contracts/ids.ts";
-import type { ChoiceId } from "../../src/duel/contracts/ids.ts";
-import type { InteractionChoice } from "../../src/app/prompts/interaction-spec.ts";
-import type { ZoneListEntry } from "../../src/field/zone-list.ts";
-import type { OffFieldTargetEntry } from "../../src/field/off-field-target-list.ts";
-import type { BoardStackView } from "../../src/field/board-view-model.ts";
+import ZoneListDialog from "../../src/battle/app/components/duel-field/ZoneListDialog.svelte";
+import ZoneListEntryTile from "../../src/battle/app/components/duel-field/ZoneListEntryTile.svelte";
+import { cardCode, choiceId } from "../../src/battle/duel/contracts/ids.ts";
+import type { ChoiceId } from "../../src/battle/duel/contracts/ids.ts";
+import type { InteractionChoice } from "../../src/battle/app/prompts/interaction-spec.ts";
+import type { ZoneListEntry } from "../../src/battle/field/zone-list.ts";
+import type { OffFieldTargetEntry } from "../../src/battle/field/off-field-target-list.ts";
+import type { BoardStackView } from "../../src/battle/field/board-view-model.ts";
 
 afterEach(() => {
   cleanup();

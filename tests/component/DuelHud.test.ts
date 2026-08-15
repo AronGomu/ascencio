@@ -3,10 +3,10 @@
 import { cleanup, render, screen, within } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import CardTray from "../../src/app/components/duel-field/CardTray.svelte";
-import DuelHud from "../../src/app/components/duel-field/DuelHud.svelte";
-import DuelLog from "../../src/app/components/duel-field/DuelLog.svelte";
-import type { DuelLogEntry } from "../../src/app/stores/duel-store.ts";
+import CardTray from "../../src/battle/app/components/duel-field/CardTray.svelte";
+import DuelHud from "../../src/battle/app/components/duel-field/DuelHud.svelte";
+import DuelLog from "../../src/battle/app/components/duel-field/DuelLog.svelte";
+import type { DuelLogEntry } from "../../src/battle/app/stores/duel-store.ts";
 import {
   PUBLIC_STATE_CARD_TEXTS,
   RICH_PUBLIC_DUEL_STATE,

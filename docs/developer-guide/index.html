@@ -149,14 +149,14 @@
     <table>
       <thead><tr><th>Area</th><th>Responsibility</th><th>Primary paths</th><th>Change risk</th></tr></thead>
       <tbody>
-        <tr><td>App shell</td><td>Lifecycle, status/error/result UI, local snapshot/image coordination</td><td class="path">src/app/App.svelte</td><td><span class="tag red">high coupling</span></td></tr>
-        <tr><td>Typed client/store</td><td>Worker lifecycle, watchdogs, event reduction, stale-context rejection</td><td class="path">src/app/DuelWorkerClient.ts<br>src/app/stores/duel-store.ts</td><td><span class="tag gold">boundary</span></td></tr>
-        <tr><td>Domain contracts</td><td>Clone-safe public commands, events, state, prompts, diagnostics</td><td class="path">src/duel/contracts/</td><td><span class="tag gold">cross-cutting</span></td></tr>
-        <tr><td>Worker orchestration</td><td>Command queue, init, session/controller ownership, result/error dispatch</td><td class="path">src/worker/DuelWorkerRuntime.ts<br>src/worker/duel.worker.ts</td><td><span class="tag red">critical</span></td></tr>
-        <tr><td>Engine/protocol</td><td>WASM adapter, duel handle, message→prompt/response mapping</td><td class="path">src/worker/engine/<br>src/worker/protocol/</td><td><span class="tag red">critical</span></td></tr>
-        <tr><td>Projection/opponent</td><td>Privacy-safe immutable state; deterministic legal-action policy</td><td class="path">src/worker/projection/<br>src/worker/opponent/</td><td><span class="tag red">privacy</span></td></tr>
-        <tr><td>Presentation</td><td>Svelte semantic controls; lazy Phaser visual field</td><td class="path">src/app/prompts/<br>src/field/</td><td><span class="tag">contained</span></td></tr>
-        <tr><td>Storage/assets</td><td>Verified runtime fetch/cache, image cache, IndexedDB activation/rollback</td><td class="path">src/storage/<br>src/worker/assets/<br>src/app/images/</td><td><span class="tag gold">integrity</span></td></tr>
+        <tr><td>App shell</td><td>Lifecycle, status/error/result UI, local snapshot/image coordination</td><td class="path">src/battle/app/App.svelte</td><td><span class="tag red">high coupling</span></td></tr>
+        <tr><td>Typed client/store</td><td>Worker lifecycle, watchdogs, event reduction, stale-context rejection</td><td class="path">src/battle/app/DuelWorkerClient.ts<br>src/battle/app/stores/duel-store.ts</td><td><span class="tag gold">boundary</span></td></tr>
+        <tr><td>Domain contracts</td><td>Clone-safe public commands, events, state, prompts, diagnostics</td><td class="path">src/battle/duel/contracts/</td><td><span class="tag gold">cross-cutting</span></td></tr>
+        <tr><td>Worker orchestration</td><td>Command queue, init, session/controller ownership, result/error dispatch</td><td class="path">src/battle/worker/DuelWorkerRuntime.ts<br>src/battle/worker/duel.worker.ts</td><td><span class="tag red">critical</span></td></tr>
+        <tr><td>Engine/protocol</td><td>WASM adapter, duel handle, message→prompt/response mapping</td><td class="path">src/battle/worker/engine/<br>src/battle/worker/protocol/</td><td><span class="tag red">critical</span></td></tr>
+        <tr><td>Projection/opponent</td><td>Privacy-safe immutable state; deterministic legal-action policy</td><td class="path">src/battle/worker/projection/<br>src/battle/worker/opponent/</td><td><span class="tag red">privacy</span></td></tr>
+        <tr><td>Presentation</td><td>Svelte semantic controls; lazy Phaser visual field</td><td class="path">src/battle/app/prompts/<br>src/battle/field/</td><td><span class="tag">contained</span></td></tr>
+        <tr><td>Storage/assets</td><td>Verified runtime fetch/cache, image cache, IndexedDB activation/rollback</td><td class="path">src/battle/storage/<br>src/battle/worker/assets/<br>src/battle/app/images/</td><td><span class="tag gold">integrity</span></td></tr>
         <tr><td>Build/tooling</td><td>Asset sync, snapshot generation, Vite packaging, independent verification</td><td class="path">scripts/<br>vite.config.ts</td><td><span class="tag gold">release</span></td></tr>
         <tr><td>Quality</td><td>Unit, component, real-WASM, Worker-thread, production browser gates</td><td class="path">tests/<br>e2e/<br>.github/workflows/ci.yml</td><td><span class="tag">broad</span></td></tr>
       </tbody>

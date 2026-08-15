@@ -13,7 +13,7 @@ import createCore, {
   type OcgRace,
   type OcgResponse,
   type SelectFieldPlace,
-} from "../../../vendor/ocgcore-wasm/0.1.2/dist/index.js";
+} from "../../../../vendor/ocgcore-wasm/0.1.2/dist/index.js";
 import {
   DuelOperationError,
   type DuelError,

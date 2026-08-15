@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest";
-import type { ActiveDuelDependencies } from "../../src/worker/assets/active-duel-dependencies.ts";
+import type { ActiveDuelDependencies } from "../../src/battle/worker/assets/active-duel-dependencies.ts";
 import {
   PromptRegistry,
   buildEnginePrompt,
-} from "../../src/worker/protocol/PromptRegistry.ts";
+} from "../../src/battle/worker/protocol/PromptRegistry.ts";
 import {
   EngineIdleAction,
   EngineLocation,
   EngineMessageType,
   EnginePosition,
   EngineResponseType,
-} from "../../src/worker/engine/engine-constants.ts";
-import type { EngineMessage } from "../../src/worker/engine/OcgCoreAdapter.ts";
+} from "../../src/battle/worker/engine/engine-constants.ts";
+import type { EngineMessage } from "../../src/battle/worker/engine/OcgCoreAdapter.ts";
 
 const dependencies: ActiveDuelDependencies = {
   cards: new Map(),

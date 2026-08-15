@@ -1,7 +1,7 @@
 import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
 import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
 import { resolveDeck, type DeckRepository } from "../../decks/index.ts";
-import type { DeckMetadata } from "../../duel/presets/deck-catalog.ts";
+import type { DeckMetadata } from "../duel/presets/deck-catalog.ts";
 import type { BattleDeckSelection } from "../battle-contracts.ts";
 
 /** One row of the pre-duel picker: a bundled deck this build ships, or a deck

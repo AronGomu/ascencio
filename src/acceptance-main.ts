@@ -1,5 +1,5 @@
 import { mount } from "svelte";
-import AcceptanceHarness from "./app/acceptance/AcceptanceHarness.svelte";
+import AcceptanceHarness from "./battle/app/acceptance/AcceptanceHarness.svelte";
 import "./styles/app.css";
 import "./styles/acceptance.css";
 

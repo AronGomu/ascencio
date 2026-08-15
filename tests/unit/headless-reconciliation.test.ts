@@ -1,23 +1,23 @@
 import { describe, expect, it, vi } from "vitest";
-import { DuelOperationError } from "../../src/duel/contracts/duel-error.ts";
-import { cardCode, snapshotId } from "../../src/duel/contracts/ids.ts";
-import type { ParsedDeck } from "../../src/duel/presets/deck-parser.ts";
-import { HeadlessDuelController } from "../../src/worker/HeadlessDuelController.ts";
-import { routineLogError } from "../../src/worker/duel-errors.ts";
-import { DuelSession } from "../../src/worker/engine/DuelSession.ts";
+import { DuelOperationError } from "../../src/battle/duel/contracts/duel-error.ts";
+import { cardCode, snapshotId } from "../../src/battle/duel/contracts/ids.ts";
+import type { ParsedDeck } from "../../src/battle/duel/presets/deck-parser.ts";
+import { HeadlessDuelController } from "../../src/battle/worker/HeadlessDuelController.ts";
+import { routineLogError } from "../../src/battle/worker/duel-errors.ts";
+import { DuelSession } from "../../src/battle/worker/engine/DuelSession.ts";
 import type {
   EngineCardQuery,
   EngineCardQueryResult,
   EngineLocationQuery,
   EngineLocationQueryResult,
   EngineMessage,
-} from "../../src/worker/engine/OcgCoreAdapter.ts";
+} from "../../src/battle/worker/engine/OcgCoreAdapter.ts";
 import {
   EngineLocation,
   EngineMessageType,
   EnginePosition,
   EngineProcess,
-} from "../../src/worker/engine/engine-constants.ts";
+} from "../../src/battle/worker/engine/engine-constants.ts";
 import {
   createFakeOcgCoreAdapter,
   EMPTY_DECK,

@@ -1,6 +1,6 @@
 import { parentPort } from "node:worker_threads";
-import { DuelWorkerRuntime } from "../../src/worker/DuelWorkerRuntime.ts";
-import { attachNodeWorkerPort } from "../../src/worker/worker-thread-bridge-node.ts";
+import { DuelWorkerRuntime } from "../../src/battle/worker/DuelWorkerRuntime.ts";
+import { attachNodeWorkerPort } from "../../src/battle/worker/worker-thread-bridge-node.ts";
 
 if (parentPort === null) {
   throw new Error("Cleanup-failure Worker fixture requires a parent port");

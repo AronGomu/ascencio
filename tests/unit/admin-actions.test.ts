@@ -2,8 +2,8 @@ import "fake-indexeddb/auto";
 
 import { openDB } from "idb";
 import { describe, expect, it, vi } from "vitest";
-import { DECK_SOURCES } from "../../src/duel/presets/deck-sources-browser.ts";
-import { reviewedCardPool } from "../../src/duel/presets/reviewed-card-pool.ts";
+import { DECK_SOURCES } from "../../src/battle/duel/presets/deck-sources-browser.ts";
+import { reviewedCardPool } from "../../src/battle/duel/presets/reviewed-card-pool.ts";
 import {
   ADMIN_ROUTES,
   ADMIN_STORAGE_TARGETS,

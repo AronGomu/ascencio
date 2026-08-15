@@ -3,8 +3,8 @@
 import { cleanup, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import DuelResultDialog from "../../src/app/components/DuelResultDialog.svelte";
-import type { DuelResult } from "../../src/duel/contracts/duel-result.ts";
+import DuelResultDialog from "../../src/battle/app/components/DuelResultDialog.svelte";
+import type { DuelResult } from "../../src/battle/duel/contracts/duel-result.ts";
 
 const COMPLETED_RESULT: DuelResult = {
   type: "completed",

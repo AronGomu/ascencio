@@ -2,22 +2,22 @@
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import EndTurnButton from "../../src/app/components/duel-field/EndTurnButton.svelte";
+import EndTurnButton from "../../src/battle/app/components/duel-field/EndTurnButton.svelte";
 import {
   cardInstanceId,
   choiceId,
   promptId,
-} from "../../src/duel/contracts/ids.ts";
+} from "../../src/battle/duel/contracts/ids.ts";
 import type {
   PlayerPrompt,
   PromptChoice,
   PromptKind,
-} from "../../src/duel/contracts/player-prompt.ts";
+} from "../../src/battle/duel/contracts/player-prompt.ts";
 import {
   mapPromptToInteractionSpec,
   type ActiveInteractionSpec,
-} from "../../src/app/prompts/interaction-spec.ts";
-import { mapSnapshotToBoard } from "../../src/field/board-view-model.ts";
+} from "../../src/battle/app/prompts/interaction-spec.ts";
+import { mapSnapshotToBoard } from "../../src/battle/field/board-view-model.ts";
 import { BOARD_VIEW_MODEL_FIXTURES } from "../fixtures/board-view-model.ts";
 
 afterEach(() => {

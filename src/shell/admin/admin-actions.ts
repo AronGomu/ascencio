@@ -1,8 +1,8 @@
 import { DECK_DATABASE_NAME, deckId, type DeckId } from "../../decks/index.ts";
-import { parseYdk } from "../../duel/presets/deck-parser.ts";
-import { DECK_SOURCES } from "../../duel/presets/deck-sources-browser.ts";
+import { parseYdk } from "../../battle/duel/presets/deck-parser.ts";
+import { DECK_SOURCES } from "../../battle/duel/presets/deck-sources-browser.ts";
 import { STORY_SAVES_DATABASE_NAME } from "../../story/index.ts";
-import { SNAPSHOT_DATABASE_NAME } from "../../storage/snapshot-store.ts";
+import { SNAPSHOT_DATABASE_NAME } from "../../battle/storage/snapshot-store.ts";
 import type { AppRoute } from "../routes.ts";
 import { SHELL_SETTINGS_KEY } from "../settings/shell-settings.ts";
 

@@ -4,29 +4,29 @@ import {
   choiceId,
   promptId,
   type ChoiceId,
-} from "../../src/duel/contracts/ids.ts";
+} from "../../src/battle/duel/contracts/ids.ts";
 import type {
   PlayerPrompt,
   PromptChoice,
-} from "../../src/duel/contracts/player-prompt.ts";
+} from "../../src/battle/duel/contracts/player-prompt.ts";
 import type {
   PublicDuelState,
   PublicLocation,
-} from "../../src/duel/contracts/public-duel-state.ts";
-import { mapPromptToInteractionSpec } from "../../src/app/prompts/interaction-spec.ts";
-import { mapSnapshotToBoard } from "../../src/field/board-view-model.ts";
+} from "../../src/battle/duel/contracts/public-duel-state.ts";
+import { mapPromptToInteractionSpec } from "../../src/battle/app/prompts/interaction-spec.ts";
+import { mapSnapshotToBoard } from "../../src/battle/field/board-view-model.ts";
 import {
   OFF_FIELD_ZONE_DISPLAY_ORDER,
   offFieldTargetEntries,
   offFieldZoneBadge,
-} from "../../src/field/off-field-target-list.ts";
+} from "../../src/battle/field/off-field-target-list.ts";
 import {
   concealedStateCard,
   deckSlots,
   publicStateCard,
   PUBLIC_STATE_CARD_TEXTS,
 } from "../fixtures/board-public-states.ts";
-import { snapshotId } from "../../src/duel/contracts/ids.ts";
+import { snapshotId } from "../../src/battle/duel/contracts/ids.ts";
 
 const CONTEXT = { workerGeneration: 1, sessionGeneration: 1 } as const;
 

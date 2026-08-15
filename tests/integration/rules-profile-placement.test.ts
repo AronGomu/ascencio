@@ -1,22 +1,22 @@
 import path from "node:path";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { uniqueDeckCodes } from "../../src/duel/presets/deck-parser.ts";
-import { loadDeckSources } from "../../src/duel/presets/deck-sources-node.ts";
+import { uniqueDeckCodes } from "../../src/battle/duel/presets/deck-parser.ts";
+import { loadDeckSources } from "../../src/battle/duel/presets/deck-sources-node.ts";
 import {
   createDuelPreset,
   type DuelPreset,
-} from "../../src/duel/presets/duel-preset.ts";
-import type { EngineMasterRule } from "../../src/duel/presets/duel-rules-profile.ts";
-import { selectedDeckPairRulesProfile } from "../../src/duel/presets/duel-rules-profile.ts";
-import type { ActiveDuelDependencies } from "../../src/worker/assets/active-duel-dependencies.ts";
-import { loadActiveDuelDependenciesNode } from "../../src/worker/assets/active-duel-dependencies-node.ts";
+} from "../../src/battle/duel/presets/duel-preset.ts";
+import type { EngineMasterRule } from "../../src/battle/duel/presets/duel-rules-profile.ts";
+import { selectedDeckPairRulesProfile } from "../../src/battle/duel/presets/duel-rules-profile.ts";
+import type { ActiveDuelDependencies } from "../../src/battle/worker/assets/active-duel-dependencies.ts";
+import { loadActiveDuelDependenciesNode } from "../../src/battle/worker/assets/active-duel-dependencies-node.ts";
 import {
   DuelSession,
   type CoreStartupScript,
-} from "../../src/worker/engine/DuelSession.ts";
-import { EngineMessageType } from "../../src/worker/engine/engine-constants.ts";
-import type { OcgCoreAdapter } from "../../src/worker/engine/OcgCoreAdapter.ts";
-import { loadVendoredCoreNode } from "../../src/worker/engine/load-vendored-core-node.ts";
+} from "../../src/battle/worker/engine/DuelSession.ts";
+import { EngineMessageType } from "../../src/battle/worker/engine/engine-constants.ts";
+import type { OcgCoreAdapter } from "../../src/battle/worker/engine/OcgCoreAdapter.ts";
+import { loadVendoredCoreNode } from "../../src/battle/worker/engine/load-vendored-core-node.ts";
 
 /**
  * The Link-free profile removes the shared Extra Monster Zones from the engine

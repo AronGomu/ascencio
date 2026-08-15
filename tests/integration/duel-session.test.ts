@@ -1,21 +1,21 @@
 import path from "node:path";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import type { ActiveDuelDependencies } from "../../src/worker/assets/active-duel-dependencies.ts";
-import { loadActiveDuelDependenciesNode } from "../../src/worker/assets/active-duel-dependencies-node.ts";
-import { cardCode, snapshotId } from "../../src/duel/contracts/ids.ts";
-import { uniqueDeckCodes } from "../../src/duel/presets/deck-parser.ts";
-import type { MvpPreset } from "../../src/duel/presets/mvp-preset.ts";
-import { loadMvpPreset } from "../../src/duel/presets/mvp-preset-node.ts";
-import { HeadlessDuelController } from "../../src/worker/HeadlessDuelController.ts";
-import { DuelSession } from "../../src/worker/engine/DuelSession.ts";
+import type { ActiveDuelDependencies } from "../../src/battle/worker/assets/active-duel-dependencies.ts";
+import { loadActiveDuelDependenciesNode } from "../../src/battle/worker/assets/active-duel-dependencies-node.ts";
+import { cardCode, snapshotId } from "../../src/battle/duel/contracts/ids.ts";
+import { uniqueDeckCodes } from "../../src/battle/duel/presets/deck-parser.ts";
+import type { MvpPreset } from "../../src/battle/duel/presets/mvp-preset.ts";
+import { loadMvpPreset } from "../../src/battle/duel/presets/mvp-preset-node.ts";
+import { HeadlessDuelController } from "../../src/battle/worker/HeadlessDuelController.ts";
+import { DuelSession } from "../../src/battle/worker/engine/DuelSession.ts";
 import {
   EngineLocation,
   EngineMessageType,
   EnginePosition,
   EngineQueryFlag,
-} from "../../src/worker/engine/engine-constants.ts";
-import type { OcgCoreAdapter } from "../../src/worker/engine/OcgCoreAdapter.ts";
-import { loadVendoredCoreNode } from "../../src/worker/engine/load-vendored-core-node.ts";
+} from "../../src/battle/worker/engine/engine-constants.ts";
+import type { OcgCoreAdapter } from "../../src/battle/worker/engine/OcgCoreAdapter.ts";
+import { loadVendoredCoreNode } from "../../src/battle/worker/engine/load-vendored-core-node.ts";
 
 let adapter: OcgCoreAdapter;
 let dependencies: ActiveDuelDependencies;

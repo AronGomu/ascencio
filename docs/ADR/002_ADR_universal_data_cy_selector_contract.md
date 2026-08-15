@@ -15,10 +15,10 @@ Existing state: zero `data-cy` attributes in `src/`, 1869-line Playwright spec, 
 
 ## Decision
 
-1. Every HTML element rendered by a Svelte component under `src/app/` carries `data-cy`.
+1. Every HTML element rendered by a Svelte component under `src/battle/app/` carries `data-cy`.
 2. `data-cy` acts as the element's variable name: kebab-case, describes role not styling, unique inside a rendered document, stable across renders.
 3. Loop-rendered elements suffix the item's stable id, for example `` data-cy={`field-card-${card.id}`} ``.
-4. Enforcement is a static unit test, `tests/unit/data-cy-coverage.test.ts`, scanning `src/app/**/*.svelte` for element open tags with no `data-cy` and for repeated static values.
+4. Enforcement is a static unit test, `tests/unit/data-cy-coverage.test.ts`, scanning `src/battle/app/**/*.svelte` for element open tags with no `data-cy` and for repeated static values.
 5. The scanner covers `<svelte:element>` and skips component tags, `<svelte:head>` contents, script blocks, style blocks and comments.
 6. Structural tests select by `data-cy`. Accessibility tests keep selecting by role and accessible name.
 7. `data-cy` never carries behaviour. No CSS hook, no runtime read.

@@ -1,11 +1,11 @@
-import { parseDuelWorkerEvent } from "../../src/duel/contracts/duel-worker-event.ts";
-import type { DuelWorkerEvent } from "../../src/duel/contracts/duel-worker-event.ts";
-import { snapshotId } from "../../src/duel/contracts/ids.ts";
-import type { PublicDuelState } from "../../src/duel/contracts/public-duel-state.ts";
+import { parseDuelWorkerEvent } from "../../src/battle/duel/contracts/duel-worker-event.ts";
+import type { DuelWorkerEvent } from "../../src/battle/duel/contracts/duel-worker-event.ts";
+import { snapshotId } from "../../src/battle/duel/contracts/ids.ts";
+import type { PublicDuelState } from "../../src/battle/duel/contracts/public-duel-state.ts";
 import {
   mapSnapshotToBoard,
   type BoardViewModel,
-} from "../../src/field/board-view-model.ts";
+} from "../../src/battle/field/board-view-model.ts";
 import {
   BOARD_CARD_TEXTS,
   BOARD_VIEW_MODEL_FIXTURES,

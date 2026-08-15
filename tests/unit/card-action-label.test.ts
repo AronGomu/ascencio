@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   CARD_ACTION_LABELS,
   cardActionLabel,
-} from "../../src/app/presentation/card-action-label.ts";
-import type { ChoiceAction } from "../../src/duel/contracts/player-prompt.ts";
+} from "../../src/battle/app/presentation/card-action-label.ts";
+import type { ChoiceAction } from "../../src/battle/duel/contracts/player-prompt.ts";
 
 // Mirrors the `ChoiceAction` union. `satisfies` keeps the two in lockstep: a
 // new union member that is missing here fails the exhaustiveness check below,

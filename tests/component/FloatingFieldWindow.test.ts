@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import FloatingFieldWindow from "../../src/app/components/duel-field/FloatingFieldWindow.svelte";
+import FloatingFieldWindow from "../../src/battle/app/components/duel-field/FloatingFieldWindow.svelte";
 
 /* jsdom lays nothing out, so every size the primitive reads is stubbed per
    element: `clientWidth/clientHeight` for the boundary's padding box and

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { duelRailStatusFor } from "../../src/app/presentation/duel-rail-status.ts";
-import { promptId, snapshotId } from "../../src/duel/contracts/ids.ts";
-import type { PlayerPrompt } from "../../src/duel/contracts/player-prompt.ts";
-import type { PublicDuelState } from "../../src/duel/contracts/public-duel-state.ts";
+import { duelRailStatusFor } from "../../src/battle/app/presentation/duel-rail-status.ts";
+import { promptId, snapshotId } from "../../src/battle/duel/contracts/ids.ts";
+import type { PlayerPrompt } from "../../src/battle/duel/contracts/player-prompt.ts";
+import type { PublicDuelState } from "../../src/battle/duel/contracts/public-duel-state.ts";
 
 const prompt: PlayerPrompt = {
   id: promptId("rail"),

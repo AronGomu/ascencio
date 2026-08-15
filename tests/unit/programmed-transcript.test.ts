@@ -4,8 +4,8 @@ import {
   cardInstanceId,
   choiceId,
   promptId,
-} from "../../src/duel/contracts/ids.ts";
-import type { PlayerPrompt } from "../../src/duel/contracts/player-prompt.ts";
+} from "../../src/battle/duel/contracts/ids.ts";
+import type { PlayerPrompt } from "../../src/battle/duel/contracts/player-prompt.ts";
 import {
   expandProgrammedResponses,
   loadBasicDuelTranscript,

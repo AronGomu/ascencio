@@ -3,10 +3,10 @@
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import ProjectedChoiceMenu from "../../src/app/components/duel-field/ProjectedChoiceMenu.svelte";
-import { choiceId } from "../../src/duel/contracts/ids.ts";
-import type { ChoiceId } from "../../src/duel/contracts/ids.ts";
-import type { InteractionChoice } from "../../src/app/prompts/interaction-spec.ts";
+import ProjectedChoiceMenu from "../../src/battle/app/components/duel-field/ProjectedChoiceMenu.svelte";
+import { choiceId } from "../../src/battle/duel/contracts/ids.ts";
+import type { ChoiceId } from "../../src/battle/duel/contracts/ids.ts";
+import type { InteractionChoice } from "../../src/battle/app/prompts/interaction-spec.ts";
 
 const choices: readonly InteractionChoice[] = [
   { id: choiceId("banish"), label: "Banish", action: "select" },

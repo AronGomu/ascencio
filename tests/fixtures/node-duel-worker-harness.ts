@@ -1,11 +1,11 @@
 import { Worker } from "node:worker_threads";
-import type { DuelCommand } from "../../src/duel/contracts/duel-command.ts";
+import type { DuelCommand } from "../../src/battle/duel/contracts/duel-command.ts";
 
 const DEFAULT_WAIT_TIMEOUT_MS = 15_000;
 const MAX_RETAINED_MESSAGES = 256;
 const MAX_OUTPUT_TAIL_LENGTH = 16_384;
 const PRODUCTION_WORKER_ENTRY_URL = new URL(
-  "../../src/worker/duel.worker-node.ts",
+  "../../src/battle/worker/duel.worker-node.ts",
   import.meta.url,
 );
 const MISSING_RUNTIME_WORKER_ENTRY_URL = new URL(

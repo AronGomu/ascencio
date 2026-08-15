@@ -1,21 +1,21 @@
 import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
-import { cardCode } from "../../src/duel/contracts/ids.ts";
+import { cardCode } from "../../src/battle/duel/contracts/ids.ts";
 import {
   DECK_CATALOG,
   type DeckId,
-} from "../../src/duel/presets/deck-catalog.ts";
+} from "../../src/battle/duel/presets/deck-catalog.ts";
 import {
   parseYdk,
   type ParsedDeck,
-} from "../../src/duel/presets/deck-parser.ts";
-import { loadDeckSources } from "../../src/duel/presets/deck-sources-node.ts";
-import { reviewedCardPool } from "../../src/duel/presets/reviewed-card-pool.ts";
+} from "../../src/battle/duel/presets/deck-parser.ts";
+import { loadDeckSources } from "../../src/battle/duel/presets/deck-sources-node.ts";
+import { reviewedCardPool } from "../../src/battle/duel/presets/reviewed-card-pool.ts";
 import {
   selectedDeckPairRulesProfile,
   TYPE_LINK,
-} from "../../src/duel/presets/duel-rules-profile.ts";
-import { loadActiveDuelDependenciesNode } from "../../src/worker/assets/active-duel-dependencies-node.ts";
+} from "../../src/battle/duel/presets/duel-rules-profile.ts";
+import { loadActiveDuelDependenciesNode } from "../../src/battle/worker/assets/active-duel-dependencies-node.ts";
 
 const TYPE_MONSTER = 0x1;
 const TYPE_FUSION = 0x40;

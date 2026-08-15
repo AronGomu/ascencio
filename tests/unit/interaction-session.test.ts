@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { choiceId, promptId } from "../../src/duel/contracts/ids.ts";
-import type { BoardTargetId } from "../../src/field/board-view-model.ts";
+import { choiceId, promptId } from "../../src/battle/duel/contracts/ids.ts";
+import type { BoardTargetId } from "../../src/battle/field/board-view-model.ts";
 import {
   createInteractionSession,
   reduceInteractionSession,
   synchronizeInteractionSession,
-} from "../../src/app/prompts/interaction-session.ts";
+} from "../../src/battle/app/prompts/interaction-session.ts";
 import {
   interactionChoicesInPromptOrder,
   type ActiveInteractionSpec,
   type InteractionChoice,
-} from "../../src/app/prompts/interaction-spec.ts";
+} from "../../src/battle/app/prompts/interaction-spec.ts";
 
 const FIRST = choiceId("first");
 const SECOND = choiceId("second");

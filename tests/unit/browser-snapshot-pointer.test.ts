@@ -3,9 +3,9 @@
 import "fake-indexeddb/auto";
 import { afterEach, describe, expect, it } from "vitest";
 import { deleteDB } from "idb";
-import { snapshotId } from "../../src/duel/contracts/ids.ts";
-import { SnapshotStore } from "../../src/storage/snapshot-store.ts";
-import { readCachedSnapshotFallbacks } from "../../src/worker/assets/browser-snapshot-pointer.ts";
+import { snapshotId } from "../../src/battle/duel/contracts/ids.ts";
+import { SnapshotStore } from "../../src/battle/storage/snapshot-store.ts";
+import { readCachedSnapshotFallbacks } from "../../src/battle/worker/assets/browser-snapshot-pointer.ts";
 
 const databaseName = "browser-snapshot-pointer-test";
 

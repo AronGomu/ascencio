@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { DuelPhase } from "../../src/duel/contracts/public-duel-state.ts";
+import type { DuelPhase } from "../../src/battle/duel/contracts/public-duel-state.ts";
 import {
   DUEL_PHASE_LABELS,
   duelPhaseLabel,
-} from "../../src/app/presentation/duel-phase-label.ts";
+} from "../../src/battle/app/presentation/duel-phase-label.ts";
 
 describe("duelPhaseLabel", () => {
   it("every phase has a label", () => {

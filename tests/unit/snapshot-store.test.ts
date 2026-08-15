@@ -3,12 +3,12 @@
 import "fake-indexeddb/auto";
 import { afterEach, describe, expect, it } from "vitest";
 import { deleteDB } from "idb";
-import { snapshotId } from "../../src/duel/contracts/ids.ts";
+import { snapshotId } from "../../src/battle/duel/contracts/ids.ts";
 import {
   SnapshotStorageError,
   SnapshotStore,
   type StagedSnapshotInput,
-} from "../../src/storage/snapshot-store.ts";
+} from "../../src/battle/storage/snapshot-store.ts";
 
 const databaseNames: string[] = [];
 

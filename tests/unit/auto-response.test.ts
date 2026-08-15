@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { choiceId, promptId } from "../../src/duel/contracts/ids.ts";
+import { choiceId, promptId } from "../../src/battle/duel/contracts/ids.ts";
 import type {
   PlayerPrompt,
   PromptChoice,
-} from "../../src/duel/contracts/player-prompt.ts";
-import { trivialPromptResponse } from "../../src/app/prompts/auto-response.ts";
+} from "../../src/battle/duel/contracts/player-prompt.ts";
+import { trivialPromptResponse } from "../../src/battle/app/prompts/auto-response.ts";
 
 function choice(
   id: string,

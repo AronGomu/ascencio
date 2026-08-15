@@ -322,7 +322,7 @@ Every step below is accepted only when:
 
 **Working software after commit:** the headless integration harness loads the vendored `ocgcore.sync.wasm`, reports the real core version and performs no network or `node_modules` engine resolution.
 
-- [x] Add a headless `node:worker_threads` entry that composes `src/worker/duel.worker.ts` with the real Node runtime, without a main-thread visual client.
+- [x] Add a headless `node:worker_threads` entry that composes `src/battle/worker/duel.worker.ts` with the real Node runtime, without a main-thread visual client.
 - [x] Add a Worker-owned `OcgCoreAdapter` module as the only engine import location.
 - [x] Resolve the synchronous module and WASM binary only from `vendor/ocgcore-wasm/0.1.2/`.
 - [x] Record the vendored package and embedded core revisions in the project manifest.

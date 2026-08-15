@@ -4,12 +4,12 @@ import {
   choiceId,
   promptId,
   type ChoiceId,
-} from "../../src/duel/contracts/ids.ts";
+} from "../../src/battle/duel/contracts/ids.ts";
 import type {
   PlayerPrompt,
   PromptChoice,
   PromptKind,
-} from "../../src/duel/contracts/player-prompt.ts";
+} from "../../src/battle/duel/contracts/player-prompt.ts";
 import {
   endPhaseChoice,
   fieldActionBarRequired,
@@ -20,10 +20,10 @@ import {
   mapPromptToInteractionSpec,
   OFF_FIELD_TARGET_LOCATIONS,
   type ActiveInteractionSpec,
-} from "../../src/app/prompts/interaction-spec.ts";
-import type { PublicLocation } from "../../src/duel/contracts/public-duel-state.ts";
-import { validatePromptSelection } from "../../src/app/prompts/prompt-selection.ts";
-import { mapSnapshotToBoard } from "../../src/field/board-view-model.ts";
+} from "../../src/battle/app/prompts/interaction-spec.ts";
+import type { PublicLocation } from "../../src/battle/duel/contracts/public-duel-state.ts";
+import { validatePromptSelection } from "../../src/battle/app/prompts/prompt-selection.ts";
+import { mapSnapshotToBoard } from "../../src/battle/field/board-view-model.ts";
 import { BOARD_VIEW_MODEL_FIXTURES } from "../fixtures/board-view-model.ts";
 
 const SNAPSHOT = BOARD_VIEW_MODEL_FIXTURES["ST-08"];

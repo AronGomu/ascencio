@@ -1,6 +1,6 @@
 import type { DeckCardLists } from "./deck-contracts.ts";
 import { cloneCardLists } from "./deck-contracts.ts";
-import { parseYdk } from "../duel/presets/deck-parser.ts";
+import { parseYdk } from "../battle/duel/presets/deck-parser.ts";
 
 export const MAXIMUM_YDK_SOURCE_LENGTH = 1_000_000;
 export const MAXIMUM_YDK_CARDS = 1_000;

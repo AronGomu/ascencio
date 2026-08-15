@@ -5,7 +5,7 @@ import {
   DEFAULT_PLAYER_DECK_ID,
   deckMetadata,
   isDeckId,
-} from "../../src/duel/presets/deck-catalog.ts";
+} from "../../src/battle/duel/presets/deck-catalog.ts";
 
 describe("deck catalog", () => {
   it("DECK_CATALOG lists six decks with unique ids and file names", () => {

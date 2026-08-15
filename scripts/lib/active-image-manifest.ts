@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { DECK_CATALOG } from "../../src/duel/presets/deck-catalog.ts";
+import { DECK_CATALOG } from "../../src/battle/duel/presets/deck-catalog.ts";
 
 export interface ActiveImageManifestRecord {
   readonly code: number;
@@ -29,7 +29,7 @@ export function buildActiveImageManifest(
   );
   const deckSources = DECK_CATALOG.map(({ fileName }) =>
     readFileSync(
-      path.join(projectRoot, "src/duel/presets/decks", fileName),
+      path.join(projectRoot, "src/battle/duel/presets/decks", fileName),
       "utf8",
     ),
   );

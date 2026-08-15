@@ -3,9 +3,9 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import CardActionChips from "../../src/app/components/duel-field/CardActionChips.svelte";
-import { choiceId } from "../../src/duel/contracts/ids.ts";
-import type { InteractionChoice } from "../../src/app/prompts/interaction-spec.ts";
+import CardActionChips from "../../src/battle/app/components/duel-field/CardActionChips.svelte";
+import { choiceId } from "../../src/battle/duel/contracts/ids.ts";
+import type { InteractionChoice } from "../../src/battle/app/prompts/interaction-spec.ts";
 
 afterEach(() => {
   cleanup();

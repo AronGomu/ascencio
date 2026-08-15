@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   isCardIdentityVisible,
   isProjectedCardIdentityKnown,
-} from "../../src/duel/card-visibility.ts";
-import { cardCode } from "../../src/duel/contracts/ids.ts";
+} from "../../src/battle/duel/card-visibility.ts";
+import { cardCode } from "../../src/battle/duel/contracts/ids.ts";
 
 describe("card visibility", () => {
   it("projected identity is known exactly when code exists", () => {

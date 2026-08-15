@@ -6,8 +6,8 @@ import {
   validateDeck,
   type DeckConstraints,
   type ParsedDeck,
-} from "../../src/duel/presets/deck-parser.ts";
-import { loadMvpPreset } from "../../src/duel/presets/mvp-preset-node.ts";
+} from "../../src/battle/duel/presets/deck-parser.ts";
+import { loadMvpPreset } from "../../src/battle/duel/presets/mvp-preset-node.ts";
 
 describe("YDK parsing", () => {
   it("loads the exact locked MVP matchup", async () => {

@@ -56,7 +56,7 @@ const workerClientSpies = vi.hoisted(() => {
   };
 });
 
-vi.mock("../../src/app/DuelWorkerClient.ts", () => {
+vi.mock("../../src/battle/app/DuelWorkerClient.ts", () => {
   class DuelWorkerClientMock {
     context = { workerGeneration: 1, sessionGeneration: 0 };
     listeners = new Set<(received: unknown) => void>();
@@ -111,7 +111,7 @@ vi.mock("../../src/app/DuelWorkerClient.ts", () => {
   return { DuelWorkerClient: DuelWorkerClientMock };
 });
 
-import App from "../../src/app/App.svelte";
+import App from "../../src/battle/app/App.svelte";
 import { DECK_DATABASE_NAME } from "../../src/decks/index.ts";
 import { emptyDeckHistory } from "../../src/decks/deck-history.ts";
 import { createBlankDeck } from "../../src/decks/deck-model.ts";

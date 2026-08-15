@@ -22,7 +22,7 @@ const workerClientSpies = vi.hoisted(() => {
   return { dispose: vi.fn() };
 });
 
-vi.mock("../../src/app/DuelWorkerClient.ts", () => {
+vi.mock("../../src/battle/app/DuelWorkerClient.ts", () => {
   class DuelWorkerClientMock {
     static instances: DuelWorkerClientMock[] = [];
     context = { workerGeneration: 1, sessionGeneration: 0 };
@@ -82,13 +82,13 @@ vi.mock("../../src/app/DuelWorkerClient.ts", () => {
   return { DuelWorkerClient: DuelWorkerClientMock };
 });
 
-import { DuelWorkerClient as MockedDuelWorkerClient } from "../../src/app/DuelWorkerClient.ts";
+import { DuelWorkerClient as MockedDuelWorkerClient } from "../../src/battle/app/DuelWorkerClient.ts";
 import {
   BattleFacade,
   parseBattleRequest,
   type BattleFacadeResult,
 } from "../../src/battle/index.ts";
-import type { DuelResult } from "../../src/duel/contracts/duel-result.ts";
+import type { DuelResult } from "../../src/battle/duel/contracts/duel-result.ts";
 
 interface MockedWorkerInstance {
   readonly context: { workerGeneration: number; sessionGeneration: number };

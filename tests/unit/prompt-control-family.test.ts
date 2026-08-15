@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { PromptKind } from "../../src/duel/contracts/player-prompt.ts";
+import type { PromptKind } from "../../src/battle/duel/contracts/player-prompt.ts";
 import {
   PROMPT_CONTROL_FAMILIES,
   promptControlFamily,
-} from "../../src/app/prompts/prompt-control-family.ts";
+} from "../../src/battle/app/prompts/prompt-control-family.ts";
 
 const ALL_PROMPT_KINDS = [
   "idleCommand",

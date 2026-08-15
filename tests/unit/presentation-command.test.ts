@@ -1,15 +1,18 @@
 import { describe, expect, it, vi } from "vitest";
-import type { DuelPresentationEvent } from "../../src/duel/contracts/duel-presentation-event.ts";
+import type { DuelPresentationEvent } from "../../src/battle/duel/contracts/duel-presentation-event.ts";
 import {
   PresentationScheduler,
   presentationCommandForDomEvent,
   presentationCommandForEvent,
-} from "../../src/app/presentation/presentation-command.ts";
-import { cardCode, cardInstanceId } from "../../src/duel/contracts/ids.ts";
+} from "../../src/battle/app/presentation/presentation-command.ts";
+import {
+  cardCode,
+  cardInstanceId,
+} from "../../src/battle/duel/contracts/ids.ts";
 import type {
   BoardCardView,
   BoardViewModel,
-} from "../../src/field/board-view-model.ts";
+} from "../../src/battle/field/board-view-model.ts";
 
 const events: readonly DuelPresentationEvent[] = [
   { type: "duelStarted" },

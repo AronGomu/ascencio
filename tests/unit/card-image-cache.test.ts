@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   CardImageCache,
   type ActiveImageManifest,
-} from "../../src/app/images/card-image-cache.ts";
+} from "../../src/battle/app/images/card-image-cache.ts";
 
 const JPEG = new Uint8Array([
   0xff, 0xd8, 0xff, 0xc0, 0x00, 0x11, 0x08, 0x00, 0x01, 0x00, 0x01, 0x03, 0x01,

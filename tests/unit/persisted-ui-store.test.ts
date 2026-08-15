@@ -1,7 +1,7 @@
 import { get } from "svelte/store";
 import { describe, expect, it, vi } from "vitest";
-import { PERSISTED_UI_STATE_KEY } from "../../src/app/stores/persisted-ui-state.ts";
-import { createPersistedUiStore } from "../../src/app/stores/persisted-ui-store.ts";
+import { PERSISTED_UI_STATE_KEY } from "../../src/battle/app/stores/persisted-ui-state.ts";
+import { createPersistedUiStore } from "../../src/battle/app/stores/persisted-ui-store.ts";
 
 function memoryStorage(seed: string | null = null) {
   let value = seed;

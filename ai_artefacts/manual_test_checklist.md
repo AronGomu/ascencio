@@ -375,7 +375,7 @@ Nothing else regressed
 
 ## T11 data-cy-contract-extension
 
-Machine-verified: `tests/unit/data-cy-coverage.test.ts` now scans `src/app/`, `src/shell/`,
+Machine-verified: `tests/unit/data-cy-coverage.test.ts` now scans `src/battle/app/`, `src/shell/`,
 `src/deck-editor/` and `src/story/` for presence, kebab-case and uniqueness.
 
 Confirm the uniqueness check bites
@@ -867,7 +867,7 @@ broken duel.
 ### Invalid card list fails visibly
 No UI can build a card list yet, and the app exposes no console handle on the
 duel Worker, so this check needs one temporary edit. In
-`src/app/stores/duel-store.ts`, inside `startCurrentDuel`, replace the player
+`src/battle/app/stores/duel-store.ts`, inside `startCurrentDuel`, replace the player
 argument passed to `client.startDuel` with a forged list whose last code is not
 in the packaged snapshot, run `npm run dev`, open `#/duel`, and press Start:
 
@@ -975,3 +975,24 @@ own (`#/duel/session/{handoffId}`), and takes exactly one result back.
 - [ ] `#/duel` still opens the standalone duel, and finishing or surrendering there does **not** navigate anywhere.
 - [ ] `#/decks` is unchanged.
 - [ ] Opening `#/duel` on a fresh profile does not download the story chunk (DevTools → Network, filter `story`).
+
+## T20 duel-source-relocation
+
+Pure file move: the duel's source now lives under `src/battle/` (`app/`, `duel/`,
+`field/`, `worker/`, `storage/`). No behavior changed, so this is a short
+"nothing fell off the shelf" pass. Run `npm run dev` first.
+
+- [ ] `#/duel` loads, the deck picker appears, **Start** reaches the first prompt,
+      and a card can be played. That proves the Worker entry still resolves after
+      the move — it is the one thing a wrong path would break silently.
+- [ ] Rotate to portrait (DevTools device toolbar, 375×667). The duel still shows
+      the rotated stage and the rotation notice, and taps land on the card you
+      aimed at rather than an offset one.
+- [ ] `#/story` → start an encounter → **Start Duel**. The duel opens and the
+      story resumes after you surrender.
+- [ ] `#/decks` opens and a deck can be edited and saved.
+- [ ] Acceptance harness: `npx playwright test --config=playwright.acceptance.config.ts`
+      is green, or open `acceptance.html?scenario=field-emz` from a preview build
+      and confirm the deterministic field renders.
+- [ ] DevTools → Network on a fresh load of `#/`: the duel chunk is **not**
+      downloaded until you open `#/duel`.

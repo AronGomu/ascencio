@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   loadBrowserRuntimeAssets,
   resolveBrowserRuntimeUrl,
-} from "../../src/worker/assets/browser-runtime-assets.ts";
+} from "../../src/battle/worker/assets/browser-runtime-assets.ts";
 
 const encoder = new TextEncoder();
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { DuelCommandValidationError } from "../../src/duel/contracts/duel-command.ts";
-import { parseDuelDeckSelection } from "../../src/duel/contracts/duel-deck-selection.ts";
+import { DuelCommandValidationError } from "../../src/battle/duel/contracts/duel-command.ts";
+import { parseDuelDeckSelection } from "../../src/battle/duel/contracts/duel-deck-selection.ts";
 
 /* Forty distinct codes: the minimum legal Main Deck, with no code repeated, so
    a copy-limit failure in one of these tests can only come from what that test

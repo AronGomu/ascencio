@@ -1,12 +1,12 @@
 import type { OcgCoreSync } from "../../vendor/ocgcore-wasm/0.1.2/dist/index.js";
-import type { SnapshotId } from "../../src/duel/contracts/ids.ts";
-import { snapshotId } from "../../src/duel/contracts/ids.ts";
-import type { ParsedDeck } from "../../src/duel/presets/deck-parser.ts";
+import type { SnapshotId } from "../../src/battle/duel/contracts/ids.ts";
+import { snapshotId } from "../../src/battle/duel/contracts/ids.ts";
+import type { ParsedDeck } from "../../src/battle/duel/presets/deck-parser.ts";
 import {
   MVP_PRESET_ID,
   type MvpPreset,
-} from "../../src/duel/presets/mvp-preset.ts";
-import type { ActiveDuelDependencies } from "../../src/worker/assets/active-duel-dependencies.ts";
+} from "../../src/battle/duel/presets/mvp-preset.ts";
+import type { ActiveDuelDependencies } from "../../src/battle/worker/assets/active-duel-dependencies.ts";
 import {
   type EngineDuelHandle,
   type EngineDuelOptions,
@@ -16,8 +16,8 @@ import {
   type EngineLocationQuery,
   type EngineLocationQueryResult,
   OcgCoreAdapter,
-} from "../../src/worker/engine/OcgCoreAdapter.ts";
-import { EngineProcess } from "../../src/worker/engine/engine-constants.ts";
+} from "../../src/battle/worker/engine/OcgCoreAdapter.ts";
+import { EngineProcess } from "../../src/battle/worker/engine/engine-constants.ts";
 
 export interface FakeProcessStep {
   readonly status?: number;

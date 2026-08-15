@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { promptId } from "../../src/duel/contracts/ids.ts";
-import type { PlayerPrompt } from "../../src/duel/contracts/player-prompt.ts";
-import { hasDuelPriority } from "../../src/app/prompts/duel-priority.ts";
+import { promptId } from "../../src/battle/duel/contracts/ids.ts";
+import type { PlayerPrompt } from "../../src/battle/duel/contracts/player-prompt.ts";
+import { hasDuelPriority } from "../../src/battle/app/prompts/duel-priority.ts";
 
 const PROMPT: PlayerPrompt = {
   id: promptId("prompt-1"),

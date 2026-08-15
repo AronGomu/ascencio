@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { OcgDuelMode } from "../../vendor/ocgcore-wasm/0.1.2/dist/index.js";
-import { DuelSession } from "../../src/worker/engine/DuelSession.ts";
-import { EngineDuelFlag } from "../../src/worker/engine/engine-constants.ts";
+import { DuelSession } from "../../src/battle/worker/engine/DuelSession.ts";
+import { EngineDuelFlag } from "../../src/battle/worker/engine/engine-constants.ts";
 import {
   createFakeOcgCoreAdapter,
   EMPTY_DECK,

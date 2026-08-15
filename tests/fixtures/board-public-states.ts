@@ -2,14 +2,14 @@ import {
   cardCode,
   cardInstanceId,
   snapshotId,
-} from "../../src/duel/contracts/ids.ts";
+} from "../../src/battle/duel/contracts/ids.ts";
 import type {
   CardPosition,
   PlayerIndex,
   PublicCard,
   PublicDuelState,
   PublicPlayerState,
-} from "../../src/duel/contracts/public-duel-state.ts";
+} from "../../src/battle/duel/contracts/public-duel-state.ts";
 
 export const PUBLIC_STATE_CARD_TEXTS = new Map([
   [

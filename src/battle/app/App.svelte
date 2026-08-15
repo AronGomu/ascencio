@@ -68,19 +68,19 @@
     presetSelectableDecks,
     supportedDuelCardCodes,
     type SelectableDeck,
-  } from "../battle/decks/selectable-decks.ts";
+  } from "../decks/selectable-decks.ts";
   import {
     catalogByCode,
     PROTOTYPE_RULESET,
-  } from "../decks/catalog/pinned-ruleset.ts";
-  import { PROTOTYPE_CATALOG } from "../decks/catalog/prototype-catalog.ts";
-  import { IndexedDbDeckRepository } from "../decks/indexeddb-deck-repository.ts";
+  } from "../../decks/catalog/pinned-ruleset.ts";
+  import { PROTOTYPE_CATALOG } from "../../decks/catalog/prototype-catalog.ts";
+  import { IndexedDbDeckRepository } from "../../decks/indexeddb-deck-repository.ts";
   import {
     battleFacadeFailure,
     battleResultForDuelResult,
     toDuelDeckSelection,
     type BattleFacadeResult,
-  } from "../battle/battle-contracts.ts";
+  } from "../battle-contracts.ts";
   import { createDuelStore, type DuelViewState } from "./stores/duel-store.ts";
   import {
     DEFAULT_PERSISTED_UI_STATE,

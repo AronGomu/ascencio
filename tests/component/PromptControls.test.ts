@@ -9,13 +9,13 @@ import {
   choiceId,
   promptId,
   type ChoiceId,
-} from "../../src/duel/contracts/ids.ts";
+} from "../../src/battle/duel/contracts/ids.ts";
 import type {
   PlayerPrompt,
   PromptChoice,
   PromptKind,
-} from "../../src/duel/contracts/player-prompt.ts";
-import PromptControls from "../../src/app/prompts/PromptControls.svelte";
+} from "../../src/battle/duel/contracts/player-prompt.ts";
+import PromptControls from "../../src/battle/app/prompts/PromptControls.svelte";
 
 afterEach(() => cleanup());
 

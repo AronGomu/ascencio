@@ -1,20 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { DuelOperationError } from "../../src/duel/contracts/duel-error.ts";
-import { parseDuelDeckSelection } from "../../src/duel/contracts/duel-deck-selection.ts";
-import { cardCode } from "../../src/duel/contracts/ids.ts";
-import type { ParsedDeck } from "../../src/duel/presets/deck-parser.ts";
-import type { DuelPreset } from "../../src/duel/presets/duel-preset.ts";
+import { DuelOperationError } from "../../src/battle/duel/contracts/duel-error.ts";
+import { parseDuelDeckSelection } from "../../src/battle/duel/contracts/duel-deck-selection.ts";
+import { cardCode } from "../../src/battle/duel/contracts/ids.ts";
+import type { ParsedDeck } from "../../src/battle/duel/presets/deck-parser.ts";
+import type { DuelPreset } from "../../src/battle/duel/presets/duel-preset.ts";
 import {
   selectedDeckPairRulesProfile,
   TYPE_LINK,
-} from "../../src/duel/presets/duel-rules-profile.ts";
-import { duelId } from "../../src/duel/contracts/ids.ts";
-import type { DuelRuntimeResources } from "../../src/worker/DuelWorkerRuntime.ts";
+} from "../../src/battle/duel/presets/duel-rules-profile.ts";
+import { duelId } from "../../src/battle/duel/contracts/ids.ts";
+import type { DuelRuntimeResources } from "../../src/battle/worker/DuelWorkerRuntime.ts";
 import {
   assertSupportedCards,
   resolveDuelDecks,
-} from "../../src/worker/decks/resolve-duel-decks.ts";
-import type { EngineCardData } from "../../src/worker/engine/OcgCoreAdapter.ts";
+} from "../../src/battle/worker/decks/resolve-duel-decks.ts";
+import type { EngineCardData } from "../../src/battle/worker/engine/OcgCoreAdapter.ts";
 import {
   createFakeOcgCoreAdapter,
   FAKE_DEPENDENCIES,

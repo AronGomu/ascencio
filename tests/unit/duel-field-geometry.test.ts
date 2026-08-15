@@ -4,8 +4,8 @@ import {
   computeFieldGeometry,
   createFieldRenderLayout,
   ZONE_GAP,
-} from "../../src/field/duel-field-geometry.ts";
-import { STANDARD_DUEL_FIELD_LAYOUT } from "../../src/field/duel-field-layout.ts";
+} from "../../src/battle/field/duel-field-geometry.ts";
+import { STANDARD_DUEL_FIELD_LAYOUT } from "../../src/battle/field/duel-field-layout.ts";
 
 const budgets = [
   [1328, 1080, 1229, 1080],

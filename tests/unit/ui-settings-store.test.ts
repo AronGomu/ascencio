@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   createUiSettingsStore,
   DEFAULT_UI_SETTINGS,
-} from "../../src/app/stores/ui-settings-store.ts";
+} from "../../src/battle/app/stores/ui-settings-store.ts";
 
 describe("createUiSettingsStore", () => {
   it("defaults hide both panels and enable both automations", () => {

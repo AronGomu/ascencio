@@ -264,7 +264,7 @@ Current store behavior retaining pending across `state` events is preserved and 
 
 ## DOM composition
 
-Files live under `src/app/components/` (`duel-field/` for the field's own parts) except `PromptControls.svelte`, which lives in `src/app/prompts/`.
+Files live under `src/battle/app/components/` (`duel-field/` for the field's own parts) except `PromptControls.svelte`, which lives in `src/battle/app/prompts/`.
 
 ```text
 App.svelte

@@ -4,26 +4,26 @@ import {
   DuelOperationError,
   duelOperationError,
   type DuelErrorCode,
-} from "../../src/duel/contracts/duel-error.ts";
-import { duelId } from "../../src/duel/contracts/ids.ts";
+} from "../../src/battle/duel/contracts/duel-error.ts";
+import { duelId } from "../../src/battle/duel/contracts/ids.ts";
 import {
   createFakeOcgCoreAdapter,
   FAKE_DEPENDENCIES,
   FAKE_PRESET,
   FAKE_SNAPSHOT_ID,
 } from "../fixtures/fake-ocgcore-adapter.ts";
-import type { DuelRuntimeResources } from "../../src/worker/DuelWorkerRuntime.ts";
+import type { DuelRuntimeResources } from "../../src/battle/worker/DuelWorkerRuntime.ts";
 import {
   DuelWorkerRuntime,
   toDuelError,
-} from "../../src/worker/DuelWorkerRuntime.ts";
-import { EngineInitializationError } from "../../src/worker/engine/OcgCoreAdapter.ts";
+} from "../../src/battle/worker/DuelWorkerRuntime.ts";
+import { EngineInitializationError } from "../../src/battle/worker/engine/OcgCoreAdapter.ts";
 import {
   EngineLocation,
   EngineMessageType,
   EnginePosition,
   EngineProcess,
-} from "../../src/worker/engine/engine-constants.ts";
+} from "../../src/battle/worker/engine/engine-constants.ts";
 
 const WIN_MESSAGE = {
   type: EngineMessageType.WIN,

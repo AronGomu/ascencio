@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { choiceId } from "../../src/duel/contracts/ids.ts";
-import type { ChoiceAction } from "../../src/duel/contracts/player-prompt.ts";
-import type { BoardZoneView } from "../../src/field/board-view-model.ts";
+import { choiceId } from "../../src/battle/duel/contracts/ids.ts";
+import type { ChoiceAction } from "../../src/battle/duel/contracts/player-prompt.ts";
+import type { BoardZoneView } from "../../src/battle/field/board-view-model.ts";
 import type {
   FieldZoneKind,
   PhysicalZoneId,
-} from "../../src/field/duel-field-layout.ts";
-import { dropChoiceForZone } from "../../src/app/prompts/drop-target.ts";
-import type { InteractionChoice } from "../../src/app/prompts/interaction-spec.ts";
+} from "../../src/battle/field/duel-field-layout.ts";
+import { dropChoiceForZone } from "../../src/battle/app/prompts/drop-target.ts";
+import type { InteractionChoice } from "../../src/battle/app/prompts/interaction-spec.ts";
 
 function choice(action: ChoiceAction): InteractionChoice {
   return Object.freeze({

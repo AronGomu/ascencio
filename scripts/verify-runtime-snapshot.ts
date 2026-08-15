@@ -2,11 +2,11 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { fileURLToPath } from "node:url";
-import { parseRuntimeSnapshotManifest } from "../src/worker/assets/runtime-manifest.ts";
+import { parseRuntimeSnapshotManifest } from "../src/battle/worker/assets/runtime-manifest.ts";
 import {
   buildRuntimeSnapshotManifest,
   verifyRuntimeSnapshotFiles,
-} from "../src/worker/assets/runtime-snapshot-node.ts";
+} from "../src/battle/worker/assets/runtime-snapshot-node.ts";
 
 const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

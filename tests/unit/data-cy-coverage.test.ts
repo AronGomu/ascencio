@@ -4,25 +4,25 @@ import { readFileSync } from "node:fs";
 import { relative, resolve } from "node:path";
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import DuelField from "../../src/app/components/DuelField.svelte";
-import CardTray from "../../src/app/components/duel-field/CardTray.svelte";
-import { createInteractionSession } from "../../src/app/prompts/interaction-session.ts";
+import DuelField from "../../src/battle/app/components/DuelField.svelte";
+import CardTray from "../../src/battle/app/components/duel-field/CardTray.svelte";
+import { createInteractionSession } from "../../src/battle/app/prompts/interaction-session.ts";
 import {
   mapPromptToInteractionSpec,
   type ActiveInteractionSpec,
-} from "../../src/app/prompts/interaction-spec.ts";
+} from "../../src/battle/app/prompts/interaction-spec.ts";
 import {
   cardInstanceId,
   choiceId,
   promptId,
-} from "../../src/duel/contracts/ids.ts";
+} from "../../src/battle/duel/contracts/ids.ts";
 import type {
   PlayerPrompt,
   PromptChoice,
   PromptKind,
-} from "../../src/duel/contracts/player-prompt.ts";
-import type { PlayerIndex } from "../../src/duel/contracts/public-duel-state.ts";
-import { mapSnapshotToBoard } from "../../src/field/board-view-model.ts";
+} from "../../src/battle/duel/contracts/player-prompt.ts";
+import type { PlayerIndex } from "../../src/battle/duel/contracts/public-duel-state.ts";
+import { mapSnapshotToBoard } from "../../src/battle/field/board-view-model.ts";
 import {
   BOARD_CARD_TEXTS,
   BOARD_VIEW_MODEL_FIXTURES,
@@ -140,7 +140,7 @@ describe("dataCyDeclaration", () => {
 /* Resolved from the working directory rather than `import.meta.url`: under the
    jsdom environment this file needs, `import.meta.url` is an http URL. */
 const CONTRACT_ROOTS = [
-  "src/app",
+  "src/battle/app",
   "src/shell",
   "src/deck-editor",
   "src/story",
@@ -175,7 +175,7 @@ interface ScannedValue {
 const BRANCH_EXCLUSIVE_VALUES: ReadonlyMap<string, string> = new Map([
   [
     "field-action-bar-list",
-    "src/app/components/duel-field/FieldActionBar.svelte",
+    "src/battle/app/components/duel-field/FieldActionBar.svelte",
   ],
 ]);
 

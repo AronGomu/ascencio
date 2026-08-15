@@ -3,7 +3,7 @@ import {
   decodeSumContribution,
   findValidContributionSelection,
   isValidContributionTotal,
-} from "../../src/worker/protocol/sum-selection.ts";
+} from "../../src/battle/worker/protocol/sum-selection.ts";
 
 describe("sum selection", () => {
   it("decodes packed alternative contributions", () => {

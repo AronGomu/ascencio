@@ -103,7 +103,7 @@ body {
    centred with no measured number anywhere. It also makes this element the
    containing block for the duel's `fixed` children — dialog backdrops, card
    trays, the drag ghost — so they rotate with the board instead of escaping to
-   the viewport; `src/app/presentation/stage-frame.ts` maps the viewport
+   the viewport; `src/battle/app/presentation/stage-frame.ts` maps the viewport
    coordinates those children are driven by into this frame. */
 @media (max-width: 1023.98px) and (orientation: portrait) {
   .shell-region--duel {

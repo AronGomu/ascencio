@@ -2,14 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   DECK_CATALOG,
   type DeckId,
-} from "../../src/duel/presets/deck-catalog.ts";
+} from "../../src/battle/duel/presets/deck-catalog.ts";
 import {
   MVP_DECK_CONSTRAINTS,
   parseYdk,
   validateDeck,
-} from "../../src/duel/presets/deck-parser.ts";
-import { DECK_SOURCES } from "../../src/duel/presets/deck-sources-browser.ts";
-import { loadDeckSources } from "../../src/duel/presets/deck-sources-node.ts";
+} from "../../src/battle/duel/presets/deck-parser.ts";
+import { DECK_SOURCES } from "../../src/battle/duel/presets/deck-sources-browser.ts";
+import { loadDeckSources } from "../../src/battle/duel/presets/deck-sources-node.ts";
 
 const ARCHETYPE_DECK_IDS: readonly DeckId[] = [
   "burning-abyss",

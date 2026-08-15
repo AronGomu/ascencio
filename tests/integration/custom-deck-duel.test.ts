@@ -1,12 +1,12 @@
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { duelId, snapshotId } from "../../src/duel/contracts/ids.ts";
-import { uniqueDeckCodes } from "../../src/duel/presets/deck-parser.ts";
-import { loadDeckSources } from "../../src/duel/presets/deck-sources-node.ts";
-import { createDuelPreset } from "../../src/duel/presets/duel-preset.ts";
-import { loadActiveDuelDependenciesNode } from "../../src/worker/assets/active-duel-dependencies-node.ts";
-import { DuelWorkerRuntime } from "../../src/worker/DuelWorkerRuntime.ts";
-import { loadVendoredCoreNode } from "../../src/worker/engine/load-vendored-core-node.ts";
+import { duelId, snapshotId } from "../../src/battle/duel/contracts/ids.ts";
+import { uniqueDeckCodes } from "../../src/battle/duel/presets/deck-parser.ts";
+import { loadDeckSources } from "../../src/battle/duel/presets/deck-sources-node.ts";
+import { createDuelPreset } from "../../src/battle/duel/presets/duel-preset.ts";
+import { loadActiveDuelDependenciesNode } from "../../src/battle/worker/assets/active-duel-dependencies-node.ts";
+import { DuelWorkerRuntime } from "../../src/battle/worker/DuelWorkerRuntime.ts";
+import { loadVendoredCoreNode } from "../../src/battle/worker/engine/load-vendored-core-node.ts";
 
 const ASSET_ROOT = path.resolve("generated/assets/current");
 const CUSTOM_DUEL_ID = duelId("custom-v1:integration");

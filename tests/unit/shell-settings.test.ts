@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { PERSISTED_UI_STATE_KEY } from "../../src/app/stores/persisted-ui-state.ts";
+import { PERSISTED_UI_STATE_KEY } from "../../src/battle/app/stores/persisted-ui-state.ts";
 import {
   DEFAULT_SHELL_SETTINGS,
   migrateFromV2,

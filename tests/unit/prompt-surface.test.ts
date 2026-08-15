@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { choiceId, promptId } from "../../src/duel/contracts/ids.ts";
+import { choiceId, promptId } from "../../src/battle/duel/contracts/ids.ts";
 import type {
   PlayerPrompt,
   PromptChoice,
-} from "../../src/duel/contracts/player-prompt.ts";
+} from "../../src/battle/duel/contracts/player-prompt.ts";
 import type {
   ActiveInteractionSpec,
   InteractionSpec,
-} from "../../src/app/prompts/interaction-spec.ts";
-import { mapPromptToInteractionSpec } from "../../src/app/prompts/interaction-spec.ts";
-import { promptSurface } from "../../src/app/prompts/prompt-surface.ts";
-import { cardInstanceId } from "../../src/duel/contracts/ids.ts";
-import { mapSnapshotToBoard } from "../../src/field/board-view-model.ts";
+} from "../../src/battle/app/prompts/interaction-spec.ts";
+import { mapPromptToInteractionSpec } from "../../src/battle/app/prompts/interaction-spec.ts";
+import { promptSurface } from "../../src/battle/app/prompts/prompt-surface.ts";
+import { cardInstanceId } from "../../src/battle/duel/contracts/ids.ts";
+import { mapSnapshotToBoard } from "../../src/battle/field/board-view-model.ts";
 import {
   BOARD_CARD_TEXTS,
   BOARD_VIEW_MODEL_FIXTURES,

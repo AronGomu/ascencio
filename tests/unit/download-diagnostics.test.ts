@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { buildDownloadableDiagnostics } from "../../src/app/diagnostics/download-diagnostics.ts";
-import type { DuelDiagnosticTrace } from "../../src/duel/contracts/duel-diagnostics.ts";
+import { buildDownloadableDiagnostics } from "../../src/battle/app/diagnostics/download-diagnostics.ts";
+import type { DuelDiagnosticTrace } from "../../src/battle/duel/contracts/duel-diagnostics.ts";
 import {
   choiceId,
   promptId,
   snapshotId,
-} from "../../src/duel/contracts/ids.ts";
+} from "../../src/battle/duel/contracts/ids.ts";
 
 const imageCache = {
   provider: "bundled-archive",

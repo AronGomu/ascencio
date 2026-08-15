@@ -375,7 +375,7 @@ Nothing else regressed
 
 ## T11 data-cy-contract-extension
 
-Machine-verified: `tests/unit/data-cy-coverage.test.ts` now scans `src/battle/app/`, `src/shell/`,
+Machine-verified: `tests/unit/data-cy-coverage.test.ts` now scans `src/battle/`, `src/shell/`,
 `src/deck-editor/` and `src/story/` for presence, kebab-case and uniqueness.
 
 Confirm the uniqueness check bites

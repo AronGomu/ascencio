@@ -110,7 +110,7 @@ Prefer small, cohesive, independently navigable files.
 
 ## HTML element contract
 
-Every HTML element rendered by a Svelte component under `src/battle/app/`, `src/shell/`, `src/deck-editor/` or `src/story/` must carry a `data-cy` attribute that acts as its variable name. Values are kebab-case, describe the role rather than the styling, and are unique inside a rendered document. Elements rendered in a loop suffix the value with the item's stable id, for example `` data-cy={`field-card-${card.id}`} ``. `tests/unit/data-cy-coverage.test.ts` enforces presence and uniqueness.
+Every HTML element rendered by a Svelte component under `src/battle/`, `src/shell/`, `src/deck-editor/` or `src/story/` must carry a `data-cy` attribute that acts as its variable name. Values are kebab-case, describe the role rather than the styling, and are unique inside a rendered document. Elements rendered in a loop suffix the value with the item's stable id, for example `` data-cy={`field-card-${card.id}`} ``. `tests/unit/data-cy-coverage.test.ts` enforces presence and uniqueness.
 
 ## Project tree
 

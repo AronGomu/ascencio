@@ -140,7 +140,10 @@ describe("dataCyDeclaration", () => {
 /* Resolved from the working directory rather than `import.meta.url`: under the
    jsdom environment this file needs, `import.meta.url` is an http URL. */
 const CONTRACT_ROOTS = [
-  "src/battle/app",
+  /* The whole battle domain, not just `app/`: the facade and the rotation
+     notice sit beside it under `src/battle/` and render elements of their own,
+     which the narrower root left outside the contract entirely. */
+  "src/battle",
   "src/shell",
   "src/deck-editor",
   "src/story",

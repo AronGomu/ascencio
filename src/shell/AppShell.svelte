@@ -22,14 +22,16 @@
     createShellSettingsStore,
     type ShellSettingsStore,
   } from "./settings/shell-settings-store.ts";
-  import { createShellStore, type ShellStore } from "./shell-store.ts";
+  import {
+    createShellStore,
+    writeLocationHash,
+    type ShellStore,
+  } from "./shell-store.ts";
   import { computeStageBox, type StageBox } from "./stage-layout.ts";
 
   export let store: ShellStore = createShellStore(
     globalThis.location.hash,
-    (hash) => {
-      globalThis.location.hash = hash;
-    },
+    writeLocationHash,
   );
   export let loaders: DomainLoaders = DEFAULT_DOMAIN_LOADERS;
   export let settings: ShellSettingsStore = createShellSettingsStore();
@@ -79,7 +81,7 @@
 
   const handoff = createHandoffCoordinator({
     saves: saves ?? lazySaves,
-    navigate: (target) => store.navigate(target),
+    navigate: (target, options) => store.navigate(target, options),
     onResolution: (resolution) => {
       /* `onRestore` always ran first: a resolution can only exist for a duel
          whose checkpoint this coordinator wrote or restored. */

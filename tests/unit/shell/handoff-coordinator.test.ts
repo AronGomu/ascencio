@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createHandoffCoordinator } from "../../../src/shell/handoff/handoff-coordinator.ts";
 import { formatAppRoute, type AppRoute } from "../../../src/shell/routes.ts";
+import type { NavigateOptions } from "../../../src/shell/shell-store.ts";
 import {
   createInitialStoryState,
   type StoryState,
@@ -104,7 +105,9 @@ function preBattleState(): StoryState {
 }
 
 let saves: FakeSaves;
-let navigate: ReturnType<typeof vi.fn<(route: AppRoute) => void>>;
+let navigate: ReturnType<
+  typeof vi.fn<(route: AppRoute, options?: NavigateOptions) => void>
+>;
 let onResolution: ReturnType<
   typeof vi.fn<(resolution: StoryDuelResolution, encounterId: string) => void>
 >;
@@ -121,6 +124,12 @@ function coordinator() {
 
 function routes(): readonly string[] {
   return navigate.mock.calls.map(([route]) => formatAppRoute(route));
+}
+
+/** How each navigation entered history, so a correction the player never asked
+    for can be told apart from the duel they chose to start. */
+function replacements(): readonly boolean[] {
+  return navigate.mock.calls.map(([, options]) => options?.replace === true);
 }
 
 beforeEach(() => {
@@ -146,6 +155,9 @@ describe("begin", () => {
 
     expect(order).toEqual(["write", "navigate"]);
     expect(routes()).toEqual([`#/duel/session/${INTENT.handoffId}`]);
+    /* The player asked for this one, so Back out of the duel must lead back to
+       the story it started from. */
+    expect(replacements()).toEqual([false]);
     const stored = await saves.read(CHECKPOINT);
     expect(stored.kind).toBe("ready");
     if (stored.kind !== "ready") throw new Error("checkpoint was not written");
@@ -264,6 +276,9 @@ describe("resume", () => {
 
     await expect(coordinator().resume(requested)).resolves.toBe("not-found");
     expect(routes()).toEqual(["#/story"]);
+    /* Pushing here is what traps Back: the entry the player pressed Back to
+       reach would be replaced by a forward push of the same session route. */
+    expect(replacements()).toEqual([true]);
     expect(onRestore).not.toHaveBeenCalled();
   });
 
@@ -331,6 +346,9 @@ describe("settle", () => {
 
     expect(onResolution).toHaveBeenCalledWith({ kind: "abort" }, "old-arena");
     expect(routes()).toEqual(["#/story"]);
+    /* The session route is spent once the duel has settled, so the return
+       replaces it rather than leaving it behind for Back to walk into. */
+    expect(replacements()).toEqual([true]);
     await vi.waitFor(() => expect(saves.cleared).toEqual([CHECKPOINT]));
   });
 

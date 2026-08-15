@@ -112,6 +112,7 @@ test("surrendering a story duel returns to the abort branch without a reward", a
 }) => {
   await reachEncounter(page);
   await startPickedDuel(page);
+  const entriesAtSession = await page.evaluate(() => history.length);
 
   await surrenderThroughMenu(page);
 
@@ -119,6 +120,10 @@ test("surrendering a story duel returns to the abort branch without a reward", a
     page.getByRole("heading", { name: "Duel paused" }),
   ).toBeVisible();
   await expect(page).toHaveURL(/#\/story$/);
+  /* The spent session route is replaced rather than stacked on. A third entry
+     is what traps Back: it lands on a session nothing can resume, which sends
+     the player forward to the story again, for as long as they keep pressing. */
+  expect(await page.evaluate(() => history.length)).toBe(entriesAtSession);
   await expect(page.getByText("Signal Cipher")).toHaveCount(0);
   await page.locator('[data-cy="story-outcome-abort-return"]').click();
   await expect(

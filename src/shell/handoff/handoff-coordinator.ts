@@ -9,6 +9,7 @@
    nowhere to land. */
 
 import { handoffId as routeHandoffId, type AppRoute } from "../routes.ts";
+import type { NavigateOptions } from "../shell-store.ts";
 /* Both cross-domain imports are type-only, which is what keeps the duel and
    the visual novel behind their dynamic imports: a value import of either
    public entry would pull `BattleFacade` or `StoryApp` into the entry chunk. */
@@ -43,7 +44,7 @@ export interface HandoffCoordinator {
 
 export function createHandoffCoordinator(deps: {
   readonly saves: StorySaveRepository;
-  readonly navigate: (route: AppRoute) => void;
+  readonly navigate: (route: AppRoute, options?: NavigateOptions) => void;
   readonly onResolution: (
     resolution: StoryDuelResolution,
     encounterId: PendingStoryDuel["encounterId"],
@@ -116,7 +117,10 @@ export function createHandoffCoordinator(deps: {
         state.encounterId === null
       ) {
         pending = null;
-        deps.navigate(STORY_ROUTE);
+        /* A correction, not a destination: pushing here would put the session
+           route the player just left in front of them again, so every Back
+           press would walk forward into it instead of out of the duel. */
+        deps.navigate(STORY_ROUTE, { replace: true });
         return "not-found";
       }
 
@@ -141,7 +145,9 @@ export function createHandoffCoordinator(deps: {
           err: error,
         });
       });
-      deps.navigate(STORY_ROUTE);
+      /* The session route is spent, so the return replaces it rather than
+         stacking a third entry the player has to press Back past twice. */
+      deps.navigate(STORY_ROUTE, { replace: true });
     },
   };
 }

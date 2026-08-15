@@ -66,6 +66,12 @@ const ALLOWANCES: Readonly<Record<string, readonly string[]>> = Object.freeze({
   "src/shell/settings/shell-settings.ts": [
     "src/app/stores/persisted-ui-state.ts",
   ],
+  /* The story's duel-handoff vocabulary. `src/story/index.ts` also exports
+     `StoryApp`, so a static import of it from the shell would make the visual
+     novel eager; this module holds pure functions and no component. */
+  "src/shell/handoff/handoff-coordinator.ts": [
+    "src/story/handoff/story-handoff.ts",
+  ],
   "src/decks/ydk-adapter.ts": ["src/duel/presets/deck-parser.ts"],
 });
 
@@ -229,12 +235,22 @@ describe("public domain APIs are frozen", () => {
       entry: "src/story/index.ts",
       namespace: story,
       values: [
+        "ENCOUNTER_LABELS",
         "STORY_SAVES_DATABASE_NAME",
+        "acceptsResult",
         "createStorySaveRepository",
         "default",
+        "restoreStoryState",
+        "storyBattleResult",
+        "toStoryResolution",
       ],
       types: [
         "EncounterId",
+        "PendingStoryDuel",
+        "StoryDuelResolution",
+        "StoryEncounterIntent",
+        "StoryEncounterRequest",
+        "StoryHandoffOutcome",
         "StorySaveEnvelope",
         "StorySaveReadResult",
         "StorySaveRepository",

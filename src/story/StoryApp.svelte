@@ -9,6 +9,14 @@
     type StoryState,
   } from "./model/story-state.ts";
   import { reduceStory } from "./model/story-reducer.ts";
+  import {
+    ENCOUNTER_LABELS,
+    restoreStoryState,
+    storyBattleResult,
+    type StoryDuelResolution,
+    type StoryEncounterRequest,
+    type StoryHandoffOutcome,
+  } from "./handoff/story-handoff.ts";
   import HistoryOverlay from "./overlays/HistoryOverlay.svelte";
   import LoadOverlay from "./overlays/LoadOverlay.svelte";
   import PauseOverlay from "./overlays/PauseOverlay.svelte";
@@ -35,6 +43,24 @@
 
   type Overlay = "history" | "settings" | "pause" | "save" | "load" | null;
 
+  /* The duel handoff, in three props. The story asks for an encounter and is
+     told whether it started; it is unmounted while the duel runs, so what
+     comes back arrives as the checkpointed state plus one resolution. */
+  export let onencounter: (
+    request: StoryEncounterRequest,
+  ) => Promise<StoryHandoffOutcome> = () =>
+    Promise.resolve("checkpoint-failed" as const);
+  export let resumeState: StoryState | null = null;
+  export let resolution: StoryDuelResolution | null = null;
+  /* Told once the handback has been adopted, so a later remount of this
+     domain does not replay an outcome the player already read. */
+  export let onhandled: () => void = () => undefined;
+
+  const CHECKPOINT_FAILED =
+    "Your progress could not be saved, so the duel was not started. Free some storage and try again.";
+  const HANDOFF_INTERRUPTED =
+    "The duel was interrupted before it started. Try again or return to the map.";
+
   /* The overlays expose one manual slot and the autosave stream; the store
      carries three manual slots and the pre-duel checkpoint for the duel
      handoff, which writes them without going through this screen. */
@@ -42,7 +68,21 @@
   const AUTOSAVE_SLOT: StorySlotKey = "autosave";
   const saves = createStorySaveRepository(globalThis.indexedDB);
 
-  let state = createInitialStoryState();
+  let state =
+    resumeState === null
+      ? createInitialStoryState()
+      : restoreStoryState(resumeState);
+  /* A restored checkpoint with no result to apply is a handoff that never
+     produced one — a duel that was never mounted, or a session route that
+     resolved to nothing. It lands here with a retry rather than on a screen
+     waiting for a duel nobody is running. */
+  let handoffError: string | null =
+    resumeState !== null &&
+    resumeState.screen === "battle-mock" &&
+    resolution === null
+      ? HANDOFF_INTERRUPTED
+      : null;
+  let appliedResolution: StoryDuelResolution | null = null;
   let manualState: StoryState | null = null;
   let autosaveState: StoryState | null = null;
   let latestSaveSlot: "manual" | "autosave" | null = null;
@@ -58,6 +98,7 @@
   let root: HTMLElement;
 
   onMount(() => {
+    if (resumeState !== null || resolution !== null) onhandled();
     /* Safe to call on every mount: reading never writes, and a slot this build
        cannot parse resolves to "no save" rather than a thrown mount. */
     void hydrate();
@@ -130,6 +171,11 @@
     });
   });
 
+  $: applyResolution(resolution);
+  $: encounterLabel =
+    state.encounterId === null
+      ? "the duel"
+      : ENCOUNTER_LABELS[state.encounterId];
   $: beat =
     PROLOGUE.beats[Math.min(state.narrativeIndex, PROLOGUE.beats.length - 1)]!;
   $: activeChoices =
@@ -153,8 +199,66 @@
   function newGame(): void {
     dispatch({ type: "new-game" });
   }
+  /** Takes the one result this encounter is allowed to produce. A resolution
+      already applied is ignored, so a re-render cannot advance the story a
+      second time on the same duel. */
+  function applyResolution(next: StoryDuelResolution | null): void {
+    if (next === null || next === appliedResolution) return;
+    appliedResolution = next;
+    handoffError = null;
+    state = reduceStory(state, {
+      type: "battle-result",
+      result: storyBattleResult(next),
+    });
+    dirty = true;
+  }
+
+  /** Asks the shell for a duel. Nothing here starts one: the answer is only
+      whether the pre-duel checkpoint survived, and a checkpoint that did not
+      leaves the player on this screen with the attempt still available. */
+  async function beginHandoff(): Promise<void> {
+    const encounterId = state.encounterId;
+    if (encounterId === null) {
+      handoffError = HANDOFF_INTERRUPTED;
+      return;
+    }
+    handoffError = null;
+    const outcome = await onencounter({
+      encounterId,
+      label: ENCOUNTER_LABELS[encounterId],
+      state,
+    });
+    if (outcome === "checkpoint-failed") handoffError = CHECKPOINT_FAILED;
+  }
+
+  function startEncounter(): void {
+    dispatch({ type: "start-battle" });
+    void beginHandoff();
+  }
+
+  function retryEncounter(): void {
+    state = {
+      ...state,
+      screen: "battle-mock",
+      outcome: null,
+      outcomeScene: null,
+    };
+    void beginHandoff();
+  }
+
+  function returnToMap(): void {
+    handoffError = null;
+    state = {
+      ...state,
+      screen: "map",
+      outcome: null,
+      outcomeScene: null,
+      encounterId: null,
+    };
+  }
+
   function resumeSnapshot(snapshot: StoryState): void {
-    state = { ...snapshot, screen: snapshot.savedScreen };
+    state = { ...restoreStoryState(snapshot), screen: snapshot.savedScreen };
     inputId = snapshot.lastInputId ?? 0;
     dirty = false;
   }
@@ -298,14 +402,6 @@
   function errorMessage(error: unknown): string {
     return error instanceof Error ? error.message : "Storage request failed";
   }
-  function recoverOutcome(action: "retry" | "return"): void {
-    state = {
-      ...state,
-      screen: action === "retry" ? "battle-mock" : "map",
-      outcome: null,
-      outcomeScene: null,
-    };
-  }
 </script>
 
 <div class="story-app" data-cy="story-app" bind:this={root}>
@@ -395,21 +491,22 @@
   {:else if state.screen === "pre-battle"}
     <PreBattleScreen
       allowReturn={true}
-      onstart={() => dispatch({ type: "start-battle" })}
+      onstart={startEncounter}
       onreturn={() => go("map")}
     />
   {:else if state.screen === "battle-mock"}
     <BattleHandoffScreen
-      onresult={(result) => dispatch({ type: "battle-result", result })}
-      onretry={() => recoverOutcome("retry")}
-      onreturn={() => recoverOutcome("return")}
+      label={encounterLabel}
+      error={handoffError}
+      onretry={retryEncounter}
+      onreturn={returnToMap}
     />
   {:else if state.screen === "outcome"}
     <OutcomeScreen
       outcome={state.outcome ?? "win"}
       oncontinue={continueOutcome}
-      onretry={() => recoverOutcome("retry")}
-      onreturn={() => recoverOutcome("return")}
+      onretry={retryEncounter}
+      onreturn={returnToMap}
     />
   {:else if state.screen === "reward"}
     <RewardScreen

@@ -5,11 +5,52 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import AppShell from "../../src/shell/AppShell.svelte";
 import type { DomainLoaders } from "../../src/shell/domain-loaders.ts";
 import { createShellStore } from "../../src/shell/shell-store.ts";
+import { createInitialStoryState } from "../../src/story/model/story-state.ts";
+import type {
+  StorySaveReadResult,
+  StorySlotKey,
+} from "../../src/story/saves/story-save-contracts.ts";
+import type { StorySaveRepository } from "../../src/story/saves/story-save-repository.ts";
 
 /* The domain roots boot a duel worker and IndexedDB, neither of which this
    test needs: it only asserts which region the shell renders. */
 const never = () => new Promise<never>(() => {});
 const loaders: DomainLoaders = { duel: never, decks: never, story: never };
+
+const SESSION_HANDOFF = "77777777-2222-4333-8444-555555555555";
+
+/** A story save store that answers the checkpoint read with exactly `read`,
+    so the two session-route branches are decided by this test rather than by
+    whatever IndexedDB the environment happens to have. */
+function savesAnswering(read: StorySaveReadResult): StorySaveRepository {
+  return {
+    read: (slot: StorySlotKey) =>
+      Promise.resolve(
+        slot === "checkpoint:pre-duel" ? read : { kind: "empty", slot },
+      ),
+    write: () => Promise.resolve({ kind: "failed", reason: "unavailable" }),
+    list: () => Promise.resolve([]),
+    clear: () => Promise.resolve(),
+  };
+}
+
+function checkpointFor(handoffId: string): StorySaveReadResult {
+  return {
+    kind: "ready",
+    envelope: {
+      schemaVersion: 1,
+      slot: "checkpoint:pre-duel",
+      revision: 1,
+      savedAt: 1,
+      state: {
+        ...createInitialStoryState(),
+        screen: "battle-mock",
+        encounterId: "old-arena",
+        pendingHandoffId: handoffId,
+      },
+    },
+  };
+}
 
 function renderAt(hash: string) {
   return render(AppShell, {
@@ -56,15 +97,68 @@ describe("AppShell", () => {
     ).not.toBeNull();
   });
 
-  /* A story handoff has no request to dispatch yet, so the session route runs
-     the same standalone duel and only marks itself as pending. */
-  it("marks the duel-session route as pending inside the duel region", () => {
+  /* Nothing of the duel mounts until the checkpoint behind the session route
+     has been found, so a route nobody can resume never becomes half a duel. */
+  it("marks the duel-session route as pending while its checkpoint is read", () => {
     renderAt("#/duel/session/opening-duel");
     const region = document.querySelector('[data-cy="shell-region-duel"]');
     expect(region).not.toBeNull();
     expect(
       region?.querySelector('[data-cy="battle-session-pending"]'),
     ).not.toBeNull();
+  });
+
+  it("mounts the duel once the session's checkpoint is restored", async () => {
+    render(AppShell, {
+      store: createShellStore(`#/duel/session/${SESSION_HANDOFF}`, () => {}),
+      loaders: {
+        ...loaders,
+        duel: async () => await import("../../src/battle/index.ts"),
+      },
+      saves: savesAnswering(checkpointFor(SESSION_HANDOFF)),
+    });
+
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector('[data-cy="battle-session-pending"]'),
+      ).toBeNull(),
+    );
+    expect(
+      document.querySelector('[data-cy="shell-region-duel"]'),
+    ).not.toBeNull();
+  });
+
+  it.each([
+    ["another handoff", checkpointFor("11111111-2222-4333-8444-555555555555")],
+    [
+      "no checkpoint",
+      { kind: "empty", slot: "checkpoint:pre-duel" } as StorySaveReadResult,
+    ],
+    [
+      "a corrupt checkpoint",
+      {
+        kind: "corrupt",
+        slot: "checkpoint:pre-duel",
+        reason: "not an envelope",
+      } as StorySaveReadResult,
+    ],
+  ])("sends a session route with %s back to the story", async (_name, read) => {
+    let hash = `#/duel/session/${SESSION_HANDOFF}`;
+    render(AppShell, {
+      store: createShellStore(hash, (next) => {
+        hash = next;
+      }),
+      loaders,
+      saves: savesAnswering(read),
+    });
+
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector('[data-cy="shell-region-story"]'),
+      ).not.toBeNull(),
+    );
+    expect(hash).toBe("#/story");
+    expect(document.querySelector('[data-cy="shell-region-duel"]')).toBeNull();
   });
 
   it("leaves the plain duel route unmarked", () => {

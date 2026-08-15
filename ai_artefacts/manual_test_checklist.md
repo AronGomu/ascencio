@@ -936,3 +936,42 @@ Widening art coverage was explicitly out of scope for this slice. The unit test
 - [ ] After choosing a pair, `localStorage["ygo.ui.v2"]` holds `decks: { playerKey: "preset:…", opponentKey: "preset:…" }` — keys, not bare deck ids, and never a copy of any card list.
 - [ ] A payload written by an older build (`decks: { player: "nekroz", opponent: "shaddoll" }`) still loads with that pair selected.
 - [ ] Display settings survive: toggle zone outlines off in `#/duel`, reload, and confirm they are still off (the payload version stays `2` precisely so the shell's settings migration keeps working).
+
+## T19 story-duel-handoff
+
+The visual novel stops mocking battles. Starting an encounter writes a
+verified pre-duel checkpoint, hands the duel to the shell on a route of its
+own (`#/duel/session/{handoffId}`), and takes exactly one result back.
+
+### Start an encounter and play it
+- [ ] Open `#/story`, play (or load) through to the **City signal map**, and click **Old Arena**.
+- [ ] The briefing reads "Your progress is saved before the duel starts." There are no reviewer or "Simulate …" buttons anywhere in the story.
+- [ ] Click **Start Duel**. The address bar changes to `#/duel/session/<id>` and the story screen is replaced by the duel.
+- [ ] The **deck picker** appears, with the pair you last used already selected (bundled `mvp-player` / `mvp-opponent` on a fresh profile).
+- [ ] Press **Start** — the duel loads and reaches the first prompt exactly as `#/duel` does.
+
+### Each outcome branch
+- [ ] **Surrender** (right rail → Options → Surrender → confirm). The story comes back on "Duel paused", the address bar returns to `#/story`, and no reward is granted. **Return to map** puts you back on the map with your progress intact.
+- [ ] **Win** the duel. The story shows "Signal broken", then **Continue story** reveals the Signal Cipher reward, and **Continue to updated map** opens the Archive route.
+- [ ] **Lose** the duel. The story shows "Signal endures" — a different scene from the win — and still continues to the reward.
+- [ ] **Technical failure:** with a duel running, open DevTools → Application → Service/Workers (or the Sources ▸ Threads panel) and terminate the duel Worker. The story shows "Connection interrupted" and says this is not an authored loss. It must **never** show "Signal endures". **Retry duel** starts a fresh duel from the picker.
+
+### Reload mid-duel (the crash-safety check)
+- [ ] Start a story encounter and press Start so a duel is actually running.
+- [ ] Reload the page (F5) while the duel is on screen.
+- [ ] The address bar still holds the same `#/duel/session/<id>`, and the same encounter restarts — the deck picker comes back, not a blank screen and not the title screen.
+- [ ] Finish or surrender that duel: the story resumes with the progress you had before the duel, not from the beginning.
+
+### A checkpoint that cannot be trusted
+- [ ] Paste `#/duel/session/does-not-exist` into the address bar. You land on `#/story` with the story's last stable state — never a blank screen and never half a duel.
+- [ ] In DevTools → Application → IndexedDB → `ygo-story-saves` → `saves`, replace the `checkpoint:pre-duel` value with the string `not a checkpoint`, then open a session route. You land on `#/story`; the other slots (`manual:1`, `autosave`) are untouched and still load.
+- [ ] Edit `checkpoint:pre-duel`'s `state.pendingHandoffId` to a different id and open the original session route. You land on `#/story` rather than resuming someone else's duel.
+
+### Checkpoint write failure
+- [ ] In DevTools → Application → Storage, set a tiny quota (or use a private window with storage blocked), then start an encounter.
+- [ ] **No duel starts.** The story shows "The duel did not start" with the reason and a **Try again** button. **Try again** re-runs the whole handoff; **Return to map** goes back safely.
+
+### The other two domains are untouched
+- [ ] `#/duel` still opens the standalone duel, and finishing or surrendering there does **not** navigate anywhere.
+- [ ] `#/decks` is unchanged.
+- [ ] Opening `#/duel` on a fresh profile does not download the story chunk (DevTools → Network, filter `story`).

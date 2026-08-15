@@ -198,6 +198,17 @@ function isStoryState(value: unknown): value is StoryState {
     "observe-first",
   ]);
   const outcomes = new Set([null, "win", "loss", "abort", "failure"]);
+  /* Both handoff fields accept `undefined` as well as `null`: a save written
+     before the duel handoff existed carries neither key, and reading that as
+     corruption would cost a player progress this build can resume perfectly
+     well. `restoreStoryState` normalises them on the way back in. */
+  const encounters = new Set([
+    undefined,
+    null,
+    "old-arena",
+    "archive",
+    "hidden-gate",
+  ]);
   if (
     typeof state.screen !== "string" ||
     !screens.has(state.screen) ||
@@ -225,6 +236,12 @@ function isStoryState(value: unknown): value is StoryState {
     typeof state.rewardGranted !== "boolean" ||
     typeof state.rewardAcknowledged !== "boolean" ||
     typeof state.objective !== "string" ||
+    !encounters.has(state.encounterId as undefined | null | string) ||
+    !(
+      state.pendingHandoffId === null ||
+      state.pendingHandoffId === undefined ||
+      typeof state.pendingHandoffId === "string"
+    ) ||
     !Array.isArray(state.locations)
   )
     return false;

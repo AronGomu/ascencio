@@ -56,6 +56,16 @@ const DUEL_UI_STATE_PENDING_RELOCATION = [
   "!**/app/stores",
   "!**/app/stores/persisted-ui-state.ts",
 ];
+/* The story's duel-handoff vocabulary, read by the shell's coordinator. It is
+   the same shape of allowance as the three above and exists for the same
+   reason: `src/story/index.ts` also exports `StoryApp`, so a static import of
+   it from the shell would make the visual novel an eager dependency. The
+   module holds pure functions and no component, so the allowance costs the
+   entry chunk nothing. */
+const STORY_HANDOFF_TYPES_PENDING_RELOCATION = [
+  "!**/story/handoff",
+  "!**/story/handoff/story-handoff.ts",
+];
 
 const STORY_MESSAGE =
   "Reach the visual novel through `src/story/index.ts` (ADR-022 domain boundary).";
@@ -205,6 +215,17 @@ export default tseslint.config(
         group: [...BATTLE_INTERNALS, ...DUEL_UI_STATE_PENDING_RELOCATION],
         message: BATTLE_MESSAGE,
       },
+    ],
+  ),
+  boundaries(
+    ["src/shell/handoff/handoff-coordinator.ts"],
+    [
+      {
+        group: [...STORY_INTERNALS, ...STORY_HANDOFF_TYPES_PENDING_RELOCATION],
+        message: STORY_MESSAGE,
+      },
+      { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
+      { group: BATTLE_INTERNALS, message: BATTLE_MESSAGE },
     ],
   ),
   boundaries(

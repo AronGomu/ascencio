@@ -80,6 +80,39 @@ describe("story state model", () => {
     ).toMatch(/watched|observe/i);
   });
 
+  /* The encounter has to outlive the screen: the story is unmounted while its
+     duel runs, and what comes back has to know which node it was. */
+  it("records the selected encounter and clears it once the outcome is read", () => {
+    const map = { ...createInitialStoryState(), screen: "map" as const };
+    const briefing = reduceStory(map, {
+      type: "select-location",
+      locationId: "old-arena",
+    });
+    expect(briefing.encounterId).toBe("old-arena");
+    expect(createInitialStoryState().encounterId).toBeNull();
+
+    const aborted = reduceStory(
+      { ...briefing, screen: "battle-mock" },
+      { type: "battle-result", result: "abort" },
+    );
+    expect(aborted.encounterId).toBe("old-arena");
+    expect(
+      reduceStory(aborted, { type: "continue-outcome" }).encounterId,
+    ).toBeNull();
+
+    const rewarded = reduceStory(
+      reduceStory(
+        { ...briefing, screen: "battle-mock" },
+        { type: "battle-result", result: "win" },
+      ),
+      { type: "continue-outcome" },
+    );
+    expect(rewarded.screen).toBe("reward");
+    expect(
+      reduceStory(rewarded, { type: "acknowledge-reward" }).encounterId,
+    ).toBeNull();
+  });
+
   it("allows available map destinations only", () => {
     const map = { ...createInitialStoryState(), screen: "map" as const };
     expect(

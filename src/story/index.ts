@@ -3,6 +3,23 @@
     into `screens/`, `overlays/` or `model/`. */
 export { default } from "./StoryApp.svelte";
 export type { StoryState } from "./model/story-state.ts";
+/* The duel handoff is a two-domain conversation, so its whole vocabulary is
+   named here: the shell generates the handoff id, mounts the duel and settles
+   exactly one result, while the story owns what each result means. */
+export {
+  acceptsResult,
+  ENCOUNTER_LABELS,
+  restoreStoryState,
+  storyBattleResult,
+  toStoryResolution,
+} from "./handoff/story-handoff.ts";
+export type {
+  PendingStoryDuel,
+  StoryDuelResolution,
+  StoryEncounterIntent,
+  StoryEncounterRequest,
+  StoryHandoffOutcome,
+} from "./handoff/story-handoff.ts";
 /* A battle handoff is identified by the map node it was launched from, so the
    public name for that id is the encounter it starts. */
 export type { LocationId as EncounterId } from "./model/story-state.ts";

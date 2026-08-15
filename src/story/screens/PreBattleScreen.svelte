@@ -53,7 +53,7 @@
       </div>
     </dl>
     <p class="checkpoint" role="status" data-cy="story-briefing-checkpoint">
-      Mock checkpoint saved before battle.
+      Your progress is saved before the duel starts.
     </p>
     <div class="actions" data-cy="story-briefing-actions">
       <button

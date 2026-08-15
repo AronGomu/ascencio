@@ -1,20 +1,12 @@
 <script lang="ts">
-  import type { BattleResult } from "../model/story-state.ts";
-  export let onresult: (result: BattleResult) => void = () => undefined;
+  /* The frame between the story and a real duel. It never runs one: the shell
+     owns mounting the duel, so all this screen can report is that the handoff
+     is under way — or that the checkpoint could not be written, in which case
+     no duel started and the player is offered the attempt again. */
+  export let label = "the duel";
+  export let error: string | null = null;
   export let onretry: () => void = () => undefined;
   export let onreturn: () => void = () => undefined;
-  let result: BattleResult | null = null;
-  const messages: Record<BattleResult, string> = {
-    win: "Player win normalized. Returning to the authored win scene.",
-    loss: "Player loss normalized. Returning to the distinct authored loss scene.",
-    abort: "Battle aborted safely. No progression granted.",
-    failure:
-      "Technical failure recorded; this is not a story defeat. No progression granted.",
-  };
-  function select(value: BattleResult): void {
-    result = value;
-    onresult(value);
-  }
 </script>
 
 <section
@@ -26,71 +18,40 @@
     DUEL
   </div>
   <div data-cy="story-handoff-intro">
-    <p class="eyebrow" data-cy="story-handoff-eyebrow">
-      Mock boundary · no duel runtime loaded
-    </p>
-    <h1 id="handoff-heading" data-cy="story-handoff-heading">
-      Existing duel experience placeholder
-    </h1>
+    <p class="eyebrow" data-cy="story-handoff-eyebrow">Entering the duel</p>
+    <h1 id="handoff-heading" data-cy="story-handoff-heading">{label}</h1>
     <p data-cy="story-handoff-body">
-      This frame validates story-to-duel language only. Reviewer picks a
-      normalized outcome below.
+      Your progress is saved before the duel begins, so the encounter can be
+      restarted exactly here if anything interrupts it.
     </p>
   </div>
-  <section
-    class="reviewer-controls"
-    aria-label="Reviewer-only battle controls"
-    data-cy="story-handoff-reviewer-controls"
-  >
-    <h2 data-cy="story-handoff-reviewer-heading">Reviewer battle outcome</h2>
-    <p data-cy="story-handoff-reviewer-note">
-      <strong data-cy="story-handoff-reviewer-note-label"
-        >Non-player tooling:</strong
-      > these controls never appear as production duel actions.
+  {#if error === null}
+    <p class="status" role="status" data-cy="story-handoff-status">
+      Saving your progress and preparing the duel…
     </p>
-    <div class="controls" data-cy="story-handoff-outcome-actions">
-      <button
-        type="button"
-        data-cy="story-handoff-simulate-win"
-        onclick={() => select("win")}>Simulate Player Win</button
-      ><button
-        type="button"
-        data-cy="story-handoff-simulate-loss"
-        onclick={() => select("loss")}>Simulate Player Loss</button
-      ><button
-        type="button"
-        class="secondary"
-        data-cy="story-handoff-simulate-abort"
-        onclick={() => select("abort")}>Simulate Abort</button
-      ><button
-        type="button"
-        class="secondary"
-        data-cy="story-handoff-simulate-failure"
-        onclick={() => select("failure")}>Simulate Technical Failure</button
-      >
-    </div>
-  </section>
-  {#if result}<div
-      class:failure={result === "failure"}
-      class="result"
-      role="status"
-      data-cy="story-handoff-result"
+  {:else}
+    <section
+      class="failure"
+      role="alert"
+      aria-labelledby="handoff-error-heading"
+      data-cy="story-handoff-error"
     >
-      <p data-cy="story-handoff-result-message">{messages[result]}</p>
-      {#if result === "abort" || result === "failure"}<div
-          class="controls"
-          data-cy="story-handoff-result-actions"
+      <h2 id="handoff-error-heading" data-cy="story-handoff-error-heading">
+        The duel did not start
+      </h2>
+      <p data-cy="story-handoff-error-message">{error}</p>
+      <div class="controls" data-cy="story-handoff-error-actions">
+        <button type="button" data-cy="story-handoff-retry" onclick={onretry}
+          >Try again</button
+        ><button
+          type="button"
+          class="secondary"
+          data-cy="story-handoff-return"
+          onclick={onreturn}>Return to map</button
         >
-          <button type="button" data-cy="story-handoff-retry" onclick={onretry}
-            >Retry mock duel</button
-          ><button
-            type="button"
-            class="secondary"
-            data-cy="story-handoff-return"
-            onclick={onreturn}>Return to map</button
-          >
-        </div>{/if}
-    </div>{/if}
+      </div>
+    </section>
+  {/if}
 </section>
 
 <style>
@@ -110,29 +71,26 @@
     top: 10vh;
   }
   .handoff > div:not(.transition-mark),
-  .reviewer-controls,
-  .result {
+  .status,
+  .failure {
     position: relative;
     max-width: 55rem;
   }
-  .reviewer-controls {
+  .status {
+    padding: 1rem;
+    border-left: 4px solid var(--story-accent);
+    background: var(--surface-raised);
+  }
+  .failure {
     padding: 1.2rem;
-    border: 2px dashed var(--selected);
+    border: 2px solid var(--danger);
     border-radius: 0.6rem;
-    background: var(--warning-surface);
+    background: var(--danger-surface);
   }
   .controls {
     display: flex;
     flex-wrap: wrap;
     gap: 0.6rem;
-  }
-  .result {
-    padding: 1rem;
-    border-left: 4px solid var(--story-accent);
-    background: var(--surface-raised);
-  }
-  .result.failure {
-    border-color: var(--danger);
   }
   @media (prefers-reduced-motion: no-preference) {
     .handoff {

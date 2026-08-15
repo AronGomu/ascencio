@@ -6,9 +6,18 @@
     type DomainLoaders,
   } from "./domain-loaders.ts";
   import { isFullscreen, requestAppFullscreen } from "./fullscreen.ts";
+  import { createHandoffCoordinator } from "./handoff/handoff-coordinator.ts";
   import { STAGE_CONTEXT_KEY } from "./index.ts";
   import type { AppRoute } from "./routes.ts";
   import HomeScreen from "./screens/HomeScreen.svelte";
+  import type { BattleFacadeResult } from "../battle/index.ts";
+  import type {
+    StoryDuelResolution,
+    StoryEncounterRequest,
+    StorySaveRepository,
+    StorySlotKey,
+    StoryState,
+  } from "../story/index.ts";
   import {
     createShellSettingsStore,
     type ShellSettingsStore,
@@ -24,13 +33,96 @@
   );
   export let loaders: DomainLoaders = DEFAULT_DOMAIN_LOADERS;
   export let settings: ShellSettingsStore = createShellSettingsStore();
+  /* Story progress is written by the shell only for the pre-duel checkpoint.
+     The default reaches the repository through the visual novel's own lazy
+     chunk, so `#/duel` and `#/decks` never load the story to hold it. */
+  export let saves: StorySaveRepository | null = null;
 
   let stage: HTMLElement | undefined;
+  let storySaves: Promise<StorySaveRepository> | null = null;
+
+  async function openStorySaves(): Promise<StorySaveRepository> {
+    storySaves ??= import("../story/index.ts").then((story) =>
+      story.createStorySaveRepository(globalThis.indexedDB),
+    );
+    return await storySaves;
+  }
+
+  const lazySaves: StorySaveRepository = {
+    read: async (slot: StorySlotKey) =>
+      await (await openStorySaves()).read(slot),
+    write: async (
+      slot: StorySlotKey,
+      state: StoryState,
+      expected: number | null,
+    ) => await (await openStorySaves()).write(slot, state, expected),
+    list: async () => await (await openStorySaves()).list(),
+    clear: async (slot: StorySlotKey) => {
+      await (await openStorySaves()).clear(slot);
+    },
+  };
+
+  /* What the story is handed when it comes back from a duel: the state that
+     was checkpointed before it started, and the one result it produced. Held
+     only until the story adopts it, so a later remount cannot replay it. */
+  let handback: {
+    readonly state: StoryState;
+    readonly resolution: StoryDuelResolution | null;
+  } | null = null;
+  let sessionHandoffId: string | null = null;
+  let sessionReady = false;
+
+  const handoff = createHandoffCoordinator({
+    saves: saves ?? lazySaves,
+    navigate: (target) => store.navigate(target),
+    onResolution: (resolution) => {
+      /* `onRestore` always ran first: a resolution can only exist for a duel
+         whose checkpoint this coordinator wrote or restored. */
+      if (handback !== null) handback = { state: handback.state, resolution };
+    },
+    onRestore: (state) => {
+      handback = { state, resolution: null };
+    },
+  });
+
+  async function startEncounter(request: StoryEncounterRequest) {
+    return await handoff.begin(
+      {
+        handoffId: crypto.randomUUID(),
+        encounterId: request.encounterId,
+        label: request.label,
+      },
+      request.state,
+    );
+  }
+
+  function settleSession(result: BattleFacadeResult): void {
+    if (sessionHandoffId !== null) handoff.settle(sessionHandoffId, result);
+  }
+
+  /* A duel only mounts once its checkpoint has been found, so a route nobody
+     can resume never becomes half a duel: `resume` sends it back to the story
+     itself, and this region shows only that it is still looking. */
+  function syncSession(current: AppRoute): void {
+    if (current.kind !== "duel-session") {
+      sessionHandoffId = null;
+      sessionReady = false;
+      return;
+    }
+    if (sessionHandoffId === current.handoffId) return;
+    const requested: string = current.handoffId;
+    sessionHandoffId = requested;
+    sessionReady = false;
+    void handoff.resume(requested).then((outcome) => {
+      if (sessionHandoffId === requested) sessionReady = outcome === "restored";
+    });
+  }
 
   let route: AppRoute;
   const unsubscribe = store.subscribe((state) => {
     route = state.route;
   });
+  $: syncSession(route);
 
   const readViewportBox = (): StageBox =>
     computeStageBox(globalThis.innerWidth, globalThis.innerHeight);
@@ -125,31 +217,42 @@
   {:else if route.kind === "story"}
     <div class="shell-region shell-region--story" data-cy="shell-region-story">
       {#await loaders.story() then module}
-        <svelte:component this={module.default} />
+        <svelte:component
+          this={module.default}
+          onencounter={startEncounter}
+          resumeState={handback?.state ?? null}
+          resolution={handback?.resolution ?? null}
+          onhandled={() => {
+            handback = null;
+          }}
+        />
       {/await}
     </div>
   {:else}
     <div class="shell-region shell-region--duel" data-cy="shell-region-duel">
-      {#if route.kind === "duel-session"}
-        <!-- A story handoff addresses a duel the shell cannot build a request
-             for yet, so the session route runs the standalone duel and only
-             marks itself as pending. T19 turns this into a real request. -->
+      {#if route.kind === "duel-session" && !sessionReady}
+        <!-- The checkpoint is still being read. Nothing of the duel mounts
+             until it is found, so a session that cannot be resumed leaves the
+             player on the story rather than inside half a duel. -->
         <p class="visually-hidden" data-cy="battle-session-pending">
           Preparing the story duel
         </p>
+      {:else}
+        {#await loaders.duel() then module}
+          <!-- The duel is rotated by the stylesheet, so the notice explaining
+               it belongs to the duel; its one-time dismissal is a shell
+               setting, so the flag and its setter cross as plain props. -->
+          <svelte:component
+            this={module.BattleFacade}
+            request={null}
+            hosted={route.kind === "duel-session"}
+            oncomplete={settleSession}
+            rotated={box.rotated}
+            rotationNoticeDismissed={$settings.rotationNoticeDismissed}
+            onrotationnoticedismiss={() => settings.dismissRotationNotice()}
+          />
+        {/await}
       {/if}
-      {#await loaders.duel() then module}
-        <!-- The duel is rotated by the stylesheet, so the notice explaining it
-             belongs to the duel; its one-time dismissal is a shell setting, so
-             the flag and its setter cross the boundary as plain props. -->
-        <svelte:component
-          this={module.BattleFacade}
-          request={null}
-          rotated={box.rotated}
-          rotationNoticeDismissed={$settings.rotationNoticeDismissed}
-          onrotationnoticedismiss={() => settings.dismissRotationNotice()}
-        />
-      {/await}
     </div>
   {/if}
 </div>

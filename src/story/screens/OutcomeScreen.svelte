@@ -77,7 +77,7 @@
       Connection interrupted
     </h1>
     <p data-cy="story-outcome-error-body">
-      Technical failure stopped the mock duel. This is not an authored loss.
+      A technical failure stopped the duel. This is not an authored loss.
     </p>
     <div data-cy="story-outcome-error-actions">
       <button

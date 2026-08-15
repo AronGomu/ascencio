@@ -1,4 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { createInitialStoryState } from "../src/story/model/story-state.ts";
+import type { BattleResult } from "../src/story/model/story-state.ts";
 
 /* The prologue advances one beat per confirm. These two counts are the beats
    before the choice and the beats after it, taken from the flow the deleted
@@ -24,6 +26,51 @@ async function startNarrative(page: Page): Promise<void> {
   await expect(page.getByText(/Rain turned/)).toBeVisible();
 }
 
+/** Resumes the story on the outcome screen for `outcome`.
+
+    The duel that produces an outcome is a real duel now: `e2e/story-duel.spec`
+    plays one, and these tests are about the authored scenes that come after
+    one, so they start from a save rather than from an engine. */
+async function resumeAtOutcome(
+  page: Page,
+  outcome: BattleResult,
+): Promise<void> {
+  await openStory(page);
+  await page.evaluate(
+    async (record) => {
+      const database = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open("ygo-story-saves", 1);
+        request.onupgradeneeded = () =>
+          request.result.createObjectStore("saves");
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      const transaction = database.transaction("saves", "readwrite");
+      transaction.objectStore("saves").put(record, "autosave");
+      await new Promise((resolve) => {
+        transaction.oncomplete = resolve;
+      });
+      database.close();
+    },
+    {
+      schemaVersion: 1,
+      slot: "autosave",
+      revision: 1,
+      savedAt: Date.now(),
+      state: {
+        ...createInitialStoryState(),
+        screen: "outcome",
+        savedScreen: "outcome",
+        progressExists: true,
+        encounterId: "old-arena",
+        outcome,
+      },
+    },
+  );
+  await page.reload();
+  await page.getByRole("button", { name: "Continue" }).click();
+}
+
 async function reachMap(page: Page): Promise<void> {
   await startNarrative(page);
   for (let index = 0; index < BEATS_BEFORE_CHOICE; index += 1)
@@ -40,7 +87,7 @@ async function reachMap(page: Page): Promise<void> {
   ).toBeVisible();
 }
 
-test("story plays the prologue through to the updated map", async ({
+test("story plays the prologue through to the duel handoff", async ({
   page,
 }) => {
   await reachMap(page);
@@ -53,10 +100,15 @@ test("story plays the prologue through to the updated map", async ({
     .click();
   await expect(page.getByRole("heading", { name: "Rin's Echo" })).toBeVisible();
   await page.getByRole("button", { name: "Start Duel" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Existing duel experience placeholder" }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Simulate Player Win" }).click();
+  /* The shell owns the duel, so the story's last act is to hand over: the
+     duel region replaces it on a session route of its own. */
+  await expect(page).toHaveURL(/#\/duel\/session\/[\w-]+$/);
+  await expect(page.locator('[data-cy="shell-region-duel"]')).toBeVisible();
+  await expect(page.locator(STORY_REGION)).toHaveCount(0);
+});
+
+test("a win reaches its own outcome and the updated map", async ({ page }) => {
+  await resumeAtOutcome(page, "win");
   await expect(
     page.getByRole("heading", { name: "Signal broken" }),
   ).toBeVisible();
@@ -69,13 +121,7 @@ test("story plays the prologue through to the updated map", async ({
 });
 
 test("a loss reaches its own outcome and still continues", async ({ page }) => {
-  await reachMap(page);
-  await page
-    .getByLabel("Map hotspots")
-    .getByRole("button", { name: /Old Arena/ })
-    .click();
-  await page.getByRole("button", { name: "Start Duel" }).click();
-  await page.getByRole("button", { name: "Simulate Player Loss" }).click();
+  await resumeAtOutcome(page, "loss");
   await expect(
     page.getByRole("heading", { name: "Signal endures" }),
   ).toBeVisible();
@@ -86,22 +132,10 @@ test("a loss reaches its own outcome and still continues", async ({ page }) => {
 });
 
 test("an aborted duel recovers without granting a reward", async ({ page }) => {
-  await reachMap(page);
-  await page
-    .getByLabel("Location list")
-    .getByRole("button", { name: /Old Arena/ })
-    .click();
-  await page.getByRole("button", { name: "Start Duel" }).click();
-  await page.getByRole("button", { name: "Simulate Abort" }).click();
+  await resumeAtOutcome(page, "abort");
   await expect(
     page.getByRole("heading", { name: "Duel paused" }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Retry duel" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Existing duel experience placeholder" }),
-  ).toBeVisible();
-  await expect(page.getByRole("status")).toHaveCount(0);
-  await page.getByRole("button", { name: "Simulate Abort" }).click();
   await page.getByRole("button", { name: "Return to map" }).click();
   await expect(
     page.getByRole("heading", { name: "City signal map" }),
@@ -109,16 +143,25 @@ test("an aborted duel recovers without granting a reward", async ({ page }) => {
   await expect(page.getByText("Signal Cipher")).toHaveCount(0);
 });
 
+/* A technical failure is not a defeat, so its scene must not offer progress
+   either — and retrying it has to run a real duel, not replay an outcome. */
+test("a technical failure offers a retry that starts a new duel", async ({
+  page,
+}) => {
+  await resumeAtOutcome(page, "failure");
+  await expect(
+    page.getByRole("heading", { name: "Connection interrupted" }),
+  ).toBeVisible();
+  await expect(page.getByText("Signal Cipher")).toHaveCount(0);
+  await page.getByRole("button", { name: "Retry duel" }).click();
+  await expect(page).toHaveURL(/#\/duel\/session\/[\w-]+$/);
+  await expect(page.locator('[data-cy="shell-region-duel"]')).toBeVisible();
+});
+
 test("saved progress survives a reload and reaches the end of the prologue", async ({
   page,
 }) => {
-  await reachMap(page);
-  await page
-    .getByLabel("Location list")
-    .getByRole("button", { name: /Old Arena/ })
-    .click();
-  await page.getByRole("button", { name: "Start Duel" }).click();
-  await page.getByRole("button", { name: "Simulate Player Win" }).click();
+  await resumeAtOutcome(page, "win");
   await page.getByRole("button", { name: "Continue story" }).click();
   await expect(page.getByText(/Autosave complete/)).toBeVisible();
   await page.getByRole("button", { name: "Continue to updated map" }).click();
@@ -397,16 +440,17 @@ test("the story flow is reachable by keyboard alone", async ({ page }) => {
     page,
     page.getByRole("button", { name: "Start Duel" }),
   );
-  await expect(
-    page.getByRole("heading", { name: "Existing duel experience placeholder" }),
-  ).toBeFocused();
-  await keyboardActivate(
-    page,
-    page.getByRole("button", { name: "Simulate Player Win" }),
-  );
-  await expect(
-    page.getByRole("heading", { name: "Signal broken" }),
-  ).toBeFocused();
+  /* The story hands the duel to the shell here, so the traversal continues
+     on the scenes that come back from one. */
+  await expect(page).toHaveURL(/#\/duel\/session\/[\w-]+$/);
+});
+
+test("the authored outcome scenes are reachable by keyboard alone", async ({
+  page,
+}) => {
+  await resumeAtOutcome(page, "win");
+  const winHeading = page.getByRole("heading", { name: "Signal broken" });
+  await expect(winHeading).toBeFocused();
   await keyboardActivate(
     page,
     page.getByRole("button", { name: "Continue story" }),
@@ -418,7 +462,9 @@ test("the story flow is reachable by keyboard alone", async ({ page }) => {
     page,
     page.getByRole("button", { name: "Continue to updated map" }),
   );
-  await expect(mapHeading).toBeFocused();
+  await expect(
+    page.getByRole("heading", { name: "City signal map" }),
+  ).toBeFocused();
 });
 
 /* The prototype shipped as a second HTML document precisely so it could not

@@ -17,7 +17,7 @@ describe("battle handoff", () => {
       /Relay Deck/i,
       /Single duel/i,
       /Decode the challenge/i,
-      /Mock checkpoint saved/i,
+      /progress is saved before the duel starts/i,
     ])
       expect(screen.getByText(text)).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Return to Map" })).toBeNull();
@@ -29,50 +29,35 @@ describe("battle handoff", () => {
     expect(screen.getByRole("button", { name: "Return to Map" })).toBeTruthy();
   });
 
-  it.each(["win", "loss", "abort", "failure"] as const)(
-    "normalizes reviewer %s simulation",
-    async (result) => {
-      const onresult = vi.fn();
-      render(BattleHandoffScreen, { onresult });
-      expect(
-        screen.getByRole("region", { name: "Reviewer-only battle controls" }),
-      ).toBeTruthy();
-      expect(screen.getByText(/Non-player tooling/)).toBeTruthy();
-      await userEvent.setup().click(
-        screen.getByRole("button", {
-          name: new RegExp(
-            `Simulate ${result === "failure" ? "Technical Failure" : result === "abort" ? "Abort" : `Player ${result[0]!.toUpperCase()}${result.slice(1)}`}`,
-            "i",
-          ),
-        }),
-      );
-      expect(onresult).toHaveBeenCalledWith(result);
-      if (result === "abort") {
-        expect(screen.getByText(/No progression granted/)).toBeTruthy();
-        expect(
-          screen.getByRole("button", { name: "Retry mock duel" }),
-        ).toBeTruthy();
-      }
-      if (result === "failure") {
-        expect(screen.getByText(/not a story defeat/i)).toBeTruthy();
-        expect(
-          screen.getByRole("button", { name: "Return to map" }),
-        ).toBeTruthy();
-      }
-    },
-  );
+  /* The screen reports a handoff; it never produces an outcome of its own.
+     The mock outcome buttons it used to carry are gone with this slice. */
+  it("announces the encounter it is handing over to, with no outcome controls", () => {
+    render(BattleHandoffScreen, { label: "Rin's Echo" });
+    expect(screen.getByRole("heading", { name: "Rin's Echo" })).toBeTruthy();
+    expect(screen.getByRole("status").textContent).toMatch(
+      /preparing the duel/i,
+    );
+    expect(screen.queryByRole("alert")).toBeNull();
+    for (const name of [/Simulate/i, /Try again/, /Return to map/])
+      expect(screen.queryByRole("button", { name })).toBeNull();
+  });
 
-  it("keeps win/loss messages distinct", async () => {
-    const rendered = render(BattleHandoffScreen);
-    await userEvent
-      .setup()
-      .click(screen.getByRole("button", { name: "Simulate Player Win" }));
-    const win = screen.getByRole("status").textContent;
-    rendered.unmount();
-    render(BattleHandoffScreen);
-    await userEvent
-      .setup()
-      .click(screen.getByRole("button", { name: "Simulate Player Loss" }));
-    expect(screen.getByRole("status").textContent).not.toBe(win);
+  it("offers a retry and a way back when the checkpoint could not be written", async () => {
+    const onretry = vi.fn();
+    const onreturn = vi.fn();
+    render(BattleHandoffScreen, {
+      label: "Rin's Echo",
+      error: "Storage is full",
+      onretry,
+      onreturn,
+    });
+
+    expect(screen.getByRole("alert").textContent).toMatch(/Storage is full/);
+    expect(screen.queryByRole("status")).toBeNull();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    await user.click(screen.getByRole("button", { name: "Return to map" }));
+    expect(onretry).toHaveBeenCalledOnce();
+    expect(onreturn).toHaveBeenCalledOnce();
   });
 });

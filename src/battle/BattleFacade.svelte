@@ -11,9 +11,13 @@
   /* `null` is standalone mode: the duel renders its own deck picker, owns the
      whole session and reports nothing back, which is exactly what `#/duel`
      did before this facade existed. A request means a host is waiting for one
-     result. Dispatching that request is T17/T19 work; until then a hosted
-     session still starts from the picker. */
+     result. Dispatching that request is still to come; until then a hosted
+     session starts from the picker. */
   export let request: BattleRequest | null = null;
+  /* The other way to say "a host is waiting for one result": T19's story
+     handoff hands the player to the duel's own picker rather than a prebuilt
+     request, and still needs exactly one result back. */
+  export let hosted = false;
   export let oncomplete: (result: BattleFacadeResult) => void = () => undefined;
   /* T15: the stylesheet turns the duel a quarter turn on a portrait phone. The
      host tells the duel that happened, and owns the one-time dismissal, so the
@@ -24,19 +28,19 @@
 
   const settle = settleOnce<BattleFacadeResult>((result) => oncomplete(result));
 
-  $: hosted = request !== null;
+  $: hostWaiting = hosted || request !== null;
 
   onDestroy(() => {
     /* The duel disposes itself through `App`'s own teardown when this
        component is destroyed, so the facade adds no second disposal; what it
        owes the host is the missing result. Leaving mid-duel is an exit, and
        `settleOnce` keeps it from overwriting a result that already arrived. */
-    if (hosted) settle({ kind: "aborted", reason: "exit" });
+    if (hostWaiting) settle({ kind: "aborted", reason: "exit" });
   });
 </script>
 
 <div class="battle-root" data-cy="battle-root">
-  <App onbattlecomplete={hosted ? settle : undefined} />
+  <App onbattlecomplete={hostWaiting ? settle : undefined} />
   {#if rotated && !rotationNoticeDismissed}
     <RotationNotice ondismiss={onrotationnoticedismiss} />
   {/if}

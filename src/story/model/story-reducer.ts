@@ -78,7 +78,7 @@ export function reduceStory(
         ({ id }) => id === command.locationId,
       );
       return location?.access === "available"
-        ? { ...state, screen: "pre-battle" }
+        ? { ...state, screen: "pre-battle", encounterId: command.locationId }
         : state;
     }
     case "start-battle":
@@ -96,7 +96,13 @@ export function reduceStory(
     case "continue-outcome":
       if (state.screen !== "outcome") return state;
       if (state.outcome === "abort" || state.outcome === "failure")
-        return { ...state, screen: "map", outcome: null, outcomeScene: null };
+        return {
+          ...state,
+          screen: "map",
+          outcome: null,
+          outcomeScene: null,
+          encounterId: null,
+        };
       if (state.outcome !== "win" && state.outcome !== "loss") return state;
       return state.rewardGranted
         ? {
@@ -105,6 +111,7 @@ export function reduceStory(
             outcome: null,
             outcomeScene: null,
             savedScreen: "map",
+            encounterId: null,
           }
         : { ...state, screen: "reward", rewardGranted: true };
     case "acknowledge-reward":
@@ -114,6 +121,7 @@ export function reduceStory(
         screen: "map",
         savedScreen: "map",
         rewardAcknowledged: true,
+        encounterId: null,
         objective: "Signal decoded — inspect the newly opened Archive route",
         locations: state.locations.map((location) =>
           location.id === "old-arena"

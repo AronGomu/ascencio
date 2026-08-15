@@ -37,6 +37,15 @@ export interface StoryState {
   readonly rewardGranted: boolean;
   readonly rewardAcknowledged: boolean;
   readonly objective: string;
+  /* Which map node the current briefing, duel and outcome belong to. Part of
+     the state rather than a screen-local variable because a duel handoff
+     outlives this component: the story is unmounted while the duel runs, and
+     what comes back has to know which encounter it was. */
+  readonly encounterId: LocationId | null;
+  /* Non-null only inside the pre-duel checkpoint, where it names the handoff
+     the shell is waiting on. A checkpoint whose id does not match the route
+     being resumed belongs to a duel this session is not running. */
+  readonly pendingHandoffId: string | null;
 }
 
 export function createInitialStoryState(): StoryState {
@@ -59,5 +68,7 @@ export function createInitialStoryState(): StoryState {
     rewardGranted: false,
     rewardAcknowledged: false,
     objective: "Meet Rin at the Old Arena",
+    encounterId: null,
+    pendingHandoffId: null,
   };
 }

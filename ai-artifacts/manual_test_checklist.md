@@ -1174,3 +1174,21 @@ Growing main grid
 - [ ] Add cards until the Main Deck reaches 41 cards — a new row of ten empty slots appears, the count label switches to `41/40-60`.
 - [ ] Continue to 51 cards — a sixth row appears, the count still shows `X/40-60`.
 - [ ] Confirm all main-grid columns stay at 10 (not 12) at every size.
+
+## T8 reorder-and-sort-ui
+
+Drag reordering
+
+- [ ] Open a deck with at least 3 cards in the Main Deck.
+- [ ] Drag the first card (slot 0) and drop it onto the third card (slot 2) — the two cards swap positions.
+- [ ] Drag a card and drop it onto an empty slot in the same zone — the card moves to the end of that zone.
+- [ ] After a drag-reorder, confirm the Undo button remains disabled (reorder does not enter history).
+- [ ] Drag a Main Deck card to the Side Deck zone — it moves there (cross-zone move still works).
+- [ ] Drag a catalog card to its canonical zone — it is added (catalog add still works).
+
+Sort buttons
+
+- [ ] Confirm two buttons appear in the deck workspace header: "Sort A–Z" and "Sort by type".
+- [ ] Click "Sort A–Z" — all three zones are sorted alphabetically by card name.
+- [ ] Click "Sort by type" — main/side zones order monsters → spells → traps; extra zone follows Fusion → Synchro → Xyz → Link.
+- [ ] After a sort, confirm the Undo button remains disabled (sort does not enter history).

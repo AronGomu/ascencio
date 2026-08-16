@@ -6,6 +6,7 @@
   import {
     FIFTEEN_CARD_GRID,
     mainDeckGridPlan,
+    type DeckCommand,
   } from "../../decks/deck-model.ts";
   import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
   import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
@@ -24,10 +25,18 @@
   export let ondragcard: (
     code: number,
     zone: DeckZone,
+    index: number,
     event: DragEvent,
   ) => void = () => undefined;
   export let ondragcancel: () => void = () => undefined;
-  export let onpickup: (code: number, zone: DeckZone) => void = () => undefined;
+  export let onpickup: (
+    code: number,
+    zone: DeckZone,
+    index: number,
+  ) => void = () => undefined;
+  export let onreorderdrop: (zone: DeckZone, toIndex: number) => void = () =>
+    undefined;
+  export let onmutate: (command: DeckCommand) => void = () => undefined;
   export let ondropzone: (zone: DeckZone) => void = () => undefined;
   export let onremove: () => void = () => undefined;
   export let ontap: ((code: number, zone: DeckZone) => void) | null = null;
@@ -42,6 +51,9 @@
   $: mainDropAllowed = canDrop("main", picked, catalog);
   $: extraDropAllowed = canDrop("extra", picked, catalog);
   $: sideDropAllowed = canDrop("side", picked, catalog);
+  $: mainReorderActive = picked?.source === "main";
+  $: extraReorderActive = picked?.source === "extra";
+  $: sideReorderActive = picked?.source === "side";
 
   function canDrop(
     zone: DeckZone,
@@ -95,6 +107,22 @@
   bind:this={workspaceElement}
 >
   <header class="workspace-header" data-cy="deck-workspace-header">
+    <div class="sort-actions" data-cy="deck-workspace-sort-actions">
+      <button
+        type="button"
+        class="secondary"
+        data-cy="deck-workspace-sort-alpha"
+        onclick={() => onmutate({ type: "sort", mode: "alpha" })}
+        >Sort A–Z</button
+      >
+      <button
+        type="button"
+        class="secondary"
+        data-cy="deck-workspace-sort-type"
+        onclick={() => onmutate({ type: "sort", mode: "type" })}
+        >Sort by type</button
+      >
+    </div>
     {#if picked && picked.source !== "catalog"}
       <button
         type="button"
@@ -127,6 +155,8 @@
     {ondragcancel}
     {onpickup}
     {ontap}
+    {onreorderdrop}
+    reorderActive={mainReorderActive}
     ondropzone={(zone) => void dropAndRestoreFocus(zone)}
     {onhovercard}
     {onhoverend}
@@ -149,6 +179,8 @@
     {ondragcancel}
     {onpickup}
     {ontap}
+    {onreorderdrop}
+    reorderActive={extraReorderActive}
     ondropzone={(zone) => void dropAndRestoreFocus(zone)}
     {onhovercard}
     {onhoverend}
@@ -171,6 +203,8 @@
     {ondragcancel}
     {onpickup}
     {ontap}
+    {onreorderdrop}
+    reorderActive={sideReorderActive}
     ondropzone={(zone) => void dropAndRestoreFocus(zone)}
     {onhovercard}
     {onhoverend}
@@ -209,6 +243,17 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
+  }
+
+  .sort-actions {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .sort-actions button {
+    min-height: 2rem;
+    padding: 0.35rem 0.55rem;
+    font-size: 0.8rem;
   }
 
   .remove {

@@ -167,7 +167,7 @@
   ): void {
     selected = card;
     selectedCode = card.code;
-    picked = { code: card.code, source: "catalog" };
+    picked = { code: card.code, source: "catalog", index: null };
     event?.dataTransfer?.setData("text/plain", String(card.code));
     if (event?.dataTransfer) event.dataTransfer.effectAllowed = "copy";
     announcement = `${card.name} picked up. Drop in ${card.canonicalZone === "main" ? "Main Deck" : "Extra Deck"}.`;
@@ -176,11 +176,12 @@
   function startZoneDrag(
     code: number,
     zone: DeckZone,
+    index: number,
     event?: DragEvent,
   ): void {
     selected = catalog.get(code) ?? null;
     selectedCode = code;
-    picked = { code, source: zone };
+    picked = { code, source: zone, index };
     event?.dataTransfer?.setData("text/plain", String(code));
     if (event?.dataTransfer) event.dataTransfer.effectAllowed = "move";
     announcement = `${selected?.name ?? `Card ${code}`} picked up from ${zone}.`;
@@ -207,6 +208,13 @@
       });
     }
     announcement = `${card?.name ?? `Card ${picked.code}`} dropped in ${zone}.`;
+    picked = null;
+  }
+
+  function reorderInZone(zone: DeckZone, toIndex: number): void {
+    if (picked === null || picked.source !== zone || picked.index === null)
+      return;
+    onmutate({ type: "reorder", zone, from: picked.index, to: toIndex });
     picked = null;
   }
 
@@ -391,9 +399,14 @@
           filled={tabs}
           onselect={selectCard}
           ontap={tabs ? tapDeckCard : null}
-          ondragcard={(code, zone, event) => startZoneDrag(code, zone, event)}
+          ondragcard={(code, zone, index, event) =>
+            startZoneDrag(code, zone, index, event)}
           ondragcancel={cancelPicked}
-          onpickup={(code, zone) => startZoneDrag(code, zone)}
+          onpickup={(code, zone, index) => startZoneDrag(code, zone, index)}
+          onreorderdrop={reorderInZone}
+          onmutate={(command) => {
+            onmutate(command);
+          }}
           ondropzone={dropInZone}
           onremove={removePicked}
           onhovercard={(code) => {

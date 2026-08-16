@@ -22,10 +22,18 @@
   export let ondragcard: (
     code: number,
     zone: DeckZone,
+    index: number,
     event: DragEvent,
   ) => void = () => undefined;
   export let ondragcancel: () => void = () => undefined;
-  export let onpickup: (code: number, zone: DeckZone) => void = () => undefined;
+  export let onpickup: (
+    code: number,
+    zone: DeckZone,
+    index: number,
+  ) => void = () => undefined;
+  export let onreorderdrop: (zone: DeckZone, toIndex: number) => void = () =>
+    undefined;
+  export let reorderActive = false;
   export let ondropzone: (zone: DeckZone) => void = () => undefined;
   export let ontap: ((code: number, zone: DeckZone) => void) | null = null;
   export let onhovercard: (code: number) => void = () => undefined;
@@ -107,21 +115,37 @@
         data-cy={`deck-zone-grid-${zone}`}
       >
         {#each codes as code, index (`${code}-${index}`)}
-          <CardTile
-            card={catalog.get(code) ?? null}
-            {code}
-            {zone}
-            limit={quantityLimit(ruleset, code)}
-            currentCopies={totalCopies.get(code) ?? 0}
-            selected={selectedCode === code}
-            compact={plan.compact}
-            onselect={() => onselect(catalog.get(code) ?? null, code)}
-            ontap={ontap === null ? null : () => ontap(code, zone)}
-            ondragcard={(event) => ondragcard(code, zone, event)}
-            {ondragcancel}
-            onpickup={() => onpickup(code, zone)}
-            onhover={() => onhovercard(code)}
-          />
+          <div
+            class="slot"
+            role="presentation"
+            data-cy={`deck-slot-${zone}-${index}`}
+            ondragover={(e) => {
+              if (reorderActive) e.preventDefault();
+            }}
+            ondrop={(e) => {
+              if (reorderActive) {
+                e.preventDefault();
+                e.stopPropagation();
+                onreorderdrop(zone, index);
+              }
+            }}
+          >
+            <CardTile
+              card={catalog.get(code) ?? null}
+              {code}
+              {zone}
+              limit={quantityLimit(ruleset, code)}
+              currentCopies={totalCopies.get(code) ?? 0}
+              selected={selectedCode === code}
+              compact={plan.compact}
+              onselect={() => onselect(catalog.get(code) ?? null, code)}
+              ontap={ontap === null ? null : () => ontap(code, zone)}
+              ondragcard={(event) => ondragcard(code, zone, index, event)}
+              {ondragcancel}
+              onpickup={() => onpickup(code, zone, index)}
+              onhover={() => onhovercard(code)}
+            />
+          </div>
         {/each}
         {#each Array.from({ length: emptyCount }) as slot, index (index)}
           <span
@@ -129,6 +153,16 @@
             data-empty-slot={slot === undefined ? index : slot}
             aria-hidden="true"
             data-cy={`deck-zone-empty-slot-${zone}-${index}`}
+            ondragover={(e) => {
+              if (reorderActive) e.preventDefault();
+            }}
+            ondrop={(e) => {
+              if (reorderActive) {
+                e.preventDefault();
+                e.stopPropagation();
+                onreorderdrop(zone, codes.length);
+              }
+            }}
           ></span>
         {/each}
       </div>
@@ -202,6 +236,11 @@
 
   .grid.compact {
     gap: 0.22rem;
+  }
+
+  .slot {
+    min-width: 0;
+    min-height: 0;
   }
 
   .empty-slot {

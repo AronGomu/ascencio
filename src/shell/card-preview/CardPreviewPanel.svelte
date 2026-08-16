@@ -1,24 +1,29 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
   import OverlayScrollbar from "./OverlayScrollbar.svelte";
-  import type { CardPreviewView } from "../presentation/card-preview.ts";
   import type {
-    CardImageLease,
-    CardImageLibrary,
-  } from "../images/card-image-cache.ts";
+    CardPreviewImageSource,
+    CardPreviewView,
+  } from "./card-preview-view.ts";
+
+  type CardImageLease = ReturnType<CardPreviewImageSource["lease"]>;
 
   export let preview: CardPreviewView | null = null;
-  export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
+  export let imageLibrary: CardPreviewImageSource | null = null;
   export let placeholderUrl = "";
+  /** Art the caller already resolved to a URL, for a domain that has no image
+      library to lease from. The lease wins when both are present. */
+  export let staticImageUrl: string | null = null;
 
-  let activeImageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
+  let activeImageLibrary: CardPreviewImageSource | null = null;
   let activeImageCode: number | undefined;
   let imageLease: CardImageLease | null = null;
   let leasedImageUrl: string | undefined;
   let textScroller: HTMLElement | null = null;
 
   $: synchronizeImageLease(imageLibrary, preview?.code);
-  $: imageUrl = leasedImageUrl ?? (placeholderUrl || undefined);
+  $: imageUrl =
+    leasedImageUrl ?? staticImageUrl ?? (placeholderUrl || undefined);
 
   onDestroy(() => imageLease?.release());
 
@@ -26,7 +31,7 @@
      moment the previewed code or the library changes and again on destroy, so
      the object URL never outlives the image that is actually mounted. */
   function synchronizeImageLease(
-    library: Pick<CardImageLibrary, "lease"> | null,
+    library: CardPreviewImageSource | null,
     code: number | undefined,
   ): void {
     if (library === activeImageLibrary && code === activeImageCode) return;

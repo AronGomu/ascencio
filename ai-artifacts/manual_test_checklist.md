@@ -1072,3 +1072,13 @@ rather than the fixture's handful.
 - [ ] Search the catalog for a known card (e.g. "Blue-Eyes White Dragon"); confirm the result tile shows the card image.
 - [ ] Click a card to open the detail/preview panel; confirm the art renders at full preview size.
 - [ ] Confirm cards without packaged art (if any) show a fallback/placeholder rather than a broken image.
+
+## T2 shared-card-preview-panel
+
+- [ ] `npm run dev`, open `http://localhost:5173/#/duel`, start a duel.
+- [ ] Hover a card in hand and on the field: the preview panel shows art, name and effect text exactly as before this slice.
+- [ ] Hover a face-down card: the panel shows "Face-down card" with no art request.
+- [ ] Long effect text: the panel's custom overlay scrollbar appears, drags with the mouse, and `Home` / `End` / `PageUp` / `PageDown` scroll the focused text region.
+- [ ] Rotate to a portrait phone viewport (device toolbar, e.g. 390x844) so the duel stage takes its quarter turn: dragging the preview scrollbar thumb and the hand-band scrollbar thumb still follows the finger along the visible axis, not a quarter turn away from it.
+- [ ] Hand band scrolls with a full hand and its overlay scrollbar behaves as before.
+- [ ] Switch to `#/decks` and back to `#/duel`: no console error about a missing module or a duplicate component.

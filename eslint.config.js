@@ -60,6 +60,17 @@ const STORY_HANDOFF_TYPES_PENDING_RELOCATION = [
   "!**/story/handoff",
   "!**/story/handoff/story-handoff.ts",
 ];
+/* The duel's quarter-turn stage mapping, read by the overlay scrollbar thumb.
+   The scrollbar is part of the shared card preview panel, so the component
+   lives in the shell, while the mapping stays duel presentation. Same shape of
+   allowance as the four above, for the same reason, and it costs the entry
+   chunk one dependency-free module. It disappears when `stage-frame.ts` gets a
+   legal home. */
+const STAGE_FRAME_PENDING_RELOCATION = [
+  "!**/battle/app",
+  "!**/battle/app/presentation",
+  "!**/battle/app/presentation/stage-frame.ts",
+];
 
 const STORY_MESSAGE =
   "Reach the visual novel through `src/story/index.ts` (ADR-022 domain boundary).";
@@ -163,12 +174,16 @@ export default tseslint.config(
       { group: BATTLE_INTERNALS, message: BATTLE_MESSAGE },
     ],
   ),
+  /* The duel reads the shell the way every other domain does: through
+     `src/shell/index.ts` and nothing deeper. It did not need the entry until
+     the shared card preview panel moved there, so this zone used to exclude
+     the whole shell — including the entry its own message names. */
   boundaries(
     ["src/acceptance-main.ts", "src/battle/**"],
     [
       { group: STORY_INTERNALS, message: STORY_MESSAGE },
       { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
-      { group: ["**/shell/**"], message: SHELL_MESSAGE },
+      { group: SHELL_INTERNALS, message: SHELL_MESSAGE },
     ],
   ),
   /* The files carrying an allowance, and only those files. Each restates its
@@ -184,6 +199,17 @@ export default tseslint.config(
           ...DECK_FORMAT_PENDING_RELOCATION,
           ...DUEL_SNAPSHOT_NAME_PENDING_RELOCATION,
         ],
+        message: BATTLE_MESSAGE,
+      },
+    ],
+  ),
+  boundaries(
+    ["src/shell/card-preview/OverlayScrollbar.svelte"],
+    [
+      { group: STORY_INTERNALS, message: STORY_MESSAGE },
+      { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
+      {
+        group: [...BATTLE_INTERNALS, ...STAGE_FRAME_PENDING_RELOCATION],
         message: BATTLE_MESSAGE,
       },
     ],

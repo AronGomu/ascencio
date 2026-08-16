@@ -21,12 +21,12 @@
     type OffFieldTargetEntry,
   } from "../field/off-field-target-list.ts";
   import type { PhysicalZoneId } from "../field/duel-field-layout.ts";
+  import { CardPreviewPanel } from "../../shell/index.ts";
   import DuelRail from "./components/DuelRail.svelte";
   import DeckPicker from "./components/DeckPicker.svelte";
   import DuelResultDialog from "./components/DuelResultDialog.svelte";
   import MenuDialog from "./components/MenuDialog.svelte";
   import SettingsDialog from "./components/SettingsDialog.svelte";
-  import CardPreviewPanel from "./components/CardPreviewPanel.svelte";
   import DuelFieldErrorBoundary from "./components/duel-field/DuelFieldErrorBoundary.svelte";
   import DuelHud from "./components/duel-field/DuelHud.svelte";
   import DuelLog from "./components/duel-field/DuelLog.svelte";

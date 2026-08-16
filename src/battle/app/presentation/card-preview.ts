@@ -1,6 +1,7 @@
 import { isProjectedCardIdentityKnown } from "../../duel/card-visibility.ts";
 import type { CardCode } from "../../duel/contracts/ids.ts";
 import type { PublicCard } from "../../duel/contracts/public-duel-state.ts";
+import type { CardPreviewView } from "../../../shell/index.ts";
 
 /** The subset of `__ACTIVE_CARD_TEXTS__` the preview panel reads. */
 export interface CardPreviewText {
@@ -8,15 +9,14 @@ export interface CardPreviewText {
   readonly description?: string;
 }
 
-export interface CardPreviewView {
-  readonly code: CardCode;
-  readonly name: string;
-  readonly description: string;
-}
+/* The panel itself lives in the shell, shared with the deck editor, so its view
+   shape is the shell's. Re-exported here because the duel's own modules read it
+   as duel presentation vocabulary. */
+export type { CardPreviewView };
 
 /** Shown when a face-down/hidden board card is hovered: no code to lease. */
 export const HIDDEN_CARD_PREVIEW: CardPreviewView = Object.freeze({
-  code: 0 as CardCode,
+  code: 0,
   name: "Face-down card",
   description: "No information is available for this card.",
 });

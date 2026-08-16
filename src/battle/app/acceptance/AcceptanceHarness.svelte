@@ -1,5 +1,5 @@
 <script lang="ts">
-  import CardPreviewPanel from "../components/CardPreviewPanel.svelte";
+  import { CardPreviewPanel } from "../../../shell/index.ts";
   import DuelField from "../components/DuelField.svelte";
   import ZoneListDialog from "../components/duel-field/ZoneListDialog.svelte";
   import { cardCode, type ChoiceId } from "../../duel/contracts/ids.ts";

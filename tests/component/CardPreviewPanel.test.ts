@@ -2,7 +2,7 @@
 
 import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import CardPreviewPanel from "../../src/battle/app/components/CardPreviewPanel.svelte";
+import CardPreviewPanel from "../../src/shell/card-preview/CardPreviewPanel.svelte";
 import {
   HIDDEN_CARD_PREVIEW,
   type CardPreviewView,
@@ -143,6 +143,35 @@ describe("CardPreviewPanel", () => {
         .querySelector('[data-cy="card-preview-image"]')
         ?.getAttribute("src"),
     ).toBe("/placeholder.webp");
+  });
+
+  it("static image url renders when no library is provided", () => {
+    render(CardPreviewPanel, {
+      preview: preview(),
+      imageLibrary: null,
+      staticImageUrl: "/cards/x.jpg",
+    });
+
+    expect(
+      document
+        .querySelector('[data-cy="card-preview-image"]')
+        ?.getAttribute("src"),
+    ).toBe("/cards/x.jpg");
+  });
+
+  it("leased image wins over the static url", () => {
+    const { library } = leaseLibrary();
+    render(CardPreviewPanel, {
+      preview: preview(),
+      imageLibrary: library,
+      staticImageUrl: "/cards/x.jpg",
+    });
+
+    expect(
+      document
+        .querySelector('[data-cy="card-preview-image"]')
+        ?.getAttribute("src"),
+    ).toBe(`blob:card-${FISHERMAN}`);
   });
 
   it("keeps only the real text scroller keyboard focusable", () => {

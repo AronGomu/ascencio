@@ -41,11 +41,13 @@ function renderEditor(mainCount = 0) {
 }
 
 describe("DeckEditor shell", () => {
-  it("renders fixed Catalog, Deck, pinned Details topology", () => {
+  it("renders fixed Catalog, Deck, Preview topology", () => {
     renderEditor();
     expect(screen.getByRole("heading", { name: "Find cards" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Build deck" })).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Select a card" })).toBeTruthy();
+    expect(
+      document.querySelector('[data-cy="card-preview-panel"]'),
+    ).not.toBeNull();
     expect(screen.getByLabelText("Deck counts").textContent).toContain(
       "Main 0",
     );

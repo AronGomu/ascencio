@@ -11,7 +11,7 @@
   import { SvelteMap } from "svelte/reactivity";
   import type { DeckBuilderState } from "../deck-editor-store.ts";
   import CardCatalog from "./CardCatalog.svelte";
-  import CardDetails from "./CardDetails.svelte";
+  import { CardPreviewPanel } from "../../shell/index.ts";
   import DeckWorkspace from "./DeckWorkspace.svelte";
   import EditorTabs from "./EditorTabs.svelte";
   import TapTargetMenu from "./TapTargetMenu.svelte";
@@ -52,6 +52,8 @@
 
   let selected: DeckBuilderCardView | null = null;
   let selectedCode: number | null = null;
+  let hovered: DeckBuilderCardView | null = null;
+  let hoveredCode: number | null = null;
   let picked: PickedCard | null = null;
   let announcement = "";
   let showImport = false;
@@ -72,14 +74,23 @@
   )
     deckName = deck.name;
   $: copies = deck === null ? new Map<number, number>() : countCopies(deck);
-  $: selectedCopies =
-    selectedCode === null || deck === null
-      ? { main: 0, extra: 0, side: 0 }
-      : {
-          main: deck.main.filter((code) => code === selectedCode).length,
-          extra: deck.extra.filter((code) => code === selectedCode).length,
-          side: deck.side.filter((code) => code === selectedCode).length,
-        };
+  $: previewSource = hovered ?? selected;
+  $: previewSourceCode = hovered !== null ? hoveredCode : selectedCode;
+  $: previewView =
+    previewSource !== null
+      ? {
+          code: previewSource.code,
+          name: previewSource.name,
+          description: previewSource.description,
+        }
+      : previewSourceCode !== null
+        ? {
+            code: previewSourceCode,
+            name: `Missing card ${previewSourceCode}`,
+            description: "Card data is unavailable for this code.",
+          }
+        : null;
+  $: previewImageUrl = previewSource?.imageUrl ?? null;
 
   function countCopies(value: DeckRecord): ReadonlyMap<number, number> {
     const result = new SvelteMap<number, number>();
@@ -403,6 +414,55 @@
       <EditorTabs {pane} onselectpane={(next) => (pane = next)} />
     {/if}
 
+    {#if !tabs || pane === "details"}
+      <div
+        class="pane"
+        id="deck-pane-details"
+        role={tabs ? "tabpanel" : undefined}
+        data-cy="deck-pane-details"
+      >
+        <CardPreviewPanel
+          preview={previewView}
+          imageLibrary={null}
+          staticImageUrl={previewImageUrl}
+          placeholderUrl=""
+        />
+      </div>
+    {/if}
+
+    {#if !tabs || pane === "deck"}
+      <div
+        class="pane"
+        id="deck-pane-deck"
+        role={tabs ? "tabpanel" : undefined}
+        data-cy="deck-pane-deck"
+      >
+        <DeckWorkspace
+          {deck}
+          {catalog}
+          {ruleset}
+          {selectedCode}
+          {picked}
+          filled={tabs}
+          onselect={selectCard}
+          ontap={tabs ? tapDeckCard : null}
+          ondragcard={(code, zone, event) => startZoneDrag(code, zone, event)}
+          ondragcancel={cancelPicked}
+          onpickup={(code, zone) => startZoneDrag(code, zone)}
+          ondropzone={dropInZone}
+          onremove={removePicked}
+          onhovercard={(code) => {
+            hovered = catalog.get(code) ?? null;
+            hoveredCode = code;
+          }}
+          onhoverend={() => {
+            hovered = null;
+            hoveredCode = null;
+          }}
+        />
+      </div>
+    {/if}
+
     {#if !tabs || pane === "catalog"}
       <div
         class="pane"
@@ -430,48 +490,14 @@
             announcement = `${card.name}: ${reason}`;
             pane = paneAfterSelect(pane, layoutMode);
           }}
-        />
-      </div>
-    {/if}
-
-    {#if !tabs || pane === "deck"}
-      <div
-        class="pane"
-        id="deck-pane-deck"
-        role={tabs ? "tabpanel" : undefined}
-        data-cy="deck-pane-deck"
-      >
-        <DeckWorkspace
-          {deck}
-          {catalog}
-          {ruleset}
-          {selectedCode}
-          {picked}
-          filled={tabs}
-          onselect={selectCard}
-          ontap={tabs ? tapDeckCard : null}
-          ondragcard={(code, zone, event) => startZoneDrag(code, zone, event)}
-          ondragcancel={cancelPicked}
-          onpickup={(code, zone) => startZoneDrag(code, zone)}
-          ondropzone={dropInZone}
-          onremove={removePicked}
-        />
-      </div>
-    {/if}
-
-    {#if !tabs || pane === "details"}
-      <div
-        class="pane"
-        id="deck-pane-details"
-        role={tabs ? "tabpanel" : undefined}
-        data-cy="deck-pane-details"
-      >
-        <CardDetails
-          card={selected}
-          missingCode={selected === null ? selectedCode : null}
-          copies={selectedCopies}
-          {ruleset}
-          filled={tabs}
+          onhovercard={(card) => {
+            hovered = card;
+            hoveredCode = card.code;
+          }}
+          onhoverend={() => {
+            hovered = null;
+            hoveredCode = null;
+          }}
         />
       </div>
     {/if}
@@ -590,9 +616,9 @@
 
   .editor-layout {
     display: grid;
-    grid-template-columns: minmax(17rem, 0.82fr) minmax(38rem, 1.9fr) minmax(
-        18rem,
-        0.9fr
+    grid-template-columns: minmax(18rem, 0.9fr) minmax(38rem, 1.9fr) minmax(
+        17rem,
+        0.82fr
       );
     gap: 0.75rem;
     width: min(118rem, calc(100% - 1.5rem));

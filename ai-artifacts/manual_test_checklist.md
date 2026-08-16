@@ -1082,3 +1082,16 @@ rather than the fixture's handful.
 - [ ] Rotate to a portrait phone viewport (device toolbar, e.g. 390x844) so the duel stage takes its quarter turn: dragging the preview scrollbar thumb and the hand-band scrollbar thumb still follows the finger along the visible axis, not a quarter turn away from it.
 - [ ] Hand band scrolls with a full hand and its overlay scrollbar behaves as before.
 - [ ] Switch to `#/decks` and back to `#/duel`: no console error about a missing module or a duplicate component.
+
+## T3 editor-preview-pane
+
+- [ ] `npm run dev`, open `http://localhost:5173/#/decks`, open any saved deck.
+- [ ] The left pane shows the shared card preview panel (not "Pinned card details"). Initially it shows "Hover a card to see its details."
+- [ ] Hover a catalog tile (right pane): the preview panel updates with the card's name, effect text, and art.
+- [ ] Click a catalog tile to select/pin it; hover another tile: preview shows the hovered card.
+- [ ] Move the cursor off the catalog grid: preview reverts to the previously selected (clicked) card.
+- [ ] Hover a deck workspace card (middle pane): preview shows that card.
+- [ ] Move the cursor off the deck workspace grid: preview reverts to the selected card.
+- [ ] With no card selected and not hovering: preview shows "Hover a card to see its details."
+- [ ] On portrait / tabs layout: the "Details" tab is now labelled "Preview" and shows the same preview panel.
+- [ ] T1 regression: card art still appears in the preview panel when a tile with packaged art is hovered or selected.

@@ -80,9 +80,11 @@ describe("keyboard drag parity", () => {
       onreload: vi.fn(),
       onpreservecopy: vi.fn(),
     });
-    const card = screen.getAllByRole("button", {
-      name: /Blue-Eyes White Dragon/,
-    })[0]!;
+    const card = screen
+      .getAllByRole("button", {
+        name: /Blue-Eyes White Dragon/,
+      })
+      .at(-1)!;
     card.focus();
     await user.keyboard(" ");
     expect(screen.getByRole("status").textContent).toContain(

@@ -49,7 +49,7 @@ describe("pointer deck editing", () => {
     const cardButtons = screen.getAllByRole("button", {
       name: /copies in deck/,
     });
-    const deckCard = cardButtons.at(-1)!;
+    const deckCard = cardButtons[0]!;
     await fireEvent.dragStart(deckCard);
     await fireEvent.drop(
       screen.getByRole("group", { name: "Side Deck drop area" }),

@@ -28,6 +28,8 @@
   export let onpickup: (code: number, zone: DeckZone) => void = () => undefined;
   export let ondropzone: (zone: DeckZone) => void = () => undefined;
   export let ontap: ((code: number, zone: DeckZone) => void) | null = null;
+  export let onhovercard: (code: number) => void = () => undefined;
+  export let onhoverend: () => void = () => undefined;
 
   $: emptyCount = Math.max(0, plan.slots - codes.length);
 </script>
@@ -71,6 +73,7 @@
       event.preventDefault();
       ondropzone(zone);
     }}
+    onmouseleave={() => onhoverend()}
   >
     <div
       class:compact={plan.compact}
@@ -96,6 +99,7 @@
           ondragcard={(event) => ondragcard(code, zone, event)}
           {ondragcancel}
           onpickup={() => onpickup(code, zone)}
+          onhover={() => onhovercard(code)}
         />
       {/each}
       {#each Array.from({ length: emptyCount }) as slot, index (index)}

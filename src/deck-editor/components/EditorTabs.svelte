@@ -7,7 +7,7 @@
   const PANES: readonly { pane: EditorPane; label: string }[] = [
     { pane: "catalog", label: "Catalog" },
     { pane: "deck", label: "Deck" },
-    { pane: "details", label: "Details" },
+    { pane: "details", label: "Preview" },
   ];
 
   /* Arrow keys move the selection, which is what a tab list does: the panes

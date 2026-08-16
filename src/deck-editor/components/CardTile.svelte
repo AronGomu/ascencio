@@ -18,6 +18,7 @@
   export let ondragcancel: () => void = () => undefined;
   export let onpickup: () => void = () => undefined;
   export let onblocked: () => void = () => undefined;
+  export let onhover: (() => void) | null = null;
 
   $: name = card?.name ?? `Missing card ${code}`;
   $: limitLabel =
@@ -43,6 +44,7 @@
   data-card-code={code}
   data-deck-zone={zone}
   onclick={() => (ontap === null ? onselect() : ontap())}
+  onmouseenter={() => onhover?.()}
   ondragstart={ondragcard}
   ondragend={ondragcancel}
   onkeydown={(event) => {

@@ -30,6 +30,8 @@
   /* The catalog is a pane of its own below the breakpoint, so it fills the
      stage instead of reserving room for the two panels beside it. */
   export let filled = false;
+  export let onhovercard: (card: DeckBuilderCardView) => void = () => undefined;
+  export let onhoverend: () => void = () => undefined;
 
   let filters: DeckCatalogFilters = { ...EMPTY_CATALOG_FILTERS };
   $: options = catalogFilterOptions(cards);
@@ -185,6 +187,7 @@
       class="results"
       aria-label="Card catalog results"
       data-cy="deck-catalog-results"
+      onmouseleave={() => onhoverend()}
     >
       {#each results as card (card.code)}
         <CardTile
@@ -206,6 +209,7 @@
           {ondragcancel}
           onpickup={() => onpickup(card)}
           onblocked={() => onblocked(card, blockedReason(card))}
+          onhover={() => onhovercard(card)}
         />
       {/each}
     </div>

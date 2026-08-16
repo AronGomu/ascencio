@@ -31,6 +31,8 @@
   export let ondropzone: (zone: DeckZone) => void = () => undefined;
   export let onremove: () => void = () => undefined;
   export let ontap: ((code: number, zone: DeckZone) => void) | null = null;
+  export let onhovercard: (code: number) => void = () => undefined;
+  export let onhoverend: () => void = () => undefined;
   /* Its own pane below the breakpoint: the stage scrolls it, not an inner box. */
   export let filled = false;
 
@@ -131,6 +133,8 @@
     {onpickup}
     {ontap}
     ondropzone={(zone) => void dropAndRestoreFocus(zone)}
+    {onhovercard}
+    {onhoverend}
   />
 
   <div class="secondary-zones" data-cy="deck-workspace-secondary-zones">
@@ -150,6 +154,8 @@
       {onpickup}
       {ontap}
       ondropzone={(zone) => void dropAndRestoreFocus(zone)}
+      {onhovercard}
+      {onhoverend}
     />
     <DeckZoneGrid
       zone="side"
@@ -167,6 +173,8 @@
       {onpickup}
       {ontap}
       ondropzone={(zone) => void dropAndRestoreFocus(zone)}
+      {onhovercard}
+      {onhoverend}
     />
   </div>
 

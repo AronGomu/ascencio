@@ -82,6 +82,9 @@ export function mapEngineFieldAddress(
         );
       return unsupported(address);
     case "spellTrap":
+      /* ocgcore keeps the Field Zone in the Spell & Trap list at sequence 5,
+         so an activated field spell arrives here rather than as `field` 0. */
+      if (sequence === 5) return supported(`p${player}:field`);
       if (sequence < 0 || sequence > 4) return unsupported(address);
       return supported(`p${player}:spellTrap:${sequence as 0 | 1 | 2 | 3 | 4}`);
     case "field":

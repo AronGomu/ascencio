@@ -1064,3 +1064,27 @@ rather than the fixture's handful.
       `scripts/lib/domain-chunk-closure.ts`. The battle domain *shrank* from
       405,950 to 365,853 because the same change ended a three-way duplication
       of the card-text manifest inside its closure; its ceiling was not touched.
+
+## T1 field-spell-zone-address
+
+Automated proof already exists (`tests/unit/duel-field.test.ts`,
+`tests/integration/field-spell-activation.test.ts` — the latter drives a real
+`ygopro-core` WASM duel and asserts the board still maps after the activation).
+These steps confirm the same fix in a browser, which no automated suite covers.
+
+### Field survives a field-spell activation
+- [ ] `npm run dev`, open the printed URL, go to `#/duel`.
+- [ ] Pick **Spellbook** as your deck, any opponent deck, and Start.
+- [ ] Play to your Main Phase 1 and activate **The Grand Spellbook Tower** from your hand.
+- [ ] The duel field stays mounted. The panel headed **Duel field unavailable**
+      (`data-cy="app-field-error-panel"`) never appears.
+- [ ] The Tower renders inside your **Field Zone** — the single slot left of your
+      monster row — not in a Spell/Trap slot and not missing.
+- [ ] Prompts keep rendering on the field itself; you are not pushed into the
+      dialog-only fallback where every action goes through a decision box.
+
+### The duel continues normally afterwards
+- [ ] Answer the Tower's follow-up prompts and pass to the End Phase. The field
+      is still mounted and still shows the Tower in the Field Zone.
+- [ ] Take one more turn: summon a monster and set a Spell/Trap. Both land in
+      their own slots; the Field Zone still holds only the Tower.

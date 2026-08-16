@@ -113,4 +113,88 @@ describe("NarrativeScreen", () => {
       container.querySelector('[data-cy="story-narrative-text"]')?.textContent,
     ).toContain("Rain turned");
   });
+
+  it("utility bar offers history, auto, skip, ui toggle and menu only", () => {
+    const { container } = render(NarrativeScreen, { beat: PROLOGUE.beats[0]! });
+    expect(
+      container.querySelector('[data-cy="story-narrative-history"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-cy="story-narrative-auto"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-cy="story-narrative-skip"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-cy="story-narrative-ui-toggle"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-cy="story-narrative-menu"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-cy="story-narrative-save"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-cy="story-narrative-load"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-cy="story-narrative-settings"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-cy="story-narrative-pause"]'),
+    ).toBeNull();
+    container.querySelectorAll("button").forEach((btn) => {
+      expect(btn.textContent).not.toContain("experimental");
+    });
+  });
+
+  it("menu button announces itself and fires pause utility", async () => {
+    const onutility = vi.fn();
+    const { container } = render(NarrativeScreen, {
+      beat: PROLOGUE.beats[0]!,
+      onutility,
+    });
+    const menuBtn = container.querySelector(
+      '[data-cy="story-narrative-menu"]',
+    ) as HTMLButtonElement;
+    expect(menuBtn).toBeTruthy();
+    expect(menuBtn.getAttribute("aria-label")).toBe("Open menu");
+    await userEvent.setup().click(menuBtn);
+    expect(onutility).toHaveBeenCalledWith("pause");
+  });
+
+  it("ui toggle hides everything but itself then restores", async () => {
+    const { container } = render(NarrativeScreen, { beat: PROLOGUE.beats[2]! });
+    const toggle = container.querySelector(
+      '[data-cy="story-narrative-ui-toggle"]',
+    ) as HTMLButtonElement;
+    await userEvent.setup().click(toggle);
+    expect(
+      container.querySelector('[data-cy="story-narrative-dialogue"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-cy="story-narrative-history"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-cy="story-narrative-auto"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-cy="story-narrative-skip"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-cy="story-narrative-menu"]'),
+    ).toBeNull();
+    expect(toggle.textContent?.trim()).toBe("Show UI");
+    expect(toggle.getAttribute("aria-pressed")).toBe("true");
+    expect(
+      container.querySelector('[data-cy="story-narrative-show-ui"]'),
+    ).toBeNull();
+    await userEvent.setup().click(toggle);
+    expect(
+      container.querySelector('[data-cy="story-narrative-dialogue"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-cy="story-narrative-history"]'),
+    ).toBeTruthy();
+  });
 });

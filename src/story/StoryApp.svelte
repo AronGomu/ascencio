@@ -455,8 +455,7 @@
       choiceResponse={state.narrativeIndex === 13 ? state.choiceResponse : null}
       onadvance={advance}
       onchoose={choose}
-      onutility={(utility) =>
-        openOverlay(utility === "pause" ? "pause" : utility)}
+      onutility={(utility) => openOverlay(utility)}
     />
   {:else if state.screen === "map"}
     <IllustratedMapScreen

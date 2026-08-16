@@ -51,7 +51,8 @@ State + persistence only — no shop UI exists yet, so every check below is done
 - [ ] First beat text contains "Welcome in. Shipment day"; speaker line reads "Shopkeeper"
 - [ ] Click the stage (or press Enter / Space) to advance to the second beat: text contains "Buying packs? Selling doubles? Either way, DP talks."
 - [ ] Click the stage once more; dialogue box disappears; a menu nav appears with three buttons: "Buy Cards", "Sell Cards", and "Leave Shop"
-- [ ] "Buy Cards" and "Sell Cards" buttons are visually disabled and show tooltip "Coming in a later slice" on hover
+- [ ] "Buy Cards" button is **enabled** (T9 wired it); clicking it opens the set browser screen
+- [ ] "Sell Cards" button is still disabled and shows tooltip "Coming in a later slice" on hover
 - [ ] Click "Leave Shop"; map screen reloads with all previous state intact (objective, choice acknowledgment, locations unchanged)
 - [ ] Gear button (top-right) is accessible from the greeting screen
 - [ ] Double-clicking the stage does not advance two beats at once (only one advance per click event)
@@ -83,3 +84,23 @@ The three modules — `src/story/shop/data/shop-rarity.ts`, `src/story/shop/data
 - [ ] Confirm `public/story/shop-sets.v1.json` contains exactly 50 sets: `node -e "const d=JSON.parse(require('fs').readFileSync('public/story/shop-sets.v1.json','utf8')); console.log(d.sets.length, 'sets')"`
 - [ ] Verify first 3 sets have `released: true` (LOB, MRD, PSV) and all others have `released: false`: `node -e "const d=JSON.parse(require('fs').readFileSync('public/story/shop-sets.v1.json','utf8')); console.log(d.sets.filter(s=>s.released).map(s=>s.id))"`
 - [ ] Confirm no card entry in any set has a rarity outside the ShopRarity union: `node -e "const valid=new Set(['common','rare','super-rare','ultra-rare','secret-rare','ultimate-rare','ghost-rare']); const d=JSON.parse(require('fs').readFileSync('public/story/shop-sets.v1.json','utf8')); const bad=d.sets.flatMap(s=>s.cards.filter(c=>!valid.has(c.rarity))); console.log(bad.length===0?'OK':bad)"`
+
+## T9 set_browser_buy
+
+- [ ] Run `npm run dev`, open `#/story`, start New Game, navigate to the map, open Card Shop
+- [ ] Click through both shopkeeper beats; "Buy Cards" button is now enabled (not disabled) — click it to open the set browser
+- [ ] Set browser shows a "Loading sets…" spinner on first visit (one network request to `/story/shop-sets.v1.json`), which resolves into the full browse screen
+- [ ] "Latest Released" row shows 3 tiles in newest-first order: Pharaoh's Servant, Metal Raiders, Legend of Blue-Eyes White Dragon
+- [ ] Unreleased sets appear in the full grid below, dimmed and with a 🔒 glyph — clicking them does nothing (no dialog opens)
+- [ ] Click a released set tile (e.g. "Legend of Blue-Eyes White Dragon"); a dialog opens with the set name as the heading and "100 DP / pack"
+- [ ] Click "Buy 1 · 100 DP" — dialog closes, DP pill in top bar drops by 100 (from 1000 to 900); re-open dialog to confirm button still works
+- [ ] Click "Buy 10 · 1000 DP" (requires ≥ 1000 DP) — DP drops by 1000
+- [ ] Set custom input to 3 and click "Buy 3" — DP drops by 300
+- [ ] With DP < 100: "Buy 1" and "Buy 10" and "Buy N" buttons are all disabled; a red error line reads "Not enough DP…"
+- [ ] "View card list" button is disabled with tooltip "Coming in a later slice"
+- [ ] Close the dialog with the "Close" button or Escape key; returns to set browser
+- [ ] "← Back" button in set browser returns to the shopkeeper greeting screen
+- [ ] Switch device to airplane mode (or DevTools → Network → Offline) and revisit the shop: set browser still renders using the cached JSON (Cache Storage entry `story-shop-data`)
+- [ ] Reload in offline mode with cache cleared → error state appears with a "Retry" button; going online and clicking Retry loads the grid
+- [ ] DP pill in the top bar updates live after every purchase without requiring navigation
+- [ ] Gear button (top-right) remains accessible from the set browser and dialog screens

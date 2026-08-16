@@ -31,7 +31,12 @@
   import OutcomeScreen from "./screens/OutcomeScreen.svelte";
   import PreBattleScreen from "./screens/PreBattleScreen.svelte";
   import RewardScreen from "./screens/RewardScreen.svelte";
+  import ShopBrowseScreen from "./shop/ShopBrowseScreen.svelte";
   import ShopGreetingScreen from "./shop/ShopGreetingScreen.svelte";
+  import {
+    fetchShopSetData,
+    type ShopSetData,
+  } from "./shop/data/shop-set-data.ts";
   import TitleScreen from "./screens/TitleScreen.svelte";
   import {
     STORY_SLOT_KEYS,
@@ -98,6 +103,9 @@
   let dirty = false;
   let inputId = 0;
   let previousScreen: StoryScreen = state.screen;
+  let shopData: ShopSetData | null = null;
+  let shopDataError: string | null = null;
+  let shopDataLoading = false;
   let root: HTMLElement;
 
   onMount(() => {
@@ -160,6 +168,16 @@
   }
 
   afterUpdate(() => {
+    if (
+      state.screen.startsWith("shop-") &&
+      shopData === null &&
+      !shopDataLoading &&
+      shopDataError === null
+    )
+      void loadShopData();
+  });
+
+  afterUpdate(() => {
     if (state.screen === previousScreen) return;
     previousScreen = state.screen;
     queueMicrotask(() => {
@@ -191,6 +209,19 @@
   $: historyEntries = PROLOGUE.beats
     .slice(0, state.narrativeIndex + 1)
     .map(({ speaker, text }) => ({ speaker, text }));
+
+  async function loadShopData(): Promise<void> {
+    shopDataLoading = true;
+    shopDataError = null;
+    try {
+      shopData = await fetchShopSetData();
+    } catch (error) {
+      shopDataError =
+        error instanceof Error ? error.message : "Shop data unavailable";
+    } finally {
+      shopDataLoading = false;
+    }
+  }
 
   function go(screen: StoryScreen): void {
     state = { ...state, screen };
@@ -522,8 +553,24 @@
     />
   {:else if state.screen === "shop-greeting"}
     <ShopGreetingScreen
-      onnavigate={() => undefined}
+      onnavigate={(target) =>
+        dispatch({
+          type: "shop-navigate",
+          to: target === "buy" ? "browse" : "sell",
+        })}
       onleave={() => dispatch({ type: "leave-shop" })}
+    />
+  {:else if state.screen === "shop-browse"}
+    <ShopBrowseScreen
+      sets={shopData?.sets ?? null}
+      error={shopDataError}
+      dp={state.dp}
+      onbuy={(setId, count) => dispatch({ type: "buy-packs", setId, count })}
+      onretry={() => {
+        shopDataError = null;
+        void loadShopData();
+      }}
+      onback={() => dispatch({ type: "shop-navigate", to: "greeting" })}
     />
   {:else if state.screen === "reward"}
     <RewardScreen

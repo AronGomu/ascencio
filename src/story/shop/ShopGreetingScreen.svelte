@@ -65,8 +65,6 @@
     <nav aria-label="Shop actions" data-cy="story-shop-greeting-menu">
       <button
         type="button"
-        disabled
-        title="Coming in a later slice"
         data-cy="story-shop-greeting-buy"
         onclick={() => onnavigate("buy")}>Buy Cards</button
       >

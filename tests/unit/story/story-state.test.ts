@@ -250,4 +250,64 @@ describe("story state model", () => {
     expect(PROLOGUE.beats.length).toBeGreaterThanOrEqual(25);
     expect(PROLOGUE.beats.length).toBeLessThanOrEqual(40);
   });
+
+  it("buying ten packs pays a thousand dp", () => {
+    const browse = {
+      ...createInitialStoryState(),
+      screen: "shop-browse" as const,
+      dp: 1000,
+    };
+    const next = reduceStory(browse, {
+      type: "buy-packs",
+      setId: "metal-raiders",
+      count: 10,
+    });
+    expect(next.dp).toBe(0);
+    expect(next.boosters["metal-raiders"]).toBe(10);
+  });
+
+  it("buying beyond the wallet is refused", () => {
+    const browse = {
+      ...createInitialStoryState(),
+      screen: "shop-browse" as const,
+      dp: 150,
+    };
+    const next = reduceStory(browse, {
+      type: "buy-packs",
+      setId: "metal-raiders",
+      count: 2,
+    });
+    expect(next).toBe(browse);
+  });
+
+  it("non-integer counts are refused", () => {
+    const browse = {
+      ...createInitialStoryState(),
+      screen: "shop-browse" as const,
+      dp: 10000,
+    };
+    for (const count of [1.5, 0, -3]) {
+      expect(
+        reduceStory(browse, {
+          type: "buy-packs",
+          setId: "metal-raiders",
+          count,
+        }),
+      ).toBe(browse);
+    }
+  });
+
+  it("shop-navigate only walks shop screens", () => {
+    const map = { ...createInitialStoryState(), screen: "map" as const };
+    expect(reduceStory(map, { type: "shop-navigate", to: "browse" })).toBe(map);
+
+    const greeting = {
+      ...createInitialStoryState(),
+      screen: "shop-greeting" as const,
+      shopReturnScreen: "map" as const,
+    };
+    expect(
+      reduceStory(greeting, { type: "shop-navigate", to: "browse" }).screen,
+    ).toBe("shop-browse");
+  });
 });

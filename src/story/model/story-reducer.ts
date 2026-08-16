@@ -8,7 +8,9 @@ import {
   type ChoiceId,
   type LocationId,
   type StoryState,
+  type StoryScreen,
 } from "./story-state.ts";
+import { PACK_PRICE_DP } from "../shop/data/shop-pricing.ts";
 
 export type StoryCommand =
   | { readonly type: "new-game" }
@@ -24,6 +26,15 @@ export type StoryCommand =
   | { readonly type: "acknowledge-reward" }
   | { readonly type: "open-shop" }
   | { readonly type: "leave-shop" }
+  | {
+      readonly type: "shop-navigate";
+      readonly to: "greeting" | "browse" | "sell";
+    }
+  | {
+      readonly type: "buy-packs";
+      readonly setId: string;
+      readonly count: number;
+    }
   | { readonly type: "reset" };
 
 export function reduceStory(
@@ -153,6 +164,30 @@ export function reduceStory(
         screen: state.shopReturnScreen ?? "map",
         shopReturnScreen: null,
       };
+    case "shop-navigate": {
+      if (!state.screen.startsWith("shop-")) return state;
+      const screenMap: Record<"greeting" | "browse" | "sell", StoryScreen> = {
+        greeting: "shop-greeting",
+        browse: "shop-browse",
+        sell: "shop-sell",
+      };
+      return { ...state, screen: screenMap[command.to] };
+    }
+    case "buy-packs": {
+      if (state.screen !== "shop-browse") return state;
+      const { setId, count } = command;
+      if (!Number.isInteger(count) || count < 1) return state;
+      const cost = count * PACK_PRICE_DP;
+      if (state.dp < cost) return state;
+      return {
+        ...state,
+        dp: state.dp - cost,
+        boosters: {
+          ...state.boosters,
+          [setId]: (state.boosters[setId] ?? 0) + count,
+        },
+      };
+    }
     case "reset":
       return createInitialStoryState();
   }

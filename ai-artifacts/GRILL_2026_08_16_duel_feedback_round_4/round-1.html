@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lock the judgment calls behind feedback round 4</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b0a08; --panel:#17130d; --panel-2:#1f190f; --text:#fff7ed; --muted:#c9b99f; --line:#4a3b25; --accent:#fbbf24; --accent-2:#fb923c; --focus:#facc15; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    main { width:min(960px,calc(100% - 32px)); margin:0 auto; padding:48px 0 96px; }
+    header { display:grid; gap:12px; margin-bottom:32px; }
+    .eyebrow { color:var(--accent); font-size:.75rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+    h1,h2,p { margin:0; } h1 { font-size:clamp(2rem,5vw,3.5rem); line-height:1.08; letter-spacing:-.035em; }
+    .lede { max-width:70ch; color:var(--muted); }
+    .tree { display:flex; align-items:center; gap:8px; overflow:auto; padding:16px; margin:24px 0 32px; border:1px solid var(--line); border-radius:12px; background:var(--panel); color:var(--muted); white-space:nowrap; }
+    .tree b { color:var(--text); } .node { padding:6px 10px; border:1px solid var(--line); border-radius:999px; } .node.active { border-color:var(--accent); color:var(--accent); } .arrow { color:var(--line); }
+    .visuals { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:0 0 32px; }
+    figure { min-width:0; margin:0; padding:18px; border:1px solid var(--line); border-radius:14px; background:var(--panel); }
+    figcaption { margin-bottom:14px; color:var(--muted); font-size:.85rem; } figcaption b { display:block; color:var(--text); font-size:1rem; }
+    svg { display:block; width:100%; height:auto; } svg text { font-family:ui-sans-serif,system-ui,sans-serif; }
+    .svg-node { fill:var(--panel-2); stroke:var(--line); stroke-width:2; } .svg-node.active { stroke:var(--accent); } .svg-line { fill:none; stroke:var(--line); stroke-width:2; } .svg-arrow { fill:var(--line); } .svg-label { fill:var(--text); font-size:12px; } .svg-note { fill:var(--muted); font-size:10px; } .svg-accent { fill:var(--accent); }
+    form { display:grid; gap:20px; }
+    fieldset { min-width:0; margin:0; padding:24px; border:1px solid var(--line); border-radius:16px; background:var(--panel); }
+    legend { max-width:100%; padding:0 8px; font-size:1.15rem; font-weight:750; }
+    .why { margin:0 0 18px; color:var(--muted); font-size:.925rem; }
+    .choices { display:grid; gap:10px; }
+    .choice { display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:start; padding:14px; border:1px solid var(--line); border-radius:10px; background:var(--panel-2); cursor:pointer; }
+    .choice:has(input:checked) { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
+    input { width:18px; height:18px; margin-top:3px; accent-color:var(--accent); }
+    .rank { display:inline-block; margin-left:7px; color:var(--accent-2); font-size:.72rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+    .detail { display:block; margin-top:3px; color:var(--muted); font-size:.875rem; }
+    label.precision { display:block; margin-top:18px; font-size:.85rem; font-weight:700; color:var(--muted); }
+    textarea { width:100%; min-height:90px; margin-top:7px; padding:12px; resize:vertical; border:1px solid var(--line); border-radius:10px; background:#100d08; color:var(--text); font:inherit; }
+    input:focus-visible,textarea:focus-visible,button:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
+    .actions { position:sticky; bottom:16px; display:flex; gap:12px; align-items:center; justify-content:space-between; padding:14px; border:1px solid var(--line); border-radius:14px; background:rgba(19,23,28,.96); box-shadow:0 16px 40px #0008; backdrop-filter:blur(10px); }
+    button { padding:11px 16px; border:0; border-radius:9px; background:var(--accent); color:#211500; font:inherit; font-weight:800; cursor:pointer; }
+    #status { color:var(--muted); font-size:.875rem; }
+    @media (max-width:700px) { .visuals { grid-template-columns:1fr; } }
+    @media (max-width:600px) { main { width:min(100% - 20px,960px); padding-top:28px; } fieldset { padding:18px 14px; } .actions { align-items:flex-start; flex-direction:column; } button { width:100%; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="eyebrow">Grill me · Round 1 · Plan judgment calls</span>
+    <h1>Lock the judgment calls behind feedback round 4</h1>
+    <p class="lede">The plan exists (14 tickets, ADR 028–032). These 10 decisions were made by assumption, not by you. Tick what you want (several or none per question — the textarea alone is a valid answer), then press Copy answer summary and paste it back in chat. Bug tickets T1/T2 carry no user decisions — facts already verified in code.</p>
+  </header>
+
+  <nav class="tree" aria-label="Design tree progress">
+    <b class="node">Feedback R4</b>
+    <span class="arrow">→</span>
+    <span class="node">Engine bugs (settled)</span>
+    <span class="arrow">→</span>
+    <span class="node active">Full Control</span>
+    <span class="node active">Decision dialog</span>
+    <span class="node active">Zoom overlay</span>
+    <span class="node active">Privacy surfaces</span>
+    <span class="node active">List dialog</span>
+    <span class="node active">Right rail</span>
+    <span class="node active">Halo</span>
+  </nav>
+
+  <section class="visuals" aria-label="Technical context">
+    <figure role="img" aria-labelledby="fig1-title fig1-desc">
+      <figcaption><b id="fig1-title">Frontier: 10 open decisions across 7 branches</b><span id="fig1-desc">Every branch of the plan with its open questions; engine-bug branch already settled by code investigation.</span></figcaption>
+      <svg viewBox="0 0 420 250">
+        <title>Frontier graph</title>
+        <desc>Root node fans out to seven branches; active branches carry question numbers.</desc>
+        <rect class="svg-node" x="150" y="10" width="120" height="28" rx="8"/>
+        <text class="svg-label" x="210" y="28" text-anchor="middle">Feedback R4</text>
+        <path class="svg-line" d="M210 38 V58 M210 58 H60 M210 58 H360 M60 58 V78 M160 58 V78 M260 58 V78 M360 58 V78 M110 58 V148 M210 58 V148 M310 58 V148"/>
+        <rect class="svg-node" x="15" y="78" width="90" height="40" rx="8"/>
+        <text class="svg-label" x="60" y="94" text-anchor="middle">Full Control</text>
+        <text class="svg-note" x="60" y="108" text-anchor="middle">Q1 Q2 Q3</text>
+        <rect class="svg-node active" x="115" y="78" width="90" height="40" rx="8"/>
+        <text class="svg-label" x="160" y="94" text-anchor="middle">Dialog</text>
+        <text class="svg-note" x="160" y="108" text-anchor="middle">Q4</text>
+        <rect class="svg-node active" x="215" y="78" width="90" height="40" rx="8"/>
+        <text class="svg-label" x="260" y="94" text-anchor="middle">Zoom overlay</text>
+        <text class="svg-note" x="260" y="108" text-anchor="middle">Q6 Q7</text>
+        <rect class="svg-node active" x="315" y="78" width="90" height="40" rx="8"/>
+        <text class="svg-label" x="360" y="94" text-anchor="middle">Privacy</text>
+        <text class="svg-note" x="360" y="108" text-anchor="middle">Q8</text>
+        <rect class="svg-node active" x="65" y="148" width="90" height="40" rx="8"/>
+        <text class="svg-label" x="110" y="164" text-anchor="middle">List dialog</text>
+        <text class="svg-note" x="110" y="178" text-anchor="middle">Q5</text>
+        <rect class="svg-node active" x="165" y="148" width="90" height="40" rx="8"/>
+        <text class="svg-label" x="210" y="164" text-anchor="middle">Right rail</text>
+        <text class="svg-note" x="210" y="178" text-anchor="middle">Q9</text>
+        <rect class="svg-node active" x="265" y="148" width="90" height="40" rx="8"/>
+        <text class="svg-label" x="310" y="164" text-anchor="middle">Halo</text>
+        <text class="svg-note" x="310" y="178" text-anchor="middle">Q10</text>
+        <rect class="svg-node" x="115" y="210" width="190" height="28" rx="8"/>
+        <text class="svg-label" x="210" y="228" text-anchor="middle">Engine bugs T1/T2 — settled</text>
+      </svg>
+    </figure>
+    <figure role="img" aria-labelledby="fig2-title fig2-desc">
+      <figcaption><b id="fig2-title">Full Control gate (Q1/Q2 decide the two ? boxes)</b><span id="fig2-desc">Prompt flow from the engine to either an auto answer or a visible decision, with the two contested branch points highlighted.</span></figcaption>
+      <svg viewBox="0 0 420 250">
+        <title>Full Control decision flow</title>
+        <desc>A prompt flows through the full-control switch; when off it passes through trivial, own-chain and auto-place gates.</desc>
+        <rect class="svg-node" x="140" y="8" width="140" height="26" rx="8"/>
+        <text class="svg-label" x="210" y="25" text-anchor="middle">core prompt (you)</text>
+        <path class="svg-line" d="M210 34 V52"/>
+        <rect class="svg-node active" x="120" y="52" width="180" height="26" rx="8"/>
+        <text class="svg-label" x="210" y="69" text-anchor="middle">Full Control ON ?</text>
+        <path class="svg-line" d="M300 65 H360 V210 M210 78 V96"/>
+        <text class="svg-note" x="330" y="58" text-anchor="middle">yes</text>
+        <rect class="svg-node" x="130" y="96" width="160" height="26" rx="8"/>
+        <text class="svg-label" x="210" y="113" text-anchor="middle">trivial? → auto answer</text>
+        <path class="svg-line" d="M210 122 V140"/>
+        <rect class="svg-node active" x="110" y="140" width="200" height="26" rx="8"/>
+        <text class="svg-label" x="210" y="157" text-anchor="middle">own-effect chain? → pass (Q2)</text>
+        <path class="svg-line" d="M210 166 V184"/>
+        <rect class="svg-node" x="120" y="184" width="180" height="26" rx="8"/>
+        <text class="svg-label" x="210" y="201" text-anchor="middle">auto-place? (Q1 keeps?)</text>
+        <path class="svg-line" d="M210 210 V228 M360 210 V228 H210"/>
+        <rect class="svg-node" x="130" y="222" width="160" height="26" rx="8"/>
+        <text class="svg-label" x="210" y="239" text-anchor="middle">show decision</text>
+        <circle class="svg-accent" cx="105" cy="153" r="4"/>
+        <circle class="svg-accent" cx="115" cy="197" r="4"/>
+      </svg>
+    </figure>
+  </section>
+
+  <form id="questions">
+    <fieldset data-question="Full Control ON: what does checking it disable?">
+      <legend>1. Full Control ON: what does checking it disable?</legend>
+      <p class="why">Defines the whole point of the toggle — how loud the game gets when you hold Ctrl or tick the box.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Disable ALL auto answers: trivial prompts, own-chain pass, auto-place — every core decision surfaces"><span><b>Disable ALL auto answers</b><span class="rank">Recommended</span><span class="detail">Matches "every input from the OCG core will pop up a dialog"; also gives manual zone placement while held.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Disable chain-related auto passes only; keep auto-place and single-option auto-resolve"><span><b>Chain passes only</b><span class="rank">Second</span><span class="detail">Toggle stays about responses; forced single options and placement stay silent — less noise, less control.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Disable only the new own-effect chain pass; everything else untouched"><span><b>Own-effect pass only</b><span class="rank">Third</span><span class="detail">Minimal delta vs today; Ctrl-hold then only re-opens your own chain windows.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. all chain windows + placement, but keep single-option auto-resolve"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Full Control OFF: which windows auto-pass as 'your own effect'?">
+      <legend>2. Full Control OFF: which windows auto-pass as "your own effect"?</legend>
+      <p class="why">Decides how often the game silently passes for you — too narrow keeps noise, too wide skips real decisions.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Chain windows whose LAST chain link is yours (chain tail controller == you). Empty-chain windows still prompt"><span><b>Chain tail is yours</b><span class="rank">Recommended</span><span class="detail">Precise, attested by the projected chain; summon/attack response windows (empty chain) still ask.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Chain tail yours OR empty-chain response window following your own action (summon, attack declaration)"><span><b>Also your own action windows</b><span class="rank">Second</span><span class="detail">Quieter (no prompt after own summon) but can skip legitimate own-trigger timings (e.g. reactive traps on your own summon).</span></span></label>
+        <label class="choice"><input type="checkbox" value="Every chain window with a pass choice auto-passes regardless of owner"><span><b>Pass everything</b><span class="rank">Third</span><span class="detail">Maximum speed; you would never chain to the opponent without Full Control on — dangerous default.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. tail yours AND no activatable choice with a card from your GY…"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Full Control persistence across sessions?">
+      <legend>3. Full Control persistence across sessions?</legend>
+      <p class="why">Session-only vs remembered changes what a returning player sees on their first activation.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Session-only, resets to unchecked every app load"><span><b>Session-only</b><span class="rank">Recommended</span><span class="detail">Hold-to-inspect ergonomics; no surprise prompts next session; matches ADR-028 as written.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Persist the manual checkbox in persisted-ui-store (like zone outlines)"><span><b>Persist it</b><span class="rank">Second</span><span class="detail">Power users keep their preference; Ctrl-hold stays ephemeral either way.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. persist, but reset when a story duel starts"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Remove Inspect: how much of the card detail goes?">
+      <legend>4. Remove Inspect: how much of the card detail goes?</legend>
+      <p class="why">The 5 Inspect expanders in PromptControls also hold the card image + effect text — the only in-dialog card info.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Delete the whole expander (toggle + image + description). Left preview panel is the card-info surface"><span><b>Delete expander + contents</b><span class="rank">Recommended</span><span class="detail">Cleanest dialog; relies on the preview panel, which is present whenever a duel renders.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Keep image + description, render them always-expanded, remove only the Inspect toggle"><span><b>Keep info, drop toggle</b><span class="rank">Second</span><span class="detail">Dialog keeps context for edge surfaces (board-unavailable fallback) at the cost of a taller dialog.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Remove Inspect in the modal decision dialog only; keep it in the workspace prompt panel"><span><b>Dialog only</b><span class="rank">Third</span><span class="detail">Workspace is a debug surface; keeps its inspection, splits the component in two behaviors.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. delete, but hovering a choice should preview its card in the left panel"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="'Select between 1 and 1 choices': removal scope?">
+      <legend>5. "Select between 1 and 1 choices": removal scope?</legend>
+      <p class="why">The text is a validation message reused by other surfaces; scope decides whether real ranges (2–3) still show it.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Remove the validation paragraph from the target-list footer entirely (all ranges). The '0 / 1 selected' counter carries the requirement"><span><b>Remove from list footer, all ranges</b><span class="rank">Recommended</span><span class="detail">Counter already states min/max; one surface, one message.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Hide it only when minimum equals maximum (the redundant case); keep for real ranges like 'between 1 and 3'"><span><b>Hide only when min == max</b><span class="rank">Second</span><span class="detail">Keeps guidance for ranged picks; conditional rendering, slightly more logic.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Reword globally in validatePromptSelection ('Select exactly N') — text stays, everywhere"><span><b>Reword globally</b><span class="rank">Third</span><span class="detail">Touches every prompt surface + FieldActionBar; not what the feedback asked.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. remove in list, keep in FieldActionBar"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Hand zoom overlay: keyboard behavior?">
+      <legend>6. Hand zoom overlay: keyboard behavior?</legend>
+      <p class="why">Overlay on focus doubles the chip focus surfaces and risks breaking the e2e keyboard walker; pointer-only keeps the pin flow untouched.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Pointer-only overlay; keyboard keeps the existing pin/focus flow (in-place zoom + in-band chips)"><span><b>Pointer-only</b><span class="rank">Recommended</span><span class="detail">Zero risk to focus invariants; keyboard users lose nothing they have today.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Overlay also appears on keyboard focus, chips move into the overlay for both input modes"><span><b>Overlay for both inputs</b><span class="rank">Second</span><span class="detail">One consistent surface, but focus management + e2e walker rework — noticeably bigger ticket.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. pointer-only now, keyboard overlay as follow-up ticket"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Hand zoom overlay: size and anchor?">
+      <legend>7. Hand zoom overlay: size and anchor?</legend>
+      <p class="why">Determines how dominant the zoom feels and whether it covers the opponent board while browsing your hand.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="~2.2x the hand card, anchored to the hovered card, growing upward from its bottom edge, clamped to viewport"><span><b>2.2× above the card</b><span class="rank">Recommended</span><span class="detail">Card-game feel (MD-like); buttons ride just above; position tracks the hovered card.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Large fixed-size preview (~3x) centered above the hand band regardless of which card is hovered"><span><b>Big fixed center preview</b><span class="rank">Second</span><span class="detail">Very readable art; loses spatial link to the hovered card.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Modest 1.6x, mostly to escape the clipping"><span><b>Modest 1.6×</b><span class="rank">Third</span><span class="detail">Subtle; may be too small to read effect-relevant art.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. 2.5x, and shift horizontally so it never covers the action bar"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Hovering your own extra deck stack: preview panel behavior?">
+      <legend>8. Hovering your own extra deck stack: preview panel behavior?</legend>
+      <p class="why">T4 hides the extra-deck top card on the board; combined with T11 the hover becomes a no-op — unless you want owner privilege.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="No preview update on extra-deck stack hover (consistent: private pile = face-down everywhere; browse the list to see inside)"><span><b>No preview update</b><span class="rank">Recommended</span><span class="detail">One rule, no exceptions; the list dialog is one click away.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Owner hovering their own extra deck still previews its top card in the left panel"><span><b>Owner still previews top</b><span class="rank">Second</span><span class="detail">Convenient, but re-introduces the 'your private zones behave differently' exception the feedback killed.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. no preview, but tooltip with count"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Life points plate: format and style?">
+      <legend>9. Life points plate: format and style?</legend>
+      <p class="why">Feedback says "look references to YGO game aesthetics, bigger, bordered, centered" — format is taste, you own it.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="'8,000 LP' — bold tabular digits in a bordered plate, ~1.35rem, centered, accent border"><span><b>8,000 LP plate</b><span class="rank">Recommended</span><span class="detail">Keeps current copy + data-cy text expectations; adds the YGO plate look.</span></span></label>
+        <label class="choice"><input type="checkbox" value="'LP 8000' — label-left, no thousands separator, like the anime/Master Duel counter"><span><b>LP 8000 (YGO style)</b><span class="rank">Second</span><span class="detail">Closer to the games; changes rendered text → touches component tests/e2e expectations.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Either format + color states: yellow under 2000, red under 1000"><span><b>Add danger colors</b><span class="rank">Third</span><span class="detail">Nice, but scope creep for this round — could be its own later ticket.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. LP 8000 + animate on change"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Red 'invalid target' halo: which surfaces?">
+      <legend>10. Red "invalid target" halo: which surfaces?</legend>
+      <p class="why">Your wording — "hovering or selecting a card in a zone to activate/target also shows invalid cards" — can mean list entries only, or field cards too.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="List-dialog entries only (over-maximum / locked choices turn red). Field stays green/orange"><span><b>List entries only</b><span class="rank">Recommended</span><span class="detail">Red appears exactly where candidates and non-candidates sit side by side; board stays calm.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Also on field cards: during a targeting prompt, non-candidate cards in targeted zones show red on hover"><span><b>Field cards too</b><span class="rank">Second</span><span class="detail">Stronger feedback while targeting; risks painting much of the board red on wide prompts.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Red only as a rejection flash when you click an invalid card, never on hover"><span><b>Click-rejection flash only</b><span class="rank">Third</span><span class="detail">Minimal visual noise; no passive affordance.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. list always red for locked; field red only on hover"></textarea></label>
+    </fieldset>
+
+    <div class="actions">
+      <span id="status" role="status">Selections stay in this page until copied.</span>
+      <button type="button" id="copy-summary">Copy answer summary</button>
+    </div>
+  </form>
+</main>
+<script>
+  const button = document.querySelector('#copy-summary');
+  const status = document.querySelector('#status');
+
+  function buildSummary() {
+    const sections = [...document.querySelectorAll('fieldset[data-question]')].map((field, index) => {
+      const question = field.dataset.question;
+      const selected = [...field.querySelectorAll('input[type="checkbox"]:checked')].map(input => `- ${input.value}`);
+      const precision = field.querySelector('textarea').value.trim();
+      const answers = selected.length ? selected.join('\n') : '- No recommended answer selected';
+      return `${index + 1}. ${question}\n${answers}${precision ? `\nPrecision: ${precision}` : ''}`;
+    });
+    return `Round 1 · Plan judgment calls — Lock the judgment calls behind feedback round 4\n\n${sections.join('\n\n')}`;
+  }
+
+  button.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(buildSummary());
+      status.textContent = 'Summary copied to clipboard.';
+    } catch (_) {
+      const fallback = document.createElement('textarea');
+      fallback.value = buildSummary();
+      document.body.appendChild(fallback);
+      fallback.select();
+      document.execCommand('copy');
+      fallback.remove();
+      status.textContent = 'Summary copied to clipboard.';
+    }
+  });
+</script>
+</body>
+</html>

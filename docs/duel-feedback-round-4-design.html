@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design — Duel Feedback Round 4 Surfaces</title>
+<style>
+  :root{
+    --bg:#0d1420;--bg2:#111a2a;--panel:#16233a;--panel2:#1c2d49;
+    --ink:#e8eefb;--muted:#8fa1bd;--line:#2a3d5e;
+    --green:#4ade80;--orange:#fbbf24;--red:#f87171;--blue:#60a5fa;--violet:#a78bfa;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--ink);
+       font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:2.5rem 1.25rem 5rem}
+  main{max-width:1000px;margin:0 auto}
+  h1{font-size:1.7rem;margin:.2rem 0}
+  h2{font-size:1.1rem;margin:2.1rem 0 .6rem;color:var(--blue);letter-spacing:.05em;text-transform:uppercase}
+  p{margin:.5rem 0}
+  .sub{color:var(--muted)}
+  code{background:#0b1220;border:1px solid var(--line);border-radius:5px;padding:.08rem .35rem;
+       font:.86em ui-monospace,Menlo,Consolas,monospace;color:#bcd3f7}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1rem 1.15rem;margin:.8rem 0}
+  table{width:100%;border-collapse:collapse;margin:.6rem 0;font-size:.92rem}
+  th,td{border:1px solid var(--line);padding:.45rem .6rem;text-align:left}
+  th{background:var(--panel2);color:var(--muted)}
+  .layers{display:flex;flex-direction:column-reverse;gap:4px;margin:.6rem 0;max-width:460px}
+  .layer{border:1px solid var(--line);border-radius:7px;padding:.35rem .7rem;background:var(--panel2);font-size:.85rem;
+         display:flex;justify-content:space-between}
+  .layer.new{border-color:var(--green);color:var(--green)}
+  .vis{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin:.6rem 0}
+  .vis .card{margin:0}
+  .vis h3{margin:.1rem 0 .4rem;font-size:.9rem}
+  .pub h3{color:var(--green)} .priv h3{color:var(--orange)} .hid h3{color:var(--red)}
+  ul{margin:.3rem 0 .3rem 1.1rem}
+  li{margin:.25rem 0}
+  .flow{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:.9rem 1.1rem;
+        font:.85em ui-monospace,Menlo,Consolas,monospace;color:#bcd3f7;overflow-x:auto;white-space:pre}
+</style>
+</head>
+<body>
+<main>
+  <h1>Duel Feedback Round 4 — Surface Design</h1>
+  <p class="sub">Companion to <code>ai-artifacts/PLAN_2026_08_16_duel_feedback_round_4.md</code> · ADR 028–032 · 2026-08-16</p>
+
+  <h2>Card knowledge model</h2>
+  <p>One vocabulary drives board art, zoom, labels, lists, preview. Attestation source = projected <code>PublicCard.code</code> (ADR-014) with one addition: prompt-attested own-card codes during a selection (ADR-029).</p>
+  <div class="vis">
+    <div class="card pub"><h3>PUBLIC</h3>Both players know. Face-up board cards, GY/banished piles. Face-up top on stack. Zoom + label + preview.</div>
+    <div class="card priv"><h3>PRIVATE</h3>One player knows. Own hand, own set cards, own extra deck, deck during own search. Board shows back; owner gets zoom + name label + list faces.</div>
+    <div class="card hid"><h3>HIDDEN</h3>Nobody knows. Opponent hand/set, unrevealed decks. No zoom, no label, preview keeps its previous card.</div>
+  </div>
+  <table>
+    <tr><th>Surface</th><th>Rule after round 4</th></tr>
+    <tr><td>Stack top art</td><td>Deck + extra: card back (both seats). GY/banished: top public card face-up. (T4)</td></tr>
+    <tr><td>Hover zoom</td><td>Only when <code>card.code !== undefined</code> (<code>is-identity-known</code>). (T6)</td></tr>
+    <tr><td>Name label</td><td>Rendered whenever identity known — including own face-down set cards. (T6)</td></tr>
+    <tr><td>Target list</td><td>Projection code, else prompt-attested own code. Opponent stays concealed. (T3)</td></tr>
+    <tr><td>Preview panel</td><td>Updates only on known cards; hidden hover = keep previous (T11). Gains a stats row: attribute · type · Level/Rank/Link · ATK/DEF (T15).</td></tr>
+  </table>
+
+  <h2>Field layer stack</h2>
+  <div class="layers">
+    <div class="layer"><span>drag ghost</span><code>150</code></div>
+    <div class="layer new"><span>hand zoom overlay (new)</span><code>140</code></div>
+    <div class="layer"><span>window active</span><code>120</code></div>
+    <div class="layer"><span>floating window</span><code>110</code></div>
+    <div class="layer"><span>menu / hand band / chips</span><code>100</code></div>
+    <div class="layer"><span>control / labels / cards / zones</span><code>50…10</code></div>
+  </div>
+  <p><code>HandZoomOverlay.svelte</code>: fixed-position, stage-frame aware, <b>1.6× — subtle emphasis, not an information surface</b> (info lives in the preview panel), grows upward from card bottom edge, hosts <code>CardActionChips</code> just above the art. Pointer-only; keyboard keeps the pin flow. (T7, ADR-032)</p>
+
+  <h2>Full Control decision flow</h2>
+  <div class="flow">prompt arrives (player 0)
+  │
+  ├─ effectiveFullControl = manualCheckbox OR ctrlHeld
+  │
+  ├─ ON  ──────────────► show every decision (no auto answers)
+  │
+  └─ OFF ─► trivialPromptResponse?          (ADR-009, unchanged)
+            └─ else ownEffectChainPassResponse?
+            │        chain prompt + pass choice, attributed to you:
+            │          chain tail controller == 0, or
+            │          chain empty + last action event yours
+            │          (summon/flip/set/position/attack; fallback = turn player)
+            │        ─► auto-pass
+            │        opponent action + activatable ─► always prompt
+            └─ else centralPlacementResponse?      (autoPlaceCards)
+                     └─ else ─► show decision</div>
+  <p>Checkbox bottom-right of the field (<code>FullControlToggle.svelte</code>). Ctrl press ticks it live; release reverts unless manually checked. Session-only. (T8, ADR-028)</p>
+
+  <h2>Halo language v2</h2>
+  <table>
+    <tr><th>Color</th><th>Meaning</th><th>Where</th></tr>
+    <tr><td style="color:var(--green)"><b>Green</b></td><td>Can trigger / legal target</td><td>Field halos (unchanged) + list-entry hover/focus with choices</td></tr>
+    <tr><td style="color:var(--orange)"><b>Orange</b></td><td>Selected</td><td>Persisted class only, wins over green</td></tr>
+    <tr><td style="color:var(--red)"><b>Red</b></td><td>Invalid target (over-max, locked, non-candidate)</td><td>List entries + field cards during a targeting prompt (field: hover-only)</td></tr>
+    <tr><td style="color:var(--muted)"><b>None</b></td><td>Neutral card</td><td>No halo on hover, anywhere</td></tr>
+  </table>
+  <p>Keyboard focus keeps the neutral high-contrast ring — focus ≠ legality. (T14, ADR-031)</p>
+
+  <h2>Engine address fix</h2>
+  <p>ocgcore reports the field-spell zone as <code>spellTrap</code> sequence 5. <code>mapEngineFieldAddress</code> now maps it to <code>p{player}:field</code>; sequences 6/7 stay rejected. Response encoding keeps the raw engine address, so the core round-trip is untouched. This unblocks The Grand Spellbook Tower and every field spell. (T1) The <code>unsupported_message</code> abort is diagnosed from the duel trace on a programmed spellbook duel and fixed at the exact unsupported message. (T2)</p>
+
+  <h2>List dialog behavior</h2>
+  <ul>
+    <li>Opponent entries upright — rotation stays board-only. (T12)</li>
+    <li>"Select between 1 and 1 choices" removed; the <code>0 / 1 selected</code> counter carries the requirement. (T12)</li>
+    <li>While a targeting effect resolves, clicking the haloed launcher toggles collapse (single button ⇄ full list) and can never dismiss the decision surface. (T13)</li>
+  </ul>
+
+  <h2>Right rail</h2>
+  <ul>
+    <li>Header row (turn · phase + options) with a separating rule.</li>
+    <li>Avatar placeholders (person silhouette, not card backs), full panel width, fat 4px border.</li>
+    <li>LP plate "LP 8000" (label-left, no separator), bordered, centered, tabular digits; green &gt;4000, orange 2000–4000, red &lt;2000; count animation on change (reduced-motion aware).</li>
+    <li>Status/action prompt vertically centered on the field middle. (T10)</li>
+  </ul>
+</main>
+</body>
+</html>

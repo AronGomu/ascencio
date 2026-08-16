@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plan — Duel Feedback Round 4</title>
+<style>
+  :root{
+    --bg:#0d1420;--bg2:#121b2b;--panel:#16233a;--panel2:#1b2c47;
+    --ink:#e8eefb;--muted:#8fa1bd;--line:#2a3d5e;
+    --green:#4ade80;--orange:#fbbf24;--red:#f87171;--blue:#60a5fa;--violet:#a78bfa;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--ink);
+       font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:2.5rem 1.25rem 5rem}
+  main{max-width:1040px;margin:0 auto}
+  h1{font-size:1.9rem;margin:.2rem 0 .3rem}
+  h2{font-size:1.15rem;margin:2.2rem 0 .7rem;color:var(--blue);letter-spacing:.04em;text-transform:uppercase}
+  .sub{color:var(--muted)}
+  .goal{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--blue);
+        border-radius:10px;padding:1rem 1.2rem;margin-top:1.2rem}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:.9rem 1.1rem}
+  .card h3{margin:.1rem 0 .5rem;font-size:.95rem;color:var(--violet)}
+  ul{margin:.3rem 0 .3rem 1.1rem;padding:0}
+  li{margin:.28rem 0}
+  code{background:#0b1220;border:1px solid var(--line);border-radius:5px;padding:.08rem .35rem;
+       font:0.86em ui-monospace,Menlo,Consolas,monospace;color:#bcd3f7}
+  table{width:100%;border-collapse:collapse;margin-top:.6rem;font-size:.92rem}
+  th,td{border:1px solid var(--line);padding:.5rem .6rem;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--muted);font-weight:600}
+  tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+  .tag{display:inline-block;border-radius:999px;padding:.05rem .55rem;font-size:.75rem;font-weight:700}
+  .bug{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.4)}
+  .feat{background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.35)}
+  .ux{background:rgba(96,165,250,.12);color:var(--blue);border:1px solid rgba(96,165,250,.35)}
+  .dep{color:var(--muted);font-size:.85rem}
+  .flow{display:flex;flex-wrap:wrap;gap:.55rem;margin:.6rem 0}
+  .node{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:.4rem .7rem;font-size:.85rem}
+  .node b{color:var(--orange)}
+  .arrow{color:var(--muted);align-self:center}
+  .halo{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.5rem}
+  .swatch{display:flex;align-items:center;gap:.5rem;background:var(--panel);border:1px solid var(--line);
+          border-radius:8px;padding:.5rem .8rem;font-size:.88rem}
+  .dot{width:.95rem;height:.95rem;border-radius:50%}
+  .k{color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+  <h1>Duel Feedback Round 4</h1>
+  <p class="sub">Plan 2026-08-16 · 15 tickets · grilled ×2 rounds (confirmed) · index <code>ai-artifacts/PLAN_2026_08_16_duel_feedback_round_4.md</code> · ADR 028–032</p>
+
+  <div class="goal">
+    <b>Goal.</b> Land <code>feedback-duel.md</code>: 2 engine bugs (field spell kills field UI, <code>unsupported_message</code> aborts duel),
+    privacy-correct visibility (deck search, extra-deck top, known face-down), Full Control chain toggle,
+    hand centering + subtle hover-zoom overlay, right-rail redesign with stateful LP, list-dialog + halo polish, preview stats row.
+    Every ticket = 1 commit, app compiles + playable after each. Judgment calls settled in
+    <code>ai-artifacts/GRILL_2026_08_16_duel_feedback_round_4/ANSWERS.md</code>.
+  </div>
+
+  <h2>Root causes found</h2>
+  <div class="cols">
+    <div class="card"><h3>Bug #7 — field spell kills field UI</h3>
+      ocgcore addresses field-spell zone as <code>spellTrap</code> seq 5.
+      <code>mapEngineFieldAddress</code> rejects seq&gt;4 → <code>unsupported_fixed_card</code> →
+      board unmounts → "Duel field unavailable" + dialog for everything. Fix in <code>duel-field-layout.ts</code> (T1).</div>
+    <div class="card"><h3>Bug #8 — unsupported_message abort</h3>
+      Thrown only in <code>HeadlessDuelController</code> (no supported prompt / multi-prompt batch / reconcile fail).
+      Non-recoverable → duel dies. Repro with programmed spellbook duel, trace names the message, then support it (T2).</div>
+    <div class="card"><h3>Deck search shows backs</h3>
+      Target list trusts projection only (ADR-014); projection never knows deck contents (ADR-008).
+      But prompt cards carry own-card codes legally → prompt-attested fallback, controller 0 only (T3, ADR-029).</div>
+    <div class="card"><h3>Hand zoom clipped</h3>
+      Hand band scrollport clips any in-place scale. Same fix family as drag ghost:
+      <code>position:fixed</code> overlay layer, chips above art, pointer-only (T7, ADR-032).</div>
+  </div>
+
+  <h2>Dependencies</h2>
+  <div class="flow">
+    <span class="node"><b>T1</b> field spell fix</span><span class="arrow">→</span>
+    <span class="node"><b>T2</b> unsupported_message</span>
+    <span class="arrow">&nbsp;·&nbsp;</span>
+    <span class="node"><b>T6</b> zoom gating</span><span class="arrow">→</span>
+    <span class="node"><b>T7</b> zoom overlay</span>
+    <span class="arrow">&nbsp;·&nbsp;</span>
+    <span class="node"><b>T12</b> list dialog fixes</span><span class="arrow">→</span>
+    <span class="node"><b>T14</b> halo v2</span>
+  </div>
+  <p class="k">T3 T4 T5 T8 T9 T10 T11 T13 T15 independent.</p>
+
+  <h2>Tickets</h2>
+  <table>
+    <tr><th>ID</th><th>Type</th><th>Outcome</th><th>Main files</th><th class="dep">Dep</th></tr>
+    <tr><td><b>T1</b></td><td><span class="tag bug">bug</span></td><td>Field spell keeps field mounted (spellTrap seq 5 → field zone)</td><td><code>duel-field-layout.ts</code>, <code>PromptRegistry.ts</code></td><td class="dep">—</td></tr>
+    <tr><td><b>T2</b></td><td><span class="tag bug">bug</span></td><td>Spellbook duel survives; unsupported engine flow supported</td><td><code>HeadlessDuelController.ts</code>, <code>PromptRegistry.ts</code></td><td class="dep">T1</td></tr>
+    <tr><td><b>T3</b></td><td><span class="tag bug">bug</span></td><td>Deck search lists real faces + names (PRIVATE state)</td><td><code>interaction-spec.ts</code>, <code>off-field-target-list.ts</code></td><td class="dep">—</td></tr>
+    <tr><td><b>T4</b></td><td><span class="tag feat">rule</span></td><td>Private pile tops face-down (extra deck = deck)</td><td><code>board-view-model.ts</code>, <code>StackControl.svelte</code></td><td class="dep">—</td></tr>
+    <tr><td><b>T5</b></td><td><span class="tag ux">ux</span></td><td>Hand cards centered, scroll intact</td><td><code>app.css</code></td><td class="dep">—</td></tr>
+    <tr><td><b>T6</b></td><td><span class="tag ux">ux</span></td><td>Unknown face-down never zooms; known keeps name label</td><td><code>CardControl.svelte</code>, <code>app.css</code></td><td class="dep">—</td></tr>
+    <tr><td><b>T7</b></td><td><span class="tag ux">ux</span></td><td>Hand hover zoom (subtle 1.6×) escapes all UI; buttons above card</td><td><code>HandZoomOverlay.svelte</code> (new), <code>DuelField.svelte</code></td><td class="dep">T6</td></tr>
+    <tr><td><b>T8</b></td><td><span class="tag feat">feat</span></td><td>Full Control checkbox + Ctrl hold; own-effect + own-action windows auto-pass when off</td><td><code>ui-settings-store.ts</code>, <code>auto-response.ts</code>, <code>App.svelte</code></td><td class="dep">—</td></tr>
+    <tr><td><b>T9</b></td><td><span class="tag ux">ux</span></td><td>No Inspect expanders in decision surfaces</td><td><code>PromptControls.svelte</code></td><td class="dep">—</td></tr>
+    <tr><td><b>T10</b></td><td><span class="tag ux">ux</span></td><td>Rail: header rule, fat-border avatars, "LP 8000" plates w/ green→orange→red states + count animation, centered status</td><td><code>DuelRail.svelte</code>, <code>app.css</code></td><td class="dep">—</td></tr>
+    <tr><td><b>T11</b></td><td><span class="tag ux">ux</span></td><td>Preview keeps last known card on hidden hover</td><td><code>App.svelte</code>, <code>card-preview.ts</code></td><td class="dep">—</td></tr>
+    <tr><td><b>T12</b></td><td><span class="tag ux">ux</span></td><td>List cards upright; "Select between 1 and 1" gone</td><td><code>app.css</code>, <code>ZoneListDialog.svelte</code></td><td class="dep">—</td></tr>
+    <tr><td><b>T13</b></td><td><span class="tag feat">feat</span></td><td>Launcher click toggles target-list collapse, never dismisses</td><td><code>DuelField.svelte</code>, <code>ZoneListDialog.svelte</code></td><td class="dep">—</td></tr>
+    <tr><td><b>T14</b></td><td><span class="tag ux">ux</span></td><td>Halo v2 everywhere incl. field red on hover during targeting</td><td><code>app.css</code>, <code>DuelField.svelte</code>, acceptance specs</td><td class="dep">T12</td></tr>
+    <tr><td><b>T15</b></td><td><span class="tag feat">feat</span></td><td>Preview panel stats row (attr · type · level · ATK/DEF)</td><td><code>card-preview.ts</code>, <code>CardPreviewPanel.svelte</code></td><td class="dep">—</td></tr>
+  </table>
+
+  <h2>Halo language (T14 / ADR-031)</h2>
+  <div class="halo">
+    <span class="swatch"><span class="dot" style="background:var(--green)"></span>green = can trigger / legal target</span>
+    <span class="swatch"><span class="dot" style="background:var(--orange)"></span>orange = selected</span>
+    <span class="swatch"><span class="dot" style="background:var(--red)"></span>red = invalid target (list + field hover)</span>
+    <span class="swatch"><span class="dot" style="background:#3b4a63"></span>neutral = no halo</span>
+  </div>
+
+  <h2>Key decisions (ADRs)</h2>
+  <div class="cols">
+    <div class="card"><h3>ADR-028 Full Control</h3>Off (default): windows attributed to you auto-pass — chain tail yours, or empty chain + last action event yours (fallback turn player). Opponent action + activatable = always prompt. On (or Ctrl held): all auto-answers off. Session-only.</div>
+    <div class="card"><h3>ADR-029 Prompt-attested identity</h3>Search prompts carry own-card codes legally → target list falls back to them when projection silent. Controller 0 only. Dies with the prompt (shuffle).</div>
+    <div class="card"><h3>ADR-030 Private pile tops</h3>Deck + extra: card-back top both seats. GY/banished keep face-up top. Owner still browses freely.</div>
+    <div class="card"><h3>ADR-031 Halo v2</h3>Green/orange/red as above; neutral bare; red also on field cards during targeting, hover-only; keyboard focus ring stays neutral.</div>
+    <div class="card"><h3>ADR-032 Zoom overlay</h3>Fixed layer <code>--duel-field-layer-hand-zoom:140</code>, pointer-only, <b>1.6× subtle</b>, chips above art, keyboard keeps pin flow.</div>
+  </div>
+
+  <h2>Verification per ticket</h2>
+  <ul>
+    <li>TDD everywhere: red test → min fix → green. Test names + exact assertions in each ticket file.</li>
+    <li>Engine bugs: integration tests on real WASM (<code>npm run test:integration</code>), trace-driven diagnosis.</li>
+    <li>Geometry/CSS: acceptance harness (<code>npx playwright test -c playwright.acceptance.config.ts</code>) with <code>boundingBox</code>/computed-style asserts.</li>
+    <li>Logic/UI: <code>npm run test:unit</code> / <code>npm run test:component</code>; data-cy gate covers every new element.</li>
+    <li>Gate before commit: <code>npm run check:headless</code>.</li>
+  </ul>
+</main>
+</body>
+</html>

@@ -14,7 +14,7 @@ import { browserRuntimeAssetsPlugin } from "./scripts/lib/vite-runtime-assets.ts
 import { syncOnlyVendoredCorePlugin } from "./scripts/lib/vite-sync-core.ts";
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
-const developmentPort = Number(process.env.DEV_PORT ?? "4300");
+const developmentPort = Number(process.env.DEV_PORT ?? "4202");
 if (!Number.isSafeInteger(developmentPort) || developmentPort <= 0) {
   throw new Error("DEV_PORT must be a positive integer");
 }

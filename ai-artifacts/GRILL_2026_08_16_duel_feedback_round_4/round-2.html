@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Two follow-ups: own-action attribution and preview stats</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b0a08; --panel:#17130d; --panel-2:#1f190f; --text:#fff7ed; --muted:#c9b99f; --line:#4a3b25; --accent:#fbbf24; --accent-2:#fb923c; --focus:#facc15; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    main { width:min(960px,calc(100% - 32px)); margin:0 auto; padding:48px 0 96px; }
+    header { display:grid; gap:12px; margin-bottom:32px; }
+    .eyebrow { color:var(--accent); font-size:.75rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+    h1,h2,p { margin:0; } h1 { font-size:clamp(2rem,5vw,3.5rem); line-height:1.08; letter-spacing:-.035em; }
+    .lede { max-width:70ch; color:var(--muted); }
+    .tree { display:flex; align-items:center; gap:8px; overflow:auto; padding:16px; margin:24px 0 32px; border:1px solid var(--line); border-radius:12px; background:var(--panel); color:var(--muted); white-space:nowrap; }
+    .tree b { color:var(--text); } .node { padding:6px 10px; border:1px solid var(--line); border-radius:999px; } .node.active { border-color:var(--accent); color:var(--accent); } .arrow { color:var(--line); }
+    .visuals { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:0 0 32px; }
+    figure { min-width:0; margin:0; padding:18px; border:1px solid var(--line); border-radius:14px; background:var(--panel); }
+    figcaption { margin-bottom:14px; color:var(--muted); font-size:.85rem; } figcaption b { display:block; color:var(--text); font-size:1rem; }
+    svg { display:block; width:100%; height:auto; } svg text { font-family:ui-sans-serif,system-ui,sans-serif; }
+    .svg-node { fill:var(--panel-2); stroke:var(--line); stroke-width:2; } .svg-node.active { stroke:var(--accent); } .svg-line { fill:none; stroke:var(--line); stroke-width:2; } .svg-arrow { fill:var(--line); } .svg-label { fill:var(--text); font-size:12px; } .svg-note { fill:var(--muted); font-size:10px; } .svg-accent { fill:var(--accent); }
+    form { display:grid; gap:20px; }
+    fieldset { min-width:0; margin:0; padding:24px; border:1px solid var(--line); border-radius:16px; background:var(--panel); }
+    legend { max-width:100%; padding:0 8px; font-size:1.15rem; font-weight:750; }
+    .why { margin:0 0 18px; color:var(--muted); font-size:.925rem; }
+    .choices { display:grid; gap:10px; }
+    .choice { display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:start; padding:14px; border:1px solid var(--line); border-radius:10px; background:var(--panel-2); cursor:pointer; }
+    .choice:has(input:checked) { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
+    input { width:18px; height:18px; margin-top:3px; accent-color:var(--accent); }
+    .rank { display:inline-block; margin-left:7px; color:var(--accent-2); font-size:.72rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+    .detail { display:block; margin-top:3px; color:var(--muted); font-size:.875rem; }
+    label.precision { display:block; margin-top:18px; font-size:.85rem; font-weight:700; color:var(--muted); }
+    textarea { width:100%; min-height:90px; margin-top:7px; padding:12px; resize:vertical; border:1px solid var(--line); border-radius:10px; background:#100d08; color:var(--text); font:inherit; }
+    input:focus-visible,textarea:focus-visible,button:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
+    .actions { position:sticky; bottom:16px; display:flex; gap:12px; align-items:center; justify-content:space-between; padding:14px; border:1px solid var(--line); border-radius:14px; background:rgba(19,23,28,.96); box-shadow:0 16px 40px #0008; backdrop-filter:blur(10px); }
+    button { padding:11px 16px; border:0; border-radius:9px; background:var(--accent); color:#211500; font:inherit; font-weight:800; cursor:pointer; }
+    #status { color:var(--muted); font-size:.875rem; }
+    @media (max-width:700px) { .visuals { grid-template-columns:1fr; } }
+    @media (max-width:600px) { main { width:min(100% - 20px,960px); padding-top:28px; } fieldset { padding:18px 14px; } .actions { align-items:flex-start; flex-direction:column; } button { width:100%; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="eyebrow">Grill me · Round 2 · Chain attribution + preview parity</span>
+    <h1>Two follow-ups: own-action attribution and preview stats</h1>
+    <p class="lede">Your round-1 answers settled 10 decisions and unblocked exactly two. Fact found meanwhile: the engine's chain window carries NO "who acted" field — but presentation events (summon/attack/turnStarted) do carry the actor, so the client can attribute windows itself. Also, parity check you asked for: the old Inspect showed only card image + effect text; the preview panel already shows image + name + effect — nothing missing, but explicit ATK/DEF/Level/Type stats exist nowhere as text (only inside the art).</p>
+  </header>
+
+  <nav class="tree" aria-label="Design tree progress">
+    <b class="node">Feedback R4</b>
+    <span class="arrow">→</span>
+    <span class="node">Round 1: 10 settled</span>
+    <span class="arrow">→</span>
+    <span class="node active">Own-action attribution</span>
+    <span class="node active">Preview stats row</span>
+  </nav>
+
+  <section class="visuals" aria-label="Technical context">
+    <figure role="img" aria-labelledby="fig1-title fig1-desc">
+      <figcaption><b id="fig1-title">Empty-chain window: who gets blamed?</b><span id="fig1-desc">The engine gives timing hints only; the actor must come from the presentation stream or the turn player.</span></figcaption>
+      <svg viewBox="0 0 420 240">
+        <title>Attribution flow</title>
+        <desc>Chain window with empty chain resolves its actor from the last action event, falling back to the turn player.</desc>
+        <rect class="svg-node" x="120" y="8" width="180" height="26" rx="8"/>
+        <text class="svg-label" x="210" y="25" text-anchor="middle">chain window (chain empty)</text>
+        <path class="svg-line" d="M210 34 V54"/>
+        <rect class="svg-node active" x="90" y="54" width="240" height="26" rx="8"/>
+        <text class="svg-label" x="210" y="71" text-anchor="middle">action event since turn start?</text>
+        <path class="svg-line" d="M120 80 V104 M300 80 V104"/>
+        <text class="svg-note" x="105" y="96" text-anchor="middle">yes</text>
+        <text class="svg-note" x="315" y="96" text-anchor="middle">no</text>
+        <rect class="svg-node" x="30" y="104" width="180" height="26" rx="8"/>
+        <text class="svg-label" x="120" y="121" text-anchor="middle">actor = event.player</text>
+        <rect class="svg-node" x="220" y="104" width="170" height="26" rx="8"/>
+        <text class="svg-label" x="305" y="121" text-anchor="middle">actor = turn player</text>
+        <path class="svg-line" d="M120 130 V158 H210 M305 130 V158 H210 M210 158 V172"/>
+        <rect class="svg-node active" x="100" y="172" width="220" height="26" rx="8"/>
+        <text class="svg-label" x="210" y="189" text-anchor="middle">actor == you → auto-pass (FC off)</text>
+        <path class="svg-line" d="M210 198 V212"/>
+        <rect class="svg-node" x="110" y="212" width="200" height="26" rx="8"/>
+        <text class="svg-label" x="210" y="229" text-anchor="middle">actor == opponent → prompt</text>
+      </svg>
+    </figure>
+    <figure role="img" aria-labelledby="fig2-title fig2-desc">
+      <figcaption><b id="fig2-title">Preview panel today vs optional stats row</b><span id="fig2-desc">Panel already renders art, name and effect text; a stats row would be a new addition, not a parity fix.</span></figcaption>
+      <svg viewBox="0 0 420 240">
+        <title>Preview panel anatomy</title>
+        <desc>Panel layout with existing sections and one dashed optional stats row between name and effect text.</desc>
+        <rect class="svg-node" x="30" y="10" width="160" height="220" rx="10"/>
+        <rect class="svg-node" x="45" y="25" width="130" height="90" rx="6"/>
+        <text class="svg-label" x="110" y="74" text-anchor="middle">card art</text>
+        <rect class="svg-node" x="45" y="125" width="130" height="22" rx="6"/>
+        <text class="svg-label" x="110" y="140" text-anchor="middle">name ✓</text>
+        <rect class="svg-node active" x="45" y="153" width="130" height="22" rx="6" stroke-dasharray="5 4"/>
+        <text class="svg-label" x="110" y="168" text-anchor="middle">stats row ?</text>
+        <rect class="svg-node" x="45" y="181" width="130" height="38" rx="6"/>
+        <text class="svg-label" x="110" y="203" text-anchor="middle">effect text ✓</text>
+        <text class="svg-note" x="300" y="60" text-anchor="middle">Inspect (removed) had:</text>
+        <text class="svg-note" x="300" y="78" text-anchor="middle">image + effect text only</text>
+        <text class="svg-note" x="300" y="110" text-anchor="middle">→ parity already met</text>
+        <text class="svg-note" x="300" y="150" text-anchor="middle">ATK/DEF/Level/Type as text:</text>
+        <text class="svg-note" x="300" y="168" text-anchor="middle">nowhere today (art only)</text>
+      </svg>
+    </figure>
+  </section>
+
+  <form id="questions">
+    <fieldset data-question="Empty-chain window: how is 'your own action' attributed?">
+      <legend>1. Empty-chain window: how is "your own action" attributed?</legend>
+      <p class="why">Engine sends no actor for chain windows; this rule decides which windows silently pass when Full Control is off (chain-tail-yours already settled).</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Actor = player of the last summon/flip/set/position/attack presentation event; if none since turn start, actor = turn player. Auto-pass when actor is you"><span><b>Last action event, fallback turn player</b><span class="rank">Recommended</span><span class="detail">Covers summons, attacks AND your own phase-change windows (your turn = your tempo); opponent's turn windows always prompt.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Actor = only explicit summon/attack events; phase-change windows with no preceding action always prompt when activatable"><span><b>Explicit actions only</b><span class="rank">Second</span><span class="detail">More conservative: your own end-phase windows would still interrupt you.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Drop the empty-chain extension: only chain-tail-yours auto-passes; every empty-chain window prompts when activatable"><span><b>Chain-tail only</b><span class="rank">Third</span><span class="detail">Simplest + safest, but keeps the noise you asked to remove (prompt after your own summon).</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. recommended, but also auto-pass windows during my own turn phases with no activatable trap-type cards…"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Preview panel: add a structured stats row (ATK/DEF/Level/Attribute/Type)?">
+      <legend>2. Preview panel: add a structured stats row (ATK/DEF/Level/Attribute/Type)?</legend>
+      <p class="why">You asked to be told if anything is missing: vs the removed Inspect — nothing. But stats-as-text never existed; today they are only readable off the card art.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="No stats row — art + name + effect is enough (parity confirmed, nothing to add)"><span><b>No stats row</b><span class="rank">Recommended</span><span class="detail">Zero new work; matches your 'should be enough' framing since the art shows stats.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Add a stats row (ATK/DEF/Level/Attribute/Type) to the preview panel — new ticket appended to the plan"><span><b>Add stats row (new ticket)</b><span class="rank">Second</span><span class="detail">Readable at small art sizes / placeholder art; needs stat data plumbed into the packaged card texts (new data path).</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. add later, log as backlog item outside this plan"></textarea></label>
+    </fieldset>
+
+    <div class="actions">
+      <span id="status" role="status">Selections stay in this page until copied.</span>
+      <button type="button" id="copy-summary">Copy answer summary</button>
+    </div>
+  </form>
+</main>
+<script>
+  const button = document.querySelector('#copy-summary');
+  const status = document.querySelector('#status');
+
+  function buildSummary() {
+    const sections = [...document.querySelectorAll('fieldset[data-question]')].map((field, index) => {
+      const question = field.dataset.question;
+      const selected = [...field.querySelectorAll('input[type="checkbox"]:checked')].map(input => `- ${input.value}`);
+      const precision = field.querySelector('textarea').value.trim();
+      const answers = selected.length ? selected.join('\n') : '- No recommended answer selected';
+      return `${index + 1}. ${question}\n${answers}${precision ? `\nPrecision: ${precision}` : ''}`;
+    });
+    return `Round 2 · Chain attribution + preview parity — Two follow-ups: own-action attribution and preview stats\n\n${sections.join('\n\n')}`;
+  }
+
+  button.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(buildSummary());
+      status.textContent = 'Summary copied to clipboard.';
+    } catch (_) {
+      const fallback = document.createElement('textarea');
+      fallback.value = buildSummary();
+      document.body.appendChild(fallback);
+      fallback.select();
+      document.execCommand('copy');
+      fallback.remove();
+      status.textContent = 'Summary copied to clipboard.';
+    }
+  });
+</script>
+</body>
+</html>

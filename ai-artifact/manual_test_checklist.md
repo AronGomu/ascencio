@@ -56,3 +56,16 @@ State + persistence only — no shop UI exists yet, so every check below is done
 - [ ] Gear button (top-right) is accessible from the greeting screen
 - [ ] Double-clicking the stage does not advance two beats at once (only one advance per click event)
 - [ ] Old-arena and archive map hotspots still route to the pre-battle screen as before
+
+## T6 story_top_bar
+
+- [ ] Run `npm run dev`, open `#/story`; verify NO top bar (`data-cy="story-top-bar"`) is visible on the title screen
+- [ ] Start New Game; narrative screen shows top-left bar with `1000 DP` text, a shop bag icon, and a deck icon
+- [ ] Click the shop icon; greeting screen opens ("Welcome in. Shipment day"); the shop icon is now hidden (bar still shows DP + deck icon only)
+- [ ] Click "Leave Shop" on the greeting screen; returns to the map; top bar shows again with shop icon
+- [ ] Navigate to the map; top bar shows `1000 DP`, shop icon, and deck icon
+- [ ] Click the deck icon; browser navigates to `#/decks`; pressing Back returns to `#/story` (story state retained in memory)
+- [ ] Verify title, load, pre-battle, battle-mock, outcome, reward, and end screens do NOT show the top bar
+- [ ] Inspect element: shop button has `aria-label="Open shop"`, deck button has `aria-label="Open deck builder"`, icons carry `aria-hidden="true"`
+- [ ] `data-cy="story-top-bar-shop"` absent while on any `shop-*` screen; present on narrative and map
+- [ ] Gear menu (top-right) still opens on map/pre-battle as before; no visual overlap with top bar

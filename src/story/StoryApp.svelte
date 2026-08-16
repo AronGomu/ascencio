@@ -23,6 +23,7 @@
   import SaveLoadOverlay from "./overlays/SaveLoadOverlay.svelte";
   import SettingsOverlay from "./overlays/SettingsOverlay.svelte";
   import GearIcon from "./components/icons/GearIcon.svelte";
+  import StoryTopBar from "./components/StoryTopBar.svelte";
   import BattleHandoffScreen from "./screens/BattleHandoffScreen.svelte";
   import IllustratedMapScreen from "./screens/IllustratedMapScreen.svelte";
   import LoadScreen from "./screens/LoadScreen.svelte";
@@ -173,6 +174,9 @@
     });
   });
 
+  $: inShop = state.screen.startsWith("shop-");
+  $: topBarVisible =
+    inShop || state.screen === "narrative" || state.screen === "map";
   $: applyResolution(resolution);
   $: encounterLabel =
     state.encounterId === null
@@ -407,6 +411,13 @@
 </script>
 
 <div class="story-app" data-cy="story-app" bind:this={root}>
+  {#if topBarVisible}
+    <StoryTopBar
+      dp={state.dp}
+      {inShop}
+      onshop={() => dispatch({ type: "open-shop" })}
+    />
+  {/if}
   {#if storageOperationError}
     <section
       class="storage-error"

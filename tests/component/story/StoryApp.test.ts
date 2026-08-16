@@ -79,6 +79,56 @@ describe("StoryApp", () => {
   /* Story styling has to stay inside its own root: the shell mounts duel and
      deck editor in the same document, so a bare `button`/`body` rule would
      repaint them. */
+  it("top bar rides narrative, map and shop, not title", async () => {
+    // title: absent
+    const { container: titleContainer } = render(StoryApp);
+    expect(
+      titleContainer.querySelector('[data-cy="story-top-bar"]'),
+    ).toBeNull();
+    cleanup();
+
+    // narrative: present
+    const narrativeState = {
+      ...createInitialStoryState(),
+      screen: "narrative" as const,
+      savedScreen: "narrative" as const,
+    };
+    const { container: narrativeContainer } = render(StoryApp, {
+      resumeState: narrativeState,
+    });
+    expect(
+      narrativeContainer.querySelector('[data-cy="story-top-bar"]'),
+    ).not.toBeNull();
+    cleanup();
+
+    // map: present
+    const mapState = {
+      ...createInitialStoryState(),
+      screen: "map" as const,
+      savedScreen: "map" as const,
+    };
+    const { container: mapContainer } = render(StoryApp, {
+      resumeState: mapState,
+    });
+    expect(
+      mapContainer.querySelector('[data-cy="story-top-bar"]'),
+    ).not.toBeNull();
+    cleanup();
+
+    // shop-greeting: present
+    const shopState = {
+      ...createInitialStoryState(),
+      screen: "shop-greeting" as const,
+      savedScreen: "shop-greeting" as const,
+    };
+    const { container: shopContainer } = render(StoryApp, {
+      resumeState: shopState,
+    });
+    expect(
+      shopContainer.querySelector('[data-cy="story-top-bar"]'),
+    ).not.toBeNull();
+  });
+
   it("renders under a single scoping root element", () => {
     const { container } = render(StoryApp);
     expect(container.querySelector(".story-app")).not.toBeNull();

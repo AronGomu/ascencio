@@ -1064,3 +1064,11 @@ rather than the fixture's handful.
       `scripts/lib/domain-chunk-closure.ts`. The battle domain *shrank* from
       405,950 to 365,853 because the same change ended a three-way duplication
       of the card-text manifest inside its closure; its ceiling was not touched.
+
+## T1 catalog-real-card-art
+
+- [ ] Run `npm run dev`, open `http://localhost:5173/#/decks`.
+- [ ] Open a saved deck in the editor; confirm card tiles display real card art (jpg images, not glyph placeholders).
+- [ ] Search the catalog for a known card (e.g. "Blue-Eyes White Dragon"); confirm the result tile shows the card image.
+- [ ] Click a card to open the detail/preview panel; confirm the art renders at full preview size.
+- [ ] Confirm cards without packaged art (if any) show a fallback/placeholder rather than a broken image.

@@ -14,6 +14,21 @@ import { packagedCatalog } from "./packaged-catalog.ts";
  * whatever a host had defined the moment this module was first imported —
  * which, in a component test that sets them up around a render, is nothing.
  */
+function buildImageUrlMap(): ReadonlyMap<number, string> {
+  if (typeof __ACTIVE_IMAGE_MANIFEST__ === "undefined") return new Map();
+  const base = import.meta.env.BASE_URL;
+  return new Map(
+    __ACTIVE_IMAGE_MANIFEST__.files.map((file) => [
+      file.code,
+      `${base}runtime/images/${file.path}`,
+    ]),
+  );
+}
+
 export function activeCatalog(): readonly DeckBuilderCardView[] {
-  return packagedCatalog(__ACTIVE_CARD_DATA__, __ACTIVE_CARD_TEXTS__);
+  return packagedCatalog(
+    __ACTIVE_CARD_DATA__,
+    __ACTIVE_CARD_TEXTS__,
+    buildImageUrlMap(),
+  );
 }

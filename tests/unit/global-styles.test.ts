@@ -303,12 +303,12 @@ describe("global styles", () => {
     expect(list).toContain("transition: transform 120ms ease-out");
     const fieldHover = ruleBlock(
       css,
-      ".duel-field-card:not(.is-hand-item):not(.is-pinned):is(:hover, :focus-within) {",
+      ".duel-field-card.is-identity-known:not(.is-hand-item):not(.is-pinned):is(\n    :hover,\n    :focus-within\n  ) {",
     );
     expect(fieldHover).toContain("scale(1.35)");
     const handHover = ruleBlock(
       css,
-      ".duel-field-card.is-hand-item:not(.is-pinned):is(:hover, :focus-within) {",
+      ".duel-field-card.is-identity-known.is-hand-item:not(.is-pinned):is(\n    :hover,\n    :focus-within\n  ) {",
     );
     expect(handHover).toContain("scale(1.35)");
     const listSelector =

@@ -1142,3 +1142,13 @@ fix in a browser, which no automated suite covers.
 - [ ] Open the duel at `http://localhost:4173` (or dev server) with a 5-card starting hand — the hand cluster is horizontally centered under the duel field middle (visually sits in the center of the hand band, not packed to the left).
 - [ ] Draw cards until the hand overflows (≥ 10–12 cards at 1920×1080) — the scrollbar appears and scrolling left/right reaches both the first and last card.
 - [ ] Opponent hand (top band) with 5 cards also appears centered.
+
+## T6 zoom-gating-known-facedown
+
+- [ ] Run `npm run dev` and open the duel at `http://localhost:4173` (or configured dev port).
+- [ ] Hover over an opponent's set (face-down) card on the spell/trap row — the card must NOT zoom (no scale-up) and must show NO name label at the bottom.
+- [ ] Hover over an opponent's face-down monster — same: no zoom, no label.
+- [ ] Hover over your own set card (face-down spell/trap) — the card MUST zoom (scale 1.35) and MUST show the card name label at the bottom.
+- [ ] Hover over a face-up card (own or opponent's visible) — zoom and label both present (regression check).
+- [ ] Hover over cards in the opponent hand band — no zoom, no label (opponent hand cards have no code).
+- [ ] Confirm the browser console shows no errors during the above.

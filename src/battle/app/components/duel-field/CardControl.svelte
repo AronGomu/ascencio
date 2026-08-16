@@ -237,6 +237,7 @@
   class:is-pinned={pinned}
   class:is-selected={selected}
   class:is-navigation-active={active}
+  class:is-identity-known={card.code !== undefined}
   class:is-hand-item={layout === "hand"}
   class="duel-field-card"
   aria-label={accessibleLabel}
@@ -262,7 +263,7 @@
       data-cy={`card-control-image-${card.id}`}
     />
   </div>
-  {#if !card.hidden}
+  {#if card.code !== undefined}
     <span
       class="duel-field-card__label"
       aria-hidden="true"

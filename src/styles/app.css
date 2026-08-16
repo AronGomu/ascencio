@@ -1778,7 +1778,10 @@ button.duel-field-zone,
    the keyboard-walker e2e's hundreds of focus moves past its time budget.
    Pin/menu z-layering (above) is unaffected — only the visual scale is
    skipped while pinned. */
-.duel-field-card:not(.is-hand-item):not(.is-pinned):is(:hover, :focus-within) {
+.duel-field-card.is-identity-known:not(.is-hand-item):not(.is-pinned):is(
+    :hover,
+    :focus-within
+  ) {
   transform: translate(-50%, -50%) scale(1.35);
 }
 
@@ -1805,7 +1808,10 @@ button.duel-field-zone,
 }
 
 /* Same pin exclusion as the field/zone rule above. */
-.duel-field-card.is-hand-item:not(.is-pinned):is(:hover, :focus-within) {
+.duel-field-card.is-identity-known.is-hand-item:not(.is-pinned):is(
+    :hover,
+    :focus-within
+  ) {
   transform: scale(1.35);
 }
 
@@ -2115,14 +2121,17 @@ button.card-action-chip:hover:not(:disabled) {
     transition: none;
   }
 
-  .duel-field-card:not(.is-hand-item):not(.is-pinned):is(
+  .duel-field-card.is-identity-known:not(.is-hand-item):not(.is-pinned):is(
       :hover,
       :focus-within
     ) {
     transform: translate(-50%, -50%);
   }
 
-  .duel-field-card.is-hand-item:not(.is-pinned):is(:hover, :focus-within) {
+  .duel-field-card.is-identity-known.is-hand-item:not(.is-pinned):is(
+      :hover,
+      :focus-within
+    ) {
     transform: none;
   }
 }

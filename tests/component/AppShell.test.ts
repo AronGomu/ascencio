@@ -211,6 +211,49 @@ describe("AppShell", () => {
     );
   });
 
+  /* A domain whose chunk never arrives — a stale dev server missing a build
+     constant, a half-cached build, an offline reload — used to render nothing
+     at all, so the entry buttons looked like routes that lead to an empty
+     page. The region must say what failed and offer a way out instead. */
+  it.each([
+    ["duel", "#/duel", "decks" as const],
+    ["decks", "#/decks", "duel" as const],
+    ["story", "#/story", "duel" as const],
+  ])(
+    "reports a %s domain whose chunk fails to load",
+    async (domain, hash, other) => {
+      const failing = () =>
+        Promise.reject(new Error("__ACTIVE_CARD_DATA__ is not defined"));
+      render(AppShell, {
+        store: createShellStore(hash, () => {}),
+        loaders: {
+          ...loaders,
+          [domain]: failing,
+        } as unknown as DomainLoaders,
+      });
+
+      const error = await vi.waitFor(() => {
+        const found = document.querySelector(
+          `[data-cy="shell-domain-error-${domain}"]`,
+        );
+        expect(found).not.toBeNull();
+        return found!;
+      });
+      expect(error.textContent).toContain("__ACTIVE_CARD_DATA__");
+      expect(
+        error.querySelector(`[data-cy="shell-domain-error-retry-${domain}"]`),
+      ).not.toBeNull();
+      expect(
+        error.querySelector<HTMLAnchorElement>(
+          `[data-cy="shell-domain-error-home-${domain}"]`,
+        )?.hash,
+      ).toBe("#/");
+      expect(
+        document.querySelector(`[data-cy="shell-domain-error-${other}"]`),
+      ).toBeNull();
+    },
+  );
+
   it("publishes the stage mode on the stage element", () => {
     setViewport(800, 1000);
     renderAt("#/");

@@ -9,6 +9,7 @@
   import { createHandoffCoordinator } from "./handoff/handoff-coordinator.ts";
   import { STAGE_CONTEXT_KEY } from "./index.ts";
   import type { AppRoute } from "./routes.ts";
+  import DomainLoadError from "./screens/DomainLoadError.svelte";
   import HomeScreen from "./screens/HomeScreen.svelte";
   import type { BattleFacadeResult } from "../battle/index.ts";
   import type {
@@ -222,12 +223,16 @@
               deckId === null ? { kind: "decks" } : { kind: "deck", deckId },
             )}
         />
+      {:catch error}
+        <DomainLoadError label="Deck Editor" cy="decks" {error} />
       {/await}
     </div>
   {:else if route.kind === "admin"}
     <div class="shell-region shell-region--admin" data-cy="shell-region-admin">
       {#await import("./admin/AdminConsole.svelte") then module}
         <svelte:component this={module.default} {store} />
+      {:catch error}
+        <DomainLoadError label="Developer console" cy="admin" {error} />
       {/await}
     </div>
   {:else if route.kind === "story"}
@@ -242,6 +247,8 @@
             handback = null;
           }}
         />
+      {:catch error}
+        <DomainLoadError label="Visual novel" cy="story" {error} />
       {/await}
     </div>
   {:else}
@@ -267,6 +274,8 @@
             rotationNoticeDismissed={$settings.rotationNoticeDismissed}
             onrotationnoticedismiss={() => settings.dismissRotationNotice()}
           />
+        {:catch error}
+          <DomainLoadError label="Duel Simulator" cy="duel" {error} />
         {/await}
       {/if}
     </div>

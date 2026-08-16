@@ -7,6 +7,10 @@ export interface UiSettingsState {
   readonly autoResolveTrivialPrompts: boolean;
   readonly showZoneOutlines: boolean;
   readonly showZoneCounts: boolean;
+  /* Every core decision surfaces while this is on: no prompt is answered for
+     the player, not even a formality. Session-only, so a duel never starts
+     with the automations silently off. */
+  readonly fullControl: boolean;
 }
 
 export interface UiSettingsStore extends Readable<UiSettingsState> {
@@ -16,6 +20,7 @@ export interface UiSettingsStore extends Readable<UiSettingsState> {
   setAutoResolveTrivialPrompts(value: boolean): void;
   setShowZoneOutlines(value: boolean): void;
   setShowZoneCounts(value: boolean): void;
+  setFullControl(value: boolean): void;
   reset(): void;
 }
 
@@ -26,6 +31,7 @@ export const DEFAULT_UI_SETTINGS: UiSettingsState = Object.freeze({
   autoResolveTrivialPrompts: true,
   showZoneOutlines: true,
   showZoneCounts: true,
+  fullControl: false,
 });
 
 export function createUiSettingsStore(
@@ -56,6 +62,9 @@ export function createUiSettingsStore(
     },
     setShowZoneCounts(value: boolean): void {
       update((state) => Object.freeze({ ...state, showZoneCounts: value }));
+    },
+    setFullControl(value: boolean): void {
+      update((state) => Object.freeze({ ...state, fullControl: value }));
     },
     reset(): void {
       set(DEFAULT_UI_SETTINGS);

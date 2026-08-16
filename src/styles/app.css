@@ -910,12 +910,28 @@ li + li {
 }
 
 .duel-field-slot {
+  position: relative;
   width: calc(var(--stage-w, 100vw) - var(--preview-w) - var(--rail-min));
   min-width: 0;
   min-height: 0;
   display: grid;
   place-items: center;
   overflow: hidden;
+}
+
+/* Sits in the slot's corner rather than the board's, so the board's own
+   aspect-driven box never moves it, and it stays legible against whatever
+   the field paints behind it. */
+.full-control-toggle {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  z-index: var(--duel-field-layer-control);
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+  font-size: 0.7rem;
+  color: var(--muted);
 }
 
 .duel-field {

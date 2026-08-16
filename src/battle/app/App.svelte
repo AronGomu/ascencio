@@ -9,7 +9,10 @@
     type PromptId,
     type SnapshotId,
   } from "../duel/contracts/ids.ts";
-  import type { PublicCard } from "../duel/contracts/public-duel-state.ts";
+  import type {
+    PublicCard,
+    PublicDuelState,
+  } from "../duel/contracts/public-duel-state.ts";
   import {
     mapSnapshotToBoard,
     type BoardCardView,
@@ -28,6 +31,7 @@
   import SettingsDialog from "./components/SettingsDialog.svelte";
   import CardPreviewPanel from "./components/CardPreviewPanel.svelte";
   import DuelFieldErrorBoundary from "./components/duel-field/DuelFieldErrorBoundary.svelte";
+  import FullControlToggle from "./components/duel-field/FullControlToggle.svelte";
   import DuelHud from "./components/duel-field/DuelHud.svelte";
   import DuelLog from "./components/duel-field/DuelLog.svelte";
   import LoadingOverlay from "./components/LoadingOverlay.svelte";
@@ -49,7 +53,11 @@
   } from "../storage/snapshot-store.ts";
   import PromptControls from "./prompts/PromptControls.svelte";
   import PromptDialog from "./components/PromptDialog.svelte";
-  import { trivialPromptResponse } from "./prompts/auto-response.ts";
+  import {
+    lastActionActor,
+    ownEffectChainPassResponse,
+    trivialPromptResponse,
+  } from "./prompts/auto-response.ts";
   import { centralPlacementResponse } from "./prompts/auto-placement.ts";
   import { mapPromptToInteractionSpec } from "./prompts/interaction-spec.ts";
   import {
@@ -81,7 +89,11 @@
     toDuelDeckSelection,
     type BattleFacadeResult,
   } from "../battle-contracts.ts";
-  import { createDuelStore, type DuelViewState } from "./stores/duel-store.ts";
+  import {
+    createDuelStore,
+    type DuelViewState,
+    type SequencedPresentationEvent,
+  } from "./stores/duel-store.ts";
   import {
     DEFAULT_PERSISTED_UI_STATE,
     type PersistedWindowPosition,
@@ -158,6 +170,11 @@
   let imageWarning: string | null = null;
   let previewCard: CardPreviewView | null = null;
   let autoResolvedPromptId: PromptId | null = null;
+  /* Ctrl is a hold, not a mode: it raises Full Control for as long as it is
+     down and drops it on release, while the checkbox keeps whatever the
+     player set. A blurred window never sees the keyup, so blur clears it. */
+  let ctrlHeld = false;
+  $: effectiveFullControl = $uiSettings.fullControl || ctrlHeld;
   let injectDuelFieldFailure = false;
   let diagnosticPending = false;
   let diagnosticMessage: string | null = null;
@@ -526,6 +543,9 @@
     effectivePrompt,
     $duel.responsePending,
     $uiSettings,
+    effectiveFullControl,
+    $duel.snapshot,
+    $duel.presentationEvents,
   );
 
   /* The duel already ends in exactly two places — a result from the engine and
@@ -549,16 +569,31 @@
     prompt: PlayerPrompt | null,
     responsePending: boolean,
     settings: UiSettingsState,
+    fullControl: boolean,
+    snapshot: PublicDuelState | null,
+    events: readonly SequencedPresentationEvent[],
   ): void {
     if (prompt === null) {
       autoResolvedPromptId = null;
       return;
     }
     if (responsePending || autoResolvedPromptId === prompt.id) return;
+    /* Full Control answers nothing, and claims the prompt on the way out:
+       dropping Ctrl while the player is looking at a window must not hand
+       that same window to an automation behind their back. */
+    if (fullControl) {
+      autoResolvedPromptId = prompt.id;
+      return;
+    }
+    const actor = lastActionActor(
+      events.map(({ event }) => event),
+      snapshot?.turnPlayer ?? 0,
+    );
     const choiceIds =
       (settings.autoResolveTrivialPrompts
         ? trivialPromptResponse(prompt)
         : null) ??
+      ownEffectChainPassResponse(prompt, snapshot, actor) ??
       (settings.autoPlaceCards ? centralPlacementResponse(prompt) : null);
     if (choiceIds === null) return;
     autoResolvedPromptId = prompt.id;
@@ -943,11 +978,26 @@
     await tick();
     menubarTrigger?.focus();
   }
+
+  /* Held keys repeat, and every repeated keydown would otherwise reassign
+     `ctrlHeld` and re-run everything reading it, so only a real change is
+     written. */
+  function trackCtrlKey(event: KeyboardEvent): void {
+    if (event.key !== "Control") return;
+    const held = event.type === "keydown";
+    if (ctrlHeld !== held) ctrlHeld = held;
+  }
 </script>
 
 <svelte:head>
   <title>Preset Duel · YGO Story Duel Simulator</title>
 </svelte:head>
+
+<svelte:window
+  onkeydown={trackCtrlKey}
+  onkeyup={trackCtrlKey}
+  onblur={() => (ctrlHeld = false)}
+/>
 
 <main
   data-cy="app-main"
@@ -1176,6 +1226,10 @@
               onconfirmWindowPositionChange={moveConfirmWindow}
             />
           {/key}
+          <FullControlToggle
+            effective={effectiveFullControl}
+            onchange={uiSettings.setFullControl}
+          />
         </div>
       {:else if $duel.snapshot}
         <section

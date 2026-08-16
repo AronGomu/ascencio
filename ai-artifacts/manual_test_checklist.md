@@ -1166,3 +1166,18 @@ fix in a browser, which no automated suite covers.
 - [ ] Press Escape while a hand card has keyboard focus with chips pinned — in-place zoom appears (1.35× via focus-within) and chips are accessible; the fixed overlay is NOT shown.
 - [ ] Hover over an opponent hand card (face-down, no code) — NO overlay appears.
 - [ ] Confirm the browser console shows no errors during the above.
+
+## T8 full-control-toggle
+
+- [ ] Run `npm run dev` and open the duel at `http://localhost:4173` (or configured dev port); confirm a "Full Control" checkbox sits at the bottom-right corner of the duel field, unchecked.
+- [ ] With Full Control unchecked, activate one of your own Spell/Trap cards — no chain window appears for your own activation (the engine's own-effect chain window is auto-passed).
+- [ ] With Full Control unchecked, Normal Summon a monster — no extra response window appears after the summon resolves.
+- [ ] With Full Control unchecked and a Trap set on your field, let the opponent activate an effect or declare an attack — a chain window DOES appear so you can respond.
+- [ ] Hold Ctrl down: the checkbox visibly ticks while the key is held.
+- [ ] Keep Ctrl held and activate your own effect — the chain window now appears (auto-pass is suppressed).
+- [ ] Release Ctrl — the checkbox unticks again, and own-effect chain windows are auto-passed once more.
+- [ ] Click the checkbox to check it manually, then press and release Ctrl — the checkbox stays checked after the release (manual check survives the hold).
+- [ ] With Full Control checked, summon a monster — the placement (zone) prompt surfaces instead of auto-placing, and single-option prompts surface instead of being auto-answered.
+- [ ] With Full Control checked, uncheck it while a prompt you can already see is open — that visible prompt is NOT auto-answered behind your back; it stays until you answer it.
+- [ ] Focus the browser's address bar (or switch windows) while holding Ctrl, then return — the checkbox is unticked (blur clears the hold).
+- [ ] Confirm the browser console shows no errors during the above.

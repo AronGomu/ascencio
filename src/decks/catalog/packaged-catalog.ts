@@ -48,6 +48,8 @@ export function packagedCatalog(
   imageUrlByCode?: ReadonlyMap<number, string>,
 ): readonly DeckBuilderCardView[] {
   return Object.freeze(
-    packagedCatalogRecords(cards, texts, imageUrlByCode).map(mapDeckBuilderCard),
+    packagedCatalogRecords(cards, texts, imageUrlByCode).map(
+      mapDeckBuilderCard,
+    ),
   );
 }

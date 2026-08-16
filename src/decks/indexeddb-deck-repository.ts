@@ -1,5 +1,6 @@
 import { openDB, unwrap, type DBSchema, type IDBPDatabase } from "idb";
 import type {
+  DeckAutosaveRecord,
   DeckHistory,
   DeckId,
   DeckRecord,
@@ -10,6 +11,7 @@ import {
   createDeckStores,
   DECK_DATABASE_NAME,
   DECK_DATABASE_VERSION,
+  MAXIMUM_DECK_AUTOSAVES,
   migrateLegacyDeckDatabase,
   type DeckMigrationReport,
 } from "./deck-database.ts";
@@ -47,6 +49,11 @@ interface DeckDatabase extends DBSchema {
   preferences: {
     key: string;
     value: Readonly<{ key: string; value: string }>;
+  };
+  autosaves: {
+    key: string;
+    value: DeckAutosaveRecord;
+    indexes: { createdAt: string };
   };
 }
 
@@ -294,9 +301,74 @@ export class IndexedDbDeckRepository implements DeckRepository {
     }
   }
 
+  /* Append and trim share one transaction, so two edits racing each other
+     cannot both read a log of 100, both append, and leave 102 behind. */
+  async appendAutosave(record: DeckAutosaveRecord): Promise<void> {
+    validateAutosaveRecord(record);
+    const transaction = this.#database.transaction("autosaves", "readwrite");
+    try {
+      await transaction.store.add(record);
+      const oldestFirst = await transaction.store
+        .index("createdAt")
+        .getAllKeys();
+      const excess = oldestFirst.length - MAXIMUM_DECK_AUTOSAVES;
+      for (let index = 0; index < excess; index += 1)
+        await transaction.store.delete(oldestFirst[index]!);
+      await transaction.done;
+    } catch (error) {
+      await transaction.done.catch(() => undefined);
+      throw storageError("Unable to append an autosave entry", error);
+    }
+  }
+
+  async listAutosaves(): Promise<readonly DeckAutosaveRecord[]> {
+    try {
+      const values = await this.#database.getAllFromIndex(
+        "autosaves",
+        "createdAt",
+      );
+      const valid: DeckAutosaveRecord[] = [];
+      for (const value of values) {
+        try {
+          valid.push(validateAutosaveRecord(value));
+        } catch {
+          // The log is a convenience surface; one bad row must not hide the rest.
+        }
+      }
+      return Object.freeze(valid.reverse());
+    } catch (error) {
+      throw storageError("Unable to list autosave entries", error);
+    }
+  }
+
   close(): void {
     this.#database.close();
   }
+}
+
+function validateAutosaveRecord(
+  record: DeckAutosaveRecord,
+): DeckAutosaveRecord {
+  if (
+    !hasExactKeys(record, [
+      "createdAt",
+      "deckId",
+      "deckName",
+      "extra",
+      "id",
+      "main",
+      "side",
+    ]) ||
+    !validKey(record.id) ||
+    !validKey(record.deckId) ||
+    typeof record.deckName !== "string" ||
+    !validTimestamp(record.createdAt) ||
+    !validCardList(record.main) ||
+    !validCardList(record.extra) ||
+    !validCardList(record.side)
+  )
+    throw new DeckStorageError("Stored autosave entry is invalid");
+  return record;
 }
 
 function validateDeckRecord(deck: DeckRecord): DeckRecord {

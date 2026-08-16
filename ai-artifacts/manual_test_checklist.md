@@ -1265,3 +1265,36 @@ Buttons gone
 
 ### Status text gone
 - [ ] No raw status word ("valid", "warnings", "errors") appears as text in any deck row.
+
+## T12 autosave-log-storage
+
+### Version-1 → version-2 upgrade (do this first, on a database that already has decks)
+- [ ] On the **previous** build (before this commit: `git stash` your worktree or check out `8a60f54`), run `npm run dev`, open `http://localhost:4300/#/decks`, and create a deck named "Upgrade Survivor" with at least 5 cards in Main. Confirm DevTools → Application → IndexedDB shows `ygo-story-decks` at **version 1** with stores `decks`, `histories`, `preferences`.
+- [ ] Stop the dev server, return to this build, run `npm run dev` again, and **reload** `http://localhost:4300/#/decks`.
+- [ ] "Upgrade Survivor" is still in the Deck Library, opens, and still holds the same 5 cards. **Nothing was lost.**
+- [ ] DevTools → Application → IndexedDB now shows `ygo-story-decks` at **version 2**, with the original three stores plus a new empty `autosaves` store.
+
+### Prototype (legacy) database is never upgraded
+- [ ] With DevTools → Application → IndexedDB, delete `ygo-story-decks` entirely, then hand-create a database named `ygo-story-duel-deck-builder-prototype` at **version 1** holding one deck row (or reuse a real prototype database if you still have one).
+- [ ] Reload the deck editor. The prototype deck appears in the Deck Library, and `ygo-story-duel-deck-builder-prototype` is gone — migrated, not wiped.
+- [ ] At no point did the prototype database's version change to 2 before its decks arrived.
+
+### Autosave log records membership edits
+- [ ] Open a deck and add two cards. In DevTools → Application → IndexedDB → `ygo-story-decks` → `autosaves`, two rows appear, each with `deckName` set to the deck's current name, an ISO `createdAt`, and the `main`/`extra`/`side` lists as they were right after that edit.
+- [ ] Remove a card, then press Undo, then Redo. Each of those three actions adds one more row.
+- [ ] Rename the deck, then add a card. The new row carries the **new** name; the earlier rows still carry the old one.
+
+### Positional changes are not logged
+- [ ] Note the current row count in `autosaves`. Drag a card to a different position inside Main Deck, then use the Sort action.
+- [ ] The `autosaves` row count is **unchanged** — reordering and sorting append nothing.
+
+### 100-entry cap
+- [ ] Add and remove a card repeatedly (roughly 55 add/remove pairs) so the log passes 100 entries.
+- [ ] `autosaves` never holds more than **100** rows, and the rows that remain are the most recent ones (oldest `createdAt` values have been dropped).
+
+### Failed log never blocks a save
+- [ ] In DevTools → Application → IndexedDB, delete the `autosaves` store's contents and, while the editor is open, keep a second tab on the same page. Edit the deck.
+- [ ] The deck still saves ("Saved" state, edit persists across reload) even if an autosave row fails to appear. A broken log must never surface an error to the player.
+
+### Known risk to watch for (not fixed by this ticket)
+- [ ] Open the deck editor in **two** browser tabs at once on the old (version-1) database, then reload only one of them onto this build. If the upgrading tab appears to hang on load, that is the IndexedDB `blocked` event with no handler — close the other tab and reload. Report it if you hit it.

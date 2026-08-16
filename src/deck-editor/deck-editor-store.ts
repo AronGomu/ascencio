@@ -331,6 +331,10 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
             beforeImportedNeedsReview: before.importedNeedsReview,
             afterImportedNeedsReview: importedNeedsReview,
           });
+      /* A new history object is exactly the signal that which cards the deck
+         holds changed: `pushDeckUpdate` hands back the one it was given when
+         the multiset did not move, and positional commands never push at all. */
+      if (nextHistory !== state.current.history) this.#appendAutosave(nextDeck);
       await this.#save(nextDeck, nextHistory);
     });
   }
@@ -348,10 +352,13 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
         return;
       const result = undoDeckUpdate(current.history);
       if (result === null) return;
-      await this.#save(
-        this.#withCards(current.deck, result.cards, result.importedNeedsReview),
-        result.history,
+      const restored = this.#withCards(
+        current.deck,
+        result.cards,
+        result.importedNeedsReview,
       );
+      this.#appendAutosave(restored);
+      await this.#save(restored, result.history);
     });
   }
 
@@ -368,10 +375,13 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
         return;
       const result = redoDeckUpdate(current.history);
       if (result === null) return;
-      await this.#save(
-        this.#withCards(current.deck, result.cards, result.importedNeedsReview),
-        result.history,
+      const restored = this.#withCards(
+        current.deck,
+        result.cards,
+        result.importedNeedsReview,
       );
+      this.#appendAutosave(restored);
+      await this.#save(restored, result.history);
     });
   }
 
@@ -533,6 +543,23 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
 
   #createAndOpen(deck: DeckRecord, history: DeckHistory): Promise<StoredDeck> {
     return this.#repository.createAndOpen(deck, history);
+  }
+
+  /* Deliberately not awaited: the log records what the player did, and a log
+     that is slow, full, or broken must never fail or delay the edit it is
+     about. Deck data is what `#save` is for. */
+  #appendAutosave(deck: DeckRecord): void {
+    void this.#repository
+      .appendAutosave({
+        id: crypto.randomUUID(),
+        deckId: deck.id,
+        deckName: deck.name,
+        createdAt: new Date().toISOString(),
+        main: [...deck.main],
+        extra: [...deck.extra],
+        side: [...deck.side],
+      })
+      .catch(() => undefined);
   }
 
   #enqueue(operation: () => Promise<void>): Promise<void> {

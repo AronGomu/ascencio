@@ -1,4 +1,5 @@
 import type {
+  DeckAutosaveRecord,
   DeckHistory,
   DeckId,
   DeckRecord,
@@ -19,4 +20,7 @@ export interface DeckRepository {
   getLastOpened(): Promise<DeckId | null>;
   setLastOpened(id: DeckId): Promise<void>;
   clearLastOpened(expectedId?: DeckId): Promise<void>;
+  appendAutosave(record: DeckAutosaveRecord): Promise<void>;
+  /** The global autosave log, newest first. */
+  listAutosaves(): Promise<readonly DeckAutosaveRecord[]>;
 }

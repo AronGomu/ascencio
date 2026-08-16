@@ -13,13 +13,37 @@ import {
   PROTOTYPE_RULESET,
 } from "../../../src/decks/catalog/pinned-ruleset.ts";
 import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
-import type { DeckId, StoredDeck } from "../../../src/decks/deck-contracts.ts";
+import type {
+  DeckAutosaveRecord,
+  DeckId,
+  StoredDeck,
+} from "../../../src/decks/deck-contracts.ts";
 import type { DeckRepository } from "../../../src/decks/deck-repository.ts";
 
 const names: string[] = [];
 afterEach(async () =>
   Promise.all(names.splice(0).map((name) => deleteDB(name))),
 );
+
+/* Autosave appends are deliberately not awaited by the controller — a slow or
+   failing log must never hold up a deck save — so a test that wants to read the
+   log has to wait for the write it is about rather than assume it landed. */
+async function autosavesReaching(
+  repository: DeckRepository,
+  count: number,
+): Promise<readonly DeckAutosaveRecord[]> {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    const entries = await repository.listAutosaves();
+    if (entries.length >= count) return entries;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+  throw new Error(`The autosave log never reached ${String(count)} entries`);
+}
+
+const NO_AUTOSAVE_LOG = {
+  appendAutosave: async () => undefined,
+  listAutosaves: async () => [],
+} satisfies Pick<DeckRepository, "appendAutosave" | "listAutosaves">;
 
 describe("deck autosave controller", () => {
   it("keeps local edits visible after failure then retries autosave", async () => {
@@ -57,6 +81,7 @@ describe("deck autosave controller", () => {
       clearLastOpened: async () => {
         lastOpened = null;
       },
+      ...NO_AUTOSAVE_LOG,
     };
     const controller = new DeckBuilderController(
       repository,
@@ -121,6 +146,7 @@ describe("deck autosave controller", () => {
       getLastOpened: async () => first.deck.id,
       setLastOpened: async () => undefined,
       clearLastOpened: async () => undefined,
+      ...NO_AUTOSAVE_LOG,
     };
     const controller = new DeckBuilderController(
       repository,
@@ -161,6 +187,7 @@ describe("deck autosave controller", () => {
       getLastOpened: async () => null,
       setLastOpened: async () => undefined,
       clearLastOpened: async () => undefined,
+      ...NO_AUTOSAVE_LOG,
     };
     const controller = new DeckBuilderController(
       repository,
@@ -224,5 +251,60 @@ describe("deck autosave controller", () => {
     const reopened = await IndexedDbDeckRepository.open(name);
     expect((await reopened.load(id))?.deck.main).toEqual([89631139]);
     reopened.close();
+  });
+
+  it("each membership edit appends an autosave entry", async () => {
+    const name = "controller-autosave-log";
+    names.push(name);
+    const repo = await IndexedDbDeckRepository.open(name);
+    const controller = new DeckBuilderController(
+      repo,
+      catalogByCode(PROTOTYPE_CATALOG),
+      PROTOTYPE_RULESET,
+    );
+    await controller.initialize();
+    await controller.createDeck("Logged");
+    await controller.mutate({ type: "add", cardCode: 89631139 });
+    await controller.mutate({ type: "add", cardCode: 46986414 });
+
+    const entries = await autosavesReaching(repo, 2);
+    expect(entries).toHaveLength(2);
+    expect(entries.every(({ deckName }) => deckName === "Logged")).toBe(true);
+    /* Both edits are recorded, each with the cards the deck held at the time.
+       Compared as a set: two entries written inside one millisecond share a
+       timestamp, so their relative order is not defined. */
+    expect(entries.map(({ main }) => main.length).sort()).toEqual([1, 2]);
+    repo.close();
+  });
+
+  it("a reorder appends no autosave entry", async () => {
+    const name = "controller-autosave-positional";
+    names.push(name);
+    const repo = await IndexedDbDeckRepository.open(name);
+    const controller = new DeckBuilderController(
+      repo,
+      catalogByCode(PROTOTYPE_CATALOG),
+      PROTOTYPE_RULESET,
+    );
+    await controller.initialize();
+    await controller.createDeck("Positional");
+    await controller.mutate({ type: "add", cardCode: 89631139 });
+    await controller.mutate({ type: "add", cardCode: 46986414 });
+
+    await controller.mutate({ type: "reorder", zone: "main", from: 0, to: 1 });
+    await controller.mutate({ type: "sort", mode: "alpha" });
+    /* One more membership edit fences the assertion: appends are issued in
+       order, so once the third entry is readable, an entry either positional
+       command had appended would be readable too. */
+    await controller.mutate({
+      type: "remove",
+      cardCode: 89631139,
+      zone: "main",
+    });
+
+    const entries = await autosavesReaching(repo, 3);
+    expect(entries).toHaveLength(3);
+    expect(get(controller).current?.deck.main).toEqual([46986414]);
+    repo.close();
   });
 });

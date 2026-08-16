@@ -98,6 +98,20 @@ export interface StoredDeck {
   readonly history: DeckHistory;
 }
 
+/** One entry in the global autosave log: which cards a deck held right after an
+    edit, under the name it carried at that moment. Deck-independent by design,
+    so the log survives the deck it came from being renamed or deleted. */
+export interface DeckAutosaveRecord {
+  readonly id: string;
+  readonly deckId: DeckId;
+  /** The name the deck carried at the moment of the edit, not its name now. */
+  readonly deckName: string;
+  readonly createdAt: string;
+  readonly main: readonly number[];
+  readonly extra: readonly number[];
+  readonly side: readonly number[];
+}
+
 export function cloneCardLists(value: DeckCardLists): DeckCardLists {
   return Object.freeze({
     main: Object.freeze([...value.main]),

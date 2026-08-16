@@ -3,7 +3,10 @@
 import "fake-indexeddb/auto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { deleteDB } from "idb";
-import { deckId } from "../../../src/decks/deck-contracts.ts";
+import {
+  deckId,
+  type DeckAutosaveRecord,
+} from "../../../src/decks/deck-contracts.ts";
 import {
   emptyDeckHistory,
   pushDeckUpdate,
@@ -12,7 +15,9 @@ import { createBlankDeck } from "../../../src/decks/deck-model.ts";
 import { validateDeckDraft } from "../../../src/decks/deck-validation.ts";
 import {
   DECK_DATABASE_NAME,
+  DECK_DATABASE_VERSION,
   LEGACY_DECK_DATABASE_NAME,
+  MAXIMUM_DECK_AUTOSAVES,
 } from "../../../src/decks/deck-database.ts";
 import {
   deckDatabaseNames,
@@ -44,6 +49,21 @@ async function repository(name: string): Promise<IndexedDbDeckRepository> {
     name,
     () => new Date("2026-01-01T00:00:00.000Z"),
   );
+}
+
+/* Distinct timestamps throughout: the log is ordered by `createdAt`, so two
+   entries written in the same millisecond have no defined order and would make
+   an ordering assertion a coin flip. */
+function autosave(id: string, createdAt: string): DeckAutosaveRecord {
+  return {
+    id,
+    deckId: deckId("logged"),
+    deckName: "Logged",
+    createdAt,
+    main: [89631139],
+    extra: [],
+    side: [],
+  };
 }
 
 describe("IndexedDbDeckRepository", () => {
@@ -202,7 +222,7 @@ describe("IndexedDbDeckRepository", () => {
     const repo = await IndexedDbDeckRepository.open(name);
     repo.close();
     const database = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open(name, 1);
+      const request = indexedDB.open(name, DECK_DATABASE_VERSION);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
@@ -268,5 +288,74 @@ describe("IndexedDbDeckRepository", () => {
     expect(loaded?.deck.validation.status).toBe("errors");
     expect(loaded?.history.undo).toHaveLength(50);
     second.close();
+  });
+});
+
+describe("the deck autosave log", () => {
+  it("appendAutosave stores entries readable newest first", async () => {
+    const repo = await repository("deck-repo-autosave-order");
+    /* Appended out of order, so the read proves it sorts by `createdAt` rather
+       than handing back insertion order. */
+    await repo.appendAutosave(autosave("older", "2026-01-01T00:00:00.000Z"));
+    await repo.appendAutosave(autosave("newest", "2026-01-03T00:00:00.000Z"));
+    await repo.appendAutosave(autosave("newer", "2026-01-02T00:00:00.000Z"));
+
+    expect((await repo.listAutosaves()).map(({ id }) => id)).toEqual([
+      "newest",
+      "newer",
+      "older",
+    ]);
+    repo.close();
+  });
+
+  it("the autosave log keeps only the newest 100 entries", async () => {
+    const repo = await repository("deck-repo-autosave-cap");
+    const total = MAXIMUM_DECK_AUTOSAVES + 5;
+    for (let index = 0; index < total; index += 1)
+      await repo.appendAutosave(
+        autosave(
+          `entry-${String(index)}`,
+          new Date(Date.UTC(2026, 0, 1, 0, 0, index)).toISOString(),
+        ),
+      );
+
+    const entries = await repo.listAutosaves();
+    expect(entries).toHaveLength(MAXIMUM_DECK_AUTOSAVES);
+    expect(entries[0]?.id).toBe(`entry-${String(total - 1)}`);
+    expect(entries.at(-1)?.id).toBe("entry-5");
+    expect(entries.some(({ id }) => id === "entry-4")).toBe(false);
+    repo.close();
+  });
+
+  /* The log is a convenience surface, not deck data: one unreadable row must
+     not take the rest of a player's history down with it. */
+  it("skips malformed autosave rows instead of failing the read", async () => {
+    const name = "deck-repo-autosave-malformed";
+    const repo = await repository(name);
+    await repo.appendAutosave(autosave("valid", "2026-01-01T00:00:00.000Z"));
+    repo.close();
+
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open(name, DECK_DATABASE_VERSION);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const transaction = database.transaction("autosaves", "readwrite");
+    transaction.objectStore("autosaves").put({
+      id: "malformed",
+      deckId: "logged",
+      createdAt: "2026-01-02T00:00:00.000Z",
+    });
+    await new Promise<void>((resolve, reject) => {
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+    database.close();
+
+    const reopened = await IndexedDbDeckRepository.open(name);
+    expect((await reopened.listAutosaves()).map(({ id }) => id)).toEqual([
+      "valid",
+    ]);
+    reopened.close();
   });
 });

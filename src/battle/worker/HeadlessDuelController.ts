@@ -139,6 +139,18 @@ export class HeadlessDuelController {
             { readonly type: "counters" }
           >
         >();
+        /* Every query below reads the core as it stands once the whole batch
+           has been processed, so an overlay host is only worth asking about
+           after the last message has been applied. Asking mid-batch would name
+           a host the core has already moved on from — a rank-up retires the
+           monster whose units moved two messages earlier. */
+        const overlayRequests = new Map<
+          string,
+          Extract<
+            ProjectionReconciliationRequest,
+            { readonly type: "overlayMaterials" }
+          >
+        >();
 
         for (const message of boundary.messages) {
           this.#trace.record({ kind: "message", messageType: message.type });
@@ -150,7 +162,9 @@ export class HeadlessDuelController {
           const immediateRequests: ProjectionReconciliationRequest[] = [];
           for (const request of update.reconciliationRequests) {
             if (request.type === "counters")
-              counterRequests.set(counterAddressKey(request), request);
+              counterRequests.set(cardAddressKey(request), request);
+            else if (request.type === "overlayMaterials")
+              overlayRequests.set(cardAddressKey(request), request);
             else immediateRequests.push(request);
           }
           this.#reconcile(immediateRequests);
@@ -182,7 +196,10 @@ export class HeadlessDuelController {
           }
         }
 
-        this.#reconcile([...counterRequests.values()]);
+        this.#reconcile([
+          ...overlayRequests.values(),
+          ...counterRequests.values(),
+        ]);
 
         for (const message of boundary.messages) {
           const prompt = this.#prompts.publish(message);
@@ -268,6 +285,11 @@ export class HeadlessDuelController {
 
   #reconcile(requests: readonly ProjectionReconciliationRequest[]): void {
     for (const request of requests) {
+      if (
+        request.type === "overlayMaterials" &&
+        !this.#projector.overlayHostPresent(request)
+      )
+        continue;
       try {
         if (request.type === "extraDeck") {
           this.#projector.reconcileExtraDeck(
@@ -562,7 +584,7 @@ function counterMessageAddressKey(message: EngineMessage): string | undefined {
   return `${message.controller}:${message.location}:${message.sequence}`;
 }
 
-function counterAddressKey(address: {
+function cardAddressKey(address: {
   readonly controller: number;
   readonly location: number;
   readonly sequence: number;

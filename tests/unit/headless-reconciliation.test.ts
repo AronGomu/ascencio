@@ -58,6 +58,12 @@ function win() {
   } as const;
 }
 
+/** A monster arriving from the Extra Deck is asked for the overlay units it
+    carried in with it; these fixtures summon monsters that carry none. */
+function emptyOverlayHost(): EngineCardQueryResult {
+  return { overlayCards: [] } as unknown as EngineCardQueryResult;
+}
+
 async function controllerWithQuery(
   queryLocation: (query: EngineLocationQuery) => EngineLocationQueryResult,
 ) {
@@ -70,7 +76,7 @@ async function controllerWithQuery(
         },
       ],
     }),
-    { queryLocation },
+    { queryLocation, queryCard: emptyOverlayHost },
   );
   const session = DuelSession.create({
     adapter: harness.adapter,
@@ -255,6 +261,7 @@ describe("HeadlessDuelController reconciliation", () => {
         ],
       }),
       {
+        queryCard: emptyOverlayHost,
         queryLocation: () =>
           queryCount++ === 0
             ? [
@@ -424,6 +431,77 @@ describe("HeadlessDuelController reconciliation", () => {
       overlayMaterials: [{ code: 5053103, sequence: 0 }],
     });
     expect(advance.state.players[0].graveyard).toEqual([]);
+  });
+
+  /* Every query reads the core as it stands once the whole batch has been
+     processed. A rank-up retires the host two messages after its units moved,
+     so asking about that host mid-batch names a monster zone the core has
+     already emptied — which is how a duel died with `unsupported_message`. */
+  it("skips an overlay host the batch has already emptied", async () => {
+    const harness = await createFakeOcgCoreAdapter(
+      () => ({
+        steps: [
+          {
+            status: EngineProcess.END,
+            messages: [
+              moveExtraToMonster(),
+              {
+                type: EngineMessageType.MOVE,
+                card: EXTRA_CODE,
+                from: {
+                  controller: 0,
+                  location: EngineLocation.MONSTER as never,
+                  sequence: 0,
+                  position: EnginePosition.FACE_UP_ATTACK,
+                },
+                to: {
+                  controller: 0,
+                  location: EngineLocation.GRAVEYARD as never,
+                  sequence: 0,
+                  position: EnginePosition.FACE_UP_ATTACK,
+                },
+              },
+              win(),
+            ],
+          },
+        ],
+      }),
+      {
+        /* The core answers nothing about an emptied zone; reaching it at all
+           is the failure this pins. */
+        queryCard: () => null,
+      },
+    );
+    const session = DuelSession.create({
+      adapter: harness.adapter,
+      dependencies: FAKE_DEPENDENCIES,
+      playerDeck: EXTRA_DECK,
+      opponentDeck: EMPTY_DECK,
+      configuration: {
+        mode: "programmed",
+        rules: "mr5",
+        seed: [1n, 2n, 3n, 4n],
+        playerDeckOrder: [],
+        opponentDeckOrder: [],
+      },
+    });
+    const controller = new HeadlessDuelController({
+      session,
+      dependencies: FAKE_DEPENDENCIES,
+      snapshotId: snapshotId("retired-host"),
+      presetId: "retired-host",
+      deckCounts: [0, 0],
+      extraDeckCounts: [1, 0],
+      extraMonsterZones: true,
+    });
+
+    const advance = controller.advance();
+
+    expect(harness.cardQueries).toEqual([]);
+    expect(advance.state.players[0].monsters).toEqual([]);
+    expect(advance.state.players[0].graveyard).toMatchObject([
+      { code: EXTRA_CODE },
+    ]);
   });
 
   it("categorizes projector reconciliation failures as invariant", async () => {

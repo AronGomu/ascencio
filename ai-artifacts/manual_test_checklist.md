@@ -1088,3 +1088,38 @@ These steps confirm the same fix in a browser, which no automated suite covers.
       is still mounted and still shows the Tower in the Field Zone.
 - [ ] Take one more turn: summon a monster and set a Spell/Trap. Both land in
       their own slots; the Field Zone still holds only the Tower.
+
+## T2 unsupported-message-abort
+
+Automated coverage exists and is the hard gate
+(`tests/integration/xyz-overlay-progression.test.ts` drives three real
+`ygopro-core` WASM duels through an Xyz Summon and asserts no
+`unsupported_message`; `tests/integration/spellbook-duel-progression.test.ts`
+plays a scripted Spellbook duel to its result). These steps confirm the same
+fix in a browser, which no automated suite covers.
+
+### A duel with an Xyz Summon is not stopped by a technical failure
+- [ ] `npm run dev`, open the printed URL, go to `#/duel`.
+- [ ] Pick **Burning Abyss** as your deck, any opponent deck, and Start.
+- [ ] Play until you can Xyz Summon (two Level 3 Burning Abyss monsters, for
+      example **Dante, Traveler of the Burning Abyss**). Complete the summon,
+      including the zone-selection prompt.
+- [ ] The duel keeps running. The panel reporting a technical failure
+      (`data-cy="app-error-panel"`) never appears and the duel does not end.
+- [ ] Open the browser console: no `duel.worker.command.failed` entry with
+      `code: 'unsupported_message'`, and no `duel.worker.detached` entry.
+
+### The Xyz monster shows the materials it carries
+- [ ] The summoned Xyz monster renders in a Monster Zone with its overlay
+      materials attached, not as a bare monster and not with its materials
+      still sitting in the zones they were summoned from.
+- [ ] The zones the materials came from are now empty.
+- [ ] Activate an effect that detaches a material (Dante's effect, for
+      example). The material count drops by one, the detached card appears in
+      the Graveyard, and the duel continues.
+
+### A story duel survives the same flow
+- [ ] Go to `#/story`, start the duel the story hands off, and play several
+      turns past the first Xyz Summon.
+- [ ] The duel is never stopped by a technical failure and the connection to
+      the duel worker is never reported as interrupted.

@@ -580,6 +580,27 @@ export class DuelStateProjector {
     }
   }
 
+  /**
+   * Whether a monster-zone card that can carry overlay materials still sits at
+   * the address. A host that left the field during a process batch took its
+   * materials with it, so the address it was named by has nothing left to
+   * reconcile and the core no longer answers queries about it.
+   */
+  overlayHostPresent(address: EngineCardAddress): boolean {
+    /* Read off the raw bits rather than decoding the location: this runs
+       outside the caller's reconciliation guard, where a throw would abort the
+       duel instead of skipping one request. */
+    if ((address.location & ~EngineLocation.OVERLAY) !== EngineLocation.MONSTER)
+      return false;
+    return (
+      findPublicCard(
+        this.#players[address.controller],
+        "monster",
+        address.sequence,
+      ) !== undefined
+    );
+  }
+
   reconcileOverlayMaterials(
     address: EngineCardAddress,
     records: readonly QueriedOverlayMaterial[],
@@ -1127,7 +1148,16 @@ export class DuelStateProjector {
     const toLocation = engineLocation(to.location);
     const endpointFromVisible = isPublicOverlayMoveEndpoint(from, fromLocation);
     const toVisible = isPublicOverlayMoveEndpoint(to, toLocation);
-    const sourceHost = fromOverlay
+    /* Only a monster-zone card carries an overlay list here, but the core
+       addresses overlay units on hosts elsewhere too: an Xyz Summon attaches
+       its materials while the Xyz monster is still in the Extra Deck, and an
+       Xyz that has left the field keeps addressing its units against the
+       Graveyard or the banished pile. An overlay endpoint away from the
+       monster zone therefore names a pile this projection never models, and
+       the material only enters or leaves view at its other endpoint. */
+    const fromHostModelled = fromOverlay && fromLocation === "monster";
+    const toHostModelled = toOverlay && toLocation === "monster";
+    const sourceHost = fromHostModelled
       ? findPublicCard(
           this.#players[from.controller],
           fromLocation,
@@ -1136,19 +1166,14 @@ export class DuelStateProjector {
       : undefined;
     const sourceOrdinal = from.overlay_sequence ?? 0;
     const sourceMaterial = sourceHost?.overlayMaterials[sourceOrdinal];
-    const fromVisible = fromOverlay
+    const fromVisible = fromHostModelled
       ? sourceMaterial?.identityVisible === true
       : endpointFromVisible;
     const fallbackMoved: MovedCard =
       rawCode > 0 && (fromVisible || toVisible)
         ? { card: cardCode(rawCode) }
         : {};
-    if (
-      fromOverlay &&
-      (sourceMaterial === undefined ||
-        fromLocation !== "monster" ||
-        (!toOverlay && sourceMaterial.owner === undefined))
-    )
+    if (fromHostModelled && sourceMaterial === undefined)
       return { moved: fallbackMoved, failure: "source_unavailable" };
     const sourceCard = fromOverlay
       ? undefined
@@ -1157,15 +1182,12 @@ export class DuelStateProjector {
           fromLocation,
           from.sequence,
         );
-    const destinationHost = toOverlay
+    const destinationHost = toHostModelled
       ? findPublicCard(this.#players[to.controller], toLocation, to.sequence)
       : undefined;
-    if (
-      toOverlay &&
-      (destinationHost === undefined || toLocation !== "monster")
-    )
+    if (toHostModelled && destinationHost === undefined)
       return { moved: fallbackMoved, failure: "destination_unavailable" };
-    if (toOverlay && sourceCard !== undefined) {
+    if (toHostModelled && sourceCard !== undefined) {
       if (sourceCard.overlayMaterials.length > 0)
         return { moved: fallbackMoved, failure: "nested_materials" };
     } else if (!toOverlay) {
@@ -1186,7 +1208,7 @@ export class DuelStateProjector {
 
     let card: MutableCard | undefined;
     let detachedMaterial: MutableOverlayMaterial | undefined;
-    if (fromOverlay) {
+    if (fromHostModelled) {
       detachedMaterial = sourceHost!.overlayMaterials.splice(
         sourceOrdinal,
         1,
@@ -1194,6 +1216,16 @@ export class DuelStateProjector {
       sourceHost!.overlayMaterials.forEach((entry, sequence) => {
         entry.sequence = sequence;
       });
+    } else if (fromOverlay && !toOverlay) {
+      /* Nothing to take out of an unmodelled pile: the unit becomes visible
+         for the first time at its destination. */
+      card = this.#createCard(
+        to.controller,
+        toLocation,
+        to.sequence,
+        to.position,
+        toVisible && rawCode > 0 ? rawCode : undefined,
+      );
     } else {
       const fromPlayer = this.#players[from.controller];
       card = removePublicCard(fromPlayer, fromLocation, from.sequence);
@@ -1221,7 +1253,7 @@ export class DuelStateProjector {
     if (fromVisible && !toVisible && card !== undefined)
       this.#rotatePublicIdentity(card);
     const currentInstanceId = card?.instanceId ?? detachedMaterial?.instanceId;
-    if (toOverlay) {
+    if (toHostModelled) {
       const host = destinationHost!;
       const material: MutableOverlayMaterial = detachedMaterial ?? {
         instanceId: card!.instanceId,
@@ -1240,13 +1272,20 @@ export class DuelStateProjector {
       host.overlayMaterials.forEach((entry, sequence) => {
         entry.sequence = sequence;
       });
+    } else if (toOverlay) {
+      /* The unit is now inside an unmodelled pile. It has already left every
+         public zone above, and it comes back into view through the host's own
+         reconciliation once that host reaches a monster zone. */
     } else {
       const toPlayer = this.#players[to.controller];
       const moved =
         card ??
         ({
           instanceId: detachedMaterial!.instanceId,
-          owner: detachedMaterial!.owner!,
+          /* A material read back from the core carries no recorded owner. A
+             card only ever leaves play into its own owner's pile, so the
+             destination's controller is that owner. */
+          owner: detachedMaterial!.owner ?? asPlayer(to.controller),
           controller: to.controller,
           location: toLocation,
           sequence: to.sequence,
@@ -1852,7 +1891,7 @@ function reconciliationRequestsForMove(
 ): readonly ProjectionReconciliationRequest[] {
   const requests: ProjectionReconciliationRequest[] = [];
   for (const endpoint of [from, to]) {
-    if (isOverlayAddress(endpoint)) {
+    if (isMonsterOverlayAddress(endpoint)) {
       requests.push({
         type: "overlayMaterials",
         controller: endpoint.controller,
@@ -1862,6 +1901,24 @@ function reconciliationRequestsForMove(
     }
     if (engineLocation(endpoint.location) === "extra")
       requests.push({ type: "extraDeck", player: endpoint.controller });
+  }
+  /* An Xyz Summon attaches its materials while the Xyz monster is still in
+     the Extra Deck, then moves the finished monster to its zone without
+     re-announcing the units it carries. The monster-zone host is the first
+     address this projection can hold those units against, so the material
+     list is read back from the core the moment the host lands. */
+  if (
+    !isOverlayAddress(from) &&
+    !isOverlayAddress(to) &&
+    engineLocation(from.location) === "extra" &&
+    engineLocation(to.location) === "monster"
+  ) {
+    requests.push({
+      type: "overlayMaterials",
+      controller: to.controller,
+      location: EngineLocation.MONSTER,
+      sequence: to.sequence,
+    });
   }
   const seen = new Set<string>();
   return requests.filter((request) => {
@@ -1956,6 +2013,23 @@ function isOverlayAddress(value: {
   return (
     value.overlay_sequence !== undefined ||
     (value.location & EngineLocation.OVERLAY) !== 0
+  );
+}
+
+/**
+ * Whether an overlay endpoint names a host this projection can actually carry
+ * materials on. Only a monster-zone card has an overlay list here, and an Xyz
+ * Summon overlays its materials onto the Xyz monster while that monster is
+ * still in the Extra Deck, so the core addresses overlay units on hosts this
+ * projection never models.
+ */
+function isMonsterOverlayAddress(value: {
+  readonly location: number;
+  readonly overlay_sequence?: number;
+}): boolean {
+  return (
+    isOverlayAddress(value) &&
+    (value.location & ~EngineLocation.OVERLAY) === EngineLocation.MONSTER
   );
 }
 

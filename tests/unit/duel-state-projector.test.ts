@@ -1482,8 +1482,16 @@ describe("DuelStateProjector", () => {
         position: EnginePosition.FACE_UP_ATTACK,
       },
     });
+    /* A monster arriving from the Extra Deck may carry overlay units the core
+       never announced, so its new monster-zone address is read back too. */
     expect(summon.reconciliationRequests).toEqual([
       { type: "extraDeck", player: 0 },
+      {
+        type: "overlayMaterials",
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+      },
     ]);
     value.reconcileExtraDeck(0, [queriedExtra(5053103)]);
     expect(value.snapshot().players[0]).toMatchObject({
@@ -1605,6 +1613,86 @@ describe("DuelStateProjector", () => {
         },
       ],
     });
+  });
+
+  /* Observed straight from the vendored core during an Xyz Summon: the
+     materials are overlaid onto the Xyz monster while that monster is still in
+     the Extra Deck, so the destination names a host that carries no material
+     list in this projection. Reconciling that address is what aborted duels
+     with `unsupported_message`. */
+  it("takes an Xyz Summon's materials off the field while the host is in the Extra Deck", () => {
+    const value = projector();
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 5053103,
+      from: {
+        controller: 0,
+        location: EngineLocation.DECK,
+        sequence: 39,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 1,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+
+    const overlaid = value.apply({
+      type: EngineMessageType.MOVE,
+      card: 5053103,
+      from: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 1,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.EXTRA,
+        sequence: 9,
+        position: EnginePosition.FACE_UP_ATTACK,
+        overlay_sequence: 0,
+      },
+    });
+
+    expect(overlaid.reconciliationFailure).toBeUndefined();
+    expect(overlaid.reconciliationRequests).toEqual([
+      { type: "extraDeck", player: 0 },
+    ]);
+    expect(value.snapshot().players[0].monsters).toEqual([]);
+  });
+
+  /* The other half of the same core convention: an Xyz monster that has left
+     the field keeps addressing its units against the pile it landed in, so the
+     unit's own move out of that pile is the first time this projection can see
+     it. */
+  it("materialises a unit leaving a host it does not model", () => {
+    const value = projector();
+
+    const update = value.apply({
+      type: EngineMessageType.MOVE,
+      card: 46986414,
+      from: {
+        controller: 0,
+        location: EngineLocation.GRAVEYARD,
+        sequence: 9,
+        position: EnginePosition.FACE_UP_ATTACK,
+        overlay_sequence: 0,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.GRAVEYARD,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+
+    expect(update.reconciliationFailure).toBeUndefined();
+    expect(value.snapshot().players[0].graveyard).toMatchObject([
+      { code: 46986414, owner: 0, location: "graveyard" },
+    ]);
   });
 
   it("attaches, detaches, and moves hosts while preserving material identity", () => {

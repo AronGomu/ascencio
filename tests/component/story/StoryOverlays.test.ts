@@ -70,6 +70,12 @@ describe("story utility overlays", () => {
     await waitFor(() => expect(document.activeElement).toBe(trigger));
   });
 
+  it("menu overlay titles itself Menu", () => {
+    render(PauseOverlay);
+    expect(screen.getByRole("dialog", { name: "Menu" })).toBeTruthy();
+    expect(screen.queryByText("Paused")).toBeNull();
+  });
+
   it("pause offers expected actions and confirms unsaved return", async () => {
     const onaction = vi.fn();
     render(PauseOverlay, { unsaved: true, onaction });

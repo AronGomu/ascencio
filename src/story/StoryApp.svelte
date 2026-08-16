@@ -22,6 +22,7 @@
   import PauseOverlay from "./overlays/PauseOverlay.svelte";
   import SaveLoadOverlay from "./overlays/SaveLoadOverlay.svelte";
   import SettingsOverlay from "./overlays/SettingsOverlay.svelte";
+  import GearIcon from "./components/icons/GearIcon.svelte";
   import BattleHandoffScreen from "./screens/BattleHandoffScreen.svelte";
   import IllustratedMapScreen from "./screens/IllustratedMapScreen.svelte";
   import LoadScreen from "./screens/LoadScreen.svelte";
@@ -536,12 +537,14 @@
     </main>
   {/if}
 
-  {#if state.screen !== "title" && state.screen !== "load" && state.screen !== "end"}
+  {#if state.screen !== "title" && state.screen !== "load" && state.screen !== "end" && state.screen !== "narrative"}
     <button
       type="button"
-      class="global-pause secondary"
-      data-cy="story-global-pause"
-      onclick={(event) => openOverlay("pause", event)}>Open pause menu</button
+      class="global-menu secondary"
+      data-cy="story-global-menu"
+      aria-label="Open menu"
+      onclick={(event) => openOverlay("pause", event)}
+      ><GearIcon cy="story-global-menu-icon" /></button
     >
   {/if}
 
@@ -614,11 +617,17 @@
   .storage-error p {
     margin: 0.2rem;
   }
-  .global-pause {
+  .global-menu {
     position: fixed;
     z-index: 25;
-    left: max(0.5rem, env(safe-area-inset-left));
+    right: max(0.5rem, env(safe-area-inset-right));
     top: max(0.5rem, env(safe-area-inset-top));
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 50%;
     background: color-mix(in srgb, var(--bg) 87%, transparent);
   }
   .completion-panel {

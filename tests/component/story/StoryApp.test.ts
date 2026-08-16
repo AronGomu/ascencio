@@ -5,6 +5,7 @@ import { cleanup, render, screen, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 import { STORY_SAVES_DATABASE_NAME } from "../../../src/story/saves/story-save-contracts.ts";
+import { createInitialStoryState } from "../../../src/story/model/story-state.ts";
 import StoryApp from "../../../src/story/StoryApp.svelte";
 
 afterEach(async () => {
@@ -45,9 +46,34 @@ describe("StoryApp", () => {
       .setup()
       .click(screen.getByRole("button", { name: "New Game" }));
     expect(screen.getByText(/Rain turned/)).toBeTruthy();
+  });
+
+  it("map screen shows floating menu gear, narrative does not", async () => {
+    const mapState = {
+      ...createInitialStoryState(),
+      screen: "map" as const,
+      savedScreen: "map" as const,
+    };
+    const { container } = render(StoryApp, { resumeState: mapState });
+    // On map: floating gear present with aria-label
+    expect(screen.getByRole("button", { name: "Open menu" })).toBeTruthy();
     expect(
-      screen.getByRole("button", { name: "Open pause menu" }),
-    ).toBeTruthy();
+      container.querySelector('[data-cy="story-global-menu"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-cy="story-global-pause"]'),
+    ).toBeNull();
+  });
+
+  it("narrative screen hides the floating menu gear", async () => {
+    const { container } = render(StoryApp);
+    // Drive to narrative via New Game
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "New Game" }));
+    // On narrative: floating gear (story-global-menu) must be absent;
+    // narrative bar's own gear (story-narrative-menu) may still be present
+    expect(container.querySelector('[data-cy="story-global-menu"]')).toBeNull();
   });
 
   /* Story styling has to stay inside its own root: the shell mounts duel and
@@ -65,6 +91,8 @@ describe("StoryApp", () => {
     const user = userEvent.setup();
     const first = render(StoryApp);
     await user.click(screen.getByRole("button", { name: "New Game" }));
+    // T1 consolidated Save into gear menu — open gear first
+    await user.click(screen.getByRole("button", { name: "Open menu" }));
     await user.click(screen.getByRole("button", { name: /^Save$/ }));
     await user.click(screen.getByRole("button", { name: "Confirm overwrite" }));
     await waitFor(() => expect(screen.getByText(/Save complete/)).toBeTruthy());

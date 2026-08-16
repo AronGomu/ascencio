@@ -34,7 +34,7 @@
 <svelte:window onkeydown={handleConfirmationKeydown} />
 
 <OverlayShell
-  title="Paused"
+  title="Menu"
   labelId="pause-title"
   {onclose}
   {restoreFocusTo}

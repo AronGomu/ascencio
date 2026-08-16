@@ -241,7 +241,7 @@ test("a manual save is reloadable from the Load screen after a reload", async ({
   page,
 }) => {
   await reachMap(page);
-  await page.getByRole("button", { name: "Open pause menu" }).click();
+  await page.getByRole("button", { name: "Open menu" }).first().click();
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await page.getByRole("button", { name: "Confirm overwrite" }).click();
   await expect(page.getByText(/Save complete/)).toBeVisible();
@@ -316,11 +316,11 @@ test("every story overlay opens, traps focus, and restores it on close", async (
     await expect(control).toBeFocused();
   }
 
-  const pause = page.getByRole("button", { name: "Open pause menu" });
+  const pause = page.getByRole("button", { name: "Open menu" }).first();
   await pause.click();
-  const paused = page.getByRole("dialog", { name: "Paused" });
+  const paused = page.getByRole("dialog", { name: "Menu" });
   await expect(paused).toBeVisible();
-  const close = page.getByRole("button", { name: "Close Paused" });
+  const close = page.getByRole("button", { name: "Close Menu" });
   const last = page.getByRole("button", { name: "Return to Title" });
   await expect(close).toBeFocused();
   await page.keyboard.press("Shift+Tab");
@@ -382,9 +382,7 @@ test("story survives 200% text zoom with reduced motion honoured", async ({
     document.documentElement.style.fontSize = "200%";
   });
   await expect(page.getByText(/Rain turned/)).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Open pause menu" }),
-  ).toBeVisible();
+  await expect(page.locator('[data-cy="story-narrative-menu"]')).toBeVisible();
   const transition = await page
     .locator("[data-testid=narrative-background]")
     .evaluate((element) => getComputedStyle(element).transitionDuration);

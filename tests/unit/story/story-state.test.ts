@@ -376,4 +376,74 @@ describe("story state model", () => {
     });
     expect(next).toBe(browse);
   });
+
+  it("opening consumes boosters and grows the collection", () => {
+    const shopBrowse = {
+      ...createInitialStoryState(),
+      screen: "shop-browse" as const,
+      boosters: { a: 2 },
+    };
+    const cards = Array.from({ length: 18 }, (_, i) => ({
+      code: i < 9 ? 1 : 2,
+      rarity: "common" as const,
+    }));
+    const next = reduceStory(shopBrowse, {
+      type: "open-boosters",
+      picks: [{ setId: "a", count: 2 }],
+      cards,
+      mode: "all",
+    });
+    expect(next.boosters).toEqual({});
+    expect(next.collection[1]).toBe(9);
+    expect(next.collection[2]).toBe(9);
+    expect(next.screen).toBe("shop-results");
+    expect(next.openedCards).toBe(cards);
+  });
+
+  it("sequential mode heads to the opening screen", () => {
+    const shopBrowse = {
+      ...createInitialStoryState(),
+      screen: "shop-browse" as const,
+      boosters: { a: 2 },
+    };
+    const cards = Array.from({ length: 18 }, (_, i) => ({
+      code: i < 9 ? 1 : 2,
+      rarity: "common" as const,
+    }));
+    const next = reduceStory(shopBrowse, {
+      type: "open-boosters",
+      picks: [{ setId: "a", count: 2 }],
+      cards,
+      mode: "sequential",
+    });
+    expect(next.screen).toBe("shop-opening");
+  });
+
+  it("overdrawn picks are refused", () => {
+    const shopBrowse = {
+      ...createInitialStoryState(),
+      screen: "shop-browse" as const,
+      boosters: { a: 2 },
+    };
+    const next = reduceStory(shopBrowse, {
+      type: "open-boosters",
+      picks: [{ setId: "a", count: 3 }],
+      cards: [],
+      mode: "all",
+    });
+    expect(next).toBe(shopBrowse);
+  });
+
+  it("acknowledge clears the recap", () => {
+    const results = {
+      ...createInitialStoryState(),
+      screen: "shop-results" as const,
+      openedCards: [{ code: 1, rarity: "common" as const }],
+      openingMode: "all" as const,
+    };
+    const next = reduceStory(results, { type: "acknowledge-opened" });
+    expect(next.screen).toBe("shop-browse");
+    expect(next.openedCards).toBeNull();
+    expect(next.openingMode).toBeNull();
+  });
 });

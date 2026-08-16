@@ -7,6 +7,7 @@ import {
   type BattleResult,
   type ChoiceId,
   type LocationId,
+  type OpenedCard,
   type ShopRarity,
   type StoryState,
   type StoryScreen,
@@ -42,6 +43,16 @@ export type StoryCommand =
       readonly code: number;
       readonly rarity: ShopRarity;
     }
+  | {
+      readonly type: "open-boosters";
+      readonly picks: readonly {
+        readonly setId: string;
+        readonly count: number;
+      }[];
+      readonly cards: readonly OpenedCard[];
+      readonly mode: "sequential" | "all";
+    }
+  | { readonly type: "acknowledge-opened" }
   | { readonly type: "reset" };
 
 export function reduceStory(
@@ -213,6 +224,40 @@ export function reduceStory(
         },
       };
     }
+    case "open-boosters": {
+      if (!state.screen.startsWith("shop-")) return state;
+      const { picks, cards, mode } = command;
+      for (const { setId, count } of picks) {
+        if (!Number.isInteger(count) || count < 1) return state;
+        if ((state.boosters[setId] ?? 0) < count) return state;
+      }
+      const boosters: Record<string, number> = { ...state.boosters };
+      for (const { setId, count } of picks) {
+        const remaining = (boosters[setId] ?? 0) - count;
+        if (remaining === 0) delete boosters[setId];
+        else boosters[setId] = remaining;
+      }
+      const collection: Record<number, number> = { ...state.collection };
+      for (const { code } of cards) {
+        collection[code] = (collection[code] ?? 0) + 1;
+      }
+      return {
+        ...state,
+        boosters,
+        collection,
+        openedCards: cards,
+        openingMode: mode,
+        screen: mode === "sequential" ? "shop-opening" : "shop-results",
+      };
+    }
+    case "acknowledge-opened":
+      if (state.screen !== "shop-results") return state;
+      return {
+        ...state,
+        screen: "shop-browse",
+        openedCards: null,
+        openingMode: null,
+      };
     case "reset":
       return createInitialStoryState();
   }

@@ -122,3 +122,23 @@ The three modules — `src/story/shop/data/shop-rarity.ts`, `src/story/shop/data
 - [ ] Hover zoom: hovering a tile enlarges it via `scale(1.6)` and it floats above neighbours; move mouse away — tile returns to normal size
 - [ ] With `prefers-reduced-motion: reduce` in OS/browser accessibility settings: tile zoom effect is absent; all other functionality works normally
 - [ ] Gear button (top-right) is accessible from the card list screen; pause overlay opens and closes correctly
+
+## T11 booster_inventory_open_all
+
+- [ ] Run `npm run dev`, open `#/story`, start New Game, reach Card Shop, buy at least 3 packs from one set (e.g. "Legend of Blue-Eyes White Dragon") via the set dialog
+- [ ] After buying, the top bar shows a booster chip displaying e.g. "3 packs" — count matches total packs owned across all sets
+- [ ] Click the chip — the Booster Inventory dialog opens with the heading "Boosters"
+- [ ] Dialog lists each owned set with its name, owned count (e.g. "Legend of Blue-Eyes White Dragon — 3 owned"), and −/+ stepper buttons
+- [ ] `−` button starts disabled (selection=0); clicking `+` increments the readout up to owned count; `+` disables at the owned cap; `−` decrements and disables at 0
+- [ ] "Open selected" button is permanently disabled with tooltip "Coming in a later slice"
+- [ ] "Open All" button is enabled when any packs are owned; disabled when inventory is empty
+- [ ] Click "Open All" — dialog closes and the results screen appears
+- [ ] Results screen heading reads "You opened N cards" where N = total packs × 9 (e.g. 3 packs → 27 cards)
+- [ ] All N card tiles render in a grid with rarity halos — common tiles have no glow; rarer tiles glow appropriately
+- [ ] Tile at index i has `data-cy="story-shop-result-{code}-{i}"` and `data-rarity` attribute matching the card's rarity (verify with DevTools)
+- [ ] Card names are displayed on each tile (matching JSON set data names or `#code` if unknown)
+- [ ] Entrance animation: grid fades and rises in on appearance; with `prefers-reduced-motion: reduce`, animation is absent
+- [ ] Click "Continue" — returns to the shop browse screen; booster chip now shows updated (lower) count
+- [ ] Collection grew: open the deck builder or DevTools → Application → IndexedDB → story-saves → inspect state.collection for incremented card codes
+- [ ] Close dialog with "Close" button or Escape — returns to the shop browse screen without opening packs
+- [ ] Buy packs from two different sets; booster chip shows combined total; dialog lists both sets with correct per-set counts; Open All sends all packs at once

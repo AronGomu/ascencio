@@ -34,10 +34,14 @@
   import ShopBrowseScreen from "./shop/ShopBrowseScreen.svelte";
   import ShopCardListScreen from "./shop/ShopCardListScreen.svelte";
   import ShopGreetingScreen from "./shop/ShopGreetingScreen.svelte";
+  import BoosterInventoryDialog from "./shop/BoosterInventoryDialog.svelte";
+  import BoosterResultsScreen from "./shop/BoosterResultsScreen.svelte";
   import {
+    contentsOf,
     fetchShopSetData,
     type ShopSetData,
   } from "./shop/data/shop-set-data.ts";
+  import { openBoosters } from "./shop/data/pack-generator.ts";
   import { singlePriceDp } from "./shop/data/shop-pricing.ts";
   import { activeCatalog } from "../decks/catalog/active-catalog.ts";
   import TitleScreen from "./screens/TitleScreen.svelte";
@@ -109,8 +113,11 @@
   let shopData: ShopSetData | null = null;
   let shopDataError: string | null = null;
   let shopDataLoading = false;
-  let catalogByCode: Map<number, { readonly imageUrl: string | null }> =
-    new Map();
+  let catalogByCode: Map<
+    number,
+    { readonly imageUrl: string | null; readonly name: string }
+  > = new Map();
+  let boosterDialogOpen = false;
   let root: HTMLElement;
 
   onMount(() => {
@@ -198,9 +205,27 @@
   });
 
   $: inShop = state.screen.startsWith("shop-");
-  $: if (state.screen === "shop-cards" && catalogByCode.size === 0) {
+  $: if (
+    (state.screen === "shop-cards" ||
+      state.screen === "shop-results" ||
+      state.screen === "shop-opening") &&
+    catalogByCode.size === 0
+  ) {
     catalogByCode = new Map(activeCatalog().map((c) => [c.code, c]));
   }
+  $: boosterTotal = Object.values(state.boosters).reduce((a, b) => a + b, 0);
+  $: shopNameByCode = new Map(
+    (shopData?.sets ?? []).flatMap((s) =>
+      s.cards.map((c) => [c.code, c.name] as const),
+    ),
+  );
+  $: openedCardViews = (state.openedCards ?? []).map(({ code, rarity }) => ({
+    code,
+    rarity,
+    name:
+      shopNameByCode.get(code) ?? catalogByCode.get(code)?.name ?? `#${code}`,
+    imageUrl: catalogByCode.get(code)?.imageUrl ?? null,
+  }));
   $: shopSet = shopData?.sets.find(({ id }) => id === state.shopSetId) ?? null;
   $: shopSetName = shopSet?.name ?? "";
   $: shopCards = (shopSet?.cards ?? []).map((card) => ({
@@ -464,7 +489,17 @@
       dp={state.dp}
       {inShop}
       onshop={() => dispatch({ type: "open-shop" })}
-    />
+    >
+      {#if inShop}
+        <button
+          type="button"
+          class="secondary compact"
+          data-cy="story-top-bar-boosters"
+          onclick={() => (boosterDialogOpen = true)}
+          >{boosterTotal} packs</button
+        >
+      {/if}
+    </StoryTopBar>
   {/if}
   {#if storageOperationError}
     <section
@@ -599,6 +634,11 @@
         dispatch({ type: "buy-single", code, rarity })}
       onback={() => dispatch({ type: "shop-navigate", to: "browse" })}
     />
+  {:else if state.screen === "shop-results" || state.screen === "shop-opening"}
+    <BoosterResultsScreen
+      cards={openedCardViews}
+      oncontinue={() => dispatch({ type: "acknowledge-opened" })}
+    />
   {:else if state.screen === "reward"}
     <RewardScreen
       {autosaveStatus}
@@ -677,6 +717,29 @@
       onclose={closeOverlay}
       restoreFocusTo={overlayTrigger}
     />{/if}
+
+  {#if boosterDialogOpen && shopData !== null}
+    <BoosterInventoryDialog
+      boosters={state.boosters}
+      setNameOf={(id) => shopData!.sets.find((s) => s.id === id)?.name ?? id}
+      onopenall={(picks) => {
+        boosterDialogOpen = false;
+        dispatch({
+          type: "open-boosters",
+          picks,
+          mode: "all",
+          cards: openBoosters(
+            picks,
+            (setId) => contentsOf(shopData!, setId),
+            Math.random,
+          ),
+        });
+      }}
+      onclose={() => {
+        boosterDialogOpen = false;
+      }}
+    />
+  {/if}
 </div>
 
 <style>

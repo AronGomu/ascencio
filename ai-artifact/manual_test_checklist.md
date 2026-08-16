@@ -75,3 +75,11 @@ State + persistence only — no shop UI exists yet, so every check below is done
 This slice is contracts-only (pure TypeScript modules, no UI surface). No manual browser steps are required.
 
 The three modules — `src/story/shop/data/shop-rarity.ts`, `src/story/shop/data/shop-pricing.ts`, and `src/story/shop/data/pack-generator.ts` — are verified entirely by unit tests (`tests/unit/story/shop-data.test.ts`). Run `npx vitest run tests/unit/story/shop-data.test.ts` to confirm all 5 automated assertions pass.
+
+## T8 set_data_asset_loader
+
+- [ ] Run `npm run dev`; in a new terminal run `curl http://localhost:5173/story/shop-sets.v1.json | head -5` — verify JSON with `"version":1` and `"sets":[` is returned
+- [ ] Open the browser network tab; navigate to `#/story`; confirm no request to `/story/shop-sets.v1.json` is made on story load (loader not wired yet — T9 wires it)
+- [ ] Confirm `public/story/shop-sets.v1.json` contains exactly 50 sets: `node -e "const d=JSON.parse(require('fs').readFileSync('public/story/shop-sets.v1.json','utf8')); console.log(d.sets.length, 'sets')"`
+- [ ] Verify first 3 sets have `released: true` (LOB, MRD, PSV) and all others have `released: false`: `node -e "const d=JSON.parse(require('fs').readFileSync('public/story/shop-sets.v1.json','utf8')); console.log(d.sets.filter(s=>s.released).map(s=>s.id))"`
+- [ ] Confirm no card entry in any set has a rarity outside the ShopRarity union: `node -e "const valid=new Set(['common','rare','super-rare','ultra-rare','secret-rare','ultimate-rare','ghost-rare']); const d=JSON.parse(require('fs').readFileSync('public/story/shop-sets.v1.json','utf8')); const bad=d.sets.flatMap(s=>s.cards.filter(c=>!valid.has(c.rarity))); console.log(bad.length===0?'OK':bad)"`

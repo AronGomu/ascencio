@@ -5,7 +5,7 @@ import {
 } from "../../../src/decks/deck-model.ts";
 
 describe("deck grid plans", () => {
-  it("uses 40 slots through card 40", () => {
+  it("forty or fewer cards keeps the four-row forty-slot grid", () => {
     expect(mainDeckGridPlan(0)).toEqual({
       columns: 10,
       rows: 4,
@@ -20,18 +20,33 @@ describe("deck grid plans", () => {
     });
   });
 
-  it("switches to 60 smaller slots at card 41", () => {
+  it("forty-one to fifty cards adds a fifth row of ten", () => {
     expect(mainDeckGridPlan(41)).toEqual({
-      columns: 12,
+      columns: 10,
       rows: 5,
+      slots: 50,
+      compact: false,
+    });
+    expect(mainDeckGridPlan(50)).toEqual({
+      columns: 10,
+      rows: 5,
+      slots: 50,
+      compact: false,
+    });
+  });
+
+  it("fifty-one or more cards adds a sixth row of ten", () => {
+    expect(mainDeckGridPlan(51)).toEqual({
+      columns: 10,
+      rows: 6,
       slots: 60,
-      compact: true,
+      compact: false,
     });
     expect(mainDeckGridPlan(61)).toEqual({
-      columns: 12,
-      rows: 5,
+      columns: 10,
+      rows: 6,
       slots: 60,
-      compact: true,
+      compact: false,
     });
   });
 

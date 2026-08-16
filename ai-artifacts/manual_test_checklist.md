@@ -1150,3 +1150,27 @@ Run `npm run dev` and open a deck at `#/decks/<id>` (or create one).
 - [ ] Open a deck that was saved BEFORE this change (an older deck in the library): it loads normally, its cards are unchanged, and adding/removing a card still saves without a "deck storage" error.
 - [ ] Import a `.ydk` from the library: the imported deck keeps the file's own card order rather than being re-sorted on import.
 - [ ] Watch the browser console through all of the above: no `DeckStorageError` and no "deck history is inconsistent" message.
+
+## T7 stacked-collapsible-zones
+
+Run `npm run dev` and open a deck at `#/decks/<id>` (or create one).
+
+Zone layout
+
+- [ ] Confirm that the Main Deck, Extra Deck, and Side Deck zones stack vertically in that order — there is no two-column Extra+Side grid.
+- [ ] Confirm that neither Extra Deck nor Side Deck appears to the right of Main Deck at any viewport width.
+
+Collapse / expand controls
+
+- [ ] Confirm the Side Deck zone starts collapsed on first open (body / card grid not visible; toggle button shows "▸").
+- [ ] Click the Side Deck toggle — the card grid and drop area expand; the toggle arrow changes to "▾".
+- [ ] Click the toggle again — the zone collapses; toggle arrow returns to "▸".
+- [ ] Confirm the same expand/collapse works for Main Deck and Extra Deck.
+- [ ] Confirm each toggle button reports its state to assistive technology (`aria-expanded` flips between "true" and "false").
+
+Growing main grid
+
+- [ ] With 40 or fewer cards in Main Deck, the count label reads `X/40` (e.g. `3/40`).
+- [ ] Add cards until the Main Deck reaches 41 cards — a new row of ten empty slots appears, the count label switches to `41/40-60`.
+- [ ] Continue to 51 cards — a sixth row appears, the count still shows `X/40-60`.
+- [ ] Confirm all main-grid columns stay at 10 (not 12) at every size.

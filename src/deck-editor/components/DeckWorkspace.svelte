@@ -37,6 +37,7 @@
   export let filled = false;
 
   let workspaceElement: HTMLElement;
+  let collapsedZones = { main: false, extra: false, side: true };
   $: totalCopies = countCopies(deck);
   $: mainDropAllowed = canDrop("main", picked, catalog);
   $: extraDropAllowed = canDrop("extra", picked, catalog);
@@ -129,48 +130,54 @@
     ondropzone={(zone) => void dropAndRestoreFocus(zone)}
     {onhovercard}
     {onhoverend}
+    collapsed={collapsedZones.main}
+    ontogglecollapse={() =>
+      (collapsedZones = { ...collapsedZones, main: !collapsedZones.main })}
   />
-
-  <div class="secondary-zones" data-cy="deck-workspace-secondary-zones">
-    <DeckZoneGrid
-      zone="extra"
-      label="Extra Deck"
-      codes={deck.extra}
-      plan={FIFTEEN_CARD_GRID}
-      {catalog}
-      {ruleset}
-      {totalCopies}
-      {selectedCode}
-      picked={extraDropAllowed}
-      {onselect}
-      {ondragcard}
-      {ondragcancel}
-      {onpickup}
-      {ontap}
-      ondropzone={(zone) => void dropAndRestoreFocus(zone)}
-      {onhovercard}
-      {onhoverend}
-    />
-    <DeckZoneGrid
-      zone="side"
-      label="Side Deck"
-      codes={deck.side}
-      plan={FIFTEEN_CARD_GRID}
-      {catalog}
-      {ruleset}
-      {totalCopies}
-      {selectedCode}
-      picked={sideDropAllowed}
-      {onselect}
-      {ondragcard}
-      {ondragcancel}
-      {onpickup}
-      {ontap}
-      ondropzone={(zone) => void dropAndRestoreFocus(zone)}
-      {onhovercard}
-      {onhoverend}
-    />
-  </div>
+  <DeckZoneGrid
+    zone="extra"
+    label="Extra Deck"
+    codes={deck.extra}
+    plan={FIFTEEN_CARD_GRID}
+    {catalog}
+    {ruleset}
+    {totalCopies}
+    {selectedCode}
+    picked={extraDropAllowed}
+    {onselect}
+    {ondragcard}
+    {ondragcancel}
+    {onpickup}
+    {ontap}
+    ondropzone={(zone) => void dropAndRestoreFocus(zone)}
+    {onhovercard}
+    {onhoverend}
+    collapsed={collapsedZones.extra}
+    ontogglecollapse={() =>
+      (collapsedZones = { ...collapsedZones, extra: !collapsedZones.extra })}
+  />
+  <DeckZoneGrid
+    zone="side"
+    label="Side Deck"
+    codes={deck.side}
+    plan={FIFTEEN_CARD_GRID}
+    {catalog}
+    {ruleset}
+    {totalCopies}
+    {selectedCode}
+    picked={sideDropAllowed}
+    {onselect}
+    {ondragcard}
+    {ondragcancel}
+    {onpickup}
+    {ontap}
+    ondropzone={(zone) => void dropAndRestoreFocus(zone)}
+    {onhovercard}
+    {onhoverend}
+    collapsed={collapsedZones.side}
+    ontogglecollapse={() =>
+      (collapsedZones = { ...collapsedZones, side: !collapsedZones.side })}
+  />
 
   <ValidationIssues
     validation={deck.validation}
@@ -180,6 +187,9 @@
 
 <style>
   .workspace {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
     min-width: 0;
     height: calc(100vh - 5.5rem);
     overflow-y: auto;
@@ -199,22 +209,10 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    margin-bottom: 0.75rem;
   }
 
   .remove {
     min-height: 2.25rem;
     padding: 0.45rem 0.65rem;
-  }
-
-  .secondary-zones {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
-    margin-top: 0.8rem;
-  }
-
-  .filled .secondary-zones {
-    grid-template-columns: minmax(0, 1fr);
   }
 </style>

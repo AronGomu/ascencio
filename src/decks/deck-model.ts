@@ -265,9 +265,11 @@ export function sortDeckCardsAlphabetical(
 }
 
 export function mainDeckGridPlan(count: number): DeckGridPlan {
-  return count <= 40
-    ? Object.freeze({ columns: 10, rows: 4, slots: 40, compact: false })
-    : Object.freeze({ columns: 12, rows: 5, slots: 60, compact: true });
+  if (count <= 40)
+    return Object.freeze({ columns: 10, rows: 4, slots: 40, compact: false });
+  if (count <= 50)
+    return Object.freeze({ columns: 10, rows: 5, slots: 50, compact: false });
+  return Object.freeze({ columns: 10, rows: 6, slots: 60, compact: false });
 }
 
 export const FIFTEEN_CARD_GRID: DeckGridPlan = Object.freeze({

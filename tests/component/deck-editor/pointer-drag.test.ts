@@ -46,6 +46,10 @@ describe("pointer deck editing", () => {
   it("moves deck cards to Side and exposes a Remove target", async () => {
     const onmutate = vi.fn<(command: DeckCommand) => void>();
     render(DeckEditor, props(onmutate, 1));
+    const sideToggle = document.querySelector(
+      '[data-cy="deck-zone-toggle-side"]',
+    )!;
+    await fireEvent.click(sideToggle);
     const cardButtons = screen.getAllByRole("button", {
       name: /copies in deck/,
     });

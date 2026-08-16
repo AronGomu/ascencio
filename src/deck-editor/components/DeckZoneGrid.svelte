@@ -30,6 +30,8 @@
   export let ontap: ((code: number, zone: DeckZone) => void) | null = null;
   export let onhovercard: (code: number) => void = () => undefined;
   export let onhoverend: () => void = () => undefined;
+  export let collapsed = false;
+  export let ontogglecollapse: () => void = () => undefined;
 
   $: emptyCount = Math.max(0, plan.slots - codes.length);
 </script>
@@ -40,17 +42,34 @@
   data-cy={`deck-zone-${zone}`}
 >
   <header data-cy={`deck-zone-header-${zone}`}>
-    <h3
-      id={`${zone}-heading`}
-      tabindex="-1"
-      data-cy={`deck-zone-heading-${zone}`}
+    <button
+      type="button"
+      data-cy={`deck-zone-toggle-${zone}`}
+      aria-expanded={!collapsed}
+      aria-controls={`deck-zone-body-${zone}`}
+      onclick={ontogglecollapse}
     >
-      {label}
-    </h3>
+      <span aria-hidden="true" data-cy={`deck-zone-chevron-${zone}`}
+        >{collapsed ? "▸" : "▾"}</span
+      >
+      <h3
+        id={`${zone}-heading`}
+        tabindex="-1"
+        data-cy={`deck-zone-heading-${zone}`}
+      >
+        {label}
+      </h3>
+    </button>
     <span
       class:error={codes.length > plan.slots}
-      data-cy={`deck-zone-count-${zone}`}>{codes.length}/{plan.slots}</span
+      data-cy={`deck-zone-count-${zone}`}
     >
+      {zone === "main"
+        ? codes.length <= 40
+          ? `${codes.length}/40`
+          : `${codes.length}/40-60`
+        : `${codes.length}/${plan.slots}`}
+    </span>
   </header>
   {#if picked}
     <button
@@ -62,56 +81,59 @@
       Drop picked card in {label}
     </button>
   {/if}
-  <div
-    class:picked
-    class="drop-zone"
-    role="group"
-    aria-label={`${label} drop area`}
-    data-cy={`deck-zone-drop-area-${zone}`}
-    ondragover={(event) => event.preventDefault()}
-    ondrop={(event) => {
-      event.preventDefault();
-      ondropzone(zone);
-    }}
-    onmouseleave={() => onhoverend()}
-  >
+  {#if !collapsed}
     <div
-      class:compact={plan.compact}
-      class="grid"
-      style={`--columns:${plan.columns}`}
-      data-columns={plan.columns}
-      data-rows={plan.rows}
-      data-slots={plan.slots}
-      aria-label={`${label}: ${codes.length} cards in ${plan.slots} slots`}
-      data-cy={`deck-zone-grid-${zone}`}
+      id={`deck-zone-body-${zone}`}
+      class:picked
+      class="drop-zone"
+      role="group"
+      aria-label={`${label} drop area`}
+      data-cy={`deck-zone-drop-area-${zone}`}
+      ondragover={(event) => event.preventDefault()}
+      ondrop={(event) => {
+        event.preventDefault();
+        ondropzone(zone);
+      }}
+      onmouseleave={() => onhoverend()}
     >
-      {#each codes as code, index (`${code}-${index}`)}
-        <CardTile
-          card={catalog.get(code) ?? null}
-          {code}
-          {zone}
-          limit={quantityLimit(ruleset, code)}
-          currentCopies={totalCopies.get(code) ?? 0}
-          selected={selectedCode === code}
-          compact={plan.compact}
-          onselect={() => onselect(catalog.get(code) ?? null, code)}
-          ontap={ontap === null ? null : () => ontap(code, zone)}
-          ondragcard={(event) => ondragcard(code, zone, event)}
-          {ondragcancel}
-          onpickup={() => onpickup(code, zone)}
-          onhover={() => onhovercard(code)}
-        />
-      {/each}
-      {#each Array.from({ length: emptyCount }) as slot, index (index)}
-        <span
-          class="empty-slot"
-          data-empty-slot={slot === undefined ? index : slot}
-          aria-hidden="true"
-          data-cy={`deck-zone-empty-slot-${zone}-${index}`}
-        ></span>
-      {/each}
+      <div
+        class:compact={plan.compact}
+        class="grid"
+        style={`--columns:${plan.columns}`}
+        data-columns={plan.columns}
+        data-rows={plan.rows}
+        data-slots={plan.slots}
+        aria-label={`${label}: ${codes.length} cards in ${plan.slots} slots`}
+        data-cy={`deck-zone-grid-${zone}`}
+      >
+        {#each codes as code, index (`${code}-${index}`)}
+          <CardTile
+            card={catalog.get(code) ?? null}
+            {code}
+            {zone}
+            limit={quantityLimit(ruleset, code)}
+            currentCopies={totalCopies.get(code) ?? 0}
+            selected={selectedCode === code}
+            compact={plan.compact}
+            onselect={() => onselect(catalog.get(code) ?? null, code)}
+            ontap={ontap === null ? null : () => ontap(code, zone)}
+            ondragcard={(event) => ondragcard(code, zone, event)}
+            {ondragcancel}
+            onpickup={() => onpickup(code, zone)}
+            onhover={() => onhovercard(code)}
+          />
+        {/each}
+        {#each Array.from({ length: emptyCount }) as slot, index (index)}
+          <span
+            class="empty-slot"
+            data-empty-slot={slot === undefined ? index : slot}
+            aria-hidden="true"
+            data-cy={`deck-zone-empty-slot-${zone}-${index}`}
+          ></span>
+        {/each}
+      </div>
     </div>
-  </div>
+  {/if}
   {#if codes.length > plan.slots}
     <p class="overflow" role="alert" data-cy={`deck-zone-overflow-${zone}`}>
       {codes.length - plan.slots} overflow card(s) remain invalid.
@@ -129,6 +151,11 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 0.45rem;
+  }
+
+  header button {
+    all: unset;
+    cursor: pointer;
   }
 
   h3 {

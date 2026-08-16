@@ -2,6 +2,7 @@
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
+import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const workerClientSpies = vi.hoisted(() => {
@@ -96,6 +97,10 @@ import {
 } from "../../src/battle/duel/contracts/ids.ts";
 import type { PlayerPrompt } from "../../src/battle/duel/contracts/player-prompt.ts";
 import type { PublicDuelState } from "../../src/battle/duel/contracts/public-duel-state.ts";
+import {
+  concealedStateCard,
+  publicStateCard,
+} from "../fixtures/board-public-states.ts";
 
 interface MockedWorkerInstance {
   readonly context: { workerGeneration: number; sessionGeneration: number };
@@ -227,6 +232,27 @@ function emitDuelError(): void {
 const LINK_FREE_SNAPSHOT: PublicDuelState = {
   ...EMPTY_SNAPSHOT,
   layout: { extraMonsterZones: false },
+};
+
+const PREVIEW_KNOWN_MONSTER = publicStateCard(
+  "preview-known-monster",
+  97590747,
+  0,
+  "monster",
+  0,
+);
+const PREVIEW_HIDDEN_MONSTER = concealedStateCard(
+  "preview-hidden-monster",
+  1,
+  "monster",
+  0,
+);
+const PREVIEW_TEST_STATE: PublicDuelState = {
+  ...EMPTY_SNAPSHOT,
+  players: [
+    { ...EMPTY_SNAPSHOT.players[0]!, monsters: [PREVIEW_KNOWN_MONSTER] },
+    { ...EMPTY_SNAPSHOT.players[1]!, monsters: [PREVIEW_HIDDEN_MONSTER] },
+  ],
 };
 
 const SHARED_ZONE_PLACE_PROMPT: PlayerPrompt = {
@@ -541,6 +567,64 @@ describe("App", () => {
       expect(main?.getAttribute("data-duel-viewport")).toBeNull(),
     );
     expect(main?.classList.contains("is-duel-viewport")).toBe(false);
+  });
+
+  it("hovering a hidden card keeps the previous preview", async () => {
+    const user = userEvent.setup();
+    await renderReadyApp();
+    await startDuelFromPicker(user);
+    emitDuelState(PREVIEW_TEST_STATE);
+
+    const knownCard = await vi.waitFor(() => {
+      const el = document.querySelector(
+        '[data-cy="field-card-preview-known-monster"]',
+      );
+      expect(el).not.toBeNull();
+      return el!;
+    });
+
+    fireEvent.pointerEnter(knownCard);
+    const nameBefore = await vi.waitFor(() => {
+      const el = document.querySelector('[data-cy="card-preview-name"]');
+      expect(el).not.toBeNull();
+      return el!.textContent;
+    });
+
+    const hiddenCard = document.querySelector(
+      '[data-cy="field-card-preview-hidden-monster"]',
+    )!;
+    fireEvent.pointerEnter(hiddenCard);
+    await tick();
+
+    expect(
+      document.querySelector('[data-cy="card-preview-name"]')?.textContent,
+    ).toBe(nameBefore);
+  });
+
+  it("hovering before any known card leaves the empty state", async () => {
+    const user = userEvent.setup();
+    await renderReadyApp();
+    await startDuelFromPicker(user);
+    emitDuelState(PREVIEW_TEST_STATE);
+
+    const hiddenCard = await vi.waitFor(() => {
+      const el = document.querySelector(
+        '[data-cy="field-card-preview-hidden-monster"]',
+      );
+      expect(el).not.toBeNull();
+      return el!;
+    });
+
+    expect(
+      document.querySelector('[data-cy="card-preview-empty"]'),
+    ).not.toBeNull();
+
+    fireEvent.pointerEnter(hiddenCard);
+    await tick();
+
+    expect(
+      document.querySelector('[data-cy="card-preview-empty"]'),
+    ).not.toBeNull();
   });
 });
 

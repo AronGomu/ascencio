@@ -63,7 +63,6 @@
   import {
     cardPreviewForCode,
     cardPreviewForPublicCard,
-    HIDDEN_CARD_PREVIEW,
     stackTopCode,
     type CardPreviewView,
   } from "./presentation/card-preview.ts";
@@ -879,30 +878,22 @@
   }
 
   function previewFieldCard(card: BoardCardView): void {
-    if (card.code === undefined) {
-      previewCard = HIDDEN_CARD_PREVIEW;
-      return;
-    }
+    if (card.code === undefined) return;
     const next = cardPreviewForCode(card.code, ACTIVE_CARD_TEXTS);
     if (next !== null) previewCard = next;
   }
 
   function previewStackCard(stack: BoardStackView): void {
     const code = stackTopCode(stack);
-    if (code === undefined) {
-      previewCard = HIDDEN_CARD_PREVIEW;
-      return;
-    }
+    if (code === undefined) return;
     const next = cardPreviewForCode(code, ACTIVE_CARD_TEXTS);
     if (next !== null) previewCard = next;
   }
 
   function previewZoneListEntry(entry: ZoneListEntry): void {
-    previewCard =
-      entry.code === undefined
-        ? HIDDEN_CARD_PREVIEW
-        : (cardPreviewForCode(entry.code, ACTIVE_CARD_TEXTS) ??
-          HIDDEN_CARD_PREVIEW);
+    if (entry.code === undefined) return;
+    const next = cardPreviewForCode(entry.code, ACTIVE_CARD_TEXTS);
+    if (next !== null) previewCard = next;
   }
 
   /* Still wired to `DuelHud`'s `oninspect`, so the HUD and the card trays need

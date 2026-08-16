@@ -1207,3 +1207,16 @@ fix in a browser, which no automated suite covers.
 - [ ] Confirm the action-prompt block (`status.title` / `status.subtitle`) is vertically centred within the rail (aligned with the middle of the duel field).
 - [ ] Confirm thinking dots still animate when the opponent is deciding.
 - [ ] Confirm the browser console shows no errors during the above.
+
+## T11 preview-keeps-last-card
+
+Start a dev duel (`npm run dev`), open the app in the browser, and pick decks to start a duel.
+
+- [ ] Hover a face-up card on the field (own monster or opponent face-up monster) — confirm the left preview panel updates to show that card's name and image.
+- [ ] While the preview panel is showing that card, hover an opponent's face-down (set) card — confirm the preview panel **does not change** (still shows the previously hovered card).
+- [ ] Hover a card in your own deck pile (graveyard stack, banished pile) — confirm preview updates to show its name.
+- [ ] Hover a stack pile that has no public top-card identity (e.g. opponent's deck) — confirm the preview panel does not change.
+- [ ] In the zone-list dialog (click a stack zone), hover a face-down entry — confirm the preview panel does not change.
+- [ ] In the zone-list dialog, hover a face-up/known entry — confirm the preview panel updates.
+- [ ] On a fresh duel load (before hovering any card), hover a hidden card — confirm the panel stays in its empty state ("Hover a card to see its details.").
+- [ ] Confirm the browser console shows no errors during the above.

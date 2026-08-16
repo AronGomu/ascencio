@@ -54,6 +54,14 @@ export type StoryCommand =
     }
   | { readonly type: "acknowledge-opened" }
   | { readonly type: "finish-opening" }
+  | {
+      readonly type: "sell-cards";
+      readonly items: readonly {
+        readonly code: number;
+        readonly quantity: number;
+        readonly unitPriceDp: number;
+      }[];
+    }
   | { readonly type: "reset" };
 
 export function reduceStory(
@@ -262,6 +270,28 @@ export function reduceStory(
     case "finish-opening":
       if (state.screen !== "shop-opening") return state;
       return { ...state, screen: "shop-results" };
+    case "sell-cards": {
+      if (state.screen !== "shop-sell") return state;
+      for (const { code, quantity, unitPriceDp } of command.items) {
+        if (
+          !Number.isInteger(quantity) ||
+          quantity < 1 ||
+          (state.collection[code] ?? 0) < quantity ||
+          !Number.isInteger(unitPriceDp) ||
+          unitPriceDp < 1
+        )
+          return state;
+      }
+      const collection: Record<number, number> = { ...state.collection };
+      let dp = state.dp;
+      for (const { code, quantity, unitPriceDp } of command.items) {
+        dp += quantity * unitPriceDp;
+        const remaining = (collection[code] ?? 0) - quantity;
+        if (remaining === 0) delete collection[code];
+        else collection[code] = remaining;
+      }
+      return { ...state, dp, collection };
+    }
     case "reset":
       return createInitialStoryState();
   }

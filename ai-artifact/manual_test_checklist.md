@@ -52,7 +52,7 @@ State + persistence only — no shop UI exists yet, so every check below is done
 - [ ] Click the stage (or press Enter / Space) to advance to the second beat: text contains "Buying packs? Selling doubles? Either way, DP talks."
 - [ ] Click the stage once more; dialogue box disappears; a menu nav appears with three buttons: "Buy Cards", "Sell Cards", and "Leave Shop"
 - [ ] "Buy Cards" button is **enabled** (T9 wired it); clicking it opens the set browser screen
-- [ ] "Sell Cards" button is still disabled and shows tooltip "Coming in a later slice" on hover
+- [ ] "Sell Cards" button is **enabled** (T13 wired it); clicking it opens the sell screen
 - [ ] Click "Leave Shop"; map screen reloads with all previous state intact (objective, choice acknowledgment, locations unchanged)
 - [ ] Gear button (top-right) is accessible from the greeting screen
 - [ ] Double-clicking the stage does not advance two beats at once (only one advance per click event)
@@ -142,6 +142,25 @@ The three modules — `src/story/shop/data/shop-rarity.ts`, `src/story/shop/data
 - [ ] Collection grew: open the deck builder or DevTools → Application → IndexedDB → story-saves → inspect state.collection for incremented card codes
 - [ ] Close dialog with "Close" button or Escape — returns to the shop browse screen without opening packs
 - [ ] Buy packs from two different sets; booster chip shows combined total; dialog lists both sets with correct per-set counts; Open All sends all packs at once
+
+## T13 sell_flow
+
+- [ ] Run `npm run dev`, open `#/story`, start New Game, navigate to the map, open Card Shop, click through both shopkeeper beats
+- [ ] "Sell Cards" button is now **enabled** (not disabled, no tooltip); click it — the sell screen opens
+- [ ] Sell screen heading reads "Sell Cards" and a "← Back" button is visible
+- [ ] With no cards owned yet: a "No cards owned yet." message is shown; "Sell" confirm button is disabled
+- [ ] Buy and open some packs to populate the collection; navigate back to the shop (Leave Shop → Card Shop)
+- [ ] Open the sell screen: owned cards appear as a grid of tiles with rarity halos (colours match T10 halo colours)
+- [ ] Each tile shows: card name, "Owned N" text, unit sell price in DP, −/+ stepper buttons
+- [ ] `−` button starts disabled (selection = 0); clicking `+` increments the readout; `+` disables at the owned count; `−` decrements and disables at 0
+- [ ] "Total: 0 DP" shown initially; total updates live as steppers are adjusted
+- [ ] "Sell" button is disabled while total is 0; enabling it by selecting ≥ 1 card
+- [ ] Select 2 of a common card (10 DP each) and 1 of a rare card (25 DP each): total reads "Total: 45 DP"
+- [ ] Click "Sell" — DP pill in the top bar rises by 45; sold items decrement in the grid; a card with 0 remaining disappears from the grid; steppers reset to 0
+- [ ] Sell all copies of a card — that card's tile disappears from the grid after selling
+- [ ] Click "← Back" from the sell screen — returns to the shopkeeper greeting
+- [ ] Gear button (top-right) is accessible from the sell screen
+- [ ] DP pill and collection update correctly after mixed buy-then-sell round-trips
 
 ## T12 sequential_opening
 

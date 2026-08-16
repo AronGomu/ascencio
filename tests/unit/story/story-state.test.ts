@@ -464,4 +464,70 @@ describe("story state model", () => {
     expect(next.openedCards).toBeNull();
     expect(next.openingMode).toBeNull();
   });
+
+  it("selling pays the ladder", () => {
+    const sell = {
+      ...createInitialStoryState(),
+      screen: "shop-sell" as const,
+      dp: 500,
+      collection: { 111: 3, 222: 1 } as Record<number, number>,
+    };
+    const next = reduceStory(sell, {
+      type: "sell-cards",
+      items: [
+        { code: 111, quantity: 2, unitPriceDp: 10 },
+        { code: 222, quantity: 1, unitPriceDp: 100 },
+      ],
+    });
+    expect(next.dp).toBe(620);
+    expect(next.collection).toEqual({ 111: 1 });
+  });
+
+  it("selling more than owned is wholly refused", () => {
+    const sell = {
+      ...createInitialStoryState(),
+      screen: "shop-sell" as const,
+      dp: 0,
+      collection: { 111: 1, 222: 5 } as Record<number, number>,
+    };
+    const next = reduceStory(sell, {
+      type: "sell-cards",
+      items: [
+        { code: 222, quantity: 3, unitPriceDp: 10 },
+        { code: 111, quantity: 2, unitPriceDp: 10 },
+      ],
+    });
+    expect(next).toBe(sell);
+  });
+
+  it("selling off the sell screen is refused", () => {
+    const browse = {
+      ...createInitialStoryState(),
+      screen: "shop-browse" as const,
+      dp: 0,
+      collection: { 111: 3 } as Record<number, number>,
+    };
+    const next = reduceStory(browse, {
+      type: "sell-cards",
+      items: [{ code: 111, quantity: 1, unitPriceDp: 10 }],
+    });
+    expect(next).toBe(browse);
+  });
+
+  it("zero and fractional quantities are refused", () => {
+    const sell = {
+      ...createInitialStoryState(),
+      screen: "shop-sell" as const,
+      dp: 0,
+      collection: { 111: 5 } as Record<number, number>,
+    };
+    for (const quantity of [0, 1.5, -1]) {
+      expect(
+        reduceStory(sell, {
+          type: "sell-cards",
+          items: [{ code: 111, quantity, unitPriceDp: 10 }],
+        }),
+      ).toBe(sell);
+    }
+  });
 });

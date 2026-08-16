@@ -70,8 +70,6 @@
       >
       <button
         type="button"
-        disabled
-        title="Coming in a later slice"
         data-cy="story-shop-greeting-sell"
         onclick={() => onnavigate("sell")}>Sell Cards</button
       >

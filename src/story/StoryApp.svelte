@@ -34,16 +34,18 @@
   import ShopBrowseScreen from "./shop/ShopBrowseScreen.svelte";
   import ShopCardListScreen from "./shop/ShopCardListScreen.svelte";
   import ShopGreetingScreen from "./shop/ShopGreetingScreen.svelte";
+  import ShopSellScreen from "./shop/ShopSellScreen.svelte";
   import BoosterInventoryDialog from "./shop/BoosterInventoryDialog.svelte";
   import BoosterOpeningScreen from "./shop/BoosterOpeningScreen.svelte";
   import BoosterResultsScreen from "./shop/BoosterResultsScreen.svelte";
   import {
     contentsOf,
     fetchShopSetData,
+    resolveCardRarity,
     type ShopSetData,
   } from "./shop/data/shop-set-data.ts";
   import { openBoosters } from "./shop/data/pack-generator.ts";
-  import { singlePriceDp } from "./shop/data/shop-pricing.ts";
+  import { SELL_PRICE_DP, singlePriceDp } from "./shop/data/shop-pricing.ts";
   import { activeCatalog } from "../decks/catalog/active-catalog.ts";
   import TitleScreen from "./screens/TitleScreen.svelte";
   import {
@@ -209,11 +211,27 @@
   $: if (
     (state.screen === "shop-cards" ||
       state.screen === "shop-results" ||
-      state.screen === "shop-opening") &&
+      state.screen === "shop-opening" ||
+      state.screen === "shop-sell") &&
     catalogByCode.size === 0
   ) {
     catalogByCode = new Map(activeCatalog().map((c) => [c.code, c]));
   }
+  $: sellableCards = Object.entries(state.collection).map(
+    ([codeKey, owned]) => {
+      const code = Number(codeKey);
+      const view = catalogByCode.get(code);
+      const rarity = resolveCardRarity(code, shopData, view);
+      return {
+        code,
+        owned,
+        name: shopNameByCode.get(code) ?? view?.name ?? `#${code}`,
+        imageUrl: view?.imageUrl ?? null,
+        rarity,
+        unitPriceDp: SELL_PRICE_DP[rarity],
+      };
+    },
+  );
   $: boosterTotal = Object.values(state.boosters).reduce((a, b) => a + b, 0);
   $: shopNameByCode = new Map(
     (shopData?.sets ?? []).flatMap((s) =>
@@ -634,6 +652,12 @@
       onbuysingle={(code, rarity) =>
         dispatch({ type: "buy-single", code, rarity })}
       onback={() => dispatch({ type: "shop-navigate", to: "browse" })}
+    />
+  {:else if state.screen === "shop-sell"}
+    <ShopSellScreen
+      cards={sellableCards}
+      onsell={(items) => dispatch({ type: "sell-cards", items })}
+      onback={() => dispatch({ type: "shop-navigate", to: "greeting" })}
     />
   {:else if state.screen === "shop-opening"}
     <BoosterOpeningScreen

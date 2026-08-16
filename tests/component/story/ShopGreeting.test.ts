@@ -30,8 +30,8 @@ describe("ShopGreetingScreen", () => {
     ) as HTMLButtonElement;
     expect(buy).toBeTruthy();
     expect(sell).toBeTruthy();
-    expect(buy.disabled).toBe(false); // T9: buy is now active
-    expect(sell.disabled).toBe(true);
+    expect(buy.disabled).toBe(false);
+    expect(sell.disabled).toBe(false); // T13: sell now enabled
     // Dialogue box gone
     expect(
       container.querySelector('[data-cy="story-shop-greeting-dialogue"]'),

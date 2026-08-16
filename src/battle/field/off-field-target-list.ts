@@ -105,9 +105,17 @@ function targetEntry(
       : projectedCards(snapshot, address.controller, address.location)[
           projectedIndex
         ];
-  const identityVisible =
+  const projectedIdentityVisible =
     card !== undefined && isProjectedCardIdentityKnown(card);
-  const code = identityVisible ? (card.code as CardCode) : undefined;
+  const projectedCode = projectedIdentityVisible
+    ? (card.code as CardCode)
+    : undefined;
+  const promptCode =
+    address.controller === 0
+      ? choices.find((choice) => choice.cardCode !== undefined)?.cardCode
+      : undefined;
+  const resolvedCode = projectedCode ?? promptCode;
+  const identityVisible = resolvedCode !== undefined;
   return Object.freeze({
     id: `target:${address.controller}:${address.location}:${address.sequence}`,
     /* Visual pile position when the projection carries this address; the
@@ -118,11 +126,11 @@ function targetEntry(
     location: address.location,
     sequence: address.sequence,
     identityVisible,
-    ...(code === undefined ? {} : { code }),
+    ...(resolvedCode === undefined ? {} : { code: resolvedCode }),
     label:
-      code === undefined
+      resolvedCode === undefined
         ? "Face-down card"
-        : (cardTexts.get(code)?.name ?? `Card ${code}`),
+        : (cardTexts.get(resolvedCode)?.name ?? `Card ${resolvedCode}`),
     zoneBadge: badge,
     zoneLabel: `${address.controller === 0 ? "Your" : "Opponent"} ${ZONE_NAMES[badge]}`,
     choices: Object.freeze([...choices]),

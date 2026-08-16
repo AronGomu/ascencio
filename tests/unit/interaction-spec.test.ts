@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  cardCode,
   cardInstanceId,
   choiceId,
   promptId,
@@ -413,6 +414,46 @@ describe("prompt interaction spec", () => {
 
     expect(cloned).toEqual(spec);
     expect(containsFunctionOrElement(cloned)).toBe(false);
+  });
+
+  it("sanitizeChoice keeps the engine card code for an own-card choice", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [
+          choice(FIRST, {
+            card: {
+              instanceId: cardInstanceId("own-deck-card"),
+              controller: 0,
+              location: "deck",
+              sequence: 3,
+              position: "faceDownDefense",
+              code: cardCode(12345),
+            },
+          }),
+        ],
+      }),
+    );
+    expect(spec.offFieldChoices[0]?.cardCode).toBe(cardCode(12345));
+  });
+
+  it("sanitizeChoice drops the card code for an opponent-controlled choice", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [
+          choice(FIRST, {
+            card: {
+              instanceId: cardInstanceId("opp-deck-card"),
+              controller: 1,
+              location: "deck",
+              sequence: 3,
+              position: "faceDownDefense",
+              code: cardCode(12345),
+            },
+          }),
+        ],
+      }),
+    );
+    expect(spec.offFieldChoices[0]?.cardCode).toBeUndefined();
   });
 
   it("creates stable value keys and an inactive spec without a prompt", () => {

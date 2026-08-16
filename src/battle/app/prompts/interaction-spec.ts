@@ -1,4 +1,4 @@
-import type { ChoiceId, PromptId } from "../../duel/contracts/ids.ts";
+import type { CardCode, ChoiceId, PromptId } from "../../duel/contracts/ids.ts";
 import type {
   ChoiceAction,
   PlayerPrompt,
@@ -45,6 +45,8 @@ export interface InteractionChoice {
     readonly location: PublicLocation;
     readonly sequence: number;
   };
+  /** Engine-attested card code for own-card (controller 0) choices. Never set for opponent cards. */
+  readonly cardCode?: CardCode;
 }
 
 export interface InteractionConstraints {
@@ -450,6 +452,11 @@ function sanitizeChoice(choice: PromptChoice): InteractionChoice | undefined {
             sequence: choice.card!.sequence,
           }),
         }
+      : {}),
+    ...(isValidCardTarget(choice.card) &&
+    choice.card!.controller === 0 &&
+    choice.card!.code !== undefined
+      ? { cardCode: choice.card!.code as CardCode }
       : {}),
   });
 }

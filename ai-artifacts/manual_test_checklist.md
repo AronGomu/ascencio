@@ -1123,3 +1123,9 @@ fix in a browser, which no automated suite covers.
       turns past the first Xyz Summon.
 - [ ] The duel is never stopped by a technical failure and the connection to
       the duel worker is never reported as interrupted.
+
+
+## T3 deck-search-private-identity
+
+- [ ] Start a dev duel and activate a card that searches the deck (e.g. Spellbook Magician of Prophecy effect, or any search-style effect). Confirm the target list dialog shows real card art and names for your own deck cards, not "Face-down card".
+- [ ] After confirming the search choice, open the deck browse list and confirm those cards now show as face-down again (the prompt-attested identity is gone once the prompt resolves and the deck shuffles).

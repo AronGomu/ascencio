@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  cardCode,
   cardInstanceId,
   choiceId,
   promptId,
@@ -262,6 +263,49 @@ describe("offFieldTargetEntries", () => {
       "Your Banished",
       "Your Extra Deck",
     ]);
+  });
+
+  it("an own deck target unattested by the projection renders with the prompt-sent identity", () => {
+    // sequence 9 is beyond the 3-card projection, so snapshot has no attestation
+    const entries = entriesFor([
+      {
+        id: choiceId("deck-hidden"),
+        label: "deck-hidden",
+        action: "select",
+        card: {
+          instanceId: cardInstanceId("deck-hidden"),
+          controller: 0 as const,
+          location: "deck" as const,
+          sequence: 9,
+          position: "faceDownDefense" as const,
+          code: cardCode(12345),
+        },
+      },
+    ]);
+    expect(entries[0]?.identityVisible).toBe(true);
+    expect(entries[0]?.code).toBe(cardCode(12345));
+    expect(entries[0]?.label).toBe("Card 12345");
+  });
+
+  it("an opponent target without projection attestation stays face-down", () => {
+    const entries = entriesFor([
+      {
+        id: choiceId("opp-deck-hidden"),
+        label: "opp-deck-hidden",
+        action: "select",
+        card: {
+          instanceId: cardInstanceId("opp-deck-hidden"),
+          controller: 1 as const,
+          location: "deck" as const,
+          sequence: 9,
+          position: "faceDownDefense" as const,
+          code: cardCode(12345),
+        },
+      },
+    ]);
+    expect(entries[0]?.identityVisible).toBe(false);
+    expect(entries[0]?.code).toBeUndefined();
+    expect(entries[0]?.label).toBe("Face-down card");
   });
 
   it("freezes the list and each entry's choices", () => {

@@ -17,6 +17,8 @@
   export let ondragcard: (event: DragEvent) => void = () => undefined;
   export let ondragcancel: () => void = () => undefined;
   export let onhover: (() => void) | null = null;
+  export let oncontext: (() => void) | null = null;
+  export let maxed = false;
 
   $: name = card?.name ?? `Missing card ${code}`;
   $: limitLabel =
@@ -34,6 +36,7 @@
   class:compact
   class:selected
   class:missing={card === null}
+  class:maxed
   class="card-tile"
   {draggable}
   aria-label={`${name}. ${limitLabel}, maximum ${limit}. ${currentCopies} copies in deck.`}
@@ -45,6 +48,12 @@
   onmouseenter={() => onhover?.()}
   ondragstart={ondragcard}
   ondragend={ondragcancel}
+  oncontextmenu={(event) => {
+    if (oncontext !== null) {
+      event.preventDefault();
+      oncontext();
+    }
+  }}
 >
   <span
     class={`limit-badge limit-${limit}`}
@@ -93,6 +102,15 @@
 
   .card-tile.missing {
     border-style: dashed;
+    border-color: var(--danger);
+    background: var(--danger-surface);
+  }
+
+  .card-tile.maxed {
+    border-color: var(--danger);
+  }
+
+  .card-tile.maxed:hover:not(:disabled) {
     border-color: var(--danger);
     background: var(--danger-surface);
   }

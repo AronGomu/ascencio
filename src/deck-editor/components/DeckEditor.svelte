@@ -235,6 +235,28 @@
     picked = null;
   }
 
+  function contextAdd(card: DeckBuilderCardView): void {
+    const counts = {
+      main: deck?.main.length ?? 0,
+      extra: deck?.extra.length ?? 0,
+      side: deck?.side.length ?? 0,
+    };
+    const canonicalFull =
+      card.canonicalZone === "main" ? counts.main >= 60 : counts.extra >= 15;
+    const zone: DeckZone = canonicalFull ? "side" : card.canonicalZone;
+    if (canonicalFull && counts.side >= 15) {
+      announcement = `No space left for ${card.name}.`;
+      return;
+    }
+    onmutate({ type: "add", cardCode: card.code, zone });
+    announcement = `${card.name} added to ${zone}.`;
+  }
+
+  function contextRemove(code: number, zone: DeckZone): void {
+    onmutate({ type: "remove", cardCode: code, zone });
+    announcement = `${catalog.get(code)?.name ?? `Card ${code}`} removed.`;
+  }
+
   function endZoneDrag(): void {
     if (picked === null) return;
     if (!dropHandled && picked.source !== "catalog") {
@@ -416,6 +438,7 @@
             onmutate(command);
           }}
           ondropzone={dropInZone}
+          oncontextremove={contextRemove}
           onhovercard={(code) => {
             hovered = catalog.get(code) ?? null;
             hoveredCode = code;
@@ -448,6 +471,7 @@
           ontap={tabs ? tapCatalogCard : null}
           ondragcard={(card, event) => startCatalogDrag(card, event)}
           ondragcancel={endZoneDrag}
+          oncontextadd={contextAdd}
           onblocked={(card, reason) => {
             selected = card;
             selectedCode = card.code;

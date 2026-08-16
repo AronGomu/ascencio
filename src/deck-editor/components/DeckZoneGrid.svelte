@@ -36,6 +36,8 @@
   export let onhoverend: () => void = () => undefined;
   export let collapsed = false;
   export let ontogglecollapse: () => void = () => undefined;
+  export let oncontextremove: (code: number, zone: DeckZone) => void = () =>
+    undefined;
 
   $: emptyCount = Math.max(0, plan.slots - codes.length);
 </script>
@@ -130,6 +132,7 @@
               ondragcard={(event) => ondragcard(code, zone, index, event)}
               {ondragcancel}
               onhover={() => onhovercard(code)}
+              oncontext={() => oncontextremove(code, zone)}
             />
           </div>
         {/each}

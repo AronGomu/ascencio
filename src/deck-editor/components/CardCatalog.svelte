@@ -31,6 +31,8 @@
   export let filled = false;
   export let onhovercard: (card: DeckBuilderCardView) => void = () => undefined;
   export let onhoverend: () => void = () => undefined;
+  export let oncontextadd: (card: DeckBuilderCardView) => void = () =>
+    undefined;
 
   let filters: DeckCatalogFilters = { ...EMPTY_CATALOG_FILTERS };
   $: options = catalogFilterOptions(cards);
@@ -203,6 +205,9 @@
           ondragcard={(event) => ondragcard(card, event)}
           {ondragcancel}
           onhover={() => onhovercard(card)}
+          maxed={(copies.get(card.code) ?? 0) >=
+            quantityLimit(ruleset, card.code)}
+          oncontext={() => oncontextadd(card)}
         />
       {/each}
     </div>

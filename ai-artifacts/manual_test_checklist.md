@@ -273,7 +273,7 @@ Build and save a deck
 - [ ] Check the address bar: the URL is now `#/decks/<some-id>`, NOT `#/decks`.
 - [ ] Type `Blue-Eyes` into the catalog Name search, drag "Blue-Eyes White Dragon" onto the Main Deck drop area — Deck counts shows `Main 1` and the Autosave chip reads "Saved locally".
 - [ ] Press Undo then Redo — the count goes 0 then back to 1, and the deck stays "Saved locally".
-- [ ] Focus the Main Deck card, press Space, then click "Drop picked card in Side Deck" — the card moves and the counts follow.
+- [ ] Right-click the Main Deck card, then choose **Move to Side Deck** from the tap menu (portrait) or confirm the move via the context menu (desktop) — the card moves and the counts follow.
 - [ ] Edit the "Deck name" field to `Manual T8 Renamed` and click elsewhere to blur — the name sticks.
 
 Deep link, reload and Back
@@ -687,8 +687,8 @@ Desktop is untouched (1440x900)
       No card is added and no tap menu appears. Adding is still drag or the
       keyboard pick-and-drop path.
 - [ ] Drag a card from the catalog into the Main Deck drop area — works as
-      before. Focus a card, press Space, then click "Drop picked card in Side
-      Deck" — works as before.
+      before. Right-click a Main Deck card — the context menu removes it;
+      right-click a catalog card — the card is added to its canonical zone.
 - [ ] Undo/redo, rename and the Deck Library round trip all behave exactly as they did before this ticket; import and export remain accessible from the library menu (moved in T4).
 - [ ] Resize from 1440 wide down past 1024 and back up without reloading — the
       editor swaps between panels and tabs each way, keeping the open deck and
@@ -1029,7 +1029,7 @@ rather than the fixture's handful.
 ### Build a deck from scratch and duel with it
 - [ ] Open `#/decks`. Press **Create deck**, name it (e.g. `Manual T22`), confirm with **Create**.
 - [ ] The catalog panel lists real cards — search `Nekroz`, `Shaddoll`, `Spellbook` or `Burning Abyss` and each returns several distinct cards with names and effect text.
-- [ ] Add cards until **Deck counts** reads `Main 40`. Fastest route: search a name, focus the tile, press `Space` to pick it up, then **Drop picked card in Main Deck**; repeat, or add three copies of ~14 different cards.
+- [ ] Add cards until **Deck counts** reads `Main 40`. Fastest route: search a card name, then right-click the catalog tile to add it directly; repeat, or drag tiles onto the Main Deck drop area.
 - [ ] The validation panel shows no **errors**. Warnings such as "Extra Deck is empty", "Side Deck is empty" and "uses placeholder art" are expected and do not block anything.
 - [ ] Wait for **Saved locally**.
 - [ ] Go to `#/duel`. A **Your decks** group renders below **Bundled decks**, holding `Manual T22` in both the player and opponent columns.
@@ -1217,3 +1217,28 @@ Buttons gone
 
 - [ ] Drag any Main Deck card and confirm no "Remove picked card" button appears in the workspace header.
 - [ ] Confirm no per-zone "Drop picked card in …" keyboard buttons appear during the drag.
+
+## T10 context-menu-and-maxed-highlight
+
+### Setup
+- [ ] Run `npm run dev` and open `http://localhost:4300/#/decks`. Create or open a deck.
+
+### Right-click remove from deck zone
+- [ ] Open the Main Deck zone. Right-click any card in the zone — the card is removed from the deck immediately, counts update, and an accessible announcement plays.
+- [ ] Press Undo — the removed card returns.
+- [ ] Repeat for a card in the Extra Deck zone and a card in the Side Deck zone.
+
+### Right-click add from catalog
+- [ ] Right-click a catalog card whose canonical zone is **Main** — the card is added to Main Deck; the announcement reads "… added to main."
+- [ ] Right-click the same card again until Main Deck has **60** cards.
+- [ ] Right-click a different catalog monster — Main is full, so the card is added to **Side Deck** instead; the announcement says "… added to side."
+- [ ] Fill Side Deck to **15** cards (by right-clicking more catalog cards or dragging). Right-click another catalog monster — no card is added and an announcement reads "No space left for …"
+
+### Maxed (copy-limit) highlight
+- [ ] Find a card that already has **3** copies in the deck (check the copy badge). Its catalog tile should show a **red border** instead of the normal accent border.
+- [ ] Hover that tile — the background also tints red (danger-surface), border stays red.
+- [ ] Remove one copy (right-click in the deck zone). The catalog tile border returns to normal once copies drop below the limit.
+- [ ] A forbidden card (limit-badge shows **0**) always has a red border in the catalog, regardless of how many copies are in the deck.
+
+### No native context menu
+- [ ] Right-click any card tile — the browser's native context menu does **not** appear.

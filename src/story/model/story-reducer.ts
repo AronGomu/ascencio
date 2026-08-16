@@ -7,10 +7,11 @@ import {
   type BattleResult,
   type ChoiceId,
   type LocationId,
+  type ShopRarity,
   type StoryState,
   type StoryScreen,
 } from "./story-state.ts";
-import { PACK_PRICE_DP } from "../shop/data/shop-pricing.ts";
+import { PACK_PRICE_DP, singlePriceDp } from "../shop/data/shop-pricing.ts";
 
 export type StoryCommand =
   | { readonly type: "new-game" }
@@ -34,6 +35,12 @@ export type StoryCommand =
       readonly type: "buy-packs";
       readonly setId: string;
       readonly count: number;
+    }
+  | { readonly type: "view-set-cards"; readonly setId: string }
+  | {
+      readonly type: "buy-single";
+      readonly code: number;
+      readonly rarity: ShopRarity;
     }
   | { readonly type: "reset" };
 
@@ -171,7 +178,25 @@ export function reduceStory(
         browse: "shop-browse",
         sell: "shop-sell",
       };
-      return { ...state, screen: screenMap[command.to] };
+      const next = { ...state, screen: screenMap[command.to] };
+      return command.to === "browse" ? { ...next, shopSetId: null } : next;
+    }
+    case "view-set-cards": {
+      if (state.screen !== "shop-browse") return state;
+      return { ...state, screen: "shop-cards", shopSetId: command.setId };
+    }
+    case "buy-single": {
+      if (state.screen !== "shop-cards") return state;
+      const price = singlePriceDp(command.rarity);
+      if (state.dp < price) return state;
+      return {
+        ...state,
+        dp: state.dp - price,
+        collection: {
+          ...state.collection,
+          [command.code]: (state.collection[command.code] ?? 0) + 1,
+        },
+      };
     }
     case "buy-packs": {
       if (state.screen !== "shop-browse") return state;

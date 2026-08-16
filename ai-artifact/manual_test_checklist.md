@@ -97,10 +97,28 @@ The three modules — `src/story/shop/data/shop-rarity.ts`, `src/story/shop/data
 - [ ] Click "Buy 10 · 1000 DP" (requires ≥ 1000 DP) — DP drops by 1000
 - [ ] Set custom input to 3 and click "Buy 3" — DP drops by 300
 - [ ] With DP < 100: "Buy 1" and "Buy 10" and "Buy N" buttons are all disabled; a red error line reads "Not enough DP…"
-- [ ] "View card list" button is disabled with tooltip "Coming in a later slice"
+- [ ] "View card list" button is enabled — clicking it opens the full card list for that set (T10)
 - [ ] Close the dialog with the "Close" button or Escape key; returns to set browser
 - [ ] "← Back" button in set browser returns to the shopkeeper greeting screen
 - [ ] Switch device to airplane mode (or DevTools → Network → Offline) and revisit the shop: set browser still renders using the cached JSON (Cache Storage entry `story-shop-data`)
 - [ ] Reload in offline mode with cache cleared → error state appears with a "Retry" button; going online and clicking Retry loads the grid
 - [ ] DP pill in the top bar updates live after every purchase without requiring navigation
 - [ ] Gear button (top-right) remains accessible from the set browser and dialog screens
+
+## T10 card_list_singles_halos
+
+- [ ] Run `npm run dev`, open `#/story`, start New Game, reach the Card Shop, open Browse, click a released set tile — dialog opens
+- [ ] Click "View card list" — dialog closes, a new screen opens showing the set name as `h1` heading and a back button
+- [ ] Card grid shows tiles for every card in the set (scrollable, auto-fill grid)
+- [ ] Each tile displays: card image (or a grey placeholder block for cards without packaged art), card name, a coloured glow halo matching rarity, and a price button
+- [ ] Halos differ by rarity: common has no glow, rare is silver/grey, super rare is blue, ultra rare is gold/yellow, secret rare is purple, ultimate rare is amber/brown, ghost rare is near-white
+- [ ] Hover over a tile — the left preview panel updates: shows the card image (or placeholder), name, and rarity label
+- [ ] Price button labels show the correct 4× sell prices: common = 40 DP, rare = 100 DP, super rare = 200 DP, ultra rare = 400 DP, secret rare = 1000 DP
+- [ ] Click a "40 DP" common-card buy button — DP top bar decrements by 40; button remains enabled if DP ≥ 40
+- [ ] With DP below a card's price, its buy button is disabled; other cards with lower prices remain enabled
+- [ ] Click "← Back" — returns to the set browser (ShopBrowseScreen); the set dialog is closed
+- [ ] Navigate to a different set and back: the card list opens correctly for each set with the right set name
+- [ ] Cards without packaged art show a uniform placeholder block (no broken-image icon)
+- [ ] Hover zoom: hovering a tile enlarges it via `scale(1.6)` and it floats above neighbours; move mouse away — tile returns to normal size
+- [ ] With `prefers-reduced-motion: reduce` in OS/browser accessibility settings: tile zoom effect is absent; all other functionality works normally
+- [ ] Gear button (top-right) is accessible from the card list screen; pause overlay opens and closes correctly

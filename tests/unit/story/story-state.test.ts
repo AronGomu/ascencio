@@ -310,4 +310,70 @@ describe("story state model", () => {
       reduceStory(greeting, { type: "shop-navigate", to: "browse" }).screen,
     ).toBe("shop-browse");
   });
+
+  it("view-set-cards opens the list for that set", () => {
+    const browse = {
+      ...createInitialStoryState(),
+      screen: "shop-browse" as const,
+    };
+    const next = reduceStory(browse, {
+      type: "view-set-cards",
+      setId: "lob",
+    });
+    expect(next).toMatchObject({ screen: "shop-cards", shopSetId: "lob" });
+  });
+
+  it("back to browse clears the set", () => {
+    const cards = {
+      ...createInitialStoryState(),
+      screen: "shop-cards" as const,
+      shopSetId: "lob",
+    };
+    const next = reduceStory(cards, { type: "shop-navigate", to: "browse" });
+    expect(next.screen).toBe("shop-browse");
+    expect(next.shopSetId).toBeNull();
+  });
+
+  it("buying a single pays four times sell", () => {
+    const cards = {
+      ...createInitialStoryState(),
+      screen: "shop-cards" as const,
+      dp: 100,
+    };
+    const next = reduceStory(cards, {
+      type: "buy-single",
+      code: 111,
+      rarity: "common",
+    });
+    expect(next.dp).toBe(60);
+    expect(next.collection[111]).toBe(1);
+  });
+
+  it("single beyond the wallet is refused", () => {
+    const cards = {
+      ...createInitialStoryState(),
+      screen: "shop-cards" as const,
+      dp: 30,
+    };
+    const next = reduceStory(cards, {
+      type: "buy-single",
+      code: 111,
+      rarity: "common",
+    });
+    expect(next).toBe(cards);
+  });
+
+  it("single off the cards screen is refused", () => {
+    const browse = {
+      ...createInitialStoryState(),
+      screen: "shop-browse" as const,
+      dp: 1000,
+    };
+    const next = reduceStory(browse, {
+      type: "buy-single",
+      code: 111,
+      rarity: "common",
+    });
+    expect(next).toBe(browse);
+  });
 });

@@ -32,11 +32,14 @@
   import PreBattleScreen from "./screens/PreBattleScreen.svelte";
   import RewardScreen from "./screens/RewardScreen.svelte";
   import ShopBrowseScreen from "./shop/ShopBrowseScreen.svelte";
+  import ShopCardListScreen from "./shop/ShopCardListScreen.svelte";
   import ShopGreetingScreen from "./shop/ShopGreetingScreen.svelte";
   import {
     fetchShopSetData,
     type ShopSetData,
   } from "./shop/data/shop-set-data.ts";
+  import { singlePriceDp } from "./shop/data/shop-pricing.ts";
+  import { activeCatalog } from "../decks/catalog/active-catalog.ts";
   import TitleScreen from "./screens/TitleScreen.svelte";
   import {
     STORY_SLOT_KEYS,
@@ -106,6 +109,8 @@
   let shopData: ShopSetData | null = null;
   let shopDataError: string | null = null;
   let shopDataLoading = false;
+  let catalogByCode: Map<number, { readonly imageUrl: string | null }> =
+    new Map();
   let root: HTMLElement;
 
   onMount(() => {
@@ -193,6 +198,18 @@
   });
 
   $: inShop = state.screen.startsWith("shop-");
+  $: if (state.screen === "shop-cards" && catalogByCode.size === 0) {
+    catalogByCode = new Map(activeCatalog().map((c) => [c.code, c]));
+  }
+  $: shopSet = shopData?.sets.find(({ id }) => id === state.shopSetId) ?? null;
+  $: shopSetName = shopSet?.name ?? "";
+  $: shopCards = (shopSet?.cards ?? []).map((card) => ({
+    code: card.code,
+    name: card.name,
+    imageUrl: catalogByCode.get(card.code)?.imageUrl ?? null,
+    rarity: card.rarity,
+    priceDp: singlePriceDp(card.rarity),
+  }));
   $: topBarVisible =
     inShop || state.screen === "narrative" || state.screen === "map";
   $: applyResolution(resolution);
@@ -566,11 +583,21 @@
       error={shopDataError}
       dp={state.dp}
       onbuy={(setId, count) => dispatch({ type: "buy-packs", setId, count })}
+      onviewcards={(setId) => dispatch({ type: "view-set-cards", setId })}
       onretry={() => {
         shopDataError = null;
         void loadShopData();
       }}
       onback={() => dispatch({ type: "shop-navigate", to: "greeting" })}
+    />
+  {:else if state.screen === "shop-cards"}
+    <ShopCardListScreen
+      setName={shopSetName}
+      dp={state.dp}
+      cards={shopCards}
+      onbuysingle={(code, rarity) =>
+        dispatch({ type: "buy-single", code, rarity })}
+      onback={() => dispatch({ type: "shop-navigate", to: "browse" })}
     />
   {:else if state.screen === "reward"}
     <RewardScreen

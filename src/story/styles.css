@@ -4,6 +4,14 @@
    refactors; the aliases derive from the shared token set, not from literals). */
 
 .story-app {
+  --rarity-common: transparent;
+  --rarity-rare: var(--rarity-halo-rare);
+  --rarity-super-rare: var(--rarity-halo-super-rare);
+  --rarity-ultra-rare: var(--rarity-halo-ultra-rare);
+  --rarity-secret-rare: var(--rarity-halo-secret-rare);
+  --rarity-ultimate-rare: var(--rarity-halo-ultimate-rare);
+  --rarity-ghost-rare: var(--rarity-halo-ghost-rare);
+
   --story-bg: var(--bg);
   --story-panel: var(--surface-raised);
   --story-text: var(--text);
@@ -66,6 +74,28 @@
     width: 100%;
   }
 }
+.story-app .rarity-halo[data-rarity] {
+  box-shadow: 0 0 0.35rem 0.15rem var(--halo, transparent);
+}
+.story-app .rarity-halo[data-rarity="rare"] {
+  --halo: var(--rarity-rare);
+}
+.story-app .rarity-halo[data-rarity="super-rare"] {
+  --halo: var(--rarity-super-rare);
+}
+.story-app .rarity-halo[data-rarity="ultra-rare"] {
+  --halo: var(--rarity-ultra-rare);
+}
+.story-app .rarity-halo[data-rarity="secret-rare"] {
+  --halo: var(--rarity-secret-rare);
+}
+.story-app .rarity-halo[data-rarity="ultimate-rare"] {
+  --halo: var(--rarity-ultimate-rare);
+}
+.story-app .rarity-halo[data-rarity="ghost-rare"] {
+  --halo: var(--rarity-ghost-rare);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .story-app *,
   .story-app *::before,

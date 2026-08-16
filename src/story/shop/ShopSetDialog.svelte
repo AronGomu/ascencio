@@ -63,8 +63,6 @@
   <button
     type="button"
     class="secondary"
-    disabled
-    title="Coming in a later slice"
     data-cy="story-shop-view-cards"
     onclick={() => onviewcards(set.id)}>View card list</button
   >

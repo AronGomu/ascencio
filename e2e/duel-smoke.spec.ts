@@ -7,11 +7,14 @@ import {
   type Page,
   type TestInfo,
 } from "@playwright/test";
+import { buildActiveCardDataManifest } from "../scripts/lib/active-card-data-manifest.ts";
+import { buildActiveCardTextManifest } from "../scripts/lib/active-card-text-manifest.ts";
+import { buildActiveImageManifest } from "../scripts/lib/active-image-manifest.ts";
 import {
   PROTOTYPE_RULESET,
   quantityLimit,
 } from "../src/decks/catalog/pinned-ruleset.ts";
-import { PROTOTYPE_CATALOG } from "../src/decks/catalog/prototype-catalog.ts";
+import { packagedCatalog } from "../src/decks/catalog/packaged-catalog.ts";
 import {
   DECK_DATABASE_NAME,
   LEGACY_DECK_DATABASE_NAME,
@@ -66,10 +69,27 @@ interface CapturedPromptEvent {
 
 const LOCAL_DECK_NAME = "E2E Local Deck";
 
-/* Derived from the pinned catalog rather than written out, so a catalog change
-   cannot leave this deck quietly illegal and the scenario quietly vacuous. */
+/* The catalog the running build offers, rebuilt here from the same manifests
+   `vite.config.ts` compiles into it. Reading the fixture instead would make
+   this scenario vacuous the moment packaging and the editor disagreed — which
+   is precisely the failure it exists to catch. */
+const PACKAGED_CATALOG = (() => {
+  const codes = new Set(
+    buildActiveImageManifest(process.cwd(), "duel-smoke").files.map(
+      ({ code }) => code,
+    ),
+  );
+  return packagedCatalog(
+    buildActiveCardDataManifest(process.cwd(), codes),
+    buildActiveCardTextManifest(process.cwd(), codes),
+  );
+})();
+
+/* Derived from the packaged catalog rather than written out, so a packaging
+   change cannot leave this deck quietly illegal and the scenario quietly
+   vacuous. */
 const LOCAL_DECK_MAIN: readonly number[] = (() => {
-  const codes = PROTOTYPE_CATALOG.filter(
+  const codes = PACKAGED_CATALOG.filter(
     (card) =>
       card.canonicalZone === "main" &&
       quantityLimit(PROTOTYPE_RULESET, card.code) === 3,
@@ -524,18 +544,17 @@ test("deck picker persists a chosen pair and Change decks returns without auto-s
     .toBe(1);
 });
 
-test("a ruleset-valid local deck stays hidden while its art is unpackaged", async ({
+test("a local deck built from the packaged catalog is offered and duels", async ({
   page,
 }) => {
   await page.goto("./#/decks");
   await deleteDeckDatabases(page);
   await page.reload();
 
-  /* Imported through the library rather than seeded through `#/admin`: the
-     admin console's test deck is drawn from a bundled preset, so most of its
-     codes are outside the pinned catalog and `resolveDeck` calls it invalid
-     before art coverage is even consulted. This is the shortest path a player
-     could also walk to a deck the ruleset accepts. */
+  /* Imported through the library rather than seeded through `#/admin`: this is
+     the shortest path a player could also walk from an empty library to a deck
+     the pinned ruleset accepts, and it goes through the editor's own catalog
+     on the way. */
   await page.locator('[data-cy="deck-library-import"]').click();
   await page
     .locator('[data-cy="deck-ydk-import-name-input"]')
@@ -544,9 +563,8 @@ test("a ruleset-valid local deck stays hidden while its art is unpackaged", asyn
     .locator('[data-cy="deck-ydk-import-source-input"]')
     .fill(ydkSource(LOCAL_DECK_MAIN));
   await page.locator('[data-cy="deck-ydk-import-preview"]').click();
-  /* The editor's own catalog knows every one of these codes, which is what
-     makes this deck legal and the omission below a packaging fact rather than
-     a validation one. */
+  /* The editor's catalog is the packaged card set itself, so every code the
+     duel can draw is a code the editor knows. */
   await expect(
     page.locator('[data-cy="deck-ydk-import-unknown-codes"]'),
   ).toHaveCount(0);
@@ -561,30 +579,53 @@ test("a ruleset-valid local deck stays hidden while its art is unpackaged", asyn
     timeout: 120_000,
   });
 
-  /* This build packages art only for the six bundled decks, so no deck the
-     editor can assemble reaches 40 Main cards the duel could draw. The picker
-     omitting it silently is the contract: offering it would put the refusal
-     after the choice instead of before it. `local deck coverage tripwire` in
-     `tests/unit/battle/selectable-decks.test.ts` fails the day that changes,
-     and this scenario is what it points at. */
-  await expect(page.locator('[data-cy="deck-picker-group-local"]')).toHaveCount(
+  /* The deck a player just built is offered, because the editor may only offer
+     cards this build packages and the picker only offers decks it can draw —
+     one derivation, so the two sets cannot disagree. */
+  const localGroup = page.locator('[data-cy="deck-picker-group-local"]');
+  await expect(localGroup).toBeVisible({ timeout: 120_000 });
+  const localOption = page.locator(
+    '[data-cy^="deck-picker-option-player-local:"]',
+  );
+  await expect(localOption).toHaveCount(1);
+  await expect(localOption).toHaveText(LOCAL_DECK_NAME);
+
+  await localOption.click();
+  await expect(localOption).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator('[data-cy="deck-picker-start-error"]')).toHaveCount(
     0,
   );
-  await expect(
-    page.locator('[data-cy^="deck-picker-option-player-local:"]'),
-  ).toHaveCount(0);
 
   await page.locator('[data-cy="deck-picker-start-button"]').click();
   await expect(page.locator('[data-cy="duel-field"]')).toBeVisible({
     timeout: 120_000,
   });
+  /* A visible field is the engine's own answer: the Worker built a duel from
+     these forty codes rather than refusing them. */
+  await expect(
+    page.locator('[data-cy="duel-field"][data-prompt-kind]'),
+  ).toBeVisible({ timeout: 120_000 });
+
   const startCommands = (await readCapture(page)).commands.filter(
     (command) => command.type === "startDuel",
   );
   expect(startCommands).toHaveLength(1);
-  expect(startCommands[0]?.player).toEqual({
+  expect(startCommands[0]?.duelId).toBe("local-v1:local:vs:mvp-opponent");
+  /* The editor stores a deck in its own display order, so the dispatched list
+     is compared as the multiset it is rather than the order it was typed. */
+  const dispatched = startCommands[0]?.player as {
+    readonly kind: string;
+    readonly main: readonly number[];
+    readonly extra: readonly number[];
+    readonly side: readonly number[];
+  };
+  expect(dispatched.kind).toBe("cards");
+  expect([...dispatched.main].sort()).toEqual([...LOCAL_DECK_MAIN].sort());
+  expect(dispatched.extra).toEqual([]);
+  expect(dispatched.side).toEqual([]);
+  expect(startCommands[0]?.opponent).toEqual({
     kind: "preset",
-    deckId: "mvp-player",
+    deckId: "mvp-opponent",
   });
 });
 

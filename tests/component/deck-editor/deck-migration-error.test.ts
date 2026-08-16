@@ -16,6 +16,9 @@ import {
   seedDeckDatabase,
 } from "../../fixtures/deck-database.ts";
 import { prototypeCatalogMap } from "../../fixtures/deck-editor.ts";
+import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts";
+
+installPrototypeActiveCatalog();
 
 /* The repository caches its migration for the lifetime of the module, and
    vitest gives each test file its own module registry. So this file owns the

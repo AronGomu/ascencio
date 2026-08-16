@@ -894,15 +894,14 @@ The pre-duel picker now offers bundled decks **plus every local deck this build
 can actually play**, and starting a local deck dispatches its card list to the
 Worker instead of a preset id.
 
-Read this before running the checks: **on this build no local deck can qualify,
-and that is the correct behaviour, not a bug.** The packaged art manifest is
-built from the six bundled `.ydk` decks only (120 codes), while the deck editor
-builds from a 24-card pinned catalog. Exactly 8 cards are in both, and the
-ruleset's copy limits cap those 8 at 21 cards — below the 40-card Main minimum.
-So a deck you build in `#/decks` is legal but undrawable, and the picker hides
-it rather than offering a deck the Worker would refuse after you chose it.
-Widening art coverage was explicitly out of scope for this slice. The unit test
-`local deck coverage tripwire` fails the day that changes.
+Corrected 2026-08-16 by T22: this section originally said no local deck could
+ever qualify on this build, because the deck editor built from a 24-card
+hand-written catalog while the packaged art covered the six bundled decks
+(120 codes) — only 8 cards in both, capped below the 40-card Main minimum. The
+editor now derives its catalog from the packaged set itself, so a deck you can
+build is a deck this build can draw. **Every step below that expected a local
+deck to be hidden has been rewritten accordingly**; see `## T22
+local-deck-playability` for the full flow.
 
 ### `#/duel` Bundled flow unchanged
 - [ ] Open `#/duel`. The picker appears with a **Bundled decks** group holding all six decks in both columns, and no empty "Your decks" heading anywhere.
@@ -913,9 +912,7 @@ Widening art coverage was explicitly out of scope for this slice. The unit test
 
 ### Build a deck and duel with it
 - [ ] Go to `#/decks`, create or import a deck, and fill the Main Deck to 40 legal cards so the editor reports no errors.
-- [ ] Go to `#/duel`. **Expected on this build:** the deck is *not* offered — only the Bundled decks group renders. No error, no warning, no disabled row.
-- [ ] Press Start anyway — the bundled pair duels normally.
-- [ ] (Only once art coverage is widened) The deck appears under **Your decks**, can be picked for either or both seats, and Start runs a duel whose opening hand is drawn from those cards.
+- [ ] Go to `#/duel`. The deck appears under **Your decks**, can be picked for either or both seats, and Start runs a duel whose opening hand is drawn from those cards.
 
 ### A deck the ruleset refuses is never offered
 - [ ] In `#/decks`, build a deck with only 39 Main cards (or 4 copies of one card).
@@ -927,7 +924,7 @@ Widening art coverage was explicitly out of scope for this slice. The unit test
 - [ ] Go to `#/duel` — only the Bundled decks group renders. There is no "Your decks" heading, no empty list, and Start still works.
 
 ### A chosen deck that disappears
-- [ ] With a local deck selected in the picker (requires art coverage; otherwise seed the same effect by editing `ygo.ui.v2` in localStorage and setting `decks.playerKey` to `local:no-such-deck:1`), reload `#/duel`.
+- [ ] With a local deck selected in the picker (or seed the same effect by editing `ygo.ui.v2` in localStorage and setting `decks.playerKey` to `local:no-such-deck:1`), reload `#/duel`.
 - [ ] The picker falls back to the default bundled pair, and a single notice explains that a deck you had chosen is no longer available.
 - [ ] The notice appears **once** — clicking any deck clears it, and it does not come back on the next click.
 - [ ] Start then runs the bundled pair normally.
@@ -1013,3 +1010,57 @@ Build-gate change only; nothing in the app moved. The whole check is one command
 - [ ] The ceilings live in `scripts/lib/domain-chunk-closure.ts` (per domain)
       and `scripts/verify-browser-build.ts` (shell). Raising one means
       re-measuring from a clean build, not nudging the number until it passes.
+
+## T22 local-deck-playability
+
+A deck you build in `#/decks` can now be played at `#/duel`. Nothing about the
+picker's filter changed — it still shows a local deck only when `resolveDeck`
+calls it `ready` and every code in it is one this build can draw. What changed
+is the editor's catalog: it used to be a 27-card hand-written fixture that
+barely overlapped the packaged art, and it is now derived at build time from
+the packaged card set itself. The editor offers **120 cards — 85 Main-deck and
+35 Extra-deck** — and every one of them has packaged art and text, so a legal
+deck is by construction a drawable one.
+
+Sanity numbers to expect while testing: 85 Main-deck cards at up to three
+copies each is 252 possible Main cards against a 40-card minimum, and the
+catalog's search/filter panel now lists real Attributes, Races and subtypes
+rather than the fixture's handful.
+
+### Build a deck from scratch and duel with it
+- [ ] Open `#/decks`. Press **Create deck**, name it (e.g. `Manual T22`), confirm with **Create**.
+- [ ] The catalog panel lists real cards — search `Nekroz`, `Shaddoll`, `Spellbook` or `Burning Abyss` and each returns several distinct cards with names and effect text.
+- [ ] Add cards until **Deck counts** reads `Main 40`. Fastest route: search a name, focus the tile, press `Space` to pick it up, then **Drop picked card in Main Deck**; repeat, or add three copies of ~14 different cards.
+- [ ] The validation panel shows no **errors**. Warnings such as "Extra Deck is empty", "Side Deck is empty" and "uses placeholder art" are expected and do not block anything.
+- [ ] Wait for **Saved locally**.
+- [ ] Go to `#/duel`. A **Your decks** group renders below **Bundled decks**, holding `Manual T22` in both the player and opponent columns.
+- [ ] Click `Manual T22` in **Your deck**. It becomes selected (`aria-pressed="true"`), and no start error appears.
+- [ ] Press **Start**. The duel initializes and reaches the first prompt — the field renders, both life-point totals are up, and your hand is drawn from the cards you picked, not from a bundled deck.
+- [ ] Hover a card in your hand: the preview panel shows that card's real name and effect text.
+- [ ] Surrender, then **Change decks** — `Manual T22` is still selected and the picker does not auto-start.
+
+### Import a YDK and duel with it
+- [ ] From `#/decks`, press **Import deck** in the library, give it a name, and paste a `#main` list of 40 codes taken from the editor's own catalog.
+- [ ] **Preview import** reports no unknown codes.
+- [ ] **Commit** — the deck opens in the editor and saves.
+- [ ] `#/duel` offers it under **Your decks**, and Start duels with it.
+
+### The filter still refuses what it should
+- [ ] In `#/decks`, build a deck with only 39 Main cards (or four copies of one card).
+- [ ] `#/duel` does not list it. It is absent, not greyed out, and there is no message about it.
+- [ ] Return to `#/decks` — the deck is exactly as you left it. Nothing was renamed, repaired, re-saved or deleted to make it playable.
+- [ ] Import a YDK holding a code the editor does not know (e.g. `99999999`). Preview flags it as unknown, and a deck saved with it is never offered at `#/duel`.
+
+### Bundled decks are unaffected
+- [ ] With no local deck at all (use `#/admin` → **Reset Deck library**), `#/duel` renders only the **Bundled decks** group — no empty "Your decks" heading — and Start works.
+- [ ] Pick a bundled pair and duel: unchanged from before this slice.
+
+### Build gate
+- [ ] `npm run build` finishes green. Its last block prints roughly
+      `"chunkBytes": { "shell": 78321, "battle": 365853, "deck-editor": 150849, "story": 60195 }`.
+- [ ] The deck-editor domain grew because it now ships the packaged card set
+      (~58 kB of masks plus names and effect text, in a chunk it shares with the
+      duel); its budget was raised deliberately from 143,750 to 201,250 bytes in
+      `scripts/lib/domain-chunk-closure.ts`. The battle domain *shrank* from
+      405,950 to 365,853 because the same change ended a three-way duplication
+      of the card-text manifest inside its closure; its ceiling was not touched.

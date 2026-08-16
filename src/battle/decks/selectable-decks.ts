@@ -1,3 +1,4 @@
+import { activeCatalog } from "../../decks/catalog/active-catalog.ts";
 import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
 import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
 import { resolveDeck, type DeckRepository } from "../../decks/index.ts";
@@ -90,16 +91,15 @@ export function findSelectableDeck(
 }
 
 /**
- * The codes this build can put on a board: packaged card text and packaged
- * art, which is the pair the Worker itself demands before it will create a
- * session. Deriving it here from the same two build-time manifests is what
- * lets the picker predict that refusal instead of provoking it.
+ * The codes this build can put on a board: packaged card data, packaged text
+ * and packaged art, which is what the Worker itself demands before it will
+ * create a session.
+ *
+ * It is the deck editor's own catalog read as a set of codes. One derivation
+ * for both surfaces is what lets the picker predict a refusal instead of
+ * provoking it, and what stops a card being offered in the editor that the
+ * picker would then quietly hold a deck back for.
  */
 export function supportedDuelCardCodes(): ReadonlySet<number> {
-  const described = new Set(__ACTIVE_CARD_TEXTS__.map(({ code }) => code));
-  return new Set(
-    __ACTIVE_IMAGE_MANIFEST__.files
-      .map(({ code }) => code)
-      .filter((code) => described.has(code)),
-  );
+  return new Set(activeCatalog().map(({ code }) => code));
 }

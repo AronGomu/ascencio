@@ -9,7 +9,8 @@ import {
   PROTOTYPE_RULESET,
   quantityLimit,
 } from "../../src/decks/catalog/pinned-ruleset.ts";
-import { PROTOTYPE_CATALOG } from "../../src/decks/catalog/prototype-catalog.ts";
+import { PROTOTYPE_CATALOG } from "../../src/deck-editor/fixtures/catalog.ts";
+import { installPrototypeActiveCatalog } from "../fixtures/active-catalog.ts";
 
 const catalog = catalogByCode(PROTOTYPE_CATALOG);
 const mainCodes = PROTOTYPE_CATALOG.filter(
@@ -36,11 +37,6 @@ const workerClientSpies = vi.hoisted(() => {
   Object.assign(globalThis, {
     __RUNTIME_SNAPSHOT_ID__: runtimeSnapshotId,
     __ACTIVATION_SNAPSHOT_ID__: runtimeSnapshotId,
-    __ACTIVE_CARD_TEXTS__: codes.map((code) => ({
-      code,
-      name: `Card ${code}`,
-      description: "",
-    })),
     __RUNTIME_MANIFEST_SHA256__: "b".repeat(64),
     __ACTIVE_IMAGE_MANIFEST_SHA256__: "c".repeat(64),
     __RUNTIME_REVISIONS__: {},
@@ -117,6 +113,12 @@ import { emptyDeckHistory } from "../../src/decks/deck-history.ts";
 import { createBlankDeck } from "../../src/decks/deck-model.ts";
 import { validateDeckDraft } from "../../src/decks/deck-validation.ts";
 import { IndexedDbDeckRepository } from "../../src/decks/indexeddb-deck-repository.ts";
+
+/* The duel builds its catalog from the packaged card set, so the fixture has
+   to be what this build packages for the seeded deck to be one it can draw.
+   Installed after the imports rather than in the hoisted block above, which
+   runs before the fixture module itself has been evaluated. */
+installPrototypeActiveCatalog();
 
 const LOCAL_PLAYER_OPTION =
   '[data-cy="deck-picker-option-player-local:built-deck:1"]';

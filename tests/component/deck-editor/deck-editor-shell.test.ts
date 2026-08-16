@@ -14,6 +14,9 @@ import {
   prototypeCatalogMap,
   stateFixture,
 } from "../../fixtures/deck-editor.ts";
+import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts";
+
+installPrototypeActiveCatalog();
 
 afterEach(async () => {
   cleanup();

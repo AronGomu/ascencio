@@ -119,6 +119,7 @@ export default tseslint.config(
         __ACTIVE_IMAGE_MANIFEST_SHA256__: "readonly",
         __ACTIVE_IMAGE_MANIFEST__: "readonly",
         __ACTIVE_CARD_TEXTS__: "readonly",
+        __ACTIVE_CARD_DATA__: "readonly",
         __RUNTIME_REVISIONS__: "readonly",
       },
       parserOptions: {

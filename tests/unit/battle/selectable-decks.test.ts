@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { buildActiveCardDataManifest } from "../../../scripts/lib/active-card-data-manifest.ts";
+import { buildActiveCardTextManifest } from "../../../scripts/lib/active-card-text-manifest.ts";
 import { buildActiveImageManifest } from "../../../scripts/lib/active-image-manifest.ts";
 import {
   findSelectableDeck,
@@ -10,7 +12,12 @@ import {
   PROTOTYPE_RULESET,
   quantityLimit,
 } from "../../../src/decks/catalog/pinned-ruleset.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/decks/catalog/prototype-catalog.ts";
+import { packagedCatalog } from "../../../src/decks/catalog/packaged-catalog.ts";
+import {
+  PROTOTYPE_CATALOG,
+  PROTOTYPE_CATALOG_ASSETS,
+  PROTOTYPE_CATALOG_TEXTS,
+} from "../../../src/deck-editor/fixtures/catalog.ts";
 import type { DeckRecord, DeckRepository } from "../../../src/decks/index.ts";
 import { emptyDeckHistory } from "../../../src/decks/deck-history.ts";
 import { createBlankDeck } from "../../../src/decks/deck-model.ts";
@@ -171,51 +178,73 @@ describe("findSelectableDeck", () => {
   });
 });
 
-/* The filter above is right, and on this build it always says no.
+/* The filter above is right, and it used to always say no: the editor built
+   from a hand-written fixture while `__ACTIVE_IMAGE_MANIFEST__` was cut from
+   the six bundled `.ydk` decks, so only eight cards were in both and the
+   pinned ruleset capped those eight below the 40-card Main minimum. No deck a
+   player could assemble was one this build could draw.
 
-   `__ACTIVE_IMAGE_MANIFEST__` is built from the six bundled `.ydk` decks alone
-   (`scripts/lib/active-image-manifest.ts`), while the deck editor builds from
-   `PROTOTYPE_CATALOG`. Only eight cards are in both, and the pinned ruleset
-   caps those eight below the 40-card Main minimum — so no deck a player can
-   assemble is one this build can draw, and the local group is empty in
-   production no matter what the picker does.
-
-   Widening art coverage is out of scope for T18, so this is a tripwire rather
-   than a fix: when the packaged set grows, this test fails, and the thing to
-   do is turn `a ruleset-valid local deck stays hidden while its art is
-   unpackaged` in `e2e/duel-smoke.spec.ts` into the local duel it was always
-   meant to be. */
-describe("local deck coverage tripwire", () => {
-  it("no assemblable deck is playable, because art covers only bundled decks", () => {
-    const packaged = new Set(
-      buildActiveImageManifest(process.cwd(), "tripwire").files.map(
-        ({ code }) => code,
-      ),
+   The editor now derives its catalog from the packaged set itself
+   (`src/decks/catalog/active-catalog.ts`), so the two sets are the same set by
+   construction. This asserts that from the build's own manifests rather than
+   from the browser globals, which is the earliest place the claim can be
+   checked — and it goes red the day packaging shrinks back below a legal deck.
+   `a local deck built from the packaged catalog duels` in
+   `e2e/duel-smoke.spec.ts` walks the same claim end to end. */
+describe("packaged local deck coverage", () => {
+  it("packages enough legal cards to assemble a deck the duel can draw", () => {
+    const packagedCodes = buildActiveImageManifest(
+      process.cwd(),
+      "coverage",
+    ).files.map(({ code }) => code);
+    const packaged = packagedCatalog(
+      buildActiveCardDataManifest(process.cwd(), new Set(packagedCodes)),
+      buildActiveCardTextManifest(process.cwd(), new Set(packagedCodes)),
     );
-    const assemblable = PROTOTYPE_CATALOG.filter((card) =>
-      packaged.has(card.code),
+    const assemblableMain = packaged.filter(
+      (card) => card.canonicalZone === "main",
     );
-    const largestPlayableDeck = assemblable.reduce(
+    const largestPlayableDeck = assemblableMain.reduce(
       (total, card) => total + quantityLimit(PROTOTYPE_RULESET, card.code),
       0,
     );
 
-    expect(assemblable).toHaveLength(8);
-    expect(largestPlayableDeck).toBeLessThan(40);
+    expect(packaged).toHaveLength(packagedCodes.length);
+    expect(largestPlayableDeck).toBeGreaterThanOrEqual(40);
+
+    /* Assembled the way the editor would, then run through the validator the
+       picker consults: legal to build is only worth asserting if it is also
+       legal to duel. */
+    const codes = assemblableMain
+      .filter((card) => quantityLimit(PROTOTYPE_RULESET, card.code) === 3)
+      .map(({ code }) => code);
+    const main = Array.from(
+      { length: 40 },
+      (_, index) => codes[index % codes.length]!,
+    );
+    const validation = validateDeckDraft(
+      { main, extra: [], side: [] },
+      catalogByCode(packaged),
+      PROTOTYPE_RULESET,
+    );
+
+    expect(
+      validation.issues.filter((issue) => issue.severity === "error"),
+    ).toEqual([]);
   });
 });
 
 describe("supportedDuelCardCodes", () => {
-  it("keeps only codes the packaged snapshot can both play and draw", () => {
-    vi.stubGlobal("__ACTIVE_CARD_TEXTS__", [
-      { code: 1, name: "one", description: "" },
-      { code: 2, name: "two", description: "" },
-    ]);
-    vi.stubGlobal("__ACTIVE_IMAGE_MANIFEST__", {
-      files: [{ code: 2 }, { code: 3 }],
-      missing: [1],
-    });
+  it("names exactly the cards the packaged catalog offers", () => {
+    const packaged = PROTOTYPE_CATALOG_ASSETS.slice(0, 2);
+    /* Text for the whole fixture, data for two of it: the card data manifest
+       is cut from the art-backed codes, so it is the narrower of the two and
+       the one that decides what may be played. */
+    vi.stubGlobal("__ACTIVE_CARD_DATA__", packaged);
+    vi.stubGlobal("__ACTIVE_CARD_TEXTS__", PROTOTYPE_CATALOG_TEXTS);
 
-    expect([...supportedDuelCardCodes()]).toEqual([2]);
+    expect([...supportedDuelCardCodes()]).toEqual(
+      packaged.map(({ code }) => code),
+    );
   });
 });

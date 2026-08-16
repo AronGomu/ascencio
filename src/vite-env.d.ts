@@ -10,6 +10,21 @@ declare const __ACTIVE_CARD_TEXTS__: readonly Readonly<{
   name: string;
   description: string;
 }>[];
+declare const __ACTIVE_CARD_DATA__: readonly Readonly<{
+  code: number;
+  alias: number;
+  setcodes: number[];
+  type: number;
+  level: number;
+  attribute: number;
+  race: string;
+  attack: number;
+  defense: number;
+  lscale: number;
+  rscale: number;
+  linkMarker: number;
+  ot: number;
+}>[];
 declare const __ACTIVE_IMAGE_MANIFEST__: Readonly<{
   schemaVersion: 1;
   snapshotId: string;

@@ -258,19 +258,21 @@ test("the deck editor recovers real save failures and revision conflicts", async
   await second.goto(`./${new URL(page.url()).hash}`);
   await expect(second.getByLabel("Deck counts")).toContainText("Main 1");
 
-  await page.getByRole("searchbox", { name: "Name" }).fill("Dark Magician");
-  const darkMagician = page.getByRole("button", { name: /Dark Magician/ });
-  await darkMagician.focus();
-  await darkMagician.press("Space");
+  await page.getByRole("searchbox", { name: "Name" }).fill("Summoned Skull");
+  const summonedSkull = page.getByRole("button", { name: /Summoned Skull/ });
+  await summonedSkull.focus();
+  await summonedSkull.press("Space");
   await page
     .getByRole("button", { name: "Drop picked card in Main Deck" })
     .click();
   await expect(page.getByText("Saved locally")).toBeVisible();
 
-  await second.getByRole("searchbox", { name: "Name" }).fill("Red-Eyes");
-  const redEyes = second.getByRole("button", { name: /Red-Eyes Black Dragon/ });
-  await redEyes.focus();
-  await redEyes.press("Space");
+  await second.getByRole("searchbox", { name: "Name" }).fill("Celtic Guardian");
+  const celticGuardian = second.getByRole("button", {
+    name: /Celtic Guardian/,
+  });
+  await celticGuardian.focus();
+  await celticGuardian.press("Space");
   await second
     .getByRole("button", { name: "Drop picked card in Main Deck" })
     .click();

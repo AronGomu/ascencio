@@ -15,6 +15,9 @@ import { createBlankDeck } from "../../../src/decks/deck-model.ts";
 import { DECK_DATABASE_NAME } from "../../../src/decks/deck-database.ts";
 import { IndexedDbDeckRepository } from "../../../src/decks/indexeddb-deck-repository.ts";
 import { prototypeCatalogMap } from "../../fixtures/deck-editor.ts";
+import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts";
+
+installPrototypeActiveCatalog();
 
 afterEach(async () => {
   cleanup();

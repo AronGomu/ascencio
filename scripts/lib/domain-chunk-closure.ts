@@ -33,8 +33,16 @@ export const DOMAIN_BUDGET_BYTES: Readonly<
 > = {
   // measured 405,950 bytes → ceil(405950/25_000) = 17 → 425,000 * 1.15
   battle: 488_750,
-  // measured 101,881 bytes → ceil(101881/25_000) = 5 → 125,000 * 1.15
-  "deck-editor": 143_750,
+  /* T22 2026-08-16: raised from 143,750. The deck editor's catalog is no longer
+     a 27-card fixture but the build's own packaged card set — 120 cards of masks
+     plus their names and effect text, ~58 kB in a chunk the editor and the duel
+     share. That payload is the feature: a deck a player builds is only offerable
+     at `#/duel` because the editor could only offer cards this build can draw.
+     Measured 150,849 bytes → ceil(150849/25_000) = 7 → 175,000 * 1.15, leaving
+     25.0% headroom. The same change took battle from 405,950 to 365,853 by
+     ending the three-way duplication of the card-text manifest inside its
+     closure, so its ceiling is untouched and now has more room than before. */
+  "deck-editor": 201_250,
   // measured 60,195 bytes → ceil(60195/25_000) = 3 → 75,000 * 1.15
   story: 86_250,
 };

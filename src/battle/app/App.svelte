@@ -73,7 +73,7 @@
     catalogByCode,
     PROTOTYPE_RULESET,
   } from "../../decks/catalog/pinned-ruleset.ts";
-  import { PROTOTYPE_CATALOG } from "../../decks/catalog/prototype-catalog.ts";
+  import { activeCatalog } from "../../decks/catalog/active-catalog.ts";
   import { IndexedDbDeckRepository } from "../../decks/indexeddb-deck-repository.ts";
   import {
     battleFacadeFailure,
@@ -103,8 +103,12 @@
   const CURRENT_ACTIVATION_SNAPSHOT_ID = snapshotId(__ACTIVATION_SNAPSHOT_ID__);
   const DEFAULT_CARD_PLACEHOLDER =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 104'%3E%3Crect width='72' height='104' rx='5' fill='%2318243b'/%3E%3Cpath d='M8 8h56v88H8z' fill='none' stroke='%23697895' stroke-width='2'/%3E%3Ctext x='36' y='57' fill='%23a9b5ca' font-size='28' text-anchor='middle'%3E?%3C/text%3E%3C/svg%3E";
+  /* Every card this build packages, which is both what the field needs a name
+     and effect text for and what a local deck may hold. One read, so the
+     duel's copy and the editor's catalog cannot name different card sets. */
+  const ACTIVE_CARDS = activeCatalog();
   const ACTIVE_CARD_TEXTS = new Map(
-    __ACTIVE_CARD_TEXTS__.map((record) => [record.code, record] as const),
+    ACTIVE_CARDS.map((card) => [card.code, card] as const),
   );
   const EMPTY_ZONE_LISTS: ReadonlyMap<
     PhysicalZoneId,
@@ -115,9 +119,11 @@
     { id: "runtime-package", sha256: __RUNTIME_MANIFEST_SHA256__ },
     { id: "active-images", sha256: __ACTIVE_IMAGE_MANIFEST_SHA256__ },
   ];
-  /* The pinned catalog every local deck is validated against. Built once: it
-     is the same 24 cards for the life of the build. */
-  const DECK_BUILDER_CATALOG = catalogByCode(PROTOTYPE_CATALOG);
+  /* The pinned catalog every local deck is validated against: the same cards
+     the editor offered when the deck was built, because both derive it from
+     this build's packaged card set. Built once, it is fixed for the life of
+     the build. */
+  const DECK_BUILDER_CATALOG = catalogByCode(ACTIVE_CARDS);
   const client = new DuelWorkerClient();
   const duel = createDuelStore(client);
   const persistedUi = createPersistedUiStore();

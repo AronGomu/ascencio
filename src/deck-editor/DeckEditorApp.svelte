@@ -23,7 +23,7 @@
     type DeckBuilderState,
   } from "./deck-editor-store.ts";
   import type { DeckEditorRoute } from "./deck-editor-route.ts";
-  import { PROTOTYPE_CATALOG } from "./fixtures/catalog.ts";
+  import { activeCatalog } from "../decks/catalog/active-catalog.ts";
   import DeckEditor from "./components/DeckEditor.svelte";
   import DeckLibrary from "./components/DeckLibrary.svelte";
   import YdkExport from "./components/YdkExport.svelte";
@@ -36,7 +36,10 @@
      `deckId` back. A host that swallows the callback keeps the library. */
   export let onnavigate: (route: DeckEditorRoute) => void = () => undefined;
 
-  const catalog = catalogByCode(PROTOTYPE_CATALOG);
+  /* Every card this build packages, read once per session: the editor may
+     only offer what the duel can draw, so both read the same manifests. */
+  const cards = activeCatalog();
+  const catalog = catalogByCode(cards);
   /* The shell is the only surface that measures the viewport: the editor reads
      the published stage once here and passes the resulting layout mode down,
      so no component below reads the stage a second time. The fallback keeps a
@@ -255,7 +258,7 @@
 {:else if state.current !== null && state.current.deck.id === deckId}
   <DeckEditor
     {state}
-    cards={PROTOTYPE_CATALOG}
+    {cards}
     {catalog}
     ruleset={PROTOTYPE_RULESET}
     {layoutMode}

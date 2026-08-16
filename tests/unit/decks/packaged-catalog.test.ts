@@ -1,0 +1,78 @@
+import { describe, expect, it } from "vitest";
+import { buildActiveCardDataManifest } from "../../../scripts/lib/active-card-data-manifest.ts";
+import { buildActiveCardTextManifest } from "../../../scripts/lib/active-card-text-manifest.ts";
+import { buildActiveImageManifest } from "../../../scripts/lib/active-image-manifest.ts";
+import {
+  packagedCatalog,
+  packagedCatalogRecords,
+} from "../../../src/decks/catalog/packaged-catalog.ts";
+import { PROTOTYPE_CATALOG_ASSETS } from "../../../src/deck-editor/fixtures/catalog.ts";
+
+/* Built the way `vite.config.ts` builds the three globals, from the same
+   generated snapshot, so this file checks the real shipped catalog rather than
+   a stand-in for it. */
+const packagedCodes = buildActiveImageManifest(
+  process.cwd(),
+  "packaged-catalog-test",
+).files.map(({ code }) => code);
+const codes = new Set(packagedCodes);
+const catalog = packagedCatalog(
+  buildActiveCardDataManifest(process.cwd(), codes),
+  buildActiveCardTextManifest(process.cwd(), codes),
+);
+
+describe("packagedCatalogRecords", () => {
+  it("joins each card's masks to its packaged text", () => {
+    const [first] = PROTOTYPE_CATALOG_ASSETS;
+    const records = packagedCatalogRecords(
+      [first!],
+      [{ code: first!.code, name: "Named", description: "Described" }],
+    );
+
+    expect(records).toHaveLength(1);
+    expect(records[0]?.card.code).toBe(first!.code);
+    expect(records[0]?.card.type).toBe(first!.type);
+    expect(records[0]?.text).toEqual({
+      code: first!.code,
+      name: "Named",
+      description: "Described",
+      strings: [],
+    });
+  });
+
+  it("refuses a card whose text this build does not package", () => {
+    expect(() => packagedCatalogRecords(PROTOTYPE_CATALOG_ASSETS, [])).toThrow(
+      /has no packaged text/,
+    );
+  });
+});
+
+describe("the packaged deck catalog", () => {
+  it("offers exactly the codes whose art this build ships", () => {
+    expect(catalog.map(({ code }) => code)).toEqual(packagedCodes);
+    expect(new Set(catalog.map(({ code }) => code)).size).toBe(catalog.length);
+  });
+
+  it("names and describes every card it offers", () => {
+    expect(
+      catalog.filter(({ name, description }) => !name || !description),
+    ).toEqual([]);
+  });
+
+  it("splits into a main-deck pool large enough to build with and an extra-deck pool", () => {
+    const main = catalog.filter((card) => card.canonicalZone === "main");
+    const extra = catalog.filter((card) => card.canonicalZone === "extra");
+
+    expect(main.length + extra.length).toBe(catalog.length);
+    /* 40 Main is the minimum a deck may hold and 15 the most an Extra may;
+       under three copies per card both pools clear their floor comfortably. */
+    expect(main.length * 3).toBeGreaterThanOrEqual(40);
+    expect(extra.length).toBeGreaterThanOrEqual(15);
+  });
+
+  it("covers every family the editor filters by", () => {
+    expect(new Set(catalog.map(({ family }) => family))).toEqual(
+      new Set(["monster", "spell", "trap"]),
+    );
+  });
+});

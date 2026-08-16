@@ -8,7 +8,7 @@ import {
 import { validateDeckDraft } from "./deck-validation.ts";
 
 export type DeckCommand =
-  | Readonly<{ type: "add"; cardCode: number }>
+  | Readonly<{ type: "add"; cardCode: number; zone?: DeckZone }>
   | Readonly<{ type: "remove"; cardCode: number; zone: DeckZone }>
   | Readonly<{
       type: "move";
@@ -16,7 +16,10 @@ export type DeckCommand =
       from: DeckZone;
       to: DeckZone;
     }>
-  | Readonly<{ type: "import"; cards: DeckCardLists }>;
+  | Readonly<{ type: "import"; cards: DeckCardLists }>
+  | Readonly<{ type: "restore"; cards: DeckCardLists }>
+  | Readonly<{ type: "reorder"; zone: DeckZone; from: number; to: number }>
+  | Readonly<{ type: "sort"; mode: "alpha" | "type" }>;
 
 export type DeckMutationResult =
   | Readonly<{
@@ -81,11 +84,14 @@ export function applyDeckCommand(
   catalog: ReadonlyMap<number, DeckBuilderCardView>,
   ruleset: PinnedDeckRuleset,
 ): DeckMutationResult {
-  if (command.type === "import")
+  /* A deck's order is the player's, so no command re-packs the lists on its
+     way through: cards land at the end of their zone and stay where they were
+     put. `reorder` and `sort` are the only ways a position moves on its own. */
+  if (command.type === "import" || command.type === "restore")
     return Object.freeze({
       type: "accepted",
-      cards: sortDeckCards(cloneCardLists(command.cards), catalog),
-      reason: "import",
+      cards: cloneCardLists(command.cards),
+      reason: command.type,
     });
 
   const next = {
@@ -93,6 +99,44 @@ export function applyDeckCommand(
     extra: [...deck.extra],
     side: [...deck.side],
   } satisfies Record<DeckZone, number[]>;
+
+  if (command.type === "sort")
+    return Object.freeze({
+      type: "accepted",
+      cards:
+        command.mode === "alpha"
+          ? sortDeckCardsAlphabetical(next, catalog)
+          : sortDeckCards(next, catalog),
+      reason: "sort",
+    });
+
+  if (command.type === "reorder") {
+    const zone = next[command.zone];
+    if (
+      !Number.isInteger(command.from) ||
+      command.from < 0 ||
+      command.from >= zone.length ||
+      command.to < 0
+    )
+      return Object.freeze({
+        type: "rejected",
+        reason: "Nothing to reorder.",
+      });
+    /* Dropping onto an occupied slot swaps the two cards, which keeps every
+       other tile still under the pointer; dropping past the last card is the
+       one gesture that means "append", so it splices instead. */
+    if (command.to < zone.length)
+      [zone[command.from], zone[command.to]] = [
+        zone[command.to]!,
+        zone[command.from]!,
+      ];
+    else zone.push(...zone.splice(command.from, 1));
+    return Object.freeze({
+      type: "accepted",
+      cards: cloneCardLists(next),
+      reason: "reorder",
+    });
+  }
 
   if (command.type === "remove") {
     if (!removeFirst(next[command.zone], command.cardCode))
@@ -102,7 +146,7 @@ export function applyDeckCommand(
       });
     return Object.freeze({
       type: "accepted",
-      cards: sortDeckCards(next, catalog),
+      cards: cloneCardLists(next),
       reason: "remove",
     });
   }
@@ -115,6 +159,12 @@ export function applyDeckCommand(
     });
 
   if (command.type === "add") {
+    const zone = command.zone ?? card.canonicalZone;
+    if (zone !== card.canonicalZone && zone !== "side")
+      return Object.freeze({
+        type: "rejected",
+        reason: "Card cannot be added to that zone.",
+      });
     const count = [...next.main, ...next.extra, ...next.side].filter(
       (code) => code === command.cardCode,
     ).length;
@@ -126,7 +176,7 @@ export function applyDeckCommand(
         type: "rejected",
         reason: `Copy limit ${limit} reached.`,
       });
-    next[card.canonicalZone].push(command.cardCode);
+    next[zone].push(command.cardCode);
   } else {
     if (command.from === command.to)
       return Object.freeze({
@@ -151,7 +201,7 @@ export function applyDeckCommand(
 
   return Object.freeze({
     type: "accepted",
-    cards: sortDeckCards(next, catalog),
+    cards: cloneCardLists(next),
     reason: command.type,
   });
 }
@@ -190,6 +240,27 @@ export function sortDeckCards(
     main: Object.freeze([...cards.main].sort(compare("main"))),
     extra: Object.freeze([...cards.extra].sort(compare("extra"))),
     side: Object.freeze([...cards.side].sort(compare("side"))),
+  });
+}
+
+export function sortDeckCardsAlphabetical(
+  cards: DeckCardLists,
+  catalog: ReadonlyMap<number, DeckBuilderCardView>,
+): DeckCardLists {
+  /* A code with no catalog entry has no name to sort by and no tile to read,
+     so it sinks to the end of its zone rather than sorting as an empty name
+     ahead of every real card. */
+  const compare = (left: number, right: number): number => {
+    const a = catalog.get(left);
+    const b = catalog.get(right);
+    if (a === undefined || b === undefined)
+      return a === b ? left - right : a === undefined ? 1 : -1;
+    return a.name.localeCompare(b.name) || a.code - b.code;
+  };
+  return Object.freeze({
+    main: Object.freeze([...cards.main].sort(compare)),
+    extra: Object.freeze([...cards.extra].sort(compare)),
+    side: Object.freeze([...cards.side].sort(compare)),
   });
 }
 

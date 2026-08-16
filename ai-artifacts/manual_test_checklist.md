@@ -1131,3 +1131,22 @@ Run `npm run dev` and open a deck at `#/decks/<id>`.
 - [ ] Click into the catalog search field, type, press Ctrl+Z — same: text-level undo only, deck untouched.
 - [ ] On macOS, Cmd+Z and Cmd+Y behave the same as Ctrl+Z / Ctrl+Y.
 - [ ] Screen reader / inspector: the Undo button announces shortcut `Control+Z`, the Redo button announces `Control+Y Control+Shift+Z`.
+
+## T6 manual-order-model
+
+Model-only slice: there is no reorder/sort UI yet (that arrives in a later
+slice). These steps check the ordering the existing editor now produces.
+
+Run `npm run dev` and open a deck at `#/decks/<id>` (or create one).
+
+- [ ] Add four different cards to the Main Deck one at a time, in a deliberate order (e.g. a Trap, then a Spell, then two Monsters). Each card appears at the END of the Main Deck, after the cards already there — the deck is NOT regrouped into monsters/spells/traps and NOT re-sorted by name.
+- [ ] Reload the page and reopen the same deck: the cards are still in the order you added them.
+- [ ] Add a second and third copy of a card already in the deck: each copy lands at the end, not next to its siblings.
+- [ ] Remove a card from the middle of the Main Deck: the remaining cards keep their relative order and do not shuffle up into a sorted arrangement.
+- [ ] Add an Extra Deck card (Fusion/Synchro/Xyz/Link): it lands at the end of the Extra Deck, not in Fusion→Synchro→Xyz→Link order.
+- [ ] Move a card between the Main/Extra Deck and the Side Deck: it lands at the END of the target zone, and the source zone keeps its remaining order.
+- [ ] Press Ctrl+Z after several adds: undo steps back one card at a time as before, and the deck it restores holds the right cards (order may snap back to the order recorded at that step — undo tracks which cards are in the deck, not where they sit).
+- [ ] Press Ctrl+Y to redo back up to the latest state: no error appears and the card count matches.
+- [ ] Open a deck that was saved BEFORE this change (an older deck in the library): it loads normally, its cards are unchanged, and adding/removing a card still saves without a "deck storage" error.
+- [ ] Import a `.ydk` from the library: the imported deck keeps the file's own card order rather than being re-sorted on import.
+- [ ] Watch the browser console through all of the above: no `DeckStorageError` and no "deck history is inconsistent" message.

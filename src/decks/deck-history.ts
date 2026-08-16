@@ -92,9 +92,18 @@ export function redoDeckUpdate(history: DeckHistory): Readonly<{
 }
 
 function sameCards(left: DeckCardLists, right: DeckCardLists): boolean {
+  /* Undo restores which cards a deck holds, never where the player put them,
+     so two lists with the same contents in a different order are the same
+     edit and earn no history entry. */
   return (
-    left.main.join(",") === right.main.join(",") &&
-    left.extra.join(",") === right.extra.join(",") &&
-    left.side.join(",") === right.side.join(",")
+    sameZone(left.main, right.main) &&
+    sameZone(left.extra, right.extra) &&
+    sameZone(left.side, right.side)
   );
+}
+
+function sameZone(left: readonly number[], right: readonly number[]): boolean {
+  /* Default lexicographic sort is a canonical form, not a meaningful order,
+     and both sides go through the same one. */
+  return [...left].sort().join(",") === [...right].sort().join(",");
 }

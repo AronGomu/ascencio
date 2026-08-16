@@ -364,7 +364,9 @@ function validateHistory(history: DeckHistory, id: DeckId): DeckHistory {
         !validTimestamp(update.createdAt) ||
         typeof update.beforeImportedNeedsReview !== "boolean" ||
         typeof update.afterImportedNeedsReview !== "boolean" ||
-        !["add", "remove", "move", "import"].includes(update.reason) ||
+        !["add", "remove", "move", "import", "restore"].includes(
+          update.reason,
+        ) ||
         !validCardLists(update.before) ||
         !validCardLists(update.after),
     )
@@ -453,12 +455,22 @@ function sameHistorySnapshot(
   },
   rightImported: boolean,
 ): boolean {
+  /* History records which cards a deck held, not the order the player left
+     them in, so a reorder saved without a history entry still lines up with
+     the snapshot it came from. */
   return (
     leftImported === rightImported &&
-    left.main.join(",") === right.main.join(",") &&
-    left.extra.join(",") === right.extra.join(",") &&
-    left.side.join(",") === right.side.join(",")
+    sameSnapshotZone(left.main, right.main) &&
+    sameSnapshotZone(left.extra, right.extra) &&
+    sameSnapshotZone(left.side, right.side)
   );
+}
+
+function sameSnapshotZone(
+  left: readonly number[],
+  right: readonly number[],
+): boolean {
+  return [...left].sort().join(",") === [...right].sort().join(",");
 }
 
 function validValidation(value: DeckRecord["validation"]): boolean {

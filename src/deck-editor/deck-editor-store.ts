@@ -317,14 +317,20 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           this.#ruleset,
         ),
       });
-      const nextHistory = pushDeckUpdate(state.current.history, {
-        deckId: before.id,
-        before,
-        after: result.cards,
-        reason: result.reason,
-        beforeImportedNeedsReview: before.importedNeedsReview,
-        afterImportedNeedsReview: importedNeedsReview,
-      });
+      /* Where a card sits is not an edit worth remembering, so reorder and
+         sort save the new order but leave undo pointing at the last change to
+         which cards the deck holds. */
+      const positional = command.type === "reorder" || command.type === "sort";
+      const nextHistory = positional
+        ? state.current.history
+        : pushDeckUpdate(state.current.history, {
+            deckId: before.id,
+            before,
+            after: result.cards,
+            reason: command.type,
+            beforeImportedNeedsReview: before.importedNeedsReview,
+            afterImportedNeedsReview: importedNeedsReview,
+          });
       await this.#save(nextDeck, nextHistory);
     });
   }

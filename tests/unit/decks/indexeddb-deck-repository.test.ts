@@ -162,6 +162,40 @@ describe("IndexedDbDeckRepository", () => {
     repo.close();
   });
 
+  /* Positions never enter the history, so the stored deck and the newest undo
+     entry legitimately disagree on order while holding the same cards. The
+     consistency check has to read that as one state, or every manual reorder
+     would make its own deck unloadable. */
+  it("a reordered deck still loads against its unreordered history", async () => {
+    const repo = await repository("deck-repo-reorder");
+    const draft = createBlankDeck("Reordered", catalog, PROTOTYPE_RULESET, {
+      id: "reordered",
+      now: new Date("2026-01-01T00:00:00.000Z"),
+    });
+    const created = await repo.createAndOpen(draft, emptyDeckHistory());
+    const history = pushDeckUpdate(created.history, {
+      id: "add-two",
+      deckId: created.deck.id,
+      before: created.deck,
+      after: { main: [89631139, 46986414], extra: [], side: [] },
+      reason: "add",
+    });
+    await repo.save(
+      1,
+      { ...created.deck, main: [89631139, 46986414] },
+      history,
+    );
+    await repo.save(
+      2,
+      { ...created.deck, main: [46986414, 89631139] },
+      history,
+    );
+    expect((await repo.load(created.deck.id))?.deck.main).toEqual([
+      46986414, 89631139,
+    ]);
+    repo.close();
+  });
+
   it("rejects malformed persisted rows before exposing them", async () => {
     const name = "deck-repo-malformed";
     names.push(name);

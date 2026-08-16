@@ -80,6 +80,24 @@ describe("bounded deck history", () => {
     expect(redoDeckUpdate(undone.history)?.importedNeedsReview).toBe(true);
   });
 
+  it("a pure reorder pushes no history entry", () => {
+    const history = pushDeckUpdate(emptyDeckHistory(), {
+      id: "first",
+      deckId: deckId("deck-a"),
+      before: { main: [], extra: [], side: [] },
+      after: { main: [1, 2, 3], extra: [], side: [] },
+      reason: "add",
+    });
+    expect(
+      pushDeckUpdate(history, {
+        deckId: deckId("deck-a"),
+        before: { main: [1, 2, 3], extra: [], side: [] },
+        after: { main: [3, 1, 2], extra: [], side: [] },
+        reason: "move",
+      }),
+    ).toBe(history);
+  });
+
   it("does not record rejected/no-op content", () => {
     const history = emptyDeckHistory();
     expect(

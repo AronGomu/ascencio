@@ -84,7 +84,7 @@ export interface DeckCardUpdate {
   readonly after: DeckCardLists;
   readonly beforeImportedNeedsReview: boolean;
   readonly afterImportedNeedsReview: boolean;
-  readonly reason: "add" | "remove" | "move" | "import";
+  readonly reason: "add" | "remove" | "move" | "import" | "restore";
 }
 
 export interface DeckHistory {

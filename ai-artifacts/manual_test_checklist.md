@@ -287,7 +287,7 @@ Import and export
 
 - [ ] From the library, click "Import YDK", set the deck name to `Manual T8 Import`, paste `#main` / `99999999` / `#extra` / `!side` (one per line) into "Or paste YDK text", click "Preview import" then "Replace deck cards" — the editor opens on the imported deck and shows a "Missing card 99999999" tile.
 - [ ] Confirm the URL moved to that imported deck's `#/decks/<id>`, then reload — the missing-card tile is still there.
-- [ ] Click "Export" in the editor — the dialog warns the deck is invalid; copy to clipboard, then Close.
+- [ ] Return to the library, use the per-row "Export" action on the imported deck — the dialog warns the deck is invalid; copy to clipboard, then Close. (Export moved to the library menu in T4 — no Export button exists in the editor header.)
 - [ ] Back in the library, use the per-row "Export" action on another deck — the YDK text dialog opens for that deck and Close returns focus to the row.
 
 Library CRUD
@@ -677,7 +677,7 @@ Layout at the sizes that matter
       no sideways scroll.
 - [ ] Tap targets are comfortable: tabs, menu items and card tiles are all
       easily hit with a thumb (44px floor).
-- [ ] Import and Export still open from the header at 390x844 and still work.
+- [ ] Navigate back to the library at 390x844 — "Import YDK" and the per-row "Export" action are accessible from the library and still work. (Import/Export moved to the library menu in T4 — no Import/Export buttons exist in the editor header.)
 
 Desktop is untouched (1440x900)
 
@@ -689,8 +689,7 @@ Desktop is untouched (1440x900)
 - [ ] Drag a card from the catalog into the Main Deck drop area — works as
       before. Focus a card, press Space, then click "Drop picked card in Side
       Deck" — works as before.
-- [ ] Undo/redo, import, export, rename and the Deck Library round trip all
-      behave exactly as they did before this ticket.
+- [ ] Undo/redo, rename and the Deck Library round trip all behave exactly as they did before this ticket; import and export remain accessible from the library menu (moved in T4).
 - [ ] Resize from 1440 wide down past 1024 and back up without reloading — the
       editor swaps between panels and tabs each way, keeping the open deck and
       its edits.
@@ -1095,3 +1094,28 @@ rather than the fixture's handful.
 - [ ] With no card selected and not hovering: preview shows "Hover a card to see its details."
 - [ ] On portrait / tabs layout: the "Details" tab is now labelled "Preview" and shows the same preview panel.
 - [ ] T1 regression: card art still appears in the preview panel when a tile with packaged art is hovered or selected.
+
+## T4 editor-layout-cleanup
+
+Run `npm run dev` and open an existing deck at `#/decks/<id>` (or create one).
+
+Header chrome removed
+
+- [ ] The editor header shows only four controls: a "← Library" link, the deck name input, Undo, and Redo. No card-count display, no validation-status chip, no autosave-status chip, no Import button, no Export button.
+- [ ] The deck name input is noticeably narrower than before (≈ 11 rem wide).
+
+Viewport stretch
+
+- [ ] The editor fills the full browser width with only a tiny margin on each side (≈ 0.25 rem per side, not the previous 1.5 rem).
+- [ ] The workspace pane and catalog pane each extend to near the bottom of the viewport — only the header row sits above them. Scroll the page; there should be no large gap between the panes and the window bottom.
+- [ ] The card-catalog results list is taller than before; you can see more cards before hitting the internal scroll boundary.
+
+Decorative headings removed
+
+- [ ] No "Deck workspace" or "Build deck" heading appears above the deck zone area.
+- [ ] No "Card catalog" or "Find cards" heading appears above the search bar / results area.
+- [ ] Both sections remain semantically labelled (screen-reader accessible) even though the visible headings are gone.
+
+Import and Export accessible from library
+
+- [ ] Navigate back to the library (`#/decks`). "Import YDK" and the per-row "Export" action are present and functional. (They no longer live in the editor header.)

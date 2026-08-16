@@ -87,7 +87,6 @@ describe("deck editor portrait layout", () => {
     );
     expect(onmutate).toHaveBeenCalledWith({ type: "add", cardCode: 89631139 });
     expect(pane("catalog")).not.toBeNull();
-    expect(screen.getByLabelText("Deck counts").textContent).toContain("Main");
   });
 
   it("announces the reason instead of adding a card at its copy limit", async () => {

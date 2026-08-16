@@ -89,17 +89,11 @@
 <section
   class="workspace"
   class:filled
-  aria-labelledby="workspace-heading"
+  aria-label="Deck workspace"
   data-cy="deck-workspace"
   bind:this={workspaceElement}
 >
   <header class="workspace-header" data-cy="deck-workspace-header">
-    <div data-cy="deck-workspace-titles">
-      <p data-cy="deck-workspace-eyebrow">Deck workspace</p>
-      <h2 id="workspace-heading" data-cy="deck-workspace-heading">
-        Build deck
-      </h2>
-    </div>
     {#if picked && picked.source !== "catalog"}
       <button
         type="button"
@@ -187,7 +181,7 @@
 <style>
   .workspace {
     min-width: 0;
-    height: calc(100vh - 9.5rem);
+    height: calc(100vh - 5.5rem);
     overflow-y: auto;
     padding: 1rem;
     border: 1px solid var(--border);
@@ -206,17 +200,6 @@
     justify-content: space-between;
     gap: 1rem;
     margin-bottom: 0.75rem;
-  }
-
-  .workspace-header p,
-  .workspace-header h2 {
-    margin: 0;
-  }
-
-  .workspace-header p {
-    color: var(--muted);
-    font-size: 0.76rem;
-    font-weight: 750;
   }
 
   .remove {

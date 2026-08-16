@@ -57,14 +57,10 @@
 <section
   class="catalog"
   class:filled
-  aria-labelledby="catalog-heading"
+  aria-label="Card catalog"
   data-cy="deck-catalog"
 >
   <header data-cy="deck-catalog-header">
-    <div data-cy="deck-catalog-titles">
-      <p class="section-label" data-cy="deck-catalog-eyebrow">Card catalog</p>
-      <h2 id="catalog-heading" data-cy="deck-catalog-heading">Find cards</h2>
-    </div>
     <span data-cy="deck-catalog-result-count">{results.length} results</span>
   </header>
 
@@ -219,7 +215,7 @@
 <style>
   .catalog {
     min-width: 0;
-    height: calc(100vh - 9.5rem);
+    height: calc(100vh - 5.5rem);
     overflow: hidden;
     padding: 1rem;
     border: 1px solid var(--border);
@@ -240,13 +236,11 @@
     gap: 0.75rem;
   }
 
-  h2,
   h3,
   p {
     margin: 0;
   }
 
-  .section-label,
   label span {
     color: var(--muted);
     font-size: 0.76rem;
@@ -289,7 +283,7 @@
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.55rem;
-    max-height: calc(100vh - 29rem);
+    max-height: calc(100vh - 24rem);
     overflow-y: auto;
     padding: 0.2rem 0.35rem 0.5rem 0.1rem;
   }

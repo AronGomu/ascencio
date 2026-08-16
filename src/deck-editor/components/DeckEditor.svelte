@@ -1,10 +1,6 @@
 <script lang="ts">
   import { MAXIMUM_DECK_NAME_LENGTH } from "../../decks/deck-model.ts";
-  import type {
-    DeckCardLists,
-    DeckRecord,
-    DeckZone,
-  } from "../../decks/deck-contracts.ts";
+  import type { DeckRecord, DeckZone } from "../../decks/deck-contracts.ts";
   import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
   import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
   import { tick } from "svelte";
@@ -28,8 +24,6 @@
     type TapTarget,
   } from "../layout/tap-targets.ts";
   import type { PickedCard } from "../drag-state.ts";
-  import YdkExport from "./YdkExport.svelte";
-  import YdkImport from "./YdkImport.svelte";
 
   export let state: DeckBuilderState;
   export let cards: readonly DeckBuilderCardView[];
@@ -56,9 +50,6 @@
   let hoveredCode: number | null = null;
   let picked: PickedCard | null = null;
   let announcement = "";
-  let showImport = false;
-  let showExport = false;
-  let modalOpener: HTMLElement | null = null;
   let deckName = state.current?.deck.name ?? "";
   let pane: EditorPane = defaultPane();
   let tapped: { code: number; zone: DeckZone } | null = null;
@@ -237,26 +228,9 @@
     picked = null;
   }
 
-  function openModal(kind: "import" | "export"): void {
-    modalOpener = document.activeElement as HTMLElement | null;
-    showImport = kind === "import";
-    showExport = kind === "export";
-  }
-
-  async function closeModal(): Promise<void> {
-    showImport = false;
-    showExport = false;
-    await tick();
-    modalOpener?.focus();
-    modalOpener = null;
-  }
-
   function handleKeydown(event: KeyboardEvent): void {
     if (event.key !== "Escape") return;
-    if (showImport || showExport) {
-      void closeModal();
-      announcement = "Dialog closed.";
-    } else if (tapped !== null) {
+    if (tapped !== null) {
       void closeTapMenu();
       announcement = "Card move cancelled.";
     } else if (picked !== null) {
@@ -289,41 +263,6 @@
         }}
       />
     </label>
-    <dl class="counts" aria-label="Deck counts" data-cy="deck-editor-counts">
-      <div data-cy="deck-editor-count-main">
-        <dt data-cy="deck-editor-count-main-term">Main</dt>
-        <dd data-cy="deck-editor-count-main-value">{deck.main.length}</dd>
-      </div>
-      <div data-cy="deck-editor-count-extra">
-        <dt data-cy="deck-editor-count-extra-term">Extra</dt>
-        <dd data-cy="deck-editor-count-extra-value">{deck.extra.length}</dd>
-      </div>
-      <div data-cy="deck-editor-count-side">
-        <dt data-cy="deck-editor-count-side-term">Side</dt>
-        <dd data-cy="deck-editor-count-side-value">{deck.side.length}</dd>
-      </div>
-    </dl>
-    <div
-      class={`status status-${deck.validation.status}`}
-      data-cy="deck-editor-validation-status"
-    >
-      <span data-cy="deck-editor-validation-status-label">Deck</span>
-      <strong data-cy="deck-editor-validation-status-value"
-        >{deck.validation.status}</strong
-      >
-    </div>
-    <div
-      class={`status save-${state.saveState}`}
-      aria-live="polite"
-      data-cy="deck-editor-save-status"
-    >
-      <span data-cy="deck-editor-save-status-label">Autosave</span>
-      <strong data-cy="deck-editor-save-status-value"
-        >{state.saveState === "saved"
-          ? "Saved locally"
-          : state.saveState}</strong
-      >
-    </div>
     <button
       type="button"
       class="secondary"
@@ -339,18 +278,6 @@
       data-cy="deck-editor-redo"
       onclick={onredo}
       aria-keyshortcuts="Control+Shift+Z">Redo</button
-    >
-    <button
-      type="button"
-      class="secondary"
-      data-cy="deck-editor-import"
-      onclick={() => openModal("import")}>Import</button
-    >
-    <button
-      type="button"
-      class="secondary"
-      data-cy="deck-editor-export"
-      onclick={() => openModal("export")}>Export</button
     >
   </header>
 
@@ -512,42 +439,15 @@
       oncancel={() => void closeTapMenu()}
     />
   {/if}
-
-  {#if showImport}
-    <div
-      class="backdrop"
-      aria-hidden="true"
-      data-cy="deck-editor-import-backdrop"
-    ></div>
-    <YdkImport
-      catalogCodes={new Set(catalog.keys())}
-      oncancel={() => void closeModal()}
-      onimport={async (cards: DeckCardLists) => {
-        await onmutate({ type: "import", cards });
-        await closeModal();
-        return true;
-      }}
-    />
-  {/if}
-  {#if showExport}
-    <div
-      class="backdrop"
-      aria-hidden="true"
-      data-cy="deck-editor-export-backdrop"
-    ></div>
-    <YdkExport {deck} oncancel={() => void closeModal()} />
-  {/if}
 {/if}
 
 <style>
   .editor-header {
     display: grid;
-    grid-template-columns:
-      auto minmax(12rem, 1fr)
-      auto auto auto auto auto auto auto;
+    grid-template-columns: auto auto 1fr auto auto;
     align-items: end;
     gap: 0.55rem;
-    width: min(118rem, calc(100% - 1.5rem));
+    width: calc(100% - 0.5rem);
     margin-inline: auto;
     padding-block: 0.75rem;
   }
@@ -562,14 +462,13 @@
     gap: 0.2rem;
   }
 
-  .name-field span,
-  .status span,
-  dt {
+  .name-field span {
     color: var(--muted);
     font-size: 0.68rem;
   }
 
   .name-field input {
+    width: 11rem;
     min-height: 2.45rem;
     padding: 0.45rem 0.6rem;
     color: var(--text);
@@ -579,41 +478,6 @@
     font-weight: 750;
   }
 
-  .counts {
-    display: flex;
-    gap: 0.35rem;
-    margin: 0;
-  }
-
-  .counts div,
-  .status {
-    min-width: 3.2rem;
-    padding: 0.3rem 0.45rem;
-    border: 1px solid var(--border);
-    border-radius: 0.45rem;
-    background: var(--surface);
-  }
-
-  dd {
-    margin: 0;
-    font-weight: 800;
-  }
-
-  .status {
-    display: grid;
-  }
-
-  .status-errors,
-  .save-failed,
-  .save-conflict {
-    border-color: var(--danger-border);
-  }
-
-  .status-warnings,
-  .save-saving {
-    border-color: var(--warning-border);
-  }
-
   .editor-layout {
     display: grid;
     grid-template-columns: minmax(18rem, 0.9fr) minmax(38rem, 1.9fr) minmax(
@@ -621,7 +485,7 @@
         0.82fr
       );
     gap: 0.75rem;
-    width: min(118rem, calc(100% - 1.5rem));
+    width: calc(100% - 0.5rem);
     margin-inline: auto;
     padding-bottom: 0.75rem;
   }
@@ -631,6 +495,11 @@
      layout it was before the panes existed. */
   .pane {
     display: contents;
+  }
+
+  .pane :global(.card-preview-panel) {
+    height: calc(100vh - 5.5rem);
+    overflow-y: auto;
   }
 
   .editor-layout.tabs {
@@ -645,7 +514,7 @@
   }
 
   .message {
-    width: min(118rem, calc(100% - 1.5rem));
+    width: calc(100% - 0.5rem);
     margin: 0 auto 0.6rem;
     padding: 0.65rem;
     border: 1px solid var(--border);
@@ -669,10 +538,8 @@
     background: color-mix(in srgb, var(--shadow) 68%, transparent);
   }
 
-  /* T14: below the stage breakpoint the header stops being a fixed nine-column
-     strip and wraps instead, so deck name, counts and both status readouts stay
-     on screen in every tab without pushing the page sideways. The width matches
-     `STAGE_BREAKPOINT_PX` in `src/shell/stage-layout.ts`. */
+  /* Below the stage breakpoint the header wraps rather than scrolling sideways.
+     The width matches `STAGE_BREAKPOINT_PX` in `src/shell/stage-layout.ts`. */
   @media (max-width: 1023.98px) {
     .editor-header {
       display: flex;

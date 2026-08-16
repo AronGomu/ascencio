@@ -1259,7 +1259,7 @@ Buttons gone
 ### Validation halo
 - [ ] A deck with errors (e.g. fewer than 40 main cards) — its row button shows a red/danger glow.
 - [ ] A deck with warnings (e.g. empty side) — its row button shows a yellow/warning glow.
-- [ ] A fully valid deck — its row button shows a green/selected glow.
+- [ ] A fully valid deck — its row button shows a green (`var(--success)`) glow, visibly distinct from the yellow-orange warning glow and the red error glow.
 - [ ] Hover a warning or error deck row — a native tooltip appears listing each issue message (one per line).
 - [ ] Hover a valid deck row — no tooltip appears.
 

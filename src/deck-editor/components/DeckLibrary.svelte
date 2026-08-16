@@ -531,8 +531,8 @@
   }
 
   .deck-open.halo-valid {
-    border-color: var(--selected);
-    box-shadow: 0 0 0.55rem color-mix(in srgb, var(--selected) 55%, transparent);
+    border-color: var(--success);
+    box-shadow: 0 0 0.55rem color-mix(in srgb, var(--success) 55%, transparent);
   }
 
   .deck-open.halo-warnings {

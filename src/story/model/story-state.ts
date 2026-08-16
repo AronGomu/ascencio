@@ -20,7 +20,8 @@ export type StoryScreen = (typeof STORY_SCREENS)[number];
 export type ChoiceId = "trust-rin" | "challenge-rin" | "observe-first";
 export type BattleResult = "win" | "loss" | "abort" | "failure";
 export type MapAccess = "available" | "locked" | "hidden";
-export type LocationId = "old-arena" | "archive" | "hidden-gate";
+export type LocationId = "old-arena" | "archive" | "hidden-gate" | "card-shop";
+export type EncounterId = Exclude<LocationId, "card-shop">;
 
 /** How rare a pulled card is. Ordered from the commonest pull to the rarest,
     which is also the order a pack reveals them in. */
@@ -65,7 +66,7 @@ export interface StoryState {
      the state rather than a screen-local variable because a duel handoff
      outlives this component: the story is unmounted while the duel runs, and
      what comes back has to know which encounter it was. */
-  readonly encounterId: LocationId | null;
+  readonly encounterId: EncounterId | null;
   /* Non-null only inside the pre-duel checkpoint, where it names the handoff
      the shell is waiting on. A checkpoint whose id does not match the route
      being resumed belongs to a duel this session is not running. */
@@ -107,6 +108,7 @@ export function createInitialStoryState(): StoryState {
       { id: "old-arena", access: "available", completed: false },
       { id: "archive", access: "locked", completed: false },
       { id: "hidden-gate", access: "hidden", completed: false },
+      { id: "card-shop", access: "available", completed: false },
     ],
     outcome: null,
     outcomeScene: null,

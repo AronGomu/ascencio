@@ -360,6 +360,13 @@ function isStoryState(value: unknown): value is StoryState {
     !isEconomy(state)
   )
     return false;
+  const VALID_LOCATION_IDS = new Set([
+    "old-arena",
+    "archive",
+    "hidden-gate",
+    "card-shop",
+  ]);
+  const REQUIRED_LOCATION_IDS = ["old-arena", "archive", "hidden-gate"];
   const locationIds = new Set<string>();
   const validLocations = state.locations.every((location) => {
     if (typeof location !== "object" || location === null) return false;
@@ -367,13 +374,15 @@ function isStoryState(value: unknown): value is StoryState {
     if (typeof item.id !== "string" || locationIds.has(item.id)) return false;
     locationIds.add(item.id);
     return (
-      ["old-arena", "archive", "hidden-gate"].includes(item.id) &&
+      VALID_LOCATION_IDS.has(item.id) &&
       typeof item.access === "string" &&
       ["available", "locked", "hidden"].includes(item.access) &&
       typeof item.completed === "boolean"
     );
   });
   return (
-    validLocations && state.locations.length === 3 && locationIds.size === 3
+    validLocations &&
+    REQUIRED_LOCATION_IDS.every((id) => locationIds.has(id)) &&
+    locationIds.size === state.locations.length
   );
 }

@@ -41,6 +41,13 @@
       x: "52%",
       y: "25%",
     },
+    "card-shop": {
+      name: "Card Shop",
+      marker: "shop",
+      summary: "Packs, singles, and a keeper who knows every reprint.",
+      x: "62%",
+      y: "72%",
+    },
   };
   let selectedId: LocationId | null = null;
   $: visibleLocations = locations.filter(({ access }) => access !== "hidden");

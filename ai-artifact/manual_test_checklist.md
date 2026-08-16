@@ -42,3 +42,17 @@ State + persistence only — no shop UI exists yet, so every check below is done
 - [ ] Re-save that slot and confirm the stored record is back at `schemaVersion: 2` with `dp: 1000` and the empty maps
 - [ ] Simulate a newer build: set a slot's `schemaVersion` to `3`, reload, and confirm the story reports the save as incompatible rather than deleting it or crashing
 - [ ] Play the existing prologue path end to end once (New Game → map → Old Arena → duel → outcome → reward): autosave, checkpoint and Continue all still work
+
+## T5 shop_location_greeting
+
+- [ ] Run `npm run dev`, open `#/story`, start New Game, advance to the map (or use gear → Continue on an existing save at the map)
+- [ ] Verify a "Card Shop" hotspot appears on the map image (expected position near 62% / 72%) and a "Card Shop" row appears in the location sidebar list
+- [ ] Click the Card Shop hotspot or sidebar row; verify the greeting screen opens (dialogue box visible, no duel loading)
+- [ ] First beat text contains "Welcome in. Shipment day"; speaker line reads "Shopkeeper"
+- [ ] Click the stage (or press Enter / Space) to advance to the second beat: text contains "Buying packs? Selling doubles? Either way, DP talks."
+- [ ] Click the stage once more; dialogue box disappears; a menu nav appears with three buttons: "Buy Cards", "Sell Cards", and "Leave Shop"
+- [ ] "Buy Cards" and "Sell Cards" buttons are visually disabled and show tooltip "Coming in a later slice" on hover
+- [ ] Click "Leave Shop"; map screen reloads with all previous state intact (objective, choice acknowledgment, locations unchanged)
+- [ ] Gear button (top-right) is accessible from the greeting screen
+- [ ] Double-clicking the stage does not advance two beats at once (only one advance per click event)
+- [ ] Old-arena and archive map hotspots still route to the pre-battle screen as before

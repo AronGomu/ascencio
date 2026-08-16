@@ -132,6 +132,33 @@ describe("story state model", () => {
     ).toBeNull();
   });
 
+  it("selecting the card shop opens the greeting, not a duel", () => {
+    const map = { ...createInitialStoryState(), screen: "map" as const };
+    const next = reduceStory(map, {
+      type: "select-location",
+      locationId: "card-shop",
+    });
+    expect(next.screen).toBe("shop-greeting");
+    expect(next.shopReturnScreen).toBe("map");
+    expect(next.encounterId).toBeNull();
+  });
+
+  it("leaving the shop returns where it was entered", () => {
+    const greeting = {
+      ...createInitialStoryState(),
+      screen: "shop-greeting" as const,
+      shopReturnScreen: "map" as const,
+    };
+    const next = reduceStory(greeting, { type: "leave-shop" });
+    expect(next.screen).toBe("map");
+    expect(next.shopReturnScreen).toBeNull();
+  });
+
+  it("leave-shop is a no-op on non-shop screens", () => {
+    const map = { ...createInitialStoryState(), screen: "map" as const };
+    expect(reduceStory(map, { type: "leave-shop" })).toBe(map);
+  });
+
   it("allows available map destinations only", () => {
     const map = { ...createInitialStoryState(), screen: "map" as const };
     expect(

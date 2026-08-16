@@ -30,6 +30,7 @@
   import OutcomeScreen from "./screens/OutcomeScreen.svelte";
   import PreBattleScreen from "./screens/PreBattleScreen.svelte";
   import RewardScreen from "./screens/RewardScreen.svelte";
+  import ShopGreetingScreen from "./shop/ShopGreetingScreen.svelte";
   import TitleScreen from "./screens/TitleScreen.svelte";
   import {
     STORY_SLOT_KEYS,
@@ -507,6 +508,11 @@
       oncontinue={continueOutcome}
       onretry={retryEncounter}
       onreturn={returnToMap}
+    />
+  {:else if state.screen === "shop-greeting"}
+    <ShopGreetingScreen
+      onnavigate={() => undefined}
+      onleave={() => dispatch({ type: "leave-shop" })}
     />
   {:else if state.screen === "reward"}
     <RewardScreen

@@ -22,6 +22,8 @@ export type StoryCommand =
   | { readonly type: "battle-result"; readonly result: BattleResult }
   | { readonly type: "continue-outcome" }
   | { readonly type: "acknowledge-reward" }
+  | { readonly type: "open-shop" }
+  | { readonly type: "leave-shop" }
   | { readonly type: "reset" };
 
 export function reduceStory(
@@ -77,9 +79,15 @@ export function reduceStory(
       const location = state.locations.find(
         ({ id }) => id === command.locationId,
       );
-      return location?.access === "available"
-        ? { ...state, screen: "pre-battle", encounterId: command.locationId }
-        : state;
+      if (location?.access !== "available") return state;
+      if (command.locationId === "card-shop") {
+        return { ...state, screen: "shop-greeting", shopReturnScreen: "map" };
+      }
+      return {
+        ...state,
+        screen: "pre-battle",
+        encounterId: command.locationId,
+      };
     }
     case "start-battle":
       return state.screen === "pre-battle"
@@ -130,6 +138,20 @@ export function reduceStory(
               ? { ...location, access: "available" }
               : location,
         ),
+      };
+    case "open-shop":
+      if (state.screen !== "narrative" && state.screen !== "map") return state;
+      return {
+        ...state,
+        screen: "shop-greeting",
+        shopReturnScreen: state.screen,
+      };
+    case "leave-shop":
+      if (!state.screen.startsWith("shop-")) return state;
+      return {
+        ...state,
+        screen: state.shopReturnScreen ?? "map",
+        shopReturnScreen: null,
       };
     case "reset":
       return createInitialStoryState();

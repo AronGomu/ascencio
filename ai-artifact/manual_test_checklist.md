@@ -69,3 +69,9 @@ State + persistence only — no shop UI exists yet, so every check below is done
 - [ ] Inspect element: shop button has `aria-label="Open shop"`, deck button has `aria-label="Open deck builder"`, icons carry `aria-hidden="true"`
 - [ ] `data-cy="story-top-bar-shop"` absent while on any `shop-*` screen; present on narrative and map
 - [ ] Gear menu (top-right) still opens on map/pre-battle as before; no visual overlap with top bar
+
+## T7 shop_data_contracts
+
+This slice is contracts-only (pure TypeScript modules, no UI surface). No manual browser steps are required.
+
+The three modules — `src/story/shop/data/shop-rarity.ts`, `src/story/shop/data/shop-pricing.ts`, and `src/story/shop/data/pack-generator.ts` — are verified entirely by unit tests (`tests/unit/story/shop-data.test.ts`). Run `npx vitest run tests/unit/story/shop-data.test.ts` to confirm all 5 automated assertions pass.

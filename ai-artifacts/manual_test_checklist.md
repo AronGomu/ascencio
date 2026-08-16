@@ -1192,3 +1192,18 @@ fix in a browser, which no automated suite covers.
 - [ ] Verify that the left CardPreviewPanel still shows card art and description when a card is focused on the field (the side panel remains the sole card-info surface).
 - [ ] Verify the HUD "Inspect" buttons (top-right tray) are unaffected and still open the card preview.
 - [ ] Confirm the browser console shows no errors during the above.
+
+## T10 right-rail-redesign
+
+- [ ] Run `npm run dev` and open the duel at `http://localhost:4173` (or configured dev port); start a preset duel.
+- [ ] Confirm a visible horizontal rule (border-bottom line) separates the turn/phase header row from the rest of the rail.
+- [ ] Confirm the avatar images are square, fill the full rail width, and have a fat accent-coloured border on all four sides (no card-back image; silhouette placeholder only).
+- [ ] Confirm the LP display reads `LP 8000` (label before the number, no thousands separator) for both players at the start of the duel.
+- [ ] Confirm the LP plate sits inside a bordered box (border visible, background slightly tinted).
+- [ ] Deal damage in the duel that brings a player below 4001 LP — confirm the LP plate colour changes to orange.
+- [ ] Deal damage that brings a player below 2000 LP — confirm the LP plate colour changes to red.
+- [ ] Confirm that when LP changes, the displayed number visibly counts/tweens toward the new value over ~600 ms (not a hard jump).
+- [ ] Enable `prefers-reduced-motion` in OS/browser settings, then repeat damage — confirm the LP number jumps immediately (no animation).
+- [ ] Confirm the action-prompt block (`status.title` / `status.subtitle`) is vertically centred within the rail (aligned with the middle of the duel field).
+- [ ] Confirm thinking dots still animate when the opponent is deciding.
+- [ ] Confirm the browser console shows no errors during the above.

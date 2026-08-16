@@ -1252,8 +1252,8 @@
             $duel.snapshot.players[0].lifePoints,
             $duel.snapshot.players[1].lifePoints,
           ]}
-          playerAvatarUrl={imageLibrary?.cardBackUrl ?? ""}
-          opponentAvatarUrl={imageLibrary?.cardBackUrl ?? ""}
+          playerAvatarUrl=""
+          opponentAvatarUrl=""
           status={railStatus}
           onopensettings={openMenu}
         />

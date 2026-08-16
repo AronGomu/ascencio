@@ -346,10 +346,10 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   await expect(currentPhaseChip).toHaveCount(1);
   await expect(
     page.locator('[data-cy="duel-right-rail-life-points-0"]'),
-  ).toHaveText("8,000 LP");
+  ).toHaveText("LP 8000");
   await expect(
     page.locator('[data-cy="duel-right-rail-life-points-1"]'),
-  ).toHaveText("8,000 LP");
+  ).toHaveText("LP 8000");
   // Round 3 (T10): the header labels each life total by role, not deck/
   // archetype name — those never render anywhere in the header or field.
   const headerText = await page

@@ -1181,3 +1181,14 @@ fix in a browser, which no automated suite covers.
 - [ ] With Full Control checked, uncheck it while a prompt you can already see is open — that visible prompt is NOT auto-answered behind your back; it stays until you answer it.
 - [ ] Focus the browser's address bar (or switch windows) while holding Ctrl, then return — the checkbox is unticked (blur clears the hold).
 - [ ] Confirm the browser console shows no errors during the above.
+
+## T9 remove-inspect-option
+
+- [ ] Run `npm run dev` and open the duel at `http://localhost:4173` (or configured dev port); start a duel.
+- [ ] Trigger any prompt dialog (effectYesNo, selectCard, etc. — use workspace toggle in Settings if needed) — verify NO "Inspect …" rows / `<details>` expanders appear inside the dialog.
+- [ ] Force a multi-choice card-select prompt (e.g. discard cards) — verify the card checkbox rows show the card label only, with NO inspect expander beneath each checkbox.
+- [ ] Force a sort/order prompt (e.g. rearrange cards on field) — verify order list shows label + up/down buttons only, NO inspect expander.
+- [ ] Force a counter-allocation prompt — verify each card row shows label + +/- controls only, NO inspect expander.
+- [ ] Verify that the left CardPreviewPanel still shows card art and description when a card is focused on the field (the side panel remains the sole card-info surface).
+- [ ] Verify the HUD "Inspect" buttons (top-right tray) are unaffected and still open the card preview.
+- [ ] Confirm the browser console shows no errors during the above.

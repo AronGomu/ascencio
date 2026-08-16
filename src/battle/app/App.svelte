@@ -1266,9 +1266,6 @@
       <PromptDialog
         prompt={effectivePrompt}
         disabled={$duel.responsePending}
-        imageLibrary={imagesMatchRuntime ? imageLibrary : null}
-        placeholderUrl={imageLibrary?.placeholderUrl ??
-          DEFAULT_CARD_PLACEHOLDER}
         onsubmit={duel.respond}
       />
     {/key}
@@ -1317,9 +1314,6 @@
               prompt={effectivePrompt}
               disabled={$duel.responsePending}
               onsubmit={duel.respond}
-              imageLibrary={imagesMatchRuntime ? imageLibrary : null}
-              placeholderUrl={imageLibrary?.placeholderUrl ??
-                DEFAULT_CARD_PLACEHOLDER}
             />
           {/key}
         {:else}

@@ -179,3 +179,16 @@ The three modules — `src/story/shop/data/shop-rarity.ts`, `src/story/shop/data
 - [ ] **Keyboard**: focus the opening screen (Tab to the main area); press Enter or Space — advances one card per keypress
 - [ ] **Reduced motion**: set OS/browser `prefers-reduced-motion: reduce`; open selected packs — cards appear instantly without the flip animation; all other functionality identical
 - [ ] "Open All" still works as before: opens all packs at once and skips directly to results recap
+
+## T14 card_art_coverage
+
+Note: these steps require the image pipeline to have run (`npm run assets:images`) to populate `generated/card-images/archive/full/`. The pipeline is blocked in the current worktree (no generated/ snapshot). Run from a machine with the full snapshot.
+
+- [ ] Run `npm run assets:images` in the project root — command completes without non-zero exit; shop-set codes are included in the download queue
+- [ ] Confirm the download report at `generated/card-images/archive/download-report.json` shows `requested` ≥ 14 794 (catalog count + any extra shop-only codes)
+- [ ] Run `npm run assets:images:verify` — exits 0; no "Image is not present in the current card catalog" failures for any shop code
+- [ ] Run `npm run dev`, open `#/story`, start New Game, navigate to Card Shop
+- [ ] Open set list for **Legend of Blue Eyes White Dragon** (LOB) — card art tiles show real JPEG images for cards fetched from YGOPRODeck; no tiles should be a blank/placeholder if the code was returned 200 by the source
+- [ ] Cards whose codes returned 404 from YGOPRODeck continue to show the placeholder tile (no broken images)
+- [ ] Open a different set (e.g. Metal Raiders) — same: real art where available, placeholder where not
+- [ ] Buy a pack and open it — cards from shop sets show art in the opening screen the same as in set-list tiles

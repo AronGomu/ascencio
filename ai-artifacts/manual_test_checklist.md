@@ -1119,3 +1119,15 @@ Decorative headings removed
 Import and Export accessible from library
 
 - [ ] Navigate back to the library (`#/decks`). "Import YDK" and the per-row "Export" action are present and functional. (They no longer live in the editor header.)
+
+## T5 undo-redo-keybinds
+
+Run `npm run dev` and open a deck at `#/decks/<id>`.
+
+- [ ] Add a card to the Main Deck, then press Ctrl+Z with focus anywhere outside a text field — the card is removed and the header Undo button greys out when no edits remain.
+- [ ] Press Ctrl+Y — the card comes back. Press Ctrl+Shift+Z after another undo — it also redoes.
+- [ ] Press Ctrl+Z repeatedly past the start of history — nothing breaks and no error appears; the Undo button stays disabled.
+- [ ] Click into the deck name input, type text, press Ctrl+Z — the browser undoes the *typing* in the input; the deck itself is unchanged (no card is removed).
+- [ ] Click into the catalog search field, type, press Ctrl+Z — same: text-level undo only, deck untouched.
+- [ ] On macOS, Cmd+Z and Cmd+Y behave the same as Ctrl+Z / Ctrl+Y.
+- [ ] Screen reader / inspector: the Undo button announces shortcut `Control+Z`, the Redo button announces `Control+Y Control+Shift+Z`.

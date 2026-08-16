@@ -229,6 +229,24 @@
   }
 
   function handleKeydown(event: KeyboardEvent): void {
+    const target = event.target as HTMLElement | null;
+    const editingText =
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLTextAreaElement ||
+      (target?.isContentEditable ?? false);
+    if (!editingText && (event.ctrlKey || event.metaKey)) {
+      const key = event.key.toLowerCase();
+      if (key === "z" && !event.shiftKey) {
+        event.preventDefault();
+        if ((state.current?.history.undo.length ?? 0) > 0) onundo();
+        return;
+      }
+      if (key === "y" || (key === "z" && event.shiftKey)) {
+        event.preventDefault();
+        if ((state.current?.history.redo.length ?? 0) > 0) onredo();
+        return;
+      }
+    }
     if (event.key !== "Escape") return;
     if (tapped !== null) {
       void closeTapMenu();
@@ -277,7 +295,7 @@
       disabled={state.current?.history.redo.length === 0}
       data-cy="deck-editor-redo"
       onclick={onredo}
-      aria-keyshortcuts="Control+Shift+Z">Redo</button
+      aria-keyshortcuts="Control+Y Control+Shift+Z">Redo</button
     >
   </header>
 

@@ -22,3 +22,10 @@
 - [ ] Close button reads "Close Menu" (not "Close Paused")
 - [ ] Gear button absent on title screen, load screen, and end screen
 - [ ] Gear button present on pre-battle, battle-mock, outcome, and reward screens
+
+## T3 title_return_to_menu
+
+- [ ] Run `npm run dev`, open `#/story`; verify a "Main menu" button appears in the title nav after "Settings"
+- [ ] Click "Main menu" from the title screen; browser navigates to `#/` (shell home screen)
+- [ ] Navigate back to `#/story`; title screen loads normally; existing buttons (New Game, Load, Settings) remain functional
+- [ ] Verify "Main menu" button has `data-cy="story-title-main-menu"` (inspect element)

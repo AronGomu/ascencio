@@ -14,7 +14,8 @@
   export let ruleset: PinnedDeckRuleset;
   export let totalCopies: ReadonlyMap<number, number>;
   export let selectedCode: number | null = null;
-  export let picked = false;
+  export let dropAllowed = false;
+  export let dragActive = false;
   export let onselect: (
     card: DeckBuilderCardView | null,
     code: number,
@@ -26,11 +27,6 @@
     event: DragEvent,
   ) => void = () => undefined;
   export let ondragcancel: () => void = () => undefined;
-  export let onpickup: (
-    code: number,
-    zone: DeckZone,
-    index: number,
-  ) => void = () => undefined;
   export let onreorderdrop: (zone: DeckZone, toIndex: number) => void = () =>
     undefined;
   export let reorderActive = false;
@@ -79,20 +75,11 @@
         : `${codes.length}/${plan.slots}`}
     </span>
   </header>
-  {#if picked}
-    <button
-      type="button"
-      class="keyboard-drop"
-      data-cy={`deck-zone-drop-button-${zone}`}
-      onclick={() => ondropzone(zone)}
-    >
-      Drop picked card in {label}
-    </button>
-  {/if}
   {#if !collapsed}
     <div
       id={`deck-zone-body-${zone}`}
-      class:picked
+      class:allowed={dragActive && dropAllowed}
+      class:blocked={dragActive && !dropAllowed}
       class="drop-zone"
       role="group"
       aria-label={`${label} drop area`}
@@ -142,7 +129,6 @@
               ontap={ontap === null ? null : () => ontap(code, zone)}
               ondragcard={(event) => ondragcard(code, zone, index, event)}
               {ondragcancel}
-              onpickup={() => onpickup(code, zone, index)}
               onhover={() => onhovercard(code)}
             />
           </div>
@@ -217,15 +203,14 @@
     background: var(--surface-sunken);
   }
 
-  .keyboard-drop {
-    width: 100%;
-    margin-bottom: 0.35rem;
-  }
-
-  .drop-zone:hover,
-  .drop-zone.picked {
+  .drop-zone.allowed {
     border-color: var(--accent);
     background: var(--surface-chain);
+  }
+
+  .drop-zone.blocked {
+    border-color: var(--danger);
+    background: var(--danger-surface);
   }
 
   .grid {

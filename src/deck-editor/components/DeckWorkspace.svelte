@@ -29,16 +29,10 @@
     event: DragEvent,
   ) => void = () => undefined;
   export let ondragcancel: () => void = () => undefined;
-  export let onpickup: (
-    code: number,
-    zone: DeckZone,
-    index: number,
-  ) => void = () => undefined;
   export let onreorderdrop: (zone: DeckZone, toIndex: number) => void = () =>
     undefined;
   export let onmutate: (command: DeckCommand) => void = () => undefined;
   export let ondropzone: (zone: DeckZone) => void = () => undefined;
-  export let onremove: () => void = () => undefined;
   export let ontap: ((code: number, zone: DeckZone) => void) | null = null;
   export let onhovercard: (code: number) => void = () => undefined;
   export let onhoverend: () => void = () => undefined;
@@ -61,6 +55,7 @@
     cards: ReadonlyMap<number, DeckBuilderCardView>,
   ): boolean {
     if (active === null) return false;
+    if (active.source === zone) return true;
     const card = cards.get(active.code);
     if (card === undefined) return false;
     if (active.source === "catalog" || active.source === "side")
@@ -123,21 +118,6 @@
         >Sort by type</button
       >
     </div>
-    {#if picked && picked.source !== "catalog"}
-      <button
-        type="button"
-        class="danger remove"
-        data-cy="deck-workspace-remove-picked"
-        ondragover={(event) => event.preventDefault()}
-        ondrop={(event) => {
-          event.preventDefault();
-          onremove();
-        }}
-        onclick={onremove}
-      >
-        Remove picked card
-      </button>
-    {/if}
   </header>
 
   <DeckZoneGrid
@@ -149,11 +129,11 @@
     {ruleset}
     {totalCopies}
     {selectedCode}
-    picked={mainDropAllowed}
+    dropAllowed={mainDropAllowed}
+    dragActive={picked !== null}
     {onselect}
     {ondragcard}
     {ondragcancel}
-    {onpickup}
     {ontap}
     {onreorderdrop}
     reorderActive={mainReorderActive}
@@ -173,11 +153,11 @@
     {ruleset}
     {totalCopies}
     {selectedCode}
-    picked={extraDropAllowed}
+    dropAllowed={extraDropAllowed}
+    dragActive={picked !== null}
     {onselect}
     {ondragcard}
     {ondragcancel}
-    {onpickup}
     {ontap}
     {onreorderdrop}
     reorderActive={extraReorderActive}
@@ -197,11 +177,11 @@
     {ruleset}
     {totalCopies}
     {selectedCode}
-    picked={sideDropAllowed}
+    dropAllowed={sideDropAllowed}
+    dragActive={picked !== null}
     {onselect}
     {ondragcard}
     {ondragcancel}
-    {onpickup}
     {ontap}
     {onreorderdrop}
     reorderActive={sideReorderActive}
@@ -254,10 +234,5 @@
     min-height: 2rem;
     padding: 0.35rem 0.55rem;
     font-size: 0.8rem;
-  }
-
-  .remove {
-    min-height: 2.25rem;
-    padding: 0.45rem 0.65rem;
   }
 </style>

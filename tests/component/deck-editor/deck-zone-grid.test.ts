@@ -27,7 +27,6 @@ describe("DeckZoneGrid", () => {
       totalCopies: new Map([[89631139, 3]]),
       onselect: vi.fn(),
       ondragcard: vi.fn(),
-      onpickup: vi.fn(),
       ondropzone: vi.fn(),
     });
     expect(

@@ -16,8 +16,6 @@
   export let ontap: (() => void) | null = null;
   export let ondragcard: (event: DragEvent) => void = () => undefined;
   export let ondragcancel: () => void = () => undefined;
-  export let onpickup: () => void = () => undefined;
-  export let onblocked: () => void = () => undefined;
   export let onhover: (() => void) | null = null;
 
   $: name = card?.name ?? `Missing card ${code}`;
@@ -47,13 +45,6 @@
   onmouseenter={() => onhover?.()}
   ondragstart={ondragcard}
   ondragend={ondragcancel}
-  onkeydown={(event) => {
-    if (event.key === " " || event.key === "Enter") {
-      event.preventDefault();
-      if (draggable) onpickup();
-      else onblocked();
-    }
-  }}
 >
   <span
     class={`limit-badge limit-${limit}`}

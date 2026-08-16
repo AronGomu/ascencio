@@ -49,6 +49,7 @@
   let hovered: DeckBuilderCardView | null = null;
   let hoveredCode: number | null = null;
   let picked: PickedCard | null = null;
+  let dropHandled = false;
   let announcement = "";
   let deckName = state.current?.deck.name ?? "";
   let pane: EditorPane = defaultPane();
@@ -168,6 +169,7 @@
     selected = card;
     selectedCode = card.code;
     picked = { code: card.code, source: "catalog", index: null };
+    dropHandled = false;
     event?.dataTransfer?.setData("text/plain", String(card.code));
     if (event?.dataTransfer) event.dataTransfer.effectAllowed = "copy";
     announcement = `${card.name} picked up. Drop in ${card.canonicalZone === "main" ? "Main Deck" : "Extra Deck"}.`;
@@ -182,6 +184,7 @@
     selected = catalog.get(code) ?? null;
     selectedCode = code;
     picked = { code, source: zone, index };
+    dropHandled = false;
     event?.dataTransfer?.setData("text/plain", String(code));
     if (event?.dataTransfer) event.dataTransfer.effectAllowed = "move";
     announcement = `${selected?.name ?? `Card ${code}`} picked up from ${zone}.`;
@@ -189,51 +192,57 @@
 
   function dropInZone(zone: DeckZone): void {
     if (picked === null) return;
-    const card = catalog.get(picked.code);
-    if (picked.source === "catalog") {
-      if (card === undefined || zone !== card.canonicalZone) {
+    dropHandled = true;
+    const src = picked;
+    const card = catalog.get(src.code);
+    if (src.source === "catalog") {
+      if (card !== undefined && zone === card.canonicalZone) {
+        onmutate({ type: "add", cardCode: src.code });
+        announcement = `${card.name} added to ${zone}.`;
+      } else {
         announcement = `Card cannot be added to ${zone}.`;
-        return;
       }
-      onmutate({ type: "add", cardCode: picked.code });
-    } else if (card === undefined) {
-      announcement = `Missing card ${picked.code} can only be removed.`;
+      picked = null;
       return;
-    } else if (picked.source !== zone) {
+    }
+    if (src.source === zone) {
+      picked = null;
+      return;
+    }
+    const legal =
+      card !== undefined &&
+      (src.source === "side" ? zone === card.canonicalZone : zone === "side");
+    if (legal) {
       onmutate({
         type: "move",
-        cardCode: picked.code,
-        from: picked.source,
+        cardCode: src.code,
+        from: src.source,
         to: zone,
       });
+      announcement = `${card!.name} moved to ${zone}.`;
+    } else {
+      onmutate({ type: "remove", cardCode: src.code, zone: src.source });
+      announcement = `${card?.name ?? `Card ${src.code}`} removed.`;
     }
-    announcement = `${card?.name ?? `Card ${picked.code}`} dropped in ${zone}.`;
     picked = null;
   }
 
   function reorderInZone(zone: DeckZone, toIndex: number): void {
     if (picked === null || picked.source !== zone || picked.index === null)
       return;
+    dropHandled = true;
     onmutate({ type: "reorder", zone, from: picked.index, to: toIndex });
     picked = null;
   }
 
-  function cancelPicked(): void {
+  function endZoneDrag(): void {
     if (picked === null) return;
-    picked = null;
-    announcement = "Card movement canceled.";
-  }
-
-  function removePicked(): void {
-    if (picked === null || picked.source === "catalog") {
-      picked = null;
-      return;
+    if (!dropHandled && picked.source !== "catalog") {
+      onmutate({ type: "remove", cardCode: picked.code, zone: picked.source });
+      announcement = `${catalog.get(picked.code)?.name ?? `Card ${picked.code}`} removed.`;
     }
-    const code = picked.code;
-    const source = picked.source;
-    onmutate({ type: "remove", cardCode: code, zone: source });
-    announcement = `${catalog.get(code)?.name ?? `Card ${code}`} removed.`;
     picked = null;
+    dropHandled = false;
   }
 
   function handleKeydown(event: KeyboardEvent): void {
@@ -401,14 +410,12 @@
           ontap={tabs ? tapDeckCard : null}
           ondragcard={(code, zone, index, event) =>
             startZoneDrag(code, zone, index, event)}
-          ondragcancel={cancelPicked}
-          onpickup={(code, zone, index) => startZoneDrag(code, zone, index)}
+          ondragcancel={endZoneDrag}
           onreorderdrop={reorderInZone}
           onmutate={(command) => {
             onmutate(command);
           }}
           ondropzone={dropInZone}
-          onremove={removePicked}
           onhovercard={(code) => {
             hovered = catalog.get(code) ?? null;
             hoveredCode = code;
@@ -440,8 +447,7 @@
           }}
           ontap={tabs ? tapCatalogCard : null}
           ondragcard={(card, event) => startCatalogDrag(card, event)}
-          ondragcancel={cancelPicked}
-          onpickup={(card) => startCatalogDrag(card)}
+          ondragcancel={endZoneDrag}
           onblocked={(card, reason) => {
             selected = card;
             selectedCode = card.code;

@@ -17,7 +17,6 @@ describe("CardCatalog", () => {
       ruleset: PROTOTYPE_RULESET,
       onselect: vi.fn(),
       ondragcard: vi.fn(),
-      onpickup: vi.fn(),
     });
     await user.type(
       screen.getByRole("searchbox", { name: "Name" }),
@@ -44,7 +43,6 @@ describe("CardCatalog", () => {
       ruleset: PROTOTYPE_RULESET,
       onselect,
       ondragcard,
-      onpickup: vi.fn(),
     });
     await userEvent
       .setup()

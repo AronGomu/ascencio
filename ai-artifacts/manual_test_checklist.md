@@ -1192,3 +1192,28 @@ Sort buttons
 - [ ] Click "Sort A–Z" — all three zones are sorted alphabetically by card name.
 - [ ] Click "Sort by type" — main/side zones order monsters → spells → traps; extra zone follows Fusion → Synchro → Xyz → Link.
 - [ ] After a sort, confirm the Undo button remains disabled (sort does not enter history).
+
+## T9 drop-removal-semantics
+
+Outside-drop removal
+
+- [ ] Open a deck with at least one card in Main Deck.
+- [ ] Drag a Main Deck card and release it over the page background (outside all zone drop areas) — the card is removed from the deck, and a removal announcement appears in the status region.
+- [ ] Confirm the Undo button becomes enabled after this removal (it entered history).
+
+Illegal-zone halo
+
+- [ ] Drag a Main Deck card (e.g. a normal monster) — the Main Deck and Side Deck drop areas turn green (allowed), the Extra Deck drop area turns red (blocked).
+- [ ] Drag an Extra Deck card — the Extra Deck and Side Deck drop areas turn green, the Main Deck drop area turns red.
+- [ ] Drag a catalog card whose canonical zone is Main — the Main Deck drop area turns green, Extra turns red.
+- [ ] Release the drag without dropping — no removal occurs for a catalog card.
+
+Illegal-zone drop → removal
+
+- [ ] Drag a Main Deck card and drop it onto the Extra Deck zone (red) — the card is removed from Main Deck (not moved to Extra).
+- [ ] Drag a catalog card and drop it onto the wrong zone — no card is added, no error panel appears.
+
+Buttons gone
+
+- [ ] Drag any Main Deck card and confirm no "Remove picked card" button appears in the workspace header.
+- [ ] Confirm no per-zone "Drop picked card in …" keyboard buttons appear during the drag.

@@ -20,7 +20,6 @@
     event: DragEvent,
   ) => void = () => undefined;
   export let ondragcancel: () => void = () => undefined;
-  export let onpickup: (card: DeckBuilderCardView) => void = () => undefined;
   export let onblocked: (
     card: DeckBuilderCardView,
     reason: string,
@@ -203,8 +202,6 @@
                   : onblocked(card, blockedReason(card))}
           ondragcard={(event) => ondragcard(card, event)}
           {ondragcancel}
-          onpickup={() => onpickup(card)}
-          onblocked={() => onblocked(card, blockedReason(card))}
           onhover={() => onhovercard(card)}
         />
       {/each}

@@ -281,6 +281,7 @@
       onactivate={() => onstackactivate(stack)}
       {imageLibrary}
       {placeholderUrl}
+      {cardBackUrl}
     />
   {/each}
   {#each fieldCards as card (card.id)}

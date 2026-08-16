@@ -43,13 +43,13 @@
 
 ## Impl steps
 
-- [ ] 1. Write unit tests; `npm run test:unit -- tests/unit/duel-field.test.ts`; red.
-- [ ] 2. `board-view-model.ts` `createStacks`: change to `const top = zone === "deck" || zone === "extra" ? undefined : publicCards.at(-1);` (touch nothing else — `publicCount` stays engine-truth for browse).
-- [ ] 3. `StackControl.svelte`: add `export let cardBackUrl = "";`. Change art block to render when `stack.topCardCode !== undefined` (existing branch, unchanged) **plus** new `{:else if stack.count > 0 && (stack.zone === "deck" || stack.zone === "extra")}` branch: `<div class="duel-field-stack__art" data-cy={\`stack-control-back-${stack.id}\`}><img src={cardBackUrl} alt="" aria-hidden="true" decoding="async" data-cy={\`stack-control-back-image-${stack.id}\`} /></div>`. Every new element carries `data-cy` (repo data-cy gate: `tests/unit/data-cy-coverage.test.ts`).
-- [ ] 4. `FieldBoard.svelte` StackControl call site: add `{cardBackUrl}`.
-- [ ] 5. Write component test; `npm run test:component -- tests/component/DuelField.test.ts`; green.
-- [ ] 6. Grep for stale expectations: `grep -rn "topCardCode\|topCardLabel" tests/ e2e/ e2e-acceptance/` — update any test asserting an extra-deck top card face.
-- [ ] 7. `npm run test:unit && npm run test:component && npm run typecheck && npm run lint`.
+- [x] 1. Write unit tests; `npm run test:unit -- tests/unit/duel-field.test.ts`; red.
+- [x] 2. `board-view-model.ts` `createStacks`: change to `const top = zone === "deck" || zone === "extra" ? undefined : publicCards.at(-1);` (touch nothing else — `publicCount` stays engine-truth for browse).
+- [x] 3. `StackControl.svelte`: add `export let cardBackUrl = "";`. Change art block to render when `stack.topCardCode !== undefined` (existing branch, unchanged) **plus** new `{:else if stack.count > 0 && (stack.zone === "deck" || stack.zone === "extra")}` branch: `<div class="duel-field-stack__art" data-cy={\`stack-control-back-${stack.id}\`}><img src={cardBackUrl} alt="" aria-hidden="true" decoding="async" data-cy={\`stack-control-back-image-${stack.id}\`} /></div>`. Every new element carries `data-cy` (repo data-cy gate: `tests/unit/data-cy-coverage.test.ts`).
+- [x] 4. `FieldBoard.svelte` StackControl call site: add `{cardBackUrl}`.
+- [x] 5. Write component test; `npm run test:component -- tests/component/DuelField.test.ts`; green.
+- [x] 6. Grep for stale expectations: `grep -rn "topCardCode\|topCardLabel" tests/ e2e/ e2e-acceptance/` — update any test asserting an extra-deck top card face.
+- [x] 7. `npm run test:unit && npm run test:component && npm run typecheck && npm run lint`.
 - [ ] 8. Manual check: dev duel — both deck + both extra stacks show identical card-back art; GY shows top face.
 
 ## Outputs
@@ -60,7 +60,7 @@
 
 ## Validation
 
-- [ ] tests pass: `npm run test:unit`, `npm run test:component`
-- [ ] manual check: extra deck stack = card back
-- [ ] app functional — no broken path from this slice
+- [x] tests pass: `npm run test:unit`, `npm run test:component`
+- [ ] manual check: extra deck stack = card back — delegated to manual_test_checklist.md
+- [x] app functional — no broken path from this slice (`npm run check:headless` all green)
 - [ ] commit msg draft: `fix(field): render private pile tops face-down, extra deck included`

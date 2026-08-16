@@ -670,6 +670,33 @@ describe("semantic board view model", () => {
     expect(graveyard?.topCardCode).toBe(89631139);
   });
 
+  it("an extra deck stack exposes no top card identity", () => {
+    const result = mapSnapshotToBoard(
+      BOARD_VIEW_MODEL_FIXTURES["ST-08"],
+      BOARD_CARD_TEXTS,
+    );
+    if (!result.ok) throw new Error("Fixture failed to map");
+    const extra = result.value.stacks.find(({ id }) => id === "p0:extra");
+
+    expect(extra?.count).toBeGreaterThan(0);
+    expect(extra?.topCardCode).toBeUndefined();
+    expect(extra?.topCardLabel).toBeUndefined();
+    expect(extra?.accessibleLabel).not.toContain("top card");
+  });
+
+  it("graveyard stack keeps its face-up top card", () => {
+    const result = mapSnapshotToBoard(
+      TWO_CARD_GRAVEYARD_STATE,
+      BOARD_CARD_TEXTS,
+    );
+    if (!result.ok) throw new Error("Fixture failed to map");
+    const graveyard = result.value.stacks.find(
+      ({ id }) => id === "p0:graveyard",
+    );
+
+    expect(graveyard?.topCardCode).toBeDefined();
+  });
+
   it("keeps 34 zones with both shared EMZs for a Link profile", () => {
     const result = mapSnapshotToBoard(
       BOARD_VIEW_MODEL_FIXTURES["ST-03"],

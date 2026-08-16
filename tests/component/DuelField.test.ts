@@ -3808,6 +3808,38 @@ describe("FieldBoard", () => {
       ),
     ).toEqual([]);
   });
+
+  it("deck and extra stacks render a card back", () => {
+    const cardBackUrl = "/cards/back.webp";
+    const stackBoard = mapSnapshotToBoard(
+      BOARD_VIEW_MODEL_FIXTURES["ST-08"],
+      BOARD_CARD_TEXTS,
+    );
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    const { container } = render(FieldBoard, {
+      board: stackBoard.value,
+      renderLayout: createFieldRenderLayout(true, 1280, 720),
+      imageUrls: new Map<number, string>(),
+      cardBackUrl,
+      placeholderUrl: "",
+    });
+
+    const deckBack = container.querySelector<HTMLDivElement>(
+      '[data-cy="stack-control-back-p0:deck"]',
+    );
+    const extraBack = container.querySelector<HTMLDivElement>(
+      '[data-cy="stack-control-back-p0:extra"]',
+    );
+
+    expect(deckBack).not.toBeNull();
+    expect(extraBack).not.toBeNull();
+    expect(
+      deckBack?.querySelector<HTMLImageElement>("img")?.getAttribute("src"),
+    ).toBe(cardBackUrl);
+    expect(
+      extraBack?.querySelector<HTMLImageElement>("img")?.getAttribute("src"),
+    ).toBe(cardBackUrl);
+  });
 });
 
 const HAND_CARD_ID = "st01-own-hand";

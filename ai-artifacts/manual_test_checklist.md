@@ -1129,3 +1129,10 @@ fix in a browser, which no automated suite covers.
 
 - [ ] Start a dev duel and activate a card that searches the deck (e.g. Spellbook Magician of Prophecy effect, or any search-style effect). Confirm the target list dialog shows real card art and names for your own deck cards, not "Face-down card".
 - [ ] After confirming the search choice, open the deck browse list and confirm those cards now show as face-down again (the prompt-attested identity is gone once the prompt resolves and the deck shuffles).
+
+## T4 extra-deck-facedown-top
+
+- [ ] Start a dev duel and observe both deck stacks (own and opponent). Each non-empty deck stack shows the card-back image, not a face-up card art.
+- [ ] Observe both extra deck stacks. Each non-empty extra deck stack shows the card-back image (same back art as the deck), not a face-up card art.
+- [ ] Open the GY (graveyard) browse list — the top card in the GY stack shows face-up art (regression: public piles unchanged).
+- [ ] Open the extra deck browse list — the list still shows own card names/art face-up (browse of private piles is intentionally allowed; only the stack tile face is hidden).

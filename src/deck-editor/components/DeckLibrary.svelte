@@ -107,20 +107,20 @@
 >
   <header data-cy="deck-library-header">
     <div data-cy="deck-library-titles">
-      <p data-cy="deck-library-eyebrow">Local decks</p>
-      <h1 id="deck-library-heading" data-cy="deck-library-heading">
+      <h1
+        id="deck-library-heading"
+        data-cy="deck-library-heading"
+        class="visually-hidden"
+      >
         Deck Library
       </h1>
-      <span data-cy="deck-library-subtitle"
-        >Visual Novel chooses a deck ID. This module stores and resolves decks.</span
-      >
     </div>
     <div class="actions" data-cy="deck-library-actions">
       <button
         type="button"
         class="secondary"
         data-cy="deck-library-import"
-        onclick={onimport}>Import YDK</button
+        onclick={onimport}>Import Deck</button
       >
       <button
         type="button"
@@ -192,8 +192,12 @@
         <li data-cy={`deck-library-row-${deck.id}`}>
           <button
             type="button"
-            class="deck-open"
+            class={`deck-open halo-${deck.validation.status}`}
             data-cy={`deck-library-open-${deck.id}`}
+            data-validation-status={deck.validation.status}
+            title={deck.validation.issues.length === 0
+              ? null
+              : deck.validation.issues.map(({ message }) => message).join("\n")}
             onclick={() => onopen(deck.id)}
           >
             <strong data-cy={`deck-library-name-${deck.id}`}>{deck.name}</strong
@@ -201,11 +205,6 @@
             <span data-cy={`deck-library-counts-${deck.id}`}
               >Main {deck.main.length} · Extra {deck.extra.length} · Side {deck
                 .side.length}</span
-            >
-            <span
-              class:error={deck.validation.status === "errors"}
-              data-cy={`deck-library-status-${deck.id}`}
-              >{deck.validation.status}</span
             >
             <small data-cy={`deck-library-updated-${deck.id}`}
               >Updated {new Date(deck.updatedAt).toLocaleString()}</small
@@ -463,18 +462,10 @@
     margin-top: 0;
   }
 
-  header p,
-  header span,
   label span,
   .deck-open span,
   .deck-open small {
     color: var(--muted);
-  }
-
-  header p {
-    margin-bottom: 0.25rem;
-    font-size: 0.78rem;
-    font-weight: 750;
   }
 
   .tools {
@@ -513,20 +504,45 @@
     background: var(--surface);
   }
 
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
   .deck-open {
     display: grid;
     min-width: 0;
     color: var(--text);
     background: transparent;
     text-align: left;
+    border: 1px solid transparent;
+    border-radius: 0.5rem;
   }
 
   .deck-open:hover {
     background: var(--surface-raised);
   }
 
-  .deck-open .error {
-    color: var(--danger);
+  .deck-open.halo-valid {
+    border-color: var(--selected);
+    box-shadow: 0 0 0.55rem color-mix(in srgb, var(--selected) 55%, transparent);
+  }
+
+  .deck-open.halo-warnings {
+    border-color: var(--warning);
+    box-shadow: 0 0 0.55rem color-mix(in srgb, var(--warning) 55%, transparent);
+  }
+
+  .deck-open.halo-errors {
+    border-color: var(--danger);
+    box-shadow: 0 0 0.55rem color-mix(in srgb, var(--danger) 55%, transparent);
   }
 
   .row-actions button {

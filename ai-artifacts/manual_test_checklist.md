@@ -285,7 +285,7 @@ Deep link, reload and Back
 
 Import and export
 
-- [ ] From the library, click "Import YDK", set the deck name to `Manual T8 Import`, paste `#main` / `99999999` / `#extra` / `!side` (one per line) into "Or paste YDK text", click "Preview import" then "Replace deck cards" — the editor opens on the imported deck and shows a "Missing card 99999999" tile.
+- [ ] From the library, click "Import Deck", set the deck name to `Manual T8 Import`, paste `#main` / `99999999` / `#extra` / `!side` (one per line) into "Or paste YDK text", click "Preview import" then "Replace deck cards" — the editor opens on the imported deck and shows a "Missing card 99999999" tile.
 - [ ] Confirm the URL moved to that imported deck's `#/decks/<id>`, then reload — the missing-card tile is still there.
 - [ ] Return to the library, use the per-row "Export" action on the imported deck — the dialog warns the deck is invalid; copy to clipboard, then Close. (Export moved to the library menu in T4 — no Export button exists in the editor header.)
 - [ ] Back in the library, use the per-row "Export" action on another deck — the YDK text dialog opens for that deck and Close returns focus to the row.
@@ -677,7 +677,7 @@ Layout at the sizes that matter
       no sideways scroll.
 - [ ] Tap targets are comfortable: tabs, menu items and card tiles are all
       easily hit with a thumb (44px floor).
-- [ ] Navigate back to the library at 390x844 — "Import YDK" and the per-row "Export" action are accessible from the library and still work. (Import/Export moved to the library menu in T4 — no Import/Export buttons exist in the editor header.)
+- [ ] Navigate back to the library at 390x844 — "Import Deck" and the per-row "Export" action are accessible from the library and still work. (Import/Export moved to the library menu in T4 — no Import/Export buttons exist in the editor header.)
 
 Desktop is untouched (1440x900)
 
@@ -1118,7 +1118,7 @@ Decorative headings removed
 
 Import and Export accessible from library
 
-- [ ] Navigate back to the library (`#/decks`). "Import YDK" and the per-row "Export" action are present and functional. (They no longer live in the editor header.)
+- [ ] Navigate back to the library (`#/decks`). "Import Deck" and the per-row "Export" action are present and functional. (They no longer live in the editor header.)
 
 ## T5 undo-redo-keybinds
 
@@ -1242,3 +1242,26 @@ Buttons gone
 
 ### No native context menu
 - [ ] Right-click any card tile — the browser's native context menu does **not** appear.
+
+## T11 library-halo-polish
+
+### Setup
+- [ ] Run `npm run dev` and open `http://localhost:4300/#/decks`.
+
+### Import button label
+- [ ] The library header shows an "Import Deck" button (not "Import YDK"). Click it — the import dialog opens normally.
+
+### Titles removed
+- [ ] The "Local decks" eyebrow text is gone.
+- [ ] The "Visual Novel chooses a deck ID…" subtitle text is gone.
+- [ ] The "Deck Library" h1 is not visible, but the page landmark is still labelled (screen reader / accessibility tree shows the landmark).
+
+### Validation halo
+- [ ] A deck with errors (e.g. fewer than 40 main cards) — its row button shows a red/danger glow.
+- [ ] A deck with warnings (e.g. empty side) — its row button shows a yellow/warning glow.
+- [ ] A fully valid deck — its row button shows a green/selected glow.
+- [ ] Hover a warning or error deck row — a native tooltip appears listing each issue message (one per line).
+- [ ] Hover a valid deck row — no tooltip appears.
+
+### Status text gone
+- [ ] No raw status word ("valid", "warnings", "errors") appears as text in any deck row.

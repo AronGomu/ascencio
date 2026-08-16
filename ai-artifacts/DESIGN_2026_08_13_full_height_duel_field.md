@@ -1,7 +1,7 @@
 # Design — Full-height duel field, right rail, defense-capable zones
 
 Status: **validated prototype; implementation planned**
-Plan: [`../ai_artefacts/PLAN_2026_08_13_feedback_follow_up.md`](../ai_artefacts/PLAN_2026_08_13_feedback_follow_up.md)
+Plan: [`../ai-artifact/PLAN_2026_08_13_feedback_follow_up.md`](../ai-artifact/PLAN_2026_08_13_feedback_follow_up.md)
 Date: 2026-08-13
 Prototype: [`ai-artifacts/PROTO_2026_08_12_full_height_field.html`](PROTO_2026_08_12_full_height_field.html) (standalone, no build, no engine)
 ADR-019 adopts this design + supersedes ADR-003. Implementation plan will replace production render geometry currently rooted in `src/field/duel-field-layout.ts`.

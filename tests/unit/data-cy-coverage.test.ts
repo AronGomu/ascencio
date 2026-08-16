@@ -345,7 +345,7 @@ describe("data-cy coverage across the production domains", () => {
 /* The static scan above reads one source site at a time, so a single literal
    inside a component mounted once per card looks unique to it while the live
    document carries one copy per card. Only a rendered document can settle the
-   `AGENT.md` contract, so these render the fixture boards and count. */
+   `AGENTS.md` contract, so these render the fixture boards and count. */
 
 const CONTEXT = { workerGeneration: 1, sessionGeneration: 2 } as const;
 

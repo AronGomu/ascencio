@@ -3,7 +3,7 @@
 > Status: accepted
 > Decided: 2026-08-14
 > Owners: story-domain, battle-domain, application-shell architecture
-> Plan: [`../../ai_artefacts/PLAN_2026_08_14_three_ui_restructure.md`](../../ai_artefacts/PLAN_2026_08_14_three_ui_restructure.md) — T9, T19
+> Plan: [`../../ai-artifact/PLAN_2026_08_14_three_ui_restructure.md`](../../ai-artifact/PLAN_2026_08_14_three_ui_restructure.md) — T9, T19
 
 ## Context
 

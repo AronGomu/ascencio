@@ -11,7 +11,7 @@ Turn app from panel-stack shell into field-first duel client. Chrome panels gone
 
 ## Assumptions
 
-- **A1** Artifacts land in `ai-artifacts/` (tracked dir declared in `AGENT.md`), not `ai_artefacts/`. One artifact dir, not two.
+- **A1** Artifacts land in `ai-artifacts/` (tracked dir declared in `AGENT.md`), not `ai-artifact/`. One artifact dir, not two.
 - **A2** UI settings live in memory for the session. No IndexedDB, no `localStorage`. Reload resets to defaults.
 - **A3** Menubar carries only the right-justified `Settings` button. Engine version + active/fallback snapshot ids move into the Settings dialog (they lose their old home when `app-header` and `status-panel` die).
 - **A4** "Remove selection-dock" = delete the panel. Affordances it alone provided (Confirm/Cancel, counter +/−, order ↑/↓, validation text, non-`endPhase` global choices) move to a compact non-modal `FieldActionBar` pinned inside the field. `endPhase` moves to the corner End turn button.

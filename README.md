@@ -1,12 +1,48 @@
-# YGO Story Duel Simulator
+# Ascencio
 
-Browser-first, offline Yu-Gi-Oh! duel simulator built around Project Ignis `ygopro-core` through `ocgcore-wasm`.
+Revisit the different era of Yu-Gi-Oh! through the Story of Ascencio !
 
-The MVP launches directly into a normal duel between one human player and a basic computer opponent. Both sides use bundled preset decks; production games shuffle the decks and draw randomized starting hands normally. The opponent uses only simple, straightforward cards and shallow legal-action priorities rather than strategic combo planning.
+This is a Fan Game project with the gola of recreating old YGO solo game experience akin to YGO Spirit Troubadour, Spirit Caller, Tag Forces.
 
-Development remains headless-first. Programmed real-WASM integration scenarios cover every supported game-action family before presentation changes. The architecture requires `ocgcore-wasm@0.1.2` to stay vendored and integrity-verified.
+Play through a mostly linear Story, open cards, build decks and beat your opponents.
 
-> **Current status:** browser MVP is implemented through Checkpoint G plus the DOM duel-field migration. Pinned synchronous core runs in a dedicated Worker; Svelte renders the semantic DOM field, accessible controls, HUD, inspector, logs, and feedback. Active runtime/image artifacts, diagnostics, restart, rollback, compatibility, and browser gates remain unchanged.
+You start at the DUEL MONSTER era and you will eventually progress up to modern ERA yugioh (that's the goal at least) !
+
+This game will be release in chapters, each chapter corresponding to a new story arc and new era of YGO !
+
+Current Road Map :
+DUEL MONSTER => GX => Synchros => XYZ => PENDULUM => LINKS
+
+This roadmap may be redefined as the Story is refined.
+
+## Who is this for ?
+
+This experience is tailored for experienced Yu‑Gi‑Oh! players and newcomers.
+Unlike modern Yu‑Gi‑Oh games, this experience is built knowing that modern Yu‑Gi‑Oh can be extremely complicated.
+That's why I start at the basis of the game in the Duel Monsters era.
+Discover new mechanics and new archetypes progressively, so you are never overloaded with information.
+
+## Online ?
+
+There is no online mode ! This is an experience tailored for solo play experience.
+
+## Thanks to [find names]
+
+This project is browser-first and designed to run on any OS and machines.
+If you encounter any performance issue, do not hesitate to send feedback.
+I want to design an experience that can be accessed by everyone.
+
+Deep thanks to Project Ignis, ygopro-core, and ocgcore-wasm, which allowed me to start with a very solid base.
+
+## AI
+
+This project was made only thanks to AI.
+The entire codebase and most of the assets used for this game are AI-generated.
+
+## Copyright
+
+Copyright does not exist; it's a scam and pure evil.
+Everything everything built and released in this project is fully open source and accessible to anyone to do anything with it.
 
 ## Included asset pipeline
 
@@ -60,33 +96,33 @@ Both launchers accept the same options as `npm run assets:mvp` and can be launch
 
 ## npm commands
 
-| Command | Description |
-|---|---|
-| `npm ci` | Install the exact development dependencies from `package-lock.json`. |
-| `npm run assets:mvp` | Download, generate, and verify all currently supported external MVP assets. |
-| `npm run assets:engine` | Download, integrity-check, extract, and publish the pinned engine package. |
-| `npm run assets:engine:verify` | Verify the extracted engine package and WASM header. |
-| `npm run assets:sync` | Fetch Project Ignis sources and regenerate catalog, text, scripts, strings, and image manifests. |
-| `npm run assets:sync:offline` | Regenerate data from the existing local Git source caches without fetching. |
-| `npm run assets:verify` | Verify generated data manifests, hashes, counts, shards, and coverage. |
-| `npm run assets:images` | Download or resume the full-card JPEG archive. |
-| `npm run assets:images:verify` | Verify image coverage, report consistency, sizes, and JPEG boundaries. |
-| `npm run dev` | Start the Vite development server. |
-| `npm run build` | Verify vendor/snapshot integrity, build `dist/`, and independently verify the package. |
-| `npm run preview` | Serve the current production build locally. |
-| `npm run build:reproducible` | Produce two isolated builds and require identical file hashes. |
-| `npm test` | Run the legacy, unit, component, and real-WASM integration suites. |
-| `npm run test:unit` | Run the focused Vitest unit suite. |
-| `npm run test:component` | Run Svelte component tests. |
-| `npm run test:integration` | Run real asset/WASM integration tests. |
-| `npm run test:e2e` | Build at a non-root base and run the Playwright browser suite. |
-| `npm run check` | Run every headless, component, build, reproducibility, and browser gate. |
-| `npm run lint` | Run ESLint. |
-| `npm run format:check` | Verify Prettier formatting. |
-| `npm run typecheck` | Run strict TypeScript and Svelte checking. |
-| `npm run vendor:verify` | Verify every vendored engine file against its reviewed manifest. |
-| `npm run snapshot:verify` | Verify the generated runtime snapshot files and digests. |
-| `npm run check:headless` | Run the complete mandatory local headless quality gate. |
+| Command                        | Description                                                                                      |
+| ------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `npm ci`                       | Install the exact development dependencies from `package-lock.json`.                             |
+| `npm run assets:mvp`           | Download, generate, and verify all currently supported external MVP assets.                      |
+| `npm run assets:engine`        | Download, integrity-check, extract, and publish the pinned engine package.                       |
+| `npm run assets:engine:verify` | Verify the extracted engine package and WASM header.                                             |
+| `npm run assets:sync`          | Fetch Project Ignis sources and regenerate catalog, text, scripts, strings, and image manifests. |
+| `npm run assets:sync:offline`  | Regenerate data from the existing local Git source caches without fetching.                      |
+| `npm run assets:verify`        | Verify generated data manifests, hashes, counts, shards, and coverage.                           |
+| `npm run assets:images`        | Download or resume the full-card JPEG archive.                                                   |
+| `npm run assets:images:verify` | Verify image coverage, report consistency, sizes, and JPEG boundaries.                           |
+| `npm run dev`                  | Start the Vite development server.                                                               |
+| `npm run build`                | Verify vendor/snapshot integrity, build `dist/`, and independently verify the package.           |
+| `npm run preview`              | Serve the current production build locally.                                                      |
+| `npm run build:reproducible`   | Produce two isolated builds and require identical file hashes.                                   |
+| `npm test`                     | Run the legacy, unit, component, and real-WASM integration suites.                               |
+| `npm run test:unit`            | Run the focused Vitest unit suite.                                                               |
+| `npm run test:component`       | Run Svelte component tests.                                                                      |
+| `npm run test:integration`     | Run real asset/WASM integration tests.                                                           |
+| `npm run test:e2e`             | Build at a non-root base and run the Playwright browser suite.                                   |
+| `npm run check`                | Run every headless, component, build, reproducibility, and browser gate.                         |
+| `npm run lint`                 | Run ESLint.                                                                                      |
+| `npm run format:check`         | Verify Prettier formatting.                                                                      |
+| `npm run typecheck`            | Run strict TypeScript and Svelte checking.                                                       |
+| `npm run vendor:verify`        | Verify every vendored engine file against its reviewed manifest.                                 |
+| `npm run snapshot:verify`      | Verify the generated runtime snapshot files and digests.                                         |
+| `npm run check:headless`       | Run the complete mandatory local headless quality gate.                                          |
 
 To display the unified downloader help:
 
@@ -100,13 +136,13 @@ npm run assets:mvp -- --help
 npm run assets:mvp -- [options]
 ```
 
-| Option | Description |
-|---|---|
-| `--offline` | Regenerate and verify using existing Git and image caches without network access. |
-| `--force-images` | Redownload images even when a valid cached JPEG exists. |
-| `--concurrency <count>` | Set simultaneous image workers; default is `18`. |
-| `--requests-per-second <count>` | Set the image request rate; default is `18`, maximum is `20`. |
-| `-h`, `--help` | Print command usage. |
+| Option                          | Description                                                                       |
+| ------------------------------- | --------------------------------------------------------------------------------- |
+| `--offline`                     | Regenerate and verify using existing Git and image caches without network access. |
+| `--force-images`                | Redownload images even when a valid cached JPEG exists.                           |
+| `--concurrency <count>`         | Set simultaneous image workers; default is `18`.                                  |
+| `--requests-per-second <count>` | Set the image request rate; default is `18`, maximum is `20`.                     |
+| `-h`, `--help`                  | Print command usage.                                                              |
 
 Examples:
 
@@ -146,14 +182,14 @@ node scripts/verify-engine.ts
 node scripts/sync-assets.ts [options]
 ```
 
-| Option | Default | Description |
-|---|---:|---|
-| `--offline` | disabled | Use existing source repositories without fetching. |
-| `--cache-dir <directory>` | `.cache/upstream` | Set the Git source cache directory inside the project. |
-| `--output <directory>` | `generated/assets/current` | Set the generated snapshot output directory. |
-| `--babel-ref <ref>` | `master` | Pin a BabelCDB branch, tag, or commit. |
-| `--scripts-ref <ref>` | `master` | Pin a CardScripts branch, tag, or commit. |
-| `--distribution-ref <ref>` | `master` | Pin a Project Ignis Distribution branch, tag, or commit. |
+| Option                     |                    Default | Description                                              |
+| -------------------------- | -------------------------: | -------------------------------------------------------- |
+| `--offline`                |                   disabled | Use existing source repositories without fetching.       |
+| `--cache-dir <directory>`  |          `.cache/upstream` | Set the Git source cache directory inside the project.   |
+| `--output <directory>`     | `generated/assets/current` | Set the generated snapshot output directory.             |
+| `--babel-ref <ref>`        |                   `master` | Pin a BabelCDB branch, tag, or commit.                   |
+| `--scripts-ref <ref>`      |                   `master` | Pin a CardScripts branch, tag, or commit.                |
+| `--distribution-ref <ref>` |                   `master` | Pin a Project Ignis Distribution branch, tag, or commit. |
 
 Example:
 
@@ -177,14 +213,14 @@ node scripts/verify-assets.ts --output <directory>
 node scripts/download-images.ts [options]
 ```
 
-| Option | Default | Description |
-|---|---:|---|
-| `--assets <directory>` | `generated/assets/current` | Set the source image-manifest snapshot. |
-| `--output <directory>` | `generated/card-images/archive` | Set the local image archive directory. |
-| `--concurrency <count>` | `18` | Set simultaneous download workers. |
-| `--requests-per-second <count>` | `18` | Set request rate; cannot exceed `20`. |
-| `--limit <count>` | all records | Process only the first number of image records, useful for testing. |
-| `--force` | disabled | Redownload valid cached images. |
+| Option                          |                         Default | Description                                                         |
+| ------------------------------- | ------------------------------: | ------------------------------------------------------------------- |
+| `--assets <directory>`          |      `generated/assets/current` | Set the source image-manifest snapshot.                             |
+| `--output <directory>`          | `generated/card-images/archive` | Set the local image archive directory.                              |
+| `--concurrency <count>`         |                            `18` | Set simultaneous download workers.                                  |
+| `--requests-per-second <count>` |                            `18` | Set request rate; cannot exceed `20`.                               |
+| `--limit <count>`               |                     all records | Process only the first number of image records, useful for testing. |
+| `--force`                       |                        disabled | Redownload valid cached images.                                     |
 
 Examples:
 
@@ -229,7 +265,7 @@ Per-duel bounded traces record revisions, process/message ordering, public event
 
 ## Documentation
 
-- [`AGENT.md`](AGENT.md) — concise project context and target architecture
+- [`AGENTS.md`](AGENTS.md) — concise project context and target architecture
 - [`docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`](docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md) — current TDD ticket/dependency plan
 - [`docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md`](docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md) — completed MVP/Phaser baseline plan
 - [`docs/assets/asset-import-pipeline.md`](docs/assets/asset-import-pipeline.md) — asset sources, transformations, integrity guarantees, and observed counts
@@ -256,11 +292,7 @@ Keep the deployment private. The generated active-image manifest records `redist
 4. Review revision, count, protocol, trace, and active-dependency changes.
 5. Run `npm run check`; activate/publish only if every gate passes. Keep the previous snapshot available for rollback.
 
-## Current limitations
+## Contribution
 
-- The MVP has two fixed preset decks, a deliberately basic legal-action opponent, and no story, progression, deck editor, multiplayer, or save/resume system.
-- Rare protocol families use reviewable programmed real-core fixtures. An unclassified/unsupported runtime message ends safely and offers a diagnostic rather than guessing a response.
-- Current desktop Chromium-based browsers are the product target. The field remains desktop-first with responsive composition; mobile controls stay usable, but mobile-first polish remains outside MVP.
-- Missing or invalid card art uses deterministic placeholders. The current full archive has documented provider-missing IDs, while the production package contains only the preset decks' active subset.
-- Downloaded diagnostics include the production seed and are sensitive.
-- Public deployment remains blocked on BabelCDB/content/image redistribution review and AGPL/source-availability compliance.
+Feel free to open PR requests for this project, or to fork and create your own versions.
+For now, I accept all kinds of contributions.

@@ -1,457 +1,1066 @@
-# Manual test checklist
+## T1 pixel-geometry-model
 
-Human-only checks that automated tests cannot cover. One section per plan ticket; never edit another ticket's section.
+- [ ] Confirm existing duel field renderer looks unchanged at supported viewport sizes.
+- [ ] Confirm keyboard field navigation behaves identically at small and large viewport sizes.
+- [ ] Confirm Link-free duel omits both shared Extra Monster Zones from render-layout data.
 
-## T1 land-round-2-on-main
+## T2 conditional-chromium-acceptance-harness
 
-- [x] Chromium e2e completed 18/18 on merge commit `52eb619`; full keyboard-only preset duel finished with one response per prompt.
-- [x] Headless, component, unit, integration, legacy, and production-build gates passed on merged round-2 baseline.
-- [x] Current branch contains round-2 head `736b374`; `feedback.md` remained unstaged.
+- [ ] Open an unknown or missing acceptance scenario and confirm a visible error appears with no fallback board.
+- [ ] Open the normal app and confirm its startup and duel experience remain unchanged.
+- [ ] Open the deterministic EMZ, no-EMZ, and Defense harness scenarios and confirm each field renders visually as expected.
 
-## T2 deck-registry-and-derived-card-pool
+## T3 pixel-board-rendering
 
-- [ ] Start app in Chromium: duel auto-starts with Starter (Player) against Starter (Opponent), with no deck picker or other new visible control.
-- [ ] Play opening turn of default duel: original MVP cards, prompts, field, and opponent behaviour remain unchanged.
-- [ ] Open each new `.ydk` in a compatible deck viewer: Burning Abyss, Nekroz, Shaddoll, and Spellbook lists match intended archetypes and contain full 15-card Extra Decks.
+- [ ] Open real duel; confirm square zone outlines plus concentric card slots stay aligned.
+- [ ] Resize duel boundary; confirm board recomputes without oscillation or clipped floating windows.
+- [ ] Hover face-up Defense plus face-down Set cards; confirm art rotates while outer card centre plus hover scale stay fixed.
+- [ ] Use keyboard focus, card actions, stack preview, hand drag; confirm controls remain actionable.
 
-## T3 pre-duel-deck-picker-and-persistence
+## T4 full-hands-overlay-scrollbar
 
-- [ ] Run `npm run dev`, open app in Chromium, confirm deck picker appears before any duel starts.
-- [ ] Choose Burning Abyss for your deck, Shaddoll for opponent, press Start, confirm duel field opens.
-- [ ] Reload page, confirm picker reopens with Burning Abyss and Shaddoll still selected.
-- [ ] In DevTools, run `localStorage.getItem("ygo.ui.v1")`; confirm JSON has `"version":1` and chosen deck ids.
-- [ ] Start chosen duel, surrender, press Change decks; confirm picker returns with same pair selected and no duel auto-starts.
-- [ ] Start another duel, surrender, press Start another duel; confirm replacement Worker starts same chosen pair after ready.
+- [ ] Use wheel/trackpad to reach offscreen cards in a 20-card hand.
+- [ ] Use Arrow navigation to reach offscreen hand cards; confirm focus scrolls them into view.
+- [ ] Drag an actionable hand card after scrolling; confirm drag still starts and completes.
+- [ ] Drag the overlay thumb; confirm the hand viewport scrolls without changing card height.
 
-## T4 opponent-policy-loop-breaker
+## T5 geometry-anchored-phases
 
-- [ ] Run a deterministic diagnostic duel that previously repeated one unchanged opponent prompt; confirm duel advances without reaching the 1,000-response controller fuse.
-- [ ] Inspect opponent response diagnostics for one unchanged prompt; confirm first two reasons stay normal, then reason becomes `break_loop_alternative` or `break_loop_exit`.
-- [ ] Confirm every loop-break response id belongs to the current prompt, then play through next human prompt or duel result without an invalid-response error.
+- [ ] Confirm EMZ phase groups flank both shared zones without overlap.
+- [ ] Confirm no-EMZ phases form one centered Draw→Standby→Main 1→Battle→Main 2 run.
+- [ ] Confirm End turn aligns board inner-right edge in both profiles.
+- [ ] Use keyboard to reach each legal phase control plus End turn; confirm each activates same offered choice.
 
-## T5 preview-hover-and-opponent-art-inversion
+## T6 right-rail-replaces-header
 
-- [ ] Hover a passive field card, a player stack, an opponent stack, and one card in each open pile list; confirm persistent preview updates every time.
-- [ ] Compare player and opponent pile/list art; confirm only opponent images are upside down while labels, counts, position badges, halos, and action chips stay upright.
-- [ ] Inspect face-down cards on the board; confirm no visible `Hidden card` caption appears while screen-reader naming remains available.
-- [ ] Use existing action chips, click a card, and drag a playable hand card; confirm each flow still works without layout, halo, zoom, or projector changes.
-
-Ticket ids restart per plan, so sections are grouped by round. **Round 2 is the current implementation.** Where a round 2 ticket replaced round 1 behaviour, the round 1 section is marked **SUPERSEDED** and must not be run — its steps describe UI that no longer exists.
-
----
-
-# Round 2 — 2026-08-09 duel field feedback (current)
-
-## T1 header-bar-avatars-and-life-points
-
-
-- [ ] `npm run dev`, open the app: the top row shows a duel header bar with the opponent avatar + LP on the left, your avatar + LP on the right, and a gear-icon settings button on the far right — no `Settings` text button anywhere.
-- [ ] Both avatars show a placeholder circle image (or the card-back art once images finish loading) — never a broken image icon.
-- [ ] Before the first duel snapshot arrives, both life-point readouts show `—`; once the duel starts they switch to numbers formatted like `8,000 LP`.
-- [ ] Deal or take damage during a duel: both header LP readouts update to the new totals.
-- [ ] Click the gear icon: the same menu opens as before (Settings / Surrender), and closing the menu returns focus to the gear button.
-- [ ] The duel field itself no longer shows any life-point pills inside the board — only the header bar carries LP.
-- [ ] Resize the window from a wide desktop down to a phone width: the header bar stays on one row (or wraps sanely), avatars and LP stay legible, and the gear button stays reachable and clickable.
-- [ ] Keyboard only: tab to the gear button, confirm its accessible name announces as `Settings` and it activates with Enter/Space.
-
-## T2 preview-panel-left-and-hover-status
-
-
-- [ ] `npm run dev`, open on a wide desktop window: the card preview panel sits to the LEFT of the duel field (not the right), and the field is the right column.
-- [ ] Hover a face-down card of yours or a hidden opponent hand card: the preview panel now fills with a hidden-card view — art placeholder, name `Face-down card`, text `No information is available for this card.` — instead of leaving the previous card up or staying blank.
-- [ ] Hover any stack (deck, extra deck, graveyard, banished) with at least one public card in it: the panel fills with that stack's top public card.
-- [ ] Hover an empty or fully-private stack: the panel shows the hidden-card view, not the previous card.
-- [ ] Under the card art/text (or under the empty-state copy when nothing is previewed), a status line is visible.
-- [ ] While a response has just been sent and the engine hasn't answered yet, the status line reads `Waiting for the engine` with an animated three-dot indicator after it.
-- [ ] While it's the opponent's turn and you have no prompt, the status line reads `Opponent is acting` with the animated three-dot indicator.
-- [ ] While you have an active prompt, the status line echoes that prompt's title (e.g. `Choose a Main Phase action`) with no animated dots.
-- [ ] With OS-level "reduce motion" turned on, the three dots are still visible next to the status text but do not animate.
-- [ ] Resize the window down to 1024px wide: the board still renders and every board control remains clickable, and the preview column does not push a horizontal scrollbar onto the page.
-- [ ] Shrink further below the responsive breakpoint (~79rem/1264px): the preview panel stacks above the field (not beside it) rather than disappearing or overlapping.
-
-## T3 phase-strip-and-end-turn-placement
-
-
-- [ ] `npm run dev`, reach a Main Phase 1 idle-command prompt: an in-field phase strip is visible in the free centre band of the board, split into a left group (`Draw`, `Standby`, `Main 1`) and a right group (`Battle`, `Main 2`, `End`), and it does not visually overlap either shared Extra Monster Zone.
-- [ ] During Main Phase 1, the `Main 1` chip has a blue halo (the current-phase highlight), `Battle` and `End` are lit and clickable, and `Draw`/`Standby`/`Main 2` are greyed and not clickable.
-- [ ] Click the `Battle` chip: the duel advances into the Battle Phase, the `Battle` chip now carries the blue halo, and the board (cards, zones) stays fully clickable — no click is swallowed by the strip.
-- [ ] Progress through Draw, Standby, both Main Phases, Battle Start/Step/Damage/Damage Calculation and End: exactly one chip carries the current-phase halo at a time, and every battle sub-phase (`battleStart`, `battleStep`, `damage`, `damageCalculation`, `battle`) lights the single `Battle` chip.
-- [ ] The `End turn` button sits at the right edge of the board, roughly level with the two banished zones (between them vertically), and stays clickable and functional exactly as before (ends your turn when clicked).
-- [ ] The top-right status pills (`Choose Action`/`Waiting Opponent` and the old phase pill) are gone; nothing at the top-right corner of the field displays that text or blocks clicks there.
-- [ ] Resize the window across a few widths (desktop, ~1024px, phone width): the phase strip and End turn button stay inside the board's free band, do not overlap the banished zones or Extra Monster Zones, and every card/zone remains clickable at each size.
-- [ ] Keyboard only: tab through the field; the phase strip chips and the End turn button are each reachable and operable via keyboard, and tabbing does not get stuck inside the board region.
-- [ ] With a screen reader, each phase chip announces its phase name plus `current`/`available` state (e.g. "Battle phase, available"); the strip as a whole is one `Duel phases` group, not announced twice.
-
-## T4 auto-response-and-prompt-trimming
-
-
-- [ ] `npm run dev`, open Settings: two new checkboxes are present after the existing two, labelled `Place cards automatically` (checked by default) and `Skip prompts with a single answer` (checked by default).
-- [ ] Play a turn with default settings: no `Choose a chain response` dialog appears when you have nothing to chain (only a `Pass` option) — the duel proceeds straight past it.
-- [ ] Reach a chain prompt that genuinely offers you an activation (you have a card you could chain): the dialog still appears and waits for your click; it is not skipped.
-- [ ] Open the Main Phase action list (the field action bar, when it is showing, or the equivalent card-action chips): `Shuffle Deck` is never offered as an action, on any turn.
-- [ ] Turn off `Skip prompts with a single answer` in Settings, then play a turn where a trivial chain (nothing to activate) would occur: the `Choose a chain response` dialog now appears and must be answered by hand (Pass).
-- [ ] Turn `Skip prompts with a single answer` back on mid-duel: from that point on, trivial prompts go back to resolving automatically without a click.
-- [ ] Reload the page: both new settings reset to their defaults (checked), matching the existing session-only behaviour of the other two toggles.
-
-## T5 auto-placement-and-single-click-actions
-
-
-- [ ] `npm run dev`, with `Place cards automatically` left on (the default): summon or set a monster — it lands directly in the centre-most legal zone with no follow-up "choose a zone" prompt of any kind. (manual check: auto-place ON)
-- [ ] Turn `Place cards automatically` off in Settings, then summon or set a monster: the legal zones halo, one click on any one of them plays the card immediately with no `Confirm placement` button anywhere, and one click on an empty part of the board (no card, no zone, no bar/strip/button) cancels the pending placement and returns you to the previous prompt. (manual check: auto-place OFF)
-- [ ] With auto-place on, repeatedly summon/set monsters across a duel and confirm the chosen zone always looks like the same "most central first" order a player would expect (centre main-monster zone before the edges, main row before the extra monster zones, your side before the opponent's).
-- [ ] With auto-place off, open a hand card that offers exactly one action (e.g. only `Activate`): clicking the card fires that action immediately — no chip menu ever appears for it.
-- [ ] With auto-place off, open a hand card that offers two or more actions: clicking the card still opens the chip menu exactly as before, and clicking a chip fires that one action.
-- [ ] With auto-place off, start a placement, then click a legal zone: the card is played immediately with no separate `Confirm placement` step.
-- [ ] With auto-place off, start a placement that is cancelable and click elsewhere on the empty board: the prompt cancels cleanly, no error/toast appears, and you're returned to the state before the placement started.
-- [ ] With auto-place off, start a placement that is *not* cancelable (if you can reach one) and click elsewhere on the empty board: nothing happens — the prompt stays open, no error appears.
-- [ ] Dragging a hand card onto a highlighted zone (T10) still plays it in one gesture and still wins over auto-placement — the drag never pops up a redundant place prompt regardless of the auto-place setting.
-- [ ] Play a full duel with auto-place on and `Skip prompts with a single answer` on (both defaults): the duel proceeds smoothly with the fewest possible prompts, and no click is ever swallowed by a stray Confirm bar that shouldn't be there.
-- [ ] Reload the page: `Place cards automatically` resets to checked (the default), matching the other settings' session-only behaviour.
-
-## T6 stack-interaction-targets
-
-
-- [ ] `npm run dev`; get the engine to offer a graveyard activation (e.g. an effect that can be activated from the graveyard): the graveyard pile glows with the same orange "you may act here" halo the field's actionable zones and cards use.
-- [ ] ~~While that graveyard pile glows, the modal `PromptDialog` still opens — clicking the pile itself does nothing.~~ **Superseded by T8 and T11:** the pile is now clickable and opens its zone list, and the chain modal is gone. Verify instead via the T8 and T11 sections.
-- [ ] Clicking on a glowing stack does not throw a console error.
-- [ ] Reach a banished-pile activation, an extra-deck activation, and a deck activation (if you can find/force one) in turn: each pile glows the same orange while the choice is live, and each is answerable by clicking the pile and acting from its list.
-- [ ] Confirm no previously reachable choice became unanswerable across a full duel: every prompt that used to resolve via the modal (including graveyard/banished/deck/extra activations) is still answerable start to finish.
-
-## T7 stack-top-card-face
-
-
-- [ ] `npm run dev`, send a monster to the graveyard: the graveyard pile shows that card's art with `GY` and the count still readable on top of the art.
-- [ ] The deck and extra deck piles are unchanged (no art appears on the deck pile; the extra deck pile behaves as before).
-- [ ] Open and restart a duel twice while watching devtools memory for `blob:` URLs: no image lease leaks — the count of live `blob:` URLs does not keep growing across restarts.
-
-## T8 zone-list-dialog
-
-
-- [ ] `npm run dev`; click your graveyard: a centred list opens over the field, scrolls horizontally, numbers each card starting at 1, previews the hovered card in the left preview panel, and closes on Escape. (manual check)
-- [ ] Click the opponent's extra deck: every entry in the list is face-down (card back only, no name, no art) regardless of what you might otherwise infer from earlier play. (manual check)
-- [ ] ~~Click your deck: the list shows one face-down placeholder per card in your deck count.~~ **Superseded by T10:** the deck list now renders the real projected deck order. Verify via the T10 section.
-- [ ] The dialog never shows a backdrop and never blocks the rest of the board — a legal-action card elsewhere on the field is still clickable while the dialog is open.
-- [ ] Reach a graveyard or banished-pile activation prompt (e.g. an effect that activates from the graveyard): the pile itself gets the orange actionable halo, and clicking it opens the list with an orange halo and action chips on the specific card the engine is offering — no separate modal "Choose a chain response" dialog appears for this case.
-- [ ] With that same list open, click the action chip on the actionable card: the action fires, the dialog closes, and the duel proceeds — the same as clicking a chip on a card on the board.
-- [ ] Click an already-open pile a second time: the list closes.
-- [ ] Trigger a new prompt (e.g. pass priority to the opponent) while a zone list is open: the list closes automatically without needing another click.
-- [ ] An empty pile (0 cards) is not clickable and shows no hover/focus affordance.
-- [ ] Keyboard only: tab to a non-empty pile, press Enter/Space to open its list, tab through the entries and any action chips, and confirm Escape closes the dialog and returns focus sensibly.
-
-## T9 projected-deck-order
-
-
-- [ ] Complete a duel, inspect final projected state, confirm `players[0].deck.length === players[0].deckCount`.
-
-## T10 deck-list-in-zone-dialog
-
-
-- [ ] `npm run dev`; click your deck: the list shows one face-down entry per remaining card, numbered from the top with position 1 first.
-- [ ] Click the opponent's deck: every unrevealed entry stays face-down with no card name, code, or face art exposed.
-- [ ] If the preset deck contains an excavate effect, resolve it: legitimately revealed positions render face-up, then return face-down after a shuffle.
-- [ ] With either 40-card deck dialog open, scroll the list and click a legal card target elsewhere on the board: the dialog stays usable without intercepting unrelated board clicks.
-- [ ] Confirm the deck pile itself still shows only its name and count, never card art.
-
-## T11 inline-chain-response
-
-
-- [ ] `npm run dev`; trigger a chain: no modal appears, the preview reads `Do you respond?` with pulsing dots, and every activatable source glows orange on the field or on its pile.
-- [ ] On a cancelable chain, click an activatable source to respond; trigger another chain and click empty field to pass. Both choices advance the duel exactly once.
-- [ ] Trigger a forced chain: clicking empty field does nothing, no `Pass` button appears, and clicking the required field or pile source answers it.
-
-## T12 result-dialog
-
-
-- [ ] `npm run dev`, surrender from the menu: a centred modal dialog announces `Duel surrendered`, focus lands on its heading, and `Start another duel` starts a clean duel.
-- [ ] Click the dialog backdrop and press Escape: the result dialog stays open; no close control appears, while restart and diagnostics remain reachable.
-- [ ] Complete a duel normally: the winner announcement appears without reflowing the page behind it, and diagnostics still download.
-
-## R1 review-repairs
-
-- [ ] Trigger an optional chain, open a glowing graveyard pile, then click its Close button and a non-chip area of an entry tile in separate attempts: neither click passes the chain; clicking genuine empty field still passes exactly once.
-- [ ] During a cancelable multi-card pile selection, open the pile and click the zone-list header: the selection stays live and no cancel response is sent.
-- [ ] Reach or force a deck-located choice in a deck of known size: its chip and orange halo appear on the correct top-relative list position, and no unrevealed mirrored slot exposes a card name.
-- [ ] Trigger a chain while the duel field is unavailable through its render-failure path: the prompt dialog mounts and remains answerable under the field-error panel.
-- [ ] Open a non-empty pile with the mouse, leave focus on the pile button, then press Escape: the list closes; pressing Escape with no zone list open does not disturb chips or other dialogs.
-- [ ] Reach a field prompt that requires the field action bar, then resize across desktop and phone widths: the bar stays fully in the viewport and entirely below the duel board without covering hand clicks.
-- [ ] Play a full duel start to finish: every field, pile, chain, and dialog prompt remains answerable.
-
----
-
-# Round 1 — 2026-08-08 duel field UX overhaul (archive)
-
-Kept for history. Read the SUPERSEDED banners before running anything here.
-
-## R1-T6 field-action-bar — SUPERSEDED
-
-
-> Superseded by round 2. `Shuffle Deck` no longer exists as an action (round 2 T4), the bar's `End turn` moved into the board's phase strip (round 2 T3), and single-action cards now fire on one click without a `Confirm` step (round 2 T5). Do not run this section; use round 2 T3, T4 and T5 instead.
-
-- [ ] Start a duel and reach a "select a card" prompt: a compact bar appears pinned to the bottom of the duel field, below the board, with the prompt title on it.
-- [ ] The bar sits in its own strip under the board — it does not cover the player's hand, and no empty strip is left under the board once the bar disappears.
-- [ ] A legal-action card at the bottom of the board is still clickable while the action bar is on screen (click a hand card that has actions; its chips appear and stay pinned, nothing swallows the click).
-- [ ] Select two cards: the bar shows `2 selected` as a count on one line, never a comma-separated list of card names.
-- [ ] `Confirm selection` is disabled until the selection is legal, and the red validation text under it explains why.
-- [ ] `Cancel` appears only on prompts the engine allows you to back out of, and backing out returns you to the same board state.
-- [ ] Reach a counter-allocation prompt: each choice has its own `−` / value / `+` group, `−` is dead at 0, `+` is dead at the maximum, and the button reads `Confirm allocation`.
-- [ ] Reach an ordering prompt: each row has `↑` / `↓`, the top row's `↑` and the bottom row's `↓` are dead, and the button reads `Confirm order`.
-- [ ] With enough counter or order rows to overflow, the list scrolls inside the bar instead of growing the bar to full height, and the board stays fully visible.
-- [ ] Reach a place-selection prompt: the button reads `Confirm placement` and the zone you click is the one that gets used.
-- [ ] Global choices such as `Shuffle Deck` or `Enter Battle Phase` are buttons on the bar and act on click.
-- [ ] A yes/no or announce prompt opens the centre prompt dialog instead — no action bar appears on the field for it.
-- [ ] Resize the window from a wide desktop down to a phone width: the bar stays fully on screen, stays clear of the board at every size, and never clips off the field edge.
-- [ ] Keyboard only: tab from the board into the bar, operate every control, and confirm — focus outlines stay visible throughout.
-- [ ] With a screen reader, the bar announces as the `Field decision` region and the validation text is read out when confirm is blocked.
-
-## R1-T7 end-turn-corner-button — SUPERSEDED
-
-
-> Superseded by round 2 T3: `End turn` no longer sits in the bottom-right corner outside the board. It now sits at the board's right edge, level with the banished zones, deliberately inside the board's bounding box. The "never sits on top of the board" step below is no longer the intended design. Do not run this section; use round 2 T3.
-
-- [ ] An orange `End turn` button sits fixed in the bottom-right corner of the duel field at all times, whether or not any other prompt is on screen.
-- [ ] In Main Phase with nothing else to do, the button is enabled and reads `End turn`; clicking it ends the phase.
-- [ ] In Battle Phase, the same corner button reads `End Battle Phase` instead, and clicking it ends the battle phase.
-- [ ] When no `End turn` choice is currently legal (e.g. a card-action prompt that offers no phase choice), the corner button is visibly disabled and unclickable, but still reads `End turn`.
-- [ ] The field action bar no longer shows its own `End turn` / `End Battle Phase` button — that choice only ever appears in the corner now. If a prompt's only reason to show the bar was that choice, no bar appears at all.
-- [ ] The corner button never sits on top of the board — a legal-action card in the board's bottom-right corner is still clickable with the corner button on screen.
-- [ ] When the field action bar is also open, the corner button and the bar do not overlap each other at any window width, including a narrow phone-width window where the bar and button both need room in the bottom strip.
-- [ ] Resize the window from a wide desktop down to a phone width: the corner button stays fully on screen and never overlaps the board at any size.
-- [ ] Double-clicking the corner button quickly (or clicking again while a response is pending) only ends the phase once.
-- [ ] Keyboard only: tab to the corner button, confirm it announces its current label (`End turn` or `End Battle Phase`) and its disabled state is announced when it's not usable.
-
-## R1-T9 card-action-chips — PARTLY SUPERSEDED
-
-
-> Round 2 T5 changed chip behaviour: a card offering exactly one action now fires it on a single click and never opens a chip menu, and placement no longer has a `Confirm placement` step. The multi-action chip steps below still hold. Prefer round 2 T5 for anything about clicking a card.
-
-- [ ] Reach a Main Phase idle-command prompt: every card you can act on wears an orange halo, and cards you cannot act on wear none.
-- [ ] Actionable zones (e.g. a place-selection prompt) wear the same orange halo; a card you have _selected_ keeps its distinct lime highlight, so legality and selection never look alike.
-- [ ] Hover an actionable card with the mouse: tiny orange chips fade in floating just above the card's top edge, and nothing appears when you hover a card with no legal action.
-- [ ] Move the pointer from the middle of the card straight up onto a chip without the chips disappearing on the way — there must be no dead gap between the card and its chips.
-- [ ] Chip wording is the short action only (`Summon`, `Set`, `Activate`, `Flip`, `Special Summon`, `Change Position`), never the engine's full `Activate <card name>` sentence.
-- [ ] Hover a chip and wait for the native tooltip: it shows the full engine label for that action.
-- [ ] A monster in hand that can be both summoned and set shows both chips at once, and they stay the same fixed size regardless of the word length.
-- [ ] There is no `Inspect` chip, no `Close actions` chip, and no `Inspect` button on any card on the board.
-- [ ] Click a chip: the action is taken exactly once, the chips disappear, and the duel moves on — clicking fast twice must not send two responses.
-- [ ] Click the card itself (not a chip): the chips stay pinned open even after you move the mouse away; clicking a different actionable card moves the pin to that card.
-- [ ] Press and drag from a card, then release somewhere harmless (empty space outside the board): the drag must _not_ pin the chips — only a clean click does. Dragging a _hand_ card onto a highlighted zone now plays it instead (see T10); drag a board card, or release off the board, to check this one.
-- [ ] Keyboard only: arrow to an actionable card, press `Enter`: the chips pin and focus lands on the first chip with a visible focus ring.
-- [ ] With a chip focused, `ArrowRight` / `ArrowLeft` walk the chips and wrap around at both ends; `Home` and `End` jump to the first and last chip.
-- [ ] Press `Escape` with a chip focused: the chips unpin and focus is back on the card itself, ready for arrow-key board navigation.
-- [ ] Tab or arrow the keyboard focus onto an actionable card without pressing Enter: the chips show while the card holds focus and hide again once focus moves elsewhere.
-- [ ] Chips never fall off the edge of the window: check an actionable card in the leftmost and rightmost columns, and on a phone-width window.
-- [ ] Chips never cover the board's own controls in a way that blocks them: with chips showing, the `End turn` corner button and the field action bar are both still clickable.
-- [ ] Play a full duel using only the chips for card actions: every Main Phase, Battle Phase and chain decision stays answerable to the end of the duel.
-- [ ] With a screen reader, a chip announces the full engine label (e.g. `Activate Mystical Space Typhoon`), not the short word, and the chip group announces as `<card name> actions`.
-
-## R1-T10 hand-drag-and-drop
-
-
-> Still current. Round 2 T5 added auto-placement but drag still wins over it — see the corresponding step in round 2 T5.
-
-- [ ] Reach a Main Phase idle-command prompt and press-and-drag a summonable monster out of your hand: after roughly 8px of movement the card fades slightly and the empty Main Monster zones fill with an orange tint that is clearly different from the plain orange legality halo.
-- [ ] While that drag is live, no Spell/Trap zone, no Field zone, no opponent zone and no already-occupied monster zone lights up.
-- [ ] Release over one of the tinted zones: the monster is summoned into exactly that zone in one gesture — no second click, and no zone-picker prompt appears.
-- [ ] Drag the same kind of card and release it over an _occupied_ monster zone: nothing happens at all, the card stays in your hand and no response is sent.
-- [ ] Drag a hand card whose only offers are a Normal Summon and/or a Set, and release it on either shared Extra Monster Zone in the middle row: nothing happens — the card stays in your hand, your once-per-turn Normal Summon is still available, and no zone-picker prompt appears. Those two zones must never tint for such a card either.
-- [ ] Drag a hand card the engine offers a _Special_ Summon for and release it on a tinted shared Extra Monster Zone: the card arrives there as a Special Summon and your Normal Summon for the turn is still unspent.
-- [ ] Drag a card and release it outside the board entirely: nothing happens and the tint disappears.
-- [ ] Drag a settable Spell or Trap out of your hand: only the Spell/Trap zones tint, never the monster row, and dropping on one plays it.
-- [ ] Start a drag and then press `Escape` or switch to another window mid-gesture: the tint clears and no card is played.
-- [ ] Drag a hand card that also has pinned action chips showing (click it first to pin, then drag it): the chips must not swallow the drop — the zone under the pointer is the one that receives the card.
-- [ ] Click a hand card normally (no movement) after this change: the chips still pin and still work exactly as before.
-- [ ] Play a card by dragging, then keep playing with chips and the keyboard for the rest of the turn: nothing about the earlier drag leaks into a later decision (no zone gets chosen for you unexpectedly).
-- [ ] Keyboard only, with no mouse touched: the whole duel is still playable and no drag behaviour interferes.
-- [ ] Rare case, if you can reach it: play a card whose zone the engine refuses (e.g. a summon that must go to a specific zone). The normal zone-selection prompt appears with its own highlighted zones and you pick one by hand — the mis-guess costs you nothing.
-
-## R1-T11 card-preview-panel — SUPERSEDED
-
-
-> Superseded by round 2 T2: the preview panel moved to the LEFT column, hovering a face-down card now fills the panel with a hidden-card view instead of leaving it unchanged, and the panel gained a status line. Do not run this section; use round 2 T2.
-
-- [ ] Open the app on a wide desktop window (wider than ~1264px): a `22rem` panel sits to the right of the duel field, its top edge level with the field's and its bottom edge level with the field's, and the board is still fully visible with no horizontal scrollbar anywhere.
-- [ ] Before you touch anything, the panel reads `Hover a card to see its details.` and shows no image, no name and no effect text.
-- [ ] Hover each card in your hand in turn: the panel fills with that card's art, name and effect text, and swaps as you move between cards.
-- [ ] Press and hold the pointer down on a face-up monster on the field (without moving it): the panel fills with that card while the button is held.
-- [ ] Move the pointer off the card and onto the panel: the content stays put — it must not blank out while you are reading it.
-- [ ] Hover a face-down card of yours and an opponent hand card: the panel does not change at all — it neither fills with the hidden card nor clears whatever it was showing.
-- [ ] Keyboard only: arrow the board focus from card to card — the panel follows the focused card exactly as hovering does.
-- [ ] Find a card with long effect text: the text region scrolls inside the panel, and the panel and the duel field stay the same height — the field must not get taller to fit the text.
-- [ ] Try to click, tab into, or select anything in the panel: nothing in it is focusable or clickable, and tabbing through the page skips it entirely.
-- [ ] With the Duel HUD enabled, open a card tray and click an `Inspect …` button: the panel fills with that card instead of a modal dialog opening.
-- [ ] There is no card-inspector dialog anywhere any more, and pressing `Escape` with the panel filled does nothing (it must not close or clear the panel, and it must not disturb pinned action chips).
-- [ ] Slowly shrink the window below ~1264px: the panel drops beneath the duel field, the field becomes full width, and the panel is capped at about `18rem` tall with its text still scrollable.
-- [ ] Keep shrinking to a phone width: the panel stays under the field, stays fully on screen, and nothing on the page scrolls sideways except the duel field itself.
-- [ ] Surrender and start another duel: the panel resets to its empty state instead of holding the previous duel's card.
-- [ ] Play a full duel with the panel on screen: card art keeps loading correctly and the app never slows down or shows a broken image placeholder where art should be.
-
-## R1-T8 status-and-life-pills — SUPERSEDED
-
-
-> Superseded by round 2. The in-field life-point pills were deleted and life points moved to the header bar (round 2 T1); the top-right priority/phase pills were deleted and replaced by the in-field phase strip (round 2 T3). Nothing in this section still exists. Do not run it; use round 2 T1 and T3.
-
-- [ ] On your turn, the field's top-right corner reads `Choose Action - Main 1` (or the current phase) in two pills separated by a `-`, the left pill green.
-- [ ] While the opponent is acting (your response has been sent and you have no prompt), the left pill turns orange and reads `Waiting Opponent`; the phase pill still updates.
-- [ ] Play through Draw, Standby, both Main Phases, Battle Start, Battle Step, Damage, Damage Calculation, Battle and End: the phase pill shows the matching human-readable name at each step.
-- [ ] Two life-point pills are visible inside the duel field itself (not the Duel HUD): the opponent's top-left, yours bottom-left, each formatted like `8,000 LP`.
-- [ ] Deal or take damage: both LP pills update to the new totals immediately.
-- [ ] The status pills and both life pills never block a click — a card underneath any of them (top-right corner, top-left corner, bottom-left corner) is still clickable/draggable exactly as if the pill were not there.
-- [ ] With a screen reader, the priority/phase pill group announces once per change (not once per unrelated re-render) as a single `polite` region; the `-` separator itself is not announced.
-- [ ] There is no `Inspect` button in the Duel HUD pointing at a missing `card-inspector` id — Inspect buttons still open the card preview panel with no console error.
-
-## T7 zone-naming-and-field-geometry (round 3)
-
-- [ ] `npm run dev` at a 1280×720-ish window: every painted zone label is short and owner-neutral — `Monster Zone 1…5`, `Spell/Trap Zone 1…5`, `Field Zone`, `Deck`, `Extra Deck`, `GY`, `Banished`, `Hand` — with no `Your`/`Opponent` prefix anywhere on the board, and only the two shared zones still read `Shared Extra Monster Zone left/right`.
-- [ ] Eyeball the five central columns: cards sit visibly closer together horizontally than before, and the two rows on each side sit visibly further apart vertically, without any card overlapping its neighbour.
-- [ ] Eyeball both outer columns: each player's Extra Deck pile sits directly under (opponent: over) that player's Field Zone, sharing the same vertical line.
-- [ ] With a screen reader on, tab into the field and arrow around: player-0 controls announce `Your …`, player-1 controls announce `Opponent …`, the shared zones announce `Shared Extra Monster Zone left/right`, `Spell/Trap` is spoken as `Spell and Trap`, and `GY` is spoken as `Graveyard`.
-- [ ] With a screen reader on, focus a card on the field: it announces the owner-aware zone (e.g. `The Legendary Fisherman in Your Monster Zone 2`) while the painted zone underneath still reads `Monster Zone 2`.
-- [ ] Arrow-key around the whole field by hand: both shared Extra Monster Zones are reachable (press Up from your Monster Zone 2/3/4, or Down from the opponent's), and no zone, pile, or hand card is stranded with no way in.
-- [ ] Arrow navigation still feels sane after the shared zones joined the vertical path: pressing Up twice from your monster row lands on the opponent's row via the shared zone rather than jumping somewhere unrelated.
-- [ ] Play a short duel: summoning, setting, dragging from hand, and opening a pile's list all still land on the intended zone — the tighter columns did not shift any hit target off its card.
-
-## T6 face-down-public-knowledge (round 3)
-
-- [ ] `npm run dev` and start a duel. Let the opponent summon a monster face-up, then wait for it to be flipped/set face-down in the same zone (or force it with a card that changes position): the board still paints the card back, but hovering it fills the preview panel with that monster's art, name and effect text.
-- [ ] Focus that same face-down opponent monster with the keyboard: the screen reader announces the known card name and its zone, not `Hidden card`.
-- [ ] Privacy check — the opponent sets a card straight out of its hand (nothing revealed it first): the board paints a card back, hovering it leaves the preview panel on `Face-down card` with no art, no name and no effect text, and keyboard focus announces no card name.
-- [ ] Still on that set-from-hand card: open Settings → download diagnostics (or the result dialog's `Download diagnostics`) and search the file for that card's name and passcode — neither appears anywhere in the snapshot or event log.
-- [ ] Opponent GY/Banished trays: a face-up card in an opponent pile is still named and inspectable; an unrevealed opponent Extra Deck entry is still unnamed and shows only a card back.
-- [ ] Watch a known face-down opponent card get destroyed or sent to the GY: it appears in the GY named, and the preview panel resolves it from the GY as usual.
-- [ ] Watch a known face-down opponent card leave the field for the hand or deck (a card that returns it): once it is back in a hidden zone it is no longer identified, and a later set of that same card is unnamed again.
-- [ ] Your own cards are unchanged: your hand, your set spells/traps and your face-down monsters all still hover-preview with full art, name and effect text.
-- [ ] Play a full duel to the result dialog: no error banner, no worker restart, and the field never shows an identified card in a zone that should be secret.
-
-## T8 hand-band-and-pagination (round 3)
-
-- [ ] `npm run dev`, start a duel with 11+ cards in your hand (e.g. via a diagnostic/test deck or by drawing extra cards): only 10 cards are visible at once, a `Page 1 of 2` status is present, and the 11th+ card is reachable only after paging.
-- [ ] With that 11+ hand, use keyboard-only play: focus card sequence 9 (10th card) and press ArrowRight — sequence 10 becomes focused and the page visibly turns to page 2. From sequence 10, press ArrowLeft — sequence 9 becomes focused again and the page turns back to page 1. No duplicate cards, no lost focus.
-- [ ] Mirror the same crossing for the opponent's hand if it also holds 11+ cards: ArrowLeft moves forward across the page boundary, ArrowRight moves back (mirrored direction from the player's).
-- [ ] Click the previous/next arrows directly with the mouse: the page changes by 10 cards, the correct arrow disables at each end (page 1 has no previous, the last page has no next), and both arrow buttons are comfortably clickable (not tiny/finicky targets).
-- [ ] With a hand wider than the viewport at a page's card count, use the mouse wheel or trackpad over the hand row: it scrolls horizontally to reach cards within the current page without needing the arrows.
-- [ ] Visually confirm neither hand shows a bordered/dashed rectangle behind the cards any more — cards sit directly on the plain board background.
-- [ ] Visually confirm the opponent's hand still mirrors the player's hand: card backs face the same way as before, and the left-to-right visual order looks like a mirror image of your own hand's order.
-- [ ] Visually confirm both hands span exactly the five Spell/Trap zone columns (S/T1 through S/T5) — the hand's left/right edges line up with the outer edges of the leftmost and rightmost Spell/Trap zones, not wider or narrower.
-- [ ] Visually confirm each player's Deck/GY and Banished piles sit snugly next to the Spell/Trap row and Monster row respectively, with the same visual gap as between any two adjacent central-column zones — no crowding or odd extra whitespace around the pile column.
-- [ ] Drag a hand card onto a highlighted zone as usual (e.g. Summon/Set): the drag still works exactly as before paging was added, from any page.
-- [ ] Play a full duel to completion: no console errors, no broken path, and the hand always remains usable (draw, discard, play from any page) throughout.
-
-## T9 viewport-fit-and-preview-collapse (round 3)
-
-- [ ] `npm run dev`, start a duel at a normal desktop window size (e.g. maximized, 1920×1080 or 1366×768): the whole page has no scrollbar at all — the duel field, header and preview panel all fit in the window together, and scrolling the mouse wheel over the page does nothing.
-- [ ] Slowly shrink the window width down past ~1264px: the preview panel moves from beside the duel field to a horizontal strip underneath it (card art on the left, name/text on the right), and the field stays above the panel, never below.
-- [ ] Keep shrinking to a phone-sized window (e.g. 375×667): the page still never scrolls vertically; if the board is too wide to fit, the duel field itself scrolls sideways (not the page) to reach every zone.
-- [ ] Shrink the window height down to something short (e.g. resize to ~420px tall, or use a laptop with a small viewport plus browser chrome): the preview panel's card art shrinks to a small thumbnail, the card name stays fully visible, and long effect text scrolls inside its own little box instead of pushing the panel taller.
-- [ ] Hover/focus a card with a long effect text description at that short window height: confirm you can scroll just the effect-text box (e.g. with the wheel while hovering it) to read the rest, without the page or panel moving.
-- [ ] Open a deck/GY/Extra Deck/Banished pile list (the zone-list dialog): every card image in the list is clearly full-sized but never taller than roughly half the window — no image explodes to fill the whole screen.
-- [ ] With the Duel HUD or workspace panel enabled (Settings), confirm the page goes back to scrolling normally (this is the one case where a page scrollbar is expected) and nothing is trapped off-screen — you can still reach the HUD and workspace content by scrolling.
-- [ ] Play a full duel end-to-end at a normal window size, including dragging a hand card onto a highlighted zone and finishing a turn with the action bar visible: the End Turn button always sits clear of the board, never overlapping a card or zone, at every window size you tried above. (Round 3 T14: the action bar now rides in a draggable "Decision" window that floats over the board on purpose — judge it by whether you can move it clear, not by whether it starts clear.)
-- [ ] Resize the window between wide, narrow, and short repeatedly while a duel is in progress: layout reflows cleanly each time with no leftover scrollbar, no stuck/cut-off content, and no console errors.
-
-## T10 phase-strip-end-turn-and-role-labels (round 3)
-
-- [ ] `npm run dev`, start a duel at a normal desktop window size: the phase strip shows exactly four chips on the left (Draw, Standby, Main 1, Battle) and Main 2 plus one yellow "End turn"-style button on the right — no separate End chip, no second End Turn button anywhere on the field.
-- [ ] Confirm nothing in the phase strip ever visually overlaps a card, zone, or pile at a few different window sizes. (Round 3 T11: with the bundled Link-free decks there are no shared Extra Monster Zones any more, so the two groups now flow as one continuous run anchored at the right instead of straddling those zones.)
-- [ ] Click the End turn button when it's enabled: the turn ends exactly once, matching its previous behaviour before this change.
-- [ ] Confirm the header shows exactly two labels next to the life point totals: "Opponent" next to the top/opponent LP and "You" next to your own LP — no deck or archetype name appears anywhere in the header or on the field.
-- [ ] Confirm no old-style status pills (priority pill, phase pill, or an opponent-hand status badge) have reappeared anywhere on the duel field.
-- [ ] Play a full duel end-to-end, including reaching and using End turn from both the idle command menu and the field action bar's Battle/Main 2 buttons: no broken path, no console errors, and the app remains fully functional through to the result dialog.
-
-## T11 link-detection-and-extra-monster-zones (round 3)
-
-- [ ] `npm run dev`, start a duel with any bundled deck pair: the board shows no shared Extra Monster Zones at all — the central band between the two monster rows is empty, and no "Shared Extra Monster Zone" control can be focused or clicked.
-- [ ] With that same duel, confirm the phase strip reads Draw, Standby, Main 1, Battle, Main 2, End turn in one continuous run with even spacing between neighbours, and that the End turn button stays comfortably clickable and clear of every card, zone and pile.
-- [ ] Summon an Extra Deck monster (Fusion/Synchro/Xyz) during that duel: the placement prompt only ever offers the five main Monster Zones — no choice points at a zone that is not drawn on the board, and no prompt is silently skipped or answered for you.
-- [ ] Play a full duel to the result dialog with a bundled pair: no error banner, no "Duel field and rules disagree" alert, no worker restart, and every decision the engine asks for is reachable on screen.
-- [ ] Use Rematch from the result dialog: the rematch keeps the same deck pair and the same board layout (still no shared Extra Monster Zones), and the duel plays normally.
-- [ ] Use Change decks, pick a different pair and start again: the new duel recomputes its own layout, still shows no shared Extra Monster Zones for bundled (Link-free) decks, and no stale zones or phase-strip spacing survive from the previous duel.
-- [ ] Keyboard-only pass: with arrow keys alone, reach every remaining field target (both hands, all monster/spell-trap zones, field zones, and all four pile columns per player) — nothing is stranded and no arrow move lands on an invisible zone.
-
-## T12 halo-palette-hover-zoom-and-chip-layer (round 3)
-
-- [ ] `npm run dev`, start a duel: legal/actionable cards, zones, stacks and list entries show a **green** halo (not orange); selecting a target (e.g. a multi-target effect) switches that target's halo to **orange**, and the green never reappears underneath while it stays selected.
-- [ ] Drag a hand card toward a legal zone: the drop-candidate zone shows a **green** outline with a visible translucent green fill, distinct at a glance from a plain (unfilled) legal-green zone.
-- [ ] Tab to any field target with the keyboard: the focus ring is a neutral white/high-contrast outline, never green or orange, regardless of whether that target is also legal or selected.
-- [ ] Trigger a transient feedback highlight (e.g. an effect/summon feedback pulse) and the non-attack targeting line: both render **teal**, not orange. Trigger an attack: the attack line stays **red**. Trigger LP damage feedback: it stays **red**.
-- [ ] Hover (pointer) over a zone-list dialog entry that is *not* legal: it still turns **orange** on hover. Confirm hovering never toggles or leaves behind a selected/actionable class change once the pointer leaves.
-- [ ] Hover a player hand card: it visibly grows (~1.35×) growing **upward** from its bottom edge; halo/art grow together, not just the art. Move the mouse away: it shrinks back over a short, smooth transition.
-- [ ] Hover an opponent hand card: it grows **downward** from its top edge (opposite direction from the player's hand).
-- [ ] Hover a placed field card (monster/spell-trap zone) and a zone-list dialog entry: both zoom from their **centre**, halo intact, no visible clipping by the hand/list scroll viewport at a normal window size.
-- [ ] With an actionable card's chip menu open (hover, keyboard focus, or pinned via Enter+click), confirm every visible chip button is still clickable — clicking lands on the chip, not on a neighbouring card or zone underneath.
-- [ ] OS/browser "reduce motion" enabled (e.g. `prefers-reduced-motion: reduce`): hovering/focusing a card or list entry shows no zoom animation and no size change at all; halo colours (green/orange/teal/neutral-focus) are still all correct and static.
-- [ ] Resize the window down to a narrow/short viewport and repeat the hand-card hover check: the zoomed card is not clipped by the hand's own horizontal scrollbar, and normal scrolling of the hand still works.
-
-## T13 drag-ghost-physics (round 3)
-
-- [ ] `npm run dev`, start a duel, drag a legal hand card (summon/set) fast to the right: a floating card ghost appears under the cursor above the field, tilts visibly clockwise (leaning right) while moving fast, and does not tilt while nearly still.
-- [ ] Drag the same card fast to the left: the ghost tilts the other way (leaning left).
-- [ ] While dragging, confirm the ghost sits above every card, zone, chip and floating field window, and the source card in the hand stays exactly where it was (same slot, same scroll position), just visibly dimmed — it never jumps or moves in the hand row.
-- [ ] Drop the card on a highlighted (green, filled) candidate zone: the card is placed immediately (no waiting on any animation) and the ghost visibly springs to the dropped zone before disappearing.
-- [ ] Start a drag and release the pointer somewhere with no legal zone underneath (e.g. empty space or a non-candidate zone): nothing is played, and the ghost visibly springs back to the hand card's own position before disappearing.
-- [ ] Start a drag and press Escape or otherwise cancel the pointer (e.g. drag the mouse out of the browser window and release outside it, or use a touch cancel if testing on a touchscreen): nothing is played and the ghost springs home the same way as a miss.
-- [ ] OS/browser "reduce motion" enabled (`prefers-reduced-motion: reduce`): dragging still shows a ghost that follows the cursor, but it never tilts and never lifts/scales up; releasing (valid or invalid) removes the ghost instantly with no springing/settling animation at all.
-- [ ] Open a fresh prompt or otherwise interrupt an in-progress drag (e.g. trigger a chain or another prompt mid-drag if possible): the ghost disappears cleanly rather than freezing on screen or continuing to animate against stale state.
-- [ ] Play a full duel end-to-end using at least one hand-card drag to place a card: the drag/drop still behaves exactly as before this change functionally (one legal placement per drop, no double responses), just with the new visual ghost/tilt/spring polish layered on top.
-
-## T14 floating-window-primitive-and-zone-list-dialog (round 3)
-
-- [ ] `npm run dev`, start a duel and open a Deck/GY/Extra/Banished pile: the list appears as a window with a header showing the pile name, its card count, and a red `×` button at the far right of that header. The `×` closes it.
-- [ ] Drag the list window by its header to each corner and past every edge of the duel field: it follows the pointer smoothly and always stops with its whole box inside the field's dark panel — never half off the edge, never over the header bar or the preview panel.
-- [ ] Start a drag on the header and keep the mouse button held while sweeping far outside the browser window, then come back and release: the window keeps following the pointer the whole time and lands where you release it.
-- [ ] Press the red `×` (or anywhere on the header text) without moving: pressing the `×` closes the list, and pressing the header alone starts a drag rather than closing anything.
-- [ ] Wheel-scroll (normal vertical scroll) with the pointer over the row of list entries: the entries travel sideways. At either end of the row, one more wheel notch does nothing else weird — the page still does not scroll.
-- [ ] With the list open, click anywhere on the empty board: the list closes. Press Escape with the list open: it closes too.
-- [ ] Reach a decision that shows the "Decision" window (e.g. a multi-select effect or a chain response — a lone Battle Phase/Main Phase 2/End Turn choice no longer opens this window as of T15, so it is not a valid trigger here): drag it around by its "Decision" header the same way; it also stays fully inside the field.
-- [ ] With the Decision window on screen, click repeatedly on empty board space, on cards, and on the preview panel, and press Escape several times: the Decision window never disappears and the duel never advances by itself. Only its own Confirm/Cancel/Pass buttons answer.
-- [ ] With both windows open at once, press each in turn: the one you pressed comes to the front. Pressing the Decision window also closes the zone list (it counts as clicking outside it), while the Decision window itself stays.
-- [ ] Drag the list and Decision windows to two clearly different places, then reload the page (F5) and start a duel again: each window comes back at the place you left it, independently of the other.
-- [ ] With windows parked near the field edges, resize the browser window much narrower and shorter: both windows slide back inside the field instead of being cut off, and stay usable.
-- [ ] At a narrow window where the board is wider than the field (a horizontal scrollbar appears inside the field): scroll the board sideways and up/down — the two windows stay exactly where they are on screen while the board moves under them.
-- [ ] Check every button in both windows is still comfortably clickable (at least a fingertip — 44px — tall/wide), including the red `×`.
-- [ ] Play a full duel to the result dialog using the Decision window for confirmations and cancels: nothing is answered twice, no decision is lost, and no console errors appear.
-
-## T15 single-target-auto-submit-and-battle-command-trim (round 3)
-
-- [ ] `npm run dev`, declare an attack that offers exactly one legal target (or reach any effect prompt offering exactly one legal card/zone target): clicking that one card or zone submits immediately — the engine advances at once, with no "Decision" window/Confirm step appearing at all, and the card never flashes orange (selected) first.
-- [ ] Reach a Main Phase or Battle Phase decision whose only legal actions are phase transitions (e.g. only `Battle Phase`/`Main Phase 2`/`End Turn` are available, no card action): use only the phase-strip chips and the End Turn button to advance — no dialog and no "Decision" window ever appears for this transition.
-- [ ] Reach a Battle Phase decision that also offers an attack (a card chip) alongside `Main Phase 2`/`End Turn`: the attack is only ever offered as a card chip, `Main Phase 2`/`End Turn` are only ever offered via the phase strip/End button, and there is never a second dialog or action bar duplicating either.
-- [ ] Reach a multi-select prompt (choose 2 of N, or a select/unselect prompt): clicking legal targets still only drafts the selection (cards highlight orange, nothing submits) and an explicit `Confirm`/`Cancel` in the Decision window is still required — this draft/confirm flow is unchanged from before T15.
-- [ ] Reach a counter-allocation or ordering prompt: the Decision window and its Confirm step still appear exactly as before, even though the total picked count could be one — these two kinds always keep the window.
-- [ ] Rapidly double-click (or double-tap) a single legal target in an exact one-target prompt: only one response reaches the engine — the second click lands after the response is pending and does nothing (no error, no duplicate answer).
-- [ ] Play a full duel end-to-end: no click is ever swallowed by a stray empty Decision window, no phase transition or attack pops up a redundant dialog, and multi-select/cancel/counter/order decisions all still work exactly as before this change.
-
-## T16 off-field-target-list-dialog (round 3)
-
-- [ ] `npm run dev`, start a duel and reach any effect that targets a card outside the field (hand discard cost, a Graveyard/Banished/Deck/Extra Deck target — e.g. play Monster Hunter Bound, the effect that could not be answered before this change): a floating target window opens by itself, listing only the legal cards, and the effect can be completed to the end.
-- [ ] Check the list contains only legal targets: a pile that holds ten cards but offers one legal target shows exactly that one card, not the whole pile.
-- [ ] Check each entry carries the small zone badge naming where it came from — `HAND`, `GY`, `DECK`, `BAN` or `EXTRA` — and that a prompt spanning several zones shows them all in one window.
-- [ ] Exactly one legal target (choose 1 of 1): clicking it submits immediately — no Confirm step, no separate "Decision" window.
-- [ ] Multi-select off-field prompt: clicking entries turns them orange and the counter in the window updates (`2 / 3 selected` when the count is fixed, `2 selected · 1–3 allowed` for a range). `Confirm selection` stays disabled until the selection is legal, then submits it.
-- [ ] Mixed prompt (a legal target on the field plus one off-field): the on-field card keeps its green halo and stays clickable behind the window, selecting it turns it orange and updates the same counter in the target window, and one Confirm submits both.
-- [ ] Close the target window with its red `×`, by pressing Escape, or by clicking empty board space: the window only hides — nothing is cancelled and your orange selections are kept.
-- [ ] Reopen it by clicking the highlighted pile (or the highlighted hand card) the targets came from: the window comes back with the same selections still orange. Clicking that same launcher again hides it.
-- [ ] Cancellable off-field prompt: the window's `Cancel` button appears only when the engine allows cancelling, and pressing it cancels the whole prompt exactly once.
-- [ ] While an off-field target prompt is live, click around the board, the preview panel and the phase strip: the duel never answers the prompt by itself, and nothing is submitted twice.
-- [ ] Privacy inspection: reach a prompt that targets a card you are not allowed to identify (an opponent hand or face-down banished card). It must still be listed and clickable, showing the card back and a neutral label. Open DevTools, inspect that entry's element (and its `img` src) and search the page HTML: no card code, no card name and no card art URL for it anywhere.
-- [ ] Browse mode is unchanged: clicking a pile with no legal target in it (or any pile outside a targeting prompt) still opens the ordinary pile-browsing list, showing that pile's full contents with Deck position 1 at the top.
-- [ ] Every button in the target window is comfortably clickable (44px minimum), including the entry buttons, `Confirm selection`, `Cancel` and the red `×`.
-- [ ] Play one full duel per deck — Burning Abyss, Nekroz, Shaddoll and Spellbook — using this build. Any off-field or mixed target you meet must be answerable and completable in the UI, and the duel must reach its result dialog with no console errors. Note which effects and zones you actually encountered: an effect you never met is not evidence.
-
-## R1 review-repairs-correctness-and-privacy (round 3)
-
-- [ ] `npm run dev`, start a duel and reach any decision while your hand holds more than ten cards (draw into a big hand, or reach a chain/effect prompt during a turn with 11+ cards): click the hand band's `‹`/`›` page arrows, drag-scroll the hand row, and click the empty space in the band. The page changes, and the live decision is never answered — nothing is cancelled, no chain is passed, the Decision window stays exactly where it was.
-- [ ] With the same big hand, page to the second hand page and then answer the prompt normally (card chip, Decision window Confirm/Cancel, or phase strip): the answer still works and is sent exactly once.
-- [ ] Reach a targeting prompt whose only legal targets are cards you cannot identify and that are not shown on the board (an opponent hand target is the live case), needing two or more picks: the target window opens by itself and now refuses to close — clicking empty board space, pressing Escape and pressing the window's red `×` all leave it on screen, because it is the only surface that can answer. Complete the effect from that window.
-- [ ] Contrast case: reach an off-field prompt whose targets do sit in a visible pile or in your own hand (GY/Deck/Banished/your hand). Clicking empty board space still hides that window, and clicking the highlighted pile or hand card reopens it with the selections intact.
-- [ ] Play at least one full duel per deck to the result dialog with DevTools open: no console error mentioning `Concealed opponent card outside a fixed field slot carries a code` and no `invalid_worker_event` failure appears. If either ever does appear, the duel has stopped on purpose to avoid leaking an opponent identity — capture the diagnostics download and report it rather than retrying.
-
-## R2 review-repairs-feedback-gaps (round 3)
-
-- [ ] `npm run dev`, start a duel: confirm no pill/badge of any kind sits at the top-centre of the field over the opponent's hand — nothing shows "X phase", "Normal Summon", "Opponent's turn" or similar text pinned above the opponent hand band. Confirm the phase strip's current-phase chip and the header's turn text still tell you the phase/turn some other way.
-- [ ] Trigger a field-line/highlight feedback moment (a summon, an attack, a card move) and confirm the teal target highlight and the attack/target line still render exactly as before — only the floating text badge is gone.
-- [ ] Place a card into a spell/trap zone (Set a spell or trap), then hover an actionable hand card whose visible box overlaps that placed card: the hover chip menu opens above the field card, never hidden underneath it, and every chip button is clickable exactly where it visibly sits.
-- [ ] Repeat the previous check at a narrow/short viewport (e.g. resize to ~1024×768 or the mobile layout): the hand band and its chips still win over any field card, zone or the phase strip.
-- [ ] Drag a hand card toward two or more legal zones (e.g. a monster summon offering several empty Monster Zone slots): as the pointer crosses from one legal zone to another, the zone directly under the pointer gets a visibly brighter/filled green halo that fades in over a beat, while the other legal zones keep the plain (dimmer) legal-green halo. Moving off every zone fades the extra emphasis back out.
-- [ ] Repeat the drag-hover check with OS/browser "reduce motion" enabled: the hovered zone still gets the distinct emphasis, but it snaps rather than fades.
-- [ ] Release the drag over the hovered zone: the card places normally and every drop-candidate/hover emphasis clears immediately.
-- [ ] Look at the yellow End turn button in the phase strip's right group: it should read visibly narrower/more compact than a normal button (closer to the width of a phase chip) while still being comfortably tappable — no accidental misses when clicking it repeatedly.
+- [ ] Confirm right-rail Options opens menu/settings during active duel.
+- [ ] Confirm rail status stays additive; active prompt remains sole decision UI.
+- [ ] Confirm reduced-motion mode keeps three waiting dots visible and static.
+
+## T7 full-height-shell
+
+- [ ] Confirm preview, field, rail fill one viewport-height row with no page scrollbar.
+- [ ] Resize among 1366×768, 1920×1080, 2560×1440; confirm field stays centered between preview and rail.
+- [ ] Drag floating field windows to each edge, resize narrower; confirm windows reclamp inside field.
+
+## T8 preview-overlay-scrollbar
+
+- [ ] Focus effect text; confirm PageDown and End scroll it, focus ring stays visible, and overlay thumb is absent from Tab order.
+- [ ] Compare short and long effect text; confirm paragraph width stays fixed and overlay thumb appears only for long text.
+- [ ] Drag overlay thumb; confirm effect text scrolls while panel remains inside one viewport-height row.
+
+## T9 persisted-display-settings-v2
+
+- [ ] Toggle zone outlines and counts off; confirm zone names, focus, legality, selection, and drop halos remain intact.
+- [ ] Reload; confirm both display choices remain off.
+- [ ] Reset settings; reload; confirm both display choices return on.
+- [ ] Clear site data; confirm display settings, decks, and floating-window positions return to defaults.
+
+## T10 approved-browse-dialog-shell
+
+- [ ] Confirm browse actions remain usable through approved shell.
+- [ ] Confirm alphabetical sorting never requests or reveals hidden card art or identity.
+- [ ] Confirm browse dismisses through outside press, Escape, header ×, and footer Cancel.
+- [ ] Confirm 6-card row centers; overflow row retains 8px edges at field widths.
+
+## T11 card-tiles-projected-choice-menu
+
+- [ ] Confirm duplicate menu reaches every choice with Tab, Arrow keys, Home, and End; Escape returns focus to tile trigger.
+- [ ] Confirm Details previews card without emitting an engine response.
+- [ ] Confirm hidden cards reveal no identity in art alt text, labels, or menus.
+- [ ] Confirm first and last zoomed card menus remain clickable inside dialog.
+
+## T12 target-chrome-collapse
+
+- [ ] Confirm target draft survives outside press, Escape, collapse, and expansion.
+- [ ] Confirm target collapse stays anchored and expansion remains inside resized field boundary.
+- [ ] Confirm target shows no ×, conditional Cancel, dynamic source notice, and privacy-safe sorting.
+- [ ] Confirm browse still dismisses through outside press, Escape, ×, and Cancel.
+
+## T14 selection-ui-integration
+
+- [ ] Confirm off-field exact-single clicks draft only, then Validate submits; mounted-field exact-single still submits immediately.
+- [ ] Confirm range Validate enables inclusively, while maximum lock disables only unselected opaque choices.
+- [ ] Confirm selected duplicate choices remain removable one opaque ID at a time; final tile unselect suppresses zoom until pointerleave.
+- [ ] Confirm sorting, collapse, outside press, and Escape preserve target draft without answering prompt.
+- [ ] Confirm hidden opponent targets expose no identity or art while unavailable/selected state remains perceivable without color alone.
+
+## T15 card-list-chromium-acceptance
+
+- [x] Confirm attached wide browse, mixed target, max-locked target, and 320px responsive screenshots are readable.
+- [x] Confirm keyboard route focus remains visible and no hidden card identity appears.
+- [x] Confirm startup, duel actions, browse, target Validate, and reload settings remain functional.
+
+## T1 merge-duel-field-branch
+
+- [ ] Run `npm run dev` (default `DEV_PORT=4300`) and open `http://localhost:4300/#/` — the duel starts directly, no blank screen and no "Application could not start" alert.
+- [ ] On that duel, confirm the field uses the merged pixel geometry: square zone outlines with concentric card slots, aligned rows, no clipped board edge.
+- [ ] Confirm the right status rail is present and the old duel header bar is gone.
+- [ ] Confirm the whole duel fits exactly one viewport (no page scrollbar) at your normal window size, then resize taller/shorter and confirm it still fits.
+- [ ] Open a stack zone (Deck / Graveyard / Banished) to raise the card-list dialog; confirm cards render as tiles, sorting/browse chrome appears, and Escape closes it.
+- [ ] Open Settings, toggle a field-display option, reload the page, and confirm the toggle survived (persisted display settings v2).
+- [ ] Open `http://localhost:4300/#/decks` — the Deck Editor library renders and the duel does not start. (Route renamed from `#/prototype/deck-builder` by T2; the surface was renamed from "deck-builder prototype" to "Deck Editor" by T8.)
+- [ ] Open `http://localhost:4300/#/story` — the visual-novel title screen renders. (Corrected by T7: this was `prototype.html`, which no longer exists.)
+- [ ] Run `npm run build` and confirm it exits 0 — this proves the repaired `vite.config.ts` still emits the `app` (`index.html`) bundle. (Corrected by T7: the `prototype` input was removed, so only one bundle is expected now.)
+- [ ] Confirm `dist/index.html` exists after that build and `dist/prototype.html` does NOT. (Corrected by T7.)
+
+## T2 shell-routes-and-mount
+
+- [ ] Run `npm run dev` (default `DEV_PORT=4300`). Open `http://localhost:4300/#/` — the duel starts directly, exactly as before, with no "Application could not start" alert.
+- [ ] Open `http://localhost:4300/#/duel` — the duel starts here too.
+- [ ] Confirm the duel still fills exactly one viewport height with no page scrollbar (the `100svh` grid moved from `#app[data-app-entry="duel"]` to `.shell-region--duel`).
+- [ ] Open `http://localhost:4300/#/decks` — the Deck Editor library renders and no duel starts. (Corrected by T8: this used to say "deck-builder prototype".)
+- [ ] Open `http://localhost:4300/#/story` — the visual-novel title screen renders. (Corrected by T7: this used to be the `Not available yet` placeholder.)
+- [ ] Open `http://localhost:4300/#/admin` — the page shows only the text `Not available yet`.
+- [ ] Open `http://localhost:4300/#/nope` — it falls back to home, which currently renders the duel.
+- [ ] Open `http://localhost:4300/#/prototype/deck-builder` — this old route is gone; it must now fall back to the duel, NOT the deck builder.
+- [ ] From the duel, edit the address-bar hash to `#/decks` and press Enter without reloading — the shell swaps to the deck builder in place (hashchange routing).
+- [ ] Then edit the hash back to `#/duel` without reloading — the shell swaps back to the duel.
+- [ ] Play a few actions in the duel (draw/summon/end turn) and confirm it is fully usable with an empty browser console (no errors).
+- [ ] Create and edit a deck in the deck builder, reload, and confirm the edit persisted and the console is empty.
+- [ ] Open `http://localhost:4300/#/story` — the visual novel is served from `index.html` like every other domain. (Corrected by T7: this line used to point at `prototype.html`, which T7 deleted.)
+- [ ] In DevTools, confirm `document.querySelector("#app").dataset.appShell === "ready"`.
+- [ ] Run `npm run build` and confirm it exits 0.
+
+## T3 design-tokens
+
+T3 is a pure indirection refactor: every colour, radius and font-size in
+`src/styles/app.css` now resolves from `src/styles/tokens.css`. Nothing may
+look different. Every item below is a "did it stay the same" check — take a
+screenshot before checking out this branch if you want a strict A/B.
+
+- [ ] Run `npm run dev` and open `http://localhost:4300/#/duel`. The page background is still the dark navy with the blue radial glow in the top-left corner.
+- [ ] The duel field board is still the dark green felt with its diagonal gradient and centre radial sheen — not flat, not a different hue.
+- [ ] Empty zones still show their dashed pale-green outlines; zone count badges still read in off-white.
+- [ ] Hover a card in your hand: the halo/zoom behaves as before and the card art border is still the pale near-white hairline.
+- [ ] Trigger a legal action (e.g. summon): actionable zones and cards still show the GREEN halo, not orange.
+- [ ] Select a card in a prompt: the selected halo is still ORANGE and overrides the green.
+- [ ] Tab to a field control and confirm the keyboard focus ring is still the warm amber outline (`--focus-ring`), visually distinct from both green and orange.
+- [ ] Drag a card over a legal drop zone: the drop-candidate fill is still translucent green and darkens on hover.
+- [ ] Open the card-list dialog (click a zone with a pile): header, body, footer, scrollbar thumb/track colours and the tile borders are all unchanged.
+- [ ] In the card-list dialog, hover a tile (orange border) and confirm an unavailable target tile still shows RED through hover and focus.
+- [ ] Open the card preview panel: panel background, art frame and effect-text colours are unchanged; art is still bounded by viewport height.
+- [ ] Check the status rail and the phase strip / End turn button: chip fills, text colours and the amber "warning" button hover are unchanged.
+- [ ] Force an error (or view a known error/result panel): the error panel is still red-bordered on dark maroon, the recoverable variant still amber-bordered, the result panel still teal-bordered.
+- [ ] Confirm no element has visibly different CORNER ROUNDING — `border-radius` values of 0.35/0.6/0.9rem were swapped for `--radius-sm/md/lg`.
+- [ ] Confirm no label or badge changed SIZE — font sizes of 0.72/0.85/1.25rem were swapped for `--text-xs/sm/lg`.
+- [ ] Play one full turn and confirm the browser console stays empty (no missing-variable or CSS parse warnings).
+
+## T4 responsive-stage
+
+T4 gives the whole product one layout law: above 1024px CSS width the app is a
+centred 16:9 "stage" with `--bg` letterbox bars filling the leftover space;
+below 1024px the shell publishes a mobile mode instead. The duel now measures
+the stage, not the viewport. The portrait duel rotation and the deck portrait
+layout are NOT in this ticket — below 1024px you should only see the mode
+change and the stage scale down, not a re-laid-out duel.
+
+Note for the T3 checks above: on a window whose aspect ratio is not 16:9 the
+app is now bordered by black bars. Colours inside the stage are unchanged; the
+bars themselves are expected and are not a T3 regression.
+
+Run `npm run dev` and open `http://localhost:4300/#/duel` for every item.
+
+- [ ] Resize the window to roughly 1920x1080 (or any 16:9 shape): there are NO bars — the app fills the window edge to edge.
+- [ ] Resize to a tall/square window (e.g. 1920x1200, or just drag the bottom edge down): horizontal bars appear above and below the app, equal height, background matches the page background.
+- [ ] Resize to a short/wide window (e.g. 1280x600): vertical bars appear left and right, equal width, and the duel shrinks to stay inside them.
+- [ ] At every desktop size above: no scrollbar ever appears on the page itself, on either axis. Spin the mouse wheel over the field and over the bars — the page must not move.
+- [ ] Inspect the stage element (`[data-cy="app-stage"]` in devtools) at each desktop size: `data-stage-mode` reads `stage`.
+- [ ] Narrow the window below 1024px while keeping it wider than it is tall (e.g. 900x500): `data-stage-mode` reads `mobile-landscape` and the app is still a 16:9 box, just smaller, with bars top and bottom.
+- [ ] Narrow to a portrait shape (e.g. 500x900): `data-stage-mode` reads `mobile-portrait`, ALL bars vanish, and the app fills the whole window. The duel is expected to look cramped here — its portrait layout is a later ticket.
+- [ ] Rotate a phone/tablet (or use devtools device emulation) from portrait to landscape and back: the mode attribute flips between `mobile-portrait` and `mobile-landscape` without needing a page reload.
+- [ ] Start a duel from the deck picker at 1920x1200: the picker, the field, the status rail and the card preview all sit INSIDE the stage — nothing is drawn over the bars.
+- [ ] Play a full turn (summon, set, attack, end turn) at 1280x600: every control is reachable and clickable, and the field never spills outside the bars.
+- [ ] Open the card-list dialog by clicking a zone with a pile at 1920x1200: the dialog stays inside the stage and can still be dragged/collapsed/closed.
+- [ ] Open `http://localhost:4300/#/decks` and resize between the sizes above: the deck editor scrolls INSIDE the stage (its own scrollbar), and the page itself still never scrolls.
+- [ ] Drag the window edge slowly across the 1024px boundary: the mode switches once, cleanly, with no flicker or stuck bars.
+
+## T5 home-hub-and-settings
+
+Run `npm run dev` and open `http://localhost:4300/` (no hash) for every item.
+
+- [ ] The first screen is the hub: a "YGO Story Duel Simulator" title with four buttons — Story, Decks, Duel, Settings. NO deck picker and NO duel appear here.
+- [ ] Click Duel: the URL becomes `#/duel` and the deck picker loads; start a duel and play a turn — the duel behaves exactly as before.
+- [ ] Press the browser Back button from the duel: you return to the hub and the duel is gone.
+- [ ] Click Decks: the URL becomes `#/decks` and the deck editor loads.
+- [ ] Click Story: the URL becomes `#/story` and the "Not available yet" placeholder shows (the visual novel moves here in a later ticket).
+- [ ] Type `http://localhost:4300/#/nonsense` in the address bar: you land back on the hub, not on an error.
+- [ ] Click Settings on the hub: a settings dialog opens with a Fullscreen switch reading "Off" and a Close button.
+- [ ] Click the Fullscreen switch: it reads "On". Close the dialog, reopen it — it still reads "On" (the choice is remembered).
+- [ ] Reload the page: the browser does NOT jump to fullscreen on its own, and a tip appears on the hub explaining that fullscreen needs one click.
+- [ ] Click "Go fullscreen" in the tip: the browser enters fullscreen.
+- [ ] Leave fullscreen (Esc) and reload: the tip does NOT come back. Any first click or keypress in the app now re-applies fullscreen.
+- [ ] Turn the Fullscreen switch back to "Off" in Settings and reload: no tip, and clicking around never forces fullscreen.
+- [ ] With fullscreen preferred and the tip showing, click "Not now" instead: the tip disappears and does not return after a reload.
+- [ ] In devtools Application → Local Storage, confirm a `ygo.ui.v3` entry exists after changing a setting.
+- [ ] Zone outlines/counts you set previously inside the duel settings are still what you left them (the v2 display settings carry forward).
+
+## T6 admin-console
+
+Run `npm run dev`. The console is a developer surface: it is never linked from the game, so it is reached only by typing the URL.
+
+- [ ] From the hub at `http://localhost:4300/`, look over the whole screen and open Settings: there is NO Admin/Console/Developer button anywhere.
+- [ ] Press Tab repeatedly through the hub and the settings dialog: focus never lands on an admin control.
+- [ ] Do the same sweep inside `#/duel` and `#/decks`: no admin control appears there either.
+- [ ] Type `http://localhost:4300/#/admin` in the address bar: a "Developer console" screen loads with a warning line and three sections — Routes, State jumps, Resets.
+- [ ] The console stays inside the 16:9 stage (letterbox bars are untouched) and scrolls with its own scrollbar if the window is short; the page itself never scrolls.
+- [ ] In Routes, click `#/` → the hub loads. Type `#/admin` again, click `#/duel` → the deck picker loads. Type `#/admin` again, click `#/decks` → the deck editor loads. Type `#/admin` again, click `#/story` → the "Not available yet" placeholder shows.
+- [ ] Back on `#/admin`, click "Seed test deck & open decks": the deck editor opens and the library lists a deck named "Admin test deck".
+- [ ] Open that deck: it holds 40 Main-deck cards.
+- [ ] Return to `#/admin` and click "Launch preset duel": the duel route opens with the normal deck picker, and no extra deck was written to the library.
+- [ ] Return to `#/admin` and click "Open story": the visual-novel title screen shows. (Corrected by T7: this used to land on the placeholder.)
+- [ ] Click "Reset…" next to "Deck library": nothing is deleted yet — a "Delete for good" button and a "Cancel" button appear in its place.
+- [ ] Click "Cancel": the row returns to a single "Reset…" button. Visit `#/decks` — "Admin test deck" is STILL there. A single stray click must never delete data.
+- [ ] Back on `#/admin`, click "Reset…" on "Deck library", then click "Reset…" on "Shell settings": only ONE row is armed at a time — the deck-library confirm disappears.
+- [ ] Press Cancel, then arm "Deck library" again and click "Delete for good": the status line reads "Cleared Deck library." Visit `#/decks` — the library shows "No local decks".
+- [ ] Repeat the arm-then-confirm flow for each remaining row (Duel snapshots, Shell settings, Story saves): each one asks for a separate confirmation and reports "Cleared …" when done. (Corrected by T7: the story row exists. Corrected by T13: it is now labelled "Story saves" and deletes the `ygo-story-saves` database, not a local-storage key.)
+- [ ] After clearing "Shell settings", check devtools Application → Local Storage: the `ygo.ui.v3` entry is gone, and reloading the hub shows default settings.
+- [ ] After clearing "Duel snapshots", start a duel from `#/duel` and play a turn: the duel still works (the snapshot store rebuilds itself).
+- [ ] Reload `#/admin` after every reset: the console still loads and normal play from the hub is unaffected.
+
+## T7 story-domain-migration
+
+Reach the story
+
+- [ ] Run `npm run dev` (default `DEV_PORT=4300`) and open `http://localhost:4300/#/` — the home hub appears; click its Visual novel entry and the URL becomes `#/story`.
+- [ ] Open `http://localhost:4300/#/story` directly — the title screen "Echoes of the Draw" renders with New Game / Load / Settings, and focus starts on New Game.
+- [ ] Confirm there is NO "Start full flow" screen, no "Jump to screen or state" button, and no "Reviewer tools" drawer anywhere in the story.
+- [ ] Open `http://localhost:4300/prototype.html` — it must NOT serve the visual novel any more (the second entry document is deleted).
+- [ ] With DevTools Network open, load `#/story` and confirm no `.wasm` request and no `runtime/` request fires, and no Worker appears under Application → Workers. The story must not boot the duel engine.
+
+Walk the prologue
+
+- [ ] Click New Game — the first narrative beat ("Rain turned …") renders with the utility bar (History, Save, Load, Settings, Pause).
+- [ ] Press Enter repeatedly (about 13 times) until "Choose your response" appears, and confirm the first choice button takes focus on its own.
+- [ ] Pick "I trust you" — the acknowledgment about earning trust appears.
+- [ ] Press Enter until the "City signal map" heading appears, and confirm the earlier-choice line mentions your trust.
+- [ ] Select Old Arena from the location list — the "Rin's Echo" briefing appears. Go back and select it again from the map hotspots — the same briefing appears.
+- [ ] Click Start Duel — the mock "Existing duel experience placeholder" appears. This is expected: the real duel handoff is a later ticket.
+- [ ] Click Simulate Player Win → "Signal broken" → Continue story → "Signal Cipher" reward, with an "Autosave complete" status.
+- [ ] Click Continue to updated map — the map now says "Archive available".
+- [ ] Click Save progress → Confirm overwrite — "Save complete" appears; close the dialog.
+- [ ] Reload the page — the title screen offers Continue; click it and you land back on the updated map.
+- [ ] Click End prototype — the end screen appears; confirm its buttons read "Replay from the title" and "Return to the updated map" (there is no launcher any more), and that Replay returns you to the title screen.
+
+Overlays and layout
+
+- [ ] From a narrative beat, open History, Settings, Save and Load in turn: each opens a dialog, focus lands on its Close button, Escape closes it, and focus returns to the button you opened it from.
+- [ ] Confirm the Settings dialog no longer shows a "Reviewer state: …" line.
+- [ ] Open the pause menu, press Shift+Tab then Tab — focus cycles inside the dialog and never escapes to the page behind it.
+- [ ] Open Load, click "Delete manual slot 1" — the confirmation is the only modal on screen; Escape dismisses it and leaves the Load dialog open.
+- [ ] Resize the window to a tall/narrow shape (about 375×667) on the map screen — no horizontal scrollbar, and every location button is at least 44×44 px.
+- [ ] Resize to a wide window that is NOT 16:9 (for example 1920×1200) — the story stays inside the letterboxed stage; the "Open pause menu" button and any overlay must not spill into the black bars above or below the stage.
+
+Nothing else regressed
+
+- [ ] Open `#/duel` and play a few actions — the duel looks and behaves exactly as before; story styling has not leaked into its buttons or background.
+- [ ] Open `#/decks`, create and edit a deck — the deck editor looks and behaves exactly as before.
+- [ ] Open `#/admin` — the storage list shows a "Story saves" row; arm and confirm its reset, then check DevTools Application → IndexedDB: `ygo-story-saves` is gone and `#/story` starts from a fresh title screen with no Continue. (Corrected by T13: story progress moved out of local storage into IndexedDB, so this row and this DevTools panel replaced the old `ygo.story.v1` key.)
+- [ ] Confirm the browser console is empty across all of the above.
+
+## T8 deck-editor-domain-migration
+
+Reach the Deck Editor
+
+- [ ] Run `npm run dev` (default `DEV_PORT=4300`) and open `http://localhost:4300/#/` — the home hub appears; click its "Decks" entry and the URL becomes `#/decks`.
+- [ ] Open `http://localhost:4300/#/decks` directly — the "Deck Library" heading renders (an empty library says "No local decks"). The browser tab title reads "Deck Editor · YGO Story Duel Simulator", not "Deck Builder Prototype".
+- [ ] Confirm there is NO "Prototype review states" panel in the bottom-right corner and no "State fixture" dropdown anywhere in the deck editor.
+- [ ] Confirm the deck editor still looks exactly as it did before this ticket — this was a move, not a restyle.
+
+Build and save a deck
+
+- [ ] Click "Create deck", name it `Manual T8`, confirm — the editor opens with Catalog / Build deck / Select a card panels.
+- [ ] Check the address bar: the URL is now `#/decks/<some-id>`, NOT `#/decks`.
+- [ ] Type `Blue-Eyes` into the catalog Name search, drag "Blue-Eyes White Dragon" onto the Main Deck drop area — Deck counts shows `Main 1` and the Autosave chip reads "Saved locally".
+- [ ] Press Undo then Redo — the count goes 0 then back to 1, and the deck stays "Saved locally".
+- [ ] Focus the Main Deck card, press Space, then click "Drop picked card in Side Deck" — the card moves and the counts follow.
+- [ ] Edit the "Deck name" field to `Manual T8 Renamed` and click elsewhere to blur — the name sticks.
+
+Deep link, reload and Back
+
+- [ ] Copy the `#/decks/<id>` URL, reload the page — the same deck reopens directly, without bouncing through the library.
+- [ ] Press the browser Back button — you land on the library at `#/decks` and the editor is gone.
+- [ ] Press Forward — the same deck reopens.
+- [ ] Open `http://localhost:4300/#/decks/no-such-deck` — a "Deck not found" page appears with a "Back to Deck Library" link; click it and the library at `#/decks` renders with your decks intact.
+
+Import and export
+
+- [ ] From the library, click "Import YDK", set the deck name to `Manual T8 Import`, paste `#main` / `99999999` / `#extra` / `!side` (one per line) into "Or paste YDK text", click "Preview import" then "Replace deck cards" — the editor opens on the imported deck and shows a "Missing card 99999999" tile.
+- [ ] Confirm the URL moved to that imported deck's `#/decks/<id>`, then reload — the missing-card tile is still there.
+- [ ] Click "Export" in the editor — the dialog warns the deck is invalid; copy to clipboard, then Close.
+- [ ] Back in the library, use the per-row "Export" action on another deck — the YDK text dialog opens for that deck and Close returns focus to the row.
+
+Library CRUD
+
+- [ ] From the library, "Duplicate" a deck — the copy opens in the editor and the URL points at the copy, not the original.
+- [ ] Return to the library, "Rename" a deck — the renamed deck opens and the URL points at it.
+- [ ] Return to the library, "Delete" a deck, confirm in the dialog — the row disappears; reload and confirm it stays gone.
+
+Admin console jump
+
+- [ ] Open `http://localhost:4300/#/admin`, click "Seed test deck & open it" — the editor opens directly on the seeded deck (name "Admin test deck") and the URL is `#/decks/admin-test-deck`.
+- [ ] Back on `#/admin`, arm and confirm the "Deck library" reset, then click the `#/decks` route button — the library shows "No local decks".
+
+Nothing else regressed
+
+- [ ] Open `#/duel` and play a few actions — the duel looks and behaves exactly as before.
+- [ ] Open `#/story` and click through a couple of beats — unchanged.
+- [ ] Confirm the browser console is empty across all of the above.
+
+## T9 battle-facade
+
+The duel now mounts through `src/battle/index.ts` instead of being imported
+directly by the shell. Nothing about the duel itself changed, so every check
+below is a "did the indirection cost anything?" check.
+
+Reach the duel through the facade
+
+- [ ] Run `npm run dev` (default `DEV_PORT=4300`) and open `http://localhost:4300/#/duel` — the deck picker appears exactly as before.
+- [ ] Open DevTools → Elements and confirm `[data-cy="shell-region-duel"]` contains `[data-cy="battle-root"]`, which contains `[data-cy="app-main"]`.
+- [ ] Confirm the duel field, right rail and card preview column sit in exactly the same places as before this ticket — the facade must not have moved a single pixel.
+- [ ] Navigate from the home hub's "Duel" entry instead of the URL — same result.
+
+Play a full duel unchanged
+
+- [ ] Pick a non-default pair (e.g. Burning Abyss vs Shaddoll), click "Start duel" — the duel loads and the first prompt arrives.
+- [ ] Play several actions, including a placement and an End turn — responses are accepted, one per prompt, with no double-submits.
+- [ ] Open the right rail's options → Settings, toggle "Show duel HUD" and "Show workspace" on and off — both still work and the layout returns to normal.
+
+End-of-duel paths still work
+
+- [ ] Finish or force a duel to a result — the result dialog appears; click "Restart" and a fresh duel starts with the same decks.
+- [ ] Start another duel, open options → Menu → Surrender and confirm — the duel ends and the result dialog appears.
+- [ ] From the result dialog click "Change decks" — the deck picker returns.
+- [ ] From the result dialog click "Download diagnostics" — a diagnostics file downloads and the "Diagnostics downloaded" message appears.
+
+No leaked or duplicated Worker
+
+- [ ] With a duel running, open DevTools → Sources → Threads (or the Performance panel's thread list) and note exactly ONE duel worker.
+- [ ] Navigate away to `#/` (home), then back to `#/duel` — still exactly one duel worker, not two; the previous one is gone.
+- [ ] Repeat the leave/return cycle three times — the worker count stays at one and memory does not climb with each cycle.
+- [ ] Confirm the browser console is empty across all of the above.
+
+Story-handoff placeholder
+
+- [ ] Open `http://localhost:4300/#/duel/session/anything` — the standalone duel (deck picker) renders, and DevTools shows a visually hidden `[data-cy="battle-session-pending"]` marker inside the duel region. This is the placeholder T19 replaces with a real handoff; it is expected to look identical to `#/duel`.
+
+## T10 domain-boundary-enforcement
+
+This ticket adds no UI. It makes the ADR-022 domain boundaries machine-enforced,
+so the only thing to confirm by hand is that the rules actually bite.
+
+Confirm the rule fails on a real violation
+
+- [ ] Create `src/deck-editor/__probe.ts` containing a single line:
+      `import TitleScreen from "../story/screens/TitleScreen.svelte";`
+- [ ] Run `npm run lint` — it exits non-zero and names the file with
+      "Reach the visual novel through `src/story/index.ts` (ADR-022 domain boundary)".
+- [ ] Run `npx vitest run tests/unit/domain-boundaries.test.ts` — `no deep cross-domain imports`
+      fails and lists `src/deck-editor/__probe.ts -> src/story/screens/TitleScreen.svelte`.
+- [ ] Delete `src/deck-editor/__probe.ts`, re-run both commands — both exit 0.
+- [ ] In your editor, confirm the ESLint error also appears inline on the import line
+      while the probe file exists.
+
+Confirm a public API cannot widen silently
+
+- [ ] Add `export const scratch = 1;` to `src/story/index.ts`.
+- [ ] Run `npx vitest run tests/unit/domain-boundaries.test.ts` — `story public API is exact`
+      fails, showing `scratch` as an unexpected export.
+- [ ] Remove the line and re-run — 9 tests pass.
+
+Nothing else regressed
+
+- [ ] Open `#/duel`, `#/decks` and `#/story` in turn — all three still mount and behave
+      exactly as in T7–T9; the browser console stays empty.
+
+## T11 data-cy-contract-extension
+
+Machine-verified: `tests/unit/data-cy-coverage.test.ts` now scans `src/battle/`, `src/shell/`,
+`src/deck-editor/` and `src/story/` for presence, kebab-case and uniqueness.
+
+Confirm the uniqueness check bites
+
+- [ ] Change one `data-cy` in `src/story/screens/TitleScreen.svelte` to duplicate another in
+      the same file (e.g. `story-title-tagline` → `story-title-heading`).
+- [ ] Run `npx vitest run tests/unit/data-cy-coverage.test.ts` — `static data-cy values are
+      unique across the contract roots` fails with
+      `story-title-heading: src/story/screens/TitleScreen.svelte, src/story/screens/TitleScreen.svelte`.
+- [ ] Revert the change and re-run — 32 tests pass.
+
+Nothing else regressed
+
+- [ ] Open `#/`, `#/decks`, `#/story` and `#/admin` — layout, styling and behaviour are
+      unchanged; `data-cy` is a test hook only.
+
+## T12 deck-production-database
+
+The deck store moved from `ygo-story-duel-deck-builder-prototype` to
+`ygo-story-decks`. On the first load after this ticket, any decks a player
+already built are copied across, verified, and only then is the old database
+deleted. That copy only ever runs against data that already exists, so it
+cannot be exercised by opening a clean browser profile — every check below
+needs a seeded prototype database.
+
+Machine-verified: `tests/unit/decks/deck-database-migration.test.ts` covers the
+absent / already-migrated / interrupted / diverged / empty / copy-failure /
+verify-failure / delete-failure states, and
+`e2e/deck-editor.spec.ts` → `a prototype deck database is migrated on first
+load` runs the happy path in real Chromium. What follows is the human pass over
+a real profile with real DevTools.
+
+Seed a prototype deck database (pick ONE path)
+
+- [ ] Path A — faithful. In a scratch worktree at the pre-ticket commit
+      (`git worktree add /tmp/pre-t12 5ab14b8 && cd /tmp/pre-t12 && npm ci`),
+      run `npm run dev` on the SAME port this branch uses (default
+      `DEV_PORT=4300`, so same origin), open `http://localhost:4300/#/decks`,
+      create a deck named `Survivor`, drag one Blue-Eyes White Dragon into the
+      Main Deck, and wait for "Saved locally". Stop that dev server.
+- [ ] Path B — fast. Run `npm run dev` on this branch, open
+      `http://localhost:4300/#/decks`, and paste this into the DevTools console
+      (it writes the OLD database with the OLD schema directly):
+
+      ```js
+      await (async () => {
+        const db = await new Promise((res, rej) => {
+          const r = indexedDB.open("ygo-story-duel-deck-builder-prototype", 1);
+          r.onupgradeneeded = () => {
+            const d = r.result.createObjectStore("decks", { keyPath: "id" });
+            d.createIndex("updatedAt", "updatedAt");
+            d.createIndex("name", "name");
+            r.result.createObjectStore("histories", { keyPath: "deckId" });
+            r.result.createObjectStore("preferences", { keyPath: "key" });
+          };
+          r.onsuccess = () => res(r.result);
+          r.onerror = () => rej(r.error);
+        });
+        const t = db.transaction(["decks", "histories", "preferences"], "readwrite");
+        t.objectStore("decks").put({
+          schemaVersion: 1, id: "survivor", revision: 1, name: "Survivor",
+          main: [89631139], extra: [], side: [],
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+          validation: { status: "errors", issues: [], rulesetRevision: "prototype-2026-01" },
+          importedNeedsReview: false,
+        });
+        t.objectStore("histories").put({
+          deckId: "survivor", history: { undo: [], redo: [], nextSequence: 1 },
+        });
+        t.objectStore("preferences").put({ key: "last-opened-deck", value: "survivor" });
+        await new Promise((res, rej) => { t.oncomplete = res; t.onerror = () => rej(t.error); });
+        db.close();
+      })();
+      ```
+
+- [ ] Before reloading, open DevTools → Application → IndexedDB and confirm you
+      can see `ygo-story-duel-deck-builder-prototype`. If `ygo-story-decks` is
+      also listed with decks in it, right-click → Delete database first: a
+      populated target is the "already migrated" case, not the one under test.
+
+Confirm the decks survived the rename
+
+- [ ] Run `npm run dev` on THIS branch and open `http://localhost:4300/#/decks`
+      (a reload is enough if the server was already running).
+- [ ] The Deck Library lists `Survivor`. It must NOT say "No local decks" —
+      that would mean the decks were stranded in the old database.
+- [ ] Click `Survivor` — the editor opens, "Deck name" reads `Survivor` and
+      Deck counts shows `Main 1`. Opening the deck reads its history record, so
+      this also proves the migration copied more than the deck row.
+- [ ] Press Undo — it is disabled or a no-op (the seeded history is empty) and
+      nothing errors.
+- [ ] DevTools → Application → IndexedDB: `ygo-story-decks` is present and
+      `ygo-story-duel-deck-builder-prototype` is GONE. Use the refresh button on
+      the IndexedDB node if the tree looks stale.
+- [ ] In the console, `(await indexedDB.databases()).map((d) => d.name)` lists
+      `ygo-story-decks` and does not list the prototype name.
+
+Confirm it does not run twice
+
+- [ ] Reload the page — `Survivor` is still listed exactly once. A second
+      `Survivor` row would mean the migration re-ran and duplicated.
+- [ ] Create a second deck named `After Migration`, reload — both decks are
+      listed once each, and the prototype database has not reappeared.
+
+Confirm a failed migration blocks instead of losing decks (optional, ~2 min)
+
+- [ ] Re-seed the prototype database with Path B above, and this time also
+      delete `ygo-story-decks` in DevTools.
+- [ ] In a SECOND tab on the same origin, paste this and leave the tab open —
+      it holds the old database open, which is what blocks its deletion:
+
+      ```js
+      window.hold = await new Promise((res, rej) => {
+        const r = indexedDB.open("ygo-story-duel-deck-builder-prototype", 1);
+        r.onsuccess = () => res(r.result);
+        r.onerror = () => rej(r.error);
+      });
+      ```
+
+- [ ] Back in the first tab, load `#/decks`. Instead of the library you get a
+      blocking panel headed "Your decks were not moved", explaining the
+      prototype database could not be deleted, reassuring you nothing was
+      deleted, and offering a "Retry" button.
+- [ ] DevTools: BOTH databases exist, and `ygo-story-decks` already contains
+      `Survivor`. Nothing was lost.
+- [ ] Close the second tab, click "Retry" in the first — the library renders
+      with `Survivor`, and the prototype database is now gone.
+
+Admin console follows the rename
+
+- [ ] Open `http://localhost:4300/#/admin`, click "Seed test deck & open it" —
+      the editor opens on "Admin test deck". DevTools shows that deck inside
+      `ygo-story-decks`, and no prototype database was created.
+- [ ] Back on `#/admin`, arm and confirm the "Deck library" reset, then open
+      `#/decks` — the library says "No local decks", and DevTools shows
+      `ygo-story-decks` is gone. Before this ticket this button cleared the
+      prototype database, so a reset that leaves your decks in place is the
+      failure to watch for.
+
+Nothing else regressed
+
+- [ ] Deck create / rename / duplicate / delete / import YDK / export YDK all
+      behave exactly as in T8.
+- [ ] Open `#/duel` and `#/story` — unchanged; neither reads the deck database.
+- [ ] The browser console stays empty across all of the above.
+
+## T13 story-saves-repository
+
+Story progress moved out of the single `ygo.story.v1` local-storage record into
+an IndexedDB database, `ygo-story-saves`, holding one versioned record per
+slot. Prototype progress under the old key is deliberately **not** migrated: a
+player who used the story before this ticket starts from a fresh title screen,
+and a leftover `ygo.story.v1` entry is expected and harmless.
+
+The save/load overlays are unchanged, so they still drive the single manual
+slot — which is now stored as `manual:1`. The store also carries `manual:2`,
+`manual:3` and `checkpoint:pre-duel`; nothing writes those three yet (the duel
+handoff is T19), so an empty `manual:2` in DevTools is correct.
+
+Machine-verified: `tests/unit/story/story-save-repository.test.ts` covers the
+round trip, revision increments, stale-write refusal, unknown schema version,
+corrupt records, a quota failure, a write that aborts mid-transaction, and an
+unusable IndexedDB. `e2e/story.spec.ts` covers save → reload → load and
+corrupt-slot recovery in Chromium. The checks below are the ones a machine
+cannot make: that the DevTools panel shows what you expect and that the app
+still feels right.
+
+Run `npm run dev` and use `http://localhost:5173` (or the port Vite prints).
+
+Where to look in DevTools
+
+- [ ] Open DevTools → Application → Storage → IndexedDB. Before touching the
+      story there is no `ygo-story-saves` database (delete it first if a
+      previous run left one).
+- [ ] Open `#/story` and let the title screen render. Refresh the IndexedDB
+      panel — `ygo-story-saves` now exists with one object store, `saves`,
+      and no records. Opening the story must never create a save on its own.
+
+A save survives a reload
+
+- [ ] Click "New Game", advance a few beats with Enter, and note the line of
+      dialogue currently on screen.
+- [ ] Click "Save", then "Confirm overwrite" — the overlay reports "Save
+      complete. Manual slot 1 updated."
+- [ ] In DevTools → IndexedDB → `ygo-story-saves` → `saves`, refresh: there is
+      exactly one record, keyed `manual:1`. Expand it — it has
+      `schemaVersion: 1`, `slot: "manual:1"`, `revision: 1`, a `savedAt`
+      timestamp, and a `state` object whose `narrativeIndex` matches how far
+      you advanced.
+- [ ] Reload the page (F5). The title screen now offers "Continue".
+- [ ] Click "Load", then "Load manual slot 1" — you land on the same beat you
+      noted above, not back at the start.
+- [ ] Save again from the same spot and re-check the record: still exactly one
+      `manual:1` record, now `revision: 2`. A second record, or a record list
+      that keeps growing, is the failure to watch for.
+
+The autosave slot is separate
+
+- [ ] Play through to a duel (map → Old Arena → Start Duel → Simulate Player
+      Win → Continue story). The reward screen reports "Autosave complete at
+      stable story boundary."
+- [ ] In DevTools there are now two records: `manual:1` and `autosave`. Neither
+      `manual:2`, `manual:3` nor `checkpoint:pre-duel` exists.
+- [ ] Reload and click "Continue" — you resume from the autosave (the updated
+      map), because it was written more recently than the manual save.
+
+A corrupt save costs you the slot, not the app
+
+- [ ] With the story open, paste this into the DevTools console:
+      `indexedDB.open("ygo-story-saves",1).onsuccess=e=>{const d=e.target.result;d.transaction("saves","readwrite").objectStore("saves").put("garbage","manual:1");}`
+- [ ] Reload the page. A red banner appears naming `manual:1` and the reason;
+      the title screen still renders and "New Game" still plays. A blank screen
+      or a thrown error in the console is the failure to watch for.
+- [ ] Click "Reset prototype storage" in that banner — the banner clears and
+      DevTools shows the `saves` store is empty again.
+
+Admin console clears it
+
+- [ ] Open `#/admin`. The storage list has a "Story saves" row (there is no
+      longer a "Story progress" row).
+- [ ] Save some story progress first, then arm and confirm the "Story saves"
+      reset. The console reports it cleared.
+- [ ] In DevTools → Application → IndexedDB, `ygo-story-saves` is gone — not
+      merely empty. Open `#/story`: the title screen has no "Continue".
+- [ ] Do the same reset **while `#/story` is open in a second tab**, then
+      switch to that tab and reload — it comes up on a fresh title screen
+      rather than hanging. A tab that holds the database open must not block
+      the reset indefinitely.
+
+Nothing else regressed
+
+- [ ] Play the prologue end to end once: title → narrative → choice → map →
+      Old Arena → duel mock → outcome → reward → updated map → End prototype.
+- [ ] Open the pause menu, History, Settings, Save and Load overlays — each
+      opens, traps focus, closes on Escape, and returns focus to the button
+      that opened it.
+- [ ] Open Load and delete manual slot 1 — the confirmation closes, the slot
+      reads "Manual slot 1 · Empty", and the `manual:1` record is gone from
+      DevTools while `autosave` is untouched.
+- [ ] Open `#/duel` and play a few actions, and `#/decks` and edit a deck —
+      both behave exactly as before; neither reads or writes `ygo-story-saves`.
+- [ ] The browser console stays empty across all of the above.
+
+## T14 deck-editor-portrait-layout
+
+Below 1024px CSS width the deck editor is no longer a dead end: it drops the
+three-column desktop grid for a single tabbed pane (Catalog / Deck / Details)
+with a persistent header, and adds a touch model — tap a catalog card to add
+it, tap a deck card to open a move/remove menu. At and above 1024px absolutely
+nothing changes; that is the main thing to confirm.
+
+Use a real browser window resize or DevTools device toolbar. The breakpoint is
+CSS width, so a landscape phone under 1024px also gets tabs.
+
+Tabs and the persistent header (390x844)
+
+- [ ] Open `#/decks`, create a deck named "Portrait Manual", and shrink the
+      window to 390x844. The editor opens on the **Deck** tab; the "Desktop
+      viewport required" screen is gone for good.
+- [ ] The header above the tabs shows deck name, Main/Extra/Side counts, the
+      deck status and the autosave status. Switch to Catalog and then Details —
+      the header stays put and keeps showing the same counts on every tab.
+- [ ] Exactly one pane is on screen at a time: on Catalog the deck grid is
+      absent, not merely scrolled away.
+- [ ] Tab the keyboard focus into the tab strip and press Left/Right arrows —
+      the selection follows focus through Catalog, Deck, Details and wraps.
+
+Tap to add (390x844)
+
+- [ ] On the Catalog tab, filter by "Blue-Eyes" and tap the card. The Main
+      count goes to 1, the autosave reads "Saved locally", and you are still on
+      the Catalog tab so the next card is one tap away.
+- [ ] Tap the same card twice more (Main 3), then tap it a fourth time. Nothing
+      is added; the app announces "Copy limit 3 reached" and shows you the card
+      on the Details tab.
+- [ ] Filter for "Gate Guardians Combined" (a Fusion monster) and tap it — it
+      lands in the **Extra** Deck, not the Main Deck.
+
+Tap to move and remove (390x844)
+
+- [ ] On the Deck tab, tap a card sitting in the Main Deck. A menu opens naming
+      the card. It offers Side Deck (enabled), Extra Deck (disabled, with a
+      reason) and Remove; it does **not** offer Main Deck.
+- [ ] Choose Side Deck — Main drops by one, Side rises by one.
+- [ ] Tap the card in the Side Deck: this time Main Deck is enabled (its home
+      zone) and Extra is not. Press Escape instead of choosing — the menu closes
+      and nothing moved.
+- [ ] Tap it again and choose Remove — the count drops. Press Undo in the
+      header: it comes back. Press Redo: it goes again. Autosave keeps saying
+      "Saved locally" throughout.
+
+Layout at the sizes that matter
+
+- [ ] At 360x640, 390x844 and 768x1024 in turn: no horizontal scrollbar and no
+      content clipped at the right edge, on all three tabs. The header wraps
+      onto more rows rather than pushing the page sideways.
+- [ ] Rotate to landscape under 1024px wide (e.g. 844x390) — still tabs, still
+      no sideways scroll.
+- [ ] Tap targets are comfortable: tabs, menu items and card tiles are all
+      easily hit with a thumb (44px floor).
+- [ ] Import and Export still open from the header at 390x844 and still work.
+
+Desktop is untouched (1440x900)
+
+- [ ] Widen to 1440x900. All three panels are back side by side, with no tab
+      strip anywhere.
+- [ ] Click a catalog card — it only **selects** (details fill the right panel).
+      No card is added and no tap menu appears. Adding is still drag or the
+      keyboard pick-and-drop path.
+- [ ] Drag a card from the catalog into the Main Deck drop area — works as
+      before. Focus a card, press Space, then click "Drop picked card in Side
+      Deck" — works as before.
+- [ ] Undo/redo, import, export, rename and the Deck Library round trip all
+      behave exactly as they did before this ticket.
+- [ ] Resize from 1440 wide down past 1024 and back up without reloading — the
+      editor swaps between panels and tabs each way, keeping the open deck and
+      its edits.
+
+## T15 duel-portrait-rotation
+
+Below 1024px CSS width, a **portrait** viewport now plays the duel on a stage
+turned a quarter turn clockwise. Landscape below the breakpoint, and every
+desktop size, are deliberately unchanged.
+
+Setup
+
+- [ ] Use a real phone if you have one (or Chrome DevTools device toolbar,
+      iPhone 12 Pro / 390x844). Hold it **upright**.
+- [ ] Clear site data first, so the one-time rotation notice is still pending.
+- [ ] Open `#/duel`.
+
+Portrait: the turn itself (390x844)
+
+- [ ] The deck picker is reachable: scroll the duel area if needed and press
+      Start. Nothing is clipped out of reach.
+- [ ] Once the duel loads, the board runs **down** the long axis of the phone —
+      the player's side is on one long edge, the opponent's on the other. To
+      read it you tilt your head (or the phone), not squint at a shrunken board.
+- [ ] The board is centred: neither end of the field is cropped by the screen
+      edge, and there are equal bars above and below it.
+- [ ] The page itself never scrolls in any direction — no page scrollbar, and
+      dragging a finger on the background does not move the page.
+
+Portrait: taps land where you look (this is the row that matters)
+
+- [ ] Tap a monster zone. The zone **you touched** reacts — not the one that
+      would be there if the board were unturned (that would be a zone roughly a
+      quarter turn away).
+- [ ] Tap several cards in your hand, one at a time. Each time, the card under
+      your finger is the one that previews/selects. Work along the whole hand,
+      including the cards nearest each screen edge.
+- [ ] Tap a graveyard/deck pile. The pile under your finger opens.
+- [ ] Tap an action chip on a card. The chip under your finger fires, and not a
+      neighbouring one.
+
+Portrait: dragging, hands, dialogs and overlays
+
+- [ ] Drag a card from your hand onto a highlighted zone. Two things must both
+      be true: the ghost card **stays under your finger** the whole way (it must
+      not shoot off at right angles to your movement), and the card is played
+      into the zone you dropped it on.
+- [ ] Drag a card and release it over nothing. The ghost settles back onto the
+      card it came from, not onto some other part of the board.
+- [ ] Swipe the hand band sideways (along the hand's own direction, as drawn).
+      It scrolls, and the overlay scrollbar thumb tracks your finger rather than
+      running the opposite way.
+- [ ] Drag the overlay scrollbar thumb itself. The band scrolls the way you
+      drag it.
+- [ ] Open the zone-list / decision window and drag it by its handle. It follows
+      your finger; it does not travel at right angles to the drag, and it stays
+      clamped inside the board.
+- [ ] Open a dialog/backdrop (e.g. a duel result or prompt dialog). It covers
+      the board and reads the same way up as the board, not the phone.
+- [ ] Trigger a target/attack line (attack or target something). The line is
+      drawn between the two cards involved, not across the board at a right
+      angle.
+
+Portrait: the rotation notice
+
+- [ ] The one-time notice explaining the turn is visible when you first arrive.
+- [ ] It does not block play: tap the board *through* the notice's background —
+      the card/zone underneath still responds. Only its "Got it" button
+      intercepts a tap.
+- [ ] Press "Got it". The notice disappears.
+- [ ] Reload the page in portrait. The notice does not come back.
+
+Keyboard (portrait, with a bluetooth keyboard or in DevTools)
+
+- [ ] Tab through the duel controls. The order is the same as on desktop — the
+      turn changed nothing about the sequence.
+- [ ] Arrow-key navigation across the field still moves between controls, and
+      the focus ring is visible on the control that has focus.
+
+Reduced motion
+
+- [ ] Enable "reduce motion" in the OS/browser. Reload in portrait. Nothing
+      animates the turn, and the rotation notice appears without a fade.
+
+Unchanged: small landscape (844x390)
+
+- [ ] Turn the phone sideways (or set 844x390). The board is **not** turned — it
+      is the ordinary 16:9 stage, scaled down, exactly as before this ticket.
+- [ ] No rotation notice appears in landscape.
+- [ ] (Known, pre-existing and out of scope: at this size the deck picker screen
+      is taller than the stage, so Start can sit below the visible area. This is
+      unchanged by this ticket — only portrait gained a scrollable duel region.)
+
+Unchanged: desktop (1440x900 and 1920x1080)
+
+- [ ] The duel looks and behaves exactly as before: same field size, same
+      spacing, same preview panel and right rail.
+- [ ] Drag a card onto a zone — ghost, drop and settle behave exactly as before.
+- [ ] Drag the decision window by its handle — it follows the pointer exactly
+      as before.
+- [ ] Target/attack lines are drawn exactly as before.
+
+## T16 unified-visual-restyle
+
+### `#/` Home screen — desktop (1920×1080)
+- [ ] Home screen background and typography match the duel dark-blue-teal palette; no white or light-mode remnants.
+- [ ] Buttons use the consistent token-driven style (teal primary, transparent secondary).
+- [ ] Focus ring is amber (`--focus-ring: #f6c177`) when tabbing through navigation links.
+
+### `#/` Home screen — portrait (390×844)
+- [ ] Layout remains readable; colours and typography unchanged from desktop palette.
+
+### `#/story` Visual novel — desktop
+- [ ] Background gradients derive from the duel palette (dark navy blues and teals); no bright alien colours.
+- [ ] Dialogue box uses `var(--bg)` with ~91% opacity — dark background, legible white text.
+- [ ] Speaker name tag has dark `var(--surface-chain)` background and `var(--accent)` teal text.
+- [ ] Thought-bubble left border is purple (`var(--stack-accent): #9f8deb`).
+- [ ] Story buttons match global style: teal fill, dark text, amber focus ring.
+- [ ] Pause/overlay backdrop is near-black with slight transparency.
+- [ ] Overlay panel uses `var(--surface-raised)` — same dark-navy as duel side panels.
+
+### `#/story` Visual novel — portrait (390×844)
+- [ ] Dialogue box fills width correctly; text remains legible on dark background.
+- [ ] Choice buttons stack and are fully tappable (≥44px targets).
+
+### `#/decks` Deck editor — desktop
+- [ ] Card tiles: normal state uses dark navy (`var(--surface-raised)`), hover/selected uses slightly lighter `var(--surface-highlight)` with teal border.
+- [ ] Card limit badges: 0-limit is burgundy (`var(--danger-border)`), 1-limit is pink (`var(--danger)`), 2-limit is gold (`var(--selected)`), 3-limit is teal (`var(--accent)`).
+- [ ] Filter/search inputs have dark navy background (`var(--surface-chain)`) with legible white text.
+- [ ] Validation warning panel uses `var(--warning-surface)` background with `var(--warning-border)` border (amber tones).
+- [ ] Error states (missing card, import error) use `var(--danger-surface)` background.
+- [ ] Dialog panels use `var(--surface)` background with dark shadow.
+
+### `#/decks` Deck editor — portrait (390×844)
+- [ ] Tab mode (card catalog / workspace / zones) switches work; pane heights correct.
+- [ ] No colour regressions in portrait tab layout.
+
+### `#/duel` Duel field — desktop
+- [ ] Field geometry (card sizes, zone sizes, spacing, gaps) unchanged from pre-T16 baseline.
+- [ ] Legal zones are green (`var(--legal): #7ee2a8` border + glow).
+- [ ] Selected zones/cards are amber-gold (`var(--selected): #ffd580` border + glow).
+- [ ] Keyboard nav focus ring is white (`var(--ink)`), distinct from legal/selected.
+- [ ] Feedback halos are teal (`var(--accent)`).
+- [ ] Attack lines are red (`var(--danger)`), default lines are teal (`var(--accent)`).
+- [ ] Card limit badge colours on field cards look right (green/pink/gold/teal).
+
+### `#/duel` Duel field — portrait (390×844)
+- [ ] Field rotates 90° clockwise (T15 behaviour preserved).
+- [ ] Field geometry in rotated mode unchanged; zone targets remain tappable.
+- [ ] Semantic colours (legal/selected) unchanged in rotated mode.
+
+### `#/admin` Admin console — desktop
+- [ ] Panel renders with dark-blue token-driven background; no visual regressions.
+- [ ] Inputs and buttons consistent with the rest of the product.
+
+### Cross-domain coherence check
+- [ ] Navigating `#/ → #/story → #/decks → #/duel → #/admin` feels like one product — consistent dark palette, button style, focus ring, typography throughout.
+- [ ] No jarring colour shifts between domain transitions.
+
+## T17 worker-card-list-start-contract
+
+The Worker now starts a duel from an explicit validated card list as well as
+from a bundled preset. No UI produces a card list yet (the deck picker is a
+later slice), so the checks below are: the preset path must be indistinguishable
+from before, and a forged illegal list must fail visibly instead of starting a
+broken duel.
+
+### `#/duel` Preset duel unchanged
+- [ ] Pick any deck pair in the picker and press Start — the duel initializes and the first prompt appears exactly as before.
+- [ ] Play a few prompts, then Restart — the duel restarts and reaches a first prompt again.
+- [ ] Surrender — the duel ends with the usual surrender result, no error banner.
+- [ ] Reload the page with a pair already chosen — the duel auto-starts as before.
+
+### Invalid card list fails visibly
+No UI can build a card list yet, and the app exposes no console handle on the
+duel Worker, so this check needs one temporary edit. In
+`src/battle/app/stores/duel-store.ts`, inside `startCurrentDuel`, replace the player
+argument passed to `client.startDuel` with a forged list whose last code is not
+in the packaged snapshot, run `npm run dev`, open `#/duel`, and press Start:
+
+```ts
+// TEMPORARY — revert after this check
+{
+  kind: "cards",
+  main: [...Array.from({ length: 39 }, (_, i) => 46986414 + (i % 3)), 909090],
+  extra: [],
+  side: [],
+}
+```
+- [ ] The duel does **not** start: no field appears and no prompt arrives.
+- [ ] A visible error is shown (not a silent no-op, not a blank screen, not a stuck loading state).
+- [ ] The error text names the offending code `909090` and says the card is outside the active snapshot.
+- [ ] After the refusal, revert the edit, reload, choose a normal preset pair and press Start — it still works, and the Worker was not left wedged.
+
+### Hidden information
+- [ ] With a duel running, nothing in the DevTools console, network tab, or Worker message log shows the opponent's deck list — only counts (deck size, extra-deck size) and cards the opponent has actually revealed on the field.
+
+## T18 deck-picker-local-decks
+
+The pre-duel picker now offers bundled decks **plus every local deck this build
+can actually play**, and starting a local deck dispatches its card list to the
+Worker instead of a preset id.
+
+Corrected 2026-08-16 by T22: this section originally said no local deck could
+ever qualify on this build, because the deck editor built from a 24-card
+hand-written catalog while the packaged art covered the six bundled decks
+(120 codes) — only 8 cards in both, capped below the 40-card Main minimum. The
+editor now derives its catalog from the packaged set itself, so a deck you can
+build is a deck this build can draw. **Every step below that expected a local
+deck to be hidden has been rewritten accordingly**; see `## T22
+local-deck-playability` for the full flow.
+
+### `#/duel` Bundled flow unchanged
+- [ ] Open `#/duel`. The picker appears with a **Bundled decks** group holding all six decks in both columns, and no empty "Your decks" heading anywhere.
+- [ ] The picker is never briefly empty and Start is never briefly disabled while the page settles.
+- [ ] Pick a pair, press Start — the duel initializes and reaches the first prompt exactly as before.
+- [ ] Reload with a pair already chosen — the same pair is still selected.
+- [ ] Surrender, then Change decks — the picker returns with the same pair selected and does not auto-start.
+
+### Build a deck and duel with it
+- [ ] Go to `#/decks`, create or import a deck, and fill the Main Deck to 40 legal cards so the editor reports no errors.
+- [ ] Go to `#/duel`. The deck appears under **Your decks**, can be picked for either or both seats, and Start runs a duel whose opening hand is drawn from those cards.
+
+### A deck the ruleset refuses is never offered
+- [ ] In `#/decks`, build a deck with only 39 Main cards (or 4 copies of one card).
+- [ ] Go to `#/duel` — the deck is absent from the picker. It is not shown greyed out, and there is no message about it.
+- [ ] Return to `#/decks` — the deck is exactly as you left it. Nothing was renamed, repaired, re-saved, or deleted to make it playable.
+
+### No local decks at all
+- [ ] Open `#/admin`, click **Reset Deck library** and confirm, so no local deck exists.
+- [ ] Go to `#/duel` — only the Bundled decks group renders. There is no "Your decks" heading, no empty list, and Start still works.
+
+### A chosen deck that disappears
+- [ ] With a local deck selected in the picker (or seed the same effect by editing `ygo.ui.v2` in localStorage and setting `decks.playerKey` to `local:no-such-deck:1`), reload `#/duel`.
+- [ ] The picker falls back to the default bundled pair, and a single notice explains that a deck you had chosen is no longer available.
+- [ ] The notice appears **once** — clicking any deck clears it, and it does not come back on the next click.
+- [ ] Start then runs the bundled pair normally.
+
+### Persistence shape
+- [ ] After choosing a pair, `localStorage["ygo.ui.v2"]` holds `decks: { playerKey: "preset:…", opponentKey: "preset:…" }` — keys, not bare deck ids, and never a copy of any card list.
+- [ ] A payload written by an older build (`decks: { player: "nekroz", opponent: "shaddoll" }`) still loads with that pair selected.
+- [ ] Display settings survive: toggle zone outlines off in `#/duel`, reload, and confirm they are still off (the payload version stays `2` precisely so the shell's settings migration keeps working).
+
+## T19 story-duel-handoff
+
+The visual novel stops mocking battles. Starting an encounter writes a
+verified pre-duel checkpoint, hands the duel to the shell on a route of its
+own (`#/duel/session/{handoffId}`), and takes exactly one result back.
+
+### Start an encounter and play it
+- [ ] Open `#/story`, play (or load) through to the **City signal map**, and click **Old Arena**.
+- [ ] The briefing reads "Your progress is saved before the duel starts." There are no reviewer or "Simulate …" buttons anywhere in the story.
+- [ ] Click **Start Duel**. The address bar changes to `#/duel/session/<id>` and the story screen is replaced by the duel.
+- [ ] The **deck picker** appears, with the pair you last used already selected (bundled `mvp-player` / `mvp-opponent` on a fresh profile).
+- [ ] Press **Start** — the duel loads and reaches the first prompt exactly as `#/duel` does.
+
+### Each outcome branch
+- [ ] **Surrender** (right rail → Options → Surrender → confirm). The story comes back on "Duel paused", the address bar returns to `#/story`, and no reward is granted. **Return to map** puts you back on the map with your progress intact.
+- [ ] **Win** the duel. The story shows "Signal broken", then **Continue story** reveals the Signal Cipher reward, and **Continue to updated map** opens the Archive route.
+- [ ] **Lose** the duel. The story shows "Signal endures" — a different scene from the win — and still continues to the reward.
+- [ ] **Technical failure:** with a duel running, open DevTools → Application → Service/Workers (or the Sources ▸ Threads panel) and terminate the duel Worker. The story shows "Connection interrupted" and says this is not an authored loss. It must **never** show "Signal endures". **Retry duel** starts a fresh duel from the picker.
+
+### Reload mid-duel (the crash-safety check)
+- [ ] Start a story encounter and press Start so a duel is actually running.
+- [ ] Reload the page (F5) while the duel is on screen.
+- [ ] The address bar still holds the same `#/duel/session/<id>`, and the same encounter restarts — the deck picker comes back, not a blank screen and not the title screen.
+- [ ] Finish or surrender that duel: the story resumes with the progress you had before the duel, not from the beginning.
+
+### A checkpoint that cannot be trusted
+- [ ] Paste `#/duel/session/does-not-exist` into the address bar. You land on `#/story` with the story's last stable state — never a blank screen and never half a duel.
+- [ ] In DevTools → Application → IndexedDB → `ygo-story-saves` → `saves`, replace the `checkpoint:pre-duel` value with the string `not a checkpoint`, then open a session route. You land on `#/story`; the other slots (`manual:1`, `autosave`) are untouched and still load.
+- [ ] Edit `checkpoint:pre-duel`'s `state.pendingHandoffId` to a different id and open the original session route. You land on `#/story` rather than resuming someone else's duel.
+
+### Checkpoint write failure
+- [ ] In DevTools → Application → Storage, set a tiny quota (or use a private window with storage blocked), then start an encounter.
+- [ ] **No duel starts.** The story shows "The duel did not start" with the reason and a **Try again** button. **Try again** re-runs the whole handoff; **Return to map** goes back safely.
+
+### The other two domains are untouched
+- [ ] `#/duel` still opens the standalone duel, and finishing or surrendering there does **not** navigate anywhere.
+- [ ] `#/decks` is unchanged.
+- [ ] Opening `#/duel` on a fresh profile does not download the story chunk (DevTools → Network, filter `story`).
+
+## T20 duel-source-relocation
+
+Pure file move: the duel's source now lives under `src/battle/` (`app/`, `duel/`,
+`field/`, `worker/`, `storage/`). No behavior changed, so this is a short
+"nothing fell off the shelf" pass. Run `npm run dev` first.
+
+- [ ] `#/duel` loads, the deck picker appears, **Start** reaches the first prompt,
+      and a card can be played. That proves the Worker entry still resolves after
+      the move — it is the one thing a wrong path would break silently.
+- [ ] Rotate to portrait (DevTools device toolbar, 375×667). The duel still shows
+      the rotated stage and the rotation notice, and taps land on the card you
+      aimed at rather than an offset one.
+- [ ] `#/story` → start an encounter → **Start Duel**. The duel opens and the
+      story resumes after you surrender.
+- [ ] `#/decks` opens and a deck can be edited and saved.
+- [ ] Acceptance harness: `npx playwright test --config=playwright.acceptance.config.ts`
+      is green, or open `acceptance.html?scenario=field-emz` from a preview build
+      and confirm the deterministic field renders.
+- [ ] DevTools → Network on a fresh load of `#/`: the duel chunk is **not**
+      downloaded until you open `#/duel`.
+
+## T21 restore-build-budgets
+
+Build-gate change only; nothing in the app moved. The whole check is one command.
+
+- [ ] `npm run build` finishes green and its last block prints the four
+      measurements, e.g. `"chunkBytes": { "shell": 78142, "battle": 405950,
+      "deck-editor": 101881, "story": 60195 }`. `npm run build:verify` alone
+      re-checks an existing `dist/` without rebuilding.
+- [ ] A breach fails the build with the offending budget named and both numbers
+      shown, e.g.
+      `Error: battle domain closure exceeds its production budget: 501234 > 488750 bytes`.
+      A domain chunk missing from the build fails the same way rather than
+      counting as zero: `Browser build did not emit the story domain chunk`.
+- [ ] The ceilings live in `scripts/lib/domain-chunk-closure.ts` (per domain)
+      and `scripts/verify-browser-build.ts` (shell). Raising one means
+      re-measuring from a clean build, not nudging the number until it passes.
+
+## T22 local-deck-playability
+
+A deck you build in `#/decks` can now be played at `#/duel`. Nothing about the
+picker's filter changed — it still shows a local deck only when `resolveDeck`
+calls it `ready` and every code in it is one this build can draw. What changed
+is the editor's catalog: it used to be a 27-card hand-written fixture that
+barely overlapped the packaged art, and it is now derived at build time from
+the packaged card set itself. The editor offers **120 cards — 85 Main-deck and
+35 Extra-deck** — and every one of them has packaged art and text, so a legal
+deck is by construction a drawable one.
+
+Sanity numbers to expect while testing: 85 Main-deck cards at up to three
+copies each is 252 possible Main cards against a 40-card minimum, and the
+catalog's search/filter panel now lists real Attributes, Races and subtypes
+rather than the fixture's handful.
+
+### Build a deck from scratch and duel with it
+- [ ] Open `#/decks`. Press **Create deck**, name it (e.g. `Manual T22`), confirm with **Create**.
+- [ ] The catalog panel lists real cards — search `Nekroz`, `Shaddoll`, `Spellbook` or `Burning Abyss` and each returns several distinct cards with names and effect text.
+- [ ] Add cards until **Deck counts** reads `Main 40`. Fastest route: search a name, focus the tile, press `Space` to pick it up, then **Drop picked card in Main Deck**; repeat, or add three copies of ~14 different cards.
+- [ ] The validation panel shows no **errors**. Warnings such as "Extra Deck is empty", "Side Deck is empty" and "uses placeholder art" are expected and do not block anything.
+- [ ] Wait for **Saved locally**.
+- [ ] Go to `#/duel`. A **Your decks** group renders below **Bundled decks**, holding `Manual T22` in both the player and opponent columns.
+- [ ] Click `Manual T22` in **Your deck**. It becomes selected (`aria-pressed="true"`), and no start error appears.
+- [ ] Press **Start**. The duel initializes and reaches the first prompt — the field renders, both life-point totals are up, and your hand is drawn from the cards you picked, not from a bundled deck.
+- [ ] Hover a card in your hand: the preview panel shows that card's real name and effect text.
+- [ ] Surrender, then **Change decks** — `Manual T22` is still selected and the picker does not auto-start.
+
+### Import a YDK and duel with it
+- [ ] From `#/decks`, press **Import deck** in the library, give it a name, and paste a `#main` list of 40 codes taken from the editor's own catalog.
+- [ ] **Preview import** reports no unknown codes.
+- [ ] **Commit** — the deck opens in the editor and saves.
+- [ ] `#/duel` offers it under **Your decks**, and Start duels with it.
+
+### The filter still refuses what it should
+- [ ] In `#/decks`, build a deck with only 39 Main cards (or four copies of one card).
+- [ ] `#/duel` does not list it. It is absent, not greyed out, and there is no message about it.
+- [ ] Return to `#/decks` — the deck is exactly as you left it. Nothing was renamed, repaired, re-saved or deleted to make it playable.
+- [ ] Import a YDK holding a code the editor does not know (e.g. `99999999`). Preview flags it as unknown, and a deck saved with it is never offered at `#/duel`.
+
+### Bundled decks are unaffected
+- [ ] With no local deck at all (use `#/admin` → **Reset Deck library**), `#/duel` renders only the **Bundled decks** group — no empty "Your decks" heading — and Start works.
+- [ ] Pick a bundled pair and duel: unchanged from before this slice.
+
+### Build gate
+- [ ] `npm run build` finishes green. Its last block prints roughly
+      `"chunkBytes": { "shell": 78321, "battle": 365853, "deck-editor": 150849, "story": 60195 }`.
+- [ ] The deck-editor domain grew because it now ships the packaged card set
+      (~58 kB of masks plus names and effect text, in a chunk it shares with the
+      duel); its budget was raised deliberately from 143,750 to 201,250 bytes in
+      `scripts/lib/domain-chunk-closure.ts`. The battle domain *shrank* from
+      405,950 to 365,853 because the same change ended a three-way duplication
+      of the card-text manifest inside its closure; its ceiling was not touched.

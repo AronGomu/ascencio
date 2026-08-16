@@ -11,7 +11,7 @@ Ship the 30 items of `feedback.md`. Four archetype decks plus a pre-duel deck pi
 
 ## Assumptions
 
-- **A1** Artifacts live in `ai-artifacts/` (the tracked dir declared in `AGENT.md`), not `ai_artefacts/`. Carried from the 2026-08-08 and 2026-08-09 plans.
+- **A1** Artifacts live in `ai-artifacts/` (the tracked dir declared in `AGENT.md`), not `ai-artifact/`. Carried from the 2026-08-08 and 2026-08-09 plans.
 - **A2** Base is `main` **after** `feat/duel-field-round-2` (`736b374`) is merged into it. T1 performs that merge. *User decision.* `origin/main` alone has no `PhaseStrip.svelte`, `ZoneListDialog.svelte` or `DuelHeaderBar.svelte`, so basing on it would make the plan unimplementable.
 - **A3** The four archetype `.ydk` files are seeded from the local catalog by T2 and may be overwritten by the user at any time with no code change. Deck files are `?raw` Vite imports — pure data. *User decision.*
 - **A4** The deck registry lists **six** decks: the four archetypes plus the two existing MVP decks, which stay selectable and remain the **default** selection so the e2e walkers keep a deterministic card pool. *Planner decision.*

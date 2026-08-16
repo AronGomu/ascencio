@@ -1,6 +1,6 @@
 # Documentation
 
-This directory contains current project documentation and historical context. Root [`AGENT.md`](../AGENT.md) is the fast entry point for AI and contributors.
+This directory contains current project documentation and historical context. Root [`AGENTS.md`](../AGENTS.md) is the fast entry point for AI and contributors.
 
 ## Current sources of truth
 
@@ -44,7 +44,7 @@ This directory contains current project documentation and historical context. Ro
 | [`../ai-artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md`](../ai-artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md)               | Completed TDD ticket ledger for the duel-field UX overhaul                                |
 | [`../ai-artifacts/PLAN_2026_08_09_duel_field_feedback_round_2.md`](../ai-artifacts/PLAN_2026_08_09_duel_field_feedback_round_2.md)     | Round-2 TDD ticket ledger                                                                 |
 | [`../ai-artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md`](../ai-artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md)     | Completed round-3 implementation ledger                                                   |
-| [`../ai_artefacts/PLAN_2026_08_13_feedback_follow_up.html`](../ai_artefacts/PLAN_2026_08_13_feedback_follow_up.html)                   | Completed full-height field + approved card-list implementation plan                      |
+| [`../ai-artifact/PLAN_2026_08_13_feedback_follow_up.html`](../ai-artifact/PLAN_2026_08_13_feedback_follow_up.html)                   | Completed full-height field + approved card-list implementation plan                      |
 | [`duel-field-validation-references.html`](duel-field-validation-references.html)                                                       | Styled rule/visual/a11y validation catalog                                                |
 | [`MVP_TECHNICAL_IMPLEMENTATION_PLAN.md`](MVP_TECHNICAL_IMPLEMENTATION_PLAN.md)                                                         | Completed MVP/Phaser baseline audit plan                                                  |
 | [`assets/asset-import-pipeline.md`](assets/asset-import-pipeline.md)                                                                   | Implemented asset acquisition, generation, and verification pipeline                      |
@@ -75,7 +75,7 @@ Start with [`card-game-vn-handoff/00-index.md`](card-game-vn-handoff/00-index.md
 ## Agent artifact roots
 
 - [`../ai-artifacts/`](../ai-artifacts/) — existing design/prototype evidence.
-- [`../ai_artefacts/`](../ai_artefacts/) — implementation-plan indexes, self-contained tickets, rendered plan HTML (caller-required spelling).
+- [`../ai-artifact/`](../ai-artifact/) — implementation-plan indexes, self-contained tickets, rendered plan HTML (caller-required spelling).
 
 ## Historical material
 

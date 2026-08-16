@@ -11,7 +11,7 @@ Ship the 17 duel-field feedback items: player/opponent header with avatars + LP,
 
 ## Assumptions
 
-- **A1** Artifacts land in `ai-artifacts/` (the tracked dir declared in `AGENT.md`), not `ai_artefacts/`. Carried forward from the 2026-08-08 plan.
+- **A1** Artifacts land in `ai-artifacts/` (the tracked dir declared in `AGENT.md`), not `ai-artifact/`. Carried forward from the 2026-08-08 plan.
 - **A2** UI settings stay in memory for the session (no IndexedDB, no `localStorage`). Reload resets to defaults. Carried forward.
 - **A3** Avatars reuse the bundled card-back image (`CardImageLibrary.cardBackUrl`) as the avatar art. *User decision.* The component takes an `avatarUrl` prop so real character art drops in later with no layout change.
 - **A4** "Auto-validate all the system hints" (item 7) = auto-answer **chain prompts with no activatable option** *and* **prompts that carry no real decision** (`option` with exactly one choice, `selectPosition` with exactly one choice, `chain` with `forced` semantics and exactly one choice). *User decision.* Monster battle position with two choices stays manual.

@@ -3,7 +3,7 @@
 > Status: accepted; planned
 > Decided: 2026-08-13
 > Owners: browser presentation architecture
-> Plan: [`../../ai_artefacts/PLAN_2026_08_13_feedback_follow_up.md`](../../ai_artefacts/PLAN_2026_08_13_feedback_follow_up.md) — T1–T8
+> Plan: [`../../ai-artifact/PLAN_2026_08_13_feedback_follow_up.md`](../../ai-artifact/PLAN_2026_08_13_feedback_follow_up.md) — T1–T8
 > Supersedes: ADR-003 shell/chrome/geometry decisions
 
 ## Context

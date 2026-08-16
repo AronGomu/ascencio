@@ -415,6 +415,39 @@ test("preview bounds text with stable width and vertical overlay", async ({
     .toBeGreaterThan(0);
 });
 
+test("hand cards are centered when the hand fits", async ({ page }) => {
+  for (const player of ["p0", "p1"] as const) {
+    await page.goto("?scenario=field-hand-6");
+    const viewport = page.locator(`[data-cy="field-hand-${player}-viewport"]`);
+    const cards = viewport.locator(".duel-field-card");
+    expect(await cards.count()).toBeGreaterThan(0);
+    const viewportBox = await rect(viewport);
+    const firstBox = await rect(cards.first());
+    const lastBox = await rect(cards.last());
+    const clusterCenter = (firstBox.x + lastBox.x + lastBox.width) / 2;
+    const viewportCenter = viewportBox.x + viewportBox.width / 2;
+    expect(Math.abs(clusterCenter - viewportCenter)).toBeLessThanOrEqual(8);
+  }
+});
+
+test("an overflowing hand still scrolls to both ends", async ({ page }) => {
+  await page.goto("?scenario=field-hand-20");
+  const viewport = page.locator('[data-cy="field-hand-p0-viewport"]');
+  const cards = viewport.locator(".duel-field-card");
+  const viewportBox = await rect(viewport);
+
+  const firstBox = await rect(cards.first());
+  expect(firstBox.x).toBeGreaterThanOrEqual(viewportBox.x - 1);
+
+  await viewport.evaluate((el) => {
+    el.scrollLeft = el.scrollWidth;
+  });
+  const lastBox = await rect(cards.last());
+  expect(lastBox.x + lastBox.width).toBeLessThanOrEqual(
+    viewportBox.x + viewportBox.width + 1,
+  );
+});
+
 test("opponent twenty-card overlay uses negative row-reverse scrolling", async ({
   page,
 }) => {

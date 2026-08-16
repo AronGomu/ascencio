@@ -1136,3 +1136,9 @@ fix in a browser, which no automated suite covers.
 - [ ] Observe both extra deck stacks. Each non-empty extra deck stack shows the card-back image (same back art as the deck), not a face-up card art.
 - [ ] Open the GY (graveyard) browse list — the top card in the GY stack shows face-up art (regression: public piles unchanged).
 - [ ] Open the extra deck browse list — the list still shows own card names/art face-up (browse of private piles is intentionally allowed; only the stack tile face is hidden).
+
+## T5 center-hand-cards
+
+- [ ] Open the duel at `http://localhost:4173` (or dev server) with a 5-card starting hand — the hand cluster is horizontally centered under the duel field middle (visually sits in the center of the hand band, not packed to the left).
+- [ ] Draw cards until the hand overflows (≥ 10–12 cards at 1920×1080) — the scrollbar appears and scrolling left/right reaches both the first and last card.
+- [ ] Opponent hand (top band) with 5 cards also appears centered.

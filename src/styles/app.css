@@ -1809,6 +1809,17 @@ button.duel-field-zone,
   transform: scale(1.35);
 }
 
+/* Auto-margin centering: absorbs free space symmetrically so the card
+   cluster is centered when it fits; degrades to normal scrolling otherwise.
+   Works for both LTR (p0) and row-reverse (p1) layouts. */
+.duel-field-hand-band__viewport > .duel-field-card.is-hand-item:first-child {
+  margin-left: auto;
+}
+
+.duel-field-hand-band__viewport > .duel-field-card.is-hand-item:last-child {
+  margin-right: auto;
+}
+
 /* Item 5: the hand and its action chips must never be painted over by a
    field card, zone, stack or the phase strip. This box creates its own
    stacking context (position + z-index), so its z-index must outrank every

@@ -308,7 +308,7 @@ describe("global styles", () => {
     expect(fieldHover).toContain("scale(1.35)");
     const handHover = ruleBlock(
       css,
-      ".duel-field-card.is-identity-known.is-hand-item:not(.is-pinned):is(\n    :hover,\n    :focus-within\n  ) {",
+      ".duel-field-card.is-identity-known.is-hand-item:not(.is-pinned):focus-within {",
     );
     expect(handHover).toContain("scale(1.35)");
     const listSelector =

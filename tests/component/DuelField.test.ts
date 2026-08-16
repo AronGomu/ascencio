@@ -2508,6 +2508,33 @@ describe("DuelField", () => {
     ).toBe(true);
   });
 
+  it("hovering a known hand card mounts the zoom overlay with its actions above", async () => {
+    renderDraggableHand();
+    const article = handCardArticle();
+    await fireEvent.pointerEnter(article);
+    const overlay = document.querySelector('[data-cy^="hand-zoom-overlay-"]');
+    expect(overlay).not.toBeNull();
+    expect(
+      overlay!.querySelector('[data-cy^="card-action-chips-"]'),
+    ).not.toBeNull();
+    await fireEvent.pointerLeave(article);
+    expect(
+      document.querySelector('[data-cy^="hand-zoom-overlay-"]'),
+    ).toBeNull();
+  });
+
+  it("an unknown hand card never mounts the zoom overlay", async () => {
+    renderDraggableHand();
+    const opponentCard = document.querySelector<HTMLElement>(
+      ".duel-field-card.is-opponent",
+    );
+    if (opponentCard === null) throw new Error("Missing opponent hand card");
+    await fireEvent.pointerEnter(opponentCard);
+    expect(
+      document.querySelector('[data-cy^="hand-zoom-overlay-"]'),
+    ).toBeNull();
+  });
+
   it("duel field no longer renders life pills", () => {
     const value = DUEL_FIELD_PUBLIC_STATES["ST-01"];
     render(DuelField, { board: value.board });

@@ -1212,6 +1212,46 @@ button.duel-field-zone,
   }
 }
 
+.hand-zoom-overlay {
+  position: fixed;
+  z-index: var(--duel-field-layer-hand-zoom);
+  pointer-events: auto;
+}
+
+.hand-zoom-overlay__art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0.28rem;
+}
+
+.hand-zoom-overlay__name {
+  position: absolute;
+  z-index: var(--duel-field-layer-label);
+  right: -0.1rem;
+  bottom: -0.1rem;
+  left: -0.1rem;
+  overflow: hidden;
+  padding: 0.12rem 0.18rem;
+  border-radius: 0.2rem;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--bg-deeper) 82%, transparent);
+  font-size: clamp(0.38rem, 0.55vw, 0.57rem);
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Override the default display:none on chips so they show inside the overlay. */
+.hand-zoom-overlay .card-action-chips {
+  display: flex;
+  position: absolute;
+  bottom: calc(100% + 0.3rem);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 /* Chips float above the zones and stay visible while their card is hovered,
    focused or pinned — all of which survive a drag. Taking them out of hit
    testing for the duration keeps `document.elementFromPoint` on the zone the
@@ -1807,11 +1847,9 @@ button.duel-field-zone,
   transform-origin: center top;
 }
 
-/* Same pin exclusion as the field/zone rule above. */
-.duel-field-card.is-identity-known.is-hand-item:not(.is-pinned):is(
-    :hover,
-    :focus-within
-  ) {
+/* Same pin exclusion as the field/zone rule above. The overlay handles
+   the hover state; only focus-within keeps the in-place lift. */
+.duel-field-card.is-identity-known.is-hand-item:not(.is-pinned):focus-within {
   transform: scale(1.35);
 }
 
@@ -2012,6 +2050,14 @@ button.duel-field-zone,
   display: flex;
 }
 
+/* Hand hover opens the overlay instead; suppress the clipped in-band chips
+   on plain hover so they do not peek out below the overlay. Focus and pin
+   keep their own reveal path (the rule above). */
+.duel-field-card.is-hand-item:not(:focus-within):not(.is-pinned):hover
+  .card-action-chips {
+  display: none;
+}
+
 button.card-action-chip {
   min-width: 3.4rem;
   min-height: 1.15rem;
@@ -2128,10 +2174,7 @@ button.card-action-chip:hover:not(:disabled) {
     transform: translate(-50%, -50%);
   }
 
-  .duel-field-card.is-identity-known.is-hand-item:not(.is-pinned):is(
-      :hover,
-      :focus-within
-    ) {
+  .duel-field-card.is-identity-known.is-hand-item:not(.is-pinned):focus-within {
     transform: none;
   }
 }

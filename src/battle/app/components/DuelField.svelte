@@ -62,6 +62,7 @@
     type StageFrame,
   } from "../presentation/stage-frame.ts";
   import DragGhost from "./duel-field/DragGhost.svelte";
+  import HandZoomOverlay from "./duel-field/HandZoomOverlay.svelte";
   import FieldActionBar from "./duel-field/FieldActionBar.svelte";
   import FloatingFieldWindow from "./duel-field/FloatingFieldWindow.svelte";
   import FieldBoard from "./duel-field/FieldBoard.svelte";
@@ -186,6 +187,12 @@
      gesture — the frame cannot turn mid-drag — so `CardControl` keeps
      reporting plain viewport coordinates and the physics module stays pure. */
   let dragStageFrame: StageFrame = UNROTATED_FRAME;
+  let handZoom: {
+    card: BoardCardView;
+    anchor: { left: number; top: number; width: number; height: number };
+  } | null = null;
+  let handZoomOverlayHovered = false;
+  let handZoomBoardRef: BoardViewModel | null = null;
 
   $: resolvedCardBackUrl = cardBackUrl || DEFAULT_CARD_BACK;
   $: effectiveReducedMotion = reducedMotion ?? mediaReducedMotion;
@@ -202,6 +209,7 @@
   $: targetLaunchers = targetLauncherIds(spec);
   $: synchronizeZoneList(spec, offFieldTargets);
   $: cancelDragGhostOnPromptChange(spec);
+  $: clearHandZoomOnBoardChange(board);
   $: openStack = browsedStack(zoneListState, board);
   $: targetListOpen = zoneListState?.mode === "target";
   $: submittedChoiceIds =
@@ -514,6 +522,7 @@
     dragCard = card;
     dropCandidates = candidates;
     dropHoveredZoneId = null;
+    handZoom = null;
     /* A new drag always wins over a settle still in flight for the previous
        card ("new drag first cancels prior settle"). */
     cancelGhostFrame();
@@ -662,6 +671,29 @@
     if (key === ghostPromptKey) return;
     ghostPromptKey = key;
     if (ghostOrigin !== null) removeGhost();
+    handZoom = null;
+    handZoomOverlayHovered = false;
+  }
+
+  function clearHandZoomOnBoardChange(value: BoardViewModel): void {
+    if (value !== handZoomBoardRef) {
+      handZoomBoardRef = value;
+      handZoom = null;
+      handZoomOverlayHovered = false;
+    }
+  }
+
+  function enterHandZoom(card: BoardCardView, element: HTMLElement): void {
+    const frame = readStageFrame(fieldRoot);
+    const rect = toFrameRect(frame, element.getBoundingClientRect());
+    handZoomOverlayHovered = false;
+    handZoom = { card, anchor: rect };
+  }
+
+  function leaveHandZoom(): void {
+    if (!handZoomOverlayHovered) {
+      handZoom = null;
+    }
   }
 
   /* The ghost's home/target rect is read live from the DOM only here, at
@@ -960,6 +992,8 @@
         oncardpreview={onpreview}
         {onstackpreview}
         onstackactivate={activateStack}
+        oncardzoomenter={enterHandZoom}
+        oncardzoomleave={leaveHandZoom}
       />
       <PhaseStrip
         geometry={renderLayout.geometry}
@@ -977,6 +1011,27 @@
       origin={ghostOrigin}
       settling={ghostPhase === "settling"}
       reducedMotion={effectiveReducedMotion}
+    />
+  {/if}
+  {#if handZoom !== null}
+    <HandZoomOverlay
+      card={handZoom.card}
+      anchor={handZoom.anchor}
+      imageUrl={handZoom.card.image.kind === "back"
+        ? resolvedCardBackUrl
+        : (imageUrls.get(handZoom.card.image.code) ?? resolvedPlaceholderUrl)}
+      choices={spec?.cardChoices.get(handZoom.card.targetId) ?? []}
+      disabled={pending}
+      onchoose={(choice) =>
+        dispatch({ type: "chooseChoice", choiceId: choice.id })}
+      ondismiss={() => (handZoom = null)}
+      onpointerenter={() => {
+        handZoomOverlayHovered = true;
+      }}
+      onpointerleave={() => {
+        handZoomOverlayHovered = false;
+        handZoom = null;
+      }}
     />
   {/if}
   {#if targetListOpen && spec !== null}

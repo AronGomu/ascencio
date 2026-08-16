@@ -102,5 +102,6 @@
      window the player pressed takes it (ADR-017). */
   --duel-field-layer-window: 110;
   --duel-field-layer-window-active: 120;
+  --duel-field-layer-hand-zoom: 140;
   --duel-field-layer-drag-ghost: 150;
 }

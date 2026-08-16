@@ -42,6 +42,11 @@
   export let oncarddragmove: (x: number, y: number) => void = () => undefined;
   export let oncarddragend: (x: number, y: number) => void = () => undefined;
   export let oncardpreview: (card: BoardCardView) => void = () => undefined;
+  export let oncardzoomenter: (
+    card: BoardCardView,
+    element: HTMLElement,
+  ) => void = () => undefined;
+  export let oncardzoomleave: () => void = () => undefined;
 
   const mirrored = player === 1;
   let viewportElement: HTMLDivElement | null = null;
@@ -100,6 +105,8 @@
         ondragmove={oncarddragmove}
         ondragend={oncarddragend}
         onpreview={() => oncardpreview(card)}
+        onzoomenter={(element) => oncardzoomenter(card, element)}
+        onzoomleave={oncardzoomleave}
       />
     {/each}
   </div>

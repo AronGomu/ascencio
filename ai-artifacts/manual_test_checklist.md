@@ -1152,3 +1152,17 @@ fix in a browser, which no automated suite covers.
 - [ ] Hover over a face-up card (own or opponent's visible) — zoom and label both present (regression check).
 - [ ] Hover over cards in the opponent hand band — no zoom, no label (opponent hand cards have no code).
 - [ ] Confirm the browser console shows no errors during the above.
+
+## T7 hand-hover-zoom-overlay
+
+- [ ] Run `npm run dev` and open the duel at `http://localhost:4173` (or configured dev port).
+- [ ] Hover a known hand card (own face-up or face-down card you own) — a fixed-position overlay appears enlarged (~1.6× the card height) escaping the hand band and overlapping adjacent panels or side rails if it would clip there.
+- [ ] Confirm the overlay extends visually ABOVE the hand band top edge (not clipped by the band's overflow-y: hidden).
+- [ ] Action buttons (e.g. Summon, Set) appear directly above the zoomed card — not inside the hand band below the card.
+- [ ] Click an action button on the overlay — the action is dispatched (card is played or prompt advances). Overlay disappears.
+- [ ] Move the pointer from the card onto the overlay without leaving — overlay must stay visible (pointer-over-overlay grace period).
+- [ ] Move the pointer off the overlay entirely — overlay disappears.
+- [ ] Start dragging a hand card — overlay disappears immediately on drag start.
+- [ ] Press Escape while a hand card has keyboard focus with chips pinned — in-place zoom appears (1.35× via focus-within) and chips are accessible; the fixed overlay is NOT shown.
+- [ ] Hover over an opponent hand card (face-down, no code) — NO overlay appears.
+- [ ] Confirm the browser console shows no errors during the above.

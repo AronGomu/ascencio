@@ -33,7 +33,10 @@
   export let ondragmove: (x: number, y: number) => void = () => undefined;
   export let ondragend: (x: number, y: number) => void = () => undefined;
   export let onpreview: (card: BoardCardView) => void = () => undefined;
+  export let onzoomenter: (element: HTMLElement) => void = () => undefined;
+  export let onzoomleave: () => void = () => undefined;
 
+  let articleEl: HTMLElement | undefined;
   let pointerOrigin: { readonly x: number; readonly y: number } | null = null;
   let pointerMoved = false;
   let dragging = false;
@@ -134,6 +137,23 @@
     onpreview(card);
   }
 
+  function handleArticlePointerEnter(): void {
+    reportPreview();
+    if (
+      layout === "hand" &&
+      card.code !== undefined &&
+      articleEl !== undefined
+    ) {
+      onzoomenter(articleEl);
+    }
+  }
+
+  function handleArticlePointerLeave(): void {
+    if (layout === "hand" && card.code !== undefined) {
+      onzoomleave();
+    }
+  }
+
   function pointerDown(
     event: PointerEvent & { currentTarget: HTMLButtonElement },
   ): void {
@@ -225,7 +245,9 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex (passive card participates in spatial roving focus) -->
 <article
-  onpointerenter={reportPreview}
+  bind:this={articleEl}
+  onpointerenter={handleArticlePointerEnter}
+  onpointerleave={handleArticlePointerLeave}
   onfocusin={reportPreview}
   class:is-hidden={card.hidden}
   class:is-opponent={card.facing === "opponent"}

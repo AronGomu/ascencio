@@ -16,7 +16,8 @@ export type AcceptanceScenarioId =
   | "card-list-range"
   | "card-list-hand-mixed"
   | "card-list-duplicate"
-  | "card-list-stale";
+  | "card-list-stale"
+  | "field-hand-zoom";
 
 const SCENARIOS: ReadonlySet<string> = new Set<AcceptanceScenarioId>([
   "field-emz",
@@ -37,6 +38,7 @@ const SCENARIOS: ReadonlySet<string> = new Set<AcceptanceScenarioId>([
   "card-list-hand-mixed",
   "card-list-duplicate",
   "card-list-stale",
+  "field-hand-zoom",
 ]);
 
 export function acceptanceScenarioId(

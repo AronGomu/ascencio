@@ -54,6 +54,52 @@ async function databaseNames(): Promise<readonly string[]> {
   return (await indexedDB.databases()).map(({ name }) => name ?? "");
 }
 
+/** The record exactly as it sits on disk, so a claim about what was written
+    is read from the store rather than from the repository's own answer. */
+function storedRecord(slot: string): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(
+      STORY_SAVES_DATABASE_NAME,
+      STORY_SAVES_DATABASE_VERSION,
+    );
+    request.onupgradeneeded = () => createStorySaveStores(request.result);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const database = request.result;
+      const transaction = database.transaction(
+        STORY_SAVES_STORE_NAME,
+        "readonly",
+      );
+      const record = transaction.objectStore(STORY_SAVES_STORE_NAME).get(slot);
+      transaction.oncomplete = () => {
+        database.close();
+        resolve(record.result);
+      };
+      transaction.onabort = () => {
+        database.close();
+        reject(transaction.error);
+      };
+    };
+  });
+}
+
+/** A state as a build before the economy existed wrote it: the seven economy
+    and shop-session fields are simply absent from the record. */
+function version1State(): Record<string, unknown> {
+  const state: Record<string, unknown> = { ...storyState() };
+  for (const key of [
+    "dp",
+    "boosters",
+    "collection",
+    "shopReturnScreen",
+    "shopSetId",
+    "openedCards",
+    "openingMode",
+  ])
+    delete state[key];
+  return state;
+}
+
 /** Plants a raw record the repository would never write, so the read path can
     be shown recognising it. Seeding goes through `createStorySaveStores` so a
     schema change cannot leave this fixture describing a store that is gone. */
@@ -87,7 +133,7 @@ function seedRecord(slot: string, record: unknown): Promise<void> {
 describe("story save slots", () => {
   it("names the production database and the five slot keys", () => {
     expect(STORY_SAVES_DATABASE_NAME).toBe("ygo-story-saves");
-    expect(STORY_SAVE_SCHEMA_VERSION).toBe(1);
+    expect(STORY_SAVE_SCHEMA_VERSION).toBe(2);
     expect([...STORY_SLOT_KEYS]).toEqual([
       "manual:1",
       "manual:2",
@@ -129,7 +175,7 @@ describe("createStorySaveRepository", () => {
     expect(read).toEqual({
       kind: "ready",
       envelope: {
-        schemaVersion: 1,
+        schemaVersion: 2,
         slot: "manual:1",
         revision: 1,
         savedAt: 1_700_000_000_123,
@@ -142,6 +188,114 @@ describe("createStorySaveRepository", () => {
     if (read.kind !== "ready") throw new Error("expected a ready save");
     expect(read.envelope.state).not.toBe(state);
     expect(JSON.stringify(read.envelope.state)).toBe(JSON.stringify(state));
+  });
+
+  it("writes envelopes at schema version 2", async () => {
+    const saves = repository();
+    await saves.write("manual:1", storyState(), null);
+    expect(await storedRecord("manual:1")).toMatchObject({
+      schemaVersion: 2,
+    });
+  });
+
+  /* The economy rides inside the story state, so a save has to carry it back
+     exactly: a wallet that rounds down on load is progress a player lost. */
+  it("round-trips the economy", async () => {
+    const saves = repository();
+    const state = storyState({
+      dp: 640,
+      boosters: { "metal-raiders": 2 },
+      collection: { 89631139: 3 },
+    });
+    await saves.write("manual:1", state, null);
+    const read = await saves.read("manual:1");
+    expect(read).toMatchObject({
+      kind: "ready",
+      envelope: {
+        state: {
+          dp: 640,
+          boosters: { "metal-raiders": 2 },
+          collection: { 89631139: 3 },
+        },
+      },
+    });
+    if (read.kind !== "ready") throw new Error("expected a ready save");
+    expect(read.envelope.state).toEqual(state);
+  });
+
+  /* A save written before the shop existed still has to resume. It reads as a
+     funded wallet with nothing owned, and every field it did carry survives. */
+  it("reads a version 1 envelope by defaulting the economy", async () => {
+    const legacy = version1State();
+    await seedRecord("manual:1", {
+      schemaVersion: 1,
+      slot: "manual:1",
+      revision: 4,
+      savedAt: 1_700_000_000_000,
+      state: legacy,
+    });
+    const read = await repository().read("manual:1");
+    expect(read).toMatchObject({
+      kind: "ready",
+      envelope: {
+        revision: 4,
+        state: {
+          dp: 1000,
+          boosters: {},
+          collection: {},
+          shopReturnScreen: null,
+          shopSetId: null,
+          openedCards: null,
+          openingMode: null,
+        },
+      },
+    });
+    if (read.kind !== "ready") throw new Error("expected a ready save");
+    /* Everything the old build did store comes back untouched: a migration
+       that resumes the player one beat earlier is a migration that lost data. */
+    for (const [key, value] of Object.entries(legacy))
+      expect(read.envelope.state[key as keyof StoryState], key).toEqual(value);
+  });
+
+  /* Two version 1 saves must not come back sharing one inventory: a default
+     handed out by reference would let a purchase in one slot appear in the
+     other. */
+  it("gives every migrated save its own inventory", async () => {
+    const legacy = version1State();
+    for (const slot of ["manual:1", "manual:2"])
+      await seedRecord(slot, {
+        schemaVersion: 1,
+        slot,
+        revision: 1,
+        savedAt: 1,
+        state: legacy,
+      });
+    const saves = repository();
+    const first = await saves.read("manual:1");
+    const second = await saves.read("manual:2");
+    if (first.kind !== "ready" || second.kind !== "ready")
+      throw new Error("expected two ready saves");
+    expect(first.envelope.state.boosters).not.toBe(
+      second.envelope.state.boosters,
+    );
+    expect(first.envelope.state.collection).not.toBe(
+      second.envelope.state.collection,
+    );
+  });
+
+  it("still rejects future schema versions", async () => {
+    await seedRecord("manual:2", {
+      schemaVersion: 3,
+      slot: "manual:2",
+      revision: 1,
+      savedAt: 1,
+      state: storyState(),
+    });
+    expect(await repository().read("manual:2")).toEqual({
+      kind: "incompatible",
+      slot: "manual:2",
+      found: 3,
+    });
   });
 
   it("increments the revision and overwrites in place rather than appending", async () => {

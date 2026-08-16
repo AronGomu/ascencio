@@ -20,6 +20,12 @@ describe("story state model", () => {
       "outcome",
       "reward",
       "end",
+      "shop-greeting",
+      "shop-browse",
+      "shop-cards",
+      "shop-sell",
+      "shop-opening",
+      "shop-results",
     ]);
     expect(createInitialStoryState().screen).toBe("title");
     const state = reduceStory(createInitialStoryState(), {
@@ -30,6 +36,19 @@ describe("story state model", () => {
       narrativeIndex: 0,
       progressExists: true,
     });
+  });
+
+  /* The wallet is part of the story rather than a store beside it, so a fresh
+     run starts funded and with no shop session half-open. */
+  it("initial state funds the wallet and idles the shop", () => {
+    const initial = createInitialStoryState();
+    expect(initial.dp).toBe(1000);
+    expect(initial.boosters).toEqual({});
+    expect(initial.collection).toEqual({});
+    expect(initial.shopReturnScreen).toBeNull();
+    expect(initial.shopSetId).toBeNull();
+    expect(initial.openedCards).toBeNull();
+    expect(initial.openingMode).toBeNull();
   });
 
   it("continues mock progress and loads only occupied manual/autosave slots", () => {

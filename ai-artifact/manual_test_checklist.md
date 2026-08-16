@@ -29,3 +29,16 @@
 - [ ] Click "Main menu" from the title screen; browser navigates to `#/` (shell home screen)
 - [ ] Navigate back to `#/story`; title screen loads normally; existing buttons (New Game, Load, Settings) remain functional
 - [ ] Verify "Main menu" button has `data-cy="story-title-main-menu"` (inspect element)
+
+## T4 economy_state_save_v2
+
+State + persistence only — no shop UI exists yet, so every check below is done through DevTools.
+
+- [ ] Run `npm run dev`, open `#/story`, start New Game, then open the gear menu and Save to `manual:1`
+- [ ] DevTools → Application → IndexedDB → `ygo-story-saves` → `saves` → `manual:1`: record shows `schemaVersion: 2`
+- [ ] Same record's `state` carries `dp: 1000`, `boosters: {}`, `collection: {}`, and `shopReturnScreen` / `shopSetId` / `openedCards` / `openingMode` all `null`
+- [ ] Simulate an older save: in the DevTools console, read `manual:1`, set `schemaVersion` to `1`, `delete` the seven fields above from `state`, put it back under key `manual:1`, then reload `#/story`
+- [ ] Load screen still lists the slot with its original chapter label, and Load resumes at the same screen and beat as before the edit (no progress lost, no "save is unreadable" message)
+- [ ] Re-save that slot and confirm the stored record is back at `schemaVersion: 2` with `dp: 1000` and the empty maps
+- [ ] Simulate a newer build: set a slot's `schemaVersion` to `3`, reload, and confirm the story reports the save as incompatible rather than deleting it or crashing
+- [ ] Play the existing prologue path end to end once (New Game → map → Old Arena → duel → outcome → reward): autosave, checkpoint and Continue all still work

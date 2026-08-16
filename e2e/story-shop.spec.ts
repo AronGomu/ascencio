@@ -56,6 +56,10 @@ test("shop loop: buy packs, open all, sell cards, singles sanity", async ({
   await expect(
     page.locator('[data-cy="story-shop-browse-loading"]'),
   ).not.toBeVisible();
+  // The grid itself, not just the absence of the spinner: a data-load failure
+  // renders the error block, and asserting on the grid reports that as itself
+  // rather than as a locator timeout three steps later.
+  await expect(page.locator('[data-cy="story-shop-set-grid"]')).toBeVisible();
   await page.locator('[data-cy="story-shop-set-metal-raiders"]').click();
   await page.locator('[data-cy="story-shop-buy-ten"]').click();
   await expect(page.locator('[data-cy="story-top-bar-dp"]')).toHaveText("0 DP");
@@ -96,6 +100,10 @@ test("shop loop: buy packs, open all, sell cards, singles sanity", async ({
   await expect(
     page.locator('[data-cy="story-shop-browse-loading"]'),
   ).not.toBeVisible();
+  // The grid itself, not just the absence of the spinner: a data-load failure
+  // renders the error block, and asserting on the grid reports that as itself
+  // rather than as a locator timeout three steps later.
+  await expect(page.locator('[data-cy="story-shop-set-grid"]')).toBeVisible();
   await page.locator('[data-cy="story-shop-set-metal-raiders"]').click();
   await page.locator('[data-cy="story-shop-view-cards"]').click();
 

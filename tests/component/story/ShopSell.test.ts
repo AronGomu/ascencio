@@ -3,6 +3,7 @@ import { cleanup, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import ShopSellScreen from "../../../src/story/shop/ShopSellScreen.svelte";
+import { SELL_PRICE_DP } from "../../../src/story/shop/data/shop-pricing.ts";
 
 afterEach(() => cleanup());
 
@@ -13,7 +14,6 @@ const CARDS = [
     imageUrl: null,
     rarity: "common" as const,
     owned: 3,
-    unitPriceDp: 10,
   },
   {
     code: 222,
@@ -21,7 +21,6 @@ const CARDS = [
     imageUrl: null,
     rarity: "rare" as const,
     owned: 1,
-    unitPriceDp: 25,
   },
   {
     code: 333,
@@ -29,7 +28,6 @@ const CARDS = [
     imageUrl: null,
     rarity: "ultra-rare" as const,
     owned: 2,
-    unitPriceDp: 100,
   },
 ] as const;
 
@@ -59,7 +57,7 @@ describe("ShopSellScreen", () => {
           `[data-cy="story-shop-sell-price-${card.code}"]`,
         )?.textContent,
         `price for ${card.code}`,
-      ).toContain(String(card.unitPriceDp));
+      ).toContain(String(SELL_PRICE_DP[card.rarity]));
     }
   });
 
@@ -119,9 +117,55 @@ describe("ShopSellScreen", () => {
 
     expect(onsell).toHaveBeenCalledOnce();
     expect(onsell).toHaveBeenCalledWith([
-      { code: 111, quantity: 2, unitPriceDp: 10 },
-      { code: 222, quantity: 1, unitPriceDp: 25 },
+      { code: 111, quantity: 2, rarity: "common" },
+      { code: 222, quantity: 1, rarity: "rare" },
     ]);
+  });
+
+  /* Rarity decides the price, and rarity is only knowable once the shop data
+     has loaded. Until then the screen offers nothing to sell rather than
+     rows the player could sell at a degraded price. */
+  it("offers nothing to sell while the shop data is loading", () => {
+    const { container } = render(ShopSellScreen, {
+      cards: null,
+      onsell: noop,
+      onback: noop,
+    });
+    expect(
+      container.querySelector('[data-cy="story-shop-sell-loading"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-cy="story-shop-sell-grid"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-cy="story-shop-sell-confirm"]'),
+    ).toBeNull();
+  });
+
+  it("shows the data error with a retry instead of rows", async () => {
+    const onretry = vi.fn();
+    const { container } = render(ShopSellScreen, {
+      cards: null,
+      error: "Shop data unavailable",
+      onsell: noop,
+      onretry,
+      onback: noop,
+    });
+    expect(
+      container.querySelector('[data-cy="story-shop-sell-error-message"]')
+        ?.textContent,
+    ).toContain("Shop data unavailable");
+    expect(
+      container.querySelector('[data-cy="story-shop-sell-confirm"]'),
+    ).toBeNull();
+    await userEvent
+      .setup()
+      .click(
+        container.querySelector(
+          '[data-cy="story-shop-sell-retry"]',
+        ) as HTMLElement,
+      );
+    expect(onretry).toHaveBeenCalledOnce();
   });
 
   it("back returns to the keeper", async () => {

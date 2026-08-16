@@ -7,6 +7,7 @@ import {
 } from "../../../src/story/shop/data/shop-pricing.ts";
 import {
   generatePack,
+  openablePicks,
   openBoosters,
 } from "../../../src/story/shop/data/pack-generator.ts";
 import type { ShopCardOffer } from "../../../src/story/shop/data/shop-rarity.ts";
@@ -158,6 +159,50 @@ describe("shop data contracts", () => {
     const pack = generatePack(contents, random);
 
     expect(pack).toHaveLength(9);
+  });
+
+  /* A set with nothing in it is reachable from a tampered save and from a
+     data file that drops a set. Opening one used to read past the end of an
+     empty pool and throw mid-dispatch, which closed the dialog on an uncaught
+     exception. The pick is skipped instead: no cards, no throw. */
+  it("an empty set yields no cards instead of throwing", () => {
+    expect(() => generatePack([], () => 0)).not.toThrow();
+    expect(generatePack([], () => 0)).toHaveLength(0);
+  });
+
+  it("openBoosters skips picks whose set has no contents", () => {
+    const aContents: readonly ShopCardOffer[] = [
+      { code: 100, rarity: "common" },
+      { code: 101, rarity: "rare" },
+    ];
+    const contentsOf = (setId: string) => (setId === "a" ? aContents : []);
+    const picks = [
+      { setId: "bogus", count: 3 },
+      { setId: "a", count: 1 },
+    ] as const;
+    const seq = Array(9).fill(0.0) as number[];
+    const random = () => seq.shift()!;
+
+    const result = openBoosters(picks, contentsOf, random);
+
+    expect(result).toHaveLength(9);
+    expect(result.every((c) => c.code >= 100 && c.code <= 101)).toBe(true);
+  });
+
+  it("openablePicks drops the picks nothing can be opened from", () => {
+    const contentsOf = (setId: string) =>
+      setId === "a"
+        ? ([{ code: 100, rarity: "common" }] as readonly ShopCardOffer[])
+        : [];
+    expect(
+      openablePicks(
+        [
+          { setId: "bogus", count: 3 },
+          { setId: "a", count: 2 },
+        ],
+        contentsOf,
+      ),
+    ).toEqual([{ setId: "a", count: 2 }]);
   });
 
   it("openBoosters honors pick counts and order", () => {

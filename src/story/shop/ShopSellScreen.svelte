@@ -1,23 +1,35 @@
 <script lang="ts">
   import type { ShopRarity } from "../model/story-state.ts";
+  import { SELL_PRICE_DP } from "./data/shop-pricing.ts";
 
-  export let cards: readonly {
-    code: number;
-    name: string;
-    imageUrl: string | null;
-    rarity: ShopRarity;
-    owned: number;
-    unitPriceDp: number;
-  }[] = [];
+  /* `null` means the shop data has not loaded, not that the player owns
+     nothing: a card's price follows its rarity, and rarity is only knowable
+     from that data. Selling is irreversible, so the screen offers no rows at
+     all until it can price them. */
+  export let cards:
+    | readonly {
+        code: number;
+        name: string;
+        imageUrl: string | null;
+        rarity: ShopRarity;
+        owned: number;
+      }[]
+    | null = null;
+  export let error: string | null = null;
   export let onsell: (
-    items: readonly { code: number; quantity: number; unitPriceDp: number }[],
+    items: readonly {
+      code: number;
+      quantity: number;
+      rarity: ShopRarity;
+    }[],
   ) => void = () => undefined;
+  export let onretry: () => void = () => undefined;
   export let onback: () => void = () => undefined;
 
   let selected: Record<number, number> = {};
 
-  $: total = cards.reduce(
-    (sum, c) => sum + (selected[c.code] ?? 0) * c.unitPriceDp,
+  $: total = (cards ?? []).reduce(
+    (sum, c) => sum + (selected[c.code] ?? 0) * SELL_PRICE_DP[c.rarity],
     0,
   );
 
@@ -34,11 +46,11 @@
   }
 
   function confirm(): void {
-    const items = cards
+    const items = (cards ?? [])
       .map((c) => ({
         code: c.code,
         quantity: selected[c.code] ?? 0,
-        unitPriceDp: c.unitPriceDp,
+        rarity: c.rarity,
       }))
       .filter((i) => i.quantity > 0);
     onsell(items);
@@ -57,7 +69,18 @@
     >
   </header>
 
-  {#if cards.length === 0}
+  {#if error !== null}
+    <div class="state-block" role="alert" data-cy="story-shop-sell-error">
+      <p data-cy="story-shop-sell-error-message">{error}</p>
+      <button type="button" data-cy="story-shop-sell-retry" onclick={onretry}
+        >Retry</button
+      >
+    </div>
+  {:else if cards === null}
+    <div class="state-block" aria-busy="true" data-cy="story-shop-sell-loading">
+      <p data-cy="story-shop-sell-loading-text">Loading prices…</p>
+    </div>
+  {:else if cards.length === 0}
     <p class="empty" data-cy="story-shop-sell-empty">No cards owned yet.</p>
   {:else}
     <div class="sell-grid" data-cy="story-shop-sell-grid">
@@ -74,7 +97,7 @@
             Owned {card.owned}
           </p>
           <p class="price" data-cy={`story-shop-sell-price-${card.code}`}>
-            {card.unitPriceDp} DP
+            {SELL_PRICE_DP[card.rarity]} DP
           </p>
           <div class="stepper" data-cy={`story-shop-sell-stepper-${card.code}`}>
             <button
@@ -98,15 +121,17 @@
     </div>
   {/if}
 
-  <footer class="sell-footer" data-cy="story-shop-sell-footer">
-    <span data-cy="story-shop-sell-total">Total: {total} DP</span>
-    <button
-      type="button"
-      data-cy="story-shop-sell-confirm"
-      disabled={total === 0}
-      onclick={confirm}>Sell</button
-    >
-  </footer>
+  {#if cards !== null && error === null}
+    <footer class="sell-footer" data-cy="story-shop-sell-footer">
+      <span data-cy="story-shop-sell-total">Total: {total} DP</span>
+      <button
+        type="button"
+        data-cy="story-shop-sell-confirm"
+        disabled={total === 0}
+        onclick={confirm}>Sell</button
+      >
+    </footer>
+  {/if}
 </section>
 
 <style>
@@ -184,6 +209,14 @@
   .empty {
     color: var(--muted);
     margin: auto;
+    text-align: center;
+  }
+  .state-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 3rem;
     text-align: center;
   }
 </style>

@@ -22,7 +22,11 @@ export interface ShopSetData {
   readonly sets: readonly ShopSetEntry[];
 }
 
-export const SHOP_SET_DATA_URL = "/story/shop-sets.v1.json";
+/* Built from the deployed base path rather than the site root: the PWA and
+   the Playwright preview both serve the bundle under a base, where a
+   leading-slash literal fetches a document that is not there. `BASE_URL`
+   always ends with a slash. */
+export const SHOP_SET_DATA_URL = `${import.meta.env.BASE_URL}story/shop-sets.v1.json`;
 export const SHOP_SET_DATA_CACHE = "story-shop-data";
 
 const SHOP_RARITIES = new Set<string>([

@@ -12,7 +12,12 @@ import {
   type StoryState,
   type StoryScreen,
 } from "./story-state.ts";
-import { PACK_PRICE_DP, singlePriceDp } from "../shop/data/shop-pricing.ts";
+import {
+  isShopRarity,
+  PACK_PRICE_DP,
+  SELL_PRICE_DP,
+  singlePriceDp,
+} from "../shop/data/shop-pricing.ts";
 
 export type StoryCommand =
   | { readonly type: "new-game" }
@@ -56,10 +61,12 @@ export type StoryCommand =
   | { readonly type: "finish-opening" }
   | {
       readonly type: "sell-cards";
+      /* The receipt names what is being sold, never what it is worth: the
+         price belongs to the rarity ladder this reducer owns. */
       readonly items: readonly {
         readonly code: number;
         readonly quantity: number;
-        readonly unitPriceDp: number;
+        readonly rarity: ShopRarity;
       }[];
     }
   | { readonly type: "reset" };
@@ -207,6 +214,7 @@ export function reduceStory(
     }
     case "buy-single": {
       if (state.screen !== "shop-cards") return state;
+      if (!isShopRarity(command.rarity)) return state;
       const price = singlePriceDp(command.rarity);
       if (state.dp < price) return state;
       return {
@@ -236,12 +244,18 @@ export function reduceStory(
     case "open-boosters": {
       if (!state.screen.startsWith("shop-")) return state;
       const { picks, cards, mode } = command;
+      /* Totalled per set before anything is checked: two picks naming one set
+         each pass a per-pick check the pair cannot pass together, and the
+         shelf would go negative. */
+      const wanted = new Map<string, number>();
       for (const { setId, count } of picks) {
         if (!Number.isInteger(count) || count < 1) return state;
-        if ((state.boosters[setId] ?? 0) < count) return state;
+        wanted.set(setId, (wanted.get(setId) ?? 0) + count);
       }
+      for (const [setId, count] of wanted)
+        if ((state.boosters[setId] ?? 0) < count) return state;
       const boosters: Record<string, number> = { ...state.boosters };
-      for (const { setId, count } of picks) {
+      for (const [setId, count] of wanted) {
         const remaining = (boosters[setId] ?? 0) - count;
         if (remaining === 0) delete boosters[setId];
         else boosters[setId] = remaining;
@@ -272,20 +286,27 @@ export function reduceStory(
       return { ...state, screen: "shop-results" };
     case "sell-cards": {
       if (state.screen !== "shop-sell") return state;
-      for (const { code, quantity, unitPriceDp } of command.items) {
+      /* Totalled per code before anything is checked: two rows naming one
+         card each pass a per-row check the pair cannot pass together, and the
+         collection would go negative — a save this build can no longer
+         read. */
+      const wanted = new Map<number, number>();
+      for (const { code, quantity, rarity } of command.items) {
         if (
           !Number.isInteger(quantity) ||
           quantity < 1 ||
-          (state.collection[code] ?? 0) < quantity ||
-          !Number.isInteger(unitPriceDp) ||
-          unitPriceDp < 1
+          !isShopRarity(rarity)
         )
           return state;
+        wanted.set(code, (wanted.get(code) ?? 0) + quantity);
       }
+      for (const [code, quantity] of wanted)
+        if ((state.collection[code] ?? 0) < quantity) return state;
       const collection: Record<number, number> = { ...state.collection };
       let dp = state.dp;
-      for (const { code, quantity, unitPriceDp } of command.items) {
-        dp += quantity * unitPriceDp;
+      for (const { quantity, rarity } of command.items)
+        dp += quantity * SELL_PRICE_DP[rarity];
+      for (const [code, quantity] of wanted) {
         const remaining = (collection[code] ?? 0) - quantity;
         if (remaining === 0) delete collection[code];
         else collection[code] = remaining;

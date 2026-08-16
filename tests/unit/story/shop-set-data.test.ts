@@ -281,9 +281,30 @@ describe("resolveCardRarity", () => {
 });
 
 describe("SHOP_SET_DATA constants", () => {
-  it("URL and cache name are stable", () => {
-    expect(SHOP_SET_DATA_URL).toBe("/story/shop-sets.v1.json");
+  it("URL is built from the deployed base path", () => {
+    expect(SHOP_SET_DATA_URL).toBe(
+      `${import.meta.env.BASE_URL}story/shop-sets.v1.json`,
+    );
     expect(SHOP_SET_DATA_CACHE).toBe("story-shop-data");
+  });
+
+  /* The production bundle is served under a base path (the PWA deploy and the
+     Playwright preview both use one), so a leading-slash literal would fetch
+     off the deployment root and leave the shop permanently in its error
+     state. */
+  it("URL follows a non-root base path", async () => {
+    vi.stubEnv("BASE_URL", "/ygo-story-duel/");
+    vi.resetModules();
+    try {
+      const reloaded =
+        await import("../../../src/story/shop/data/shop-set-data.ts");
+      expect(reloaded.SHOP_SET_DATA_URL).toBe(
+        "/ygo-story-duel/story/shop-sets.v1.json",
+      );
+    } finally {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
   });
 });
 

@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { STORY_SAVES_DATABASE_NAME } from "../../../src/story/saves/story-save-contracts.ts";
 import { createInitialStoryState } from "../../../src/story/model/story-state.ts";
 import StoryApp from "../../../src/story/StoryApp.svelte";
+import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts";
 
 afterEach(async () => {
   cleanup();
@@ -127,6 +128,36 @@ describe("StoryApp", () => {
     expect(
       shopContainer.querySelector('[data-cy="story-top-bar"]'),
     ).not.toBeNull();
+  });
+
+  /* Selling is irreversible and priced by rarity, and rarity is only known
+     once the shop data has loaded. With no data the screen must offer no
+     rows at all rather than rows that would degrade to the commonest
+     price. */
+  it("offers no sale on the sell screen until the shop data has loaded", async () => {
+    const sellState = {
+      ...createInitialStoryState(),
+      screen: "shop-sell" as const,
+      savedScreen: "shop-sell" as const,
+      shopReturnScreen: "map" as const,
+      collection: { 111: 3 },
+    };
+    /* The sell screen reads the packaged catalog for card names, which a
+       jsdom test has no build to substitute. */
+    installPrototypeActiveCatalog();
+    const { container } = render(StoryApp, { resumeState: sellState });
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-cy="story-shop-sell-error"]') ??
+          container.querySelector('[data-cy="story-shop-sell-loading"]'),
+      ).not.toBeNull(),
+    );
+    expect(
+      container.querySelectorAll('[data-cy^="story-shop-sell-plus-"]'),
+    ).toHaveLength(0);
+    expect(
+      container.querySelector('[data-cy="story-shop-sell-confirm"]'),
+    ).toBeNull();
   });
 
   it("renders under a single scoping root element", () => {

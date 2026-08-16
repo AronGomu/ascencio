@@ -44,8 +44,8 @@
     resolveCardRarity,
     type ShopSetData,
   } from "./shop/data/shop-set-data.ts";
-  import { openBoosters } from "./shop/data/pack-generator.ts";
-  import { SELL_PRICE_DP, singlePriceDp } from "./shop/data/shop-pricing.ts";
+  import { openablePicks, openBoosters } from "./shop/data/pack-generator.ts";
+  import { singlePriceDp } from "./shop/data/shop-pricing.ts";
   import { activeCatalog } from "../decks/catalog/active-catalog.ts";
   import TitleScreen from "./screens/TitleScreen.svelte";
   import {
@@ -217,21 +217,24 @@
   ) {
     catalogByCode = new Map(activeCatalog().map((c) => [c.code, c]));
   }
-  $: sellableCards = Object.entries(state.collection).map(
-    ([codeKey, owned]) => {
-      const code = Number(codeKey);
-      const view = catalogByCode.get(code);
-      const rarity = resolveCardRarity(code, shopData, view);
-      return {
-        code,
-        owned,
-        name: shopNameByCode.get(code) ?? view?.name ?? `#${code}`,
-        imageUrl: view?.imageUrl ?? null,
-        rarity,
-        unitPriceDp: SELL_PRICE_DP[rarity],
-      };
-    },
-  );
+  /* Null until the shop data is in hand: rarity decides what a card sells
+     for, and resolving it without that data degrades every unknown card to
+     `common`. A sale is irreversible, so the screen waits rather than pays
+     the floor price for a ghost rare. */
+  $: sellableCards =
+    shopData === null
+      ? null
+      : Object.entries(state.collection).map(([codeKey, owned]) => {
+          const code = Number(codeKey);
+          const view = catalogByCode.get(code);
+          return {
+            code,
+            owned,
+            name: shopNameByCode.get(code) ?? view?.name ?? `#${code}`,
+            imageUrl: view?.imageUrl ?? null,
+            rarity: resolveCardRarity(code, shopData, view),
+          };
+        });
   $: boosterTotal = Object.values(state.boosters).reduce((a, b) => a + b, 0);
   $: shopNameByCode = new Map(
     (shopData?.sets ?? []).flatMap((s) =>
@@ -282,6 +285,28 @@
     } finally {
       shopDataLoading = false;
     }
+  }
+
+  /** Opens only what the loaded data can fill. A pick naming a set with no
+      contents — a tampered save, or a data file that dropped the set — grants
+      nothing, so its packs stay on the shelf instead of being spent on a
+      reveal that has no cards in it. */
+  function openPicks(
+    picks: readonly { readonly setId: string; readonly count: number }[],
+    mode: "sequential" | "all",
+  ): void {
+    boosterDialogOpen = false;
+    const data = shopData;
+    if (data === null) return;
+    const contents = (setId: string) => contentsOf(data, setId);
+    const openable = openablePicks(picks, contents);
+    if (openable.length === 0) return;
+    dispatch({
+      type: "open-boosters",
+      picks: openable,
+      mode,
+      cards: openBoosters(openable, contents, Math.random),
+    });
   }
 
   function go(screen: StoryScreen): void {
@@ -656,7 +681,12 @@
   {:else if state.screen === "shop-sell"}
     <ShopSellScreen
       cards={sellableCards}
+      error={shopDataError}
       onsell={(items) => dispatch({ type: "sell-cards", items })}
+      onretry={() => {
+        shopDataError = null;
+        void loadShopData();
+      }}
       onback={() => dispatch({ type: "shop-navigate", to: "greeting" })}
     />
   {:else if state.screen === "shop-opening"}
@@ -752,32 +782,8 @@
     <BoosterInventoryDialog
       boosters={state.boosters}
       setNameOf={(id) => shopData!.sets.find((s) => s.id === id)?.name ?? id}
-      onopen={(picks) => {
-        boosterDialogOpen = false;
-        dispatch({
-          type: "open-boosters",
-          picks,
-          mode: "sequential",
-          cards: openBoosters(
-            picks,
-            (setId) => contentsOf(shopData!, setId),
-            Math.random,
-          ),
-        });
-      }}
-      onopenall={(picks) => {
-        boosterDialogOpen = false;
-        dispatch({
-          type: "open-boosters",
-          picks,
-          mode: "all",
-          cards: openBoosters(
-            picks,
-            (setId) => contentsOf(shopData!, setId),
-            Math.random,
-          ),
-        });
-      }}
+      onopen={(picks) => openPicks(picks, "sequential")}
+      onopenall={(picks) => openPicks(picks, "all")}
       onclose={() => {
         boosterDialogOpen = false;
       }}

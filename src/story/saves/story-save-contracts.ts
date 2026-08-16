@@ -6,6 +6,7 @@
 
 import { PROLOGUE } from "../content/prologue.ts";
 import {
+  createInitialStoryState,
   STORY_SCREENS,
   type StoryScreen,
   type StoryState,
@@ -196,8 +197,30 @@ export function migrateStorySaveState(
   if (typeof raw !== "object" || raw === null || Array.isArray(raw))
     return null;
   const candidate =
-    schemaVersion === 1 ? { ...economyDefaults(), ...raw } : raw;
+    schemaVersion === 1 ? withCardShop({ ...economyDefaults(), ...raw }) : raw;
   return isStoryState(candidate) ? candidate : null;
+}
+
+/** The map a save written before the shop existed carries, plus the node it
+    could not have known about. Appended rather than rebuilt, so every node the
+    player already opened keeps the state they left it in — and a record that
+    somehow already has the shop is left exactly as it is. */
+function withCardShop(state: Record<string, unknown>): Record<string, unknown> {
+  const locations = state["locations"];
+  if (!Array.isArray(locations)) return state;
+  const hasCardShop = locations.some(
+    (location) =>
+      typeof location === "object" &&
+      location !== null &&
+      (location as Record<string, unknown>)["id"] === "card-shop",
+  );
+  if (hasCardShop) return state;
+  const cardShop = createInitialStoryState().locations.find(
+    ({ id }) => id === "card-shop",
+  );
+  return cardShop === undefined
+    ? state
+    : { ...state, locations: [...locations, cardShop] };
 }
 
 export function summarizeStorySave(
@@ -260,8 +283,8 @@ function isEconomy(state: Record<string, unknown>): boolean {
   ]);
   return (
     isCount(state.dp) &&
-    isCountRecord(state.boosters) &&
-    isCountRecord(state.collection) &&
+    isCountRecord(state.boosters, isSetIdKey) &&
+    isCountRecord(state.collection, isCardCodeKey) &&
     (state.shopReturnScreen === null ||
       (typeof state.shopReturnScreen === "string" &&
         screens.has(state.shopReturnScreen))) &&
@@ -283,13 +306,32 @@ function isEconomy(state: Record<string, unknown>): boolean {
   );
 }
 
-function isCountRecord(value: unknown): boolean {
+/* Keys as well as values: an inventory is a record, and a key outside its
+   own vocabulary is a record the screens cannot render. `Number("a")` is
+   `NaN`, and two such keys collide into one `NaN` row, which takes the sell
+   screen down mid-visit rather than at the door. */
+function isCountRecord(
+  value: unknown,
+  isKey: (key: string) => boolean,
+): boolean {
   return (
     typeof value === "object" &&
     value !== null &&
     !Array.isArray(value) &&
-    Object.values(value).every(isCount)
+    Object.entries(value).every(([key, count]) => isKey(key) && isCount(count))
   );
+}
+
+/** A card code, written the one way `Object.keys` gives it back. */
+function isCardCodeKey(key: string): boolean {
+  const code = Number(key);
+  return Number.isSafeInteger(code) && code >= 0 && String(code) === key;
+}
+
+/** A shop set id. Unknown ids are refused when a pack is opened rather than
+    here: a data file that drops a set must not cost a player their save. */
+function isSetIdKey(key: string): boolean {
+  return key.length > 0;
 }
 
 function hasExactKeys(value: object, expected: readonly string[]): boolean {

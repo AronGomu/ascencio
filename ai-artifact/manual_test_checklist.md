@@ -148,15 +148,16 @@ The three modules — `src/story/shop/data/shop-rarity.ts`, `src/story/shop/data
 - [ ] Run `npm run dev`, open `#/story`, start New Game, navigate to the map, open Card Shop, click through both shopkeeper beats
 - [ ] "Sell Cards" button is now **enabled** (not disabled, no tooltip); click it — the sell screen opens
 - [ ] Sell screen heading reads "Sell Cards" and a "← Back" button is visible
-- [ ] With no cards owned yet: a "No cards owned yet." message is shown; "Sell" confirm button is disabled
+- [ ] While the shop data is still loading the sell screen shows "Loading prices…" with no rows and no "Sell" button (T16 gating)
+- [ ] With no cards owned yet (data loaded): a "No cards owned yet." message is shown; "Sell" confirm button is disabled
 - [ ] Buy and open some packs to populate the collection; navigate back to the shop (Leave Shop → Card Shop)
 - [ ] Open the sell screen: owned cards appear as a grid of tiles with rarity halos (colours match T10 halo colours)
-- [ ] Each tile shows: card name, "Owned N" text, unit sell price in DP, −/+ stepper buttons
+- [ ] Each tile shows: card name, "Owned N" text, the rarity's sell price in DP (10/25/50/100/250/500/1000), −/+ stepper buttons
 - [ ] `−` button starts disabled (selection = 0); clicking `+` increments the readout; `+` disables at the owned count; `−` decrements and disables at 0
 - [ ] "Total: 0 DP" shown initially; total updates live as steppers are adjusted
 - [ ] "Sell" button is disabled while total is 0; enabling it by selecting ≥ 1 card
 - [ ] Select 2 of a common card (10 DP each) and 1 of a rare card (25 DP each): total reads "Total: 45 DP"
-- [ ] Click "Sell" — DP pill in the top bar rises by 45; sold items decrement in the grid; a card with 0 remaining disappears from the grid; steppers reset to 0
+- [ ] Click "Sell" — DP pill in the top bar rises by 45; sold items decrement in the grid; a card with 0 remaining disappears from the grid; steppers reset to 0 (the price paid comes from the rarity ladder in the reducer, not from the screen — T16)
 - [ ] Sell all copies of a card — that card's tile disappears from the grid after selling
 - [ ] Click "← Back" from the sell screen — returns to the shopkeeper greeting
 - [ ] Gear button (top-right) is accessible from the sell screen
@@ -207,3 +208,14 @@ Note: the build and Playwright e2e cannot run in this worktree (no generated/ sn
 - [ ] From sell → Back → greeting → Buy Cards → Metal Raiders → View card list → first buy button disabled/enabled matches DP value
 - [ ] `docs/GLOSSARY.md` Frontend table contains new rows: shop, dp, booster, collection, rarity, setdata, topbar
 - [ ] `scripts/lib/domain-chunk-closure.ts` has the updated story budget (115 000) with T15 comment and "shop prototype" reason
+
+## T16 review_fixes
+
+Note: the base-path check needs a build, which is blocked in this worktree (no generated/ snapshot). Run it from a machine with the full snapshot. Everything else runs under `npm run dev`.
+
+- [ ] `npm run build:app -- --base=/ygo-story-duel/` then `npm run preview -- --base=/ygo-story-duel/`: open the preview URL, reach Card Shop → Buy Cards — the set grid renders (no "Shop data unavailable" error block); DevTools → Network shows the request going to `/ygo-story-duel/story/shop-sets.v1.json`
+- [ ] Sell screen with no shop data: in DevTools → Network, set "Offline" and clear the `story-shop-data` cache (Application → Cache Storage), then open Card Shop → Sell Cards — the screen shows the error block with a "Retry" button and offers no rows and no "Sell" button; go back online, click "Retry" — rows appear priced by rarity
+- [ ] Pre-shop save resumes with a shop: in DevTools → Application → IndexedDB → `ygo-story-saves`, edit a `manual:1` record to `schemaVersion: 1` and delete the `card-shop` entry from `state.locations`; reload, Continue — the map shows the Card Shop hotspot and it is clickable
+- [ ] Tampered inventory is refused at the door: edit a save record's `state.collection` to `{"a": 1}`; reload — the title screen reports the slot as corrupt (storage alert names `manual:1`), New Game still plays, and no shop screen crashes
+- [ ] Tampered booster shelf does not crash the shop: edit a save record's `state.boosters` to `{"bogus": 3}`; reload, Continue, open the booster pill dialog, select the bogus packs and click "Open selected" — the dialog closes, nothing is opened, no blank screen, and the pack count is unchanged
+- [ ] Buy 10 packs of one set, open them all, then sell: DP and collection stay whole numbers (never negative, never `NaN`); reload and Continue — the save loads with the same DP and collection

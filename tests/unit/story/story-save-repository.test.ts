@@ -257,6 +257,33 @@ describe("createStorySaveRepository", () => {
       expect(read.envelope.state[key as keyof StoryState], key).toEqual(value);
   });
 
+  /* A save written before the shop existed carries a map with no shop on it.
+     Resuming that map as-is would leave the player funded with no way to
+     spend it, forever — the node only exists in states this build creates. */
+  it("gives a pre-shop map its card shop back", async () => {
+    const legacy = version1State();
+    legacy["locations"] = (
+      legacy["locations"] as readonly { readonly id: string }[]
+    ).filter(({ id }) => id !== "card-shop");
+    await seedRecord("manual:1", {
+      schemaVersion: 1,
+      slot: "manual:1",
+      revision: 1,
+      savedAt: 1,
+      state: legacy,
+    });
+    const read = await repository().read("manual:1");
+    if (read.kind !== "ready") throw new Error("expected a ready save");
+    expect(read.envelope.state.locations.map(({ id }) => id)).toEqual(
+      createInitialStoryState().locations.map(({ id }) => id),
+    );
+    expect(read.envelope.state.locations.at(-1)).toEqual({
+      id: "card-shop",
+      access: "available",
+      completed: false,
+    });
+  });
+
   /* Two version 1 saves must not come back sharing one inventory: a default
      handed out by reference would let a purchase in one slot appear in the
      other. */
@@ -462,6 +489,51 @@ describe("createStorySaveRepository", () => {
         "corrupt",
       );
     }
+  });
+
+  /* The collection is keyed by card code and the boosters by set id. A record
+     whose keys are neither — tampered with, or written by a build that never
+     existed — parses as a state the screens then render `Number("a")` from,
+     which duplicates keys and takes the shop down mid-visit. It has to read
+     as corrupt at the door instead. */
+  it("reports an inventory with unusable keys as corrupt", async () => {
+    const saves = repository();
+    const valid = createInitialStoryState();
+    const invalidStates: readonly unknown[] = [
+      { ...valid, collection: { a: 1 } },
+      { ...valid, collection: { "01": 1 } },
+      { ...valid, collection: { "1.5": 1 } },
+      { ...valid, collection: { "-2": 1 } },
+      { ...valid, boosters: { "": 2 } },
+    ];
+    for (const state of invalidStates) {
+      await seedRecord("manual:1", {
+        schemaVersion: 2,
+        slot: "manual:1",
+        revision: 1,
+        savedAt: 1,
+        state,
+      });
+      expect((await saves.read("manual:1")).kind, JSON.stringify(state)).toBe(
+        "corrupt",
+      );
+    }
+  });
+
+  it("keeps a canonical inventory readable", async () => {
+    const saves = repository();
+    await seedRecord("manual:1", {
+      schemaVersion: 2,
+      slot: "manual:1",
+      revision: 1,
+      savedAt: 1,
+      state: {
+        ...createInitialStoryState(),
+        collection: { 89631139: 2 },
+        boosters: { "metal-raiders": 1 },
+      },
+    });
+    expect((await saves.read("manual:1")).kind).toBe("ready");
   });
 
   it("keeps a corrupt record out of the slot listing without failing the list", async () => {

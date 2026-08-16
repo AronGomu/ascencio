@@ -72,6 +72,36 @@ describe("BoosterOpening", () => {
     expect(byId["b"]).toBe(1);
   });
 
+  it("open selected is enabled with selection and hands picks to onopen", async () => {
+    const user = userEvent.setup();
+    const onopen = vi.fn();
+    const { container } = render(BoosterInventoryDialog, {
+      boosters: { lob: 3 },
+      setNameOf: (id: string) => id,
+      onopen,
+    });
+
+    const openSelectedBtn = container.querySelector(
+      '[data-cy="story-shop-open-selected"]',
+    ) as HTMLButtonElement;
+    expect(openSelectedBtn.disabled).toBe(true);
+
+    const plusBtn = container.querySelector(
+      '[data-cy="story-shop-booster-plus-lob"]',
+    ) as HTMLButtonElement;
+    await user.click(plusBtn);
+    await user.click(plusBtn);
+    expect(openSelectedBtn.disabled).toBe(false);
+
+    await user.click(openSelectedBtn);
+    expect(onopen).toHaveBeenCalledOnce();
+    const [picks] = onopen.mock.calls[0] as [
+      { setId: string; count: number }[],
+    ];
+    expect(picks).toHaveLength(1);
+    expect(picks[0]).toMatchObject({ setId: "lob", count: 2 });
+  });
+
   it("results list opened cards with halos", async () => {
     const oncontinue = vi.fn();
     const fakeCards = Array.from({ length: 5 }, (_, i) => ({

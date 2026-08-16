@@ -434,6 +434,24 @@ describe("story state model", () => {
     expect(next).toBe(shopBrowse);
   });
 
+  it("finish-opening reaches the recap", () => {
+    const opening = {
+      ...createInitialStoryState(),
+      screen: "shop-opening" as const,
+      openedCards: [{ code: 1, rarity: "common" as const }],
+      openingMode: "sequential" as const,
+    };
+    const next = reduceStory(opening, { type: "finish-opening" });
+    expect(next.screen).toBe("shop-results");
+    expect(next.openedCards).toBe(opening.openedCards);
+    expect(next.openingMode).toBe(opening.openingMode);
+  });
+
+  it("finish-opening elsewhere is refused", () => {
+    const map = { ...createInitialStoryState(), screen: "map" as const };
+    expect(reduceStory(map, { type: "finish-opening" })).toBe(map);
+  });
+
   it("acknowledge clears the recap", () => {
     const results = {
       ...createInitialStoryState(),

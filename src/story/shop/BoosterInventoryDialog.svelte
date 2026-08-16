@@ -17,6 +17,7 @@
 
   $: entries = Object.entries(boosters);
   $: totalOwned = Object.values(boosters).reduce((a, b) => a + b, 0);
+  $: selectedTotal = Object.values(selection).reduce((a, b) => a + b, 0);
 
   function decrement(setId: string): void {
     const v = selection[setId] ?? 0;
@@ -77,8 +78,13 @@
       type="button"
       class="secondary"
       data-cy="story-shop-open-selected"
-      disabled
-      title="Coming in a later slice">Open selected</button
+      disabled={selectedTotal < 1}
+      onclick={() => {
+        const picks = Object.entries(selection)
+          .filter(([, n]) => n > 0)
+          .map(([setId, count]) => ({ setId, count }));
+        onopen(picks);
+      }}>Open selected</button
     >
     <button
       type="button"

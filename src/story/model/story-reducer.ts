@@ -53,6 +53,7 @@ export type StoryCommand =
       readonly mode: "sequential" | "all";
     }
   | { readonly type: "acknowledge-opened" }
+  | { readonly type: "finish-opening" }
   | { readonly type: "reset" };
 
 export function reduceStory(
@@ -258,6 +259,9 @@ export function reduceStory(
         openedCards: null,
         openingMode: null,
       };
+    case "finish-opening":
+      if (state.screen !== "shop-opening") return state;
+      return { ...state, screen: "shop-results" };
     case "reset":
       return createInitialStoryState();
   }

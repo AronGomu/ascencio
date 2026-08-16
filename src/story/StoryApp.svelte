@@ -35,6 +35,7 @@
   import ShopCardListScreen from "./shop/ShopCardListScreen.svelte";
   import ShopGreetingScreen from "./shop/ShopGreetingScreen.svelte";
   import BoosterInventoryDialog from "./shop/BoosterInventoryDialog.svelte";
+  import BoosterOpeningScreen from "./shop/BoosterOpeningScreen.svelte";
   import BoosterResultsScreen from "./shop/BoosterResultsScreen.svelte";
   import {
     contentsOf,
@@ -634,7 +635,12 @@
         dispatch({ type: "buy-single", code, rarity })}
       onback={() => dispatch({ type: "shop-navigate", to: "browse" })}
     />
-  {:else if state.screen === "shop-results" || state.screen === "shop-opening"}
+  {:else if state.screen === "shop-opening"}
+    <BoosterOpeningScreen
+      cards={openedCardViews}
+      onfinish={() => dispatch({ type: "finish-opening" })}
+    />
+  {:else if state.screen === "shop-results"}
     <BoosterResultsScreen
       cards={openedCardViews}
       oncontinue={() => dispatch({ type: "acknowledge-opened" })}
@@ -722,6 +728,19 @@
     <BoosterInventoryDialog
       boosters={state.boosters}
       setNameOf={(id) => shopData!.sets.find((s) => s.id === id)?.name ?? id}
+      onopen={(picks) => {
+        boosterDialogOpen = false;
+        dispatch({
+          type: "open-boosters",
+          picks,
+          mode: "sequential",
+          cards: openBoosters(
+            picks,
+            (setId) => contentsOf(shopData!, setId),
+            Math.random,
+          ),
+        });
+      }}
       onopenall={(picks) => {
         boosterDialogOpen = false;
         dispatch({

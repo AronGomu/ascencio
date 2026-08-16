@@ -130,7 +130,7 @@ The three modules — `src/story/shop/data/shop-rarity.ts`, `src/story/shop/data
 - [ ] Click the chip — the Booster Inventory dialog opens with the heading "Boosters"
 - [ ] Dialog lists each owned set with its name, owned count (e.g. "Legend of Blue-Eyes White Dragon — 3 owned"), and −/+ stepper buttons
 - [ ] `−` button starts disabled (selection=0); clicking `+` increments the readout up to owned count; `+` disables at the owned cap; `−` decrements and disables at 0
-- [ ] "Open selected" button is permanently disabled with tooltip "Coming in a later slice"
+- [ ] "Open selected" button is **disabled when no packs are selected** (no selection = stepper readout is 0); selecting ≥ 1 pack with the stepper enables it (T12 wired this)
 - [ ] "Open All" button is enabled when any packs are owned; disabled when inventory is empty
 - [ ] Click "Open All" — dialog closes and the results screen appears
 - [ ] Results screen heading reads "You opened N cards" where N = total packs × 9 (e.g. 3 packs → 27 cards)
@@ -142,3 +142,21 @@ The three modules — `src/story/shop/data/shop-rarity.ts`, `src/story/shop/data
 - [ ] Collection grew: open the deck builder or DevTools → Application → IndexedDB → story-saves → inspect state.collection for incremented card codes
 - [ ] Close dialog with "Close" button or Escape — returns to the shop browse screen without opening packs
 - [ ] Buy packs from two different sets; booster chip shows combined total; dialog lists both sets with correct per-set counts; Open All sends all packs at once
+
+## T12 sequential_opening
+
+- [ ] Run `npm run dev`, open `#/story`, start New Game, reach Card Shop, buy at least 2 packs (e.g. 2 × "Legend of Blue-Eyes White Dragon")
+- [ ] Open the Booster Inventory dialog via the chip in the top bar; "Open selected" is disabled (stepper at 0)
+- [ ] Click `+` twice to select 2 packs; "Open selected" becomes enabled
+- [ ] Click "Open selected" — dialog closes and the **opening screen** (not results) appears
+- [ ] Opening screen shows "Pack 1 of 1" initially (no cards revealed, face-down stack visible)
+- [ ] Click anywhere on the stage — first card tile appears with a rarity halo and the card name; progress still reads "Pack 1 of 1"
+- [ ] Continue clicking; each click reveals one more card tile with the flip animation (card rotates in from 90 °)
+- [ ] After 9 clicks (pack complete), progress updates to "Pack 2 of 1" is NOT shown (only 1 pack) OR if 2 packs bought, after 9 clicks it reads "Pack 2 of 2"
+- [ ] After all 18 cards are revealed (2 packs × 9): a "See results" button appears, face-down stack is hidden
+- [ ] Click "See results" — transitions to the results recap screen showing all 18 cards; count in heading reads "You opened 18 cards"
+- [ ] Click "Continue" on results — returns to shop browse; booster chip updated (reduced or gone)
+- [ ] **Skip path**: repeat opening with 1 pack; after revealing 3 cards click "Skip" — immediately transitions to results (remaining cards shown, no more click-reveals)
+- [ ] **Keyboard**: focus the opening screen (Tab to the main area); press Enter or Space — advances one card per keypress
+- [ ] **Reduced motion**: set OS/browser `prefers-reduced-motion: reduce`; open selected packs — cards appear instantly without the flip animation; all other functionality identical
+- [ ] "Open All" still works as before: opens all packs at once and skips directly to results recap

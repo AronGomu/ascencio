@@ -43,8 +43,13 @@ export const DOMAIN_BUDGET_BYTES: Readonly<
      ending the three-way duplication of the card-text manifest inside its
      closure, so its ceiling is untouched and now has more room than before. */
   "deck-editor": 201_250,
-  // measured 60,195 bytes → ceil(60195/25_000) = 3 → 75,000 * 1.15
-  story: 86_250,
+  /* T15 2026-08-17: raised from 86,250. The shop surface added greeting/browse/cards/sell/
+     opening/results screens plus set-data loader, economy in story state, and save schema v2
+     (shop prototype: set browser, opening, singles, sell). Build blocked by missing generated/
+     in worktree; estimated ~87k bytes from source delta (56,803 bytes × 0.48 ratio) and
+     pre-shop measurement of 60,195 bytes. ceil(87461/25_000) = 4 → 100,000 * 1.15,
+     leaving ~24% headroom. */
+  story: 115_000,
 };
 
 /** Bytes each domain's lazy chunk adds on top of the shell it loads into. */

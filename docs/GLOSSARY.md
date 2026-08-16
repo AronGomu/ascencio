@@ -14,6 +14,13 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 | duel simulator | Production battle UI plus Worker-owned rules runtime | `src/battle/app/`, `src/battle/duel/`, `src/battle/field/`, `src/battle/worker/` |
 | deck editor | Local deck library/editor domain; currently integrated as isolated prototype | `src/decks/`, `src/prototypes/deck-builder/` |
 | visual novel | Narrative/map/campaign domain reached at `#/story` | `src/story/` |
+| shop | Story card shop: keeper, 50-set browser, packs, singles, sell | `src/story/shop/` |
+| dp | Duel-point wallet, starts at 1000 | `StoryState.dp`, ADR-033 |
+| booster | Unopened pack count per shop set | `StoryState.boosters`, `src/story/shop/data/pack-generator.ts` |
+| collection | Owned card counts by card code | `StoryState.collection` |
+| rarity | Printed rarity from set data, inference fallback, halo colors | `src/story/shop/data/shop-set-data.ts`, ADR-035 |
+| setdata | First-50-sets JSON asset + offline-cached loader | `public/story/shop-sets.v1.json`, `src/story/shop/data/shop-set-data.ts` |
+| topbar | Story DP/shop/deck strip on narrative, map, shop | `src/story/components/StoryTopBar.svelte` |
 | facade | Narrow domain-owned public lifecycle/contract boundary used by shell | future `src/battle/index.ts`, `src/decks/index.ts`, `src/story/index.ts` |
 | store | Typed duel view state store + reducer | `src/battle/app/stores/duel-store.ts` (`createDuelStore`, `reduceDuelViewState`, `DuelViewState`) |
 | client | Main-thread typed Worker client/port | `src/battle/app/DuelWorkerClient.ts` (`DuelWorkerClient`, `DuelWorkerPort`) |

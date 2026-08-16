@@ -192,3 +192,18 @@ Note: these steps require the image pipeline to have run (`npm run assets:images
 - [ ] Cards whose codes returned 404 from YGOPRODeck continue to show the placeholder tile (no broken images)
 - [ ] Open a different set (e.g. Metal Raiders) — same: real art where available, placeholder where not
 - [ ] Buy a pack and open it — cards from shop sets show art in the opening screen the same as in set-list tiles
+
+## T15 budget_e2e_glossary
+
+Note: the build and Playwright e2e cannot run in this worktree (no generated/ snapshot). Run from a machine with the full snapshot. The budget formula and glossary additions are verifiable in any environment.
+
+- [ ] `npm run build` completes without a budget assertion failure for the story domain
+- [ ] The story domain budget reported in the build output (`chunkBytes.story`) is below 115 000 bytes
+- [ ] `npx vitest run tests/unit/domain-chunk-closure.test.ts` passes; the "satisfies every domain budget with at least 10% headroom" case is not skipped (requires a built dist/)
+- [ ] `npx playwright test e2e/story-shop.spec.ts` — Chromium passes the full shop loop test
+- [ ] During the Playwright run: New Game → prologue → map → Card Shop hotspot → greeting (2 beats) → Buy Cards → Metal Raiders → Buy 10 → DP pill reads "0 DP"
+- [ ] Booster pill reads "10 packs" → Open All → results screen shows exactly 90 card tiles → Continue
+- [ ] Back on browse → Back → greeting → Sell Cards → "+" on first card → Sell → DP pill > 0 DP
+- [ ] From sell → Back → greeting → Buy Cards → Metal Raiders → View card list → first buy button disabled/enabled matches DP value
+- [ ] `docs/GLOSSARY.md` Frontend table contains new rows: shop, dp, booster, collection, rarity, setdata, topbar
+- [ ] `scripts/lib/domain-chunk-closure.ts` has the updated story budget (115 000) with T15 comment and "shop prototype" reason

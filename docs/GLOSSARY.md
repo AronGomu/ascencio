@@ -28,11 +28,11 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 | presentation | Event → DOM feedback commands, scheduler | `src/battle/app/presentation/presentation-command.ts` (`PresentationScheduler`) |
 | feedback | Non-authoritative CSS/SVG field feedback state | `src/battle/app/presentation/dom-feedback-controller.ts`, `src/battle/app/components/duel-field/FieldLines.svelte` |
 | log | Duel event log formatting + panel | `src/battle/app/presentation/format-duel-log-entry.ts`, `src/battle/app/components/duel-field/DuelLog.svelte` |
-| preview | Sticky card art + bounded scroll text column; shared duel/editor component | `src/battle/app/components/CardPreviewPanel.svelte` (planned move → `src/shell/card-preview/`, ADR-033), `src/battle/app/presentation/card-preview.ts` |
-| default deck | Player-assigned deck the duel menu auto-selects; stored preference | planned `preferences["default-deck"]` in `src/decks/indexeddb-deck-repository.ts`, ADR-035 |
-| starter deck | Seeded "Starter Deck" built from bundled `player.ydk`, default on first run | planned `src/decks/starter-deck.ts` (`ensureStarterDeck`), ADR-035 |
-| autosave log | Global capped-100 list of membership deck edits (timestamp + deck name) | planned `autosaves` store, `src/decks/deck-database.ts` v2, ADR-035 |
-| load dialog | Editor dialog: saved decks tab + autosave log tab, restore = undoable edit | planned `src/deck-editor/components/LoadDeckDialog.svelte` |
+| preview | Sticky card art + bounded scroll text column; shared duel/editor component | `src/shell/card-preview/CardPreviewPanel.svelte` (ADR-033), `src/battle/app/presentation/card-preview.ts` |
+| default deck | Player-assigned deck the duel menu auto-selects; stored preference | `preferences["default-deck"]` in `src/decks/indexeddb-deck-repository.ts`, ADR-035 |
+| starter deck | Seeded "Starter Deck" built from bundled `player.ydk`, default on first run | `src/decks/starter-deck.ts` (`ensureStarterDeck`), ADR-035 |
+| autosave log | Global capped-100 list of membership deck edits (timestamp + deck name) | `autosaves` store, `src/decks/deck-database.ts` v2, ADR-035 |
+| load dialog | Editor dialog: saved decks tab + autosave log tab, restore = undoable edit | `src/deck-editor/components/LoadDeckDialog.svelte` |
 | library halo | Green/orange/red validity glow + tooltip on deck-library rows | planned `DeckLibrary.svelte` `.halo-*`, feedback Menu-3 |
 | manual order | No auto-sort; cards sit where dropped; reorder/sort commands are position-only and history-blind | `src/decks/deck-model.ts` (`reorder`, `sort` planned), ADR-034 |
 | rail | Right-side LP, turn, phase, status column | planned `src/battle/app/components/DuelRail.svelte`, `docs/ADR/019_ADR_full_height_duel_shell_and_pixel_geometry.md` |

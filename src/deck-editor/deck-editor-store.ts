@@ -530,10 +530,14 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
     const existing = await this.#repository
       .load(entry.deckId)
       .catch(() => null);
+    /* Restoring into whatever deck happens to be open would overwrite it with
+       another deck's cards, so a failed open or create stops here and leaves
+       its own failure state standing. */
     if (existing !== null) {
       await this.openDeck(entry.deckId);
-    } else {
-      await this.createDeck(entry.deckName);
+      if (get(this.#state).current?.deck.id !== entry.deckId) return;
+    } else if (!(await this.createDeck(entry.deckName))) {
+      return;
     }
     await this.mutate({
       type: "restore",

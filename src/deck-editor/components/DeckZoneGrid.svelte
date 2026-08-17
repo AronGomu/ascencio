@@ -181,6 +181,13 @@
     cursor: pointer;
   }
 
+  /* `all: unset` drops the user-agent focus ring, and being an author
+     declaration it also beats the global one in `app.css`. */
+  header button:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 3px;
+  }
+
   h3 {
     margin: 0;
     font-size: 0.94rem;

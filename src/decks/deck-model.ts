@@ -116,6 +116,7 @@ export function applyDeckCommand(
       !Number.isInteger(command.from) ||
       command.from < 0 ||
       command.from >= zone.length ||
+      !Number.isInteger(command.to) ||
       command.to < 0
     )
       return Object.freeze({

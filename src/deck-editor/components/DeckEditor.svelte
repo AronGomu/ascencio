@@ -67,6 +67,7 @@
   let tapped: { code: number; zone: DeckZone } | null = null;
   let tapOpener: HTMLElement | null = null;
   let showLoad = false;
+  let loadButton: HTMLButtonElement | null = null;
   let loadedAutosaves: readonly DeckAutosaveRecord[] = [];
 
   $: tabs = layoutMode === "tabs";
@@ -285,6 +286,14 @@
     showLoad = true;
   }
 
+  /* `loadButton` is null once the editor unmounts, so opening another deck
+     never fights the new view for focus. */
+  async function closeLoadDialog(): Promise<void> {
+    showLoad = false;
+    await tick();
+    loadButton?.focus();
+  }
+
   function handleKeydown(event: KeyboardEvent): void {
     const target = event.target as HTMLElement | null;
     const editingText =
@@ -358,6 +367,7 @@
       type="button"
       class="secondary"
       data-cy="deck-editor-load"
+      bind:this={loadButton}
       onclick={() => void openLoadDialog()}>Load</button
     >
   </header>
@@ -531,14 +541,14 @@
       decks={state.decks}
       autosaves={loadedAutosaves}
       onopendeck={(id) => {
-        showLoad = false;
+        void closeLoadDialog();
         onopendeckbyid(id);
       }}
       onrestore={(entry) => {
-        showLoad = false;
+        void closeLoadDialog();
         onrestoreautosave(entry);
       }}
-      oncancel={() => (showLoad = false)}
+      oncancel={() => void closeLoadDialog()}
     />
   {/if}
 {/if}

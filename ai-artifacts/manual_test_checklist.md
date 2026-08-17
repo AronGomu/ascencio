@@ -1167,6 +1167,7 @@ Collapse / expand controls
 - [ ] Click the toggle again — the zone collapses; toggle arrow returns to "▸".
 - [ ] Confirm the same expand/collapse works for Main Deck and Extra Deck.
 - [ ] Confirm each toggle button reports its state to assistive technology (`aria-expanded` flips between "true" and "false").
+- [ ] Tab to a zone toggle with the keyboard — a visible focus ring surrounds the toggle, and Enter/Space collapses or expands the zone.
 
 Growing main grid
 
@@ -1306,6 +1307,7 @@ Buttons gone
 - [ ] Open a deck in the editor. A "Load" button is visible in the header next to Redo.
 - [ ] Click "Load". A modal dialog appears with two tabs: "Your decks" and "Autosaves".
 - [ ] Press Escape. The dialog closes.
+- [ ] Tab to the "Load" button and press Enter — the dialog opens with focus already inside it, Escape closes it without tabbing first, and focus returns to the "Load" button.
 - [ ] The backdrop (dim overlay) covers the page while the dialog is open.
 
 ### Your decks tab

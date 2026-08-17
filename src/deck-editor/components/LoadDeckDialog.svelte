@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import { handleModalKeydown } from "../focus-trap.ts";
   import type {
     DeckAutosaveRecord,
@@ -13,6 +14,12 @@
   export let oncancel: () => void;
 
   let tab: "decks" | "autosaves" = "decks";
+  let dialog: HTMLElement;
+
+  /* The dialog renders after the editor layout, so without this a keyboard user
+     would have to tab through the whole catalog to reach it, and Escape would
+     do nothing until they got there. */
+  onMount(() => dialog.focus());
 </script>
 
 <div
@@ -20,9 +27,13 @@
   role="dialog"
   aria-modal="true"
   tabindex="-1"
+  aria-labelledby="load-deck-dialog-heading"
   data-cy="load-deck-dialog"
+  bind:this={dialog}
   onkeydown={(e) => handleModalKeydown(e, oncancel)}
 >
+  <h2 id="load-deck-dialog-heading" data-cy="load-dialog-heading">Load deck</h2>
+
   <div
     class="tabs"
     role="tablist"
@@ -112,6 +123,11 @@
     background: var(--surface);
     box-shadow: 0 1.5rem 5rem color-mix(in srgb, var(--shadow) 55%, transparent);
     overflow: hidden;
+  }
+
+  h2 {
+    margin: 0 0 0.7rem;
+    font-size: 1rem;
   }
 
   .tabs {

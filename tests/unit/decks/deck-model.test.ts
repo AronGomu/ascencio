@@ -201,6 +201,17 @@ describe("deck editing model", () => {
     ).toEqual({ type: "rejected", reason: "Nothing to reorder." });
   });
 
+  it("reorder rejects a fractional target index", () => {
+    expect(
+      applyDeckCommand(
+        { main: [89631139, 12580477], extra: [], side: [] },
+        { type: "reorder", zone: "main", from: 0, to: 1.5 },
+        catalog,
+        PROTOTYPE_RULESET,
+      ),
+    ).toEqual({ type: "rejected", reason: "Nothing to reorder." });
+  });
+
   it("sort type groups monsters, spells then traps alphabetically", () => {
     const result = applyDeckCommand(
       { main: [44095762, 12580477, 89631139], extra: [], side: [] },

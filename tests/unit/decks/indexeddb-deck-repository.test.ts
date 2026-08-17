@@ -359,3 +359,68 @@ describe("the deck autosave log", () => {
     reopened.close();
   });
 });
+
+describe("the default deck preference", () => {
+  it("setDefaultDeck persists and getDefaultDeck reads it back", async () => {
+    const repo = await repository("deck-repo-default-round-trip");
+    const deck = createBlankDeck("Default", catalog, PROTOTYPE_RULESET, {
+      id: "defaulted",
+    });
+    await repo.create(deck, emptyDeckHistory());
+    expect(await repo.getDefaultDeck()).toBeNull();
+    await repo.setDefaultDeck(deck.id);
+    expect(await repo.getDefaultDeck()).toBe(deck.id);
+    await repo.setDefaultDeck(null);
+    expect(await repo.getDefaultDeck()).toBeNull();
+    repo.close();
+  });
+
+  /* A default pointing at a deck that is gone is a deck picker offering
+     nothing, so the delete that removes the deck removes the preference. */
+  it("deleting the default deck clears the preference", async () => {
+    const repo = await repository("deck-repo-default-cleared-on-delete");
+    const deck = createBlankDeck("Doomed", catalog, PROTOTYPE_RULESET, {
+      id: "doomed",
+    });
+    const created = await repo.create(deck, emptyDeckHistory());
+    await repo.setDefaultDeck(deck.id);
+    await repo.delete(deck.id, created.deck.revision);
+    expect(await repo.getDefaultDeck()).toBeNull();
+    repo.close();
+  });
+
+  /* A row can outlive its deck when storage is edited outside the repository,
+     so the read verifies the deck rather than trusting the preference. */
+  it("reads a default naming a deck that is gone as none set", async () => {
+    const name = "deck-repo-default-dangling";
+    const repo = await repository(name);
+    repo.close();
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open(name, DECK_DATABASE_VERSION);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const transaction = database.transaction("preferences", "readwrite");
+    transaction
+      .objectStore("preferences")
+      .put({ key: "default-deck", value: "vanished" });
+    await new Promise<void>((resolve, reject) => {
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+    database.close();
+
+    const reopened = await IndexedDbDeckRepository.open(name);
+    expect(await reopened.getDefaultDeck()).toBeNull();
+    reopened.close();
+  });
+
+  it("setDefaultDeck refuses a missing deck", async () => {
+    const repo = await repository("deck-repo-default-missing");
+    await expect(repo.setDefaultDeck(deckId("absent"))).rejects.toBeInstanceOf(
+      DeckStorageError,
+    );
+    expect(await repo.getDefaultDeck()).toBeNull();
+    repo.close();
+  });
+});

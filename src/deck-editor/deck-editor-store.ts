@@ -40,6 +40,8 @@ export interface DeckBuilderState {
   readonly current: StoredDeck | null;
   readonly saveState: "idle" | "saving" | "saved" | "failed" | "conflict";
   readonly message: string | null;
+  /** The deck a duel starts from, so the library can mark its row. */
+  readonly defaultDeckId: DeckId | null;
 }
 
 const INITIAL_STATE: DeckBuilderState = Object.freeze({
@@ -48,6 +50,7 @@ const INITIAL_STATE: DeckBuilderState = Object.freeze({
   current: null,
   saveState: "idle",
   message: null,
+  defaultDeckId: null,
 });
 
 export class DeckBuilderController implements Readable<DeckBuilderState> {
@@ -76,9 +79,10 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
   async initialize(): Promise<void> {
     const generation = this.#startContext();
     try {
-      const [storedDecks, lastOpened] = await Promise.all([
+      const [storedDecks, lastOpened, defaultDeckId] = await Promise.all([
         this.#repository.list(),
         this.#repository.getLastOpened(),
+        this.#repository.getDefaultDeck(),
       ]);
       const decks = storedDecks.map((deck) => this.#revalidateDeck(deck));
       let recoveryMessage: string | null = null;
@@ -109,6 +113,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           current,
           saveState: current === null ? "idle" : "saved",
           message: recoveryMessage,
+          defaultDeckId,
         }),
       );
     } catch (error) {
@@ -183,6 +188,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           current,
           saveState: "saved",
           message: null,
+          defaultDeckId: get(this.#state).defaultDeckId,
         }),
       );
       return true;
@@ -250,6 +256,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           current: committed,
           saveState: "saved",
           message: "Deck imported.",
+          defaultDeckId: get(this.#state).defaultDeckId,
         }),
       );
       return true;
@@ -269,6 +276,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
               current: committed,
               saveState: "saved",
               message: "Deck imported; library refresh failed.",
+              defaultDeckId: get(this.#state).defaultDeckId,
             }),
           );
         }
@@ -452,6 +460,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           current,
           saveState: "saved",
           message: "Deck duplicated.",
+          defaultDeckId: get(this.#state).defaultDeckId,
         }),
       );
     } catch (error) {
@@ -474,6 +483,19 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
         this.#fail("Deck could not be deleted", error);
     } finally {
       this.#deletesInFlight.delete(id);
+    }
+  }
+
+  /** Makes `id` the deck a duel starts from, then re-reads the library so the
+      badge and the disabled button follow storage rather than the click. */
+  async setDefaultDeck(id: DeckId): Promise<void> {
+    const generation = this.#startContext();
+    try {
+      await this.#repository.setDefaultDeck(id);
+      await this.#refreshLibrary(null, generation);
+    } catch (error) {
+      if (this.#isCurrentContext(generation))
+        this.#fail("Default deck could not be set", error);
     }
   }
 
@@ -689,9 +711,11 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
     generation = this.#contextGeneration,
   ): Promise<void> {
     try {
-      const decks = (await this.#repository.list()).map((deck) =>
-        this.#revalidateDeck(deck),
-      );
+      const [storedDecks, defaultDeckId] = await Promise.all([
+        this.#repository.list(),
+        this.#repository.getDefaultDeck(),
+      ]);
+      const decks = storedDecks.map((deck) => this.#revalidateDeck(deck));
       if (!this.#isCurrentContext(generation)) return;
       this.#state.set(
         Object.freeze({
@@ -700,6 +724,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           current: null,
           saveState: "idle",
           message,
+          defaultDeckId,
         }),
       );
     } catch (error) {

@@ -14,6 +14,7 @@
   } from "../decks/deck-contracts.ts";
   import { DeckMigrationError } from "../decks/index.ts";
   import { IndexedDbDeckRepository } from "../decks/indexeddb-deck-repository.ts";
+  import { ensureStarterDeck } from "../decks/starter-deck.ts";
   import {
     catalogByCode,
     PROTOTYPE_RULESET,
@@ -54,6 +55,7 @@
     current: null,
     saveState: "idle",
     message: null,
+    defaultDeckId: null,
   };
   let controller: DeckBuilderController | null = null;
   let showLibraryImport = false;
@@ -100,6 +102,10 @@
           return;
         }
         close = () => repository.close();
+        /* Before the controller reads storage, so a player arriving with no
+           decks sees the starter deck rather than an empty library. It never
+           throws, so a seeding failure cannot keep the editor from opening. */
+        await ensureStarterDeck(repository, catalog, PROTOTYPE_RULESET);
         controller = new DeckBuilderController(
           repository,
           catalog,
@@ -254,6 +260,8 @@
     ondelete={(deck) => controller?.deleteDeck(deck.id, deck.revision)}
     onexport={(deck) => openLibraryModal("export", deck)}
     onimport={() => openLibraryModal("import")}
+    defaultDeckId={state.defaultDeckId}
+    onsetdefault={(id) => void controller?.setDefaultDeck(id)}
   />
 {:else if state.current !== null && state.current.deck.id === deckId}
   <DeckEditor

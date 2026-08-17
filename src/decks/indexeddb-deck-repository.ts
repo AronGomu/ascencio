@@ -19,6 +19,7 @@ import { MAXIMUM_DECK_UPDATES } from "./deck-history.ts";
 import type { DeckRepository } from "./deck-repository.ts";
 
 const LAST_OPENED_KEY = "last-opened-deck";
+const DEFAULT_DECK_KEY = "default-deck";
 
 /* One migration per page load, shared by every caller: the deck editor and the
    admin console both open the repository and the copy must not run twice. A
@@ -245,11 +246,15 @@ export class IndexedDbDeckRepository implements DeckRepository {
         transaction.objectStore("decks").delete(id),
         transaction.objectStore("histories").delete(id),
       ]);
-      const preference = await transaction
-        .objectStore("preferences")
-        .get(LAST_OPENED_KEY);
-      if (preference?.value === id)
-        await transaction.objectStore("preferences").delete(LAST_OPENED_KEY);
+      /* Both preferences name a deck, so both follow it out of storage: a
+         default pointing at a deleted deck is a deck picker offering nothing. */
+      for (const key of [LAST_OPENED_KEY, DEFAULT_DECK_KEY]) {
+        const preference = await transaction
+          .objectStore("preferences")
+          .get(key);
+        if (preference?.value === id)
+          await transaction.objectStore("preferences").delete(key);
+      }
       await transaction.done;
     } catch (error) {
       await transaction.done.catch(() => undefined);
@@ -298,6 +303,52 @@ export class IndexedDbDeckRepository implements DeckRepository {
     } catch (error) {
       await transaction.done.catch(() => undefined);
       throw storageError("Unable to clear last-opened deck", error);
+    }
+  }
+
+  /* Read across both stores in one transaction: a default whose deck is gone
+     reads as none set, rather than as an id the caller then fails to load. */
+  async getDefaultDeck(): Promise<DeckId | null> {
+    const transaction = this.#database.transaction(
+      ["decks", "preferences"],
+      "readonly",
+    );
+    try {
+      const value = (
+        await transaction.objectStore("preferences").get(DEFAULT_DECK_KEY)
+      )?.value;
+      const deck =
+        value === undefined
+          ? undefined
+          : await transaction.objectStore("decks").get(value);
+      await transaction.done;
+      return value === undefined || deck === undefined ? null : deckId(value);
+    } catch (error) {
+      await transaction.done.catch(() => undefined);
+      throw storageError("Unable to read the default deck", error);
+    }
+  }
+
+  async setDefaultDeck(id: DeckId | null): Promise<void> {
+    const transaction = this.#database.transaction(
+      ["decks", "preferences"],
+      "readwrite",
+    );
+    try {
+      if (id === null)
+        await transaction.objectStore("preferences").delete(DEFAULT_DECK_KEY);
+      else {
+        if ((await transaction.objectStore("decks").get(id)) === undefined)
+          throw new DeckStorageError("Cannot default a missing deck");
+        await transaction.objectStore("preferences").put({
+          key: DEFAULT_DECK_KEY,
+          value: id,
+        });
+      }
+      await transaction.done;
+    } catch (error) {
+      await transaction.done.catch(() => undefined);
+      throw storageError("Unable to save the default deck", error);
     }
   }
 

@@ -18,6 +18,7 @@ function callbacks() {
     ondelete: vi.fn(),
     onexport: vi.fn(),
     onimport: vi.fn(),
+    onsetdefault: vi.fn(),
   };
 }
 
@@ -161,5 +162,33 @@ describe("DeckLibrary", () => {
     expect(screen.queryByRole("button", { name: /Other/ })).toBeNull();
     await userEvent.setup().click(matching);
     expect(values.onopen).toHaveBeenCalledWith(deck.id);
+  });
+
+  it("set default marks the row with the default badge", async () => {
+    const values = callbacks();
+    const deck = deckFixture();
+    const { rerender } = render(DeckLibrary, {
+      decks: [deck],
+      defaultDeckId: null,
+      ...values,
+    });
+    const badge = () =>
+      document.querySelector(
+        `[data-cy="deck-library-default-badge-${deck.id}"]`,
+      );
+    const setDefault = () =>
+      document.querySelector<HTMLButtonElement>(
+        `[data-cy="deck-library-set-default-${deck.id}"]`,
+      )!;
+    expect(badge()).toBeNull();
+    expect(setDefault().disabled).toBe(false);
+    await userEvent.setup().click(setDefault());
+    expect(values.onsetdefault).toHaveBeenCalledWith(deck.id);
+
+    /* The controller owns which deck is default, so the row only claims the
+       badge once the refreshed state says so. */
+    await rerender({ decks: [deck], defaultDeckId: deck.id, ...values });
+    expect(badge()?.textContent).toContain("Default");
+    expect(setDefault().disabled).toBe(true);
   });
 });

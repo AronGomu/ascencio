@@ -20,6 +20,9 @@ export interface DeckRepository {
   getLastOpened(): Promise<DeckId | null>;
   setLastOpened(id: DeckId): Promise<void>;
   clearLastOpened(expectedId?: DeckId): Promise<void>;
+  /** The deck a duel starts from; `null` when none is set or it is gone. */
+  getDefaultDeck(): Promise<DeckId | null>;
+  setDefaultDeck(id: DeckId | null): Promise<void>;
   appendAutosave(record: DeckAutosaveRecord): Promise<void>;
   /** The global autosave log, newest first. */
   listAutosaves(): Promise<readonly DeckAutosaveRecord[]>;

@@ -45,6 +45,13 @@ const NO_AUTOSAVE_LOG = {
   listAutosaves: async () => [],
 } satisfies Pick<DeckRepository, "appendAutosave" | "listAutosaves">;
 
+/* None of these cases is about the default deck, so every fake answers the
+   preference the way a fresh database does. */
+const NO_DEFAULT_DECK = {
+  getDefaultDeck: async () => null,
+  setDefaultDeck: async () => undefined,
+} satisfies Pick<DeckRepository, "getDefaultDeck" | "setDefaultDeck">;
+
 describe("deck autosave controller", () => {
   it("keeps local edits visible after failure then retries autosave", async () => {
     let stored: StoredDeck | null = null;
@@ -82,6 +89,7 @@ describe("deck autosave controller", () => {
         lastOpened = null;
       },
       ...NO_AUTOSAVE_LOG,
+      ...NO_DEFAULT_DECK,
     };
     const controller = new DeckBuilderController(
       repository,
@@ -147,6 +155,7 @@ describe("deck autosave controller", () => {
       setLastOpened: async () => undefined,
       clearLastOpened: async () => undefined,
       ...NO_AUTOSAVE_LOG,
+      ...NO_DEFAULT_DECK,
     };
     const controller = new DeckBuilderController(
       repository,
@@ -188,6 +197,7 @@ describe("deck autosave controller", () => {
       setLastOpened: async () => undefined,
       clearLastOpened: async () => undefined,
       ...NO_AUTOSAVE_LOG,
+      ...NO_DEFAULT_DECK,
     };
     const controller = new DeckBuilderController(
       repository,

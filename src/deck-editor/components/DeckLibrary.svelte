@@ -16,6 +16,9 @@
   export let ondelete: (deck: DeckRecord) => unknown | Promise<unknown>;
   export let onexport: (deck: DeckRecord) => void;
   export let onimport: () => void;
+  /** Which row wears the badge; the controller owns the value, not the click. */
+  export let defaultDeckId: DeckId | null = null;
+  export let onsetdefault: (id: DeckId) => void = () => undefined;
 
   let search = "";
   let sort: "modified" | "name" = "modified";
@@ -202,6 +205,12 @@
           >
             <strong data-cy={`deck-library-name-${deck.id}`}>{deck.name}</strong
             >
+            {#if deck.id === defaultDeckId}
+              <span
+                class="default-badge"
+                data-cy={`deck-library-default-badge-${deck.id}`}>Default</span
+              >
+            {/if}
             <span data-cy={`deck-library-counts-${deck.id}`}
               >Main {deck.main.length} · Extra {deck.extra.length} · Side {deck
                 .side.length}</span
@@ -223,6 +232,13 @@
                 renameName = deck.name;
                 void focusDialog();
               }}>Rename</button
+            >
+            <button
+              type="button"
+              class="secondary"
+              disabled={deck.id === defaultDeckId}
+              data-cy={`deck-library-set-default-${deck.id}`}
+              onclick={() => onsetdefault(deck.id)}>Set default</button
             >
             <button
               type="button"
@@ -528,6 +544,19 @@
 
   .deck-open:hover {
     background: var(--surface-raised);
+  }
+
+  /* Outranks the `.deck-open span` muted rule above, which every other line
+     inside the row button wants and this one does not. */
+  .deck-open .default-badge {
+    justify-self: start;
+    padding: 0.1rem 0.4rem;
+    color: var(--success);
+    border: 1px solid var(--success);
+    border-radius: 0.35rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 
   .deck-open.halo-valid {

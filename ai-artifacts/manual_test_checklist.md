@@ -1324,3 +1324,23 @@ Buttons gone
 
 - [ ] Create a deck, add a card, then delete the deck from the library. Open the Load dialog, switch to Autosaves, and click the entry for the deleted deck.
 - [ ] A new deck is created with the same name and the autosave's card lists.
+
+## T14 default-deck
+
+### Starter deck on a fresh install
+
+- [ ] Wipe site data for the app (DevTools → Application → Storage → "Clear site data"), then reload and open `#/decks`. Exactly one deck named "Starter Deck" is listed, and its row shows the "Default" badge.
+- [ ] Reload the page again. Still exactly one "Starter Deck" row — the seeding did not add a second one.
+- [ ] Open "Starter Deck". Its card list is the bundled player deck, and no "imported, needs review" banner is shown.
+
+### Setting the default
+
+- [ ] Create a second deck and return to the library. Its row has a "Set default" button; the Starter Deck row's "Set default" button is disabled.
+- [ ] Click "Set default" on the second deck. The "Default" badge moves to that row, its button becomes disabled, and the Starter Deck row's button becomes clickable again.
+- [ ] Reload the page. The badge is still on the second deck.
+
+### Deleting the default
+
+- [ ] Delete the deck that currently holds the "Default" badge. No remaining row shows a "Default" badge, and every remaining row's "Set default" button is clickable.
+- [ ] Reload the page. Because no deck is default any more, seeding runs again: it adopts the existing "Starter Deck" rather than creating a second one, so that row now carries the badge and the deck count is unchanged.
+- [ ] Delete every deck including "Starter Deck", then reload. A single fresh "Starter Deck" is seeded and marked default.

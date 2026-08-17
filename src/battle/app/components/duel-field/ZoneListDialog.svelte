@@ -53,14 +53,15 @@
   export let onpreview: (entry: ZoneListEntry) => void = noop;
   export let onclose: (event?: Event) => void = noop;
 
+  export let collapsed = false;
+  export let oncollapsedchange: (value: boolean) => void = () => undefined;
+
   let entriesElement: HTMLElement | null = null;
   let alphabetical = false;
-  let collapsed = false;
   let collapseButton: HTMLButtonElement | null = null;
   let expandButton: HTMLButtonElement | null = null;
 
   $: targetMode = mode === "target";
-  $: if (!targetMode) collapsed = false;
   $: sourceEntries = targetMode ? targetEntries : entries;
   $: alphabeticalAllowed = cardListAlphabeticalAllowed(sourceEntries);
   $: if (!alphabeticalAllowed) alphabetical = false;
@@ -86,7 +87,7 @@
   });
 
   async function setCollapsed(value: boolean): Promise<void> {
-    collapsed = value;
+    oncollapsedchange(value);
     await tick();
     (value ? expandButton : collapseButton)?.focus();
   }

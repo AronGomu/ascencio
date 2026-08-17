@@ -148,9 +148,19 @@ function renderTargetDialog(
   const onconfirm = vi.fn();
   const oncancel = vi.fn();
   const onclose = vi.fn();
+  const oncollapsedchange = vi.fn();
+  const ctx: {
+    rendered: ReturnType<typeof render<typeof ZoneListDialog>> | null;
+  } = { rendered: null };
+  const handleCollapsedChange = (value: boolean): void => {
+    oncollapsedchange(value);
+    ctx.rendered?.rerender({ collapsed: value });
+  };
   const rendered = render(ZoneListDialog, {
     mode: "target",
     stack: null,
+    collapsed: false,
+    oncollapsedchange: handleCollapsedChange,
     targetEntries: overrides.targetEntries ?? [targetEntry()],
     selectedChoiceIds: overrides.selectedChoiceIds ?? [],
     minimum: overrides.minimum ?? 1,
@@ -164,13 +174,21 @@ function renderTargetDialog(
     oncancel,
     onclose,
   });
-  return { rendered, ontargetchoice, onconfirm, oncancel, onclose };
+  ctx.rendered = rendered;
+  return {
+    rendered,
+    ontargetchoice,
+    onconfirm,
+    oncancel,
+    onclose,
+    oncollapsedchange,
+  };
 }
 
 describe("ZoneListDialog target mode", () => {
   it("renders target notice, collapse chrome, and mode state", async () => {
     const user = userEvent.setup();
-    renderTargetDialog({
+    const { oncollapsedchange } = renderTargetDialog({
       targetEntries: [
         targetEntry({ location: "deck", zoneBadge: "DECK" }),
         targetEntry({
@@ -210,6 +228,7 @@ describe("ZoneListDialog target mode", () => {
     );
     if (collapse === null) throw new Error("Missing collapse button");
     await user.click(collapse);
+    expect(oncollapsedchange).toHaveBeenCalledWith(true);
     expect(root?.dataset.collapsed).toBe("true");
     expect(
       document.querySelector('[data-cy="zone-list-dialog-title"]'),
@@ -223,6 +242,7 @@ describe("ZoneListDialog target mode", () => {
     if (expand === null) throw new Error("Missing expand button");
     expect(document.activeElement).toBe(expand);
     await user.click(expand);
+    expect(oncollapsedchange).toHaveBeenCalledWith(false);
     expect(root?.dataset.collapsed).toBe("false");
     expect(document.activeElement).toBe(
       document.querySelector('[data-cy="zone-list-dialog-collapse-button"]'),

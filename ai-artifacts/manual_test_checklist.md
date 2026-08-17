@@ -1225,3 +1225,15 @@ Start a dev duel (`npm run dev`), open the app in the browser, and pick decks to
 - [ ] In the zone-list dialog, hover a face-up/known entry — confirm the preview panel updates.
 - [ ] On a fresh duel load (before hovering any card), hover a hidden card — confirm the panel stays in its empty state ("Hover a card to see its details.").
 - [ ] Confirm the browser console shows no errors during the above.
+
+## T13 launcher-toggles-collapse
+
+Start a dev duel (`npm run dev`), open the app in the browser, and pick decks/start a duel. Activate a card effect that searches the deck (e.g. Reinforcement of the Army / Pot of Greed) so the off-field target list appears.
+
+- [ ] With the target list visible, click the graveyard pile (or whichever stack pile is haloed as the launcher) — confirm the list **collapses** to a single `+` button (does **not** close/disappear).
+- [ ] Click the same launcher pile again — confirm the list **expands** back to full, showing target entries.
+- [ ] With the list expanded, click the `−` button in the list header — confirm the list collapses to the `+` button.
+- [ ] With the list collapsed, click the `+` button — confirm the list expands and the `−` collapse button receives focus.
+- [ ] Click elsewhere on the duel field (not a launcher) — confirm the list closes (existing outside-click dismissal is unchanged).
+- [ ] Start a new duel effect that triggers a different target prompt — confirm the list opens expanded (collapse resets to `false` for the new prompt).
+- [ ] Confirm the browser console shows no errors during the above.

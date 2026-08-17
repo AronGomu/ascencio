@@ -135,6 +135,7 @@
     | null;
 
   let zoneListState: ZoneListState = null;
+  let targetListCollapsed = false;
   /* Ephemeral, never persisted (ADR-017): the last window the player touched
      is the one that rises. */
   let activeWindowId: FieldWindowId | null = null;
@@ -821,6 +822,7 @@
     if (key !== lastPromptKey) {
       lastPromptKey = key;
       zoneListState = null;
+      targetListCollapsed = false;
       outsideDismissedTargetId = null;
       dismissedTargetPromptKey = null;
       activeWindowId = null;
@@ -836,8 +838,7 @@
     const key = promptKeyOf(spec);
     if (key === null) return;
     if (zoneListState?.mode === "target") {
-      dismissedTargetPromptKey = key;
-      closeZoneList();
+      targetListCollapsed = !targetListCollapsed;
       return;
     }
     dismissedTargetPromptKey = null;
@@ -1054,6 +1055,8 @@
       boundaryElement={fieldRoot}
       windowPosition={zoneListWindowPosition}
       active={activeWindowId === "zoneList"}
+      collapsed={targetListCollapsed}
+      oncollapsedchange={(value) => (targetListCollapsed = value)}
       onactivate={activateWindow}
       onwindowpositionchange={onzoneListWindowPositionChange}
       ontargetchoice={chooseTargetChoice}

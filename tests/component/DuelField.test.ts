@@ -3796,6 +3796,96 @@ describe("DuelField off-field target list", () => {
 
     expect(document.querySelector('[data-cy="zone-list-dialog"]')).toBeNull();
   });
+
+  it("a launcher click collapses the open target list instead of closing it", async () => {
+    const user = userEvent.setup();
+    renderTargets(
+      fieldPrompt("selectCard", [offFieldChoice("gy-0", "graveyard", 0)]),
+    );
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog"]'),
+    ).not.toBeNull();
+
+    const launcher = document.querySelector<HTMLElement>(
+      '[data-cy="field-stack-p0:graveyard"]',
+    );
+    if (launcher === null) throw new Error("Missing graveyard launcher");
+    await user.click(launcher);
+
+    expect(
+      document.querySelector('[data-cy="floating-field-window-zoneList"]'),
+    ).not.toBeNull();
+    expect(document.querySelector('[data-cy="zone-list-dialog"]')).toBeNull();
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-expand-button"]'),
+    ).not.toBeNull();
+  });
+
+  it("a second launcher click expands the collapsed target list", async () => {
+    const user = userEvent.setup();
+    renderTargets(
+      fieldPrompt("selectCard", [offFieldChoice("gy-0", "graveyard", 0)]),
+    );
+    const launcher = document.querySelector<HTMLElement>(
+      '[data-cy="field-stack-p0:graveyard"]',
+    );
+    if (launcher === null) throw new Error("Missing graveyard launcher");
+    await user.click(launcher);
+    await user.click(launcher);
+
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-collapse-button"]'),
+    ).not.toBeNull();
+  });
+
+  it("a new prompt resets the collapse state", async () => {
+    const user = userEvent.setup();
+    const harness = renderTargets(
+      fieldPrompt("selectCard", [offFieldChoice("gy-0", "graveyard", 0)]),
+    );
+    const launcher = document.querySelector<HTMLElement>(
+      '[data-cy="field-stack-p0:graveyard"]',
+    );
+    if (launcher === null) throw new Error("Missing graveyard launcher");
+    await user.click(launcher);
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-expand-button"]'),
+    ).not.toBeNull();
+
+    const nextPrompt = fieldPrompt(
+      "selectCard",
+      [offFieldChoice("gy-1", "graveyard", 1)],
+      { id: promptId("reset-collapse-prompt") },
+    );
+    const nextSpec = mapPromptToInteractionSpec(
+      nextPrompt,
+      TARGET_STATE,
+      harness.board,
+      CONTEXT,
+    );
+    if (nextSpec.kind === "inactive")
+      throw new Error("Expected active field spec");
+    await harness.rendered.rerender({
+      prompt: nextPrompt,
+      spec: nextSpec,
+      session: createInteractionSession(nextSpec),
+      offFieldTargets: offFieldTargetEntries(
+        nextSpec,
+        TARGET_STATE,
+        BOARD_CARD_TEXTS,
+      ),
+    });
+
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-collapse-button"]'),
+    ).not.toBeNull();
+  });
 });
 
 describe("FieldBoard", () => {

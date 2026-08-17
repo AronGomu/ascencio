@@ -120,10 +120,12 @@ import { IndexedDbDeckRepository } from "../../src/decks/indexeddb-deck-reposito
    runs before the fixture module itself has been evaluated. */
 installPrototypeActiveCatalog();
 
-const LOCAL_PLAYER_OPTION =
-  '[data-cy="deck-picker-option-player-local:built-deck:1"]';
+const LOCAL_PLAYER_OPTION = '[data-cy="deck-picker-option-local:built-deck:1"]';
 
-async function seedDeck(main: readonly number[]): Promise<void> {
+async function seedDeck(
+  main: readonly number[],
+  { asDefault = false }: { readonly asDefault?: boolean } = {},
+): Promise<void> {
   const repository = await IndexedDbDeckRepository.open();
   try {
     const base = createBlankDeck("Built Deck", catalog, PROTOTYPE_RULESET, {
@@ -141,9 +143,18 @@ async function seedDeck(main: readonly number[]): Promise<void> {
       },
       emptyDeckHistory(),
     );
+    if (asDefault) await repository.setDefaultDeck(base.id);
   } finally {
     repository.close();
   }
+}
+
+function playerSelect(): HTMLSelectElement {
+  return query("deck-picker-player-select") as HTMLSelectElement;
+}
+
+function persistedDeckKeys(): { playerKey: string; opponentKey: string } {
+  return JSON.parse(localStorage.getItem("ygo.ui.v2") ?? "null").decks;
 }
 
 function deleteDeckDatabase(): Promise<void> {
@@ -183,9 +194,7 @@ describe("App deck picker with local decks", () => {
 
     expect(query("deck-picker-group-preset")).not.toBeNull();
     expect(
-      document.querySelectorAll(
-        '[data-cy^="deck-picker-option-player-preset:"]',
-      ),
+      document.querySelectorAll('[data-cy^="deck-picker-option-preset:"]'),
     ).toHaveLength(6);
     expect(
       (query("deck-picker-start-button") as HTMLButtonElement).disabled,
@@ -200,25 +209,61 @@ describe("App deck picker with local decks", () => {
       expect(document.querySelector(LOCAL_PLAYER_OPTION)).not.toBeNull(),
     );
 
-    await user.click(
-      document.querySelector(LOCAL_PLAYER_OPTION) as HTMLElement,
-    );
+    await user.selectOptions(playerSelect(), "local:built-deck:1");
     await user.click(query("deck-picker-start-button") as HTMLButtonElement);
 
     expect(workerClientSpies.startDuel).toHaveBeenCalledOnce();
     expect(workerClientSpies.startDuel).toHaveBeenCalledWith(
-      "local-v1:local:vs:mvp-opponent",
+      "local-v1:local:vs:shaddoll",
       { kind: "cards", main: VALID_MAIN, extra: [], side: [] },
-      { kind: "preset", deckId: "mvp-opponent" },
+      { kind: "preset", deckId: "shaddoll" },
     );
+  });
+
+  /* The whole point of the stored default: a player who built a deck and
+     marked it theirs opens the duel menu on that deck, not on a bundled one. */
+  it("the stored default deck is pre-selected for the player seat", async () => {
+    await seedDeck(VALID_MAIN, { asDefault: true });
+    await renderReadyApp();
+
+    await vi.waitFor(() =>
+      expect(document.querySelector(LOCAL_PLAYER_OPTION)).not.toBeNull(),
+    );
+    expect(playerSelect().value).toBe("local:built-deck:1");
+    expect(query("deck-picker-fallback-notice")).toBeNull();
+    expect(persistedDeckKeys().playerKey).toBe("local:built-deck:1");
+  });
+
+  /* An existing profile carries the opponent this build no longer offers, so
+     the stored key is rewritten rather than read forever. */
+  it("the persisted opponent key is forced to shaddoll", async () => {
+    localStorage.setItem(
+      "ygo.ui.v2",
+      JSON.stringify({
+        version: 2,
+        windows: { zoneList: null, confirm: null },
+        decks: {
+          playerKey: "preset:nekroz",
+          opponentKey: "preset:mvp-opponent",
+        },
+        settings: { showZoneOutlines: true, showZoneCounts: true },
+      }),
+    );
+
+    await renderReadyApp();
+
+    await vi.waitFor(() =>
+      expect(persistedDeckKeys().opponentKey).toBe("preset:shaddoll"),
+    );
+    expect(persistedDeckKeys().playerKey).toBe("preset:nekroz");
+    expect(playerSelect().value).toBe("preset:nekroz");
+    expect(query("deck-picker-fallback-notice")).toBeNull();
   });
 
   it("omits a local deck that does not satisfy the pinned ruleset", async () => {
     await seedDeck(VALID_MAIN.slice(0, 39));
     await renderReadyApp();
-    await vi.waitFor(() =>
-      expect(query("deck-picker-column-player")).not.toBeNull(),
-    );
+    await vi.waitFor(() => expect(playerSelect()).not.toBeNull());
 
     expect(query("deck-picker-group-local")).toBeNull();
     expect(document.querySelector(LOCAL_PLAYER_OPTION)).toBeNull();
@@ -243,16 +288,9 @@ describe("App deck picker with local decks", () => {
       expect(query("deck-picker-fallback-notice")).not.toBeNull(),
     );
 
-    expect(
-      query("deck-picker-option-player-preset:mvp-player")?.getAttribute(
-        "aria-pressed",
-      ),
-    ).toBe("true");
-    expect(
-      query("deck-picker-option-opponent-preset:mvp-opponent")?.getAttribute(
-        "aria-pressed",
-      ),
-    ).toBe("true");
+    expect(playerSelect().value).toBe("preset:mvp-player");
+    expect(query("deck-picker-opponent-fixed")).not.toBeNull();
+    expect(persistedDeckKeys().opponentKey).toBe("preset:shaddoll");
     expect(
       document.querySelectorAll('[data-cy="deck-picker-fallback-notice"]'),
     ).toHaveLength(1);
@@ -274,9 +312,7 @@ describe("App deck picker with local decks", () => {
       expect(query("deck-picker-fallback-notice")).not.toBeNull(),
     );
 
-    await user.click(
-      query("deck-picker-option-player-preset:nekroz") as HTMLButtonElement,
-    );
+    await user.selectOptions(playerSelect(), "preset:nekroz");
 
     expect(query("deck-picker-fallback-notice")).toBeNull();
   });

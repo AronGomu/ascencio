@@ -40,7 +40,6 @@ function renderPicker(overrides: Record<string, unknown> = {}) {
   return render(DeckPicker, {
     decks: PRESET_DECKS,
     playerKey: "preset:nekroz",
-    opponentKey: "preset:mvp-opponent",
     ...overrides,
   });
 }
@@ -49,50 +48,93 @@ function query(value: string): HTMLElement | null {
   return document.querySelector(`[data-cy="${value}"]`);
 }
 
+function playerSelect(): HTMLSelectElement {
+  return query("deck-picker-player-select") as HTMLSelectElement;
+}
+
 describe("DeckPicker", () => {
-  it("renders one option per deck in both columns", () => {
-    renderPicker();
+  it("renders one option per deck under its own group", () => {
+    renderPicker({ decks: [...PRESET_DECKS, LOCAL_DECK] });
 
     expect(
-      document.querySelectorAll('[data-cy^="deck-picker-option-player-"]'),
-    ).toHaveLength(6);
-    expect(
-      document.querySelectorAll('[data-cy^="deck-picker-option-opponent-"]'),
-    ).toHaveLength(6);
+      document.querySelectorAll('[data-cy^="deck-picker-option-"]'),
+    ).toHaveLength(7);
+    expect(query("deck-picker-group-preset")?.getAttribute("label")).toBe(
+      "Bundled decks",
+    );
+    expect(query("deck-picker-group-local")?.getAttribute("label")).toBe(
+      "Your decks",
+    );
+    expect(query("deck-picker-option-local:built-deck:2")?.textContent).toBe(
+      "Built Deck",
+    );
   });
 
-  it("marks the selected deck in each column", () => {
+  it("pre-selects the deck the host chose", () => {
     renderPicker();
 
-    expect(
-      query("deck-picker-option-player-preset:nekroz")?.getAttribute(
-        "aria-pressed",
-      ),
-    ).toBe("true");
-    const otherPlayerOptions = [
-      ...document.querySelectorAll(
-        '[data-cy^="deck-picker-option-player-"]:not([data-cy="deck-picker-option-player-preset:nekroz"])',
-      ),
-    ];
-    expect(otherPlayerOptions).toHaveLength(5);
-    expect(
-      otherPlayerOptions.every(
-        (option) => option.getAttribute("aria-pressed") === "false",
-      ),
-    ).toBe(true);
+    expect(playerSelect().value).toBe("preset:nekroz");
   });
 
-  it("clicking an option reports the new pair", async () => {
+  it("the filter narrows the deck options", async () => {
+    const user = userEvent.setup();
+    renderPicker({ decks: [...PRESET_DECKS, LOCAL_DECK] });
+
+    await user.type(query("deck-picker-filter") as HTMLInputElement, "shad");
+
+    expect(query("deck-picker-option-preset:shaddoll")).not.toBeNull();
+    expect(query("deck-picker-option-preset:burning-abyss")).toBeNull();
+    expect(query("deck-picker-option-local:built-deck:2")).toBeNull();
+    expect(query("deck-picker-no-matches")).toBeNull();
+  });
+
+  /* Filtering is a view over the list, never a change of choice: hiding the
+     chosen deck would leave a select with no selected option and a Start
+     button that duels with a deck nobody can see. */
+  it("keeps the chosen deck listed even when the filter excludes it", async () => {
+    const user = userEvent.setup();
+    renderPicker();
+
+    await user.type(query("deck-picker-filter") as HTMLInputElement, "shad");
+
+    expect(query("deck-picker-option-preset:nekroz")).not.toBeNull();
+    expect(playerSelect().value).toBe("preset:nekroz");
+  });
+
+  it("reports that nothing matched while still showing the choice", async () => {
+    const user = userEvent.setup();
+    renderPicker();
+
+    await user.type(query("deck-picker-filter") as HTMLInputElement, "zzz");
+
+    expect(query("deck-picker-no-matches")).not.toBeNull();
+    expect(
+      document.querySelectorAll('[data-cy^="deck-picker-option-"]'),
+    ).toHaveLength(1);
+    expect(playerSelect().value).toBe("preset:nekroz");
+  });
+
+  it("choosing an option reports its key", async () => {
     const user = userEvent.setup();
     const onselect = vi.fn();
     renderPicker({ onselect });
 
-    await user.click(
-      query("deck-picker-option-opponent-preset:shaddoll") as HTMLButtonElement,
-    );
+    await user.selectOptions(playerSelect(), "preset:shaddoll");
 
     expect(onselect).toHaveBeenCalledOnce();
-    expect(onselect).toHaveBeenCalledWith("preset:nekroz", "preset:shaddoll");
+    expect(onselect).toHaveBeenCalledWith("preset:shaddoll");
+  });
+
+  it("the opponent seat is a fixed shaddoll line", () => {
+    renderPicker();
+
+    expect(query("deck-picker-opponent-fixed")?.textContent?.trim()).toBe(
+      "Opponent deck: Shaddoll (auto-assigned)",
+    );
+    expect(document.querySelectorAll("select")).toHaveLength(1);
+    expect(
+      document.querySelectorAll('[data-cy*="opponent-preset"]'),
+    ).toHaveLength(0);
   });
 
   it("start reports once", async () => {
@@ -105,31 +147,16 @@ describe("DeckPicker", () => {
     expect(onstart).toHaveBeenCalledOnce();
   });
 
-  it("disabled blocks start", async () => {
+  it("disabled blocks start and the deck controls", async () => {
     const user = userEvent.setup();
     const onstart = vi.fn();
     renderPicker({ disabled: true, onstart });
     const start = query("deck-picker-start-button") as HTMLButtonElement;
 
     expect(start.disabled).toBe(true);
+    expect(playerSelect().disabled).toBe(true);
     await user.click(start);
     expect(onstart).not.toHaveBeenCalled();
-  });
-
-  it("renders a labelled group per source when both exist", () => {
-    renderPicker({ decks: [...PRESET_DECKS, LOCAL_DECK] });
-
-    expect(query("deck-picker-group-preset")).not.toBeNull();
-    expect(query("deck-picker-group-local")).not.toBeNull();
-    expect(
-      document.getElementById("deck-picker-preset-label")?.textContent,
-    ).toBe("Bundled decks");
-    expect(
-      document.getElementById("deck-picker-local-label")?.textContent,
-    ).toBe("Your decks");
-    expect(
-      query("deck-picker-option-player-local:built-deck:2")?.textContent,
-    ).toBe("Built Deck");
   });
 
   it("hides the local group when no local deck qualifies", () => {
@@ -138,21 +165,6 @@ describe("DeckPicker", () => {
     expect(query("deck-picker-group-preset")).not.toBeNull();
     expect(query("deck-picker-group-local")).toBeNull();
     expect(query("deck-picker-start-button")).not.toBeNull();
-  });
-
-  it("selects a local deck for one seat and keeps the other preset", async () => {
-    const user = userEvent.setup();
-    const onselect = vi.fn();
-    renderPicker({ decks: [...PRESET_DECKS, LOCAL_DECK], onselect });
-
-    await user.click(
-      query("deck-picker-option-player-local:built-deck:2") as HTMLElement,
-    );
-
-    expect(onselect).toHaveBeenCalledWith(
-      "local:built-deck:2",
-      "preset:mvp-opponent",
-    );
   });
 
   it("shows the fallback notice only when the host asks for it", () => {

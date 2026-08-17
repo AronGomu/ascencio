@@ -1032,8 +1032,8 @@ rather than the fixture's handful.
 - [ ] Add cards until **Deck counts** reads `Main 40`. Fastest route: search a card name, then right-click the catalog tile to add it directly; repeat, or drag tiles onto the Main Deck drop area.
 - [ ] The validation panel shows no **errors**. Warnings such as "Extra Deck is empty", "Side Deck is empty" and "uses placeholder art" are expected and do not block anything.
 - [ ] Wait for **Saved locally**.
-- [ ] Go to `#/duel`. A **Your decks** group renders below **Bundled decks**, holding `Manual T22` in both the player and opponent columns.
-- [ ] Click `Manual T22` in **Your deck**. It becomes selected (`aria-pressed="true"`), and no start error appears.
+- [ ] Go to `#/duel`. The deck list holds a **Your decks** group below **Bundled decks**, with `Manual T22` in it. (Superseded by T15: one list for the player seat only, and the opponent is a fixed line rather than a column.)
+- [ ] Pick `Manual T22` in the deck list. It becomes the selected row, and no start error appears.
 - [ ] Press **Start**. The duel initializes and reaches the first prompt — the field renders, both life-point totals are up, and your hand is drawn from the cards you picked, not from a bundled deck.
 - [ ] Hover a card in your hand: the preview panel shows that card's real name and effect text.
 - [ ] Surrender, then **Change decks** — `Manual T22` is still selected and the picker does not auto-start.
@@ -1051,8 +1051,8 @@ rather than the fixture's handful.
 - [ ] Import a YDK holding a code the editor does not know (e.g. `99999999`). Preview flags it as unknown, and a deck saved with it is never offered at `#/duel`.
 
 ### Bundled decks are unaffected
-- [ ] With no local deck at all (use `#/admin` → **Reset Deck library**), `#/duel` renders only the **Bundled decks** group — no empty "Your decks" heading — and Start works.
-- [ ] Pick a bundled pair and duel: unchanged from before this slice.
+- [ ] With no local deck at all (use `#/admin` → **Reset Deck library**), `#/duel` renders only the **Bundled decks** group — no empty "Your decks" heading — and Start works. (Superseded by T15: opening `#/duel` now seeds a "Starter Deck", so a **Your decks** group holding exactly that one deck is the expected state here.)
+- [ ] Pick a bundled deck and duel: unchanged from before this slice.
 
 ### Build gate
 - [ ] `npm run build` finishes green. Its last block prints roughly
@@ -1344,3 +1344,38 @@ Buttons gone
 - [ ] Delete the deck that currently holds the "Default" badge. No remaining row shows a "Default" badge, and every remaining row's "Set default" button is clickable.
 - [ ] Reload the page. Because no deck is default any more, seeding runs again: it adopts the existing "Starter Deck" rather than creating a second one, so that row now carries the badge and the deck count is unchanged.
 - [ ] Delete every deck including "Starter Deck", then reload. A single fresh "Starter Deck" is seeded and marked default.
+
+## T15 duel-menu-default-selection
+
+### An existing profile still carrying the old opponent
+
+- [ ] Before reloading anything, open DevTools → Application → Local Storage and set `ygo.ui.v2` to a record whose `decks` reads `{"playerKey":"preset:nekroz","opponentKey":"preset:mvp-opponent"}` (keep `version: 2`, `windows` and `settings` as they are).
+- [ ] Reload and open `#/duel`. Read `ygo.ui.v2` again: `opponentKey` is now `preset:shaddoll`, and the picker's opponent line reads "Opponent deck: Shaddoll (auto-assigned)".
+- [ ] `playerKey` is still `preset:nekroz` and that deck is the selected row — a choice the player made is not overwritten by the default deck.
+- [ ] No "a deck you had chosen is no longer available" notice is shown.
+
+### A fresh profile
+
+- [ ] Wipe site data for the app (DevTools → Application → Storage → "Clear site data"), then reload and open `#/duel` directly, without visiting `#/decks` first.
+- [ ] Once the picker appears, the selected row is **Starter Deck** under **Your decks** — the deck seeded on this first run, not a bundled one.
+- [ ] No fallback notice is shown anywhere on the picker. A first run has lost nothing and must not be told it has.
+- [ ] The opponent line reads "Opponent deck: Shaddoll (auto-assigned)", and there is no opponent column, list or button.
+- [ ] Press **Start**. The duel initializes against a Shaddoll deck.
+
+### A default deck the player set themselves
+
+- [ ] Open `#/decks`, create or import a second legal 40-card deck, and press **Set default** on its row.
+- [ ] Wipe only `ygo.ui.v2` from Local Storage (leave IndexedDB alone), reload, and open `#/duel`. The selected row is that second deck.
+- [ ] Pick a different deck in the list, reload, and open `#/duel` again. Your pick is still selected — the stored default only fills an empty seat, it does not reclaim one.
+
+### The filter
+
+- [ ] Type `shad` into **Filter decks**. Only decks whose name contains "shad" remain listed, plus the deck currently selected.
+- [ ] Type something no deck matches (e.g. `zzz`). The message "No deck matches that filter." appears, and the selected deck is still listed and still selected.
+- [ ] Clear the filter. Every deck is listed again.
+- [ ] With a filter typed that hides the selected deck's name, press **Start** anyway. The duel runs with the selected deck, not with whatever is visible.
+
+### A deck that vanished
+
+- [ ] Select a local deck at `#/duel`, then go to `#/decks` and delete that deck.
+- [ ] Return to `#/duel`. The fallback notice is shown, and the seat has fallen back to the stored default deck (or the bundled starter if there is none).

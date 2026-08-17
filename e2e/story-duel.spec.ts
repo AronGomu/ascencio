@@ -88,7 +88,7 @@ async function surrenderThroughMenu(page: Page): Promise<void> {
     .click();
 }
 
-test("a story encounter reaches the duel through the picker with the last used pair", async ({
+test("a story encounter reaches the duel through the picker with a deck already chosen", async ({
   page,
 }) => {
   await reachEncounter(page);
@@ -98,12 +98,15 @@ test("a story encounter reaches the duel through the picker with the last used p
   await expect(page.locator('[data-cy="deck-picker"]')).toBeVisible({
     timeout: 120_000,
   });
+  /* The seat is never left empty: the stored default deck on a fresh profile,
+     the player's own key afterwards. Which one it is depends on whether the
+     starter deck seeded, so what is asserted is that a deck is selected. */
   await expect(
-    page.locator('[data-cy="deck-picker-option-player-preset:mvp-player"]'),
-  ).toHaveAttribute("aria-pressed", "true");
+    page.locator('[data-cy="deck-picker-player-select"]'),
+  ).not.toHaveValue("", { timeout: 120_000 });
   await expect(
-    page.locator('[data-cy="deck-picker-option-opponent-preset:mvp-opponent"]'),
-  ).toHaveAttribute("aria-pressed", "true");
+    page.locator('[data-cy="deck-picker-opponent-fixed"]'),
+  ).toContainText("Shaddoll");
   await expect(page.locator(STORY_REGION)).toHaveCount(0);
 });
 

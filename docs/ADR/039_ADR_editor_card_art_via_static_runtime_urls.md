@@ -1,9 +1,9 @@
-# ADR-036: Editor Card Art via Static Runtime URLs
+# ADR-039: Editor Card Art via Static Runtime URLs
 
 > Status: accepted; planned
 > Decided: 2026-08-16
 > Owners: decks data architecture
-> Relates: ADR-033 (shared preview panel)
+> Relates: ADR-036 (shared preview panel)
 > Plan: [`../../ai-artifact/PLAN_2026_08_16_decks_feedback.md`](../../ai-artifact/PLAN_2026_08_16_decks_feedback.md) — T1
 
 ## Context

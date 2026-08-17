@@ -1,4 +1,4 @@
-# ADR-034: Manual Deck Order with Position-Blind History
+# ADR-037: Manual Deck Order with Position-Blind History
 
 > Status: accepted; planned
 > Decided: 2026-08-16

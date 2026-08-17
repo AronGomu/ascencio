@@ -47,7 +47,7 @@ Supersedes the three-pane details layout described implicitly by the pre-2026-08
   <p>Near-full viewport (<code>calc(100% - 0.5rem)</code>). Header: Library · small name input · Undo · Redo · Load. No counts, no deck/autosave status, no import/export (library-only now).</p>
   <div class="layout">
     <div class="pane"><h4>Preview (left)</h4>
-      <p>Shared <code>CardPreviewPanel</code> from <code>src/shell/index.ts</code> (ADR-033). Art via <code>staticImageUrl</code> (ADR-036).</p>
+      <p>Shared <code>CardPreviewPanel</code> from <code>src/shell/index.ts</code> (ADR-036). Art via <code>staticImageUrl</code> (ADR-039).</p>
       <p class="muted">Shows <code>hovered ?? selected</code>. Mouse leaves card area → falls back to selected.</p>
     </div>
     <div class="pane"><h4>Workspace (center)</h4>
@@ -81,10 +81,10 @@ Supersedes the three-pane details layout described implicitly by the pre-2026-08
 <h2>Model &amp; storage</h2>
 <div class="card">
   <ul>
-    <li><code>DeckCommand</code>: <code>add(zone?)</code> · <code>remove</code> · <code>move</code> · <code>import</code> · <code>restore</code> · <code>reorder</code> · <code>sort(alpha|type)</code>. Append-at-end semantics; no auto-sort (ADR-034).</li>
+    <li><code>DeckCommand</code>: <code>add(zone?)</code> · <code>remove</code> · <code>move</code> · <code>import</code> · <code>restore</code> · <code>reorder</code> · <code>sort(alpha|type)</code>. Append-at-end semantics; no auto-sort (ADR-037).</li>
     <li>History = membership multisets. <code>reorder</code>/<code>sort</code>: no history entry, not undoable, no autosave entry.</li>
-    <li><code>ygo-story-decks</code> v2 (ADR-035): stores <code>decks</code> · <code>histories</code> · <code>preferences</code> (<code>last-opened-deck</code>, <code>default-deck</code>) · <code>autosaves</code> (global, cap 100, <code>{id, deckId, deckName, createdAt, main, extra, side}</code>). Legacy prototype DB pinned at version 1 during migration.</li>
-    <li>Catalog: <code>activeCatalog()</code> joins <code>__ACTIVE_CARD_DATA__</code> + <code>__ACTIVE_CARD_TEXTS__</code> + <code>__ACTIVE_IMAGE_MANIFEST__</code> → <code>imageUrl = {BASE_URL}runtime/images/{code}.jpg</code> (ADR-036).</li>
+    <li><code>ygo-story-decks</code> v2 (ADR-038): stores <code>decks</code> · <code>histories</code> · <code>preferences</code> (<code>last-opened-deck</code>, <code>default-deck</code>) · <code>autosaves</code> (global, cap 100, <code>{id, deckId, deckName, createdAt, main, extra, side}</code>). Legacy prototype DB pinned at version 1 during migration.</li>
+    <li>Catalog: <code>activeCatalog()</code> joins <code>__ACTIVE_CARD_DATA__</code> + <code>__ACTIVE_CARD_TEXTS__</code> + <code>__ACTIVE_IMAGE_MANIFEST__</code> → <code>imageUrl = {BASE_URL}runtime/images/{code}.jpg</code> (ADR-039).</li>
   </ul>
 </div>
 

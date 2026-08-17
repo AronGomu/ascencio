@@ -12,7 +12,7 @@ export {
    ADR-022 forbids the deck editor from reaching `src/battle/app/components/`,
    and `src/battle/index.ts` cannot carry it either: that entry also exports
    `BattleFacade`, so importing it would make the duel eager. The shell entry is
-   the legal shared home (ADR-033). */
+   the legal shared home (ADR-036). */
 export { default as CardPreviewPanel } from "./card-preview/CardPreviewPanel.svelte";
 export { default as OverlayScrollbar } from "./card-preview/OverlayScrollbar.svelte";
 export type {

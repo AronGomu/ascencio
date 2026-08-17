@@ -1,4 +1,4 @@
-# ADR-033: Shared Card Preview Panel Lives in the Shell
+# ADR-036: Shared Card Preview Panel Lives in the Shell
 
 > Status: accepted; planned
 > Decided: 2026-08-16

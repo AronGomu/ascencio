@@ -24,6 +24,11 @@
     type TapTarget,
   } from "../layout/tap-targets.ts";
   import type { PickedCard } from "../drag-state.ts";
+  import LoadDeckDialog from "./LoadDeckDialog.svelte";
+  import type {
+    DeckAutosaveRecord,
+    DeckId,
+  } from "../../decks/deck-contracts.ts";
 
   export let state: DeckBuilderState;
   export let cards: readonly DeckBuilderCardView[];
@@ -43,6 +48,12 @@
   export let onretrysave: () => void;
   export let onreload: () => void;
   export let onpreservecopy: () => void;
+  export let onlistautosaves: () => Promise<
+    readonly DeckAutosaveRecord[]
+  > = () => Promise.resolve([]);
+  export let onrestoreautosave: (entry: DeckAutosaveRecord) => void = () =>
+    undefined;
+  export let onopendeckbyid: (id: DeckId) => void = () => undefined;
 
   let selected: DeckBuilderCardView | null = null;
   let selectedCode: number | null = null;
@@ -55,6 +66,8 @@
   let pane: EditorPane = defaultPane();
   let tapped: { code: number; zone: DeckZone } | null = null;
   let tapOpener: HTMLElement | null = null;
+  let showLoad = false;
+  let loadedAutosaves: readonly DeckAutosaveRecord[] = [];
 
   $: tabs = layoutMode === "tabs";
   $: deck = state.current?.deck ?? null;
@@ -267,6 +280,11 @@
     dropHandled = false;
   }
 
+  async function openLoadDialog(): Promise<void> {
+    loadedAutosaves = await onlistautosaves();
+    showLoad = true;
+  }
+
   function handleKeydown(event: KeyboardEvent): void {
     const target = event.target as HTMLElement | null;
     const editingText =
@@ -335,6 +353,12 @@
       data-cy="deck-editor-redo"
       onclick={onredo}
       aria-keyshortcuts="Control+Y Control+Shift+Z">Redo</button
+    >
+    <button
+      type="button"
+      class="secondary"
+      data-cy="deck-editor-load"
+      onclick={() => void openLoadDialog()}>Load</button
     >
   </header>
 
@@ -500,12 +524,29 @@
       oncancel={() => void closeTapMenu()}
     />
   {/if}
+
+  {#if showLoad}
+    <div class="backdrop" aria-hidden="true" data-cy="load-deck-backdrop"></div>
+    <LoadDeckDialog
+      decks={state.decks}
+      autosaves={loadedAutosaves}
+      onopendeck={(id) => {
+        showLoad = false;
+        onopendeckbyid(id);
+      }}
+      onrestore={(entry) => {
+        showLoad = false;
+        onrestoreautosave(entry);
+      }}
+      oncancel={() => (showLoad = false)}
+    />
+  {/if}
 {/if}
 
 <style>
   .editor-header {
     display: grid;
-    grid-template-columns: auto auto 1fr auto auto;
+    grid-template-columns: auto auto 1fr auto auto auto;
     align-items: end;
     gap: 0.55rem;
     width: calc(100% - 0.5rem);

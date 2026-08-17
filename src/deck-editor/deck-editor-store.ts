@@ -1,5 +1,6 @@
 import { get, writable, type Readable } from "svelte/store";
 import type {
+  DeckAutosaveRecord,
   DeckCardLists,
   DeckHistory,
   DeckId,
@@ -497,6 +498,29 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
   async reloadCurrent(): Promise<void> {
     const current = get(this.#state).current;
     if (current !== null) await this.openDeck(current.deck.id);
+  }
+
+  async listAutosaves(): Promise<readonly DeckAutosaveRecord[]> {
+    return this.#repository.listAutosaves().catch(() => []);
+  }
+
+  async restoreAutosave(entry: DeckAutosaveRecord): Promise<void> {
+    const existing = await this.#repository
+      .load(entry.deckId)
+      .catch(() => null);
+    if (existing !== null) {
+      await this.openDeck(entry.deckId);
+    } else {
+      await this.createDeck(entry.deckName);
+    }
+    await this.mutate({
+      type: "restore",
+      cards: {
+        main: [...entry.main],
+        extra: [...entry.extra],
+        side: [...entry.side],
+      },
+    });
   }
 
   async preserveCurrentAsCopy(): Promise<void> {

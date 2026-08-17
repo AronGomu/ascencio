@@ -270,6 +270,10 @@
     onretrysave={() => void controller?.retrySave()}
     onreload={() => void controller?.reloadCurrent()}
     onpreservecopy={() => void runAndSync(controller?.preserveCurrentAsCopy())}
+    onlistautosaves={() => controller?.listAutosaves() ?? Promise.resolve([])}
+    onrestoreautosave={(entry) =>
+      void runAndSync(controller?.restoreAutosave(entry))}
+    onopendeckbyid={(id) => onnavigate({ deckId: id })}
   />
 {:else}
   <main class="loading" aria-busy="true" data-cy="deck-editor-opening">

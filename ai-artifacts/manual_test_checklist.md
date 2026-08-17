@@ -1298,3 +1298,29 @@ Buttons gone
 
 ### Known risk to watch for (not fixed by this ticket)
 - [ ] Open the deck editor in **two** browser tabs at once on the old (version-1) database, then reload only one of them onto this build. If the upgrading tab appears to hang on load, that is the IndexedDB `blocked` event with no handler — close the other tab and reload. Report it if you hit it.
+
+## T13 load-deck-dialog
+
+### Load dialog opens from editor header
+
+- [ ] Open a deck in the editor. A "Load" button is visible in the header next to Redo.
+- [ ] Click "Load". A modal dialog appears with two tabs: "Your decks" and "Autosaves".
+- [ ] Press Escape. The dialog closes.
+- [ ] The backdrop (dim overlay) covers the page while the dialog is open.
+
+### Your decks tab
+
+- [ ] The dialog opens on the "Your decks" tab by default.
+- [ ] All saved decks are listed, each showing the deck name and "Main N" card count.
+- [ ] Clicking a deck row closes the dialog and navigates to that deck.
+
+### Autosaves tab
+
+- [ ] Click the "Autosaves" tab. Entries are listed newest first, each showing a human-readable timestamp and the deck name.
+- [ ] If no autosaves exist, the message "No autosaves yet." appears.
+- [ ] Click an autosave entry. The dialog closes and the open deck's card list is replaced by the autosave's lists. The change is undoable (Ctrl+Z returns the previous lists).
+
+### Restoring an autosave of a deleted deck
+
+- [ ] Create a deck, add a card, then delete the deck from the library. Open the Load dialog, switch to Autosaves, and click the entry for the deleted deck.
+- [ ] A new deck is created with the same name and the autosave's card lists.

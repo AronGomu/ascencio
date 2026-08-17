@@ -252,11 +252,11 @@ describe("story state model", () => {
     expect(PROLOGUE.beats.length).toBeLessThanOrEqual(40);
   });
 
-  it("buying ten packs pays a thousand dp", () => {
+  it("buying ten packs pays fifteen hundred dp", () => {
     const browse = {
       ...createInitialStoryState(),
       screen: "shop-browse" as const,
-      dp: 1000,
+      dp: 1500,
     };
     const next = reduceStory(browse, {
       type: "buy-packs",

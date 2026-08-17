@@ -184,12 +184,14 @@ test("saved progress survives a reload and reaches the end of the prologue", asy
 
 test("manual save and delete only touch the manual slot", async ({ page }) => {
   await startNarrative(page);
+  await page.getByRole("button", { name: "Open menu" }).first().click();
   await page.getByRole("button", { name: "Save", exact: true }).click();
   /* New Game already marks progress as existing, so the save overlay opens on
      the overwrite confirmation rather than the empty-slot action. */
   await page.getByRole("button", { name: "Confirm overwrite" }).click();
   await expect(page.getByText(/Save complete/)).toBeVisible();
   await page.getByRole("button", { name: "Close Save and load" }).click();
+  await page.getByRole("button", { name: "Open menu" }).first().click();
   await page.getByRole("button", { name: "Load", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Load game" })).toBeVisible();
   await page.getByRole("button", { name: "Delete manual slot 1" }).click();
@@ -299,21 +301,38 @@ test("every story overlay opens, traps focus, and restores it on close", async (
   page,
 }) => {
   await startNarrative(page);
+  const history = page.getByRole("button", { name: "History", exact: true });
+  await history.click();
+  await expect(
+    page.getByRole("dialog", { name: "Dialogue history" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Close Dialogue history" }),
+  ).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(
+    page.getByRole("dialog", { name: "Dialogue history" }),
+  ).toHaveCount(0);
+  await expect(history).toBeFocused();
+
+  /* Settings, Save and Load sit behind the gear menu; when one of them closes,
+     focus restores to the gear that opened the menu, because the menu item it
+     was chosen from no longer exists. */
+  const gear = page.getByRole("button", { name: "Open menu" }).first();
   for (const [trigger, dialog] of [
-    ["History", "Dialogue history"],
     ["Settings", "Settings"],
     ["Save", "Save and load"],
     ["Load", "Load game"],
   ] as const) {
-    const control = page.getByRole("button", { name: trigger, exact: true });
-    await control.click();
+    await gear.click();
+    await page.getByRole("button", { name: trigger, exact: true }).click();
     await expect(page.getByRole("dialog", { name: dialog })).toBeVisible();
     await expect(
       page.getByRole("button", { name: `Close ${dialog}` }),
     ).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog", { name: dialog })).toHaveCount(0);
-    await expect(control).toBeFocused();
+    await expect(gear).toBeFocused();
   }
 
   const pause = page.getByRole("button", { name: "Open menu" }).first();

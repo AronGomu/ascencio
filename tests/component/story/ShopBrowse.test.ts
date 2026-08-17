@@ -129,7 +129,7 @@ describe("ShopBrowseScreen", () => {
     const { container } = render(ShopBrowseScreen, {
       sets,
       error: null,
-      dp: 1000,
+      dp: 2000,
       onbuy,
       onback: noop,
     });

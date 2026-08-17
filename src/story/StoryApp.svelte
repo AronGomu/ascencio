@@ -47,6 +47,7 @@
   import { openablePicks, openBoosters } from "./shop/data/pack-generator.ts";
   import { singlePriceDp } from "./shop/data/shop-pricing.ts";
   import { activeCatalog } from "../decks/catalog/active-catalog.ts";
+  import type { DeckBuilderCardView } from "../decks/catalog/ocg-card-mapper.ts";
   import TitleScreen from "./screens/TitleScreen.svelte";
   import {
     STORY_SLOT_KEYS,
@@ -116,10 +117,9 @@
   let shopData: ShopSetData | null = null;
   let shopDataError: string | null = null;
   let shopDataLoading = false;
-  let catalogByCode: Map<
-    number,
-    { readonly imageUrl: string | null; readonly name: string }
-  > = new Map();
+  /* Full views, not a name/image projection: `resolveCardRarity` infers a
+     rarity from ATK/type fields when the shop data misses a code. */
+  let catalogByCode: Map<number, DeckBuilderCardView> = new Map();
   let boosterDialogOpen = false;
   let root: HTMLElement;
 

@@ -92,11 +92,11 @@ The three modules — `src/story/shop/data/shop-rarity.ts`, `src/story/shop/data
 - [ ] Set browser shows a "Loading sets…" spinner on first visit (one network request to `/story/shop-sets.v1.json`), which resolves into the full browse screen
 - [ ] "Latest Released" row shows 3 tiles in newest-first order: Pharaoh's Servant, Metal Raiders, Legend of Blue-Eyes White Dragon
 - [ ] Unreleased sets appear in the full grid below, dimmed and with a 🔒 glyph — clicking them does nothing (no dialog opens)
-- [ ] Click a released set tile (e.g. "Legend of Blue-Eyes White Dragon"); a dialog opens with the set name as the heading and "100 DP / pack"
-- [ ] Click "Buy 1 · 100 DP" — dialog closes, DP pill in top bar drops by 100 (from 1000 to 900); re-open dialog to confirm button still works
-- [ ] Click "Buy 10 · 1000 DP" (requires ≥ 1000 DP) — DP drops by 1000
+- [ ] Click a released set tile (e.g. "Legend of Blue-Eyes White Dragon"); a dialog opens with the set name as the heading and "150 DP / pack"
+- [ ] Click "Buy 1 · 150 DP" — dialog closes, DP pill in top bar drops by 150 (from 1000 to 850); re-open dialog to confirm button still works
+- [ ] Click "Buy 10 · 1500 DP" (requires ≥ 1500 DP — more than the starting wallet; sell cards first or verify the button is disabled at 1000 DP)
 - [ ] Set custom input to 3 and click "Buy 3" — DP drops by 300
-- [ ] With DP < 100: "Buy 1" and "Buy 10" and "Buy N" buttons are all disabled; a red error line reads "Not enough DP…"
+- [ ] With DP < 150: "Buy 1" and "Buy 10" and "Buy N" buttons are all disabled; a red error line reads "Not enough DP…"
 - [ ] "View card list" button is enabled — clicking it opens the full card list for that set (T10)
 - [ ] Close the dialog with the "Close" button or Escape key; returns to set browser
 - [ ] "← Back" button in set browser returns to the shopkeeper greeting screen

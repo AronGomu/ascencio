@@ -51,7 +51,7 @@ test("shop loop: buy packs, open all, sell cards, singles sanity", async ({
   await expect(page.locator('[data-cy="story-shop-greeting"]')).toBeVisible();
   await advanceThroughGreeting(page);
 
-  // Step 3: buy 10 Metal Raiders packs, spending all 1000 DP
+  // Step 3: buy 6 Metal Raiders packs (6 × 150 = 900 of the 1000 DP wallet)
   await page.locator('[data-cy="story-shop-greeting-buy"]').click();
   await expect(
     page.locator('[data-cy="story-shop-browse-loading"]'),
@@ -61,21 +61,24 @@ test("shop loop: buy packs, open all, sell cards, singles sanity", async ({
   // rather than as a locator timeout three steps later.
   await expect(page.locator('[data-cy="story-shop-set-grid"]')).toBeVisible();
   await page.locator('[data-cy="story-shop-set-metal-raiders"]').click();
-  await page.locator('[data-cy="story-shop-buy-ten"]').click();
-  await expect(page.locator('[data-cy="story-top-bar-dp"]')).toHaveText("0 DP");
+  await page.locator('[data-cy="story-shop-buy-custom-input"]').fill("6");
+  await page.locator('[data-cy="story-shop-buy-custom"]').click();
+  await expect(page.locator('[data-cy="story-top-bar-dp"]')).toHaveText(
+    "100 DP",
+  );
 
   // Close the set dialog before accessing the top-bar boosters pill
   await page.keyboard.press("Escape");
 
-  // Step 4: open all 10 packs at once, verify 90 result tiles, continue
+  // Step 4: open all 6 packs at once, verify 54 result tiles, continue
   await expect(page.locator('[data-cy="story-top-bar-boosters"]')).toHaveText(
-    "10 packs",
+    "6 packs",
   );
   await page.locator('[data-cy="story-top-bar-boosters"]').click();
   await page.locator('[data-cy="story-shop-open-all"]').click();
   await expect(
     page.locator('[data-cy="story-shop-results-grid"] > div'),
-  ).toHaveCount(90);
+  ).toHaveCount(54);
   await page.locator('[data-cy="story-shop-results-continue"]').click();
 
   // Step 5: sell — navigate back through greeting to the sell screen
@@ -90,7 +93,8 @@ test("shop loop: buy packs, open all, sell cards, singles sanity", async ({
     .locator('[data-cy="story-top-bar-dp"]')
     .textContent();
   const dp = Number.parseInt(dpText ?? "0", 10);
-  expect(dp).toBeGreaterThan(0);
+  // 100 DP remained after buying; a completed sale must have added to it.
+  expect(dp).toBeGreaterThan(100);
 
   // Step 6: singles sanity — buy button disabled/enabled consistent with DP
   await page.locator('[data-cy="story-shop-sell-back"]').click();

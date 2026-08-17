@@ -1,6 +1,9 @@
 import type { ShopRarity } from "../../model/story-state.ts";
 
-export const PACK_PRICE_DP = 100;
+/* Must stay above a pack's expected sell value (≈138–142 DP across the three
+   released sets: 8 commons + 1 rare-or-better against the ladder below), or
+   buy → open → sell loops DP upward without bound. ADR-035 rev. 3. */
+export const PACK_PRICE_DP = 150;
 export const PACK_SIZE = 9;
 
 export const SELL_PRICE_DP: Readonly<Record<ShopRarity, number>> = {

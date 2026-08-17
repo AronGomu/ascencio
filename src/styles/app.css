@@ -1315,6 +1315,15 @@ button.duel-field-zone,
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--selected) 78%, transparent);
 }
 
+/* While a card-targeting prompt is active, hovering a non-candidate field card
+   shows a red ring to signal invalid target — hover-only, never persistent. */
+.duel-field[data-targeting="true"]
+  .duel-field-card:not(.is-actionable):hover
+  .duel-field-card__art {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--danger) 60%, transparent);
+}
+
 /* Keyboard focus is a neutral high-contrast ring, independent of the
    legal/selected palette above. */
 .duel-field-zone.is-navigation-active:focus-visible,
@@ -1586,22 +1595,20 @@ button.duel-field-zone,
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--selected) 78%, transparent);
 }
 
-/* List pointer hover is orange regardless of legality, and never persists
-   as a class: same specificity as the two rules above, source order last
-   so it wins for the duration of the hover only. */
-.zone-list-entry:hover img {
-  border-color: var(--warning);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--selected) 55%, transparent);
+/* Actionable hover/focus amplifies the base green ring; selected and neutral
+   entries are excluded so hover never overrides orange or paints neutrals. */
+.zone-list-entry.is-actionable:not(.is-selected):hover img {
+  border-color: var(--success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--legal) 78%, transparent);
 }
 
-/* Unavailable exceeds hover/focus specificity so hard-locked choices stay
-   visibly red. Selected tiles never match and retain removable orange state. */
+/* Unavailable entries show a red ring (danger, not danger-strong) so the
+   invalid-target language matches the field card targeting halo below. */
 .zone-list-entry.is-unavailable:not(.is-selected) img,
 .zone-list-entry.is-unavailable:not(.is-selected):hover img,
 .zone-list-entry.is-unavailable:not(.is-selected):focus-within img {
-  border-color: var(--danger-strong);
-  box-shadow: 0 0 0 3px
-    color-mix(in srgb, var(--danger-strong) 78%, transparent);
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 65%, transparent);
 }
 
 .zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open) {

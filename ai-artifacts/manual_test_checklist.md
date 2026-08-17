@@ -1237,3 +1237,14 @@ Start a dev duel (`npm run dev`), open the app in the browser, and pick decks/st
 - [ ] Click elsewhere on the duel field (not a launcher) — confirm the list closes (existing outside-click dismissal is unchanged).
 - [ ] Start a new duel effect that triggers a different target prompt — confirm the list opens expanded (collapse resets to `false` for the new prompt).
 - [ ] Confirm the browser console shows no errors during the above.
+
+## T14 halo-semantics-v2
+
+Start a dev duel (`npm run dev`), open the app in the browser, and pick decks/start a duel.
+
+- [ ] Open the GY (graveyard) browse list — hover entries that have no choices (neutral): confirm **no colored ring appears** on hover.
+- [ ] Activate a card effect with field targets (e.g. a monster that targets another monster). Hover actionable field cards — confirm **green ring** appears on hover.
+- [ ] Select a target card in the list — confirm **orange ring** persists even while hovering.
+- [ ] In a multi-select prompt, select up to the maximum, then hover an unselected entry — confirm **red ring** appears on the unavailable entry.
+- [ ] With a card-targeting prompt active: hover a non-candidate field card (one that is NOT highlighted green) — confirm **red ring** appears on hover and **disappears** when the pointer leaves.
+- [ ] Confirm the browser console shows no errors during the above.

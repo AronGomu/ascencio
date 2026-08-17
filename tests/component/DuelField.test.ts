@@ -3200,6 +3200,42 @@ describe("DuelField", () => {
     await openGraveyardList();
     expect(windowRoot("zoneList")?.classList.contains("is-active")).toBe(true);
   });
+
+  it("the field flags an active targeting prompt", () => {
+    const selectionPrompt = fieldPrompt("selectCard", [
+      mountedChoice("select", "Select"),
+    ]);
+    const selectionSpec = activeSpec(selectionPrompt);
+    render(DuelField, {
+      board: board("ST-05"),
+      prompt: selectionPrompt,
+      spec: selectionSpec,
+      session: createInteractionSession(selectionSpec),
+    });
+    expect(
+      document
+        .querySelector('[data-cy="duel-field"]')
+        ?.getAttribute("data-targeting"),
+    ).toBe("true");
+
+    cleanup();
+
+    const actionPrompt = fieldPrompt("idleCommand", [
+      mountedChoice("activate", "Activate"),
+    ]);
+    const actionSpec = activeSpec(actionPrompt);
+    render(DuelField, {
+      board: board("ST-05"),
+      prompt: actionPrompt,
+      spec: actionSpec,
+      session: createInteractionSession(actionSpec),
+    });
+    expect(
+      document
+        .querySelector('[data-cy="duel-field"]')
+        ?.hasAttribute("data-targeting"),
+    ).toBe(false);
+  });
 });
 
 /* T16: every legal off-field target of one prompt in a single window. */

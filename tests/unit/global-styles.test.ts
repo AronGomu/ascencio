@@ -244,9 +244,9 @@ describe("global styles", () => {
     );
     expect(unavailable).toContain(":hover img");
     expect(unavailable).toContain(":focus-within img");
-    expect(unavailable).toContain("border-color: var(--danger-strong)");
+    expect(unavailable).toContain("border-color: var(--danger)");
     expect(unavailable).toContain(
-      "color-mix(in srgb, var(--danger-strong) 78%, transparent)",
+      "color-mix(in srgb, var(--danger) 65%, transparent)",
     );
     expect(unavailable).not.toContain("var(--warning)");
   });

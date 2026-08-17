@@ -958,6 +958,9 @@
   bind:this={fieldRoot}
   data-cy="duel-field"
   data-dragging={dragCard === null ? undefined : "true"}
+  data-targeting={spec !== null && spec.kind === "cardSelection"
+    ? "true"
+    : undefined}
   data-prompt-kind={prompt === null ? undefined : prompt.kind}
   style={`width: ${renderLayout.geometry.width}px; height: ${renderLayout.geometry.height}px;`}
   onclick={dismissOnOutsideClick}

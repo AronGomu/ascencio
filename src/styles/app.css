@@ -380,6 +380,14 @@ h4 {
   min-height: 0;
 }
 
+.card-preview-panel__stats {
+  margin: 0.15rem 0 0.4rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 .card-preview-panel__text-region {
   position: relative;
   min-height: 0;

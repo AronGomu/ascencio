@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   cardPreviewForCode,
   cardPreviewForPublicCard,
+  formatCardStatsLine,
   HIDDEN_CARD_PREVIEW,
   stackTopCode,
   type CardPreviewText,
@@ -37,6 +38,7 @@ describe("cardPreviewForCode", () => {
       code: KNOWN,
       name: "The Legendary Fisherman",
       description: "This card is unaffected by Spell effects.",
+      statsLine: null,
     });
   });
 
@@ -45,6 +47,7 @@ describe("cardPreviewForCode", () => {
       code: UNKNOWN,
       name: `Card ${UNKNOWN}`,
       description: "No card text available.",
+      statsLine: null,
     });
   });
 
@@ -53,7 +56,31 @@ describe("cardPreviewForCode", () => {
       code: NAMELESS,
       name: "Blue-Eyes White Dragon",
       description: "No card text available.",
+      statsLine: null,
     });
+  });
+
+  it("carries the stats line from text fields", () => {
+    const textsWithStats: ReadonlyMap<number, CardPreviewText> = new Map([
+      [
+        KNOWN,
+        {
+          name: "Dark Magician",
+          description: "The ultimate wizard in terms of attack and defense.",
+          family: "monster",
+          attribute: "DARK",
+          race: "Spellcaster",
+          ratingLabel: "Level",
+          levelRankLink: 7,
+          attack: 2500,
+          defense: 2100,
+        },
+      ],
+    ]);
+    const result = cardPreviewForCode(KNOWN, textsWithStats);
+    expect(result?.statsLine).toBe(
+      "DARK · Spellcaster · Level 7 · ATK 2500 / DEF 2100",
+    );
   });
 });
 
@@ -75,6 +102,7 @@ describe("cardPreviewForPublicCard", () => {
       code: KNOWN,
       name: "The Legendary Fisherman",
       description: "This card is unaffected by Spell effects.",
+      statsLine: null,
     });
   });
 
@@ -105,6 +133,7 @@ describe("cardPreviewForPublicCard", () => {
       code: KNOWN,
       name: "The Legendary Fisherman",
       description: "This card is unaffected by Spell effects.",
+      statsLine: null,
     });
   });
 
@@ -137,7 +166,77 @@ describe("HIDDEN_CARD_PREVIEW", () => {
       code: 0,
       name: "Face-down card",
       description: "No information is available for this card.",
+      statsLine: null,
     });
+  });
+});
+
+describe("formatCardStatsLine", () => {
+  it("formats a monster stat line", () => {
+    expect(
+      formatCardStatsLine({
+        name: "Dark Magician",
+        family: "monster",
+        attribute: "DARK",
+        race: "Spellcaster",
+        ratingLabel: "Level",
+        levelRankLink: 4,
+        attack: 1800,
+        defense: 1200,
+      }),
+    ).toBe("DARK · Spellcaster · Level 4 · ATK 1800 / DEF 1200");
+  });
+
+  it("formats a link monster without defense", () => {
+    expect(
+      formatCardStatsLine({
+        name: "Decode Talker",
+        family: "monster",
+        attribute: "DARK",
+        race: "Cyberse",
+        ratingLabel: "Link",
+        levelRankLink: 2,
+        attack: 1400,
+        defense: null,
+      }),
+    ).toBe("DARK · Cyberse · Link 2 · ATK 1400");
+  });
+
+  it("renders unknown attack as a question mark", () => {
+    expect(
+      formatCardStatsLine({
+        name: "Some Monster",
+        family: "monster",
+        attack: null,
+        defense: 0,
+      }),
+    ).toBe("ATK ? / DEF 0");
+  });
+
+  it("formats a spell with its subtype", () => {
+    expect(
+      formatCardStatsLine({
+        name: "Mystical Space Typhoon",
+        family: "spell",
+        subtypes: ["Quick-Play"],
+      }),
+    ).toBe("Spell · Quick-Play");
+  });
+
+  it("formats a spell with no subtype", () => {
+    expect(
+      formatCardStatsLine({
+        name: "Pot of Greed",
+        family: "spell",
+        subtypes: [],
+      }),
+    ).toBe("Spell");
+  });
+
+  it("returns null without family data", () => {
+    expect(
+      formatCardStatsLine({ name: "Unknown", description: "Some text" }),
+    ).toBeNull();
   });
 });
 

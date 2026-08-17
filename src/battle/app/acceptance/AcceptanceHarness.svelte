@@ -102,6 +102,7 @@
         code: cardCode(97590747),
         name: "The Legendary Fisherman",
         description: previewDescription,
+        statsLine: null,
       }}
     />
     <div class="duel-field-slot" data-cy="acceptance-preview-field"></div>

@@ -79,6 +79,12 @@
     </div>
     <div class="card-preview-panel__body" data-cy="card-preview-body">
       <h2 data-cy="card-preview-name">{preview.name}</h2>
+      {#if preview.statsLine}<p
+          class="card-preview-panel__stats"
+          data-cy="card-preview-stats"
+        >
+          {preview.statsLine}
+        </p>{/if}
       <div
         class="card-preview-panel__text-region"
         data-cy="card-preview-text-region"

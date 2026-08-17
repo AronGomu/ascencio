@@ -1248,3 +1248,14 @@ Start a dev duel (`npm run dev`), open the app in the browser, and pick decks/st
 - [ ] In a multi-select prompt, select up to the maximum, then hover an unselected entry — confirm **red ring** appears on the unavailable entry.
 - [ ] With a card-targeting prompt active: hover a non-candidate field card (one that is NOT highlighted green) — confirm **red ring** appears on hover and **disappears** when the pointer leaves.
 - [ ] Confirm the browser console shows no errors during the above.
+
+
+## T15 preview-stats-row
+
+- [ ] Hover a monster card in the preview panel — stats line shows `ATTRIBUTE · Race · Level/Rank N · ATK X / DEF Y` between name and effect text.
+- [ ] Hover a Link monster — stats line shows `ATTRIBUTE · Race · Link N · ATK X` (no `/ DEF` segment).
+- [ ] Hover a Spell card — stats line shows `Spell · SubType` (e.g., `Spell · Quick-Play`) or plain `Spell` when there is no subtype.
+- [ ] Hover a Trap card — stats line shows `Trap · SubType` or plain `Trap`.
+- [ ] Hover a card with unknown ATK/DEF — stats line renders `ATK ?` or `DEF ?` for null/negative values.
+- [ ] Hovering a face-down card shows no stats row (hidden card preview).
+- [ ] Stats line text is muted, small (0.78rem), and bold — matches `.card-preview-panel__stats` spec.

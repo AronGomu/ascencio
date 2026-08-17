@@ -23,6 +23,7 @@ function preview(
     code,
     name: "The Legendary Fisherman",
     description: "This card is unaffected by Spell effects.",
+    statsLine: null,
     ...overrides,
   };
 }
@@ -143,6 +144,34 @@ describe("CardPreviewPanel", () => {
         .querySelector('[data-cy="card-preview-image"]')
         ?.getAttribute("src"),
     ).toBe("/placeholder.webp");
+  });
+
+  it("renders the stats row between name and effect text", () => {
+    render(CardPreviewPanel, {
+      preview: preview(FISHERMAN, {
+        statsLine: "DARK · Spellcaster · Level 4 · ATK 1800 / DEF 1200",
+      }),
+    });
+
+    const stats = document.querySelector('[data-cy="card-preview-stats"]');
+    const name = document.querySelector('[data-cy="card-preview-name"]');
+    const region = document.querySelector(
+      '[data-cy="card-preview-text-region"]',
+    );
+    expect(stats).not.toBeNull();
+    expect(stats?.textContent).toBe(
+      "DARK · Spellcaster · Level 4 · ATK 1800 / DEF 1200",
+    );
+    const body = document.querySelector('[data-cy="card-preview-body"]');
+    expect(body?.children[0]).toBe(name);
+    expect(body?.children[1]).toBe(stats);
+    expect(body?.children[2]).toBe(region);
+  });
+
+  it("omits the stats row without stats", () => {
+    render(CardPreviewPanel, { preview: preview() });
+
+    expect(document.querySelector('[data-cy="card-preview-stats"]')).toBeNull();
   });
 
   it("keeps only the real text scroller keyboard focusable", () => {

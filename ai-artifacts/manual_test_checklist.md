@@ -77,6 +77,11 @@
 - [ ] Confirm target shows no ×, conditional Cancel, dynamic source notice, and privacy-safe sorting.
 - [ ] Confirm browse still dismisses through outside press, Escape, ×, and Cancel.
 
+## T12 list-dialog-upright-no-count-text
+
+- [ ] Run `npm run dev`, open a duel, browse an opponent's Graveyard: confirm all cards render upright (title at top, art below).
+- [ ] In a duel with a search/select-1-of-1 prompt, confirm the footer shows "0 / 1 selected" counter but NO "Select between 1 and 1 choices" text.
+
 ## T14 selection-ui-integration
 
 - [ ] Confirm off-field exact-single clicks draft only, then Validate submits; mounted-field exact-single still submits immediately.

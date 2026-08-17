@@ -622,3 +622,11 @@ test("duplicate choice compatibility keeps two opaque IDs keyboard and max safe"
   await first.click();
   expect(await selectedIds(page)).toEqual(["acceptance-duplicate-second"]);
 });
+
+test("an opponent card renders upright in the list", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await open(page, "card-list-browse-opponent");
+  const entryImg = page.locator(`${tileSelector}.is-opponent img`).first();
+  await expect(entryImg).toBeVisible();
+  await expect(entryImg).toHaveCSS("transform", "none");
+});

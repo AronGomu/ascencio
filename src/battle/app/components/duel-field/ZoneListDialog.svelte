@@ -32,7 +32,6 @@
   export let minimum = 0;
   export let maximum = 0;
   export let confirmValid = false;
-  export let validationMessage = "";
   export let cancelable = false;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let cardBackUrl = "";
@@ -271,10 +270,6 @@
           <button
             type="button"
             disabled={disabled || !selectionState.validateEnabled}
-            aria-describedby={!selectionState.validateEnabled &&
-            validationMessage
-              ? "zone-list-dialog-validation"
-              : undefined}
             onclick={() => onconfirm()}
             data-cy="zone-list-dialog-confirm-button">Validate selection</button
           >
@@ -286,15 +281,6 @@
               onclick={() => oncancel()}
               data-cy="zone-list-dialog-target-cancel-button">Cancel</button
             >
-          {/if}
-          {#if !confirmValid && validationMessage}
-            <p
-              id="zone-list-dialog-validation"
-              class="validation"
-              data-cy="zone-list-dialog-validation"
-            >
-              {validationMessage}
-            </p>
           {/if}
         {:else}
           <button

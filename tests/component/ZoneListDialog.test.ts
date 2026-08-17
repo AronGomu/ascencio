@@ -140,7 +140,6 @@ function renderTargetDialog(
     readonly minimum?: number;
     readonly maximum?: number;
     readonly confirmValid?: boolean;
-    readonly validationMessage?: string;
     readonly cancelable?: boolean;
     readonly title?: string;
   } = {},
@@ -157,7 +156,6 @@ function renderTargetDialog(
     minimum: overrides.minimum ?? 1,
     maximum: overrides.maximum ?? 1,
     confirmValid: overrides.confirmValid ?? false,
-    validationMessage: overrides.validationMessage ?? "",
     cancelable: overrides.cancelable ?? false,
     ...(overrides.title === undefined ? {} : { title: overrides.title }),
     cardBackUrl: "back.png",
@@ -572,19 +570,22 @@ describe("ZoneListDialog target mode", () => {
     expect(unavailable?.getAttribute("aria-disabled")).toBe("true");
   });
 
-  it("shows the validation message and only offers Cancel when the engine allows it", async () => {
+  it("never renders the selection-range validation text", () => {
+    renderTargetDialog({ minimum: 1, maximum: 1, confirmValid: false });
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-validation"]'),
+    ).toBeNull();
+    expect(document.body.textContent).not.toMatch(/Select between/);
+  });
+
+  it("only offers Cancel when the engine allows it", async () => {
     const user = userEvent.setup();
     const harness = renderTargetDialog({
       minimum: 1,
       maximum: 2,
-      validationMessage: "Select at least 1 card",
       cancelable: true,
     });
 
-    expect(
-      document.querySelector('[data-cy="zone-list-dialog-validation"]')
-        ?.textContent,
-    ).toContain("Select at least 1 card");
     const cancel = document.querySelector<HTMLButtonElement>(
       '[data-cy="zone-list-dialog-target-cancel-button"]',
     );

@@ -8,6 +8,7 @@ export type AcceptanceScenarioId =
   | "preview-long"
   | "card-list-browse-six"
   | "card-list-browse-overflow"
+  | "card-list-browse-opponent"
   | "card-list-empty"
   | "card-list-target-chrome"
   | "card-list-single"
@@ -29,6 +30,7 @@ const SCENARIOS: ReadonlySet<string> = new Set<AcceptanceScenarioId>([
   "preview-long",
   "card-list-browse-six",
   "card-list-browse-overflow",
+  "card-list-browse-opponent",
   "card-list-empty",
   "card-list-target-chrome",
   "card-list-single",

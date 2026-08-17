@@ -2016,8 +2016,7 @@ button.duel-field-zone,
   object-fit: cover;
 }
 
-.duel-field-stack.is-opponent .duel-field-stack__art img,
-.zone-list-entry.is-opponent > img {
+.duel-field-stack.is-opponent .duel-field-stack__art img {
   transform: rotate(180deg);
 }
 

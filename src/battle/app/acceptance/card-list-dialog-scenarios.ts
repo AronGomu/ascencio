@@ -104,6 +104,44 @@ function browseScenario(
 }
 
 export const CARD_LIST_BROWSE_SIX = browseScenario("card-list-browse-six", 6);
+
+const opponentStack: BoardStackView = Object.freeze({
+  id: "p1:graveyard",
+  targetId: "stack:p1:graveyard",
+  player: 1,
+  zone: "graveyard",
+  count: 2,
+  publicCount: 2,
+  label: "Opponent Graveyard",
+  accessibleLabel: "Opponent Graveyard",
+  x: 0,
+  y: 0,
+  width: 0.1,
+  height: 0.14,
+});
+
+const opponentEntries: readonly ZoneListEntry[] = Object.freeze(
+  Array.from({ length: 2 }, (_, index) =>
+    Object.freeze({
+      id: `acceptance:opp-graveyard:${index}`,
+      position: index + 1,
+      controller: 1 as const,
+      location: "graveyard" as const,
+      sequence: index,
+      identityVisible: true,
+      code: cardCode(97590747),
+      label: `Opponent Card ${index + 1}`,
+    }),
+  ),
+);
+
+export const CARD_LIST_BROWSE_OPPONENT: CardListAcceptanceScenario =
+  Object.freeze({
+    id: "card-list-browse-opponent",
+    stack: opponentStack,
+    entries: opponentEntries,
+    choices: Object.freeze([]),
+  });
 export const CARD_LIST_BROWSE_OVERFLOW = browseScenario(
   "card-list-browse-overflow",
   12,
@@ -286,6 +324,8 @@ export function cardListAcceptanceScenario(
       return CARD_LIST_BROWSE_SIX;
     case "card-list-browse-overflow":
       return CARD_LIST_BROWSE_OVERFLOW;
+    case "card-list-browse-opponent":
+      return CARD_LIST_BROWSE_OPPONENT;
     case "card-list-empty":
       return CARD_LIST_EMPTY;
     case "card-list-target-chrome":

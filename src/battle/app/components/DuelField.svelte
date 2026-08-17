@@ -1046,7 +1046,6 @@
       minimum={spec.constraints.minimum}
       maximum={spec.constraints.maximum}
       confirmValid={validation.valid}
-      validationMessage={validation.valid ? "" : validation.message}
       cancelable={spec.constraints.cancelable}
       {imageLibrary}
       cardBackUrl={resolvedCardBackUrl}

@@ -538,12 +538,21 @@ test("duel colors resolve from tokens", async ({ page }) => {
   /* Chromium serializes `color-mix()` as `color(srgb r g b / a)` with 0-1
      channels, so compare sRGB channels rather than the literal string the
      pre-token `rgb(126 226 168 / 0.55)` used to print. */
-  expect(sRgbChannels(halos.legalShadow)).toEqual([...hexToChannels(tokens.legal), 0.55]);
-  expect(sRgbChannels(halos.selectedShadow)).toEqual([...hexToChannels(tokens.selected), 0.78]);
+  expect(sRgbChannels(halos.legalShadow)).toEqual([
+    ...hexToChannels(tokens.legal),
+    0.55,
+  ]);
+  expect(sRgbChannels(halos.selectedShadow)).toEqual([
+    ...hexToChannels(tokens.selected),
+    0.78,
+  ]);
 });
 
 function hexToRgb(hex: string): string {
-  const [r, g, b] = hex.slice(1).match(/.{2}/g)!.map((h) => parseInt(h, 16));
+  const [r, g, b] = hex
+    .slice(1)
+    .match(/.{2}/g)!
+    .map((h) => parseInt(h, 16));
   return `rgb(${r}, ${g}, ${b})`;
 }
 
@@ -564,3 +573,52 @@ function sRgbChannels(value: string): [number, number, number, number] {
     .map((channel) => Math.round(Number(channel) * 255));
   return [red, green, blue, Number(match![4])];
 }
+
+/* T14 halo v2: the field's `data-targeting` attribute exists to produce the
+   invalid-target ring on a non-candidate card. Component tests assert the
+   attribute; only a real browser can assert the rule it gates. */
+test("a non-candidate field card halos red only while targeting", async ({
+  page,
+}) => {
+  await page.goto("?scenario=field-invalid-target");
+  const field = page.locator('[data-cy="duel-field"]');
+  await expect(field).toHaveAttribute("data-targeting", "true");
+
+  const danger = await page.evaluate(() =>
+    getComputedStyle(document.documentElement)
+      .getPropertyValue("--danger")
+      .trim(),
+  );
+  expect(danger).toBe("#ff8c9b");
+  const invalidRing = hexToRgb(danger);
+
+  const board = page.locator('[data-cy="duel-field-board"]');
+  const candidate = board.locator(".duel-field-card.is-actionable");
+  const nonCandidate = board.locator(".duel-field-card:not(.is-actionable)");
+  await expect(candidate).toHaveCount(1);
+  await expect(nonCandidate).toHaveCount(1);
+
+  await nonCandidate.hover();
+  await expect(nonCandidate.locator(".duel-field-card__art")).toHaveCSS(
+    "border-color",
+    invalidRing,
+  );
+
+  await candidate.hover();
+  await expect(candidate.locator(".duel-field-card__art")).not.toHaveCSS(
+    "border-color",
+    invalidRing,
+  );
+
+  /* The same two cards with no targeting prompt: hover paints nothing red. */
+  await page.goto("?scenario=field-defense");
+  await expect(field).not.toHaveAttribute("data-targeting", "true");
+  const idleCard = board
+    .locator(".duel-field-card:not(.is-actionable)")
+    .first();
+  await idleCard.hover();
+  await expect(idleCard.locator(".duel-field-card__art")).not.toHaveCSS(
+    "border-color",
+    invalidRing,
+  );
+});

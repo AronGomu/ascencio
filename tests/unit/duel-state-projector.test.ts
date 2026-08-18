@@ -1839,6 +1839,53 @@ describe("DuelStateProjector", () => {
     });
   });
 
+  it("a queried material keeps a real owner when it detaches into a pile", () => {
+    const value = projector();
+    moveOpponent(
+      value,
+      97590747,
+      {
+        location: EngineLocation.DECK,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.MONSTER,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    );
+    /* A material the projector never saw attach: it comes back from a core
+       query, so it carries no recorded owner of its own. */
+    value.reconcileOverlayMaterials(
+      { controller: 1, location: EngineLocation.MONSTER, sequence: 0 },
+      [{ code: 123456789, identityVisible: true }],
+    );
+    expect(
+      value.snapshot().players[1].monsters[0]?.overlayMaterials,
+    ).toHaveLength(1);
+
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 123456789,
+      from: {
+        controller: 1,
+        location: (EngineLocation.MONSTER | EngineLocation.OVERLAY) as never,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+        overlay_sequence: 0,
+      },
+      to: {
+        controller: 1,
+        location: EngineLocation.GRAVEYARD,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+
+    const detached = value.snapshot().players[1].graveyard[0];
+    expect(detached?.code).toBe(123456789);
+    expect(detached?.owner).toBe(1);
+  });
+
   it("retains hidden opponent material identity with explicit presentation visibility", () => {
     const value = projector();
     value.apply({

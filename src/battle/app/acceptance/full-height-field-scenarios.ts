@@ -42,7 +42,7 @@ export function fullHeightFieldScenario(
   const snapshot = state(
     id,
     extraMonsterZones,
-    id === "field-defense"
+    id === "field-defense" || id === "field-invalid-target"
       ? [
           card(
             "acceptance-defense",
@@ -84,7 +84,9 @@ export function fullHeightFieldScenario(
   const phaseSpec =
     id === "field-hand-zoom"
       ? acceptanceZoomSpec(snapshot, result.value)
-      : acceptancePhaseSpec(snapshot, result.value);
+      : id === "field-invalid-target"
+        ? acceptanceTargetSpec(snapshot, result.value)
+        : acceptancePhaseSpec(snapshot, result.value);
   return Object.freeze({
     id,
     extraMonsterZones,
@@ -165,6 +167,46 @@ function acceptancePhaseSpec(
   });
   if (spec.kind === "inactive")
     throw new Error("Acceptance phase choices did not map to field controls");
+  return spec;
+}
+
+/**
+ * One legal on-field target beside one that is not, so the field carries
+ * `data-targeting` while a non-candidate card is still hoverable.
+ */
+function acceptanceTargetSpec(
+  snapshot: PublicDuelState,
+  board: BoardViewModel,
+): ActiveInteractionSpec {
+  const prompt: PlayerPrompt = {
+    id: promptId("acceptance-target-choices"),
+    kind: "selectCard",
+    player: 0,
+    title: "Select a target",
+    choices: [
+      {
+        id: choiceId("acceptance-legal-target"),
+        label: "Select",
+        action: "select",
+        card: {
+          instanceId: cardInstanceId("acceptance-defense"),
+          controller: 0 as PlayerIndex,
+          location: "monster",
+          sequence: 2,
+        },
+      },
+    ],
+    minimum: 1,
+    maximum: 1,
+    cancelable: false,
+    ordered: false,
+  };
+  const spec = mapPromptToInteractionSpec(prompt, snapshot, board, {
+    workerGeneration: 1,
+    sessionGeneration: 1,
+  });
+  if (spec.kind !== "cardSelection")
+    throw new Error("Acceptance target choices did not map to a selection");
   return spec;
 }
 

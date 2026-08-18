@@ -6,7 +6,6 @@ export default defineConfig({
   plugins: [svelte(), svelteTesting()],
   test: {
     environment: "node",
-    setupFiles: ["tests/component/setup.ts"],
     include: ["tests/{unit,integration,component}/**/*.test.ts"],
     testTimeout: 30_000,
     hookTimeout: 30_000,

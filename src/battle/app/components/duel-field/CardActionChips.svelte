@@ -10,6 +10,13 @@
   export let ondismiss: () => void;
   export let variant: "field" | "list" = "field";
   export let ondetails: (() => void) | null = null;
+  /* A second copy of a card's chips exists while the hand zoom overlay is open:
+     the card keeps its own for focus and pin, the overlay draws the hovered
+     set. Both would otherwise carry the same `data-cy`, and those values are
+     required to be unique within a document. */
+  export let dataCyScope = "";
+
+  $: dataCyPrefix = dataCyScope === "" ? "" : `${dataCyScope}-`;
 
   let chipsElement: HTMLDivElement | undefined;
 
@@ -57,7 +64,7 @@
   role="group"
   aria-label={`${cardLabel} actions`}
   bind:this={chipsElement}
-  data-cy={`card-action-chips-${cardId}`}
+  data-cy={`${dataCyPrefix}card-action-chips-${cardId}`}
 >
   {#each choices as choice (choice.id)}
     <button
@@ -69,7 +76,7 @@
       {disabled}
       onclick={() => onchoose(choice)}
       onkeydown={handleKeydown}
-      data-cy={`card-action-chip-${choice.id}`}
+      data-cy={`${dataCyPrefix}card-action-chip-${choice.id}`}
       >{variant === "list" && choice.action === "activate"
         ? "Activate effect"
         : cardActionLabel(choice.action)}</button
@@ -81,7 +88,7 @@
       class="card-action-chip card-action-chip--details"
       onclick={ondetails}
       onkeydown={handleKeydown}
-      data-cy={`card-action-details-${cardId}`}>Details</button
+      data-cy={`${dataCyPrefix}card-action-details-${cardId}`}>Details</button
     >
   {/if}
 </div>

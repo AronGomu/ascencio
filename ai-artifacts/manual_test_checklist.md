@@ -1269,5 +1269,7 @@ Start a dev duel (`npm run dev`), open the app in the browser, pick decks and st
 - [ ] With Full Control on, trigger a chain window you opened yourself — confirm the window waits for you instead of auto-passing.
 - [ ] Open a chain window while holding Ctrl, then release Ctrl while the window is still on screen — confirm nothing answers it for you.
 - [ ] Rotate a phone-sized viewport into the portrait duel layout (device toolbar, e.g. 390x844) and hover a hand card near the right edge — confirm the zoom overlay stays inside the rotated board instead of being pulled toward the left edge.
-- [ ] **Known defect, confirm severity:** rest the pointer on a hand card without moving it — the zoom overlay currently mounts and unmounts every other frame (visible strobe). Note whether the card can still be clicked and dragged while it strobes.
-- [ ] **Known defect, confirm severity:** with the zoom overlay open, try to click the hand card itself and to drag it to a zone — the overlay is anchored at 1.6x on the card's bottom edge and covers it, so it competes for the pointer.
+- [ ] Rest the pointer on a hand card without moving it for a few seconds — confirm the zoom overlay mounts once and stays perfectly still, with no flicker or strobe.
+- [ ] With the zoom overlay open, click the hand card itself, then drag it onto a highlighted zone — confirm both work exactly as they do without the overlay, even though the overlay art is drawn over the card.
+- [ ] With the zoom overlay open, move the pointer straight up from the card onto the action chips above it — confirm the overlay stays open the whole way and the chip you click fires its action.
+- [ ] Move the pointer off the card sideways, away from the overlay — confirm the overlay closes immediately.

@@ -67,7 +67,8 @@
     card: BoardCardView,
     element: HTMLElement,
   ) => void = () => undefined;
-  export let oncardzoomleave: () => void = () => undefined;
+  export let oncardzoomleave: (related: EventTarget | null) => void = () =>
+    undefined;
 
   let boardElement: HTMLDivElement;
   let navigationState: FieldNavigationState = createFieldNavigationState();

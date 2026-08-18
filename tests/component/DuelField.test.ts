@@ -2515,12 +2515,80 @@ describe("DuelField", () => {
     const overlay = document.querySelector('[data-cy^="hand-zoom-overlay-"]');
     expect(overlay).not.toBeNull();
     expect(
-      overlay!.querySelector('[data-cy^="card-action-chips-"]'),
+      overlay!.querySelector(
+        '[data-cy^="hand-zoom-overlay-card-action-chips-"]',
+      ),
     ).not.toBeNull();
     await fireEvent.pointerLeave(article);
     expect(
       document.querySelector('[data-cy^="hand-zoom-overlay-"]'),
     ).toBeNull();
+  });
+
+  /* The round-4 strobe: the overlay is anchored on the card's bottom edge, so
+     it is drawn over the card that opened it. A crossing into it reports the
+     card's own `pointerleave`, and closing on that alone unmounts the overlay
+     before the pointer can ever be reported as being on it — which puts the
+     pointer back on the card, which reopens it, ~30 times a second. */
+  it("a pointer crossing from the hand card onto the overlay keeps that overlay mounted", async () => {
+    renderDraggableHand();
+    const article = handCardArticle();
+    await fireEvent.pointerEnter(article);
+    const overlay = document.querySelector('[data-cy^="hand-zoom-overlay-"]');
+    expect(overlay).not.toBeNull();
+    const overlayArt = overlay!.querySelector(
+      '[data-cy^="hand-zoom-overlay-image-"]',
+    );
+    expect(overlayArt).not.toBeNull();
+
+    /* Built by hand rather than through `fireEvent.pointerLeave`: jsdom ships
+       no `PointerEvent`, so the helper degrades to an event carrying no
+       `relatedTarget` — the one field under test here. */
+    await fireEvent(
+      article,
+      new MouseEvent("pointerleave", { relatedTarget: overlayArt }),
+    );
+
+    // Same node, not merely a node: a remount is exactly what strobes.
+    expect(document.querySelector('[data-cy^="hand-zoom-overlay-"]')).toBe(
+      overlay,
+    );
+  });
+
+  it("leaving the hand card for anything outside the overlay still closes it", async () => {
+    renderDraggableHand();
+    const article = handCardArticle();
+    await fireEvent.pointerEnter(article);
+    expect(document.querySelector('[data-cy^="hand-zoom-overlay-"]')).not.toBe(
+      null,
+    );
+
+    await fireEvent(
+      article,
+      new MouseEvent("pointerleave", {
+        relatedTarget: document.querySelector('[data-cy="duel-field"]'),
+      }),
+    );
+
+    expect(
+      document.querySelector('[data-cy^="hand-zoom-overlay-"]'),
+    ).toBeNull();
+  });
+
+  it("the open overlay leaves every data-cy in the document unique", async () => {
+    renderDraggableHand();
+    await fireEvent.pointerEnter(handCardArticle());
+    expect(document.querySelector('[data-cy^="hand-zoom-overlay-"]')).not.toBe(
+      null,
+    );
+
+    const seen = new Map<string, number>();
+    for (const element of document.querySelectorAll("[data-cy]")) {
+      const value = element.getAttribute("data-cy") ?? "";
+      seen.set(value, (seen.get(value) ?? 0) + 1);
+    }
+
+    expect([...seen].filter(([, count]) => count > 1)).toEqual([]);
   });
 
   it("an unknown hand card never mounts the zoom overlay", async () => {

@@ -3,7 +3,11 @@
 import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 import HandZoomOverlay from "../../src/battle/app/components/duel-field/HandZoomOverlay.svelte";
-import { cardInstanceId } from "../../src/battle/duel/contracts/ids.ts";
+import {
+  cardInstanceId,
+  choiceId,
+} from "../../src/battle/duel/contracts/ids.ts";
+import type { InteractionChoice } from "../../src/battle/app/prompts/interaction-spec.ts";
 import type { BoardCardView } from "../../src/battle/field/board-view-model.ts";
 
 afterEach(() => {
@@ -60,14 +64,23 @@ function overlay(): HTMLElement {
   ) as HTMLElement;
 }
 
+const CHOICES: readonly InteractionChoice[] = [
+  { id: choiceId("summon"), label: "Summon", action: "summon" },
+];
+
 /* Nested under `props`: `anchor` is also a Svelte mount option, so a flat
    object would be read as one and the component would get no props at all. */
-function renderOverlay(frameWidth: number, anchor = ANCHOR) {
+function renderOverlay(
+  frameWidth: number,
+  anchor = ANCHOR,
+  choices: readonly InteractionChoice[] = [],
+) {
   return render(HandZoomOverlay, {
     props: {
       card: CARD,
       anchor,
       frameWidth,
+      choices,
       imageUrl: "/back.webp",
     },
   });
@@ -104,5 +117,28 @@ describe("HandZoomOverlay clamping", () => {
     cleanup();
     renderOverlay(FRAME_WIDTH, { ...ANCHOR, top: 10 });
     expect(overlay().style.top).toBe("8px");
+  });
+});
+
+describe("HandZoomOverlay pointer surface", () => {
+  it("stops the chips bridge at the anchor card's top edge", () => {
+    renderOverlay(FRAME_WIDTH, ANCHOR, CHOICES);
+
+    expect(
+      document.querySelector('[data-cy="hand-zoom-overlay-bridge-p0-hand-2"]'),
+    ).not.toBeNull();
+    /* Measured from the overlay's bottom edge, which sits on the card's: the
+       bridge may cover the overlay above the card and nothing below it. */
+    expect(overlay().style.getPropertyValue("--hand-zoom-bridge-bottom")).toBe(
+      `${ANCHOR.height}px`,
+    );
+  });
+
+  it("renders no pointer-catching part at all without chips to reach", () => {
+    renderOverlay(FRAME_WIDTH);
+
+    expect(
+      document.querySelector('[data-cy^="hand-zoom-overlay-bridge-"]'),
+    ).toBeNull();
   });
 });

@@ -196,7 +196,6 @@
        the anchor was measured in, never against the viewport. */
     frameWidth: number;
   } | null = null;
-  let handZoomOverlayHovered = false;
   let handZoomBoardRef: BoardViewModel | null = null;
 
   $: resolvedCardBackUrl = cardBackUrl || DEFAULT_CARD_BACK;
@@ -677,21 +676,18 @@
     ghostPromptKey = key;
     if (ghostOrigin !== null) removeGhost();
     handZoom = null;
-    handZoomOverlayHovered = false;
   }
 
   function clearHandZoomOnBoardChange(value: BoardViewModel): void {
     if (value !== handZoomBoardRef) {
       handZoomBoardRef = value;
       handZoom = null;
-      handZoomOverlayHovered = false;
     }
   }
 
   function enterHandZoom(card: BoardCardView, element: HTMLElement): void {
     const frame = readStageFrame(fieldRoot);
     const rect = toFrameRect(frame, element.getBoundingClientRect());
-    handZoomOverlayHovered = false;
     handZoom = {
       card,
       anchor: rect,
@@ -699,10 +695,24 @@
     };
   }
 
-  function leaveHandZoom(): void {
-    if (!handZoomOverlayHovered) {
-      handZoom = null;
-    }
+  /* ADR-032 §5: the overlay dies when the pointer leaves the *union* of the
+     hand card and the overlay, never on either boundary on its own. The
+     crossing's `relatedTarget` settles that synchronously, inside the very
+     event that reports the leave. A flag raised by the other half's
+     `pointerenter` cannot: that enter is a later dispatch, and the overlay is
+     already unmounted by the microtask checkpoint in between. */
+  function leaveHandZoom(related: EventTarget | null): void {
+    if (insideHandZoomUnion(related)) return;
+    handZoom = null;
+  }
+
+  function insideHandZoomUnion(related: EventTarget | null): boolean {
+    if (handZoom === null || !(related instanceof Element)) return false;
+    if (related.closest(".hand-zoom-overlay") !== null) return true;
+    return (
+      related.closest("[data-card-id]")?.getAttribute("data-card-id") ===
+      handZoom.card.id
+    );
   }
 
   /* The ghost's home/target rect is read live from the DOM only here, at
@@ -1038,13 +1048,7 @@
       onchoose={(choice) =>
         dispatch({ type: "chooseChoice", choiceId: choice.id })}
       ondismiss={() => (handZoom = null)}
-      onpointerenter={() => {
-        handZoomOverlayHovered = true;
-      }}
-      onpointerleave={() => {
-        handZoomOverlayHovered = false;
-        handZoom = null;
-      }}
+      onzoomleave={leaveHandZoom}
     />
   {/if}
   {#if targetListOpen && spec !== null}

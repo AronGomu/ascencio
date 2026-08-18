@@ -46,7 +46,8 @@
     card: BoardCardView,
     element: HTMLElement,
   ) => void = () => undefined;
-  export let oncardzoomleave: () => void = () => undefined;
+  export let oncardzoomleave: (related: EventTarget | null) => void = () =>
+    undefined;
 
   const mirrored = player === 1;
   let viewportElement: HTMLDivElement | null = null;

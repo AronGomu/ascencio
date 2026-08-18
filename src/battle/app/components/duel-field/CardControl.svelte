@@ -34,7 +34,8 @@
   export let ondragend: (x: number, y: number) => void = () => undefined;
   export let onpreview: (card: BoardCardView) => void = () => undefined;
   export let onzoomenter: (element: HTMLElement) => void = () => undefined;
-  export let onzoomleave: () => void = () => undefined;
+  export let onzoomleave: (related: EventTarget | null) => void = () =>
+    undefined;
 
   let articleEl: HTMLElement | undefined;
   let pointerOrigin: { readonly x: number; readonly y: number } | null = null;
@@ -148,9 +149,9 @@
     }
   }
 
-  function handleArticlePointerLeave(): void {
+  function handleArticlePointerLeave(event: PointerEvent): void {
     if (layout === "hand" && card.code !== undefined) {
-      onzoomleave();
+      onzoomleave(event.relatedTarget);
     }
   }
 

@@ -1281,9 +1281,27 @@ button.duel-field-zone,
   }
 }
 
+/* Anchored on the card's bottom edge at 1.6x, the overlay is drawn *over* the
+   card that opened it. Taking pointer input there would steal that card's own
+   hover and press: the card would report a leave the moment the overlay
+   mounted, and the press meant for the card would land on the art. So the box
+   and everything it draws stay out of hit testing; only the bridge below opts
+   back in, and only above the card. */
 .hand-zoom-overlay {
   position: fixed;
   z-index: var(--duel-field-layer-hand-zoom);
+  pointer-events: none;
+}
+
+/* Spans the overlay from the chips' bottom edge down to the anchor card's top
+   edge, and no further. That single span is what lets the pointer reach a chip
+   without ever crossing dead ground and closing the overlay on the way. */
+.hand-zoom-overlay__bridge {
+  position: absolute;
+  top: -0.3rem;
+  right: 0;
+  bottom: var(--hand-zoom-bridge-bottom);
+  left: 0;
   pointer-events: auto;
 }
 
@@ -1312,13 +1330,16 @@ button.duel-field-zone,
   white-space: nowrap;
 }
 
-/* Override the default display:none on chips so they show inside the overlay. */
+/* Override the default display:none on chips so they show inside the overlay.
+   Positioned against the bridge rather than the overlay box, so the two meet
+   edge to edge and the pointer path between them has no gap. */
 .hand-zoom-overlay .card-action-chips {
   display: flex;
   position: absolute;
-  bottom: calc(100% + 0.3rem);
+  bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
+  pointer-events: auto;
 }
 
 /* Chips float above the zones and stay visible while their card is hovered,

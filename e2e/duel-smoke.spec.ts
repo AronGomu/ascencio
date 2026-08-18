@@ -2306,20 +2306,17 @@ test("T12: hand hover opens a 1.6x overlay, keyboard focus lifts the card 1.35x 
   });
   // Hand hover no longer scales the card in place: it mounts a fixed overlay
   // that escapes the band (`HandZoomOverlay`, T7 round 4). `force` skips the
-  // actionability re-check, which that overlay would otherwise fail by
-  // covering the very card the hover opened it from.
+  // actionability re-check: the overlay is drawn over the card and, while it
+  // no longer takes pointer input there, it still fails that check by sight.
   /* Matched by class, not by a `data-cy` prefix: the overlay's own art and name
      strip carry `hand-zoom-overlay-image-…`/`hand-zoom-overlay-name-…`, so a
      prefix locator counts one overlay three times. */
   const handZoomOverlays = page.locator("div.hand-zoom-overlay");
   await handCard.hover({ force: true });
   await expect(handZoomOverlays).toHaveCount(1);
-  /* Measured inside the page rather than through a resolved element handle.
-     A pointer resting on the card leaves the overlay covering it, so the
-     browser hands the hover back and forth and the overlay remounts every
-     other frame; a handle taken from a previous `expect` can already be
-     detached, which reports a 0x0 box instead of the geometry under test.
-     Reading in-page also takes the rect field by field — a `DOMRect` carries
+  /* Measured inside the page rather than through a resolved element handle,
+     which any remount would leave detached, reporting a 0x0 box instead of the
+     geometry under test. Reading in-page also takes the rect field by field — a `DOMRect` carries
      its geometry on the prototype and serialises out as an empty object. */
   const overlayBox = await page
     .waitForFunction(() => {
@@ -3271,9 +3268,12 @@ test("responsive field compositions contain controls across supported viewports"
             .closest<HTMLElement>("[data-card-zone-id]")
             ?.dataset.cardZoneId?.endsWith(":hand") ?? false,
       );
+      /* The overlay's own copy is scoped: two elements carrying one `data-cy`
+         would break the uniqueness half of the element contract while both are
+         mounted. */
       const hoverChips = inHand
         ? field.locator(
-            `.hand-zoom-overlay [data-cy="card-action-chips-${cardId}"]`,
+            `.hand-zoom-overlay [data-cy="hand-zoom-overlay-card-action-chips-${cardId}"]`,
           )
         : chips;
 

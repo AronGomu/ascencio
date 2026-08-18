@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from "svelte";
   import { writable } from "svelte/store";
   import type {
     DuelPhase,
@@ -29,13 +30,19 @@
     const store = writable(initial);
     let current = initial;
     let frame: number | null = null;
+    /* A pending frame outlives the component unless it is cancelled, and its
+       tick would keep setting an orphaned store for the rest of the tween. */
+    function cancel(): void {
+      if (frame !== null) {
+        cancelAnimationFrame(frame);
+        frame = null;
+      }
+    }
     return {
       subscribe: store.subscribe,
+      cancel,
       set(target: number): void {
-        if (frame !== null) {
-          cancelAnimationFrame(frame);
-          frame = null;
-        }
+        cancel();
         if (duration <= 0 || typeof requestAnimationFrame === "undefined") {
           current = target;
           store.set(target);
@@ -59,6 +66,11 @@
 
   $: displayed0.set(lifePoints[0]);
   $: displayed1.set(lifePoints[1]);
+
+  onDestroy(() => {
+    displayed0.cancel();
+    displayed1.cancel();
+  });
 </script>
 
 <aside

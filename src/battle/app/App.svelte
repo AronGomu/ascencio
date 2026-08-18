@@ -1217,8 +1217,12 @@
               onconfirmWindowPositionChange={moveConfirmWindow}
             />
           {/key}
+          <!-- The box shows the stored setting; the Ctrl hold rides beside it
+               as `held`, so clicking while Ctrl is down still toggles the
+               setting rather than fighting a tick it did not write. -->
           <FullControlToggle
-            effective={effectiveFullControl}
+            value={$uiSettings.fullControl}
+            held={ctrlHeld}
             onchange={uiSettings.setFullControl}
           />
         </div>

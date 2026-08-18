@@ -1632,8 +1632,8 @@ button.duel-field-zone,
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--legal) 55%, transparent);
 }
 
-/* Selected overrides plain legal green with the same orange the pointer
-   hover rule below uses; hover never mutates this class. */
+/* Selected overrides plain legal green with orange; hover never mutates this
+   class, and no hover rule below repaints a selected entry. */
 .zone-list-entry.is-selected img {
   border-color: var(--warning);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--selected) 78%, transparent);

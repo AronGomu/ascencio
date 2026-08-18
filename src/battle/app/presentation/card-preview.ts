@@ -23,14 +23,6 @@ export interface CardPreviewView {
   readonly statsLine: string | null;
 }
 
-/** Shown when a face-down/hidden board card is hovered: no code to lease. */
-export const HIDDEN_CARD_PREVIEW: CardPreviewView = Object.freeze({
-  code: 0 as CardCode,
-  name: "Face-down card",
-  description: "No information is available for this card.",
-  statsLine: null,
-});
-
 /** Builds the compact stats line shown in the preview panel below the card name. */
 export function formatCardStatsLine(text: CardPreviewText): string | null {
   if (text.family === "monster") {

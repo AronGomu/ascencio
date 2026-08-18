@@ -54,10 +54,12 @@ export function offFieldZoneBadge(
  * The legal off-field targets of one prompt, aggregated across every pile and
  * the hand, in raw prompt order.
  *
- * Identity comes only from the sanitized projected snapshot: a prompt choice
- * never reveals a card. An address the projector cannot attest still renders
- * as an answerable hidden entry, because the engine prompt — not the
- * projection — decides what is legal.
+ * Identity resolves from the sanitized projected snapshot first, then from the
+ * prompt's own attestation for a card the local player controls (ADR-029): the
+ * engine already sent that code, so refusing it would invent hidden
+ * information. An opponent address never takes the prompt fallback. An address
+ * neither source can attest still renders as an answerable hidden entry,
+ * because the engine prompt — not the projection — decides what is legal.
  */
 export function offFieldTargetEntries(
   spec: ActiveInteractionSpec,

@@ -3,10 +3,8 @@
 import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import CardPreviewPanel from "../../src/battle/app/components/CardPreviewPanel.svelte";
-import {
-  HIDDEN_CARD_PREVIEW,
-  type CardPreviewView,
-} from "../../src/battle/app/presentation/card-preview.ts";
+import type { CardPreviewView } from "../../src/battle/app/presentation/card-preview.ts";
+import type { CardCode } from "../../src/battle/duel/contracts/ids.ts";
 import type { CardImageLease } from "../../src/battle/app/images/card-image-cache.ts";
 import { cardCode } from "../../src/battle/duel/contracts/ids.ts";
 
@@ -130,10 +128,18 @@ describe("CardPreviewPanel", () => {
     expect(releaseFor(FISHERMAN)).toHaveBeenCalledTimes(1);
   });
 
-  it("panel does not lease an image for the hidden preview", () => {
+  /* cardCode() rejects 0, so the panel's `code > 0` guard is only reachable
+     with a cast — it is the defensive branch that keeps a codeless preview
+     on the placeholder instead of leasing an image for it. */
+  it("panel does not lease an image for a zero code", () => {
     const { library, lease } = leaseLibrary();
     render(CardPreviewPanel, {
-      preview: HIDDEN_CARD_PREVIEW,
+      preview: {
+        code: 0 as CardCode,
+        name: "Face-down card",
+        description: "No information is available for this card.",
+        statsLine: null,
+      },
       imageLibrary: library,
       placeholderUrl: "/placeholder.webp",
     });

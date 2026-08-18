@@ -3,7 +3,6 @@ import {
   cardPreviewForCode,
   cardPreviewForPublicCard,
   formatCardStatsLine,
-  HIDDEN_CARD_PREVIEW,
   stackTopCode,
   type CardPreviewText,
   type PreviewablePublicCard,
@@ -157,17 +156,6 @@ describe("cardPreviewForPublicCard", () => {
         TEXTS,
       ),
     ).toBeNull();
-  });
-});
-
-describe("HIDDEN_CARD_PREVIEW", () => {
-  it("describes a face-down card with no lease-able code", () => {
-    expect(HIDDEN_CARD_PREVIEW).toEqual({
-      code: 0,
-      name: "Face-down card",
-      description: "No information is available for this card.",
-      statsLine: null,
-    });
   });
 });
 

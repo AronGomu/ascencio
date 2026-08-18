@@ -55,6 +55,7 @@
     type DragPointerSample,
   } from "../presentation/drag-ghost-physics.ts";
   import {
+    readFrameWidth,
     readStageFrame,
     toFramePoint,
     toFrameRect,
@@ -191,6 +192,9 @@
   let handZoom: {
     card: BoardCardView;
     anchor: { left: number; top: number; width: number; height: number };
+    /* Captured with the anchor so the overlay clamps against the same frame
+       the anchor was measured in, never against the viewport. */
+    frameWidth: number;
   } | null = null;
   let handZoomOverlayHovered = false;
   let handZoomBoardRef: BoardViewModel | null = null;
@@ -688,7 +692,11 @@
     const frame = readStageFrame(fieldRoot);
     const rect = toFrameRect(frame, element.getBoundingClientRect());
     handZoomOverlayHovered = false;
-    handZoom = { card, anchor: rect };
+    handZoom = {
+      card,
+      anchor: rect,
+      frameWidth: readFrameWidth(fieldRoot),
+    };
   }
 
   function leaveHandZoom(): void {
@@ -1021,6 +1029,7 @@
     <HandZoomOverlay
       card={handZoom.card}
       anchor={handZoom.anchor}
+      frameWidth={handZoom.frameWidth}
       imageUrl={handZoom.card.image.kind === "back"
         ? resolvedCardBackUrl
         : (imageUrls.get(handZoom.card.image.code) ?? resolvedPlaceholderUrl)}

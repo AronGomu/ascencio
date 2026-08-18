@@ -11,6 +11,12 @@
     height: number;
   };
   export let imageUrl: string;
+  /* Clamp ceiling in the same coordinate space as `anchor`. The overlay is
+     `position: fixed` inside the stage the phone layout turns a quarter turn,
+     so that stage — not the viewport — is its containing block, and reading
+     `innerWidth` here would clamp a frame-space left edge against a viewport
+     axis (`readFrameWidth` in `presentation/stage-frame.ts`). */
+  export let frameWidth: number;
   export let choices: readonly InteractionChoice[] = [];
   export let disabled = false;
   export let scale = 1.6;
@@ -23,14 +29,7 @@
   $: h = anchor.height * scale;
   $: left = Math.max(
     8,
-    Math.min(
-      anchor.left + anchor.width / 2 - w / 2,
-      (typeof globalThis.innerWidth === "number"
-        ? globalThis.innerWidth
-        : 1280) -
-        w -
-        8,
-    ),
+    Math.min(anchor.left + anchor.width / 2 - w / 2, frameWidth - w - 8),
   );
   $: top = Math.max(8, anchor.top + anchor.height - h);
   $: overlayStyle = `left: ${left}px; top: ${top}px; width: ${w}px; height: ${h}px;`;

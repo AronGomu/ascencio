@@ -14,7 +14,15 @@ test("the zoomed hand card overflows the hand band and shows chips above", async
   // 3rd card (sequence 2) is the one with choices; hover it
   const cards = handBand.locator(".duel-field-card");
   const thirdCard = cards.nth(2);
-  await thirdCard.hover();
+  // Card box read before the hover: the overlay is measured against the card at
+  // rest, and reading it afterwards would race the mount.
+  const cardBox = await thirdCard.boundingBox();
+  expect(cardBox).not.toBeNull();
+  // `force` skips the actionability re-check. The hover mounts an overlay over
+  // the very card it was opened from, so that re-check can never settle: under
+  // load it retried ~350 times and failed the test on a timeout rather than on
+  // anything the test is about.
+  await thirdCard.hover({ force: true });
 
   const overlay = page.locator('div.hand-zoom-overlay');
   await expect(overlay).toBeVisible();
@@ -29,8 +37,6 @@ test("the zoomed hand card overflows the hand band and shows chips above", async
   expect(overlayBox!.y).toBeLessThan(bandBox!.y);
 
   // Overlay height must be approximately card height × 1.6 (±10%)
-  const cardBox = await thirdCard.boundingBox();
-  expect(cardBox).not.toBeNull();
   const expectedHeight = cardBox!.height * 1.6;
   expect(overlayBox!.height).toBeGreaterThan(expectedHeight * 0.9);
   expect(overlayBox!.height).toBeLessThan(expectedHeight * 1.1);

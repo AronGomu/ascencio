@@ -1,6 +1,6 @@
 # ADR-034: Shop as story-internal screens + VN menu consolidation
 
-Status: accepted · 2026-08-16 (rev. 2 after grill `ai-artifacts/GRILL_2026_08_16_vn_feedback_and_shop/ANSWERS.md`) · Plan: `ai-artifact/PLAN_2026_08_16_vn_feedback_and_shop.md`
+Status: accepted · 2026-08-16 (rev. 2 after grill `artifacts/GRILL_2026_08_16_vn_feedback_and_shop/ANSWERS.md`) · Plan: `artifacts/PLAN_2026_08_16_vn_feedback_and_shop.md`
 
 ## Context
 

@@ -3,7 +3,7 @@
 > Status: accepted; planned
 > Decided: 2026-08-08
 > Owners: presentation architecture
-> Plan: [`../../ai-artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md`](../../ai-artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md) — T11
+> Plan: [`../../artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md`](../../artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md) — T11
 
 ## Context
 

@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Plan · Duel Field Feedback Round 2</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f4f6f8; --surface: #ffffff; --surface-2: #edf2f6; --ink: #162230; --muted: #5b6875;
+  --line: #d5dde5; --accent: #087e8b; --accent-soft: #d9f1f2; --warm: #a65d00; --warm-soft: #fdf0dc;
+  --danger: #a3283c; --ok: #1d7a52; --code: #101c2a; --code-ink: #dceafa;
+  --shadow: 0 16px 45px rgb(23 38 52 / 10%);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b121b; --surface: #111c28; --surface-2: #172536; --ink: #edf5fa; --muted: #a9b8c5;
+    --line: #2a3c4d; --accent: #65d4da; --accent-soft: #15373d; --warm: #f1b65f; --warm-soft: #33270f;
+    --danger: #ff8c9b; --ok: #7ee2a8; --code: #07101a; --code-ink: #dceafa;
+    --shadow: 0 16px 45px rgb(0 0 0 / 25%);
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.62 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+a { color: var(--accent); text-underline-offset: .18em; }
+code, pre { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace; }
+code { padding: .1rem .32rem; border-radius: .28rem; background: var(--surface-2); font-size: .88em; }
+pre { overflow-x: auto; padding: .9rem 1rem; border-radius: .6rem; background: var(--code); color: var(--code-ink); font-size: .84rem; line-height: 1.55; }
+pre code { padding: 0; background: none; color: inherit; }
+.skip-link { position: fixed; top: -4rem; left: 1rem; z-index: 20; padding: .7rem 1rem; background: var(--surface); border: 1px solid var(--accent); border-radius: .5rem; }
+.skip-link:focus { top: 1rem; }
+.hero { background: radial-gradient(circle at 88% 15%, var(--accent-soft), transparent 38%), var(--surface); border-bottom: 1px solid var(--line); }
+.hero-inner { max-width: 1400px; margin: auto; padding: 2.7rem clamp(1.2rem, 4vw, 4rem) 2.3rem; }
+.eyebrow { margin: 0 0 .55rem; color: var(--accent); font-size: .76rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.hero h1 { max-width: 22ch; margin: 0; font-size: clamp(2rem, 5vw, 4rem); line-height: 1.04; letter-spacing: -.045em; }
+.hero-summary { max-width: 76ch; margin: 1rem 0 0; color: var(--muted); font-size: 1.05rem; }
+.stats { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 1.6rem; }
+.stat { padding: .55rem .9rem; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2); font-size: .82rem; font-weight: 700; }
+.stat b { color: var(--accent); }
+.layout { display: grid; grid-template-columns: 16rem minmax(0, 1fr); gap: 2.2rem; max-width: 1400px; margin: auto; padding: 2.2rem clamp(1.2rem, 4vw, 4rem) 4rem; }
+@media (max-width: 62rem) { .layout { grid-template-columns: minmax(0, 1fr); } .toc { position: static; max-height: none; } }
+.toc { position: sticky; top: 1rem; align-self: start; max-height: calc(100vh - 2rem); overflow: auto; padding: 1.1rem; background: var(--surface); border: 1px solid var(--line); border-radius: .9rem; box-shadow: var(--shadow); }
+.toc h2 { margin: 0 0 .6rem; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.toc ol { margin: 0; padding-left: 1.15rem; font-size: .88rem; }
+.toc li { margin: .3rem 0; }
+section.card { margin-bottom: 1.8rem; padding: 1.4rem clamp(1rem, 2.4vw, 1.8rem); background: var(--surface); border: 1px solid var(--line); border-radius: .9rem; box-shadow: var(--shadow); }
+section.card > h2 { margin-top: 0; font-size: 1.5rem; letter-spacing: -.02em; }
+h3 { font-size: 1.05rem; letter-spacing: -.01em; }
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+th, td { padding: .55rem .6rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+th { font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+tbody tr:last-child td { border-bottom: none; }
+.pill { display: inline-block; padding: .1rem .5rem; border-radius: 999px; font-size: .72rem; font-weight: 800; }
+.pill.shell { background: var(--accent-soft); color: var(--accent); }
+.pill.field { background: var(--warm-soft); color: var(--warm); }
+.pill.core { background: color-mix(in srgb, var(--danger) 16%, transparent); color: var(--danger); }
+.note { padding: .85rem 1rem; border-left: 3px solid var(--warm); border-radius: .35rem; background: var(--warm-soft); font-size: .92rem; }
+.note.good { border-left-color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); }
+ul.tight, ol.tight { padding-left: 1.15rem; }
+ul.tight li, ol.tight li { margin: .28rem 0; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1rem; }
+.tile { padding: .9rem 1rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface-2); }
+.tile h4 { margin: 0 0 .35rem; font-size: .92rem; }
+.tile p { margin: 0; font-size: .86rem; color: var(--muted); }
+.board { display: grid; gap: .35rem; margin: 0; }
+.bandfig { position: relative; aspect-ratio: 16/9; width: 100%; border: 1px solid var(--line); border-radius: .6rem; background: #153d35; overflow: hidden; }
+.bandfig div { position: absolute; border-radius: .2rem; font-size: .6rem; display: grid; place-items: center; color: #eaf6f1; }
+.bandfig .zone { background: rgb(213 240 230 / .16); border: 1px solid rgb(213 240 230 / .35); }
+.bandfig .band { background: rgb(101 212 218 / .22); border: 1px dashed rgb(101 212 218 / .8); }
+.bandfig .emz { background: rgb(241 182 95 / .3); border: 1px solid rgb(241 182 95 / .9); }
+footer { max-width: 1400px; margin: auto; padding: 0 clamp(1.2rem, 4vw, 4rem) 3rem; color: var(--muted); font-size: .86rem; }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="hero">
+  <div class="hero-inner">
+    <p class="eyebrow">YGO Story Duel Simulator · Plan · 2026-08-09</p>
+    <h1>Duel Field Feedback, Round 2</h1>
+    <p class="hero-summary">
+      Seventeen feedback items, twelve commit-sized tickets. Header gets avatars and life points.
+      Preview moves left and follows every hover. Phases become an in-field strip you click.
+      Placement and formality prompts answer themselves. Piles stop being decoration: they halo,
+      they open, you act from inside them. The deck gains a real projected order with reveal
+      tracking. The chain modal dies.
+    </p>
+    <div class="stats">
+      <span class="stat"><b>17</b> feedback items</span>
+      <span class="stat"><b>12</b> tickets</span>
+      <span class="stat"><b>4</b> ADRs</span>
+      <span class="stat"><b>1</b> worker-side ticket</span>
+      <span class="stat"><b>16</b> logged assumptions</span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="toc" aria-label="Contents">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#goal">Goal &amp; scope</a></li>
+      <li><a href="#decisions">Decisions taken</a></li>
+      <li><a href="#geometry">Board geometry</a></li>
+      <li><a href="#flow">Ticket flow</a></li>
+      <li><a href="#tickets">Ticket order</a></li>
+      <li><a href="#coverage">Feedback coverage</a></li>
+      <li><a href="#risk">Risks</a></li>
+      <li><a href="#env">Environment</a></li>
+    </ol>
+  </nav>
+
+  <main id="main">
+
+    <section class="card" id="goal">
+      <h2>Goal &amp; scope</h2>
+      <p>
+        Success = all 17 items shipped, <code>npm run check</code> green, duel completable end to
+        end mouse-only and keyboard-only. Every ticket compiles and ships a working app.
+      </p>
+      <div class="grid2">
+        <div class="tile">
+          <h4>In</h4>
+          <p><code>src/app/**</code>, <code>src/field/**</code>, <code>src/duel/contracts/**</code>,
+          <code>DuelStateProjector</code>, <code>PromptRegistry</code>, <code>src/styles/app.css</code>,
+          unit + component + e2e tests, ADRs 007–010, one architecture HTML doc.</p>
+        </div>
+        <div class="tile">
+          <h4>Out</h4>
+          <p>Engine/WASM upgrade, card data pipeline, deck editing, story &amp; progression systems,
+          real avatar art, i18n, settings persistence across reloads, mobile-first redesign,
+          opponent AI policy.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="decisions">
+      <h2>Decisions taken</h2>
+      <p>Four were the user's call. The rest are logged assumptions in the markdown index.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Question</th><th>Answer</th><th>Cost</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Deck reveals — item 13 tail. Worker tracks a <em>count</em>, not a list.</td>
+              <td><b>Full deck order tracking now.</b></td>
+              <td>T9: new contract field, projector state, validator, 8 fixture files.</td>
+            </tr>
+            <tr>
+              <td>"Auto-validate all the system hints" — what counts?</td>
+              <td><b>Empty chains + non-decision prompts</b> (single-option <code>option</code>,
+              single-position <code>selectPosition</code>, forced one-choice chain).</td>
+              <td>T4: one pure function, nine unit cases.</td>
+            </tr>
+            <tr>
+              <td>Avatars — no character art exists.</td>
+              <td><b>Reuse the bundled card back.</b></td>
+              <td>T1: <code>avatarUrl</code> prop so real art swaps in later with no layout change.</td>
+            </tr>
+            <tr>
+              <td>Graveyard/banished/deck/extra as targets.</td>
+              <td><b>Map them to stack targets</b> in <code>card-mapping.ts</code>.</td>
+              <td>T6: widened resolution union; kills the chain modal at the root.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:1rem">
+        The sharp one is deck reveals. The obvious model — mirror <code>list_main</code>, index by the
+        engine's deck sequence — needs a fact we refuse to take on faith: whether sequence 0 is the top
+        or the bottom. Wrong guess does not crash; it quietly shows the wrong card at the wrong
+        position. So the projector stores <b>offsets from the top</b> and only writes them from three
+        messages that already speak in offsets:
+      </p>
+      <pre><code>DRAW              → shift every reveal down by drawn.length
+CONFIRM_DECKTOP   → cards[i] is the i-th from the top
+DECK_TOP          → count IS the offset from the top
+
+SHUFFLE_DECK | SWAP_GRAVE_DECK | REVERSE_DECK | any MOVE touching a deck
+                  → clear every reveal for that player</code></pre>
+      <p class="note good">
+        The asymmetry is the safety property: the projection may <b>forget</b> a reveal. It can never
+        <b>invent</b> one. Any future change must preserve that. See ADR-008.
+      </p>
+    </section>
+
+    <section class="card" id="geometry">
+      <h2>Board geometry — where an overlay may live</h2>
+      <p>
+        The previous overhaul lost a session to a field bar painted over card targets, swallowing 344
+        retried Playwright clicks. The board has exactly one free horizontal band.
+      </p>
+      <figure class="board">
+        <div class="bandfig" role="img" aria-label="Duel board with the free y 51 to 64 percent band highlighted, interrupted by the two shared extra monster zones">
+          <div class="band"  style="left:0;   top:51%;  width:46.1%; height:13%">free pocket</div>
+          <div class="band"  style="left:60.3%;top:51%;  width:39.7%; height:13%">free pocket</div>
+          <div class="zone"  style="left:34.4%;top:34.7%;width:39.8%; height:15.9%">p1 monsters</div>
+          <div class="zone"  style="left:34.4%;top:65.3%;width:39.8%; height:15.8%">p0 monsters</div>
+          <div class="emz"   style="left:46.1%;top:50%;  width:6.4%;  height:15.8%">EMZ</div>
+          <div class="emz"   style="left:53.9%;top:50%;  width:6.4%;  height:15.8%">EMZ</div>
+          <div class="zone"  style="left:88.3%;top:34.7%;width:6.4%;  height:15.9%">p1 ban</div>
+          <div class="zone"  style="left:88.3%;top:65.3%;width:6.4%;  height:15.8%">p0 ban</div>
+        </div>
+        <figcaption style="font-size:.82rem;color:var(--muted)">
+          y 51%–64%, split by the two shared extra monster zones at x 46.1%–60.3%. Left pocket takes
+          Draw / Standby / Main 1. Right pocket takes Battle / Main 2 / End, plus End turn at the far
+          right, level between the two banished piles.
+        </figcaption>
+      </figure>
+      <p class="note">
+        Strip container is <code>pointer-events: none</code>. Only a chip that is currently a
+        <code>&lt;button&gt;</code> gets <code>pointer-events: auto</code>. Centring the strip on y 50%
+        would overlap <code>p1:mainMonster:1</code> — that is the exact failure mode from last time.
+      </p>
+    </section>
+
+    <section class="card" id="flow">
+      <h2>Ticket flow</h2>
+      <pre><code>T1 header ──► T2 preview left + status ──┬──► T8 zone list dialog ──┬──► T10 deck list
+                                          │         ▲                │
+T7 stack top card ◄── T6 stack targets ───┘         │                └──► T11 inline chain
+                                                    │                        ▲
+T9 projected deck order ────────────────────────────┴────────────────────────┘
+
+T3 phase strip + end turn        (independent)
+T4 auto-response + prompt trim ──► T5 auto-place + single click
+T12 result dialog                (independent)</code></pre>
+      <p>
+        Four independent roots — T1, T3, T4, T6, T9, T12 — so the run can start anywhere. Execution
+        order below is the safe linear one.
+      </p>
+    </section>
+
+    <section class="card" id="tickets">
+      <h2>Ticket order</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>ID</th><th>Title</th><th>Dep</th><th>Commit outcome</th></tr></thead>
+          <tbody>
+            <tr><td><span class="pill shell">T1</span></td><td>Duel header bar</td><td>—</td>
+              <td>Both avatars, both LP readouts and a gear button in the top row. In-field LP pills deleted.</td></tr>
+            <tr><td><span class="pill shell">T2</span></td><td>Preview left + hover + status</td><td>T1</td>
+              <td>Preview column moves left, every hovered surface fills it (face-down cards included), status line under the text.</td></tr>
+            <tr><td><span class="pill field">T3</span></td><td>Phase strip + End turn</td><td>—</td>
+              <td>Six chips in the free band, blue halo on the current phase, clickable legal transitions, End turn far right. Status pills deleted.</td></tr>
+            <tr><td><span class="pill core">T4</span></td><td>Auto-response + prompt trim</td><td>—</td>
+              <td>Empty chains and single-answer prompts resolve themselves. Shuffle Deck gone.</td></tr>
+            <tr><td><span class="pill core">T5</span></td><td>Auto-place + single click</td><td>T4</td>
+              <td>Auto-place on → never asks where. Off → one click plays, one click outside cancels.</td></tr>
+            <tr><td><span class="pill core">T6</span></td><td>Stack interaction targets</td><td>—</td>
+              <td>Pile-sourced choices resolve to <code>stack:</code> targets and halo their pile.</td></tr>
+            <tr><td><span class="pill field">T7</span></td><td>Stack top-card face</td><td>T6</td>
+              <td>Graveyard and banished render the last public card behind name and count.</td></tr>
+            <tr><td><span class="pill field">T8</span></td><td>Zone list dialog</td><td>T2, T7</td>
+              <td>Click a pile → centred scrolling list, position-numbered, haloed, chip-actionable, face-down where it must be.</td></tr>
+            <tr><td><span class="pill core">T9</span></td><td>Projected deck order</td><td>—</td>
+              <td><code>PublicPlayerState.deck</code> + reveal tracking in the projector.</td></tr>
+            <tr><td><span class="pill core">T10</span></td><td>Deck list in the dialog</td><td>T8, T9</td>
+              <td>Deck list reads real slots; revealed positions face-up, rest face-down.</td></tr>
+            <tr><td><span class="pill field">T11</span></td><td>Inline chain response</td><td>T2, T8</td>
+              <td>No modal. Orange sources, "Do you respond?" with pulsing dots, click-away passes.</td></tr>
+            <tr><td><span class="pill shell">T12</span></td><td>Result dialog</td><td>—</td>
+              <td>Winner announcement, rematch and diagnostics move into a centred modal.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:.9rem;font-size:.86rem;color:var(--muted)">
+        <span class="pill shell">shell</span> app chrome ·
+        <span class="pill field">field</span> board presentation ·
+        <span class="pill core">core</span> interaction &amp; projection contracts
+      </p>
+    </section>
+
+    <section class="card" id="coverage">
+      <h2>Feedback coverage</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>#</th><th>Feedback</th><th>Ticket</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Header row with avatars, LP, gear icon</td><td>T1</td></tr>
+            <tr><td>2</td><td>Hover anything on the field updates the preview</td><td>T2, T8</td></tr>
+            <tr><td>3</td><td>Preview window moves left</td><td>T2</td></tr>
+            <tr><td>4</td><td>Auto-place setting, checked by default</td><td>T5</td></tr>
+            <tr><td>5</td><td>Click outside a valid zone cancels</td><td>T5</td></tr>
+            <tr><td>6</td><td>One click starts, second click places</td><td>T5</td></tr>
+            <tr><td>7</td><td>Auto-validate system hints</td><td>T4</td></tr>
+            <tr><td>8</td><td>Auto-pass when no chain response exists</td><td>T4</td></tr>
+            <tr><td>9</td><td>Remove Shuffle Deck</td><td>T4</td></tr>
+            <tr><td>10</td><td>Phase strip in the centre, End turn far right</td><td>T3</td></tr>
+            <tr><td>11</td><td>Public piles show their last card</td><td>T7</td></tr>
+            <tr><td>12</td><td>Orange halo on activatable piles</td><td>T6</td></tr>
+            <tr><td>13</td><td>Zone list dialog + deck reveal is public</td><td>T8, T9, T10</td></tr>
+            <tr><td>14</td><td>Extra deck list, opponent lists face-down</td><td>T8</td></tr>
+            <tr><td>15</td><td>Remove the centre-top phase badges</td><td>T3</td></tr>
+            <tr><td>16</td><td>Inline chain response, "Do you respond?"</td><td>T11</td></tr>
+            <tr><td>17</td><td>Winner section becomes a dialog</td><td>T12</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" id="risk">
+      <h2>Risks worth naming</h2>
+      <ul class="tight">
+        <li><b>Overlay pointer interception (T3, T8, T11).</b> Every new field overlay must stay in the
+        free band or outside zone extents, container <code>pointer-events: none</code>. The chromium
+        responsive-composition spec is the gate. Never relax it — it asserts the right thing.</li>
+        <li><b>Ordering trap in T6.</b> <code>stackChoices</code> must <em>not</em> count toward
+        <code>fieldCapable</code> until T8 ships the list dialog. Flip it early and a graveyard
+        activation becomes unanswerable: modal hidden, field inert, duel deadlocked.</li>
+        <li><b>Empty-response trap in T5.</b> <code>validatePromptSelection</code> rejects an empty
+        selection for <code>single</code>-family prompts even when cancelable. Chain prompts are
+        exactly that. Outside-click cancel is gated on family; T11 gives chains a <em>pass</em>.</li>
+        <li><b>Visibility foot-gun in T10.</b>
+        <code>isCardIdentityVisible(0, 0, "deck", …)</code> returns <code>true</code> for your own deck
+        — it would reveal the whole thing. Deck entries read <code>faceUp &amp;&amp; code</code>
+        instead, with a comment at the call site.</li>
+        <li><b>Fixture blast radius in T9.</b> The contract validator asserts
+        <code>deck.length === deckCount</code>, so eight fixture files need a <code>deck</code>. A
+        <code>deckSlots(player, count)</code> helper absorbs it.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="env">
+      <h2>Environment</h2>
+      <p>Playwright needs a nix closure. Do not merge the chromium and firefox invocations; both browser dirs already exist.</p>
+      <pre><code>cd /home/aron/projects/ascencio
+
+timeout 590 nix-shell -p playwright-driver.browsers glib gtk3 nss nspr dbus atk cups \
+  libdrm expat libx11 libxcomposite libxdamage libxext libxfixes libxrandr mesa \
+  alsa-lib at-spi2-atk at-spi2-core cairo pango xorg.xvfb --run '
+npx playwright test --project=chromium
+'</code></pre>
+      <p class="note">
+        Run from the repo root. <code>playwright-driver.browsers</code> <em>and</em>
+        <code>xorg.xvfb</code> are both empirically required in the <code>-p</code> list even though
+        Xvfb is never launched. Drop either and
+        <code>libglib-2.0.so.0: cannot open shared object file</code> comes back. Do not "simplify" it.
+        Full details in <code>artifacts/HANDOFF_2026_08_09_duel_field_ux_overhaul.md</code>.
+      </p>
+      <p>Per-ticket gate: <code>format:check</code>, <code>lint</code>, <code>typecheck</code>,
+      <code>test:unit</code>, <code>test:component</code>. Add <code>test:integration</code> when the
+      worker or contracts move (T4, T6, T9, T10). Add chromium e2e on T3, T5, T8, T11, T12.</p>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  Index: <code>artifacts/PLAN_2026_08_09_duel_field_feedback_round_2.md</code> ·
+  Tickets: <code>artifacts/PLAN_2026_08_09_duel_field_feedback_round_2/T1…T12</code> ·
+  ADRs: <code>docs/ADR/007…010</code> ·
+  Architecture: <code>docs/duel-field-interaction-model-v2.html</code>
+</footer>
+</body>
+</html>
+</content>

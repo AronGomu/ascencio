@@ -1,6 +1,6 @@
 # ADR-035: Shop set data, rarity, pricing, rarity halos
 
-Status: accepted · 2026-08-16 (rev. 2 after grill `ai-artifacts/GRILL_2026_08_16_vn_feedback_and_shop/ANSWERS.md`; rev. 3 2026-08-17: pack price 100 → 150 DP after review measured pack expected sell value at ≈138–142 DP, making every pack a guaranteed profit) · Plan: `ai-artifact/PLAN_2026_08_16_vn_feedback_and_shop.md`
+Status: accepted · 2026-08-16 (rev. 2 after grill `artifacts/GRILL_2026_08_16_vn_feedback_and_shop/ANSWERS.md`; rev. 3 2026-08-17: pack price 100 → 150 DP after review measured pack expected sell value at ≈138–142 DP, making every pack a guaranteed profit) · Plan: `artifacts/PLAN_2026_08_16_vn_feedback_and_shop.md`
 
 ## Context
 

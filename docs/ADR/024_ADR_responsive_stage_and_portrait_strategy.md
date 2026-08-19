@@ -3,7 +3,7 @@
 > Status: accepted
 > Decided: 2026-08-14
 > Owners: application-shell, duel-field, deck-editor architecture
-> Plan: [`../../ai-artifact/PLAN_2026_08_14_three_ui_restructure.md`](../../ai-artifact/PLAN_2026_08_14_three_ui_restructure.md) — T4, T14, T15
+> Plan: [`../../artifacts/PLAN_2026_08_14_three_ui_restructure.md`](../../artifacts/PLAN_2026_08_14_three_ui_restructure.md) — T4, T14, T15
 
 ## Context
 

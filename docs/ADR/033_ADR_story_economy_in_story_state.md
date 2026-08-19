@@ -1,6 +1,6 @@
 # ADR-033: Story economy lives in StoryState (save schema v2)
 
-Status: accepted · 2026-08-16 · Plan: `ai-artifact/PLAN_2026_08_16_vn_feedback_and_shop.md`
+Status: accepted · 2026-08-16 · Plan: `artifacts/PLAN_2026_08_16_vn_feedback_and_shop.md`
 
 ## Context
 

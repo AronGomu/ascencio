@@ -3,7 +3,7 @@
 > Status: accepted; planned
 > Decided: 2026-08-09
 > Owners: worker projection architecture
-> Plan: [`../../ai-artifacts/PLAN_2026_08_09_duel_field_feedback_round_2.md`](../../ai-artifacts/PLAN_2026_08_09_duel_field_feedback_round_2.md) — T9, T10
+> Plan: [`../../artifacts/PLAN_2026_08_09_duel_field_feedback_round_2.md`](../../artifacts/PLAN_2026_08_09_duel_field_feedback_round_2.md) — T9, T10
 
 ## Context
 

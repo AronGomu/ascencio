@@ -4,7 +4,7 @@
 > Decided: 2026-08-16
 > Owners: decks data architecture
 > Relates: ADR-036 (shared preview panel)
-> Plan: [`../../ai-artifact/PLAN_2026_08_16_decks_feedback.md`](../../ai-artifact/PLAN_2026_08_16_decks_feedback.md) — T1
+> Plan: [`../../artifacts/PLAN_2026_08_16_decks_feedback.md`](../../artifacts/PLAN_2026_08_16_decks_feedback.md) — T1
 
 ## Context
 

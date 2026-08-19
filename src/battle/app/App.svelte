@@ -21,12 +21,12 @@
     type OffFieldTargetEntry,
   } from "../field/off-field-target-list.ts";
   import type { PhysicalZoneId } from "../field/duel-field-layout.ts";
+  import { CardPreviewPanel } from "../../shell/index.ts";
   import DuelRail from "./components/DuelRail.svelte";
   import DeckPicker from "./components/DeckPicker.svelte";
   import DuelResultDialog from "./components/DuelResultDialog.svelte";
   import MenuDialog from "./components/MenuDialog.svelte";
   import SettingsDialog from "./components/SettingsDialog.svelte";
-  import CardPreviewPanel from "./components/CardPreviewPanel.svelte";
   import DuelFieldErrorBoundary from "./components/duel-field/DuelFieldErrorBoundary.svelte";
   import DuelHud from "./components/duel-field/DuelHud.svelte";
   import DuelLog from "./components/duel-field/DuelLog.svelte";
@@ -61,7 +61,10 @@
   } from "./presentation/card-preview.ts";
   import { duelRailStatusFor } from "./presentation/duel-rail-status.ts";
   import { promptSurface } from "./prompts/prompt-surface.ts";
-  import { DECK_CATALOG } from "../duel/presets/deck-catalog.ts";
+  import {
+    DECK_CATALOG,
+    DEFAULT_OPPONENT_DECK_ID,
+  } from "../duel/presets/deck-catalog.ts";
   import {
     findSelectableDeck,
     listSelectableDecks,
@@ -75,6 +78,10 @@
   } from "../../decks/catalog/pinned-ruleset.ts";
   import { activeCatalog } from "../../decks/catalog/active-catalog.ts";
   import { IndexedDbDeckRepository } from "../../decks/indexeddb-deck-repository.ts";
+  /* Imported by path rather than through `src/decks/index.ts`: that entry is
+     reached eagerly from the shell, and exporting the starter list from it
+     would put the raw deck in the entry chunk. */
+  import { ensureStarterDeck } from "../../decks/starter-deck.ts";
   import {
     battleFacadeFailure,
     battleResultForDuelResult,
@@ -84,6 +91,7 @@
   import { createDuelStore, type DuelViewState } from "./stores/duel-store.ts";
   import {
     DEFAULT_PERSISTED_UI_STATE,
+    hasPersistedUiState,
     type PersistedWindowPosition,
   } from "./stores/persisted-ui-state.ts";
   import { createPersistedUiStore } from "./stores/persisted-ui-store.ts";
@@ -124,6 +132,10 @@
      this build's packaged card set. Built once, it is fixed for the life of
      the build. */
   const DECK_BUILDER_CATALOG = catalogByCode(ACTIVE_CARDS);
+  /* The opponent seat is not the player's to choose for now, so it is a
+     constant rather than a selection: every duel this build starts is against
+     this deck, and a persisted key naming any other is rewritten to it. */
+  const FIXED_OPPONENT_KEY = `preset:${DEFAULT_OPPONENT_DECK_ID}`;
   const client = new DuelWorkerClient();
   const duel = createDuelStore(client);
   const persistedUi = createPersistedUiStore();
@@ -697,6 +709,10 @@
      moment, and it only ever adds rows. */
   let selectableDecks: readonly SelectableDeck[] =
     presetSelectableDecks(DECK_CATALOG);
+  /* The row the player marked as their default in the editor, once it has been
+     matched against a deck this build can actually play. Null until the local
+     library has been read, and null again if that deck no longer qualifies. */
+  let defaultDeckKey: string | null = null;
   let pickerFallbackNotice = false;
   let pickerStartError: string | null = null;
   /* Every refresh is racing the one before it — the picker reopens while a
@@ -704,11 +720,19 @@
      write, or a deck deleted a second ago comes back on screen. */
   let deckListingGeneration = 0;
 
+  /** One reading of the local library: what a seat may be given, and which of
+      those rows the player marked as their default. */
+  interface DeckListing {
+    readonly decks: readonly SelectableDeck[];
+    readonly defaultDeckKey: string | null;
+  }
+
   async function refreshSelectableDecks(): Promise<void> {
     const generation = (deckListingGeneration += 1);
-    const listed = await listDecksOrBundledOnly();
+    const listing = await listDecksOrBundledOnly();
     if (generation !== deckListingGeneration) return;
-    selectableDecks = listed;
+    selectableDecks = listing.decks;
+    defaultDeckKey = listing.defaultDeckKey;
     reconcilePersistedDeckKeys();
   }
 
@@ -721,19 +745,46 @@
    * bundled decks are compiled into this build, so the picker still works; the
    * player just does not see decks the browser would not hand over.
    */
-  async function listDecksOrBundledOnly(): Promise<readonly SelectableDeck[]> {
+  async function listDecksOrBundledOnly(): Promise<DeckListing> {
     let repository: IndexedDbDeckRepository | null = null;
     try {
       repository = await IndexedDbDeckRepository.open();
-      return await listSelectableDecks(
+      /* Best-effort and idempotent, so a player who has never opened the
+         editor still arrives here with a deck of their own to duel with. */
+      await ensureStarterDeck(
+        repository,
+        DECK_BUILDER_CATALOG,
+        PROTOTYPE_RULESET,
+      );
+      const decks = await listSelectableDecks(
         DECK_CATALOG,
         repository,
         DECK_BUILDER_CATALOG,
         PROTOTYPE_RULESET,
         supportedDuelCardCodes(),
       );
+      const defaultDeckId = await repository.getDefaultDeck();
+      /* A key carries the revision the deck had, so the default is matched by
+         its deck id and takes whichever revision this listing offered. A deck
+         the ruleset now refuses is simply absent, and the seat falls back. */
+      const defaultPrefix =
+        defaultDeckId === null ? null : `local:${defaultDeckId}:`;
+      return {
+        decks,
+        defaultDeckKey:
+          defaultPrefix === null
+            ? null
+            : (decks.find(
+                (deck) =>
+                  deck.selection.kind === "local" &&
+                  deck.key.startsWith(defaultPrefix),
+              )?.key ?? null),
+      };
     } catch {
-      return presetSelectableDecks(DECK_CATALOG);
+      return {
+        decks: presetSelectableDecks(DECK_CATALOG),
+        defaultDeckKey: null,
+      };
     } finally {
       repository?.close();
     }
@@ -746,16 +797,22 @@
   function reconcilePersistedDeckKeys(): void {
     if (selectableDecks.length === 0) return;
     const { playerKey, opponentKey } = $persistedUi.decks;
-    if (
-      findSelectableDeck(selectableDecks, playerKey) !== null &&
-      findSelectableDeck(selectableDecks, opponentKey) !== null
-    )
-      return;
-    pickerFallbackNotice = true;
-    persistedUi.setDecks(
-      DEFAULT_PERSISTED_UI_STATE.decks.playerKey,
-      DEFAULT_PERSISTED_UI_STATE.decks.opponentKey,
-    );
+    /* A profile with nothing stored has made no choice to keep, so the stored
+       default deck wins there and only there: once a key has been written,
+       what the player picked outranks what the editor calls their default. */
+    const chose = hasPersistedUiState();
+    const chosen = chose
+      ? findSelectableDeck(selectableDecks, playerKey)
+      : null;
+    /* Only a profile that had a key and lost it is told anything. A first run
+       has nothing to have lost, and a notice there reads as a fault. */
+    if (chose && chosen === null) pickerFallbackNotice = true;
+    const nextPlayerKey =
+      chosen?.key ??
+      defaultDeckKey ??
+      DEFAULT_PERSISTED_UI_STATE.decks.playerKey;
+    if (nextPlayerKey !== playerKey || opponentKey !== FIXED_OPPONENT_KEY)
+      persistedUi.setDecks(nextPlayerKey, FIXED_OPPONENT_KEY);
   }
 
   function selectDecks(playerKey: string, opponentKey: string): void {
@@ -1106,10 +1163,9 @@
     <DeckPicker
       decks={selectableDecks}
       playerKey={$persistedUi.decks.playerKey}
-      opponentKey={$persistedUi.decks.opponentKey}
       fallbackNotice={pickerFallbackNotice}
       startError={pickerStartError}
-      onselect={selectDecks}
+      onselect={(key) => selectDecks(key, FIXED_OPPONENT_KEY)}
       onstart={startSelectedDuel}
     />
   {/if}

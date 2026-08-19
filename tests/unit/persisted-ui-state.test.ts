@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_PERSISTED_UI_STATE,
+  hasPersistedUiState,
   PERSISTED_UI_STATE_KEY,
   readPersistedUiState,
   writePersistedUiState,
@@ -129,6 +130,30 @@ describe("persisted UI state", () => {
     const state = validState();
     writePersistedUiState(state, storage);
     expect(readPersistedUiState(storage)).toEqual(state);
+  });
+
+  /* The duel menu asks this to tell a first run from a player who chose the
+     bundled deck, and the two read back identically through the state. */
+  it("reports whether a record exists at all", () => {
+    expect(hasPersistedUiState(null)).toBe(false);
+    expect(hasPersistedUiState({ getItem: () => null })).toBe(false);
+    expect(hasPersistedUiState({ getItem: () => "{" })).toBe(true);
+    expect(
+      hasPersistedUiState({
+        getItem: (key: string) =>
+          key === PERSISTED_UI_STATE_KEY ? "{}" : null,
+      }),
+    ).toBe(true);
+  });
+
+  it("a throwing getItem reads as no record rather than escaping", () => {
+    expect(
+      hasPersistedUiState({
+        getItem: () => {
+          throw new DOMException("Blocked", "SecurityError");
+        },
+      }),
+    ).toBe(false);
   });
 
   it("a throwing setItem does not propagate", () => {

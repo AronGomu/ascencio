@@ -10,18 +10,43 @@
 export const DECK_DATABASE_NAME = "ygo-story-decks";
 export const LEGACY_DECK_DATABASE_NAME =
   "ygo-story-duel-deck-builder-prototype";
-export const DECK_DATABASE_VERSION = 1;
+export const DECK_DATABASE_VERSION = 2;
+
+/* The prototype database is frozen at the version it shipped at, and opening it
+   is a read of somebody's only copy of their decks. Naming the production
+   version here instead would fire `upgradeneeded` on a real prototype database
+   the moment the two numbers diverge, and `openLegacyDatabase` reads that flag
+   as "this database did not exist until I created it" and deletes it. */
+export const LEGACY_DECK_DATABASE_VERSION = 1;
+
+/** How many entries the global autosave log keeps. Older entries are dropped by
+    the append that pushes the log past it. */
+export const MAXIMUM_DECK_AUTOSAVES = 100;
 
 const DECK_STORE_NAMES = ["decks", "histories", "preferences"] as const;
 
 /** The schema, in one place, so the repository and the migration can never
-    create two different shapes of the same database. */
+    create two different shapes of the same database.
+
+    Every store is guarded, because this runs for an upgrade as well as a
+    creation: a player arriving from version 1 already has three of these, full
+    of their decks, and `createObjectStore` on an existing name throws. */
 export function createDeckStores(database: IDBDatabase): void {
-  const decks = database.createObjectStore("decks", { keyPath: "id" });
-  decks.createIndex("updatedAt", "updatedAt");
-  decks.createIndex("name", "name");
-  database.createObjectStore("histories", { keyPath: "deckId" });
-  database.createObjectStore("preferences", { keyPath: "key" });
+  if (!database.objectStoreNames.contains("decks")) {
+    const decks = database.createObjectStore("decks", { keyPath: "id" });
+    decks.createIndex("updatedAt", "updatedAt");
+    decks.createIndex("name", "name");
+  }
+  if (!database.objectStoreNames.contains("histories"))
+    database.createObjectStore("histories", { keyPath: "deckId" });
+  if (!database.objectStoreNames.contains("preferences"))
+    database.createObjectStore("preferences", { keyPath: "key" });
+  if (!database.objectStoreNames.contains("autosaves")) {
+    const autosaves = database.createObjectStore("autosaves", {
+      keyPath: "id",
+    });
+    autosaves.createIndex("createdAt", "createdAt");
+  }
 }
 
 export type DeckMigrationFailure =
@@ -178,7 +203,7 @@ async function openLegacyDatabase(
 
   const request = factory.open(
     LEGACY_DECK_DATABASE_NAME,
-    DECK_DATABASE_VERSION,
+    LEGACY_DECK_DATABASE_VERSION,
   );
   let created = false;
   request.onupgradeneeded = () => {

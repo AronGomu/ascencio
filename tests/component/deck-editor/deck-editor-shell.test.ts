@@ -41,14 +41,18 @@ function renderEditor(mainCount = 0) {
 }
 
 describe("DeckEditor shell", () => {
-  it("renders fixed Catalog, Deck, pinned Details topology", () => {
+  it("renders fixed Catalog, Deck, Preview topology", () => {
     renderEditor();
-    expect(screen.getByRole("heading", { name: "Find cards" })).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Build deck" })).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Select a card" })).toBeTruthy();
-    expect(screen.getByLabelText("Deck counts").textContent).toContain(
-      "Main 0",
-    );
+    expect(
+      document.querySelector('[data-cy="card-preview-panel"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="deck-pane-details"]'),
+    ).not.toBeNull();
+    expect(document.querySelector('[data-cy="deck-pane-deck"]')).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="deck-pane-catalog"]'),
+    ).not.toBeNull();
     expect(
       screen.queryByRole("button", { name: /Use deck|Select deck/i }),
     ).toBeNull();
@@ -57,10 +61,39 @@ describe("DeckEditor shell", () => {
     ).toBeNull();
   });
 
-  it("keeps save state separate from deck validity", () => {
+  it("the header keeps only library, name, undo and redo controls", () => {
     renderEditor();
-    expect(screen.getByText("Saved locally")).toBeTruthy();
-    expect(screen.getByText("errors")).toBeTruthy();
+    expect(
+      document.querySelector('[data-cy="deck-editor-library-link"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="deck-name-input"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="deck-editor-undo"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="deck-editor-redo"]'),
+    ).not.toBeNull();
+    expect(document.querySelector('[data-cy="deck-editor-counts"]')).toBeNull();
+    expect(
+      document.querySelector('[data-cy="deck-editor-validation-status"]'),
+    ).toBeNull();
+    expect(
+      document.querySelector('[data-cy="deck-editor-save-status"]'),
+    ).toBeNull();
+    expect(document.querySelector('[data-cy="deck-editor-import"]')).toBeNull();
+    expect(document.querySelector('[data-cy="deck-editor-export"]')).toBeNull();
+  });
+
+  it("workspace and catalog render without decorative headings", () => {
+    renderEditor();
+    expect(
+      document.querySelector('[data-cy="deck-workspace-titles"]'),
+    ).toBeNull();
+    expect(
+      document.querySelector('[data-cy="deck-catalog-titles"]'),
+    ).toBeNull();
   });
 
   it("shows the empty-catalog state from real filters, not a fixture switch", async () => {

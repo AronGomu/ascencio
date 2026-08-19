@@ -84,7 +84,7 @@ export interface DeckCardUpdate {
   readonly after: DeckCardLists;
   readonly beforeImportedNeedsReview: boolean;
   readonly afterImportedNeedsReview: boolean;
-  readonly reason: "add" | "remove" | "move" | "import";
+  readonly reason: "add" | "remove" | "move" | "import" | "restore";
 }
 
 export interface DeckHistory {
@@ -96,6 +96,20 @@ export interface DeckHistory {
 export interface StoredDeck {
   readonly deck: DeckRecord;
   readonly history: DeckHistory;
+}
+
+/** One entry in the global autosave log: which cards a deck held right after an
+    edit, under the name it carried at that moment. Deck-independent by design,
+    so the log survives the deck it came from being renamed or deleted. */
+export interface DeckAutosaveRecord {
+  readonly id: string;
+  readonly deckId: DeckId;
+  /** The name the deck carried at the moment of the edit, not its name now. */
+  readonly deckName: string;
+  readonly createdAt: string;
+  readonly main: readonly number[];
+  readonly extra: readonly number[];
+  readonly side: readonly number[];
 }
 
 export function cloneCardLists(value: DeckCardLists): DeckCardLists {

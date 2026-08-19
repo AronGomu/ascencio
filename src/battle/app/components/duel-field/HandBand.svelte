@@ -12,7 +12,7 @@
     InteractionChoice,
   } from "../../prompts/interaction-spec.ts";
   import type { CardDragOrigin } from "../../presentation/drag-ghost-physics.ts";
-  import OverlayScrollbar from "../OverlayScrollbar.svelte";
+  import { OverlayScrollbar } from "../../../../shell/index.ts";
   import CardControl from "./CardControl.svelte";
 
   export let player: PlayerIndex;

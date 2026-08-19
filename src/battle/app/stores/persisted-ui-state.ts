@@ -90,6 +90,26 @@ export function readPersistedUiState(
   }
 }
 
+/**
+ * Whether this profile has ever written a UI record.
+ *
+ * The deck keys cannot answer this on their own: a profile with nothing stored
+ * reads back as the built-in defaults, which are indistinguishable from a
+ * player who deliberately chose the bundled deck. Only the absence of the
+ * record itself says "this player has never picked", which is what lets the
+ * duel menu open on the stored default deck on a first run and leave a real
+ * choice alone afterwards.
+ */
+export function hasPersistedUiState(
+  storage: Pick<Storage, "getItem"> | null = defaultStorage(),
+): boolean {
+  try {
+    return storage?.getItem(PERSISTED_UI_STATE_KEY) != null;
+  } catch {
+    return false;
+  }
+}
+
 export function writePersistedUiState(
   next: PersistedUiState,
   storage: Pick<Storage, "setItem"> | null = defaultStorage(),

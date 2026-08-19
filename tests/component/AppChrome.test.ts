@@ -127,15 +127,11 @@ async function renderReadyApp() {
 async function startDuelFromPicker(
   user: ReturnType<typeof userEvent.setup>,
 ): Promise<void> {
-  await user.click(
+  await user.selectOptions(
     document.querySelector(
-      '[data-cy="deck-picker-option-player-preset:burning-abyss"]',
-    ) as HTMLButtonElement,
-  );
-  await user.click(
-    document.querySelector(
-      '[data-cy="deck-picker-option-opponent-preset:shaddoll"]',
-    ) as HTMLButtonElement,
+      '[data-cy="deck-picker-player-select"]',
+    ) as HTMLSelectElement,
+    "preset:burning-abyss",
   );
   await user.click(
     document.querySelector(
@@ -275,21 +271,9 @@ describe("App", () => {
     const user = userEvent.setup();
     await renderReadyApp();
 
-    await user.click(
-      document.querySelector(
-        '[data-cy="deck-picker-option-player-preset:burning-abyss"]',
-      ) as HTMLButtonElement,
-    );
-    await user.click(
-      document.querySelector(
-        '[data-cy="deck-picker-option-opponent-preset:shaddoll"]',
-      ) as HTMLButtonElement,
-    );
-    await user.click(
-      document.querySelector(
-        '[data-cy="deck-picker-start-button"]',
-      ) as HTMLButtonElement,
-    );
+    /* Only the player seat is chosen here: the opponent is fixed to Shaddoll
+       by the host, which is what the dispatched pair below proves. */
+    await startDuelFromPicker(user);
 
     expect(workerClientSpies.startDuel).toHaveBeenCalledOnce();
     expect(workerClientSpies.startDuel).toHaveBeenCalledWith(

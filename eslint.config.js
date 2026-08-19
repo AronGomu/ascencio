@@ -38,6 +38,17 @@ const DECK_FORMAT_PENDING_RELOCATION = [
   "!**/battle/duel/presets/deck-parser.ts",
   "!**/battle/duel/presets/deck-sources-browser.ts",
 ];
+/* The bundled player list itself, read raw so a fresh install can be seeded
+   with a deck. Same parking spot and same reason as the modules above: the
+   preset `.ydk` files live under `src/battle/duel/presets/decks`, and
+   `src/decks/index.ts` cannot carry them because it is eager. The allowance
+   names the one list the seeding reads, not the folder. */
+const STARTER_DECK_LIST_PENDING_RELOCATION = [
+  "!**/battle/duel",
+  "!**/battle/duel/presets",
+  "!**/battle/duel/presets/decks",
+  "!**/battle/duel/presets/decks/player.ydk?raw",
+];
 /* The duel's snapshot database name, read by the admin console to reset it. */
 const DUEL_SNAPSHOT_NAME_PENDING_RELOCATION = [
   "!**/battle/storage",
@@ -59,6 +70,17 @@ const DUEL_UI_STATE_PENDING_RELOCATION = [
 const STORY_HANDOFF_TYPES_PENDING_RELOCATION = [
   "!**/story/handoff",
   "!**/story/handoff/story-handoff.ts",
+];
+/* The duel's quarter-turn stage mapping, read by the overlay scrollbar thumb.
+   The scrollbar is part of the shared card preview panel, so the component
+   lives in the shell, while the mapping stays duel presentation. Same shape of
+   allowance as the four above, for the same reason, and it costs the entry
+   chunk one dependency-free module. It disappears when `stage-frame.ts` gets a
+   legal home. */
+const STAGE_FRAME_PENDING_RELOCATION = [
+  "!**/battle/app",
+  "!**/battle/app/presentation",
+  "!**/battle/app/presentation/stage-frame.ts",
 ];
 
 const STORY_MESSAGE =
@@ -163,12 +185,16 @@ export default tseslint.config(
       { group: BATTLE_INTERNALS, message: BATTLE_MESSAGE },
     ],
   ),
+  /* The duel reads the shell the way every other domain does: through
+     `src/shell/index.ts` and nothing deeper. It did not need the entry until
+     the shared card preview panel moved there, so this zone used to exclude
+     the whole shell — including the entry its own message names. */
   boundaries(
     ["src/acceptance-main.ts", "src/battle/**"],
     [
       { group: STORY_INTERNALS, message: STORY_MESSAGE },
       { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
-      { group: ["**/shell/**"], message: SHELL_MESSAGE },
+      { group: SHELL_INTERNALS, message: SHELL_MESSAGE },
     ],
   ),
   /* The files carrying an allowance, and only those files. Each restates its
@@ -184,6 +210,17 @@ export default tseslint.config(
           ...DECK_FORMAT_PENDING_RELOCATION,
           ...DUEL_SNAPSHOT_NAME_PENDING_RELOCATION,
         ],
+        message: BATTLE_MESSAGE,
+      },
+    ],
+  ),
+  boundaries(
+    ["src/shell/card-preview/OverlayScrollbar.svelte"],
+    [
+      { group: STORY_INTERNALS, message: STORY_MESSAGE },
+      { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
+      {
+        group: [...BATTLE_INTERNALS, ...STAGE_FRAME_PENDING_RELOCATION],
         message: BATTLE_MESSAGE,
       },
     ],
@@ -208,6 +245,18 @@ export default tseslint.config(
       },
       { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
       { group: BATTLE_INTERNALS, message: BATTLE_MESSAGE },
+    ],
+  ),
+  boundaries(
+    ["src/decks/starter-deck.ts"],
+    [
+      { group: STORY_INTERNALS, message: STORY_MESSAGE },
+      { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
+      { group: SHELL_INTERNALS, message: SHELL_MESSAGE },
+      {
+        group: [...BATTLE_INTERNALS, ...STARTER_DECK_LIST_PENDING_RELOCATION],
+        message: BATTLE_MESSAGE,
+      },
     ],
   ),
   boundaries(

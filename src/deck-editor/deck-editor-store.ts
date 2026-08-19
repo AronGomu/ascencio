@@ -1,5 +1,6 @@
 import { get, writable, type Readable } from "svelte/store";
 import type {
+  DeckAutosaveRecord,
   DeckCardLists,
   DeckHistory,
   DeckId,
@@ -39,6 +40,8 @@ export interface DeckBuilderState {
   readonly current: StoredDeck | null;
   readonly saveState: "idle" | "saving" | "saved" | "failed" | "conflict";
   readonly message: string | null;
+  /** The deck a duel starts from, so the library can mark its row. */
+  readonly defaultDeckId: DeckId | null;
 }
 
 const INITIAL_STATE: DeckBuilderState = Object.freeze({
@@ -47,6 +50,7 @@ const INITIAL_STATE: DeckBuilderState = Object.freeze({
   current: null,
   saveState: "idle",
   message: null,
+  defaultDeckId: null,
 });
 
 export class DeckBuilderController implements Readable<DeckBuilderState> {
@@ -75,9 +79,10 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
   async initialize(): Promise<void> {
     const generation = this.#startContext();
     try {
-      const [storedDecks, lastOpened] = await Promise.all([
+      const [storedDecks, lastOpened, defaultDeckId] = await Promise.all([
         this.#repository.list(),
         this.#repository.getLastOpened(),
+        this.#repository.getDefaultDeck(),
       ]);
       const decks = storedDecks.map((deck) => this.#revalidateDeck(deck));
       let recoveryMessage: string | null = null;
@@ -108,6 +113,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           current,
           saveState: current === null ? "idle" : "saved",
           message: recoveryMessage,
+          defaultDeckId,
         }),
       );
     } catch (error) {
@@ -182,6 +188,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           current,
           saveState: "saved",
           message: null,
+          defaultDeckId: get(this.#state).defaultDeckId,
         }),
       );
       return true;
@@ -249,6 +256,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           current: committed,
           saveState: "saved",
           message: "Deck imported.",
+          defaultDeckId: get(this.#state).defaultDeckId,
         }),
       );
       return true;
@@ -268,6 +276,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
               current: committed,
               saveState: "saved",
               message: "Deck imported; library refresh failed.",
+              defaultDeckId: get(this.#state).defaultDeckId,
             }),
           );
         }
@@ -317,14 +326,24 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           this.#ruleset,
         ),
       });
-      const nextHistory = pushDeckUpdate(state.current.history, {
-        deckId: before.id,
-        before,
-        after: result.cards,
-        reason: result.reason,
-        beforeImportedNeedsReview: before.importedNeedsReview,
-        afterImportedNeedsReview: importedNeedsReview,
-      });
+      /* Where a card sits is not an edit worth remembering, so reorder and
+         sort save the new order but leave undo pointing at the last change to
+         which cards the deck holds. */
+      const positional = command.type === "reorder" || command.type === "sort";
+      const nextHistory = positional
+        ? state.current.history
+        : pushDeckUpdate(state.current.history, {
+            deckId: before.id,
+            before,
+            after: result.cards,
+            reason: command.type,
+            beforeImportedNeedsReview: before.importedNeedsReview,
+            afterImportedNeedsReview: importedNeedsReview,
+          });
+      /* A new history object is exactly the signal that which cards the deck
+         holds changed: `pushDeckUpdate` hands back the one it was given when
+         the multiset did not move, and positional commands never push at all. */
+      if (nextHistory !== state.current.history) this.#appendAutosave(nextDeck);
       await this.#save(nextDeck, nextHistory);
     });
   }
@@ -342,10 +361,13 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
         return;
       const result = undoDeckUpdate(current.history);
       if (result === null) return;
-      await this.#save(
-        this.#withCards(current.deck, result.cards, result.importedNeedsReview),
-        result.history,
+      const restored = this.#withCards(
+        current.deck,
+        result.cards,
+        result.importedNeedsReview,
       );
+      this.#appendAutosave(restored);
+      await this.#save(restored, result.history);
     });
   }
 
@@ -362,10 +384,13 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
         return;
       const result = redoDeckUpdate(current.history);
       if (result === null) return;
-      await this.#save(
-        this.#withCards(current.deck, result.cards, result.importedNeedsReview),
-        result.history,
+      const restored = this.#withCards(
+        current.deck,
+        result.cards,
+        result.importedNeedsReview,
       );
+      this.#appendAutosave(restored);
+      await this.#save(restored, result.history);
     });
   }
 
@@ -435,6 +460,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           current,
           saveState: "saved",
           message: "Deck duplicated.",
+          defaultDeckId: get(this.#state).defaultDeckId,
         }),
       );
     } catch (error) {
@@ -460,6 +486,19 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
     }
   }
 
+  /** Makes `id` the deck a duel starts from, then re-reads the library so the
+      badge and the disabled button follow storage rather than the click. */
+  async setDefaultDeck(id: DeckId): Promise<void> {
+    const generation = this.#startContext();
+    try {
+      await this.#repository.setDefaultDeck(id);
+      await this.#refreshLibrary(null, generation);
+    } catch (error) {
+      if (this.#isCurrentContext(generation))
+        this.#fail("Default deck could not be set", error);
+    }
+  }
+
   retrySave(): Promise<void> {
     return this.#enqueue(async () => {
       const pending = this.#pendingSave;
@@ -481,6 +520,33 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
   async reloadCurrent(): Promise<void> {
     const current = get(this.#state).current;
     if (current !== null) await this.openDeck(current.deck.id);
+  }
+
+  async listAutosaves(): Promise<readonly DeckAutosaveRecord[]> {
+    return this.#repository.listAutosaves().catch(() => []);
+  }
+
+  async restoreAutosave(entry: DeckAutosaveRecord): Promise<void> {
+    const existing = await this.#repository
+      .load(entry.deckId)
+      .catch(() => null);
+    /* Restoring into whatever deck happens to be open would overwrite it with
+       another deck's cards, so a failed open or create stops here and leaves
+       its own failure state standing. */
+    if (existing !== null) {
+      await this.openDeck(entry.deckId);
+      if (get(this.#state).current?.deck.id !== entry.deckId) return;
+    } else if (!(await this.createDeck(entry.deckName))) {
+      return;
+    }
+    await this.mutate({
+      type: "restore",
+      cards: {
+        main: [...entry.main],
+        extra: [...entry.extra],
+        side: [...entry.side],
+      },
+    });
   }
 
   async preserveCurrentAsCopy(): Promise<void> {
@@ -527,6 +593,23 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
 
   #createAndOpen(deck: DeckRecord, history: DeckHistory): Promise<StoredDeck> {
     return this.#repository.createAndOpen(deck, history);
+  }
+
+  /* Deliberately not awaited: the log records what the player did, and a log
+     that is slow, full, or broken must never fail or delay the edit it is
+     about. Deck data is what `#save` is for. */
+  #appendAutosave(deck: DeckRecord): void {
+    void this.#repository
+      .appendAutosave({
+        id: crypto.randomUUID(),
+        deckId: deck.id,
+        deckName: deck.name,
+        createdAt: new Date().toISOString(),
+        main: [...deck.main],
+        extra: [...deck.extra],
+        side: [...deck.side],
+      })
+      .catch(() => undefined);
   }
 
   #enqueue(operation: () => Promise<void>): Promise<void> {
@@ -632,9 +715,11 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
     generation = this.#contextGeneration,
   ): Promise<void> {
     try {
-      const decks = (await this.#repository.list()).map((deck) =>
-        this.#revalidateDeck(deck),
-      );
+      const [storedDecks, defaultDeckId] = await Promise.all([
+        this.#repository.list(),
+        this.#repository.getDefaultDeck(),
+      ]);
+      const decks = storedDecks.map((deck) => this.#revalidateDeck(deck));
       if (!this.#isCurrentContext(generation)) return;
       this.#state.set(
         Object.freeze({
@@ -643,6 +728,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           current: null,
           saveState: "idle",
           message,
+          defaultDeckId,
         }),
       );
     } catch (error) {

@@ -12,6 +12,7 @@ import {
 } from "../../../src/decks/catalog/pinned-ruleset.ts";
 import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
 import { deckId } from "../../../src/decks/deck-contracts.ts";
+import { DECK_DATABASE_VERSION } from "../../../src/decks/deck-database.ts";
 
 const names: string[] = [];
 afterEach(async () =>
@@ -44,7 +45,7 @@ describe("deck editor entry", () => {
     expect(get(next).current?.deck.id).toBe(id);
 
     const database = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open(name, 1);
+      const request = indexedDB.open(name, DECK_DATABASE_VERSION);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });

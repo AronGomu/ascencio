@@ -273,7 +273,7 @@ Build and save a deck
 - [ ] Check the address bar: the URL is now `#/decks/<some-id>`, NOT `#/decks`.
 - [ ] Type `Blue-Eyes` into the catalog Name search, drag "Blue-Eyes White Dragon" onto the Main Deck drop area — Deck counts shows `Main 1` and the Autosave chip reads "Saved locally".
 - [ ] Press Undo then Redo — the count goes 0 then back to 1, and the deck stays "Saved locally".
-- [ ] Focus the Main Deck card, press Space, then click "Drop picked card in Side Deck" — the card moves and the counts follow.
+- [ ] Right-click the Main Deck card, then choose **Move to Side Deck** from the tap menu (portrait) or confirm the move via the context menu (desktop) — the card moves and the counts follow.
 - [ ] Edit the "Deck name" field to `Manual T8 Renamed` and click elsewhere to blur — the name sticks.
 
 Deep link, reload and Back
@@ -285,9 +285,9 @@ Deep link, reload and Back
 
 Import and export
 
-- [ ] From the library, click "Import YDK", set the deck name to `Manual T8 Import`, paste `#main` / `99999999` / `#extra` / `!side` (one per line) into "Or paste YDK text", click "Preview import" then "Replace deck cards" — the editor opens on the imported deck and shows a "Missing card 99999999" tile.
+- [ ] From the library, click "Import Deck", set the deck name to `Manual T8 Import`, paste `#main` / `99999999` / `#extra` / `!side` (one per line) into "Or paste YDK text", click "Preview import" then "Replace deck cards" — the editor opens on the imported deck and shows a "Missing card 99999999" tile.
 - [ ] Confirm the URL moved to that imported deck's `#/decks/<id>`, then reload — the missing-card tile is still there.
-- [ ] Click "Export" in the editor — the dialog warns the deck is invalid; copy to clipboard, then Close.
+- [ ] Return to the library, use the per-row "Export" action on the imported deck — the dialog warns the deck is invalid; copy to clipboard, then Close. (Export moved to the library menu in T4 — no Export button exists in the editor header.)
 - [ ] Back in the library, use the per-row "Export" action on another deck — the YDK text dialog opens for that deck and Close returns focus to the row.
 
 Library CRUD
@@ -677,7 +677,7 @@ Layout at the sizes that matter
       no sideways scroll.
 - [ ] Tap targets are comfortable: tabs, menu items and card tiles are all
       easily hit with a thumb (44px floor).
-- [ ] Import and Export still open from the header at 390x844 and still work.
+- [ ] Navigate back to the library at 390x844 — "Import Deck" and the per-row "Export" action are accessible from the library and still work. (Import/Export moved to the library menu in T4 — no Import/Export buttons exist in the editor header.)
 
 Desktop is untouched (1440x900)
 
@@ -687,10 +687,9 @@ Desktop is untouched (1440x900)
       No card is added and no tap menu appears. Adding is still drag or the
       keyboard pick-and-drop path.
 - [ ] Drag a card from the catalog into the Main Deck drop area — works as
-      before. Focus a card, press Space, then click "Drop picked card in Side
-      Deck" — works as before.
-- [ ] Undo/redo, import, export, rename and the Deck Library round trip all
-      behave exactly as they did before this ticket.
+      before. Right-click a Main Deck card — the context menu removes it;
+      right-click a catalog card — the card is added to its canonical zone.
+- [ ] Undo/redo, rename and the Deck Library round trip all behave exactly as they did before this ticket; import and export remain accessible from the library menu (moved in T4).
 - [ ] Resize from 1440 wide down past 1024 and back up without reloading — the
       editor swaps between panels and tabs each way, keeping the open deck and
       its edits.
@@ -1030,11 +1029,11 @@ rather than the fixture's handful.
 ### Build a deck from scratch and duel with it
 - [ ] Open `#/decks`. Press **Create deck**, name it (e.g. `Manual T22`), confirm with **Create**.
 - [ ] The catalog panel lists real cards — search `Nekroz`, `Shaddoll`, `Spellbook` or `Burning Abyss` and each returns several distinct cards with names and effect text.
-- [ ] Add cards until **Deck counts** reads `Main 40`. Fastest route: search a name, focus the tile, press `Space` to pick it up, then **Drop picked card in Main Deck**; repeat, or add three copies of ~14 different cards.
+- [ ] Add cards until **Deck counts** reads `Main 40`. Fastest route: search a card name, then right-click the catalog tile to add it directly; repeat, or drag tiles onto the Main Deck drop area.
 - [ ] The validation panel shows no **errors**. Warnings such as "Extra Deck is empty", "Side Deck is empty" and "uses placeholder art" are expected and do not block anything.
 - [ ] Wait for **Saved locally**.
-- [ ] Go to `#/duel`. A **Your decks** group renders below **Bundled decks**, holding `Manual T22` in both the player and opponent columns.
-- [ ] Click `Manual T22` in **Your deck**. It becomes selected (`aria-pressed="true"`), and no start error appears.
+- [ ] Go to `#/duel`. The deck list holds a **Your decks** group below **Bundled decks**, with `Manual T22` in it. (Superseded by T15: one list for the player seat only, and the opponent is a fixed line rather than a column.)
+- [ ] Pick `Manual T22` in the deck list. It becomes the selected row, and no start error appears.
 - [ ] Press **Start**. The duel initializes and reaches the first prompt — the field renders, both life-point totals are up, and your hand is drawn from the cards you picked, not from a bundled deck.
 - [ ] Hover a card in your hand: the preview panel shows that card's real name and effect text.
 - [ ] Surrender, then **Change decks** — `Manual T22` is still selected and the picker does not auto-start.
@@ -1052,8 +1051,8 @@ rather than the fixture's handful.
 - [ ] Import a YDK holding a code the editor does not know (e.g. `99999999`). Preview flags it as unknown, and a deck saved with it is never offered at `#/duel`.
 
 ### Bundled decks are unaffected
-- [ ] With no local deck at all (use `#/admin` → **Reset Deck library**), `#/duel` renders only the **Bundled decks** group — no empty "Your decks" heading — and Start works.
-- [ ] Pick a bundled pair and duel: unchanged from before this slice.
+- [ ] With no local deck at all (use `#/admin` → **Reset Deck library**), `#/duel` renders only the **Bundled decks** group — no empty "Your decks" heading — and Start works. (Superseded by T15: opening `#/duel` now seeds a "Starter Deck", so a **Your decks** group holding exactly that one deck is the expected state here.)
+- [ ] Pick a bundled deck and duel: unchanged from before this slice.
 
 ### Build gate
 - [ ] `npm run build` finishes green. Its last block prints roughly
@@ -1064,3 +1063,321 @@ rather than the fixture's handful.
       `scripts/lib/domain-chunk-closure.ts`. The battle domain *shrank* from
       405,950 to 365,853 because the same change ended a three-way duplication
       of the card-text manifest inside its closure; its ceiling was not touched.
+
+## T1 catalog-real-card-art
+
+- [ ] Run `npm run dev`, open `http://localhost:5173/#/decks`.
+- [ ] Open a saved deck in the editor; confirm card tiles display real card art (jpg images, not glyph placeholders).
+- [ ] Search the catalog for a known card (e.g. "Blue-Eyes White Dragon"); confirm the result tile shows the card image.
+- [ ] Click a card to open the detail/preview panel; confirm the art renders at full preview size.
+- [ ] Confirm cards without packaged art (if any) show a fallback/placeholder rather than a broken image.
+
+## T2 shared-card-preview-panel
+
+- [ ] `npm run dev`, open `http://localhost:5173/#/duel`, start a duel.
+- [ ] Hover a card in hand and on the field: the preview panel shows art, name and effect text exactly as before this slice.
+- [ ] Hover a face-down card: the panel shows "Face-down card" with no art request.
+- [ ] Long effect text: the panel's custom overlay scrollbar appears, drags with the mouse, and `Home` / `End` / `PageUp` / `PageDown` scroll the focused text region.
+- [ ] Rotate to a portrait phone viewport (device toolbar, e.g. 390x844) so the duel stage takes its quarter turn: dragging the preview scrollbar thumb and the hand-band scrollbar thumb still follows the finger along the visible axis, not a quarter turn away from it.
+- [ ] Hand band scrolls with a full hand and its overlay scrollbar behaves as before.
+- [ ] Switch to `#/decks` and back to `#/duel`: no console error about a missing module or a duplicate component.
+
+## T3 editor-preview-pane
+
+- [ ] `npm run dev`, open `http://localhost:5173/#/decks`, open any saved deck.
+- [ ] The left pane shows the shared card preview panel (not "Pinned card details"). Initially it shows "Hover a card to see its details."
+- [ ] Hover a catalog tile (right pane): the preview panel updates with the card's name, effect text, and art.
+- [ ] Click a catalog tile to select/pin it; hover another tile: preview shows the hovered card.
+- [ ] Move the cursor off the catalog grid: preview reverts to the previously selected (clicked) card.
+- [ ] Hover a deck workspace card (middle pane): preview shows that card.
+- [ ] Move the cursor off the deck workspace grid: preview reverts to the selected card.
+- [ ] With no card selected and not hovering: preview shows "Hover a card to see its details."
+- [ ] On portrait / tabs layout: the "Details" tab is now labelled "Preview" and shows the same preview panel.
+- [ ] T1 regression: card art still appears in the preview panel when a tile with packaged art is hovered or selected.
+
+## T4 editor-layout-cleanup
+
+Run `npm run dev` and open an existing deck at `#/decks/<id>` (or create one).
+
+Header chrome removed
+
+- [ ] The editor header shows only four controls: a "← Library" link, the deck name input, Undo, and Redo. No card-count display, no validation-status chip, no autosave-status chip, no Import button, no Export button.
+- [ ] The deck name input is noticeably narrower than before (≈ 11 rem wide).
+
+Viewport stretch
+
+- [ ] The editor fills the full browser width with only a tiny margin on each side (≈ 0.25 rem per side, not the previous 1.5 rem).
+- [ ] The workspace pane and catalog pane each extend to near the bottom of the viewport — only the header row sits above them. Scroll the page; there should be no large gap between the panes and the window bottom.
+- [ ] The card-catalog results list is taller than before; you can see more cards before hitting the internal scroll boundary.
+
+Decorative headings removed
+
+- [ ] No "Deck workspace" or "Build deck" heading appears above the deck zone area.
+- [ ] No "Card catalog" or "Find cards" heading appears above the search bar / results area.
+- [ ] Both sections remain semantically labelled (screen-reader accessible) even though the visible headings are gone.
+
+Import and Export accessible from library
+
+- [ ] Navigate back to the library (`#/decks`). "Import Deck" and the per-row "Export" action are present and functional. (They no longer live in the editor header.)
+
+## T5 undo-redo-keybinds
+
+Run `npm run dev` and open a deck at `#/decks/<id>`.
+
+- [ ] Add a card to the Main Deck, then press Ctrl+Z with focus anywhere outside a text field — the card is removed and the header Undo button greys out when no edits remain.
+- [ ] Press Ctrl+Y — the card comes back. Press Ctrl+Shift+Z after another undo — it also redoes.
+- [ ] Press Ctrl+Z repeatedly past the start of history — nothing breaks and no error appears; the Undo button stays disabled.
+- [ ] Click into the deck name input, type text, press Ctrl+Z — the browser undoes the *typing* in the input; the deck itself is unchanged (no card is removed).
+- [ ] Click into the catalog search field, type, press Ctrl+Z — same: text-level undo only, deck untouched.
+- [ ] On macOS, Cmd+Z and Cmd+Y behave the same as Ctrl+Z / Ctrl+Y.
+- [ ] Screen reader / inspector: the Undo button announces shortcut `Control+Z`, the Redo button announces `Control+Y Control+Shift+Z`.
+
+## T6 manual-order-model
+
+Model-only slice: there is no reorder/sort UI yet (that arrives in a later
+slice). These steps check the ordering the existing editor now produces.
+
+Run `npm run dev` and open a deck at `#/decks/<id>` (or create one).
+
+- [ ] Add four different cards to the Main Deck one at a time, in a deliberate order (e.g. a Trap, then a Spell, then two Monsters). Each card appears at the END of the Main Deck, after the cards already there — the deck is NOT regrouped into monsters/spells/traps and NOT re-sorted by name.
+- [ ] Reload the page and reopen the same deck: the cards are still in the order you added them.
+- [ ] Add a second and third copy of a card already in the deck: each copy lands at the end, not next to its siblings.
+- [ ] Remove a card from the middle of the Main Deck: the remaining cards keep their relative order and do not shuffle up into a sorted arrangement.
+- [ ] Add an Extra Deck card (Fusion/Synchro/Xyz/Link): it lands at the end of the Extra Deck, not in Fusion→Synchro→Xyz→Link order.
+- [ ] Move a card between the Main/Extra Deck and the Side Deck: it lands at the END of the target zone, and the source zone keeps its remaining order.
+- [ ] Press Ctrl+Z after several adds: undo steps back one card at a time as before, and the deck it restores holds the right cards (order may snap back to the order recorded at that step — undo tracks which cards are in the deck, not where they sit).
+- [ ] Press Ctrl+Y to redo back up to the latest state: no error appears and the card count matches.
+- [ ] Open a deck that was saved BEFORE this change (an older deck in the library): it loads normally, its cards are unchanged, and adding/removing a card still saves without a "deck storage" error.
+- [ ] Import a `.ydk` from the library: the imported deck keeps the file's own card order rather than being re-sorted on import.
+- [ ] Watch the browser console through all of the above: no `DeckStorageError` and no "deck history is inconsistent" message.
+
+## T7 stacked-collapsible-zones
+
+Run `npm run dev` and open a deck at `#/decks/<id>` (or create one).
+
+Zone layout
+
+- [ ] Confirm that the Main Deck, Extra Deck, and Side Deck zones stack vertically in that order — there is no two-column Extra+Side grid.
+- [ ] Confirm that neither Extra Deck nor Side Deck appears to the right of Main Deck at any viewport width.
+
+Collapse / expand controls
+
+- [ ] Confirm the Side Deck zone starts collapsed on first open (body / card grid not visible; toggle button shows "▸").
+- [ ] Click the Side Deck toggle — the card grid and drop area expand; the toggle arrow changes to "▾".
+- [ ] Click the toggle again — the zone collapses; toggle arrow returns to "▸".
+- [ ] Confirm the same expand/collapse works for Main Deck and Extra Deck.
+- [ ] Confirm each toggle button reports its state to assistive technology (`aria-expanded` flips between "true" and "false").
+- [ ] Tab to a zone toggle with the keyboard — a visible focus ring surrounds the toggle, and Enter/Space collapses or expands the zone.
+
+Growing main grid
+
+- [ ] With 40 or fewer cards in Main Deck, the count label reads `X/40` (e.g. `3/40`).
+- [ ] Add cards until the Main Deck reaches 41 cards — a new row of ten empty slots appears, the count label switches to `41/40-60`.
+- [ ] Continue to 51 cards — a sixth row appears, the count still shows `X/40-60`.
+- [ ] Confirm all main-grid columns stay at 10 (not 12) at every size.
+
+## T8 reorder-and-sort-ui
+
+Drag reordering
+
+- [ ] Open a deck with at least 3 cards in the Main Deck.
+- [ ] Drag the first card (slot 0) and drop it onto the third card (slot 2) — the two cards swap positions.
+- [ ] Drag a card and drop it onto an empty slot in the same zone — the card moves to the end of that zone.
+- [ ] After a drag-reorder, confirm the Undo button remains disabled (reorder does not enter history).
+- [ ] Drag a Main Deck card to the Side Deck zone — it moves there (cross-zone move still works).
+- [ ] Drag a catalog card to its canonical zone — it is added (catalog add still works).
+
+Sort buttons
+
+- [ ] Confirm two buttons appear in the deck workspace header: "Sort A–Z" and "Sort by type".
+- [ ] Click "Sort A–Z" — all three zones are sorted alphabetically by card name.
+- [ ] Click "Sort by type" — main/side zones order monsters → spells → traps; extra zone follows Fusion → Synchro → Xyz → Link.
+- [ ] After a sort, confirm the Undo button remains disabled (sort does not enter history).
+
+## T9 drop-removal-semantics
+
+Outside-drop removal
+
+- [ ] Open a deck with at least one card in Main Deck.
+- [ ] Drag a Main Deck card and release it over the page background (outside all zone drop areas) — the card is removed from the deck, and a removal announcement appears in the status region.
+- [ ] Confirm the Undo button becomes enabled after this removal (it entered history).
+
+Illegal-zone halo
+
+- [ ] Drag a Main Deck card (e.g. a normal monster) — the Main Deck and Side Deck drop areas turn green (allowed), the Extra Deck drop area turns red (blocked).
+- [ ] Drag an Extra Deck card — the Extra Deck and Side Deck drop areas turn green, the Main Deck drop area turns red.
+- [ ] Drag a catalog card whose canonical zone is Main — the Main Deck drop area turns green, Extra turns red.
+- [ ] Release the drag without dropping — no removal occurs for a catalog card.
+
+Illegal-zone drop → removal
+
+- [ ] Drag a Main Deck card and drop it onto the Extra Deck zone (red) — the card is removed from Main Deck (not moved to Extra).
+- [ ] Drag a catalog card and drop it onto the wrong zone — no card is added, no error panel appears.
+
+Buttons gone
+
+- [ ] Drag any Main Deck card and confirm no "Remove picked card" button appears in the workspace header.
+- [ ] Confirm no per-zone "Drop picked card in …" keyboard buttons appear during the drag.
+
+## T10 context-menu-and-maxed-highlight
+
+### Setup
+- [ ] Run `npm run dev` and open `http://localhost:4300/#/decks`. Create or open a deck.
+
+### Right-click remove from deck zone
+- [ ] Open the Main Deck zone. Right-click any card in the zone — the card is removed from the deck immediately, counts update, and an accessible announcement plays.
+- [ ] Press Undo — the removed card returns.
+- [ ] Repeat for a card in the Extra Deck zone and a card in the Side Deck zone.
+
+### Right-click add from catalog
+- [ ] Right-click a catalog card whose canonical zone is **Main** — the card is added to Main Deck; the announcement reads "… added to main."
+- [ ] Right-click the same card again until Main Deck has **60** cards.
+- [ ] Right-click a different catalog monster — Main is full, so the card is added to **Side Deck** instead; the announcement says "… added to side."
+- [ ] Fill Side Deck to **15** cards (by right-clicking more catalog cards or dragging). Right-click another catalog monster — no card is added and an announcement reads "No space left for …"
+
+### Maxed (copy-limit) highlight
+- [ ] Find a card that already has **3** copies in the deck (check the copy badge). Its catalog tile should show a **red border** instead of the normal accent border.
+- [ ] Hover that tile — the background also tints red (danger-surface), border stays red.
+- [ ] Remove one copy (right-click in the deck zone). The catalog tile border returns to normal once copies drop below the limit.
+- [ ] A forbidden card (limit-badge shows **0**) always has a red border in the catalog, regardless of how many copies are in the deck.
+
+### No native context menu
+- [ ] Right-click any card tile — the browser's native context menu does **not** appear.
+
+## T11 library-halo-polish
+
+### Setup
+- [ ] Run `npm run dev` and open `http://localhost:4300/#/decks`.
+
+### Import button label
+- [ ] The library header shows an "Import Deck" button (not "Import YDK"). Click it — the import dialog opens normally.
+
+### Titles removed
+- [ ] The "Local decks" eyebrow text is gone.
+- [ ] The "Visual Novel chooses a deck ID…" subtitle text is gone.
+- [ ] The "Deck Library" h1 is not visible, but the page landmark is still labelled (screen reader / accessibility tree shows the landmark).
+
+### Validation halo
+- [ ] A deck with errors (e.g. fewer than 40 main cards) — its row button shows a red/danger glow.
+- [ ] A deck with warnings (e.g. empty side) — its row button shows a yellow/warning glow.
+- [ ] A fully valid deck — its row button shows a green (`var(--success)`) glow, visibly distinct from the yellow-orange warning glow and the red error glow.
+- [ ] Hover a warning or error deck row — a native tooltip appears listing each issue message (one per line).
+- [ ] Hover a valid deck row — no tooltip appears.
+
+### Status text gone
+- [ ] No raw status word ("valid", "warnings", "errors") appears as text in any deck row.
+
+## T12 autosave-log-storage
+
+### Version-1 → version-2 upgrade (do this first, on a database that already has decks)
+- [ ] On the **previous** build (before this commit: `git stash` your worktree or check out `8a60f54`), run `npm run dev`, open `http://localhost:4300/#/decks`, and create a deck named "Upgrade Survivor" with at least 5 cards in Main. Confirm DevTools → Application → IndexedDB shows `ygo-story-decks` at **version 1** with stores `decks`, `histories`, `preferences`.
+- [ ] Stop the dev server, return to this build, run `npm run dev` again, and **reload** `http://localhost:4300/#/decks`.
+- [ ] "Upgrade Survivor" is still in the Deck Library, opens, and still holds the same 5 cards. **Nothing was lost.**
+- [ ] DevTools → Application → IndexedDB now shows `ygo-story-decks` at **version 2**, with the original three stores plus a new empty `autosaves` store.
+
+### Prototype (legacy) database is never upgraded
+- [ ] With DevTools → Application → IndexedDB, delete `ygo-story-decks` entirely, then hand-create a database named `ygo-story-duel-deck-builder-prototype` at **version 1** holding one deck row (or reuse a real prototype database if you still have one).
+- [ ] Reload the deck editor. The prototype deck appears in the Deck Library, and `ygo-story-duel-deck-builder-prototype` is gone — migrated, not wiped.
+- [ ] At no point did the prototype database's version change to 2 before its decks arrived.
+
+### Autosave log records membership edits
+- [ ] Open a deck and add two cards. In DevTools → Application → IndexedDB → `ygo-story-decks` → `autosaves`, two rows appear, each with `deckName` set to the deck's current name, an ISO `createdAt`, and the `main`/`extra`/`side` lists as they were right after that edit.
+- [ ] Remove a card, then press Undo, then Redo. Each of those three actions adds one more row.
+- [ ] Rename the deck, then add a card. The new row carries the **new** name; the earlier rows still carry the old one.
+
+### Positional changes are not logged
+- [ ] Note the current row count in `autosaves`. Drag a card to a different position inside Main Deck, then use the Sort action.
+- [ ] The `autosaves` row count is **unchanged** — reordering and sorting append nothing.
+
+### 100-entry cap
+- [ ] Add and remove a card repeatedly (roughly 55 add/remove pairs) so the log passes 100 entries.
+- [ ] `autosaves` never holds more than **100** rows, and the rows that remain are the most recent ones (oldest `createdAt` values have been dropped).
+
+### Failed log never blocks a save
+- [ ] In DevTools → Application → IndexedDB, delete the `autosaves` store's contents and, while the editor is open, keep a second tab on the same page. Edit the deck.
+- [ ] The deck still saves ("Saved" state, edit persists across reload) even if an autosave row fails to appear. A broken log must never surface an error to the player.
+
+### Known risk to watch for (not fixed by this ticket)
+- [ ] Open the deck editor in **two** browser tabs at once on the old (version-1) database, then reload only one of them onto this build. If the upgrading tab appears to hang on load, that is the IndexedDB `blocked` event with no handler — close the other tab and reload. Report it if you hit it.
+
+## T13 load-deck-dialog
+
+### Load dialog opens from editor header
+
+- [ ] Open a deck in the editor. A "Load" button is visible in the header next to Redo.
+- [ ] Click "Load". A modal dialog appears with two tabs: "Your decks" and "Autosaves".
+- [ ] Press Escape. The dialog closes.
+- [ ] Tab to the "Load" button and press Enter — the dialog opens with focus already inside it, Escape closes it without tabbing first, and focus returns to the "Load" button.
+- [ ] The backdrop (dim overlay) covers the page while the dialog is open.
+
+### Your decks tab
+
+- [ ] The dialog opens on the "Your decks" tab by default.
+- [ ] All saved decks are listed, each showing the deck name and "Main N" card count.
+- [ ] Clicking a deck row closes the dialog and navigates to that deck.
+
+### Autosaves tab
+
+- [ ] Click the "Autosaves" tab. Entries are listed newest first, each showing a human-readable timestamp and the deck name.
+- [ ] If no autosaves exist, the message "No autosaves yet." appears.
+- [ ] Click an autosave entry. The dialog closes and the open deck's card list is replaced by the autosave's lists. The change is undoable (Ctrl+Z returns the previous lists).
+
+### Restoring an autosave of a deleted deck
+
+- [ ] Create a deck, add a card, then delete the deck from the library. Open the Load dialog, switch to Autosaves, and click the entry for the deleted deck.
+- [ ] A new deck is created with the same name and the autosave's card lists.
+
+## T14 default-deck
+
+### Starter deck on a fresh install
+
+- [ ] Wipe site data for the app (DevTools → Application → Storage → "Clear site data"), then reload and open `#/decks`. Exactly one deck named "Starter Deck" is listed, and its row shows the "Default" badge.
+- [ ] Reload the page again. Still exactly one "Starter Deck" row — the seeding did not add a second one.
+- [ ] Open "Starter Deck". Its card list is the bundled player deck, and no "imported, needs review" banner is shown.
+
+### Setting the default
+
+- [ ] Create a second deck and return to the library. Its row has a "Set default" button; the Starter Deck row's "Set default" button is disabled.
+- [ ] Click "Set default" on the second deck. The "Default" badge moves to that row, its button becomes disabled, and the Starter Deck row's button becomes clickable again.
+- [ ] Reload the page. The badge is still on the second deck.
+
+### Deleting the default
+
+- [ ] Delete the deck that currently holds the "Default" badge. No remaining row shows a "Default" badge, and every remaining row's "Set default" button is clickable.
+- [ ] Reload the page. Because no deck is default any more, seeding runs again: it adopts the existing "Starter Deck" rather than creating a second one, so that row now carries the badge and the deck count is unchanged.
+- [ ] Delete every deck including "Starter Deck", then reload. A single fresh "Starter Deck" is seeded and marked default.
+
+## T15 duel-menu-default-selection
+
+### An existing profile still carrying the old opponent
+
+- [ ] Before reloading anything, open DevTools → Application → Local Storage and set `ygo.ui.v2` to a record whose `decks` reads `{"playerKey":"preset:nekroz","opponentKey":"preset:mvp-opponent"}` (keep `version: 2`, `windows` and `settings` as they are).
+- [ ] Reload and open `#/duel`. Read `ygo.ui.v2` again: `opponentKey` is now `preset:shaddoll`, and the picker's opponent line reads "Opponent deck: Shaddoll (auto-assigned)".
+- [ ] `playerKey` is still `preset:nekroz` and that deck is the selected row — a choice the player made is not overwritten by the default deck.
+- [ ] No "a deck you had chosen is no longer available" notice is shown.
+
+### A fresh profile
+
+- [ ] Wipe site data for the app (DevTools → Application → Storage → "Clear site data"), then reload and open `#/duel` directly, without visiting `#/decks` first.
+- [ ] Once the picker appears, the selected row is **Starter Deck** under **Your decks** — the deck seeded on this first run, not a bundled one.
+- [ ] No fallback notice is shown anywhere on the picker. A first run has lost nothing and must not be told it has.
+- [ ] The opponent line reads "Opponent deck: Shaddoll (auto-assigned)", and there is no opponent column, list or button.
+- [ ] Press **Start**. The duel initializes against a Shaddoll deck.
+
+### A default deck the player set themselves
+
+- [ ] Open `#/decks`, create or import a second legal 40-card deck, and press **Set default** on its row.
+- [ ] Wipe only `ygo.ui.v2` from Local Storage (leave IndexedDB alone), reload, and open `#/duel`. The selected row is that second deck.
+- [ ] Pick a different deck in the list, reload, and open `#/duel` again. Your pick is still selected — the stored default only fills an empty seat, it does not reclaim one.
+
+### The filter
+
+- [ ] Type `shad` into **Filter decks**. Only decks whose name contains "shad" remain listed, plus the deck currently selected.
+- [ ] Type something no deck matches (e.g. `zzz`). The message "No deck matches that filter." appears, and the selected deck is still listed and still selected.
+- [ ] Clear the filter. Every deck is listed again.
+- [ ] With a filter typed that hides the selected deck's name, press **Start** anyway. The duel runs with the selected deck, not with whatever is visible.
+
+### A deck that vanished
+
+- [ ] Select a local deck at `#/duel`, then go to `#/decks` and delete that deck.
+- [ ] Return to `#/duel`. The fallback notice is shown, and the seat has fallen back to the stored default deck (or the bundled starter if there is none).

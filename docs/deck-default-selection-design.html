@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Default Deck Selection — design (2026-08-16)</title>
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --border:#2b3446;
+    --fg:#dbe4f0; --muted:#8b98ab; --accent:#58a6ff; --green:#3fb950;
+    --orange:#d29922; --purple:#bc8cff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+    font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  .wrap { max-width:960px; margin:0 auto; padding:2rem 1.3rem 4rem; }
+  h1 { font-size:1.5rem; margin:0 0 .3rem; }
+  .sub { color:var(--muted); margin:0 0 1.5rem; }
+  h2 { color:var(--accent); font-size:1.12rem; margin:2rem 0 .7rem;
+    border-bottom:1px solid var(--border); padding-bottom:.3rem; }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:1rem 1.1rem; margin:.8rem 0; }
+  code { background:#22304a66; border-radius:5px; padding:.05rem .3rem;
+    font:.84em ui-monospace,monospace; color:#9fc4ff; }
+  ul { margin:.3rem 0 .3rem 1.1rem; padding:0; } li { margin:.24rem 0; }
+  ol { margin:.3rem 0 .3rem 1.2rem; padding:0; } ol li { margin:.3rem 0; }
+  .flow { display:grid; grid-template-columns:repeat(3,1fr); gap:.7rem; margin:.8rem 0; }
+  @media (max-width:720px){ .flow { grid-template-columns:1fr; } }
+  .step { border:1px solid var(--border); border-radius:10px; background:var(--panel2);
+    padding:.7rem .85rem; font-size:.84rem; }
+  .step h4 { margin:0 0 .35rem; font-size:.82rem; color:var(--accent); }
+  .muted { color:var(--muted); }
+  table { width:100%; border-collapse:collapse; font-size:.88rem; }
+  th,td { text-align:left; padding:.45rem .55rem; border-bottom:1px solid var(--border); }
+  th { color:var(--muted); font-size:.76rem; text-transform:uppercase; letter-spacing:.05em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Default Deck Selection — storage → editor → duel menu</h1>
+<p class="sub">Feedback General-1. Plan <code>ai-artifact/PLAN_2026_08_16_decks_feedback.md</code> T14/T15 · ADR-038.
+Complements <code>deck-selection-architecture.html</code> (resolution/validation flow unchanged).</p>
+
+<h2>Flow</h2>
+<div class="flow">
+  <div class="step"><h4>1 · Seed (first run)</h4>
+    <p><code>ensureStarterDeck()</code> (<code>src/decks/starter-deck.ts</code>): no default set → adopt existing "Starter Deck" or create it from bundled <code>player.ydk</code> → <code>setDefaultDeck(id)</code>.</p>
+    <p class="muted">Idempotent, best-effort. Called by editor mount and duel picker listing.</p></div>
+  <div class="step"><h4>2 · Assign (library)</h4>
+    <p>Deck Library row action <b>Set default</b> → <code>preferences["default-deck"]</code>. Badge marks the row. Deleting the deck clears the preference.</p></div>
+  <div class="step"><h4>3 · Consume (duel menu)</h4>
+    <p>Picker resolves default id → selectable key <code>local:{id}:{rev}</code>. Player seat pre-selected. Opponent fixed <code>preset:shaddoll</code>.</p></div>
+</div>
+
+<h2>Player-seat selection precedence</h2>
+<ol>
+  <li>Persisted key (<code>ygo.ui.v2 → decks.playerKey</code>) when it still resolves against the listed selectable decks.</li>
+  <li>Stored default deck's key, when the deck resolves <em>ready</em> and all codes are duel-supported.</li>
+  <li>Bundled fallback <code>preset:mvp-player</code> (+ fallback notice only when a previously chosen deck vanished).</li>
+</ol>
+
+<h2>Opponent seat</h2>
+<div class="card">
+  <ul>
+    <li>Auto-assigned <b>Shaddoll</b> (<code>DEFAULT_OPPONENT_DECK_ID = "shaddoll"</code>). Feedback names a "Shadow deck"; Shaddoll is the assumed match — no such preset exists otherwise.</li>
+    <li>No opponent picker rendered; stale persisted opponent keys rewritten to <code>preset:shaddoll</code>.</li>
+    <li>"For now": a later plan may reopen opponent choice; the persisted field survives for that.</li>
+  </ul>
+</div>
+
+<h2>Picker UI</h2>
+<table>
+  <tr><th>Element</th><th>data-cy</th><th>Behavior</th></tr>
+  <tr><td>Filter</td><td><code>deck-picker-filter</code></td><td>Substring match on labels, case-insensitive</td></tr>
+  <tr><td>Deck select</td><td><code>deck-picker-player-select</code></td><td>Optgroups: Bundled decks · Your decks (validated locals only)</td></tr>
+  <tr><td>Opponent line</td><td><code>deck-picker-opponent-fixed</code></td><td>Static "Opponent deck: Shaddoll (auto-assigned)"</td></tr>
+  <tr><td>Start</td><td><code>deck-picker-start-button</code></td><td>Unchanged start path (resolution, worker contract intact)</td></tr>
+</table>
+
+<h2>Invariants kept</h2>
+<div class="card">
+  <ul>
+    <li>Only decks that <code>resolveDeck</code> calls ready and whose codes the duel supports are offered (unchanged from ADR-025 flow).</li>
+    <li>The picker never repairs a deck; the editor does.</li>
+    <li>Battle reads decks data through <code>src/decks/</code> modules; no new boundary crossings.</li>
+  </ul>
+</div>
+
+</div>
+</body>
+</html>

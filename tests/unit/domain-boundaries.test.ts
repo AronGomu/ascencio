@@ -61,6 +61,14 @@ const ALLOWANCES: Readonly<Record<string, readonly string[]>> = Object.freeze({
   "src/shell/handoff/handoff-coordinator.ts": [
     "src/story/handoff/story-handoff.ts",
   ],
+  /* The quarter-turn stage mapping the overlay thumb drags through. The panel
+     it belongs to is shared, so the component now lives in the shell, but the
+     mapping stays duel presentation: `src/battle/index.ts` exports
+     `BattleFacade`, and the shell entry is eager. The allowance disappears when
+     `stage-frame.ts` gets a legal home. */
+  "src/shell/card-preview/OverlayScrollbar.svelte": [
+    "src/battle/app/presentation/stage-frame.ts",
+  ],
   "src/decks/ydk-adapter.ts": ["src/battle/duel/presets/deck-parser.ts"],
 });
 
@@ -254,6 +262,8 @@ describe("public domain APIs are frozen", () => {
       entry: "src/shell/index.ts",
       namespace: shell,
       values: [
+        "CardPreviewPanel",
+        "OverlayScrollbar",
         "STAGE_ASPECT_HEIGHT",
         "STAGE_ASPECT_WIDTH",
         "STAGE_BREAKPOINT_PX",
@@ -261,7 +271,12 @@ describe("public domain APIs are frozen", () => {
         "computeStageBox",
         "selectStageMode",
       ],
-      types: ["StageBox", "StageMode"],
+      types: [
+        "CardPreviewImageSource",
+        "CardPreviewView",
+        "StageBox",
+        "StageMode",
+      ],
     },
   ] as const;
 

@@ -25,6 +25,7 @@ export interface PackagedCardText {
 export function packagedCatalogRecords(
   cards: readonly AssetDeckCardRecord[],
   texts: readonly PackagedCardText[],
+  imageUrlByCode?: ReadonlyMap<number, string>,
 ): readonly DeckCatalogRecord[] {
   const textByCode = new Map(texts.map((text) => [text.code, text] as const));
   return Object.freeze(
@@ -32,7 +33,11 @@ export function packagedCatalogRecords(
       const text = textByCode.get(card.code);
       if (text === undefined)
         throw new Error(`Packaged card ${card.code} has no packaged text`);
-      return adaptAssetDeckCard(card, { ...text, strings: [] });
+      return adaptAssetDeckCard(
+        card,
+        { ...text, strings: [] },
+        imageUrlByCode?.get(card.code) ?? null,
+      );
     }),
   );
 }
@@ -40,8 +45,11 @@ export function packagedCatalogRecords(
 export function packagedCatalog(
   cards: readonly AssetDeckCardRecord[],
   texts: readonly PackagedCardText[],
+  imageUrlByCode?: ReadonlyMap<number, string>,
 ): readonly DeckBuilderCardView[] {
   return Object.freeze(
-    packagedCatalogRecords(cards, texts).map(mapDeckBuilderCard),
+    packagedCatalogRecords(cards, texts, imageUrlByCode).map(
+      mapDeckBuilderCard,
+    ),
   );
 }

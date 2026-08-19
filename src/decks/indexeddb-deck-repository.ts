@@ -1,5 +1,6 @@
 import { openDB, unwrap, type DBSchema, type IDBPDatabase } from "idb";
 import type {
+  DeckAutosaveRecord,
   DeckHistory,
   DeckId,
   DeckRecord,
@@ -10,6 +11,7 @@ import {
   createDeckStores,
   DECK_DATABASE_NAME,
   DECK_DATABASE_VERSION,
+  MAXIMUM_DECK_AUTOSAVES,
   migrateLegacyDeckDatabase,
   type DeckMigrationReport,
 } from "./deck-database.ts";
@@ -17,6 +19,7 @@ import { MAXIMUM_DECK_UPDATES } from "./deck-history.ts";
 import type { DeckRepository } from "./deck-repository.ts";
 
 const LAST_OPENED_KEY = "last-opened-deck";
+const DEFAULT_DECK_KEY = "default-deck";
 
 /* One migration per page load, shared by every caller: the deck editor and the
    admin console both open the repository and the copy must not run twice. A
@@ -47,6 +50,11 @@ interface DeckDatabase extends DBSchema {
   preferences: {
     key: string;
     value: Readonly<{ key: string; value: string }>;
+  };
+  autosaves: {
+    key: string;
+    value: DeckAutosaveRecord;
+    indexes: { createdAt: string };
   };
 }
 
@@ -238,11 +246,15 @@ export class IndexedDbDeckRepository implements DeckRepository {
         transaction.objectStore("decks").delete(id),
         transaction.objectStore("histories").delete(id),
       ]);
-      const preference = await transaction
-        .objectStore("preferences")
-        .get(LAST_OPENED_KEY);
-      if (preference?.value === id)
-        await transaction.objectStore("preferences").delete(LAST_OPENED_KEY);
+      /* Both preferences name a deck, so both follow it out of storage: a
+         default pointing at a deleted deck is a deck picker offering nothing. */
+      for (const key of [LAST_OPENED_KEY, DEFAULT_DECK_KEY]) {
+        const preference = await transaction
+          .objectStore("preferences")
+          .get(key);
+        if (preference?.value === id)
+          await transaction.objectStore("preferences").delete(key);
+      }
       await transaction.done;
     } catch (error) {
       await transaction.done.catch(() => undefined);
@@ -294,9 +306,120 @@ export class IndexedDbDeckRepository implements DeckRepository {
     }
   }
 
+  /* Read across both stores in one transaction: a default whose deck is gone
+     reads as none set, rather than as an id the caller then fails to load. */
+  async getDefaultDeck(): Promise<DeckId | null> {
+    const transaction = this.#database.transaction(
+      ["decks", "preferences"],
+      "readonly",
+    );
+    try {
+      const value = (
+        await transaction.objectStore("preferences").get(DEFAULT_DECK_KEY)
+      )?.value;
+      const deck =
+        value === undefined
+          ? undefined
+          : await transaction.objectStore("decks").get(value);
+      await transaction.done;
+      return value === undefined || deck === undefined ? null : deckId(value);
+    } catch (error) {
+      await transaction.done.catch(() => undefined);
+      throw storageError("Unable to read the default deck", error);
+    }
+  }
+
+  async setDefaultDeck(id: DeckId | null): Promise<void> {
+    const transaction = this.#database.transaction(
+      ["decks", "preferences"],
+      "readwrite",
+    );
+    try {
+      if (id === null)
+        await transaction.objectStore("preferences").delete(DEFAULT_DECK_KEY);
+      else {
+        if ((await transaction.objectStore("decks").get(id)) === undefined)
+          throw new DeckStorageError("Cannot default a missing deck");
+        await transaction.objectStore("preferences").put({
+          key: DEFAULT_DECK_KEY,
+          value: id,
+        });
+      }
+      await transaction.done;
+    } catch (error) {
+      await transaction.done.catch(() => undefined);
+      throw storageError("Unable to save the default deck", error);
+    }
+  }
+
+  /* Append and trim share one transaction, so two edits racing each other
+     cannot both read a log of 100, both append, and leave 102 behind. */
+  async appendAutosave(record: DeckAutosaveRecord): Promise<void> {
+    validateAutosaveRecord(record);
+    const transaction = this.#database.transaction("autosaves", "readwrite");
+    try {
+      await transaction.store.add(record);
+      const oldestFirst = await transaction.store
+        .index("createdAt")
+        .getAllKeys();
+      const excess = oldestFirst.length - MAXIMUM_DECK_AUTOSAVES;
+      for (let index = 0; index < excess; index += 1)
+        await transaction.store.delete(oldestFirst[index]!);
+      await transaction.done;
+    } catch (error) {
+      await transaction.done.catch(() => undefined);
+      throw storageError("Unable to append an autosave entry", error);
+    }
+  }
+
+  async listAutosaves(): Promise<readonly DeckAutosaveRecord[]> {
+    try {
+      const values = await this.#database.getAllFromIndex(
+        "autosaves",
+        "createdAt",
+      );
+      const valid: DeckAutosaveRecord[] = [];
+      for (const value of values) {
+        try {
+          valid.push(validateAutosaveRecord(value));
+        } catch {
+          // The log is a convenience surface; one bad row must not hide the rest.
+        }
+      }
+      return Object.freeze(valid.reverse());
+    } catch (error) {
+      throw storageError("Unable to list autosave entries", error);
+    }
+  }
+
   close(): void {
     this.#database.close();
   }
+}
+
+function validateAutosaveRecord(
+  record: DeckAutosaveRecord,
+): DeckAutosaveRecord {
+  if (
+    !hasExactKeys(record, [
+      "createdAt",
+      "deckId",
+      "deckName",
+      "extra",
+      "id",
+      "main",
+      "side",
+    ]) ||
+    !validKey(record.id) ||
+    !validKey(record.deckId) ||
+    typeof record.deckName !== "string" ||
+    !validTimestamp(record.createdAt) ||
+    !validCardList(record.main) ||
+    !validCardList(record.extra) ||
+    !validCardList(record.side)
+  )
+    throw new DeckStorageError("Stored autosave entry is invalid");
+  return record;
 }
 
 function validateDeckRecord(deck: DeckRecord): DeckRecord {
@@ -364,7 +487,9 @@ function validateHistory(history: DeckHistory, id: DeckId): DeckHistory {
         !validTimestamp(update.createdAt) ||
         typeof update.beforeImportedNeedsReview !== "boolean" ||
         typeof update.afterImportedNeedsReview !== "boolean" ||
-        !["add", "remove", "move", "import"].includes(update.reason) ||
+        !["add", "remove", "move", "import", "restore"].includes(
+          update.reason,
+        ) ||
         !validCardLists(update.before) ||
         !validCardLists(update.after),
     )
@@ -453,12 +578,22 @@ function sameHistorySnapshot(
   },
   rightImported: boolean,
 ): boolean {
+  /* History records which cards a deck held, not the order the player left
+     them in, so a reorder saved without a history entry still lines up with
+     the snapshot it came from. */
   return (
     leftImported === rightImported &&
-    left.main.join(",") === right.main.join(",") &&
-    left.extra.join(",") === right.extra.join(",") &&
-    left.side.join(",") === right.side.join(",")
+    sameSnapshotZone(left.main, right.main) &&
+    sameSnapshotZone(left.extra, right.extra) &&
+    sameSnapshotZone(left.side, right.side)
   );
+}
+
+function sameSnapshotZone(
+  left: readonly number[],
+  right: readonly number[],
+): boolean {
+  return [...left].sort().join(",") === [...right].sort().join(",");
 }
 
 function validValidation(value: DeckRecord["validation"]): boolean {

@@ -6,6 +6,7 @@
   import {
     FIFTEEN_CARD_GRID,
     mainDeckGridPlan,
+    type DeckCommand,
   } from "../../decks/deck-model.ts";
   import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
   import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
@@ -24,21 +25,31 @@
   export let ondragcard: (
     code: number,
     zone: DeckZone,
+    index: number,
     event: DragEvent,
   ) => void = () => undefined;
   export let ondragcancel: () => void = () => undefined;
-  export let onpickup: (code: number, zone: DeckZone) => void = () => undefined;
+  export let onreorderdrop: (zone: DeckZone, toIndex: number) => void = () =>
+    undefined;
+  export let onmutate: (command: DeckCommand) => void = () => undefined;
   export let ondropzone: (zone: DeckZone) => void = () => undefined;
-  export let onremove: () => void = () => undefined;
   export let ontap: ((code: number, zone: DeckZone) => void) | null = null;
+  export let onhovercard: (code: number) => void = () => undefined;
+  export let onhoverend: () => void = () => undefined;
+  export let oncontextremove: (code: number, zone: DeckZone) => void = () =>
+    undefined;
   /* Its own pane below the breakpoint: the stage scrolls it, not an inner box. */
   export let filled = false;
 
   let workspaceElement: HTMLElement;
+  let collapsedZones = { main: false, extra: false, side: true };
   $: totalCopies = countCopies(deck);
   $: mainDropAllowed = canDrop("main", picked, catalog);
   $: extraDropAllowed = canDrop("extra", picked, catalog);
   $: sideDropAllowed = canDrop("side", picked, catalog);
+  $: mainReorderActive = picked?.source === "main";
+  $: extraReorderActive = picked?.source === "extra";
+  $: sideReorderActive = picked?.source === "side";
 
   function canDrop(
     zone: DeckZone,
@@ -46,6 +57,7 @@
     cards: ReadonlyMap<number, DeckBuilderCardView>,
   ): boolean {
     if (active === null) return false;
+    if (active.source === zone) return true;
     const card = cards.get(active.code);
     if (card === undefined) return false;
     if (active.source === "catalog" || active.source === "side")
@@ -87,32 +99,27 @@
 <section
   class="workspace"
   class:filled
-  aria-labelledby="workspace-heading"
+  aria-label="Deck workspace"
   data-cy="deck-workspace"
   bind:this={workspaceElement}
 >
   <header class="workspace-header" data-cy="deck-workspace-header">
-    <div data-cy="deck-workspace-titles">
-      <p data-cy="deck-workspace-eyebrow">Deck workspace</p>
-      <h2 id="workspace-heading" data-cy="deck-workspace-heading">
-        Build deck
-      </h2>
-    </div>
-    {#if picked && picked.source !== "catalog"}
+    <div class="sort-actions" data-cy="deck-workspace-sort-actions">
       <button
         type="button"
-        class="danger remove"
-        data-cy="deck-workspace-remove-picked"
-        ondragover={(event) => event.preventDefault()}
-        ondrop={(event) => {
-          event.preventDefault();
-          onremove();
-        }}
-        onclick={onremove}
+        class="secondary"
+        data-cy="deck-workspace-sort-alpha"
+        onclick={() => onmutate({ type: "sort", mode: "alpha" })}
+        >Sort A–Z</button
       >
-        Remove picked card
-      </button>
-    {/if}
+      <button
+        type="button"
+        class="secondary"
+        data-cy="deck-workspace-sort-type"
+        onclick={() => onmutate({ type: "sort", mode: "type" })}
+        >Sort by type</button
+      >
+    </div>
   </header>
 
   <DeckZoneGrid
@@ -124,51 +131,72 @@
     {ruleset}
     {totalCopies}
     {selectedCode}
-    picked={mainDropAllowed}
+    dropAllowed={mainDropAllowed}
+    dragActive={picked !== null}
     {onselect}
     {ondragcard}
     {ondragcancel}
-    {onpickup}
     {ontap}
+    {onreorderdrop}
+    reorderActive={mainReorderActive}
     ondropzone={(zone) => void dropAndRestoreFocus(zone)}
+    {onhovercard}
+    {onhoverend}
+    {oncontextremove}
+    collapsed={collapsedZones.main}
+    ontogglecollapse={() =>
+      (collapsedZones = { ...collapsedZones, main: !collapsedZones.main })}
   />
-
-  <div class="secondary-zones" data-cy="deck-workspace-secondary-zones">
-    <DeckZoneGrid
-      zone="extra"
-      label="Extra Deck"
-      codes={deck.extra}
-      plan={FIFTEEN_CARD_GRID}
-      {catalog}
-      {ruleset}
-      {totalCopies}
-      {selectedCode}
-      picked={extraDropAllowed}
-      {onselect}
-      {ondragcard}
-      {ondragcancel}
-      {onpickup}
-      {ontap}
-      ondropzone={(zone) => void dropAndRestoreFocus(zone)}
-    />
-    <DeckZoneGrid
-      zone="side"
-      label="Side Deck"
-      codes={deck.side}
-      plan={FIFTEEN_CARD_GRID}
-      {catalog}
-      {ruleset}
-      {totalCopies}
-      {selectedCode}
-      picked={sideDropAllowed}
-      {onselect}
-      {ondragcard}
-      {ondragcancel}
-      {onpickup}
-      {ontap}
-      ondropzone={(zone) => void dropAndRestoreFocus(zone)}
-    />
-  </div>
+  <DeckZoneGrid
+    zone="extra"
+    label="Extra Deck"
+    codes={deck.extra}
+    plan={FIFTEEN_CARD_GRID}
+    {catalog}
+    {ruleset}
+    {totalCopies}
+    {selectedCode}
+    dropAllowed={extraDropAllowed}
+    dragActive={picked !== null}
+    {onselect}
+    {ondragcard}
+    {ondragcancel}
+    {ontap}
+    {onreorderdrop}
+    reorderActive={extraReorderActive}
+    ondropzone={(zone) => void dropAndRestoreFocus(zone)}
+    {onhovercard}
+    {onhoverend}
+    {oncontextremove}
+    collapsed={collapsedZones.extra}
+    ontogglecollapse={() =>
+      (collapsedZones = { ...collapsedZones, extra: !collapsedZones.extra })}
+  />
+  <DeckZoneGrid
+    zone="side"
+    label="Side Deck"
+    codes={deck.side}
+    plan={FIFTEEN_CARD_GRID}
+    {catalog}
+    {ruleset}
+    {totalCopies}
+    {selectedCode}
+    dropAllowed={sideDropAllowed}
+    dragActive={picked !== null}
+    {onselect}
+    {ondragcard}
+    {ondragcancel}
+    {ontap}
+    {onreorderdrop}
+    reorderActive={sideReorderActive}
+    ondropzone={(zone) => void dropAndRestoreFocus(zone)}
+    {onhovercard}
+    {onhoverend}
+    {oncontextremove}
+    collapsed={collapsedZones.side}
+    ontogglecollapse={() =>
+      (collapsedZones = { ...collapsedZones, side: !collapsedZones.side })}
+  />
 
   <ValidationIssues
     validation={deck.validation}
@@ -178,8 +206,11 @@
 
 <style>
   .workspace {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
     min-width: 0;
-    height: calc(100vh - 9.5rem);
+    height: calc(100vh - 5.5rem);
     overflow-y: auto;
     padding: 1rem;
     border: 1px solid var(--border);
@@ -197,33 +228,16 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    margin-bottom: 0.75rem;
   }
 
-  .workspace-header p,
-  .workspace-header h2 {
-    margin: 0;
+  .sort-actions {
+    display: flex;
+    gap: 0.4rem;
   }
 
-  .workspace-header p {
-    color: var(--muted);
-    font-size: 0.76rem;
-    font-weight: 750;
-  }
-
-  .remove {
-    min-height: 2.25rem;
-    padding: 0.45rem 0.65rem;
-  }
-
-  .secondary-zones {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
-    margin-top: 0.8rem;
-  }
-
-  .filled .secondary-zones {
-    grid-template-columns: minmax(0, 1fr);
+  .sort-actions button {
+    min-height: 2rem;
+    padding: 0.35rem 0.55rem;
+    font-size: 0.8rem;
   }
 </style>

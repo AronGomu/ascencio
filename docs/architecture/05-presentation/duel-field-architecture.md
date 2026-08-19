@@ -281,7 +281,8 @@ App.svelte
 │       ├── FieldLines.svelte      pointer-events:none SVG
 │       ├── FieldActionBar.svelte  confirm/cancel/order/allocate state
 │       └── EndTurnButton.svelte   corner end-phase control
-├── CardPreviewPanel.svelte        hovered/focused card art + text
+├── CardPreviewPanel.svelte        hovered/focused card art + text; shared,
+│                                  lives in `src/shell/card-preview/` (ADR-036)
 ├── PromptDialog.svelte            non-field prompts
 │   └── PromptControls.svelte      prompt control families
 ├── DuelHud.svelte                 LP, turn, phase, counts (settings-gated)

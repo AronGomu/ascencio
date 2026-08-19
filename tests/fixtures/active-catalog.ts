@@ -15,5 +15,18 @@ export function installPrototypeActiveCatalog(): void {
   Object.assign(globalThis, {
     __ACTIVE_CARD_DATA__: PROTOTYPE_CATALOG_ASSETS,
     __ACTIVE_CARD_TEXTS__: PROTOTYPE_CATALOG_TEXTS,
+    __ACTIVE_IMAGE_MANIFEST__: {
+      schemaVersion: 1 as const,
+      snapshotId: "a".repeat(64),
+      provider: "bundled-archive" as const,
+      redistributionApproved: false as const,
+      files: PROTOTYPE_CATALOG_ASSETS.map(({ code }) => ({
+        code,
+        path: `${code}.jpg`,
+        bytes: 1,
+        sha256: "0".repeat(64),
+      })),
+      missing: [] as number[],
+    },
   });
 }

@@ -285,18 +285,18 @@ test("the root route shows the home hub without booting the duel", async ({
   await expect(page.locator('[data-cy="home-title"]')).toBeVisible();
   for (const entry of ["story", "decks", "duel", "settings"])
     await expect(page.locator(`[data-cy="home-entry-${entry}"]`)).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Choose decks" })).toHaveCount(
-    0,
-  );
+  await expect(
+    page.getByRole("heading", { name: "Choose your deck" }),
+  ).toHaveCount(0);
   expect(requests.some((url) => /\/runtime\/|\.wasm(?:$|\?)/.test(url))).toBe(
     false,
   );
 
   await page.locator('[data-cy="home-entry-duel"]').click();
   expect(new URL(page.url()).hash).toBe("#/duel");
-  await expect(page.getByRole("heading", { name: "Choose decks" })).toBeVisible(
-    { timeout: 120_000 },
-  );
+  await expect(
+    page.getByRole("heading", { name: "Choose your deck" }),
+  ).toBeVisible({ timeout: 120_000 });
 });
 
 test("production bundle initializes the real Worker and sends one opaque choice once", async ({
@@ -463,18 +463,14 @@ test("deck picker persists a chosen pair and Change decks returns without auto-s
     ),
   ).toHaveLength(0);
 
-  await page
-    .locator('[data-cy="deck-picker-option-player-preset:burning-abyss"]')
-    .click();
-  await page
-    .locator('[data-cy="deck-picker-option-opponent-preset:shaddoll"]')
-    .click();
+  const playerSelect = page.locator('[data-cy="deck-picker-player-select"]');
+  await playerSelect.selectOption("preset:burning-abyss");
+  await expect(playerSelect).toHaveValue("preset:burning-abyss");
+  /* The opponent seat is not chosen here and never was in this run: it is
+     fixed to Shaddoll, which the persisted record below has to show. */
   await expect(
-    page.locator('[data-cy="deck-picker-option-player-preset:burning-abyss"]'),
-  ).toHaveAttribute("aria-pressed", "true");
-  await expect(
-    page.locator('[data-cy="deck-picker-option-opponent-preset:shaddoll"]'),
-  ).toHaveAttribute("aria-pressed", "true");
+    page.locator('[data-cy="deck-picker-opponent-fixed"]'),
+  ).toContainText("Shaddoll");
   expect(
     await page.evaluate(() =>
       JSON.parse(localStorage.getItem("ygo.ui.v2") ?? "null"),
@@ -511,12 +507,7 @@ test("deck picker persists a chosen pair and Change decks returns without auto-s
 
   await page.reload();
   await expect(picker).toBeVisible({ timeout: 120_000 });
-  await expect(
-    page.locator('[data-cy="deck-picker-option-player-preset:burning-abyss"]'),
-  ).toHaveAttribute("aria-pressed", "true");
-  await expect(
-    page.locator('[data-cy="deck-picker-option-opponent-preset:shaddoll"]'),
-  ).toHaveAttribute("aria-pressed", "true");
+  await expect(playerSelect).toHaveValue("preset:burning-abyss");
 
   await page.locator('[data-cy="deck-picker-start-button"]').click();
   await expect(page.locator('[data-cy="duel-field"]')).toBeVisible({
@@ -528,12 +519,7 @@ test("deck picker persists a chosen pair and Change decks returns without auto-s
   ).toBeVisible();
   await page.locator('[data-cy="duel-result-change-decks-button"]').click();
   await expect(picker).toBeVisible({ timeout: 120_000 });
-  await expect(
-    page.locator('[data-cy="deck-picker-option-player-preset:burning-abyss"]'),
-  ).toHaveAttribute("aria-pressed", "true");
-  await expect(
-    page.locator('[data-cy="deck-picker-option-opponent-preset:shaddoll"]'),
-  ).toHaveAttribute("aria-pressed", "true");
+  await expect(playerSelect).toHaveValue("preset:burning-abyss");
   await expect
     .poll(
       async () =>
@@ -583,15 +569,16 @@ test("a local deck built from the packaged catalog is offered and duels", async 
      cards this build packages and the picker only offers decks it can draw —
      one derivation, so the two sets cannot disagree. */
   const localGroup = page.locator('[data-cy="deck-picker-group-local"]');
-  await expect(localGroup).toBeVisible({ timeout: 120_000 });
-  const localOption = page.locator(
-    '[data-cy^="deck-picker-option-player-local:"]',
-  );
+  await expect(localGroup).toHaveCount(1, { timeout: 120_000 });
+  const localOption = localGroup.getByRole("option", {
+    name: LOCAL_DECK_NAME,
+    exact: true,
+  });
   await expect(localOption).toHaveCount(1);
-  await expect(localOption).toHaveText(LOCAL_DECK_NAME);
 
-  await localOption.click();
-  await expect(localOption).toHaveAttribute("aria-pressed", "true");
+  const playerSelect = page.locator('[data-cy="deck-picker-player-select"]');
+  await playerSelect.selectOption({ label: LOCAL_DECK_NAME });
+  await expect(playerSelect).toHaveValue(/^local:/);
   await expect(page.locator('[data-cy="deck-picker-start-error"]')).toHaveCount(
     0,
   );
@@ -610,7 +597,7 @@ test("a local deck built from the packaged catalog is offered and duels", async 
     (command) => command.type === "startDuel",
   );
   expect(startCommands).toHaveLength(1);
-  expect(startCommands[0]?.duelId).toBe("local-v1:local:vs:mvp-opponent");
+  expect(startCommands[0]?.duelId).toBe("local-v1:local:vs:shaddoll");
   /* The editor stores a deck in its own display order, so the dispatched list
      is compared as the multiset it is rather than the order it was typed. */
   const dispatched = startCommands[0]?.player as {
@@ -625,7 +612,7 @@ test("a local deck built from the packaged catalog is offered and duels", async 
   expect(dispatched.side).toEqual([]);
   expect(startCommands[0]?.opponent).toEqual({
     kind: "preset",
-    deckId: "mvp-opponent",
+    deckId: "shaddoll",
   });
 });
 
@@ -655,12 +642,14 @@ test("a local deck the pinned ruleset refuses is never offered", async ({
   });
   await expect(
     page.locator('[data-cy="deck-picker-group-preset"]'),
-  ).toBeVisible();
-  await expect(page.locator('[data-cy="deck-picker-group-local"]')).toHaveCount(
-    0,
-  );
+  ).toHaveCount(1);
+  /* The seeded starter deck is a legal local row, so the group itself may
+     exist; what must never appear is the deck the ruleset refused. */
   await expect(
-    page.locator('[data-cy^="deck-picker-option-player-local:"]'),
+    page.locator('[data-cy="deck-picker-player-select"]').getByRole("option", {
+      name: "Thirty Nine",
+      exact: true,
+    }),
   ).toHaveCount(0);
 });
 
@@ -715,9 +704,11 @@ test("zone visuals persist through reload and Reset settings restores defaults",
   ).toEqual({
     version: 2,
     windows: { zoneList: null, confirm: null },
+    /* The player seat follows the stored default deck, whose id is generated
+       when the starter deck seeds, so only the fixed opponent is pinned. */
     decks: {
-      playerKey: "preset:mvp-player",
-      opponentKey: "preset:mvp-opponent",
+      playerKey: expect.any(String),
+      opponentKey: "preset:shaddoll",
     },
     settings: { showZoneOutlines: false, showZoneCounts: false },
   });
@@ -750,9 +741,11 @@ test("zone visuals persist through reload and Reset settings restores defaults",
   ).toEqual({
     version: 2,
     windows: { zoneList: null, confirm: null },
+    /* The player seat follows the stored default deck, whose id is generated
+       when the starter deck seeds, so only the fixed opponent is pinned. */
     decks: {
-      playerKey: "preset:mvp-player",
-      opponentKey: "preset:mvp-opponent",
+      playerKey: expect.any(String),
+      opponentKey: "preset:shaddoll",
     },
     settings: { showZoneOutlines: true, showZoneCounts: true },
   });
@@ -1613,9 +1606,11 @@ test("floating field windows stay inside the field, persist and never lose a dec
   ).toEqual({
     version: 2,
     windows: { zoneList: draggedList, confirm: draggedConfirm },
+    /* The player seat follows the stored default deck, whose id is generated
+       when the starter deck seeds, so only the fixed opponent is pinned. */
     decks: {
-      playerKey: "preset:mvp-player",
-      opponentKey: "preset:mvp-opponent",
+      playerKey: expect.any(String),
+      opponentKey: "preset:shaddoll",
     },
     settings: { showZoneOutlines: true, showZoneCounts: true },
   });

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deck Editor Architecture — target state (2026-08-16)</title>
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --border:#2b3446;
+    --fg:#dbe4f0; --muted:#8b98ab; --accent:#58a6ff; --green:#3fb950;
+    --orange:#d29922; --red:#f85149; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+    font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  .wrap { max-width:1000px; margin:0 auto; padding:2rem 1.3rem 4rem; }
+  h1 { font-size:1.55rem; margin:0 0 .3rem; }
+  .sub { color:var(--muted); margin:0 0 1.6rem; }
+  h2 { color:var(--accent); font-size:1.15rem; margin:2rem 0 .7rem;
+    border-bottom:1px solid var(--border); padding-bottom:.3rem; }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:1rem 1.1rem; margin:.8rem 0; }
+  code { background:#22304a66; border-radius:5px; padding:.05rem .3rem;
+    font:.84em ui-monospace,monospace; color:#9fc4ff; }
+  ul { margin:.3rem 0 .3rem 1.1rem; padding:0; } li { margin:.24rem 0; }
+  table { width:100%; border-collapse:collapse; font-size:.88rem; }
+  th,td { text-align:left; padding:.45rem .55rem; border-bottom:1px solid var(--border); vertical-align:top; }
+  th { color:var(--muted); font-size:.76rem; text-transform:uppercase; letter-spacing:.05em; }
+  .layout { display:grid; grid-template-columns: 1fr 2.2fr 1fr; gap:.6rem; margin:.6rem 0; }
+  .pane { border:1px solid var(--border); border-radius:10px; background:var(--panel2);
+    padding:.7rem .8rem; font-size:.82rem; min-height:9rem; }
+  .pane h4 { margin:0 0 .4rem; font-size:.82rem; color:var(--accent); }
+  .pane .muted { color:var(--muted); }
+  .zone { border:1px dashed var(--border); border-radius:7px; padding:.3rem .5rem; margin:.3rem 0; }
+  .zone.side { opacity:.55; }
+  .tag { display:inline-block; border:1px solid var(--border); border-radius:999px;
+    padding:.05rem .5rem; font-size:.72rem; color:var(--muted); margin-right:.3rem; }
+  .g { color:var(--green); } .o { color:var(--orange); } .r { color:var(--red); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Deck Editor — target architecture</h1>
+<p class="sub">Post decks-feedback plan (<code>ai-artifact/PLAN_2026_08_16_decks_feedback.md</code>).
+Supersedes the three-pane details layout described implicitly by the pre-2026-08-16 components. ADRs 033–036.</p>
+
+<h2>Surface layout</h2>
+<div class="card">
+  <p>Near-full viewport (<code>calc(100% - 0.5rem)</code>). Header: Library · small name input · Undo · Redo · Load. No counts, no deck/autosave status, no import/export (library-only now).</p>
+  <div class="layout">
+    <div class="pane"><h4>Preview (left)</h4>
+      <p>Shared <code>CardPreviewPanel</code> from <code>src/shell/index.ts</code> (ADR-036). Art via <code>staticImageUrl</code> (ADR-039).</p>
+      <p class="muted">Shows <code>hovered ?? selected</code>. Mouse leaves card area → falls back to selected.</p>
+    </div>
+    <div class="pane"><h4>Workspace (center)</h4>
+      <div class="zone">Main — 10 cols, rows 4→5→6 (40/50/60), count <code>X/40</code> → <code>X/40-60</code></div>
+      <div class="zone">Extra — full width, collapsible</div>
+      <div class="zone side">Side — full width, collapsed by default</div>
+      <p class="muted">Toolbar: Sort A–Z · Sort by type. All zones collapsible.</p>
+    </div>
+    <div class="pane"><h4>Catalog (right)</h4>
+      <p>Filters + results (packaged card set, real art).</p>
+      <p class="muted"><span class="r">Red tile</span> at copy limit. Right-click adds. Hover previews.</p>
+    </div>
+  </div>
+</div>
+
+<h2>Interaction model</h2>
+<table>
+  <tr><th>Gesture</th><th>Effect</th></tr>
+  <tr><td>Hover tile</td><td>Preview updates; leave restores selected card</td></tr>
+  <tr><td>Click tile</td><td>Selects (pins preview)</td></tr>
+  <tr><td>Drag catalog → legal zone</td><td><code>add</code> (append at end). Legal zones glow <span class="g">green</span>, illegal <span class="r">red</span></td></tr>
+  <tr><td>Drag zone card → other zone</td><td><code>move</code> (append) when legal; illegal zone or outside any zone → <code>remove</code></td></tr>
+  <tr><td>Drag zone card → card in same zone</td><td><code>reorder</code> swap; onto empty slot → move to end</td></tr>
+  <tr><td>Right-click zone card</td><td><code>remove</code></td></tr>
+  <tr><td>Right-click catalog card</td><td><code>add</code> canonical zone; full → side deck; both full → announcement only</td></tr>
+  <tr><td>Ctrl+Z / Ctrl+Y (or Ctrl+Shift+Z)</td><td>Undo / redo (membership edits only)</td></tr>
+  <tr><td>Load button</td><td>Dialog: tab 1 saved decks, tab 2 autosave log (timestamp · deck name), restore = undoable edit</td></tr>
+</table>
+<p class="tag">Removed: "Remove picked card" button · per-zone keyboard drop buttons · editor import/export modals · auto-sort</p>
+
+<h2>Model &amp; storage</h2>
+<div class="card">
+  <ul>
+    <li><code>DeckCommand</code>: <code>add(zone?)</code> · <code>remove</code> · <code>move</code> · <code>import</code> · <code>restore</code> · <code>reorder</code> · <code>sort(alpha|type)</code>. Append-at-end semantics; no auto-sort (ADR-037).</li>
+    <li>History = membership multisets. <code>reorder</code>/<code>sort</code>: no history entry, not undoable, no autosave entry.</li>
+    <li><code>ygo-story-decks</code> v2 (ADR-038): stores <code>decks</code> · <code>histories</code> · <code>preferences</code> (<code>last-opened-deck</code>, <code>default-deck</code>) · <code>autosaves</code> (global, cap 100, <code>{id, deckId, deckName, createdAt, main, extra, side}</code>). Legacy prototype DB pinned at version 1 during migration.</li>
+    <li>Catalog: <code>activeCatalog()</code> joins <code>__ACTIVE_CARD_DATA__</code> + <code>__ACTIVE_CARD_TEXTS__</code> + <code>__ACTIVE_IMAGE_MANIFEST__</code> → <code>imageUrl = {BASE_URL}runtime/images/{code}.jpg</code> (ADR-039).</li>
+  </ul>
+</div>
+
+<h2>Library screen</h2>
+<div class="card">
+  <ul>
+    <li>Buttons: <b>Import Deck</b> (renamed) · Create deck. Title/eyebrow/subtitle texts removed (h1 stays visually hidden).</li>
+    <li>Row halo replaces the status text: <span class="g">green</span> valid · <span class="o">orange</span> warnings · <span class="r">red</span> errors; hover tooltip (<code>title</code>) lists issues.</li>
+    <li>Row actions: Rename · Duplicate · Export · Delete · <b>Set default</b> (+ Default badge). Default feeds the duel start menu (see <code>deck-default-selection-design.html</code>).</li>
+  </ul>
+</div>
+
+<h2>Boundary notes</h2>
+<div class="card">
+  <ul>
+    <li>Editor ↔ shell: preview panel + stage context via <code>src/shell/index.ts</code> only.</li>
+    <li><code>src/decks/starter-deck.ts</code> imports the bundled <code>player.ydk?raw</code> (asset import, mirrors <code>ydk-adapter.ts</code> precedent); never exported from <code>src/decks/index.ts</code> (eager-chunk rule).</li>
+    <li>Every rendered element carries a unique kebab <code>data-cy</code> (enforced).</li>
+  </ul>
+</div>
+
+</div>
+</body>
+</html>

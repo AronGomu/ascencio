@@ -1,17 +1,13 @@
 <script lang="ts">
   import { MAXIMUM_DECK_NAME_LENGTH } from "../../decks/deck-model.ts";
-  import type {
-    DeckCardLists,
-    DeckRecord,
-    DeckZone,
-  } from "../../decks/deck-contracts.ts";
+  import type { DeckRecord, DeckZone } from "../../decks/deck-contracts.ts";
   import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
   import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
   import { tick } from "svelte";
   import { SvelteMap } from "svelte/reactivity";
   import type { DeckBuilderState } from "../deck-editor-store.ts";
   import CardCatalog from "./CardCatalog.svelte";
-  import CardDetails from "./CardDetails.svelte";
+  import { CardPreviewPanel } from "../../shell/index.ts";
   import DeckWorkspace from "./DeckWorkspace.svelte";
   import EditorTabs from "./EditorTabs.svelte";
   import TapTargetMenu from "./TapTargetMenu.svelte";
@@ -28,8 +24,11 @@
     type TapTarget,
   } from "../layout/tap-targets.ts";
   import type { PickedCard } from "../drag-state.ts";
-  import YdkExport from "./YdkExport.svelte";
-  import YdkImport from "./YdkImport.svelte";
+  import LoadDeckDialog from "./LoadDeckDialog.svelte";
+  import type {
+    DeckAutosaveRecord,
+    DeckId,
+  } from "../../decks/deck-contracts.ts";
 
   export let state: DeckBuilderState;
   export let cards: readonly DeckBuilderCardView[];
@@ -49,18 +48,27 @@
   export let onretrysave: () => void;
   export let onreload: () => void;
   export let onpreservecopy: () => void;
+  export let onlistautosaves: () => Promise<
+    readonly DeckAutosaveRecord[]
+  > = () => Promise.resolve([]);
+  export let onrestoreautosave: (entry: DeckAutosaveRecord) => void = () =>
+    undefined;
+  export let onopendeckbyid: (id: DeckId) => void = () => undefined;
 
   let selected: DeckBuilderCardView | null = null;
   let selectedCode: number | null = null;
+  let hovered: DeckBuilderCardView | null = null;
+  let hoveredCode: number | null = null;
   let picked: PickedCard | null = null;
+  let dropHandled = false;
   let announcement = "";
-  let showImport = false;
-  let showExport = false;
-  let modalOpener: HTMLElement | null = null;
   let deckName = state.current?.deck.name ?? "";
   let pane: EditorPane = defaultPane();
   let tapped: { code: number; zone: DeckZone } | null = null;
   let tapOpener: HTMLElement | null = null;
+  let showLoad = false;
+  let loadButton: HTMLButtonElement | null = null;
+  let loadedAutosaves: readonly DeckAutosaveRecord[] = [];
 
   $: tabs = layoutMode === "tabs";
   $: deck = state.current?.deck ?? null;
@@ -72,14 +80,23 @@
   )
     deckName = deck.name;
   $: copies = deck === null ? new Map<number, number>() : countCopies(deck);
-  $: selectedCopies =
-    selectedCode === null || deck === null
-      ? { main: 0, extra: 0, side: 0 }
-      : {
-          main: deck.main.filter((code) => code === selectedCode).length,
-          extra: deck.extra.filter((code) => code === selectedCode).length,
-          side: deck.side.filter((code) => code === selectedCode).length,
-        };
+  $: previewSource = hovered ?? selected;
+  $: previewSourceCode = hovered !== null ? hoveredCode : selectedCode;
+  $: previewView =
+    previewSource !== null
+      ? {
+          code: previewSource.code,
+          name: previewSource.name,
+          description: previewSource.description,
+        }
+      : previewSourceCode !== null
+        ? {
+            code: previewSourceCode,
+            name: `Missing card ${previewSourceCode}`,
+            description: "Card data is unavailable for this code.",
+          }
+        : null;
+  $: previewImageUrl = previewSource?.imageUrl ?? null;
 
   function countCopies(value: DeckRecord): ReadonlyMap<number, number> {
     const result = new SvelteMap<number, number>();
@@ -165,7 +182,8 @@
   ): void {
     selected = card;
     selectedCode = card.code;
-    picked = { code: card.code, source: "catalog" };
+    picked = { code: card.code, source: "catalog", index: null };
+    dropHandled = false;
     event?.dataTransfer?.setData("text/plain", String(card.code));
     if (event?.dataTransfer) event.dataTransfer.effectAllowed = "copy";
     announcement = `${card.name} picked up. Drop in ${card.canonicalZone === "main" ? "Main Deck" : "Extra Deck"}.`;
@@ -174,11 +192,13 @@
   function startZoneDrag(
     code: number,
     zone: DeckZone,
+    index: number,
     event?: DragEvent,
   ): void {
     selected = catalog.get(code) ?? null;
     selectedCode = code;
-    picked = { code, source: zone };
+    picked = { code, source: zone, index };
+    dropHandled = false;
     event?.dataTransfer?.setData("text/plain", String(code));
     if (event?.dataTransfer) event.dataTransfer.effectAllowed = "move";
     announcement = `${selected?.name ?? `Card ${code}`} picked up from ${zone}.`;
@@ -186,66 +206,115 @@
 
   function dropInZone(zone: DeckZone): void {
     if (picked === null) return;
-    const card = catalog.get(picked.code);
-    if (picked.source === "catalog") {
-      if (card === undefined || zone !== card.canonicalZone) {
+    dropHandled = true;
+    const src = picked;
+    const card = catalog.get(src.code);
+    if (src.source === "catalog") {
+      if (card !== undefined && zone === card.canonicalZone) {
+        onmutate({ type: "add", cardCode: src.code });
+        announcement = `${card.name} added to ${zone}.`;
+      } else {
         announcement = `Card cannot be added to ${zone}.`;
-        return;
       }
-      onmutate({ type: "add", cardCode: picked.code });
-    } else if (card === undefined) {
-      announcement = `Missing card ${picked.code} can only be removed.`;
-      return;
-    } else if (picked.source !== zone) {
-      onmutate({
-        type: "move",
-        cardCode: picked.code,
-        from: picked.source,
-        to: zone,
-      });
-    }
-    announcement = `${card?.name ?? `Card ${picked.code}`} dropped in ${zone}.`;
-    picked = null;
-  }
-
-  function cancelPicked(): void {
-    if (picked === null) return;
-    picked = null;
-    announcement = "Card movement canceled.";
-  }
-
-  function removePicked(): void {
-    if (picked === null || picked.source === "catalog") {
       picked = null;
       return;
     }
-    const code = picked.code;
-    const source = picked.source;
-    onmutate({ type: "remove", cardCode: code, zone: source });
-    announcement = `${catalog.get(code)?.name ?? `Card ${code}`} removed.`;
+    if (src.source === zone) {
+      picked = null;
+      return;
+    }
+    const legal =
+      card !== undefined &&
+      (src.source === "side" ? zone === card.canonicalZone : zone === "side");
+    if (legal) {
+      onmutate({
+        type: "move",
+        cardCode: src.code,
+        from: src.source,
+        to: zone,
+      });
+      announcement = `${card!.name} moved to ${zone}.`;
+    } else {
+      onmutate({ type: "remove", cardCode: src.code, zone: src.source });
+      announcement = `${card?.name ?? `Card ${src.code}`} removed.`;
+    }
     picked = null;
   }
 
-  function openModal(kind: "import" | "export"): void {
-    modalOpener = document.activeElement as HTMLElement | null;
-    showImport = kind === "import";
-    showExport = kind === "export";
+  function reorderInZone(zone: DeckZone, toIndex: number): void {
+    if (picked === null || picked.source !== zone || picked.index === null)
+      return;
+    dropHandled = true;
+    onmutate({ type: "reorder", zone, from: picked.index, to: toIndex });
+    picked = null;
   }
 
-  async function closeModal(): Promise<void> {
-    showImport = false;
-    showExport = false;
+  function contextAdd(card: DeckBuilderCardView): void {
+    const counts = {
+      main: deck?.main.length ?? 0,
+      extra: deck?.extra.length ?? 0,
+      side: deck?.side.length ?? 0,
+    };
+    const canonicalFull =
+      card.canonicalZone === "main" ? counts.main >= 60 : counts.extra >= 15;
+    const zone: DeckZone = canonicalFull ? "side" : card.canonicalZone;
+    if (canonicalFull && counts.side >= 15) {
+      announcement = `No space left for ${card.name}.`;
+      return;
+    }
+    onmutate({ type: "add", cardCode: card.code, zone });
+    announcement = `${card.name} added to ${zone}.`;
+  }
+
+  function contextRemove(code: number, zone: DeckZone): void {
+    onmutate({ type: "remove", cardCode: code, zone });
+    announcement = `${catalog.get(code)?.name ?? `Card ${code}`} removed.`;
+  }
+
+  function endZoneDrag(): void {
+    if (picked === null) return;
+    if (!dropHandled && picked.source !== "catalog") {
+      onmutate({ type: "remove", cardCode: picked.code, zone: picked.source });
+      announcement = `${catalog.get(picked.code)?.name ?? `Card ${picked.code}`} removed.`;
+    }
+    picked = null;
+    dropHandled = false;
+  }
+
+  async function openLoadDialog(): Promise<void> {
+    loadedAutosaves = await onlistautosaves();
+    showLoad = true;
+  }
+
+  /* `loadButton` is null once the editor unmounts, so opening another deck
+     never fights the new view for focus. */
+  async function closeLoadDialog(): Promise<void> {
+    showLoad = false;
     await tick();
-    modalOpener?.focus();
-    modalOpener = null;
+    loadButton?.focus();
   }
 
   function handleKeydown(event: KeyboardEvent): void {
+    const target = event.target as HTMLElement | null;
+    const editingText =
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLTextAreaElement ||
+      (target?.isContentEditable ?? false);
+    if (!editingText && (event.ctrlKey || event.metaKey)) {
+      const key = event.key.toLowerCase();
+      if (key === "z" && !event.shiftKey) {
+        event.preventDefault();
+        if ((state.current?.history.undo.length ?? 0) > 0) onundo();
+        return;
+      }
+      if (key === "y" || (key === "z" && event.shiftKey)) {
+        event.preventDefault();
+        if ((state.current?.history.redo.length ?? 0) > 0) onredo();
+        return;
+      }
+    }
     if (event.key !== "Escape") return;
-    if (showImport || showExport) {
-      void closeModal();
-      announcement = "Dialog closed.";
-    } else if (tapped !== null) {
+    if (tapped !== null) {
       void closeTapMenu();
       announcement = "Card move cancelled.";
     } else if (picked !== null) {
@@ -278,41 +347,6 @@
         }}
       />
     </label>
-    <dl class="counts" aria-label="Deck counts" data-cy="deck-editor-counts">
-      <div data-cy="deck-editor-count-main">
-        <dt data-cy="deck-editor-count-main-term">Main</dt>
-        <dd data-cy="deck-editor-count-main-value">{deck.main.length}</dd>
-      </div>
-      <div data-cy="deck-editor-count-extra">
-        <dt data-cy="deck-editor-count-extra-term">Extra</dt>
-        <dd data-cy="deck-editor-count-extra-value">{deck.extra.length}</dd>
-      </div>
-      <div data-cy="deck-editor-count-side">
-        <dt data-cy="deck-editor-count-side-term">Side</dt>
-        <dd data-cy="deck-editor-count-side-value">{deck.side.length}</dd>
-      </div>
-    </dl>
-    <div
-      class={`status status-${deck.validation.status}`}
-      data-cy="deck-editor-validation-status"
-    >
-      <span data-cy="deck-editor-validation-status-label">Deck</span>
-      <strong data-cy="deck-editor-validation-status-value"
-        >{deck.validation.status}</strong
-      >
-    </div>
-    <div
-      class={`status save-${state.saveState}`}
-      aria-live="polite"
-      data-cy="deck-editor-save-status"
-    >
-      <span data-cy="deck-editor-save-status-label">Autosave</span>
-      <strong data-cy="deck-editor-save-status-value"
-        >{state.saveState === "saved"
-          ? "Saved locally"
-          : state.saveState}</strong
-      >
-    </div>
     <button
       type="button"
       class="secondary"
@@ -327,19 +361,14 @@
       disabled={state.current?.history.redo.length === 0}
       data-cy="deck-editor-redo"
       onclick={onredo}
-      aria-keyshortcuts="Control+Shift+Z">Redo</button
+      aria-keyshortcuts="Control+Y Control+Shift+Z">Redo</button
     >
     <button
       type="button"
       class="secondary"
-      data-cy="deck-editor-import"
-      onclick={() => openModal("import")}>Import</button
-    >
-    <button
-      type="button"
-      class="secondary"
-      data-cy="deck-editor-export"
-      onclick={() => openModal("export")}>Export</button
+      data-cy="deck-editor-load"
+      bind:this={loadButton}
+      onclick={() => void openLoadDialog()}>Load</button
     >
   </header>
 
@@ -403,33 +432,18 @@
       <EditorTabs {pane} onselectpane={(next) => (pane = next)} />
     {/if}
 
-    {#if !tabs || pane === "catalog"}
+    {#if !tabs || pane === "details"}
       <div
         class="pane"
-        id="deck-pane-catalog"
+        id="deck-pane-details"
         role={tabs ? "tabpanel" : undefined}
-        data-cy="deck-pane-catalog"
+        data-cy="deck-pane-details"
       >
-        <CardCatalog
-          {cards}
-          {ruleset}
-          {selectedCode}
-          {copies}
-          filled={tabs}
-          onselect={(card) => {
-            selected = card;
-            selectedCode = card.code;
-          }}
-          ontap={tabs ? tapCatalogCard : null}
-          ondragcard={(card, event) => startCatalogDrag(card, event)}
-          ondragcancel={cancelPicked}
-          onpickup={(card) => startCatalogDrag(card)}
-          onblocked={(card, reason) => {
-            selected = card;
-            selectedCode = card.code;
-            announcement = `${card.name}: ${reason}`;
-            pane = paneAfterSelect(pane, layoutMode);
-          }}
+        <CardPreviewPanel
+          preview={previewView}
+          imageLibrary={null}
+          staticImageUrl={previewImageUrl}
+          placeholderUrl=""
         />
       </div>
     {/if}
@@ -450,28 +464,62 @@
           filled={tabs}
           onselect={selectCard}
           ontap={tabs ? tapDeckCard : null}
-          ondragcard={(code, zone, event) => startZoneDrag(code, zone, event)}
-          ondragcancel={cancelPicked}
-          onpickup={(code, zone) => startZoneDrag(code, zone)}
+          ondragcard={(code, zone, index, event) =>
+            startZoneDrag(code, zone, index, event)}
+          ondragcancel={endZoneDrag}
+          onreorderdrop={reorderInZone}
+          onmutate={(command) => {
+            onmutate(command);
+          }}
           ondropzone={dropInZone}
-          onremove={removePicked}
+          oncontextremove={contextRemove}
+          onhovercard={(code) => {
+            hovered = catalog.get(code) ?? null;
+            hoveredCode = code;
+          }}
+          onhoverend={() => {
+            hovered = null;
+            hoveredCode = null;
+          }}
         />
       </div>
     {/if}
 
-    {#if !tabs || pane === "details"}
+    {#if !tabs || pane === "catalog"}
       <div
         class="pane"
-        id="deck-pane-details"
+        id="deck-pane-catalog"
         role={tabs ? "tabpanel" : undefined}
-        data-cy="deck-pane-details"
+        data-cy="deck-pane-catalog"
       >
-        <CardDetails
-          card={selected}
-          missingCode={selected === null ? selectedCode : null}
-          copies={selectedCopies}
+        <CardCatalog
+          {cards}
           {ruleset}
+          {selectedCode}
+          {copies}
           filled={tabs}
+          onselect={(card) => {
+            selected = card;
+            selectedCode = card.code;
+          }}
+          ontap={tabs ? tapCatalogCard : null}
+          ondragcard={(card, event) => startCatalogDrag(card, event)}
+          ondragcancel={endZoneDrag}
+          oncontextadd={contextAdd}
+          onblocked={(card, reason) => {
+            selected = card;
+            selectedCode = card.code;
+            announcement = `${card.name}: ${reason}`;
+            pane = paneAfterSelect(pane, layoutMode);
+          }}
+          onhovercard={(card) => {
+            hovered = card;
+            hoveredCode = card.code;
+          }}
+          onhoverend={() => {
+            hovered = null;
+            hoveredCode = null;
+          }}
         />
       </div>
     {/if}
@@ -487,41 +535,31 @@
     />
   {/if}
 
-  {#if showImport}
-    <div
-      class="backdrop"
-      aria-hidden="true"
-      data-cy="deck-editor-import-backdrop"
-    ></div>
-    <YdkImport
-      catalogCodes={new Set(catalog.keys())}
-      oncancel={() => void closeModal()}
-      onimport={async (cards: DeckCardLists) => {
-        await onmutate({ type: "import", cards });
-        await closeModal();
-        return true;
+  {#if showLoad}
+    <div class="backdrop" aria-hidden="true" data-cy="load-deck-backdrop"></div>
+    <LoadDeckDialog
+      decks={state.decks}
+      autosaves={loadedAutosaves}
+      onopendeck={(id) => {
+        void closeLoadDialog();
+        onopendeckbyid(id);
       }}
+      onrestore={(entry) => {
+        void closeLoadDialog();
+        onrestoreautosave(entry);
+      }}
+      oncancel={() => void closeLoadDialog()}
     />
-  {/if}
-  {#if showExport}
-    <div
-      class="backdrop"
-      aria-hidden="true"
-      data-cy="deck-editor-export-backdrop"
-    ></div>
-    <YdkExport {deck} oncancel={() => void closeModal()} />
   {/if}
 {/if}
 
 <style>
   .editor-header {
     display: grid;
-    grid-template-columns:
-      auto minmax(12rem, 1fr)
-      auto auto auto auto auto auto auto;
+    grid-template-columns: auto auto 1fr auto auto auto;
     align-items: end;
     gap: 0.55rem;
-    width: min(118rem, calc(100% - 1.5rem));
+    width: calc(100% - 0.5rem);
     margin-inline: auto;
     padding-block: 0.75rem;
   }
@@ -536,14 +574,13 @@
     gap: 0.2rem;
   }
 
-  .name-field span,
-  .status span,
-  dt {
+  .name-field span {
     color: var(--muted);
     font-size: 0.68rem;
   }
 
   .name-field input {
+    width: 11rem;
     min-height: 2.45rem;
     padding: 0.45rem 0.6rem;
     color: var(--text);
@@ -553,49 +590,14 @@
     font-weight: 750;
   }
 
-  .counts {
-    display: flex;
-    gap: 0.35rem;
-    margin: 0;
-  }
-
-  .counts div,
-  .status {
-    min-width: 3.2rem;
-    padding: 0.3rem 0.45rem;
-    border: 1px solid var(--border);
-    border-radius: 0.45rem;
-    background: var(--surface);
-  }
-
-  dd {
-    margin: 0;
-    font-weight: 800;
-  }
-
-  .status {
-    display: grid;
-  }
-
-  .status-errors,
-  .save-failed,
-  .save-conflict {
-    border-color: var(--danger-border);
-  }
-
-  .status-warnings,
-  .save-saving {
-    border-color: var(--warning-border);
-  }
-
   .editor-layout {
     display: grid;
-    grid-template-columns: minmax(17rem, 0.82fr) minmax(38rem, 1.9fr) minmax(
-        18rem,
-        0.9fr
+    grid-template-columns: minmax(18rem, 0.9fr) minmax(38rem, 1.9fr) minmax(
+        17rem,
+        0.82fr
       );
     gap: 0.75rem;
-    width: min(118rem, calc(100% - 1.5rem));
+    width: calc(100% - 0.5rem);
     margin-inline: auto;
     padding-bottom: 0.75rem;
   }
@@ -605,6 +607,11 @@
      layout it was before the panes existed. */
   .pane {
     display: contents;
+  }
+
+  .pane :global(.card-preview-panel) {
+    height: calc(100vh - 5.5rem);
+    overflow-y: auto;
   }
 
   .editor-layout.tabs {
@@ -619,7 +626,7 @@
   }
 
   .message {
-    width: min(118rem, calc(100% - 1.5rem));
+    width: calc(100% - 0.5rem);
     margin: 0 auto 0.6rem;
     padding: 0.65rem;
     border: 1px solid var(--border);
@@ -643,10 +650,8 @@
     background: color-mix(in srgb, var(--shadow) 68%, transparent);
   }
 
-  /* T14: below the stage breakpoint the header stops being a fixed nine-column
-     strip and wraps instead, so deck name, counts and both status readouts stay
-     on screen in every tab without pushing the page sideways. The width matches
-     `STAGE_BREAKPOINT_PX` in `src/shell/stage-layout.ts`. */
+  /* Below the stage breakpoint the header wraps rather than scrolling sideways.
+     The width matches `STAGE_BREAKPOINT_PX` in `src/shell/stage-layout.ts`. */
   @media (max-width: 1023.98px) {
     .editor-header {
       display: flex;

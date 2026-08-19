@@ -26,8 +26,8 @@ describe("deck catalog", () => {
     expect(isDeckId("not-a-deck")).toBe(false);
   });
 
-  it("defaults point at the two MVP decks", () => {
+  it("defaults name the bundled player deck and the fixed opponent", () => {
     expect(DEFAULT_PLAYER_DECK_ID).toBe("mvp-player");
-    expect(DEFAULT_OPPONENT_DECK_ID).toBe("mvp-opponent");
+    expect(DEFAULT_OPPONENT_DECK_ID).toBe("shaddoll");
   });
 });

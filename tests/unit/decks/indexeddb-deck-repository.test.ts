@@ -3,7 +3,10 @@
 import "fake-indexeddb/auto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { deleteDB } from "idb";
-import { deckId } from "../../../src/decks/deck-contracts.ts";
+import {
+  deckId,
+  type DeckAutosaveRecord,
+} from "../../../src/decks/deck-contracts.ts";
 import {
   emptyDeckHistory,
   pushDeckUpdate,
@@ -12,7 +15,9 @@ import { createBlankDeck } from "../../../src/decks/deck-model.ts";
 import { validateDeckDraft } from "../../../src/decks/deck-validation.ts";
 import {
   DECK_DATABASE_NAME,
+  DECK_DATABASE_VERSION,
   LEGACY_DECK_DATABASE_NAME,
+  MAXIMUM_DECK_AUTOSAVES,
 } from "../../../src/decks/deck-database.ts";
 import {
   deckDatabaseNames,
@@ -44,6 +49,21 @@ async function repository(name: string): Promise<IndexedDbDeckRepository> {
     name,
     () => new Date("2026-01-01T00:00:00.000Z"),
   );
+}
+
+/* Distinct timestamps throughout: the log is ordered by `createdAt`, so two
+   entries written in the same millisecond have no defined order and would make
+   an ordering assertion a coin flip. */
+function autosave(id: string, createdAt: string): DeckAutosaveRecord {
+  return {
+    id,
+    deckId: deckId("logged"),
+    deckName: "Logged",
+    createdAt,
+    main: [89631139],
+    extra: [],
+    side: [],
+  };
 }
 
 describe("IndexedDbDeckRepository", () => {
@@ -162,13 +182,47 @@ describe("IndexedDbDeckRepository", () => {
     repo.close();
   });
 
+  /* Positions never enter the history, so the stored deck and the newest undo
+     entry legitimately disagree on order while holding the same cards. The
+     consistency check has to read that as one state, or every manual reorder
+     would make its own deck unloadable. */
+  it("a reordered deck still loads against its unreordered history", async () => {
+    const repo = await repository("deck-repo-reorder");
+    const draft = createBlankDeck("Reordered", catalog, PROTOTYPE_RULESET, {
+      id: "reordered",
+      now: new Date("2026-01-01T00:00:00.000Z"),
+    });
+    const created = await repo.createAndOpen(draft, emptyDeckHistory());
+    const history = pushDeckUpdate(created.history, {
+      id: "add-two",
+      deckId: created.deck.id,
+      before: created.deck,
+      after: { main: [89631139, 46986414], extra: [], side: [] },
+      reason: "add",
+    });
+    await repo.save(
+      1,
+      { ...created.deck, main: [89631139, 46986414] },
+      history,
+    );
+    await repo.save(
+      2,
+      { ...created.deck, main: [46986414, 89631139] },
+      history,
+    );
+    expect((await repo.load(created.deck.id))?.deck.main).toEqual([
+      46986414, 89631139,
+    ]);
+    repo.close();
+  });
+
   it("rejects malformed persisted rows before exposing them", async () => {
     const name = "deck-repo-malformed";
     names.push(name);
     const repo = await IndexedDbDeckRepository.open(name);
     repo.close();
     const database = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open(name, 1);
+      const request = indexedDB.open(name, DECK_DATABASE_VERSION);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
@@ -234,5 +288,139 @@ describe("IndexedDbDeckRepository", () => {
     expect(loaded?.deck.validation.status).toBe("errors");
     expect(loaded?.history.undo).toHaveLength(50);
     second.close();
+  });
+});
+
+describe("the deck autosave log", () => {
+  it("appendAutosave stores entries readable newest first", async () => {
+    const repo = await repository("deck-repo-autosave-order");
+    /* Appended out of order, so the read proves it sorts by `createdAt` rather
+       than handing back insertion order. */
+    await repo.appendAutosave(autosave("older", "2026-01-01T00:00:00.000Z"));
+    await repo.appendAutosave(autosave("newest", "2026-01-03T00:00:00.000Z"));
+    await repo.appendAutosave(autosave("newer", "2026-01-02T00:00:00.000Z"));
+
+    expect((await repo.listAutosaves()).map(({ id }) => id)).toEqual([
+      "newest",
+      "newer",
+      "older",
+    ]);
+    repo.close();
+  });
+
+  it("the autosave log keeps only the newest 100 entries", async () => {
+    const repo = await repository("deck-repo-autosave-cap");
+    const total = MAXIMUM_DECK_AUTOSAVES + 5;
+    for (let index = 0; index < total; index += 1)
+      await repo.appendAutosave(
+        autosave(
+          `entry-${String(index)}`,
+          new Date(Date.UTC(2026, 0, 1, 0, 0, index)).toISOString(),
+        ),
+      );
+
+    const entries = await repo.listAutosaves();
+    expect(entries).toHaveLength(MAXIMUM_DECK_AUTOSAVES);
+    expect(entries[0]?.id).toBe(`entry-${String(total - 1)}`);
+    expect(entries.at(-1)?.id).toBe("entry-5");
+    expect(entries.some(({ id }) => id === "entry-4")).toBe(false);
+    repo.close();
+  });
+
+  /* The log is a convenience surface, not deck data: one unreadable row must
+     not take the rest of a player's history down with it. */
+  it("skips malformed autosave rows instead of failing the read", async () => {
+    const name = "deck-repo-autosave-malformed";
+    const repo = await repository(name);
+    await repo.appendAutosave(autosave("valid", "2026-01-01T00:00:00.000Z"));
+    repo.close();
+
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open(name, DECK_DATABASE_VERSION);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const transaction = database.transaction("autosaves", "readwrite");
+    transaction.objectStore("autosaves").put({
+      id: "malformed",
+      deckId: "logged",
+      createdAt: "2026-01-02T00:00:00.000Z",
+    });
+    await new Promise<void>((resolve, reject) => {
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+    database.close();
+
+    const reopened = await IndexedDbDeckRepository.open(name);
+    expect((await reopened.listAutosaves()).map(({ id }) => id)).toEqual([
+      "valid",
+    ]);
+    reopened.close();
+  });
+});
+
+describe("the default deck preference", () => {
+  it("setDefaultDeck persists and getDefaultDeck reads it back", async () => {
+    const repo = await repository("deck-repo-default-round-trip");
+    const deck = createBlankDeck("Default", catalog, PROTOTYPE_RULESET, {
+      id: "defaulted",
+    });
+    await repo.create(deck, emptyDeckHistory());
+    expect(await repo.getDefaultDeck()).toBeNull();
+    await repo.setDefaultDeck(deck.id);
+    expect(await repo.getDefaultDeck()).toBe(deck.id);
+    await repo.setDefaultDeck(null);
+    expect(await repo.getDefaultDeck()).toBeNull();
+    repo.close();
+  });
+
+  /* A default pointing at a deck that is gone is a deck picker offering
+     nothing, so the delete that removes the deck removes the preference. */
+  it("deleting the default deck clears the preference", async () => {
+    const repo = await repository("deck-repo-default-cleared-on-delete");
+    const deck = createBlankDeck("Doomed", catalog, PROTOTYPE_RULESET, {
+      id: "doomed",
+    });
+    const created = await repo.create(deck, emptyDeckHistory());
+    await repo.setDefaultDeck(deck.id);
+    await repo.delete(deck.id, created.deck.revision);
+    expect(await repo.getDefaultDeck()).toBeNull();
+    repo.close();
+  });
+
+  /* A row can outlive its deck when storage is edited outside the repository,
+     so the read verifies the deck rather than trusting the preference. */
+  it("reads a default naming a deck that is gone as none set", async () => {
+    const name = "deck-repo-default-dangling";
+    const repo = await repository(name);
+    repo.close();
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open(name, DECK_DATABASE_VERSION);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const transaction = database.transaction("preferences", "readwrite");
+    transaction
+      .objectStore("preferences")
+      .put({ key: "default-deck", value: "vanished" });
+    await new Promise<void>((resolve, reject) => {
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+    database.close();
+
+    const reopened = await IndexedDbDeckRepository.open(name);
+    expect(await reopened.getDefaultDeck()).toBeNull();
+    reopened.close();
+  });
+
+  it("setDefaultDeck refuses a missing deck", async () => {
+    const repo = await repository("deck-repo-default-missing");
+    await expect(repo.setDefaultDeck(deckId("absent"))).rejects.toBeInstanceOf(
+      DeckStorageError,
+    );
+    expect(await repo.getDefaultDeck()).toBeNull();
+    repo.close();
   });
 });

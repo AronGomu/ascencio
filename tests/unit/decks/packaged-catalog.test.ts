@@ -47,6 +47,26 @@ describe("packagedCatalogRecords", () => {
   });
 });
 
+describe("packagedCatalog imageUrl param", () => {
+  it("attaches an image url for manifest-backed codes", () => {
+    const [first] = PROTOTYPE_CATALOG_ASSETS;
+    const code = first!.code;
+    const url = `runtime/images/${code}.jpg`;
+    const map: ReadonlyMap<number, string> = new Map([[code, url]]);
+    const texts = [{ code, name: "Test", description: "Test" }];
+    const views = packagedCatalog([first!], texts, map);
+    expect(views[0]?.imageUrl).toBe(url);
+  });
+
+  it("leaves imageUrl null for codes without packaged art", () => {
+    const [first] = PROTOTYPE_CATALOG_ASSETS;
+    const code = first!.code;
+    const texts = [{ code, name: "Test", description: "Test" }];
+    const views = packagedCatalog([first!], texts, new Map());
+    expect(views[0]?.imageUrl).toBeNull();
+  });
+});
+
 describe("the packaged deck catalog", () => {
   it("offers exactly the codes whose art this build ships", () => {
     expect(catalog.map(({ code }) => code)).toEqual(packagedCodes);

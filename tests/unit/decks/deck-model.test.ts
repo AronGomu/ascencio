@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   applyDeckCommand,
   sortDeckCards,
+  sortDeckCardsAlphabetical,
 } from "../../../src/decks/deck-model.ts";
 import {
   catalogByCode,
@@ -32,6 +33,46 @@ describe("deck editing model", () => {
     );
     expect(main.type === "accepted" && main.cards.main).toEqual([89631139]);
     expect(extra.type === "accepted" && extra.cards.extra).toEqual([8505920]);
+  });
+
+  it("add appends to the end of its zone", () => {
+    const result = applyDeckCommand(
+      { main: [44095762, 12580477], extra: [], side: [] },
+      { type: "add", cardCode: 89631139 },
+      catalog,
+      PROTOTYPE_RULESET,
+    );
+    expect(result.type === "accepted" && result.cards.main).toEqual([
+      44095762, 12580477, 89631139,
+    ]);
+  });
+
+  it("add with an explicit side zone lands in the side deck", () => {
+    const result = applyDeckCommand(
+      empty,
+      { type: "add", cardCode: 89631139, zone: "side" },
+      catalog,
+      PROTOTYPE_RULESET,
+    );
+    expect(result.type === "accepted" && result.cards).toEqual({
+      main: [],
+      extra: [],
+      side: [89631139],
+    });
+  });
+
+  it("add rejects a zone that is neither canonical nor side", () => {
+    expect(
+      applyDeckCommand(
+        empty,
+        { type: "add", cardCode: 89631139, zone: "extra" },
+        catalog,
+        PROTOTYPE_RULESET,
+      ),
+    ).toEqual({
+      type: "rejected",
+      reason: "Card cannot be added to that zone.",
+    });
   });
 
   it("rejects forbidden catalog cards without mutating the deck", () => {
@@ -77,6 +118,128 @@ describe("deck editing model", () => {
     ).toMatchObject({ type: "rejected" });
   });
 
+  it("move appends to the target zone end", () => {
+    const result = applyDeckCommand(
+      { main: [89631139], extra: [], side: [44095762, 12580477] },
+      { type: "move", cardCode: 89631139, from: "main", to: "side" },
+      catalog,
+      PROTOTYPE_RULESET,
+    );
+    expect(result.type === "accepted" && result.cards.side).toEqual([
+      44095762, 12580477, 89631139,
+    ]);
+  });
+
+  it("import preserves the given order", () => {
+    const result = applyDeckCommand(
+      empty,
+      {
+        type: "import",
+        cards: { main: [44095762, 89631139, 12580477], extra: [], side: [] },
+      },
+      catalog,
+      PROTOTYPE_RULESET,
+    );
+    expect(result).toMatchObject({
+      type: "accepted",
+      reason: "import",
+      cards: { main: [44095762, 89631139, 12580477] },
+    });
+  });
+
+  it("restore preserves order and reports reason restore", () => {
+    const result = applyDeckCommand(
+      { main: [89631139], extra: [], side: [] },
+      {
+        type: "restore",
+        cards: { main: [44095762, 89631139, 12580477], extra: [], side: [] },
+      },
+      catalog,
+      PROTOTYPE_RULESET,
+    );
+    expect(result).toMatchObject({
+      type: "accepted",
+      reason: "restore",
+      cards: { main: [44095762, 89631139, 12580477] },
+    });
+  });
+
+  it("reorder swaps two occupied slots", () => {
+    const result = applyDeckCommand(
+      { main: [89631139, 12580477, 44095762], extra: [], side: [] },
+      { type: "reorder", zone: "main", from: 0, to: 2 },
+      catalog,
+      PROTOTYPE_RULESET,
+    );
+    expect(result).toMatchObject({
+      type: "accepted",
+      reason: "reorder",
+      cards: { main: [44095762, 12580477, 89631139] },
+    });
+  });
+
+  it("reorder past the end moves the card to the last position", () => {
+    const result = applyDeckCommand(
+      { main: [89631139, 12580477, 44095762], extra: [], side: [] },
+      { type: "reorder", zone: "main", from: 0, to: 9 },
+      catalog,
+      PROTOTYPE_RULESET,
+    );
+    expect(result.type === "accepted" && result.cards.main).toEqual([
+      12580477, 44095762, 89631139,
+    ]);
+  });
+
+  it("reorder rejects an empty source index", () => {
+    expect(
+      applyDeckCommand(
+        { main: [89631139], extra: [], side: [] },
+        { type: "reorder", zone: "main", from: 3, to: 0 },
+        catalog,
+        PROTOTYPE_RULESET,
+      ),
+    ).toEqual({ type: "rejected", reason: "Nothing to reorder." });
+  });
+
+  it("reorder rejects a fractional target index", () => {
+    expect(
+      applyDeckCommand(
+        { main: [89631139, 12580477], extra: [], side: [] },
+        { type: "reorder", zone: "main", from: 0, to: 1.5 },
+        catalog,
+        PROTOTYPE_RULESET,
+      ),
+    ).toEqual({ type: "rejected", reason: "Nothing to reorder." });
+  });
+
+  it("sort type groups monsters, spells then traps alphabetically", () => {
+    const result = applyDeckCommand(
+      { main: [44095762, 12580477, 89631139], extra: [], side: [] },
+      { type: "sort", mode: "type" },
+      catalog,
+      PROTOTYPE_RULESET,
+    );
+    expect(result).toMatchObject({
+      type: "accepted",
+      reason: "sort",
+      cards: { main: [89631139, 12580477, 44095762] },
+    });
+  });
+
+  it("sort alpha orders the main deck by name", () => {
+    const result = applyDeckCommand(
+      { main: [44095762, 12580477, 89631139], extra: [], side: [] },
+      { type: "sort", mode: "alpha" },
+      catalog,
+      PROTOTYPE_RULESET,
+    );
+    expect(result).toMatchObject({
+      type: "accepted",
+      reason: "sort",
+      cards: { main: [89631139, 44095762, 12580477] },
+    });
+  });
+
   it("removes one repeated tile and enforces the pinned copy limit", () => {
     let cards = { ...empty };
     for (let index = 0; index < 3; index += 1) {
@@ -107,6 +270,18 @@ describe("deck editing model", () => {
     expect(removed.type === "accepted" && removed.cards.main).toHaveLength(2);
   });
 
+  it("removes the first copy and keeps the remaining order", () => {
+    const removed = applyDeckCommand(
+      { main: [12580477, 89631139, 44095762], extra: [], side: [] },
+      { type: "remove", cardCode: 89631139, zone: "main" },
+      catalog,
+      PROTOTYPE_RULESET,
+    );
+    expect(removed.type === "accepted" && removed.cards.main).toEqual([
+      12580477, 44095762,
+    ]);
+  });
+
   it("removes missing-card placeholders without catalog data", () => {
     const removed = applyDeckCommand(
       { main: [99999999], extra: [], side: [] },
@@ -126,12 +301,29 @@ describe("deck editing model", () => {
     ).toEqual([89631139, 44095762, 8505920]);
   });
 
-  it("auto-packs cards deterministically instead of exposing manual ordering", () => {
+  it("packs cards deterministically when an explicit sort is asked for", () => {
     expect(
       sortDeckCards(
         { main: [44095762, 12580477, 89631139], extra: [], side: [] },
         catalog,
       ).main,
     ).toEqual([89631139, 12580477, 44095762]);
+  });
+
+  it("sorts every zone by name and pushes uncatalogued codes last", () => {
+    expect(
+      sortDeckCardsAlphabetical(
+        {
+          main: [99999999, 12580477, 89631139, 99999998],
+          extra: [8505920, 1322368],
+          side: [44095762, 46986414],
+        },
+        catalog,
+      ),
+    ).toEqual({
+      main: [89631139, 12580477, 99999998, 99999999],
+      extra: [8505920, 1322368],
+      side: [46986414, 44095762],
+    });
   });
 });

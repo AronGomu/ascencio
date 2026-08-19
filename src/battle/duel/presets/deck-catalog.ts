@@ -43,7 +43,10 @@ export const DECK_CATALOG: readonly DeckMetadata[] = Object.freeze([
 ]);
 
 export const DEFAULT_PLAYER_DECK_ID: DeckId = "mvp-player";
-export const DEFAULT_OPPONENT_DECK_ID: DeckId = "mvp-opponent";
+/* The seat the player never chooses: the duel menu fixes the opponent to this
+   deck, and an existing profile carrying the previous default is rewritten to
+   it on load rather than duelling a deck the menu no longer offers. */
+export const DEFAULT_OPPONENT_DECK_ID: DeckId = "shaddoll";
 
 export function deckMetadata(id: DeckId): DeckMetadata {
   return DECK_CATALOG.find((metadata) => metadata.id === id)!;

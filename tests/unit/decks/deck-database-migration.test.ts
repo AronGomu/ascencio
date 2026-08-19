@@ -6,13 +6,18 @@ import { deleteDB } from "idb";
 import { deckId, type DeckRecord } from "../../../src/decks/deck-contracts.ts";
 import {
   DECK_DATABASE_NAME,
+  DECK_DATABASE_VERSION,
   DeckMigrationError,
   LEGACY_DECK_DATABASE_NAME,
+  LEGACY_DECK_DATABASE_VERSION,
   migrateLegacyDeckDatabase,
 } from "../../../src/decks/deck-database.ts";
+import { IndexedDbDeckRepository } from "../../../src/decks/indexeddb-deck-repository.ts";
 import {
+  DECK_DATABASE_VERSION_1,
   deckDatabaseNames,
   deckDatabaseRows,
+  deckDatabaseVersion,
   openDeckDatabase,
   seedDeckDatabase,
 } from "../../fixtures/deck-database.ts";
@@ -254,5 +259,84 @@ describe("migrateLegacyDeckDatabase", () => {
       legacyDeleted: true,
     });
     expect(await deckDatabaseNames()).not.toContain(LEGACY_DECK_DATABASE_NAME);
+  });
+});
+
+/* The prototype database is the one thing the version bump could quietly
+   destroy. Opening it at the production version fires `upgradeneeded` on a real
+   player's decks, `openLegacyDatabase` reads that flag as "this database did not
+   exist until I created it", and deletes what it just upgraded. */
+describe("the deck database version bump", () => {
+  it("the legacy prototype database is opened at version 1 and never upgraded", async () => {
+    expect(LEGACY_DECK_DATABASE_VERSION).toBe(1);
+    expect(DECK_DATABASE_VERSION).toBeGreaterThan(LEGACY_DECK_DATABASE_VERSION);
+    /* Diverged, so the prototype database survives the run and its version is
+       still there to look at afterwards. */
+    await seedDeckDatabase(LEGACY_DECK_DATABASE_NAME, {
+      decks: [deckRecord("prototype-only")],
+    });
+    await seedDeckDatabase(DECK_DATABASE_NAME, {
+      decks: [deckRecord("production-only")],
+    });
+
+    expect(await migrateLegacyDeckDatabase(indexedDB)).toEqual({
+      migrated: 0,
+      legacyDeleted: false,
+    });
+
+    expect(await deckDatabaseVersion(LEGACY_DECK_DATABASE_NAME)).toBe(
+      LEGACY_DECK_DATABASE_VERSION,
+    );
+    expect(await deckIdsIn(LEGACY_DECK_DATABASE_NAME)).toEqual([
+      "prototype-only",
+    ]);
+  });
+
+  it("still migrates a version-1 prototype database after the bump", async () => {
+    await seedDeckDatabase(LEGACY_DECK_DATABASE_NAME, {
+      decks: [deckRecord("prototype")],
+      lastOpened: "prototype",
+    });
+
+    expect(await migrateLegacyDeckDatabase(indexedDB)).toEqual({
+      migrated: 1,
+      legacyDeleted: true,
+    });
+    expect(await deckIdsIn(DECK_DATABASE_NAME)).toEqual(["prototype"]);
+  });
+
+  it("a version-1 production database upgrades to version 2 keeping decks and gaining autosaves", async () => {
+    await seedDeckDatabase(
+      DECK_DATABASE_NAME,
+      { decks: [deckRecord("kept")], lastOpened: "kept" },
+      DECK_DATABASE_VERSION_1,
+    );
+
+    const repository = await IndexedDbDeckRepository.open();
+    try {
+      expect((await repository.list()).map(({ id }) => id)).toEqual(["kept"]);
+      expect(await repository.getLastOpened()).toBe("kept");
+      expect((await repository.load(deckId("kept")))?.deck.name).toBe(
+        "Deck kept",
+      );
+
+      await repository.appendAutosave({
+        id: "first",
+        deckId: deckId("kept"),
+        deckName: "Deck kept",
+        createdAt: "2026-02-01T00:00:00.000Z",
+        main: [89631139],
+        extra: [],
+        side: [],
+      });
+      expect((await repository.listAutosaves()).map(({ id }) => id)).toEqual([
+        "first",
+      ]);
+    } finally {
+      repository.close();
+    }
+    expect(await deckDatabaseVersion(DECK_DATABASE_NAME)).toBe(
+      DECK_DATABASE_VERSION,
+    );
   });
 });

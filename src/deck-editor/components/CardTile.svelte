@@ -16,8 +16,9 @@
   export let ontap: (() => void) | null = null;
   export let ondragcard: (event: DragEvent) => void = () => undefined;
   export let ondragcancel: () => void = () => undefined;
-  export let onpickup: () => void = () => undefined;
-  export let onblocked: () => void = () => undefined;
+  export let onhover: (() => void) | null = null;
+  export let oncontext: (() => void) | null = null;
+  export let maxed = false;
 
   $: name = card?.name ?? `Missing card ${code}`;
   $: limitLabel =
@@ -35,6 +36,7 @@
   class:compact
   class:selected
   class:missing={card === null}
+  class:maxed
   class="card-tile"
   {draggable}
   aria-label={`${name}. ${limitLabel}, maximum ${limit}. ${currentCopies} copies in deck.`}
@@ -43,13 +45,13 @@
   data-card-code={code}
   data-deck-zone={zone}
   onclick={() => (ontap === null ? onselect() : ontap())}
+  onmouseenter={() => onhover?.()}
   ondragstart={ondragcard}
   ondragend={ondragcancel}
-  onkeydown={(event) => {
-    if (event.key === " " || event.key === "Enter") {
+  oncontextmenu={(event) => {
+    if (oncontext !== null) {
       event.preventDefault();
-      if (draggable) onpickup();
-      else onblocked();
+      oncontext();
     }
   }}
 >
@@ -100,6 +102,15 @@
 
   .card-tile.missing {
     border-style: dashed;
+    border-color: var(--danger);
+    background: var(--danger-surface);
+  }
+
+  .card-tile.maxed {
+    border-color: var(--danger);
+  }
+
+  .card-tile.maxed:hover:not(:disabled) {
     border-color: var(--danger);
     background: var(--danger-surface);
   }

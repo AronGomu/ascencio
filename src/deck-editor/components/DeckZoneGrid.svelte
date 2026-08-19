@@ -14,7 +14,8 @@
   export let ruleset: PinnedDeckRuleset;
   export let totalCopies: ReadonlyMap<number, number>;
   export let selectedCode: number | null = null;
-  export let picked = false;
+  export let dropAllowed = false;
+  export let dragActive = false;
   export let onselect: (
     card: DeckBuilderCardView | null,
     code: number,
@@ -22,12 +23,21 @@
   export let ondragcard: (
     code: number,
     zone: DeckZone,
+    index: number,
     event: DragEvent,
   ) => void = () => undefined;
   export let ondragcancel: () => void = () => undefined;
-  export let onpickup: (code: number, zone: DeckZone) => void = () => undefined;
+  export let onreorderdrop: (zone: DeckZone, toIndex: number) => void = () =>
+    undefined;
+  export let reorderActive = false;
   export let ondropzone: (zone: DeckZone) => void = () => undefined;
   export let ontap: ((code: number, zone: DeckZone) => void) | null = null;
+  export let onhovercard: (code: number) => void = () => undefined;
+  export let onhoverend: () => void = () => undefined;
+  export let collapsed = false;
+  export let ontogglecollapse: () => void = () => undefined;
+  export let oncontextremove: (code: number, zone: DeckZone) => void = () =>
+    undefined;
 
   $: emptyCount = Math.max(0, plan.slots - codes.length);
 </script>
@@ -38,76 +48,115 @@
   data-cy={`deck-zone-${zone}`}
 >
   <header data-cy={`deck-zone-header-${zone}`}>
-    <h3
-      id={`${zone}-heading`}
-      tabindex="-1"
-      data-cy={`deck-zone-heading-${zone}`}
-    >
-      {label}
-    </h3>
-    <span
-      class:error={codes.length > plan.slots}
-      data-cy={`deck-zone-count-${zone}`}>{codes.length}/{plan.slots}</span
-    >
-  </header>
-  {#if picked}
     <button
       type="button"
-      class="keyboard-drop"
-      data-cy={`deck-zone-drop-button-${zone}`}
-      onclick={() => ondropzone(zone)}
+      data-cy={`deck-zone-toggle-${zone}`}
+      aria-expanded={!collapsed}
+      aria-controls={`deck-zone-body-${zone}`}
+      onclick={ontogglecollapse}
     >
-      Drop picked card in {label}
+      <span aria-hidden="true" data-cy={`deck-zone-chevron-${zone}`}
+        >{collapsed ? "▸" : "▾"}</span
+      >
+      <h3
+        id={`${zone}-heading`}
+        tabindex="-1"
+        data-cy={`deck-zone-heading-${zone}`}
+      >
+        {label}
+      </h3>
     </button>
-  {/if}
-  <div
-    class:picked
-    class="drop-zone"
-    role="group"
-    aria-label={`${label} drop area`}
-    data-cy={`deck-zone-drop-area-${zone}`}
-    ondragover={(event) => event.preventDefault()}
-    ondrop={(event) => {
-      event.preventDefault();
-      ondropzone(zone);
-    }}
-  >
-    <div
-      class:compact={plan.compact}
-      class="grid"
-      style={`--columns:${plan.columns}`}
-      data-columns={plan.columns}
-      data-rows={plan.rows}
-      data-slots={plan.slots}
-      aria-label={`${label}: ${codes.length} cards in ${plan.slots} slots`}
-      data-cy={`deck-zone-grid-${zone}`}
+    <span
+      class:error={codes.length > plan.slots}
+      data-cy={`deck-zone-count-${zone}`}
     >
-      {#each codes as code, index (`${code}-${index}`)}
-        <CardTile
-          card={catalog.get(code) ?? null}
-          {code}
-          {zone}
-          limit={quantityLimit(ruleset, code)}
-          currentCopies={totalCopies.get(code) ?? 0}
-          selected={selectedCode === code}
-          compact={plan.compact}
-          onselect={() => onselect(catalog.get(code) ?? null, code)}
-          ontap={ontap === null ? null : () => ontap(code, zone)}
-          ondragcard={(event) => ondragcard(code, zone, event)}
-          {ondragcancel}
-          onpickup={() => onpickup(code, zone)}
-        />
-      {/each}
-      {#each Array.from({ length: emptyCount }) as slot, index (index)}
-        <span
-          class="empty-slot"
-          data-empty-slot={slot === undefined ? index : slot}
-          aria-hidden="true"
-          data-cy={`deck-zone-empty-slot-${zone}-${index}`}
-        ></span>
-      {/each}
+      {zone === "main"
+        ? codes.length <= 40
+          ? `${codes.length}/40`
+          : `${codes.length}/40-60`
+        : `${codes.length}/${plan.slots}`}
+    </span>
+  </header>
+  {#if !collapsed}
+    <div
+      id={`deck-zone-body-${zone}`}
+      class:allowed={dragActive && dropAllowed}
+      class:blocked={dragActive && !dropAllowed}
+      class="drop-zone"
+      role="group"
+      aria-label={`${label} drop area`}
+      data-cy={`deck-zone-drop-area-${zone}`}
+      ondragover={(event) => event.preventDefault()}
+      ondrop={(event) => {
+        event.preventDefault();
+        ondropzone(zone);
+      }}
+      onmouseleave={() => onhoverend()}
+    >
+      <div
+        class:compact={plan.compact}
+        class="grid"
+        style={`--columns:${plan.columns}`}
+        data-columns={plan.columns}
+        data-rows={plan.rows}
+        data-slots={plan.slots}
+        aria-label={`${label}: ${codes.length} cards in ${plan.slots} slots`}
+        data-cy={`deck-zone-grid-${zone}`}
+      >
+        {#each codes as code, index (`${code}-${index}`)}
+          <div
+            class="slot"
+            role="presentation"
+            data-cy={`deck-slot-${zone}-${index}`}
+            ondragover={(e) => {
+              if (reorderActive) e.preventDefault();
+            }}
+            ondrop={(e) => {
+              if (reorderActive) {
+                e.preventDefault();
+                e.stopPropagation();
+                onreorderdrop(zone, index);
+              }
+            }}
+          >
+            <CardTile
+              card={catalog.get(code) ?? null}
+              {code}
+              {zone}
+              limit={quantityLimit(ruleset, code)}
+              currentCopies={totalCopies.get(code) ?? 0}
+              selected={selectedCode === code}
+              compact={plan.compact}
+              onselect={() => onselect(catalog.get(code) ?? null, code)}
+              ontap={ontap === null ? null : () => ontap(code, zone)}
+              ondragcard={(event) => ondragcard(code, zone, index, event)}
+              {ondragcancel}
+              onhover={() => onhovercard(code)}
+              oncontext={() => oncontextremove(code, zone)}
+            />
+          </div>
+        {/each}
+        {#each Array.from({ length: emptyCount }) as slot, index (index)}
+          <span
+            class="empty-slot"
+            data-empty-slot={slot === undefined ? index : slot}
+            aria-hidden="true"
+            data-cy={`deck-zone-empty-slot-${zone}-${index}`}
+            ondragover={(e) => {
+              if (reorderActive) e.preventDefault();
+            }}
+            ondrop={(e) => {
+              if (reorderActive) {
+                e.preventDefault();
+                e.stopPropagation();
+                onreorderdrop(zone, codes.length);
+              }
+            }}
+          ></span>
+        {/each}
+      </div>
     </div>
-  </div>
+  {/if}
   {#if codes.length > plan.slots}
     <p class="overflow" role="alert" data-cy={`deck-zone-overflow-${zone}`}>
       {codes.length - plan.slots} overflow card(s) remain invalid.
@@ -125,6 +174,18 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 0.45rem;
+  }
+
+  header button {
+    all: unset;
+    cursor: pointer;
+  }
+
+  /* `all: unset` drops the user-agent focus ring, and being an author
+     declaration it also beats the global one in `app.css`. */
+  header button:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 3px;
   }
 
   h3 {
@@ -152,15 +213,14 @@
     background: var(--surface-sunken);
   }
 
-  .keyboard-drop {
-    width: 100%;
-    margin-bottom: 0.35rem;
-  }
-
-  .drop-zone:hover,
-  .drop-zone.picked {
+  .drop-zone.allowed {
     border-color: var(--accent);
     background: var(--surface-chain);
+  }
+
+  .drop-zone.blocked {
+    border-color: var(--danger);
+    background: var(--danger-surface);
   }
 
   .grid {
@@ -171,6 +231,11 @@
 
   .grid.compact {
     gap: 0.22rem;
+  }
+
+  .slot {
+    min-width: 0;
+    min-height: 0;
   }
 
   .empty-slot {

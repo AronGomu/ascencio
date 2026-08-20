@@ -1830,3 +1830,40 @@ Right-click removes the copy under the pointer
       first A and B stay put, in that order. Before this fix the first A went
       and the tile you clicked stayed on screen.
 - [ ] Undo — the deck returns to A, B, A in that order.
+
+## R3 round-2-test-quality-fixes
+
+Goal: two product bugs found while strengthening the round-2 test suite. Run
+against `npm run dev`.
+
+"Set default" stays on the deck page
+
+- [ ] Open any non-default deck. Click **Set default** in the deck header —
+      the editor remains on the deck page; neither the library view nor the
+      "Opening deck…" loading skeleton replaces it.
+- [ ] Without navigating away, confirm **Set default** is now disabled, and
+      that the **Default** badge has moved to that deck's row in the library
+      panel.
+- [ ] Open a second non-default deck and click **Set default** — the editor
+      stays on the second deck's page; the badge moves to the second deck's
+      row and the first deck's button becomes enabled again.
+- [ ] Reload — the badge is still on the second deck's row after reload.
+
+Drag to an illegal zone removes the copy under the pointer
+
+- [ ] Build a Main Deck with, in order, card A, card B, card A (add A, then
+      B, then A again — three separate tiles in that sequence).
+- [ ] Drag the **third tile** (the second copy of A) onto the Extra Deck drop
+      area, which shows a red border for a Main-canonical card. That tile is
+      removed; the deck reads A, B in that order. Before this fix the first A
+      was removed instead, leaving B, A.
+- [ ] Undo — the deck returns to A, B, A in that order.
+
+Drag cancel removes the copy under the pointer
+
+- [ ] With the deck reading A, B, A, start dragging the **third tile** but
+      release it outside every drop zone — over the page header, sidebar, or
+      empty margin, not onto any deck zone.
+- [ ] That tile is removed; the deck reads A, B in that order. Before this fix
+      the first A was removed instead, leaving B, A.
+- [ ] Undo — the deck returns to A, B, A in that order.

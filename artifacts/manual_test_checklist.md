@@ -1576,3 +1576,22 @@ Interaction intact on appended tiles
 - [ ] Scroll down to a tile in the second or third batch. Left-click it — the card is added to the deck (or the card preview panel updates) correctly.
 - [ ] Drag an appended tile into the deck zone — drag-and-drop works normally.
 - [ ] Right-click an appended tile (context add) — context menu or direct-add works normally.
+
+## T11 ship-full-runtime-snapshot
+
+Goal: verify the full runtime snapshot (451 declared files) is packaged and the duel still works on the fatter `dist`.
+
+Build integrity
+
+- [ ] Run `npm run build` and confirm it completes without error.
+- [ ] Run `find dist/runtime/assets/current -type f | wc -l` and confirm the count is 452 (451 declared files + manifest.json).
+- [ ] Run `du -sh dist` and confirm the total is approximately 65 MB.
+
+Duel still starts from bundled decks
+
+- [ ] Navigate to `/#/duel`, select a preset deck on each side, and confirm the duel launches and the first turn starts without errors in the browser console.
+- [ ] Complete at least three turns to confirm game loop and script loading are unaffected.
+
+Runtime asset availability
+
+- [ ] Open DevTools → Network, reload the duel, and confirm requests to `/runtime/assets/current/scripts/...` return 200 for scripts not in the preset-deck closure (e.g. `scripts/globals.json`).

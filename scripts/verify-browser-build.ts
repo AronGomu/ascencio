@@ -11,12 +11,12 @@ import {
   verifyRuntimeSnapshotFiles,
 } from "../src/battle/worker/assets/runtime-snapshot-node.ts";
 import { assertNoMissingActiveImages } from "./lib/active-image-manifest.ts";
-import { resolveActiveRuntimeFiles } from "./lib/active-runtime-files.ts";
 import {
   DOMAIN_BUDGET_BYTES,
   measureDomainChunks,
   staticHtmlScriptClosure,
 } from "./lib/domain-chunk-closure.ts";
+import { snapshotCopyPaths } from "./lib/vite-runtime-assets.ts";
 
 const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -45,24 +45,11 @@ const runtimeManifestSha256 = sha256(runtimeManifestBytes);
 const manifest = parseRuntimeSnapshotManifest(
   JSON.parse(runtimeManifestBytes.toString("utf8")) as unknown,
 );
-const activeRuntimePaths = await resolveActiveRuntimeFiles(projectRoot);
-const activeRuntimePathSet = new Set(activeRuntimePaths);
-const activeRuntimeFiles = manifest.assets.files.filter((file) =>
-  activeRuntimePathSet.has(file.path),
-);
-if (activeRuntimeFiles.length !== activeRuntimePaths.length)
-  throw new Error("Active runtime closure contains undeclared files");
-await verifyRuntimeSnapshotFiles(
-  {
-    ...manifest,
-    assets: { ...manifest.assets, files: activeRuntimeFiles },
-  },
-  assetRoot,
-);
+await verifyRuntimeSnapshotFiles(manifest, assetRoot);
 const packagedAssetPaths = (await findFiles(assetRoot)).map((file) =>
   path.relative(assetRoot, file).replaceAll("\\", "/"),
 );
-const expectedAssetPaths = ["manifest.json", ...activeRuntimePaths].sort();
+const expectedAssetPaths = [...snapshotCopyPaths(manifest)].sort();
 if (packagedAssetPaths.sort().join("\n") !== expectedAssetPaths.join("\n")) {
   throw new Error(
     "Browser build contains missing or unmanifested runtime files",
@@ -192,7 +179,7 @@ console.log(
     {
       status: "ok",
       snapshotId: manifest.snapshotId,
-      runtimeFiles: activeRuntimePaths.length,
+      runtimeFiles: manifest.assets.files.length,
       worker: path.basename(workerFile),
       chunkBytes: sizeSummary,
     },
@@ -392,7 +379,7 @@ async function verifySizeBudgets(
     shellClosure,
   );
   const budgets: ReadonlyArray<readonly [string, number, number]> = [
-    ["aggregate cold-start transfer", coldStartBytes, 41_000_000],
+    ["aggregate cold-start transfer", coldStartBytes, 70_000_000],
     /* T21 2026-08-15: replaces the "initial JavaScript" 400,000 ceiling, which
        covered the two-entry build and went unmeasured per domain. Measured
        shell closure 78,142 bytes → ceil(78142/25_000) = 4 → 100,000 * 1.15.
@@ -401,7 +388,7 @@ async function verifySizeBudgets(
        to 339.73 kB, which this line rejects. */
     ["shell initial JavaScript", shellBytes, 115_000],
     ["Duel Worker JavaScript", sizes.get(workerFile) ?? 0, 200_000],
-    ["active runtime closure", runtimeBytes, 22_000_000],
+    ["active runtime closure", runtimeBytes, 50_000_000],
     ["active card images", imageBytes, 19_000_000],
     ...domainReports.map(
       ({ domain, bytes }) =>

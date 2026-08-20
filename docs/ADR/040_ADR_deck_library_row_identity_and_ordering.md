@@ -4,7 +4,7 @@
 > Decided: 2026-08-20
 > Owners: decks UI architecture
 > Relates: ADR-038 (default deck preference), ADR-023 (hash routes)
-> Plan: [`../../ai-artifact/PLAN_2026_08_20_decks_feedback_round_2.md`](../../ai-artifact/PLAN_2026_08_20_decks_feedback_round_2.md) — T1, T2, T3
+> Feedback: [`../../feedback-decks.md`](../../feedback-decks.md) — Decks Menu 1, 2, 3, 4
 
 ## Context
 

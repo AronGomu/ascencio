@@ -379,7 +379,12 @@ async function verifySizeBudgets(
     shellClosure,
   );
   const budgets: ReadonlyArray<readonly [string, number, number]> = [
-    ["aggregate cold-start transfer", coldStartBytes, 70_000_000],
+    /* T11 2026-08-20: raised from 41,000,000. `snapshotCopyPaths` packages every
+       file the runtime manifest declares instead of the bundled-deck closure
+       (ADR-043 §3), so a cold start carries the whole snapshot. Measured
+       64,351,552 bytes = shell 85,628 + Worker 144,801 + runtime 45,546,991 +
+       images 18,574,132 → ceil(64351552/25_000) = 2,575 → 64,375,000 * 1.15. */
+    ["aggregate cold-start transfer", coldStartBytes, 74_031_250],
     /* T21 2026-08-15: replaces the "initial JavaScript" 400,000 ceiling, which
        covered the two-entry build and went unmeasured per domain. Measured
        shell closure 78,142 bytes → ceil(78142/25_000) = 4 → 100,000 * 1.15.
@@ -388,7 +393,10 @@ async function verifySizeBudgets(
        to 339.73 kB, which this line rejects. */
     ["shell initial JavaScript", shellBytes, 115_000],
     ["Duel Worker JavaScript", sizes.get(workerFile) ?? 0, 200_000],
-    ["active runtime closure", runtimeBytes, 50_000_000],
+    /* T11 2026-08-20: raised from 22,000,000, same cause as the cold-start
+       ceiling above. Measured 45,546,991 bytes → ceil(45546991/25_000) = 1,822 →
+       45,550,000 * 1.15. */
+    ["active runtime closure", runtimeBytes, 52_382_500],
     ["active card images", imageBytes, 19_000_000],
     ...domainReports.map(
       ({ domain, bytes }) =>

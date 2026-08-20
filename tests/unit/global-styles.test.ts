@@ -547,29 +547,45 @@ describe("deck editor sizing", () => {
     ).toHaveLength(1);
   });
 
-  it("the editor sizes its panes from the stage, not the viewport", () => {
-    const editor = readFileSync(
-      "src/deck-editor/components/DeckEditor.svelte",
-      "utf8",
-    );
-    const workspace = readFileSync(
-      "src/deck-editor/components/DeckWorkspace.svelte",
-      "utf8",
-    );
-    const catalog = readFileSync(
-      "src/deck-editor/components/CardCatalog.svelte",
-      "utf8",
-    );
-    expect(editor, "DeckEditor.svelte must not reference 100vh").not.toContain(
-      "100vh",
-    );
-    expect(
-      workspace,
-      "DeckWorkspace.svelte must not reference 100vh",
-    ).not.toContain("100vh");
-    expect(
-      catalog,
-      "CardCatalog.svelte must not reference 100vh",
-    ).not.toContain("100vh");
+  const editorComponentPaths = (dir = "src/deck-editor"): string[] =>
+    readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+      const fullPath = join(dir, entry.name);
+      if (entry.isDirectory()) return editorComponentPaths(fullPath);
+      return entry.isFile() && entry.name.endsWith(".svelte") ? [fullPath] : [];
+    });
+
+  /* ADR-042 §1. Fixed-position overlays are the exception: a modal is painted
+     over the whole window, not inside the letterboxed stage, so the viewport is
+     the right unit for its `max-height`. Everything that lays out inside the
+     stage must read `--stage-h`. */
+  const VIEWPORT_SIZED_EDITOR_OVERLAYS = new Set([
+    "src/deck-editor/components/LoadDeckDialog.svelte",
+    "src/deck-editor/components/YdkExport.svelte",
+    "src/deck-editor/components/YdkImport.svelte",
+  ]);
+
+  it("the editor lays out from the stage, not the viewport", () => {
+    const components = editorComponentPaths();
+    expect(components.length).toBeGreaterThan(5);
+    for (const file of components) {
+      if (VIEWPORT_SIZED_EDITOR_OVERLAYS.has(file)) continue;
+      expect(
+        readFileSync(file, "utf8"),
+        `${file} must size itself from --stage-h, not 100vh`,
+      ).not.toContain("100vh");
+    }
+  });
+
+  it("every viewport-sized exception is a fixed overlay that still exists", () => {
+    for (const file of VIEWPORT_SIZED_EDITOR_OVERLAYS) {
+      const source = readFileSync(file, "utf8");
+      expect(
+        source,
+        `${file} no longer uses 100vh; drop the exception`,
+      ).toContain("100vh");
+      expect(source, `${file} is not a fixed overlay`).toContain(
+        "position: fixed",
+      );
+    }
   });
 });

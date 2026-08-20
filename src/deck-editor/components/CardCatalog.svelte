@@ -14,6 +14,7 @@
   import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
   import { quantityLimit } from "../../decks/catalog/pinned-ruleset.ts";
   import {
+    INITIAL_RESULT_WINDOW,
     initialResultWindow,
     nextResultWindow,
   } from "../layout/result-window.ts";
@@ -55,7 +56,7 @@
 
   let resultsScroller: HTMLElement | null = null;
   let filters: DeckCatalogFilters = { ...EMPTY_CATALOG_FILTERS };
-  let visibleCount = 60;
+  let visibleCount = INITIAL_RESULT_WINDOW;
   let sentinel: HTMLElement | null = null;
   let observer: IntersectionObserver | null = null;
   let observerSupported = typeof IntersectionObserver === "function";

@@ -184,9 +184,9 @@ describe("findSelectableDeck", () => {
    pinned ruleset capped those eight below the 40-card Main minimum. No deck a
    player could assemble was one this build could draw.
 
-   The editor now derives its catalog from the packaged set itself
-   (`src/decks/catalog/active-catalog.ts`), so the two sets are the same set by
-   construction. This asserts that from the build's own manifests rather than
+   The editor and the duel now await one runtime catalog read
+   (`src/decks/catalog/runtime-catalog.ts`, ADR-043), so the editor's offer is
+   the duel's card set less its Tokens, never a different set. This asserts that from the build's own manifests rather than
    from the browser globals, which is the earliest place the claim can be
    checked — and it goes red the day packaging shrinks back below a legal deck.
    `a local deck built from the packaged catalog duels` in

@@ -3,7 +3,10 @@
   import { handleModalKeydown } from "../focus-trap.ts";
   import type { DeckId, DeckRecord } from "../../decks/deck-contracts.ts";
   import { MAXIMUM_DECK_NAME_LENGTH } from "../../decks/deck-model.ts";
-  import { orderDeckLibrary } from "../../decks/deck-library-order.ts";
+  import {
+    orderDeckLibrary,
+    type DeckLibrarySort,
+  } from "../../decks/deck-library-order.ts";
 
   export let decks: readonly DeckRecord[];
   export let message: string | null = null;
@@ -17,7 +20,7 @@
     undefined;
 
   let search = "";
-  let sort: "modified" | "name" = "modified";
+  let sort: DeckLibrarySort = "modified";
   let creating = false;
   let createName = "";
   let dialogHeading: HTMLHeadingElement;

@@ -94,7 +94,7 @@ Supersedes the 2026-08-16 target state. ADRs 036–044.</p>
     <li><code>DeckCommand</code>: <code>add(zone?)</code> · <code>remove</code> · <code>move</code> · <code>import</code> · <code>restore</code> · <code>reorder</code> · <code>sort(alpha|type)</code>. Append-at-end, no auto-sort (ADR-037).</li>
     <li>History = membership multisets. <code>reorder</code>/<code>sort</code> push no history entry and are not undoable — <b>but they do append an autosave entry</b> (ADR-044).</li>
     <li><code>ygo-story-decks</code> v2 (ADR-038): <code>decks</code> · <code>histories</code> · <code>preferences</code> (<code>last-opened-deck</code>, <code>default-deck</code>, <b><code>favourite-decks</code></b>) · <code>autosaves</code> (global, cap 100).</li>
-    <li>Catalog: <code>runtimeCatalog()</code> fetches 64 card shards + 64 text shards from <code>runtime/assets/current/catalog/…</code>, joins them through <code>packagedCatalog</code>, memoized per page load (ADR-043). 14,794 cards.</li>
+    <li>Catalog: <code>runtimeCatalog()</code> fetches 64 card shards + 64 text shards from <code>runtime/assets/current/catalog/…</code>, joins them through <code>packagedCatalog</code>, memoized per page load (ADR-043). 14,794 cards read; <code>deckBuildableCards</code> offers 14,551 of them — the 243 Tokens are field-created cards no deck may hold, and the duel still reads all 14,794 so it can name them.</li>
     <li>Search: <code>buildDeckCatalogIndex</code> pre-lowercases names once; <code>filterDeckCatalogIndex</code> filters against it, under measured budgets.</li>
     <li>Validation: no <code>missing-art</code> warning — art coverage is a build property, not a deck defect.</li>
   </ul>

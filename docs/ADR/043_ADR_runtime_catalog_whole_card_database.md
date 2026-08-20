@@ -4,7 +4,7 @@
 > Decided: 2026-08-20
 > Owners: decks data architecture
 > Relates: ADR-011 (deck registry and derived card pool), ADR-039 (editor card art via static runtime URLs), ADR-025 (validated card-list duel start)
-> Plan: [`../../ai-artifact/PLAN_2026_08_20_decks_feedback_round_2.md`](../../ai-artifact/PLAN_2026_08_20_decks_feedback_round_2.md) — T11, T12, T13, T14
+> Feedback: [`../../feedback-decks.md`](../../feedback-decks.md) — Deck Builder 13, 14
 
 ## Context
 
@@ -17,8 +17,8 @@ Measured on this checkout: parsing all 128 catalog shards costs ~36 ms in Node; 
 ## Decision
 
 1. **The catalog is fetched, not compiled.** `src/decks/catalog/runtime-catalog.ts` reads the 64 card shards and 64 text shards from `runtime/assets/current/catalog/…` — the same files, over the same middleware and the same `dist` layout the Worker already reads — joins them through the existing `packagedCatalog`, and memoizes the promise for the page.
-2. **One catalog, two domains.** The editor and the duel await the same memoized promise. A build cannot offer a card in the editor that the picker withholds, because both derive their code set from one read.
-3. **The build ships the whole verified snapshot.** `copySnapshotAssets` copies every file the runtime manifest declares instead of the bundled-deck closure, and `verify-browser-build.ts` verifies the packaged tree against the full declared list. `dist` grows to ~50 MB. That is the price of "any deck you can build, you can play"; the app is an offline private build, not a bandwidth-billed site.
+2. **One catalog, two domains.** The editor and the duel await the same memoized promise. A build cannot offer a card in the editor that the picker withholds, because both derive their code set from one read. The editor narrows what it *offers* by one pure filter, `deckBuildableCards`: the database's 243 Tokens are cards a duel creates on the field and no deck may hold, so the editor offers **14,551** of the 14,794. The duel still reads all 14,794, because a Token on the field has to be nameable.
+3. **The build ships the whole verified snapshot.** `copySnapshotAssets` copies every file the runtime manifest declares instead of the bundled-deck closure, and `verify-browser-build.ts` verifies the packaged tree against the full declared list. `dist` grows to ~66 MB (45 MB snapshot, 19 MB card art, the rest JavaScript). That is the price of "any deck you can build, you can play"; the app is an offline private build, not a bandwidth-billed site.
 4. **Card art stays URL-by-convention.** Every code maps to `{BASE_URL}runtime/images/{code}.jpg` (ADR-039's discipline, widened from the manifest-listed subset). Dev serves ~14.5k local images; the production build still packages only manifest-backed art, and a tile whose image 404s falls back to the placeholder glyph.
 5. **`missing-art` is deleted from validation.** Once the catalog is the whole database, art availability describes the build's image coverage, not a defect in the player's deck; keeping it would attach a warning to nearly every deck and teach players to ignore the validation panel.
 6. **Search runs off an index.** `buildDeckCatalogIndex` pre-lowercases names once per card list; `filterDeckCatalogIndex` filters against it. Budgets for load, index build, filter and option derivation are asserted in `tests/unit/decks/deck-catalog-performance.test.ts` with the measurement recorded beside each.

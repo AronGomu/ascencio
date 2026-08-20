@@ -4,7 +4,7 @@
 > Decided: 2026-08-20
 > Owners: integration/shell architecture
 > Relates: ADR-019 (full-height duel shell and pixel geometry), ADR-024 (responsive stage), ADR-036 (shared preview panel)
-> Plan: [`../../ai-artifact/PLAN_2026_08_20_decks_feedback_round_2.md`](../../ai-artifact/PLAN_2026_08_20_decks_feedback_round_2.md) — T4, T5, T8
+> Feedback: [`../../feedback-decks.md`](../../feedback-decks.md) — Deck Builder 1, 2, 5, 6, 7, 8
 
 ## Context
 
@@ -14,12 +14,12 @@ The scrollbar has a precise cause. The editor sized its panes with `calc(100vh -
 
 ## Decision
 
-1. **Domains size themselves from the stage.** The editor's layout is `calc(var(--stage-h, 100svh) - var(--deck-editor-header-h))` tall with `grid-template-rows: minmax(0, 1fr)`; its three panes are `height: 100%` and scroll internally. No `100vh` remains under `src/deck-editor/`.
+1. **Domains size themselves from the stage.** The editor's layout is `calc(var(--stage-h, 100svh) - var(--deck-editor-header-h))` tall with `grid-template-rows: minmax(0, 1fr)`; its three panes are `height: 100%` and scroll internally. No editor component that lays out **inside** the stage reads `100vh`. The three fixed-position overlays (`LoadDeckDialog`, `YdkExport`, `YdkImport`) keep `calc(100vh - …)` on purpose: a modal is painted over the window, not inside the letterbox, so the viewport is its correct unit.
 2. **`--preview-w` is the one preview-width knob**, shared by the duel shell and the editor's first column, and it drops from `22rem` to `15.5rem` (sub-breakpoint `18rem` → `13.5rem`). The panel is a card plus its text; sizing it to the card is what feedback asked for, and the duel gets the same benefit from the same edit.
 3. **Full-bleed gutters.** Header, message strip and layout span the stage width with a `0.25rem` gutter instead of a centred `calc(100% - 0.5rem)`; the workspace column takes the slack (`minmax(0, 1fr)`).
 4. **Fifteen-card zones are one row.** `FIFTEEN_CARD_GRID` becomes `{ columns: 15, rows: 1, slots: 15, compact: true }`. A zone header is one full-width button carrying chevron, heading and count, so the whole bar toggles.
 5. **A tile shows its whole card.** Tile art fills the tile with `object-fit: cover`; tile geometry (`59 / 86` ≈ 0.686) matches card scans (~421×614 ≈ 0.686), so "cover" crops nothing. The name overlays the art bottom with a scrim, and stays a plain row when there is no art.
-6. **The budget is machine-checked**: an e2e assertion that at 1920×1080 `shell-region-decks` has `scrollHeight <= clientHeight` and `scrollWidth <= clientWidth`, plus a stylesheet test that no editor component mentions `100vh`.
+6. **The budget is machine-checked**: an e2e assertion that at 1920×1080 `shell-region-decks` has `scrollHeight <= clientHeight` and `scrollWidth <= clientWidth`, plus a stylesheet test that walks every `.svelte` under `src/deck-editor/` and rejects `100vh` outside a named list of fixed overlays — which it also re-checks, so an exception that stops being one fails the suite.
 
 ## Consequences
 

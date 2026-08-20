@@ -42,7 +42,7 @@
 <body>
 <div class="wrap">
 <h1>Card catalog — build to editor and duel</h1>
-<p class="sub">Target state after <code>ai-artifact/PLAN_2026_08_20_decks_feedback_round_2.md</code> T11–T14. ADR-043.</p>
+<p class="sub">Shipped state for <code>feedback-decks.md</code> Deck Builder 13–14. ADR-043.</p>
 
 <h2>Scale</h2>
 <div class="card">
@@ -97,7 +97,7 @@
 <thead><tr><th>Concern</th><th class="old">Before</th><th class="now">After</th></tr></thead>
 <tbody>
 <tr><td>Catalog source</td><td><code>__ACTIVE_CARD_DATA__</code> / <code>__ACTIVE_CARD_TEXTS__</code> Vite defines</td><td>fetched runtime shards, memoized</td></tr>
-<tr><td>Catalog size</td><td>~120 cards (art-backed bundled-deck codes)</td><td>14,794 cards</td></tr>
+<tr><td>Catalog size</td><td>~120 cards (art-backed bundled-deck codes)</td><td>14,794 read; 14,551 offered by the editor (243 Tokens excluded)</td></tr>
 <tr><td>Packaged assets</td><td>bundled-deck closure</td><td>every declared snapshot file (~45 MB)</td></tr>
 <tr><td>Playable set</td><td>the same ~120 codes</td><td>anything in the database</td></tr>
 <tr><td>Art</td><td>manifest-listed codes only</td><td>URL by convention + placeholder fallback</td></tr>

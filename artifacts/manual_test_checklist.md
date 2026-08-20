@@ -906,7 +906,9 @@ decks-feedback-round-2: T12 made the **editor's** catalog the whole card databas
 bundle, and T13 made the **picker** read that same catalog. Between the two the
 claim above was briefly false — the editor offered 14,794 cards while the picker
 still filtered against ~120 packaged codes — so use T13's section for the current
-behaviour. **Every step below that expected a local deck to be hidden has been
+behaviour. Narrowed again by R1: the editor offers 14,551 of those codes, the
+243 Tokens excluded (`## R1 round-2-review-fixes`); the picker still reads all
+14,794. **Every step below that expected a local deck to be hidden has been
 rewritten accordingly**; see `## T22 local-deck-playability` for the full flow.
 
 ### `#/duel` Bundled flow unchanged

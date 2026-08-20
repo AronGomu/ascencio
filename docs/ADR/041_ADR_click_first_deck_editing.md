@@ -4,7 +4,7 @@
 > Decided: 2026-08-20
 > Owners: deck editor interaction architecture
 > Relates: ADR-037 (manual deck order), ADR-024 (responsive stage)
-> Plan: [`../../ai-artifact/PLAN_2026_08_20_decks_feedback_round_2.md`](../../ai-artifact/PLAN_2026_08_20_decks_feedback_round_2.md) — T6
+> Feedback: [`../../feedback-decks.md`](../../feedback-decks.md) — Deck Builder 3, 3.1, 4, 9, 10
 
 ## Context
 

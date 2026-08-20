@@ -4,7 +4,7 @@
 > Decided: 2026-08-20
 > Owners: decks storage architecture
 > Amends: ADR-037 §3 (position-blind history), ADR-038 §3 (autosave log)
-> Plan: [`../../ai-artifact/PLAN_2026_08_20_decks_feedback_round_2.md`](../../ai-artifact/PLAN_2026_08_20_decks_feedback_round_2.md) — T7
+> Feedback: [`../../feedback-decks.md`](../../feedback-decks.md) — Deck Builder 11
 
 ## Context
 

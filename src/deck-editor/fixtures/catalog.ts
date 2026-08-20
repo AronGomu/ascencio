@@ -15,11 +15,12 @@ import {
 } from "../../decks/catalog/ocg-mask.ts";
 
 /* A small hand-written catalog, kept for tests and nothing else: production
-   builds the editor's catalog from the packaged card set
-   (`src/decks/catalog/active-catalog.ts`), which is the only source that
-   cannot drift from what this build can draw. Twenty-odd cards covering every
-   family stay far easier to assert against than a hundred real ones, so the
-   fixture lives on here rather than in the production catalog folder. */
+   fetches the whole card database at runtime
+   (`src/decks/catalog/runtime-catalog.ts`), the same read the duel makes, so
+   the editor's offer cannot drift from what this build can draw. Twenty-odd
+   cards covering every family stay far easier to assert against than 14,551
+   real ones, so the fixture lives on here rather than in the production
+   catalog folder. */
 interface FixtureInput {
   readonly code: number;
   readonly name: string;

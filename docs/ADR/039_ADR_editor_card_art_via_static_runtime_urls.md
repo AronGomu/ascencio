@@ -5,6 +5,7 @@
 > Owners: decks data architecture
 > Relates: ADR-036 (shared preview panel)
 > Plan: [`../../artifacts/PLAN_2026_08_16_decks_feedback.md`](../../artifacts/PLAN_2026_08_16_decks_feedback.md) — T1
+> Amended by [ADR-043](043_ADR_runtime_catalog_whole_card_database.md): art is a URL by convention for **every** code, not only manifest-listed ones, and the `missing-art` warning is deleted; the parenthesis in §1 is superseded.
 
 ## Context
 

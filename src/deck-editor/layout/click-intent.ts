@@ -14,8 +14,8 @@ export interface ZoneCounts {
   readonly side: number;
 }
 
-export const MAIN_ZONE_CAPACITY = 60;
-export const FIFTEEN_ZONE_CAPACITY = 15;
+const MAIN_ZONE_CAPACITY = 60;
+const FIFTEEN_ZONE_CAPACITY = 15;
 
 const FULL_REASON: Readonly<Record<DeckZone, string>> = {
   main: "Main Deck is full.",

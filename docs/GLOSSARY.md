@@ -32,12 +32,13 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 | default deck | Player-assigned deck the duel menu auto-selects; stored preference | `preferences["default-deck"]` in `src/decks/indexeddb-deck-repository.ts`, ADR-038 |
 | favourite deck | A deck the player starred; ordering rank between the default deck and the rest | `preferences["favourite-decks"]` in `src/decks/indexeddb-deck-repository.ts`, `src/decks/deck-library-order.ts` |
 | starter deck | Seeded "Starter Deck" built from bundled `player.ydk`, default on first run | `src/decks/starter-deck.ts` (`ensureStarterDeck`), ADR-038 |
-| autosave log | Global capped-100 list of membership deck edits (timestamp + deck name) | `autosaves` store, `src/decks/deck-database.ts` v2, ADR-038 |
+| autosave log | Global capped-100 list, one entry per accepted deck command including reorder/sort (timestamp + deck name) | `autosaves` store, `src/decks/deck-database.ts` v2, ADR-038, ADR-044 |
 | load dialog | Editor dialog: saved decks tab + autosave log tab, restore = undoable edit | `src/deck-editor/components/LoadDeckDialog.svelte` |
-| library halo | Green/orange/red validity glow + tooltip on deck-library rows | planned `DeckLibrary.svelte` `.halo-*`, feedback Menu-3 |
+| library halo | Green/orange/red validity glow + issue tooltip on deck-library rows | `src/deck-editor/components/DeckLibrary.svelte` (`.halo-valid`/`.halo-warnings`/`.halo-errors`), status from `src/decks/deck-validation.ts` |
 | manual order | No auto-sort; cards sit where dropped; reorder/sort commands are position-only and history-blind | `src/decks/deck-model.ts` (`reorder`, `sort` planned), ADR-037 |
 | click intent | What a left click on a tile means, derived from zone + capacity, never from presentation state | `src/deck-editor/layout/click-intent.ts` (`deckCardClickIntent`, `catalogCardClickIntent`, `ClickIntent`) |
 | runtime catalog | The whole packaged card database (14,794 codes), fetched from the runtime assets when a domain opens rather than compiled into the bundle, memoized per page load | `src/decks/catalog/runtime-catalog.ts` (`runtimeCatalog`, `loadRuntimeCatalog`, `setRuntimeCatalogForTests`), ADR-043 |
+| buildable card | A catalog card a deck may hold; the runtime catalog less its 243 Tokens (14,551 offered) | `src/decks/catalog/deck-buildable-cards.ts` (`isDeckBuildableCard`, `deckBuildableCards`) |
 | rail | Right-side LP, turn, phase, status column | planned `src/battle/app/components/DuelRail.svelte`, `docs/ADR/019_ADR_full_height_duel_shell_and_pixel_geometry.md` |
 | cardlist | Browse/target floating physical-card window | `src/battle/app/components/duel-field/ZoneListDialog.svelte`, `docs/ADR/021_ADR_card_list_dialog_modes_and_selection.md` |
 | images | Card art cache, leases, placeholders | `src/battle/app/images/card-image-cache.ts` (`CardImageLibrary`, `CardImageLease`) |

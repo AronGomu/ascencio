@@ -1515,3 +1515,20 @@ Undo still reverts membership only, not order
 
 - [ ] With a deck open, add a card, then drag a different card to a new position.
 - [ ] Press **Undo** — the previously added card is removed; the card you dragged stays in its new position (order is not restored).
+
+## T8 editor-viewport-fit
+
+Preview width
+
+- [ ] Open the deck editor at 1920×1080 — the left card-preview panel is visually narrower than before (≈248px ≈ 15.5rem, not the old 352px / 22rem).
+- [ ] Open the duel at 1920×1080 — the card-preview column is also narrower, confirming `--preview-w` is shared.
+
+No region scrollbar (desktop)
+
+- [ ] Open any deck at 1920×1080 — the browser viewport shows no vertical or horizontal scrollbar on the deck editor region.
+- [ ] Resize to 1280×720 — still no region scrollbar (stage smaller, layout still fits).
+
+Sub-breakpoint usable (tablet / portrait)
+
+- [ ] Resize to 768×1024 portrait — the deck editor switches to tab layout; the header and content fill the width without side-scrolling.
+- [ ] Resize to 390×844 portrait — tabbed layout is still usable; no horizontal overflow.

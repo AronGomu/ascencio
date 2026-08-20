@@ -709,9 +709,9 @@
     grid-template-columns: auto auto 1fr repeat(7, auto);
     align-items: end;
     gap: 0.55rem;
-    width: calc(100% - 0.5rem);
-    margin-inline: auto;
-    padding-block: 0.75rem;
+    width: 100%;
+    margin-inline: 0;
+    padding: 0.6rem 0.25rem;
   }
 
   .editor-header button {
@@ -741,15 +741,19 @@
   }
 
   .editor-layout {
+    --deck-editor-header-h: 4.75rem;
+
     display: grid;
-    grid-template-columns: minmax(18rem, 0.9fr) minmax(38rem, 1.9fr) minmax(
-        17rem,
-        0.82fr
+    grid-template-columns: var(--preview-w, 15.5rem) minmax(0, 1fr) minmax(
+        16rem,
+        0.55fr
       );
-    gap: 0.75rem;
-    width: calc(100% - 0.5rem);
-    margin-inline: auto;
-    padding-bottom: 0.75rem;
+    grid-template-rows: minmax(0, 1fr);
+    gap: 0.5rem;
+    width: 100%;
+    height: calc(var(--stage-h, 100svh) - var(--deck-editor-header-h));
+    margin-inline: 0;
+    padding: 0 0.25rem 0.5rem;
   }
 
   /* Above the breakpoint the pane wrapper is not a box at all: the three
@@ -760,7 +764,7 @@
   }
 
   .pane :global(.card-preview-panel) {
-    height: calc(100vh - 5.5rem);
+    height: 100%;
     overflow-y: auto;
   }
 
@@ -776,8 +780,8 @@
   }
 
   .message {
-    width: calc(100% - 0.5rem);
-    margin: 0 auto 0.6rem;
+    width: 100%;
+    margin: 0 0 0.4rem;
     padding: 0.65rem;
     border: 1px solid var(--border);
     border-radius: 0.5rem;
@@ -828,8 +832,9 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      width: calc(100% - 1rem);
+      width: 100%;
       padding-block: 0.5rem;
+      padding-inline: 0.5rem;
     }
 
     .name-field {
@@ -838,7 +843,13 @@
 
     .editor-layout,
     .message {
-      width: calc(100% - 1rem);
+      width: 100%;
+      padding-inline: 0.5rem;
+    }
+
+    .editor-layout {
+      height: auto;
+      grid-template-rows: auto;
     }
   }
 

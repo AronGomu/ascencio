@@ -228,8 +228,11 @@
 
 <style>
   .catalog {
+    display: flex;
+    flex-direction: column;
     min-width: 0;
-    height: calc(100vh - 5.5rem);
+    height: 100%;
+    min-height: 0;
     overflow: hidden;
     padding: 1rem;
     border: 1px solid var(--border);
@@ -310,7 +313,9 @@
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.55rem;
-    max-height: calc(100vh - 24rem);
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
     overflow-y: auto;
     padding: 0.2rem 0.35rem 0.5rem 0.1rem;
   }

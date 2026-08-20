@@ -14,7 +14,7 @@
   background: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  --preview-w: 22rem;
+  --preview-w: 15.5rem;
   --rail-min: 15rem;
 }
 
@@ -490,7 +490,7 @@ h4 {
 
 @media (max-width: 1500px) {
   :root {
-    --preview-w: 18rem;
+    --preview-w: 13.5rem;
     --rail-min: 12rem;
   }
 }

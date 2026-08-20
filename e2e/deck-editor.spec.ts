@@ -479,3 +479,48 @@ test("the deck editor keeps its three panels above the breakpoint", async ({
   await expect(page.locator('[data-cy="deck-tap-menu"]')).toHaveCount(0);
   await expect(zoneCount(page, "main")).toHaveText("1/40");
 });
+
+test("the deck editor fits the stage without a region scrollbar", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.getByLabel("Deck name").fill("Viewport Fit");
+  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await expect(page.locator('[data-cy="deck-editor-layout"]')).toBeVisible();
+
+  const region = page.locator('[data-cy="shell-region-decks"]');
+  const scrolls = await region.evaluate((el) => ({
+    fitsVertically: el.scrollHeight <= el.clientHeight + 1,
+    fitsHorizontally: el.scrollWidth <= el.clientWidth + 1,
+  }));
+  expect(scrolls.fitsVertically, "region must not scroll vertically").toBe(
+    true,
+  );
+  expect(scrolls.fitsHorizontally, "region must not scroll horizontally").toBe(
+    true,
+  );
+});
+
+test("the card viewer is card width", async ({ page }) => {
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.getByLabel("Deck name").fill("Card Width");
+  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await expect(page.locator('[data-cy="deck-editor-layout"]')).toBeVisible();
+
+  const preview = page.locator('[data-cy="card-preview-panel"]');
+  const box = await preview.boundingBox();
+  expect(box, "card-preview-panel must be visible").not.toBeNull();
+  const expectedPx = 15.5 * 16;
+  expect(
+    Math.abs(box!.width - expectedPx),
+    `card-preview-panel width ${box!.width}px should be within 10px of ${expectedPx}px`,
+  ).toBeLessThanOrEqual(10);
+});

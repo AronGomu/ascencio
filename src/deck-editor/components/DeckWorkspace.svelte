@@ -213,7 +213,8 @@
     flex-direction: column;
     gap: 0.75rem;
     min-width: 0;
-    height: calc(100vh - 5.5rem);
+    height: 100%;
+    min-height: 0;
     overflow-y: auto;
     padding: 1rem;
     border: 1px solid var(--border);

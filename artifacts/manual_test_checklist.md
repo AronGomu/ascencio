@@ -1381,3 +1381,14 @@ Buttons gone
 
 - [ ] Select a local deck at `#/duel`, then go to `#/decks` and delete that deck.
 - [ ] Return to `#/duel`. The fallback notice is shown, and the seat has fallen back to the stored default deck (or the bundled starter if there is none).
+
+## T1 library-toolbar-row
+
+- [ ] Open `#/decks`. Confirm the library header shows no buttons — only a visually-hidden "Deck Library" heading.
+- [ ] Confirm the search field, sort dropdown, **Import Deck** button, and **Create deck** button all appear on the same horizontal toolbar row below the header.
+- [ ] Resize the window to a narrow viewport (~400 px). Confirm the toolbar wraps gracefully with no overlapping elements.
+- [ ] In the deck list, confirm the **Default** badge appears on the same line as the deck name, pushed to the right edge of that line.
+- [ ] Confirm the counts line (Main · Extra · Side) and the "Updated …" timestamp appear below the name line, unchanged.
+- [ ] Click **Import Deck** and confirm the import flow opens.
+- [ ] Click **Create deck** and confirm the create-deck dialog opens.
+- [ ] Create a deck, set it as default, and confirm the **Default** badge appears right-aligned on its name row.

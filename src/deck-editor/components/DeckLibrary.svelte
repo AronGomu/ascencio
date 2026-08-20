@@ -109,32 +109,13 @@
   aria-labelledby="deck-library-heading"
 >
   <header data-cy="deck-library-header">
-    <div data-cy="deck-library-titles">
-      <h1
-        id="deck-library-heading"
-        data-cy="deck-library-heading"
-        class="visually-hidden"
-      >
-        Deck Library
-      </h1>
-    </div>
-    <div class="actions" data-cy="deck-library-actions">
-      <button
-        type="button"
-        class="secondary"
-        data-cy="deck-library-import"
-        onclick={onimport}>Import Deck</button
-      >
-      <button
-        type="button"
-        data-cy="deck-library-create"
-        onclick={() => {
-          creating = true;
-          createName = "";
-          void focusDialog();
-        }}>Create deck</button
-      >
-    </div>
+    <h1
+      id="deck-library-heading"
+      data-cy="deck-library-heading"
+      class="visually-hidden"
+    >
+      Deck Library
+    </h1>
   </header>
 
   {#if message}<p class="message" role="status" data-cy="deck-library-message">
@@ -162,6 +143,21 @@
         >
       </select>
     </label>
+    <button
+      type="button"
+      class="secondary"
+      data-cy="deck-library-import"
+      onclick={onimport}>Import Deck</button
+    >
+    <button
+      type="button"
+      data-cy="deck-library-create"
+      onclick={() => {
+        creating = true;
+        createName = "";
+        void focusDialog();
+      }}>Create deck</button
+    >
   </div>
 
   {#if decks.length === 0}
@@ -203,14 +199,21 @@
               : deck.validation.issues.map(({ message }) => message).join("\n")}
             onclick={() => onopen(deck.id)}
           >
-            <strong data-cy={`deck-library-name-${deck.id}`}>{deck.name}</strong
+            <span
+              class="row-title"
+              data-cy={`deck-library-row-title-${deck.id}`}
             >
-            {#if deck.id === defaultDeckId}
-              <span
-                class="default-badge"
-                data-cy={`deck-library-default-badge-${deck.id}`}>Default</span
+              <strong data-cy={`deck-library-name-${deck.id}`}
+                >{deck.name}</strong
               >
-            {/if}
+              {#if deck.id === defaultDeckId}
+                <span
+                  class="default-badge"
+                  data-cy={`deck-library-default-badge-${deck.id}`}
+                  >Default</span
+                >
+              {/if}
+            </span>
             <span data-cy={`deck-library-counts-${deck.id}`}
               >Main {deck.main.length} · Extra {deck.extra.length} · Side {deck
                 .side.length}</span
@@ -461,7 +464,6 @@
     padding-block: 2rem;
   }
 
-  header,
   .tools,
   .actions,
   .row-actions {
@@ -485,7 +487,19 @@
   }
 
   .tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 0.75rem;
     margin-block: 1.5rem 1rem;
+  }
+
+  .tools label {
+    flex: 1 1 12rem;
+  }
+
+  .tools button {
+    min-height: 2.5rem;
   }
 
   label {
@@ -546,10 +560,17 @@
     background: var(--surface-raised);
   }
 
+  .row-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
   /* Outranks the `.deck-open span` muted rule above, which every other line
      inside the row button wants and this one does not. */
   .deck-open .default-badge {
-    justify-self: start;
+    margin-left: auto;
     padding: 0.1rem 0.4rem;
     color: var(--success);
     border: 1px solid var(--success);

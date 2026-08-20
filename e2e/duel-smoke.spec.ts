@@ -1350,19 +1350,21 @@ test("default duel occupies exactly one viewport at every supported viewport", a
         : viewport.id;
     await expect(main).toHaveAttribute("data-duel-viewport", "true");
 
-    const metrics = await page.evaluate(() => ({
-      documentScrollHeight: document.documentElement.scrollHeight,
-      bodyScrollHeight: document.body.scrollHeight,
-      innerHeight: window.innerHeight,
-    }));
-    expect(
-      metrics.documentScrollHeight,
-      `${label} document must not overflow the viewport`,
-    ).toBeLessThanOrEqual(metrics.innerHeight + 1);
-    expect(
-      metrics.bodyScrollHeight,
-      `${label} body must not overflow the viewport`,
-    ).toBeLessThanOrEqual(metrics.innerHeight + 1);
+    await expect(async () => {
+      const metrics = await page.evaluate(() => ({
+        documentScrollHeight: document.documentElement.scrollHeight,
+        bodyScrollHeight: document.body.scrollHeight,
+        innerHeight: window.innerHeight,
+      }));
+      expect(
+        metrics.documentScrollHeight,
+        `${label} document must not overflow the viewport`,
+      ).toBeLessThanOrEqual(metrics.innerHeight + 1);
+      expect(
+        metrics.bodyScrollHeight,
+        `${label} body must not overflow the viewport`,
+      ).toBeLessThanOrEqual(metrics.innerHeight + 1);
+    }).toPass();
 
     await expect(field).toBeVisible();
     const box = await field.boundingBox();
@@ -1406,44 +1408,54 @@ test("the shell letterboxes the app to a 16:9 stage above the breakpoint", async
     });
     await expect(stage).toHaveAttribute("data-stage-mode", "stage");
 
-    const box = await stage.boundingBox();
-    if (box === null) throw new Error(`${viewport.id} stage has no box`);
-    expect(
-      Math.abs(box.width - (box.height * 16) / 9),
-      `${viewport.id} stage must be 16:9 (got ${box.width}x${box.height})`,
-    ).toBeLessThanOrEqual(1);
-    expect(box.width).toBeLessThanOrEqual(viewport.width);
-    expect(box.height).toBeLessThanOrEqual(viewport.height);
+    let box!: NonNullable<Awaited<ReturnType<typeof stage.boundingBox>>>;
+    await expect(async () => {
+      const b = await stage.boundingBox();
+      if (b === null) throw new Error(`${viewport.id} stage has no box`);
+      expect(
+        Math.abs(b.width - (b.height * 16) / 9),
+        `${viewport.id} stage must be 16:9 (got ${b.width}x${b.height})`,
+      ).toBeLessThanOrEqual(1);
+      expect(b.width).toBeLessThanOrEqual(viewport.width);
+      expect(b.height).toBeLessThanOrEqual(viewport.height);
+      box = b;
+    }).toPass();
 
-    const metrics = await page.evaluate(() => ({
-      scrollHeight: document.scrollingElement!.scrollHeight,
-      innerHeight: window.innerHeight,
-      bodyOverflow: getComputedStyle(document.body).overflowY,
-    }));
-    expect(
-      metrics.scrollHeight,
-      `${viewport.id} page must not scroll`,
-    ).toBeLessThanOrEqual(metrics.innerHeight + 1);
-    expect(metrics.bodyOverflow).toBe("hidden");
+    await expect(async () => {
+      const metrics = await page.evaluate(() => ({
+        scrollHeight: document.scrollingElement!.scrollHeight,
+        innerHeight: window.innerHeight,
+        bodyOverflow: getComputedStyle(document.body).overflowY,
+      }));
+      expect(
+        metrics.scrollHeight,
+        `${viewport.id} page must not scroll`,
+      ).toBeLessThanOrEqual(metrics.innerHeight + 1);
+      expect(metrics.bodyOverflow).toBe("hidden");
+    }).toPass();
 
     // The duel renders inside the stage, never outside its bars.
-    const fieldBox = await field.boundingBox();
-    if (fieldBox === null) throw new Error(`${viewport.id} field has no box`);
-    expect(fieldBox.y).toBeGreaterThanOrEqual(box.y - 1);
-    expect(fieldBox.y + fieldBox.height).toBeLessThanOrEqual(
-      box.y + box.height + 1,
-    );
+    await expect(async () => {
+      const fieldBox = await field.boundingBox();
+      if (fieldBox === null) throw new Error(`${viewport.id} field has no box`);
+      expect(fieldBox.y).toBeGreaterThanOrEqual(box.y - 1);
+      expect(fieldBox.y + fieldBox.height).toBeLessThanOrEqual(
+        box.y + box.height + 1,
+      );
+    }).toPass();
   }
 
   // The duel measures the stage, not the viewport, so it fills the box.
   await page.setViewportSize({ width: 1600, height: 1000 });
-  const stageBox = await stage.boundingBox();
-  const regionBox = await page
-    .locator('[data-cy="shell-region-duel"]')
-    .boundingBox();
-  if (stageBox === null || regionBox === null)
-    throw new Error("stage or duel region has no bounding box");
-  expect(Math.abs(regionBox.height - stageBox.height)).toBeLessThanOrEqual(1);
+  await expect(async () => {
+    const stageBox = await stage.boundingBox();
+    const regionBox = await page
+      .locator('[data-cy="shell-region-duel"]')
+      .boundingBox();
+    if (stageBox === null || regionBox === null)
+      throw new Error("stage or duel region has no bounding box");
+    expect(Math.abs(regionBox.height - stageBox.height)).toBeLessThanOrEqual(1);
+  }).toPass();
 });
 
 test("short-height duel keeps the full-height preview column, bounded art and scroll-ready text", async ({

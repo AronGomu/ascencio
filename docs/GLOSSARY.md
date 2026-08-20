@@ -36,6 +36,7 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 | load dialog | Editor dialog: saved decks tab + autosave log tab, restore = undoable edit | `src/deck-editor/components/LoadDeckDialog.svelte` |
 | library halo | Green/orange/red validity glow + tooltip on deck-library rows | planned `DeckLibrary.svelte` `.halo-*`, feedback Menu-3 |
 | manual order | No auto-sort; cards sit where dropped; reorder/sort commands are position-only and history-blind | `src/decks/deck-model.ts` (`reorder`, `sort` planned), ADR-037 |
+| click intent | What a left click on a tile means, derived from zone + capacity, never from presentation state | `src/deck-editor/layout/click-intent.ts` (`deckCardClickIntent`, `catalogCardClickIntent`, `ClickIntent`) |
 | rail | Right-side LP, turn, phase, status column | planned `src/battle/app/components/DuelRail.svelte`, `docs/ADR/019_ADR_full_height_duel_shell_and_pixel_geometry.md` |
 | cardlist | Browse/target floating physical-card window | `src/battle/app/components/duel-field/ZoneListDialog.svelte`, `docs/ADR/021_ADR_card_list_dialog_modes_and_selection.md` |
 | images | Card art cache, leases, placeholders | `src/battle/app/images/card-image-cache.ts` (`CardImageLibrary`, `CardImageLease`) |

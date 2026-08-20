@@ -1069,7 +1069,7 @@ rather than the fixture's handful.
 - [ ] Run `npm run dev`, open `http://localhost:5173/#/decks`.
 - [ ] Open a saved deck in the editor; confirm card tiles display real card art (jpg images, not glyph placeholders).
 - [ ] Search the catalog for a known card (e.g. "Blue-Eyes White Dragon"); confirm the result tile shows the card image.
-- [ ] Click a card to open the detail/preview panel; confirm the art renders at full preview size.
+- [ ] Click a card to open the detail/preview panel; confirm the art renders at full preview size. (Since T6 of decks-feedback-round-2, a desktop click also edits the deck — hover to preview without editing, or press Undo afterwards.)
 - [ ] Confirm cards without packaged art (if any) show a fallback/placeholder rather than a broken image.
 
 ## T2 shared-card-preview-panel
@@ -1087,7 +1087,7 @@ rather than the fixture's handful.
 - [ ] `npm run dev`, open `http://localhost:5173/#/decks`, open any saved deck.
 - [ ] The left pane shows the shared card preview panel (not "Pinned card details"). Initially it shows "Hover a card to see its details."
 - [ ] Hover a catalog tile (right pane): the preview panel updates with the card's name, effect text, and art.
-- [ ] Click a catalog tile to select/pin it; hover another tile: preview shows the hovered card.
+- [ ] Click a catalog tile to select/pin it; hover another tile: preview shows the hovered card. (Since T6 of decks-feedback-round-2, that click also adds a copy — press Undo after checking the preview.)
 - [ ] Move the cursor off the catalog grid: preview reverts to the previously selected (clicked) card.
 - [ ] Hover a deck workspace card (middle pane): preview shows that card.
 - [ ] Move the cursor off the deck workspace grid: preview reverts to the selected card.
@@ -1206,13 +1206,13 @@ Illegal-zone halo
 
 - [ ] Drag a Main Deck card (e.g. a normal monster) — the Main Deck and Side Deck drop areas turn green (allowed), the Extra Deck drop area turns red (blocked).
 - [ ] Drag an Extra Deck card — the Extra Deck and Side Deck drop areas turn green, the Main Deck drop area turns red.
-- [ ] Drag a catalog card whose canonical zone is Main — the Main Deck drop area turns green, Extra turns red.
+- [ ] Drag a catalog card whose canonical zone is Main — the Main Deck **and** Side Deck drop areas turn green, Extra turns red. (Side became a legal catalog target in T6 of decks-feedback-round-2.)
 - [ ] Release the drag without dropping — no removal occurs for a catalog card.
 
 Illegal-zone drop → removal
 
 - [ ] Drag a Main Deck card and drop it onto the Extra Deck zone (red) — the card is removed from Main Deck (not moved to Extra).
-- [ ] Drag a catalog card and drop it onto the wrong zone — no card is added, no error panel appears.
+- [ ] Drag a catalog card onto the wrong zone (the Extra Deck, for a Main-canonical card — Side is legal since T6 of decks-feedback-round-2) — no card is added, no error panel appears.
 
 Buttons gone
 
@@ -1233,7 +1233,7 @@ Buttons gone
 - [ ] Right-click a catalog card whose canonical zone is **Main** — the card is added to Main Deck; the announcement reads "… added to main."
 - [ ] Right-click the same card again until Main Deck has **60** cards.
 - [ ] Right-click a different catalog monster — Main is full, so the card is added to **Side Deck** instead; the announcement says "… added to side."
-- [ ] Fill Side Deck to **15** cards (by right-clicking more catalog cards or dragging). Right-click another catalog monster — no card is added and an announcement reads "No space left for …"
+- [ ] Fill Side Deck to **15** cards (by right-clicking more catalog cards or dragging). Right-click another catalog monster — no card is added and an announcement reads "…: No space left." (wording changed in T6 of decks-feedback-round-2).
 
 ### Maxed (copy-limit) highlight
 - [ ] Find a card that already has **3** copies in the deck (check the copy badge). Its catalog tile should show a **red border** instead of the normal accent border.
@@ -1422,7 +1422,7 @@ Buttons gone
 - [ ] Run `npm run dev`, open a deck, and confirm tiles in **Main**, **Extra**, and **Side** zones show the full card art scaled to fill the tile (no top-left-corner clip, no letterbox).
 - [ ] Confirm the card name overlays the bottom of the art with a readable scrim (dark gradient behind the text), and the name still has its own `data-cy` attribute (`deck-tile-name-{code}`).
 - [ ] Open the catalog panel and confirm catalog tiles also show full card art with the name overlay.
-- [ ] Select a card tile and confirm the accent border is still visible around the tile.
+- [ ] Select a card tile and confirm the accent border is still visible around the tile. (Since T6 of decks-feedback-round-2, clicking a deck tile also moves or removes it — press Undo, or select a catalog tile whose copy limit is already reached.)
 - [ ] Confirm the limit badge (number in circle, top-left) remains above the art and is not obscured.
 - [ ] Scroll to a card with no image URL; confirm the placeholder glyph (letter or `!`) fills the tile and the name appears as a normal (non-overlay) row below it.
 - [ ] Confirm no tile overflows its grid slot at any of the default column widths.
@@ -1452,3 +1452,52 @@ Side Deck expanded on arrival
 
 - [ ] Open the deck editor from the library; confirm the Side Deck card grid and drop area are **visible immediately** without clicking the toggle.
 - [ ] Confirm cards can be dragged from Main or Extra Deck directly onto the Side Deck drop area without first expanding it.
+
+## T6 click-intents-and-sideboard
+
+Desktop click intents (viewport ≥1024px wide — the `panels` layout)
+
+- [ ] Run `npm run dev`, open `http://localhost:5173/#/decks`, and open a saved deck in a window wider than 1024px.
+- [ ] Click a catalog card whose canonical zone is **Main** — one copy is added to Main Deck, the counts update, and the announcement reads "… added to main."
+- [ ] Click a catalog card whose canonical zone is **Extra** (e.g. a Fusion monster) — it is added to Extra Deck, announcement "… added to extra."
+- [ ] Click the card you just added in the **Main Deck** zone — that copy moves to Side Deck; Main drops by one, Side rises by one, announcement "… moved to side."
+- [ ] Click that same copy in the **Side Deck** zone — it returns to Main Deck, announcement "… moved to main."
+- [ ] Click a card in the **Extra Deck** zone — the copy is removed outright (it does not go to Side), announcement "… removed."
+- [ ] Click an Extra Deck card that you first moved into Side, while in Side — it returns to **Extra**, not Main.
+- [ ] Confirm every click also updates the preview panel to the clicked card, and that hovering another tile still wins over the selection.
+
+Blocked click intents
+
+- [ ] Fill Side Deck to **15** cards, then click a Main Deck card — nothing moves and the announcement reads "…: Side Deck is full."
+- [ ] With Extra Deck at **15**, move one Extra card to Side first, then click it in Side — nothing moves and the announcement reads "…: Extra Deck is full."
+- [ ] Fill Main Deck to **60** and Side Deck to **15**, then click a Main-canonical catalog card — nothing is added and the announcement reads "…: No space left."
+- [ ] With Main Deck at **60** but Side below 15, click a Main-canonical catalog card — it lands in **Side Deck** instead, announcement "… added to side."
+- [ ] Click a catalog card already at its copy limit (tile shows the maxed border) — nothing is added and the announcement gives the copy-limit reason, not a zone reason.
+
+To-sideboard checkbox
+
+- [ ] Confirm a **To sideboard** checkbox sits in the catalog header beside the result count, and that it is **unchecked** on arrival.
+- [ ] Check **To sideboard**, then click a Main-canonical catalog card — it is added to **Side Deck**, not Main.
+- [ ] With **To sideboard** still checked and Side Deck at **15**, click another catalog card — it falls back to its canonical zone (Main/Extra) rather than being blocked.
+- [ ] Uncheck **To sideboard** and click a catalog card — it goes back to landing in its canonical zone.
+- [ ] Tab to the checkbox and confirm it takes a visible focus ring and toggles with Space.
+
+Catalog → Side drag
+
+- [ ] Start dragging a Main-canonical catalog card — the **Main Deck and Side Deck** drop areas turn green and Extra turns red.
+- [ ] Drop that catalog card onto the **Side Deck** drop area — one copy is added to Side, announcement "… added to side."
+- [ ] Drag an Extra-canonical catalog card onto the **Side Deck** drop area — it is added to Side as well.
+- [ ] Drag a catalog card onto the drop area that is still red (Extra for a Main card) — nothing is added.
+
+Mobile is unchanged
+
+- [ ] Narrow the window below 1024px (or use the device toolbar at e.g. 390x844) so the tabbed layout appears.
+- [ ] Tap a catalog card — the **tap target menu** opens as before; the card is not silently added.
+- [ ] Tap a deck card — the tap target menu opens with its zone choices; no immediate move or removal happens.
+
+Undo / redo and persistence
+
+- [ ] After a click-driven add, press **Undo** — the card is removed again; press **Redo** — it comes back.
+- [ ] After a click-driven move (Main → Side), press **Undo** — the copy returns to Main; **Redo** sends it to Side again.
+- [ ] After a click-driven Extra Deck removal, press **Undo** — the copy returns to Extra.
+- [ ] Make several click edits, wait for **Saved locally**, reload the page, and confirm the deck contents match what you left.

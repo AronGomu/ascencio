@@ -60,8 +60,11 @@
     if (active.source === zone) return true;
     const card = cards.get(active.code);
     if (card === undefined) return false;
-    if (active.source === "catalog" || active.source === "side")
-      return zone === card.canonicalZone;
+    /* The catalog can seed the sideboard directly; a side card only ever
+       returns to the zone it belongs in. */
+    if (active.source === "catalog")
+      return zone === card.canonicalZone || zone === "side";
+    if (active.source === "side") return zone === card.canonicalZone;
     return zone === "side";
   }
 

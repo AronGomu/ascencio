@@ -23,6 +23,12 @@
     deckTapTargets,
     type TapTarget,
   } from "../layout/tap-targets.ts";
+  import {
+    catalogCardClickIntent,
+    deckCardClickIntent,
+    type ClickIntent,
+    type ZoneCounts,
+  } from "../layout/click-intent.ts";
   import type { PickedCard } from "../drag-state.ts";
   import LoadDeckDialog from "./LoadDeckDialog.svelte";
   import type {
@@ -68,6 +74,7 @@
   let picked: PickedCard | null = null;
   let dropHandled = false;
   let announcement = "";
+  let toSideboard = false;
   let deckName = state.current?.deck.name ?? "";
   let pane: EditorPane = defaultPane();
   let tapped: { code: number; zone: DeckZone } | null = null;
@@ -184,6 +191,68 @@
     selected = card ?? catalog.get(code) ?? null;
   }
 
+  function zoneCounts(): ZoneCounts {
+    return {
+      main: deck?.main.length ?? 0,
+      extra: deck?.extra.length ?? 0,
+      side: deck?.side.length ?? 0,
+    };
+  }
+
+  /* One place turns an intent into a command, so the left click, the right
+     click and the tap menu cannot drift apart. */
+  function applyIntent(
+    intent: ClickIntent,
+    code: number,
+    from: DeckZone | "catalog",
+  ): void {
+    const name = catalog.get(code)?.name ?? `Card ${code}`;
+    if (intent.kind === "blocked") {
+      announcement = `${name}: ${intent.reason}`;
+      return;
+    }
+    if (intent.kind === "add") {
+      onmutate({ type: "add", cardCode: code, zone: intent.zone });
+      announcement = `${name} added to ${intent.zone}.`;
+      return;
+    }
+    /* A catalog tile has no copy in a zone to move or remove, and the catalog
+       deriver never asks for one; this narrows `from` to a real zone. */
+    if (from === "catalog") return;
+    if (intent.kind === "remove") {
+      onmutate({ type: "remove", cardCode: code, zone: from });
+      announcement = `${name} removed.`;
+      return;
+    }
+    onmutate({ type: "move", cardCode: code, from, to: intent.to });
+    announcement = `${name} moved to ${intent.to}.`;
+  }
+
+  function clickDeckCard(code: number, zone: DeckZone): void {
+    const card = catalog.get(code) ?? null;
+    selectCard(card, code);
+    /* A card the pinned catalog no longer knows has no canonical zone to
+       swap with, so removal is the only honest edit. */
+    if (card === null) {
+      applyIntent({ kind: "remove" }, code, zone);
+      return;
+    }
+    applyIntent(
+      deckCardClickIntent(zone, card.canonicalZone, zoneCounts()),
+      code,
+      zone,
+    );
+  }
+
+  function clickCatalogCard(card: DeckBuilderCardView): void {
+    selectCard(card, card.code);
+    applyIntent(
+      catalogCardClickIntent(card.canonicalZone, zoneCounts(), toSideboard),
+      card.code,
+      "catalog",
+    );
+  }
+
   function startCatalogDrag(
     card: DeckBuilderCardView,
     event?: DragEvent,
@@ -218,8 +287,11 @@
     const src = picked;
     const card = catalog.get(src.code);
     if (src.source === "catalog") {
-      if (card !== undefined && zone === card.canonicalZone) {
-        onmutate({ type: "add", cardCode: src.code });
+      if (
+        card !== undefined &&
+        (zone === card.canonicalZone || zone === "side")
+      ) {
+        onmutate({ type: "add", cardCode: src.code, zone });
         announcement = `${card.name} added to ${zone}.`;
       } else {
         announcement = `Card cannot be added to ${zone}.`;
@@ -258,20 +330,11 @@
   }
 
   function contextAdd(card: DeckBuilderCardView): void {
-    const counts = {
-      main: deck?.main.length ?? 0,
-      extra: deck?.extra.length ?? 0,
-      side: deck?.side.length ?? 0,
-    };
-    const canonicalFull =
-      card.canonicalZone === "main" ? counts.main >= 60 : counts.extra >= 15;
-    const zone: DeckZone = canonicalFull ? "side" : card.canonicalZone;
-    if (canonicalFull && counts.side >= 15) {
-      announcement = `No space left for ${card.name}.`;
-      return;
-    }
-    onmutate({ type: "add", cardCode: card.code, zone });
-    announcement = `${card.name} added to ${zone}.`;
+    applyIntent(
+      catalogCardClickIntent(card.canonicalZone, zoneCounts(), toSideboard),
+      card.code,
+      "catalog",
+    );
   }
 
   function contextRemove(code: number, zone: DeckZone): void {
@@ -503,7 +566,7 @@
           {picked}
           filled={tabs}
           onselect={selectCard}
-          ontap={tabs ? tapDeckCard : null}
+          ontap={tabs ? tapDeckCard : clickDeckCard}
           ondragcard={(code, zone, index, event) =>
             startZoneDrag(code, zone, index, event)}
           ondragcancel={endZoneDrag}
@@ -542,10 +605,12 @@
             selected = card;
             selectedCode = card.code;
           }}
-          ontap={tabs ? tapCatalogCard : null}
+          ontap={tabs ? tapCatalogCard : clickCatalogCard}
           ondragcard={(card, event) => startCatalogDrag(card, event)}
           ondragcancel={endZoneDrag}
           oncontextadd={contextAdd}
+          {toSideboard}
+          ontosideboardchange={(value) => (toSideboard = value)}
           onblocked={(card, reason) => {
             selected = card;
             selectedCode = card.code;

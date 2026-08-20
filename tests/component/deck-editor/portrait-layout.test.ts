@@ -187,12 +187,17 @@ describe("deck editor portrait layout", () => {
     expect(pane("deck")).not.toBeNull();
     expect(pane("details")).not.toBeNull();
     expect(screen.queryByRole("tablist")).toBeNull();
-    /* A desktop click still only selects: the tap model never reaches the
-       store above the breakpoint. */
+    /* A desktop click edits straight away: the tap menu is the mobile model
+       and never reaches the stage above the breakpoint. */
     await user.click(
       screen.getAllByRole("button", { name: /Blue-Eyes White Dragon/ })[0]!,
     );
     expect(document.querySelector('[data-cy="deck-tap-menu"]')).toBeNull();
-    expect(onmutate).not.toHaveBeenCalled();
+    expect(onmutate).toHaveBeenCalledWith({
+      type: "move",
+      cardCode: 89631139,
+      from: "main",
+      to: "side",
+    });
   });
 });

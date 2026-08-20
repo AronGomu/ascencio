@@ -31,7 +31,7 @@ function props(onmutate: (command: DeckCommand) => void, mainCount = 0) {
 }
 
 describe("pointer deck editing", () => {
-  it("drags catalog cards only to their canonical target", async () => {
+  it("drags catalog cards to their canonical target", async () => {
     const onmutate = vi.fn<(command: DeckCommand) => void>();
     render(DeckEditor, props(onmutate));
     await fireEvent.dragStart(
@@ -40,7 +40,11 @@ describe("pointer deck editing", () => {
     await fireEvent.drop(
       screen.getByRole("group", { name: "Main Deck drop area" }),
     );
-    expect(onmutate).toHaveBeenCalledWith({ type: "add", cardCode: 89631139 });
+    expect(onmutate).toHaveBeenCalledWith({
+      type: "add",
+      cardCode: 89631139,
+      zone: "main",
+    });
   });
 
   it("moves deck cards to Side deck", async () => {

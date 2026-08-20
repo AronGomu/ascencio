@@ -33,6 +33,9 @@
   export let onhoverend: () => void = () => undefined;
   export let oncontextadd: (card: DeckBuilderCardView) => void = () =>
     undefined;
+  /* Owned by the editor, because the routed click runs there. */
+  export let toSideboard = false;
+  export let ontosideboardchange: (value: boolean) => void = () => undefined;
 
   let filters: DeckCatalogFilters = { ...EMPTY_CATALOG_FILTERS };
   $: options = catalogFilterOptions(cards);
@@ -63,6 +66,15 @@
 >
   <header data-cy="deck-catalog-header">
     <span data-cy="deck-catalog-result-count">{results.length} results</span>
+    <label class="to-side" data-cy="deck-catalog-to-sideboard-field">
+      <input
+        type="checkbox"
+        checked={toSideboard}
+        data-cy="deck-catalog-to-sideboard"
+        onchange={(event) => ontosideboardchange(event.currentTarget.checked)}
+      />
+      <span data-cy="deck-catalog-to-sideboard-label">To sideboard</span>
+    </label>
   </header>
 
   <label data-cy="deck-catalog-name-field">
@@ -241,6 +253,19 @@
   h3,
   p {
     margin: 0;
+  }
+
+  .to-side {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0;
+    font-size: 0.76rem;
+  }
+
+  .to-side input {
+    min-height: auto;
+    width: auto;
   }
 
   label span {

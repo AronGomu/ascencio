@@ -334,9 +334,9 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           this.#ruleset,
         ),
       });
-      /* Where a card sits is not an edit worth remembering, so reorder and
-         sort save the new order but leave undo pointing at the last change to
-         which cards the deck holds. */
+      /* Reorder and sort leave undo pointing at the last membership change so
+         undo never fights the player's ordering; the log answers "what did the
+         deck look like a moment ago", which includes where the cards sat. */
       const positional = command.type === "reorder" || command.type === "sort";
       const nextHistory = positional
         ? state.current.history
@@ -348,10 +348,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
             beforeImportedNeedsReview: before.importedNeedsReview,
             afterImportedNeedsReview: importedNeedsReview,
           });
-      /* A new history object is exactly the signal that which cards the deck
-         holds changed: `pushDeckUpdate` hands back the one it was given when
-         the multiset did not move, and positional commands never push at all. */
-      if (nextHistory !== state.current.history) this.#appendAutosave(nextDeck);
+      this.#appendAutosave(nextDeck);
       await this.#save(nextDeck, nextHistory);
     });
   }

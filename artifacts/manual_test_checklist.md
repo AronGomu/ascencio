@@ -1501,3 +1501,17 @@ Undo / redo and persistence
 - [ ] After a click-driven move (Main → Side), press **Undo** — the copy returns to Main; **Redo** sends it to Side again.
 - [ ] After a click-driven Extra Deck removal, press **Undo** — the copy returns to Extra.
 - [ ] Make several click edits, wait for **Saved locally**, reload the page, and confirm the deck contents match what you left.
+
+## T7 autosave-every-command
+
+Autosave log records position changes
+
+- [ ] Open the deck editor with a deck that has at least two cards in the Main Deck.
+- [ ] Drag one card to a different position within the Main Deck zone.
+- [ ] Open the **Load** dialog — confirm a new autosave entry appears with the current timestamp and the reordered card list.
+- [ ] Click the **Sort** button (alpha or type) — open **Load** again and confirm another fresh entry appears.
+
+Undo still reverts membership only, not order
+
+- [ ] With a deck open, add a card, then drag a different card to a new position.
+- [ ] Press **Undo** — the previously added card is removed; the card you dragged stays in its new position (order is not restored).

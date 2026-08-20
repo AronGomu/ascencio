@@ -1416,3 +1416,13 @@ Buttons gone
 - [ ] Click **Delete** — the confirm dialog appears with the deck name and "Local deck and retained history will be removed."; **Delete** (confirm) is available and **Cancel** returns focus to the Delete button without deleting.
 - [ ] Confirm deletion — you land on `#/decks`; the deleted deck row is gone. Reload and confirm it stays gone.
 - [ ] Delete the default deck — after deletion no row shows the **Default** badge.
+
+## T4 card-tile-art-fit
+
+- [ ] Run `npm run dev`, open a deck, and confirm tiles in **Main**, **Extra**, and **Side** zones show the full card art scaled to fill the tile (no top-left-corner clip, no letterbox).
+- [ ] Confirm the card name overlays the bottom of the art with a readable scrim (dark gradient behind the text), and the name still has its own `data-cy` attribute (`deck-tile-name-{code}`).
+- [ ] Open the catalog panel and confirm catalog tiles also show full card art with the name overlay.
+- [ ] Select a card tile and confirm the accent border is still visible around the tile.
+- [ ] Confirm the limit badge (number in circle, top-left) remains above the art and is not obscured.
+- [ ] Scroll to a card with no image URL; confirm the placeholder glyph (letter or `!`) fills the tile and the name appears as a normal (non-overlay) row below it.
+- [ ] Confirm no tile overflows its grid slot at any of the default column widths.

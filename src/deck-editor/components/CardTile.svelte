@@ -61,7 +61,14 @@
     data-cy={`deck-tile-limit-${code}`}>{limit}</span
   >
   {#if card?.imageUrl}
-    <img src={card.imageUrl} alt="" data-cy={`deck-tile-image-${code}`} />
+    <img
+      class="card-art"
+      loading="lazy"
+      decoding="async"
+      src={card.imageUrl}
+      alt=""
+      data-cy={`deck-tile-image-${code}`}
+    />
   {:else}
     <span
       class="art-placeholder"
@@ -73,13 +80,18 @@
       >
     </span>
   {/if}
-  <span class="card-name" data-cy={`deck-tile-name-${code}`}>{name}</span>
+  <span
+    class="card-name"
+    class:overlay={card?.imageUrl != null}
+    data-cy={`deck-tile-name-${code}`}>{name}</span
+  >
 </button>
 
 <style>
   .card-tile {
     position: relative;
     display: grid;
+    grid-template-areas: "card";
     width: 100%;
     min-width: 0;
     min-height: 0;
@@ -92,6 +104,18 @@
     background: var(--surface-raised);
     font-weight: 650;
     isolation: isolate;
+  }
+
+  .card-tile > * {
+    grid-area: card;
+    min-width: 0;
+  }
+
+  .card-art {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
   }
 
   .card-tile:hover:not(:disabled),
@@ -117,6 +141,8 @@
 
   .art-placeholder {
     display: grid;
+    width: 100%;
+    height: 100%;
     min-height: 0;
     place-items: center;
     background:
@@ -135,6 +161,7 @@
 
   .card-name {
     display: -webkit-box;
+    align-self: end;
     min-height: 2.1rem;
     padding: 0.3rem;
     overflow: hidden;
@@ -144,6 +171,15 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-clamp: 2;
+  }
+
+  .card-name.overlay {
+    background: linear-gradient(
+      to top,
+      color-mix(in srgb, var(--shadow) 88%, transparent),
+      transparent
+    );
+    color: var(--text);
   }
 
   .compact .card-name {

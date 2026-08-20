@@ -56,6 +56,7 @@
     saveState: "idle",
     message: null,
     defaultDeckId: null,
+    favouriteDeckIds: [],
   };
   let controller: DeckBuilderController | null = null;
   let showLibraryImport = false;
@@ -262,6 +263,8 @@
     onimport={() => openLibraryModal("import")}
     defaultDeckId={state.defaultDeckId}
     onsetdefault={(id) => void controller?.setDefaultDeck(id)}
+    favouriteDeckIds={state.favouriteDeckIds}
+    onfavourite={(id) => void controller?.toggleFavourite(id)}
   />
 {:else if state.current !== null && state.current.deck.id === deckId}
   <DeckEditor

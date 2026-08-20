@@ -26,4 +26,7 @@ export interface DeckRepository {
   appendAutosave(record: DeckAutosaveRecord): Promise<void>;
   /** The global autosave log, newest first. */
   listAutosaves(): Promise<readonly DeckAutosaveRecord[]>;
+  /** Favourites, pruned against existing decks. */
+  listFavourites(): Promise<readonly DeckId[]>;
+  setFavourite(id: DeckId, favourite: boolean): Promise<void>;
 }

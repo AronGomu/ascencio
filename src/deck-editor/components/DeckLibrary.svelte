@@ -3,6 +3,7 @@
   import { handleModalKeydown } from "../focus-trap.ts";
   import type { DeckId, DeckRecord } from "../../decks/deck-contracts.ts";
   import { MAXIMUM_DECK_NAME_LENGTH } from "../../decks/deck-model.ts";
+  import { orderDeckLibrary } from "../../decks/deck-library-order.ts";
 
   export let decks: readonly DeckRecord[];
   export let message: string | null = null;
@@ -19,6 +20,9 @@
   /** Which row wears the badge; the controller owns the value, not the click. */
   export let defaultDeckId: DeckId | null = null;
   export let onsetdefault: (id: DeckId) => void = () => undefined;
+  export let favouriteDeckIds: readonly DeckId[] = [];
+  export let onfavourite: (id: DeckId, favourite: boolean) => void = () =>
+    undefined;
 
   let search = "";
   let sort: "modified" | "name" = "modified";
@@ -44,15 +48,12 @@
       renameName.trim().length > 0 &&
       deck.name.toLocaleLowerCase() === renameName.trim().toLocaleLowerCase(),
   );
-  $: filtered = decks
-    .filter((deck) =>
+  $: filtered = orderDeckLibrary(
+    decks.filter((deck) =>
       deck.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()),
-    )
-    .sort((left, right) =>
-      sort === "name"
-        ? left.name.localeCompare(right.name)
-        : right.updatedAt.localeCompare(left.updatedAt),
-    );
+    ),
+    { defaultDeckId, favouriteDeckIds, sort },
+  );
 
   async function focusDialog(): Promise<void> {
     dialogOpener = document.activeElement as HTMLElement | null;
@@ -221,6 +222,22 @@
             <small data-cy={`deck-library-updated-${deck.id}`}
               >Updated {new Date(deck.updatedAt).toLocaleString()}</small
             >
+          </button>
+          <button
+            type="button"
+            class="favourite"
+            data-cy={`deck-library-favourite-${deck.id}`}
+            aria-pressed={favouriteDeckIds.includes(deck.id)}
+            aria-label={`Favourite ${deck.name}`}
+            onclick={() =>
+              onfavourite(deck.id, !favouriteDeckIds.includes(deck.id))}
+          >
+            <span
+              aria-hidden="true"
+              data-cy={`deck-library-favourite-glyph-${deck.id}`}
+            >
+              {favouriteDeckIds.includes(deck.id) ? "★" : "☆"}
+            </span>
           </button>
           <div
             class="row-actions"
@@ -526,7 +543,7 @@
 
   .deck-list li {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto auto;
     gap: 0.75rem;
     padding: 0.75rem;
     border: 1px solid var(--border);
@@ -598,6 +615,20 @@
   .row-actions button {
     min-height: 2.2rem;
     padding: 0.4rem 0.6rem;
+  }
+
+  .favourite {
+    align-self: start;
+    min-height: 2.2rem;
+    padding: 0.2rem 0.45rem;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--muted);
+    font-size: 1.1rem;
+  }
+
+  .favourite[aria-pressed="true"] {
+    color: var(--warning);
   }
 
   .empty,

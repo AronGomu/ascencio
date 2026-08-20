@@ -30,6 +30,7 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 | log | Duel event log formatting + panel | `src/battle/app/presentation/format-duel-log-entry.ts`, `src/battle/app/components/duel-field/DuelLog.svelte` |
 | preview | Sticky card art + bounded scroll text column; shared duel/editor component | `src/shell/card-preview/CardPreviewPanel.svelte` (ADR-036), `src/battle/app/presentation/card-preview.ts` |
 | default deck | Player-assigned deck the duel menu auto-selects; stored preference | `preferences["default-deck"]` in `src/decks/indexeddb-deck-repository.ts`, ADR-038 |
+| favourite deck | A deck the player starred; ordering rank between the default deck and the rest | `preferences["favourite-decks"]` in `src/decks/indexeddb-deck-repository.ts`, `src/decks/deck-library-order.ts` |
 | starter deck | Seeded "Starter Deck" built from bundled `player.ydk`, default on first run | `src/decks/starter-deck.ts` (`ensureStarterDeck`), ADR-038 |
 | autosave log | Global capped-100 list of membership deck edits (timestamp + deck name) | `autosaves` store, `src/decks/deck-database.ts` v2, ADR-038 |
 | load dialog | Editor dialog: saved decks tab + autosave log tab, restore = undoable edit | `src/deck-editor/components/LoadDeckDialog.svelte` |

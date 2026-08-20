@@ -424,3 +424,49 @@ describe("the default deck preference", () => {
     repo.close();
   });
 });
+
+describe("the favourite decks preference", () => {
+  it("favourites persist and drop deleted decks", async () => {
+    const repo = await repository("deck-repo-favourites-round-trip");
+    const deckA = createBlankDeck("Alpha", catalog, PROTOTYPE_RULESET, {
+      id: "fav-a",
+    });
+    const deckB = createBlankDeck("Beta", catalog, PROTOTYPE_RULESET, {
+      id: "fav-b",
+    });
+    const createdA = await repo.create(deckA, emptyDeckHistory());
+    const createdB = await repo.create(deckB, emptyDeckHistory());
+
+    await repo.setFavourite(deckA.id, true);
+    await repo.setFavourite(deckB.id, true);
+    expect(await repo.listFavourites()).toEqual(
+      expect.arrayContaining([deckA.id, deckB.id]),
+    );
+
+    await repo.delete(deckB.id, createdB.deck.revision);
+    expect(await repo.listFavourites()).toEqual([createdA.deck.id]);
+    repo.close();
+  });
+
+  it("setFavourite refuses a missing deck", async () => {
+    const repo = await repository("deck-repo-favourites-missing");
+    await expect(
+      repo.setFavourite(deckId("absent"), true),
+    ).rejects.toBeInstanceOf(DeckStorageError);
+    expect(await repo.listFavourites()).toEqual([]);
+    repo.close();
+  });
+
+  it("unfavouring a deck removes it from the list", async () => {
+    const repo = await repository("deck-repo-favourites-remove");
+    const deck = createBlankDeck("Removable", catalog, PROTOTYPE_RULESET, {
+      id: "fav-remove",
+    });
+    await repo.create(deck, emptyDeckHistory());
+    await repo.setFavourite(deck.id, true);
+    expect(await repo.listFavourites()).toEqual([deck.id]);
+    await repo.setFavourite(deck.id, false);
+    expect(await repo.listFavourites()).toEqual([]);
+    repo.close();
+  });
+});

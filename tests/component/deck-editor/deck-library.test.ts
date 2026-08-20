@@ -157,7 +157,7 @@ describe("DeckLibrary", () => {
         screen.getByRole("searchbox", { name: "Search decks" }),
         "Prototype",
       );
-    const matching = screen.getByRole("button", { name: /Prototype Control/ });
+    const matching = screen.getByRole("button", { name: /^Prototype Control/ });
     expect(matching).toBeTruthy();
     expect(screen.queryByRole("button", { name: /Other/ })).toBeNull();
     await userEvent.setup().click(matching);

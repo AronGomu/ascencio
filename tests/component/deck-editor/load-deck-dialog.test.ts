@@ -264,6 +264,8 @@ describe("load dialog", () => {
       listAutosaves: async () => [],
       getDefaultDeck: async () => null,
       setDefaultDeck: async () => undefined,
+      listFavourites: async () => [],
+      setFavourite: async () => undefined,
     };
     const controller = new DeckBuilderController(
       repository,

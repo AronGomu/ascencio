@@ -1392,3 +1392,14 @@ Buttons gone
 - [ ] Click **Import Deck** and confirm the import flow opens.
 - [ ] Click **Create deck** and confirm the create-deck dialog opens.
 - [ ] Create a deck, set it as default, and confirm the **Default** badge appears right-aligned on its name row.
+
+## T2 favourite-decks-ordering
+
+- [ ] Open the deck library; confirm every deck row shows a star button (☆) to the right of the open button.
+- [ ] Click the star on a deck; confirm the glyph changes to ★ and the button's `aria-pressed` flips to `true`.
+- [ ] Click the star again; confirm the glyph reverts to ☆.
+- [ ] Star two decks (but not the default), then reload the page; confirm the starred decks still show ★ after reload.
+- [ ] With a default deck and two starred decks, confirm the library order is: default deck first, then starred decks, then unstarred — within starred/unstarred groups the active sort (modified/name) applies.
+- [ ] Switch the sort to **Name** and confirm order within each group respects alphabetical ordering.
+- [ ] Delete a starred deck; reload the page; confirm it no longer appears in the favourites.
+- [ ] Open, create, and delete a deck while favourites are set; confirm the library remains functional with no console errors.

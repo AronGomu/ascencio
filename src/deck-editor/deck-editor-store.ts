@@ -42,6 +42,7 @@ export interface DeckBuilderState {
   readonly message: string | null;
   /** The deck a duel starts from, so the library can mark its row. */
   readonly defaultDeckId: DeckId | null;
+  readonly favouriteDeckIds: readonly DeckId[];
 }
 
 const INITIAL_STATE: DeckBuilderState = Object.freeze({
@@ -51,6 +52,7 @@ const INITIAL_STATE: DeckBuilderState = Object.freeze({
   saveState: "idle",
   message: null,
   defaultDeckId: null,
+  favouriteDeckIds: Object.freeze([]),
 });
 
 export class DeckBuilderController implements Readable<DeckBuilderState> {
@@ -79,11 +81,13 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
   async initialize(): Promise<void> {
     const generation = this.#startContext();
     try {
-      const [storedDecks, lastOpened, defaultDeckId] = await Promise.all([
-        this.#repository.list(),
-        this.#repository.getLastOpened(),
-        this.#repository.getDefaultDeck(),
-      ]);
+      const [storedDecks, lastOpened, defaultDeckId, favouriteDeckIds] =
+        await Promise.all([
+          this.#repository.list(),
+          this.#repository.getLastOpened(),
+          this.#repository.getDefaultDeck(),
+          this.#repository.listFavourites(),
+        ]);
       const decks = storedDecks.map((deck) => this.#revalidateDeck(deck));
       let recoveryMessage: string | null = null;
       let stored: StoredDeck | null = null;
@@ -114,6 +118,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           saveState: current === null ? "idle" : "saved",
           message: recoveryMessage,
           defaultDeckId,
+          favouriteDeckIds,
         }),
       );
     } catch (error) {
@@ -189,6 +194,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           saveState: "saved",
           message: null,
           defaultDeckId: get(this.#state).defaultDeckId,
+          favouriteDeckIds: get(this.#state).favouriteDeckIds,
         }),
       );
       return true;
@@ -257,6 +263,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           saveState: "saved",
           message: "Deck imported.",
           defaultDeckId: get(this.#state).defaultDeckId,
+          favouriteDeckIds: get(this.#state).favouriteDeckIds,
         }),
       );
       return true;
@@ -277,6 +284,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
               saveState: "saved",
               message: "Deck imported; library refresh failed.",
               defaultDeckId: get(this.#state).defaultDeckId,
+              favouriteDeckIds: get(this.#state).favouriteDeckIds,
             }),
           );
         }
@@ -461,6 +469,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           saveState: "saved",
           message: "Deck duplicated.",
           defaultDeckId: get(this.#state).defaultDeckId,
+          favouriteDeckIds: get(this.#state).favouriteDeckIds,
         }),
       );
     } catch (error) {
@@ -483,6 +492,18 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
         this.#fail("Deck could not be deleted", error);
     } finally {
       this.#deletesInFlight.delete(id);
+    }
+  }
+
+  async toggleFavourite(id: DeckId): Promise<void> {
+    const generation = this.#startContext();
+    try {
+      const isFav = get(this.#state).favouriteDeckIds.includes(id);
+      await this.#repository.setFavourite(id, !isFav);
+      await this.#refreshLibrary(null, generation);
+    } catch (error) {
+      if (this.#isCurrentContext(generation))
+        this.#fail("Favourite could not be saved", error);
     }
   }
 
@@ -715,9 +736,10 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
     generation = this.#contextGeneration,
   ): Promise<void> {
     try {
-      const [storedDecks, defaultDeckId] = await Promise.all([
+      const [storedDecks, defaultDeckId, favouriteDeckIds] = await Promise.all([
         this.#repository.list(),
         this.#repository.getDefaultDeck(),
+        this.#repository.listFavourites(),
       ]);
       const decks = storedDecks.map((deck) => this.#revalidateDeck(deck));
       if (!this.#isCurrentContext(generation)) return;
@@ -729,6 +751,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           saveState: "idle",
           message,
           defaultDeckId,
+          favouriteDeckIds,
         }),
       );
     } catch (error) {

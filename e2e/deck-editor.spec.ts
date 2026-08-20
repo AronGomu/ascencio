@@ -541,3 +541,62 @@ test("the card viewer is card width", async ({ page }) => {
     `card-preview-panel width ${box!.width}px should be within 10px of ${expectedPx}px`,
   ).toBeLessThanOrEqual(10);
 });
+
+/* The tabbed layout hands `CardCatalog` `filled`, which stops `.results` being
+   a scroll container: `overflow-y: visible`, `scrollHeight === clientHeight`,
+   and an ancestor doing the scrolling. An observer rooted on a box that never
+   clips watches a sentinel that never leaves it, so the callback stopped
+   arriving — measured here before the fix, the window burst to 543 tiles with
+   no gesture and then stalled at 599 of 14,551 across six scrolls to the
+   bottom. Only a real layout shows that, which is why this case is here rather
+   than beside the jsdom observer tests. */
+test("the catalog keeps loading past the second page on a phone", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+
+  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.getByLabel("Deck name").fill("Scroll Build");
+  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.locator('[data-cy="deck-tab-catalog"]').click();
+
+  const tiles = page.locator(
+    '[data-cy="deck-catalog-results"] [data-cy^="deck-tile-"]',
+  );
+  await expect(tiles.first()).toBeVisible();
+  await expect(
+    page.locator('[data-cy="deck-catalog-result-count"]'),
+  ).toHaveText(/\d{4,} results/);
+
+  /* Still a window and not the whole database: the first render settles around
+     300 of them. */
+  await page.waitForTimeout(1500);
+  expect(
+    await tiles.count(),
+    "the first render must stay a window over the database",
+  ).toBeLessThan(1000);
+
+  /* And the window keeps growing, which is what stalled. */
+  const scrollToBottom = () =>
+    page.evaluate(() => {
+      const region = document.querySelector(
+        '[data-cy="shell-region-decks"]',
+      ) as HTMLElement | null;
+      region?.scrollTo({ top: region.scrollHeight });
+    });
+  await expect
+    .poll(
+      async () => {
+        await scrollToBottom();
+        return tiles.count();
+      },
+      {
+        timeout: 30_000,
+        message: "scrolling to the bottom must keep appending results",
+      },
+    )
+    .toBeGreaterThan(1200);
+});

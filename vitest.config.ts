@@ -7,6 +7,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/{unit,integration,component}/**/*.test.ts"],
+    setupFiles: ["tests/fixtures/runtime-build-constants.ts"],
     testTimeout: 30_000,
     hookTimeout: 30_000,
     coverage: {

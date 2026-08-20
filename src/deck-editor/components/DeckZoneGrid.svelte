@@ -39,8 +39,13 @@
   export let onhoverend: () => void = () => undefined;
   export let collapsed = false;
   export let ontogglecollapse: () => void = () => undefined;
-  export let oncontextremove: (code: number, zone: DeckZone) => void = () =>
-    undefined;
+  /* The index for the same reason `ontap` carries one: without it the removal
+     lands on the first copy of a repeated card rather than the one clicked. */
+  export let oncontextremove: (
+    code: number,
+    zone: DeckZone,
+    index: number,
+  ) => void = () => undefined;
 
   $: emptyCount = Math.max(0, plan.slots - codes.length);
 </script>
@@ -136,7 +141,7 @@
               ondragcard={(event) => ondragcard(code, zone, index, event)}
               {ondragcancel}
               onhover={() => onhovercard(code)}
-              oncontext={() => oncontextremove(code, zone)}
+              oncontext={() => oncontextremove(code, zone, index)}
             />
           </div>
         {/each}

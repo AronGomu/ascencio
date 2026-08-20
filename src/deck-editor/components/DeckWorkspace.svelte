@@ -37,8 +37,11 @@
     ((code: number, zone: DeckZone, index: number) => void) | null = null;
   export let onhovercard: (code: number) => void = () => undefined;
   export let onhoverend: () => void = () => undefined;
-  export let oncontextremove: (code: number, zone: DeckZone) => void = () =>
-    undefined;
+  export let oncontextremove: (
+    code: number,
+    zone: DeckZone,
+    index: number,
+  ) => void = () => undefined;
   /* Its own pane below the breakpoint: the stage scrolls it, not an inner box. */
   export let filled = false;
 

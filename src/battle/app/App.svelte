@@ -138,6 +138,12 @@
   /* The whole database is a fetch, and a fetch can fail. Bundled decks still
      duel without it, so this is a panel rather than a dead application. */
   let catalogError: string | null = null;
+  let catalogLoading = false;
+  /* Retryable because `runtimeCatalog()` no longer memoizes a rejection: a
+     second call reaches the network again. Without this the panel latched for
+     the session, and with it `duelViewportOnly`, so a player who accepted the
+     offer of bundled decks kept a banner over the field until they reloaded. */
+  let loadCatalog: () => void = () => undefined;
   /* The opponent seat is not the player's to choose for now, so it is a
      constant rather than a selection: every duel this build starts is against
      this deck, and a persisted key naming any other is rewritten to it. */
@@ -458,28 +464,36 @@
     requestFallbackImages = (snapshot, manifestSha256) =>
       void loadImages({ snapshotId: snapshot, manifestSha256 });
 
+    loadCatalog = () => {
+      catalogError = null;
+      catalogLoading = true;
+      void runtimeCatalog().then(
+        (loaded) => {
+          if (disposed) return;
+          catalogLoading = false;
+          activeCards = loaded;
+          deckBuilderCatalog = catalogByCode(loaded);
+          void refreshSelectableDecks();
+        },
+        (error: unknown) => {
+          if (disposed) return;
+          catalogLoading = false;
+          catalogError = `Card database could not load: ${
+            error instanceof Error ? error.message : String(error)
+          }`;
+          /* Still listed, so the bundled decks this build compiles in remain
+             playable: a duel with real cards beats a picker with none. */
+          void refreshSelectableDecks();
+        },
+      );
+    };
+
     duel.initialize();
     trackStorageOperation("initialize", initializeStorage());
     void loadImages();
     /* Before the first listing: the listing resolves every local deck's codes
        against this catalog, so starting it earlier would only make it wait. */
-    void runtimeCatalog().then(
-      (loaded) => {
-        if (disposed) return;
-        activeCards = loaded;
-        deckBuilderCatalog = catalogByCode(loaded);
-        void refreshSelectableDecks();
-      },
-      (error: unknown) => {
-        if (disposed) return;
-        catalogError = `Card database could not load: ${
-          error instanceof Error ? error.message : String(error)
-        }`;
-        /* Still listed, so the bundled decks this build compiles in remain
-           playable: a duel with real cards beats a picker with none. */
-        void refreshSelectableDecks();
-      },
-    );
+    loadCatalog();
     return () => {
       disposed = true;
       appDisposed = true;
@@ -1073,9 +1087,16 @@
         <p class="eyebrow" data-cy="app-catalog-error-eyebrow">Card database</p>
         <p data-cy="app-catalog-error-message">
           {catalogError} Bundled decks can still be played; decks you built are not
-          listed. Reload to try again.
+          listed.
         </p>
       </div>
+      <button
+        type="button"
+        class="secondary"
+        disabled={catalogLoading}
+        data-cy="app-retry-catalog-button"
+        onclick={loadCatalog}>Retry card database</button
+      >
     </section>
   {/if}
 

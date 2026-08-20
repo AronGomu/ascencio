@@ -47,6 +47,12 @@
   export let toSideboard = false;
   export let ontosideboardchange: (value: boolean) => void = () => undefined;
 
+  /* Without an observer nothing ever appends, so the window can only be what
+     the first render mounts. Every result would be 14,551 tiles at once, which
+     is the one unbounded render this component would otherwise have. Chromium
+     always has an observer, so this is a ceiling for anything else. */
+  const FALLBACK_RESULT_CAP = 200;
+
   let resultsScroller: HTMLElement | null = null;
   let filters: DeckCatalogFilters = { ...EMPTY_CATALOG_FILTERS };
   let visibleCount = 60;
@@ -63,27 +69,40 @@
     void filterKey;
     visibleCount = initialResultWindow(results.length);
   }
-  $: visible = observerSupported ? results.slice(0, visibleCount) : results;
+  $: visible = observerSupported
+    ? results.slice(0, visibleCount)
+    : results.slice(0, FALLBACK_RESULT_CAP);
+  $: fallbackTruncated =
+    !observerSupported && results.length > FALLBACK_RESULT_CAP;
 
+  /* `filled` gives the catalog the whole stage, and with it `overflow-y:
+     visible` on `.results`: the region grows to its content and an ancestor
+     scrolls instead. An observer rooted on a box that never clips watches a
+     sentinel that never leaves it, so the callback stops arriving. Measured in
+     Chromium at 390x844: the window burst to 543 tiles with no gesture, then
+     stalled at 599 of 14,551 across six scrolls to the bottom. The viewport is
+     the root that still moves in that layout. */
   function observeSentinel(
     element: HTMLElement | null,
     scroller: HTMLElement | null,
+    viewportRooted: boolean,
   ): void {
     observer?.disconnect();
     observer = null;
-    if (!element || !scroller) return;
+    if (!element) return;
+    if (!viewportRooted && !scroller) return;
     observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
           visibleCount = nextResultWindow(visibleCount, results.length);
         }
       },
-      { root: scroller, rootMargin: "200px" },
+      { root: viewportRooted ? null : scroller, rootMargin: "200px" },
     );
     observer.observe(element);
   }
 
-  $: observeSentinel(sentinel, resultsScroller);
+  $: observeSentinel(sentinel, resultsScroller, filled);
 
   onDestroy(() => observer?.disconnect());
 
@@ -238,6 +257,12 @@
       >
     </div>
   {:else}
+    {#if fallbackTruncated}
+      <p class="fallback-notice" data-cy="deck-catalog-fallback-notice">
+        Showing the first {FALLBACK_RESULT_CAP} of {results.length} cards. Narrow
+        the filters to reach the rest.
+      </p>
+    {/if}
     <div class="results-region" data-cy="deck-catalog-results-region">
       <div
         class="results"
@@ -412,6 +437,11 @@
   .sentinel {
     grid-column: 1 / -1;
     height: 1px;
+  }
+
+  .fallback-notice {
+    margin: 0 0 0.5rem;
+    color: var(--muted);
   }
 
   .empty-state {

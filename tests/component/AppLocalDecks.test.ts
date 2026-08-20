@@ -232,6 +232,34 @@ describe("App deck picker with local decks", () => {
     expect(document.querySelector(LOCAL_PLAYER_OPTION)).toBeNull();
   });
 
+  /* The panel used to latch for the session: it is a term in
+     `duelViewportOnly`, so a player who took its offer and duelled with a
+     bundled deck kept a banner over the field and lost the ADR-019 full-height
+     shell until they reloaded. `runtimeCatalog()` no longer memoizes a
+     rejection, so there is now something for a retry to reach. */
+  it("retries the card database and clears the panel when it answers", async () => {
+    const user = userEvent.setup();
+    await seedDeck(VALID_MAIN);
+    setRuntimeCatalogForTests(null);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.reject(new Error("offline"))),
+    );
+
+    await renderReadyApp();
+    await vi.waitFor(() =>
+      expect(query("app-catalog-error-panel")).not.toBeNull(),
+    );
+
+    installPrototypeActiveCatalog();
+    await user.click(query("app-retry-catalog-button") as HTMLButtonElement);
+
+    await vi.waitFor(() => expect(query("app-catalog-error-panel")).toBeNull());
+    await vi.waitFor(() =>
+      expect(document.querySelector(LOCAL_PLAYER_OPTION)).not.toBeNull(),
+    );
+  });
+
   it("lists a playable local deck and dispatches its card list", async () => {
     const user = userEvent.setup();
     await seedDeck(VALID_MAIN);

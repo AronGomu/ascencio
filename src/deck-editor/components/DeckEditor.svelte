@@ -345,8 +345,8 @@
     );
   }
 
-  function contextRemove(code: number, zone: DeckZone): void {
-    onmutate({ type: "remove", cardCode: code, zone });
+  function contextRemove(code: number, zone: DeckZone, index: number): void {
+    onmutate({ type: "remove", cardCode: code, zone, index });
     announcement = `${catalog.get(code)?.name ?? `Card ${code}`} removed.`;
   }
 

@@ -150,4 +150,26 @@ describe("catalog infinite scroll", () => {
       container.querySelector('[data-cy="deck-catalog-results-sentinel"]'),
     ).toBeNull();
   });
+
+  /* Nothing appends without an observer, so the first render is the only
+     render: the whole database would be 14,551 tiles at once, the one
+     unbounded path in a component that windows everywhere else. */
+  it("no observer caps the render and says the rest is behind the filters", async () => {
+    delete (globalThis as Record<string, unknown>).IntersectionObserver;
+
+    const cards = syntheticCatalog(15_000);
+    const { container } = render(CardCatalog, {
+      cards,
+      ruleset: PROTOTYPE_RULESET,
+      onselect: vi.fn(),
+      ondragcard: vi.fn(),
+    });
+    await tick();
+
+    expect(countTiles(container)).toBe(200);
+    expect(
+      container.querySelector('[data-cy="deck-catalog-fallback-notice"]')
+        ?.textContent,
+    ).toContain("Showing the first 200");
+  });
 });

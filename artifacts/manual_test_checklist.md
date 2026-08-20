@@ -1574,7 +1574,7 @@ Mobile tabs layout still scrolls
 
 First paint bounded
 
-- [ ] Open the deck editor, clear all filters — the catalog shows the result count (e.g. "14 794 results" with real data, or the fixture count) but only the first 60 card tiles are visible without scrolling.
+- [ ] Open the deck editor, clear all filters — the catalog shows the result count (e.g. "14 794 results" with real data, or the fixture count) but only the first 60 card tiles are visible without scrolling. (Corrected 2026-08-20 by R2: 60 is the three-panel layout above the breakpoint. In the tabbed layout the observer is rooted on the viewport, so the first render settles around 300 tiles instead — still a window over the database, never all of it.)
 - [ ] Confirm no freeze or jank on first paint even with a large card list.
 
 Grow on scroll
@@ -1762,3 +1762,69 @@ A delete that fails stays on the deck
 - [ ] In tab A, press **Delete** and confirm.
 - [ ] Tab A reports that the deck could not be deleted and the URL stays on `#/decks/{deckId}` — it must not fall back to `#/decks` as though the deck were gone.
 - [ ] Reload tab A — the deck is still there, under the name tab B gave it.
+
+## R2 round-2-robustness-fixes
+
+Goal: eight robustness defects found reviewing the round-2 diff, plus the
+right-click half of R1.3. Run against `npm run dev` unless a step says
+otherwise.
+
+The catalog only accepts cards from this build's snapshot
+
+- [ ] Open DevTools → Network, filter on `manifest`, then hard-reload `#/decks`.
+      `runtime/current/manifest.json` is requested **once** before the 128
+      catalog shard requests, and every request returns 200.
+- [ ] Navigate to `#/duel` and back to `#/decks` without reloading — still no
+      second manifest request. One read per page, shared by both surfaces.
+- [ ] Serve a shard from another snapshot: in DevTools → Network, right-click
+      `runtime/assets/current/catalog/cards/00.json` → **Override content**,
+      change one card's name, then hard-reload. The editor stops with
+      `Runtime catalog shard failed: assets/current/catalog/cards/00.json`
+      rather than offering a card the duel would refuse. Delete the override
+      afterwards.
+
+The editor cannot hang waiting for a shard
+
+- [ ] DevTools → Network → throttling → **Custom** → add a profile with 0 kb/s
+      download, select it, then hard-reload `#/decks`. Within 30 seconds the
+      loading skeleton gives way to the "Deck Editor stopped" screen naming a
+      shard; it must not sit on the skeleton indefinitely.
+- [ ] Set throttling back to **No throttling** and press **Retry** — the editor
+      opens normally.
+
+One failed read does not poison the other surface
+
+- [ ] DevTools → Network → **Offline**, then load `#/duel` and wait for the
+      "Card database" panel to appear.
+- [ ] Turn Offline off, then navigate to `#/decks` **without reloading** — the
+      editor fetches the catalog and opens. Before this fix it showed the
+      stopped screen without attempting a fetch of its own.
+
+The duel's card-database panel is not a life sentence
+
+- [ ] DevTools → Network → **Offline**, load `#/duel`, and confirm the "Card
+      database" panel appears with a **Retry card database** button, while the
+      six bundled decks remain listed and playable.
+- [ ] Turn Offline off and press **Retry card database** — the panel disappears
+      and any decks you built appear in the picker.
+- [ ] Confirm the duel is back to one viewport height with no banner over the
+      field (settings → HUD and workspace both off).
+
+Infinite scroll keeps going on a phone
+
+- [ ] At 390×844, open a deck, open the **Catalog** tab and clear every filter
+      (`14551 results`).
+- [ ] Scroll the pane to the very bottom, repeatedly. The tile count keeps
+      climbing past 600, past 1200, and on toward the full result count. Before
+      this fix it stalled at 599 and no further scrolling ever added a card.
+- [ ] The first render is still a window, not the whole database — roughly 300
+      tiles before you scroll, and no freeze on opening the tab.
+
+Right-click removes the copy under the pointer
+
+- [ ] Above the breakpoint (1440×900), build a Main Deck reading, in order,
+      card A, card B, card A.
+- [ ] Right-click the **third** tile. That tile is the one that disappears; the
+      first A and B stay put, in that order. Before this fix the first A went
+      and the tile you clicked stayed on screen.
+- [ ] Undo — the deck returns to A, B, A in that order.

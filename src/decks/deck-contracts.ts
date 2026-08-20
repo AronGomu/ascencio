@@ -29,7 +29,6 @@ export interface DeckValidationIssue {
     | "unsupported-card"
     | "empty-extra"
     | "empty-side"
-    | "missing-art"
     | "ruleset-changed"
     | "import-review";
   readonly message: string;

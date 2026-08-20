@@ -20,6 +20,14 @@
   export let oncontext: (() => void) | null = null;
   export let maxed = false;
 
+  /* Art is a URL by convention for every code, so a card this build packages no
+     image for is the normal case rather than an error: the tile keeps the glyph
+     instead of a broken-image icon. The failure is remembered as the URL that
+     failed rather than as a flag, so a tile recycled onto another card is not
+     still hiding art because the card before it had none. */
+  let failedArtUrl: string | null = null;
+  $: artUrl = card?.imageUrl === failedArtUrl ? null : (card?.imageUrl ?? null);
+
   $: name = card?.name ?? `Missing card ${code}`;
   $: limitLabel =
     limit === 0
@@ -60,13 +68,14 @@
     aria-hidden="true"
     data-cy={`deck-tile-limit-${code}`}>{limit}</span
   >
-  {#if card?.imageUrl}
+  {#if artUrl !== null}
     <img
       class="card-art"
       loading="lazy"
       decoding="async"
-      src={card.imageUrl}
+      src={artUrl}
       alt=""
+      onerror={() => (failedArtUrl = artUrl)}
       data-cy={`deck-tile-image-${code}`}
     />
   {:else}
@@ -82,7 +91,7 @@
   {/if}
   <span
     class="card-name"
-    class:overlay={card?.imageUrl != null}
+    class:overlay={artUrl !== null}
     data-cy={`deck-tile-name-${code}`}>{name}</span
   >
 </button>

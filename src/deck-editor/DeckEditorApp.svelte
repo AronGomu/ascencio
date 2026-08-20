@@ -24,7 +24,8 @@
     type DeckBuilderState,
   } from "./deck-editor-store.ts";
   import type { DeckEditorRoute } from "./deck-editor-route.ts";
-  import { activeCatalog } from "../decks/catalog/active-catalog.ts";
+  import { runtimeCatalog } from "../decks/catalog/runtime-catalog.ts";
+  import type { DeckBuilderCardView } from "../decks/catalog/ocg-card-mapper.ts";
   import DeckEditor from "./components/DeckEditor.svelte";
   import DeckLibrary from "./components/DeckLibrary.svelte";
   import YdkExport from "./components/YdkExport.svelte";
@@ -37,10 +38,13 @@
      `deckId` back. A host that swallows the callback keeps the library. */
   export let onnavigate: (route: DeckEditorRoute) => void = () => undefined;
 
-  /* Every card this build packages, read once per session: the editor may
-     only offer what the duel can draw, so both read the same manifests. */
-  const cards = activeCatalog();
-  const catalog = catalogByCode(cards);
+  /* Every card this build packages, fetched once per page: the editor may only
+     offer what the duel can draw, so both await the same read. It is ~10 MB of
+     shards, which is why it arrives after mount rather than inside the bundle,
+     and why nothing below may render until it lands. */
+  let cards: readonly DeckBuilderCardView[] = [];
+  let catalog: ReadonlyMap<number, DeckBuilderCardView> = new Map();
+  let catalogReady = false;
   /* The shell is the only surface that measures the viewport: the editor reads
      the published stage once here and passes the resulting layout mode down,
      so no component below reads the stage a second time. The fallback keeps a
@@ -96,7 +100,15 @@
     let disposed = false;
     let unsubscribe: () => void = () => undefined;
     let close: () => void = () => undefined;
-    void IndexedDbDeckRepository.open()
+    /* Before storage opens: seeding the starter deck resolves codes against the
+       catalog, so a repository opened first would only wait on it anyway. */
+    void runtimeCatalog()
+      .then(async (loaded) => {
+        cards = loaded;
+        catalog = catalogByCode(cards);
+        catalogReady = true;
+        return IndexedDbDeckRepository.open();
+      })
       .then(async (repository) => {
         if (disposed) {
           repository.close();
@@ -241,7 +253,7 @@
     </p>
     <a href="#/decks" data-cy="deck-not-found-back">Back to Deck Library</a>
   </main>
-{:else if !routeApplied || state.mode === "loading"}
+{:else if !catalogReady || !routeApplied || state.mode === "loading"}
   <main class="loading" aria-busy="true" data-cy="deck-editor-loading">
     <p data-cy="deck-editor-loading-eyebrow">Deck Editor</p>
     <h1 data-cy="deck-editor-loading-heading">Loading local decks…</h1>

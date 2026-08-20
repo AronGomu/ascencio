@@ -44,4 +44,16 @@ describe("CardCatalog overlay scrollbar", () => {
     expect(src).toContain("::-webkit-scrollbar");
     expect(src).toContain("display: none");
   });
+
+  /* jsdom computes no grid, so the rule itself is the assertion. Without it an
+     `auto` row sizes to the card name and every tile overflows onto the rows
+     below, which reads as "the wrong card was added" once a search matches
+     more than one row of the database. */
+  it("result rows are sized to the tile rather than to the card name", () => {
+    const src = readFileSync(
+      resolve("src/deck-editor/components/CardCatalog.svelte"),
+      "utf8",
+    );
+    expect(src).toMatch(/grid-auto-rows:\s*max-content/);
+  });
 });

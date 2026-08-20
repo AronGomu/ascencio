@@ -898,7 +898,9 @@ ever qualify on this build, because the deck editor built from a 24-card
 hand-written catalog while the packaged art covered the six bundled decks
 (120 codes) — only 8 cards in both, capped below the 40-card Main minimum. The
 editor now derives its catalog from the packaged set itself, so a deck you can
-build is a deck this build can draw. **Every step below that expected a local
+build is a deck this build can draw. Widened again 2026-08-20 by T12: that
+packaged set is the whole card database (14,794 codes), fetched from the runtime
+assets rather than compiled into the bundle. **Every step below that expected a local
 deck to be hidden has been rewritten accordingly**; see `## T22
 local-deck-playability` for the full flow.
 
@@ -1030,7 +1032,7 @@ rather than the fixture's handful.
 - [ ] Open `#/decks`. Press **Create deck**, name it (e.g. `Manual T22`), confirm with **Create**.
 - [ ] The catalog panel lists real cards — search `Nekroz`, `Shaddoll`, `Spellbook` or `Burning Abyss` and each returns several distinct cards with names and effect text.
 - [ ] Add cards until **Deck counts** reads `Main 40`. Fastest route: search a card name, then right-click the catalog tile to add it directly; repeat, or drag tiles onto the Main Deck drop area.
-- [ ] The validation panel shows no **errors**. Warnings such as "Extra Deck is empty", "Side Deck is empty" and "uses placeholder art" are expected and do not block anything.
+- [ ] The validation panel shows no **errors**. Warnings such as "Extra Deck is empty" and "Side Deck is empty" are expected and do not block anything. (Corrected 2026-08-20 by T12 of decks-feedback-round-2: the "uses placeholder art" warning was deleted, because art coverage describes the build's images rather than a defect in your deck. If you still see one, the slice regressed.)
 - [ ] Wait for **Saved locally**.
 - [ ] Go to `#/duel`. The deck list holds a **Your decks** group below **Bundled decks**, with `Manual T22` in it. (Superseded by T15: one list for the player seat only, and the opponent is a fixed line rather than a column.)
 - [ ] Pick `Manual T22` in the deck list. It becomes the selected row, and no start error appears.
@@ -1067,10 +1069,16 @@ rather than the fixture's handful.
 ## T1 catalog-real-card-art
 
 - [ ] Run `npm run dev`, open `http://localhost:5173/#/decks`.
+Corrected 2026-08-20 by T12 of decks-feedback-round-2: the catalog is the whole
+card database now, and only the cards this build packaged art for have an image.
+A glyph placeholder is therefore the **majority** case in a production build, not
+a defect. `npm run dev` still serves ~14.5k local images, so run this section
+against `npm run dev` to see real art.
+
 - [ ] Open a saved deck in the editor; confirm card tiles display real card art (jpg images, not glyph placeholders).
 - [ ] Search the catalog for a known card (e.g. "Blue-Eyes White Dragon"); confirm the result tile shows the card image.
 - [ ] Click a card to open the detail/preview panel; confirm the art renders at full preview size. (Since T6 of decks-feedback-round-2, a desktop click also edits the deck — hover to preview without editing, or press Undo afterwards.)
-- [ ] Confirm cards without packaged art (if any) show a fallback/placeholder rather than a broken image.
+- [ ] Confirm cards this build packaged no art for show the glyph placeholder rather than a broken image.
 
 ## T2 shared-card-preview-panel
 
@@ -1424,7 +1432,7 @@ Buttons gone
 - [ ] Open the catalog panel and confirm catalog tiles also show full card art with the name overlay.
 - [ ] Select a card tile and confirm the accent border is still visible around the tile. (Since T6 of decks-feedback-round-2, clicking a deck tile also moves or removes it — press Undo, or select a catalog tile whose copy limit is already reached.)
 - [ ] Confirm the limit badge (number in circle, top-left) remains above the art and is not obscured.
-- [ ] Scroll to a card with no image URL; confirm the placeholder glyph (letter or `!`) fills the tile and the name appears as a normal (non-overlay) row below it.
+- [ ] Scroll to a card whose art this build did not package; confirm the placeholder glyph (letter or `!`) fills the tile and the name appears as a normal (non-overlay) row below it. (Corrected 2026-08-20 by T12: every code now gets an image URL by convention, so the placeholder is reached by the image failing to load rather than by a null URL.)
 - [ ] Confirm no tile overflows its grid slot at any of the default column widths.
 
 ## T5 fifteen-in-a-row-collapse-bar
@@ -1595,3 +1603,45 @@ Duel still starts from bundled decks
 Runtime asset availability
 
 - [ ] Open DevTools → Network, reload the duel, and confirm requests to `/runtime/assets/current/scripts/...` return 200 for scripts not in the preset-deck closure (e.g. `scripts/globals.json`).
+
+## T12 runtime-catalog-editor
+
+Goal: the deck editor's catalog is every card in the packaged database (14,794
+codes), fetched from the runtime assets when the editor opens instead of
+compiled into the bundle. Run against `npm run dev` unless a step says otherwise.
+
+The whole database is offered
+
+- [ ] Open `#/decks`, create or open a deck, and clear every catalog filter — the result count reads `14794 results`.
+- [ ] Search `Dark Magician` — the count drops to `40 results` and "Dark Magician" itself is among the tiles.
+- [ ] Search `Blue-Eyes` — 39 results, including printings the old ~120-card catalog never offered (e.g. "Blue-Eyes Shining Dragon", "Blue-Eyes Alternative White Dragon").
+- [ ] Click a card the old catalog did not have — it is added to its canonical zone and the deck counts move.
+
+The catalog arrives as a load, not as a bundle
+
+- [ ] Open DevTools → Network, filter on `catalog`, then hard-reload `#/decks`: exactly 128 requests appear — `runtime/assets/current/catalog/cards/00.json`…`3f.json` and `runtime/assets/current/catalog/texts/en/00.json`…`3f.json` — and all return 200.
+- [ ] Navigate away to `#/duel` and back to `#/decks` **without** reloading — no second burst of 128 requests appears. The catalog is read once per page load.
+- [ ] While those requests are in flight, the editor shows the "Loading local decks…" skeleton rather than an empty catalog or a partially filled one.
+
+A catalog that cannot be read says so
+
+- [ ] In DevTools → Network, enable **Offline**, then hard-reload `#/decks`. The editor shows the "Deck Editor stopped" screen, and the message begins `Deck Editor could not start: Runtime catalog shard failed:` and names a shard file.
+- [ ] Turn Offline back off and press **Retry** — the editor reloads and opens normally.
+
+Art is a URL by convention, and a miss is not an error
+
+- [ ] In `npm run dev`, confirm most catalog tiles show real jpg art.
+- [ ] Run `npm run build && npm run preview`, open the built app at `#/decks`, and search `Blue-Eyes`: exactly one tile shows art and the other 38 show the glyph placeholder. **No tile shows a broken-image icon.**
+- [ ] Open the validation panel on a 40-card deck of art-less cards — there is no "uses placeholder art" warning. That warning was deleted in this slice.
+
+The results grid no longer overlaps itself
+
+- [ ] Search a term matching more than one row of results (`Blue-Eyes` gives 13 rows). Click the card named in the **last** row — the card that is added is the one you clicked, not a card from a row below it.
+- [ ] Scroll the results with the overlay scrollbar and confirm rows stay a full tile apart, with no tile drawn over the tile above it.
+
+Nothing else moved
+
+- [ ] Open a deck, add and remove cards, rename it, and confirm it still autosaves (**Saved locally**).
+- [ ] Press Undo and Redo — both still work against the bigger catalog.
+- [ ] Reload — the deck is exactly as you left it.
+- [ ] Go to `#/duel` and start a bundled preset duel — it still initializes and reaches the first prompt.

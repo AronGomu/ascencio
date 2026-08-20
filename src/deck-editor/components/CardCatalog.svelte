@@ -376,6 +376,12 @@
   .results {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    /* A tile's height comes from its `aspect-ratio`, which an `auto` row does
+       not see: the row sizes itself to the card name alone (~22 px) and every
+       tile then overflows into the rows below it, so the last row painted wins
+       the click. Invisible while a search returned one row; the whole database
+       returns thirteen. `max-content` sizes the row to the tile it holds. */
+    grid-auto-rows: max-content;
     gap: 0.55rem;
     height: 100%;
     max-height: none;

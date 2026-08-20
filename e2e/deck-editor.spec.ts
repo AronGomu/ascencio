@@ -6,6 +6,11 @@ import {
 
 const libraryUrl = "./#/decks";
 const BLUE_EYES = 89631139;
+/* The catalog is the whole card database, where a name is not unique: six
+   printings answer to "Summoned Skull" and three to "Celtic Guardian". Pick the
+   card by code, the way the rest of this file already does. */
+const SUMMONED_SKULL = 70781052;
+const CELTIC_GUARDIAN = 91152256;
 
 /* Both names, so a scenario that seeds the prototype database cannot leave one
    behind for the next scenario to migrate. */
@@ -276,18 +281,12 @@ test("the deck editor recovers real save failures and revision conflicts", async
   await expect(zoneCount(second, "main")).toHaveText("1/40");
 
   await page.getByRole("searchbox", { name: "Name" }).fill("Summoned Skull");
-  await page
-    .locator('[data-cy="deck-catalog-results"]')
-    .getByRole("button", { name: /Summoned Skull/ })
-    .click();
+  await catalogTile(page, SUMMONED_SKULL).click();
   await expect(zoneCount(page, "main")).toHaveText("2/40");
   await expectSaveSettled(page);
 
   await second.getByRole("searchbox", { name: "Name" }).fill("Celtic Guardian");
-  await second
-    .locator('[data-cy="deck-catalog-results"]')
-    .getByRole("button", { name: /Celtic Guardian/ })
-    .click();
+  await catalogTile(second, CELTIC_GUARDIAN).click();
   await expect(second.getByRole("alert")).toContainText(
     "changed by another browser context",
   );

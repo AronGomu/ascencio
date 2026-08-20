@@ -4,7 +4,11 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import DeckEditor from "../../../src/deck-editor/components/DeckEditor.svelte";
 import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
-import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
+import {
+  PROTOTYPE_RULESET,
+  quantityLimit,
+} from "../../../src/decks/catalog/pinned-ruleset.ts";
+import type { DeckBuilderState } from "../../../src/deck-editor/deck-editor-store.ts";
 import type { DeckCommand } from "../../../src/decks/deck-model.ts";
 import {
   prototypeCatalogMap,
@@ -13,9 +17,30 @@ import {
 
 afterEach(() => cleanup());
 
-function props(onmutate: (command: DeckCommand) => void, mainCount = 0) {
+const MAIN_LIMIT_3_CODES = PROTOTYPE_CATALOG.filter(
+  (card) =>
+    card.canonicalZone === "main" &&
+    quantityLimit(PROTOTYPE_RULESET, card.code) === 3,
+).map(({ code }) => code);
+
+function stateWithMain(main: readonly number[]): DeckBuilderState {
+  const base = stateFixture(0);
   return {
-    state: stateFixture(mainCount),
+    ...base,
+    current: {
+      deck: { ...base.current!.deck, main },
+      history: base.current!.history,
+    },
+  };
+}
+
+function props(
+  onmutate: (command: DeckCommand) => void,
+  mainCount = 0,
+  state = stateFixture(mainCount),
+) {
+  return {
+    state,
     cards: PROTOTYPE_CATALOG,
     catalog: prototypeCatalogMap,
     ruleset: PROTOTYPE_RULESET,
@@ -75,6 +100,34 @@ describe("pointer deck editing", () => {
     );
   });
 
+  /* `remove` takes the index of the copy to drop and falls back to the first
+     one without it. Left click and right click both send it; these two drag
+     paths did not, so abandoning or misdropping the third copy of a card
+     removed its first copy and left the tile under the pointer on screen. */
+  it("ending a drag outside every zone removes the copy that was dragged", async () => {
+    const onmutate = vi.fn<(command: DeckCommand) => void>();
+    const repeated = MAIN_LIMIT_3_CODES[0]!;
+    const { container } = render(
+      DeckEditor,
+      props(
+        onmutate,
+        0,
+        stateWithMain([repeated, MAIN_LIMIT_3_CODES[1]!, repeated]),
+      ),
+    );
+    const deckCard = container.querySelector(
+      '[data-cy="deck-slot-main-2"] button',
+    )!;
+    await fireEvent.dragStart(deckCard);
+    await fireEvent.dragEnd(deckCard);
+    expect(onmutate).toHaveBeenCalledWith({
+      type: "remove",
+      cardCode: repeated,
+      zone: "main",
+      index: 2,
+    });
+  });
+
   it("dropping a main card on an illegal zone removes it", async () => {
     const onmutate = vi.fn<(command: DeckCommand) => void>();
     const { container } = render(DeckEditor, props(onmutate, 1));
@@ -88,6 +141,31 @@ describe("pointer deck editing", () => {
     expect(onmutate).toHaveBeenCalledWith(
       expect.objectContaining({ type: "remove", zone: "main" }),
     );
+  });
+
+  it("dropping on an illegal zone removes the copy that was dragged", async () => {
+    const onmutate = vi.fn<(command: DeckCommand) => void>();
+    const repeated = MAIN_LIMIT_3_CODES[0]!;
+    const { container } = render(
+      DeckEditor,
+      props(
+        onmutate,
+        0,
+        stateWithMain([repeated, MAIN_LIMIT_3_CODES[1]!, repeated]),
+      ),
+    );
+    await fireEvent.dragStart(
+      container.querySelector('[data-cy="deck-slot-main-2"] button')!,
+    );
+    await fireEvent.drop(
+      container.querySelector('[data-cy="deck-zone-drop-area-extra"]')!,
+    );
+    expect(onmutate).toHaveBeenCalledWith({
+      type: "remove",
+      cardCode: repeated,
+      zone: "main",
+      index: 2,
+    });
   });
 
   it("dropping a catalog card on an illegal zone adds nothing", async () => {

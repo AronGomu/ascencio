@@ -49,13 +49,83 @@ function catalogTile(page: Page, code: number): Locator {
   );
 }
 
-/* The autosave chip went with the rest of the header chrome; `aria-busy` on
-   the editor layout is the only thing the editor still says about a save in
-   flight, so waiting for it to drop is what "saved" looks like now. */
-async function expectSaveSettled(page: Page) {
-  await expect(
-    page.locator('[data-cy="deck-editor-layout"]'),
-  ).not.toHaveAttribute("aria-busy", "true");
+interface DeckCounts {
+  readonly main: number;
+  readonly extra: number;
+  readonly side: number;
+}
+
+/* Reads the deck row the editor writes, not the one it is holding. */
+async function persistedDeckCounts(
+  page: Page,
+  deckId: string,
+): Promise<DeckCounts | null> {
+  return page.evaluate(
+    async ([name, id]) => {
+      const database = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open(name);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      try {
+        if (!database.objectStoreNames.contains("decks")) return null;
+        const record = await new Promise<{
+          main: readonly number[];
+          extra: readonly number[];
+          side: readonly number[];
+        } | null>((resolve, reject) => {
+          const request = database
+            .transaction("decks", "readonly")
+            .objectStore("decks")
+            .get(id);
+          request.onsuccess = () =>
+            resolve(
+              (request.result as {
+                main: readonly number[];
+                extra: readonly number[];
+                side: readonly number[];
+              } | null) ?? null,
+            );
+          request.onerror = () => reject(request.error);
+        });
+        return record === null
+          ? null
+          : {
+              main: record.main.length,
+              extra: record.extra.length,
+              side: record.side.length,
+            };
+      } finally {
+        database.close();
+      }
+    },
+    [DECK_DATABASE_NAME, deckId] as const,
+  );
+}
+
+/* `aria-busy` on the editor layout is `saveState === "saving"` and nothing
+   else, so its absence is equally true of `saved`, `failed`, `conflict` and of
+   `idle` before the queued save has begun — four of the five states, two of
+   them failures. It is also unordered: a mutation chains onto a promise queue,
+   so the click resolves at least a microtask before `saveState` leaves the
+   value it already had, and the first poll lands inside that window. Neither
+   the scenarios that follow a save nor the second browser context that has to
+   lose a revision race can stand on that.
+
+   What only a committed save produces is the deck row itself. The expected
+   card counts are passed in rather than read back off the page, because the
+   page is the thing under test: comparing the database to the DOM passes
+   whenever both are still one step behind. */
+async function expectSaveSettled(page: Page, expected: DeckCounts) {
+  const deckId = new URL(page.url()).hash.replace(/^#\/decks\//, "");
+  expect(deckId, "expectSaveSettled must be called on a deck route").not.toBe(
+    "",
+  );
+  await expect
+    .poll(() => persistedDeckCounts(page, deckId), {
+      message: `the saved deck row should hold ${expected.main}/${expected.extra}/${expected.side}`,
+    })
+    .toEqual(expected);
 }
 
 test("default route shows the home hub", async ({ page }) => {
@@ -93,7 +163,7 @@ test("deck editor persists edits across reloads", async ({ page }) => {
     ),
   ).toBeVisible();
   await expect(zoneCount(page, "main")).toHaveText("1/40");
-  await expectSaveSettled(page);
+  await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
 
   /* Dragging is still its own path into the deck, so a second copy arrives
      that way and undo/redo has to see both adds. */
@@ -119,7 +189,7 @@ test("deck editor persists edits across reloads", async ({ page }) => {
   await expect(zoneCount(page, "main")).toHaveText("0/40");
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(zoneCount(page, "main")).toHaveText("1/40");
-  await expectSaveSettled(page);
+  await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
 
   await page.reload();
   await expect(page.getByLabel("Deck name")).toHaveValue("E2E Control");
@@ -272,7 +342,7 @@ test("the deck editor recovers real save failures and revision conflicts", async
   await expect(page.locator('[data-cy="deck-editor-save-failed"]')).toHaveCount(
     0,
   );
-  await expectSaveSettled(page);
+  await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
 
   /* `#/decks` is the library now, so the second context has to deep-link at
      the deck under test rather than rely on a last-opened pointer. */
@@ -283,7 +353,10 @@ test("the deck editor recovers real save failures and revision conflicts", async
   await page.getByRole("searchbox", { name: "Name" }).fill("Summoned Skull");
   await catalogTile(page, SUMMONED_SKULL).click();
   await expect(zoneCount(page, "main")).toHaveText("2/40");
-  await expectSaveSettled(page);
+  /* The second context loses the revision race only if this save has actually
+     landed before it tries its own; that is exactly what the old barrier could
+     not promise. */
+  await expectSaveSettled(page, { main: 2, extra: 0, side: 0 });
 
   await second.getByRole("searchbox", { name: "Name" }).fill("Celtic Guardian");
   await catalogTile(second, CELTIC_GUARDIAN).click();
@@ -404,7 +477,7 @@ test("the deck editor builds a deck by tap on a small screen", async ({
   await catalogTile(page, BLUE_EYES).click();
   /* Adding leaves the catalog open, so the next card is one tap away. */
   await expect(page.locator('[data-cy="deck-pane-catalog"]')).toBeVisible();
-  await expectSaveSettled(page);
+  await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
 
   await page.locator('[data-cy="deck-tab-deck"]').click();
   await expect(main).toHaveText("1/40");
@@ -428,7 +501,7 @@ test("the deck editor builds a deck by tap on a small screen", async ({
 
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(side).toHaveText("1/15");
-  await expectSaveSettled(page);
+  await expectSaveSettled(page, { main: 0, extra: 0, side: 1 });
   await page.reload();
   await expect(page.getByLabel("Deck name")).toHaveValue("Portrait Build");
   await expect(side).toHaveText("1/15");
@@ -540,6 +613,86 @@ test("the card viewer is card width", async ({ page }) => {
     Math.abs(box!.width - expectedPx),
     `card-preview-panel width ${box!.width}px should be within 10px of ${expectedPx}px`,
   ).toBeLessThanOrEqual(10);
+});
+
+/* jsdom holds no component CSS — `vite-plugin-svelte` keeps it out of the
+   document, so `getComputedStyle` answers `none` for every grid property —
+   which leaves the unit test in `card-tile-art.test.ts` reading rules out of
+   the source. Whether those rules add up to art that fills the tile is a
+   question only a real box tree answers, so it is asked here: without
+   `grid-template-areas: "card"` and `.card-tile > * { grid-area: card }` the
+   badge, the art and the name take a row each and the art collapses to a strip
+   across the top of the tile. */
+test("the tile art fills the tile", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.getByLabel("Deck name").fill("Art Fit");
+  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
+
+  const tile = catalogTile(page, BLUE_EYES);
+  await expect(tile).toBeVisible();
+  /* Whichever of the two this build has for the card: the image when it
+     packages art, the placeholder glyph when it does not. Both sit in the same
+     grid area and both have to fill it. */
+  const art = tile.locator(
+    `[data-cy="deck-tile-image-${BLUE_EYES}"], [data-cy="deck-tile-art-${BLUE_EYES}"]`,
+  );
+  await expect(art).toHaveCount(1);
+
+  /* The tile's content box rather than its border box: the 1px border is not
+     something the art is supposed to cover. */
+  const inner = await tile.evaluate((el) => ({
+    width: el.clientWidth,
+    height: el.clientHeight,
+    scrollHeight: el.scrollHeight,
+  }));
+  const tileBox = (await tile.boundingBox())!;
+  const artBox = (await art.boundingBox())!;
+  const nameBox = (await tile
+    .locator(`[data-cy="deck-tile-name-${BLUE_EYES}"]`)
+    .boundingBox())!;
+  expect(tileBox, "the catalog tile must be laid out").not.toBeNull();
+  expect(artBox, "the tile art must be laid out").not.toBeNull();
+  expect(nameBox, "the tile name must be laid out").not.toBeNull();
+  expect(inner.height, "a card tile is taller than it is wide").toBeGreaterThan(
+    inner.width,
+  );
+
+  expect(
+    artBox.height,
+    `art ${artBox.height}px should cover the ${inner.height}px tile interior`,
+  ).toBeGreaterThanOrEqual(inner.height - 1);
+  expect(
+    artBox.width,
+    `art ${artBox.width}px should cover the ${inner.width}px tile interior`,
+  ).toBeGreaterThanOrEqual(inner.width - 1);
+  /* Covering it from the top-left corner, not overflowing past it. */
+  expect(Math.abs(artBox.y - tileBox.y)).toBeLessThanOrEqual(2);
+  expect(Math.abs(artBox.x - tileBox.x)).toBeLessThanOrEqual(2);
+
+  /* The art filling the tile is not by itself the thing the grid area buys.
+     A card image already has the tile's own 59:86 proportions, so an image
+     that loaded is about tile-sized whether or not it shares an area with the
+     name; what it does not do is leave room for the name underneath. Take the
+     rows away and the two stack to 209px inside a 176px tile, `overflow:
+     hidden` eats the name, and the tile the player reads has no title on it.
+     So: the name sits over the art, and nothing spills out of the tile. */
+  expect(
+    nameBox.y,
+    `the name at ${nameBox.y} should sit over art starting at ${artBox.y}`,
+  ).toBeGreaterThanOrEqual(artBox.y - 1);
+  expect(
+    nameBox.y + nameBox.height,
+    "the name should end inside the tile rather than under its clipped edge",
+  ).toBeLessThanOrEqual(tileBox.y + tileBox.height + 1);
+  expect(
+    inner.scrollHeight,
+    `tile content ${inner.scrollHeight}px overflows its ${inner.height}px box`,
+  ).toBeLessThanOrEqual(inner.height + 1);
 });
 
 /* The tabbed layout hands `CardCatalog` `filled`, which stops `.results` being

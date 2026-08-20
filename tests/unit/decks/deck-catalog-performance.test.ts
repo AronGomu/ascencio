@@ -5,6 +5,7 @@ import {
 } from "../../../src/decks/catalog/deck-catalog-index.ts";
 import {
   catalogFilterOptions,
+  filterDeckCatalog,
   EMPTY_CATALOG_FILTERS,
 } from "../../../src/decks/catalog/deck-catalog.ts";
 import {
@@ -18,6 +19,26 @@ import type { PackagedCardText } from "../../../src/decks/catalog/packaged-catal
 import { syntheticCatalog } from "../../fixtures/synthetic-catalog.ts";
 
 const CARDS_15K = syntheticCatalog(15_000);
+
+/* Every budget below is a best-of-N rather than one cold run. A single run
+   measures whatever the JIT and the GC were doing at that instant — the same
+   `buildDeckCatalogIndex` call costs 3.1-3.8 ms cold and 0.26-0.38 ms warm —
+   so a ceiling set from a cold number is really a ceiling four to fifteen
+   times looser than it reads, and every "measured: ~Nms" comment in this file
+   used to quote the runner's wall time for the whole case instead of the
+   quantity the assertion tests. Best-of-N is the noise-robust number: measured
+   across three full `npm run test:unit` runs, where these files share the
+   machine with forty others, the spread stayed inside 1.5x. */
+function bestOf(runs: number, work: () => unknown): number {
+  let best = Infinity;
+  for (let run = 0; run < runs; run++) {
+    const t0 = performance.now();
+    work();
+    const elapsed = performance.now() - t0;
+    if (elapsed < best) best = elapsed;
+  }
+  return best;
+}
 
 /** Build an in-memory CatalogShardReader from 15k synthetic view cards. */
 function makeInMemoryReader(count: number): CatalogShardReader {
@@ -73,34 +94,50 @@ function makeInMemoryReader(count: number): CatalogShardReader {
 }
 
 describe("catalog performance budgets", () => {
-  it("building the index stays under budget", () => {
-    const t0 = performance.now();
-    buildDeckCatalogIndex(CARDS_15K);
-    const elapsed = performance.now() - t0;
-    // measured: ~18ms in Vitest (Node 24 transform overhead), budget = ~22× headroom
-    expect(elapsed).toBeLessThan(400);
+  /* The regression this rejects is an accidental quadratic, which is what a
+     de-duplicating pass over 15k codes turns into the moment it reaches for
+     `Array.prototype.includes` instead of a `Set`: measured at 34-43 ms, or
+     120x the linear build, and the old 400 ms ceiling waved it through. */
+  it("building the index stays under budget (best of 20 runs)", () => {
+    const best = bestOf(20, () => buildDeckCatalogIndex(CARDS_15K));
+    // measured: 0.26-0.38ms best-of-20 at n=15,000; budget rejects a 10x regression
+    expect(best).toBeLessThan(2.5);
   });
 
+  /* `dragon` is three of the twenty-four prototype names, so the search walks
+     15,000 cards and pushes 1,875 of them: the `out.push` path a real search
+     takes, not the early-`continue` a zero-match term would measure. The count
+     is asserted so a fixture rename cannot quietly turn this into a timing of
+     the empty branch. */
   it("a name search stays under budget (best of 20 runs)", () => {
     const index = buildDeckCatalogIndex(CARDS_15K);
     const filters = { ...EMPTY_CATALOG_FILTERS, name: "dragon" };
-    let best = Infinity;
-    for (let r = 0; r < 20; r++) {
-      const t0 = performance.now();
-      filterDeckCatalogIndex(index, filters);
-      const elapsed = performance.now() - t0;
-      if (elapsed < best) best = elapsed;
-    }
-    // measured: ~6ms in Vitest, budget = ~6× headroom
-    expect(best).toBeLessThan(40);
+    expect(filterDeckCatalogIndex(index, filters)).toHaveLength(1_875);
+
+    const best = bestOf(20, () => filterDeckCatalogIndex(index, filters));
+    // measured: 0.175-0.209ms best-of-20 at n=15,000; budget rejects a 10x regression
+    expect(best).toBeLessThan(1.5);
   });
 
-  it("deriving filter options stays under budget", () => {
-    const t0 = performance.now();
-    catalogFilterOptions(CARDS_15K);
-    const elapsed = performance.now() - t0;
-    // measured: ~3ms in Vitest, budget = ~100× headroom
-    expect(elapsed).toBeLessThan(300);
+  /* The index earns its keep by lower-casing every name once instead of once
+     per keystroke, and that is a ratio rather than a ceiling: the two paths
+     are 0.18 ms and 0.44 ms, so no absolute budget can separate them without
+     sitting close enough to the noise to flake. `catalog-index-wiring.test.ts`
+     is what proves the component is on the indexed path; this proves the
+     indexed path is still worth being on. */
+  it("the indexed search beats the unindexed reference implementation", () => {
+    const index = buildDeckCatalogIndex(CARDS_15K);
+    const filters = { ...EMPTY_CATALOG_FILTERS, name: "dragon" };
+    const indexed = bestOf(20, () => filterDeckCatalogIndex(index, filters));
+    const unindexed = bestOf(20, () => filterDeckCatalog(CARDS_15K, filters));
+    // measured: unindexed/indexed = 1.9-4.3x across 24 samples under suite load
+    expect(indexed).toBeLessThan(unindexed);
+  });
+
+  it("deriving filter options stays under budget (best of 20 runs)", () => {
+    const best = bestOf(20, () => catalogFilterOptions(CARDS_15K));
+    // measured: 1.15-1.89ms best-of-20 at n=15,000; budget rejects a 10x regression
+    expect(best).toBeLessThan(12);
   });
 
   it("loading the catalog stays under budget", async () => {

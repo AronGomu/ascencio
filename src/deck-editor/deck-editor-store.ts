@@ -508,13 +508,26 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
     }
   }
 
-  /** Makes `id` the deck a duel starts from, then re-reads the library so the
-      badge and the disabled button follow storage rather than the click. */
+  /** Makes `id` the deck a duel starts from, then re-reads the stored default
+      so the badge and the disabled button follow storage rather than the
+      click.
+
+      Only the default is re-read. `#refreshLibrary` sets `mode` to `library`
+      and `current` to `null`, which was survivable while this action lived on
+      a library row and is not now that it lives on the deck page: it closed
+      the deck under the button, and `DeckEditorApp` had already applied the
+      route, so nothing re-opened it and the editor sat on its "Opening deck…"
+      skeleton until a reload. Making a deck the default changes no deck, so
+      the open one stays open. The context is captured rather than started for
+      the same reason — a new context would throw away a save still in
+      flight. */
   async setDefaultDeck(id: DeckId): Promise<void> {
-    const generation = this.#startContext();
+    const generation = this.#contextGeneration;
     try {
       await this.#repository.setDefaultDeck(id);
-      await this.#refreshLibrary(null, generation);
+      const defaultDeckId = await this.#repository.getDefaultDeck();
+      if (!this.#isCurrentContext(generation)) return;
+      this.#state.update((state) => Object.freeze({ ...state, defaultDeckId }));
     } catch (error) {
       if (this.#isCurrentContext(generation))
         this.#fail("Default deck could not be set", error);

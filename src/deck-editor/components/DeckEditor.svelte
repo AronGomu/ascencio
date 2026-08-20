@@ -323,7 +323,16 @@
       });
       announcement = `${card!.name} moved to ${zone}.`;
     } else {
-      onmutate({ type: "remove", cardCode: src.code, zone: src.source });
+      /* The dragged tile's own index, so a repeated card loses the copy the
+         player picked up rather than its first copy: the click and
+         context-menu paths already aim this way, and a drag that reads the
+         same tile has to agree with them. */
+      onmutate({
+        type: "remove",
+        cardCode: src.code,
+        zone: src.source,
+        ...(src.index === null ? {} : { index: src.index }),
+      });
       announcement = `${card?.name ?? `Card ${src.code}`} removed.`;
     }
     picked = null;
@@ -353,7 +362,14 @@
   function endZoneDrag(): void {
     if (picked === null) return;
     if (!dropHandled && picked.source !== "catalog") {
-      onmutate({ type: "remove", cardCode: picked.code, zone: picked.source });
+      /* Same tile, same copy: a drag abandoned outside every zone removes the
+         one that was picked up. */
+      onmutate({
+        type: "remove",
+        cardCode: picked.code,
+        zone: picked.source,
+        ...(picked.index === null ? {} : { index: picked.index }),
+      });
       announcement = `${catalog.get(picked.code)?.name ?? `Card ${picked.code}`} removed.`;
     }
     picked = null;

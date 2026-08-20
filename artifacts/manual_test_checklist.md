@@ -898,11 +898,14 @@ ever qualify on this build, because the deck editor built from a 24-card
 hand-written catalog while the packaged art covered the six bundled decks
 (120 codes) — only 8 cards in both, capped below the 40-card Main minimum. The
 editor now derives its catalog from the packaged set itself, so a deck you can
-build is a deck this build can draw. Widened again 2026-08-20 by T12: that
-packaged set is the whole card database (14,794 codes), fetched from the runtime
-assets rather than compiled into the bundle. **Every step below that expected a local
-deck to be hidden has been rewritten accordingly**; see `## T22
-local-deck-playability` for the full flow.
+build is a deck this build can draw. Widened again 2026-08-20 by T12 and T13 of
+decks-feedback-round-2: T12 made the **editor's** catalog the whole card database
+(14,794 codes), fetched from the runtime assets rather than compiled into the
+bundle, and T13 made the **picker** read that same catalog. Between the two the
+claim above was briefly false — the editor offered 14,794 cards while the picker
+still filtered against ~120 packaged codes — so use T13's section for the current
+behaviour. **Every step below that expected a local deck to be hidden has been
+rewritten accordingly**; see `## T22 local-deck-playability` for the full flow.
 
 ### `#/duel` Bundled flow unchanged
 - [ ] Open `#/duel`. The picker appears with a **Bundled decks** group holding all six decks in both columns, and no empty "Your decks" heading anywhere.
@@ -1027,6 +1030,14 @@ Sanity numbers to expect while testing: 85 Main-deck cards at up to three
 copies each is 252 possible Main cards against a 40-card minimum, and the
 catalog's search/filter panel now lists real Attributes, Races and subtypes
 rather than the fixture's handful.
+
+Corrected 2026-08-20 by T12 and T13 of decks-feedback-round-2: the two
+paragraphs above are superseded. Both surfaces now read the whole packaged
+database — **14,794 cards**, not 120 — fetched from the runtime assets. The
+picker's filter still has the shape described (`resolveDeck` says `ready` **and**
+every code is one this build can draw), but "can draw" now means the whole
+database rather than the art-backed subset, so art coverage no longer decides
+what is playable. The steps below still pass; only the numbers moved.
 
 ### Build a deck from scratch and duel with it
 - [ ] Open `#/decks`. Press **Create deck**, name it (e.g. `Manual T22`), confirm with **Create**.
@@ -1653,3 +1664,55 @@ Nothing else moved
 - [ ] Scroll the catalog results past the initial 60 tiles — more tiles load on scroll (windowing still works).
 - [ ] Click a card tile to select it, then drag one into a deck zone — drag intents still fire.
 - [ ] Clear all filters and confirm the full result count is back and scrolling is smooth.
+
+## T13 duel-runtime-catalog
+
+Goal: any deck the editor can build is offered by the duel picker and shows real
+card names and effect text in the duel, because the duel reads the same
+whole-database runtime catalog the editor does. Run against `npm run dev` unless
+a step says otherwise.
+
+A deck of cards no bundled deck names is offered and duels
+
+- [ ] Open `#/decks`, press **Create deck**, name it `Manual T13`.
+- [ ] Search `Blue-Eyes` and add printings the old ~120-card packaged set never carried (e.g. "Blue-Eyes Alternative White Dragon"), then fill the Main Deck to 40 legal cards so the validation panel shows no errors. Wait for **Saved locally**.
+- [ ] Go to `#/duel` — `Manual T13` is listed. Before this slice it was silently absent, because the picker filtered against the ~120 art-backed codes.
+- [ ] Select it and press **Start** — the duel initializes, reaches the first prompt, and the opening hand is drawn from those cards.
+- [ ] Every card in hand shows its real name, never `Card 89631139`. Hover one — the preview panel shows the real name and effect text.
+- [ ] Play a card to the field, then open that zone's card list — both the field card and the list entry name the card, not `Card {code}`.
+
+One catalog read, shared with the editor
+
+- [ ] DevTools → Network, filter on `catalog`, hard-reload `#/duel`: exactly 128 requests appear — `runtime/assets/current/catalog/cards/00.json`…`3f.json` and `runtime/assets/current/catalog/texts/en/00.json`…`3f.json` — and all return 200.
+- [ ] Without reloading, navigate to `#/decks` — no second burst of 128 requests. The duel and the editor share one read per page load.
+- [ ] Reverse it: hard-reload `#/decks`, wait for the catalog, then navigate to `#/duel` — again no second burst, and `Manual T13` is listed.
+
+Bundled decks never wait on the catalog
+
+- [ ] DevTools → Network → throttle to **Slow 3G**, then hard-reload `#/duel`. The **Bundled decks** group and all six rows appear immediately and **Start** is enabled while the catalog shards are still in flight.
+- [ ] `Manual T13` appears a moment later, once the shards land. The bundled rows do not flicker, reorder, or briefly disappear.
+
+A catalog that cannot be read says so, and the bundled decks still duel
+
+- [ ] DevTools → Network → enable **Offline**, then hard-reload `#/duel`.
+- [ ] A **Card database** panel appears. Its message begins `Card database could not load: Runtime catalog shard failed:`, names a shard file, and then says bundled decks can still be played, decks you built are not listed, and to reload to try again.
+- [ ] All six bundled decks are still listed and **Start** still reaches the first prompt.
+- [ ] In this state only, cards read `Card {code}` — no text was fetched. Confirm the duel is still playable: answer one prompt and end the turn.
+- [ ] Turn **Offline** back off and reload — the panel is gone, `Manual T13` is listed again, and cards show real names.
+
+The filter still refuses what it should
+
+- [ ] In `#/decks`, build a deck with only 39 Main cards (or 4 copies of one card).
+- [ ] Go to `#/duel` — that deck is absent from the list. It is not greyed out and there is no message about it.
+- [ ] Return to `#/decks` — the deck is exactly as you left it. Nothing was renamed, repaired, re-saved, or deleted.
+
+Nothing else moved
+
+- [ ] Pick a bundled pair, press **Start**, and play three turns — the game loop, script loading and card images behave exactly as before.
+- [ ] Surrender, then **Change decks** — the list returns with the same selection and does not auto-start.
+- [ ] `#/decks` still opens, still autosaves (**Saved locally**), and Undo/Redo still work.
+
+Build shape
+
+- [ ] Run `npm run build` and confirm `build:verify` reports `"battle"` at or below `316908` bytes, comfortably under the 488,750-byte budget — the two inlined card manifests left the bundle.
+- [ ] Run `grep -rn "__ACTIVE_CARD_DATA__\|__ACTIVE_CARD_TEXTS__" src` — the only hit is a stale doc comment in `src/battle/app/presentation/card-preview.ts`, left untouched because that file was being hand-merged elsewhere. No build `define` and no runtime read remains.

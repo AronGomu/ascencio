@@ -76,7 +76,8 @@
     catalogByCode,
     PROTOTYPE_RULESET,
   } from "../../decks/catalog/pinned-ruleset.ts";
-  import { activeCatalog } from "../../decks/catalog/active-catalog.ts";
+  import { runtimeCatalog } from "../../decks/catalog/runtime-catalog.ts";
+  import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
   import { IndexedDbDeckRepository } from "../../decks/indexeddb-deck-repository.ts";
   /* Imported by path rather than through `src/decks/index.ts`: that entry is
      reached eagerly from the shell, and exporting the starter list from it
@@ -111,12 +112,14 @@
   const CURRENT_ACTIVATION_SNAPSHOT_ID = snapshotId(__ACTIVATION_SNAPSHOT_ID__);
   const DEFAULT_CARD_PLACEHOLDER =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 104'%3E%3Crect width='72' height='104' rx='5' fill='%2318243b'/%3E%3Cpath d='M8 8h56v88H8z' fill='none' stroke='%23697895' stroke-width='2'/%3E%3Ctext x='36' y='57' fill='%23a9b5ca' font-size='28' text-anchor='middle'%3E?%3C/text%3E%3C/svg%3E";
-  /* Every card this build packages, which is both what the field needs a name
-     and effect text for and what a local deck may hold. One read, so the
-     duel's copy and the editor's catalog cannot name different card sets. */
-  const ACTIVE_CARDS = activeCatalog();
-  const ACTIVE_CARD_TEXTS = new Map(
-    ACTIVE_CARDS.map((card) => [card.code, card] as const),
+  /* Every card the packaged database holds, fetched once per page and shared
+     with the editor through the same memo, so the duel's copy and the editor's
+     catalog cannot name different card sets. Empty until it lands: a card the
+     board draws before then falls back to `Card {code}` and corrects itself,
+     which is a better opening than a picker that will not open. */
+  let activeCards: readonly DeckBuilderCardView[] = [];
+  $: activeCardTexts = new Map(
+    activeCards.map((card) => [card.code, card] as const),
   );
   const EMPTY_ZONE_LISTS: ReadonlyMap<
     PhysicalZoneId,
@@ -128,10 +131,13 @@
     { id: "active-images", sha256: __ACTIVE_IMAGE_MANIFEST_SHA256__ },
   ];
   /* The pinned catalog every local deck is validated against: the same cards
-     the editor offered when the deck was built, because both derive it from
-     this build's packaged card set. Built once, it is fixed for the life of
-     the build. */
-  const DECK_BUILDER_CATALOG = catalogByCode(ACTIVE_CARDS);
+     the editor offered when the deck was built, because both read the same
+     catalog. Indexed beside `activeCards` rather than derived reactively, so a
+     listing that awaited the catalog cannot read it one flush too early. */
+  let deckBuilderCatalog: ReadonlyMap<number, DeckBuilderCardView> = new Map();
+  /* The whole database is a fetch, and a fetch can fail. Bundled decks still
+     duel without it, so this is a panel rather than a dead application. */
+  let catalogError: string | null = null;
   /* The opponent seat is not the player's to choose for now, so it is a
      constant rather than a selection: every duel this build starts is against
      this deck, and a persisted key naming any other is rewritten to it. */
@@ -195,7 +201,7 @@
   $: boardResult =
     $duel.snapshot === null
       ? null
-      : mapSnapshotToBoard($duel.snapshot, ACTIVE_CARD_TEXTS, $duel.prompt);
+      : mapSnapshotToBoard($duel.snapshot, activeCardTexts, $duel.prompt);
   $: duelBoard = boardResult?.ok === true ? boardResult.value : null;
   /* Engine legality and visible geometry disagree about the shared Extra
      Monster Zones. Nothing may hide, auto-answer or generically recover from
@@ -209,6 +215,7 @@
   $: duelViewportOnly =
     layoutProfileConflict === null &&
     (duelBoard !== null || $duel.snapshot !== null) &&
+    catalogError === null &&
     storageWarning === null &&
     !snapshotActivationPending &&
     imageWarning === null &&
@@ -219,7 +226,7 @@
   $: zoneLists =
     duelBoard === null
       ? EMPTY_ZONE_LISTS
-      : zoneListsForBoard(duelBoard, $duel.snapshot, ACTIVE_CARD_TEXTS);
+      : zoneListsForBoard(duelBoard, $duel.snapshot, activeCardTexts);
   $: mappedInteractionSpec = mapPromptToInteractionSpec(
     effectivePrompt,
     $duel.snapshot,
@@ -237,7 +244,7 @@
       : offFieldTargetEntries(
           fieldInteractionSpec,
           $duel.snapshot,
-          ACTIVE_CARD_TEXTS,
+          activeCardTexts,
         );
   $: currentPromptSurface = promptSurface(
     effectivePrompt,
@@ -251,6 +258,7 @@
     responsePending: $duel.responsePending,
   });
   $: appAnnouncement =
+    catalogError ??
     storageWarning ??
     imageWarning ??
     diagnosticMessage ??
@@ -453,7 +461,25 @@
     duel.initialize();
     trackStorageOperation("initialize", initializeStorage());
     void loadImages();
-    void refreshSelectableDecks();
+    /* Before the first listing: the listing resolves every local deck's codes
+       against this catalog, so starting it earlier would only make it wait. */
+    void runtimeCatalog().then(
+      (loaded) => {
+        if (disposed) return;
+        activeCards = loaded;
+        deckBuilderCatalog = catalogByCode(loaded);
+        void refreshSelectableDecks();
+      },
+      (error: unknown) => {
+        if (disposed) return;
+        catalogError = `Card database could not load: ${
+          error instanceof Error ? error.message : String(error)
+        }`;
+        /* Still listed, so the bundled decks this build compiles in remain
+           playable: a duel with real cards beats a picker with none. */
+        void refreshSelectableDecks();
+      },
+    );
     return () => {
       disposed = true;
       appDisposed = true;
@@ -748,20 +774,25 @@
   async function listDecksOrBundledOnly(): Promise<DeckListing> {
     let repository: IndexedDbDeckRepository | null = null;
     try {
+      /* Before storage opens, and before the starter deck is seeded: both
+         resolve codes against the catalog, so a repository opened first would
+         only wait on it anyway. A catalog that never lands lands here, and the
+         bundled fallback below is what the player gets. */
+      const supportedCodes = await supportedDuelCardCodes();
       repository = await IndexedDbDeckRepository.open();
       /* Best-effort and idempotent, so a player who has never opened the
          editor still arrives here with a deck of their own to duel with. */
       await ensureStarterDeck(
         repository,
-        DECK_BUILDER_CATALOG,
+        deckBuilderCatalog,
         PROTOTYPE_RULESET,
       );
       const decks = await listSelectableDecks(
         DECK_CATALOG,
         repository,
-        DECK_BUILDER_CATALOG,
+        deckBuilderCatalog,
         PROTOTYPE_RULESET,
-        supportedDuelCardCodes(),
+        supportedCodes,
       );
       const defaultDeckId = await repository.getDefaultDeck();
       /* A key carries the revision the deck had, so the default is matched by
@@ -905,7 +936,7 @@
       previewCard = HIDDEN_CARD_PREVIEW;
       return;
     }
-    const next = cardPreviewForCode(card.code, ACTIVE_CARD_TEXTS);
+    const next = cardPreviewForCode(card.code, activeCardTexts);
     if (next !== null) previewCard = next;
   }
 
@@ -915,7 +946,7 @@
       previewCard = HIDDEN_CARD_PREVIEW;
       return;
     }
-    const next = cardPreviewForCode(code, ACTIVE_CARD_TEXTS);
+    const next = cardPreviewForCode(code, activeCardTexts);
     if (next !== null) previewCard = next;
   }
 
@@ -923,7 +954,7 @@
     previewCard =
       entry.code === undefined
         ? HIDDEN_CARD_PREVIEW
-        : (cardPreviewForCode(entry.code, ACTIVE_CARD_TEXTS) ??
+        : (cardPreviewForCode(entry.code, activeCardTexts) ??
           HIDDEN_CARD_PREVIEW);
   }
 
@@ -934,7 +965,7 @@
      `cardPreviewForPublicCard` reads that attestation instead of re-deriving
      identity visibility from face orientation. */
   function previewHudCard(card: PublicCard): void {
-    const next = cardPreviewForPublicCard(card, ACTIVE_CARD_TEXTS);
+    const next = cardPreviewForPublicCard(card, activeCardTexts);
     if (next !== null) previewCard = next;
   }
 
@@ -1032,6 +1063,21 @@
   >
     {appAnnouncement}
   </p>
+
+  {#if catalogError}
+    <section
+      class="message-panel error-panel"
+      data-cy="app-catalog-error-panel"
+    >
+      <div data-cy="app-catalog-error-body">
+        <p class="eyebrow" data-cy="app-catalog-error-eyebrow">Card database</p>
+        <p data-cy="app-catalog-error-message">
+          {catalogError} Bundled decks can still be played; decks you built are not
+          listed. Reload to try again.
+        </p>
+      </div>
+    </section>
+  {/if}
 
   {#if storageWarning || snapshotActivationPending}
     <section
@@ -1280,7 +1326,7 @@
     {#if $uiSettings.showDuelHud}
       <DuelHud
         snapshot={$duel.snapshot}
-        cardTexts={ACTIVE_CARD_TEXTS}
+        cardTexts={activeCardTexts}
         imageLibrary={imagesMatchRuntime ? imageLibrary : null}
         placeholderUrl={imageLibrary?.placeholderUrl ??
           DEFAULT_CARD_PLACEHOLDER}

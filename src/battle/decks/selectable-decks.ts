@@ -1,4 +1,4 @@
-import { activeCatalog } from "../../decks/catalog/active-catalog.ts";
+import { runtimeCatalog } from "../../decks/catalog/runtime-catalog.ts";
 import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
 import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
 import { resolveDeck, type DeckRepository } from "../../decks/index.ts";
@@ -91,15 +91,16 @@ export function findSelectableDeck(
 }
 
 /**
- * The codes this build can put on a board: packaged card data, packaged text
- * and packaged art, which is what the Worker itself demands before it will
- * create a session.
+ * The codes this build can put on a board: the whole packaged card database,
+ * every shard of which the runtime assets carry, which is what the Worker
+ * itself demands before it will create a session.
  *
- * It is the deck editor's own catalog read as a set of codes. One derivation
+ * It is the deck editor's own catalog read as a set of codes — fetched once
+ * per page and shared with the editor through the same memo. One derivation
  * for both surfaces is what lets the picker predict a refusal instead of
  * provoking it, and what stops a card being offered in the editor that the
  * picker would then quietly hold a deck back for.
  */
-export function supportedDuelCardCodes(): ReadonlySet<number> {
-  return new Set(activeCatalog().map(({ code }) => code));
+export async function supportedDuelCardCodes(): Promise<ReadonlySet<number>> {
+  return new Set((await runtimeCatalog()).map(({ code }) => code));
 }

@@ -9,6 +9,7 @@ import {
   PROTOTYPE_RULESET,
   quantityLimit,
 } from "../../src/decks/catalog/pinned-ruleset.ts";
+import { setRuntimeCatalogForTests } from "../../src/decks/catalog/runtime-catalog.ts";
 import { PROTOTYPE_CATALOG } from "../../src/deck-editor/fixtures/catalog.ts";
 import { installPrototypeActiveCatalog } from "../fixtures/active-catalog.ts";
 
@@ -182,6 +183,10 @@ beforeEach(async () => {
 
 afterEach(async () => {
   cleanup();
+  vi.unstubAllGlobals();
+  /* Every test starts from a catalog that answers: the failure case below
+     clears the memo, and a cleared memo would make the next render fetch. */
+  installPrototypeActiveCatalog();
   localStorage.clear();
   workerClientSpies.startDuel.mockClear();
   workerClientSpies.startDuel.mockImplementation(() => true);
@@ -199,6 +204,32 @@ describe("App deck picker with local decks", () => {
     expect(
       (query("deck-picker-start-button") as HTMLButtonElement).disabled,
     ).toBe(false);
+  });
+
+  /* The card database is a fetch now, and a fetch can fail. The bundled decks
+     are compiled into the build, so they must survive that; the decks the
+     player built cannot be resolved without the catalog, so their absence is
+     explained rather than left looking like deletion. */
+  it("keeps the bundled decks and says so when the card database fails", async () => {
+    await seedDeck(VALID_MAIN);
+    setRuntimeCatalogForTests(null);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.reject(new Error("offline"))),
+    );
+
+    await renderReadyApp();
+
+    await vi.waitFor(() =>
+      expect(query("app-catalog-error-panel")).not.toBeNull(),
+    );
+    expect(query("app-catalog-error-message")?.textContent).toContain(
+      "Card database could not load",
+    );
+    expect(
+      document.querySelectorAll('[data-cy^="deck-picker-option-preset:"]'),
+    ).toHaveLength(6);
+    expect(document.querySelector(LOCAL_PLAYER_OPTION)).toBeNull();
   });
 
   it("lists a playable local deck and dispatches its card list", async () => {

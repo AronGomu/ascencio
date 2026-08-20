@@ -9,7 +9,6 @@ import {
   type AdminStorageTarget,
 } from "../../src/shell/admin/admin-actions.ts";
 import HomeScreen from "../../src/shell/screens/HomeScreen.svelte";
-import { createShellSettingsStore } from "../../src/shell/settings/shell-settings-store.ts";
 import { createShellStore } from "../../src/shell/shell-store.ts";
 
 afterEach(() => {
@@ -162,13 +161,7 @@ describe("AdminConsole", () => {
 
 describe("admin reachability", () => {
   it("exposes no admin control on the home hub", () => {
-    render(HomeScreen, {
-      store: createShellStore("#/", () => {}),
-      settings: createShellSettingsStore({
-        getItem: () => null,
-        setItem: () => {},
-      }),
-    });
+    render(HomeScreen, { store: createShellStore("#/", () => {}) });
     expect(document.querySelector('[data-cy^="admin-"]')).toBeNull();
   });
 });

@@ -12,8 +12,17 @@ import HistoryOverlay from "../../../src/story/overlays/HistoryOverlay.svelte";
 import PauseOverlay from "../../../src/story/overlays/PauseOverlay.svelte";
 import SaveLoadOverlay from "../../../src/story/overlays/SaveLoadOverlay.svelte";
 import SettingsOverlay from "../../../src/story/overlays/SettingsOverlay.svelte";
+import {
+  DEFAULT_STORY_PLAYBACK_SETTINGS,
+  readStoryPlaybackSettings,
+} from "../../../src/story/playback/story-playback-settings.ts";
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  /* The settings overlay persists auto speed and skip-unread, so one test's
+     choices must not become the next one's starting point. */
+  localStorage.clear();
+});
 
 describe("story utility overlays", () => {
   it("shows ordered history and empty state", () => {
@@ -49,13 +58,44 @@ describe("story utility overlays", () => {
       (screen.getByLabelText("Music volume") as HTMLInputElement).disabled,
     ).toBe(true);
     expect(screen.getByText(/Audio not included/)).toBeTruthy();
-    expect(screen.getByText(/Fullscreen (supported|unavailable)/)).toBeTruthy();
+    expect(screen.getByText(/Press F11 for fullscreen/)).toBeTruthy();
     await userEvent
       .setup()
       .click(screen.getByRole("button", { name: "Reset settings" }));
     expect(textSpeed.value).toBe("40");
     expect(autoSpeed.value).toBe("3");
     expect(transitions.value).toBe("standard");
+  });
+
+  it("persists auto speed and skip-unread for the narrative screen to read", async () => {
+    const rendered = render(SettingsOverlay);
+    const skipUnread = screen.getByLabelText(
+      "Skip unread text",
+    ) as HTMLInputElement;
+    expect(skipUnread.checked).toBe(false);
+    await fireEvent.input(screen.getByLabelText("Auto speed"), {
+      target: { value: "6" },
+    });
+    await userEvent.setup().click(skipUnread);
+    expect(readStoryPlaybackSettings()).toEqual({
+      autoSpeedSeconds: 6,
+      skipUnread: true,
+    });
+
+    rendered.unmount();
+    render(SettingsOverlay);
+    expect(
+      (screen.getByLabelText("Auto speed") as HTMLInputElement).value,
+    ).toBe("6");
+    expect(
+      (screen.getByLabelText("Skip unread text") as HTMLInputElement).checked,
+    ).toBe(true);
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "Reset settings" }));
+    expect(readStoryPlaybackSettings()).toEqual(
+      DEFAULT_STORY_PLAYBACK_SETTINGS,
+    );
   });
 
   it("Escape closes top overlay and restores invoking control", async () => {
@@ -128,7 +168,9 @@ describe("story utility overlays", () => {
           screen.getByRole("button", { name: "Continue Without Saving" }),
         ).toBeTruthy();
       }
-      expect(screen.getByText(/Auto and Skip are experimental/)).toBeTruthy();
+      expect(
+        screen.getByText(/Auto and Skip are reader settings/),
+      ).toBeTruthy();
     },
   );
 });

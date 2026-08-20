@@ -16,8 +16,8 @@
   {restoreFocusTo}
 >
   <p data-cy="story-save-load-note">
-    Prototype-local state only. Auto and Skip are experimental, not fully
-    functional.
+    Prototype-local state only. Auto and Skip are reader settings and are not
+    part of a save.
   </p>
   {#if mode === "saving"}<p
       role="status"

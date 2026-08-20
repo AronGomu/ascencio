@@ -1,8 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  export let fullscreenPreferred: boolean;
-  export let onToggleFullscreen: (next: boolean) => void;
   export let onclose: () => void;
 
   let heading: HTMLHeadingElement | undefined;
@@ -28,21 +26,8 @@
     >
       Settings
     </h2>
-    <button
-      type="button"
-      class="switch"
-      role="switch"
-      aria-checked={fullscreenPreferred}
-      data-cy="shell-settings-fullscreen"
-      onclick={() => onToggleFullscreen(!fullscreenPreferred)}
-    >
-      Fullscreen
-      <span class="switch-state" data-cy="shell-settings-fullscreen-state"
-        >{fullscreenPreferred ? "On" : "Off"}</span
-      >
-    </button>
     <p class="hint" data-cy="shell-settings-fullscreen-hint">
-      Fullscreen needs a click, so it is applied on your next interaction.
+      Press F11 for fullscreen.
     </p>
     <button type="button" data-cy="shell-settings-close" onclick={onclose}
       >Close</button
@@ -54,16 +39,6 @@
   h2 {
     margin: 0;
     font-size: var(--text-lg);
-  }
-
-  .switch {
-    display: flex;
-    justify-content: space-between;
-    gap: var(--space-3);
-  }
-
-  .switch-state {
-    color: var(--accent);
   }
 
   .hint {

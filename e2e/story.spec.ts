@@ -107,6 +107,74 @@ test("story plays the prologue through to the duel handoff", async ({
   await expect(page.locator(STORY_REGION)).toHaveCount(0);
 });
 
+/* A reader tapping through a scene clicks the line itself, fast, in one spot:
+   the browser raises `detail` on every click after the first and would select
+   the text under the pointer. Both used to swallow the click. */
+test("a fast burst of clicks on the dialogue text advances once per click", async ({
+  page,
+}) => {
+  await startNarrative(page);
+  const line = page.locator('[data-cy="story-narrative-text"]');
+  await line.click({ clickCount: 5, delay: 10 });
+  await expect(page.locator('[data-cy="story-narrative-cursor"]')).toHaveText(
+    "Beat 6",
+  );
+  expect(await page.evaluate(() => globalThis.getSelection()?.toString())).toBe(
+    "",
+  );
+
+  /* Two more bursts with no pause between them: nothing resets the click
+     counter, so this is the case that used to lose everything after the
+     first click of each burst. */
+  await line.click({ clickCount: 4, delay: 5 });
+  await line.click({ clickCount: 4, delay: 5 });
+  await expect(page.locator('[data-cy="story-narrative-cursor"]')).toHaveText(
+    "Beat 14",
+  );
+  await expect(
+    page.getByRole("heading", { name: "Choose your response" }),
+  ).toBeVisible();
+});
+
+test("auto advances the scene, and skip stops at unread text until the reader allows it", async ({
+  page,
+}) => {
+  /* Seeded rather than dragged on the slider: the setting is proven by the
+     overlay tests, and one second per beat keeps this run honest and short. */
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      "ygo.story.playback.v1",
+      JSON.stringify({ autoSpeedSeconds: 1, skipUnread: false }),
+    ),
+  );
+  await startNarrative(page);
+
+  const auto = page.getByRole("button", { name: "Auto", exact: true });
+  await auto.click();
+  await expect(auto).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByText(/Rin said midnight/)).toBeVisible();
+  await page.locator('[data-cy="story-narrative-stage"]').click();
+  await expect(auto).toHaveAttribute("aria-pressed", "false");
+
+  /* Beat 3 has never been read, so skip hands the scene straight back — and
+     says so, rather than looking like a dead button. */
+  const skip = page.getByRole("button", { name: "Skip", exact: true });
+  await skip.click();
+  await expect(page.getByRole("status")).toContainText("not read yet");
+  await expect(skip).toHaveAttribute("aria-pressed", "false");
+
+  await page.getByRole("button", { name: "Open menu" }).first().click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await page.getByLabel("Skip unread text").check();
+  await page.keyboard.press("Escape");
+
+  await skip.click();
+  await expect(
+    page.getByRole("heading", { name: "Choose your response" }),
+  ).toBeVisible();
+  await expect(page.getByRole("status")).toContainText("choose a response");
+});
+
 test("a win reaches its own outcome and the updated map", async ({ page }) => {
   await resumeAtOutcome(page, "win");
   await expect(

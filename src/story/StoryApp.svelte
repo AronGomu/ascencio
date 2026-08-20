@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { afterUpdate, onMount } from "svelte";
+  import { afterUpdate, onDestroy, onMount } from "svelte";
   import { PROLOGUE } from "./content/prologue.ts";
   import {
     createInitialStoryState,
@@ -9,6 +9,18 @@
     type StoryState,
   } from "./model/story-state.ts";
   import { reduceStory } from "./model/story-reducer.ts";
+  import {
+    playbackDelayMs,
+    playbackHalt,
+    playbackNotice,
+    type PlaybackMode,
+  } from "./playback/story-playback.ts";
+  import { createStoryPlaybackSettingsStore } from "./playback/story-playback-settings-store.ts";
+  import {
+    readStoryReadLog,
+    withBeatRead,
+    writeStoryReadLog,
+  } from "./playback/story-read-log.ts";
   import {
     ENCOUNTER_LABELS,
     restoreStoryState,
@@ -86,6 +98,9 @@
   const MANUAL_SLOT: StorySlotKey = "manual:1";
   const AUTOSAVE_SLOT: StorySlotKey = "autosave";
   const saves = createStorySaveRepository(globalThis.indexedDB);
+  /* Auto and Skip read their pacing from here; the settings overlay writes
+     it. Reader preferences, so they live outside the save slots. */
+  const playbackSettings = createStoryPlaybackSettingsStore();
 
   let state =
     resumeState === null
@@ -122,6 +137,15 @@
   let catalogByCode: Map<number, DeckBuilderCardView> = new Map();
   let boosterDialogOpen = false;
   let root: HTMLElement;
+  let playback: PlaybackMode = "off";
+  let playbackMessage: string | null = null;
+  let playbackTimer: ReturnType<typeof setTimeout> | null = null;
+  let playbackKey = "";
+  /* Profile-wide rather than per save: skip fast-forwards what this player has
+     read, including beats read in a run that was later loaded over. */
+  let readBeats: ReadonlySet<string> = readStoryReadLog();
+
+  onDestroy(() => stopPlaybackTimer());
 
   onMount(() => {
     if (resumeState !== null || resolution !== null) onhandled();
@@ -273,6 +297,80 @@
   $: historyEntries = PROLOGUE.beats
     .slice(0, state.narrativeIndex + 1)
     .map(({ speaker, text }) => ({ speaker, text }));
+  /* Playback is driven from here rather than from a reactive statement: it
+     schedules an advance, and an advance is what re-runs it. The key makes
+     that loop terminate at one timer per beat — an update that changes
+     nothing playback depends on leaves the pending beat alone instead of
+     restarting its countdown. */
+  afterUpdate(() => {
+    if (state.screen === "narrative") markRead(beat.id);
+    const key = [
+      playback,
+      state.screen,
+      state.narrativeIndex,
+      activeChoices.length,
+      overlay ?? "none",
+      readBeats.size,
+      $playbackSettings.autoSpeedSeconds,
+      $playbackSettings.skipUnread,
+    ].join("|");
+    if (key === playbackKey) return;
+    playbackKey = key;
+    drivePlayback();
+  });
+
+  /** Records a beat as read the moment it is on screen, which is what Skip
+      later consults. Written through on every new beat: a session that ends
+      in a crash still keeps what was read up to it. */
+  function markRead(id: string): void {
+    const next = withBeatRead(readBeats, id);
+    if (next === readBeats) return;
+    readBeats = next;
+    writeStoryReadLog(next);
+  }
+
+  function stopPlaybackTimer(): void {
+    if (playbackTimer === null) return;
+    clearTimeout(playbackTimer);
+    playbackTimer = null;
+  }
+
+  function togglePlayback(mode: "auto" | "skip"): void {
+    playbackMessage = null;
+    playback = playback === mode ? "off" : mode;
+  }
+
+  /** The single owner of the playback timer: one beat is never queued twice,
+      and a run that has to stop always says why instead of going quiet. */
+  function drivePlayback(): void {
+    stopPlaybackTimer();
+    if (playback === "off") return;
+    /* An overlay or a screen change is the player taking the scene back. */
+    if (state.screen !== "narrative" || overlay !== null) {
+      playback = "off";
+      return;
+    }
+    const halt = playbackHalt(playback, {
+      hasChoices: activeChoices.length > 0,
+      atLastBeat: state.narrativeIndex >= PROLOGUE.beats.length - 1,
+      nextBeatRead: readBeats.has(
+        PROLOGUE.beats[state.narrativeIndex + 1]?.id ?? "",
+      ),
+      skipUnread: $playbackSettings.skipUnread,
+    });
+    if (halt !== null) {
+      playbackMessage = playbackNotice(playback, halt);
+      playback = "off";
+      return;
+    }
+    playbackTimer = setTimeout(
+      () => {
+        playbackTimer = null;
+        advanceBeat();
+      },
+      playbackDelayMs(playback, $playbackSettings.autoSpeedSeconds),
+    );
+  }
 
   async function loadShopData(): Promise<void> {
     shopDataLoading = true;
@@ -419,7 +517,16 @@
     };
     return true;
   }
+  /** Advance the player asked for. Any manual input ends playback: the reader
+      taking the scene back is exactly what Auto and Skip yield to. */
   function advance(): void {
+    if (playback !== "off") {
+      playback = "off";
+      playbackMessage = null;
+    }
+    advanceBeat();
+  }
+  function advanceBeat(): void {
     if (state.narrativeIndex >= PROLOGUE.beats.length - 1) {
       dispatch({ type: "go-to-map" });
       return;
@@ -593,7 +700,10 @@
       choices={activeChoices}
       selectedChoice={state.choice}
       choiceResponse={state.narrativeIndex === 13 ? state.choiceResponse : null}
+      {playback}
+      playbackNotice={playbackMessage}
       onadvance={advance}
+      ontoggleplayback={togglePlayback}
       onchoose={choose}
       onutility={(utility) => openOverlay(utility)}
     />
@@ -745,6 +855,7 @@
       restoreFocusTo={overlayTrigger}
     />
   {:else if overlay === "settings"}<SettingsOverlay
+      settings={playbackSettings}
       onclose={closeOverlay}
       restoreFocusTo={overlayTrigger}
     />

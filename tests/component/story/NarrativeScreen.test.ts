@@ -43,7 +43,7 @@ describe("NarrativeScreen", () => {
     ).toBe("thought");
   });
 
-  it("advances once from Enter, Space, and scene click while controls block global advance", async () => {
+  it("advances per Enter, Space, and scene click while controls block global advance", async () => {
     const onadvance = vi.fn();
     render(NarrativeScreen, { beat: PROLOGUE.beats[0]!, onadvance });
     await fireEvent.keyDown(window, { key: "Enter", repeat: false });
@@ -53,11 +53,33 @@ describe("NarrativeScreen", () => {
     expect(onadvance).toHaveBeenCalledTimes(3);
     onadvance.mockClear();
     await userEvent.setup().dblClick(screen.getByTestId("narrative-stage"));
-    expect(onadvance).toHaveBeenCalledTimes(1);
+    expect(onadvance).toHaveBeenCalledTimes(2);
     const history = screen.getByRole("button", { name: "History" });
     history.focus();
     await fireEvent.keyDown(history, { key: "Enter" });
-    expect(onadvance).toHaveBeenCalledTimes(1);
+    expect(onadvance).toHaveBeenCalledTimes(2);
+  });
+
+  /* A reader tapping through a scene sends a burst of clicks on one spot, so
+     the browser raises `detail` on each one. Every click in that burst has to
+     advance: dropping the repeats is what made the dialogue box look dead. */
+  it("advances once per click through a fast burst on the dialogue text", async () => {
+    const onadvance = vi.fn();
+    const { container } = render(NarrativeScreen, {
+      beat: PROLOGUE.beats[0]!,
+      onadvance,
+    });
+    const line = container.querySelector(
+      '[data-cy="story-narrative-text"]',
+    ) as HTMLElement;
+    for (let click = 1; click <= 6; click += 1)
+      await fireEvent.click(line, { detail: click });
+    expect(onadvance).toHaveBeenCalledTimes(6);
+
+    onadvance.mockClear();
+    const user = userEvent.setup({ delay: null });
+    for (let click = 0; click < 6; click += 1) await user.click(line);
+    expect(onadvance).toHaveBeenCalledTimes(6);
   });
 
   it("renders semantic choices without prior advance selecting one", async () => {
@@ -146,6 +168,48 @@ describe("NarrativeScreen", () => {
     container.querySelectorAll("button").forEach((btn) => {
       expect(btn.textContent).not.toContain("experimental");
     });
+  });
+
+  it("auto and skip report their engaged state and request the mode they name", async () => {
+    const ontoggleplayback = vi.fn();
+    const rendered = render(NarrativeScreen, {
+      beat: PROLOGUE.beats[0]!,
+      ontoggleplayback,
+    });
+    const auto = screen.getByRole("button", { name: "Auto" });
+    const skip = screen.getByRole("button", { name: "Skip" });
+    expect(auto.getAttribute("aria-pressed")).toBe("false");
+    expect(skip.getAttribute("aria-pressed")).toBe("false");
+    expect(auto.getAttribute("title")).toBeNull();
+    expect(skip.getAttribute("title")).toBeNull();
+    const user = userEvent.setup();
+    await user.click(auto);
+    await user.click(skip);
+    expect(ontoggleplayback.mock.calls).toEqual([["auto"], ["skip"]]);
+    await rendered.rerender({ playback: "skip" });
+    expect(
+      screen.getByRole("button", { name: "Skip" }).getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(
+      screen.getByRole("button", { name: "Auto" }).getAttribute("aria-pressed"),
+    ).toBe("false");
+  });
+
+  it("announces why playback stopped, and hides the notice with the UI", async () => {
+    const rendered = render(NarrativeScreen, {
+      beat: PROLOGUE.beats[0]!,
+      playbackNotice: "Skip stopped at text you have not read yet.",
+    });
+    expect(screen.getByRole("status").textContent).toContain("not read yet");
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "Hide UI" }));
+    expect(screen.queryByRole("status")).toBeNull();
+    await rendered.rerender({
+      beat: PROLOGUE.beats[0]!,
+      playbackNotice: null,
+    });
+    expect(screen.queryByRole("status")).toBeNull();
   });
 
   it("menu button announces itself and fires pause utility", async () => {

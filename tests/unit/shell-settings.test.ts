@@ -15,10 +15,7 @@ function storageOf(entries: Record<string, string>): Pick<Storage, "getItem"> {
 
 describe("shell settings", () => {
   it("defaults when storage is empty", () => {
-    const settings = readShellSettings(storageOf({}));
-    expect(settings).toEqual(DEFAULT_SHELL_SETTINGS);
-    expect(settings.fullscreenPreferred).toBe(false);
-    expect(settings.fullscreenTipDismissed).toBe(false);
+    expect(readShellSettings(storageOf({}))).toEqual(DEFAULT_SHELL_SETTINGS);
   });
 
   it("migrates v2 display settings forward", () => {
@@ -36,8 +33,6 @@ describe("shell settings", () => {
       showZoneOutlines: false,
       showZoneCounts: false,
     });
-    expect(settings.fullscreenPreferred).toBe(false);
-    expect(settings.fullscreenTipDismissed).toBe(false);
     expect(migrateFromV2(v2)).toEqual(settings);
   });
 
@@ -59,8 +54,6 @@ describe("shell settings", () => {
     const entries: Record<string, string> = {};
     const value: ShellSettings = {
       version: 3,
-      fullscreenPreferred: true,
-      fullscreenTipDismissed: true,
       rotationNoticeDismissed: true,
       display: { showZoneOutlines: false, showZoneCounts: true },
     };
@@ -85,8 +78,6 @@ describe("shell settings", () => {
     );
     const withoutFlag = JSON.stringify({
       version: 3,
-      fullscreenPreferred: true,
-      fullscreenTipDismissed: true,
       display: { showZoneOutlines: true, showZoneCounts: true },
     });
     expect(
@@ -104,13 +95,10 @@ describe("shell settings", () => {
       }),
       [SHELL_SETTINGS_KEY]: JSON.stringify({
         version: 3,
-        fullscreenPreferred: true,
-        fullscreenTipDismissed: false,
         display: { showZoneOutlines: true, showZoneCounts: true },
       }),
     };
     const settings = readShellSettings(storageOf(entries));
-    expect(settings.fullscreenPreferred).toBe(true);
     expect(settings.display.showZoneOutlines).toBe(true);
   });
 

@@ -1,16 +1,26 @@
 <script lang="ts">
   import OverlayShell from "./OverlayShell.svelte";
+  import {
+    AUTO_SPEED_MAX_SECONDS,
+    AUTO_SPEED_MIN_SECONDS,
+  } from "../playback/story-playback.ts";
+  import {
+    createStoryPlaybackSettingsStore,
+    type StoryPlaybackSettingsStore,
+  } from "../playback/story-playback-settings-store.ts";
+  /* Auto speed and skip-unread are the two settings with a consumer, so they
+     go through the store the narrative screen reads. The rest below are still
+     prototype-local: there is no typewriter or transition to drive yet. */
+  export let settings: StoryPlaybackSettingsStore =
+    createStoryPlaybackSettingsStore();
   export let onclose: () => void = () => undefined;
   export let restoreFocusTo: HTMLElement | null = null;
   let textSpeed = 40;
-  let autoSpeed = 3;
   let transitions = "standard";
-  const fullscreenSupported =
-    typeof document !== "undefined" && document.fullscreenEnabled;
   function reset(): void {
     textSpeed = 40;
-    autoSpeed = 3;
     transitions = "standard";
+    settings.reset();
   }
 </script>
 
@@ -32,15 +42,31 @@
       /></label
     >
     <label data-cy="story-settings-auto-speed-field"
-      >Auto speed <input
+      >Auto speed ({$settings.autoSpeedSeconds}s per line)
+      <input
         aria-label="Auto speed"
         type="range"
-        min="1"
-        max="8"
+        min={AUTO_SPEED_MIN_SECONDS}
+        max={AUTO_SPEED_MAX_SECONDS}
         data-cy="story-settings-auto-speed"
-        bind:value={autoSpeed}
+        value={$settings.autoSpeedSeconds}
+        oninput={(event) =>
+          settings.setAutoSpeedSeconds(Number(event.currentTarget.value))}
       /></label
     >
+    <label class="toggle" data-cy="story-settings-skip-unread-field"
+      ><input
+        aria-label="Skip unread text"
+        type="checkbox"
+        data-cy="story-settings-skip-unread"
+        checked={$settings.skipUnread}
+        onchange={(event) =>
+          settings.setSkipUnread(event.currentTarget.checked)}
+      /> Skip unread text</label
+    >
+    <p class="hint" data-cy="story-settings-skip-unread-note">
+      Off, Skip stops at the first line you have not read yet.
+    </p>
     <label data-cy="story-settings-transitions-field"
       >Transitions <select
         aria-label="Transitions"
@@ -74,9 +100,7 @@
     <p data-cy="story-settings-audio-note">
       Audio not included in this prototype.
     </p>
-    <p data-cy="story-settings-fullscreen-support">
-      Fullscreen {fullscreenSupported ? "supported" : "unavailable"}
-    </p>
+    <p data-cy="story-settings-fullscreen-hint">Press F11 for fullscreen.</p>
     <button
       type="button"
       class="secondary"
@@ -94,6 +118,20 @@
   .settings label {
     display: grid;
     gap: 0.4rem;
+  }
+  .settings label.toggle {
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .settings label.toggle input {
+    width: 1.25rem;
+    min-height: 1.25rem;
+  }
+  .settings .hint {
+    margin: -0.6rem 0 0;
+    color: var(--story-muted);
+    font-size: 0.85rem;
   }
   input,
   select {

@@ -8,6 +8,7 @@
   import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
   import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
   import { quantityLimit } from "../../decks/catalog/pinned-ruleset.ts";
+  import { OverlayScrollbar } from "../../shell/index.ts";
   import CardTile from "./CardTile.svelte";
 
   export let cards: readonly DeckBuilderCardView[];
@@ -37,6 +38,7 @@
   export let toSideboard = false;
   export let ontosideboardchange: (value: boolean) => void = () => undefined;
 
+  let resultsScroller: HTMLElement | null = null;
   let filters: DeckCatalogFilters = { ...EMPTY_CATALOG_FILTERS };
   $: options = catalogFilterOptions(cards);
   $: results = filterDeckCatalog(cards, filters);
@@ -192,36 +194,45 @@
       >
     </div>
   {:else}
-    <div
-      class="results"
-      aria-label="Card catalog results"
-      data-cy="deck-catalog-results"
-      onmouseleave={() => onhoverend()}
-    >
-      {#each results as card (card.code)}
-        <CardTile
-          {card}
-          code={card.code}
-          limit={quantityLimit(ruleset, card.code)}
-          currentCopies={copies.get(card.code) ?? 0}
-          selected={selectedCode === card.code}
-          draggable={(copies.get(card.code) ?? 0) <
-            quantityLimit(ruleset, card.code)}
-          onselect={() => onselect(card)}
-          ontap={ontap === null
-            ? null
-            : () =>
-                addable(card)
-                  ? ontap(card)
-                  : onblocked(card, blockedReason(card))}
-          ondragcard={(event) => ondragcard(card, event)}
-          {ondragcancel}
-          onhover={() => onhovercard(card)}
-          maxed={(copies.get(card.code) ?? 0) >=
-            quantityLimit(ruleset, card.code)}
-          oncontext={() => oncontextadd(card)}
-        />
-      {/each}
+    <div class="results-region" data-cy="deck-catalog-results-region">
+      <div
+        class="results"
+        aria-label="Card catalog results"
+        data-cy="deck-catalog-results"
+        onmouseleave={() => onhoverend()}
+        bind:this={resultsScroller}
+      >
+        {#each results as card (card.code)}
+          <CardTile
+            {card}
+            code={card.code}
+            limit={quantityLimit(ruleset, card.code)}
+            currentCopies={copies.get(card.code) ?? 0}
+            selected={selectedCode === card.code}
+            draggable={(copies.get(card.code) ?? 0) <
+              quantityLimit(ruleset, card.code)}
+            onselect={() => onselect(card)}
+            ontap={ontap === null
+              ? null
+              : () =>
+                  addable(card)
+                    ? ontap(card)
+                    : onblocked(card, blockedReason(card))}
+            ondragcard={(event) => ondragcard(card, event)}
+            {ondragcancel}
+            onhover={() => onhovercard(card)}
+            maxed={(copies.get(card.code) ?? 0) >=
+              quantityLimit(ruleset, card.code)}
+            oncontext={() => oncontextadd(card)}
+          />
+        {/each}
+      </div>
+      <OverlayScrollbar
+        axis="vertical"
+        scrollElement={resultsScroller}
+        contentSizeKey={`${results.length}`}
+        dataCyPrefix="deck-catalog-results"
+      />
     </div>
   {/if}
 </section>
@@ -309,15 +320,29 @@
     padding: 0.3rem 0.55rem;
   }
 
+  .results-region {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
   .results {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.55rem;
-    flex: 1 1 auto;
-    min-height: 0;
+    height: 100%;
     max-height: none;
     overflow-y: auto;
     padding: 0.2rem 0.35rem 0.5rem 0.1rem;
+    scrollbar-width: none;
+  }
+
+  .results::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filled .results-region {
+    flex: none;
   }
 
   .filled .results {

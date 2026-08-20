@@ -1532,3 +1532,19 @@ Sub-breakpoint usable (tablet / portrait)
 
 - [ ] Resize to 768×1024 portrait — the deck editor switches to tab layout; the header and content fill the width without side-scrolling.
 - [ ] Resize to 390×844 portrait — tabbed layout is still usable; no horizontal overflow.
+
+## T9 catalog-overlay-scrollbar
+
+Overlay scrollbar visible and functional
+
+- [ ] Open the deck editor with a deck. Scroll the card catalog with the mouse wheel — a themed overlay scrollbar thumb appears over the catalog results on the right edge.
+- [ ] Drag the scrollbar thumb up and down — the catalog results scroll smoothly in response.
+- [ ] Resize the browser so the catalog results fit without scrolling — the overlay scrollbar track and thumb disappear automatically.
+
+Native scrollbar hidden
+
+- [ ] In a browser that shows native scrollbars (non-macOS or forced-visible), open the deck editor — no native scrollbar is visible on the catalog results panel.
+
+Mobile tabs layout still scrolls
+
+- [ ] Resize to 390×844 portrait to activate the tab layout — switch to the Catalog tab and scroll the catalog results; the whole pane grows normally without a clipped overlay bar.

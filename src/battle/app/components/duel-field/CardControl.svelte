@@ -33,7 +33,11 @@
   export let ondragmove: (x: number, y: number) => void = () => undefined;
   export let ondragend: (x: number, y: number) => void = () => undefined;
   export let onpreview: (card: BoardCardView) => void = () => undefined;
+  export let onzoomenter: (element: HTMLElement) => void = () => undefined;
+  export let onzoomleave: (related: EventTarget | null) => void = () =>
+    undefined;
 
+  let articleEl: HTMLElement | undefined;
   let pointerOrigin: { readonly x: number; readonly y: number } | null = null;
   let pointerMoved = false;
   let dragging = false;
@@ -134,6 +138,23 @@
     onpreview(card);
   }
 
+  function handleArticlePointerEnter(): void {
+    reportPreview();
+    if (
+      layout === "hand" &&
+      card.code !== undefined &&
+      articleEl !== undefined
+    ) {
+      onzoomenter(articleEl);
+    }
+  }
+
+  function handleArticlePointerLeave(event: PointerEvent): void {
+    if (layout === "hand" && card.code !== undefined) {
+      onzoomleave(event.relatedTarget);
+    }
+  }
+
   function pointerDown(
     event: PointerEvent & { currentTarget: HTMLButtonElement },
   ): void {
@@ -225,7 +246,9 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex (passive card participates in spatial roving focus) -->
 <article
-  onpointerenter={reportPreview}
+  bind:this={articleEl}
+  onpointerenter={handleArticlePointerEnter}
+  onpointerleave={handleArticlePointerLeave}
   onfocusin={reportPreview}
   class:is-hidden={card.hidden}
   class:is-opponent={card.facing === "opponent"}
@@ -237,6 +260,7 @@
   class:is-pinned={pinned}
   class:is-selected={selected}
   class:is-navigation-active={active}
+  class:is-identity-known={card.code !== undefined}
   class:is-hand-item={layout === "hand"}
   class="duel-field-card"
   aria-label={accessibleLabel}
@@ -262,7 +286,7 @@
       data-cy={`card-control-image-${card.id}`}
     />
   </div>
-  {#if !card.hidden}
+  {#if card.code !== undefined}
     <span
       class="duel-field-card__label"
       aria-hidden="true"

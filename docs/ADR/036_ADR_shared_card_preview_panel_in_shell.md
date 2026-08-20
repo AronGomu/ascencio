@@ -13,7 +13,7 @@ Deck feedback demands the editor's card preview be *the exact component* the due
 ## Decision
 
 1. `CardPreviewPanel.svelte` and its `OverlayScrollbar.svelte` dependency move to `src/shell/card-preview/`; both are exported from `src/shell/index.ts`. Battle re-imports them through the shell public entry.
-2. The panel's contract is de-branded: `CardPreviewView { code: number; name: string; description: string }` and a minimal `CardPreviewImageSource { lease(code): { url; release() } }` live in the shell. Battle's `CardCode` narrows to `number`; battle's `CardImageLibrary` structurally satisfies the image source. Battle keeps `cardPreviewForCode` / `cardPreviewForPublicCard` / `HIDDEN_CARD_PREVIEW` internally — visibility logic never leaves the battle domain.
+2. The panel's contract is de-branded: `CardPreviewView { code: number; name: string; description: string; statsLine?: string | null }` and a minimal `CardPreviewImageSource { lease(code): { url; release() } }` live in the shell. Battle's `CardCode` narrows to `number`; battle's `CardImageLibrary` structurally satisfies the image source. Battle keeps `cardPreviewForCode` / `cardPreviewForPublicCard` / `formatCardStatsLine` internally — visibility logic never leaves the battle domain.
 3. The panel gains one prop, `staticImageUrl`, so a host without an image-lease library (the deck editor) can hand it a plain URL. Lease resolution still wins when a library is present.
 4. The frozen shell API lists in `tests/unit/domain-boundaries.test.ts` widen accordingly — a deliberate edit, per the boundary policy.
 

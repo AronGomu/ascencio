@@ -1,16 +1,10 @@
 <script lang="ts">
-  import { afterUpdate, onDestroy, onMount, tick } from "svelte";
-  import { SvelteMap } from "svelte/reactivity";
+  import { afterUpdate, onMount, tick } from "svelte";
   import type { ChoiceId, PromptId } from "../../duel/contracts/ids.ts";
   import type {
     PlayerPrompt,
-    PromptCard,
     PromptChoice,
   } from "../../duel/contracts/player-prompt.ts";
-  import type {
-    CardImageLease,
-    CardImageLibrary,
-  } from "../images/card-image-cache.ts";
   import { promptControlFamily } from "./prompt-control-family.ts";
   import {
     describePromptConstraints,
@@ -25,10 +19,6 @@
     readonly id: ChoiceId;
     readonly nonce: number;
   } | null = null;
-  export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
-  export let placeholderUrl = "";
-  export let resolveCardImage: (card: PromptCard) => string | undefined = () =>
-    undefined;
 
   let heading: HTMLHeadingElement;
   let activePromptId: PromptId = prompt.id;
@@ -40,11 +30,7 @@
   let localError: string | null = null;
   let reorderAnnouncement = "";
   let handledIntentNonce = -1;
-  let activeImageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
-  let imageLeases = new SvelteMap<number, CardImageLease>();
-  let leasedImageUrls = new Map<number, string>();
 
-  $: synchronizeImageLeases(imageLibrary, mountedImageCodes(prompt));
   $: family = promptControlFamily(prompt.kind);
   $: constraintsId = `${prompt.id}-constraints`;
   $: validationId = `${prompt.id}-validation`;
@@ -75,8 +61,6 @@
   onMount(() => {
     heading.focus();
   });
-
-  onDestroy(releaseImageLeases);
 
   afterUpdate(() => {
     const promptChanged = activePromptId !== prompt.id;
@@ -168,65 +152,6 @@
     localError = null;
   }
 
-  function mountedImageCodes(value: PlayerPrompt): readonly number[] {
-    const codes = [value.contextCard, ...value.choices.map(({ card }) => card)]
-      .map((card) => card?.code)
-      .filter((code): code is NonNullable<typeof code> => code !== undefined);
-    return [...new Set(codes.map(Number))];
-  }
-
-  function synchronizeImageLeases(
-    library: Pick<CardImageLibrary, "lease"> | null,
-    codes: readonly number[],
-  ): void {
-    if (library !== activeImageLibrary) {
-      releaseImageLeases();
-      activeImageLibrary = library;
-    }
-    const mounted = new Set(codes);
-    for (const [code, lease] of imageLeases) {
-      if (mounted.has(code)) continue;
-      lease.release();
-      imageLeases.delete(code);
-    }
-    if (library !== null) {
-      for (const code of mounted) {
-        if (!imageLeases.has(code)) imageLeases.set(code, library.lease(code));
-      }
-    }
-    leasedImageUrls = new Map(
-      [...imageLeases].map(([code, lease]) => [code, lease.url]),
-    );
-  }
-
-  function releaseImageLeases(): void {
-    for (const lease of imageLeases.values()) lease.release();
-    imageLeases.clear();
-    leasedImageUrls = new Map();
-  }
-
-  function cardImageUrl(card: PromptCard): string | undefined {
-    const resolved = resolveCardImage(card);
-    if (resolved !== undefined) return resolved;
-    if (card.code === undefined) return undefined;
-    return (
-      leasedImageUrls.get(Number(card.code)) ?? (placeholderUrl || undefined)
-    );
-  }
-
-  function useFallbackImage(event: Event): void {
-    const image = event.currentTarget as HTMLImageElement;
-    image.onerror = null;
-    if (placeholderUrl) image.src = placeholderUrl;
-    else image.remove();
-  }
-
-  function cardTitle(card: PromptCard, fallback: string): string {
-    return (
-      card.name ?? (card.code === undefined ? fallback : `Card ${card.code}`)
-    );
-  }
-
   function contributionLabel(choice: PromptChoice): string | null {
     const contribution = choice.card?.contribution;
     if (contribution === undefined) return null;
@@ -291,33 +216,6 @@
     </p>
   </header>
 
-  {#if prompt.contextCard}
-    <details class="card-detail" data-cy="prompt-controls-context-card-detail">
-      <summary data-cy="prompt-controls-context-card-summary"
-        >Inspect {cardTitle(prompt.contextCard, "effect card")}</summary
-      >
-      {#if cardImageUrl(prompt.contextCard)}
-        <img
-          class="card-image"
-          src={cardImageUrl(prompt.contextCard)}
-          alt={cardTitle(prompt.contextCard, "Effect card")}
-          decoding="async"
-          onerror={useFallbackImage}
-          data-cy="prompt-controls-context-card-image"
-        />
-      {/if}
-      {#if prompt.contextCard.description}
-        <p data-cy="prompt-controls-context-card-description">
-          {prompt.contextCard.description}
-        </p>
-      {:else}
-        <p data-cy="prompt-controls-context-card-no-description">
-          No effect text is available.
-        </p>
-      {/if}
-    </details>
-  {/if}
-
   {#if prompt.choices.length === 0}
     {#if emptyValidation.valid}
       <button
@@ -365,35 +263,6 @@
             {choice.label}
             {choice.selected ? " · selected" : ""}
           </button>
-          {#if choice.card}
-            <details
-              class="card-detail compact"
-              data-cy={`prompt-controls-single-choice-detail-${choice.id}`}
-            >
-              <summary data-cy="prompt-controls-single-choice-summary"
-                >Inspect {cardTitle(choice.card, choice.label)}</summary
-              >
-              {#if cardImageUrl(choice.card)}
-                <img
-                  class="card-image"
-                  src={cardImageUrl(choice.card)}
-                  alt={cardTitle(choice.card, choice.label)}
-                  decoding="async"
-                  onerror={useFallbackImage}
-                  data-cy="prompt-controls-single-choice-image"
-                />
-              {/if}
-              {#if choice.card.description}
-                <p data-cy="prompt-controls-single-choice-description">
-                  {choice.card.description}
-                </p>
-              {:else}
-                <p data-cy="prompt-controls-single-choice-no-description">
-                  No effect text is available.
-                </p>
-              {/if}
-            </details>
-          {/if}
         </div>
       {/each}
     </div>
@@ -430,35 +299,6 @@
                 {/if}
               </span>
             </label>
-            {#if choice.card}
-              <details
-                class="card-detail compact"
-                data-cy={`prompt-controls-multiple-choice-detail-${choice.id}`}
-              >
-                <summary data-cy="prompt-controls-multiple-choice-summary"
-                  >Inspect {cardTitle(choice.card, choice.label)}</summary
-                >
-                {#if cardImageUrl(choice.card)}
-                  <img
-                    class="card-image"
-                    src={cardImageUrl(choice.card)}
-                    alt={cardTitle(choice.card, choice.label)}
-                    decoding="async"
-                    onerror={useFallbackImage}
-                    data-cy="prompt-controls-multiple-choice-image"
-                  />
-                {/if}
-                {#if choice.card.description}
-                  <p data-cy="prompt-controls-multiple-choice-description">
-                    {choice.card.description}
-                  </p>
-                {:else}
-                  <p data-cy="prompt-controls-multiple-choice-no-description">
-                    No effect text is available.
-                  </p>
-                {/if}
-              </details>
-            {/if}
           </div>
         {/each}
       </div>
@@ -528,29 +368,6 @@
               >↓</button
             >
           </span>
-          {#if choice.card}
-            <details
-              class="card-detail compact"
-              data-cy={`prompt-controls-order-choice-detail-${choice.id}`}
-            >
-              <summary data-cy="prompt-controls-order-choice-summary"
-                >Inspect {cardTitle(choice.card, choice.label)}</summary
-              >
-              {#if cardImageUrl(choice.card)}
-                <img
-                  class="card-image"
-                  src={cardImageUrl(choice.card)}
-                  alt={cardTitle(choice.card, choice.label)}
-                  decoding="async"
-                  onerror={useFallbackImage}
-                  data-cy="prompt-controls-order-choice-image"
-                />
-              {/if}
-              <p data-cy="prompt-controls-order-choice-description">
-                {choice.card.description || "No effect text is available."}
-              </p>
-            </details>
-          {/if}
         </li>
       {/each}
     </ol>
@@ -620,29 +437,6 @@
               >+</button
             >
           </div>
-          {#if choice.card}
-            <details
-              class="card-detail compact"
-              data-cy={`prompt-controls-counter-choice-detail-${choice.id}`}
-            >
-              <summary data-cy="prompt-controls-counter-choice-summary"
-                >Inspect {cardTitle(choice.card, choice.label)}</summary
-              >
-              {#if cardImageUrl(choice.card)}
-                <img
-                  class="card-image"
-                  src={cardImageUrl(choice.card)}
-                  alt={cardTitle(choice.card, choice.label)}
-                  decoding="async"
-                  onerror={useFallbackImage}
-                  data-cy="prompt-controls-counter-choice-image"
-                />
-              {/if}
-              <p data-cy="prompt-controls-counter-choice-description">
-                {choice.card.description || "No effect text is available."}
-              </p>
-            </details>
-          {/if}
         </div>
       {/each}
     </div>
@@ -673,8 +467,7 @@
     gap: 1rem;
   }
 
-  header p:last-child,
-  .card-detail p {
+  header p:last-child {
     margin-bottom: 0;
   }
 
@@ -717,31 +510,6 @@
 
   .choice-with-detail > button {
     width: 100%;
-  }
-
-  .card-detail {
-    padding: 0.75rem;
-    border: 1px solid var(--border);
-    border-radius: 0.55rem;
-    background: #0a1323;
-  }
-
-  .card-detail.compact {
-    margin-top: 0.55rem;
-    padding: 0.55rem;
-  }
-
-  .card-image {
-    display: block;
-    width: min(11rem, 100%);
-    height: auto;
-    margin: 0.75rem auto;
-    border-radius: 0.45rem;
-  }
-
-  summary {
-    cursor: pointer;
-    font-weight: 700;
   }
 
   fieldset {

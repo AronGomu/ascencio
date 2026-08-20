@@ -15,6 +15,7 @@
   export let onactivate: () => void = () => undefined;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let placeholderUrl = "";
+  export let cardBackUrl = "";
 
   let activeImageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   let activeImageCode: number | undefined;
@@ -112,6 +113,19 @@
         decoding="async"
         onerror={useFallbackImage}
         data-cy={`stack-control-image-${stack.id}`}
+      />
+    </div>
+  {:else if stack.count > 0 && (stack.zone === "deck" || stack.zone === "extra")}
+    <div
+      class="duel-field-stack__art"
+      data-cy={`stack-control-back-${stack.id}`}
+    >
+      <img
+        src={cardBackUrl}
+        alt=""
+        aria-hidden="true"
+        decoding="async"
+        data-cy={`stack-control-back-image-${stack.id}`}
       />
     </div>
   {/if}

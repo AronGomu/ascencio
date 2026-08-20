@@ -77,6 +77,11 @@
 - [ ] Confirm target shows no ×, conditional Cancel, dynamic source notice, and privacy-safe sorting.
 - [ ] Confirm browse still dismisses through outside press, Escape, ×, and Cancel.
 
+## T12 list-dialog-upright-no-count-text
+
+- [ ] Run `npm run dev`, open a duel, browse an opponent's Graveyard: confirm all cards render upright (title at top, art below).
+- [ ] In a duel with a search/select-1-of-1 prompt, confirm the footer shows "0 / 1 selected" counter but NO "Select between 1 and 1 choices" text.
+
 ## T14 selection-ui-integration
 
 - [ ] Confirm off-field exact-single clicks draft only, then Validate submits; mounted-field exact-single still submits immediately.
@@ -1381,3 +1386,207 @@ Buttons gone
 
 - [ ] Select a local deck at `#/duel`, then go to `#/decks` and delete that deck.
 - [ ] Return to `#/duel`. The fallback notice is shown, and the seat has fallen back to the stored default deck (or the bundled starter if there is none).
+
+## T1 field-spell-zone-address
+
+Automated proof already exists (`tests/unit/duel-field.test.ts`,
+`tests/integration/field-spell-activation.test.ts` — the latter drives a real
+`ygopro-core` WASM duel and asserts the board still maps after the activation).
+These steps confirm the same fix in a browser, which no automated suite covers.
+
+### Field survives a field-spell activation
+- [ ] `npm run dev`, open the printed URL, go to `#/duel`.
+- [ ] Pick **Spellbook** as your deck, any opponent deck, and Start.
+- [ ] Play to your Main Phase 1 and activate **The Grand Spellbook Tower** from your hand.
+- [ ] The duel field stays mounted. The panel headed **Duel field unavailable**
+      (`data-cy="app-field-error-panel"`) never appears.
+- [ ] The Tower renders inside your **Field Zone** — the single slot left of your
+      monster row — not in a Spell/Trap slot and not missing.
+- [ ] Prompts keep rendering on the field itself; you are not pushed into the
+      dialog-only fallback where every action goes through a decision box.
+
+### The duel continues normally afterwards
+- [ ] Answer the Tower's follow-up prompts and pass to the End Phase. The field
+      is still mounted and still shows the Tower in the Field Zone.
+- [ ] Take one more turn: summon a monster and set a Spell/Trap. Both land in
+      their own slots; the Field Zone still holds only the Tower.
+
+## T2 unsupported-message-abort
+
+Automated coverage exists and is the hard gate
+(`tests/integration/xyz-overlay-progression.test.ts` drives three real
+`ygopro-core` WASM duels through an Xyz Summon and asserts no
+`unsupported_message`; `tests/integration/spellbook-duel-progression.test.ts`
+plays a scripted Spellbook duel to its result). These steps confirm the same
+fix in a browser, which no automated suite covers.
+
+### A duel with an Xyz Summon is not stopped by a technical failure
+- [ ] `npm run dev`, open the printed URL, go to `#/duel`.
+- [ ] Pick **Burning Abyss** as your deck, any opponent deck, and Start.
+- [ ] Play until you can Xyz Summon (two Level 3 Burning Abyss monsters, for
+      example **Dante, Traveler of the Burning Abyss**). Complete the summon,
+      including the zone-selection prompt.
+- [ ] The duel keeps running. The panel reporting a technical failure
+      (`data-cy="app-error-panel"`) never appears and the duel does not end.
+- [ ] Open the browser console: no `duel.worker.command.failed` entry with
+      `code: 'unsupported_message'`, and no `duel.worker.detached` entry.
+
+### The Xyz monster shows the materials it carries
+- [ ] The summoned Xyz monster renders in a Monster Zone with its overlay
+      materials attached, not as a bare monster and not with its materials
+      still sitting in the zones they were summoned from.
+- [ ] The zones the materials came from are now empty.
+- [ ] Activate an effect that detaches a material (Dante's effect, for
+      example). The material count drops by one, the detached card appears in
+      the Graveyard, and the duel continues.
+
+### A story duel survives the same flow
+- [ ] Go to `#/story`, start the duel the story hands off, and play several
+      turns past the first Xyz Summon.
+- [ ] The duel is never stopped by a technical failure and the connection to
+      the duel worker is never reported as interrupted.
+
+
+## T3 deck-search-private-identity
+
+- [ ] Start a dev duel and activate a card that searches the deck (e.g. Spellbook Magician of Prophecy effect, or any search-style effect). Confirm the target list dialog shows real card art and names for your own deck cards, not "Face-down card".
+- [ ] After confirming the search choice, open the deck browse list and confirm those cards now show as face-down again (the prompt-attested identity is gone once the prompt resolves and the deck shuffles).
+
+## T4 extra-deck-facedown-top
+
+- [ ] Start a dev duel and observe both deck stacks (own and opponent). Each non-empty deck stack shows the card-back image, not a face-up card art.
+- [ ] Observe both extra deck stacks. Each non-empty extra deck stack shows the card-back image (same back art as the deck), not a face-up card art.
+- [ ] Open the GY (graveyard) browse list — the top card in the GY stack shows face-up art (regression: public piles unchanged).
+- [ ] Open the extra deck browse list — the list still shows own card names/art face-up (browse of private piles is intentionally allowed; only the stack tile face is hidden).
+
+## T5 center-hand-cards
+
+- [ ] Open the duel at `http://localhost:4173` (or dev server) with a 5-card starting hand — the hand cluster is horizontally centered under the duel field middle (visually sits in the center of the hand band, not packed to the left).
+- [ ] Draw cards until the hand overflows (≥ 10–12 cards at 1920×1080) — the scrollbar appears and scrolling left/right reaches both the first and last card.
+- [ ] Opponent hand (top band) with 5 cards also appears centered.
+
+## T6 zoom-gating-known-facedown
+
+- [ ] Run `npm run dev` and open the duel at `http://localhost:4173` (or configured dev port).
+- [ ] Hover over an opponent's set (face-down) card on the spell/trap row — the card must NOT zoom (no scale-up) and must show NO name label at the bottom.
+- [ ] Hover over an opponent's face-down monster — same: no zoom, no label.
+- [ ] Hover over your own set card (face-down spell/trap) — the card MUST zoom (scale 1.35) and MUST show the card name label at the bottom.
+- [ ] Hover over a face-up card (own or opponent's visible) — zoom and label both present (regression check).
+- [ ] Hover over cards in the opponent hand band — no zoom, no label (opponent hand cards have no code).
+- [ ] Confirm the browser console shows no errors during the above.
+
+## T7 hand-hover-zoom-overlay
+
+- [ ] Run `npm run dev` and open the duel at `http://localhost:4173` (or configured dev port).
+- [ ] Hover a known hand card (own face-up or face-down card you own) — a fixed-position overlay appears enlarged (~1.6× the card height) escaping the hand band and overlapping adjacent panels or side rails if it would clip there.
+- [ ] Confirm the overlay extends visually ABOVE the hand band top edge (not clipped by the band's overflow-y: hidden).
+- [ ] Action buttons (e.g. Summon, Set) appear directly above the zoomed card — not inside the hand band below the card.
+- [ ] Click an action button on the overlay — the action is dispatched (card is played or prompt advances). Overlay disappears.
+- [ ] Move the pointer from the card onto the overlay without leaving — overlay must stay visible (pointer-over-overlay grace period).
+- [ ] Move the pointer off the overlay entirely — overlay disappears.
+- [ ] Start dragging a hand card — overlay disappears immediately on drag start.
+- [ ] Press Escape while a hand card has keyboard focus with chips pinned — in-place zoom appears (1.35× via focus-within) and chips are accessible; the fixed overlay is NOT shown.
+- [ ] Hover over an opponent hand card (face-down, no code) — NO overlay appears.
+- [ ] Confirm the browser console shows no errors during the above.
+
+## T8 full-control-toggle
+
+- [ ] Run `npm run dev` and open the duel at `http://localhost:4173` (or configured dev port); confirm a "Full Control" checkbox sits at the bottom-right corner of the duel field, unchecked.
+- [ ] With Full Control unchecked, activate one of your own Spell/Trap cards — no chain window appears for your own activation (the engine's own-effect chain window is auto-passed).
+- [ ] With Full Control unchecked, Normal Summon a monster — no extra response window appears after the summon resolves.
+- [ ] With Full Control unchecked and a Trap set on your field, let the opponent activate an effect or declare an attack — a chain window DOES appear so you can respond.
+- [ ] Hold Ctrl down: the checkbox visibly ticks while the key is held.
+- [ ] Keep Ctrl held and activate your own effect — the chain window now appears (auto-pass is suppressed).
+- [ ] Release Ctrl — the checkbox unticks again, and own-effect chain windows are auto-passed once more.
+- [ ] Click the checkbox to check it manually, then press and release Ctrl — the checkbox stays checked after the release (manual check survives the hold).
+- [ ] With Full Control checked, summon a monster — the placement (zone) prompt surfaces instead of auto-placing, and single-option prompts surface instead of being auto-answered.
+- [ ] With Full Control checked, uncheck it while a prompt you can already see is open — that visible prompt is NOT auto-answered behind your back; it stays until you answer it.
+- [ ] Focus the browser's address bar (or switch windows) while holding Ctrl, then return — the checkbox is unticked (blur clears the hold).
+- [ ] Confirm the browser console shows no errors during the above.
+
+## T9 remove-inspect-option
+
+- [ ] Run `npm run dev` and open the duel at `http://localhost:4173` (or configured dev port); start a duel.
+- [ ] Trigger any prompt dialog (effectYesNo, selectCard, etc. — use workspace toggle in Settings if needed) — verify NO "Inspect …" rows / `<details>` expanders appear inside the dialog.
+- [ ] Force a multi-choice card-select prompt (e.g. discard cards) — verify the card checkbox rows show the card label only, with NO inspect expander beneath each checkbox.
+- [ ] Force a sort/order prompt (e.g. rearrange cards on field) — verify order list shows label + up/down buttons only, NO inspect expander.
+- [ ] Force a counter-allocation prompt — verify each card row shows label + +/- controls only, NO inspect expander.
+- [ ] Verify that the left CardPreviewPanel still shows card art and description when a card is focused on the field (the side panel remains the sole card-info surface).
+- [ ] Verify the HUD "Inspect" buttons (top-right tray) are unaffected and still open the card preview.
+- [ ] Confirm the browser console shows no errors during the above.
+
+## T10 right-rail-redesign
+
+- [ ] Run `npm run dev` and open the duel at `http://localhost:4173` (or configured dev port); start a preset duel.
+- [ ] Confirm a visible horizontal rule (border-bottom line) separates the turn/phase header row from the rest of the rail.
+- [ ] Confirm the avatar images are square, fill the full rail width, and have a fat accent-coloured border on all four sides (no card-back image; silhouette placeholder only).
+- [ ] Confirm the LP display reads `LP 8000` (label before the number, no thousands separator) for both players at the start of the duel.
+- [ ] Confirm the LP plate sits inside a bordered box (border visible, background slightly tinted).
+- [ ] Deal damage in the duel that brings a player below 4001 LP — confirm the LP plate colour changes to orange.
+- [ ] Deal damage that brings a player below 2000 LP — confirm the LP plate colour changes to red.
+- [ ] Confirm that when LP changes, the displayed number visibly counts/tweens toward the new value over ~600 ms (not a hard jump).
+- [ ] Enable `prefers-reduced-motion` in OS/browser settings, then repeat damage — confirm the LP number jumps immediately (no animation).
+- [ ] Confirm the action-prompt block (`status.title` / `status.subtitle`) is vertically centred within the rail (aligned with the middle of the duel field).
+- [ ] Confirm thinking dots still animate when the opponent is deciding.
+- [ ] Confirm the browser console shows no errors during the above.
+
+## T11 preview-keeps-last-card
+
+Start a dev duel (`npm run dev`), open the app in the browser, and pick decks to start a duel.
+
+- [ ] Hover a face-up card on the field (own monster or opponent face-up monster) — confirm the left preview panel updates to show that card's name and image.
+- [ ] While the preview panel is showing that card, hover an opponent's face-down (set) card — confirm the preview panel **does not change** (still shows the previously hovered card).
+- [ ] Hover a card in your own deck pile (graveyard stack, banished pile) — confirm preview updates to show its name.
+- [ ] Hover a stack pile that has no public top-card identity (e.g. opponent's deck) — confirm the preview panel does not change.
+- [ ] In the zone-list dialog (click a stack zone), hover a face-down entry — confirm the preview panel does not change.
+- [ ] In the zone-list dialog, hover a face-up/known entry — confirm the preview panel updates.
+- [ ] On a fresh duel load (before hovering any card), hover a hidden card — confirm the panel stays in its empty state ("Hover a card to see its details.").
+- [ ] Confirm the browser console shows no errors during the above.
+
+## T13 launcher-toggles-collapse
+
+Start a dev duel (`npm run dev`), open the app in the browser, and pick decks/start a duel. Activate a card effect that searches the deck (e.g. Reinforcement of the Army / Pot of Greed) so the off-field target list appears.
+
+- [ ] With the target list visible, click the graveyard pile (or whichever stack pile is haloed as the launcher) — confirm the list **collapses** to a single `+` button (does **not** close/disappear).
+- [ ] Click the same launcher pile again — confirm the list **expands** back to full, showing target entries.
+- [ ] With the list expanded, click the `−` button in the list header — confirm the list collapses to the `+` button.
+- [ ] With the list collapsed, click the `+` button — confirm the list expands and the `−` collapse button receives focus.
+- [ ] Click elsewhere on the duel field (not a launcher) — confirm the list closes (existing outside-click dismissal is unchanged).
+- [ ] Start a new duel effect that triggers a different target prompt — confirm the list opens expanded (collapse resets to `false` for the new prompt).
+- [ ] Confirm the browser console shows no errors during the above.
+
+## T14 halo-semantics-v2
+
+Start a dev duel (`npm run dev`), open the app in the browser, and pick decks/start a duel.
+
+- [ ] Open the GY (graveyard) browse list — hover entries that have no choices (neutral): confirm **no colored ring appears** on hover.
+- [ ] Activate a card effect with field targets (e.g. a monster that targets another monster). Hover actionable field cards — confirm **green ring** appears on hover.
+- [ ] Select a target card in the list — confirm **orange ring** persists even while hovering.
+- [ ] In a multi-select prompt, select up to the maximum, then hover an unselected entry — confirm **red ring** appears on the unavailable entry.
+- [ ] With a card-targeting prompt active: hover a non-candidate field card (one that is NOT highlighted green) — confirm **red ring** appears on hover and **disappears** when the pointer leaves.
+- [ ] Confirm the browser console shows no errors during the above.
+
+
+## T15 preview-stats-row
+
+- [ ] Hover a monster card in the preview panel — stats line shows `ATTRIBUTE · Race · Level/Rank N · ATK X / DEF Y` between name and effect text.
+- [ ] Hover a Link monster — stats line shows `ATTRIBUTE · Race · Link N · ATK X` (no `/ DEF` segment).
+- [ ] Hover a Spell card — stats line shows `Spell · SubType` (e.g., `Spell · Quick-Play`) or plain `Spell` when there is no subtype.
+- [ ] Hover a Trap card — stats line shows `Trap · SubType` or plain `Trap`.
+- [ ] Hover a card with unknown ATK/DEF — stats line renders `ATK ?` or `DEF ?` for null/negative values.
+- [ ] Hovering a face-down card shows no stats row (hidden card preview).
+- [ ] Stats line text is muted, small (0.78rem), and bold — matches `.card-preview-panel__stats` spec.
+
+## Review repair pass 1
+
+Start a dev duel (`npm run dev`), open the app in the browser, pick decks and start a duel.
+
+- [ ] Hold Ctrl with the Full Control checkbox off — confirm the box stays **unticked**, the label turns accent-coloured and a "held by Ctrl" pill appears beside it; release Ctrl and confirm the pill disappears.
+- [ ] With Ctrl held, click the Full Control checkbox — confirm it ticks and stays ticked after Ctrl is released.
+- [ ] With Full Control on, trigger a chain window you opened yourself — confirm the window waits for you instead of auto-passing.
+- [ ] Open a chain window while holding Ctrl, then release Ctrl while the window is still on screen — confirm nothing answers it for you.
+- [ ] Rotate a phone-sized viewport into the portrait duel layout (device toolbar, e.g. 390x844) and hover a hand card near the right edge — confirm the zoom overlay stays inside the rotated board instead of being pulled toward the left edge.
+- [ ] Rest the pointer on a hand card without moving it for a few seconds — confirm the zoom overlay mounts once and stays perfectly still, with no flicker or strobe.
+- [ ] With the zoom overlay open, click the hand card itself, then drag it onto a highlighted zone — confirm both work exactly as they do without the overlay, even though the overlay art is drawn over the card.
+- [ ] With the zoom overlay open, move the pointer straight up from the card onto the action chips above it — confirm the overlay stays open the whole way and the chip you click fires its action.
+- [ ] Move the pointer off the card sideways, away from the overlay — confirm the overlay closes immediately.

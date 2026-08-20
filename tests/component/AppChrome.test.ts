@@ -2,6 +2,7 @@
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
+import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const workerClientSpies = vi.hoisted(() => {
@@ -96,6 +97,10 @@ import {
 } from "../../src/battle/duel/contracts/ids.ts";
 import type { PlayerPrompt } from "../../src/battle/duel/contracts/player-prompt.ts";
 import type { PublicDuelState } from "../../src/battle/duel/contracts/public-duel-state.ts";
+import {
+  concealedStateCard,
+  publicStateCard,
+} from "../fixtures/board-public-states.ts";
 
 interface MockedWorkerInstance {
   readonly context: { workerGeneration: number; sessionGeneration: number };
@@ -223,6 +228,27 @@ function emitDuelError(): void {
 const LINK_FREE_SNAPSHOT: PublicDuelState = {
   ...EMPTY_SNAPSHOT,
   layout: { extraMonsterZones: false },
+};
+
+const PREVIEW_KNOWN_MONSTER = publicStateCard(
+  "preview-known-monster",
+  97590747,
+  0,
+  "monster",
+  0,
+);
+const PREVIEW_HIDDEN_MONSTER = concealedStateCard(
+  "preview-hidden-monster",
+  1,
+  "monster",
+  0,
+);
+const PREVIEW_TEST_STATE: PublicDuelState = {
+  ...EMPTY_SNAPSHOT,
+  players: [
+    { ...EMPTY_SNAPSHOT.players[0]!, monsters: [PREVIEW_KNOWN_MONSTER] },
+    { ...EMPTY_SNAPSHOT.players[1]!, monsters: [PREVIEW_HIDDEN_MONSTER] },
+  ],
 };
 
 const SHARED_ZONE_PLACE_PROMPT: PlayerPrompt = {
@@ -526,6 +552,206 @@ describe("App", () => {
     );
     expect(main?.classList.contains("is-duel-viewport")).toBe(false);
   });
+
+  it("hovering a hidden card keeps the previous preview", async () => {
+    const user = userEvent.setup();
+    await renderReadyApp();
+    await startDuelFromPicker(user);
+    emitDuelState(PREVIEW_TEST_STATE);
+
+    const knownCard = await vi.waitFor(() => {
+      const el = document.querySelector(
+        '[data-cy="field-card-preview-known-monster"]',
+      );
+      expect(el).not.toBeNull();
+      return el!;
+    });
+
+    fireEvent.pointerEnter(knownCard);
+    const nameBefore = await vi.waitFor(() => {
+      const el = document.querySelector('[data-cy="card-preview-name"]');
+      expect(el).not.toBeNull();
+      return el!.textContent;
+    });
+
+    const hiddenCard = document.querySelector(
+      '[data-cy="field-card-preview-hidden-monster"]',
+    )!;
+    fireEvent.pointerEnter(hiddenCard);
+    await tick();
+
+    expect(
+      document.querySelector('[data-cy="card-preview-name"]')?.textContent,
+    ).toBe(nameBefore);
+  });
+
+  it("hovering before any known card leaves the empty state", async () => {
+    const user = userEvent.setup();
+    await renderReadyApp();
+    await startDuelFromPicker(user);
+    emitDuelState(PREVIEW_TEST_STATE);
+
+    const hiddenCard = await vi.waitFor(() => {
+      const el = document.querySelector(
+        '[data-cy="field-card-preview-hidden-monster"]',
+      );
+      expect(el).not.toBeNull();
+      return el!;
+    });
+
+    expect(
+      document.querySelector('[data-cy="card-preview-empty"]'),
+    ).not.toBeNull();
+
+    fireEvent.pointerEnter(hiddenCard);
+    await tick();
+
+    expect(
+      document.querySelector('[data-cy="card-preview-empty"]'),
+    ).not.toBeNull();
+  });
+});
+
+/* The chain window the player opened themselves: two choices, so it is not a
+   formality `trivialPromptResponse` would answer, and a chain whose last link
+   the player controls, so `ownEffectChainPassResponse` is what has to answer
+   it. Everything below turns on whether that automation runs. */
+const OWN_CHAIN_PASS = choiceId("own-chain-pass");
+const OWN_EFFECT_CHAIN_PROMPT: PlayerPrompt = {
+  id: promptId("own-effect-chain-window"),
+  kind: "chain",
+  player: 0,
+  title: "Activate an effect in response?",
+  choices: [
+    {
+      id: choiceId("own-chain-activate"),
+      label: "Activate Set card",
+      action: "activate",
+    },
+    { id: OWN_CHAIN_PASS, label: "No response", action: "pass" },
+  ],
+  minimum: 0,
+  maximum: 1,
+  cancelable: true,
+  ordered: false,
+};
+
+const OWN_CHAIN_SNAPSHOT: PublicDuelState = {
+  ...EMPTY_SNAPSHOT,
+  chain: [
+    {
+      index: 0,
+      controller: 0,
+      sourceIdentityVisible: true,
+      label: "Your effect",
+      phase: "pending",
+      outcome: "normal",
+    },
+  ],
+};
+
+/** Lets the prompt reach the auto-resolve reactive statement and its queued
+    response. Sized by the positive test below, which fails if it is short. */
+async function settleAutoResolve(): Promise<void> {
+  for (let round = 0; round < 3; round += 1) {
+    await tick();
+    await new Promise<void>((resolve) => queueMicrotask(resolve));
+  }
+  await tick();
+}
+
+async function startOwnEffectChainWindow(
+  user: ReturnType<typeof userEvent.setup>,
+): Promise<void> {
+  await startDuelFromPicker(user);
+  emitDuelState(OWN_CHAIN_SNAPSHOT);
+  await vi.waitFor(() =>
+    expect(
+      document.querySelector('[data-cy="full-control-checkbox"]'),
+    ).not.toBeNull(),
+  );
+}
+
+function holdCtrl(): void {
+  fireEvent.keyDown(window, { key: "Control" });
+}
+
+function releaseCtrl(): void {
+  fireEvent.keyUp(window, { key: "Control" });
+}
+
+describe("App Full Control", () => {
+  it("passes on a chain window the player opened themselves", async () => {
+    const user = userEvent.setup();
+    await renderReadyApp();
+    await startOwnEffectChainWindow(user);
+
+    emitPrompt(OWN_EFFECT_CHAIN_PROMPT);
+    await settleAutoResolve();
+
+    expect(workerClientSpies.respond).toHaveBeenCalledTimes(1);
+    expect(workerClientSpies.respond).toHaveBeenCalledWith(
+      OWN_EFFECT_CHAIN_PROMPT.id,
+      [OWN_CHAIN_PASS],
+    );
+  });
+
+  it("answers nothing at all while the Full Control setting is on", async () => {
+    const user = userEvent.setup();
+    await renderReadyApp();
+    await startOwnEffectChainWindow(user);
+
+    await user.click(
+      document.querySelector(
+        '[data-cy="full-control-checkbox"]',
+      ) as HTMLInputElement,
+    );
+    emitPrompt(OWN_EFFECT_CHAIN_PROMPT);
+    await settleAutoResolve();
+
+    expect(workerClientSpies.respond).not.toHaveBeenCalled();
+  });
+
+  it("answers nothing while Ctrl is held, with the setting left off", async () => {
+    const user = userEvent.setup();
+    await renderReadyApp();
+    await startOwnEffectChainWindow(user);
+
+    holdCtrl();
+    await tick();
+    expect(
+      (
+        document.querySelector(
+          '[data-cy="full-control-checkbox"]',
+        ) as HTMLInputElement
+      ).checked,
+    ).toBe(false);
+
+    emitPrompt(OWN_EFFECT_CHAIN_PROMPT);
+    await settleAutoResolve();
+
+    expect(workerClientSpies.respond).not.toHaveBeenCalled();
+  });
+
+  /* Releasing Ctrl must not hand an automation the very window the player is
+     looking at. Full Control claims the prompt id on the way out, so the
+     window the player already saw stays theirs even after the key comes up. */
+  it("keeps a window the player already saw after Ctrl is released", async () => {
+    const user = userEvent.setup();
+    await renderReadyApp();
+    await startOwnEffectChainWindow(user);
+
+    holdCtrl();
+    await tick();
+    emitPrompt(OWN_EFFECT_CHAIN_PROMPT);
+    await settleAutoResolve();
+    expect(workerClientSpies.respond).not.toHaveBeenCalled();
+
+    releaseCtrl();
+    await settleAutoResolve();
+
+    expect(workerClientSpies.respond).not.toHaveBeenCalled();
+  });
 });
 
 describe("MenuDialog", () => {
@@ -785,6 +1011,7 @@ describe("SettingsDialog", () => {
         showWorkspace: false,
         autoPlaceCards: true,
         autoResolveTrivialPrompts: true,
+        fullControl: false,
         showZoneOutlines: true,
         showZoneCounts: false,
       },
@@ -829,6 +1056,7 @@ describe("SettingsDialog", () => {
         showWorkspace: false,
         autoPlaceCards: true,
         autoResolveTrivialPrompts: true,
+        fullControl: false,
         showZoneOutlines: true,
         showZoneCounts: true,
       },
@@ -862,6 +1090,7 @@ describe("SettingsDialog", () => {
         showWorkspace: false,
         autoPlaceCards: true,
         autoResolveTrivialPrompts: true,
+        fullControl: false,
         showZoneOutlines: true,
         showZoneCounts: true,
       },
@@ -897,6 +1126,7 @@ describe("SettingsDialog", () => {
         showWorkspace: false,
         autoPlaceCards: true,
         autoResolveTrivialPrompts: true,
+        fullControl: false,
         showZoneOutlines: true,
         showZoneCounts: true,
       },
@@ -931,6 +1161,7 @@ describe("SettingsDialog", () => {
         showWorkspace: false,
         autoPlaceCards: true,
         autoResolveTrivialPrompts: true,
+        fullControl: false,
         showZoneOutlines: true,
         showZoneCounts: true,
       },
@@ -963,6 +1194,7 @@ describe("SettingsDialog", () => {
         showWorkspace: false,
         autoPlaceCards: true,
         autoResolveTrivialPrompts: true,
+        fullControl: false,
         showZoneOutlines: true,
         showZoneCounts: true,
       },

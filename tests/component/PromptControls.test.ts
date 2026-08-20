@@ -79,7 +79,7 @@ describe("PromptControls", () => {
     expect(screen.getByRole("status").textContent).toContain("Response sent");
   });
 
-  it("accepts field-selection intent through the Svelte control layer and renders card art", async () => {
+  it("accepts field-selection intent through the Svelte control layer", async () => {
     const onsubmit = vi.fn<(choiceIds: readonly ChoiceId[]) => boolean>(
       () => true,
     );
@@ -102,12 +102,7 @@ describe("PromptControls", () => {
       disabled: false,
       onsubmit,
       choiceIntent: null,
-      resolveCardImage: () => "https://example.test/card.jpg",
     });
-    await userEvent.setup().click(screen.getByText(/Inspect/));
-    expect(
-      screen.getByRole("img", { name: "Card 97590747" }).getAttribute("src"),
-    ).toBe("https://example.test/card.jpg");
 
     await rendered.rerender({
       choiceIntent: { id: choiceId("card"), nonce: 1 },
@@ -118,13 +113,9 @@ describe("PromptControls", () => {
     expect(onsubmit).toHaveBeenCalledWith(["card"]);
   });
 
-  it("keeps legal input enabled while mounted card art has only a placeholder", async () => {
+  it("keeps legal input enabled for a card choice", async () => {
     const onsubmit = vi.fn<(choiceIds: readonly ChoiceId[]) => boolean>(
       () => true,
-    );
-    const release = vi.fn();
-    const lease = vi.fn<(code: number) => { url: string; release: () => void }>(
-      () => ({ url: "blob:late-card", release }),
     );
     const value = prompt("selectCard", {
       choices: [
@@ -140,26 +131,16 @@ describe("PromptControls", () => {
         }),
       ],
     });
-    const rendered = render(PromptControls, {
+    render(PromptControls, {
       prompt: value,
       disabled: false,
       onsubmit,
-      imageLibrary: null,
-      placeholderUrl: "data:image/svg+xml,placeholder",
     });
 
     expect(screen.getByRole("checkbox")).not.toHaveProperty("disabled", true);
-    expect(screen.getByRole("img").getAttribute("src")).toBe(
-      "data:image/svg+xml,placeholder",
-    );
     await userEvent.setup().click(screen.getByRole("checkbox"));
     await userEvent.setup().click(button("Confirm selection"));
     expect(onsubmit).toHaveBeenCalledOnce();
-
-    await rendered.rerender({ imageLibrary: { lease } });
-    expect(lease).toHaveBeenCalledWith(97590747);
-    rendered.unmount();
-    expect(release).toHaveBeenCalledOnce();
   });
 
   it("re-enables the same prompt after a recoverable response rejection", async () => {
@@ -328,8 +309,7 @@ describe("PromptControls", () => {
     ]);
   });
 
-  it("provides effect-text inspection from public prompt data", async () => {
-    const user = userEvent.setup();
+  it("renders choice buttons for an effectYesNo prompt with contextCard", () => {
     render(PromptControls, {
       prompt: prompt("effectYesNo", {
         contextCard: {
@@ -349,8 +329,34 @@ describe("PromptControls", () => {
       onsubmit: vi.fn(),
     });
 
-    await user.click(screen.getByText("Inspect La Jinn"));
-    expect(screen.getByText("A mystical genie with great power.")).toBeTruthy();
+    expect(button("Yes")).toBeTruthy();
+    expect(button("No")).toBeTruthy();
+    expect(screen.queryByText(/Inspect/)).toBeNull();
+  });
+
+  it("renders no inspect expander for any prompt surface", () => {
+    const card = {
+      instanceId: cardInstanceId("inspect-test-card"),
+      code: cardCode(97590747),
+      name: "La Jinn",
+      description: "A mystical genie.",
+      controller: 0 as const,
+      location: "monster" as const,
+      sequence: 0,
+    };
+    render(PromptControls, {
+      prompt: prompt("effectYesNo", {
+        contextCard: card,
+        choices: [
+          choice("yes", "Yes", { action: "yes", card }),
+          choice("no", "No", { action: "no" }),
+        ],
+      }),
+      onsubmit: vi.fn(),
+    });
+
+    expect(screen.queryByText(/Inspect/)).toBeNull();
+    expect(document.querySelector("details.card-detail")).toBeNull();
   });
 
   it("restores focus to the heading when a new prompt replaces the old one", async () => {

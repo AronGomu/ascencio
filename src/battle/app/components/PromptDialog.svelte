@@ -2,13 +2,10 @@
   import { onMount } from "svelte";
   import type { ChoiceId } from "../../duel/contracts/ids.ts";
   import type { PlayerPrompt } from "../../duel/contracts/player-prompt.ts";
-  import type { CardImageLibrary } from "../images/card-image-cache.ts";
   import PromptControls from "../prompts/PromptControls.svelte";
 
   export let prompt: PlayerPrompt;
   export let disabled = false;
-  export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
-  export let placeholderUrl = "";
   export let onsubmit: (choiceIds: readonly ChoiceId[]) => unknown;
 
   let panel: HTMLDivElement | undefined;
@@ -32,8 +29,6 @@
     <PromptControls
       {prompt}
       {disabled}
-      {imageLibrary}
-      {placeholderUrl}
       onsubmit={(choiceIds) => {
         onsubmit(choiceIds);
       }}

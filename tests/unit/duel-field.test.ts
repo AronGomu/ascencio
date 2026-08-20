@@ -262,6 +262,8 @@ describe("duel field mapping", () => {
     [{ player: 1, location: "spellTrap", sequence: 2 }, "p1:spellTrap:2"],
     [{ player: 1, location: "spellTrap", sequence: 3 }, "p1:spellTrap:3"],
     [{ player: 1, location: "spellTrap", sequence: 4 }, "p1:spellTrap:4"],
+    [{ player: 0, location: "spellTrap", sequence: 5 }, "p0:field"],
+    [{ player: 1, location: "spellTrap", sequence: 5 }, "p1:field"],
     [{ player: 0, location: "field", sequence: 0 }, "p0:field"],
     [{ player: 1, location: "field", sequence: 0 }, "p1:field"],
     [{ player: 0, location: "pendulum", sequence: 0 }, "p0:spellTrap:0"],
@@ -278,7 +280,9 @@ describe("duel field mapping", () => {
     { player: 0, location: "monster", sequence: 7 },
     { player: 1, location: "monster", sequence: 8 },
     { player: 0, location: "spellTrap", sequence: -1 },
-    { player: 0, location: "spellTrap", sequence: 5 },
+    { player: 0, location: "spellTrap", sequence: 6 },
+    { player: 1, location: "spellTrap", sequence: 6 },
+    { player: 0, location: "spellTrap", sequence: 7 },
     { player: 1, location: "spellTrap", sequence: 7 },
     { player: 0, location: "field", sequence: -1 },
     { player: 0, location: "field", sequence: 1 },
@@ -346,7 +350,60 @@ function revealedDeckSnapshot(): PublicDuelState {
   };
 }
 
+/**
+ * ocgcore keeps the Field Zone inside the Spell & Trap list at sequence 5,
+ * so a projected field spell arrives as `spellTrap` 5 rather than `field` 0.
+ */
+function fieldSpellSnapshot(sequence: number): PublicDuelState {
+  return {
+    ...RICH_PUBLIC_DUEL_STATE,
+    players: [
+      {
+        ...RICH_PUBLIC_DUEL_STATE.players[0],
+        spellsAndTraps: [
+          publicStateCard(
+            "grand-spellbook-tower",
+            33981008,
+            0,
+            "spellTrap",
+            sequence,
+            "faceUpAttack",
+          ),
+        ],
+      },
+      RICH_PUBLIC_DUEL_STATE.players[1],
+    ],
+  };
+}
+
 describe("semantic board view model", () => {
+  it("maps a field spell reported at spellTrap sequence 5 into the field zone", () => {
+    const result = mapSnapshotToBoard(fieldSpellSnapshot(5), BOARD_CARD_TEXTS);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(
+      result.value.cards.find(({ id }) => id === "grand-spellbook-tower"),
+    ).toMatchObject({ zoneId: "p0:field", sequence: 5, hidden: false });
+  });
+
+  it("still rejects spellTrap sequences 6 and 7", () => {
+    for (const sequence of [6, 7]) {
+      expect(
+        mapSnapshotToBoard(fieldSpellSnapshot(sequence), BOARD_CARD_TEXTS),
+      ).toEqual({
+        ok: false,
+        error: {
+          type: "unsupported_fixed_card",
+          cardId: "grand-spellbook-tower",
+          controller: 0,
+          location: "spellTrap",
+          sequence,
+        },
+      });
+    }
+  });
+
   it.each(Object.entries(BOARD_VIEW_MODEL_FIXTURES))(
     "maps %s with stable normalized physical controls",
     (_fixture, snapshot) => {
@@ -611,6 +668,33 @@ describe("semantic board view model", () => {
 
     expect(graveyard?.topCardLabel).toBe("Blue-Eyes White Dragon");
     expect(graveyard?.topCardCode).toBe(89631139);
+  });
+
+  it("an extra deck stack exposes no top card identity", () => {
+    const result = mapSnapshotToBoard(
+      BOARD_VIEW_MODEL_FIXTURES["ST-08"],
+      BOARD_CARD_TEXTS,
+    );
+    if (!result.ok) throw new Error("Fixture failed to map");
+    const extra = result.value.stacks.find(({ id }) => id === "p0:extra");
+
+    expect(extra?.count).toBeGreaterThan(0);
+    expect(extra?.topCardCode).toBeUndefined();
+    expect(extra?.topCardLabel).toBeUndefined();
+    expect(extra?.accessibleLabel).not.toContain("top card");
+  });
+
+  it("graveyard stack keeps its face-up top card", () => {
+    const result = mapSnapshotToBoard(
+      TWO_CARD_GRAVEYARD_STATE,
+      BOARD_CARD_TEXTS,
+    );
+    if (!result.ok) throw new Error("Fixture failed to map");
+    const graveyard = result.value.stacks.find(
+      ({ id }) => id === "p0:graveyard",
+    );
+
+    expect(graveyard?.topCardCode).toBeDefined();
   });
 
   it("keeps 34 zones with both shared EMZs for a Link profile", () => {

@@ -55,6 +55,7 @@
     type DragPointerSample,
   } from "../presentation/drag-ghost-physics.ts";
   import {
+    readFrameWidth,
     readStageFrame,
     toFramePoint,
     toFrameRect,
@@ -62,6 +63,7 @@
     type StageFrame,
   } from "../presentation/stage-frame.ts";
   import DragGhost from "./duel-field/DragGhost.svelte";
+  import HandZoomOverlay from "./duel-field/HandZoomOverlay.svelte";
   import FieldActionBar from "./duel-field/FieldActionBar.svelte";
   import FloatingFieldWindow from "./duel-field/FloatingFieldWindow.svelte";
   import FieldBoard from "./duel-field/FieldBoard.svelte";
@@ -134,6 +136,7 @@
     | null;
 
   let zoneListState: ZoneListState = null;
+  let targetListCollapsed = false;
   /* Ephemeral, never persisted (ADR-017): the last window the player touched
      is the one that rises. */
   let activeWindowId: FieldWindowId | null = null;
@@ -186,6 +189,14 @@
      gesture — the frame cannot turn mid-drag — so `CardControl` keeps
      reporting plain viewport coordinates and the physics module stays pure. */
   let dragStageFrame: StageFrame = UNROTATED_FRAME;
+  let handZoom: {
+    card: BoardCardView;
+    anchor: { left: number; top: number; width: number; height: number };
+    /* Captured with the anchor so the overlay clamps against the same frame
+       the anchor was measured in, never against the viewport. */
+    frameWidth: number;
+  } | null = null;
+  let handZoomBoardRef: BoardViewModel | null = null;
 
   $: resolvedCardBackUrl = cardBackUrl || DEFAULT_CARD_BACK;
   $: effectiveReducedMotion = reducedMotion ?? mediaReducedMotion;
@@ -202,6 +213,7 @@
   $: targetLaunchers = targetLauncherIds(spec);
   $: synchronizeZoneList(spec, offFieldTargets);
   $: cancelDragGhostOnPromptChange(spec);
+  $: clearHandZoomOnBoardChange(board);
   $: openStack = browsedStack(zoneListState, board);
   $: targetListOpen = zoneListState?.mode === "target";
   $: submittedChoiceIds =
@@ -514,6 +526,7 @@
     dragCard = card;
     dropCandidates = candidates;
     dropHoveredZoneId = null;
+    handZoom = null;
     /* A new drag always wins over a settle still in flight for the previous
        card ("new drag first cancels prior settle"). */
     cancelGhostFrame();
@@ -662,6 +675,44 @@
     if (key === ghostPromptKey) return;
     ghostPromptKey = key;
     if (ghostOrigin !== null) removeGhost();
+    handZoom = null;
+  }
+
+  function clearHandZoomOnBoardChange(value: BoardViewModel): void {
+    if (value !== handZoomBoardRef) {
+      handZoomBoardRef = value;
+      handZoom = null;
+    }
+  }
+
+  function enterHandZoom(card: BoardCardView, element: HTMLElement): void {
+    const frame = readStageFrame(fieldRoot);
+    const rect = toFrameRect(frame, element.getBoundingClientRect());
+    handZoom = {
+      card,
+      anchor: rect,
+      frameWidth: readFrameWidth(fieldRoot),
+    };
+  }
+
+  /* ADR-032 §5: the overlay dies when the pointer leaves the *union* of the
+     hand card and the overlay, never on either boundary on its own. The
+     crossing's `relatedTarget` settles that synchronously, inside the very
+     event that reports the leave. A flag raised by the other half's
+     `pointerenter` cannot: that enter is a later dispatch, and the overlay is
+     already unmounted by the microtask checkpoint in between. */
+  function leaveHandZoom(related: EventTarget | null): void {
+    if (insideHandZoomUnion(related)) return;
+    handZoom = null;
+  }
+
+  function insideHandZoomUnion(related: EventTarget | null): boolean {
+    if (handZoom === null || !(related instanceof Element)) return false;
+    if (related.closest(".hand-zoom-overlay") !== null) return true;
+    return (
+      related.closest("[data-card-id]")?.getAttribute("data-card-id") ===
+      handZoom.card.id
+    );
   }
 
   /* The ghost's home/target rect is read live from the DOM only here, at
@@ -789,6 +840,7 @@
     if (key !== lastPromptKey) {
       lastPromptKey = key;
       zoneListState = null;
+      targetListCollapsed = false;
       outsideDismissedTargetId = null;
       dismissedTargetPromptKey = null;
       activeWindowId = null;
@@ -804,8 +856,7 @@
     const key = promptKeyOf(spec);
     if (key === null) return;
     if (zoneListState?.mode === "target") {
-      dismissedTargetPromptKey = key;
-      closeZoneList();
+      targetListCollapsed = !targetListCollapsed;
       return;
     }
     dismissedTargetPromptKey = null;
@@ -925,6 +976,9 @@
   bind:this={fieldRoot}
   data-cy="duel-field"
   data-dragging={dragCard === null ? undefined : "true"}
+  data-targeting={spec !== null && spec.kind === "cardSelection"
+    ? "true"
+    : undefined}
   data-prompt-kind={prompt === null ? undefined : prompt.kind}
   style={`width: ${renderLayout.geometry.width}px; height: ${renderLayout.geometry.height}px;`}
   onclick={dismissOnOutsideClick}
@@ -960,6 +1014,8 @@
         oncardpreview={onpreview}
         {onstackpreview}
         onstackactivate={activateStack}
+        oncardzoomenter={enterHandZoom}
+        oncardzoomleave={leaveHandZoom}
       />
       <PhaseStrip
         geometry={renderLayout.geometry}
@@ -979,6 +1035,22 @@
       reducedMotion={effectiveReducedMotion}
     />
   {/if}
+  {#if handZoom !== null}
+    <HandZoomOverlay
+      card={handZoom.card}
+      anchor={handZoom.anchor}
+      frameWidth={handZoom.frameWidth}
+      imageUrl={handZoom.card.image.kind === "back"
+        ? resolvedCardBackUrl
+        : (imageUrls.get(handZoom.card.image.code) ?? resolvedPlaceholderUrl)}
+      choices={spec?.cardChoices.get(handZoom.card.targetId) ?? []}
+      disabled={pending}
+      onchoose={(choice) =>
+        dispatch({ type: "chooseChoice", choiceId: choice.id })}
+      ondismiss={() => (handZoom = null)}
+      onzoomleave={leaveHandZoom}
+    />
+  {/if}
   {#if targetListOpen && spec !== null}
     <ZoneListDialog
       mode="target"
@@ -991,7 +1063,6 @@
       minimum={spec.constraints.minimum}
       maximum={spec.constraints.maximum}
       confirmValid={validation.valid}
-      validationMessage={validation.valid ? "" : validation.message}
       cancelable={spec.constraints.cancelable}
       {imageLibrary}
       cardBackUrl={resolvedCardBackUrl}
@@ -1000,6 +1071,8 @@
       boundaryElement={fieldRoot}
       windowPosition={zoneListWindowPosition}
       active={activeWindowId === "zoneList"}
+      collapsed={targetListCollapsed}
+      oncollapsedchange={(value) => (targetListCollapsed = value)}
       onactivate={activateWindow}
       onwindowpositionchange={onzoneListWindowPositionChange}
       ontargetchoice={chooseTargetChoice}

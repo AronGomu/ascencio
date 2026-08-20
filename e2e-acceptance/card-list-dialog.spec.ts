@@ -408,11 +408,11 @@ test("maximum lock and stale draft cover checks 22-28", async ({
     0,
   );
   expect(await computed(unavailableTile.locator("img"), "border-color")).toBe(
-    "rgb(255, 69, 93)",
+    "rgb(255, 140, 155)",
   );
   await unavailableTile.hover({ position: { x: 130, y: 100 } });
   expect(await computed(unavailableTile.locator("img"), "border-color")).toBe(
-    "rgb(255, 69, 93)",
+    "rgb(255, 140, 155)",
   );
   await page.mouse.move(0, 0);
   await page.waitForTimeout(150);
@@ -621,4 +621,61 @@ test("duplicate choice compatibility keeps two opaque IDs keyboard and max safe"
   ).toBeEnabled();
   await first.click();
   expect(await selectedIds(page)).toEqual(["acceptance-duplicate-second"]);
+});
+
+test("an opponent card renders upright in the list", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await open(page, "card-list-browse-opponent");
+  const entryImg = page.locator(`${tileSelector}.is-opponent img`).first();
+  await expect(entryImg).toBeVisible();
+  await expect(entryImg).toHaveCSS("transform", "none");
+});
+
+test("a neutral browse entry shows no halo on hover", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await open(page, "card-list-browse-six");
+  // Entry 1 has no choices — neutral (entries 0 and 5 are actionable).
+  const neutralTile = page.locator(tileSelector).nth(1);
+  await neutralTile.hover({ position: { x: 72, y: 50 } });
+  const borderColor = await computed(neutralTile.locator("img"), "border-color");
+  expect(borderColor).not.toBe("rgb(126, 226, 168)"); // not green
+  expect(borderColor).not.toBe("rgb(255, 213, 128)"); // not orange
+  expect(borderColor).not.toBe("rgb(255, 140, 155)"); // not red
+});
+
+test("an actionable entry halos green on hover", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await open(page, "card-list-browse-six");
+  // Entry 0 has choices — actionable.
+  const actionableTile = page.locator(tileSelector).nth(0);
+  await actionableTile.hover({ position: { x: 72, y: 50 } });
+  expect(await computed(actionableTile.locator("img"), "border-color")).toBe(
+    "rgb(126, 226, 168)",
+  );
+});
+
+test("an over-maximum entry halos red", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await open(page, "card-list-range");
+  const buttons = await targetButtons(page);
+  // Select 3 entries to reach the maximum.
+  for (let i = 0; i < 3; i += 1) await clickTarget(page, buttons.nth(i));
+  // 4th entry is now unavailable.
+  const unavailableTile = page.locator(tileSelector).nth(3);
+  await unavailableTile.hover({ position: { x: 72, y: 50 } });
+  expect(await computed(unavailableTile.locator("img"), "border-color")).toBe(
+    "rgb(255, 140, 155)",
+  );
+});
+
+test("a selected entry stays orange even while hovered", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await open(page, "card-list-range");
+  const buttons = await targetButtons(page);
+  await clickTarget(page, buttons.first());
+  const selectedTile = page.locator(tileSelector).first();
+  await selectedTile.hover({ position: { x: 72, y: 50 } });
+  expect(await computed(selectedTile.locator("img"), "border-color")).toBe(
+    "rgb(255, 213, 128)",
+  );
 });

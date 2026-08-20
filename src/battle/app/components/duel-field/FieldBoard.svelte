@@ -63,6 +63,12 @@
   export let oncardpreview: (card: BoardCardView) => void = () => undefined;
   export let onstackpreview: (stack: BoardStackView) => void = () => undefined;
   export let onstackactivate: (stack: BoardStackView) => void = () => undefined;
+  export let oncardzoomenter: (
+    card: BoardCardView,
+    element: HTMLElement,
+  ) => void = () => undefined;
+  export let oncardzoomleave: (related: EventTarget | null) => void = () =>
+    undefined;
 
   let boardElement: HTMLDivElement;
   let navigationState: FieldNavigationState = createFieldNavigationState();
@@ -245,6 +251,8 @@
       {oncarddragmove}
       {oncarddragend}
       {oncardpreview}
+      {oncardzoomenter}
+      {oncardzoomleave}
     />
   {/if}
   {#if opponentHandZone !== undefined}
@@ -269,6 +277,8 @@
       {oncarddragmove}
       {oncarddragend}
       {oncardpreview}
+      {oncardzoomenter}
+      {oncardzoomleave}
     />
   {/if}
   {#each board.stacks as stack (stack.targetId)}
@@ -281,6 +291,7 @@
       onactivate={() => onstackactivate(stack)}
       {imageLibrary}
       {placeholderUrl}
+      {cardBackUrl}
     />
   {/each}
   {#each fieldCards as card (card.id)}

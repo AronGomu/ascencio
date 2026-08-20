@@ -8,6 +8,7 @@ export type AcceptanceScenarioId =
   | "preview-long"
   | "card-list-browse-six"
   | "card-list-browse-overflow"
+  | "card-list-browse-opponent"
   | "card-list-empty"
   | "card-list-target-chrome"
   | "card-list-single"
@@ -16,7 +17,9 @@ export type AcceptanceScenarioId =
   | "card-list-range"
   | "card-list-hand-mixed"
   | "card-list-duplicate"
-  | "card-list-stale";
+  | "card-list-stale"
+  | "field-hand-zoom"
+  | "field-invalid-target";
 
 const SCENARIOS: ReadonlySet<string> = new Set<AcceptanceScenarioId>([
   "field-emz",
@@ -28,6 +31,7 @@ const SCENARIOS: ReadonlySet<string> = new Set<AcceptanceScenarioId>([
   "preview-long",
   "card-list-browse-six",
   "card-list-browse-overflow",
+  "card-list-browse-opponent",
   "card-list-empty",
   "card-list-target-chrome",
   "card-list-single",
@@ -37,6 +41,8 @@ const SCENARIOS: ReadonlySet<string> = new Set<AcceptanceScenarioId>([
   "card-list-hand-mixed",
   "card-list-duplicate",
   "card-list-stale",
+  "field-hand-zoom",
+  "field-invalid-target",
 ]);
 
 export function acceptanceScenarioId(

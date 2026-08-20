@@ -3,10 +3,8 @@
 import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import CardPreviewPanel from "../../src/shell/card-preview/CardPreviewPanel.svelte";
-import {
-  HIDDEN_CARD_PREVIEW,
-  type CardPreviewView,
-} from "../../src/battle/app/presentation/card-preview.ts";
+import type { CardPreviewView } from "../../src/battle/app/presentation/card-preview.ts";
+import type { CardCode } from "../../src/battle/duel/contracts/ids.ts";
 import type { CardImageLease } from "../../src/battle/app/images/card-image-cache.ts";
 import { cardCode } from "../../src/battle/duel/contracts/ids.ts";
 
@@ -23,6 +21,7 @@ function preview(
     code,
     name: "The Legendary Fisherman",
     description: "This card is unaffected by Spell effects.",
+    statsLine: null,
     ...overrides,
   };
 }
@@ -129,10 +128,18 @@ describe("CardPreviewPanel", () => {
     expect(releaseFor(FISHERMAN)).toHaveBeenCalledTimes(1);
   });
 
-  it("panel does not lease an image for the hidden preview", () => {
+  /* cardCode() rejects 0, so the panel's `code > 0` guard is only reachable
+     with a cast — it is the defensive branch that keeps a codeless preview
+     on the placeholder instead of leasing an image for it. */
+  it("panel does not lease an image for a zero code", () => {
     const { library, lease } = leaseLibrary();
     render(CardPreviewPanel, {
-      preview: HIDDEN_CARD_PREVIEW,
+      preview: {
+        code: 0 as CardCode,
+        name: "Face-down card",
+        description: "No information is available for this card.",
+        statsLine: null,
+      },
       imageLibrary: library,
       placeholderUrl: "/placeholder.webp",
     });
@@ -172,6 +179,34 @@ describe("CardPreviewPanel", () => {
         .querySelector('[data-cy="card-preview-image"]')
         ?.getAttribute("src"),
     ).toBe(`blob:card-${FISHERMAN}`);
+  });
+
+  it("renders the stats row between name and effect text", () => {
+    render(CardPreviewPanel, {
+      preview: preview(FISHERMAN, {
+        statsLine: "DARK · Spellcaster · Level 4 · ATK 1800 / DEF 1200",
+      }),
+    });
+
+    const stats = document.querySelector('[data-cy="card-preview-stats"]');
+    const name = document.querySelector('[data-cy="card-preview-name"]');
+    const region = document.querySelector(
+      '[data-cy="card-preview-text-region"]',
+    );
+    expect(stats).not.toBeNull();
+    expect(stats?.textContent).toBe(
+      "DARK · Spellcaster · Level 4 · ATK 1800 / DEF 1200",
+    );
+    const body = document.querySelector('[data-cy="card-preview-body"]');
+    expect(body?.children[0]).toBe(name);
+    expect(body?.children[1]).toBe(stats);
+    expect(body?.children[2]).toBe(region);
+  });
+
+  it("omits the stats row without stats", () => {
+    render(CardPreviewPanel, { preview: preview() });
+
+    expect(document.querySelector('[data-cy="card-preview-stats"]')).toBeNull();
   });
 
   it("keeps only the real text scroller keyboard focusable", () => {

@@ -76,16 +76,37 @@ export function isQuarterTurnClockwise(transform: string): boolean {
   return Math.abs(a) < 1e-6 && Math.abs(b - 1) < 1e-6;
 }
 
-/** Reads the frame `element` is rendered in. Anything mounted outside the shell
-    — the acceptance harness, a component test — has no duel region above it and
-    is never rotated. */
-export function readStageFrame(element: Element | null): StageFrame {
+/** The rotated stage `element` is rendered inside, or `null` when there is no
+    quarter turn above it. Anything mounted outside the shell — the acceptance
+    harness, a component test — has no duel region above it and is never
+    rotated. */
+function rotatedFrameElement(element: Element | null): Element | null {
   const frame = element?.closest(DUEL_FRAME_SELECTOR) ?? null;
-  if (frame === null) return UNROTATED_FRAME;
+  if (frame === null) return null;
   const transform = globalThis.getComputedStyle?.(frame).transform ?? "";
-  if (!isQuarterTurnClockwise(transform)) return UNROTATED_FRAME;
+  return isQuarterTurnClockwise(transform) ? frame : null;
+}
+
+/** Reads the frame `element` is rendered in. */
+export function readStageFrame(element: Element | null): StageFrame {
+  const frame = rotatedFrameElement(element);
+  if (frame === null) return UNROTATED_FRAME;
   const rect = frame.getBoundingClientRect();
   return Object.freeze({ rotated: true, top: rect.top, right: rect.right });
+}
+
+/** The frame's width along its own x axis: the ceiling a `position: fixed`
+    child has to clamp against. A transformed ancestor becomes the containing
+    block for its fixed descendants, so a fixed child of the rotated stage
+    resolves against that stage rather than the viewport — and the quarter turn
+    swaps the axes, making the stage's local width its *viewport height* (a
+    390x844 phone gives ~693, not 390). Unrotated there is no transformed
+    ancestor, the containing block really is the viewport, and this is
+    `innerWidth`. */
+export function readFrameWidth(element: Element | null): number {
+  const frame = rotatedFrameElement(element);
+  if (frame !== null) return frame.getBoundingClientRect().height;
+  return typeof globalThis.innerWidth === "number" ? globalThis.innerWidth : 0;
 }
 
 export function toFramePoint(

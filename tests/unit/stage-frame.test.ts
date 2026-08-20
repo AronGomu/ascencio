@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   isQuarterTurnClockwise,
+  readFrameWidth,
   readStageFrame,
   toFrameDelta,
   toFramePoint,
@@ -57,6 +58,55 @@ describe("readStageFrame", () => {
       closest: () => null,
     } as unknown as Element;
     expect(readStageFrame(orphan)).toBe(UNROTATED_FRAME);
+  });
+});
+
+/** An element inside a duel region carrying `transform`, standing in for the
+    stylesheet's quarter turn without a layout engine. */
+function elementInFrame(transform: string): Element {
+  const frame = {
+    getBoundingClientRect: () => ({
+      top: FRAME_TOP,
+      right: VIEWPORT_WIDTH,
+      // On screen the rotated stage is VIEWPORT_WIDTH wide and FRAME_WIDTH
+      // tall; its own x axis runs down that height.
+      width: VIEWPORT_WIDTH,
+      height: FRAME_WIDTH,
+    }),
+  } as unknown as Element;
+  vi.stubGlobal("getComputedStyle", (element: Element) =>
+    element === frame ? { transform } : { transform: "none" },
+  );
+  return {
+    closest: (selector: string) =>
+      selector === '[data-cy="shell-region-duel"]' ? frame : null,
+  } as unknown as Element;
+}
+
+describe("readFrameWidth", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  /* The regression: a `position: fixed` child of the rotated stage resolves
+     against that stage, so clamping it to `innerWidth` clamps a frame-space
+     edge (0..693 here) against a viewport axis (0..390) and pulls the hand
+     zoom overlay a third of the board to the left. */
+  it("reads the rotated stage's own width from its on-screen height", () => {
+    vi.stubGlobal("innerWidth", VIEWPORT_WIDTH);
+    const element = elementInFrame("matrix(0, 1, -1, 0, -346.5, -195)");
+
+    expect(readFrameWidth(element)).toBeCloseTo(FRAME_WIDTH, 6);
+    expect(readFrameWidth(element)).not.toBeCloseTo(VIEWPORT_WIDTH, 6);
+  });
+
+  it("is the viewport width with no duel region and with an unrotated one", () => {
+    vi.stubGlobal("innerWidth", 1366);
+    expect(readFrameWidth(null)).toBe(1366);
+    expect(readFrameWidth(elementInFrame("none"))).toBe(1366);
+    expect(readFrameWidth(elementInFrame("matrix(1, 0, 0, 1, 0, 0)"))).toBe(
+      1366,
+    );
   });
 });
 

@@ -15,6 +15,7 @@ describe("createUiSettingsStore", () => {
       autoResolveTrivialPrompts: true,
       showZoneOutlines: true,
       showZoneCounts: true,
+      fullControl: false,
     });
   });
 
@@ -28,6 +29,7 @@ describe("createUiSettingsStore", () => {
       autoResolveTrivialPrompts: true,
       showZoneOutlines: true,
       showZoneCounts: true,
+      fullControl: false,
     });
   });
 
@@ -41,6 +43,7 @@ describe("createUiSettingsStore", () => {
       autoResolveTrivialPrompts: true,
       showZoneOutlines: true,
       showZoneCounts: true,
+      fullControl: false,
     });
   });
 
@@ -54,6 +57,7 @@ describe("createUiSettingsStore", () => {
       autoResolveTrivialPrompts: true,
       showZoneOutlines: true,
       showZoneCounts: true,
+      fullControl: false,
     });
   });
 
@@ -67,7 +71,21 @@ describe("createUiSettingsStore", () => {
       autoResolveTrivialPrompts: false,
       showZoneOutlines: true,
       showZoneCounts: true,
+      fullControl: false,
     });
+  });
+
+  it("fullControl defaults off and toggles", () => {
+    const store = createUiSettingsStore();
+    expect(get(store).fullControl).toBe(false);
+    store.setFullControl(true);
+    expect(get(store)).toMatchObject({
+      fullControl: true,
+      autoPlaceCards: true,
+      autoResolveTrivialPrompts: true,
+    });
+    store.setFullControl(false);
+    expect(get(store).fullControl).toBe(false);
   });
 
   it("sets each UI display flag independently", () => {

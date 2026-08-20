@@ -140,7 +140,6 @@ function renderTargetDialog(
     readonly minimum?: number;
     readonly maximum?: number;
     readonly confirmValid?: boolean;
-    readonly validationMessage?: string;
     readonly cancelable?: boolean;
     readonly title?: string;
   } = {},
@@ -149,15 +148,24 @@ function renderTargetDialog(
   const onconfirm = vi.fn();
   const oncancel = vi.fn();
   const onclose = vi.fn();
+  const oncollapsedchange = vi.fn();
+  const ctx: {
+    rendered: ReturnType<typeof render<typeof ZoneListDialog>> | null;
+  } = { rendered: null };
+  const handleCollapsedChange = (value: boolean): void => {
+    oncollapsedchange(value);
+    ctx.rendered?.rerender({ collapsed: value });
+  };
   const rendered = render(ZoneListDialog, {
     mode: "target",
     stack: null,
+    collapsed: false,
+    oncollapsedchange: handleCollapsedChange,
     targetEntries: overrides.targetEntries ?? [targetEntry()],
     selectedChoiceIds: overrides.selectedChoiceIds ?? [],
     minimum: overrides.minimum ?? 1,
     maximum: overrides.maximum ?? 1,
     confirmValid: overrides.confirmValid ?? false,
-    validationMessage: overrides.validationMessage ?? "",
     cancelable: overrides.cancelable ?? false,
     ...(overrides.title === undefined ? {} : { title: overrides.title }),
     cardBackUrl: "back.png",
@@ -166,13 +174,21 @@ function renderTargetDialog(
     oncancel,
     onclose,
   });
-  return { rendered, ontargetchoice, onconfirm, oncancel, onclose };
+  ctx.rendered = rendered;
+  return {
+    rendered,
+    ontargetchoice,
+    onconfirm,
+    oncancel,
+    onclose,
+    oncollapsedchange,
+  };
 }
 
 describe("ZoneListDialog target mode", () => {
   it("renders target notice, collapse chrome, and mode state", async () => {
     const user = userEvent.setup();
-    renderTargetDialog({
+    const { oncollapsedchange } = renderTargetDialog({
       targetEntries: [
         targetEntry({ location: "deck", zoneBadge: "DECK" }),
         targetEntry({
@@ -212,6 +228,7 @@ describe("ZoneListDialog target mode", () => {
     );
     if (collapse === null) throw new Error("Missing collapse button");
     await user.click(collapse);
+    expect(oncollapsedchange).toHaveBeenCalledWith(true);
     expect(root?.dataset.collapsed).toBe("true");
     expect(
       document.querySelector('[data-cy="zone-list-dialog-title"]'),
@@ -225,6 +242,7 @@ describe("ZoneListDialog target mode", () => {
     if (expand === null) throw new Error("Missing expand button");
     expect(document.activeElement).toBe(expand);
     await user.click(expand);
+    expect(oncollapsedchange).toHaveBeenCalledWith(false);
     expect(root?.dataset.collapsed).toBe("false");
     expect(document.activeElement).toBe(
       document.querySelector('[data-cy="zone-list-dialog-collapse-button"]'),
@@ -572,19 +590,22 @@ describe("ZoneListDialog target mode", () => {
     expect(unavailable?.getAttribute("aria-disabled")).toBe("true");
   });
 
-  it("shows the validation message and only offers Cancel when the engine allows it", async () => {
+  it("never renders the selection-range validation text", () => {
+    renderTargetDialog({ minimum: 1, maximum: 1, confirmValid: false });
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-validation"]'),
+    ).toBeNull();
+    expect(document.body.textContent).not.toMatch(/Select between/);
+  });
+
+  it("only offers Cancel when the engine allows it", async () => {
     const user = userEvent.setup();
     const harness = renderTargetDialog({
       minimum: 1,
       maximum: 2,
-      validationMessage: "Select at least 1 card",
       cancelable: true,
     });
 
-    expect(
-      document.querySelector('[data-cy="zone-list-dialog-validation"]')
-        ?.textContent,
-    ).toContain("Select at least 1 card");
     const cancel = document.querySelector<HTMLButtonElement>(
       '[data-cy="zone-list-dialog-target-cancel-button"]',
     );

@@ -32,7 +32,6 @@
   export let minimum = 0;
   export let maximum = 0;
   export let confirmValid = false;
-  export let validationMessage = "";
   export let cancelable = false;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let cardBackUrl = "";
@@ -54,14 +53,15 @@
   export let onpreview: (entry: ZoneListEntry) => void = noop;
   export let onclose: (event?: Event) => void = noop;
 
+  export let collapsed = false;
+  export let oncollapsedchange: (value: boolean) => void = () => undefined;
+
   let entriesElement: HTMLElement | null = null;
   let alphabetical = false;
-  let collapsed = false;
   let collapseButton: HTMLButtonElement | null = null;
   let expandButton: HTMLButtonElement | null = null;
 
   $: targetMode = mode === "target";
-  $: if (!targetMode) collapsed = false;
   $: sourceEntries = targetMode ? targetEntries : entries;
   $: alphabeticalAllowed = cardListAlphabeticalAllowed(sourceEntries);
   $: if (!alphabeticalAllowed) alphabetical = false;
@@ -87,7 +87,7 @@
   });
 
   async function setCollapsed(value: boolean): Promise<void> {
-    collapsed = value;
+    oncollapsedchange(value);
     await tick();
     (value ? expandButton : collapseButton)?.focus();
   }
@@ -271,10 +271,6 @@
           <button
             type="button"
             disabled={disabled || !selectionState.validateEnabled}
-            aria-describedby={!selectionState.validateEnabled &&
-            validationMessage
-              ? "zone-list-dialog-validation"
-              : undefined}
             onclick={() => onconfirm()}
             data-cy="zone-list-dialog-confirm-button">Validate selection</button
           >
@@ -286,15 +282,6 @@
               onclick={() => oncancel()}
               data-cy="zone-list-dialog-target-cancel-button">Cancel</button
             >
-          {/if}
-          {#if !confirmValid && validationMessage}
-            <p
-              id="zone-list-dialog-validation"
-              class="validation"
-              data-cy="zone-list-dialog-validation"
-            >
-              {validationMessage}
-            </p>
           {/if}
         {:else}
           <button

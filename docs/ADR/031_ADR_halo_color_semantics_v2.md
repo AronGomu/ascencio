@@ -1,6 +1,6 @@
 # ADR-031: Halo Color Semantics v2
 
-> Status: accepted; planned
+> Status: accepted; implemented
 > Decided: 2026-08-16
 > Owners: field presentation architecture
 > Supersedes: the list-hover clause of ADR-015 (field clauses stand)

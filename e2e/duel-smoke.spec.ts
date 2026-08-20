@@ -346,10 +346,10 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   await expect(currentPhaseChip).toHaveCount(1);
   await expect(
     page.locator('[data-cy="duel-right-rail-life-points-0"]'),
-  ).toHaveText("8,000 LP");
+  ).toHaveText("LP 8000");
   await expect(
     page.locator('[data-cy="duel-right-rail-life-points-1"]'),
-  ).toHaveText("8,000 LP");
+  ).toHaveText("LP 8000");
   // Round 3 (T10): the header labels each life total by role, not deck/
   // archetype name — those never render anywhere in the header or field.
   const headerText = await page
@@ -2218,7 +2218,10 @@ test("hovering a hand card fills the preview panel sharing the shell row", async
     )
     .first();
   await expect(handCard).toBeVisible();
-  await handCard.hover();
+  // `force` skips the actionability re-check: the hover mounts the zoom overlay
+  // over the very card it was opened from (T7), so the re-check can never find
+  // that card unobstructed again.
+  await handCard.hover({ force: true });
 
   const hoveredName = ((await handCard.getAttribute("aria-label")) ?? "")
     .replace(/ in Your Hand$/, "")
@@ -2259,12 +2262,20 @@ test("a passive opponent hand card receives a real hover", async ({ page }) => {
   await expect(card).toHaveCSS("pointer-events", "auto");
   await card.hover();
 
-  await expect(page.locator('[data-cy="card-preview-name"]')).toHaveText(
-    "Face-down card",
+  // The pointer really lands on the card rather than being swallowed by the
+  // band around it — which is the whole claim of this test.
+  expect(await card.evaluate((element) => element.matches(":hover"))).toBe(
+    true,
   );
+
+  // T11: a card with no identity no longer overwrites the preview with a
+  // "Face-down card" placeholder. The panel keeps whatever was last known,
+  // which at this point in the duel is still the empty state.
+  await expect(page.locator('[data-cy="card-preview-name"]')).toHaveCount(0);
+  await expect(page.locator('[data-cy="card-preview-empty"]')).toBeVisible();
 });
 
-test("T12: field/hand cards zoom 1.35x on hover, halo/art scale with the root, chips stay hit-testable, and reduced motion disables the zoom", async ({
+test("T12: hand hover opens a 1.6x overlay, keyboard focus lifts the card 1.35x in place, chips stay hit-testable, and reduced motion disables the zoom", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1366, height: 768 });
@@ -2288,7 +2299,57 @@ test("T12: field/hand cards zoom 1.35x on hover, halo/art scale with the root, c
       ?.getBoundingClientRect();
     return { width: root.width, height: root.height, artWidth: art?.width };
   });
-  await handCard.hover();
+  // Hand hover no longer scales the card in place: it mounts a fixed overlay
+  // that escapes the band (`HandZoomOverlay`, T7 round 4). `force` skips the
+  // actionability re-check: the overlay is drawn over the card and, while it
+  // no longer takes pointer input there, it still fails that check by sight.
+  /* Matched by class, not by a `data-cy` prefix: the overlay's own art and name
+     strip carry `hand-zoom-overlay-image-…`/`hand-zoom-overlay-name-…`, so a
+     prefix locator counts one overlay three times. */
+  const handZoomOverlays = page.locator("div.hand-zoom-overlay");
+  await handCard.hover({ force: true });
+  await expect(handZoomOverlays).toHaveCount(1);
+  /* Measured inside the page rather than through a resolved element handle,
+     which any remount would leave detached, reporting a 0x0 box instead of the
+     geometry under test. Reading in-page also takes the rect field by field — a `DOMRect` carries
+     its geometry on the prototype and serialises out as an empty object. */
+  const overlayBox = await page
+    .waitForFunction(() => {
+      const element = document.querySelector("div.hand-zoom-overlay");
+      if (element === null) return null;
+      const rect = element.getBoundingClientRect();
+      return rect.width > 0 ? { width: rect.width, height: rect.height } : null;
+    })
+    .then((handle) => handle.jsonValue());
+  if (overlayBox === null)
+    throw new Error("Missing hand zoom overlay geometry");
+  const hoveredCard = await handCard.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return { width: rect.width, height: rect.height };
+  });
+  const overlayRatio = overlayBox.width / before.width;
+  expect(
+    overlayRatio,
+    "hand hover overlay renders ~1.6x the card box",
+  ).toBeGreaterThan(1.6 * 0.98);
+  expect(overlayRatio).toBeLessThan(1.6 * 1.02);
+  expect(
+    overlayBox.height / before.height,
+    "hand hover overlay height scales ~1.6x with the card box",
+  ).toBeGreaterThan(1.6 * 0.98);
+  expect(
+    Math.abs(hoveredCard.width - before.width),
+    "hover leaves the hand card itself at rest — the overlay carries the zoom",
+  ).toBeLessThanOrEqual(1);
+
+  // Keyboard focus keeps the in-place 1.35x lift, halo/art scaling with it.
+  await page.mouse.move(0, 0);
+  await expect(handZoomOverlays).toHaveCount(0);
+  await handCard.evaluate((element) => {
+    (
+      element.querySelector<HTMLElement>(".duel-field-card__target") ?? element
+    ).focus({ preventScroll: true });
+  });
   await page.waitForTimeout(200);
   const after = await handCard.evaluate((element) => {
     const root = element.getBoundingClientRect();
@@ -2298,13 +2359,13 @@ test("T12: field/hand cards zoom 1.35x on hover, halo/art scale with the root, c
     return { width: root.width, height: root.height, artWidth: art?.width };
   });
   const ratio = after.width / before.width;
-  expect(ratio, "hand card root scales ~1.35x on hover").toBeGreaterThan(
+  expect(ratio, "hand card root scales ~1.35x on focus").toBeGreaterThan(
     1.35 * 0.98,
   );
   expect(ratio).toBeLessThan(1.35 * 1.02);
   expect(
     after.height / before.height,
-    "hand card root height scales ~1.35x on hover",
+    "hand card root height scales ~1.35x on focus",
   ).toBeGreaterThan(1.35 * 0.98);
   if (before.artWidth !== undefined && after.artWidth !== undefined) {
     expect(
@@ -2312,6 +2373,10 @@ test("T12: field/hand cards zoom 1.35x on hover, halo/art scale with the root, c
       "art scales with the root, not independently",
     ).toBeGreaterThan(1.35 * 0.98);
   }
+  await page.evaluate(() => {
+    if (document.activeElement instanceof HTMLElement)
+      document.activeElement.blur();
+  });
 
   // Chips remain hit-testable above every visible card once its parent's
   // z-index is raised on hover/focus (T12 impl step 10).
@@ -2356,35 +2421,48 @@ test("T12: field/hand cards zoom 1.35x on hover, halo/art scale with the root, c
     await expect(chipButtons.first()).toBeFocused();
   }
 
-  // Reduced motion: bounds unchanged within 1px, chips still usable.
+  // Reduced motion: bounds unchanged within 1px, chips still usable. Focus is
+  // what the reduced-motion rule now has to disable — hover stopped scaling
+  // the card in place at all, so a hover probe here would pass vacuously.
   await page.mouse.move(0, 0);
   await page.emulateMedia({ reducedMotion: "reduce" });
   const restRect = await handCard.evaluate((element) =>
     element.getBoundingClientRect(),
   );
-  await handCard.hover();
+  await handCard.evaluate((element) => {
+    (
+      element.querySelector<HTMLElement>(".duel-field-card__target") ?? element
+    ).focus({ preventScroll: true });
+  });
   await page.waitForTimeout(200);
-  const hoveredReducedRect = await handCard.evaluate((element) =>
+  const focusedReducedRect = await handCard.evaluate((element) =>
     element.getBoundingClientRect(),
   );
   expect(
-    Math.abs(hoveredReducedRect.width - restRect.width),
-    "reduced motion keeps hand card bounds unchanged on hover",
+    Math.abs(focusedReducedRect.width - restRect.width),
+    "reduced motion keeps hand card bounds unchanged on focus",
   ).toBeLessThanOrEqual(1);
   expect(
-    Math.abs(hoveredReducedRect.height - restRect.height),
-    "reduced motion keeps hand card bounds unchanged on hover",
+    Math.abs(focusedReducedRect.height - restRect.height),
+    "reduced motion keeps hand card bounds unchanged on focus",
   ).toBeLessThanOrEqual(1);
   if (actionTargetId !== null) {
     const chips = page.locator(
       `[data-cy="card-action-chips-${actionTargetId.cardId}"]`,
     );
-    await actionTarget.hover();
+    /* Focus, not hover: on a hand card hover mounts the overlay, which carries
+       its own copy of this card's chips, so a hover probe here would resolve
+       two elements instead of proving the chips are still usable. */
+    await actionTarget.focus();
     await expect(chips).toBeVisible();
+    await actionTarget.evaluate((element: HTMLElement) => element.blur());
   }
   await page.emulateMedia({ reducedMotion: "no-preference" });
 
-  // Zone-list entry hover turns orange (computed border colour) and grows.
+  // Zone-list entry hover grows, and paints the ADR-031 halo colour its own
+  // state calls for: green when the entry carries choices, red when it is an
+  // invalid target, orange only when it is already selected, and nothing at
+  // all when it is neutral. Hover is never itself a colour.
   const trayButton = page
     .getByRole("button", { name: /Open Your (Extra Deck|GY|Banished) tray/ })
     .first();
@@ -2406,19 +2484,49 @@ test("T12: field/hand cards zoom 1.35x on hover, halo/art scale with the root, c
     const entryAfter = await entry.evaluate((element) => {
       const rect = element.getBoundingClientRect();
       const img = element.querySelector("img");
+      /* Tokens are declared as hex; borderColor comes back as rgb(). Resolving
+         each token through a real element is what makes the two comparable
+         without restating a colour literal the stylesheet owns. */
+      const resolveToken = (name: string): string => {
+        const probe = document.createElement("span");
+        probe.style.color = `var(${name})`;
+        document.body.append(probe);
+        const resolved = getComputedStyle(probe).color;
+        probe.remove();
+        return resolved;
+      };
       return {
         width: rect.width,
         borderColor: img === null ? "" : getComputedStyle(img).borderColor,
+        actionable: element.classList.contains("is-actionable"),
+        selected: element.classList.contains("is-selected"),
+        unavailable: element.classList.contains("is-unavailable"),
+        success: resolveToken("--success"),
+        warning: resolveToken("--warning"),
+        danger: resolveToken("--danger"),
+        neutral: resolveToken("--border"),
       };
     });
     expect(
       entryAfter.width / entryBefore.width,
       "zone-list entry grows on hover",
     ).toBeGreaterThan(1.35 * 0.98);
+    const expectedBorder = entryAfter.selected
+      ? entryAfter.warning
+      : entryAfter.unavailable
+        ? entryAfter.danger
+        : entryAfter.actionable
+          ? entryAfter.success
+          : entryAfter.neutral;
     expect(
       entryAfter.borderColor,
-      "zone-list entry hover border is orange (--warning)",
-    ).toBe("rgb(255, 213, 128)");
+      `ADR-031 halo for hovered entry (selected=${entryAfter.selected}, unavailable=${entryAfter.unavailable}, actionable=${entryAfter.actionable})`,
+    ).toBe(expectedBorder);
+    if (!entryAfter.selected)
+      expect(
+        entryAfter.borderColor,
+        "ADR-031 reserves orange for selection, so a plain hover never paints it",
+      ).not.toBe(entryAfter.warning);
   }
 });
 
@@ -2485,8 +2593,18 @@ test("item 5: field cards stay outside the hand band and hand action chips remai
     /^field-card-target-/,
     "",
   );
-  const chips = field.locator(`[data-cy="card-action-chips-${cardId}"]`);
-  await opener.hover();
+  /* Revealed with focus rather than with the pointer. T7 routed the *hover*
+     reveal into the zoom overlay, which is anchored on the card's bottom edge
+     at 1.6x and therefore covers the card it was opened from — so a resting
+     pointer has the browser hand the hover back and forth between card and
+     overlay, and the overlay's chips mount and unmount every other frame. The
+     overlay's own geometry is covered by `e2e-acceptance/hand-zoom.spec.ts`;
+     what this test still owns is that the chips win the hit test above every
+     card and that firing one crosses the production response boundary. */
+  const chips = field.locator(
+    `[data-card-id="${cardId}"] [data-cy="card-action-chips-${cardId}"]`,
+  );
+  await opener.focus();
   await expect(chips).toBeVisible();
   const chipButtons = chips.locator("button");
   const chipCount = await chipButtons.count();
@@ -2513,13 +2631,11 @@ test("item 5: field cards stay outside the hand band and hand action chips remai
     ).toBe(true);
   }
   const responsesBeforeAction = await countResponses(page);
-  const firstChipBox = await chipButtons.first().boundingBox();
-  if (firstChipBox === null)
-    throw new Error("Missing hand action chip geometry");
-  await page.mouse.click(
-    firstChipBox.x + firstChipBox.width / 2,
-    firstChipBox.y + firstChipBox.height / 2,
-  );
+  /* Fired from the keyboard: a pointer moving onto a chip crosses its own
+     card, which opens the zoom overlay on top of the chip it was heading for.
+     Both routes run the same `onchoose` handler out to the worker. */
+  await chipButtons.first().focus();
+  await page.keyboard.press("Enter");
   await expect
     .poll(async () => countResponses(page))
     .toBeGreaterThan(responsesBeforeAction);
@@ -2667,8 +2783,11 @@ test("opponent pile inversion rotates images only", async ({ page }) => {
     playerEntryImage: upright,
     playerEntryPosition: upright,
     playerEntryChips: upright,
+    /* Only the field stack art above stays inverted. List entries read as a
+       browsable pile, so T12 round 4 dropped the entry-image rotation and
+       opponent cards render the same way up as the player's. */
     opponentEntryRoot: upright,
-    opponentEntryImage: inverted,
+    opponentEntryImage: upright,
     opponentEntryPosition: upright,
     opponentEntryChips: upright,
   } as const;
@@ -3131,7 +3250,27 @@ test("responsive field compositions contain controls across supported viewports"
       // merely `display: none` until the card is hovered, holds focus, or is
       // the pinned menu target. Every assertion here is therefore about
       // visibility; `toHaveCount` would pass or fail for the wrong reason.
-      const chips = field.locator(`[data-cy="card-action-chips-${cardId}"]`);
+      const chips = field.locator(
+        `[data-card-id="${cardId}"] [data-cy="card-action-chips-${cardId}"]`,
+      );
+      /* T7 split the hover reveal off the card: a hand card's in-band chips
+         would be clipped by the band's scroll box, so hovering one mounts the
+         zoom overlay and shows the chips above that instead. Focus and pin
+         keep the in-place copy either way. */
+      const inHand = await actionTarget.evaluate(
+        (element) =>
+          element
+            .closest<HTMLElement>("[data-card-zone-id]")
+            ?.dataset.cardZoneId?.endsWith(":hand") ?? false,
+      );
+      /* The overlay's own copy is scoped: two elements carrying one `data-cy`
+         would break the uniqueness half of the element contract while both are
+         mounted. */
+      const hoverChips = inHand
+        ? field.locator(
+            `.hand-zoom-overlay [data-cy="hand-zoom-overlay-card-action-chips-${cardId}"]`,
+          )
+        : chips;
 
       /* Hover and focus are the plan's headline reveal triggers and the pinned
          path below exercises neither, so assert each on its own. Both the
@@ -3140,10 +3279,10 @@ test("responsive field compositions contain controls across supported viewports"
       await page.mouse.move(0, 0);
       await actionTarget.evaluate((element: HTMLElement) => element.blur());
       await expect(chips).toBeHidden();
-      await actionTarget.hover();
-      await expect(chips).toBeVisible();
+      await actionTarget.hover({ force: true });
+      await expect(hoverChips).toBeVisible();
       await page.mouse.move(0, 0);
-      await expect(chips).toBeHidden();
+      await expect(hoverChips).toBeHidden();
       await actionTarget.focus();
       await expect(chips).toBeVisible();
       // A card offering exactly one action fires it directly on click (T5)
@@ -3154,7 +3293,13 @@ test("responsive field compositions contain controls across supported viewports"
       await expect(chips).toBeHidden();
 
       if (chipChoiceCount > 1) {
-        await actionTarget.click();
+        /* Activated from the keyboard rather than with the mouse. On a hand
+           card the T7 zoom overlay is anchored at 1.6x on the card's bottom
+           edge, so it covers the card it was opened from and competes for the
+           click. Both routes run the same handler; what is under test here is
+           the pinned state and its Escape round trip, not the input device. */
+        await actionTarget.focus();
+        await page.keyboard.press("Enter");
         await expect(chips).toBeVisible();
         await assertRectInsideViewport(
           page,

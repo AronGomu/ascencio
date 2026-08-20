@@ -244,9 +244,9 @@ describe("global styles", () => {
     );
     expect(unavailable).toContain(":hover img");
     expect(unavailable).toContain(":focus-within img");
-    expect(unavailable).toContain("border-color: var(--danger-strong)");
+    expect(unavailable).toContain("border-color: var(--danger)");
     expect(unavailable).toContain(
-      "color-mix(in srgb, var(--danger-strong) 78%, transparent)",
+      "color-mix(in srgb, var(--danger) 65%, transparent)",
     );
     expect(unavailable).not.toContain("var(--warning)");
   });
@@ -303,12 +303,12 @@ describe("global styles", () => {
     expect(list).toContain("transition: transform 120ms ease-out");
     const fieldHover = ruleBlock(
       css,
-      ".duel-field-card:not(.is-hand-item):not(.is-pinned):is(:hover, :focus-within) {",
+      ".duel-field-card.is-identity-known:not(.is-hand-item):not(.is-pinned):is(\n    :hover,\n    :focus-within\n  ) {",
     );
     expect(fieldHover).toContain("scale(1.35)");
     const handHover = ruleBlock(
       css,
-      ".duel-field-card.is-hand-item:not(.is-pinned):is(:hover, :focus-within) {",
+      ".duel-field-card.is-identity-known.is-hand-item:not(.is-pinned):focus-within {",
     );
     expect(handHover).toContain("scale(1.35)");
     const listSelector =

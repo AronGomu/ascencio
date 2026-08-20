@@ -380,6 +380,14 @@ h4 {
   min-height: 0;
 }
 
+.card-preview-panel__stats {
+  margin: 0.15rem 0 0.4rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 .card-preview-panel__text-region {
   position: relative;
   min-height: 0;
@@ -404,6 +412,11 @@ h4 {
   grid-template-rows: auto auto minmax(0, 1fr) auto;
   gap: 0.75rem;
   min-width: 0;
+}
+.duel-right-rail__header {
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 .duel-right-rail__top {
   display: flex;
@@ -430,17 +443,42 @@ h4 {
 .duel-right-rail__identity img {
   display: block;
   width: 100%;
+  height: auto;
   aspect-ratio: 1;
-  max-height: 26svh;
   object-fit: cover;
+  border: 4px solid var(--accent);
+  border-radius: var(--radius-sm);
 }
-.duel-right-rail__identity p {
-  margin: 0.35rem 0;
-  color: var(--warning);
+.duel-right-rail__life {
+  display: block;
+  width: 100%;
+  margin: 0.35rem auto 0;
+  padding: 0.3rem 0;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--bg-deep) 70%, transparent);
+  font-size: 1.35rem;
   font-weight: 800;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.duel-right-rail__life.is-high {
+  color: var(--success);
+  border-color: currentColor;
+}
+.duel-right-rail__life.is-mid {
+  color: var(--warning);
+  border-color: currentColor;
+}
+.duel-right-rail__life.is-low {
+  color: var(--danger);
+  border-color: currentColor;
 }
 .duel-right-rail__status {
-  align-self: center;
+  flex: 1;
+  display: grid;
+  place-content: center;
+  text-align: center;
   min-width: 0;
 }
 .duel-right-rail__status h2 {
@@ -910,12 +948,43 @@ li + li {
 }
 
 .duel-field-slot {
+  position: relative;
   width: calc(var(--stage-w, 100vw) - var(--preview-w) - var(--rail-min));
   min-width: 0;
   min-height: 0;
   display: grid;
   place-items: center;
   overflow: hidden;
+}
+
+/* Sits in the slot's corner rather than the board's, so the board's own
+   aspect-driven box never moves it, and it stays legible against whatever
+   the field paints behind it. */
+.full-control-toggle {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  z-index: var(--duel-field-layer-control);
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+/* Ctrl raises Full Control without writing the setting, so the hold is shown
+   next to the box instead of inside it: the tick keeps meaning "this is what
+   you set", and the highlight means "and it is on right now anyway". */
+.full-control-toggle.is-held {
+  color: var(--accent);
+}
+
+.full-control-toggle__hold:not(:empty) {
+  padding: 0 0.25rem;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  font-size: 0.65rem;
+  line-height: 1.4;
 }
 
 .duel-field {
@@ -1212,6 +1281,67 @@ button.duel-field-zone,
   }
 }
 
+/* Anchored on the card's bottom edge at 1.6x, the overlay is drawn *over* the
+   card that opened it. Taking pointer input there would steal that card's own
+   hover and press: the card would report a leave the moment the overlay
+   mounted, and the press meant for the card would land on the art. So the box
+   and everything it draws stay out of hit testing; only the bridge below opts
+   back in, and only above the card. */
+.hand-zoom-overlay {
+  position: fixed;
+  z-index: var(--duel-field-layer-hand-zoom);
+  pointer-events: none;
+}
+
+/* Spans the overlay from the chips' bottom edge down to the anchor card's top
+   edge, and no further. That single span is what lets the pointer reach a chip
+   without ever crossing dead ground and closing the overlay on the way. */
+.hand-zoom-overlay__bridge {
+  position: absolute;
+  top: -0.3rem;
+  right: 0;
+  bottom: var(--hand-zoom-bridge-bottom);
+  left: 0;
+  pointer-events: auto;
+}
+
+.hand-zoom-overlay__art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0.28rem;
+}
+
+.hand-zoom-overlay__name {
+  position: absolute;
+  z-index: var(--duel-field-layer-label);
+  right: -0.1rem;
+  bottom: -0.1rem;
+  left: -0.1rem;
+  overflow: hidden;
+  padding: 0.12rem 0.18rem;
+  border-radius: 0.2rem;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--bg-deeper) 82%, transparent);
+  font-size: clamp(0.38rem, 0.55vw, 0.57rem);
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Override the default display:none on chips so they show inside the overlay.
+   Positioned against the bridge rather than the overlay box, so the two meet
+   edge to edge and the pointer path between them has no gap. */
+.hand-zoom-overlay .card-action-chips {
+  display: flex;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
+
 /* Chips float above the zones and stay visible while their card is hovered,
    focused or pinned — all of which survive a drag. Taking them out of hit
    testing for the duration keeps `document.elementFromPoint` on the zone the
@@ -1227,6 +1357,15 @@ button.duel-field-zone,
 .duel-field-card.is-selected .duel-field-card__art {
   border-color: var(--warning);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--selected) 78%, transparent);
+}
+
+/* While a card-targeting prompt is active, hovering a non-candidate field card
+   shows a red ring to signal invalid target — hover-only, never persistent. */
+.duel-field[data-targeting="true"]
+  .duel-field-card:not(.is-actionable):hover
+  .duel-field-card__art {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--danger) 60%, transparent);
 }
 
 /* Keyboard focus is a neutral high-contrast ring, independent of the
@@ -1493,29 +1632,27 @@ button.duel-field-zone,
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--legal) 55%, transparent);
 }
 
-/* Selected overrides plain legal green with the same orange the pointer
-   hover rule below uses; hover never mutates this class. */
+/* Selected overrides plain legal green with orange; hover never mutates this
+   class, and no hover rule below repaints a selected entry. */
 .zone-list-entry.is-selected img {
   border-color: var(--warning);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--selected) 78%, transparent);
 }
 
-/* List pointer hover is orange regardless of legality, and never persists
-   as a class: same specificity as the two rules above, source order last
-   so it wins for the duration of the hover only. */
-.zone-list-entry:hover img {
-  border-color: var(--warning);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--selected) 55%, transparent);
+/* Actionable hover/focus amplifies the base green ring; selected and neutral
+   entries are excluded so hover never overrides orange or paints neutrals. */
+.zone-list-entry.is-actionable:not(.is-selected):hover img {
+  border-color: var(--success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--legal) 78%, transparent);
 }
 
-/* Unavailable exceeds hover/focus specificity so hard-locked choices stay
-   visibly red. Selected tiles never match and retain removable orange state. */
+/* Unavailable entries show a red ring (danger, not danger-strong) so the
+   invalid-target language matches the field card targeting halo below. */
 .zone-list-entry.is-unavailable:not(.is-selected) img,
 .zone-list-entry.is-unavailable:not(.is-selected):hover img,
 .zone-list-entry.is-unavailable:not(.is-selected):focus-within img {
-  border-color: var(--danger-strong);
-  box-shadow: 0 0 0 3px
-    color-mix(in srgb, var(--danger-strong) 78%, transparent);
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 65%, transparent);
 }
 
 .zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open) {
@@ -1778,7 +1915,10 @@ button.duel-field-zone,
    the keyboard-walker e2e's hundreds of focus moves past its time budget.
    Pin/menu z-layering (above) is unaffected — only the visual scale is
    skipped while pinned. */
-.duel-field-card:not(.is-hand-item):not(.is-pinned):is(:hover, :focus-within) {
+.duel-field-card.is-identity-known:not(.is-hand-item):not(.is-pinned):is(
+    :hover,
+    :focus-within
+  ) {
   transform: translate(-50%, -50%) scale(1.35);
 }
 
@@ -1804,9 +1944,21 @@ button.duel-field-zone,
   transform-origin: center top;
 }
 
-/* Same pin exclusion as the field/zone rule above. */
-.duel-field-card.is-hand-item:not(.is-pinned):is(:hover, :focus-within) {
+/* Same pin exclusion as the field/zone rule above. The overlay handles
+   the hover state; only focus-within keeps the in-place lift. */
+.duel-field-card.is-identity-known.is-hand-item:not(.is-pinned):focus-within {
   transform: scale(1.35);
+}
+
+/* Auto-margin centering: absorbs free space symmetrically so the card
+   cluster is centered when it fits; degrades to normal scrolling otherwise.
+   Works for both LTR (p0) and row-reverse (p1) layouts. */
+.duel-field-hand-band__viewport > .duel-field-card.is-hand-item:first-child {
+  margin-left: auto;
+}
+
+.duel-field-hand-band__viewport > .duel-field-card.is-hand-item:last-child {
+  margin-right: auto;
 }
 
 /* Item 5: the hand and its action chips must never be painted over by a
@@ -1915,8 +2067,7 @@ button.duel-field-zone,
   object-fit: cover;
 }
 
-.duel-field-stack.is-opponent .duel-field-stack__art img,
-.zone-list-entry.is-opponent > img {
+.duel-field-stack.is-opponent .duel-field-stack__art img {
   transform: rotate(180deg);
 }
 
@@ -1993,6 +2144,14 @@ button.duel-field-zone,
 .duel-field-card.is-actionable:focus-within .card-action-chips,
 .duel-field-card.is-pinned .card-action-chips {
   display: flex;
+}
+
+/* Hand hover opens the overlay instead; suppress the clipped in-band chips
+   on plain hover so they do not peek out below the overlay. Focus and pin
+   keep their own reveal path (the rule above). */
+.duel-field-card.is-hand-item:not(:focus-within):not(.is-pinned):hover
+  .card-action-chips {
+  display: none;
 }
 
 button.card-action-chip {
@@ -2104,14 +2263,14 @@ button.card-action-chip:hover:not(:disabled) {
     transition: none;
   }
 
-  .duel-field-card:not(.is-hand-item):not(.is-pinned):is(
+  .duel-field-card.is-identity-known:not(.is-hand-item):not(.is-pinned):is(
       :hover,
       :focus-within
     ) {
     transform: translate(-50%, -50%);
   }
 
-  .duel-field-card.is-hand-item:not(.is-pinned):is(:hover, :focus-within) {
+  .duel-field-card.is-identity-known.is-hand-item:not(.is-pinned):focus-within {
     transform: none;
   }
 }

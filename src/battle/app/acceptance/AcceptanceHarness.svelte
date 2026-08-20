@@ -35,6 +35,7 @@
   let fieldSlot: HTMLElement | null = null;
   let selectedChoiceIds: readonly ChoiceId[] =
     cardList?.initialSelectedChoiceIds ?? [];
+  let collapsed = false;
   let lastAction = "";
   let previewEntryId = "";
   let confirmCount = 0;
@@ -87,6 +88,8 @@
       ontargetchoice={toggleTargetChoice}
       onconfirm={() => (confirmCount += 1)}
       oncancel={() => (cancelCount += 1)}
+      {collapsed}
+      oncollapsedchange={(value) => (collapsed = value)}
       onclose={() => (closeCount += 1)}
       onpreview={previewEntry}
       onwindowpositionchange={() => (positionChangeCount += 1)}
@@ -99,6 +102,7 @@
         code: cardCode(97590747),
         name: "The Legendary Fisherman",
         description: previewDescription,
+        statsLine: null,
       }}
     />
     <div class="duel-field-slot" data-cy="acceptance-preview-field"></div>

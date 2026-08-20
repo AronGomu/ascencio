@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from "svelte";
   import {
     catalogFilterOptions,
     EMPTY_CATALOG_FILTERS,
@@ -8,6 +9,10 @@
   import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
   import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
   import { quantityLimit } from "../../decks/catalog/pinned-ruleset.ts";
+  import {
+    initialResultWindow,
+    nextResultWindow,
+  } from "../layout/result-window.ts";
   import { OverlayScrollbar } from "../../shell/index.ts";
   import CardTile from "./CardTile.svelte";
 
@@ -40,8 +45,42 @@
 
   let resultsScroller: HTMLElement | null = null;
   let filters: DeckCatalogFilters = { ...EMPTY_CATALOG_FILTERS };
+  let visibleCount = 60;
+  let sentinel: HTMLElement | null = null;
+  let observer: IntersectionObserver | null = null;
+  let observerSupported = typeof IntersectionObserver === "function";
+
   $: options = catalogFilterOptions(cards);
   $: results = filterDeckCatalog(cards, filters);
+  $: filterKey = `${filters.name}|${filters.family}|${filters.subtype}|${filters.attribute}|${filters.race}`;
+  $: {
+    // depend on filterKey so a same-length filter change still resets
+    void filterKey;
+    visibleCount = initialResultWindow(results.length);
+  }
+  $: visible = observerSupported ? results.slice(0, visibleCount) : results;
+
+  function observeSentinel(
+    element: HTMLElement | null,
+    scroller: HTMLElement | null,
+  ): void {
+    observer?.disconnect();
+    observer = null;
+    if (!element || !scroller) return;
+    observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          visibleCount = nextResultWindow(visibleCount, results.length);
+        }
+      },
+      { root: scroller, rootMargin: "200px" },
+    );
+    observer.observe(element);
+  }
+
+  $: observeSentinel(sentinel, resultsScroller);
+
+  onDestroy(() => observer?.disconnect());
 
   function addable(card: DeckBuilderCardView): boolean {
     return (copies.get(card.code) ?? 0) < quantityLimit(ruleset, card.code);
@@ -202,7 +241,7 @@
         onmouseleave={() => onhoverend()}
         bind:this={resultsScroller}
       >
-        {#each results as card (card.code)}
+        {#each visible as card (card.code)}
           <CardTile
             {card}
             code={card.code}
@@ -226,11 +265,19 @@
             oncontext={() => oncontextadd(card)}
           />
         {/each}
+        {#if observerSupported && visibleCount < results.length}
+          <div
+            class="sentinel"
+            aria-hidden="true"
+            data-cy="deck-catalog-results-sentinel"
+            bind:this={sentinel}
+          ></div>
+        {/if}
       </div>
       <OverlayScrollbar
         axis="vertical"
         scrollElement={resultsScroller}
-        contentSizeKey={`${results.length}`}
+        contentSizeKey={`${results.length}:${visibleCount}`}
         dataCyPrefix="deck-catalog-results"
       />
     </div>
@@ -349,6 +396,11 @@
     grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
     max-height: none;
     overflow-y: visible;
+  }
+
+  .sentinel {
+    grid-column: 1 / -1;
+    height: 1px;
   }
 
   .empty-state {

@@ -1548,3 +1548,31 @@ Native scrollbar hidden
 Mobile tabs layout still scrolls
 
 - [ ] Resize to 390×844 portrait to activate the tab layout — switch to the Catalog tab and scroll the catalog results; the whole pane grows normally without a clipped overlay bar.
+
+## T10 catalog-infinite-scroll
+
+First paint bounded
+
+- [ ] Open the deck editor, clear all filters — the catalog shows the result count (e.g. "14 794 results" with real data, or the fixture count) but only the first 60 card tiles are visible without scrolling.
+- [ ] Confirm no freeze or jank on first paint even with a large card list.
+
+Grow on scroll
+
+- [ ] Scroll the catalog results to the very bottom — an additional batch of 60 cards appends to the list and the scroll position does not jump.
+- [ ] Scroll to the bottom again — another 60 cards appear, up to the total result count.
+- [ ] After reaching the full result count, no more batches are appended and the sentinel disappears.
+
+Overlay scrollbar thumb resizes correctly
+
+- [ ] As cards are appended, the overlay scrollbar thumb grows smaller (reflecting the longer content), and does not jump or flicker.
+
+Filter resets window
+
+- [ ] While viewing a grown list (e.g. 120 tiles), type in the Name filter — the list instantly resets to at most 60 tiles matching the new filter.
+- [ ] Clear the Name filter — the list resets again to the first 60 of the full result set.
+
+Interaction intact on appended tiles
+
+- [ ] Scroll down to a tile in the second or third batch. Left-click it — the card is added to the deck (or the card preview panel updates) correctly.
+- [ ] Drag an appended tile into the deck zone — drag-and-drop works normally.
+- [ ] Right-click an appended tile (context add) — context menu or direct-add works normally.

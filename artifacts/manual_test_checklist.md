@@ -271,8 +271,8 @@ Build and save a deck
 
 - [ ] Click "Create deck", name it `Manual T8`, confirm — the editor opens with Catalog / Build deck / Select a card panels.
 - [ ] Check the address bar: the URL is now `#/decks/<some-id>`, NOT `#/decks`.
-- [ ] Type `Blue-Eyes` into the catalog Name search, drag "Blue-Eyes White Dragon" onto the Main Deck drop area — Deck counts shows `Main 1` and the Autosave chip reads "Saved locally".
-- [ ] Press Undo then Redo — the count goes 0 then back to 1, and the deck stays "Saved locally".
+- [ ] Type `Blue-Eyes` into the catalog Name search, drag "Blue-Eyes White Dragon" onto the Main Deck drop area — the Main Deck collapse bar reads `1/40`. (Corrected 2026-08-20: the "Deck counts" panel became a per-zone count in each collapse bar, and the "Saved locally" autosave chip went with the rest of the header chrome. Autosave is now checked through **Load → Autosaves**, which gains an entry per edit.)
+- [ ] Press Undo then Redo — the count goes `0/40` then back to `1/40`, and **Load → Autosaves** keeps gaining entries.
 - [ ] Right-click the Main Deck card, then choose **Move to Side Deck** from the tap menu (portrait) or confirm the move via the context menu (desktop) — the card moves and the counts follow.
 - [ ] Edit the "Deck name" field to `Manual T8 Renamed` and click elsewhere to blur — the name sticks.
 
@@ -415,7 +415,8 @@ Seed a prototype deck database (pick ONE path)
       run `npm run dev` on the SAME port this branch uses (default
       `DEV_PORT=4300`, so same origin), open `http://localhost:4300/#/decks`,
       create a deck named `Survivor`, drag one Blue-Eyes White Dragon into the
-      Main Deck, and wait for "Saved locally". Stop that dev server.
+      Main Deck, and wait for the autosave to land (**Load → Autosaves** lists
+      it). Stop that dev server.
 - [ ] Path B — fast. Run `npm run dev` on this branch, open
       `http://localhost:4300/#/decks`, and paste this into the DevTools console
       (it writes the OLD database with the OLD schema directly):
@@ -464,7 +465,8 @@ Confirm the decks survived the rename
 - [ ] The Deck Library lists `Survivor`. It must NOT say "No local decks" —
       that would mean the decks were stranded in the old database.
 - [ ] Click `Survivor` — the editor opens, "Deck name" reads `Survivor` and
-      Deck counts shows `Main 1`. Opening the deck reads its history record, so
+      the Main Deck collapse bar reads `1/40`. Opening the deck reads its
+      history record, so
       this also proves the migration copied more than the deck row.
 - [ ] Press Undo — it is disabled or a no-op (the seeded history is empty) and
       nothing errors.
@@ -647,8 +649,8 @@ Tabs and the persistent header (390x844)
 Tap to add (390x844)
 
 - [ ] On the Catalog tab, filter by "Blue-Eyes" and tap the card. The Main
-      count goes to 1, the autosave reads "Saved locally", and you are still on
-      the Catalog tab so the next card is one tap away.
+      count goes to `1/40`, **Load → Autosaves** gains an entry, and you are
+      still on the Catalog tab so the next card is one tap away.
 - [ ] Tap the same card twice more (Main 3), then tap it a fourth time. Nothing
       is added; the app announces "Copy limit 3 reached" and shows you the card
       on the Details tab.
@@ -665,8 +667,8 @@ Tap to move and remove (390x844)
       zone) and Extra is not. Press Escape instead of choosing — the menu closes
       and nothing moved.
 - [ ] Tap it again and choose Remove — the count drops. Press Undo in the
-      header: it comes back. Press Redo: it goes again. Autosave keeps saying
-      "Saved locally" throughout.
+      header: it comes back. Press Redo: it goes again. Autosave keeps running
+      throughout — **Load → Autosaves** gains an entry per edit.
 
 Layout at the sizes that matter
 
@@ -1042,9 +1044,9 @@ what is playable. The steps below still pass; only the numbers moved.
 ### Build a deck from scratch and duel with it
 - [ ] Open `#/decks`. Press **Create deck**, name it (e.g. `Manual T22`), confirm with **Create**.
 - [ ] The catalog panel lists real cards — search `Nekroz`, `Shaddoll`, `Spellbook` or `Burning Abyss` and each returns several distinct cards with names and effect text.
-- [ ] Add cards until **Deck counts** reads `Main 40`. Fastest route: search a card name, then right-click the catalog tile to add it directly; repeat, or drag tiles onto the Main Deck drop area.
+- [ ] Add cards until the Main Deck collapse bar reads `40/40`. Fastest route: search a card name, then right-click the catalog tile to add it directly; repeat, or drag tiles onto the Main Deck drop area.
 - [ ] The validation panel shows no **errors**. Warnings such as "Extra Deck is empty" and "Side Deck is empty" are expected and do not block anything. (Corrected 2026-08-20 by T12 of decks-feedback-round-2: the "uses placeholder art" warning was deleted, because art coverage describes the build's images rather than a defect in your deck. If you still see one, the slice regressed.)
-- [ ] Wait for **Saved locally**.
+- [ ] Confirm the autosave landed: **Load → Autosaves** lists a fresh entry.
 - [ ] Go to `#/duel`. The deck list holds a **Your decks** group below **Bundled decks**, with `Manual T22` in it. (Superseded by T15: one list for the player seat only, and the opponent is a fixed line rather than a column.)
 - [ ] Pick `Manual T22` in the deck list. It becomes the selected row, and no start error appears.
 - [ ] Press **Start**. The duel initializes and reaches the first prompt — the field renders, both life-point totals are up, and your hand is drawn from the cards you picked, not from a bundled deck.
@@ -1519,7 +1521,7 @@ Undo / redo and persistence
 - [ ] After a click-driven add, press **Undo** — the card is removed again; press **Redo** — it comes back.
 - [ ] After a click-driven move (Main → Side), press **Undo** — the copy returns to Main; **Redo** sends it to Side again.
 - [ ] After a click-driven Extra Deck removal, press **Undo** — the copy returns to Extra.
-- [ ] Make several click edits, wait for **Saved locally**, reload the page, and confirm the deck contents match what you left.
+- [ ] Make several click edits, confirm **Load → Autosaves** lists them, reload the page, and confirm the deck contents match what you left.
 
 ## T7 autosave-every-command
 
@@ -1652,7 +1654,7 @@ The results grid no longer overlaps itself
 
 Nothing else moved
 
-- [ ] Open a deck, add and remove cards, rename it, and confirm it still autosaves (**Saved locally**).
+- [ ] Open a deck, add and remove cards, rename it, and confirm it still autosaves (**Load → Autosaves** gains entries).
 - [ ] Press Undo and Redo — both still work against the bigger catalog.
 - [ ] Reload — the deck is exactly as you left it.
 - [ ] Go to `#/duel` and start a bundled preset duel — it still initializes and reaches the first prompt.
@@ -1675,7 +1677,7 @@ a step says otherwise.
 A deck of cards no bundled deck names is offered and duels
 
 - [ ] Open `#/decks`, press **Create deck**, name it `Manual T13`.
-- [ ] Search `Blue-Eyes` and add printings the old ~120-card packaged set never carried (e.g. "Blue-Eyes Alternative White Dragon"), then fill the Main Deck to 40 legal cards so the validation panel shows no errors. Wait for **Saved locally**.
+- [ ] Search `Blue-Eyes` and add printings the old ~120-card packaged set never carried (e.g. "Blue-Eyes Alternative White Dragon"), then fill the Main Deck to 40 legal cards so the validation panel shows no errors. Confirm the autosave landed through **Load → Autosaves**.
 - [ ] Go to `#/duel` — `Manual T13` is listed. Before this slice it was silently absent, because the picker filtered against the ~120 art-backed codes.
 - [ ] Select it and press **Start** — the duel initializes, reaches the first prompt, and the opening hand is drawn from those cards.
 - [ ] Every card in hand shows its real name, never `Card 89631139`. Hover one — the preview panel shows the real name and effect text.
@@ -1710,7 +1712,7 @@ Nothing else moved
 
 - [ ] Pick a bundled pair, press **Start**, and play three turns — the game loop, script loading and card images behave exactly as before.
 - [ ] Surrender, then **Change decks** — the list returns with the same selection and does not auto-start.
-- [ ] `#/decks` still opens, still autosaves (**Saved locally**), and Undo/Redo still work.
+- [ ] `#/decks` still opens, still autosaves (**Load → Autosaves** gains entries), and Undo/Redo still work.
 
 Build shape
 

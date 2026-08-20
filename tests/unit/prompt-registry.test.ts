@@ -259,6 +259,33 @@ describe("PromptRegistry", () => {
     }
   });
 
+  /* The core substitutes `options[value]` for the answer it reads back and
+     replies MSG_RETRY when `value` is not an index into that list, so a
+     response carrying the announced number itself announces the wrong one
+     whenever it lands in range and stops the duel whenever it does not. */
+  it("answers an announced number with its index rather than its value", () => {
+    const binding = buildEnginePrompt(
+      {
+        type: EngineMessageType.ANNOUNCE_NUMBER,
+        player: 0,
+        options: [1n, 2n, 3n],
+      },
+      21,
+      dependencies,
+    );
+    expect(binding?.prompt.choices.map((choice) => choice.label)).toEqual([
+      "1",
+      "2",
+      "3",
+    ]);
+    const last = binding?.prompt.choices.at(-1);
+    if (last === undefined) throw new Error("Announced numbers are missing");
+    expect(binding?.resolve([last.id])).toEqual({
+      type: EngineResponseType.ANNOUNCE_NUMBER,
+      value: 2,
+    });
+  });
+
   it("emits a diagnostic when localized option text is missing", () => {
     const diagnostics: unknown[] = [];
     const option = 123n << 20n;

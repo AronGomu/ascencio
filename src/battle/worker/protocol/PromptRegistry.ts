@@ -647,9 +647,14 @@ function buildRawEnginePrompt(
           "Announce a number",
           bindings,
         ),
+        /* The core announces a list and reads the answer back as an index into
+           it, not as the number itself: it substitutes `options[value]` and
+           replies MSG_RETRY when `value` is out of range. Sending the number
+           announced the wrong one whenever it was a valid index, and killed
+           the duel whenever it was not. */
         (ids) => ({
           type: EngineResponseType.ANNOUNCE_NUMBER,
-          value: Number(message.options[exactlyOne(ids, bindings).rawIndex]),
+          value: exactlyOne(ids, bindings).rawIndex,
         }),
       );
     }

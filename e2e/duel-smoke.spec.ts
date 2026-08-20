@@ -558,7 +558,16 @@ test("a local deck built from the packaged catalog is offered and duels", async 
   await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
     LOCAL_DECK_NAME,
   );
-  await expect(page.getByText("Saved locally")).toBeVisible();
+  /* The "Saved locally" chip went with the rest of the editor's header chrome.
+     The commit itself is still announced: the store only reaches this message
+     after the repository has written the record, so it says what the chip said
+     — the deck is in local storage before this test navigates away from it. */
+  await expect(page.locator('[data-cy="deck-editor-message"]')).toHaveText(
+    "Deck imported.",
+  );
+  await expect(
+    page.locator('[data-cy="deck-editor-layout"]'),
+  ).not.toHaveAttribute("aria-busy", "true");
 
   await page.goto("./#/duel");
   await expect(page.locator('[data-cy="deck-picker"]')).toBeVisible({

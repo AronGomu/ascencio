@@ -76,9 +76,23 @@ test("seeding fills the deck library and a confirmed reset empties it", async ({
     "Cleared Deck library.",
   );
 
+  /* The reset deletes the deck database outright, so its absence is the reset
+     itself rather than anything a view happens to render. Asserted here, while
+     the console is still the open route: the editor seeds a starter deck on
+     mount, which recreates the database the moment `#/decks` opens. */
+  const deckDatabaseNames = await page.evaluate(async () =>
+    (await indexedDB.databases()).map((entry) => entry.name),
+  );
+  expect(deckDatabaseNames).not.toContain(DECK_DATABASE_NAME);
+
+  /* Which is why "No local decks" is no longer reachable from here: opening the
+     library seeds `Starter Deck` into the database the reset just removed. The
+     deck the seed jump wrote is gone all the same, and nothing else survives
+     beside it. */
   await page.locator('[data-cy="admin-route-decks"]').click();
-  await expect(
-    page.getByRole("heading", { name: "No local decks" }),
-  ).toBeVisible();
+  await expect(page.getByText("Starter Deck")).toBeVisible();
   await expect(page.getByText("Admin test deck")).toHaveCount(0);
+  await expect(page.locator('[data-cy="deck-library-list"] > li')).toHaveCount(
+    1,
+  );
 });

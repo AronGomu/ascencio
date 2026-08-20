@@ -3,7 +3,7 @@
 > Status: accepted; planned with pinned-core rule gate
 > Decided: 2026-08-10
 > Owners: deck-selection, engine-rules, field-layout architecture
-> Plan: [`../../ai-artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md`](../../ai-artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md) — T11
+> Plan: [`../../artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md`](../../artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md) — T11
 
 ## Context
 

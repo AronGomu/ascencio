@@ -41,10 +41,10 @@ This directory contains current project documentation and historical context. Ro
 | [`duel-field-interaction-model-v2.html`](duel-field-interaction-model-v2.html)                                                         | Styled round-2 interaction baseline                                                       |
 | [`duel-field-interaction-model-v3.html`](duel-field-interaction-model-v3.html)                                                         | Styled round-3 interaction model: knowledge, semantics, motion, windows, target routing   |
 | [`deck-selection-architecture.html`](deck-selection-architecture.html)                                                                 | Styled registry-to-picker-to-Worker deck-selection architecture                           |
-| [`../ai-artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md`](../ai-artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md)               | Completed TDD ticket ledger for the duel-field UX overhaul                                |
-| [`../ai-artifacts/PLAN_2026_08_09_duel_field_feedback_round_2.md`](../ai-artifacts/PLAN_2026_08_09_duel_field_feedback_round_2.md)     | Round-2 TDD ticket ledger                                                                 |
-| [`../ai-artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md`](../ai-artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md)     | Completed round-3 implementation ledger                                                   |
-| [`../ai-artifact/PLAN_2026_08_13_feedback_follow_up.html`](../ai-artifact/PLAN_2026_08_13_feedback_follow_up.html)                   | Completed full-height field + approved card-list implementation plan                      |
+| [`../artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md`](../artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md)               | Completed TDD ticket ledger for the duel-field UX overhaul                                |
+| [`../artifacts/PLAN_2026_08_09_duel_field_feedback_round_2.md`](../artifacts/PLAN_2026_08_09_duel_field_feedback_round_2.md)     | Round-2 TDD ticket ledger                                                                 |
+| [`../artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md`](../artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md)     | Completed round-3 implementation ledger                                                   |
+| [`../artifacts/PLAN_2026_08_13_feedback_follow_up.html`](../artifacts/PLAN_2026_08_13_feedback_follow_up.html)                   | Completed full-height field + approved card-list implementation plan                      |
 | [`duel-field-validation-references.html`](duel-field-validation-references.html)                                                       | Styled rule/visual/a11y validation catalog                                                |
 | [`MVP_TECHNICAL_IMPLEMENTATION_PLAN.md`](MVP_TECHNICAL_IMPLEMENTATION_PLAN.md)                                                         | Completed MVP/Phaser baseline audit plan                                                  |
 | [`assets/asset-import-pipeline.md`](assets/asset-import-pipeline.md)                                                                   | Implemented asset acquisition, generation, and verification pipeline                      |
@@ -74,8 +74,8 @@ Start with [`card-game-vn-handoff/00-index.md`](card-game-vn-handoff/00-index.md
 
 ## Agent artifact roots
 
-- [`../ai-artifacts/`](../ai-artifacts/) — existing design/prototype evidence.
-- [`../ai-artifact/`](../ai-artifact/) — implementation-plan indexes, self-contained tickets, rendered plan HTML (caller-required spelling).
+- [`../artifacts/`](../artifacts/) — existing design/prototype evidence.
+- [`../artifacts/`](../artifacts/) — implementation-plan indexes, self-contained tickets, rendered plan HTML (caller-required spelling).
 
 ## Historical material
 

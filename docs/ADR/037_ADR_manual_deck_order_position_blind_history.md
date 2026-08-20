@@ -3,7 +3,7 @@
 > Status: accepted; planned
 > Decided: 2026-08-16
 > Owners: decks data architecture
-> Plan: [`../../ai-artifact/PLAN_2026_08_16_decks_feedback.md`](../../ai-artifact/PLAN_2026_08_16_decks_feedback.md) — T6, T8
+> Plan: [`../../artifacts/PLAN_2026_08_16_decks_feedback.md`](../../artifacts/PLAN_2026_08_16_decks_feedback.md) — T6, T8
 
 ## Context
 

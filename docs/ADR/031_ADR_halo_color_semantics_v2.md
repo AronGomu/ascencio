@@ -4,7 +4,7 @@
 > Decided: 2026-08-16
 > Owners: field presentation architecture
 > Supersedes: the list-hover clause of ADR-015 (field clauses stand)
-> Plan: [`../../ai-artifacts/PLAN_2026_08_16_duel_feedback_round_4.md`](../../ai-artifacts/PLAN_2026_08_16_duel_feedback_round_4.md) — T14
+> Plan: [`../../artifacts/PLAN_2026_08_16_duel_feedback_round_4.md`](../../artifacts/PLAN_2026_08_16_duel_feedback_round_4.md) — T14
 
 ## Context
 

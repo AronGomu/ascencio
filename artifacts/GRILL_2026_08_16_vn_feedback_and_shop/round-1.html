@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VN feedback + shop — settle the assumptions</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b0a08; --panel:#17130d; --panel-2:#1f190f; --text:#fff7ed; --muted:#c9b99f; --line:#4a3b25; --accent:#fbbf24; --accent-2:#fb923c; --focus:#facc15; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    main { width:min(960px,calc(100% - 32px)); margin:0 auto; padding:48px 0 96px; }
+    header { display:grid; gap:12px; margin-bottom:32px; }
+    .eyebrow { color:var(--accent); font-size:.75rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+    h1,h2,p { margin:0; } h1 { font-size:clamp(2rem,5vw,3.5rem); line-height:1.08; letter-spacing:-.035em; }
+    .lede { max-width:70ch; color:var(--muted); }
+    .tree { display:flex; align-items:center; gap:8px; overflow:auto; padding:16px; margin:24px 0 32px; border:1px solid var(--line); border-radius:12px; background:var(--panel); color:var(--muted); white-space:nowrap; }
+    .tree b { color:var(--text); } .node { padding:6px 10px; border:1px solid var(--line); border-radius:999px; } .node.active { border-color:var(--accent); color:var(--accent); } .arrow { color:var(--line); }
+    .visuals { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:0 0 32px; }
+    figure { min-width:0; margin:0; padding:18px; border:1px solid var(--line); border-radius:14px; background:var(--panel); }
+    figcaption { margin-bottom:14px; color:var(--muted); font-size:.85rem; } figcaption b { display:block; color:var(--text); font-size:1rem; }
+    svg { display:block; width:100%; height:auto; } svg text { font-family:ui-sans-serif,system-ui,sans-serif; }
+    .svg-node { fill:var(--panel-2); stroke:var(--line); stroke-width:2; } .svg-node.active { stroke:var(--accent); } .svg-line { fill:none; stroke:var(--line); stroke-width:2; } .svg-arrow { fill:var(--line); } .svg-label { fill:var(--text); font-size:12px; } .svg-note { fill:var(--muted); font-size:10px; } .svg-accent { fill:var(--accent); }
+    form { display:grid; gap:20px; }
+    fieldset { min-width:0; margin:0; padding:24px; border:1px solid var(--line); border-radius:16px; background:var(--panel); }
+    legend { max-width:100%; padding:0 8px; font-size:1.15rem; font-weight:750; }
+    .why { margin:0 0 18px; color:var(--muted); font-size:.925rem; }
+    .choices { display:grid; gap:10px; }
+    .choice { display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:start; padding:14px; border:1px solid var(--line); border-radius:10px; background:var(--panel-2); cursor:pointer; }
+    .choice:has(input:checked) { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
+    input { width:18px; height:18px; margin-top:3px; accent-color:var(--accent); }
+    .rank { display:inline-block; margin-left:7px; color:var(--accent-2); font-size:.72rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+    .detail { display:block; margin-top:3px; color:var(--muted); font-size:.875rem; }
+    label.precision { display:block; margin-top:18px; font-size:.85rem; font-weight:700; color:var(--muted); }
+    textarea { width:100%; min-height:90px; margin-top:7px; padding:12px; resize:vertical; border:1px solid var(--line); border-radius:10px; background:#100d08; color:var(--text); font:inherit; }
+    input:focus-visible,textarea:focus-visible,button:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
+    .actions { position:sticky; bottom:16px; display:flex; gap:12px; align-items:center; justify-content:space-between; padding:14px; border:1px solid var(--line); border-radius:14px; background:rgba(19,23,28,.96); box-shadow:0 16px 40px #0008; backdrop-filter:blur(10px); }
+    button { padding:11px 16px; border:0; border-radius:9px; background:var(--accent); color:#211500; font:inherit; font-weight:800; cursor:pointer; }
+    #status { color:var(--muted); font-size:.875rem; }
+    @media (max-width:700px) { .visuals { grid-template-columns:1fr; } }
+    @media (max-width:600px) { main { width:min(100% - 20px,960px); padding-top:28px; } fieldset { padding:18px 14px; } .actions { align-items:flex-start; flex-direction:column; } button { width:100%; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="eyebrow">Grill me · Round 1 · General UI + Economy + Shop</span>
+    <h1>VN feedback + shop — settle the assumptions</h1>
+    <p class="lede">A full plan already exists (13 tickets, 3 ADRs). It was written on 12 unconfirmed assumptions. Each question below shows the plan's current choice as Recommended — confirm or override; the plan and ADRs get patched from your answers. Check boxes, add precisions, hit Copy.</p>
+  </header>
+
+  <nav class="tree" aria-label="Design tree progress"><b>feedback-vn</b><span class="arrow">→</span><span class="node active">General UI</span><span class="arrow">→</span><span class="node active">Economy</span><span class="arrow">→</span><span class="node active">Shop design</span><span class="arrow">→</span><span class="node">(round 2 if overrides)</span></nav>
+
+  <section class="visuals" aria-label="Technical context">
+    <figure role="img" aria-labelledby="fig1-title fig1-desc">
+      <figcaption><b id="fig1-title">Frontier — 12 decisions, 3 branches</b><span id="fig1-desc">All prerequisites settled by codebase scouting; whole frontier fits one round.</span></figcaption>
+      <svg viewBox="0 0 420 190">
+        <title>Frontier graph</title>
+        <desc>Root feedback-vn splits into General UI with five questions, Economy with two questions, Shop design with five questions.</desc>
+        <rect class="svg-node active" x="160" y="10" width="100" height="30" rx="8"/>
+        <text class="svg-label" x="210" y="29" text-anchor="middle">feedback-vn</text>
+        <path class="svg-line" d="M210 40 L80 80"/><path class="svg-line" d="M210 40 L210 80"/><path class="svg-line" d="M210 40 L340 80"/>
+        <rect class="svg-node active" x="20" y="80" width="120" height="30" rx="8"/>
+        <text class="svg-label" x="80" y="99" text-anchor="middle">General UI</text>
+        <text class="svg-note" x="80" y="130" text-anchor="middle">Q1–Q4, Q6 · gear, toggle,</text>
+        <text class="svg-note" x="80" y="143" text-anchor="middle">menu, return, top bar</text>
+        <rect class="svg-node active" x="150" y="80" width="120" height="30" rx="8"/>
+        <text class="svg-label" x="210" y="99" text-anchor="middle">Economy</text>
+        <text class="svg-note" x="210" y="130" text-anchor="middle">Q5 persistence</text>
+        <text class="svg-note" x="210" y="143" text-anchor="middle">Q9–Q10 prices</text>
+        <rect class="svg-node active" x="280" y="80" width="120" height="30" rx="8"/>
+        <text class="svg-label" x="340" y="99" text-anchor="middle">Shop design</text>
+        <text class="svg-note" x="340" y="130" text-anchor="middle">Q7–Q8, Q11–Q12 · entry,</text>
+        <text class="svg-note" x="340" y="143" text-anchor="middle">sets, rarity, opening</text>
+        <text class="svg-accent" x="210" y="175" text-anchor="middle" font-size="11">facts already scouted — only decisions remain</text>
+      </svg>
+    </figure>
+    <figure role="img" aria-labelledby="fig2-title fig2-desc">
+      <figcaption><b id="fig2-title">Planned shop loop (as currently designed)</b><span id="fig2-desc">Map or top bar enters the greeting; browse buys packs; boosters open to a recap; sell pays DP back.</span></figcaption>
+      <svg viewBox="0 0 420 190">
+        <title>Shop flow diagram</title>
+        <desc>Map hotspot and top bar icon lead to shopkeeper greeting, then buy, open and sell loops that all return to the greeting.</desc>
+        <rect class="svg-node" x="10" y="20" width="90" height="28" rx="8"/><text class="svg-label" x="55" y="38" text-anchor="middle">map node</text>
+        <rect class="svg-node" x="10" y="60" width="90" height="28" rx="8"/><text class="svg-label" x="55" y="78" text-anchor="middle">top bar 🛍</text>
+        <path class="svg-line" d="M100 34 L150 60"/><path class="svg-line" d="M100 74 L150 74"/>
+        <rect class="svg-node active" x="150" y="52" width="110" height="40" rx="8"/>
+        <text class="svg-label" x="205" y="70" text-anchor="middle">shop-greeting</text>
+        <text class="svg-note" x="205" y="84" text-anchor="middle">keeper beats · menu</text>
+        <path class="svg-line" d="M260 60 L310 30"/><path class="svg-line" d="M260 84 L310 110"/><path class="svg-line" d="M260 72 L310 72"/>
+        <rect class="svg-node" x="310" y="16" width="100" height="28" rx="8"/><text class="svg-label" x="360" y="34" text-anchor="middle">browse · buy</text>
+        <rect class="svg-node" x="310" y="58" width="100" height="28" rx="8"/><text class="svg-label" x="360" y="76" text-anchor="middle">open packs</text>
+        <rect class="svg-node" x="310" y="100" width="100" height="28" rx="8"/><text class="svg-label" x="360" y="118" text-anchor="middle">sell cards</text>
+        <text class="svg-note" x="205" y="150" text-anchor="middle">DP 1000 start · 100 DP/pack · 9 cards/pack</text>
+        <text class="svg-note" x="205" y="165" text-anchor="middle">state in StoryState · save schema v2</text>
+      </svg>
+    </figure>
+  </section>
+
+  <form id="questions">
+
+    <fieldset data-question="Does 'Open Pose Menu' mean the 'Open pause menu' button?">
+      <legend>1. Does “Open Pose Menu” mean the “Open pause menu” button?</legend>
+      <p class="why">Two feedback items hinge on this reading; if a real character-pose feature was meant, T1/T2 change entirely.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Yes — speech-to-text artifact; it is the floating 'Open pause menu' button"><span><b>Yes — it is the pause-menu button</b><span class="rank">Recommended</span><span class="detail">Matches the code: only `story-global-pause` exists; no pose feature anywhere.</span></span></label>
+        <label class="choice"><input type="checkbox" value="No — a separate character-pose menu exists or is planned"><span><b>No — I meant an actual pose menu</b><span class="rank">Second</span><span class="detail">Then describe it in the precision box; plan needs a new branch.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="If 'pose' is real, what does it do?"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Where does the gear button sit on map and system screens?">
+      <legend>2. Where does the gear button sit on map / system screens?</legend>
+      <p class="why">Feedback says “same location as the dialog window” — the dialogue box spans the bottom, so the literal spot is ambiguous.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Bottom-left corner, floating round gear"><span><b>Bottom-left corner</b><span class="rank">Recommended</span><span class="detail">Literal reading (dialogue window lives at the bottom); thumb-reachable, never covers map detail panel.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Top-right, same spot as the narrative utility bar gear"><span><b>Top-right, same as narrative bar</b><span class="rank">Second</span><span class="detail">One position everywhere; but contradicts the literal feedback text.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Bottom-right corner"><span><b>Bottom-right corner</b><span class="rank">Third</span><span class="detail">Mirrors where the old Show UI button sat; collides with map sidebar on small screens.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="Also: overlay retitled 'Menu' instead of 'Paused' — object?"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="What does Hide UI hide?">
+      <legend>3. What does Hide UI hide?</legend>
+      <p class="why">Toggle button is agreed; unclear whether the utility bar itself should vanish with the dialogue.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Dialogue + choices hide; utility bar stays visible"><span><b>Dialogue + choices only; bar stays</b><span class="rank">Recommended</span><span class="detail">Literal to the feedback (only the button flips); toggle always reachable.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Everything hides except the toggle button itself"><span><b>Everything except the toggle</b><span class="rank">Second</span><span class="detail">Cleanest art view — classic VN behavior; other bar buttons need a re-show first.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Bar fades to low opacity, dialogue hides"><span><b>Bar fades to ~30% opacity</b><span class="rank">Third</span><span class="detail">Compromise; costs extra styling and a11y care.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="Anything else Hide UI should affect?"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Return-to-menu scope: VN only, or all domains now?">
+      <legend>4. Return-to-menu: VN only, or all domains now?</legend>
+      <p class="why">Feedback says “all interfaces”; but duel/deck belong to other branch lanes — including them makes this a cross-lane plan.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="VN only in this plan; duel/deck logged for their lanes"><span><b>VN only here; log the rest</b><span class="rank">Recommended</span><span class="detail">Keeps the `vn` branch clean per ADR-022; duel/deck get equivalent tickets in their own plans.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Add main-lane tickets to this plan for duel/deck/admin back buttons"><span><b>Cover all domains in this plan</b><span class="rank">Second</span><span class="detail">One feedback item, one plan — but commits must land via main and the plan spans three ownerships.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="Which screens exactly need the button?"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="DP/collection persistence: inside story saves, or a separate always-on store?">
+      <legend>5. DP + collection: inside story saves, or separate persistent store?</legend>
+      <p class="why">Decides what loading a save does to your money and cards — the deepest gameplay consequence in the plan.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Inside StoryState: loading a save rolls DP/collection back with the story"><span><b>Inside StoryState (rolls back on load)</b><span class="rank">Recommended</span><span class="detail">One atomic snapshot, no dupe exploits, free checkpointing; economy resets with story reset. ADR-033 as written.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Separate store: DP/collection survive loads and resets, account-level"><span><b>Separate account-level store</b><span class="rank">Second</span><span class="detail">Feels like Tag Force; but save-scumming mints cards (save→open→load keeps cards, refunds nothing) and needs its own DB + reset story.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. hybrid: collection account-level, DP in save"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Top bar position and which screens show it?">
+      <legend>6. Top bar (DP · shop · deck): position and screens?</legend>
+      <p class="why">“At the top of the screen” leaves corner and screen coverage open; narrative's utility bar already owns the top-right.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Top-left; shown on narrative, map and shop screens"><span><b>Top-left · narrative + map + shop</b><span class="rank">Recommended</span><span class="detail">Avoids the utility bar; hidden on title/duel-handoff/outcome where money is noise.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Top-center pill cluster, same screens"><span><b>Top-center</b><span class="rank">Second</span><span class="detail">Prominent HUD feel; risks crowding the narrative headline art.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Every story screen including outcome/reward"><span><b>All story screens</b><span class="rank">Third</span><span class="detail">Always visible; clutters emotional beats (outcome, reward).</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="Deck icon = hash-jump to #/decks (story context drops, like exiting to menu). OK?"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Shop entry points for the prototype?">
+      <legend>7. Shop entry points?</legend>
+      <p class="why">Feedback names both a map location (test) and a top-bar icon “whenever available”; restrictions come later.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Map hotspot + top-bar icon from narrative and map, unrestricted for now"><span><b>Map node + top-bar icon (narrative + map)</b><span class="rank">Recommended</span><span class="detail">Matches both feedback items; restriction hook added later.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Map hotspot only; top-bar icon shows but disabled outside map"><span><b>Map node only, icon disabled elsewhere</b><span class="rank">Second</span><span class="detail">Closer to future restrictions; makes the icon feel broken today.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="Where should Leave Shop land when entered from narrative?"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Prototype set catalog strategy?">
+      <legend>8. Prototype set catalog: how do ~120 packaged cards become “extensions”?</legend>
+      <p class="why">The pinned snapshot has no set membership; hundreds of real sets need a browsable index today and honest data later.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="~30 real set names listed, 3 unlocked (LOB/MRD/PSV), contents = deterministic code%3 partition of the packaged pool"><span><b>3 unlocked real-named sets, deterministic partition</b><span class="rank">Recommended</span><span class="detail">Exercises the hundreds-scale browser + locked row now; swapping in real lists later only touches one data module.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Hand-curated card lists per set from the packaged pool (real membership where it exists)"><span><b>Hand-curate the 3 sets' contents</b><span class="rank">Second</span><span class="detail">More authentic; hours of manual data for 120 cards, partial sets feel emptier than fake-but-full ones.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Single 'All Cards' set for now; set browser comes with real data later"><span><b>One “All Cards” set now</b><span class="rank">Third</span><span class="detail">Least work; skips the extension-browser feedback item entirely.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Bundle real set/rarity JSON scraped now"><span><b>Ship real set data now</b><span class="rank">Fourth</span><span class="detail">Violates the pinned-snapshot rule; unverified scraped data in the build.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="Different unlocked sets? Different count?"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Pack size and price?">
+      <legend>9. Pack size and price?</legend>
+      <p class="why">Start wallet is fixed at 1000 DP; pack economics set the whole pacing of the loop.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="9 cards (8 common + 1 rare-or-better) at 100 DP"><span><b>9 cards · 100 DP</b><span class="rank">Recommended</span><span class="detail">Real TCG pack shape; 10 packs from starting wallet.</span></span></label>
+        <label class="choice"><input type="checkbox" value="5 cards at 100 DP"><span><b>5 cards · 100 DP</b><span class="rank">Second</span><span class="detail">Tag Force pacing; lighter opening animation, scarcer feel.</span></span></label>
+        <label class="choice"><input type="checkbox" value="9 cards at 150 DP"><span><b>9 cards · 150 DP</b><span class="rank">Third</span><span class="detail">Tighter economy (6 packs to start); slower first session.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="Custom size/price or per-set pricing?"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Sell price ladder?">
+      <legend>10. Sell price ladder (common fixed at 10 DP)?</legend>
+      <p class="why">Feedback fixes common = 10 and says infer the rest; the ladder decides whether selling dupes funds new packs.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="10 / 25 / 50 / 100 / 250 / 500 / 1000 (common→ghost)"><span><b>10 · 25 · 50 · 100 · 250 · 500 · 1000</b><span class="rank">Recommended</span><span class="detail">~2× steps; a secret-rare dupe ≈ 2.5 packs — meaningful, not economy-breaking.</span></span></label>
+        <label class="choice"><input type="checkbox" value="10 / 50 / 100 / 300 / 1000 / 2000 / 5000 steeper ladder"><span><b>Steeper: 10 · 50 · 100 · 300 · 1000 · 2000 · 5000</b><span class="rank">Second</span><span class="detail">Big-hit dopamine; one lucky pull trivializes buying.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Flat fraction: every card sells for 25% of pack price share"><span><b>Flat ~25 DP any rarity</b><span class="rank">Third</span><span class="detail">Simplest; ignores the rarity fantasy the feedback asks for.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="Your own numbers?"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Rarity assignment source and halo palette?">
+      <legend>11. Rarity source + halo palette?</legend>
+      <p class="why">Snapshot carries no rarity; something deterministic must color every card until real printing data exists.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Inferred by ordered rules (ATK>=3000 secret, extra-deck ultra, ritual/ATK>=2000 super, typed S/T or lv>=5 rare, else common); palette gray/silver/blue/gold/purple + reserved bronze/white"><span><b>Rule-inferred + proposed palette</b><span class="rank">Recommended</span><span class="detail">Zero data work, testable, wrong vs real printings but invisible until real data lands (ADR-035).</span></span></label>
+        <label class="choice"><input type="checkbox" value="Hand-tag all ~120 packaged cards once in a static table"><span><b>Hand-tag the 120 cards</b><span class="rank">Second</span><span class="detail">Authentic for iconic cards (Blue-Eyes = ultra); a table to maintain every snapshot bump.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Seeded pseudo-random rarity per card code"><span><b>Seeded random per code</b><span class="rank">Third</span><span class="detail">Even distribution; nonsense pairings (vanilla token = secret rare) undermine the fantasy.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="Palette tweaks? (see docs/story-shop-architecture.html swatches)"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Sequential pack-opening interaction model?">
+      <legend>12. “Open” animation: click-to-advance or timed?</legend>
+      <p class="why">Feedback wants an animation per pack and per card; the advance mechanism decides feel and testability.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Click/Enter reveals next card (VN idiom); Skip button; reduced-motion instant"><span><b>Click-to-advance reveal</b><span class="rank">Recommended</span><span class="detail">Deterministic, testable, savoring pace controlled by the player.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Timed auto-reveal (~600ms/card) with pause on hover"><span><b>Timed auto-reveal</b><span class="rank">Second</span><span class="detail">Slot-machine feel; timers in tests and impatient players fight it.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Hybrid: auto within a pack, click between packs"><span><b>Auto per pack, click between packs</b><span class="rank">Third</span><span class="detail">Middle ground; two interaction modes to teach.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="Reveal visual: flip? rise? glow burst by rarity?"></textarea></label>
+    </fieldset>
+
+    <div class="actions">
+      <span id="status" role="status">Selections stay in this page until copied.</span>
+      <button type="button" id="copy-summary">Copy answer summary</button>
+    </div>
+  </form>
+</main>
+<script>
+  const button = document.querySelector('#copy-summary');
+  const status = document.querySelector('#status');
+
+  function buildSummary() {
+    const sections = [...document.querySelectorAll('fieldset[data-question]')].map((field, index) => {
+      const question = field.dataset.question;
+      const selected = [...field.querySelectorAll('input[type="checkbox"]:checked')].map(input => `- ${input.value}`);
+      const precision = field.querySelector('textarea').value.trim();
+      const answers = selected.length ? selected.join('\n') : '- No recommended answer selected';
+      return `${index + 1}. ${question}\n${answers}${precision ? `\nPrecision: ${precision}` : ''}`;
+    });
+    return `Round 1 · General UI + Economy + Shop — VN feedback + shop, settle the assumptions\n\n${sections.join('\n\n')}`;
+  }
+
+  button.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(buildSummary());
+      status.textContent = 'Summary copied to clipboard.';
+    } catch (_) {
+      const fallback = document.createElement('textarea');
+      fallback.value = buildSummary();
+      document.body.appendChild(fallback);
+      fallback.select();
+      document.execCommand('copy');
+      fallback.remove();
+      status.textContent = 'Summary copied to clipboard.';
+    }
+  });
+</script>
+</body>
+</html>

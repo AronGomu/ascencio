@@ -3,7 +3,7 @@
 > Status: accepted; planned
 > Decided: 2026-08-16
 > Owners: field presentation architecture
-> Plan: [`../../ai-artifacts/PLAN_2026_08_16_duel_feedback_round_4.md`](../../ai-artifacts/PLAN_2026_08_16_duel_feedback_round_4.md) — T6, T7
+> Plan: [`../../artifacts/PLAN_2026_08_16_duel_feedback_round_4.md`](../../artifacts/PLAN_2026_08_16_duel_feedback_round_4.md) — T6, T7
 
 ## Context
 

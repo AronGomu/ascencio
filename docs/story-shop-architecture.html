@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Story Shop Architecture</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b23; --panel2:#1d242f; --border:#2b3442;
+    --fg:#dce3ee; --muted:#8b98ab; --accent:#4ea3ff; --gold:#ffcf4d;
+    --ok:#5dd39e; --warn:#ff8f5d;
+    --r-common:#6b7686; --r-rare:#c0c8d8; --r-super:#4ea3ff; --r-ultra:#ffcf4d;
+    --r-secret:#d06bff; --r-ultimate:#b8722d; --r-ghost:#eaf6ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);
+    font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:2.5rem 1.5rem 5rem}
+  main{max-width:70rem;margin:0 auto}
+  h1{font-size:2.1rem;margin:.2rem 0 .4rem}
+  h2{margin:2.6rem 0 .8rem;padding-top:1rem;border-top:1px solid var(--border);color:var(--accent)}
+  .sub{color:var(--muted)}
+  code{background:var(--panel2);border:1px solid var(--border);border-radius:4px;padding:.08em .35em;font-size:.88em}
+  table{border-collapse:collapse;width:100%;margin:.8rem 0;font-size:.93rem}
+  th,td{border:1px solid var(--border);padding:.45rem .7rem;text-align:left;vertical-align:top}
+  th{background:var(--panel);color:var(--muted);font-weight:600}
+  .flow{display:flex;flex-wrap:wrap;gap:.9rem;align-items:stretch;margin:1rem 0}
+  .node{background:var(--panel);border:1px solid var(--border);border-radius:.6rem;padding:.7rem .9rem;min-width:11rem;flex:1}
+  .node b{display:block;color:var(--fg)}
+  .node small{color:var(--muted)}
+  .node.shop{border-color:var(--accent)}
+  .node.sys{border-color:var(--gold)}
+  .arrow{align-self:center;color:var(--muted);font-size:1.3rem}
+  .lane{background:var(--panel2);border:1px dashed var(--border);border-radius:.8rem;padding:1rem;margin:.8rem 0}
+  .lane h3{margin:.1rem 0 .6rem;color:var(--muted);font-size:.85rem;text-transform:uppercase;letter-spacing:.08em}
+  .swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(9.5rem,1fr));gap:.7rem;margin:1rem 0}
+  .sw{background:var(--panel);border:1px solid var(--border);border-radius:.6rem;padding:.7rem;text-align:center}
+  .sw .halo{width:3.4rem;height:4.8rem;margin:0 auto .5rem;border-radius:.35rem;
+    background:linear-gradient(160deg,var(--panel2),var(--panel));border:1px solid var(--border)}
+  .sw small{color:var(--muted);display:block}
+  .pill{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:.1em .7em;
+    background:var(--panel);color:var(--muted);font-size:.8rem;margin:.15rem .2rem .15rem 0}
+  .note{border-left:3px solid var(--warn);background:var(--panel);padding:.6rem .9rem;border-radius:0 .5rem .5rem 0;margin:1rem 0}
+  ul{padding-left:1.2rem}
+</style>
+</head>
+<body>
+<main>
+  <h1>Story Shop Architecture</h1>
+  <p class="sub">Design doc for plan <code>PLAN_2026_08_16_vn_feedback_and_shop</code> ·
+  ADR-033 / ADR-034 / ADR-035 · domain <code>src/story/</code> · grill-confirmed 2026-08-16
+  (<code>artifacts/GRILL_2026_08_16_vn_feedback_and_shop/ANSWERS.md</code>).</p>
+
+  <h2>Big picture</h2>
+  <p>Shop = story-internal screen family. No shell route. State machine stays <code>reduceStory</code>;
+  economy stays inside <code>StoryState</code>, saved with everything else (schema v2).
+  Cross-domain jumps (deck builder, main menu) = <code>location.hash</code> writes; boundaries untouched.</p>
+
+  <h2>Screen flow</h2>
+  <div class="lane"><h3>Entry</h3>
+    <div class="flow">
+      <div class="node"><b>map</b><small>hotspot <code>card-shop</code></small></div>
+      <div class="arrow">→</div>
+      <div class="node"><b>narrative / map</b><small>top-bar shop icon · <code>open-shop</code></small></div>
+      <div class="arrow">→</div>
+      <div class="node shop"><b>shop-greeting</b><small>keeper beats → menu: Buy · Sell · Leave</small></div>
+    </div>
+  </div>
+  <div class="lane"><h3>Buy</h3>
+    <div class="flow">
+      <div class="node shop"><b>shop-browse</b><small>latest-unlocked row + set grid (built for hundreds)</small></div>
+      <div class="arrow">→</div>
+      <div class="node shop"><b>set dialog</b><small>Buy 1 / 10 / custom · view list · <code>buy-packs</code></small></div>
+      <div class="arrow">→</div>
+      <div class="node shop"><b>shop-cards</b><small>full real list · halo grid · preview · zoom · <b>buy singles @4× sell</b> · back</small></div>
+    </div>
+  </div>
+  <div class="lane"><h3>Open</h3>
+    <div class="flow">
+      <div class="node shop"><b>booster dialog</b><small>top-bar chip · steppers · Open / Open All</small></div>
+      <div class="arrow">→</div>
+      <div class="node shop"><b>shop-opening</b><small>sequential: pack-by-pack, card-by-card reveal</small></div>
+      <div class="arrow">→</div>
+      <div class="node shop"><b>shop-results</b><small>all cards, halos · <code>acknowledge-opened</code></small></div>
+    </div>
+  </div>
+  <div class="lane"><h3>Sell / system</h3>
+    <div class="flow">
+      <div class="node shop"><b>shop-sell</b><small>owned grid · steppers · total · <code>sell-cards</code></small></div>
+      <div class="arrow">·</div>
+      <div class="node sys"><b>floating gear</b><small>top-right (same spot as bar gear), all non-narrative screens → "Menu" overlay</small></div>
+      <div class="arrow">·</div>
+      <div class="node sys"><b>top bar</b><small>DP pill · shop icon · deck icon (<code>#/decks</code>) · booster chip (shop only)</small></div>
+    </div>
+  </div>
+
+  <h2>State (schema v2, ADR-033)</h2>
+  <table>
+    <tr><th>Field</th><th>Type</th><th>Init</th><th>Meaning</th></tr>
+    <tr><td><code>dp</code></td><td><code>number</code></td><td>1000</td><td>wallet</td></tr>
+    <tr><td><code>boosters</code></td><td><code>Record&lt;setId, count&gt;</code></td><td><code>{}</code></td><td>unopened packs</td></tr>
+    <tr><td><code>collection</code></td><td><code>Record&lt;code, count&gt;</code></td><td><code>{}</code></td><td>owned cards</td></tr>
+    <tr><td><code>shopReturnScreen</code></td><td><code>StoryScreen | null</code></td><td>null</td><td>where Leave lands</td></tr>
+    <tr><td><code>shopSetId</code></td><td><code>string | null</code></td><td>null</td><td>card-list context</td></tr>
+    <tr><td><code>openedCards</code></td><td><code>OpenedCard[] | null</code></td><td>null</td><td>last opening recap</td></tr>
+    <tr><td><code>openingMode</code></td><td><code>"sequential" | "all" | null</code></td><td>null</td><td>reveal path</td></tr>
+  </table>
+  <p>v1 saves migrate on read by defaulting all seven fields. Writes always v2. &gt;2 = incompatible.</p>
+
+  <h2>Commands (all guarded in <code>reduceStory</code>)</h2>
+  <p>
+    <span class="pill">open-shop</span><span class="pill">leave-shop</span>
+    <span class="pill">shop-navigate {greeting|browse|sell}</span>
+    <span class="pill">buy-packs {setId, count}</span>
+    <span class="pill">buy-single {code, rarity}</span>
+    <span class="pill">view-set-cards {setId}</span>
+    <span class="pill">open-boosters {picks, cards, mode}</span>
+    <span class="pill">finish-opening</span>
+    <span class="pill">acknowledge-opened</span>
+    <span class="pill">sell-cards {items}</span>
+  </p>
+  <p>UI cannot mint DP or cards: every mutation validated (wallet, ownership, unlock, integer counts).
+  RNG stays outside the reducer — <code>open-boosters</code> receives generated cards; tests seed the generator.</p>
+
+  <h2>Data (ADR-035, grill-confirmed)</h2>
+  <ul>
+    <li><b>Sets:</b> first <b>50 TCG English booster sets</b> (LOB 2002 →) in <code>public/story/shop-sets.v1.json</code>,
+      hand-assembled once, no pinning ceremony. Per card: <code>{code, name, rarity}</code>. First 3 sets start <code>released</code>.</li>
+    <li><b>Delivery:</b> lazy fetch on first shop entry → structural validation → Cache Storage (<code>story-shop-data</code>,
+      cache-first) → fully offline afterwards (PWA rule). Never bundled into the story JS chunk.</li>
+    <li><b>Coverage:</b> full real lists shown; packs/singles grant any listed card into <code>collection[code]</code>.
+      Missing art → placeholder tile until the image pipeline covers the code (plan T14, main-lane).
+      Packaged cards outside the 50 sets: invisible test data.</li>
+    <li><b>Pack:</b> 9 cards = 8 commons + 1 rare-or-better · 100 DP. <b>Singles:</b> 4× sell price once the set is released (common 40 DP).</li>
+    <li><b>Rarity:</b> printed rarity from set data (highest across printings in a set) → fallback ordered inference
+      (ATK ≥ 3000 → secret; extra deck → ultra; ritual / ATK ≥ 2000 → super; typed S/T or lv ≥ 5 effect → rare; else common) → common.</li>
+  </ul>
+
+  <h2>Rarity halos (new tokens — duel legality halos ADR-031 untouched)</h2>
+  <div class="swatches">
+    <div class="sw"><div class="halo" style="box-shadow:0 0 .35rem .15rem var(--r-common)"></div>Common<small>sell 10 DP</small></div>
+    <div class="sw"><div class="halo" style="box-shadow:0 0 .35rem .15rem var(--r-rare)"></div>Rare<small>sell 25 DP</small></div>
+    <div class="sw"><div class="halo" style="box-shadow:0 0 .35rem .15rem var(--r-super)"></div>Super Rare<small>sell 50 DP</small></div>
+    <div class="sw"><div class="halo" style="box-shadow:0 0 .35rem .15rem var(--r-ultra)"></div>Ultra Rare<small>sell 100 DP</small></div>
+    <div class="sw"><div class="halo" style="box-shadow:0 0 .35rem .15rem var(--r-secret)"></div>Secret Rare<small>sell 250 DP</small></div>
+    <div class="sw"><div class="halo" style="box-shadow:0 0 .35rem .15rem var(--r-ultimate)"></div>Ultimate Rare<small>reserved · 500 DP</small></div>
+    <div class="sw"><div class="halo" style="box-shadow:0 0 .35rem .15rem var(--r-ghost)"></div>Ghost Rare<small>reserved · 1000 DP</small></div>
+  </div>
+
+  <h2>Menu consolidation (ADR-034)</h2>
+  <table>
+    <tr><th>Before</th><th>After</th></tr>
+    <tr><td>Bar: History · Auto·experimental · Skip·experimental · Hide UI · Save · Load · Settings · Pause</td>
+        <td>Bar: History · Auto · Skip · Hide/Show-UI toggle · ⚙ gear</td></tr>
+    <tr><td>Separate bottom-right "Show UI" button</td><td>Same button toggles in place; hidden state hides everything except the toggle</td></tr>
+    <tr><td>Floating text button "Open pause menu" top-left</td><td>Floating ⚙ top-right (same spot as the bar gear), non-narrative screens</td></tr>
+    <tr><td>Overlay "Paused"</td><td>Overlay "Menu" (Save / Load / Settings / Return to Title inside)</td></tr>
+    <tr><td>Exit via URL edit</td><td>Title "Main menu" button → <code>#/</code></td></tr>
+  </table>
+
+  <div class="note"><b>Boundary notes.</b> Story imports <code>src/decks/catalog/*</code> (shared library — legal).
+  Story never imports shell or deck-editor internals. <code>EncounterId = Exclude&lt;LocationId, "card-shop"&gt;</code>
+  keeps the duel handoff blind to the shop. Chunk budget: <code>DOMAIN_BUDGET_BYTES.story</code> recomputed at T15;
+  T14 (image-script extension) and T15 touch root config → land via main (ADR-022).</div>
+</main>
+</body>
+</html>

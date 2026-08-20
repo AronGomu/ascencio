@@ -4,7 +4,7 @@
 > Decided: 2026-08-08
 > Superseded: 2026-08-13
 > Owners: presentation architecture
-> Historical plan: [`../../ai-artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md`](../../ai-artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md) — T2, T3, T4, T5, T8
+> Historical plan: [`../../artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md`](../../artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md) — T2, T3, T4, T5, T8
 
 ## Context
 

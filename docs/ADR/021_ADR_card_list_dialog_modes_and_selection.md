@@ -3,8 +3,8 @@
 > Status: accepted; planned
 > Decided: 2026-08-13
 > Owners: field interaction presentation
-> Plan: [`../../ai-artifact/PLAN_2026_08_13_feedback_follow_up.md`](../../ai-artifact/PLAN_2026_08_13_feedback_follow_up.md) — T10–T13
-> Evidence: [`../../ai-artifacts/PROTOTYPE_SPEC_card-list-dialog.md`](../../ai-artifacts/PROTOTYPE_SPEC_card-list-dialog.md), [`../feature/PDDR-card-list-dialog.md`](../feature/PDDR-card-list-dialog.md)
+> Plan: [`../../artifacts/PLAN_2026_08_13_feedback_follow_up.md`](../../artifacts/PLAN_2026_08_13_feedback_follow_up.md) — T10–T13
+> Evidence: [`../../artifacts/PROTOTYPE_SPEC_card-list-dialog.md`](../../artifacts/PROTOTYPE_SPEC_card-list-dialog.md), [`../feature/PDDR-card-list-dialog.md`](../feature/PDDR-card-list-dialog.md)
 
 ## Context
 

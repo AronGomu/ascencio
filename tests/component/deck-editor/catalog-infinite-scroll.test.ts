@@ -6,6 +6,7 @@ import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import CardCatalog from "../../../src/deck-editor/components/CardCatalog.svelte";
 import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
+import { syntheticCatalog } from "../../fixtures/synthetic-catalog.ts";
 import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
 import type { DeckBuilderCardView } from "../../../src/decks/catalog/ocg-card-mapper.ts";
 
@@ -113,6 +114,23 @@ describe("catalog infinite scroll", () => {
     await tick();
 
     expect(countTiles(container)).toBeLessThanOrEqual(60);
+  });
+
+  it("renders at most 60 tiles for 15k cards and resolves quickly", async () => {
+    installStubIO();
+    const cards = syntheticCatalog(15_000);
+    const t0 = performance.now();
+    const { container } = render(CardCatalog, {
+      cards,
+      ruleset: PROTOTYPE_RULESET,
+      onselect: vi.fn(),
+      ondragcard: vi.fn(),
+    });
+    await tick();
+    const elapsed = performance.now() - t0;
+    // measured: <200ms in Vitest, budget = 1500ms
+    expect(countTiles(container)).toBeLessThanOrEqual(60);
+    expect(elapsed).toBeLessThan(1500);
   });
 
   it("no observer means no hidden cards", async () => {

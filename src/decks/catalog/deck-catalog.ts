@@ -16,6 +16,7 @@ export const EMPTY_CATALOG_FILTERS: DeckCatalogFilters = Object.freeze({
   race: null,
 });
 
+// The UI uses `filterDeckCatalogIndex` from `deck-catalog-index.ts`; this function is the reference implementation kept for other callers and tests.
 export function filterDeckCatalog(
   cards: readonly DeckBuilderCardView[],
   filters: DeckCatalogFilters,

@@ -3,9 +3,13 @@
   import {
     catalogFilterOptions,
     EMPTY_CATALOG_FILTERS,
-    filterDeckCatalog,
+    // filterDeckCatalog is the reference implementation; the UI uses the index path below.
     type DeckCatalogFilters,
   } from "../../decks/catalog/deck-catalog.ts";
+  import {
+    buildDeckCatalogIndex,
+    filterDeckCatalogIndex,
+  } from "../../decks/catalog/deck-catalog-index.ts";
   import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
   import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
   import { quantityLimit } from "../../decks/catalog/pinned-ruleset.ts";
@@ -51,7 +55,8 @@
   let observerSupported = typeof IntersectionObserver === "function";
 
   $: options = catalogFilterOptions(cards);
-  $: results = filterDeckCatalog(cards, filters);
+  $: index = buildDeckCatalogIndex(cards);
+  $: results = filterDeckCatalogIndex(index, filters);
   $: filterKey = `${filters.name}|${filters.family}|${filters.subtype}|${filters.attribute}|${filters.race}`;
   $: {
     // depend on filterKey so a same-length filter change still resets

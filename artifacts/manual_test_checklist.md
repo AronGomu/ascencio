@@ -1645,3 +1645,11 @@ Nothing else moved
 - [ ] Press Undo and Redo — both still work against the bigger catalog.
 - [ ] Reload — the deck is exactly as you left it.
 - [ ] Go to `#/duel` and start a bundled preset duel — it still initializes and reaches the first prompt.
+
+## T14 catalog-performance
+
+- [ ] Open the deck editor with the full runtime catalog loaded (14,794 cards). Type into the **Name** filter — the list should keep up with typing without visible lag on a mid-range laptop.
+- [ ] Apply each filter dropdown (Type, Subtype, Attribute, Race) — results update immediately.
+- [ ] Scroll the catalog results past the initial 60 tiles — more tiles load on scroll (windowing still works).
+- [ ] Click a card tile to select it, then drag one into a deck zone — drag intents still fire.
+- [ ] Clear all filters and confirm the full result count is back and scrolling is smooth.

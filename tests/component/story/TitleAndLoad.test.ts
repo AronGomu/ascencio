@@ -5,9 +5,29 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import LoadScreen from "../../../src/story/screens/LoadScreen.svelte";
 import TitleScreen from "../../../src/story/screens/TitleScreen.svelte";
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  globalThis.location.hash = "";
+});
 
 describe("title and mock load", () => {
+  it("title offers a main menu return", async () => {
+    const onmainmenu = vi.fn();
+    render(TitleScreen, { onmainmenu });
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "Main menu" }));
+    expect(onmainmenu).toHaveBeenCalledOnce();
+  });
+
+  it("main menu return defaults to the shell home hash", async () => {
+    render(TitleScreen);
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "Main menu" }));
+    expect(globalThis.location.hash).toBe("#/");
+  });
+
   it("renders title actions, conditionally shows Continue, focuses primary action", async () => {
     const onnewgame = vi.fn();
     const rendered = render(TitleScreen, { hasProgress: false, onnewgame });

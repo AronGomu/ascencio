@@ -6,7 +6,7 @@
 import type { BattleFacadeResult } from "../../battle/battle-contracts.ts";
 import type {
   BattleResult,
-  LocationId as EncounterId,
+  EncounterId,
   StoryState,
 } from "../model/story-state.ts";
 

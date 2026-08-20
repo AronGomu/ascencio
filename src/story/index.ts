@@ -22,7 +22,7 @@ export type {
 } from "./handoff/story-handoff.ts";
 /* A battle handoff is identified by the map node it was launched from, so the
    public name for that id is the encounter it starts. */
-export type { LocationId as EncounterId } from "./model/story-state.ts";
+export type { EncounterId } from "./model/story-state.ts";
 /* Story progress is persisted, so the store is part of the domain's contract:
    the admin console resets the database by name, and the duel handoff writes
    and restores the `checkpoint:pre-duel` slot through the repository. Every

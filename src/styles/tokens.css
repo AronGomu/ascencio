@@ -54,6 +54,14 @@
   --focus-ring: #f6c177;
   --shadow: #000000;
 
+  /* rarity halo primitives */
+  --rarity-halo-rare: #c0c8d8;
+  --rarity-halo-super-rare: #4ea3ff;
+  --rarity-halo-ultra-rare: #ffcf4d;
+  --rarity-halo-secret-rare: #d06bff;
+  --rarity-halo-ultimate-rare: #b8722d;
+  --rarity-halo-ghost-rare: #eaf6ff;
+
   /* duel field palette */
   --field-glow: #1e3a5f;
   --field-border: #436558;

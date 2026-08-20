@@ -5,7 +5,9 @@ import { cleanup, render, screen, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 import { STORY_SAVES_DATABASE_NAME } from "../../../src/story/saves/story-save-contracts.ts";
+import { createInitialStoryState } from "../../../src/story/model/story-state.ts";
 import StoryApp from "../../../src/story/StoryApp.svelte";
+import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts";
 
 afterEach(async () => {
   cleanup();
@@ -45,14 +47,119 @@ describe("StoryApp", () => {
       .setup()
       .click(screen.getByRole("button", { name: "New Game" }));
     expect(screen.getByText(/Rain turned/)).toBeTruthy();
+  });
+
+  it("map screen shows floating menu gear, narrative does not", async () => {
+    const mapState = {
+      ...createInitialStoryState(),
+      screen: "map" as const,
+      savedScreen: "map" as const,
+    };
+    const { container } = render(StoryApp, { resumeState: mapState });
+    // On map: floating gear present with aria-label
+    expect(screen.getByRole("button", { name: "Open menu" })).toBeTruthy();
     expect(
-      screen.getByRole("button", { name: "Open pause menu" }),
-    ).toBeTruthy();
+      container.querySelector('[data-cy="story-global-menu"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-cy="story-global-pause"]'),
+    ).toBeNull();
+  });
+
+  it("narrative screen hides the floating menu gear", async () => {
+    const { container } = render(StoryApp);
+    // Drive to narrative via New Game
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "New Game" }));
+    // On narrative: floating gear (story-global-menu) must be absent;
+    // narrative bar's own gear (story-narrative-menu) may still be present
+    expect(container.querySelector('[data-cy="story-global-menu"]')).toBeNull();
   });
 
   /* Story styling has to stay inside its own root: the shell mounts duel and
      deck editor in the same document, so a bare `button`/`body` rule would
      repaint them. */
+  it("top bar rides narrative, map and shop, not title", async () => {
+    // title: absent
+    const { container: titleContainer } = render(StoryApp);
+    expect(
+      titleContainer.querySelector('[data-cy="story-top-bar"]'),
+    ).toBeNull();
+    cleanup();
+
+    // narrative: present
+    const narrativeState = {
+      ...createInitialStoryState(),
+      screen: "narrative" as const,
+      savedScreen: "narrative" as const,
+    };
+    const { container: narrativeContainer } = render(StoryApp, {
+      resumeState: narrativeState,
+    });
+    expect(
+      narrativeContainer.querySelector('[data-cy="story-top-bar"]'),
+    ).not.toBeNull();
+    cleanup();
+
+    // map: present
+    const mapState = {
+      ...createInitialStoryState(),
+      screen: "map" as const,
+      savedScreen: "map" as const,
+    };
+    const { container: mapContainer } = render(StoryApp, {
+      resumeState: mapState,
+    });
+    expect(
+      mapContainer.querySelector('[data-cy="story-top-bar"]'),
+    ).not.toBeNull();
+    cleanup();
+
+    // shop-greeting: present
+    const shopState = {
+      ...createInitialStoryState(),
+      screen: "shop-greeting" as const,
+      savedScreen: "shop-greeting" as const,
+    };
+    const { container: shopContainer } = render(StoryApp, {
+      resumeState: shopState,
+    });
+    expect(
+      shopContainer.querySelector('[data-cy="story-top-bar"]'),
+    ).not.toBeNull();
+  });
+
+  /* Selling is irreversible and priced by rarity, and rarity is only known
+     once the shop data has loaded. With no data the screen must offer no
+     rows at all rather than rows that would degrade to the commonest
+     price. */
+  it("offers no sale on the sell screen until the shop data has loaded", async () => {
+    const sellState = {
+      ...createInitialStoryState(),
+      screen: "shop-sell" as const,
+      savedScreen: "shop-sell" as const,
+      shopReturnScreen: "map" as const,
+      collection: { 111: 3 },
+    };
+    /* The sell screen reads the packaged catalog for card names, which a
+       jsdom test has no build to substitute. */
+    installPrototypeActiveCatalog();
+    const { container } = render(StoryApp, { resumeState: sellState });
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-cy="story-shop-sell-error"]') ??
+          container.querySelector('[data-cy="story-shop-sell-loading"]'),
+      ).not.toBeNull(),
+    );
+    expect(
+      container.querySelectorAll('[data-cy^="story-shop-sell-plus-"]'),
+    ).toHaveLength(0);
+    expect(
+      container.querySelector('[data-cy="story-shop-sell-confirm"]'),
+    ).toBeNull();
+  });
+
   it("renders under a single scoping root element", () => {
     const { container } = render(StoryApp);
     expect(container.querySelector(".story-app")).not.toBeNull();
@@ -65,6 +172,8 @@ describe("StoryApp", () => {
     const user = userEvent.setup();
     const first = render(StoryApp);
     await user.click(screen.getByRole("button", { name: "New Game" }));
+    // T1 consolidated Save into gear menu — open gear first
+    await user.click(screen.getByRole("button", { name: "Open menu" }));
     await user.click(screen.getByRole("button", { name: /^Save$/ }));
     await user.click(screen.getByRole("button", { name: "Confirm overwrite" }));
     await waitFor(() => expect(screen.getByText(/Save complete/)).toBeTruthy());

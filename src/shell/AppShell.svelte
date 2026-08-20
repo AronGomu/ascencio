@@ -5,7 +5,6 @@
     DEFAULT_DOMAIN_LOADERS,
     type DomainLoaders,
   } from "./domain-loaders.ts";
-  import { isFullscreen, requestAppFullscreen } from "./fullscreen.ts";
   import { createHandoffCoordinator } from "./handoff/handoff-coordinator.ts";
   import { STAGE_CONTEXT_KEY } from "./index.ts";
   import type { AppRoute } from "./routes.ts";
@@ -160,20 +159,6 @@
     const syncFromLocation = () => store.syncFromHash(globalThis.location.hash);
     globalThis.addEventListener("hashchange", syncFromLocation);
 
-    /* A stored fullscreen preference can only be honoured from inside a user
-       gesture, so the shell waits for the first one and then stops listening.
-       The helper already resolves a rejected request to `false`. */
-    const onFirstGesture = () => {
-      let preferred = false;
-      settings.subscribe((state) => {
-        preferred = state.fullscreenPreferred;
-      })();
-      if (!preferred || stage === undefined || isFullscreen(document)) return;
-      void requestAppFullscreen(stage);
-    };
-    globalThis.addEventListener("pointerdown", onFirstGesture, { once: true });
-    globalThis.addEventListener("keydown", onFirstGesture, { once: true });
-
     const measure = () => stageBox.set(readViewportBox());
     measure();
     /* `ResizeObserver` also fires for viewport changes a `resize` event misses
@@ -187,8 +172,6 @@
     else observer.observe(document.documentElement);
 
     return () => {
-      globalThis.removeEventListener("pointerdown", onFirstGesture);
-      globalThis.removeEventListener("keydown", onFirstGesture);
       observer?.disconnect();
       globalThis.removeEventListener("resize", measure);
       globalThis.removeEventListener("hashchange", syncFromLocation);
@@ -210,7 +193,7 @@
 >
   {#if route.kind === "home"}
     <div class="shell-region shell-region--home" data-cy="shell-region-home">
-      <HomeScreen {store} {settings} />
+      <HomeScreen {store} />
     </div>
   {:else if route.kind === "decks" || route.kind === "deck"}
     <div class="shell-region shell-region--decks" data-cy="shell-region-decks">

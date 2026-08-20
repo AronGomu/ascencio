@@ -1,8 +1,10 @@
 <script lang="ts">
   import { afterUpdate } from "svelte";
+  import GearIcon from "../components/icons/GearIcon.svelte";
   import type { StoryBeat } from "../content/prologue.ts";
   import { PROLOGUE } from "../content/prologue.ts";
   import type { ChoiceId } from "../model/story-state.ts";
+  import type { PlaybackMode } from "../playback/story-playback.ts";
 
   export let beat: StoryBeat = PROLOGUE.beats[0]!;
   export let narrativeIndex = 0;
@@ -13,11 +15,15 @@
   export let selectedChoice: ChoiceId | null = null;
   export let choiceResponse: string | null = null;
   export let missingAssets = false;
+  export let playback: PlaybackMode = "off";
+  /** Why playback last stopped on its own, or null when it did not. */
+  export let playbackNotice: string | null = null;
   export let onadvance: () => void = () => undefined;
+  export let ontoggleplayback: (mode: "auto" | "skip") => void = () =>
+    undefined;
   export let onchoose: (choice: ChoiceId) => void = () => undefined;
-  export let onutility: (
-    utility: "history" | "save" | "load" | "settings" | "pause",
-  ) => void = () => undefined;
+  export let onutility: (utility: "history" | "pause") => void = () =>
+    undefined;
 
   let uiHidden = false;
   let firstChoice: HTMLButtonElement;
@@ -53,13 +59,13 @@
     }
   }
 
+  /* Every click advances, including the second and third of a fast burst: a
+     reader tapping through a scene produces clicks with a rising `detail`,
+     and dropping those was indistinguishable from a dead dialogue box. The
+     stage is unselectable instead, so a fast burst cannot highlight the line
+     it is trying to advance past. */
   function handleStageClick(event: MouseEvent): void {
-    if (
-      event.detail <= 1 &&
-      !uiHidden &&
-      choices.length === 0 &&
-      !isControl(event.target)
-    )
+    if (!uiHidden && choices.length === 0 && !isControl(event.target))
       onadvance();
   }
 
@@ -127,61 +133,56 @@
     <button
       type="button"
       class="secondary compact"
-      data-cy="story-narrative-history"
-      onclick={() => onutility("history")}>History</button
+      data-cy="story-narrative-ui-toggle"
+      aria-pressed={uiHidden}
+      onclick={() => (uiHidden = !uiHidden)}
+      >{uiHidden ? "Show UI" : "Hide UI"}</button
     >
-    <button
-      type="button"
-      class="secondary compact"
-      data-cy="story-narrative-auto"
-      title="Experimental; not functional">Auto · experimental</button
-    >
-    <button
-      type="button"
-      class="secondary compact"
-      data-cy="story-narrative-skip"
-      title="Experimental; not functional">Skip · experimental</button
-    >
-    <button
-      type="button"
-      class="secondary compact"
-      data-cy="story-narrative-hide-ui"
-      onclick={() => (uiHidden = true)}>Hide UI</button
-    >
-    <button
-      type="button"
-      class="secondary compact"
-      data-cy="story-narrative-save"
-      onclick={() => onutility("save")}>Save</button
-    >
-    <button
-      type="button"
-      class="secondary compact"
-      data-cy="story-narrative-load"
-      onclick={() => onutility("load")}>Load</button
-    >
-    <button
-      type="button"
-      class="secondary compact"
-      data-cy="story-narrative-settings"
-      onclick={() => onutility("settings")}>Settings</button
-    >
-    <button
-      type="button"
-      class="secondary compact"
-      data-cy="story-narrative-pause"
-      onclick={() => onutility("pause")}>Pause</button
-    >
+    {#if !uiHidden}
+      <button
+        type="button"
+        class="secondary compact"
+        data-cy="story-narrative-history"
+        onclick={() => onutility("history")}>History</button
+      >
+      <button
+        type="button"
+        class="secondary compact"
+        class:engaged={playback === "auto"}
+        aria-pressed={playback === "auto"}
+        data-cy="story-narrative-auto"
+        onclick={() => ontoggleplayback("auto")}>Auto</button
+      >
+      <button
+        type="button"
+        class="secondary compact"
+        class:engaged={playback === "skip"}
+        aria-pressed={playback === "skip"}
+        data-cy="story-narrative-skip"
+        onclick={() => ontoggleplayback("skip")}>Skip</button
+      >
+      <button
+        type="button"
+        class="secondary compact"
+        data-cy="story-narrative-menu"
+        aria-label="Open menu"
+        onclick={() => onutility("pause")}
+        ><GearIcon cy="story-narrative-menu-icon" /></button
+      >
+    {/if}
   </div>
 
-  {#if uiHidden}
-    <button
-      type="button"
-      class="show-ui"
-      data-cy="story-narrative-show-ui"
-      onclick={() => (uiHidden = false)}>Show UI</button
+  {#if !uiHidden && playbackNotice !== null}
+    <p
+      class="playback-notice"
+      role="status"
+      data-cy="story-narrative-playback-notice"
     >
-  {:else}
+      {playbackNotice}
+    </p>
+  {/if}
+
+  {#if !uiHidden}
     <article
       class="dialogue"
       data-kind={beat.kind}
@@ -253,6 +254,9 @@
     min-height: 100svh;
     overflow: hidden;
     background: var(--bg);
+    /* Tapping through a scene must never select the line being tapped; the
+       history overlay is where the text stays selectable. */
+    user-select: none;
   }
   .background {
     position: absolute;
@@ -334,6 +338,25 @@
     padding: 0.5rem 0.7rem;
     background: color-mix(in srgb, var(--bg) 80%, transparent);
   }
+  .compact.engaged {
+    border-color: var(--story-accent);
+    background: var(--surface-chain);
+    color: var(--accent);
+  }
+  .playback-notice {
+    position: absolute;
+    z-index: 3;
+    left: 50%;
+    top: max(4rem, calc(3.5rem + env(safe-area-inset-top)));
+    width: min(34rem, calc(100% - 2rem));
+    transform: translateX(-50%);
+    margin: 0;
+    padding: 0.6rem 0.9rem;
+    border: 1px solid var(--story-accent);
+    border-radius: 0.5rem;
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    text-align: center;
+  }
   .dialogue {
     position: absolute;
     z-index: 2;
@@ -408,12 +431,6 @@
     inset: auto 1rem 12rem;
     padding: 1rem;
     background: var(--surface-chain);
-  }
-  .show-ui {
-    position: absolute;
-    z-index: 5;
-    right: 1rem;
-    bottom: 1rem;
   }
   .visually-hidden {
     position: absolute;

@@ -6,6 +6,7 @@
 
 import { PROLOGUE } from "../content/prologue.ts";
 import {
+  createInitialStoryState,
   STORY_SCREENS,
   type StoryScreen,
   type StoryState,
@@ -14,7 +15,11 @@ import {
 export const STORY_SAVES_DATABASE_NAME = "ygo-story-saves";
 export const STORY_SAVES_DATABASE_VERSION = 1;
 export const STORY_SAVES_STORE_NAME = "saves";
-export const STORY_SAVE_SCHEMA_VERSION = 1;
+export const STORY_SAVE_SCHEMA_VERSION = 2;
+
+/** The oldest schema this build can still read. Version 1 predates the shop:
+    it carries no economy, and `migrateStorySaveState` completes it. */
+const OLDEST_READABLE_SCHEMA_VERSION = 1;
 
 export type StorySlotKey =
   `manual:${1 | 2 | 3}` | "autosave" | "checkpoint:pre-duel";
@@ -38,7 +43,7 @@ export function isStorySlotKey(value: unknown): value is StorySlotKey {
 }
 
 export interface StorySaveEnvelope {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
   readonly slot: StorySlotKey;
   readonly revision: number;
   readonly savedAt: number;
@@ -122,9 +127,9 @@ export function parseStorySaveEnvelope(
      free to have changed the shape, and reporting that as corruption would
      invite the player to delete a save this build simply cannot read. */
   const schemaVersion = record.schemaVersion;
-  if (!isCount(schemaVersion) || schemaVersion < 1)
+  if (!isCount(schemaVersion) || schemaVersion < OLDEST_READABLE_SCHEMA_VERSION)
     return corrupt(slot, "Save record has no usable schema version");
-  if (schemaVersion !== STORY_SAVE_SCHEMA_VERSION)
+  if (schemaVersion > STORY_SAVE_SCHEMA_VERSION)
     return { kind: "incompatible", slot, found: schemaVersion };
 
   if (!hasExactKeys(record, ENVELOPE_KEYS))
@@ -135,10 +140,87 @@ export function parseStorySaveEnvelope(
     return corrupt(slot, "Save record has no usable revision");
   if (!isCount(record.savedAt))
     return corrupt(slot, "Save record has no usable timestamp");
-  if (!isStoryState(record.state))
-    return corrupt(slot, "Saved story state is invalid");
+  const state = migrateStorySaveState(record.state, schemaVersion);
+  if (state === null) return corrupt(slot, "Saved story state is invalid");
 
-  return { kind: "ready", envelope: value as StorySaveEnvelope };
+  /* Rebuilt rather than cast, so a `ready` envelope always describes itself as
+     the version this build actually returns: an older record reaches the story
+     already migrated, and nothing downstream has to ask which version it came
+     from. The state object is passed through untouched when it is already v2,
+     so a round-trip preserves it exactly. */
+  return {
+    kind: "ready",
+    envelope: {
+      schemaVersion: STORY_SAVE_SCHEMA_VERSION,
+      slot,
+      revision: record.revision,
+      savedAt: record.savedAt,
+      state,
+    },
+  };
+}
+
+/** What a save written before the shop existed is missing. Every field is a
+    fresh player's: a returning save resumes funded, owning nothing, with no
+    shop visit half-open.
+
+    Built per call rather than shared, so two migrated saves never end up
+    pointing at one inventory object. */
+function economyDefaults(): Record<string, unknown> {
+  return {
+    dp: 1000,
+    boosters: {},
+    collection: {},
+    shopReturnScreen: null,
+    shopSetId: null,
+    openedCards: null,
+    openingMode: null,
+  };
+}
+
+/**
+ * Brings a stored story state up to the shape this build runs on, or answers
+ * `null` when it cannot be read at all.
+ *
+ * Version 2 is validated as-is. Version 1 has the economy spread in *under*
+ * the stored fields, so a value the record already carries always wins over
+ * the default, and the completed state is then validated exactly like a
+ * version 2 one — a v1 record with a broken beat index stays corrupt rather
+ * than being laundered by the migration. Any other version answers `null`;
+ * the caller has already separated "too new" from "unreadable".
+ */
+export function migrateStorySaveState(
+  raw: unknown,
+  schemaVersion: number,
+): StoryState | null {
+  if (schemaVersion !== 1 && schemaVersion !== 2) return null;
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw))
+    return null;
+  const candidate =
+    schemaVersion === 1 ? withCardShop({ ...economyDefaults(), ...raw }) : raw;
+  return isStoryState(candidate) ? candidate : null;
+}
+
+/** The map a save written before the shop existed carries, plus the node it
+    could not have known about. Appended rather than rebuilt, so every node the
+    player already opened keeps the state they left it in — and a record that
+    somehow already has the shop is left exactly as it is. */
+function withCardShop(state: Record<string, unknown>): Record<string, unknown> {
+  const locations = state["locations"];
+  if (!Array.isArray(locations)) return state;
+  const hasCardShop = locations.some(
+    (location) =>
+      typeof location === "object" &&
+      location !== null &&
+      (location as Record<string, unknown>)["id"] === "card-shop",
+  );
+  if (hasCardShop) return state;
+  const cardShop = createInitialStoryState().locations.find(
+    ({ id }) => id === "card-shop",
+  );
+  return cardShop === undefined
+    ? state
+    : { ...state, locations: [...locations, cardShop] };
 }
 
 export function summarizeStorySave(
@@ -162,6 +244,12 @@ const SCREEN_LABELS: Readonly<Record<StoryScreen, string>> = Object.freeze({
   outcome: "Outcome",
   reward: "Reward",
   end: "End of the prologue",
+  "shop-greeting": "Card shop",
+  "shop-browse": "Card shop",
+  "shop-cards": "Card shop",
+  "shop-sell": "Card shop",
+  "shop-opening": "Card shop",
+  "shop-results": "Card shop",
 });
 
 /** Where a save resumes from, in the player's words. Derived rather than
@@ -176,6 +264,74 @@ function corrupt(slot: StorySlotKey, reason: string): StorySaveReadResult {
 
 function isCount(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
+}
+
+/* The wallet, what the player owns, and the shop visit in progress. A stored
+   balance that is not a whole non-negative number, or an inventory holding
+   something other than counts, is a record this build must not resume from:
+   the economy is the one part of the state a player could otherwise forge. */
+function isEconomy(state: Record<string, unknown>): boolean {
+  const screens = new Set<string>(STORY_SCREENS);
+  const rarities = new Set<string>([
+    "common",
+    "rare",
+    "super-rare",
+    "ultra-rare",
+    "secret-rare",
+    "ultimate-rare",
+    "ghost-rare",
+  ]);
+  return (
+    isCount(state.dp) &&
+    isCountRecord(state.boosters, isSetIdKey) &&
+    isCountRecord(state.collection, isCardCodeKey) &&
+    (state.shopReturnScreen === null ||
+      (typeof state.shopReturnScreen === "string" &&
+        screens.has(state.shopReturnScreen))) &&
+    (state.shopSetId === null || typeof state.shopSetId === "string") &&
+    (state.openedCards === null ||
+      (Array.isArray(state.openedCards) &&
+        state.openedCards.every((card) => {
+          if (typeof card !== "object" || card === null) return false;
+          const opened = card as Record<string, unknown>;
+          return (
+            isCount(opened.code) &&
+            typeof opened.rarity === "string" &&
+            rarities.has(opened.rarity)
+          );
+        }))) &&
+    (state.openingMode === null ||
+      state.openingMode === "sequential" ||
+      state.openingMode === "all")
+  );
+}
+
+/* Keys as well as values: an inventory is a record, and a key outside its
+   own vocabulary is a record the screens cannot render. `Number("a")` is
+   `NaN`, and two such keys collide into one `NaN` row, which takes the sell
+   screen down mid-visit rather than at the door. */
+function isCountRecord(
+  value: unknown,
+  isKey: (key: string) => boolean,
+): boolean {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Object.entries(value).every(([key, count]) => isKey(key) && isCount(count))
+  );
+}
+
+/** A card code, written the one way `Object.keys` gives it back. */
+function isCardCodeKey(key: string): boolean {
+  const code = Number(key);
+  return Number.isSafeInteger(code) && code >= 0 && String(code) === key;
+}
+
+/** A shop set id. Unknown ids are refused when a pack is opened rather than
+    here: a data file that drops a set must not cost a player their save. */
+function isSetIdKey(key: string): boolean {
+  return key.length > 0;
 }
 
 function hasExactKeys(value: object, expected: readonly string[]): boolean {
@@ -242,9 +398,17 @@ function isStoryState(value: unknown): value is StoryState {
       state.pendingHandoffId === undefined ||
       typeof state.pendingHandoffId === "string"
     ) ||
-    !Array.isArray(state.locations)
+    !Array.isArray(state.locations) ||
+    !isEconomy(state)
   )
     return false;
+  const VALID_LOCATION_IDS = new Set([
+    "old-arena",
+    "archive",
+    "hidden-gate",
+    "card-shop",
+  ]);
+  const REQUIRED_LOCATION_IDS = ["old-arena", "archive", "hidden-gate"];
   const locationIds = new Set<string>();
   const validLocations = state.locations.every((location) => {
     if (typeof location !== "object" || location === null) return false;
@@ -252,13 +416,15 @@ function isStoryState(value: unknown): value is StoryState {
     if (typeof item.id !== "string" || locationIds.has(item.id)) return false;
     locationIds.add(item.id);
     return (
-      ["old-arena", "archive", "hidden-gate"].includes(item.id) &&
+      VALID_LOCATION_IDS.has(item.id) &&
       typeof item.access === "string" &&
       ["available", "locked", "hidden"].includes(item.access) &&
       typeof item.completed === "boolean"
     );
   });
   return (
-    validLocations && state.locations.length === 3 && locationIds.size === 3
+    validLocations &&
+    REQUIRED_LOCATION_IDS.every((id) => locationIds.has(id)) &&
+    locationIds.size === state.locations.length
   );
 }

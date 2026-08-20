@@ -6,6 +6,9 @@
   export let oncontinue: () => void = () => undefined;
   export let onload: () => void = () => undefined;
   export let onsettings: () => void = () => undefined;
+  export let onmainmenu: () => void = () => {
+    globalThis.location.hash = "#/";
+  };
   let primary: HTMLButtonElement;
   onMount(() => primary.focus());
 </script>
@@ -47,6 +50,12 @@
       class="secondary"
       data-cy="story-title-settings"
       onclick={onsettings}>Settings</button
+    >
+    <button
+      type="button"
+      class="secondary"
+      data-cy="story-title-main-menu"
+      onclick={onmainmenu}>Main menu</button
     >
   </nav>
 </section>

@@ -68,6 +68,29 @@ describe("IllustratedMapScreen", () => {
     expect(screen.getByText(/Requires decoded arena signal/)).toBeTruthy();
   });
 
+  it("map offers the card shop hotspot", async () => {
+    const onselect = vi.fn();
+    const withShop: readonly StoryLocationState[] = [
+      { id: "old-arena", access: "available", completed: false },
+      { id: "archive", access: "locked", completed: false },
+      { id: "hidden-gate", access: "hidden", completed: false },
+      { id: "card-shop", access: "available", completed: false },
+    ];
+    render(IllustratedMapScreen, { locations: withShop, onselect });
+    const hotspot = within(screen.getByLabelText("Map hotspots")).getByRole(
+      "button",
+      { name: /Card Shop.*shop.*available/i },
+    );
+    expect(hotspot).toBeTruthy();
+    await userEvent.setup().click(hotspot);
+    expect(onselect).toHaveBeenCalledWith("card-shop");
+    expect(
+      within(screen.getByLabelText("Location list")).getByRole("button", {
+        name: /Card Shop.*shop.*available/i,
+      }),
+    ).toBeTruthy();
+  });
+
   it("keeps completion separate from access and conditionally renders Back", () => {
     const availableCompleted: readonly StoryLocationState[] = [
       { id: "old-arena", access: "available", completed: true },

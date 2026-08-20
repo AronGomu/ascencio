@@ -107,6 +107,74 @@ test("story plays the prologue through to the duel handoff", async ({
   await expect(page.locator(STORY_REGION)).toHaveCount(0);
 });
 
+/* A reader tapping through a scene clicks the line itself, fast, in one spot:
+   the browser raises `detail` on every click after the first and would select
+   the text under the pointer. Both used to swallow the click. */
+test("a fast burst of clicks on the dialogue text advances once per click", async ({
+  page,
+}) => {
+  await startNarrative(page);
+  const line = page.locator('[data-cy="story-narrative-text"]');
+  await line.click({ clickCount: 5, delay: 10 });
+  await expect(page.locator('[data-cy="story-narrative-cursor"]')).toHaveText(
+    "Beat 6",
+  );
+  expect(await page.evaluate(() => globalThis.getSelection()?.toString())).toBe(
+    "",
+  );
+
+  /* Two more bursts with no pause between them: nothing resets the click
+     counter, so this is the case that used to lose everything after the
+     first click of each burst. */
+  await line.click({ clickCount: 4, delay: 5 });
+  await line.click({ clickCount: 4, delay: 5 });
+  await expect(page.locator('[data-cy="story-narrative-cursor"]')).toHaveText(
+    "Beat 14",
+  );
+  await expect(
+    page.getByRole("heading", { name: "Choose your response" }),
+  ).toBeVisible();
+});
+
+test("auto advances the scene, and skip stops at unread text until the reader allows it", async ({
+  page,
+}) => {
+  /* Seeded rather than dragged on the slider: the setting is proven by the
+     overlay tests, and one second per beat keeps this run honest and short. */
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      "ygo.story.playback.v1",
+      JSON.stringify({ autoSpeedSeconds: 1, skipUnread: false }),
+    ),
+  );
+  await startNarrative(page);
+
+  const auto = page.getByRole("button", { name: "Auto", exact: true });
+  await auto.click();
+  await expect(auto).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByText(/Rin said midnight/)).toBeVisible();
+  await page.locator('[data-cy="story-narrative-stage"]').click();
+  await expect(auto).toHaveAttribute("aria-pressed", "false");
+
+  /* Beat 3 has never been read, so skip hands the scene straight back — and
+     says so, rather than looking like a dead button. */
+  const skip = page.getByRole("button", { name: "Skip", exact: true });
+  await skip.click();
+  await expect(page.getByRole("status")).toContainText("not read yet");
+  await expect(skip).toHaveAttribute("aria-pressed", "false");
+
+  await page.getByRole("button", { name: "Open menu" }).first().click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await page.getByLabel("Skip unread text").check();
+  await page.keyboard.press("Escape");
+
+  await skip.click();
+  await expect(
+    page.getByRole("heading", { name: "Choose your response" }),
+  ).toBeVisible();
+  await expect(page.getByRole("status")).toContainText("choose a response");
+});
+
 test("a win reaches its own outcome and the updated map", async ({ page }) => {
   await resumeAtOutcome(page, "win");
   await expect(
@@ -184,12 +252,14 @@ test("saved progress survives a reload and reaches the end of the prologue", asy
 
 test("manual save and delete only touch the manual slot", async ({ page }) => {
   await startNarrative(page);
+  await page.getByRole("button", { name: "Open menu" }).first().click();
   await page.getByRole("button", { name: "Save", exact: true }).click();
   /* New Game already marks progress as existing, so the save overlay opens on
      the overwrite confirmation rather than the empty-slot action. */
   await page.getByRole("button", { name: "Confirm overwrite" }).click();
   await expect(page.getByText(/Save complete/)).toBeVisible();
   await page.getByRole("button", { name: "Close Save and load" }).click();
+  await page.getByRole("button", { name: "Open menu" }).first().click();
   await page.getByRole("button", { name: "Load", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Load game" })).toBeVisible();
   await page.getByRole("button", { name: "Delete manual slot 1" }).click();
@@ -241,7 +311,7 @@ test("a manual save is reloadable from the Load screen after a reload", async ({
   page,
 }) => {
   await reachMap(page);
-  await page.getByRole("button", { name: "Open pause menu" }).click();
+  await page.getByRole("button", { name: "Open menu" }).first().click();
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await page.getByRole("button", { name: "Confirm overwrite" }).click();
   await expect(page.getByText(/Save complete/)).toBeVisible();
@@ -299,28 +369,45 @@ test("every story overlay opens, traps focus, and restores it on close", async (
   page,
 }) => {
   await startNarrative(page);
+  const history = page.getByRole("button", { name: "History", exact: true });
+  await history.click();
+  await expect(
+    page.getByRole("dialog", { name: "Dialogue history" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Close Dialogue history" }),
+  ).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(
+    page.getByRole("dialog", { name: "Dialogue history" }),
+  ).toHaveCount(0);
+  await expect(history).toBeFocused();
+
+  /* Settings, Save and Load sit behind the gear menu; when one of them closes,
+     focus restores to the gear that opened the menu, because the menu item it
+     was chosen from no longer exists. */
+  const gear = page.getByRole("button", { name: "Open menu" }).first();
   for (const [trigger, dialog] of [
-    ["History", "Dialogue history"],
     ["Settings", "Settings"],
     ["Save", "Save and load"],
     ["Load", "Load game"],
   ] as const) {
-    const control = page.getByRole("button", { name: trigger, exact: true });
-    await control.click();
+    await gear.click();
+    await page.getByRole("button", { name: trigger, exact: true }).click();
     await expect(page.getByRole("dialog", { name: dialog })).toBeVisible();
     await expect(
       page.getByRole("button", { name: `Close ${dialog}` }),
     ).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog", { name: dialog })).toHaveCount(0);
-    await expect(control).toBeFocused();
+    await expect(gear).toBeFocused();
   }
 
-  const pause = page.getByRole("button", { name: "Open pause menu" });
+  const pause = page.getByRole("button", { name: "Open menu" }).first();
   await pause.click();
-  const paused = page.getByRole("dialog", { name: "Paused" });
+  const paused = page.getByRole("dialog", { name: "Menu" });
   await expect(paused).toBeVisible();
-  const close = page.getByRole("button", { name: "Close Paused" });
+  const close = page.getByRole("button", { name: "Close Menu" });
   const last = page.getByRole("button", { name: "Return to Title" });
   await expect(close).toBeFocused();
   await page.keyboard.press("Shift+Tab");
@@ -382,9 +469,7 @@ test("story survives 200% text zoom with reduced motion honoured", async ({
     document.documentElement.style.fontSize = "200%";
   });
   await expect(page.getByText(/Rain turned/)).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Open pause menu" }),
-  ).toBeVisible();
+  await expect(page.locator('[data-cy="story-narrative-menu"]')).toBeVisible();
   const transition = await page
     .locator("[data-testid=narrative-background]")
     .evaluate((element) => getComputedStyle(element).transitionDuration);

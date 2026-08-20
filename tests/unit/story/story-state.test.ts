@@ -3,6 +3,7 @@ import { PROLOGUE } from "../../../src/story/content/prologue.ts";
 import {
   createInitialStoryState,
   STORY_SCREENS,
+  type ShopRarity,
 } from "../../../src/story/model/story-state.ts";
 import { reduceStory } from "../../../src/story/model/story-reducer.ts";
 
@@ -20,6 +21,12 @@ describe("story state model", () => {
       "outcome",
       "reward",
       "end",
+      "shop-greeting",
+      "shop-browse",
+      "shop-cards",
+      "shop-sell",
+      "shop-opening",
+      "shop-results",
     ]);
     expect(createInitialStoryState().screen).toBe("title");
     const state = reduceStory(createInitialStoryState(), {
@@ -30,6 +37,19 @@ describe("story state model", () => {
       narrativeIndex: 0,
       progressExists: true,
     });
+  });
+
+  /* The wallet is part of the story rather than a store beside it, so a fresh
+     run starts funded and with no shop session half-open. */
+  it("initial state funds the wallet and idles the shop", () => {
+    const initial = createInitialStoryState();
+    expect(initial.dp).toBe(1000);
+    expect(initial.boosters).toEqual({});
+    expect(initial.collection).toEqual({});
+    expect(initial.shopReturnScreen).toBeNull();
+    expect(initial.shopSetId).toBeNull();
+    expect(initial.openedCards).toBeNull();
+    expect(initial.openingMode).toBeNull();
   });
 
   it("continues mock progress and loads only occupied manual/autosave slots", () => {
@@ -111,6 +131,33 @@ describe("story state model", () => {
     expect(
       reduceStory(rewarded, { type: "acknowledge-reward" }).encounterId,
     ).toBeNull();
+  });
+
+  it("selecting the card shop opens the greeting, not a duel", () => {
+    const map = { ...createInitialStoryState(), screen: "map" as const };
+    const next = reduceStory(map, {
+      type: "select-location",
+      locationId: "card-shop",
+    });
+    expect(next.screen).toBe("shop-greeting");
+    expect(next.shopReturnScreen).toBe("map");
+    expect(next.encounterId).toBeNull();
+  });
+
+  it("leaving the shop returns where it was entered", () => {
+    const greeting = {
+      ...createInitialStoryState(),
+      screen: "shop-greeting" as const,
+      shopReturnScreen: "map" as const,
+    };
+    const next = reduceStory(greeting, { type: "leave-shop" });
+    expect(next.screen).toBe("map");
+    expect(next.shopReturnScreen).toBeNull();
+  });
+
+  it("leave-shop is a no-op on non-shop screens", () => {
+    const map = { ...createInitialStoryState(), screen: "map" as const };
+    expect(reduceStory(map, { type: "leave-shop" })).toBe(map);
   });
 
   it("allows available map destinations only", () => {
@@ -203,5 +250,394 @@ describe("story state model", () => {
     expect(() => JSON.parse(JSON.stringify(reset))).not.toThrow();
     expect(PROLOGUE.beats.length).toBeGreaterThanOrEqual(25);
     expect(PROLOGUE.beats.length).toBeLessThanOrEqual(40);
+  });
+
+  it("buying ten packs pays fifteen hundred dp", () => {
+    const browse = {
+      ...createInitialStoryState(),
+      screen: "shop-browse" as const,
+      dp: 1500,
+    };
+    const next = reduceStory(browse, {
+      type: "buy-packs",
+      setId: "metal-raiders",
+      count: 10,
+    });
+    expect(next.dp).toBe(0);
+    expect(next.boosters["metal-raiders"]).toBe(10);
+  });
+
+  it("buying beyond the wallet is refused", () => {
+    const browse = {
+      ...createInitialStoryState(),
+      screen: "shop-browse" as const,
+      dp: 150,
+    };
+    const next = reduceStory(browse, {
+      type: "buy-packs",
+      setId: "metal-raiders",
+      count: 2,
+    });
+    expect(next).toBe(browse);
+  });
+
+  it("non-integer counts are refused", () => {
+    const browse = {
+      ...createInitialStoryState(),
+      screen: "shop-browse" as const,
+      dp: 10000,
+    };
+    for (const count of [1.5, 0, -3]) {
+      expect(
+        reduceStory(browse, {
+          type: "buy-packs",
+          setId: "metal-raiders",
+          count,
+        }),
+      ).toBe(browse);
+    }
+  });
+
+  it("shop-navigate only walks shop screens", () => {
+    const map = { ...createInitialStoryState(), screen: "map" as const };
+    expect(reduceStory(map, { type: "shop-navigate", to: "browse" })).toBe(map);
+
+    const greeting = {
+      ...createInitialStoryState(),
+      screen: "shop-greeting" as const,
+      shopReturnScreen: "map" as const,
+    };
+    expect(
+      reduceStory(greeting, { type: "shop-navigate", to: "browse" }).screen,
+    ).toBe("shop-browse");
+  });
+
+  it("view-set-cards opens the list for that set", () => {
+    const browse = {
+      ...createInitialStoryState(),
+      screen: "shop-browse" as const,
+    };
+    const next = reduceStory(browse, {
+      type: "view-set-cards",
+      setId: "lob",
+    });
+    expect(next).toMatchObject({ screen: "shop-cards", shopSetId: "lob" });
+  });
+
+  it("back to browse clears the set", () => {
+    const cards = {
+      ...createInitialStoryState(),
+      screen: "shop-cards" as const,
+      shopSetId: "lob",
+    };
+    const next = reduceStory(cards, { type: "shop-navigate", to: "browse" });
+    expect(next.screen).toBe("shop-browse");
+    expect(next.shopSetId).toBeNull();
+  });
+
+  it("buying a single pays four times sell", () => {
+    const cards = {
+      ...createInitialStoryState(),
+      screen: "shop-cards" as const,
+      dp: 100,
+    };
+    const next = reduceStory(cards, {
+      type: "buy-single",
+      code: 111,
+      rarity: "common",
+    });
+    expect(next.dp).toBe(60);
+    expect(next.collection[111]).toBe(1);
+  });
+
+  it("single beyond the wallet is refused", () => {
+    const cards = {
+      ...createInitialStoryState(),
+      screen: "shop-cards" as const,
+      dp: 30,
+    };
+    const next = reduceStory(cards, {
+      type: "buy-single",
+      code: 111,
+      rarity: "common",
+    });
+    expect(next).toBe(cards);
+  });
+
+  /* A rarity outside the union has no price, so pricing it produced `NaN`,
+     every comparison against it was false, and the buy went through for a
+     wallet that could never be spent again. */
+  it("single at a rarity the shop does not sell is refused", () => {
+    const cards = {
+      ...createInitialStoryState(),
+      screen: "shop-cards" as const,
+      dp: 1000,
+    };
+    const next = reduceStory(cards, {
+      type: "buy-single",
+      code: 111,
+      rarity: "mythic" as ShopRarity,
+    });
+    expect(next).toBe(cards);
+    expect(next.dp).toBe(1000);
+  });
+
+  it("single off the cards screen is refused", () => {
+    const browse = {
+      ...createInitialStoryState(),
+      screen: "shop-browse" as const,
+      dp: 1000,
+    };
+    const next = reduceStory(browse, {
+      type: "buy-single",
+      code: 111,
+      rarity: "common",
+    });
+    expect(next).toBe(browse);
+  });
+
+  it("opening consumes boosters and grows the collection", () => {
+    const shopBrowse = {
+      ...createInitialStoryState(),
+      screen: "shop-browse" as const,
+      boosters: { a: 2 },
+    };
+    const cards = Array.from({ length: 18 }, (_, i) => ({
+      code: i < 9 ? 1 : 2,
+      rarity: "common" as const,
+    }));
+    const next = reduceStory(shopBrowse, {
+      type: "open-boosters",
+      picks: [{ setId: "a", count: 2 }],
+      cards,
+      mode: "all",
+    });
+    expect(next.boosters).toEqual({});
+    expect(next.collection[1]).toBe(9);
+    expect(next.collection[2]).toBe(9);
+    expect(next.screen).toBe("shop-results");
+    expect(next.openedCards).toBe(cards);
+  });
+
+  it("sequential mode heads to the opening screen", () => {
+    const shopBrowse = {
+      ...createInitialStoryState(),
+      screen: "shop-browse" as const,
+      boosters: { a: 2 },
+    };
+    const cards = Array.from({ length: 18 }, (_, i) => ({
+      code: i < 9 ? 1 : 2,
+      rarity: "common" as const,
+    }));
+    const next = reduceStory(shopBrowse, {
+      type: "open-boosters",
+      picks: [{ setId: "a", count: 2 }],
+      cards,
+      mode: "sequential",
+    });
+    expect(next.screen).toBe("shop-opening");
+  });
+
+  it("overdrawn picks are refused", () => {
+    const shopBrowse = {
+      ...createInitialStoryState(),
+      screen: "shop-browse" as const,
+      boosters: { a: 2 },
+    };
+    const next = reduceStory(shopBrowse, {
+      type: "open-boosters",
+      picks: [{ setId: "a", count: 3 }],
+      cards: [],
+      mode: "all",
+    });
+    expect(next).toBe(shopBrowse);
+  });
+
+  it("zero, negative and fractional pack counts are refused", () => {
+    const shopBrowse = {
+      ...createInitialStoryState(),
+      screen: "shop-browse" as const,
+      boosters: { a: 2 },
+    };
+    for (const count of [0, -1, 1.5]) {
+      const next = reduceStory(shopBrowse, {
+        type: "open-boosters",
+        picks: [{ setId: "a", count }],
+        cards: [],
+        mode: "all",
+      });
+      expect(next, `count ${count}`).toBe(shopBrowse);
+    }
+  });
+
+  it("finish-opening reaches the recap", () => {
+    const opening = {
+      ...createInitialStoryState(),
+      screen: "shop-opening" as const,
+      openedCards: [{ code: 1, rarity: "common" as const }],
+      openingMode: "sequential" as const,
+    };
+    const next = reduceStory(opening, { type: "finish-opening" });
+    expect(next.screen).toBe("shop-results");
+    expect(next.openedCards).toBe(opening.openedCards);
+    expect(next.openingMode).toBe(opening.openingMode);
+  });
+
+  it("finish-opening elsewhere is refused", () => {
+    const map = { ...createInitialStoryState(), screen: "map" as const };
+    expect(reduceStory(map, { type: "finish-opening" })).toBe(map);
+  });
+
+  it("acknowledge clears the recap", () => {
+    const results = {
+      ...createInitialStoryState(),
+      screen: "shop-results" as const,
+      openedCards: [{ code: 1, rarity: "common" as const }],
+      openingMode: "all" as const,
+    };
+    const next = reduceStory(results, { type: "acknowledge-opened" });
+    expect(next.screen).toBe("shop-browse");
+    expect(next.openedCards).toBeNull();
+    expect(next.openingMode).toBeNull();
+  });
+
+  it("selling pays the ladder", () => {
+    const sell = {
+      ...createInitialStoryState(),
+      screen: "shop-sell" as const,
+      dp: 500,
+      collection: { 111: 3, 222: 1 } as Record<number, number>,
+    };
+    const next = reduceStory(sell, {
+      type: "sell-cards",
+      items: [
+        { code: 111, quantity: 2, rarity: "common" },
+        { code: 222, quantity: 1, rarity: "ultra-rare" },
+      ],
+    });
+    expect(next.dp).toBe(620);
+    expect(next.collection).toEqual({ 111: 1 });
+  });
+
+  /* The receipt names a rarity; the price for it comes from the ladder here.
+     A screen that has not loaded the shop data yet cannot know a card's
+     rarity, and a caller-supplied price would let that ignorance be paid
+     out — irreversibly — at the commonest rate. */
+  it("sell price comes from the ladder, not from the receipt", () => {
+    const sell = {
+      ...createInitialStoryState(),
+      screen: "shop-sell" as const,
+      dp: 0,
+      collection: { 111: 1 } as Record<number, number>,
+    };
+    const next = reduceStory(sell, {
+      type: "sell-cards",
+      items: [{ code: 111, quantity: 1, rarity: "ghost-rare" }],
+    });
+    expect(next.dp).toBe(1000);
+    expect(next.collection).toEqual({});
+  });
+
+  it("selling at a rarity the shop does not price is refused", () => {
+    const sell = {
+      ...createInitialStoryState(),
+      screen: "shop-sell" as const,
+      dp: 0,
+      collection: { 111: 1 } as Record<number, number>,
+    };
+    const next = reduceStory(sell, {
+      type: "sell-cards",
+      items: [{ code: 111, quantity: 1, rarity: "mythic" as ShopRarity }],
+    });
+    expect(next).toBe(sell);
+  });
+
+  it("selling more than owned is wholly refused", () => {
+    const sell = {
+      ...createInitialStoryState(),
+      screen: "shop-sell" as const,
+      dp: 0,
+      collection: { 111: 1, 222: 5 } as Record<number, number>,
+    };
+    const next = reduceStory(sell, {
+      type: "sell-cards",
+      items: [
+        { code: 222, quantity: 3, rarity: "common" },
+        { code: 111, quantity: 2, rarity: "common" },
+      ],
+    });
+    expect(next).toBe(sell);
+  });
+
+  it("selling off the sell screen is refused", () => {
+    const browse = {
+      ...createInitialStoryState(),
+      screen: "shop-browse" as const,
+      dp: 0,
+      collection: { 111: 3 } as Record<number, number>,
+    };
+    const next = reduceStory(browse, {
+      type: "sell-cards",
+      items: [{ code: 111, quantity: 1, rarity: "common" }],
+    });
+    expect(next).toBe(browse);
+  });
+
+  /* Each item used to be checked against the stored collection on its own, so
+     two rows naming one card aggregated past the guard: the player was paid
+     for four copies of a card they owned three of, and the save came back
+     holding minus one. */
+  it("repeated codes are counted together against the collection", () => {
+    const sell = {
+      ...createInitialStoryState(),
+      screen: "shop-sell" as const,
+      dp: 0,
+      collection: { 111: 3 } as Record<number, number>,
+    };
+    const next = reduceStory(sell, {
+      type: "sell-cards",
+      items: [
+        { code: 111, quantity: 2, rarity: "common" },
+        { code: 111, quantity: 2, rarity: "common" },
+      ],
+    });
+    expect(next).toBe(sell);
+    expect(next.collection[111]).toBe(3);
+  });
+
+  it("repeated sets are counted together against the boosters", () => {
+    const shopBrowse = {
+      ...createInitialStoryState(),
+      screen: "shop-browse" as const,
+      boosters: { a: 2 },
+    };
+    const next = reduceStory(shopBrowse, {
+      type: "open-boosters",
+      picks: [
+        { setId: "a", count: 2 },
+        { setId: "a", count: 2 },
+      ],
+      cards: [],
+      mode: "all",
+    });
+    expect(next).toBe(shopBrowse);
+    expect(next.boosters["a"]).toBe(2);
+  });
+
+  it("zero and fractional quantities are refused", () => {
+    const sell = {
+      ...createInitialStoryState(),
+      screen: "shop-sell" as const,
+      dp: 0,
+      collection: { 111: 5 } as Record<number, number>,
+    };
+    for (const quantity of [0, 1.5, -1]) {
+      expect(
+        reduceStory(sell, {
+          type: "sell-cards",
+          items: [{ code: 111, quantity, rarity: "common" }],
+        }),
+      ).toBe(sell);
+    }
   });
 });

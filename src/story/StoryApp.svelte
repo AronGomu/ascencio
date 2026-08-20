@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { afterUpdate, onMount } from "svelte";
+  import { afterUpdate, onDestroy, onMount } from "svelte";
   import { PROLOGUE } from "./content/prologue.ts";
   import {
     createInitialStoryState,
@@ -9,6 +9,18 @@
     type StoryState,
   } from "./model/story-state.ts";
   import { reduceStory } from "./model/story-reducer.ts";
+  import {
+    playbackDelayMs,
+    playbackHalt,
+    playbackNotice,
+    type PlaybackMode,
+  } from "./playback/story-playback.ts";
+  import { createStoryPlaybackSettingsStore } from "./playback/story-playback-settings-store.ts";
+  import {
+    readStoryReadLog,
+    withBeatRead,
+    writeStoryReadLog,
+  } from "./playback/story-read-log.ts";
   import {
     ENCOUNTER_LABELS,
     restoreStoryState,
@@ -22,6 +34,8 @@
   import PauseOverlay from "./overlays/PauseOverlay.svelte";
   import SaveLoadOverlay from "./overlays/SaveLoadOverlay.svelte";
   import SettingsOverlay from "./overlays/SettingsOverlay.svelte";
+  import GearIcon from "./components/icons/GearIcon.svelte";
+  import StoryTopBar from "./components/StoryTopBar.svelte";
   import BattleHandoffScreen from "./screens/BattleHandoffScreen.svelte";
   import IllustratedMapScreen from "./screens/IllustratedMapScreen.svelte";
   import LoadScreen from "./screens/LoadScreen.svelte";
@@ -29,6 +43,23 @@
   import OutcomeScreen from "./screens/OutcomeScreen.svelte";
   import PreBattleScreen from "./screens/PreBattleScreen.svelte";
   import RewardScreen from "./screens/RewardScreen.svelte";
+  import ShopBrowseScreen from "./shop/ShopBrowseScreen.svelte";
+  import ShopCardListScreen from "./shop/ShopCardListScreen.svelte";
+  import ShopGreetingScreen from "./shop/ShopGreetingScreen.svelte";
+  import ShopSellScreen from "./shop/ShopSellScreen.svelte";
+  import BoosterInventoryDialog from "./shop/BoosterInventoryDialog.svelte";
+  import BoosterOpeningScreen from "./shop/BoosterOpeningScreen.svelte";
+  import BoosterResultsScreen from "./shop/BoosterResultsScreen.svelte";
+  import {
+    contentsOf,
+    fetchShopSetData,
+    resolveCardRarity,
+    type ShopSetData,
+  } from "./shop/data/shop-set-data.ts";
+  import { openablePicks, openBoosters } from "./shop/data/pack-generator.ts";
+  import { singlePriceDp } from "./shop/data/shop-pricing.ts";
+  import { activeCatalog } from "../decks/catalog/active-catalog.ts";
+  import type { DeckBuilderCardView } from "../decks/catalog/ocg-card-mapper.ts";
   import TitleScreen from "./screens/TitleScreen.svelte";
   import {
     STORY_SLOT_KEYS,
@@ -67,6 +98,9 @@
   const MANUAL_SLOT: StorySlotKey = "manual:1";
   const AUTOSAVE_SLOT: StorySlotKey = "autosave";
   const saves = createStorySaveRepository(globalThis.indexedDB);
+  /* Auto and Skip read their pacing from here; the settings overlay writes
+     it. Reader preferences, so they live outside the save slots. */
+  const playbackSettings = createStoryPlaybackSettingsStore();
 
   let state =
     resumeState === null
@@ -95,7 +129,23 @@
   let dirty = false;
   let inputId = 0;
   let previousScreen: StoryScreen = state.screen;
+  let shopData: ShopSetData | null = null;
+  let shopDataError: string | null = null;
+  let shopDataLoading = false;
+  /* Full views, not a name/image projection: `resolveCardRarity` infers a
+     rarity from ATK/type fields when the shop data misses a code. */
+  let catalogByCode: Map<number, DeckBuilderCardView> = new Map();
+  let boosterDialogOpen = false;
   let root: HTMLElement;
+  let playback: PlaybackMode = "off";
+  let playbackMessage: string | null = null;
+  let playbackTimer: ReturnType<typeof setTimeout> | null = null;
+  let playbackKey = "";
+  /* Profile-wide rather than per save: skip fast-forwards what this player has
+     read, including beats read in a run that was later loaded over. */
+  let readBeats: ReadonlySet<string> = readStoryReadLog();
+
+  onDestroy(() => stopPlaybackTimer());
 
   onMount(() => {
     if (resumeState !== null || resolution !== null) onhandled();
@@ -157,6 +207,16 @@
   }
 
   afterUpdate(() => {
+    if (
+      state.screen.startsWith("shop-") &&
+      shopData === null &&
+      !shopDataLoading &&
+      shopDataError === null
+    )
+      void loadShopData();
+  });
+
+  afterUpdate(() => {
     if (state.screen === previousScreen) return;
     previousScreen = state.screen;
     queueMicrotask(() => {
@@ -171,6 +231,58 @@
     });
   });
 
+  $: inShop = state.screen.startsWith("shop-");
+  $: if (
+    (state.screen === "shop-cards" ||
+      state.screen === "shop-results" ||
+      state.screen === "shop-opening" ||
+      state.screen === "shop-sell") &&
+    catalogByCode.size === 0
+  ) {
+    catalogByCode = new Map(activeCatalog().map((c) => [c.code, c]));
+  }
+  /* Null until the shop data is in hand: rarity decides what a card sells
+     for, and resolving it without that data degrades every unknown card to
+     `common`. A sale is irreversible, so the screen waits rather than pays
+     the floor price for a ghost rare. */
+  $: sellableCards =
+    shopData === null
+      ? null
+      : Object.entries(state.collection).map(([codeKey, owned]) => {
+          const code = Number(codeKey);
+          const view = catalogByCode.get(code);
+          return {
+            code,
+            owned,
+            name: shopNameByCode.get(code) ?? view?.name ?? `#${code}`,
+            imageUrl: view?.imageUrl ?? null,
+            rarity: resolveCardRarity(code, shopData, view),
+          };
+        });
+  $: boosterTotal = Object.values(state.boosters).reduce((a, b) => a + b, 0);
+  $: shopNameByCode = new Map(
+    (shopData?.sets ?? []).flatMap((s) =>
+      s.cards.map((c) => [c.code, c.name] as const),
+    ),
+  );
+  $: openedCardViews = (state.openedCards ?? []).map(({ code, rarity }) => ({
+    code,
+    rarity,
+    name:
+      shopNameByCode.get(code) ?? catalogByCode.get(code)?.name ?? `#${code}`,
+    imageUrl: catalogByCode.get(code)?.imageUrl ?? null,
+  }));
+  $: shopSet = shopData?.sets.find(({ id }) => id === state.shopSetId) ?? null;
+  $: shopSetName = shopSet?.name ?? "";
+  $: shopCards = (shopSet?.cards ?? []).map((card) => ({
+    code: card.code,
+    name: card.name,
+    imageUrl: catalogByCode.get(card.code)?.imageUrl ?? null,
+    rarity: card.rarity,
+    priceDp: singlePriceDp(card.rarity),
+  }));
+  $: topBarVisible =
+    inShop || state.screen === "narrative" || state.screen === "map";
   $: applyResolution(resolution);
   $: encounterLabel =
     state.encounterId === null
@@ -185,6 +297,115 @@
   $: historyEntries = PROLOGUE.beats
     .slice(0, state.narrativeIndex + 1)
     .map(({ speaker, text }) => ({ speaker, text }));
+  /* Playback is driven from here rather than from a reactive statement: it
+     schedules an advance, and an advance is what re-runs it. The key makes
+     that loop terminate at one timer per beat — an update that changes
+     nothing playback depends on leaves the pending beat alone instead of
+     restarting its countdown. */
+  afterUpdate(() => {
+    if (state.screen === "narrative") markRead(beat.id);
+    const key = [
+      playback,
+      state.screen,
+      state.narrativeIndex,
+      activeChoices.length,
+      overlay ?? "none",
+      readBeats.size,
+      $playbackSettings.autoSpeedSeconds,
+      $playbackSettings.skipUnread,
+    ].join("|");
+    if (key === playbackKey) return;
+    playbackKey = key;
+    drivePlayback();
+  });
+
+  /** Records a beat as read the moment it is on screen, which is what Skip
+      later consults. Written through on every new beat: a session that ends
+      in a crash still keeps what was read up to it. */
+  function markRead(id: string): void {
+    const next = withBeatRead(readBeats, id);
+    if (next === readBeats) return;
+    readBeats = next;
+    writeStoryReadLog(next);
+  }
+
+  function stopPlaybackTimer(): void {
+    if (playbackTimer === null) return;
+    clearTimeout(playbackTimer);
+    playbackTimer = null;
+  }
+
+  function togglePlayback(mode: "auto" | "skip"): void {
+    playbackMessage = null;
+    playback = playback === mode ? "off" : mode;
+  }
+
+  /** The single owner of the playback timer: one beat is never queued twice,
+      and a run that has to stop always says why instead of going quiet. */
+  function drivePlayback(): void {
+    stopPlaybackTimer();
+    if (playback === "off") return;
+    /* An overlay or a screen change is the player taking the scene back. */
+    if (state.screen !== "narrative" || overlay !== null) {
+      playback = "off";
+      return;
+    }
+    const halt = playbackHalt(playback, {
+      hasChoices: activeChoices.length > 0,
+      atLastBeat: state.narrativeIndex >= PROLOGUE.beats.length - 1,
+      nextBeatRead: readBeats.has(
+        PROLOGUE.beats[state.narrativeIndex + 1]?.id ?? "",
+      ),
+      skipUnread: $playbackSettings.skipUnread,
+    });
+    if (halt !== null) {
+      playbackMessage = playbackNotice(playback, halt);
+      playback = "off";
+      return;
+    }
+    playbackTimer = setTimeout(
+      () => {
+        playbackTimer = null;
+        advanceBeat();
+      },
+      playbackDelayMs(playback, $playbackSettings.autoSpeedSeconds),
+    );
+  }
+
+  async function loadShopData(): Promise<void> {
+    shopDataLoading = true;
+    shopDataError = null;
+    try {
+      shopData = await fetchShopSetData();
+    } catch (error) {
+      shopDataError =
+        error instanceof Error ? error.message : "Shop data unavailable";
+    } finally {
+      shopDataLoading = false;
+    }
+  }
+
+  /** Opens only what the loaded data can fill. A pick naming a set with no
+      contents — a tampered save, or a data file that dropped the set — grants
+      nothing, so its packs stay on the shelf instead of being spent on a
+      reveal that has no cards in it. */
+  function openPicks(
+    picks: readonly { readonly setId: string; readonly count: number }[],
+    mode: "sequential" | "all",
+  ): void {
+    boosterDialogOpen = false;
+    const data = shopData;
+    if (data === null) return;
+    const contents = (setId: string) => contentsOf(data, setId);
+    const openable = openablePicks(picks, contents);
+    if (openable.length === 0) return;
+    dispatch({
+      type: "open-boosters",
+      picks: openable,
+      mode,
+      cards: openBoosters(openable, contents, Math.random),
+    });
+  }
 
   function go(screen: StoryScreen): void {
     state = { ...state, screen };
@@ -296,7 +517,16 @@
     };
     return true;
   }
+  /** Advance the player asked for. Any manual input ends playback: the reader
+      taking the scene back is exactly what Auto and Skip yield to. */
   function advance(): void {
+    if (playback !== "off") {
+      playback = "off";
+      playbackMessage = null;
+    }
+    advanceBeat();
+  }
+  function advanceBeat(): void {
     if (state.narrativeIndex >= PROLOGUE.beats.length - 1) {
       dispatch({ type: "go-to-map" });
       return;
@@ -405,6 +635,23 @@
 </script>
 
 <div class="story-app" data-cy="story-app" bind:this={root}>
+  {#if topBarVisible}
+    <StoryTopBar
+      dp={state.dp}
+      {inShop}
+      onshop={() => dispatch({ type: "open-shop" })}
+    >
+      {#if inShop}
+        <button
+          type="button"
+          class="secondary compact"
+          data-cy="story-top-bar-boosters"
+          onclick={() => (boosterDialogOpen = true)}
+          >{boosterTotal} packs</button
+        >
+      {/if}
+    </StoryTopBar>
+  {/if}
   {#if storageOperationError}
     <section
       class="storage-error"
@@ -453,10 +700,12 @@
       choices={activeChoices}
       selectedChoice={state.choice}
       choiceResponse={state.narrativeIndex === 13 ? state.choiceResponse : null}
+      {playback}
+      playbackNotice={playbackMessage}
       onadvance={advance}
+      ontoggleplayback={togglePlayback}
       onchoose={choose}
-      onutility={(utility) =>
-        openOverlay(utility === "pause" ? "pause" : utility)}
+      onutility={(utility) => openOverlay(utility)}
     />
   {:else if state.screen === "map"}
     <IllustratedMapScreen
@@ -508,6 +757,58 @@
       onretry={retryEncounter}
       onreturn={returnToMap}
     />
+  {:else if state.screen === "shop-greeting"}
+    <ShopGreetingScreen
+      onnavigate={(target) =>
+        dispatch({
+          type: "shop-navigate",
+          to: target === "buy" ? "browse" : "sell",
+        })}
+      onleave={() => dispatch({ type: "leave-shop" })}
+    />
+  {:else if state.screen === "shop-browse"}
+    <ShopBrowseScreen
+      sets={shopData?.sets ?? null}
+      error={shopDataError}
+      dp={state.dp}
+      onbuy={(setId, count) => dispatch({ type: "buy-packs", setId, count })}
+      onviewcards={(setId) => dispatch({ type: "view-set-cards", setId })}
+      onretry={() => {
+        shopDataError = null;
+        void loadShopData();
+      }}
+      onback={() => dispatch({ type: "shop-navigate", to: "greeting" })}
+    />
+  {:else if state.screen === "shop-cards"}
+    <ShopCardListScreen
+      setName={shopSetName}
+      dp={state.dp}
+      cards={shopCards}
+      onbuysingle={(code, rarity) =>
+        dispatch({ type: "buy-single", code, rarity })}
+      onback={() => dispatch({ type: "shop-navigate", to: "browse" })}
+    />
+  {:else if state.screen === "shop-sell"}
+    <ShopSellScreen
+      cards={sellableCards}
+      error={shopDataError}
+      onsell={(items) => dispatch({ type: "sell-cards", items })}
+      onretry={() => {
+        shopDataError = null;
+        void loadShopData();
+      }}
+      onback={() => dispatch({ type: "shop-navigate", to: "greeting" })}
+    />
+  {:else if state.screen === "shop-opening"}
+    <BoosterOpeningScreen
+      cards={openedCardViews}
+      onfinish={() => dispatch({ type: "finish-opening" })}
+    />
+  {:else if state.screen === "shop-results"}
+    <BoosterResultsScreen
+      cards={openedCardViews}
+      oncontinue={() => dispatch({ type: "acknowledge-opened" })}
+    />
   {:else if state.screen === "reward"}
     <RewardScreen
       {autosaveStatus}
@@ -537,12 +838,14 @@
     </main>
   {/if}
 
-  {#if state.screen !== "title" && state.screen !== "load" && state.screen !== "end"}
+  {#if state.screen !== "title" && state.screen !== "load" && state.screen !== "end" && state.screen !== "narrative"}
     <button
       type="button"
-      class="global-pause secondary"
-      data-cy="story-global-pause"
-      onclick={(event) => openOverlay("pause", event)}>Open pause menu</button
+      class="global-menu secondary"
+      data-cy="story-global-menu"
+      aria-label="Open menu"
+      onclick={(event) => openOverlay("pause", event)}
+      ><GearIcon cy="story-global-menu-icon" /></button
     >
   {/if}
 
@@ -552,6 +855,7 @@
       restoreFocusTo={overlayTrigger}
     />
   {:else if overlay === "settings"}<SettingsOverlay
+      settings={playbackSettings}
       onclose={closeOverlay}
       restoreFocusTo={overlayTrigger}
     />
@@ -584,6 +888,18 @@
       onclose={closeOverlay}
       restoreFocusTo={overlayTrigger}
     />{/if}
+
+  {#if boosterDialogOpen && shopData !== null}
+    <BoosterInventoryDialog
+      boosters={state.boosters}
+      setNameOf={(id) => shopData!.sets.find((s) => s.id === id)?.name ?? id}
+      onopen={(picks) => openPicks(picks, "sequential")}
+      onopenall={(picks) => openPicks(picks, "all")}
+      onclose={() => {
+        boosterDialogOpen = false;
+      }}
+    />
+  {/if}
 </div>
 
 <style>
@@ -615,11 +931,17 @@
   .storage-error p {
     margin: 0.2rem;
   }
-  .global-pause {
+  .global-menu {
     position: fixed;
     z-index: 25;
-    left: max(0.5rem, env(safe-area-inset-left));
+    right: max(0.5rem, env(safe-area-inset-right));
     top: max(0.5rem, env(safe-area-inset-top));
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 50%;
     background: color-mix(in srgb, var(--bg) 87%, transparent);
   }
   .completion-panel {

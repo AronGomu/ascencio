@@ -5,6 +5,7 @@ import { isJpeg, validJpegFileSize } from "./lib/images.ts";
 import { CATALOG_SHARD_COUNT, type ImageRecord } from "./lib/model.ts";
 import { resolveProjectSubpath } from "./lib/paths.ts";
 import { acquireRunLock } from "./lib/run-lock.ts";
+import { collectShopCodes, mergeShopImageRecords } from "./lib/shop-set-image-codes.ts";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptDirectory, "..");
@@ -29,7 +30,9 @@ const releaseRunLock = await acquireRunLock(
 
 try {
 await mkdir(fullImageRoot, { recursive: true });
-const records = (await readImageManifest(assetRoot)).slice(0, options.limit);
+const shopJson = await readFile(path.join(projectRoot, "public/story/shop-sets.v1.json"), "utf8");
+const manifestRecords = await readImageManifest(assetRoot);
+const records = mergeShopImageRecords(manifestRecords, collectShopCodes(shopJson)).slice(0, options.limit);
 const limiter = createRateLimiter(options.requestsPerSecond);
 const queue = [...records];
 const results: DownloadResult[] = [];

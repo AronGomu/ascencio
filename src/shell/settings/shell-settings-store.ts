@@ -7,8 +7,6 @@ import {
 } from "./shell-settings.ts";
 
 export interface ShellSettingsStore extends Readable<ShellSettings> {
-  setFullscreenPreferred(preferred: boolean): void;
-  dismissFullscreenTip(): void;
   dismissRotationNotice(): void;
 }
 
@@ -31,16 +29,6 @@ export function createShellSettingsStore(
 
   return {
     subscribe,
-    setFullscreenPreferred(preferred: boolean): void {
-      persist((state) =>
-        Object.freeze({ ...state, fullscreenPreferred: preferred }),
-      );
-    },
-    dismissFullscreenTip(): void {
-      persist((state) =>
-        Object.freeze({ ...state, fullscreenTipDismissed: true }),
-      );
-    },
     dismissRotationNotice(): void {
       persist((state) =>
         Object.freeze({ ...state, rotationNoticeDismissed: true }),

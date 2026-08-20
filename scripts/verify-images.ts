@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { validJpegFileSize } from "./lib/images.ts";
 import { CATALOG_SHARD_COUNT, type ImageRecord } from "./lib/model.ts";
 import { resolveProjectSubpath } from "./lib/paths.ts";
+import { collectShopCodes } from "./lib/shop-set-image-codes.ts";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptDirectory, "..");
@@ -37,6 +38,11 @@ for (let shard = 0; shard < CATALOG_SHARD_COUNT; shard += 1) {
   for (const record of records) {
     expectedCodes.add(record.code);
   }
+}
+for (const code of collectShopCodes(
+  await readFile(path.join(projectRoot, "public/story/shop-sets.v1.json"), "utf8"),
+)) {
+  expectedCodes.add(code);
 }
 
 const archivedCodes = new Set<number>();

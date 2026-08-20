@@ -7,8 +7,17 @@ import {
   type BattleResult,
   type ChoiceId,
   type LocationId,
+  type OpenedCard,
+  type ShopRarity,
   type StoryState,
+  type StoryScreen,
 } from "./story-state.ts";
+import {
+  isShopRarity,
+  PACK_PRICE_DP,
+  SELL_PRICE_DP,
+  singlePriceDp,
+} from "../shop/data/shop-pricing.ts";
 
 export type StoryCommand =
   | { readonly type: "new-game" }
@@ -22,6 +31,44 @@ export type StoryCommand =
   | { readonly type: "battle-result"; readonly result: BattleResult }
   | { readonly type: "continue-outcome" }
   | { readonly type: "acknowledge-reward" }
+  | { readonly type: "open-shop" }
+  | { readonly type: "leave-shop" }
+  | {
+      readonly type: "shop-navigate";
+      readonly to: "greeting" | "browse" | "sell";
+    }
+  | {
+      readonly type: "buy-packs";
+      readonly setId: string;
+      readonly count: number;
+    }
+  | { readonly type: "view-set-cards"; readonly setId: string }
+  | {
+      readonly type: "buy-single";
+      readonly code: number;
+      readonly rarity: ShopRarity;
+    }
+  | {
+      readonly type: "open-boosters";
+      readonly picks: readonly {
+        readonly setId: string;
+        readonly count: number;
+      }[];
+      readonly cards: readonly OpenedCard[];
+      readonly mode: "sequential" | "all";
+    }
+  | { readonly type: "acknowledge-opened" }
+  | { readonly type: "finish-opening" }
+  | {
+      readonly type: "sell-cards";
+      /* The receipt names what is being sold, never what it is worth: the
+         price belongs to the rarity ladder this reducer owns. */
+      readonly items: readonly {
+        readonly code: number;
+        readonly quantity: number;
+        readonly rarity: ShopRarity;
+      }[];
+    }
   | { readonly type: "reset" };
 
 export function reduceStory(
@@ -77,9 +124,15 @@ export function reduceStory(
       const location = state.locations.find(
         ({ id }) => id === command.locationId,
       );
-      return location?.access === "available"
-        ? { ...state, screen: "pre-battle", encounterId: command.locationId }
-        : state;
+      if (location?.access !== "available") return state;
+      if (command.locationId === "card-shop") {
+        return { ...state, screen: "shop-greeting", shopReturnScreen: "map" };
+      }
+      return {
+        ...state,
+        screen: "pre-battle",
+        encounterId: command.locationId,
+      };
     }
     case "start-battle":
       return state.screen === "pre-battle"
@@ -131,6 +184,135 @@ export function reduceStory(
               : location,
         ),
       };
+    case "open-shop":
+      if (state.screen !== "narrative" && state.screen !== "map") return state;
+      return {
+        ...state,
+        screen: "shop-greeting",
+        shopReturnScreen: state.screen,
+      };
+    case "leave-shop":
+      if (!state.screen.startsWith("shop-")) return state;
+      return {
+        ...state,
+        screen: state.shopReturnScreen ?? "map",
+        shopReturnScreen: null,
+      };
+    case "shop-navigate": {
+      if (!state.screen.startsWith("shop-")) return state;
+      const screenMap: Record<"greeting" | "browse" | "sell", StoryScreen> = {
+        greeting: "shop-greeting",
+        browse: "shop-browse",
+        sell: "shop-sell",
+      };
+      const next = { ...state, screen: screenMap[command.to] };
+      return command.to === "browse" ? { ...next, shopSetId: null } : next;
+    }
+    case "view-set-cards": {
+      if (state.screen !== "shop-browse") return state;
+      return { ...state, screen: "shop-cards", shopSetId: command.setId };
+    }
+    case "buy-single": {
+      if (state.screen !== "shop-cards") return state;
+      if (!isShopRarity(command.rarity)) return state;
+      const price = singlePriceDp(command.rarity);
+      if (state.dp < price) return state;
+      return {
+        ...state,
+        dp: state.dp - price,
+        collection: {
+          ...state.collection,
+          [command.code]: (state.collection[command.code] ?? 0) + 1,
+        },
+      };
+    }
+    case "buy-packs": {
+      if (state.screen !== "shop-browse") return state;
+      const { setId, count } = command;
+      if (!Number.isInteger(count) || count < 1) return state;
+      const cost = count * PACK_PRICE_DP;
+      if (state.dp < cost) return state;
+      return {
+        ...state,
+        dp: state.dp - cost,
+        boosters: {
+          ...state.boosters,
+          [setId]: (state.boosters[setId] ?? 0) + count,
+        },
+      };
+    }
+    case "open-boosters": {
+      if (!state.screen.startsWith("shop-")) return state;
+      const { picks, cards, mode } = command;
+      /* Totalled per set before anything is checked: two picks naming one set
+         each pass a per-pick check the pair cannot pass together, and the
+         shelf would go negative. */
+      const wanted = new Map<string, number>();
+      for (const { setId, count } of picks) {
+        if (!Number.isInteger(count) || count < 1) return state;
+        wanted.set(setId, (wanted.get(setId) ?? 0) + count);
+      }
+      for (const [setId, count] of wanted)
+        if ((state.boosters[setId] ?? 0) < count) return state;
+      const boosters: Record<string, number> = { ...state.boosters };
+      for (const [setId, count] of wanted) {
+        const remaining = (boosters[setId] ?? 0) - count;
+        if (remaining === 0) delete boosters[setId];
+        else boosters[setId] = remaining;
+      }
+      const collection: Record<number, number> = { ...state.collection };
+      for (const { code } of cards) {
+        collection[code] = (collection[code] ?? 0) + 1;
+      }
+      return {
+        ...state,
+        boosters,
+        collection,
+        openedCards: cards,
+        openingMode: mode,
+        screen: mode === "sequential" ? "shop-opening" : "shop-results",
+      };
+    }
+    case "acknowledge-opened":
+      if (state.screen !== "shop-results") return state;
+      return {
+        ...state,
+        screen: "shop-browse",
+        openedCards: null,
+        openingMode: null,
+      };
+    case "finish-opening":
+      if (state.screen !== "shop-opening") return state;
+      return { ...state, screen: "shop-results" };
+    case "sell-cards": {
+      if (state.screen !== "shop-sell") return state;
+      /* Totalled per code before anything is checked: two rows naming one
+         card each pass a per-row check the pair cannot pass together, and the
+         collection would go negative — a save this build can no longer
+         read. */
+      const wanted = new Map<number, number>();
+      for (const { code, quantity, rarity } of command.items) {
+        if (
+          !Number.isInteger(quantity) ||
+          quantity < 1 ||
+          !isShopRarity(rarity)
+        )
+          return state;
+        wanted.set(code, (wanted.get(code) ?? 0) + quantity);
+      }
+      for (const [code, quantity] of wanted)
+        if ((state.collection[code] ?? 0) < quantity) return state;
+      const collection: Record<number, number> = { ...state.collection };
+      let dp = state.dp;
+      for (const { quantity, rarity } of command.items)
+        dp += quantity * SELL_PRICE_DP[rarity];
+      for (const [code, quantity] of wanted) {
+        const remaining = (collection[code] ?? 0) - quantity;
+        if (remaining === 0) delete collection[code];
+        else collection[code] = remaining;
+      }
+      return { ...state, dp, collection };
+    }
     case "reset":
       return createInitialStoryState();
   }

@@ -42,7 +42,7 @@
   export let filled = false;
 
   let workspaceElement: HTMLElement;
-  let collapsedZones = { main: false, extra: false, side: true };
+  let collapsedZones = { main: false, extra: false, side: false };
   $: totalCopies = countCopies(deck);
   $: mainDropAllowed = canDrop("main", picked, catalog);
   $: extraDropAllowed = canDrop("extra", picked, catalog);

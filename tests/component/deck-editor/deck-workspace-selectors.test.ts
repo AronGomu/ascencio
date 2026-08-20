@@ -24,4 +24,15 @@ describe("deck workspace selector contract", () => {
         `deck-zone-${zone} is missing`,
       ).not.toBeNull();
   });
+
+  it("the side deck drop area is present on first paint", () => {
+    const { container } = render(DeckWorkspace, {
+      deck: deckFixture(0),
+      catalog: prototypeCatalogMap,
+      ruleset: PROTOTYPE_RULESET,
+    });
+    expect(
+      container.querySelector('[data-cy="deck-zone-drop-area-side"]'),
+    ).not.toBeNull();
+  });
 });

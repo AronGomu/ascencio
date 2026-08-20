@@ -50,12 +50,18 @@ describe("deck grid plans", () => {
     });
   });
 
-  it("keeps Extra and Side at 15 slots", () => {
+  it("fifteen-card zones are one row of fifteen", () => {
     expect(FIFTEEN_CARD_GRID).toEqual({
-      columns: 5,
-      rows: 3,
+      columns: 15,
+      rows: 1,
       slots: 15,
-      compact: false,
+      compact: true,
     });
+  });
+
+  it("main deck plans are unchanged", () => {
+    expect(mainDeckGridPlan(40)).toMatchObject({ columns: 10, slots: 40 });
+    expect(mainDeckGridPlan(50)).toMatchObject({ columns: 10, slots: 50 });
+    expect(mainDeckGridPlan(60)).toMatchObject({ columns: 10, slots: 60 });
   });
 });

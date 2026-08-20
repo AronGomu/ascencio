@@ -1162,9 +1162,9 @@ Zone layout
 
 Collapse / expand controls
 
-- [ ] Confirm the Side Deck zone starts collapsed on first open (body / card grid not visible; toggle button shows "▸").
-- [ ] Click the Side Deck toggle — the card grid and drop area expand; the toggle arrow changes to "▾".
-- [ ] Click the toggle again — the zone collapses; toggle arrow returns to "▸".
+- [ ] Confirm the Side Deck zone starts **expanded** on first open (card grid visible; toggle button shows "▾"). *(updated by T5)*
+- [ ] Click the Side Deck toggle — the card grid and drop area collapse; the toggle arrow changes to "▸".
+- [ ] Click the toggle again — the zone expands; toggle arrow returns to "▾".
 - [ ] Confirm the same expand/collapse works for Main Deck and Extra Deck.
 - [ ] Confirm each toggle button reports its state to assistive technology (`aria-expanded` flips between "true" and "false").
 - [ ] Tab to a zone toggle with the keyboard — a visible focus ring surrounds the toggle, and Enter/Space collapses or expands the zone.
@@ -1426,3 +1426,29 @@ Buttons gone
 - [ ] Confirm the limit badge (number in circle, top-left) remains above the art and is not obscured.
 - [ ] Scroll to a card with no image URL; confirm the placeholder glyph (letter or `!`) fills the tile and the name appears as a normal (non-overlay) row below it.
 - [ ] Confirm no tile overflows its grid slot at any of the default column widths.
+
+## T5 fifteen-in-a-row-collapse-bar
+
+Run `npm run dev` and open a deck at `#/decks/<id>`.
+
+Single-row Extra and Side grids
+
+- [ ] Confirm the Extra Deck zone renders all 15 slots on **one horizontal row** (not 3 rows of 5).
+- [ ] Confirm the Side Deck zone renders all 15 slots on **one horizontal row**.
+- [ ] Confirm the Main Deck zone is unchanged: 10 columns and 4 rows (40 slots) for a deck with ≤ 40 cards.
+- [ ] Add cards to Extra Deck until it holds 15; confirm all 15 tiles sit in one row with compact gap.
+- [ ] Confirm card-name text in Extra/Side tiles is smaller than in Main Deck tiles (compact font).
+
+Full-width collapse bar
+
+- [ ] Click the chevron icon in the Extra Deck header — the zone collapses.
+- [ ] Click the zone heading text in the Extra Deck header — the zone re-expands.
+- [ ] Click the count badge (e.g. "0/15") in the Extra Deck header — the zone collapses again.
+- [ ] Confirm the toggle button spans the full width of the workspace column (no orphan count badge to the right).
+- [ ] Confirm a hover highlight appears across the entire header bar (not just the chevron region).
+- [ ] Tab to the Extra Deck toggle and confirm a visible focus ring spans the full button; Enter/Space toggles the zone.
+
+Side Deck expanded on arrival
+
+- [ ] Open the deck editor from the library; confirm the Side Deck card grid and drop area are **visible immediately** without clicking the toggle.
+- [ ] Confirm cards can be dragged from Main or Extra Deck directly onto the Side Deck drop area without first expanding it.

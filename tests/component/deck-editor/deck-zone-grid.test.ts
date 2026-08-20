@@ -5,7 +5,10 @@ import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import DeckZoneGrid from "../../../src/deck-editor/components/DeckZoneGrid.svelte";
 import DeckWorkspace from "../../../src/deck-editor/components/DeckWorkspace.svelte";
-import { mainDeckGridPlan } from "../../../src/decks/deck-model.ts";
+import {
+  FIFTEEN_CARD_GRID,
+  mainDeckGridPlan,
+} from "../../../src/decks/deck-model.ts";
 import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
 import {
   deckFixture,
@@ -56,34 +59,73 @@ describe("DeckZoneGrid", () => {
 });
 
 describe("DeckZoneGrid collapsible zones", () => {
-  it("the side deck starts collapsed", () => {
+  it("the side deck starts expanded", () => {
     const { container } = render(DeckWorkspace, {
       deck: deckFixture(0),
       catalog: prototypeCatalogMap,
       ruleset: PROTOTYPE_RULESET,
     });
-    expect(container.querySelector("#deck-zone-body-side")).toBeNull();
+    expect(container.querySelector("#deck-zone-body-side")).not.toBeNull();
     const toggle = container.querySelector('[data-cy="deck-zone-toggle-side"]');
     expect(toggle).not.toBeNull();
-    expect(toggle!.getAttribute("aria-expanded")).toBe("false");
+    expect(toggle!.getAttribute("aria-expanded")).toBe("true");
   });
 
-  it("toggling expands and collapses a zone", async () => {
+  it("toggling collapses and re-expands a zone", async () => {
     const user = userEvent.setup();
     const { container } = render(DeckWorkspace, {
       deck: deckFixture(0),
       catalog: prototypeCatalogMap,
       ruleset: PROTOTYPE_RULESET,
     });
-    expect(container.querySelector("#deck-zone-body-side")).toBeNull();
-    await user.click(
-      container.querySelector('[data-cy="deck-zone-toggle-side"]')!,
-    );
     expect(container.querySelector("#deck-zone-body-side")).not.toBeNull();
     await user.click(
       container.querySelector('[data-cy="deck-zone-toggle-side"]')!,
     );
     expect(container.querySelector("#deck-zone-body-side")).toBeNull();
+    await user.click(
+      container.querySelector('[data-cy="deck-zone-toggle-side"]')!,
+    );
+    expect(container.querySelector("#deck-zone-body-side")).not.toBeNull();
+  });
+
+  it("the zone count sits inside the collapse control", () => {
+    const { container } = render(DeckZoneGrid, {
+      zone: "extra",
+      label: "Extra Deck",
+      codes: [],
+      plan: FIFTEEN_CARD_GRID,
+      catalog: prototypeCatalogMap,
+      ruleset: PROTOTYPE_RULESET,
+      totalCopies: new Map(),
+    });
+    const countEl = container.querySelector(
+      '[data-cy="deck-zone-count-extra"]',
+    );
+    expect(countEl).not.toBeNull();
+    expect(
+      countEl!.closest('[data-cy="deck-zone-toggle-extra"]'),
+    ).not.toBeNull();
+  });
+
+  it("clicking the header bar collapses the zone", async () => {
+    const user = userEvent.setup();
+    const ontogglecollapse = vi.fn();
+    const { container } = render(DeckZoneGrid, {
+      zone: "side",
+      label: "Side Deck",
+      codes: [],
+      plan: FIFTEEN_CARD_GRID,
+      catalog: prototypeCatalogMap,
+      ruleset: PROTOTYPE_RULESET,
+      totalCopies: new Map(),
+      collapsed: false,
+      ontogglecollapse,
+    });
+    const toggle = container.querySelector('[data-cy="deck-zone-toggle-side"]');
+    expect(toggle!.getAttribute("aria-expanded")).toBe("true");
+    await user.click(toggle!);
+    expect(ontogglecollapse).toHaveBeenCalledOnce();
   });
 
   it("the main count reads 41/40-60 above forty cards", () => {

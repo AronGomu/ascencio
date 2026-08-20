@@ -65,17 +65,18 @@
       >
         {label}
       </h3>
+      <span
+        class="count"
+        class:error={codes.length > plan.slots}
+        data-cy={`deck-zone-count-${zone}`}
+      >
+        {zone === "main"
+          ? codes.length <= 40
+            ? `${codes.length}/40`
+            : `${codes.length}/40-60`
+          : `${codes.length}/${plan.slots}`}
+      </span>
     </button>
-    <span
-      class:error={codes.length > plan.slots}
-      data-cy={`deck-zone-count-${zone}`}
-    >
-      {zone === "main"
-        ? codes.length <= 40
-          ? `${codes.length}/40`
-          : `${codes.length}/40-60`
-        : `${codes.length}/${plan.slots}`}
-    </span>
   </header>
   {#if !collapsed}
     <div
@@ -170,15 +171,22 @@
   }
 
   header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     margin-bottom: 0.45rem;
   }
 
   header button {
     all: unset;
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.15rem 0.25rem;
+    border-radius: 0.4rem;
     cursor: pointer;
+  }
+
+  header button:hover {
+    background: var(--surface-raised);
   }
 
   /* `all: unset` drops the user-agent focus ring, and being an author
@@ -193,13 +201,14 @@
     font-size: 0.94rem;
   }
 
-  header span {
+  .count {
+    margin-left: auto;
     color: var(--muted);
     font-size: 0.78rem;
     font-weight: 750;
   }
 
-  header span.error,
+  .count.error,
   .overflow {
     color: var(--danger);
   }

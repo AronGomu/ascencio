@@ -274,10 +274,10 @@ export function mainDeckGridPlan(count: number): DeckGridPlan {
 }
 
 export const FIFTEEN_CARD_GRID: DeckGridPlan = Object.freeze({
-  columns: 5,
-  rows: 3,
+  columns: 15,
+  rows: 1,
   slots: 15,
-  compact: false,
+  compact: true,
 });
 
 function removeFirst(values: number[], code: number): boolean {

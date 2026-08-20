@@ -253,16 +253,8 @@
     message={state.message}
     oncreate={(name) => runAndSync(controller?.createDeck(name))}
     onopen={(id) => onnavigate({ deckId: id })}
-    onrename={async (deck, name) => {
-      await controller?.openDeck(deck.id);
-      await runAndSync(controller?.rename(name));
-    }}
-    onduplicate={(id) => runAndSync(controller?.duplicate(id))}
-    ondelete={(deck) => controller?.deleteDeck(deck.id, deck.revision)}
-    onexport={(deck) => openLibraryModal("export", deck)}
     onimport={() => openLibraryModal("import")}
     defaultDeckId={state.defaultDeckId}
-    onsetdefault={(id) => void controller?.setDefaultDeck(id)}
     favouriteDeckIds={state.favouriteDeckIds}
     onfavourite={(id) => void controller?.toggleFavourite(id)}
   />
@@ -285,6 +277,20 @@
     onrestoreautosave={(entry) =>
       void runAndSync(controller?.restoreAutosave(entry))}
     onopendeckbyid={(id) => onnavigate({ deckId: id })}
+    defaultDeckId={state.defaultDeckId}
+    onduplicate={() => void runAndSync(controller?.duplicate(deckId!))}
+    onexport={() => {
+      if (state.current !== null)
+        openLibraryModal("export", state.current.deck);
+    }}
+    onsetdefault={() => void controller?.setDefaultDeck(deckId!)}
+    ondelete={() => {
+      const deck = state.current?.deck;
+      if (deck === undefined) return;
+      void controller
+        ?.deleteDeck(deck.id, deck.revision)
+        .then(() => onnavigate({ deckId: null }));
+    }}
   />
 {:else}
   <main class="loading" aria-busy="true" data-cy="deck-editor-opening">

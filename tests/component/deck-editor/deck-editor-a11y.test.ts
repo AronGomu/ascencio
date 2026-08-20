@@ -75,10 +75,6 @@ describe("deck builder accessibility", () => {
       decks: [],
       oncreate: vi.fn(),
       onopen: vi.fn(),
-      onrename: vi.fn(),
-      onduplicate: vi.fn(),
-      ondelete: vi.fn(),
-      onexport: vi.fn(),
       onimport: vi.fn(),
     });
     const opener = screen.getByRole("button", { name: "Create deck" });

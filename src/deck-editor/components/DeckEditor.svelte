@@ -29,6 +29,7 @@
     DeckAutosaveRecord,
     DeckId,
   } from "../../decks/deck-contracts.ts";
+  import { handleModalKeydown } from "../focus-trap.ts";
 
   export let state: DeckBuilderState;
   export let cards: readonly DeckBuilderCardView[];
@@ -54,6 +55,11 @@
   export let onrestoreautosave: (entry: DeckAutosaveRecord) => void = () =>
     undefined;
   export let onopendeckbyid: (id: DeckId) => void = () => undefined;
+  export let defaultDeckId: DeckId | null = null;
+  export let onduplicate: () => void = () => undefined;
+  export let onexport: () => void = () => undefined;
+  export let onsetdefault: () => void = () => undefined;
+  export let ondelete: () => void = () => undefined;
 
   let selected: DeckBuilderCardView | null = null;
   let selectedCode: number | null = null;
@@ -68,6 +74,8 @@
   let tapOpener: HTMLElement | null = null;
   let showLoad = false;
   let loadButton: HTMLButtonElement | null = null;
+  let confirmingDelete = false;
+  let deleteButton: HTMLButtonElement | null = null;
   let loadedAutosaves: readonly DeckAutosaveRecord[] = [];
 
   $: tabs = layoutMode === "tabs";
@@ -294,6 +302,12 @@
     loadButton?.focus();
   }
 
+  async function closeDelete(): Promise<void> {
+    confirmingDelete = false;
+    await tick();
+    deleteButton?.focus();
+  }
+
   function handleKeydown(event: KeyboardEvent): void {
     const target = event.target as HTMLElement | null;
     const editingText =
@@ -347,6 +361,32 @@
         }}
       />
     </label>
+    <button
+      type="button"
+      class="secondary"
+      data-cy="deck-editor-duplicate"
+      onclick={onduplicate}>Duplicate</button
+    >
+    <button
+      type="button"
+      class="secondary"
+      data-cy="deck-editor-export"
+      onclick={onexport}>Export</button
+    >
+    <button
+      type="button"
+      class="secondary"
+      data-cy="deck-editor-set-default"
+      disabled={deck?.id === defaultDeckId}
+      onclick={onsetdefault}>Set default</button
+    >
+    <button
+      type="button"
+      class="danger"
+      data-cy="deck-editor-delete"
+      bind:this={deleteButton}
+      onclick={() => (confirmingDelete = true)}>Delete</button
+    >
     <button
       type="button"
       class="secondary"
@@ -535,6 +575,51 @@
     />
   {/if}
 
+  {#if confirmingDelete}
+    <div
+      class="backdrop"
+      aria-hidden="true"
+      data-cy="deck-delete-backdrop"
+    ></div>
+    <div
+      class="dialog"
+      role="dialog"
+      aria-modal="true"
+      tabindex="-1"
+      aria-labelledby="deck-editor-delete-dialog-heading"
+      data-cy="deck-editor-delete-dialog"
+      onkeydown={(event) => handleModalKeydown(event, closeDelete)}
+    >
+      <h2
+        id="deck-editor-delete-dialog-heading"
+        tabindex="-1"
+        data-cy="deck-editor-delete-heading"
+      >
+        Delete {deck.name}?
+      </h2>
+      <p data-cy="deck-editor-delete-message">
+        Local deck and retained history will be removed.
+      </p>
+      <div class="actions" data-cy="deck-editor-delete-actions">
+        <button
+          type="button"
+          class="secondary"
+          data-cy="deck-editor-delete-cancel"
+          onclick={closeDelete}>Cancel</button
+        >
+        <button
+          type="button"
+          class="danger"
+          data-cy="deck-editor-delete-confirm"
+          onclick={() => {
+            ondelete();
+            void closeDelete();
+          }}>Delete {deck.name}</button
+        >
+      </div>
+    </div>
+  {/if}
+
   {#if showLoad}
     <div class="backdrop" aria-hidden="true" data-cy="load-deck-backdrop"></div>
     <LoadDeckDialog
@@ -556,7 +641,7 @@
 <style>
   .editor-header {
     display: grid;
-    grid-template-columns: auto auto 1fr auto auto auto;
+    grid-template-columns: auto auto 1fr repeat(7, auto);
     align-items: end;
     gap: 0.55rem;
     width: calc(100% - 0.5rem);
@@ -648,6 +733,27 @@
     z-index: 20;
     inset: 0;
     background: color-mix(in srgb, var(--shadow) 68%, transparent);
+  }
+
+  .dialog {
+    position: fixed;
+    z-index: 30;
+    inset: 50% auto auto 50%;
+    width: min(30rem, calc(100vw - 3rem));
+    padding: 1rem;
+    transform: translate(-50%, -50%);
+    border: 1px solid var(--border);
+    border-radius: 0.8rem;
+    background: var(--surface);
+    box-shadow: 0 1.5rem 5rem color-mix(in srgb, var(--shadow) 55%, transparent);
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
   }
 
   /* Below the stage breakpoint the header wraps rather than scrolling sideways.

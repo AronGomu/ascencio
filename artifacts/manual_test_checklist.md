@@ -287,14 +287,14 @@ Import and export
 
 - [ ] From the library, click "Import Deck", set the deck name to `Manual T8 Import`, paste `#main` / `99999999` / `#extra` / `!side` (one per line) into "Or paste YDK text", click "Preview import" then "Replace deck cards" — the editor opens on the imported deck and shows a "Missing card 99999999" tile.
 - [ ] Confirm the URL moved to that imported deck's `#/decks/<id>`, then reload — the missing-card tile is still there.
-- [ ] Return to the library, use the per-row "Export" action on the imported deck — the dialog warns the deck is invalid; copy to clipboard, then Close. (Export moved to the library menu in T4 — no Export button exists in the editor header.)
-- [ ] Back in the library, use the per-row "Export" action on another deck — the YDK text dialog opens for that deck and Close returns focus to the row.
+- [ ] With the imported deck open in the editor, click **Export** in the deck header — the dialog warns the deck is invalid; copy to clipboard, then Close.
+- [ ] Open another deck and click **Export** — the YDK text dialog opens for that deck and Close returns focus to the Export button.
 
 Library CRUD
 
-- [ ] From the library, "Duplicate" a deck — the copy opens in the editor and the URL points at the copy, not the original.
-- [ ] Return to the library, "Rename" a deck — the renamed deck opens and the URL points at it.
-- [ ] Return to the library, "Delete" a deck, confirm in the dialog — the row disappears; reload and confirm it stays gone.
+- [ ] Open a deck and click **Duplicate** in the deck header — the copy opens in the editor and the URL points at the copy, not the original.
+- [ ] Edit the deck-name input to rename the deck and blur — the new name is saved.
+- [ ] Click **Delete** in the deck header, confirm in the dialog — you land on the library and the row is gone; reload and confirm it stays gone.
 
 Admin console jump
 
@@ -1337,15 +1337,15 @@ Buttons gone
 
 ### Setting the default
 
-- [ ] Create a second deck and return to the library. Its row has a "Set default" button; the Starter Deck row's "Set default" button is disabled.
-- [ ] Click "Set default" on the second deck. The "Default" badge moves to that row, its button becomes disabled, and the Starter Deck row's button becomes clickable again.
+- [ ] Create a second deck and open it. Its deck page header has a **Set default** button; open the Starter Deck and confirm its **Set default** button is disabled (it is already the default).
+- [ ] Open the second deck, click **Set default**. The **Default** badge appears on that row in the library; open the Starter Deck — its **Set default** button is now enabled.
 - [ ] Reload the page. The badge is still on the second deck.
 
 ### Deleting the default
 
-- [ ] Delete the deck that currently holds the "Default" badge. No remaining row shows a "Default" badge, and every remaining row's "Set default" button is clickable.
+- [ ] Open the deck that currently holds the **Default** badge and click **Delete** from the deck page header, confirming the dialog. No remaining row in the library shows a **Default** badge.
 - [ ] Reload the page. Because no deck is default any more, seeding runs again: it adopts the existing "Starter Deck" rather than creating a second one, so that row now carries the badge and the deck count is unchanged.
-- [ ] Delete every deck including "Starter Deck", then reload. A single fresh "Starter Deck" is seeded and marked default.
+- [ ] Open each remaining deck and delete it from the deck page (including "Starter Deck"), then reload. A single fresh "Starter Deck" is seeded and marked default.
 
 ## T15 duel-menu-default-selection
 
@@ -1366,7 +1366,7 @@ Buttons gone
 
 ### A default deck the player set themselves
 
-- [ ] Open `#/decks`, create or import a second legal 40-card deck, and press **Set default** on its row.
+- [ ] Open `#/decks`, create or import a second legal 40-card deck, open it in the editor, and press **Set default** in the deck header.
 - [ ] Wipe only `ygo.ui.v2` from Local Storage (leave IndexedDB alone), reload, and open `#/duel`. The selected row is that second deck.
 - [ ] Pick a different deck in the list, reload, and open `#/duel` again. Your pick is still selected — the stored default only fills an empty seat, it does not reclaim one.
 
@@ -1391,7 +1391,7 @@ Buttons gone
 - [ ] Confirm the counts line (Main · Extra · Side) and the "Updated …" timestamp appear below the name line, unchanged.
 - [ ] Click **Import Deck** and confirm the import flow opens.
 - [ ] Click **Create deck** and confirm the create-deck dialog opens.
-- [ ] Create a deck, set it as default, and confirm the **Default** badge appears right-aligned on its name row.
+- [ ] Create a deck, open it, click **Set default** in the deck header, return to the library, and confirm the **Default** badge appears right-aligned on its name row.
 
 ## T2 favourite-decks-ordering
 
@@ -1401,5 +1401,18 @@ Buttons gone
 - [ ] Star two decks (but not the default), then reload the page; confirm the starred decks still show ★ after reload.
 - [ ] With a default deck and two starred decks, confirm the library order is: default deck first, then starred decks, then unstarred — within starred/unstarred groups the active sort (modified/name) applies.
 - [ ] Switch the sort to **Name** and confirm order within each group respects alphabetical ordering.
-- [ ] Delete a starred deck; reload the page; confirm it no longer appears in the favourites.
-- [ ] Open, create, and delete a deck while favourites are set; confirm the library remains functional with no console errors.
+- [ ] Open a starred deck and delete it from the deck page header; reload the page; confirm it no longer appears in the favourites.
+- [ ] Open, create, and delete decks (delete from the deck page) while favourites are set; confirm the library remains functional with no console errors.
+
+## T3 deck-page-actions
+
+- [ ] Open any deck. Confirm the editor header contains **Duplicate**, **Export**, **Set default**, and **Delete** buttons (in that order, between the name field and Undo).
+- [ ] Confirm no deck row in the library shows Rename, Duplicate, Export, Set default, or Delete buttons.
+- [ ] Click **Duplicate** — the copy opens in the editor and the URL points at the copy; the library lists both decks.
+- [ ] Rename the open deck by editing the name input and blurring — the new name is saved (no dialog, no rename button).
+- [ ] Click **Export** — the YDK export dialog opens for the open deck; Close returns focus to the Export button.
+- [ ] Open a deck that is already the default. Confirm **Set default** is disabled.
+- [ ] Open a non-default deck. Click **Set default** — the **Default** badge moves to that deck's row in the library, and **Set default** becomes disabled on the deck page.
+- [ ] Click **Delete** — the confirm dialog appears with the deck name and "Local deck and retained history will be removed."; **Delete** (confirm) is available and **Cancel** returns focus to the Delete button without deleting.
+- [ ] Confirm deletion — you land on `#/decks`; the deleted deck row is gone. Reload and confirm it stays gone.
+- [ ] Delete the default deck — after deletion no row shows the **Default** badge.

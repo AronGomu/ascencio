@@ -117,33 +117,34 @@ test("deck editor persists edits across reloads", async ({ page }) => {
     page.getByRole("button", { name: /Missing card 99999999/ }),
   ).toBeVisible();
 
-  await page.getByRole("button", { name: "Deck Library" }).click();
-  await page.getByRole("button", { name: "Rename" }).click();
-  await page.getByLabel("Deck name").fill("E2E Renamed");
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: "Rename", exact: true })
-    .click();
-  await expect(page.getByLabel("Deck name")).toHaveValue("E2E Renamed");
-  await page.getByRole("button", { name: "Deck Library" }).click();
-  await page.getByRole("button", { name: "Duplicate" }).first().click();
-  await expect(page.getByLabel("Deck name")).toHaveValue("E2E Renamed Copy");
+  // Rename via deck-name-input (A7: commit on blur, no dialog)
+  const nameInput = page.locator('[data-cy="deck-name-input"]');
+  await nameInput.fill("E2E Renamed");
+  await nameInput.blur();
+  await expect(nameInput).toHaveValue("E2E Renamed");
+
+  // Duplicate via deck page
+  await page.locator('[data-cy="deck-editor-duplicate"]').click();
+  await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
+    "E2E Renamed Copy",
+  );
   await expect(page.getByLabel("Deck counts")).toContainText("Main 1");
   await expect(
     page.getByRole("button", { name: /Missing card 99999999/ }),
   ).toBeVisible();
   await page.reload();
-  await expect(page.getByLabel("Deck name")).toHaveValue("E2E Renamed Copy");
-  await expect(page.getByLabel("Deck counts")).toContainText("Main 1");
-  await page.getByRole("button", { name: "Deck Library" }).click();
-  await page.getByRole("button", { name: "Delete" }).first().click();
-  await expect(page.getByRole("dialog")).toContainText(
-    "Local deck and retained history",
+  await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
+    "E2E Renamed Copy",
   );
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: /Delete / })
-    .click();
+  await expect(page.getByLabel("Deck counts")).toContainText("Main 1");
+
+  // Delete via deck page — confirm dialog, then land on library
+  await page.locator('[data-cy="deck-editor-delete"]').click();
+  await expect(
+    page.locator('[data-cy="deck-editor-delete-dialog"]'),
+  ).toBeVisible();
+  await page.locator('[data-cy="deck-editor-delete-confirm"]').click();
+  await expect(page.locator('[data-cy="deck-library"]')).toBeVisible();
   await expect(
     page.getByRole("button", { name: /E2E Renamed Copy/ }),
   ).toHaveCount(0);

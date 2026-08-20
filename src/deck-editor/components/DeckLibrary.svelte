@@ -9,17 +9,9 @@
   export let message: string | null = null;
   export let oncreate: (name: string) => unknown | Promise<unknown>;
   export let onopen: (id: DeckId) => unknown | Promise<unknown>;
-  export let onrename: (
-    deck: DeckRecord,
-    name: string,
-  ) => unknown | Promise<unknown>;
-  export let onduplicate: (id: DeckId) => unknown | Promise<unknown>;
-  export let ondelete: (deck: DeckRecord) => unknown | Promise<unknown>;
-  export let onexport: (deck: DeckRecord) => void;
   export let onimport: () => void;
   /** Which row wears the badge; the controller owns the value, not the click. */
   export let defaultDeckId: DeckId | null = null;
-  export let onsetdefault: (id: DeckId) => void = () => undefined;
   export let favouriteDeckIds: readonly DeckId[] = [];
   export let onfavourite: (id: DeckId, favourite: boolean) => void = () =>
     undefined;
@@ -28,9 +20,6 @@
   let sort: "modified" | "name" = "modified";
   let creating = false;
   let createName = "";
-  let renaming: DeckRecord | null = null;
-  let renameName = "";
-  let deleting: DeckRecord | null = null;
   let dialogHeading: HTMLHeadingElement;
   let dialogInput: HTMLInputElement;
   let dialogOpener: HTMLElement | null = null;
@@ -40,13 +29,6 @@
     (deck) =>
       createName.trim().length > 0 &&
       deck.name.toLocaleLowerCase() === createName.trim().toLocaleLowerCase(),
-  );
-  $: renameNameDuplicate = decks.some(
-    (deck) =>
-      renaming !== null &&
-      deck.id !== renaming.id &&
-      renameName.trim().length > 0 &&
-      deck.name.toLocaleLowerCase() === renameName.trim().toLocaleLowerCase(),
   );
   $: filtered = orderDeckLibrary(
     decks.filter((deck) =>
@@ -58,7 +40,7 @@
   async function focusDialog(): Promise<void> {
     dialogOpener = document.activeElement as HTMLElement | null;
     await tick();
-    if (creating || renaming !== null) dialogInput?.focus();
+    if (creating) dialogInput?.focus();
     else dialogHeading?.focus();
   }
 
@@ -68,29 +50,6 @@
     try {
       await oncreate(createName);
       await closeDialog(() => (creating = false));
-    } finally {
-      dialogBusy = false;
-    }
-  }
-
-  async function submitRename(): Promise<void> {
-    if (dialogBusy || renaming === null || renameName.trim().length === 0)
-      return;
-    dialogBusy = true;
-    try {
-      await onrename(renaming, renameName);
-      await closeDialog(() => (renaming = null));
-    } finally {
-      dialogBusy = false;
-    }
-  }
-
-  async function confirmDelete(): Promise<void> {
-    if (dialogBusy || deleting === null) return;
-    dialogBusy = true;
-    try {
-      await ondelete(deleting);
-      await closeDialog(() => (deleting = null));
     } finally {
       dialogBusy = false;
     }
@@ -239,49 +198,6 @@
               {favouriteDeckIds.includes(deck.id) ? "★" : "☆"}
             </span>
           </button>
-          <div
-            class="row-actions"
-            data-cy={`deck-library-row-actions-${deck.id}`}
-          >
-            <button
-              type="button"
-              class="secondary"
-              data-cy={`deck-library-rename-${deck.id}`}
-              onclick={() => {
-                renaming = deck;
-                renameName = deck.name;
-                void focusDialog();
-              }}>Rename</button
-            >
-            <button
-              type="button"
-              class="secondary"
-              disabled={deck.id === defaultDeckId}
-              data-cy={`deck-library-set-default-${deck.id}`}
-              onclick={() => onsetdefault(deck.id)}>Set default</button
-            >
-            <button
-              type="button"
-              class="secondary"
-              data-cy={`deck-library-duplicate-${deck.id}`}
-              onclick={() => onduplicate(deck.id)}>Duplicate</button
-            >
-            <button
-              type="button"
-              class="secondary"
-              data-cy={`deck-library-export-${deck.id}`}
-              onclick={() => onexport(deck)}>Export</button
-            >
-            <button
-              type="button"
-              class="danger"
-              data-cy={`deck-library-delete-${deck.id}`}
-              onclick={() => {
-                deleting = deck;
-                void focusDialog();
-              }}>Delete</button
-            >
-          </div>
         </li>
       {/each}
     </ul>
@@ -358,122 +274,6 @@
   </div>
 {/if}
 
-{#if renaming}
-  <div
-    class="dialog"
-    role="dialog"
-    tabindex="-1"
-    aria-modal="true"
-    aria-labelledby="rename-heading"
-    data-cy="deck-library-rename-dialog"
-    onkeydown={(event) =>
-      handleModalKeydown(
-        event,
-        () => void closeDialog(() => (renaming = null)),
-      )}
-  >
-    <h2
-      id="rename-heading"
-      tabindex="-1"
-      data-cy="deck-library-rename-heading"
-      bind:this={dialogHeading}
-    >
-      Rename {renaming.name}
-    </h2>
-    <form
-      aria-busy={dialogBusy}
-      data-cy="deck-library-rename-form"
-      onsubmit={(event) => {
-        event.preventDefault();
-        void submitRename();
-      }}
-    >
-      <label data-cy="deck-library-rename-name-field"
-        ><span data-cy="deck-library-rename-name-label">Deck name</span><input
-          data-cy="deck-library-rename-name-input"
-          bind:this={dialogInput}
-          bind:value={renameName}
-          maxlength={MAXIMUM_DECK_NAME_LENGTH}
-        /></label
-      >
-      {#if renameNameDuplicate}
-        <p
-          class="name-warning"
-          role="status"
-          data-cy="deck-library-rename-duplicate-name"
-        >
-          Another deck already uses this name. IDs remain independent.
-        </p>
-      {/if}
-      <div class="actions" data-cy="deck-library-rename-actions">
-        <small data-cy="deck-library-rename-hint"
-          >Enter to rename · Esc to cancel</small
-        >
-        <button
-          type="button"
-          class="secondary"
-          disabled={dialogBusy}
-          data-cy="deck-library-rename-cancel"
-          onclick={() => void closeDialog(() => (renaming = null))}
-          >Cancel</button
-        >
-        <button
-          type="submit"
-          disabled={dialogBusy || renameName.trim().length === 0}
-          data-cy="deck-library-rename-submit"
-          >{dialogBusy ? "Renaming…" : "Rename"}</button
-        >
-      </div>
-    </form>
-  </div>
-{/if}
-
-{#if deleting}
-  <div
-    class="dialog"
-    role="dialog"
-    tabindex="-1"
-    aria-modal="true"
-    aria-busy={dialogBusy}
-    aria-labelledby="delete-heading"
-    data-cy="deck-library-delete-dialog"
-    onkeydown={(event) =>
-      handleModalKeydown(
-        event,
-        () => void closeDialog(() => (deleting = null)),
-      )}
-  >
-    <h2
-      id="delete-heading"
-      tabindex="-1"
-      data-cy="deck-library-delete-heading"
-      bind:this={dialogHeading}
-    >
-      Delete {deleting.name}?
-    </h2>
-    <p data-cy="deck-library-delete-message">
-      Local deck and retained history will be removed.
-    </p>
-    <div class="actions" data-cy="deck-library-delete-actions">
-      <button
-        type="button"
-        class="secondary"
-        disabled={dialogBusy}
-        data-cy="deck-library-delete-cancel"
-        onclick={() => void closeDialog(() => (deleting = null))}>Cancel</button
-      >
-      <button
-        type="button"
-        class="danger"
-        disabled={dialogBusy}
-        data-cy="deck-library-delete-confirm"
-        onclick={() => void confirmDelete()}
-        >{dialogBusy ? "Deleting…" : `Delete ${deleting.name}`}</button
-      >
-    </div>
-  </div>
-{/if}
-
 <style>
   .library {
     width: min(78rem, calc(100% - 2rem));
@@ -482,8 +282,7 @@
   }
 
   .tools,
-  .actions,
-  .row-actions {
+  .actions {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -543,7 +342,7 @@
 
   .deck-list li {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: 0.75rem;
     padding: 0.75rem;
     border: 1px solid var(--border);
@@ -610,11 +409,6 @@
   .deck-open.halo-errors {
     border-color: var(--danger);
     box-shadow: 0 0 0.55rem color-mix(in srgb, var(--danger) 55%, transparent);
-  }
-
-  .row-actions button {
-    min-height: 2.2rem;
-    padding: 0.4rem 0.6rem;
   }
 
   .favourite {

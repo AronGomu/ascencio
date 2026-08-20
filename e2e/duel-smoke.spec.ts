@@ -3460,8 +3460,14 @@ test("spatial field navigation has one visible 44px keyboard entry without a tra
 test("a full preset duel can be completed using keyboard controls only with one response per prompt", async ({
   page,
 }, testInfo) => {
-  // Full-suite runs can validly exceed five minutes while still advancing
-  // through unique prompts; keep the larger budget local to this duel walker.
+  // Production duels shuffle for real, so this walk is exactly as long as the
+  // duel it is handed: consecutive runs have answered anywhere from 60 to 191
+  // prompts. Every one of them kept advancing through prompt ids it had never
+  // seen before, so a long run here is a long duel and not a stall. What used
+  // to make the long ones time out was this walk costing time quadratic in
+  // its own length (see `readLatestPromptId`); now that a step is flat, the
+  // walk measures ~145 ms per prompt, and even the 400-prompt ceiling below
+  // fits inside this budget several times over.
   test.setTimeout(600_000);
   await page.goto("./#/duel");
   await startPresetDuel(page);
@@ -3486,6 +3492,9 @@ test("a full preset duel can be completed using keyboard controls only with one 
 
   const field = page.getByRole("region", { name: "Duel field" });
   const answeredPromptIds = new Set<string>();
+  // Recorded in the evidence below so a future slow run can be read as a long
+  // duel or a stalled one without re-instrumenting this walk.
+  const walkStartedAt = Date.now();
   // Opponent hand cards render upright, so the only sideways cards in a duel are
   // real defense-position monsters. Ask the walker to produce one so the
   // focus-visibility assertion on rotated card art has something to focus.
@@ -3493,7 +3502,12 @@ test("a full preset duel can be completed using keyboard controls only with one 
   let fieldResponses = 0;
   let confirmWindowGeometryChecks = 0;
   let defenseFocusVisible = false;
-  for (let step = 0; step < 200; step += 1) {
+  // A real duel has been measured at 191 prompts, so a 200-step ceiling is a
+  // cap this walk can hit on a merely long duel and then fail for having
+  // stopped early rather than for anything the duel did. The ceiling is only
+  // here so a broken build cannot spin forever; a duel that loops is caught
+  // by the duplicate-prompt assertion on the first repeat, not by this count.
+  for (let step = 0; step < 400; step += 1) {
     const result = page.locator(".result-panel");
     if (await result.isVisible()) break;
 
@@ -3501,11 +3515,8 @@ test("a full preset duel can be completed using keyboard controls only with one 
     await controls.waitFor({ state: "visible", timeout: 30_000 });
     const kind = await controls.getAttribute("data-prompt-kind");
     if (kind === null) throw new Error("Prompt kind is missing");
-    const prompt = [...(await readCapture(page)).events]
-      .reverse()
-      .find((event) => event.type === "prompt") as
-      (CapturedPromptEvent & Readonly<Record<string, unknown>>) | undefined;
-    if (prompt === undefined) throw new Error("Captured prompt is missing");
+    const promptId = await readLatestPromptId(page);
+    if (promptId === undefined) throw new Error("Captured prompt is missing");
     if (!defenseFocusVisible) {
       const defenseTarget = field
         .locator(
@@ -3523,10 +3534,7 @@ test("a full preset duel can be completed using keyboard controls only with one 
       // managed to focus it.
       setup.needsDefense = !defenseFocusVisible && !defenseOnBoard;
     }
-    const responseCountBefore = (await readCapture(page)).commands.filter(
-      (command) =>
-        command.type === "respond" && command.promptId === prompt.prompt.id,
-    ).length;
+    const responseCountBefore = await countResponsesTo(page, promptId);
     const actionBar = field.locator('[data-cy="field-action-bar"]');
     if (confirmWindowGeometryChecks === 0 && (await actionBar.count()) > 0) {
       await assertConfirmWindowGeometry(
@@ -3552,28 +3560,17 @@ test("a full preset duel can be completed using keyboard controls only with one 
       .poll(
         async () => {
           if (await result.isVisible()) return true;
-          const latest = [...(await readCapture(page)).events]
-            .reverse()
-            .find((event) => event.type === "prompt") as
-            | (CapturedPromptEvent & Readonly<Record<string, unknown>>)
-            | undefined;
-          return latest !== undefined && latest.prompt.id !== prompt.prompt.id;
+          const latest = await readLatestPromptId(page);
+          return latest !== undefined && latest !== promptId;
         },
         { timeout: 30_000 },
       )
       .toBe(true);
     await expect
-      .poll(
-        async () =>
-          (await readCapture(page)).commands.filter(
-            (command) =>
-              command.type === "respond" &&
-              command.promptId === prompt.prompt.id,
-          ).length,
-      )
+      .poll(async () => await countResponsesTo(page, promptId))
       .toBe(responseCountBefore + 1);
-    expect(answeredPromptIds.has(prompt.prompt.id)).toBe(false);
-    answeredPromptIds.add(prompt.prompt.id);
+    expect(answeredPromptIds.has(promptId)).toBe(false);
+    answeredPromptIds.add(promptId);
   }
 
   expect(answeredPromptIds.size).toBeGreaterThan(0);
@@ -3581,9 +3578,12 @@ test("a full preset duel can be completed using keyboard controls only with one 
   // Prevent `count() > 0` from silently deleting the geometry gate.
   expect(confirmWindowGeometryChecks).toBeGreaterThan(0);
   expect(defenseFocusVisible).toBe(true);
+  // One read for the whole check rather than one per prompt id: the same
+  // assertion, without re-shipping the transcript once per answered prompt.
+  const finalCommands = (await readCapture(page)).commands;
   for (const promptId of answeredPromptIds) {
     expect(
-      (await readCapture(page)).commands.filter(
+      finalCommands.filter(
         (command) =>
           command.type === "respond" && command.promptId === promptId,
       ),
@@ -3626,6 +3626,7 @@ test("a full preset duel can be completed using keyboard controls only with one 
         completedWithoutPointer: true,
         result: await result.getByRole("heading").textContent(),
         responses: answeredPromptIds.size,
+        walkerMs: Date.now() - walkStartedAt,
         fieldResponses,
         confirmWindowGeometryChecks,
         duplicateResponses: 0,
@@ -4704,5 +4705,37 @@ async function readCapture(page: Page): Promise<BrowserCapture> {
           readonly __duelCapture: BrowserCapture;
         }
       ).__duelCapture,
+  );
+}
+
+/* The capture holds every engine message of the duel so far, and a full duel
+   is hundreds of prompts long: by prompt 190 the whole log was 2.6 MB and one
+   `readCapture` cost ~0.8 s. A walker that polls it on every step therefore
+   costs time quadratic in its own length — measured at 4.9 s per step near
+   the end of a 191-prompt duel against 0.2 s at the start, which is what put
+   the walk past its ten-minute budget. These two answer the single question
+   each poll actually asks, inside the page, so a poll ships a string or a
+   number instead of the transcript. The questions are unchanged. */
+async function readLatestPromptId(page: Page): Promise<string | undefined> {
+  return page.evaluate(() => {
+    const events = window.__duelCapture.events;
+    for (let index = events.length - 1; index >= 0; index -= 1) {
+      const event = events[index] as { readonly type?: unknown } & Readonly<
+        Record<string, unknown>
+      >;
+      if (event.type === "prompt")
+        return (event as unknown as CapturedPromptEvent).prompt.id;
+    }
+    return undefined;
+  });
+}
+
+async function countResponsesTo(page: Page, promptId: string): Promise<number> {
+  return page.evaluate(
+    (id) =>
+      window.__duelCapture.commands.filter(
+        (command) => command.type === "respond" && command.promptId === id,
+      ).length,
+    promptId,
   );
 }

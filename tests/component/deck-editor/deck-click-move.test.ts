@@ -25,6 +25,25 @@ const MAIN_CODE = PROTOTYPE_CATALOG.find(
 const EXTRA_CODE = PROTOTYPE_CATALOG.find(
   (card) => card.canonicalZone === "extra",
 )!.code;
+/* A second Main-deck card, so a repeated-code deck still has a neighbour that
+   proves the wrong tile was not the one that moved. */
+const EXTRA_MAIN_CODE = PROTOTYPE_CATALOG.find(
+  (card) =>
+    card.canonicalZone === "main" &&
+    card.code !== MAIN_CODE &&
+    quantityLimit(PROTOTYPE_RULESET, card.code) === 3,
+)!.code;
+
+function stateWithMain(main: readonly number[]): DeckBuilderState {
+  const base = stateFixture(0);
+  return {
+    ...base,
+    current: {
+      deck: { ...base.current!.deck, main },
+      history: base.current!.history,
+    },
+  };
+}
 
 function stateWithExtra(): DeckBuilderState {
   const base = stateFixture(0);
@@ -70,6 +89,28 @@ describe("desktop click editing", () => {
       cardCode: MAIN_CODE,
       from: "main",
       to: "side",
+      index: 0,
+    });
+  });
+
+  /* Two copies of one card are two tiles, and the click has to mean the tile
+     under the pointer: naming only the code moved the first copy and left the
+     clicked one on screen, destroying the order ADR-037 preserves. */
+  it("clicking the third tile of a repeated card moves that copy", async () => {
+    const onmutate = vi.fn<(command: DeckCommand) => void>();
+    const { container } = render(
+      DeckEditor,
+      props(onmutate, stateWithMain([MAIN_CODE, EXTRA_MAIN_CODE, MAIN_CODE])),
+    );
+    await fireEvent.click(
+      container.querySelector('[data-cy="deck-slot-main-2"] button')!,
+    );
+    expect(onmutate).toHaveBeenCalledWith({
+      type: "move",
+      cardCode: MAIN_CODE,
+      from: "main",
+      to: "side",
+      index: 2,
     });
   });
 
@@ -83,6 +124,7 @@ describe("desktop click editing", () => {
       type: "remove",
       cardCode: EXTRA_CODE,
       zone: "extra",
+      index: 0,
     });
   });
 

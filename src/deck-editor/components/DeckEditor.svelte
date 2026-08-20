@@ -18,11 +18,7 @@
     type EditorLayoutMode,
     type EditorPane,
   } from "../layout/editor-layout.ts";
-  import {
-    catalogTapZone,
-    deckTapTargets,
-    type TapTarget,
-  } from "../layout/tap-targets.ts";
+  import { deckTapTargets, type TapTarget } from "../layout/tap-targets.ts";
   import {
     catalogCardClickIntent,
     deckCardClickIntent,
@@ -77,7 +73,7 @@
   let toSideboard = false;
   let deckName = state.current?.deck.name ?? "";
   let pane: EditorPane = defaultPane();
-  let tapped: { code: number; zone: DeckZone } | null = null;
+  let tapped: { code: number; zone: DeckZone; index: number } | null = null;
   let tapOpener: HTMLElement | null = null;
   let showLoad = false;
   let loadButton: HTMLButtonElement | null = null;
@@ -121,19 +117,23 @@
   }
 
   /* Every tap runs the same command the drag and keyboard paths run, so undo,
-     redo and autosave cannot tell the three apart. */
+     redo and autosave cannot tell the three apart, and it aims where the click
+     path aims — including at the sideboard when that checkbox is ticked. */
   function tapCatalogCard(card: DeckBuilderCardView): void {
-    selected = card;
-    selectedCode = card.code;
-    onmutate({ type: "add", cardCode: card.code });
-    announcement = `${card.name} added to ${catalogTapZone(card) === "main" ? "Main Deck" : "Extra Deck"}.`;
-    pane = paneAfterAdd(pane);
+    const intent = catalogCardClickIntent(
+      card.canonicalZone,
+      zoneCounts(),
+      toSideboard,
+    );
+    selectCard(card, card.code);
+    applyIntent(intent, card.code, "catalog");
+    if (intent.kind === "add") pane = paneAfterAdd(pane);
   }
 
-  function tapDeckCard(code: number, zone: DeckZone): void {
+  function tapDeckCard(code: number, zone: DeckZone, index: number): void {
     selectCard(catalog.get(code) ?? null, code);
     tapOpener = document.activeElement as HTMLElement | null;
-    tapped = { code, zone };
+    tapped = { code, zone, index };
   }
 
   function targetsFor(code: number, zone: DeckZone): readonly TapTarget[] {
@@ -165,7 +165,12 @@
     if (active === null) return;
     const name = catalog.get(active.code)?.name ?? `Card ${active.code}`;
     if (target === "remove") {
-      onmutate({ type: "remove", cardCode: active.code, zone: active.zone });
+      onmutate({
+        type: "remove",
+        cardCode: active.code,
+        zone: active.zone,
+        index: active.index,
+      });
       announcement = `${name} removed.`;
     } else {
       onmutate({
@@ -173,6 +178,7 @@
         cardCode: active.code,
         from: active.zone,
         to: target,
+        index: active.index,
       });
       announcement = `${name} moved to ${target}.`;
     }
@@ -205,6 +211,7 @@
     intent: ClickIntent,
     code: number,
     from: DeckZone | "catalog",
+    index?: number,
   ): void {
     const name = catalog.get(code)?.name ?? `Card ${code}`;
     if (intent.kind === "blocked") {
@@ -220,27 +227,28 @@
        deriver never asks for one; this narrows `from` to a real zone. */
     if (from === "catalog") return;
     if (intent.kind === "remove") {
-      onmutate({ type: "remove", cardCode: code, zone: from });
+      onmutate({ type: "remove", cardCode: code, zone: from, index });
       announcement = `${name} removed.`;
       return;
     }
-    onmutate({ type: "move", cardCode: code, from, to: intent.to });
+    onmutate({ type: "move", cardCode: code, from, to: intent.to, index });
     announcement = `${name} moved to ${intent.to}.`;
   }
 
-  function clickDeckCard(code: number, zone: DeckZone): void {
+  function clickDeckCard(code: number, zone: DeckZone, index: number): void {
     const card = catalog.get(code) ?? null;
     selectCard(card, code);
     /* A card the pinned catalog no longer knows has no canonical zone to
        swap with, so removal is the only honest edit. */
     if (card === null) {
-      applyIntent({ kind: "remove" }, code, zone);
+      applyIntent({ kind: "remove" }, code, zone, index);
       return;
     }
     applyIntent(
       deckCardClickIntent(zone, card.canonicalZone, zoneCounts()),
       code,
       zone,
+      index,
     );
   }
 
@@ -475,46 +483,6 @@
     >
   </header>
 
-  {#if state.saveState === "failed"}
-    <section
-      class="message error"
-      role="alert"
-      data-cy="deck-editor-save-failed"
-    >
-      <p data-cy="deck-editor-save-failed-message">{state.message}</p>
-      <button
-        type="button"
-        data-cy="deck-editor-retry-save"
-        onclick={onretrysave}>Retry autosave</button
-      >
-      <button
-        type="button"
-        class="secondary"
-        data-cy="deck-editor-reload-saved"
-        onclick={onreload}>Reload saved deck</button
-      >
-    </section>
-  {:else if state.saveState === "conflict"}
-    <section class="message error" role="alert" data-cy="deck-editor-conflict">
-      <p data-cy="deck-editor-conflict-message">{state.message}</p>
-      <button
-        type="button"
-        data-cy="deck-editor-reload-revision"
-        onclick={onreload}>Reload newer revision</button
-      >
-      <button
-        type="button"
-        class="secondary"
-        data-cy="deck-editor-preserve-copy"
-        onclick={onpreservecopy}>Preserve local edits as copy</button
-      >
-    </section>
-  {:else if state.message}
-    <p class="message" role="status" data-cy="deck-editor-message">
-      {state.message}
-    </p>
-  {/if}
-
   <p
     class="visually-hidden"
     role="status"
@@ -531,6 +499,55 @@
     aria-busy={state.saveState === "saving"}
     data-cy="deck-editor-layout"
   >
+    <!-- Always rendered, and empty it is a zero-height row: a message that
+         appeared outside the sized grid would push the panes past the stage
+         and hand the region a scrollbar (ADR-042). -->
+    <div class="message-strip" data-cy="deck-editor-message-strip">
+      {#if state.saveState === "failed"}
+        <section
+          class="message error"
+          role="alert"
+          data-cy="deck-editor-save-failed"
+        >
+          <p data-cy="deck-editor-save-failed-message">{state.message}</p>
+          <button
+            type="button"
+            data-cy="deck-editor-retry-save"
+            onclick={onretrysave}>Retry autosave</button
+          >
+          <button
+            type="button"
+            class="secondary"
+            data-cy="deck-editor-reload-saved"
+            onclick={onreload}>Reload saved deck</button
+          >
+        </section>
+      {:else if state.saveState === "conflict"}
+        <section
+          class="message error"
+          role="alert"
+          data-cy="deck-editor-conflict"
+        >
+          <p data-cy="deck-editor-conflict-message">{state.message}</p>
+          <button
+            type="button"
+            data-cy="deck-editor-reload-revision"
+            onclick={onreload}>Reload newer revision</button
+          >
+          <button
+            type="button"
+            class="secondary"
+            data-cy="deck-editor-preserve-copy"
+            onclick={onpreservecopy}>Preserve local edits as copy</button
+          >
+        </section>
+      {:else if state.message}
+        <p class="message" role="status" data-cy="deck-editor-message">
+          {state.message}
+        </p>
+      {/if}
+    </div>
+
     {#if tabs}
       <EditorTabs {pane} onselectpane={(next) => (pane = next)} />
     {/if}
@@ -748,8 +765,11 @@
         16rem,
         0.55fr
       );
-    grid-template-rows: minmax(0, 1fr);
-    gap: 0.5rem;
+    grid-template-rows: auto minmax(0, 1fr);
+    /* No row gap: the strip is zero-height when silent, and its own message
+       carries the spacing when it is not. */
+    column-gap: 0.5rem;
+    row-gap: 0;
     width: 100%;
     height: calc(var(--stage-h, 100svh) - var(--deck-editor-header-h));
     margin-inline: 0;
@@ -776,6 +796,11 @@
 
   .editor-layout.tabs .pane {
     display: block;
+    min-width: 0;
+  }
+
+  .message-strip {
+    grid-column: 1 / -1;
     min-width: 0;
   }
 
@@ -841,14 +866,10 @@
       flex: 1 1 9rem;
     }
 
-    .editor-layout,
-    .message {
-      width: 100%;
-      padding-inline: 0.5rem;
-    }
-
     .editor-layout {
+      width: 100%;
       height: auto;
+      padding-inline: 0.5rem;
       grid-template-rows: auto;
     }
   }

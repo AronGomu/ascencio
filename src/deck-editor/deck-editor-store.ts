@@ -477,16 +477,20 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
     }
   }
 
-  async deleteDeck(id: DeckId, revision: number): Promise<void> {
-    if (this.#deletesInFlight.has(id)) return;
+  /** `true` only when storage really dropped the deck, so a caller that
+      navigates away on delete cannot leave the page of a deck that survived. */
+  async deleteDeck(id: DeckId, revision: number): Promise<boolean> {
+    if (this.#deletesInFlight.has(id)) return false;
     this.#deletesInFlight.add(id);
     const generation = this.#startContext();
     try {
       await this.#repository.delete(id, revision);
       await this.#refreshLibrary("Deck deleted.", generation);
+      return true;
     } catch (error) {
       if (this.#isCurrentContext(generation))
         this.#fail("Deck could not be deleted", error);
+      return false;
     } finally {
       this.#deletesInFlight.delete(id);
     }

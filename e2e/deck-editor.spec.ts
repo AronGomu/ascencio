@@ -492,16 +492,34 @@ test("the deck editor fits the stage without a region scrollbar", async ({
   await expect(page.locator('[data-cy="deck-editor-layout"]')).toBeVisible();
 
   const region = page.locator('[data-cy="shell-region-decks"]');
-  const scrolls = await region.evaluate((el) => ({
-    fitsVertically: el.scrollHeight <= el.clientHeight + 1,
-    fitsHorizontally: el.scrollWidth <= el.clientWidth + 1,
-  }));
+  const measure = () =>
+    region.evaluate((el) => ({
+      fitsVertically: el.scrollHeight <= el.clientHeight + 1,
+      fitsHorizontally: el.scrollWidth <= el.clientWidth + 1,
+    }));
+  const scrolls = await measure();
   expect(scrolls.fitsVertically, "region must not scroll vertically").toBe(
     true,
   );
   expect(scrolls.fitsHorizontally, "region must not scroll horizontally").toBe(
     true,
   );
+
+  /* A status message is the ordinary state of this page, not an exception to
+     it: Duplicate posts one, and the budget has to hold while it shows. */
+  await page.locator('[data-cy="deck-editor-duplicate"]').click();
+  await expect(page.locator('[data-cy="deck-editor-message"]')).toHaveText(
+    "Deck duplicated.",
+  );
+  const withMessage = await measure();
+  expect(
+    withMessage.fitsVertically,
+    "region must not scroll vertically while a message shows",
+  ).toBe(true);
+  expect(
+    withMessage.fitsHorizontally,
+    "region must not scroll horizontally while a message shows",
+  ).toBe(true);
 });
 
 test("the card viewer is card width", async ({ page }) => {

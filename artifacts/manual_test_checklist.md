@@ -1661,7 +1661,7 @@ Nothing else moved
 
 ## T14 catalog-performance
 
-- [ ] Open the deck editor with the full runtime catalog loaded (14,794 cards). Type into the **Name** filter — the list should keep up with typing without visible lag on a mid-range laptop.
+- [ ] Open the deck editor with the full runtime catalog loaded (14,551 offered cards: the database's 14,794 less its 243 Tokens, see R1). Type into the **Name** filter — the list should keep up with typing without visible lag on a mid-range laptop.
 - [ ] Apply each filter dropdown (Type, Subtype, Attribute, Race) — results update immediately.
 - [ ] Scroll the catalog results past the initial 60 tiles — more tiles load on scroll (windowing still works).
 - [ ] Click a card tile to select it, then drag one into a deck zone — drag intents still fire.
@@ -1718,3 +1718,47 @@ Build shape
 
 - [ ] Run `npm run build` and confirm `build:verify` reports `"battle"` at or below `316908` bytes, comfortably under the 488,750-byte budget — the two inlined card manifests left the bundle.
 - [ ] Run `grep -rn "__ACTIVE_CARD_DATA__\|__ACTIVE_CARD_TEXTS__" src` — the only hit is a stale doc comment in `src/battle/app/presentation/card-preview.ts`, left untouched because that file was being hand-merged elsewhere. No build `define` and no runtime read remains.
+
+## R1 round-2-review-fixes
+
+Goal: six product-correctness defects found reviewing the round-2 diff. Run
+against `npm run dev`.
+
+Tokens are never offered and never enter a deck
+
+- [ ] Open `#/decks`, open any deck, and search the catalog for `Token` — no entry named `… Token` appears. The catalog offers 14,551 cards, not the database's 14,794: the 243 Tokens are cards the duel creates on the field and no deck may hold.
+- [ ] Search `Sheep Token` specifically — no result.
+- [ ] Start a duel that summons Tokens (Scapegoat, or any Token-producing effect). Each Token on the field still shows its real name, never `Card {code}` — the duel and the editor still share one catalog read; only the editor's offer is narrowed.
+
+"To sideboard" works with a finger, not only with a mouse
+
+- [ ] Narrow the window below 1024 px (or use a phone) so the editor shows the **Deck / Catalog / Card** tab strip.
+- [ ] Open the **Catalog** tab, tick **To sideboard**, tap a Main-deck card.
+- [ ] The card lands in the **Side Deck**, and the live region says it was added to `side`. Before this fix the tap ignored the checkbox and put it in the Main Deck while announcing "Main Deck".
+- [ ] Untick **To sideboard** and tap another card — it goes to the Main Deck as before.
+
+Clicking one copy of a repeated card edits that copy
+
+- [ ] Build a Main Deck reading, in order, card A, card B, card A (add A, add B, add A).
+- [ ] Click the **third** tile. That tile is the one that moves to the Side Deck; the first A and B stay put, in that order.
+- [ ] Repeat below the breakpoint: tap the third tile, choose **Remove from deck** — the third tile is the one that disappears.
+- [ ] Undo twice and confirm the deck returns to A, B, A in that order.
+
+A status message does not bring back a scrollbar
+
+- [ ] At 1920×1080, open a deck and press **Duplicate**. The strip reading `Deck duplicated.` appears.
+- [ ] The page does not gain a scrollbar while it shows, and the three panels still end at the bottom of the stage.
+- [ ] Repeat for the save-failure and conflict strips (DevTools → Application → IndexedDB, or the e2e recovery scenario): both fit inside the stage too.
+
+Dropping a card back where it was is not an edit
+
+- [ ] Open **Load → Autosaves** and note the newest entry.
+- [ ] Drag a deck tile and drop it back on its own slot. The deck is unchanged, and the editor says `Nothing to reorder.`
+- [ ] Re-open **Load → Autosaves** — no new entry was written. A non-edit must not spend one of the 100 retained autosave slots.
+
+A delete that fails stays on the deck
+
+- [ ] Open the same deck in two tabs. In tab B, rename it (so its stored revision moves ahead of tab A's).
+- [ ] In tab A, press **Delete** and confirm.
+- [ ] Tab A reports that the deck could not be deleted and the URL stays on `#/decks/{deckId}` — it must not fall back to `#/decks` as though the deck were gone.
+- [ ] Reload tab A — the deck is still there, under the name tab B gave it.

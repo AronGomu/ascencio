@@ -1,20 +1,30 @@
 import type { DeckCardLists, DeckRecord, DeckZone } from "./deck-contracts.ts";
 import { cloneCardLists, deckId } from "./deck-contracts.ts";
 import type { DeckBuilderCardView } from "./catalog/ocg-card-mapper.ts";
+import { isDeckBuildableCard } from "./catalog/deck-buildable-cards.ts";
 import {
   quantityLimit,
   type PinnedDeckRuleset,
 } from "./catalog/pinned-ruleset.ts";
 import { validateDeckDraft } from "./deck-validation.ts";
 
+/* `index` names which copy of a repeated card a command means. A tile knows
+   its own position; a drag or an import does not, so it stays optional and the
+   first copy answers for the callers that cannot say. */
 export type DeckCommand =
   | Readonly<{ type: "add"; cardCode: number; zone?: DeckZone }>
-  | Readonly<{ type: "remove"; cardCode: number; zone: DeckZone }>
+  | Readonly<{
+      type: "remove";
+      cardCode: number;
+      zone: DeckZone;
+      index?: number | undefined;
+    }>
   | Readonly<{
       type: "move";
       cardCode: number;
       from: DeckZone;
       to: DeckZone;
+      index?: number | undefined;
     }>
   | Readonly<{ type: "import"; cards: DeckCardLists }>
   | Readonly<{ type: "restore"; cards: DeckCardLists }>
@@ -117,7 +127,10 @@ export function applyDeckCommand(
       command.from < 0 ||
       command.from >= zone.length ||
       !Number.isInteger(command.to) ||
-      command.to < 0
+      command.to < 0 ||
+      /* Dropping a tile back on its own slot is not an edit, and accepting it
+         would spend an autosave slot on a deck identical to its predecessor. */
+      command.from === command.to
     )
       return Object.freeze({
         type: "rejected",
@@ -140,7 +153,7 @@ export function applyDeckCommand(
   }
 
   if (command.type === "remove") {
-    if (!removeFirst(next[command.zone], command.cardCode))
+    if (!removeCopy(next[command.zone], command.cardCode, command.index))
       return Object.freeze({
         type: "rejected",
         reason: "Card is not in that zone.",
@@ -160,6 +173,13 @@ export function applyDeckCommand(
     });
 
   if (command.type === "add") {
+    /* A Token is dealt onto the field by the duel, never held in a deck, and
+       the catalog carries all 243 of them so the duel can name one. */
+    if (!isDeckBuildableCard(card))
+      return Object.freeze({
+        type: "rejected",
+        reason: "Tokens cannot be added to a deck.",
+      });
     const zone = command.zone ?? card.canonicalZone;
     if (zone !== card.canonicalZone && zone !== "side")
       return Object.freeze({
@@ -192,7 +212,7 @@ export function applyDeckCommand(
         type: "rejected",
         reason: "Card cannot move to that zone.",
       });
-    if (!removeFirst(next[command.from], command.cardCode))
+    if (!removeCopy(next[command.from], command.cardCode, command.index))
       return Object.freeze({
         type: "rejected",
         reason: "Card is not in that zone.",
@@ -279,6 +299,21 @@ export const FIFTEEN_CARD_GRID: DeckGridPlan = Object.freeze({
   slots: 15,
   compact: true,
 });
+
+/* An index only decides anything when it still names the card it was read
+   from, so a stale one falls back to the first copy rather than removing a
+   neighbour the player never clicked. */
+function removeCopy(
+  values: number[],
+  code: number,
+  index: number | undefined,
+): boolean {
+  if (index !== undefined && values[index] === code) {
+    values.splice(index, 1);
+    return true;
+  }
+  return removeFirst(values, code);
+}
 
 function removeFirst(values: number[], code: number): boolean {
   const index = values.indexOf(code);

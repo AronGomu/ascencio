@@ -31,7 +31,10 @@
     undefined;
   export let reorderActive = false;
   export let ondropzone: (zone: DeckZone) => void = () => undefined;
-  export let ontap: ((code: number, zone: DeckZone) => void) | null = null;
+  /* The index is what tells one copy of a repeated card from another, so the
+     edit lands on the tile that was clicked rather than on the first match. */
+  export let ontap:
+    ((code: number, zone: DeckZone, index: number) => void) | null = null;
   export let onhovercard: (code: number) => void = () => undefined;
   export let onhoverend: () => void = () => undefined;
   export let collapsed = false;
@@ -129,7 +132,7 @@
               selected={selectedCode === code}
               compact={plan.compact}
               onselect={() => onselect(catalog.get(code) ?? null, code)}
-              ontap={ontap === null ? null : () => ontap(code, zone)}
+              ontap={ontap === null ? null : () => ontap(code, zone, index)}
               ondragcard={(event) => ondragcard(code, zone, index, event)}
               {ondragcancel}
               onhover={() => onhovercard(code)}

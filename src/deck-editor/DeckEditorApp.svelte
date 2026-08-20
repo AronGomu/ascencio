@@ -25,6 +25,7 @@
   } from "./deck-editor-store.ts";
   import type { DeckEditorRoute } from "./deck-editor-route.ts";
   import { runtimeCatalog } from "../decks/catalog/runtime-catalog.ts";
+  import { deckBuildableCards } from "../decks/catalog/deck-buildable-cards.ts";
   import type { DeckBuilderCardView } from "../decks/catalog/ocg-card-mapper.ts";
   import DeckEditor from "./components/DeckEditor.svelte";
   import DeckLibrary from "./components/DeckLibrary.svelte";
@@ -41,7 +42,11 @@
   /* Every card this build packages, fetched once per page: the editor may only
      offer what the duel can draw, so both await the same read. It is ~10 MB of
      shards, which is why it arrives after mount rather than inside the bundle,
-     and why nothing below may render until it lands. */
+     and why nothing below may render until it lands.
+
+     `cards` is what the catalog offers and drops the Tokens no deck may hold;
+     `catalog` keeps them, because a deck imported with one still has to name
+     it in the preview and in its validation errors. */
   let cards: readonly DeckBuilderCardView[] = [];
   let catalog: ReadonlyMap<number, DeckBuilderCardView> = new Map();
   let catalogReady = false;
@@ -104,8 +109,8 @@
        catalog, so a repository opened first would only wait on it anyway. */
     void runtimeCatalog()
       .then(async (loaded) => {
-        cards = loaded;
-        catalog = catalogByCode(cards);
+        cards = deckBuildableCards(loaded);
+        catalog = catalogByCode(loaded);
         catalogReady = true;
         return IndexedDbDeckRepository.open();
       })
@@ -299,9 +304,12 @@
     ondelete={() => {
       const deck = state.current?.deck;
       if (deck === undefined) return;
-      void controller
-        ?.deleteDeck(deck.id, deck.revision)
-        .then(() => onnavigate({ deckId: null }));
+      /* A delete that failed leaves the deck where it is, so the route stays
+         on it: navigating away would report a deck as gone that still exists,
+         and hide the failure the editor is showing. */
+      void controller?.deleteDeck(deck.id, deck.revision).then((deleted) => {
+        if (deleted) onnavigate({ deckId: null });
+      });
     }}
   />
 {:else}

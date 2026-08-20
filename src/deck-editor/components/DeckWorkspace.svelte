@@ -33,7 +33,8 @@
     undefined;
   export let onmutate: (command: DeckCommand) => void = () => undefined;
   export let ondropzone: (zone: DeckZone) => void = () => undefined;
-  export let ontap: ((code: number, zone: DeckZone) => void) | null = null;
+  export let ontap:
+    ((code: number, zone: DeckZone, index: number) => void) | null = null;
   export let onhovercard: (code: number) => void = () => undefined;
   export let onhoverend: () => void = () => undefined;
   export let oncontextremove: (code: number, zone: DeckZone) => void = () =>

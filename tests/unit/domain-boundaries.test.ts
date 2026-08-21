@@ -243,6 +243,12 @@ describe("public domain APIs are frozen", () => {
       name: "story",
       entry: "src/story/index.ts",
       namespace: story,
+      /* T22, deliberate widening of one name: `storyCardOwnership` reads the
+         save's collection, so it needs `StoryState` and can only live here.
+         Its `CardOwnership` type and free play's `unlimitedCardOwnership()`
+         deliberately do *not* join it — they ship from
+         `src/decks/card-ownership.ts`, which records the measurement that
+         keeps them out of this entry. */
       values: [
         "ENCOUNTER_LABELS",
         "STORY_SAVES_DATABASE_NAME",
@@ -252,6 +258,7 @@ describe("public domain APIs are frozen", () => {
         "default",
         "restoreStoryState",
         "storyBattleResult",
+        "storyCardOwnership",
         "toStoryResolution",
       ],
       types: [

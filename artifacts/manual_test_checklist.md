@@ -2818,3 +2818,36 @@ matters most: a save that already exists must come back exactly as it was left.
 
 - [ ] Open `#/free-play/decks` on this build with a library you already had. Every deck is present under the same name, the same deck is still the default, and no `Starter Deck` was added beside them.
 - [ ] In a fresh profile or after clearing `ygo-story-decks`, open `#/free-play/decks` again. It seeds one `Starter Deck`, and opening it shows 40 Main Deck cards with no red error banner — in particular **2× Mirror Force and 1× Raigeki**, which is what the copy limits allow.
+
+## T22 card-ownership-contract
+
+Nothing on screen changes here. This slice lands the one function that later answers "how
+many copies of this card may this context use" — the save's own count in a story,
+unlimited in free play — and no screen reads it yet. Six later slices will: the story
+catalog, deck legality, the sell dialog, the pre-battle picker and the collection screen.
+
+Two things are worth a human's time. The contract deliberately sits in the shared deck
+library rather than in the visual novel, and the point of that is the deck editor must
+never pull the story in to ask the question. And the story's public entry was widened once
+more, so the visual novel must still load only when the player goes there.
+
+### The deck editor never loads the visual novel
+
+- [ ] Open DevTools → Network, tick "Disable cache", and load `http://localhost:4300/#/` fresh. On the main menu: no `story-*.js` request and no `deck-editor-*.js` request.
+- [ ] Go straight to `#/free-play/decks` and build a deck: add cards, remove cards, rename it, save. In the Network panel `deck-editor-*.js` loaded and **`story-*.js` never did**.
+- [ ] Only after clicking through to the story does `story-*.js` appear in that panel.
+- [ ] Note the transferred size of `deck-editor-*.js`. It is the same as before this slice — the editor gained nothing.
+
+### Free play still behaves exactly as before
+
+- [ ] In `#/free-play/decks`, open a deck you already had. Its Main/Extra/Side contents and card count are unchanged.
+- [ ] Add a fourth copy of an ordinary card. The editor still refuses it at three, as it always did — free play owning every card does not raise the deck limit.
+- [ ] Add a second copy of **Raigeki**. It is still refused at one copy. Ownership never overrides the pinned copy limit.
+- [ ] Create, favourite, set as default and delete a deck, then reload (F5). All four stuck.
+
+### An existing story save still opens, and its collection is untouched
+
+- [ ] Open `#/story` → Load and load a save you already had. It resumes on the screen it was saved on, with the same DP.
+- [ ] Enter the **Card Shop** → **Sell**. The list holds exactly the cards it held before — reading ownership changes nothing, and nothing on this screen consults it yet.
+- [ ] Leave the shop without selling, save to Manual slot 1, reload the page (F5) and load that slot. It opens normally rather than reporting a corrupt save, and the Sell list is unchanged.
+- [ ] In DevTools → Application → IndexedDB → `ygo-story-saves` → `saves`, that record's `state.collection` is a plain map of card code to count, with no rarity and no new field beside it.

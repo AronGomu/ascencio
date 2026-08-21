@@ -32,7 +32,6 @@
 
   export let board: BoardViewModel;
   export let renderLayout: FieldRenderLayout;
-  export let imageUrls: ReadonlyMap<number, string>;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let cardBackUrl: string;
   export let placeholderUrl: string;
@@ -109,9 +108,10 @@
     return placement;
   }
 
+  /* Only the pre-lease fallback: `CardControl` swaps in the leased art as
+     soon as the library resolves the code. */
   function cardImageUrl(card: BoardViewModel["cards"][number]): string {
-    if (card.image.kind === "back") return cardBackUrl;
-    return imageUrls.get(card.image.code) ?? placeholderUrl;
+    return card.image.kind === "back" ? cardBackUrl : placeholderUrl;
   }
 
   function synchronizeNavigation(
@@ -235,7 +235,6 @@
       cards={playerHandCards}
       zone={playerHandZone}
       placement={placementFor(renderLayout, playerHandZone.id)}
-      {imageUrls}
       {imageLibrary}
       {cardBackUrl}
       {placeholderUrl}
@@ -261,7 +260,6 @@
       cards={opponentHandCards}
       zone={opponentHandZone}
       placement={placementFor(renderLayout, opponentHandZone.id)}
-      {imageUrls}
       {imageLibrary}
       {cardBackUrl}
       {placeholderUrl}

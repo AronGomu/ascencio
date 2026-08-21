@@ -85,7 +85,6 @@ function renderBand(
   return render(HandBand, {
     zone: zoneFor(player),
     placement: PLACEMENT,
-    imageUrls: new Map(),
     imageLibrary: null,
     cardBackUrl: "/back.webp",
     placeholderUrl: "/placeholder.webp",

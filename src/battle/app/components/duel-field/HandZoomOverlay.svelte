@@ -1,5 +1,10 @@
 <script lang="ts">
+  import { onDestroy } from "svelte";
   import type { BoardCardView } from "../../../field/board-view-model.ts";
+  import type {
+    CardImageLease,
+    CardImageLibrary,
+  } from "../../images/card-image-cache.ts";
   import type { InteractionChoice } from "../../prompts/interaction-spec.ts";
   import CardActionChips from "./CardActionChips.svelte";
 
@@ -10,7 +15,9 @@
     width: number;
     height: number;
   };
-  export let imageUrl: string;
+  export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
+  export let cardBackUrl: string;
+  export let placeholderUrl: string;
   /* Clamp ceiling in the same coordinate space as `anchor`. The overlay is
      `position: fixed` inside the stage the phone layout turns a quarter turn,
      so that stage — not the viewport — is its containing block, and reading
@@ -28,6 +35,20 @@
   export let onzoomleave: (related: EventTarget | null) => void = () =>
     undefined;
 
+  let activeImageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
+  let activeImageCode: number | undefined;
+  let imageLease: CardImageLease | null = null;
+  let renderedImageUrl = placeholderUrl;
+
+  /* The zoom resolves its own art the way a mounted card does: a lease per
+     previewed code, released as soon as the preview moves on. A hidden card
+     leases nothing — its identity is the one thing the overlay may not ask
+     the library about. */
+  $: synchronizeImageLease(
+    imageLibrary,
+    card.image.kind === "face" ? card.image.code : undefined,
+    card.image.kind === "back" ? cardBackUrl : placeholderUrl,
+  );
   $: w = anchor.width * scale;
   $: h = anchor.height * scale;
   $: left = Math.max(
@@ -40,6 +61,29 @@
      so it stays exact when the top gutter clamp has moved it. */
   $: bridgeBottom = top + h - anchor.top;
   $: overlayStyle = `left: ${left}px; top: ${top}px; width: ${w}px; height: ${h}px; --hand-zoom-bridge-bottom: ${bridgeBottom}px;`;
+
+  onDestroy(() => imageLease?.release());
+
+  function synchronizeImageLease(
+    library: Pick<CardImageLibrary, "lease"> | null,
+    code: number | undefined,
+    fallbackUrl: string,
+  ): void {
+    if (library !== activeImageLibrary || code !== activeImageCode) {
+      imageLease?.release();
+      activeImageLibrary = library;
+      activeImageCode = code;
+      imageLease =
+        library !== null && code !== undefined ? library.lease(code) : null;
+    }
+    renderedImageUrl = imageLease?.url ?? fallbackUrl;
+  }
+
+  function useFallbackImage(event: Event): void {
+    const image = event.currentTarget as HTMLImageElement;
+    image.onerror = null;
+    renderedImageUrl = placeholderUrl;
+  }
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions (presentation layer: the
@@ -73,7 +117,9 @@
   <img
     class="hand-zoom-overlay__art"
     data-cy={`hand-zoom-overlay-image-${card.id}`}
-    src={imageUrl}
+    src={renderedImageUrl}
+    decoding="async"
+    onerror={useFallbackImage}
     alt={card.label}
   />
   <span

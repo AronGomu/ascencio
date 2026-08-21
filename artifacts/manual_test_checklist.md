@@ -2192,3 +2192,18 @@ Record what the bundled decks cannot reach
       `tests/unit/prompt-registry.test.ts` (`describe("response encoding")`) and by the
       audit table in `docs/ADR/046_ADR_engine_response_encoding_contract.md`; no human
       has observed them end to end in a browser.
+
+## T4 hand-zoom-art-lease
+
+- [ ] Start a duel with the preset decks and hover one of your own hand cards: the zoom
+      overlay shows that card's real art — the same picture as the small card in the hand —
+      not the grey "Image unavailable" placeholder.
+- [ ] Move the pointer from one hand card to another without leaving the hand: each zoom
+      shows its own card's art, never the previous card's.
+- [ ] Hover an opponent hand card: the overlay shows the card back, and no card name or
+      art of a hidden card appears anywhere.
+- [ ] Hover a hand card whose art this build did not package (if the deck has one): only
+      that card's zoom shows the "Image unavailable" placeholder, and no broken-image icon
+      appears.
+- [ ] Open a dozen hand zooms, then restart the duel from the HUD: field cards, hand cards
+      and the tray still render their art, with no broken images and no blank tiles.

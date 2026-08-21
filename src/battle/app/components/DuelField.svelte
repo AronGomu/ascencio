@@ -71,7 +71,6 @@
   import PhaseStrip from "./duel-field/PhaseStrip.svelte";
 
   const noop = (): void => undefined;
-  const EMPTY_IMAGE_URLS: ReadonlyMap<number, string> = new Map();
   const EMPTY_TARGETS: ReadonlySet<BoardTargetId> = new Set();
   const EMPTY_ZONE_IDS: ReadonlySet<PhysicalZoneId> = new Set();
   const EMPTY_TARGET_ENTRIES: readonly OffFieldTargetEntry[] = [];
@@ -82,7 +81,6 @@
 
   export let board: BoardViewModel;
   export let layoutBoundaryElement: HTMLElement | null = null;
-  export let imageUrls: ReadonlyMap<number, string> = EMPTY_IMAGE_URLS;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let cardBackUrl = DEFAULT_CARD_BACK;
   export let placeholderUrl = DEFAULT_PLACEHOLDER;
@@ -990,7 +988,6 @@
       <FieldBoard
         {board}
         {renderLayout}
-        {imageUrls}
         {imageLibrary}
         cardBackUrl={resolvedCardBackUrl}
         placeholderUrl={resolvedPlaceholderUrl}
@@ -1040,9 +1037,9 @@
       card={handZoom.card}
       anchor={handZoom.anchor}
       frameWidth={handZoom.frameWidth}
-      imageUrl={handZoom.card.image.kind === "back"
-        ? resolvedCardBackUrl
-        : (imageUrls.get(handZoom.card.image.code) ?? resolvedPlaceholderUrl)}
+      {imageLibrary}
+      cardBackUrl={resolvedCardBackUrl}
+      placeholderUrl={resolvedPlaceholderUrl}
       choices={spec?.cardChoices.get(handZoom.card.targetId) ?? []}
       disabled={pending}
       onchoose={(choice) =>

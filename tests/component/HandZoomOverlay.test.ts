@@ -1,12 +1,14 @@
 // @vitest-environment jsdom
 
 import { cleanup, render } from "@testing-library/svelte";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi, type Mock } from "vitest";
 import HandZoomOverlay from "../../src/battle/app/components/duel-field/HandZoomOverlay.svelte";
 import {
+  cardCode,
   cardInstanceId,
   choiceId,
 } from "../../src/battle/duel/contracts/ids.ts";
+import type { CardImageLibrary } from "../../src/battle/app/images/card-image-cache.ts";
 import type { InteractionChoice } from "../../src/battle/app/prompts/interaction-spec.ts";
 import type { BoardCardView } from "../../src/battle/field/board-view-model.ts";
 
@@ -36,6 +38,31 @@ const CARD: BoardCardView = Object.freeze({
   chainLinks: [],
   image: Object.freeze({ kind: "back" as const }),
 });
+
+/* A face-up hand card: the zoom overlay resolves its art through a lease on
+   the image library, exactly as every mounted card does. */
+const FACE_CARD: BoardCardView = Object.freeze({
+  ...CARD,
+  id: "p0-hand-3",
+  targetId: "card:p0-hand-3" as const,
+  instanceId: cardInstanceId("p0-hand-3"),
+  sequence: 3,
+  label: "Card 3 in Your Hand",
+  image: Object.freeze({ kind: "face" as const, code: cardCode(12_345) }),
+});
+
+const OTHER_FACE_CARD: BoardCardView = Object.freeze({
+  ...FACE_CARD,
+  id: "p0-hand-4",
+  targetId: "card:p0-hand-4" as const,
+  instanceId: cardInstanceId("p0-hand-4"),
+  sequence: 4,
+  label: "Card 4 in Your Hand",
+  image: Object.freeze({ kind: "face" as const, code: cardCode(54_321) }),
+});
+
+const CARD_BACK_URL = "/back.webp";
+const PLACEHOLDER_URL = "/placeholder.webp";
 
 const SCALE = 1.6;
 interface Anchor {
@@ -74,16 +101,58 @@ function renderOverlay(
   frameWidth: number,
   anchor = ANCHOR,
   choices: readonly InteractionChoice[] = [],
+  overrides: {
+    readonly card?: BoardCardView;
+    readonly imageLibrary?: Pick<CardImageLibrary, "lease"> | null;
+  } = {},
 ) {
   return render(HandZoomOverlay, {
     props: {
-      card: CARD,
+      card: overrides.card ?? CARD,
       anchor,
       frameWidth,
       choices,
-      imageUrl: "/back.webp",
+      imageLibrary: overrides.imageLibrary ?? null,
+      cardBackUrl: CARD_BACK_URL,
+      placeholderUrl: PLACEHOLDER_URL,
     },
   });
+}
+
+function overlayImageSource(cardId: string): string | null {
+  return (
+    document
+      .querySelector(`[data-cy="hand-zoom-overlay-image-${cardId}"]`)
+      ?.getAttribute("src") ?? null
+  );
+}
+
+/* One `release` spy per leased code, so a rerender can be checked against the
+   lease the previous card held rather than a shared counter. */
+function fakeImageLibrary(): {
+  readonly library: Pick<CardImageLibrary, "lease">;
+  readonly releaseFor: (code: number) => Mock<() => void>;
+} {
+  const releases = new Map<number, Mock<() => void>>();
+  const lease = vi.fn<(code: number) => { url: string; release: () => void }>(
+    (code) => {
+      let release = releases.get(code);
+      if (release === undefined) {
+        release = vi.fn<() => void>();
+        releases.set(code, release);
+      }
+      return { url: `blob:test-${code}`, release };
+    },
+  );
+  return {
+    library: { lease },
+    releaseFor: (code) => {
+      const release = releases.get(code);
+      if (release === undefined)
+        throw new Error(`Code ${code} was never leased`);
+      return release;
+    },
+  };
 }
 
 describe("HandZoomOverlay clamping", () => {
@@ -140,5 +209,58 @@ describe("HandZoomOverlay pointer surface", () => {
     expect(
       document.querySelector('[data-cy^="hand-zoom-overlay-bridge-"]'),
     ).toBeNull();
+  });
+});
+
+describe("HandZoomOverlay art", () => {
+  it("renders the leased art for a known card", () => {
+    const { library } = fakeImageLibrary();
+
+    renderOverlay(FRAME_WIDTH, ANCHOR, [], {
+      card: FACE_CARD,
+      imageLibrary: library,
+    });
+
+    expect(overlayImageSource(FACE_CARD.id)).toBe("blob:test-12345");
+  });
+
+  it("renders the card back for a hidden card", () => {
+    const { library } = fakeImageLibrary();
+
+    renderOverlay(FRAME_WIDTH, ANCHOR, [], { imageLibrary: library });
+
+    expect(overlayImageSource(CARD.id)).toBe(CARD_BACK_URL);
+    expect(library.lease).not.toHaveBeenCalled();
+  });
+
+  it("falls back to the placeholder when no lease exists", () => {
+    renderOverlay(FRAME_WIDTH, ANCHOR, [], { card: FACE_CARD });
+
+    expect(overlayImageSource(FACE_CARD.id)).toBe(PLACEHOLDER_URL);
+  });
+
+  it("releases the lease when the card changes", async () => {
+    const { library, releaseFor } = fakeImageLibrary();
+    const rendered = renderOverlay(FRAME_WIDTH, ANCHOR, [], {
+      card: FACE_CARD,
+      imageLibrary: library,
+    });
+
+    await rendered.rerender({ card: OTHER_FACE_CARD });
+
+    expect(releaseFor(12_345)).toHaveBeenCalledTimes(1);
+    expect(overlayImageSource(OTHER_FACE_CARD.id)).toBe("blob:test-54321");
+  });
+
+  it("releases the lease on destroy", () => {
+    const { library, releaseFor } = fakeImageLibrary();
+    const rendered = renderOverlay(FRAME_WIDTH, ANCHOR, [], {
+      card: FACE_CARD,
+      imageLibrary: library,
+    });
+
+    rendered.unmount();
+
+    expect(releaseFor(12_345)).toHaveBeenCalledTimes(1);
   });
 });

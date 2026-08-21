@@ -19,11 +19,8 @@
   import type { PersistedWindowPosition } from "../../stores/persisted-ui-state.ts";
   import DuelField from "../DuelField.svelte";
 
-  const EMPTY_IMAGE_URLS: ReadonlyMap<number, string> = new Map();
-
   export let board: BoardViewModel;
   export let layoutBoundaryElement: HTMLElement | null = null;
-  export let imageUrls: ReadonlyMap<number, string> = EMPTY_IMAGE_URLS;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let cardBackUrl: string;
   export let placeholderUrl: string;
@@ -105,7 +102,6 @@
   <DuelField
     {board}
     {layoutBoundaryElement}
-    {imageUrls}
     {imageLibrary}
     {cardBackUrl}
     {placeholderUrl}

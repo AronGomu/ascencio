@@ -19,7 +19,6 @@
   export let cards: readonly BoardCardView[];
   export let zone: BoardZoneView;
   export let placement: FieldPlacement;
-  export let imageUrls: ReadonlyMap<number, string>;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let cardBackUrl: string;
   export let placeholderUrl: string;
@@ -57,9 +56,10 @@
   );
   $: contentSizeKey = `${placement.width}:${sortedCards.map((card) => card.id).join(",")}`;
 
+  /* Only the pre-lease fallback: `CardControl` swaps in the leased art as
+     soon as the library resolves the code. */
   function cardImageUrl(card: BoardCardView): string {
-    if (card.image.kind === "back") return cardBackUrl;
-    return imageUrls.get(card.image.code) ?? placeholderUrl;
+    return card.image.kind === "back" ? cardBackUrl : placeholderUrl;
   }
 </script>
 

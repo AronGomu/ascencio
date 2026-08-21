@@ -688,7 +688,6 @@ describe("DuelField", () => {
     const { container } = render(FieldBoard, {
       board: value,
       renderLayout: createFieldRenderLayout(true, 1280, 720),
-      imageUrls: new Map(),
       cardBackUrl: "",
       placeholderUrl: "",
     });
@@ -715,7 +714,6 @@ describe("DuelField", () => {
     const { container } = render(FieldBoard, {
       board: value,
       renderLayout: createFieldRenderLayout(true, 1280, 720),
-      imageUrls: new Map(),
       cardBackUrl: "",
       placeholderUrl: "",
     });
@@ -746,7 +744,6 @@ describe("DuelField", () => {
     const { container } = render(FieldBoard, {
       board: value,
       renderLayout: createFieldRenderLayout(true, 1280, 720),
-      imageUrls: new Map(),
       cardBackUrl: "",
       placeholderUrl: "",
     });
@@ -777,7 +774,6 @@ describe("DuelField", () => {
     const value = board("ST-01");
     const rendered = render(DuelField, {
       board: value,
-      imageUrls: new Map([[97590747, "/cards/97590747.jpg"]]),
       cardBackUrl: "/cards/back.webp",
       placeholderUrl: "/cards/placeholder.webp",
     });
@@ -1731,7 +1727,6 @@ describe("DuelField", () => {
     const spec = activeSpec(value);
     render(DuelFieldErrorBoundary, {
       board: board("ST-05"),
-      imageUrls: new Map(),
       cardBackUrl: "",
       placeholderUrl: "",
       prompt: value,
@@ -2506,6 +2501,27 @@ describe("DuelField", () => {
     expect(
       harness.onpreview.mock.calls.every(([value]) => value !== null),
     ).toBe(true);
+  });
+
+  /* The overlay used to read a map no caller ever filled, so it rendered the
+     "Image unavailable" placeholder over a card whose art was already on the
+     board. The guard belongs here, at the seam that broke: the overlay's own
+     tests pass the library directly. */
+  it("hovering a known hand card zooms its leased art, never the placeholder", async () => {
+    const release = vi.fn<() => void>();
+    const lease = vi.fn<(code: number) => { url: string; release: () => void }>(
+      (code) => ({ url: `blob:zoom-${code}`, release }),
+    );
+    renderDraggableHand({ imageLibrary: { lease } });
+
+    await fireEvent.pointerEnter(handCardArticle());
+
+    expect(
+      document
+        .querySelector('[data-cy^="hand-zoom-overlay-image-"]')
+        ?.getAttribute("src"),
+    ).toBe("blob:zoom-97590747");
+    expect(lease).toHaveBeenCalledWith(97590747);
   });
 
   it("hovering a known hand card mounts the zoom overlay with its actions above", async () => {
@@ -4007,7 +4023,6 @@ describe("FieldBoard", () => {
       const rendered = render(FieldBoard, {
         board: board("ST-05"),
         renderLayout: createFieldRenderLayout(true, 1280, 720),
-        imageUrls: new Map<number, string>(),
         cardBackUrl: "card-back.png",
         placeholderUrl: "placeholder.png",
       });
@@ -4040,7 +4055,6 @@ describe("FieldBoard", () => {
     const { container } = render(FieldBoard, {
       board: stackBoard.value,
       renderLayout: createFieldRenderLayout(true, 1280, 720),
-      imageUrls: new Map<number, string>(),
       cardBackUrl,
       placeholderUrl: "",
     });
@@ -4115,6 +4129,9 @@ function renderDraggableHand(
   options: {
     readonly occupiedZoneId?: string;
     readonly reducedMotion?: boolean;
+    readonly imageLibrary?: {
+      lease: (code: number) => { url: string; release: () => void };
+    };
   } = {},
 ) {
   const base = board("ST-01");
@@ -4160,6 +4177,7 @@ function renderDraggableHand(
     spec,
     session: createInteractionSession(spec),
     pending: false,
+    imageLibrary: options.imageLibrary ?? null,
     reducedMotion: options.reducedMotion ?? false,
     oninteraction: dispatch,
     onplacementintent,

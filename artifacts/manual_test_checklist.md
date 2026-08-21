@@ -2144,3 +2144,51 @@ If the bundled decks raise no announce-number prompt
       `tests/unit/prompt-registry.test.ts` ("answers an announced number with its index
       rather than its value") and by the diagnostics trace cited in ADR-046; the manual
       pass is the only thing that observes it end to end in a browser.
+
+## T3 response-encoder-audit
+
+This slice changes no duel behaviour. `src/battle/worker/protocol/PromptRegistry.ts` is
+byte-identical to its previous version once block comments are stripped; everything else
+added is a test or an ADR section. So the pass below is a regression sweep across the
+prompt kinds the pinning tests now cover, not a check of something new.
+
+Confirm the duel is unchanged
+
+- [ ] Start a duel from the bundled preset decks and play a few turns. Nothing about the
+      prompts, the field or the log looks different from before this change.
+- [ ] No error panel appears at any point. In particular "ocgcore rejected the previous
+      response" does not appear and no duel closes as failed.
+
+Answer each prompt kind you can reach and confirm the answer lands
+
+- [ ] Main Phase: Summon a monster, then Set a different monster, then activate a
+      Spell/Trap. Each time, the card that acts is the card that was picked — not its
+      neighbour in the list.
+- [ ] Battle Phase: with two or more monsters able to attack, attack with the **second**
+      one in the list. The monster that attacks is the one picked.
+- [ ] A yes/no prompt ("do you want to activate…"): answer No once and confirm the
+      effect does not resolve, then reach it again and answer Yes.
+- [ ] An effect with two or more options: pick the **last** option and confirm the
+      effect that resolves is the one described by that option, not the first.
+- [ ] A card-selection prompt asking for two or more cards: pick a non-contiguous pair,
+      for example the second and fourth. Exactly those two cards are used.
+- [ ] A summon-position prompt: choose face-down Defense and confirm the monster lands
+      face-down in Defense, not face-up in Attack.
+- [ ] A zone-placement prompt: pick a zone other than the leftmost. The card lands in the
+      zone that was picked.
+- [ ] A chain prompt with at least one candidate: choose Pass once and confirm the chain
+      resolves without your card, then reach it again and chain the **second** candidate.
+- [ ] A tribute prompt: pick the tributes explicitly and confirm exactly those monsters
+      leave the field.
+- [ ] An announce-number prompt: pick the last number offered. It resolves as the number
+      picked and the duel continues. (Same check as the T2 section; repeated here because
+      the sweep now covers every kind.)
+
+Record what the bundled decks cannot reach
+
+- [ ] Note here every prompt kind above that no bundled deck can raise — sort, counter
+      allocation, select-sum, announce race/attribute/card, rock-paper-scissors are the
+      likely ones. Those stay covered only by
+      `tests/unit/prompt-registry.test.ts` (`describe("response encoding")`) and by the
+      audit table in `docs/ADR/046_ADR_engine_response_encoding_contract.md`; no human
+      has observed them end to end in a browser.

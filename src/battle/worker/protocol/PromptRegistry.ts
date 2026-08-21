@@ -181,6 +181,14 @@ function buildRawEnginePrompt(
     return `Card ${code}`;
   };
 
+  /* Every `resolve` below encodes one `OcgResponse*`, and each of its fields is
+     an index into a list the message just sent, a raw game value, a card code
+     or a bitmask. The types name none of that — `{ type; index: number }` is
+     the same shape either way — so each encoder states its own semantics and
+     cites the writer case that settles it. "Writer case n" means `case n:` in
+     the `ce()` response writer of `vendor/ocgcore-wasm/0.1.2/dist/index.js`;
+     the response shapes are in the sibling `dist/index.d.ts`. Contract:
+     `docs/ADR/046_ADR_engine_response_encoding_contract.md`. */
   switch (message.type) {
     case EngineMessageType.SELECT_IDLE_COMMAND: {
       const bindings: ChoiceBinding[] = [];
@@ -239,6 +247,10 @@ function buildRawEnginePrompt(
         (ids) => {
           const selected = exactlyOne(ids, bindings);
           const action = idleAction(selected.choice.action);
+          /* Raw action enum plus an index into that action's own message array
+             — `summons`, `activates` and so on — never the choice's position
+             in the merged list. Writer case 1 packs both into one integer as
+             `action | index << 16`. */
           return {
             type: EngineResponseType.SELECT_IDLE_COMMAND,
             action,
@@ -280,6 +292,9 @@ function buildRawEnginePrompt(
         (ids) => {
           const selected = exactlyOne(ids, bindings);
           const action = battleAction(selected.choice.action);
+          /* Raw action enum plus an index into `chains` or `attacks`, whichever
+             the action names. Writer case 0 packs both as `action | index <<
+             16`. */
           return {
             type: EngineResponseType.SELECT_BATTLE_COMMAND,
             action,
@@ -302,6 +317,8 @@ function buildRawEnginePrompt(
       const bindings = yesNoChoices(id);
       return binding(prompt(id, kind, player, "Confirm", bindings), (ids) => {
         const selected = exactlyOne(ids, bindings);
+        /* Boolean, not the position of the Yes choice. Writer cases 2 and 3
+           send `i32(yes ? 1 : 0)`. */
         return message.type === EngineMessageType.SELECT_EFFECT_YES_NO
           ? {
               type: EngineResponseType.SELECT_EFFECT_YES_NO,
@@ -331,6 +348,8 @@ function buildRawEnginePrompt(
           "Choose an option",
           bindings,
         ),
+        /* Index into `message.options`, not the option value it announced.
+           Writer case 4 sends `i32(index)`. */
         (ids) => ({
           type: EngineResponseType.SELECT_OPTION,
           index: exactlyOne(ids, bindings).rawIndex,
@@ -354,6 +373,8 @@ function buildRawEnginePrompt(
         ),
         (ids) => {
           const selected = exactlyOne(ids, bindings);
+          /* Index into `message.selects`; `null` passes, which writer case 8
+             sends as `i32(-1)`. */
           return {
             type: EngineResponseType.SELECT_CHAIN,
             index: selected.choice.action === "pass" ? null : selected.rawIndex,
@@ -433,6 +454,9 @@ function buildRawEnginePrompt(
               `Selected cards do not satisfy the ${sumMode === "exact" ? "exact" : "minimum"} total ${message.amount}`,
             );
           }
+          /* Indexes into `message.selects` alone: `selects_must` is implicit,
+             so it constrains the total above but is never indexed on the wire.
+             Writer case 14 sends a length-prefixed run of `i32` indexes. */
           return {
             type: EngineResponseType.SELECT_SUM,
             indicies: selected.map((choice) => choice.rawIndex),
@@ -469,6 +493,9 @@ function buildRawEnginePrompt(
         ),
         (ids) => {
           const selected = exactlyOne(ids, bindings);
+          /* Index into `select_cards` followed by `unselect_cards`, counted as
+             one list; `null` for finish and cancel alike, which writer case 7
+             sends as `i32(-1)`. */
           return {
             type: EngineResponseType.SELECT_UNSELECT_CARD,
             index:
@@ -508,6 +535,9 @@ function buildRawEnginePrompt(
         (ids) => {
           const selected = selectedBindings(ids, bindings);
           requireSelectionCount(selected, message.count, message.count, false);
+          /* Raw engine place addresses, echoed back exactly as the field mask
+             offered them. Writer cases 9 and 10 send `i8` player, location and
+             sequence per place, with no length prefix. */
           const rawPlaces = selected.map((selectedChoice) => {
             const place = places[selectedChoice.rawIndex];
             if (place === undefined)
@@ -550,6 +580,8 @@ function buildRawEnginePrompt(
           const position = positions[selected.rawIndex];
           if (position === undefined)
             throw new Error("Unknown selected position");
+          /* Raw `EnginePosition` bit, not the offered position's ordinal.
+             Writer case 11 sends `i32(position)`. */
           return { type: EngineResponseType.SELECT_POSITION, position };
         },
       );
@@ -569,6 +601,9 @@ function buildRawEnginePrompt(
           cancelable: true,
         }),
         (ids) => {
+          /* Indexes into `message.cards`; `null` declines the sort, which
+             writer case 15 sends as a single `i8(-1)` instead of the run of
+             `i8` indexes. Both sort messages answer with response type 15. */
           if (ids.length === 0)
             return { type: EngineResponseType.SORT_CARD, order: null };
           const selected = selectedBindings(ids, bindings);
@@ -618,6 +653,10 @@ function buildRawEnginePrompt(
           const selected = selectedBindings(ids, bindings, true);
           if (selected.length !== message.count)
             throw new Error(`Select exactly ${message.count} counters`);
+          /* Raw counts, one slot per `message.cards` entry in the message's own
+             order, not the indexes of the cards the player picked. Writer case
+             13 sends one `i16` per slot with no length prefix, so the array's
+             length is part of the contract. */
           const counters = message.cards.map(() => 0);
           for (const choice of selected) {
             const card = message.cards[choice.rawIndex];
@@ -691,6 +730,9 @@ function buildRawEnginePrompt(
         (ids) => {
           const selected = selectedBindings(ids, bindings);
           requireSelectionCount(selected, message.count, message.count, false);
+          /* Raw race/attribute bits, not their ordinals in the offered list.
+             Writer cases 16 and 17 OR the array into one bitmask and send it as
+             `u64` for races and `u32` for attributes. */
           const selectedValues = selected.map(
             (choice) => values[choice.rawIndex] ?? 0n,
           );
@@ -726,6 +768,9 @@ function buildRawEnginePrompt(
           const candidate = candidates[selected.rawIndex];
           if (candidate === undefined)
             throw new Error("Unknown announced card");
+          /* Raw card code, not the candidate's index: the opcode filter is ours
+             and the engine never saw the list. Writer case 18 sends
+             `i32(card)`. */
           return {
             type: EngineResponseType.ANNOUNCE_CARD,
             card: candidate.code,
@@ -751,6 +796,9 @@ function buildRawEnginePrompt(
           const value = Number(exactlyOne(ids, bindings).choice.value);
           if (value !== 1 && value !== 2 && value !== 3)
             throw new Error("Invalid hand choice");
+          /* Raw hand value — 1 scissors, 2 rock, 3 paper — not the choice's
+             index, which would be one less. Writer case 20 sends
+             `i32(value)`. */
           return { type: EngineResponseType.ROCK_PAPER_SCISSORS, value };
         },
       );
@@ -890,6 +938,9 @@ function multiCardPrompt(
     (ids) => {
       const selected = selectedBindings(ids, bindings);
       requireSelectionCount(selected, minimum, maximum, cancelable);
+      /* Indexes into `message.selects`; `null` cancels. Writer cases 5 and 12
+         send `i32(-1)` for the cancel and a length-prefixed run of `i32`
+         indexes otherwise. */
       const indicies =
         selected.length === 0
           ? null

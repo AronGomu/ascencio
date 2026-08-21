@@ -3,15 +3,30 @@ import type { ActiveDuelDependencies } from "../../src/battle/worker/assets/acti
 import {
   PromptRegistry,
   buildEnginePrompt,
+  type EnginePromptBinding,
 } from "../../src/battle/worker/protocol/PromptRegistry.ts";
 import {
+  EngineBattleAction,
   EngineIdleAction,
   EngineLocation,
   EngineMessageType,
   EnginePosition,
   EngineResponseType,
 } from "../../src/battle/worker/engine/engine-constants.ts";
-import type { EngineMessage } from "../../src/battle/worker/engine/OcgCoreAdapter.ts";
+import type {
+  EngineCardData,
+  EngineMessage,
+} from "../../src/battle/worker/engine/OcgCoreAdapter.ts";
+/* The vendored definitions are the authority ADR-046 pins these encodings
+   against, and their named masks type-check where a hand-written `a | b` does
+   not: the message types admit only the combinations the engine declares. */
+import {
+  OcgAttribute,
+  OcgOpCode,
+  OcgPosition,
+  OcgRace,
+  OcgType,
+} from "../../vendor/ocgcore-wasm/0.1.2/dist/index.js";
 
 const dependencies: ActiveDuelDependencies = {
   cards: new Map(),
@@ -425,4 +440,480 @@ describe("PromptRegistry", () => {
       indicies: [0],
     });
   });
+
+  /* ADR-046: one pinning test per prompt kind that answers the engine. Every
+     fixture below gives its values positions they do not equal, because a
+     fixture where value and position coincide passes under either encoding and
+     proves nothing. `ANNOUNCE_NUMBER` is pinned by the announced-number tests
+     above, which also record the disagreement they were written to catch. */
+  describe("response encoding", () => {
+    it("select-idle-command answers with the index into that action's own list", () => {
+      const binding = buildPrompt({
+        type: EngineMessageType.SELECT_IDLE_COMMAND,
+        player: 0,
+        summons: [handCard(1)],
+        special_summons: [],
+        pos_changes: [],
+        monster_sets: [],
+        spell_sets: [],
+        activates: [activatableCard(3), activatableCard(5)],
+        to_bp: false,
+        to_ep: true,
+        shuffle: false,
+      });
+      expect(binding.prompt.choices.map((choice) => choice.action)).toEqual([
+        "summon",
+        "activate",
+        "activate",
+        "endPhase",
+      ]);
+      /* Third choice overall, second activatable card: the engine wants 1. */
+      expect(binding.resolve(choiceIds(binding, 2))).toEqual({
+        type: EngineResponseType.SELECT_IDLE_COMMAND,
+        action: EngineIdleAction.ACTIVATE,
+        index: 1,
+      });
+      expect(binding.resolve(choiceIds(binding, 3))).toEqual({
+        type: EngineResponseType.SELECT_IDLE_COMMAND,
+        action: EngineIdleAction.END_PHASE,
+        index: null,
+      });
+    });
+
+    it("select-battle-command answers with the index into that action's own list", () => {
+      const binding = buildPrompt({
+        type: EngineMessageType.SELECT_BATTLE_COMMAND,
+        player: 0,
+        chains: [activatableCard(4)],
+        attacks: [attackCard(3), attackCard(5)],
+        to_m2: true,
+        to_ep: true,
+      });
+      expect(binding.prompt.choices.map((choice) => choice.action)).toEqual([
+        "activate",
+        "attack",
+        "attack",
+        "mainPhase2",
+        "endPhase",
+      ]);
+      expect(binding.resolve(choiceIds(binding, 2))).toEqual({
+        type: EngineResponseType.SELECT_BATTLE_COMMAND,
+        action: EngineBattleAction.ATTACK,
+        index: 1,
+      });
+      expect(binding.resolve(choiceIds(binding, 3))).toEqual({
+        type: EngineResponseType.SELECT_BATTLE_COMMAND,
+        action: EngineBattleAction.MAIN_PHASE_2,
+        index: null,
+      });
+    });
+
+    it("select-effect-yes-no answers with a boolean rather than a choice index", () => {
+      const binding = buildPrompt({
+        type: EngineMessageType.SELECT_EFFECT_YES_NO,
+        player: 0,
+        code: CARD_CODE,
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 2,
+        position: EnginePosition.FACE_UP_ATTACK,
+        description: 0n,
+      });
+      expect(binding.resolve(choiceIds(binding, 0))).toEqual({
+        type: EngineResponseType.SELECT_EFFECT_YES_NO,
+        yes: true,
+      });
+      expect(binding.resolve(choiceIds(binding, 1))).toEqual({
+        type: EngineResponseType.SELECT_EFFECT_YES_NO,
+        yes: false,
+      });
+    });
+
+    it("select-yes-no answers with a boolean rather than a choice index", () => {
+      const binding = buildPrompt({
+        type: EngineMessageType.SELECT_YES_NO,
+        player: 0,
+        description: 0n,
+      });
+      expect(binding.resolve(choiceIds(binding, 0))).toEqual({
+        type: EngineResponseType.SELECT_YES_NO,
+        yes: true,
+      });
+      expect(binding.resolve(choiceIds(binding, 1))).toEqual({
+        type: EngineResponseType.SELECT_YES_NO,
+        yes: false,
+      });
+    });
+
+    it("select-option answers with the option index", () => {
+      const binding = buildPrompt({
+        type: EngineMessageType.SELECT_OPTION,
+        player: 0,
+        options: [900n, 901n, 902n],
+      });
+      expect(binding.resolve(choiceIds(binding, 2))).toEqual({
+        type: EngineResponseType.SELECT_OPTION,
+        index: 2,
+      });
+    });
+
+    it("select-card answers with engine card indexes", () => {
+      const binding = buildPrompt({
+        type: EngineMessageType.SELECT_CARD,
+        player: 0,
+        can_cancel: false,
+        min: 2,
+        max: 2,
+        selects: [2, 4, 6, 8].map(fieldCard),
+      });
+      /* Second and fourth card, whose field sequences are 4 and 8. */
+      expect(binding.resolve(choiceIds(binding, 1, 3))).toEqual({
+        type: EngineResponseType.SELECT_CARD,
+        indicies: [1, 3],
+      });
+    });
+
+    it("select-chain answers with the chain index or null", () => {
+      const binding = buildPrompt({
+        type: EngineMessageType.SELECT_CHAIN,
+        player: 0,
+        spe_count: 0,
+        forced: false,
+        hint_timing: 1,
+        hint_timing_other: 1,
+        selects: [activatableFieldCard(3), activatableFieldCard(6)],
+      });
+      expect(binding.resolve(choiceIds(binding, 1))).toEqual({
+        type: EngineResponseType.SELECT_CHAIN,
+        index: 1,
+      });
+      expect(binding.prompt.choices[2]?.action).toBe("pass");
+      expect(binding.resolve(choiceIds(binding, 2))).toEqual({
+        type: EngineResponseType.SELECT_CHAIN,
+        index: null,
+      });
+    });
+
+    it("select-place answers with the engine place address", () => {
+      /* A set bit marks a zone as taken, so clearing bit 3 offers exactly one
+         place: the selecting player's fourth monster zone. */
+      const binding = buildPrompt({
+        type: EngineMessageType.SELECT_PLACE,
+        player: 0,
+        count: 1,
+        field_mask: (0xffffffff & ~(1 << 3)) >>> 0,
+      });
+      expect(binding.prompt.choices).toHaveLength(1);
+      expect(binding.resolve(choiceIds(binding, 0))).toEqual({
+        type: EngineResponseType.SELECT_PLACE,
+        places: [{ player: 0, location: EngineLocation.MONSTER, sequence: 3 }],
+      });
+    });
+
+    it("select-disabled-field answers with the engine place address", () => {
+      /* Bit 26 is the opponent's third spell/trap zone. */
+      const binding = buildPrompt({
+        type: EngineMessageType.SELECT_DISABLED_FIELD,
+        player: 0,
+        count: 1,
+        field_mask: (0xffffffff & ~(1 << 26)) >>> 0,
+      });
+      expect(binding.prompt.choices).toHaveLength(1);
+      expect(binding.resolve(choiceIds(binding, 0))).toEqual({
+        type: EngineResponseType.SELECT_DISABLED_FIELD,
+        places: [
+          { player: 1, location: EngineLocation.SPELL_TRAP, sequence: 2 },
+        ],
+      });
+    });
+
+    it("select-position answers with the position bit", () => {
+      const binding = buildPrompt({
+        type: EngineMessageType.SELECT_POSITION,
+        player: 0,
+        code: CARD_CODE,
+        positions: OcgPosition.DEFENSE,
+      });
+      /* Second offered position: the bit is 8, its ordinal would be 1. */
+      expect(binding.resolve(choiceIds(binding, 1))).toEqual({
+        type: EngineResponseType.SELECT_POSITION,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      });
+    });
+
+    it("select-tribute answers with engine card indexes", () => {
+      const binding = buildPrompt({
+        type: EngineMessageType.SELECT_TRIBUTE,
+        player: 0,
+        can_cancel: false,
+        min: 2,
+        max: 2,
+        selects: [1, 3, 5].map(tributeCard),
+      });
+      expect(binding.resolve(choiceIds(binding, 0, 2))).toEqual({
+        type: EngineResponseType.SELECT_TRIBUTE,
+        indicies: [0, 2],
+      });
+    });
+
+    it("sort-chain answers with engine card indexes or null", () => {
+      const binding = buildPrompt({
+        type: EngineMessageType.SORT_CHAIN,
+        player: 0,
+        cards: [1, 3, 5].map(handCard),
+      });
+      expect(binding.resolve(choiceIds(binding, 2, 0, 1))).toEqual({
+        type: EngineResponseType.SORT_CARD,
+        order: [2, 0, 1],
+      });
+      expect(binding.resolve([])).toEqual({
+        type: EngineResponseType.SORT_CARD,
+        order: null,
+      });
+    });
+
+    it("sort-card answers with engine card indexes or null", () => {
+      const binding = buildPrompt({
+        type: EngineMessageType.SORT_CARD,
+        player: 0,
+        cards: [2, 4, 6].map(handCard),
+      });
+      expect(binding.resolve(choiceIds(binding, 1, 2, 0))).toEqual({
+        type: EngineResponseType.SORT_CARD,
+        order: [1, 2, 0],
+      });
+      expect(binding.resolve([])).toEqual({
+        type: EngineResponseType.SORT_CARD,
+        order: null,
+      });
+    });
+
+    it("select-counter answers with per-card counts", () => {
+      const binding = buildPrompt({
+        type: EngineMessageType.SELECT_COUNTER,
+        player: 0,
+        counter_type: 1,
+        count: 3,
+        cards: [counterCard(1, 2), counterCard(4, 3)],
+      });
+      /* Counts, one slot per message card, in the message's order — not the
+         indexes of the cards the player picked. */
+      expect(binding.resolve(choiceIds(binding, 1, 1, 1))).toEqual({
+        type: EngineResponseType.SELECT_COUNTER,
+        counters: [0, 3],
+      });
+      expect(binding.resolve(choiceIds(binding, 0, 1, 1))).toEqual({
+        type: EngineResponseType.SELECT_COUNTER,
+        counters: [1, 2],
+      });
+    });
+
+    it("select-sum answers with selected indexes", () => {
+      const binding = buildPrompt({
+        type: EngineMessageType.SELECT_SUM,
+        player: 0,
+        select_max: 0,
+        amount: 7,
+        min: 1,
+        max: 3,
+        selects_must: [],
+        selects: [sumCard(1, 2), sumCard(2, 3), sumCard(3, 4)],
+      });
+      /* Contributions 3 and 4 make the required 7; the answer carries their
+         positions, not the amounts they contributed. */
+      expect(binding.resolve(choiceIds(binding, 1, 2))).toEqual({
+        type: EngineResponseType.SELECT_SUM,
+        indicies: [1, 2],
+      });
+    });
+
+    it("select-unselect-card answers with the concatenated index or null", () => {
+      const binding = buildPrompt({
+        type: EngineMessageType.SELECT_UNSELECT_CARD,
+        player: 0,
+        can_finish: true,
+        can_cancel: true,
+        min: 1,
+        max: 2,
+        select_cards: [1, 2].map(fieldCard),
+        unselect_cards: [3, 4].map(fieldCard),
+      });
+      /* Second unselectable card: `select_cards.length + 1`. */
+      expect(binding.resolve(choiceIds(binding, 3))).toEqual({
+        type: EngineResponseType.SELECT_UNSELECT_CARD,
+        index: 3,
+      });
+      expect(binding.prompt.choices[4]?.action).toBe("finish");
+      expect(binding.resolve(choiceIds(binding, 4))).toEqual({
+        type: EngineResponseType.SELECT_UNSELECT_CARD,
+        index: null,
+      });
+      expect(binding.prompt.choices[5]?.action).toBe("cancel");
+      expect(binding.resolve(choiceIds(binding, 5))).toEqual({
+        type: EngineResponseType.SELECT_UNSELECT_CARD,
+        index: null,
+      });
+    });
+
+    it("announce-race answers with a bitmask", () => {
+      const binding = buildPrompt({
+        type: EngineMessageType.ANNOUNCE_RACE,
+        player: 0,
+        count: 2,
+        available: (OcgRace.WARRIOR |
+          OcgRace.MACHINE |
+          OcgRace.DRAGON) as OcgRace,
+      });
+      /* Race bits, which the writer ORs into one u64 — not their ordinals. */
+      expect(binding.resolve(choiceIds(binding, 1, 2))).toEqual({
+        type: EngineResponseType.ANNOUNCE_RACE,
+        races: [OcgRace.MACHINE, OcgRace.DRAGON],
+      });
+    });
+
+    it("announce-attribute answers with a bitmask", () => {
+      const binding = buildPrompt({
+        type: EngineMessageType.ANNOUNCE_ATTRIBUTE,
+        player: 0,
+        count: 2,
+        available: (OcgAttribute.WATER |
+          OcgAttribute.LIGHT |
+          OcgAttribute.DARK) as OcgAttribute,
+      });
+      /* Attribute bits, which the writer ORs into one u32. */
+      expect(binding.resolve(choiceIds(binding, 1, 2))).toEqual({
+        type: EngineResponseType.ANNOUNCE_ATTRIBUTE,
+        attributes: [OcgAttribute.LIGHT, OcgAttribute.DARK],
+      });
+    });
+
+    it("announce-card answers with the card code", () => {
+      const binding = buildPrompt(
+        {
+          type: EngineMessageType.ANNOUNCE_CARD,
+          player: 0,
+          /* Announce any monster, so both candidates match and the answer has
+             to distinguish the second card's code from its index. */
+          opcodes: [BigInt(OcgType.MONSTER), OcgOpCode.ISTYPE],
+        },
+        announceCardDependencies,
+      );
+      expect(binding.prompt.choices).toHaveLength(2);
+      expect(binding.resolve(choiceIds(binding, 1))).toEqual({
+        type: EngineResponseType.ANNOUNCE_CARD,
+        card: 87654321,
+      });
+    });
+
+    it("rock-paper-scissors answers 1, 2 or 3", () => {
+      const binding = buildPrompt({
+        type: EngineMessageType.ROCK_PAPER_SCISSORS,
+        player: 0,
+      });
+      expect(binding.prompt.choices.map((choice) => choice.label)).toEqual([
+        "Scissors",
+        "Rock",
+        "Paper",
+      ]);
+      /* Raw hand values, each one more than the choice's own position. */
+      expect(
+        [0, 1, 2].map((position) =>
+          binding.resolve(choiceIds(binding, position)),
+        ),
+      ).toEqual([
+        { type: EngineResponseType.ROCK_PAPER_SCISSORS, value: 1 },
+        { type: EngineResponseType.ROCK_PAPER_SCISSORS, value: 2 },
+        { type: EngineResponseType.ROCK_PAPER_SCISSORS, value: 3 },
+      ]);
+    });
+  });
 });
+
+const CARD_CODE = 97590747;
+
+const announceCardDependencies: ActiveDuelDependencies = {
+  ...dependencies,
+  cards: new Map([
+    [12345678, monsterCardData(12345678)],
+    [87654321, monsterCardData(87654321)],
+  ]),
+};
+
+function buildPrompt(
+  message: EngineMessage,
+  deps: ActiveDuelDependencies = dependencies,
+): EnginePromptBinding {
+  const binding = buildEnginePrompt(message, 1, deps);
+  if (binding === null)
+    throw new Error(`Message ${message.type} publishes no prompt`);
+  return binding;
+}
+
+function choiceIds(binding: EnginePromptBinding, ...positions: number[]) {
+  return positions.map((position) => {
+    const choice = binding.prompt.choices[position];
+    if (choice === undefined)
+      throw new Error(`Prompt has no choice at position ${position}`);
+    return choice.id;
+  });
+}
+
+function handCard(sequence: number) {
+  return {
+    code: CARD_CODE,
+    controller: 0 as const,
+    location: EngineLocation.HAND,
+    sequence,
+  };
+}
+
+function fieldCard(sequence: number) {
+  return {
+    code: CARD_CODE,
+    controller: 0 as const,
+    location: EngineLocation.MONSTER,
+    sequence,
+    position: EnginePosition.FACE_UP_ATTACK,
+  };
+}
+
+function activatableCard(sequence: number) {
+  return { ...handCard(sequence), description: 0n, client_mode: 0 as const };
+}
+
+function activatableFieldCard(sequence: number) {
+  return { ...fieldCard(sequence), description: 0n, client_mode: 0 as const };
+}
+
+function attackCard(sequence: number) {
+  return { ...handCard(sequence), can_direct: false };
+}
+
+function tributeCard(sequence: number) {
+  return { ...handCard(sequence), release_param: 1 };
+}
+
+function counterCard(sequence: number, count: number) {
+  return { ...handCard(sequence), count };
+}
+
+function sumCard(sequence: number, amount: number) {
+  return { ...fieldCard(sequence), amount };
+}
+
+function monsterCardData(code: number): EngineCardData {
+  return {
+    code,
+    alias: 0,
+    setcodes: [],
+    type: OcgType.MONSTER,
+    level: 4,
+    attribute: OcgAttribute.EARTH,
+    race: OcgRace.WARRIOR,
+    attack: 1800,
+    defense: 1000,
+    lscale: 0,
+    rscale: 0,
+    link_marker: 0,
+  };
+}

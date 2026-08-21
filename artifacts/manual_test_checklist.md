@@ -2207,3 +2207,28 @@ Record what the bundled decks cannot reach
       appears.
 - [ ] Open a dozen hand zooms, then restart the duel from the HUD: field cards, hand cards
       and the tray still render their art, with no broken images and no blank tiles.
+
+## T5 preview-effect-text-flow
+
+- [ ] Start a duel with the preset decks and hover a monster in your hand: the effect text
+      starts one small line-gap under the stats row — the same tight gap the rest of the
+      panel uses — with no tall blank band between the stats line and the text.
+- [ ] Hover a monster whose effect text is only one or two lines (a vanilla monster is
+      ideal): the text still sits directly under the stats row, and the empty space is
+      below the text, not above it.
+- [ ] Hover a card with very long effect text (a Ritual or a long Pendulum effect): the
+      stats line stays fully readable on its own line and no part of it is painted over
+      the effect text.
+- [ ] Read the effect text: the lines are left-aligned with a ragged right edge — no
+      stretched word spacing, no text flush to both edges.
+- [ ] With that long-text card still previewed, scroll the effect text with the wheel and
+      with the keyboard (click the text, then Home / End / PageUp / PageDown): it scrolls,
+      and the thin overlay scrollbar appears on the right edge of the text area only.
+- [ ] Open the Deck Editor and hover a catalog tile: the preview there has no stats row,
+      and its effect text still starts right under the card name and fills the panel down
+      to the bottom edge.
+- [ ] In the Deck Editor, hover a card with long effect text: the text area scrolls inside
+      the panel rather than pushing the panel out of the layout.
+- [ ] Narrow the window until the Deck Editor switches to its tabbed layout, open the card
+      details tab and hover a card: the preview is still readable, with the effect text
+      directly under the name and no giant gap.

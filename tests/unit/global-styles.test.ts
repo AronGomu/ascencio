@@ -196,6 +196,53 @@ describe("global styles", () => {
     expect(art).toContain("object-fit: contain");
   });
 
+  /* Effect text is prose in a 15.5rem column: justification would open rivers
+     between the words, so the flow stays left-aligned and says so explicitly
+     rather than relying on an inherited default. */
+  it("preview effect text is not justified", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const text = ruleBlock(css, ".card-preview-panel__text {");
+    expect(text).not.toContain("text-align: justify");
+    expect(text).toContain("text-align: left");
+  });
+
+  /* The body renders three children with stats and two without, so a fixed
+     two-row grid template handed the free space to whichever child landed in
+     the flexible row — the stats line, which then stretched ~390px tall and
+     pushed the effect text to the bottom of the panel. A column flex box is
+     shape agnostic: name and stats size to content and the text region takes
+     the rest, with or without the optional stats row. */
+  it("preview body is a column whose text region takes the free space", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const body = ruleBlock(css, ".card-preview-panel__body {");
+    expect(body).toContain("display: flex");
+    expect(body).toContain("flex-direction: column");
+    expect(body).not.toContain("grid-template-rows");
+    expect(ruleBlock(css, ".card-preview-panel__text-region {")).toContain(
+      "flex: 1 1 auto",
+    );
+  });
+
+  /* One gap law in the panel body: the flex `gap` is the only thing between
+     name, stats and effect text. A margin on the stats row would add a
+     second, larger gap under it and break that rhythm. */
+  it("preview stats and effect text share the body gap", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    expect(ruleBlock(css, ".card-preview-panel__stats {")).toContain(
+      "margin: 0;",
+    );
+    expect(ruleBlock(css, ".card-preview-panel__body {")).toContain(
+      "gap: 0.35rem",
+    );
+  });
+
+  it("preview text keeps its own scroll region", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    expect(ruleBlock(css, ".card-preview-panel__text {")).toContain(
+      "overflow-y: auto",
+    );
+  });
+
   it("board is explicit geometry without width-only stretch", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     const block = ruleBlock(css, ".duel-field-board {");

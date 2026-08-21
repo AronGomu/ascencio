@@ -404,15 +404,19 @@ h4 {
   border-radius: 0.5rem;
 }
 
+/* A column rather than a row template: the stats row is optional, so any
+   fixed template hands the free space to whichever child happens to land in
+   the flexible track. The text region claims it explicitly instead, and the
+   single `gap` is the only separation name, stats and effect text ever get. */
 .card-preview-panel__body {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 0.35rem;
   min-height: 0;
 }
 
 .card-preview-panel__stats {
-  margin: 0.15rem 0 0.4rem;
+  margin: 0;
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 700;
@@ -422,6 +426,7 @@ h4 {
 .card-preview-panel__text-region {
   position: relative;
   min-height: 0;
+  flex: 1 1 auto;
 }
 
 .card-preview-panel__text {
@@ -432,6 +437,7 @@ h4 {
   color: var(--muted);
   scrollbar-width: none;
   white-space: pre-wrap;
+  text-align: left;
 }
 
 .card-preview-panel__text::-webkit-scrollbar {

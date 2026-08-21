@@ -185,9 +185,9 @@ Run `npm run dev` and open `http://localhost:4300/#/duel` for every item.
 Run `npm run dev` and open `http://localhost:4300/` (no hash) for every item.
 
 - [ ] The first screen is the hub: a "YGO Story Duel Simulator" title with four buttons — Story, Decks, Duel, Settings. NO deck picker and NO duel appear here.
-- [ ] Click Duel: the URL becomes `#/duel` and the deck picker loads; start a duel and play a turn — the duel behaves exactly as before.
+- [ ] Click Duel: the URL becomes `#/free-play` and the deck picker loads; start a duel and play a turn — the duel behaves exactly as before. (Route renamed by T14; the old `#/duel` still redirects here.)
 - [ ] Press the browser Back button from the duel: you return to the hub and the duel is gone.
-- [ ] Click Decks: the URL becomes `#/decks` and the deck editor loads.
+- [ ] Click Decks: the URL becomes `#/free-play/decks` and the deck editor loads. (Route renamed by T14; the old `#/decks` still redirects here.)
 - [ ] Click Story: the URL becomes `#/story` and the "Not available yet" placeholder shows (the visual novel moves here in a later ticket).
 - [ ] Type `http://localhost:4300/#/nonsense` in the address bar: you land back on the hub, not on an error.
 - [ ] Click Settings on the hub: a settings dialog opens with a Fullscreen switch reading "Off" and a Close button.
@@ -209,7 +209,7 @@ Run `npm run dev`. The console is a developer surface: it is never linked from t
 - [ ] Do the same sweep inside `#/duel` and `#/decks`: no admin control appears there either.
 - [ ] Type `http://localhost:4300/#/admin` in the address bar: a "Developer console" screen loads with a warning line and three sections — Routes, State jumps, Resets.
 - [ ] The console stays inside the 16:9 stage (letterbox bars are untouched) and scrolls with its own scrollbar if the window is short; the page itself never scrolls.
-- [ ] In Routes, click `#/` → the hub loads. Type `#/admin` again, click `#/duel` → the deck picker loads. Type `#/admin` again, click `#/decks` → the deck editor loads. Type `#/admin` again, click `#/story` → the "Not available yet" placeholder shows.
+- [ ] In Routes, click `#/` → the hub loads. Type `#/admin` again, click `#/free-play` → the deck picker loads. Type `#/admin` again, click `#/free-play/decks` → the deck editor loads. Type `#/admin` again, click `#/story` → the "Not available yet" placeholder shows. (Buttons are labelled by their route, so T14 renamed these two labels.)
 - [ ] Back on `#/admin`, click "Seed test deck & open decks": the deck editor opens and the library lists a deck named "Admin test deck".
 - [ ] Open that deck: it holds 40 Main-deck cards.
 - [ ] Return to `#/admin` and click "Launch preset duel": the duel route opens with the normal deck picker, and no extra deck was written to the library.
@@ -267,7 +267,7 @@ Nothing else regressed
 
 Reach the Deck Editor
 
-- [ ] Run `npm run dev` (default `DEV_PORT=4300`) and open `http://localhost:4300/#/` — the home hub appears; click its "Decks" entry and the URL becomes `#/decks`.
+- [ ] Run `npm run dev` (default `DEV_PORT=4300`) and open `http://localhost:4300/#/` — the home hub appears; click its "Decks" entry and the URL becomes `#/free-play/decks`.
 - [ ] Open `http://localhost:4300/#/decks` directly — the "Deck Library" heading renders (an empty library says "No local decks"). The browser tab title reads "Deck Editor · YGO Story Duel Simulator", not "Deck Builder Prototype".
 - [ ] Confirm there is NO "Prototype review states" panel in the bottom-right corner and no "State fixture" dropdown anywhere in the deck editor.
 - [ ] Confirm the deck editor still looks exactly as it did before this ticket — this was a move, not a restyle.
@@ -275,7 +275,7 @@ Reach the Deck Editor
 Build and save a deck
 
 - [ ] Click "Create deck", name it `Manual T8`, confirm — the editor opens with Catalog / Build deck / Select a card panels.
-- [ ] Check the address bar: the URL is now `#/decks/<some-id>`, NOT `#/decks`.
+- [ ] Check the address bar: the URL is now `#/free-play/decks/<some-id>`, NOT `#/free-play/decks`.
 - [ ] Type `Blue-Eyes` into the catalog Name search, drag "Blue-Eyes White Dragon" onto the Main Deck drop area — the Main Deck collapse bar reads `1/40`. (Corrected 2026-08-20: the "Deck counts" panel became a per-zone count in each collapse bar, and the "Saved locally" autosave chip went with the rest of the header chrome. Autosave is now checked through **Load → Autosaves**, which gains an entry per edit.)
 - [ ] Press Undo then Redo — the count goes `0/40` then back to `1/40`, and **Load → Autosaves** keeps gaining entries.
 - [ ] Right-click the Main Deck card, then choose **Move to Side Deck** from the tap menu (portrait) or confirm the move via the context menu (desktop) — the card moves and the counts follow.
@@ -283,15 +283,15 @@ Build and save a deck
 
 Deep link, reload and Back
 
-- [ ] Copy the `#/decks/<id>` URL, reload the page — the same deck reopens directly, without bouncing through the library.
-- [ ] Press the browser Back button — you land on the library at `#/decks` and the editor is gone.
+- [ ] Copy the `#/free-play/decks/<id>` URL, reload the page — the same deck reopens directly, without bouncing through the library.
+- [ ] Press the browser Back button — you land on the library at `#/free-play/decks` and the editor is gone.
 - [ ] Press Forward — the same deck reopens.
 - [ ] Open `http://localhost:4300/#/decks/no-such-deck` — a "Deck not found" page appears with a "Back to Deck Library" link; click it and the library at `#/decks` renders with your decks intact.
 
 Import and export
 
 - [ ] From the library, click "Import Deck", set the deck name to `Manual T8 Import`, paste `#main` / `99999999` / `#extra` / `!side` (one per line) into "Or paste YDK text", click "Preview import" then "Replace deck cards" — the editor opens on the imported deck and shows a "Missing card 99999999" tile.
-- [ ] Confirm the URL moved to that imported deck's `#/decks/<id>`, then reload — the missing-card tile is still there.
+- [ ] Confirm the URL moved to that imported deck's `#/free-play/decks/<id>`, then reload — the missing-card tile is still there.
 - [ ] With the imported deck open in the editor, click **Export** in the deck header — the dialog warns the deck is invalid; copy to clipboard, then Close.
 - [ ] Open another deck and click **Export** — the YDK text dialog opens for that deck and Close returns focus to the Export button.
 
@@ -303,8 +303,8 @@ Library CRUD
 
 Admin console jump
 
-- [ ] Open `http://localhost:4300/#/admin`, click "Seed test deck & open it" — the editor opens directly on the seeded deck (name "Admin test deck") and the URL is `#/decks/admin-test-deck`.
-- [ ] Back on `#/admin`, arm and confirm the "Deck library" reset, then click the `#/decks` route button — the library shows "No local decks".
+- [ ] Open `http://localhost:4300/#/admin`, click "Seed test deck & open it" — the editor opens directly on the seeded deck (name "Admin test deck") and the URL is `#/free-play/decks/admin-test-deck`.
+- [ ] Back on `#/admin`, arm and confirm the "Deck library" reset, then click the `#/free-play/decks` route button — the library shows "No local decks".
 
 Nothing else regressed
 
@@ -1649,7 +1649,7 @@ Start a dev duel (`npm run dev`), open the app in the browser, pick decks and st
 - [ ] Open a deck that is already the default. Confirm **Set default** is disabled.
 - [ ] Open a non-default deck. Click **Set default** — the **Default** badge moves to that deck's row in the library, and **Set default** becomes disabled on the deck page.
 - [ ] Click **Delete** — the confirm dialog appears with the deck name and "Local deck and retained history will be removed."; **Delete** (confirm) is available and **Cancel** returns focus to the Delete button without deleting.
-- [ ] Confirm deletion — you land on `#/decks`; the deleted deck row is gone. Reload and confirm it stays gone.
+- [ ] Confirm deletion — you land on `#/free-play/decks`; the deleted deck row is gone. Reload and confirm it stays gone.
 - [ ] Delete the default deck — after deletion no row shows the **Default** badge.
 
 ## T4 card-tile-art-fit
@@ -1974,7 +1974,7 @@ A delete that fails stays on the deck
 
 - [ ] Open the same deck in two tabs. In tab B, rename it (so its stored revision moves ahead of tab A's).
 - [ ] In tab A, press **Delete** and confirm.
-- [ ] Tab A reports that the deck could not be deleted and the URL stays on `#/decks/{deckId}` — it must not fall back to `#/decks` as though the deck were gone.
+- [ ] Tab A reports that the deck could not be deleted and the URL stays on `#/free-play/decks/{deckId}` — it must not fall back to `#/free-play/decks` as though the deck were gone.
 - [ ] Reload tab A — the deck is still there, under the name tab B gave it.
 
 ## R2 round-2-robustness-fixes
@@ -2517,3 +2517,47 @@ browser console shows `duel.worker.command.failed` and the dialog heading reads
       (a different question, no decision left to rebuild from, or the rebuild could not
       run), the **Restore** button disappears, and **Download diagnostics** still works.
       Nothing fails silently.
+
+## T14 route-table-contexts
+
+Run `npm run dev` (default `DEV_PORT=4300`). Every route below is typed into the
+address bar unless the step says to click something.
+
+### Old links still land where they used to
+
+- [ ] Open `http://localhost:4300/#/duel` — the deck picker loads exactly as before. The address bar still reads `#/duel` (the redirect is what the app resolves, not a URL rewrite).
+- [ ] Open `#/decks` — the Deck Library renders.
+- [ ] Open `#/decks/<id>` for a deck you own — that deck opens in the editor.
+- [ ] Open `#/duel/session/anything` — unchanged: the duel region shows, and a session nobody can resume still returns you to `#/story`.
+- [ ] Open `#/admin` — the developer console still loads.
+
+### The new context-carrying routes
+
+- [ ] Open `#/free-play` — the deck picker loads, same as `#/duel`.
+- [ ] Open `#/free-play/decks` — the Deck Library renders.
+- [ ] Open `#/free-play/decks/<id>` — that deck opens.
+- [ ] Open `#/story/decks` — the Deck Library renders. (T23 gives it the save's decks; today both contexts read the same library.)
+- [ ] Open `#/story/decks/<id>` — that deck opens.
+- [ ] Open `#/free-play/collection` and `#/story/collection` — each shows the main menu, not a blank screen. (T29 replaces both with the real collection screen.)
+- [ ] Open `#/story` — the visual novel still loads.
+
+### Navigation keeps its context
+
+- [ ] From `#/free-play/decks`, open a deck: the URL becomes `#/free-play/decks/<id>`.
+- [ ] Press Back: you return to `#/free-play/decks`.
+- [ ] From `#/story/decks`, open a deck: the URL becomes `#/story/decks/<id>` — it must NOT jump to `#/free-play/decks/<id>`.
+- [ ] From `#/story/decks/<id>`, use the editor's own back-to-library path: you land on `#/story/decks`, still in the story context.
+
+### Nothing unknown becomes a screen
+
+- [ ] Open `#/free-play/nope`, `#/story/nope`, `#/free-play/decks/a/b` and `#/nonsense` — each falls back to the main menu at `#/`.
+
+### The duel still spends the pillarbox
+
+- [ ] On a window wider than 1024px, open `#/duel` (or `#/free-play`) and confirm the duel field still uses the full window width, with the right rail absorbing the reclaimed space — exactly as before this ticket. In DevTools, `[data-cy="app-stage"]` carries `data-stage-route="free-play"`.
+- [ ] Open `#/free-play/decks` at the same width: the deck editor still sits in the 16:9 stage with bars at the sides, unchanged.
+
+### The developer console lists the new routes
+
+- [ ] Open `#/admin` → Routes. There are buttons for `#/`, `#/free-play`, `#/free-play/decks`, `#/free-play/collection`, `#/story`, `#/story/decks` and `#/story/collection`, and none for `#/admin` itself.
+- [ ] Click each one and confirm it lands on the screen its label names.

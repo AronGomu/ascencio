@@ -10,10 +10,10 @@ import {
 describe("createShellStore", () => {
   it("starts on the route parsed from the initial hash", () => {
     const setHash = vi.fn();
-    const store = createShellStore("#/duel", setHash);
+    const store = createShellStore("#/free-play", setHash);
     const seen: string[] = [];
     store.subscribe((state) => seen.push(state.route.kind));
-    expect(seen).toEqual(["duel"]);
+    expect(seen).toEqual(["free-play"]);
     expect(setHash).not.toHaveBeenCalled();
   });
 
@@ -22,22 +22,22 @@ describe("createShellStore", () => {
     const store = createShellStore("#/", setHash);
     const seen: string[] = [];
     store.subscribe((state) => seen.push(state.route.kind));
-    store.navigate({ kind: "decks" });
+    store.navigate({ kind: "free-play-decks" });
     expect(setHash).toHaveBeenCalledTimes(1);
-    expect(setHash).toHaveBeenCalledWith("#/decks", false);
-    expect(seen).toEqual(["home", "decks"]);
+    expect(setHash).toHaveBeenCalledWith("#/free-play/decks", false);
+    expect(seen).toEqual(["home", "free-play-decks"]);
   });
 
   /* A route the player did not ask for — the correction a finished or
      unresumable duel makes — must not become an entry Back can return to. */
   it("asks for a replacement when the navigation is a correction", () => {
     const setHash = vi.fn();
-    const store = createShellStore("#/duel", setHash);
+    const store = createShellStore("#/free-play", setHash);
     const seen: string[] = [];
     store.subscribe((state) => seen.push(state.route.kind));
     store.navigate({ kind: "story" }, { replace: true });
     expect(setHash).toHaveBeenCalledWith("#/story", true);
-    expect(seen).toEqual(["duel", "story"]);
+    expect(seen).toEqual(["free-play", "story"]);
   });
 
   it("syncs from a hash without writing it back", () => {
@@ -45,8 +45,8 @@ describe("createShellStore", () => {
     const store = createShellStore("#/", setHash);
     const seen: string[] = [];
     store.subscribe((state) => seen.push(state.route.kind));
-    store.syncFromHash("#/duel");
-    expect(seen).toEqual(["home", "duel"]);
+    store.syncFromHash("#/free-play");
+    expect(seen).toEqual(["home", "free-play"]);
     expect(setHash).not.toHaveBeenCalled();
   });
 
@@ -62,7 +62,7 @@ describe("createShellStore", () => {
     const seen: string[] = [];
     const unsubscribe = store.subscribe((state) => seen.push(state.route.kind));
     unsubscribe();
-    store.syncFromHash("#/duel");
+    store.syncFromHash("#/free-play");
     expect(seen).toEqual(["home"]);
   });
 });

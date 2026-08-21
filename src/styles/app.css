@@ -95,7 +95,7 @@ body {
    `computeStageBox` deliberately still reports the 16:9 box: it is read by the
    deck editor, which never renders on this route. */
 @media (min-width: 1024px) {
-  .app-stage[data-stage-route="duel"],
+  .app-stage[data-stage-route="free-play"],
   .app-stage[data-stage-route="duel-session"] {
     --stage-w: 100vw;
     --duel-field-margin: clamp(

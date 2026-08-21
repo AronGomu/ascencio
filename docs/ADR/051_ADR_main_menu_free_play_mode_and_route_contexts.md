@@ -43,5 +43,5 @@ A story-scoped route reached with no save loaded returns to the main menu rather
 - One front door; the duplicate menu is gone.
 - A URL always names its context, so a deep link cannot silently mean the wrong deck list, and the E2E suite can address either world directly.
 - The entry chunk keeps its budget: the menu is shell code, and story, deck-editor and battle all stay behind their loaders.
-- `AppRoute` grew from 7 kinds to 12. `formatAppRoute`'s exhaustive switch and `ROUTE_INDEX` in the admin console both fail to compile on a missing case, which is the intended pressure.
+- `AppRoute` grew from 7 kinds to 11 — the table above, one kind per row and one more for each `(/:id)`. `duel`, `decks` and `deck` left the union rather than joining it: nothing can produce a kind whose only hash now parses to another one. `formatAppRoute`'s exhaustive switch and `ROUTE_INDEX` in the admin console both fail to compile on a missing case, which is the intended pressure.
 - Cost: the main menu is authored twice in spirit — the shell's menu and the story's in-playthrough title treatment. Accepted as the price of keeping the visual novel lazy.

@@ -23,9 +23,12 @@ describe("admin route index", () => {
   it("covers every route reachable without an id and excludes admin", () => {
     const kinds = ADMIN_ROUTES.map((route) => route.kind);
     expect(kinds).toContain("home");
-    expect(kinds).toContain("duel");
-    expect(kinds).toContain("decks");
+    expect(kinds).toContain("free-play");
+    expect(kinds).toContain("free-play-decks");
+    expect(kinds).toContain("free-play-collection");
     expect(kinds).toContain("story");
+    expect(kinds).toContain("story-decks");
+    expect(kinds).toContain("story-collection");
     expect(kinds).not.toContain("admin");
   });
 });

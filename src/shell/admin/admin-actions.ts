@@ -50,11 +50,15 @@ export const ADMIN_STORAGE_TARGETS: readonly AdminStorageTarget[] =
 const ROUTE_INDEX: Readonly<Record<AppRoute["kind"], AppRoute | null>> =
   Object.freeze({
     home: { kind: "home" },
-    duel: { kind: "duel" },
-    "duel-session": null,
-    decks: { kind: "decks" },
-    deck: null,
+    "free-play": { kind: "free-play" },
+    "free-play-decks": { kind: "free-play-decks" },
+    "free-play-deck": null,
+    "free-play-collection": { kind: "free-play-collection" },
     story: { kind: "story" },
+    "story-decks": { kind: "story-decks" },
+    "story-deck": null,
+    "story-collection": { kind: "story-collection" },
+    "duel-session": null,
     admin: null,
   });
 

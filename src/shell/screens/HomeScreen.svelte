@@ -7,8 +7,12 @@
 
   const ENTRIES: readonly { route: AppRoute; cy: string; label: string }[] = [
     { route: { kind: "story" }, cy: "home-entry-story", label: "Story" },
-    { route: { kind: "decks" }, cy: "home-entry-decks", label: "Decks" },
-    { route: { kind: "duel" }, cy: "home-entry-duel", label: "Duel" },
+    {
+      route: { kind: "free-play-decks" },
+      cy: "home-entry-decks",
+      label: "Decks",
+    },
+    { route: { kind: "free-play" }, cy: "home-entry-duel", label: "Duel" },
   ];
 
   let settingsOpen = false;

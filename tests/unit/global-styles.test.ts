@@ -142,7 +142,7 @@ describe("global styles", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     const bleed = ruleBlock(
       css,
-      '.app-stage[data-stage-route="duel"],\n  .app-stage[data-stage-route="duel-session"] {',
+      '.app-stage[data-stage-route="free-play"],\n  .app-stage[data-stage-route="duel-session"] {',
     );
     expect(bleed).toContain("--stage-w: 100vw");
     // The inset is only ever paid out of the reclaimed bar, so an exactly-16:9

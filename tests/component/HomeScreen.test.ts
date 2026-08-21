@@ -27,12 +27,12 @@ describe("HomeScreen", () => {
     render(HomeScreen, { store });
 
     await fireEvent.click(query("home-entry-duel")!);
-    expect(hashes).toEqual(["#/duel"]);
+    expect(hashes).toEqual(["#/free-play"]);
     let route = "";
     store.subscribe((state) => {
       route = state.route.kind;
     })();
-    expect(route).toBe("duel");
+    expect(route).toBe("free-play");
   });
 
   it("navigates to story and decks before those domains land", async () => {
@@ -42,7 +42,7 @@ describe("HomeScreen", () => {
     });
     await fireEvent.click(query("home-entry-story")!);
     await fireEvent.click(query("home-entry-decks")!);
-    expect(hashes).toEqual(["#/story", "#/decks"]);
+    expect(hashes).toEqual(["#/story", "#/free-play/decks"]);
   });
 
   it("opens the settings dialog from the settings entry", async () => {

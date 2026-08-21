@@ -117,7 +117,10 @@ async function persistedDeckCounts(
    page is the thing under test: comparing the database to the DOM passes
    whenever both are still one step behind. */
 async function expectSaveSettled(page: Page, expected: DeckCounts) {
-  const deckId = new URL(page.url()).hash.replace(/^#\/decks\//, "");
+  const deckId = new URL(page.url()).hash.replace(
+    /^#\/(?:free-play|story)\/decks\//,
+    "",
+  );
   expect(deckId, "expectSaveSettled must be called on a deck route").not.toBe(
     "",
   );
@@ -255,7 +258,7 @@ test("the deck route deep-links, survives a reload and answers Back", async ({
   /* Opening a deck has to be a real navigation, not internal state: the hash
      names the deck and a reload of that hash reopens the same deck. */
   const deckHash = new URL(page.url()).hash;
-  expect(deckHash).toMatch(/^#\/decks\/.+/);
+  expect(deckHash).toMatch(/^#\/free-play\/decks\/.+/);
   await page.reload();
   await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
     "Deep Link",

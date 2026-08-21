@@ -76,7 +76,7 @@
       busy = false;
     }
     status = "Seeded the test deck.";
-    store.navigate({ kind: "deck", deckId: ADMIN_TEST_DECK_ID });
+    store.navigate({ kind: "free-play-deck", deckId: ADMIN_TEST_DECK_ID });
   }
 
   async function runReset(target: AdminStorageTarget): Promise<void> {
@@ -130,7 +130,7 @@
       <button
         type="button"
         data-cy="admin-jump-preset-duel"
-        onclick={() => go({ kind: "duel" })}>Launch preset duel</button
+        onclick={() => go({ kind: "free-play" })}>Launch preset duel</button
       >
       <button
         type="button"

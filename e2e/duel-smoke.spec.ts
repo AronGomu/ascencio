@@ -293,7 +293,7 @@ test("the root route shows the home hub without booting the duel", async ({
   );
 
   await page.locator('[data-cy="home-entry-duel"]').click();
-  expect(new URL(page.url()).hash).toBe("#/duel");
+  expect(new URL(page.url()).hash).toBe("#/free-play");
   await expect(
     page.getByRole("heading", { name: "Choose your deck" }),
   ).toBeVisible({ timeout: 120_000 });

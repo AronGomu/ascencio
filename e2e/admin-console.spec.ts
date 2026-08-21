@@ -32,11 +32,11 @@ test("the console is not linked from the player-facing home hub", async ({
 
 test("the route index navigates to any indexed route", async ({ page }) => {
   await page.goto(adminUrl);
-  await page.locator('[data-cy="admin-route-decks"]').click();
+  await page.locator('[data-cy="admin-route-free-play-decks"]').click();
   await expect(
     page.getByRole("heading", { name: "Deck Library" }),
   ).toBeVisible();
-  expect(new URL(page.url()).hash).toBe("#/decks");
+  expect(new URL(page.url()).hash).toBe("#/free-play/decks");
 
   await page.goto(adminUrl);
   await page.locator('[data-cy="admin-route-home"]').click();
@@ -57,7 +57,7 @@ test("seeding fills the deck library and a confirmed reset empties it", async ({
   await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
     "Admin test deck",
   );
-  expect(new URL(page.url()).hash).toBe("#/decks/admin-test-deck");
+  expect(new URL(page.url()).hash).toBe("#/free-play/decks/admin-test-deck");
 
   await page.goto(adminUrl);
   /* The first click only arms the delete: nothing is removed until the
@@ -66,7 +66,7 @@ test("seeding fills the deck library and a confirmed reset empties it", async ({
   await expect(
     page.locator('[data-cy="admin-reset-decks-confirm"]'),
   ).toBeVisible();
-  await page.locator('[data-cy="admin-route-decks"]').click();
+  await page.locator('[data-cy="admin-route-free-play-decks"]').click();
   await expect(page.getByText("Admin test deck")).toBeVisible();
 
   await page.goto(adminUrl);
@@ -79,7 +79,7 @@ test("seeding fills the deck library and a confirmed reset empties it", async ({
   /* The reset deletes the deck database outright, so its absence is the reset
      itself rather than anything a view happens to render. Asserted here, while
      the console is still the open route: the editor seeds a starter deck on
-     mount, which recreates the database the moment `#/decks` opens. */
+     mount, which recreates the database the moment the deck library opens. */
   const deckDatabaseNames = await page.evaluate(async () =>
     (await indexedDB.databases()).map((entry) => entry.name),
   );
@@ -89,7 +89,7 @@ test("seeding fills the deck library and a confirmed reset empties it", async ({
      library seeds `Starter Deck` into the database the reset just removed. The
      deck the seed jump wrote is gone all the same, and nothing else survives
      beside it. */
-  await page.locator('[data-cy="admin-route-decks"]').click();
+  await page.locator('[data-cy="admin-route-free-play-decks"]').click();
   await expect(page.getByText("Starter Deck")).toBeVisible();
   await expect(page.getByText("Admin test deck")).toHaveCount(0);
   await expect(page.locator('[data-cy="deck-library-list"] > li')).toHaveCount(

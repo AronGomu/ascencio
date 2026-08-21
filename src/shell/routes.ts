@@ -11,29 +11,78 @@ export function handoffId(value: string): HandoffId {
   return value as HandoffId;
 }
 
+/** The world a deck or collection route belongs to. Decks mean two different
+    things — a loaded save's decks or the free-play library — so the route says
+    which, and a deep link cannot silently open the wrong one (ADR-051). */
+export type RouteContext = "free-play" | "story";
+
 export type AppRoute =
   | { readonly kind: "home" }
-  | { readonly kind: "duel" }
-  | { readonly kind: "duel-session"; readonly handoffId: HandoffId }
-  | { readonly kind: "decks" }
-  | { readonly kind: "deck"; readonly deckId: DeckId }
+  | { readonly kind: "free-play" }
+  | { readonly kind: "free-play-decks" }
+  | { readonly kind: "free-play-deck"; readonly deckId: DeckId }
+  | { readonly kind: "free-play-collection" }
   | { readonly kind: "story" }
+  | { readonly kind: "story-decks" }
+  | { readonly kind: "story-deck"; readonly deckId: DeckId }
+  | { readonly kind: "story-collection" }
+  | { readonly kind: "duel-session"; readonly handoffId: HandoffId }
   | { readonly kind: "admin" };
 
 export const HOME_ROUTE: AppRoute = { kind: "home" };
+
+/** The deck route `context` owns: its library when `id` is `null`, that one
+    deck otherwise. */
+export function deckRoute(context: RouteContext, id: DeckId | null): AppRoute {
+  if (context === "story")
+    return id === null
+      ? { kind: "story-decks" }
+      : { kind: "story-deck", deckId: id };
+  return id === null
+    ? { kind: "free-play-decks" }
+    : { kind: "free-play-deck", deckId: id };
+}
+
+/** The context a deck route names, or `null` when the route names no deck
+    library — so one deck-editor region can serve both worlds and hand
+    navigation back in the context it was reached from. */
+export function deckRouteContext(route: AppRoute): RouteContext | null {
+  switch (route.kind) {
+    case "free-play-decks":
+    case "free-play-deck":
+      return "free-play";
+    case "story-decks":
+    case "story-deck":
+      return "story";
+    default:
+      return null;
+  }
+}
+
+/** The context a first path segment names, or `null` when it names none. */
+function segmentContext(segment: string | undefined): RouteContext | null {
+  if (segment === "free-play") return "free-play";
+  if (segment === "story") return "story";
+  return null;
+}
 
 export function parseAppRoute(hash: string): AppRoute {
   const path = hash.startsWith("#") ? hash.slice(1) : hash;
   if (path === "" || path === "/") return HOME_ROUTE;
   if (!path.startsWith("/")) return HOME_ROUTE;
   const segments = path.slice(1).split("/");
+  const [first, second, third] = segments;
 
   if (segments.length === 1) {
-    switch (segments[0]) {
+    switch (first) {
+      /* `#/duel` and `#/decks` are the links from before routes carried a
+         context. They redirect rather than 404 so bookmarks and shared URLs
+         keep landing on the screen they named. */
       case "duel":
-        return { kind: "duel" };
+      case "free-play":
+        return { kind: "free-play" };
       case "decks":
-        return { kind: "decks" };
+        return { kind: "free-play-decks" };
       case "story":
         return { kind: "story" };
       case "admin":
@@ -43,24 +92,43 @@ export function parseAppRoute(hash: string): AppRoute {
     }
   }
 
-  const sessionId = segments[2];
+  const context = segmentContext(first);
+
+  if (segments.length === 2 && context !== null) {
+    if (second === "decks") return deckRoute(context, null);
+    if (second === "collection")
+      return context === "story"
+        ? { kind: "story-collection" }
+        : { kind: "free-play-collection" };
+    return HOME_ROUTE;
+  }
+
   if (
     segments.length === 3 &&
-    segments[0] === "duel" &&
-    segments[1] === "session" &&
-    sessionId !== undefined &&
-    ROUTE_ID.test(sessionId)
+    context !== null &&
+    second === "decks" &&
+    third !== undefined &&
+    ROUTE_ID.test(third)
   )
-    return { kind: "duel-session", handoffId: handoffId(sessionId) };
+    return deckRoute(context, deckId(third));
 
-  const id = segments[1];
+  if (
+    segments.length === 3 &&
+    first === "duel" &&
+    second === "session" &&
+    third !== undefined &&
+    ROUTE_ID.test(third)
+  )
+    return { kind: "duel-session", handoffId: handoffId(third) };
+
+  /* The pre-context single deck, redirected like its library above. */
   if (
     segments.length === 2 &&
-    segments[0] === "decks" &&
-    id !== undefined &&
-    ROUTE_ID.test(id)
+    first === "decks" &&
+    second !== undefined &&
+    ROUTE_ID.test(second)
   )
-    return { kind: "deck", deckId: deckId(id) };
+    return deckRoute("free-play", deckId(second));
 
   return HOME_ROUTE;
 }
@@ -69,16 +137,24 @@ export function formatAppRoute(route: AppRoute): string {
   switch (route.kind) {
     case "home":
       return "#/";
-    case "duel":
-      return "#/duel";
-    case "duel-session":
-      return `#/duel/session/${route.handoffId}`;
-    case "decks":
-      return "#/decks";
-    case "deck":
-      return `#/decks/${route.deckId}`;
+    case "free-play":
+      return "#/free-play";
+    case "free-play-decks":
+      return "#/free-play/decks";
+    case "free-play-deck":
+      return `#/free-play/decks/${route.deckId}`;
+    case "free-play-collection":
+      return "#/free-play/collection";
     case "story":
       return "#/story";
+    case "story-decks":
+      return "#/story/decks";
+    case "story-deck":
+      return `#/story/decks/${route.deckId}`;
+    case "story-collection":
+      return "#/story/collection";
+    case "duel-session":
+      return `#/duel/session/${route.handoffId}`;
     case "admin":
       return "#/admin";
   }

@@ -7,7 +7,7 @@
   } from "./domain-loaders.ts";
   import { createHandoffCoordinator } from "./handoff/handoff-coordinator.ts";
   import { STAGE_CONTEXT_KEY } from "./index.ts";
-  import type { AppRoute } from "./routes.ts";
+  import { deckRoute, deckRouteContext, type AppRoute } from "./routes.ts";
   import DomainLoadError from "./screens/DomainLoadError.svelte";
   import HomeScreen from "./screens/HomeScreen.svelte";
   import type { BattleFacadeResult } from "../battle/index.ts";
@@ -37,7 +37,7 @@
   export let settings: ShellSettingsStore = createShellSettingsStore();
   /* Story progress is written by the shell only for the pre-duel checkpoint.
      The default reaches the repository through the visual novel's own lazy
-     chunk, so `#/duel` and `#/decks` never load the story to hold it. */
+     chunk, so `#/free-play` and its decks never load the story to hold it. */
   export let saves: StorySaveRepository | null = null;
 
   let stage: HTMLElement | undefined;
@@ -120,7 +120,7 @@
          tearing it down, and it is unhosted there, so its result would belong
          to nobody. Every other route unmounts the region, and that teardown
          still owes the story its abort. */
-      if (current.kind === "duel") hostedHandoffId = null;
+      if (current.kind === "free-play") hostedHandoffId = null;
       return;
     }
     if (sessionHandoffId === current.handoffId) return;
@@ -139,6 +139,9 @@
     route = state.route;
   });
   $: syncSession(route);
+  /* Which deck library the route names, so one editor region serves both
+     contexts and hands navigation back in the one it was reached from. */
+  $: deckContext = deckRouteContext(route);
 
   const readViewportBox = (): StageBox =>
     computeStageBox(globalThis.innerWidth, globalThis.innerHeight);
@@ -194,20 +197,24 @@
   data-stage-route={route.kind}
   bind:this={stage}
 >
-  {#if route.kind === "home"}
+  <!-- The collection screens land in T29. Until they exist their routes show
+       the main menu, which is where a story route with nothing to show goes
+       anyway (ADR-051), rather than an empty region. -->
+  {#if route.kind === "home" || route.kind === "free-play-collection" || route.kind === "story-collection"}
     <div class="shell-region shell-region--home" data-cy="shell-region-home">
       <HomeScreen {store} />
     </div>
-  {:else if route.kind === "decks" || route.kind === "deck"}
+  {:else if deckContext !== null}
+    {@const context = deckContext}
     <div class="shell-region shell-region--decks" data-cy="shell-region-decks">
       {#await loaders.decks() then module}
         <svelte:component
           this={module.default}
-          deckId={route.kind === "deck" ? route.deckId : null}
+          deckId={route.kind === "free-play-deck" || route.kind === "story-deck"
+            ? route.deckId
+            : null}
           onnavigate={({ deckId }) =>
-            store.navigate(
-              deckId === null ? { kind: "decks" } : { kind: "deck", deckId },
-            )}
+            store.navigate(deckRoute(context, deckId))}
         />
       {:catch error}
         <DomainLoadError label="Deck Editor" cy="decks" {error} />

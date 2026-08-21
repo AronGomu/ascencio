@@ -76,7 +76,15 @@ describe("AdminConsole", () => {
 
   it("renders one button per indexed route and none for admin", () => {
     mount();
-    for (const kind of ["home", "duel", "decks", "story"])
+    for (const kind of [
+      "home",
+      "free-play",
+      "free-play-decks",
+      "free-play-collection",
+      "story",
+      "story-decks",
+      "story-collection",
+    ])
       expect(query(`admin-route-${kind}`)).not.toBeNull();
     expect(query("admin-route-admin")).toBeNull();
   });
@@ -84,8 +92,8 @@ describe("AdminConsole", () => {
   it("navigates from a route link", async () => {
     const hashes: string[] = [];
     mount({ hashes });
-    await fireEvent.click(query("admin-route-duel")!);
-    expect(hashes).toEqual(["#/duel"]);
+    await fireEvent.click(query("admin-route-free-play")!);
+    expect(hashes).toEqual(["#/free-play"]);
   });
 
   it("seeds the test deck and then opens the deck editor", async () => {
@@ -93,7 +101,9 @@ describe("AdminConsole", () => {
     const created: DeckRecord[] = [];
     mount({ hashes, created });
     await fireEvent.click(query("admin-jump-seed-deck")!);
-    await vi.waitFor(() => expect(hashes).toEqual(["#/decks/admin-test-deck"]));
+    await vi.waitFor(() =>
+      expect(hashes).toEqual(["#/free-play/decks/admin-test-deck"]),
+    );
     expect(created).toHaveLength(1);
     expect(created[0]!.id).toBe("admin-test-deck");
     expect(created[0]!.main).toHaveLength(40);
@@ -104,7 +114,7 @@ describe("AdminConsole", () => {
     const created: DeckRecord[] = [];
     mount({ hashes, created });
     await fireEvent.click(query("admin-jump-preset-duel")!);
-    expect(hashes).toEqual(["#/duel"]);
+    expect(hashes).toEqual(["#/free-play"]);
     expect(created).toHaveLength(0);
   });
 

@@ -9,6 +9,10 @@
   export let onchoose: (choice: InteractionChoice) => void;
   export let ondismiss: () => void;
   export let variant: "field" | "list" = "field";
+  /* The inline row is what a chip menu anchored on a small card can afford.
+     The hand zoom overlay has a whole enlarged card box to spend, so it asks
+     for one chip per row across that width instead. */
+  export let layout: "row" | "stack" = "row";
   export let ondetails: (() => void) | null = null;
   /* A second copy of a card's chips exists while the hand zoom overlay is open:
      the card keeps its own for focus and pin, the overlay draws the hovered
@@ -61,6 +65,7 @@
 
 <div
   class="card-action-chips"
+  class:is-stacked={layout === "stack"}
   role="group"
   aria-label={`${cardLabel} actions`}
   bind:this={chipsElement}

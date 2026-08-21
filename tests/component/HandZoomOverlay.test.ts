@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render } from "@testing-library/svelte";
+import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi, type Mock } from "vitest";
 import HandZoomOverlay from "../../src/battle/app/components/duel-field/HandZoomOverlay.svelte";
 import {
@@ -95,6 +95,12 @@ const CHOICES: readonly InteractionChoice[] = [
   { id: choiceId("summon"), label: "Summon", action: "summon" },
 ];
 
+const THREE_CHOICES: readonly InteractionChoice[] = [
+  ...CHOICES,
+  { id: choiceId("set"), label: "Set", action: "setMonster" },
+  { id: choiceId("activate"), label: "Activate", action: "activate" },
+];
+
 /* Nested under `props`: `anchor` is also a Svelte mount option, so a flat
    object would be read as one and the component would get no props at all. */
 function renderOverlay(
@@ -104,6 +110,7 @@ function renderOverlay(
   overrides: {
     readonly card?: BoardCardView;
     readonly imageLibrary?: Pick<CardImageLibrary, "lease"> | null;
+    readonly onzoomleave?: (related: EventTarget | null) => void;
   } = {},
 ) {
   return render(HandZoomOverlay, {
@@ -115,8 +122,27 @@ function renderOverlay(
       imageLibrary: overrides.imageLibrary ?? null,
       cardBackUrl: CARD_BACK_URL,
       placeholderUrl: PLACEHOLDER_URL,
+      ...(overrides.onzoomleave === undefined
+        ? {}
+        : { onzoomleave: overrides.onzoomleave }),
     },
   });
+}
+
+/* The overlay scopes its copy of the chips, so the action buttons carry the
+   component's own `card-action-chip-` value behind that scope prefix. */
+function actionButtons(): HTMLButtonElement[] {
+  return [
+    ...document.querySelectorAll<HTMLButtonElement>(
+      '[data-cy^="hand-zoom-overlay-card-action-chip-"]',
+    ),
+  ];
+}
+
+function actionList(): HTMLElement | null {
+  return document.querySelector<HTMLElement>(
+    '[data-cy="hand-zoom-overlay-card-action-chips-p0-hand-2"]',
+  );
 }
 
 function overlayImageSource(cardId: string): string | null {
@@ -209,6 +235,61 @@ describe("HandZoomOverlay pointer surface", () => {
     expect(
       document.querySelector('[data-cy^="hand-zoom-overlay-bridge-"]'),
     ).toBeNull();
+  });
+
+  /* The taller stack extends the bridge's reach upward, so the crossing the
+     field reads to decide whether the union was left has to keep reporting the
+     node the pointer went to (ADR-032 §5). */
+  it("keeps the pointer bridge between card and actions", async () => {
+    const onzoomleave = vi.fn<(related: EventTarget | null) => void>();
+    renderOverlay(FRAME_WIDTH, ANCHOR, THREE_CHOICES, { onzoomleave });
+    const action = actionButtons()[0];
+    if (action === undefined) throw new Error("Missing action row");
+
+    /* Built by hand rather than through `fireEvent.pointerLeave`: jsdom ships
+       no `PointerEvent`, so the helper degrades to an event carrying no
+       `relatedTarget` — the one field under test here. */
+    await fireEvent(
+      overlay(),
+      new MouseEvent("pointerleave", { relatedTarget: action }),
+    );
+
+    expect(onzoomleave).toHaveBeenCalledTimes(1);
+    expect(onzoomleave).toHaveBeenCalledWith(action);
+  });
+});
+
+describe("HandZoomOverlay action rows", () => {
+  it("stacks one action per row at the zoom width", () => {
+    renderOverlay(FRAME_WIDTH, ANCHOR, THREE_CHOICES);
+
+    const list = actionList();
+    expect(list).not.toBeNull();
+    /* The rows are a CSS grid keyed off this class, and jsdom loads no
+       stylesheet: the class is the part of the contract a component test can
+       hold, the `1fr` track itself is proved in the browser. */
+    expect(list?.classList.contains("is-stacked")).toBe(true);
+    const buttons = actionButtons();
+    expect(buttons).toHaveLength(THREE_CHOICES.length);
+    for (const button of buttons) expect(button.parentElement).toBe(list);
+  });
+
+  /* A row spans the zoomed box and its label is sized from that same width, so
+     the overlay has to publish the width it computed — a percentage can carry
+     the box but never the font. */
+  it("publishes the zoom width the rows are sized from", () => {
+    renderOverlay(FRAME_WIDTH, ANCHOR, THREE_CHOICES);
+
+    expect(overlay().style.getPropertyValue("--hand-zoom-width")).toBe(
+      `${OVERLAY_WIDTH}px`,
+    );
+  });
+
+  it("renders no action list when there are no choices", () => {
+    renderOverlay(FRAME_WIDTH, ANCHOR, []);
+
+    expect(actionList()).toBeNull();
+    expect(actionButtons()).toHaveLength(0);
   });
 });
 

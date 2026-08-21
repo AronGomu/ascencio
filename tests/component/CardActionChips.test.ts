@@ -59,6 +59,36 @@ describe("CardActionChips", () => {
     expect(chips()).toHaveLength(2);
   });
 
+  /* Only the hand zoom overlay asks for the stacked rows. The field's own
+     pinned menu and the zone list keep the inline row they were designed as,
+     so the stack has to be opt-in at the call site. */
+  it("chips keep their row layout for the field menu", () => {
+    const { rendered } = renderChips();
+    const container = rendered.container.querySelector(
+      '[data-cy="card-action-chips-card-1"]',
+    );
+    expect(container?.classList.contains("is-stacked")).toBe(false);
+  });
+
+  it("stacks one chip per row when the caller asks for the stacked layout", () => {
+    const rendered = render(CardActionChips, {
+      cardId: "card-1",
+      cardLabel: "Mystical Space Typhoon in Your Hand",
+      choices: [ACTIVATE, SET],
+      layout: "stack",
+      onchoose: vi.fn(),
+      ondismiss: vi.fn(),
+    });
+
+    const container = rendered.container.querySelector(
+      '[data-cy="card-action-chips-card-1"]',
+    );
+    expect(container?.classList.contains("is-stacked")).toBe(true);
+    // The scoped `data-cy` values are what the e2e locators address; a layout
+    // switch may not rename them.
+    expect(chips()).toHaveLength(2);
+  });
+
   it("labels a chip with the action word and keeps the engine text accessible", () => {
     renderChips({ choices: [ACTIVATE] });
     const chip = chips()[0];

@@ -60,7 +60,10 @@
      which is where the bridge below has to stop: measured from the placed box
      so it stays exact when the top gutter clamp has moved it. */
   $: bridgeBottom = top + h - anchor.top;
-  $: overlayStyle = `left: ${left}px; top: ${top}px; width: ${w}px; height: ${h}px; --hand-zoom-bridge-bottom: ${bridgeBottom}px;`;
+  /* `--hand-zoom-width` repeats the box's own width because the action rows
+     scale their label off it: a percentage sizes the row but can never size
+     the text inside it. */
+  $: overlayStyle = `left: ${left}px; top: ${top}px; width: ${w}px; height: ${h}px; --hand-zoom-width: ${w}px; --hand-zoom-bridge-bottom: ${bridgeBottom}px;`;
 
   onDestroy(() => imageLease?.release());
 
@@ -107,6 +110,7 @@
         cardId={card.id}
         cardLabel={card.label}
         dataCyScope="hand-zoom-overlay"
+        layout="stack"
         {choices}
         {disabled}
         {onchoose}

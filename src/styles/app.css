@@ -2216,6 +2216,30 @@ button.duel-field-zone,
   transform: translateX(-50%);
 }
 
+/* The hand zoom overlay hands its chips a whole enlarged card box, so they
+   stop competing for one row and take one each across its full width. The
+   container's own inset padding goes with the row layout: it would hold every
+   button short of the box the overlay published. Declared after the overlay's
+   own `display: flex` rule above, which it carries the same specificity as and
+   therefore overrides on source order alone — do not hoist it. */
+.card-action-chips.is-stacked {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-1);
+  width: var(--hand-zoom-width);
+  padding: 0;
+}
+
+/* Sized from the zoom's own width rather than the chip's fixed 0.55rem, which
+   a row this wide would strand in the middle of an empty band. The floor is
+   the small-text token, so a narrow field never trades legibility for the
+   ratio; the height floor is the shared 44px control minimum, which the row
+   layout can finally afford. */
+.card-action-chips.is-stacked .card-action-chip {
+  min-height: 44px;
+  font-size: max(var(--text-xs), calc(var(--hand-zoom-width) / 11));
+}
+
 /* Hand cards live inside a horizontal scrollport whose vertical overflow is
    clipped. Offset their chips by the 1.35x bottom-origin hover lift, keeping
    every visible chip inside the hand band and pointer reachable. */

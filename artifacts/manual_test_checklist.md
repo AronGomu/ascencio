@@ -2274,3 +2274,34 @@ Record what the bundled decks cannot reach
       not shoved to one side.
 - [ ] Repeat the first check at 1280x720 and in a portrait/mobile window: both bands still
       group their cards at the centre after the field has been re-laid out or rotated.
+
+## T8 hand-zoom-action-button-rows
+
+- [ ] Start a duel with the preset decks and hover a hand card that has two or more legal
+      actions (a monster you can both Summon and Set is the easiest): the actions appear
+      above the zoomed card as a vertical list, one button per row, never two side by side.
+- [ ] Look at the width of those buttons: each one spans the whole width of the zoomed card
+      below it — left and right edges line up with the enlarged card's edges exactly.
+- [ ] Read the button labels: the text is clearly larger than the small chip text on a
+      field card's own menu, and each label fits inside its button with no clipped or
+      overflowing words.
+- [ ] Move the pointer straight up from the card onto the top button and pause there: the
+      overlay stays open the whole way, and the button under the pointer highlights.
+- [ ] Click that button: the action fires (the card is played or the prompt advances) and
+      the overlay disappears.
+- [ ] Hover a hand card that offers only one action: a single full-width button appears
+      above it, in the same place and at the same width as the stack.
+- [ ] Hover a hand card that offers no action at all: the zoom still appears with its art
+      and name, and no button strip appears above it.
+- [ ] Give a card on the field (not in hand) its own menu — click it to pin the menu, or
+      tab to it so it takes focus: those chips are unchanged, still small and side by side
+      in one row directly above the card, not stacked and not full width.
+- [ ] Open a card list dialog (a browse or target prompt that lists cards): the action
+      chips inside each list row are unchanged too.
+- [ ] Resize to 1280x720 and then to 1920x1080, hovering a multi-action hand card at each:
+      the buttons still fill the zoom's width at both sizes, and the label text grows with
+      the bigger card rather than staying tiny.
+- [ ] Rotate a phone-sized viewport into the portrait duel layout (device toolbar, e.g.
+      390x844) and hover a multi-action hand card: the stack stays inside the rotated board
+      and every button is still comfortably tappable.
+- [ ] Confirm the browser console shows no errors during the above.

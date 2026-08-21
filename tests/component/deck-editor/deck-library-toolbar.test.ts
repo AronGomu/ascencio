@@ -16,13 +16,14 @@ function callbacks() {
 }
 
 describe("DeckLibrary toolbar layout", () => {
-  it("search, sort, import and create share the tools row", () => {
+  it("search, sort, collection, import and create share the tools row", () => {
     render(DeckLibrary, { decks: [deckFixture()], ...callbacks() });
     const toolsRow = document.querySelector('[data-cy="deck-library-tools"]');
     expect(toolsRow).not.toBeNull();
     for (const cy of [
       "deck-library-search-field",
       "deck-library-sort-field",
+      "deck-library-collection",
       "deck-library-import",
       "deck-library-create",
     ]) {

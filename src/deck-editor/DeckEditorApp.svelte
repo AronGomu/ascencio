@@ -53,6 +53,12 @@
      reports where it wants to go and waits for the shell to echo the new
      `deckId` back. A host that swallows the callback keeps the library. */
   export let onnavigate: (route: DeckEditorRoute) => void = () => undefined;
+  /* Leaving the editor for the collection, reported for the same reason: the
+     collection is a route of the shell's, in the same two worlds this editor
+     binds, and `DeckEditorRoute` names a deck rather than a destination. A host
+     that swallows this keeps the library, so the button is inert rather than
+     wrong wherever the domain is mounted alone. */
+  export let oncollection: () => void = () => undefined;
 
   /* Every card this build packages, fetched once per page: the editor may only
      offer what the duel can draw, so both await the same read. It is ~10 MB of
@@ -326,6 +332,7 @@
     oncreate={(name) => runAndSync(controller?.createDeck(name))}
     onopen={(id) => onnavigate({ deckId: id })}
     onimport={() => openLibraryModal("import")}
+    {oncollection}
     defaultDeckId={state.defaultDeckId}
     favouriteDeckIds={state.favouriteDeckIds}
     onfavourite={(id) => void controller?.toggleFavourite(id)}

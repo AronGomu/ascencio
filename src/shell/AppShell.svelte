@@ -9,6 +9,7 @@
   import { storyBattleRequest } from "./handoff/story-battle-request.ts";
   import { STAGE_CONTEXT_KEY } from "./index.ts";
   import {
+    collectionRoute,
     deckRoute,
     deckRouteContext,
     HOME_ROUTE,
@@ -494,6 +495,7 @@
                 : null}
               onnavigate={({ deckId }) =>
                 store.navigate(deckRoute(context, deckId))}
+              oncollection={() => store.navigate(collectionRoute(context))}
             />
           {:catch error}
             <DomainLoadError label="Deck Editor" cy="decks" {error} />

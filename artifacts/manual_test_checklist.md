@@ -3214,8 +3214,8 @@ the encounter's fixed preset for the opponent.
 
 The collection is a browsable card list for one world at a time: `#/story/collection` is the
 loaded save's own cards, `#/free-play/collection` is the whole card database. Both use the set
-list's grid and the shared card preview panel. Nothing links to them yet — T30 adds the entry
-buttons — so reach them by typing the hash.
+list's grid and the shared card preview panel. The steps below reach them by typing the hash, so
+the screen is checked on its own; the button that opens it is T30's.
 
 ### The story collection is the save's own cards, at its own counts
 
@@ -3261,3 +3261,41 @@ buttons — so reach them by typing the hash.
 
 - [ ] The shop's set list, the booster reveal and the sell screen look and behave exactly as before.
 - [ ] The deck editor opens and edits normally from both `#/free-play/decks` and `#/story/decks`.
+
+## T30 collection-entry-points
+
+The collection stops being a hash you have to know. The deck menu — the same one screen in both
+worlds — now carries a **Collection** button, and it opens the collection belonging to the world
+that menu is bound to. Every step below is a round trip: go in, and come back out to the menu you
+pressed the button in. A door that only opens one way is the failure here.
+
+### Free play: in and back out
+
+- [ ] From the main menu press **Free Play**, then **Deck builder**. You are on `#/free-play/decks`.
+- [ ] The toolbar row above the deck list reads: search box, **Sort**, **Collection**, **Import Deck**, **Create deck**.
+- [ ] Press **Collection**. The address bar becomes `#/free-play/collection` and the heading reads **Card database**.
+- [ ] Press **← Back**. You land back on `#/free-play/decks`, with your free-play decks listed exactly as you left them.
+- [ ] Do the round trip a second time. Nothing accumulates: still one collection screen, still one deck library, no duplicated toolbar.
+- [ ] Use the browser's own Back button instead of **← Back** the third time. It also returns you to `#/free-play/decks`.
+
+### A story save: in and back out
+
+- [ ] From the main menu press **Continue** (or **Load**) into a save that owns some cards, and get to the map.
+- [ ] Press the deck icon in the top bar. You land on `#/story/decks` — this save's decks, not free play's library. The banner above the list names the save.
+- [ ] Press **Collection**. The address bar becomes `#/story/collection` and the heading reads **Your collection** — your own cards, with their counts, and the **Show every existing card** checkbox.
+- [ ] Press **← Back**. You land back on `#/story/decks`, still naming the same save, still listing that save's decks.
+- [ ] Press the top bar's deck icon again from the map, then **Collection**, then **← Back**, then the browser's Back button repeatedly. You walk back out through `#/story/decks` and never get stranded on a screen with no way off it.
+
+### The two worlds never cross
+
+- [ ] Open the collection from `#/free-play/decks`. It is the whole database, with no counts and no **Show every existing card** checkbox.
+- [ ] Without reloading, go to `#/story/decks` and open the collection from there. It is the save's own cards, with counts. The free-play database is not what you see.
+- [ ] Go back to `#/free-play/decks` and open the collection again. It is the database again — the previous save's cards are not still on screen.
+- [ ] With no save loaded (DevTools → Application → Storage → **Clear site data**, reload), `#/free-play/decks` still offers **Collection** and it still opens.
+
+### Nothing else moved
+
+- [ ] **Import Deck** and **Create deck** still do what they always did, and **Create deck** is still the last button in the row.
+- [ ] Opening a deck, editing it and returning to the library all behave exactly as before, in both worlds.
+- [ ] Narrow the window until the toolbar wraps onto two lines. All five controls are still reachable and none is cut off.
+- [ ] Tab through the toolbar with the keyboard. Focus reaches **Collection** between **Sort** and **Import Deck**, its focus ring is visible, and Enter opens the collection.

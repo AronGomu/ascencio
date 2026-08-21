@@ -43,6 +43,17 @@ export function deckRoute(context: RouteContext, id: DeckId | null): AppRoute {
     : { kind: "free-play-deck", deckId: id };
 }
 
+/** The collection route `context` owns, in the shape `deckRoute` above has for
+    decks. It is a function for the same reason that one is: the deck menu that
+    offers the collection is one screen serving both worlds, and a route
+    hardcoded there would open one world's cards from the other's library
+    (ADR-051). */
+export function collectionRoute(context: RouteContext): AppRoute {
+  return context === "story"
+    ? { kind: "story-collection" }
+    : { kind: "free-play-collection" };
+}
+
 /** The context a deck route names, or `null` when the route names no deck
     library — so one deck-editor region can serve both worlds and hand
     navigation back in the context it was reached from. */
@@ -96,10 +107,7 @@ export function parseAppRoute(hash: string): AppRoute {
 
   if (segments.length === 2 && context !== null) {
     if (second === "decks") return deckRoute(context, null);
-    if (second === "collection")
-      return context === "story"
-        ? { kind: "story-collection" }
-        : { kind: "free-play-collection" };
+    if (second === "collection") return collectionRoute(context);
     return HOME_ROUTE;
   }
 

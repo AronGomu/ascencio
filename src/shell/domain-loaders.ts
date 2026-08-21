@@ -34,6 +34,10 @@ export type DomainLoader<
 export type DeckEditorDomainProps = DeckEditorRoute & {
   readonly context: DeckContext;
   readonly onnavigate: (route: DeckEditorRoute) => void;
+  /** Leaving the deck menu for the cards the same world owns. Reported rather
+      than routed, because `DeckEditorRoute` names a deck and this names a
+      screen the shell owns the URL of. */
+  readonly oncollection: () => void;
 };
 
 /** The duel is reached through the battle facade, which its public entry

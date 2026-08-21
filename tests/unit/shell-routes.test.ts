@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { deckId } from "../../src/decks/index.ts";
 import {
+  collectionRoute,
   deckRoute,
   deckRouteContext,
   formatAppRoute,
@@ -191,6 +192,15 @@ describe("deckRoute", () => {
       kind: "story-deck",
       deckId: deckId("deck-1"),
     });
+  });
+});
+
+describe("collectionRoute", () => {
+  it("keeps the collection inside the context it was reached from", () => {
+    expect(collectionRoute("free-play")).toEqual({
+      kind: "free-play-collection",
+    });
+    expect(collectionRoute("story")).toEqual({ kind: "story-collection" });
   });
 });
 

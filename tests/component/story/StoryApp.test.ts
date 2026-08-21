@@ -15,6 +15,7 @@ import {
 afterEach(async () => {
   cleanup();
   vi.unstubAllGlobals();
+  globalThis.location.hash = "";
   await deleteDB(STORY_SAVES_DATABASE_NAME);
 });
 
@@ -183,6 +184,25 @@ describe("StoryApp", () => {
     expect(
       shopContainer.querySelector('[data-cy="story-top-bar"]'),
     ).not.toBeNull();
+  });
+
+  /* The top bar is how a player inside a save reaches their decks, and from
+     there their collection. `StoryApp` passes no `ondecks`, so what the button
+     does is `StoryTopBar`'s own default — asserted here from the story root,
+     because the requirement is about the bar the story actually mounts. */
+  it("top bar decks button opens the story's own deck builder", async () => {
+    const mapState = {
+      ...createInitialStoryState(),
+      screen: "map" as const,
+      savedScreen: "map" as const,
+    };
+    render(StoryApp, { resumeState: mapState });
+
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "Open deck builder" }));
+
+    expect(globalThis.location.hash).toBe("#/story/decks");
   });
 
   /* Selling is irreversible and priced by rarity, and rarity is only known

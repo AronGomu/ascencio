@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
-import { cleanup, render } from "@testing-library/svelte";
+import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { deleteDB } from "idb";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
@@ -125,6 +125,16 @@ function query(value: string): HTMLElement | null {
   return document.querySelector(`[data-cy="${value}"]`);
 }
 
+/** Waits for one `data-cy` the shell or a lazily loaded domain has yet to
+    render, and hands it back. */
+async function appears(value: string): Promise<HTMLElement> {
+  return await vi.waitFor(() => {
+    const found = query(value);
+    expect(found, `${value} should render`).not.toBeNull();
+    return found!;
+  }, REAL_IMPORT);
+}
+
 /** The library rows, once the editor has read whichever repository its context
     resolved to. */
 async function libraryDeckNames(): Promise<readonly string[]> {
@@ -206,6 +216,45 @@ describe("deck editor context binding", () => {
     renderAt("#/story/decks", storySave(["saved-one"]));
     const story = await libraryDeckNames();
     expect(story).toStrictEqual(["Deck saved-one"]);
+  });
+
+  /* The way in to the collection, and the way back out of it. A player who can
+     reach their cards but not leave them is inside a one-way door, so both
+     halves of the round trip are one test: the deck menu the button was pressed
+     in is the deck menu Back has to land on, in the world it was pressed in. */
+  it("free play's deck menu opens the free-play collection and comes back", async () => {
+    await seedFreePlayDeck("free-one", "Free Deck One");
+    const { hash } = renderAt("#/free-play/decks");
+
+    await fireEvent.click(await appears("deck-library-collection"));
+
+    expect(hash()).toBe("#/free-play/collection");
+    await appears("collection-screen");
+    /* Free play owns everything, so it is the whole database rather than a
+       collection, and nothing there is counted. */
+    expect(query("collection-show-all")).toBeNull();
+
+    await fireEvent.click(await appears("collection-back"));
+
+    expect(hash()).toBe("#/free-play/decks");
+    expect(await libraryDeckNames()).toContain("Free Deck One");
+  });
+
+  it("a save's deck menu opens the story collection and comes back", async () => {
+    const { hash } = renderAt("#/story/decks", storySave(["saved-one"]));
+
+    await fireEvent.click(await appears("deck-library-collection"));
+
+    expect(hash()).toBe("#/story/collection");
+    await appears("collection-screen");
+    /* The save's own cards, not the database: what it owns is the list, and
+       everything else is behind the checkbox this world alone offers. */
+    expect(query("collection-show-all")).not.toBeNull();
+
+    await fireEvent.click(await appears("collection-back"));
+
+    expect(hash()).toBe("#/story/decks");
+    expect(await libraryDeckNames()).toStrictEqual(["Deck saved-one"]);
   });
 
   /* Back out of a story deck route and the editor is over free play again. The

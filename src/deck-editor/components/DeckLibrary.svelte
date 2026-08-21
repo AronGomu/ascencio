@@ -17,6 +17,11 @@
   export let oncreate: (name: string) => unknown | Promise<unknown>;
   export let onopen: (id: DeckId) => unknown | Promise<unknown>;
   export let onimport: () => void;
+  /** Consulting the cards this context owns. Reported rather than linked, like
+      every other navigation the editor offers: the collection is two routes
+      over one screen and only the host knows which world this library is
+      bound to. */
+  export let oncollection: () => void = () => undefined;
   /** Which row wears the badge; the controller owns the value, not the click. */
   export let defaultDeckId: DeckId | null = null;
   export let favouriteDeckIds: readonly DeckId[] = [];
@@ -129,6 +134,12 @@
         >
       </select>
     </label>
+    <button
+      type="button"
+      class="secondary"
+      data-cy="deck-library-collection"
+      onclick={oncollection}>Collection</button
+    >
     <button
       type="button"
       class="secondary"

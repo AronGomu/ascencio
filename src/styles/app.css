@@ -670,10 +670,22 @@ progress {
   border-color: var(--accent-deep);
 }
 
-.dialog-panel .result-panel {
+.dialog-panel .result-panel,
+.dialog-panel .error-panel {
   padding: 0;
   border: none;
   background: none;
+}
+
+/* A dead duel is the one modal the player cannot dismiss, so the panel itself
+   carries the danger edge the in-flow error panel would have shown. */
+.duel-error-dialog-panel {
+  border-color: var(--danger-border);
+}
+
+.restore-failure {
+  margin: 0;
+  color: var(--danger);
 }
 
 .phase-pill {

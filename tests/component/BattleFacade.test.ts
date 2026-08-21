@@ -1,7 +1,14 @@
 // @vitest-environment jsdom
 
-import { cleanup, render } from "@testing-library/svelte";
+import { cleanup, fireEvent, render } from "@testing-library/svelte";
+import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+const diagnosticsSpies = vi.hoisted(() => ({ download: vi.fn() }));
+
+vi.mock("../../src/battle/app/diagnostics/download-diagnostics.ts", () => ({
+  downloadDuelDiagnostics: diagnosticsSpies.download,
+}));
 
 const workerClientSpies = vi.hoisted(() => {
   const runtimeSnapshotId = "a".repeat(64);
@@ -18,7 +25,7 @@ const workerClientSpies = vi.hoisted(() => {
     },
     __APP_BUILD_ID__: "component-test",
   });
-  return { dispose: vi.fn() };
+  return { dispose: vi.fn(), requestDiagnostics: vi.fn(), restore: vi.fn() };
 });
 
 vi.mock("../../src/battle/app/DuelWorkerClient.ts", () => {
@@ -60,8 +67,17 @@ vi.mock("../../src/battle/app/DuelWorkerClient.ts", () => {
       return false;
     }
 
+    diagnosticsAccepted = false;
+    restoreAccepted = true;
+
     requestDiagnostics() {
-      return false;
+      workerClientSpies.requestDiagnostics();
+      return this.diagnosticsAccepted;
+    }
+
+    restore() {
+      workerClientSpies.restore();
+      return this.restoreAccepted;
     }
 
     async replace() {
@@ -87,11 +103,20 @@ import {
   parseBattleRequest,
   type BattleFacadeResult,
 } from "../../src/battle/index.ts";
+import type { DuelDiagnosticTrace } from "../../src/battle/duel/contracts/duel-diagnostics.ts";
 import type { DuelResult } from "../../src/battle/duel/contracts/duel-result.ts";
+import type { PlayerPrompt } from "../../src/battle/duel/contracts/player-prompt.ts";
+import {
+  choiceId,
+  promptId,
+  snapshotId,
+} from "../../src/battle/duel/contracts/ids.ts";
 
 interface MockedWorkerInstance {
   readonly context: { workerGeneration: number; sessionGeneration: number };
   readonly listeners: Set<(received: unknown) => void>;
+  diagnosticsAccepted: boolean;
+  restoreAccepted: boolean;
 }
 interface MockedWorkerClientCtor {
   instances: MockedWorkerInstance[];
@@ -105,10 +130,46 @@ const HOSTED_REQUEST = parseBattleRequest({
   opponent: { kind: "preset", deckId: "shaddoll" },
 });
 
+const RESTORED_PROMPT: PlayerPrompt = {
+  id: promptId("restored-decision"),
+  kind: "yesNo",
+  player: 0,
+  title: "Activate the effect?",
+  choices: [
+    { id: choiceId("restored-yes"), label: "Yes", action: "yes" },
+    { id: choiceId("restored-no"), label: "No", action: "no" },
+  ],
+  minimum: 1,
+  maximum: 1,
+  cancelable: false,
+  ordered: false,
+};
+
+const TRACE: DuelDiagnosticTrace = {
+  schemaVersion: 2,
+  sensitivity: "contains-production-seed",
+  presetId: "mvp-preset-v1",
+  snapshotId: snapshotId("a".repeat(64)),
+  seed: ["1", "2", "3", "4"],
+  coreVersion: [11, 0],
+  revisions: {
+    enginePackage: "ocgcore-wasm",
+    engineVersion: "0.1.2",
+    babelCdb: "babel",
+    cardScripts: "scripts",
+    distribution: "strings",
+    activeImageManifestSha256: "b".repeat(64),
+  },
+  entries: [{ sequence: 1, kind: "message", messageType: 15 }],
+};
+
 afterEach(() => {
   cleanup();
   localStorage.clear();
   workerClientSpies.dispose.mockReset();
+  workerClientSpies.requestDiagnostics.mockReset();
+  workerClientSpies.restore.mockReset();
+  diagnosticsSpies.download.mockReset();
   mockedWorkerClientCtor.instances.length = 0;
 });
 
@@ -140,6 +201,55 @@ function emitFatalWorkerError(): void {
       recoverable: false,
     },
   });
+}
+
+/* The rejection the recovery dialog exists for: `canRestore` rides the error
+   itself, because the response that killed the duel is recorded during the
+   very command that fails and no state event follows it (ADR-048). */
+function emitRejectedResponse(canRestore?: boolean): void {
+  emit({
+    type: "error",
+    error: {
+      code: "engine_error",
+      message: "ocgcore rejected the previous response",
+      recoverable: false,
+    },
+    ...(canRestore === undefined ? {} : { canRestore }),
+  });
+}
+
+function element(dataCy: string): HTMLElement {
+  const found = document.querySelector<HTMLElement>(`[data-cy="${dataCy}"]`);
+  if (found === null) throw new Error(`Missing ${dataCy}`);
+  return found;
+}
+
+async function startDuelFromPicker(
+  user: ReturnType<typeof userEvent.setup>,
+): Promise<void> {
+  await user.selectOptions(
+    element("deck-picker-player-select") as HTMLSelectElement,
+    "preset:burning-abyss",
+  );
+  await user.click(element("deck-picker-start-button"));
+}
+
+/* A started duel is the only state the recovery dialog is reachable from: it
+   is what gives the session a trace to download and a duel to rebuild. */
+async function failStartedDuel(
+  canRestore?: boolean,
+): Promise<ReturnType<typeof userEvent.setup>> {
+  const user = userEvent.setup();
+  await renderFacade(null, vi.fn());
+  await startDuelFromPicker(user);
+
+  emitRejectedResponse(canRestore);
+  await vi.waitFor(() =>
+    expect(
+      document.querySelector('[data-cy="duel-error-dialog"]'),
+    ).not.toBeNull(),
+  );
+  return user;
 }
 
 async function renderFacade(
@@ -233,5 +343,123 @@ describe("BattleFacade", () => {
     );
 
     expect(mockedWorkerClientCtor.instances).toHaveLength(1);
+  });
+
+  it("a fatal error opens the recovery dialog", async () => {
+    await failStartedDuel();
+
+    expect(element("duel-error-dialog").getAttribute("role")).toBe("dialog");
+    expect(element("duel-error-dialog").getAttribute("aria-modal")).toBe(
+      "true",
+    );
+    expect(element("duel-error-heading").textContent).toBe(
+      "ocgcore rejected the previous response",
+    );
+    expect(element("duel-error-code").textContent).toContain("engine_error");
+    expect(element("duel-error-sensitive-note").textContent).toContain("seed");
+    expect(document.activeElement).toBe(element("duel-error-heading"));
+    /* The in-flow panel is the recoverable path only; a dead duel is modal. */
+    expect(document.querySelector('[data-cy="app-error-panel"]')).toBeNull();
+  });
+
+  it("restore is hidden when the trace holds no human response", async () => {
+    await failStartedDuel();
+
+    expect(
+      document.querySelector('[data-cy="duel-error-restore-button"]'),
+    ).toBeNull();
+    expect(element("duel-error-retry-button")).toBeDefined();
+    expect(element("duel-error-download-button")).toBeDefined();
+  });
+
+  it("restore calls the worker and closes on success", async () => {
+    const user = await failStartedDuel(true);
+
+    await user.click(element("duel-error-restore-button"));
+    expect(workerClientSpies.restore).toHaveBeenCalledTimes(1);
+
+    emit({ type: "restored" });
+    emit({ type: "prompt", prompt: RESTORED_PROMPT });
+
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector('[data-cy="duel-error-dialog"]'),
+      ).toBeNull(),
+    );
+    expect(element("prompt-controls-heading").textContent).toBe(
+      "Activate the effect?",
+    );
+  });
+
+  it("a failed restore keeps the dialog open", async () => {
+    const user = await failStartedDuel(true);
+
+    await user.click(element("duel-error-restore-button"));
+    emit({ type: "restore_failed", reason: "replay_diverged" });
+
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector('[data-cy="duel-error-restore-failure"]'),
+      ).not.toBeNull(),
+    );
+    expect(element("duel-error-dialog")).toBeDefined();
+    expect(element("duel-error-restore-failure").textContent).toContain(
+      "different",
+    );
+    /* The offer that just proved impossible goes away; the report does not. */
+    expect(
+      document.querySelector('[data-cy="duel-error-restore-button"]'),
+    ).toBeNull();
+    expect(
+      (element("duel-error-download-button") as HTMLButtonElement).disabled,
+    ).toBe(false);
+  });
+
+  /* A refusal is answered by the client, not the Worker, so nothing comes back
+     to say it happened. Silence here is the failure this dialog exists to
+     prevent. */
+  it("a restore the client refuses says so instead of doing nothing", async () => {
+    const user = await failStartedDuel(true);
+    latestWorker().restoreAccepted = false;
+
+    await user.click(element("duel-error-restore-button"));
+
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector('[data-cy="duel-error-restore-failure"]'),
+      ).not.toBeNull(),
+    );
+    expect(element("duel-error-restore-failure").textContent).toContain(
+      "could not be handed back to the engine",
+    );
+    expect(element("duel-error-dialog")).toBeDefined();
+    expect(
+      (element("duel-error-restore-button") as HTMLButtonElement).disabled,
+    ).toBe(false);
+  });
+
+  it("download still works from the dialog", async () => {
+    const user = await failStartedDuel(true);
+    latestWorker().diagnosticsAccepted = true;
+
+    await user.click(element("duel-error-download-button"));
+    expect(workerClientSpies.requestDiagnostics).toHaveBeenCalledTimes(1);
+    emit({ type: "diagnostics", trace: TRACE });
+
+    await vi.waitFor(() =>
+      expect(diagnosticsSpies.download).toHaveBeenCalledTimes(1),
+    );
+    expect(element("duel-error-message").textContent).toContain(
+      "Diagnostics downloaded",
+    );
+  });
+
+  it("Escape does not dismiss a fatal dialog", async () => {
+    await failStartedDuel(true);
+
+    await fireEvent.keyDown(document.body, { key: "Escape" });
+
+    expect(element("duel-error-dialog")).toBeDefined();
+    expect(element("duel-error-restore-button")).toBeDefined();
   });
 });

@@ -3,6 +3,7 @@
   import { SvelteSet } from "svelte/reactivity";
   import type { DuelDeckSelection } from "../duel/contracts/duel-deck-selection.ts";
   import type { DuelDiagnosticTrace } from "../duel/contracts/duel-diagnostics.ts";
+  import type { DuelError } from "../duel/contracts/duel-error.ts";
   import type { PlayerPrompt } from "../duel/contracts/player-prompt.ts";
   import {
     snapshotId,
@@ -27,6 +28,7 @@
   import { CardPreviewPanel } from "../../shell/index.ts";
   import DuelRail from "./components/DuelRail.svelte";
   import DeckPicker from "./components/DeckPicker.svelte";
+  import DuelErrorDialog from "./components/DuelErrorDialog.svelte";
   import DuelResultDialog from "./components/DuelResultDialog.svelte";
   import MenuDialog from "./components/MenuDialog.svelte";
   import SettingsDialog from "./components/SettingsDialog.svelte";
@@ -201,6 +203,24 @@
   let injectDuelFieldFailure = false;
   let diagnosticPending = false;
   let diagnosticMessage: string | null = null;
+  /* The error a restore was asked for. `restore` reports its outcome as an
+     event, not a promise, so the pending label lives until the store either
+     retires that error (rebuilt), types a failure against it, or replaces it
+     with the command watchdog's own `process_timeout`. */
+  let restoreRequestedFor: DuelError | null = null;
+  /* The error whose restore the client refused outright. A refusal never
+     reaches the Worker, so no `restore_failed` follows it: without this the
+     button would do nothing and say nothing about it. Both are keyed to the
+     error so neither outcome survives into the next failure. */
+  let restoreRefusedFor: DuelError | null = null;
+  $: restorePending =
+    restoreRequestedFor !== null &&
+    $duel.error === restoreRequestedFor &&
+    $duel.restoreFailure === null;
+  $: restoreFailure =
+    restoreRefusedFor !== null && $duel.error === restoreRefusedFor
+      ? ("refused" as const)
+      : $duel.restoreFailure;
   let downloadedDiagnostics = $duel.diagnostics;
   let snapshotStore: SnapshotStore | null = null;
   let snapshotStorageStatus: SnapshotStorageStatus = {
@@ -778,6 +798,12 @@
       diagnosticMessage = "Diagnostics are unavailable for this session.";
   }
 
+  function requestRestore(): void {
+    const accepted = duel.restore();
+    restoreRequestedFor = accepted ? $duel.error : null;
+    restoreRefusedFor = accepted ? null : $duel.error;
+  }
+
   /* Seeded with the bundled decks so the picker is never briefly empty and
      Start is never briefly dead: reading the local library is what takes a
      moment, and it only ever adds rows. */
@@ -1203,7 +1229,20 @@
     </section>
   {/if}
 
-  {#if $duel.error}
+  {#if $duel.error && $duel.status === "failed"}
+    <DuelErrorDialog
+      error={$duel.error}
+      canRestore={$duel.canRestore}
+      diagnosticsAvailable={$duel.context.sessionGeneration > 0}
+      {diagnosticPending}
+      {diagnosticMessage}
+      {restorePending}
+      {restoreFailure}
+      ondownload={requestDiagnostics}
+      onrestore={requestRestore}
+      onretry={() => void duel.retry()}
+    />
+  {:else if $duel.error}
     <section
       class:recoverable={$duel.error.recoverable}
       class="message-panel error-panel"
@@ -1213,9 +1252,7 @@
     >
       <div data-cy="app-error-body">
         <p class="eyebrow" data-cy="app-error-eyebrow">
-          {$duel.status === "failed"
-            ? "Duel stopped"
-            : "Choice needs attention"}
+          Choice needs attention
         </p>
         <h2
           id="duel-error-heading"
@@ -1228,35 +1265,12 @@
         <p data-cy="app-error-code">Error code: {$duel.error.code}</p>
       </div>
       <div class="button-row" data-cy="app-error-actions">
-        {#if $duel.error.recoverable && $duel.status !== "failed"}
-          <button
-            type="button"
-            class="secondary"
-            data-cy="app-dismiss-error-button"
-            onclick={() => void dismissRecoverableError()}>Dismiss</button
-          >
-        {:else}
-          <button
-            type="button"
-            data-cy="app-retry-duel-button"
-            onclick={() => void duel.retry()}>Try again</button
-          >
-        {/if}
-        {#if $duel.context.sessionGeneration > 0 && $duel.status === "failed"}
-          <span class="sensitive-note" data-cy="app-error-sensitive-note"
-            >Contains the production seed.</span
-          >
-          <button
-            type="button"
-            class="secondary"
-            disabled={diagnosticPending}
-            data-cy="app-error-download-diagnostics-button"
-            onclick={requestDiagnostics}
-            >{diagnosticPending
-              ? "Preparing diagnostics…"
-              : "Download diagnostics"}</button
-          >
-        {/if}
+        <button
+          type="button"
+          class="secondary"
+          data-cy="app-dismiss-error-button"
+          onclick={() => void dismissRecoverableError()}>Dismiss</button
+        >
       </div>
     </section>
   {/if}

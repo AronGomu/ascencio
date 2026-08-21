@@ -2426,9 +2426,10 @@ Level 4 or lower monster (Summon or Set) is the case you will hit first.
 ## T12 duel-replay-log-contract
 
 This slice is the engine half of the recovery feature: the Worker learns to rebuild a
-duel from its own recorded responses. Nothing new is visible yet — the button that
-calls it arrives with T13 — so these steps are mostly about proving a normal duel is
-untouched. Run them with `npm run dev` on `#/duel`.
+duel from its own recorded responses. Nothing it added is visible during a healthy
+duel — the button that calls it lives on T13's fatal-error dialog — so these steps are
+mostly about proving a normal duel is untouched. Run them with `npm run dev` on
+`#/duel`.
 
 - [ ] Start a duel with the preset decks and play three or four of your own decisions
       (summon, set, attack, end turn). Everything behaves exactly as before: prompts,
@@ -2436,8 +2437,83 @@ untouched. Run them with `npm run dev` on `#/duel`.
 - [ ] Confirm the browser console shows no errors during the above.
 - [ ] Surrender, then start a fresh duel from the same screen. The new duel starts
       normally and its opening hand is different from the one you just left.
-- [ ] Open the error panel's **Download diagnostics** button after that surrender and
-      confirm a report still downloads, exactly as before this ticket.
-- [ ] Confirm there is still **no** Restore button anywhere: the error panel offers the
-      same actions it did before (download plus restart), and nothing new appears on
-      the field, in the log, or in the settings.
+- [ ] Press the duel result dialog's **Download diagnostics** button after that
+      surrender and confirm a report still downloads, exactly as before this ticket.
+- [ ] Confirm no **Restore** button appears anywhere in a healthy duel: not on the
+      field, not in the duel log, not in the settings, and not on the result dialog
+      after a surrender. (Since T13 it exists, but only on the dialog a *fatal* duel
+      error opens — see `## T13 duel-error-recovery-dialog`.)
+
+## T13 duel-error-recovery-dialog
+
+This slice is the UI half of the recovery feature: a fatal duel error stops being a
+dead end and becomes a dialog offering **Download diagnostics**, **Restore your last
+decision** and **Try again**.
+
+Automated coverage is the hard gate — `tests/component/BattleFacade.test.ts` drives the
+dialog through every branch (opens on a fatal error, hides Restore when the trace holds
+no human response, calls the Worker and closes on success, keeps itself open on a
+failed or refused restore, still downloads, ignores `Escape`), and
+`tests/integration/duel-replay-restore.test.ts` covers the replay behind it. These steps
+confirm the same behaviour in a browser, which no automated suite covers.
+
+Run them with `npm run dev` and open the printed URL at `#/duel`.
+
+### A healthy duel never sees the dialog
+
+- [ ] Start a duel with the preset decks and play three or four of your own decisions
+      (summon, set, attack, end turn). No dialog appears, no Restore button appears,
+      and the field, prompts and duel log behave exactly as before.
+- [ ] Confirm the browser console shows no errors during the above.
+
+### A rejected choice is still just a rejected choice
+
+- [ ] Reach a prompt that asks for a specific number of cards (a tribute or a target
+      selection). Submit a selection the engine refuses, or press the submit control
+      with nothing selected.
+- [ ] The **in-flow** warning panel appears in the page (not a modal), it offers
+      **Dismiss**, and the board behind it stays fully usable. Press Dismiss: the panel
+      goes away and you answer the same prompt again.
+- [ ] No **Restore** button and no **Try again** button appear on that panel. A choice
+      you can answer again is never a duel to rebuild.
+
+### A duel that cannot start offers a dialog, and offers only what it can deliver
+
+- [ ] Open DevTools → Network, reload `#/duel`, right-click the `duel.worker-*.js`
+      request and choose **Block request URL**. Reload the page.
+- [ ] A centred modal dialog appears over a dimmed backdrop. It has a heading naming
+      the failure, a line reading `Error code: worker_error`, and a **Try again**
+      button.
+- [ ] There is **no** Restore button and **no** Download diagnostics button: no duel
+      ever started, so there is no report to download and nothing to rebuild. This is
+      the point of the slice — the dialog must never offer what it cannot deliver.
+- [ ] Press `Escape`. The dialog stays exactly where it is: a dead duel has no safe
+      dismissal.
+- [ ] Click the dimmed area outside the dialog. Nothing is dismissed.
+- [ ] Un-block the request (Network → right-click → **Unblock**), press **Try again**,
+      and confirm the app comes back to the deck picker and a fresh duel starts.
+
+### A duel killed mid-play offers the report and the restore
+
+This needs a real rejection from `ygopro-core`, which is not reproducible on demand —
+there is no failure-injection hook for it. Run this block whenever you do hit one; the
+browser console shows `duel.worker.command.failed` and the dialog heading reads
+`ocgcore rejected the previous response`.
+
+- [ ] The dialog appears over the duel, centred and modal, with the heading above, the
+      `Error code:` line, and the note **Contains the production seed.**
+- [ ] Press **Download diagnostics**. A `ygo-duel-diagnostics-<snapshot>.json` file
+      lands in your downloads and the dialog adds the line
+      "Diagnostics downloaded. The file contains the production seed; share it
+      carefully."
+- [ ] The **Restore your last decision** button sits next to the download button, and
+      is still there after the download. Press it: the label changes to
+      "Rebuilding the duel…" while it works.
+- [ ] The dialog closes on its own and the duel comes back at **your** last decision —
+      the same prompt you answered before it died, with the same board, life points and
+      graveyard. Answer it differently and keep playing.
+- [ ] Confirm the browser console shows no errors after the restore.
+- [ ] If the rebuild fails instead, the dialog stays open, adds a red line saying why
+      (a different question, no decision left to rebuild from, or the rebuild could not
+      run), the **Restore** button disappears, and **Download diagnostics** still works.
+      Nothing fails silently.

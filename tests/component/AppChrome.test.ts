@@ -223,6 +223,26 @@ function emitDuelError(): void {
     });
 }
 
+function emitRecoverableDuelError(): void {
+  const worker =
+    mockedWorkerClientCtor.instances[
+      mockedWorkerClientCtor.instances.length - 1
+    ];
+  if (worker === undefined) throw new Error("No mocked worker client instance");
+  for (const listener of worker.listeners)
+    listener({
+      context: worker.context,
+      event: {
+        type: "error",
+        error: {
+          code: "invalid_response",
+          message: "Select exactly one choice",
+          recoverable: true,
+        },
+      },
+    });
+}
+
 const LINK_FREE_SNAPSHOT: PublicDuelState = {
   ...EMPTY_SNAPSHOT,
   layout: { extraMonsterZones: false },
@@ -465,7 +485,7 @@ describe("App", () => {
     expect(main?.classList.contains("is-duel-viewport")).toBe(false);
   });
 
-  it("restores document scrolling while an in-flow error panel renders", async () => {
+  it("restores document scrolling while the fatal error dialog renders", async () => {
     const user = userEvent.setup();
     await renderReadyApp();
     await startDuelFromPicker(user);
@@ -475,12 +495,34 @@ describe("App", () => {
 
     await vi.waitFor(() =>
       expect(
-        document.querySelector('[data-cy="app-error-panel"]'),
+        document.querySelector('[data-cy="duel-error-dialog"]'),
       ).not.toBeNull(),
     );
     const main = document.querySelector('[data-cy="app-main"]');
     expect(main?.getAttribute("data-duel-viewport")).toBeNull();
     expect(main?.classList.contains("is-duel-viewport")).toBe(false);
+  });
+
+  /* Only a dead duel is modal. A rejected choice is still answerable, so it
+     keeps the in-flow panel and its Dismiss. */
+  it("keeps the dismissable in-flow panel for a recoverable rejection", async () => {
+    const user = userEvent.setup();
+    await renderReadyApp();
+    await startDuelFromPicker(user);
+    emitDuelState(EMPTY_SNAPSHOT);
+    emitPrompt(SHARED_ZONE_PLACE_PROMPT);
+
+    emitRecoverableDuelError();
+
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector('[data-cy="app-error-panel"]'),
+      ).not.toBeNull(),
+    );
+    expect(
+      document.querySelector('[data-cy="app-dismiss-error-button"]'),
+    ).not.toBeNull();
+    expect(document.querySelector('[data-cy="duel-error-dialog"]')).toBeNull();
   });
 
   it("restores document mode for optional HUD", async () => {

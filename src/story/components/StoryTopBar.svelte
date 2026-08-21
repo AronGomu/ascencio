@@ -4,8 +4,11 @@
   export let dp = 0;
   export let inShop = false;
   export let onshop: () => void = () => undefined;
+  /* The story's own deck route, not `#/decks`: that one is free play's library,
+     so the default sent a player inside a save to build decks their save would
+     never see (ADR-051). */
   export let ondecks: () => void = () => {
-    globalThis.location.hash = "#/decks";
+    globalThis.location.hash = "#/story/decks";
   };
 </script>
 

@@ -2851,3 +2851,63 @@ more, so the visual novel must still load only when the player goes there.
 - [ ] Enter the **Card Shop** → **Sell**. The list holds exactly the cards it held before — reading ownership changes nothing, and nothing on this screen consults it yet.
 - [ ] Leave the shop without selling, save to Manual slot 1, reload the page (F5) and load that slot. It opens normally rather than reporting a corrupt save, and the Sell list is unchanged.
 - [ ] In DevTools → Application → IndexedDB → `ygo-story-saves` → `saves`, that record's `state.collection` is a plain map of card code to count, with no rarity and no new field beside it.
+
+## T23 deck-editor-context-binding
+
+One editor now serves two deck libraries, and the route decides which one it writes into.
+`#/free-play/decks` is the database every deck ever built already lives in;
+`#/story/decks` is the deck list inside the save the player would resume. Nothing moves
+between them, so the thing worth a human's time is the separation itself: a deck built in
+a story must never turn up in free play, and vice versa. The banner across the top of the
+editor is what tells the player which one they are in.
+
+The story context is the save Continue would resume — the newer of Manual slot 1 and the
+autosave. A story deck route reached with no save at all goes to the main menu instead of
+opening an empty editor.
+
+### The banner names the world you are editing
+
+- [ ] Open `#/free-play/decks`. A small line above the library reads **Free Play library**.
+- [ ] Open a deck from that library. The banner is still there, still reading **Free Play library**, and the editor's three panels still reach the bottom of the stage with no scrollbar on the region.
+- [ ] Start a story (`#/story` → New Game), play to the city map, and save to Manual slot 1. Now open `#/story/decks`. The banner reads **Story save:** followed by the chapter and the screen that save resumes on, e.g. `The Signal Beneath the City · City map`.
+
+### A story deck does not appear in free play
+
+- [ ] From `#/story/decks`, create a deck named `Story Only`. Add a few cards and let it save.
+- [ ] Navigate to `#/free-play/decks`. `Story Only` is **not** listed. Every free-play deck you already had is.
+- [ ] Reload the page (F5) on `#/free-play/decks`. Still no `Story Only`.
+- [ ] In DevTools → Application → IndexedDB → `ygo-story-decks` → `decks`, there is no record named `Story Only`.
+
+### A free-play deck does not appear in the story
+
+- [ ] From `#/free-play/decks`, create a deck named `Free Only` and let it save.
+- [ ] Navigate to `#/story/decks`. `Free Only` is **not** listed. The save's own decks are.
+- [ ] Reload the page (F5) on `#/story/decks`. Still no `Free Only`, and `Story Only` is still there.
+- [ ] In DevTools → Application → IndexedDB → `ygo-story-saves` → `saves`, the `manual:1` record's `state.decks` holds `Story Only` and nothing named `Free Only`.
+
+### Crossing between the two libraries rebinds the editor
+
+- [ ] With both decks above in place, open `#/story/decks`, then press the browser **Back** button until you land on `#/free-play/decks`. The banner changes to **Free Play library** and the list changes with it — `Story Only` is gone, `Free Only` is there.
+- [ ] Press **Forward** back to `#/story/decks`. The banner and the list swap back. Create one more deck here and confirm it lands in the story list, not the free-play one.
+
+### A story deck edit reaches the save
+
+- [ ] On `#/story/decks`, open `Story Only`, add two more cards, and wait for the editor to report the deck saved.
+- [ ] Go to `#/story` and press **Continue**. The run resumes from the save.
+- [ ] Return to `#/story/decks`. `Story Only` holds the two cards you just added.
+
+### The story's own deck button goes to the story's decks
+
+- [ ] Inside a story run, on the narrative or the city map, click the deck icon in the top bar. It opens the **story** deck library — the banner says `Story save:`, not `Free Play library`.
+
+### A story deck route with no save goes to the main menu
+
+- [ ] In DevTools → Application → IndexedDB, delete the `ygo-story-saves` database, then reload.
+- [ ] Paste `#/story/decks` into the address bar. The main menu appears and the address becomes `#/`. No empty deck editor is shown, and no banner appears.
+- [ ] Paste `#/free-play/decks`. It still opens normally — free play never needs a save.
+
+### Free-play editing is unchanged
+
+- [ ] In `#/free-play/decks`, create, rename, favourite, set as default, duplicate, export and delete a deck. All of it behaves as before, and each survives a reload (F5).
+- [ ] Open `#/free-play/decks/no-such-deck`. The "Deck not found" screen appears; click **Back to Deck Library** and it lands on the free-play library.
+- [ ] Do the same at `#/story/decks/no-such-deck` while a save exists. **Back to Deck Library** lands on the **story** library, not free play.

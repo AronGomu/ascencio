@@ -71,11 +71,18 @@ describe("deck editor route binding", () => {
     expect(query("deck-library")).toBeNull();
   });
 
-  it("shows a typed not-found state with a link back to the library", async () => {
-    mount(deckId("missing"));
+  /* Reported rather than linked: the way back is the library of whichever deck
+     world this mount was bound to, and only the shell knows its URL. */
+  it("shows a typed not-found state with a way back to the library", async () => {
+    const { onnavigate } = mount(deckId("missing"));
     await waitFor(() => expect(query("deck-not-found")).not.toBeNull());
-    expect(query("deck-not-found-back")?.getAttribute("href")).toBe("#/decks");
     expect(query("deck-name-input")).toBeNull();
+
+    await userEvent.setup().click(query("deck-not-found-back")!);
+
+    expect(onnavigate).toHaveBeenCalledWith<[DeckEditorRoute]>({
+      deckId: null,
+    });
   });
 
   it("pushes the deck route when a library entry is opened", async () => {

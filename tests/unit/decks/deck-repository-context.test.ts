@@ -11,12 +11,15 @@ import {
   DeckStorageError,
   IndexedDbDeckRepository,
 } from "../../../src/decks/indexeddb-deck-repository.ts";
+import { storyCardOwnership } from "../../../src/story/decks/card-ownership.ts";
 import { createStoryDeckRepository } from "../../../src/story/decks/story-deck-repository.ts";
 import { reduceStory } from "../../../src/story/model/story-reducer.ts";
 import {
   createInitialStoryState,
   type StoryState,
 } from "../../../src/story/model/story-state.ts";
+
+type StoryCollection = StoryState["collection"];
 import {
   deckDatabaseNames,
   deckDatabaseRows,
@@ -56,12 +59,15 @@ function deckRecord(id: string): DeckRecord {
 
 /** A story save the adapter can edit, driven by the real reducer so a context
     that resolves to it is exercised the way the editor will use it. */
-function storySave(decks: readonly string[]) {
+function storySave(decks: readonly string[], collection: StoryCollection = {}) {
   let state: StoryState = {
     ...createInitialStoryState(),
+    collection: { ...collection },
     decks: decks.map((id) => storyDeckFixture(id)),
   };
   return {
+    label: "Test Save",
+    ownership: storyCardOwnership(state),
     createRepository: () =>
       createStoryDeckRepository({
         readState: () => state,
@@ -120,6 +126,32 @@ describe("resolveDeckRepository", () => {
        much as create the free-play library. */
     handle.close();
     expect(await deckDatabaseNames()).not.toContain(DECK_DATABASE_NAME);
+  });
+
+  /* The pairing T22 asked for: a resolved handle answers "which decks" and
+     "what does this player own" from one context, so a story repository can
+     never arrive next to free play's unlimited ownership. Free play's half is
+     derived here rather than supplied, so no caller can get it wrong at all. */
+  it("free play resolves to unlimited ownership", async () => {
+    const handle = await resolveDeckRepository({ kind: "free-play" });
+    handle.close();
+
+    expect(handle.ownership.isUnlimited).toBe(true);
+    expect(handle.ownership.ownedCount(89631139)).toBe(
+      Number.POSITIVE_INFINITY,
+    );
+  });
+
+  it("a story context resolves to the save's own ownership", async () => {
+    const handle = await resolveDeckRepository({
+      kind: "story",
+      ...storySave(["saved-one"], { 89631139: 2 }),
+    });
+    handle.close();
+
+    expect(handle.ownership.isUnlimited).toBe(false);
+    expect(handle.ownership.ownedCount(89631139)).toBe(2);
+    expect(handle.ownership.ownedCount(46986414)).toBe(0);
   });
 
   it("closing a free-play handle releases the database connection", async () => {

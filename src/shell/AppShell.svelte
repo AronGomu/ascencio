@@ -7,7 +7,14 @@
   } from "./domain-loaders.ts";
   import { createHandoffCoordinator } from "./handoff/handoff-coordinator.ts";
   import { STAGE_CONTEXT_KEY } from "./index.ts";
-  import { deckRoute, deckRouteContext, type AppRoute } from "./routes.ts";
+  import {
+    deckRoute,
+    deckRouteContext,
+    HOME_ROUTE,
+    type AppRoute,
+    type RouteContext,
+  } from "./routes.ts";
+  import type { DeckContext } from "../decks/deck-repository-context.ts";
   import DomainLoadError from "./screens/DomainLoadError.svelte";
   import FreePlayMenuScreen from "./screens/FreePlayMenuScreen.svelte";
   import MainMenuScreen from "./screens/MainMenuScreen.svelte";
@@ -76,6 +83,16 @@
       await (await openStorySaves()).clear(slot);
     },
   };
+
+  /* The story builds its own deck context: the repository over the save, what
+     that save owns and the name the editor puts on screen all come out of one
+     read, so no pairing of them can be got wrong here (ADR-050). Reached
+     through the same lazy import as the saves above — a static one would make
+     the visual novel eager and collapse its chunk into the entry. */
+  async function openStoryDeckContext(): Promise<DeckContext | null> {
+    const story = await import("../story/index.ts");
+    return await story.openStoryDeckContext(saves ?? lazySaves);
+  }
 
   /* What the story is handed when it comes back from a duel: the state that
      was checkpointed before it started, and the one result it produced. Held
@@ -160,10 +177,46 @@
   /* Which deck library the route names, so one editor region serves both
      contexts and hands navigation back in the one it was reached from. */
   $: deckContext = deckRouteContext(route);
+  $: bindDeckContext(deckContext);
 
   function leaveMatch(): void {
     matchStarted = false;
     matchRequest = null;
+  }
+
+  /* Which world the mounted editor writes into, and the world it was bound for.
+     Held apart so moving between a library and one of its decks keeps the one
+     binding: rebuilding it would drop the editing session the story adapter
+     holds in that closure — its favourites, its undo log, its last-opened deck.
+
+     Free play is a value, so the editor is bound before the first paint. A save
+     has to be read first, and until it answers the region shows nothing rather
+     than an editor over the wrong library. */
+  let boundDeckWorld: RouteContext | null = null;
+  let editorContext: DeckContext | null = null;
+  let storyDeckToken = 0;
+
+  function bindDeckContext(world: RouteContext | null): void {
+    if (world === boundDeckWorld) return;
+    boundDeckWorld = world;
+    editorContext = world === "free-play" ? { kind: "free-play" } : null;
+    if (world !== "story") return;
+    const requested = ++storyDeckToken;
+    void openStoryDeckContext().then(
+      (bound) => {
+        if (requested !== storyDeckToken) return;
+        /* No save is loaded, so there are no decks to edit and nothing to name.
+           The main menu is where a story route with nothing to show goes
+           (ADR-051); replaced rather than pushed, because the player asked for
+           a deck library rather than for this correction. */
+        if (bound === null) store.navigate(HOME_ROUTE, { replace: true });
+        else editorContext = bound;
+      },
+      () => {
+        if (requested === storyDeckToken)
+          store.navigate(HOME_ROUTE, { replace: true });
+      },
+    );
   }
 
   const readViewportBox = (): StageBox =>
@@ -230,18 +283,37 @@
   {:else if deckContext !== null}
     {@const context = deckContext}
     <div class="shell-region shell-region--decks" data-cy="shell-region-decks">
-      {#await loaders.decks() then module}
-        <svelte:component
-          this={module.default}
-          deckId={route.kind === "free-play-deck" || route.kind === "story-deck"
-            ? route.deckId
-            : null}
-          onnavigate={({ deckId }) =>
-            store.navigate(deckRoute(context, deckId))}
-        />
-      {:catch error}
-        <DomainLoadError label="Deck Editor" cy="decks" {error} />
-      {/await}
+      <!-- Keyed on the world, so crossing between the two deck libraries — with
+           Back, or a pasted hash — mounts a new editor rather than handing the
+           old one a new banner. The repository is opened once per mount, so a
+           reused instance would keep writing into the library it was mounted
+           for while naming the one the player is now looking at. -->
+      {#key context}
+        {#if editorContext === null}
+          <!-- The save behind a story deck route is still being read. Nothing
+               of the editor mounts until it is found, so a route with no save
+               never becomes an editor over the free-play library. -->
+          <p class="visually-hidden" data-cy="story-decks-pending">
+            Opening your story decks
+          </p>
+        {:else}
+          {@const bound = editorContext}
+          {#await loaders.decks() then module}
+            <svelte:component
+              this={module.default}
+              context={bound}
+              deckId={route.kind === "free-play-deck" ||
+              route.kind === "story-deck"
+                ? route.deckId
+                : null}
+              onnavigate={({ deckId }) =>
+                store.navigate(deckRoute(context, deckId))}
+            />
+          {:catch error}
+            <DomainLoadError label="Deck Editor" cy="decks" {error} />
+          {/await}
+        {/if}
+      {/key}
     </div>
   {:else if route.kind === "admin"}
     <div class="shell-region shell-region--admin" data-cy="shell-region-admin">

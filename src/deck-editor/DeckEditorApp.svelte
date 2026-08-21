@@ -35,8 +35,15 @@
   import YdkExport from "./components/YdkExport.svelte";
   import YdkImport from "./components/YdkImport.svelte";
 
-  /** Which deck the app route asks for; `null` is the library at `#/decks`. */
+  /** Which deck the app route asks for; `null` is the context's library. */
   export let deckId: DeckId | null = null;
+  /** Which of the two deck worlds this mount edits: the free-play library, or
+      the decks a story save owns. The shell resolves it from the route, and
+      every repository, ownership reader and banner below follows from it.
+
+      Defaulted rather than required so a harness that mounts the domain alone
+      still opens the library a player would see; the shell always says. */
+  export let context: DeckContext = { kind: "free-play" };
   /* The route is a controlled prop: the domain never writes the URL itself, it
      reports where it wants to go and waits for the shell to echo the new
      `deckId` back. A host that swallows the callback keeps the library. */
@@ -86,10 +93,13 @@
      copy completes, or a second editor session would write into the database
      the next attempt is about to overwrite. */
   let migrationError: DeckMigrationError | null = null;
-  /* The world whose decks this mount edits. Free play until T23 hands the
-     editor the context its route names; the resolver is what makes the two
-     worlds one code path either way. */
-  const context: DeckContext = { kind: "free-play" };
+  /* What the banner says. Free play is named by this file because the name is
+     presentation; a save names itself, because only the story knows which one
+     the player is in. */
+  $: contextLabel =
+    context.kind === "free-play"
+      ? "Free Play library"
+      : `Story save: ${context.label}`;
 
   /* Applying the route reads IndexedDB, so it is watched here rather than
      from a reactive statement: `routing` keeps one application in flight and
@@ -230,6 +240,14 @@
   <title>Deck Editor · YGO Story Duel Simulator</title>
 </svelte:head>
 
+<!-- Which world is being edited, on screen wherever the editor is: the two deck
+     libraries look alike, and a player who cannot tell them apart cannot tell
+     where a deck they just built went. Rendered once here rather than in the
+     library and the deck page, so one document never carries two of it. -->
+<p class="context-banner" data-cy="deck-editor-context-banner">
+  {contextLabel}
+</p>
+
 {#if migrationError !== null}
   <main class="loading error" role="alert" data-cy="deck-migration-error">
     <p data-cy="deck-migration-error-eyebrow">Deck Editor stopped</p>
@@ -263,7 +281,15 @@
     <p data-cy="deck-not-found-message">
       No local deck is stored under “{notFound}”.
     </p>
-    <a href="#/decks" data-cy="deck-not-found-back">Back to Deck Library</a>
+    <!-- Reported rather than linked: the domain does not own the URL, and a
+         hardcoded `#/decks` sent a player editing a story save back into the
+         free-play library. -->
+    <button
+      type="button"
+      class="secondary"
+      data-cy="deck-not-found-back"
+      onclick={() => onnavigate({ deckId: null })}>Back to Deck Library</button
+    >
   </main>
 {:else if !catalogReady || !routeApplied || state.mode === "loading"}
   <main class="loading" aria-busy="true" data-cy="deck-editor-loading">
@@ -354,6 +380,19 @@
 <style>
   :global(body) {
     overflow-x: hidden;
+  }
+
+  /* A fixed 1.5rem: `DeckEditor.svelte` sizes its workspace against the stage
+     minus everything above it, so this bar has to be a height that file can
+     count rather than one that follows the text. */
+  .context-banner {
+    display: flex;
+    align-items: center;
+    min-height: 1.5rem;
+    margin: 0;
+    padding-inline: 0.5rem;
+    color: var(--muted);
+    font-size: 0.72rem;
   }
 
   .loading {

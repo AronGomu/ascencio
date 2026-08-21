@@ -28,12 +28,14 @@ describe("StoryTopBar", () => {
     expect(onshop).toHaveBeenCalledOnce();
   });
 
-  it("deck button navigates to the deck builder", async () => {
+  /* The save's own decks, not free play's library: a player inside a story who
+     builds a deck has to find it in that story (ADR-051). */
+  it("deck button navigates to the story's deck builder", async () => {
     render(StoryTopBar, { dp: 0 });
     const btn = screen.getByRole("button", { name: "Open deck builder" });
     expect(btn).toBeTruthy();
     await userEvent.setup().click(btn);
-    expect(globalThis.location.hash).toBe("#/decks");
+    expect(globalThis.location.hash).toBe("#/story/decks");
   });
 
   it("inside the shop the shop button disappears", () => {

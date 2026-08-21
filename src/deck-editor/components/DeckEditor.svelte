@@ -774,7 +774,9 @@
   }
 
   .editor-layout {
-    --deck-editor-header-h: 4.75rem;
+    /* The header plus the 1.5rem context banner `DeckEditorApp` renders above
+       it, so the workspace still ends exactly at the bottom of the stage. */
+    --deck-editor-header-h: 6.25rem;
 
     display: grid;
     grid-template-columns: var(--preview-w, 15.5rem) minmax(0, 1fr) minmax(

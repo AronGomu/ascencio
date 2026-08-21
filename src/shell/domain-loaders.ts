@@ -11,6 +11,7 @@ import type {
   supportedDuelCardCodes,
 } from "../battle/index.ts";
 import type { DeckEditorRoute } from "../deck-editor/index.ts";
+import type { DeckContext } from "../decks/deck-repository-context.ts";
 import type {
   StoryDuelResolution,
   StoryEncounterRequest,
@@ -27,8 +28,11 @@ export type DomainLoader<
 }>;
 
 /** The deck editor is the one domain the route addresses past its own name,
-    so the shell hands it the deck id and takes navigation back. */
+    so the shell hands it the deck id and takes navigation back — plus the world
+    the route names, because the same editor serves the free-play library and a
+    story save's decks and must never write into the wrong one. */
 export type DeckEditorDomainProps = DeckEditorRoute & {
+  readonly context: DeckContext;
   readonly onnavigate: (route: DeckEditorRoute) => void;
 };
 

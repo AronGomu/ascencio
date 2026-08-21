@@ -248,7 +248,13 @@ describe("public domain APIs are frozen", () => {
          Its `CardOwnership` type and free play's `unlimitedCardOwnership()`
          deliberately do *not* join it — they ship from
          `src/decks/card-ownership.ts`, which records the measurement that
-         keeps them out of this entry. */
+         keeps them out of this entry.
+
+         T23, deliberate widening of one more: `openStoryDeckContext` is the
+         only constructor of a story deck context. The shell binds the editor
+         to it, and building one outside the story would mean exporting the
+         reducer and letting a caller pair one save's decks with another save's
+         ownership. */
       values: [
         "ENCOUNTER_LABELS",
         "STORY_SAVES_DATABASE_NAME",
@@ -256,6 +262,7 @@ describe("public domain APIs are frozen", () => {
         "createStoryDeckRepository",
         "createStorySaveRepository",
         "default",
+        "openStoryDeckContext",
         "restoreStoryState",
         "storyBattleResult",
         "storyCardOwnership",

@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { latestReleasedSets } from "./data/latest-sets.ts";
   import type { ShopSetEntry } from "./data/shop-set-data.ts";
+  import SetTile from "./SetTile.svelte";
   import ShopSetDialog from "./ShopSetDialog.svelte";
 
   export let sets: readonly ShopSetEntry[] | null = null;
@@ -12,8 +14,14 @@
 
   let dialogSetId: string | null = null;
 
-  $: released = (sets ?? []).filter((s) => s.released);
-  $: latestRow = [...released].reverse();
+  $: latestRow = latestReleasedSets(sets ?? []);
+
+  /* Set art is addressed by convention — the build copies every packaged image
+     to `runtime/sets/<set id>.jpg` — so the screen needs no manifest and no
+     probe to name one. A set the build has no art for is the tile's problem,
+     not this function's. */
+  const setImageUrl = (entry: ShopSetEntry): string =>
+    `${import.meta.env.BASE_URL}runtime/sets/${entry.id}.jpg`;
 
   function openDialog(entry: ShopSetEntry): void {
     if (!entry.released) return;
@@ -67,22 +75,12 @@
         </h2>
         <div class="latest-scroll" data-cy="story-shop-latest-scroll">
           {#each latestRow as set (set.id)}
-            <button
-              type="button"
-              class="set-tile set-tile--latest"
-              data-cy={`story-shop-latest-${set.id}`}
-              onclick={() => openDialog(set)}
-            >
-              <span
-                class="tile-name"
-                data-cy={`story-shop-latest-name-${set.id}`}>{set.name}</span
-              >
-              <span
-                class="tile-year"
-                data-cy={`story-shop-latest-year-${set.id}`}
-                >{set.releaseYear}</span
-              >
-            </button>
+            <SetTile
+              {set}
+              imageUrl={setImageUrl(set)}
+              variant="latest"
+              onselect={() => openDialog(set)}
+            />
           {/each}
         </div>
       </section>
@@ -94,22 +92,12 @@
       </h2>
       <div class="set-grid" data-cy="story-shop-set-grid">
         {#each sets as set (set.id)}
-          <button
-            type="button"
-            class="set-tile"
-            class:set-tile--unreleased={!set.released}
-            aria-disabled={!set.released || undefined}
-            data-cy={`story-shop-set-${set.id}`}
-            onclick={() => openDialog(set)}
-          >
-            <span class="tile-name" data-cy={`story-shop-set-name-${set.id}`}
-              >{set.name}</span
-            >
-            <span class="tile-year" data-cy={`story-shop-set-year-${set.id}`}>
-              {set.releaseYear}{#if !set.released}
-                🔒{/if}
-            </span>
-          </button>
+          <SetTile
+            {set}
+            imageUrl={setImageUrl(set)}
+            variant="set"
+            onselect={() => openDialog(set)}
+          />
         {/each}
       </div>
     </section>
@@ -165,49 +153,26 @@
     margin-bottom: 2rem;
   }
 
+  /* Two columns is the tablet shape; the desktop the owner sizes for shows
+     exactly four with the rest below the fold, and one narrow column is the
+     phone. Nothing here caps the height — the page scrolls. */
   .set-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.75rem;
     margin-bottom: 2rem;
   }
 
-  .set-tile {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    padding: 0.85rem 1rem;
-    border: 1px solid var(--story-border);
-    border-radius: 0.6rem;
-    background: color-mix(in srgb, var(--bg) 85%, transparent);
-    text-align: left;
-    cursor: pointer;
-    transition: border-color 0.15s;
+  @media (min-width: 1280px) {
+    .set-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
   }
 
-  .set-tile:hover:not([aria-disabled]) {
-    border-color: var(--story-accent);
-  }
-
-  .set-tile--latest {
-    min-width: 10rem;
-    flex-shrink: 0;
-    border-color: var(--story-accent);
-  }
-
-  .set-tile--unreleased {
-    opacity: 0.45;
-    cursor: default;
-  }
-
-  .tile-name {
-    font-weight: 600;
-    font-size: 0.9rem;
-  }
-
-  .tile-year {
-    font-size: 0.78rem;
-    color: var(--muted);
+  @media (max-width: 640px) {
+    .set-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 
   .state-block {

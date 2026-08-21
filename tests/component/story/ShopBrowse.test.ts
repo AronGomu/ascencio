@@ -74,7 +74,7 @@ describe("ShopBrowseScreen", () => {
     expect(onretry).toHaveBeenCalledOnce();
   });
 
-  it("latest released row lists newest first", () => {
+  it("latest released row lists the newest sets oldest first", () => {
     const { container } = render(ShopBrowseScreen, {
       sets: FOUR_SETS,
       error: null,
@@ -92,10 +92,10 @@ describe("ShopBrowseScreen", () => {
       ),
     ];
     expect(tiles.length).toBe(3);
-    // newest first: psv → mrd → lob
-    expect(tiles[0]!.dataset["cy"]).toBe("story-shop-latest-psv");
+    // chronological: lob → mrd → psv
+    expect(tiles[0]!.dataset["cy"]).toBe("story-shop-latest-lob");
     expect(tiles[1]!.dataset["cy"]).toBe("story-shop-latest-mrd");
-    expect(tiles[2]!.dataset["cy"]).toBe("story-shop-latest-lob");
+    expect(tiles[2]!.dataset["cy"]).toBe("story-shop-latest-psv");
     // unreleased absent from row
     expect(row.querySelector('[data-cy="story-shop-latest-toci"]')).toBeNull();
   });

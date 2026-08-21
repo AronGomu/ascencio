@@ -3345,5 +3345,47 @@ never acquired. `generated/` is git-ignored, so nothing here ends up in a commit
 
 ### Nothing in the app moved
 
-- [ ] Open the app, go **Continue → Shop**. The set list looks exactly as it did before this slice: text tiles with name and year, no art. T32 is the slice that renders it.
+- [ ] Open the app, go **Continue → Shop**. The set list renders the art this pipeline acquired — that rendering is T32's slice, checked in its own section below.
 - [ ] Open a booster, sell a card, and open the deck editor. All unchanged.
+
+## T32 shop-set-grid-and-art
+
+The shop's browse screen is illustrated: every set tile shows the pack art T31 acquired, the
+all-sets grid is four columns on a desktop screen, and the **Latest Released** row is the newest
+released sets in chronological order. Set art needs `npm run assets:sets` (T31) to exist locally;
+a set with no art is a normal, browsable, buyable tile, not a broken image.
+
+### Four per row at HD, and the rest are below the fold
+
+- [ ] Size the browser window to 1280×720 (Chromium devtools → device toolbar → **Responsive**, 1280×720, at 100% zoom). Go **Continue → Shop → Buy packs**.
+- [ ] The **All Sets** grid shows exactly **four tiles per row**. Count the top row.
+- [ ] The tiles are pack-shaped and large — roughly 290 px wide by 515 px tall, so one row nearly fills the height.
+- [ ] Scroll down inside the shop. The remaining sets keep coming, all 50 of them, and the last row is `Legacy of the Valiant`.
+- [ ] Drag the window narrower, to about 1000 px. The grid becomes **two** columns. Narrower still, under 640 px, it becomes **one**. Widen back past 1280 px and it returns to four.
+
+### The art is the real art
+
+- [ ] Each tile shows a booster-pack image with the set name and year written across the bottom of it.
+- [ ] The first tile is **Legend of Blue Eyes White Dragon** and its picture is the Blue-Eyes pack, not a placeholder.
+- [ ] No tile shows a browser broken-image icon.
+- [ ] Right-click the Metal Raiders tile → **Inspect**. Its `<img>` `src` ends in `runtime/sets/metal-raiders.jpg` — the set's id, not its set code.
+- [ ] Locked (unreleased) sets — everything from `Spell Ruler` down — still show their art but dimmed, with the 🔒 next to the year, and clicking one still does nothing.
+
+### Latest Released, oldest to newest
+
+- [ ] Above the grid, the **Latest Released** row shows only released sets — today that is three: `Legend of Blue Eyes White Dragon`, `Metal Raiders`, `Pharaoh's Servant`, in that order (oldest on the left).
+- [ ] It never shows more than four. When a fourth set is marked released in `public/story/shop-sets.v1.json` the row shows four; a fifth pushes the oldest out, and the row still reads oldest-to-newest left to right.
+
+### A set with no art stays usable
+
+- [ ] Quit the dev server. Run `mv generated/set-images/metal-raiders.jpg /tmp/`, then `npm run dev` and go back to **Shop → Buy packs**.
+- [ ] The Metal Raiders tile is now a plain typographic tile — a tinted panel with the name and year centred on it, no broken image.
+- [ ] Click it. The set dialog still opens and buying a pack still works.
+- [ ] Do the same against a **built** site, which is the case a real host hits: `mv generated/set-images/pharaohs-servant.jpg /tmp/`, `npm run build:app`, `npm run preview`, then open the shop. A built preview answers the missing image with its own HTML page and `HTTP 200` rather than a 404 — the tile must still fall back to the typographic version rather than showing a broken image.
+- [ ] Restore both files: `mv /tmp/metal-raiders.jpg /tmp/pharaohs-servant.jpg generated/set-images/` and run `npm run assets:sets:verify` — `"status": "ok"`.
+
+### Nothing else in the shop moved
+
+- [ ] Clicking a tile opens the same set dialog as before, with Buy 1 / Buy 10 / custom amount, and the DP total drops by the right amount.
+- [ ] The **View cards** route, booster opening, and the sell screen all behave as they did.
+- [ ] With the network throttled to Slow 3G (devtools → Network), the grid still appears immediately and the art fills in as it loads; the page never waits on images.

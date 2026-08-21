@@ -2232,3 +2232,25 @@ Record what the bundled decks cannot reach
 - [ ] Narrow the window until the Deck Editor switches to its tabbed layout, open the card
       details tab and hover a card: the preview is still readable, with the effect text
       directly under the name and no giant gap.
+
+## T6 end-turn-button-single-row
+
+- [ ] Start a duel with the preset decks and look at the End turn button in the phase strip
+      (bottom-right of the board, right-anchored beside the phase chips): its label sits on
+      one single row, not broken over two.
+- [ ] Compare it against the phase chips beside it: the End turn button is clearly the
+      bigger control — taller, wider, and its text is noticeably larger than the chip text.
+- [ ] Play forward to your Battle Phase so the button's label becomes "End Battle Phase":
+      that longer label is also on one row, and the button simply grows leftwards to fit it.
+- [ ] With the longer "End Battle Phase" label showing, check the button's left edge: it
+      does not cover any card, zone outline or pile, and clicking a card near it still
+      selects the card rather than the button.
+- [ ] Click End turn: the phase actually passes (the phase strip's highlighted chip moves
+      on, or the turn changes) — the bigger button is still a working control.
+- [ ] Resize the window to 1280x720 and then to 1920x1080: at both sizes the label stays on
+      one row and the button stays inside the board, hard against its right edge.
+- [ ] Rotate to a portrait/mobile window (narrower than 1024px, taller than wide): the
+      rotated field still shows the End turn label on one row, at a comfortable tap size.
+- [ ] Confirm the button is still the amber "warning" colour with the same hover shade — the
+      size change did not alter its colour or its disabled (dimmed) look while the opponent
+      is thinking.

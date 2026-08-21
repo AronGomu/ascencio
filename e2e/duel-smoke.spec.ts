@@ -2753,7 +2753,11 @@ test("item 5: field cards stay outside the hand band and hand action chips remai
     .toBeGreaterThan(responsesBeforeAction);
 });
 
-test("item 24: End turn button is measurably smaller while keeping the 44px pointer-target floor", async ({
+/* Round 3 item 24 required this button to be measurably smaller than T10's.
+   Round 4 item 7 reverses that outright — one row, and bigger — so the
+   size-direction comparison and the scoped "before" style that fed it are
+   gone. The floors it also guarded stay. */
+test("End turn button keeps its label on one row above the 44px pointer-target floor", async ({
   page,
 }) => {
   await page.goto("./#/duel");
@@ -2764,35 +2768,54 @@ test("item 24: End turn button is measurably smaller while keeping the 44px poin
   const endTurn = page.locator('[data-cy="field-end-turn-button"]');
   await expect(endTurn).toBeVisible();
 
-  const after = await endTurn.boundingBox();
-  if (after === null) throw new Error("Missing End turn geometry");
+  /* One client rect per rendered line of the label, so a wrap is observable
+     rather than inferred from the box height. */
+  const renderedLines = async (): Promise<number> =>
+    endTurn.evaluate((element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return new Set(
+        [...range.getClientRects()].map((rect) => Math.round(rect.top)),
+      ).size;
+    });
 
-  // "Before" reproduces T10's shipped-but-unreduced rule (padding: .55rem
-  // 1rem, no explicit font-size override) as a scoped style override on the
-  // same live button, so the comparison is a real rendered rect, not an
-  // arithmetic guess about box-model composition.
-  await page.addStyleTag({
-    content:
-      '[data-cy="field-end-turn-button"] { padding: .55rem 1rem !important; font-size: 1rem !important; }',
-  });
-  const before = await endTurn.boundingBox();
-  if (before === null) throw new Error("Missing End turn 'before' geometry");
+  const box = await endTurn.boundingBox();
+  if (box === null) throw new Error("Missing End turn geometry");
+  const liveLabel = await endTurn.textContent();
+  const liveLines = await renderedLines();
 
+  expect(liveLines, `${liveLabel} must render on one row`).toBe(1);
+  expect(box.height, "height clears the 3rem floor").toBeGreaterThanOrEqual(48);
   expect(
-    after.width,
-    `after width ${after.width} must be smaller than before width ${before.width}`,
-  ).toBeLessThan(before.width);
-  expect(after.height, "height stays at the 44px floor").toBeGreaterThanOrEqual(
-    44,
-  );
-  expect(
-    after.width,
+    box.width,
     "width stays at or above the 44px pointer target",
   ).toBeGreaterThanOrEqual(44);
+  expect(
+    box.height,
+    "height stays at or above the 44px pointer target",
+  ).toBeGreaterThanOrEqual(44);
 
-  // Evidence for the ticket report: a real rendered before/after rect pair.
+  /* The opening Main Phase 1 only ever offers `End turn`. The longest label
+     the engine can hand this control is the Battle Phase's, so it is applied
+     directly rather than duelling forward to reach it — the wrap this guards
+     is a property of the CSS box, not of how the text arrived. */
+  const longestLabel = "End Battle Phase";
+  await endTurn.evaluate((element, label) => {
+    element.textContent = label;
+  }, longestLabel);
+  const longestBox = await endTurn.boundingBox();
+  if (longestBox === null) throw new Error("Missing End turn longest-label");
+  const longestLines = await renderedLines();
+
+  expect(longestLines, `${longestLabel} must render on one row`).toBe(1);
+  expect(
+    longestBox.height,
+    "the longest label does not grow the button past one row",
+  ).toBeCloseTo(box.height, 0);
+
+  // Evidence for the ticket report: real rendered rects and line counts.
   console.log(
-    `item 24 End turn rect: before=${JSON.stringify(before)} after=${JSON.stringify(after)}`,
+    `End turn rect: ${JSON.stringify(liveLabel)}=${JSON.stringify(box)} lines=${liveLines}; ${JSON.stringify(longestLabel)}=${JSON.stringify(longestBox)} lines=${longestLines}`,
   );
 });
 

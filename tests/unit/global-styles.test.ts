@@ -470,6 +470,22 @@ describe("global styles", () => {
     expect(reveal).toContain("display: flex");
   });
 
+  /* The end-turn strip slot is absolutely positioned from its left edge
+     alone, so its shrink-to-fit width is the label's min-content unless the
+     button forbids wrapping. Without this row `End Battle Phase` breaks over
+     three lines and no jsdom test can see it. */
+  it("end-turn button never wraps its label", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    expect(ruleBlock(css, "\n.field-end-turn {")).toContain(
+      "white-space: nowrap",
+    );
+  });
+
+  it("end-turn button is at least 3rem tall", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    expect(ruleBlock(css, "\n.field-end-turn {")).toContain("min-height: 3rem");
+  });
+
   // T8: both hands render through HandBand, which paints no border,
   // background or ZoneControl at all — there is no dashed hand-zone
   // treatment left to make transparent for the opponent specifically.

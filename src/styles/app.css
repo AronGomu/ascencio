@@ -2241,14 +2241,19 @@ button.card-action-chip:hover:not(:disabled) {
   background: var(--selected-strong);
 }
 
+/* The strip slot is absolutely positioned from its left edge alone, so its
+   shrink-to-fit width is this button's min-content: without `nowrap` the
+   engine's own label (`End Battle Phase`) breaks over three lines. The height
+   floor rises past the shared 44px control minimum on purpose. */
 .field-end-turn {
   min-inline-size: 44px;
-  min-block-size: 44px;
+  min-height: 3rem;
   display: inline-grid;
   place-items: center;
   pointer-events: auto;
-  padding: 0.5rem 0.65rem;
-  font-size: var(--chip-size);
+  padding: 0.5rem var(--space-4);
+  font-size: var(--text-md);
+  white-space: nowrap;
 }
 
 /* T14: the bar is normal flow inside the confirm window (ADR-017), which

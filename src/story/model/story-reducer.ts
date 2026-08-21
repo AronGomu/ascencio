@@ -2,6 +2,7 @@ import {
   CHOICE_RESPONSES,
   LATER_ACKNOWLEDGMENTS,
 } from "../content/prologue.ts";
+import { buildStarterGrant } from "../decks/starter-grant.ts";
 import {
   createInitialStoryState,
   type BattleResult,
@@ -85,13 +86,23 @@ export function reduceStory(
   command: StoryCommand,
 ): StoryState {
   switch (command.type) {
-    case "new-game":
+    case "new-game": {
+      /* The one place a deck is ever given away. A save that already exists is
+         never reached from here — `new-game` replaces the state wholesale, and
+         an older save arrives through the migration, which fills an empty deck
+         list rather than a granted one. */
+      const initial = createInitialStoryState();
+      const { deck, collection } = buildStarterGrant();
       return {
-        ...createInitialStoryState(),
+        ...initial,
         screen: "narrative",
         savedScreen: "narrative",
         progressExists: true,
+        decks: [deck],
+        defaultDeckId: deck.id,
+        collection: { ...initial.collection, ...collection },
       };
+    }
     case "continue":
       return state.progressExists
         ? { ...state, screen: state.savedScreen }

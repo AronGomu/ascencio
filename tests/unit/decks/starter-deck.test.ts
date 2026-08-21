@@ -1,7 +1,9 @@
 // @vitest-environment node
 
 import "fake-indexeddb/auto";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { deleteDB } from "idb";
 import {
   DECK_DATABASE_NAME,
@@ -14,10 +16,25 @@ import {
   ensureStarterDeck,
   STARTER_DECK_NAME,
 } from "../../../src/decks/starter-deck.ts";
+import { STARTER_DECK_LIST } from "../../../src/decks/starter-deck.ts";
 import {
   catalogByCode,
   PROTOTYPE_RULESET,
 } from "../../../src/decks/catalog/pinned-ruleset.ts";
+import {
+  packagedCatalog,
+  type PackagedCardText,
+} from "../../../src/decks/catalog/packaged-catalog.ts";
+import {
+  CATALOG_SHARD_COUNT,
+  catalogShardName,
+} from "../../../src/decks/catalog/runtime-catalog.ts";
+import type {
+  AssetDeckCardRecord,
+  DeckBuilderCardView,
+} from "../../../src/decks/catalog/ocg-card-mapper.ts";
+import { validateDeckDraft } from "../../../src/decks/deck-validation.ts";
+import { importYdk } from "../../../src/decks/ydk-adapter.ts";
 import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
 
 const names: string[] = [];
@@ -121,5 +138,78 @@ describe("ensureStarterDeck", () => {
     expect(warn).toHaveBeenCalled();
     warn.mockRestore();
     repo.close();
+  });
+});
+
+/* The bundled list, checked by the validator the editor actually runs against
+   the card database this build ships — not by inspection. A starter deck the
+   pinned ruleset refuses is a deck `resolveDeck` calls `invalid`, which is a
+   fresh save that cannot duel and a red halo the first time the library opens.
+   The catalog is read from the snapshot rather than the prototype fixture
+   because the fixture carries 27 cards and the question is about all of them. */
+describe("the bundled starter list", () => {
+  let snapshot: ReadonlyMap<number, DeckBuilderCardView>;
+
+  beforeAll(async () => {
+    const shards = Array.from({ length: CATALOG_SHARD_COUNT }, (_, i) =>
+      catalogShardName(i),
+    );
+    const read = async <T>(kind: string, shard: string): Promise<T> =>
+      JSON.parse(
+        await readFile(
+          path.resolve(
+            `generated/assets/current/catalog/${kind}/${shard}.json`,
+          ),
+          "utf8",
+        ),
+      ) as T;
+    const [cards, texts] = await Promise.all([
+      Promise.all(
+        shards.map((shard) =>
+          read<readonly AssetDeckCardRecord[]>("cards", shard),
+        ),
+      ),
+      Promise.all(
+        shards.map((shard) =>
+          read<readonly PackagedCardText[]>("texts/en", shard),
+        ),
+      ),
+    ]);
+    snapshot = catalogByCode(packagedCatalog(cards.flat(), texts.flat()));
+  });
+
+  it("names only cards the shipped card database carries", () => {
+    const imported = importYdk(STARTER_DECK_LIST);
+    expect(imported.type).toBe("ready");
+    if (imported.type !== "ready") return;
+    const codes = [
+      ...imported.cards.main,
+      ...imported.cards.extra,
+      ...imported.cards.side,
+    ];
+    expect(codes.length).toBeGreaterThanOrEqual(40);
+    expect(codes.filter((code) => !snapshot.has(code))).toEqual([]);
+  });
+
+  /* Warnings, not clean: the starter deck genuinely has no Extra and no Side
+     deck, and a starting player has nothing to put in either. What must not be
+     here is an error — that is what stops a duel. */
+  it("is legal under the pinned ruleset", () => {
+    const imported = importYdk(STARTER_DECK_LIST);
+    expect(imported.type).toBe("ready");
+    if (imported.type !== "ready") return;
+    const summary = validateDeckDraft(
+      imported.cards,
+      snapshot,
+      PROTOTYPE_RULESET,
+    );
+    expect(
+      summary.issues.filter(({ severity }) => severity === "error"),
+    ).toEqual([]);
+    expect(summary.issues.map(({ code }) => code).sort()).toEqual([
+      "empty-extra",
+      "empty-side",
+    ]);
+    expect(summary.status).toBe("warnings");
   });
 });

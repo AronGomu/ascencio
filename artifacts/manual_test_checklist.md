@@ -2778,3 +2778,43 @@ check is that nothing changed for a player who already has decks.
 - [ ] Open `#/admin`. The first storage row now reads **Free-play deck library** rather than "Deck library".
 - [ ] Arm and confirm that reset. The status line reads "Cleared Free-play deck library."
 - [ ] The **Story saves** row is a separate entry and is untouched by that reset: load a story save afterwards and it still opens.
+
+## T21 new-save-starter-grant
+
+Starting a new story now hands the save a deck **and** the cards behind it, so the deck is
+one the save owns from the first duel. The wallet is untouched at 1000 DP.
+
+There is no story deck-list screen yet — that arrives with the story deck editor — so the
+deck itself is checked in DevTools, while the granted cards are visible in the shop's Sell
+screen, which reads the same collection.
+
+The grant happens on save creation and nowhere else. The last section is the one that
+matters most: a save that already exists must come back exactly as it was left.
+
+### A new story save arrives with the Starter Deck
+
+- [ ] Open `#/story` and choose **New Game**. The prologue starts as before, with no new prompt or delay on the button.
+- [ ] Play to the map, enter the **Card Shop**, and open **Sell**. The list is not empty: it holds 16 different cards, among them 3× La Jinn the Mystical Genie of the Lamp, 3× Celtic Guardian, 2× Blue-Eyes White Dragon, 2× Summoned Skull and 2× Mirror Force.
+- [ ] Counting every copy on that Sell list gives 40 cards.
+- [ ] Leave the shop without selling. The DP counter still reads **1000** — the grant is cards, not credit.
+- [ ] Save to Manual slot 1. In DevTools → Application → IndexedDB → `ygo-story-saves` → `saves`, that record's `state.decks` holds exactly one deck, named `Starter Deck`, with 40 entries in `main` and none in `extra` or `side`.
+- [ ] In the same record, `state.defaultDeckId` reads `story-starter-deck` and matches that deck's `id`.
+- [ ] In the same record, `state.collection` has one entry per card code in the deck, each count equal to the number of copies the deck uses.
+- [ ] Reload the page (F5) and load Manual slot 1. It opens normally rather than reporting a corrupt save, and the Sell screen still lists the same 40 cards.
+
+### The granted deck is a legal deck
+
+- [ ] In that save's `state.decks[0].validation`, no entry in `issues` has `"severity": "error"`. Two warnings are expected and correct — `empty-extra` and `empty-side` — because the starter deck has no Extra and no Side deck.
+- [ ] Start a second **New Game** and compare its `state.decks[0]` against the first: same `id`, same `createdAt`, same card list. The grant is fixed, not generated per save.
+
+### An existing save is not modified retroactively
+
+- [ ] Before pulling this build, open `#/story`, load a save you already had, and write down its DP, the cards on its Sell list, and the screen it resumes on.
+- [ ] Load this build and open that same save. It resumes on the same screen with the same DP, and the Sell list holds exactly the cards it held before — no starter cards were added to it.
+- [ ] In DevTools → Application → IndexedDB → `ygo-story-saves` → `saves`, that record's `state.decks` is still `[]` and `state.defaultDeckId` is still `null`. An older save is completed with an empty deck list, never with a granted one.
+- [ ] Save that older save again, reload, and load it once more. It still holds no decks — nothing granted a deck on the way through.
+
+### Free play keeps the deck it already had
+
+- [ ] Open `#/free-play/decks` on this build with a library you already had. Every deck is present under the same name, the same deck is still the default, and no `Starter Deck` was added beside them.
+- [ ] In a fresh profile or after clearing `ygo-story-decks`, open `#/free-play/decks` again. It seeds one `Starter Deck`, and opening it shows 40 Main Deck cards with no red error banner — in particular **2× Mirror Force and 1× Raigeki**, which is what the copy limits allow.

@@ -22,7 +22,7 @@ import type { DeckRepository } from "../../decks/deck-repository.ts";
 import {
   DeckRevisionConflictError,
   DeckStorageError,
-} from "../../decks/indexeddb-deck-repository.ts";
+} from "../../decks/deck-storage-errors.ts";
 import type { StoryCommand } from "../model/story-reducer.ts";
 import type { StoryState } from "../model/story-state.ts";
 import { isStoryDeck } from "../saves/story-save-contracts.ts";

@@ -164,6 +164,10 @@ describe("story deck commands", () => {
     const reset = reduceStory(shopping, { type: "reset" });
     expect(reset.decks).toEqual([]);
     expect(reset.defaultDeckId).toBeNull();
-    expect(reduceStory(shopping, { type: "new-game" }).decks).toEqual([]);
+    /* A new game drops the old library too, but lands on the granted starter
+       deck rather than on nothing — see `new-game-grant.test.ts`. */
+    const restarted = reduceStory(shopping, { type: "new-game" });
+    expect(restarted.decks.map(({ id }) => id)).not.toContain("alpha");
+    expect(restarted.defaultDeckId).toBe(restarted.decks[0]?.id);
   });
 });

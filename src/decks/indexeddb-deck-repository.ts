@@ -17,6 +17,14 @@ import {
 } from "./deck-database.ts";
 import { MAXIMUM_DECK_UPDATES } from "./deck-history.ts";
 import type { DeckRepository } from "./deck-repository.ts";
+import {
+  DeckRevisionConflictError,
+  DeckStorageError,
+} from "./deck-storage-errors.ts";
+
+/* Still reached through this module, which is where every caller but the story
+   repository already looks for them. */
+export { DeckRevisionConflictError, DeckStorageError };
 
 const LAST_OPENED_KEY = "last-opened-deck";
 const DEFAULT_DECK_KEY = "default-deck";
@@ -57,23 +65,6 @@ interface DeckDatabase extends DBSchema {
     value: DeckAutosaveRecord;
     indexes: { createdAt: string };
   };
-}
-
-export class DeckStorageError extends Error {
-  constructor(message: string, options?: ErrorOptions) {
-    super(message, options);
-    this.name = "DeckStorageError";
-  }
-}
-
-export class DeckRevisionConflictError extends DeckStorageError {
-  readonly actualRevision: number | null;
-
-  constructor(actualRevision: number | null) {
-    super("Deck was changed by another browser context");
-    this.name = "DeckRevisionConflictError";
-    this.actualRevision = actualRevision;
-  }
 }
 
 export class IndexedDbDeckRepository implements DeckRepository {

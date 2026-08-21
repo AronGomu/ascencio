@@ -1,4 +1,4 @@
-import starterYdk from "../battle/duel/presets/decks/player.ydk?raw";
+import starterYdk from "./starter-deck.ydk?raw";
 import type { DeckRecord } from "./deck-contracts.ts";
 import type { DeckBuilderCardView } from "./catalog/ocg-card-mapper.ts";
 import type { PinnedDeckRuleset } from "./catalog/pinned-ruleset.ts";
@@ -14,6 +14,13 @@ import { importYdk } from "./ydk-adapter.ts";
    which ADR-022 allows for the shared deck-data library. */
 
 export const STARTER_DECK_NAME = "Starter Deck";
+
+/* The list itself, so free play and a story save are granted one deck rather
+   than two that drift. It sits beside this module instead of among the duel's
+   presets because the seeding is what reads it: the preset `player.ydk` is the
+   duel's own opening hand, pinned by the recorded programmed-duel transcripts,
+   and a copy limit the deck editor enforces is not its concern. */
+export const STARTER_DECK_LIST: string = starterYdk;
 
 /**
  * Gives a player who has never built a deck one to duel with.

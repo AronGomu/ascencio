@@ -1,6 +1,15 @@
 <script lang="ts">
-  import type { ShopRarity } from "../model/story-state.ts";
+  import { tick } from "svelte";
+  import type { ShopRarity, StoryState } from "../model/story-state.ts";
   import { SELL_PRICE_DP } from "./data/shop-pricing.ts";
+  import SellImpactDialog from "./SellImpactDialog.svelte";
+  import { decksBrokenBySale, type SaleDeckImpact } from "./sell-impact.ts";
+
+  type SellItem = {
+    readonly code: number;
+    readonly quantity: number;
+    readonly rarity: ShopRarity;
+  };
 
   /* `null` means the shop data has not loaded, not that the player owns
      nothing: a card's price follows its rarity, and rarity is only knowable
@@ -16,21 +25,27 @@
       }[]
     | null = null;
   export let error: string | null = null;
-  export let onsell: (
-    items: readonly {
-      code: number;
-      quantity: number;
-      rarity: ShopRarity;
-    }[],
-  ) => void = () => undefined;
+  /* The save the cards would leave, or `null` where there is none to ask —
+     free play owns every card and has no collection to spend. A sale then
+     commits straight through, which is also what a save with no decks does. */
+  export let state: StoryState | null = null;
+  export let onsell: (items: readonly SellItem[]) => void = () => undefined;
   export let onretry: () => void = () => undefined;
   export let onback: () => void = () => undefined;
 
   let selected: Record<number, number> = {};
+  /* The receipt the dialog is asking about, held rather than recomputed: the
+     sale that commits must be the one the player was shown. */
+  let pending: readonly SellItem[] | null = null;
+  let impact: readonly SaleDeckImpact[] = [];
+  let sellButton: HTMLButtonElement;
 
   $: total = (cards ?? []).reduce(
     (sum, c) => sum + (selected[c.code] ?? 0) * SELL_PRICE_DP[c.rarity],
     0,
+  );
+  $: cardNameByCode = new Map(
+    (cards ?? []).map(({ code, name }) => [code, name] as const),
   );
 
   function decrement(code: number): void {
@@ -53,12 +68,43 @@
         rarity: c.rarity,
       }))
       .filter((i) => i.quantity > 0);
+    /* Asked before the sale is dispatched, never after: once the reducer has
+       the receipt the cards are gone, and a deck the player would have kept
+       them for cannot be given them back. */
+    const broken = state === null ? [] : decksBrokenBySale(state, items);
+    if (broken.length === 0) {
+      commit(items);
+      return;
+    }
+    impact = broken;
+    pending = items;
+  }
+
+  function commit(items: readonly SellItem[]): void {
+    pending = null;
     onsell(items);
     selected = {};
   }
+
+  function confirmSale(): void {
+    if (pending !== null) commit(pending);
+  }
+
+  async function cancelSale(): Promise<void> {
+    /* The steppers keep what they held: cancelling means the sale did not
+       happen, not that the selection was thrown away. */
+    pending = null;
+    await tick();
+    sellButton.focus();
+  }
 </script>
 
-<section class="shop-sell" data-cy="story-shop-sell" aria-label="Sell cards">
+<section
+  class="shop-sell"
+  data-cy="story-shop-sell"
+  aria-label="Sell cards"
+  inert={pending !== null}
+>
   <header class="sell-header" data-cy="story-shop-sell-header">
     <h1 data-cy="story-shop-sell-heading">Sell Cards</h1>
     <button
@@ -128,11 +174,21 @@
         type="button"
         data-cy="story-shop-sell-confirm"
         disabled={total === 0}
+        bind:this={sellButton}
         onclick={confirm}>Sell</button
       >
     </footer>
   {/if}
 </section>
+
+{#if pending !== null}
+  <SellImpactDialog
+    decks={impact}
+    cardNameOf={(code) => cardNameByCode.get(code) ?? `Card ${code}`}
+    onconfirm={confirmSale}
+    oncancel={() => void cancelSale()}
+  />
+{/if}
 
 <style>
   .shop-sell {

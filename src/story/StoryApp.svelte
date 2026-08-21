@@ -846,6 +846,7 @@
     <ShopSellScreen
       cards={sellableCards}
       error={shopDataError ?? catalogError}
+      {state}
       onsell={(items) => dispatch({ type: "sell-cards", items })}
       onretry={retrySellSources}
       onback={() => dispatch({ type: "shop-navigate", to: "greeting" })}

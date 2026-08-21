@@ -3061,3 +3061,47 @@ duel with. Cards are granted by **New Game** and by the shop, and nowhere else.
 ### A save that already caught the bug
 
 - [ ] If a save built on an earlier build already carries an unowned **Starter Deck** — red halo, **CARDS NOT OWNED** — this change does not remove it. Delete that deck from the deck page; the library stays empty and nothing replaces it.
+
+## T26 sell-breaks-decks-confirmation
+
+Selling cards a deck depends on names those decks before the sale commits. The warning
+informs, it never refuses: confirming sells exactly what was selected and leaves those
+decks illegal, cancelling sells nothing at all.
+
+The half that is just as important: a sale that breaks nothing shows no dialog. A
+confirmation that fires on every sale is one the player learns to click through.
+
+### A sale that would break a deck warns first
+
+- [ ] Start a **New Game** and walk to the city map, then enter the **card shop** and reach the keeper's menu.
+- [ ] Choose **Sell**. The grid lists the cards the starter grant gave you, **Blue-Eyes White Dragon** among them, **Owned 2**.
+- [ ] Press **+** once on Blue-Eyes, then press **Sell**. A dialog appears — it does **not** sell yet — headed **Sell cards these decks use?**, listing **Starter Deck** with **Blue-Eyes White Dragon** under it.
+- [ ] The DP counter in the top bar has not moved, and the card is still in the grid at **Owned 2**.
+- [ ] Press **Keep the cards** (the red one). The dialog closes, DP is unchanged, and the stepper still reads **1** — the selection survived the cancel.
+- [ ] Press **Sell** again. The same dialog comes back. Press **Sell anyway**. Now DP rises by the Blue-Eyes price and the grid shows **Owned 1**.
+- [ ] Open the story deck library (`#/story/decks`). **Starter Deck** is badged **CARDS NOT OWNED** — the sale was allowed to break it, exactly as confirmed.
+
+### A sale that breaks nothing shows no dialog
+
+- [ ] Back in the shop, buy a pack and open it, then go to **Sell**.
+- [ ] Sell one copy of a card that came out of that pack and is **not** in any of your decks. No dialog appears at all — the sale commits straight away and DP rises.
+- [ ] Find a card your deck uses where **Owned** is higher than the number of copies the deck runs (buy a spare single of one of your deck's cards if you have none). Sell down to exactly the number the deck runs. Still no dialog: spare copies are not the deck's copies.
+- [ ] Sell one more of that same card, so the deck is left short. Now the dialog appears and names the deck.
+
+### Several decks, several cards
+
+- [ ] Build a second deck in the story deck editor that reuses a card your first deck already runs, so both decks depend on your last copies.
+- [ ] Go to **Sell**, select that card, press **Sell**. The dialog lists **both** decks, each with the card under it.
+- [ ] Select two different cards from two different decks in one go. One dialog appears, naming every deck the sale would break and every card at fault under it.
+
+### Keyboard and focus
+
+- [ ] Open the dialog again. Focus starts on **Keep the cards**, so pressing **Enter** straight away cancels rather than sells.
+- [ ] Press **Escape**. The dialog closes and nothing was sold.
+- [ ] With the dialog open, **Tab** cycles only between **Sell anyway** and **Keep the cards** — the sell grid behind it cannot be reached or clicked.
+- [ ] After cancelling, focus is back on the **Sell** button you pressed.
+
+### A deck that was already illegal is not blamed on the sale
+
+- [ ] Take a save whose deck is already badged **CARDS NOT OWNED** (sell a card it uses, as above, and leave it broken).
+- [ ] Go back to **Sell** and sell one copy of a completely different card that no deck uses. No dialog — the already-broken deck is not reported, because this sale is not what broke it.

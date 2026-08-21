@@ -87,8 +87,38 @@ test("shop loop: buy packs, open all, sell cards, singles sanity", async ({
   await advanceThroughGreeting(page);
   await page.locator('[data-cy="story-shop-greeting-sell"]').click();
   await expect(page.locator('[data-cy="story-shop-sell"]')).toBeVisible();
-  await page.locator('[data-cy^="story-shop-sell-plus-"]').first().click();
+  // Blue-Eyes rather than whichever row happens to sort first: New Game grants
+  // two copies with the starter deck, that deck runs both, and no Metal Raiders
+  // pack can add a third — so selling one deterministically leaves the deck
+  // holding a card the save no longer owns, and must warn before it commits.
+  await page.locator('[data-cy="story-shop-sell-plus-89631139"]').click();
   await page.locator('[data-cy="story-shop-sell-confirm"]').click();
+  await expect(
+    page.locator('[data-cy="story-sell-impact-dialog"]'),
+  ).toBeVisible();
+  await expect(
+    page.locator('[data-cy="story-sell-impact-deck-story-starter-deck"]'),
+  ).toContainText("Starter Deck");
+  // Cancelling is the half that has to be exact: no sale, no card gone, and the
+  // stepper still holding what was selected, so Sell reopens the same warning.
+  await page.locator('[data-cy="story-sell-impact-cancel"]').click();
+  await expect(
+    page.locator('[data-cy="story-sell-impact-dialog"]'),
+  ).toBeHidden();
+  await expect(page.locator('[data-cy="story-top-bar-dp"]')).toHaveText(
+    "100 DP",
+  );
+  await expect(
+    page.locator('[data-cy="story-shop-sell-selected-89631139"]'),
+  ).toHaveText("1");
+  await page.locator('[data-cy="story-shop-sell-confirm"]').click();
+  await expect(
+    page.locator('[data-cy="story-sell-impact-dialog"]'),
+  ).toBeVisible();
+  await page.locator('[data-cy="story-sell-impact-confirm"]').click();
+  await expect(
+    page.locator('[data-cy="story-sell-impact-dialog"]'),
+  ).toBeHidden();
   const dpText = await page
     .locator('[data-cy="story-top-bar-dp"]')
     .textContent();

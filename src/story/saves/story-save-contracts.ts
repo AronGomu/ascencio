@@ -340,7 +340,10 @@ function isDeckLibrary(state: Record<string, unknown>): boolean {
   );
 }
 
-function isStoryDeck(value: unknown): boolean {
+/** Exported so the deck repository can refuse a record before it is written:
+    a deck this predicate rejects makes the whole save unreadable, and the
+    editor's own validator is stricter in ways the save does not care about. */
+export function isStoryDeck(value: unknown): boolean {
   if (typeof value !== "object" || value === null || Array.isArray(value))
     return false;
   const deck = value as Record<string, unknown>;

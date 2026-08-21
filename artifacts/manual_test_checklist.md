@@ -2720,3 +2720,34 @@ What is being checked is that the save file grew a deck list without losing anyt
 
 - [ ] Open `#/free-play/decks`: it lists exactly the decks it listed before, and `ygo-story-decks` in IndexedDB is unchanged. This slice does not touch the free-play deck library.
 - [ ] Play a fresh New Game through the prologue to the map and start an encounter — the duel handoff still works, and the checkpoint slot still restores if you leave the duel.
+
+## T19 story-deck-repository-adapter
+
+Nothing on screen changes in this slice either: the adapter exists but no screen binds it
+yet (T23 does that). What is being checked is that widening the story's public entry did
+not drag the visual novel into the shell, and that neither the free-play deck library nor
+an existing story save moved.
+
+### The visual novel is still lazy
+
+- [ ] Open DevTools → Network, tick "Disable cache", and load `http://localhost:4300/#/` fresh. On the main menu: no `story-*.js` request.
+- [ ] Click through to the story. Only now does `story-*.js` load.
+- [ ] In the same Network panel, note the transferred size of `story-*.js`. It is expected to be larger than before this slice — the deck error type it now shares with the editor comes with it.
+
+### The free-play deck library is untouched
+
+- [ ] Open `#/free-play/decks` and confirm it lists exactly the decks it listed before.
+- [ ] Create a deck there, rename it, set it as default, favourite it, then reload the page (F5). All four survive.
+- [ ] In DevTools → Application → IndexedDB, `ygo-story-decks` still holds those decks and no store was added, renamed or emptied.
+- [ ] Delete one of those decks and confirm only that deck disappears.
+
+### An existing story save still opens and still saves
+
+- [ ] Open `#/story` → Load and load a save you already had. It resumes on the screen it was saved on, with the same DP and the same collection.
+- [ ] Save to Manual slot 1 from inside the story. In DevTools → Application → IndexedDB → `ygo-story-saves` → `saves`, that record reads `schemaVersion: 3` with `decks` and `defaultDeckId` beside the wallet.
+- [ ] Reload the page (F5) and load that slot again — it opens normally rather than reporting a corrupt save.
+
+### The deck editor still behaves for free play
+
+- [ ] In `#/free-play/decks`, open a deck in two browser tabs, edit and save it in tab A, then edit and save the same deck in tab B. Tab B reports a conflict rather than silently overwriting tab A.
+- [ ] Undo and redo an edit, then check the autosave list still shows the recent edits.

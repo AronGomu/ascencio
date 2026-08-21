@@ -247,6 +247,7 @@ describe("public domain APIs are frozen", () => {
         "ENCOUNTER_LABELS",
         "STORY_SAVES_DATABASE_NAME",
         "acceptsResult",
+        "createStoryDeckRepository",
         "createStorySaveRepository",
         "default",
         "restoreStoryState",

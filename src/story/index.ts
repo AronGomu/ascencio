@@ -38,3 +38,8 @@ export type {
 } from "./saves/story-save-contracts.ts";
 export { createStorySaveRepository } from "./saves/story-save-repository.ts";
 export type { StorySaveRepository } from "./saves/story-save-repository.ts";
+/* A save owns its decks, so editing them is a save write like any other. The
+   adapter presents them through the deck domain's own `DeckRepository`, which
+   is what lets the editor open a story save without knowing it is one
+   (ADR-049). Named here because the caller that binds it is the shell. */
+export { createStoryDeckRepository } from "./decks/story-deck-repository.ts";

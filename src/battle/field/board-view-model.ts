@@ -70,6 +70,7 @@ export interface BoardCardView {
   readonly owner?: PlayerIndex;
   readonly zoneId: PhysicalZoneId;
   readonly sequence: number;
+  readonly displayOrder?: number;
   readonly position: CardPosition;
   readonly orientation: "upright" | "sideways";
   readonly facing: "self" | "opponent";
@@ -222,7 +223,13 @@ export function mapSnapshotToBoard(
   const cardIds = new Set<string>();
   for (const player of snapshot.players) {
     if (player.player === 0) {
-      for (const card of player.hand) {
+      /* Placement and navigation both read left-to-right off the same order
+         the hand band renders, so an engine shuffle cannot move the card
+         under the caret either. */
+      const handInDisplayOrder = [...player.hand].sort(
+        (left, right) => handDisplayRank(left) - handDisplayRank(right),
+      );
+      for (const [displayIndex, card] of handInDisplayOrder.entries()) {
         const duplicate = addCard(
           cards,
           cardIds,
@@ -230,7 +237,7 @@ export function mapSnapshotToBoard(
           LAYOUT_BY_ID.get("p0:hand"),
           snapshot,
           cardTexts,
-          handNavigationOffset(card.sequence, player.handCount),
+          handNavigationOffset(displayIndex, player.handCount),
         );
         if (duplicate !== undefined) return failure(duplicate);
       }
@@ -421,6 +428,9 @@ function addCard(
       owner: card.owner,
       zoneId: layout.id,
       sequence: card.sequence,
+      ...(card.displayOrder === undefined
+        ? {}
+        : { displayOrder: card.displayOrder }),
       position: card.position,
       orientation: orientationFor(card.position),
       facing: card.controller === 0 ? "self" : "opponent",
@@ -609,7 +619,9 @@ function handHorizontalOverrides(
     if (zone.kind !== "hand") continue;
     const handCards = cards
       .filter((card) => card.zoneId === zone.id)
-      .toSorted((left, right) => left.sequence - right.sequence);
+      .toSorted(
+        (left, right) => handDisplayRank(left) - handDisplayRank(right),
+      );
     const mirrored = zone.player === 1;
     const leftDelta = mirrored ? 1 : -1;
     const rightDelta = mirrored ? -1 : 1;
@@ -738,13 +750,27 @@ function orientationFor(position: CardPosition): "upright" | "sideways" {
 }
 
 /**
+ * `sequence` addresses the engine; `displayOrder` addresses the eye. Only the
+ * local player's hand carries one, so every other zone falls through to the
+ * engine's own order (ADR-047).
+ */
+function handDisplayRank(card: {
+  readonly sequence: number;
+  readonly displayOrder?: number;
+}): number {
+  return card.displayOrder ?? card.sequence;
+}
+
+/**
  * Hand cards no longer paint from these coordinates (HandBand renders them
  * in normal document flow instead), but spatial up/down navigation still
- * needs distinct virtual x positions per hand card, so this stays.
+ * needs distinct virtual x positions per hand card, so this stays. The index
+ * is the card's place in the row as rendered, which for the local hand is its
+ * display rank rather than its engine sequence.
  */
-function handNavigationOffset(sequence: number, count: number): number {
+function handNavigationOffset(index: number, count: number): number {
   const pixels =
-    (sequence - (count - 1) / 2) * Math.min(58, 600 / Math.max(count, 1));
+    (index - (count - 1) / 2) * Math.min(58, 600 / Math.max(count, 1));
   return pixels / DUEL_FIELD_WIDTH;
 }
 

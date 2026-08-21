@@ -135,6 +135,33 @@ describe("HandBand", () => {
     expect(root.hasAttribute("data-zone-id")).toBe(false);
   });
 
+  it("renders by display order for player 0", () => {
+    /* Arrival order is the reverse of the engine order the shuffle left
+       behind: the DOM must follow the eye, not the engine. */
+    const cards = handCards(0, 4).map((card, index) =>
+      Object.freeze({ ...card, displayOrder: 3 - index }),
+    );
+    renderBand({ cards });
+
+    expect(cardArticles().map((article) => article.dataset.cardId)).toEqual([
+      "p0-hand-3",
+      "p0-hand-2",
+      "p0-hand-1",
+      "p0-hand-0",
+    ]);
+  });
+
+  it("keeps the opponent hand on engine order", () => {
+    /* Player 1 never receives a display order; the band must not invent one. */
+    renderBand({ player: 1, cards: handCards(1, 3).toReversed() });
+
+    expect(cardArticles().map((article) => article.dataset.cardId)).toEqual([
+      "p1-hand-0",
+      "p1-hand-1",
+      "p1-hand-2",
+    ]);
+  });
+
   it("mirrors opponent visual flow without changing DOM sequence", () => {
     renderBand({ player: 1, cards: handCards(1, 3) });
 

@@ -208,6 +208,38 @@ describe("Worker contracts", () => {
     ).toThrow("deck count");
   });
 
+  it("rejects a display order outside the hand", () => {
+    const player = contractPlayer(0, 40);
+    const card = {
+      instanceId: "card-1",
+      code: 97590747,
+      owner: 0 as const,
+      controller: 0 as const,
+      location: "graveyard" as const,
+      sequence: 0,
+      displayOrder: 0,
+      position: "faceUpAttack" as const,
+      faceUp: true,
+      counters: [],
+      overlayMaterials: [],
+    };
+    expect(() =>
+      parseDuelWorkerEvent({
+        type: "state",
+        state: {
+          snapshotId: "a".repeat(64),
+          revision: 0,
+          turn: 0,
+          turnPlayer: 0,
+          phase: "unknown",
+          layout: { extraMonsterZones: true },
+          players: [{ ...player, graveyard: [card] }, contractPlayer(1, 40)],
+          chain: [],
+        },
+      }),
+    ).toThrow("graveyard[0].displayOrder");
+  });
+
   it.each([
     ["missing", undefined],
     ["non-boolean", { extraMonsterZones: "false" }],

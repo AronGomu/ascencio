@@ -52,8 +52,14 @@
   const mirrored = player === 1;
   let viewportElement: HTMLDivElement | null = null;
 
+  /* `sequence` addresses the engine, `displayOrder` addresses the eye: your
+     own hand keeps arrival order across an engine shuffle and a searched card
+     lands rightmost (ADR-047). The opponent's cards carry no display order,
+     so their band stays on the engine's own order. */
   $: sortedCards = [...cards].sort(
-    (left, right) => left.sequence - right.sequence,
+    (left, right) =>
+      (left.displayOrder ?? left.sequence) -
+      (right.displayOrder ?? right.sequence),
   );
   $: contentSizeKey = `${placement.width}:${sortedCards.map((card) => card.id).join(",")}`;
 

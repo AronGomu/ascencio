@@ -53,6 +53,7 @@ interface MutableCard {
   controller: PlayerIndex;
   location: PublicLocation;
   sequence: number;
+  displayOrder?: number;
   position: CardPosition;
   faceUp: boolean;
   counters: MutableCounter[];
@@ -95,6 +96,8 @@ interface MutablePlayer {
   deckReveals: Map<number, CardCode>;
   extraDeckCount: number;
   handCount: number;
+  /** Monotonic source of hand `displayOrder`; never decreases within a duel. */
+  handArrivals: number;
   hand: MutableCard[];
   extraDeck: MutableCard[];
   monsters: MutableCard[];
@@ -876,15 +879,15 @@ export class DuelStateProjector {
     const state = this.#players[player];
     state.deckCount = Math.max(0, state.deckCount - drawn.length);
     for (const draw of drawn) {
-      state.hand.push(
-        this.#createCard(
-          player,
-          "hand",
-          state.hand.length,
-          draw.position,
-          player === 0 ? draw.code : undefined,
-        ),
+      const card = this.#createCard(
+        player,
+        "hand",
+        state.hand.length,
+        draw.position,
+        player === 0 ? draw.code : undefined,
       );
+      takeHandArrival(state, card);
+      state.hand.push(card);
     }
     state.handCount = state.hand.length;
   }
@@ -915,6 +918,8 @@ export class DuelStateProjector {
       const code = codes[index];
       if (code !== undefined && code > 0) card.code = cardCode(code);
     });
+    /* Only the engine-facing order moves. `displayOrder` rides along on each
+       card, so the hand the player is looking at stays put (ADR-047). */
     hand.splice(0, hand.length, ...reordered);
     resequence(hand);
   }
@@ -1642,6 +1647,7 @@ function mutablePlayer(
     deckReveals: new Map(),
     extraDeckCount,
     handCount: 0,
+    handArrivals: 0,
     hand: [],
     extraDeck: [],
     monsters: [],
@@ -1784,12 +1790,23 @@ function removePublicCard(
   return card;
 }
 
+/**
+ * A card entering a hand takes the next arrival rank, so a searched card lands
+ * at the right end; a card leaving one drops the rank it no longer needs.
+ */
+function takeHandArrival(player: MutablePlayer, card: MutableCard): void {
+  card.displayOrder = player.handArrivals;
+  player.handArrivals += 1;
+}
+
 function insertPublicCard(
   player: MutablePlayer,
   location: PublicLocation,
   sequence: number,
   card: MutableCard,
 ): boolean {
+  if (location === "hand") takeHandArrival(player, card);
+  else delete card.displayOrder;
   const zone = publicZone(player, location);
   if (zone === null) return false;
   if (isFixedLocation(location)) {

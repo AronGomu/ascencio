@@ -2350,3 +2350,34 @@ Main Phase 1, so the hand cards carry legal actions.
 - [ ] Repeat one freeze/release cycle on a touch device or the browser's device toolbar:
       tapping a hand card freezes it, tapping it again releases it.
 - [ ] Confirm the browser console shows no errors during the above.
+
+## T10 stable-local-hand-order
+
+Start a duel with the preset decks (`npm run dev`, `#/duel`) and play to your own
+Main Phase 1. You need a card that searches your Deck (fetches a card to your hand);
+if the preset hand offers none, play on until a Deck-search effect resolves.
+
+- [ ] Before searching, read your hand left to right and write the order down.
+- [ ] Resolve the search and pick a card: the fetched card appears at the **rightmost**
+      end of your hand, and every card you wrote down is still in the same place, in the
+      same left-to-right order. Nothing slides sideways to make room in the middle.
+- [ ] Watch the hand through the rest of the turn — each further draw also lands at the
+      right end, and no engine shuffle ever reorders the cards you already held.
+- [ ] Play the card the search fetched (click it to pin its zoom, then click its action
+      button): the card that leaves your hand is the one you clicked, not a neighbour.
+- [ ] Play a card from the **middle** of your hand the same way: again the card that
+      leaves is the one you clicked, and the cards on either side close the gap without
+      otherwise reordering.
+- [ ] Drag a hand card onto a highlighted zone and drop it: the dropped card is the one
+      you dragged.
+- [ ] Reach a prompt that asks you to pick cards in hand (a tribute, a discard, a cost):
+      click the rightmost card — the card that highlights and the card the prompt resolves
+      on are the one you clicked.
+- [ ] Keyboard: Tab into your hand, then press the Right arrow repeatedly — focus walks
+      your cards strictly left to right as you see them, with no jumping back and forth,
+      and the Left arrow walks back the same way.
+- [ ] Look at the opponent's band along the top: their card backs are unchanged, still one
+      centred group in the same count, and nothing about your hand's order affects it.
+- [ ] End your turn and take a second turn: the hand still holds its order from the
+      previous turn plus the new draw at the right end.
+- [ ] Confirm the browser console shows no errors during the above.

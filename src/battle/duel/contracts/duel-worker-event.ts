@@ -574,6 +574,9 @@ function validatePublicPlayer(
         (zone === "graveyard" && record.location === "graveyard") ||
         (zone === "banished" && record.location === "banished");
       if (!validLocation) throw invalid(`${cardLabel}.location`);
+      /* `displayOrder` addresses the eye and only the hand has one. */
+      if (zone !== "hand" && record.displayOrder !== undefined)
+        throw invalid(`${cardLabel}.displayOrder`);
       if (zone === "deck" && record.sequence !== cardIndex)
         throw invalid(`${cardLabel}.sequence order`);
       if (zone === "deck" && record.owner !== index)
@@ -625,6 +628,7 @@ function validatePublicCard(
       "controller",
       "location",
       "sequence",
+      "displayOrder",
       "position",
       "faceUp",
       "counters",
@@ -640,6 +644,15 @@ function validatePublicCard(
   requirePlayer(card.controller, `${label}.controller`);
   requireEnum(card.location, LOCATIONS, `${label}.location`);
   requireSafeInteger(card.sequence, `${label}.sequence`, 0, 255);
+  /* Unlike `sequence`, this counts every arrival in a hand across the whole
+     duel, so it is not bounded by the hand's size. */
+  if (card.displayOrder !== undefined)
+    requireSafeInteger(
+      card.displayOrder,
+      `${label}.displayOrder`,
+      0,
+      Number.MAX_SAFE_INTEGER,
+    );
   requireEnum(card.position, POSITIONS, `${label}.position`);
   requireBoolean(card.faceUp, `${label}.faceUp`);
   const expectedFaceUp =

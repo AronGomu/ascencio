@@ -70,6 +70,38 @@ function revealOpponentCard(
   });
 }
 
+const OWN_HAND_CODES = [97590747, 5053103, 46986414, 89631139, 55144522];
+
+function drawOwnHand(
+  value: DuelStateProjector,
+  codes: readonly number[] = OWN_HAND_CODES,
+) {
+  value.apply({
+    type: EngineMessageType.DRAW,
+    player: 0,
+    drawn: codes.map((code) => ({
+      code,
+      position: EnginePosition.FACE_DOWN_DEFENSE,
+    })),
+  });
+}
+
+/** The own hand as the player sees it: arrival order, left to right. */
+function ownHandByArrival(value: DuelStateProjector): readonly number[] {
+  const hand = value.snapshot().players[0].hand;
+  /* A hand card without a display order would sort arbitrarily and pass this
+     helper by accident, so prove every card carries one first. */
+  for (const card of hand) expect(card.displayOrder).toBeTypeOf("number");
+  return [...hand]
+    .sort((left, right) => left.displayOrder! - right.displayOrder!)
+    .map((card) => card.code as number);
+}
+
+/** The own hand as the engine addresses it. */
+function ownHandByEngine(value: DuelStateProjector): readonly number[] {
+  return value.snapshot().players[0].hand.map((card) => card.code as number);
+}
+
 describe("DuelStateProjector", () => {
   it.each([true, false])(
     "projects the chosen immutable layout: %s",
@@ -1394,6 +1426,175 @@ describe("DuelStateProjector", () => {
       [5053103, 0],
       [97590747, 1],
     ]);
+  });
+
+  it("local hand keeps arrival order across an engine shuffle", () => {
+    const value = projector();
+    drawOwnHand(value);
+
+    value.apply({
+      type: EngineMessageType.SHUFFLE_HAND,
+      player: 0,
+      cards: [...OWN_HAND_CODES].toReversed(),
+    });
+
+    /* The engine really did reorder the hand it addresses ... */
+    expect(ownHandByEngine(value)).toEqual([...OWN_HAND_CODES].toReversed());
+    /* ... and the player's own hand did not move under them. */
+    expect(ownHandByArrival(value)).toEqual(OWN_HAND_CODES);
+  });
+
+  it("a card added to the local hand lands last", () => {
+    const value = projector();
+    drawOwnHand(value);
+    /* A search: the engine fetches a card out of the deck and inserts it at
+       the front of the hand, then shuffles. */
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 55623480,
+      from: {
+        controller: 0,
+        location: EngineLocation.DECK,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.HAND,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    });
+    value.apply({
+      type: EngineMessageType.SHUFFLE_HAND,
+      player: 0,
+      cards: [...OWN_HAND_CODES, 55623480],
+    });
+
+    const hand = value.snapshot().players[0].hand;
+    const fetched = hand.find((card) => card.code === 55623480);
+    expect(fetched?.displayOrder).toBe(
+      Math.max(...hand.map((card) => card.displayOrder!)),
+    );
+    expect(ownHandByArrival(value)).toEqual([...OWN_HAND_CODES, 55623480]);
+  });
+
+  it("removing a card leaves the rest ordered", () => {
+    const value = projector();
+    drawOwnHand(value);
+    value.apply({
+      type: EngineMessageType.SHUFFLE_HAND,
+      player: 0,
+      cards: [...OWN_HAND_CODES].toReversed(),
+    });
+
+    /* Play a card from the middle of the hand. The shuffle above left it at
+       engine sequence 3, so a hand that fell back to engine order would come
+       out reversed here. */
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: 5053103,
+      from: {
+        controller: 0,
+        location: EngineLocation.HAND,
+        sequence: 3,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+
+    expect(ownHandByArrival(value)).toEqual(
+      OWN_HAND_CODES.filter((code) => code !== 5053103),
+    );
+    /* The played card takes its display order with it. */
+    expect(value.snapshot().players[0].monsters[0]).not.toHaveProperty(
+      "displayOrder",
+    );
+  });
+
+  it("opponent hand still follows engine order", () => {
+    const value = projector();
+    drawOwnHand(value);
+    value.apply({
+      type: EngineMessageType.DRAW,
+      player: 1,
+      drawn: [
+        { code: 5053103, position: EnginePosition.FACE_DOWN_DEFENSE },
+        { code: 46986414, position: EnginePosition.FACE_DOWN_DEFENSE },
+      ],
+    });
+    value.apply({
+      type: EngineMessageType.SHUFFLE_HAND,
+      player: 1,
+      cards: [46986414, 5053103],
+    });
+
+    const snapshot = value.snapshot();
+    expect(snapshot.players[1].handCount).toBe(2);
+    expect(snapshot.players[1].hand).toEqual([]);
+    /* A display order exists only where the eye needs one: the own hand. No
+       other zone and no opponent card carries it across the boundary. */
+    expect(JSON.stringify(snapshot).match(/"displayOrder"/g)).toHaveLength(
+      snapshot.players[0].hand.length,
+    );
+  });
+
+  it("responses still use engine indexes", () => {
+    const value = projector();
+    drawOwnHand(value);
+    value.apply({
+      type: EngineMessageType.SHUFFLE_HAND,
+      player: 0,
+      cards: [...OWN_HAND_CODES].toReversed(),
+    });
+
+    const hand = value.snapshot().players[0].hand;
+    const visuallyLast = [...hand].sort(
+      (left, right) => left.displayOrder! - right.displayOrder!,
+    )[hand.length - 1]!;
+
+    /* The rightmost card on screen is the engine's sequence 0 after this
+       shuffle: a choice made on it must carry 0, not 4. */
+    expect(visuallyLast.code).toBe(OWN_HAND_CODES.at(-1));
+    expect(visuallyLast.sequence).toBe(0);
+    expect(hand[visuallyLast.sequence]?.instanceId).toBe(
+      visuallyLast.instanceId,
+    );
+  });
+
+  it("restores the hand display order with the checkpoint", () => {
+    const value = projector();
+    drawOwnHand(value);
+    const checkpoint = value.checkpoint();
+
+    /* A speculative branch draws more cards, then is rolled back. */
+    drawOwnHand(value, [55623480, 12580477]);
+    value.restore(checkpoint);
+    drawOwnHand(value, [12580477]);
+
+    expect(ownHandByArrival(value)).toEqual([...OWN_HAND_CODES, 12580477]);
+  });
+
+  it("the worker contract accepts a hand card carrying its display order", () => {
+    const value = projector();
+    drawOwnHand(value);
+    value.apply({
+      type: EngineMessageType.SHUFFLE_HAND,
+      player: 0,
+      cards: [...OWN_HAND_CODES].toReversed(),
+    });
+
+    expect(value.snapshot().players[0].hand[0]?.displayOrder).toBeTypeOf(
+      "number",
+    );
+    expect(() =>
+      parseDuelWorkerEvent({ type: "state", state: value.snapshot() }),
+    ).not.toThrow();
   });
 
   it("accepts hidden code-zero deck moves emitted while sorting", () => {

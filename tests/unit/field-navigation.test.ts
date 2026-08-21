@@ -9,6 +9,8 @@ import {
   type BoardViewModel,
 } from "../../src/battle/field/board-view-model.ts";
 import { createFieldRenderLayout } from "../../src/battle/field/duel-field-geometry.ts";
+import { cardInstanceId } from "../../src/battle/duel/contracts/ids.ts";
+import type { PublicDuelState } from "../../src/battle/duel/contracts/public-duel-state.ts";
 import {
   BOARD_CARD_TEXTS,
   BOARD_VIEW_MODEL_FIXTURES,
@@ -76,6 +78,35 @@ function synchronize(
     actionableTargets: new Set(actionableTargets),
     context,
   });
+}
+
+/**
+ * An own hand whose arrival order is the exact reverse of the engine order a
+ * shuffle left behind, so a nav path built on `sequence` and one built on
+ * `displayOrder` cannot accidentally agree.
+ */
+function reversedArrivalHandBoard(): BoardViewModel {
+  const base = BOARD_VIEW_MODEL_FIXTURES["ST-01"];
+  const template = base.players[0].hand[0]!;
+  const hand = [0, 1, 2].map((sequence) =>
+    Object.freeze({
+      ...template,
+      instanceId: cardInstanceId(`arrival-${sequence}`),
+      sequence,
+      displayOrder: 2 - sequence,
+    }),
+  );
+  const state: PublicDuelState = {
+    ...base,
+    players: [
+      { ...base.players[0], handCount: hand.length, hand },
+      base.players[1],
+    ],
+  };
+  const result = mapSnapshotToBoard(state, BOARD_CARD_TEXTS);
+  if (!result.ok)
+    throw new Error(`Arrival-hand mapping failed: ${result.error.type}`);
+  return result.value;
 }
 
 function sharedExtraMonsterTargets(
@@ -164,6 +195,38 @@ describe("field navigation", () => {
       key: "Home",
     });
     expect(state.activeTarget).toBe(opponentHand[1]);
+  });
+
+  it("walks the own hand in display order, not engine order", () => {
+    const value = reversedArrivalHandBoard();
+    let state = synchronize(value, ["card:arrival-2"]);
+
+    /* `arrival-2` is the engine's last card but the player's first, so one
+       step right must reach `arrival-1` — the next card to its right on
+       screen — rather than walking off the row edge. */
+    state = reduceFieldNavigation(state, {
+      type: "move",
+      board: value,
+      key: "ArrowRight",
+    });
+    expect(state.activeTarget).toBe("card:arrival-1");
+    state = reduceFieldNavigation(state, {
+      type: "move",
+      board: value,
+      key: "ArrowRight",
+    });
+    expect(state.activeTarget).toBe("card:arrival-0");
+  });
+
+  it("places own hand cards left to right in display order", () => {
+    const value = reversedArrivalHandBoard();
+    const handCards = value.cards.filter(({ zoneId }) => zoneId === "p0:hand");
+
+    expect(
+      [...handCards]
+        .sort((left, right) => left.x - right.x)
+        .map(({ id }) => id),
+    ).toEqual(["arrival-2", "arrival-1", "arrival-0"]);
   });
 
   it("keeps horizontal movement row-local so vertical keys reach hand defense cards", () => {

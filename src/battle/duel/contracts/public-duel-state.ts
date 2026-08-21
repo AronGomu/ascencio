@@ -46,6 +46,13 @@ export interface PublicCard {
   readonly controller: PlayerIndex;
   readonly location: PublicLocation;
   readonly sequence: number;
+  /**
+   * Arrival rank inside the owner's hand, present on hand cards only. Two
+   * orders exist per hand: `sequence` addresses the engine, `displayOrder`
+   * addresses the eye, so an engine shuffle never moves the hand a player is
+   * looking at (ADR-047). Never part of a choice payload.
+   */
+  readonly displayOrder?: number;
   readonly position: CardPosition;
   readonly faceUp: boolean;
   readonly counters: readonly PublicCounter[];

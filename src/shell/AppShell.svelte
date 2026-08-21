@@ -183,12 +183,15 @@
 
 <!-- `data-stage-rotated` reports the mode, not a measurement: the quarter turn
      itself lives in `src/styles/app.css` so it lands in the same layout pass as
-     the viewport change. -->
+     the viewport change. `data-stage-route` reports the route for the same
+     reason: the stylesheet decides which routes keep the 16:9 width law and
+     which spend the pillarbox (only the duel does today). -->
 <div
   class="app-stage"
   data-cy="app-stage"
   data-stage-mode={box.mode}
   data-stage-rotated={box.rotated ? "true" : undefined}
+  data-stage-route={route.kind}
   bind:this={stage}
 >
   {#if route.kind === "home"}

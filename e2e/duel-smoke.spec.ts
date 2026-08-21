@@ -1386,7 +1386,10 @@ test("default duel occupies exactly one viewport at every supported viewport", a
 
 /* T4: above the 1024px breakpoint the app is a centred 16:9 stage, so a
    viewport that is not itself 16:9 gets `--bg` bars instead of a stretched
-   duel — and the page still never scrolls. */
+   duel — and the page still never scrolls. The duel is the one route that
+   spends the *vertical* bars: it keeps the 16:9 height and takes the whole
+   viewport width, because the board is sized from the stage height and the
+   reclaimed width is worth more to the right rail (see below). */
 test("the shell letterboxes the app to a 16:9 stage above the breakpoint", async ({
   page,
 }) => {
@@ -1412,12 +1415,18 @@ test("the shell letterboxes the app to a 16:9 stage above the breakpoint", async
     await expect(async () => {
       const b = await stage.boundingBox();
       if (b === null) throw new Error(`${viewport.id} stage has no box`);
+      // The height law is untouched: the stage is never taller than the 16:9
+      // rectangle that fits, so `VP-BARS-Y` still gets its top and bottom bars.
       expect(
-        Math.abs(b.width - (b.height * 16) / 9),
-        `${viewport.id} stage must be 16:9 (got ${b.width}x${b.height})`,
-      ).toBeLessThanOrEqual(1);
-      expect(b.width).toBeLessThanOrEqual(viewport.width);
+        b.height,
+        `${viewport.id} stage keeps the 16:9 height (got ${b.width}x${b.height})`,
+      ).toBeLessThanOrEqual((viewport.width * 9) / 16 + 1);
       expect(b.height).toBeLessThanOrEqual(viewport.height);
+      // The width law is lifted for the duel: no side bars are left unspent.
+      expect(
+        b.width,
+        `${viewport.id} duel stage spans the viewport width`,
+      ).toBeGreaterThanOrEqual(viewport.width - 1);
       box = b;
     }).toPass();
 
@@ -1433,6 +1442,7 @@ test("the shell letterboxes the app to a 16:9 stage above the breakpoint", async
       ).toBeLessThanOrEqual(metrics.innerHeight + 1);
       expect(metrics.bodyOverflow).toBe("hidden");
     }).toPass();
+    await assertNoPageWideHorizontalOverflow(page, viewport.id);
 
     // The duel renders inside the stage, never outside its bars.
     await expect(async () => {
@@ -1456,6 +1466,87 @@ test("the shell letterboxes the app to a 16:9 stage above the breakpoint", async
       throw new Error("stage or duel region has no bounding box");
     expect(Math.abs(regionBox.height - stageBox.height)).toBeLessThanOrEqual(1);
   }).toPass();
+
+  // Every other route keeps both halves of T4, so the full-bleed width is a
+  // duel exemption rather than a repealed law. Checked last, because it leaves
+  // the duel route.
+  await page.setViewportSize({ width: 1280, height: 600 });
+  await page.goto("./#/");
+  await expect(stage).toHaveAttribute("data-stage-route", "home");
+  const homeBox = await stage.boundingBox();
+  if (homeBox === null) throw new Error("home stage has no box");
+  expect(
+    Math.abs(homeBox.width - (homeBox.height * 16) / 9),
+    `home stage must be 16:9 (got ${homeBox.width}x${homeBox.height})`,
+  ).toBeLessThanOrEqual(1);
+  expect(homeBox.width).toBeLessThan(1280);
+});
+
+/* The board is sized from the stage height, so the width the duel reclaims
+   from the pillarbox cannot make it bigger. It goes to the right rail instead,
+   minus `--duel-field-inset` of breathing room on each side of the board. */
+test("the duel spends the reclaimed pillarbox on the right rail, not the board", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1920, height: 900 });
+  await page.goto("./#/duel");
+  await startPresetDuel(page);
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+
+  const boxes = await page.evaluate(() => {
+    const rect = (selector: string): DOMRect | null =>
+      document.querySelector(selector)?.getBoundingClientRect() ?? null;
+    return {
+      shell: rect('[data-cy="duel-shell"]'),
+      preview: rect('[data-cy="card-preview-panel"]'),
+      slot: rect('[data-cy="duel-field-slot"]'),
+      field: rect('[data-cy="duel-field"]'),
+      rail: rect('[data-cy="duel-right-rail"]'),
+      innerWidth: window.innerWidth,
+      // The 16:9 width the stage would have had, which is what the field
+      // column is still sized against.
+      letterboxWidth:
+        (Math.min(window.innerHeight, (window.innerWidth * 9) / 16) * 16) / 9,
+    };
+  });
+  const { shell, preview, slot, field, rail } = boxes;
+  if (
+    shell === null ||
+    preview === null ||
+    slot === null ||
+    field === null ||
+    rail === null
+  )
+    throw new Error("missing duel shell geometry");
+
+  // 1920x900 is wider than 16:9, so there is a real bar to reclaim.
+  expect(boxes.letterboxWidth).toBeLessThan(boxes.innerWidth - 2);
+  expect(shell.width).toBeGreaterThanOrEqual(boxes.innerWidth - 1);
+
+  // The board keeps the width the letterboxed stage gave it.
+  expect(field.width).toBeLessThanOrEqual(slot.width + 1);
+  expect(
+    slot.width,
+    "the field column is sized from the letterboxed stage, not the viewport",
+  ).toBeLessThanOrEqual(boxes.letterboxWidth - preview.width + 1);
+
+  // Everything the shell reclaimed past the board's inset is the rail's.
+  const reclaimed = boxes.innerWidth - boxes.letterboxWidth;
+  expect(
+    rail.width,
+    "the rail absorbs the reclaimed pillarbox",
+  ).toBeGreaterThan(reclaimed / 2);
+  expect(rail.left).toBeGreaterThanOrEqual(slot.right - 1);
+  expect(rail.right).toBeLessThanOrEqual(shell.right + 1);
+  // The board gained breathing room on both sides rather than only one.
+  expect(
+    Math.abs(field.left - preview.right - (rail.left - field.right)),
+    "the board is inset symmetrically between the preview and the rail",
+  ).toBeLessThanOrEqual(2);
+
+  await assertNoPageWideHorizontalOverflow(page, "duel full-bleed");
 });
 
 test("short-height duel keeps the full-height preview column, bounded art and scroll-ready text", async ({

@@ -16,6 +16,10 @@
   text-rendering: optimizeLegibility;
   --preview-w: 15.5rem;
   --rail-min: 15rem;
+  /* How much of the reclaimed pillarbox the board is allowed to spend on
+     breathing room before the rail takes the rest. Never comes out of the
+     board's own width — see `.duel-field-slot`. */
+  --duel-field-inset: 1.5rem;
 }
 
 * {
@@ -72,6 +76,33 @@ body {
   .app-stage {
     --stage-w: 100vw;
     --stage-h: 100svh;
+  }
+}
+
+/* The duel is the one region that spends the pillarbox. Above 16:9 — which is
+   what a 1920x1080 screen becomes as soon as browser chrome eats into the
+   height — T4 leaves a `--bg` bar on each side. The board cannot use them: it
+   is sized from `--stage-h` (see `.duel-field-slot`), so a wider column buys
+   no bigger board, only more dead space around it. So the width law is lifted
+   for the duel and the height law is left exactly as it was: the board is
+   unchanged, keeps `--duel-field-inset` of the reclaimed space as margin, and
+   the right rail's `1fr` absorbs everything else.
+
+   Only above the breakpoint. Below it the three-column shell is already tight
+   and the portrait duel runs on its own rotated box, so neither mode has bars
+   worth handing to a rail.
+
+   `computeStageBox` deliberately still reports the 16:9 box: it is read by the
+   deck editor, which never renders on this route. */
+@media (min-width: 1024px) {
+  .app-stage[data-stage-route="duel"],
+  .app-stage[data-stage-route="duel-session"] {
+    --stage-w: 100vw;
+    --duel-field-margin: clamp(
+      0px,
+      calc((100vw - var(--stage-h) * 16 / 9) / 2),
+      var(--duel-field-inset)
+    );
   }
 }
 
@@ -412,6 +443,11 @@ h4 {
   grid-template-rows: auto auto minmax(0, 1fr) auto;
   gap: 0.75rem;
   min-width: 0;
+  /* The pillarbox used to sit between this rail and the edge of the screen.
+     Once the duel spends it the rail runs to the true viewport edge, so it
+     keeps the same inset the board does — and only while there was a bar to
+     spend, so an exactly-16:9 viewport is untouched. */
+  padding-inline-end: var(--duel-field-margin, 0px);
 }
 .duel-right-rail__header {
   border-bottom: 2px solid var(--border);
@@ -435,14 +471,26 @@ h4 {
   flex: 0 0 2.5rem;
 }
 .duel-right-rail__identity {
+  display: grid;
+  justify-items: center;
   border: 2px solid transparent;
 }
 .duel-right-rail__identity.active {
   border-color: var(--accent);
 }
+/* The avatar is square and sized by the column, so on its own it would grow
+   with the rail — and the rail now grows with whatever the duel reclaims from
+   the pillarbox. Two of them plus the status band have to fit the stage's
+   height, so the square is capped against `--stage-h` as well and the surplus
+   width goes to the status text instead. The cap only bites once the rail is
+   wider than roughly a third of the stage is tall; at `--rail-min` the column
+   still wins, which is also what keeps a short viewport's rail intact. */
+.duel-right-rail__identity img,
+.duel-right-rail__life {
+  width: min(100%, calc(var(--stage-h, 100svh) * 0.26));
+}
 .duel-right-rail__identity img {
   display: block;
-  width: 100%;
   height: auto;
   aspect-ratio: 1;
   object-fit: cover;
@@ -451,7 +499,6 @@ h4 {
 }
 .duel-right-rail__life {
   display: block;
-  width: 100%;
   margin: 0.35rem auto 0;
   padding: 0.3rem 0;
   border: 2px solid var(--accent);
@@ -530,6 +577,7 @@ h4 {
   :root {
     --preview-w: 13.5rem;
     --rail-min: 12rem;
+    --duel-field-inset: 0.75rem;
   }
 }
 
@@ -949,7 +997,22 @@ li + li {
 
 .duel-field-slot {
   position: relative;
-  width: calc(var(--stage-w, 100vw) - var(--preview-w) - var(--rail-min));
+  /* `--stage-h * 16 / 9` is the letterboxed stage's width in every mode the
+     duel renders — upright and rotated alike, because both derive the two axes
+     from the same 16:9 fit — so this is the width the column had before the
+     full-bleed rule above, and the board it produces is identical.
+     `--stage-w` is not used here on purpose: on this route it is now the whole
+     viewport, and widening the column would only pad the board with dead space
+     that the rail can put to better use.
+
+     The inset is margin, not padding: `DuelField` sizes the board from this
+     element's `clientWidth`, which padding would shrink and margin does not.
+     It is also clamped to the reclaimed bar, so a viewport that is exactly
+     16:9 keeps every pixel of board it has today. */
+  width: calc(
+    var(--stage-h, 100svh) * 16 / 9 - var(--preview-w) - var(--rail-min)
+  );
+  margin-inline: var(--duel-field-margin, 0px);
   min-width: 0;
   min-height: 0;
   display: grid;

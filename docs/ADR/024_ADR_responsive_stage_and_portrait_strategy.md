@@ -32,6 +32,21 @@ Two product requirements collided: a fixed 16:9 stage with black bars, and mobil
 - **Orientation-only rule.** Cleaner conceptually, but a 900px landscape desktop window then keeps a desktop layout it cannot fit.
 - **No letterboxing.** Browser chrome keeps squeezing the field; ratio drifts per window.
 
+## Amendment 2026-08-20: the duel spends the pillarbox
+
+Decision point 2 held both axes of the stage box for every route. It still does, except for the duel's width.
+
+Above the breakpoint a viewport wider than 16:9 — which is what a 1920x1080 screen becomes the moment browser chrome takes a slice of the height — leaves a `--bg` bar on each side. The duel cannot use extra width for a bigger board: `computeFieldGeometry` is driven by the stage height in every desktop case, so a wider field column only pads the board with dead space. The bars were therefore costing the right rail real estate for nothing.
+
+So on `#/duel` and `#/duel/session/*`, above the breakpoint only:
+
+- `--stage-w` becomes `100vw`; `--stage-h` and the whole height law are untouched, so a viewport that is *taller* than 16:9 keeps its top and bottom bars.
+- The field column stays sized against the letterboxed width (`--stage-h * 16 / 9`, which is the same number in both the upright and rotated boxes), so the board is pixel-identical and the acceptance matrix is unaffected.
+- The board keeps `--duel-field-inset` of the reclaimed width as margin on each side, and the rail's `1fr` absorbs the rest. The inset is clamped to the reclaimed bar, so an exactly-16:9 viewport renders exactly as it did before.
+- `.duel-right-rail` caps its avatars against `--stage-h`, because a square sized by a column that now grows would otherwise push the rail past the stage.
+
+Every other route keeps both halves of the original law. `computeStageBox` still reports the 16:9 box: its only consumer is the deck editor, which never renders on the duel route. The stylesheet decides which routes bleed, from the `data-stage-route` the shell reports.
+
 ## Consequences
 
 - One `data-stage-mode` attribute and one context value drive every domain's responsive behavior.

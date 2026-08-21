@@ -118,14 +118,40 @@ describe("global styles", () => {
   });
 
   /* The duel must measure the stage, not the viewport, or it keeps its old
-     full-viewport height inside a letterboxed box. */
+     full-viewport height inside a letterboxed box. The field column stays on
+     the *letterboxed* width even though the duel route widens `--stage-w` to
+     the viewport: the board is height-driven, so the reclaimed pillarbox is
+     the rail's, not the board's. */
   it("sizes the duel against the stage box with a viewport fallback", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     expect(ruleBlock(css, "main.is-duel-viewport {")).toContain(
       "height: var(--stage-h, 100svh)",
     );
-    expect(ruleBlock(css, ".duel-field-slot {")).toContain(
-      "width: calc(var(--stage-w, 100vw) - var(--preview-w) - var(--rail-min))",
+    const slot = ruleBlock(css, ".duel-field-slot {");
+    expect(slot).toContain(
+      "width: calc(\n    var(--stage-h, 100svh) * 16 / 9 - var(--preview-w) - var(--rail-min)\n  )",
+    );
+    expect(slot).not.toContain("width: calc(var(--stage-w");
+    expect(slot).toContain("margin-inline: var(--duel-field-margin, 0px)");
+  });
+
+  /* The duel is the only route that spends the pillarbox, and only above the
+     breakpoint. Losing either half of that condition would stretch the shared
+     stage for every other domain, or hand a phone's bars to a cramped rail. */
+  it("lets only the duel route spend the pillarbox above the breakpoint", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const bleed = ruleBlock(
+      css,
+      '.app-stage[data-stage-route="duel"],\n  .app-stage[data-stage-route="duel-session"] {',
+    );
+    expect(bleed).toContain("--stage-w: 100vw");
+    // The inset is only ever paid out of the reclaimed bar, so an exactly-16:9
+    // viewport keeps the board it has today.
+    expect(bleed).toContain("--duel-field-margin: clamp(");
+    expect(bleed).toContain("calc((100vw - var(--stage-h) * 16 / 9) / 2)");
+    expect(bleed).toContain("var(--duel-field-inset)");
+    expect(css.slice(0, css.indexOf(bleed))).toMatch(
+      /@media \(min-width: 1024px\) \{\s*$/,
     );
   });
 

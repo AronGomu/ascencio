@@ -3,7 +3,7 @@
 > Status: accepted
 > Decided: 2026-08-14
 > Owners: duel-worker, deck-domain architecture
-> Plan: [`../../artifacts/PLAN_2026_08_14_three_ui_restructure.md`](../../artifacts/PLAN_2026_08_14_three_ui_restructure.md) — T17, T18
+> Commit: `c27f4b0` — T17, T18
 
 ## Context
 

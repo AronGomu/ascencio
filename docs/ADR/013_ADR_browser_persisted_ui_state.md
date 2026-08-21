@@ -4,7 +4,7 @@
 > Decided: 2026-08-10
 > Superseded: 2026-08-13
 > Owners: browser UI state architecture
-> Historical plan: [`../../artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md`](../../artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md) — T3, T14
+> Commit: `5eac0b5` — T3, T14
 
 ## Context
 

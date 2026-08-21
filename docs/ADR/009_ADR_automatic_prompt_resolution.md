@@ -3,7 +3,7 @@
 > Status: accepted; planned
 > Decided: 2026-08-09
 > Owners: prompt architecture
-> Plan: [`../../artifacts/PLAN_2026_08_09_duel_field_feedback_round_2.md`](../../artifacts/PLAN_2026_08_09_duel_field_feedback_round_2.md) — T4, T5
+> Commit: `b5702e2` — T4, T5
 
 ## Context
 

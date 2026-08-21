@@ -3,7 +3,7 @@
 > Status: accepted; planned
 > Decided: 2026-08-10
 > Owners: preset and asset architecture
-> Plan: [`../../artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md`](../../artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md) — T2
+> Commit: `5eac0b5` — T2
 
 ## Context
 

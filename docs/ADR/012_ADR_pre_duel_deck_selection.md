@@ -3,7 +3,7 @@
 > Status: accepted; planned
 > Decided: 2026-08-10
 > Owners: duel lifecycle architecture
-> Plan: [`../../artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md`](../../artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md) — T3
+> Commit: `5eac0b5` — T3
 
 ## Context
 

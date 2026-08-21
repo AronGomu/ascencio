@@ -4,7 +4,7 @@
 > Decided: 2026-08-08
 > Superseded: 2026-08-13
 > Owners: presentation architecture
-> Historical plan: [`../../artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md`](../../artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md) — T2, T3, T4, T5, T8
+> Commit: `f0139d0` — T2, T3, T4, T5, T8
 
 ## Context
 

@@ -3,7 +3,7 @@
 > Status: accepted
 > Decided: 2026-08-14
 > Owners: application-shell architecture
-> Plan: [`../../artifacts/PLAN_2026_08_14_three_ui_restructure.md`](../../artifacts/PLAN_2026_08_14_three_ui_restructure.md) — T2, T5, T6, T7
+> Commit: `c27f4b0` — T2, T5, T6, T7
 
 ## Context
 

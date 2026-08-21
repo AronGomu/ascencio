@@ -41,10 +41,6 @@ This directory contains current project documentation and historical context. Ro
 | [`duel-field-interaction-model-v2.html`](duel-field-interaction-model-v2.html)                                                         | Styled round-2 interaction baseline                                                       |
 | [`duel-field-interaction-model-v3.html`](duel-field-interaction-model-v3.html)                                                         | Styled round-3 interaction model: knowledge, semantics, motion, windows, target routing   |
 | [`deck-selection-architecture.html`](deck-selection-architecture.html)                                                                 | Styled registry-to-picker-to-Worker deck-selection architecture                           |
-| [`../artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md`](../artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md)               | Completed TDD ticket ledger for the duel-field UX overhaul                                |
-| [`../artifacts/PLAN_2026_08_09_duel_field_feedback_round_2.md`](../artifacts/PLAN_2026_08_09_duel_field_feedback_round_2.md)     | Round-2 TDD ticket ledger                                                                 |
-| [`../artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md`](../artifacts/PLAN_2026_08_10_duel_field_feedback_round_3.md)     | Completed round-3 implementation ledger                                                   |
-| [`../artifacts/PLAN_2026_08_13_feedback_follow_up.html`](../artifacts/PLAN_2026_08_13_feedback_follow_up.html)                   | Completed full-height field + approved card-list implementation plan                      |
 | [`duel-field-validation-references.html`](duel-field-validation-references.html)                                                       | Styled rule/visual/a11y validation catalog                                                |
 | [`MVP_TECHNICAL_IMPLEMENTATION_PLAN.md`](MVP_TECHNICAL_IMPLEMENTATION_PLAN.md)                                                         | Completed MVP/Phaser baseline audit plan                                                  |
 | [`assets/asset-import-pipeline.md`](assets/asset-import-pipeline.md)                                                                   | Implemented asset acquisition, generation, and verification pipeline                      |
@@ -72,10 +68,17 @@ architecture/
 
 Start with [`card-game-vn-handoff/00-index.md`](card-game-vn-handoff/00-index.md), then use [`card-game-vn-handoff/08-phased-implementation-plan.md`](card-game-vn-handoff/08-phased-implementation-plan.md) for implementation order.
 
-## Agent artifact roots
+## Plans and tickets are ephemeral
 
-- [`../artifacts/`](../artifacts/) — existing design/prototype evidence.
-- [`../artifacts/`](../artifacts/) — implementation-plan indexes, self-contained tickets, rendered plan HTML (caller-required spelling).
+Plans, self-contained tickets, grill records and design scratch live in the repo-root `artifacts` directory. That directory is working state: it is deleted when a round of work finishes. **No durable document links into it** — not an ADR, not an architecture doc, not this index. Everything that must outlive a round belongs in an ADR or under [`architecture/`](architecture/).
+
+Provenance is cited as an immutable git commit instead. Every ADR header carries one line of this shape:
+
+```text
+> Commit: `f0139d0` — T1
+```
+
+`f0139d0` is the commit that introduced that ADR. It also contains the plan and ticket files the decision was written against, so `git show f0139d0` recovers them long after the working directory is cleared. The `— T1` suffix is the ticket range the decision covered, kept because it records scope. The design documents under `docs/` cite the same commit in their footer.
 
 ## Historical material
 

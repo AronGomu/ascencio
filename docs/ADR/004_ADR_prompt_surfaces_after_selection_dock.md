@@ -3,7 +3,7 @@
 > Status: accepted; planned
 > Decided: 2026-08-08
 > Owners: interaction architecture
-> Plan: [`../../artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md`](../../artifacts/PLAN_2026_08_08_duel_field_ux_overhaul.md) — T5, T6, T7, T9
+> Commit: `f0139d0` — T5, T6, T7, T9
 
 ## Context
 

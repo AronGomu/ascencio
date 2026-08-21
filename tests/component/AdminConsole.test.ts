@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import "fake-indexeddb/auto";
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { DeckRecord, DeckRepository } from "../../src/decks/index.ts";
@@ -8,7 +9,7 @@ import {
   ADMIN_STORAGE_TARGETS,
   type AdminStorageTarget,
 } from "../../src/shell/admin/admin-actions.ts";
-import HomeScreen from "../../src/shell/screens/HomeScreen.svelte";
+import MainMenuScreen from "../../src/shell/screens/MainMenuScreen.svelte";
 import { createShellStore } from "../../src/shell/shell-store.ts";
 
 afterEach(() => {
@@ -170,8 +171,8 @@ describe("AdminConsole", () => {
 });
 
 describe("admin reachability", () => {
-  it("exposes no admin control on the home hub", () => {
-    render(HomeScreen, { store: createShellStore("#/", () => {}) });
+  it("exposes no admin control on the main menu", () => {
+    render(MainMenuScreen, { store: createShellStore("#/", () => {}) });
     expect(document.querySelector('[data-cy^="admin-"]')).toBeNull();
   });
 });

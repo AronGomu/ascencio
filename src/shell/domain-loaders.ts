@@ -7,6 +7,7 @@ import type {
   StoryHandoffOutcome,
   StoryState,
 } from "../story/index.ts";
+import type { StoryEntryIntent } from "./shell-store.ts";
 
 /** Each UI domain root is code-split, so the shell only holds a loader. */
 export type DomainLoader<
@@ -31,6 +32,10 @@ export type BattleDomainLoader = () => Promise<{
     is handed back the checkpointed state plus the one result that encounter
     produced; the shell owns the handoff id, the route and the duel itself. */
 export type StoryDomainProps = {
+  /** Which main-menu entry sent the player here, so the story can open on that
+      screen rather than repeating a title the shell already showed. `null`
+      when the route was reached any other way. */
+  readonly storyEntryIntent?: StoryEntryIntent | null;
   readonly onencounter?: (
     request: StoryEncounterRequest,
   ) => Promise<StoryHandoffOutcome>;

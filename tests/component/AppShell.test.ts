@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import "fake-indexeddb/auto";
 import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import AppShell from "../../src/shell/AppShell.svelte";
@@ -86,13 +87,13 @@ afterEach(() => {
 });
 
 describe("AppShell", () => {
-  it("mounts the home hub for the home route", () => {
+  it("mounts the main menu for the home route", () => {
     renderAt("#/");
     expect(
       document.querySelector('[data-cy="shell-region-home"]'),
     ).not.toBeNull();
     expect(
-      document.querySelector('[data-cy="home-entry-duel"]'),
+      document.querySelector('[data-cy="main-menu-free-play"]'),
     ).not.toBeNull();
     expect(document.querySelector('[data-cy="shell-region-duel"]')).toBeNull();
     expect(document.querySelector('[data-cy="shell-region-decks"]')).toBeNull();

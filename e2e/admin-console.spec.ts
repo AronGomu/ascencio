@@ -22,11 +22,11 @@ test("the admin console ships in the production bundle", async ({ page }) => {
   await expect(page.locator('[data-cy="admin-resets"]')).toBeVisible();
 });
 
-test("the console is not linked from the player-facing home hub", async ({
+test("the console is not linked from the player-facing main menu", async ({
   page,
 }) => {
   await page.goto("./");
-  await expect(page.locator('[data-cy="home-title"]')).toBeVisible();
+  await expect(page.locator('[data-cy="main-menu-title"]')).toBeVisible();
   await expect(page.locator('[data-cy^="admin-"]')).toHaveCount(0);
 });
 
@@ -40,7 +40,7 @@ test("the route index navigates to any indexed route", async ({ page }) => {
 
   await page.goto(adminUrl);
   await page.locator('[data-cy="admin-route-home"]').click();
-  await expect(page.locator('[data-cy="home-title"]')).toBeVisible();
+  await expect(page.locator('[data-cy="main-menu-title"]')).toBeVisible();
   expect(new URL(page.url()).hash).toBe("#/");
 });
 

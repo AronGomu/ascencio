@@ -57,6 +57,34 @@ describe("createShellStore", () => {
     expect(route).toEqual(HOME_ROUTE);
   });
 
+  /* The story opens on the screen the menu entry asked for, so the intent has
+     to survive the `hashchange` the navigation itself provokes. */
+  it("records which menu entry sent the player into the story", () => {
+    const setHash = vi.fn();
+    const store = createShellStore("#/", setHash);
+    const seen: (string | null)[] = [];
+    store.subscribe((state) => seen.push(state.storyEntryIntent));
+
+    store.enterStory("new");
+    store.syncFromHash("#/story");
+
+    expect(setHash).toHaveBeenCalledWith("#/story", false);
+    expect(seen).toEqual([null, "new"]);
+  });
+
+  /* Otherwise Back into the story replays the menu entry instead of resuming
+     where the player left it. */
+  it("drops the entry intent once the player leaves the story", () => {
+    const store = createShellStore("#/", vi.fn());
+    const seen: (string | null)[] = [];
+    store.subscribe((state) => seen.push(state.storyEntryIntent));
+
+    store.enterStory("continue");
+    store.navigate({ kind: "free-play" });
+
+    expect(seen).toEqual([null, "continue", null]);
+  });
+
   it("stops notifying after unsubscribe", () => {
     const store = createShellStore("#/", vi.fn());
     const seen: string[] = [];

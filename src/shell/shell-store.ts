@@ -1,7 +1,15 @@
 import { formatAppRoute, parseAppRoute, type AppRoute } from "./routes.ts";
 
+/** Which main-menu entry asked for the story, so the visual novel can open on
+    that screen instead of repeating its own title. */
+export type StoryEntryIntent = "new" | "continue" | "load";
+
 export interface ShellState {
   readonly route: AppRoute;
+  /** Set only by `enterStory`, and only for as long as the route is the story:
+      leaving it drops the intent, so coming back resumes where the player left
+      off rather than replaying the entry they once chose. */
+  readonly storyEntryIntent: StoryEntryIntent | null;
 }
 
 export interface NavigateOptions {
@@ -16,6 +24,8 @@ export interface ShellStore {
   subscribe(run: (state: ShellState) => void): () => void;
   /** Writes `location.hash`; the hashchange listener is not needed to react. */
   navigate(route: AppRoute, options?: NavigateOptions): void;
+  /** Navigates to the story, recording which menu entry sent the player. */
+  enterStory(intent: StoryEntryIntent): void;
   /** Applies a hash that the browser already owns, without writing it back. */
   syncFromHash(hash: string): void;
 }
@@ -31,12 +41,24 @@ export function createShellStore(
   initialHash: string,
   setHash: (hash: string, replace: boolean) => void,
 ): ShellStore {
-  let state: ShellState = { route: parseAppRoute(initialHash) };
+  let state: ShellState = {
+    route: parseAppRoute(initialHash),
+    storyEntryIntent: null,
+  };
   const subscribers = new Set<(state: ShellState) => void>();
 
-  function apply(route: AppRoute): void {
-    if (formatAppRoute(route) === formatAppRoute(state.route)) return;
-    state = { route };
+  function apply(route: AppRoute, intent: StoryEntryIntent | null): void {
+    /* The intent belongs to the story route it was chosen for. Carrying it
+       through `syncFromHash` is what lets it survive the `hashchange` the
+       navigation that set it provokes; dropping it anywhere else is what stops
+       it from outliving the visit. */
+    const carried = route.kind === "story" ? intent : null;
+    if (
+      formatAppRoute(route) === formatAppRoute(state.route) &&
+      carried === state.storyEntryIntent
+    )
+      return;
+    state = { route, storyEntryIntent: carried };
     for (const run of subscribers) run(state);
   }
 
@@ -50,10 +72,15 @@ export function createShellStore(
     },
     navigate(route, options) {
       setHash(formatAppRoute(route), options?.replace === true);
-      apply(route);
+      apply(route, state.storyEntryIntent);
+    },
+    enterStory(intent) {
+      const route: AppRoute = { kind: "story" };
+      setHash(formatAppRoute(route), false);
+      apply(route, intent);
     },
     syncFromHash(hash) {
-      apply(parseAppRoute(hash));
+      apply(parseAppRoute(hash), state.storyEntryIntent);
     },
   };
 }

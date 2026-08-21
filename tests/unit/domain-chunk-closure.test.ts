@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { mkdir, mkdtemp, readdir, rm, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -165,6 +165,50 @@ describe("staticHtmlScriptClosure", () => {
     await expect(
       staticHtmlScriptClosure(fixtureRoot, "index.html", []),
     ).rejects.toThrow(/no module entry script/);
+  });
+});
+
+/* The built-tree cases below are the airtight check, and they are skipped
+   whenever `dist/` is absent — which is every `npm run check:headless`. This
+   one reads the sources instead, so the mistake it guards is caught before a
+   build: the main menu is eager, and a static *value* import of
+   `src/story/index.ts` from anything eager makes the whole visual novel eager.
+   Rollup then reports INEFFECTIVE_DYNAMIC_IMPORT, emits no `story-*.js` chunk
+   at all, and `npm run build:verify` refuses the build (measured: entry chunk
+   32.49 kB → 131.31 kB). `import type` is erased, so it is not a value import
+   and not a leak. */
+describe("the shell's static import of the story", () => {
+  /* Reached only through `import("./admin/AdminConsole.svelte")`, so the story
+     it names lands in the admin chunk rather than the entry. */
+  const LAZY_ONLY = new Set(["src/shell/admin/admin-actions.ts"]);
+  /* `import type` is erased before the bundler sees it, and `import("…")` is
+     the lazy load itself, so neither counts. Removing the type imports first
+     rather than trying to exclude them in one pattern keeps a multi-line
+     `import type { … }` block from reading as a value import. */
+  const TYPE_IMPORT = /\bimport\s+type\s[\s\S]*?from\s*["'][^"']+["']/g;
+  const STORY_ENTRY = /\bfrom\s*["'][^"']*\/story\/index\.ts["']/;
+
+  function importsStoryEntryEagerly(file: string): boolean {
+    return STORY_ENTRY.test(
+      readFileSync(file, "utf8").replace(TYPE_IMPORT, ""),
+    );
+  }
+
+  function shellSources(directory: string): readonly string[] {
+    return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+      const absolute = path.join(directory, entry.name);
+      if (entry.isDirectory()) return shellSources(absolute);
+      return /\.(?:ts|svelte)$/.test(entry.name) ? [absolute] : [];
+    });
+  }
+
+  it("is confined to modules the entry never reaches", () => {
+    const offenders = shellSources(path.join(projectRoot, "src/shell"))
+      .filter(importsStoryEntryEagerly)
+      .map((file) => path.relative(projectRoot, file).split(path.sep).join("/"))
+      .filter((file) => !LAZY_ONLY.has(file));
+
+    expect(offenders).toStrictEqual([]);
   });
 });
 

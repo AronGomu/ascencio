@@ -275,16 +275,19 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test("the root route shows the home hub without booting the duel", async ({
+test("the root route shows the main menu without booting the duel", async ({
   page,
 }) => {
   const requests: string[] = [];
   page.on("request", (request) => requests.push(request.url()));
   await page.goto("./");
 
-  await expect(page.locator('[data-cy="home-title"]')).toBeVisible();
-  for (const entry of ["story", "decks", "duel", "settings"])
-    await expect(page.locator(`[data-cy="home-entry-${entry}"]`)).toBeVisible();
+  await expect(page.locator('[data-cy="main-menu-title"]')).toBeVisible();
+  /* Continue is absent on a profile that has never played, so the entries a
+     fresh install meets are these four, Free Play last. */
+  for (const entry of ["new-game", "load", "settings", "free-play"])
+    await expect(page.locator(`[data-cy="main-menu-${entry}"]`)).toBeVisible();
+  await expect(page.locator('[data-cy="main-menu-continue"]')).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "Choose your deck" }),
   ).toHaveCount(0);
@@ -292,7 +295,17 @@ test("the root route shows the home hub without booting the duel", async ({
     false,
   );
 
-  await page.locator('[data-cy="home-entry-duel"]').click();
+  /* Deciding whether to offer Continue must not conjure the story-saves
+     database: `createStorySaveRepository` builds the `saves` store only on
+     `upgradeneeded`, so a database the menu created could never be saved
+     into. This is the production browser's own verdict on that. */
+  expect(
+    await page.evaluate(async () =>
+      (await indexedDB.databases()).map(({ name }) => name),
+    ),
+  ).not.toContain("ygo-story-saves");
+
+  await page.locator('[data-cy="main-menu-free-play"]').click();
   expect(new URL(page.url()).hash).toBe("#/free-play");
   await expect(
     page.getByRole("heading", { name: "Choose your deck" }),

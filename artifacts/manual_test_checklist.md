@@ -184,13 +184,13 @@ Run `npm run dev` and open `http://localhost:4300/#/duel` for every item.
 
 Run `npm run dev` and open `http://localhost:4300/` (no hash) for every item.
 
-- [ ] The first screen is the hub: a "YGO Story Duel Simulator" title with four buttons — Story, Decks, Duel, Settings. NO deck picker and NO duel appear here.
-- [ ] Click Duel: the URL becomes `#/free-play` and the deck picker loads; start a duel and play a turn — the duel behaves exactly as before. (Route renamed by T14; the old `#/duel` still redirects here.)
-- [ ] Press the browser Back button from the duel: you return to the hub and the duel is gone.
-- [ ] Click Decks: the URL becomes `#/free-play/decks` and the deck editor loads. (Route renamed by T14; the old `#/decks` still redirects here.)
-- [ ] Click Story: the URL becomes `#/story` and the "Not available yet" placeholder shows (the visual novel moves here in a later ticket).
-- [ ] Type `http://localhost:4300/#/nonsense` in the address bar: you land back on the hub, not on an error.
-- [ ] Click Settings on the hub: a settings dialog opens with a Fullscreen switch reading "Off" and a Close button.
+- [ ] The first screen is the main menu: an "Echoes of the Draw" title with New Game, Load, Settings and Free Play (Continue too, once a save exists). NO deck picker and NO duel appear here. (Replaced by T15: the hub's "YGO Story Duel Simulator" title and its Story/Decks/Duel entries are gone.)
+- [ ] Click Free Play: the URL becomes `#/free-play` and the deck picker loads; start a duel and play a turn — the duel behaves exactly as before. (Route renamed by T14; entry renamed by T15; the old `#/duel` still redirects here.)
+- [ ] Press the browser Back button from the duel: you return to the main menu and the duel is gone.
+- [ ] Open `http://localhost:4300/#/free-play/decks` in the address bar: the deck editor loads. (Corrected by T15: the main menu has no Decks entry — the free-play submenu that offers one lands in T16. The old `#/decks` still redirects here.)
+- [ ] Click New Game: the URL becomes `#/story` and the visual novel loads. (Corrected by T15: this entry was "Story"; corrected by T7: the story is real, not a placeholder.)
+- [ ] Type `http://localhost:4300/#/nonsense` in the address bar: you land back on the main menu, not on an error.
+- [ ] Click Settings on the main menu: a settings dialog opens with a Fullscreen switch reading "Off" and a Close button.
 - [ ] Click the Fullscreen switch: it reads "On". Close the dialog, reopen it — it still reads "On" (the choice is remembered).
 - [ ] Reload the page: the browser does NOT jump to fullscreen on its own, and a tip appears on the hub explaining that fullscreen needs one click.
 - [ ] Click "Go fullscreen" in the tip: the browser enters fullscreen.
@@ -204,12 +204,12 @@ Run `npm run dev` and open `http://localhost:4300/` (no hash) for every item.
 
 Run `npm run dev`. The console is a developer surface: it is never linked from the game, so it is reached only by typing the URL.
 
-- [ ] From the hub at `http://localhost:4300/`, look over the whole screen and open Settings: there is NO Admin/Console/Developer button anywhere.
-- [ ] Press Tab repeatedly through the hub and the settings dialog: focus never lands on an admin control.
+- [ ] From the main menu at `http://localhost:4300/`, look over the whole screen and open Settings: there is NO Admin/Console/Developer button anywhere.
+- [ ] Press Tab repeatedly through the main menu and the settings dialog: focus never lands on an admin control.
 - [ ] Do the same sweep inside `#/duel` and `#/decks`: no admin control appears there either.
 - [ ] Type `http://localhost:4300/#/admin` in the address bar: a "Developer console" screen loads with a warning line and three sections — Routes, State jumps, Resets.
 - [ ] The console stays inside the 16:9 stage (letterbox bars are untouched) and scrolls with its own scrollbar if the window is short; the page itself never scrolls.
-- [ ] In Routes, click `#/` → the hub loads. Type `#/admin` again, click `#/free-play` → the deck picker loads. Type `#/admin` again, click `#/free-play/decks` → the deck editor loads. Type `#/admin` again, click `#/story` → the "Not available yet" placeholder shows. (Buttons are labelled by their route, so T14 renamed these two labels.)
+- [ ] In Routes, click `#/` → the main menu loads. Type `#/admin` again, click `#/free-play` → the deck picker loads. Type `#/admin` again, click `#/free-play/decks` → the deck editor loads. Type `#/admin` again, click `#/story` → the "Not available yet" placeholder shows. (Buttons are labelled by their route, so T14 renamed these two labels.)
 - [ ] Back on `#/admin`, click "Seed test deck & open decks": the deck editor opens and the library lists a deck named "Admin test deck".
 - [ ] Open that deck: it holds 40 Main-deck cards.
 - [ ] Return to `#/admin` and click "Launch preset duel": the duel route opens with the normal deck picker, and no extra deck was written to the library.
@@ -221,13 +221,13 @@ Run `npm run dev`. The console is a developer surface: it is never linked from t
 - [ ] Repeat the arm-then-confirm flow for each remaining row (Duel snapshots, Shell settings, Story saves): each one asks for a separate confirmation and reports "Cleared …" when done. (Corrected by T7: the story row exists. Corrected by T13: it is now labelled "Story saves" and deletes the `ygo-story-saves` database, not a local-storage key.)
 - [ ] After clearing "Shell settings", check devtools Application → Local Storage: the `ygo.ui.v3` entry is gone, and reloading the hub shows default settings.
 - [ ] After clearing "Duel snapshots", start a duel from `#/duel` and play a turn: the duel still works (the snapshot store rebuilds itself).
-- [ ] Reload `#/admin` after every reset: the console still loads and normal play from the hub is unaffected.
+- [ ] Reload `#/admin` after every reset: the console still loads and normal play from the main menu is unaffected.
 
 ## T7 story-domain-migration
 
 Reach the story
 
-- [ ] Run `npm run dev` (default `DEV_PORT=4300`) and open `http://localhost:4300/#/` — the home hub appears; click its Visual novel entry and the URL becomes `#/story`.
+- [ ] Run `npm run dev` (default `DEV_PORT=4300`) and open `http://localhost:4300/#/` — the main menu appears; click New Game and the URL becomes `#/story`. (Corrected by T15: the entry used to be "Story" on the home hub.)
 - [ ] Open `http://localhost:4300/#/story` directly — the title screen "Echoes of the Draw" renders with New Game / Load / Settings, and focus starts on New Game.
 - [ ] Confirm there is NO "Start full flow" screen, no "Jump to screen or state" button, and no "Reviewer tools" drawer anywhere in the story.
 - [ ] Open `http://localhost:4300/prototype.html` — it must NOT serve the visual novel any more (the second entry document is deleted).
@@ -267,7 +267,7 @@ Nothing else regressed
 
 Reach the Deck Editor
 
-- [ ] Run `npm run dev` (default `DEV_PORT=4300`) and open `http://localhost:4300/#/` — the home hub appears; click its "Decks" entry and the URL becomes `#/free-play/decks`.
+- [ ] Run `npm run dev` (default `DEV_PORT=4300`) and open `http://localhost:4300/#/free-play/decks` — the deck editor loads. (Corrected by T15: the main menu replaced the home hub and offers no Decks entry; the free-play submenu that offers one lands in T16.)
 - [ ] Open `http://localhost:4300/#/decks` directly — the "Deck Library" heading renders (an empty library says "No local decks"). The browser tab title reads "Deck Editor · YGO Story Duel Simulator", not "Deck Builder Prototype".
 - [ ] Confirm there is NO "Prototype review states" panel in the bottom-right corner and no "State fixture" dropdown anywhere in the deck editor.
 - [ ] Confirm the deck editor still looks exactly as it did before this ticket — this was a move, not a restyle.
@@ -2561,3 +2561,45 @@ address bar unless the step says to click something.
 
 - [ ] Open `#/admin` → Routes. There are buttons for `#/`, `#/free-play`, `#/free-play/decks`, `#/free-play/collection`, `#/story`, `#/story/decks` and `#/story/collection`, and none for `#/admin` itself.
 - [ ] Click each one and confirm it lands on the screen its label names.
+
+## T15 shell-main-menu-screen
+
+Run `npm run dev` (default `DEV_PORT=4300`). The app's first screen is now the game's own main menu, not the developer-shaped home hub.
+
+### The front door
+
+- [ ] Open `http://localhost:4300/#/` with no hash of your own — an "Echoes of the Draw" title renders in a large serif over the dark blue gradient, above the line "One signal. One duel. More than one way forward." and an eyebrow reading "Private prototype · v0.1".
+- [ ] The entries read, top to bottom: New Game, Load, Settings, Free Play. Free Play is LAST. There is no "Duel" and no "Decks" entry any more.
+- [ ] "Press F11 for fullscreen." still sits under the entries.
+- [ ] Nothing about a deck picker, a duel or a card appears on this screen.
+
+### Continue appears only when there is something to continue
+
+- [ ] In DevTools → Application → IndexedDB, delete `ygo-story-saves` if it is there, then reload `#/` — there is NO Continue entry, and the other four are unchanged.
+- [ ] Still on `#/`, check DevTools → Application → IndexedDB again: `ygo-story-saves` is NOT listed. Merely looking at the menu must never create the database. (If it does, the story can never save again — that is the bug this step is watching for.)
+- [ ] Click New Game, play far enough for the story to save (reach the map, or use its Save), then return to `#/` — Continue is now the second entry, between New Game and Load.
+- [ ] Reload `#/` — Continue is still there.
+- [ ] Open `#/admin`, arm and confirm the "Story saves" reset, then return to `#/` — Continue is gone again.
+
+### Every entry goes where it says
+
+- [ ] Click New Game — the URL becomes `#/story` and the visual novel loads.
+- [ ] Press Back — you return to the main menu.
+- [ ] Click Load — the URL becomes `#/story`.
+- [ ] With a save present, click Continue — the URL becomes `#/story`.
+- [ ] Click Free Play — the URL becomes `#/free-play` and the deck picker loads; start a duel and play a turn.
+- [ ] Click Settings — a dialog opens ON TOP of the menu and the URL stays `#/` (no new hash, no navigation). Close it: the menu is exactly as you left it.
+
+### The visual novel is still loaded lazily
+
+- [ ] Open DevTools → Network, tick "Disable cache", and load `http://localhost:4300/#/` fresh. No `story-*.js` and no `story-*.css` request fires while only the menu is on screen.
+- [ ] Now click New Game: `story-*.js` is requested at that moment, not before.
+- [ ] Confirm no `.wasm` and no `runtime/` request fires on the menu, and no Worker appears under Application → Workers.
+
+### Nothing else moved
+
+- [ ] Open `#/free-play/decks` — the deck editor still loads and looks unchanged.
+- [ ] Open `#/free-play/collection` and `#/story/collection` — each still shows the main menu rather than a blank screen (T29 replaces both).
+- [ ] Open `#/nonsense` — you land on the main menu.
+- [ ] Open `#/admin` → Routes and click `#/` — the main menu loads.
+- [ ] Resize the window narrow and short: the menu stays readable and scrolls inside the stage rather than pushing a scrollbar onto the page.

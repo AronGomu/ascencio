@@ -163,6 +163,62 @@ body {
   height: 100%;
 }
 
+/* The app's front door, styled like the visual novel's own title screen
+   (ADR-051). The treatment lives here rather than in the component's scoped
+   styles because the shell's menu and the story's in-playthrough title are two
+   authorings of one look, and only the shell's half is allowed to be eager —
+   so neither can reach for the other's stylesheet. */
+.main-menu {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: var(--space-2);
+  width: 100%;
+  height: 100%;
+  padding: clamp(var(--space-4), 8vw, var(--space-6));
+  overflow: auto;
+  background:
+    radial-gradient(circle at 70% 30%, var(--field-glow), transparent 35%),
+    linear-gradient(120deg, var(--bg), var(--surface-raised));
+}
+
+.main-menu__eyebrow {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.main-menu__title {
+  max-width: 8ch;
+  margin: 0;
+  font-family: Georgia, serif;
+  font-size: clamp(3rem, 10vw, 7rem);
+  line-height: 0.85;
+}
+
+.main-menu__tagline {
+  margin: 0;
+  color: var(--muted);
+}
+
+.main-menu__entries {
+  display: grid;
+  gap: var(--space-3);
+  width: min(20rem, 100%);
+  margin-block-start: var(--space-5);
+}
+
+.main-menu__entries button {
+  padding-block: var(--space-3);
+  font-size: var(--text-md);
+}
+
+.main-menu__hint {
+  margin-block: var(--space-4) 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
 /* The deck editor is a document-shaped domain, so it keeps its own scroll
    inside the stage rather than pushing one onto the page. */
 .shell-region--decks {

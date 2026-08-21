@@ -9,7 +9,7 @@
   import { STAGE_CONTEXT_KEY } from "./index.ts";
   import { deckRoute, deckRouteContext, type AppRoute } from "./routes.ts";
   import DomainLoadError from "./screens/DomainLoadError.svelte";
-  import HomeScreen from "./screens/HomeScreen.svelte";
+  import MainMenuScreen from "./screens/MainMenuScreen.svelte";
   import type { BattleFacadeResult } from "../battle/index.ts";
   import type {
     StoryDuelResolution,
@@ -26,6 +26,7 @@
     createShellStore,
     writeLocationHash,
     type ShellStore,
+    type StoryEntryIntent,
   } from "./shell-store.ts";
   import { computeStageBox, type StageBox } from "./stage-layout.ts";
 
@@ -135,8 +136,10 @@
   }
 
   let route: AppRoute;
+  let storyEntryIntent: StoryEntryIntent | null = null;
   const unsubscribe = store.subscribe((state) => {
     route = state.route;
+    storyEntryIntent = state.storyEntryIntent;
   });
   $: syncSession(route);
   /* Which deck library the route names, so one editor region serves both
@@ -202,7 +205,7 @@
        anyway (ADR-051), rather than an empty region. -->
   {#if route.kind === "home" || route.kind === "free-play-collection" || route.kind === "story-collection"}
     <div class="shell-region shell-region--home" data-cy="shell-region-home">
-      <HomeScreen {store} />
+      <MainMenuScreen {store} />
     </div>
   {:else if deckContext !== null}
     {@const context = deckContext}
@@ -234,6 +237,7 @@
         <svelte:component
           this={module.default}
           onencounter={startEncounter}
+          {storyEntryIntent}
           resumeState={handback?.state ?? null}
           resolution={handback?.resolution ?? null}
           onhandled={() => {

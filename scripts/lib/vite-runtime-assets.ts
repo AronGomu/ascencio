@@ -12,6 +12,8 @@ import path from "node:path";
 import type { Plugin, ResolvedConfig, ViteDevServer } from "vite";
 import { parseRuntimeSnapshotManifest } from "../../src/battle/worker/assets/runtime-manifest.ts";
 import { buildActiveImageManifest } from "./active-image-manifest.ts";
+import type { SetImageManifest } from "./set-images.ts";
+import { setImageFileName } from "./set-images.ts";
 
 const RUNTIME_PREFIX = "runtime/";
 
@@ -113,6 +115,7 @@ async function copyRuntimeAssets(
     ),
     copySnapshotAssets(projectRoot, runtimeOutput),
     copyActiveCardImages(projectRoot, runtimeOutput, allowPrivateContent),
+    copySetImages(projectRoot, runtimeOutput),
     copyThirdPartyLicenses(projectRoot, outputRoot),
     copyFileWithParents(
       path.join(projectRoot, "vendor/ocgcore-wasm/0.1.2/vendor-manifest.json"),
@@ -170,6 +173,42 @@ async function copyActiveCardImages(
     path.join(imageOutputRoot, "active-manifest.json"),
     `${JSON.stringify(manifest, null, 2)}\n`,
   );
+}
+
+/* Shop set art, ADR-052. It is pinned by its own sha256 manifest and served
+   as a plain static URL, so it is copied like card art rather than joining the
+   duel's verified snapshot. An archive nobody has acquired yet leaves the shop
+   tiles typographic instead of failing the build; `npm run assets:sets:verify`
+   inside `assets:verify` is the gate that reports it. */
+async function copySetImages(
+  projectRoot: string,
+  runtimeOutput: string,
+): Promise<void> {
+  const sourceRoot = path.join(projectRoot, "generated/set-images");
+  const manifest = await readSetImageManifest(sourceRoot);
+  if (manifest === null) return;
+  const outputRoot = path.join(runtimeOutput, "sets");
+  await rm(outputRoot, { recursive: true, force: true });
+  await mkdir(outputRoot, { recursive: true });
+  for (const record of manifest.files) {
+    const fileName = setImageFileName(record.setId);
+    const source = resolveWithin(sourceRoot, fileName);
+    await assertRealPathContained(sourceRoot, source);
+    await copyFileWithParents(source, resolveWithin(outputRoot, fileName));
+  }
+}
+
+async function readSetImageManifest(
+  sourceRoot: string,
+): Promise<SetImageManifest | null> {
+  try {
+    return JSON.parse(
+      await readFile(path.join(sourceRoot, "manifest.json"), "utf8"),
+    ) as SetImageManifest;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw error;
+  }
 }
 
 // Full snapshot (2026-08-20): ~45 MB across 451 declared files. Editor offers all 14,794 cards → duel must load any.
@@ -265,6 +304,16 @@ function runtimeSourcePath(
       return resolveWithin(
         path.join(projectRoot, "generated/card-images/archive/full"),
         normalized.slice("images/".length),
+      );
+    } catch {
+      return null;
+    }
+  }
+  if (/^sets\/[A-Za-z0-9_-]+\.jpg$/.test(normalized)) {
+    try {
+      return resolveWithin(
+        path.join(projectRoot, "generated/set-images"),
+        normalized.slice("sets/".length),
       );
     } catch {
       return null;

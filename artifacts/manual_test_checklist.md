@@ -3299,3 +3299,51 @@ pressed the button in. A door that only opens one way is the failure here.
 - [ ] Opening a deck, editing it and returning to the library all behave exactly as before, in both worlds.
 - [ ] Narrow the window until the toolbar wraps onto two lines. All five controls are still reachable and none is cut off.
 - [ ] Tab through the toolbar with the keyboard. Focus reaches **Collection** between **Sort** and **Import Deck**, its focus ring is visible, and Enter opens the collection.
+
+## T31 set-image-acquisition-pipeline
+
+Nothing on screen changes here. This slice acquires the 50 shop sets' official art into
+`generated/set-images/`, pins every byte with a sha256 manifest, and publishes them as plain
+static URLs at `{BASE_URL}runtime/sets/{setId}.jpg`. What you are testing is the pipeline's
+honesty: it must fail loudly when the bytes drift, and it must degrade quietly when the art was
+never acquired. `generated/` is git-ignored, so nothing here ends up in a commit.
+
+### Acquire and verify
+
+- [ ] Run `npm run assets:sets`. It prints `"status": "ok"` with `"sets": 50`, `"downloaded": 50`, `"missing": []`, and takes roughly 20 seconds.
+- [ ] Run `ls generated/set-images`. There are 50 `.jpg` files named after the shop set ids (`legend-of-blue-eyes-white-dragon.jpg`, `metal-raiders.jpg`, …) plus one `manifest.json`.
+- [ ] Open `generated/set-images/manifest.json`. Every entry carries `setId`, `sha256`, `bytes` and a `sourceUrl` on `https://images.ygoprodeck.com/images/sets/`, and `missing` is an empty list.
+- [ ] Run `npm run assets:sets:verify`. It prints `"status": "ok"` with `"sets": 50` and no failures.
+- [ ] Run `npm run assets:sets` a second time and confirm `manifest.json` is byte-identical to before (`sha256sum generated/set-images/manifest.json` matches). Two acquisitions of the same upstream produce the same pin.
+
+### It fails loudly when the bytes drift
+
+- [ ] Change one byte of `generated/set-images/metal-raiders.jpg` (any hex editor, or open and re-save it). Run `npm run assets:sets:verify`: it exits non-zero and the failure names `metal-raiders`, with the expected and found digests.
+- [ ] Delete `generated/set-images/spell-ruler.jpg`. Verify fails with `Set image is missing: spell-ruler`.
+- [ ] Copy any set image to `generated/set-images/not-a-shop-set.jpg`. Verify fails with `Set image is not listed in the manifest: not-a-shop-set.jpg`.
+- [ ] Run `npm run assets:sets` once more. It repairs all three: the stray file is pruned, the deleted and corrupted images are re-downloaded, and `npm run assets:sets:verify` is `"status": "ok"` again.
+- [ ] Run `npm run check:headless`. It passes, and its `assets:verify` step now prints two `"status": "ok"` blocks — the data snapshot's and the set images'.
+
+### Missing art degrades, it never breaks
+
+- [ ] Move the whole folder away: `mv generated/set-images /tmp/`. Run `npm run assets:sets:verify` — it fails with a message naming the absent `generated/set-images/manifest.json` and telling you to run `npm run assets:sets`.
+- [ ] With the folder still moved away, run `npm run build`. It **succeeds**, and `ls dist/runtime` has no `sets` directory. A contributor who has never acquired set art can still build the app; the shop simply has no art to show.
+- [ ] Move the folder back (`mv /tmp/set-images generated/`) and run `npm run build` again. Now `ls dist/runtime/sets | wc -l` is 50.
+
+### Works with the network unplugged
+
+- [ ] Disconnect the network (or turn off Wi-Fi). Run `npm run assets:sets:verify` — still `"status": "ok"`. Verification only re-hashes local files.
+- [ ] Still offline, run `npm run build` and `npm run check:headless`. Both pass. Reconnect afterwards.
+
+### The images are reachable in the browser
+
+- [ ] Run `npm run dev` and open `http://localhost:4202/runtime/sets/legend-of-blue-eyes-white-dragon.jpg`. The Legend of Blue Eyes set image loads (about 71 KB).
+- [ ] Open `http://localhost:4202/runtime/sets/no-such-set.jpg`. You get a 404, not an error page and not a crash.
+- [ ] Open `http://localhost:4202/runtime/sets/../../package.json`. You do not get `package.json`.
+- [ ] Run `npm run build:app -- --base=/ygo-story-duel/`, then `npm run preview -- --base=/ygo-story-duel/`, and open `http://localhost:4202/ygo-story-duel/runtime/sets/metal-raiders.jpg`. The Metal Raiders image loads under the deployed base path too.
+- [ ] In that same preview, open `http://localhost:4202/ygo-story-duel/runtime/sets/no-such-set.jpg`. A built preview answers unknown paths with the app's own HTML page instead of a 404 — which is why a set tile must fall back on the image's `error` event rather than on a status code.
+
+### Nothing in the app moved
+
+- [ ] Open the app, go **Continue → Shop**. The set list looks exactly as it did before this slice: text tiles with name and year, no art. T32 is the slice that renders it.
+- [ ] Open a booster, sell a card, and open the deck editor. All unchanged.

@@ -2075,3 +2075,33 @@ Drag cancel removes the copy under the pointer
 - [ ] That tile is removed; the deck reads A, B in that order. Before this fix
       the first A was removed instead, leaving B, A.
 - [ ] Undo — the deck returns to A, B, A in that order.
+
+## T1 trunk-docs-and-baseline
+
+No `src/` change, so nothing in the running app can regress. What a human verifies
+is that the repo's own instructions now agree with how the repo is worked.
+
+Read `AGENTS.md` top to bottom
+
+- [ ] `## Purpose and status` no longer offers domain worktree lanes and points at
+      ADR-045 instead.
+- [ ] `### Branch model` replaces `### Branch ownership`, and nothing in the file
+      tells an agent to commit on `duel`, `deck` or `vn`.
+- [ ] `## Three-domain application direction` still names the same four directory
+      owners; only the branch/worktree bullets are gone.
+- [ ] `## Boundary rules`, `## File design policy`, `## HTML element contract`, the
+      knowledge-graph section and the technical stack table read exactly as before.
+
+Read the ADRs
+
+- [ ] `docs/ADR/045_ADR_single_branch_trunk_development.md` states the decision, and
+      its "import boundaries are unaffected" line is unambiguous.
+- [ ] `docs/ADR/022_...worktree_boundaries.md` carries the partial-supersession line in
+      its status block, and its import-boundary content is otherwise untouched.
+
+Working copy
+
+- [ ] `git worktree list` shows `main` plus `deckbuilder` only — `duel` and `vn` are
+      gone. `deckbuilder` remaining is expected; removing it has not been authorised.
+- [ ] Decide whether the `deckbuilder` worktree should now be retired too, since its
+      branch is fully merged into `main`.

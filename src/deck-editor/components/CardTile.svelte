@@ -19,6 +19,10 @@
   export let onhover: (() => void) | null = null;
   export let oncontext: (() => void) | null = null;
   export let maxed = false;
+  /* The id of an element saying why this tile can take no further copy. The
+     red `maxed` border is the sighted signal; this is the same fact for a
+     screen reader, and `null` where there is nothing to explain. */
+  export let describedby: string | null = null;
 
   /* Art is a URL by convention for every code, so a card this build packages no
      image for is the normal case rather than an error: the tile keeps the glyph
@@ -48,6 +52,7 @@
   class="card-tile"
   {draggable}
   aria-label={`${name}. ${limitLabel}, maximum ${limit}. ${currentCopies} copies in deck.`}
+  aria-describedby={describedby}
   aria-pressed={selected}
   data-cy={`deck-tile-${code}`}
   data-card-code={code}

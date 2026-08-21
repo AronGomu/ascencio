@@ -17,6 +17,11 @@
     resolveDeckRepository,
     type DeckContext,
   } from "../decks/deck-repository-context.ts";
+  import {
+    unlimitedCardOwnership,
+    type CardOwnership,
+  } from "../decks/card-ownership.ts";
+  import { ownedCatalog } from "./catalog-availability.ts";
   import { ensureStarterDeck } from "../decks/starter-deck.ts";
   import {
     catalogByCode,
@@ -54,10 +59,13 @@
      shards, which is why it arrives after mount rather than inside the bundle,
      and why nothing below may render until it lands.
 
-     `cards` is what the catalog offers and drops the Tokens no deck may hold;
-     `catalog` keeps them, because a deck imported with one still has to name
-     it in the preview and in its validation errors. */
-  let cards: readonly DeckBuilderCardView[] = [];
+     `cards` is what the catalog offers: it drops the Tokens no deck may hold,
+     then narrows to what this context owns. `catalog` keeps every card,
+     because a deck holding one the save no longer owns still has to name it in
+     the preview and in its validation errors. */
+  let buildableCards: readonly DeckBuilderCardView[] = [];
+  let ownership: CardOwnership = unlimitedCardOwnership();
+  $: cards = ownedCatalog(buildableCards, ownership);
   let catalog: ReadonlyMap<number, DeckBuilderCardView> = new Map();
   let catalogReady = false;
   /* The shell is the only surface that measures the viewport: the editor reads
@@ -126,17 +134,21 @@
        catalog, so a repository opened first would only wait on it anyway. */
     void runtimeCatalog()
       .then(async (loaded) => {
-        cards = deckBuildableCards(loaded);
+        buildableCards = deckBuildableCards(loaded);
         catalog = catalogByCode(loaded);
         catalogReady = true;
         return resolveDeckRepository(context);
       })
-      .then(async ({ repository, close: release }) => {
+      .then(async ({ repository, ownership: resolved, close: release }) => {
         if (disposed) {
           release();
           return;
         }
         close = release;
+        /* Before the controller, so the first mutation it accepts is already
+           held to what this context owns. Nothing below renders until the
+           controller exists, so the catalog is never painted unnarrowed. */
+        ownership = resolved;
         /* Before the controller reads storage, so a player arriving with no
            decks sees the starter deck rather than an empty library. It never
            throws, so a seeding failure cannot keep the editor from opening. */
@@ -145,6 +157,7 @@
           repository,
           catalog,
           PROTOTYPE_RULESET,
+          ownership,
         );
         unsubscribe = controller.subscribe((value) => (state = value));
         await controller.initialize();
@@ -314,6 +327,7 @@
     {cards}
     {catalog}
     ruleset={PROTOTYPE_RULESET}
+    {ownership}
     {layoutMode}
     onlibrary={() => void runAndSync(controller?.showLibrary())}
     onrename={(name) => void controller?.rename(name)}

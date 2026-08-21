@@ -23,8 +23,16 @@ import {
 import type { DeckRepository } from "../decks/deck-repository.ts";
 import { DeckRevisionConflictError } from "../decks/indexeddb-deck-repository.ts";
 import type { DeckBuilderCardView } from "../decks/catalog/ocg-card-mapper.ts";
-import type { PinnedDeckRuleset } from "../decks/catalog/pinned-ruleset.ts";
+import {
+  quantityLimit,
+  type PinnedDeckRuleset,
+} from "../decks/catalog/pinned-ruleset.ts";
+import {
+  unlimitedCardOwnership,
+  type CardOwnership,
+} from "../decks/card-ownership.ts";
 import { validateDeckDraft } from "../decks/deck-validation.ts";
+import { availableCopies, unavailableReason } from "./catalog-availability.ts";
 
 interface PendingDeckSave {
   readonly deck: DeckRecord;
@@ -60,20 +68,25 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
   readonly #repository: DeckRepository;
   readonly #catalog: ReadonlyMap<number, DeckBuilderCardView>;
   readonly #ruleset: PinnedDeckRuleset;
+  readonly #ownership: CardOwnership;
   #queue: Promise<void> = Promise.resolve();
   #contextGeneration = 0;
   #createInFlight = false;
   #deletesInFlight = new Set<DeckId>();
   #pendingSave: PendingDeckSave | null = null;
 
+  /** `ownership` defaults to free play's, because a host that says nothing about
+      which world it is editing is editing the one that owns everything. */
   constructor(
     repository: DeckRepository,
     catalog: ReadonlyMap<number, DeckBuilderCardView>,
     ruleset: PinnedDeckRuleset,
+    ownership: CardOwnership = unlimitedCardOwnership(),
   ) {
     this.#repository = repository;
     this.#catalog = catalog;
     this.#ruleset = ruleset;
+    this.#ownership = ownership;
   }
 
   subscribe = this.#state.subscribe;
@@ -318,6 +331,13 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
       if (result.type === "rejected") {
         this.#state.update((value) =>
           Object.freeze({ ...value, message: result.reason }),
+        );
+        return;
+      }
+      const denial = this.#ownershipDenial(state.current.deck, command);
+      if (denial !== null) {
+        this.#state.update((value) =>
+          Object.freeze({ ...value, message: denial }),
         );
         return;
       }
@@ -703,6 +723,22 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
         }),
       );
     }
+  }
+
+  /* The cap the catalog draws, enforced again on the command itself: a drag, a
+     context-menu add and the keyboard all reach `mutate` without passing
+     through a tile, so a disabled affordance is a courtesy rather than a gate.
+     Read after `applyDeckCommand` has accepted, so the ruleset's own refusals
+     keep their wording and their order. */
+  #ownershipDenial(deck: DeckCardLists, command: DeckCommand): string | null {
+    if (this.#ownership.isUnlimited || command.type !== "add") return null;
+    const limit = quantityLimit(this.#ruleset, command.cardCode);
+    const used = [...deck.main, ...deck.extra, ...deck.side].filter(
+      (code) => code === command.cardCode,
+    ).length;
+    return availableCopies(command.cardCode, this.#ownership, limit, used) > 0
+      ? null
+      : unavailableReason(this.#ownership.ownedCount(command.cardCode), limit);
   }
 
   #pendingIsCurrent(pending: PendingDeckSave): boolean {

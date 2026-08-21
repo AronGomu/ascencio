@@ -14,6 +14,14 @@
   import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
   import { quantityLimit } from "../../decks/catalog/pinned-ruleset.ts";
   import {
+    unlimitedCardOwnership,
+    type CardOwnership,
+  } from "../../decks/card-ownership.ts";
+  import {
+    availableCopies,
+    unavailableReason,
+  } from "../catalog-availability.ts";
+  import {
     INITIAL_RESULT_WINDOW,
     initialResultWindow,
     nextResultWindow,
@@ -23,6 +31,10 @@
 
   export let cards: readonly DeckBuilderCardView[];
   export let ruleset: PinnedDeckRuleset;
+  /* What the context being edited owns. The list handed in is already narrowed
+     to it; this is the second half of the same answer, the copy count, which
+     only the add path can ask. Free play's is the default. */
+  export let ownership: CardOwnership = unlimitedCardOwnership();
   export let selectedCode: number | null = null;
   export let copies: ReadonlyMap<number, number> = new Map();
   export let onselect: (card: DeckBuilderCardView) => void = () => undefined;
@@ -108,12 +120,25 @@
   onDestroy(() => observer?.disconnect());
 
   function addable(card: DeckBuilderCardView): boolean {
-    return (copies.get(card.code) ?? 0) < quantityLimit(ruleset, card.code);
+    return (
+      availableCopies(
+        card.code,
+        ownership,
+        quantityLimit(ruleset, card.code),
+        copies.get(card.code) ?? 0,
+      ) > 0
+    );
   }
 
   function blockedReason(card: DeckBuilderCardView): string {
-    const limit = quantityLimit(ruleset, card.code);
-    return limit === 0 ? "Card is forbidden." : `Copy limit ${limit} reached.`;
+    return unavailableReason(
+      ownership.ownedCount(card.code),
+      quantityLimit(ruleset, card.code),
+    );
+  }
+
+  function capReasonId(code: number): string {
+    return `deck-catalog-cap-reason-${code}`;
   }
 
   function setFilter<Key extends keyof DeckCatalogFilters>(
@@ -273,14 +298,27 @@
         bind:this={resultsScroller}
       >
         {#each visible as card (card.code)}
+          <!-- Read per tile rather than into a map over the whole window: the
+               window grows to every result, and a map rebuilt on each of those
+               steps would turn one scroll to the bottom into quadratic work.
+               Spelled out rather than delegated to `addable` because what a
+               `{@const}` re-reads is what it names: through the helper, a tile
+               would keep its affordance after the copy that spent it. -->
+          {@const spent =
+            availableCopies(
+              card.code,
+              ownership,
+              quantityLimit(ruleset, card.code),
+              copies.get(card.code) ?? 0,
+            ) === 0}
           <CardTile
             {card}
             code={card.code}
             limit={quantityLimit(ruleset, card.code)}
             currentCopies={copies.get(card.code) ?? 0}
             selected={selectedCode === card.code}
-            draggable={(copies.get(card.code) ?? 0) <
-              quantityLimit(ruleset, card.code)}
+            draggable={!spent}
+            describedby={spent ? capReasonId(card.code) : null}
             onselect={() => onselect(card)}
             ontap={ontap === null
               ? null
@@ -291,10 +329,19 @@
             ondragcard={(event) => ondragcard(card, event)}
             {ondragcancel}
             onhover={() => onhovercard(card)}
-            maxed={(copies.get(card.code) ?? 0) >=
-              quantityLimit(ruleset, card.code)}
+            maxed={spent}
             oncontext={() => oncontextadd(card)}
           />
+          <!-- Out of flow, so it takes no cell in the results grid, and read to
+               a screen reader through the tile's `aria-describedby` rather than
+               printed under every spent card. -->
+          {#if spent}
+            <span
+              class="visually-hidden"
+              id={capReasonId(card.code)}
+              data-cy={capReasonId(card.code)}>{blockedReason(card)}</span
+            >
+          {/if}
         {/each}
         {#if observerSupported && visibleCount < results.length}
           <div

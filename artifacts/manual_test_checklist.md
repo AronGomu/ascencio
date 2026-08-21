@@ -2911,3 +2911,53 @@ opening an empty editor.
 - [ ] In `#/free-play/decks`, create, rename, favourite, set as default, duplicate, export and delete a deck. All of it behaves as before, and each survives a reload (F5).
 - [ ] Open `#/free-play/decks/no-such-deck`. The "Deck not found" screen appears; click **Back to Deck Library** and it lands on the free-play library.
 - [ ] Do the same at `#/story/decks/no-such-deck` while a save exists. **Back to Deck Library** lands on the **story** library, not free play.
+
+## T24 owned-only-story-catalog
+
+Inside a story save the deck editor now builds only from the cards that save owns. The
+catalog offers nothing else, and the add path is capped by the smaller of two numbers —
+how many copies you own, and how many copies the pinned ruleset lets a deck run. Owning
+five copies of a card limited to three still gets you three; owning one gets you one.
+
+The cap counts every copy in the deck, Main, Extra and Side together, so moving a card to
+the sideboard does not free a slot to add another.
+
+Free play is the control. It owns every card without limit, so its catalog and its caps
+must look exactly as they did before this slice — if anything there changed, this slice is
+wrong.
+
+### A new save's catalog is its starter deck and nothing else
+
+- [ ] Start a **New Game**, get through to the city map, then open the story deck library (`#/story/decks`) and open the deck the save was granted.
+- [ ] The catalog header reads **16 results**. That is the 16 distinct cards behind the starter deck — not the 14,551 free play offers.
+- [ ] Search the catalog for a card you know is in the database but not in the starter deck (for example `Raigeki`). No row appears, and the empty state says to clear filters or try another name.
+- [ ] Clear the search. It goes back to 16 results, not to the whole database — the filters run on the narrowed list.
+- [ ] Use the **Card type**, **Subtype**, **Attribute** and **Monster type** dropdowns. Each narrows the 16, and each dropdown only offers values that exist among them.
+
+### You cannot add a copy you do not have
+
+- [ ] In the same deck, empty the Main Deck (right-click each tile, or click each and remove) so you are starting from zero.
+- [ ] Find a card the starter deck gave you exactly **one** of. Click its catalog tile once: it lands in the Main Deck and the zone count goes to `1/40`.
+- [ ] Click the same tile again. Nothing is added, the count stays `1/40`, and the message line under the deck name reads `<card name>: You own 1 of this card.`
+- [ ] That tile now has a red border. Drag it toward the Main Deck: it will not pick up — the tile is no longer draggable.
+- [ ] Right-click the same tile. Still nothing is added, and the same message appears — the context-menu add is capped too.
+- [ ] Tick **To sideboard** in the catalog header, then click the tile again. Nothing lands in the Side Deck; the count there stays `0/15`. The cap counts the copy already sitting in the Main Deck.
+
+### The ruleset's copy limit still applies on top
+
+- [ ] Find a card the starter deck gave you **three or more** of, and click its tile four times.
+- [ ] Three copies land. The fourth is refused with `Copy limit 3 reached.` — not with an ownership message. Owning more copies never raises the deck limit.
+- [ ] Reload the page (F5) and reopen the deck. It holds the three copies you added, and the tile is still red.
+
+### Free play is untouched
+
+- [ ] Go to `#/free-play/decks` and open any deck. The catalog header reads **14,551 results**, exactly as before.
+- [ ] Add four copies of an ordinary card: three land, the fourth is refused with `Copy limit 3 reached.`
+- [ ] Add a second **Raigeki**: refused at one copy. Add **Obelisk the Tormentor**: refused outright as forbidden.
+- [ ] Scroll the catalog to the bottom in one go. Tiles keep appending smoothly and the scroll does not get slower the further down you are.
+- [ ] Search, filter, drag a card in, drag one out, undo, redo, save. All of it behaves as it did before this slice.
+
+### The deck editor still never loads the visual novel
+
+- [ ] DevTools → Network, tick "Disable cache", load `http://localhost:4300/#/` fresh, then go straight to `#/free-play/decks` and build a deck.
+- [ ] `deck-editor-*.js` loaded and **`story-*.js` never did**. Only clicking through to the story fetches it.

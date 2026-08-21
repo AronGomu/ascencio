@@ -3,6 +3,10 @@
   import type { DeckRecord, DeckZone } from "../../decks/deck-contracts.ts";
   import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
   import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
+  import {
+    unlimitedCardOwnership,
+    type CardOwnership,
+  } from "../../decks/card-ownership.ts";
   import { tick } from "svelte";
   import { SvelteMap } from "svelte/reactivity";
   import type { DeckBuilderState } from "../deck-editor-store.ts";
@@ -37,6 +41,9 @@
   export let cards: readonly DeckBuilderCardView[];
   export let catalog: ReadonlyMap<number, DeckBuilderCardView>;
   export let ruleset: PinnedDeckRuleset;
+  /* Passed straight to the catalog, which is the only pane that offers a card
+      the deck does not already hold. Free play's is the default. */
+  export let ownership: CardOwnership = unlimitedCardOwnership();
   /* `panels` is the three-column desktop editor; `tabs` shows one pane at a
      time below the stage breakpoint. The shell decides which, so no component
      below here reads the stage a second time. */
@@ -631,6 +638,7 @@
         <CardCatalog
           {cards}
           {ruleset}
+          {ownership}
           {selectedCode}
           {copies}
           filled={tabs}

@@ -4,7 +4,6 @@
 > Decided: 2026-08-16
 > Owners: integration/shell architecture
 > Relates: ADR-022 (boundaries), ADR-014 (preview identity attestation — untouched)
-> Plan: [`../../artifacts/PLAN_2026_08_16_decks_feedback.md`](../../artifacts/PLAN_2026_08_16_decks_feedback.md) — T2, T3
 
 ## Context
 

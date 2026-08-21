@@ -4,7 +4,6 @@
 > Decided: 2026-08-16
 > Owners: decks storage architecture
 > Relates: ADR-026 (domain storage ownership)
-> Plan: [`../../artifacts/PLAN_2026_08_16_decks_feedback.md`](../../artifacts/PLAN_2026_08_16_decks_feedback.md) — T12, T13, T14
 
 ## Context
 

@@ -1958,6 +1958,9 @@ async function locateDraggablePlacement(page: Page): Promise<{
   };
   readonly from: { readonly x: number; readonly y: number };
   readonly to: { readonly x: number; readonly y: number };
+  /** The action the walker picked, which is also the answer to give the drop
+      confirmation when the same card offers more than one (item 6). */
+  readonly action: string;
 } | null> {
   /* A pointer gesture is driven in viewport coordinates, so the whole board —
      the hand row and the monster row at once — has to be on screen. The
@@ -1982,8 +1985,8 @@ async function locateDraggablePlacement(page: Page): Promise<{
     );
   /* Any placement the hand offers exercises the same seam, so the walker tries
      the monster row first and falls back to the backrow rather than skipping.
-     `activate` is deliberately absent: `dropChoiceForZone` prefers it over
-     `setSpellTrap` for a card offering both, and an activated Spell need not
+     `activate` is deliberately absent: a card offering both puts `activate`
+     first in the drop confirmation (item 6), and an activated Spell need not
      stay in the zone it was placed in, so it cannot carry the "one gesture,
      two responses" assertions below. */
   const PLACEMENTS = [
@@ -2008,7 +2011,11 @@ async function locateDraggablePlacement(page: Page): Promise<{
       return null;
     }, zoneKind);
 
-  let chosen: { readonly chip: Locator; readonly zoneId: string } | null = null;
+  let chosen: {
+    readonly chip: Locator;
+    readonly zoneId: string;
+    readonly action: string;
+  } | null = null;
   for (const placement of PLACEMENTS) {
     const zoneId = await firstEmptyZone(placement.zoneKind);
     if (zoneId === null) continue;
@@ -2016,8 +2023,9 @@ async function locateDraggablePlacement(page: Page): Promise<{
     const total = await chips.count();
     for (let index = 0; index < total; index += 1) {
       const chip = chips.nth(index);
-      /* A card offering both would resolve to `activate` on a backrow drop,
-         which this test cannot assert on. Skip to the next card instead. */
+      /* A card offering both would put `activate` in the backrow drop's
+         confirmation, which this test cannot assert on. Skip to the next card
+         instead. */
       if (
         placement.action === "setSpellTrap" &&
         (await chip.evaluate(
@@ -2030,14 +2038,14 @@ async function locateDraggablePlacement(page: Page): Promise<{
         ))
       )
         continue;
-      chosen = { chip, zoneId };
+      chosen = { chip, zoneId, action: placement.action };
       break;
     }
     if (chosen !== null) break;
   }
   if (chosen === null) return null;
 
-  const { chip, zoneId: targetZoneId } = chosen;
+  const { chip, zoneId: targetZoneId, action } = chosen;
   const cardId = await chip.evaluate(
     (element) =>
       element.closest(".duel-field-card")?.getAttribute("data-card-id") ?? "",
@@ -2066,7 +2074,16 @@ async function locateDraggablePlacement(page: Page): Promise<{
     y: zoneBox.y + zoneBox.height / 2,
   };
 
-  return { field, dragTarget, targetZone, targetZoneId, cardBox, from, to };
+  return {
+    field,
+    dragTarget,
+    targetZone,
+    targetZoneId,
+    cardBox,
+    from,
+    to,
+    action,
+  };
 }
 
 /**
@@ -2182,9 +2199,32 @@ test("dragging a hand card onto a highlighted zone plays it", async ({
   await page.mouse.move(to.x, to.y, { steps: 4 });
   await page.mouse.up();
 
-  await expect(
-    field.locator(`.duel-field-card[data-card-zone-id="${targetZoneId}"]`),
-  ).toHaveCount(1, { timeout: 30_000 });
+  /* Item 6: the same card usually offers both a summon and a set, so the drop
+     is ambiguous and the gesture ends in a question rather than a play. The
+     confirmation is part of the gesture: answer it with the very action the
+     walker picked and every assertion below is unchanged. A card with only one
+     legal action for this zone still plays in one gesture and never shows it,
+     which is why the wait accepts either outcome. */
+  const landedCard = field.locator(
+    `.duel-field-card[data-card-zone-id="${targetZoneId}"]`,
+  );
+  const dropConfirm = field.locator('[data-cy="drop-confirm-dialog"]');
+  await expect(dropConfirm.or(landedCard).first()).toBeVisible({
+    timeout: 30_000,
+  });
+  if ((await dropConfirm.count()) > 0) {
+    const confirmAction = field.locator(
+      `[data-cy^="drop-confirm-action-"][data-cy$="-${placement.action}"]`,
+    );
+    await expect(confirmAction).toHaveCount(1);
+    await expect(
+      field.locator('[data-cy="drop-confirm-cancel"]'),
+    ).toBeVisible();
+    await confirmAction.click();
+    await expect(dropConfirm).toHaveCount(0);
+  }
+
+  await expect(landedCard).toHaveCount(1, { timeout: 30_000 });
   await expect(targetZone).not.toHaveAttribute("data-drop-candidate", "true");
   await expect(ghost).toHaveCount(0, { timeout: 650 });
 

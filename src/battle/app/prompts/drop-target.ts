@@ -4,10 +4,11 @@ import type { PhysicalZoneId } from "../../field/duel-field-layout.ts";
 import type { InteractionChoice } from "./interaction-spec.ts";
 
 /**
- * One drop is one action, so a zone that could host several of the card's
- * offers has to pick a single primary (assumption A6). Play beats set, and an
- * activation beats a set: the more committal reading of the gesture is the one
- * a player who dragged a card onto an empty zone meant.
+ * A drop names a zone, never an action, so a zone that can host several of the
+ * card's offers leaves the gesture ambiguous. The order below is the order the
+ * player is asked in (item 6): play before set, activation before set — the
+ * more committal reading of the gesture first — but a second entry is a
+ * question now, not a discarded alternative.
  */
 const MONSTER_PREFERENCE: readonly ChoiceAction[] = Object.freeze([
   "summon",
@@ -35,17 +36,15 @@ const EXTRA_MONSTER_ZONE_IDS: ReadonlySet<PhysicalZoneId> =
     "shared:extraMonster:right",
   ]);
 
-export function dropChoiceForZone(
+export function dropChoicesForZone(
   zone: BoardZoneView,
   choices: readonly InteractionChoice[],
-): InteractionChoice | null {
+): readonly InteractionChoice[] {
   const preference = preferenceForZone(zone);
-  if (preference === null) return null;
-  for (const action of preference) {
-    const match = choices.find((choice) => choice.action === action);
-    if (match !== undefined) return match;
-  }
-  return null;
+  if (preference === null) return [];
+  return preference.flatMap((action) =>
+    choices.filter((choice) => choice.action === action),
+  );
 }
 
 function preferenceForZone(

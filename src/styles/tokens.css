@@ -112,4 +112,8 @@
   --duel-field-layer-window-active: 120;
   --duel-field-layer-hand-zoom: 140;
   --duel-field-layer-drag-ghost: 150;
+  /* Item 6: the drop confirmation is the one field surface that outranks the
+     ghost — the card springs home behind it while the question is still
+     unanswered, and the question must never be the thing that is covered. */
+  --duel-field-layer-drop-confirm: 160;
 }

@@ -28,7 +28,7 @@
   import type { ZoneListEntry } from "../../field/zone-list.ts";
   import type { OffFieldTargetEntry } from "../../field/off-field-target-list.ts";
   import ZoneListDialog from "./duel-field/ZoneListDialog.svelte";
-  import { dropChoiceForZone } from "../prompts/drop-target.ts";
+  import { dropChoicesForZone } from "../prompts/drop-target.ts";
   import { validatePromptSelection } from "../prompts/prompt-selection.ts";
   import { placementZoneCandidates } from "../../field/placement-candidates.ts";
   import type { PhysicalZoneId } from "../../field/duel-field-layout.ts";
@@ -63,6 +63,7 @@
     type StageFrame,
   } from "../presentation/stage-frame.ts";
   import DragGhost from "./duel-field/DragGhost.svelte";
+  import DropConfirmDialog from "./duel-field/DropConfirmDialog.svelte";
   import HandZoomOverlay from "./duel-field/HandZoomOverlay.svelte";
   import FieldActionBar from "./duel-field/FieldActionBar.svelte";
   import FloatingFieldWindow from "./duel-field/FloatingFieldWindow.svelte";
@@ -200,6 +201,15 @@
      on a leave — and only a chosen action, a drag, a second click on the card,
      a click outside its union or Escape clears it. */
   let pinnedHandTarget: BoardTargetId | null = null;
+  /* Item 6: the drop that could not be read as one action, held until the
+     player answers it. Nothing is dispatched and no placement intent is armed
+     while it is set, so cancelling leaves the game exactly as the drag found
+     it. */
+  let dropConfirm: {
+    readonly card: BoardCardView;
+    readonly zone: BoardZoneView;
+    readonly choices: readonly InteractionChoice[];
+  } | null = null;
 
   $: resolvedCardBackUrl = cardBackUrl || DEFAULT_CARD_BACK;
   $: effectiveReducedMotion = reducedMotion ?? mediaReducedMotion;
@@ -495,7 +505,7 @@
      drives navigation only, so none of them may ever reach the outside-click
      dismissal that answers the live decision. */
   const INTERACTIVE_SELECTOR =
-    "[data-field-target], .card-action-chips, .field-action-bar, .field-phase-strip, .field-end-turn, .floating-field-window, .duel-field-hand-band";
+    "[data-field-target], .card-action-chips, .field-action-bar, .field-phase-strip, .field-end-turn, .floating-field-window, .duel-field-hand-band, .drop-confirm-backdrop";
 
   function chainPassChoice(): InteractionChoice | null {
     if (spec === null || spec.promptKind !== "chain") return null;
@@ -709,6 +719,9 @@
     ghostPromptKey = key;
     if (ghostOrigin !== null) removeGhost();
     clearHandPin();
+    /* The held choices belong to the prompt that offered them: answering the
+       replacement with one of them would send a dead choice id. */
+    dropConfirm = null;
   }
 
   function clearHandZoomOnBoardChange(value: BoardViewModel): void {
@@ -815,14 +828,20 @@
       const zoneId = zoneIdAtPoint(x, y);
       if (zoneId !== null && candidates.has(zoneId)) {
         const zone = board.zones.find((value) => value.id === zoneId);
-        const choice =
+        const choices =
           zone === undefined
-            ? null
-            : dropChoiceForZone(
+            ? []
+            : dropChoicesForZone(
                 zone,
                 spec.cardChoices.get(card.targetId) ?? [],
               );
-        if (zone !== undefined && choice !== null) {
+        const choice = choices.length === 1 ? choices[0] : undefined;
+        /* Item 6: two or more readings of the same gesture is a question, not
+           a preference. The card springs home behind the modal and only the
+           answer commits anything. */
+        if (zone !== undefined && choices.length > 1)
+          dropConfirm = { card, zone, choices };
+        else if (zone !== undefined && choice !== undefined) {
           /* Exactly one placement intent + one chooseChoice, dispatched before
              any ghost animation starts — the spring never delays or
              authorizes this. */
@@ -1130,6 +1149,24 @@
       }}
       ondismiss={clearHandPin}
       onzoomleave={leaveHandZoom}
+    />
+  {/if}
+  {#if dropConfirm !== null}
+    <DropConfirmDialog
+      card={dropConfirm.card}
+      zone={dropConfirm.zone}
+      choices={dropConfirm.choices}
+      disabled={pending}
+      onconfirm={(choice) => {
+        const confirmed = dropConfirm;
+        dropConfirm = null;
+        if (confirmed === null) return;
+        /* The same pair `endCardDrag` sends for an unambiguous drop, only now
+           the zone was held across the question instead of the gesture. */
+        onplacementintent(confirmed.zone.id);
+        dispatch({ type: "chooseChoice", choiceId: choice.id });
+      }}
+      oncancel={() => (dropConfirm = null)}
     />
   {/if}
   {#if targetListOpen && spec !== null}

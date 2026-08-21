@@ -2066,11 +2066,13 @@ describe("DuelField", () => {
     ).toBeNull();
   });
 
-  it("drops on a candidate zone with one intent and one dispatch", async () => {
-    const harness = renderDraggableHand();
+  it("a single-action drop dispatches immediately", async () => {
+    const harness = renderDraggableHand({ singleChoice: true });
     await startHandDrag();
 
     await dropAt(harness, zoneElement("p0:mainMonster:3"));
+
+    expect(dropConfirmDialog()).toBeNull();
 
     expect(harness.onplacementintent.mock.calls).toEqual([
       ["p0:mainMonster:3"],
@@ -2084,7 +2086,7 @@ describe("DuelField", () => {
   });
 
   it("resolves a hit on the zone's own label to the enclosing zone", async () => {
-    const harness = renderDraggableHand();
+    const harness = renderDraggableHand({ singleChoice: true });
     await startHandDrag();
     const label = zoneElement("p0:mainMonster:1").querySelector(
       '[data-cy="zone-control-label-p0:mainMonster:1"]',
@@ -2143,6 +2145,147 @@ describe("DuelField", () => {
     expect(harness.dispatch).not.toHaveBeenCalled();
   });
 
+  /* Item 6: the drop gesture stops guessing. The owner's own example is a
+     spell dragged onto an empty backrow zone, where activating it and setting
+     it are both legal and the two are not undoable into each other. */
+  it("an ambiguous drop opens the confirm modal", async () => {
+    const harness = renderDraggableHand({ spellChoices: true });
+    await startHandDrag();
+
+    await dropAt(harness, zoneElement("p0:spellTrap:2"));
+
+    expect(dropConfirmDialog()).not.toBeNull();
+    // In the preference order, and worded exactly as the card's own chips are.
+    expect(
+      [...document.querySelectorAll('[data-cy^="drop-confirm-action-"]')].map(
+        (button) => button.textContent?.trim(),
+      ),
+    ).toEqual(["Activate", "Set"]);
+    expect(
+      document.querySelector('[data-cy="drop-confirm-cancel"]'),
+    ).not.toBeNull();
+    // Nothing is committed while the question is still on screen.
+    expect(harness.onplacementintent).not.toHaveBeenCalled();
+    expect(harness.dispatch).not.toHaveBeenCalled();
+  });
+
+  it("choosing an action in the modal plays exactly that action", async () => {
+    const harness = renderDraggableHand({ spellChoices: true });
+    await startHandDrag();
+    await dropAt(harness, zoneElement("p0:spellTrap:2"));
+
+    const set = document.querySelector<HTMLButtonElement>(
+      '[data-cy="drop-confirm-action-setspelltrap"]',
+    );
+    if (set === null) throw new Error("Missing drop confirm set button");
+    await fireEvent.click(set);
+
+    expect(harness.onplacementintent.mock.calls).toEqual([["p0:spellTrap:2"]]);
+    expect(harness.dispatch).toHaveBeenCalledTimes(1);
+    expect(harness.dispatch.mock.calls[0]?.[0]).toMatchObject({
+      type: "chooseChoice",
+      choiceId: "setspelltrap",
+    });
+    expect(dropConfirmDialog()).toBeNull();
+  });
+
+  it("cancelling the modal dispatches nothing", async () => {
+    const harness = renderDraggableHand();
+    await startHandDrag();
+    await dropAt(harness, zoneElement("p0:mainMonster:3"));
+    expect(dropConfirmDialog()).not.toBeNull();
+
+    const cancel = document.querySelector<HTMLButtonElement>(
+      '[data-cy="drop-confirm-cancel"]',
+    );
+    if (cancel === null) throw new Error("Missing drop confirm cancel button");
+    await fireEvent.click(cancel);
+
+    expect(dropConfirmDialog()).toBeNull();
+    // "Cancel and return the card to your hand": the game state is untouched,
+    // so not even the placement intent may survive the cancelled gesture.
+    expect(harness.onplacementintent).not.toHaveBeenCalled();
+    expect(harness.dispatch).not.toHaveBeenCalled();
+  });
+
+  it("Escape cancels the modal", async () => {
+    const harness = renderDraggableHand();
+    await startHandDrag();
+    await dropAt(harness, zoneElement("p0:mainMonster:3"));
+    expect(dropConfirmDialog()).not.toBeNull();
+
+    await fireEvent.keyDown(window, { key: "Escape" });
+
+    expect(dropConfirmDialog()).toBeNull();
+    expect(harness.onplacementintent).not.toHaveBeenCalled();
+    expect(harness.dispatch).not.toHaveBeenCalled();
+  });
+
+  /* A response is already in flight, so the actions cannot be answered twice —
+     but backing out must stay available, because cancelling sends nothing. */
+  it("a pending response disables the modal's actions, never its cancel", async () => {
+    const harness = renderDraggableHand();
+    await startHandDrag();
+    await dropAt(harness, zoneElement("p0:mainMonster:3"));
+    await harness.rendered.rerender({ pending: true });
+    await tick();
+
+    expect(
+      [...document.querySelectorAll('[data-cy^="drop-confirm-action-"]')].map(
+        (button) => (button as HTMLButtonElement).disabled,
+      ),
+    ).toEqual([true, true]);
+    const cancel = document.querySelector<HTMLButtonElement>(
+      '[data-cy="drop-confirm-cancel"]',
+    );
+    expect(cancel?.disabled).toBe(false);
+
+    if (cancel === null) throw new Error("Missing drop confirm cancel button");
+    await fireEvent.click(cancel);
+
+    expect(dropConfirmDialog()).toBeNull();
+    expect(harness.onplacementintent).not.toHaveBeenCalled();
+    expect(harness.dispatch).not.toHaveBeenCalled();
+  });
+
+  /* The choices the modal holds belong to one prompt. If the engine replaces
+     that prompt underneath it, confirming would answer the new prompt with a
+     dead choice id, so the question has to leave with the prompt that asked
+     it. */
+  it("a prompt replacement closes the modal without dispatching", async () => {
+    const harness = renderDraggableHand();
+    await startHandDrag();
+    await dropAt(harness, zoneElement("p0:mainMonster:3"));
+    expect(dropConfirmDialog()).not.toBeNull();
+
+    const nextPrompt = fieldPrompt(
+      "idleCommand",
+      [
+        handChoice("summon", "Summon The Legendary Fisherman", {
+          action: "summon",
+        }),
+      ],
+      { id: promptId("idleCommand-field-component-drop-replacement") },
+    );
+    const nextSpec = mapPromptToInteractionSpec(
+      nextPrompt,
+      BOARD_VIEW_MODEL_FIXTURES["ST-01"],
+      harness.board,
+      CONTEXT,
+    );
+    if (nextSpec.kind === "inactive")
+      throw new Error("Expected active field spec");
+    await harness.rendered.rerender({
+      prompt: nextPrompt,
+      spec: nextSpec,
+      session: createInteractionSession(nextSpec),
+    });
+    await tick();
+
+    expect(dropConfirmDialog()).toBeNull();
+    expect(harness.dispatch).not.toHaveBeenCalled();
+  });
+
   it("cancels a drag whose pointer was taken away", async () => {
     const harness = renderDraggableHand();
     const target = await startHandDrag();
@@ -2191,7 +2334,7 @@ describe("DuelField", () => {
   it("dispatches the single intent/choice immediately, then springs the ghost to the target and unmounts it", async () => {
     const rafStub = stubRaf();
     try {
-      const harness = renderDraggableHand();
+      const harness = renderDraggableHand({ singleChoice: true });
       await startHandDrag();
       const zone = zoneElement("p0:mainMonster:3");
       vi.spyOn(zone, "getBoundingClientRect").mockReturnValue({
@@ -4277,6 +4420,9 @@ function renderDraggableHand(
     /** One legal action instead of two: the shape whose click used to commit
         the play outright. */
     readonly singleChoice?: boolean;
+    /** Item 6's own example: a hand card offering both `activate` and
+        `setSpellTrap`, so a backrow drop is ambiguous. */
+    readonly spellChoices?: boolean;
     readonly imageLibrary?: {
       lease: (code: number) => { url: string; release: () => void };
     };
@@ -4302,20 +4448,29 @@ function renderDraggableHand(
         };
   const value = fieldPrompt(
     "idleCommand",
-    options.singleChoice === true
+    options.spellChoices === true
       ? [
-          handChoice("summon", "Summon The Legendary Fisherman", {
-            action: "summon",
+          handChoice("activate", "Activate The Legendary Fisherman", {
+            action: "activate",
+          }),
+          handChoice("setspelltrap", "Set The Legendary Fisherman", {
+            action: "setSpellTrap",
           }),
         ]
-      : [
-          handChoice("summon", "Summon The Legendary Fisherman", {
-            action: "summon",
-          }),
-          handChoice("setmonster", "Set The Legendary Fisherman", {
-            action: "setMonster",
-          }),
-        ],
+      : options.singleChoice === true
+        ? [
+            handChoice("summon", "Summon The Legendary Fisherman", {
+              action: "summon",
+            }),
+          ]
+        : [
+            handChoice("summon", "Summon The Legendary Fisherman", {
+              action: "summon",
+            }),
+            handChoice("setmonster", "Set The Legendary Fisherman", {
+              action: "setMonster",
+            }),
+          ],
   );
   const spec = mapPromptToInteractionSpec(
     value,
@@ -4355,6 +4510,10 @@ function renderDraggableHand(
 
 function dragGhost(): HTMLElement | null {
   return document.querySelector<HTMLElement>('[data-cy="drag-ghost"]');
+}
+
+function dropConfirmDialog(): HTMLElement | null {
+  return document.querySelector<HTMLElement>('[data-cy="drop-confirm-dialog"]');
 }
 
 function handCardArticle(): HTMLElement {

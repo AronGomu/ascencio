@@ -21,7 +21,7 @@
 
 - [ ] Use wheel/trackpad to reach offscreen cards in a 20-card hand.
 - [ ] Use Arrow navigation to reach offscreen hand cards; confirm focus scrolls them into view.
-- [ ] Drag an actionable hand card after scrolling; confirm drag still starts and completes.
+- [ ] Drag an actionable hand card after scrolling; confirm drag still starts and completes (a card with two legal actions for that zone now ends the drag in the drop confirmation — answer it, see T11).
 - [ ] Drag the overlay thumb; confirm the hand viewport scrolls without changing card height.
 
 ## T5 geometry-anchored-phases
@@ -743,7 +743,9 @@ Portrait: dragging, hands, dialogs and overlays
 - [ ] Drag a card from your hand onto a highlighted zone. Two things must both
       be true: the ghost card **stays under your finger** the whole way (it must
       not shoot off at right angles to your movement), and the card is played
-      into the zone you dropped it on.
+      into the zone you dropped it on — directly when only one action is legal
+      there, or after you pick one in the drop confirmation when two are (T11).
+      The confirmation itself reads the same way up as the board.
 - [ ] Drag a card and release it over nothing. The ghost settles back onto the
       card it came from, not onto some other part of the board.
 - [ ] Swipe the hand band sideways (along the hand's own direction, as drawn).
@@ -794,7 +796,9 @@ Unchanged: desktop (1440x900 and 1920x1080)
 
 - [ ] The duel looks and behaves exactly as before: same field size, same
       spacing, same preview panel and right rail.
-- [ ] Drag a card onto a zone — ghost, drop and settle behave exactly as before.
+- [ ] Drag a card onto a zone — ghost, drop and settle behave exactly as before,
+      except that a drop offering two legal actions now asks which one (T11)
+      instead of picking the more committal one for you.
 - [ ] Drag the decision window by its handle — it follows the pointer exactly
       as before.
 - [ ] Target/attack lines are drawn exactly as before.
@@ -2369,7 +2373,8 @@ if the preset hand offers none, play on until a Deck-search effect resolves.
       leaves is the one you clicked, and the cards on either side close the gap without
       otherwise reordering.
 - [ ] Drag a hand card onto a highlighted zone and drop it: the dropped card is the one
-      you dragged.
+      you dragged. If the drop confirmation opens (T11), the card it names is that same
+      card, and the action you pick is played on it.
 - [ ] Reach a prompt that asks you to pick cards in hand (a tribute, a discard, a cost):
       click the rightmost card — the card that highlights and the card the prompt resolves
       on are the one you clicked.
@@ -2380,4 +2385,40 @@ if the preset hand offers none, play on until a Deck-search effect resolves.
       centred group in the same count, and nothing about your hand's order affects it.
 - [ ] End your turn and take a second turn: the hand still holds its order from the
       previous turn plus the new draw at the right end.
+- [ ] Confirm the browser console shows no errors during the above.
+
+## T11 drop-action-confirm-modal
+
+Start a duel with the preset decks (`npm run dev`, `#/duel`) and play to your own
+Main Phase 1. You need a hand card the engine offers two ways to play into the same
+zone: a Spell you may either activate or set is the case item 6 names, and almost any
+Level 4 or lower monster (Summon or Set) is the case you will hit first.
+
+- [ ] Drag a Spell from your hand onto an empty Spell & Trap Zone and release.
+      A small window opens in the middle of the field, over everything else. It names
+      the card you dragged, names the zone you dropped it on, and lists **Activate**,
+      **Set** and **Cancel** — in that order, Activate first.
+- [ ] Nothing has been played yet: the card is back in your hand behind the window,
+      the zone is still empty, and the turn has not moved on.
+- [ ] Press **Cancel**. The window closes and nothing at all happens: the card is still
+      in your hand, the zone is still empty, and it is still your Main Phase 1 with the
+      same cards everywhere. Repeat the drag — it still offers the same three buttons.
+- [ ] Drag the same Spell onto the same zone again and press **Escape** instead. Same
+      result as Cancel: nothing is played.
+- [ ] Drag it again and click somewhere outside the window (on the dimmed area around
+      it). Same result again: nothing is played.
+- [ ] Drag it a fourth time and press **Set**. The card is set face-down in the zone you
+      dropped it on — not in some other zone, and it is not activated.
+- [ ] Now drag a monster onto an empty Monster Zone. The window offers **Summon**,
+      **Set** and **Cancel**, with Summon first. Press **Summon**: the monster is
+      summoned face-up in attack position, in that zone.
+- [ ] Find a drop with only one legal action — for example a monster you can only Set
+      because you have already Normal Summoned this turn. Drag it onto an empty Monster
+      Zone: it plays straight away in the one gesture, with **no** window at all.
+- [ ] Drag a card onto a zone it cannot be played into (an occupied zone, or the deck
+      pile): as before, nothing happens, the card springs back, and no window opens.
+- [ ] Keyboard: open the window with a drag. Focus is already on the first action button,
+      so pressing Enter straight away plays that action; Tab moves along the buttons to
+      Cancel. (Focus is not trapped inside the window — Tab past Cancel walks on into the
+      board behind it. Escape closes the window from anywhere.)
 - [ ] Confirm the browser console shows no errors during the above.

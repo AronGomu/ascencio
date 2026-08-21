@@ -1350,6 +1350,25 @@ button.duel-field-zone,
   }
 }
 
+/* Item 6: the drop that could be read two ways. Centred on the field rather
+   than anchored on the zone, and above the drag ghost, which is springing the
+   card home behind it while the question stands. Everything else is the shared
+   `.dialog-backdrop`/`.dialog-panel` pair the field's other modals use. */
+.drop-confirm-backdrop {
+  z-index: var(--duel-field-layer-drop-confirm);
+}
+
+.drop-confirm-dialog {
+  width: min(20rem, 100%);
+  text-align: center;
+}
+
+.drop-confirm-dialog__zone {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
 /* Anchored on the card's bottom edge at 1.6x, the overlay is drawn *over* the
    card that opened it. Taking pointer input there would steal that card's own
    hover and press: the card would report a leave the moment the overlay

@@ -56,6 +56,7 @@ describe("shell settings", () => {
       version: 3,
       rotationNoticeDismissed: true,
       display: { showZoneOutlines: false, showZoneCounts: true },
+      freePlayPairing: { player: "preset:nekroz", opponent: "local:mine:4" },
     };
     writeShellSettings(
       {
@@ -85,6 +86,42 @@ describe("shell settings", () => {
         .rotationNoticeDismissed,
     ).toBe(false);
     expect(migrateFromV2(null).rotationNoticeDismissed).toBe(false);
+  });
+
+  /* T17: the free-play pairing. A payload written before it existed parses as
+     no pairing rather than as a broken one, which is what lets the match setup
+     open on the bundled defaults for an existing profile. */
+  it("defaults the free-play pairing to none, including on an older v3 payload", () => {
+    expect(DEFAULT_SHELL_SETTINGS.freePlayPairing).toBeNull();
+    const withoutPairing = JSON.stringify({
+      version: 3,
+      rotationNoticeDismissed: true,
+      display: { showZoneOutlines: true, showZoneCounts: true },
+    });
+    expect(
+      readShellSettings(storageOf({ [SHELL_SETTINGS_KEY]: withoutPairing })),
+    ).toEqual({ ...DEFAULT_SHELL_SETTINGS, rotationNoticeDismissed: true });
+    expect(migrateFromV2(null).freePlayPairing).toBeNull();
+  });
+
+  /* Half a remembered match is a seat the player never chose, so a pairing
+     that is not two keys is dropped whole rather than half-adopted. */
+  it.each([
+    ["a missing seat", { player: "preset:nekroz" }],
+    ["a seat that is not a string", { player: "preset:nekroz", opponent: 7 }],
+    ["an empty seat", { player: "", opponent: "preset:shaddoll" }],
+    ["an array", ["preset:nekroz", "preset:shaddoll"]],
+    ["a string", "preset:nekroz"],
+  ])("drops a free-play pairing with %s", (_name, freePlayPairing) => {
+    const serialized = JSON.stringify({
+      version: 3,
+      display: { showZoneOutlines: true, showZoneCounts: true },
+      freePlayPairing,
+    });
+    expect(
+      readShellSettings(storageOf({ [SHELL_SETTINGS_KEY]: serialized }))
+        .freePlayPairing,
+    ).toBeNull();
   });
 
   it("prefers the v3 payload over a stale v2 payload", () => {

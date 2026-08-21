@@ -11,8 +11,9 @@
   /* `null` is standalone mode: the duel renders its own deck picker, owns the
      whole session and reports nothing back, which is exactly what `#/duel`
      did before this facade existed. A request means a host is waiting for one
-     result. Dispatching that request is still to come; until then a hosted
-     session starts from the picker. */
+     result and has already chosen both seats, so the duel starts from it
+     instead of opening a picker that would ask again — and would fix the
+     opponent to one deck, discarding the one the host picked. */
   export let request: BattleRequest | null = null;
   /* The other way to say "a host is waiting for one result": T19's story
      handoff hands the player to the duel's own picker rather than a prebuilt
@@ -40,7 +41,7 @@
 </script>
 
 <div class="battle-root" data-cy="battle-root">
-  <App onbattlecomplete={hostWaiting ? settle : undefined} />
+  <App {request} onbattlecomplete={hostWaiting ? settle : undefined} />
   {#if rotated && !rotationNoticeDismissed}
     <RotationNotice ondismiss={onrotationnoticedismiss} />
   {/if}

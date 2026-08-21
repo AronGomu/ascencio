@@ -32,8 +32,11 @@ async function openDuel(page: Page, url = "./#/duel"): Promise<void> {
   await startMatch(page);
 }
 
+/* T17: both seats are chosen in the shell's match setup, and the duel starts
+   from the request it builds rather than from a picker of its own. Start is
+   dead until the free-play library has answered, which is what the wait is. */
 async function startPresetDuel(page: Page): Promise<void> {
-  const start = page.locator('[data-cy="deck-picker-start-button"]');
+  const start = page.locator('[data-cy="free-play-match-start"]');
   await expect(start).toBeEnabled({ timeout: 120_000 });
   await start.click();
 }
@@ -79,6 +82,7 @@ test("a portrait phone turns the duel stage a quarter turn and never scrolls the
 }) => {
   await page.setViewportSize(PHONE);
   await openDuel(page);
+  await startPresetDuel(page);
 
   const stage = page.locator('[data-cy="app-stage"]');
   await expect(stage).toHaveAttribute("data-stage-rotated", "true");
@@ -211,6 +215,7 @@ test("the rotation notice explains the turn once and stays dismissed", async ({
 }) => {
   await page.setViewportSize(PHONE);
   await openDuel(page);
+  await startPresetDuel(page);
 
   const notice = page.locator('[data-cy="duel-rotation-notice"]');
   await expect(notice).toBeVisible();
@@ -244,6 +249,7 @@ test("reduced motion animates neither the stage nor the turn", async ({
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize(PHONE);
   await openDuel(page);
+  await startPresetDuel(page);
   await expect(page.locator('[data-cy="app-stage"]')).toHaveAttribute(
     "data-stage-rotated",
     "true",
@@ -288,6 +294,7 @@ test("a landscape phone below the breakpoint keeps the upright stage", async ({
 }) => {
   await page.setViewportSize(PHONE_LANDSCAPE);
   await openDuel(page);
+  await startPresetDuel(page);
 
   const stage = page.locator('[data-cy="app-stage"]');
   await expect(stage).toHaveAttribute("data-stage-mode", "mobile-landscape");

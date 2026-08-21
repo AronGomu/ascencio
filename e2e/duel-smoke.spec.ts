@@ -128,8 +128,11 @@ async function openDuel(page: Page, url = "./#/duel"): Promise<void> {
   await startMatch(page);
 }
 
+/* T17: both seats are chosen in the shell's match setup, and the duel starts
+   from the request it builds rather than from a picker of its own. Start is
+   dead until the free-play library has answered, which is what the wait is. */
 async function startPresetDuel(page: Page): Promise<void> {
-  const start = page.locator('[data-cy="deck-picker-start-button"]');
+  const start = page.locator('[data-cy="free-play-match-start"]');
   await expect(start).toBeEnabled({ timeout: 120_000 });
   await start.click();
 }
@@ -330,9 +333,19 @@ test("the root route shows the main menu without booting the duel", async ({
   ).toHaveCount(0);
 
   await page.locator('[data-cy="free-play-start-match"]').click();
+  /* T17: the entry opens the match setup, where both seats are chosen. The
+     duel's own "Choose your deck" picker, which fixed the opponent, is what
+     that setup replaces — so it must not appear here either. */
+  await expect(page.locator('[data-cy="free-play-match-setup"]')).toBeVisible({
+    timeout: 120_000,
+  });
+  await expect(
+    page.getByRole("heading", { name: "Choose the decks" }),
+  ).toBeVisible();
+  await startPresetDuel(page);
   await expect(
     page.getByRole("heading", { name: "Choose your deck" }),
-  ).toBeVisible({ timeout: 120_000 });
+  ).toHaveCount(0);
 
   /* The match is a state of the menu, so the way back to it is a control the
      shell paints over the duel rather than a route the player navigates. */
@@ -493,44 +506,32 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   );
 });
 
-test("deck picker persists a chosen pair and Change decks returns without auto-start", async ({
+test("the match setup persists a chosen pair and Change decks returns without auto-start", async ({
   page,
 }) => {
   await openDuel(page);
-  const picker = page.locator('[data-cy="deck-picker"]');
-  await expect(picker).toBeVisible({ timeout: 120_000 });
+  const setup = page.locator('[data-cy="free-play-match-setup"]');
+  await expect(setup).toBeVisible({ timeout: 120_000 });
   expect(
     (await readCapture(page)).commands.filter(
       (command) => command.type === "startDuel",
     ),
   ).toHaveLength(0);
 
-  const playerSelect = page.locator('[data-cy="deck-picker-player-select"]');
+  const playerSelect = page.locator(
+    '[data-cy="free-play-match-player-picker"]',
+  );
+  const opponentSelect = page.locator(
+    '[data-cy="free-play-match-opponent-picker"]',
+  );
+  await expect(playerSelect).toBeEnabled({ timeout: 120_000 });
   await playerSelect.selectOption("preset:burning-abyss");
-  await expect(playerSelect).toHaveValue("preset:burning-abyss");
-  /* The opponent seat is not chosen here and never was in this run: it is
-     fixed to Shaddoll, which the persisted record below has to show. */
-  await expect(
-    page.locator('[data-cy="deck-picker-opponent-fixed"]'),
-  ).toContainText("Shaddoll");
-  expect(
-    await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("ygo.ui.v2") ?? "null"),
-    ),
-  ).toEqual({
-    version: 2,
-    windows: { zoneList: null, confirm: null },
-    decks: {
-      playerKey: "preset:burning-abyss",
-      opponentKey: "preset:shaddoll",
-    },
-    settings: { showZoneOutlines: true, showZoneCounts: true },
-  });
-  expect(
-    await page.evaluate(() => localStorage.getItem("ygo.ui.v1")),
-  ).toBeNull();
+  /* T17: the opponent seat is a choice now. Picking a deck that is neither
+     seat's default is what proves the request carries it rather than the
+     Shaddoll the duel's own picker used to assign. */
+  await opponentSelect.selectOption("preset:nekroz");
 
-  await page.locator('[data-cy="deck-picker-start-button"]').click();
+  await page.locator('[data-cy="free-play-match-start"]').click();
   await expect(page.locator('[data-cy="duel-field"]')).toBeVisible({
     timeout: 120_000,
   });
@@ -541,18 +542,32 @@ test("deck picker persists a chosen pair and Change decks returns without auto-s
   ).toEqual([
     {
       type: "startDuel",
-      duelId: "bundled-v1:burning-abyss:vs:shaddoll",
+      duelId: "bundled-v1:burning-abyss:vs:nekroz",
       player: { kind: "preset", deckId: "burning-abyss" },
-      opponent: { kind: "preset", deckId: "shaddoll" },
+      opponent: { kind: "preset", deckId: "nekroz" },
     },
   ]);
+  expect(
+    await page.evaluate(
+      () =>
+        (
+          JSON.parse(localStorage.getItem("ygo.ui.v3") ?? "null") as {
+            freePlayPairing: unknown;
+          } | null
+        )?.freePlayPairing,
+    ),
+  ).toEqual({ player: "preset:burning-abyss", opponent: "preset:nekroz" });
+  expect(
+    await page.evaluate(() => localStorage.getItem("ygo.ui.v1")),
+  ).toBeNull();
 
   await page.reload();
   await startMatch(page);
-  await expect(picker).toBeVisible({ timeout: 120_000 });
+  await expect(setup).toBeVisible({ timeout: 120_000 });
   await expect(playerSelect).toHaveValue("preset:burning-abyss");
+  await expect(opponentSelect).toHaveValue("preset:nekroz");
 
-  await page.locator('[data-cy="deck-picker-start-button"]').click();
+  await startPresetDuel(page);
   await expect(page.locator('[data-cy="duel-field"]')).toBeVisible({
     timeout: 120_000,
   });
@@ -560,9 +575,13 @@ test("deck picker persists a chosen pair and Change decks returns without auto-s
   await expect(
     page.getByRole("heading", { name: "Duel surrendered" }),
   ).toBeVisible();
+  /* Change decks resets the session, and the request that started this match
+     must not fire a second time into it: the duel dispatches a request once
+     per identity, and its own picker is what the reset opens. */
   await page.locator('[data-cy="duel-result-change-decks-button"]').click();
-  await expect(picker).toBeVisible({ timeout: 120_000 });
-  await expect(playerSelect).toHaveValue("preset:burning-abyss");
+  await expect(page.locator('[data-cy="deck-picker"]')).toBeVisible({
+    timeout: 120_000,
+  });
   await expect
     .poll(
       async () =>
@@ -613,14 +632,14 @@ test("a local deck built from the packaged catalog is offered and duels", async 
   ).not.toHaveAttribute("aria-busy", "true");
 
   await openDuel(page);
-  await expect(page.locator('[data-cy="deck-picker"]')).toBeVisible({
+  await expect(page.locator('[data-cy="free-play-match-setup"]')).toBeVisible({
     timeout: 120_000,
   });
 
   /* The deck a player just built is offered, because the editor may only offer
      cards this build packages and the picker only offers decks it can draw —
      one derivation, so the two sets cannot disagree. */
-  const localGroup = page.locator('[data-cy="deck-picker-group-local"]');
+  const localGroup = page.locator('[data-cy="free-play-match-player-locals"]');
   await expect(localGroup).toHaveCount(1, { timeout: 120_000 });
   const localOption = localGroup.getByRole("option", {
     name: LOCAL_DECK_NAME,
@@ -628,14 +647,16 @@ test("a local deck built from the packaged catalog is offered and duels", async 
   });
   await expect(localOption).toHaveCount(1);
 
-  const playerSelect = page.locator('[data-cy="deck-picker-player-select"]');
+  const playerSelect = page.locator(
+    '[data-cy="free-play-match-player-picker"]',
+  );
   await playerSelect.selectOption({ label: LOCAL_DECK_NAME });
   await expect(playerSelect).toHaveValue(/^local:/);
-  await expect(page.locator('[data-cy="deck-picker-start-error"]')).toHaveCount(
+  await expect(page.locator('[data-cy="free-play-match-error"]')).toHaveCount(
     0,
   );
 
-  await page.locator('[data-cy="deck-picker-start-button"]').click();
+  await page.locator('[data-cy="free-play-match-start"]').click();
   await expect(page.locator('[data-cy="duel-field"]')).toBeVisible({
     timeout: 120_000,
   });
@@ -689,20 +710,22 @@ test("a local deck the pinned ruleset refuses is never offered", async ({
   );
 
   await openDuel(page);
-  await expect(page.locator('[data-cy="deck-picker"]')).toBeVisible({
+  await expect(page.locator('[data-cy="free-play-match-setup"]')).toBeVisible({
     timeout: 120_000,
   });
   await expect(
-    page.locator('[data-cy="deck-picker-group-preset"]'),
-  ).toHaveCount(1);
-  /* The seeded starter deck is a legal local row, so the group itself may
-     exist; what must never appear is the deck the ruleset refused. */
-  await expect(
-    page.locator('[data-cy="deck-picker-player-select"]').getByRole("option", {
-      name: "Thirty Nine",
-      exact: true,
-    }),
-  ).toHaveCount(0);
+    page.locator('[data-cy="free-play-match-player-presets"]'),
+  ).toHaveCount(1, { timeout: 120_000 });
+  /* The starter deck the editor seeded is a legal local row, so the group
+     itself may exist; what must never appear is the deck the ruleset refused,
+     in either seat. */
+  for (const seat of ["player", "opponent"] as const) {
+    await expect(
+      page
+        .locator(`[data-cy="free-play-match-${seat}-picker"]`)
+        .getByRole("option", { name: "Thirty Nine", exact: true }),
+    ).toHaveCount(0);
+  }
 });
 
 test("panels stay hidden until settings enable them", async ({ page }) => {
@@ -1189,6 +1212,7 @@ test("forced Worker initialization timeout terminates and replaces the Worker", 
       )) as typeof window.setTimeout;
   });
   await openDuel(page);
+  await startPresetDuel(page);
   const timeoutHeading = page.getByRole("heading", {
     name: /Duel Worker did not initialize within 120000ms/,
   });

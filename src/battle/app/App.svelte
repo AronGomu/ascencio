@@ -97,6 +97,7 @@
     battleResultForDuelResult,
     toDuelDeckSelection,
     type BattleFacadeResult,
+    type BattleRequest,
   } from "../battle-contracts.ts";
   import {
     createDuelStore,
@@ -120,6 +121,11 @@
      outwards and behaves exactly as it did before the facade existed. */
   export let onbattlecomplete:
     ((result: BattleFacadeResult) => void) | undefined = undefined;
+  /* The seats a host chose before this duel mounted. The picker below is what
+     `null` means: the duel asks for itself. One object per match, because the
+     dispatch below fires once per request identity — a host that rebuilt an
+     equal request every render would restart the duel on every flush. */
+  export let request: BattleRequest | null = null;
 
   const CURRENT_RUNTIME_SNAPSHOT_ID = snapshotId(__RUNTIME_SNAPSHOT_ID__);
   const CURRENT_ACTIVATION_SNAPSHOT_ID = snapshotId(__ACTIVATION_SNAPSHOT_ID__);
@@ -168,7 +174,10 @@
     ...DEFAULT_UI_SETTINGS,
     ...$persistedUi.settings,
   });
-  let pickerOpen = true;
+  /* A request already names both decks, so the picker never opens for it: the
+     player chose one screen ago, and this seat's opponent is fixed below. */
+  let pickerOpen = request === null;
+  let dispatchedRequest: BattleRequest | null = null;
   let duelFieldSlot: HTMLElement | null = null;
   let menuOpen = false;
   let settingsOpen = false;
@@ -610,6 +619,8 @@
     handleDiagnosticsDownload($duel.diagnostics);
   }
 
+  $: startRequestedDuel(request, $duel.status, $duel.coreVersion);
+
   $: maybeAutoResolvePrompt(
     effectivePrompt,
     $duel.responsePending,
@@ -918,6 +929,42 @@
       DEFAULT_PERSISTED_UI_STATE.decks.playerKey;
     if (nextPlayerKey !== playerKey || opponentKey !== FIXED_OPPONENT_KEY)
       persistedUi.setDecks(nextPlayerKey, FIXED_OPPONENT_KEY);
+  }
+
+  /** Starts the duel a host asked for, once the Worker can take it.
+
+      Gated on `coreVersion` for the same reason the picker is: the Worker
+      answers `ready` before it will create a session, and a start dispatched
+      earlier is one the store refuses. Fires once per request, so a reset from
+      the duel menu does not silently restart the match the host began. */
+  function startRequestedDuel(
+    requested: BattleRequest | null,
+    status: DuelViewState["status"],
+    coreVersion: DuelViewState["coreVersion"],
+  ): void {
+    if (requested === null || requested === dispatchedRequest) return;
+    if (status !== "idle" || coreVersion === null) return;
+    dispatchedRequest = requested;
+    pickerStartError = null;
+    try {
+      if (
+        duel.start(
+          toDuelDeckSelection(requested.player),
+          toDuelDeckSelection(requested.opponent),
+        )
+      )
+        return;
+      pickerStartError = "The duel could not be started. Try again.";
+    } catch (error) {
+      /* The host parsed this request against the same contract, so reaching
+         here means the two drifted apart. The player gets the broken rule by
+         name and the duel's own picker, rather than a duel that never starts. */
+      pickerStartError =
+        error instanceof Error
+          ? `That deck cannot be played: ${error.message}`
+          : "That deck cannot be played.";
+    }
+    pickerOpen = true;
   }
 
   function selectDecks(playerKey: string, opponentKey: string): void {

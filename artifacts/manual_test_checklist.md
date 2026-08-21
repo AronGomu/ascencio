@@ -2525,7 +2525,7 @@ address bar unless the step says to click something.
 
 ### Old links still land where they used to
 
-- [ ] Open `http://localhost:4300/#/duel` — the free-play menu loads (T16 put it on that route); its Start a match entry opens the deck picker exactly as before. The address bar still reads `#/duel` (the redirect is what the app resolves, not a URL rewrite).
+- [ ] Open `http://localhost:4300/#/duel` — the free-play menu loads (T16 put it on that route); its Start a match entry opens the match setup, and Start the duel there begins the duel. (Corrected by T17: Start a match used to open the duel's own deck picker.) The address bar still reads `#/duel` (the redirect is what the app resolves, not a URL rewrite).
 - [ ] Open `#/decks` — the Deck Library renders.
 - [ ] Open `#/decks/<id>` for a deck you own — that deck opens in the editor.
 - [ ] Open `#/duel/session/anything` — unchanged: the duel region shows, and a session nobody can resume still returns you to `#/story`.
@@ -2554,7 +2554,7 @@ address bar unless the step says to click something.
 
 ### The duel still spends the pillarbox
 
-- [ ] On a window wider than 1024px, open `#/duel` (or `#/free-play`), press Start a match, and confirm the duel field still uses the full window width, with the right rail absorbing the reclaimed space — exactly as before this ticket. In DevTools, `[data-cy="app-stage"]` carries `data-stage-route="free-play"`.
+- [ ] On a window wider than 1024px, open `#/duel` (or `#/free-play`), press Start a match, then Start the duel (T17 added that second step), and confirm the duel field still uses the full window width, with the right rail absorbing the reclaimed space — exactly as before this ticket. In DevTools, `[data-cy="app-stage"]` carries `data-stage-route="free-play"`.
 - [ ] Open `#/free-play/decks` at the same width: the deck editor still sits in the 16:9 stage with bars at the sides, unchanged.
 
 ### The developer console lists the new routes
@@ -2587,7 +2587,7 @@ Run `npm run dev` (default `DEV_PORT=4300`). The app's first screen is now the g
 - [ ] Press Back — you return to the main menu.
 - [ ] Click Load — the URL becomes `#/story`.
 - [ ] With a save present, click Continue — the URL becomes `#/story`.
-- [ ] Click Free Play — the URL becomes `#/free-play` and the free-play menu loads (T16); its Start a match entry opens the deck picker — start a duel and play a turn.
+- [ ] Click Free Play — the URL becomes `#/free-play` and the free-play menu loads (T16); its Start a match entry opens the match setup (T17, which replaced the duel's own deck picker here) — Start the duel and play a turn.
 - [ ] Click Settings — a dialog opens ON TOP of the menu and the URL stays `#/` (no new hash, no navigation). Close it: the menu is exactly as you left it.
 
 ### The visual novel is still loaded lazily
@@ -2620,12 +2620,12 @@ Run `npm run dev` (default `DEV_PORT=4300`). Free play now has a menu of its own
 - [ ] Click Deck builder — the URL becomes `#/free-play/decks` and the Deck Library renders.
 - [ ] Press Back — you return to the free-play menu at `#/free-play`.
 - [ ] Click Return to main menu — the URL becomes `#/` and the main menu renders.
-- [ ] Click Free Play again, then Start a match — the deck picker loads; start a duel and play a turn.
+- [ ] Click Free Play again, then Start a match — the match setup loads. (Corrected by T17: this used to be the duel's own deck picker.) Press Start the duel and play a turn.
 
 ### Leaving a match
 
-- [ ] While the deck picker or the duel is on screen, a small "Leave match" button sits in the top-left corner. Click it — you are back on the free-play menu, and the URL is still `#/free-play`.
-- [ ] Press Start a match again — a fresh duel starts from the deck picker.
+- [ ] While the duel is on screen, a small "Leave match" button sits in the top-left corner. Click it — you are back on the free-play menu, and the URL is still `#/free-play`. (Corrected by T17: the match setup that now comes first carries its own Back button instead, and no "Leave match".)
+- [ ] Press Start a match again — the match setup opens again, and Start the duel begins a fresh duel. (Corrected by T17.)
 - [ ] Start a match, then type `#/` in the address bar and go back to `#/free-play` — you land on the menu, not back inside the duel.
 - [ ] Start a match, then press the browser's Back button — you leave free play for the main menu rather than staying in the duel.
 - [ ] Play into a real duel and confirm the board's bottom edge (your hand band) is not cut off by the extra button, and that opening the duel's own options menu draws its dialog OVER "Leave match" rather than under it.
@@ -2634,9 +2634,65 @@ Run `npm run dev` (default `DEV_PORT=4300`). Free play now has a menu of its own
 ### The duel is still loaded only when a match starts
 
 - [ ] Open DevTools → Network, tick "Disable cache", and load `http://localhost:4300/#/free-play` fresh. While only the menu is on screen: no `battle-*.js`, no `.wasm` and no `runtime/` request fires, and no Worker appears under Application → Workers.
-- [ ] Click Start a match: `battle-*.js` and the runtime requests fire at that moment, and a Worker appears.
+- [ ] Click Start a match: `battle-*.js` and the runtime requests fire at that moment — the match setup reads its deck list from that same chunk. (Corrected by T17: the Worker itself appears one step later, when you press Start the duel.)
 
 ### On a phone-sized window
 
 - [ ] With a portrait phone viewport (390x844 in DevTools), open `#/free-play` — the menu reads upright and is not rotated.
-- [ ] Press Start a match — the duel is turned a quarter turn as before, and "Leave match" turns with the board rather than staying upright in the corner of the screen.
+- [ ] Press Start a match — the match setup reads upright too (T17). Press Start the duel: the duel is turned a quarter turn as before, and "Leave match" turns with the board rather than staying upright in the corner of the screen.
+
+## T17 free-play-opponent-picker
+
+Run `npm run dev` (default `DEV_PORT=4300`). A free-play match now chooses both
+decks before the duel starts, and remembers the pair.
+
+### Both seats are a choice
+
+- [ ] Open `http://localhost:4300/#/free-play` and click Start a match — a "Choose the decks" screen appears, NOT the duel. It shows two dropdowns, "Your deck" and "Opponent deck", plus Start the duel and Back.
+- [ ] Both dropdowns list the same decks: a "Bundled decks" group with Starter (Player), Starter (Opponent), Burning Abyss, Nekroz, Shaddoll and Spellbook. Neither seat says anything about Shaddoll being auto-assigned.
+- [ ] On first visit the pair reads Starter (Player) against Shaddoll.
+- [ ] Set Your deck to Burning Abyss and Opponent deck to Nekroz, then press Start the duel — the duel starts immediately with NO second deck picker in front of it.
+- [ ] Play a turn and confirm the opponent's deck really is the one you chose (surrender through the duel's options menu, then read the result dialog / open the duel log — the opponent's cards are Nekroz, not Shaddoll).
+
+### Your own decks are offered for either seat
+
+- [ ] Go to `#/free-play/decks` and build or import a deck the ruleset accepts (40+ cards, all from the packaged catalog).
+- [ ] Return to `#/free-play` → Start a match. Both dropdowns now carry a second group, "Your decks", with that deck in it.
+- [ ] Pick your own deck for Your deck and a bundled deck for the opponent, press Start the duel, and confirm the duel starts and your deck's cards are the ones in your hand.
+- [ ] Pick your own deck for BOTH seats and start — the duel still begins.
+- [ ] Build a deck of 39 cards in the editor. Back on the match setup, confirm it is offered in NEITHER dropdown.
+
+### The pairing is remembered
+
+- [ ] Choose Burning Abyss against Nekroz, press Start the duel, then press Leave match. Press Start a match again — both dropdowns are already set to Burning Abyss and Nekroz.
+- [ ] Reload the whole page (F5), open `#/free-play` → Start a match — still Burning Abyss against Nekroz.
+- [ ] In DevTools → Application → Local Storage, open the `ygo.ui.v3` entry: it holds `"freePlayPairing":{"player":"preset:burning-abyss","opponent":"preset:nekroz"}`. No other key was added.
+- [ ] Choose one of your own decks for a seat, start, leave, and come back — that deck is still selected.
+
+### A remembered deck that is gone
+
+- [ ] With one of your own decks selected for a seat and remembered (start a match, then leave), go to `#/free-play/decks` and DELETE that deck.
+- [ ] Return to `#/free-play` → Start a match. The screen opens normally: the seat that pointed at the deleted deck has fallen back to a bundled deck, no error message is shown, and Start the duel is clickable.
+- [ ] Instead of deleting it, EDIT that deck (add and remove a card so it is saved again), then come back to the match setup: the seat falls back the same way, because the remembered key names the revision the deck had.
+
+### Back, and leaving
+
+- [ ] From the match setup, press Back — you land on the free-play menu at `#/free-play`, and no duel was started.
+- [ ] Press Start a match, then type `#/` in the address bar and navigate back to `#/free-play` — you land on the free-play menu, not back on the match setup.
+- [ ] Press Start a match, press Start the duel, then press Leave match — you land on the free-play menu. Press Start a match again: the setup screen, not the duel.
+- [ ] Start a duel from the setup, surrender through the duel's options menu, and press "Change decks" in the result dialog — the duel's own picker opens and NO second duel starts by itself.
+
+### The duel is still lazy
+
+- [ ] Open DevTools → Network, tick "Disable cache", and load `http://localhost:4300/#/free-play` fresh. While only the free-play menu is on screen: no `battle-*.js`, no `.wasm` and no `runtime/` request.
+- [ ] Click Start a match: `battle-*.js`, `FreePlayMatchSetup-*.js` and the `runtime/` catalog requests fire now.
+- [ ] Under Application → Workers, no Worker exists yet. Press Start the duel — the Worker appears at that moment.
+
+### A story duel is untouched
+
+- [ ] New Game → play to an encounter and start it. That duel still opens the duel's OWN deck picker with the opponent fixed to Shaddoll, and has no "Leave match" button. The free-play match setup must not appear there.
+
+### On a phone-sized window
+
+- [ ] With a portrait phone viewport (390x844 in DevTools), open `#/free-play` → Start a match: the match setup reads upright, both dropdowns are reachable, and the screen scrolls inside the stage rather than pushing a scrollbar onto the page.
+- [ ] Press Start the duel — the duel is turned a quarter turn as before.

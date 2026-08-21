@@ -4,8 +4,9 @@
 
   export let store: ShellStore;
   /* The match is a state of this menu rather than a route, so starting one is
-     the host's business: the duel mounts in the shell's own duel region, which
-     is the element its stylesheet rotates and its geometry measures against
+     the host's business: it opens the deck setup, and the duel that follows
+     mounts in the shell's own duel region — the element its stylesheet rotates
+     and its geometry measures against
      (`src/battle/app/presentation/stage-frame.ts`). */
   export let onstartmatch: () => void = () => undefined;
 

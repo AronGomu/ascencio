@@ -11,7 +11,7 @@
   import DomainLoadError from "./screens/DomainLoadError.svelte";
   import FreePlayMenuScreen from "./screens/FreePlayMenuScreen.svelte";
   import MainMenuScreen from "./screens/MainMenuScreen.svelte";
-  import type { BattleFacadeResult } from "../battle/index.ts";
+  import type { BattleFacadeResult, BattleRequest } from "../battle/index.ts";
   import type {
     StoryDuelResolution,
     StoryEncounterRequest,
@@ -49,6 +49,12 @@
      duel. The battle domain is loaded by the region below, which is what keeps
      the menu itself free of it. */
   let matchStarted = false;
+  /* The two decks the match setup produced, and the second half of that state:
+     a started match with no request yet is the setup screen, and one with a
+     request is the duel it names. Held as one object for the whole match — the
+     duel dispatches a request once per identity, so rebuilding an equal one
+     here would restart the duel on every flush. */
+  let matchRequest: BattleRequest | null = null;
 
   async function openStorySaves(): Promise<StorySaveRepository> {
     storySaves ??= import("../story/index.ts").then((story) =>
@@ -150,10 +156,15 @@
   $: syncSession(route);
   /* Leaving the free-play menu ends its match, so coming back opens on the menu
      rather than on a duel nobody asked to resume. */
-  $: if (route.kind !== "free-play") matchStarted = false;
+  $: if (route.kind !== "free-play") leaveMatch();
   /* Which deck library the route names, so one editor region serves both
      contexts and hands navigation back in the one it was reached from. */
   $: deckContext = deckRouteContext(route);
+
+  function leaveMatch(): void {
+    matchStarted = false;
+    matchRequest = null;
+  }
 
   const readViewportBox = (): StageBox =>
     computeStageBox(globalThis.innerWidth, globalThis.innerHeight);
@@ -264,6 +275,32 @@
     >
       <FreePlayMenuScreen {store} onstartmatch={() => (matchStarted = true)} />
     </div>
+  {:else if route.kind === "free-play" && matchRequest === null}
+    <!-- Both seats are chosen here rather than inside the duel, whose own
+         picker fixes the opponent. The duel still mounts in the region below
+         and nowhere else: `src/battle/app/presentation/stage-frame.ts` maps
+         every viewport coordinate through `shell-region-duel`.
+
+         Loaded rather than imported, for the reason the domains are: reading
+         the free-play library pulls in the deck repository and the card
+         catalog, and measured statically that is 24,989 bytes of the shell's
+         115,000-byte budget for a screen only a free-play match opens. -->
+    <div
+      class="shell-region shell-region--free-play"
+      data-cy="shell-region-free-play-setup"
+    >
+      {#await import("./screens/FreePlayMatchSetup.svelte") then module}
+        <svelte:component
+          this={module.default}
+          {settings}
+          loadBattle={loaders.duel}
+          onstart={(request) => (matchRequest = request)}
+          onback={leaveMatch}
+        />
+      {:catch error}
+        <DomainLoadError label="Match setup" cy="free-play-match" {error} />
+      {/await}
+    </div>
   {:else}
     <div class="shell-region shell-region--duel" data-cy="shell-region-duel">
       {#if route.kind === "duel-session" && !sessionReady}
@@ -280,7 +317,7 @@
                setting, so the flag and its setter cross as plain props. -->
           <svelte:component
             this={module.BattleFacade}
-            request={null}
+            request={route.kind === "free-play" ? matchRequest : null}
             hosted={route.kind === "duel-session"}
             oncomplete={settleSession}
             rotated={box.rotated}
@@ -299,7 +336,7 @@
           class="secondary free-play-leave-match"
           type="button"
           data-cy="free-play-leave-match"
-          onclick={() => (matchStarted = false)}>Leave match</button
+          onclick={leaveMatch}>Leave match</button
         >
       {/if}
     </div>

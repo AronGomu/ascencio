@@ -184,12 +184,24 @@ describe("public domain APIs are frozen", () => {
       name: "battle",
       entry: "src/battle/index.ts",
       namespace: battle,
+      /* T17, deliberate widening: the free-play match setup builds a
+         `BattleRequest` before the duel mounts, so the shell needs the bundled
+         list the picker offers, the seats a lost key falls back to, and the
+         preset-only listing a library that will not open answers with. Deck
+         metadata only — the `.ydk` payloads stay behind
+         `deck-sources-browser.ts` — and every one of them is reached through
+         `loaders.duel()`, never a static import, or the duel turns eager and
+         the shell budget in `verify-browser-build.ts` rejects the build. */
       values: [
         "BattleFacade",
         "BattleRequestError",
+        "DECK_CATALOG",
+        "DEFAULT_OPPONENT_DECK_ID",
+        "DEFAULT_PLAYER_DECK_ID",
         "findSelectableDeck",
         "listSelectableDecks",
         "parseBattleRequest",
+        "presetSelectableDecks",
         "settleOnce",
         "supportedDuelCardCodes",
       ],

@@ -3,11 +3,13 @@ import {
   DEFAULT_SHELL_SETTINGS,
   readShellSettings,
   writeShellSettings,
+  type FreePlayPairing,
   type ShellSettings,
 } from "./shell-settings.ts";
 
 export interface ShellSettingsStore extends Readable<ShellSettings> {
   dismissRotationNotice(): void;
+  rememberFreePlayPairing(pairing: FreePlayPairing): void;
 }
 
 /* One live owner for shell settings: every setter writes the complete state,
@@ -32,6 +34,11 @@ export function createShellSettingsStore(
     dismissRotationNotice(): void {
       persist((state) =>
         Object.freeze({ ...state, rotationNoticeDismissed: true }),
+      );
+    },
+    rememberFreePlayPairing(pairing: FreePlayPairing): void {
+      persist((state) =>
+        Object.freeze({ ...state, freePlayPairing: Object.freeze(pairing) }),
       );
     },
   };

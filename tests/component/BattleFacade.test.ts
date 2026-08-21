@@ -25,7 +25,12 @@ const workerClientSpies = vi.hoisted(() => {
     },
     __APP_BUILD_ID__: "component-test",
   });
-  return { dispose: vi.fn(), requestDiagnostics: vi.fn(), restore: vi.fn() };
+  return {
+    dispose: vi.fn(),
+    requestDiagnostics: vi.fn(),
+    restore: vi.fn(),
+    startDuel: vi.fn(),
+  };
 });
 
 vi.mock("../../src/battle/app/DuelWorkerClient.ts", () => {
@@ -54,7 +59,8 @@ vi.mock("../../src/battle/app/DuelWorkerClient.ts", () => {
       return true;
     }
 
-    startDuel() {
+    startDuel(...args: unknown[]) {
+      workerClientSpies.startDuel(...args);
       this.context = { ...this.context, sessionGeneration: 1 };
       return this.context;
     }
@@ -169,6 +175,7 @@ afterEach(() => {
   workerClientSpies.dispose.mockReset();
   workerClientSpies.requestDiagnostics.mockReset();
   workerClientSpies.restore.mockReset();
+  workerClientSpies.startDuel.mockReset();
   diagnosticsSpies.download.mockReset();
   mockedWorkerClientCtor.instances.length = 0;
 });
@@ -252,13 +259,20 @@ async function failStartedDuel(
   return user;
 }
 
+/* T17 reversal: a request used to be inert — the facade read it only to decide
+   whether a result was owed, and every render, hosted or not, waited on the
+   duel's own picker. A request now starts the duel it names, so a hosted render
+   waits on the dispatch instead; the picker it no longer opens is what
+   `starts a host request without opening its own picker` asserts. */
 async function renderFacade(
   request: ReturnType<typeof parseBattleRequest> | null,
   oncomplete: (result: BattleFacadeResult) => void,
 ) {
   const rendered = render(BattleFacade, { request, oncomplete });
   await vi.waitFor(() =>
-    expect(document.querySelector('[data-cy="deck-picker"]')).not.toBeNull(),
+    request === null
+      ? expect(document.querySelector('[data-cy="deck-picker"]')).not.toBeNull()
+      : expect(workerClientSpies.startDuel).toHaveBeenCalled(),
   );
   return rendered;
 }
@@ -272,6 +286,20 @@ describe("BattleFacade", () => {
     expect(root?.querySelector('[data-cy="app-main"]')).not.toBeNull();
     expect(root?.querySelector('[data-cy="deck-picker"]')).not.toBeNull();
     expect(mockedWorkerClientCtor.instances).toHaveLength(1);
+  });
+
+  /* The decks were chosen one screen ago. Asking again would discard the
+     opponent the host picked, since the duel's own picker fixes that seat. */
+  it("starts a host request without opening its own picker", async () => {
+    await renderFacade(HOSTED_REQUEST, vi.fn());
+
+    expect(workerClientSpies.startDuel).toHaveBeenCalledTimes(1);
+    expect(workerClientSpies.startDuel).toHaveBeenCalledWith(
+      "bundled-v1:burning-abyss:vs:shaddoll",
+      { kind: "preset", deckId: "burning-abyss" },
+      { kind: "preset", deckId: "shaddoll" },
+    );
+    expect(document.querySelector('[data-cy="deck-picker"]')).toBeNull();
   });
 
   /* Standalone mode is today's `#/duel`: the duel owns its picker and reports

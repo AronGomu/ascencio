@@ -1,7 +1,11 @@
 <script lang="ts">
   import { tick } from "svelte";
   import { handleModalKeydown } from "../focus-trap.ts";
-  import type { DeckId, DeckRecord } from "../../decks/deck-contracts.ts";
+  import type {
+    DeckId,
+    DeckRecord,
+    DeckValidationSummary,
+  } from "../../decks/deck-contracts.ts";
   import { MAXIMUM_DECK_NAME_LENGTH } from "../../decks/deck-model.ts";
   import {
     orderDeckLibrary,
@@ -39,6 +43,25 @@
     ),
     { defaultDeckId, favouriteDeckIds, sort },
   );
+
+  /** Why the deck cannot be fielded, named after the limit that binds. A deck
+      whose cards the save no longer owns is repaired in the shop; one that
+      breaks a build rule is repaired in the editor, and "Illegal" on its own
+      would send a player who never touched the deck looking for a mistake they
+      did not make (ADR-050).
+
+      Ownership is claimed only when it is the whole story. A deck that is both
+      short of cards and short of a build rule is not fixed by buying the card
+      back, so promising that in a badge would buy the player a wasted trip; the
+      row's tooltip lists every issue either way. */
+  function illegalLabel(validation: DeckValidationSummary): string {
+    const errors = validation.issues.filter(
+      ({ severity }) => severity === "error",
+    );
+    return errors.every(({ code }) => code === "not-owned")
+      ? "Cards not owned"
+      : "Illegal";
+  }
 
   async function focusDialog(): Promise<void> {
     dialogOpener = document.activeElement as HTMLElement | null;
@@ -169,6 +192,13 @@
               <strong data-cy={`deck-library-name-${deck.id}`}
                 >{deck.name}</strong
               >
+              {#if deck.validation.status === "errors"}
+                <span
+                  class="illegal-badge"
+                  data-cy={`deck-library-illegal-${deck.id}`}
+                  >{illegalLabel(deck.validation)}</span
+                >
+              {/if}
               {#if deck.id === defaultDeckId}
                 <span
                   class="default-badge"
@@ -393,6 +423,20 @@
     padding: 0.1rem 0.4rem;
     color: var(--success);
     border: 1px solid var(--success);
+    border-radius: 0.35rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* Same override as `.default-badge` above, for the same reason: the muted
+     rule would make the one line that says this deck cannot be fielded the
+     quietest thing in the row. No `margin-left`, so the Default badge keeps
+     the right edge when a deck wears both. */
+  .deck-open .illegal-badge {
+    padding: 0.1rem 0.4rem;
+    color: var(--danger);
+    border: 1px solid var(--danger);
     border-radius: 0.35rem;
     font-size: 0.7rem;
     text-transform: uppercase;

@@ -5,9 +5,29 @@ import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import DeckLibrary from "../../../src/deck-editor/components/DeckLibrary.svelte";
 import { deckFixture } from "../../fixtures/deck-editor.ts";
-import { deckId, type DeckRecord } from "../../../src/decks/deck-contracts.ts";
+import {
+  deckId,
+  type DeckRecord,
+  type DeckValidationIssue,
+} from "../../../src/decks/deck-contracts.ts";
 
 afterEach(() => cleanup());
+
+const NOT_OWNED: DeckValidationIssue = {
+  id: "not-owned:deck-89631139",
+  severity: "error",
+  code: "not-owned",
+  message: "This deck uses 2 copy/copies of Blue-Eyes White Dragon; you own 1.",
+  cardCode: 89631139,
+};
+
+const UNDER_MINIMUM: DeckValidationIssue = {
+  id: "main-under-minimum",
+  severity: "error",
+  code: "main-under-minimum",
+  message: "Main Deck needs 40 more card(s).",
+  zone: "main",
+};
 
 function callbacks() {
   return {
@@ -113,6 +133,123 @@ describe("DeckLibrary", () => {
     const btn = document.querySelector('[data-cy="deck-library-open-e1"]');
     expect(btn?.classList.contains("halo-errors")).toBe(true);
     expect(btn?.getAttribute("data-validation-status")).toBe("errors");
+  });
+
+  /* The halo alone says "something is wrong"; the badge says the deck cannot be
+     fielded, and names ownership when that is why. A player who sold a card
+     never edited this deck, so "Illegal" on its own would send them to the
+     editor to look for a mistake they did not make. */
+  it("an illegal deck wears a badge naming ownership as the cause", () => {
+    const deck: DeckRecord = {
+      ...deckFixture(),
+      id: deckId("o1"),
+      validation: {
+        status: "errors",
+        issues: [NOT_OWNED],
+        rulesetRevision: "prototype-2026-01",
+      },
+    };
+    render(DeckLibrary, { decks: [deck], ...callbacks() });
+    const badge = document.querySelector('[data-cy="deck-library-illegal-o1"]');
+    expect(badge?.classList.contains("illegal-badge")).toBe(true);
+    expect(badge?.textContent).toContain("Cards not owned");
+    expect(
+      document
+        .querySelector('[data-cy="deck-library-open-o1"]')
+        ?.getAttribute("title"),
+    ).toContain("Blue-Eyes White Dragon");
+  });
+
+  it("a build-rule error is badged illegal without blaming ownership", () => {
+    const deck: DeckRecord = {
+      ...deckFixture(),
+      id: deckId("e2"),
+      validation: {
+        status: "errors",
+        issues: [UNDER_MINIMUM],
+        rulesetRevision: "prototype-2026-01",
+      },
+    };
+    render(DeckLibrary, { decks: [deck], ...callbacks() });
+    expect(
+      document.querySelector('[data-cy="deck-library-illegal-e2"]')
+        ?.textContent,
+    ).toContain("Illegal");
+  });
+
+  /* Buying the card back would not make this deck legal, so the badge must not
+     promise that it would. */
+  it("a deck short of cards and of a build rule is not blamed on ownership", () => {
+    const deck: DeckRecord = {
+      ...deckFixture(),
+      id: deckId("b1"),
+      validation: {
+        status: "errors",
+        issues: [NOT_OWNED, UNDER_MINIMUM],
+        rulesetRevision: "prototype-2026-01",
+      },
+    };
+    render(DeckLibrary, { decks: [deck], ...callbacks() });
+    expect(
+      document.querySelector('[data-cy="deck-library-illegal-b1"]')
+        ?.textContent,
+    ).toContain("Illegal");
+  });
+
+  /* A warning alongside the ownership error must not cost the row its wording:
+     the empty Extra and Side decks the starter deck ships with are warnings, and
+     the deck is still illegal for exactly one reason. */
+  it("a warning alongside the ownership error keeps the ownership wording", () => {
+    const deck: DeckRecord = {
+      ...deckFixture(),
+      id: deckId("b2"),
+      validation: {
+        status: "errors",
+        issues: [
+          NOT_OWNED,
+          {
+            id: "empty-side",
+            severity: "warning",
+            code: "empty-side",
+            message: "Side Deck is empty.",
+            zone: "side",
+          },
+        ],
+        rulesetRevision: "prototype-2026-01",
+      },
+    };
+    render(DeckLibrary, { decks: [deck], ...callbacks() });
+    expect(
+      document.querySelector('[data-cy="deck-library-illegal-b2"]')
+        ?.textContent,
+    ).toContain("Cards not owned");
+  });
+
+  /* Warnings are not illegal, and this is the case that would lock a brand-new
+     save out of the game: the granted starter deck has no Extra and no Side
+     deck, so its honest verdict is two warnings. */
+  it("a warning deck wears no illegal badge", () => {
+    const deck: DeckRecord = {
+      ...deckFixture(),
+      id: deckId("w2"),
+      validation: {
+        status: "warnings",
+        issues: [
+          {
+            id: "empty-extra",
+            severity: "warning",
+            code: "empty-extra",
+            message: "Extra Deck is empty.",
+            zone: "extra",
+          },
+        ],
+        rulesetRevision: "prototype-2026-01",
+      },
+    };
+    render(DeckLibrary, { decks: [deck], ...callbacks() });
+    expect(
+      document.querySelector('[data-cy="deck-library-illegal-w2"]'),
+    ).toBeNull();
   });
 
   it("a valid deck gets the green halo and no tooltip", () => {

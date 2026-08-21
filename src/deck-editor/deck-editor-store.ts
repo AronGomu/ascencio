@@ -5,6 +5,7 @@ import type {
   DeckHistory,
   DeckId,
   DeckRecord,
+  DeckValidationSummary,
   StoredDeck,
 } from "../decks/deck-contracts.ts";
 import {
@@ -31,7 +32,10 @@ import {
   unlimitedCardOwnership,
   type CardOwnership,
 } from "../decks/card-ownership.ts";
-import { validateDeckDraft } from "../decks/deck-validation.ts";
+import {
+  validateDeckDraft,
+  type DeckValidationInput,
+} from "../decks/deck-validation.ts";
 import { availableCopies, unavailableReason } from "./catalog-availability.ts";
 
 interface PendingDeckSave {
@@ -249,11 +253,10 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
         ...draft,
         ...result.cards,
         importedNeedsReview: true,
-        validation: validateDeckDraft(
-          { ...result.cards, importedNeedsReview: true },
-          this.#catalog,
-          this.#ruleset,
-        ),
+        validation: this.#validate({
+          ...result.cards,
+          importedNeedsReview: true,
+        }),
       });
       const history = pushDeckUpdate(emptyDeckHistory(), {
         deckId: deck.id,
@@ -348,11 +351,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
         ...before,
         ...result.cards,
         importedNeedsReview,
-        validation: validateDeckDraft(
-          { ...result.cards, importedNeedsReview },
-          this.#catalog,
-          this.#ruleset,
-        ),
+        validation: this.#validate({ ...result.cards, importedNeedsReview }),
       });
       /* Reorder and sort leave undo pointing at the last membership change so
          undo never fights the player's ordering; the log answers "what did the
@@ -467,11 +466,10 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
         main: Object.freeze([...source.deck.main]),
         extra: Object.freeze([...source.deck.extra]),
         side: Object.freeze([...source.deck.side]),
-        validation: validateDeckDraft(
-          { ...source.deck, importedNeedsReview: false },
-          this.#catalog,
-          this.#ruleset,
-        ),
+        validation: this.#validate({
+          ...source.deck,
+          importedNeedsReview: false,
+        }),
       });
       const current = await this.#createAndOpen(value, emptyDeckHistory());
       const decks = (await this.#repository.list()).map((deck) =>
@@ -620,11 +618,10 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
       main: Object.freeze([...current.deck.main]),
       extra: Object.freeze([...current.deck.extra]),
       side: Object.freeze([...current.deck.side]),
-      validation: validateDeckDraft(
-        { ...current.deck, importedNeedsReview: false },
-        this.#catalog,
-        this.#ruleset,
-      ),
+      validation: this.#validate({
+        ...current.deck,
+        importedNeedsReview: false,
+      }),
     });
     try {
       const stored = await this.#createAndOpen(value, emptyDeckHistory());
@@ -759,25 +756,33 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
       ...deck,
       ...cards,
       importedNeedsReview,
-      validation: validateDeckDraft(
-        { ...cards, importedNeedsReview },
-        this.#catalog,
-        this.#ruleset,
-      ),
+      validation: this.#validate({ ...cards, importedNeedsReview }),
     });
+  }
+
+  /* Every verdict this controller writes comes through here, so the context's
+     ownership cannot be passed at five call sites and forgotten at the sixth.
+     That matters most on the paths that carry a whole card list rather than one
+     add — import, autosave restore and duplicate — because none of them passes
+     the add affordance that `#ownershipDenial` guards (ADR-050). They are
+     accepted as the player asked and then reported illegal, which is what a
+     deck the save cannot field is. */
+  #validate(input: DeckValidationInput): DeckValidationSummary {
+    return validateDeckDraft(
+      input,
+      this.#catalog,
+      this.#ruleset,
+      this.#ownership,
+    );
   }
 
   #revalidateDeck(deck: DeckRecord): DeckRecord {
     return Object.freeze({
       ...deck,
-      validation: validateDeckDraft(
-        {
-          ...deck,
-          storedRulesetRevision: deck.validation.rulesetRevision,
-        },
-        this.#catalog,
-        this.#ruleset,
-      ),
+      validation: this.#validate({
+        ...deck,
+        storedRulesetRevision: deck.validation.rulesetRevision,
+      }),
     });
   }
 

@@ -3,6 +3,10 @@ import type {
   DeckValidationIssue,
   DeckValidationSummary,
 } from "./deck-contracts.ts";
+import {
+  unlimitedCardOwnership,
+  type CardOwnership,
+} from "./card-ownership.ts";
 import type { DeckBuilderCardView } from "./catalog/ocg-card-mapper.ts";
 import { OCG_TYPE, hasOcgType } from "./catalog/ocg-mask.ts";
 import {
@@ -15,10 +19,16 @@ export interface DeckValidationInput extends DeckCardLists {
   readonly storedRulesetRevision?: string;
 }
 
+/** `ownership` defaults to free play's for the same reason the editor's
+    controller does: a caller that says nothing about which world the deck
+    belongs to is asking about the one that owns everything. A story caller
+    passes the save's reader, and gets `not-owned` for the cards it no longer
+    has (ADR-050). */
 export function validateDeckDraft(
   deck: DeckValidationInput,
   catalog: ReadonlyMap<number, DeckBuilderCardView>,
   ruleset: PinnedDeckRuleset,
+  ownership: CardOwnership = unlimitedCardOwnership(),
 ): DeckValidationSummary {
   const issues: DeckValidationIssue[] = [];
   if (deck.main.length < 40)
@@ -70,6 +80,30 @@ export function validateDeckDraft(
 
   for (const [code, count] of counts) {
     const card = catalog.get(code);
+    /* Two limits, not one. `copy-limit` below answers how many copies a deck
+       may run; this answers how many the save has, and a deck can break both
+       at once. The add affordance in `catalog-availability.ts` collapses them
+       into one `min` on purpose, because it only has to decide yes or no; a
+       verdict cannot, because the player has to know which limit to fix — and
+       selling a card is the one that turns a deck illegal without anybody
+       editing it. Read off the count map above rather than counted again, so
+       the same card sleeved into Main and Side stays two copies of one card.
+
+       Raised before the missing-card guard: a code the catalog lost and a code
+       the save sold are different facts, and a deck can carry both. */
+    if (!ownership.isUnlimited) {
+      const owned = ownership.ownedCount(code);
+      if (count > owned)
+        issues.push(
+          issue(
+            "not-owned",
+            "error",
+            `This deck uses ${count} copy/copies of ${card?.name ?? `Card ${code}`}; you own ${owned}.`,
+            undefined,
+            code,
+          ),
+        );
+    }
     if (card === undefined) {
       issues.push(
         issue(

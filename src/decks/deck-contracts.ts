@@ -26,6 +26,7 @@ export interface DeckValidationIssue {
     | "forbidden"
     | "wrong-zone"
     | "missing-card"
+    | "not-owned"
     | "unsupported-card"
     | "empty-extra"
     | "empty-side"

@@ -2961,3 +2961,60 @@ wrong.
 
 - [ ] DevTools → Network, tick "Disable cache", load `http://localhost:4300/#/` fresh, then go straight to `#/free-play/decks` and build a deck.
 - [ ] `deck-editor-*.js` loaded and **`story-*.js` never did**. Only clicking through to the story fetches it.
+
+## T25 ownership-deck-legality
+
+A story deck that uses cards the save no longer owns is now reported illegal, and the
+report names the card. Two questions stay apart in that verdict, and this slice is wrong
+if they merge: **owning** a card and being **allowed to run** it. Selling your last copy
+of a card a deck uses is an ownership error; putting four copies of a three-limit card in
+a deck is a ruleset error; a deck can carry both at once and must say both.
+
+Warnings are not illegal. The deck a new save is granted has no Extra and no Side deck, so
+its honest verdict is two warnings — it must stay duel-able. If a fresh save's only deck
+wears a red badge, this slice is wrong.
+
+Free play owns every card without limit, so it can never raise an ownership error at all.
+
+### Selling a card your deck uses badges the deck illegal
+
+- [ ] Start a **New Game**, get to the city map, then open the story deck library (`#/story/decks`). The granted **Starter Deck** row has an **orange** halo and no badge next to its name — two warnings, not an error.
+- [ ] Hover the row. The tooltip reads `Extra Deck is empty.` and `Side Deck is empty.` and nothing else.
+- [ ] Open the deck, note the name of a card you have exactly **one** of, then go back to the city map and into the **shop → Sell Cards**.
+- [ ] Sell that one copy, then return to the story deck library.
+- [ ] The Starter Deck row now has a **red** halo and a red **CARDS NOT OWNED** badge next to its name.
+- [ ] Hover the row. The tooltip names the card: `This deck uses 1 copy/copies of <card name>; you own 0.`
+- [ ] Open the deck. The **Deck checks** panel lists that same sentence as an error (red, with a `×`), alongside the two empty-deck warnings.
+- [ ] Click the error. The editor jumps to that card in the deck, exactly as it does for any other issue.
+- [ ] Reload the page (F5) and reopen the library. The badge is still there — the verdict is recomputed from the save, not remembered from before the reload.
+
+### Buying the card back clears it
+
+- [ ] Go back to the shop and buy the card you sold.
+- [ ] Return to the story deck library. The row is orange again, with no badge, and the tooltip is back to the two empty-deck warnings.
+
+### The badge names the right thing to fix
+
+- [ ] In a story deck, remove cards until the Main Deck is under 40, then sell a card that deck still uses.
+- [ ] The row's badge reads **ILLEGAL**, not **CARDS NOT OWNED** — buying the card back alone would not make this deck legal, so the badge does not promise that it would.
+- [ ] Hover the row: the tooltip lists both the size error and the ownership error, so nothing is hidden.
+- [ ] Put the deck back to 40 cards without buying the card back. The badge changes to **CARDS NOT OWNED**.
+
+### The two limits stay separate
+
+- [ ] In a story deck, add three copies of a card you own at least three of. No error appears.
+- [ ] Sell one copy of that card, then reopen the library. The deck is badged **CARDS NOT OWNED**, and the tooltip reads `This deck uses 3 copy/copies of <card name>; you own 2.`
+- [ ] The message is about how many you *own*. It never says `Copy limit 3 reached.` — that wording belongs to the ruleset and only appears when you try to add a fourth copy.
+
+### Free play is never badged for ownership
+
+- [ ] Go to `#/free-play/decks`. No deck there ever wears a **CARDS NOT OWNED** badge, whatever it holds.
+- [ ] Open a free-play deck, remove cards until it is under 40, and go back to the library. That deck is badged **ILLEGAL** — the badge itself still works in free play, it just never blames ownership.
+- [ ] Import a YDK with four copies of an ordinary card into free play. The deck is badged **ILLEGAL** and the Deck checks panel says `<card name> allows 3 copy/copies; found 4.` — a ruleset error, not an ownership one.
+
+### The paths that carry a whole deck at once are covered too
+
+- [ ] In a story save, use **Import Deck** to import a YDK naming a card the save does not own at all.
+- [ ] The import is accepted — nothing silently drops your cards — and the resulting deck is badged **CARDS NOT OWNED** with that card named in the tooltip.
+- [ ] Duplicate a story deck that is already badged illegal. The copy is badged the same way.
+- [ ] Restore an autosave entry for a deck whose cards you have since sold. The restored deck is badged illegal and names the card.

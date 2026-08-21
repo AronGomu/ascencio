@@ -18,6 +18,37 @@ describe("deck validation UI", () => {
     ).toBeTruthy();
   });
 
+  /* The panel is generic over the issue code, so a new one needs no case of its
+     own — which is exactly the claim worth pinning, because `not-owned` is the
+     first code whose cause sits outside the deck the player is looking at. It
+     has to read as an error and stay clickable back to the card. */
+  it("an ownership issue reads like any other error", () => {
+    const onfocusissue = vi.fn();
+    render(ValidationIssues, {
+      validation: {
+        status: "errors",
+        issues: [
+          {
+            id: "not-owned:deck-89631139",
+            severity: "error",
+            code: "not-owned",
+            message:
+              "This deck uses 2 copy/copies of Blue-Eyes White Dragon; you own 1.",
+            cardCode: 89631139,
+          },
+        ],
+        rulesetRevision: "r1",
+      },
+      onfocusissue,
+    });
+    const button = screen.getByRole("button", {
+      name: /Blue-Eyes White Dragon/,
+    });
+    expect(button.closest("li")?.classList.contains("error")).toBe(true);
+    button.click();
+    expect(onfocusissue).toHaveBeenCalledWith(89631139, null);
+  });
+
   it("renders no expanded panel for an issue-free summary", () => {
     render(ValidationIssues, {
       validation: { status: "valid", issues: [], rulesetRevision: "r1" },

@@ -3018,3 +3018,46 @@ Free play owns every card without limit, so it can never raise an ownership erro
 - [ ] The import is accepted — nothing silently drops your cards — and the resulting deck is badged **CARDS NOT OWNED** with that card named in the tooltip.
 - [ ] Duplicate a story deck that is already badged illegal. The copy is badged the same way.
 - [ ] Restore an autosave entry for a deck whose cards you have since sold. The restored deck is badged illegal and names the card.
+
+## R1 story-editor-no-starter-seed
+
+Opening the deck editor never gives a story save a deck. Free play still seeds one, exactly
+as before. The two are one call apart, so the free-play half is retested here rather than
+assumed.
+
+The bug this closes: a story save whose default deck is gone — deleted by the player, or
+never set because the save migrated from an older schema — was handed a fresh 40-card
+"Starter Deck" the moment the editor opened, with **none of its cards granted**. The
+player's only deck was one badged **CARDS NOT OWNED** that the game will not let them
+duel with. Cards are granted by **New Game** and by the shop, and nowhere else.
+
+### Deleting a story save's default deck does not conjure a replacement
+
+- [ ] Start a **New Game**, get to the city map, open the story deck library (`#/story/decks`). One row, **Starter Deck**, wearing the **Default** badge.
+- [ ] Open it, click **Delete** from the deck page header and confirm. The library is now empty: it reads **No local decks** with a **Create blank deck** button, and no row carries a **Default** badge.
+- [ ] Navigate away to the city map and back into the deck library. Still empty — no deck was seeded. Reload the page (F5), continue the save, reopen the library: still empty.
+- [ ] DevTools → Application → IndexedDB → `ygo-story-saves` → `saves`. That save's `state.decks` is `[]` and `state.defaultDeckId` is `null`.
+- [ ] In the same record, `state.collection` is unchanged — the cards the deck used are still owned, exactly as they were before the delete. Nothing was granted and nothing was taken.
+
+### The empty story library is not a dead end
+
+- [ ] From that empty story library, click **Create blank deck**, type a name and confirm. The editor opens on the new empty deck.
+- [ ] Go back to the library. The new deck is listed. Its halo is red and the **Deck checks** panel says the Main Deck is under 40 — correct for an empty deck, and repairable from the catalog on the left.
+- [ ] The catalog on that deck page offers only cards this save owns, and adding them works normally.
+- [ ] Reload the page and continue the save. The deck you built is still there.
+
+### A save with no decks opens the editor cleanly
+
+- [ ] Simulating an older save: in DevTools → Application → IndexedDB → `ygo-story-saves` → `saves`, edit a save record so `state.decks` is `[]` and `state.defaultDeckId` is `null`, then load that save and open `#/story/decks`.
+- [ ] The library opens on the empty state. No error banner, no loading skeleton that never resolves, and no deck appears in the list.
+
+### Free play still seeds, unchanged
+
+- [ ] DevTools → Application → Storage → **Clear site data**, reload, then open `#/free-play/decks`. Exactly one deck, **Starter Deck**, wearing the **Default** badge, with 40 Main Deck cards.
+- [ ] Reload and reopen it. Still exactly one **Starter Deck** — no second one was added.
+- [ ] Open it and delete it, then reload and reopen `#/free-play/decks`. A single fresh **Starter Deck** is seeded and marked default. Free play hands one out for as long as you keep deleting it; a story save never does.
+- [ ] Open `#/duel` on a cleared free-play library. The picker's **Your decks** group still holds the seeded **Starter Deck** — the duel's own seeding path is untouched by this change.
+
+### A save that already caught the bug
+
+- [ ] If a save built on an earlier build already carries an unowned **Starter Deck** — red halo, **CARDS NOT OWNED** — this change does not remove it. Delete that deck from the deck page; the library stays empty and nothing replaces it.

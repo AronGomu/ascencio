@@ -149,10 +149,19 @@
            held to what this context owns. Nothing below renders until the
            controller exists, so the catalog is never painted unnarrowed. */
         ownership = resolved;
-        /* Before the controller reads storage, so a player arriving with no
-           decks sees the starter deck rather than an empty library. It never
-           throws, so a seeding failure cannot keep the editor from opening. */
-        await ensureStarterDeck(repository, catalog, PROTOTYPE_RULESET);
+        /* Free play only, and before the controller reads storage, so a player
+           arriving with no decks sees the starter deck rather than an empty
+           library. It never throws, so a seeding failure cannot keep the editor
+           from opening.
+
+           A story save is not seeded: seeding grants a deck and no cards, so a
+           save would get forty cards it does not own — badged `not-owned` and
+           refused at pre-battle (ADR-050). The story's one grant path is
+           `new-game`, which hands over the deck and the collection behind it
+           together. Granting here instead would be a fountain: delete the deck,
+           reopen the editor, receive the cards again. */
+        if (context.kind === "free-play")
+          await ensureStarterDeck(repository, catalog, PROTOTYPE_RULESET);
         controller = new DeckBuilderController(
           repository,
           catalog,

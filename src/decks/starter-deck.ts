@@ -25,7 +25,11 @@ export const STARTER_DECK_LIST: string = starterYdk;
 /**
  * Gives a player who has never built a deck one to duel with.
  *
- * Called on every deck-editor mount, so it is idempotent by construction and
+ * Free play only: it grants a deck and no cards, so a story save it seeded
+ * would hold forty cards it does not own (ADR-050). A story save is granted its
+ * deck and the collection behind it together, by `new-game` and nowhere else.
+ *
+ * Called on every such mount, so it is idempotent by construction and
  * best-effort by design: it short-circuits on a default that already exists,
  * adopts a starter deck the player already has rather than making a second
  * one, and answers any failure with a warning. Storage that cannot be seeded

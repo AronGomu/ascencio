@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>App Navigation Map — target state (2026-08-20)</title>
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --border:#2b3446;
+    --fg:#dbe4f0; --muted:#8b98ab; --accent:#58a6ff; --green:#3fb950;
+    --orange:#d29922; --red:#f85149; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+    font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  .wrap { max-width:1000px; margin:0 auto; padding:2rem 1.3rem 4rem; }
+  h1 { font-size:1.55rem; margin:0 0 .3rem; }
+  .sub { color:var(--muted); margin:0 0 1.6rem; }
+  h2 { color:var(--accent); font-size:1.15rem; margin:2rem 0 .7rem;
+    border-bottom:1px solid var(--border); padding-bottom:.3rem; }
+  h3 { font-size:.95rem; margin:1.2rem 0 .4rem; }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:1rem 1.1rem; margin:.8rem 0; }
+  code { background:#22304a66; border-radius:5px; padding:.05rem .3rem;
+    font:.84em ui-monospace,monospace; color:#9fc4ff; }
+  ul { margin:.3rem 0 .3rem 1.1rem; padding:0; } li { margin:.24rem 0; }
+  table { width:100%; border-collapse:collapse; font-size:.88rem; }
+  th,td { text-align:left; padding:.45rem .55rem; border-bottom:1px solid var(--border); vertical-align:top; }
+  th { color:var(--muted); font-size:.76rem; text-transform:uppercase; letter-spacing:.05em; }
+  .tag { display:inline-block; border:1px solid var(--border); border-radius:999px;
+    padding:.05rem .5rem; font-size:.72rem; color:var(--muted); margin-right:.3rem; }
+  .g { color:var(--green); } .o { color:var(--orange); } .r { color:var(--red); }
+  .lazy { border-color:#2f5d8a; color:#7fb3e8; }
+  svg { display:block; width:100%; height:auto; }
+  .svg-box { fill:var(--panel2); stroke:var(--border); stroke-width:1.5; }
+  .svg-box.accent { stroke:var(--accent); }
+  .svg-box.lazy { stroke:#2f5d8a; stroke-dasharray:5 4; }
+  .svg-t { fill:var(--fg); font:12px system-ui,sans-serif; }
+  .svg-m { fill:var(--muted); font:10px system-ui,sans-serif; }
+  .svg-l { fill:none; stroke:var(--border); stroke-width:1.5; }
+  .before-after { display:grid; grid-template-columns:1fr 1fr; gap:.7rem; }
+  @media (max-width:720px) { .before-after { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>App navigation — target map</h1>
+<p class="sub">Plan <code>artifacts/PLAN_2026_08_20_duel_vn_feedback.md</code> (T14–T17, T23, T29–T30).
+Decision record: ADR-051. Boundary rules unchanged (ADR-022); branch model now ADR-045.</p>
+
+<h2>Why it changed</h2>
+<div class="card">
+  <ul>
+    <li><b>Two menus in a row.</b> The shell home listed Story · Decks · Duel; picking Story showed the visual novel's own title screen with the real entries. The second menu was the game's front door.</li>
+    <li><b>"Decks" became ambiguous.</b> With save-owned decks (ADR-049) a deck list is either a save's or the free-play library's. One <code>#/decks</code> route cannot say which, and a bookmark would mean whichever mode you were last in.</li>
+    <li><b>The story must stay lazy.</b> <code>domain-loaders.ts</code> imports each domain on demand and <code>build:verify</code> enforces <code>DOMAIN_BUDGET_BYTES</code>. Putting the story's title at the app root would drag the whole visual novel into first paint — so the menu moves into the shell instead.</li>
+  </ul>
+</div>
+
+<h2>Screen graph</h2>
+<div class="card">
+<svg viewBox="0 0 900 430" role="img" aria-labelledby="navt navd">
+  <title id="navt">Navigation graph</title>
+  <desc id="navd">The main menu at the app root leads to the story or to free play. Free play leads to match setup and the free-play deck editor and collection. The story leads to its playthrough screens, its own deck editor and collection, and duel sessions. Battle, deck editor and story are lazily loaded chunks.</desc>
+
+  <rect class="svg-box accent" x="330" y="12" width="240" height="46" rx="10"/>
+  <text class="svg-t" x="450" y="32" text-anchor="middle">Main menu — shell — #/</text>
+  <text class="svg-m" x="450" y="48" text-anchor="middle">New · Continue · Load · Settings · Free Play</text>
+
+  <path class="svg-l" d="M450 58 v20 M200 78 h500 M200 78 v22 M700 78 v22"/>
+
+  <rect class="svg-box lazy" x="80" y="100" width="240" height="46" rx="10"/>
+  <text class="svg-t" x="200" y="120" text-anchor="middle">Story — #/story</text>
+  <text class="svg-m" x="200" y="136" text-anchor="middle">lazy chunk · save context</text>
+
+  <rect class="svg-box accent" x="580" y="100" width="240" height="46" rx="10"/>
+  <text class="svg-t" x="700" y="120" text-anchor="middle">Free Play — #/free-play</text>
+  <text class="svg-m" x="700" y="136" text-anchor="middle">match · deck builder · return</text>
+
+  <path class="svg-l" d="M200 146 v18 M90 164 h220 M90 164 v20 M200 164 v20 M310 164 v20"/>
+  <rect class="svg-box" x="20" y="184" width="140" height="44" rx="9"/>
+  <text class="svg-t" x="90" y="202" text-anchor="middle">Playthrough</text>
+  <text class="svg-m" x="90" y="218" text-anchor="middle">map · shop · pre-battle</text>
+  <rect class="svg-box lazy" x="170" y="184" width="150" height="44" rx="9"/>
+  <text class="svg-t" x="245" y="202" text-anchor="middle">#/story/decks</text>
+  <text class="svg-m" x="245" y="218" text-anchor="middle">save's decks · owned-only</text>
+  <rect class="svg-box lazy" x="330" y="184" width="150" height="44" rx="9"/>
+  <text class="svg-t" x="405" y="202" text-anchor="middle">#/story/collection</text>
+  <text class="svg-m" x="405" y="218" text-anchor="middle">owned + show-all</text>
+
+  <path class="svg-l" d="M700 146 v18 M600 164 h200 M600 164 v20 M700 164 v20 M800 164 v20"/>
+  <rect class="svg-box" x="530" y="184" width="140" height="44" rx="9"/>
+  <text class="svg-t" x="600" y="202" text-anchor="middle">Match setup</text>
+  <text class="svg-m" x="600" y="218" text-anchor="middle">both decks · remembered</text>
+  <rect class="svg-box lazy" x="680" y="184" width="140" height="44" rx="9"/>
+  <text class="svg-t" x="750" y="202" text-anchor="middle">#/free-play/decks</text>
+  <text class="svg-m" x="750" y="218" text-anchor="middle">library · unlimited</text>
+  <rect class="svg-box lazy" x="750" y="240" width="140" height="44" rx="9"/>
+  <text class="svg-t" x="820" y="258" text-anchor="middle">…/collection</text>
+  <text class="svg-m" x="820" y="274" text-anchor="middle">whole database</text>
+
+  <path class="svg-l" d="M90 228 v40 M600 228 v40 M90 268 h510"/>
+  <rect class="svg-box lazy" x="290" y="290" width="240" height="46" rx="10"/>
+  <text class="svg-t" x="410" y="310" text-anchor="middle">Duel — #/duel/session/:handoffId</text>
+  <text class="svg-m" x="410" y="326" text-anchor="middle">battle chunk · one BattleRequest</text>
+
+  <rect class="svg-box" x="290" y="356" width="240" height="56" rx="10"/>
+  <text class="svg-m" x="410" y="376" text-anchor="middle">story seat = the save's chosen deck (T28)</text>
+  <text class="svg-m" x="410" y="392" text-anchor="middle">free-play seats = both pickers (T17)</text>
+  <text class="svg-m" x="410" y="406" text-anchor="middle">opponent = bundled preset unless picked</text>
+  <path class="svg-l" d="M410 336 v20"/>
+
+  <rect class="svg-box lazy" x="20" y="300" width="180" height="34" rx="8"/>
+  <text class="svg-m" x="110" y="321" text-anchor="middle">dashed = lazily loaded</text>
+</svg>
+</div>
+
+<h2>Route table</h2>
+<div class="card">
+<table>
+<tr><th>Route</th><th>Screen</th><th>Context</th><th>Domain chunk</th></tr>
+<tr><td><code>#/</code></td><td>Main menu</td><td>—</td><td>shell (eager)</td></tr>
+<tr><td><code>#/story</code></td><td>Visual novel</td><td>loaded save</td><td>story</td></tr>
+<tr><td><code>#/story/decks</code> · <code>/:id</code></td><td>Deck editor</td><td>save decks · owned-only catalog</td><td>deck-editor</td></tr>
+<tr><td><code>#/story/collection</code></td><td>Collection</td><td>save collection · counts</td><td>story</td></tr>
+<tr><td><code>#/free-play</code></td><td>Free-play menu</td><td>free play</td><td>shell</td></tr>
+<tr><td><code>#/free-play/decks</code> · <code>/:id</code></td><td>Deck editor</td><td>library · full catalog</td><td>deck-editor</td></tr>
+<tr><td><code>#/free-play/collection</code></td><td>Collection</td><td>whole database · no counts</td><td>story</td></tr>
+<tr><td><code>#/duel/session/:handoffId</code></td><td>Duel</td><td>a running duel</td><td>battle</td></tr>
+<tr><td><code>#/admin</code></td><td>Admin console</td><td>—</td><td>shell</td></tr>
+<tr><td><code>#/duel</code> <span class="tag">redirect</span></td><td>→ <code>#/free-play</code></td><td>old bookmarks · PWA start URL</td><td>—</td></tr>
+<tr><td><code>#/decks</code> · <code>/:id</code> <span class="tag">redirect</span></td><td>→ <code>#/free-play/decks…</code></td><td>old bookmarks</td><td>—</td></tr>
+</table>
+<p class="sub" style="margin:.8rem 0 0">Settings is a dialog from any menu, never a route. A story-scoped route with no save loaded returns to <code>#/</code> instead of rendering empty.</p>
+</div>
+
+<h2>One editor, two contexts</h2>
+<div class="card">
+  <p>The deck editor is a single screen. What differs is the <code>DeckEditorContext</code> the shell builds per route.</p>
+<table>
+<tr><th></th><th class="g">Free play</th><th class="o">Story save</th></tr>
+<tr><td>Repository</td><td><code>ygo-story-decks</code> (IndexedDB v2)</td><td><code>createStoryDeckRepository</code> over <code>StoryState</code></td></tr>
+<tr><td>Ownership</td><td><code>unlimitedCardOwnership()</code></td><td><code>storyCardOwnership(state)</code></td></tr>
+<tr><td>Catalog</td><td>every card</td><td>owned cards only</td></tr>
+<tr><td>Copy cap</td><td>ruleset limit</td><td><code>min(owned, ruleset limit)</code></td></tr>
+<tr><td>Persistence</td><td>its own database</td><td>inside the save · rolls back on load</td></tr>
+<tr><td>Banner</td><td>“Free Play”</td><td>the save's name</td></tr>
+</table>
+</div>
+
+<h2>What stayed put</h2>
+<div class="card">
+  <ul>
+    <li>ADR-022 <b>import boundaries</b>: public entries only, enforced by <code>eslint.config.js</code> and <code>tests/unit/domain-boundaries.test.ts</code>.</li>
+    <li>Lazy domain loading and per-domain byte budgets (<code>build:verify</code>).</li>
+    <li>The duel handoff vocabulary — the story still never mounts a duel, and the shell still settles exactly one result.</li>
+    <li>The <code>data-cy</code> contract on every rendered element.</li>
+  </ul>
+</div>
+
+</div>
+</body>
+</html>

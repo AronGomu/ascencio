@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Duel Protocol Contract &amp; Recovery — 2026-08-20</title>
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --border:#2b3446;
+    --fg:#dbe4f0; --muted:#8b98ab; --accent:#58a6ff; --green:#3fb950;
+    --orange:#d29922; --red:#f85149; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+    font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  .wrap { max-width:1000px; margin:0 auto; padding:2rem 1.3rem 4rem; }
+  h1 { font-size:1.55rem; margin:0 0 .3rem; }
+  .sub { color:var(--muted); margin:0 0 1.6rem; }
+  h2 { color:var(--accent); font-size:1.15rem; margin:2rem 0 .7rem;
+    border-bottom:1px solid var(--border); padding-bottom:.3rem; }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:1rem 1.1rem; margin:.8rem 0; }
+  code { background:#22304a66; border-radius:5px; padding:.05rem .3rem;
+    font:.84em ui-monospace,monospace; color:#9fc4ff; }
+  pre { background:var(--panel2); border:1px solid var(--border); border-radius:9px;
+    padding:.7rem .8rem; overflow:auto; font:.82rem ui-monospace,monospace; margin:.5rem 0; }
+  ul { margin:.3rem 0 .3rem 1.1rem; padding:0; } li { margin:.24rem 0; }
+  table { width:100%; border-collapse:collapse; font-size:.88rem; }
+  th,td { text-align:left; padding:.45rem .55rem; border-bottom:1px solid var(--border); vertical-align:top; }
+  th { color:var(--muted); font-size:.76rem; text-transform:uppercase; letter-spacing:.05em; }
+  .g { color:var(--green); } .o { color:var(--orange); } .r { color:var(--red); }
+  .tag { display:inline-block; border:1px solid var(--border); border-radius:999px;
+    padding:.05rem .5rem; font-size:.72rem; color:var(--muted); margin-right:.3rem; }
+  svg { display:block; width:100%; height:auto; }
+  .svg-box { fill:var(--panel2); stroke:var(--border); stroke-width:1.5; }
+  .svg-box.accent { stroke:var(--accent); } .svg-box.warn { stroke:var(--red); }
+  .svg-t { fill:var(--fg); font:12px system-ui,sans-serif; }
+  .svg-m { fill:var(--muted); font:10px system-ui,sans-serif; }
+  .svg-r { fill:var(--red); font:11px system-ui,sans-serif; }
+  .svg-l { fill:none; stroke:var(--border); stroke-width:1.5; }
+  .svg-l.dash { stroke-dasharray:5 4; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Duel protocol contract &amp; recovery</h1>
+<p class="sub">Plan <code>artifacts/PLAN_2026_08_20_duel_vn_feedback.md</code> (T2, T3, T12, T13).
+Decision records: ADR-046 (response encoding contract), ADR-048 (replay-based recovery). Engine stays frozen at <code>ocgcore-wasm@0.1.2</code>.</p>
+
+<h2>The bug that produced both decisions</h2>
+<div class="card">
+  <p>A duel ended with <code>ocgcore rejected the previous response</code> and nothing else. The trace tail:</p>
+<pre>474  message  type 143   ANNOUNCE_NUMBER
+475  prompt   …-prompt-149  player 1
+476  response choice-0-select  opponentReason: select_first_legal
+478  message  type 1     MSG_RETRY
+479  error    ocgcore rejected the previous response
+480  lifecycle session_closed:failed</pre>
+  <p>The registry answered with the <b>announced value</b>:</p>
+<pre>value: Number(message.options[exactlyOne(ids, bindings).rawIndex])</pre>
+  <p>ocgcore reads that field as an <b>index into its own option list</b> and retries when it is out of range. The vendored writer confirms it takes the integer raw — <code>case 19: t.i32(e.value)</code> — so nothing in between could have corrected it.</p>
+  <p class="r">An option list of <code>[1, 2, 3]</code> answers correctly by accident. <code>[4, 6, 8]</code> kills the duel.</p>
+</div>
+
+<h2>Contract: what each response field means</h2>
+<div class="card">
+  <p>The TypeScript types cannot distinguish these — <code>{ type; value: number }</code> looks identical either way — so each encoder states its semantics in a comment and is pinned by a test built from <b>values that differ from their positions</b>.</p>
+<table>
+<tr><th>Kind</th><th>Field carries</th><th>Note</th></tr>
+<tr><td><code>SELECT_OPTION</code></td><td class="g">index</td><td>already correct</td></tr>
+<tr><td><code>SELECT_CHAIN</code></td><td class="g">index or null</td><td>null = pass</td></tr>
+<tr><td><code>SELECT_CARD</code>, <code>SELECT_TRIBUTE</code>, <code>SELECT_SUM</code></td><td class="g">indexes</td><td>into the message's own list</td></tr>
+<tr><td><code>SELECT_PLACE</code>, <code>SELECT_DISFIELD</code></td><td>engine place address</td><td>echoed back unchanged</td></tr>
+<tr><td><code>SELECT_POSITION</code></td><td>position bit</td><td>bitmask member, not an ordinal</td></tr>
+<tr><td><code>SELECT_COUNTER</code></td><td>per-card counts</td><td>aligned to the message's card order</td></tr>
+<tr><td><code>ANNOUNCE_RACE</code>, <code>ANNOUNCE_ATTRIBUTE</code></td><td>bitmask</td><td>selected bits OR-ed</td></tr>
+<tr><td><code>ANNOUNCE_CARD</code></td><td>card code</td><td>not an index</td></tr>
+<tr><td><code>ANNOUNCE_NUMBER</code></td><td class="r">index <span class="tag">was value</span></td><td>the fix</td></tr>
+<tr><td><code>ROCK_PAPER_SCISSORS</code></td><td>1 · 2 · 3</td><td>raw value</td></tr>
+</table>
+  <p class="sub" style="margin:.7rem 0 0">Authority for every row: <code>vendor/ocgcore-wasm/0.1.2/dist/index.d.ts</code> plus the response writer switch in <code>dist/index.js</code>. A prompt kind without an encoding test is not finished.</p>
+</div>
+
+<h2>Recovery: replay, not snapshot</h2>
+<div class="card">
+  <p>The frozen core exposes no state snapshot. What exists is a trace that already records the seed, the deck selection and every prompt/response pair — and an integration harness that already replays exactly that.</p>
+<svg viewBox="0 0 900 250" role="img" aria-labelledby="rt rd">
+  <title id="rt">Recovery flow</title>
+  <desc id="rd">A fatal error opens a dialog offering download and restore. Restore builds a plan from the trace, creates a fresh session with the same seed, replays every recorded response up to the last human decision, then hands control back at that prompt.</desc>
+  <rect class="svg-box warn" x="20" y="14" width="200" height="52" rx="10"/>
+  <text class="svg-r" x="120" y="36" text-anchor="middle">fatal duel error</text>
+  <text class="svg-m" x="120" y="54" text-anchor="middle">any cause, not just MSG_RETRY</text>
+
+  <path class="svg-l" d="M220 40 h60"/>
+  <rect class="svg-box accent" x="280" y="14" width="230" height="52" rx="10"/>
+  <text class="svg-t" x="395" y="34" text-anchor="middle">DuelErrorDialog</text>
+  <text class="svg-m" x="395" y="52" text-anchor="middle">Download diagnostics · Restore · Try again</text>
+
+  <path class="svg-l" d="M510 40 h60"/>
+  <rect class="svg-box" x="570" y="14" width="310" height="52" rx="10"/>
+  <text class="svg-t" x="725" y="34" text-anchor="middle">buildRestorePlan(trace)</text>
+  <text class="svg-m" x="725" y="52" text-anchor="middle">null when no human response → no Restore button</text>
+
+  <path class="svg-l" d="M725 66 v26 M120 92 h605"/>
+  <rect class="svg-box" x="20" y="100" width="200" height="66" rx="10"/>
+  <text class="svg-t" x="120" y="122" text-anchor="middle">fresh session</text>
+  <text class="svg-m" x="120" y="140" text-anchor="middle">same seed · same decks</text>
+  <text class="svg-m" x="120" y="156" text-anchor="middle">same snapshot id</text>
+
+  <path class="svg-l" d="M220 133 h60"/>
+  <rect class="svg-box" x="280" y="100" width="300" height="66" rx="10"/>
+  <text class="svg-t" x="430" y="122" text-anchor="middle">replay recorded responses 1…n−1</text>
+  <text class="svg-m" x="430" y="140" text-anchor="middle">opponent answers replayed verbatim</text>
+  <text class="svg-m" x="430" y="156" text-anchor="middle">policy is not consulted while records remain</text>
+
+  <path class="svg-l" d="M580 133 h60"/>
+  <rect class="svg-box accent" x="640" y="100" width="240" height="66" rx="10"/>
+  <text class="svg-t" x="760" y="122" text-anchor="middle">stop at the last human prompt</text>
+  <text class="svg-m" x="760" y="140" text-anchor="middle">re-issued as a live prompt</text>
+  <text class="svg-m" x="760" y="156" text-anchor="middle">you decide again, possibly differently</text>
+
+  <path class="svg-l dash" d="M760 166 v30 h-520 v-30"/>
+  <rect class="svg-box" x="240" y="196" width="520" height="44" rx="10"/>
+  <text class="svg-m" x="500" y="216" text-anchor="middle">replay fails → typed restore_failed; the original error stays visible</text>
+  <text class="svg-m" x="500" y="232" text-anchor="middle">and the diagnostics report is still downloadable</text>
+</svg>
+</div>
+
+<h2>Why the stop point is the last human decision</h2>
+<div class="card">
+  <ul>
+    <li>Replaying opponent answers verbatim reproduces the exact position rather than letting the policy re-decide into a different game.</li>
+    <li>Stopping at your own last decision gives you a real choice again — including a different line that routes around an unfixed bug.</li>
+    <li>Cost is a full replay of the duel so far: linear in the duel's length, milliseconds at duel scale, and exact because the same seed and the same recorded answers produce the same core state.</li>
+    <li>This is recovery, not undo. It is reachable from the error dialog only; an in-duel undo would raise rules-integrity questions this decision does not answer.</li>
+  </ul>
+</div>
+
+<h2>Related duel changes in the same plan</h2>
+<div class="card">
+<table>
+<tr><th>Item</th><th>Ticket</th><th>Change</th></tr>
+<tr><td>Hand zoom art</td><td>T4</td><td>The overlay leases from <code>CardImageLibrary</code>; the never-passed <code>imageUrls</code> prop is deleted from three components.</td></tr>
+<tr><td>Action buttons</td><td>T8</td><td>One per row at the zoom's full width, above the card, text scaled to the frame.</td></tr>
+<tr><td>Click to pin</td><td>T9</td><td>A click pins zoom + actions with the orange halo; only a button or a drag commits — including for single-action cards.</td></tr>
+<tr><td>Hand order</td><td>T10</td><td>Arrival-ordered local hand (ADR-047); <code>MSG_SHUFFLE_HAND</code> no longer moves your own cards.</td></tr>
+<tr><td>Ambiguous drop</td><td>T11</td><td>Two or more legal actions in the target zone open a centred confirm modal with Cancel.</td></tr>
+<tr><td>Hand centring</td><td>T7</td><td><code>justify-content: safe center</code> replaces the auto-margin hack that broke the mirrored opponent band.</td></tr>
+</table>
+</div>
+
+</div>
+</body>
+</html>

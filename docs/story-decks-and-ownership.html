@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Story Decks &amp; Card Ownership — target state (2026-08-20)</title>
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --border:#2b3446;
+    --fg:#dbe4f0; --muted:#8b98ab; --accent:#58a6ff; --green:#3fb950;
+    --orange:#d29922; --red:#f85149; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+    font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  .wrap { max-width:1000px; margin:0 auto; padding:2rem 1.3rem 4rem; }
+  h1 { font-size:1.55rem; margin:0 0 .3rem; }
+  .sub { color:var(--muted); margin:0 0 1.6rem; }
+  h2 { color:var(--accent); font-size:1.15rem; margin:2rem 0 .7rem;
+    border-bottom:1px solid var(--border); padding-bottom:.3rem; }
+  h3 { font-size:.95rem; margin:1.2rem 0 .4rem; }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:1rem 1.1rem; margin:.8rem 0; }
+  code { background:#22304a66; border-radius:5px; padding:.05rem .3rem;
+    font:.84em ui-monospace,monospace; color:#9fc4ff; }
+  pre { background:var(--panel2); border:1px solid var(--border); border-radius:9px;
+    padding:.7rem .8rem; overflow:auto; font:.82rem ui-monospace,monospace; margin:.5rem 0; }
+  ul { margin:.3rem 0 .3rem 1.1rem; padding:0; } li { margin:.24rem 0; }
+  table { width:100%; border-collapse:collapse; font-size:.88rem; }
+  th,td { text-align:left; padding:.45rem .55rem; border-bottom:1px solid var(--border); vertical-align:top; }
+  th { color:var(--muted); font-size:.76rem; text-transform:uppercase; letter-spacing:.05em; }
+  .tag { display:inline-block; border:1px solid var(--border); border-radius:999px;
+    padding:.05rem .5rem; font-size:.72rem; color:var(--muted); margin-right:.3rem; }
+  .g { color:var(--green); } .o { color:var(--orange); } .r { color:var(--red); }
+  .invariant { border-left:3px solid var(--accent); padding-left:.9rem; margin:.6rem 0;
+    font-size:1.02rem; }
+  svg { display:block; width:100%; height:auto; }
+  .svg-box { fill:var(--panel2); stroke:var(--border); stroke-width:1.5; }
+  .svg-box.accent { stroke:var(--accent); } .svg-box.warn { stroke:var(--red); }
+  .svg-t { fill:var(--fg); font:12px system-ui,sans-serif; }
+  .svg-m { fill:var(--muted); font:10px system-ui,sans-serif; }
+  .svg-r { fill:var(--red); font:11px system-ui,sans-serif; }
+  .svg-l { fill:none; stroke:var(--border); stroke-width:1.5; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Story decks &amp; card ownership</h1>
+<p class="sub">Plan <code>artifacts/PLAN_2026_08_20_duel_vn_feedback.md</code> (T18–T30).
+Decision records: ADR-049 (save-owned decks), ADR-050 (ownership invariant), building on ADR-033 (economy in <code>StoryState</code>).</p>
+
+<h2>The invariant</h2>
+<div class="card">
+  <p class="invariant">Every card in a story deck is a card that save owns.</p>
+  <p>Everything below exists to state that once and enforce it in the four places it can be broken or discovered. Free play short-circuits all of it with a single flag.</p>
+</div>
+
+<h2>Where data lives</h2>
+<div class="card">
+<svg viewBox="0 0 900 300" role="img" aria-labelledby="dt dd">
+  <title id="dt">Storage map</title>
+  <desc id="dd">Each story save slot stores one serialized story state holding progress, wallet, boosters, collection, decks and the default deck id. The free-play deck library remains a separate IndexedDB database. The deck editor binds to one of the two through a context.</desc>
+
+  <rect class="svg-box accent" x="20" y="14" width="400" height="40" rx="9"/>
+  <text class="svg-t" x="220" y="32" text-anchor="middle">ygo-story-saves — one record per slot</text>
+  <text class="svg-m" x="220" y="47" text-anchor="middle">manual:1 · manual:2 · manual:3 · autosave · checkpoint:pre-duel</text>
+
+  <path class="svg-l" d="M220 54 v16"/>
+  <rect class="svg-box accent" x="60" y="70" width="320" height="150" rx="10"/>
+  <text class="svg-t" x="220" y="90" text-anchor="middle">StoryState — schema v3</text>
+  <text class="svg-m" x="220" y="110" text-anchor="middle">progress · screen · encounterId · pendingHandoffId</text>
+  <text class="svg-m" x="220" y="128" text-anchor="middle">dp · boosters</text>
+  <text class="svg-t" x="220" y="150" text-anchor="middle">collection: code → owned</text>
+  <text class="svg-t" x="220" y="172" text-anchor="middle">decks: StoryDeck[] · defaultDeckId</text>
+  <text class="svg-m" x="220" y="196" text-anchor="middle">one snapshot · one rollback · deleted with the save</text>
+
+  <rect class="svg-box" x="490" y="70" width="330" height="150" rx="10"/>
+  <text class="svg-t" x="655" y="90" text-anchor="middle">ygo-story-decks — IndexedDB v2</text>
+  <text class="svg-m" x="655" y="112" text-anchor="middle">the free-play library</text>
+  <text class="svg-m" x="655" y="132" text-anchor="middle">decks · history · favourites · default pointer</text>
+  <text class="svg-m" x="655" y="152" text-anchor="middle">autosave log</text>
+  <text class="svg-m" x="655" y="176" text-anchor="middle">pre-existing decks stay here — nothing is copied</text>
+  <text class="svg-m" x="655" y="196" text-anchor="middle">unlimited ownership</text>
+
+  <path class="svg-l" d="M220 220 v22 M655 220 v22 M220 242 h435"/>
+  <rect class="svg-box accent" x="300" y="252" width="290" height="40" rx="9"/>
+  <text class="svg-t" x="445" y="270" text-anchor="middle">Deck editor — one screen</text>
+  <text class="svg-m" x="445" y="285" text-anchor="middle">DeckEditorContext picks repository + ownership</text>
+</svg>
+</div>
+
+<h2>The ownership contract</h2>
+<div class="card">
+<pre>interface CardOwnership {
+  ownedCount(code: number): number;
+  readonly isUnlimited: boolean;
+}
+
+storyCardOwnership(state)   // collection[code] ?? 0
+unlimitedCardOwnership()    // Infinity, isUnlimited: true — a flag, never a stored record</pre>
+  <p>Free play is not a materialised collection of every card times three. It is one branch in one function: nothing to write, nothing to migrate when the card pool grows.</p>
+  <p><b>Ownership governs availability, not legality.</b> The pinned ruleset still caps copies, so what you can add is <code>min(ownedCount, rulesetLimit)</code>.</p>
+</div>
+
+<h2>Four enforcement points</h2>
+<div class="card">
+<table>
+<tr><th>Point</th><th>Ticket</th><th>Behaviour</th></tr>
+<tr><td>Catalog</td><td>T24</td><td>Story lists only owned codes; add is capped by owned × ruleset, across all three zones.</td></tr>
+<tr><td>Validation</td><td>T25</td><td>New <code>not-owned</code> error code per over-used card. Deck lists badge the deck illegal, red border.</td></tr>
+<tr><td>Sell screen</td><td>T26</td><td>Selling stays free, but a sale that breaks decks names them in a dialog <b>before</b> it commits.</td></tr>
+<tr><td>Pre-battle</td><td>T27</td><td>Illegal decks are disabled with their reason; start is blocked and links to the editor.</td></tr>
+</table>
+</div>
+
+<h2>How the invariant can break — and what happens</h2>
+<div class="card">
+<svg viewBox="0 0 900 210" role="img" aria-labelledby="bt bd">
+  <title id="bt">Breach paths</title>
+  <desc id="bd">Selling a card is the only way ownership shrinks, and it warns first. Loading an older save rolls decks and collection back together so it cannot break. Buying and opening packs only ever grows the collection.</desc>
+  <rect class="svg-box warn" x="20" y="14" width="270" height="70" rx="10"/>
+  <text class="svg-r" x="155" y="36" text-anchor="middle">Sell a card a deck uses</text>
+  <text class="svg-m" x="155" y="54" text-anchor="middle">the only shrinking path</text>
+  <text class="svg-m" x="155" y="72" text-anchor="middle">→ dialog names the decks, then allows it</text>
+
+  <rect class="svg-box" x="315" y="14" width="270" height="70" rx="10"/>
+  <text class="svg-t" x="450" y="36" text-anchor="middle">Load an older save</text>
+  <text class="svg-m" x="450" y="54" text-anchor="middle">decks + collection roll back together</text>
+  <text class="svg-m" x="450" y="72" text-anchor="middle">→ cannot break by construction</text>
+
+  <rect class="svg-box" x="610" y="14" width="270" height="70" rx="10"/>
+  <text class="svg-t" x="745" y="36" text-anchor="middle">Buy / open packs</text>
+  <text class="svg-m" x="745" y="54" text-anchor="middle">credited the moment you press open</text>
+  <text class="svg-m" x="745" y="72" text-anchor="middle">→ only grows the collection</text>
+
+  <path class="svg-l" d="M155 84 v22 M450 84 v22 M745 84 v22 M155 106 h590"/>
+  <rect class="svg-box accent" x="270" y="120" width="360" height="70" rx="10"/>
+  <text class="svg-t" x="450" y="142" text-anchor="middle">Discovery is never at duel time</text>
+  <text class="svg-m" x="450" y="160" text-anchor="middle">illegal decks are badged in the list and disabled at pre-battle</text>
+  <text class="svg-m" x="450" y="178" text-anchor="middle">with the offending cards named</text>
+</svg>
+</div>
+
+<h2>New-save grant</h2>
+<div class="card">
+  <ul>
+    <li>Starter deck: the existing <code>src/battle/duel/presets/decks/player.ydk</code>, built through the normal deck model so its validation summary is real.</li>
+    <li>Its cards are credited to the collection at the counts the deck uses, rarity <code>common</code> for the sell ladder.</li>
+    <li>Wallet unchanged at 1000 DP; a pack costs 150 DP.</li>
+    <li>Deterministic: fixed id and timestamps, so two new games produce identical decks and collections and a test can diff them.</li>
+  </ul>
+  <p class="sub" style="margin:.6rem 0 0">Consequence: the opening encounter is playable immediately, and everything in your deck is something you own — the invariant holds from turn one.</p>
+</div>
+
+<h2>Collection screen</h2>
+<div class="card">
+  <ul>
+    <li>Same grid and tile proportions as the set card list; shared <code>CardPreviewPanel</code> from the shell, not the new zoom inspector.</li>
+    <li>Story: owned cards with counts. <b>“Show every existing card”</b> is unchecked by default and reveals unowned cards dimmed.</li>
+    <li>Free play: the whole database, no counts — every card is available anyway.</li>
+    <li>Tri-state rarity grouping shared with the set list and the pack results screen.</li>
+    <li>Reached from the deck menu in both contexts; the show-all checkbox lives here and <b>not</b> in the builder's catalog.</li>
+  </ul>
+  <p class="sub" style="margin:.6rem 0 0">Explicitly later: filters, search, and the full database interface. This screen is the browse surface those will grow from.</p>
+</div>
+
+</div>
+</body>
+</html>

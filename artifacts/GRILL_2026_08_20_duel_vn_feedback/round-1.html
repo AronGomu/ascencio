@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Duel round 5 + Visual Novel round 3 — plan judgment calls</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b0a08; --panel:#17130d; --panel-2:#1f190f; --text:#fff7ed; --muted:#c9b99f; --line:#4a3b25; --accent:#fbbf24; --accent-2:#fb923c; --focus:#facc15; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    main { width:min(960px,calc(100% - 32px)); margin:0 auto; padding:48px 0 96px; }
+    header { display:grid; gap:12px; margin-bottom:32px; }
+    .eyebrow { color:var(--accent); font-size:.75rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+    h1,h2,p { margin:0; } h1 { font-size:clamp(2rem,5vw,3.5rem); line-height:1.08; letter-spacing:-.035em; }
+    .lede { max-width:70ch; color:var(--muted); }
+    .tree { display:flex; align-items:center; gap:8px; overflow:auto; padding:16px; margin:24px 0 32px; border:1px solid var(--line); border-radius:12px; background:var(--panel); color:var(--muted); white-space:nowrap; }
+    .tree b { color:var(--text); } .node { padding:6px 10px; border:1px solid var(--line); border-radius:999px; } .node.active { border-color:var(--accent); color:var(--accent); } .arrow { color:var(--line); }
+    .visuals { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:0 0 32px; }
+    figure { min-width:0; margin:0; padding:18px; border:1px solid var(--line); border-radius:14px; background:var(--panel); }
+    figcaption { margin-bottom:14px; color:var(--muted); font-size:.85rem; } figcaption b { display:block; color:var(--text); font-size:1rem; }
+    svg { display:block; width:100%; height:auto; } svg text { font-family:ui-sans-serif,system-ui,sans-serif; }
+    .svg-node { fill:var(--panel-2); stroke:var(--line); stroke-width:2; } .svg-node.active { stroke:var(--accent); } .svg-line { fill:none; stroke:var(--line); stroke-width:2; } .svg-arrow { fill:var(--line); } .svg-label { fill:var(--text); font-size:12px; } .svg-note { fill:var(--muted); font-size:10px; } .svg-accent { fill:var(--accent); }
+    form { display:grid; gap:20px; }
+    fieldset { min-width:0; margin:0; padding:24px; border:1px solid var(--line); border-radius:16px; background:var(--panel); }
+    legend { max-width:100%; padding:0 8px; font-size:1.15rem; font-weight:750; }
+    .why { margin:0 0 18px; color:var(--muted); font-size:.925rem; }
+    .choices { display:grid; gap:10px; }
+    .choice { display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:start; padding:14px; border:1px solid var(--line); border-radius:10px; background:var(--panel-2); cursor:pointer; }
+    .choice:has(input:checked) { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
+    input { width:18px; height:18px; margin-top:3px; accent-color:var(--accent); }
+    .rank { display:inline-block; margin-left:7px; color:var(--accent-2); font-size:.72rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+    .detail { display:block; margin-top:3px; color:var(--muted); font-size:.875rem; }
+    label.precision { display:block; margin-top:18px; font-size:.85rem; font-weight:700; color:var(--muted); }
+    textarea { width:100%; min-height:90px; margin-top:7px; padding:12px; resize:vertical; border:1px solid var(--line); border-radius:10px; background:#100d08; color:var(--text); font:inherit; }
+    input:focus-visible,textarea:focus-visible,button:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
+    .actions { position:sticky; bottom:16px; display:flex; gap:12px; align-items:center; justify-content:space-between; padding:14px; border:1px solid var(--line); border-radius:14px; background:rgba(19,23,28,.96); box-shadow:0 16px 40px #0008; backdrop-filter:blur(10px); }
+    button { padding:11px 16px; border:0; border-radius:9px; background:var(--accent); color:#211500; font:inherit; font-weight:800; cursor:pointer; }
+    #status { color:var(--muted); font-size:.875rem; }
+    code { background:#100d08; border:1px solid var(--line); border-radius:5px; padding:1px 5px; font-size:.85em; }
+    .settled { margin:0 0 32px; padding:18px 20px; border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:12px; background:var(--panel); }
+    .settled h2 { font-size:.95rem; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin-bottom:10px; }
+    .settled ul { margin:0; padding-left:20px; color:var(--muted); font-size:.9rem; } .settled li { margin:5px 0; } .settled b { color:var(--text); }
+    @media (max-width:700px) { .visuals { grid-template-columns:1fr; } }
+    @media (max-width:600px) { main { width:min(100% - 20px,960px); padding-top:28px; } fieldset { padding:18px 14px; } .actions { align-items:flex-start; flex-direction:column; } button { width:100%; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="eyebrow">Grill me · Round 1 · Scope split, duel interaction model, shop economy &amp; assets</span>
+    <h1>Duel round 5 + Visual Novel round 3</h1>
+    <p class="lede">Twelve decisions that change what gets built from <code>feedback-duel.md</code> and <code>feedback-vn.md</code>. Everything lookup-able was already read from the repo and the diagnostics dump (see “Already settled by reading the code”). Tick answers, add precision, hit copy, paste back.</p>
+  </header>
+
+  <nav class="tree" aria-label="Design tree progress">
+    <span class="node active"><b>Feedback round</b></span><span class="arrow">→</span>
+    <span class="node active">Scope split</span><span class="arrow">→</span>
+    <span class="node active">Duel: interaction</span><span class="arrow">·</span>
+    <span class="node active">Duel: engine + recovery</span><span class="arrow">·</span>
+    <span class="node active">VN: shop assets</span><span class="arrow">·</span>
+    <span class="node active">VN: reveal + economy</span><span class="arrow">·</span>
+    <span class="node active">Collection</span><span class="arrow">→</span>
+    <span class="node">Ticket order</span><span class="arrow">→</span>
+    <span class="node">ADRs</span>
+  </nav>
+
+  <section class="settled">
+    <h2>Already settled by reading the code — not asked</h2>
+    <ul>
+      <li><b>Duel 8 root cause found.</b> Trace ends <code>msg 143</code> (<code>ANNOUNCE_NUMBER</code>) → response → <code>msg 1</code> (<code>MSG_RETRY</code>) → <code>session_closed:failed</code>. <code>PromptRegistry.ts:651</code> answers with the option <b>value</b>; ocgcore wants the option <b>index</b> into its own list. Everything else in that file (<code>SELECT_OPTION</code>, <code>SELECT_CHAIN</code>) already sends <code>rawIndex</code>.</li>
+      <li><b>Duel 2 root cause found.</b> <code>DuelField.svelte:85</code> declares <code>imageUrls</code>, <code>App.svelte</code> never passes it → the map is always empty → the zoom overlay always falls back to the “Image unavailable” placeholder. Mounted cards are fine because <code>CardControl</code> leases from <code>imageLibrary</code> itself.</li>
+      <li><b>Duel 10 root cause found.</b> Hand centring is done with <code>:first-child{margin-left:auto}</code> / <code>:last-child{margin-right:auto}</code> (<code>app.css:2019-2025</code>); the opponent band is <code>flex-direction:row-reverse</code>, so both autos land on the same side and blow the row apart.</li>
+      <li><b>Duel 5 root cause found.</b> Not an ordering bug in the UI: after a search ocgcore emits <code>MSG_SHUFFLE_HAND</code>, and <code>DuelStateProjector</code> re-orders the hand to the engine’s new order. Question 2 below decides the policy.</li>
+      <li><b>VN card text is already available offline</b> (<code>activeCatalog()</code> → <code>DeckBuilderCardView</code> carries name, description, ATK/DEF/level/attribute/type), so the shared preview panel can be reused in the shop with no new data path.</li>
+      <li><b>Rarity halo tokens already exist</b> (<code>--rarity-halo-*</code>, <code>src/story/styles.css</code>) — reveal hover halos reuse them.</li>
+      <li><b>Collection already exists</b> as <code>StoryState.collection: Record&lt;code, count&gt;</code> (ADR-033), credited today at pack-open time.</li>
+    </ul>
+  </section>
+
+  <section class="visuals" aria-label="Technical context">
+    <figure>
+      <figcaption><b>Frontier: 12 open decisions</b>Branches whose prerequisites are already settled by the code read.</figcaption>
+      <svg viewBox="0 0 420 300" role="img" aria-labelledby="f1t f1d">
+        <title id="f1t">Design tree of this round</title>
+        <desc id="f1d">Root feedback round splits into scope, duel interaction, duel engine and recovery, visual novel assets, visual novel reveal and economy, and collection. Twelve questions hang off those branches.</desc>
+        <rect class="svg-node active" x="150" y="8" width="120" height="28" rx="14"/>
+        <text class="svg-label" x="210" y="26" text-anchor="middle">Feedback round</text>
+        <path class="svg-line" d="M210 36 v18 M60 54 h300 M60 54 v14 M170 54 v14 M300 54 v14"/>
+        <rect class="svg-node active" x="8" y="68" width="104" height="26" rx="8"/>
+        <text class="svg-label" x="60" y="85" text-anchor="middle">Scope / branches</text>
+        <rect class="svg-node active" x="118" y="68" width="104" height="26" rx="8"/>
+        <text class="svg-label" x="170" y="85" text-anchor="middle">Duel</text>
+        <rect class="svg-node active" x="248" y="68" width="104" height="26" rx="8"/>
+        <text class="svg-label" x="300" y="85" text-anchor="middle">Visual Novel</text>
+        <path class="svg-line" d="M60 94 v20 M170 94 v20 M300 94 v20"/>
+        <rect class="svg-node active" x="12" y="114" width="96" height="24" rx="6"/>
+        <text class="svg-accent svg-label" x="60" y="130" text-anchor="middle">Q1 plan split</text>
+        <rect class="svg-node active" x="122" y="114" width="96" height="24" rx="6"/>
+        <text class="svg-accent svg-label" x="170" y="130" text-anchor="middle">Q2 hand order</text>
+        <rect class="svg-node active" x="252" y="114" width="96" height="24" rx="6"/>
+        <text class="svg-accent svg-label" x="300" y="130" text-anchor="middle">Q7 set art</text>
+        <rect class="svg-node active" x="122" y="144" width="96" height="24" rx="6"/>
+        <text class="svg-accent svg-label" x="170" y="160" text-anchor="middle">Q3 recovery</text>
+        <rect class="svg-node active" x="252" y="144" width="96" height="24" rx="6"/>
+        <text class="svg-accent svg-label" x="300" y="160" text-anchor="middle">Q8 credit time</text>
+        <rect class="svg-node active" x="122" y="174" width="96" height="24" rx="6"/>
+        <text class="svg-accent svg-label" x="170" y="190" text-anchor="middle">Q4 drop menu</text>
+        <rect class="svg-node active" x="252" y="174" width="96" height="24" rx="6"/>
+        <text class="svg-accent svg-label" x="300" y="190" text-anchor="middle">Q9 flip pacing</text>
+        <rect class="svg-node active" x="122" y="204" width="96" height="24" rx="6"/>
+        <text class="svg-accent svg-label" x="170" y="220" text-anchor="middle">Q5 click pin</text>
+        <rect class="svg-node active" x="252" y="204" width="96" height="24" rx="6"/>
+        <text class="svg-accent svg-label" x="300" y="220" text-anchor="middle">Q10 preview</text>
+        <rect class="svg-node active" x="122" y="234" width="96" height="24" rx="6"/>
+        <text class="svg-accent svg-label" x="170" y="250" text-anchor="middle">Q6 encoder audit</text>
+        <rect class="svg-node active" x="252" y="234" width="96" height="24" rx="6"/>
+        <text class="svg-accent svg-label" x="300" y="250" text-anchor="middle">Q11 collection</text>
+        <rect class="svg-node active" x="252" y="264" width="96" height="24" rx="6"/>
+        <text class="svg-accent svg-label" x="300" y="280" text-anchor="middle">Q12 choice UI</text>
+        <path class="svg-line" d="M60 138 v122 h56"/>
+        <text class="svg-note" x="12" y="278">Q1 gates every ticket’s branch</text>
+      </svg>
+    </figure>
+    <figure>
+      <figcaption><b>The failing response path (duel 8)</b>Where the rejected answer is built, and what the recovery in Q3 would replay.</figcaption>
+      <svg viewBox="0 0 420 300" role="img" aria-labelledby="f2t f2d">
+        <title id="f2t">Prompt and response path through the worker</title>
+        <desc id="f2d">The core emits message 143 announce number. PromptRegistry builds choices and an answer function. The opponent policy picks a choice. The answer function sends the option value instead of its index, so the core answers with message 1, retry, and the session fails. A trace of seed plus every response is kept in the worker and is what a rewind would replay.</desc>
+        <rect class="svg-node" x="10" y="14" width="150" height="34" rx="8"/>
+        <text class="svg-label" x="85" y="30" text-anchor="middle">ocgcore (wasm)</text>
+        <text class="svg-note" x="85" y="43" text-anchor="middle">msg 143 ANNOUNCE_NUMBER</text>
+        <path class="svg-line" d="M160 31 h60"/><path class="svg-arrow" d="M220 26 l10 5 -10 5z"/>
+        <rect class="svg-node active" x="232" y="14" width="176" height="34" rx="8"/>
+        <text class="svg-label" x="320" y="30" text-anchor="middle">PromptRegistry.ts:638</text>
+        <text class="svg-note" x="320" y="43" text-anchor="middle">options → choices + answer fn</text>
+        <path class="svg-line" d="M320 48 v26"/><path class="svg-arrow" d="M315 74 l5 10 5 -10z"/>
+        <rect class="svg-node" x="232" y="86" width="176" height="34" rx="8"/>
+        <text class="svg-label" x="320" y="102" text-anchor="middle">OpponentPolicy</text>
+        <text class="svg-note" x="320" y="115" text-anchor="middle">select_first_legal</text>
+        <path class="svg-line" d="M232 103 h-60"/><path class="svg-arrow" d="M172 98 l-10 5 10 5z"/>
+        <rect class="svg-node active" x="10" y="86" width="150" height="34" rx="8"/>
+        <text class="svg-accent svg-label" x="85" y="102" text-anchor="middle">value: Number(option)</text>
+        <text class="svg-note" x="85" y="115" text-anchor="middle">core wants the index</text>
+        <path class="svg-line" d="M85 120 v24"/><path class="svg-arrow" d="M80 144 l5 10 5 -10z"/>
+        <rect class="svg-node" x="10" y="156" width="150" height="34" rx="8"/>
+        <text class="svg-label" x="85" y="172" text-anchor="middle">msg 1 MSG_RETRY</text>
+        <text class="svg-note" x="85" y="185" text-anchor="middle">session_closed:failed</text>
+        <path class="svg-line" d="M160 173 h72"/><path class="svg-arrow" d="M232 168 l10 5 -10 5z"/>
+        <rect class="svg-node active" x="244" y="156" width="164" height="34" rx="8"/>
+        <text class="svg-label" x="326" y="172" text-anchor="middle">duel-trace.ts</text>
+        <text class="svg-note" x="326" y="185" text-anchor="middle">seed + 480 entries kept</text>
+        <path class="svg-line" d="M326 190 v22 h-241 v-22"/>
+        <path class="svg-arrow" d="M80 212 l5 -10 5 10z" transform="translate(0,-4)"/>
+        <rect class="svg-node" x="10" y="222" width="398" height="60" rx="10"/>
+        <text class="svg-label" x="209" y="243" text-anchor="middle">Rewind = fresh session, same seed, replay responses 1…n−1</text>
+        <text class="svg-note" x="209" y="259" text-anchor="middle">the harness already exists: tests/integration/programmed-duel.test.ts</text>
+        <text class="svg-note" x="209" y="273" text-anchor="middle">Q3 decides where n stops and who re-answers</text>
+      </svg>
+    </figure>
+  </section>
+
+  <form id="questions">
+
+    <fieldset data-question="How is this feedback split into plans and branches?">
+      <legend>1. How is this feedback split into plans and branches?</legend>
+      <p class="why">Branch ownership is a hard rule (duel → <code>src/battle/</code>, vn → <code>src/story/</code>, deck → <code>src/deck-editor/</code>), and the VN file ends with a deck-builder feature, so one feedback file no longer maps to one branch.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Three plans: duel, vn, deck-collection; shared bits (preview reuse, red-cancel token) land on main first"><span><b>Three plans — duel / vn / deck</b><span class="rank">Recommended</span><span class="detail">Every ticket commits on the branch that owns its files; the collection viewer becomes its own small deck plan that consumes a story contract.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Two plans: duel and vn; the collection viewer rides inside the vn plan even though it edits src/deck-editor"><span><b>Two plans, collection inside the VN plan</b><span class="rank">Second</span><span class="detail">Fewer artifacts, but one ticket knowingly breaks branch ownership.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Two plans now (duel, vn); collection deferred to a later plan"><span><b>Two plans, collection deferred</b><span class="rank">Third</span><span class="detail">Smallest round; the collection feature waits for the next one.</span></span></label>
+        <label class="choice"><input type="checkbox" value="One combined plan executed on main"><span><b>One plan on main</b><span class="rank">Fourth</span><span class="detail">Simplest to read, abandons the worktree lanes for this round.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. duel first, vn after it lands; or name the branch the shared shell changes go on"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Duel 5 — what order does your own hand render in after a search?">
+      <legend>2. Duel 5 — what order does your own hand render in after a search?</legend>
+      <p class="why">The searched card is not appended at the right because ocgcore shuffles your hand after a search (<code>MSG_SHUFFLE_HAND</code>) and the projector adopts that order; the fix is a display policy, and it must not leak anything (your own hand is fully known to you anyway).</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Own hand keeps a stable UI order by arrival; new arrivals append rightmost; engine hand shuffles are ignored for the local player's display only"><span><b>Stable arrival order, new cards rightmost</b><span class="rank">Recommended</span><span class="detail">Matches how every YGOPro client behaves; opponent hand is backs only, so nothing is revealed. Engine order still governs every response.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Adopt the engine order, but move the just-added card to the rightmost slot until the next hand change"><span><b>Engine order + the new card pinned right</b><span class="rank">Second</span><span class="detail">Minimal change; hand still reshuffles under you on the following search.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Sort own hand deterministically (monsters, spells, traps then level) like the YGOPro sort button"><span><b>Type sort</b><span class="rank">Third</span><span class="detail">Predictable but throws away the order you arranged.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. also add a manual drag-to-reorder of your own hand? (would be a separate ticket)"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Duel 9 — what exactly does 'restore the last non-bugged state' restore?">
+      <legend>3. Duel 9 — what exactly does “restore the last non-bugged state” restore?</legend>
+      <p class="why">ocgcore has no state snapshot in the vendored build, so the only honest rewind is a deterministic replay of the recorded response log against the same seed — which means deciding where the replay stops and who answers next.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Replay from the seed with every recorded response except the rejected one, then re-issue that prompt (opponent re-decides, human re-picks)"><span><b>Replay to just before the rejected response</b><span class="rank">Recommended</span><span class="detail">Loses nothing; if the underlying bug is unfixed the same prompt can fail again, so the dialog stays available.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Rewind further, to the last prompt the human answered before the failure"><span><b>Rewind to my last decision</b><span class="rank">Second</span><span class="detail">Gives you a different line to try, which can route around the bug; discards a few opponent decisions.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Rewind to the start of the current turn"><span><b>Rewind to turn start</b><span class="rank">Third</span><span class="detail">Coarse and easy to explain; throws away a lot of play.</span></span></label>
+        <label class="choice"><input type="checkbox" value="No restore: download report, then only Try again (restart the duel)"><span><b>Download only</b><span class="rank">Fourth</span><span class="detail">Cheapest ticket; leaves the duel unrecoverable, which is what the feedback complains about.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. what should happen if the replay itself diverges or fails? fall back to the error panel + restart?"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Duel 6 — when does a drag-and-drop open a confirmation menu?">
+      <legend>4. Duel 6 — when does a drag-and-drop open a confirmation menu?</legend>
+      <p class="why">Today a drop auto-picks one action per zone (<code>drop-target.ts</code>: activate beats set, summon beats set-monster). The feedback wants the choice surfaced — the question is whether that is spells only or every ambiguous drop.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Any drop with two or more legal actions in that zone opens a menu listing them plus Cancel; single-action drops stay instant"><span><b>Every ambiguous drop, one rule</b><span class="rank">Recommended</span><span class="detail">Covers summon vs set monster with the same code; drops that only allow one thing never nag you.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Spell and trap zones only; monster drops keep the current auto-pick"><span><b>Spells and traps only</b><span class="rank">Second</span><span class="detail">Exactly what the feedback text asks for, leaves summon/set ambiguity auto-picked.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Always confirm, even when only one action is legal"><span><b>Always confirm</b><span class="rank">Third</span><span class="detail">Consistent, but adds a click to every drag.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. where should the menu appear — over the target zone, or above the dragged card?"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Duel 4 — what does clicking a hand card do when only one action is legal?">
+      <legend>5. Duel 4 — what does clicking a hand card do when only one action is legal?</legend>
+      <p class="why">Click currently fires immediately when there is exactly one choice and only opens a menu when there are several (<code>DuelField.svelte:431</code>). The requested “click freezes the zoom, orange halo, buttons stay” model has to say what happens in the one-choice case.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Click always pins the zoom and the button list, even for a single action; the action only fires from its button"><span><b>Always pin, never fire on the card</b><span class="rank">Recommended</span><span class="detail">One mental model, no accidental summons; costs one extra click on obvious plays.</span></span></label>
+        <label class="choice"><input type="checkbox" value="One legal action fires immediately on click; pinning only happens when there are two or more"><span><b>Fire on one, pin on many</b><span class="rank">Second</span><span class="detail">Faster play, two behaviours to learn, and a misclick commits a card.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Click pins; double-click on the pinned card fires the single action"><span><b>Pin, double-click commits</b><span class="rank">Third</span><span class="detail">Best of both, but double-click is undiscoverable and awkward on touch.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. does the pinned card also stay pinned while the follow-up placement prompt is up?"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Duel 8 — how wide is the engine-response fix?">
+      <legend>6. Duel 8 — how wide is the engine-response fix?</legend>
+      <p class="why">The announce-number bug is one line, but it is a whole class of bug: every prompt answer either sends an index, a raw value, or a card code, and one wrong pick kills a duel with no diagnosis. Tick as many as you want.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Fix ANNOUNCE_NUMBER plus audit every response encoder against the vendored type definitions, one unit test per prompt kind"><span><b>Fix + full encoder audit</b><span class="rank">Recommended</span><span class="detail">~20 prompt kinds; the audit is mechanical and turns a silent class of duel-killers into tests.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Also surface MSG_RETRY as a named, diagnosable error carrying the prompt kind and choice that was rejected"><span><b>+ Name the retry</b><span class="rank">Second</span><span class="detail">Today it is “ocgcore rejected the previous response”; naming the prompt makes every future report self-diagnosing and feeds the rewind in Q3.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Fix ANNOUNCE_NUMBER only, with a regression test"><span><b>Just the bug</b><span class="rank">Third</span><span class="detail">One small ticket; the next mis-encoded prompt kind will look identical to this one.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. is a scripted headless repro for the exact card acceptable, or must the fix replay your diagnostics file?"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="VN shop 1 — where do the set images come from?">
+      <legend>7. VN shop 1 — where do the set images come from?</legend>
+      <p class="why">“Fetch the original images for each set” needs a source, and the app is offline-first with hash-verified, pinned assets — 50 set images is a new asset pipeline unless we reuse what is already bundled.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Use the set's own cards as its tile art (first card, or a 3-card fan) from the bundled image manifest"><span><b>Build tiles from bundled card art</b><span class="rank">Recommended</span><span class="detail">Zero new assets, works offline today, no licensing question; it is not the official box art.</span></span></label>
+        <label class="choice"><input type="checkbox" value="New scripts/ acquisition step: download official set images from a pinned upstream into generated/, hash-verified like card images"><span><b>New pinned download pipeline</b><span class="rank">Second</span><span class="detail">Real box art, matches the existing asset discipline; costs a pipeline ticket, a manifest, and a named upstream you must approve.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Manual drop: public/story/sets/{setId}.jpg, supplied by hand, placeholder when missing"><span><b>Hand-placed files</b><span class="rank">Third</span><span class="detail">You control every image; 50 files to source yourself.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Keep text tiles, only restyle them bigger"><span><b>No art at all</b><span class="rank">Fourth</span><span class="detail">Cheapest; ignores the request.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="if you pick the download pipeline, name the upstream you accept (e.g. ygoprodeck set images) and whether the files may be committed"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="VN reveal 5 — when do bought cards enter the collection, and can they be sold before opening?">
+      <legend>8. VN reveal 5 — when do bought cards enter the collection?</legend>
+      <p class="why">Cards are credited at open time today, and pack price (150 DP) was deliberately set to kill open-and-sell arbitrage; crediting at purchase changes when the pack contents are rolled and what an unopened pack is worth.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Roll the pack contents and credit the collection at purchase; opening is a cosmetic replay of the stored pack; selling stays unrestricted"><span><b>Roll and credit at purchase</b><span class="rank">Recommended</span><span class="detail">Exactly what the feedback asks; a closed pack becomes a known quantity you could sell without ever opening it.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Credit at purchase, but cards from an unopened pack cannot be sold until revealed"><span><b>Credit at purchase, sell after reveal</b><span class="rank">Second</span><span class="detail">Keeps the reveal meaningful and the economy tight; adds a per-card 'unrevealed' flag to the save.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Keep crediting at open time"><span><b>No change</b><span class="rank">Third</span><span class="detail">Today's behaviour; a pack closed forever is worth nothing.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. should the sell screen show packs as sellable at all?"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="VN reveal 1 — pacing and persistence of the auto-flip option">
+      <legend>9. VN reveal 1 — pacing and persistence of the auto-flip option</legend>
+      <p class="why">“A checkbox that automates the flips” needs a speed and a memory; it also decides whether the Hearthstone-style click reveal is the default.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Auto-flip reveals cards left to right about every 450 ms, checkbox remembered in the story save, default off, reduced-motion cuts the animation not the pacing"><span><b>~450 ms, remembered, default off</b><span class="rank">Recommended</span><span class="detail">Manual reveal stays the first experience; the setting sticks once you opt out of clicking.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Same pacing, but the checkbox is per-opening and resets every time"><span><b>Per-opening, resets</b><span class="rank">Second</span><span class="detail">No new saved field; you re-tick it every pack.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Auto-flip on by default, clicking a card jumps it ahead"><span><b>Auto by default</b><span class="rank">Third</span><span class="detail">Fastest; kills the suspense the feature is for.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. exact delay, whether rarer cards should pause longer"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="VN — which preview surface do the shop screens reuse?">
+      <legend>10. VN — which preview surface do the shop screens reuse?</legend>
+      <p class="why">“Same card preview from duels and decks” is the shell <code>CardPreviewPanel</code> (ADR-036), but the reveal screen asks for a floating window beside the zoomed card while the card list is a browsing grid — those want different placements of the same component.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Reuse the shell CardPreviewPanel in both: docked side panel in the set card list, floating anchored beside the zoomed card during reveal"><span><b>One component, two placements</b><span class="rank">Recommended</span><span class="detail">Single source of truth for card info; the floating case needs an anchor wrapper, which the duel already has a pattern for.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Floating anchored preview on both screens"><span><b>Floating everywhere</b><span class="rank">Second</span><span class="detail">Consistent, and gives the grid more room; a moving panel is harder to read while scanning a set.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Docked side panel on both screens"><span><b>Docked everywhere</b><span class="rank">Third</span><span class="detail">Simplest layout; contradicts “floating window next to the zoomed card”.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. on mobile, should the preview become a bottom sheet?"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="Collection feature — who owns the data and how far does the viewer go?">
+      <legend>11. Collection feature — who owns the data and how far does the viewer go?</legend>
+      <p class="why">The collection lives in the story save today (<code>StoryState.collection</code>, ADR-033) but the viewer is asked for in the deck-builder menu, so the two domains have to meet at a public contract — and “can I only build decks from cards I own” is a much bigger change than a browse screen.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Story keeps ownership; a narrow read-only contract is exported from src/story/index.ts; the viewer is browse-only with rarity grouping; deck building is NOT gated by ownership yet"><span><b>Story owns, deck reads, no gate</b><span class="rank">Recommended</span><span class="detail">One save keeps wallet and cards consistent; the viewer ships this round and the ownership gate stays a later, deliberate decision.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Move the collection out of the story save into its own IndexedDB store owned by src/decks, story reads it"><span><b>Move it to the deck domain</b><span class="rank">Second</span><span class="detail">Cleaner long-term home for a card database; needs a migration and breaks the “one save rolls back together” property of ADR-033.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Also gate deck building by owned copies now (deck editor rejects cards you do not own)"><span><b>Add the ownership gate now</b><span class="rank">Third</span><span class="detail">Makes the economy matter immediately; invalidates existing decks and the bundled presets unless they are exempted.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. should the viewer already show unowned cards greyed out (the 'true database' direction), or only what you own?"></textarea></label>
+    </fieldset>
+
+    <fieldset data-question="VN general 4 and 5 — where does the shared choice component live, and what is 'red'?">
+      <legend>12. VN general 4 &amp; 5 — where does the shared choice component live?</legend>
+      <p class="why">Narrative choices, the shopkeeper menu and any future multiple choice are asked to share one centred component, and cancel/back actions are asked to be red — both are either story-local or a shell-wide primitive, and that decides which branch they land on.</p>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" value="Story-local component (src/story/components/ChoiceList.svelte) plus a story danger button class for cancel/leave actions"><span><b>Story-local</b><span class="rank">Recommended</span><span class="detail">Only the VN needs it today; lands entirely on the vn branch with no cross-domain contract change.</span></span></label>
+        <label class="choice"><input type="checkbox" value="Shell primitive shared by every domain, with the red danger style as a shell token"><span><b>Shell primitive</b><span class="rank">Second</span><span class="detail">Reusable by the duel and deck editor later; must land on main first and widen a frozen public API.</span></span></label>
+      </div>
+      <label class="precision">Precision or custom answer<textarea placeholder="e.g. does the duel's End Turn / cancel buttons also become red in this round?"></textarea></label>
+    </fieldset>
+
+    <div class="actions">
+      <span id="status" role="status">Selections stay in this page until copied.</span>
+      <button type="button" id="copy-summary">Copy answer summary</button>
+    </div>
+  </form>
+</main>
+<script>
+  const button = document.querySelector('#copy-summary');
+  const status = document.querySelector('#status');
+
+  function buildSummary() {
+    const sections = [...document.querySelectorAll('fieldset[data-question]')].map((field, index) => {
+      const question = field.dataset.question;
+      const selected = [...field.querySelectorAll('input[type="checkbox"]:checked')].map(input => `- ${input.value}`);
+      const precision = field.querySelector('textarea').value.trim();
+      const answers = selected.length ? selected.join('\n') : '- No recommended answer selected';
+      return `${index + 1}. ${question}\n${answers}${precision ? `\nPrecision: ${precision}` : ''}`;
+    });
+    return `Round 1 · Scope split, duel interaction model, shop economy & assets — Duel round 5 + Visual Novel round 3\n\n${sections.join('\n\n')}`;
+  }
+
+  button.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(buildSummary());
+      status.textContent = 'Summary copied to clipboard.';
+    } catch (_) {
+      const fallback = document.createElement('textarea');
+      fallback.value = buildSummary();
+      document.body.appendChild(fallback);
+      fallback.select();
+      document.execCommand('copy');
+      fallback.remove();
+      status.textContent = 'Summary copied to clipboard.';
+    }
+  });
+</script>
+</body>
+</html>

@@ -9,6 +9,7 @@
   import { STAGE_CONTEXT_KEY } from "./index.ts";
   import { deckRoute, deckRouteContext, type AppRoute } from "./routes.ts";
   import DomainLoadError from "./screens/DomainLoadError.svelte";
+  import FreePlayMenuScreen from "./screens/FreePlayMenuScreen.svelte";
   import MainMenuScreen from "./screens/MainMenuScreen.svelte";
   import type { BattleFacadeResult } from "../battle/index.ts";
   import type {
@@ -43,6 +44,11 @@
 
   let stage: HTMLElement | undefined;
   let storySaves: Promise<StorySaveRepository> | null = null;
+  /* A free-play match is a state of the free-play menu rather than a route of
+     its own, so it is what decides whether `#/free-play` shows the menu or the
+     duel. The battle domain is loaded by the region below, which is what keeps
+     the menu itself free of it. */
+  let matchStarted = false;
 
   async function openStorySaves(): Promise<StorySaveRepository> {
     storySaves ??= import("../story/index.ts").then((story) =>
@@ -117,10 +123,10 @@
     if (current.kind !== "duel-session") {
       sessionHandoffId = null;
       sessionReady = false;
-      /* The standalone duel route keeps the same facade mounted rather than
-         tearing it down, and it is unhosted there, so its result would belong
-         to nobody. Every other route unmounts the region, and that teardown
-         still owes the story its abort. */
+      /* Leaving a session for free play is a mode change the player asked for,
+         so the abort its teardown produces belongs to nobody: settling it here
+         would send them straight back to the story they just left. Every other
+         route the duel unmounts on still owes the story that abort. */
       if (current.kind === "free-play") hostedHandoffId = null;
       return;
     }
@@ -142,6 +148,9 @@
     storyEntryIntent = state.storyEntryIntent;
   });
   $: syncSession(route);
+  /* Leaving the free-play menu ends its match, so coming back opens on the menu
+     rather than on a duel nobody asked to resume. */
+  $: if (route.kind !== "free-play") matchStarted = false;
   /* Which deck library the route names, so one editor region serves both
      contexts and hands navigation back in the one it was reached from. */
   $: deckContext = deckRouteContext(route);
@@ -248,6 +257,13 @@
         <DomainLoadError label="Visual novel" cy="story" {error} />
       {/await}
     </div>
+  {:else if route.kind === "free-play" && !matchStarted}
+    <div
+      class="shell-region shell-region--free-play"
+      data-cy="shell-region-free-play"
+    >
+      <FreePlayMenuScreen {store} onstartmatch={() => (matchStarted = true)} />
+    </div>
   {:else}
     <div class="shell-region shell-region--duel" data-cy="shell-region-duel">
       {#if route.kind === "duel-session" && !sessionReady}
@@ -274,6 +290,17 @@
         {:catch error}
           <DomainLoadError label="Duel Simulator" cy="duel" {error} />
         {/await}
+      {/if}
+      {#if route.kind === "free-play"}
+        <!-- The way back to the free-play menu, painted over the duel rather
+             than laid out above it; the stylesheet says why. A story session
+             gets no such control: the story owns that exit. -->
+        <button
+          class="secondary free-play-leave-match"
+          type="button"
+          data-cy="free-play-leave-match"
+          onclick={() => (matchStarted = false)}>Leave match</button
+        >
       {/if}
     </div>
   {/if}

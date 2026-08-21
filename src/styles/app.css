@@ -163,6 +163,30 @@ body {
   height: 100%;
 }
 
+/* Free play's own menu is a peer of the main menu and wears the same treatment
+   (`.main-menu` below), so its region asks for nothing the home region does
+   not. The route it shares with the duel widens the stage above the breakpoint;
+   the menu is start-aligned inside it either way. */
+.shell-region--free-play {
+  width: 100%;
+  height: 100%;
+}
+
+/* The way back out of a free-play match. It is painted over the duel rather
+   than laid out above it: the duel region is exactly `--stage-h` tall and
+   `main.is-duel-viewport` takes all of it, so a control in that grid flow would
+   push the board's bottom edge past the stage's own `overflow: hidden`. It sits
+   inside the region so a portrait phone turns it with the board, and below the
+   duel's menu layer so a dialog covers it rather than the other way round. */
+.free-play-leave-match {
+  position: absolute;
+  z-index: var(--duel-field-layer-control);
+  top: var(--space-2);
+  left: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+}
+
 /* The app's front door, styled like the visual novel's own title screen
    (ADR-051). The treatment lives here rather than in the component's scoped
    styles because the shell's menu and the story's in-playthrough title are two

@@ -20,6 +20,18 @@ declare global {
 const PHONE = { width: 390, height: 844 } as const;
 const PHONE_LANDSCAPE = { width: 844, height: 390 } as const;
 
+/* T16: `#/duel` redirects to the free-play menu, and the duel is what its
+   first entry starts. The match is a state of that menu rather than a route,
+   so a reload lands on the menu again and has to start a second one. */
+async function startMatch(page: Page): Promise<void> {
+  await page.locator('[data-cy="free-play-start-match"]').click();
+}
+
+async function openDuel(page: Page, url = "./#/duel"): Promise<void> {
+  await page.goto(url);
+  await startMatch(page);
+}
+
 async function startPresetDuel(page: Page): Promise<void> {
   const start = page.locator('[data-cy="deck-picker-start-button"]');
   await expect(start).toBeEnabled({ timeout: 120_000 });
@@ -66,7 +78,7 @@ test("a portrait phone turns the duel stage a quarter turn and never scrolls the
   page,
 }) => {
   await page.setViewportSize(PHONE);
-  await page.goto("./#/duel");
+  await openDuel(page);
 
   const stage = page.locator('[data-cy="app-stage"]');
   await expect(stage).toHaveAttribute("data-stage-rotated", "true");
@@ -100,7 +112,7 @@ test("a tap on the rotated board lands on the element drawn under it", async ({
   page,
 }) => {
   await page.setViewportSize(PHONE);
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
@@ -198,7 +210,7 @@ test("the rotation notice explains the turn once and stays dismissed", async ({
   page,
 }) => {
   await page.setViewportSize(PHONE);
-  await page.goto("./#/duel");
+  await openDuel(page);
 
   const notice = page.locator('[data-cy="duel-rotation-notice"]');
   await expect(notice).toBeVisible();
@@ -218,6 +230,7 @@ test("the rotation notice explains the turn once and stays dismissed", async ({
   await expect(notice).toHaveCount(0);
 
   await page.reload();
+  await startMatch(page);
   await expect(page.locator('[data-cy="app-stage"]')).toHaveAttribute(
     "data-stage-rotated",
     "true",
@@ -230,11 +243,17 @@ test("reduced motion animates neither the stage nor the turn", async ({
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize(PHONE);
-  await page.goto("./#/duel");
+  await openDuel(page);
   await expect(page.locator('[data-cy="app-stage"]')).toHaveAttribute(
     "data-stage-rotated",
     "true",
   );
+  /* The notice arrives with the battle chunk, which the match this test starts
+     is what loads: reading its computed style before it mounts would read a
+     missing element rather than a still one. */
+  await expect(page.locator('[data-cy="duel-rotation-notice"]')).toBeVisible({
+    timeout: 120_000,
+  });
 
   const motion = await page.evaluate(() => {
     const read = (selector: string) => {
@@ -268,7 +287,7 @@ test("a landscape phone below the breakpoint keeps the upright stage", async ({
   page,
 }) => {
   await page.setViewportSize(PHONE_LANDSCAPE);
-  await page.goto("./#/duel");
+  await openDuel(page);
 
   const stage = page.locator('[data-cy="app-stage"]');
   await expect(stage).toHaveAttribute("data-stage-mode", "mobile-landscape");

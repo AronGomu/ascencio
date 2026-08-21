@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
-import { cleanup, render } from "@testing-library/svelte";
+import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import AppShell from "../../src/shell/AppShell.svelte";
 import type { DomainLoaders } from "../../src/shell/domain-loaders.ts";
@@ -68,6 +68,18 @@ function renderAt(hash: string) {
   });
 }
 
+/** Starts the free-play match the menu's first entry offers. The duel is no
+    longer what `#/free-play` renders: T16 put the free-play menu on that route
+    and made the match a state of it. */
+async function startMatch(): Promise<void> {
+  const start = document.querySelector<HTMLElement>(
+    '[data-cy="free-play-start-match"]',
+  );
+  if (start === null)
+    throw new Error("The free-play menu offers no match to start");
+  await fireEvent.click(start);
+}
+
 function setViewport(width: number, height: number) {
   Object.defineProperty(window, "innerWidth", { value: width, writable: true });
   Object.defineProperty(window, "innerHeight", {
@@ -99,11 +111,79 @@ describe("AppShell", () => {
     expect(document.querySelector('[data-cy="shell-region-decks"]')).toBeNull();
   });
 
-  it("mounts the duel region for the duel route", () => {
+  it("mounts the free-play menu for the duel route", async () => {
     renderAt("#/duel");
+    expect(
+      document.querySelector('[data-cy="shell-region-free-play"]'),
+    ).not.toBeNull();
+    expect(document.querySelector('[data-cy="shell-region-duel"]')).toBeNull();
+
+    await startMatch();
+
     expect(
       document.querySelector('[data-cy="shell-region-duel"]'),
     ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="shell-region-free-play"]'),
+    ).toBeNull();
+  });
+
+  /* The battle domain is the largest chunk the shell can load, so the menu in
+     front of it must not be what loads it. */
+  it("loads the battle domain only once a match starts", async () => {
+    const duel = vi.fn(never);
+    render(AppShell, {
+      store: createShellStore("#/free-play", () => {}),
+      loaders: { ...loaders, duel },
+    });
+
+    expect(duel).not.toHaveBeenCalled();
+
+    await startMatch();
+
+    expect(duel).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns to the free-play menu when the match is left", async () => {
+    renderAt("#/free-play");
+    await startMatch();
+
+    await fireEvent.click(
+      document.querySelector<HTMLElement>('[data-cy="free-play-leave-match"]')!,
+    );
+
+    expect(
+      document.querySelector('[data-cy="shell-region-free-play"]'),
+    ).not.toBeNull();
+    expect(document.querySelector('[data-cy="shell-region-duel"]')).toBeNull();
+  });
+
+  /* The match is a state of the menu rather than a route, so a route change is
+     what ends it: coming back opens on the menu rather than on a duel nobody
+     asked to resume. */
+  it("ends the match when the route leaves free play", async () => {
+    const store = createShellStore("#/free-play", () => {});
+    render(AppShell, { store, loaders });
+    await startMatch();
+
+    store.syncFromHash("#/");
+    await Promise.resolve();
+    store.syncFromHash("#/free-play");
+    await Promise.resolve();
+
+    expect(
+      document.querySelector('[data-cy="shell-region-free-play"]'),
+    ).not.toBeNull();
+    expect(document.querySelector('[data-cy="shell-region-duel"]')).toBeNull();
+  });
+
+  /* A story session owns its own exit, so the shell paints no way out over it:
+     leaving it is the story's business, not a control the duel region adds. */
+  it("paints no leave control over a story session's duel", () => {
+    renderAt(`#/duel/session/${SESSION_HANDOFF}`);
+    expect(
+      document.querySelector('[data-cy="free-play-leave-match"]'),
+    ).toBeNull();
   });
 
   /* Nothing of the duel mounts until the checkpoint behind the session route
@@ -172,8 +252,12 @@ describe("AppShell", () => {
     expect(document.querySelector('[data-cy="shell-region-duel"]')).toBeNull();
   });
 
-  it("leaves the plain duel route unmarked", () => {
+  it("leaves the plain duel route unmarked", async () => {
     renderAt("#/duel");
+    await startMatch();
+    expect(
+      document.querySelector('[data-cy="shell-region-duel"]'),
+    ).not.toBeNull();
     expect(
       document.querySelector('[data-cy="battle-session-pending"]'),
     ).toBeNull();
@@ -248,6 +332,7 @@ describe("AppShell", () => {
           [domain]: failing,
         } as unknown as DomainLoaders,
       });
+      if (domain === "duel") await startMatch();
 
       const error = await vi.waitFor(() => {
         const found = document.querySelector(
@@ -312,15 +397,18 @@ describe("AppShell", () => {
   /* The rotation must not reorder anything: it is a transform on one box, so
      the duel's controls keep the DOM order — and therefore the tab order —
      they have in landscape. */
-  it("renders the same duel region markup rotated and unrotated", () => {
+  it("renders the same duel region markup rotated and unrotated", async () => {
     setViewport(900, 400);
     renderAt("#/duel");
+    await startMatch();
     const landscape = document.querySelector(
       '[data-cy="shell-region-duel"]',
     )?.innerHTML;
+    expect(landscape).toBeDefined();
     cleanup();
     setViewport(400, 900);
     renderAt("#/duel");
+    await startMatch();
     const portrait = document.querySelector(
       '[data-cy="shell-region-duel"]',
     )?.innerHTML;

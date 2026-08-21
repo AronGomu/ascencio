@@ -116,6 +116,18 @@ async function deleteDeckDatabases(page: Page): Promise<void> {
   );
 }
 
+/* T16: `#/duel` redirects to the free-play menu, and the duel is what its
+   first entry starts. The match is a state of that menu rather than a route,
+   so a reload lands on the menu again and has to start a second one. */
+async function startMatch(page: Page): Promise<void> {
+  await page.locator('[data-cy="free-play-start-match"]').click();
+}
+
+async function openDuel(page: Page, url = "./#/duel"): Promise<void> {
+  await page.goto(url);
+  await startMatch(page);
+}
+
 async function startPresetDuel(page: Page): Promise<void> {
   const start = page.locator('[data-cy="deck-picker-start-button"]');
   await expect(start).toBeEnabled({ timeout: 120_000 });
@@ -307,9 +319,26 @@ test("the root route shows the main menu without booting the duel", async ({
 
   await page.locator('[data-cy="main-menu-free-play"]').click();
   expect(new URL(page.url()).hash).toBe("#/free-play");
+
+  /* T16: free play has a menu of its own, and the duel is behind its first
+     entry rather than behind the route. */
+  await expect(page.locator('[data-cy="free-play-menu-screen"]')).toBeVisible();
+  for (const entry of ["start-match", "deck-builder", "return"])
+    await expect(page.locator(`[data-cy="free-play-${entry}"]`)).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Choose your deck" }),
+  ).toHaveCount(0);
+
+  await page.locator('[data-cy="free-play-start-match"]').click();
   await expect(
     page.getByRole("heading", { name: "Choose your deck" }),
   ).toBeVisible({ timeout: 120_000 });
+
+  /* The match is a state of the menu, so the way back to it is a control the
+     shell paints over the duel rather than a route the player navigates. */
+  await page.locator('[data-cy="free-play-leave-match"]').click();
+  await expect(page.locator('[data-cy="free-play-menu-screen"]')).toBeVisible();
+  expect(new URL(page.url()).hash).toBe("#/free-play");
 });
 
 test("production bundle initializes the real Worker and sends one opaque choice once", async ({
@@ -318,7 +347,7 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   const requests: string[] = [];
   page.on("request", (request) => requests.push(request.url()));
   const startupBeganAt = Date.now();
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
 
   /* Without the removed "Shuffle Deck" idle command, an opening Main Phase
@@ -467,7 +496,7 @@ test("production bundle initializes the real Worker and sends one opaque choice 
 test("deck picker persists a chosen pair and Change decks returns without auto-start", async ({
   page,
 }) => {
-  await page.goto("./#/duel");
+  await openDuel(page);
   const picker = page.locator('[data-cy="deck-picker"]');
   await expect(picker).toBeVisible({ timeout: 120_000 });
   expect(
@@ -519,6 +548,7 @@ test("deck picker persists a chosen pair and Change decks returns without auto-s
   ]);
 
   await page.reload();
+  await startMatch(page);
   await expect(picker).toBeVisible({ timeout: 120_000 });
   await expect(playerSelect).toHaveValue("preset:burning-abyss");
 
@@ -582,7 +612,7 @@ test("a local deck built from the packaged catalog is offered and duels", async 
     page.locator('[data-cy="deck-editor-layout"]'),
   ).not.toHaveAttribute("aria-busy", "true");
 
-  await page.goto("./#/duel");
+  await openDuel(page);
   await expect(page.locator('[data-cy="deck-picker"]')).toBeVisible({
     timeout: 120_000,
   });
@@ -658,7 +688,7 @@ test("a local deck the pinned ruleset refuses is never offered", async ({
     "Thirty Nine",
   );
 
-  await page.goto("./#/duel");
+  await openDuel(page);
   await expect(page.locator('[data-cy="deck-picker"]')).toBeVisible({
     timeout: 120_000,
   });
@@ -676,7 +706,7 @@ test("a local deck the pinned ruleset refuses is never offered", async ({
 });
 
 test("panels stay hidden until settings enable them", async ({ page }) => {
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await expect(
     page.locator('[data-cy="duel-field"][data-prompt-kind]'),
@@ -701,7 +731,7 @@ test("zone visuals persist through reload and Reset settings restores defaults",
     .first();
   const count = board.locator(".duel-field-stack__count").first();
 
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await expect(board).toBeVisible({ timeout: 120_000 });
   await expect(zone).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
@@ -736,6 +766,7 @@ test("zone visuals persist through reload and Reset settings restores defaults",
   });
 
   await page.reload();
+  await startMatch(page);
   await startPresetDuel(page);
   await expect(board).toBeVisible({ timeout: 120_000 });
   await expect(board).toHaveAttribute("data-zone-outlines", "false");
@@ -776,6 +807,7 @@ test("zone visuals persist through reload and Reset settings restores defaults",
   ).toBeNull();
 
   await page.reload();
+  await startMatch(page);
   await startPresetDuel(page);
   await expect(board).toBeVisible({ timeout: 120_000 });
   await expect(board).toHaveAttribute("data-zone-outlines", "true");
@@ -792,7 +824,7 @@ test("duel HUD keeps hidden stacks count-only and tray image work mounted on dem
     if (/\/runtime\/images\/\d+\.jpg$/.test(request.url()))
       imageRequests.push(request.url());
   });
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await enableDuelHud(page);
 
@@ -858,7 +890,7 @@ test("duel HUD keeps hidden stacks count-only and tray image work mounted on dem
 test("repeated restart replaces the Worker and clears presentation state", async ({
   page,
 }) => {
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   for (let cycle = 1; cycle <= 2; cycle += 1) {
     await expect(
@@ -927,11 +959,12 @@ test("refresh during loading and after completion starts a clean duel", async ({
     await route.continue();
   });
 
-  await page.goto("./#/duel");
+  await openDuel(page);
   await manifestBlocked;
   const reloadDuringLoading = page.reload();
   releaseManifest();
   await reloadDuringLoading;
+  await startMatch(page);
   await startPresetDuel(page);
   await expect(
     page.locator('[data-cy="duel-field"][data-prompt-kind]'),
@@ -958,6 +991,7 @@ test("refresh during loading and after completion starts a clean duel", async ({
   };
   expect(diagnostic.trace.sensitivity).toBe("contains-production-seed");
   await page.reload();
+  await startMatch(page);
   await startPresetDuel(page);
   await expect(
     page.locator('[data-cy="duel-field"][data-prompt-kind]'),
@@ -972,7 +1006,7 @@ test("refresh during loading and after completion starts a clean duel", async ({
 test("mounted card image leases return to baseline across tray, restart, and destroy", async ({
   page,
 }, testInfo) => {
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await enableDuelHud(page);
   await expect(
@@ -1072,7 +1106,7 @@ test("slow image preload cannot delay a legal Worker response", async ({
     await route.abort("failed");
   });
 
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await blocked;
   const controls = page.locator('[data-cy="duel-field"][data-prompt-kind]');
@@ -1126,7 +1160,7 @@ test("missing active images use deterministic placeholders without blocking inpu
   await page.route(/\/runtime\/images\/\d+\.jpg$/, (route) =>
     route.abort("failed"),
   );
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   const controls = page.locator('[data-cy="duel-field"][data-prompt-kind]');
   await expect(controls).toBeVisible({ timeout: 120_000 });
@@ -1154,7 +1188,7 @@ test("forced Worker initialization timeout terminates and replaces the Worker", 
         ...args,
       )) as typeof window.setTimeout;
   });
-  await page.goto("./#/duel");
+  await openDuel(page);
   const timeoutHeading = page.getByRole("heading", {
     name: /Duel Worker did not initialize within 120000ms/,
   });
@@ -1169,7 +1203,7 @@ test("forced Worker initialization timeout terminates and replaces the Worker", 
 test("injected DOM field failure preserves fallback controls and one opaque response", async ({
   page,
 }) => {
-  await page.goto(`${duelFieldRenderFailureUrl()}#/duel`);
+  await openDuel(page, `${duelFieldRenderFailureUrl()}#/duel`);
   await startPresetDuel(page);
   await expect(
     page.getByRole("heading", { name: "Interactive field could not render" }),
@@ -1237,7 +1271,7 @@ test("rail reduced motion keeps three thinking dots visible and static", async (
     });
   });
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   const endTurn = page.locator('[data-cy="field-end-turn-button"]');
   await expect(endTurn).toBeEnabled({ timeout: 120_000 });
@@ -1276,7 +1310,7 @@ test("smallest supported layout preserves controls and honors reduced motion", a
 }) => {
   await page.setViewportSize({ width: 1366, height: 768 });
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
@@ -1312,7 +1346,7 @@ test("wheel over the duel field never scrolls the default duel page", async ({
   // Narrow (<80rem) and short (<=48rem) at once: the combined constrained
   // layout the ticket's requirements name explicitly.
   await page.setViewportSize({ width: 900, height: 420 });
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
@@ -1334,7 +1368,7 @@ test("wheel over the duel field never scrolls the default duel page", async ({
 test("default duel occupies exactly one viewport at every supported viewport", async ({
   page,
 }) => {
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
@@ -1406,7 +1440,7 @@ test("default duel occupies exactly one viewport at every supported viewport", a
 test("the shell letterboxes the app to a 16:9 stage above the breakpoint", async ({
   page,
 }) => {
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
@@ -1502,7 +1536,7 @@ test("the duel spends the reclaimed pillarbox on the right rail, not the board",
   page,
 }) => {
   await page.setViewportSize({ width: 1920, height: 900 });
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
@@ -1566,7 +1600,7 @@ test("short-height duel keeps the full-height preview column, bounded art and sc
   page,
 }) => {
   await page.setViewportSize({ width: 900, height: 420 });
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
@@ -1683,7 +1717,7 @@ test("floating field windows stay inside the field, persist and never lose a dec
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
@@ -1793,6 +1827,7 @@ test("floating field windows stay inside the field, persist and never lose a dec
     JSON.parse(localStorage.getItem("ygo.ui.v2") ?? "null"),
   )) as { readonly windows: { zoneList: unknown; confirm: unknown } };
   await page.reload();
+  await startMatch(page);
   await startPresetDuel(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
@@ -1929,7 +1964,7 @@ async function assertWindowInsideField(
 test("zone-list preview image never exceeds half the viewport height", async ({
   page,
 }) => {
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
@@ -1980,7 +2015,7 @@ async function locateDraggablePlacement(page: Page): Promise<{
      default 720px-tall viewport puts the hand below the fold, where
      `elementFromPoint` returns null and every synthetic move is a no-op. */
   await page.setViewportSize({ width: 1440, height: 1400 });
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await expect(
     page.locator('[data-cy="duel-field"][data-prompt-kind="idleCommand"]'),
@@ -2365,7 +2400,7 @@ test("hovering a hand card fills the preview panel sharing the shell row", async
   // 1366 is above the 79rem (1264px) stacking breakpoint, so the panel is
   // beside the field here; below it the panel drops under the board instead.
   await page.setViewportSize({ width: 1366, height: 768 });
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
@@ -2412,7 +2447,7 @@ test("hovering a hand card fills the preview panel sharing the shell row", async
 
 test("a passive opponent hand card receives a real hover", async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 768 });
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
@@ -2444,7 +2479,7 @@ test("T12: hand hover opens a 1.6x overlay, keyboard focus lifts the card 1.35x 
   page,
 }) => {
   await page.setViewportSize({ width: 1366, height: 768 });
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
@@ -2701,7 +2736,7 @@ test("item 5: field cards stay outside the hand band and hand action chips remai
   // Full board on screen: hand row plus spellTrap row remain measurable in
   // real layout, without substituting design-grid arithmetic.
   await page.setViewportSize({ width: 1440, height: 1400 });
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await expect(
     page.locator('[data-cy="duel-field"][data-prompt-kind="idleCommand"]'),
@@ -2813,7 +2848,7 @@ test("item 5: field cards stay outside the hand band and hand action chips remai
 test("End turn button keeps its label on one row above the 44px pointer-target floor", async ({
   page,
 }) => {
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
@@ -2873,7 +2908,7 @@ test("End turn button keeps its label on one row above the 44px pointer-target f
 });
 
 test("opponent pile inversion rotates images only", async ({ page }) => {
-  await page.goto("./#/duel");
+  await openDuel(page);
 
   const orientations = await page.evaluate(() => {
     const fixture = document.createElement("div");
@@ -2996,7 +3031,7 @@ test("opponent pile inversion rotates images only", async ({ page }) => {
 test("responsive field compositions contain controls across supported viewports", async ({
   page,
 }, testInfo) => {
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await enableDuelHud(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
@@ -3540,7 +3575,7 @@ test("DF-16 Chromium pinned parity/perf/resource gate records automated evidence
   await cdp.send("Performance.enable").catch(() => undefined);
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
   await page.setViewportSize({ width: 1280, height: 720 });
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await enableDuelHud(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
@@ -3677,7 +3712,7 @@ test("DF-16 Chromium pinned parity/perf/resource gate records automated evidence
 test("spatial field navigation has one visible 44px keyboard entry without a trap", async ({
   page,
 }, testInfo) => {
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
@@ -3781,7 +3816,7 @@ test("a full preset duel can be completed using keyboard controls only with one 
   // walk measures ~145 ms per prompt, and even the 400-prompt ceiling below
   // fits inside this budget several times over.
   test.setTimeout(600_000);
-  await page.goto("./#/duel");
+  await openDuel(page);
   await startPresetDuel(page);
   await expect(
     page.locator('[data-cy="duel-field"][data-prompt-kind]'),

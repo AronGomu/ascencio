@@ -2525,7 +2525,7 @@ address bar unless the step says to click something.
 
 ### Old links still land where they used to
 
-- [ ] Open `http://localhost:4300/#/duel` — the deck picker loads exactly as before. The address bar still reads `#/duel` (the redirect is what the app resolves, not a URL rewrite).
+- [ ] Open `http://localhost:4300/#/duel` — the free-play menu loads (T16 put it on that route); its Start a match entry opens the deck picker exactly as before. The address bar still reads `#/duel` (the redirect is what the app resolves, not a URL rewrite).
 - [ ] Open `#/decks` — the Deck Library renders.
 - [ ] Open `#/decks/<id>` for a deck you own — that deck opens in the editor.
 - [ ] Open `#/duel/session/anything` — unchanged: the duel region shows, and a session nobody can resume still returns you to `#/story`.
@@ -2533,7 +2533,7 @@ address bar unless the step says to click something.
 
 ### The new context-carrying routes
 
-- [ ] Open `#/free-play` — the deck picker loads, same as `#/duel`.
+- [ ] Open `#/free-play` — the free-play menu loads, same as `#/duel`.
 - [ ] Open `#/free-play/decks` — the Deck Library renders.
 - [ ] Open `#/free-play/decks/<id>` — that deck opens.
 - [ ] Open `#/story/decks` — the Deck Library renders. (T23 gives it the save's decks; today both contexts read the same library.)
@@ -2554,7 +2554,7 @@ address bar unless the step says to click something.
 
 ### The duel still spends the pillarbox
 
-- [ ] On a window wider than 1024px, open `#/duel` (or `#/free-play`) and confirm the duel field still uses the full window width, with the right rail absorbing the reclaimed space — exactly as before this ticket. In DevTools, `[data-cy="app-stage"]` carries `data-stage-route="free-play"`.
+- [ ] On a window wider than 1024px, open `#/duel` (or `#/free-play`), press Start a match, and confirm the duel field still uses the full window width, with the right rail absorbing the reclaimed space — exactly as before this ticket. In DevTools, `[data-cy="app-stage"]` carries `data-stage-route="free-play"`.
 - [ ] Open `#/free-play/decks` at the same width: the deck editor still sits in the 16:9 stage with bars at the sides, unchanged.
 
 ### The developer console lists the new routes
@@ -2587,7 +2587,7 @@ Run `npm run dev` (default `DEV_PORT=4300`). The app's first screen is now the g
 - [ ] Press Back — you return to the main menu.
 - [ ] Click Load — the URL becomes `#/story`.
 - [ ] With a save present, click Continue — the URL becomes `#/story`.
-- [ ] Click Free Play — the URL becomes `#/free-play` and the deck picker loads; start a duel and play a turn.
+- [ ] Click Free Play — the URL becomes `#/free-play` and the free-play menu loads (T16); its Start a match entry opens the deck picker — start a duel and play a turn.
 - [ ] Click Settings — a dialog opens ON TOP of the menu and the URL stays `#/` (no new hash, no navigation). Close it: the menu is exactly as you left it.
 
 ### The visual novel is still loaded lazily
@@ -2603,3 +2603,40 @@ Run `npm run dev` (default `DEV_PORT=4300`). The app's first screen is now the g
 - [ ] Open `#/nonsense` — you land on the main menu.
 - [ ] Open `#/admin` → Routes and click `#/` — the main menu loads.
 - [ ] Resize the window narrow and short: the menu stays readable and scrolls inside the stage rather than pushing a scrollbar onto the page.
+
+## T16 free-play-menu-screen
+
+Run `npm run dev` (default `DEV_PORT=4300`). Free play now has a menu of its own between the main menu and the duel.
+
+### The menu
+
+- [ ] Open `http://localhost:4300/#/` and click Free Play — the URL becomes `#/free-play` and a "Free Play" title renders over the same dark gradient as the main menu, above the line "Every card available. No story, no stakes."
+- [ ] The entries read, top to bottom: Start a match, Deck builder, Return to main menu. Nothing about a deck picker, a card or a duel is on this screen.
+- [ ] Type `#/free-play` into the address bar directly — the same menu, not a duel.
+- [ ] Type `#/duel` — the same menu (the old link still resolves here, and the address bar keeps reading `#/duel`).
+
+### Every entry goes where it says
+
+- [ ] Click Deck builder — the URL becomes `#/free-play/decks` and the Deck Library renders.
+- [ ] Press Back — you return to the free-play menu at `#/free-play`.
+- [ ] Click Return to main menu — the URL becomes `#/` and the main menu renders.
+- [ ] Click Free Play again, then Start a match — the deck picker loads; start a duel and play a turn.
+
+### Leaving a match
+
+- [ ] While the deck picker or the duel is on screen, a small "Leave match" button sits in the top-left corner. Click it — you are back on the free-play menu, and the URL is still `#/free-play`.
+- [ ] Press Start a match again — a fresh duel starts from the deck picker.
+- [ ] Start a match, then type `#/` in the address bar and go back to `#/free-play` — you land on the menu, not back inside the duel.
+- [ ] Start a match, then press the browser's Back button — you leave free play for the main menu rather than staying in the duel.
+- [ ] Play into a real duel and confirm the board's bottom edge (your hand band) is not cut off by the extra button, and that opening the duel's own options menu draws its dialog OVER "Leave match" rather than under it.
+- [ ] Enter a story duel instead (New Game → play to an encounter): that duel has NO "Leave match" button — the story owns that exit.
+
+### The duel is still loaded only when a match starts
+
+- [ ] Open DevTools → Network, tick "Disable cache", and load `http://localhost:4300/#/free-play` fresh. While only the menu is on screen: no `battle-*.js`, no `.wasm` and no `runtime/` request fires, and no Worker appears under Application → Workers.
+- [ ] Click Start a match: `battle-*.js` and the runtime requests fire at that moment, and a Worker appears.
+
+### On a phone-sized window
+
+- [ ] With a portrait phone viewport (390x844 in DevTools), open `#/free-play` — the menu reads upright and is not rotated.
+- [ ] Press Start a match — the duel is turned a quarter turn as before, and "Leave match" turns with the board rather than staying upright in the corner of the screen.

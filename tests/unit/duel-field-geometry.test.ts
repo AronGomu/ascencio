@@ -7,10 +7,16 @@ import {
 } from "../../src/battle/field/duel-field-geometry.ts";
 import { STANDARD_DUEL_FIELD_LAYOUT } from "../../src/battle/field/duel-field-layout.ts";
 
+/* M2 2026-08-21: the first column is the middle-column budget
+   `stage - --preview-w - --rail-min`, not a viewport. 1328 and 886 were the
+   1920x1080 and 1366x768 budgets while `--preview-w` was 22rem/18rem; round 2
+   narrowed it to 15.5rem/13.5rem (89faedf, ADR-042 §2), which makes them 1432
+   and 958. Both expected sizes are unchanged because these EMZ fits are
+   height-constrained, so the stale inputs were passing on luck. */
 const budgets = [
-  [1328, 1080, 1229, 1080],
+  [1432, 1080, 1229, 1080],
   [1872, 1440, 1638, 1440],
-  [886, 768, 874, 768],
+  [958, 768, 874, 768],
 ] as const;
 
 describe("duel field pixel geometry", () => {
@@ -29,11 +35,16 @@ describe("duel field pixel geometry", () => {
     },
   );
 
-  it("computes accepted no-EMZ small geometry", () => {
-    const geometry = computeFieldGeometry(false, 886, 768);
-    expect(geometry.width).toBeCloseTo(886, 0);
-    expect(geometry.height).toBeCloseTo(735, 0);
-    expect(geometry.height / 768).toBeCloseTo(0.957, 2);
+  it("fills the small no-EMZ viewport height on the narrowed preview budget", () => {
+    /* M2 2026-08-21: was `(false, 886, 768)` -> 886x735, the 95.7% compromise
+       ADR-019 §8 accepted while `--preview-w` was 18rem below 1500px. At
+       13.5rem the budget is 958, so the fit stops being width-constrained and
+       the board takes the whole viewport height. Chromium measures the width
+       as 925.5625 in the acceptance run. */
+    const geometry = computeFieldGeometry(false, 958, 768);
+    expect(geometry.width).toBeCloseTo(925.57, 1);
+    expect(geometry.height).toBeCloseTo(768, 0);
+    expect(geometry.height / 768).toBeCloseTo(1, 3);
   });
 
   it.each([true, false])(

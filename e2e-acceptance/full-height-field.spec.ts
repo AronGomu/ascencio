@@ -58,6 +58,11 @@ async function openField(page: Page, scenario: "field-emz" | "field-no-emz") {
   await expect(page.locator('[data-cy="field-phase-strip"]')).toHaveCount(1);
 }
 
+/* M2 2026-08-21: every board size below is a Chromium measurement, not a
+   designed figure. `computeFieldGeometry` scales continuously, so a board only
+   lands on an integer when its budget happens to; the sizes the geometry is
+   *required* to hit are asserted as invariants in "pixel board keeps
+   five-pixel gaps and ratio" further down, never as a board width. */
 const BOARD_MATRIX = [
   {
     viewport: { width: 1920, height: 1080 },
@@ -87,7 +92,13 @@ const BOARD_MATRIX = [
   {
     viewport: { width: 1366, height: 768 },
     scenario: "field-no-emz",
-    board: { width: 886, height: 735 },
+    /* M2 2026-08-21: re-recorded from 886x735. Round 2 narrowed the shared
+       `--preview-w` to 13.5rem under the 1500px breakpoint (89faedf, ADR-042
+       §2), so the middle column budgets 958px here instead of 886px. This was
+       the only width-constrained entry in the matrix, which is why it is the
+       only one that moved: the board is now height-constrained like every
+       other entry and fills the viewport height. */
+    board: { width: 925.5625, height: 768 },
   },
 ] as const;
 

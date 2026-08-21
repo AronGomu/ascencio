@@ -22,6 +22,7 @@ Validated prototype proves one height-derived px grid, square footprints, no hea
 6. Outer dashed square is true zone footprint. Upright slot + card are concentric. Face-up Defense + face-down Set rotate card art 90°; outer placement/hover scale remain independent.
 7. Worker-projected `layout.extraMonsterZones` selects 7-row EMZ or 6-row + phase-band profile. UI never recomputes rules profile. ADR-018 retains authority.
 8. At 1366×768 no-EMZ, board ≈886×735 (95.7% viewport height) is accepted. Do not compress preview below 18rem or rail below 12rem solely to force 100%.
+   - Amended 2026-08-21: ADR-042 §2 narrowed the shared `--preview-w` to 15.5rem (13.5rem below the 1500px breakpoint) to size the panel to the card — not to force 100%, so the rule above stands and only its recorded figure moved. That viewport now budgets 958px of middle column, and the board measures ≈925.57×768: height-constrained like every other viewport, at 100% of viewport height.
 9. Hands span board inner width, one box high. All cards mount inside real horizontal scroller. Native chrome hidden; decorative custom overlay thumb mirrors + pointer-controls scroll. Count badge stays fixed over wrapper.
 10. Phase controls derive anchors/type scale from same geometry. End turn is independent primary control at inner right edge. Every action remains ≥44×44px.
 11. Preview effect text uses bounded `minmax(0,1fr)` real vertical scroller, permanent 10px text gutter, decorative custom overlay thumb. Keyboard/wheel semantics remain native.

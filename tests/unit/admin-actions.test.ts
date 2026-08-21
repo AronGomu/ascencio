@@ -3,6 +3,7 @@ import "fake-indexeddb/auto";
 import { openDB } from "idb";
 import { describe, expect, it, vi } from "vitest";
 import { DECK_SOURCES } from "../../src/battle/duel/presets/deck-sources-browser.ts";
+import { DECK_DATABASE_NAME } from "../../src/decks/index.ts";
 import { reviewedCardPool } from "../../src/battle/duel/presets/reviewed-card-pool.ts";
 import {
   ADMIN_ROUTES,
@@ -44,6 +45,14 @@ describe("admin storage targets", () => {
   it("names the decks and duel-snapshot databases", () => {
     expect(target("decks").kind).toBe("indexeddb");
     expect(target("duel-snapshots").name).toBe("ygo-story-duel");
+  });
+
+  /* The library the console clears is the free-play one, and saying so is the
+     whole of the rename: the database underneath it is the one every deck ever
+     built is already in, so the name may not follow the label (ADR-049). */
+  it("admin still targets the deck database", () => {
+    expect(target("decks").name).toBe(DECK_DATABASE_NAME);
+    expect(target("decks").label).toBe("Free-play deck library");
   });
 
   it("resets story saves under the production database name", () => {

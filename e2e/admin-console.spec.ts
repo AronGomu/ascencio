@@ -73,7 +73,7 @@ test("seeding fills the deck library and a confirmed reset empties it", async ({
   await page.locator('[data-cy="admin-reset-decks"]').click();
   await page.locator('[data-cy="admin-reset-decks-confirm"]').click();
   await expect(page.locator('[data-cy="admin-status"]')).toHaveText(
-    "Cleared Deck library.",
+    "Cleared Free-play deck library.",
   );
 
   /* The reset deletes the deck database outright, so its absence is the reset

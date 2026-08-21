@@ -13,7 +13,10 @@
     DeckRecord,
   } from "../decks/deck-contracts.ts";
   import { DeckMigrationError } from "../decks/index.ts";
-  import { IndexedDbDeckRepository } from "../decks/indexeddb-deck-repository.ts";
+  import {
+    resolveDeckRepository,
+    type DeckContext,
+  } from "../decks/deck-repository-context.ts";
   import { ensureStarterDeck } from "../decks/starter-deck.ts";
   import {
     catalogByCode,
@@ -83,6 +86,10 @@
      copy completes, or a second editor session would write into the database
      the next attempt is about to overwrite. */
   let migrationError: DeckMigrationError | null = null;
+  /* The world whose decks this mount edits. Free play until T23 hands the
+     editor the context its route names; the resolver is what makes the two
+     worlds one code path either way. */
+  const context: DeckContext = { kind: "free-play" };
 
   /* Applying the route reads IndexedDB, so it is watched here rather than
      from a reactive statement: `routing` keeps one application in flight and
@@ -112,14 +119,14 @@
         cards = deckBuildableCards(loaded);
         catalog = catalogByCode(loaded);
         catalogReady = true;
-        return IndexedDbDeckRepository.open();
+        return resolveDeckRepository(context);
       })
-      .then(async (repository) => {
+      .then(async ({ repository, close: release }) => {
         if (disposed) {
-          repository.close();
+          release();
           return;
         }
-        close = () => repository.close();
+        close = release;
         /* Before the controller reads storage, so a player arriving with no
            decks sees the starter deck rather than an empty library. It never
            throws, so a seeding failure cannot keep the editor from opening. */

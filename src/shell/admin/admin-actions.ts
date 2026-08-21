@@ -20,7 +20,7 @@ export const ADMIN_STORAGE_TARGETS: readonly AdminStorageTarget[] =
   Object.freeze([
     Object.freeze({
       id: "decks",
-      label: "Deck library",
+      label: "Free-play deck library",
       kind: "indexeddb",
       name: DECK_DATABASE_NAME,
     } as const),

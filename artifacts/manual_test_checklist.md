@@ -214,10 +214,10 @@ Run `npm run dev`. The console is a developer surface: it is never linked from t
 - [ ] Open that deck: it holds 40 Main-deck cards.
 - [ ] Return to `#/admin` and click "Launch preset duel": the duel route opens with the normal deck picker, and no extra deck was written to the library.
 - [ ] Return to `#/admin` and click "Open story": the visual-novel title screen shows. (Corrected by T7: this used to land on the placeholder.)
-- [ ] Click "Reset…" next to "Deck library": nothing is deleted yet — a "Delete for good" button and a "Cancel" button appear in its place.
+- [ ] Click "Reset…" next to "Free-play deck library": nothing is deleted yet — a "Delete for good" button and a "Cancel" button appear in its place.
 - [ ] Click "Cancel": the row returns to a single "Reset…" button. Visit `#/decks` — "Admin test deck" is STILL there. A single stray click must never delete data.
-- [ ] Back on `#/admin`, click "Reset…" on "Deck library", then click "Reset…" on "Shell settings": only ONE row is armed at a time — the deck-library confirm disappears.
-- [ ] Press Cancel, then arm "Deck library" again and click "Delete for good": the status line reads "Cleared Deck library." Visit `#/decks` — the library shows "No local decks".
+- [ ] Back on `#/admin`, click "Reset…" on "Free-play deck library", then click "Reset…" on "Shell settings": only ONE row is armed at a time — the deck-library confirm disappears.
+- [ ] Press Cancel, then arm "Free-play deck library" again and click "Delete for good": the status line reads "Cleared Free-play deck library." Visit `#/decks` — the library shows "No local decks".
 - [ ] Repeat the arm-then-confirm flow for each remaining row (Duel snapshots, Shell settings, Story saves): each one asks for a separate confirmation and reports "Cleared …" when done. (Corrected by T7: the story row exists. Corrected by T13: it is now labelled "Story saves" and deletes the `ygo-story-saves` database, not a local-storage key.)
 - [ ] After clearing "Shell settings", check devtools Application → Local Storage: the `ygo.ui.v3` entry is gone, and reloading the hub shows default settings.
 - [ ] After clearing "Duel snapshots", start a duel from `#/duel` and play a turn: the duel still works (the snapshot store rebuilds itself).
@@ -304,7 +304,7 @@ Library CRUD
 Admin console jump
 
 - [ ] Open `http://localhost:4300/#/admin`, click "Seed test deck & open it" — the editor opens directly on the seeded deck (name "Admin test deck") and the URL is `#/free-play/decks/admin-test-deck`.
-- [ ] Back on `#/admin`, arm and confirm the "Deck library" reset, then click the `#/free-play/decks` route button — the library shows "No local decks".
+- [ ] Back on `#/admin`, arm and confirm the "Free-play deck library" reset, then click the `#/free-play/decks` route button — the library shows "No local decks".
 
 Nothing else regressed
 
@@ -517,7 +517,7 @@ Admin console follows the rename
 - [ ] Open `http://localhost:4300/#/admin`, click "Seed test deck & open it" —
       the editor opens on "Admin test deck". DevTools shows that deck inside
       `ygo-story-decks`, and no prototype database was created.
-- [ ] Back on `#/admin`, arm and confirm the "Deck library" reset, then open
+- [ ] Back on `#/admin`, arm and confirm the "Free-play deck library" reset, then open
       `#/decks` — the library says "No local decks", and DevTools shows
       `ygo-story-decks` is gone. Before this ticket this button cleared the
       prototype database, so a reset that leaves your decks in place is the
@@ -937,7 +937,7 @@ rewritten accordingly**; see `## T22 local-deck-playability` for the full flow.
 - [ ] Return to `#/decks` — the deck is exactly as you left it. Nothing was renamed, repaired, re-saved, or deleted to make it playable.
 
 ### No local decks at all
-- [ ] Open `#/admin`, click **Reset Deck library** and confirm, so no local deck exists.
+- [ ] Open `#/admin`, click **Reset Free-play deck library** and confirm, so no local deck exists.
 - [ ] Go to `#/duel` — only the Bundled decks group renders. There is no "Your decks" heading, no empty list, and Start still works.
 
 ### A chosen deck that disappears
@@ -1077,7 +1077,7 @@ what is playable. The steps below still pass; only the numbers moved.
 - [ ] Import a YDK holding a code the editor does not know (e.g. `99999999`). Preview flags it as unknown, and a deck saved with it is never offered at `#/duel`.
 
 ### Bundled decks are unaffected
-- [ ] With no local deck at all (use `#/admin` → **Reset Deck library**), `#/duel` renders only the **Bundled decks** group — no empty "Your decks" heading — and Start works. (Superseded by T15: opening `#/duel` now seeds a "Starter Deck", so a **Your decks** group holding exactly that one deck is the expected state here.)
+- [ ] With no local deck at all (use `#/admin` → **Reset Free-play deck library**), `#/duel` renders only the **Bundled decks** group — no empty "Your decks" heading — and Start works. (Superseded by T15: opening `#/duel` now seeds a "Starter Deck", so a **Your decks** group holding exactly that one deck is the expected state here.)
 - [ ] Pick a bundled deck and duel: unchanged from before this slice.
 
 ### Build gate
@@ -2751,3 +2751,30 @@ an existing story save moved.
 
 - [ ] In `#/free-play/decks`, open a deck in two browser tabs, edit and save it in tab A, then edit and save the same deck in tab B. Tab B reports a conflict rather than silently overwriting tab A.
 - [ ] Undo and redo an edit, then check the autosave list still shows the recent edits.
+
+## T20 free-play-deck-library-split
+
+No deck moves in this slice and no database is renamed. The editor now reaches its
+repository through one entry point that a context chooses — free play until T23 wires the
+story route — and the admin console says out loud which library it clears. So the thing to
+check is that nothing changed for a player who already has decks.
+
+### Decks built before this change are still there
+
+- [ ] Before pulling this build, open `#/free-play/decks` and write down the name of every deck you have, plus which one carries the default badge and which ones are favourited.
+- [ ] Load this build and open `#/free-play/decks` again. Every deck on that list is present, under the same name, in the same order (most recently edited first). The same deck is still the default and the same decks are still favourited.
+- [ ] Open one of those older decks. Its Main/Extra/Side contents are unchanged and the card count matches what it had.
+- [ ] In DevTools → Application → IndexedDB, the database is still named `ygo-story-decks` and there is no second deck database beside it. Its `decks` store holds the same rows as before.
+
+### The editor still behaves for free play
+
+- [ ] Create a deck, add and remove cards, rename it, undo and redo. Reload the page (F5): everything survived.
+- [ ] Set a deck as default, favourite another, delete a third. Reload — the default, the favourite and the deletion all stuck.
+- [ ] Open the same deck in two tabs, save in tab A then save in tab B: tab B reports a conflict instead of overwriting.
+- [ ] Leave the deck editor and come back to it several times, then go to `#/admin` and reset the deck library. The reset completes rather than hanging on "another tab still has it open" — each visit released its database connection.
+
+### The admin console names the right library
+
+- [ ] Open `#/admin`. The first storage row now reads **Free-play deck library** rather than "Deck library".
+- [ ] Arm and confirm that reset. The status line reads "Cleared Free-play deck library."
+- [ ] The **Story saves** row is a separate entry and is untouched by that reset: load a story save afterwards and it still opens.

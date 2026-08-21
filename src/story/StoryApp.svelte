@@ -61,6 +61,7 @@
   import { runtimeCatalog } from "../decks/catalog/runtime-catalog.ts";
   import { catalogByCode } from "../decks/catalog/pinned-ruleset.ts";
   import type { DeckBuilderCardView } from "../decks/catalog/ocg-card-mapper.ts";
+  import { preBattleDeckOptions } from "./decks/pre-battle-decks.ts";
   import TitleScreen from "./screens/TitleScreen.svelte";
   import {
     STORY_SLOT_KEYS,
@@ -94,9 +95,12 @@
     "The duel was interrupted before it started. Try again or return to the map.";
   const CATALOG_UNAVAILABLE = "The card database could not load.";
 
-  /* The shop screens that name, picture or price a card. Greeting and browse
-     list sets rather than cards, so neither pays for the read. */
+  /* The screens that need the card database. The shop ones name, picture or
+     price a card; greeting and browse list sets rather than cards, so neither
+     pays for the read. The briefing needs it to decide which of the save's
+     decks may be fielded, and refuses to decide without it. */
   const CATALOG_SCREENS: ReadonlySet<StoryScreen> = new Set([
+    "pre-battle",
     "shop-cards",
     "shop-opening",
     "shop-results",
@@ -297,6 +301,15 @@
     rarity: card.rarity,
     priceDp: singlePriceDp(card.rarity),
   }));
+  /* Null until the catalog lands, which the briefing renders as "still
+     checking" rather than as a refusal: an empty catalog calls every card
+     missing, so a verdict reached from one would lock the save out of every
+     deck it owns. Scoped to the screen that asks, because it revalidates every
+     deck in the save on every flush. */
+  $: preBattleDeckChoices =
+    state.screen === "pre-battle" && catalogReady
+      ? preBattleDeckOptions(state, cardViewByCode)
+      : null;
   $: topBarVisible =
     inShop || state.screen === "narrative" || state.screen === "map";
   $: applyResolution(resolution);
@@ -794,6 +807,11 @@
   {:else if state.screen === "pre-battle"}
     <PreBattleScreen
       allowReturn={true}
+      decks={preBattleDeckChoices}
+      defaultDeckId={state.defaultDeckId}
+      decksError={catalogError}
+      onselectdeck={(id) => dispatch({ type: "deck-set-default", id })}
+      onretrydecks={loadCatalog}
       onstart={startEncounter}
       onreturn={() => go("map")}
     />

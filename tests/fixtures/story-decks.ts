@@ -1,7 +1,12 @@
 import {
+  PROTOTYPE_RULESET,
+  quantityLimit,
+} from "../../src/decks/catalog/pinned-ruleset.ts";
+import {
   deckId,
   type DeckValidationSummary,
 } from "../../src/decks/deck-contracts.ts";
+import { PROTOTYPE_CATALOG } from "../../src/deck-editor/fixtures/catalog.ts";
 import type { StoryDeck } from "../../src/story/model/story-state.ts";
 
 /* One deck as a story save holds it. Built as a literal rather than through
@@ -34,4 +39,30 @@ export function storyDeckFixture(
     importedNeedsReview: false,
     ...overrides,
   };
+}
+
+/* Forty cards the pinned ruleset allows three copies of, drawn from the
+   prototype catalog so a jsdom test can hold the whole card database in
+   memory. Nothing here breaks a build rule, which leaves ownership as the only
+   thing that can turn the deck below illegal. */
+const FIELDABLE_MAIN_CARDS = PROTOTYPE_CATALOG.filter(
+  (card) =>
+    card.canonicalZone === "main" &&
+    quantityLimit(PROTOTYPE_RULESET, card.code) === 3,
+);
+
+/** The smallest save a story encounter can actually start from: one deck the
+    pre-battle gate accepts, and the collection that owns every copy of it. */
+export function fieldableStoryDeck(id = "story-fieldable-deck"): {
+  readonly deck: StoryDeck;
+  readonly collection: Record<number, number>;
+} {
+  const main = Array.from(
+    { length: 40 },
+    (_, index) =>
+      FIELDABLE_MAIN_CARDS[index % FIELDABLE_MAIN_CARDS.length]!.code,
+  );
+  const collection: Record<number, number> = {};
+  for (const code of main) collection[code] = (collection[code] ?? 0) + 1;
+  return { deck: storyDeckFixture(id, { main }), collection };
 }

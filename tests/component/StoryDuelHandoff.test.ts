@@ -103,6 +103,13 @@ import {
   createStorySaveRepository,
   type StorySaveRepository,
 } from "../../src/story/saves/story-save-repository.ts";
+import { installPrototypeActiveCatalog } from "../fixtures/active-catalog.ts";
+import { fieldableStoryDeck } from "../fixtures/story-decks.ts";
+
+/* The briefing revalidates the save's decks against the card database before
+   it will start an encounter, and jsdom has no runtime assets to serve one
+   from. The same fixture answers the duel's own deck picker downstream. */
+installPrototypeActiveCatalog();
 
 interface MockedWorkerInstance {
   readonly context: { workerGeneration: number; sessionGeneration: number };
@@ -182,8 +189,13 @@ function emitResult(result: unknown): void {
 }
 
 /** Puts the player on the city map with one save on disk, so the flow under
-    test starts at the encounter rather than 30 narrative beats earlier. */
+    test starts at the encounter rather than 30 narrative beats earlier.
+
+    The save carries a deck and the cards behind it, as every real save that
+    reaches the map does: a new game is granted both, and the briefing refuses
+    to hand a duel a deck this save cannot field. */
 async function seedMapProgress(): Promise<void> {
+  const { deck, collection } = fieldableStoryDeck();
   await saves.write(
     "autosave" as StorySlotKey,
     {
@@ -191,6 +203,9 @@ async function seedMapProgress(): Promise<void> {
       screen: "map",
       savedScreen: "map",
       progressExists: true,
+      decks: [deck],
+      defaultDeckId: deck.id,
+      collection,
     },
     null,
   );
@@ -201,7 +216,12 @@ async function reachEncounter(): Promise<ReturnType<typeof userEvent.setup>> {
   renderShell();
   await user.click(await waitForCy("story-title-continue"));
   await user.click(await waitForCy("story-map-location-old-arena"));
-  await user.click(await waitForCy("story-briefing-start"));
+  /* The catalog read the briefing gates on resolves a microtask later than the
+     screen renders, so Start is briefly disabled on purpose. */
+  await vi.waitFor(() =>
+    expect(cy("story-briefing-start").hasAttribute("disabled")).toBe(false),
+  );
+  await user.click(cy("story-briefing-start"));
   return user;
 }
 

@@ -1,5 +1,11 @@
+import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { createInitialStoryState } from "../src/story/model/story-state.ts";
+import { deckId } from "../src/decks/deck-contracts.ts";
+import { importYdk } from "../src/decks/ydk-adapter.ts";
+import {
+  createInitialStoryState,
+  type StoryDeck,
+} from "../src/story/model/story-state.ts";
 import {
   STORY_SAVES_DATABASE_NAME,
   STORY_SAVES_STORE_NAME,
@@ -9,6 +15,53 @@ import {
 const STORY_REGION = '[data-cy="shell-region-story"]';
 const DUEL_REGION = '[data-cy="shell-region-duel"]';
 const SESSION_ROUTE = /#\/duel\/session\/[\w-]+$/;
+/* The deck and cards a new game is granted. A save standing on the map always
+   has both, and the briefing refuses to start an encounter for a save holding
+   no deck it can field.
+
+   Read off the bundled list here rather than through `buildStarterGrant`,
+   because that module reaches the list through a Vite `?raw` import and
+   Playwright loads this file without Vite. The list is the same one, and
+   `tests/unit/decks/starter-deck.test.ts` is what pins it legal against the
+   shipped card database. The stored verdict below is a placeholder: the
+   briefing recomputes every deck against the live catalog, which is the whole
+   point of the gate under test. */
+const STARTER = starterSave();
+
+function starterSave(): {
+  readonly deck: StoryDeck;
+  readonly collection: Record<number, number>;
+} {
+  const imported = importYdk(
+    readFileSync("src/decks/starter-deck.ydk", "utf8"),
+  );
+  if (imported.type !== "ready")
+    throw new Error(`Starter deck list is unreadable: ${imported.message}`);
+  const { main, extra, side } = imported.cards;
+  const collection: Record<number, number> = {};
+  for (const code of [...main, ...extra, ...side])
+    collection[code] = (collection[code] ?? 0) + 1;
+  return {
+    deck: {
+      schemaVersion: 1,
+      id: deckId("story-starter-deck"),
+      revision: 1,
+      name: "Starter Deck",
+      createdAt: "2026-08-20T00:00:00.000Z",
+      updatedAt: "2026-08-20T00:00:00.000Z",
+      main: [...main],
+      extra: [...extra],
+      side: [...side],
+      validation: {
+        status: "valid",
+        issues: [],
+        rulesetRevision: "prototype-2026-01",
+      },
+      importedNeedsReview: false,
+    },
+    collection,
+  };
+}
 
 /** Writes one story record straight into the database the story reads on
     mount. Playing 30 narrative beats per test would prove the prologue, which
@@ -55,6 +108,34 @@ async function seedMapProgress(page: Page): Promise<void> {
       screen: "map",
       savedScreen: "map",
       progressExists: true,
+      decks: [STARTER.deck],
+      defaultDeckId: STARTER.deck.id,
+      collection: STARTER.collection,
+    },
+  });
+  await page.reload();
+}
+
+/* A save whose default deck the collection no longer covers. Nobody edited it;
+   the cards behind it were sold, which is the state T25 badges in the library
+   and T26 warns about before the sale commits. */
+async function seedBrokenDefault(page: Page): Promise<void> {
+  await page.goto("./#/story");
+  await expect(page.locator(STORY_REGION)).toBeVisible();
+  const [sold] = STARTER.deck.main;
+  await putStorySave(page, {
+    schemaVersion: 3,
+    slot: "autosave",
+    revision: 1,
+    savedAt: Date.now(),
+    state: {
+      ...createInitialStoryState(),
+      screen: "map",
+      savedScreen: "map",
+      progressExists: true,
+      decks: [STARTER.deck],
+      defaultDeckId: STARTER.deck.id,
+      collection: { ...STARTER.collection, [sold!]: 0 },
     },
   });
   await page.reload();
@@ -68,7 +149,14 @@ async function reachEncounter(page: Page): Promise<void> {
   ).toBeVisible();
   await page.locator('[data-cy="story-map-location-old-arena"]').click();
   await expect(page.getByRole("heading", { name: "Rin's Echo" })).toBeVisible();
-  await page.locator('[data-cy="story-briefing-start"]').click();
+  /* Disabled until the card database has answered for the save's decks, which
+     is the whole read the duel is about to make anyway. */
+  const start = page.locator('[data-cy="story-briefing-start"]');
+  await expect(start).toBeEnabled({ timeout: 120_000 });
+  await expect(
+    page.locator('[data-cy="story-briefing-player-deck-value"]'),
+  ).toHaveText(STARTER.deck.name);
+  await start.click();
 }
 
 async function startPickedDuel(page: Page): Promise<void> {
@@ -265,4 +353,34 @@ test("a corrupt checkpoint lands on the story with progress intact", async ({
   await expect(
     page.getByRole("heading", { name: "City signal map" }),
   ).toBeVisible();
+});
+
+/* The refusal, end to end against the shipped card database: a deck the save
+   cannot field stops the duel, says which card is missing, and the way out it
+   offers actually opens the editor rather than dropping the run. */
+test("an encounter refuses a deck the save no longer owns and links to the editor", async ({
+  page,
+}) => {
+  await seedBrokenDefault(page);
+  await page.locator('[data-cy="story-title-continue"]').click();
+  await page.locator('[data-cy="story-map-location-old-arena"]').click();
+  await expect(page.getByRole("heading", { name: "Rin's Echo" })).toBeVisible();
+
+  const reason = page.locator('[data-cy="story-briefing-block-reason"]');
+  await expect(reason).toBeVisible({ timeout: 120_000 });
+  await expect(reason).toContainText("you own 0");
+  await expect(page.locator('[data-cy="story-briefing-start"]')).toBeDisabled();
+  await expect(
+    page.locator(`[data-cy="story-briefing-deck-${STARTER.deck.id}"]`),
+  ).toBeDisabled();
+
+  await page.locator('[data-cy="story-briefing-block-link"]').click();
+
+  await expect(page.locator('[data-cy="shell-region-decks"]')).toBeVisible({
+    timeout: 120_000,
+  });
+  await expect(page).toHaveURL(/#\/story\/decks$/);
+  await expect(
+    page.locator(`[data-cy="deck-library-illegal-${STARTER.deck.id}"]`),
+  ).toBeVisible({ timeout: 120_000 });
 });

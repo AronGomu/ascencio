@@ -1,11 +1,60 @@
 <script lang="ts">
+  import {
+    preBattleBlock,
+    preBattleSelection,
+    type PreBattleDeckOption,
+  } from "../decks/pre-battle-decks.ts";
+
   export let allowReturn = true;
+  /* Null while the card database is still being read. An empty catalog calls
+     every card missing, so a verdict reached before it lands would refuse every
+     deck in the save — the screen waits instead of refusing. */
+  export let decks: readonly PreBattleDeckOption[] | null = null;
+  export let defaultDeckId: string | null = null;
+  export let decksError: string | null = null;
   export let onstart: () => void = () => undefined;
   export let onreturn: () => void = () => undefined;
+  export let onselectdeck: (deckId: string) => void = () => undefined;
+  export let onretrydecks: () => void = () => undefined;
+
+  const DECKS_ROUTE = "#/story/decks";
+
   let started = false;
+  /* Null until the player picks for themselves, which is what lets the line
+     below stay derived: an opening selection recomputed on every flush cannot
+     overwrite a choice that was never stored there. */
+  let chosenId: string | null = null;
+  /* What this screen has already written into the save. Tracked here rather
+     than read back off `defaultDeckId`, so recording stays once-per-deck
+     whether or not the parent has flushed the new prop yet. */
+  let recordedId: string | null = null;
+
+  $: selectedId =
+    chosenId ??
+    (decks === null ? null : preBattleSelection(decks, defaultDeckId));
+  $: savedId = recordedId ?? defaultDeckId;
+  $: block = decks === null ? null : preBattleBlock(decks, selectedId);
+  $: selectedName =
+    decks?.find(({ id }) => id === selectedId)?.name ?? "No deck selected";
+  $: blocked = decksError !== null || decks === null || block !== null;
+
+  function record(deckId: string): void {
+    if (deckId === savedId) return;
+    recordedId = deckId;
+    onselectdeck(deckId);
+  }
+
+  function choose(deckId: string): void {
+    chosenId = deckId;
+    record(deckId);
+  }
+
   function start(): void {
-    if (started) return;
+    if (started || blocked || selectedId === null) return;
     started = true;
+    /* A fallback selection was chosen by nobody, so nothing recorded it. The
+       encounter is what makes it the save's deck. */
+    record(selectedId);
     onstart();
   }
 </script>
@@ -33,7 +82,7 @@
     <dl data-cy="story-briefing-facts">
       <div data-cy="story-briefing-player-deck-row">
         <dt data-cy="story-briefing-player-deck-term">Your deck</dt>
-        <dd data-cy="story-briefing-player-deck-value">Signal Deck</dd>
+        <dd data-cy="story-briefing-player-deck-value">{selectedName}</dd>
       </div>
       <div data-cy="story-briefing-opponent-deck-row">
         <dt data-cy="story-briefing-opponent-deck-term">Opponent deck</dt>
@@ -52,13 +101,74 @@
         </dd>
       </div>
     </dl>
+    <div class="deck-picker" data-cy="story-briefing-deck-picker">
+      <h2 id="deck-picker-heading" data-cy="story-briefing-deck-picker-heading">
+        Choose your deck
+      </h2>
+      {#if decksError !== null}
+        <p class="deck-error" role="alert" data-cy="story-briefing-deck-error">
+          {decksError}
+        </p>
+        <button
+          type="button"
+          class="secondary"
+          data-cy="story-briefing-deck-error-retry"
+          onclick={() => onretrydecks()}>Try again</button
+        >
+      {:else if decks === null}
+        <p role="status" data-cy="story-briefing-deck-checking">
+          Checking your decks against the card database…
+        </p>
+      {:else if decks.length > 0}
+        <ul
+          aria-labelledby="deck-picker-heading"
+          data-cy="story-briefing-deck-list"
+        >
+          {#each decks as deck (deck.id)}
+            <li data-cy={`story-briefing-deck-row-${deck.id}`}>
+              <button
+                type="button"
+                class="deck-choice"
+                class:illegal={!deck.legal}
+                data-cy={`story-briefing-deck-${deck.id}`}
+                disabled={!deck.legal}
+                aria-pressed={deck.id === selectedId}
+                aria-describedby={deck.issue === null
+                  ? null
+                  : `deck-issue-${deck.id}`}
+                onclick={() => choose(deck.id)}
+                ><span data-cy={`story-briefing-deck-name-${deck.id}`}
+                  >{deck.name}</span
+                ></button
+              >{#if deck.issue !== null}<p
+                  id={`deck-issue-${deck.id}`}
+                  class="deck-issue"
+                  data-cy={`story-briefing-deck-issue-${deck.id}`}
+                >
+                  {deck.issue}
+                </p>{/if}
+            </li>
+          {/each}
+        </ul>
+      {/if}
+      {#if block !== null}
+        <div class="deck-block" role="status" data-cy="story-briefing-block">
+          <p data-cy="story-briefing-block-reason">{block.reason}</p>
+          <a href={DECKS_ROUTE} data-cy="story-briefing-block-link"
+            >{block.action === "build"
+              ? "Build a deck"
+              : "Open the deck editor"}</a
+          >
+        </div>
+      {/if}
+    </div>
     <p class="checkpoint" role="status" data-cy="story-briefing-checkpoint">
       Your progress is saved before the duel starts.
     </p>
     <div class="actions" data-cy="story-briefing-actions">
       <button
         type="button"
-        disabled={started}
+        disabled={started || blocked}
         data-cy="story-briefing-start"
         onclick={start}>{started ? "Entering duel…" : "Start Duel"}</button
       >{#if allowReturn}<button
@@ -112,6 +222,51 @@
   dd {
     margin: 0.2rem 0 0;
     font-weight: 800;
+  }
+  .deck-picker {
+    margin-top: 1rem;
+  }
+  .deck-picker h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+  }
+  .deck-picker ul {
+    display: grid;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .deck-choice {
+    width: 100%;
+    background: transparent;
+    color: var(--story-text);
+    text-align: left;
+  }
+  .deck-choice[aria-pressed="true"] {
+    background: var(--story-accent);
+    color: var(--ink-on-accent);
+  }
+  /* The same danger border the deck library paints an `errors` row with, so a
+     deck refused here and a deck badged there read as one verdict. */
+  .deck-choice.illegal {
+    border-color: var(--danger);
+    color: var(--danger);
+    cursor: not-allowed;
+  }
+  .deck-issue,
+  .deck-error {
+    margin: 0.2rem 0 0;
+    color: var(--danger);
+    font-size: 0.85rem;
+  }
+  .deck-block {
+    margin-top: 0.6rem;
+    padding: 0.6rem;
+    border-left: 3px solid var(--danger);
+  }
+  .deck-block p {
+    margin: 0 0 0.3rem;
   }
   .checkpoint {
     padding: 0.7rem;

@@ -3105,3 +3105,64 @@ confirmation that fires on every sale is one the player learns to click through.
 
 - [ ] Take a save whose deck is already badged **CARDS NOT OWNED** (sell a card it uses, as above, and leave it broken).
 - [ ] Go back to **Sell** and sell one copy of a completely different card that no deck uses. No dialog — the already-broken deck is not reported, because this sale is not what broke it.
+
+## T27 pre-battle-deck-picker-legality
+
+The briefing before a story encounter now picks the deck the duel will use, out of the
+save's own decks. Legality is recomputed against the live card database and this save's
+collection every time the screen opens — the verdict stored on the deck record is a cache
+built with no catalog and is never trusted.
+
+Illegal means **errors**, never warnings. The deck a new game grants has no Extra and no
+Side deck, so it validates to *warnings* — and it must still start a duel. That case is the
+first one below, and it is the one that breaks worst: a gate that demanded a clean deck
+would lock every new player out of their very first encounter.
+
+### A brand-new save starts its first encounter on the deck it was granted
+
+- [ ] DevTools → Application → Storage → **Clear site data**, reload, open `#/story`, press **New Game**.
+- [ ] Tap through the prologue to the city map, then choose **Old Arena**.
+- [ ] The briefing shows **Choose your deck** with exactly one deck, **Starter Deck**, highlighted as selected. **Your deck** in the fact list reads **Starter Deck** — not a hardcoded name.
+- [ ] Briefly, while the card database loads, **Start Duel** is disabled and the picker reads *Checking your decks against the card database…*. It becomes enabled on its own within a few seconds. Nothing has to be clicked to unstick it.
+- [ ] No red border, no error text, no block message anywhere — the empty Extra and Side deck are warnings, not errors.
+- [ ] Press **Start Duel**. The duel starts as before.
+
+### A deck the save no longer owns the cards for is refused by name
+
+- [ ] From the map, enter the **card shop**, choose **Sell**, and sell a copy of a card **Starter Deck** uses (**Blue-Eyes White Dragon** works; confirm through the T26 warning dialog).
+- [ ] Leave the shop, choose **Old Arena**.
+- [ ] **Starter Deck** is listed with a red border and cannot be clicked. Under it is the first error, naming the card: *This deck uses N copy/copies of Blue-Eyes White Dragon; you own M.*
+- [ ] **Start Duel** is disabled. Below the list, a block message names the deck and repeats the reason.
+- [ ] **Return to Map** still works. This is the way out that never depends on the card database, and it is always there.
+
+### The block links to the story deck editor, not free play's
+
+- [ ] From that blocked briefing, press **Open the deck editor**. The URL becomes `#/story/decks` and the story deck library opens — the decks listed are this save's, and **Starter Deck** wears the **CARDS NOT OWNED** badge there too. The two screens agree.
+- [ ] Caveat worth knowing: navigating away from the story unmounts it. Progress made since your last save is not carried into the editor and is not carried back. Save first (pause menu → Save) if the run matters.
+
+### Choosing a different deck, and the choice sticking
+
+- [ ] Open `#/story/decks`, build a second deck of 40 cards you do own, and go back to `#/story`.
+- [ ] Reach the briefing. The broken deck is still preselected and still blocks — it is your save's default and you are told so rather than quietly moved off it.
+- [ ] Click the new deck. The red block disappears, **Your deck** updates to its name, and **Start Duel** enables.
+- [ ] Press **Return to Map**, then choose **Old Arena** again. The new deck is still the selected one — the pick was written into the save, not just into the screen.
+- [ ] Press **Start Duel**. The duel starts on that deck.
+
+### A save with no decks at all
+
+- [ ] In DevTools → Application → IndexedDB → `ygo-story-saves` → `saves`, edit your save record so `state.decks` is `[]` and `state.defaultDeckId` is `null`. Reload and load that save.
+- [ ] Choose **Old Arena**. No deck list appears. The block reads *This save has no decks yet. Build one to duel with.* and the link is labelled **Build a deck**.
+- [ ] **Start Duel** is disabled and **Return to Map** works.
+
+### A card database that will not load
+
+- [ ] DevTools → Network → **Offline**, then reload and reach the briefing (load a save that is already on the map).
+- [ ] The picker shows *The card database could not load.* with a **Try again** button. **Start Duel** is disabled — it never guesses a verdict without the catalog.
+- [ ] Turn Network back **Online** and press **Try again**. The deck list appears and **Start Duel** enables.
+- [ ] Repeat with the network still offline and press **Return to Map** instead. It works — a failed read never traps you on this screen.
+
+### Keyboard and screen reader
+
+- [ ] Tab through the briefing. Every legal deck button is reachable and shows a focus ring; illegal ones are skipped, being disabled.
+- [ ] Press **Space** or **Enter** on a legal deck. It becomes the selection and **Start Duel** enables.
+- [ ] With a screen reader on, the picker list is announced under its **Choose your deck** heading, and the block message is announced when it appears.

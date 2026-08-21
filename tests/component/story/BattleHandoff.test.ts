@@ -7,13 +7,27 @@ import PreBattleScreen from "../../../src/story/screens/PreBattleScreen.svelte";
 
 afterEach(() => cleanup());
 
+/* The briefing refuses to start without a deck it can field, so every render of
+   it here carries one. Which decks are offered and which are refused is
+   `tests/component/story/pre-battle-deck-picker.test.ts`. */
+const SIGNAL_DECK = {
+  id: "signal",
+  name: "Signal Deck",
+  legal: true,
+  issue: null,
+} as const;
+
 describe("battle handoff", () => {
   it("shows briefing details, checkpoint, conditional return, and starts once", async () => {
     const onstart = vi.fn();
-    const rendered = render(PreBattleScreen, { allowReturn: false, onstart });
+    const rendered = render(PreBattleScreen, {
+      allowReturn: false,
+      decks: [SIGNAL_DECK],
+      defaultDeckId: SIGNAL_DECK.id,
+      onstart,
+    });
     for (const text of [
       /Rin's Echo/i,
-      /Signal Deck/i,
       /Relay Deck/i,
       /Single duel/i,
       /Decode the challenge/i,

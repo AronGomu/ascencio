@@ -18,17 +18,20 @@
     type EditorLayoutMode,
     type EditorPane,
   } from "../layout/editor-layout.ts";
+  import { deckTapTargets, type TapTarget } from "../layout/tap-targets.ts";
   import {
-    catalogTapZone,
-    deckTapTargets,
-    type TapTarget,
-  } from "../layout/tap-targets.ts";
+    catalogCardClickIntent,
+    deckCardClickIntent,
+    type ClickIntent,
+    type ZoneCounts,
+  } from "../layout/click-intent.ts";
   import type { PickedCard } from "../drag-state.ts";
   import LoadDeckDialog from "./LoadDeckDialog.svelte";
   import type {
     DeckAutosaveRecord,
     DeckId,
   } from "../../decks/deck-contracts.ts";
+  import { handleModalKeydown } from "../focus-trap.ts";
 
   export let state: DeckBuilderState;
   export let cards: readonly DeckBuilderCardView[];
@@ -54,6 +57,11 @@
   export let onrestoreautosave: (entry: DeckAutosaveRecord) => void = () =>
     undefined;
   export let onopendeckbyid: (id: DeckId) => void = () => undefined;
+  export let defaultDeckId: DeckId | null = null;
+  export let onduplicate: () => void = () => undefined;
+  export let onexport: () => void = () => undefined;
+  export let onsetdefault: () => void = () => undefined;
+  export let ondelete: () => void = () => undefined;
 
   let selected: DeckBuilderCardView | null = null;
   let selectedCode: number | null = null;
@@ -62,12 +70,15 @@
   let picked: PickedCard | null = null;
   let dropHandled = false;
   let announcement = "";
+  let toSideboard = false;
   let deckName = state.current?.deck.name ?? "";
   let pane: EditorPane = defaultPane();
-  let tapped: { code: number; zone: DeckZone } | null = null;
+  let tapped: { code: number; zone: DeckZone; index: number } | null = null;
   let tapOpener: HTMLElement | null = null;
   let showLoad = false;
   let loadButton: HTMLButtonElement | null = null;
+  let confirmingDelete = false;
+  let deleteButton: HTMLButtonElement | null = null;
   let loadedAutosaves: readonly DeckAutosaveRecord[] = [];
 
   $: tabs = layoutMode === "tabs";
@@ -106,19 +117,23 @@
   }
 
   /* Every tap runs the same command the drag and keyboard paths run, so undo,
-     redo and autosave cannot tell the three apart. */
+     redo and autosave cannot tell the three apart, and it aims where the click
+     path aims — including at the sideboard when that checkbox is ticked. */
   function tapCatalogCard(card: DeckBuilderCardView): void {
-    selected = card;
-    selectedCode = card.code;
-    onmutate({ type: "add", cardCode: card.code });
-    announcement = `${card.name} added to ${catalogTapZone(card) === "main" ? "Main Deck" : "Extra Deck"}.`;
-    pane = paneAfterAdd(pane);
+    const intent = catalogCardClickIntent(
+      card.canonicalZone,
+      zoneCounts(),
+      toSideboard,
+    );
+    selectCard(card, card.code);
+    applyIntent(intent, card.code, "catalog");
+    if (intent.kind === "add") pane = paneAfterAdd(pane);
   }
 
-  function tapDeckCard(code: number, zone: DeckZone): void {
+  function tapDeckCard(code: number, zone: DeckZone, index: number): void {
     selectCard(catalog.get(code) ?? null, code);
     tapOpener = document.activeElement as HTMLElement | null;
-    tapped = { code, zone };
+    tapped = { code, zone, index };
   }
 
   function targetsFor(code: number, zone: DeckZone): readonly TapTarget[] {
@@ -150,7 +165,12 @@
     if (active === null) return;
     const name = catalog.get(active.code)?.name ?? `Card ${active.code}`;
     if (target === "remove") {
-      onmutate({ type: "remove", cardCode: active.code, zone: active.zone });
+      onmutate({
+        type: "remove",
+        cardCode: active.code,
+        zone: active.zone,
+        index: active.index,
+      });
       announcement = `${name} removed.`;
     } else {
       onmutate({
@@ -158,6 +178,7 @@
         cardCode: active.code,
         from: active.zone,
         to: target,
+        index: active.index,
       });
       announcement = `${name} moved to ${target}.`;
     }
@@ -174,6 +195,70 @@
   function selectCard(card: DeckBuilderCardView | null, code: number): void {
     selectedCode = code;
     selected = card ?? catalog.get(code) ?? null;
+  }
+
+  function zoneCounts(): ZoneCounts {
+    return {
+      main: deck?.main.length ?? 0,
+      extra: deck?.extra.length ?? 0,
+      side: deck?.side.length ?? 0,
+    };
+  }
+
+  /* One place turns an intent into a command, so the left click, the right
+     click and the tap menu cannot drift apart. */
+  function applyIntent(
+    intent: ClickIntent,
+    code: number,
+    from: DeckZone | "catalog",
+    index?: number,
+  ): void {
+    const name = catalog.get(code)?.name ?? `Card ${code}`;
+    if (intent.kind === "blocked") {
+      announcement = `${name}: ${intent.reason}`;
+      return;
+    }
+    if (intent.kind === "add") {
+      onmutate({ type: "add", cardCode: code, zone: intent.zone });
+      announcement = `${name} added to ${intent.zone}.`;
+      return;
+    }
+    /* A catalog tile has no copy in a zone to move or remove, and the catalog
+       deriver never asks for one; this narrows `from` to a real zone. */
+    if (from === "catalog") return;
+    if (intent.kind === "remove") {
+      onmutate({ type: "remove", cardCode: code, zone: from, index });
+      announcement = `${name} removed.`;
+      return;
+    }
+    onmutate({ type: "move", cardCode: code, from, to: intent.to, index });
+    announcement = `${name} moved to ${intent.to}.`;
+  }
+
+  function clickDeckCard(code: number, zone: DeckZone, index: number): void {
+    const card = catalog.get(code) ?? null;
+    selectCard(card, code);
+    /* A card the pinned catalog no longer knows has no canonical zone to
+       swap with, so removal is the only honest edit. */
+    if (card === null) {
+      applyIntent({ kind: "remove" }, code, zone, index);
+      return;
+    }
+    applyIntent(
+      deckCardClickIntent(zone, card.canonicalZone, zoneCounts()),
+      code,
+      zone,
+      index,
+    );
+  }
+
+  function clickCatalogCard(card: DeckBuilderCardView): void {
+    selectCard(card, card.code);
+    applyIntent(
+      catalogCardClickIntent(card.canonicalZone, zoneCounts(), toSideboard),
+      card.code,
+      "catalog",
+    );
   }
 
   function startCatalogDrag(
@@ -210,8 +295,11 @@
     const src = picked;
     const card = catalog.get(src.code);
     if (src.source === "catalog") {
-      if (card !== undefined && zone === card.canonicalZone) {
-        onmutate({ type: "add", cardCode: src.code });
+      if (
+        card !== undefined &&
+        (zone === card.canonicalZone || zone === "side")
+      ) {
+        onmutate({ type: "add", cardCode: src.code, zone });
         announcement = `${card.name} added to ${zone}.`;
       } else {
         announcement = `Card cannot be added to ${zone}.`;
@@ -235,7 +323,16 @@
       });
       announcement = `${card!.name} moved to ${zone}.`;
     } else {
-      onmutate({ type: "remove", cardCode: src.code, zone: src.source });
+      /* The dragged tile's own index, so a repeated card loses the copy the
+         player picked up rather than its first copy: the click and
+         context-menu paths already aim this way, and a drag that reads the
+         same tile has to agree with them. */
+      onmutate({
+        type: "remove",
+        cardCode: src.code,
+        zone: src.source,
+        ...(src.index === null ? {} : { index: src.index }),
+      });
       announcement = `${card?.name ?? `Card ${src.code}`} removed.`;
     }
     picked = null;
@@ -250,31 +347,29 @@
   }
 
   function contextAdd(card: DeckBuilderCardView): void {
-    const counts = {
-      main: deck?.main.length ?? 0,
-      extra: deck?.extra.length ?? 0,
-      side: deck?.side.length ?? 0,
-    };
-    const canonicalFull =
-      card.canonicalZone === "main" ? counts.main >= 60 : counts.extra >= 15;
-    const zone: DeckZone = canonicalFull ? "side" : card.canonicalZone;
-    if (canonicalFull && counts.side >= 15) {
-      announcement = `No space left for ${card.name}.`;
-      return;
-    }
-    onmutate({ type: "add", cardCode: card.code, zone });
-    announcement = `${card.name} added to ${zone}.`;
+    applyIntent(
+      catalogCardClickIntent(card.canonicalZone, zoneCounts(), toSideboard),
+      card.code,
+      "catalog",
+    );
   }
 
-  function contextRemove(code: number, zone: DeckZone): void {
-    onmutate({ type: "remove", cardCode: code, zone });
+  function contextRemove(code: number, zone: DeckZone, index: number): void {
+    onmutate({ type: "remove", cardCode: code, zone, index });
     announcement = `${catalog.get(code)?.name ?? `Card ${code}`} removed.`;
   }
 
   function endZoneDrag(): void {
     if (picked === null) return;
     if (!dropHandled && picked.source !== "catalog") {
-      onmutate({ type: "remove", cardCode: picked.code, zone: picked.source });
+      /* Same tile, same copy: a drag abandoned outside every zone removes the
+         one that was picked up. */
+      onmutate({
+        type: "remove",
+        cardCode: picked.code,
+        zone: picked.source,
+        ...(picked.index === null ? {} : { index: picked.index }),
+      });
       announcement = `${catalog.get(picked.code)?.name ?? `Card ${picked.code}`} removed.`;
     }
     picked = null;
@@ -292,6 +387,12 @@
     showLoad = false;
     await tick();
     loadButton?.focus();
+  }
+
+  async function closeDelete(): Promise<void> {
+    confirmingDelete = false;
+    await tick();
+    deleteButton?.focus();
   }
 
   function handleKeydown(event: KeyboardEvent): void {
@@ -350,6 +451,32 @@
     <button
       type="button"
       class="secondary"
+      data-cy="deck-editor-duplicate"
+      onclick={onduplicate}>Duplicate</button
+    >
+    <button
+      type="button"
+      class="secondary"
+      data-cy="deck-editor-export"
+      onclick={onexport}>Export</button
+    >
+    <button
+      type="button"
+      class="secondary"
+      data-cy="deck-editor-set-default"
+      disabled={deck?.id === defaultDeckId}
+      onclick={onsetdefault}>Set default</button
+    >
+    <button
+      type="button"
+      class="danger"
+      data-cy="deck-editor-delete"
+      bind:this={deleteButton}
+      onclick={() => (confirmingDelete = true)}>Delete</button
+    >
+    <button
+      type="button"
+      class="secondary"
       disabled={state.current?.history.undo.length === 0}
       data-cy="deck-editor-undo"
       onclick={onundo}
@@ -372,46 +499,6 @@
     >
   </header>
 
-  {#if state.saveState === "failed"}
-    <section
-      class="message error"
-      role="alert"
-      data-cy="deck-editor-save-failed"
-    >
-      <p data-cy="deck-editor-save-failed-message">{state.message}</p>
-      <button
-        type="button"
-        data-cy="deck-editor-retry-save"
-        onclick={onretrysave}>Retry autosave</button
-      >
-      <button
-        type="button"
-        class="secondary"
-        data-cy="deck-editor-reload-saved"
-        onclick={onreload}>Reload saved deck</button
-      >
-    </section>
-  {:else if state.saveState === "conflict"}
-    <section class="message error" role="alert" data-cy="deck-editor-conflict">
-      <p data-cy="deck-editor-conflict-message">{state.message}</p>
-      <button
-        type="button"
-        data-cy="deck-editor-reload-revision"
-        onclick={onreload}>Reload newer revision</button
-      >
-      <button
-        type="button"
-        class="secondary"
-        data-cy="deck-editor-preserve-copy"
-        onclick={onpreservecopy}>Preserve local edits as copy</button
-      >
-    </section>
-  {:else if state.message}
-    <p class="message" role="status" data-cy="deck-editor-message">
-      {state.message}
-    </p>
-  {/if}
-
   <p
     class="visually-hidden"
     role="status"
@@ -428,6 +515,55 @@
     aria-busy={state.saveState === "saving"}
     data-cy="deck-editor-layout"
   >
+    <!-- Always rendered, and empty it is a zero-height row: a message that
+         appeared outside the sized grid would push the panes past the stage
+         and hand the region a scrollbar (ADR-042). -->
+    <div class="message-strip" data-cy="deck-editor-message-strip">
+      {#if state.saveState === "failed"}
+        <section
+          class="message error"
+          role="alert"
+          data-cy="deck-editor-save-failed"
+        >
+          <p data-cy="deck-editor-save-failed-message">{state.message}</p>
+          <button
+            type="button"
+            data-cy="deck-editor-retry-save"
+            onclick={onretrysave}>Retry autosave</button
+          >
+          <button
+            type="button"
+            class="secondary"
+            data-cy="deck-editor-reload-saved"
+            onclick={onreload}>Reload saved deck</button
+          >
+        </section>
+      {:else if state.saveState === "conflict"}
+        <section
+          class="message error"
+          role="alert"
+          data-cy="deck-editor-conflict"
+        >
+          <p data-cy="deck-editor-conflict-message">{state.message}</p>
+          <button
+            type="button"
+            data-cy="deck-editor-reload-revision"
+            onclick={onreload}>Reload newer revision</button
+          >
+          <button
+            type="button"
+            class="secondary"
+            data-cy="deck-editor-preserve-copy"
+            onclick={onpreservecopy}>Preserve local edits as copy</button
+          >
+        </section>
+      {:else if state.message}
+        <p class="message" role="status" data-cy="deck-editor-message">
+          {state.message}
+        </p>
+      {/if}
+    </div>
+
     {#if tabs}
       <EditorTabs {pane} onselectpane={(next) => (pane = next)} />
     {/if}
@@ -463,7 +599,7 @@
           {picked}
           filled={tabs}
           onselect={selectCard}
-          ontap={tabs ? tapDeckCard : null}
+          ontap={tabs ? tapDeckCard : clickDeckCard}
           ondragcard={(code, zone, index, event) =>
             startZoneDrag(code, zone, index, event)}
           ondragcancel={endZoneDrag}
@@ -502,10 +638,12 @@
             selected = card;
             selectedCode = card.code;
           }}
-          ontap={tabs ? tapCatalogCard : null}
+          ontap={tabs ? tapCatalogCard : clickCatalogCard}
           ondragcard={(card, event) => startCatalogDrag(card, event)}
           ondragcancel={endZoneDrag}
           oncontextadd={contextAdd}
+          {toSideboard}
+          ontosideboardchange={(value) => (toSideboard = value)}
           onblocked={(card, reason) => {
             selected = card;
             selectedCode = card.code;
@@ -535,6 +673,51 @@
     />
   {/if}
 
+  {#if confirmingDelete}
+    <div
+      class="backdrop"
+      aria-hidden="true"
+      data-cy="deck-delete-backdrop"
+    ></div>
+    <div
+      class="dialog"
+      role="dialog"
+      aria-modal="true"
+      tabindex="-1"
+      aria-labelledby="deck-editor-delete-dialog-heading"
+      data-cy="deck-editor-delete-dialog"
+      onkeydown={(event) => handleModalKeydown(event, closeDelete)}
+    >
+      <h2
+        id="deck-editor-delete-dialog-heading"
+        tabindex="-1"
+        data-cy="deck-editor-delete-heading"
+      >
+        Delete {deck.name}?
+      </h2>
+      <p data-cy="deck-editor-delete-message">
+        Local deck and retained history will be removed.
+      </p>
+      <div class="actions" data-cy="deck-editor-delete-actions">
+        <button
+          type="button"
+          class="secondary"
+          data-cy="deck-editor-delete-cancel"
+          onclick={closeDelete}>Cancel</button
+        >
+        <button
+          type="button"
+          class="danger"
+          data-cy="deck-editor-delete-confirm"
+          onclick={() => {
+            ondelete();
+            void closeDelete();
+          }}>Delete {deck.name}</button
+        >
+      </div>
+    </div>
+  {/if}
+
   {#if showLoad}
     <div class="backdrop" aria-hidden="true" data-cy="load-deck-backdrop"></div>
     <LoadDeckDialog
@@ -556,12 +739,12 @@
 <style>
   .editor-header {
     display: grid;
-    grid-template-columns: auto auto 1fr auto auto auto;
+    grid-template-columns: auto auto 1fr repeat(7, auto);
     align-items: end;
     gap: 0.55rem;
-    width: calc(100% - 0.5rem);
-    margin-inline: auto;
-    padding-block: 0.75rem;
+    width: 100%;
+    margin-inline: 0;
+    padding: 0.6rem 0.25rem;
   }
 
   .editor-header button {
@@ -591,15 +774,22 @@
   }
 
   .editor-layout {
+    --deck-editor-header-h: 4.75rem;
+
     display: grid;
-    grid-template-columns: minmax(18rem, 0.9fr) minmax(38rem, 1.9fr) minmax(
-        17rem,
-        0.82fr
+    grid-template-columns: var(--preview-w, 15.5rem) minmax(0, 1fr) minmax(
+        16rem,
+        0.55fr
       );
-    gap: 0.75rem;
-    width: calc(100% - 0.5rem);
-    margin-inline: auto;
-    padding-bottom: 0.75rem;
+    grid-template-rows: auto minmax(0, 1fr);
+    /* No row gap: the strip is zero-height when silent, and its own message
+       carries the spacing when it is not. */
+    column-gap: 0.5rem;
+    row-gap: 0;
+    width: 100%;
+    height: calc(var(--stage-h, 100svh) - var(--deck-editor-header-h));
+    margin-inline: 0;
+    padding: 0 0.25rem 0.5rem;
   }
 
   /* Above the breakpoint the pane wrapper is not a box at all: the three
@@ -610,7 +800,7 @@
   }
 
   .pane :global(.card-preview-panel) {
-    height: calc(100vh - 5.5rem);
+    height: 100%;
     overflow-y: auto;
   }
 
@@ -625,9 +815,14 @@
     min-width: 0;
   }
 
+  .message-strip {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
   .message {
-    width: calc(100% - 0.5rem);
-    margin: 0 auto 0.6rem;
+    width: 100%;
+    margin: 0 0 0.4rem;
     padding: 0.65rem;
     border: 1px solid var(--border);
     border-radius: 0.5rem;
@@ -650,6 +845,27 @@
     background: color-mix(in srgb, var(--shadow) 68%, transparent);
   }
 
+  .dialog {
+    position: fixed;
+    z-index: 30;
+    inset: 50% auto auto 50%;
+    width: min(30rem, calc(100vw - 3rem));
+    padding: 1rem;
+    transform: translate(-50%, -50%);
+    border: 1px solid var(--border);
+    border-radius: 0.8rem;
+    background: var(--surface);
+    box-shadow: 0 1.5rem 5rem color-mix(in srgb, var(--shadow) 55%, transparent);
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
   /* Below the stage breakpoint the header wraps rather than scrolling sideways.
      The width matches `STAGE_BREAKPOINT_PX` in `src/shell/stage-layout.ts`. */
   @media (max-width: 1023.98px) {
@@ -657,17 +873,20 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      width: calc(100% - 1rem);
+      width: 100%;
       padding-block: 0.5rem;
+      padding-inline: 0.5rem;
     }
 
     .name-field {
       flex: 1 1 9rem;
     }
 
-    .editor-layout,
-    .message {
-      width: calc(100% - 1rem);
+    .editor-layout {
+      width: 100%;
+      height: auto;
+      padding-inline: 0.5rem;
+      grid-template-rows: auto;
     }
   }
 

@@ -61,13 +61,25 @@ describe("DeckEditor shell", () => {
     ).toBeNull();
   });
 
-  it("the header keeps only library, name, undo and redo controls", () => {
+  it("the header has library, name, action buttons and history controls", () => {
     renderEditor();
     expect(
       document.querySelector('[data-cy="deck-editor-library-link"]'),
     ).not.toBeNull();
     expect(
       document.querySelector('[data-cy="deck-name-input"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="deck-editor-duplicate"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="deck-editor-export"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="deck-editor-set-default"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="deck-editor-delete"]'),
     ).not.toBeNull();
     expect(
       document.querySelector('[data-cy="deck-editor-undo"]'),
@@ -83,7 +95,6 @@ describe("DeckEditor shell", () => {
       document.querySelector('[data-cy="deck-editor-save-status"]'),
     ).toBeNull();
     expect(document.querySelector('[data-cy="deck-editor-import"]')).toBeNull();
-    expect(document.querySelector('[data-cy="deck-editor-export"]')).toBeNull();
   });
 
   it("workspace and catalog render without decorative headings", () => {

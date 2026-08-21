@@ -12,7 +12,6 @@ import path from "node:path";
 import type { Plugin, ResolvedConfig, ViteDevServer } from "vite";
 import { parseRuntimeSnapshotManifest } from "../../src/battle/worker/assets/runtime-manifest.ts";
 import { buildActiveImageManifest } from "./active-image-manifest.ts";
-import { resolveActiveRuntimeFiles } from "./active-runtime-files.ts";
 
 const RUNTIME_PREFIX = "runtime/";
 
@@ -173,6 +172,15 @@ async function copyActiveCardImages(
   );
 }
 
+// Full snapshot (2026-08-20): ~45 MB across 451 declared files. Editor offers all 14,794 cards → duel must load any.
+export function snapshotCopyPaths(manifest: {
+  readonly assets: { readonly files: readonly { readonly path: string }[] };
+}): readonly string[] {
+  return [
+    ...new Set(["manifest.json", ...manifest.assets.files.map((f) => f.path)]),
+  ].sort();
+}
+
 async function copySnapshotAssets(
   projectRoot: string,
   runtimeOutput: string,
@@ -187,26 +195,18 @@ async function copySnapshotAssets(
       ),
     ) as unknown,
   );
-  const activePaths = await resolveActiveRuntimeFiles(projectRoot);
-  const declaredPaths = new Set(
-    runtimeManifest.assets.files.map((file) => file.path),
-  );
-  const undeclared = activePaths.find((file) => !declaredPaths.has(file));
-  if (undeclared !== undefined)
-    throw new Error(`Active runtime file is not declared: ${undeclared}`);
+  const paths = snapshotCopyPaths(runtimeManifest);
   await rm(destinationRoot, { recursive: true, force: true });
-  await Promise.all([
-    copyFileWithParents(
-      path.join(sourceRoot, "manifest.json"),
-      path.join(destinationRoot, "manifest.json"),
-    ),
-    ...activePaths.map(async (relativePath) => {
-      const source = resolveWithin(sourceRoot, relativePath);
-      const destination = resolveWithin(destinationRoot, relativePath);
-      await assertRealPathContained(sourceRoot, source);
-      await copyFileWithParents(source, destination);
-    }),
-  ]);
+  for (let i = 0; i < paths.length; i += 32) {
+    await Promise.all(
+      paths.slice(i, i + 32).map(async (relativePath) => {
+        const source = resolveWithin(sourceRoot, relativePath);
+        const destination = resolveWithin(destinationRoot, relativePath);
+        await assertRealPathContained(sourceRoot, source);
+        await copyFileWithParents(source, destination);
+      }),
+    );
+  }
 }
 
 async function copyThirdPartyLicenses(

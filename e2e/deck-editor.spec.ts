@@ -1,10 +1,16 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
   DECK_DATABASE_NAME,
   LEGACY_DECK_DATABASE_NAME,
 } from "../src/decks/deck-database.ts";
 
 const libraryUrl = "./#/decks";
+const BLUE_EYES = 89631139;
+/* The catalog is the whole card database, where a name is not unique: six
+   printings answer to "Summoned Skull" and three to "Celtic Guardian". Pick the
+   card by code, the way the rest of this file already does. */
+const SUMMONED_SKULL = 70781052;
+const CELTIC_GUARDIAN = 91152256;
 
 /* Both names, so a scenario that seeds the prototype database cannot leave one
    behind for the next scenario to migrate. */
@@ -21,6 +27,105 @@ async function deleteDeckDatabase(page: Page) {
     },
     [DECK_DATABASE_NAME, LEGACY_DECK_DATABASE_NAME],
   );
+}
+
+/* The counts moved into each zone's collapse bar, so "Main 1" is now the main
+   zone's own `1/40`. `40-60` only appears once the deck is past forty cards. */
+function zoneCount(page: Page, zone: "main" | "extra" | "side"): Locator {
+  return page.locator(`[data-cy="deck-zone-count-${zone}"]`);
+}
+
+function zoneTile(page: Page, zone: "main" | "extra" | "side", code: number) {
+  return page.locator(
+    `[data-cy="deck-zone-drop-area-${zone}"] [data-cy="deck-tile-${code}"]`,
+  );
+}
+
+/* The catalog and the deck render the same card as the same tile, so every
+   tile locator says which of the two it means. */
+function catalogTile(page: Page, code: number): Locator {
+  return page.locator(
+    `[data-cy="deck-catalog-results"] [data-cy="deck-tile-${code}"]`,
+  );
+}
+
+interface DeckCounts {
+  readonly main: number;
+  readonly extra: number;
+  readonly side: number;
+}
+
+/* Reads the deck row the editor writes, not the one it is holding. */
+async function persistedDeckCounts(
+  page: Page,
+  deckId: string,
+): Promise<DeckCounts | null> {
+  return page.evaluate(
+    async ([name, id]) => {
+      const database = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open(name);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      try {
+        if (!database.objectStoreNames.contains("decks")) return null;
+        const record = await new Promise<{
+          main: readonly number[];
+          extra: readonly number[];
+          side: readonly number[];
+        } | null>((resolve, reject) => {
+          const request = database
+            .transaction("decks", "readonly")
+            .objectStore("decks")
+            .get(id);
+          request.onsuccess = () =>
+            resolve(
+              (request.result as {
+                main: readonly number[];
+                extra: readonly number[];
+                side: readonly number[];
+              } | null) ?? null,
+            );
+          request.onerror = () => reject(request.error);
+        });
+        return record === null
+          ? null
+          : {
+              main: record.main.length,
+              extra: record.extra.length,
+              side: record.side.length,
+            };
+      } finally {
+        database.close();
+      }
+    },
+    [DECK_DATABASE_NAME, deckId] as const,
+  );
+}
+
+/* `aria-busy` on the editor layout is `saveState === "saving"` and nothing
+   else, so its absence is equally true of `saved`, `failed`, `conflict` and of
+   `idle` before the queued save has begun — four of the five states, two of
+   them failures. It is also unordered: a mutation chains onto a promise queue,
+   so the click resolves at least a microtask before `saveState` leaves the
+   value it already had, and the first poll lands inside that window. Neither
+   the scenarios that follow a save nor the second browser context that has to
+   lose a revision race can stand on that.
+
+   What only a committed save produces is the deck row itself. The expected
+   card counts are passed in rather than read back off the page, because the
+   page is the thing under test: comparing the database to the DOM passes
+   whenever both are still one step behind. */
+async function expectSaveSettled(page: Page, expected: DeckCounts) {
+  const deckId = new URL(page.url()).hash.replace(/^#\/decks\//, "");
+  expect(deckId, "expectSaveSettled must be called on a deck route").not.toBe(
+    "",
+  );
+  await expect
+    .poll(() => persistedDeckCounts(page, deckId), {
+      message: `the saved deck row should hold ${expected.main}/${expected.extra}/${expected.side}`,
+    })
+    .toEqual(expected);
 }
 
 test("default route shows the home hub", async ({ page }) => {
@@ -48,110 +153,89 @@ test("deck editor persists edits across reloads", async ({ page }) => {
     ),
   ).toBe(true);
   await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
-  const blueEyes = page.getByRole("button", {
-    name: /Blue-Eyes White Dragon.*Unlimited/,
-  });
+  const blueEyes = catalogTile(page, BLUE_EYES);
   await expect(blueEyes).toBeVisible();
+  /* A catalog click both selects the card and adds it to its canonical zone. */
   await blueEyes.click();
   await expect(
     page.getByText(
       "This legendary dragon is a powerful engine of destruction.",
     ),
   ).toBeVisible();
-  const mainDropArea = page.getByRole("group", {
-    name: "Main Deck drop area",
-  });
-  await blueEyes.dragTo(mainDropArea);
-  await expect(page.getByLabel("Deck counts")).toContainText("Main 1");
-  await expect(page.getByText("Saved locally")).toBeVisible();
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+  await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
 
+  /* Dragging is still its own path into the deck, so a second copy arrives
+     that way and undo/redo has to see both adds. */
+  await blueEyes.dragTo(page.locator('[data-cy="deck-zone-drop-area-main"]'));
+  await expect(zoneCount(page, "main")).toHaveText("2/40");
   await page.getByRole("button", { name: "Undo" }).click();
-  await expect(page.getByLabel("Deck counts")).toContainText("Main 0");
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
   await page.getByRole("button", { name: "Redo" }).click();
-  await expect(page.getByLabel("Deck counts")).toContainText("Main 1");
-
-  const mainCard = mainDropArea.getByRole("button", {
-    name: /Blue-Eyes White Dragon/,
-  });
-  await mainCard.focus();
-  await mainCard.press("Space");
-  await page
-    .getByRole("button", { name: "Drop picked card in Side Deck" })
-    .click();
-  await expect(page.getByLabel("Deck counts")).toContainText("Side 1");
-  const sideCard = page
-    .getByRole("group", { name: "Side Deck drop area" })
-    .getByRole("button", { name: /Blue-Eyes White Dragon/ });
-  await sideCard.focus();
-  await sideCard.press("Space");
-  await page
-    .getByRole("button", { name: "Drop picked card in Main Deck" })
-    .click();
-  await mainCard.focus();
-  await mainCard.press("Space");
-  await page.getByRole("button", { name: "Remove picked card" }).click();
-  await expect(page.getByLabel("Deck counts")).toContainText("Main 0");
+  await expect(zoneCount(page, "main")).toHaveText("2/40");
   await page.getByRole("button", { name: "Undo" }).click();
-  await expect(page.getByLabel("Deck counts")).toContainText("Main 1");
-  await expect(page.getByText("Saved locally")).toBeVisible();
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+
+  /* Above the breakpoint a left click on a deck card is the move itself: out
+     of the Main Deck goes to the Side Deck, and back again from there. */
+  await zoneTile(page, "main", BLUE_EYES).click();
+  await expect(zoneCount(page, "side")).toHaveText("1/15");
+  await expect(zoneCount(page, "main")).toHaveText("0/40");
+  await zoneTile(page, "side", BLUE_EYES).click();
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+  await expect(zoneCount(page, "side")).toHaveText("0/15");
+  /* Right click is the remove that the picked-card toolbar used to spell. */
+  await zoneTile(page, "main", BLUE_EYES).click({ button: "right" });
+  await expect(zoneCount(page, "main")).toHaveText("0/40");
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+  await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
 
   await page.reload();
   await expect(page.getByLabel("Deck name")).toHaveValue("E2E Control");
-  await expect(page.getByLabel("Deck counts")).toContainText("Main 1");
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
 
-  await page.getByRole("button", { name: "Import" }).click();
-  await page
-    .getByLabel("Or paste YDK text")
-    .fill("#main\n99999999\n#extra\n!side\n");
-  await page.getByRole("button", { name: "Preview import" }).click();
-  await page.getByRole("button", { name: "Replace deck cards" }).click();
+  /* A one-card deck is invalid, and exporting one says so rather than
+     refusing. */
+  await page.locator('[data-cy="deck-editor-export"]').click();
   await expect(
-    page.getByRole("button", { name: /Missing card 99999999/ }),
-  ).toBeVisible();
-
-  await page.getByRole("button", { name: "Export" }).click();
-  await expect(page.getByRole("alert")).toContainText("invalid");
+    page.locator('[data-cy="deck-ydk-export-warning"]'),
+  ).toContainText("invalid");
   await page.getByRole("button", { name: "Close" }).click();
   await page.reload();
-  await expect(
-    page.getByRole("button", { name: /Missing card 99999999/ }),
-  ).toBeVisible();
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
 
-  await page.getByRole("button", { name: "Deck Library" }).click();
-  await page.getByRole("button", { name: "Rename" }).click();
-  await page.getByLabel("Deck name").fill("E2E Renamed");
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: "Rename", exact: true })
-    .click();
-  await expect(page.getByLabel("Deck name")).toHaveValue("E2E Renamed");
-  await page.getByRole("button", { name: "Deck Library" }).click();
-  await page.getByRole("button", { name: "Duplicate" }).first().click();
-  await expect(page.getByLabel("Deck name")).toHaveValue("E2E Renamed Copy");
-  await expect(page.getByLabel("Deck counts")).toContainText("Main 1");
-  await expect(
-    page.getByRole("button", { name: /Missing card 99999999/ }),
-  ).toBeVisible();
-  await page.reload();
-  await expect(page.getByLabel("Deck name")).toHaveValue("E2E Renamed Copy");
-  await expect(page.getByLabel("Deck counts")).toContainText("Main 1");
-  await page.getByRole("button", { name: "Deck Library" }).click();
-  await page.getByRole("button", { name: "Delete" }).first().click();
-  await expect(page.getByRole("dialog")).toContainText(
-    "Local deck and retained history",
+  // Rename via deck-name-input (A7: commit on blur, no dialog)
+  const nameInput = page.locator('[data-cy="deck-name-input"]');
+  await nameInput.fill("E2E Renamed");
+  await nameInput.blur();
+  await expect(nameInput).toHaveValue("E2E Renamed");
+
+  // Duplicate via deck page
+  await page.locator('[data-cy="deck-editor-duplicate"]').click();
+  await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
+    "E2E Renamed Copy",
   );
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: /Delete / })
-    .click();
-  await expect(
-    page.getByRole("button", { name: /E2E Renamed Copy/ }),
-  ).toHaveCount(0);
-  await expect(page.getByRole("button", { name: /E2E Renamed/ })).toBeVisible();
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+  await expect(zoneTile(page, "main", BLUE_EYES)).toBeVisible();
   await page.reload();
+  await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
+    "E2E Renamed Copy",
+  );
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+
+  // Delete via deck page — confirm dialog, then land on library
+  await page.locator('[data-cy="deck-editor-delete"]').click();
   await expect(
-    page.getByRole("button", { name: /E2E Renamed Copy/ }),
-  ).toHaveCount(0);
+    page.locator('[data-cy="deck-editor-delete-dialog"]'),
+  ).toBeVisible();
+  await page.locator('[data-cy="deck-editor-delete-confirm"]').click();
+  const list = page.locator('[data-cy="deck-library-list"]');
+  await expect(page.locator('[data-cy="deck-library"]')).toBeVisible();
+  await expect(list).not.toContainText("E2E Renamed Copy");
+  await expect(page.getByText("E2E Renamed", { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(list).not.toContainText("E2E Renamed Copy");
 });
 
 test("the deck route deep-links, survives a reload and answers Back", async ({
@@ -185,30 +269,39 @@ test("the deck route deep-links, survives a reload and answers Back", async ({
   await expect(page.locator('[data-cy="deck-not-found"]')).toBeVisible();
   await page.locator('[data-cy="deck-not-found-back"]').click();
   await expect(page.locator('[data-cy="deck-library"]')).toBeVisible();
-  await expect(page.getByRole("button", { name: /Deep Link/ })).toBeVisible();
+  /* Anchored, because the row's favourite toggle is named after the deck too. */
+  await expect(page.getByRole("button", { name: /^Deep Link/ })).toBeVisible();
 });
 
 test("Deck Library imports one persisted undoable update", async ({ page }) => {
   await page.goto(libraryUrl);
   await deleteDeckDatabase(page);
   await page.reload();
-  await page.getByRole("button", { name: "Import YDK" }).click();
+  await page.locator('[data-cy="deck-library-import"]').click();
   await page.getByLabel("Deck name").fill("Library Import E2E");
   await page
     .getByLabel("Or paste YDK text")
     .fill("#main\n99999999\n#extra\n!side\n");
   await page.getByRole("button", { name: "Preview import" }).click();
   await page.getByRole("button", { name: "Replace deck cards" }).click();
-  await expect(page.getByLabel("Deck name")).toHaveValue("Library Import E2E");
-  await expect(
-    page.getByRole("button", { name: /Missing card 99999999/ }),
-  ).toBeVisible();
+  await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
+    "Library Import E2E",
+  );
+  /* A code the pinned catalog does not know stays in the deck as a tile that
+     says so; nothing is repaired silently. */
+  await expect(zoneTile(page, "main", 99999999)).toHaveAttribute(
+    "aria-label",
+    /Missing card 99999999/,
+  );
   await expect(page.getByRole("button", { name: "Undo" })).toBeEnabled();
   await page.reload();
-  await expect(page.getByLabel("Deck name")).toHaveValue("Library Import E2E");
-  await expect(
-    page.getByRole("button", { name: /Missing card 99999999/ }),
-  ).toBeVisible();
+  await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
+    "Library Import E2E",
+  );
+  await expect(zoneTile(page, "main", 99999999)).toHaveAttribute(
+    "aria-label",
+    /Missing card 99999999/,
+  );
 });
 
 test("the deck editor recovers real save failures and revision conflicts", async ({
@@ -240,42 +333,33 @@ test("the deck editor recovers real save failures and revision conflicts", async
     });
   });
   await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
-  const blueEyes = page.getByRole("button", { name: /Blue-Eyes White Dragon/ });
-  await blueEyes.focus();
-  await blueEyes.press("Space");
-  await page
-    .getByRole("button", { name: "Drop picked card in Main Deck" })
-    .click();
+  await catalogTile(page, BLUE_EYES).click();
   await expect(page.getByRole("alert")).toContainText(
     "simulated transaction failure",
   );
   await page.getByRole("button", { name: "Retry autosave" }).click();
-  await expect(page.getByText("Saved locally")).toBeVisible();
+  /* The banner is the failure; its absence is the recovery. */
+  await expect(page.locator('[data-cy="deck-editor-save-failed"]')).toHaveCount(
+    0,
+  );
+  await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
 
   /* `#/decks` is the library now, so the second context has to deep-link at
      the deck under test rather than rely on a last-opened pointer. */
   const second = await context.newPage();
   await second.goto(`./${new URL(page.url()).hash}`);
-  await expect(second.getByLabel("Deck counts")).toContainText("Main 1");
+  await expect(zoneCount(second, "main")).toHaveText("1/40");
 
   await page.getByRole("searchbox", { name: "Name" }).fill("Summoned Skull");
-  const summonedSkull = page.getByRole("button", { name: /Summoned Skull/ });
-  await summonedSkull.focus();
-  await summonedSkull.press("Space");
-  await page
-    .getByRole("button", { name: "Drop picked card in Main Deck" })
-    .click();
-  await expect(page.getByText("Saved locally")).toBeVisible();
+  await catalogTile(page, SUMMONED_SKULL).click();
+  await expect(zoneCount(page, "main")).toHaveText("2/40");
+  /* The second context loses the revision race only if this save has actually
+     landed before it tries its own; that is exactly what the old barrier could
+     not promise. */
+  await expectSaveSettled(page, { main: 2, extra: 0, side: 0 });
 
   await second.getByRole("searchbox", { name: "Name" }).fill("Celtic Guardian");
-  const celticGuardian = second.getByRole("button", {
-    name: /Celtic Guardian/,
-  });
-  await celticGuardian.focus();
-  await celticGuardian.press("Space");
-  await second
-    .getByRole("button", { name: "Drop picked card in Main Deck" })
-    .click();
+  await catalogTile(second, CELTIC_GUARDIAN).click();
   await expect(second.getByRole("alert")).toContainText(
     "changed by another browser context",
   );
@@ -285,7 +369,7 @@ test("the deck editor recovers real save failures and revision conflicts", async
   await expect(second.getByLabel("Deck name")).toHaveValue(
     "Recovery E2E Recovered Copy",
   );
-  await expect(second.getByLabel("Deck counts")).toContainText("Main 2");
+  await expect(zoneCount(second, "main")).toHaveText("2/40");
   await second.reload();
   await expect(second.getByLabel("Deck name")).toHaveValue(
     "Recovery E2E Recovered Copy",
@@ -352,7 +436,8 @@ test("a prototype deck database is migrated on first load", async ({
   }, LEGACY_DECK_DATABASE_NAME);
 
   await page.reload();
-  const migrated = page.getByRole("button", { name: /Prototype Survivor/ });
+  /* Anchored, because the row's favourite toggle is named after the deck too. */
+  const migrated = page.getByRole("button", { name: /^Prototype Survivor/ });
   await expect(migrated).toBeVisible();
 
   const names = await page.evaluate(async () =>
@@ -365,7 +450,7 @@ test("a prototype deck database is migrated on first load", async ({
      migration copied more than the deck row. */
   await migrated.click();
   await expect(page.getByLabel("Deck name")).toHaveValue("Prototype Survivor");
-  await expect(page.getByLabel("Deck counts")).toContainText("Main 1");
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
 });
 
 test("the deck editor builds a deck by tap on a small screen", async ({
@@ -380,25 +465,22 @@ test("the deck editor builds a deck by tap on a small screen", async ({
   await page.getByLabel("Deck name").fill("Portrait Build");
   await page.getByRole("button", { name: "Create", exact: true }).click();
 
-  /* One pane at a time, and the counts stay on screen in every one of them. */
-  const counts = page.getByLabel("Deck counts");
-  await expect(counts).toBeVisible();
+  /* One pane at a time, and the deck pane carries the counts. */
+  const main = zoneCount(page, "main");
+  const side = zoneCount(page, "side");
+  await expect(main).toBeVisible();
   await expect(page.locator('[data-cy="deck-pane-deck"]')).toBeVisible();
   await expect(page.locator('[data-cy="deck-pane-catalog"]')).toHaveCount(0);
 
   await page.locator('[data-cy="deck-tab-catalog"]').click();
-  await expect(counts).toBeVisible();
   await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
-  await page
-    .getByRole("button", { name: /Blue-Eyes White Dragon/ })
-    .first()
-    .click();
-  await expect(counts).toContainText("Main 1");
+  await catalogTile(page, BLUE_EYES).click();
   /* Adding leaves the catalog open, so the next card is one tap away. */
   await expect(page.locator('[data-cy="deck-pane-catalog"]')).toBeVisible();
-  await expect(page.getByText("Saved locally")).toBeVisible();
+  await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
 
   await page.locator('[data-cy="deck-tab-deck"]').click();
+  await expect(main).toHaveText("1/40");
   /* The tile itself, not the validation issue that also names the card. */
   const deckTile = page.locator(
     '[data-cy="deck-pane-deck"] [data-cy="deck-tile-89631139"]',
@@ -410,19 +492,19 @@ test("the deck editor builds a deck by tap on a small screen", async ({
     page.locator('[data-cy="deck-tap-target-extra"]'),
   ).toBeDisabled();
   await page.locator('[data-cy="deck-tap-target-side"]').click();
-  await expect(counts).toContainText("Side 1");
-  await expect(counts).toContainText("Main 0");
+  await expect(side).toHaveText("1/15");
+  await expect(main).toHaveText("0/40");
 
   await deckTile.click();
   await page.locator('[data-cy="deck-tap-target-remove"]').click();
-  await expect(counts).toContainText("Side 0");
+  await expect(side).toHaveText("0/15");
 
   await page.getByRole("button", { name: "Undo" }).click();
-  await expect(counts).toContainText("Side 1");
-  await expect(page.getByText("Saved locally")).toBeVisible();
+  await expect(side).toHaveText("1/15");
+  await expectSaveSettled(page, { main: 0, extra: 0, side: 1 });
   await page.reload();
   await expect(page.getByLabel("Deck name")).toHaveValue("Portrait Build");
-  await expect(counts).toContainText("Side 1");
+  await expect(side).toHaveText("1/15");
 
   /* No sideways scroll at any of the sizes the editor now has to serve. */
   for (const size of [
@@ -462,9 +544,212 @@ test("the deck editor keeps its three panels above the breakpoint", async ({
   for (const pane of ["catalog", "deck", "details"])
     await expect(page.locator(`[data-cy="deck-pane-${pane}"]`)).toHaveCount(1);
   await expect(page.getByRole("tablist")).toHaveCount(0);
-  /* A click above the breakpoint still only selects: no tap menu, no add. */
+  /* The tap menu stays a touch affordance: above the breakpoint a catalog
+     click is the add itself, with no menu in between. */
   await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
-  await page.getByRole("button", { name: /Blue-Eyes White Dragon/ }).click();
+  await catalogTile(page, BLUE_EYES).click();
   await expect(page.locator('[data-cy="deck-tap-menu"]')).toHaveCount(0);
-  await expect(page.getByLabel("Deck counts")).toContainText("Main 0");
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+});
+
+test("the deck editor fits the stage without a region scrollbar", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.getByLabel("Deck name").fill("Viewport Fit");
+  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await expect(page.locator('[data-cy="deck-editor-layout"]')).toBeVisible();
+
+  const region = page.locator('[data-cy="shell-region-decks"]');
+  const measure = () =>
+    region.evaluate((el) => ({
+      fitsVertically: el.scrollHeight <= el.clientHeight + 1,
+      fitsHorizontally: el.scrollWidth <= el.clientWidth + 1,
+    }));
+  const scrolls = await measure();
+  expect(scrolls.fitsVertically, "region must not scroll vertically").toBe(
+    true,
+  );
+  expect(scrolls.fitsHorizontally, "region must not scroll horizontally").toBe(
+    true,
+  );
+
+  /* A status message is the ordinary state of this page, not an exception to
+     it: Duplicate posts one, and the budget has to hold while it shows. */
+  await page.locator('[data-cy="deck-editor-duplicate"]').click();
+  await expect(page.locator('[data-cy="deck-editor-message"]')).toHaveText(
+    "Deck duplicated.",
+  );
+  const withMessage = await measure();
+  expect(
+    withMessage.fitsVertically,
+    "region must not scroll vertically while a message shows",
+  ).toBe(true);
+  expect(
+    withMessage.fitsHorizontally,
+    "region must not scroll horizontally while a message shows",
+  ).toBe(true);
+});
+
+test("the card viewer is card width", async ({ page }) => {
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.getByLabel("Deck name").fill("Card Width");
+  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await expect(page.locator('[data-cy="deck-editor-layout"]')).toBeVisible();
+
+  const preview = page.locator('[data-cy="card-preview-panel"]');
+  const box = await preview.boundingBox();
+  expect(box, "card-preview-panel must be visible").not.toBeNull();
+  const expectedPx = 15.5 * 16;
+  expect(
+    Math.abs(box!.width - expectedPx),
+    `card-preview-panel width ${box!.width}px should be within 10px of ${expectedPx}px`,
+  ).toBeLessThanOrEqual(10);
+});
+
+/* jsdom holds no component CSS — `vite-plugin-svelte` keeps it out of the
+   document, so `getComputedStyle` answers `none` for every grid property —
+   which leaves the unit test in `card-tile-art.test.ts` reading rules out of
+   the source. Whether those rules add up to art that fills the tile is a
+   question only a real box tree answers, so it is asked here: without
+   `grid-template-areas: "card"` and `.card-tile > * { grid-area: card }` the
+   badge, the art and the name take a row each and the art collapses to a strip
+   across the top of the tile. */
+test("the tile art fills the tile", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.getByLabel("Deck name").fill("Art Fit");
+  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
+
+  const tile = catalogTile(page, BLUE_EYES);
+  await expect(tile).toBeVisible();
+  /* Whichever of the two this build has for the card: the image when it
+     packages art, the placeholder glyph when it does not. Both sit in the same
+     grid area and both have to fill it. */
+  const art = tile.locator(
+    `[data-cy="deck-tile-image-${BLUE_EYES}"], [data-cy="deck-tile-art-${BLUE_EYES}"]`,
+  );
+  await expect(art).toHaveCount(1);
+
+  /* The tile's content box rather than its border box: the 1px border is not
+     something the art is supposed to cover. */
+  const inner = await tile.evaluate((el) => ({
+    width: el.clientWidth,
+    height: el.clientHeight,
+    scrollHeight: el.scrollHeight,
+  }));
+  const tileBox = (await tile.boundingBox())!;
+  const artBox = (await art.boundingBox())!;
+  const nameBox = (await tile
+    .locator(`[data-cy="deck-tile-name-${BLUE_EYES}"]`)
+    .boundingBox())!;
+  expect(tileBox, "the catalog tile must be laid out").not.toBeNull();
+  expect(artBox, "the tile art must be laid out").not.toBeNull();
+  expect(nameBox, "the tile name must be laid out").not.toBeNull();
+  expect(inner.height, "a card tile is taller than it is wide").toBeGreaterThan(
+    inner.width,
+  );
+
+  expect(
+    artBox.height,
+    `art ${artBox.height}px should cover the ${inner.height}px tile interior`,
+  ).toBeGreaterThanOrEqual(inner.height - 1);
+  expect(
+    artBox.width,
+    `art ${artBox.width}px should cover the ${inner.width}px tile interior`,
+  ).toBeGreaterThanOrEqual(inner.width - 1);
+  /* Covering it from the top-left corner, not overflowing past it. */
+  expect(Math.abs(artBox.y - tileBox.y)).toBeLessThanOrEqual(2);
+  expect(Math.abs(artBox.x - tileBox.x)).toBeLessThanOrEqual(2);
+
+  /* The art filling the tile is not by itself the thing the grid area buys.
+     A card image already has the tile's own 59:86 proportions, so an image
+     that loaded is about tile-sized whether or not it shares an area with the
+     name; what it does not do is leave room for the name underneath. Take the
+     rows away and the two stack to 209px inside a 176px tile, `overflow:
+     hidden` eats the name, and the tile the player reads has no title on it.
+     So: the name sits over the art, and nothing spills out of the tile. */
+  expect(
+    nameBox.y,
+    `the name at ${nameBox.y} should sit over art starting at ${artBox.y}`,
+  ).toBeGreaterThanOrEqual(artBox.y - 1);
+  expect(
+    nameBox.y + nameBox.height,
+    "the name should end inside the tile rather than under its clipped edge",
+  ).toBeLessThanOrEqual(tileBox.y + tileBox.height + 1);
+  expect(
+    inner.scrollHeight,
+    `tile content ${inner.scrollHeight}px overflows its ${inner.height}px box`,
+  ).toBeLessThanOrEqual(inner.height + 1);
+});
+
+/* The tabbed layout hands `CardCatalog` `filled`, which stops `.results` being
+   a scroll container: `overflow-y: visible`, `scrollHeight === clientHeight`,
+   and an ancestor doing the scrolling. An observer rooted on a box that never
+   clips watches a sentinel that never leaves it, so the callback stopped
+   arriving — measured here before the fix, the window burst to 543 tiles with
+   no gesture and then stalled at 599 of 14,551 across six scrolls to the
+   bottom. Only a real layout shows that, which is why this case is here rather
+   than beside the jsdom observer tests. */
+test("the catalog keeps loading past the second page on a phone", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+
+  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.getByLabel("Deck name").fill("Scroll Build");
+  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.locator('[data-cy="deck-tab-catalog"]').click();
+
+  const tiles = page.locator(
+    '[data-cy="deck-catalog-results"] [data-cy^="deck-tile-"]',
+  );
+  await expect(tiles.first()).toBeVisible();
+  await expect(
+    page.locator('[data-cy="deck-catalog-result-count"]'),
+  ).toHaveText(/\d{4,} results/);
+
+  /* Still a window and not the whole database: the first render settles around
+     300 of them. */
+  await page.waitForTimeout(1500);
+  expect(
+    await tiles.count(),
+    "the first render must stay a window over the database",
+  ).toBeLessThan(1000);
+
+  /* And the window keeps growing, which is what stalled. */
+  const scrollToBottom = () =>
+    page.evaluate(() => {
+      const region = document.querySelector(
+        '[data-cy="shell-region-decks"]',
+      ) as HTMLElement | null;
+      region?.scrollTo({ top: region.scrollHeight });
+    });
+  await expect
+    .poll(
+      async () => {
+        await scrollToBottom();
+        return tiles.count();
+      },
+      {
+        timeout: 30_000,
+        message: "scrolling to the bottom must keep appending results",
+      },
+    )
+    .toBeGreaterThan(1200);
 });

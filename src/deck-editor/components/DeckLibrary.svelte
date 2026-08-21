@@ -3,30 +3,26 @@
   import { handleModalKeydown } from "../focus-trap.ts";
   import type { DeckId, DeckRecord } from "../../decks/deck-contracts.ts";
   import { MAXIMUM_DECK_NAME_LENGTH } from "../../decks/deck-model.ts";
+  import {
+    orderDeckLibrary,
+    type DeckLibrarySort,
+  } from "../../decks/deck-library-order.ts";
 
   export let decks: readonly DeckRecord[];
   export let message: string | null = null;
   export let oncreate: (name: string) => unknown | Promise<unknown>;
   export let onopen: (id: DeckId) => unknown | Promise<unknown>;
-  export let onrename: (
-    deck: DeckRecord,
-    name: string,
-  ) => unknown | Promise<unknown>;
-  export let onduplicate: (id: DeckId) => unknown | Promise<unknown>;
-  export let ondelete: (deck: DeckRecord) => unknown | Promise<unknown>;
-  export let onexport: (deck: DeckRecord) => void;
   export let onimport: () => void;
   /** Which row wears the badge; the controller owns the value, not the click. */
   export let defaultDeckId: DeckId | null = null;
-  export let onsetdefault: (id: DeckId) => void = () => undefined;
+  export let favouriteDeckIds: readonly DeckId[] = [];
+  export let onfavourite: (id: DeckId, favourite: boolean) => void = () =>
+    undefined;
 
   let search = "";
-  let sort: "modified" | "name" = "modified";
+  let sort: DeckLibrarySort = "modified";
   let creating = false;
   let createName = "";
-  let renaming: DeckRecord | null = null;
-  let renameName = "";
-  let deleting: DeckRecord | null = null;
   let dialogHeading: HTMLHeadingElement;
   let dialogInput: HTMLInputElement;
   let dialogOpener: HTMLElement | null = null;
@@ -37,27 +33,17 @@
       createName.trim().length > 0 &&
       deck.name.toLocaleLowerCase() === createName.trim().toLocaleLowerCase(),
   );
-  $: renameNameDuplicate = decks.some(
-    (deck) =>
-      renaming !== null &&
-      deck.id !== renaming.id &&
-      renameName.trim().length > 0 &&
-      deck.name.toLocaleLowerCase() === renameName.trim().toLocaleLowerCase(),
-  );
-  $: filtered = decks
-    .filter((deck) =>
+  $: filtered = orderDeckLibrary(
+    decks.filter((deck) =>
       deck.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()),
-    )
-    .sort((left, right) =>
-      sort === "name"
-        ? left.name.localeCompare(right.name)
-        : right.updatedAt.localeCompare(left.updatedAt),
-    );
+    ),
+    { defaultDeckId, favouriteDeckIds, sort },
+  );
 
   async function focusDialog(): Promise<void> {
     dialogOpener = document.activeElement as HTMLElement | null;
     await tick();
-    if (creating || renaming !== null) dialogInput?.focus();
+    if (creating) dialogInput?.focus();
     else dialogHeading?.focus();
   }
 
@@ -67,29 +53,6 @@
     try {
       await oncreate(createName);
       await closeDialog(() => (creating = false));
-    } finally {
-      dialogBusy = false;
-    }
-  }
-
-  async function submitRename(): Promise<void> {
-    if (dialogBusy || renaming === null || renameName.trim().length === 0)
-      return;
-    dialogBusy = true;
-    try {
-      await onrename(renaming, renameName);
-      await closeDialog(() => (renaming = null));
-    } finally {
-      dialogBusy = false;
-    }
-  }
-
-  async function confirmDelete(): Promise<void> {
-    if (dialogBusy || deleting === null) return;
-    dialogBusy = true;
-    try {
-      await ondelete(deleting);
-      await closeDialog(() => (deleting = null));
     } finally {
       dialogBusy = false;
     }
@@ -109,32 +72,13 @@
   aria-labelledby="deck-library-heading"
 >
   <header data-cy="deck-library-header">
-    <div data-cy="deck-library-titles">
-      <h1
-        id="deck-library-heading"
-        data-cy="deck-library-heading"
-        class="visually-hidden"
-      >
-        Deck Library
-      </h1>
-    </div>
-    <div class="actions" data-cy="deck-library-actions">
-      <button
-        type="button"
-        class="secondary"
-        data-cy="deck-library-import"
-        onclick={onimport}>Import Deck</button
-      >
-      <button
-        type="button"
-        data-cy="deck-library-create"
-        onclick={() => {
-          creating = true;
-          createName = "";
-          void focusDialog();
-        }}>Create deck</button
-      >
-    </div>
+    <h1
+      id="deck-library-heading"
+      data-cy="deck-library-heading"
+      class="visually-hidden"
+    >
+      Deck Library
+    </h1>
   </header>
 
   {#if message}<p class="message" role="status" data-cy="deck-library-message">
@@ -162,6 +106,21 @@
         >
       </select>
     </label>
+    <button
+      type="button"
+      class="secondary"
+      data-cy="deck-library-import"
+      onclick={onimport}>Import Deck</button
+    >
+    <button
+      type="button"
+      data-cy="deck-library-create"
+      onclick={() => {
+        creating = true;
+        createName = "";
+        void focusDialog();
+      }}>Create deck</button
+    >
   </div>
 
   {#if decks.length === 0}
@@ -203,14 +162,21 @@
               : deck.validation.issues.map(({ message }) => message).join("\n")}
             onclick={() => onopen(deck.id)}
           >
-            <strong data-cy={`deck-library-name-${deck.id}`}>{deck.name}</strong
+            <span
+              class="row-title"
+              data-cy={`deck-library-row-title-${deck.id}`}
             >
-            {#if deck.id === defaultDeckId}
-              <span
-                class="default-badge"
-                data-cy={`deck-library-default-badge-${deck.id}`}>Default</span
+              <strong data-cy={`deck-library-name-${deck.id}`}
+                >{deck.name}</strong
               >
-            {/if}
+              {#if deck.id === defaultDeckId}
+                <span
+                  class="default-badge"
+                  data-cy={`deck-library-default-badge-${deck.id}`}
+                  >Default</span
+                >
+              {/if}
+            </span>
             <span data-cy={`deck-library-counts-${deck.id}`}
               >Main {deck.main.length} · Extra {deck.extra.length} · Side {deck
                 .side.length}</span
@@ -219,49 +185,22 @@
               >Updated {new Date(deck.updatedAt).toLocaleString()}</small
             >
           </button>
-          <div
-            class="row-actions"
-            data-cy={`deck-library-row-actions-${deck.id}`}
+          <button
+            type="button"
+            class="favourite"
+            data-cy={`deck-library-favourite-${deck.id}`}
+            aria-pressed={favouriteDeckIds.includes(deck.id)}
+            aria-label={`Favourite ${deck.name}`}
+            onclick={() =>
+              onfavourite(deck.id, !favouriteDeckIds.includes(deck.id))}
           >
-            <button
-              type="button"
-              class="secondary"
-              data-cy={`deck-library-rename-${deck.id}`}
-              onclick={() => {
-                renaming = deck;
-                renameName = deck.name;
-                void focusDialog();
-              }}>Rename</button
+            <span
+              aria-hidden="true"
+              data-cy={`deck-library-favourite-glyph-${deck.id}`}
             >
-            <button
-              type="button"
-              class="secondary"
-              disabled={deck.id === defaultDeckId}
-              data-cy={`deck-library-set-default-${deck.id}`}
-              onclick={() => onsetdefault(deck.id)}>Set default</button
-            >
-            <button
-              type="button"
-              class="secondary"
-              data-cy={`deck-library-duplicate-${deck.id}`}
-              onclick={() => onduplicate(deck.id)}>Duplicate</button
-            >
-            <button
-              type="button"
-              class="secondary"
-              data-cy={`deck-library-export-${deck.id}`}
-              onclick={() => onexport(deck)}>Export</button
-            >
-            <button
-              type="button"
-              class="danger"
-              data-cy={`deck-library-delete-${deck.id}`}
-              onclick={() => {
-                deleting = deck;
-                void focusDialog();
-              }}>Delete</button
-            >
-          </div>
+              {favouriteDeckIds.includes(deck.id) ? "★" : "☆"}
+            </span>
+          </button>
         </li>
       {/each}
     </ul>
@@ -338,122 +277,6 @@
   </div>
 {/if}
 
-{#if renaming}
-  <div
-    class="dialog"
-    role="dialog"
-    tabindex="-1"
-    aria-modal="true"
-    aria-labelledby="rename-heading"
-    data-cy="deck-library-rename-dialog"
-    onkeydown={(event) =>
-      handleModalKeydown(
-        event,
-        () => void closeDialog(() => (renaming = null)),
-      )}
-  >
-    <h2
-      id="rename-heading"
-      tabindex="-1"
-      data-cy="deck-library-rename-heading"
-      bind:this={dialogHeading}
-    >
-      Rename {renaming.name}
-    </h2>
-    <form
-      aria-busy={dialogBusy}
-      data-cy="deck-library-rename-form"
-      onsubmit={(event) => {
-        event.preventDefault();
-        void submitRename();
-      }}
-    >
-      <label data-cy="deck-library-rename-name-field"
-        ><span data-cy="deck-library-rename-name-label">Deck name</span><input
-          data-cy="deck-library-rename-name-input"
-          bind:this={dialogInput}
-          bind:value={renameName}
-          maxlength={MAXIMUM_DECK_NAME_LENGTH}
-        /></label
-      >
-      {#if renameNameDuplicate}
-        <p
-          class="name-warning"
-          role="status"
-          data-cy="deck-library-rename-duplicate-name"
-        >
-          Another deck already uses this name. IDs remain independent.
-        </p>
-      {/if}
-      <div class="actions" data-cy="deck-library-rename-actions">
-        <small data-cy="deck-library-rename-hint"
-          >Enter to rename · Esc to cancel</small
-        >
-        <button
-          type="button"
-          class="secondary"
-          disabled={dialogBusy}
-          data-cy="deck-library-rename-cancel"
-          onclick={() => void closeDialog(() => (renaming = null))}
-          >Cancel</button
-        >
-        <button
-          type="submit"
-          disabled={dialogBusy || renameName.trim().length === 0}
-          data-cy="deck-library-rename-submit"
-          >{dialogBusy ? "Renaming…" : "Rename"}</button
-        >
-      </div>
-    </form>
-  </div>
-{/if}
-
-{#if deleting}
-  <div
-    class="dialog"
-    role="dialog"
-    tabindex="-1"
-    aria-modal="true"
-    aria-busy={dialogBusy}
-    aria-labelledby="delete-heading"
-    data-cy="deck-library-delete-dialog"
-    onkeydown={(event) =>
-      handleModalKeydown(
-        event,
-        () => void closeDialog(() => (deleting = null)),
-      )}
-  >
-    <h2
-      id="delete-heading"
-      tabindex="-1"
-      data-cy="deck-library-delete-heading"
-      bind:this={dialogHeading}
-    >
-      Delete {deleting.name}?
-    </h2>
-    <p data-cy="deck-library-delete-message">
-      Local deck and retained history will be removed.
-    </p>
-    <div class="actions" data-cy="deck-library-delete-actions">
-      <button
-        type="button"
-        class="secondary"
-        disabled={dialogBusy}
-        data-cy="deck-library-delete-cancel"
-        onclick={() => void closeDialog(() => (deleting = null))}>Cancel</button
-      >
-      <button
-        type="button"
-        class="danger"
-        disabled={dialogBusy}
-        data-cy="deck-library-delete-confirm"
-        onclick={() => void confirmDelete()}
-        >{dialogBusy ? "Deleting…" : `Delete ${deleting.name}`}</button
-      >
-    </div>
-  </div>
-{/if}
-
 <style>
   .library {
     width: min(78rem, calc(100% - 2rem));
@@ -461,10 +284,8 @@
     padding-block: 2rem;
   }
 
-  header,
   .tools,
-  .actions,
-  .row-actions {
+  .actions {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -485,7 +306,19 @@
   }
 
   .tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 0.75rem;
     margin-block: 1.5rem 1rem;
+  }
+
+  .tools label {
+    flex: 1 1 12rem;
+  }
+
+  .tools button {
+    min-height: 2.5rem;
   }
 
   label {
@@ -546,10 +379,17 @@
     background: var(--surface-raised);
   }
 
+  .row-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
   /* Outranks the `.deck-open span` muted rule above, which every other line
      inside the row button wants and this one does not. */
   .deck-open .default-badge {
-    justify-self: start;
+    margin-left: auto;
     padding: 0.1rem 0.4rem;
     color: var(--success);
     border: 1px solid var(--success);
@@ -574,9 +414,18 @@
     box-shadow: 0 0 0.55rem color-mix(in srgb, var(--danger) 55%, transparent);
   }
 
-  .row-actions button {
+  .favourite {
+    align-self: start;
     min-height: 2.2rem;
-    padding: 0.4rem 0.6rem;
+    padding: 0.2rem 0.45rem;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--muted);
+    font-size: 1.1rem;
+  }
+
+  .favourite[aria-pressed="true"] {
+    color: var(--warning);
   }
 
   .empty,

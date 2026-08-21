@@ -33,16 +33,20 @@
     undefined;
   export let onmutate: (command: DeckCommand) => void = () => undefined;
   export let ondropzone: (zone: DeckZone) => void = () => undefined;
-  export let ontap: ((code: number, zone: DeckZone) => void) | null = null;
+  export let ontap:
+    ((code: number, zone: DeckZone, index: number) => void) | null = null;
   export let onhovercard: (code: number) => void = () => undefined;
   export let onhoverend: () => void = () => undefined;
-  export let oncontextremove: (code: number, zone: DeckZone) => void = () =>
-    undefined;
+  export let oncontextremove: (
+    code: number,
+    zone: DeckZone,
+    index: number,
+  ) => void = () => undefined;
   /* Its own pane below the breakpoint: the stage scrolls it, not an inner box. */
   export let filled = false;
 
   let workspaceElement: HTMLElement;
-  let collapsedZones = { main: false, extra: false, side: true };
+  let collapsedZones = { main: false, extra: false, side: false };
   $: totalCopies = countCopies(deck);
   $: mainDropAllowed = canDrop("main", picked, catalog);
   $: extraDropAllowed = canDrop("extra", picked, catalog);
@@ -60,8 +64,11 @@
     if (active.source === zone) return true;
     const card = cards.get(active.code);
     if (card === undefined) return false;
-    if (active.source === "catalog" || active.source === "side")
-      return zone === card.canonicalZone;
+    /* The catalog can seed the sideboard directly; a side card only ever
+       returns to the zone it belongs in. */
+    if (active.source === "catalog")
+      return zone === card.canonicalZone || zone === "side";
+    if (active.source === "side") return zone === card.canonicalZone;
     return zone === "side";
   }
 
@@ -210,7 +217,8 @@
     flex-direction: column;
     gap: 0.75rem;
     min-width: 0;
-    height: calc(100vh - 5.5rem);
+    height: 100%;
+    min-height: 0;
     overflow-y: auto;
     padding: 1rem;
     border: 1px solid var(--border);

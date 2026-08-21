@@ -19,6 +19,14 @@ const loaders: DomainLoaders = { duel: never, decks: never, story: never };
 
 const SESSION_HANDOFF = "77777777-2222-4333-8444-555555555555";
 
+/* A wait that gates on a real domain root being imported is waiting for a
+   Vite transform of the whole module graph behind it, which is work the
+   default one-second `vi.waitFor` budget knows nothing about: a warm machine
+   resolves the story root in ~0.4s, a loaded one has been measured past 1s
+   and failed the assertion for no reason but the clock. The assertions below
+   are unchanged; they are only allowed to become true later. */
+const REAL_IMPORT = { timeout: 15_000 };
+
 /** A story save store that answers the checkpoint read with exactly `read`,
     so the two session-route branches are decided by this test rather than by
     whatever IndexedDB the environment happens to have. */
@@ -118,10 +126,12 @@ describe("AppShell", () => {
       saves: savesAnswering(checkpointFor(SESSION_HANDOFF)),
     });
 
-    await vi.waitFor(() =>
-      expect(
-        document.querySelector('[data-cy="battle-session-pending"]'),
-      ).toBeNull(),
+    await vi.waitFor(
+      () =>
+        expect(
+          document.querySelector('[data-cy="battle-session-pending"]'),
+        ).toBeNull(),
+      REAL_IMPORT,
     );
     expect(
       document.querySelector('[data-cy="shell-region-duel"]'),
@@ -193,10 +203,12 @@ describe("AppShell", () => {
         story: async () => await import("../../src/story/index.ts"),
       },
     });
-    await vi.waitFor(() =>
-      expect(
-        document.querySelector('[data-cy="shell-region-story"] .story-app'),
-      ).not.toBeNull(),
+    await vi.waitFor(
+      () =>
+        expect(
+          document.querySelector('[data-cy="shell-region-story"] .story-app'),
+        ).not.toBeNull(),
+      REAL_IMPORT,
     );
   });
 
@@ -206,8 +218,12 @@ describe("AppShell", () => {
       document.querySelector('[data-cy="shell-region-admin"]'),
     ).not.toBeNull();
     expect(document.querySelector('[data-cy="shell-placeholder"]')).toBeNull();
-    await vi.waitFor(() =>
-      expect(document.querySelector('[data-cy="admin-title"]')).not.toBeNull(),
+    await vi.waitFor(
+      () =>
+        expect(
+          document.querySelector('[data-cy="admin-title"]'),
+        ).not.toBeNull(),
+      REAL_IMPORT,
     );
   });
 

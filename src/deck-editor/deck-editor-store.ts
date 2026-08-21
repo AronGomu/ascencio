@@ -42,6 +42,7 @@ export interface DeckBuilderState {
   readonly message: string | null;
   /** The deck a duel starts from, so the library can mark its row. */
   readonly defaultDeckId: DeckId | null;
+  readonly favouriteDeckIds: readonly DeckId[];
 }
 
 const INITIAL_STATE: DeckBuilderState = Object.freeze({
@@ -51,6 +52,7 @@ const INITIAL_STATE: DeckBuilderState = Object.freeze({
   saveState: "idle",
   message: null,
   defaultDeckId: null,
+  favouriteDeckIds: Object.freeze([]),
 });
 
 export class DeckBuilderController implements Readable<DeckBuilderState> {
@@ -79,11 +81,13 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
   async initialize(): Promise<void> {
     const generation = this.#startContext();
     try {
-      const [storedDecks, lastOpened, defaultDeckId] = await Promise.all([
-        this.#repository.list(),
-        this.#repository.getLastOpened(),
-        this.#repository.getDefaultDeck(),
-      ]);
+      const [storedDecks, lastOpened, defaultDeckId, favouriteDeckIds] =
+        await Promise.all([
+          this.#repository.list(),
+          this.#repository.getLastOpened(),
+          this.#repository.getDefaultDeck(),
+          this.#repository.listFavourites(),
+        ]);
       const decks = storedDecks.map((deck) => this.#revalidateDeck(deck));
       let recoveryMessage: string | null = null;
       let stored: StoredDeck | null = null;
@@ -114,6 +118,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           saveState: current === null ? "idle" : "saved",
           message: recoveryMessage,
           defaultDeckId,
+          favouriteDeckIds,
         }),
       );
     } catch (error) {
@@ -189,6 +194,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           saveState: "saved",
           message: null,
           defaultDeckId: get(this.#state).defaultDeckId,
+          favouriteDeckIds: get(this.#state).favouriteDeckIds,
         }),
       );
       return true;
@@ -257,6 +263,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           saveState: "saved",
           message: "Deck imported.",
           defaultDeckId: get(this.#state).defaultDeckId,
+          favouriteDeckIds: get(this.#state).favouriteDeckIds,
         }),
       );
       return true;
@@ -277,6 +284,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
               saveState: "saved",
               message: "Deck imported; library refresh failed.",
               defaultDeckId: get(this.#state).defaultDeckId,
+              favouriteDeckIds: get(this.#state).favouriteDeckIds,
             }),
           );
         }
@@ -326,9 +334,9 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           this.#ruleset,
         ),
       });
-      /* Where a card sits is not an edit worth remembering, so reorder and
-         sort save the new order but leave undo pointing at the last change to
-         which cards the deck holds. */
+      /* Reorder and sort leave undo pointing at the last membership change so
+         undo never fights the player's ordering; the log answers "what did the
+         deck look like a moment ago", which includes where the cards sat. */
       const positional = command.type === "reorder" || command.type === "sort";
       const nextHistory = positional
         ? state.current.history
@@ -340,10 +348,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
             beforeImportedNeedsReview: before.importedNeedsReview,
             afterImportedNeedsReview: importedNeedsReview,
           });
-      /* A new history object is exactly the signal that which cards the deck
-         holds changed: `pushDeckUpdate` hands back the one it was given when
-         the multiset did not move, and positional commands never push at all. */
-      if (nextHistory !== state.current.history) this.#appendAutosave(nextDeck);
+      this.#appendAutosave(nextDeck);
       await this.#save(nextDeck, nextHistory);
     });
   }
@@ -461,6 +466,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           saveState: "saved",
           message: "Deck duplicated.",
           defaultDeckId: get(this.#state).defaultDeckId,
+          favouriteDeckIds: get(this.#state).favouriteDeckIds,
         }),
       );
     } catch (error) {
@@ -471,28 +477,57 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
     }
   }
 
-  async deleteDeck(id: DeckId, revision: number): Promise<void> {
-    if (this.#deletesInFlight.has(id)) return;
+  /** `true` only when storage really dropped the deck, so a caller that
+      navigates away on delete cannot leave the page of a deck that survived. */
+  async deleteDeck(id: DeckId, revision: number): Promise<boolean> {
+    if (this.#deletesInFlight.has(id)) return false;
     this.#deletesInFlight.add(id);
     const generation = this.#startContext();
     try {
       await this.#repository.delete(id, revision);
       await this.#refreshLibrary("Deck deleted.", generation);
+      return true;
     } catch (error) {
       if (this.#isCurrentContext(generation))
         this.#fail("Deck could not be deleted", error);
+      return false;
     } finally {
       this.#deletesInFlight.delete(id);
     }
   }
 
-  /** Makes `id` the deck a duel starts from, then re-reads the library so the
-      badge and the disabled button follow storage rather than the click. */
-  async setDefaultDeck(id: DeckId): Promise<void> {
+  async toggleFavourite(id: DeckId): Promise<void> {
     const generation = this.#startContext();
     try {
-      await this.#repository.setDefaultDeck(id);
+      const isFav = get(this.#state).favouriteDeckIds.includes(id);
+      await this.#repository.setFavourite(id, !isFav);
       await this.#refreshLibrary(null, generation);
+    } catch (error) {
+      if (this.#isCurrentContext(generation))
+        this.#fail("Favourite could not be saved", error);
+    }
+  }
+
+  /** Makes `id` the deck a duel starts from, then re-reads the stored default
+      so the badge and the disabled button follow storage rather than the
+      click.
+
+      Only the default is re-read. `#refreshLibrary` sets `mode` to `library`
+      and `current` to `null`, which was survivable while this action lived on
+      a library row and is not now that it lives on the deck page: it closed
+      the deck under the button, and `DeckEditorApp` had already applied the
+      route, so nothing re-opened it and the editor sat on its "Opening deck…"
+      skeleton until a reload. Making a deck the default changes no deck, so
+      the open one stays open. The context is captured rather than started for
+      the same reason — a new context would throw away a save still in
+      flight. */
+  async setDefaultDeck(id: DeckId): Promise<void> {
+    const generation = this.#contextGeneration;
+    try {
+      await this.#repository.setDefaultDeck(id);
+      const defaultDeckId = await this.#repository.getDefaultDeck();
+      if (!this.#isCurrentContext(generation)) return;
+      this.#state.update((state) => Object.freeze({ ...state, defaultDeckId }));
     } catch (error) {
       if (this.#isCurrentContext(generation))
         this.#fail("Default deck could not be set", error);
@@ -715,9 +750,10 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
     generation = this.#contextGeneration,
   ): Promise<void> {
     try {
-      const [storedDecks, defaultDeckId] = await Promise.all([
+      const [storedDecks, defaultDeckId, favouriteDeckIds] = await Promise.all([
         this.#repository.list(),
         this.#repository.getDefaultDeck(),
+        this.#repository.listFavourites(),
       ]);
       const decks = storedDecks.map((deck) => this.#revalidateDeck(deck));
       if (!this.#isCurrentContext(generation)) return;
@@ -729,6 +765,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           saveState: "idle",
           message,
           defaultDeckId,
+          favouriteDeckIds,
         }),
       );
     } catch (error) {

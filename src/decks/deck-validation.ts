@@ -103,16 +103,6 @@ export function validateDeckDraft(
           code,
         ),
       );
-    if (card.imageUrl === null)
-      issues.push(
-        issue(
-          "missing-art",
-          "warning",
-          `${card.name} uses placeholder art.`,
-          undefined,
-          code,
-        ),
-      );
     if (hasOcgType(card.rawType, OCG_TYPE.TOKEN) || (card.scope & 8) !== 0)
       issues.push(
         issue(

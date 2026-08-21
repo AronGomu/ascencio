@@ -4,6 +4,7 @@ import {
   type RuntimeManifestFile,
   type RuntimeSnapshotManifest,
 } from "./runtime-manifest.ts";
+import { verifyDigest } from "../../../decks/catalog/snapshot-digest.ts";
 import type { ActiveDuelAssetReader } from "./active-duel-dependencies.ts";
 
 const WASM_VENDOR_PATH = "lib/ocgcore.sync.wasm";
@@ -437,25 +438,6 @@ async function readResponseBytes(
     offset += chunk.byteLength;
   }
   return bytes;
-}
-
-async function verifyDigest(
-  label: string,
-  bytes: Uint8Array,
-  expected: string,
-): Promise<void> {
-  const actual = await sha256(bytes);
-  if (actual !== expected) throw new Error(`${label}: SHA-256 mismatch`);
-}
-
-async function sha256(bytes: Uint8Array): Promise<string> {
-  const digest = await globalThis.crypto.subtle.digest(
-    "SHA-256",
-    toArrayBuffer(bytes),
-  );
-  return [...new Uint8Array(digest)]
-    .map((value) => value.toString(16).padStart(2, "0"))
-    .join("");
 }
 
 function parseJson(bytes: Uint8Array, label: string): unknown {

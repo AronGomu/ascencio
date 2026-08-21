@@ -1,13 +1,24 @@
 <script lang="ts">
+  import { onDestroy } from "svelte";
   import {
     catalogFilterOptions,
     EMPTY_CATALOG_FILTERS,
-    filterDeckCatalog,
+    // filterDeckCatalog is the reference implementation; the UI uses the index path below.
     type DeckCatalogFilters,
   } from "../../decks/catalog/deck-catalog.ts";
+  import {
+    buildDeckCatalogIndex,
+    filterDeckCatalogIndex,
+  } from "../../decks/catalog/deck-catalog-index.ts";
   import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
   import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
   import { quantityLimit } from "../../decks/catalog/pinned-ruleset.ts";
+  import {
+    INITIAL_RESULT_WINDOW,
+    initialResultWindow,
+    nextResultWindow,
+  } from "../layout/result-window.ts";
+  import { OverlayScrollbar } from "../../shell/index.ts";
   import CardTile from "./CardTile.svelte";
 
   export let cards: readonly DeckBuilderCardView[];
@@ -33,10 +44,68 @@
   export let onhoverend: () => void = () => undefined;
   export let oncontextadd: (card: DeckBuilderCardView) => void = () =>
     undefined;
+  /* Owned by the editor, because the routed click runs there. */
+  export let toSideboard = false;
+  export let ontosideboardchange: (value: boolean) => void = () => undefined;
 
+  /* Without an observer nothing ever appends, so the window can only be what
+     the first render mounts. Every result would be 14,551 tiles at once, which
+     is the one unbounded render this component would otherwise have. Chromium
+     always has an observer, so this is a ceiling for anything else. */
+  const FALLBACK_RESULT_CAP = 200;
+
+  let resultsScroller: HTMLElement | null = null;
   let filters: DeckCatalogFilters = { ...EMPTY_CATALOG_FILTERS };
+  let visibleCount = INITIAL_RESULT_WINDOW;
+  let sentinel: HTMLElement | null = null;
+  let observer: IntersectionObserver | null = null;
+  let observerSupported = typeof IntersectionObserver === "function";
+
   $: options = catalogFilterOptions(cards);
-  $: results = filterDeckCatalog(cards, filters);
+  $: index = buildDeckCatalogIndex(cards);
+  $: results = filterDeckCatalogIndex(index, filters);
+  $: filterKey = `${filters.name}|${filters.family}|${filters.subtype}|${filters.attribute}|${filters.race}`;
+  $: {
+    // depend on filterKey so a same-length filter change still resets
+    void filterKey;
+    visibleCount = initialResultWindow(results.length);
+  }
+  $: visible = observerSupported
+    ? results.slice(0, visibleCount)
+    : results.slice(0, FALLBACK_RESULT_CAP);
+  $: fallbackTruncated =
+    !observerSupported && results.length > FALLBACK_RESULT_CAP;
+
+  /* `filled` gives the catalog the whole stage, and with it `overflow-y:
+     visible` on `.results`: the region grows to its content and an ancestor
+     scrolls instead. An observer rooted on a box that never clips watches a
+     sentinel that never leaves it, so the callback stops arriving. Measured in
+     Chromium at 390x844: the window burst to 543 tiles with no gesture, then
+     stalled at 599 of 14,551 across six scrolls to the bottom. The viewport is
+     the root that still moves in that layout. */
+  function observeSentinel(
+    element: HTMLElement | null,
+    scroller: HTMLElement | null,
+    viewportRooted: boolean,
+  ): void {
+    observer?.disconnect();
+    observer = null;
+    if (!element) return;
+    if (!viewportRooted && !scroller) return;
+    observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          visibleCount = nextResultWindow(visibleCount, results.length);
+        }
+      },
+      { root: viewportRooted ? null : scroller, rootMargin: "200px" },
+    );
+    observer.observe(element);
+  }
+
+  $: observeSentinel(sentinel, resultsScroller, filled);
+
+  onDestroy(() => observer?.disconnect());
 
   function addable(card: DeckBuilderCardView): boolean {
     return (copies.get(card.code) ?? 0) < quantityLimit(ruleset, card.code);
@@ -63,6 +132,15 @@
 >
   <header data-cy="deck-catalog-header">
     <span data-cy="deck-catalog-result-count">{results.length} results</span>
+    <label class="to-side" data-cy="deck-catalog-to-sideboard-field">
+      <input
+        type="checkbox"
+        checked={toSideboard}
+        data-cy="deck-catalog-to-sideboard"
+        onchange={(event) => ontosideboardchange(event.currentTarget.checked)}
+      />
+      <span data-cy="deck-catalog-to-sideboard-label">To sideboard</span>
+    </label>
   </header>
 
   <label data-cy="deck-catalog-name-field">
@@ -180,44 +258,70 @@
       >
     </div>
   {:else}
-    <div
-      class="results"
-      aria-label="Card catalog results"
-      data-cy="deck-catalog-results"
-      onmouseleave={() => onhoverend()}
-    >
-      {#each results as card (card.code)}
-        <CardTile
-          {card}
-          code={card.code}
-          limit={quantityLimit(ruleset, card.code)}
-          currentCopies={copies.get(card.code) ?? 0}
-          selected={selectedCode === card.code}
-          draggable={(copies.get(card.code) ?? 0) <
-            quantityLimit(ruleset, card.code)}
-          onselect={() => onselect(card)}
-          ontap={ontap === null
-            ? null
-            : () =>
-                addable(card)
-                  ? ontap(card)
-                  : onblocked(card, blockedReason(card))}
-          ondragcard={(event) => ondragcard(card, event)}
-          {ondragcancel}
-          onhover={() => onhovercard(card)}
-          maxed={(copies.get(card.code) ?? 0) >=
-            quantityLimit(ruleset, card.code)}
-          oncontext={() => oncontextadd(card)}
-        />
-      {/each}
+    {#if fallbackTruncated}
+      <p class="fallback-notice" data-cy="deck-catalog-fallback-notice">
+        Showing the first {FALLBACK_RESULT_CAP} of {results.length} cards. Narrow
+        the filters to reach the rest.
+      </p>
+    {/if}
+    <div class="results-region" data-cy="deck-catalog-results-region">
+      <div
+        class="results"
+        aria-label="Card catalog results"
+        data-cy="deck-catalog-results"
+        onmouseleave={() => onhoverend()}
+        bind:this={resultsScroller}
+      >
+        {#each visible as card (card.code)}
+          <CardTile
+            {card}
+            code={card.code}
+            limit={quantityLimit(ruleset, card.code)}
+            currentCopies={copies.get(card.code) ?? 0}
+            selected={selectedCode === card.code}
+            draggable={(copies.get(card.code) ?? 0) <
+              quantityLimit(ruleset, card.code)}
+            onselect={() => onselect(card)}
+            ontap={ontap === null
+              ? null
+              : () =>
+                  addable(card)
+                    ? ontap(card)
+                    : onblocked(card, blockedReason(card))}
+            ondragcard={(event) => ondragcard(card, event)}
+            {ondragcancel}
+            onhover={() => onhovercard(card)}
+            maxed={(copies.get(card.code) ?? 0) >=
+              quantityLimit(ruleset, card.code)}
+            oncontext={() => oncontextadd(card)}
+          />
+        {/each}
+        {#if observerSupported && visibleCount < results.length}
+          <div
+            class="sentinel"
+            aria-hidden="true"
+            data-cy="deck-catalog-results-sentinel"
+            bind:this={sentinel}
+          ></div>
+        {/if}
+      </div>
+      <OverlayScrollbar
+        axis="vertical"
+        scrollElement={resultsScroller}
+        contentSizeKey={`${results.length}:${visibleCount}`}
+        dataCyPrefix="deck-catalog-results"
+      />
     </div>
   {/if}
 </section>
 
 <style>
   .catalog {
+    display: flex;
+    flex-direction: column;
     min-width: 0;
-    height: calc(100vh - 5.5rem);
+    height: 100%;
+    min-height: 0;
     overflow: hidden;
     padding: 1rem;
     border: 1px solid var(--border);
@@ -241,6 +345,19 @@
   h3,
   p {
     margin: 0;
+  }
+
+  .to-side {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0;
+    font-size: 0.76rem;
+  }
+
+  .to-side input {
+    min-height: auto;
+    width: auto;
   }
 
   label span {
@@ -281,19 +398,51 @@
     padding: 0.3rem 0.55rem;
   }
 
+  .results-region {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
   .results {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    /* A tile's height comes from its `aspect-ratio`, which an `auto` row does
+       not see: the row sizes itself to the card name alone (~22 px) and every
+       tile then overflows into the rows below it, so the last row painted wins
+       the click. Invisible while a search returned one row; the whole database
+       returns thirteen. `max-content` sizes the row to the tile it holds. */
+    grid-auto-rows: max-content;
     gap: 0.55rem;
-    max-height: calc(100vh - 24rem);
+    height: 100%;
+    max-height: none;
     overflow-y: auto;
     padding: 0.2rem 0.35rem 0.5rem 0.1rem;
+    scrollbar-width: none;
+  }
+
+  .results::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filled .results-region {
+    flex: none;
   }
 
   .filled .results {
     grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
     max-height: none;
     overflow-y: visible;
+  }
+
+  .sentinel {
+    grid-column: 1 / -1;
+    height: 1px;
+  }
+
+  .fallback-notice {
+    margin: 0 0 0.5rem;
+    color: var(--muted);
   }
 
   .empty-state {

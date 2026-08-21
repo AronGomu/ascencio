@@ -3,7 +3,7 @@
 > Status: accepted; planned
 > Decided: 2026-08-16
 > Owners: decks data architecture
-> Plan: [`../../artifacts/PLAN_2026_08_16_decks_feedback.md`](../../artifacts/PLAN_2026_08_16_decks_feedback.md) — T6, T8
+> Amended by [ADR-044](044_ADR_autosave_records_every_command.md): `reorder`/`sort` now **do** append to the autosave log; the "append nothing" clause in §3 is superseded.
 
 ## Context
 

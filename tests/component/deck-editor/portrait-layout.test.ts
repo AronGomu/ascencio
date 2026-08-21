@@ -85,8 +85,31 @@ describe("deck editor portrait layout", () => {
     await user.click(
       screen.getByRole("button", { name: /Blue-Eyes White Dragon/ }),
     );
-    expect(onmutate).toHaveBeenCalledWith({ type: "add", cardCode: 89631139 });
+    expect(onmutate).toHaveBeenCalledWith({
+      type: "add",
+      cardCode: 89631139,
+      zone: "main",
+    });
     expect(pane("catalog")).not.toBeNull();
+  });
+
+  /* The touch tap and the desktop click run the same intent function, so the
+     sideboard checkbox cannot be a control that only desktop obeys. */
+  it("sends a tapped catalog card to the sideboard when the checkbox is ticked", async () => {
+    const user = userEvent.setup();
+    const onmutate = renderEditor("tabs");
+    await openCatalog(user);
+    await user.click(
+      document.querySelector('[data-cy="deck-catalog-to-sideboard"]')!,
+    );
+    await user.click(
+      screen.getByRole("button", { name: /Blue-Eyes White Dragon/ }),
+    );
+    expect(onmutate).toHaveBeenCalledWith({
+      type: "add",
+      cardCode: 89631139,
+      zone: "side",
+    });
   });
 
   it("announces the reason instead of adding a card at its copy limit", async () => {
@@ -149,6 +172,7 @@ describe("deck editor portrait layout", () => {
       cardCode: 89631139,
       from: "main",
       to: "side",
+      index: 0,
     });
     expect(document.querySelector('[data-cy="deck-tap-menu"]')).toBeNull();
   });
@@ -166,6 +190,7 @@ describe("deck editor portrait layout", () => {
       type: "remove",
       cardCode: 89631139,
       zone: "main",
+      index: 0,
     });
   });
 
@@ -187,12 +212,18 @@ describe("deck editor portrait layout", () => {
     expect(pane("deck")).not.toBeNull();
     expect(pane("details")).not.toBeNull();
     expect(screen.queryByRole("tablist")).toBeNull();
-    /* A desktop click still only selects: the tap model never reaches the
-       store above the breakpoint. */
+    /* A desktop click edits straight away: the tap menu is the mobile model
+       and never reaches the stage above the breakpoint. */
     await user.click(
       screen.getAllByRole("button", { name: /Blue-Eyes White Dragon/ })[0]!,
     );
     expect(document.querySelector('[data-cy="deck-tap-menu"]')).toBeNull();
-    expect(onmutate).not.toHaveBeenCalled();
+    expect(onmutate).toHaveBeenCalledWith({
+      type: "move",
+      cardCode: 89631139,
+      from: "main",
+      to: "side",
+      index: 0,
+    });
   });
 });

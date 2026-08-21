@@ -52,6 +52,11 @@ const NO_DEFAULT_DECK = {
   setDefaultDeck: async () => undefined,
 } satisfies Pick<DeckRepository, "getDefaultDeck" | "setDefaultDeck">;
 
+const NO_FAVOURITES = {
+  listFavourites: async (): Promise<readonly DeckId[]> => [],
+  setFavourite: async () => undefined,
+} satisfies Pick<DeckRepository, "listFavourites" | "setFavourite">;
+
 describe("deck autosave controller", () => {
   it("keeps local edits visible after failure then retries autosave", async () => {
     let stored: StoredDeck | null = null;
@@ -90,6 +95,7 @@ describe("deck autosave controller", () => {
       },
       ...NO_AUTOSAVE_LOG,
       ...NO_DEFAULT_DECK,
+      ...NO_FAVOURITES,
     };
     const controller = new DeckBuilderController(
       repository,
@@ -156,6 +162,7 @@ describe("deck autosave controller", () => {
       clearLastOpened: async () => undefined,
       ...NO_AUTOSAVE_LOG,
       ...NO_DEFAULT_DECK,
+      ...NO_FAVOURITES,
     };
     const controller = new DeckBuilderController(
       repository,
@@ -198,6 +205,7 @@ describe("deck autosave controller", () => {
       clearLastOpened: async () => undefined,
       ...NO_AUTOSAVE_LOG,
       ...NO_DEFAULT_DECK,
+      ...NO_FAVOURITES,
     };
     const controller = new DeckBuilderController(
       repository,
@@ -287,8 +295,8 @@ describe("deck autosave controller", () => {
     repo.close();
   });
 
-  it("a reorder appends no autosave entry", async () => {
-    const name = "controller-autosave-positional";
+  it("a reorder appends an autosave entry", async () => {
+    const name = "controller-autosave-reorder";
     names.push(name);
     const repo = await IndexedDbDeckRepository.open(name);
     const controller = new DeckBuilderController(
@@ -302,19 +310,57 @@ describe("deck autosave controller", () => {
     await controller.mutate({ type: "add", cardCode: 46986414 });
 
     await controller.mutate({ type: "reorder", zone: "main", from: 0, to: 1 });
-    await controller.mutate({ type: "sort", mode: "alpha" });
-    /* One more membership edit fences the assertion: appends are issued in
-       order, so once the third entry is readable, an entry either positional
-       command had appended would be readable too. */
-    await controller.mutate({
-      type: "remove",
-      cardCode: 89631139,
-      zone: "main",
-    });
-
     const entries = await autosavesReaching(repo, 3);
+
+    const reorderedMain = get(controller).current?.deck.main;
     expect(entries).toHaveLength(3);
-    expect(get(controller).current?.deck.main).toEqual([46986414]);
+    expect(entries.map(({ main }) => main)).toContainEqual(reorderedMain);
+    repo.close();
+  });
+
+  it("a sort appends an autosave entry", async () => {
+    const name = "controller-autosave-sort";
+    names.push(name);
+    const repo = await IndexedDbDeckRepository.open(name);
+    const controller = new DeckBuilderController(
+      repo,
+      catalogByCode(PROTOTYPE_CATALOG),
+      PROTOTYPE_RULESET,
+    );
+    await controller.initialize();
+    await controller.createDeck("Sorted");
+    await controller.mutate({ type: "add", cardCode: 89631139 });
+    await controller.mutate({ type: "add", cardCode: 46986414 });
+
+    await controller.mutate({ type: "sort", mode: "alpha" });
+    const entries = await autosavesReaching(repo, 3);
+
+    expect(entries).toHaveLength(3);
+    repo.close();
+  });
+
+  it("a reorder is still not undoable", async () => {
+    const name = "controller-autosave-not-undoable";
+    names.push(name);
+    const repo = await IndexedDbDeckRepository.open(name);
+    const controller = new DeckBuilderController(
+      repo,
+      catalogByCode(PROTOTYPE_CATALOG),
+      PROTOTYPE_RULESET,
+    );
+    await controller.initialize();
+    await controller.createDeck("Undoable");
+    await controller.mutate({ type: "add", cardCode: 89631139 });
+    await controller.mutate({ type: "add", cardCode: 46986414 });
+    const undoLengthBefore = get(controller).current?.history.undo.length ?? 0;
+
+    await controller.mutate({ type: "reorder", zone: "main", from: 0, to: 1 });
+
+    expect(get(controller).current?.history.undo.length).toBe(undoLengthBefore);
+    await controller.undo();
+    expect(get(controller).current?.deck.main).not.toEqual([
+      89631139, 46986414,
+    ]);
     repo.close();
   });
 });

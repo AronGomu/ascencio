@@ -9,8 +9,10 @@ import {
   PROTOTYPE_RULESET,
 } from "../../../src/decks/catalog/pinned-ruleset.ts";
 import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
+import { SHEEP_TOKEN, SHEEP_TOKEN_CODE } from "../../fixtures/token-card.ts";
 
 const catalog = catalogByCode(PROTOTYPE_CATALOG);
+const catalogWithToken = catalogByCode([...PROTOTYPE_CATALOG, SHEEP_TOKEN]);
 const empty = {
   main: [] as number[],
   extra: [] as number[],
@@ -33,6 +35,20 @@ describe("deck editing model", () => {
     );
     expect(main.type === "accepted" && main.cards.main).toEqual([89631139]);
     expect(extra.type === "accepted" && extra.cards.extra).toEqual([8505920]);
+  });
+
+  it("refuses to add a Token the duel-facing catalog carries", () => {
+    expect(
+      applyDeckCommand(
+        empty,
+        { type: "add", cardCode: SHEEP_TOKEN_CODE },
+        catalogWithToken,
+        PROTOTYPE_RULESET,
+      ),
+    ).toEqual({
+      type: "rejected",
+      reason: "Tokens cannot be added to a deck.",
+    });
   });
 
   it("add appends to the end of its zone", () => {
@@ -190,6 +206,17 @@ describe("deck editing model", () => {
     ]);
   });
 
+  it("reorder rejects a tile dropped back on its own slot", () => {
+    expect(
+      applyDeckCommand(
+        { main: [89631139, 12580477, 44095762], extra: [], side: [] },
+        { type: "reorder", zone: "main", from: 1, to: 1 },
+        catalog,
+        PROTOTYPE_RULESET,
+      ),
+    ).toEqual({ type: "rejected", reason: "Nothing to reorder." });
+  });
+
   it("reorder rejects an empty source index", () => {
     expect(
       applyDeckCommand(
@@ -279,6 +306,49 @@ describe("deck editing model", () => {
     );
     expect(removed.type === "accepted" && removed.cards.main).toEqual([
       12580477, 44095762,
+    ]);
+  });
+
+  it("removes the copy an index names rather than the first", () => {
+    const removed = applyDeckCommand(
+      { main: [89631139, 12580477, 89631139], extra: [], side: [] },
+      { type: "remove", cardCode: 89631139, zone: "main", index: 2 },
+      catalog,
+      PROTOTYPE_RULESET,
+    );
+    expect(removed.type === "accepted" && removed.cards.main).toEqual([
+      89631139, 12580477,
+    ]);
+  });
+
+  it("moves the copy an index names rather than the first", () => {
+    const moved = applyDeckCommand(
+      { main: [89631139, 12580477, 89631139], extra: [], side: [] },
+      {
+        type: "move",
+        cardCode: 89631139,
+        from: "main",
+        to: "side",
+        index: 2,
+      },
+      catalog,
+      PROTOTYPE_RULESET,
+    );
+    expect(moved.type === "accepted" && moved.cards).toMatchObject({
+      main: [89631139, 12580477],
+      side: [89631139],
+    });
+  });
+
+  it("falls back to the first copy when an index no longer names the card", () => {
+    const removed = applyDeckCommand(
+      { main: [89631139, 12580477], extra: [], side: [] },
+      { type: "remove", cardCode: 89631139, zone: "main", index: 7 },
+      catalog,
+      PROTOTYPE_RULESET,
+    );
+    expect(removed.type === "accepted" && removed.cards.main).toEqual([
+      12580477,
     ]);
   });
 

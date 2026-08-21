@@ -33,23 +33,23 @@ export const DOMAIN_BUDGET_BYTES: Readonly<
 > = {
   // measured 405,950 bytes → ceil(405950/25_000) = 17 → 425,000 * 1.15
   battle: 488_750,
-  /* T22 2026-08-16: raised from 143,750. The deck editor's catalog is no longer
-     a 27-card fixture but the build's own packaged card set — 120 cards of masks
-     plus their names and effect text, ~58 kB in a chunk the editor and the duel
-     share. That payload is the feature: a deck a player builds is only offerable
-     at `#/duel` because the editor could only offer cards this build can draw.
-     Measured 150,849 bytes → ceil(150849/25_000) = 7 → 175,000 * 1.15, leaving
-     25.0% headroom. The same change took battle from 405,950 to 365,853 by
-     ending the three-way duplication of the card-text manifest inside its
-     closure, so its ceiling is untouched and now has more room than before. */
-  "deck-editor": 201_250,
-  /* T15 2026-08-17: raised from 86,250 for the shop surface (greeting/browse/cards/sell/
-     opening/results screens, set-data loader, economy in story state, save schema v2).
-     First set from a source-delta estimate (~87k); a real build measured the closure at
-     150,699 bytes — the estimate missed the shared chunks the shop pulls into the story
-     closure (active-catalog for card names/art). Measured 150,699 bytes →
-     ceil(150699/25_000) = 7 → 175,000 * 1.15, leaving ~25% headroom. */
-  story: 201_250,
+  /* T12 2026-08-20: lowered from 201_250. The catalog left the bundle — it is
+     the whole packaged database now (14,794 cards), far too large to inline, so
+     `runtimeCatalog()` fetches the same shards the Worker reads and the ~48 kB
+     of packaged masks and text this chunk used to carry went with it. Measured
+     102,745 bytes → ceil(102745/25_000) = 5 → 125,000 * 1.15, leaving 28.5%
+     headroom. A future rise here would mean the catalog crept back into the
+     bundle, which is the thing this ceiling now watches for. */
+  "deck-editor": 143_750,
+  /* M1 2026-08-20: lowered from 201_250. The shop surface (greeting/browse/cards/sell/
+     opening/results screens, set-data loader, economy in story state, save schema v2)
+     measured 150,699 bytes while it read the inlined `active-catalog` for card names and
+     art. That module is gone: the shop now awaits the shared `runtimeCatalog()` fetch
+     like the editor and the duel, taking 46,296 bytes of packaged masks and text out of
+     this closure. Measured 104,403 bytes → ceil(104403/25_000) = 5 → 125,000 * 1.15,
+     leaving 27.4% headroom. A rise back toward 150k would mean a catalog crept into the
+     story bundle again. */
+  story: 143_750,
 };
 
 /** Bytes each domain's lazy chunk adds on top of the shell it loads into. */

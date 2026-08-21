@@ -1,20 +1,21 @@
+import { setRuntimeCatalogForTests } from "../../src/decks/catalog/runtime-catalog.ts";
 import {
+  PROTOTYPE_CATALOG,
   PROTOTYPE_CATALOG_ASSETS,
-  PROTOTYPE_CATALOG_TEXTS,
 } from "../../src/deck-editor/fixtures/catalog.ts";
 
 /**
- * Points `activeCatalog()` at the small hand-written fixture.
+ * Points `runtimeCatalog()` at the small hand-written fixture, and gives the
+ * duel's image cache a manifest naming the same cards.
  *
- * Production substitutes the two globals from the packaged card set at build
- * time, which a jsdom test has no build to do. Mounting a component that reads
- * the catalog without this leaves the editor and the deck picker looking at an
- * empty build, so every such test calls it before it renders.
+ * Production fetches the card database from the runtime assets, which a jsdom
+ * test has no server for. Mounting a component that reads the catalog without
+ * this leaves the editor and the deck picker waiting on a fetch that will never
+ * answer, so every such test calls it before it renders.
  */
 export function installPrototypeActiveCatalog(): void {
+  setRuntimeCatalogForTests(PROTOTYPE_CATALOG);
   Object.assign(globalThis, {
-    __ACTIVE_CARD_DATA__: PROTOTYPE_CATALOG_ASSETS,
-    __ACTIVE_CARD_TEXTS__: PROTOTYPE_CATALOG_TEXTS,
     __ACTIVE_IMAGE_MANIFEST__: {
       schemaVersion: 1 as const,
       snapshotId: "a".repeat(64),
@@ -29,4 +30,9 @@ export function installPrototypeActiveCatalog(): void {
       missing: [] as number[],
     },
   });
+}
+
+/** Hands `runtimeCatalog()` back to the real loader, for a test that drives it. */
+export function resetRuntimeCatalog(): void {
+  setRuntimeCatalogForTests(null);
 }

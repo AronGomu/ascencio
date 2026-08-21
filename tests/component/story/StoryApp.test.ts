@@ -3,16 +3,71 @@ import "fake-indexeddb/auto";
 import { deleteDB } from "idb";
 import { cleanup, render, screen, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { STORY_SAVES_DATABASE_NAME } from "../../../src/story/saves/story-save-contracts.ts";
 import { createInitialStoryState } from "../../../src/story/model/story-state.ts";
 import StoryApp from "../../../src/story/StoryApp.svelte";
-import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts";
+import {
+  installPrototypeActiveCatalog,
+  resetRuntimeCatalog,
+} from "../../fixtures/active-catalog.ts";
 
 afterEach(async () => {
   cleanup();
+  vi.unstubAllGlobals();
   await deleteDB(STORY_SAVES_DATABASE_NAME);
 });
+
+/* Sells Dark Magician and nothing else, so a Blue-Eyes in the collection has
+   no rarity from the shop data and falls through to the catalog view — the
+   case the sell screen holds full views for. */
+const SHOP_SETS = {
+  version: 1,
+  sets: [
+    {
+      id: "alpha",
+      name: "Alpha Set",
+      releaseYear: 2002,
+      released: true,
+      cards: [{ code: 46986414, name: "Dark Magician", rarity: "ultra-rare" }],
+    },
+  ],
+};
+
+/**
+ * Answers the shop-data request and refuses every other one.
+ *
+ * The catalog reads the packaged snapshot over the same `fetch`, so a blanket
+ * stub would fail both sources at once and the sell screen would report the
+ * shop data rather than the card database. Routing by URL keeps the two
+ * failures tellable apart.
+ */
+function installShopDataOnlyNetwork(): void {
+  const cache = {
+    match: () => Promise.resolve(undefined),
+    put: () => Promise.resolve(undefined),
+  };
+  vi.stubGlobal("caches", { open: () => Promise.resolve(cache) });
+  vi.stubGlobal("fetch", (input: unknown) =>
+    String(input).includes("shop-sets")
+      ? Promise.resolve(
+          new Response(JSON.stringify(SHOP_SETS), {
+            headers: { "Content-Type": "application/json" },
+          }),
+        )
+      : Promise.reject(new Error("offline")),
+  );
+}
+
+function sellState(collection: Record<number, number>) {
+  return {
+    ...createInitialStoryState(),
+    screen: "shop-sell" as const,
+    savedScreen: "shop-sell" as const,
+    shopReturnScreen: "map" as const,
+    collection,
+  };
+}
 
 describe("StoryApp", () => {
   it("mounts from the story domain straight onto the title screen", async () => {
@@ -157,6 +212,74 @@ describe("StoryApp", () => {
     ).toHaveLength(0);
     expect(
       container.querySelector('[data-cy="story-shop-sell-confirm"]'),
+    ).toBeNull();
+  });
+
+  /* The card database is fetched rather than compiled in, so the shop opens
+     before it lands. What it carries has to reach the screen when it does:
+     a name for a code no set sells, and the rarity the sell price is read
+     from — which for a 3000 ATK monster is secret-rare at 250 DP, not the
+     10 DP floor an unresolved card would degrade to. */
+  it("names and prices a sell row from the catalog once it resolves", async () => {
+    installShopDataOnlyNetwork();
+    installPrototypeActiveCatalog();
+    const { container } = render(StoryApp, {
+      resumeState: sellState({ 89631139: 2 }),
+    });
+
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-cy="story-shop-sell-name-89631139"]')
+          ?.textContent,
+      ).toContain("Blue-Eyes White Dragon"),
+    );
+    expect(
+      container.querySelector('[data-cy="story-shop-sell-price-89631139"]')
+        ?.textContent,
+    ).toContain("250 DP");
+    expect(
+      container.querySelector('[data-cy="story-shop-sell-owned-89631139"]')
+        ?.textContent,
+    ).toContain("2");
+  });
+
+  /* A catalog that never lands is not a dead shop: it is one screen that
+     cannot price what it would sell. That screen says so and offers a
+     Retry, and the Retry has to reach the catalog rather than only the shop
+     data, which loaded fine here. */
+  it("blocks selling behind a retryable error when the catalog fails", async () => {
+    installShopDataOnlyNetwork();
+    resetRuntimeCatalog();
+    const { container } = render(StoryApp, {
+      resumeState: sellState({ 89631139: 2 }),
+    });
+
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-cy="story-shop-sell-error-message"]')
+          ?.textContent,
+      ).toContain("card database"),
+    );
+    expect(
+      container.querySelectorAll('[data-cy^="story-shop-sell-plus-"]'),
+    ).toHaveLength(0);
+    expect(
+      container.querySelector('[data-cy="story-shop-sell-confirm"]'),
+    ).toBeNull();
+
+    installPrototypeActiveCatalog();
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "Retry" }));
+
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-cy="story-shop-sell-price-89631139"]')
+          ?.textContent,
+      ).toContain("250 DP"),
+    );
+    expect(
+      container.querySelector('[data-cy="story-shop-sell-error"]'),
     ).toBeNull();
   });
 

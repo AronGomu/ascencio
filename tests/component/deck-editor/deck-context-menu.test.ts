@@ -28,6 +28,17 @@ const MAIN_LIMIT_3_CODES = PROTOTYPE_CATALOG.filter(
     quantityLimit(PROTOTYPE_RULESET, c.code) === 3,
 ).map((c) => c.code);
 
+function stateWithMain(main: readonly number[]): DeckBuilderState {
+  const base = stateFixture(0);
+  return {
+    ...base,
+    current: {
+      deck: { ...base.current!.deck, main },
+      history: base.current!.history,
+    },
+  };
+}
+
 function stateWith(mainCount: number, sideCount: number): DeckBuilderState {
   const base = stateFixture(mainCount);
   const sideCards = Array.from(
@@ -74,6 +85,30 @@ describe("context-menu deck editing", () => {
     expect(onmutate).toHaveBeenCalledWith(
       expect.objectContaining({ type: "remove", zone: "main" }),
     );
+  });
+
+  /* The left-click path already carries the index. Right-click did not, so it
+     removed the first copy of a repeated card rather than the one under the
+     pointer, and the clicked tile stayed on screen. */
+  it("right-click on the third tile of a repeated card removes that copy", async () => {
+    const onmutate = vi.fn<(command: DeckCommand) => void>();
+    const repeated = MAIN_LIMIT_3_CODES[0]!;
+    const { container } = render(
+      DeckEditor,
+      props(
+        onmutate,
+        stateWithMain([repeated, MAIN_LIMIT_3_CODES[1]!, repeated]),
+      ),
+    );
+    await fireEvent.contextMenu(
+      container.querySelector('[data-cy="deck-slot-main-2"] button')!,
+    );
+    expect(onmutate).toHaveBeenCalledWith({
+      type: "remove",
+      cardCode: repeated,
+      zone: "main",
+      index: 2,
+    });
   });
 
   it("right-click on a catalog card adds it to its canonical zone", async () => {

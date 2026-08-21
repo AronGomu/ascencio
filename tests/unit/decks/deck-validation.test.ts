@@ -105,6 +105,22 @@ describe("deck validation", () => {
     expect(result.issues.some(({ code }) => code === "empty-side")).toBe(true);
   });
 
+  it("says nothing about a deck the build has no art for", () => {
+    /* Once the catalog is the whole database, art coverage describes the
+       build's images rather than a defect in the player's deck: a warning per
+       art-less card would attach to nearly every deck and teach players to
+       stop reading the panel. */
+    expect(
+      validMain.every((code) => catalog.get(code)?.imageUrl === null),
+    ).toBe(true);
+    const codes: readonly string[] = validateDeckDraft(
+      { main: validMain, extra: [], side: [] },
+      catalog,
+      PROTOTYPE_RULESET,
+    ).issues.map(({ code }) => code);
+    expect(codes).not.toContain("missing-art");
+  });
+
   it("marks forbidden and changed-ruleset state explicitly", () => {
     const result = validateDeckDraft(
       {

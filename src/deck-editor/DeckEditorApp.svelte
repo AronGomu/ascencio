@@ -24,7 +24,9 @@
     type DeckBuilderState,
   } from "./deck-editor-store.ts";
   import type { DeckEditorRoute } from "./deck-editor-route.ts";
-  import { activeCatalog } from "../decks/catalog/active-catalog.ts";
+  import { runtimeCatalog } from "../decks/catalog/runtime-catalog.ts";
+  import { deckBuildableCards } from "../decks/catalog/deck-buildable-cards.ts";
+  import type { DeckBuilderCardView } from "../decks/catalog/ocg-card-mapper.ts";
   import DeckEditor from "./components/DeckEditor.svelte";
   import DeckLibrary from "./components/DeckLibrary.svelte";
   import YdkExport from "./components/YdkExport.svelte";
@@ -37,10 +39,17 @@
      `deckId` back. A host that swallows the callback keeps the library. */
   export let onnavigate: (route: DeckEditorRoute) => void = () => undefined;
 
-  /* Every card this build packages, read once per session: the editor may
-     only offer what the duel can draw, so both read the same manifests. */
-  const cards = activeCatalog();
-  const catalog = catalogByCode(cards);
+  /* Every card this build packages, fetched once per page: the editor may only
+     offer what the duel can draw, so both await the same read. It is ~10 MB of
+     shards, which is why it arrives after mount rather than inside the bundle,
+     and why nothing below may render until it lands.
+
+     `cards` is what the catalog offers and drops the Tokens no deck may hold;
+     `catalog` keeps them, because a deck imported with one still has to name
+     it in the preview and in its validation errors. */
+  let cards: readonly DeckBuilderCardView[] = [];
+  let catalog: ReadonlyMap<number, DeckBuilderCardView> = new Map();
+  let catalogReady = false;
   /* The shell is the only surface that measures the viewport: the editor reads
      the published stage once here and passes the resulting layout mode down,
      so no component below reads the stage a second time. The fallback keeps a
@@ -56,6 +65,7 @@
     saveState: "idle",
     message: null,
     defaultDeckId: null,
+    favouriteDeckIds: [],
   };
   let controller: DeckBuilderController | null = null;
   let showLibraryImport = false;
@@ -95,7 +105,15 @@
     let disposed = false;
     let unsubscribe: () => void = () => undefined;
     let close: () => void = () => undefined;
-    void IndexedDbDeckRepository.open()
+    /* Before storage opens: seeding the starter deck resolves codes against the
+       catalog, so a repository opened first would only wait on it anyway. */
+    void runtimeCatalog()
+      .then(async (loaded) => {
+        cards = deckBuildableCards(loaded);
+        catalog = catalogByCode(loaded);
+        catalogReady = true;
+        return IndexedDbDeckRepository.open();
+      })
       .then(async (repository) => {
         if (disposed) {
           repository.close();
@@ -240,7 +258,7 @@
     </p>
     <a href="#/decks" data-cy="deck-not-found-back">Back to Deck Library</a>
   </main>
-{:else if !routeApplied || state.mode === "loading"}
+{:else if !catalogReady || !routeApplied || state.mode === "loading"}
   <main class="loading" aria-busy="true" data-cy="deck-editor-loading">
     <p data-cy="deck-editor-loading-eyebrow">Deck Editor</p>
     <h1 data-cy="deck-editor-loading-heading">Loading local decks…</h1>
@@ -252,16 +270,10 @@
     message={state.message}
     oncreate={(name) => runAndSync(controller?.createDeck(name))}
     onopen={(id) => onnavigate({ deckId: id })}
-    onrename={async (deck, name) => {
-      await controller?.openDeck(deck.id);
-      await runAndSync(controller?.rename(name));
-    }}
-    onduplicate={(id) => runAndSync(controller?.duplicate(id))}
-    ondelete={(deck) => controller?.deleteDeck(deck.id, deck.revision)}
-    onexport={(deck) => openLibraryModal("export", deck)}
     onimport={() => openLibraryModal("import")}
     defaultDeckId={state.defaultDeckId}
-    onsetdefault={(id) => void controller?.setDefaultDeck(id)}
+    favouriteDeckIds={state.favouriteDeckIds}
+    onfavourite={(id) => void controller?.toggleFavourite(id)}
   />
 {:else if state.current !== null && state.current.deck.id === deckId}
   <DeckEditor
@@ -282,6 +294,23 @@
     onrestoreautosave={(entry) =>
       void runAndSync(controller?.restoreAutosave(entry))}
     onopendeckbyid={(id) => onnavigate({ deckId: id })}
+    defaultDeckId={state.defaultDeckId}
+    onduplicate={() => void runAndSync(controller?.duplicate(deckId!))}
+    onexport={() => {
+      if (state.current !== null)
+        openLibraryModal("export", state.current.deck);
+    }}
+    onsetdefault={() => void controller?.setDefaultDeck(deckId!)}
+    ondelete={() => {
+      const deck = state.current?.deck;
+      if (deck === undefined) return;
+      /* A delete that failed leaves the deck where it is, so the route stays
+         on it: navigating away would report a deck as gone that still exists,
+         and hide the failure the editor is showing. */
+      void controller?.deleteDeck(deck.id, deck.revision).then((deleted) => {
+        if (deleted) onnavigate({ deckId: null });
+      });
+    }}
   />
 {:else}
   <main class="loading" aria-busy="true" data-cy="deck-editor-opening">

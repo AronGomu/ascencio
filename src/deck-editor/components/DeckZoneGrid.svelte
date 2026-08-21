@@ -31,13 +31,21 @@
     undefined;
   export let reorderActive = false;
   export let ondropzone: (zone: DeckZone) => void = () => undefined;
-  export let ontap: ((code: number, zone: DeckZone) => void) | null = null;
+  /* The index is what tells one copy of a repeated card from another, so the
+     edit lands on the tile that was clicked rather than on the first match. */
+  export let ontap:
+    ((code: number, zone: DeckZone, index: number) => void) | null = null;
   export let onhovercard: (code: number) => void = () => undefined;
   export let onhoverend: () => void = () => undefined;
   export let collapsed = false;
   export let ontogglecollapse: () => void = () => undefined;
-  export let oncontextremove: (code: number, zone: DeckZone) => void = () =>
-    undefined;
+  /* The index for the same reason `ontap` carries one: without it the removal
+     lands on the first copy of a repeated card rather than the one clicked. */
+  export let oncontextremove: (
+    code: number,
+    zone: DeckZone,
+    index: number,
+  ) => void = () => undefined;
 
   $: emptyCount = Math.max(0, plan.slots - codes.length);
 </script>
@@ -65,17 +73,18 @@
       >
         {label}
       </h3>
+      <span
+        class="count"
+        class:error={codes.length > plan.slots}
+        data-cy={`deck-zone-count-${zone}`}
+      >
+        {zone === "main"
+          ? codes.length <= 40
+            ? `${codes.length}/40`
+            : `${codes.length}/40-60`
+          : `${codes.length}/${plan.slots}`}
+      </span>
     </button>
-    <span
-      class:error={codes.length > plan.slots}
-      data-cy={`deck-zone-count-${zone}`}
-    >
-      {zone === "main"
-        ? codes.length <= 40
-          ? `${codes.length}/40`
-          : `${codes.length}/40-60`
-        : `${codes.length}/${plan.slots}`}
-    </span>
   </header>
   {#if !collapsed}
     <div
@@ -128,11 +137,11 @@
               selected={selectedCode === code}
               compact={plan.compact}
               onselect={() => onselect(catalog.get(code) ?? null, code)}
-              ontap={ontap === null ? null : () => ontap(code, zone)}
+              ontap={ontap === null ? null : () => ontap(code, zone, index)}
               ondragcard={(event) => ondragcard(code, zone, index, event)}
               {ondragcancel}
               onhover={() => onhovercard(code)}
-              oncontext={() => oncontextremove(code, zone)}
+              oncontext={() => oncontextremove(code, zone, index)}
             />
           </div>
         {/each}
@@ -170,15 +179,22 @@
   }
 
   header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     margin-bottom: 0.45rem;
   }
 
   header button {
     all: unset;
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.15rem 0.25rem;
+    border-radius: 0.4rem;
     cursor: pointer;
+  }
+
+  header button:hover {
+    background: var(--surface-raised);
   }
 
   /* `all: unset` drops the user-agent focus ring, and being an author
@@ -193,13 +209,14 @@
     font-size: 0.94rem;
   }
 
-  header span {
+  .count {
+    margin-left: auto;
     color: var(--muted);
     font-size: 0.78rem;
     font-weight: 750;
   }
 
-  header span.error,
+  .count.error,
   .overflow {
     color: var(--danger);
   }

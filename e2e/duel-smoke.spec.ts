@@ -558,7 +558,16 @@ test("a local deck built from the packaged catalog is offered and duels", async 
   await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
     LOCAL_DECK_NAME,
   );
-  await expect(page.getByText("Saved locally")).toBeVisible();
+  /* The "Saved locally" chip went with the rest of the editor's header chrome.
+     The commit itself is still announced: the store only reaches this message
+     after the repository has written the record, so it says what the chip said
+     — the deck is in local storage before this test navigates away from it. */
+  await expect(page.locator('[data-cy="deck-editor-message"]')).toHaveText(
+    "Deck imported.",
+  );
+  await expect(
+    page.locator('[data-cy="deck-editor-layout"]'),
+  ).not.toHaveAttribute("aria-busy", "true");
 
   await page.goto("./#/duel");
   await expect(page.locator('[data-cy="deck-picker"]')).toBeVisible({
@@ -1341,19 +1350,21 @@ test("default duel occupies exactly one viewport at every supported viewport", a
         : viewport.id;
     await expect(main).toHaveAttribute("data-duel-viewport", "true");
 
-    const metrics = await page.evaluate(() => ({
-      documentScrollHeight: document.documentElement.scrollHeight,
-      bodyScrollHeight: document.body.scrollHeight,
-      innerHeight: window.innerHeight,
-    }));
-    expect(
-      metrics.documentScrollHeight,
-      `${label} document must not overflow the viewport`,
-    ).toBeLessThanOrEqual(metrics.innerHeight + 1);
-    expect(
-      metrics.bodyScrollHeight,
-      `${label} body must not overflow the viewport`,
-    ).toBeLessThanOrEqual(metrics.innerHeight + 1);
+    await expect(async () => {
+      const metrics = await page.evaluate(() => ({
+        documentScrollHeight: document.documentElement.scrollHeight,
+        bodyScrollHeight: document.body.scrollHeight,
+        innerHeight: window.innerHeight,
+      }));
+      expect(
+        metrics.documentScrollHeight,
+        `${label} document must not overflow the viewport`,
+      ).toBeLessThanOrEqual(metrics.innerHeight + 1);
+      expect(
+        metrics.bodyScrollHeight,
+        `${label} body must not overflow the viewport`,
+      ).toBeLessThanOrEqual(metrics.innerHeight + 1);
+    }).toPass();
 
     await expect(field).toBeVisible();
     const box = await field.boundingBox();
@@ -1397,44 +1408,54 @@ test("the shell letterboxes the app to a 16:9 stage above the breakpoint", async
     });
     await expect(stage).toHaveAttribute("data-stage-mode", "stage");
 
-    const box = await stage.boundingBox();
-    if (box === null) throw new Error(`${viewport.id} stage has no box`);
-    expect(
-      Math.abs(box.width - (box.height * 16) / 9),
-      `${viewport.id} stage must be 16:9 (got ${box.width}x${box.height})`,
-    ).toBeLessThanOrEqual(1);
-    expect(box.width).toBeLessThanOrEqual(viewport.width);
-    expect(box.height).toBeLessThanOrEqual(viewport.height);
+    let box!: NonNullable<Awaited<ReturnType<typeof stage.boundingBox>>>;
+    await expect(async () => {
+      const b = await stage.boundingBox();
+      if (b === null) throw new Error(`${viewport.id} stage has no box`);
+      expect(
+        Math.abs(b.width - (b.height * 16) / 9),
+        `${viewport.id} stage must be 16:9 (got ${b.width}x${b.height})`,
+      ).toBeLessThanOrEqual(1);
+      expect(b.width).toBeLessThanOrEqual(viewport.width);
+      expect(b.height).toBeLessThanOrEqual(viewport.height);
+      box = b;
+    }).toPass();
 
-    const metrics = await page.evaluate(() => ({
-      scrollHeight: document.scrollingElement!.scrollHeight,
-      innerHeight: window.innerHeight,
-      bodyOverflow: getComputedStyle(document.body).overflowY,
-    }));
-    expect(
-      metrics.scrollHeight,
-      `${viewport.id} page must not scroll`,
-    ).toBeLessThanOrEqual(metrics.innerHeight + 1);
-    expect(metrics.bodyOverflow).toBe("hidden");
+    await expect(async () => {
+      const metrics = await page.evaluate(() => ({
+        scrollHeight: document.scrollingElement!.scrollHeight,
+        innerHeight: window.innerHeight,
+        bodyOverflow: getComputedStyle(document.body).overflowY,
+      }));
+      expect(
+        metrics.scrollHeight,
+        `${viewport.id} page must not scroll`,
+      ).toBeLessThanOrEqual(metrics.innerHeight + 1);
+      expect(metrics.bodyOverflow).toBe("hidden");
+    }).toPass();
 
     // The duel renders inside the stage, never outside its bars.
-    const fieldBox = await field.boundingBox();
-    if (fieldBox === null) throw new Error(`${viewport.id} field has no box`);
-    expect(fieldBox.y).toBeGreaterThanOrEqual(box.y - 1);
-    expect(fieldBox.y + fieldBox.height).toBeLessThanOrEqual(
-      box.y + box.height + 1,
-    );
+    await expect(async () => {
+      const fieldBox = await field.boundingBox();
+      if (fieldBox === null) throw new Error(`${viewport.id} field has no box`);
+      expect(fieldBox.y).toBeGreaterThanOrEqual(box.y - 1);
+      expect(fieldBox.y + fieldBox.height).toBeLessThanOrEqual(
+        box.y + box.height + 1,
+      );
+    }).toPass();
   }
 
   // The duel measures the stage, not the viewport, so it fills the box.
   await page.setViewportSize({ width: 1600, height: 1000 });
-  const stageBox = await stage.boundingBox();
-  const regionBox = await page
-    .locator('[data-cy="shell-region-duel"]')
-    .boundingBox();
-  if (stageBox === null || regionBox === null)
-    throw new Error("stage or duel region has no bounding box");
-  expect(Math.abs(regionBox.height - stageBox.height)).toBeLessThanOrEqual(1);
+  await expect(async () => {
+    const stageBox = await stage.boundingBox();
+    const regionBox = await page
+      .locator('[data-cy="shell-region-duel"]')
+      .boundingBox();
+    if (stageBox === null || regionBox === null)
+      throw new Error("stage or duel region has no bounding box");
+    expect(Math.abs(regionBox.height - stageBox.height)).toBeLessThanOrEqual(1);
+  }).toPass();
 });
 
 test("short-height duel keeps the full-height preview column, bounded art and scroll-ready text", async ({
@@ -3584,8 +3605,14 @@ test("spatial field navigation has one visible 44px keyboard entry without a tra
 test("a full preset duel can be completed using keyboard controls only with one response per prompt", async ({
   page,
 }, testInfo) => {
-  // Full-suite runs can validly exceed five minutes while still advancing
-  // through unique prompts; keep the larger budget local to this duel walker.
+  // Production duels shuffle for real, so this walk is exactly as long as the
+  // duel it is handed: consecutive runs have answered anywhere from 60 to 191
+  // prompts. Every one of them kept advancing through prompt ids it had never
+  // seen before, so a long run here is a long duel and not a stall. What used
+  // to make the long ones time out was this walk costing time quadratic in
+  // its own length (see `readLatestPromptId`); now that a step is flat, the
+  // walk measures ~145 ms per prompt, and even the 400-prompt ceiling below
+  // fits inside this budget several times over.
   test.setTimeout(600_000);
   await page.goto("./#/duel");
   await startPresetDuel(page);
@@ -3610,6 +3637,9 @@ test("a full preset duel can be completed using keyboard controls only with one 
 
   const field = page.getByRole("region", { name: "Duel field" });
   const answeredPromptIds = new Set<string>();
+  // Recorded in the evidence below so a future slow run can be read as a long
+  // duel or a stalled one without re-instrumenting this walk.
+  const walkStartedAt = Date.now();
   // Opponent hand cards render upright, so the only sideways cards in a duel are
   // real defense-position monsters. Ask the walker to produce one so the
   // focus-visibility assertion on rotated card art has something to focus.
@@ -3617,7 +3647,12 @@ test("a full preset duel can be completed using keyboard controls only with one 
   let fieldResponses = 0;
   let confirmWindowGeometryChecks = 0;
   let defenseFocusVisible = false;
-  for (let step = 0; step < 200; step += 1) {
+  // A real duel has been measured at 191 prompts, so a 200-step ceiling is a
+  // cap this walk can hit on a merely long duel and then fail for having
+  // stopped early rather than for anything the duel did. The ceiling is only
+  // here so a broken build cannot spin forever; a duel that loops is caught
+  // by the duplicate-prompt assertion on the first repeat, not by this count.
+  for (let step = 0; step < 400; step += 1) {
     const result = page.locator(".result-panel");
     if (await result.isVisible()) break;
 
@@ -3625,11 +3660,8 @@ test("a full preset duel can be completed using keyboard controls only with one 
     await controls.waitFor({ state: "visible", timeout: 30_000 });
     const kind = await controls.getAttribute("data-prompt-kind");
     if (kind === null) throw new Error("Prompt kind is missing");
-    const prompt = [...(await readCapture(page)).events]
-      .reverse()
-      .find((event) => event.type === "prompt") as
-      (CapturedPromptEvent & Readonly<Record<string, unknown>>) | undefined;
-    if (prompt === undefined) throw new Error("Captured prompt is missing");
+    const promptId = await readLatestPromptId(page);
+    if (promptId === undefined) throw new Error("Captured prompt is missing");
     if (!defenseFocusVisible) {
       const defenseTarget = field
         .locator(
@@ -3647,10 +3679,7 @@ test("a full preset duel can be completed using keyboard controls only with one 
       // managed to focus it.
       setup.needsDefense = !defenseFocusVisible && !defenseOnBoard;
     }
-    const responseCountBefore = (await readCapture(page)).commands.filter(
-      (command) =>
-        command.type === "respond" && command.promptId === prompt.prompt.id,
-    ).length;
+    const responseCountBefore = await countResponsesTo(page, promptId);
     const actionBar = field.locator('[data-cy="field-action-bar"]');
     if (confirmWindowGeometryChecks === 0 && (await actionBar.count()) > 0) {
       await assertConfirmWindowGeometry(
@@ -3676,28 +3705,17 @@ test("a full preset duel can be completed using keyboard controls only with one 
       .poll(
         async () => {
           if (await result.isVisible()) return true;
-          const latest = [...(await readCapture(page)).events]
-            .reverse()
-            .find((event) => event.type === "prompt") as
-            | (CapturedPromptEvent & Readonly<Record<string, unknown>>)
-            | undefined;
-          return latest !== undefined && latest.prompt.id !== prompt.prompt.id;
+          const latest = await readLatestPromptId(page);
+          return latest !== undefined && latest !== promptId;
         },
         { timeout: 30_000 },
       )
       .toBe(true);
     await expect
-      .poll(
-        async () =>
-          (await readCapture(page)).commands.filter(
-            (command) =>
-              command.type === "respond" &&
-              command.promptId === prompt.prompt.id,
-          ).length,
-      )
+      .poll(async () => await countResponsesTo(page, promptId))
       .toBe(responseCountBefore + 1);
-    expect(answeredPromptIds.has(prompt.prompt.id)).toBe(false);
-    answeredPromptIds.add(prompt.prompt.id);
+    expect(answeredPromptIds.has(promptId)).toBe(false);
+    answeredPromptIds.add(promptId);
   }
 
   expect(answeredPromptIds.size).toBeGreaterThan(0);
@@ -3705,9 +3723,12 @@ test("a full preset duel can be completed using keyboard controls only with one 
   // Prevent `count() > 0` from silently deleting the geometry gate.
   expect(confirmWindowGeometryChecks).toBeGreaterThan(0);
   expect(defenseFocusVisible).toBe(true);
+  // One read for the whole check rather than one per prompt id: the same
+  // assertion, without re-shipping the transcript once per answered prompt.
+  const finalCommands = (await readCapture(page)).commands;
   for (const promptId of answeredPromptIds) {
     expect(
-      (await readCapture(page)).commands.filter(
+      finalCommands.filter(
         (command) =>
           command.type === "respond" && command.promptId === promptId,
       ),
@@ -3750,6 +3771,7 @@ test("a full preset duel can be completed using keyboard controls only with one 
         completedWithoutPointer: true,
         result: await result.getByRole("heading").textContent(),
         responses: answeredPromptIds.size,
+        walkerMs: Date.now() - walkStartedAt,
         fieldResponses,
         confirmWindowGeometryChecks,
         duplicateResponses: 0,
@@ -4828,5 +4850,37 @@ async function readCapture(page: Page): Promise<BrowserCapture> {
           readonly __duelCapture: BrowserCapture;
         }
       ).__duelCapture,
+  );
+}
+
+/* The capture holds every engine message of the duel so far, and a full duel
+   is hundreds of prompts long: by prompt 190 the whole log was 2.6 MB and one
+   `readCapture` cost ~0.8 s. A walker that polls it on every step therefore
+   costs time quadratic in its own length — measured at 4.9 s per step near
+   the end of a 191-prompt duel against 0.2 s at the start, which is what put
+   the walk past its ten-minute budget. These two answer the single question
+   each poll actually asks, inside the page, so a poll ships a string or a
+   number instead of the transcript. The questions are unchanged. */
+async function readLatestPromptId(page: Page): Promise<string | undefined> {
+  return page.evaluate(() => {
+    const events = window.__duelCapture.events;
+    for (let index = events.length - 1; index >= 0; index -= 1) {
+      const event = events[index] as { readonly type?: unknown } & Readonly<
+        Record<string, unknown>
+      >;
+      if (event.type === "prompt")
+        return (event as unknown as CapturedPromptEvent).prompt.id;
+    }
+    return undefined;
+  });
+}
+
+async function countResponsesTo(page: Page, promptId: string): Promise<number> {
+  return page.evaluate(
+    (id) =>
+      window.__duelCapture.commands.filter(
+        (command) => command.type === "respond" && command.promptId === id,
+      ).length,
+    promptId,
   );
 }

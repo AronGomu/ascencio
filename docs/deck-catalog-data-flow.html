@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Card Catalog Data Flow — build to editor and duel (2026-08-20)</title>
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --border:#2b3446;
+    --fg:#dbe4f0; --muted:#8b98ab; --accent:#58a6ff; --green:#3fb950;
+    --orange:#d29922; --red:#f85149; --violet:#a371f7; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+    font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  .wrap { max-width:1040px; margin:0 auto; padding:2rem 1.3rem 4rem; }
+  h1 { font-size:1.55rem; margin:0 0 .3rem; }
+  .sub { color:var(--muted); margin:0 0 1.6rem; }
+  h2 { color:var(--accent); font-size:1.15rem; margin:2rem 0 .7rem;
+    border-bottom:1px solid var(--border); padding-bottom:.3rem; }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:1rem 1.1rem; margin:.8rem 0; }
+  code { background:#22304a66; border-radius:5px; padding:.05rem .3rem;
+    font:.84em ui-monospace,monospace; color:#9fc4ff; }
+  a { color:var(--accent); }
+  ul { margin:.3rem 0 .3rem 1.1rem; padding:0; } li { margin:.24rem 0; }
+  table { width:100%; border-collapse:collapse; font-size:.88rem; }
+  th,td { text-align:left; padding:.45rem .55rem; border-bottom:1px solid var(--border); vertical-align:top; }
+  th { color:var(--muted); font-size:.76rem; text-transform:uppercase; letter-spacing:.05em; }
+  .flow { display:grid; grid-template-columns:repeat(4, 1fr); gap:.5rem; align-items:stretch; margin:.7rem 0; }
+  .box { border:1px solid var(--border); border-radius:10px; background:var(--panel2); padding:.6rem .7rem; font-size:.8rem; }
+  .box h4 { margin:0 0 .35rem; font-size:.76rem; color:var(--accent); text-transform:uppercase; letter-spacing:.05em; }
+  .box p { margin:.2rem 0; color:var(--muted); }
+  .box b { color:var(--fg); }
+  .rowarrow { display:grid; grid-template-columns:repeat(4,1fr); gap:.5rem; color:var(--muted); text-align:center; font-size:.8rem; }
+  .metric { display:flex; gap:1.6rem; flex-wrap:wrap; margin:.4rem 0; }
+  .metric div { min-width:8rem; }
+  .metric b { display:block; font-size:1.25rem; color:var(--accent); }
+  .metric span { color:var(--muted); font-size:.74rem; }
+  .old { color:var(--red); } .now { color:var(--green); }
+  .note { border-left:3px solid var(--orange); padding-left:.7rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Card catalog — build to editor and duel</h1>
+<p class="sub">Shipped state for <code>feedback-decks.md</code> Deck Builder 13–14. ADR-043.</p>
+
+<h2>Scale</h2>
+<div class="card">
+  <div class="metric">
+    <div><b>14,794</b><span>cards in the snapshot</span></div>
+    <div><b>2.7 MB</b><span>catalog/cards (64 shards)</span></div>
+    <div><b>7.1 MB</b><span>catalog/texts/en (64 shards)</span></div>
+    <div><b>33 MB</b><span>card scripts (256 shards)</span></div>
+    <div><b>~1.6 MB</b><span>cards + texts, gzipped</span></div>
+    <div><b>~36 ms</b><span>parse of all 128 shards</span></div>
+  </div>
+  <p class="note">Sharding is <code>code % 64</code> as lowercase two-digit hex: <code>catalog/cards/3f.json</code>,
+  <code>catalog/texts/en/3f.json</code>. Scripts shard by a different rule and are read by the Worker per code, never by the editor.</p>
+</div>
+
+<h2>Pipeline</h2>
+<div class="card">
+  <div class="flow">
+    <div class="box"><h4>1 · Source</h4>
+      <p><b>BabelCDB</b> + CardScripts + Ignis strings, pinned and hash-verified</p>
+      <p><code>npm run assets:sync</code> → <code>generated/assets/current/</code></p></div>
+    <div class="box"><h4>2 · Snapshot</h4>
+      <p><b>manifest.json</b> declares 451 files with bytes + sha256</p>
+      <p><code>npm run snapshot:verify</code></p></div>
+    <div class="box"><h4>3 · Package</h4>
+      <p><b>copySnapshotAssets</b> copies <i>every declared file</i> into <code>dist/runtime/assets/current/</code></p>
+      <p class="now">was: bundled-deck closure only</p></div>
+    <div class="box"><h4>4 · Read</h4>
+      <p><b>runtimeCatalog()</b> fetches 128 shards, joins via <code>packagedCatalog</code>, memoizes</p>
+      <p>editor + duel share one promise</p></div>
+  </div>
+  <div class="rowarrow"><span>▼ verified</span><span>▼ declared</span><span>▼ served</span><span>▼ mapped</span></div>
+</div>
+
+<h2>Who reads what</h2>
+<div class="card">
+<table>
+<thead><tr><th>Consumer</th><th>Reads</th><th>For</th></tr></thead>
+<tbody>
+<tr><td><code>src/deck-editor/DeckEditorApp.svelte</code></td><td><code>runtimeCatalog()</code></td><td>catalog pane, validation catalog, starter-deck seeding</td></tr>
+<tr><td><code>src/battle/decks/selectable-decks.ts</code></td><td><code>runtimeCatalog()</code> → <code>supportedDuelCardCodes()</code></td><td>which local decks the picker may offer</td></tr>
+<tr><td><code>src/battle/app/App.svelte</code></td><td><code>runtimeCatalog()</code></td><td>card names/effect text on the field and in preview</td></tr>
+<tr><td>Duel Worker</td><td><code>runtime/assets/current/catalog/*</code> + <code>scripts/*</code> per code</td><td>engine card data and effect scripts at duel start</td></tr>
+<tr><td>Tiles &amp; preview</td><td><code>{BASE_URL}runtime/images/{code}.jpg</code></td><td>art, with placeholder fallback on 404</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>Before / after</h2>
+<div class="card">
+<table>
+<thead><tr><th>Concern</th><th class="old">Before</th><th class="now">After</th></tr></thead>
+<tbody>
+<tr><td>Catalog source</td><td><code>__ACTIVE_CARD_DATA__</code> / <code>__ACTIVE_CARD_TEXTS__</code> Vite defines</td><td>fetched runtime shards, memoized</td></tr>
+<tr><td>Catalog size</td><td>~120 cards (art-backed bundled-deck codes)</td><td>14,794 read; 14,551 offered by the editor (243 Tokens excluded)</td></tr>
+<tr><td>Packaged assets</td><td>bundled-deck closure</td><td>every declared snapshot file (~45 MB)</td></tr>
+<tr><td>Playable set</td><td>the same ~120 codes</td><td>anything in the database</td></tr>
+<tr><td>Art</td><td>manifest-listed codes only</td><td>URL by convention + placeholder fallback</td></tr>
+<tr><td><code>missing-art</code> warning</td><td>per card without art</td><td>deleted</td></tr>
+<tr><td>Search</td><td><code>toLocaleLowerCase()</code> per card per keystroke</td><td><code>DeckCatalogIndex</code>, budgets asserted in CI</td></tr>
+<tr><td>Result rendering</td><td>every match mounted</td><td>60 per window, +60 per intersection</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>Invariants this flow protects</h2>
+<div class="card">
+  <ul>
+    <li><b>One derivation, two surfaces.</b> The editor cannot offer a card the picker withholds, because both read the
+    same memoized catalog.</li>
+    <li><b>The engine stays authoritative.</b> Nothing here decides legality; the Worker still loads the card data and
+    scripts it needs and still refuses what it cannot run.</li>
+    <li><b>The snapshot stays one verified unit.</b> Files are copied because the manifest declares them, and
+    <code>build:verify</code> re-checks byte length and digest for every one.</li>
+    <li><b>Art is decoration.</b> A missing image is a placeholder, never a validation error and never a reason to
+    withhold a deck.</li>
+  </ul>
+</div>
+
+</div>
+</body>
+</html>
+</content>

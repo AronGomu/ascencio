@@ -16,6 +16,12 @@ export const EMPTY_CATALOG_FILTERS: DeckCatalogFilters = Object.freeze({
   race: null,
 });
 
+/* The UI filters through `filterDeckCatalogIndex` (`deck-catalog-index.ts`).
+   This is the obvious implementation of the same predicate, kept as the oracle
+   the indexed one is proved against: `deck-catalog-index.test.ts` asserts the
+   two agree over generated filters, and `deck-catalog-performance.test.ts`
+   times them side by side. It has no production caller — if the differential
+   test goes, this goes with it. */
 export function filterDeckCatalog(
   cards: readonly DeckBuilderCardView[],
   filters: DeckCatalogFilters,

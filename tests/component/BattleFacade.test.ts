@@ -8,8 +8,6 @@ const workerClientSpies = vi.hoisted(() => {
   Object.assign(globalThis, {
     __RUNTIME_SNAPSHOT_ID__: runtimeSnapshotId,
     __ACTIVATION_SNAPSHOT_ID__: runtimeSnapshotId,
-    __ACTIVE_CARD_TEXTS__: [],
-    __ACTIVE_CARD_DATA__: [],
     __RUNTIME_MANIFEST_SHA256__: "b".repeat(64),
     __ACTIVE_IMAGE_MANIFEST_SHA256__: "c".repeat(64),
     __RUNTIME_REVISIONS__: {},

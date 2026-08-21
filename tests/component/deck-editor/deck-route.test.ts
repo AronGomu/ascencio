@@ -57,7 +57,7 @@ describe("deck editor route binding", () => {
     await waitFor(() => expect(query("deck-library")).not.toBeNull());
     expect(query("deck-name-input")).toBeNull();
     expect(
-      await screen.findByRole("button", { name: /Library Deck/ }),
+      await screen.findByRole("button", { name: /^Library Deck/ }),
     ).toBeTruthy();
   });
 
@@ -81,7 +81,7 @@ describe("deck editor route binding", () => {
   it("pushes the deck route when a library entry is opened", async () => {
     await seedDeck("d1", "Pushed Deck");
     const { onnavigate } = mount(null);
-    const entry = await screen.findByRole("button", { name: /Pushed Deck/ });
+    const entry = await screen.findByRole("button", { name: /^Pushed Deck/ });
     await userEvent.setup().click(entry);
     await waitFor(() =>
       expect(onnavigate).toHaveBeenCalledWith<[DeckEditorRoute]>({

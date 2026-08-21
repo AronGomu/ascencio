@@ -159,7 +159,7 @@ describe("global styles", () => {
     );
     expect(shell).toContain("grid-template-rows: minmax(0, 1fr)");
     expect(shell).toContain("overflow: hidden");
-    expect(css).toContain("--preview-w: 22rem");
+    expect(css).toContain("--preview-w: 15.5rem");
     expect(css).toContain("--rail-min: 15rem");
   });
 
@@ -529,5 +529,63 @@ describe("primitives.css (T16)", () => {
     expect(tokensIdx, "tokens.css import missing").toBeGreaterThan(-1);
     expect(primitivesIdx, "primitives.css import missing").toBeGreaterThan(-1);
     expect(primitivesIdx).toBeGreaterThan(tokensIdx);
+  });
+});
+
+describe("deck editor sizing", () => {
+  it("the shared preview width is card sized", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const rootMatches = css.match(/--preview-w:\s*15\.5rem;/g);
+    expect(
+      rootMatches,
+      "root --preview-w should be 15.5rem exactly once",
+    ).toHaveLength(1);
+    const subMatches = css.match(/--preview-w:\s*13\.5rem;/g);
+    expect(
+      subMatches,
+      "sub-breakpoint --preview-w should be 13.5rem exactly once",
+    ).toHaveLength(1);
+  });
+
+  const editorComponentPaths = (dir = "src/deck-editor"): string[] =>
+    readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+      const fullPath = join(dir, entry.name);
+      if (entry.isDirectory()) return editorComponentPaths(fullPath);
+      return entry.isFile() && entry.name.endsWith(".svelte") ? [fullPath] : [];
+    });
+
+  /* ADR-042 §1. Fixed-position overlays are the exception: a modal is painted
+     over the whole window, not inside the letterboxed stage, so the viewport is
+     the right unit for its `max-height`. Everything that lays out inside the
+     stage must read `--stage-h`. */
+  const VIEWPORT_SIZED_EDITOR_OVERLAYS = new Set([
+    "src/deck-editor/components/LoadDeckDialog.svelte",
+    "src/deck-editor/components/YdkExport.svelte",
+    "src/deck-editor/components/YdkImport.svelte",
+  ]);
+
+  it("the editor lays out from the stage, not the viewport", () => {
+    const components = editorComponentPaths();
+    expect(components.length).toBeGreaterThan(5);
+    for (const file of components) {
+      if (VIEWPORT_SIZED_EDITOR_OVERLAYS.has(file)) continue;
+      expect(
+        readFileSync(file, "utf8"),
+        `${file} must size itself from --stage-h, not 100vh`,
+      ).not.toContain("100vh");
+    }
+  });
+
+  it("every viewport-sized exception is a fixed overlay that still exists", () => {
+    for (const file of VIEWPORT_SIZED_EDITOR_OVERLAYS) {
+      const source = readFileSync(file, "utf8");
+      expect(
+        source,
+        `${file} no longer uses 100vh; drop the exception`,
+      ).toContain("100vh");
+      expect(source, `${file} is not a fixed overlay`).toContain(
+        "position: fixed",
+      );
+    }
   });
 });

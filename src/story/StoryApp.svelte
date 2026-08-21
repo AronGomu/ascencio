@@ -58,7 +58,8 @@
   } from "./shop/data/shop-set-data.ts";
   import { openablePicks, openBoosters } from "./shop/data/pack-generator.ts";
   import { singlePriceDp } from "./shop/data/shop-pricing.ts";
-  import { activeCatalog } from "../decks/catalog/active-catalog.ts";
+  import { runtimeCatalog } from "../decks/catalog/runtime-catalog.ts";
+  import { catalogByCode } from "../decks/catalog/pinned-ruleset.ts";
   import type { DeckBuilderCardView } from "../decks/catalog/ocg-card-mapper.ts";
   import TitleScreen from "./screens/TitleScreen.svelte";
   import {
@@ -91,6 +92,16 @@
     "Your progress could not be saved, so the duel was not started. Free some storage and try again.";
   const HANDOFF_INTERRUPTED =
     "The duel was interrupted before it started. Try again or return to the map.";
+  const CATALOG_UNAVAILABLE = "The card database could not load.";
+
+  /* The shop screens that name, picture or price a card. Greeting and browse
+     list sets rather than cards, so neither pays for the read. */
+  const CATALOG_SCREENS: ReadonlySet<StoryScreen> = new Set([
+    "shop-cards",
+    "shop-opening",
+    "shop-results",
+    "shop-sell",
+  ]);
 
   /* The overlays expose one manual slot and the autosave stream; the store
      carries three manual slots and the pre-duel checkpoint for the duel
@@ -134,7 +145,12 @@
   let shopDataLoading = false;
   /* Full views, not a name/image projection: `resolveCardRarity` infers a
      rarity from ATK/type fields when the shop data misses a code. */
-  let catalogByCode: Map<number, DeckBuilderCardView> = new Map();
+  let cardViewByCode: ReadonlyMap<number, DeckBuilderCardView> = new Map();
+  /* Tracked as a flag rather than as `size > 0`, so a read that answered is
+     never mistaken for one still in flight and retried on every flush. */
+  let catalogReady = false;
+  let catalogError: string | null = null;
+  let catalogLoading = false;
   let boosterDialogOpen = false;
   let root: HTMLElement;
   let playback: PlaybackMode = "off";
@@ -214,6 +230,13 @@
       shopDataError === null
     )
       void loadShopData();
+    if (
+      CATALOG_SCREENS.has(state.screen) &&
+      !catalogReady &&
+      !catalogLoading &&
+      catalogError === null
+    )
+      loadCatalog();
   });
 
   afterUpdate(() => {
@@ -232,25 +255,18 @@
   });
 
   $: inShop = state.screen.startsWith("shop-");
-  $: if (
-    (state.screen === "shop-cards" ||
-      state.screen === "shop-results" ||
-      state.screen === "shop-opening" ||
-      state.screen === "shop-sell") &&
-    catalogByCode.size === 0
-  ) {
-    catalogByCode = new Map(activeCatalog().map((c) => [c.code, c]));
-  }
-  /* Null until the shop data is in hand: rarity decides what a card sells
-     for, and resolving it without that data degrades every unknown card to
-     `common`. A sale is irreversible, so the screen waits rather than pays
-     the floor price for a ghost rare. */
+  /* Null until both card sources are in hand: rarity decides what a card
+     sells for, and resolving it without the shop data degrades every unknown
+     card to `common` — as does resolving it without the catalog, which is
+     what `resolveCardRarity` infers a rarity from for a code no set sells. A
+     sale is irreversible, so the screen waits rather than pays the floor
+     price for a ghost rare. */
   $: sellableCards =
-    shopData === null
+    shopData === null || !catalogReady
       ? null
       : Object.entries(state.collection).map(([codeKey, owned]) => {
           const code = Number(codeKey);
-          const view = catalogByCode.get(code);
+          const view = cardViewByCode.get(code);
           return {
             code,
             owned,
@@ -269,15 +285,15 @@
     code,
     rarity,
     name:
-      shopNameByCode.get(code) ?? catalogByCode.get(code)?.name ?? `#${code}`,
-    imageUrl: catalogByCode.get(code)?.imageUrl ?? null,
+      shopNameByCode.get(code) ?? cardViewByCode.get(code)?.name ?? `#${code}`,
+    imageUrl: cardViewByCode.get(code)?.imageUrl ?? null,
   }));
   $: shopSet = shopData?.sets.find(({ id }) => id === state.shopSetId) ?? null;
   $: shopSetName = shopSet?.name ?? "";
   $: shopCards = (shopSet?.cards ?? []).map((card) => ({
     code: card.code,
     name: card.name,
-    imageUrl: catalogByCode.get(card.code)?.imageUrl ?? null,
+    imageUrl: cardViewByCode.get(card.code)?.imageUrl ?? null,
     rarity: card.rarity,
     priceDp: singlePriceDp(card.rarity),
   }));
@@ -383,6 +399,44 @@
     } finally {
       shopDataLoading = false;
     }
+  }
+
+  /**
+   * Reads the card database the shop names, pictures and prices cards from.
+   *
+   * Not awaited before the shop renders: this is a fetch of the whole packaged
+   * snapshot, and every shop screen but Sell already has a name and a price
+   * for each card from the shop data — the catalog only adds the art, which
+   * folds in when it lands and falls back to the placeholder until then.
+   * Sell is the exception and waits on `catalogReady`, because it is the one
+   * screen whose numbers the catalog changes.
+   */
+  function loadCatalog(): void {
+    catalogLoading = true;
+    catalogError = null;
+    void runtimeCatalog().then(
+      (loaded) => {
+        cardViewByCode = catalogByCode(loaded);
+        catalogReady = true;
+        catalogLoading = false;
+      },
+      (error: unknown) => {
+        catalogLoading = false;
+        catalogError = `${CATALOG_UNAVAILABLE} ${
+          error instanceof Error ? error.message : String(error)
+        }`;
+      },
+    );
+  }
+
+  /** One Retry for the sell screen, which reads both sources and so can be
+      held up by either. Retries only what actually failed. */
+  function retrySellSources(): void {
+    if (shopDataError !== null) {
+      shopDataError = null;
+      void loadShopData();
+    }
+    if (catalogError !== null) loadCatalog();
   }
 
   /** Opens only what the loaded data can fill. A pick naming a set with no
@@ -791,12 +845,9 @@
   {:else if state.screen === "shop-sell"}
     <ShopSellScreen
       cards={sellableCards}
-      error={shopDataError}
+      error={shopDataError ?? catalogError}
       onsell={(items) => dispatch({ type: "sell-cards", items })}
-      onretry={() => {
-        shopDataError = null;
-        void loadShopData();
-      }}
+      onretry={retrySellSources}
       onback={() => dispatch({ type: "shop-navigate", to: "greeting" })}
     />
   {:else if state.screen === "shop-opening"}

@@ -2,56 +2,48 @@
 
 ## General
 
-1. Update the pre-configured starting deck for the duel application and insert it as default, as decks are already saved in the deck storage. And also update the dual starting menu to auto-select a default deck. So basically, in the deck interface you can assign a default deck, and by default it assigns that. Then you have a select picker with a filter to select other decks you created and stored as decks. For the opponent is auto-assigned the Shadow deck for now.
-
-2.
-
 ## Decks Menu
 
-1. Replace "import YDK" with simply "Import Deck".
+1. "deck-library-search-field", "", "" and "" should all be on the same first row.
 
-2. Remove : "Local decks", "Deck Library", "Visual Novel chooses a deck ID. This module stores and resolves decks."
+2. The "default" tag should be in on same line of deck name but justified right instead of taking an entire new row.
 
-3. Remove "deck-library-status-{id}" row. Instead, replace it with a halo-type highlight. It's green for a valid decklist, orange for a warning decklist, and when you hover the card, a tooltip shows the deck warnings; red is for an invalid decklist.
+3. On the same row, completly justified right in the corner, add a clickable star icon. If clicked, add decks to favourite. By default, order decks in the list favourite first (by date) then others by date. Default is always first in the list.
+
+4. Rename, duplicate, export, set default, delete directly into deck/{id} page on the top row
 
 ## Deck Builder
 
-1. The card preview should be at the left and the card search should be at the right. Invert the position of those two panels.
+1. There is still margins to exploit on full hd screens
 
-2. Make sure the preview panel is exactly the same feature used by the dual simulator. It should be shared.
+2. No scroll bar should appear on "shell-region-decks" before going to responsive mobile size.
 
-3. Bind Control + Z to the undo action. It should do the same thing as clicking on Undo.
+3. Left clicking on a card in the deck should move it to the sideboard. Same from sideboard to deck.
 
-4. Expand the width and height of the different sections to use almost the entire viewport for the width and the height, just leave a very minimal margin.
+3.1 Left clicking a card in the extra deck should remove it from that deck.
 
-5. Remove the import and export button at the top right to make them exclusive to the previous window in the deck selector.
+4. Left clicking on a card in the "deck-catalog" should add the card to the main deck or extra deck. Move to sideboard only if main deck is full.
 
-6. Make the text input for the deck name way smaller.
+Note : keep right clicking
 
-7. In the main panel, make the main deck, extra deck, and side deck sections collapsible, and make the extra deck and side deck sections take full width within the panel, not placed side by side. They should be one above the other, with the extra deck first, then the side deck. Also, by default, the side deck is collapsed.
+5. The sidebar to collapse or uncollaps the main, extra or side should take whole width and be clickable to do the effect on the whole width.
 
-8. Remove from main panel : "Deck workspace" and "Build deck" rows. Same for "Pinned card details" and "Card catalog" and "Find cards".
+6. Reduce width of card viewer in not mobile view. Make is fit card image preview width with tight margins (also impact duel)
 
-9. Wire the real card database and replace the placeholder for the preview and the card in the search and the deck with the real cards. Same as the duo simulator.
+7. Card image shown in card rectangle ni deck and results only show top left corner of image. Make sure either :
+   1. use and resize the actual image
+   2. Fit the image entirely within
 
-10. Whenever the maximum number of copies is already present in the deck, show the card with a red highlight instead of green to indicate that you cannot add more.
+8. Put all 15 slots of extra deck and sideboard on 1 row. Resize to fit.
 
-11. When the mouse pointer hovers over a card, the preview should update. If you click on a card and select it, leaving the card area returns the preview to the currently selected card.
+9. Bug to fix : i cannot drag and drop valid card to sideboard
 
-12. When you drag and drop a card from the main deck, extra deck, or side deck outside of a valid zone for the deck, treat this action as removing the card from the deck.
+10. Add a checkbox at the corner top right of "deck-catalog" with label "to sideboard". If checked, clicked-on card go to the sideboard instead of the main deck first.
 
-13. Remove the “remove picked card” button and remove the “drop picked card” in the main deck, side deck, or extra deck whenever you drag and drop a card. Only use the highlights of the actual zones to signal to the user that it’s droppable.
+11. Make sure to auto save on each update of the deck, extra and side (card position movements included)
 
-14. If I right‑click on an already selected card from either the main deck, side deck, or extra deck, it will remove the card from the deck. If I do the same in the card catalog, it will add the card to the deck—first to the main deck, then, if there is not enough space, to the side deck or the extra deck.
+12. Make a custom scroll bar for results in catalag to blend better with the dark background. Still visible though.
 
-15. Do not auto-sort the card. Instead, in the main panel for the deck workspace, add a button to sort by alphabetical order or sort by type of card. It will put monsters first, spells second, and traps third, then sort alphabetically. The user can take a card and drag and drop it onto another card or an empty slot on the deck workspace; it will either swap places with the selected card or move to the empty slot.
+13. Load the cards lazily in the search result of catalog and do a "infinite scroll" style to avoid loading all cards at once in the result panel.
 
-16. When you try to drop a card into an invalid zone, the zone should highlight red to show that it's not possible.
-
-17. When you go above 40 cards, you should only add a new row with the new slots up to 50. If you go over 50, it adds another new row. The 40 out of 40 changes to 40 out of 40‑60 : "X/40-60".
-
-18. At the top, remove the number, the cards for main and the number of cards in the main, extra and the number of cards in the extra, and side and the number of cards in the extra. Also remove the deck status. And the autosave.
-
-19. Add two new buttons to the top: a Load button to load a deck from the saved decks, and a dialog that opens with two tabs. The first tab lists your decks, and the second tab contains the list of autosaves. The autosave list keeps in memory the last hundred actions you took to update the deck—adding or removing a card, or moving a card from the main deck to the side deck, etc. Do not record the position of the card within a section, main deck, side deck, or extra deck. And for each entry, put the timestamp and then the deck name inputted at the time of the edit.
-
-20. Bind Ctrl+Y to redo an action. It should do the same thing as the redo button.
+14. Wire the entire card database. Add performance test to make sure that all loading and searching is as fast as possible.

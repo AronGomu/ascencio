@@ -647,11 +647,12 @@ function buildRawEnginePrompt(
           "Announce a number",
           bindings,
         ),
-        /* The core announces a list and reads the answer back as an index into
-           it, not as the number itself: it substitutes `options[value]` and
-           replies MSG_RETRY when `value` is out of range. Sending the number
-           announced the wrong one whenever it was a valid index, and killed
-           the duel whenever it was not. */
+        /* Index into `message.options`, not the announced number. The core
+           substitutes `options[value]` and replies MSG_RETRY when `value` is
+           out of range; sending the number announced the wrong one whenever it
+           was a valid index, and killed the duel whenever it was not. Nothing
+           maps it on the way out: `vendor/ocgcore-wasm/0.1.2/dist/index.js`
+           writes response 19 as a raw `t.i32(e.value)`. */
         (ids) => ({
           type: EngineResponseType.ANNOUNCE_NUMBER,
           value: exactlyOne(ids, bindings).rawIndex,

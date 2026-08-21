@@ -32,6 +32,15 @@ const dependencies: ActiveDuelDependencies = {
   counts: { cards: 0, texts: 1, scripts: 0, globals: 0, images: 0 },
 };
 
+/* No announced value equals its own position, so an encoder that answered
+   with the value rather than the index answers 8 here — which no three-option
+   list can index. A fixture like [0, 1, 2] would pass under either encoding. */
+const announcedNumbers: EngineMessage = {
+  type: EngineMessageType.ANNOUNCE_NUMBER,
+  player: 0,
+  options: [4n, 6n, 8n],
+};
+
 const idleMessage: EngineMessage = {
   type: EngineMessageType.SELECT_IDLE_COMMAND,
   player: 0,
@@ -264,26 +273,33 @@ describe("PromptRegistry", () => {
      response carrying the announced number itself announces the wrong one
      whenever it lands in range and stops the duel whenever it does not. */
   it("answers an announced number with its index rather than its value", () => {
-    const binding = buildEnginePrompt(
-      {
-        type: EngineMessageType.ANNOUNCE_NUMBER,
-        player: 0,
-        options: [1n, 2n, 3n],
-      },
-      21,
-      dependencies,
-    );
-    expect(binding?.prompt.choices.map((choice) => choice.label)).toEqual([
-      "1",
-      "2",
-      "3",
-    ]);
-    const last = binding?.prompt.choices.at(-1);
-    if (last === undefined) throw new Error("Announced numbers are missing");
-    expect(binding?.resolve([last.id])).toEqual({
+    const binding = buildEnginePrompt(announcedNumbers, 21, dependencies);
+    const eight = binding?.prompt.choices.at(-1);
+    if (eight === undefined) throw new Error("Announced numbers are missing");
+    expect(eight.label).toBe("8");
+    expect(binding?.resolve([eight.id])).toEqual({
       type: EngineResponseType.ANNOUNCE_NUMBER,
       value: 2,
     });
+  });
+
+  it("labels announced-number choices with the announced value", () => {
+    const binding = buildEnginePrompt(announcedNumbers, 21, dependencies);
+    expect(binding?.prompt.choices.map((choice) => choice.label)).toEqual([
+      "4",
+      "6",
+      "8",
+    ]);
+  });
+
+  it("rejects an announced number carrying more than one choice", () => {
+    const binding = buildEnginePrompt(announcedNumbers, 21, dependencies);
+    const [four, six] = binding?.prompt.choices ?? [];
+    if (four === undefined || six === undefined)
+      throw new Error("Announced numbers are missing");
+    expect(() => binding?.resolve([four.id, six.id])).toThrow(
+      /Select exactly one choice/,
+    );
   });
 
   it("emits a diagnostic when localized option text is missing", () => {

@@ -2105,3 +2105,42 @@ Working copy
       gone. `deckbuilder` remaining is expected; removing it has not been authorised.
 - [ ] Decide whether the `deckbuilder` worktree should now be retired too, since its
       branch is fully merged into `main`.
+
+## T2 announce-number-response-index
+
+`src/` changed by a comment only — the encoder itself shipped in `6d865e8`. What a human
+still has to confirm is the runtime half no unit test can reach: that a real
+announce-number prompt is answered, accepted by the core, and resolves as the number the
+human actually picked.
+
+Reach an announce-number prompt
+
+- [ ] Start a duel with a deck holding a card that declares a number — "declare a
+      Level", "declare a number from 1 to N", a Number-declaring effect — and activate it.
+- [ ] A prompt appears with the heading "Announce a number" and one button per
+      announced number.
+- [ ] The button labels are the announced numbers themselves (for example 4, 6, 8) —
+      not 0, 1, 2. Labels stay values; only the answer sent to the core is an index.
+
+Answer it without killing the duel
+
+- [ ] Pick the **last** button in the list — the largest announced number, the case that
+      used to be out of range when sent as an index.
+- [ ] No error panel appears. Specifically "ocgcore rejected the previous response" does
+      not appear and the duel is not closed as failed.
+- [ ] The duel continues: the next prompt or phase advance arrives normally.
+- [ ] The effect resolves with the number that was picked, not another number from the
+      list. The quiet half of the old bug announced a neighbour instead of aborting.
+
+Repeat once from the other end
+
+- [ ] Reach a second announce-number prompt (replay the effect, or restart the duel) and
+      pick the **first** button this time. Same two checks: no error panel, and the
+      number that resolves is the one picked.
+
+If the bundled decks raise no announce-number prompt
+
+- [ ] Record that here instead of checking the boxes above. The encoding stays pinned by
+      `tests/unit/prompt-registry.test.ts` ("answers an announced number with its index
+      rather than its value") and by the diagnostics trace cited in ADR-046; the manual
+      pass is the only thing that observes it end to end in a browser.

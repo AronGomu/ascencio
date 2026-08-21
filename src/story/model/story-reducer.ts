@@ -9,6 +9,7 @@ import {
   type LocationId,
   type OpenedCard,
   type ShopRarity,
+  type StoryDeck,
   type StoryState,
   type StoryScreen,
 } from "./story-state.ts";
@@ -69,6 +70,14 @@ export type StoryCommand =
         readonly rarity: ShopRarity;
       }[];
     }
+  /* Deck editing is an economy change like buying a pack: it goes through the
+     reducer so the save that snapshots the wallet snapshots the deck list with
+     it. Each command addresses a deck by id, and every one of them answers an
+     id it cannot resolve by changing nothing. */
+  | { readonly type: "deck-create"; readonly deck: StoryDeck }
+  | { readonly type: "deck-save"; readonly deck: StoryDeck }
+  | { readonly type: "deck-delete"; readonly id: string }
+  | { readonly type: "deck-set-default"; readonly id: string | null }
   | { readonly type: "reset" };
 
 export function reduceStory(
@@ -312,6 +321,41 @@ export function reduceStory(
         else collection[code] = remaining;
       }
       return { ...state, dp, collection };
+    }
+    case "deck-create": {
+      /* Two decks under one id would make every later replace and delete
+         ambiguous, and the deck that lost would be one the player built. */
+      if (state.decks.some(({ id }) => id === command.deck.id)) return state;
+      return { ...state, decks: [...state.decks, command.deck] };
+    }
+    case "deck-save": {
+      /* An unknown id is an editor holding a deck this save no longer has —
+         deleted in another tab, or a draft from a save that was loaded over.
+         Appending it would undo the deletion. */
+      if (!state.decks.some(({ id }) => id === command.deck.id)) return state;
+      return {
+        ...state,
+        decks: state.decks.map((deck) =>
+          deck.id === command.deck.id ? command.deck : deck,
+        ),
+      };
+    }
+    case "deck-delete": {
+      if (!state.decks.some(({ id }) => id === command.id)) return state;
+      return {
+        ...state,
+        decks: state.decks.filter(({ id }) => id !== command.id),
+        /* A default pointing at a deck that no longer exists would send the
+           next duel looking for it. */
+        defaultDeckId:
+          state.defaultDeckId === command.id ? null : state.defaultDeckId,
+      };
+    }
+    case "deck-set-default": {
+      if (command.id === null) return { ...state, defaultDeckId: null };
+      return state.decks.some(({ id }) => id === command.id)
+        ? { ...state, defaultDeckId: command.id }
+        : state;
     }
     case "reset":
       return createInitialStoryState();

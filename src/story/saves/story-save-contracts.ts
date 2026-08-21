@@ -15,7 +15,7 @@ import {
 export const STORY_SAVES_DATABASE_NAME = "ygo-story-saves";
 export const STORY_SAVES_DATABASE_VERSION = 1;
 export const STORY_SAVES_STORE_NAME = "saves";
-export const STORY_SAVE_SCHEMA_VERSION = 2;
+export const STORY_SAVE_SCHEMA_VERSION = 3;
 
 /** The oldest schema this build can still read. Version 1 predates the shop:
     it carries no economy, and `migrateStorySaveState` completes it. */
@@ -43,7 +43,7 @@ export function isStorySlotKey(value: unknown): value is StorySlotKey {
 }
 
 export interface StorySaveEnvelope {
-  readonly schemaVersion: 2;
+  readonly schemaVersion: 3;
   readonly slot: StorySlotKey;
   readonly revision: number;
   readonly savedAt: number;
@@ -146,7 +146,7 @@ export function parseStorySaveEnvelope(
   /* Rebuilt rather than cast, so a `ready` envelope always describes itself as
      the version this build actually returns: an older record reaches the story
      already migrated, and nothing downstream has to ask which version it came
-     from. The state object is passed through untouched when it is already v2,
+     from. The state object is passed through untouched when it is already v3,
      so a round-trip preserves it exactly. */
   return {
     kind: "ready",
@@ -178,26 +178,42 @@ function economyDefaults(): Record<string, unknown> {
   };
 }
 
+/** What a save written before the decks moved into the story is missing: it
+    owns none, and duels with none until the player picks one.
+
+    Built per call for the same reason as the economy defaults: two migrated
+    saves must not come back sharing one deck list. */
+function deckDefaults(): Record<string, unknown> {
+  return { decks: [], defaultDeckId: null };
+}
+
 /**
  * Brings a stored story state up to the shape this build runs on, or answers
  * `null` when it cannot be read at all.
  *
- * Version 2 is validated as-is. Version 1 has the economy spread in *under*
- * the stored fields, so a value the record already carries always wins over
- * the default, and the completed state is then validated exactly like a
- * version 2 one — a v1 record with a broken beat index stays corrupt rather
- * than being laundered by the migration. Any other version answers `null`;
- * the caller has already separated "too new" from "unreadable".
+ * Version 3 is validated as-is. Older versions have what they are missing
+ * spread in *under* the stored fields, one version step at a time, so a value
+ * the record already carries always wins over the default and a version 1
+ * record picks up the economy and the deck list on its way forward. Nothing is
+ * renamed, rewritten or dropped: a migration is only ever an addition here.
+ *
+ * The completed state is then validated exactly like a version 3 one — a v1
+ * record with a broken beat index stays corrupt rather than being laundered by
+ * the migration. Any other version answers `null`; the caller has already
+ * separated "too new" from "unreadable".
  */
 export function migrateStorySaveState(
   raw: unknown,
   schemaVersion: number,
 ): StoryState | null {
-  if (schemaVersion !== 1 && schemaVersion !== 2) return null;
+  if (schemaVersion !== 1 && schemaVersion !== 2 && schemaVersion !== 3)
+    return null;
   if (typeof raw !== "object" || raw === null || Array.isArray(raw))
     return null;
-  const candidate =
-    schemaVersion === 1 ? withCardShop({ ...economyDefaults(), ...raw }) : raw;
+  let candidate = raw as Record<string, unknown>;
+  if (schemaVersion < 2)
+    candidate = withCardShop({ ...economyDefaults(), ...candidate });
+  if (schemaVersion < 3) candidate = { ...deckDefaults(), ...candidate };
   return isStoryState(candidate) ? candidate : null;
 }
 
@@ -306,6 +322,64 @@ function isEconomy(state: Record<string, unknown>): boolean {
   );
 }
 
+/* The decks this save owns, and which one it duels with. A deck the editor
+   cannot open is a deck the player built and then lost, so each record is
+   checked field by field like the economy — and two decks under one id are
+   refused outright, because every command that edits or deletes a deck
+   addresses it by id and one of the pair would be unreachable.
+
+   `defaultDeckId` is checked as an id, not as a pointer: a default naming a
+   deck this save no longer has costs the player one pick, while calling that
+   record corrupt costs them the save. */
+function isDeckLibrary(state: Record<string, unknown>): boolean {
+  const decks = state.decks;
+  if (!Array.isArray(decks) || !decks.every(isStoryDeck)) return false;
+  if (new Set(decks.map((deck) => deck.id)).size !== decks.length) return false;
+  return (
+    state.defaultDeckId === null || typeof state.defaultDeckId === "string"
+  );
+}
+
+function isStoryDeck(value: unknown): boolean {
+  if (typeof value !== "object" || value === null || Array.isArray(value))
+    return false;
+  const deck = value as Record<string, unknown>;
+  return (
+    deck.schemaVersion === 1 &&
+    typeof deck.id === "string" &&
+    deck.id.length > 0 &&
+    isCount(deck.revision) &&
+    typeof deck.name === "string" &&
+    typeof deck.createdAt === "string" &&
+    typeof deck.updatedAt === "string" &&
+    typeof deck.importedNeedsReview === "boolean" &&
+    isCardCodeList(deck.main) &&
+    isCardCodeList(deck.extra) &&
+    isCardCodeList(deck.side) &&
+    isDeckValidation(deck.validation)
+  );
+}
+
+function isCardCodeList(value: unknown): boolean {
+  return Array.isArray(value) && value.every(isCount);
+}
+
+/* The stored verdict is a cache rather than an authority — the editor
+   recomputes it against the pinned ruleset — so only its shape is checked
+   here. A verdict this build would now compute differently costs a
+   revalidation, not a save. */
+function isDeckValidation(value: unknown): boolean {
+  if (typeof value !== "object" || value === null) return false;
+  const summary = value as Record<string, unknown>;
+  return (
+    (summary.status === "valid" ||
+      summary.status === "warnings" ||
+      summary.status === "errors") &&
+    Array.isArray(summary.issues) &&
+    typeof summary.rulesetRevision === "string"
+  );
+}
+
 /* Keys as well as values: an inventory is a record, and a key outside its
    own vocabulary is a record the screens cannot render. `Number("a")` is
    `NaN`, and two such keys collide into one `NaN` row, which takes the sell
@@ -399,7 +473,8 @@ function isStoryState(value: unknown): value is StoryState {
       typeof state.pendingHandoffId === "string"
     ) ||
     !Array.isArray(state.locations) ||
-    !isEconomy(state)
+    !isEconomy(state) ||
+    !isDeckLibrary(state)
   )
     return false;
   const VALID_LOCATION_IDS = new Set([

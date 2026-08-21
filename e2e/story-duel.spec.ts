@@ -46,7 +46,7 @@ async function seedMapProgress(page: Page): Promise<void> {
   await page.goto("./#/story");
   await expect(page.locator(STORY_REGION)).toBeVisible();
   await putStorySave(page, {
-    schemaVersion: 2,
+    schemaVersion: 3,
     slot: "autosave",
     revision: 1,
     savedAt: Date.now(),
@@ -206,7 +206,7 @@ test("a session route whose checkpoint names another handoff lands on the story"
 }) => {
   await seedMapProgress(page);
   await putStorySave(page, {
-    schemaVersion: 2,
+    schemaVersion: 3,
     slot: "checkpoint:pre-duel",
     revision: 1,
     savedAt: Date.now(),

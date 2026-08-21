@@ -3,6 +3,7 @@
 import "fake-indexeddb/auto";
 import { deleteDB } from "idb";
 import { afterEach, describe, expect, it } from "vitest";
+import { storyDeckFixture } from "../../fixtures/story-decks.ts";
 import { PROLOGUE } from "../../../src/story/content/prologue.ts";
 import {
   createInitialStoryState,
@@ -84,7 +85,8 @@ function storedRecord(slot: string): Promise<unknown> {
 }
 
 /** A state as a build before the economy existed wrote it: the seven economy
-    and shop-session fields are simply absent from the record. */
+    and shop-session fields are simply absent from the record, and so are the
+    two deck fields no version before 3 ever wrote. */
 function version1State(): Record<string, unknown> {
   const state: Record<string, unknown> = { ...storyState() };
   for (const key of [
@@ -95,10 +97,54 @@ function version1State(): Record<string, unknown> {
     "shopSetId",
     "openedCards",
     "openingMode",
+    "decks",
+    "defaultDeckId",
   ])
     delete state[key];
   return state;
 }
+
+/** A save exactly as the build before decks existed wrote it: captured from
+    `createStorySaveRepository` at commit `22f868b` and pasted here verbatim,
+    rather than synthesised from today's `createInitialStoryState()`. A
+    migration proved only against a fixture this file builds is a migration
+    proved against this file's idea of version 2. */
+const VERSION_2_RECORD = {
+  schemaVersion: 2,
+  slot: "manual:1",
+  revision: 1,
+  savedAt: 1_700_000_000_123,
+  state: {
+    screen: "map",
+    savedScreen: "map",
+    progressExists: true,
+    narrativeIndex: 18,
+    lastInputId: 12,
+    choice: "trust-rin",
+    choiceResponse: "Then walk beside me.",
+    laterAcknowledgment: null,
+    locations: [
+      { id: "old-arena", access: "available", completed: false },
+      { id: "archive", access: "locked", completed: false },
+      { id: "hidden-gate", access: "hidden", completed: false },
+      { id: "card-shop", access: "available", completed: false },
+    ],
+    outcome: null,
+    outcomeScene: null,
+    rewardGranted: true,
+    rewardAcknowledged: false,
+    objective: "Meet Rin at the Old Arena",
+    encounterId: "old-arena",
+    pendingHandoffId: null,
+    dp: 640,
+    boosters: { "metal-raiders": 2 },
+    collection: { 89631139: 3 },
+    shopReturnScreen: null,
+    shopSetId: null,
+    openedCards: null,
+    openingMode: null,
+  },
+} as const;
 
 /** Plants a raw record the repository would never write, so the read path can
     be shown recognising it. Seeding goes through `createStorySaveStores` so a
@@ -133,7 +179,7 @@ function seedRecord(slot: string, record: unknown): Promise<void> {
 describe("story save slots", () => {
   it("names the production database and the five slot keys", () => {
     expect(STORY_SAVES_DATABASE_NAME).toBe("ygo-story-saves");
-    expect(STORY_SAVE_SCHEMA_VERSION).toBe(2);
+    expect(STORY_SAVE_SCHEMA_VERSION).toBe(3);
     expect([...STORY_SLOT_KEYS]).toEqual([
       "manual:1",
       "manual:2",
@@ -175,7 +221,7 @@ describe("createStorySaveRepository", () => {
     expect(read).toEqual({
       kind: "ready",
       envelope: {
-        schemaVersion: 2,
+        schemaVersion: 3,
         slot: "manual:1",
         revision: 1,
         savedAt: 1_700_000_000_123,
@@ -190,12 +236,96 @@ describe("createStorySaveRepository", () => {
     expect(JSON.stringify(read.envelope.state)).toBe(JSON.stringify(state));
   });
 
-  it("writes envelopes at schema version 2", async () => {
+  it("writes envelopes at schema version 3", async () => {
     const saves = repository();
     await saves.write("manual:1", storyState(), null);
     expect(await storedRecord("manual:1")).toMatchObject({
-      schemaVersion: 2,
+      schemaVersion: 3,
     });
+  });
+
+  /* The one migration a player can lose progress to. What is proved here is
+     that a save the previous build actually wrote still opens, that it gains
+     the deck list and nothing else, and that reading it leaves the record on
+     disk exactly as it was. */
+  it("a v2 save migrates to v3 with an empty deck list", async () => {
+    await seedRecord("manual:1", VERSION_2_RECORD);
+    const read = await repository().read("manual:1");
+    expect(read).toMatchObject({
+      kind: "ready",
+      envelope: {
+        schemaVersion: 3,
+        slot: "manual:1",
+        revision: 1,
+        savedAt: 1_700_000_000_123,
+        state: { decks: [], defaultDeckId: null },
+      },
+    });
+    if (read.kind !== "ready") throw new Error("expected a ready save");
+    /* Additive in both directions: every field the record carried comes back
+       with the value it carried, and the only fields it did not carry are the
+       two this version adds. */
+    for (const [key, value] of Object.entries(VERSION_2_RECORD.state))
+      expect(read.envelope.state[key as keyof StoryState], key).toEqual(value);
+    expect(Object.keys(read.envelope.state).sort()).toEqual(
+      [...Object.keys(VERSION_2_RECORD.state), "decks", "defaultDeckId"].sort(),
+    );
+    /* Migration happens in memory. A read that rewrote the slot would turn
+       every load into a write the player never asked for. */
+    expect(await storedRecord("manual:1")).toEqual(VERSION_2_RECORD);
+  });
+
+  it("a v3 save round-trips", async () => {
+    const saves = repository();
+    const state = storyState({
+      decks: [storyDeckFixture("alpha"), storyDeckFixture("beta")],
+      defaultDeckId: "beta",
+    });
+    expect(await saves.write("manual:1", state, null)).toEqual({
+      kind: "written",
+      revision: 1,
+    });
+    const read = await saves.read("manual:1");
+    if (read.kind !== "ready") throw new Error("expected a ready save");
+    expect(read.envelope.schemaVersion).toBe(3);
+    expect(read.envelope.state.decks).toEqual(state.decks);
+    expect(read.envelope.state.defaultDeckId).toBe("beta");
+    expect(JSON.stringify(read.envelope.state)).toBe(JSON.stringify(state));
+  });
+
+  /* A v3 record is not migrated, so a deck list it does not carry is a record
+     this build cannot resume from: the screens would iterate `undefined`.
+     Refusing at the door leaves the record on disk for a build that can read
+     it, which is what `incompatible` and `corrupt` both exist to preserve. */
+  it("reports a v3 record without a usable deck list as corrupt", async () => {
+    const saves = repository();
+    const valid = createInitialStoryState();
+    const invalidStates: readonly unknown[] = [
+      { ...valid, decks: undefined },
+      { ...valid, decks: null },
+      { ...valid, decks: "all of them" },
+      { ...valid, decks: [{ id: "alpha" }] },
+      { ...valid, decks: [storyDeckFixture("alpha", { main: [-1] })] },
+      {
+        ...valid,
+        decks: [storyDeckFixture("alpha"), storyDeckFixture("alpha")],
+      },
+      { ...valid, defaultDeckId: 7 },
+    ];
+    for (const state of invalidStates) {
+      const record = {
+        schemaVersion: 3,
+        slot: "manual:1",
+        revision: 1,
+        savedAt: 1,
+        state,
+      };
+      await seedRecord("manual:1", record);
+      expect((await saves.read("manual:1")).kind, JSON.stringify(state)).toBe(
+        "corrupt",
+      );
+      expect(await storedRecord("manual:1")).toEqual(record);
+    }
   });
 
   /* The economy rides inside the story state, so a save has to carry it back
@@ -247,6 +377,8 @@ describe("createStorySaveRepository", () => {
           shopSetId: null,
           openedCards: null,
           openingMode: null,
+          decks: [],
+          defaultDeckId: null,
         },
       },
     });
@@ -308,11 +440,12 @@ describe("createStorySaveRepository", () => {
     expect(first.envelope.state.collection).not.toBe(
       second.envelope.state.collection,
     );
+    expect(first.envelope.state.decks).not.toBe(second.envelope.state.decks);
   });
 
-  it("still rejects future schema versions", async () => {
+  it("an unknown future version is incompatible", async () => {
     await seedRecord("manual:2", {
-      schemaVersion: 3,
+      schemaVersion: 4,
       slot: "manual:2",
       revision: 1,
       savedAt: 1,
@@ -321,7 +454,7 @@ describe("createStorySaveRepository", () => {
     expect(await repository().read("manual:2")).toEqual({
       kind: "incompatible",
       slot: "manual:2",
-      found: 3,
+      found: 4,
     });
   });
 

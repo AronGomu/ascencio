@@ -1,3 +1,5 @@
+import type { DeckRecord } from "../../decks/deck-contracts.ts";
+
 export const STORY_SCREENS = [
   "title",
   "load",
@@ -41,6 +43,11 @@ export interface OpenedCard {
   readonly rarity: ShopRarity;
 }
 
+/** One deck a story save owns. The deck domain's own record, reused rather
+    than restated, so the editor reads a save-owned deck without translating it
+    and a deck moved between the two worlds keeps its shape (ADR-049). */
+export type StoryDeck = DeckRecord;
+
 export interface StoryLocationState {
   readonly id: LocationId;
   readonly access: MapAccess;
@@ -81,6 +88,15 @@ export interface StoryState {
   /** Owned count per card code. Counts only, so a large collection stays a
       small record. */
   readonly collection: Readonly<Record<number, number>>;
+  /* The decks belong to the save for the same reason the collection does: a
+     deck built out of one save's cards is not a deck another save may duel
+     with. Saving snapshots them, loading rolls them back, and deleting a save
+     deletes them with it (ADR-049). The global deck database is free play's
+     library and is never read from here. */
+  readonly decks: readonly StoryDeck[];
+  /** Which of `decks` a duel starts from, by id. Null until one is chosen, and
+      cleared again if that deck is deleted. */
+  readonly defaultDeckId: string | null;
   /* The four fields below describe one shop visit rather than what the player
      owns. They are still part of the saved state: a save taken mid-visit has
      to resume the visit rather than strand the player on a shop screen with
@@ -120,6 +136,8 @@ export function createInitialStoryState(): StoryState {
     dp: 1000,
     boosters: {},
     collection: {},
+    decks: [],
+    defaultDeckId: null,
     shopReturnScreen: null,
     shopSetId: null,
     openedCards: null,

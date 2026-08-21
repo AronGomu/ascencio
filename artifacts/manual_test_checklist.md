@@ -2696,3 +2696,27 @@ decks before the duel starts, and remembers the pair.
 
 - [ ] With a portrait phone viewport (390x844 in DevTools), open `#/free-play` → Start a match: the match setup reads upright, both dropdowns are reachable, and the screen scrolls inside the stage rather than pushing a scrollbar onto the page.
 - [ ] Press Start the duel — the duel is turned a quarter turn as before.
+
+## T18 story-state-decks-and-save-migration
+
+Nothing on screen changes in this slice: no screen reads the new deck fields yet.
+What is being checked is that the save file grew a deck list without losing anything.
+
+### A save made before this change still opens
+
+- [ ] Open `#/story`, press New Game, advance a few beats, visit the Card Shop, buy one pack and open it, then save to Manual slot 1. Write down the DP the wallet shows and which cards the collection holds.
+- [ ] Open DevTools → Console and turn that record back into the shape the PREVIOUS build wrote — paste and run:
+      `await new Promise(done => { const r = indexedDB.open("ygo-story-saves", 1); r.onsuccess = () => { const db = r.result; const tx = db.transaction("saves", "readwrite"); const store = tx.objectStore("saves"); const get = store.get("manual:1"); get.onsuccess = () => { const record = get.result; delete record.state.decks; delete record.state.defaultDeckId; store.put({ ...record, schemaVersion: 2 }, "manual:1"); }; tx.oncomplete = () => { db.close(); done(); }; }; });`
+- [ ] Reload the page (F5), open `#/story` → Load, and load Manual slot 1. The story resumes on the screen it was saved on, the wallet shows the same DP, and the collection holds the same cards. No error banner appears and the slot is not shown as empty.
+- [ ] In DevTools → Application → IndexedDB → `ygo-story-saves` → `saves`, the `manual:1` record STILL reads `schemaVersion: 2` — loading an old save must not rewrite it.
+- [ ] Save to Manual slot 1 again from inside the story. Only now does that record read `schemaVersion: 3`, with `decks: []` and `defaultDeckId: null` beside the wallet.
+
+### A save from a newer build is refused rather than replaced
+
+- [ ] Run the snippet above again with `schemaVersion: 4` in place of `2`, reload, and open `#/story`. A message names the slot and says the save was written by a newer version (schema 4); the story still starts.
+- [ ] In DevTools → Application → IndexedDB, that `manual:1` record is still there, untouched. A save this build cannot read is never cleared for you.
+
+### Nothing else moved
+
+- [ ] Open `#/free-play/decks`: it lists exactly the decks it listed before, and `ygo-story-decks` in IndexedDB is unchanged. This slice does not touch the free-play deck library.
+- [ ] Play a fresh New Game through the prologue to the map and start an encounter — the duel handoff still works, and the checkpoint slot still restores if you leave the duel.

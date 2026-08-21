@@ -85,7 +85,7 @@ function checkpointFor(handoffId: string): StorySaveReadResult {
   return {
     kind: "ready",
     envelope: {
-      schemaVersion: 2,
+      schemaVersion: 3,
       slot: "checkpoint:pre-duel",
       revision: 1,
       savedAt: 1,

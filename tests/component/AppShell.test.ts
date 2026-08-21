@@ -81,6 +81,33 @@ function savesAnswering(read: StorySaveReadResult): StorySaveRepository {
   };
 }
 
+/** A store holding one manual save, for the routes that read what a save owns
+    rather than what a duel checkpointed. */
+function savesHolding(
+  collection: Readonly<Record<number, number>>,
+): StorySaveRepository {
+  return {
+    read: (slot: StorySlotKey) =>
+      Promise.resolve(
+        slot === "manual:1"
+          ? {
+              kind: "ready",
+              envelope: {
+                schemaVersion: 3,
+                slot,
+                revision: 1,
+                savedAt: 1,
+                state: { ...createInitialStoryState(), collection },
+              },
+            }
+          : { kind: "empty", slot },
+      ),
+    write: () => Promise.resolve({ kind: "failed", reason: "unavailable" }),
+    list: () => Promise.resolve([]),
+    clear: () => Promise.resolve(),
+  };
+}
+
 function checkpointFor(handoffId: string): StorySaveReadResult {
   return {
     kind: "ready",
@@ -405,6 +432,74 @@ describe("AppShell", () => {
         ).not.toBeNull(),
       REAL_IMPORT,
     );
+  });
+
+  /* Free play owns every printed card, so its collection route needs no save:
+     the region is the whole database, browsed through the story's own screen
+     because rarity is resolved there. */
+  it("mounts the collection region for the free-play collection route", async () => {
+    renderAt("#/free-play/collection");
+    expect(
+      document.querySelector('[data-cy="shell-region-collection"]'),
+    ).not.toBeNull();
+    await vi.waitFor(
+      () =>
+        expect(
+          document.querySelector(
+            '[data-cy="shell-region-collection"] [data-cy="collection-screen"]',
+          ),
+        ).not.toBeNull(),
+      REAL_IMPORT,
+    );
+    expect(document.querySelector('[data-cy="shell-region-home"]')).toBeNull();
+  });
+
+  /* The loaded save decides what the story collection lists: its own cards, at
+     the counts it records, and nothing else in the database. */
+  it("lists the loaded save's own cards with their counts", async () => {
+    const darkMagician = 46986414;
+    render(AppShell, {
+      store: createShellStore("#/story/collection", () => {}),
+      loaders,
+      saves: savesHolding({ [darkMagician]: 3 }),
+    });
+    const count = await vi.waitFor(() => {
+      const found = document.querySelector(
+        `[data-cy="collection-count-${darkMagician}"]`,
+      );
+      expect(found).not.toBeNull();
+      return found!;
+    }, REAL_IMPORT);
+    expect(count.textContent).toBe("3");
+    expect(
+      document.querySelectorAll('[data-cy^="collection-card-"]'),
+    ).toHaveLength(1);
+    /* Everything else the database holds is behind the checkbox, which starts
+       unticked. */
+    expect(
+      document.querySelector<HTMLInputElement>(
+        '[data-cy="collection-show-all"]',
+      )?.checked,
+    ).toBe(false);
+  });
+
+  /* A collection belongs to one save, so a story collection route reached with
+     none loaded has nothing to browse. ADR-051 sends it back to the main menu
+     rather than opening an empty one, exactly as the story deck routes do. */
+  it("sends the story collection route home when no save is loaded", async () => {
+    render(AppShell, {
+      store: createShellStore("#/story/collection", () => {}),
+      loaders,
+      saves: savesAnswering({ kind: "empty", slot: "checkpoint:pre-duel" }),
+    });
+    await vi.waitFor(
+      () =>
+        expect(
+          document.querySelector('[data-cy="shell-region-home"]'),
+        ).not.toBeNull(),
+      REAL_IMPORT,
+    );
+    expect(document.querySelector('[data-cy="collection-screen"]')).toBeNull();
   });
 
   it("mounts the admin console region for the admin route", async () => {

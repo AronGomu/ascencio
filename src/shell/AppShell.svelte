@@ -16,11 +16,16 @@
     type RouteContext,
   } from "./routes.ts";
   import type { DeckContext } from "../decks/deck-repository-context.ts";
+  import {
+    unlimitedCardOwnership,
+    type CardOwnership,
+  } from "../decks/card-ownership.ts";
   import DomainLoadError from "./screens/DomainLoadError.svelte";
   import FreePlayMenuScreen from "./screens/FreePlayMenuScreen.svelte";
   import MainMenuScreen from "./screens/MainMenuScreen.svelte";
   import type { BattleFacadeResult, BattleRequest } from "../battle/index.ts";
   import type {
+    CollectionCatalog,
     StoryDuelResolution,
     StoryEncounterRequest,
     StorySaveRepository,
@@ -253,6 +258,16 @@
      contexts and hands navigation back in the one it was reached from. */
   $: deckContext = deckRouteContext(route);
   $: bindDeckContext(deckContext);
+  /* The same question for the collection, which is two routes over one screen
+     for the same reason the editor is two over one: a save's cards and free
+     play's database are the same browsing, over a different pool. */
+  $: collectionContext =
+    route.kind === "story-collection"
+      ? ("story" as const)
+      : route.kind === "free-play-collection"
+        ? ("free-play" as const)
+        : null;
+  $: bindCollection(collectionContext);
 
   function leaveMatch(): void {
     matchStarted = false;
@@ -292,6 +307,82 @@
           store.navigate(HOME_ROUTE, { replace: true });
       },
     );
+  }
+
+  /* The collection screen is not part of the visual novel's own surface, so it
+     ships as its own chunk behind `loadCollectionScreen` rather than inside the
+     story entry. This is the type of what that loader hands back. */
+  type CollectionScreenComponent = Awaited<
+    ReturnType<(typeof import("../story/index.ts"))["loadCollectionScreen"]>
+  >;
+
+  /* What the collection region renders, or `null` while it is still being
+     read. Held as one object so the pool, what owns it and the world it was
+     opened for can never be paired wrong — the same reason `DeckContext`
+     carries its ownership rather than sitting beside it. */
+  interface OpenCollection {
+    readonly context: RouteContext;
+    readonly ownership: CardOwnership;
+    readonly catalog: CollectionCatalog;
+    readonly Screen: CollectionScreenComponent;
+  }
+
+  let collection: OpenCollection | null = null;
+  let boundCollectionWorld: RouteContext | null = null;
+  let collectionToken = 0;
+
+  function bindCollection(world: RouteContext | null): void {
+    if (world === boundCollectionWorld) return;
+    boundCollectionWorld = world;
+    collection = null;
+    if (world === null) return;
+    const requested = ++collectionToken;
+    void openCollection(world).then(
+      (opened) => {
+        if (requested !== collectionToken) return;
+        /* No save is loaded, so there is no collection to browse. The main menu
+           is where a story route with nothing to show goes (ADR-051), and it is
+           replaced rather than pushed because the player asked for their cards
+           rather than for this correction. */
+        if (opened === null) store.navigate(HOME_ROUTE, { replace: true });
+        else collection = opened;
+      },
+      () => {
+        if (requested === collectionToken)
+          store.navigate(HOME_ROUTE, { replace: true });
+      },
+    );
+  }
+
+  /** The pool a collection route browses, or `null` for a story route with no
+      save behind it.
+
+      Both halves come from the visual novel's lazy entry: free play's ownership
+      is the shared one from `src/decks/`, but the card database read and the
+      rarity every tile is grouped by are resolved from the shop's set data,
+      which only the story may reach. */
+  async function openCollection(
+    world: RouteContext,
+  ): Promise<OpenCollection | null> {
+    const story = await import("../story/index.ts");
+    let ownership: CardOwnership = unlimitedCardOwnership();
+    if (world === "story") {
+      const bound = await story.openStoryDeckContext(saves ?? lazySaves);
+      if (bound === null || bound.kind !== "story") return null;
+      ownership = bound.ownership;
+    }
+    /* The screen's chunk and the database read start together: neither needs
+       the other, and the region shows nothing until both have landed. */
+    const [catalog, Screen] = await Promise.all([
+      story.loadCollectionCatalog(),
+      story.loadCollectionScreen(),
+    ]);
+    return {
+      context: world,
+      ownership,
+      catalog,
+      Screen,
+    };
   }
 
   const readViewportBox = (): StageBox =>
@@ -348,12 +439,32 @@
   data-stage-route={route.kind}
   bind:this={stage}
 >
-  <!-- The collection screens land in T29. Until they exist their routes show
-       the main menu, which is where a story route with nothing to show goes
-       anyway (ADR-051), rather than an empty region. -->
-  {#if route.kind === "home" || route.kind === "free-play-collection" || route.kind === "story-collection"}
+  {#if route.kind === "home"}
     <div class="shell-region shell-region--home" data-cy="shell-region-home">
       <MainMenuScreen {store} />
+    </div>
+  {:else if collectionContext !== null}
+    <div
+      class="shell-region shell-region--collection"
+      data-cy="shell-region-collection"
+    >
+      {#if collection === null}
+        <!-- The save and the card database are still being read. Nothing of the
+             screen mounts until both are in hand, so a route with no save never
+             becomes an empty collection. -->
+        <p class="visually-hidden" data-cy="collection-pending">
+          Opening your collection
+        </p>
+      {:else}
+        {@const opened = collection}
+        <svelte:component
+          this={opened.Screen}
+          ownership={opened.ownership}
+          cards={opened.catalog.cards}
+          rarityByCode={opened.catalog.rarityByCode}
+          onback={() => store.navigate(deckRoute(opened.context, null))}
+        />
+      {/if}
     </div>
   {:else if deckContext !== null}
     {@const context = deckContext}

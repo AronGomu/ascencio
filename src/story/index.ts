@@ -55,6 +55,24 @@ export { openStoryDeckContext } from "./decks/story-deck-context.ts";
    play's `unlimitedCardOwnership()` ship from `src/decks/card-ownership.ts`,
    which records why. */
 export { storyCardOwnership } from "./decks/card-ownership.ts";
+/* The collection browser and the one read that fills it. The screen serves
+   both worlds — a save's own cards, and free play's whole database — but it
+   lives here because rarity does: a collection is counts only, so the tier a
+   card is shown at comes out of the shop's set data and the rarity inference
+   beside it, neither of which the shell may reach. The shell reaches both
+   through the same lazy import it opens saves with, so nothing here is eager.
+
+   The screen is loaded rather than re-exported, which is the one difference
+   between the two. `StoryApp` never renders it, so a static export would
+   charge every narrative route for a browser only the collection route opens:
+   measured, it takes the story closure from 126,110 to 132,976 bytes against
+   the 143,750 budget, inside the ceiling but under the 10% headroom
+   `tests/unit/domain-chunk-closure.test.ts` requires. Loaded, the screen is a
+   chunk of its own and the route that mounts it pays for it. */
+export const loadCollectionScreen = async () =>
+  (await import("./collection/CollectionScreen.svelte")).default;
+export { loadCollectionCatalog } from "./collection/collection-cards.ts";
+export type { CollectionCatalog } from "./collection/collection-cards.ts";
 /* The deck an encounter is fought with, resolved out of a save. The story
    itself calls this when the player presses Start; the shell calls it when a
    reload lands straight on a duel session, where the checkpoint is all there

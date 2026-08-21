@@ -256,6 +256,19 @@ describe("public domain APIs are frozen", () => {
          reducer and letting a caller pair one save's decks with another save's
          ownership.
 
+         T29, deliberate widening of three more: the collection browser. A
+         collection is counts only, so the rarity every tile is grouped by is
+         resolved from the shop's set data and the inference beside it — story
+         internals the shell may not reach — while the screen itself is mounted
+         for both worlds. All three are reached through the shell's lazy
+         `import("../story/index.ts")`, never a static import, or the visual
+         novel turns eager and the shell budget in `verify-browser-build.ts`
+         rejects the build. `loadCollectionScreen` is a loader rather than a
+         re-export of the component for the same reason one level down:
+         `StoryApp` never renders that screen, and carrying it took the story
+         closure from 126,110 to 132,976 bytes, inside the 143,750 budget but
+         under the 10% headroom `domain-chunk-closure.test.ts` requires.
+
          T28, deliberate widening of one more: `encounterDeck` resolves the deck
          an encounter is fought with. A reload that lands on a duel session has
          no story mounted to resolve it and the shell has neither the save's
@@ -270,6 +283,8 @@ describe("public domain APIs are frozen", () => {
         "createStorySaveRepository",
         "default",
         "encounterDeck",
+        "loadCollectionCatalog",
+        "loadCollectionScreen",
         "openStoryDeckContext",
         "restoreStoryState",
         "storyBattleResult",
@@ -277,6 +292,7 @@ describe("public domain APIs are frozen", () => {
         "toStoryResolution",
       ],
       types: [
+        "CollectionCatalog",
         "EncounterId",
         "PendingStoryDuel",
         "StoryDuelResolution",

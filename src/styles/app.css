@@ -251,6 +251,14 @@ body {
   overflow: auto;
 }
 
+/* The collection is a long grid of tiles, so it scrolls inside the stage on the
+   same terms as the deck editor. */
+.shell-region--collection {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
 /* The developer console is a long list of controls, so it scrolls inside the
    stage on the same terms as the deck editor. */
 .shell-region--admin {

@@ -3209,3 +3209,55 @@ the encounter's fixed preset for the opponent.
 - [ ] Start the encounter again and press browser **Back** from the duel. Same abort scene, progress intact.
 - [ ] Play one encounter to a win. The win scene shows, its reward is granted, and the map updates.
 - [ ] After any of these, the save you return to is the save you left — same money, same cards, same decks, same default deck as before the duel.
+
+## T29 collection-screen
+
+The collection is a browsable card list for one world at a time: `#/story/collection` is the
+loaded save's own cards, `#/free-play/collection` is the whole card database. Both use the set
+list's grid and the shared card preview panel. Nothing links to them yet — T30 adds the entry
+buttons — so reach them by typing the hash.
+
+### The story collection is the save's own cards, at its own counts
+
+- [ ] Continue a save that has bought or opened some cards, then type `#/story/collection` into the address bar.
+- [ ] The heading reads **Your collection**. Only cards this save owns are on screen — a card you have never owned is not there.
+- [ ] Every tile carries a small count under its name. Buy a second copy of a card in the shop, come back, and that card's count has gone from 1 to 2.
+- [ ] Sell a card down to zero copies in the shop, come back, and it has left the list entirely.
+
+### Show every existing card
+
+- [ ] The **Show every existing card** checkbox starts unticked.
+- [ ] Tick it. The list grows to the whole database, and every card you do not own is visibly dimmed against the ones you do.
+- [ ] The dimmed cards carry no count; the ones you own still do.
+- [ ] Untick it. The list returns to your own cards only.
+
+### Grouping and ordering
+
+- [ ] **Group by rarity** starts ticked. The list is broken into headed sections running Common → Rare → Super Rare → Ultra Rare → Secret Rare → Ultimate Rare → Ghost Rare, and each heading carries that rarity's halo colour. A rarity you own nothing of has no heading at all.
+- [ ] Inside each section the card names run alphabetically.
+- [ ] Untick **Group by rarity**. The headings disappear and the whole list is one alphabetical run.
+
+### The preview panel
+
+- [ ] Hover a tile. The panel on the left fills with that card's art, name and rules text.
+- [ ] Click a tile. Same panel, same card — it is the preview the deck editor and the duel use, not a new one.
+- [ ] Tab through the tiles with the keyboard. Focus moves tile to tile, each focused tile fills the preview, and the focus ring is visible.
+
+### Free play is the whole database, with no counts
+
+- [ ] Type `#/free-play/collection`. The heading reads **Card database**.
+- [ ] There are no counts anywhere, and no **Show every existing card** checkbox — free play owns everything, so there is nothing to reveal and nothing to count.
+- [ ] Scroll to the bottom of the grid. More cards keep appending as you go, rather than the page trying to draw all 14,794 at once. Scrolling stays smooth.
+- [ ] Grouping and the preview behave exactly as they do in the story collection.
+
+### Getting out, and the routes that should not open
+
+- [ ] Press **← Back** from `#/free-play/collection`. You land on `#/free-play/decks`.
+- [ ] Press **← Back** from `#/story/collection`. You land on `#/story/decks`.
+- [ ] With no save loaded at all (DevTools → Application → Storage → **Clear site data**, reload), type `#/story/collection`. You are sent straight to the main menu instead of an empty collection.
+- [ ] `#/free-play/collection` still opens after clearing site data — free play needs no save.
+
+### Nothing else moved
+
+- [ ] The shop's set list, the booster reveal and the sell screen look and behave exactly as before.
+- [ ] The deck editor opens and edits normally from both `#/free-play/decks` and `#/story/decks`.

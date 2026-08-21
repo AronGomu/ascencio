@@ -6,14 +6,27 @@ const storyRoot = path.resolve("src/story");
 
 /* What the visual novel may reach for outside itself, mirroring the rule
    `tests/unit/domain-boundaries.test.ts` enforces across every domain: the
-   shared deck-data library, and the one type-only battle module that names a
-   duel result. Everything else the app ships — the duel's `app/`, `duel/`,
-   `field/`, `worker/` and `storage/` internals under `src/battle/`, the shell,
-   the deck editor — is a boundary break, because the story is loaded as its
-   own lazy chunk and a value import would drag that chunk in with it. */
+   shared deck-data library, the one type-only battle module that names a duel
+   result, and the shell's public entry. Everything else the app ships — the
+   duel's `app/`, `duel/`, `field/`, `worker/` and `storage/` internals under
+   `src/battle/`, the shell's internals, the deck editor — is a boundary break,
+   because the story is loaded as its own lazy chunk and a value import would
+   drag that chunk in with it.
+
+   T29, deliberate widening of one target: `src/shell/index.ts` is the shared
+   card preview panel's home (ADR-036), and the collection screen renders it
+   rather than growing a third inspector. It costs the story chunk nothing —
+   the shell entry is the eager chunk every route has already loaded before the
+   visual novel mounts — which is the same reason the duel's zone in
+   `eslint.config.js` stopped excluding the whole shell when the panel moved
+   there. Both machine checks already allow it: the story zone in
+   `eslint.config.js` re-includes the shell entry, and `isLegalImport` in
+   `tests/unit/domain-boundaries.test.ts` resolves it to the shell's public
+   entry. This file was the one list still holding the pre-ADR-036 shape. */
 function reachableFromStory(target: string): boolean {
   return (
     target === "src/battle/battle-contracts.ts" ||
+    target === "src/shell/index.ts" ||
     target.startsWith("src/decks/")
   );
 }

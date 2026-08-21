@@ -9,7 +9,10 @@ import {
   type DuelError,
 } from "../duel/contracts/duel-error.ts";
 import type { DuelDeckSelection } from "../duel/contracts/duel-deck-selection.ts";
-import type { DuelWorkerEvent } from "../duel/contracts/duel-worker-event.ts";
+import type {
+  DuelWorkerEvent,
+  RestoreFailureReason,
+} from "../duel/contracts/duel-worker-event.ts";
 import type { SnapshotId } from "../duel/contracts/ids.ts";
 import type { DeckId } from "../duel/presets/deck-catalog.ts";
 import type { DuelPreset } from "../duel/presets/duel-preset.ts";
@@ -17,13 +20,24 @@ import { selectedDeckPairRulesProfile } from "../duel/presets/duel-rules-profile
 import type { ActiveDuelDependencies } from "./assets/active-duel-dependencies.ts";
 import {
   BoundedDuelTrace,
+  buildRestorePlan,
   type DuelTrace,
   type DuelTraceEntry,
+  type RecordedDuelResponse,
 } from "./diagnostics/duel-trace.ts";
 import { resolveDuelDecks } from "./decks/resolve-duel-decks.ts";
 import { DuelSession } from "./engine/DuelSession.ts";
-import { createProductionSeed } from "./engine/duel-seed.ts";
+import { createProductionSeed, type DuelSeed } from "./engine/duel-seed.ts";
 import type { OcgCoreAdapter } from "./engine/OcgCoreAdapter.ts";
+import {
+  BasicOpponentPolicy,
+  type OpponentPolicy,
+} from "./opponent/OpponentPolicy.ts";
+import {
+  ReplayDivergenceError,
+  ReplayOpponentPolicy,
+  type RecordedOpponentResponse,
+} from "./opponent/ReplayOpponentPolicy.ts";
 import {
   HeadlessDuelController,
   type DuelAdvance,
@@ -88,6 +102,32 @@ export interface DuelWorkerRuntimeOptions {
   readonly logger?: WorkerLogger;
 }
 
+/** What the trace cannot say about a duel that has already failed: which decks
+    were brought to the table, and which namespace its prompt IDs were minted
+    in. A rebuild reuses both, so the recorded answers still name the choices
+    they were recorded against. */
+interface DuelStartRecord {
+  readonly duelId: string;
+  readonly player: DuelDeckSelection;
+  readonly opponent: DuelDeckSelection;
+  readonly promptIdNamespace: string;
+}
+
+interface OpenDuelOptions {
+  readonly duelId: string;
+  readonly player: DuelDeckSelection;
+  readonly opponent: DuelDeckSelection;
+  readonly seed: DuelSeed;
+  readonly snapshotId: SnapshotId;
+  readonly promptIdNamespace: string;
+  readonly opponentPolicy?: OpponentPolicy;
+  readonly publishTrace: (trace: DuelTrace) => void;
+}
+
+/** Long enough to name the engine call that refused, short enough that a
+    failure message can never become a payload. */
+const MAXIMUM_RESTORE_DETAIL_LENGTH = 1_024;
+
 export class DuelWorkerRuntime {
   readonly #initializeResources: DuelRuntimeInitializer;
   #resources: DuelRuntimeResources | null = null;
@@ -95,6 +135,7 @@ export class DuelWorkerRuntime {
   #initializationAbortController: AbortController | null = null;
   #controller: HeadlessDuelController | null = null;
   #lastTrace: DuelTrace | null = null;
+  #lastStart: DuelStartRecord | null = null;
   #commandQueue: Promise<void> = Promise.resolve();
   readonly #maximumQueuedCommands: number;
   readonly #runtimeId: string;
@@ -248,6 +289,9 @@ export class DuelWorkerRuntime {
         case "requestDiagnostics":
           events.push({ type: "diagnostics", trace: this.#diagnosticTrace() });
           break;
+        case "restore":
+          this.#restore(events);
+          break;
         default:
           assertNever(command);
       }
@@ -285,7 +329,12 @@ export class DuelWorkerRuntime {
         },
         failureSink,
       );
-      events.push({ type: "error", error: duelError });
+      const canRestore = this.#canRestore();
+      events.push({
+        type: "error",
+        error: duelError,
+        ...(canRestore ? { canRestore } : {}),
+      });
     }
     return this.#disposed ? [] : events;
   }
@@ -336,19 +385,62 @@ export class DuelWorkerRuntime {
         "A duel session is already active",
       );
     }
+    const promptIdNamespace = `${this.#runtimeId}-duel-${this.#nextDuelSequence + 1}`;
+    const controller = this.#openDuel({
+      duelId,
+      player,
+      opponent,
+      seed: createProductionSeed(),
+      snapshotId: resources.snapshotId,
+      promptIdNamespace,
+      publishTrace: (trace) => {
+        this.#lastTrace = trace;
+      },
+    });
+    if (controller === null) return;
+    this.#nextDuelSequence += 1;
+    this.#nextEventSequence = 0;
+    this.#controller = controller;
+    this.#lastStart = Object.freeze({
+      duelId,
+      player,
+      opponent,
+      promptIdNamespace,
+    });
+    try {
+      this.#recordAdvance(controller, controller.advance(), events);
+    } catch (error) {
+      try {
+        controller.dispose();
+      } catch (cleanupError) {
+        throw new AggregateError(
+          [error, cleanupError],
+          "Duel start failed and session cleanup also failed",
+          { cause: error },
+        );
+      }
+      throw error;
+    }
+  }
+
+  /** Builds a duel session and its controller without publishing anything:
+      the caller decides whether the result becomes the active duel. Returns
+      `null` only when the runtime was disposed while the core was starting. */
+  #openDuel(options: OpenDuelOptions): HeadlessDuelController | null {
+    const resources = this.#requireResources();
     /* Resolution and card support are settled before any core session exists,
        so a refused deck leaves the runtime exactly as it found it. */
-    const decks = resolveDuelDecks(player, opponent, resources);
+    const decks = resolveDuelDecks(options.player, options.opponent, resources);
     /* Only a preset pair has an id the Worker can derive and check. A duel
        built from an explicit list carries whatever id its caller chose, and
        there is nothing on this side to compare it against. */
-    if (decks.presetId !== null && duelId !== decks.presetId) {
+    if (decks.presetId !== null && options.duelId !== decks.presetId) {
       throw duelOperationError(
         "invalid_command",
-        `Unknown preset duel: ${duelId}`,
+        `Unknown preset duel: ${options.duelId}`,
       );
     }
-    const traceId = decks.presetId ?? duelId;
+    const traceId = decks.presetId ?? options.duelId;
     /* One immutable rules/layout decision per selected pair: the engine mode
        and the visible geometry can never disagree about Extra Monster Zones. */
     const profile = selectedDeckPairRulesProfile(
@@ -356,10 +448,13 @@ export class DuelWorkerRuntime {
       decks.opponent,
       resources.dependencies.cards,
     );
-    const seed = createProductionSeed();
-    const trace = new BoundedDuelTrace(traceId, resources.snapshotId, seed);
+    const trace = new BoundedDuelTrace(
+      traceId,
+      options.snapshotId,
+      options.seed,
+    );
     trace.record({ kind: "lifecycle", detail: "session creation started" });
-    this.#lastTrace = trace.snapshot();
+    options.publishTrace(trace.snapshot());
     let session: DuelSession;
     try {
       session = DuelSession.create({
@@ -367,18 +462,22 @@ export class DuelWorkerRuntime {
         dependencies: resources.dependencies,
         playerDeck: decks.player,
         opponentDeck: decks.opponent,
-        configuration: { mode: "production", rules: profile.rules, seed },
+        configuration: {
+          mode: "production",
+          rules: profile.rules,
+          seed: options.seed,
+        },
         onEngineDiagnostic: ({ type, message, error }) => {
           trace.record({
             kind: "engineDiagnostic",
             diagnosticType: type,
             detail: "engine diagnostic emitted",
           });
-          this.#lastTrace = trace.snapshot();
+          options.publishTrace(trace.snapshot());
           this.#logger.warn({
             event: "duel.worker.engine.session.diagnostic",
             runtimeId: this.#runtimeId,
-            duelId,
+            duelId: options.duelId,
             diagnosticType: type,
             message,
             ...(error === undefined ? {} : { err: error }),
@@ -391,7 +490,7 @@ export class DuelWorkerRuntime {
         detail:
           error instanceof Error ? error.message : "Session creation failed",
       });
-      this.#lastTrace = trace.snapshot();
+      options.publishTrace(trace.snapshot());
       throw error;
     }
     if (this.#disposed) {
@@ -401,19 +500,18 @@ export class DuelWorkerRuntime {
         this.#logger.error({
           event: "duel.worker.session.cleanup.failed",
           runtimeId: this.#runtimeId,
-          duelId,
+          duelId: options.duelId,
           reason: "runtime_disposed_during_creation",
           err: error,
         });
       }
-      return;
+      return null;
     }
-    let controller: HeadlessDuelController | null = null;
     try {
-      controller = new HeadlessDuelController({
+      return new HeadlessDuelController({
         session,
         dependencies: resources.dependencies,
-        snapshotId: resources.snapshotId,
+        snapshotId: options.snapshotId,
         presetId: traceId,
         deckCounts: [decks.player.main.length, decks.opponent.main.length],
         extraDeckCounts: [
@@ -421,16 +519,15 @@ export class DuelWorkerRuntime {
           decks.opponent.extra.length,
         ],
         extraMonsterZones: profile.extraMonsterZones,
-        promptIdNamespace: `${this.#runtimeId}-duel-${++this.#nextDuelSequence}`,
+        promptIdNamespace: options.promptIdNamespace,
+        ...(options.opponentPolicy === undefined
+          ? {}
+          : { opponentPolicy: options.opponentPolicy }),
         trace,
       });
-      this.#nextEventSequence = 0;
-      this.#controller = controller;
-      this.#recordAdvance(controller, controller.advance(), events);
     } catch (error) {
       try {
-        if (controller === null) session.dispose();
-        else controller.dispose();
+        session.dispose();
       } catch (cleanupError) {
         throw new AggregateError(
           [error, cleanupError],
@@ -440,6 +537,127 @@ export class DuelWorkerRuntime {
       }
       throw error;
     }
+  }
+
+  /**
+   * Rebuilds the failed duel from its own recorded answers and hands it back
+   * at the last prompt the player owned.
+   *
+   * Nothing the runtime already holds is touched until the rebuild has
+   * reached that prompt: a replay that fails leaves the previous error, its
+   * trace and its downloadable report exactly as the player found them.
+   */
+  #restore(events: DuelWorkerEvent[]): void {
+    const resources = this.#requireResources();
+    if (this.#controller !== null) {
+      events.push({ type: "restore_failed", reason: "duel_active" });
+      return;
+    }
+    const start = this.#lastStart;
+    const plan =
+      this.#lastTrace === null ? null : buildRestorePlan(this.#lastTrace);
+    if (start === null || plan === null) {
+      events.push({ type: "restore_failed", reason: "no_restore_point" });
+      return;
+    }
+    const humanResponses: RecordedDuelResponse[] = [];
+    const opponentResponses: RecordedOpponentResponse[] = [];
+    for (const response of plan.responses) {
+      if (response.opponentReason === undefined) humanResponses.push(response);
+      else
+        opponentResponses.push({
+          promptId: response.promptId,
+          choiceIds: response.choiceIds,
+          reason: response.opponentReason,
+        });
+    }
+    let handedOver = false;
+    let controller: HeadlessDuelController | null = null;
+    try {
+      controller = this.#openDuel({
+        duelId: start.duelId,
+        player: start.player,
+        opponent: start.opponent,
+        seed: plan.seed,
+        snapshotId: plan.snapshotId,
+        promptIdNamespace: start.promptIdNamespace,
+        opponentPolicy: new ReplayOpponentPolicy(
+          opponentResponses,
+          new BasicOpponentPolicy(resources.dependencies),
+        ),
+        publishTrace: (trace) => {
+          if (handedOver) this.#lastTrace = trace;
+        },
+      });
+      if (controller === null) return;
+      let advance = controller.advance();
+      for (const response of humanResponses) {
+        if (advance.prompt?.id !== response.promptId) {
+          throw new ReplayDivergenceError(
+            `Replay expected to answer ${response.promptId} but the rebuilt duel asked ${advance.prompt?.id ?? "nothing"}`,
+          );
+        }
+        advance = controller.respond(response.promptId, response.choiceIds);
+      }
+      const prompt = advance.prompt;
+      if (prompt === undefined || prompt.id !== plan.stopAtPromptId) {
+        throw new ReplayDivergenceError(
+          `Replay expected to stop at ${plan.stopAtPromptId} but the rebuilt duel asked ${prompt?.id ?? "nothing"}`,
+        );
+      }
+      /* Disposal during the replay cannot reach a controller the runtime does
+         not hold yet, so the last word on whether this session lives belongs
+         here rather than to `dispose`. */
+      if (this.#disposed) {
+        controller.dispose();
+        return;
+      }
+      handedOver = true;
+      this.#controller = controller;
+      this.#lastTrace = controller.trace();
+      events.push(
+        { type: "restored" },
+        { type: "state", state: advance.state },
+        { type: "prompt", prompt },
+      );
+    } catch (error) {
+      const reason: RestoreFailureReason =
+        error instanceof ReplayDivergenceError
+          ? "replay_diverged"
+          : "replay_failed";
+      this.#logger.error({
+        event: "duel.worker.restore.failed",
+        runtimeId: this.#runtimeId,
+        reason,
+        replayedResponses: plan.responses.length,
+        err: routineLogError(error),
+      });
+      /* Disposal failure is the one case that escapes as an ordinary command
+         error: the core handle is then in an unknown state and the Worker has
+         to be replaced, which outranks keeping the previous error on screen. */
+      if (controller !== null) this.#disposeController(controller, "restore");
+      const detail = toDuelError(error).message.slice(
+        0,
+        MAXIMUM_RESTORE_DETAIL_LENGTH,
+      );
+      events.push({
+        type: "restore_failed",
+        reason,
+        ...(detail.length === 0 ? {} : { detail }),
+      });
+    }
+  }
+
+  /** Whether a `restore` command sent right now would be accepted. */
+  #canRestore(): boolean {
+    return (
+      !this.#disposed &&
+      !this.#replacementRequired &&
+      this.#controller === null &&
+      this.#lastStart !== null &&
+      this.#lastTrace !== null &&
+      buildRestorePlan(this.#lastTrace) !== null
+    );
   }
 
   #recordAdvance(

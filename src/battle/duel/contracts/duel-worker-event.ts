@@ -31,8 +31,31 @@ export type DuelWorkerEvent =
   | { readonly type: "prompt"; readonly prompt: PlayerPrompt }
   | { readonly type: "result"; readonly result: DuelResult }
   | { readonly type: "diagnostics"; readonly trace: DuelDiagnosticTrace }
-  | { readonly type: "error"; readonly error: DuelError }
+  | {
+      readonly type: "error";
+      readonly error: DuelError;
+      /* Whether a `restore` command sent right now would be accepted. It
+         rides the error rather than the state because the response that
+         killed the duel is recorded during the very command that fails, and
+         the last state event predates it. */
+      readonly canRestore?: boolean;
+    }
+  /** The duel was rebuilt; the `state` and `prompt` events that follow are the
+      position the player left. */
+  | { readonly type: "restored" }
+  | {
+      readonly type: "restore_failed";
+      readonly reason: RestoreFailureReason;
+      readonly detail?: string;
+    }
   | { readonly type: "disposed"; readonly clean: boolean };
+
+/** Why a duel could not be rebuilt. `no_restore_point` covers both a duel the
+    player never answered and a trace too long to still hold its own start;
+    `replay_diverged` means the rebuilt duel asked a different question than
+    the recorded answer belongs to. */
+export type RestoreFailureReason =
+  "no_restore_point" | "duel_active" | "replay_diverged" | "replay_failed";
 
 const MAXIMUM_ID_LENGTH = 512;
 const MAXIMUM_TEXT_LENGTH = 32_768;
@@ -46,6 +69,13 @@ const MAXIMUM_STATE_TEXT_UNITS = 262_144;
 const MAXIMUM_DIAGNOSTIC_TEXT_UNITS = 1_000_000;
 const CHAIN_PHASES = new Set(["pending", "solving", "solved"]);
 const CHAIN_OUTCOMES = new Set(["normal", "negated", "disabled"]);
+
+const RESTORE_FAILURE_REASONS: ReadonlySet<string> = new Set([
+  "no_restore_point",
+  "duel_active",
+  "replay_diverged",
+  "replay_failed",
+] satisfies readonly RestoreFailureReason[]);
 
 const PROMPT_KINDS: ReadonlySet<PromptKind> = new Set([
   "idleCommand",
@@ -196,8 +226,31 @@ export function parseDuelWorkerEvent(value: unknown): DuelWorkerEvent {
       validateDiagnosticTrace(event.trace);
       break;
     case "error":
-      requireExactKeys(event, ["type", "error"], "error event");
+      requireExactKeys(event, ["type", "error", "canRestore"], "error event");
       validateDuelError(event.error);
+      if (event.canRestore !== undefined)
+        requireBoolean(event.canRestore, "error.canRestore");
+      break;
+    case "restored":
+      requireExactKeys(event, ["type"], "restored event");
+      break;
+    case "restore_failed":
+      requireExactKeys(
+        event,
+        ["type", "reason", "detail"],
+        "restore_failed event",
+      );
+      requireEnum(
+        event.reason,
+        RESTORE_FAILURE_REASONS,
+        "restore_failed.reason",
+      );
+      if (event.detail !== undefined)
+        requireString(
+          event.detail,
+          "restore_failed.detail",
+          MAXIMUM_TEXT_LENGTH,
+        );
       break;
     case "disposed":
       requireExactKeys(event, ["type", "clean"], "disposed");

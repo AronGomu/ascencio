@@ -163,6 +163,8 @@ class FakeDuelClient implements DuelClient {
   replaceFailure: Error | null = null;
   initializeResult = true;
   respondResult = true;
+  restoreResult = true;
+  restoreCalls = 0;
   readonly respondCalls: Array<{
     readonly promptId: string;
     readonly choiceIds: readonly string[];
@@ -206,6 +208,11 @@ class FakeDuelClient implements DuelClient {
 
   requestDiagnostics(): boolean {
     return true;
+  }
+
+  restore(): boolean {
+    this.restoreCalls += 1;
+    return this.restoreResult;
   }
 
   async replace(): Promise<{ readonly graceful: boolean }> {
@@ -364,6 +371,74 @@ describe("duel view-state reducer", () => {
       nextLogSequence: 1,
     });
     expect(next.context).not.toEqual(view.context);
+  });
+
+  it("offers recovery only for a failure the Worker can still rebuild", () => {
+    const failure = {
+      code: "engine_error",
+      message: "ocgcore rejected the previous response",
+      recoverable: false,
+    } as const;
+    let view = apply(createInitialDuelViewState(CONTEXT), PROMPT_EVENT);
+
+    const unrecoverable = apply(view, { type: "error", error: failure });
+    expect(unrecoverable).toMatchObject({
+      status: "failed",
+      canRestore: false,
+      restoreFailure: null,
+    });
+
+    view = apply(view, { type: "error", error: failure, canRestore: true });
+    expect(view).toMatchObject({
+      status: "failed",
+      error: failure,
+      canRestore: true,
+    });
+
+    /* A replay that fails changes nothing the player is looking at except the
+       offer that just proved impossible. */
+    view = apply(view, { type: "restore_failed", reason: "replay_failed" });
+    expect(view).toMatchObject({
+      status: "failed",
+      error: failure,
+      canRestore: false,
+      restoreFailure: "replay_failed",
+    });
+
+    view = apply(view, { type: "restored" });
+    expect(view).toMatchObject({
+      status: "active",
+      error: null,
+      canRestore: false,
+      restoreFailure: null,
+      responsePending: false,
+    });
+
+    /* A recoverable rejection is answered again at the same prompt, so it
+       never offers to rebuild the duel around it. */
+    const recoverable = apply(apply(view, PROMPT_EVENT), {
+      type: "error",
+      error: {
+        code: "invalid_response",
+        message: "Select exactly one choice",
+        recoverable: true,
+      },
+      canRestore: true,
+    });
+    expect(recoverable).toMatchObject({
+      status: "awaiting-input",
+      canRestore: false,
+    });
+  });
+
+  it("forwards a restore request to the client", () => {
+    const client = new FakeDuelClient();
+    const store = createDuelStore(client);
+
+    expect(store.restore()).toBe(true);
+    client.restoreResult = false;
+    expect(store.restore()).toBe(false);
+    expect(client.restoreCalls).toBe(2);
   });
 
   it("keeps 100 transient events while retaining approved semantic rows", () => {

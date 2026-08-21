@@ -34,9 +34,12 @@ const examples: readonly (DuelCommand | DuelWorkerEvent)[] = [
   },
   { type: "surrender" },
   { type: "requestDiagnostics" },
+  { type: "restore" },
   { type: "dispose" },
   { type: "ready", coreVersion: [11, 0] },
   { type: "disposed", clean: true },
+  { type: "restored" },
+  { type: "restore_failed", reason: "replay_diverged", detail: "prompt 4" },
   { type: "loading", stage: "snapshot", progress: 0.5 },
   {
     type: "state",
@@ -283,6 +286,46 @@ describe("Worker contracts", () => {
       expect(parseDuelWorkerEvent(event)).toEqual(event);
     },
   );
+
+  it("carries recovery on the error that offers it and nothing else", () => {
+    const failure = {
+      code: "engine_error",
+      message: "ocgcore rejected the previous response",
+      recoverable: false,
+    };
+    for (const event of [
+      { type: "error", error: failure },
+      { type: "error", error: failure, canRestore: false },
+      { type: "error", error: failure, canRestore: true },
+      { type: "restored" },
+      { type: "restore_failed", reason: "no_restore_point" },
+      { type: "restore_failed", reason: "duel_active" },
+      { type: "restore_failed", reason: "replay_failed", detail: "refused" },
+    ]) {
+      expect(parseDuelWorkerEvent(event)).toEqual(event);
+    }
+
+    expect(() =>
+      parseDuelWorkerEvent({
+        type: "error",
+        error: failure,
+        canRestore: "yes",
+      }),
+    ).toThrow("error.canRestore");
+    expect(() =>
+      parseDuelWorkerEvent({ type: "restored", promptId: "worker-prompt-1" }),
+    ).toThrow("restored event.promptId");
+    expect(() =>
+      parseDuelWorkerEvent({ type: "restore_failed", reason: "because" }),
+    ).toThrow("restore_failed.reason");
+    expect(() =>
+      parseDuelWorkerEvent({
+        type: "restore_failed",
+        reason: "replay_failed",
+        trace: {},
+      }),
+    ).toThrow("restore_failed event.trace");
+  });
 
   it("requires a positive safe presentation event sequence", () => {
     expect(

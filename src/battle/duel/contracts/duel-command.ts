@@ -36,6 +36,9 @@ export type DuelCommand =
     }
   | { readonly type: "surrender" }
   | { readonly type: "requestDiagnostics" }
+  /** Rebuild the failed duel from its own recorded responses, up to the last
+      decision the player owned. */
+  | { readonly type: "restore" }
   | { readonly type: "dispose" };
 
 export function parseDuelCommand(value: unknown): DuelCommand {
@@ -48,6 +51,7 @@ export function parseDuelCommand(value: unknown): DuelCommand {
     case "initialize":
     case "surrender":
     case "requestDiagnostics":
+    case "restore":
     case "dispose":
       requireOnlyKeys(command, ["type"]);
       return { type: commandType };

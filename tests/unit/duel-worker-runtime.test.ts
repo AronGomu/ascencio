@@ -1,5 +1,6 @@
 import { inspect } from "node:util";
 import { describe, expect, it, vi } from "vitest";
+import type { DuelCommand } from "../../src/battle/duel/contracts/duel-command.ts";
 import {
   DuelOperationError,
   duelOperationError,
@@ -913,6 +914,127 @@ describe("duels started from an explicit card list", () => {
     runtime.dispose();
   });
 
+  it("rebuilds a failed duel from its own recorded responses", async () => {
+    const harness = await createFakeOcgCoreAdapter(recordedDuelProgram);
+    const runtime = new DuelWorkerRuntime(async () =>
+      createResources(harness.adapter),
+    );
+    try {
+      await runtime.handle({ type: "initialize" });
+      const started = await runtime.handle(START_FAKE_DUEL);
+      const firstPrompt = started.find((event) => event.type === "prompt");
+      if (firstPrompt?.type !== "prompt")
+        throw new Error("Fake duel asked the player nothing");
+
+      /* A live duel is played, not rebuilt. */
+      expect(await runtime.handle({ type: "restore" })).toEqual([
+        { type: "restore_failed", reason: "duel_active" },
+      ]);
+
+      const answered = await runtime.handle({
+        type: "respond",
+        promptId: firstPrompt.prompt.id,
+        choiceIds: [firstPrompt.prompt.choices[0]!.id],
+      });
+      const secondPrompt = answered.find((event) => event.type === "prompt");
+      if (secondPrompt?.type !== "prompt")
+        throw new Error(
+          "Fake duel asked the player nothing after the opponent",
+        );
+      const failed = await runtime.handle({
+        type: "respond",
+        promptId: secondPrompt.prompt.id,
+        choiceIds: [secondPrompt.prompt.choices[0]!.id],
+      });
+      expect(failed).toEqual([
+        {
+          type: "error",
+          error: expect.objectContaining({ recoverable: false }),
+          canRestore: true,
+        },
+      ]);
+      const before = runtime.diagnosticTrace();
+
+      const restored = await runtime.handle({ type: "restore" });
+      expect(restored.map((event) => event.type)).toEqual([
+        "restored",
+        "state",
+        "prompt",
+      ]);
+      const restoredPrompt = restored.find((event) => event.type === "prompt");
+      if (restoredPrompt?.type !== "prompt")
+        throw new Error("Restore published no live prompt");
+      expect(restoredPrompt.prompt).toEqual(secondPrompt.prompt);
+      expect(harness.counters.createDuel).toBe(2);
+
+      /* The opponent's recorded answer was fed back, reason and all, instead
+         of being decided a second time. */
+      const after = runtime.diagnosticTrace();
+      expect(responses(after)).toEqual(responses(before).slice(0, -1));
+      expect(responses(after)).toContainEqual(
+        expect.objectContaining({
+          player: 1,
+          opponentReason: "decline_optional",
+        }),
+      );
+    } finally {
+      runtime.dispose();
+    }
+  });
+
+  it("refuses to hand over a rebuilt duel that asks a different question", async () => {
+    let createdDuels = 0;
+    const harness = await createFakeOcgCoreAdapter(() => {
+      createdDuels += 1;
+      /* The rebuilt duel opens on the opponent's seat, so the first recorded
+         answer no longer belongs to the prompt in front of it. */
+      return createdDuels === 1
+        ? recordedDuelProgram()
+        : { steps: [yesNoStep(1), yesNoStep(0)] };
+    });
+    const runtime = new DuelWorkerRuntime(async () =>
+      createResources(harness.adapter),
+    );
+    try {
+      await runtime.handle({ type: "initialize" });
+      const started = await runtime.handle(START_FAKE_DUEL);
+      const firstPrompt = started.find((event) => event.type === "prompt");
+      if (firstPrompt?.type !== "prompt")
+        throw new Error("Fake duel asked the player nothing");
+      const answered = await runtime.handle({
+        type: "respond",
+        promptId: firstPrompt.prompt.id,
+        choiceIds: [firstPrompt.prompt.choices[0]!.id],
+      });
+      const secondPrompt = answered.find((event) => event.type === "prompt");
+      if (secondPrompt?.type !== "prompt")
+        throw new Error(
+          "Fake duel asked the player nothing after the opponent",
+        );
+      await runtime.handle({
+        type: "respond",
+        promptId: secondPrompt.prompt.id,
+        choiceIds: [secondPrompt.prompt.choices[0]!.id],
+      });
+      const before = runtime.diagnosticTrace();
+
+      expect(await runtime.handle({ type: "restore" })).toEqual([
+        {
+          type: "restore_failed",
+          reason: "replay_diverged",
+          detail: expect.stringContaining("Replay expected"),
+        },
+      ]);
+      /* The duel the player is looking at, and the report they can download,
+         are untouched by the attempt. */
+      expect(runtime.diagnosticTrace()).toEqual(before);
+      expect(harness.counters).toEqual({ createDuel: 2, destroyDuel: 2 });
+      expect(harness.activeHandles()).toBe(0);
+    } finally {
+      runtime.dispose();
+    }
+  });
+
   it("still refuses a preset pair whose duel id does not match", async () => {
     const harness = await createFakeOcgCoreAdapter(winImmediately);
     const runtime = new DuelWorkerRuntime(async () =>
@@ -940,6 +1062,52 @@ describe("duels started from an explicit card list", () => {
 
 const PLAYER_MAIN = Array.from({ length: 40 }, (_, index) => 11_000 + index);
 const OPPONENT_MAIN = Array.from({ length: 40 }, (_, index) => 22_000 + index);
+
+const START_FAKE_DUEL = {
+  type: "startDuel",
+  duelId: FAKE_PRESET.id,
+  player: { kind: "preset", deckId: "mvp-player" },
+  opponent: { kind: "preset", deckId: "mvp-opponent" },
+} as const satisfies DuelCommand;
+
+function yesNoStep(player: 0 | 1) {
+  return {
+    status: EngineProcess.WAITING,
+    messages: [
+      { type: EngineMessageType.SELECT_YES_NO, player, description: 0n },
+    ],
+  };
+}
+
+/** Player, opponent, player, then a core that gives up: the shortest duel
+    that still has a decision of the player's own to go back to. */
+const recordedDuelProgram = () => ({
+  steps: [
+    yesNoStep(0),
+    yesNoStep(1),
+    yesNoStep(0),
+    { error: new Error("fake core rejected the previous response") },
+  ],
+});
+
+function responses(
+  trace: ReturnType<DuelWorkerRuntime["diagnosticTrace"]>,
+): readonly unknown[] {
+  return (trace?.entries ?? []).flatMap((entry) =>
+    entry.kind === "response"
+      ? [
+          {
+            promptId: entry.promptId,
+            choiceIds: entry.choiceIds,
+            player: entry.player,
+            ...(entry.opponentReason === undefined
+              ? {}
+              : { opponentReason: entry.opponentReason }),
+          },
+        ]
+      : [],
+  );
+}
 
 const winImmediately = () => ({
   steps: [{ status: EngineProcess.END, messages: [WIN_MESSAGE] }],

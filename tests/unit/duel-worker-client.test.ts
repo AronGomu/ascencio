@@ -148,6 +148,82 @@ describe("DuelWorkerClient", () => {
     ]);
   });
 
+  it("sends one restore per failure and answers the prompt it hands back", () => {
+    const { client, workers } = createHarness();
+    const worker = workers[0]!;
+
+    /* Nothing to rebuild before a duel has run. */
+    expect(client.restore()).toBe(false);
+    client.initialize();
+    worker.emit({ type: "ready", coreVersion: [11, 0] });
+    client.startDuel(
+      duelId("mvp-preset-v1"),
+      { kind: "preset", deckId: "mvp-player" },
+      { kind: "preset", deckId: "mvp-opponent" },
+    );
+    worker.emit(promptEvent);
+    /* A live duel is restored by playing it, not by rebuilding it. */
+    expect(client.restore()).toBe(false);
+    expect(client.respond(promptEvent.prompt.id, [choiceId("yes")])).toBe(true);
+    worker.emit({
+      type: "error",
+      error: {
+        code: "engine_error",
+        message: "ocgcore rejected the previous response",
+        recoverable: false,
+      },
+      canRestore: true,
+    });
+
+    expect(client.restore()).toBe(true);
+    /* One replay at a time: a second click cannot race the first. */
+    expect(client.restore()).toBe(false);
+    worker.emit({ type: "restored" });
+    worker.emit(promptEvent);
+
+    /* The rebuilt duel stops on the prompt this client already answered
+       once, and answering it again is the whole point. */
+    expect(client.respond(promptEvent.prompt.id, [choiceId("no")])).toBe(true);
+    expect(worker.commands.filter(({ type }) => type === "restore")).toEqual([
+      { type: "restore" },
+    ]);
+    expect(worker.commands.filter(({ type }) => type === "respond")).toEqual([
+      { type: "respond", promptId: "worker-prompt-1", choiceIds: ["yes"] },
+      { type: "respond", promptId: "worker-prompt-1", choiceIds: ["no"] },
+    ]);
+  });
+
+  it("lets a refused replay be attempted again", () => {
+    const { client, workers } = createHarness();
+    const worker = workers[0]!;
+    client.initialize();
+    worker.emit({ type: "ready", coreVersion: [11, 0] });
+    client.startDuel(
+      duelId("mvp-preset-v1"),
+      { kind: "preset", deckId: "mvp-player" },
+      { kind: "preset", deckId: "mvp-opponent" },
+    );
+    worker.emit(promptEvent);
+    client.respond(promptEvent.prompt.id, [choiceId("yes")]);
+    worker.emit({
+      type: "error",
+      error: {
+        code: "engine_error",
+        message: "ocgcore rejected the previous response",
+        recoverable: false,
+      },
+      canRestore: true,
+    });
+
+    expect(client.restore()).toBe(true);
+    worker.emit({ type: "restore_failed", reason: "replay_failed" });
+    expect(client.restore()).toBe(true);
+    expect(worker.commands.filter(({ type }) => type === "restore")).toEqual([
+      { type: "restore" },
+      { type: "restore" },
+    ]);
+  });
+
   it("emits one Worker response across field and prompt-control submits", async () => {
     const { client, workers } = createHarness();
     const worker = workers[0]!;

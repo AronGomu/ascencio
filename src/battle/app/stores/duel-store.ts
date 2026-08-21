@@ -3,6 +3,7 @@ import type { DuelDiagnosticTrace } from "../../duel/contracts/duel-diagnostics.
 import type { DuelError } from "../../duel/contracts/duel-error.ts";
 import type { DuelPresentationEvent } from "../../duel/contracts/duel-presentation-event.ts";
 import type { DuelResult } from "../../duel/contracts/duel-result.ts";
+import type { RestoreFailureReason } from "../../duel/contracts/duel-worker-event.ts";
 import type { PlayerPrompt } from "../../duel/contracts/player-prompt.ts";
 import type { PublicDuelState } from "../../duel/contracts/public-duel-state.ts";
 import { duelId, type DuelId } from "../../duel/contracts/ids.ts";
@@ -87,6 +88,11 @@ export interface DuelViewState {
   readonly prompt: PlayerPrompt | null;
   readonly result: DuelResult | null;
   readonly error: DuelError | null;
+  /* Whether the Worker still holds enough of this duel to rebuild it to the
+     last decision the player owned. Only a failed duel reports it, because
+     that is the only state recovery is offered from. */
+  readonly canRestore: boolean;
+  readonly restoreFailure: RestoreFailureReason | null;
   readonly diagnostics: DuelDiagnosticTrace | null;
   readonly presentationEvents: readonly SequencedPresentationEvent[];
   readonly duelLog: readonly DuelLogEntry[];
@@ -110,6 +116,7 @@ export interface DuelStore extends Readable<DuelViewState> {
   armPlacementIntent(zoneId: PhysicalZoneId): boolean;
   surrender(): boolean;
   requestDiagnostics(): boolean;
+  restore(): boolean;
   retry(): Promise<boolean>;
   restart(): Promise<boolean>;
   reset(): Promise<boolean>;
@@ -131,6 +138,8 @@ export function createInitialDuelViewState(
     prompt: null,
     result: null,
     error: null,
+    canRestore: false,
+    restoreFailure: null,
     diagnostics: null,
     presentationEvents: Object.freeze([]),
     duelLog: Object.freeze([]),
@@ -240,6 +249,29 @@ export function reduceDuelViewState(
     }
     case "diagnostics":
       return freezeState({ ...state, diagnostics: event.trace });
+    case "restored":
+      /* The `state` and `prompt` events behind this one carry the rebuilt
+         position, so this only has to retire the failure it recovers from. */
+      return freezeState({
+        ...state,
+        status: "active",
+        error: null,
+        canRestore: false,
+        restoreFailure: null,
+        result: null,
+        responsePending: false,
+        responsePendingKey: null,
+        interactionSession: createInactiveInteractionSession(),
+        pendingPlacement: null,
+      });
+    case "restore_failed":
+      /* The duel the player was looking at is still the duel they are looking
+         at: the error, its report and its status all stay put. */
+      return freezeState({
+        ...state,
+        canRestore: false,
+        restoreFailure: event.reason,
+      });
     case "result":
       return freezeState({
         ...state,
@@ -247,6 +279,8 @@ export function reduceDuelViewState(
         prompt: null,
         result: event.result,
         error: null,
+        canRestore: false,
+        restoreFailure: null,
         loading: null,
         responsePending: false,
         responsePendingKey: null,
@@ -273,6 +307,7 @@ export function reduceDuelViewState(
           ...state,
           status: "awaiting-input",
           error: event.error,
+          canRestore: false,
           responsePending: false,
           responsePendingKey: null,
           interactionSession: rejected.session,
@@ -285,6 +320,8 @@ export function reduceDuelViewState(
         prompt: null,
         result: null,
         error: event.error,
+        canRestore: event.canRestore === true,
+        restoreFailure: null,
         loading: null,
         responsePending: false,
         responsePendingKey: null,
@@ -580,6 +617,7 @@ export function createDuelStore(client: DuelClient): DuelStore {
       return true;
     },
     requestDiagnostics: () => client.requestDiagnostics(),
+    restore: () => client.restore(),
     retry: () => replaceAndInitialize(lastStartedDecks),
     restart: () =>
       lastStartedDecks === null

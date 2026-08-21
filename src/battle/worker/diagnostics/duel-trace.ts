@@ -38,6 +38,81 @@ export interface DuelTrace {
   readonly entries: readonly DuelTraceEntry[];
 }
 
+/** One answer the duel accepted, in the order it accepted it. Only the
+    opponent's answers carry a reason, so its absence is what marks a response
+    as the player's own decision. */
+export interface RecordedDuelResponse {
+  readonly promptId: PromptId;
+  readonly choiceIds: readonly ChoiceId[];
+  readonly player: PlayerIndex;
+  readonly opponentReason?: OpponentDecisionReason;
+}
+
+/** Everything a fresh session needs to reproduce a duel up to the last
+    decision the player owned: the same seed, the same snapshot, and the
+    answers to feed back before the rebuilt duel is handed over. */
+export interface RestorePlan {
+  readonly seed: DuelSeed;
+  readonly snapshotId: SnapshotId;
+  readonly responses: readonly RecordedDuelResponse[];
+  readonly stopAtPromptId: PromptId;
+}
+
+/**
+ * Reads the trace back as the plan for rebuilding the duel, or `null` when
+ * there is nothing to rebuild to.
+ *
+ * The stop point is the last response with no `opponentReason` — the last
+ * prompt the player answered themselves. Everything recorded at or after it is
+ * dropped: the player is about to make that decision again, so the opponent's
+ * replies to the line they abandoned are no longer part of the position.
+ */
+export function buildRestorePlan(trace: DuelTrace): RestorePlan | null {
+  /* A trace that has evicted its oldest entries no longer holds the whole
+     duel, and replaying a suffix rebuilds a different position without
+     saying so. The first entry is recorded before the core session exists,
+     so a first sequence other than 1 is the evidence that the log is
+     incomplete. */
+  if (trace.entries[0]?.sequence !== 1) return null;
+  const responses: RecordedDuelResponse[] = [];
+  let lastHumanIndex = -1;
+  for (const entry of trace.entries) {
+    if (
+      entry.kind !== "response" ||
+      entry.promptId === undefined ||
+      entry.choiceIds === undefined ||
+      entry.player === undefined
+    )
+      continue;
+    if (entry.opponentReason === undefined) lastHumanIndex = responses.length;
+    responses.push(
+      Object.freeze({
+        promptId: entry.promptId,
+        choiceIds: entry.choiceIds,
+        player: entry.player,
+        ...(entry.opponentReason === undefined
+          ? {}
+          : { opponentReason: entry.opponentReason }),
+      }),
+    );
+  }
+  const stopAt = responses[lastHumanIndex];
+  if (stopAt === undefined) return null;
+  const [first, second, third, fourth] = trace.seed;
+  const seed: DuelSeed = [
+    BigInt(first),
+    BigInt(second),
+    BigInt(third),
+    BigInt(fourth),
+  ];
+  return Object.freeze({
+    seed,
+    snapshotId: trace.snapshotId,
+    responses: Object.freeze(responses.slice(0, lastHumanIndex)),
+    stopAtPromptId: stopAt.promptId,
+  });
+}
+
 export class BoundedDuelTrace {
   readonly #presetId: string;
   readonly #snapshotId: SnapshotId;

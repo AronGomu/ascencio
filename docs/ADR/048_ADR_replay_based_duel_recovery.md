@@ -27,6 +27,7 @@ Recovery is a **deterministic replay**, not a snapshot restore.
 
 - Recovery costs a full replay of the duel so far. For a duel of a few hundred messages this is milliseconds; it grows linearly and is bounded by the duel's own length.
 - Exactness comes from determinism: same seed, same responses, same core, same position. This is the same property the reproducible-build and programmed-duel suites already depend on.
-- The trace must stay in memory for the session — it already does, because the diagnostics download needs it.
+- The trace must stay in memory for the session — it already does, because the diagnostics download needs it. It is a bounded recorder (10,000 entries or ~900,000 characters, whichever comes first) that drops its oldest entries, so a duel long enough to overflow it loses the start of its own response log. A trace whose first entry is no longer sequence 1 offers no restore at all rather than a replay of a suffix, which would rebuild a position the player never played and say nothing about it.
+- Recovery is offered by the Worker only while it is idle and healthy: a duel still in progress is played rather than rebuilt, and a Worker whose core cleanup was uncertain is replaced rather than replayed.
 - If the underlying bug is unfixed, restoring to the same prompt can fail again. Accepted: the dialog stays reachable, and the player can take a different line from their own decision point.
 - This is recovery, not undo. It is reachable from the error dialog only; a general in-duel undo would be a separate decision with rules-integrity questions this ADR does not answer.

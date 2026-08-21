@@ -2422,3 +2422,22 @@ Level 4 or lower monster (Summon or Set) is the case you will hit first.
       Cancel. (Focus is not trapped inside the window — Tab past Cancel walks on into the
       board behind it. Escape closes the window from anywhere.)
 - [ ] Confirm the browser console shows no errors during the above.
+
+## T12 duel-replay-log-contract
+
+This slice is the engine half of the recovery feature: the Worker learns to rebuild a
+duel from its own recorded responses. Nothing new is visible yet — the button that
+calls it arrives with T13 — so these steps are mostly about proving a normal duel is
+untouched. Run them with `npm run dev` on `#/duel`.
+
+- [ ] Start a duel with the preset decks and play three or four of your own decisions
+      (summon, set, attack, end turn). Everything behaves exactly as before: prompts,
+      the duel log, the opponent's turns, the field.
+- [ ] Confirm the browser console shows no errors during the above.
+- [ ] Surrender, then start a fresh duel from the same screen. The new duel starts
+      normally and its opening hand is different from the one you just left.
+- [ ] Open the error panel's **Download diagnostics** button after that surrender and
+      confirm a report still downloads, exactly as before this ticket.
+- [ ] Confirm there is still **no** Restore button anywhere: the error panel offers the
+      same actions it did before (download plus restart), and nothing new appears on
+      the field, in the log, or in the settings.

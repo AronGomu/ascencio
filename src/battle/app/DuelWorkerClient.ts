@@ -71,6 +71,7 @@ export interface DuelClient {
   respond(promptId: PromptId, choiceIds: readonly ChoiceId[]): boolean;
   surrender(): boolean;
   requestDiagnostics(): boolean;
+  restore(): boolean;
   replace(): Promise<DuelWorkerDisposalResult>;
   dispose(): Promise<DuelWorkerDisposalResult>;
 }
@@ -107,6 +108,7 @@ export class DuelWorkerClient implements DuelClient {
   #lastResponsePromptId: PromptId | null = null;
   #respondedPromptIds = new Set<PromptId>();
   #diagnosticsPending = false;
+  #restorePending = false;
   #disposalResolver:
     ((acknowledgement: DisposalAcknowledgement) => void) | null = null;
   #shutdown: Promise<DuelWorkerDisposalResult> | null = null;
@@ -239,6 +241,33 @@ export class DuelWorkerClient implements DuelClient {
     );
   }
 
+  /** Asks the Worker to rebuild the failed duel from its own recorded
+      responses. Only sensible once a duel has ended in failure, which is the
+      one state where the Worker is idle but the session is not over. */
+  restore(): boolean {
+    if (
+      this.#closed ||
+      this.#worker === null ||
+      !this.#ready ||
+      this.#sessionGeneration === 0 ||
+      this.#active ||
+      this.#restorePending ||
+      this.#shutdown !== null
+    ) {
+      return false;
+    }
+    this.#restorePending = true;
+    if (!this.#post({ type: "restore" })) {
+      this.#restorePending = false;
+      return false;
+    }
+    this.#startWatchdog(
+      this.#commandTimeoutMs,
+      `Duel Worker did not restore the duel within ${this.#commandTimeoutMs}ms`,
+    );
+    return true;
+  }
+
   surrender(): boolean {
     if (
       this.#closed ||
@@ -290,6 +319,7 @@ export class DuelWorkerClient implements DuelClient {
     this.#lastResponsePromptId = null;
     this.#respondedPromptIds = new Set();
     this.#diagnosticsPending = false;
+    this.#restorePending = false;
     this.#startupFailure = null;
 
     let worker: DuelWorkerPort;
@@ -391,6 +421,20 @@ export class DuelWorkerClient implements DuelClient {
       this.#diagnosticsPending = false;
       this.#clearWatchdog();
     }
+    if (event.type === "restored") {
+      this.#restorePending = false;
+      this.#clearWatchdog();
+      this.#active = true;
+      /* The rebuilt duel mints the prompt IDs of the duel it replaced, so the
+         prompt it stops on is one this client has already answered once. */
+      this.#respondedPromptIds = new Set();
+      this.#currentPromptId = null;
+      this.#lastResponsePromptId = null;
+    }
+    if (event.type === "restore_failed") {
+      this.#restorePending = false;
+      this.#clearWatchdog();
+    }
     if (event.type === "result") {
       this.#clearWatchdog();
       this.#active = false;
@@ -399,6 +443,7 @@ export class DuelWorkerClient implements DuelClient {
     }
     if (event.type === "error") {
       this.#diagnosticsPending = false;
+      this.#restorePending = false;
       this.#clearWatchdog();
       if (
         (event.error.code === "invalid_response" ||

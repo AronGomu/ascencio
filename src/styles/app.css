@@ -2019,14 +2019,31 @@ button.duel-field-zone,
   transform: scale(1.35);
 }
 
-/* Auto-margin centering: absorbs free space symmetrically so the card
-   cluster is centered when it fits; degrades to normal scrolling otherwise.
-   Works for both LTR (p0) and row-reverse (p1) layouts. */
-.duel-field-hand-band__viewport > .duel-field-card.is-hand-item:first-child {
+/* Auto-margin centering: the free space is absorbed on the outer side of the
+   cluster's two end cards, so the cards stay adjacent and centered while they
+   fit, and the margins collapse to zero — leaving the scroll extent untouched
+   — once they no longer do. The opponent's band is `row-reverse`, which puts
+   its first child on the right, so each band takes the auto margin on the
+   opposite physical side; pairing both bands on the same side lands them
+   inside the cluster and spreads the opponent's cards to the band edges.
+   `justify-content: safe center` cannot replace this: `safe` falls back to
+   writing-mode start, not flex start, which leaves a mirrored band's overflow
+   outside its scrollable area. */
+.duel-field-hand-band:not(.is-opponent)
+  .duel-field-hand-band__viewport
+  > .duel-field-card.is-hand-item:first-child,
+.duel-field-hand-band.is-opponent
+  .duel-field-hand-band__viewport
+  > .duel-field-card.is-hand-item:last-child {
   margin-left: auto;
 }
 
-.duel-field-hand-band__viewport > .duel-field-card.is-hand-item:last-child {
+.duel-field-hand-band:not(.is-opponent)
+  .duel-field-hand-band__viewport
+  > .duel-field-card.is-hand-item:last-child,
+.duel-field-hand-band.is-opponent
+  .duel-field-hand-band__viewport
+  > .duel-field-card.is-hand-item:first-child {
   margin-right: auto;
 }
 

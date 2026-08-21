@@ -2254,3 +2254,23 @@ Record what the bundled decks cannot reach
 - [ ] Confirm the button is still the amber "warning" colour with the same hover shade — the
       size change did not alter its colour or its disabled (dimmed) look while the opponent
       is thinking.
+
+## T7 hand-band-safe-center
+
+- [ ] Start a duel with the preset decks and look at the opponent's band along the top of
+      the board: their five card backs sit as one adjacent group in the middle of the band,
+      with no card pinned against the band's left or right edge.
+- [ ] Look at the gaps between the opponent's backs: every gap is the same small one, with
+      no wide hole opened up inside the row.
+- [ ] Look at your own hand along the bottom: it is still one centred group, exactly as
+      before this change.
+- [ ] Draw cards until a hand no longer fits its band (roughly 10-12 cards at 1920x1080, or
+      narrow the window until the cards overflow): the hand starts scrolling and its overlay
+      scrollbar appears, for your hand and for the opponent's alike.
+- [ ] With a hand overflowing, scroll it to both ends: every card can be brought fully into
+      view, including the one at the end the band starts from — nothing is stranded outside
+      the scrollable area.
+- [ ] Play or discard down to a single card in hand: that one card sits centred in its band,
+      not shoved to one side.
+- [ ] Repeat the first check at 1280x720 and in a portrait/mobile window: both bands still
+      group their cards at the centre after the field has been re-laid out or rotated.

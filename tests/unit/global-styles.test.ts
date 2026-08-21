@@ -486,6 +486,49 @@ describe("global styles", () => {
     expect(ruleBlock(css, "\n.field-end-turn {")).toContain("min-height: 3rem");
   });
 
+  /* Both bands centre their cluster with an `auto` margin on the *outer* side
+     of each end card. Which physical side that is depends on the flex
+     direction: the opponent band is `row-reverse`, so its first child sits on
+     the right and the plain `:first-child { margin-left: auto }` pair lands both
+     margins inside the cluster — three opponent cards then spread to the band's
+     two edges instead of grouping. jsdom computes no layout, so only the
+     selector pairing can be pinned here. */
+  it("both hand bands centre their cards, the mirrored opponent band included", () => {
+    const css = normalizeWhitespace(readFileSync("src/styles/app.css", "utf8"));
+    const outer = (
+      side: "left" | "right",
+      localEnd: "first" | "last",
+    ): string =>
+      `.duel-field-hand-band:not(.is-opponent) .duel-field-hand-band__viewport > .duel-field-card.is-hand-item:${localEnd}-child, .duel-field-hand-band.is-opponent .duel-field-hand-band__viewport > .duel-field-card.is-hand-item:${localEnd === "first" ? "last" : "first"}-child { margin-${side}: auto; }`;
+    expect(css).toContain(outer("left", "first"));
+    expect(css).toContain(outer("right", "last"));
+  });
+
+  /* Measured in headless Chromium 1.61.1 on 2026-08-21: `justify-content: safe
+     center` does centre both bands while the hand fits, but `safe` falls back to
+     writing-mode start, not flex start. Under `row-reverse` that puts the
+     overflow on the scroll-origin side: with 12 cards the viewport reported
+     `scrollWidth === clientWidth`, a scroll range of `[0, 0]` and 0% of the first
+     card visible — an opponent hand wider than its band became unreachable. The
+     auto margins collapse to zero on overflow instead and leave the scroll
+     extent alone, so the viewport must not align its content at all. */
+  it("hand viewport never aligns its content, so overflow stays reachable", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const block = ruleBlock(css, "\n.duel-field-hand-band__viewport {");
+    expect(block).toContain("overflow-x: auto");
+    expect(block).not.toContain("justify-content");
+  });
+
+  it("opponent hand band keeps its mirrored direction", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    expect(
+      ruleBlock(
+        css,
+        ".duel-field-hand-band.is-opponent .duel-field-hand-band__viewport {",
+      ),
+    ).toContain("flex-direction: row-reverse");
+  });
+
   // T8: both hands render through HandBand, which paints no border,
   // background or ZoneControl at all — there is no dashed hand-zone
   // treatment left to make transparent for the opponent specifically.
@@ -527,6 +570,10 @@ describe("global styles", () => {
 
 function stripComments(css: string): string {
   return css.replace(/\/\*[\s\S]*?\*\//g, "");
+}
+
+function normalizeWhitespace(css: string): string {
+  return stripComments(css).replace(/\s+/g, " ");
 }
 
 function ruleBlock(css: string, selectorStart: string, fromIndex = 0): string {

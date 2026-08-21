@@ -50,6 +50,26 @@ The private browser MVP baseline and semantic Svelte DOM duel-field migration ar
 - Use [`docs/assets/asset-import-pipeline.md`](docs/assets/asset-import-pipeline.md) for the implemented asset pipeline.
 - `docs/archive/` is historical only and must not override current decisions.
 
+## Document rules
+
+Neither rule here is machine-enforced, unlike the boundaries further down. They are conventions, and one of them has already been broken once at real cost.
+
+### `feedback*.md` is owner-authored input
+
+`feedback-decks.md`, `feedback-duel.md`, `feedback-vn.md` and any future sibling are written by the owner and record what was actually asked. They are the source of requirements, not a work product. An agent reads them, cites them, and leaves them byte-identical — no edits, no reformatting, no ticking items off, no summarising in place.
+
+Commit `161d1e8` rewrote `feedback-decks.md`. The round-1 ADRs could then no longer be relinked to the text that motivated them, and their plan links were deleted instead of repointed. The file still exists; the record of what was asked does not.
+
+### Durable documents never link to ephemeral ones
+
+`docs/` is durable — ADRs, architecture pages, `README.md`, `GLOSSARY.md`. `artifacts/` (plans, tickets, grill records) and `.tmp/` (progress, scratch) are ephemeral and get deleted when a round ends.
+
+A durable document cites an immutable anchor instead — a commit SHA, a git tag, or a tracked file that outlives the round — and inlines the fact it is citing, so the reader never has to follow the link to get the point. The convention is a header line naming the tickets the commit covers:
+
+> Commit: `c27f4b0` — T1–T8
+
+Commit a plan before retiring it and that SHA stays a real address: `git show <sha>:artifacts/PLAN_....md` recovers the full text long after the working copy is gone.
+
 ## Technical stack
 
 | Area | Technology | Role |

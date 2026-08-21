@@ -1,6 +1,6 @@
 # ADR-050: Card ownership invariant
 
-Status: accepted · 2026-08-20 · Plan: `artifacts/PLAN_2026_08_20_duel_vn_feedback.md` — T22, T24, T25, T26, T27
+Status: accepted · 2026-08-20 · Commit: `9d8b8a7` — T22, T24, T25, T26, T27
 Relates: ADR-033 (collection in `StoryState`), ADR-049 (save-owned decks)
 
 ## Context

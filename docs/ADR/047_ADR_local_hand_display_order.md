@@ -1,6 +1,6 @@
 # ADR-047: Local hand display order
 
-Status: accepted · 2026-08-20 · Plan: `artifacts/PLAN_2026_08_20_duel_vn_feedback.md` — T10
+Status: accepted · 2026-08-20 · Commit: `9d8b8a7` — T10
 
 ## Context
 

@@ -1,6 +1,6 @@
 # ADR-051: Main menu, Free Play mode and route contexts
 
-Status: accepted · 2026-08-20 · Plan: `artifacts/PLAN_2026_08_20_duel_vn_feedback.md` — T14, T15, T16, T17
+Status: accepted · 2026-08-20 · Commit: `9d8b8a7` — T14, T15, T16, T17
 Relates: ADR-022 (modular monolith), ADR-049 (save-owned decks)
 
 ## Context

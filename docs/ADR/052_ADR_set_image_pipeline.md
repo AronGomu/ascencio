@@ -1,6 +1,6 @@
 # ADR-052: Set image pipeline
 
-Status: accepted · 2026-08-20 · Plan: `artifacts/PLAN_2026_08_20_duel_vn_feedback.md` — T31, T32
+Status: accepted · 2026-08-20 · Commit: `9d8b8a7` — T31, T32
 Relates: ADR-039 (editor card art via static runtime URLs)
 
 ## Context

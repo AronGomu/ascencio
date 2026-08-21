@@ -1,6 +1,6 @@
 # ADR-049: Save-owned decks (save schema v3)
 
-Status: accepted · 2026-08-20 · Plan: `artifacts/PLAN_2026_08_20_duel_vn_feedback.md` — T18, T19, T20, T21
+Status: accepted · 2026-08-20 · Commit: `9d8b8a7` — T18, T19, T20, T21
 Relates: ADR-033 (story economy in `StoryState`), ADR-038 (deck DB v2), ADR-050 (ownership invariant)
 
 ## Context

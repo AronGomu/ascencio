@@ -26,7 +26,10 @@
   export let choices: readonly InteractionChoice[] = [];
   export let pinned = false;
   export let draggable = false;
-  export let onactivate: (element: HTMLButtonElement) => void = () => undefined;
+  export let onactivate: (
+    element: HTMLButtonElement,
+    source: "pointer" | "keyboard",
+  ) => void = () => undefined;
   export let onchoose: (choice: InteractionChoice) => void = () => undefined;
   export let ondismiss: () => void = () => undefined;
   export let ondragstart: (origin: CardDragOrigin) => void = () => undefined;
@@ -232,15 +235,21 @@
     ondragend(Number.NaN, Number.NaN);
   }
 
+  /* A click with a `pointerdown` behind it came from the pointer; a bare click
+     is the button's native keyboard activation (Enter or Space), which has no
+     pointer events at all. The field needs the two apart: the hand's zoom is
+     pointer-only and the keyboard keeps the in-band pin/focus flow
+     (ADR-032 §4). */
   function activate(
     event: MouseEvent & { currentTarget: HTMLButtonElement },
   ): void {
+    const fromPointer = pointerOrigin !== null;
     pointerOrigin = null;
     if (pointerMoved) {
       pointerMoved = false;
       return;
     }
-    onactivate(event.currentTarget);
+    onactivate(event.currentTarget, fromPointer ? "pointer" : "keyboard");
   }
 </script>
 

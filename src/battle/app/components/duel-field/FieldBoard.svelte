@@ -48,6 +48,7 @@
   export let oncardactivate: (
     card: BoardCardView,
     element: HTMLButtonElement,
+    source: "pointer" | "keyboard",
   ) => void = () => undefined;
   export let onzoneactivate: (zone: BoardZoneView) => void = () => undefined;
   export let oncardchoose: (choice: InteractionChoice) => void = () =>
@@ -309,7 +310,7 @@
       choices={spec?.cardChoices.get(card.targetId) ?? []}
       pinned={pinnedTarget === card.targetId}
       draggable={false}
-      onactivate={(element) => oncardactivate(card, element)}
+      onactivate={(element, source) => oncardactivate(card, element, source)}
       onchoose={oncardchoose}
       ondismiss={oncarddismiss}
       ondragstart={(origin) => oncarddragstart(card, origin)}

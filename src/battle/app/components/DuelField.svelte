@@ -195,6 +195,11 @@
     frameWidth: number;
   } | null = null;
   let handZoomBoardRef: BoardViewModel | null = null;
+  /* Item 4: the hand card whose zoom a click froze. While it is set the zoom
+     ignores the pointer entirely — it neither follows another card nor closes
+     on a leave — and only a chosen action, a drag, a second click on the card,
+     a click outside its union or Escape clears it. */
+  let pinnedHandTarget: BoardTargetId | null = null;
 
   $: resolvedCardBackUrl = cardBackUrl || DEFAULT_CARD_BACK;
   $: effectiveReducedMotion = reducedMotion ?? mediaReducedMotion;
@@ -206,8 +211,10 @@
     board,
   );
   $: resolvedPlaceholderUrl = placeholderUrl || DEFAULT_PLACEHOLDER;
-  $: selectedTargets =
-    spec === null ? EMPTY_TARGETS : targetSelections(spec, session);
+  $: selectedTargets = withPinnedHandTarget(
+    spec === null ? EMPTY_TARGETS : targetSelections(spec, session),
+    pinnedHandTarget,
+  );
   $: targetLaunchers = targetLauncherIds(spec);
   $: synchronizeZoneList(spec, offFieldTargets);
   $: cancelDragGhostOnPromptChange(spec);
@@ -275,6 +282,11 @@
     };
     updateMotion();
     motionQuery?.addEventListener("change", updateMotion);
+    /* On the document, not the field root: a pinned hand zoom outlives the
+       pointer leaving the field, so the click or Escape that cancels it can
+       land anywhere on the page. */
+    document.addEventListener("pointerdown", cancelHandPinOnOutsidePointer);
+    document.addEventListener("keydown", cancelHandPinOnEscape);
     feedbackController = createDomFeedbackController(fieldRoot, (state) => {
       feedbackState = state;
     });
@@ -287,6 +299,11 @@
     );
     return () => {
       motionQuery?.removeEventListener("change", updateMotion);
+      document.removeEventListener(
+        "pointerdown",
+        cancelHandPinOnOutsidePointer,
+      );
+      document.removeEventListener("keydown", cancelHandPinOnEscape);
       feedbackSyncSequence += 1;
       feedbackController?.cancel();
       feedbackController = null;
@@ -413,7 +430,11 @@
     oninteraction({ ...action, key: spec.key } as InteractionSessionAction);
   }
 
-  function activateCard(card: BoardCardView): void {
+  function activateCard(
+    card: BoardCardView,
+    element: HTMLButtonElement,
+    source: "pointer" | "keyboard",
+  ): void {
     if (spec === null) return;
     const choices = spec.cardChoices.get(card.targetId) ?? [];
     const choice = choices[0];
@@ -422,6 +443,20 @@
        its mounted control only opens that list. */
     if (targetLaunchers.has(card.targetId)) {
       toggleTargetList();
+      return;
+    }
+    /* Item 4: a pointer click on a hand card commits nothing at all — not the
+       lone legal action, not the menu. It freezes the zoom and its action list
+       where they stand, and a chip in that list (or a drag) is what answers.
+       `cardAction` only: a selection prompt's hand target still toggles, since
+       its answer is a draft the player confirms, not a card action. The
+       keyboard keeps the in-band pin/focus flow (ADR-032 §4). */
+    if (
+      source === "pointer" &&
+      spec.kind === "cardAction" &&
+      card.zoneId === "p0:hand"
+    ) {
+      toggleHandPin(card, element);
       return;
     }
     switch (spec.kind) {
@@ -524,7 +559,7 @@
     dragCard = card;
     dropCandidates = candidates;
     dropHoveredZoneId = null;
-    handZoom = null;
+    clearHandPin();
     /* A new drag always wins over a settle still in flight for the previous
        card ("new drag first cancels prior settle"). */
     cancelGhostFrame();
@@ -673,17 +708,63 @@
     if (key === ghostPromptKey) return;
     ghostPromptKey = key;
     if (ghostOrigin !== null) removeGhost();
-    handZoom = null;
+    clearHandPin();
   }
 
   function clearHandZoomOnBoardChange(value: BoardViewModel): void {
     if (value !== handZoomBoardRef) {
       handZoomBoardRef = value;
-      handZoom = null;
+      clearHandPin();
     }
   }
 
+  /* Toggling on the target rather than on the card view: a re-projection hands
+     out a new `BoardCardView` object for the same card. Anchored on the card
+     article, never on the activated button, whose 44px pointer-target floor
+     can outgrow the card it covers. */
+  function toggleHandPin(card: BoardCardView, element: HTMLElement): void {
+    if (pinnedHandTarget === card.targetId) {
+      clearHandPin();
+      return;
+    }
+    pinnedHandTarget = card.targetId;
+    enterHandZoom(
+      card,
+      element.closest<HTMLElement>(".duel-field-card") ?? element,
+    );
+  }
+
+  /* Cancelling drops the zoom with the pin: the card returns to its unzoomed
+     state on the spot, without waiting for a pointer that may never leave. */
+  function clearHandPin(): void {
+    pinnedHandTarget = null;
+    handZoom = null;
+  }
+
+  function cancelHandPinOnOutsidePointer(event: PointerEvent): void {
+    if (pinnedHandTarget === null || insideHandZoomUnion(event.target)) return;
+    clearHandPin();
+  }
+
+  function cancelHandPinOnEscape(event: KeyboardEvent): void {
+    if (pinnedHandTarget === null || event.key !== "Escape") return;
+    clearHandPin();
+  }
+
+  function withPinnedHandTarget(
+    base: ReadonlySet<BoardTargetId>,
+    pinned: BoardTargetId | null,
+  ): ReadonlySet<BoardTargetId> {
+    if (pinned === null) return base;
+    const result = new SvelteSet(base);
+    result.add(pinned);
+    return result;
+  }
+
   function enterHandZoom(card: BoardCardView, element: HTMLElement): void {
+    /* A pinned zoom outranks the pointer: hovering a second hand card must
+       leave the frozen one exactly where it is. */
+    if (pinnedHandTarget !== null && pinnedHandTarget !== card.targetId) return;
     const frame = readStageFrame(fieldRoot);
     const rect = toFrameRect(frame, element.getBoundingClientRect());
     handZoom = {
@@ -700,7 +781,7 @@
      `pointerenter` cannot: that enter is a later dispatch, and the overlay is
      already unmounted by the microtask checkpoint in between. */
   function leaveHandZoom(related: EventTarget | null): void {
-    if (insideHandZoomUnion(related)) return;
+    if (pinnedHandTarget !== null || insideHandZoomUnion(related)) return;
     handZoom = null;
   }
 
@@ -1041,10 +1122,13 @@
       cardBackUrl={resolvedCardBackUrl}
       placeholderUrl={resolvedPlaceholderUrl}
       choices={spec?.cardChoices.get(handZoom.card.targetId) ?? []}
+      selected={pinnedHandTarget === handZoom.card.targetId}
       disabled={pending}
-      onchoose={(choice) =>
-        dispatch({ type: "chooseChoice", choiceId: choice.id })}
-      ondismiss={() => (handZoom = null)}
+      onchoose={(choice) => {
+        dispatch({ type: "chooseChoice", choiceId: choice.id });
+        clearHandPin();
+      }}
+      ondismiss={clearHandPin}
       onzoomleave={leaveHandZoom}
     />
   {/if}

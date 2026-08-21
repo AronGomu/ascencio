@@ -2619,6 +2619,151 @@ describe("DuelField", () => {
     ).toBeNull();
   });
 
+  /* Item 4: a pointer click on a hand card freezes its zoom and its action
+     list where they stand instead of answering the prompt. Only a chip in
+     that list — or a drag — commits the play. */
+  it("clicking a hand card with one action pins instead of committing", async () => {
+    const harness = renderDraggableHand({ singleChoice: true });
+    await fireEvent.pointerEnter(handCardArticle());
+
+    await clickHandCard();
+
+    expect(harness.dispatch).not.toHaveBeenCalled();
+    expect(handZoomOverlay()).not.toBeNull();
+    // Both halves carry the orange selected halo: the card is the one the
+    // requirement names, and the overlay is the one the player can see, since
+    // it covers the card's own art at 1.6x.
+    expect(handCardArticle().classList.contains("is-selected")).toBe(true);
+    expect(handZoomOverlay()?.classList.contains("is-selected")).toBe(true);
+  });
+
+  it("clicking the pinned card again cancels", async () => {
+    const harness = renderDraggableHand({ singleChoice: true });
+    await fireEvent.pointerEnter(handCardArticle());
+    await clickHandCard();
+    expect(handZoomOverlay()).not.toBeNull();
+
+    await clickHandCard();
+
+    expect(handZoomOverlay()).toBeNull();
+    expect(handCardArticle().classList.contains("is-selected")).toBe(false);
+    expect(harness.dispatch).not.toHaveBeenCalled();
+  });
+
+  /* The two-choice hand card, which used to answer this click with an
+     `openMenu`: the pin replaces that dispatch too, not only the single-choice
+     commit. */
+  it("clicking outside cancels the pin without answering the prompt", async () => {
+    const harness = renderDraggableHand();
+    await fireEvent.pointerEnter(handCardArticle());
+    await clickHandCard();
+    expect(handZoomOverlay()).not.toBeNull();
+    expect(harness.dispatch).not.toHaveBeenCalled();
+
+    const surface = document.querySelector<HTMLElement>(
+      '[data-cy="duel-field-board-surface"]',
+    );
+    if (surface === null) throw new Error("Missing board surface");
+    await fireEvent.pointerDown(surface);
+    await fireEvent.click(surface);
+
+    expect(handZoomOverlay()).toBeNull();
+    expect(handCardArticle().classList.contains("is-selected")).toBe(false);
+    expect(harness.dispatch).not.toHaveBeenCalled();
+  });
+
+  it("Escape cancels the pin", async () => {
+    const harness = renderDraggableHand({ singleChoice: true });
+    await fireEvent.pointerEnter(handCardArticle());
+    await clickHandCard();
+
+    await fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(handZoomOverlay()).toBeNull();
+    expect(handCardArticle().classList.contains("is-selected")).toBe(false);
+    expect(harness.dispatch).not.toHaveBeenCalled();
+  });
+
+  it("clicking an action commits it and unpins", async () => {
+    const harness = renderDraggableHand({ singleChoice: true });
+    await fireEvent.pointerEnter(handCardArticle());
+    await clickHandCard();
+
+    const chip = document.querySelector<HTMLButtonElement>(
+      '[data-cy="hand-zoom-overlay-card-action-chip-summon"]',
+    );
+    if (chip === null) throw new Error("Missing pinned hand zoom action chip");
+    await fireEvent.pointerDown(chip);
+    await fireEvent.click(chip);
+
+    expect(harness.dispatch).toHaveBeenCalledTimes(1);
+    expect(harness.dispatch.mock.calls[0]?.[0]).toMatchObject({
+      type: "chooseChoice",
+      choiceId: "summon",
+    });
+    expect(handZoomOverlay()).toBeNull();
+    expect(handCardArticle().classList.contains("is-selected")).toBe(false);
+  });
+
+  it("pointer leaving does not cancel a pinned zoom", async () => {
+    renderDraggableHand();
+    const article = handCardArticle();
+    await fireEvent.pointerEnter(article);
+    await clickHandCard();
+    const overlay = handZoomOverlay();
+    expect(overlay).not.toBeNull();
+
+    await fireEvent(
+      article,
+      new MouseEvent("pointerleave", {
+        relatedTarget: document.querySelector('[data-cy="duel-field"]'),
+      }),
+    );
+
+    // Same node, not merely a node: the pin freezes this overlay in place.
+    expect(handZoomOverlay()).toBe(overlay);
+  });
+
+  it("dragging a pinned card still commits by drop", async () => {
+    const harness = renderDraggableHand({ singleChoice: true });
+    await fireEvent.pointerEnter(handCardArticle());
+    await clickHandCard();
+    expect(handZoomOverlay()).not.toBeNull();
+
+    await startHandDrag();
+    await dropAt(harness, zoneElement("p0:mainMonster:3"));
+
+    expect(harness.onplacementintent.mock.calls).toEqual([
+      ["p0:mainMonster:3"],
+    ]);
+    expect(harness.dispatch).toHaveBeenCalledTimes(1);
+    expect(harness.dispatch.mock.calls[0]?.[0]).toMatchObject({
+      type: "chooseChoice",
+      choiceId: "summon",
+    });
+    expect(handZoomOverlay()).toBeNull();
+    expect(handCardArticle().classList.contains("is-selected")).toBe(false);
+  });
+
+  /* ADR-032 §4: the overlay stays pointer-only. Enter on a focused hand card
+     keeps the in-band pin/focus menu, which is the keyboard's only route to a
+     hand card's actions — its chips carry `tabindex=-1` and are reachable
+     solely through the pin that moves focus into them. */
+  it("keyboard activation still opens the hand card's pinned chip menu", async () => {
+    const user = userEvent.setup();
+    const harness = renderDraggableHand();
+    const target = handDragTarget();
+    target.focus();
+
+    await user.keyboard("{Enter}");
+
+    expect(harness.dispatch.mock.calls[0]?.[0]).toMatchObject({
+      type: "openMenu",
+      target: target.getAttribute("data-field-target"),
+    });
+    expect(handZoomOverlay()).toBeNull();
+  });
+
   it("duel field no longer renders life pills", () => {
     const value = DUEL_FIELD_PUBLIC_STATES["ST-01"];
     render(DuelField, { board: value.board });
@@ -4129,6 +4274,9 @@ function renderDraggableHand(
   options: {
     readonly occupiedZoneId?: string;
     readonly reducedMotion?: boolean;
+    /** One legal action instead of two: the shape whose click used to commit
+        the play outright. */
+    readonly singleChoice?: boolean;
     readonly imageLibrary?: {
       lease: (code: number) => { url: string; release: () => void };
     };
@@ -4152,14 +4300,23 @@ function renderDraggableHand(
             },
           ],
         };
-  const value = fieldPrompt("idleCommand", [
-    handChoice("summon", "Summon The Legendary Fisherman", {
-      action: "summon",
-    }),
-    handChoice("setmonster", "Set The Legendary Fisherman", {
-      action: "setMonster",
-    }),
-  ]);
+  const value = fieldPrompt(
+    "idleCommand",
+    options.singleChoice === true
+      ? [
+          handChoice("summon", "Summon The Legendary Fisherman", {
+            action: "summon",
+          }),
+        ]
+      : [
+          handChoice("summon", "Summon The Legendary Fisherman", {
+            action: "summon",
+          }),
+          handChoice("setmonster", "Set The Legendary Fisherman", {
+            action: "setMonster",
+          }),
+        ],
+  );
   const spec = mapPromptToInteractionSpec(
     value,
     BOARD_VIEW_MODEL_FIXTURES["ST-01"],
@@ -4214,6 +4371,22 @@ function handDragTarget(): HTMLElement {
   );
   if (target === null) throw new Error("Missing hand card drag target");
   return target;
+}
+
+/** The pointer route, press and release included: a click with no pointer
+    behind it is a keyboard activation, which keeps the in-band pin flow. */
+async function clickHandCard(): Promise<HTMLElement> {
+  const target = handDragTarget();
+  await fireEvent.pointerDown(target, { clientX: 10, clientY: 10 });
+  await fireEvent.pointerUp(target, { clientX: 10, clientY: 10 });
+  await fireEvent.click(target);
+  return target;
+}
+
+/** The overlay box itself. A `data-cy` prefix would also match its art and
+    name strip, counting one overlay three times. */
+function handZoomOverlay(): HTMLElement | null {
+  return document.querySelector<HTMLElement>("div.hand-zoom-overlay");
 }
 
 /** 20px past the origin clears `CardControl`'s 8px click-suppression gate. */

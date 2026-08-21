@@ -732,8 +732,8 @@ Portrait: taps land where you look (this is the row that matters)
       would be there if the board were unturned (that would be a zone roughly a
       quarter turn away).
 - [ ] Tap several cards in your hand, one at a time. Each time, the card under
-      your finger is the one that previews/selects. Work along the whole hand,
-      including the cards nearest each screen edge.
+      your finger is the one that previews and pins its zoom. Work along the
+      whole hand, including the cards nearest each screen edge.
 - [ ] Tap a graveyard/deck pile. The pile under your finger opens.
 - [ ] Tap an action chip on a card. The chip under your finger fires, and not a
       neighbouring one.
@@ -1420,7 +1420,7 @@ These steps confirm the same fix in a browser, which no automated suite covers.
 ### Field survives a field-spell activation
 - [ ] `npm run dev`, open the printed URL, go to `#/duel`.
 - [ ] Pick **Spellbook** as your deck, any opponent deck, and Start.
-- [ ] Play to your Main Phase 1 and activate **The Grand Spellbook Tower** from your hand.
+- [ ] Play to your Main Phase 1 and activate **The Grand Spellbook Tower** from your hand — click the card to pin its zoom, then press **Activate** in the pinned action list.
 - [ ] The duel field stays mounted. The panel headed **Duel field unavailable**
       (`data-cy="app-field-error-panel"`) never appears.
 - [ ] The Tower renders inside your **Field Zone** — the single slot left of your
@@ -1506,7 +1506,7 @@ fix in a browser, which no automated suite covers.
 - [ ] Action buttons (e.g. Summon, Set) appear directly above the zoomed card — not inside the hand band below the card.
 - [ ] Click an action button on the overlay — the action is dispatched (card is played or prompt advances). Overlay disappears.
 - [ ] Move the pointer from the card onto the overlay without leaving — overlay must stay visible (pointer-over-overlay grace period).
-- [ ] Move the pointer off the overlay entirely — overlay disappears.
+- [ ] Move the pointer off the overlay entirely, having only hovered the card and never clicked it — overlay disappears. (A click pins it instead; see **T9 click-pinned-hand-zoom**.)
 - [ ] Start dragging a hand card — overlay disappears immediately on drag start.
 - [ ] Press Escape while a hand card has keyboard focus with chips pinned — in-place zoom appears (1.35× via focus-within) and chips are accessible; the fixed overlay is NOT shown.
 - [ ] Hover over an opponent hand card (face-down, no code) — NO overlay appears.
@@ -1610,9 +1610,9 @@ Start a dev duel (`npm run dev`), open the app in the browser, pick decks and st
 - [ ] Open a chain window while holding Ctrl, then release Ctrl while the window is still on screen — confirm nothing answers it for you.
 - [ ] Rotate a phone-sized viewport into the portrait duel layout (device toolbar, e.g. 390x844) and hover a hand card near the right edge — confirm the zoom overlay stays inside the rotated board instead of being pulled toward the left edge.
 - [ ] Rest the pointer on a hand card without moving it for a few seconds — confirm the zoom overlay mounts once and stays perfectly still, with no flicker or strobe.
-- [ ] With the zoom overlay open, click the hand card itself, then drag it onto a highlighted zone — confirm both work exactly as they do without the overlay, even though the overlay art is drawn over the card.
+- [ ] With the zoom overlay open, click the hand card itself — confirm the press reaches the card (the zoom freezes in place with an orange halo) even though the overlay art is drawn over it — then click it again to release, and drag it onto a highlighted zone: the drag still plays the card exactly as it does without the overlay.
 - [ ] With the zoom overlay open, move the pointer straight up from the card onto the action chips above it — confirm the overlay stays open the whole way and the chip you click fires its action.
-- [ ] Move the pointer off the card sideways, away from the overlay — confirm the overlay closes immediately.
+- [ ] Move the pointer off the card sideways, away from the overlay, without having clicked the card — confirm the overlay closes immediately.
 ## T1 library-toolbar-row
 
 - [ ] Open `#/decks`. Confirm the library header shows no buttons — only a visually-hidden "Deck Library" heading.
@@ -2304,4 +2304,49 @@ Record what the bundled decks cannot reach
 - [ ] Rotate a phone-sized viewport into the portrait duel layout (device toolbar, e.g.
       390x844) and hover a multi-action hand card: the stack stays inside the rotated board
       and every button is still comfortably tappable.
+- [ ] Confirm the browser console shows no errors during the above.
+
+## T9 click-pinned-hand-zoom
+
+Start a duel with the preset decks (`npm run dev`, `#/duel`) and play to your own
+Main Phase 1, so the hand cards carry legal actions.
+
+- [ ] Hover a hand card that has exactly ONE legal action (a Spell you can only Activate,
+      or a monster you can only Set): the zoom opens as before. Now click the card. Nothing
+      is played — no card leaves your hand, the life totals and the log do not move.
+- [ ] While that card is clicked, look at it: the zoom stays frozen where it was, its action
+      button stays in the same place, and the zoomed card wears an orange halo border.
+- [ ] Move the pointer well away from the card and the buttons — across the field, over a
+      pile, off the field entirely: the frozen zoom stays exactly where it was, orange halo
+      and all. It does not follow the pointer and it does not close.
+- [ ] With the zoom still frozen, hover a different hand card: the frozen zoom does not
+      move to the new card and no second zoom opens.
+- [ ] Click the frozen card a second time: the zoom closes, the halo goes, the card returns
+      to its normal size in the hand, and still nothing has been played.
+- [ ] Click a hand card again to freeze it, then click somewhere empty on the field: the
+      zoom closes and nothing is played.
+- [ ] Click a hand card again to freeze it, then press **Escape**: the zoom closes and
+      nothing is played.
+- [ ] Click a hand card to freeze it, then click one of its action buttons: that action
+      fires (the card is played or the prompt advances), the zoom closes, and the halo goes.
+      Exactly one action happens — not two.
+- [ ] Repeat the whole sequence with a hand card that offers TWO or more actions (a monster
+      you can both Summon and Set): the click freezes the zoom in the same way and lists
+      both buttons; it does not fire either one on its own.
+- [ ] Click a hand card to freeze it, then drag that same card onto a highlighted zone and
+      release: the card is played by the drop, the frozen zoom is gone, and only one action
+      happens.
+- [ ] Click a hand card to freeze it and leave it frozen while the opponent takes an action
+      (end your turn, or wait for a chain): the frozen zoom clears itself rather than
+      hanging over a board that has moved on.
+- [ ] Keyboard, unchanged: Tab or arrow to a hand card with two or more actions, press
+      **Enter** — the small chip menu opens in the hand band as before and focus lands on
+      the first chip, with NO enlarged overlay. Press **Escape**: focus returns to the card.
+- [ ] Field cards are unchanged: click a monster on the field with one legal action — it
+      still fires that action directly; click one with several — its chip menu still pins.
+- [ ] Targeting is unchanged: reach a prompt that asks you to pick cards (a tribute or a
+      discard) and click a hand card it names — it still selects/deselects for that prompt
+      instead of freezing a zoom.
+- [ ] Repeat one freeze/release cycle on a touch device or the browser's device toolbar:
+      tapping a hand card freezes it, tapping it again releases it.
 - [ ] Confirm the browser console shows no errors during the above.

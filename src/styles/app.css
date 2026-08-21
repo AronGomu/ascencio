@@ -1382,6 +1382,14 @@ button.duel-field-zone,
   border-radius: 0.28rem;
 }
 
+/* Item 4: the same orange selected halo the pinned card carries, repeated on
+   the box that covers it. The overlay is 1.6x the card and anchored on its
+   bottom edge, so it hides the card's own ring completely — this is the copy
+   the player actually sees. */
+.hand-zoom-overlay.is-selected .hand-zoom-overlay__art {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--selected) 78%, transparent);
+}
+
 .hand-zoom-overlay__name {
   position: absolute;
   z-index: var(--duel-field-layer-label);

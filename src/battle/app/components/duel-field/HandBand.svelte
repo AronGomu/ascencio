@@ -30,6 +30,7 @@
   export let oncardactivate: (
     card: BoardCardView,
     element: HTMLButtonElement,
+    source: "pointer" | "keyboard",
   ) => void = () => undefined;
   export let oncardchoose: (choice: InteractionChoice) => void = () =>
     undefined;
@@ -99,7 +100,7 @@
           spec?.kind === "cardAction" &&
           spec.cardChoices.has(card.targetId) &&
           card.zoneId === zone.id}
-        onactivate={(element) => oncardactivate(card, element)}
+        onactivate={(element, source) => oncardactivate(card, element, source)}
         onchoose={oncardchoose}
         ondismiss={oncarddismiss}
         ondragstart={(origin) => oncarddragstart(card, origin)}

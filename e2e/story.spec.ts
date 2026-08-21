@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { createInitialStoryState } from "../src/story/model/story-state.ts";
 import type { BattleResult } from "../src/story/model/story-state.ts";
+import { storyStarterSave } from "./story-starter-save.ts";
 
 /* The prologue advances one beat per confirm. These two counts are the beats
    before the choice and the beats after it, taken from the flow the deleted
@@ -11,6 +12,7 @@ const BEATS_AFTER_CHOICE = 17;
 /* The app labels elements with `data-cy`, not Playwright's default
    `data-testid`, so the region is addressed by attribute. */
 const STORY_REGION = '[data-cy="shell-region-story"]';
+const STARTER = storyStarterSave();
 
 async function openStory(page: Page): Promise<void> {
   await page.goto("./#/story");
@@ -30,7 +32,13 @@ async function startNarrative(page: Page): Promise<void> {
 
     The duel that produces an outcome is a real duel now: `e2e/story-duel.spec`
     plays one, and these tests are about the authored scenes that come after
-    one, so they start from a save rather than from an engine. */
+    one, so they start from a save rather than from an engine.
+
+    The save carries the granted deck and the cards behind it, because Retry on
+    these scenes starts a real encounter and an encounter is fought with this
+    save's own deck. A save holding none cannot start one at all. The record is
+    written at schema 1 on purpose — the migration keeps fields a v1 record
+    already carries — so the read path stays under test with it. */
 async function resumeAtOutcome(
   page: Page,
   outcome: BattleResult,
@@ -64,6 +72,9 @@ async function resumeAtOutcome(
         progressExists: true,
         encounterId: "old-arena",
         outcome,
+        decks: [STARTER.deck],
+        defaultDeckId: STARTER.deck.id,
+        collection: STARTER.collection,
       },
     },
   );

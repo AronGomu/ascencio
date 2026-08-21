@@ -30,6 +30,9 @@ vi.hoisted(() => {
 vi.mock("../../src/battle/app/DuelWorkerClient.ts", () => {
   class DuelWorkerClientMock {
     static instances: DuelWorkerClientMock[] = [];
+    /** Every seat pairing the duel actually asked the Worker to start. The one
+        place the deck the player fights with is observable end to end. */
+    static starts: { player: unknown; opponent: unknown }[] = [];
     context = { workerGeneration: 1, sessionGeneration: 0 };
     listeners = new Set<(received: unknown) => void>();
 
@@ -53,7 +56,8 @@ vi.mock("../../src/battle/app/DuelWorkerClient.ts", () => {
       return true;
     }
 
-    startDuel() {
+    startDuel(_duelId: unknown, player: unknown, opponent: unknown) {
+      DuelWorkerClientMock.starts.push({ player, opponent });
       this.context = { ...this.context, sessionGeneration: 1 };
       return this.context;
     }
@@ -118,10 +122,26 @@ interface MockedWorkerInstance {
 
 const mockedWorkerClientCtor = MockedDuelWorkerClient as unknown as {
   instances: MockedWorkerInstance[];
+  starts: { player: unknown; opponent: unknown }[];
 };
 
+/** Set to make the duel's own request parser refuse whatever the shell built,
+    which is the one way the two contracts can be made to disagree from here. */
+let refuseBattleRequest = false;
+
 const loaders: DomainLoaders = {
-  duel: async () => await import("../../src/battle/index.ts"),
+  duel: async () => {
+    const battle = await import("../../src/battle/index.ts");
+    if (!refuseBattleRequest) return battle;
+    return {
+      ...battle,
+      parseBattleRequest: () => {
+        throw new battle.BattleRequestError(
+          "player.deck.main holds more than 60 cards",
+        );
+      },
+    };
+  },
   decks: () => new Promise<never>(() => {}),
   story: async () => await import("../../src/story/index.ts"),
 };
@@ -237,6 +257,8 @@ async function deleteStorySaves(): Promise<void> {
 beforeEach(async () => {
   hash = "#/story";
   checkpointWriteFailure = null;
+  refuseBattleRequest = false;
+  mockedWorkerClientCtor.starts.length = 0;
   await deleteStorySaves();
   saves = failableSaves(createStorySaveRepository(globalThis.indexedDB));
   await seedMapProgress();
@@ -246,18 +268,98 @@ afterEach(async () => {
   cleanup();
   localStorage.clear();
   mockedWorkerClientCtor.instances.length = 0;
+  mockedWorkerClientCtor.starts.length = 0;
   await deleteStorySaves();
 });
 
+/** The seats the Worker was actually asked to duel with, once it has been. */
+async function startedSeats(): Promise<{
+  player: unknown;
+  opponent: unknown;
+}> {
+  await vi.waitFor(() =>
+    expect(mockedWorkerClientCtor.starts.length).toBeGreaterThan(0),
+  );
+  return mockedWorkerClientCtor.starts[
+    mockedWorkerClientCtor.starts.length - 1
+  ]!;
+}
+
 describe("story duel handoff", () => {
-  it("starts a real duel through the deck picker and routes to the session", async () => {
+  it("starts a real duel on the chosen deck and routes to the session", async () => {
     await reachEncounter();
 
-    await waitForCy("deck-picker");
+    await waitForCy("battle-root");
     expect(region("duel")).not.toBeNull();
     expect(region("story")).toBeNull();
-    expect(cy("battle-root")).not.toBeNull();
     expect(hash).toMatch(/^#\/duel\/session\/[\w-]+$/);
+    /* The player already chose at the briefing. A picker here would ask again
+       and, worse, fix the opponent to a deck the encounter did not stage. */
+    expect(document.querySelector('[data-cy="deck-picker"]')).toBeNull();
+  });
+
+  /* The payoff of the whole chain, read off the only place it is real: what
+     the duel asked the Worker to shuffle. A duel that merely started proves
+     nothing about which deck is in the player's hand. */
+  it("seats the save's own cards as the player and the encounter's preset as the opponent", async () => {
+    await reachEncounter();
+
+    const { player, opponent } = await startedSeats();
+
+    expect(player).toEqual({
+      kind: "cards",
+      main: fieldableStoryDeck().deck.main,
+      extra: [],
+      side: [],
+    });
+    expect(opponent).toEqual({ kind: "preset", deckId: expect.any(String) });
+  });
+
+  /* A reload lands on the session with nothing in memory. The checkpoint holds
+     the whole save, so the deck the encounter chose has to come back with it —
+     otherwise crash recovery quietly demotes the player to a bundled preset. */
+  it("rebuilds the chosen deck from the checkpoint on a cold start into the session", async () => {
+    const handoffId = "77777777-2222-4333-8444-555555555555";
+    const { deck, collection } = fieldableStoryDeck();
+    await saves.write(
+      "checkpoint:pre-duel",
+      {
+        ...createInitialStoryState(),
+        screen: "battle-mock",
+        savedScreen: "map",
+        progressExists: true,
+        encounterId: "old-arena",
+        pendingHandoffId: handoffId,
+        decks: [deck],
+        defaultDeckId: deck.id,
+        collection,
+      },
+      null,
+    );
+    hash = `#/duel/session/${handoffId}`;
+    renderShell();
+
+    await waitForCy("battle-root");
+    const { player } = await startedSeats();
+
+    expect(player).toMatchObject({ kind: "cards", main: deck.main });
+    expect(document.querySelector('[data-cy="deck-picker"]')).toBeNull();
+  });
+
+  /* The briefing accepted the deck and the duel's own parser refused it, which
+     can only mean the two contracts drifted apart. The story says so and keeps
+     the player where they can change the deck; no duel is mounted, and nothing
+     is checkpointed for one. */
+  it("fails the encounter instead of mounting a duel the request cannot start", async () => {
+    refuseBattleRequest = true;
+    await reachEncounter();
+
+    const error = await waitForCy("story-handoff-error");
+    expect(error.textContent).toMatch(/cannot be played/i);
+    expect(region("duel")).toBeNull();
+    expect(hash).toBe("#/story");
+    expect(mockedWorkerClientCtor.starts).toEqual([]);
+    expect((await saves.read("checkpoint:pre-duel")).kind).toBe("empty");
   });
 
   it("returns a surrendered duel to the story's abort branch", async () => {

@@ -3166,3 +3166,46 @@ would lock every new player out of their very first encounter.
 - [ ] Tab through the briefing. Every legal deck button is reachable and shows a focus ring; illegal ones are skipped, being disabled.
 - [ ] Press **Space** or **Enter** on a legal deck. It becomes the selection and **Start Duel** enables.
 - [ ] With a screen reader on, the picker list is announced under its **Choose your deck** heading, and the block message is announced when it appears.
+
+## T28 story-duel-uses-save-deck
+
+An encounter is now fought with the deck the save chose at the briefing, not with a bundled
+preset. **Start Duel** goes straight to the field: the duel's own deck picker never appears
+inside a story session, because both seats are already decided — your save's deck for you,
+the encounter's fixed preset for the opponent.
+
+"A duel started" is not evidence here. The hand is what has to be read.
+
+### The opening hand is dealt from the deck you picked
+
+- [ ] Open `#/story/decks` and open the deck your save duels with. Write down its name and five card names you can recognise on sight.
+- [ ] Go back to `#/story`, continue the save, and choose **Old Arena**. The briefing's **Your deck** line reads the deck you just looked at.
+- [ ] Press **Start Duel**. The duel field comes up on its own — no **Choose your decks** screen, no second **Start duel** button. The field is the next thing you see.
+- [ ] Hover each card in your opening hand in turn. The preview panel beside the field names it. **Every name is on the list you wrote down** — that is the check this ticket exists for. A name that is not on that list means the duel was dealt some other deck.
+- [ ] Play the duel a few turns and keep hovering what you draw. Still only cards from that deck.
+- [ ] The opponent is unchanged: they play the encounter's bundled preset, as they always have. Only your seat comes from the save.
+
+### A different deck deals a different hand
+
+- [ ] Open `#/story/decks` and build a second 40-card deck out of cards you own, using cards the first deck does not hold. Note five of them.
+- [ ] Return to `#/story`, reach the briefing, and click that second deck. **Your deck** updates to its name.
+- [ ] Press **Start Duel** and hover the opening hand. The names now come from the second list, not the first. The hand changed because the deck did.
+
+### A brand-new save fights its first encounter on the granted deck
+
+- [ ] DevTools → Application → Storage → **Clear site data**, reload, `#/story`, **New Game**, tap through to the map, choose **Old Arena**.
+- [ ] **Start Duel** is enabled and the duel starts. The granted **Starter Deck** has no Extra and no Side deck, which are warnings, never errors — a fresh save must never be locked out of its first duel.
+- [ ] Hover the opening hand. The cards are Starter Deck cards, the same list `#/story/decks` shows for that save.
+
+### A reload mid-duel resumes on the same deck
+
+- [ ] With a story duel on screen, reload the page (F5). The URL stays on `#/duel/session/…`.
+- [ ] The duel comes back by itself — no deck picker in between.
+- [ ] Hover the hand. The cards are from the same deck the encounter started on, not from a preset.
+
+### The story's branches still fire, and progress survives
+
+- [ ] Surrender through the duel menu. The story reaches its **Duel paused** / abort scene and grants no reward.
+- [ ] Start the encounter again and press browser **Back** from the duel. Same abort scene, progress intact.
+- [ ] Play one encounter to a win. The win scene shows, its reward is granted, and the map updates.
+- [ ] After any of these, the save you return to is the save you left — same money, same cards, same decks, same default deck as before the duel.

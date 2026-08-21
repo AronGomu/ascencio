@@ -300,10 +300,16 @@ describe("the briefing inside the story app", () => {
     await userEvent.setup().click(start());
     await waitFor(() => expect(onencounter).toHaveBeenCalledOnce());
     /* The state the shell checkpoints is the state the duel is handed, so the
-       deck the player chose has to be recorded in it before the handoff. */
+       deck the player chose has to be recorded in it before the handoff — and
+       the handoff carries that deck resolved, because the shell has neither the
+       catalog nor this save's ownership to resolve it with. */
     expect(onencounter.mock.calls[0]?.[0]).toMatchObject({
       encounterId: "old-arena",
       state: { defaultDeckId: FIELDABLE.deck.id },
+      deck: {
+        ref: { type: "local", deckId: FIELDABLE.deck.id },
+        main: FIELDABLE.deck.main,
+      },
     });
   });
 

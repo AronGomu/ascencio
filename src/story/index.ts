@@ -55,3 +55,9 @@ export { openStoryDeckContext } from "./decks/story-deck-context.ts";
    play's `unlimitedCardOwnership()` ship from `src/decks/card-ownership.ts`,
    which records why. */
 export { storyCardOwnership } from "./decks/card-ownership.ts";
+/* The deck an encounter is fought with, resolved out of a save. The story
+   itself calls this when the player presses Start; the shell calls it when a
+   reload lands straight on a duel session, where the checkpoint is all there
+   is and no story is mounted to resolve it. Both need the same three inputs
+   the briefing used, so there is one resolver rather than two. */
+export { encounterDeck } from "./decks/encounter-deck.ts";

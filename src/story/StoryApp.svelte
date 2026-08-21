@@ -61,6 +61,7 @@
   import { runtimeCatalog } from "../decks/catalog/runtime-catalog.ts";
   import { catalogByCode } from "../decks/catalog/pinned-ruleset.ts";
   import type { DeckBuilderCardView } from "../decks/catalog/ocg-card-mapper.ts";
+  import { encounterDeck } from "./decks/encounter-deck.ts";
   import { preBattleDeckOptions } from "./decks/pre-battle-decks.ts";
   import TitleScreen from "./screens/TitleScreen.svelte";
   import {
@@ -93,6 +94,8 @@
     "Your progress could not be saved, so the duel was not started. Free some storage and try again.";
   const HANDOFF_INTERRUPTED =
     "The duel was interrupted before it started. Try again or return to the map.";
+  const DECK_UNPLAYABLE =
+    "The deck this save is set to duel with cannot be played. Return to the map and choose another, or repair it in the deck editor.";
   const CATALOG_UNAVAILABLE = "The card database could not load.";
 
   /* The screens that need the card database. The shop ones name, picture or
@@ -501,22 +504,47 @@
     dirty = true;
   }
 
-  /** Asks the shell for a duel. Nothing here starts one: the answer is only
-      whether the pre-duel checkpoint survived, and a checkpoint that did not
-      leaves the player on this screen with the attempt still available. */
+  /** Asks the shell for a duel, with the deck this save is set to fight it
+      with. Nothing here starts one: the answer is only whether the pre-duel
+      checkpoint survived, and a checkpoint that did not leaves the player on
+      this screen with the attempt still available.
+
+      The save is read once, up front. Resolving the deck is a read of the card
+      database, so there is a gap between the click and the handoff that the
+      player can leave through — and a checkpoint written from the state as it
+      stands after that would record a screen they already walked away from. */
   async function beginHandoff(): Promise<void> {
-    const encounterId = state.encounterId;
+    const current = state;
+    const encounterId = current.encounterId;
     if (encounterId === null) {
       handoffError = HANDOFF_INTERRUPTED;
       return;
     }
     handoffError = null;
-    const outcome = await onencounter({
-      encounterId,
-      label: ENCOUNTER_LABELS[encounterId],
-      state,
-    });
-    if (outcome === "checkpoint-failed") handoffError = CHECKPOINT_FAILED;
+    try {
+      /* The briefing already refused every deck this save cannot field, so a
+         null here is the same save answering differently — a card database
+         that changed under it, or a retry reached from the outcome screen
+         without ever passing the briefing. */
+      const deck = await encounterDeck(current);
+      if (deck === null) {
+        handoffError = DECK_UNPLAYABLE;
+        return;
+      }
+      const outcome = await onencounter({
+        encounterId,
+        label: ENCOUNTER_LABELS[encounterId],
+        state: current,
+        deck,
+      });
+      if (outcome === "checkpoint-failed") handoffError = CHECKPOINT_FAILED;
+      else if (outcome === "deck-rejected") handoffError = DECK_UNPLAYABLE;
+    } catch {
+      /* The card database or the duel's own chunk never arrived. Both are a
+         duel that did not start for a reason retrying can fix, which is what
+         this screen already offers. */
+      handoffError = HANDOFF_INTERRUPTED;
+    }
   }
 
   function startEncounter(): void {

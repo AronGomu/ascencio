@@ -6,6 +6,7 @@
     type DomainLoaders,
   } from "./domain-loaders.ts";
   import { createHandoffCoordinator } from "./handoff/handoff-coordinator.ts";
+  import { storyBattleRequest } from "./handoff/story-battle-request.ts";
   import { STAGE_CONTEXT_KEY } from "./index.ts";
   import {
     deckRoute,
@@ -62,6 +63,11 @@
      duel dispatches a request once per identity, so rebuilding an equal one
      here would restart the duel on every flush. */
   let matchRequest: BattleRequest | null = null;
+  /* The same state for a story encounter, and held for the same reason: one
+     frozen object for the whole duel. `null` is a session the shell could not
+     build a request for, which leaves the duel to open its own picker rather
+     than throwing the player out of an encounter that is already checkpointed. */
+  let sessionRequest: BattleRequest | null = null;
 
   async function openStorySaves(): Promise<StorySaveRepository> {
     storySaves ??= import("../story/index.ts").then((story) =>
@@ -122,8 +128,24 @@
     },
   });
 
+  /* Built before the checkpoint is written, and set before the navigation that
+     mounts the duel: `App` decides whether to open its own deck picker from the
+     request it is handed on mount, so a request arriving one flush late would
+     leave the picker over a duel that had already started from it. */
   async function startEncounter(request: StoryEncounterRequest) {
-    return await handoff.begin(
+    let built: BattleRequest;
+    try {
+      built = storyBattleRequest(await loaders.duel(), request.deck);
+    } catch (error) {
+      /* The duel's own parser refused the snapshot the briefing accepted, which
+         means the two contracts drifted apart. The story says so and keeps the
+         player on the screen they can change the deck from. */
+      if (error instanceof Error && error.name === "BattleRequestError")
+        return "deck-rejected" as const;
+      throw error;
+    }
+    sessionRequest = built;
+    const outcome = await handoff.begin(
       {
         handoffId: crypto.randomUUID(),
         encounterId: request.encounterId,
@@ -131,6 +153,32 @@
       },
       request.state,
     );
+    if (outcome !== "ready") sessionRequest = null;
+    return outcome;
+  }
+
+  /** The request a resumed session runs on, rebuilt from the checkpoint.
+
+      A reload has nothing in memory, and the checkpoint carries the whole save
+      — its decks, its default and its collection — so the deck resolves to the
+      same snapshot the encounter started with. Reached through the story's lazy
+      entry, which the checkpoint read on this route has already loaded, and
+      through `loaders.duel()`, which the duel about to mount needs anyway. */
+  async function restoredSessionRequest(
+    state: StoryState,
+  ): Promise<BattleRequest | null> {
+    try {
+      const story = await import("../story/index.ts");
+      const deck = await story.encounterDeck(state);
+      /* The battle module is asked for second and only when there is a deck to
+         seat with it: a checkpoint naming no fieldable deck must not pay for
+         the largest chunk in the build to learn that. */
+      return deck === null
+        ? null
+        : storyBattleRequest(await loaders.duel(), deck);
+    } catch {
+      return null;
+    }
   }
 
   function settleSession(result: BattleFacadeResult): void {
@@ -146,6 +194,7 @@
     if (current.kind !== "duel-session") {
       sessionHandoffId = null;
       sessionReady = false;
+      sessionRequest = null;
       /* Leaving a session for free play is a mode change the player asked for,
          so the abort its teardown produces belongs to nobody: settling it here
          would send them straight back to the story they just left. Every other
@@ -157,8 +206,23 @@
     const requested: string = current.handoffId;
     sessionHandoffId = requested;
     sessionReady = false;
-    void handoff.resume(requested).then((outcome) => {
+    void handoff.resume(requested).then(async (outcome) => {
       if (sessionHandoffId !== requested) return;
+      /* Only ever the reload: the encounter that started this session in this
+         tab already built its request, and rebuilding it would hand the duel a
+         second object and restart the match it is running. `resume` restores
+         the checkpoint before it answers, so the state is there to rebuild
+         from whenever it answered `restored`. */
+      const restored = handback?.state ?? null;
+      if (
+        outcome === "restored" &&
+        sessionRequest === null &&
+        restored !== null
+      ) {
+        const rebuilt = await restoredSessionRequest(restored);
+        if (sessionHandoffId !== requested) return;
+        sessionRequest = rebuilt;
+      }
       sessionReady = outcome === "restored";
       if (sessionReady) hostedHandoffId = requested;
     });
@@ -171,6 +235,17 @@
     storyEntryIntent = state.storyEntryIntent;
   });
   $: syncSession(route);
+  /* Which pairing the duel below mounts on: the one free play's setup screen
+     produced, or the one the story's encounter chose. `#/duel` standalone has
+     neither and opens the duel's own picker, which is what it has always done.
+     Both sides hold one object per match, so this reads a reference rather
+     than building one — a fresh equal object here would restart the duel. */
+  $: duelRequest =
+    route.kind === "free-play"
+      ? matchRequest
+      : route.kind === "duel-session"
+        ? sessionRequest
+        : null;
   /* Leaving the free-play menu ends its match, so coming back opens on the menu
      rather than on a duel nobody asked to resume. */
   $: if (route.kind !== "free-play") leaveMatch();
@@ -389,7 +464,7 @@
                setting, so the flag and its setter cross as plain props. -->
           <svelte:component
             this={module.BattleFacade}
-            request={route.kind === "free-play" ? matchRequest : null}
+            request={duelRequest}
             hosted={route.kind === "duel-session"}
             oncomplete={settleSession}
             rotated={box.rotated}

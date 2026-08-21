@@ -1,3 +1,7 @@
+import {
+  unlimitedCardOwnership,
+  type CardOwnership,
+} from "./card-ownership.ts";
 import type {
   DeckId,
   ResolveDeckResult,
@@ -8,11 +12,18 @@ import type { DeckBuilderCardView } from "./catalog/ocg-card-mapper.ts";
 import type { PinnedDeckRuleset } from "./catalog/pinned-ruleset.ts";
 import { validateDeckDraft, validationDigest } from "./deck-validation.ts";
 
+/** `ownership` defaults to free play's, exactly as `validateDeckDraft` does and
+    for the same reason: a caller that says nothing about which world the deck
+    belongs to is asking about the one that owns everything. A story caller
+    passes the save's reader, or the snapshot it gets back — the one a duel is
+    actually started from — would carry cards that save no longer has
+    (ADR-050). */
 export async function resolveDeck(
   deckId: DeckId,
   repository: Pick<DeckRepository, "load">,
   catalog: ReadonlyMap<number, DeckBuilderCardView>,
   ruleset: PinnedDeckRuleset,
+  ownership: CardOwnership = unlimitedCardOwnership(),
 ): Promise<ResolveDeckResult> {
   const stored = await repository.load(deckId);
   if (stored === null) return Object.freeze({ type: "missing", deckId });
@@ -23,6 +34,7 @@ export async function resolveDeck(
     },
     catalog,
     ruleset,
+    ownership,
   );
   const errors = validation.issues.filter(
     ({ severity }) => severity === "error",

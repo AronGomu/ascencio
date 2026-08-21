@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { CardOwnership } from "../../../src/decks/card-ownership.ts";
 import { deckId } from "../../../src/decks/deck-contracts.ts";
 import { emptyDeckHistory } from "../../../src/decks/deck-history.ts";
 import { createBlankDeck } from "../../../src/decks/deck-model.ts";
@@ -72,5 +73,33 @@ describe("resolveDeck", () => {
     await expect(
       resolveDeck(deckId("missing"), reader(null), catalog, PROTOTYPE_RULESET),
     ).resolves.toEqual({ type: "missing", deckId: "missing" });
+  });
+
+  /* The snapshot this returns is what a duel is started from, so the rule a
+     story save is validated against has to reach it. Without the ownership
+     reader the resolver answers `ready` for a deck built from cards the save
+     sold, and the duel is played with them. */
+  it("refuses a deck the ownership reader does not cover", async () => {
+    const base = createBlankDeck("Sold", catalog, PROTOTYPE_RULESET, {
+      id: "sold",
+    });
+    const deck = { ...base, main: validMain };
+    const ownsNothing: CardOwnership = {
+      ownedCount: () => 0,
+      isUnlimited: false,
+    };
+
+    await expect(
+      resolveDeck(deck.id, reader(deck), catalog, PROTOTYPE_RULESET),
+    ).resolves.toMatchObject({ type: "ready" });
+    await expect(
+      resolveDeck(
+        deck.id,
+        reader(deck),
+        catalog,
+        PROTOTYPE_RULESET,
+        ownsNothing,
+      ),
+    ).resolves.toMatchObject({ type: "invalid", deckId: deck.id });
   });
 });

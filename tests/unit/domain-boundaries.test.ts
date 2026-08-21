@@ -254,7 +254,14 @@ describe("public domain APIs are frozen", () => {
          only constructor of a story deck context. The shell binds the editor
          to it, and building one outside the story would mean exporting the
          reducer and letting a caller pair one save's decks with another save's
-         ownership. */
+         ownership.
+
+         T28, deliberate widening of one more: `encounterDeck` resolves the deck
+         an encounter is fought with. A reload that lands on a duel session has
+         no story mounted to resolve it and the shell has neither the save's
+         ownership nor the catalog, so the resolver has to be reachable — and
+         there must be exactly one of it, or the briefing and the duel could
+         disagree about which decks are legal. */
       values: [
         "ENCOUNTER_LABELS",
         "STORY_SAVES_DATABASE_NAME",
@@ -262,6 +269,7 @@ describe("public domain APIs are frozen", () => {
         "createStoryDeckRepository",
         "createStorySaveRepository",
         "default",
+        "encounterDeck",
         "openStoryDeckContext",
         "restoreStoryState",
         "storyBattleResult",

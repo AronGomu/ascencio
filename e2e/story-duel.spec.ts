@@ -1,67 +1,19 @@
-import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { deckId } from "../src/decks/deck-contracts.ts";
-import { importYdk } from "../src/decks/ydk-adapter.ts";
-import {
-  createInitialStoryState,
-  type StoryDeck,
-} from "../src/story/model/story-state.ts";
+import { createInitialStoryState } from "../src/story/model/story-state.ts";
 import {
   STORY_SAVES_DATABASE_NAME,
   STORY_SAVES_STORE_NAME,
   type StorySaveEnvelope,
 } from "../src/story/saves/story-save-contracts.ts";
+import { storyStarterSave } from "./story-starter-save.ts";
 
 const STORY_REGION = '[data-cy="shell-region-story"]';
 const DUEL_REGION = '[data-cy="shell-region-duel"]';
 const SESSION_ROUTE = /#\/duel\/session\/[\w-]+$/;
 /* The deck and cards a new game is granted. A save standing on the map always
    has both, and the briefing refuses to start an encounter for a save holding
-   no deck it can field.
-
-   Read off the bundled list here rather than through `buildStarterGrant`,
-   because that module reaches the list through a Vite `?raw` import and
-   Playwright loads this file without Vite. The list is the same one, and
-   `tests/unit/decks/starter-deck.test.ts` is what pins it legal against the
-   shipped card database. The stored verdict below is a placeholder: the
-   briefing recomputes every deck against the live catalog, which is the whole
-   point of the gate under test. */
-const STARTER = starterSave();
-
-function starterSave(): {
-  readonly deck: StoryDeck;
-  readonly collection: Record<number, number>;
-} {
-  const imported = importYdk(
-    readFileSync("src/decks/starter-deck.ydk", "utf8"),
-  );
-  if (imported.type !== "ready")
-    throw new Error(`Starter deck list is unreadable: ${imported.message}`);
-  const { main, extra, side } = imported.cards;
-  const collection: Record<number, number> = {};
-  for (const code of [...main, ...extra, ...side])
-    collection[code] = (collection[code] ?? 0) + 1;
-  return {
-    deck: {
-      schemaVersion: 1,
-      id: deckId("story-starter-deck"),
-      revision: 1,
-      name: "Starter Deck",
-      createdAt: "2026-08-20T00:00:00.000Z",
-      updatedAt: "2026-08-20T00:00:00.000Z",
-      main: [...main],
-      extra: [...extra],
-      side: [...side],
-      validation: {
-        status: "valid",
-        issues: [],
-        rulesetRevision: "prototype-2026-01",
-      },
-      importedNeedsReview: false,
-    },
-    collection,
-  };
-}
+   no deck it can field. */
+const STARTER = storyStarterSave();
 
 /** Writes one story record straight into the database the story reads on
     mount. Playing 30 narrative beats per test would prove the prologue, which
@@ -159,13 +111,13 @@ async function reachEncounter(page: Page): Promise<void> {
   await start.click();
 }
 
-async function startPickedDuel(page: Page): Promise<void> {
-  const start = page.locator('[data-cy="deck-picker-start-button"]');
-  await expect(start).toBeEnabled({ timeout: 120_000 });
-  await start.click();
+/* No picker step: the briefing already chose the deck and the shell hands the
+   duel a built request, so the field is what comes up. */
+async function awaitDuelField(page: Page): Promise<void> {
   await expect(page.locator('[data-cy="duel-shell"]')).toBeVisible({
     timeout: 120_000,
   });
+  await expect(page.locator('[data-cy="deck-picker"]')).toHaveCount(0);
 }
 
 async function surrenderThroughMenu(page: Page): Promise<void> {
@@ -176,33 +128,34 @@ async function surrenderThroughMenu(page: Page): Promise<void> {
     .click();
 }
 
-test("a story encounter reaches the duel through the picker with a deck already chosen", async ({
+/* The deck chosen at the briefing is the deck fought with. What crosses to the
+   Worker — the save's own forty card codes, seat by seat — is asserted exactly
+   in `tests/component/StoryDuelHandoff.test.ts`, which drives the same shell,
+   coordinator and story against a hand-driven worker client. What only a real
+   browser can show is that the field comes up on its own: the encounter never
+   stops at the duel's own picker, which lists free play's decks rather than
+   this save's and would fix the opponent itself. */
+test("a story encounter opens the duel on the chosen deck, with no second picker", async ({
   page,
 }) => {
   await reachEncounter(page);
 
   await expect(page.locator(DUEL_REGION)).toBeVisible();
   await expect(page).toHaveURL(SESSION_ROUTE);
-  await expect(page.locator('[data-cy="deck-picker"]')).toBeVisible({
+  await awaitDuelField(page);
+  await expect(page.locator(STORY_REGION)).toHaveCount(0);
+  /* The player's own hand is dealt from that deck, so a duel that reached the
+     field at all has already been handed one. */
+  await expect(page.locator('[data-cy="field-hand-band-p0"]')).toBeVisible({
     timeout: 120_000,
   });
-  /* The seat is never left empty: the stored default deck on a fresh profile,
-     the player's own key afterwards. Which one it is depends on whether the
-     starter deck seeded, so what is asserted is that a deck is selected. */
-  await expect(
-    page.locator('[data-cy="deck-picker-player-select"]'),
-  ).not.toHaveValue("", { timeout: 120_000 });
-  await expect(
-    page.locator('[data-cy="deck-picker-opponent-fixed"]'),
-  ).toContainText("Shaddoll");
-  await expect(page.locator(STORY_REGION)).toHaveCount(0);
 });
 
 test("surrendering a story duel returns to the abort branch without a reward", async ({
   page,
 }) => {
   await reachEncounter(page);
-  await startPickedDuel(page);
+  await awaitDuelField(page);
   const entriesAtSession = await page.evaluate(() => history.length);
 
   await surrenderThroughMenu(page);
@@ -228,7 +181,7 @@ test("browser back out of a story duel reaches the abort branch", async ({
   page,
 }) => {
   await reachEncounter(page);
-  await startPickedDuel(page);
+  await awaitDuelField(page);
 
   await page.goBack();
 
@@ -253,17 +206,16 @@ test("a reload mid-duel restarts the same encounter from the checkpoint", async 
   page,
 }) => {
   await reachEncounter(page);
-  await startPickedDuel(page);
+  await awaitDuelField(page);
   const sessionUrl = page.url();
 
   await page.reload();
 
   await expect(page).toHaveURL(sessionUrl);
   await expect(page.locator(DUEL_REGION)).toBeVisible();
-  await expect(page.locator('[data-cy="deck-picker"]')).toBeVisible({
-    timeout: 120_000,
-  });
-  await startPickedDuel(page);
+  /* The checkpoint carries the whole save, so the restarted encounter resolves
+     the same deck rather than dropping the player back into a picker. */
+  await awaitDuelField(page);
   await surrenderThroughMenu(page);
   await expect(
     page.getByRole("heading", { name: "Duel paused" }),

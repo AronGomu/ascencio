@@ -4,6 +4,10 @@
    branches it already had. */
 
 import type { BattleFacadeResult } from "../../battle/battle-contracts.ts";
+/* Type-only, like the battle import above: `src/decks/index.ts` reaches the
+   deck database and `idb` through it, and the shell's coordinator imports this
+   module from its eager entry chunk. */
+import type { ValidatedDeckSnapshot } from "../../decks/index.ts";
 import type {
   BattleResult,
   EncounterId,
@@ -20,16 +24,27 @@ export interface StoryEncounterIntent {
 
 /** What the story hands upwards when the player starts an encounter. It is the
     intent minus the handoff id, plus the state to checkpoint: the story cannot
-    name a route, and the shell cannot know which beat the player is on. */
+    name a route, and the shell cannot know which beat the player is on.
+
+    `deck` is the seat the player chose at the briefing, already resolved
+    against the live catalog, the pinned ruleset and this save's own ownership.
+    It travels beside the state rather than being read back out of it, because
+    the shell has none of those three and must not decide legality (ADR-050). */
 export interface StoryEncounterRequest {
   readonly encounterId: EncounterId;
   readonly label: string;
   readonly state: StoryState;
+  readonly deck: ValidatedDeckSnapshot;
 }
 
-/** Whether the duel actually started. A checkpoint that could not be written
-    and verified never becomes a duel — the story shows a retry instead. */
-export type StoryHandoffOutcome = "ready" | "checkpoint-failed";
+/** Whether the duel actually started, and what stopped it when it did not.
+
+    A checkpoint that could not be written and verified never becomes a duel.
+    Neither does a deck the duel's own contract refuses — the two are separate
+    answers because they need separate ways out: one is storage the player has
+    to free, the other is a deck they have to change. */
+export type StoryHandoffOutcome =
+  "ready" | "checkpoint-failed" | "deck-rejected";
 
 /** The duel the story is waiting on. Exactly one exists at a time. */
 export interface PendingStoryDuel {

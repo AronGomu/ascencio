@@ -267,7 +267,7 @@
   {:else}
     <button
       type="button"
-      class="secondary exit-btn"
+      class="story-danger exit-btn"
       data-cy="story-shop-opening-back"
       onclick={onback}>← Back</button
     >

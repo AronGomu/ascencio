@@ -186,7 +186,7 @@
       {/if}
       {#if allowBack}<button
           type="button"
-          class="secondary"
+          class="story-danger"
           data-cy="story-map-back"
           onclick={onback}>Back</button
         >{/if}

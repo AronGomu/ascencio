@@ -224,15 +224,28 @@ describe("global styles", () => {
   });
 
   /* One gap law in the panel body: the flex `gap` is the only thing between
-     name, stats and effect text. A margin on the stats row would add a
-     second, larger gap under it and break that rhythm. */
-  it("preview stats and effect text share the body gap", () => {
+     name, stats and effect text. A margin on any of the three rows would add a
+     second, larger gap under it and break that rhythm.
+
+     The name is the row that has to be held to it explicitly. It is an `h2`,
+     so it arrives carrying the global heading margin, and a flex gap does not
+     collapse with a margin the way stacked block margins do — the two add up.
+     Asserting the `gap` alone left that unread, which is how name→stats shipped
+     at 0.90rem against stats→text's 0.35rem. */
+  it("preview name, stats and effect text share the body gap", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     expect(ruleBlock(css, ".card-preview-panel__stats {")).toContain(
       "margin: 0;",
     );
     expect(ruleBlock(css, ".card-preview-panel__body {")).toContain(
       "gap: 0.35rem",
+    );
+    /* The global rule this cancels, so a heading margin change cannot quietly
+       re-open the gap: whatever `h2` is worth elsewhere, it is worth nothing
+       inside this panel. */
+    expect(ruleBlock(css, "h2,\nh3,\nh4 {")).toMatch(/margin-bottom:\s*\S+;/);
+    expect(ruleBlock(css, ".card-preview-panel__body h2 {")).toContain(
+      "margin-bottom: 0;",
     );
   });
 

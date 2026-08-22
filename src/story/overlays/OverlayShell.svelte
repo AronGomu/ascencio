@@ -62,7 +62,7 @@
       <h2 id={labelId} data-cy={`story-overlay-heading-${labelId}`}>{title}</h2>
       <button
         type="button"
-        class="secondary"
+        class="story-danger"
         aria-label={`Close ${title}`}
         data-cy={`story-overlay-close-${labelId}`}
         onclick={() => void close()}>Close</button

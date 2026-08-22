@@ -142,7 +142,7 @@
   </div>
   <button
     type="button"
-    class="secondary"
+    class="story-danger"
     data-cy="story-load-back"
     onclick={onback}>Back</button
   >

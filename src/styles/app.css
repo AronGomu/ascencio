@@ -503,6 +503,15 @@ h4 {
   min-height: 0;
 }
 
+/* The name is a heading, so it arrives with the global `h2` bottom margin —
+   and a flex gap does not collapse with a margin, it adds to it. Cancelled
+   here rather than on the global rule, which every other heading in the app
+   still wants: the effect text then sits under the stats at the same step the
+   stats sit under the name. */
+.card-preview-panel__body h2 {
+  margin-bottom: 0;
+}
+
 .card-preview-panel__stats {
   margin: 0;
   color: var(--muted);

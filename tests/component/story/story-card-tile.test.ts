@@ -75,6 +75,7 @@ describe("StoryCardTile", () => {
         {
           code: 333,
           name: "Exodia the Forbidden One",
+          description: "Cannot be Normal Summoned or Set.",
           imageUrl: "/art/333.jpg",
           rarity: "ultra-rare" as ShopRarity,
           priceDp: 400,
@@ -101,6 +102,7 @@ describe("StoryCardTile", () => {
         {
           code: 111,
           name: "Blue-Eyes White Dragon",
+          description: "A powerful engine of destruction.",
           imageUrl: "/art/111.jpg",
           rarity: "common" as ShopRarity,
           priceDp: 40,
@@ -112,10 +114,14 @@ describe("StoryCardTile", () => {
     expect(
       container.querySelector('[data-cy="story-shop-card-art-111"]'),
     ).not.toBeNull();
-    /* The preview beside the grid is the same card at a larger size, so it is
-       the same tile rather than a second rendering of one. */
+    /* The grid is this tile; the preview beside it is the shared panel the
+       duel and the deck editor dock, which draws its own art. Two renderings
+       of one card would be the tile drawn twice. */
     expect(
       container.querySelector('[data-cy="story-shop-cards-preview-art-111"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-cy="card-preview-image"]'),
     ).not.toBeNull();
   });
 

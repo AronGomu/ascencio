@@ -190,11 +190,12 @@ function economyDefaults(): Record<string, unknown> {
     story's other grant, and it is the same one, so a returning save and a fresh
     one open on the same deck.
 
-    Set semantics, never add: the record on disk stays at its own version, so
-    every read migrates it again, and a stored value has to win over the granted
-    one or a second read would double what the first handed out. That also makes
-    this the one place a grant can live without becoming a fountain — it runs
-    per record read, not per button press.
+    Per code, the higher of the stored and granted counts — never the sum: the
+    record on disk stays at its own version, so every read migrates it again,
+    and an adding merge would double what the first read handed out. A maximum
+    lands on the same counts however many times it runs, which makes this the
+    one place a grant can live without becoming a fountain — it runs per record
+    read, not per button press.
 
     Built per call for the same reason as the economy defaults: two migrated
     saves must not come back sharing one deck list. */
@@ -220,14 +221,39 @@ function withStarterDecks(
        point of granting the two together.
 
        Merged per card code, and only over a collection that is already a
-       record: a stored count always wins, so nothing the player owns is
-       lowered, and a collection this build cannot read stays unreadable rather
-       than being laundered into a valid save by the grant. */
+       record: a collection this build cannot read stays unreadable rather than
+       being laundered into a valid save by the grant. */
     collection:
       typeof owned === "object" && owned !== null && !Array.isArray(owned)
-        ? { ...collection, ...owned }
+        ? topUpToGrant(owned as Record<string, unknown>, collection)
         : owned,
   };
+}
+
+/** The stored collection with every granted code raised to the count the
+    granted deck actually runs, and nothing lowered.
+
+    A stored count that already meets or beats the grant is the player's and is
+    kept; one below it is topped up, because the grant is a deck *and* the cards
+    behind it, and half a playset makes the granted deck as illegal as no deck
+    at all — the same lockout the grant was added to close, only now with a deck
+    the player cannot field. Only the granted deck's own copies are ever handed
+    out, so a second migration of the same record changes nothing.
+
+    A stored value that is not a count is left exactly as it is: it makes the
+    record fail validation, and repairing it here would resume a save from a
+    number this build invented. */
+function topUpToGrant(
+  stored: Record<string, unknown>,
+  granted: Readonly<Record<number, number>>,
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = { ...stored };
+  for (const [code, copies] of Object.entries(granted)) {
+    const held = merged[code];
+    if (held === undefined) merged[code] = copies;
+    else if (isCount(held)) merged[code] = Math.max(held, copies);
+  }
+  return merged;
 }
 
 /**

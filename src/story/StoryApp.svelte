@@ -340,13 +340,21 @@
   }));
   $: shopSet = shopData?.sets.find(({ id }) => id === state.shopSetId) ?? null;
   $: shopSetName = shopSet?.name ?? "";
-  $: shopCards = (shopSet?.cards ?? []).map((card) => ({
-    code: card.code,
-    name: card.name,
-    imageUrl: cardViewByCode.get(card.code)?.imageUrl ?? null,
-    rarity: card.rarity,
-    priceDp: singlePriceDp(card.rarity),
-  }));
+  $: shopCards = (shopSet?.cards ?? []).map((card) => {
+    /* The set data lists what is for sale; what a card does comes from the
+       catalog, which this screen already waits on for the art. Both are
+       absent for the frame before it lands, and the shared preview panel
+       renders a name with no text rather than a claim about the card. */
+    const view = cardViewByCode.get(card.code);
+    return {
+      code: card.code,
+      name: card.name,
+      description: view?.description ?? "",
+      imageUrl: view?.imageUrl ?? null,
+      rarity: card.rarity,
+      priceDp: singlePriceDp(card.rarity),
+    };
+  });
   /* Null until the catalog lands, which the briefing renders as "still
      checking" rather than as a refusal: an empty catalog calls every card
      missing, so a verdict reached from one would lock the save out of every

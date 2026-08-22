@@ -43,7 +43,7 @@
     <h1 data-cy="story-shop-browse-heading">Card Shop</h1>
     <button
       type="button"
-      class="secondary"
+      class="story-danger"
       data-cy="story-shop-browse-back"
       onclick={onback}>← Back</button
     >

@@ -3720,3 +3720,58 @@ the story with everything it had not written yet.
 - [ ] Go back to `#/story` and press **Continue**. You land on the **briefing**, with the same DP, and the pulled card is still in the collection. Nothing since your last manual save was lost.
 - [ ] The way out is a button now, not a link: right-click it — there is no *Open link in new tab*, and hovering shows no URL in the status bar. Watch its label as you press it: it reads **Saving your progress…** and greys out for the moment the write takes, so a double-click cannot save the run twice.
 - [ ] Refused writes keep you put: DevTools → Application → Storage, tick **Simulate custom storage quota** and set it to `1`, then reach a blocked briefing and press the button. You stay on the briefing, a *Prototype storage needs attention* banner appears, and the URL is still `#/story`. Untick the quota, press the button again, and it goes through.
+
+---
+
+## R4 owner-ask-repairs
+
+Four asks the round left unmet, checked from the player's side: reading a card's
+text while browsing a set to buy, the red on every control that backs out of a
+screen, the preview panel's two gaps, and a save that owned part of a playset.
+
+### Browsing a set tells you what the cards do
+
+The set list drew its own preview — art, name, rarity, no card text — so
+deciding what to buy meant buying it to find out. It now docks the same preview
+panel the duel and the deck editor use.
+
+- [ ] Reach the card shop, press **Buy**, open any set and press **View cards**. The panel on the left shows the first card's name *and* its effect text.
+- [ ] Move the pointer across the grid. The panel follows the card under it: name, effect text, and the rarity line under the panel all change together.
+- [ ] Tab through the grid without touching the mouse. The panel follows the focused card the same way.
+- [ ] The card is drawn once, not twice: there is one image in the left column, inside the panel's frame, with no second tile above it.
+- [ ] Long effect text scrolls inside the panel instead of stretching it — pick a card with a paragraph of rules text and scroll it with the wheel.
+
+### Backing out of a screen is red
+
+The owner's rule was "make button action that cancel or return to previous
+state red", with *Leave shop* as the example. Only the example had shipped.
+
+- [ ] In the shop, check **Leave Shop** is still red, then check the **← Back** on the set browser, on a set's card list, and on the sell screen: all four the same red.
+- [ ] Open one pack, and check the **← Back** under the reveal is red. Open several: **Skip** beside it is *not* red — it moves you on to the recap, it does not take you back.
+- [ ] Open the packs dialog from the top bar. Its **Close** in the footer and the **Close** in its header are both red.
+- [ ] Open the gear menu → **Settings**, then **History**, then **Save**. Every overlay's header **Close** is red.
+- [ ] On the city map, and on the story's Load screen, **Back** is red.
+- [ ] Open the collection from the deck library. Its **← Back** is red.
+- [ ] The label stays readable on the red: no grey-on-red or white-on-red anywhere above — the text is near-black.
+- [ ] One dialog deliberately does not follow the rule: on the Load screen press **Delete manual slot 1**. **Delete save** is the red one and **Cancel delete** is not, because red there marks the button that destroys something.
+
+### The preview panel's two gaps match
+
+The effect text sat tighter under the stats than the stats sat under the name,
+so it read as attached to the wrong thing.
+
+- [ ] Start a duel and hover a card in your hand. In the left panel, the space between the **name** and the **stats line** is the same as the space between the **stats line** and the **effect text** — the text reads as the row after the stats.
+- [ ] Open the deck editor and click a card in the catalog. The same panel, the same single step between the name and the text.
+- [ ] Do the same in the shop's set list. All three surfaces space the panel identically.
+
+### A save that owned part of a playset can still duel
+
+A save from before this round is granted the starter deck. It used to keep every
+count it already had, so a save owning one copy of a card the deck runs three of
+was handed a deck it still could not field.
+
+- [ ] Make the case by hand: DevTools → Application → IndexedDB → `ygo-story-saves` → `saves`. Take a record, set `schemaVersion` to `2`, delete `state.decks` and `state.defaultDeckId`, and set `state.collection` to `{"97590747": 1, "89631139": 5}`.
+- [ ] Reload and press **Continue**, then open the story deck library. **Starter Deck** is there and no card in it is badged **CARDS NOT OWNED**.
+- [ ] Open the collection. The card you set to `1` now reads **×3** — topped up to what the deck runs, no further. The card you set to `5` still reads **×5** — a count above the deck's is yours and is never lowered.
+- [ ] Press **Continue** a second time without saving in between and check the collection again. Both counts are unchanged: the top-up lands on the same numbers however many times the save is opened.
+- [ ] Choose **Old Arena**: the briefing accepts **Starter Deck** with no block message, and **Start Duel** enables.

@@ -304,13 +304,14 @@ describe("createStorySaveRepository", () => {
     expect(await storedRecord("manual:1")).toEqual(VERSION_2_RECORD);
   });
 
-  /* A stored value always wins over the granted one, per card code: the grant
-     completes a save, it never rewrites one. A player who owns three copies of
-     a card the starter deck runs two of keeps three, and one who sold down to
-     a single copy keeps the single copy — the granted deck then needs a repair
-     in the editor, which is a screen away, rather than a count of theirs being
-     raised behind their back. */
-  it("never lowers a stored count to make room for the grant", async () => {
+  /* Per card code, the higher of the two counts. A count above what the deck
+     runs is the player's and is never lowered; a count below it is topped up,
+     because a partial playset is the lockout the grant exists to close — a save
+     owning one copy of a card the starter deck runs three of would be handed a
+     deck the ownership rule still refuses, and the player would be blocked
+     while holding it. Topping up only ever adds what the granted deck itself
+     needs, so it stays idempotent across reads. */
+  it("tops a stored count up to the granted playset and never lowers one", async () => {
     const { collection } = buildStarterGrant();
     const hoarded = 89631139;
     const sold = 97590747;
@@ -323,10 +324,38 @@ describe("createStorySaveRepository", () => {
         collection: { [hoarded]: 3, [sold]: 1 },
       },
     });
-    const read = await repository().read("manual:1");
+    const saves = repository();
+    const read = await saves.read("manual:1");
     if (read.kind !== "ready") throw new Error("expected a ready save");
     expect(read.envelope.state.collection[hoarded]).toBe(3);
-    expect(read.envelope.state.collection[sold]).toBe(1);
+    expect(read.envelope.state.collection[sold]).toBe(3);
+    /* The record on disk stays at version 2, so the next read migrates it
+       again: the top-up has to land on the same counts a second time. */
+    const second = await saves.read("manual:1");
+    if (second.kind !== "ready") throw new Error("expected a ready save");
+    expect(second.envelope.state.collection).toEqual(
+      read.envelope.state.collection,
+    );
+    expect(await storedRecord("manual:1")).toMatchObject({
+      state: { collection: { [hoarded]: 3, [sold]: 1 } },
+    });
+  });
+
+  /* The grant tops counts up; it does not repair a collection this build
+     cannot read. A stored value that is not a count stays exactly as it is, so
+     the record still fails validation rather than being laundered into a valid
+     save by the merge. */
+  it("leaves an unreadable stored count unreadable", async () => {
+    const { collection } = buildStarterGrant();
+    const sold = 97590747;
+    expect(collection[sold]).toBe(3);
+    await seedRecord("manual:1", {
+      ...VERSION_2_RECORD,
+      state: { ...VERSION_2_RECORD.state, collection: { [sold]: "three" } },
+    });
+    expect(await repository().read("manual:1")).toMatchObject({
+      kind: "corrupt",
+    });
   });
 
   /* The deck list is a stored value like any other. A record that already

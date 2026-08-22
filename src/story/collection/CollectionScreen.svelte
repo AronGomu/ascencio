@@ -144,7 +144,7 @@
   <header class="collection-header" data-cy="collection-header">
     <button
       type="button"
-      class="secondary"
+      class="story-danger"
       data-cy="collection-back"
       onclick={onback}>← Back</button
     >

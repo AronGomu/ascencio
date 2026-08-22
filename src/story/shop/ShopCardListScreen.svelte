@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { CardPreviewPanel, type CardPreviewView } from "../../shell/index.ts";
   import RaritySortButton from "../components/RaritySortButton.svelte";
   import StoryCardTile from "../components/StoryCardTile.svelte";
   import {
@@ -10,6 +11,10 @@
   interface SetCard {
     readonly code: number;
     readonly name: string;
+    /** The card's effect text, from the catalog rather than the set data — a
+        set lists what it sells, not what a card does. Empty until the catalog
+        lands, exactly as `imageUrl` is null until then. */
+    readonly description: string;
     readonly imageUrl: string | null;
     readonly rarity: ShopRarity;
     readonly priceDp: number;
@@ -39,6 +44,17 @@
     previewCode !== null
       ? (cards.find((c) => c.code === previewCode) ?? cards[0] ?? null)
       : (cards[0] ?? null);
+  /* The shared panel the duel and the deck editor dock, built the way the
+     collection screen builds it: deciding what to buy is reading a card, and
+     the set list had no card text at all until it mounted this. */
+  $: preview =
+    previewCard === null
+      ? null
+      : ({
+          code: previewCard.code,
+          name: previewCard.name,
+          description: previewCard.description,
+        } satisfies CardPreviewView);
   /* One section list for both states, so the tile is written once: grouping off
      is the whole set under no heading, in the order it was handed in. */
   $: sections =
@@ -51,7 +67,7 @@
   <header class="cards-header" data-cy="story-shop-cards-header">
     <button
       type="button"
-      class="secondary"
+      class="story-danger"
       data-cy="story-shop-cards-back"
       onclick={onback}>← Back</button
     >
@@ -67,16 +83,14 @@
 
   <div class="cards-layout" data-cy="story-shop-cards-layout">
     <aside class="cards-preview" data-cy="story-shop-cards-preview">
+      <CardPreviewPanel
+        {preview}
+        staticImageUrl={previewCard?.imageUrl ?? null}
+      />
       {#if previewCard !== null}
-        <StoryCardTile
-          name={previewCard.name}
-          imageUrl={previewCard.imageUrl}
-          dataCyPrefix="story-shop-cards-preview"
-          dataCyId={previewCard.code}
-        />
-        <p class="preview-name" data-cy="story-shop-cards-preview-name">
-          {previewCard.name}
-        </p>
+        <!-- What the panel has no vocabulary for: rarity is the set's fact
+             about this printing, not the card's, and it is what the price is
+             read against. -->
         <p class="preview-rarity" data-cy="story-shop-cards-preview-rarity">
           {previewCard.rarity}
         </p>
@@ -165,23 +179,16 @@
     overflow: hidden;
   }
 
+  /* Chrome-free, like the collection screen's column: the shared panel brings
+     its own border and background, and a second frame around it would draw the
+     preview twice. */
   .cards-preview {
     position: sticky;
     top: 0;
     align-self: start;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    padding: 1rem;
-    border: 1px solid var(--story-border);
-    border-radius: 0.6rem;
-    background: color-mix(in srgb, var(--bg) 85%, transparent);
-  }
-
-  .preview-name {
-    margin: 0;
-    font-weight: 600;
-    font-size: 0.95rem;
+    gap: 0.5rem;
   }
 
   .preview-rarity {

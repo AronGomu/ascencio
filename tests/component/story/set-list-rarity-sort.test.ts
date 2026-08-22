@@ -10,6 +10,7 @@ afterEach(() => cleanup());
 type CardEntry = {
   code: number;
   name: string;
+  description: string;
   imageUrl: string | null;
   rarity: ShopRarity;
   priceDp: number;
@@ -21,6 +22,7 @@ const SET_CARDS: readonly CardEntry[] = [
   {
     code: 1,
     name: "Zombie Master",
+    description: "Zombie effect text.",
     imageUrl: null,
     rarity: "common",
     priceDp: 40,
@@ -28,6 +30,7 @@ const SET_CARDS: readonly CardEntry[] = [
   {
     code: 2,
     name: "Dark Magician",
+    description: "The ultimate wizard in terms of attack and defense.",
     imageUrl: null,
     rarity: "ultra-rare",
     priceDp: 400,
@@ -35,6 +38,7 @@ const SET_CARDS: readonly CardEntry[] = [
   {
     code: 3,
     name: "Alpha the Magnet Warrior",
+    description: "A magnetic warrior.",
     imageUrl: null,
     rarity: "common",
     priceDp: 40,
@@ -42,6 +46,7 @@ const SET_CARDS: readonly CardEntry[] = [
   {
     code: 4,
     name: "Celtic Guardian",
+    description: "An elf who learned to wield a sword.",
     imageUrl: null,
     rarity: "rare",
     priceDp: 100,
@@ -49,6 +54,7 @@ const SET_CARDS: readonly CardEntry[] = [
   {
     code: 5,
     name: "Blue-Eyes White Dragon",
+    description: "This legendary dragon is a powerful engine of destruction.",
     imageUrl: null,
     rarity: "ultra-rare",
     priceDp: 400,
@@ -56,6 +62,8 @@ const SET_CARDS: readonly CardEntry[] = [
   {
     code: 6,
     name: "Exodia the Forbidden One",
+    description:
+      "Cannot be Normal Summoned or Set. Must first be Special Summoned.",
     imageUrl: null,
     rarity: "secret-rare",
     priceDp: 1000,
@@ -227,8 +235,7 @@ describe("the set card list's rarity sort", () => {
     );
 
     expect(
-      container.querySelector('[data-cy="story-shop-cards-preview-name"]')!
-        .textContent,
+      container.querySelector('[data-cy="card-preview-name"]')!.textContent,
     ).toBe("Exodia the Forbidden One");
     expect(
       container.querySelector('[data-cy="story-shop-cards-preview-rarity"]')!

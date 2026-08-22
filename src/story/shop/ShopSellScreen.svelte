@@ -110,7 +110,7 @@
     <h1 data-cy="story-shop-sell-heading">Sell Cards</h1>
     <button
       type="button"
-      class="secondary"
+      class="story-danger"
       data-cy="story-shop-sell-back"
       onclick={onback}>← Back</button
     >

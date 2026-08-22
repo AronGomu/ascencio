@@ -94,7 +94,7 @@
     >
     <button
       type="button"
-      class="secondary"
+      class="story-danger"
       data-cy="story-shop-booster-close"
       onclick={onclose}>Close</button
     >

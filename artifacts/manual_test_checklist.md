@@ -3429,3 +3429,34 @@ local images.
 ### Rarity is still visible
 
 - [ ] In the sell screen and the results grid, the coloured halo around a rare card is still there — a common card has none, a super/ultra rare glows.
+
+## T34 set-list-rarity-sort
+
+The set card list's header row now carries one more button, beside **← Back** and the set name. It
+cycles three states: off, common-to-rarest, rarest-to-common, then off again. Grouping is a view
+setting, not a saved one — it starts off every time the list is opened.
+
+Run these against `npm run dev`, from **Continue → Shop → Buy packs → Metal Raiders → View card
+list** (144 cards, five rarities).
+
+### The three states, in order
+
+- [ ] The list opens ungrouped: no rarity headings anywhere, and the button on the right of the header row reads **Sort by rarity**.
+- [ ] Click it once. The button reads **Rarity: common first**, and the cards are now under headings in this order, top to bottom: `COMMON`, `RARE`, `SUPER-RARE`, `ULTRA-RARE`, `SECRET-RARE`.
+- [ ] Click it a second time. The button reads **Rarity: rarest first** and the same five headings appear in the opposite order: `SECRET-RARE`, `ULTRA-RARE`, `SUPER-RARE`, `RARE`, `COMMON`.
+- [ ] Click it a third time. Every heading disappears and the button reads **Sort by rarity** again — the list is back to the order it opened in, unsorted.
+
+### What grouping must not change
+
+- [ ] In each of the three states, scroll to the bottom: every card of the set is still there exactly once. Nothing is dropped and nothing is listed twice.
+- [ ] Inside any one heading the cards read alphabetically — under `SECRET-RARE`, `Gate Guardian` comes before `Thousand Dragon`.
+- [ ] While grouped, hover a card near the bottom of the list. The preview panel on the left still switches to it and still names its rarity.
+- [ ] While grouped, the card grid still scrolls on its own, with the header row and the preview panel staying put.
+- [ ] Buy a single from a grouped list. The price and the purchase behave exactly as they do ungrouped.
+- [ ] Press **← Back**, re-enter the card list. Grouping is off again — the state is not remembered.
+
+### Keyboard and screen reader
+
+- [ ] Tab from **← Back**: focus reaches the sort button, and Space or Enter cycles it just like a click.
+- [ ] With a screen reader on, activating the button announces both the new name and its pressed state — "Rarity: common first, pressed" on the first click, "Sort by rarity, not pressed" on the third.
+- [ ] The heading colours match the collection screen: a `SECRET-RARE` heading carries the same halo colour a secret-rare card's tile does.

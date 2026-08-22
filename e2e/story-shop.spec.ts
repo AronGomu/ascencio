@@ -70,15 +70,38 @@ test("shop loop: buy packs, open all, sell cards, singles sanity", async ({
   // Close the set dialog before accessing the top-bar boosters pill
   await page.keyboard.press("Escape");
 
-  // Step 4: open all 6 packs at once, verify 54 result tiles, continue
+  // Step 4: open all 6 packs at once, verify all 54 cards arrived, continue
   await expect(page.locator('[data-cy="story-top-bar-boosters"]')).toHaveText(
     "6 packs",
   );
   await page.locator('[data-cy="story-top-bar-boosters"]').click();
   await page.locator('[data-cy="story-shop-open-all"]').click();
+  // The recap collapses duplicates into one tile carrying a count, so the tile
+  // count is a property of a random pull rather than a constant. What is
+  // constant is the accounting: badges plus badge-less tiles total 54, which
+  // fails if the grouping drops a card or invents one.
   await expect(
-    page.locator('[data-cy="story-shop-results-grid"] > div'),
-  ).toHaveCount(54);
+    page.locator('[data-cy="story-shop-results-heading"]'),
+  ).toContainText("54");
+  const openedTotal = await page
+    .locator('[data-cy^="story-shop-result-tile-"]')
+    .evaluateAll((tiles) =>
+      tiles.reduce((sum, tile) => {
+        const badge = tile.querySelector(
+          '[data-cy^="story-shop-results-quantity-"]',
+        );
+        return (
+          sum +
+          (badge === null
+            ? 1
+            : Number.parseInt(
+                (badge.textContent ?? "").replace("\u00d7", ""),
+                10,
+              ))
+        );
+      }, 0),
+    );
+  expect(openedTotal).toBe(54);
   await page.locator('[data-cy="story-shop-results-continue"]').click();
 
   // Step 5: sell — navigate back through greeting to the sell screen

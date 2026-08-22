@@ -7,10 +7,18 @@
       for, so every card is on screen from the start and the player decides
       which one to turn — or ticks the box and watches the pack open itself.
 
+      One pack at a time, however many were bought: "you open 1 booster at a
+      time and there is an open all option to open all remaining boosters".
+      Nine tiles is a pack; the rest wait behind Next pack, or are handed over
+      uncounted to the results list by Open all remaining.
+
       Presentation only. Which cards a pack holds was decided before this
       screen mounted; nothing here can change a pull, and the flip state is
       deliberately component-local — a reload during a reveal is the reveal
-      starting over, not a save migration. */
+      starting over, not a save migration. That goes for which pack is open
+      too: every card was credited to the collection before this screen
+      mounted, so a reveal abandoned halfway loses the ceremony and nothing
+      else. */
   import { onDestroy } from "svelte";
   import CardZoomInspector from "../components/CardZoomInspector.svelte";
   import StoryCardTile from "../components/StoryCardTile.svelte";
@@ -41,6 +49,7 @@
   export let settings: StoryPlaybackSettingsStore =
     createStoryPlaybackSettingsStore();
 
+  let packIndex = 0;
   let flipped: boolean[] = [];
   /* The art boxes, so the zoom can grow out of the card rather than out of the
      labelled tile around it — the frame keeps the card's proportions only if
@@ -49,37 +58,58 @@
   let pointed: number | null = null;
   let pointedAnchor: ZoomRect | null = null;
   let autoFlip: AutoFlip | null = null;
-  let packKey = "";
+  let openingKey = "";
 
   /* Keyed on which cards are in hand rather than on the array's identity: the
      shop rebuilds its card list whenever anything else about the save changes,
-     and a half-revealed pack must not turn back over because the catalog
-     finished loading behind it. */
-  $: syncPack(cards.map((card) => card.code).join("-"));
+     and a half-revealed pack must not turn back over — nor jump back to pack
+     one — because the catalog finished loading behind it. */
+  $: syncOpening(cards.map((card) => card.code).join("-"));
   $: syncAutoRun($settings.autoFlip);
-  $: flippedCount = flipped.filter(Boolean).length;
   $: packCount = Math.ceil(cards.length / PACK_SIZE);
-  $: currentPack = Math.min(
-    Math.floor(flippedCount / PACK_SIZE) + 1,
-    packCount,
+  $: packCards = cards.slice(
+    packIndex * PACK_SIZE,
+    (packIndex + 1) * PACK_SIZE,
   );
+  $: flippedCount = flipped.filter(Boolean).length;
+  $: packRevealed = packCards.length > 0 && flippedCount >= packCards.length;
+  $: onLastPack = packIndex >= packCount - 1;
   /* Face down, the magnified card would be the face the halo is standing in
      for, so the zoom waits for the flip the halo advertises. */
   $: zoomIndex = pointed !== null && flipped[pointed] === true ? pointed : null;
-  $: zoomCard = zoomIndex === null ? null : (cards[zoomIndex]?.view ?? null);
+  $: zoomCard =
+    zoomIndex === null ? null : (packCards[zoomIndex]?.view ?? null);
   $: zoomRarity =
-    zoomIndex === null ? null : (cards[zoomIndex]?.rarity ?? null);
+    zoomIndex === null ? null : (packCards[zoomIndex]?.rarity ?? null);
 
   onDestroy(() => autoFlip?.stop());
 
-  function syncPack(key: string): void {
-    if (key === packKey) return;
-    packKey = key;
-    flipped = cards.map(() => false);
+  function syncOpening(key: string): void {
+    if (key === openingKey) return;
+    openingKey = key;
+    packIndex = 0;
+    startPack();
+  }
+
+  function nextPack(): void {
+    if (packIndex + 1 >= packCount) return;
+    packIndex += 1;
+    startPack();
+  }
+
+  /* Sized from `cards` rather than from the derived `packCards`, so a pack
+     starts from the same statement that moved to it instead of from whichever
+     reactive statement Svelte happens to run next. */
+  function startPack(): void {
+    const total = Math.max(
+      0,
+      Math.min(PACK_SIZE, cards.length - packIndex * PACK_SIZE),
+    );
+    flipped = Array.from({ length: total }, () => false);
     pointed = null;
     pointedAnchor = null;
     autoFlip?.stop();
-    autoFlip = createAutoFlip({ total: cards.length, onFlip: flip });
+    autoFlip = createAutoFlip({ total, onFlip: flip });
     if ($settings.autoFlip) autoFlip.start();
   }
 
@@ -119,7 +149,7 @@
 <main class="opening-screen" data-cy="story-shop-opening">
   <header class="opening-header" data-cy="story-shop-opening-header">
     <p class="progress" data-cy="story-shop-opening-progress">
-      Pack {currentPack} of {packCount}
+      Pack {packIndex + 1} of {packCount}
     </p>
     <label class="auto-flip" data-cy="story-shop-opening-auto-flip-field"
       ><input
@@ -133,7 +163,11 @@
   </header>
 
   <div class="revealed-grid" data-cy="story-shop-opening-grid">
-    {#each cards as card, index (index)}
+    <!-- Keyed on the slot rather than on the card, and it has to be: a pack
+         draws from its pool with replacement, so the same code twice in nine
+         is ordinary — it is why the results list counts copies at all — and
+         `(card.code)` throws `each_key_duplicate` on that pack. -->
+    {#each packCards as card, index (index)}
       <button
         type="button"
         class="opening-tile rarity-halo"
@@ -183,13 +217,29 @@
     {/each}
   </div>
 
-  {#if flippedCount >= cards.length && cards.length > 0}
+  {#if packRevealed}
     <div class="opening-actions" data-cy="story-shop-opening-actions">
-      <button
-        type="button"
-        data-cy="story-shop-opening-finish"
-        onclick={onfinish}>See results</button
-      >
+      {#if onLastPack}
+        <button
+          type="button"
+          data-cy="story-shop-opening-see-all"
+          onclick={onfinish}>See all opened cards</button
+        >
+      {:else}
+        <button
+          type="button"
+          data-cy="story-shop-opening-next-pack"
+          onclick={nextPack}>Next pack</button
+        >
+        <!-- Straight to the recap, which already holds every card of every
+             pack: the packs left are opened, just not one card at a time. -->
+        <button
+          type="button"
+          class="secondary"
+          data-cy="story-shop-opening-open-all"
+          onclick={onfinish}>Open all remaining</button
+        >
+      {/if}
     </div>
   {/if}
 
@@ -320,6 +370,7 @@
   .opening-actions {
     display: flex;
     justify-content: center;
+    gap: 0.75rem;
     padding: 0.5rem 0;
   }
   .skip-btn {
@@ -332,6 +383,14 @@
   @media (prefers-reduced-motion: no-preference) {
     .tile-art {
       transition: transform 420ms ease;
+    }
+    /* Only the turn face-up is a reveal. Next pack resets the same nine tiles,
+       and a transition read from the face-down state would spend 420ms
+       rotating the last pack's now-empty fronts back over before the new pack
+       appeared. A transition is read from the state being moved to, so the
+       flip up still animates. */
+    .opening-tile:not(.is-flipped) .tile-art {
+      transition: none;
     }
     .opening-tile {
       transition: box-shadow 220ms ease;

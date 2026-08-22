@@ -116,7 +116,7 @@ describe("BoosterOpening", () => {
     });
     for (let i = 0; i < 5; i++) {
       const tile = container.querySelector(
-        `[data-cy="story-shop-result-${100 + i}-${i}"]`,
+        `[data-cy="story-shop-result-tile-${100 + i}"]`,
       ) as HTMLElement;
       expect(tile).not.toBeNull();
       expect(tile.dataset["rarity"]).toBe("common");

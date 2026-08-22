@@ -5,8 +5,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import BoosterOpeningScreen from "../../../src/story/shop/BoosterOpeningScreen.svelte";
 
 /* The single pack — face-down start, the flip, the halo, the zoom, auto-flip
-   and the layout — is `booster-reveal.test.ts`. What is left here is what only
-   more than one pack at a time can show. */
+   and the layout — is `booster-reveal.test.ts`, and the walk from pack to pack
+   is `booster-open-all.test.ts`. What is left here is the boundary between the
+   two: what finishing a pack does and does not do on its own. */
 
 const PACK_SIZE = 9;
 
@@ -31,7 +32,10 @@ afterEach(() => {
 });
 
 describe("BoosterOpeningScreen", () => {
-  it("pack boundary advances the pack counter", async () => {
+  it("the last card of a pack does not advance the counter by itself", async () => {
+    /* The player decides when the next pack is dealt: a counter that ticked
+       over on the ninth flip would leave the pack they were still reading
+       labelled as the one after it. */
     const user = userEvent.setup();
     const cards = makeCards(18);
     const { container } = render(BoosterOpeningScreen, { cards });
@@ -43,27 +47,38 @@ describe("BoosterOpeningScreen", () => {
 
     for (let i = 0; i < PACK_SIZE; i++) await user.click(tile(container, i));
 
-    expect(progress?.textContent).toContain("Pack 2 of 2");
+    expect(progress?.textContent).toContain("Pack 1 of 2");
   });
 
-  it("finish appears after the last card of the last pack", async () => {
+  it("see all appears after the last card of the last pack", async () => {
     const user = userEvent.setup();
     const onfinish = vi.fn();
     const cards = makeCards(18);
     const { container } = render(BoosterOpeningScreen, { cards, onfinish });
 
-    for (let i = 0; i < 17; i++) await user.click(tile(container, i));
+    for (let i = 0; i < PACK_SIZE; i++) await user.click(tile(container, i));
     expect(
-      container.querySelector('[data-cy="story-shop-opening-finish"]'),
+      container.querySelector('[data-cy="story-shop-opening-see-all"]'),
     ).toBeNull();
 
-    await user.click(tile(container, 17));
-    const finishBtn = container.querySelector(
-      '[data-cy="story-shop-opening-finish"]',
-    ) as HTMLButtonElement;
-    expect(finishBtn).not.toBeNull();
+    await user.click(
+      container.querySelector(
+        '[data-cy="story-shop-opening-next-pack"]',
+      ) as HTMLButtonElement,
+    );
+    for (let i = 0; i < PACK_SIZE - 1; i++)
+      await user.click(tile(container, i));
+    expect(
+      container.querySelector('[data-cy="story-shop-opening-see-all"]'),
+    ).toBeNull();
 
-    await user.click(finishBtn);
+    await user.click(tile(container, PACK_SIZE - 1));
+    const seeAllBtn = container.querySelector(
+      '[data-cy="story-shop-opening-see-all"]',
+    ) as HTMLButtonElement;
+    expect(seeAllBtn).not.toBeNull();
+
+    await user.click(seeAllBtn);
     expect(onfinish).toHaveBeenCalledOnce();
   });
 

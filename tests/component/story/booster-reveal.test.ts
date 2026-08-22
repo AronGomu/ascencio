@@ -287,7 +287,7 @@ describe("booster reveal", () => {
     expect(desktop).toContain("repeat(9, minmax(0, 1fr))");
   });
 
-  it("finish appears only once every card is face up", async () => {
+  it("the way out appears only once every card is face up", async () => {
     const user = userEvent.setup();
     const onfinish = vi.fn();
     const { container } = render(BoosterOpeningScreen, {
@@ -296,16 +296,16 @@ describe("booster reveal", () => {
     });
 
     expect(
-      container.querySelector('[data-cy="story-shop-opening-finish"]'),
+      container.querySelector('[data-cy="story-shop-opening-see-all"]'),
     ).toBeNull();
     for (let index = 0; index < 9; index += 1)
       await user.click(tile(container, index));
 
-    const finish = container.querySelector(
-      '[data-cy="story-shop-opening-finish"]',
+    const seeAll = container.querySelector(
+      '[data-cy="story-shop-opening-see-all"]',
     ) as HTMLButtonElement;
-    expect(finish).not.toBeNull();
-    await user.click(finish);
+    expect(seeAll).not.toBeNull();
+    await user.click(seeAll);
     expect(onfinish).toHaveBeenCalledOnce();
   });
 });

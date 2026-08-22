@@ -3548,7 +3548,7 @@ booster dialog (**Open all** skips straight to the results grid, which is T37's)
 - [ ] Click one card in the middle of the row. **Only that card** turns over, with a flip animation — you see it rotate, not fade or pop. Its name appears under it; every other card is still face down.
 - [ ] Click the same card again. Nothing happens — a reveal is one-way.
 - [ ] Hover the card you turned over. It grows to twice its size with the floating text window beside it, exactly as in the T35 steps above.
-- [ ] Turn over all nine. **See results** appears only after the last one, and takes you to the results grid holding the same nine cards, in the same order, with the same names you just read.
+- [ ] Turn over all nine. **See all opened cards** appears only after the last one, and takes you to the results list holding those same nine cards, in the order you turned them over. A card the pack drew twice is one tile carrying a count rather than two tiles — T37 renamed the button and deduplicated the list.
 
 ### The auto-flip checkbox
 
@@ -3570,3 +3570,48 @@ booster dialog (**Open all** skips straight to the results grid, which is T37's)
 
 - [ ] Turn on the operating system's **reduce motion** setting and reload. Turn a card over: it changes to its face **instantly**, with no rotation and no fade, and the rarity glow appears at once instead of fading.
 - [ ] With reduce motion still on, tick **Flip them for me**. The cards still open one at a time at the same roughly half-second pace — reduced motion removes the animation, never the pacing, and must not dump all nine at once.
+
+## T37 booster-open-all-and-results
+
+Buying more than one pack. Before this, every card of every pack was dealt onto one screen at
+once and the results grid listed all fifty-four pulls, duplicates and all. Now a pack is opened
+at a time with a way out of the queue, and the recap says each card once with a count.
+
+Reach it from the shop: **Buy** → a set → a pack count, then the packs pill in the top bar.
+**Open selected** walks the packs; **Open all** on that dialog still skips the walk entirely.
+
+### One pack at a time
+
+- [ ] Buy **three** packs of one set. Click the packs pill, step the count to 3 and press **Open selected**. **Nine** cards are on screen, not twenty-seven, and the header reads `Pack 1 of 3`.
+- [ ] Turn one card over. No **Next pack**, **Open all remaining** or **See all opened cards** button has appeared — the way on shows up only once the pack is out.
+- [ ] Turn over the remaining eight. **Next pack** and **Open all remaining** both appear, side by side. There is no **See all opened cards** yet — two packs are still unopened.
+- [ ] Press **Next pack**. The header reads `Pack 2 of 3`, nine cards are face down again, and they are new cards: turn one over and it is not a card you saw in pack 1 unless the set genuinely dealt it twice.
+- [ ] Watch the moment you press **Next pack**. The old pack does **not** spend half a second visibly rotating blank faces back over — the new pack is simply dealt face down.
+- [ ] Finish pack 2, press **Next pack** again, finish pack 3. On the last pack **Next pack** and **Open all remaining** are gone and **See all opened cards** is there instead. Press it.
+
+### The way out mid-way
+
+- [ ] Buy three more packs and open them. Finish pack 1 and press **Open all remaining** instead of **Next pack**. You go straight to the results list — no cards flip on the way, and no second screen asks you to confirm.
+- [ ] That results list holds **all twenty-seven** cards, not just the nine you turned over. The heading reads `You opened 27 cards`.
+- [ ] Do it again and press **Skip** in the corner during pack 1 instead. Same destination, same twenty-seven cards — Skip abandons the ceremony, it never abandons a card.
+
+### Duplicates become a quantity
+
+- [ ] On any results list from three or more packs, find a card the packs dealt more than once. It appears **once**, with a small count badge in the corner of its tile reading `×2`, `×3` and so on. There is no second tile for it anywhere in the list.
+- [ ] A card dealt exactly once has **no** badge at all — an unmarked tile means one copy.
+- [ ] Add up every badge, counting an unbadged tile as one. The total equals the number in the heading. Nothing was dropped and nothing was invented.
+- [ ] With a screen reader, or by inspecting the accessible name, a tile with a count announces as `Kuriboh, 3 copies` — once, not as the name followed by a separate "×3".
+
+### Grouping the results by rarity
+
+- [ ] The results list has a **Sort by rarity** button in its header, in the same place the set card list has one.
+- [ ] Press it once. It reads **Rarity: common first**, and the list breaks into headed groups running from `common` down to the rarest tier present. A tier nothing was pulled at gets no heading.
+- [ ] Press it again. It reads **Rarity: rarest first** and the same groups appear in the opposite order.
+- [ ] Press it a third time. It reads **Sort by rarity** again, the headings disappear, and the list is back in the order the packs dealt it.
+- [ ] Compare against a set's card list (**Buy** → a set → the same button). Three presses, the same three labels, the same two directions — the two screens behave identically.
+- [ ] The count badges survive all three states: a `×3` tile is still one tile with `×3` inside a rarity group.
+
+### Nothing is lost
+
+- [ ] After any of the routes above, press **Continue**, leave the shop and open the collection. Every card from every pack is there, including the packs you never turned over card by card, and a card pulled three times shows three copies owned.
+- [ ] Buy one single pack and open it. It is the last pack from the start, so it offers **See all opened cards** and never **Next pack** — the multi-pack controls stay out of a single-pack opening.

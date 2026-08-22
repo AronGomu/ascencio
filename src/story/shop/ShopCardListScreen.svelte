@@ -1,8 +1,9 @@
 <script lang="ts">
+  import RaritySortButton from "../components/RaritySortButton.svelte";
   import StoryCardTile from "../components/StoryCardTile.svelte";
   import {
     groupByRarity,
-    type RarityDirection,
+    type RarityGrouping,
   } from "../collection/group-by-rarity.ts";
   import type { ShopRarity } from "../model/story-state.ts";
 
@@ -21,30 +22,12 @@
     readonly cards: readonly SetCard[];
   }
 
-  /** Off, then each direction, then off again — the button is one control the
-      player cycles rather than a toggle plus a direction switch. */
-  type RarityGrouping = "off" | RarityDirection;
-
   export let setName = "";
   export let dp = 0;
   export let cards: readonly SetCard[] = [];
   export let onbuysingle: (code: number, rarity: ShopRarity) => void = () =>
     undefined;
   export let onback: () => void = () => undefined;
-
-  const NEXT_GROUPING: Readonly<Record<RarityGrouping, RarityGrouping>> = {
-    off: "common-first",
-    "common-first": "rarest-first",
-    "rarest-first": "off",
-  };
-
-  /* The label is the state: a button whose name never changed would leave a
-     screen reader announcing "sort by rarity, pressed" for both directions. */
-  const GROUPING_LABELS: Readonly<Record<RarityGrouping, string>> = {
-    off: "Sort by rarity",
-    "common-first": "Rarity: common first",
-    "rarest-first": "Rarity: rarest first",
-  };
 
   /* View state, not a preference: the set list opens in the order the set
      itself is packaged in, which is what an ungrouped list is for. */
@@ -73,16 +56,13 @@
       onclick={onback}>← Back</button
     >
     <h1 data-cy="story-shop-cards-heading">{setName}</h1>
-    <button
-      type="button"
-      class="secondary rarity-sort"
-      data-cy="story-shop-cards-rarity-sort"
-      data-state={rarityGrouping}
-      aria-pressed={rarityGrouping !== "off"}
-      onclick={() => {
-        rarityGrouping = NEXT_GROUPING[rarityGrouping];
-      }}>{GROUPING_LABELS[rarityGrouping]}</button
-    >
+    <RaritySortButton
+      grouping={rarityGrouping}
+      dataCy="story-shop-cards-rarity-sort"
+      onchange={(next) => {
+        rarityGrouping = next;
+      }}
+    />
   </header>
 
   <div class="cards-layout" data-cy="story-shop-cards-layout">
@@ -175,11 +155,6 @@
     flex: 1;
     margin: 0;
     font-size: clamp(1.25rem, 4vw, 2rem);
-  }
-
-  .rarity-sort {
-    flex: none;
-    font-size: 0.8rem;
   }
 
   .cards-layout {

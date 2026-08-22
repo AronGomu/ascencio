@@ -144,9 +144,7 @@ describe("StoryCardTile", () => {
 
     const results = render(BoosterResultsScreen, { cards, oncontinue: noop });
     expect(
-      results.container.querySelector(
-        '[data-cy="story-shop-result-art-111-0"]',
-      ),
+      results.container.querySelector('[data-cy="story-shop-result-art-111"]'),
     ).not.toBeNull();
   });
 

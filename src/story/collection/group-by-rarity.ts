@@ -20,6 +20,12 @@ export const RARITY_ORDER: readonly ShopRarity[] = Object.freeze([
 /** Which end of `RARITY_ORDER` the first group comes from. */
 export type RarityDirection = "common-first" | "rarest-first";
 
+/** Off, then each direction, then off again — the grouping control is one
+    button the player cycles rather than a toggle plus a direction switch. Here
+    rather than in the screens that hold it, because two screens now do, and
+    two copies of a three-state cycle is how they come to disagree. */
+export type RarityGrouping = "off" | RarityDirection;
+
 export interface RarityGroup<T> {
   readonly rarity: ShopRarity;
   /** Alphabetical by name, so a group reads as a list rather than as whatever

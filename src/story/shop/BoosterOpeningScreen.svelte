@@ -12,6 +12,12 @@
       Nine tiles is a pack; the rest wait behind Next pack, or are handed over
       uncounted to the results list by Open all remaining.
 
+      One pack on its own gets none of that. Nine tiles is the whole opening,
+      so a results list would repeat the screen the player is looking at and
+      Skip would lead out of a reveal with nowhere left to go: "Remove the
+      button 'See result' or 'skip' if opening only 1 pack. Just have a back
+      button."
+
       Presentation only. Which cards a pack holds was decided before this
       screen mounted; nothing here can change a pull, and the flip state is
       deliberately component-local — a reload during a reveal is the reveal
@@ -43,6 +49,10 @@
     readonly view?: DeckBuilderCardView | null;
   }[] = [];
   export let onfinish: () => void = () => undefined;
+  /** The single pack's one exit. Separate from `onfinish` because it lands
+      somewhere else — there is no results list to see, so Back leaves the
+      opening outright rather than moving on to the recap. */
+  export let onback: () => void = () => undefined;
   /** Handed in by the story app so the whole domain shares one owner of the
       reader's preferences; defaulted for a standalone render, the way the
       settings overlay defaults it. */
@@ -217,7 +227,7 @@
     {/each}
   </div>
 
-  {#if packRevealed}
+  {#if packRevealed && packCount > 1}
     <div class="opening-actions" data-cy="story-shop-opening-actions">
       {#if onLastPack}
         <button
@@ -243,12 +253,25 @@
     </div>
   {/if}
 
-  <button
-    type="button"
-    class="secondary skip-btn"
-    data-cy="story-shop-opening-skip"
-    onclick={onfinish}>Skip</button
-  >
+  <!-- Skip is a way past the packs still to come, so one pack has nothing to
+       skip: it gets Back instead, and Back is there from the first frame —
+       every card was credited before this screen mounted, so leaving without
+       turning any of them over costs the player nothing. -->
+  {#if packCount > 1}
+    <button
+      type="button"
+      class="secondary exit-btn"
+      data-cy="story-shop-opening-skip"
+      onclick={onfinish}>Skip</button
+    >
+  {:else}
+    <button
+      type="button"
+      class="secondary exit-btn"
+      data-cy="story-shop-opening-back"
+      onclick={onback}>← Back</button
+    >
+  {/if}
 
   {#if zoomCard !== null && pointedAnchor !== null}
     <CardZoomInspector
@@ -373,7 +396,7 @@
     gap: 0.75rem;
     padding: 0.5rem 0;
   }
-  .skip-btn {
+  .exit-btn {
     align-self: flex-end;
   }
   /* Switched on only for a reader who has not asked for less motion, rather

@@ -921,6 +921,7 @@
           cards={openedCardViews}
           settings={playbackSettings}
           onfinish={() => dispatch({ type: "finish-opening" })}
+          onback={() => dispatch({ type: "acknowledge-opened" })}
         />
       {:else if state.screen === "shop-results"}
         <svelte:component

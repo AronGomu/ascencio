@@ -3614,4 +3614,40 @@ Reach it from the shop: **Buy** → a set → a pack count, then the packs pill 
 ### Nothing is lost
 
 - [ ] After any of the routes above, press **Continue**, leave the shop and open the collection. Every card from every pack is there, including the packs you never turned over card by card, and a card pulled three times shows three copies owned.
-- [ ] Buy one single pack and open it. It is the last pack from the start, so it offers **See all opened cards** and never **Next pack** — the multi-pack controls stay out of a single-pack opening.
+- [ ] Buy one single pack and open it. **Next pack** and **Open all remaining** never appear — the multi-pack controls stay out of a single-pack opening. What a single pack offers instead is one **← Back**, checked in the T38 section below.
+
+## T38 single-pack-reveal-actions
+
+One pack has one way out, and the cards are the player's from the moment the pack is opened rather than from the moment the last one is turned over.
+
+Nine tiles are the whole opening, so there is no results list worth walking to and nothing left to skip past. Everything here is reached the same way as T37: **Buy** → a set → a pack count, then the packs pill in the top bar.
+
+### One pack, one button
+
+- [ ] Buy **one** pack of any set. Click the packs pill, leave the count at 1 and press **Open selected**. Nine cards are on screen face down and the header reads `Pack 1 of 1`.
+- [ ] Before turning anything over, read the buttons. There is exactly one, **← Back**, in the bottom corner. No **Skip**, no **See all opened cards**, no **Next pack**, no **Open all remaining**.
+- [ ] Turn all nine over, one by one. Nothing new appears when the ninth lands — no results button slides in, no second screen offers itself. **← Back** is still the only way out.
+- [ ] Press **← Back**. You land on the shop's buy list, not on a results list.
+- [ ] Do it again and tick **Flip them for me** instead. The pack opens itself; when it finishes, still only **← Back**.
+
+### Leaving with nothing turned over
+
+- [ ] Buy one pack, press **Open selected**, and press **← Back** immediately — do not turn a single card over.
+- [ ] Open the collection (leave the shop → **Collection**). All nine cards from that pack are listed. Not one of them was lost by walking out of the reveal.
+- [ ] Check the packs pill. It is one lower than before — the pack was spent, not left on the shelf to be opened a second time.
+
+### Closing the tab in the middle of a reveal
+
+Saving is manual in this build: the gear menu writes the save, and nothing in the shop writes one for you. So the save is what survives a closed tab, and the point of this test is that a save taken mid-reveal already holds the cards.
+
+- [ ] Save first (gear → **Save**), then buy **one** pack and press **Open selected**. Turn over two or three cards and stop.
+- [ ] With the pack still half face down, open the gear menu and press **Save** again. Then **close the browser tab outright** — no Back, no Continue.
+- [ ] Reopen the app and load that save. Open the collection: **all nine** cards from that pack are there, including the six you never turned over.
+- [ ] Count a card the pack dealt once — it shows **one** copy, not two. Reloading a reveal does not pay it out a second time.
+- [ ] Reload the same save a second time and look again. Still one copy each. The credit belongs to the pack being opened, not to the reveal being displayed.
+- [ ] Now the other direction: save, buy one pack, press **Open selected**, and close the tab **without saving again**. Reopen and load. The DP is back, the pack is unbought and no cards were added — the purchase rolled back whole, rather than taking the DP and keeping the cards from you.
+
+### Several packs are untouched by all of this
+
+- [ ] Buy **three** packs and open them with **Open selected**. **Skip** is back in the corner and there is no **← Back** — a multi-pack opening still has packs worth skipping past.
+- [ ] Finish pack 1. **Next pack** and **Open all remaining** appear exactly as T37 describes, and the walk to the results list is unchanged.

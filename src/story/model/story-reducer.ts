@@ -280,6 +280,17 @@ export function reduceStory(
         if (remaining === 0) delete boosters[setId];
         else boosters[setId] = remaining;
       }
+      /* The pack leaves the shelf and its cards join the collection in this
+         one reduction, which is what `feedback-vn.md` item 5 is actually
+         asking for: the reveal that follows can be walked out of, reloaded
+         through or crashed out of, and the player is owed nothing either way.
+         Credit the cards when the reveal ends instead and finishing the
+         ceremony becomes the thing that pays out.
+
+         The other half of that contract is that nothing downstream may add a
+         card — not `finish-opening`, not `acknowledge-opened` — or the same
+         pull lands twice. `tests/unit/story/credit-at-open.test.ts` holds
+         both halves. */
       const collection: Record<number, number> = { ...state.collection };
       for (const { code } of cards) {
         collection[code] = (collection[code] ?? 0) + 1;
@@ -293,8 +304,14 @@ export function reduceStory(
         screen: mode === "sequential" ? "shop-opening" : "shop-results",
       };
     }
+    /* Reachable from the reveal as well as from the results list: one pack has
+       no results list to acknowledge, so its Back button ends the opening from
+       the reveal itself. Either way this only clears the visit's scratch
+       fields — the cards were credited by `open-boosters` and are not touched
+       here. */
     case "acknowledge-opened":
-      if (state.screen !== "shop-results") return state;
+      if (state.screen !== "shop-results" && state.screen !== "shop-opening")
+        return state;
       return {
         ...state,
         screen: "shop-browse",

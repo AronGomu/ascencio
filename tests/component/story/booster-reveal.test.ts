@@ -287,25 +287,8 @@ describe("booster reveal", () => {
     expect(desktop).toContain("repeat(9, minmax(0, 1fr))");
   });
 
-  it("the way out appears only once every card is face up", async () => {
-    const user = userEvent.setup();
-    const onfinish = vi.fn();
-    const { container } = render(BoosterOpeningScreen, {
-      cards: pack(),
-      onfinish,
-    });
-
-    expect(
-      container.querySelector('[data-cy="story-shop-opening-see-all"]'),
-    ).toBeNull();
-    for (let index = 0; index < 9; index += 1)
-      await user.click(tile(container, index));
-
-    const seeAll = container.querySelector(
-      '[data-cy="story-shop-opening-see-all"]',
-    ) as HTMLButtonElement;
-    expect(seeAll).not.toBeNull();
-    await user.click(seeAll);
-    expect(onfinish).toHaveBeenCalledOnce();
-  });
+  /* The way out of a single pack is Back, and it is there from the first frame
+     rather than gated on the ninth flip — `single-pack-reveal.test.ts` holds
+     that, and the gated See all it replaced is a multi-pack claim, kept in
+     `booster-open-all.test.ts` and `BoosterOpeningScreen.test.ts`. */
 });

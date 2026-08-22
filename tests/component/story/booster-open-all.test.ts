@@ -162,9 +162,11 @@ describe("opening more than one pack", () => {
   it("the last pack offers See all instead of Next pack", async () => {
     const onfinish = vi.fn();
     const { container } = render(BoosterOpeningScreen, {
-      cards: opened(1),
+      cards: opened(2),
       onfinish,
     });
+    await flipWholePack(container);
+    await userEvent.setup().click(button(container, "next-pack")!);
     await flipWholePack(container);
 
     expect(button(container, "next-pack")).toBeNull();

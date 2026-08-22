@@ -1,4 +1,9 @@
 import type { ShopRarity } from "../../model/story-state.ts";
+/* The one declaration of how the tiers rank. It lives beside the collection's
+   grouping because that is what reads it most, but the ordering is the shop's
+   own and there is exactly one of it — a second table here is how "rarest
+   wins" comes out differently on two screens. */
+import { RARITY_ORDER } from "../../collection/group-by-rarity.ts";
 import type { ShopCardOffer } from "./shop-rarity.ts";
 import { inferRarity } from "./shop-rarity.ts";
 import type { DeckBuilderCardView } from "../../../decks/catalog/ocg-card-mapper.ts";
@@ -38,16 +43,6 @@ const SHOP_RARITIES = new Set<string>([
   "ultimate-rare",
   "ghost-rare",
 ]);
-
-const RARITY_RANK: Record<ShopRarity, number> = {
-  common: 0,
-  rare: 1,
-  "super-rare": 2,
-  "ultra-rare": 3,
-  "secret-rare": 4,
-  "ultimate-rare": 5,
-  "ghost-rare": 6,
-};
 
 function isShopRarity(v: unknown): v is ShopRarity {
   return typeof v === "string" && SHOP_RARITIES.has(v);
@@ -115,7 +110,10 @@ export function resolveCardRarity(
     for (const set of data.sets) {
       for (const card of set.cards) {
         if (card.code === code) {
-          if (best === null || RARITY_RANK[card.rarity] > RARITY_RANK[best]) {
+          if (
+            best === null ||
+            RARITY_ORDER.indexOf(card.rarity) > RARITY_ORDER.indexOf(best)
+          ) {
             best = card.rarity;
           }
         }

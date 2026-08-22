@@ -3460,3 +3460,44 @@ list** (144 cards, five rarities).
 - [ ] Tab from **← Back**: focus reaches the sort button, and Space or Enter cycles it just like a click.
 - [ ] With a screen reader on, activating the button announces both the new name and its pressed state — "Rarity: common first, pressed" on the first click, "Sort by rarity, not pressed" on the third.
 - [ ] The heading colours match the collection screen: a `SECRET-RARE` heading carries the same halo colour a secret-rare card's tile does.
+
+## R2 story-chunk-headroom
+
+The shop's screens now arrive as their own download the first time the player walks in, instead of
+riding along with every narrative route. Nothing about the shop should look or behave differently —
+this list is entirely about proving that.
+
+Run these against `npm run build && npm run preview`, not the dev server: the dev server serves
+modules unbundled, so it cannot show the boundary that was added. Open the browser devtools
+**Network** tab before starting and leave it open. Play from **New Game** through the prologue to
+the map, or **Continue** into a save that has reached it.
+
+### Walking in
+
+- [ ] Click the card shop on the map. The shopkeeper's greeting appears with no pause, no white or black flash, and no moment where the screen is empty below the top bar.
+- [ ] The DP figure and the packs pill in the top bar stay on screen and stay readable for the whole transition — they never blank out and reappear.
+- [ ] In the Network tab, exactly one new script named `shop-screens-<hash>.js` and one `shop-screens-<hash>.css` were requested at that click, and both returned 200.
+
+### Opening a set
+
+- [ ] Advance through both greeting lines and click **Buy Cards**. The set grid appears with its artwork; no set tile is a blank rectangle waiting for styling.
+- [ ] Click a set — Metal Raiders will do. The dialog opens immediately with its price and pack controls styled the same as before.
+- [ ] Buy 6 packs. The DP figure in the top bar drops by the right amount, and the packs pill reads **6 packs**.
+- [ ] Press Escape, then **View card list** on the same set. The card list opens with card art and prices, again with no empty frame first.
+
+### Opening a booster
+
+- [ ] Click the packs pill. The booster dialog opens at once — no delay between the click and the dialog, and nothing flashes behind it.
+- [ ] Click **Open all**. The reveal plays, then the results grid lists every card with its rarity halo.
+- [ ] Press **Continue**. The results screen hands back to the shop, not to a blank screen.
+
+### Coming back
+
+- [ ] From the greeting, click **Leave Shop**. The map returns with no pause.
+- [ ] Walk into the shop a second time. The greeting is instant, and the Network tab shows **no** second request for `shop-screens-<hash>.js` — it was already in hand.
+- [ ] Open the gear menu, **Save**, confirm, then reload the page and **Continue**. The save resumes on the screen it was made on, shop screens included.
+
+### Rarity ordering is unchanged
+
+- [ ] In **Sell Cards**, a card printed in more than one set is still priced at its highest printed rarity, not its lowest — pick any card you own two printings of and check its price against the rarity shown on the higher of the two set lists.
+- [ ] In the set card list, the **Sort by rarity** button still orders the headings `COMMON` → `RARE` → `SUPER-RARE` → `ULTRA-RARE` → `SECRET-RARE` on its first click, and exactly reversed on its second.

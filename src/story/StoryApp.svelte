@@ -43,13 +43,10 @@
   import OutcomeScreen from "./screens/OutcomeScreen.svelte";
   import PreBattleScreen from "./screens/PreBattleScreen.svelte";
   import RewardScreen from "./screens/RewardScreen.svelte";
-  import ShopBrowseScreen from "./shop/ShopBrowseScreen.svelte";
-  import ShopCardListScreen from "./shop/ShopCardListScreen.svelte";
-  import ShopGreetingScreen from "./shop/ShopGreetingScreen.svelte";
-  import ShopSellScreen from "./shop/ShopSellScreen.svelte";
-  import BoosterInventoryDialog from "./shop/BoosterInventoryDialog.svelte";
-  import BoosterOpeningScreen from "./shop/BoosterOpeningScreen.svelte";
-  import BoosterResultsScreen from "./shop/BoosterResultsScreen.svelte";
+  /* The shop's screens are not imported here: they are a chunk of their own,
+     loaded when the player walks in. `./shop/shop-screens.ts` records what
+     that buys. Its data modules stay static — this screen reads them itself,
+     and they are a fraction of the size. */
   import {
     contentsOf,
     fetchShopSetData,
@@ -857,56 +854,114 @@
       onretry={retryEncounter}
       onreturn={returnToMap}
     />
-  {:else if state.screen === "shop-greeting"}
-    <ShopGreetingScreen
-      onnavigate={(target) =>
-        dispatch({
-          type: "shop-navigate",
-          to: target === "buy" ? "browse" : "sell",
-        })}
-      onleave={() => dispatch({ type: "leave-shop" })}
-    />
-  {:else if state.screen === "shop-browse"}
-    <ShopBrowseScreen
-      sets={shopData?.sets ?? null}
-      error={shopDataError}
-      dp={state.dp}
-      onbuy={(setId, count) => dispatch({ type: "buy-packs", setId, count })}
-      onviewcards={(setId) => dispatch({ type: "view-set-cards", setId })}
-      onretry={() => {
-        shopDataError = null;
-        void loadShopData();
-      }}
-      onback={() => dispatch({ type: "shop-navigate", to: "greeting" })}
-    />
-  {:else if state.screen === "shop-cards"}
-    <ShopCardListScreen
-      setName={shopSetName}
-      dp={state.dp}
-      cards={shopCards}
-      onbuysingle={(code, rarity) =>
-        dispatch({ type: "buy-single", code, rarity })}
-      onback={() => dispatch({ type: "shop-navigate", to: "browse" })}
-    />
-  {:else if state.screen === "shop-sell"}
-    <ShopSellScreen
-      cards={sellableCards}
-      error={shopDataError ?? catalogError}
-      {state}
-      onsell={(items) => dispatch({ type: "sell-cards", items })}
-      onretry={retrySellSources}
-      onback={() => dispatch({ type: "shop-navigate", to: "greeting" })}
-    />
-  {:else if state.screen === "shop-opening"}
-    <BoosterOpeningScreen
-      cards={openedCardViews}
-      onfinish={() => dispatch({ type: "finish-opening" })}
-    />
-  {:else if state.screen === "shop-results"}
-    <BoosterResultsScreen
-      cards={openedCardViews}
-      oncontinue={() => dispatch({ type: "acknowledge-opened" })}
-    />
+  {:else if inShop}
+    <!-- One boundary for the whole shop, entered the way the shell enters a
+         domain: `{#await}` around the import, a pending line, and something
+         that says so if the chunk never arrives. -->
+    {#await import("./shop/shop-screens.ts")}
+      <!-- Announced rather than drawn, the way the shell announces
+           `collection-pending`: the chunk is a cache read in the ordinary
+           case, and a placeholder that flashes for a frame reads as a fault. -->
+      <p class="visually-hidden" data-cy="story-shop-pending">
+        Opening the shop
+      </p>
+    {:then shop}
+      {#if state.screen === "shop-greeting"}
+        <svelte:component
+          this={shop.ShopGreetingScreen}
+          onnavigate={(target) =>
+            dispatch({
+              type: "shop-navigate",
+              to: target === "buy" ? "browse" : "sell",
+            })}
+          onleave={() => dispatch({ type: "leave-shop" })}
+        />
+      {:else if state.screen === "shop-browse"}
+        <svelte:component
+          this={shop.ShopBrowseScreen}
+          sets={shopData?.sets ?? null}
+          error={shopDataError}
+          dp={state.dp}
+          onbuy={(setId, count) =>
+            dispatch({ type: "buy-packs", setId, count })}
+          onviewcards={(setId) => dispatch({ type: "view-set-cards", setId })}
+          onretry={() => {
+            shopDataError = null;
+            void loadShopData();
+          }}
+          onback={() => dispatch({ type: "shop-navigate", to: "greeting" })}
+        />
+      {:else if state.screen === "shop-cards"}
+        <svelte:component
+          this={shop.ShopCardListScreen}
+          setName={shopSetName}
+          dp={state.dp}
+          cards={shopCards}
+          onbuysingle={(code, rarity) =>
+            dispatch({ type: "buy-single", code, rarity })}
+          onback={() => dispatch({ type: "shop-navigate", to: "browse" })}
+        />
+      {:else if state.screen === "shop-sell"}
+        <svelte:component
+          this={shop.ShopSellScreen}
+          cards={sellableCards}
+          error={shopDataError ?? catalogError}
+          {state}
+          onsell={(items) => dispatch({ type: "sell-cards", items })}
+          onretry={retrySellSources}
+          onback={() => dispatch({ type: "shop-navigate", to: "greeting" })}
+        />
+      {:else if state.screen === "shop-opening"}
+        <svelte:component
+          this={shop.BoosterOpeningScreen}
+          cards={openedCardViews}
+          onfinish={() => dispatch({ type: "finish-opening" })}
+        />
+      {:else if state.screen === "shop-results"}
+        <svelte:component
+          this={shop.BoosterResultsScreen}
+          cards={openedCardViews}
+          oncontinue={() => dispatch({ type: "acknowledge-opened" })}
+        />
+      {/if}
+    {:catch error}
+      <!-- The shop's chunk never arrived: a stale build, a half-cached
+           reload, an offline one. The way out is a reload, which the player is
+           told about rather than sent through — a browser remembers a failed
+           module load, so walking back in would fail the same way, and a
+           reload from here would drop story progress since the last save.
+           Leaving the shop keeps it, and keeps Save reachable. -->
+      {@const reason =
+        error instanceof Error ? error.message : "The shop could not load."}
+      <section
+        class="shop-load-error"
+        role="alert"
+        aria-labelledby="shop-load-error-heading"
+        data-cy="story-shop-load-error"
+      >
+        <p class="eyebrow" data-cy="story-shop-load-error-eyebrow">
+          Card shop stopped
+        </p>
+        <h1
+          id="shop-load-error-heading"
+          data-cy="story-shop-load-error-heading"
+        >
+          The shop could not open
+        </h1>
+        <p data-cy="story-shop-load-error-message">{reason}</p>
+        <p data-cy="story-shop-load-error-advice">
+          Reload the page to try again. Leave the shop first if you have
+          progress you have not saved.
+        </p>
+        <button
+          type="button"
+          class="secondary"
+          data-cy="story-shop-load-error-leave"
+          onclick={() => dispatch({ type: "leave-shop" })}
+          >Leave the shop</button
+        >
+      </section>
+    {/await}
   {:else if state.screen === "reward"}
     <RewardScreen
       {autosaveStatus}
@@ -988,15 +1043,23 @@
     />{/if}
 
   {#if boosterDialogOpen && shopData !== null}
-    <BoosterInventoryDialog
-      boosters={state.boosters}
-      setNameOf={(id) => shopData!.sets.find((s) => s.id === id)?.name ?? id}
-      onopen={(picks) => openPicks(picks, "sequential")}
-      onopenall={(picks) => openPicks(picks, "all")}
-      onclose={() => {
-        boosterDialogOpen = false;
-      }}
-    />
+    <!-- The same chunk the screens came from, so this import is a lookup in a
+         map the browser has already filled: the pill that opens this dialog
+         only renders inside the shop. Rendered from here rather than beside
+         the screens so it stays the last modal in the document — that order is
+         what `OverlayShell` reads to decide which dialog Escape closes. -->
+    {#await import("./shop/shop-screens.ts") then shop}
+      <svelte:component
+        this={shop.BoosterInventoryDialog}
+        boosters={state.boosters}
+        setNameOf={(id) => shopData!.sets.find((s) => s.id === id)?.name ?? id}
+        onopen={(picks) => openPicks(picks, "sequential")}
+        onopenall={(picks) => openPicks(picks, "all")}
+        onclose={() => {
+          boosterDialogOpen = false;
+        }}
+      />
+    {/await}
   {/if}
 </div>
 
@@ -1058,6 +1121,7 @@
   .completion-panel button {
     margin-right: 0.5rem;
   }
+  .shop-load-error,
   .end-screen {
     min-height: 100%;
     display: grid;
@@ -1069,6 +1133,7 @@
       radial-gradient(circle at 60% 30%, var(--field-glow), transparent 30%),
       var(--bg);
   }
+  .shop-load-error p,
   .end-screen p {
     max-width: 50ch;
     line-height: 1.6;

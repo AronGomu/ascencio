@@ -1,6 +1,6 @@
 # ADR-051: Main menu, Free Play mode and route contexts
 
-Status: accepted · 2026-08-20 · Commit: `9d8b8a7` — T14, T15, T16, T17
+Status: accepted · 2026-08-20 · Shipped: `7638f24` (T14), `a9cdd43` (T15), `21acd24` (T16), `22f868b` (T17) · Plan commit: `9d8b8a7`
 Relates: ADR-022 (modular monolith), ADR-049 (save-owned decks)
 
 ## Context

@@ -4,6 +4,7 @@
 > Decided: 2026-08-08
 > Owners: interaction architecture
 > Commit: `f0139d0` — T10
+> Amended by `41c6fdf` (`feedback-duel.md` item 6): §3's automatic pick is superseded. A drop whose zone admits two or more of the card's actions now opens a centred confirmation listing them plus Cancel; cancelling by button, Escape or backdrop dispatches nothing and arms no placement intent, so the game state is untouched. The mapper is `dropChoicesForZone`, returning every legal choice in the same preference order — none refuses the drop, exactly one still commits in the single gesture.
 
 ## Context
 

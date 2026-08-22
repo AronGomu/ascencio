@@ -1,6 +1,6 @@
 # ADR-049: Save-owned decks (save schema v3)
 
-Status: accepted · 2026-08-20 · Commit: `9d8b8a7` — T18, T19, T20, T21
+Status: accepted · 2026-08-20 · Shipped: `8b9eab3` (T18), `c827e44` (T19), `f350e04` (T20), `1fd60b0` (T21) · Plan commit: `9d8b8a7`
 Relates: ADR-033 (story economy in `StoryState`), ADR-038 (deck DB v2), ADR-050 (ownership invariant)
 
 ## Context

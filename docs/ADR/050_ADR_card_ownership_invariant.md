@@ -1,6 +1,6 @@
 # ADR-050: Card ownership invariant
 
-Status: accepted · 2026-08-20 · Commit: `9d8b8a7` — T22, T24, T25, T26, T27
+Status: accepted · 2026-08-20 · Shipped: `1d3e3a7` (T22), `f03ad13` (T24), `178b64f` (T25), `ca57340` (T26), `9ed8390` (T27) · Plan commit: `9d8b8a7`
 Relates: ADR-033 (collection in `StoryState`), ADR-049 (save-owned decks)
 
 ## Context
@@ -40,3 +40,4 @@ interface CardOwnership {
 - Free play costs nothing to store and never needs migrating when the catalog grows.
 - Selling a staple is allowed and its consequence is stated in advance rather than discovered at an encounter.
 - A deck can be legal at save time and illegal later. That is the point of the `not-owned` error code, and why validation takes an ownership snapshot rather than trusting a stored summary.
+- A deck the save is *handed* has to satisfy the invariant too, and two repairs made it. `c5a27ee` stopped the deck editor seeding its starter deck into a story save: seeding grants a deck and no cards, so the save's only deck was one this build badged `not-owned` and refused at pre-battle. `acbb212` moved that grant to save migration, deck and cards together, and `66967fc` made the collection merge take the higher of the stored and granted count per code, so a pre-v3 save arrives with the starter deck and full playsets behind it — half a playset is as illegal as no deck — while re-reading the same record changes nothing and no owned count is ever lowered.

@@ -1,6 +1,6 @@
 # ADR-048: Replay-based duel recovery
 
-Status: accepted · 2026-08-20 · Commit: `9d8b8a7` — T12, T13
+Status: accepted · 2026-08-20 · Shipped: `d983f49` (T12), `ce42fc3` (T13) · Plan commit: `9d8b8a7`
 
 ## Context
 

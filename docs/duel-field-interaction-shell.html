@@ -164,7 +164,8 @@ render      = (prio-pill) - (phase-pill)   top-right of the field</pre></div>
 <tbody>
 <tr><td>Drag start</td><td>Field</td><td>Hand card only, actionable, <code>cardAction</code> spec, pointer moved more than 8px</td></tr>
 <tr><td>Halo</td><td>Pure mapper</td><td><code>placementZoneCandidates(action, board)</code> — unoccupied monster zones for summon and set-monster, plus both extra monster zones for special summon, unoccupied spell/trap zones for activate and set-spell. Never <code>p0:field</code>.</td></tr>
-<tr><td>Drop</td><td>Pure mapper</td><td><code>dropChoiceForZone</code> — monster zone prefers summon, then special summon, then set; spell zone prefers activate, then set</td></tr>
+<tr><td>Drop</td><td>Pure mapper</td><td><code>dropChoicesForZone</code> — every legal choice for the zone, ordered summon, special summon, set-monster for a main monster zone, special summon alone for the two extra monster zones, and activate, set-spell for a spell zone. None refuses the drop, one commits in the gesture, two or more ask.</td></tr>
+<tr><td>Confirm</td><td>Field</td><td><code>DropConfirmDialog</code> — centred modal listing those choices plus Cancel, because a drop names a zone and never an action (<code>41c6fdf</code>, <code>feedback-duel.md</code> item 6). Cancel by button, <code>Escape</code> or backdrop dispatches nothing and arms no intent; a replacement prompt closes it rather than let it answer with a dead choice id.</td></tr>
 <tr><td>Arm</td><td>Store</td><td><code>armPlacementIntent(zoneId)</code> records zone plus the arming prompt id</td></tr>
 <tr><td>Dispatch</td><td>Store</td><td>One <code>chooseChoice</code>, normal validation path</td></tr>
 <tr><td>Reconcile</td><td>Store</td><td>Auto-answer only a <code>selectPlace</code> prompt with <code>min === max === 1</code> and exactly one choice mapping to the armed zone</td></tr>

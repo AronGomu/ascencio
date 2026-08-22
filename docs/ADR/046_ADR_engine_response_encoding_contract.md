@@ -3,7 +3,7 @@
 > Status: accepted
 > Decided: 2026-08-20
 > Owners: duel worker protocol
-> Shipped: `6d865e8` (encoder), and the commit carrying this file (contract + pinning tests)
+> Shipped: `6d865e8` (encoder fix), `c204dbb` (this contract + the announce-number pin, T2), `d8e3fe1` (audit sweep, every encoder pinned, T3)
 > Feedback: [`../../feedback-duel.md`](../../feedback-duel.md) — item 8
 
 ## Context

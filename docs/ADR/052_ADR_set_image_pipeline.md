@@ -1,6 +1,6 @@
 # ADR-052: Set image pipeline
 
-Status: accepted · 2026-08-20 · Commit: `9d8b8a7` — T31, T32
+Status: accepted · 2026-08-20 · Shipped: `4858e11` (T31), `d0a3d5a` (T32) · Plan commit: `9d8b8a7`
 Relates: ADR-039 (editor card art via static runtime URLs)
 
 ## Context

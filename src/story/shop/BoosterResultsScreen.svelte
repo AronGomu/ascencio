@@ -1,4 +1,5 @@
 <script lang="ts">
+  import StoryCardTile from "../components/StoryCardTile.svelte";
   import type { ShopRarity } from "../model/story-state.ts";
 
   export let cards: readonly {
@@ -19,20 +20,12 @@
         data-cy={`story-shop-result-${card.code}-${index}`}
         data-rarity={card.rarity}
       >
-        {#if card.imageUrl !== null}
-          <img
-            src={card.imageUrl}
-            alt={card.name}
-            class="result-art"
-            data-cy={`story-shop-result-art-${card.code}-${index}`}
-          />
-        {:else}
-          <div
-            class="result-placeholder"
-            aria-hidden="true"
-            data-cy={`story-shop-result-placeholder-${card.code}-${index}`}
-          ></div>
-        {/if}
+        <StoryCardTile
+          name={card.name}
+          imageUrl={card.imageUrl}
+          dataCyPrefix="story-shop-result"
+          dataCyId={`${card.code}-${index}`}
+        />
         <span
           class="result-name"
           data-cy={`story-shop-result-name-${card.code}-${index}`}
@@ -95,18 +88,6 @@
     border: 1px solid var(--story-border);
     border-radius: 0.5rem;
     background: color-mix(in srgb, var(--bg) 85%, transparent);
-  }
-  .result-art {
-    width: 100%;
-    aspect-ratio: 421 / 614;
-    object-fit: cover;
-    border-radius: 0.3rem;
-  }
-  .result-placeholder {
-    width: 100%;
-    aspect-ratio: 421 / 614;
-    border-radius: 0.3rem;
-    background: color-mix(in srgb, var(--muted) 20%, transparent);
   }
   .result-name {
     font-size: 0.65rem;

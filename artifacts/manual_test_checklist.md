@@ -3389,3 +3389,43 @@ a set with no art is a normal, browsable, buyable tile, not a broken image.
 - [ ] Clicking a tile opens the same set dialog as before, with Buy 1 / Buy 10 / custom amount, and the DP total drops by the right amount.
 - [ ] The **View cards** route, booster opening, and the sell screen all behave as they did.
 - [ ] With the network throttled to Slow 3G (devtools → Network), the grid still appears immediately and the art fills in as it loads; the page never waits on images.
+
+## T33 shop-card-art-parity
+
+Every card the story draws — the shop's set list and its preview, the sell screen, the two reveal
+screens and the collection — goes through one tile now, and that tile renders what the deck
+editor's does: the whole card at the card's own proportions, never a crop. A card the build has no
+image for shows the editor's placeholder, a tinted panel with the card's initial on it, rather than
+a broken image.
+
+Run these against `npm run dev`. A built site packages only the 121 pinned card images, so almost
+every tile there is a placeholder and there is no art to compare; the dev server serves all 14,579
+local images.
+
+### The same card, side by side with the deck builder
+
+- [ ] Run `npm run dev`, open the app, go **Continue → Deck builder** and find **Change of Heart** in the catalog. Leave that tab open.
+- [ ] In a second tab open the same app, go **Continue → Shop → Sell cards** and find **Change of Heart** there.
+- [ ] Put the two windows beside each other. The picture is the same picture: the whole card, frame and card name and text box included, with nothing cut off at the top or the bottom in either one.
+- [ ] Neither tile stretches the card sideways or squashes it. Held next to each other at the same width, the two cards are the same shape.
+- [ ] Right-click each tile → **Inspect**. Both `<img>` `src` values end in `runtime/images/4031928.jpg` — the same file from the same path, not two different URLs.
+
+### All five card surfaces
+
+- [ ] **Shop → Buy packs → Metal Raiders → View card list.** Every tile in the grid shows a whole card. Hover one — it magnifies, still whole, still uncropped.
+- [ ] The preview panel on the left of that list shows the hovered card, larger, and also whole.
+- [ ] Go back, buy one Metal Raiders pack, open the boosters pill, select 1 and press **Open selected**. Click through the reveal: each revealed card is whole.
+- [ ] Press **Skip** (or reveal all nine). The results grid shows nine cards, all whole.
+- [ ] **Continue → Shop → Sell cards.** Every owned card shows its art above its name, count and price, and the steppers still add and subtract.
+- [ ] **Deck builder → Card database** (the collection). Every tile shows a whole card, and the rarity groups still read `COMMON`, `RARE`, and so on.
+
+### A card with no image
+
+- [ ] Still in the collection, turn **Group by rarity** off and scroll to `Accesscode Talker` — one of the 215 cards the image set has no picture for. It shows a tinted panel with a large initial on it, the same treatment the deck builder uses for a card it has no art for. Find the same card in the deck builder's catalog: the same panel.
+- [ ] No tile anywhere shows the browser's broken-image icon.
+- [ ] Quit the dev server, run `mv generated/card-images/archive/full/4031928.jpg /tmp/`, start `npm run dev` again and open **Shop → Sell cards**. Change of Heart is now the placeholder panel, not a broken image, and the row still sells.
+- [ ] Restore it: `mv /tmp/4031928.jpg generated/card-images/archive/full/`.
+
+### Rarity is still visible
+
+- [ ] In the sell screen and the results grid, the coloured halo around a rare card is still there — a common card has none, a super/ultra rare glows.

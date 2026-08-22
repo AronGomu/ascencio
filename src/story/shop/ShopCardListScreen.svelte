@@ -1,4 +1,5 @@
 <script lang="ts">
+  import StoryCardTile from "../components/StoryCardTile.svelte";
   import type { ShopRarity } from "../model/story-state.ts";
 
   export let setName = "";
@@ -36,19 +37,12 @@
   <div class="cards-layout" data-cy="story-shop-cards-layout">
     <aside class="cards-preview" data-cy="story-shop-cards-preview">
       {#if previewCard !== null}
-        {#if previewCard.imageUrl !== null}
-          <img
-            src={previewCard.imageUrl}
-            alt={previewCard.name}
-            class="preview-art"
-            data-cy="story-shop-cards-preview-art"
-          />
-        {:else}
-          <div
-            class="preview-placeholder"
-            data-cy="story-shop-cards-preview-placeholder"
-          ></div>
-        {/if}
+        <StoryCardTile
+          name={previewCard.name}
+          imageUrl={previewCard.imageUrl}
+          dataCyPrefix="story-shop-cards-preview"
+          dataCyId={previewCard.code}
+        />
         <p class="preview-name" data-cy="story-shop-cards-preview-name">
           {previewCard.name}
         </p>
@@ -73,20 +67,12 @@
             previewCode = card.code;
           }}
         >
-          {#if card.imageUrl !== null}
-            <img
-              src={card.imageUrl}
-              alt={card.name}
-              class="card-art"
-              data-cy={`story-shop-card-art-${card.code}`}
-            />
-          {:else}
-            <div
-              class="card-placeholder"
-              aria-hidden="true"
-              data-cy={`story-shop-card-placeholder-${card.code}`}
-            ></div>
-          {/if}
+          <StoryCardTile
+            name={card.name}
+            imageUrl={card.imageUrl}
+            dataCyPrefix="story-shop-card"
+            dataCyId={card.code}
+          />
           <span class="card-name" data-cy={`story-shop-card-name-${card.code}`}
             >{card.name}</span
           >
@@ -149,20 +135,6 @@
     background: color-mix(in srgb, var(--bg) 85%, transparent);
   }
 
-  .preview-art {
-    width: 100%;
-    aspect-ratio: 421 / 614;
-    object-fit: cover;
-    border-radius: 0.4rem;
-  }
-
-  .preview-placeholder {
-    width: 100%;
-    aspect-ratio: 421 / 614;
-    border-radius: 0.4rem;
-    background: color-mix(in srgb, var(--muted) 20%, transparent);
-  }
-
   .preview-name {
     margin: 0;
     font-weight: 600;
@@ -202,20 +174,6 @@
       z-index: 10;
       position: relative;
     }
-  }
-
-  .card-art {
-    width: 100%;
-    aspect-ratio: 421 / 614;
-    object-fit: cover;
-    border-radius: 0.3rem;
-  }
-
-  .card-placeholder {
-    width: 100%;
-    aspect-ratio: 421 / 614;
-    border-radius: 0.3rem;
-    background: color-mix(in srgb, var(--muted) 20%, transparent);
   }
 
   .card-name {

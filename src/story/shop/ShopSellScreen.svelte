@@ -1,5 +1,6 @@
 <script lang="ts">
   import { tick } from "svelte";
+  import StoryCardTile from "../components/StoryCardTile.svelte";
   import type { ShopRarity, StoryState } from "../model/story-state.ts";
   import { SELL_PRICE_DP } from "./data/shop-pricing.ts";
   import SellImpactDialog from "./SellImpactDialog.svelte";
@@ -136,6 +137,12 @@
           data-rarity={card.rarity}
           data-cy={`story-shop-sell-card-${card.code}`}
         >
+          <StoryCardTile
+            name={card.name}
+            imageUrl={card.imageUrl}
+            dataCyPrefix="story-shop-sell"
+            dataCyId={card.code}
+          />
           <p class="card-name" data-cy={`story-shop-sell-name-${card.code}`}>
             {card.name}
           </p>

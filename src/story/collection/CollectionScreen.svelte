@@ -3,6 +3,7 @@
   import type { CardOwnership } from "../../decks/card-ownership.ts";
   import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
   import { CardPreviewPanel, type CardPreviewView } from "../../shell/index.ts";
+  import StoryCardTile from "../components/StoryCardTile.svelte";
   import type { ShopRarity } from "../model/story-state.ts";
   import { byName, groupByRarity } from "./group-by-rarity.ts";
   /* Scoped to `.story-app`, so the rarity halo tokens and the button styling
@@ -219,20 +220,12 @@
                 onmouseenter={() => select(entry.card)}
                 onfocus={() => select(entry.card)}
               >
-                {#if entry.card.imageUrl !== null}
-                  <img
-                    src={entry.card.imageUrl}
-                    alt=""
-                    class="tile-art"
-                    data-cy={`collection-art-${entry.card.code}`}
-                  />
-                {:else}
-                  <span
-                    class="tile-placeholder"
-                    aria-hidden="true"
-                    data-cy={`collection-placeholder-${entry.card.code}`}
-                  ></span>
-                {/if}
+                <StoryCardTile
+                  name={entry.name}
+                  imageUrl={entry.card.imageUrl}
+                  dataCyPrefix="collection"
+                  dataCyId={entry.card.code}
+                />
                 <span
                   class="tile-name"
                   data-cy={`collection-name-${entry.card.code}`}
@@ -379,21 +372,6 @@
       z-index: 10;
       position: relative;
     }
-  }
-
-  .tile-art,
-  .tile-placeholder {
-    width: 100%;
-    aspect-ratio: 421 / 614;
-    border-radius: 0.3rem;
-  }
-
-  .tile-art {
-    object-fit: cover;
-  }
-
-  .tile-placeholder {
-    background: color-mix(in srgb, var(--muted) 20%, transparent);
   }
 
   .tile-name {

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import StoryCardTile from "../components/StoryCardTile.svelte";
   import { PACK_SIZE } from "./data/shop-pricing.ts";
   import type { ShopRarity } from "../model/story-state.ts";
 
@@ -55,20 +56,12 @@
         data-cy={`story-shop-opening-card-${index}`}
         data-rarity={card.rarity}
       >
-        {#if card.imageUrl !== null}
-          <img
-            src={card.imageUrl}
-            alt={card.name}
-            class="opening-art"
-            data-cy={`story-shop-opening-art-${index}`}
-          />
-        {:else}
-          <div
-            class="opening-placeholder"
-            aria-hidden="true"
-            data-cy={`story-shop-opening-placeholder-${index}`}
-          ></div>
-        {/if}
+        <StoryCardTile
+          name={card.name}
+          imageUrl={card.imageUrl}
+          dataCyPrefix="story-shop-opening"
+          dataCyId={index}
+        />
         <span class="opening-name" data-cy={`story-shop-opening-name-${index}`}
           >{card.name}</span
         >
@@ -149,18 +142,6 @@
     border: 1px solid var(--story-border);
     border-radius: 0.5rem;
     background: color-mix(in srgb, var(--bg) 85%, transparent);
-  }
-  .opening-art {
-    width: 100%;
-    aspect-ratio: 421 / 614;
-    object-fit: cover;
-    border-radius: 0.25rem;
-  }
-  .opening-placeholder {
-    width: 100%;
-    aspect-ratio: 421 / 614;
-    border-radius: 0.25rem;
-    background: color-mix(in srgb, var(--muted) 20%, transparent);
   }
   .opening-name {
     font-size: 0.6rem;

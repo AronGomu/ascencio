@@ -96,6 +96,94 @@
   --halo: var(--rarity-ghost-rare);
 }
 
+/* T35: the card zoom inspector. It covers the screen it is drawn over, so it
+   takes no pointer at all — the card underneath keeps every event, including
+   the one that ends the hover — and the screen above it stays operable by
+   keyboard while it is up. Below the story's dialogs and overlays (z-index 20
+   and 30), above the tiles it magnifies (10). */
+.story-app .card-zoom-inspector {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+}
+
+/* Orange is "this is the one you picked" everywhere else in the product, which
+   is what the duel's click-pinned zoom wears (`--selected`), so the magnified
+   card wears it here too. */
+.story-app .card-zoom-inspector__card {
+  position: absolute;
+  border-radius: 0.4rem;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--selected) 78%, transparent),
+    0 0 1.4rem 0.35rem color-mix(in srgb, var(--selected) 42%, transparent);
+}
+
+/* Rarity is a second fact about the same card, so it is layered under the
+   selection ring rather than replacing it. Declared after `.rarity-halo` and at
+   the same weight, so this is the box-shadow that wins. */
+.story-app .card-zoom-inspector__card[data-rarity] {
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--selected) 78%, transparent),
+    0 0 1.4rem 0.35rem color-mix(in srgb, var(--selected) 42%, transparent),
+    0 0 0.7rem 0.3rem var(--halo, transparent);
+}
+
+/* Nothing can scroll a window the pointer cannot reach, so the rare over-long
+   effect text clips rather than hiding behind a scrollbar that would never
+   respond. The cap itself is inline: it is the room left under the window's own
+   placed top edge, which only the component knows. */
+.story-app .card-zoom-inspector__window {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  overflow: hidden;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--story-border);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--story-bg) 92%, transparent);
+  box-shadow: 0 0.5rem 1.5rem color-mix(in srgb, var(--shadow) 45%, transparent);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.story-app .card-zoom-inspector__name {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.story-app .card-zoom-inspector__stats {
+  margin: 0;
+  color: var(--story-muted);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* `pre-wrap`, like the docked preview panel: the card text carries its own
+   line breaks and a rules paragraph reads wrong without them. */
+.story-app .card-zoom-inspector__text {
+  margin: 0;
+  color: var(--story-muted);
+  white-space: pre-wrap;
+}
+
+@keyframes story-card-zoom-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* The appearance fade — halo included — is switched on only for a reader who
+   has not asked for less motion, rather than switched off again afterwards, so
+   a browser that reports no preference at all still gets the quiet version. */
+@media (prefers-reduced-motion: no-preference) {
+  .story-app .card-zoom-inspector {
+    animation: story-card-zoom-in 160ms ease-out;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .story-app *,
   .story-app *::before,

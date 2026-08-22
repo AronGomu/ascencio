@@ -3501,3 +3501,22 @@ the map, or **Continue** into a save that has reached it.
 
 - [ ] In **Sell Cards**, a card printed in more than one set is still priced at its highest printed rarity, not its lowest — pick any card you own two printings of and check its price against the rarity shown on the higher of the two set lists.
 - [ ] In the set card list, the **Sort by rarity** button still orders the headings `COMMON` → `RARE` → `SUPER-RARE` → `ULTRA-RARE` → `SECRET-RARE` on its first click, and exactly reversed on its second.
+
+## T35 card-zoom-inspector-component
+
+The zoom inspector is built here but nothing mounts it yet — T36 is what puts it on the booster
+reveal screens. Until then only the first step is checkable; the rest become live the moment a
+reveal screen shows a card, and are written now so they are not re-derived later.
+
+- [ ] Play from the map into the card shop, buy packs and open them. Greeting, set grid, set card list, reveal and results all look and behave exactly as before: no card grows on hover, no window floats beside one, nothing new appears anywhere.
+
+Once T36 has mounted it on the reveal screens:
+
+- [ ] Hover a revealed card. It grows to twice its size in place — same centre, whole card visible, not a crop — and an orange ring fades in around it rather than snapping on.
+- [ ] A window appears beside the magnified card carrying the card's name, a stats row and its full effect text. A monster reads like `DARK · Spellcaster · Level 7 · ATK 2500 / DEF 2100`; a monster with `?` ATK reads `ATK ?`, never a negative number. A spell or trap shows name and effect text with no stats row at all.
+- [ ] Hover a card in the rightmost column. The window flips to the left of the card instead of running off the screen edge. Hover the bottom row: the window sits fully on screen, top and bottom, and never hangs past the bottom edge even for one frame.
+- [ ] Move the pointer from the card onto the floating window. The zoom closes — the window is decoration and cannot hold the pointer, so nothing sticks open.
+- [ ] Keyboard-only, no mouse: press Tab until a revealed card takes focus. The same magnified card and window appear for the focused card, and follow the focus to the next card. This is the non-hover path — on a touch screen the same happens on tap.
+- [ ] Turn on the operating system's "reduce motion" setting, reload, and hover a card. The magnified card and its halo appear at once with no fade, and everything else still behaves the same.
+- [ ] Hover a Secret Rare in the results grid. The orange selection ring is still the inner ring, with the card's rarity colour glowing outside it — the two are layered, not one replacing the other.
+- [ ] Known limitation to confirm rather than fix: in a browser window narrower than roughly 530px the floating text window can cover the magnified card, because neither side has room for both. Note where it happens.

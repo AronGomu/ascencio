@@ -56,6 +56,26 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 | styles | Single global stylesheet | `src/styles/app.css` |
 | boundary | Field render error boundary | `src/battle/app/components/duel-field/DuelFieldErrorBoundary.svelte` |
 
+## Story canon
+
+The fiction, not the code. Nothing here is implemented yet; refs point at the canon document that owns the term (ADR-053).
+
+| word | short description | ref in code |
+| ---- | ----------------- | ----------- |
+| canon | Narrative source of truth; runtime story content derives from it and never contradicts it | `docs/story/README.md`, ADR-053 |
+| fynn | The protagonist; 15, lazy, hungry for duels, cheats twice and learns from it | `docs/story/characters/fynn.md` |
+| chapter | One era of Yu-Gi-Oh!, one standalone game; ch1 = Duel Monsters | `docs/story/scenario/01-concept.md` |
+| zaps | Corporation selling students a cheating product that costs them their health; ch1 main plot | `docs/story/chapters/01-duel-monsters.md` |
+| conflict | Two incompatible claims on one value; the trigger that forces a duel | `docs/story/scenario/03-world-rules.md` |
+| multi | Several duelists jointly engaging one person; legal, unbalanced on purpose | `docs/story/scenario/03-world-rules.md` |
+| shadow game | The one duel where the soul may be staked; the sole exception to the integrity ban | `docs/story/scenario/03-world-rules.md` |
+| hard magic | Magic as a natural phenomenon with fixed knowable laws, costs and limits | `docs/story/scenario/02-philosophy.md` |
+| cheating | Not forbidden; punished only when proven by a binding logical argument, which loses the duel | `docs/story/scenario/03-world-rules.md` |
+| whim-worship | Acting on impulse rather than rational judgment; Fynn's ch1 error, mistaken by him for egoism | `docs/story/scenario/02-philosophy.md` |
+| second-hander | Someone who acts for others' approval rather than their own judgment; the trio's missing premise | `docs/story/characters/README.md` |
+| spirit card | A card a spirit has imprinted itself into; scarcity, market, covetousness follow from it | `docs/story/scenario/03-world-rules.md` |
+| grid | Egri/Truby/McKee/Rand template every character sheet answers | `docs/story/characters/creation-grid.md` |
+
 ## Backend
 
 Worker, engine, and asset pipeline are "backend" here — nothing runs on a server.

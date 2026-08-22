@@ -44,6 +44,7 @@ The private browser MVP baseline and semantic Svelte DOM duel-field migration ar
 
 - Start with [`docs/README.md`](docs/README.md) for all documentation.
 - Use [`docs/architecture/architecture.md`](docs/architecture/architecture.md) as the canonical architecture map and granular task-context router.
+- Use [`docs/story/README.md`](docs/story/README.md) as the narrative canon router for any story, character, or chapter question; runtime content under `src/story/content/` derives from it and never contradicts it (ADR-053).
 - Use [`docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`](docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md) as completed semantic DOM-field migration history.
 - Use [`docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md`](docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md) as completed MVP/Phaser baseline history.
 - Use [`docs/assets/asset-import-pipeline.md`](docs/assets/asset-import-pipeline.md) for the implemented asset pipeline.
@@ -152,6 +153,7 @@ Every HTML element rendered by a Svelte component under `src/battle/`, `src/shel
 │   │   ├── architecture.md            # Canonical decision map
 │   │   └── <numbered concern folders>/
 │   ├── assets/                        # Asset-pipeline documentation
+│   ├── story/                         # Narrative canon: scenario, chapters, characters
 │   └── archive/                       # Superseded historical context
 ├── package.json
 ├── tsconfig.json

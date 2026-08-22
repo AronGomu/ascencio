@@ -61,10 +61,11 @@ describe("the new-save starter grant", () => {
     expect(migrated?.defaultDeckId).toBe(state.defaultDeckId);
   });
 
-  /* Grant on creation only. A save written before the decks moved into the
-     story migrates to an empty library and is never handed cards it did not
-     earn. */
-  it("an existing save is not granted anything retroactively", () => {
+  /* The migration grants the same deck to a save written before decks existed,
+     which is what keeps such a save playable at all. A record that already
+     carries a deck list is not such a save: an empty library it chose to hold
+     stays empty, and no cards come with it. */
+  it("a record that already carries a deck list is granted nothing", () => {
     const existing = { ...createInitialStoryState(), dp: 40 };
     const migrated = migrateStorySaveState(existing, 2);
     expect(migrated?.decks).toEqual([]);

@@ -3138,7 +3138,7 @@ would lock every new player out of their very first encounter.
 ### The block links to the story deck editor, not free play's
 
 - [ ] From that blocked briefing, press **Open the deck editor**. The URL becomes `#/story/decks` and the story deck library opens — the decks listed are this save's, and **Starter Deck** wears the **CARDS NOT OWNED** badge there too. The two screens agree.
-- [ ] Caveat worth knowing: navigating away from the story unmounts it. Progress made since your last save is not carried into the editor and is not carried back. Save first (pause menu → Save) if the run matters.
+- [ ] Progress comes with you: this button writes the run to the autosave slot before the route changes, so the editor opens the save you were just playing. See the R3 section at the end of this file for the full check, including what happens when that write is refused. (The top bar's deck icon is *not* this button and does not write — save first, pause menu → Save, if you leave that way.)
 
 ### Choosing a different deck, and the choice sticking
 
@@ -3674,3 +3674,49 @@ the action that backs out of a screen is red.
 - [ ] **Leave Shop** is red; **Buy Cards** and **Sell Cards** are not. Read the red one against its label — the dark text on it is legible.
 - [ ] Keyboard: the moment the menu appears, **Buy Cards** has focus. Tab to **Leave Shop**, press Enter, and you land back on the map.
 - [ ] Re-enter the shop and take **Buy Cards** and **Sell Cards** by mouse. Each still opens the screen it names.
+
+## R3 review-repairs
+
+Three defects the round-3 review found, checked from the player's side: the main
+menu's three story entries, a save written before this round still having a deck
+to duel with, and leaving the pre-battle gate without losing the run.
+
+### The main menu's three entries land on the screen they name
+
+The shell's menu and the story's own title screen were two menus in a row, the
+second one the real one (ADR-051). Each entry below opens the story *past* that
+title screen.
+
+- [ ] DevTools → Application → Storage → **Clear site data**, reload, land on the main menu, press **New Game**. The prologue's first beat is on screen. You are **not** asked to press New Game a second time.
+- [ ] Play to the city map, save (gear → **Save**), and reload to the main menu. Press **Continue**. You land on the map, in one click, with the DP you had.
+- [ ] Reload to the main menu and press **Load**. The story's Load screen opens directly, listing your slots. Press **Back** there: you land on the story's title screen — and *stay* there. It does not bounce you back to Load.
+- [ ] From that title screen press **Main menu**, then **Continue** again. Still one click to the map.
+- [ ] Type `#/story` into the address bar and press Enter. This time the title screen *is* what opens: nothing on the menu chose an entry, so nothing is skipped.
+- [ ] With **Clear site data** done and no save on disk, check the menu offers **New Game**, **Load**, **Settings**, **Free Play** and no **Continue**.
+
+### A save from before this round still has a deck to duel with
+
+Saves written before the decks moved into the story arrived with an empty deck
+list, which no screen would refill: the briefing refused to start, and the deck
+editor grants a story save nothing. Such a save now opens with the same starter
+deck a new game is granted, and the cards behind it.
+
+- [ ] If you have a save from an earlier build, load it. Otherwise make one: DevTools → Application → IndexedDB → `ygo-story-saves` → `saves`, take your `autosave` record, set `schemaVersion` to `2` and delete `state.decks` and `state.defaultDeckId` from it.
+- [ ] Reload and press **Continue**. The save opens where it was left, with the DP and the cards it had.
+- [ ] Choose **Old Arena**. The briefing lists **Starter Deck**, selected, with no red border and no block message. **Start Duel** enables once the card database lands.
+- [ ] Open the story deck library (top bar → deck icon). **Starter Deck** is there with the **Default** badge, and no card in it is badged **CARDS NOT OWNED** — the cards were granted with it.
+- [ ] Cards you already owned are still yours: open the collection and confirm a card you had bought before is still there, at the count you had.
+- [ ] Press **Continue** a second time without saving in between, and check the collection again. The counts are the same — the grant completes the save once, it does not pay out again on every load.
+- [ ] A save this build wrote is untouched: on a current save, delete every deck in the story deck editor, then reload and press **Continue**. The library is still empty — an empty library you chose stays empty.
+
+### Leaving the pre-battle gate keeps the run
+
+The way out of a blocked briefing was a plain link, and following it unmounted
+the story with everything it had not written yet.
+
+- [ ] **Clear site data**, **New Game**, play to the map, then enter the **card shop** and spend some DP on packs. Open them, and note the DP left and one card you pulled.
+- [ ] Leave the shop, choose **Old Arena**, and sell-or-break your way to a block if the briefing is not already blocked (the T27 sections above give two ways). Press **Build a deck** / **Open the deck editor**.
+- [ ] The URL becomes `#/story/decks` and the story deck library opens. It lists the cards you just pulled — the shop trip came with you.
+- [ ] Go back to `#/story` and press **Continue**. You land on the **briefing**, with the same DP, and the pulled card is still in the collection. Nothing since your last manual save was lost.
+- [ ] The way out is a button now, not a link: right-click it — there is no *Open link in new tab*, and hovering shows no URL in the status bar. Watch its label as you press it: it reads **Saving your progress…** and greys out for the moment the write takes, so a double-click cannot save the run twice.
+- [ ] Refused writes keep you put: DevTools → Application → Storage, tick **Simulate custom storage quota** and set it to `1`, then reach a blocked briefing and press the button. You stay on the briefing, a *Prototype storage needs attention* banner appears, and the URL is still `#/story`. Untick the quota, press the button again, and it goes through.

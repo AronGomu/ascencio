@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "fake-indexeddb/auto";
-import { cleanup, render, waitFor } from "@testing-library/svelte";
+import { cleanup, fireEvent, render, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { deleteDB } from "idb";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -14,6 +14,7 @@ import type {
 } from "../../../src/story/handoff/story-handoff.ts";
 import { createInitialStoryState } from "../../../src/story/model/story-state.ts";
 import { STORY_SAVES_DATABASE_NAME } from "../../../src/story/saves/story-save-contracts.ts";
+import { createStorySaveRepository } from "../../../src/story/saves/story-save-repository.ts";
 import {
   installPrototypeActiveCatalog,
   resetRuntimeCatalog,
@@ -131,29 +132,40 @@ describe("the pre-battle deck picker", () => {
     expect(onstart).not.toHaveBeenCalled();
   });
 
-  it("links a blocked start to the story deck editor", () => {
+  /* Reported rather than linked. An anchor changes the route itself, which
+     unmounts the story with everything it has not written yet — the shop trip
+     that got the player here included. The parent saves first and navigates
+     second, so this screen only says where the player wants to go. */
+  it("reports a blocked start as a request for the deck editor", async () => {
+    const onopendecks = vi.fn();
     render(PreBattleScreen, {
       decks: [ILLEGAL],
       defaultDeckId: ILLEGAL.id,
+      onopendecks,
     });
 
-    expect(cy("story-briefing-block-link")?.getAttribute("href")).toBe(
-      "#/story/decks",
-    );
+    const way = cy("story-briefing-block-action");
+    expect(way?.tagName).toBe("BUTTON");
+    expect(way?.hasAttribute("href")).toBe(false);
+    await userEvent.setup().click(way!);
+    expect(onopendecks).toHaveBeenCalledOnce();
   });
 
   /* Reachable, not theoretical: the deck editor no longer seeds a deck into a
      story save, so a player who deletes their last one lands here. The way out
      has to be on the screen. */
-  it("sends a save with no decks to build one", () => {
-    render(PreBattleScreen, { decks: [], defaultDeckId: null });
+  it("sends a save with no decks to build one", async () => {
+    const onopendecks = vi.fn();
+    render(PreBattleScreen, { decks: [], defaultDeckId: null, onopendecks });
 
     expect(start().disabled).toBe(true);
     expect(cy("story-briefing-block-reason")?.textContent).toMatch(/no decks/i);
-    const link = cy("story-briefing-block-link");
-    expect(link?.getAttribute("href")).toBe("#/story/decks");
-    expect(link?.textContent).toMatch(/build/i);
+    const way = cy("story-briefing-block-action");
+    expect(way?.textContent).toMatch(/build/i);
     expect(cy("story-briefing-deck-list")).toBeNull();
+
+    await userEvent.setup().click(way!);
+    expect(onopendecks).toHaveBeenCalledOnce();
   });
 
   it("records the chosen deck once and enables the start", async () => {
@@ -221,7 +233,7 @@ describe("the pre-battle deck picker", () => {
     expect(start().disabled).toBe(true);
     expect(cy("story-briefing-deck-checking")).not.toBeNull();
     expect(cy("story-briefing-block-reason")).toBeNull();
-    expect(cy("story-briefing-block-link")).toBeNull();
+    expect(cy("story-briefing-block-action")).toBeNull();
   });
 
   it("offers a retry and a way back when the card database will not load", async () => {
@@ -360,5 +372,102 @@ describe("the briefing inside the story app", () => {
     expect(cy("story-map-screen")).not.toBeNull();
     expect(cy("story-briefing-screen")).toBeNull();
     fetchSpy.mockRestore();
+  });
+});
+
+/* The briefing is the one screen a player is *sent* to the deck editor from,
+   and it is the screen furthest from their last save: a new game, a shop trip
+   and a walk to the arena all sit between the two. The story writes on a manual
+   save and on the reward autosave and nowhere else, so leaving for the editor
+   has to write, and has to keep the player here when the write is refused. */
+describe("leaving the briefing for the deck editor", () => {
+  /* A save that cannot start its encounter and cannot repair its way out on
+     this screen: no decks at all, plus a shop trip that is still only in
+     memory. */
+  function unsavedProgress() {
+    return {
+      ...createInitialStoryState(),
+      screen: "pre-battle" as const,
+      savedScreen: "map" as const,
+      progressExists: true,
+      encounterId: "old-arena" as const,
+      dp: 250,
+      collection: { 89631139: 3 },
+      decks: [],
+      defaultDeckId: null,
+    };
+  }
+
+  async function blockedBriefing(ondecks: () => void) {
+    installPrototypeActiveCatalog();
+    render(StoryApp, { resumeState: unsavedProgress(), ondecks });
+    await waitFor(() =>
+      expect(cy("story-briefing-block-action")).not.toBeNull(),
+    );
+    /* Dispatched rather than driven through `userEvent`, so the assertion
+       below lands inside the write rather than after it. */
+    await fireEvent.click(cy("story-briefing-block-action")!);
+  }
+
+  it("writes the run to the autosave slot before it hands the route over", async () => {
+    const ondecks = vi.fn();
+    await blockedBriefing(ondecks);
+
+    /* Spent while the write is in flight: the storage round-trip takes a task,
+       so a second click here would write the same run twice and push a second
+       history entry the player has to walk back through. */
+    expect(
+      (cy("story-briefing-block-action") as HTMLButtonElement).disabled,
+    ).toBe(true);
+    await waitFor(() => expect(ondecks).toHaveBeenCalledOnce());
+    /* Read back from storage, not from the component: what the editor opens is
+       the record on disk, and it opens the newest player slot. */
+    const saved = await createStorySaveRepository(globalThis.indexedDB).read(
+      "autosave",
+    );
+    if (saved.kind !== "ready") throw new Error("expected a written save");
+    expect(saved.envelope.state).toMatchObject({
+      dp: 250,
+      collection: { 89631139: 3 },
+      /* Resumed where they were sent from, so coming back out of the editor
+         and pressing Continue lands on the briefing rather than the map. */
+      savedScreen: "pre-battle",
+    });
+  });
+
+  it("keeps the player on the briefing when the save is refused", async () => {
+    /* Reads still answer and only the write is refused, which is the state
+       full storage leaves a browser in — and the one that would silently cost
+       the player their run if the navigation went ahead anyway. */
+    const originalPut = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function put(
+      this: IDBObjectStore,
+      ...args: Parameters<typeof originalPut>
+    ) {
+      const pending = originalPut.apply(this, args);
+      queueMicrotask(() => {
+        this.transaction.abort();
+      });
+      return pending;
+    };
+    const ondecks = vi.fn();
+    try {
+      await blockedBriefing(ondecks);
+
+      await waitFor(() =>
+        expect(cy("story-storage-error-message")?.textContent).toContain(
+          "Storage write failed",
+        ),
+      );
+      expect(ondecks).not.toHaveBeenCalled();
+      expect(cy("story-briefing-screen")).not.toBeNull();
+      /* And the one way off this screen is a way off it again: a refusal that
+         left the button spent would strand the player on the briefing. */
+      expect(
+        (cy("story-briefing-block-action") as HTMLButtonElement).disabled,
+      ).toBe(false);
+    } finally {
+      IDBObjectStore.prototype.put = originalPut;
+    }
   });
 });

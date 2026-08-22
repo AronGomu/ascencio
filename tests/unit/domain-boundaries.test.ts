@@ -243,14 +243,16 @@ describe("public domain APIs are frozen", () => {
       name: "story",
       entry: "src/story/index.ts",
       namespace: story,
-      /* T22, deliberate widening of one name: `storyCardOwnership` reads the
-         save's collection, so it needs `StoryState` and can only live here.
-         Its `CardOwnership` type and free play's `unlimitedCardOwnership()`
-         deliberately do *not* join it — they ship from
-         `src/decks/card-ownership.ts`, which records the measurement that
-         keeps them out of this entry.
+      /* R3, deliberate narrowing of two names: `createStoryDeckRepository` and
+         `storyCardOwnership` are gone from this entry. Neither had a consumer
+         outside `src/story/` — the shell binds `openStoryDeckContext` — and
+         between them they re-opened the hole T23 closed: a caller holding the
+         bare constructor could assemble `{ kind: "story", createRepository,
+         ownership: unlimitedCardOwnership() }` and type-check, which is a story
+         save edited against every printed card. Both modules stay where they
+         are and are still reached from inside the domain.
 
-         T23, deliberate widening of one more: `openStoryDeckContext` is the
+         T23, deliberate widening of one name: `openStoryDeckContext` is the
          only constructor of a story deck context. The shell binds the editor
          to it, and building one outside the story would mean exporting the
          reducer and letting a caller pair one save's decks with another save's
@@ -279,7 +281,6 @@ describe("public domain APIs are frozen", () => {
         "ENCOUNTER_LABELS",
         "STORY_SAVES_DATABASE_NAME",
         "acceptsResult",
-        "createStoryDeckRepository",
         "createStorySaveRepository",
         "default",
         "encounterDeck",
@@ -288,7 +289,6 @@ describe("public domain APIs are frozen", () => {
         "openStoryDeckContext",
         "restoreStoryState",
         "storyBattleResult",
-        "storyCardOwnership",
         "toStoryResolution",
       ],
       types: [

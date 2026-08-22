@@ -16,10 +16,18 @@
   export let onreturn: () => void = () => undefined;
   export let onselectdeck: (deckId: string) => void = () => undefined;
   export let onretrydecks: () => void = () => undefined;
-
-  const DECKS_ROUTE = "#/story/decks";
+  /* Reported rather than linked. An anchor to `#/story/decks` changes the
+     route from inside the story, which unmounts the domain with everything it
+     has not written yet — and this screen is the furthest a player gets from
+     their last save. The parent writes the run first and navigates second, and
+     answers when it is done either way. */
+  export let onopendecks: () => void | Promise<void> = () => undefined;
 
   let started = false;
+  /* The same latch `started` gives the start below, for the same reason: the
+     parent writes the save before the route changes, so a second click during
+     that write would write twice and leave a duplicate history entry behind. */
+  let leaving = false;
   /* Null until the player picks for themselves, which is what lets the line
      below stay derived: an opening selection recomputed on every flush cannot
      overwrite a choice that was never stored there. */
@@ -47,6 +55,16 @@
   function choose(deckId: string): void {
     chosenId = deckId;
     record(deckId);
+  }
+
+  async function leave(): Promise<void> {
+    if (leaving) return;
+    leaving = true;
+    await onopendecks();
+    /* A write that was refused leaves the player on this screen, and the one
+       way off it has to still be one. A write that landed took the route with
+       it, so this runs against a screen that is already gone. */
+    leaving = false;
   }
 
   function start(): void {
@@ -154,10 +172,17 @@
       {#if block !== null}
         <div class="deck-block" role="status" data-cy="story-briefing-block">
           <p data-cy="story-briefing-block-reason">{block.reason}</p>
-          <a href={DECKS_ROUTE} data-cy="story-briefing-block-link"
-            >{block.action === "build"
-              ? "Build a deck"
-              : "Open the deck editor"}</a
+          <button
+            type="button"
+            class="secondary"
+            data-cy="story-briefing-block-action"
+            disabled={leaving}
+            onclick={() => void leave()}
+            >{leaving
+              ? "Saving your progress…"
+              : block.action === "build"
+                ? "Build a deck"
+                : "Open the deck editor"}</button
           >
         </div>
       {/if}

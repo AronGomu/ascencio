@@ -1,10 +1,18 @@
 import { expect, test, type Page } from "@playwright/test";
 import { createInitialStoryState } from "../src/story/model/story-state.ts";
+/* The two names come from the shell's own copy of them rather than from
+   `src/story/saves/story-save-contracts.ts`: that module now reaches the
+   starter grant, which reads the bundled deck list through a Vite `?raw`
+   import, and Playwright loads these files without Vite — the same reason
+   `story-starter-save.ts` reads that list with `readFileSync`.
+   `tests/unit/story-save-presence.test.ts` is what keeps the shell's two
+   strings and the story's one fact. The envelope type is erased at load, so
+   it still comes from the contract it describes. */
 import {
   STORY_SAVES_DATABASE_NAME,
   STORY_SAVES_STORE_NAME,
-  type StorySaveEnvelope,
-} from "../src/story/saves/story-save-contracts.ts";
+} from "../src/shell/screens/story-save-presence.ts";
+import type { StorySaveEnvelope } from "../src/story/saves/story-save-contracts.ts";
 import { storyStarterSave } from "./story-starter-save.ts";
 
 const STORY_REGION = '[data-cy="shell-region-story"]';
@@ -326,7 +334,7 @@ test("an encounter refuses a deck the save no longer owns and links to the edito
     page.locator(`[data-cy="story-briefing-deck-${STARTER.deck.id}"]`),
   ).toBeDisabled();
 
-  await page.locator('[data-cy="story-briefing-block-link"]').click();
+  await page.locator('[data-cy="story-briefing-block-action"]').click();
 
   await expect(page.locator('[data-cy="shell-region-decks"]')).toBeVisible({
     timeout: 120_000,

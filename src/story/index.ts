@@ -38,23 +38,19 @@ export type {
 } from "./saves/story-save-contracts.ts";
 export { createStorySaveRepository } from "./saves/story-save-repository.ts";
 export type { StorySaveRepository } from "./saves/story-save-repository.ts";
-/* A save owns its decks, so editing them is a save write like any other. The
-   adapter presents them through the deck domain's own `DeckRepository`, which
-   is what lets the editor open a story save without knowing it is one
-   (ADR-049). Named here because the caller that binds it is the shell. */
-export { createStoryDeckRepository } from "./decks/story-deck-repository.ts";
 /* The one constructor of a story deck context, and the reason the shell needs
    nothing else from here to bind the editor: the save the player would resume,
    the repository over it, what it owns and the name for the editor's banner all
    come out of one read. The reducer stays behind this entry — a shell that
-   dispatched story commands itself would own half a story. */
+   dispatched story commands itself would own half a story.
+
+   Deliberately the only one. The adapter it binds (`createStoryDeckRepository`)
+   and the reader it pairs with it (`storyCardOwnership`) stay story internals:
+   with the constructor reachable on its own, a caller could assemble a story
+   `DeckContext` around free play's `unlimitedCardOwnership()` and type-check —
+   a story save edited against every printed card, which is the pairing T23
+   existed to make unrepresentable (`src/decks/deck-repository-context.ts`). */
 export { openStoryDeckContext } from "./decks/story-deck-context.ts";
-/* What this save owns, for the screens that ask: the catalog it builds from,
-   the legality of its decks, the sell dialog and the pre-battle gate. Only the
-   story half of the contract is named here — `CardOwnership` itself and free
-   play's `unlimitedCardOwnership()` ship from `src/decks/card-ownership.ts`,
-   which records why. */
-export { storyCardOwnership } from "./decks/card-ownership.ts";
 /* The collection browser and the one read that fills it. The screen serves
    both worlds — a save's own cards, and free play's whole database — but it
    lives here because rarity does: a collection is counts only, so the tier a

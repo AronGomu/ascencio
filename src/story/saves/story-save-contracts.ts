@@ -5,6 +5,7 @@
    rather than a cast that fails silently three screens later. */
 
 import { PROLOGUE } from "../content/prologue.ts";
+import { buildStarterGrant } from "../decks/starter-grant.ts";
 import {
   createInitialStoryState,
   STORY_SCREENS,
@@ -178,13 +179,55 @@ function economyDefaults(): Record<string, unknown> {
   };
 }
 
-/** What a save written before the decks moved into the story is missing: it
-    owns none, and duels with none until the player picks one.
+/** What a save written before the decks moved into the story is missing: a
+    deck to duel with, and the cards behind it.
+
+    The starter grant rather than an empty list, because an empty one locks the
+    save out of the whole game: the pre-battle gate refuses a save with no
+    decks, `encounterDeck` resolves none, and the deck editor deliberately
+    grants a story save nothing (ADR-050) — so the player would have to build
+    forty legal cards out of a collection they do not own. `new-game` is the
+    story's other grant, and it is the same one, so a returning save and a fresh
+    one open on the same deck.
+
+    Set semantics, never add: the record on disk stays at its own version, so
+    every read migrates it again, and a stored value has to win over the granted
+    one or a second read would double what the first handed out. That also makes
+    this the one place a grant can live without becoming a fountain — it runs
+    per record read, not per button press.
 
     Built per call for the same reason as the economy defaults: two migrated
     saves must not come back sharing one deck list. */
-function deckDefaults(): Record<string, unknown> {
-  return { decks: [], defaultDeckId: null };
+function withStarterDecks(
+  state: Record<string, unknown>,
+): Record<string, unknown> {
+  /* No version before 3 ever wrote either field, so a record that declares one
+     of those versions and carries one anyway is not a save this build can
+     explain. It is completed with nothing rather than granted a deck on top of
+     whatever it does hold. A save that deleted its last deck on purpose is a
+     different case and never arrives here: it is version 3, and version 3 is
+     not migrated. */
+  if (state.decks !== undefined || state.defaultDeckId !== undefined)
+    return state;
+  const { deck, collection } = buildStarterGrant();
+  const owned = state.collection;
+  return {
+    ...state,
+    decks: [deck],
+    defaultDeckId: deck.id,
+    /* The deck and the cards behind it are one grant: a deck built from cards
+       the save does not own is refused at the first duel, which is the whole
+       point of granting the two together.
+
+       Merged per card code, and only over a collection that is already a
+       record: a stored count always wins, so nothing the player owns is
+       lowered, and a collection this build cannot read stays unreadable rather
+       than being laundered into a valid save by the grant. */
+    collection:
+      typeof owned === "object" && owned !== null && !Array.isArray(owned)
+        ? { ...collection, ...owned }
+        : owned,
+  };
 }
 
 /**
@@ -213,7 +256,7 @@ export function migrateStorySaveState(
   let candidate = raw as Record<string, unknown>;
   if (schemaVersion < 2)
     candidate = withCardShop({ ...economyDefaults(), ...candidate });
-  if (schemaVersion < 3) candidate = { ...deckDefaults(), ...candidate };
+  if (schemaVersion < 3) candidate = withStarterDecks(candidate);
   return isStoryState(candidate) ? candidate : null;
 }
 

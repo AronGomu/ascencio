@@ -518,6 +518,7 @@
           this={module.default}
           onencounter={startEncounter}
           {storyEntryIntent}
+          ondecks={() => store.navigate(deckRoute("story", null))}
           resumeState={handback?.state ?? null}
           resolution={handback?.resolution ?? null}
           onhandled={() => {

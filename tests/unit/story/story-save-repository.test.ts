@@ -5,6 +5,7 @@ import { deleteDB } from "idb";
 import { afterEach, describe, expect, it } from "vitest";
 import { storyDeckFixture } from "../../fixtures/story-decks.ts";
 import { PROLOGUE } from "../../../src/story/content/prologue.ts";
+import { buildStarterGrant } from "../../../src/story/decks/starter-grant.ts";
 import {
   createInitialStoryState,
   type StoryState,
@@ -246,9 +247,15 @@ describe("createStorySaveRepository", () => {
 
   /* The one migration a player can lose progress to. What is proved here is
      that a save the previous build actually wrote still opens, that it gains
-     the deck list and nothing else, and that reading it leaves the record on
-     disk exactly as it was. */
-  it("a v2 save migrates to v3 with an empty deck list", async () => {
+     a deck it can duel with, and that reading it leaves the record on disk
+     exactly as it was.
+
+     The grant is what makes the save playable at all: every gate downstream —
+     the pre-battle briefing, `encounterDeck`, the deck editor, which grants a
+     story save nothing — reads the deck list, and a migrated save that arrived
+     with an empty one could not duel and could not build its way out of it. */
+  it("a v2 save migrates to v3 with a deck it can duel with", async () => {
+    const { deck, collection } = buildStarterGrant();
     await seedRecord("manual:1", VERSION_2_RECORD);
     const read = await repository().read("manual:1");
     expect(read).toMatchObject({
@@ -258,21 +265,102 @@ describe("createStorySaveRepository", () => {
         slot: "manual:1",
         revision: 1,
         savedAt: 1_700_000_000_123,
-        state: { decks: [], defaultDeckId: null },
+        state: { decks: [deck], defaultDeckId: deck.id },
       },
     });
     if (read.kind !== "ready") throw new Error("expected a ready save");
     /* Additive in both directions: every field the record carried comes back
-       with the value it carried, and the only fields it did not carry are the
-       two this version adds. */
+       with the value it carried — the collection with the granted cards added
+       to it — and the only fields it did not carry are the two this version
+       adds. */
     for (const [key, value] of Object.entries(VERSION_2_RECORD.state))
-      expect(read.envelope.state[key as keyof StoryState], key).toEqual(value);
+      if (key !== "collection")
+        expect(read.envelope.state[key as keyof StoryState], key).toEqual(
+          value,
+        );
+    expect(read.envelope.state.collection).toEqual({
+      ...collection,
+      ...VERSION_2_RECORD.state.collection,
+    });
     expect(Object.keys(read.envelope.state).sort()).toEqual(
       [...Object.keys(VERSION_2_RECORD.state), "decks", "defaultDeckId"].sort(),
     );
     /* Migration happens in memory. A read that rewrote the slot would turn
        every load into a write the player never asked for. */
     expect(await storedRecord("manual:1")).toEqual(VERSION_2_RECORD);
+  });
+
+  /* Set semantics, not add. The record on disk stays at version 2, so every
+     read of it migrates again — and a grant that added would double the
+     collection on the second read and again on the third. */
+  it("migrates the same record twice to the same state", async () => {
+    await seedRecord("manual:1", VERSION_2_RECORD);
+    const saves = repository();
+    const first = await saves.read("manual:1");
+    const second = await saves.read("manual:1");
+    if (first.kind !== "ready" || second.kind !== "ready")
+      throw new Error("expected two ready saves");
+    expect(second.envelope.state).toEqual(first.envelope.state);
+    expect(await storedRecord("manual:1")).toEqual(VERSION_2_RECORD);
+  });
+
+  /* A stored value always wins over the granted one, per card code: the grant
+     completes a save, it never rewrites one. A player who owns three copies of
+     a card the starter deck runs two of keeps three, and one who sold down to
+     a single copy keeps the single copy — the granted deck then needs a repair
+     in the editor, which is a screen away, rather than a count of theirs being
+     raised behind their back. */
+  it("never lowers a stored count to make room for the grant", async () => {
+    const { collection } = buildStarterGrant();
+    const hoarded = 89631139;
+    const sold = 97590747;
+    expect(collection[hoarded]).toBe(2);
+    expect(collection[sold]).toBe(3);
+    await seedRecord("manual:1", {
+      ...VERSION_2_RECORD,
+      state: {
+        ...VERSION_2_RECORD.state,
+        collection: { [hoarded]: 3, [sold]: 1 },
+      },
+    });
+    const read = await repository().read("manual:1");
+    if (read.kind !== "ready") throw new Error("expected a ready save");
+    expect(read.envelope.state.collection[hoarded]).toBe(3);
+    expect(read.envelope.state.collection[sold]).toBe(1);
+  });
+
+  /* The deck list is a stored value like any other. A record that already
+     carries one is a record the grant has nothing to complete, whatever
+     version it declares. */
+  it("leaves a deck list the record already carries alone", async () => {
+    const stored = storyDeckFixture("alpha");
+    await seedRecord("manual:1", {
+      ...VERSION_2_RECORD,
+      state: {
+        ...VERSION_2_RECORD.state,
+        decks: [stored],
+        defaultDeckId: stored.id,
+      },
+    });
+    const read = await repository().read("manual:1");
+    if (read.kind !== "ready") throw new Error("expected a ready save");
+    expect(read.envelope.state.decks).toEqual([stored]);
+    expect(read.envelope.state.defaultDeckId).toBe(stored.id);
+  });
+
+  /* A save this build wrote is never migrated, so an empty deck list it chose
+     to hold stays empty: the player deleted their last deck, and a read that
+     handed it back would be the fountain the deck editor's seeding was taken
+     out to close. */
+  it("leaves a v3 save with no decks exactly as it was written", async () => {
+    const saves = repository();
+    const state = storyState({ decks: [], defaultDeckId: null });
+    await saves.write("manual:1", state, null);
+    const read = await saves.read("manual:1");
+    if (read.kind !== "ready") throw new Error("expected a ready save");
+    expect(read.envelope.state.decks).toEqual([]);
+    expect(read.envelope.state.defaultDeckId).toBeNull();
+    expect(read.envelope.state.collection).toEqual(state.collection);
   });
 
   it("a v3 save round-trips", async () => {
@@ -354,9 +442,11 @@ describe("createStorySaveRepository", () => {
   });
 
   /* A save written before the shop existed still has to resume. It reads as a
-     funded wallet with nothing owned, and every field it did carry survives. */
+     funded wallet owning the granted deck and nothing else, and every field it
+     did carry survives. */
   it("reads a version 1 envelope by defaulting the economy", async () => {
     const legacy = version1State();
+    const { deck, collection } = buildStarterGrant();
     await seedRecord("manual:1", {
       schemaVersion: 1,
       slot: "manual:1",
@@ -372,13 +462,13 @@ describe("createStorySaveRepository", () => {
         state: {
           dp: 1000,
           boosters: {},
-          collection: {},
+          collection,
           shopReturnScreen: null,
           shopSetId: null,
           openedCards: null,
           openingMode: null,
-          decks: [],
-          defaultDeckId: null,
+          decks: [deck],
+          defaultDeckId: deck.id,
         },
       },
     });

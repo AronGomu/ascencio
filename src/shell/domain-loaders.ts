@@ -81,6 +81,11 @@ export type StoryDomainProps = {
   readonly resumeState?: StoryState | null;
   readonly resolution?: StoryDuelResolution | null;
   readonly onhandled?: () => void;
+  /** Leaving the story for the decks the same save owns. Reported rather than
+      routed, for the reason the deck editor's `oncollection` above is: the
+      route is the shell's to write — and this one unmounts the visual novel,
+      so the story only asks once the run it would lose is on disk. */
+  readonly ondecks?: () => void;
 };
 
 export interface DomainLoaders {

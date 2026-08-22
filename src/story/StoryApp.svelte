@@ -86,6 +86,21 @@
   /* Told once the handback has been adopted, so a later remount of this
      domain does not replay an outcome the player already read. */
   export let onhandled: () => void = () => undefined;
+  /* Leaving the story for its deck editor. Reported rather than routed: the
+     shell owns the URL, and a route change unmounts this domain — so the run
+     has to be on disk before the shell acts on this, and a refused write must
+     leave the player where they are. */
+  export let ondecks: () => void = () => undefined;
+
+  /* Which main-menu entry sent the player here, so the shell's menu and this
+     domain's title screen are not two menus in a row (ADR-051). `null` is a
+     story route reached any other way — a bookmark, the address bar, a duel
+     handing a settled session back — which still opens on the title.
+
+     The union is written out rather than imported: it is the shell's
+     `StoryEntryIntent` (`src/shell/shell-store.ts`), and the visual novel may
+     not reach into the shell for three string literals. */
+  export let storyEntryIntent: "new" | "continue" | "load" | null = null;
 
   const CHECKPOINT_FAILED =
     "Your progress could not be saved, so the duel was not started. Free some storage and try again.";
@@ -132,6 +147,11 @@
       ? HANDOFF_INTERRUPTED
       : null;
   let appliedResolution: StoryDuelResolution | null = null;
+  /* Read once, at mount, for the same reason `appliedResolution` above takes a
+     resolution once: the entry belongs to the click that chose it, and a later
+     flush of the prop must not throw a player who has walked on back to the
+     screen they came in by. */
+  const entryIntent = storyEntryIntent;
   let manualState: StoryState | null = null;
   let autosaveState: StoryState | null = null;
   let latestSaveSlot: "manual" | "autosave" | null = null;
@@ -170,9 +190,31 @@
   onMount(() => {
     if (resumeState !== null || resolution !== null) onhandled();
     /* Safe to call on every mount: reading never writes, and a slot this build
-       cannot parse resolves to "no save" rather than a thrown mount. */
-    void hydrate();
+       cannot parse resolves to "no save" rather than a thrown mount.
+
+       The entry is applied after it, never beside it: Continue resumes the
+       newer of the two player slots, and which one that is only exists once
+       storage has answered. */
+    void hydrate().then(() => applyEntryIntent());
   });
+
+  /** Opens on the screen the main-menu entry asked for.
+
+      Only ever out of the title screen, which is what the entry was chosen
+      instead of. Storage answers a round-trip after the first render, so the
+      title is live for that window and a player who took it themselves has
+      already answered the question this was going to — and a mount that started
+      from a checkpoint is not on the title at all.
+
+      Continue with nothing on disk stays on the title rather than resuming an
+      empty run: the menu hides that entry once the probe answers, and a stale
+      one must not resolve to a save the player does not have. */
+  function applyEntryIntent(): void {
+    if (state.screen !== "title") return;
+    if (entryIntent === "new") newGame();
+    else if (entryIntent === "load") go("load");
+    else if (entryIntent === "continue" && state.progressExists) continueGame();
+  }
 
   /** Re-reads both player-visible slots and rebuilds what the title screen
       offers. Returns whether storage answered cleanly. */
@@ -695,6 +737,33 @@
       dirty = false;
     } else storageOperationError = writeProblem(result);
   }
+  /** Leaves for the deck editor, but only once this run is on disk.
+
+      The editor opens the newest of the two player slots and the shell unmounts
+      this domain the moment the route changes, so a briefing reached through a
+      new game, a shop trip and a walk to the arena would otherwise take all
+      three with it. A refused write keeps the player on the briefing with the
+      storage banner, the way a refused checkpoint keeps them on the handoff
+      screen rather than starting a duel it could not record.
+
+      Storage already known bad is tried again rather than refused up front, as
+      the two save paths above refuse it: those report into a dialog the player
+      opened, while this one is the only way off a screen that is already
+      blocking them, and a permission or quota that has since been fixed must
+      not keep them there. */
+  async function openDeckEditor(): Promise<void> {
+    const snapshot = { ...state, savedScreen: state.screen };
+    const result = await saves.write(AUTOSAVE_SLOT, snapshot, null);
+    if (result.kind !== "written") {
+      storageOperationError = writeProblem(result);
+      return;
+    }
+    autosaveState = snapshot;
+    latestSaveSlot = "autosave";
+    dirty = false;
+    ondecks();
+  }
+
   async function retryAutosave(): Promise<void> {
     if (storageOperationError !== null && !(await retryStorageAccess())) return;
     await autosaveReward();
@@ -843,6 +912,7 @@
       onretrydecks={loadCatalog}
       onstart={startEncounter}
       onreturn={() => go("map")}
+      onopendecks={openDeckEditor}
     />
   {:else if state.screen === "battle-mock"}
     <BattleHandoffScreen

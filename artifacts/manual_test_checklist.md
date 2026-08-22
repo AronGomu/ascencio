@@ -3651,3 +3651,26 @@ Saving is manual in this build: the gear menu writes the save, and nothing in th
 
 - [ ] Buy **three** packs and open them with **Open selected**. **Skip** is back in the corner and there is no **← Back** — a multi-pack opening still has packs worth skipping past.
 - [ ] Finish pack 1. **Next pack** and **Open all remaining** appear exactly as T37 describes, and the walk to the results list is unchanged.
+
+## T39 story-choice-list-and-danger
+
+Every multiple choice the story asks is now one component: the narrative's branch
+point and the shopkeeper's menu are the same centred column of large buttons, and
+the action that backs out of a screen is red.
+
+### The narrative branch
+
+- [ ] Start a new game and press Enter until **Choose your response** appears (about 13 beats).
+- [ ] The three choices sit in the **middle of the screen**, stacked in one column, each button noticeably taller than the Auto/Skip buttons in the corner. They are not tucked above the dialogue box any more.
+- [ ] Keyboard: without touching the mouse, the first choice (**I trust you. Lead the way.**) already has the focus ring. Press Tab twice — focus moves down the list in the order the choices are printed, not around the screen. Press Enter on the second choice and the story takes it.
+- [ ] None of the three is red — a branch has no way out to colour.
+- [ ] Press **Hide UI** while the choices are open, then **Show UI**. The choices come back and the first one takes focus again.
+- [ ] Repeat on a phone-sized window (about 375px wide). The column narrows to fit, and nothing runs off the side of the screen.
+
+### The shopkeeper's menu
+
+- [ ] Walk to the card shop and click through both greeting lines until the menu appears.
+- [ ] It is the **same layout as the narrative branch**: one centred column, in the middle of the screen, buttons the same size — not the bordered panel at the bottom it used to be.
+- [ ] **Leave Shop** is red; **Buy Cards** and **Sell Cards** are not. Read the red one against its label — the dark text on it is legible.
+- [ ] Keyboard: the moment the menu appears, **Buy Cards** has focus. Tab to **Leave Shop**, press Enter, and you land back on the map.
+- [ ] Re-enter the shop and take **Buy Cards** and **Sell Cards** by mouse. Each still opens the screen it names.

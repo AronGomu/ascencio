@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { afterUpdate } from "svelte";
+  import ChoiceList from "../components/ChoiceList.svelte";
   import GearIcon from "../components/icons/GearIcon.svelte";
   import type { StoryBeat } from "../content/prologue.ts";
   import { PROLOGUE } from "../content/prologue.ts";
@@ -26,16 +26,6 @@
     undefined;
 
   let uiHidden = false;
-  let firstChoice: HTMLButtonElement;
-  let focusedChoiceSet = "";
-
-  afterUpdate(() => {
-    const key = choices.map(({ id }) => id).join(":");
-    if (key !== "" && key !== focusedChoiceSet) {
-      focusedChoiceSet = key;
-      firstChoice?.focus();
-    }
-  });
 
   function isControl(target: EventTarget | null): boolean {
     return (
@@ -209,33 +199,22 @@
     </article>
 
     {#if choices.length > 0}
-      <div
-        class="choices"
-        role="group"
-        aria-labelledby="choice-heading"
-        data-cy="story-narrative-choices"
-      >
-        <h2 id="choice-heading" data-cy="story-narrative-choices-heading">
-          Choose your response
-        </h2>
-        {#each choices as choice, index (choice.id)}
-          {#if index === 0}
-            <button
-              type="button"
-              data-cy={`story-choice-${choice.id}`}
-              bind:this={firstChoice}
-              aria-pressed={selectedChoice === choice.id}
-              onclick={() => onchoose(choice.id)}>{choice.label}</button
-            >
-          {:else}
-            <button
-              type="button"
-              data-cy={`story-choice-${choice.id}`}
-              aria-pressed={selectedChoice === choice.id}
-              onclick={() => onchoose(choice.id)}>{choice.label}</button
-            >
-          {/if}
-        {/each}
+      <div class="choices" data-cy="story-narrative-choices">
+        <h2 data-cy="story-narrative-choices-heading">Choose your response</h2>
+        <ChoiceList
+          choices={choices.map((choice) => ({
+            id: choice.id,
+            label: choice.label,
+            dataCy: `story-choice-${choice.id}`,
+            pressed: selectedChoice === choice.id,
+          }))}
+          dataCy="story-narrative-choice-list"
+          label="Choose your response"
+          onchoose={(id) =>
+            /* The list hands back an id this screen gave it, and every one of
+               those came from `choices`. */
+            onchoose(id as ChoiceId)}
+        />
       </div>
     {/if}
     {#if choiceResponse}<p
@@ -407,23 +386,24 @@
     color: var(--story-muted);
     font-size: 0.7rem;
   }
+  /* Centred on the stage rather than stacked above the dialogue box: a branch
+     point is the screen's whole question while it is open, and the shopkeeper's
+     menu meets the player in the same place. Sized to its content instead of
+     spanning the stage, so the utility bar underneath it stays clickable. */
   .choices {
     position: absolute;
     z-index: 4;
-    inset: auto max(1rem, env(safe-area-inset-right))
-      max(12rem, calc(10rem + env(safe-area-inset-bottom)))
-      max(1rem, env(safe-area-inset-left));
+    left: 50%;
+    top: 50%;
+    width: min(28rem, calc(100% - 2rem));
+    transform: translate(-50%, -50%);
     display: grid;
     gap: 0.5rem;
-    justify-content: center;
   }
   .choices h2 {
     margin: 0;
     text-align: center;
     text-shadow: 0 2px 5px var(--shadow);
-  }
-  .choices button {
-    width: min(36rem, calc(100vw - 2rem));
   }
   .choice-response {
     position: absolute;
@@ -453,9 +433,6 @@
     }
     .dialogue {
       bottom: max(0.5rem, env(safe-area-inset-bottom));
-    }
-    .choices {
-      bottom: 13rem;
     }
     .utility-bar {
       justify-content: start;

@@ -50,6 +50,34 @@
   outline: 3px solid var(--focus-ring);
   outline-offset: 3px;
 }
+
+/* T39: every multiple choice the story asks is this list — one centred column
+   of buttons big enough to read as the screen's decision rather than a
+   footnote to it. The column is capped rather than stretched, so a wide screen
+   does not turn three choices into three banners. */
+.story-app .story-choice-list {
+  display: grid;
+  gap: 0.6rem;
+  width: min(28rem, 100%);
+  margin-inline: auto;
+}
+.story-app .story-choice-list button {
+  min-height: 3.25rem;
+  font-size: var(--text-md);
+}
+
+/* Cancelling, leaving, backing out. Red so the way out of a screen is never
+   mistaken for the way through it — the red the story's delete and keep-the-cards
+   dialogs already paint. The ink is the shared danger primitive's
+   (`src/styles/primitives.css`) rather than those dialogs' white, which measures
+   3.35:1 against this background and misses AA for the 16px bold label; this
+   pairing measures 5.66:1. */
+.story-app .story-danger {
+  border-color: var(--danger);
+  background: var(--danger-strong);
+  color: var(--ink-on-danger);
+}
+
 .story-app .eyebrow {
   margin: 0;
   color: var(--story-accent);

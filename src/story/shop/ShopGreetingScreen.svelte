@@ -1,6 +1,21 @@
 <script lang="ts">
+  import ChoiceList from "../components/ChoiceList.svelte";
+
   export let onnavigate: (target: "buy" | "sell") => void = () => undefined;
   export let onleave: () => void = () => undefined;
+
+  /* The same shape a narrative branch offers, because it is the same control:
+     leaving is the way out of the shop, so it is the red one. */
+  const MENU = [
+    { id: "buy", label: "Buy Cards", dataCy: "story-shop-greeting-buy" },
+    { id: "sell", label: "Sell Cards", dataCy: "story-shop-greeting-sell" },
+    {
+      id: "leave",
+      label: "Leave Shop",
+      dataCy: "story-shop-greeting-leave",
+      danger: true,
+    },
+  ] as const;
 
   const GREETING_BEATS = [
     {
@@ -41,6 +56,11 @@
     if (event.detail > 1 || showMenu || isControl(event.target)) return;
     advance();
   }
+
+  function choose(id: string): void {
+    if (id === "buy" || id === "sell") onnavigate(id);
+    else onleave();
+  }
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -49,6 +69,7 @@
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <section
   class="shop-greeting"
+  class:menu={showMenu}
   aria-label="Shop greeting"
   data-cy="story-shop-greeting"
   onclick={handleStageClick}
@@ -62,23 +83,12 @@
       <span aria-hidden="true" data-cy="story-shop-greeting-cue">◆</span>
     </div>
   {:else}
-    <nav aria-label="Shop actions" data-cy="story-shop-greeting-menu">
-      <button
-        type="button"
-        data-cy="story-shop-greeting-buy"
-        onclick={() => onnavigate("buy")}>Buy Cards</button
-      >
-      <button
-        type="button"
-        data-cy="story-shop-greeting-sell"
-        onclick={() => onnavigate("sell")}>Sell Cards</button
-      >
-      <button
-        type="button"
-        data-cy="story-shop-greeting-leave"
-        onclick={onleave}>Leave Shop</button
-      >
-    </nav>
+    <ChoiceList
+      choices={MENU}
+      dataCy="story-shop-greeting-menu"
+      label="Shop actions"
+      onchoose={choose}
+    />
   {/if}
 </section>
 
@@ -120,20 +130,16 @@
     line-height: 1.55;
     overflow-wrap: anywhere;
   }
+  /* The dialogue sits where a visual novel puts it, at the foot of the screen;
+     the menu that replaces it is a decision, so it meets the player in the
+     middle exactly as a narrative branch does. */
+  .shop-greeting.menu {
+    place-items: center;
+  }
   .shop-greeting span[aria-hidden] {
     position: absolute;
     right: 1.2rem;
     bottom: 1rem;
     color: var(--story-accent);
-  }
-  nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    padding: 1.5rem;
-    border: 1px solid var(--story-border);
-    border-radius: 0.75rem;
-    background: color-mix(in srgb, var(--bg) 91%, transparent);
-    box-shadow: 0 1rem 3rem color-mix(in srgb, var(--shadow) 60%, transparent);
   }
 </style>

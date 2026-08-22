@@ -10,6 +10,7 @@ import {
 export interface StoryPlaybackSettingsStore extends Readable<StoryPlaybackSettings> {
   setAutoSpeedSeconds(seconds: number): void;
   setSkipUnread(skipUnread: boolean): void;
+  setAutoFlip(autoFlip: boolean): void;
   reset(): void;
 }
 
@@ -44,6 +45,9 @@ export function createStoryPlaybackSettingsStore(
     },
     setSkipUnread(skipUnread: boolean): void {
       persist((state) => Object.freeze({ ...state, skipUnread }));
+    },
+    setAutoFlip(autoFlip: boolean): void {
+      persist((state) => Object.freeze({ ...state, autoFlip }));
     },
     reset(): void {
       persist(() => DEFAULT_STORY_PLAYBACK_SETTINGS);

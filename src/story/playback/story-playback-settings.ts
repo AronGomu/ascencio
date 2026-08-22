@@ -11,12 +11,16 @@ export interface StoryPlaybackSettings {
   readonly autoSpeedSeconds: number;
   /** Whether Skip is allowed past text this player has never read. */
   readonly skipUnread: boolean;
+  /** Whether a booster pack turns its own cards over instead of waiting to be
+      clicked. Off by default: the reveal is the point of opening a pack, and a
+      player who wants it done for them says so once and is remembered. */
+  readonly autoFlip: boolean;
 }
 
 export const STORY_PLAYBACK_SETTINGS_KEY = "ygo.story.playback.v1";
 
 export const DEFAULT_STORY_PLAYBACK_SETTINGS: StoryPlaybackSettings =
-  Object.freeze({ autoSpeedSeconds: 3, skipUnread: false });
+  Object.freeze({ autoSpeedSeconds: 3, skipUnread: false, autoFlip: false });
 
 export function readStoryPlaybackSettings(
   storage: Pick<Storage, "getItem"> | null = defaultStorage(),
@@ -35,6 +39,12 @@ export function readStoryPlaybackSettings(
         typeof record.skipUnread === "boolean"
           ? record.skipUnread
           : DEFAULT_STORY_PLAYBACK_SETTINGS.skipUnread,
+      /* A payload written before the reveal screen existed carries no flag at
+         all, which reads as the default rather than as a corrupt file. */
+      autoFlip:
+        typeof record.autoFlip === "boolean"
+          ? record.autoFlip
+          : DEFAULT_STORY_PLAYBACK_SETTINGS.autoFlip,
     });
   } catch {
     return DEFAULT_STORY_PLAYBACK_SETTINGS;

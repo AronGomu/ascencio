@@ -291,6 +291,10 @@
     name:
       shopNameByCode.get(code) ?? cardViewByCode.get(code)?.name ?? `#${code}`,
     imageUrl: cardViewByCode.get(code)?.imageUrl ?? null,
+    /* The whole catalog card, for the reveal screen's zoom: name and art are
+       enough to draw a tile, not to read out an effect. Null until the catalog
+       lands, which the zoom reads as "nothing to magnify yet". */
+    view: cardViewByCode.get(code) ?? null,
   }));
   $: shopSet = shopData?.sets.find(({ id }) => id === state.shopSetId) ?? null;
   $: shopSetName = shopSet?.name ?? "";
@@ -915,6 +919,7 @@
         <svelte:component
           this={shop.BoosterOpeningScreen}
           cards={openedCardViews}
+          settings={playbackSettings}
           onfinish={() => dispatch({ type: "finish-opening" })}
         />
       {:else if state.screen === "shop-results"}

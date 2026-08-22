@@ -80,6 +80,7 @@ describe("story utility overlays", () => {
     expect(readStoryPlaybackSettings()).toEqual({
       autoSpeedSeconds: 6,
       skipUnread: true,
+      autoFlip: false,
     });
 
     rendered.unmount();

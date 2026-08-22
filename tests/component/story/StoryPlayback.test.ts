@@ -96,7 +96,11 @@ describe("story auto and skip playback", () => {
   });
 
   it("the skip-unread setting carries skip through unread text up to the first choice", async () => {
-    writeStoryPlaybackSettings({ autoSpeedSeconds: 3, skipUnread: true });
+    writeStoryPlaybackSettings({
+      autoSpeedSeconds: 3,
+      skipUnread: true,
+      autoFlip: false,
+    });
     const user = await startNewGame();
     await user.click(screen.getByRole("button", { name: "Skip" }));
     await runPlayback(2400);

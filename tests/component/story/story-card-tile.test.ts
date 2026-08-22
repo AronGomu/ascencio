@@ -129,11 +129,13 @@ describe("StoryCardTile", () => {
       },
     ];
     const opening = render(BoosterOpeningScreen, { cards, onfinish: noop });
+    /* The tile only exists once the card has been turned over: face down, the
+       reveal screen draws a card back and no art at all. */
     await userEvent
       .setup()
       .click(
         opening.container.querySelector(
-          '[data-cy="story-shop-opening"]',
+          '[data-cy="story-shop-opening-card-0"]',
         ) as HTMLElement,
       );
     expect(

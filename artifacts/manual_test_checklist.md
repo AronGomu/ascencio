@@ -3504,13 +3504,14 @@ the map, or **Continue** into a save that has reached it.
 
 ## T35 card-zoom-inspector-component
 
-The zoom inspector is built here but nothing mounts it yet — T36 is what puts it on the booster
-reveal screens. Until then only the first step is checkable; the rest become live the moment a
-reveal screen shows a card, and are written now so they are not re-derived later.
+The zoom inspector was built here and mounted nowhere. **T36 has since mounted it on the
+pack-opening screen** — the face-down reveal you click through — so every step below is live
+*there*. The results grid that follows it is still T37's, so a step that says "results grid" is
+not testable yet and is not a failure.
 
-- [ ] Play from the map into the card shop, buy packs and open them. Greeting, set grid, set card list, reveal and results all look and behave exactly as before: no card grows on hover, no window floats beside one, nothing new appears anywhere.
+- [ ] Play from the map into the card shop, buy packs and open them. Greeting, set grid and set card list look and behave exactly as before: no card grows on hover there, no window floats beside one.
 
-Once T36 has mounted it on the reveal screens:
+On the pack-opening screen (T36), for a card you have already turned over:
 
 - [ ] Hover a revealed card. It grows to twice its size in place — same centre, whole card visible, not a crop — and an orange ring fades in around it rather than snapping on.
 - [ ] A window appears beside the magnified card carrying the card's name, a stats row and its full effect text. A monster reads like `DARK · Spellcaster · Level 7 · ATK 2500 / DEF 2100`; a monster with `?` ATK reads `ATK ?`, never a negative number. A spell or trap shows name and effect text with no stats row at all.
@@ -3520,3 +3521,52 @@ Once T36 has mounted it on the reveal screens:
 - [ ] Turn on the operating system's "reduce motion" setting, reload, and hover a card. The magnified card and its halo appear at once with no fade, and everything else still behaves the same.
 - [ ] Hover a Secret Rare in the results grid. The orange selection ring is still the inner ring, with the card's rarity colour glowing outside it — the two are layered, not one replacing the other.
 - [ ] Known limitation to confirm rather than fix: in a browser window narrower than roughly 530px the floating text window can cover the magnified card, because neither side has room for both. Note where it happens.
+
+## T36 booster-reveal-flip
+
+The pack-opening screen used to be a counter: a click anywhere turned over the next card,
+wherever the pointer was. It is now nine face-down cards you turn over yourself — or tick a
+box and watch open themselves. Reach it by buying packs and using **Open selected** on the
+booster dialog (**Open all** skips straight to the results grid, which is T37's).
+
+### The pack arrives face down
+
+- [ ] Buy at least one pack, click the packs pill, step the count to 1 and press **Open selected**. Nine card backs are on screen at once — a patterned back, not a blank rectangle, and not a single stacked card waiting to be clicked.
+- [ ] No card name is readable and no card art is visible anywhere. A face-down card gives away nothing but its shape.
+- [ ] On a desktop-width window the nine sit on **one row** spanning nearly the whole width, with only a thin margin at each edge, and the row is centred vertically in the screen. They are noticeably bigger than the old reveal's tiles.
+- [ ] Narrow the window below roughly 1024px. The nine become a single centred column you scroll, and the column scrolls from its **top** — the first card is reachable, not cut off above the scroll.
+
+### Hover shows the rarity before the face
+
+- [ ] Hover a face-down card. A coloured glow **fades** in around it rather than snapping on, and the card stays face down — you learn the rarity before you learn the card.
+- [ ] Move the pointer off. The glow fades back out.
+- [ ] A `common` card shows no glow at all. That is correct, not a bug: commons have no rarity colour anywhere in the story. Hover several cards until you find one that glows, or open packs until a rare turns up.
+- [ ] Hover a face-down card and confirm **no** magnified card or floating text window appears. The zoom is for cards you have already turned over.
+
+### Clicking flips one card
+
+- [ ] Click one card in the middle of the row. **Only that card** turns over, with a flip animation — you see it rotate, not fade or pop. Its name appears under it; every other card is still face down.
+- [ ] Click the same card again. Nothing happens — a reveal is one-way.
+- [ ] Hover the card you turned over. It grows to twice its size with the floating text window beside it, exactly as in the T35 steps above.
+- [ ] Turn over all nine. **See results** appears only after the last one, and takes you to the results grid holding the same nine cards, in the same order, with the same names you just read.
+
+### The auto-flip checkbox
+
+- [ ] Open a fresh pack. The **Flip them for me** checkbox in the header is **unticked** — that is the default for a save that has never touched it.
+- [ ] Tick it. The cards start turning themselves over from the left, roughly one every half-second, with no further input. Nine cards take about four seconds.
+- [ ] Untick it mid-run. The flipping stops where it is and the cards already turned over stay turned over. Tick it again — it carries on from where it stopped rather than starting over.
+- [ ] Turn a card over by hand while auto-flip is running. It stays turned over and the run does not stumble, skip or double back.
+- [ ] With the box ticked, press **Skip**, then open another pack. The box is **still ticked** and the new pack starts opening itself immediately — the preference is remembered.
+- [ ] Reload the page entirely, continue the save and open a pack. The box is still ticked. Untick it, reload again, open a pack: still unticked.
+
+### Keyboard and touch
+
+- [ ] Mouse untouched: press Tab from the top of the screen. Focus lands on the checkbox first, then on each card in turn. A focused card shows the same rarity glow a hovered one does, and the same magnified card and text window once it is turned over.
+- [ ] With a card focused, press **Enter**, then on another card press **Space**. Each turns over the focused card and nothing else.
+- [ ] With a screen reader, or by inspecting the accessible name, a face-down card announces as `Reveal card 3, ultra-rare` — the rarity a sighted player gets from the glow. A turned-over card announces as its card name.
+- [ ] On a touch screen (or with the browser's device emulation): tap a card. It turns over. Nothing here needs a hover to be reachable.
+
+### Reduced motion
+
+- [ ] Turn on the operating system's **reduce motion** setting and reload. Turn a card over: it changes to its face **instantly**, with no rotation and no fade, and the rarity glow appears at once instead of fading.
+- [ ] With reduce motion still on, tick **Flip them for me**. The cards still open one at a time at the same roughly half-second pace — reduced motion removes the animation, never the pacing, and must not dump all nine at once.

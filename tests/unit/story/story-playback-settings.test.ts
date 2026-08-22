@@ -24,12 +24,13 @@ describe("story playback settings", () => {
     );
     const storage = memoryStorage();
     writeStoryPlaybackSettings(
-      { autoSpeedSeconds: 5, skipUnread: true },
+      { autoSpeedSeconds: 5, skipUnread: true, autoFlip: true },
       storage,
     );
     expect(readStoryPlaybackSettings(storage)).toEqual({
       autoSpeedSeconds: 5,
       skipUnread: true,
+      autoFlip: true,
     });
   });
 
@@ -43,7 +44,9 @@ describe("story playback settings", () => {
           }),
         }),
       ),
-    ).toEqual({ autoSpeedSeconds: 8, skipUnread: false });
+      /* A payload from before the reveal screen carries no `autoFlip` at all,
+         which is the same absence as a tampered one and reads as the default. */
+    ).toEqual({ autoSpeedSeconds: 8, skipUnread: false, autoFlip: false });
     expect(
       readStoryPlaybackSettings(
         memoryStorage({ [STORY_PLAYBACK_SETTINGS_KEY]: "{" }),
@@ -56,9 +59,11 @@ describe("story playback settings", () => {
     const store = createStoryPlaybackSettingsStore(storage);
     store.setAutoSpeedSeconds(6);
     store.setSkipUnread(true);
+    store.setAutoFlip(true);
     expect(readStoryPlaybackSettings(storage)).toEqual({
       autoSpeedSeconds: 6,
       skipUnread: true,
+      autoFlip: true,
     });
     let seen = DEFAULT_STORY_PLAYBACK_SETTINGS;
     const unsubscribe = store.subscribe((value) => (seen = value));

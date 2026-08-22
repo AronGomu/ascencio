@@ -43,7 +43,7 @@
 <body>
 <div class="wrap">
 <h1>App navigation — target map</h1>
-<p class="sub">Commit: <code>9d8b8a7</code> (T14–T17, T23, T29–T30).
+<p class="sub">Shipped: <code>7638f24</code> (T14), <code>a9cdd43</code> (T15), <code>21acd24</code> (T16), <code>22f868b</code> (T17), <code>eef4690</code> (T23), <code>1b6ba30</code> (T28, the story seat below), <code>81de44c</code> (T29), <code>e1c24a3</code> (T30), with the menu handoff and the story's exit repaired in <code>acbb212</code> · Plan commit: <code>9d8b8a7</code>.
 Decision record: ADR-051. Boundary rules unchanged (ADR-022); branch model now ADR-045.</p>
 
 <h2>Why it changed</h2>
@@ -59,7 +59,7 @@ Decision record: ADR-051. Boundary rules unchanged (ADR-022); branch model now A
 <div class="card">
 <svg viewBox="0 0 900 430" role="img" aria-labelledby="navt navd">
   <title id="navt">Navigation graph</title>
-  <desc id="navd">The main menu at the app root leads to the story or to free play. Free play leads to match setup and the free-play deck editor and collection. The story leads to its playthrough screens, its own deck editor and collection, and duel sessions. Battle, deck editor and story are lazily loaded chunks.</desc>
+  <desc id="navd">The main menu at the app root leads to the story or to free play. Free play leads to match setup and the free-play deck editor. The story leads to its playthrough screens and its own deck editor, and both worlds reach their collection from that deck editor's menu rather than from the menu above it. Both worlds reach duel sessions. Battle, deck editor, story and the collection screen are lazily loaded chunks.</desc>
 
   <rect class="svg-box accent" x="330" y="12" width="240" height="46" rx="10"/>
   <text class="svg-t" x="450" y="32" text-anchor="middle">Main menu — shell — #/</text>
@@ -84,7 +84,7 @@ Decision record: ADR-051. Boundary rules unchanged (ADR-022); branch model now A
   <text class="svg-m" x="245" y="218" text-anchor="middle">save's decks · owned-only</text>
   <rect class="svg-box lazy" x="330" y="184" width="150" height="44" rx="9"/>
   <text class="svg-t" x="405" y="202" text-anchor="middle">#/story/collection</text>
-  <text class="svg-m" x="405" y="218" text-anchor="middle">owned + show-all</text>
+  <text class="svg-m" x="405" y="218" text-anchor="middle">owned + show-all · via decks</text>
 
   <path class="svg-l" d="M700 146 v18 M600 164 h200 M600 164 v20 M700 164 v20 M800 164 v20"/>
   <rect class="svg-box" x="530" y="184" width="140" height="44" rx="9"/>
@@ -95,7 +95,7 @@ Decision record: ADR-051. Boundary rules unchanged (ADR-022); branch model now A
   <text class="svg-m" x="750" y="218" text-anchor="middle">library · unlimited</text>
   <rect class="svg-box lazy" x="750" y="240" width="140" height="44" rx="9"/>
   <text class="svg-t" x="820" y="258" text-anchor="middle">…/collection</text>
-  <text class="svg-m" x="820" y="274" text-anchor="middle">whole database</text>
+  <text class="svg-m" x="820" y="274" text-anchor="middle">whole database · via decks</text>
 
   <path class="svg-l" d="M90 228 v40 M600 228 v40 M90 268 h510"/>
   <rect class="svg-box lazy" x="290" y="290" width="240" height="46" rx="10"/>
@@ -120,16 +120,17 @@ Decision record: ADR-051. Boundary rules unchanged (ADR-022); branch model now A
 <tr><td><code>#/</code></td><td>Main menu</td><td>—</td><td>shell (eager)</td></tr>
 <tr><td><code>#/story</code></td><td>Visual novel</td><td>loaded save</td><td>story</td></tr>
 <tr><td><code>#/story/decks</code> · <code>/:id</code></td><td>Deck editor</td><td>save decks · owned-only catalog</td><td>deck-editor</td></tr>
-<tr><td><code>#/story/collection</code></td><td>Collection</td><td>save collection · counts</td><td>story</td></tr>
+<tr><td><code>#/story/collection</code></td><td>Collection</td><td>save collection · counts</td><td>story + own chunk</td></tr>
 <tr><td><code>#/free-play</code></td><td>Free-play menu</td><td>free play</td><td>shell</td></tr>
 <tr><td><code>#/free-play/decks</code> · <code>/:id</code></td><td>Deck editor</td><td>library · full catalog</td><td>deck-editor</td></tr>
-<tr><td><code>#/free-play/collection</code></td><td>Collection</td><td>whole database · no counts</td><td>story</td></tr>
+<tr><td><code>#/free-play/collection</code></td><td>Collection</td><td>whole database · no counts</td><td>story + own chunk</td></tr>
 <tr><td><code>#/duel/session/:handoffId</code></td><td>Duel</td><td>a running duel</td><td>battle</td></tr>
 <tr><td><code>#/admin</code></td><td>Admin console</td><td>—</td><td>shell</td></tr>
 <tr><td><code>#/duel</code> <span class="tag">redirect</span></td><td>→ <code>#/free-play</code></td><td>old bookmarks · PWA start URL</td><td>—</td></tr>
 <tr><td><code>#/decks</code> · <code>/:id</code> <span class="tag">redirect</span></td><td>→ <code>#/free-play/decks…</code></td><td>old bookmarks</td><td>—</td></tr>
 </table>
-<p class="sub" style="margin:.8rem 0 0">Settings is a dialog from any menu, never a route. A story-scoped route with no save loaded returns to <code>#/</code> instead of rendering empty.</p>
+<p class="sub" style="margin:.8rem 0 0">Settings is a dialog from any menu, never a route. A story-scoped route with no save loaded returns to <code>#/</code> instead of rendering empty. Either collection is reached from the deck editor's own menu, in the world that editor was opened for, and ships as a chunk of its own behind the story entry — the narrative routes never pay for it.</p>
+<p class="sub" style="margin:.6rem 0 0">New Game, Continue and Load navigate to <code>#/story</code> carrying which entry was pressed. The story reads that intent once at mount and applies it after storage has answered, out of its own title screen only, so the second menu ADR-051 exists to remove cannot come back; leaving <code>#/story</code> drops the intent. Going the other way is reported rather than linked: the story asks for <code>#/story/decks</code>, writes the run to the autosave slot, and only a write that landed hands the route to the shell — a route change unmounts the visual novel with everything it has not written (<code>acbb212</code>).</p>
 </div>
 
 <h2>One editor, two contexts</h2>
@@ -144,6 +145,7 @@ Decision record: ADR-051. Boundary rules unchanged (ADR-022); branch model now A
 <tr><td>Persistence</td><td>its own database</td><td>inside the save · rolls back on load</td></tr>
 <tr><td>Banner</td><td>“Free Play”</td><td>the save's name</td></tr>
 </table>
+<p class="sub" style="margin:.8rem 0 0">The story column is built in one place: <code>openStoryDeckContext</code> reads the save once and returns the repository, the ownership and the banner name together. It is also all <code>src/story/index.ts</code> exports of that pairing — neither <code>createStoryDeckRepository</code> nor <code>storyCardOwnership</code> leaves the domain on its own (<code>acbb212</code>), so a story repository paired with free play's unlimited ownership is unrepresentable, which is what T23 exists for.</p>
 </div>
 
 <h2>What stayed put</h2>

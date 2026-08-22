@@ -44,7 +44,7 @@
 <body>
 <div class="wrap">
 <h1>Story decks &amp; card ownership</h1>
-<p class="sub">Commit: <code>9d8b8a7</code> (T18–T30).
+<p class="sub">Shipped: <code>8b9eab3</code> (T18), <code>c827e44</code> (T19), <code>f350e04</code> (T20), <code>1fd60b0</code> (T21), <code>1d3e3a7</code> (T22), <code>eef4690</code> (T23), <code>f03ad13</code> (T24), <code>178b64f</code> (T25), <code>ca57340</code> (T26), <code>9ed8390</code> (T27), <code>81de44c</code> (T29), <code>e1c24a3</code> (T30), with the invariant repaired by <code>c5a27ee</code>, <code>acbb212</code> and <code>66967fc</code> · Plan commit: <code>9d8b8a7</code>.
 Decision records: ADR-049 (save-owned decks), ADR-050 (ownership invariant), building on ADR-033 (economy in <code>StoryState</code>).</p>
 
 <h2>The invariant</h2>
@@ -107,7 +107,7 @@ unlimitedCardOwnership()    // Infinity, isUnlimited: true — a flag, never a s
 <tr><td>Catalog</td><td>T24</td><td>Story lists only owned codes; add is capped by owned × ruleset, across all three zones.</td></tr>
 <tr><td>Validation</td><td>T25</td><td>New <code>not-owned</code> error code per over-used card. Deck lists badge the deck illegal, red border.</td></tr>
 <tr><td>Sell screen</td><td>T26</td><td>Selling stays free, but a sale that breaks decks names them in a dialog <b>before</b> it commits.</td></tr>
-<tr><td>Pre-battle</td><td>T27</td><td>Illegal decks are disabled with their reason; start is blocked and links to the editor.</td></tr>
+<tr><td>Pre-battle</td><td>T27</td><td>Illegal decks are disabled with their reason; start is blocked, and the way out to the editor writes the run to the autosave slot before the route changes — a refused write keeps the player on the briefing with the storage banner (<code>acbb212</code>).</td></tr>
 </table>
 </div>
 
@@ -139,13 +139,15 @@ unlimitedCardOwnership()    // Infinity, isUnlimited: true — a flag, never a s
 </svg>
 </div>
 
-<h2>New-save grant</h2>
+<h2>The starter grant</h2>
 <div class="card">
   <ul>
-    <li>Starter deck: the existing <code>src/battle/duel/presets/decks/player.ydk</code>, built through the normal deck model so its validation summary is real.</li>
-    <li>Its cards are credited to the collection at the counts the deck uses, rarity <code>common</code> for the sell ladder.</li>
+    <li>Starter deck: <code>src/decks/starter-deck.ydk</code>, built through the normal deck model so its validation summary is real. Its own list rather than the duel's <code>player.ydk</code> preset: that one carries two Raigeki against a pinned limit of one, so a fresh save could not duel with the deck it was just given, and the recorded programmed-duel transcripts are cut from it. The granted list runs a second Mirror Force instead, and free play seeds from the same list.</li>
+    <li>Its cards are credited to the collection at the counts the deck uses. No rarity travels with them — the collection is code to count, and what a card sells for is resolved at sell time from the shop's set data.</li>
     <li>Wallet unchanged at 1000 DP; a pack costs 150 DP.</li>
     <li>Deterministic: fixed id and timestamps, so two new games produce identical decks and collections and a test can diff them.</li>
+    <li>Two grant sites, one grant. <code>new-game</code> hands it to a fresh save; the save migration completes a pre-schema-3 record that arrived with no deck list, because an empty one locks the save out of the game — the pre-battle gate refuses it, <code>encounterDeck</code> resolves none, and the editor grants a story save nothing by design (<code>acbb212</code>). The collection is merged per card code as the higher of the stored and the granted count, never the sum, so re-reading the same record changes nothing and no owned count is ever lowered (<code>66967fc</code>).</li>
+    <li>The deck editor is not a grant site. It seeded its starter deck into whatever repository the context resolved, the save's included, which handed a story player a deck of forty cards that save does not own — badged <code>not-owned</code> and refused at pre-battle. Seeding is free play's alone (<code>c5a27ee</code>).</li>
   </ul>
   <p class="sub" style="margin:.6rem 0 0">Consequence: the opening encounter is playable immediately, and everything in your deck is something you own — the invariant holds from turn one.</p>
 </div>
@@ -153,10 +155,10 @@ unlimitedCardOwnership()    // Infinity, isUnlimited: true — a flag, never a s
 <h2>Collection screen</h2>
 <div class="card">
   <ul>
-    <li>Same grid and tile proportions as the set card list; shared <code>CardPreviewPanel</code> from the shell, not the new zoom inspector.</li>
+    <li>Same grid and tile proportions as the set card list, and the same docked <code>CardPreviewPanel</code> from the shell rather than the zoom inspector — the set list mounts that panel too since <code>66967fc</code>.</li>
     <li>Story: owned cards with counts. <b>“Show every existing card”</b> is unchecked by default and reveals unowned cards dimmed.</li>
     <li>Free play: the whole database, no counts — every card is available anyway.</li>
-    <li>Tri-state rarity grouping shared with the set list and the pack results screen.</li>
+    <li>The rarity order and the grouping helper are shared with the set list and the pack results, which cycle a three-state control. This screen's own control is a checkbox, on by default, grouping common first.</li>
     <li>Reached from the deck menu in both contexts; the show-all checkbox lives here and <b>not</b> in the builder's catalog.</li>
   </ul>
   <p class="sub" style="margin:.6rem 0 0">Explicitly later: filters, search, and the full database interface. This screen is the browse surface those will grow from.</p>

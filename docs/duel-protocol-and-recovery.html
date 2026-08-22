@@ -42,7 +42,7 @@
 <body>
 <div class="wrap">
 <h1>Duel protocol contract &amp; recovery</h1>
-<p class="sub">Commit: <code>9d8b8a7</code> (T2, T3, T12, T13).
+<p class="sub">Shipped: <code>6d865e8</code> (the encoder fix itself), <code>c204dbb</code> (contract + the announce-number pin, T2), <code>d8e3fe1</code> (audit sweep, every encoder pinned, T3), <code>d983f49</code> (T12), <code>ce42fc3</code> (T13) · Plan commit: <code>9d8b8a7</code>.
 Decision records: ADR-046 (response encoding contract), ADR-048 (replay-based recovery). Engine stays frozen at <code>ocgcore-wasm@0.1.2</code>.</p>
 
 <h2>The bug that produced both decisions</h2>
@@ -138,12 +138,12 @@ Decision records: ADR-046 (response encoding contract), ADR-048 (replay-based re
 <div class="card">
 <table>
 <tr><th>Item</th><th>Ticket</th><th>Change</th></tr>
-<tr><td>Hand zoom art</td><td>T4</td><td>The overlay leases from <code>CardImageLibrary</code>; the never-passed <code>imageUrls</code> prop is deleted from three components.</td></tr>
-<tr><td>Action buttons</td><td>T8</td><td>One per row at the zoom's full width, above the card, text scaled to the frame.</td></tr>
-<tr><td>Click to pin</td><td>T9</td><td>A click pins zoom + actions with the orange halo; only a button or a drag commits — including for single-action cards.</td></tr>
-<tr><td>Hand order</td><td>T10</td><td>Arrival-ordered local hand (ADR-047); <code>MSG_SHUFFLE_HAND</code> no longer moves your own cards.</td></tr>
-<tr><td>Ambiguous drop</td><td>T11</td><td>Two or more legal actions in the target zone open a centred confirm modal with Cancel.</td></tr>
-<tr><td>Hand centring</td><td>T7</td><td><code>justify-content: safe center</code> replaces the auto-margin hack that broke the mirrored opponent band.</td></tr>
+<tr><td>Hand zoom art</td><td>T4 · <code>8a3bb83</code></td><td>The overlay leases from <code>CardImageLibrary</code>; the never-passed <code>imageUrls</code> prop is deleted from four components — the field, its error boundary, the board and the hand band.</td></tr>
+<tr><td>Action buttons</td><td>T8 · <code>90e6835</code></td><td>One per row at the zoom's full width, above the card, text scaled to the frame.</td></tr>
+<tr><td>Click to pin</td><td>T9 · <code>e1fd06f</code></td><td>A click pins zoom + actions with the orange halo; only a button or a drag commits — including for single-action cards.</td></tr>
+<tr><td>Hand order</td><td>T10 · <code>a4fcdea</code></td><td>Arrival-ordered local hand (ADR-047): a card takes a <code>displayOrder</code> when it enters a hand. <code>MSG_SHUFFLE_HAND</code> still reorders the engine-facing hand and leaves the band alone.</td></tr>
+<tr><td>Ambiguous drop</td><td>T11 · <code>41c6fdf</code></td><td>Two or more legal actions in the target zone open a centred confirm modal with Cancel.</td></tr>
+<tr><td>Hand centring</td><td>T7 · <code>f3ded00</code></td><td><code>justify-content: safe center</code> was measured and dropped: <code>safe</code> falls back to writing-mode start, so the <code>row-reverse</code> opponent band's overflow lands outside its scrollable area. Both bands keep the auto margin and only mirror which physical side takes it.</td></tr>
 </table>
 </div>
 

@@ -28,10 +28,12 @@
   $: synchronizeImageLease(imageLibrary, stack.topCardCode, placeholderUrl);
   $: clickable = stack.count > 0;
   /* The halo says "a legal target sits in here", which is only ever readable
-     on a pile that shows what it holds. A deck or a face-down banished pile
-     tells the player nothing they can act on, so it wears no halo — it stays
-     a button, and opening it is still how the target is reached. */
-  $: haloed = actionable && stack.publicCount > 0;
+     on a pile that shows what it holds. A deck, an extra deck, or a
+     face-down banished pile never renders its top card art (board-view-model
+     always suppresses topCardCode for "deck"/"extra"), so it tells the player
+     nothing they can act on and wears no halo — it stays a button, and
+     opening it is still how the target is reached. */
+  $: haloed = actionable && stack.topCardCode !== undefined;
 
   onDestroy(() => imageLease?.release());
 

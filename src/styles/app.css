@@ -2065,6 +2065,22 @@ button.duel-field-zone,
   overflow: hidden;
 }
 
+/* A stack renders as a real `<button>` whenever it holds any card, so it can
+   open a browsable pile even with no legal target inside — the generic
+   `button:hover` reset above would otherwise paint every hovered pile with
+   the accent fill, whether or not it wears the `.is-actionable` ring. The
+   ring alone is the legality signal here; hover repeats the resting
+   background instead of overriding it. */
+.duel-field-stack:hover:not(:disabled) {
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--stack-accent) 24%, transparent),
+      transparent 65%
+    ),
+    var(--stack-surface);
+}
+
 .duel-field-stack__art {
   position: absolute;
   z-index: 0;

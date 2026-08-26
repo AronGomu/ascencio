@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Deck Selection Screen — final design (2026-08-26)</title>
+<style>
+:root{color-scheme:light dark;--bg:#f4f6f8;--surface:#fff;--surface2:#edf2f6;--ink:#162330;--muted:#5b6875;--line:#d5dde5;--accent:#087e8b;--accent2:#d9f1f2;--gold:#a65d00;--gold2:#fdf0dc;--ok:#1d7a52;--bad:#a3283c;--bad2:#fae4e8;--blue:#1f5fb0;--blue2:#dbe9fb;--code:#101c2a;--codeInk:#dceafa;--shadow:0 15px 42px rgb(23 38 52/.1)}
+@media(prefers-color-scheme:dark){:root{--bg:#0b121b;--surface:#111c28;--surface2:#172536;--ink:#edf5fa;--muted:#a9b8c5;--line:#2a3c4d;--accent:#65d4da;--accent2:#15373d;--gold:#f1b65f;--gold2:#33270f;--ok:#7ee2a8;--bad:#ff8c9b;--bad2:#3b1d27;--blue:#7fb3f5;--blue2:#152840;--code:#07101a;--codeInk:#dceafa;--shadow:0 15px 42px rgb(0 0 0/.25)}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.62 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}a{color:var(--accent);text-underline-offset:.18em}code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}code{padding:.1rem .32rem;border-radius:.27rem;background:var(--surface2);font-size:.88em}pre{overflow:auto;padding:1rem;border-radius:.65rem;background:var(--code);color:var(--codeInk);font-size:.82rem;line-height:1.55}pre code{padding:0;background:none;color:inherit}.hero{border-bottom:1px solid var(--line);background:radial-gradient(circle at 82% 12%,var(--accent2),transparent 40%),var(--surface)}.hero>div{max-width:1360px;margin:auto;padding:2.7rem clamp(1.1rem,4vw,4rem) 2.2rem}.eyebrow{margin:0 0 .5rem;color:var(--accent);font-size:.75rem;font-weight:850;letter-spacing:.14em;text-transform:uppercase}.hero h1{margin:0;max-width:30ch;font-size:clamp(2rem,5vw,3.6rem);line-height:1.03;letter-spacing:-.045em}.hero p{max-width:82ch;margin:1rem 0 0;color:var(--muted)}.shell{display:grid;grid-template-columns:16rem minmax(0,1fr);gap:2rem;max-width:1360px;margin:auto;padding:2rem clamp(1.1rem,4vw,4rem) 4rem}.toc{position:sticky;top:1rem;align-self:start;max-height:calc(100vh - 2rem);overflow:auto;padding:1rem;border:1px solid var(--line);border-radius:.85rem;background:var(--surface);box-shadow:var(--shadow)}.toc h2{margin:0 0 .55rem;color:var(--muted);font-size:.73rem;letter-spacing:.12em;text-transform:uppercase}.toc ol{margin:0;padding-left:1.15rem;font-size:.86rem}.toc li{margin:.3rem 0}.card{margin-bottom:1.5rem;padding:1.35rem clamp(1rem,2.4vw,1.8rem);border:1px solid var(--line);border-radius:.9rem;background:var(--surface);box-shadow:var(--shadow)}.card>h2{margin-top:0;font-size:1.42rem;letter-spacing:-.02em}.card>h3{font-size:1.05rem;letter-spacing:-.01em}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:.88rem}th,td{padding:.55rem .65rem;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:var(--muted);font-size:.72rem;letter-spacing:.09em;text-transform:uppercase}tbody tr:last-child td{border-bottom:0}.note{padding:.85rem 1rem;border-left:3px solid var(--gold);border-radius:.35rem;background:var(--gold2);font-size:.9rem}.note.good{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent)}.note.bad{border-color:var(--bad);background:var(--bad2)}.grid2,.grid3{display:grid;gap:1rem}.grid2{grid-template-columns:repeat(auto-fit,minmax(17rem,1fr))}.grid3{grid-template-columns:repeat(auto-fit,minmax(14rem,1fr))}.tile{padding:.9rem 1rem;border:1px solid var(--line);border-radius:.7rem;background:var(--surface2)}.tile h3{margin:0 0 .35rem;font-size:.96rem}.tile p{margin:0;color:var(--muted);font-size:.86rem}.swatch{display:flex;align-items:center;gap:.6rem;padding:.6rem .75rem;border:1px solid var(--line);border-radius:.6rem;background:var(--surface2)}.swatch .dot{width:1.1rem;height:1.1rem;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 1px rgb(0 0 0/.15)}.swatch code{background:none;padding:0}.badge{display:inline-block;padding:.12rem .42rem;border-radius:999px;background:var(--surface2);font-size:.72rem;font-weight:800}.badge.default{color:var(--gold);border:1px solid var(--gold)}.badge.blue{color:var(--blue);border:1px solid var(--blue)}.badge.bad{color:var(--bad);border:1px solid var(--bad)}.small{color:var(--muted);font-size:.82rem}ul.tight{padding-left:1.1rem}ul.tight li{margin:.25rem 0}.wire{border:1px dashed var(--line);border-radius:.7rem;padding:1rem;background:var(--surface2);font-size:.84rem;line-height:1.55}.wire b{color:var(--ink)}footer{max-width:1360px;margin:auto;padding:0 clamp(1.1rem,4vw,4rem) 3rem;color:var(--muted);font-size:.85rem}@media(max-width:68rem){.shell{grid-template-columns:1fr}.toc{position:static;max-height:none}}
+</style>
+</head>
+<body>
+
+<header class="hero"><div>
+<p class="eyebrow">UI design · validated 2026-08-26</p>
+<h1>Deck Selection Screen</h1>
+<p>The default entry screen for every duel, free play and story alike: pick who you face, pick what you bring, and manage the deck library — all from one screen. This document records the design as validated on desktop and mobile against the standalone prototype; it is the reference for the real Svelte implementation, not a plan for further prototype iteration.</p>
+</div></header>
+
+<div class="shell">
+<nav class="toc"><h2>Contents</h2><ol>
+<li><a href="#status">Status &amp; scope</a></li>
+<li><a href="#screens">Two screens, one shell</a></li>
+<li><a href="#tile">The deck tile</a></li>
+<li><a href="#halos">Halo &amp; badge semantics</a></li>
+<li><a href="#ordering">List ordering</a></li>
+<li><a href="#desktop">Desktop layout</a></li>
+<li><a href="#mobile">Mobile layout</a></li>
+<li><a href="#actions">Deck actions (kebab menu)</a></li>
+<li><a href="#hover">Desktop hover previews</a></li>
+<li><a href="#opponent">Opponent selection (free play)</a></li>
+<li><a href="#keyboard">Keyboard &amp; a11y</a></li>
+<li><a href="#data">Data model gaps</a></li>
+<li><a href="#nongoals">Non-goals</a></li>
+<li><a href="#impl">Real implementation path</a></li>
+</ol></nav>
+
+<main>
+
+<section class="card" id="status">
+<h2>Status &amp; scope</h2>
+<p>This design was built and iterated as a standalone HTML/CSS/JS prototype (three rounds), verified with Playwright against real pointer interaction — not just programmatic state changes — on both a 1440×810 desktop viewport and a 430×900 phone viewport. The owner has validated the result on both surfaces. <b>No real Svelte/TypeScript component exists yet</b>; the four screens this replaces (<code>FreePlayMatchSetup.svelte</code>, <code>FreePlayDeckSeat.svelte</code>, <code>PreBattleScreen.svelte</code>, <code>DeckLibrary.svelte</code>) still hold the old UI. See <a href="#impl">Real implementation path</a>.</p>
+<div class="grid2">
+<div class="tile"><h3>Two scopes, one component</h3><p>Free Play and Story share this exact screen. A <code>scope: "free-play" | "story"</code> flag decides which library loads, whether the opponent seat is choosable, and where the deck-builder route points.</p></div>
+<div class="tile"><h3>One tile, four contexts</h3><p>The same deck-tile component renders the picking grid, the library grid, the opponent's seat card, and the player's own seat preview — only the interaction mode differs.</p></div>
+</div>
+</section>
+
+<section class="card" id="screens">
+<h2>Two screens, one shell</h2>
+<p>Duel Start (pick decks, start the duel) and the Deck Builder Library (manage the collection) share one header/tools/grid/footer shell. A deck tile always means the same thing; only the surrounding frame and what a press does differ.</p>
+<div class="tablewrap"><table><thead><tr><th>Screen</th><th>Grid press</th><th>Right panel (desktop)</th><th>Footer</th></tr></thead><tbody>
+<tr><td>Duel Start</td><td>Selects the deck for the active seat (player or, mid-pick, opponent)</td><td>Opponent portrait/deck card + your deck preview</td><td>Back · Delete/Rename/Duplicate · Open · Start the duel</td></tr>
+<tr><td>Deck Builder Library</td><td>Focuses the deck (preview only, no seat is being filled)</td><td>Full Main/Extra/Side decklist of the focused deck</td><td>Back · Delete/Rename/Duplicate</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="card" id="tile">
+<h2>The deck tile</h2>
+<p>2:1 rectangle. The card art fills the <b>entire</b> tile — not a cropped half — with a hard black fade (solid at the text edge, transparent by ~70% across) so the name/stats/badges stay legible without needing a separate art panel. This replaced an earlier 50/50 split specifically so the illustration reads as more than half the card.</p>
+<div class="grid3">
+<div class="tile"><h3>Top-left</h3><p>Favourite star (☆/★), its own button — outside the tile's own button so it's independently keyboard-reachable.</p></div>
+<div class="tile"><h3>Top-right</h3><p>Selection checkmark (✓), shown only on the tile currently picked for the active seat or focused in the library.</p></div>
+<div class="tile"><h3>Bottom-right</h3><p>Kebab (⋮) — opens the deck-actions menu. See <a href="#actions">Deck actions</a>.</p></div>
+</div>
+<p>Body text: deck name (2-line clamp), <code>Main N · Extra N · Side N</code>, a meta line (last-modified, or the block reason for an illegal deck), and a badge row.</p>
+</section>
+
+<section class="card" id="halos">
+<h2>Halo &amp; badge semantics</h2>
+<p>Colour carries meaning consistently across the grid, the seat panel, and the mobile list — never decoration.</p>
+<div class="grid2">
+<div class="swatch"><span class="dot" style="background:#4ea3ff"></span><div><b>Blue halo</b> — <code>--seat-you</code><div class="small">Your own deck: the tile you've picked for the player seat, and your seat's preview card.</div></div></div>
+<div class="swatch"><span class="dot" style="background:#ff8c9b"></span><div><b>Red halo</b> — <code>--seat-opponent</code> (reuses <code>--danger</code>)<div class="small">The opponent's deck: their seat's preview card, and — while the opponent seat is actively being filled — the tile chosen for it in the grid.</div></div></div>
+<div class="swatch"><span class="dot" style="background:#73daca"></span><div><b>Teal accent</b> — existing app accent<div class="small">Neutral selection state: the focused tile in the library grid, where no seat/colour distinction applies.</div></div></div>
+<div class="swatch"><span class="dot" style="background:#ffd580;border-radius:.3rem"></span><div><b>Gold hairline</b> — <code>--selected</code> token, border only, no glow<div class="small">Persistent "this is the scope's default deck" marker — worn regardless of current pick, so it never competes visually with an active selection glow.</div></div></div>
+</div>
+<p class="small">Both seat colours are new tokens local to this design (<code>--seat-you: #4ea3ff</code>, <code>--seat-opponent: var(--danger)</code>) — <code>src/styles/tokens.css</code> has no blue token today; the real implementation adds one.</p>
+<h3>Badges</h3>
+<div class="tablewrap"><table><thead><tr><th>Badge</th><th>Shown when</th></tr></thead><tbody>
+<tr><td><span class="badge default">Default</span></td><td>This is the scope's default deck (independent of current pick)</td></tr>
+<tr><td><span class="badge bad">Illegal / reason</span></td><td>Deck fails validation — story shows it disabled with the reason; free play never lists it at all</td></tr>
+<tr><td><span class="badge">Bundled</span></td><td>Preset deck, ships with the app, not user-created</td></tr>
+<tr><td><span class="badge">🔒 &lt;AI name&gt;</span></td><td>Deck is owned by a specific free-play AI opponent — never deletable</td></tr>
+<tr><td><span class="badge blue">Yours</span></td><td>While filling the opponent seat: marks which tile is your own current pick, so it doesn't disappear from view</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="card" id="ordering">
+<h2>List ordering</h2>
+<p>Same rank function everywhere a deck list renders (duel-start grid, library grid, mobile list), in this priority order:</p>
+<ol class="tight">
+<li><b>Illegal decks sink to the bottom</b>, unconditionally — before default/favourite rank is even considered. A deck that cannot be picked should never crowd out one that can.</li>
+<li><b>Default deck</b> first among the rest.</li>
+<li><b>Favourited decks</b> next.</li>
+<li><b>Everything else</b>, ordered by the active sort (last-modified or name).</li>
+</ol>
+<p>Mobile adds one more transform on top: whichever deck is <i>currently selected</i> for the active seat is pinned to the very first slot in the visible list, ahead of even the default/favourite ranking above, so it never scrolls out of reach while the grid is being browsed.</p>
+</section>
+
+<section class="card" id="desktop">
+<h2>Desktop layout</h2>
+<div class="wire">
+<b>16:9 stage, two columns.</b><br>
+Left (≈73%): header (eyebrow + title + <code>X/Y</code> deck count) → filter/sort tools → scrolling deck grid → footer.<br>
+Right (≈27%, ≥17rem): opponent portrait/identity → opponent's deck card (red halo) → your deck card (blue halo).<br>
+Below 62rem container width, the layout collapses to one column with the opponent panel stacked above the grid.
+</div>
+<ul class="tight">
+<li><b>No "Change opponent" / "Change deck" buttons.</b> The opponent's portrait itself is the control that opens the AI picker (persistent "⇄ Change" chip on hover/focus); the opponent's deck card itself is the control that puts the grid into opponent-seat-picking mode (press again, or the card's own toggle state, to return to picking for yourself).</li>
+<li><b>Deck count</b> renders as <code>shown/total</code> next to "Choose your deck", live with the filter.</li>
+<li><b>Footer</b> (left to right): Back · Delete/Rename/Duplicate (act on whichever seat's current pick is highlighted; same enablement rule as the library — Delete off for bundled/AI-owned decks) · Open (opens the selected deck directly, no browse step) · Start the duel.</li>
+<li>Double-clicking any grid tile opens it — the single click(s) that precede the browser's native dblclick already updated selection/focus, so this only triggers the open action.</li>
+</ul>
+</section>
+
+<section class="card" id="mobile">
+<h2>Mobile layout</h2>
+<div class="wire">
+<b>Single column, portrait phone frame.</b><br>
+Header (back icon + eyebrow + title + <code>X/Y</code> count) → opponent card → filter/sort tools → scrolling one-column deck list (selected deck pinned first) → sticky footer (Start the duel only).
+</div>
+<ul class="tight">
+<li><b>Opponent card</b> sits below the header, above the deck list: tappable avatar (with a permanent ⇄ badge — no hover state exists on a phone) opens the AI picker; the deck card below it (red halo) toggles opponent-seat picking. No separate "Change opponent" / "Change deck" buttons — same avatar-and-card-are-the-controls rule as desktop.</li>
+<li><b>No standalone "Open" button.</b> Deck management moved entirely onto each card's own kebab menu (see next section) — the footer's only job is Start.</li>
+<li>Double-click/double-tap to open works identically to desktop.</li>
+</ul>
+</section>
+
+<section class="card" id="actions">
+<h2>Deck actions (kebab menu)</h2>
+<p>Every grid deck card — desktop and mobile alike — carries a ⋮ kebab at its bottom-right. Pressing it opens an action sheet (dismissed by pressing outside it, or Escape):</p>
+<ol class="tight">
+<li><b>Open in deck builder</b> — first, the primary action.</li>
+<li><b>Rename</b></li>
+<li><b>Duplicate</b> — creates an editable local copy and selects it.</li>
+<li><b>Delete</b> — disabled for bundled/AI-owned decks (<code>source === "preset"</code>), which are never deletable.</li>
+</ol>
+<p class="small">Desktop's duel-start screen additionally exposes Delete/Rename/Duplicate as ordinary footer buttons (see <a href="#desktop">Desktop layout</a>) acting on the currently-picked deck — the kebab and the footer buttons are two paths to the identical operation, not two different feature sets.</p>
+</section>
+
+<section class="card" id="hover">
+<h2>Desktop hover previews</h2>
+<div class="grid2">
+<div class="tile"><h3>Duel start: floating decklist</h3><p>Hovering a grid tile floats its full Main/Extra/Side decklist beside the card (flips to the opposite side if it would run off-screen). The panel is sized to the <b>whole viewport height</b> minus a small margin, not a fixed short tooltip height — a 90-card maximum-size deck should be visible with minimal or no internal scrolling. Disappears immediately when the pointer leaves the tile.</p></div>
+<div class="tile"><h3>Library: docked panel + card art</h3><p>Hovering a tile in the library grid previews its list in the docked right panel without moving the actual focus (reverts on mouseout). Hovering a decklist row inside that panel floats a full-size, text-free card-art image near the cursor.</p></div>
+</div>
+<div class="note">
+<b>Implementation trap already hit once:</b> a floating panel that sets <code>display: flex</code> as an ordinary class rule will stay visually displayed even while its <code>hidden</code> attribute is set — an author-origin <code>display</code> declaration always beats the browser's built-in <code>[hidden]{display:none}</code> rule regardless of specificity. Any new floating/tooltip element needs an explicit <code>.thing[hidden]{display:none}</code> override, or must avoid declaring <code>display</code> on the bare class at all.
+</div>
+</section>
+
+<section class="card" id="opponent">
+<h2>Opponent selection (free play only)</h2>
+<p>Story's opponent is fixed by the encounter (portrait, name, deck all locked, with a "🔒 Set by the story" caption on the deck card) — none of this section applies there.</p>
+<ul class="tight">
+<li>Free play offers exactly three bundled AI opponents (Practice Bot, Blaze Circuit, Vault Warden), picked from the portrait-triggered picker — same tile grammar as decks (name + line, no stats row).</li>
+<li>Each AI owns exactly one bundled, undeletable deck. Picking a different AI brings its deck along automatically; the opponent's own deck card can still override that pick for one duel by opening opponent-seat-picking mode.</li>
+</ul>
+</section>
+
+<section class="card" id="keyboard">
+<h2>Keyboard &amp; a11y</h2>
+<div class="grid2">
+<div class="tile"><h3>Preserved shortcuts</h3><p><code>/</code> focuses the filter · <code>↑</code>/<code>↓</code> move the pick among legal decks · <code>Enter</code> starts the duel · <code>f</code> toggles favourite on the current pick.</p></div>
+<div class="tile"><h3>Contract carried into real code</h3><p>Every rendered element needs a role-describing <code>data-cy</code> per the project's HTML element contract; the prototype's naming (e.g. <code>deck-tile-${id}</code>, <code>deck-tile-menu-${id}</code>, <code>duel-start-opponent-portrait</code>) is the reference naming to reuse, not to redesign.</p></div>
+</div>
+<p class="small">Open, undecided in this round: colour is still doing real work here (the red/blue halo pair, the gold default hairline) with no contrast or colour-blind pass done yet — flagged in <code>PRODUCT.md</code> as the duel field's own known accessibility debt, and the same caveat now extends to this screen.</p>
+</section>
+
+<section class="card" id="data">
+<h2>Data model gaps this design assumes get filled</h2>
+<div class="tablewrap"><table><thead><tr><th>Gap</th><th>Where it bites</th><th>Suggested fix</th></tr></thead><tbody>
+<tr><td>No cover-art field on a deck record</td><td>Every tile's full-bleed illustration</td><td>Add <code>coverCardCode?: number</code> to <code>DeckRecord</code> (<code>src/decks/deck-contracts.ts</code>), defaulting to the deck's first Extra card, else its first Main card</td></tr>
+<tr><td><code>aiOwner</code> (one deck permanently bound to one AI) has no real equivalent</td><td>Free-play opponent picker, the 🔒 badge, delete-guarding</td><td>Check <code>src/battle/worker/opponent/</code> for how opponent AI selection actually works today before assuming a 1:1 mapping</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="card" id="nongoals">
+<h2>Non-goals</h2>
+<ul class="tight">
+<li>No real Yu-Gi-Oh! card art anywhere in the prototype — every illustration is authored inline SVG geometry, matching the discipline in <code>src/story/assets/PROVENANCE.md</code>. The real implementation swaps each placeholder for the cover card's cropped image from the pinned asset snapshot.</li>
+<li>No chosen product-wide visual direction is implied here — this is a refinement of the incumbent <code>src/styles/tokens.css</code> world, not an adoption of any of the twenty unselected directions explored elsewhere in <code>artifacts/</code>.</li>
+<li>No real deck-builder editor screen exists yet; every "Open"/"Open in deck builder" action in the prototype is a simulated acknowledgement (a tile pulse), not a navigation.</li>
+</ul>
+</section>
+
+<section class="card" id="impl">
+<h2>Real implementation path</h2>
+<p>This is a design spec, not an implementation plan. Before writing real code:</p>
+<ol class="tight">
+<li>Confirm current contracts with <code>graphify query</code>/<code>graphify explain</code> against <code>src/battle/duel/presets/deck-catalog.ts</code>, <code>src/decks/deck-library-order.ts</code> (<code>orderDeckLibrary</code>), and <code>src/decks/deck-contracts.ts</code> — this design's ordering rule and tile data are meant to extend those, not replace them.</li>
+<li>The four real screens this replaces span three domains — <code>src/shell/screens/FreePlayMatchSetup.svelte</code>, <code>src/shell/screens/FreePlayDeckSeat.svelte</code>, <code>src/story/screens/PreBattleScreen.svelte</code>, <code>src/deck-editor/components/DeckLibrary.svelte</code> — so building it is cross-domain work. Read <a href="ADR/022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md">ADR-022</a> and the Boundary rules in <code>AGENTS.md</code> before any cross-domain import.</li>
+<li>The full prototype markup/behaviour this document summarizes is recoverable at any time from git history: <code>git show 7c34d05:artifacts/PROTOTYPE_duel_start_deck_selection.html</code>.</li>
+</ol>
+</section>
+
+</main>
+</div>
+
+<footer>Commit: <code>7c34d05</code> — validated prototype snapshot this design was written against · Related: <a href="deck-selection-architecture.html"><code>deck-selection-architecture.html</code></a> (registry/Worker flow, unaffected by this screen's visual redesign) · <a href="ADR/054_ADR_free_play_opens_on_the_seats.md"><code>ADR-054</code></a> (free-play seat-entry precedent this extends) · Canonical map: <a href="architecture/architecture.md"><code>architecture/architecture.md</code></a></footer>
+
+</body></html>

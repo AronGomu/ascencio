@@ -86,6 +86,9 @@ function storyContext(collection: Readonly<Record<number, number>>): {
       dispatch: (command) => {
         state = reduceStory(state, command);
       },
+      restore: (previous) => {
+        state = previous;
+      },
       persist: () => Promise.resolve(),
     });
   return {

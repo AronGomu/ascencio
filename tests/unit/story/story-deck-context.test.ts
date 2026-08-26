@@ -171,4 +171,32 @@ describe("openStoryDeckContext", () => {
         .create(storyDeckFixture("unwritable"), emptyDeckHistory()),
     ).rejects.toThrow(DeckStorageError);
   });
+
+  /* The write refused once, then allowed: the editor's retry path. The context
+     must roll its state back on the refusal, or the retry writes a save whose
+     revision the store no longer holds. */
+  it("rolls the save back so a refused write can be retried", async () => {
+    const real = saves();
+    let refuse = true;
+    const flaky: StorySaveRepository = {
+      ...real,
+      write: (slot, state, revision) =>
+        refuse
+          ? Promise.resolve({ kind: "failed", reason: "quota" })
+          : real.write(slot, state, revision),
+    };
+    await seed("manual:1", saveState({ decks: [] }), 20);
+    const context = await openStoryDeckContext(flaky);
+    if (context?.kind !== "story") throw new Error("no story context");
+    const repository = context.createRepository();
+
+    await expect(
+      repository.create(storyDeckFixture("retried"), emptyDeckHistory()),
+    ).rejects.toThrow(DeckStorageError);
+    expect(await repository.list()).toStrictEqual([]);
+
+    refuse = false;
+    await repository.create(storyDeckFixture("retried"), emptyDeckHistory());
+    expect(await storedDeckIds("manual:1")).toStrictEqual(["retried"]);
+  });
 });

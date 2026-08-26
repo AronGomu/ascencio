@@ -35,12 +35,17 @@ const NOW = new Date("2026-09-01T12:00:00.000Z");
 function harness(overrides: Partial<StoryState> = {}) {
   let state: StoryState = { ...createInitialStoryState(), ...overrides };
   const persisted: StoryState[] = [];
+  let persistError: Error | null = null;
   const repository = createStoryDeckRepository({
     readState: () => state,
     dispatch: (command) => {
       state = reduceStory(state, command);
     },
+    restore: (previous) => {
+      state = previous;
+    },
     persist: async () => {
+      if (persistError !== null) throw persistError;
       persisted.push(state);
     },
     now: () => NOW,
@@ -50,6 +55,9 @@ function harness(overrides: Partial<StoryState> = {}) {
     persisted,
     get state(): StoryState {
       return state;
+    },
+    failPersistWith(error: Error | null) {
+      persistError = error;
     },
   };
 }
@@ -329,6 +337,7 @@ describe("story deck repository", () => {
       dispatch: () => {
         /* A holder wired to a stale store: the command is accepted and lost. */
       },
+      restore: () => {},
       persist: async () => {
         persisted.push(state);
       },
@@ -368,6 +377,174 @@ describe("story deck repository", () => {
   });
 });
 
+/* The branch the audit repros live in: the command landed, the write was
+   refused. Memory must come back to where disk still is — otherwise the retry
+   is refused as a false conflict and the editor reports "saved" for a deck
+   the save does not have. */
+describe("a persist the save layer refused", () => {
+  const refusal = () => new DeckStorageError("Storage is full");
+
+  it("save rolls back and the retry then writes", async () => {
+    const context = harness({ decks: [storyDeck("alpha", { revision: 4 })] });
+    const edited: DeckHistory = { undo: [], redo: [], nextSequence: 7 };
+    context.failPersistWith(refusal());
+
+    await expect(
+      context.repository.save(
+        4,
+        storyDeck("alpha", { revision: 4, name: "Renamed" }),
+        edited,
+      ),
+    ).rejects.toBeInstanceOf(DeckStorageError);
+    expect(context.state.decks[0]!.name).toBe("Deck alpha");
+    expect(context.state.decks[0]!.revision).toBe(4);
+    expect((await context.repository.load(deckId("alpha")))?.history).toEqual(
+      emptyDeckHistory(),
+    );
+    expect(context.persisted).toEqual([]);
+
+    context.failPersistWith(null);
+    const stored = await context.repository.save(
+      4,
+      storyDeck("alpha", { revision: 4, name: "Renamed" }),
+      edited,
+    );
+    expect(stored.deck.revision).toBe(5);
+    expect(context.persisted).toHaveLength(1);
+    expect(context.persisted[0]!.decks[0]!.name).toBe("Renamed");
+  });
+
+  it("create leaves no deck behind and the retry then writes", async () => {
+    const context = harness();
+    context.failPersistWith(refusal());
+
+    await expect(
+      context.repository.createAndOpen(storyDeck("alpha"), history),
+    ).rejects.toBeInstanceOf(DeckStorageError);
+    expect(context.state.decks).toEqual([]);
+    expect(await context.repository.load(deckId("alpha"))).toBeNull();
+    expect(await context.repository.getLastOpened()).toBeNull();
+    expect(context.persisted).toEqual([]);
+
+    context.failPersistWith(null);
+    const stored = await context.repository.createAndOpen(
+      storyDeck("alpha"),
+      history,
+    );
+    expect(stored.deck.revision).toBe(1);
+    expect(await context.repository.getLastOpened()).toBe("alpha");
+    expect(context.persisted).toHaveLength(1);
+  });
+
+  it("delete keeps the deck and the session, and the retry then writes", async () => {
+    const context = harness({ decks: [storyDeck("alpha")] });
+    await context.repository.setFavourite(deckId("alpha"), true);
+    await context.repository.setLastOpened(deckId("alpha"));
+    context.failPersistWith(refusal());
+
+    await expect(
+      context.repository.delete(deckId("alpha"), 1),
+    ).rejects.toBeInstanceOf(DeckStorageError);
+    expect(context.state.decks).toHaveLength(1);
+    expect(await context.repository.listFavourites()).toEqual(["alpha"]);
+    expect(await context.repository.getLastOpened()).toBe("alpha");
+    expect(context.persisted).toEqual([]);
+
+    context.failPersistWith(null);
+    await context.repository.delete(deckId("alpha"), 1);
+    expect(context.state.decks).toEqual([]);
+    expect(context.persisted).toHaveLength(1);
+    expect(context.persisted[0]!.decks).toEqual([]);
+    expect(await context.repository.listFavourites()).toEqual([]);
+    expect(await context.repository.getLastOpened()).toBeNull();
+  });
+
+  it("setDefaultDeck rolls back and the retry then writes", async () => {
+    const context = harness({ decks: [storyDeck("alpha")] });
+    context.failPersistWith(refusal());
+
+    await expect(
+      context.repository.setDefaultDeck(deckId("alpha")),
+    ).rejects.toBeInstanceOf(DeckStorageError);
+    expect(context.state.defaultDeckId).toBeNull();
+    expect(await context.repository.getDefaultDeck()).toBeNull();
+    expect(context.persisted).toEqual([]);
+
+    context.failPersistWith(null);
+    await context.repository.setDefaultDeck(deckId("alpha"));
+    expect(context.state.defaultDeckId).toBe("alpha");
+    expect(context.persisted).toHaveLength(1);
+  });
+
+  /* The reachable overlap: the editor queues #save but not setDefaultDeck, so
+     a default click can land inside a failing save's persist await. Commits
+     serialize through one per-repository chain, so the refused save rolls
+     back without clobbering the default write behind it. Deterministic: the
+     first persist stays pending until the second call is enqueued, then
+     rejects — no timers. */
+  it("a refused write cannot clobber the write behind it", async () => {
+    let state: StoryState = {
+      ...createInitialStoryState(),
+      decks: [storyDeck("alpha", { revision: 4 })],
+    };
+    const persisted: StoryState[] = [];
+    let persistCalls = 0;
+    let refuseFirst: (error: Error) => void = () => {};
+    let firstPersistReached: () => void = () => {};
+    const firstPersistStarted = new Promise<void>((resolve) => {
+      firstPersistReached = resolve;
+    });
+    const repository = createStoryDeckRepository({
+      readState: () => state,
+      dispatch: (command) => {
+        state = reduceStory(state, command);
+      },
+      restore: (previous) => {
+        state = previous;
+      },
+      persist: () => {
+        persistCalls += 1;
+        if (persistCalls === 1) {
+          firstPersistReached();
+          return new Promise<void>((_, reject) => {
+            refuseFirst = reject;
+          });
+        }
+        persisted.push(state);
+        return Promise.resolve();
+      },
+      now: () => NOW,
+    });
+    const edited: DeckHistory = { undo: [], redo: [], nextSequence: 7 };
+
+    const saveAttempt = repository.save(
+      4,
+      storyDeck("alpha", { revision: 4, name: "Renamed" }),
+      edited,
+    );
+    const defaultAttempt = repository.setDefaultDeck(deckId("alpha"));
+    await firstPersistStarted;
+    refuseFirst(refusal());
+
+    await expect(saveAttempt).rejects.toBeInstanceOf(DeckStorageError);
+    await defaultAttempt;
+    expect(state.defaultDeckId).toBe("alpha");
+    expect(state.decks[0]!.name).toBe("Deck alpha");
+    expect(state.decks[0]!.revision).toBe(4);
+    expect(persisted).toHaveLength(1);
+    expect(persisted[0]).toBe(state);
+
+    const stored = await repository.save(
+      4,
+      storyDeck("alpha", { revision: 4, name: "Renamed" }),
+      edited,
+    );
+    expect(stored.deck.revision).toBe(5);
+    expect(persisted).toHaveLength(2);
+    expect(persisted[1]!.defaultDeckId).toBe("alpha");
+  });
+});
+
 /* Everything above stubs the write. This drives the same adapter through the
    real store, because the requirement is not that `persist` was called: it is
    that the record which lands is one this build can still read back. A deck the
@@ -389,6 +566,9 @@ describe("a deck edit is part of the save", () => {
       readState: () => state,
       dispatch: (command) => {
         state = reduceStory(state, command);
+      },
+      restore: (previous) => {
+        state = previous;
       },
       persist: async () => {
         const result = await saves.write("manual:1", state, null);

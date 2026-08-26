@@ -73,6 +73,12 @@ function storyDeckContext(
         dispatch: (command) => {
           state = reduceStory(state, command);
         },
+        /* A refused write rolls the dispatched command back out, so the next
+           attempt writes from the state the save still holds instead of being
+           refused as stale. */
+        restore: (previous) => {
+          state = previous;
+        },
         /* Thrown rather than returned: the editor reports a failed save from
            an exception, and a refused write reported as success would leave
            the player looking at a deck their save does not have. */

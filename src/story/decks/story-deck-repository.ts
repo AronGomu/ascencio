@@ -34,6 +34,9 @@ import { isStoryDeck } from "../saves/story-save-contracts.ts";
 export interface StoryDeckRepositoryDeps {
   readState(): StoryState;
   dispatch(command: StoryCommand): void;
+  /** Puts the captured pre-dispatch state back when the write is refused, so
+      memory never runs ahead of the save on disk. */
+  restore(state: StoryState): void;
   persist(): Promise<void>;
   now?: () => Date;
 }
@@ -41,6 +44,7 @@ export interface StoryDeckRepositoryDeps {
 export function createStoryDeckRepository({
   readState,
   dispatch,
+  restore,
   persist,
   now = () => new Date(),
 }: StoryDeckRepositoryDeps): DeckRepository {
@@ -53,18 +57,45 @@ export function createStoryDeckRepository({
     return readState().decks.find((deck) => deck.id === id);
   }
 
+  /* One chain per repository — the save layer's serialize() idiom: every
+     commit captures its snapshot only after the previous commit settled. The
+     editor does not queue setDefaultDeck/deleteDeck behind an in-flight save,
+     and a rollback racing such a commit could otherwise restore over a write
+     that already landed on disk. */
+  let chain: Promise<unknown> = Promise.resolve();
+
+  function serialize<T>(task: () => Promise<T>): Promise<T> {
+    const next = chain.then(task, task);
+    chain = next.catch(() => undefined);
+    return next;
+  }
+
   /* Dispatch, confirm the command landed, and only then write. Each of the four
      deck commands answers an id it cannot resolve by changing nothing, so a
      save that followed a dropped command would store the state the editor was
-     trying to replace — and report it to the editor as a successful save. */
-  async function commit(
+     trying to replace — and report it to the editor as a successful save.
+
+     The state captured first comes back through `restore` on any refusal, so a
+     thrown commit leaves memory exactly where disk still is: a retry carries
+     the revision the save holds instead of being refused as a conflict. */
+  function commit(
     command: StoryCommand,
     landed: (state: StoryState) => boolean,
   ): Promise<void> {
-    dispatch(command);
-    if (!landed(readState()))
-      throw new DeckStorageError("The story save did not accept the change");
-    await persist();
+    return serialize(async () => {
+      const previous = readState();
+      try {
+        dispatch(command);
+        if (!landed(readState()))
+          throw new DeckStorageError(
+            "The story save did not accept the change",
+          );
+        await persist();
+      } catch (error) {
+        restore(previous);
+        throw error;
+      }
+    });
   }
 
   /* The save layer's own predicate rather than a second copy of the free-play
@@ -97,11 +128,13 @@ export function createStoryDeckRepository({
     if (find(deck.id) !== undefined)
       throw new DeckRevisionConflictError(deck.revision);
     const next = stamp(deck, 1);
-    histories.set(next.id, history);
-    if (open) lastOpened = next.id;
     await commit({ type: "deck-create", deck: next }, (state) =>
       state.decks.some(({ id }) => id === next.id),
     );
+    /* Session state only after the write landed: a refused create must leave no
+       trace for the editor's recovery probe to mistake for a committed deck. */
+    histories.set(next.id, history);
+    if (open) lastOpened = next.id;
     return Object.freeze({ deck: next, history });
   }
 
@@ -136,13 +169,13 @@ export function createStoryDeckRepository({
       if (current === undefined || current.revision !== expectedRevision)
         throw new DeckRevisionConflictError(current?.revision ?? null);
       const next = stamp(deck, expectedRevision + 1);
-      histories.set(next.id, history);
       await commit(
         { type: "deck-save", deck: next },
         (state) =>
           state.decks.find(({ id }) => id === next.id)?.revision ===
           next.revision,
       );
+      histories.set(next.id, history);
       return Object.freeze({ deck: next, history });
     },
 
@@ -150,18 +183,20 @@ export function createStoryDeckRepository({
       const current = find(id);
       if (current !== undefined && current.revision !== expectedRevision)
         throw new DeckRevisionConflictError(current.revision);
+      /* A deck that is already gone is not a conflict — a retried delete has to
+         settle — but it is also not a change worth writing a save for. */
+      if (current !== undefined)
+        await commit(
+          { type: "deck-delete", id },
+          (state) => !state.decks.some((deck) => deck.id === id),
+        );
       /* Everything that named the deck goes out with it, so no part of the
-         session is left pointing at a deck the save no longer has. */
+         session is left pointing at a deck the save no longer has — but only
+         once the write landed, so a refused delete leaves the session pointing
+         at a deck the save still has. */
       histories.delete(id);
       favourites.delete(id);
       if (lastOpened === id) lastOpened = null;
-      /* A deck that is already gone is not a conflict — a retried delete has to
-         settle — but it is also not a change worth writing a save for. */
-      if (current === undefined) return;
-      await commit(
-        { type: "deck-delete", id },
-        (state) => !state.decks.some((deck) => deck.id === id),
-      );
     },
 
     getLastOpened() {

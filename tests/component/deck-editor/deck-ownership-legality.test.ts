@@ -90,6 +90,9 @@ function storyContext(
         dispatch: (command) => {
           state = reduceStory(state, command);
         },
+        restore: (previous) => {
+          state = previous;
+        },
         persist: () => Promise.resolve(),
       }),
   });

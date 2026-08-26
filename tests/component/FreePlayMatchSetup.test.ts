@@ -25,6 +25,11 @@ import { DECK_DATABASE_NAME } from "../../src/decks/index.ts";
 import { IndexedDbDeckRepository } from "../../src/decks/indexeddb-deck-repository.ts";
 import { PROTOTYPE_CATALOG } from "../../src/deck-editor/fixtures/catalog.ts";
 import type { BattleDeckModule } from "../../src/shell/domain-loaders.ts";
+import {
+  listedFreePlayDecks,
+  resetFreePlayDeckCacheForTests,
+  warmFreePlayDecks,
+} from "../../src/shell/screens/free-play-deck-listing.ts";
 import FreePlayMatchSetup from "../../src/shell/screens/FreePlayMatchSetup.svelte";
 import { createShellSettingsStore } from "../../src/shell/settings/shell-settings-store.ts";
 import { installPrototypeActiveCatalog } from "../fixtures/active-catalog.ts";
@@ -140,6 +145,7 @@ interface RenderOptions {
 function renderSetup(options: RenderOptions = {}) {
   const onstart = vi.fn();
   const onback = vi.fn();
+  const ondecks = vi.fn();
   const storage = options.storage ?? memoryStorage();
   const rendered = render(FreePlayMatchSetup, {
     settings: createShellSettingsStore(storage),
@@ -147,17 +153,30 @@ function renderSetup(options: RenderOptions = {}) {
       options.loadBattle ?? (async () => battleModule(options.module)),
     onstart,
     onback,
+    ondecks,
   });
-  return { ...rendered, onstart, onback, storage };
+  return { ...rendered, onstart, onback, ondecks, storage };
 }
 
+/** Rendered as far as the bundled decks, which need no library read. */
 async function renderLoadedSetup(options: RenderOptions = {}) {
   const setup = renderSetup(options);
   await vi.waitFor(() => expect(seat("player").options).not.toHaveLength(0));
   return setup;
 }
 
+/** Rendered as far as the library behind those bundled decks, which is what
+    puts the seeded local deck in both seats. */
+async function renderListedSetup(options: RenderOptions = {}) {
+  const setup = renderSetup(options);
+  await vi.waitFor(() => expect(optionKeys("player")).toContain(LOCAL_KEY));
+  return setup;
+}
+
 beforeEach(async () => {
+  /* The listing is held for the life of the page, so one test's library would
+     otherwise be the next one's first paint. */
+  resetFreePlayDeckCacheForTests();
   await deleteDeckDatabase();
   await seedLocalDeck();
 });
@@ -169,7 +188,7 @@ afterEach(async () => {
 
 describe("FreePlayMatchSetup", () => {
   it("lists presets and local decks for both seats", async () => {
-    await renderLoadedSetup();
+    await renderListedSetup();
 
     expect(query("free-play-match-setup")).not.toBeNull();
     for (const which of ["player", "opponent"] as const) {
@@ -181,8 +200,56 @@ describe("FreePlayMatchSetup", () => {
     }
   });
 
+  /* The bundled decks are compiled into this build, so they are on screen and
+     playable before the library read behind them has answered. */
+  it("offers the bundled decks before the library answers", async () => {
+    /* A library read that never answers, so the first stage is what stays on
+       screen: in a browser it is a fetch of the whole card database. */
+    await renderLoadedSetup({
+      module: { supportedDuelCardCodes: () => new Promise(() => {}) },
+    });
+
+    expect(optionKeys("player")).toEqual([
+      PLAYER_PRESET_KEY,
+      OPPONENT_PRESET_KEY,
+    ]);
+    expect(seat("player").disabled).toBe(false);
+    expect(startButton().disabled).toBe(false);
+  });
+
+  /* What a warmed page opens on: the read the main menu started is already an
+     answer, so a second visit never waits on the battle entry again. The
+     loader below would hang forever if this mount needed it. */
+  it("opens on the library the page already read", async () => {
+    warmFreePlayDecks(async () => battleModule());
+    await vi.waitFor(() => expect(listedFreePlayDecks()).not.toBeNull());
+
+    await renderListedSetup({
+      loadBattle: () => new Promise<BattleDeckModule>(() => {}),
+    });
+
+    expect(startButton().disabled).toBe(false);
+  });
+
+  /* A deck built between two visits is listed on the second, so the library
+     the seats show is never the one the page happened to read first. */
+  it("re-reads the library on every visit", async () => {
+    await renderListedSetup();
+    cleanup();
+    await deleteDeckDatabase();
+
+    await renderLoadedSetup();
+
+    await vi.waitFor(() =>
+      expect(optionKeys("player")).toEqual([
+        PLAYER_PRESET_KEY,
+        OPPONENT_PRESET_KEY,
+      ]),
+    );
+  });
+
   it("builds a battle request from both selections", async () => {
-    const setup = await renderLoadedSetup();
+    const setup = await renderListedSetup();
 
     await fireEvent.change(seat("player"), { target: { value: LOCAL_KEY } });
     await fireEvent.change(seat("opponent"), {
@@ -201,7 +268,7 @@ describe("FreePlayMatchSetup", () => {
 
   it("remembers the last pairing", async () => {
     const storage = memoryStorage();
-    const first = await renderLoadedSetup({ storage });
+    const first = await renderListedSetup({ storage });
 
     await fireEvent.change(seat("player"), { target: { value: LOCAL_KEY } });
     await fireEvent.change(seat("opponent"), {
@@ -211,7 +278,7 @@ describe("FreePlayMatchSetup", () => {
     expect(first.onstart).toHaveBeenCalledTimes(1);
     cleanup();
 
-    await renderLoadedSetup({ storage });
+    await renderListedSetup({ storage });
 
     expect(seat("player").value).toBe(LOCAL_KEY);
     expect(seat("opponent").value).toBe(PLAYER_PRESET_KEY);
@@ -219,7 +286,7 @@ describe("FreePlayMatchSetup", () => {
 
   it("falls back when a remembered deck is gone", async () => {
     const storage = memoryStorage();
-    const first = await renderLoadedSetup({ storage });
+    const first = await renderListedSetup({ storage });
     await fireEvent.change(seat("player"), { target: { value: LOCAL_KEY } });
     await fireEvent.click(startButton());
     expect(first.onstart).toHaveBeenCalledTimes(1);
@@ -249,7 +316,7 @@ describe("FreePlayMatchSetup", () => {
   /* The seats stay live so the player can pick their way out of it, rather
      than being left on a screen whose only working control is Back. */
   it("shows a refused request inline and keeps the pickers usable", async () => {
-    const setup = await renderLoadedSetup({
+    const setup = await renderListedSetup({
       module: {
         parseBattleRequest: () => {
           throw new BattleRequestError("player.deck.main holds 39 cards");
@@ -272,12 +339,24 @@ describe("FreePlayMatchSetup", () => {
     expect(query("free-play-match-error")).toBeNull();
   });
 
-  it("goes back to the free-play menu without starting a match", async () => {
+  it("goes back to the main menu without starting a match", async () => {
     const setup = await renderLoadedSetup();
 
     await fireEvent.click(query("free-play-match-back")!);
 
     expect(setup.onback).toHaveBeenCalledTimes(1);
+    expect(setup.onstart).not.toHaveBeenCalled();
+  });
+
+  /* The deck builder is offered under the seat whose decks the player owns,
+     and only there: nobody builds a deck for the opponent seat. */
+  it("offers the deck builder under the player's seat", async () => {
+    const setup = await renderLoadedSetup();
+
+    expect(query("free-play-match-opponent-deck-builder")).toBeNull();
+    await fireEvent.click(query("free-play-match-player-deck-builder")!);
+
+    expect(setup.ondecks).toHaveBeenCalledTimes(1);
     expect(setup.onstart).not.toHaveBeenCalled();
   });
 });

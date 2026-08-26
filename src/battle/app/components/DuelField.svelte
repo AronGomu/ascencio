@@ -2,6 +2,7 @@
   import { onDestroy, onMount, tick } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
   import type { DuelPresentationEvent } from "../../duel/contracts/duel-presentation-event.ts";
+  import type { PromptMessageSegment } from "../presentation/prompt-context-message.ts";
   import type { PlayerPrompt } from "../../duel/contracts/player-prompt.ts";
   import type { DuelPhase } from "../../duel/contracts/public-duel-state.ts";
   import type { CardImageLibrary } from "../images/card-image-cache.ts";
@@ -69,6 +70,7 @@
   import FloatingFieldWindow from "./duel-field/FloatingFieldWindow.svelte";
   import FieldBoard from "./duel-field/FieldBoard.svelte";
   import FieldLines from "./duel-field/FieldLines.svelte";
+  import FullControlToggle from "./duel-field/FullControlToggle.svelte";
   import PhaseStrip from "./duel-field/PhaseStrip.svelte";
 
   const noop = (): void => undefined;
@@ -94,6 +96,10 @@
     readonly event: DuelPresentationEvent;
   }[] = [];
   export let feedbackGeneration = "component";
+  /* Built by the app from the snapshot, the batch's events and the card texts,
+     because none of those three live on the field. The field only places the
+     line inside the decision window. */
+  export let contextMessage: readonly PromptMessageSegment[] = [];
   export let reducedMotion: boolean | null = null;
   export let injectFailure: boolean = false;
   export let oninteraction: (
@@ -126,6 +132,12 @@
   export let onconfirmWindowPositionChange: (
     position: PersistedWindowPosition,
   ) => void = noop;
+  /* Full Control lives in the field's own corner, so the box travels with the
+     board rather than with the slot around it. The stored setting and the Ctrl
+     hold stay apart: clicking while Ctrl is down still writes the setting. */
+  export let fullControl = false;
+  export let fullControlHeld = false;
+  export let onfullcontrolchange: (value: boolean) => void = noop;
 
   /* Exactly one list window: either one browsed pile, or the aggregate target
      list of one prompt. */
@@ -1124,6 +1136,11 @@
       />
     </div>
   </div>
+  <FullControlToggle
+    value={fullControl}
+    held={fullControlHeld}
+    onchange={onfullcontrolchange}
+  />
   {#if ghostOrigin !== null && ghostFrame !== null}
     <DragGhost
       frame={ghostFrame}
@@ -1236,6 +1253,7 @@
       <FieldActionBar
         {spec}
         {session}
+        {contextMessage}
         disabled={pending}
         confirmValid={validation.valid}
         validationMessage={validation.valid ? "" : validation.message}

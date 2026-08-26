@@ -8,6 +8,10 @@
      worker closed, disposal in flight) changes nothing, so the dialog has to
      stay up and say so rather than dismiss on an action that never happened. */
   export let onsurrender: () => boolean;
+  /* The host's way out of the match, offered here rather than as a control
+     painted over the field. `null` is a context that owns its own exit — a
+     story session — and then the button is absent rather than dead. */
+  export let onleavematch: (() => void) | null = null;
   export let onclose: () => void;
 
   let panel: HTMLDivElement | undefined;
@@ -103,6 +107,14 @@
           class="danger"
           data-cy="menu-dialog-surrender-button"
           onclick={beginSurrenderConfirmation}>Surrender</button
+        >
+      {/if}
+      {#if onleavematch !== null}
+        <button
+          type="button"
+          class="secondary"
+          data-cy="menu-dialog-leave-match-button"
+          onclick={onleavematch}>Leave match</button
         >
       {/if}
       <button

@@ -3,10 +3,12 @@
   import type { ChoiceId } from "../../duel/contracts/ids.ts";
   import type { PlayerPrompt } from "../../duel/contracts/player-prompt.ts";
   import PromptControls from "../prompts/PromptControls.svelte";
+  import type { PromptMessageSegment } from "../presentation/prompt-context-message.ts";
 
   export let prompt: PlayerPrompt;
   export let disabled = false;
   export let onsubmit: (choiceIds: readonly ChoiceId[]) => unknown;
+  export let contextMessage: readonly PromptMessageSegment[] = [];
 
   let panel: HTMLDivElement | undefined;
 
@@ -29,6 +31,7 @@
     <PromptControls
       {prompt}
       {disabled}
+      {contextMessage}
       onsubmit={(choiceIds) => {
         onsubmit(choiceIds);
       }}

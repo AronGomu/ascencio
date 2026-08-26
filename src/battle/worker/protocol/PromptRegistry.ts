@@ -24,6 +24,10 @@ import type {
 import type { ActiveDuelDependencies } from "../assets/active-duel-dependencies.ts";
 import { resolveEffectDescription } from "./effect-description.ts";
 import {
+  formatEffectDescription,
+  locationDescriptionName,
+} from "./effect-description-format.ts";
+import {
   EngineBattleAction,
   EngineIdleAction,
   EngineLocation,
@@ -144,10 +148,20 @@ export function buildEnginePrompt(
     message.type === EngineMessageType.SELECT_EFFECT_YES_NO
       ? toPromptCard(message)
       : raw.prompt.contextCard;
+  /* The description is a Project Ignis template, and its `%ls` arguments are
+     the card this prompt is about and the place it is used from — both of
+     which the message just named. Unfilled the player reads `%ls` where the
+     card's name belongs. */
   const effectMessage =
     message.type === EngineMessageType.SELECT_EFFECT_YES_NO &&
     message.description !== 0n
-      ? describeOption(message.description, dependencies, onDiagnostic)
+      ? formatEffectDescription(
+          describeOption(message.description, dependencies, onDiagnostic),
+          [
+            cardDisplayName(message.code, dependencies, onDiagnostic),
+            locationDescriptionName(message.location, dependencies),
+          ],
+        )
       : undefined;
   return {
     ...raw,
@@ -174,12 +188,8 @@ function buildRawEnginePrompt(
       ? `prompt-${sequence}`
       : `${idNamespace}-prompt-${sequence}`,
   );
-  const text = (code: number): string => {
-    const value = dependencies.texts.get(code)?.name;
-    if (value !== undefined) return value;
-    onDiagnostic({ type: "missing_text", reference: `card:${code}` });
-    return `Card ${code}`;
-  };
+  const text = (code: number): string =>
+    cardDisplayName(code, dependencies, onDiagnostic);
 
   /* Every `resolve` below encodes one `OcgResponse*`, and each of its fields is
      an index into a list the message just sent, a raw game value, a card code
@@ -1258,6 +1268,17 @@ function positionLabel(position: number): string {
     default:
       return `Position ${position}`;
   }
+}
+
+function cardDisplayName(
+  code: number,
+  dependencies: Pick<ActiveDuelDependencies, "texts">,
+  onDiagnostic: PromptDiagnosticSink,
+): string {
+  const value = dependencies.texts.get(code)?.name;
+  if (value !== undefined) return value;
+  onDiagnostic({ type: "missing_text", reference: `card:${code}` });
+  return `Card ${code}`;
 }
 
 function describeOption(

@@ -815,6 +815,44 @@ describe("MenuDialog", () => {
     expect(surrenderButton?.classList.contains("danger")).toBe(true);
   });
 
+  /* The host's way out of the match sits under Surrender rather than on a
+     control painted over the field. A host that owns its own exit passes none,
+     and then the item is absent rather than dead. */
+  it("offers the host's exit under surrender, and only when there is one", async () => {
+    const user = userEvent.setup();
+    const onleavematch = vi.fn();
+    const props = {
+      surrenderAvailable: true,
+      responsePending: false,
+      onopensettings: vi.fn(),
+      onsurrender: vi.fn(() => true),
+      onclose: vi.fn(),
+    };
+    const rendered = render(MenuDialog, { ...props, onleavematch });
+
+    const buttons = [
+      ...document.querySelectorAll('[data-cy="menu-dialog"] button'),
+    ].map((button) => button.getAttribute("data-cy"));
+    expect(buttons).toEqual([
+      "menu-dialog-settings-button",
+      "menu-dialog-surrender-button",
+      "menu-dialog-leave-match-button",
+      "menu-dialog-close-button",
+    ]);
+
+    await user.click(
+      document.querySelector(
+        '[data-cy="menu-dialog-leave-match-button"]',
+      ) as HTMLButtonElement,
+    );
+    expect(onleavematch).toHaveBeenCalledTimes(1);
+
+    await rendered.rerender({ ...props, onleavematch: null });
+    expect(
+      document.querySelector('[data-cy="menu-dialog-leave-match-button"]'),
+    ).toBeNull();
+  });
+
   it("needs confirmation before surrendering", async () => {
     const user = userEvent.setup();
     const onsurrender = vi.fn(() => true);

@@ -103,18 +103,18 @@ function cardArticles(): readonly HTMLElement[] {
 }
 
 describe("HandBand", () => {
-  it("mounts every sorted card with count and no page controls", () => {
+  it("mounts every sorted card with no count and no page controls", () => {
     renderBand({ cards: handCards(0, 20).toReversed() });
 
     expect(cardArticles()).toHaveLength(20);
     expect(cardArticles().map((card) => card.dataset.cardId)).toEqual(
       Array.from({ length: 20 }, (_, index) => `p0-hand-${index}`),
     );
+    /* The cards themselves are the count: a badge repeating it was chrome on
+       a band that already shows every card it holds. */
     expect(
-      document
-        .querySelector('[data-cy="field-hand-p0-count"]')
-        ?.textContent?.trim(),
-    ).toBe("20");
+      document.querySelector('[data-cy="field-hand-p0-count"]'),
+    ).toBeNull();
     expect(
       document.querySelector(
         '[data-cy^="field-hand-p0-"][data-cy$="page-status"]',
@@ -200,18 +200,13 @@ describe("HandBand", () => {
     expect(onactivate).toHaveBeenCalled();
   });
 
-  it("updates count when cards change", async () => {
+  it("mounts every card when the hand changes, with no count to fall behind", async () => {
     const rendered = renderBand({ cards: handCards(0, 6) });
-    expect(
-      document
-        .querySelector('[data-cy="field-hand-p0-count"]')
-        ?.textContent?.trim(),
-    ).toBe("6");
+    expect(cardArticles()).toHaveLength(6);
     await rendered.rerender({ cards: handCards(0, 20) });
+    expect(cardArticles()).toHaveLength(20);
     expect(
-      document
-        .querySelector('[data-cy="field-hand-p0-count"]')
-        ?.textContent?.trim(),
-    ).toBe("20");
+      document.querySelector('[data-cy="field-hand-p0-count"]'),
+    ).toBeNull();
   });
 });

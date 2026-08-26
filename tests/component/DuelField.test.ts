@@ -32,7 +32,10 @@ import type {
   PublicCard,
   PublicDuelState,
 } from "../../src/battle/duel/contracts/public-duel-state.ts";
-import { mapSnapshotToBoard } from "../../src/battle/field/board-view-model.ts";
+import {
+  mapSnapshotToBoard,
+  type BoardViewModel,
+} from "../../src/battle/field/board-view-model.ts";
 import { createFieldRenderLayout } from "../../src/battle/field/duel-field-geometry.ts";
 import { zoneListsForBoard } from "../../src/battle/field/zone-list.ts";
 import { offFieldTargetEntries } from "../../src/battle/field/off-field-target-list.ts";
@@ -56,6 +59,7 @@ import {
   BOARD_VIEW_MODEL_FIXTURES,
   LINK_FREE_STATE,
   STACK_ART_STATE,
+  TWO_CARD_GRAVEYARD_STATE,
 } from "../fixtures/board-view-model.ts";
 import {
   DUEL_FIELD_PUBLIC_STATE_MATRIX,
@@ -82,6 +86,16 @@ function board(state: keyof typeof BOARD_VIEW_MODEL_FIXTURES) {
   if (!result.ok)
     throw new Error(`Fixture mapping failed: ${result.error.type}`);
   return result.value;
+}
+
+/** The live regions the field's own feedback owns. The Full Control hold hint
+ * is a permanently mounted `role="status"` inside the field — it has to exist
+ * before Ctrl goes down for the hold to be announced — so it is not evidence
+ * of a feedback badge and is filtered out of these counts. */
+function feedbackStatuses(): HTMLElement[] {
+  return screen
+    .queryAllByRole("status")
+    .filter((node) => node.dataset.cy !== "full-control-hold-hint");
 }
 
 /** A board with an oversized player and/or opponent hand, for T8 pagination
@@ -267,9 +281,6 @@ describe("DuelField", () => {
     expect(value?.getAttribute("data-zone-counts")).toBe("false");
     expect(value?.querySelectorAll("[data-zone-id]").length).toBeGreaterThan(0);
     expect(value?.querySelector(".duel-field-stack__count")).not.toBeNull();
-    expect(
-      value?.querySelector('[data-cy="field-hand-p0-count"]'),
-    ).not.toBeNull();
   });
 
   it("renders square px zones with concentric slots and aligned field occupants", () => {
@@ -721,10 +732,8 @@ describe("DuelField", () => {
       container.querySelectorAll('[data-card-zone-id="p0:hand"]'),
     ).toHaveLength(20);
     expect(
-      container
-        .querySelector('[data-cy="field-hand-p0-count"]')
-        ?.textContent?.trim(),
-    ).toBe("20");
+      container.querySelector('[data-cy="field-hand-p0-count"]'),
+    ).toBeNull();
     expect(
       container.querySelector(
         '[data-cy^="field-hand-p0-"][data-cy$="page-status"]',
@@ -1782,13 +1791,13 @@ describe("DuelField", () => {
         },
       ],
     });
-    expect(screen.queryByRole("status")).toBeNull();
+    expect(feedbackStatuses()).toHaveLength(0);
 
     await rendered.rerender({ board: current });
 
     // Item 26: the action/phase badge is gone; the highlight and line stay
     // (ADR-010/round 2 assigned current-action status to the preview panel).
-    expect(screen.queryByRole("status")).toBeNull();
+    expect(feedbackStatuses()).toHaveLength(0);
     expect(
       document.querySelector(`[data-card-id="${moved.id}"]`)?.classList,
     ).toContain("is-feedback-target");
@@ -1818,7 +1827,7 @@ describe("DuelField", () => {
     await rendered.rerender({ board: value });
     // Item 26: no badge; the highlight is the surviving evidence of the
     // summon feedback that this test cancels below.
-    expect(screen.queryByRole("status")).toBeNull();
+    expect(feedbackStatuses()).toHaveLength(0);
     expect(document.querySelector(".is-feedback-target")).not.toBeNull();
 
     await rendered.rerender({
@@ -1826,7 +1835,7 @@ describe("DuelField", () => {
       presentationEvents,
     });
 
-    expect(screen.queryByRole("status")).toBeNull();
+    expect(feedbackStatuses()).toHaveLength(0);
     expect(document.querySelector(".is-feedback-target")).toBeNull();
     expect(document.querySelector("svg.field-lines")).toBeNull();
   });
@@ -1872,7 +1881,7 @@ describe("DuelField", () => {
 
     expect(animate).not.toHaveBeenCalled();
     // Item 26: no badge; the highlight still fires under reduced motion.
-    expect(screen.queryByRole("status")).toBeNull();
+    expect(feedbackStatuses()).toHaveLength(0);
     expect(document.querySelector(".is-feedback-target")).not.toBeNull();
     await userEvent
       .setup()
@@ -2915,8 +2924,8 @@ describe("DuelField", () => {
     expect(field.querySelector('[data-cy="life-pill-p1"]')).toBeNull();
   });
 
-  it("actionable stack renders the halo", () => {
-    const value = fieldPrompt("chain", [
+  function renderGraveyardTargetPrompt(value: BoardViewModel): void {
+    const prompt = fieldPrompt("chain", [
       mountedChoice("graveyard-activate", "Activate", {
         card: {
           instanceId: cardInstanceId("prompt-graveyard-activate"),
@@ -2928,15 +2937,23 @@ describe("DuelField", () => {
       } as Partial<PromptChoice>),
       promptChoice("pass-choice", "Pass", { action: "pass" }),
     ]);
-    const spec = activeSpec(value);
-    const session = createInteractionSession(spec);
+    const spec = activeSpec(prompt);
     render(DuelField, {
-      board: board("ST-05"),
-      prompt: value,
+      board: value,
+      prompt,
       spec,
-      session,
+      session: createInteractionSession(spec),
       pending: false,
     });
+  }
+
+  it("actionable stack renders the halo when the pile shows what it holds", () => {
+    const stackBoard = mapSnapshotToBoard(
+      TWO_CARD_GRAVEYARD_STATE,
+      BOARD_CARD_TEXTS,
+    );
+    if (!stackBoard.ok) throw new Error("Fixture mapping failed");
+    renderGraveyardTargetPrompt(stackBoard.value);
 
     const stack = document.querySelector(
       '[data-cy="field-stack-p0:graveyard"]',
@@ -2945,6 +2962,20 @@ describe("DuelField", () => {
     expect(stack?.classList.contains("is-actionable")).toBe(true);
     expect(stack?.getAttribute("data-actionable")).toBe("true");
     expect(document.querySelector('[data-cy="prompt-dialog"]')).toBeNull();
+  });
+
+  /* A pile holding nothing the player is allowed to see cannot tell them what
+     the halo would be pointing at, so it wears none — and stays a button, so
+     the target is still reached by opening it. */
+  it("actionable stack drops the halo when it shows nothing, and stays clickable", () => {
+    renderGraveyardTargetPrompt(board("ST-05"));
+
+    const stack = document.querySelector(
+      '[data-cy="field-stack-p0:graveyard"]',
+    );
+    expect(stack).not.toBeNull();
+    expect(stack?.classList.contains("is-actionable")).toBe(false);
+    expect(stack?.getAttribute("data-actionable")).toBe("true");
   });
 
   it("maps an engine deck sequence to the matching top-relative list slot", async () => {

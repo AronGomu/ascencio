@@ -866,6 +866,16 @@ describe("Worker contracts", () => {
         description: "Resolved effect",
         phase: "solving",
         outcome: "disabled",
+        targets: [
+          {
+            identityVisible: true,
+            controller: 0,
+            location: "monster",
+            instanceId: card.instanceId,
+            card: card.code,
+          },
+          { identityVisible: false, controller: 1, location: "spellTrap" },
+        ],
       },
       {
         index: 2,
@@ -964,6 +974,39 @@ describe("Worker contracts", () => {
         "chain exact keys",
         (event) => {
           stateOf(event).chain[0]!.extra = 1;
+        },
+        /extra/,
+      ],
+      [
+        "chain target hidden identity",
+        (event) => {
+          const targets = stateOf(event).chain[0]!.targets as Record<
+            string,
+            unknown
+          >[];
+          targets[1]!.card = cardCode(5053103);
+        },
+        /hidden target identity/,
+      ],
+      [
+        "chain target location enum",
+        (event) => {
+          const targets = stateOf(event).chain[0]!.targets as Record<
+            string,
+            unknown
+          >[];
+          targets[0]!.location = "pendulum";
+        },
+        /location/,
+      ],
+      [
+        "chain target exact keys",
+        (event) => {
+          const targets = stateOf(event).chain[0]!.targets as Record<
+            string,
+            unknown
+          >[];
+          targets[0]!.extra = 1;
         },
         /extra/,
       ],

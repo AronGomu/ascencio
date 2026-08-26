@@ -87,6 +87,7 @@ export const EngineMessageType = {
   CHAIN_END: 74,
   CHAIN_NEGATED: 75,
   CHAIN_DISABLED: 76,
+  BECOME_TARGET: 83,
   DRAW: 90,
   DAMAGE: 91,
   RECOVER: 92,

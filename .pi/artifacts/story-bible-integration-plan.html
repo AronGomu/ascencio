@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="artifact-kind" content="markdown">
+<meta name="artifact-generated" content="1787421859907">
+<meta name="artifact-project" content="/home/aron/projects/ascencio">
+<title>Story Bible Integration Plan</title>
+<style data-base>:root { color-scheme: light dark;
+  --bg: #ffffff;
+  --fg: #1c1c1a;
+  --muted: #6b6862;
+  --border: #e7e5e0;
+  --code-bg: #f7f6f4;
+  --accent: #b95730;
+  --add-bg: #e9f7ee;
+  --add-word-bg: #c8ecd3;
+  --add-fg: #1a7f37;
+  --del-bg: #feeff1;
+  --del-word-bg: #f8d2d7;
+  --del-fg: #c93c4c;
+  --hl-comment: #6e7781;
+  --hl-keyword: #cf222e;
+  --hl-string: #0a3069;
+  --hl-number: #0550ae;
+  --hl-title: #8250df;
+  --hl-type: #953800;
+  --hl-attr: #0550ae;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --bg: #171614;
+  --fg: #e6e3de;
+  --muted: #94918a;
+  --border: #2e2d29;
+  --code-bg: #201f1c;
+  --accent: #d67858;
+  --add-bg: #1d2a20;
+  --add-word-bg: #2b4232;
+  --add-fg: #85c793;
+  --del-bg: #2e1c1e;
+  --del-word-bg: #4a292c;
+  --del-fg: #e28a91;
+  --hl-comment: #8b949e;
+  --hl-keyword: #ff7b72;
+  --hl-string: #a5d6ff;
+  --hl-number: #79c0ff;
+  --hl-title: #d2a8ff;
+  --hl-type: #ffa657;
+  --hl-attr: #79c0ff;
+} }
+
+* { box-sizing: border-box; }
+html { font-size: 15px; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+article { max-width: 860px; margin: 0 auto; padding: 2.75rem 1.5rem 4rem; }
+h1, h2, h3, h4 { line-height: 1.3; letter-spacing: -0.01em; color: var(--fg); }
+h1 { font-size: 1.45rem; font-weight: 650; margin: 0 0 1rem; }
+h2 { font-size: 1.15rem; font-weight: 650; margin: 2.2em 0 .7em; padding-bottom: .35em; border-bottom: 1px solid var(--border); }
+h3 { font-size: 1rem; font-weight: 600; margin: 1.8em 0 .5em; }
+h4 { font-size: .9rem; font-weight: 600; margin: 1.5em 0 .4em; }
+p { margin: .8em 0; }
+a { color: var(--accent); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 35%, transparent); text-underline-offset: 2px; }
+a:hover { text-decoration-color: var(--accent); }
+strong { font-weight: 600; }
+ul, ol { margin: .8em 0; padding-left: 1.5em; }
+li { margin: .3em 0; }
+li > ul, li > ol { margin: .2em 0; }
+hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
+img, svg, video { max-width: 100%; }
+::selection { background: color-mix(in srgb, var(--accent) 25%, transparent); }
+
+blockquote {
+  margin: 1.2em 0;
+  padding: .1em 1.1em;
+  border-left: 3px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--muted);
+}
+blockquote > :first-child { margin-top: .4em; }
+blockquote > :last-child { margin-bottom: .4em; }
+
+table { border-collapse: collapse; width: 100%; margin: 1.2em 0; font-size: .9rem; }
+th {
+  text-align: left; font-weight: 600; font-size: .74rem;
+  text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+  padding: .5em .75em; border-bottom: 1px solid var(--border);
+}
+td { padding: .55em .75em; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+
+code, kbd, samp { font-family: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace; }
+code { font-size: .85em; background: var(--code-bg); padding: .15em .4em; border-radius: 4px; }
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1em 1.2em;
+  overflow-x: auto;
+  font-size: .82rem;
+  line-height: 1.55;
+  margin: 1.2em 0;
+}
+pre code { background: transparent; padding: 0; font-size: inherit; }
+
+input[type="checkbox"] { accent-color: var(--accent); margin-right: .4em; }
+
+
+.artifact-header {
+  display: flex; align-items: baseline; gap: .75rem; flex-wrap: wrap;
+  margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+}
+.artifact-header h1 { margin: 0; }
+.artifact-badge {
+  font-family: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace; font-size: .66rem; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 999px; padding: .2em .7em; white-space: nowrap;
+}
+.artifact-meta { margin-left: auto; color: var(--muted); font-size: .72rem; font-family: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace; }
+.artifact-footer {
+  margin-top: 4rem; padding-top: 1rem; border-top: 1px solid var(--border);
+  color: var(--muted); font-size: .72rem; font-family: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace;
+}
+.artifact-mermaid { text-align: center; margin: 1.5rem 0; }
+</style>
+<style data-hljs>
+.hljs { color: var(--fg); background: transparent; }
+.hljs-comment, .hljs-quote { color: var(--hl-comment); font-style: italic; }
+.hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-deletion { color: var(--hl-keyword); }
+.hljs-string, .hljs-regexp, .hljs-addition { color: var(--hl-string); }
+.hljs-number, .hljs-symbol, .hljs-bullet, .hljs-meta, .hljs-link { color: var(--hl-number); }
+.hljs-title, .hljs-section, .hljs-function .hljs-title { color: var(--hl-title); }
+.hljs-type, .hljs-class .hljs-title, .hljs-built_in { color: var(--hl-type); }
+.hljs-variable, .hljs-template-variable, .hljs-attr, .hljs-attribute, .hljs-property { color: var(--hl-attr); }
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: 600; }
+</style>
+</head>
+<body>
+<article>
+<header class="artifact-header">
+<h1>Story Bible Integration Plan</h1>
+<span class="artifact-badge">markdown</span>
+<span class="artifact-meta">2026-08-22 18:04:19</span>
+</header>
+<h1>Story bible → repo: organization plan (rev. 2)</h1>
+<p>Source: <code>~/Downloads/scenario-fangame-bible.md</code> (301 lines, French).
+Decisions locked: <strong>canon is English</strong> · <strong>tree is <code>docs/story/</code> with concern folders</strong> · <strong>open questions get their own file</strong>.</p>
+<hr>
+<h2>1. Tree</h2>
+<pre><code class="hljs language-text">docs/story/
+├── README.md                          # index, status, routing, known gaps
+├── scenario/
+│   ├── 01-concept.md                  # premise, chapter = era, tone/gameplay references
+│   ├── 02-philosophy.md               # objectivist foundation, hard magic, per-chapter thesis, moral trilogy
+│   └── 03-world-rules.md              # god axiom, conflict definition, why Duel Monsters, duel rules, multi, Shadow Games, cheating, duelist status
+├── chapters/
+│   ├── 01-duel-monsters.md            # ch1 architecture, ZAPS plot, 20-duel target
+│   └── 02-gx.md                       # ch2 notes
+├── characters/
+│   ├── README.md                      # casting roster + status, missing-by-urgency, leads, the-girl premise question
+│   ├── creation-grid.md               # Egri/Truby/McKee/Rand grid (the annexe)
+│   └── fynn.md                        # full protagonist sheet
+└── open-questions.md</code></pre><p>No collision: <code>docs/story-decks-and-ownership.html</code> / <code>docs/story-shop-architecture.html</code> are architecture docs at <code>docs/</code> root, untouched.
+One file per character → scales to the ~12 sheets the roster still owes.</p>
+<hr>
+<h2>2. Mapping — nothing dropped</h2>
+<table>
+<thead>
+<tr>
+<th>Source (lines)</th>
+<th>Destination</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Title, status, date (1–5)</td>
+<td><code>README.md</code> header + per-file status line</td>
+</tr>
+<tr>
+<td>§1 Concept + chapter/era table (8–33)</td>
+<td><code>scenario/01-concept.md</code></td>
+</tr>
+<tr>
+<td>§2 Philosophical foundation (35–47)</td>
+<td><code>scenario/02-philosophy.md</code></td>
+</tr>
+<tr>
+<td>§3 World rules (50–93)</td>
+<td><code>scenario/03-world-rules.md</code></td>
+</tr>
+<tr>
+<td>§4 Fynn (96–153)</td>
+<td><code>characters/fynn.md</code></td>
+</tr>
+<tr>
+<td>§5 Chapter 1 + ZAPS (156–174)</td>
+<td><code>chapters/01-duel-monsters.md</code></td>
+</tr>
+<tr>
+<td>§6 Chapter 2 (177–184)</td>
+<td><code>chapters/02-gx.md</code></td>
+</tr>
+<tr>
+<td>Moral trilogy table (186–191)</td>
+<td><code>scenario/02-philosophy.md</code> — spans ch1–3, linked from both chapter files</td>
+</tr>
+<tr>
+<td>§7 Casting (195–233)</td>
+<td><code>characters/README.md</code></td>
+</tr>
+<tr>
+<td>§8 Gameplay target, 20 duels (237–243)</td>
+<td><code>chapters/01-duel-monsters.md</code> — ch1-scoped constraint</td>
+</tr>
+<tr>
+<td>§9 Open questions (247–258)</td>
+<td><code>open-questions.md</code>, kept as <code>- [ ]</code></td>
+</tr>
+<tr>
+<td>Annexe grid (262–300)</td>
+<td><code>characters/creation-grid.md</code></td>
+</tr>
+</tbody></table>
+<p>Every fact has <strong>one home</strong>; other files cross-link rather than restate. Blockquote design notes (the whim-worship note, &quot;pourquoi ça marche&quot;, the system-flaw callout, the coherence test) carry over as blockquotes.</p>
+<hr>
+<h2>3. Translation — the part that is not mechanical</h2>
+<p>English canon means I translate, and translation is interpretation. Two safeguards:</p>
+<p><strong>Safeguard 1 — the French original stays recoverable.</strong> Commit 1 imports it verbatim, unsplit. <code>git show &lt;sha&gt;:docs/story/scenario-fangame-bible.fr.md</code> returns the authored text forever.</p>
+<p><strong>Safeguard 2 — the source terms were already English.</strong> The bible translates Egri/Truby/McKee/Rand vocabulary into French; English canon restores the originals rather than inventing wording:</p>
+<table>
+<thead>
+<tr>
+<th>French</th>
+<th>English canon</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Ossature</td>
+<td><strong>Bone structure</strong></td>
+<td>Egri&#39;s own term (physiology / sociology / psychology)</td>
+</tr>
+<tr>
+<td>Moteur intérieur</td>
+<td><strong>Inner engine</strong> — weakness · need · desire · ghost · revelation</td>
+<td>Truby&#39;s terms verbatim</td>
+</tr>
+<tr>
+<td>Fantôme</td>
+<td><strong>Ghost</strong></td>
+<td>Truby</td>
+</tr>
+<tr>
+<td>Prémisse</td>
+<td><strong>Premise</strong></td>
+<td>Egri</td>
+</tr>
+<tr>
+<td>Pression</td>
+<td><strong>Pressure</strong></td>
+<td>McKee</td>
+</tr>
+<tr>
+<td>whim-worship, second-hander, first-hander</td>
+<td>unchanged</td>
+<td>Rand&#39;s terms, already English in source</td>
+</tr>
+<tr>
+<td>Faille assumée du système</td>
+<td><strong>Acknowledged flaw in the system</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>Triche</td>
+<td><strong>Cheating</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>Le doyen</td>
+<td><strong>The dean</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>Sbires + cancres</td>
+<td><strong>Goons and slackers</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>Carte à esprit</td>
+<td><strong>Spirit card</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>Le donneur de carte</td>
+<td><strong>The card giver</strong></td>
+<td></td>
+</tr>
+</tbody></table>
+<p>Kept as-is: <strong>Fynn</strong>, <strong>ZAPS</strong>, <strong>Duel Monsters</strong>, <strong>Shadow Game</strong>, era names (GX, 5D&#39;s, ZEXAL, ARC-V, VRAINS), the Judai / Kaiser Ryo reference.</p>
+<p>Judgment calls I will make and mark inline where the French is genuinely ambiguous, rather than silently smoothing.</p>
+<hr>
+<h2>4. Provenance — two commits</h2>
+<ol>
+<li><code>docs(story): import the scenario bible as authored</code> — French source verbatim at <code>docs/story/scenario-fangame-bible.fr.md</code>.</li>
+<li><code>docs(story): organize the scenario bible into English canon</code> — split + translate, French source removed in the same commit.</li>
+</ol>
+<p>Matches the repo&#39;s SHA-anchor convention (<code>docs/README.md</code>): one immutable address recovers the original, no drifting second copy on disk.</p>
+<hr>
+<h2>5. Wiring</h2>
+<ul>
+<li><code>docs/README.md</code> — row in <strong>Current sources of truth</strong>: <code>story/</code> = narrative canon.</li>
+<li><code>AGENTS.md</code> § Documentation routing — one line: story/VN content work reads <code>docs/story/README.md</code> first.</li>
+<li><code>docs/GLOSSARY.md</code> — new <strong>Story canon</strong> section: <code>fynn</code>, <code>chapter</code> (= era), <code>zaps</code>, <code>conflict</code> (incompatible claims → duel), <code>multi</code> (n-vs-1), <code>shadow game</code>, <code>hard magic</code>, <code>whim-worship</code>, <code>second-hander</code>, <code>cheating</code>, <code>spirit card</code>, <code>academy</code>, <code>senior</code>. Refs point at bible files — no code implements these yet.</li>
+<li><code>graphify . --update</code> after the split.</li>
+</ul>
+<hr>
+<h2>6. Still open: the ADR (D2 got answered as a tree)</h2>
+<p>Rule worth freezing: <em>narrative canon lives in <code>docs/story/</code>; runtime content under <code>src/story/content/</code> derives from it and never contradicts it.</em></p>
+<p><strong>Default I&#39;ll take unless you say otherwise: write it, short.</strong> Without it the next round has two plausible sources of story truth. Say &quot;no ADR&quot; and I skip it.</p>
+<hr>
+<h2>7. Flagged, not fixed</h2>
+<p>Shipped placeholder content contradicts canon. The bible obsoletes it:</p>
+<table>
+<thead>
+<tr>
+<th>Shipped</th>
+<th>Canon</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>PROLOGUE.title = &quot;The Signal Beneath the City&quot;</code>, Rin / Kael (<code>src/story/content/prologue.ts:22</code>)</td>
+<td>Fynn, duel academy, first year</td>
+</tr>
+<tr>
+<td><code>ChoiceId = &quot;trust-rin&quot; | &quot;challenge-rin&quot; | &quot;observe-first&quot;</code> (<code>src/story/model/story-state.ts:22</code>)</td>
+<td>no such beat in canon</td>
+</tr>
+<tr>
+<td><code>LocationId = &quot;old-arena&quot; | &quot;archive&quot; | &quot;hidden-gate&quot; | &quot;card-shop&quot;</code> (<code>src/story/model/story-state.ts:24</code>)</td>
+<td>academy grounds, ZAPS plot</td>
+</tr>
+<tr>
+<td><code>src/story/README.md</code>: &quot;Story, names, visuals, title, rewards, and state are provisional English-only samples&quot;</td>
+<td>accurate — it always announced itself as placeholder</td>
+</tr>
+</tbody></table>
+<p>Realignment touches state types, save envelopes, encounter ids, handoff labels and tests → <strong>separate round</strong>. Recorded as a known gap in <code>docs/story/README.md</code>.</p>
+<hr>
+<h2>8. Out of scope</h2>
+<p>Writing missing character sheets · answering the 10 open questions · ZAPS mechanism design · any <code>src/</code> change · converting canon to the validated JSON format of <code>docs/card-game-vn-handoff/04-narrative-and-map-design.md</code>.</p>
+<hr>
+<p><strong>Go?</strong></p>
+
+<footer class="artifact-footer">source: /home/aron/projects/ascencio</footer>
+</article>
+
+<script>
+(function () {
+  var slug = "story-bible-integration-plan";
+  var es = new EventSource("/events");
+  es.addEventListener("reload", function (e) {
+    try { if (e.data === slug || e.data === "*") location.reload(); } catch (_) {}
+  });
+})();
+</script>
+</body>
+</html>

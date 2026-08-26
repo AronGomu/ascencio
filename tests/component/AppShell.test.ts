@@ -2,7 +2,13 @@
 
 import "fake-indexeddb/auto";
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
+import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import BattleFacadeProbe from "../fixtures/BattleFacadeProbe.svelte";
+import {
+  battleFacadeProps,
+  resetBattleFacadeProps,
+} from "../fixtures/battle-facade-probe.ts";
 import { parseBattleRequest } from "../../src/battle/battle-contracts.ts";
 import {
   findSelectableDeck,
@@ -16,6 +22,7 @@ import type {
   BattleDeckModule,
   DomainLoaders,
 } from "../../src/shell/domain-loaders.ts";
+import { resetFreePlayDeckCacheForTests } from "../../src/shell/screens/free-play-deck-listing.ts";
 import { createShellStore } from "../../src/shell/shell-store.ts";
 import { installPrototypeActiveCatalog } from "../fixtures/active-catalog.ts";
 import { createInitialStoryState } from "../../src/story/model/story-state.ts";
@@ -126,24 +133,22 @@ function checkpointFor(handoffId: string): StorySaveReadResult {
   };
 }
 
-function renderAt(hash: string) {
+/* The same module the duel region loads, with a probe in `BattleFacade`'s
+   place: the shell's own props are then readable without a Worker. */
+const probeLoaders: DomainLoaders = {
+  ...loaders,
+  duel: async () =>
+    ({
+      ...(await duelDeckModule()),
+      BattleFacade: BattleFacadeProbe,
+    }) as Awaited<ReturnType<DomainLoaders["duel"]>>,
+};
+
+function renderAt(hash: string, domainLoaders: DomainLoaders = loaders) {
   return render(AppShell, {
     store: createShellStore(hash, () => {}),
-    loaders,
+    loaders: domainLoaders,
   });
-}
-
-/** Opens the match setup the menu's first entry offers. The duel is no longer
-    what `#/free-play` renders: T16 put the free-play menu on that route and
-    made the match a state of it, and T17 made choosing both decks the first
-    half of that state. */
-async function openMatchSetup(): Promise<void> {
-  const start = document.querySelector<HTMLElement>(
-    '[data-cy="free-play-start-match"]',
-  );
-  if (start === null)
-    throw new Error("The free-play menu offers no match to start");
-  await fireEvent.click(start);
 }
 
 /** The setup screen's own control, once its chunk has landed and the library
@@ -158,9 +163,9 @@ async function matchSetupControl(cy: string): Promise<HTMLButtonElement> {
   }, REAL_IMPORT);
 }
 
-/** Opens the match setup and duels the pair it preselected. */
+/** Duels the pair the setup screen preselected. `#/free-play` opens on that
+    screen, so there is nothing to click first (ADR-054). */
 async function startMatch(): Promise<void> {
-  await openMatchSetup();
   await fireEvent.click(await matchSetupControl("free-play-match-start"));
 }
 
@@ -179,6 +184,10 @@ const defaultViewport = {
 
 afterEach(() => {
   cleanup();
+  resetBattleFacadeProps();
+  /* The listing is held for the life of the page, so one test's library would
+     otherwise be the next one's first paint. */
+  resetFreePlayDeckCacheForTests();
   setViewport(defaultViewport.width, defaultViewport.height);
 });
 
@@ -195,10 +204,10 @@ describe("AppShell", () => {
     expect(document.querySelector('[data-cy="shell-region-decks"]')).toBeNull();
   });
 
-  it("mounts the free-play menu for the duel route", async () => {
+  it("mounts the match setup for the duel route", async () => {
     renderAt("#/duel");
     expect(
-      document.querySelector('[data-cy="shell-region-free-play"]'),
+      document.querySelector('[data-cy="shell-region-free-play-setup"]'),
     ).not.toBeNull();
     expect(document.querySelector('[data-cy="shell-region-duel"]')).toBeNull();
 
@@ -208,35 +217,31 @@ describe("AppShell", () => {
       document.querySelector('[data-cy="shell-region-duel"]'),
     ).not.toBeNull();
     expect(
-      document.querySelector('[data-cy="shell-region-free-play"]'),
+      document.querySelector('[data-cy="shell-region-free-play-setup"]'),
     ).toBeNull();
   });
 
-  /* The battle domain is the largest chunk the shell can load, so the menu in
-     front of it must not be what loads it. The match setup may: the player is
-     one click from duelling by then, and the decks it offers come from that
-     same entry. */
-  it("loads the battle domain only once a match starts", async () => {
+  /* The battle domain is the largest chunk the shell can load, so the main
+     menu must not be what loads it. Free play may: the player is two clicks
+     from duelling by then, and the decks its seats offer come from that same
+     entry. */
+  it("loads the battle domain only once free play is opened", async () => {
     const duel = vi.fn(never);
-    render(AppShell, {
-      store: createShellStore("#/free-play", () => {}),
-      loaders: { ...loaders, duel },
-    });
+    const store = createShellStore("#/", () => {});
+    render(AppShell, { store, loaders: { ...loaders, duel } });
 
     expect(duel).not.toHaveBeenCalled();
 
-    await openMatchSetup();
+    store.navigate({ kind: "free-play" });
 
     await vi.waitFor(() => expect(duel).toHaveBeenCalled(), REAL_IMPORT);
   });
 
-  /* The setup screen stands between the menu and the duel, and the duel still
-     mounts in the shell's own duel region and nowhere else: `stage-frame.ts`
-     maps every viewport coordinate through `shell-region-duel`. */
+  /* The duel still mounts in the shell's own duel region and nowhere else:
+     `stage-frame.ts` maps every viewport coordinate through
+     `shell-region-duel`. */
   it("chooses both decks before the duel region appears", async () => {
     renderAt("#/free-play");
-
-    await openMatchSetup();
 
     expect(
       document.querySelector('[data-cy="shell-region-free-play-setup"]'),
@@ -267,37 +272,64 @@ describe("AppShell", () => {
     ).toBeNull();
   });
 
-  /* Back is not Leave: it is the way out of the setup screen itself, and it
-     lands on the menu without having started anything. */
-  it("returns to the free-play menu from the setup screen", async () => {
-    renderAt("#/free-play");
-    await openMatchSetup();
+  /* Back is not Leave: it is the way out of free play itself, and it lands on
+     the main menu without having started anything. */
+  it("returns to the main menu from the setup screen", async () => {
+    const hashes: string[] = [];
+    render(AppShell, {
+      store: createShellStore("#/free-play", (hash) => hashes.push(hash)),
+      loaders,
+    });
 
     await fireEvent.click(await matchSetupControl("free-play-match-back"));
 
+    expect(hashes).toEqual(["#/"]);
     expect(
-      document.querySelector('[data-cy="shell-region-free-play"]'),
+      document.querySelector('[data-cy="shell-region-home"]'),
     ).not.toBeNull();
     expect(document.querySelector('[data-cy="shell-region-duel"]')).toBeNull();
   });
 
-  it("returns to the free-play menu when the match is left", async () => {
-    renderAt("#/free-play");
-    await startMatch();
+  /* The library the seats are filled from is one click away from the seats
+     themselves, and it is the shell that owns that route. */
+  it("opens the free-play deck library from the player's seat", async () => {
+    const hashes: string[] = [];
+    render(AppShell, {
+      store: createShellStore("#/free-play", (hash) => hashes.push(hash)),
+      loaders,
+    });
 
     await fireEvent.click(
-      document.querySelector<HTMLElement>('[data-cy="free-play-leave-match"]')!,
+      await matchSetupControl("free-play-match-player-deck-builder"),
     );
 
+    expect(hashes).toEqual(["#/free-play/decks"]);
     expect(
-      document.querySelector('[data-cy="shell-region-free-play"]'),
+      document.querySelector('[data-cy="shell-region-decks"]'),
+    ).not.toBeNull();
+  });
+
+  /* The way out of a free-play match now lives in the duel's own menu, so the
+     shell's half of it is the callback it hands the duel. Calling that callback
+     is what the menu button does, and it ends the match. */
+  it("returns to the seats when the duel calls the exit the shell handed it", async () => {
+    renderAt("#/free-play", probeLoaders);
+    await startMatch();
+
+    const leave = battleFacadeProps.current?.onleavematch;
+    expect(leave).toBeTypeOf("function");
+    leave?.();
+    await tick();
+
+    expect(
+      document.querySelector('[data-cy="shell-region-free-play-setup"]'),
     ).not.toBeNull();
     expect(document.querySelector('[data-cy="shell-region-duel"]')).toBeNull();
   });
 
-  /* The match is a state of the menu rather than a route, so a route change is
-     what ends it: coming back opens on the menu rather than on a duel nobody
-     asked to resume. */
+  /* The match is a state of the route rather than a route of its own, so a
+     route change is what ends it: coming back opens on the seats rather than
+     on a duel nobody asked to resume. */
   it("ends the match when the route leaves free play", async () => {
     const store = createShellStore("#/free-play", () => {});
     render(AppShell, { store, loaders });
@@ -309,18 +341,24 @@ describe("AppShell", () => {
     await Promise.resolve();
 
     expect(
-      document.querySelector('[data-cy="shell-region-free-play"]'),
+      document.querySelector('[data-cy="shell-region-free-play-setup"]'),
     ).not.toBeNull();
     expect(document.querySelector('[data-cy="shell-region-duel"]')).toBeNull();
   });
 
-  /* A story session owns its own exit, so the shell paints no way out over it:
-     leaving it is the story's business, not a control the duel region adds. */
-  it("paints no leave control over a story session's duel", () => {
-    renderAt(`#/duel/session/${SESSION_HANDOFF}`);
-    expect(
-      document.querySelector('[data-cy="free-play-leave-match"]'),
-    ).toBeNull();
+  /* A story session owns its own exit, so the shell offers the duel none:
+     leaving it is the story's business, not an item the duel menu adds. */
+  it("hands a story session's duel no exit of its own", async () => {
+    render(AppShell, {
+      store: createShellStore(`#/duel/session/${SESSION_HANDOFF}`, () => {}),
+      loaders: probeLoaders,
+      saves: savesAnswering(checkpointFor(SESSION_HANDOFF)),
+    });
+    await vi.waitFor(
+      () => expect(battleFacadeProps.current).not.toBeNull(),
+      REAL_IMPORT,
+    );
+    expect(battleFacadeProps.current?.onleavematch).toBeNull();
   });
 
   /* Nothing of the duel mounts until the checkpoint behind the session route
@@ -537,11 +575,9 @@ describe("AppShell", () => {
           [domain]: failing,
         } as unknown as DomainLoaders,
       });
-      /* A battle chunk that never arrives fails the match setup now, one
-         screen before the duel region it used to fail in. It is still the duel
-         domain failing, so it is still reported as one. */
-      if (domain === "duel") await openMatchSetup();
-
+      /* A battle chunk that never arrives fails the match setup, one screen
+         before the duel region it used to fail in. It is still the duel domain
+         failing, so it is still reported as one. */
       const error = await vi.waitFor(() => {
         const found = document.querySelector(
           `[data-cy="shell-domain-error-${domain}"]`,

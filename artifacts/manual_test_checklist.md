@@ -1574,7 +1574,7 @@ Start a dev duel (`npm run dev`), open the app in the browser, and pick decks to
 
 Start a dev duel (`npm run dev`), open the app in the browser, and pick decks/start a duel. Activate a card effect that searches the deck (e.g. Reinforcement of the Army / Pot of Greed) so the off-field target list appears.
 
-- [ ] With the target list visible, click the graveyard pile (or whichever stack pile is haloed as the launcher) — confirm the list **collapses** to a single `+` button (does **not** close/disappear).
+- [ ] With the target list visible, click the graveyard pile (or whichever stack pile holds the targets) — confirm the list **collapses** to a single `+` button (does **not** close/disappear). (Corrected by R6: a pile showing no card the player may see wears no halo, so the launcher is not always the haloed pile.)
 - [ ] Click the same launcher pile again — confirm the list **expands** back to full, showing target entries.
 - [ ] With the list expanded, click the `−` button in the list header — confirm the list collapses to the `+` button.
 - [ ] With the list collapsed, click the `+` button — confirm the list expands and the `−` collapse button receives focus.
@@ -1608,7 +1608,7 @@ Start a dev duel (`npm run dev`), open the app in the browser, and pick decks/st
 
 Start a dev duel (`npm run dev`), open the app in the browser, pick decks and start a duel.
 
-- [ ] Hold Ctrl with the Full Control checkbox off — confirm the box stays **unticked**, the label turns accent-coloured and a "held by Ctrl" pill appears beside it; release Ctrl and confirm the pill disappears.
+- [ ] Hold Ctrl with the Full Control checkbox off — confirm the box stays **unticked**, the label turns accent-coloured and a "held by Ctrl" pill appears beside it; release Ctrl and confirm the pill disappears. (Corrected by R6: the label is a tooltip now, so hover or focus the box to see it turn accent-coloured.)
 - [ ] With Ctrl held, click the Full Control checkbox — confirm it ticks and stays ticked after Ctrl is released.
 - [ ] With Full Control on, trigger a chain window you opened yourself — confirm the window waits for you instead of auto-passing.
 - [ ] Open a chain window while holding Ctrl, then release Ctrl while the window is still on screen — confirm nothing answers it for you.
@@ -2244,6 +2244,8 @@ Record what the bundled decks cannot reach
       one single row, not broken over two.
 - [ ] Compare it against the phase chips beside it: the End turn button is clearly the
       bigger control — taller, wider, and its text is noticeably larger than the chip text.
+      (Corrected by R6: the button was trimmed to the shared 44px control floor, so it is
+      still the bigger control but no longer towers over the chips.)
 - [ ] Play forward to your Battle Phase so the button's label becomes "End Battle Phase":
       that longer label is also on one row, and the button simply grows leftwards to fit it.
 - [ ] With the longer "End Battle Phase" label showing, check the button's left edge: it
@@ -2624,12 +2626,12 @@ Run `npm run dev` (default `DEV_PORT=4300`). Free play now has a menu of its own
 
 ### Leaving a match
 
-- [ ] While the duel is on screen, a small "Leave match" button sits in the top-left corner. Click it — you are back on the free-play menu, and the URL is still `#/free-play`. (Corrected by T17: the match setup that now comes first carries its own Back button instead, and no "Leave match".)
+- [ ] While the duel is on screen, a small "Leave match" button sits in the top-left corner. Click it — you are back on the free-play menu, and the URL is still `#/free-play`. (Corrected by T17: the match setup that now comes first carries its own Back button instead, and no "Leave match". Corrected again by R6: Leave match is an item of the duel's own options menu, under Surrender, rather than a button over the board.)
 - [ ] Press Start a match again — the match setup opens again, and Start the duel begins a fresh duel. (Corrected by T17.)
 - [ ] Start a match, then type `#/` in the address bar and go back to `#/free-play` — you land on the menu, not back inside the duel.
 - [ ] Start a match, then press the browser's Back button — you leave free play for the main menu rather than staying in the duel.
-- [ ] Play into a real duel and confirm the board's bottom edge (your hand band) is not cut off by the extra button, and that opening the duel's own options menu draws its dialog OVER "Leave match" rather than under it.
-- [ ] Enter a story duel instead (New Game → play to an encounter): that duel has NO "Leave match" button — the story owns that exit.
+- [ ] Play into a real duel and confirm the board's bottom edge (your hand band) is not cut off by the extra button, and that opening the duel's own options menu draws its dialog OVER "Leave match" rather than under it. (Retired by R6: there is no button over the board to draw over.)
+- [ ] Enter a story duel instead (New Game → play to an encounter): that duel has NO "Leave match" button — the story owns that exit. (R6: and no Leave match item in its options menu, for the same reason.)
 
 ### The duel is still loaded only when a match starts
 
@@ -2639,7 +2641,7 @@ Run `npm run dev` (default `DEV_PORT=4300`). Free play now has a menu of its own
 ### On a phone-sized window
 
 - [ ] With a portrait phone viewport (390x844 in DevTools), open `#/free-play` — the menu reads upright and is not rotated.
-- [ ] Press Start a match — the match setup reads upright too (T17). Press Start the duel: the duel is turned a quarter turn as before, and "Leave match" turns with the board rather than staying upright in the corner of the screen.
+- [ ] Press Start a match — the match setup reads upright too (T17). Press Start the duel: the duel is turned a quarter turn as before, and "Leave match" turns with the board rather than staying upright in the corner of the screen. (Corrected by R6: Leave match moved into the duel's options menu, which the rotation already carried.)
 
 ## T17 free-play-opponent-picker
 
@@ -2664,7 +2666,7 @@ decks before the duel starts, and remembers the pair.
 
 ### The pairing is remembered
 
-- [ ] Choose Burning Abyss against Nekroz, press Start the duel, then press Leave match. Press Start a match again — both dropdowns are already set to Burning Abyss and Nekroz.
+- [ ] Choose Burning Abyss against Nekroz, press Start the duel, then leave through the options menu's Leave match. Press Start a match again — both dropdowns are already set to Burning Abyss and Nekroz.
 - [ ] Reload the whole page (F5), open `#/free-play` → Start a match — still Burning Abyss against Nekroz.
 - [ ] In DevTools → Application → Local Storage, open the `ygo.ui.v3` entry: it holds `"freePlayPairing":{"player":"preset:burning-abyss","opponent":"preset:nekroz"}`. No other key was added.
 - [ ] Choose one of your own decks for a seat, start, leave, and come back — that deck is still selected.
@@ -2679,7 +2681,7 @@ decks before the duel starts, and remembers the pair.
 
 - [ ] From the match setup, press Back — you land on the free-play menu at `#/free-play`, and no duel was started.
 - [ ] Press Start a match, then type `#/` in the address bar and navigate back to `#/free-play` — you land on the free-play menu, not back on the match setup.
-- [ ] Press Start a match, press Start the duel, then press Leave match — you land on the free-play menu. Press Start a match again: the setup screen, not the duel.
+- [ ] Press Start a match, press Start the duel, then leave through the options menu's Leave match — you land on the free-play menu. Press Start a match again: the setup screen, not the duel.
 - [ ] Start a duel from the setup, surrender through the duel's options menu, and press "Change decks" in the result dialog — the duel's own picker opens and NO second duel starts by itself.
 
 ### The duel is still lazy
@@ -2690,7 +2692,7 @@ decks before the duel starts, and remembers the pair.
 
 ### A story duel is untouched
 
-- [ ] New Game → play to an encounter and start it. That duel still opens the duel's OWN deck picker with the opponent fixed to Shaddoll, and has no "Leave match" button. The free-play match setup must not appear there.
+- [ ] New Game → play to an encounter and start it. That duel still opens the duel's OWN deck picker with the opponent fixed to Shaddoll, and offers no "Leave match" anywhere. The free-play match setup must not appear there.
 
 ### On a phone-sized window
 
@@ -3775,3 +3777,89 @@ was handed a deck it still could not field.
 - [ ] Open the collection. The card you set to `1` now reads **×3** — topped up to what the deck runs, no further. The card you set to `5` still reads **×5** — a count above the deck's is yours and is never lowered.
 - [ ] Press **Continue** a second time without saving in between and check the collection again. Both counts are unchanged: the top-up lands on the same numbers however many times the save is opened.
 - [ ] Choose **Old Arena**: the briefing accepts **Starter Deck** with no block message, and **Start Duel** enables.
+
+---
+
+## R5 free-play-opens-on-the-seats
+
+Free play used to open on a menu — Start a match, Deck builder, Return — and the
+seats behind it sat disabled under "Reading your deck library…" while the whole
+card database was fetched. The menu is gone (ADR-054), the deck builder moved
+under the player's seat, and the library is read as the player reaches for the
+entry rather than after they arrive.
+
+Run `npm run dev` (default `DEV_PORT=4300`).
+
+### Free Play lands on the decks
+
+- [ ] Open `http://localhost:4300/#/` and click **Free Play**: the URL becomes `#/free-play` and the "Choose the decks" screen renders directly. There is no menu step and no "Start a match" button anywhere. (Corrected from T16, which put that menu on this route.)
+- [ ] Both seats are on screen with a **Bundled decks** group already in them, and **Start the duel** is clickable straight away — not greyed out waiting for a read.
+- [ ] Type `#/free-play` into the address bar directly, then `#/duel`: each lands on the same screen (the old link still resolves here and the address bar keeps reading `#/duel`).
+- [ ] Press **Start the duel** and play a turn — the duel behaves as before.
+- [ ] While the duel is on screen, open the duel's options menu (the gear on the right rail) and click **Leave match**: you land back on the deck seats, not on a menu, and the URL is still `#/free-play`. (Corrected from T16, where this returned to the free-play menu; corrected again by R6, which moved the control from the board's top-left corner into that menu.)
+- [ ] Press the browser's **Back** button from the seats: you leave free play for the main menu.
+
+### The deck builder is under your seat
+
+- [ ] On the seats screen, a **Deck builder** button sits directly under the **Your deck** picker. The **Opponent deck** picker has none.
+- [ ] Click it: the URL becomes `#/free-play/decks` and the Deck Library renders.
+- [ ] Build or import a deck there, then press **Back** to `#/free-play`: your new deck is listed under **Your decks** in both pickers.
+- [ ] Back on the seats, the other way out is **Main menu**, beside Start the duel: click it and you land on `#/` . (Renamed from "Back", which used to mean the free-play menu.)
+
+### No waiting for the pickers
+
+- [ ] Open DevTools → Network, tick **Disable cache**, and load `http://localhost:4300/#/` fresh. With the pointer nowhere near the entries: no `battle-*.js` and no `runtime/` request fires. A player who came for the story pays for none of free play.
+- [ ] Now move the pointer onto **Free Play** and leave it there without clicking: `battle-*.js` and the `runtime/` catalog requests start immediately. Tab to the entry with the keyboard instead of hovering — the same requests start on focus.
+- [ ] Click through: the seats are already filled, including your own decks, with no "Reading your deck library…" line.
+- [ ] Reload, and this time click **Free Play** fast enough that the requests are still in flight. The seats still open with the **Bundled decks** group live and Start clickable; your own decks join the list when the read lands.
+- [ ] From a duel, leave through the options menu's **Leave match**, then press **Deck builder**, then **Back**: neither return shows a loading line — the page is only revalidating what it already read.
+- [ ] Delete a local deck in the deck builder and come back to the seats: it is gone from both pickers. Edit one and come back: the edited version is what the picker offers.
+
+---
+
+## R6 duel-chrome-trim
+
+Six owner asks against the duel field's chrome: the match exit moved into the
+duel's own menu, the piles stopped advertising a halo they could not explain,
+End turn and the card action buttons shrank, Full Control moved onto the board
+and lost its caption, the hand-count badges went, and effect descriptions stopped
+printing `%ls` where a card's name belongs.
+
+Run `npm run dev` (default `DEV_PORT=4300`).
+
+### Leave match lives in the menu
+
+- [ ] Open `#/free-play`, press **Start the duel**. Nothing is painted over the board's top-left corner any more — no "Leave match" button there.
+- [ ] Open the duel's options menu (the gear at the top of the right rail). The items read, in order: **Settings**, **Surrender**, **Leave match**, **Close**.
+- [ ] Click **Leave match**: you land back on the deck seats and the URL is still `#/free-play`.
+- [ ] Start a duel, open the menu, press **Surrender**, then **Keep playing**: the menu's main view comes back with **Leave match** still under Surrender.
+- [ ] New Game → play to an encounter and start its duel. Open that duel's options menu: **Settings**, **Surrender** and **Close** only. There is no **Leave match** — the story owns that exit.
+
+### Piles only halo what they can show
+
+- [ ] Reach a prompt that targets a card in your graveyard with at least one face-up card in it: the graveyard pile wears the green legality halo and opens the target list on click.
+- [ ] Reach a prompt that targets a card in your deck (a search): the deck pile wears **no** halo — and clicking it still opens the list with the legal target in it. The same for a face-down extra deck.
+- [ ] The other three piles behave the same way, on both sides of the board: a pile showing nothing you are allowed to see never lights up, and never stops being clickable.
+
+### End turn and the action buttons are smaller
+
+- [ ] Look at **End turn** in the phase strip: it is visibly shorter and its text smaller than before, still on one row, and still comfortably clickable (it holds the 44px floor).
+- [ ] Play into your Battle Phase so the label becomes **End Battle Phase**: still one row, still not covering a card or pile.
+- [ ] Hover a hand card so the zoom overlay opens with its action buttons stacked under it: each button is half the height it used to be. Every one of them is still readable and still clickable, and clicking one performs that action.
+
+### Full Control sits on the board with a tooltip
+
+- [ ] Look at the bottom-right corner **of the board itself** (inside the green field, not beside it): a bare checkbox sits there with no caption next to it.
+- [ ] Hover the checkbox: a small **Full Control** tooltip appears beside it. Move the pointer away: the tooltip goes.
+- [ ] Click the checkbox: it ticks, and the tooltip is showing while the box has focus. Click it again to untick.
+- [ ] Hold Ctrl: the box stays on whatever you set, the tooltip's text turns accent-coloured when it is showing, and the "held by Ctrl" pill appears beside the box.
+- [ ] Turn the window portrait (390x844 in the device toolbar) and start a duel: the checkbox turns with the board and stays inside it, in the same corner.
+
+### The hand-count badges are gone
+
+- [ ] With cards in both hands, look at the two hand bands: neither carries a small number badge in its corner any more. The cards themselves are the count.
+- [ ] Draw a card and play one: the bands update as before, with nothing left showing a stale number.
+
+### Effect descriptions name the card
+
+- [ ] Reach an optional effect prompt — a card that asks "use this effect?" — and read the question above Yes/No: it names the card and the place it is used from, in words. No `%ls` and no other stray placeholder appears in it.

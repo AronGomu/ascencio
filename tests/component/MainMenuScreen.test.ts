@@ -3,7 +3,7 @@
 import "fake-indexeddb/auto";
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { tick } from "svelte";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import MainMenuScreen from "../../src/shell/screens/MainMenuScreen.svelte";
 import {
   STORY_SAVES_DATABASE_NAME,
@@ -54,10 +54,15 @@ async function settleSaveProbe(): Promise<void> {
 
 function renderMenu(record: ShellState[] = []) {
   const hashes: string[] = [];
+  const onfreeplaywarm = vi.fn();
   const store = createShellStore("#/", (hash) => hashes.push(hash));
   store.subscribe((state) => record.push(state));
-  render(MainMenuScreen, { store });
-  return { hashes, state: () => record[record.length - 1]! };
+  render(MainMenuScreen, { store, onfreeplaywarm });
+  return {
+    hashes,
+    onfreeplaywarm,
+    state: () => record[record.length - 1]!,
+  };
 }
 
 beforeEach(async () => {
@@ -104,6 +109,24 @@ describe("MainMenuScreen", () => {
 
     expect(menu.hashes).toEqual(["#/free-play"]);
     expect(menu.state().route).toStrictEqual({ kind: "free-play" });
+  });
+
+  /* Free play opens on a deck list, and reading that list means the whole
+     packaged card database. Reaching for the entry is what starts that read,
+     so it happens while the player is still travelling to the click — and
+     never for a player who came for the story and passes it by (ADR-054). */
+  it("reports a reach for Free Play before the click", async () => {
+    const menu = renderMenu();
+
+    await fireEvent.pointerEnter(query("main-menu-free-play")!);
+    expect(menu.onfreeplaywarm).toHaveBeenCalledTimes(1);
+    expect(menu.hashes).toEqual([]);
+
+    await fireEvent.focus(query("main-menu-free-play")!);
+    expect(menu.onfreeplaywarm).toHaveBeenCalledTimes(2);
+
+    await fireEvent.pointerEnter(query("main-menu-new-game")!);
+    expect(menu.onfreeplaywarm).toHaveBeenCalledTimes(2);
   });
 
   it("navigates into the story recording which entry was chosen", async () => {

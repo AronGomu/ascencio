@@ -11,8 +11,11 @@
     type ActiveInteractionSpec,
     type InteractionChoice,
   } from "../../prompts/interaction-spec.ts";
+  import type { PromptMessageSegment } from "../../presentation/prompt-context-message.ts";
+  import PromptContextMessage from "./PromptContextMessage.svelte";
 
   export let spec: ActiveInteractionSpec;
+  export let contextMessage: readonly PromptMessageSegment[] = [];
   export let session: InteractionSession;
   export let disabled = false;
   export let confirmValid = false;
@@ -67,6 +70,7 @@
   aria-busy={disabled}
   data-cy="field-action-bar"
 >
+  <PromptContextMessage segments={contextMessage} />
   <p data-cy="field-action-bar-title">{spec.title}</p>
   {#if session.selectedChoiceIds.length > 0}
     <p data-cy="field-action-bar-summary">

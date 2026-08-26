@@ -47,6 +47,19 @@ const dependencies: ActiveDuelDependencies = {
   counts: { cards: 0, texts: 1, scripts: 0, globals: 0, images: 0 },
 };
 
+/* The same duel, with the pinned strings the substitution above reads. Held
+   apart so every other case keeps proving the empty-snapshot path. */
+const systemStringDependencies: ActiveDuelDependencies = {
+  ...dependencies,
+  strings: {
+    ...dependencies.strings,
+    system: {
+      "200": 'Use the effect of "%ls" from [%ls]?',
+      "1004": "Graveyard",
+    },
+  },
+};
+
 /* No announced value equals its own position, so an encoder that answered
    with the value rather than the index answers 8 here — which no three-option
    list can index. A fixture like [0, 1, 2] would pass under either encoding. */
@@ -335,6 +348,29 @@ describe("PromptRegistry", () => {
     expect(diagnostics).toEqual([
       { type: "missing_text", reference: `option:${option}` },
     ]);
+  });
+
+  /* Project Ignis ships system string 200 as a printf template. Left unfilled
+     the player reads `%ls` where the card's name belongs, which is the whole
+     point of the substitution. */
+  it("fills the card name and location into a system-string effect description", () => {
+    const effect = buildEnginePrompt(
+      {
+        type: EngineMessageType.SELECT_EFFECT_YES_NO,
+        player: 0,
+        code: 97590747,
+        controller: 0,
+        location: EngineLocation.GRAVEYARD,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+        description: 200n,
+      },
+      7,
+      systemStringDependencies,
+    );
+    expect(effect?.prompt.message).toBe(
+      'Use the effect of "La Jinn" from [Graveyard]?',
+    );
   });
 
   it("adds effect-card details and explicit counter capacities to public prompts", () => {

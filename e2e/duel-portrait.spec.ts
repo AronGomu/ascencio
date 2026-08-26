@@ -20,16 +20,11 @@ declare global {
 const PHONE = { width: 390, height: 844 } as const;
 const PHONE_LANDSCAPE = { width: 844, height: 390 } as const;
 
-/* T16: `#/duel` redirects to the free-play menu, and the duel is what its
-   first entry starts. The match is a state of that menu rather than a route,
-   so a reload lands on the menu again and has to start a second one. */
-async function startMatch(page: Page): Promise<void> {
-  await page.locator('[data-cy="free-play-start-match"]').click();
-}
-
+/* ADR-054: `#/duel` redirects to free play, which opens on the match setup
+   itself. The match is a state of that route rather than a route of its own,
+   so a reload lands on the seats again and has to start a second one. */
 async function openDuel(page: Page, url = "./#/duel"): Promise<void> {
   await page.goto(url);
-  await startMatch(page);
 }
 
 /* T17: both seats are chosen in the shell's match setup, and the duel starts
@@ -235,7 +230,6 @@ test("the rotation notice explains the turn once and stays dismissed", async ({
   await expect(notice).toHaveCount(0);
 
   await page.reload();
-  await startMatch(page);
   await expect(page.locator('[data-cy="app-stage"]')).toHaveAttribute(
     "data-stage-rotated",
     "true",

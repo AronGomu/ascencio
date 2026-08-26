@@ -15,7 +15,7 @@ async function openHandZoom(page: Page) {
   return { card, box };
 }
 
-test("the zoomed hand card overflows the hand band and shows chips above", async ({
+test("the zoomed hand card overflows the hand band and centres its chips on it", async ({
   page,
 }) => {
   await page.goto("?scenario=field-hand-zoom");
@@ -54,15 +54,21 @@ test("the zoomed hand card overflows the hand band and shows chips above", async
   expect(overlayBox!.height).toBeGreaterThan(expectedHeight * 0.9);
   expect(overlayBox!.height).toBeLessThan(expectedHeight * 1.1);
 
-  // Chips row must appear above the overlay top
+  /* Chips are centred on the zoomed card, the same anchor a field card gives
+     its own chips. They used to hang above the overlay's top edge; the two
+     hosts were unified so hover and keyboard focus show one thing. */
   const chips = overlay.locator(
     '[data-cy^="hand-zoom-overlay-card-action-chips-"]',
   );
   await expect(chips).toBeVisible();
   const chipsBox = await chips.boundingBox();
   expect(chipsBox).not.toBeNull();
-  expect(chipsBox!.y + chipsBox!.height).toBeLessThanOrEqual(
-    overlayBox!.y + 2, // 2px tolerance for rounding
+  const overlayCentre = overlayBox!.y + overlayBox!.height / 2;
+  const chipsCentre = chipsBox!.y + chipsBox!.height / 2;
+  expect(Math.abs(chipsCentre - overlayCentre)).toBeLessThanOrEqual(1);
+  expect(chipsBox!.y).toBeGreaterThan(overlayBox!.y);
+  expect(chipsBox!.y + chipsBox!.height).toBeLessThan(
+    overlayBox!.y + overlayBox!.height,
   );
 });
 
@@ -111,26 +117,52 @@ test("a motionless pointer leaves the overlay mounted, never strobing", async ({
   expect(churn!.same, "overlay node survives a still pointer").toBe(true);
 });
 
-/* The overlay is presentation. Everything it draws over the card stays out of
-   hit testing, so the card keeps its own press and drag. */
+/* The overlay is presentation, with one deliberate exception: the chips it
+   centres on the zoomed card take the pointer, exactly as a field card's own
+   chips do. Everything else it draws — the art above all — stays out of hit
+   testing, so the card below the chips keeps its own press and drag. */
 test("the hand card under the overlay still takes the pointer", async ({
   page,
 }) => {
   const { box } = await openHandZoom(page);
   const centre = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 
+  /* Below the centred chip column and still inside the card: this is the span
+     a drag has to start from now that the chips own the middle of the card. */
+  const chipsBottom = await page
+    .locator('[data-cy^="hand-zoom-overlay-card-action-chips-"]')
+    .evaluate((element) => element.getBoundingClientRect().bottom);
+  const belowChips = {
+    x: centre.x,
+    y: (chipsBottom + box.y + box.height) / 2,
+  };
+  expect(belowChips.y).toBeLessThan(box.y + box.height);
+
   const hit = await page.evaluate((point) => {
     const element = document.elementFromPoint(point.x, point.y);
-    if (element === null) return { inCard: false, inOverlay: false };
+    if (element === null)
+      return { inCard: false, inOverlay: false, onChip: false };
     return {
       inCard: element.closest(".duel-field-card") !== null,
       inOverlay: element.closest("div.hand-zoom-overlay") !== null,
+      onChip: element.closest(".card-action-chip") !== null,
     };
-  }, centre);
+  }, belowChips);
   expect(hit.inOverlay, "overlay art still hit-tests over the card").toBe(
     false,
   );
-  expect(hit.inCard, "card centre no longer hit-tests to the card").toBe(true);
+  expect(
+    hit.inCard,
+    "the card below the chips no longer takes the pointer",
+  ).toBe(true);
+
+  const centreHit = await page.evaluate((point) => {
+    const element = document.elementFromPoint(point.x, point.y);
+    return element !== null && element.closest(".card-action-chip") !== null;
+  }, centre);
+  expect(centreHit, "the centred chips no longer take the pointer").toBe(true);
+
+  await page.mouse.move(belowChips.x, belowChips.y);
 
   await page.evaluate(() => {
     (
@@ -149,7 +181,7 @@ test("the hand card under the overlay still takes the pointer", async ({
     );
   });
   await page.mouse.down();
-  await page.mouse.move(centre.x + 40, centre.y - 60, { steps: 6 });
+  await page.mouse.move(belowChips.x + 40, belowChips.y - 60, { steps: 6 });
   const pressedCard = await page.evaluate(
     () =>
       (window as unknown as { __pointerDownInCard?: boolean })

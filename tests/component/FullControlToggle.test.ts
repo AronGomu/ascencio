@@ -27,11 +27,16 @@ function holdHint(): HTMLElement {
 }
 
 describe("FullControlToggle", () => {
-  it("renders the Full Control label", () => {
+  /* The name is a tooltip now, not a caption: it stays in the document so the
+     stylesheet can reveal it on hover and on focus, and the box keeps the
+     accessible name whether or not the tip is showing. */
+  it("names the control through a tooltip and the box's own label", () => {
     render(FullControlToggle, { value: false, onchange: vi.fn() });
 
     const label = document.querySelector('[data-cy="full-control-label"]');
     expect(label?.textContent).toBe("Full Control");
+    expect(label?.getAttribute("role")).toBe("tooltip");
+    expect(checkbox().getAttribute("aria-label")).toBe("Full Control");
   });
 
   it("reports checkbox changes", async () => {

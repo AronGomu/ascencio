@@ -310,7 +310,7 @@ test("six and twenty card hands keep height with conditional overlay scrollbar",
   const sixHeight = await sixCard.evaluate(
     (element) => element.getBoundingClientRect().height,
   );
-  await expect(page.locator('[data-cy="field-hand-p0-count"]')).toHaveText("6");
+  await expect(page.locator('[data-card-zone-id="p0:hand"]')).toHaveCount(6);
   await expect(
     page.locator('[data-cy="field-hand-p0-scrollbar"]'),
   ).toBeHidden();
@@ -341,14 +341,6 @@ test("six and twenty card hands keep height with conditional overlay scrollbar",
   expect(
     await viewport.evaluate((element) => element.scrollLeft),
   ).toBeGreaterThan(0);
-
-  const countZ = await page
-    .locator('[data-cy="field-hand-p0-count"]')
-    .evaluate((element) => Number(getComputedStyle(element).zIndex));
-  const cardZ = await cards
-    .first()
-    .evaluate((element) => Number(getComputedStyle(element).zIndex));
-  expect(countZ).toBeGreaterThan(cardZ);
 });
 
 test("preview bounds text with stable width and vertical overlay", async ({
@@ -548,11 +540,16 @@ test("duel colors resolve from tokens", async ({ page }) => {
   expect(halos.selectedBorder).toBe(hexToRgb(tokens.selected));
   /* Chromium serializes `color-mix()` as `color(srgb r g b / a)` with 0-1
      channels, so compare sRGB channels rather than the literal string the
-     pre-token `rgb(126 226 168 / 0.55)` used to print. */
+     pre-token `rgb(126 226 168 / 0.55)` used to print. The legal halo is two
+     layers — `sRgbChannels` reads the first, which is the solid ring; the
+     glow behind it is asserted by the spread assertion below. */
   expect(sRgbChannels(halos.legalShadow)).toEqual([
     ...hexToChannels(tokens.legal),
-    0.55,
+    0.9,
   ]);
+  expect(halos.legalShadow, "legal halo keeps its outer glow layer").toMatch(
+    /0px 0px 14px 5px/,
+  );
   expect(sRgbChannels(halos.selectedShadow)).toEqual([
     ...hexToChannels(tokens.selected),
     0.78,

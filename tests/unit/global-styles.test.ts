@@ -469,13 +469,25 @@ describe("global styles", () => {
      row both reveal triggers could be deleted with the suite still green. */
   it("chips are hidden until hover, focus or a pin reveals them", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
-    expect(ruleBlock(css, "\n.card-action-chips {")).toContain("display: none");
-    const handChips = ruleBlock(
+    const chips = ruleBlock(css, "\n.card-action-chips {");
+    expect(chips).toContain("display: none");
+    /* Centring on the card is what keeps a hand card's chips inside the band's
+       clipped scrollport, which the old fixed top offset used to buy. */
+    expect(chips).toContain("top: 0");
+    expect(chips).toContain("bottom: 0");
+    expect(chips).toContain("height: fit-content");
+    expect(chips).toContain("margin-block: auto");
+    /* The overlay's own copy inherits that centring instead of anchoring
+       itself, so it may not redeclare an edge; all it adds is the reveal and
+       the hit testing its pointer-transparent parent gave up. */
+    const overlayChips = ruleBlock(
       css,
-      ".duel-field-card.is-hand-item .card-action-chips {",
+      ".hand-zoom-overlay .card-action-chips {",
     );
-    expect(handChips).toContain("top: calc(var(--field-height) * 0.26)");
-    expect(handChips).toContain("bottom: auto");
+    expect(overlayChips).toContain("display: flex");
+    expect(overlayChips).toContain("pointer-events: auto");
+    expect(overlayChips).not.toContain("top:");
+    expect(overlayChips).not.toContain("bottom:");
     const reveal = ruleBlock(
       css,
       ".duel-field-card.is-actionable:hover .card-action-chips,\n.duel-field-card.is-actionable:focus-within .card-action-chips,\n.duel-field-card.is-pinned .card-action-chips {",
@@ -494,9 +506,11 @@ describe("global styles", () => {
     );
   });
 
-  it("end-turn button is at least 3rem tall", () => {
+  it("end-turn button keeps the 44px control minimum", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
-    expect(ruleBlock(css, "\n.field-end-turn {")).toContain("min-height: 3rem");
+    expect(ruleBlock(css, "\n.field-end-turn {")).toContain(
+      "min-height: 2.75rem",
+    );
   });
 
   /* Both bands centre their cluster with an `auto` margin on the *outer* side

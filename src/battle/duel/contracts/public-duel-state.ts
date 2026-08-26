@@ -77,6 +77,17 @@ export interface PublicPlayerState {
 export type PublicChainPhase = "pending" | "solving" | "solved";
 export type PublicChainOutcome = "normal" | "negated" | "disabled";
 
+/** A card the open chain link named as a target. Carries the address the local
+    viewer may already see and withholds the code otherwise, so a face-down
+    target reads as one without naming it. */
+export interface PublicChainTarget {
+  readonly identityVisible: boolean;
+  readonly controller: PlayerIndex;
+  readonly location: PublicLocation;
+  readonly instanceId?: CardInstanceId;
+  readonly card?: CardCode;
+}
+
 export interface PublicChainLink {
   readonly index: number;
   readonly controller: PlayerIndex;
@@ -87,6 +98,7 @@ export interface PublicChainLink {
   readonly description?: string;
   readonly phase: PublicChainPhase;
   readonly outcome: PublicChainOutcome;
+  readonly targets?: readonly PublicChainTarget[];
 }
 
 /** Immutable geometry chosen with the duel's engine rules profile. */

@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>20 Design Directions — YGO Story Duel Simulator</title>
+<style>
+/* ============================================================
+   CATALOGUE SHELL
+   Neutral warm-dark gallery ground so 20 palettes can sit next
+   to each other without the page competing with any of them.
+   ============================================================ */
+:root{
+  --pg-bg:#17161a;
+  --pg-bg2:#1e1d22;
+  --pg-ink:#f2efe9;
+  --pg-mut:#9a958d;
+  --pg-line:#33313a;
+  --pg-line2:#454250;
+  --pg-hot:#ff5d3b;
+  --pg-cool:#8fd3c4;
+  --pg-mono:"JetBrains Mono","DejaVu Sans Mono",ui-monospace,monospace;
+  --pg-sans:"TeX Gyre Heros","Liberation Sans",Helvetica,Arial,sans-serif;
+  --pg-cond:"TeX Gyre Heros Cn","DejaVu Sans Condensed","Liberation Sans Narrow",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--pg-bg);
+  color:var(--pg-ink);
+  font-family:var(--pg-sans);
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--pg-cool)}
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+
+/* ---- masthead ---- */
+.mast{border-bottom:2px solid var(--pg-ink);padding:56px 0 22px;margin-bottom:0}
+.mast .kick{font-family:var(--pg-mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--pg-hot);margin:0 0 18px}
+.mast h1{
+  font-family:var(--pg-cond);
+  font-size:clamp(44px,8.5vw,104px);
+  line-height:.9;letter-spacing:-.02em;text-transform:uppercase;
+  margin:0 0 18px;font-weight:700;
+}
+.mast .sub{max-width:62ch;color:var(--pg-mut);font-size:17px;line-height:1.55;margin:0}
+.mast .meta{display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:26px;font-family:var(--pg-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--pg-mut)}
+.mast .meta b{color:var(--pg-ink);font-weight:500}
+
+/* ---- prose blocks ---- */
+section.note{padding:44px 0;border-bottom:1px solid var(--pg-line)}
+section.note h2{font-family:var(--pg-cond);text-transform:uppercase;letter-spacing:.02em;font-size:26px;margin:0 0 14px}
+section.note p{max-width:72ch;color:#cec9c1;margin:0 0 12px}
+section.note p.tight{margin-bottom:6px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:26px;margin-top:22px}
+.cols h3{font-family:var(--pg-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--pg-hot);margin:0 0 8px}
+.cols ul{margin:0;padding-left:18px;color:#cec9c1;font-size:14px}
+.cols li{margin-bottom:5px}
+.rut{border-left:3px solid var(--pg-hot);padding:2px 0 2px 16px;margin-top:20px}
+.rut li{color:#bdb7ae}
+
+/* ---- index grid ---- */
+.index{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1px;background:var(--pg-line);border:1px solid var(--pg-line);margin:26px 0 0}
+.index a{
+  background:var(--pg-bg);padding:12px 14px;text-decoration:none;color:var(--pg-ink);
+  display:flex;gap:10px;align-items:baseline;transition:background .12s;
+}
+.index a:hover{background:var(--pg-bg2)}
+.index .no{font-family:var(--pg-mono);font-size:11px;color:var(--pg-hot);min-width:22px}
+.index .nm{font-family:var(--pg-cond);text-transform:uppercase;font-size:15px;letter-spacing:.01em}
+.index .fm{display:block;font-family:var(--pg-mono);font-size:9px;letter-spacing:.12em;color:var(--pg-mut);text-transform:uppercase;margin-top:2px}
+
+/* ============================================================
+   DIRECTION CARD
+   ============================================================ */
+.card{border-bottom:1px solid var(--pg-line);padding:52px 0 56px}
+.card-head{display:grid;grid-template-columns:112px 1fr;gap:24px;align-items:start}
+.card-no{
+  font-family:var(--pg-cond);font-size:88px;line-height:.78;font-weight:700;
+  color:transparent;-webkit-text-stroke:1.5px var(--pg-line2);letter-spacing:-.04em;
+}
+.card-title h2{font-family:var(--pg-cond);text-transform:uppercase;font-size:clamp(30px,4.4vw,50px);line-height:.95;letter-spacing:-.01em;margin:0 0 8px;font-weight:700}
+.card-family{font-family:var(--pg-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--pg-hot);margin:0 0 14px}
+.thesis{font-size:19px;line-height:1.45;max-width:66ch;margin:0 0 10px;color:var(--pg-ink)}
+.refuses{font-size:14px;color:var(--pg-mut);max-width:66ch;margin:0}
+.refuses b{color:#d8d3cb;font-weight:500}
+
+.card-body{display:grid;grid-template-columns:112px minmax(0,1fr);gap:24px;margin-top:28px}
+@media(max-width:960px){
+  .card-head,.card-body{grid-template-columns:1fr}
+  .card-no{font-size:52px}
+}
+
+/* palette + type strip */
+.strip{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-bottom:18px;align-items:stretch}
+.pal{display:flex;flex-wrap:wrap;gap:1px;background:var(--pg-line);border:1px solid var(--pg-line)}
+.sw{flex:1 1 78px;min-width:78px;padding:12px 8px 9px;display:flex;flex-direction:column;justify-content:flex-end;min-height:74px}
+.sw span{font-family:var(--pg-mono);font-size:9.5px;letter-spacing:.06em;display:block}
+.sw .role{text-transform:uppercase;opacity:.72;margin-bottom:2px}
+.typeblk{border:1px solid var(--pg-line);padding:14px 16px}
+.typeblk .lbl{font-family:var(--pg-mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--pg-mut);margin-bottom:8px}
+.typeblk .spec{font-size:30px;line-height:1.1;margin-bottom:4px;color:var(--pg-ink)}
+.typeblk .spec.b{font-size:14px;line-height:1.4;color:#cec9c1}
+.typeblk .fnote{font-family:var(--pg-mono);font-size:10px;color:var(--pg-mut);margin-top:9px;line-height:1.5}
+
+/* mockups — each renders on a fixed 420x315 canvas and is scaled to the
+   column with a container query, so composition is identical at any width */
+.mocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:20px}
+.mockwrap .cap{font-family:var(--pg-mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--pg-mut);margin:0 0 6px}
+.frame{aspect-ratio:4/3;overflow:hidden;position:relative;background:#0e0d11}
+.frame > .mock{position:absolute;top:0;left:0;width:420px;height:315px;transform:scale(var(--s,1));transform-origin:top left}
+
+/* facts band, under the mockups, full width */
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:22px;border-top:2px solid var(--pg-line2);padding-top:14px;margin-top:22px}
+.fact dt{font-family:var(--pg-mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--pg-hot);margin:0}
+.fact dd{margin:5px 0 0;font-size:13px;line-height:1.5;color:#cec9c1}
+.fact dd.risk{color:#e8b7a8}
+.meter{display:flex;gap:3px;margin-top:6px}
+.meter i{width:15px;height:5px;background:var(--pg-line2);display:block}
+.meter i.on{background:var(--pg-hot)}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.tags b{font-family:var(--pg-mono);font-weight:400;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--pg-line2);padding:3px 6px;color:#cec9c1}
+.tags b.hot{border-color:var(--pg-hot);color:var(--pg-hot)}
+
+/* exit card */
+.exit{background:var(--pg-bg2);border:1px solid var(--pg-line);padding:28px;margin:44px 0}
+.exit h2{font-family:var(--pg-cond);text-transform:uppercase;font-size:24px;margin:0 0 6px}
+.exit .kick{font-family:var(--pg-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--pg-mut);margin:0 0 12px}
+.exit p{color:#cec9c1;max-width:70ch;margin:0 0 12px;font-size:14px}
+.exit .pal{max-width:640px}
+
+footer{padding:44px 0 80px;color:var(--pg-mut);font-size:13px}
+footer h2{font-family:var(--pg-cond);text-transform:uppercase;font-size:22px;color:var(--pg-ink);margin:0 0 12px}
+footer ol{padding-left:20px;max-width:74ch;line-height:1.6}
+footer code{font-family:var(--pg-mono);font-size:12px;background:var(--pg-bg2);padding:1px 5px;border:1px solid var(--pg-line)}
+
+/* ============================================================
+   MOCKUP SKELETON
+   One markup skeleton for each of the three surfaces. Every
+   direction repaints it through the --m-* custom properties and
+   adds only the structural rules its own world needs.
+   ============================================================ */
+.mock{
+  --m-bg:#222;--m-bg2:#2a2a2a;--m-ink:#eee;--m-mut:#999;--m-line:#555;
+  --m-accent:#c33;--m-accent2:#39c;--m-zone:#1a1a1a;--m-zline:#666;
+  --m-r:0px;--m-font:var(--pg-sans);--m-alt:var(--pg-mono);
+  --m-caps:none;--m-track:0;--m-tex:none;--m-shadow:none;--m-zr:0px;
+  overflow:hidden;
+  background:var(--m-bg);background-image:var(--m-tex);
+  color:var(--m-ink);font-family:var(--m-font);font-size:9px;line-height:1.3;
+  border:1px solid var(--m-line);border-radius:var(--m-r);
+  padding:10px;display:flex;flex-direction:column;gap:5px;
+  user-select:none;
+}
+.mock *{box-sizing:border-box}
+
+/* --- duel --- */
+.mk-hud{display:flex;justify-content:space-between;align-items:center;gap:8px;flex:0 0 auto}
+.mk-name{font-family:var(--m-alt);font-size:8px;letter-spacing:.14em;text-transform:uppercase;opacity:.85;white-space:nowrap}
+.mk-lp{font-family:var(--m-alt);font-size:15px;font-weight:700;letter-spacing:.02em;color:var(--m-accent);line-height:1}
+.mk-lpbar{height:4px;flex:1;background:var(--m-zone);border:1px solid var(--m-zline);position:relative}
+.mk-lpbar::after{content:"";position:absolute;inset:0 32% 0 0;background:var(--m-accent)}
+.mk-field{flex:0 0 auto;display:flex;flex-direction:column;gap:4px;padding:4px 0;position:relative}
+.mk-row{display:flex;gap:4px;justify-content:center}
+.mk-z{
+  height:40px;aspect-ratio:5/7;border:1px solid var(--m-zline);background:var(--m-zone);
+  border-radius:var(--m-zr);position:relative;flex:0 0 auto;
+}
+.mk-z.mk-c{background:var(--m-accent2);border-color:var(--m-ink);box-shadow:var(--m-shadow)}
+.mk-z.mk-c.mk-def{transform:rotate(90deg) scale(.74)}
+.mk-z.mk-gh{opacity:.38}
+.mk-z.mk-ex{background:var(--m-accent);border-color:var(--m-ink)}
+.mk-hand{display:flex;gap:4px;justify-content:center;margin-top:auto}
+.mk-hand .mk-z{height:42px;background:var(--m-accent2);border-color:var(--m-ink)}
+.mk-hand .mk-z:nth-child(3){transform:translateY(-4px)}
+.mk-phase{display:flex;gap:3px;justify-content:center;font-family:var(--m-alt);font-size:7px;letter-spacing:.1em;text-transform:uppercase;flex:0 0 auto}
+.mk-phase span{padding:1px 4px;border:1px solid var(--m-zline);opacity:.55}
+.mk-phase span.mk-on{opacity:1;background:var(--m-accent);color:var(--m-bg);border-color:var(--m-accent)}
+
+/* --- vn --- */
+.mock-vn{justify-content:flex-end;position:relative;padding:12px}
+.mk-scene{position:absolute;inset:0;background:var(--m-bg2);background-image:var(--m-tex)}
+.mk-figure{position:absolute;left:11%;bottom:0;width:32%;height:76%;background:var(--m-accent2);opacity:.9;
+  clip-path:polygon(38% 0,62% 0,72% 16%,68% 34%,86% 46%,90% 100%,10% 100%,14% 46%,32% 34%,28% 16%)}
+.mk-box{position:relative;margin-top:auto;background:var(--m-bg);border:1px solid var(--m-zline);border-radius:var(--m-zr);padding:9px 11px}
+.mk-speaker{font-family:var(--m-alt);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--m-accent);margin-bottom:5px}
+.mk-line{font-size:10px;line-height:1.45;opacity:.92}
+.mk-choices{position:relative;display:flex;flex-direction:column;gap:3px;margin-top:8px}
+.mk-choices b{font-weight:400;font-size:9px;padding:4px 7px;border:1px solid var(--m-zline);background:var(--m-zone);border-radius:var(--m-zr);text-transform:var(--m-caps);letter-spacing:var(--m-track)}
+.mk-choices b.mk-on{background:var(--m-accent);color:var(--m-bg);border-color:var(--m-accent)}
+
+/* --- deck --- */
+.mock-deck{gap:7px}
+.mk-tools{display:flex;gap:4px;align-items:center;flex:0 0 auto}
+.mk-search{flex:1;height:14px;border:1px solid var(--m-zline);background:var(--m-zone);border-radius:var(--m-zr)}
+.mk-chip{font-family:var(--m-alt);font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;padding:2.5px 5px;border:1px solid var(--m-zline);border-radius:var(--m-zr)}
+.mk-chip.mk-on{background:var(--m-accent);color:var(--m-bg);border-color:var(--m-accent)}
+.mk-split{flex:1;display:grid;grid-template-columns:1.5fr 1fr;gap:9px;min-height:0}
+.mk-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;align-content:start}
+.mk-grid .mk-z{height:auto;width:100%;aspect-ratio:5/7;background:var(--m-accent2);border-color:var(--m-zline);opacity:.85}
+.mk-grid .mk-z:nth-child(3n){background:var(--m-zone)}
+.mk-grid .mk-z:nth-child(5){background:var(--m-accent)}
+.mk-list{display:flex;flex-direction:column;gap:3px;border-left:1px solid var(--m-zline);padding-left:8px}
+.mk-li{display:flex;justify-content:space-between;gap:5px;font-size:8px;padding:2.5px 0;border-bottom:1px solid var(--m-zline);opacity:.9;white-space:nowrap}
+.mk-li i{font-style:normal;font-family:var(--m-alt);color:var(--m-accent)}
+.mk-ratio{display:flex;height:7px;margin-top:auto;border:1px solid var(--m-zline)}
+.mk-ratio u{display:block;text-decoration:none}
+.mk-ratio u:nth-child(1){flex:5;background:var(--m-accent)}
+.mk-ratio u:nth-child(2){flex:3;background:var(--m-accent2)}
+.mk-ratio u:nth-child(3){flex:2;background:var(--m-zline)}
+.mk-count{font-family:var(--m-alt);font-size:8px;letter-spacing:.08em;text-align:right;opacity:.8;margin-bottom:2px}
+</style>
+</head>
+<body>
+<!--
+IMPECCABLE DIRECTION CONTRACT — this artifact is a direction catalogue, not a build.
+THESIS: twenty complete, mutually exclusive visual worlds for one three-domain game, each
+derived from the story canon's own material (objectivism, hard magic, god-imposed play,
+academy, ZAPS, spirit world, era-per-chapter) rather than from the category's habit; it
+refuses the single-direction decision round because the ask was explicitly for twenty.
+OWN-WORLD: warm-dark gallery ground, condensed uppercase numerals, hairline rules; the page
+carries no colour of its own so twenty palettes can sit side by side without competing.
+STORY: the reader compares twenty worlds at equal salience, sees each one applied to duel,
+VN and deck editor, and locks one.
+FIRST VIEWPORT: masthead, derivation, the rut that was excluded, then the twenty-item index.
+FORM: catalogue / specimen book. Dice not rolled — concept-seed.mjs is gated on PRODUCT.md.
+FINISH: this is an exploration deliverable; the build contract begins when a direction is locked.
+-->
+<div class="wrap">
+
+<header class="mast">
+  <p class="kick">Ascencio · YGO Story Duel Simulator · 22 Aug 2026</p>
+  <h1>Twenty<br>Visual Worlds</h1>
+  <p class="sub">Twenty complete design directions for the whole game — duel simulator, visual novel, deck editor — each derived from the story canon rather than from what a card game is expected to look like. Every card shows the world applied to all three surfaces, in its own palette, at equal salience.</p>
+  <div class="meta">
+    <span><b>Source canon</b> docs/story/</span>
+    <span><b>Domains</b> duel · vn · deck</span>
+    <span><b>Mockups</b> 60, live CSS</span>
+    <span><b>Locked</b> none — this is the hand, not the build</span>
+  </div>
+</header>
+
+<section class="note">
+  <h2>Where these came from</h2>
+  <p>The canon does the work. Five facts in <code style="font-family:var(--pg-mono);font-size:12px">docs/story/</code> are unusually generous to a designer, and every direction below is traceable to at least one of them.</p>
+  <div class="cols">
+    <div>
+      <h3>Objectivist foundation</h3>
+      <ul>
+        <li>Rand at every level, aesthetics included — 1930s American industrial modernism is the movement's native look</li>
+        <li>Value, trade, earned achievement: ledgers, securities, engraved instruments of value</li>
+        <li>The duel is character and rational choice, never fate</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Hard magic, studiable by reason</h3>
+      <ul>
+        <li>Fixed knowable laws with explicit costs — technical documentation, not mysticism</li>
+        <li>Whoever treats magic as unfathomable is wrong <i>inside the fiction</i></li>
+        <li>Patent drawings, scientific plates, spectra, lab notation</li>
+      </ul>
+    </div>
+    <div>
+      <h3>The epistemological duel</h3>
+      <ul>
+        <li>Cheating is legal until proven by binding logical argument</li>
+        <li>A failed accusation costs information and reputation</li>
+        <li>Proof trees, evidence boards, courtroom record, audit</li>
+      </ul>
+    </div>
+    <div>
+      <h3>A god who banned violence</h3>
+      <ul>
+        <li>Every conflict resolved by play, by decree, from the background</li>
+        <li>Canon law, illuminated codex, stone tablet, liturgy</li>
+        <li>Spirits imprinted into manufactured cards — talismans, shrine paper</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Chapter 1 is a school; chapter = era</h3>
+      <ul>
+        <li>Academy year, first-years, club noticeboards, gym, exams, seniors</li>
+        <li>ZAPS: a corporation selling performance at the cost of health</li>
+        <li>Six eras, six graphic languages, one shell — the structure hands you a mechanic</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Stated tone references</h3>
+      <ul>
+        <li><i>Spirit Caller</i>, <i>Nightmare Troubadour</i> — dual-screen handheld UI</li>
+        <li><i>The Duelists of the Roses</i> — painted tactical board</li>
+        <li><i>World Championship</i> — dense stat panels</li>
+        <li>Duelists are <i>badly regarded</i>: the underground fight bill, the back-room market</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="rut">
+    <h3 style="margin-bottom:6px">Excluded before the list was written — the rut</h3>
+    <ul>
+      <li><b>Near-black with one neon accent and glowing edges.</b> This is where every AI-built card game lands, and it is also what the repo currently ships (<code style="font-family:var(--pg-mono);font-size:12px">#08101f</code> ground, <code style="font-family:var(--pg-mono);font-size:12px">#73daca</code> glow). It appears once at the bottom, played straight, as the standing exit.</li>
+      <li><b>Warm cream ground, high-contrast display serif, terracotta accent.</b> Directions 02 and 11 pass near this and are pushed off it deliberately — stamped vermilion and mechanical hatch in one, lapis-and-gold drench in the other.</li>
+      <li><b>Broadsheet editorial: hairline rules, italic display serif, small tracked mono labels.</b> Not represented. It is a magazine's look, not a duel's.</li>
+      <li><b>Egyptian pastiche.</b> The canon says 100% original, no link to the official universe. Millennium items, hieroglyph borders and sand palettes are borrowed identity, and would be the one thing a fan game must not borrow.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="note">
+  <h2>How to read a card</h2>
+  <p class="tight">Every card carries the same anatomy so nothing wins on presentation: <b>thesis</b> and what it refuses · <b>canon tie</b>, the specific story fact it serves · <b>palette</b> with real hex values · <b>type</b>, the intended commercial face and the local proxy actually rendering here · <b>three live mockups</b>, duel field, VN scene, deck editor, built from the same markup skeleton repainted by that direction's tokens · <b>signature interaction</b>, <b>motion</b>, <b>honest risk</b>, and where the world is strongest.</p>
+  <p style="color:var(--pg-mut);font-size:13.5px">The mockups are structural, not final art — they show composition, material and colour at a glance, at the size where a direction either reads or does not. Fonts render in locally installed proxies because this file fetches nothing; each type block names the face the build would actually license.</p>
+  <div class="index" id="index"></div>
+</section>
+
+<main id="cards"></main>
+
+<section class="exit">
+  <p class="kick">The standing exit — always available, never recommended</p>
+  <h2>00 · The incumbent, played straight</h2>
+  <p>Deep navy ground, teal accent, gold selection, soft glow on the field: the palette in <code style="font-family:var(--pg-mono);font-size:12px">src/styles/tokens.css</code> today. It is the category standard and it works. Taking this door means committing to it properly rather than half-replacing it — naming two or three shipped card games as the craft bar, and executing that convention at full fidelity across all three domains, with no smuggled quirk from the twenty above.</p>
+  <div class="pal">
+    <div class="sw" style="background:#08101f;color:#e8edf8"><span class="role">ground</span><span>#08101f</span></div>
+    <div class="sw" style="background:#111b2f;color:#e8edf8"><span class="role">surface</span><span>#111b2f</span></div>
+    <div class="sw" style="background:#73daca;color:#06111d"><span class="role">accent</span><span>#73daca</span></div>
+    <div class="sw" style="background:#ffd580;color:#2b1d00"><span class="role">selected</span><span>#ffd580</span></div>
+    <div class="sw" style="background:#153d35;color:#d5f0e6"><span class="role">field</span><span>#153d35</span></div>
+    <div class="sw" style="background:#ff8c9b;color:#24060b"><span class="role">danger</span><span>#ff8c9b</span></div>
+  </div>
+</section>
+
+<footer>
+  <h2>What happens next</h2>
+  <ol>
+    <li><b>Pick one</b> — or pick a lead plus one you want it raised by. Twenty is a hand to choose from, not a menu to blend; a build that splits the difference between two worlds ships neither.</li>
+    <li><b>PRODUCT.md is missing, so the dice stayed in the cup.</b> <code>concept-seed.mjs</code> exits <code>NO_PRODUCT_MD</code> without it — the roll that stops a build converging on the safest concept could not run. Twenty directions spanning eleven material families is the opposite failure mode from the one the dice guard against, so nothing here is invalidated, but the direction round proper wants an <code>init</code> pass first.</li>
+    <li><b>Then the build contract.</b> Locked direction → DESIGN.md written from the built world → tokens replace <code>src/styles/tokens.css</code> wholesale, since every domain already resolves colour from that one file.</li>
+    <li><b>Scope note.</b> Each direction is costed on the effort meter for all three domains together. Anything at four or five bars needs authored assets — plates, textures, sign paint, painted portraits — and is a content project as much as a CSS one.</li>
+  </ol>
+</footer>
+
+</div>
+
+<script>
+/* ============================================================
+   DIRECTION DATA
+   ============================================================ */
+const DIRECTIONS = [
+{
+  n:"01", name:"Rendered Night", family:"Architecture · charcoal rendering",
+  thesis:"The city Rand's heroes build, drawn the way Hugh Ferriss drew it: charcoal on grey paper, mass before detail, one raking light source. The duel field is a plaza at night seen from a setback.",
+  refuses:"Refuses the flat screen. Everything here has <b>mass and a light direction</b> — a card is a solid catching light, not a rectangle with a border.",
+  canon:"Objectivist aesthetics taken literally: the 1930s American industrial modernism that is the movement's native look, and Fynn's arc from drift to built achievement.",
+  palette:[["#1b1b1e","graphite","#e8e4dc"],["#101012","night","#c9c4bb"],["#e8e4dc","chalk","#1b1b1e"],["#6f7a86","haze","#101012"],["#b08d57","brass","#101012"],["#3a3a41","stone","#e8e4dc"]],
+  type:["Monument Grotesk Condensed","TeX Gyre Heros Cn","Display and every numeral. Body sets in a neutral grotesk at 15px; nothing italic, nothing decorative. Numerals are the loudest thing on the field."],
+  sig:"Summoning drops a solid into the plaza and its shadow sweeps across the neighbouring zones — position on the field is readable from the shadows alone.",
+  motion:"Light moves, objects do not. Phase changes re-angle the single light source over 400ms; the whole board re-reads without a single element translating.",
+  risk:"Monotone risks reading as gloom rather than grandeur. The brass has to work at full saturation on very little surface, and a rendering language needs real gradient craft or it collapses into grey mush.",
+  best:["Duel","VN"], effort:4,
+  css:`--m-bg:#1b1b1e;--m-bg2:#101012;--m-ink:#e8e4dc;--m-mut:#8b8680;--m-line:#3a3a41;
+  --m-accent:#b08d57;--m-accent2:#6f7a86;--m-zone:#141417;--m-zline:#3f3f47;--m-zr:0px;
+  --m-font:"TeX Gyre Heros Cn","DejaVu Sans Condensed",sans-serif;--m-alt:"TeX Gyre Heros Cn",sans-serif;
+  --m-tex:linear-gradient(105deg,rgba(232,228,220,.10) 0%,rgba(232,228,220,.02) 26%,rgba(0,0,0,.34) 72%);
+  --m-shadow:6px 7px 0 rgba(0,0,0,.55);
+  ~ .mk-z{clip-path:polygon(0 0,100% 0,100% 88%,88% 100%,0 100%);box-shadow:3px 4px 0 rgba(0,0,0,.45)}
+  ~ .mk-field::before{content:"";position:absolute;left:50%;top:-10%;width:26%;height:130%;background:linear-gradient(180deg,rgba(232,228,220,.14),transparent);transform:skewX(-14deg)}
+  ~ .mk-figure{background:#4c525a;clip-path:polygon(30% 0,70% 0,78% 22%,72% 40%,92% 52%,96% 100%,4% 100%,8% 52%,28% 40%,22% 22%)}
+  ~ .mk-lp{font-size:14px;letter-spacing:-.02em}`
+},
+{
+  n:"02", name:"Patent Office", family:"Instrument · technical drawing",
+  thesis:"Magic is a knowable mechanism, so the whole game is filed as one. Cards are figures with reference numerals, effects are numbered claims, and the field is a plate: dashed leader lines, 45° section hatch, no fills.",
+  refuses:"Refuses cream-and-serif antiquing. This is a <b>working document</b>, not a prop — vermilion office stamps and mechanical hatch keep it in the filing room, not the library.",
+  canon:"“Magic is hard magic: fixed, coherent, knowable laws, with explicit costs and limits… one more natural phenomenon, studiable by reason.”",
+  palette:[["#d8d5cb","plate","#1c1a17"],["#c6c3b7","fold","#1c1a17"],["#1c1a17","india ink","#d8d5cb"],["#2f4a6d","pencil blue","#d8d5cb"],["#c3402c","stamp","#f4efe6"],["#8a8578","leader","#1c1a17"]],
+  type:["Letter Gothic Std","TeX Gyre Cursor / DejaVu Sans Mono","All-uppercase mono for every label, figure number and claim. Monospace is not decoration here: the reference numerals must align down a column."],
+  sig:"Accusing an opponent of cheating opens the claim editor — you assemble the proof as numbered claims against figure references, and a claim that does not close is visibly incomplete before you file it.",
+  motion:"Nothing eases. Elements are drawn: strokes extend along their leader lines at constant speed, like a plotter, then stop.",
+  risk:"Reads as cold and homework-like if the ink stays black-on-grey everywhere. Needs the stamp red used with real violence, and one hand-annotation layer to keep a human in the room.",
+  best:["Duel","Deck"], effort:3,
+  css:`--m-bg:#d8d5cb;--m-bg2:#cbc8bc;--m-ink:#1c1a17;--m-mut:#6b675e;--m-line:#1c1a17;
+  --m-accent:#c3402c;--m-accent2:#2f4a6d;--m-zone:transparent;--m-zline:#1c1a17;--m-zr:0px;
+  --m-font:"TeX Gyre Cursor","DejaVu Sans Mono",monospace;--m-alt:"DejaVu Sans Mono",monospace;
+  --m-caps:uppercase;--m-track:.08em;
+  --m-tex:repeating-linear-gradient(0deg,rgba(28,26,23,.055) 0 1px,transparent 1px 11px),repeating-linear-gradient(90deg,rgba(28,26,23,.055) 0 1px,transparent 1px 11px);
+  ~ .mk-z{border-width:1px;background:transparent}
+  ~ .mk-z.mk-c{background:repeating-linear-gradient(45deg,#2f4a6d 0 1.5px,transparent 1.5px 5px);border-color:#1c1a17}
+  ~ .mk-z.mk-ex{background:repeating-linear-gradient(-45deg,#c3402c 0 1.5px,transparent 1.5px 5px)}
+  ~ .mk-hand .mk-z{background:repeating-linear-gradient(45deg,#2f4a6d 0 1.5px,transparent 1.5px 5px)}
+  ~ .mk-grid .mk-z{background:repeating-linear-gradient(45deg,#2f4a6d 0 1.5px,transparent 1.5px 5px);opacity:1}
+  ~ .mk-grid .mk-z:nth-child(3n){background:transparent}
+  ~ .mk-box{border:1px solid #1c1a17;background:#e2dfd5}
+  ~ .mk-speaker{border-bottom:1px solid #1c1a17;padding-bottom:2px}
+  ~ .mk-figure{background:transparent;border:1px solid #1c1a17;background-image:repeating-linear-gradient(45deg,rgba(47,74,109,.5) 0 1px,transparent 1px 6px)}
+  ~ .mk-scene{background:#d8d5cb}`
+},
+{
+  n:"03", name:"Double Entry", family:"Business print · ledger",
+  thesis:"Every duel is a transaction and every stake is an entry. Green-bar accounting paper, red ruling, tabular numerals that never move, a running balance where the life points used to be. Fraud is a falsified line.",
+  refuses:"Refuses the health bar. Life points are a <b>balance carried down a column</b>, and you can read the whole game's history by scrolling up the sheet.",
+  canon:"Chapter 1's thesis, in the world's own bookkeeping: “Cheating does not pay — neither morally nor practically. Fraud harms the one who commits it.”",
+  palette:[["#e8e4d2","ledger stock","#23301f"],["#cfe0c4","green bar","#23301f"],["#23301f","entry ink","#e8e4d2"],["#9b2226","ruling","#f2eee0"],["#26456e","carbon copy","#e8e4d2"],["#b6a97e","aged edge","#23301f"]],
+  type:["Century Schoolbook + tabular figures","TeX Gyre Schola / DejaVu Sans Mono","Schoolbook for prose because a ledger is set in a book face, mono only for the figures. Every number is tabular-lining, right-aligned, no exceptions."],
+  sig:"The stake is written into the ledger before the duel begins, both parties sign the line, and the result posts as a matching debit and credit — the record survives into the next chapter.",
+  motion:"Rows post. A new entry slides up from the bottom rule and the balance recalculates digit by digit, right to left, like a mechanical adder.",
+  risk:"A spreadsheet is one bad decision away from being boring rather than beautiful. Only works if the paper is genuinely gorgeous and the numerals are perfect; there is nowhere to hide.",
+  best:["Deck","Duel"], effort:2,
+  css:`--m-bg:#e8e4d2;--m-bg2:#ded9c4;--m-ink:#23301f;--m-mut:#6f7460;--m-line:#23301f;
+  --m-accent:#9b2226;--m-accent2:#26456e;--m-zone:#f2efe2;--m-zline:#8d9483;--m-zr:0px;
+  --m-font:"TeX Gyre Schola","Liberation Serif",serif;--m-alt:"DejaVu Sans Mono",monospace;
+  --m-tex:repeating-linear-gradient(180deg,rgba(96,140,86,.20) 0 9px,transparent 9px 18px);
+  ~ .mk-hud{border-bottom:2px double #9b2226;padding-bottom:2px}
+  ~ .mk-lp{font-variant-numeric:tabular-nums;color:#23301f;border-bottom:2px double #9b2226}
+  ~ .mk-z{border-width:0 0 1px 0;border-bottom:1px solid #8d9483;background:transparent;aspect-ratio:5/7}
+  ~ .mk-z.mk-c{background:#26456e;border:1px solid #23301f}
+  ~ .mk-z.mk-ex{background:#9b2226;border:1px solid #23301f}
+  ~ .mk-hand .mk-z{border:1px solid #23301f}
+  ~ .mk-field::before{content:"";position:absolute;left:24%;top:0;bottom:0;width:1px;background:#9b2226}
+  ~ .mk-field::after{content:"";position:absolute;right:24%;top:0;bottom:0;width:1px;background:#9b2226}
+  ~ .mk-li{border-bottom:1px solid #b6a97e}
+  ~ .mk-grid .mk-z{border:1px solid #23301f;background:#26456e}
+  ~ .mk-grid .mk-z:nth-child(3n){background:#f2efe2}
+  ~ .mk-grid .mk-z:nth-child(5){background:#9b2226}
+  ~ .mk-box{background:#f2efe2}`
+},
+{
+  n:"04", name:"Ofuda", family:"Craft · shrine paper and ink",
+  thesis:"Spirits imprinted into manufactured paper — so the interface is paper the spirits were imprinted into. Vertical washi slips, sumi brushwork, vermilion seals, one gold leaf accent that only the rarest cards earn.",
+  refuses:"Refuses the glowing hologram. A summon is a <b>seal being broken on a paper slip</b>, physical and irreversible, not light appearing from nowhere.",
+  canon:"“A spirit world exists. Some spirits imprint their energy into manufactured cards.” The imprint is literal, and the paper is the interface.",
+  palette:[["#efe6d3","washi","#14100c"],["#e2d5ba","kozo","#14100c"],["#14100c","sumi","#efe6d3"],["#c8442a","vermilion","#fbf7ee"],["#b8912f","kin gold","#14100c"],["#26374f","indigo","#efe6d3"]],
+  type:["Shuei Kaku Gothic + a kaisho display","TeX Gyre Termes / DejaVu Serif","Zone labels set vertically, right to left. The display face is brushed; the UI face is a plain gothic that never competes with it."],
+  sig:"Setting a card places a folded slip face down; flipping it tears the vermilion seal, and the torn seal stays on the field for the rest of the duel as a record of what was played.",
+  motion:"Paper physics only: slips settle with a slight overshoot and a shadow, seals tear along a jagged path, gold leaf catches light once and stops.",
+  risk:"One wrong decision away from generic 'Japanese aesthetic' wallpaper. Must use real ofuda structure — the vertical inscription band, the seal position — or it becomes a texture pack.",
+  best:["Duel","VN"], effort:4,
+  css:`--m-bg:#efe6d3;--m-bg2:#e2d5ba;--m-ink:#14100c;--m-mut:#6d6353;--m-line:#c2b295;
+  --m-accent:#c8442a;--m-accent2:#26374f;--m-zone:#f7f1e3;--m-zline:#b9a888;--m-zr:0px;
+  --m-font:"TeX Gyre Termes","Liberation Serif",serif;--m-alt:"DejaVu Serif",serif;
+  --m-tex:repeating-linear-gradient(90deg,rgba(20,16,12,.035) 0 1px,transparent 1px 4px),radial-gradient(120% 90% at 50% 0,rgba(200,68,42,.07),transparent 60%);
+  ~ .mk-z{clip-path:polygon(0 0,100% 0,100% 92%,50% 100%,0 92%);box-shadow:1px 2px 0 rgba(20,16,12,.12)}
+  ~ .mk-z.mk-c{background:#26374f}
+  ~ .mk-z.mk-ex{background:#c8442a}
+  ~ .mk-z.mk-c::after{content:"";position:absolute;left:50%;top:32%;width:5px;height:5px;margin-left:-2.5px;border:1px solid #c8442a;border-radius:50%;background:rgba(200,68,42,.35)}
+  ~ .mk-field::before{content:"";position:absolute;left:0;right:0;top:50%;height:2px;background:#b8912f;opacity:.55}
+  ~ .mk-box{background:#f7f1e3;border:1px solid #14100c;border-left:3px solid #c8442a}
+  ~ .mk-figure{background:#26374f}`
+},
+{
+  n:"05", name:"Board-Formed", family:"Architecture · institutional wayfinding",
+  thesis:"The academy as a building: board-formed concrete, painted court lines, enamel door numbers, signage set in one grotesk at three sizes and nothing else. The duel happens on a gym floor, in daylight.",
+  refuses:"Refuses the arena. Chapter 1 is <b>school</b>, so the field is a marked floor in a room with a caretaker, and the drama comes from the people, not the venue.",
+  canon:"“Setting: a duel academy. A gentle introduction. Fynn enters first year like everyone else.” Also the least flattering possible frame for a boy who thinks he is special.",
+  palette:[["#b4b0a8","concrete","#17324f"],["#8f8b83","shadow face","#f4f2ee"],["#17324f","enamel navy","#f4f2ee"],["#f2c500","safety yellow","#17324f"],["#a8422f","court red","#f4f2ee"],["#f4f2ee","paint line","#17324f"]],
+  type:["Univers 67 Bold Condensed","TeX Gyre Heros","One family, three sizes, all caps for signage and sentence case for everything else. Wayfinding discipline: if a size is not in the system, it does not get set."],
+  sig:"Zones are painted onto the floor, so a card placed out of bounds is visibly out of bounds — legality reads as a line you crossed, not an error message.",
+  motion:"Institutional and unhurried. Panels slide on fixed rails at a constant 180ms; there is no bounce anywhere in the system, because nothing in a school building bounces.",
+  risk:"Safety yellow on concrete is a strong look that a hundred design systems already wear. The board-form texture and the painted court lines are what keep it specific; drop either and it becomes generic Swiss-industrial.",
+  best:["Duel","Deck","VN"], effort:2,
+  css:`--m-bg:#b4b0a8;--m-bg2:#a09c94;--m-ink:#1d1c19;--m-mut:#5d5a54;--m-line:#7d7970;
+  --m-accent:#f2c500;--m-accent2:#17324f;--m-zone:#a8a49c;--m-zline:#f4f2ee;--m-zr:0px;
+  --m-font:"TeX Gyre Heros","Liberation Sans",sans-serif;--m-alt:"TeX Gyre Heros",sans-serif;
+  --m-caps:uppercase;--m-track:.06em;
+  --m-tex:repeating-linear-gradient(180deg,rgba(0,0,0,.055) 0 13px,rgba(255,255,255,.05) 13px 14px,transparent 14px 26px);
+  ~ .mk-z{border-width:2px}
+  ~ .mk-z.mk-c{background:#17324f;border-color:#f4f2ee}
+  ~ .mk-z.mk-ex{background:#a8422f}
+  ~ .mk-field::before{content:"";position:absolute;left:6%;right:6%;top:50%;height:2px;background:#f4f2ee}
+  ~ .mk-field::after{content:"";position:absolute;left:50%;top:38%;width:34px;height:34px;margin-left:-17px;border:2px solid #f4f2ee;border-radius:50%}
+  ~ .mk-lp{background:#f2c500;color:#17324f;padding:0 3px}
+  ~ .mk-box{background:#17324f;color:#f4f2ee;border:0;border-top:3px solid #f2c500}
+  ~ .mk-speaker{color:#f2c500}
+  ~ .mk-choices b{background:#a8a49c;border-color:#f4f2ee}
+  ~ .mk-choices b.mk-on{background:#f2c500;color:#17324f;border-color:#17324f}
+  ~ .mk-phase span.mk-on{color:#17324f}`
+},
+{
+  n:"06", name:"Fight Bill", family:"Vernacular print · wood type",
+  thesis:"Duelists are badly regarded, so the game advertises itself the way an unlicensed fight advertises itself: wood-type posters, stacked screaming bands, a tale of the tape before every match, newsprint that has been folded in someone's pocket.",
+  refuses:"Refuses respectability. There is no <b>corporate calm</b> anywhere — the pre-duel screen sells the fight, and the game admits what duelists are in this world.",
+  canon:"“Duelists are literally stronger than other people… mostly employed in violent circles. Duelists are badly regarded by default.”",
+  palette:[["#e3dbc8","newsprint","#171310"],["#171310","press black","#e3dbc8"],["#b01e1e","blood","#e3dbc8"],["#e8d21f","acid","#171310"],["#c9bfa6","fold","#171310"],["#7a6f5c","misprint","#e3dbc8"]],
+  type:["Compacta / ITC Machine + a slab","TeX Gyre Heros Cn","Ultra-condensed caps stacked to full width, letter-spaced tight enough to touch. Body copy is small, plain and unglamorous — all the volume lives in the display bands.",],
+  sig:"Every named opponent gets a tale of the tape: record, deck weight, last result, and a claim printed as a headline. Rematches reprint the same bill with the previous result struck through.",
+  motion:"Print is instant. Screens cut rather than transition; the only movement is a paper-shudder on impact and the halftone flickering by one dot.",
+  risk:"Shouts constantly. Needs a deliberate quiet register for the deck editor and the long VN scenes, or three hours of it becomes exhausting.",
+  best:["VN","Duel"], effort:3,
+  css:`--m-bg:#e3dbc8;--m-bg2:#d5cbb4;--m-ink:#171310;--m-mut:#6b6154;--m-line:#171310;
+  --m-accent:#b01e1e;--m-accent2:#171310;--m-zone:#efe8d8;--m-zline:#171310;--m-zr:0px;
+  --m-font:"TeX Gyre Heros Cn","DejaVu Sans Condensed",sans-serif;--m-alt:"TeX Gyre Heros Cn",sans-serif;
+  --m-caps:uppercase;--m-track:.02em;
+  --m-tex:radial-gradient(circle at 1px 1px,rgba(23,19,16,.14) .7px,transparent .8px);background-size:4px 4px;
+  ~ .mk-hud{border-top:3px solid #171310;border-bottom:1px solid #171310;padding:1px 0}
+  ~ .mk-name{font-size:9px;font-weight:700;letter-spacing:0}
+  ~ .mk-lp{color:#b01e1e;font-size:13px}
+  ~ .mk-z{border-width:2px}
+  ~ .mk-z.mk-c{background:#171310}
+  ~ .mk-z.mk-ex{background:#b01e1e}
+  ~ .mk-phase span.mk-on{background:#e8d21f;color:#171310;border-color:#171310}
+  ~ .mk-box{background:#171310;color:#e3dbc8;border:0}
+  ~ .mk-speaker{color:#e8d21f;font-size:9px;font-weight:700}
+  ~ .mk-choices b{background:#e3dbc8;color:#171310;border:2px solid #171310;font-weight:700}
+  ~ .mk-choices b.mk-on{background:#b01e1e;color:#e3dbc8}
+  ~ .mk-figure{background:#171310}`
+},
+{
+  n:"07", name:"Graded", family:"Collector print · slab and catalogue",
+  thesis:"Scarcity is canon, so the game is built like the collector market around it: sealed grading slabs, auction-house catalogue typography, certificate numbers, population reports. A card is an asset with provenance.",
+  refuses:"Refuses the infinite collection. Every copy has a <b>grade and a history</b>, and the deck editor is a portfolio rather than a checklist.",
+  canon:"“Not every card is imprinted → real scarcity → a market → covetousness.” The market deserves its own visual language.",
+  palette:[["#eceff2","pearl","#14181d"],["#d5dae0","slab edge","#14181d"],["#14181d","label black","#eceff2"],["#cf2027","label red","#f7f9fb"],["#b99b6c","kraft","#14181d"],["#8fa6c4","holo cast","#14181d"]],
+  type:["Trade Gothic Bold Condensed No.20","TeX Gyre Heros Cn / DejaVu Sans Mono","Catalogue discipline: condensed caps for the label band, mono for certificate and population numbers, a small text face for the description paragraph."],
+  sig:"Cards enter the collection encapsulated. Building a deck cracks slabs open — a visible, slightly uncomfortable act — and the grade travels with the card into the duel as its sleeve.",
+  motion:"Handled, not animated. Cards tilt to catch a holographic sheen under the pointer; nothing else in the interface moves faster than a catalogue page turns.",
+  risk:"Extremely strong for the deck editor and thin for the duel itself. Needs a second register for the field or the duel will feel like an inventory screen with monsters in it.",
+  best:["Deck"], effort:3,
+  css:`--m-bg:#eceff2;--m-bg2:#dfe4e9;--m-ink:#14181d;--m-mut:#5f6975;--m-line:#b7bfc8;
+  --m-accent:#cf2027;--m-accent2:#8fa6c4;--m-zone:#f6f8fa;--m-zline:#aab3bd;--m-zr:1px;
+  --m-font:"TeX Gyre Heros Cn","DejaVu Sans Condensed",sans-serif;--m-alt:"DejaVu Sans Mono",monospace;
+  --m-caps:uppercase;--m-track:.1em;
+  --m-tex:linear-gradient(160deg,rgba(143,166,196,.16),transparent 42%);
+  ~ .mk-z{box-shadow:inset 0 0 0 1px rgba(255,255,255,.9),0 1px 2px rgba(20,24,29,.22)}
+  ~ .mk-z.mk-c{background:#8fa6c4}
+  ~ .mk-z.mk-ex{background:#cf2027}
+  ~ .mk-grid .mk-z{border-top:3px solid #14181d}
+  ~ .mk-grid .mk-z:nth-child(5){border-top-color:#cf2027}
+  ~ .mk-hud{background:#14181d;color:#eceff2;padding:2px 4px}
+  ~ .mk-lp{color:#eceff2}
+  ~ .mk-box{background:#fff;border:1px solid #14181d;box-shadow:0 2px 6px rgba(20,24,29,.2)}
+  ~ .mk-scene{background:linear-gradient(160deg,#dfe4e9,#c4ccd6)}`
+},
+{
+  n:"08", name:"Matte Instrument", family:"Industrial design · product housing",
+  thesis:"A Duel Disk is a manufactured object, so the interface is one: warm grey ABS, machined bevels, silkscreened labels, amber seven-segment life points. Light comes from segments and lamps, never from edges.",
+  refuses:"Refuses the neon glow. Everything is <b>matte plastic under room light</b> — the exact opposite of the glowing dark screen this genre defaults to.",
+  canon:"The duel disk is hardware in this world, and hardware made in a world that treats magic as engineering would be built by a company with an industrial design department.",
+  palette:[["#cdc9c0","ABS housing","#24231f"],["#b5b1a8","panel","#24231f"],["#24231f","bezel","#cdc9c0"],["#ffb000","amber segment","#24231f"],["#e2571e","signal","#f4f1ea"],["#6f6b62","silkscreen","#f4f1ea"]],
+  type:["Isonorm / Basis Grotesque Mono","DejaVu Sans Mono / TeX Gyre Heros","Silkscreen small caps at one tiny size for every control label, a plain grotesk for content. Segment numerals for life points, drawn as segments, not as a font effect."],
+  sig:"Controls are physical: phase advance is a keyed switch with a detent, chain resolution steps through as an indexed counter, and an illegal action makes the lamp flash rather than a toast appear.",
+  motion:"Mechanical dwell. Buttons depress 1px and stay depressed while held; segment digits change with the flicker of a real display, not a crossfade.",
+  risk:"Sits close to the neon-hardware rut and only escapes it by staying strictly matte. The moment anything glows at the edges, this becomes the default look with extra steps.",
+  best:["Duel"], effort:3,
+  css:`--m-bg:#cdc9c0;--m-bg2:#b5b1a8;--m-ink:#24231f;--m-mut:#6f6b62;--m-line:#8c887f;
+  --m-accent:#e2571e;--m-accent2:#6f6b62;--m-zone:#24231f;--m-zline:#4a4741;--m-zr:2px;--m-r:5px;
+  --m-font:"TeX Gyre Heros","Liberation Sans",sans-serif;--m-alt:"DejaVu Sans Mono",monospace;
+  --m-caps:uppercase;--m-track:.14em;
+  --m-tex:linear-gradient(180deg,rgba(255,255,255,.4),transparent 12%),radial-gradient(circle at 1px 1px,rgba(36,35,31,.09) .5px,transparent .6px);background-size:auto,3px 3px;
+  ~ .mk-field{background:#3a3833;border-radius:3px;padding:5px;box-shadow:inset 0 1px 0 rgba(0,0,0,.55),inset 0 -1px 0 rgba(255,255,255,.12)}
+  ~ .mk-z{box-shadow:inset 0 1px 0 rgba(255,255,255,.09)}
+  ~ .mk-z.mk-c{background:#6f6b62;border-color:#8c887f}
+  ~ .mk-z.mk-ex{background:#e2571e;border-color:#24231f}
+  ~ .mk-lp{background:#1a1916;color:#ffb000;padding:1px 4px;border-radius:2px;font-family:"DejaVu Sans Mono",monospace;box-shadow:inset 0 1px 2px rgba(0,0,0,.8)}
+  ~ .mk-hand .mk-z{background:#8c887f}
+  ~ .mk-box{background:#b5b1a8;border:1px solid #8c887f;border-radius:4px;box-shadow:inset 0 1px 0 rgba(255,255,255,.45)}
+  ~ .mk-choices b{background:#cdc9c0;border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 1px 0 rgba(0,0,0,.25)}`
+},
+{
+  n:"09", name:"ZAPS Clinical", family:"Corporate print · pharma packaging",
+  thesis:"The villain has the best design department in the world, and it shows. Clinical white, one aggressive corporate cyan-lime, batch numbers, dosage tables, Swiss grid discipline — and it creeps further into your interface the deeper into the chapter you get.",
+  refuses:"Refuses neutral chrome. The UI has an <b>owner with an agenda</b>, and the player is meant to notice, slowly, that the interface has been sponsored.",
+  canon:"“A large corporation works its way into the schools to introduce a product that lets students cheat / be better, for payment — at the cost of their health.”",
+  palette:[["#f7f9fa","clinical","#101314"],["#e6ebed","tray","#101314"],["#101314","lot black","#f7f9fa"],["#00d2b4","ZAPS cyan","#04211d"],["#b6ff2e","dose lime","#101314"],["#ff2e7a","contraindication","#f7f9fa"]],
+  type:["Helvetica Now Display + a mono lot face","TeX Gyre Heros / DejaVu Sans Mono","Corporate Swiss played completely straight — one weight for headings, one for body, hard left alignment, generous white. Lot codes and dosages in mono, always."],
+  sig:"ZAPS branding progressively colonises the shell: a sponsor strip in chapter 1 act 1, then a themed card sleeve, then the phase bar itself, until a scene forces you to notice you have been reading their colour for hours.",
+  motion:"Smooth, frictionless, slightly too pleasant. Everything eases perfectly, which is the point — the one place motion breaks is when a ZAPS user is on screen.",
+  risk:"The whole game wearing the antagonist's identity only works if the escalation is authored beat by beat. Unauthored, it just looks like a health-tech startup.",
+  best:["VN","Duel","Deck"], effort:3,
+  css:`--m-bg:#f7f9fa;--m-bg2:#e6ebed;--m-ink:#101314;--m-mut:#5d686b;--m-line:#c9d2d5;
+  --m-accent:#00d2b4;--m-accent2:#101314;--m-zone:#eef2f4;--m-zline:#c9d2d5;--m-zr:3px;
+  --m-font:"TeX Gyre Heros","Liberation Sans",sans-serif;--m-alt:"DejaVu Sans Mono",monospace;
+  --m-tex:none;
+  ~ .mk-hud{background:#00d2b4;color:#04211d;padding:2px 4px;border-radius:3px}
+  ~ .mk-lp{color:#04211d}
+  ~ .mk-z.mk-c{background:#101314;border-color:#101314}
+  ~ .mk-z.mk-ex{background:#b6ff2e;border-color:#b6ff2e}
+  ~ .mk-field::before{content:"LOT 04-ZP-118";position:absolute;right:0;top:2px;font-family:"DejaVu Sans Mono",monospace;font-size:5px;letter-spacing:.14em;color:#9aa6aa}
+  ~ .mk-hand .mk-z{background:#101314}
+  ~ .mk-box{background:#101314;color:#f7f9fa;border:0;border-radius:4px}
+  ~ .mk-speaker{color:#b6ff2e}
+  ~ .mk-choices b{background:#f7f9fa;color:#101314;border:0;border-radius:20px;padding:3px 7px}
+  ~ .mk-choices b.mk-on{background:#00d2b4;color:#04211d}
+  ~ .mk-chip.mk-on{border-radius:20px}
+  ~ .mk-scene{background:linear-gradient(180deg,#e6ebed,#c8d4d7)}
+  ~ .mk-figure{background:#00d2b4}`
+},
+{
+  n:"10", name:"Slate", family:"Education craft · chalk",
+  thesis:"The academy teaches magic as a subject, so the interface is the board it is taught on: green-black slate, chalk in four colours, hand-drawn boxes that are never quite square, and the ghost of last lesson's diagram still smudged behind this one.",
+  refuses:"Refuses machine precision. Every rule in the game was <b>drawn by a person explaining it</b>, and the imperfection is the warmth the canon's cold subject matter needs.",
+  canon:"Hard magic is taught, examined and revised. The maths and statistics teacher on the roster implies a curriculum, and a curriculum implies a board.",
+  palette:[["#2f3a35","slate","#eef0e8"],["#26302c","board edge","#eef0e8"],["#eef0e8","chalk white","#2f3a35"],["#f2e08a","chalk yellow","#2f3a35"],["#f0a8b4","chalk pink","#2f3a35"],["#a8c8e0","chalk blue","#2f3a35"]],
+  type:["A real chalk face + Bookman for print","DejaVu Sans / TeX Gyre Bonum","Hand-drawn display, slightly irregular baselines, and a printed textbook face for anything the school actually issued — the contrast between written and printed carries the hierarchy."],
+  sig:"Explanations are drawn live: chain resolution is written out on the board step by step, in a second chalk colour, and stays there smudged until the next chain overwrites it.",
+  motion:"Written and erased. Lines draw at hand speed with a slight wobble; removal is an eraser sweep leaving dust, never an instant disappearance.",
+  risk:"Charming can slide into twee, and a chalk texture at small sizes destroys legibility. Body copy probably has to stay printed rather than drawn.",
+  best:["VN","Duel"], effort:3,
+  css:`--m-bg:#2f3a35;--m-bg2:#26302c;--m-ink:#eef0e8;--m-mut:#9aa89f;--m-line:#5b6a62;
+  --m-accent:#f2e08a;--m-accent2:#a8c8e0;--m-zone:#354039;--m-zline:#8fa093;--m-zr:0px;
+  --m-font:"DejaVu Sans","Liberation Sans",sans-serif;--m-alt:"TeX Gyre Bonum",serif;
+  --m-tex:radial-gradient(90% 60% at 22% 30%,rgba(238,240,232,.07),transparent 60%),radial-gradient(70% 50% at 78% 74%,rgba(238,240,232,.05),transparent 60%);
+  ~ .mk-z{border-radius:22% 6% 18% 8%/8% 20% 6% 18%;border-color:#cfd8ce;opacity:.94}
+  ~ .mk-z.mk-c{background:#a8c8e0;border-color:#eef0e8}
+  ~ .mk-z.mk-ex{background:#f0a8b4;border-color:#eef0e8}
+  ~ .mk-hand .mk-z{background:#f2e08a;border-color:#eef0e8}
+  ~ .mk-field::before{content:"";position:absolute;left:8%;right:8%;top:50%;height:1px;background:repeating-linear-gradient(90deg,#eef0e8 0 5px,transparent 5px 9px);opacity:.6}
+  ~ .mk-box{background:#354039;border:1px dashed #cfd8ce;border-radius:12% 3% 10% 4%/4% 12% 3% 10%}
+  ~ .mk-speaker{color:#f2e08a}
+  ~ .mk-choices b{border-radius:16% 5% 14% 6%/6% 16% 5% 14%;border-color:#cfd8ce}
+  ~ .mk-figure{background:#a8c8e0;opacity:.75}`
+},
+{
+  n:"11", name:"Canon Law", family:"Manuscript · illuminated codex",
+  thesis:"A god decreed that conflict is settled by play. That decree is a text, and the game is its illuminated copy: vellum, rubricated headings, lapis and gold, two-column setting, versal initials the size of a whole card.",
+  refuses:"Refuses quiet parchment. This is <b>drenched in lapis and gold</b>, not a beige book — the wealth of the material is the point, because the text it carries is the law of the world.",
+  canon:"“A god rules this world and imposes its rules by its will alone… it defines the frame of the possible; it does not intervene.” The god is absent, so only its book is present.",
+  palette:[["#e6dcc0","vellum","#241d14"],["#d6c9a6","gathering","#241d14"],["#241d14","gall ink","#e6dcc0"],["#a01c1c","rubric","#f2e9d2"],["#1b3a8f","lapis","#f2e9d2"],["#c9a227","gold leaf","#241d14"]],
+  type:["A textura/uncial display + Pagella","MagicMedieval / TeX Gyre Pagella","Blackletter display used sparingly and enormously; body in a humanist old-style at generous leading, two columns, with rubricated marginal notes in red."],
+  sig:"The rulebook is diegetic and readable: every legality question opens the actual codex page that governs it, rubric and all, and a cheating verdict is entered into the margin permanently.",
+  motion:"Pages turn. Transitions are page turns with a paper curl; illumination catches light when a rare card resolves and then goes still.",
+  risk:"Blackletter at UI sizes is close to unreadable, and the register is very far from a school comedy. Probably wants to be the chapter's frame — menus, saves, verdicts — rather than the whole surface.",
+  best:["VN","Deck"], effort:5,
+  css:`--m-bg:#e6dcc0;--m-bg2:#d6c9a6;--m-ink:#241d14;--m-mut:#6d6047;--m-line:#b8a880;
+  --m-accent:#a01c1c;--m-accent2:#1b3a8f;--m-zone:#efe7cf;--m-zline:#c9a227;--m-zr:0px;
+  --m-font:"TeX Gyre Pagella","Liberation Serif",serif;--m-alt:"MagicMedieval","TeX Gyre Chorus",serif;
+  --m-tex:radial-gradient(120% 90% at 50% 0,rgba(201,162,39,.13),transparent 55%),repeating-linear-gradient(90deg,rgba(36,29,20,.03) 0 1px,transparent 1px 3px);
+  ~ .mk-z{border-width:2px;border-color:#c9a227;box-shadow:inset 0 0 0 1px #efe7cf}
+  ~ .mk-z.mk-c{background:#1b3a8f;border-color:#c9a227}
+  ~ .mk-z.mk-ex{background:#a01c1c;border-color:#c9a227}
+  ~ .mk-name{font-family:"MagicMedieval",serif;font-size:8px;letter-spacing:0}
+  ~ .mk-lp{color:#a01c1c;font-family:"MagicMedieval",serif;font-size:13px}
+  ~ .mk-field::before{content:"";position:absolute;left:50%;top:2%;bottom:2%;width:2px;margin-left:-1px;background:#c9a227;opacity:.5}
+  ~ .mk-box{background:#efe7cf;border:2px solid #c9a227}
+  ~ .mk-speaker{color:#a01c1c;font-family:"MagicMedieval",serif;font-size:8px;letter-spacing:0}
+  ~ .mk-choices b{border-color:#c9a227;border-width:1px}
+  ~ .mk-figure{background:#1b3a8f}`
+},
+{
+  n:"12", name:"Dual Screen", family:"Screen tradition · handheld pixel UI",
+  thesis:"The named references were all handhelds, so build one. Two stacked panes with a hinge between them, 2px pixel borders, dithered gradients, sprite portraits, chunky stylus-sized controls — the exact shape of the games this project is a love letter to.",
+  refuses:"Refuses widescreen cinema. The <b>hinge is real</b>: field above, hand and controls below, and no element ever spans both panes.",
+  canon:"“Tone and gameplay references: Spirit Caller, The Duelists of the Roses, Nightmare Troubadour, the World Championship series.” This is that instruction taken at its word.",
+  palette:[["#dfe3e8","shell silver","#182030"],["#182030","screen dark","#dfe3e8"],["#2b4b8f","dither blue","#f8f8f8"],["#f8f8f8","pixel white","#182030"],["#ff5555","pixel red","#182030"],["#ffcc33","pixel gold","#182030"]],
+  type:["A real bitmap UI face at fixed sizes","DejaVu Sans Mono — browsers will not render true bitmap faces, so the specimen is a stand-in","Bitmap type at its native pixel size and integer multiples only — never scaled fractionally. Everything snaps to a 2px grid, including the text baseline."],
+  sig:"The lower pane is the hand and the upper pane is the field, exactly as on the hardware: you drag a card up across the hinge to play it, and the hinge crossing is the commit.",
+  motion:"Sprite frames, not tweens. Everything animates on a small number of discrete frames at 12fps; dithered wipes between screens instead of fades.",
+  risk:"Nostalgia is a strong drug and a narrow one — it can read as a retro pastiche rather than a new game, and pixel UI fights modern high-DPI text at body sizes.",
+  best:["Duel","Deck","VN"], effort:3,
+  css:`--m-bg:#182030;--m-bg2:#0f1626;--m-ink:#f8f8f8;--m-mut:#8fa0bf;--m-line:#2b4b8f;
+  --m-accent:#ffcc33;--m-accent2:#2b4b8f;--m-zone:#0f1626;--m-zline:#4a6bb0;--m-zr:0px;--m-r:0px;
+  --m-font:"DejaVu Sans Mono",monospace;--m-alt:"DejaVu Sans Mono",monospace;
+  --m-tex:repeating-linear-gradient(0deg,rgba(43,75,143,.35) 0 1px,transparent 1px 2px);
+  ~ .mk-z{border-width:2px;image-rendering:pixelated}
+  ~ .mk-z.mk-c{background:#2b4b8f;border-color:#f8f8f8}
+  ~ .mk-z.mk-ex{background:#ff5555;border-color:#f8f8f8}
+  ~ .mk-field{border:2px solid #dfe3e8;background:#0f1626;position:relative}
+  ~ .mk-field::after{content:"";position:absolute;left:-11px;right:-11px;bottom:-6px;height:4px;background:repeating-linear-gradient(90deg,#dfe3e8 0 4px,#182030 4px 8px)}
+  ~ .mk-lp{color:#ffcc33}
+  ~ .mk-hand{padding:0 6%}
+  ~ .mk-box{background:#0f1626;border:2px solid #f8f8f8}
+  ~ .mk-speaker{color:#ffcc33}
+  ~ .mk-choices b{border-width:2px;border-color:#f8f8f8}
+  ~ .mk-figure{background:#4a6bb0;image-rendering:pixelated}`
+},
+{
+  n:"13", name:"Painted Board", family:"Painterly · oil and gilt",
+  thesis:"The Duelists of the Roses, grown up: an oil-painted tactical board seen at an angle, gilt-framed portraits, heraldic colour, varnish craquelure. The field is a painting the duel happens inside.",
+  refuses:"Refuses the flat top-down grid. The board is <b>in perspective and made of paint</b>, and the cards sit on terrain that was rendered by hand.",
+  canon:"A stated reference, and the right register for the climax duel against the departing senior — a formal, framed confrontation rather than a schoolyard match.",
+  palette:[["#3b2b1e","umber ground","#e8e0d0"],["#cbb894","canvas","#3b2b1e"],["#9e2a2b","rose red","#e8e0d0"],["#e8e0d0","rose white","#3b2b1e"],["#b58b3c","gilt","#3b2b1e"],["#4a5d4e","verdigris","#e8e0d0"]],
+  type:["Bookman + an engraved italic","TeX Gyre Bonum / TeX Gyre Termes Italic","Warm, heavy old-style with a swash italic reserved for names and titles. Small caps for zone labels, letter-spaced like a plaque under a painting."],
+  sig:"The field is drawn in perspective and the camera settles per player turn, so possession of the board is legible from the angle alone; portraits are framed paintings that react.",
+  motion:"Painted dissolves. Cards are laid with weight and a soft shadow; the varnish catches a slow specular sweep when a monster is destroyed.",
+  risk:"The most asset-hungry direction here by a distance — painted terrain and painted portraits are a commission, not a stylesheet. A perspective board also complicates every hit target in the duel.",
+  best:["Duel","VN"], effort:5,
+  css:`--m-bg:#3b2b1e;--m-bg2:#2a1d14;--m-ink:#e8e0d0;--m-mut:#a2917a;--m-line:#6b543c;
+  --m-accent:#9e2a2b;--m-accent2:#4a5d4e;--m-zone:#5c4733;--m-zline:#b58b3c;--m-zr:1px;
+  --m-font:"TeX Gyre Bonum","Liberation Serif",serif;--m-alt:"TeX Gyre Termes",serif;
+  --m-tex:radial-gradient(110% 80% at 50% 18%,rgba(203,184,148,.34),transparent 62%),radial-gradient(circle at 30% 70%,rgba(0,0,0,.4),transparent 60%);
+  ~ .mk-field{transform:perspective(160px) rotateX(18deg);transform-origin:50% 60%}
+  ~ .mk-z{box-shadow:0 1px 2px rgba(0,0,0,.5);border-color:#8d6f4a}
+  ~ .mk-z.mk-c{background:#9e2a2b;border-color:#b58b3c}
+  ~ .mk-z.mk-ex{background:#4a5d4e;border-color:#b58b3c}
+  ~ .mk-hud{border-bottom:1px solid #b58b3c}
+  ~ .mk-lp{color:#b58b3c}
+  ~ .mk-box{background:#2a1d14;border:2px solid #b58b3c;box-shadow:inset 0 0 0 1px #6b543c}
+  ~ .mk-speaker{color:#b58b3c;font-style:italic;letter-spacing:.1em}
+  ~ .mk-choices b.mk-on{color:#e8e0d0;border-color:#b58b3c}
+  ~ .mk-figure{background:#6b543c}
+  ~ .mk-scene{background:radial-gradient(80% 70% at 50% 30%,#6b543c,#2a1d14)}`
+},
+{
+  n:"14", name:"Sequent", family:"Notation · formal proof",
+  thesis:"The rules of this world make an accusation a proof obligation, so the game is set in the notation of proofs: inference bars, turnstiles, numbered derivation lines, QED. Winning an argument looks like closing a tree.",
+  refuses:"Refuses the dialogue-box accusation. Catching a cheater is <b>constructing a derivation</b> the opponent cannot refute, and the interface is the proof editor.",
+  canon:"“If a player establishes by a binding logical argument that the other is cheating, the cheater automatically loses… The duel is an epistemological confrontation as much as a technical one.”",
+  palette:[["#f2f2ef","proof paper","#16181a"],["#e4e4e0","gutter","#16181a"],["#16181a","ink","#f2f2ef"],["#d1495b","derivation","#f7f2f3"],["#2a6f6b","assumption","#f2f2ef"],["#9a9a94","discharged","#16181a"]],
+  type:["Computer Modern + a technical mono","DejaVu Serif / DejaVu Sans Mono","Mathematical setting: a serif for terms, mono for line numbers and rule names, real inference bars drawn as rules rather than borders. Italics mean variables, always."],
+  sig:"The accusation screen is a proof editor with the observations you actually made as available premises — you cannot cite what you did not see, and an unclosed branch is visibly open when you file.",
+  motion:"Derivation. New lines appear beneath their inference bar in sequence; a discharged assumption greys out and the bracket closes with a snap.",
+  risk:"Genuinely alienating to anyone who does not enjoy this, and it makes the game look like a theorem prover. Needs a warm second register — the VN especially — or chapter 1's school comedy dies.",
+  best:["Duel"], effort:3,
+  css:`--m-bg:#f2f2ef;--m-bg2:#e4e4e0;--m-ink:#16181a;--m-mut:#6d6d68;--m-line:#c6c6c1;
+  --m-accent:#d1495b;--m-accent2:#2a6f6b;--m-zone:#fafaf8;--m-zline:#16181a;--m-zr:0px;
+  --m-font:"DejaVu Serif","Liberation Serif",serif;--m-alt:"DejaVu Sans Mono",monospace;
+  --m-tex:none;
+  ~ .mk-z{border-width:0;border-top:1.5px solid #16181a;background:transparent;aspect-ratio:5/7;position:relative}
+  ~ .mk-z.mk-c{background:transparent;border-top:1.5px solid #2a6f6b;box-shadow:inset 0 -6px 0 rgba(42,111,107,.16)}
+  ~ .mk-z.mk-ex{border-top:1.5px solid #d1495b;box-shadow:inset 0 -6px 0 rgba(209,73,91,.18)}
+  ~ .mk-hand .mk-z{border:1px solid #16181a;background:#fff}
+  ~ .mk-field::before{content:"⊢";position:absolute;left:50%;top:47%;transform:translate(-50%,-50%);font-size:13px;color:#16181a}
+  ~ .mk-hud{border-bottom:1.5px solid #16181a}
+  ~ .mk-lp{font-family:"DejaVu Serif",serif;font-style:italic;color:#16181a}
+  ~ .mk-box{background:#fff;border:0;border-left:2px solid #16181a}
+  ~ .mk-speaker{color:#d1495b;font-family:"DejaVu Sans Mono",monospace}
+  ~ .mk-choices b{border:0;border-left:1.5px solid #c6c6c1;background:transparent;padding-left:6px}
+  ~ .mk-choices b.mk-on{border-left-color:#d1495b;background:transparent;color:#16181a}
+  ~ .mk-grid .mk-z{border:1px solid #c6c6c1;background:#fff}
+  ~ .mk-scene{background:#e4e4e0}
+  ~ .mk-figure{background:#c6c6c1}`
+},
+{
+  n:"15", name:"Spectral Plate", family:"Scientific print · engraved plate",
+  thesis:"Attributes are not icons, they are spectra. Nineteenth-century scientific plates: prussian ink engraving on ivory stock, specimen tags, and a banded emission spectrum that is the game's entire colour system — each attribute owns a wavelength.",
+  refuses:"Refuses the icon set. Elemental identity is carried by a <b>measured band of colour</b>, so the field reads as a spectroscopic chart rather than a row of badges.",
+  canon:"Magic is a natural phenomenon studied by reason. A world that discovered spirit imprinting “empirically over successive print runs” publishes plates about it.",
+  palette:[["#f0ece1","plate ivory","#14304f"],["#e0d9c6","mount board","#14304f"],["#14304f","prussian","#f0ece1"],["#7b2d8e","violet band","#f0ece1"],["#1f8a4c","green band","#f0ece1"],["#c9761b","amber band","#14304f"]],
+  type:["Engraved small caps + a plate serif","TeX Gyre Pagella / DejaVu Sans Mono","Letter-spaced small caps for plate captions, mono for measurements, an old-style serif for the descriptive text. Every figure gets a caption line; nothing floats uncaptioned.",],
+  sig:"The card inspector is a plate: engraved illustration, spectral band, measured stats as a calibrated scale, and a tag recording where this specimen came from.",
+  motion:"Instruments settle. Values arrive by needle sweep with a small overshoot; spectral bands resolve from blur to sharp as data loads.",
+  risk:"Shares a family with 02 and 14 and must not blur into them — its differentiator is being colour-first where those two are ink-first. Engraved illustration is real asset work.",
+  best:["Deck","Duel"], effort:4,
+  css:`--m-bg:#f0ece1;--m-bg2:#e0d9c6;--m-ink:#14304f;--m-mut:#5c6a78;--m-line:#a9b0ad;
+  --m-accent:#c9761b;--m-accent2:#14304f;--m-zone:#f7f4ea;--m-zline:#14304f;--m-zr:0px;
+  --m-font:"TeX Gyre Pagella","Liberation Serif",serif;--m-alt:"DejaVu Sans Mono",monospace;
+  --m-caps:uppercase;--m-track:.14em;
+  --m-tex:repeating-linear-gradient(45deg,rgba(20,48,79,.045) 0 1px,transparent 1px 5px);
+  ~ .mk-z{position:relative}
+  ~ .mk-z::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,#7b2d8e,#14304f,#1f8a4c,#c9761b)}
+  ~ .mk-z.mk-c{background:#14304f}
+  ~ .mk-z.mk-ex{background:#7b2d8e}
+  ~ .mk-hand .mk-z{background:#dfe6e3}
+  ~ .mk-field::before{content:"";position:absolute;left:0;right:0;top:50%;height:4px;margin-top:-2px;background:linear-gradient(90deg,#7b2d8e,#2b4a9b,#1f8a4c,#c9761b,#a01c1c);opacity:.85}
+  ~ .mk-box{background:#f7f4ea;border:1px solid #14304f;box-shadow:0 0 0 3px #f0ece1,0 0 0 4px #a9b0ad}
+  ~ .mk-ratio u:nth-child(1){background:#7b2d8e}
+  ~ .mk-ratio u:nth-child(2){background:#1f8a4c}
+  ~ .mk-figure{background:#14304f}`
+},
+{
+  n:"16", name:"Club Riso", family:"Craft print · risograph zine",
+  thesis:"The duel club makes its own printed matter and the game is made of it: two fluorescent spot inks on newsprint, misregistration on purpose, halftone everything, staples, hand-lettered headers, stickers applied crooked.",
+  refuses:"Refuses digital cleanliness. Everything is <b>printed slightly wrong</b>, and that is where the youth and the humour of chapter 1 live.",
+  canon:"First years, a circle of friends, a club, a noticeboard. Chapter 1 is the warmest the story ever gets, and this is the only direction that is actually funny.",
+  palette:[["#efe9dc","newsprint","#1a1a18"],["#ff48b0","fluoro pink","#1a1a18"],["#0078bf","riso blue","#efe9dc"],["#1a1a18","overprint","#efe9dc"],["#ffd23f","fluoro yellow","#1a1a18"],["#8c8578","register slip","#efe9dc"]],
+  type:["A geometric grotesk + real hand lettering","TeX Gyre Adventor / DejaVu Sans","Geometric caps for headers, hand-drawn for anything a student would have written, and body copy small and plain because a zine has no budget for elegance."],
+  sig:"Every result prints an issue: the club newsletter reports your duels with a photo halftone, a misspelled name and a hand-drawn margin note from whoever wrote it that week.",
+  motion:"Print run. Screens arrive as two ink passes landing a beat apart and slightly offset, then locking into register.",
+  risk:"Wrong register for the ZAPS plot and for chapter 2's collapse. Either it earns a documented darkening as the story turns, or it fights the material by act three.",
+  best:["VN","Deck"], effort:3,
+  css:`--m-bg:#efe9dc;--m-bg2:#e3dccb;--m-ink:#1a1a18;--m-mut:#6f6a5e;--m-line:#1a1a18;
+  --m-accent:#ff48b0;--m-accent2:#0078bf;--m-zone:#f6f2e8;--m-zline:#1a1a18;--m-zr:0px;
+  --m-font:"TeX Gyre Adventor","DejaVu Sans",sans-serif;--m-alt:"TeX Gyre Adventor",sans-serif;
+  --m-caps:uppercase;--m-track:.04em;
+  --m-tex:radial-gradient(circle at 1px 1px,rgba(255,72,176,.22) .9px,transparent 1px),radial-gradient(circle at 3px 3px,rgba(0,120,191,.18) .9px,transparent 1px);background-size:5px 5px,5px 5px;
+  ~ .mk-z{border-width:1.5px;box-shadow:1.5px 1.5px 0 rgba(255,72,176,.55)}
+  ~ .mk-z.mk-c{background:#0078bf}
+  ~ .mk-z.mk-ex{background:#ff48b0}
+  ~ .mk-hand .mk-z{background:#ffd23f;box-shadow:1.5px 1.5px 0 rgba(0,120,191,.5)}
+  ~ .mk-name{background:#ffd23f;padding:0 3px;transform:rotate(-1.5deg);display:inline-block}
+  ~ .mk-lp{color:#ff48b0;text-shadow:1.5px 1.5px 0 rgba(0,120,191,.55)}
+  ~ .mk-box{background:#f6f2e8;border:1.5px solid #1a1a18;box-shadow:3px 3px 0 #0078bf}
+  ~ .mk-speaker{background:#ff48b0;color:#efe9dc;padding:0 3px;display:inline-block;transform:rotate(-1deg)}
+  ~ .mk-choices b{box-shadow:2px 2px 0 #ff48b0}
+  ~ .mk-choices b.mk-on{color:#1a1a18}
+  ~ .mk-phase span.mk-on{color:#1a1a18}
+  ~ .mk-figure{background:#0078bf}`
+},
+{
+  n:"17", name:"Bearer Instrument", family:"Engraved security print · banknote",
+  thesis:"Cards are value and stakes are contracts, so the game is engraved like money: guilloché rosettes, intaglio portraits, microtext rules, embossed seals, serial numbers on everything. A deck is a portfolio; a stake is a bearer note you hand over.",
+  refuses:"Refuses the abstract wager. A stake is a <b>signed physical instrument</b> that changes hands when you lose, and losing it feels like losing money because it looks like money.",
+  canon:"Rand's world is a world of earned value and trade, and this world has real card scarcity and a real market. Security engraving is what that civilisation prints on.",
+  palette:[["#efe9d9","note paper","#1d2a22"],["#1f5c45","banknote green","#efe9d9"],["#1d2a22","intaglio","#efe9d9"],["#6b5836","sepia plate","#efe9d9"],["#9d2235","seal red","#efe9d9"],["#c4b48a","watermark","#1d2a22"]],
+  type:["An engraved titling face + a script signature","TeX Gyre Schola / DejaVu Sans Mono (Chorus is named for the signature line only)","Titling caps letter-spaced wide across the note's top edge, a chancery script for the one signature line, and mono serials. Nothing set larger than the denomination.",],
+  sig:"Guilloché is generated, not drawn: each card's rosette is derived from its own id, so every card carries a unique engraved pattern that a forgery cannot reproduce — and forgery is a canon mechanic.",
+  motion:"Engraved lines trace themselves into the rosette on reveal; seals press down and lift with a stamped impression left behind.",
+  risk:"Green-and-sepia is a narrow palette to live in for hours, and guilloché is a real generative-graphics build. It is also the direction most likely to read as a finance product rather than a card game.",
+  best:["Deck","Duel"], effort:4,
+  css:`--m-bg:#efe9d9;--m-bg2:#e3dcc7;--m-ink:#1d2a22;--m-mut:#6b6553;--m-line:#1f5c45;
+  --m-accent:#9d2235;--m-accent2:#1f5c45;--m-zone:#f5f1e4;--m-zline:#1f5c45;--m-zr:0px;
+  --m-font:"TeX Gyre Schola","Liberation Serif",serif;--m-alt:"DejaVu Sans Mono",monospace;
+  --m-caps:uppercase;--m-track:.16em;
+  --m-tex:repeating-radial-gradient(circle at 50% 50%,rgba(31,92,69,.13) 0 1px,transparent 1px 5px),repeating-linear-gradient(72deg,rgba(107,88,54,.09) 0 1px,transparent 1px 4px);
+  ~ .mk-z{box-shadow:inset 0 0 0 1px rgba(31,92,69,.35)}
+  ~ .mk-z.mk-c{background:#1f5c45}
+  ~ .mk-z.mk-ex{background:#9d2235}
+  ~ .mk-hand .mk-z{background:#6b5836}
+  ~ .mk-field::before{content:"";position:absolute;left:50%;top:50%;width:38px;height:38px;margin:-19px 0 0 -19px;border-radius:50%;background:repeating-radial-gradient(circle at 50% 50%,rgba(31,92,69,.45) 0 1px,transparent 1px 3px)}
+  ~ .mk-hud{border-bottom:1px solid #1f5c45}
+  ~ .mk-lp{color:#1f5c45}
+  ~ .mk-box{background:#f5f1e4;border:1px solid #1f5c45;box-shadow:inset 0 0 0 3px #efe9d9,inset 0 0 0 4px rgba(31,92,69,.5)}
+  ~ .mk-speaker{color:#9d2235}
+  ~ .mk-figure{background:#6b5836}`
+},
+{
+  n:"18", name:"Back Room", family:"Place · night market and card shop",
+  thesis:"The world the canon actually describes: a covetous market with a back room. Tarpaulin blue, hand-painted sign red and yellow, fluorescent tube light on plastic sleeves, binders stacked to the ceiling, prices written by hand and changed by hand.",
+  refuses:"Refuses the sterile storefront. Cards are <b>traded by people in a room</b>, and the interface has fingerprints on it.",
+  canon:"“Real scarcity → a market → covetousness.” Plus the shopkeeper, the most likely giver of Fynn's spirit card, whose shop deserves to be a place rather than a menu.",
+  palette:[["#1c4b7a","tarpaulin","#eaf4ff"],["#123146","back room","#eaf4ff"],["#d62828","sign red","#ffe9c8"],["#ffb703","sign yellow","#2a1d05"],["#eaf4ff","tube light","#123146"],["#55524c","concrete","#eaf4ff"]],
+  type:["A heavy sign-painting grotesk + a plain UI face","TeX Gyre Heros Bold / DejaVu Sans","Sign-painter weight and slight arch for anything the shopkeeper wrote; a plain, unremarkable interface face for anything the game wrote. The contrast is the whole system.",],
+  sig:"Prices are hand-written tags you can haggle over, and the binder is a real binder: you flip pages of nine-pocket sleeves rather than scrolling a grid.",
+  motion:"Fluorescent and physical. Tubes flicker once on entry, tags swing when disturbed, binder pages turn with weight and a plastic rustle.",
+  risk:"Clutter is the failure mode, and 'grubby' is very hard to keep legible. The duel field in particular has to shed most of the texture or the board becomes unreadable.",
+  best:["Deck","VN"], effort:4,
+  css:`--m-bg:#1c4b7a;--m-bg2:#123146;--m-ink:#eaf4ff;--m-mut:#9fbcd6;--m-line:#3d6f9e;
+  --m-accent:#ffb703;--m-accent2:#d62828;--m-zone:#173c61;--m-zline:#4d80ad;--m-zr:1px;
+  --m-font:"TeX Gyre Heros","Liberation Sans",sans-serif;--m-alt:"DejaVu Sans",sans-serif;
+  --m-tex:repeating-linear-gradient(90deg,rgba(255,255,255,.045) 0 2px,transparent 2px 9px),linear-gradient(180deg,rgba(234,244,255,.20),transparent 22%);
+  ~ .mk-z{box-shadow:inset 0 0 0 1px rgba(234,244,255,.08)}
+  ~ .mk-z.mk-c{background:#d62828;border-color:#ffb703}
+  ~ .mk-z.mk-ex{background:#ffb703;border-color:#eaf4ff}
+  ~ .mk-hand .mk-z{background:#2a6394}
+  ~ .mk-lp{color:#ffb703}
+  ~ .mk-name{background:#d62828;padding:0 3px}
+  ~ .mk-grid .mk-z{border-radius:1px;box-shadow:inset 0 0 0 2px rgba(234,244,255,.14)}
+  ~ .mk-grid .mk-z:nth-child(5){background:#ffb703}
+  ~ .mk-box{background:#123146;border:1px solid #4d80ad;border-top:3px solid #ffb703}
+  ~ .mk-speaker{color:#ffb703}
+  ~ .mk-choices b{background:#173c61}
+  ~ .mk-figure{background:#0d2438}`
+},
+{
+  n:"19", name:"Era Shift", family:"Meta · six graphic languages, one shell",
+  thesis:"The canon says one chapter equals one era. So the design system is the mechanic: chapter 1 is 90s manga ink and halftone, chapter 2 mid-2000s gloss, chapter 3 chrome and racing stripes, chapter 4 flat neon geometry, chapter 5 pastel poster, chapter 6 wireframe net. One shell, six skins, one token contract.",
+  refuses:"Refuses a single fixed identity. Continuity lives in the <b>layout, motion and component grammar</b>; the skin changes completely when the era does, and the player feels time pass.",
+  canon:"“One chapter = one Yu-Gi-Oh! era… Each chapter introduces the mechanics of its era, raises the depth by one notch, and has to work as a standalone game.”",
+  palette:[["#f2ece3","ch1 ink","#141414"],["#2e6fd8","ch2 gloss","#ffffff"],["#8d97a3","ch3 chrome","#12151a"],["#00e5ff","ch4 neon","#06181c"],["#f7b3d0","ch5 pastel","#3a2030"],["#0b0f1a","ch6 net","#7cf3c8"]],
+  type:["Six pairings, one metric contract","varies per era","Each era gets its own faces, but all six are fitted to one shared vertical rhythm and one set of size steps, so a component built in chapter 1 still lays out correctly in chapter 6."],
+  sig:"The chapter transition is the set piece: the interface itself re-skins on screen, component by component, while the save carries forward — the strongest 'time has passed' device the medium has.",
+  motion:"Each era brings its own motion grammar (ink snap, gloss ease, chrome slide, neon step, pastel float, wire draw), swapped with the skin.",
+  risk:"Six design systems is six times the work and six times the QA surface, and it can only be judged once at least two exist. Realistically this is chapter 1 built properly plus a token contract that proves era two is possible.",
+  best:["Duel","VN","Deck"], effort:5,
+  css:`--m-bg:#f2ece3;--m-bg2:#e6dfd3;--m-ink:#141414;--m-mut:#6a655c;--m-line:#141414;
+  --m-accent:#e03a2f;--m-accent2:#2e6fd8;--m-zone:#faf7f1;--m-zline:#141414;--m-zr:0px;
+  --m-font:"DejaVu Sans","Liberation Sans",sans-serif;--m-alt:"TeX Gyre Heros Cn",sans-serif;
+  --m-tex:none;
+  ~ .mk-field{background:linear-gradient(90deg,#f2ece3 0 33.3%,#12151a 33.3% 66.6%,#0b0f1a 66.6% 100%);padding:5px;border:1px solid #141414}
+  ~ .mk-row{gap:2px}
+  ~ .mk-z{border-width:1.5px}
+  ~ .mk-z:nth-child(n+3):nth-child(-n+5){border-color:#8d97a3;background:#1c2128}
+  ~ .mk-z:nth-child(n+6){border-color:#7cf3c8;background:#0f1626}
+  ~ .mk-z.mk-c{background:#e03a2f}
+  ~ .mk-z.mk-ex{background:#00e5ff;border-color:#00e5ff}
+  ~ .mk-box{background:linear-gradient(90deg,#f2ece3 0 50%,#0b0f1a 50% 100%);border:1px solid #141414;color:#141414}
+  ~ .mk-line{mix-blend-mode:difference;color:#8d97a3}
+  ~ .mk-speaker{color:#e03a2f}
+  ~ .mk-grid .mk-z:nth-child(n+9){background:#0b0f1a;border-color:#7cf3c8}
+  ~ .mk-scene{background:linear-gradient(90deg,#f2ece3,#2e6fd8,#0b0f1a)}
+  ~ .mk-figure{background:#141414}`
+},
+{
+  n:"20", name:"Ink and Tone", family:"Comics craft · manga production",
+  thesis:"The whole game is a page. G-pen ink weights, screentone dots, speed lines, gutters between panels, hand-drawn sound effects — the VN reads in panels instead of a dialogue box, and the duel field is a spread.",
+  refuses:"Refuses the dialogue box. Conversation is <b>panelled</b>, so pacing, silence and reaction shots become layout decisions rather than timing hacks.",
+  canon:"The medium the whole genre came from, and the one register where a duel can be both funny and enormous on the same page. One spot colour per chapter keeps the eras legible.",
+  palette:[["#f4f1ea","page stock","#0d0d0d"],["#0d0d0d","g-pen ink","#f4f1ea"],["#c8c4bc","60-line tone","#0d0d0d"],["#e03a2f","chapter spot","#f4f1ea"],["#ffffff","gutter","#0d0d0d"],["#6e6a63","grey wash","#f4f1ea"]],
+  type:["A comic letterer + a plain reading serif","DejaVu Sans Bold / Liberation Serif","Lettering face for dialogue set inside balloons — irregular, all caps, tightly fitted to the balloon shape — and a plain serif for narration boxes. SFX are drawn, never set.",],
+  sig:"Dialogue is panelled and drawn in as it is read: a new line adds a panel to the page, and skipping back scrolls the page rather than stepping a log.",
+  motion:"Ink and impact. Panels snap in with a slight scale, speed lines converge on the actor, tone dots animate only when something is hit.",
+  risk:"Screentone moiré on high-DPI screens is a real engineering problem, and panelled dialogue is a hard read on a phone. Also the highest illustration bill after 13.",
+  best:["VN","Duel"], effort:5,
+  css:`--m-bg:#f4f1ea;--m-bg2:#e8e4db;--m-ink:#0d0d0d;--m-mut:#6e6a63;--m-line:#0d0d0d;
+  --m-accent:#e03a2f;--m-accent2:#0d0d0d;--m-zone:#ffffff;--m-zline:#0d0d0d;--m-zr:0px;
+  --m-font:"DejaVu Sans","Liberation Sans",sans-serif;--m-alt:"Liberation Serif",serif;
+  --m-caps:uppercase;--m-track:.03em;
+  --m-tex:radial-gradient(circle at 1px 1px,rgba(13,13,13,.20) .8px,transparent .9px);background-size:3.5px 3.5px;
+  ~ .mk-field{border:2px solid #0d0d0d;background:#fff;box-shadow:0 0 0 3px #f4f1ea}
+  ~ .mk-z{border-width:2px}
+  ~ .mk-z.mk-c{background:#0d0d0d}
+  ~ .mk-z.mk-ex{background:#e03a2f;border-color:#0d0d0d}
+  ~ .mk-hand .mk-z{background:repeating-linear-gradient(0deg,#0d0d0d 0 1px,#fff 1px 3px)}
+  ~ .mk-lp{font-style:italic;font-weight:700;font-size:14px;color:#0d0d0d;-webkit-text-stroke:0}
+  ~ .mk-name{background:#0d0d0d;color:#f4f1ea;padding:0 3px}
+  ~ .mk-scene{background:#fff;background-image:conic-gradient(from 210deg at 62% 34%,rgba(13,13,13,.16) 0 1deg,transparent 1deg 4deg)}
+  ~ .mk-box{background:#fff;border:2px solid #0d0d0d;border-radius:14px 14px 14px 2px}
+  ~ .mk-speaker{color:#e03a2f}
+  ~ .mk-choices b{border-width:2px;background:#fff}
+  ~ .mk-choices b.mk-on{background:#e03a2f;color:#fff}
+  ~ .mk-figure{background:#0d0d0d;opacity:1}
+  ~ .mk-grid .mk-z{border-width:2px}`
+}
+];
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+const DUEL = `
+  <div class="mk-hud"><span class="mk-name">Rival · 3rd yr</span><span class="mk-lpbar"></span><span class="mk-lp">2400</span></div>
+  <div class="mk-field">
+    <div class="mk-row"><div class="mk-z mk-gh"></div><div class="mk-z mk-c"></div><div class="mk-z"></div><div class="mk-z mk-c mk-def"></div><div class="mk-z"></div><div class="mk-z mk-gh"></div><div class="mk-z"></div></div>
+    <div class="mk-row"><div class="mk-z mk-gh"></div><div class="mk-z"></div><div class="mk-z mk-c"></div><div class="mk-z"></div><div class="mk-z"></div><div class="mk-z"></div><div class="mk-z mk-gh"></div></div>
+    <div class="mk-row"><div class="mk-z mk-gh"></div><div class="mk-z"></div><div class="mk-z mk-c"></div><div class="mk-z"></div><div class="mk-z mk-c"></div><div class="mk-z"></div><div class="mk-z mk-gh"></div></div>
+    <div class="mk-row"><div class="mk-z mk-gh"></div><div class="mk-z mk-ex"></div><div class="mk-z"></div><div class="mk-z mk-c"></div><div class="mk-z"></div><div class="mk-z"></div><div class="mk-z"></div></div>
+  </div>
+  <div class="mk-phase"><span>dp</span><span>sp</span><span class="mk-on">m1</span><span>bp</span><span>m2</span><span>ep</span></div>
+  <div class="mk-hud"><span class="mk-name">Fynn</span><span class="mk-lpbar"></span><span class="mk-lp">3800</span></div>
+  <div class="mk-hand"><div class="mk-z"></div><div class="mk-z"></div><div class="mk-z"></div><div class="mk-z"></div><div class="mk-z"></div></div>`;
+
+const VN = `
+  <div class="mk-scene"><div class="mk-figure"></div></div>
+  <div class="mk-box">
+    <div class="mk-speaker">Fynn</div>
+    <div class="mk-line">You counted the deck before you shuffled it. I watched you do it twice.</div>
+    <div class="mk-choices"><b class="mk-on">Name the cheat now</b><b>Wait for a second tell</b><b>Say nothing, play on</b></div>
+  </div>`;
+
+const DECK = `
+  <div class="mk-tools"><span class="mk-search"></span><span class="mk-chip mk-on">mon</span><span class="mk-chip">s/t</span><span class="mk-chip">ext</span></div>
+  <div class="mk-split">
+    <div class="mk-grid">${'<div class="mk-z"></div>'.repeat(15)}</div>
+    <div class="mk-list">
+      <div class="mk-count">40 / 60 · 15 · 0</div>
+      <div class="mk-li"><span>Fusion Recovery</span><i>×2</i></div>
+      <div class="mk-li"><span>Ritual Cage</span><i>×1</i></div>
+      <div class="mk-li"><span>Polymerization</span><i>×3</i></div>
+      <div class="mk-li"><span>Senju of Thousand</span><i>×2</i></div>
+      <div class="mk-li"><span>Manju of Ten Th.</span><i>×3</i></div>
+      <div class="mk-li"><span>Preparation of Rites</span><i>×2</i></div>
+      <div class="mk-ratio"><u></u><u></u><u></u></div>
+    </div>
+  </div>`;
+
+const cards = document.getElementById('cards');
+const index = document.getElementById('index');
+const style = document.createElement('style');
+let css = '';
+
+DIRECTIONS.forEach(d => {
+  const scope = '.d' + d.n;
+  /* the direction's own css: a var block, then any rule prefixed with `~` which
+     is expanded into a scoped selector so each world can restructure the skeleton */
+  const parts = d.css.split('~').map(s => s.trim()).filter(Boolean);
+  css += scope + ' .mock{' + parts[0].replace(/;\s*$/, '') + '}\n';
+  parts.slice(1).forEach(rule => {
+    const i = rule.indexOf('{');
+    const sel = rule.slice(0, i).trim();
+    const body = rule.slice(i);
+    css += sel.split(',').map(s => scope + ' .mock ' + s.trim()).join(',') + body + '\n';
+  });
+
+  index.insertAdjacentHTML('beforeend',
+    `<a href="#dir${d.n}"><span class="no">${d.n}</span><span><span class="nm">${d.name}</span><span class="fm">${d.family.split('·')[0].trim()}</span></span></a>`);
+
+  const pal = d.palette.map(p => `<div class="sw" style="background:${p[0]};color:${p[2]}"><span class="role">${p[1]}</span><span>${p[0]}</span></div>`).join('');
+  const meter = [1,2,3,4,5].map(i => `<i class="${i <= d.effort ? 'on' : ''}"></i>`).join('');
+  const tags = d.best.map(b => `<b class="hot">${b}</b>`).join('');
+
+  cards.insertAdjacentHTML('beforeend', `
+  <article class="card d${d.n}" id="dir${d.n}">
+    <div class="card-head">
+      <div class="card-no">${d.n}</div>
+      <div class="card-title">
+        <p class="card-family">${d.family}</p>
+        <h2>${d.name}</h2>
+        <p class="thesis">${d.thesis}</p>
+        <p class="refuses">${d.refuses}</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="spacer"></div>
+      <div class="content">
+        <div class="strip">
+          <div class="pal">${pal}</div>
+          <div class="typeblk">
+            <div class="lbl">Type</div>
+            <div class="spec" style="font-family:var(--f${d.n})">Fynn — 3800 LP</div>
+            <div class="spec b" style="font-family:var(--fb${d.n})">Cheating is not forbidden. It is sanctioned only if it is discovered and demonstrated.</div>
+            <div class="fnote"><b style="color:#d8d3cb;font-weight:400">Intended:</b> ${d.type[0]} &nbsp;·&nbsp; <b style="color:#d8d3cb;font-weight:400">rendering here:</b> ${d.type[1]}<br>${d.type[2]}</div>
+          </div>
+        </div>
+        <div class="mocks">
+          <div class="mockwrap"><p class="cap">Duel field</p><div class="frame"><div class="mock mock-duel">${DUEL}</div></div></div>
+          <div class="mockwrap"><p class="cap">Visual novel</p><div class="frame"><div class="mock mock-vn">${VN}</div></div></div>
+          <div class="mockwrap"><p class="cap">Deck editor</p><div class="frame"><div class="mock mock-deck">${DECK}</div></div></div>
+        </div>
+        <div class="facts">
+          <div class="fact"><dt>Canon tie</dt><dd>${d.canon}</dd></div>
+          <div class="fact"><dt>Signature interaction</dt><dd>${d.sig}</dd></div>
+          <div class="fact"><dt>Motion grammar</dt><dd>${d.motion}</dd></div>
+          <div class="fact"><dt>Honest risk</dt><dd class="risk">${d.risk}</dd></div>
+          <div class="fact"><dt>Strongest on</dt><dd><div class="tags">${tags}</div></dd>
+            <dt style="margin-top:14px">Effort · all three domains</dt><dd><div class="meter">${meter}</div></dd></div>
+        </div>
+      </div>
+    </div>
+  </article>`);
+
+  /* specimen faces for the type block, pulled from the direction's own mock font */
+  const m = d.css.match(/--m-font:([^;]+);/);
+  const a = d.css.match(/--m-alt:([^;]+);/);
+  css += `:root{--f${d.n}:${(a ? a[1] : 'inherit')};--fb${d.n}:${(m ? m[1] : 'inherit')}}\n`;
+});
+
+style.textContent = css;
+document.head.appendChild(style);
+
+/* every mock lays out on a fixed 420x315 canvas and is scaled to whatever
+   width its column ends up at, so composition is identical on every card */
+const fit = () => document.querySelectorAll('.frame').forEach(f => {
+  f.style.setProperty('--s', (f.clientWidth / 420).toFixed(4));
+});
+fit();
+addEventListener('resize', fit);
+</script>
+</body>
+</html>

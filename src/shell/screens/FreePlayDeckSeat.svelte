@@ -10,6 +10,10 @@
   export let value = "";
   export let disabled = false;
   export let onselect: (key: string) => void = () => undefined;
+  /* Only the seat whose decks the player owns is given one: the opponent's is
+     filled from the same library, but nobody builds a deck for the opponent
+     seat, so a second copy of this control would be noise. */
+  export let onmanage: (() => void) | null = null;
 
   $: presetDecks = decks.filter((deck) => deck.source === "preset");
   /* No local deck qualifies is the ordinary state before a player has built
@@ -57,6 +61,14 @@
       </optgroup>
     {/if}
   </select>
+  {#if onmanage !== null}
+    <button
+      type="button"
+      class="secondary"
+      data-cy={`free-play-match-${seat}-deck-builder`}
+      onclick={onmanage}>Deck builder</button
+    >
+  {/if}
 </div>
 
 <style>

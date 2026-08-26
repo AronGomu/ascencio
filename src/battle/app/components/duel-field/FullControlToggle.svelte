@@ -20,12 +20,19 @@
 >
   <input
     type="checkbox"
+    aria-label="Full Control"
     checked={value}
     onchange={(event) => onchange(event.currentTarget.checked)}
     data-cy="full-control-checkbox"
   />
-  <span class="full-control-toggle__text" data-cy="full-control-label"
-    >Full Control</span
+  <!-- The name is a tooltip rather than a permanent caption: the box sits
+       inside the board now, where two words of chrome would sit on the field
+       itself. Revealed on hover and on focus, and a click focuses the box, so
+       pointer and keyboard both reach it. -->
+  <span
+    class="full-control-toggle__text"
+    role="tooltip"
+    data-cy="full-control-label">Full Control</span
   >
   <!-- Live region rather than a conditional block: it has to exist before the
        key goes down for the hold to be announced while focus is on the board. -->

@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="artifact-kind" content="markdown">
+<meta name="artifact-generated" content="1787609017990">
+<meta name="artifact-project" content="/home/aron/projects/ascencio">
+<title>Chain window state matrix</title>
+<style data-base>:root { color-scheme: light dark;
+  --bg: #ffffff;
+  --fg: #1c1c1a;
+  --muted: #6b6862;
+  --border: #e7e5e0;
+  --code-bg: #f7f6f4;
+  --accent: #b95730;
+  --add-bg: #e9f7ee;
+  --add-word-bg: #c8ecd3;
+  --add-fg: #1a7f37;
+  --del-bg: #feeff1;
+  --del-word-bg: #f8d2d7;
+  --del-fg: #c93c4c;
+  --hl-comment: #6e7781;
+  --hl-keyword: #cf222e;
+  --hl-string: #0a3069;
+  --hl-number: #0550ae;
+  --hl-title: #8250df;
+  --hl-type: #953800;
+  --hl-attr: #0550ae;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --bg: #171614;
+  --fg: #e6e3de;
+  --muted: #94918a;
+  --border: #2e2d29;
+  --code-bg: #201f1c;
+  --accent: #d67858;
+  --add-bg: #1d2a20;
+  --add-word-bg: #2b4232;
+  --add-fg: #85c793;
+  --del-bg: #2e1c1e;
+  --del-word-bg: #4a292c;
+  --del-fg: #e28a91;
+  --hl-comment: #8b949e;
+  --hl-keyword: #ff7b72;
+  --hl-string: #a5d6ff;
+  --hl-number: #79c0ff;
+  --hl-title: #d2a8ff;
+  --hl-type: #ffa657;
+  --hl-attr: #79c0ff;
+} }
+
+* { box-sizing: border-box; }
+html { font-size: 15px; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+article { max-width: 860px; margin: 0 auto; padding: 2.75rem 1.5rem 4rem; }
+h1, h2, h3, h4 { line-height: 1.3; letter-spacing: -0.01em; color: var(--fg); }
+h1 { font-size: 1.45rem; font-weight: 650; margin: 0 0 1rem; }
+h2 { font-size: 1.15rem; font-weight: 650; margin: 2.2em 0 .7em; padding-bottom: .35em; border-bottom: 1px solid var(--border); }
+h3 { font-size: 1rem; font-weight: 600; margin: 1.8em 0 .5em; }
+h4 { font-size: .9rem; font-weight: 600; margin: 1.5em 0 .4em; }
+p { margin: .8em 0; }
+a { color: var(--accent); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 35%, transparent); text-underline-offset: 2px; }
+a:hover { text-decoration-color: var(--accent); }
+strong { font-weight: 600; }
+ul, ol { margin: .8em 0; padding-left: 1.5em; }
+li { margin: .3em 0; }
+li > ul, li > ol { margin: .2em 0; }
+hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
+img, svg, video { max-width: 100%; }
+::selection { background: color-mix(in srgb, var(--accent) 25%, transparent); }
+
+blockquote {
+  margin: 1.2em 0;
+  padding: .1em 1.1em;
+  border-left: 3px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--muted);
+}
+blockquote > :first-child { margin-top: .4em; }
+blockquote > :last-child { margin-bottom: .4em; }
+
+table { border-collapse: collapse; width: 100%; margin: 1.2em 0; font-size: .9rem; }
+th {
+  text-align: left; font-weight: 600; font-size: .74rem;
+  text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+  padding: .5em .75em; border-bottom: 1px solid var(--border);
+}
+td { padding: .55em .75em; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+
+code, kbd, samp { font-family: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace; }
+code { font-size: .85em; background: var(--code-bg); padding: .15em .4em; border-radius: 4px; }
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1em 1.2em;
+  overflow-x: auto;
+  font-size: .82rem;
+  line-height: 1.55;
+  margin: 1.2em 0;
+}
+pre code { background: transparent; padding: 0; font-size: inherit; }
+
+input[type="checkbox"] { accent-color: var(--accent); margin-right: .4em; }
+
+
+.artifact-header {
+  display: flex; align-items: baseline; gap: .75rem; flex-wrap: wrap;
+  margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+}
+.artifact-header h1 { margin: 0; }
+.artifact-badge {
+  font-family: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace; font-size: .66rem; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 999px; padding: .2em .7em; white-space: nowrap;
+}
+.artifact-meta { margin-left: auto; color: var(--muted); font-size: .72rem; font-family: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace; }
+.artifact-footer {
+  margin-top: 4rem; padding-top: 1rem; border-top: 1px solid var(--border);
+  color: var(--muted); font-size: .72rem; font-family: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace;
+}
+.artifact-mermaid { text-align: center; margin: 1.5rem 0; }
+</style>
+</head>
+<body>
+<article>
+<header class="artifact-header">
+<h1>Chain window state matrix</h1>
+<span class="artifact-badge">markdown</span>
+<span class="artifact-meta">2026-08-24 22:03:37</span>
+</header>
+<h1>Chain-window state matrix</h1>
+<p>Scope: every state combination observable when the engine emits <code>MSG_SELECT_CHAIN</code> (<code>EngineMessageType.SELECT_CHAIN</code>, type <code>16</code>), and the message each combination could carry instead of the current fixed title <code>&quot;Choose a chain response&quot;</code> (<code>src/battle/worker/protocol/PromptRegistry.ts:378</code>).</p>
+<p>Nothing here is implemented. This is the enumeration that a wording change would have to cover.</p>
+<h2>1. Inputs available at a chain window</h2>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Type</th>
+<th>Source</th>
+<th>Used today</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>player</code></td>
+<td><code>0 | 1</code></td>
+<td><code>vendor/ocgcore-wasm/0.1.2/dist/index.d.ts:1157</code></td>
+<td>yes — prompt owner</td>
+</tr>
+<tr>
+<td><code>forced</code></td>
+<td><code>boolean</code></td>
+<td><code>index.d.ts:1159</code></td>
+<td>yes — <code>cancelable: !forced</code> (<code>PromptRegistry.ts:383</code>)</td>
+</tr>
+<tr>
+<td><code>spe_count</code></td>
+<td><code>number</code></td>
+<td><code>index.d.ts:1158</code></td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>hint_timing</code></td>
+<td><code>OcgHintTiming</code> bitmask, 28 bits</td>
+<td><code>index.d.ts:1160</code>, values at <code>index.d.ts:583-640</code></td>
+<td>no — zero hits in <code>src/</code></td>
+</tr>
+<tr>
+<td><code>hint_timing_other</code></td>
+<td>same bitmask, other player</td>
+<td><code>index.d.ts:1161</code></td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>selects[]</code></td>
+<td><code>OcgCardLocPosActive[]</code></td>
+<td><code>index.d.ts:1162</code></td>
+<td>partly — only <code>code</code> reaches the label</td>
+</tr>
+<tr>
+<td><code>selects[].description</code></td>
+<td><code>bigint</code> effect reference</td>
+<td><code>index.d.ts:175</code></td>
+<td>no — resolvable via <code>resolveEffectDescription</code> (<code>protocol/effect-description.ts:8</code>)</td>
+</tr>
+<tr>
+<td><code>selects[].client_mode</code></td>
+<td><code>NORMAL | RESOLVE | RESET</code></td>
+<td><code>index.d.ts:176</code>, enum at <code>index.d.ts:524</code></td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>state.chain[]</code></td>
+<td><code>PublicChainLink[]</code></td>
+<td><code>src/battle/duel/contracts/public-duel-state.ts:80-90</code></td>
+<td>rendered by <code>ChainStatus.svelte</code>, not by the prompt</td>
+</tr>
+<tr>
+<td><code>state.phase</code></td>
+<td><code>DuelPhase</code>, 11 values</td>
+<td><code>public-duel-state.ts:4-15</code></td>
+<td>rail only</td>
+</tr>
+<tr>
+<td><code>state.turnPlayer</code></td>
+<td><code>0 | 1</code></td>
+<td><code>public-duel-state.ts:99</code></td>
+<td>auto-response actor fallback</td>
+</tr>
+<tr>
+<td>batch presentation events</td>
+<td><code>DuelPresentationEvent[]</code></td>
+<td><code>src/battle/duel/contracts/duel-presentation-event.ts</code></td>
+<td><code>lastActionActor</code> (<code>app/prompts/auto-response.ts:52</code>)</td>
+</tr>
+<tr>
+<td><code>MSG_HINT</code> / <code>CARD_HINT</code> / <code>PLAYER_HINT</code></td>
+<td>engine wording channel</td>
+<td><code>projection/DuelStateProjector.ts:476-493</code></td>
+<td>emitted raw: <code>`System hint ${message.hint}`</code> — never resolved through <code>strings.system</code></td>
+</tr>
+</tbody></table>
+<h2>2. Axes and raw cardinality</h2>
+<table>
+<thead>
+<tr>
+<th>Axis</th>
+<th>Values</th>
+<th>Count</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>A — <code>forced</code></td>
+<td><code>false</code>, <code>true</code></td>
+<td>2</td>
+</tr>
+<tr>
+<td>B — chain class</td>
+<td>empty · last link is yours · last link is opponent&#39;s · last link source hidden</td>
+<td>4</td>
+</tr>
+<tr>
+<td>C — <code>hint_timing</code> mask</td>
+<td>any subset of 28 bits</td>
+<td>2^28</td>
+</tr>
+<tr>
+<td>D — candidate shape</td>
+<td>0 candidates · 1 · ≥2</td>
+<td>3</td>
+</tr>
+<tr>
+<td>E — <code>state.phase</code></td>
+<td>11 <code>DuelPhase</code> values</td>
+<td>11</td>
+</tr>
+<tr>
+<td>F — last-link <code>phase</code> × <code>outcome</code></td>
+<td><code>pending|solving|solved</code> × <code>normal|negated|disabled</code></td>
+<td>9 (only when B ≠ empty)</td>
+</tr>
+</tbody></table>
+<p>Raw product ≈ <code>2 × 4 × 2^28 × 3 × 11</code> ≈ 3.5 × 10^11. Not enumerable, and not meaningful: C is a <em>set of legal response timings</em>, not a single fact. The matrix below reduces C to one dominant bit (§5) and drops E as redundant with C&#39;s phase bits.</p>
+<p>Reduced product: <code>2 (A) × 4 (B) × 3 (D) = 24</code> templates (§6), with the chain-empty rows expanded across the 29 C-classes (§7).</p>
+<h2>3. Reachability filter — combinations no human ever sees</h2>
+<p>Applied in order. Default settings are <code>autoResolveTrivialPrompts: true</code>, <code>autoPlaceCards: true</code>, <code>fullControl: false</code> (<code>src/battle/app/stores/ui-settings-store.ts:30-34</code>).</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Condition</th>
+<th>Effect</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>R1</td>
+<td><code>prompt.player === 1</code></td>
+<td>opponent policy answers in the worker; no UI at all</td>
+<td><code>worker/HeadlessDuelController.ts:218-229</code></td>
+</tr>
+<tr>
+<td>R2</td>
+<td>Full Control held/on</td>
+<td><strong>all</strong> auto-rules disabled → every combination below becomes visible</td>
+<td><code>app/App.svelte:667-671</code></td>
+</tr>
+<tr>
+<td>R3</td>
+<td>0 activatable candidates + a pass choice</td>
+<td>auto-pass</td>
+<td><code>app/prompts/auto-response.ts:22-26</code></td>
+</tr>
+<tr>
+<td>R4</td>
+<td>exactly 1 choice total and it is a candidate (i.e. <code>forced</code> with one option)</td>
+<td>auto-select</td>
+<td><code>auto-response.ts:27-30</code></td>
+</tr>
+<tr>
+<td>R5</td>
+<td>last chain link controller is you, or chain empty and <code>lastActionActor</code> is you</td>
+<td>auto-pass — own-effect window</td>
+<td><code>auto-response.ts:83-96</code></td>
+</tr>
+</tbody></table>
+<p>Consequence: with default settings the wording only ever reaches the player in the <strong>opponent-owned</strong> rows of §6/§7, plus every row when R2 holds. A wording change must still cover the R2 rows, because Full Control makes all of them visible.</p>
+<h2>4. Axis B — chain classes</h2>
+<p>Chain links come from <code>MSG_CHAINING</code> and are appended with <code>phase: &quot;pending&quot;</code>, <code>outcome: &quot;normal&quot;</code> (<code>projection/DuelStateProjector.ts:1512-1522</code>). <code>controller</code> is the <strong>triggering</strong> controller (<code>DuelStateProjector.ts:1485</code>). <code>label</code> is the card name, or the literal <code>&quot;Card effect&quot;</code> when the source identity is not visible (<code>DuelStateProjector.ts:1498-1502</code>).</p>
+<table>
+<thead>
+<tr>
+<th>B</th>
+<th>Condition</th>
+<th>Proposed message fragment</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>B0</td>
+<td><code>chain.length === 0</code></td>
+<td>no chain fragment — fall through to axis C (§5)</td>
+</tr>
+<tr>
+<td>B1</td>
+<td>last link <code>controller === 0</code>, <code>sourceIdentityVisible</code></td>
+<td><code>Respond to your &quot;&lt;label&gt;&quot;</code> — normally unreachable, R5</td>
+</tr>
+<tr>
+<td>B2</td>
+<td>last link <code>controller === 1</code>, <code>sourceIdentityVisible</code></td>
+<td><code>Respond to the opponent&#39;s &quot;&lt;label&gt;&quot;</code></td>
+</tr>
+<tr>
+<td>B3</td>
+<td>last link <code>sourceIdentityVisible === false</code></td>
+<td><code>Respond to the opponent&#39;s face-down effect</code> (label is <code>&quot;Card effect&quot;</code>)</td>
+</tr>
+</tbody></table>
+<p>Chain depth is a suffix rather than an axis: <code>· Link &lt;chain.length&gt;</code> when <code>chain.length ≥ 2</code>.</p>
+<p>Last-link <code>phase</code>/<code>outcome</code> (axis F): at a chain-building window the last link is <code>pending</code>/<code>normal</code> by construction, because <code>CHAIN_SOLVING</code>/<code>CHAIN_NEGATED</code>/<code>CHAIN_DISABLED</code> only arrive after the window closes and <code>CHAIN_END</code> empties the array (<code>DuelStateProjector.ts:458-474</code>). <strong>Unverified</strong> — see §9 U2. Treat the other 8 F-combinations as theoretically representable but not observed; wording should ignore F until a trace proves otherwise.</p>
+<h2>5. Axis C — <code>hint_timing</code> bits, all 28 + empty mask</h2>
+<p>Values verbatim from <code>vendor/ocgcore-wasm/0.1.2/dist/index.d.ts:583-640</code>. &quot;Prec.&quot; is the proposed dominant-bit precedence class (§8).</p>
+<table>
+<thead>
+<tr>
+<th>Bit</th>
+<th>Value</th>
+<th>Vendor name</th>
+<th>Vendor comment</th>
+<th>Prec.</th>
+<th>Proposed message (chain empty)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>C1</td>
+<td>1</td>
+<td><code>DRAW_PHASE</code></td>
+<td>In draw phase</td>
+<td>3</td>
+<td>Respond in the Draw Phase</td>
+</tr>
+<tr>
+<td>C2</td>
+<td>2</td>
+<td><code>STANDBY_PHASE</code></td>
+<td>In standby phase</td>
+<td>3</td>
+<td>Respond in the Standby Phase</td>
+</tr>
+<tr>
+<td>C3</td>
+<td>4</td>
+<td><code>MAIN_END</code></td>
+<td>Before end of main</td>
+<td>3</td>
+<td>Respond before the Main Phase ends</td>
+</tr>
+<tr>
+<td>C4</td>
+<td>8</td>
+<td><code>BATTLE_START</code></td>
+<td>In battle phase</td>
+<td>2</td>
+<td>Respond at the start of the Battle Phase</td>
+</tr>
+<tr>
+<td>C5</td>
+<td>16</td>
+<td><code>BATTLE_END</code></td>
+<td>After battle</td>
+<td>2</td>
+<td>Respond at the end of the Battle Phase</td>
+</tr>
+<tr>
+<td>C6</td>
+<td>32</td>
+<td><code>END_PHASE</code></td>
+<td>In end phase</td>
+<td>3</td>
+<td>Respond in the End Phase</td>
+</tr>
+<tr>
+<td>C7</td>
+<td>64</td>
+<td><code>SUMMON</code></td>
+<td>After summon</td>
+<td>1</td>
+<td>Respond to the Normal Summon</td>
+</tr>
+<tr>
+<td>C8</td>
+<td>128</td>
+<td><code>SPSUMMON</code></td>
+<td>After special summon</td>
+<td>1</td>
+<td>Respond to the Special Summon</td>
+</tr>
+<tr>
+<td>C9</td>
+<td>256</td>
+<td><code>FLIPSUMMON</code></td>
+<td>After flip summon</td>
+<td>1</td>
+<td>Respond to the Flip Summon</td>
+</tr>
+<tr>
+<td>C10</td>
+<td>512</td>
+<td><code>MSET</code></td>
+<td>After monster set</td>
+<td>1</td>
+<td>Respond to the Set monster</td>
+</tr>
+<tr>
+<td>C11</td>
+<td>1024</td>
+<td><code>SSET</code></td>
+<td>After spell set</td>
+<td>1</td>
+<td>Respond to the Set Spell/Trap</td>
+</tr>
+<tr>
+<td>C12</td>
+<td>2048</td>
+<td><code>POS_CHANGE</code></td>
+<td>After pos change</td>
+<td>1</td>
+<td>Respond to the position change</td>
+</tr>
+<tr>
+<td>C13</td>
+<td>4096</td>
+<td><code>ATTACK</code></td>
+<td>In attack declaration</td>
+<td>1</td>
+<td>Respond to the attack declaration</td>
+</tr>
+<tr>
+<td>C14</td>
+<td>8192</td>
+<td><code>DAMAGE_STEP</code></td>
+<td>In damage step</td>
+<td>2</td>
+<td>Respond in the Damage Step</td>
+</tr>
+<tr>
+<td>C15</td>
+<td>16384</td>
+<td><code>DAMAGE_CAL</code></td>
+<td>In damage calculation</td>
+<td>2</td>
+<td>Respond before damage calculation</td>
+</tr>
+<tr>
+<td>C16</td>
+<td>32768</td>
+<td><code>CHAIN_END</code></td>
+<td>After chain resolved</td>
+<td>1</td>
+<td>Respond after the chain resolved</td>
+</tr>
+<tr>
+<td>C17</td>
+<td>65536</td>
+<td><code>DRAW</code></td>
+<td>After card draw</td>
+<td>1</td>
+<td>Respond to the draw</td>
+</tr>
+<tr>
+<td>C18</td>
+<td>131072</td>
+<td><code>DAMAGE</code></td>
+<td>After damage</td>
+<td>1</td>
+<td>Respond to the damage</td>
+</tr>
+<tr>
+<td>C19</td>
+<td>262144</td>
+<td><code>RECOVER</code></td>
+<td>After recover</td>
+<td>1</td>
+<td>Respond to the life point gain</td>
+</tr>
+<tr>
+<td>C20</td>
+<td>524288</td>
+<td><code>DESTROY</code></td>
+<td>After destroy</td>
+<td>1</td>
+<td>Respond to the destruction</td>
+</tr>
+<tr>
+<td>C21</td>
+<td>1048576</td>
+<td><code>REMOVE</code></td>
+<td>After banis[h]</td>
+<td>1</td>
+<td>Respond to the banishment</td>
+</tr>
+<tr>
+<td>C22</td>
+<td>2097152</td>
+<td><code>TOHAND</code></td>
+<td>After card added to the hand</td>
+<td>1</td>
+<td>Respond to the card added to the hand</td>
+</tr>
+<tr>
+<td>C23</td>
+<td>4194304</td>
+<td><code>TODECK</code></td>
+<td>After card sent to the deck</td>
+<td>1</td>
+<td>Respond to the card returned to the Deck</td>
+</tr>
+<tr>
+<td>C24</td>
+<td>8388608</td>
+<td><code>TOGRAVE</code></td>
+<td>After card sent to the graveyard</td>
+<td>1</td>
+<td>Respond to the card sent to the Graveyard</td>
+</tr>
+<tr>
+<td>C25</td>
+<td>16777216</td>
+<td><code>BATTLE_PHASE</code></td>
+<td>Battle phase</td>
+<td>3</td>
+<td>Respond in the Battle Phase</td>
+</tr>
+<tr>
+<td>C26</td>
+<td>33554432</td>
+<td><code>EQUIP</code></td>
+<td>After equip</td>
+<td>1</td>
+<td>Respond to the equip</td>
+</tr>
+<tr>
+<td>C27</td>
+<td>67108864</td>
+<td><code>BATTLE_STEP_END</code></td>
+<td>Battle step end</td>
+<td>2</td>
+<td>Respond at the end of the Battle Step</td>
+</tr>
+<tr>
+<td>C28</td>
+<td>134217728</td>
+<td><code>BATTLED</code></td>
+<td>Battled</td>
+<td>2</td>
+<td>Respond after damage calculation</td>
+</tr>
+<tr>
+<td>C0</td>
+<td><code>0</code></td>
+<td>—</td>
+<td>no bit set</td>
+<td>4</td>
+<td>fall back to the last presentation event (§10), else <code>Choose a chain response</code></td>
+</tr>
+</tbody></table>
+<h2>6. Combination matrix — 24 templates</h2>
+<p><code>A</code> = <code>forced</code>, <code>B</code> = chain class (§4), <code>D</code> = candidate shape. <code>⟨C⟩</code> = the axis-C fragment from §5/§7.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>A</th>
+<th>B</th>
+<th>D</th>
+<th>Reachable by default</th>
+<th>Message</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>false</td>
+<td>B0 empty</td>
+<td>0</td>
+<td>no — R3</td>
+<td>—</td>
+</tr>
+<tr>
+<td>2</td>
+<td>false</td>
+<td>B0 empty</td>
+<td>1</td>
+<td>no — R5 when actor is you; else yes</td>
+<td>⟨C⟩</td>
+</tr>
+<tr>
+<td>3</td>
+<td>false</td>
+<td>B0 empty</td>
+<td>≥2</td>
+<td>no — R5 when actor is you; else yes</td>
+<td>⟨C⟩</td>
+</tr>
+<tr>
+<td>4</td>
+<td>false</td>
+<td>B1 yours</td>
+<td>0</td>
+<td>no — R3</td>
+<td>—</td>
+</tr>
+<tr>
+<td>5</td>
+<td>false</td>
+<td>B1 yours</td>
+<td>1</td>
+<td>no — R5</td>
+<td>Respond to your &quot;&lt;label&gt;&quot;</td>
+</tr>
+<tr>
+<td>6</td>
+<td>false</td>
+<td>B1 yours</td>
+<td>≥2</td>
+<td>no — R5</td>
+<td>Respond to your &quot;&lt;label&gt;&quot;</td>
+</tr>
+<tr>
+<td>7</td>
+<td>false</td>
+<td>B2 opponent</td>
+<td>0</td>
+<td>no — R3</td>
+<td>—</td>
+</tr>
+<tr>
+<td>8</td>
+<td>false</td>
+<td>B2 opponent</td>
+<td>1</td>
+<td><strong>yes</strong></td>
+<td>Respond to the opponent&#39;s &quot;&lt;label&gt;&quot;</td>
+</tr>
+<tr>
+<td>9</td>
+<td>false</td>
+<td>B2 opponent</td>
+<td>≥2</td>
+<td><strong>yes</strong></td>
+<td>Respond to the opponent&#39;s &quot;&lt;label&gt;&quot;</td>
+</tr>
+<tr>
+<td>10</td>
+<td>false</td>
+<td>B3 hidden</td>
+<td>0</td>
+<td>no — R3</td>
+<td>—</td>
+</tr>
+<tr>
+<td>11</td>
+<td>false</td>
+<td>B3 hidden</td>
+<td>1</td>
+<td><strong>yes</strong></td>
+<td>Respond to the opponent&#39;s face-down effect</td>
+</tr>
+<tr>
+<td>12</td>
+<td>false</td>
+<td>B3 hidden</td>
+<td>≥2</td>
+<td><strong>yes</strong></td>
+<td>Respond to the opponent&#39;s face-down effect</td>
+</tr>
+<tr>
+<td>13</td>
+<td>true</td>
+<td>B0 empty</td>
+<td>0</td>
+<td>contradiction — see §9 U4</td>
+<td>—</td>
+</tr>
+<tr>
+<td>14</td>
+<td>true</td>
+<td>B0 empty</td>
+<td>1</td>
+<td>no — R4</td>
+<td>You must respond · ⟨C⟩</td>
+</tr>
+<tr>
+<td>15</td>
+<td>true</td>
+<td>B0 empty</td>
+<td>≥2</td>
+<td><strong>yes</strong></td>
+<td>You must respond · ⟨C⟩</td>
+</tr>
+<tr>
+<td>16</td>
+<td>true</td>
+<td>B1 yours</td>
+<td>0</td>
+<td>contradiction — U4</td>
+<td>—</td>
+</tr>
+<tr>
+<td>17</td>
+<td>true</td>
+<td>B1 yours</td>
+<td>1</td>
+<td>no — R4</td>
+<td>You must chain to your &quot;&lt;label&gt;&quot;</td>
+</tr>
+<tr>
+<td>18</td>
+<td>true</td>
+<td>B1 yours</td>
+<td>≥2</td>
+<td><strong>yes</strong></td>
+<td>You must chain to your &quot;&lt;label&gt;&quot;</td>
+</tr>
+<tr>
+<td>19</td>
+<td>true</td>
+<td>B2 opponent</td>
+<td>0</td>
+<td>contradiction — U4</td>
+<td>—</td>
+</tr>
+<tr>
+<td>20</td>
+<td>true</td>
+<td>B2 opponent</td>
+<td>1</td>
+<td>no — R4</td>
+<td>You must chain to the opponent&#39;s &quot;&lt;label&gt;&quot;</td>
+</tr>
+<tr>
+<td>21</td>
+<td>true</td>
+<td>B2 opponent</td>
+<td>≥2</td>
+<td><strong>yes</strong></td>
+<td>You must chain to the opponent&#39;s &quot;&lt;label&gt;&quot;</td>
+</tr>
+<tr>
+<td>22</td>
+<td>true</td>
+<td>B3 hidden</td>
+<td>0</td>
+<td>contradiction — U4</td>
+<td>—</td>
+</tr>
+<tr>
+<td>23</td>
+<td>true</td>
+<td>B3 hidden</td>
+<td>1</td>
+<td>no — R4</td>
+<td>You must chain to the opponent&#39;s face-down effect</td>
+</tr>
+<tr>
+<td>24</td>
+<td>true</td>
+<td>B3 hidden</td>
+<td>≥2</td>
+<td><strong>yes</strong></td>
+<td>You must chain to the opponent&#39;s face-down effect</td>
+</tr>
+</tbody></table>
+<p>R4/R5 rows are still reachable under Full Control (R2), so their message column is filled rather than dashed.</p>
+<p>Depth suffix appends to rows 5–12 and 17–24 when <code>chain.length ≥ 2</code>: <code>· Link &lt;n&gt;</code>.</p>
+<p>Candidate suffix for <code>D = 1</code>, available from <code>selects[0].description</code> today and unused: <code>— &lt;resolved effect text&gt;</code>.</p>
+<h2>7. Chain-empty expansion — rows 2, 3, 15</h2>
+<p>29 axis-C classes × 2 <code>forced</code> values. This is the full enumeration of the chain-empty windows; everything else in §6 is already terminal.</p>
+<table>
+<thead>
+<tr>
+<th>C</th>
+<th>Optional (<code>forced === false</code>, rows 2/3)</th>
+<th>Forced (rows 14/15)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>C1 <code>DRAW_PHASE</code></td>
+<td>Respond in the Draw Phase</td>
+<td>You must respond in the Draw Phase</td>
+</tr>
+<tr>
+<td>C2 <code>STANDBY_PHASE</code></td>
+<td>Respond in the Standby Phase</td>
+<td>You must respond in the Standby Phase</td>
+</tr>
+<tr>
+<td>C3 <code>MAIN_END</code></td>
+<td>Respond before the Main Phase ends</td>
+<td>You must respond before the Main Phase ends</td>
+</tr>
+<tr>
+<td>C4 <code>BATTLE_START</code></td>
+<td>Respond at the start of the Battle Phase</td>
+<td>You must respond at the start of the Battle Phase</td>
+</tr>
+<tr>
+<td>C5 <code>BATTLE_END</code></td>
+<td>Respond at the end of the Battle Phase</td>
+<td>You must respond at the end of the Battle Phase</td>
+</tr>
+<tr>
+<td>C6 <code>END_PHASE</code></td>
+<td>Respond in the End Phase</td>
+<td>You must respond in the End Phase</td>
+</tr>
+<tr>
+<td>C7 <code>SUMMON</code></td>
+<td>Respond to the Normal Summon</td>
+<td>You must respond to the Normal Summon</td>
+</tr>
+<tr>
+<td>C8 <code>SPSUMMON</code></td>
+<td>Respond to the Special Summon</td>
+<td>You must respond to the Special Summon</td>
+</tr>
+<tr>
+<td>C9 <code>FLIPSUMMON</code></td>
+<td>Respond to the Flip Summon</td>
+<td>You must respond to the Flip Summon</td>
+</tr>
+<tr>
+<td>C10 <code>MSET</code></td>
+<td>Respond to the Set monster</td>
+<td>You must respond to the Set monster</td>
+</tr>
+<tr>
+<td>C11 <code>SSET</code></td>
+<td>Respond to the Set Spell/Trap</td>
+<td>You must respond to the Set Spell/Trap</td>
+</tr>
+<tr>
+<td>C12 <code>POS_CHANGE</code></td>
+<td>Respond to the position change</td>
+<td>You must respond to the position change</td>
+</tr>
+<tr>
+<td>C13 <code>ATTACK</code></td>
+<td>Respond to the attack declaration</td>
+<td>You must respond to the attack declaration</td>
+</tr>
+<tr>
+<td>C14 <code>DAMAGE_STEP</code></td>
+<td>Respond in the Damage Step</td>
+<td>You must respond in the Damage Step</td>
+</tr>
+<tr>
+<td>C15 <code>DAMAGE_CAL</code></td>
+<td>Respond before damage calculation</td>
+<td>You must respond before damage calculation</td>
+</tr>
+<tr>
+<td>C16 <code>CHAIN_END</code></td>
+<td>Respond after the chain resolved</td>
+<td>You must respond after the chain resolved</td>
+</tr>
+<tr>
+<td>C17 <code>DRAW</code></td>
+<td>Respond to the draw</td>
+<td>You must respond to the draw</td>
+</tr>
+<tr>
+<td>C18 <code>DAMAGE</code></td>
+<td>Respond to the damage</td>
+<td>You must respond to the damage</td>
+</tr>
+<tr>
+<td>C19 <code>RECOVER</code></td>
+<td>Respond to the life point gain</td>
+<td>You must respond to the life point gain</td>
+</tr>
+<tr>
+<td>C20 <code>DESTROY</code></td>
+<td>Respond to the destruction</td>
+<td>You must respond to the destruction</td>
+</tr>
+<tr>
+<td>C21 <code>REMOVE</code></td>
+<td>Respond to the banishment</td>
+<td>You must respond to the banishment</td>
+</tr>
+<tr>
+<td>C22 <code>TOHAND</code></td>
+<td>Respond to the card added to the hand</td>
+<td>You must respond to the card added to the hand</td>
+</tr>
+<tr>
+<td>C23 <code>TODECK</code></td>
+<td>Respond to the card returned to the Deck</td>
+<td>You must respond to the card returned to the Deck</td>
+</tr>
+<tr>
+<td>C24 <code>TOGRAVE</code></td>
+<td>Respond to the card sent to the Graveyard</td>
+<td>You must respond to the card sent to the Graveyard</td>
+</tr>
+<tr>
+<td>C25 <code>BATTLE_PHASE</code></td>
+<td>Respond in the Battle Phase</td>
+<td>You must respond in the Battle Phase</td>
+</tr>
+<tr>
+<td>C26 <code>EQUIP</code></td>
+<td>Respond to the equip</td>
+<td>You must respond to the equip</td>
+</tr>
+<tr>
+<td>C27 <code>BATTLE_STEP_END</code></td>
+<td>Respond at the end of the Battle Step</td>
+<td>You must respond at the end of the Battle Step</td>
+</tr>
+<tr>
+<td>C28 <code>BATTLED</code></td>
+<td>Respond after damage calculation</td>
+<td>You must respond after damage calculation</td>
+</tr>
+<tr>
+<td>C0 none</td>
+<td>§10 fallback</td>
+<td>You must respond</td>
+</tr>
+</tbody></table>
+<h2>8. Dominant-bit precedence</h2>
+<p><code>hint_timing</code> is a <em>mask</em>, so a mask with <code>SUMMON | MAIN_END | BATTLE_PHASE</code> set has three truths in it. The message picks one. Proposed order, highest first:</p>
+<ol>
+<li><strong>Class 1 — card events</strong>: <code>SUMMON</code>, <code>SPSUMMON</code>, <code>FLIPSUMMON</code>, <code>MSET</code>, <code>SSET</code>, <code>POS_CHANGE</code>, <code>ATTACK</code>, <code>DRAW</code>, <code>DAMAGE</code>, <code>RECOVER</code>, <code>DESTROY</code>, <code>REMOVE</code>, <code>TOHAND</code>, <code>TODECK</code>, <code>TOGRAVE</code>, <code>EQUIP</code>, <code>CHAIN_END</code></li>
+<li><strong>Class 2 — battle sub-steps</strong>: <code>DAMAGE_CAL</code>, <code>BATTLED</code>, <code>DAMAGE_STEP</code>, <code>BATTLE_STEP_END</code>, <code>BATTLE_START</code>, <code>BATTLE_END</code></li>
+<li><strong>Class 3 — phase windows</strong>: <code>DRAW_PHASE</code>, <code>STANDBY_PHASE</code>, <code>MAIN_END</code>, <code>BATTLE_PHASE</code>, <code>END_PHASE</code></li>
+<li><strong>Class 4 — empty mask</strong>: §10 fallback</li>
+</ol>
+<p>Within a class, low bit value first, so the order is total and stable. Ties inside class 1 are the real risk: two card events in one mask produce a message naming only one of them. §9 U1 is the check that would settle how often that happens.</p>
+<h2>9. Unverified — needs a trace before wording ships</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Question</th>
+<th>How to settle</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>U1</td>
+<td>Which <code>hint_timing</code> bit combinations actually co-occur, and how often class 1 has &gt;1 bit</td>
+<td>Record <code>hint_timing</code> per <code>SELECT_CHAIN</code> in <code>worker/diagnostics/duel-trace.ts</code>; run the existing duel fixtures; histogram the masks</td>
+</tr>
+<tr>
+<td>U2</td>
+<td>Whether a <code>SELECT_CHAIN</code> can arrive with a non-<code>pending</code> last link (axis F)</td>
+<td>Same trace, assert <code>chain.at(-1).phase === &quot;pending&quot;</code> at every chain window</td>
+</tr>
+<tr>
+<td>U3</td>
+<td>What <code>hint_timing_other</code> adds — the <em>other</em> player&#39;s legal timings</td>
+<td>Trace both fields; check whether they ever differ meaningfully at a player-0 window</td>
+</tr>
+<tr>
+<td>U4</td>
+<td>Whether <code>forced</code> with 0 candidates can occur (rows 13/16/19/22 marked contradiction)</td>
+<td>Trace <code>forced &amp;&amp; selects.length === 0</code>; expected never, currently unguarded</td>
+</tr>
+<tr>
+<td>U5</td>
+<td>Whether <code>client_mode</code> (<code>NORMAL|RESOLVE|RESET</code>) distinguishes candidates the label should mark</td>
+<td>Trace the distribution over <code>selects[]</code></td>
+</tr>
+<tr>
+<td>U6</td>
+<td>Whether <code>MSG_HINT</code> with <code>hint_type = 3</code> (<code>selectmsg</code>) precedes chain windows and already carries the engine&#39;s own wording</td>
+<td>Resolve <code>message.hint</code> through <code>strings.system</code> instead of the raw dump at <code>DuelStateProjector.ts:476-477</code>, log both</td>
+</tr>
+</tbody></table>
+<h2>10. Fallback chain when axis C is empty</h2>
+<p>Ordered, first hit wins, from the batch&#39;s presentation events (<code>duel-presentation-event.ts</code>), newest first, stopping at <code>turnStarted</code> exactly as <code>lastActionActor</code> does (<code>auto-response.ts:52-74</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Message</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>summon</code></td>
+<td>Respond to the Normal Summon</td>
+</tr>
+<tr>
+<td><code>specialSummon</code></td>
+<td>Respond to the Special Summon</td>
+</tr>
+<tr>
+<td><code>flipSummon</code></td>
+<td>Respond to the Flip Summon</td>
+</tr>
+<tr>
+<td><code>set</code></td>
+<td>Respond to the Set card</td>
+</tr>
+<tr>
+<td><code>attack</code></td>
+<td>Respond to the attack declaration</td>
+</tr>
+<tr>
+<td><code>cardDrawn</code></td>
+<td>Respond to the draw</td>
+</tr>
+<tr>
+<td><code>damage</code> / <code>recover</code></td>
+<td>Respond to the life point change</td>
+</tr>
+<tr>
+<td><code>positionChanged</code></td>
+<td>Respond to the position change</td>
+</tr>
+<tr>
+<td><code>cardMoved</code></td>
+<td>Respond to the card movement</td>
+</tr>
+<tr>
+<td>none of the above</td>
+<td>Choose a chain response — current behaviour</td>
+</tr>
+</tbody></table>
+<h2>11. Blast radius of changing the wording</h2>
+<ul>
+<li><code>e2e/duel-smoke.spec.ts:4066</code> asserts <code>toHaveText(&quot;Choose a chain response&quot;)</code> on the rail prompt.</li>
+<li>Title flows to <code>PromptControls.svelte:205</code>/<code>:246</code>/<code>:275</code>, <code>PromptDialog.svelte:25</code> (<code>aria-label</code>), <code>presentation/duel-rail-status.ts:30</code>, <code>prompts/interaction-spec.ts:369</code>.</li>
+<li>Keeping <code>title</code> fixed and filling the existing <code>PlayerPrompt.message</code> field instead leaves all of the above untouched; <code>message</code> already has a precedent in effectYesNo (<code>PromptRegistry.ts:158-172</code>).</li>
+<li>The build seam is <code>buildEnginePrompt</code> (<code>PromptRegistry.ts:132</code>), which today receives only the message plus text dependencies. Chain state lives in <code>DuelStateProjector</code> and is current at publish time, because the controller applies every message of the batch (<code>HeadlessDuelController.ts:154-161</code>) before it builds prompts (<code>:205</code>).</li>
+</ul>
+
+<footer class="artifact-footer">source: /home/aron/projects/ascencio</footer>
+</article>
+
+<script>
+(function () {
+  var slug = "chain-window-state-matrix";
+  var es = new EventSource("/events");
+  es.addEventListener("reload", function (e) {
+    try { if (e.data === slug || e.data === "*") location.reload(); } catch (_) {}
+  });
+})();
+</script>
+</body>
+</html>

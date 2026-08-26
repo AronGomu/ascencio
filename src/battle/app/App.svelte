@@ -33,7 +33,6 @@
   import MenuDialog from "./components/MenuDialog.svelte";
   import SettingsDialog from "./components/SettingsDialog.svelte";
   import DuelFieldErrorBoundary from "./components/duel-field/DuelFieldErrorBoundary.svelte";
-  import FullControlToggle from "./components/duel-field/FullControlToggle.svelte";
   import DuelHud from "./components/duel-field/DuelHud.svelte";
   import DuelLog from "./components/duel-field/DuelLog.svelte";
   import LoadingOverlay from "./components/LoadingOverlay.svelte";
@@ -69,6 +68,7 @@
     type CardPreviewView,
   } from "./presentation/card-preview.ts";
   import { duelRailStatusFor } from "./presentation/duel-rail-status.ts";
+  import { promptContextMessage } from "./presentation/prompt-context-message.ts";
   import { promptSurface } from "./prompts/prompt-surface.ts";
   import {
     DECK_CATALOG,
@@ -126,6 +126,9 @@
      dispatch below fires once per request identity — a host that rebuilt an
      equal request every render would restart the duel on every flush. */
   export let request: BattleRequest | null = null;
+  /* The host's exit from the match, offered inside the duel menu beside
+     Surrender. `null` where the host owns its own way out. */
+  export let onleavematch: (() => void) | null = null;
 
   const CURRENT_RUNTIME_SNAPSHOT_ID = snapshotId(__RUNTIME_SNAPSHOT_ID__);
   const CURRENT_ACTIVATION_SNAPSHOT_ID = snapshotId(__ACTIVATION_SNAPSHOT_ID__);
@@ -263,6 +266,17 @@
       ? boardResult.error
       : null;
   $: effectivePrompt = layoutProfileConflict === null ? $duel.prompt : null;
+  /* The decision window says what it is asking about, not just what to press.
+     Only the app holds all three inputs — the snapshot's chain, the batch's
+     events and the card texts — so the line is built once here and handed to
+     whichever surface shows the prompt. */
+  $: promptContextSegments =
+    promptContextMessage({
+      prompt: effectivePrompt,
+      snapshot: $duel.snapshot,
+      events: $duel.presentationEvents.map(({ event }) => event),
+      cardTexts: activeCardTexts,
+    }) ?? [];
   $: duelViewportOnly =
     layoutProfileConflict === null &&
     (duelBoard !== null || $duel.snapshot !== null) &&
@@ -1399,16 +1413,12 @@
               showZoneCounts={$uiSettings.showZoneCounts}
               onzoneListWindowPositionChange={moveZoneListWindow}
               onconfirmWindowPositionChange={moveConfirmWindow}
+              contextMessage={promptContextSegments}
+              fullControl={$uiSettings.fullControl}
+              fullControlHeld={ctrlHeld}
+              onfullcontrolchange={uiSettings.setFullControl}
             />
           {/key}
-          <!-- The box shows the stored setting; the Ctrl hold rides beside it
-               as `held`, so clicking while Ctrl is down still toggles the
-               setting rather than fighting a tick it did not write. -->
-          <FullControlToggle
-            value={$uiSettings.fullControl}
-            held={ctrlHeld}
-            onchange={uiSettings.setFullControl}
-          />
         </div>
       {:else if $duel.snapshot}
         <section
@@ -1446,6 +1456,7 @@
         prompt={effectivePrompt}
         disabled={$duel.responsePending}
         onsubmit={duel.respond}
+        contextMessage={promptContextSegments}
       />
     {/key}
   {/if}
@@ -1493,6 +1504,7 @@
               prompt={effectivePrompt}
               disabled={$duel.responsePending}
               onsubmit={duel.respond}
+              contextMessage={promptContextSegments}
             />
           {/key}
         {:else}
@@ -1521,6 +1533,7 @@
         openSettings();
       }}
       onsurrender={() => duel.surrender()}
+      {onleavematch}
       onclose={() => void closeMenu()}
     />
   {/if}

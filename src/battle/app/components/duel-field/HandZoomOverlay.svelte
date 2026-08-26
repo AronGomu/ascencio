@@ -65,8 +65,8 @@
      so it stays exact when the top gutter clamp has moved it. */
   $: bridgeBottom = top + h - anchor.top;
   /* `--hand-zoom-width` repeats the box's own width because the action rows
-     scale their label off it: a percentage sizes the row but can never size
-     the text inside it. */
+     size their track off it: they are absolutely positioned, so a percentage
+     would resolve against the same box only by accident. */
   $: overlayStyle = `left: ${left}px; top: ${top}px; width: ${w}px; height: ${h}px; --hand-zoom-width: ${w}px; --hand-zoom-bridge-bottom: ${bridgeBottom}px;`;
 
   onDestroy(() => imageLease?.release());
@@ -104,24 +104,14 @@
   onpointerleave={(event) => onzoomleave(event.relatedTarget)}
 >
   {#if choices.length > 0}
-    <!-- The only pointer-catching span of the overlay, and it deliberately
-         stops at the card's top edge: it joins the chips to the card so the
-         pointer can travel to an action without ever leaving the union. -->
+    <!-- The only pointer-catching span of the overlay besides the chips, and it
+         deliberately stops at the card's top edge: it covers the enlarged art
+         above the card so a pointer wandering there stays inside the union
+         instead of crossing dead ground and closing the overlay. -->
     <div
       class="hand-zoom-overlay__bridge"
       data-cy={`hand-zoom-overlay-bridge-${card.id}`}
-    >
-      <CardActionChips
-        cardId={card.id}
-        cardLabel={card.label}
-        dataCyScope="hand-zoom-overlay"
-        layout="stack"
-        {choices}
-        {disabled}
-        {onchoose}
-        {ondismiss}
-      />
-    </div>
+    ></div>
   {/if}
   <img
     class="hand-zoom-overlay__art"
@@ -135,4 +125,20 @@
     class="hand-zoom-overlay__name"
     data-cy={`hand-zoom-overlay-name-${card.id}`}>{card.label}</span
   >
+  <!-- Drawn last so it paints over the art, and a sibling of it rather than a
+       child of the bridge: the chips are centred on the zoomed card the same
+       way a field card centres its own, which is a box the bridge does not
+       cover. -->
+  {#if choices.length > 0}
+    <CardActionChips
+      cardId={card.id}
+      cardLabel={card.label}
+      dataCyScope="hand-zoom-overlay"
+      layout="stack"
+      {choices}
+      {disabled}
+      {onchoose}
+      {ondismiss}
+    />
+  {/if}
 </div>

@@ -26,6 +26,10 @@
   export let rotated = false;
   export let rotationNoticeDismissed = false;
   export let onrotationnoticedismiss: () => void = () => undefined;
+  /* The host's exit from the match. It belongs in the duel menu rather than on
+     a control of the host's own painted over the field, so it crosses as a
+     prop; `null` is a host that owns its exit, like a story session. */
+  export let onleavematch: (() => void) | null = null;
 
   const settle = settleOnce<BattleFacadeResult>((result) => oncomplete(result));
 
@@ -41,7 +45,11 @@
 </script>
 
 <div class="battle-root" data-cy="battle-root">
-  <App {request} onbattlecomplete={hostWaiting ? settle : undefined} />
+  <App
+    {request}
+    {onleavematch}
+    onbattlecomplete={hostWaiting ? settle : undefined}
+  />
   {#if rotated && !rotationNoticeDismissed}
     <RotationNotice ondismiss={onrotationnoticedismiss} />
   {/if}

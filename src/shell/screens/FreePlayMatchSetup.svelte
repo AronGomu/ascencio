@@ -5,7 +5,11 @@
     BattleDeckModule,
     BattleDomainLoader,
   } from "../domain-loaders.ts";
-  import { loadFreePlayDecks } from "./free-play-deck-listing.ts";
+  import {
+    freePlayBattleModule,
+    listedFreePlayDecks,
+    refreshFreePlayDecks,
+  } from "./free-play-deck-listing.ts";
   import type { ShellSettingsStore } from "../settings/shell-settings-store.ts";
   import DomainLoadError from "./DomainLoadError.svelte";
   import FreePlayDeckSeat from "./FreePlayDeckSeat.svelte";
@@ -19,6 +23,9 @@
   export let loadBattle: BattleDomainLoader | (() => Promise<BattleDeckModule>);
   export let onstart: (request: BattleRequest) => void = () => undefined;
   export let onback: () => void = () => undefined;
+  /* Leaving the seat for the library it is filled from. Reported rather than
+     routed, because the deck editor is a route the shell owns the URL of. */
+  export let ondecks: () => void = () => undefined;
 
   let battle: BattleDeckModule | null = null;
   let decks: readonly SelectableDeck[] = [];
@@ -39,12 +46,20 @@
     let cancelled = false;
     void (async () => {
       try {
-        const loaded = await loadBattle();
-        const listed = await loadFreePlayDecks(loaded);
+        const loaded = await freePlayBattleModule(loadBattle);
         if (cancelled) return;
         battle = loaded;
-        decks = listed;
-        adoptRememberedPairing(loaded, listed);
+        /* Whatever is already known, so the seats fill on the first paint: the
+           listing this page last read, or the bundled decks alone, which are
+           compiled into this build and need no read at all. */
+        adoptDecks(
+          loaded,
+          listedFreePlayDecks() ??
+            loaded.presetSelectableDecks(loaded.DECK_CATALOG),
+        );
+        const listed = await refreshFreePlayDecks(loadBattle);
+        if (cancelled) return;
+        adoptDecks(loaded, listed);
       } catch (error) {
         if (!cancelled) loadError = error;
       }
@@ -54,26 +69,28 @@
     };
   });
 
-  /* The pairing this player last started a match with, checked against the
-     library as it is now. A deck they deleted, or edited since — the key
-     carries the revision — simply does not resolve, and the seat falls back to
-     the bundled default rather than holding the screen on an error about a
-     deck that is already gone. */
-  function adoptRememberedPairing(
+  /* A listing, and the seats that survive it. Each seat keeps what it already
+     shows — the bundled list is replaced by the full one a moment later, and a
+     choice made in between is the player's — then falls back to the pairing
+     they last played, then to the bundled default. A deck deleted, or edited
+     since — the key carries the revision — simply does not resolve, so no seat
+     ever names a deck the picker does not show. */
+  function adoptDecks(
     loaded: BattleDeckModule,
     listed: readonly SelectableDeck[],
   ): void {
+    decks = listed;
     const remembered = $settings.freePlayPairing;
     playerKey = seatKey(
       loaded,
       listed,
-      remembered?.player,
+      [playerKey, remembered?.player],
       `preset:${loaded.DEFAULT_PLAYER_DECK_ID}`,
     );
     opponentKey = seatKey(
       loaded,
       listed,
-      remembered?.opponent,
+      [opponentKey, remembered?.opponent],
       `preset:${loaded.DEFAULT_OPPONENT_DECK_ID}`,
     );
   }
@@ -81,14 +98,16 @@
   function seatKey(
     loaded: BattleDeckModule,
     listed: readonly SelectableDeck[],
-    remembered: string | undefined,
+    candidates: readonly (string | undefined)[],
     fallback: string,
   ): string {
-    if (
-      remembered !== undefined &&
-      loaded.findSelectableDeck(listed, remembered) !== null
-    )
-      return remembered;
+    for (const candidate of candidates)
+      if (
+        candidate !== undefined &&
+        candidate !== "" &&
+        loaded.findSelectableDeck(listed, candidate) !== null
+      )
+        return candidate;
     /* The bundled default is normally there — it is compiled into this build —
        but a listing that answered with nothing at all must not preselect a row
        the picker does not show, or Start would run a deck nobody can see. */
@@ -156,6 +175,10 @@
     {/if}
 
     <div class="match-setup__seats" data-cy="free-play-match-seats">
+      <!-- The way to the library this seat is filled from sits under the seat
+           itself: a deck the player wants is either in this list or one click
+           from being built, and that click belongs beside the list rather than
+           on a menu one screen back. -->
       <FreePlayDeckSeat
         seat="player"
         label="Your deck"
@@ -163,6 +186,7 @@
         value={playerKey}
         disabled={!ready}
         onselect={(key) => select("player", key)}
+        onmanage={ondecks}
       />
       <FreePlayDeckSeat
         seat="opponent"
@@ -185,7 +209,7 @@
         type="button"
         class="secondary"
         data-cy="free-play-match-back"
-        onclick={onback}>Back</button
+        onclick={onback}>Main menu</button
       >
     </div>
   </main>

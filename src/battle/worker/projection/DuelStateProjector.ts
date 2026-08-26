@@ -16,6 +16,7 @@ import type {
   PublicChainLink,
   PublicChainOutcome,
   PublicChainPhase,
+  PublicChainTarget,
   PublicCounter,
   PublicDuelState,
   PublicLocation,
@@ -70,7 +71,14 @@ interface MutableChainLink {
   description?: string;
   phase: PublicChainPhase;
   outcome: PublicChainOutcome;
+  targets?: PublicChainTarget[];
 }
+
+/* An effect that names more targets than this says nothing more to a player
+   reading one prompt line, and an unbounded list is a state-size hole the
+   snapshot contract would have to police. The stored list is what the message
+   counts, so the cap is stated rather than silently variable. */
+const MAXIMUM_CHAIN_TARGETS = 64;
 
 interface MovedCard {
   readonly card?: CardCode;
@@ -467,6 +475,9 @@ export class DuelStateProjector {
       case EngineMessageType.CHAIN_DISABLED:
         this.#setChainOutcome(message.chain_size, "disabled");
         break;
+      case EngineMessageType.BECOME_TARGET:
+        this.#appendChainTargets(message.cards);
+        break;
       case EngineMessageType.CHAIN_END: {
         const hadChain = this.#chain.length > 0;
         this.#chain = [];
@@ -727,7 +738,14 @@ export class DuelStateProjector {
       layout: this.#layout,
       players: Object.freeze(players),
       chain: Object.freeze(
-        this.#chain.map((link): PublicChainLink => Object.freeze({ ...link })),
+        this.#chain.map((link): PublicChainLink =>
+          Object.freeze({
+            ...link,
+            ...(link.targets === undefined
+              ? {}
+              : { targets: Object.freeze([...link.targets]) }),
+          }),
+        ),
       ),
     });
   }
@@ -1560,6 +1578,50 @@ export class DuelStateProjector {
     return { instanceId: card.instanceId, card: card.code };
   }
 
+  /* The core announces targets after the activation that named them, so they
+     belong to the link the chain is currently building. Nothing is invented
+     when no link is open — a target with no activation to attach to is dropped
+     rather than guessed onto the previous one. */
+  #appendChainTargets(
+    cards: readonly {
+      readonly controller: 0 | 1;
+      readonly location: number;
+      readonly sequence: number;
+      readonly position: number;
+      readonly overlay_sequence?: number;
+    }[],
+  ): void {
+    const link = this.#chain.at(-1);
+    if (link === undefined) return;
+    const targets = link.targets ?? [];
+    for (const address of cards) {
+      if (targets.length >= MAXIMUM_CHAIN_TARGETS) break;
+      if (isOverlayAddress(address)) continue;
+      const controller = asPlayer(address.controller);
+      const location = publicLocationOrUndefined(address.location);
+      if (location === undefined) continue;
+      const card = findPublicCard(
+        this.#players[controller],
+        location,
+        address.sequence,
+      );
+      const identityVisible =
+        card?.code !== undefined &&
+        isPublicCard(controller, location, address.position);
+      targets.push(
+        Object.freeze({
+          identityVisible,
+          controller,
+          location,
+          ...(identityVisible && card !== undefined
+            ? { instanceId: card.instanceId, card: card.code }
+            : {}),
+        }),
+      );
+    }
+    link.targets = targets;
+  }
+
   #requireChainLink(index: number): MutableChainLink {
     if (!Number.isSafeInteger(index) || index < 1 || index > 255)
       throw new Error("Chain link index is invalid");
@@ -1971,6 +2033,18 @@ function engineLocation(value: number): PublicLocation {
       return "extra";
     default:
       throw new Error(`Unsupported card location: ${value}`);
+  }
+}
+
+/** The projected location for an address the core may have built from a zone
+    this projection does not carry. Unlike `engineLocation` this reports the
+    gap instead of throwing: a target the duel cannot place is worth skipping,
+    not worth ending the duel over. */
+function publicLocationOrUndefined(value: number): PublicLocation | undefined {
+  try {
+    return engineLocation(value);
+  } catch {
+    return undefined;
   }
 }
 

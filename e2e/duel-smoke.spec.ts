@@ -116,16 +116,11 @@ async function deleteDeckDatabases(page: Page): Promise<void> {
   );
 }
 
-/* T16: `#/duel` redirects to the free-play menu, and the duel is what its
-   first entry starts. The match is a state of that menu rather than a route,
-   so a reload lands on the menu again and has to start a second one. */
-async function startMatch(page: Page): Promise<void> {
-  await page.locator('[data-cy="free-play-start-match"]').click();
-}
-
+/* ADR-054: `#/duel` redirects to free play, which opens on the match setup
+   itself. The match is a state of that route rather than a route of its own,
+   so a reload lands on the seats again and has to start a second one. */
 async function openDuel(page: Page, url = "./#/duel"): Promise<void> {
   await page.goto(url);
-  await startMatch(page);
 }
 
 /* T17: both seats are chosen in the shell's match setup, and the duel starts
@@ -323,35 +318,49 @@ test("the root route shows the main menu without booting the duel", async ({
   await page.locator('[data-cy="main-menu-free-play"]').click();
   expect(new URL(page.url()).hash).toBe("#/free-play");
 
-  /* T16: free play has a menu of its own, and the duel is behind its first
-     entry rather than behind the route. */
-  await expect(page.locator('[data-cy="free-play-menu-screen"]')).toBeVisible();
-  for (const entry of ["start-match", "deck-builder", "return"])
-    await expect(page.locator(`[data-cy="free-play-${entry}"]`)).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Choose your deck" }),
-  ).toHaveCount(0);
-
-  await page.locator('[data-cy="free-play-start-match"]').click();
-  /* T17: the entry opens the match setup, where both seats are chosen. The
-     duel's own "Choose your deck" picker, which fixed the opponent, is what
-     that setup replaces — so it must not appear here either. */
+  /* ADR-054: the entry lands on the seats themselves. The menu that used to
+     stand here offered Start a match, Deck builder and Return; the first was a
+     click that named the screen behind it, and the other two are now the deck
+     builder under the player's seat and Main menu beside Start. The duel's own
+     "Choose your deck" picker, which fixed the opponent, is what these seats
+     replaced — so it must not appear here either. */
   await expect(page.locator('[data-cy="free-play-match-setup"]')).toBeVisible({
     timeout: 120_000,
   });
   await expect(
     page.getByRole("heading", { name: "Choose the decks" }),
   ).toBeVisible();
+  for (const control of [
+    "free-play-match-player-deck-builder",
+    "free-play-match-back",
+  ])
+    await expect(page.locator(`[data-cy="${control}"]`)).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Choose your deck" }),
+  ).toHaveCount(0);
+
+  /* Both seats are offered before the card database behind the library has
+     answered: the bundled decks are compiled into this build, so Start is live
+     on the first paint rather than after a fetch. */
+  await expect(
+    page.locator('[data-cy="free-play-match-player-presets"]'),
+  ).toHaveCount(1);
+
   await startPresetDuel(page);
   await expect(
     page.getByRole("heading", { name: "Choose your deck" }),
   ).toHaveCount(0);
 
-  /* The match is a state of the menu, so the way back to it is a control the
-     shell paints over the duel rather than a route the player navigates. */
-  await page.locator('[data-cy="free-play-leave-match"]').click();
-  await expect(page.locator('[data-cy="free-play-menu-screen"]')).toBeVisible();
+  /* The match is a state of the route, so the way back to the seats is an item
+     of the duel's own menu rather than a route the player navigates. */
+  await page.locator('[data-cy="duel-right-rail-options"]').click();
+  await page.locator('[data-cy="menu-dialog-leave-match-button"]').click();
+  await expect(page.locator('[data-cy="free-play-match-setup"]')).toBeVisible();
   expect(new URL(page.url()).hash).toBe("#/free-play");
+
+  /* The library the seats are filled from is one click away from them. */
+  await page.locator('[data-cy="free-play-match-player-deck-builder"]').click();
+  expect(new URL(page.url()).hash).toBe("#/free-play/decks");
 });
 
 test("production bundle initializes the real Worker and sends one opaque choice once", async ({
@@ -562,7 +571,6 @@ test("the match setup persists a chosen pair and Change decks returns without au
   ).toBeNull();
 
   await page.reload();
-  await startMatch(page);
   await expect(setup).toBeVisible({ timeout: 120_000 });
   await expect(playerSelect).toHaveValue("preset:burning-abyss");
   await expect(opponentSelect).toHaveValue("preset:nekroz");
@@ -789,7 +797,6 @@ test("zone visuals persist through reload and Reset settings restores defaults",
   });
 
   await page.reload();
-  await startMatch(page);
   await startPresetDuel(page);
   await expect(board).toBeVisible({ timeout: 120_000 });
   await expect(board).toHaveAttribute("data-zone-outlines", "false");
@@ -830,7 +837,6 @@ test("zone visuals persist through reload and Reset settings restores defaults",
   ).toBeNull();
 
   await page.reload();
-  await startMatch(page);
   await startPresetDuel(page);
   await expect(board).toBeVisible({ timeout: 120_000 });
   await expect(board).toHaveAttribute("data-zone-outlines", "true");
@@ -987,7 +993,6 @@ test("refresh during loading and after completion starts a clean duel", async ({
   const reloadDuringLoading = page.reload();
   releaseManifest();
   await reloadDuringLoading;
-  await startMatch(page);
   await startPresetDuel(page);
   await expect(
     page.locator('[data-cy="duel-field"][data-prompt-kind]'),
@@ -1014,7 +1019,6 @@ test("refresh during loading and after completion starts a clean duel", async ({
   };
   expect(diagnostic.trace.sensitivity).toBe("contains-production-seed");
   await page.reload();
-  await startMatch(page);
   await startPresetDuel(page);
   await expect(
     page.locator('[data-cy="duel-field"][data-prompt-kind]'),
@@ -1851,7 +1855,6 @@ test("floating field windows stay inside the field, persist and never lose a dec
     JSON.parse(localStorage.getItem("ygo.ui.v2") ?? "null"),
   )) as { readonly windows: { zoneList: unknown; confirm: unknown } };
   await page.reload();
-  await startMatch(page);
   await startPresetDuel(page);
   await expect(page.locator("[data-prompt-kind]")).toBeVisible({
     timeout: 120_000,
@@ -2866,9 +2869,11 @@ test("item 5: field cards stay outside the hand band and hand action chips remai
 });
 
 /* Round 3 item 24 required this button to be measurably smaller than T10's.
-   Round 4 item 7 reverses that outright — one row, and bigger — so the
+   Round 4 item 7 reversed that outright — one row, and bigger — so the
    size-direction comparison and the scoped "before" style that fed it are
-   gone. The floors it also guarded stay. */
+   gone. Round 5 trimmed it back towards the rest of the field's chrome, down
+   to the 44px pointer floor every field control shares; that floor and the
+   one-row rule are what remain guarded here. */
 test("End turn button keeps its label on one row above the 44px pointer-target floor", async ({
   page,
 }) => {
@@ -2897,7 +2902,6 @@ test("End turn button keeps its label on one row above the 44px pointer-target f
   const liveLines = await renderedLines();
 
   expect(liveLines, `${liveLabel} must render on one row`).toBe(1);
-  expect(box.height, "height clears the 3rem floor").toBeGreaterThanOrEqual(48);
   expect(
     box.width,
     "width stays at or above the 44px pointer target",
@@ -4061,6 +4065,13 @@ async function answerPromptWithKeyboard(
       await expect(railPrompt).toBeVisible();
       await expect(railPrompt).toHaveText("Choose a chain response");
       await expect(field).toHaveAttribute("data-prompt-kind", "chain");
+      /* The window states what it is asking about when the duel has something
+         to say — an open chain link, or an action since the turn started. A
+         window that opens on neither says nothing rather than inventing a
+         subject, so presence is conditional and emptiness is not. */
+      const contextLine = page.locator('[data-cy="prompt-context-message"]');
+      if ((await contextLine.count()) > 0)
+        await expect(contextLine.first()).not.toBeEmpty();
       await answerChainOnField(page, field);
       return "field";
     }

@@ -6,6 +6,8 @@
     PromptChoice,
   } from "../../duel/contracts/player-prompt.ts";
   import { promptControlFamily } from "./prompt-control-family.ts";
+  import type { PromptMessageSegment } from "../presentation/prompt-context-message.ts";
+  import PromptContextMessage from "../components/duel-field/PromptContextMessage.svelte";
   import {
     describePromptConstraints,
     validatePromptSelection,
@@ -19,6 +21,7 @@
     readonly id: ChoiceId;
     readonly nonce: number;
   } | null = null;
+  export let contextMessage: readonly PromptMessageSegment[] = [];
 
   let heading: HTMLHeadingElement;
   let activePromptId: PromptId = prompt.id;
@@ -204,6 +207,7 @@
     >
       {prompt.title}
     </h2>
+    <PromptContextMessage segments={contextMessage} />
     {#if prompt.message}<p data-cy="prompt-controls-message">
         {prompt.message}
       </p>{/if}

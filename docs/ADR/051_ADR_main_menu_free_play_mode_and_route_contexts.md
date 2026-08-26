@@ -1,6 +1,7 @@
 # ADR-051: Main menu, Free Play mode and route contexts
 
 Status: accepted · 2026-08-20 · Shipped: `7638f24` (T14), `a9cdd43` (T15), `21acd24` (T16), `22f868b` (T17) · Plan commit: `9d8b8a7`
+Superseded in part by ADR-054: the free-play menu described below is gone, and `#/free-play` renders the match setup itself. Everything else here stands.
 Relates: ADR-022 (modular monolith), ADR-049 (save-owned decks)
 
 ## Context
@@ -18,7 +19,7 @@ Constraint: the shell loads each domain on demand (`domain-loaders.ts`) and `bui
 
 **The main menu is a shell screen, styled like the story's title.** New Game, Continue, Load, Settings, then **Free Play last**. The story domain stays lazy; the menu reads save presence through the story-saves database _name_ (a string constant), never by importing a story component.
 
-**Free Play is an explicit mode.** `#/free-play` offers Start a match, Deck builder and Return. A match picks both decks — yours and the opponent's, from bundled presets or your own free-play builds — and remembers the pairing.
+**Free Play is an explicit mode.** `#/free-play` offers Start a match, Deck builder and Return. A match picks both decks — yours and the opponent's, from bundled presets or your own free-play builds — and remembers the pairing. (ADR-054 replaced that menu with the deck seats themselves; the mode, the pairing and the memory of it are unchanged.)
 
 **Routes carry their context:**
 
@@ -28,7 +29,7 @@ Constraint: the shell loads each domain on demand (`domain-loaders.ts`) and `bui
 | `#/story`                   | the visual novel             |
 | `#/story/decks(/:id)`       | the loaded save's decks      |
 | `#/story/collection`        | the loaded save's collection |
-| `#/free-play`               | free-play menu               |
+| `#/free-play`               | free-play match setup        |
 | `#/free-play/decks(/:id)`   | the free-play library        |
 | `#/free-play/collection`    | the whole card database      |
 | `#/duel/session/:handoffId` | a duel the shell is running  |

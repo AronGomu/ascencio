@@ -1,0 +1,2388 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Prototype · Duel start — deck selection</title>
+    <style>
+      /* ------------------------------------------------------------------
+         Tokens copied verbatim from src/styles/tokens.css. The incumbent
+         world is preserved: this is a screen prototype, not a redesign.
+         ------------------------------------------------------------------ */
+      :root {
+        --bg: #08101f;
+        --bg-deep: #040912;
+        --surface: #111b2f;
+        --surface-raised: #18243b;
+        --surface-highlight: #22324e;
+        --surface-sunken: #0b1424;
+        --surface-panel: #101a2d;
+        --surface-chain: #0d1729;
+        --border: #697895;
+        --border-strong: #486078;
+        --border-soft: #53627e;
+        --text: #e8edf8;
+        --muted: #a9b5ca;
+        --ink-on-accent: #06111d;
+        --accent: #73daca;
+        --accent-strong: #42c9b5;
+        --accent-deep: #297f73;
+        --legal: #7ee2a8;
+        --success: var(--legal);
+        --selected: #ffd580;
+        --warning: var(--selected);
+        --danger: #ff8c9b;
+        --danger-border: #a43b50;
+        --danger-surface: #321825;
+        --neutral: #33405a;
+        --focus-ring: #f6c177;
+        --shadow: #000000;
+
+        --space-1: 0.25rem;
+        --space-2: 0.5rem;
+        --space-3: 0.75rem;
+        --space-4: 1rem;
+        --space-5: 1.5rem;
+        --space-6: 2rem;
+        --radius-sm: 0.35rem;
+        --radius-md: 0.6rem;
+        --radius-lg: 0.9rem;
+        --font-ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+          sans-serif;
+        --text-xs: 0.72rem;
+        --text-sm: 0.85rem;
+        --text-md: 1rem;
+        --text-lg: 1.25rem;
+        --motion-fast: 120ms;
+        --motion-base: 200ms;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        /* The layout law: body never scrolls, the stage clips
+           (src/shell/stage-layout.ts). */
+        overflow: hidden;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        background: var(--bg-deep);
+        color: var(--text);
+        font-family: var(--font-ui);
+        font-size: 16px;
+      }
+
+      button {
+        font: inherit;
+        cursor: pointer;
+      }
+
+      /* ==================================================================
+         Prototype chrome — NOT part of the screen. Everything below the
+         .stage rule is the screen itself.
+         ================================================================== */
+      .chrome {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-3);
+        padding: var(--space-2) var(--space-4);
+        border-block-end: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+        background: #030711;
+      }
+
+      .chrome__label {
+        margin: 0;
+        color: var(--muted);
+        font-size: var(--text-xs);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .switch {
+        display: flex;
+        gap: 2px;
+        padding: 2px;
+        border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+        border-radius: 999px;
+        background: var(--surface-sunken);
+      }
+
+      .switch button {
+        min-height: 1.9rem;
+        padding: 0 var(--space-3);
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--muted);
+        font-size: var(--text-xs);
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+
+      .switch button[aria-pressed="true"] {
+        background: var(--surface-highlight);
+        color: var(--text);
+      }
+
+      .chrome__spacer {
+        flex: 1;
+      }
+
+      .chrome__hint {
+        margin: 0;
+        color: color-mix(in srgb, var(--muted) 70%, transparent);
+        font-size: var(--text-xs);
+      }
+
+      .chrome__hint kbd {
+        padding: 0 0.3em;
+        border: 1px solid var(--border-strong);
+        border-radius: 3px;
+        background: var(--surface-sunken);
+        font-family: inherit;
+        font-size: 0.9em;
+      }
+
+      /* ==================================================================
+         Stage — 16:9, centred, clipped. ≥1024px only, per ADR layout law.
+         ================================================================== */
+      .stage-frame {
+        container-type: size;
+        display: grid;
+        place-items: center;
+        min-height: 0;
+        padding: var(--space-4);
+        background:
+          radial-gradient(
+            120% 90% at 50% 0%,
+            color-mix(in srgb, var(--accent-deep) 12%, transparent),
+            transparent 60%
+          ),
+          var(--bg-deep);
+      }
+
+      /* Exact 16:9 (or --ratio-w/--ratio-h for the mobile modifier below),
+         whichever axis is tighter, via container query units — a fixed
+         vh-minus-chrome-height guess drifted off-ratio whenever the chrome
+         bar wrapped to a second line. */
+      .stage {
+        --ratio-w: 16;
+        --ratio-h: 9;
+        position: relative;
+        width: min(100cqw, 100cqh * var(--ratio-w) / var(--ratio-h));
+        height: min(100cqh, 100cqw * var(--ratio-h) / var(--ratio-w));
+        overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
+        border-radius: var(--radius-lg);
+        background: var(--bg);
+        box-shadow: 0 2rem 5rem color-mix(in srgb, var(--shadow) 70%, transparent);
+      }
+
+      /* ==================================================================
+         The screen
+         ================================================================== */
+      /* The library's desktop variant (`.library[data-panel="true"]`)
+         reuses this exact column split — main content plus a narrow right
+         panel — rather than a second copy of the same three declarations. */
+      .duel-start,
+      .library[data-panel="true"] {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(17rem, 27%);
+        width: 100%;
+        height: 100%;
+        container-type: size;
+      }
+
+      /* ---------------- Opponent (right) ---------------- */
+      /* Placed second in the grid by `order`, not by DOM position: the
+         markup still emits the opponent panel first, which is what a
+         screen reader meets before the deck it is choosing against. */
+      .opponent {
+        position: relative;
+        order: 2;
+        display: grid;
+        grid-template-rows: 1fr auto auto;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        border-inline-start: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
+        background: linear-gradient(
+          180deg,
+          var(--surface-panel) 0%,
+          var(--bg-deep) 100%
+        );
+      }
+
+      .opponent__art {
+        position: relative;
+        min-height: 8rem;
+        overflow: hidden;
+      }
+
+      .opponent__art svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      /* The portrait fades into the panel instead of ending on a hard edge:
+         the deck block below has to read as the same person's block. */
+      .opponent__art::after {
+        content: "";
+        position: absolute;
+        inset: auto 0 0 0;
+        height: 45%;
+        background: linear-gradient(
+          180deg,
+          transparent,
+          color-mix(in srgb, var(--bg-deep) 92%, transparent) 78%,
+          var(--bg-deep)
+        );
+        pointer-events: none;
+      }
+
+      .opponent__identity {
+        position: absolute;
+        inset: auto var(--space-4) var(--space-3) var(--space-4);
+        z-index: 1;
+      }
+
+      .opponent__role {
+        margin: 0 0 var(--space-1);
+        color: var(--accent);
+        font-size: var(--text-xs);
+        font-weight: 750;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      /* Name and its Change button share a row so the two identity-level
+         facts — who it is, and that it's swappable — read together; the
+         Opponent deck row below keeps its own Change for the deck alone. */
+      .opponent__name-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--space-3);
+      }
+
+      .opponent__name {
+        margin: 0;
+        font-size: clamp(1.15rem, 2.2cqw, 1.6rem);
+        line-height: 1.15;
+        letter-spacing: -0.01em;
+      }
+
+      .opponent__line {
+        margin: var(--space-2) 0 0;
+        color: var(--muted);
+        font-size: var(--text-sm);
+        line-height: 1.45;
+      }
+
+      .opponent__deck {
+        display: grid;
+        gap: var(--space-2);
+        min-width: 0;
+        padding: var(--space-3) var(--space-4) var(--space-4);
+      }
+
+      /* One tile, however narrow the column gets: the shared grid's 19rem
+         track would push the opponent's deck out past the panel edge. */
+      .opponent .deck-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      /* A compact strip, not the picking grid's 2:1 card: two of these plus
+         the portrait have to share one narrow column, so confirming "here's
+         who/what" takes a fixed short height instead of scaling with width. */
+      .opponent .deck-tile {
+        aspect-ratio: auto;
+        height: 4.5rem;
+      }
+
+      /* While the opponent seat is the one being filled, the slot it fills
+         says so — the seat colour, not the player's accent. */
+      .opponent[data-seating="true"] .deck-tile {
+        border-color: var(--selected);
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--selected) 40%, transparent);
+      }
+
+      .opponent__deck-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-2);
+        color: var(--muted);
+        font-size: var(--text-xs);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .opponent__deck-label .lock {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3em;
+        letter-spacing: 0.04em;
+        text-transform: none;
+      }
+
+      .link-button {
+        min-height: 1.75rem;
+        padding: 0 var(--space-2);
+        border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+        border-radius: var(--radius-sm);
+        background: transparent;
+        color: var(--text);
+        font-size: var(--text-xs);
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: none;
+      }
+
+      .link-button:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      /* ---------------- Selection (left) ---------------- */
+      .selection {
+        order: 1;
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+        min-height: 0;
+      }
+
+      .selection__head {
+        display: flex;
+        align-items: baseline;
+        gap: var(--space-3);
+        padding: var(--space-4) var(--space-5) 0;
+      }
+
+      .selection__eyebrow {
+        margin: 0 0 var(--space-1);
+        color: var(--muted);
+        font-size: var(--text-xs);
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .selection__title {
+        margin: 0;
+        font-size: clamp(1.2rem, 2cqw, 1.55rem);
+        letter-spacing: -0.01em;
+      }
+
+      .selection__scope {
+        margin: 0;
+        color: var(--muted);
+        font-size: var(--text-sm);
+      }
+
+      .selection__scope strong {
+        color: var(--text);
+        font-weight: 700;
+      }
+
+      /* Seat mode: the opponent seat borrows the same list, and the whole
+         right pane says so rather than a heading alone. */
+      .selection[data-seat="opponent"] .selection__eyebrow {
+        color: var(--selected);
+      }
+
+      .selection[data-seat="opponent"]::before {
+        content: "";
+        position: absolute;
+      }
+
+      .tools {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        padding: var(--space-3) var(--space-5) var(--space-3);
+      }
+
+      .search {
+        position: relative;
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+
+      .search svg {
+        position: absolute;
+        inset: 50% auto auto var(--space-3);
+        width: 1rem;
+        height: 1rem;
+        translate: 0 -50%;
+        color: var(--muted);
+        pointer-events: none;
+      }
+
+      .search input {
+        width: 100%;
+        min-height: 2.5rem;
+        padding: 0.5rem 2.2rem 0.5rem 2.3rem;
+        border: 1px solid var(--border-soft);
+        border-radius: var(--radius-md);
+        background: var(--surface-chain);
+        color: var(--text);
+        font: inherit;
+      }
+
+      .search input::placeholder {
+        color: color-mix(in srgb, var(--muted) 75%, transparent);
+      }
+
+      /* The browser's own clear glyph would sit beside ours. */
+      .search input::-webkit-search-cancel-button {
+        display: none;
+      }
+
+      .search input {
+        appearance: none;
+      }
+
+      .search input:focus-visible {
+        outline: 2px solid var(--focus-ring);
+        outline-offset: 2px;
+        border-color: var(--accent);
+      }
+
+      .search__clear {
+        position: absolute;
+        inset: 50% var(--space-2) auto auto;
+        translate: 0 -50%;
+        width: 1.5rem;
+        height: 1.5rem;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: var(--neutral);
+        color: var(--text);
+        font-size: 0.8rem;
+        line-height: 1;
+      }
+
+      .tools select {
+        min-height: 2.5rem;
+        padding: 0 var(--space-2);
+        border: 1px solid var(--border-soft);
+        border-radius: var(--radius-md);
+        background: var(--surface-chain);
+        color: var(--text);
+        font: inherit;
+        font-size: var(--text-sm);
+      }
+
+      /* ---------------- Deck grid ---------------- */
+      .deck-scroll {
+        min-height: 0;
+        padding: 0 var(--space-5) var(--space-3);
+        overflow-y: auto;
+        scrollbar-color: var(--border) transparent;
+      }
+
+      .deck-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+        gap: var(--space-3);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      /* 2:1 card, split into two equal columns — each column's width is
+         exactly the card's height, so the art column is a square without
+         needing its own aspect-ratio rule. */
+      .deck-tile {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        aspect-ratio: 2 / 1;
+        width: 100%;
+        padding: 0;
+        overflow: hidden;
+        border: 1px solid var(--border-soft);
+        border-radius: var(--radius-md);
+        background: var(--surface);
+        color: var(--text);
+        text-align: left;
+        transition:
+          border-color var(--motion-fast) ease,
+          background var(--motion-fast) ease,
+          translate var(--motion-fast) ease,
+          box-shadow var(--motion-fast) ease;
+      }
+
+      .deck-tile:hover:not(:disabled) {
+        background: var(--surface-raised);
+        border-color: var(--border-light, #8ba0bf);
+        translate: 0 -1px;
+      }
+
+      .deck-tile:focus-visible {
+        outline: 2px solid var(--focus-ring);
+        outline-offset: 2px;
+      }
+
+      /* Persistent identity, not a status glow: a hairline the default deck
+         always wears, whether or not it is the one currently picked. Gold
+         rather than the validation greens/ambers/reds this component's other
+         halos already mean (DeckLibrary.svelte halo-valid/warnings/errors),
+         and a hairline rather than a glow so it never competes with the
+         accent ring below once the deck actually is the pick. */
+      .deck-tile[data-default="true"] {
+        border-color: color-mix(in srgb, var(--selected) 45%, var(--border-soft));
+      }
+
+      .deck-tile[aria-pressed="true"] {
+        border-color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+        box-shadow:
+          inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent),
+          0 0.4rem 1.4rem color-mix(in srgb, var(--accent-deep) 40%, transparent);
+      }
+
+      /* Two seats, two colours. A tile chosen for the opponent must never
+         look like the deck the player is about to field. */
+      .selection[data-seat="opponent"] .deck-tile[aria-pressed="true"] {
+        border-color: var(--selected);
+        background: color-mix(in srgb, var(--selected) 10%, var(--surface));
+        box-shadow:
+          inset 0 0 0 1px color-mix(in srgb, var(--selected) 45%, transparent),
+          0 0.4rem 1.4rem color-mix(in srgb, var(--selected) 18%, transparent);
+      }
+
+      .selection[data-seat="opponent"] .deck-tile__check {
+        background: var(--selected);
+        color: #2b1d00;
+      }
+
+      .deck-tile:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+
+      /* The right half, and a square by construction (see `.deck-tile`
+         above) — no cropping math needed, only `cover`-style fill. */
+      .deck-tile__art {
+        position: relative;
+        overflow: hidden;
+        background: var(--surface-sunken);
+      }
+
+      .deck-tile__art svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* The blend: solid black at the seam, fading to transparent a quarter
+         of the way into the art — the divider between the two halves
+         becomes a gradient instead of a hard line. */
+      .deck-tile__art::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          rgba(4, 8, 15, 0.92) 0%,
+          rgba(4, 8, 15, 0.55) 12%,
+          transparent 26%
+        );
+        pointer-events: none;
+      }
+
+      /* The left half: description only, no image behind it to fade into. */
+      .deck-tile__body {
+        display: grid;
+        align-content: center;
+        gap: 0.3rem;
+        min-width: 0;
+        padding: var(--space-3);
+      }
+
+      /* Two lines, not one: the square split leaves a narrower text column
+         than the old full-width row did, and a name that no longer fits on
+         one line reads better wrapped than cut mid-word. */
+      .deck-tile__name {
+        display: -webkit-box;
+        overflow: hidden;
+        min-width: 0;
+        font-size: var(--text-md);
+        font-weight: 750;
+        letter-spacing: -0.005em;
+        line-height: 1.2;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+
+      .deck-tile__counts {
+        color: var(--muted);
+        font-size: var(--text-xs);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .deck-tile__meta {
+        color: color-mix(in srgb, var(--muted) 80%, transparent);
+        font-size: var(--text-xs);
+      }
+
+      .deck-tile__badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+        margin-block-start: 0.1rem;
+      }
+
+      .badge {
+        padding: 0.05rem 0.4rem;
+        border: 1px solid currentColor;
+        border-radius: var(--radius-sm);
+        font-size: 0.66rem;
+        font-weight: 750;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .badge--default {
+        color: var(--success);
+      }
+
+      .badge--illegal {
+        color: var(--danger);
+        background: color-mix(in srgb, var(--danger-surface) 70%, transparent);
+      }
+
+      .badge--preset {
+        color: var(--muted);
+      }
+
+      /* No delete control exists for this tile, but the tag says so anyway:
+         an AI's deck is bundled with that AI, not something the UI ever
+         offers to remove. */
+      .badge--ai {
+        color: var(--muted);
+      }
+
+      /* Which tile the player's own seat holds, shown only while they are
+         filling the other one. */
+      .badge--yours {
+        color: var(--accent);
+      }
+
+      /* Top-right, over the art half now that the art sits on the right;
+         the favourite star keeps the opposite corner, over the description. */
+      .deck-tile__check {
+        position: absolute;
+        inset: var(--space-2) var(--space-2) auto auto;
+        z-index: 2;
+        display: grid;
+        place-items: center;
+        width: 1.4rem;
+        height: 1.4rem;
+        border-radius: 50%;
+        background: var(--accent);
+        color: var(--ink-on-accent);
+        font-size: 0.8rem;
+        font-weight: 900;
+      }
+
+      .deck-cell {
+        position: relative;
+      }
+
+      /* Its own button, outside the tile button: a star inside a button is
+         not a control the keyboard can reach. */
+      .favourite {
+        position: absolute;
+        inset: var(--space-2) auto auto var(--space-2);
+        z-index: 2;
+        display: grid;
+        place-items: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        padding: 0;
+        border: 1px solid transparent;
+        border-radius: var(--radius-sm);
+        background: color-mix(in srgb, var(--bg-deep) 55%, transparent);
+        color: var(--muted);
+        font-size: 0.95rem;
+        line-height: 1;
+      }
+
+      .favourite:hover {
+        color: var(--selected);
+        border-color: color-mix(in srgb, var(--selected) 55%, transparent);
+      }
+
+      .favourite[aria-pressed="true"] {
+        color: var(--selected);
+      }
+
+      .favourite:focus-visible {
+        outline: 2px solid var(--focus-ring);
+        outline-offset: 1px;
+      }
+
+      .empty {
+        display: grid;
+        gap: var(--space-2);
+        justify-items: center;
+        padding: var(--space-6) var(--space-4);
+        border: 1px dashed var(--border-soft);
+        border-radius: var(--radius-md);
+        background: var(--surface-sunken);
+        text-align: center;
+      }
+
+      .empty p {
+        margin: 0;
+        color: var(--muted);
+        font-size: var(--text-sm);
+      }
+
+      /* ---------------- Footer ---------------- */
+      .actions {
+        display: grid;
+        gap: var(--space-2);
+        padding: var(--space-3) var(--space-5) var(--space-4);
+        border-block-start: 1px solid color-mix(in srgb, var(--border) 35%, transparent);
+        background: linear-gradient(
+          180deg,
+          transparent,
+          color-mix(in srgb, var(--surface-sunken) 70%, transparent)
+        );
+      }
+
+      .actions__row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-2);
+      }
+
+      /* Leaving the screen and managing its library are grouped on the left;
+         Start stands alone on the right, at the true bottom-left/bottom-right
+         corners of the stage now that the opponent panel is on the other
+         side. */
+      .actions__group {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-2);
+      }
+
+      .ui-button {
+        min-height: 2.75rem;
+        padding: 0.7rem 1.1rem;
+        border: 1px solid transparent;
+        border-radius: var(--radius-md);
+        font-weight: 750;
+      }
+
+      .ui-button--primary {
+        color: var(--ink-on-accent);
+        background: var(--accent);
+      }
+
+      .ui-button--primary:hover:not(:disabled) {
+        background: var(--accent-strong);
+      }
+
+      .ui-button--secondary {
+        color: var(--text);
+        background: transparent;
+        border-color: var(--border);
+      }
+
+      .ui-button--secondary:hover {
+        border-color: var(--border-light, #8ba0bf);
+        background: var(--surface-raised);
+      }
+
+      .ui-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+
+      .ui-button:focus-visible {
+        outline: 2px solid var(--focus-ring);
+        outline-offset: 2px;
+      }
+
+      /* ---------------- Deck builder library view ---------------- */
+      .library {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        container-type: size;
+      }
+
+      /* Desktop's variant has two direct children (the panel and the
+         reused `.selection`, which supplies its own head/tools/grid/footer
+         rhythm) instead of library's own four rows — so those rows are
+         exactly what this cancels. */
+      .library[data-panel="true"] {
+        grid-template-rows: none;
+        min-height: 0;
+      }
+
+      .library .tools {
+        flex-wrap: wrap;
+      }
+
+      .library .deck-scroll {
+        padding-block-end: var(--space-5);
+      }
+
+      /* ---------------- Deck builder library: right panel ---------------- */
+      .library-panel {
+        position: relative;
+        order: 2;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
+        border-inline-start: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
+        background: linear-gradient(
+          180deg,
+          var(--surface-panel) 0%,
+          var(--bg-deep) 100%
+        );
+      }
+
+      .library-panel__empty {
+        display: grid;
+        place-items: center;
+        height: 100%;
+        padding: var(--space-5);
+        color: var(--muted);
+        font-size: var(--text-sm);
+        text-align: center;
+      }
+
+      .library-panel__head {
+        padding: var(--space-4) var(--space-4) var(--space-3);
+        border-block-end: 1px solid color-mix(in srgb, var(--border) 35%, transparent);
+      }
+
+      .library-panel__name {
+        margin: 0 0 var(--space-1);
+        font-size: clamp(1.05rem, 2.2cqw, 1.35rem);
+        line-height: 1.2;
+        letter-spacing: -0.01em;
+      }
+
+      .library-panel__stats {
+        margin: 0;
+        color: var(--muted);
+        font-size: var(--text-xs);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .decklist {
+        min-height: 0;
+        overflow-y: auto;
+        padding: var(--space-2) 0 var(--space-4);
+      }
+
+      .decklist__section + .decklist__section {
+        margin-block-start: var(--space-3);
+      }
+
+      .decklist__section-title {
+        margin: 0;
+        padding: var(--space-1) var(--space-4);
+        color: var(--muted);
+        font-size: var(--text-xs);
+        font-weight: 750;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .decklist__rows {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      /* Quantity left, name centre, level/rank + attribute right — the
+         MTG Arena vertical-list grammar. */
+      .decklist__row {
+        display: flex;
+        align-items: baseline;
+        gap: var(--space-2);
+        padding: 0.35rem var(--space-4);
+      }
+
+      .decklist__row:hover {
+        background: color-mix(in srgb, var(--surface-raised) 70%, transparent);
+      }
+
+      .decklist__qty {
+        flex: 0 0 auto;
+        min-width: 1.6rem;
+        color: var(--muted);
+        font-size: var(--text-xs);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .decklist__name {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        font-size: var(--text-xs);
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .decklist__right {
+        flex: 0 0 auto;
+        color: var(--muted);
+        font-size: 0.66rem;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+
+      /* Art only, no text: the row already says the name, quantity and
+         right-column fact, so the floating preview's only job is to show
+         the illustration at a size worth looking at. */
+      .card-preview {
+        position: fixed;
+        z-index: 60;
+        width: 220px;
+        aspect-ratio: 0.686;
+        overflow: hidden;
+        border: 1px solid var(--border-light, #8ba0bf);
+        border-radius: var(--radius-md);
+        background: var(--surface-sunken);
+        box-shadow: 0 1rem 3rem color-mix(in srgb, var(--shadow) 70%, transparent);
+        pointer-events: none;
+      }
+
+      .card-preview svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* ---------------- Mobile duel-start ---------------- */
+      .stage.stage--mobile {
+        --ratio-w: 9;
+        --ratio-h: 19.5;
+        border-width: 10px;
+        border-color: #05070c;
+        border-radius: 2.2rem;
+      }
+
+      .mobile-screen {
+        display: grid;
+        /* An unspecified column still defaults to `auto` sizing, which is the
+           same content-based-minimum trap as bare `1fr` — an explicit 0 floor
+           is what actually lets every row below (header, opponent, tools,
+           footer) shrink to the phone's width instead of the frame just
+           clipping whichever one overflowed it. */
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        background: var(--bg);
+      }
+
+      .mobile-header {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        padding: var(--space-4) var(--space-4) var(--space-2);
+      }
+
+      .mobile-header h1 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+
+      .mobile-header__eyebrow {
+        margin: 0 0 2px;
+        color: var(--muted);
+        font-size: var(--text-xs);
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .mobile-header__text {
+        min-width: 0;
+      }
+
+      .mobile-back {
+        display: grid;
+        flex: 0 0 auto;
+        place-items: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        padding: 0;
+        border: 1px solid var(--border-soft);
+        border-radius: 50%;
+        background: var(--surface-raised);
+        color: var(--text);
+      }
+
+      .mobile-back svg {
+        width: 1rem;
+        height: 1rem;
+      }
+
+      .mobile-opponent {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        margin: 0 var(--space-4) var(--space-2);
+        padding: var(--space-2) var(--space-3);
+        border: 1px solid var(--border-soft);
+        border-radius: var(--radius-md);
+        background: var(--surface-panel);
+      }
+
+      .mobile-opponent__portrait {
+        flex: 0 0 auto;
+        width: 2.75rem;
+        height: 2.75rem;
+        overflow: hidden;
+        border-radius: 50%;
+      }
+
+      .mobile-opponent__text {
+        display: grid;
+        flex: 1 1 auto;
+        min-width: 0;
+        gap: 1px;
+      }
+
+      .mobile-opponent__name {
+        margin: 0;
+        font-size: var(--text-sm);
+        font-weight: 750;
+      }
+
+      .mobile-opponent__deck {
+        margin: 0;
+        overflow: hidden;
+        color: var(--muted);
+        font-size: var(--text-xs);
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      /* Two things to change, stacked rather than crowded side by side at
+         phone width — who you face, and (separately) what they brought. */
+      .mobile-opponent__actions {
+        display: flex;
+        flex: 0 0 auto;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.25rem;
+      }
+
+      .mobile-screen .tools {
+        padding: 0 var(--space-4) var(--space-2);
+      }
+
+      .mobile-deck-list {
+        min-height: 0;
+        padding: 0 var(--space-4) var(--space-2);
+        overflow-y: auto;
+      }
+
+      /* `minmax(0, 1fr)`, not bare `1fr`: an `fr` track's implicit minimum
+         is `auto` (its content's own min-content), which is exactly the
+         classic CSS Grid overflow trap — an explicit 0 floor is what actually
+         lets the column shrink to the phone's width. */
+      .mobile-deck-list .deck-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .mobile-footer {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--space-2);
+        padding: var(--space-3) var(--space-4) var(--space-4);
+        border-block-start: 1px solid color-mix(in srgb, var(--border) 35%, transparent);
+        background: color-mix(in srgb, var(--surface-sunken) 70%, transparent);
+      }
+
+      .mobile-footer .ui-button--primary {
+        width: 100%;
+      }
+
+      .mobile-footer__row {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+      }
+
+      .mobile-footer__row .link-button {
+        flex: 0 0 auto;
+      }
+
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+        }
+      }
+
+      /* Narrow container: one column of tiles, opponent panel above — the
+         desktop order (opponent after selection, placed right by `order`)
+         inverts back to opponent-first now that "right" has no meaning in
+         a single stacked column. */
+      @container (max-width: 62rem) {
+        .duel-start,
+        .library[data-panel="true"] {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto minmax(0, 1fr);
+        }
+
+        .opponent,
+        .library-panel {
+          order: 1;
+          border-inline-start: 0;
+          border-block-end: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
+        }
+
+        .selection {
+          order: 2;
+        }
+      }
+
+      /* Notes footer, prototype chrome. */
+      .notes {
+        max-width: 62rem;
+        margin: var(--space-4) auto 0;
+        padding: 0 var(--space-4) var(--space-4);
+        color: var(--muted);
+        font-size: var(--text-sm);
+        line-height: 1.5;
+      }
+
+      .notes summary {
+        cursor: pointer;
+        color: var(--text);
+        font-weight: 700;
+      }
+
+      .notes code {
+        padding: 0 0.25em;
+        border-radius: 3px;
+        background: var(--surface-chain);
+        font-size: 0.9em;
+      }
+
+      .notes ul {
+        padding-inline-start: 1.1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ============ prototype chrome ============ -->
+    <div class="chrome">
+      <p class="chrome__label">Scope</p>
+      <div class="switch" id="scope-switch" role="group" aria-label="Scope">
+        <button type="button" data-scope="free-play" aria-pressed="true">
+          Free Play
+        </button>
+        <button type="button" data-scope="story" aria-pressed="false">
+          Story
+        </button>
+      </div>
+      <p class="chrome__label">View</p>
+      <div class="switch" id="view-switch" role="group" aria-label="View">
+        <button type="button" data-view="duel-start" aria-pressed="true">
+          Duel start
+        </button>
+        <button type="button" data-view="library" aria-pressed="false">
+          Deck builder library
+        </button>
+      </div>
+      <p class="chrome__label">Device</p>
+      <div class="switch" id="device-switch" role="group" aria-label="Device">
+        <button type="button" data-device="desktop" aria-pressed="true">
+          Desktop
+        </button>
+        <button type="button" data-device="mobile" aria-pressed="false">
+          Mobile
+        </button>
+      </div>
+      <span class="chrome__spacer"></span>
+      <p class="chrome__hint">
+        <kbd>/</kbd> filter · <kbd>↑</kbd><kbd>↓</kbd> move · <kbd>Enter</kbd>
+        start · <kbd>f</kbd> favourite
+      </p>
+    </div>
+
+    <!-- ============ the stage ============ -->
+    <div class="stage-frame">
+      <div class="stage" id="stage"></div>
+    </div>
+
+    <!-- Floating card preview: art only, no text, follows decklist-row hover. -->
+    <div class="card-preview" id="card-preview" hidden aria-hidden="true">
+      <svg><use href="" /></svg>
+    </div>
+
+    <!-- Inline art library: authored geometry only, no third-party card art.
+         Same discipline as src/story/assets/PROVENANCE.md. -->
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <defs>
+        <symbol id="art-ember" viewBox="0 0 160 128" preserveAspectRatio="xMidYMid slice">
+          <rect width="160" height="128" fill="#2a0f18" />
+          <path d="M0 128 L40 44 L74 128Z" fill="#7a1c2c" />
+          <path d="M52 128 L96 20 L140 128Z" fill="#b3312f" />
+          <path d="M86 128 L112 60 L138 128Z" fill="#ff8c9b" opacity=".8" />
+          <circle cx="112" cy="34" r="9" fill="#ffd580" opacity=".9" />
+        </symbol>
+        <symbol id="art-tide" viewBox="0 0 160 128" preserveAspectRatio="xMidYMid slice">
+          <rect width="160" height="128" fill="#08243a" />
+          <path d="M0 78q40-26 80 0t80 0v50H0Z" fill="#12496b" />
+          <path d="M0 96q40-22 80 0t80 0v32H0Z" fill="#1f7fa5" />
+          <path d="M0 112q40-16 80 0t80 0v16H0Z" fill="#73daca" opacity=".85" />
+          <circle cx="120" cy="30" r="14" fill="#dffbf3" opacity=".22" />
+        </symbol>
+        <symbol id="art-gear" viewBox="0 0 160 128" preserveAspectRatio="xMidYMid slice">
+          <rect width="160" height="128" fill="#141a24" />
+          <g fill="none" stroke="#5c6b86" stroke-width="7">
+            <circle cx="80" cy="58" r="28" />
+            <circle cx="126" cy="100" r="18" />
+          </g>
+          <g fill="#8ba0bf">
+            <rect x="74" y="16" width="12" height="16" />
+            <rect x="74" y="84" width="12" height="16" />
+            <rect x="36" y="52" width="16" height="12" />
+            <rect x="108" y="52" width="16" height="12" />
+          </g>
+          <circle cx="80" cy="58" r="9" fill="#73daca" />
+        </symbol>
+        <symbol id="art-arcane" viewBox="0 0 160 128" preserveAspectRatio="xMidYMid slice">
+          <rect width="160" height="128" fill="#191033" />
+          <g fill="none" stroke="#9f8deb" stroke-width="3" opacity=".9">
+            <circle cx="80" cy="64" r="40" />
+            <circle cx="80" cy="64" r="26" />
+            <path d="M80 20 L118 86 H42Z" />
+          </g>
+          <circle cx="80" cy="64" r="10" fill="#d06bff" />
+          <circle cx="80" cy="64" r="20" fill="#d06bff" opacity=".18" />
+        </symbol>
+        <symbol id="art-dragon" viewBox="0 0 160 128" preserveAspectRatio="xMidYMid slice">
+          <rect width="160" height="128" fill="#0b2030" />
+          <path d="M10 108 L58 26 L74 70 L104 18 L150 108Z" fill="#1d4a63" />
+          <path d="M40 108 L74 48 L98 82 L120 52 L142 108Z" fill="#4ea3ff" opacity=".75" />
+          <circle cx="74" cy="42" r="7" fill="#eaf6ff" />
+        </symbol>
+        <symbol id="art-abyss" viewBox="0 0 160 128" preserveAspectRatio="xMidYMid slice">
+          <rect width="160" height="128" fill="#0e0a14" />
+          <path d="M0 128 L34 40 L60 128Z" fill="#2b1330" />
+          <path d="M46 128 L86 16 L126 128Z" fill="#4a1a3c" />
+          <path d="M96 128 L124 52 L160 128Z" fill="#7a2148" />
+          <circle cx="86" cy="44" r="12" fill="#ff8c9b" opacity=".55" />
+          <circle cx="86" cy="44" r="4" fill="#ffd580" />
+        </symbol>
+        <symbol id="art-verdant" viewBox="0 0 160 128" preserveAspectRatio="xMidYMid slice">
+          <rect width="160" height="128" fill="#0d2018" />
+          <path d="M80 118 V54" stroke="#7ee2a8" stroke-width="6" />
+          <path d="M80 74 q-38-6-46-44 40-2 46 44Z" fill="#2f7d55" />
+          <path d="M80 92 q40-8 48-48-42 0-48 48Z" fill="#4aa876" />
+          <circle cx="80" cy="46" r="8" fill="#ffd580" opacity=".8" />
+        </symbol>
+        <symbol id="art-relay" viewBox="0 0 160 128" preserveAspectRatio="xMidYMid slice">
+          <rect width="160" height="128" fill="#0a1626" />
+          <g stroke="#42c9b5" stroke-width="3" fill="none" opacity=".9">
+            <path d="M20 104 L60 104 L60 64 L100 64 L100 104 L140 104" />
+            <path d="M40 104 V38 H120 V104" />
+          </g>
+          <circle cx="60" cy="64" r="6" fill="#73daca" />
+          <circle cx="100" cy="64" r="6" fill="#73daca" />
+          <circle cx="80" cy="24" r="10" fill="#ffd580" opacity=".85" />
+        </symbol>
+        <symbol id="art-stone" viewBox="0 0 160 128" preserveAspectRatio="xMidYMid slice">
+          <rect width="160" height="128" fill="#1c1a17" />
+          <path d="M0 128 L44 62 L82 128Z" fill="#4a4438" />
+          <path d="M62 128 L106 40 L152 128Z" fill="#6e6350" />
+          <rect x="18" y="20" width="26" height="26" fill="#b8722d" opacity=".8" />
+        </symbol>
+        <symbol id="art-signal" viewBox="0 0 160 128" preserveAspectRatio="xMidYMid slice">
+          <rect width="160" height="128" fill="#101a2d" />
+          <g fill="#22324e">
+            <rect x="8" y="76" width="18" height="52" />
+            <rect x="34" y="52" width="18" height="76" />
+            <rect x="60" y="88" width="18" height="40" />
+            <rect x="86" y="40" width="18" height="88" />
+            <rect x="112" y="66" width="18" height="62" />
+            <rect x="138" y="96" width="18" height="32" />
+          </g>
+          <path d="M0 60 L34 30 L60 66 L94 14 L128 52 L160 26" stroke="#73daca" stroke-width="4" fill="none" />
+        </symbol>
+
+        <!-- Opponent portraits. Bust geometry, no face detail: placeholder
+             art that will be replaced by a character illustration. -->
+        <symbol id="portrait-rival" viewBox="0 0 320 420" preserveAspectRatio="xMidYMax slice">
+          <rect width="320" height="420" fill="#101a2d" />
+          <circle cx="160" cy="196" r="166" fill="#16243c" />
+          <!-- Bust: shoulders leave the frame, so the crop never exposes an
+               empty band the way a centred figure does. -->
+          <path d="M-10 420 q0-124 74-158 h192 q74 34 74 158Z" fill="#1d2f4d" />
+          <path d="M104 236 h112 l-14 184 h-84Z" fill="#22324e" />
+          <circle cx="160" cy="166" r="78" fill="#2b3d5e" />
+          <path d="M82 162 q12-92 78-92 t78 92 q-18-38-78-38 t-78 38Z" fill="#0f1729" />
+          <circle cx="160" cy="166" r="78" fill="none" stroke="#42c9b5" stroke-width="2" opacity=".45" />
+          <path d="M160 262 l30 30-30 28-30-28Z" fill="#73daca" opacity=".85" />
+        </symbol>
+        <symbol id="portrait-machine" viewBox="0 0 320 420" preserveAspectRatio="xMidYMax slice">
+          <rect width="320" height="420" fill="#0b1424" />
+          <circle cx="160" cy="196" r="158" fill="#12203a" />
+          <path d="M-10 420 q0-118 76-152 h188 q76 34 76 152Z" fill="#16243c" />
+          <rect x="92" y="92" width="136" height="152" rx="22" fill="#22324e" />
+          <rect x="114" y="140" width="92" height="20" rx="10" fill="#ffd580" opacity=".85" />
+          <rect x="114" y="184" width="50" height="12" rx="6" fill="#73daca" opacity=".7" />
+          <path d="M104 258 h112 l26 162 h-164Z" fill="#1a2942" />
+          <g stroke="#42c9b5" stroke-width="2" fill="none" opacity=".5">
+            <path d="M44 330 h48 v52" />
+            <path d="M276 330 h-48 v52" />
+          </g>
+        </symbol>
+      </defs>
+    </svg>
+
+    <details class="notes">
+      <summary>Prototype notes — what this asks of the code</summary>
+      <ul>
+        <li>
+          <strong>One screen, two scopes.</strong> A single component takes
+          <code>scope: "free-play" | "story"</code>. It decides three things:
+          which library is listed, whether the opponent seat is choosable, and
+          where the deck-builder button routes —
+          <code>#/free-play/decks</code> vs <code>#/story/decks</code>.
+        </li>
+        <li>
+          <strong>Free Play</strong> lists bundled presets plus the free-play
+          library, already filtered to playable decks by
+          <code>listSelectableDecks</code>. The opponent seat is choosable and
+          borrows the same list.
+        </li>
+        <li>
+          <strong>Story</strong> lists the save's decks only, keeps illegal
+          decks visible but disabled with the reason
+          (<code>preBattleBlock</code> semantics), and shows the encounter's
+          fixed opponent — portrait, name, their deck, locked.
+        </li>
+        <li>
+          <strong>Ordering</strong> is
+          <code>orderDeckLibrary</code> unchanged: default deck first,
+          favourites next, then the chosen sort. Toggling a star re-sorts live.
+        </li>
+        <li>
+          <strong>New data:</strong> <code>DeckRecord</code> has no cover today.
+          It needs one field —
+          <code>coverCardCode?: number</code> — defaulting to the deck's first
+          Extra card, else its first Main card, so every existing deck gets an
+          illustration without an edit.
+        </li>
+        <li>
+          <strong>Art in this file is authored geometry.</strong> Shipping
+          swaps each <code>&lt;use&gt;</code> for the cover card's cropped image
+          from the pinned snapshot.
+        </li>
+        <li>
+          <strong>Same tile in both places.</strong> The "Deck builder library"
+          view renders the identical tile component; only the surrounding frame
+          and the row's action differ (open vs select).
+        </li>
+      </ul>
+    </details>
+
+    <script>
+      // ================= prototype data =================
+      const ART = [
+        "art-ember",
+        "art-tide",
+        "art-gear",
+        "art-arcane",
+        "art-dragon",
+        "art-abyss",
+        "art-verdant",
+        "art-relay",
+        "art-stone",
+        "art-signal",
+      ];
+
+      /** Fixture cards for the library's decklist preview. No real card
+          database exists in this prototype, so every deck's list is
+          synthesised from these two pools — deterministically, from the
+          deck's own id, so the same deck always shows the same list. */
+      const MAIN_CARD_POOL = [
+        { name: "Ember Vanguard", right: "★4 · FIRE", art: ART[0] },
+        { name: "Tideglass Serpent", right: "★6 · WATER", art: ART[1] },
+        { name: "Gearwork Sentry", right: "★3 · EARTH", art: ART[2] },
+        { name: "Arcane Diviner", right: "★2 · DARK", art: ART[3] },
+        { name: "Dragon of the Verge", right: "★7 · WIND", art: ART[4] },
+        { name: "Abyssal Wraith", right: "★5 · DARK", art: ART[5] },
+        { name: "Verdant Sprout", right: "★1 · EARTH", art: ART[6] },
+        { name: "Relay Signaler", right: "★4 · LIGHT", art: ART[7] },
+        { name: "Stoneframe Golem", right: "★6 · EARTH", art: ART[8] },
+        { name: "Signal Flare Owl", right: "★2 · WIND", art: ART[9] },
+        { name: "Ember's Resolve", right: "Spell", art: ART[0] },
+        { name: "Tidal Surge", right: "Spell", art: ART[1] },
+        { name: "Gear Shift", right: "Trap", art: ART[2] },
+        { name: "Arcane Barrier", right: "Trap", art: ART[3] },
+        { name: "Verdant Growth", right: "Spell", art: ART[6] },
+      ];
+
+      const EXTRA_CARD_POOL = [
+        { name: "Ember Dragon, the Ashcaller", right: "Rank 4 · FIRE", art: ART[0] },
+        { name: "Tideborn Leviathan", right: "Rank 8 · WATER", art: ART[1] },
+        { name: "Gearframe Overlord", right: "Link-2 · EARTH", art: ART[2] },
+        { name: "Arcane Sovereign", right: "Rank 3 · DARK", art: ART[3] },
+        { name: "Verge Dragon Apex", right: "Level 8 · WIND", art: ART[4] },
+        { name: "Abyss Herald", right: "Link-3 · DARK", art: ART[5] },
+        { name: "Stonebound Titan", right: "Rank 6 · EARTH", art: ART[8] },
+        { name: "Signal Construct", right: "Link-1 · LIGHT", art: ART[9] },
+      ];
+
+      function hashSeed(id) {
+        let hash = 0;
+        for (let index = 0; index < id.length; index++)
+          hash = (hash * 31 + id.charCodeAt(index)) >>> 0;
+        return hash;
+      }
+
+      function buildSection(deck, count, pool) {
+        if (count <= 0) return [];
+        const rows = [];
+        let remaining = count;
+        let index = hashSeed(deck.id + pool.length) % pool.length;
+        while (remaining > 0 && rows.length < pool.length) {
+          const qty = remaining >= 3 ? 3 : remaining;
+          rows.push({ ...pool[index % pool.length], qty });
+          remaining -= qty;
+          index += 1;
+        }
+        return rows;
+      }
+
+      function buildDecklist(deck) {
+        return {
+          main: buildSection(deck, deck.main, MAIN_CARD_POOL),
+          extra: buildSection(deck, deck.extra, EXTRA_CARD_POOL),
+          side: buildSection(deck, deck.side, MAIN_CARD_POOL),
+        };
+      }
+
+      /** Deck fixtures. `source` and `status` mirror the real contracts:
+          preset decks are bundled, local decks come from the scoped library,
+          and `status` is DeckValidationSummary.status. */
+      const DECKS = [
+        // --- free-play library ---
+        { id: "mvp-player", name: "Starter (Player)", art: "art-relay", main: 40, extra: 0, side: 0, source: "preset", status: "valid", updated: "bundled", scopes: ["free-play"] },
+        { id: "mvp-opponent", name: "Starter (Opponent)", art: "art-signal", main: 40, extra: 0, side: 0, source: "preset", status: "valid", updated: "bundled", scopes: ["free-play"], aiOwner: "Practice Bot" },
+        { id: "burning-abyss", name: "Burning Abyss", art: "art-abyss", main: 40, extra: 15, side: 15, source: "preset", status: "valid", updated: "bundled", scopes: ["free-play"] },
+        { id: "nekroz", name: "Nekroz", art: "art-tide", main: 40, extra: 15, side: 15, source: "preset", status: "valid", updated: "bundled", scopes: ["free-play"] },
+        { id: "shaddoll", name: "Shaddoll", art: "art-arcane", main: 40, extra: 15, side: 15, source: "preset", status: "valid", updated: "bundled", scopes: ["free-play"] },
+        { id: "spellbook", name: "Spellbook", art: "art-verdant", main: 40, extra: 8, side: 15, source: "preset", status: "valid", updated: "bundled", scopes: ["free-play"] },
+        { id: "local-blaze", name: "Blaze Accelerator", art: "art-ember", main: 41, extra: 12, side: 0, source: "local", status: "warnings", updated: "12 minutes ago", scopes: ["free-play"] },
+        { id: "local-gadget", name: "Gadget Gears", art: "art-gear", main: 40, extra: 14, side: 3, source: "local", status: "valid", updated: "yesterday", scopes: ["free-play"] },
+        { id: "local-blue", name: "Blue-Eyed Testbed", art: "art-dragon", main: 40, extra: 15, side: 15, source: "local", status: "valid", updated: "2 days ago", scopes: ["free-play"] },
+        { id: "local-stone", name: "Stone Vault Control", art: "art-stone", main: 43, extra: 6, side: 0, source: "local", status: "valid", updated: "5 days ago", scopes: ["free-play"] },
+        { id: "local-tide", name: "Tidecaller Ritual", art: "art-tide", main: 40, extra: 4, side: 0, source: "local", status: "valid", updated: "last week", scopes: ["free-play"] },
+        { id: "local-relay", name: "Relay Signal Burn", art: "art-signal", main: 40, extra: 0, side: 0, source: "local", status: "valid", updated: "last week", scopes: ["free-play"] },
+
+        // --- AI opponent decks: bundled with a specific AI, never deletable ---
+        { id: "ai-blaze", name: "Blaze Circuit's Deck", art: "art-ember", main: 40, extra: 12, side: 0, source: "preset", status: "valid", updated: "bundled", scopes: ["free-play"], aiOwner: "Blaze Circuit" },
+        { id: "ai-vault", name: "Vault Warden's Deck", art: "art-stone", main: 40, extra: 6, side: 0, source: "preset", status: "valid", updated: "bundled", scopes: ["free-play"], aiOwner: "Vault Warden" },
+
+        // --- story save library ---
+        { id: "story-starter", name: "Academy Starter", art: "art-verdant", main: 40, extra: 3, side: 0, source: "local", status: "valid", updated: "1 hour ago", scopes: ["story"] },
+        { id: "story-ember", name: "First-Year Ember", art: "art-ember", main: 40, extra: 6, side: 0, source: "local", status: "valid", updated: "3 hours ago", scopes: ["story"] },
+        { id: "story-arcane", name: "Signal Study", art: "art-arcane", main: 40, extra: 5, side: 0, source: "local", status: "valid", updated: "yesterday", scopes: ["story"] },
+        { id: "story-gear", name: "Workshop Scrap", art: "art-gear", main: 38, extra: 0, side: 0, source: "local", status: "errors", issue: "Illegal", reason: "Main Deck holds 38 cards; the minimum is 40.", updated: "yesterday", scopes: ["story"] },
+        { id: "story-dragon", name: "Borrowed Dragons", art: "art-dragon", main: 40, extra: 12, side: 0, source: "local", status: "errors", issue: "Cards not owned", reason: "3 cards in this deck are no longer in your collection.", updated: "2 days ago", scopes: ["story"] },
+        { id: "story-abyss", name: "Late-Night Abyss", art: "art-abyss", main: 41, extra: 9, side: 0, source: "local", status: "warnings", updated: "4 days ago", scopes: ["story"] },
+        { id: "story-stone", name: "Groundwork", art: "art-stone", main: 40, extra: 0, side: 0, source: "local", status: "valid", updated: "last week", scopes: ["story"] },
+      ];
+
+      /** The AIs a free-play opponent can be. Each one owns exactly one
+          deck it always starts with (see `aiOwner` on `DECKS`) — picking a
+          different AI brings that deck along, though the "Change" under
+          Opponent deck can still override it for one duel. */
+      const AI_OPPONENTS = [
+        { id: "practice", portrait: "portrait-machine", name: "Practice Bot", line: "No narrative, no save. Pick both decks and duel now.", deckId: "mvp-opponent" },
+        { id: "blaze", portrait: "portrait-machine", name: "Blaze Circuit", line: "Plays fast and punishes hesitation.", deckId: "ai-blaze" },
+        { id: "vault", portrait: "portrait-machine", name: "Vault Warden", line: "Locks the board, then closes it out.", deckId: "ai-vault" },
+      ];
+
+      /** What the left column shows, per scope. Free play is computed from
+          `state.aiOpponentId` (see `currentOpponent`); story has exactly one
+          fixed opponent, so it stays a plain record. */
+      const OPPONENTS = {
+        story: {
+          portrait: "portrait-rival",
+          role: "Chapter 1 · Encounter 04",
+          name: "Rin's Echo",
+          line: "The arena transmitter shaped Rin's warning into an opponent. Win or lose, finish the duel to decode its challenge.",
+          deckLabel: "Their deck",
+          locked: true,
+          opponentDeck: {
+            id: "relay-deck",
+            name: "Relay Deck",
+            art: "art-relay",
+            main: 40,
+            extra: 6,
+            side: 0,
+            source: "preset",
+            status: "valid",
+            meta: "Fixed by the encounter",
+            updated: "never",
+          },
+        },
+      };
+
+      const SCOPE_COPY = {
+        "free-play": {
+          eyebrow: "Free play",
+          builder: "Open",
+          libraryTitle: "Free Play deck library",
+        },
+        story: {
+          eyebrow: "Pre-battle briefing",
+          builder: "Open",
+          libraryTitle: "Story deck library",
+        },
+      };
+
+      // ================= state =================
+      const state = {
+        scope: "free-play",
+        view: "duel-start",
+        device: "desktop",
+        seat: "player",
+        query: "",
+        sort: "modified",
+        favourites: new Set(["local-gadget", "nekroz", "story-ember"]),
+        defaults: { "free-play": "mvp-player", story: "story-starter" },
+        selected: { "free-play": "mvp-player", story: "story-starter" },
+        opponentKey: { "free-play": "mvp-opponent" },
+        aiOpponentId: "practice",
+        choosingAi: false,
+        libraryFocus: { "free-play": null, story: null },
+        libraryHover: null,
+      };
+
+      const stage = document.getElementById("stage");
+
+      // ================= ordering =================
+      /** orderDeckLibrary, verbatim in behaviour: default first, favourites
+          next, then the chosen sort inside each rank. */
+      function orderDecks(decks) {
+        const defaultId = state.defaults[state.scope];
+        const rank = (deck) =>
+          deck.id === defaultId ? 0 : state.favourites.has(deck.id) ? 1 : 2;
+        const MODIFIED_ORDER = new Map(DECKS.map((deck, index) => [deck.id, index]));
+        return [...decks].sort((a, b) => {
+          const diff = rank(a) - rank(b);
+          if (diff !== 0) return diff;
+          if (state.sort === "name") return a.name.localeCompare(b.name);
+          return MODIFIED_ORDER.get(a.id) - MODIFIED_ORDER.get(b.id);
+        });
+      }
+
+      function scopedDecks() {
+        // Free play never offers a deck the engine would refuse — the listing
+        // drops it. Story keeps it visible and disabled, because that deck is
+        // the player's own and they need to be told what to repair.
+        const inScope = DECKS.filter((deck) => deck.scopes.includes(state.scope));
+        return state.scope === "free-play"
+          ? inScope.filter((deck) => deck.status !== "errors")
+          : inScope;
+      }
+
+      function visibleDecks() {
+        const query = state.query.trim().toLocaleLowerCase();
+        const matched = scopedDecks().filter((deck) =>
+          deck.name.toLocaleLowerCase().includes(query),
+        );
+        return orderDecks(matched);
+      }
+
+      function currentSelectionId() {
+        return state.seat === "opponent"
+          ? state.opponentKey[state.scope]
+          : state.selected[state.scope];
+      }
+
+      function deckById(id) {
+        if (id === "relay-deck") return OPPONENTS.story.opponentDeck;
+        return DECKS.find((deck) => deck.id === id) ?? null;
+      }
+
+      /** The deliberately-picked deck: whatever was last clicked in the
+          library grid, else the scope's default — so a fresh visit is
+          never the empty state. This is what the footer actions act on,
+          and what a tile's checkmark reflects; hovering never changes it. */
+      function focusedLibraryDeckId() {
+        return state.libraryFocus[state.scope] ?? state.defaults[state.scope];
+      }
+
+      function focusedLibraryDeck() {
+        return deckById(focusedLibraryDeckId());
+      }
+
+      /** What the panel actually renders: a hovered tile previews its deck
+          without disturbing the focus, and reverts the moment the pointer
+          leaves. */
+      function previewLibraryDeck() {
+        return deckById(state.libraryHover ?? focusedLibraryDeckId());
+      }
+
+      /** The left column's content for the current scope. Story is a fixed
+          record; free play is derived from whichever AI is picked. */
+      function currentOpponent() {
+        if (state.scope === "story") return OPPONENTS.story;
+        const ai =
+          AI_OPPONENTS.find((candidate) => candidate.id === state.aiOpponentId) ??
+          AI_OPPONENTS[0];
+        return {
+          portrait: ai.portrait,
+          role: "Free play",
+          name: ai.name,
+          line: ai.line,
+          deckLabel: "Opponent deck",
+          locked: false,
+        };
+      }
+
+      // ================= rendering =================
+      function escapeHtml(value) {
+        return value.replace(/[&<>"]/g, (character) =>
+          ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[character],
+        );
+      }
+
+      function artMarkup(art) {
+        return `<svg aria-hidden="true"><use href="#${art}" /></svg>`;
+      }
+
+      /** The tile. One component, used by the duel-start picker and the deck
+          builder library alike — only `mode` changes what the press means. */
+      function deckTile(deck, { mode }) {
+        const isStatic = mode === "static";
+        const selected =
+          (mode === "select" && deck.id === currentSelectionId()) ||
+          (mode === "library" && deck.id === focusedLibraryDeckId());
+        const isDefault = !isStatic && deck.id === state.defaults[state.scope];
+        const favourite = state.favourites.has(deck.id);
+        const blocked = deck.status === "errors";
+        const badges = [];
+        if (isDefault)
+          badges.push(`<span class="badge badge--default">Default</span>`);
+        if (blocked)
+          badges.push(
+            `<span class="badge badge--illegal">${escapeHtml(deck.issue ?? "Illegal")}</span>`,
+          );
+        // While the opponent seat is being filled, the player's own pick would
+        // otherwise leave the screen entirely.
+        if (
+          mode === "select" &&
+          state.seat === "opponent" &&
+          deck.id === state.selected[state.scope]
+        )
+          badges.push(`<span class="badge badge--yours">Yours</span>`);
+        if (deck.aiOwner && !isStatic)
+          badges.push(`<span class="badge badge--ai">🔒 ${escapeHtml(deck.aiOwner)}</span>`);
+        if (deck.source === "preset" && !isStatic)
+          badges.push(`<span class="badge badge--preset">Bundled</span>`);
+
+        const meta = blocked && deck.reason
+          ? deck.reason
+          : deck.meta ?? `Updated ${deck.updated}`;
+
+        return `
+          <li class="deck-cell" data-cy="deck-cell-${deck.id}">
+            <button
+              type="button"
+              class="deck-tile"
+              data-deck="${deck.id}"
+              data-default="${isDefault}"
+              data-cy="deck-tile-${deck.id}"
+              ${mode === "select" || mode === "library" ? `aria-pressed="${selected}"` : ""}
+              ${blocked && mode === "select" ? "disabled" : ""}
+              title="${escapeHtml(blocked && deck.reason ? deck.reason : deck.name)}"
+            >
+              <span class="deck-tile__body" data-cy="deck-tile-body-${deck.id}">
+                <span class="deck-tile__name" data-cy="deck-tile-name-${deck.id}">${escapeHtml(deck.name)}</span>
+                ${
+                  isStatic
+                    ? ""
+                    : `<span class="deck-tile__counts" data-cy="deck-tile-counts-${deck.id}">Main ${deck.main} · Extra ${deck.extra} · Side ${deck.side}</span>
+                <span class="deck-tile__meta" data-cy="deck-tile-meta-${deck.id}">${escapeHtml(meta)}</span>`
+                }
+                ${badges.length > 0 ? `<span class="deck-tile__badges" data-cy="deck-tile-badges-${deck.id}">${badges.join("")}</span>` : ""}
+              </span>
+              <span class="deck-tile__art" data-cy="deck-tile-art-${deck.id}">
+                ${artMarkup(deck.art)}
+              </span>
+              ${selected ? `<span class="deck-tile__check" data-cy="deck-tile-check-${deck.id}" aria-hidden="true">✓</span>` : ""}
+            </button>
+            ${
+              isStatic
+                ? ""
+                : `<button
+              type="button"
+              class="favourite"
+              data-favourite="${deck.id}"
+              data-cy="deck-tile-favourite-${deck.id}"
+              aria-pressed="${favourite}"
+              aria-label="Favourite ${escapeHtml(deck.name)}"
+            >${favourite ? "★" : "☆"}</button>`
+            }
+          </li>`;
+      }
+
+      /** Same tile grammar as `deckTile` — art on one half, description on
+          the other — so choosing who you face reads as the same kind of
+          choice as choosing what you play. */
+      function aiTile(ai) {
+        const selected = ai.id === state.aiOpponentId;
+        return `
+          <li class="deck-cell" data-cy="ai-cell-${ai.id}">
+            <button
+              type="button"
+              class="deck-tile"
+              data-ai="${ai.id}"
+              aria-pressed="${selected}"
+              data-cy="ai-tile-${ai.id}"
+              title="${escapeHtml(ai.name)}"
+            >
+              <span class="deck-tile__body" data-cy="ai-tile-body-${ai.id}">
+                <span class="deck-tile__name" data-cy="ai-tile-name-${ai.id}">${escapeHtml(ai.name)}</span>
+                <span class="deck-tile__meta" data-cy="ai-tile-line-${ai.id}">${escapeHtml(ai.line)}</span>
+              </span>
+              <span class="deck-tile__art" data-cy="ai-tile-art-${ai.id}">
+                ${artMarkup(ai.portrait)}
+              </span>
+              ${selected ? `<span class="deck-tile__check" data-cy="ai-tile-check-${ai.id}" aria-hidden="true">✓</span>` : ""}
+            </button>
+          </li>`;
+      }
+
+      function aiGridMarkup() {
+        return `<ul class="deck-grid" data-cy="ai-grid">${AI_OPPONENTS.map(aiTile).join("")}</ul>`;
+      }
+
+      function toolsMarkup() {
+        return `
+          <div class="tools" data-cy="deck-filter-tools">
+            <div class="search" data-cy="deck-filter-search">
+              <svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="9" cy="9" r="6" />
+                <path d="M13.5 13.5 L18 18" stroke-linecap="round" />
+              </svg>
+              <input
+                type="search"
+                id="deck-filter-input"
+                placeholder="Filter by deck name"
+                value="${escapeHtml(state.query)}"
+                aria-label="Filter decks by name"
+                data-cy="deck-filter-input"
+              />
+              ${state.query !== "" ? `<button type="button" class="search__clear" data-clear aria-label="Clear filter" data-cy="deck-filter-clear">✕</button>` : ""}
+            </div>
+            <select data-sort aria-label="Sort decks" data-cy="deck-filter-sort">
+              <option value="modified" ${state.sort === "modified" ? "selected" : ""}>Last modified</option>
+              <option value="name" ${state.sort === "name" ? "selected" : ""}>Name</option>
+            </select>
+          </div>`;
+      }
+
+      function gridMarkup(decks, mode) {
+        if (decks.length === 0) {
+          return `
+            <div class="empty" data-cy="deck-grid-empty">
+              <p>No deck matches “${escapeHtml(state.query)}”.</p>
+              <button type="button" class="ui-button ui-button--secondary" data-clear data-cy="deck-grid-empty-clear">Clear filter</button>
+            </div>`;
+        }
+        return `<ul class="deck-grid" data-cy="deck-grid">${decks
+          .map((deck) => deckTile(deck, { mode }))
+          .join("")}</ul>`;
+      }
+
+      function opponentMarkup() {
+        const opponent = currentOpponent();
+        const deck =
+          state.scope === "story"
+            ? opponent.opponentDeck
+            : deckById(state.opponentKey[state.scope]);
+        const yourDeck = deckById(state.selected[state.scope]);
+        const seatingOpponent = state.seat === "opponent";
+
+        return `
+          <aside class="opponent" data-seating="${seatingOpponent}" data-cy="duel-start-opponent">
+            <div class="opponent__art" data-cy="duel-start-opponent-art">
+              <svg role="img" aria-label="Placeholder portrait of ${escapeHtml(opponent.name)}"><use href="#${opponent.portrait}" /></svg>
+              <div class="opponent__identity" data-cy="duel-start-opponent-identity">
+                <p class="opponent__role" data-cy="duel-start-opponent-role">${escapeHtml(opponent.role)}</p>
+                <div class="opponent__name-row" data-cy="duel-start-opponent-name-row">
+                  <h2 class="opponent__name" data-cy="duel-start-opponent-name">${escapeHtml(opponent.name)}</h2>
+                  ${
+                    opponent.locked
+                      ? ""
+                      : `<button type="button" class="link-button" data-ai-toggle data-cy="duel-start-opponent-ai-toggle">${state.choosingAi ? "Done" : "Change"}</button>`
+                  }
+                </div>
+                <p class="opponent__line" data-cy="duel-start-opponent-line">${escapeHtml(opponent.line)}</p>
+              </div>
+            </div>
+            <div class="opponent__deck" data-cy="duel-start-opponent-deck">
+              <p class="opponent__deck-label" data-cy="duel-start-opponent-deck-label">
+                <span>${escapeHtml(opponent.deckLabel)}</span>
+                ${
+                  opponent.locked
+                    ? `<span class="lock" data-cy="duel-start-opponent-deck-lock">🔒 Set by the story</span>`
+                    : `<button type="button" class="link-button" data-seat-toggle="${seatingOpponent ? "player" : "opponent"}" data-cy="duel-start-opponent-deck-change">${seatingOpponent ? "Done" : "Change"}</button>`
+                }
+              </p>
+              <ul class="deck-grid" data-cy="duel-start-opponent-deck-grid">
+                ${deck ? deckTile(deck, { mode: "static" }) : ""}
+              </ul>
+            </div>
+            <div class="opponent__deck" data-cy="duel-start-your-deck">
+              <p class="opponent__deck-label" data-cy="duel-start-your-deck-label">
+                <span>Your deck</span>
+              </p>
+              <ul class="deck-grid" data-cy="duel-start-your-deck-grid">
+                ${yourDeck ? deckTile(yourDeck, { mode: "static" }) : ""}
+              </ul>
+            </div>
+          </aside>`;
+      }
+
+      function duelStartMarkup() {
+        const copy = SCOPE_COPY[state.scope];
+        const decks = visibleDecks();
+        const selected = deckById(currentSelectionId());
+        const seatingOpponent = state.seat === "opponent";
+
+        const choosingAi = state.scope === "free-play" && state.choosingAi;
+
+        return `
+          <div class="duel-start" data-cy="duel-start-screen" data-scope="${state.scope}">
+            ${opponentMarkup()}
+            <section class="selection" data-seat="${state.seat}" data-cy="duel-start-selection">
+              <header class="selection__head" data-cy="duel-start-head">
+                <div>
+                  <p class="selection__eyebrow" data-cy="duel-start-eyebrow">${escapeHtml(choosingAi ? "Changing the opponent" : seatingOpponent ? "Choosing for the opponent seat" : copy.eyebrow)}</p>
+                  <h1 class="selection__title" data-cy="duel-start-title">${choosingAi ? "Choose your opponent" : seatingOpponent ? "Which deck do they bring?" : "Choose your deck"}</h1>
+                </div>
+              </header>
+              ${choosingAi ? "" : toolsMarkup()}
+              <div class="deck-scroll" data-cy="duel-start-deck-scroll">
+                ${choosingAi ? aiGridMarkup() : gridMarkup(decks, "select")}
+              </div>
+              <footer class="actions" data-cy="duel-start-actions">
+                <div class="actions__row" data-cy="duel-start-actions-row">
+                  <button type="button" class="ui-button ui-button--secondary" data-cy="duel-start-back">Back</button>
+                  <div class="actions__group" data-cy="duel-start-actions-right">
+                    <button type="button" class="ui-button ui-button--secondary" data-open-deck data-cy="duel-start-open-deck">${escapeHtml(copy.builder)}</button>
+                    <button type="button" class="ui-button ui-button--primary" ${selected ? "" : "disabled"} data-cy="duel-start-start">Start the duel</button>
+                  </div>
+                </div>
+              </footer>
+            </section>
+          </div>`;
+      }
+
+      /** One row: quantity left, name centre, level/rank + attribute right
+          — the MTG Arena vertical-list grammar, adapted to this game's
+          right-column fact. */
+      function decklistSectionMarkup(title, rows, sectionCount) {
+        if (rows.length === 0) return "";
+        const key = title.toLowerCase().replace(/\s+/g, "-");
+        return `
+          <div class="decklist__section" data-cy="decklist-section-${key}">
+            <p class="decklist__section-title" data-cy="decklist-section-title-${key}">${title} (${sectionCount})</p>
+            <ul class="decklist__rows" data-cy="decklist-rows-${key}">
+              ${rows
+                .map(
+                  (row) => `
+                <li class="decklist__row" data-card-art="${row.art}" data-cy="decklist-row">
+                  <span class="decklist__qty" data-cy="decklist-row-qty">×${row.qty}</span>
+                  <span class="decklist__name" data-cy="decklist-row-name">${escapeHtml(row.name)}</span>
+                  <span class="decklist__right" data-cy="decklist-row-right">${escapeHtml(row.right)}</span>
+                </li>`,
+                )
+                .join("")}
+            </ul>
+          </div>`;
+      }
+
+      /** The right panel's body only — kept separate from the `<aside>` that
+          wraps it so a tile hover can replace just this content, not the
+          whole stage, and never disturb the grid's own hover/focus state. */
+      function libraryPanelMarkup() {
+        const deck = previewLibraryDeck();
+        if (!deck) {
+          return `<div class="library-panel__empty" data-cy="library-panel-empty"><p>Select a deck to preview it.</p></div>`;
+        }
+        const list = buildDecklist(deck);
+        return `
+          <div class="library-panel__head" data-cy="library-panel-head">
+            <h2 class="library-panel__name" data-cy="library-panel-name">${escapeHtml(deck.name)}</h2>
+            <p class="library-panel__stats" data-cy="library-panel-stats">Main ${deck.main} · Extra ${deck.extra} · Side ${deck.side}</p>
+          </div>
+          <div class="decklist" data-cy="decklist">
+            ${decklistSectionMarkup("Main Deck", list.main, deck.main)}
+            ${decklistSectionMarkup("Extra Deck", list.extra, deck.extra)}
+            ${decklistSectionMarkup("Side Deck", list.side, deck.side)}
+          </div>`;
+      }
+
+      /** Same screen as duel start — same header rhythm, same tools, same
+          tile grid, same footer classes — minus the opponent panel and the
+          Start action, which only make sense mid-duel-setup. Desktop adds
+          its own right panel (decklist preview) in that freed slot instead. */
+      function libraryMarkup() {
+        const copy = SCOPE_COPY[state.scope];
+        const total = scopedDecks().length;
+        const decks = visibleDecks();
+        const focused = focusedLibraryDeck();
+        const canModify = !!focused;
+        const canDelete = canModify && focused.source !== "preset";
+
+        const content = `
+          <header class="selection__head" data-cy="deck-library-head">
+            <div>
+              <p class="selection__eyebrow" data-cy="deck-library-eyebrow">Deck builder</p>
+              <h1 class="selection__title" data-cy="deck-library-title">${escapeHtml(copy.libraryTitle)}</h1>
+            </div>
+            <p class="selection__scope" data-cy="deck-library-scope-line">Same tile, same ordering. Hover to preview, press to focus.</p>
+          </header>
+          ${toolsMarkup()}
+          <div class="deck-scroll" data-cy="deck-library-scroll">
+            ${gridMarkup(decks, "library")}
+          </div>
+          <footer class="actions" data-cy="deck-library-actions">
+            <div class="actions__row" data-cy="deck-library-actions-row">
+              <button type="button" class="ui-button ui-button--secondary" data-library-back data-cy="deck-library-back">Back</button>
+              <div class="actions__group" data-cy="deck-library-actions-right">
+                <button type="button" class="ui-button ui-button--secondary" data-lib-delete ${canDelete ? "" : "disabled"} data-cy="deck-library-delete">Delete</button>
+                <button type="button" class="ui-button ui-button--secondary" data-lib-rename ${canModify ? "" : "disabled"} data-cy="deck-library-rename">Rename</button>
+                <button type="button" class="ui-button ui-button--secondary" data-lib-duplicate ${canModify ? "" : "disabled"} data-cy="deck-library-duplicate">Duplicate</button>
+              </div>
+            </div>
+          </footer>`;
+
+        if (state.device === "desktop") {
+          return `
+            <div class="library" data-panel="true" data-cy="deck-library-screen" data-scope="${state.scope}">
+              <aside class="library-panel" data-cy="deck-library-panel">${libraryPanelMarkup()}</aside>
+              <section class="selection" data-cy="deck-library-selection">${content}</section>
+            </div>`;
+        }
+        return `<div class="library" data-cy="deck-library-screen" data-scope="${state.scope}">${content}</div>`;
+      }
+
+      /** Mobile duel-start: the same scope data and the same tile component,
+          reshaped for a phone — opponent collapses to a header strip, the
+          grid collapses to one column, and Start/Back move to a sticky
+          footer and a header icon respectively (no floating corner button:
+          there is no corner to spare). */
+      function mobileDuelStartMarkup() {
+        const copy = SCOPE_COPY[state.scope];
+        const opponent = currentOpponent();
+        const opponentDeck =
+          state.scope === "story"
+            ? opponent.opponentDeck
+            : deckById(state.opponentKey[state.scope]);
+        const seatingOpponent = state.seat === "opponent";
+        const choosingAi = state.scope === "free-play" && state.choosingAi;
+        const decks = visibleDecks();
+        const selected = deckById(currentSelectionId());
+
+        return `
+          <div class="mobile-screen" data-cy="mobile-duel-start" data-scope="${state.scope}">
+            <header class="mobile-header" data-cy="mobile-header">
+              <button type="button" class="mobile-back" data-back aria-label="Back" data-cy="mobile-back">
+                <svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4 L6 10 L12 16" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              </button>
+              <div class="mobile-header__text" data-cy="mobile-header-text">
+                <p class="mobile-header__eyebrow" data-cy="mobile-header-eyebrow">${escapeHtml(choosingAi ? "Changing the opponent" : seatingOpponent ? "Opponent's deck" : copy.eyebrow)}</p>
+                <h1 data-cy="mobile-header-title">${choosingAi ? "Choose your opponent" : seatingOpponent ? "Which deck do they bring?" : "Choose your deck"}</h1>
+              </div>
+            </header>
+            <div class="mobile-opponent" data-cy="mobile-opponent">
+              <svg class="mobile-opponent__portrait" role="img" aria-label="Placeholder portrait of ${escapeHtml(opponent.name)}"><use href="#${opponent.portrait}" /></svg>
+              <div class="mobile-opponent__text" data-cy="mobile-opponent-text">
+                <p class="mobile-opponent__name" data-cy="mobile-opponent-name">${escapeHtml(opponent.name)}</p>
+                <p class="mobile-opponent__deck" data-cy="mobile-opponent-deck">${escapeHtml(opponent.deckLabel)}: ${opponentDeck ? escapeHtml(opponentDeck.name) : "—"}</p>
+              </div>
+              ${
+                opponent.locked
+                  ? `<span class="lock" data-cy="mobile-opponent-lock" aria-label="Set by the story">🔒</span>`
+                  : `<div class="mobile-opponent__actions" data-cy="mobile-opponent-actions">
+                <button type="button" class="link-button" data-ai-toggle data-cy="mobile-opponent-ai-toggle">${choosingAi ? "Done" : "Change opponent"}</button>
+                <button type="button" class="link-button" data-seat-toggle="${seatingOpponent ? "player" : "opponent"}" data-cy="mobile-opponent-change">${seatingOpponent ? "Done" : "Change deck"}</button>
+              </div>`
+              }
+            </div>
+            ${choosingAi ? "" : toolsMarkup()}
+            <div class="mobile-deck-list" data-cy="mobile-deck-scroll">
+              ${choosingAi ? aiGridMarkup() : gridMarkup(decks, "select")}
+            </div>
+            <footer class="mobile-footer" data-cy="mobile-footer">
+              <button type="button" class="ui-button ui-button--primary" ${selected ? "" : "disabled"} data-cy="mobile-start">Start the duel</button>
+              <div class="mobile-footer__row" data-cy="mobile-footer-row">
+                <button type="button" class="link-button" data-open-deck data-cy="mobile-open-deck">${escapeHtml(copy.builder)}</button>
+              </div>
+            </footer>
+          </div>`;
+      }
+
+      function render() {
+        const active = document.activeElement;
+        const restoreFilter = active && active.id === "deck-filter-input";
+        const caret = restoreFilter ? active.selectionStart : null;
+
+        stage.classList.toggle("stage--mobile", state.device === "mobile");
+        stage.innerHTML =
+          state.device === "mobile"
+            ? state.view === "duel-start"
+              ? mobileDuelStartMarkup()
+              : libraryMarkup()
+            : state.view === "duel-start"
+              ? duelStartMarkup()
+              : libraryMarkup();
+
+        if (restoreFilter) {
+          const input = document.getElementById("deck-filter-input");
+          input.focus();
+          input.setSelectionRange(caret, caret);
+        }
+      }
+
+      // ================= interaction =================
+      stage.addEventListener("click", (event) => {
+        const favourite = event.target.closest("[data-favourite]");
+        if (favourite) {
+          const id = favourite.dataset.favourite;
+          if (state.favourites.has(id)) state.favourites.delete(id);
+          else state.favourites.add(id);
+          render();
+          return;
+        }
+
+        const seat = event.target.closest("[data-seat-toggle]");
+        if (seat) {
+          state.seat = seat.dataset.seatToggle;
+          state.choosingAi = false;
+          render();
+          return;
+        }
+
+        if (event.target.closest("[data-ai-toggle]")) {
+          state.choosingAi = !state.choosingAi;
+          if (state.choosingAi) state.seat = "player";
+          render();
+          return;
+        }
+
+        const aiOption = event.target.closest("[data-ai]");
+        if (aiOption) {
+          const ai = AI_OPPONENTS.find((candidate) => candidate.id === aiOption.dataset.ai);
+          state.aiOpponentId = ai.id;
+          state.opponentKey["free-play"] = ai.deckId;
+          state.choosingAi = false;
+          render();
+          return;
+        }
+
+        if (event.target.closest("[data-clear]")) {
+          state.query = "";
+          render();
+          return;
+        }
+
+        const openDeck = event.target.closest("[data-open-deck]");
+        if (openDeck) {
+          // Opens the currently selected deck directly — no browsing step.
+          // The "Deck builder library" view is the separate, deliberate way
+          // to browse and pick a different deck to edit.
+          openDeck.animate(
+            [{ scale: 1 }, { scale: 0.97 }, { scale: 1 }],
+            { duration: 180 },
+          );
+          return;
+        }
+
+        if (event.target.closest("[data-library-back]")) {
+          state.view = "duel-start";
+          state.libraryHover = null;
+          syncSwitches();
+          render();
+          return;
+        }
+
+        if (event.target.closest("[data-lib-delete]")) {
+          const deck = focusedLibraryDeck();
+          if (deck && deck.source !== "preset") {
+            const index = DECKS.indexOf(deck);
+            if (index !== -1) DECKS.splice(index, 1);
+            state.favourites.delete(deck.id);
+            if (state.libraryFocus[state.scope] === deck.id)
+              state.libraryFocus[state.scope] = null;
+            if (state.selected[state.scope] === deck.id)
+              state.selected[state.scope] = state.defaults[state.scope];
+            if (state.opponentKey[state.scope] === deck.id)
+              state.opponentKey[state.scope] = state.defaults[state.scope];
+          }
+          render();
+          return;
+        }
+
+        if (event.target.closest("[data-lib-rename]")) {
+          const deck = focusedLibraryDeck();
+          if (deck) {
+            const next = window.prompt("Rename deck", deck.name);
+            if (next && next.trim()) deck.name = next.trim();
+          }
+          render();
+          return;
+        }
+
+        if (event.target.closest("[data-lib-duplicate]")) {
+          const deck = focusedLibraryDeck();
+          if (deck) {
+            const copy = {
+              ...deck,
+              id: `${deck.id}-copy-${DECKS.length}`,
+              name: `${deck.name} copy`,
+              source: "local",
+              status: "valid",
+              updated: "just now",
+            };
+            delete copy.aiOwner;
+            delete copy.issue;
+            delete copy.reason;
+            delete copy.meta;
+            DECKS.push(copy);
+            state.libraryFocus[state.scope] = copy.id;
+          }
+          render();
+          return;
+        }
+
+        const tile = event.target.closest("[data-deck]");
+        if (tile && !tile.disabled) {
+          const id = tile.dataset.deck;
+          if (state.view === "library") {
+            state.libraryFocus[state.scope] = id;
+            render();
+            return;
+          }
+          if (state.seat === "opponent") {
+            state.opponentKey[state.scope] = id;
+            state.seat = "player";
+          } else {
+            state.selected[state.scope] = id;
+          }
+          render();
+        }
+      });
+
+      function updateLibraryPanel() {
+        const panel = document.querySelector('[data-cy="deck-library-panel"]');
+        if (panel) panel.innerHTML = libraryPanelMarkup();
+      }
+
+      function showCardPreview(art, rowElement) {
+        const preview = document.getElementById("card-preview");
+        if (!preview) return;
+        preview.querySelector("use").setAttribute("href", `#${art}`);
+        const rect = rowElement.getBoundingClientRect();
+        const width = 220;
+        const height = Math.round(width / 0.686);
+        const top = Math.max(
+          12,
+          Math.min(rect.top + rect.height / 2 - height / 2, window.innerHeight - height - 12),
+        );
+        const left = Math.max(12, rect.left - width - 16);
+        preview.style.top = `${top}px`;
+        preview.style.left = `${left}px`;
+        preview.hidden = false;
+      }
+
+      function hideCardPreview() {
+        const preview = document.getElementById("card-preview");
+        if (preview) preview.hidden = true;
+      }
+
+      // Desktop-only: hovering a deck tile previews its list in the right
+      // panel without moving focus, and hovering a decklist row floats a
+      // full-size, text-free art preview beside it.
+      stage.addEventListener("mouseover", (event) => {
+        if (state.view !== "library" || state.device !== "desktop") return;
+        const tile = event.target.closest("[data-deck]");
+        if (tile) {
+          const id = tile.dataset.deck;
+          if (state.libraryHover !== id) {
+            state.libraryHover = id;
+            updateLibraryPanel();
+          }
+          return;
+        }
+        const row = event.target.closest("[data-card-art]");
+        if (row) showCardPreview(row.dataset.cardArt, row);
+      });
+
+      stage.addEventListener("mouseout", (event) => {
+        if (state.view !== "library" || state.device !== "desktop") return;
+        const tile = event.target.closest("[data-deck]");
+        if (tile && !tile.contains(event.relatedTarget)) {
+          state.libraryHover = null;
+          updateLibraryPanel();
+          return;
+        }
+        const row = event.target.closest("[data-card-art]");
+        if (row && !row.contains(event.relatedTarget)) hideCardPreview();
+      });
+
+      stage.addEventListener("input", (event) => {
+        if (event.target.id === "deck-filter-input") {
+          state.query = event.target.value;
+          render();
+        }
+      });
+
+      stage.addEventListener("change", (event) => {
+        if (event.target.matches("[data-sort]")) {
+          state.sort = event.target.value;
+          render();
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        const typing =
+          event.target instanceof HTMLInputElement ||
+          event.target instanceof HTMLSelectElement;
+
+        if (event.key === "/" && !typing) {
+          event.preventDefault();
+          document.getElementById("deck-filter-input")?.focus();
+          return;
+        }
+        if (event.key === "Escape" && typing) {
+          state.query = "";
+          render();
+          return;
+        }
+        if (state.view !== "duel-start" || state.choosingAi) return;
+
+        if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+          const decks = visibleDecks().filter((deck) => deck.status !== "errors");
+          if (decks.length === 0) return;
+          event.preventDefault();
+          const index = decks.findIndex((deck) => deck.id === currentSelectionId());
+          const next =
+            (index + (event.key === "ArrowDown" ? 1 : -1) + decks.length) %
+            decks.length;
+          if (state.seat === "opponent")
+            state.opponentKey[state.scope] = decks[next].id;
+          else state.selected[state.scope] = decks[next].id;
+          render();
+          return;
+        }
+        if (event.key.toLowerCase() === "f" && !typing) {
+          const id = currentSelectionId();
+          if (state.favourites.has(id)) state.favourites.delete(id);
+          else state.favourites.add(id);
+          render();
+        }
+      });
+
+      function syncSwitches() {
+        for (const button of document.querySelectorAll("#scope-switch button"))
+          button.setAttribute(
+            "aria-pressed",
+            String(button.dataset.scope === state.scope),
+          );
+        for (const button of document.querySelectorAll("#view-switch button"))
+          button.setAttribute(
+            "aria-pressed",
+            String(button.dataset.view === state.view),
+          );
+        for (const button of document.querySelectorAll("#device-switch button"))
+          button.setAttribute(
+            "aria-pressed",
+            String(button.dataset.device === state.device),
+          );
+      }
+
+      document.getElementById("scope-switch").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-scope]");
+        if (!button) return;
+        state.scope = button.dataset.scope;
+        state.seat = "player";
+        state.choosingAi = false;
+        state.libraryHover = null;
+        state.query = "";
+        syncSwitches();
+        render();
+      });
+
+      document.getElementById("view-switch").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-view]");
+        if (!button) return;
+        state.view = button.dataset.view;
+        state.libraryHover = null;
+        syncSwitches();
+        render();
+      });
+
+      document.getElementById("device-switch").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-device]");
+        if (!button) return;
+        state.device = button.dataset.device;
+        state.libraryHover = null;
+        syncSwitches();
+        render();
+      });
+
+      render();
+    </script>
+  </body>
+</html>

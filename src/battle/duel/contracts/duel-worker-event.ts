@@ -64,6 +64,7 @@ const MAXIMUM_PUBLIC_CARDS = 256;
 const MAXIMUM_COUNTERS_PER_CARD = 256;
 const MAXIMUM_STATE_COUNTERS = 1_024;
 const MAXIMUM_CHAIN_LINKS = 255;
+const MAXIMUM_CHAIN_TARGETS = 64;
 const MAXIMUM_COUNTER_NAME_LENGTH = 1_024;
 const MAXIMUM_STATE_TEXT_UNITS = 262_144;
 const MAXIMUM_DIAGNOSTIC_TEXT_UNITS = 1_000_000;
@@ -811,6 +812,7 @@ function validateChainLink(
       "description",
       "phase",
       "outcome",
+      "targets",
     ],
     label,
   );
@@ -862,9 +864,46 @@ function validateChainLink(
   ) {
     throw invalid(`${label}.hidden source identity`);
   }
+  if (link.targets !== undefined) {
+    const targets = requireArray(
+      link.targets,
+      `${label}.targets`,
+      MAXIMUM_CHAIN_TARGETS,
+    );
+    targets.forEach((target, targetIndex) =>
+      validateChainTarget(target, `${label}.targets[${targetIndex}]`),
+    );
+  }
   instances.textUnits +=
     (link.label as string).length +
     (link.description === undefined ? 0 : (link.description as string).length);
+}
+
+function validateChainTarget(value: unknown, label: string): void {
+  const target = requireRecord(value, label);
+  requireExactKeys(
+    target,
+    ["identityVisible", "controller", "location", "instanceId", "card"],
+    label,
+  );
+  requireBoolean(target.identityVisible, `${label}.identityVisible`);
+  requirePlayer(target.controller, `${label}.controller`);
+  requireEnum(target.location, LOCATIONS, `${label}.location`);
+  if (target.identityVisible === true) {
+    requireString(target.instanceId, `${label}.instanceId`, MAXIMUM_ID_LENGTH);
+    requireSafeInteger(
+      target.card,
+      `${label}.card`,
+      1,
+      Number.MAX_SAFE_INTEGER,
+    );
+    return;
+  }
+  /* A hidden target may not smuggle its identity through: no instance handle,
+     no code. The prompt line says a face-down card was targeted and nothing
+     more. */
+  if (target.instanceId !== undefined || target.card !== undefined)
+    throw invalid(`${label}.hidden target identity`);
 }
 
 function validatePresentationEvent(value: unknown): void {

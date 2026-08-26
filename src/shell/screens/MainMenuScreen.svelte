@@ -5,6 +5,12 @@
   import { storySaveExists } from "./story-save-presence.ts";
 
   export let store: ShellStore;
+  /* Free play opens on a deck list, and reading that list means the whole
+     packaged card database. Reported the moment a player reaches for the
+     entry — pointer over it, or focus on it — so the read happens while they
+     are still travelling to the click, and never for a player who came for the
+     story and passes it by. */
+  export let onfreeplaywarm: () => void = () => undefined;
 
   /* Starts hidden and appears once the probe answers: a Continue that turns
      out to have nothing behind it is worse than one that arrives a frame
@@ -64,6 +70,8 @@
       type="button"
       class="secondary"
       data-cy="main-menu-free-play"
+      onpointerenter={onfreeplaywarm}
+      onfocus={onfreeplaywarm}
       onclick={() => store.navigate({ kind: "free-play" })}>Free Play</button
     >
   </nav>

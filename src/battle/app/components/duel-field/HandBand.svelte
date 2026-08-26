@@ -118,12 +118,6 @@
       />
     {/each}
   </div>
-  <span
-    class="duel-field-hand-band__count"
-    data-cy={`field-hand-p${player}-count`}
-  >
-    {sortedCards.length}
-  </span>
   <OverlayScrollbar
     axis="horizontal"
     scrollElement={viewportElement}

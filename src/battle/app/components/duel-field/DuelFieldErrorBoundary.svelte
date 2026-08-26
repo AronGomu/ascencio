@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { DuelPresentationEvent } from "../../../duel/contracts/duel-presentation-event.ts";
+  import type { PromptMessageSegment } from "../../presentation/prompt-context-message.ts";
   import type { PlayerPrompt } from "../../../duel/contracts/player-prompt.ts";
   import type { DuelPhase } from "../../../duel/contracts/public-duel-state.ts";
   import type { CardImageLibrary } from "../../images/card-image-cache.ts";
@@ -57,6 +58,10 @@
   export let onconfirmWindowPositionChange: (
     position: PersistedWindowPosition,
   ) => void = () => undefined;
+  export let fullControl = false;
+  export let fullControlHeld = false;
+  export let onfullcontrolchange: (value: boolean) => void = () => undefined;
+  export let contextMessage: readonly PromptMessageSegment[] = [];
 
   let shouldFail: boolean = injectFailure;
 
@@ -126,5 +131,9 @@
     {showZoneCounts}
     {onzoneListWindowPositionChange}
     {onconfirmWindowPositionChange}
+    {fullControl}
+    {fullControlHeld}
+    {onfullcontrolchange}
+    {contextMessage}
   />
 </svelte:boundary>

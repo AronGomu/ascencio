@@ -3839,6 +3839,128 @@ describe("DuelStateProjector", () => {
     );
   });
 
+  it("attaches targets to the open chain link and hides what the seat cannot see", () => {
+    const source = 97590747;
+    const targeted = 5053103;
+    const hidden = 46986414;
+    const value = projector();
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: source,
+      from: {
+        controller: 0,
+        location: EngineLocation.DECK,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.SPELL_TRAP,
+        sequence: 0,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    value.apply({
+      type: EngineMessageType.MOVE,
+      card: targeted,
+      from: {
+        controller: 0,
+        location: EngineLocation.DECK,
+        sequence: 0,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      to: {
+        controller: 0,
+        location: EngineLocation.MONSTER,
+        sequence: 2,
+        position: EnginePosition.FACE_UP_ATTACK,
+      },
+    });
+    moveOpponent(
+      value,
+      hidden,
+      {
+        location: EngineLocation.DECK,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+      {
+        location: EngineLocation.SPELL_TRAP,
+        sequence: 1,
+        position: EnginePosition.FACE_DOWN_DEFENSE,
+      },
+    );
+    value.apply({
+      type: EngineMessageType.CHAINING,
+      code: source,
+      controller: 0,
+      location: EngineLocation.SPELL_TRAP,
+      sequence: 0,
+      position: EnginePosition.FACE_UP_ATTACK,
+      triggering_controller: 0,
+      triggering_location: EngineLocation.SPELL_TRAP,
+      triggering_sequence: 0,
+      description: 0n,
+      chain_size: 1,
+    });
+    const update = value.apply({
+      type: EngineMessageType.BECOME_TARGET,
+      cards: [
+        {
+          controller: 0,
+          location: EngineLocation.MONSTER,
+          sequence: 2,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+        {
+          controller: 1,
+          location: EngineLocation.SPELL_TRAP,
+          sequence: 1,
+          position: EnginePosition.FACE_DOWN_DEFENSE,
+        },
+      ],
+    });
+    expect(update.events).toEqual([]);
+    expect(value.snapshot().chain[0]!.targets).toEqual([
+      {
+        identityVisible: true,
+        controller: 0,
+        location: "monster",
+        instanceId: expect.any(String),
+        card: cardCode(targeted),
+      },
+      { identityVisible: false, controller: 1, location: "spellTrap" },
+    ]);
+    expect(
+      parseDuelWorkerEvent({
+        type: "state",
+        state: value.snapshot(),
+      }),
+    ).toBeDefined();
+  });
+
+  it("drops targets announced with no open chain link", () => {
+    const value = projector();
+    const before = value.snapshot();
+    const update = value.apply({
+      type: EngineMessageType.BECOME_TARGET,
+      cards: [
+        {
+          controller: 0,
+          location: EngineLocation.MONSTER,
+          sequence: 0,
+          position: EnginePosition.FACE_UP_ATTACK,
+        },
+      ],
+    });
+    expect(update.events).toEqual([]);
+    /* Only the revision moves: a target with no activation to attach to leaves
+       the chain, and every other projection, untouched. */
+    expect(value.snapshot()).toEqual({
+      ...before,
+      revision: before.revision + 1,
+    });
+  });
+
   it.each([0, 2, 256, 1.5])(
     "rejects invalid first CHAINING index %s atomically",
     (chainSize) => {

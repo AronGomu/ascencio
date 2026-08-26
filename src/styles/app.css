@@ -163,28 +163,12 @@ body {
   height: 100%;
 }
 
-/* Free play's own menu is a peer of the main menu and wears the same treatment
-   (`.main-menu` below), so its region asks for nothing the home region does
-   not. The route it shares with the duel widens the stage above the breakpoint;
-   the menu is start-aligned inside it either way. */
+/* Free play opens on its match setup, which asks for nothing the home region
+   does not. The route it shares with the duel widens the stage above the
+   breakpoint; the setup is start-aligned inside it either way. */
 .shell-region--free-play {
   width: 100%;
   height: 100%;
-}
-
-/* The way back out of a free-play match. It is painted over the duel rather
-   than laid out above it: the duel region is exactly `--stage-h` tall and
-   `main.is-duel-viewport` takes all of it, so a control in that grid flow would
-   push the board's bottom edge past the stage's own `overflow: hidden`. It sits
-   inside the region so a portrait phone turns it with the board, and below the
-   duel's menu layer so a dialog covers it rather than the other way round. */
-.free-play-leave-match {
-  position: absolute;
-  z-index: var(--duel-field-layer-control);
-  top: var(--space-2);
-  left: var(--space-2);
-  padding: var(--space-1) var(--space-2);
-  font-size: var(--text-sm);
 }
 
 /* The app's front door, styled like the visual novel's own title screen
@@ -1135,9 +1119,9 @@ li + li {
   overflow: hidden;
 }
 
-/* Sits in the slot's corner rather than the board's, so the board's own
-   aspect-driven box never moves it, and it stays legible against whatever
-   the field paints behind it. */
+/* Sits in the field's own bottom-right corner, inside the board rather than in
+   the slot around it: anchored to the slot the box drifted with the empty
+   letterboxing and could end up beside the field instead of on it. */
 .full-control-toggle {
   position: absolute;
   right: 0.5rem;
@@ -1148,6 +1132,27 @@ li + li {
   align-items: center;
   font-size: 0.7rem;
   color: var(--muted);
+}
+
+/* The caption is the tooltip. Hidden by default and revealed on hover or on
+   focus — clicking the box focuses it, so a click reveals the name too. It is
+   taken out of flow so appearing cannot move the box it names. */
+.full-control-toggle__text {
+  position: absolute;
+  right: 100%;
+  bottom: 0;
+  visibility: hidden;
+  margin-right: 0.3rem;
+  padding: 0.1rem 0.35rem;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  white-space: nowrap;
+}
+
+.full-control-toggle:hover .full-control-toggle__text,
+.full-control-toggle:focus-within .full-control-toggle__text {
+  visibility: visible;
 }
 
 /* Ctrl raises Full Control without writing the setting, so the hold is shown
@@ -1357,8 +1362,7 @@ button.field-phase-chip {
   --zone-outline-color: transparent;
 }
 
-.duel-field-board[data-zone-counts="false"] .duel-field-stack__count,
-.duel-field-board[data-zone-counts="false"] .duel-field-hand-band__count {
+.duel-field-board[data-zone-counts="false"] .duel-field-stack__count {
   display: none;
 }
 
@@ -1381,16 +1385,26 @@ button.duel-field-zone,
 
 /* Green is the "you may act here" colour across the field. Orange is
    reserved for selection below: selection is a different state from
-   legality and the two must never be confusable. */
+   legality and the two must never be confusable. Two layers: a near-opaque
+   3px ring reads as an edge at field scale, and the soft outer glow makes a
+   playable card separate from the board behind it at a glance. The glow
+   carries no spread on purpose — a spread paints a hard-edged band, and a
+   card whose art is rotated (defense, set) leaves that band standing inside
+   the card's own upright box, which reads as a card filled solid green
+   rather than a card wearing a ring. */
 .duel-field-zone.is-actionable,
 .duel-field-card.is-actionable .duel-field-card__art {
   border-color: var(--success);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--legal) 55%, transparent);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--legal) 90%, transparent),
+    0 0 10px color-mix(in srgb, var(--legal) 40%, transparent);
 }
 
 .duel-field-stack.is-actionable {
   border-color: var(--success);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--legal) 55%, transparent);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--legal) 90%, transparent),
+    0 0 10px color-mix(in srgb, var(--legal) 40%, transparent);
 }
 
 /* A drop candidate wears the same green as legality, filled in: the tint is
@@ -1536,14 +1550,12 @@ button.duel-field-zone,
 }
 
 /* Override the default display:none on chips so they show inside the overlay.
-   Positioned against the bridge rather than the overlay box, so the two meet
-   edge to edge and the pointer path between them has no gap. */
+   Position, centring and the horizontal transform all come from the shared
+   rule: the overlay's chips sit on the zoomed card exactly the way a field
+   card's sit on it. The overlay box itself is out of hit testing, so the chips
+   have to opt back in on their own. */
 .hand-zoom-overlay .card-action-chips {
   display: flex;
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
   pointer-events: auto;
 }
 
@@ -2111,11 +2123,10 @@ button.duel-field-zone,
    (shared rule above); the zoom scale composes onto that same transform so
    the halo/art (which fills the card root) scales with it, origin centre.
    `:not(.is-pinned)` deliberately excludes the pin flow, which moves focus
-   onto a `card-action-chips` button just above the card's own top edge;
-   zooming the card while that chip holds focus would amplify the chip's
-   offset from the transform origin and can push it above the (non-
-   scrolling) viewport, which `assertRectInsideViewport` in e2e correctly
-   rejects. A `:has()`-based fix (matching only the card's own target button)
+   onto a `card-action-chips` button; zooming the card while that chip holds
+   focus would amplify the chip's offset from the transform origin and can
+   push it outside the (non-scrolling) viewport, which
+   `assertRectInsideViewport` in e2e correctly rejects. A `:has()`-based fix (matching only the card's own target button)
    was tried first and reverted: `:has()` invalidation cost measurably slowed
    the keyboard-walker e2e's hundreds of focus moves past its time budget.
    Pin/menu z-layering (above) is unaffected — only the visual scale is
@@ -2133,14 +2144,18 @@ button.duel-field-zone,
    group above (one class each), so this always wins regardless of source
    order. */
 .duel-field-card.is-hand-item {
+  --hand-card-halo-gap: 0.35rem;
+  --hand-card-height: calc(var(--field-height) - var(--hand-card-halo-gap));
+
   position: relative;
   top: auto;
   left: auto;
-  flex: 0 0 calc(var(--field-height) * 72 / 104);
-  width: calc(var(--field-height) * 72 / 104);
-  height: var(--field-height);
+  flex: 0 0 calc(var(--hand-card-height) * 72 / 104);
+  width: calc(var(--hand-card-height) * 72 / 104);
+  height: var(--hand-card-height);
   min-width: 0;
   min-height: 0;
+  margin-top: var(--hand-card-halo-gap);
   transform: none;
   transform-origin: center bottom;
 }
@@ -2217,22 +2232,6 @@ button.duel-field-zone,
 
 .duel-field-hand-band.is-opponent .duel-field-hand-band__viewport {
   flex-direction: row-reverse;
-}
-
-.duel-field-hand-band__count {
-  position: absolute;
-  right: 0.15rem;
-  bottom: 0.15rem;
-  z-index: var(--duel-field-layer-label);
-  min-width: 1.25rem;
-  padding: 0.05rem 0.3rem;
-  border-radius: 999px;
-  pointer-events: none;
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  color: var(--ink);
-  font-size: 0.65rem;
-  font-weight: 800;
-  text-align: center;
 }
 
 .overlay-scrollbar {
@@ -2323,6 +2322,18 @@ button.duel-field-zone,
   white-space: nowrap;
 }
 
+/* The band's viewport clips its overflow, and a hand card fills the band's
+   full height, so the legality halo painted outside the card's own box had
+   nowhere to land. The gap above shortens the card by exactly what the ring
+   needs and spends it as top margin. The label overhangs the art by 0.1rem
+   and covered the ring along the bottom edge, so inside the band it tucks
+   back inside the art instead. */
+.duel-field-card.is-hand-item .duel-field-card__label {
+  right: 0.16rem;
+  bottom: 0.16rem;
+  left: 0.16rem;
+}
+
 .duel-field-card__target {
   position: absolute;
   z-index: var(--duel-field-layer-control);
@@ -2336,16 +2347,23 @@ button.duel-field-zone,
   cursor: pointer;
 }
 
-/* Chips float above the card and deliberately overlap its top edge by
-   0.35rem, so a pointer travelling from the card to a chip never crosses a
-   gap that would drop the `:hover` that reveals them. */
+/* Chips sit on top of the card, centred on it in both axes: `top`/`bottom` 0
+   with an intrinsic height leaves the two auto block margins to split the
+   leftover space evenly. Inside the card's own box there is no gap at all for
+   a pointer travelling from card to chip to cross, so the `:hover` that
+   reveals them can never be dropped in transit. Every other host of this
+   class — the hand zoom overlay and the zone list — sets its own `top`/
+   `bottom` pair and keeps its own anchor. */
 .card-action-chips {
   position: absolute;
   z-index: var(--duel-field-layer-menu);
-  bottom: calc(100% - 0.35rem);
+  top: 0;
+  bottom: 0;
   left: 50%;
   display: none;
+  height: fit-content;
   gap: 0.15rem;
+  margin-block: auto;
   padding: 0.12rem;
   border-radius: 0.3rem;
   background: color-mix(in srgb, var(--bg) 92%, transparent);
@@ -2366,24 +2384,6 @@ button.duel-field-zone,
   padding: 0;
 }
 
-/* Sized from the zoom's own width rather than the chip's fixed 0.55rem, which
-   a row this wide would strand in the middle of an empty band. The floor is
-   the small-text token, so a narrow field never trades legibility for the
-   ratio; the height floor is the shared 44px control minimum, which the row
-   layout can finally afford. */
-.card-action-chips.is-stacked .card-action-chip {
-  min-height: 44px;
-  font-size: max(var(--text-xs), calc(var(--hand-zoom-width) / 11));
-}
-
-/* Hand cards live inside a horizontal scrollport whose vertical overflow is
-   clipped. Offset their chips by the 1.35x bottom-origin hover lift, keeping
-   every visible chip inside the hand band and pointer reachable. */
-.duel-field-card.is-hand-item .card-action-chips {
-  top: calc(var(--field-height) * 0.26);
-  bottom: auto;
-}
-
 /* Always mounted for an actionable card, merely hidden: assertions about
    dismissal must test visibility, never element count. */
 .duel-field-card.is-actionable:hover .card-action-chips,
@@ -2398,6 +2398,20 @@ button.duel-field-zone,
 .duel-field-card.is-hand-item:not(:focus-within):not(.is-pinned):hover
   .card-action-chips {
   display: none;
+}
+
+/* Chips drawn over a card — the field/hand card itself and the hand zoom
+   overlay of one — get 1.5x the shared size: unlike a list row's chip, this
+   button has to read as a target from across the board. The zone list keeps
+   the smaller size below. */
+.duel-field-card .card-action-chip,
+.hand-zoom-overlay .card-action-chip {
+  min-width: 5.1rem;
+  min-height: 1.725rem;
+  height: 1.725rem;
+  padding: 0 0.45rem;
+  border-radius: 0.375rem;
+  font-size: 0.825rem;
 }
 
 button.card-action-chip {
@@ -2421,15 +2435,16 @@ button.card-action-chip:hover:not(:disabled) {
 /* The strip slot is absolutely positioned from its left edge alone, so its
    shrink-to-fit width is this button's min-content: without `nowrap` the
    engine's own label (`End Battle Phase`) breaks over three lines. The height
-   floor rises past the shared 44px control minimum on purpose. */
+   floor stays on the shared 44px control minimum: the button was trimmed back
+   towards the rest of the field's chrome, not below what a thumb can hit. */
 .field-end-turn {
   min-inline-size: 44px;
-  min-height: 3rem;
+  min-height: 2.75rem;
   display: inline-grid;
   place-items: center;
   pointer-events: auto;
-  padding: 0.5rem var(--space-4);
-  font-size: var(--text-md);
+  padding: 0.35rem var(--space-3);
+  font-size: var(--text-sm);
   white-space: nowrap;
 }
 

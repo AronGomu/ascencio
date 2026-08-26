@@ -4,6 +4,7 @@
 > Decided: 2026-08-09
 > Owners: field interaction architecture
 > Commit: `b5702e2` — T6, T8, T11
+> Amended (owner ask, duel chrome round): §4 is now conditional. A stack wears the legality halo only while `publicCount > 0` — only while it holds at least one card whose identity the viewer may see. A deck, or any pile showing nothing, stays an actionable button that opens its list, and simply wears no halo: the halo says "a legal target sits in here", which a pile that shows nothing cannot make good on.
 
 ## Context
 

@@ -27,6 +27,11 @@
   $: positionStyle = `--field-x: ${placement.x}px; --field-y: ${placement.y}px; --field-width: ${placement.width * (72 / 104)}px; --field-height: ${placement.height}px;`;
   $: synchronizeImageLease(imageLibrary, stack.topCardCode, placeholderUrl);
   $: clickable = stack.count > 0;
+  /* The halo says "a legal target sits in here", which is only ever readable
+     on a pile that shows what it holds. A deck or a face-down banished pile
+     tells the player nothing they can act on, so it wears no halo — it stays
+     a button, and opening it is still how the target is reached. */
+  $: haloed = actionable && stack.publicCount > 0;
 
   onDestroy(() => imageLease?.release());
 
@@ -65,7 +70,7 @@
   this={clickable ? "button" : "div"}
   type={clickable ? "button" : undefined}
   class:is-navigation-active={active}
-  class:is-actionable={actionable}
+  class:is-actionable={haloed}
   class:is-opponent={stack.player === 1}
   class="duel-field-stack"
   role={clickable ? undefined : "group"}

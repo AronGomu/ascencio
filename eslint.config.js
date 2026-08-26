@@ -89,8 +89,10 @@ const boundaries = (files, patterns) => ({
 export default tseslint.config(
   {
     ignores: [
+      ".agents/**",
       ".agentsystem/**",
       ".cache/**",
+      ".claude/**",
       ".pi/**",
       ".github/skills/**",
       ".github/hooks/**",

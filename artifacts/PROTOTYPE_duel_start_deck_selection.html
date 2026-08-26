@@ -37,6 +37,11 @@
         --neutral: #33405a;
         --focus-ring: #f6c177;
         --shadow: #000000;
+        /* Prototype-local seat colours: blue = your seat, red = the
+           opponent's. Not in tokens.css yet; a real implementation adds
+           them there. */
+        --seat-you: #4ea3ff;
+        --seat-opponent: var(--danger);
 
         --space-1: 0.25rem;
         --space-2: 0.5rem;
@@ -234,6 +239,48 @@
         object-fit: cover;
       }
 
+      /* Free play: the portrait itself is the control that opens the AI
+         picker — no separate Change button. The chip names the affordance;
+         hover/focus light it up. Story keeps a plain, locked portrait. */
+      .opponent__portrait {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+      }
+
+      .opponent__portrait:hover svg {
+        filter: brightness(1.1);
+      }
+
+      .opponent__portrait:focus-visible {
+        outline: 2px solid var(--focus-ring);
+        outline-offset: -2px;
+      }
+
+      .opponent__portrait-hint {
+        position: absolute;
+        inset: var(--space-2) var(--space-2) auto auto;
+        z-index: 1;
+        padding: 0.15rem 0.55rem;
+        border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--bg-deep) 72%, transparent);
+        color: var(--muted);
+        font-size: var(--text-xs);
+        font-weight: 700;
+      }
+
+      .opponent__portrait:hover .opponent__portrait-hint,
+      .opponent__portrait:focus-visible .opponent__portrait-hint {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
       /* The portrait fades into the panel instead of ending on a hard edge:
          the deck block below has to read as the same person's block. */
       .opponent__art::after {
@@ -254,6 +301,8 @@
         position: absolute;
         inset: auto var(--space-4) var(--space-3) var(--space-4);
         z-index: 1;
+        /* Text overlay only — clicks fall through to the portrait button. */
+        pointer-events: none;
       }
 
       .opponent__role {
@@ -263,16 +312,6 @@
         font-weight: 750;
         letter-spacing: 0.14em;
         text-transform: uppercase;
-      }
-
-      /* Name and its Change button share a row so the two identity-level
-         facts — who it is, and that it's swappable — read together; the
-         Opponent deck row below keeps its own Change for the deck alone. */
-      .opponent__name-row {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: var(--space-3);
       }
 
       .opponent__name {
@@ -293,7 +332,11 @@
         display: grid;
         gap: var(--space-2);
         min-width: 0;
-        padding: var(--space-3) var(--space-4) var(--space-4);
+        padding: var(--space-3) var(--space-4) 0;
+      }
+
+      .opponent__deck:last-of-type {
+        padding-block-end: var(--space-4);
       }
 
       /* One tile, however narrow the column gets: the shared grid's 19rem
@@ -302,56 +345,24 @@
         grid-template-columns: minmax(0, 1fr);
       }
 
-      /* A compact strip, not the picking grid's 2:1 card: two of these plus
-         the portrait have to share one narrow column, so confirming "here's
-         who/what" takes a fixed short height instead of scaling with width. */
+      /* A compact strip, not the picking grid's 2:1 card — but taller than
+         it used to be: the "Opponent deck" / "Your deck" captions are gone
+         and the halo colours carry that meaning, so the freed space goes
+         to the cards themselves. */
       .opponent .deck-tile {
         aspect-ratio: auto;
-        height: 4.5rem;
+        height: 6rem;
       }
 
-      /* While the opponent seat is the one being filled, the slot it fills
-         says so — the seat colour, not the player's accent. */
-      .opponent[data-seating="true"] .deck-tile {
-        border-color: var(--selected);
-        box-shadow: 0 0 0 1px color-mix(in srgb, var(--selected) 40%, transparent);
-      }
-
-      .opponent__deck-label {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--space-2);
-        color: var(--muted);
-        font-size: var(--text-xs);
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-      }
-
-      .opponent__deck-label .lock {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3em;
-        letter-spacing: 0.04em;
-        text-transform: none;
-      }
-
-      .link-button {
-        min-height: 1.75rem;
-        padding: 0 var(--space-2);
-        border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
-        border-radius: var(--radius-sm);
-        background: transparent;
-        color: var(--text);
-        font-size: var(--text-xs);
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        text-transform: none;
-      }
-
-      .link-button:hover {
-        border-color: var(--accent);
-        color: var(--accent);
+      /* While the opponent seat is the one being filled, their card says
+         so louder — same red, stronger glow. Scoped to the opponent's own
+         card: the blue "yours" preview sits in the same panel. */
+      .opponent[data-seating="true"] .deck-tile[data-halo="opponent"],
+      .mobile-opponent[data-seating="true"] .deck-tile[data-halo="opponent"] {
+        border-color: var(--seat-opponent);
+        box-shadow:
+          0 0 0 1px color-mix(in srgb, var(--seat-opponent) 55%, transparent),
+          0 0 1.4rem color-mix(in srgb, var(--seat-opponent) 45%, transparent);
       }
 
       /* ---------------- Selection (left) ---------------- */
@@ -384,6 +395,16 @@
         letter-spacing: -0.01em;
       }
 
+      /* Shown / total, next to the title: the filter's effect stays
+         countable even when the grid scrolls. */
+      .selection__count {
+        margin-inline-start: var(--space-2);
+        color: var(--muted);
+        font-size: var(--text-sm);
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+
       .selection__scope {
         margin: 0;
         color: var(--muted);
@@ -398,7 +419,7 @@
       /* Seat mode: the opponent seat borrows the same list, and the whole
          right pane says so rather than a heading alone. */
       .selection[data-seat="opponent"] .selection__eyebrow {
-        color: var(--selected);
+        color: var(--seat-opponent);
       }
 
       .selection[data-seat="opponent"]::before {
@@ -502,13 +523,11 @@
         list-style: none;
       }
 
-      /* 2:1 card, split into two equal columns — each column's width is
-         exactly the card's height, so the art column is a square without
-         needing its own aspect-ratio rule. */
+      /* 2:1 card. The art fills the whole rectangle; the text sits on a
+         hard black fade over its left side (see .deck-tile__art::after). */
       .deck-tile {
         position: relative;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
+        display: block;
         aspect-ratio: 2 / 1;
         width: 100%;
         padding: 0;
@@ -554,19 +573,138 @@
           0 0.4rem 1.4rem color-mix(in srgb, var(--accent-deep) 40%, transparent);
       }
 
-      /* Two seats, two colours. A tile chosen for the opponent must never
-         look like the deck the player is about to field. */
-      .selection[data-seat="opponent"] .deck-tile[aria-pressed="true"] {
-        border-color: var(--selected);
-        background: color-mix(in srgb, var(--selected) 10%, var(--surface));
+      /* Two seats, two colours — blue is yours, red is theirs — and the
+         same pair speaks everywhere: the picking grid, the right-panel
+         cards, the mobile list. Library focus keeps the app accent. */
+      [data-seat="player"] .deck-tile[aria-pressed="true"] {
+        border-color: var(--seat-you);
+        background: color-mix(in srgb, var(--seat-you) 12%, var(--surface));
         box-shadow:
-          inset 0 0 0 1px color-mix(in srgb, var(--selected) 45%, transparent),
-          0 0.4rem 1.4rem color-mix(in srgb, var(--selected) 18%, transparent);
+          inset 0 0 0 1px color-mix(in srgb, var(--seat-you) 45%, transparent),
+          0 0.4rem 1.4rem color-mix(in srgb, var(--seat-you) 30%, transparent);
       }
 
-      .selection[data-seat="opponent"] .deck-tile__check {
-        background: var(--selected);
-        color: #2b1d00;
+      [data-seat="player"] .deck-tile__check {
+        background: var(--seat-you);
+        color: #041022;
+      }
+
+      [data-seat="opponent"] .deck-tile[aria-pressed="true"] {
+        border-color: var(--seat-opponent);
+        background: color-mix(in srgb, var(--seat-opponent) 10%, var(--surface));
+        box-shadow:
+          inset 0 0 0 1px color-mix(in srgb, var(--seat-opponent) 45%, transparent),
+          0 0.4rem 1.4rem color-mix(in srgb, var(--seat-opponent) 25%, transparent);
+      }
+
+      [data-seat="opponent"] .deck-tile__check {
+        background: var(--seat-opponent);
+        color: #2b0710;
+      }
+
+      /* The seat cards wear their colour permanently: red halo = the
+         opponent's deck, blue halo = yours. */
+      .deck-tile[data-halo="opponent"] {
+        border-color: color-mix(in srgb, var(--seat-opponent) 75%, var(--border-soft));
+        box-shadow:
+          0 0 0 1px color-mix(in srgb, var(--seat-opponent) 40%, transparent),
+          0 0 1.1rem color-mix(in srgb, var(--seat-opponent) 30%, transparent);
+      }
+
+      .deck-tile[data-halo="you"] {
+        border-color: color-mix(in srgb, var(--seat-you) 75%, var(--border-soft));
+        box-shadow:
+          0 0 0 1px color-mix(in srgb, var(--seat-you) 40%, transparent),
+          0 0 1.1rem color-mix(in srgb, var(--seat-you) 30%, transparent);
+      }
+
+      /* Read-only previews (your own deck's card in the panel): same tile,
+         no interaction. */
+      .deck-tile--static {
+        pointer-events: none;
+      }
+
+      .decklist-float {
+        position: fixed;
+        z-index: 60;
+        display: flex;
+        flex-direction: column;
+        width: 260px;
+        overflow: hidden;
+        border: 1px solid var(--border-light, #8ba0bf);
+        border-radius: var(--radius-md);
+        background: var(--surface-panel);
+        box-shadow: 0 1rem 3rem color-mix(in srgb, var(--shadow) 70%, transparent);
+        pointer-events: none;
+      }
+
+      /* `display: flex` above is an author rule, which beats the browser's
+         own `[hidden] { display: none }` UA rule regardless of the
+         attribute being set — so the JS toggle did nothing without this. */
+      .decklist-float[hidden] {
+        display: none;
+      }
+
+      .decklist-float__head {
+        padding: var(--space-3) var(--space-3) var(--space-2);
+        border-block-end: 1px solid color-mix(in srgb, var(--border) 35%, transparent);
+      }
+
+      .decklist-float__name {
+        margin: 0 0 2px;
+        font-size: var(--text-md);
+        font-weight: 750;
+        line-height: 1.2;
+      }
+
+      .decklist-float__stats {
+        margin: 0;
+        color: var(--muted);
+        font-size: var(--text-xs);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .decklist-float .decklist {
+        min-height: 0;
+        overflow-y: auto;
+        padding: var(--space-2) 0 var(--space-3);
+      }
+
+      /* Menu sheet, desktop context: the mobile version stretches edge to
+         edge on a narrow phone; capped and centred here so it doesn't span
+         the full duel-start width. */
+      .sheet {
+        max-width: 26rem;
+        margin-inline: auto;
+      }
+
+      /* Narrow contexts — the seat cards and the one-column phone list —
+         give the text more of the card and push the fade deeper, or the
+         wrapped counts/badges overflow the tile and collide with the
+         corner controls. */
+      .opponent .deck-tile__body,
+      .mobile-opponent .deck-tile__body,
+      .mobile-deck-list .deck-tile__body {
+        width: 80%;
+      }
+
+      /* Phone list only: text hugs the card's bottom so the star and the
+         checkmark keep the top corners to themselves. */
+      .mobile-deck-list .deck-tile__body {
+        align-content: end;
+        padding-block-end: var(--space-3);
+      }
+
+      .opponent .deck-tile__art::after,
+      .mobile-opponent .deck-tile__art::after,
+      .mobile-deck-list .deck-tile__art::after {
+        background: linear-gradient(
+          90deg,
+          #04080f 0%,
+          rgba(4, 8, 15, 0.9) 45%,
+          rgba(4, 8, 15, 0.35) 68%,
+          transparent 85%
+        );
       }
 
       .deck-tile:disabled {
@@ -574,10 +712,11 @@
         opacity: 0.55;
       }
 
-      /* The right half, and a square by construction (see `.deck-tile`
-         above) — no cropping math needed, only `cover`-style fill. */
+      /* The whole rectangle, not a right-half square: the illustration is
+         the card, and the text reads over its faded left edge. */
       .deck-tile__art {
-        position: relative;
+        position: absolute;
+        inset: 0;
         overflow: hidden;
         background: var(--surface-sunken);
       }
@@ -588,28 +727,33 @@
         height: 100%;
       }
 
-      /* The blend: solid black at the seam, fading to transparent a quarter
-         of the way into the art — the divider between the two halves
-         becomes a gradient instead of a hard line. */
+      /* The hard black fade the text sits on: near-solid over the text
+         column, gone by two-thirds across, so more than half of the
+         illustration stays clearly visible. */
       .deck-tile__art::after {
         content: "";
         position: absolute;
         inset: 0;
         background: linear-gradient(
           90deg,
-          rgba(4, 8, 15, 0.92) 0%,
-          rgba(4, 8, 15, 0.55) 12%,
-          transparent 26%
+          #04080f 0%,
+          rgba(4, 8, 15, 0.93) 30%,
+          rgba(4, 8, 15, 0.45) 52%,
+          transparent 70%
         );
         pointer-events: none;
       }
 
-      /* The left half: description only, no image behind it to fade into. */
+      /* The text layer, over the faded side of the art. */
       .deck-tile__body {
+        position: relative;
+        z-index: 1;
         display: grid;
         align-content: center;
         gap: 0.3rem;
         min-width: 0;
+        width: 58%;
+        height: 100%;
         padding: var(--space-3);
       }
 
@@ -679,11 +823,11 @@
       /* Which tile the player's own seat holds, shown only while they are
          filling the other one. */
       .badge--yours {
-        color: var(--accent);
+        color: var(--seat-you);
       }
 
-      /* Top-right, over the art half now that the art sits on the right;
-         the favourite star keeps the opposite corner, over the description. */
+      /* Top-right, over the art; the favourite star keeps the opposite
+         corner, over the description. */
       .deck-tile__check {
         position: absolute;
         inset: var(--space-2) var(--space-2) auto auto;
@@ -734,6 +878,104 @@
       .favourite:focus-visible {
         outline: 2px solid var(--focus-ring);
         outline-offset: 1px;
+      }
+
+      /* Story: the caption "Set by the story" moved onto the card itself
+         when the panel labels went away. */
+      .deck-tile__lock {
+        position: absolute;
+        inset: auto var(--space-2) var(--space-2) auto;
+        z-index: 2;
+        padding: 0.1rem 0.5rem;
+        border: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
+        border-radius: var(--radius-sm);
+        background: color-mix(in srgb, var(--bg-deep) 78%, transparent);
+        color: var(--muted);
+        font-size: 0.66rem;
+        letter-spacing: 0.04em;
+      }
+
+      /* Mobile only: per-card actions live behind a kebab at the card's
+         bottom-right; the footer keeps a single job (Start). */
+      .deck-menu {
+        position: absolute;
+        inset: auto var(--space-2) var(--space-2) auto;
+        z-index: 2;
+        display: grid;
+        place-items: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        padding: 0;
+        border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+        border-radius: var(--radius-sm);
+        background: color-mix(in srgb, var(--bg-deep) 60%, transparent);
+        color: var(--text);
+        font-size: 1rem;
+        font-weight: 700;
+        line-height: 1;
+      }
+
+      .deck-menu:focus-visible {
+        outline: 2px solid var(--focus-ring);
+        outline-offset: 1px;
+      }
+
+      /* The action sheet the kebab opens — pinned to the phone frame's
+         bottom, scrim behind. */
+      .sheet-backdrop {
+        position: absolute;
+        inset: 0;
+        z-index: 30;
+        display: grid;
+        align-items: end;
+        background: color-mix(in srgb, var(--bg-deep) 62%, transparent);
+      }
+
+      .sheet {
+        display: grid;
+        gap: 2px;
+        margin: var(--space-3);
+        padding: var(--space-2);
+        border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+        border-radius: var(--radius-lg);
+        background: var(--surface-raised);
+        box-shadow: 0 1rem 3rem color-mix(in srgb, var(--shadow) 70%, transparent);
+      }
+
+      .sheet__title {
+        margin: 0;
+        padding: var(--space-2) var(--space-3);
+        overflow: hidden;
+        color: var(--muted);
+        font-size: var(--text-xs);
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-overflow: ellipsis;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+
+      .sheet button {
+        padding: 0.7rem var(--space-3);
+        border: 0;
+        border-radius: var(--radius-sm);
+        background: transparent;
+        color: var(--text);
+        font-weight: 600;
+        text-align: left;
+      }
+
+      .sheet button:hover:not(:disabled) {
+        background: var(--surface-highlight);
+      }
+
+      .sheet button:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
+
+      .sheet button[data-menu-action="delete"]:not(:disabled) {
+        color: var(--danger);
       }
 
       .empty {
@@ -993,6 +1235,7 @@
       }
 
       .mobile-screen {
+        position: relative;
         display: grid;
         /* An unspecified column still defaults to `auto` sizing, which is the
            same content-based-minimum trap as bare `1fr` — an explicit 0 floor
@@ -1050,23 +1293,75 @@
         height: 1rem;
       }
 
+      /* The opponent's card, top of the screen: tappable avatar (change
+         who), their deck card below it (change what they bring). */
       .mobile-opponent {
-        display: flex;
-        align-items: center;
-        gap: var(--space-3);
+        display: grid;
+        gap: var(--space-2);
         margin: 0 var(--space-4) var(--space-2);
-        padding: var(--space-2) var(--space-3);
+        padding: var(--space-3);
         border: 1px solid var(--border-soft);
         border-radius: var(--radius-md);
         background: var(--surface-panel);
       }
 
-      .mobile-opponent__portrait {
+      .mobile-opponent__head {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        min-width: 0;
+      }
+
+      .mobile-opponent__avatar {
+        position: relative;
         flex: 0 0 auto;
-        width: 2.75rem;
-        height: 2.75rem;
+        width: 3.25rem;
+        height: 3.25rem;
+      }
+
+      .mobile-opponent__avatar > svg,
+      .mobile-opponent__portrait-button {
+        display: block;
+        width: 100%;
+        height: 100%;
         overflow: hidden;
+        border: 1px solid var(--border-soft);
         border-radius: 50%;
+        background: var(--surface-sunken);
+      }
+
+      .mobile-opponent__portrait-button {
+        padding: 0;
+        cursor: pointer;
+      }
+
+      .mobile-opponent__portrait-button svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .mobile-opponent__portrait-button:focus-visible {
+        outline: 2px solid var(--focus-ring);
+        outline-offset: 2px;
+      }
+
+      /* No hover on a phone: the swap glyph rides the avatar permanently
+         so the tap affordance is visible. */
+      .avatar-badge {
+        position: absolute;
+        inset: auto -0.2rem -0.2rem auto;
+        z-index: 1;
+        display: grid;
+        place-items: center;
+        width: 1.15rem;
+        height: 1.15rem;
+        border: 1px solid var(--border-strong);
+        border-radius: 50%;
+        background: var(--surface-highlight);
+        color: var(--accent);
+        font-size: 0.65rem;
+        pointer-events: none;
       }
 
       .mobile-opponent__text {
@@ -1076,29 +1371,30 @@
         gap: 1px;
       }
 
+      .mobile-opponent__role {
+        margin: 0;
+        color: var(--muted);
+        font-size: var(--text-xs);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
       .mobile-opponent__name {
         margin: 0;
         font-size: var(--text-sm);
         font-weight: 750;
       }
 
-      .mobile-opponent__deck {
-        margin: 0;
-        overflow: hidden;
-        color: var(--muted);
-        font-size: var(--text-xs);
-        text-overflow: ellipsis;
-        white-space: nowrap;
+      .mobile-opponent .deck-grid {
+        grid-template-columns: minmax(0, 1fr);
       }
 
-      /* Two things to change, stacked rather than crowded side by side at
-         phone width — who you face, and (separately) what they brought. */
-      .mobile-opponent__actions {
-        display: flex;
-        flex: 0 0 auto;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 0.25rem;
+      .mobile-opponent .deck-tile {
+        aspect-ratio: auto;
+        /* Tall enough for a two-line deck name plus counts, and for the
+           story's lock chip to keep clear of the text. */
+        height: 5.5rem;
       }
 
       .mobile-screen .tools {
@@ -1130,16 +1426,6 @@
 
       .mobile-footer .ui-button--primary {
         width: 100%;
-      }
-
-      .mobile-footer__row {
-        display: flex;
-        align-items: center;
-        gap: var(--space-2);
-      }
-
-      .mobile-footer__row .link-button {
-        flex: 0 0 auto;
       }
 
       .visually-hidden {
@@ -1257,6 +1543,11 @@
     <div class="card-preview" id="card-preview" hidden aria-hidden="true">
       <svg><use href="" /></svg>
     </div>
+
+    <!-- Floating decklist preview: duel-start, desktop only. Follows a deck
+         tile's hover so the full Main/Extra/Side list is a glance away
+         without leaving the picking grid. -->
+    <div class="decklist-float" id="decklist-float" hidden aria-hidden="true"></div>
 
     <!-- Inline art library: authored geometry only, no third-party card art.
          Same discipline as src/story/assets/PROVENANCE.md. -->
@@ -1496,7 +1787,79 @@
         return rows;
       }
 
+      /** A real, published decklist (Elvis Vu's Zoodiac Zombie Lightsworn,
+          17th–32nd at YCS Denver, Apr 2017 — 60 Main / 15 Extra / 15 Side,
+          https://www.yugiohtopdecks.org/deck/6455), used verbatim instead of
+          the synthetic pool: this is the prototype's example of a deck at
+          the legal maximum size. Card names, quantities, and the levels /
+          ranks / attributes in `right` are the real card data; `art` reuses
+          this file's authored motifs by attribute, not an official image. */
+      const REAL_DECKLISTS = {
+        "real-zoodiac": {
+          main: [
+            { name: "Aurkus, Lightsworn Druid", right: "★3 · LIGHT", art: "art-relay", qty: 1 },
+            { name: "D.D. Crow", right: "★1 · DARK", art: "art-abyss", qty: 3 },
+            { name: "Fairy Tail - Snow", right: "★4 · LIGHT", art: "art-relay", qty: 3 },
+            { name: "Gem-Knight Garnet", right: "★4 · EARTH", art: "art-stone", qty: 1 },
+            { name: "Ghost Ogre & Snow Rabbit", right: "★3 · LIGHT", art: "art-relay", qty: 2 },
+            { name: "Lunalight Black Sheep", right: "★2 · DARK", art: "art-abyss", qty: 1 },
+            { name: "Lyla, Lightsworn Sorceress", right: "★4 · LIGHT", art: "art-relay", qty: 1 },
+            { name: 'Maxx "C"', right: "★2 · EARTH", art: "art-stone", qty: 1 },
+            { name: "Mezuki", right: "★4 · EARTH", art: "art-stone", qty: 3 },
+            { name: "Photon Thrasher", right: "★4 · LIGHT", art: "art-relay", qty: 1 },
+            { name: "Raiden, Hand of the Lightsworn", right: "★4 · LIGHT", art: "art-relay", qty: 1 },
+            { name: "Shiranui Solitaire", right: "★4 · FIRE", art: "art-ember", qty: 3 },
+            { name: "Shiranui Spiritmaster", right: "★4 · FIRE", art: "art-ember", qty: 1 },
+            { name: "Speedroid Taketomborg", right: "★3 · WIND", art: "art-dragon", qty: 1 },
+            { name: "Speedroid Terrortop", right: "★3 · WIND", art: "art-dragon", qty: 3 },
+            { name: "Uni-Zombie", right: "★3 · DARK", art: "art-abyss", qty: 2 },
+            { name: "Wulf, Lightsworn Beast", right: "★4 · LIGHT", art: "art-relay", qty: 3 },
+            { name: "Zoodiac Ratpier", right: "★4 · EARTH", art: "art-stone", qty: 2 },
+            { name: "Zoodiac Whiptail", right: "★4 · EARTH", art: "art-stone", qty: 1 },
+            { name: "Brilliant Fusion", right: "Spell", art: "art-signal", qty: 3 },
+            { name: "Charge of the Light Brigade", right: "Spell", art: "art-signal", qty: 2 },
+            { name: "Foolish Burial", right: "Spell", art: "art-signal", qty: 1 },
+            { name: "Fusion Substitute", right: "Spell", art: "art-signal", qty: 1 },
+            { name: "Instant Fusion", right: "Spell", art: "art-signal", qty: 3 },
+            { name: "Pot of Desires", right: "Spell", art: "art-signal", qty: 3 },
+            { name: "Raigeki", right: "Spell", art: "art-signal", qty: 1 },
+            { name: "Solar Recharge", right: "Spell", art: "art-signal", qty: 2 },
+            { name: "Soul Charge", right: "Spell", art: "art-signal", qty: 1 },
+            { name: "That Grass Looks Greener", right: "Spell", art: "art-signal", qty: 3 },
+            { name: "Twin Twisters", right: "Spell", art: "art-signal", qty: 3 },
+            { name: "Zoodiac Barrage", right: "Spell", art: "art-signal", qty: 3 },
+          ],
+          extra: [
+            { name: "Abyss Dweller", right: "Rank 4 · WATER", art: "art-tide", qty: 1 },
+            { name: "Black Rose Dragon", right: "Level 7 · FIRE", art: "art-ember", qty: 1 },
+            { name: "Daigusto Emeral", right: "Rank 4 · WIND", art: "art-dragon", qty: 2 },
+            { name: "Diamond Dire Wolf", right: "Rank 4 · EARTH", art: "art-stone", qty: 1 },
+            { name: "Elder Entity Norden", right: "Level 4 · WATER", art: "art-tide", qty: 1 },
+            { name: "Gem-Knight Seraphinite", right: "Level 5 · EARTH", art: "art-stone", qty: 1 },
+            { name: "Minerva, the Exalted Lightsworn", right: "Rank 4 · LIGHT", art: "art-relay", qty: 1 },
+            { name: "M-X-Saber Invoker", right: "Rank 3 · EARTH", art: "art-stone", qty: 1 },
+            { name: "PSY-Framelord Omega", right: "Level 8 · LIGHT", art: "art-relay", qty: 2 },
+            { name: "Zoodiac Boarbow", right: "Rank 4 · EARTH", art: "art-stone", qty: 1 },
+            { name: "Zoodiac Broadbull", right: "Rank 4 · EARTH", art: "art-stone", qty: 1 },
+            { name: "Zoodiac Drident", right: "Rank 4 · EARTH", art: "art-stone", qty: 1 },
+            { name: "Zoodiac Tigermortar", right: "Rank 4 · EARTH", art: "art-stone", qty: 1 },
+          ],
+          side: [
+            { name: "Denko Sekka", right: "★4 · LIGHT", art: "art-relay", qty: 3 },
+            { name: "Gadarla, the Mystery Dust Kaiju", right: "★8 · WIND", art: "art-dragon", qty: 1 },
+            { name: "Gameciel, the Sea Turtle Kaiju", right: "★8 · WATER", art: "art-tide", qty: 1 },
+            { name: "Kumongous, the Sticky String Kaiju", right: "★7 · EARTH", art: "art-stone", qty: 1 },
+            { name: 'Retaliating "C"', right: "★4 · EARTH", art: "art-stone", qty: 2 },
+            { name: "Interrupted Kaiju Slumber", right: "Spell", art: "art-signal", qty: 2 },
+            { name: "Legacy of the Duelist", right: "Spell", art: "art-signal", qty: 2 },
+            { name: "Anti-Spell Fragrance", right: "Trap", art: "art-abyss", qty: 2 },
+            { name: "Imperial Order", right: "Trap", art: "art-abyss", qty: 1 },
+          ],
+        },
+      };
+
       function buildDecklist(deck) {
+        if (REAL_DECKLISTS[deck.id]) return REAL_DECKLISTS[deck.id];
         return {
           main: buildSection(deck, deck.main, MAIN_CARD_POOL),
           extra: buildSection(deck, deck.extra, EXTRA_CARD_POOL),
@@ -1521,6 +1884,7 @@
         { id: "local-stone", name: "Stone Vault Control", art: "art-stone", main: 43, extra: 6, side: 0, source: "local", status: "valid", updated: "5 days ago", scopes: ["free-play"] },
         { id: "local-tide", name: "Tidecaller Ritual", art: "art-tide", main: 40, extra: 4, side: 0, source: "local", status: "valid", updated: "last week", scopes: ["free-play"] },
         { id: "local-relay", name: "Relay Signal Burn", art: "art-signal", main: 40, extra: 0, side: 0, source: "local", status: "valid", updated: "last week", scopes: ["free-play"] },
+        { id: "real-zoodiac", name: "Zoodiac Zombie Lightsworn", art: "art-abyss", main: 60, extra: 15, side: 15, source: "local", status: "valid", updated: "YCS Denver, Apr 2017", meta: "Real published decklist — 60/15/15, the legal maximum", scopes: ["free-play"] },
 
         // --- AI opponent decks: bundled with a specific AI, never deletable ---
         { id: "ai-blaze", name: "Blaze Circuit's Deck", art: "art-ember", main: 40, extra: 12, side: 0, source: "preset", status: "valid", updated: "bundled", scopes: ["free-play"], aiOwner: "Blaze Circuit" },
@@ -1538,8 +1902,8 @@
 
       /** The AIs a free-play opponent can be. Each one owns exactly one
           deck it always starts with (see `aiOwner` on `DECKS`) — picking a
-          different AI brings that deck along, though the "Change" under
-          Opponent deck can still override it for one duel. */
+          different AI brings that deck along, though clicking the
+          opponent's deck card can still override it for one duel. */
       const AI_OPPONENTS = [
         { id: "practice", portrait: "portrait-machine", name: "Practice Bot", line: "No narrative, no save. Pick both decks and duel now.", deckId: "mvp-opponent" },
         { id: "blaze", portrait: "portrait-machine", name: "Blaze Circuit", line: "Plays fast and punishes hesitation.", deckId: "ai-blaze" },
@@ -1555,7 +1919,6 @@
           role: "Chapter 1 · Encounter 04",
           name: "Rin's Echo",
           line: "The arena transmitter shaped Rin's warning into an opponent. Win or lose, finish the duel to decode its challenge.",
-          deckLabel: "Their deck",
           locked: true,
           opponentDeck: {
             id: "relay-deck",
@@ -1601,6 +1964,7 @@
         choosingAi: false,
         libraryFocus: { "free-play": null, story: null },
         libraryHover: null,
+        menuDeckId: null,
       };
 
       const stage = document.getElementById("stage");
@@ -1610,8 +1974,13 @@
           next, then the chosen sort inside each rank. */
       function orderDecks(decks) {
         const defaultId = state.defaults[state.scope];
-        const rank = (deck) =>
-          deck.id === defaultId ? 0 : state.favourites.has(deck.id) ? 1 : 2;
+        // Illegal decks sink to the bottom regardless of default/favourite
+        // rank — they cannot be picked, so they should never crowd out decks
+        // that can be.
+        const rank = (deck) => {
+          if (deck.status === "errors") return 3;
+          return deck.id === defaultId ? 0 : state.favourites.has(deck.id) ? 1 : 2;
+        };
         const MODIFIED_ORDER = new Map(DECKS.map((deck, index) => [deck.id, index]));
         return [...decks].sort((a, b) => {
           const diff = rank(a) - rank(b);
@@ -1681,7 +2050,6 @@
           role: "Free play",
           name: ai.name,
           line: ai.line,
-          deckLabel: "Opponent deck",
           locked: false,
         };
       }
@@ -1697,16 +2065,27 @@
         return `<svg aria-hidden="true"><use href="#${art}" /></svg>`;
       }
 
-      /** The tile. One component, used by the duel-start picker and the deck
-          builder library alike — only `mode` changes what the press means. */
-      function deckTile(deck, { mode }) {
+      /** The tile. One component, used by the duel-start picker, the deck
+          builder library, and the seat cards alike. `mode` sets what a
+          press means: select, library-focus, toggle the opponent seat
+          (`seat-toggle`), or nothing (`static` preview). `halo` paints the
+          seat colour; `lock` overlays a story-locked caption; `cyKey`
+          disambiguates the same deck rendered in two places at once. */
+      function deckTile(deck, { mode, halo, lock, cyKey } = {}) {
         const isStatic = mode === "static";
+        const isSeatToggle = mode === "seat-toggle";
+        const inert = isStatic || isSeatToggle;
+        const cy = cyKey ?? deck.id;
+        const seatingOpponent = state.seat === "opponent";
         const selected =
           (mode === "select" && deck.id === currentSelectionId()) ||
           (mode === "library" && deck.id === focusedLibraryDeckId());
-        const isDefault = !isStatic && deck.id === state.defaults[state.scope];
+        const isDefault = !inert && deck.id === state.defaults[state.scope];
         const favourite = state.favourites.has(deck.id);
         const blocked = deck.status === "errors";
+        // Desktop and mobile alike — the kebab is the one place every
+        // deck's actions live, on either surface.
+        const showMenu = mode === "select";
         const badges = [];
         if (isDefault)
           badges.push(`<span class="badge badge--default">Default</span>`);
@@ -1718,57 +2097,89 @@
         // otherwise leave the screen entirely.
         if (
           mode === "select" &&
-          state.seat === "opponent" &&
+          seatingOpponent &&
           deck.id === state.selected[state.scope]
         )
           badges.push(`<span class="badge badge--yours">Yours</span>`);
-        if (deck.aiOwner && !isStatic)
+        if (deck.aiOwner && !inert)
           badges.push(`<span class="badge badge--ai">🔒 ${escapeHtml(deck.aiOwner)}</span>`);
-        if (deck.source === "preset" && !isStatic)
+        if (deck.source === "preset" && !inert)
           badges.push(`<span class="badge badge--preset">Bundled</span>`);
 
         const meta = blocked && deck.reason
           ? deck.reason
           : deck.meta ?? `Updated ${deck.updated}`;
 
+        const inner = `
+              <span class="deck-tile__art" data-cy="deck-tile-art-${cy}">
+                ${artMarkup(deck.art)}
+              </span>
+              <span class="deck-tile__body" data-cy="deck-tile-body-${cy}">
+                <span class="deck-tile__name" data-cy="deck-tile-name-${cy}">${escapeHtml(deck.name)}</span>
+                <span class="deck-tile__counts" data-cy="deck-tile-counts-${cy}">Main ${deck.main} · Extra ${deck.extra} · Side ${deck.side}</span>
+                ${inert ? "" : `<span class="deck-tile__meta" data-cy="deck-tile-meta-${cy}">${escapeHtml(meta)}</span>`}
+                ${badges.length > 0 ? `<span class="deck-tile__badges" data-cy="deck-tile-badges-${cy}">${badges.join("")}</span>` : ""}
+              </span>
+              ${selected ? `<span class="deck-tile__check" data-cy="deck-tile-check-${cy}" aria-hidden="true">✓</span>` : ""}
+              ${lock ? `<span class="deck-tile__lock" data-cy="deck-tile-lock-${cy}">🔒 ${escapeHtml(lock)}</span>` : ""}`;
+
+        const haloAttr = halo ? ` data-halo="${halo}"` : "";
+
+        if (isStatic) {
+          return `
+          <li class="deck-cell" data-cy="deck-cell-${cy}">
+            <span class="deck-tile deck-tile--static"${haloAttr} data-cy="deck-tile-${cy}">${inner}</span>
+          </li>`;
+        }
+
+        if (isSeatToggle) {
+          const label = seatingOpponent
+            ? "Done changing the opponent's deck"
+            : "Change the opponent's deck";
+          return `
+          <li class="deck-cell" data-cy="deck-cell-${cy}">
+            <button
+              type="button"
+              class="deck-tile"${haloAttr}
+              data-seat-toggle="${seatingOpponent ? "player" : "opponent"}"
+              aria-pressed="${seatingOpponent}"
+              data-cy="deck-tile-${cy}"
+              title="${label}"
+              aria-label="${label}"
+            >${inner}</button>
+          </li>`;
+        }
+
         return `
-          <li class="deck-cell" data-cy="deck-cell-${deck.id}">
+          <li class="deck-cell" data-cy="deck-cell-${cy}">
             <button
               type="button"
               class="deck-tile"
               data-deck="${deck.id}"
               data-default="${isDefault}"
-              data-cy="deck-tile-${deck.id}"
-              ${mode === "select" || mode === "library" ? `aria-pressed="${selected}"` : ""}
+              data-cy="deck-tile-${cy}"
+              aria-pressed="${selected}"
               ${blocked && mode === "select" ? "disabled" : ""}
               title="${escapeHtml(blocked && deck.reason ? deck.reason : deck.name)}"
-            >
-              <span class="deck-tile__body" data-cy="deck-tile-body-${deck.id}">
-                <span class="deck-tile__name" data-cy="deck-tile-name-${deck.id}">${escapeHtml(deck.name)}</span>
-                ${
-                  isStatic
-                    ? ""
-                    : `<span class="deck-tile__counts" data-cy="deck-tile-counts-${deck.id}">Main ${deck.main} · Extra ${deck.extra} · Side ${deck.side}</span>
-                <span class="deck-tile__meta" data-cy="deck-tile-meta-${deck.id}">${escapeHtml(meta)}</span>`
-                }
-                ${badges.length > 0 ? `<span class="deck-tile__badges" data-cy="deck-tile-badges-${deck.id}">${badges.join("")}</span>` : ""}
-              </span>
-              <span class="deck-tile__art" data-cy="deck-tile-art-${deck.id}">
-                ${artMarkup(deck.art)}
-              </span>
-              ${selected ? `<span class="deck-tile__check" data-cy="deck-tile-check-${deck.id}" aria-hidden="true">✓</span>` : ""}
-            </button>
-            ${
-              isStatic
-                ? ""
-                : `<button
+            >${inner}</button>
+            <button
               type="button"
               class="favourite"
               data-favourite="${deck.id}"
-              data-cy="deck-tile-favourite-${deck.id}"
+              data-cy="deck-tile-favourite-${cy}"
               aria-pressed="${favourite}"
               aria-label="Favourite ${escapeHtml(deck.name)}"
-            >${favourite ? "★" : "☆"}</button>`
+            >${favourite ? "★" : "☆"}</button>
+            ${
+              showMenu
+                ? `<button
+              type="button"
+              class="deck-menu"
+              data-deck-menu="${deck.id}"
+              data-cy="deck-tile-menu-${cy}"
+              aria-label="Actions for ${escapeHtml(deck.name)}"
+            >⋮</button>`
+                : ""
             }
           </li>`;
       }
@@ -1851,42 +2262,35 @@
         const yourDeck = deckById(state.selected[state.scope]);
         const seatingOpponent = state.seat === "opponent";
 
+        // No captions and no Change buttons: the portrait is the control
+        // that swaps who you face, their deck card is the control that
+        // swaps what they bring, and the halo colours (red = theirs,
+        // blue = yours) say which card is which.
         return `
           <aside class="opponent" data-seating="${seatingOpponent}" data-cy="duel-start-opponent">
             <div class="opponent__art" data-cy="duel-start-opponent-art">
-              <svg role="img" aria-label="Placeholder portrait of ${escapeHtml(opponent.name)}"><use href="#${opponent.portrait}" /></svg>
+              ${
+                opponent.locked
+                  ? `<svg role="img" aria-label="Placeholder portrait of ${escapeHtml(opponent.name)}"><use href="#${opponent.portrait}" /></svg>`
+                  : `<button type="button" class="opponent__portrait" data-ai-toggle aria-label="${state.choosingAi ? "Stop changing the opponent" : "Change opponent"}" data-cy="duel-start-opponent-portrait">
+                      <svg role="img" aria-label="Placeholder portrait of ${escapeHtml(opponent.name)}"><use href="#${opponent.portrait}" /></svg>
+                      <span class="opponent__portrait-hint" aria-hidden="true">${state.choosingAi ? "✕ Cancel" : "⇄ Change"}</span>
+                    </button>`
+              }
               <div class="opponent__identity" data-cy="duel-start-opponent-identity">
                 <p class="opponent__role" data-cy="duel-start-opponent-role">${escapeHtml(opponent.role)}</p>
-                <div class="opponent__name-row" data-cy="duel-start-opponent-name-row">
-                  <h2 class="opponent__name" data-cy="duel-start-opponent-name">${escapeHtml(opponent.name)}</h2>
-                  ${
-                    opponent.locked
-                      ? ""
-                      : `<button type="button" class="link-button" data-ai-toggle data-cy="duel-start-opponent-ai-toggle">${state.choosingAi ? "Done" : "Change"}</button>`
-                  }
-                </div>
+                <h2 class="opponent__name" data-cy="duel-start-opponent-name">${escapeHtml(opponent.name)}</h2>
                 <p class="opponent__line" data-cy="duel-start-opponent-line">${escapeHtml(opponent.line)}</p>
               </div>
             </div>
             <div class="opponent__deck" data-cy="duel-start-opponent-deck">
-              <p class="opponent__deck-label" data-cy="duel-start-opponent-deck-label">
-                <span>${escapeHtml(opponent.deckLabel)}</span>
-                ${
-                  opponent.locked
-                    ? `<span class="lock" data-cy="duel-start-opponent-deck-lock">🔒 Set by the story</span>`
-                    : `<button type="button" class="link-button" data-seat-toggle="${seatingOpponent ? "player" : "opponent"}" data-cy="duel-start-opponent-deck-change">${seatingOpponent ? "Done" : "Change"}</button>`
-                }
-              </p>
               <ul class="deck-grid" data-cy="duel-start-opponent-deck-grid">
-                ${deck ? deckTile(deck, { mode: "static" }) : ""}
+                ${deck ? deckTile(deck, { mode: opponent.locked ? "static" : "seat-toggle", halo: "opponent", lock: opponent.locked ? "Set by the story" : "", cyKey: `opponent-${deck.id}` }) : ""}
               </ul>
             </div>
             <div class="opponent__deck" data-cy="duel-start-your-deck">
-              <p class="opponent__deck-label" data-cy="duel-start-your-deck-label">
-                <span>Your deck</span>
-              </p>
               <ul class="deck-grid" data-cy="duel-start-your-deck-grid">
-                ${yourDeck ? deckTile(yourDeck, { mode: "static" }) : ""}
+                ${yourDeck ? deckTile(yourDeck, { mode: "static", halo: "you", cyKey: `yours-${yourDeck.id}` }) : ""}
               </ul>
             </div>
           </aside>`;
@@ -1897,6 +2301,11 @@
         const decks = visibleDecks();
         const selected = deckById(currentSelectionId());
         const seatingOpponent = state.seat === "opponent";
+        // The footer's own Delete/Rename/Duplicate act on whichever seat's
+        // pick is currently highlighted in the grid — same deck the check
+        // mark and the halo point at.
+        const canModify = !!selected;
+        const canDelete = canModify && selected.source !== "preset";
 
         const choosingAi = state.scope === "free-play" && state.choosingAi;
 
@@ -1907,7 +2316,7 @@
               <header class="selection__head" data-cy="duel-start-head">
                 <div>
                   <p class="selection__eyebrow" data-cy="duel-start-eyebrow">${escapeHtml(choosingAi ? "Changing the opponent" : seatingOpponent ? "Choosing for the opponent seat" : copy.eyebrow)}</p>
-                  <h1 class="selection__title" data-cy="duel-start-title">${choosingAi ? "Choose your opponent" : seatingOpponent ? "Which deck do they bring?" : "Choose your deck"}</h1>
+                  <h1 class="selection__title" data-cy="duel-start-title">${choosingAi ? "Choose your opponent" : seatingOpponent ? "Which deck do they bring?" : "Choose your deck"}${choosingAi ? "" : `<span class="selection__count" data-cy="duel-start-deck-count">${decks.length}/${scopedDecks().length}</span>`}</h1>
                 </div>
               </header>
               ${choosingAi ? "" : toolsMarkup()}
@@ -1918,12 +2327,16 @@
                 <div class="actions__row" data-cy="duel-start-actions-row">
                   <button type="button" class="ui-button ui-button--secondary" data-cy="duel-start-back">Back</button>
                   <div class="actions__group" data-cy="duel-start-actions-right">
+                    <button type="button" class="ui-button ui-button--secondary" data-ds-delete ${canDelete ? "" : "disabled"} data-cy="duel-start-delete">Delete</button>
+                    <button type="button" class="ui-button ui-button--secondary" data-ds-rename ${canModify ? "" : "disabled"} data-cy="duel-start-rename">Rename</button>
+                    <button type="button" class="ui-button ui-button--secondary" data-ds-duplicate ${canModify ? "" : "disabled"} data-cy="duel-start-duplicate">Duplicate</button>
                     <button type="button" class="ui-button ui-button--secondary" data-open-deck data-cy="duel-start-open-deck">${escapeHtml(copy.builder)}</button>
                     <button type="button" class="ui-button ui-button--primary" ${selected ? "" : "disabled"} data-cy="duel-start-start">Start the duel</button>
                   </div>
                 </div>
               </footer>
             </section>
+            ${state.menuDeckId ? deckMenuMarkup() : ""}
           </div>`;
       }
 
@@ -2017,11 +2430,68 @@
         return `<div class="library" data-cy="deck-library-screen" data-scope="${state.scope}">${content}</div>`;
       }
 
+      /** Shared mutations: the library footer and the mobile kebab sheet
+          drive the same operations. */
+      function deleteDeck(deck) {
+        if (!deck || deck.source === "preset") return;
+        const index = DECKS.indexOf(deck);
+        if (index !== -1) DECKS.splice(index, 1);
+        state.favourites.delete(deck.id);
+        if (state.libraryFocus[state.scope] === deck.id)
+          state.libraryFocus[state.scope] = null;
+        if (state.selected[state.scope] === deck.id)
+          state.selected[state.scope] = state.defaults[state.scope];
+        if (state.opponentKey[state.scope] === deck.id)
+          state.opponentKey[state.scope] = state.defaults[state.scope];
+      }
+
+      function duplicateDeck(deck) {
+        const copy = {
+          ...deck,
+          id: `${deck.id}-copy-${DECKS.length}`,
+          name: `${deck.name} copy`,
+          source: "local",
+          status: "valid",
+          updated: "just now",
+        };
+        delete copy.aiOwner;
+        delete copy.issue;
+        delete copy.reason;
+        delete copy.meta;
+        DECKS.push(copy);
+        return copy;
+      }
+
+      function renameDeck(deck) {
+        const next = window.prompt("Rename deck", deck.name);
+        if (next && next.trim()) deck.name = next.trim();
+      }
+
+      /** The kebab's action sheet. "Open in deck builder" leads; Delete
+          stays disabled for bundled/AI-owned decks, which are never
+          deletable. */
+      function deckMenuMarkup() {
+        const deck = deckById(state.menuDeckId);
+        if (!deck) return "";
+        const deletable = deck.source !== "preset";
+        return `
+          <div class="sheet-backdrop" data-menu-close data-cy="deck-menu-backdrop">
+            <div class="sheet" role="menu" aria-label="Deck actions" data-cy="deck-menu">
+              <p class="sheet__title" data-cy="deck-menu-title">${escapeHtml(deck.name)}</p>
+              <button type="button" role="menuitem" data-menu-action="open" data-cy="deck-menu-open">Open in deck builder</button>
+              <button type="button" role="menuitem" data-menu-action="rename" data-cy="deck-menu-rename">Rename</button>
+              <button type="button" role="menuitem" data-menu-action="duplicate" data-cy="deck-menu-duplicate">Duplicate</button>
+              <button type="button" role="menuitem" data-menu-action="delete" ${deletable ? "" : `disabled title="Bundled decks can't be deleted"`} data-cy="deck-menu-delete">Delete</button>
+            </div>
+          </div>`;
+      }
+
       /** Mobile duel-start: the same scope data and the same tile component,
-          reshaped for a phone — opponent collapses to a header strip, the
-          grid collapses to one column, and Start/Back move to a sticky
-          footer and a header icon respectively (no floating corner button:
-          there is no corner to spare). */
+          reshaped for a phone — the opponent becomes a card at the top of
+          the screen (tap the avatar to change who, tap their deck card to
+          change what they bring), the grid collapses to one column with the
+          current pick pinned first, and per-deck actions live behind each
+          card's kebab menu. */
       function mobileDuelStartMarkup() {
         const copy = SCOPE_COPY[state.scope];
         const opponent = currentOpponent();
@@ -2031,45 +2501,56 @@
             : deckById(state.opponentKey[state.scope]);
         const seatingOpponent = state.seat === "opponent";
         const choosingAi = state.scope === "free-play" && state.choosingAi;
-        const decks = visibleDecks();
-        const selected = deckById(currentSelectionId());
+        const listed = visibleDecks();
+        const selectionId = currentSelectionId();
+        // The current pick always leads the list: the grid scrolls, and the
+        // one card that must stay reachable is the pick.
+        const pinned = [
+          ...listed.filter((deck) => deck.id === selectionId),
+          ...listed.filter((deck) => deck.id !== selectionId),
+        ];
+        const selected = deckById(selectionId);
+
+        const portrait = opponent.locked
+          ? `<span class="mobile-opponent__avatar" data-cy="mobile-opponent-avatar"><svg role="img" aria-label="Placeholder portrait of ${escapeHtml(opponent.name)}"><use href="#${opponent.portrait}" /></svg></span>`
+          : `<span class="mobile-opponent__avatar" data-cy="mobile-opponent-avatar">
+              <button type="button" class="mobile-opponent__portrait-button" data-ai-toggle aria-label="${choosingAi ? "Stop changing the opponent" : "Change opponent"}" data-cy="mobile-opponent-portrait">
+                <svg aria-hidden="true"><use href="#${opponent.portrait}" /></svg>
+              </button>
+              <span class="avatar-badge" aria-hidden="true">${choosingAi ? "✕" : "⇄"}</span>
+            </span>`;
 
         return `
-          <div class="mobile-screen" data-cy="mobile-duel-start" data-scope="${state.scope}">
+          <div class="mobile-screen" data-seat="${state.seat}" data-cy="mobile-duel-start" data-scope="${state.scope}">
             <header class="mobile-header" data-cy="mobile-header">
               <button type="button" class="mobile-back" data-back aria-label="Back" data-cy="mobile-back">
                 <svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4 L6 10 L12 16" stroke-linecap="round" stroke-linejoin="round" /></svg>
               </button>
               <div class="mobile-header__text" data-cy="mobile-header-text">
                 <p class="mobile-header__eyebrow" data-cy="mobile-header-eyebrow">${escapeHtml(choosingAi ? "Changing the opponent" : seatingOpponent ? "Opponent's deck" : copy.eyebrow)}</p>
-                <h1 data-cy="mobile-header-title">${choosingAi ? "Choose your opponent" : seatingOpponent ? "Which deck do they bring?" : "Choose your deck"}</h1>
+                <h1 data-cy="mobile-header-title">${choosingAi ? "Choose your opponent" : seatingOpponent ? "Which deck do they bring?" : "Choose your deck"}${choosingAi ? "" : `<span class="selection__count" data-cy="mobile-deck-count">${listed.length}/${scopedDecks().length}</span>`}</h1>
               </div>
             </header>
-            <div class="mobile-opponent" data-cy="mobile-opponent">
-              <svg class="mobile-opponent__portrait" role="img" aria-label="Placeholder portrait of ${escapeHtml(opponent.name)}"><use href="#${opponent.portrait}" /></svg>
-              <div class="mobile-opponent__text" data-cy="mobile-opponent-text">
-                <p class="mobile-opponent__name" data-cy="mobile-opponent-name">${escapeHtml(opponent.name)}</p>
-                <p class="mobile-opponent__deck" data-cy="mobile-opponent-deck">${escapeHtml(opponent.deckLabel)}: ${opponentDeck ? escapeHtml(opponentDeck.name) : "—"}</p>
+            <section class="mobile-opponent" data-seating="${seatingOpponent}" data-cy="mobile-opponent">
+              <div class="mobile-opponent__head" data-cy="mobile-opponent-head">
+                ${portrait}
+                <div class="mobile-opponent__text" data-cy="mobile-opponent-text">
+                  <p class="mobile-opponent__role" data-cy="mobile-opponent-role">${escapeHtml(opponent.role)}</p>
+                  <p class="mobile-opponent__name" data-cy="mobile-opponent-name">${escapeHtml(opponent.name)}</p>
+                </div>
               </div>
-              ${
-                opponent.locked
-                  ? `<span class="lock" data-cy="mobile-opponent-lock" aria-label="Set by the story">🔒</span>`
-                  : `<div class="mobile-opponent__actions" data-cy="mobile-opponent-actions">
-                <button type="button" class="link-button" data-ai-toggle data-cy="mobile-opponent-ai-toggle">${choosingAi ? "Done" : "Change opponent"}</button>
-                <button type="button" class="link-button" data-seat-toggle="${seatingOpponent ? "player" : "opponent"}" data-cy="mobile-opponent-change">${seatingOpponent ? "Done" : "Change deck"}</button>
-              </div>`
-              }
-            </div>
+              <ul class="deck-grid" data-cy="mobile-opponent-deck-grid">
+                ${opponentDeck ? deckTile(opponentDeck, { mode: opponent.locked ? "static" : "seat-toggle", halo: "opponent", lock: opponent.locked ? "Set by the story" : "", cyKey: `mobile-opponent-${opponentDeck.id}` }) : ""}
+              </ul>
+            </section>
             ${choosingAi ? "" : toolsMarkup()}
             <div class="mobile-deck-list" data-cy="mobile-deck-scroll">
-              ${choosingAi ? aiGridMarkup() : gridMarkup(decks, "select")}
+              ${choosingAi ? aiGridMarkup() : gridMarkup(pinned, "select")}
             </div>
             <footer class="mobile-footer" data-cy="mobile-footer">
               <button type="button" class="ui-button ui-button--primary" ${selected ? "" : "disabled"} data-cy="mobile-start">Start the duel</button>
-              <div class="mobile-footer__row" data-cy="mobile-footer-row">
-                <button type="button" class="link-button" data-open-deck data-cy="mobile-open-deck">${escapeHtml(copy.builder)}</button>
-              </div>
             </footer>
+            ${state.menuDeckId ? deckMenuMarkup() : ""}
           </div>`;
       }
 
@@ -2077,6 +2558,11 @@
         const active = document.activeElement;
         const restoreFilter = active && active.id === "deck-filter-input";
         const caret = restoreFilter ? active.selectionStart : null;
+
+        // A re-render replaces the hovered tile's DOM node, so a floating
+        // preview left open would go stale with nothing to dismiss it.
+        const decklistFloat = document.getElementById("decklist-float");
+        if (decklistFloat) decklistFloat.hidden = true;
 
         stage.classList.toggle("stage--mobile", state.device === "mobile");
         stage.innerHTML =
@@ -2097,6 +2583,41 @@
 
       // ================= interaction =================
       stage.addEventListener("click", (event) => {
+        const menuAction = event.target.closest("[data-menu-action]");
+        if (menuAction) {
+          const deck = deckById(state.menuDeckId);
+          const action = menuAction.dataset.menuAction;
+          state.menuDeckId = null;
+          if (deck && action === "rename") renameDeck(deck);
+          if (deck && action === "duplicate") duplicateDeck(deck);
+          if (deck && action === "delete") deleteDeck(deck);
+          render();
+          if (deck && action === "open") {
+            // Same simulation as the desktop Open button: no editor exists
+            // in this prototype, so the tile acknowledges the intent.
+            stage
+              .querySelector(`[data-deck="${deck.id}"]`)
+              ?.animate([{ scale: 1 }, { scale: 0.97 }, { scale: 1 }], { duration: 180 });
+          }
+          return;
+        }
+
+        if (state.menuDeckId !== null) {
+          // Any press outside an action while the sheet is up dismisses it.
+          if (!event.target.closest(".sheet")) {
+            state.menuDeckId = null;
+            render();
+          }
+          return;
+        }
+
+        const menuToggle = event.target.closest("[data-deck-menu]");
+        if (menuToggle) {
+          state.menuDeckId = menuToggle.dataset.deckMenu;
+          render();
+          return;
+        }
+
         const favourite = event.target.closest("[data-favourite]");
         if (favourite) {
           const id = favourite.dataset.favourite;
@@ -2158,49 +2679,44 @@
         }
 
         if (event.target.closest("[data-lib-delete]")) {
-          const deck = focusedLibraryDeck();
-          if (deck && deck.source !== "preset") {
-            const index = DECKS.indexOf(deck);
-            if (index !== -1) DECKS.splice(index, 1);
-            state.favourites.delete(deck.id);
-            if (state.libraryFocus[state.scope] === deck.id)
-              state.libraryFocus[state.scope] = null;
-            if (state.selected[state.scope] === deck.id)
-              state.selected[state.scope] = state.defaults[state.scope];
-            if (state.opponentKey[state.scope] === deck.id)
-              state.opponentKey[state.scope] = state.defaults[state.scope];
-          }
+          deleteDeck(focusedLibraryDeck());
           render();
           return;
         }
 
         if (event.target.closest("[data-lib-rename]")) {
           const deck = focusedLibraryDeck();
-          if (deck) {
-            const next = window.prompt("Rename deck", deck.name);
-            if (next && next.trim()) deck.name = next.trim();
-          }
+          if (deck) renameDeck(deck);
           render();
           return;
         }
 
         if (event.target.closest("[data-lib-duplicate]")) {
           const deck = focusedLibraryDeck();
+          if (deck) state.libraryFocus[state.scope] = duplicateDeck(deck).id;
+          render();
+          return;
+        }
+
+        if (event.target.closest("[data-ds-delete]")) {
+          deleteDeck(deckById(currentSelectionId()));
+          render();
+          return;
+        }
+
+        if (event.target.closest("[data-ds-rename]")) {
+          const deck = deckById(currentSelectionId());
+          if (deck) renameDeck(deck);
+          render();
+          return;
+        }
+
+        if (event.target.closest("[data-ds-duplicate]")) {
+          const deck = deckById(currentSelectionId());
           if (deck) {
-            const copy = {
-              ...deck,
-              id: `${deck.id}-copy-${DECKS.length}`,
-              name: `${deck.name} copy`,
-              source: "local",
-              status: "valid",
-              updated: "just now",
-            };
-            delete copy.aiOwner;
-            delete copy.issue;
-            delete copy.reason;
-            delete copy.meta;
-            DECKS.push(copy);
-            state.libraryFocus[state.scope] = copy.id;
+            const copy = duplicateDeck(deck);
+            if (state.seat === "opponent") state.opponentKey[state.scope] = copy.id;
+            else state.selected[state.scope] = copy.id;
           }
           render();
           return;
@@ -2251,11 +2767,67 @@
         if (preview) preview.hidden = true;
       }
 
-      // Desktop-only: hovering a deck tile previews its list in the right
-      // panel without moving focus, and hovering a decklist row floats a
+      /** The floating decklist's content: same head/list grammar as the
+          library's right panel, sized for a tooltip instead of a docked
+          pane. */
+      function decklistFloatContent(deck) {
+        const list = buildDecklist(deck);
+        return `
+          <div class="decklist-float__head" data-cy="decklist-float-head">
+            <p class="decklist-float__name" data-cy="decklist-float-name">${escapeHtml(deck.name)}</p>
+            <p class="decklist-float__stats" data-cy="decklist-float-stats">Main ${deck.main} · Extra ${deck.extra} · Side ${deck.side}</p>
+          </div>
+          <div class="decklist" data-cy="decklist-float-body">
+            ${decklistSectionMarkup("Main Deck", list.main, deck.main)}
+            ${decklistSectionMarkup("Extra Deck", list.extra, deck.extra)}
+            ${decklistSectionMarkup("Side Deck", list.side, deck.side)}
+          </div>`;
+      }
+
+      function showDecklistFloat(deck, tileElement) {
+        const preview = document.getElementById("decklist-float");
+        if (!preview) return;
+        preview.innerHTML = decklistFloatContent(deck);
+        const width = 260;
+        // The full list — up to 90 real cards for the maximum-size example
+        // deck — gets the whole viewport height to show in, rather than a
+        // fixed short tooltip height that forces scrolling immediately.
+        const maxHeight = window.innerHeight - 24;
+        const rect = tileElement.getBoundingClientRect();
+        const spaceRight = window.innerWidth - rect.right;
+        const left =
+          spaceRight >= width + 16
+            ? rect.right + 12
+            : Math.max(12, rect.left - width - 12);
+        const top = Math.max(12, Math.min(rect.top, window.innerHeight - maxHeight - 12));
+        preview.style.left = `${left}px`;
+        preview.style.top = `${top}px`;
+        preview.style.maxHeight = `${maxHeight}px`;
+        preview.hidden = false;
+      }
+
+      function hideDecklistFloat() {
+        const preview = document.getElementById("decklist-float");
+        if (preview) preview.hidden = true;
+      }
+
+      // Desktop-only: hovering a deck tile previews its list — in the
+      // library's docked right panel without moving focus, or in duel-start's
+      // floating panel beside the tile — and hovering a decklist row floats a
       // full-size, text-free art preview beside it.
       stage.addEventListener("mouseover", (event) => {
-        if (state.view !== "library" || state.device !== "desktop") return;
+        if (state.device !== "desktop") return;
+
+        if (state.view === "duel-start" && !state.choosingAi) {
+          const tile = event.target.closest("[data-deck]");
+          if (tile) {
+            const deck = deckById(tile.dataset.deck);
+            if (deck) showDecklistFloat(deck, tile);
+          }
+          return;
+        }
+
+        if (state.view !== "library") return;
         const tile = event.target.closest("[data-deck]");
         if (tile) {
           const id = tile.dataset.deck;
@@ -2270,7 +2842,15 @@
       });
 
       stage.addEventListener("mouseout", (event) => {
-        if (state.view !== "library" || state.device !== "desktop") return;
+        if (state.device !== "desktop") return;
+
+        if (state.view === "duel-start") {
+          const tile = event.target.closest("[data-deck]");
+          if (tile && !tile.contains(event.relatedTarget)) hideDecklistFloat();
+          return;
+        }
+
+        if (state.view !== "library") return;
         const tile = event.target.closest("[data-deck]");
         if (tile && !tile.contains(event.relatedTarget)) {
           state.libraryHover = null;
@@ -2279,6 +2859,16 @@
         }
         const row = event.target.closest("[data-card-art]");
         if (row && !row.contains(event.relatedTarget)) hideCardPreview();
+      });
+
+      // Double-click a deck tile: open it, on either surface. The single
+      // click(s) that precede the dblclick already updated selection/focus,
+      // so this only needs to acknowledge "open".
+      stage.addEventListener("dblclick", (event) => {
+        const tile = event.target.closest("[data-deck]");
+        if (!tile || tile.disabled) return;
+        hideDecklistFloat();
+        tile.animate([{ scale: 1 }, { scale: 0.96 }, { scale: 1 }], { duration: 180 });
       });
 
       stage.addEventListener("input", (event) => {
@@ -2303,6 +2893,11 @@
         if (event.key === "/" && !typing) {
           event.preventDefault();
           document.getElementById("deck-filter-input")?.focus();
+          return;
+        }
+        if (event.key === "Escape" && state.menuDeckId !== null) {
+          state.menuDeckId = null;
+          render();
           return;
         }
         if (event.key === "Escape" && typing) {
@@ -2359,6 +2954,7 @@
         state.seat = "player";
         state.choosingAi = false;
         state.libraryHover = null;
+        state.menuDeckId = null;
         state.query = "";
         syncSwitches();
         render();
@@ -2369,6 +2965,7 @@
         if (!button) return;
         state.view = button.dataset.view;
         state.libraryHover = null;
+        state.menuDeckId = null;
         syncSwitches();
         render();
       });
@@ -2378,6 +2975,7 @@
         if (!button) return;
         state.device = button.dataset.device;
         state.libraryHover = null;
+        state.menuDeckId = null;
         syncSwitches();
         render();
       });

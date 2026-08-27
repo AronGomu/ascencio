@@ -27,7 +27,10 @@ export function parseMvpAssetOptions(args: string[]): MvpAssetOptions {
       options.offline = true;
     } else if (argument === "--force-images") {
       options.forceImages = true;
-    } else if (argument === "--concurrency" || argument === "--requests-per-second") {
+    } else if (
+      argument === "--concurrency" ||
+      argument === "--requests-per-second"
+    ) {
       const value = args[index + 1];
       if (!value) {
         throw new Error(`Missing value for ${argument}`);
@@ -60,7 +63,10 @@ export function buildAssetStages(options: MvpAssetOptions): AssetStage[] {
     imageArguments.push("--concurrency", String(options.concurrency));
   }
   if (options.requestsPerSecond !== undefined) {
-    imageArguments.push("--requests-per-second", String(options.requestsPerSecond));
+    imageArguments.push(
+      "--requests-per-second",
+      String(options.requestsPerSecond),
+    );
   }
 
   return [
@@ -75,10 +81,20 @@ export function buildAssetStages(options: MvpAssetOptions): AssetStage[] {
       script: "sync-assets.ts",
       args: options.offline ? ["--offline"] : [],
     },
-    { name: "verifyDataScriptsAndStrings", script: "verify-assets.ts", args: [] },
+    {
+      name: "verifyDataScriptsAndStrings",
+      script: "verify-assets.ts",
+      args: [],
+    },
     ...(options.offline
       ? []
-      : [{ name: "downloadCardImages", script: "download-images.ts", args: imageArguments }]),
+      : [
+          {
+            name: "downloadCardImages",
+            script: "download-images.ts",
+            args: imageArguments,
+          },
+        ]),
     { name: "verifyCardImages", script: "verify-images.ts", args: [] },
     {
       name: "generateRuntimeSnapshot",

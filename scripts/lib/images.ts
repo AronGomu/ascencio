@@ -10,7 +10,9 @@ export function isJpeg(bytes: Uint8Array): boolean {
   );
 }
 
-export async function validJpegFileSize(filePath: string): Promise<number | null> {
+export async function validJpegFileSize(
+  filePath: string,
+): Promise<number | null> {
   try {
     const fileStat = await stat(filePath);
     if (!fileStat.isFile() || fileStat.size < 1_000) return null;

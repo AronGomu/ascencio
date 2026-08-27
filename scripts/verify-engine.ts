@@ -31,12 +31,16 @@ const required = [
 ];
 const declared = new Set(manifest.files.map((file) => file.path));
 
-if (manifest.schemaVersion !== 1) failures.push(`Unsupported schema: ${manifest.schemaVersion}`);
+if (manifest.schemaVersion !== 1)
+  failures.push(`Unsupported schema: ${manifest.schemaVersion}`);
 if (manifest.package !== "ocgcore-wasm" || manifest.version !== "0.1.2") {
-  failures.push(`Unexpected engine package: ${manifest.package}@${manifest.version}`);
+  failures.push(
+    `Unexpected engine package: ${manifest.package}@${manifest.version}`,
+  );
 }
 for (const requiredPath of required) {
-  if (!declared.has(requiredPath)) failures.push(`Missing required engine file: ${requiredPath}`);
+  if (!declared.has(requiredPath))
+    failures.push(`Missing required engine file: ${requiredPath}`);
 }
 for (const file of manifest.files) {
   const filePath = path.join(root, ...file.path.split("/"));
@@ -46,10 +50,15 @@ for (const file of manifest.files) {
       failures.push(`Engine file size mismatch: ${file.path}`);
       continue;
     }
-    const digest = createHash("sha256").update(await readFile(filePath)).digest("hex");
-    if (digest !== file.sha256) failures.push(`Engine file hash mismatch: ${file.path}`);
+    const digest = createHash("sha256")
+      .update(await readFile(filePath))
+      .digest("hex");
+    if (digest !== file.sha256)
+      failures.push(`Engine file hash mismatch: ${file.path}`);
   } catch (error) {
-    failures.push(`Cannot read engine file ${file.path}: ${(error as Error).message}`);
+    failures.push(
+      `Cannot read engine file ${file.path}: ${(error as Error).message}`,
+    );
   }
 }
 

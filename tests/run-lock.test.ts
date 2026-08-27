@@ -10,7 +10,10 @@ test("asset run lock prevents overlapping processes and can be reacquired", asyn
   try {
     const lock = path.join(root, "asset.lock");
     const release = await acquireRunLock(lock);
-    await assert.rejects(() => acquireRunLock(lock), /Another asset process is running/);
+    await assert.rejects(
+      () => acquireRunLock(lock),
+      /Another asset process is running/,
+    );
     await release();
     const releaseAgain = await acquireRunLock(lock);
     await releaseAgain();
@@ -25,7 +28,11 @@ test("asset run lock safely reclaims a dead owner's lock", async () => {
     const lock = path.join(root, "asset.lock");
     await writeFile(
       lock,
-      JSON.stringify({ pid: 2_147_483_647, token: "stale", startedAt: "2020-01-01T00:00:00Z" }),
+      JSON.stringify({
+        pid: 2_147_483_647,
+        token: "stale",
+        startedAt: "2020-01-01T00:00:00Z",
+      }),
     );
     const release = await acquireRunLock(lock);
     await release();

@@ -25,7 +25,8 @@ function runGit(args: string[], cwd?: string): string {
   });
 
   if (result.error || result.status !== 0) {
-    const detail = result.error?.message ?? result.stderr?.trim() ?? "unknown git error";
+    const detail =
+      result.error?.message ?? result.stderr?.trim() ?? "unknown git error";
     emit({
       operation: "git",
       status: "failed",
@@ -69,14 +70,29 @@ export async function syncRepository(
       detail: (error as Error).message,
     });
     if (offline) {
-      throw new Error(`Offline source cache is missing or invalid: ${directory}`, {
-        cause: error,
-      });
+      throw new Error(
+        `Offline source cache is missing or invalid: ${directory}`,
+        {
+          cause: error,
+        },
+      );
     }
     await rm(directory, { recursive: true, force: true });
     const cloneArguments = definition.sparsePaths?.length
-      ? ["clone", "--filter=blob:none", "--no-checkout", definition.repository, directory]
-      : ["clone", "--depth=1", "--no-checkout", definition.repository, directory];
+      ? [
+          "clone",
+          "--filter=blob:none",
+          "--no-checkout",
+          definition.repository,
+          directory,
+        ]
+      : [
+          "clone",
+          "--depth=1",
+          "--no-checkout",
+          definition.repository,
+          directory,
+        ];
     runGit(cloneArguments);
   }
 
@@ -130,5 +146,7 @@ export function validateGitRef(ref: string): void {
 }
 
 function emit(event: Record<string, unknown>): void {
-  process.stderr.write(`${JSON.stringify({ timestamp: new Date().toISOString(), ...event })}\n`);
+  process.stderr.write(
+    `${JSON.stringify({ timestamp: new Date().toISOString(), ...event })}\n`,
+  );
 }

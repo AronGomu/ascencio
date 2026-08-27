@@ -8,7 +8,10 @@ const MAX_FILES = 1_000;
 const MAX_FILE_BYTES = 20 * 1024 * 1024;
 const MAX_TOTAL_FILE_BYTES = 50 * 1024 * 1024;
 
-export function readTarFiles(archive: Uint8Array, requiredPrefix: string): TarFile[] {
+export function readTarFiles(
+  archive: Uint8Array,
+  requiredPrefix: string,
+): TarFile[] {
   const files: TarFile[] = [];
   let totalFileBytes = 0;
   let offset = 0;
@@ -34,14 +37,22 @@ export function readTarFiles(archive: Uint8Array, requiredPrefix: string): TarFi
     }
 
     if (type === "\0" || type === "0") {
-      if (size > MAX_FILE_BYTES) throw new Error(`TAR entry exceeds size limit: ${entryPath}`);
+      if (size > MAX_FILE_BYTES)
+        throw new Error(`TAR entry exceeds size limit: ${entryPath}`);
       totalFileBytes += size;
-      if (totalFileBytes > MAX_TOTAL_FILE_BYTES) throw new Error("TAR files exceed total size limit");
-      if (files.length >= MAX_FILES) throw new Error(`TAR contains more than ${MAX_FILES} files`);
+      if (totalFileBytes > MAX_TOTAL_FILE_BYTES)
+        throw new Error("TAR files exceed total size limit");
+      if (files.length >= MAX_FILES)
+        throw new Error(`TAR contains more than ${MAX_FILES} files`);
       const safePath = safeArchivePath(entryPath, requiredPrefix);
-      files.push({ path: safePath, bytes: archive.slice(contentStart, contentEnd) });
+      files.push({
+        path: safePath,
+        bytes: archive.slice(contentStart, contentEnd),
+      });
     } else if (type !== "5") {
-      throw new Error(`Unsupported TAR entry type ${JSON.stringify(type)}: ${entryPath}`);
+      throw new Error(
+        `Unsupported TAR entry type ${JSON.stringify(type)}: ${entryPath}`,
+      );
     }
 
     offset = contentStart + Math.ceil(size / BLOCK_SIZE) * BLOCK_SIZE;
@@ -58,7 +69,10 @@ function safeArchivePath(entryPath: string, requiredPrefix: string): string {
   }
   const relative = normalized.slice(requiredPrefix.length);
   const segments = relative.split("/");
-  if (!relative || segments.some((segment) => !segment || segment === "." || segment === "..")) {
+  if (
+    !relative ||
+    segments.some((segment) => !segment || segment === "." || segment === "..")
+  ) {
     throw new Error(`Unsafe TAR entry path: ${entryPath}`);
   }
   return segments.join("/");
@@ -66,6 +80,7 @@ function safeArchivePath(entryPath: string, requiredPrefix: string): string {
 
 function readString(bytes: Uint8Array, offset: number, length: number): string {
   const end = bytes.indexOf(0, offset);
-  const boundedEnd = end === -1 || end > offset + length ? offset + length : end;
+  const boundedEnd =
+    end === -1 || end > offset + length ? offset + length : end;
   return new TextDecoder().decode(bytes.subarray(offset, boundedEnd));
 }

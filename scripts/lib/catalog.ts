@@ -17,7 +17,8 @@ export interface Catalog {
 }
 
 export function readCatalog(databasePaths: string | string[]): Catalog {
-  const paths = typeof databasePaths === "string" ? [databasePaths] : databasePaths;
+  const paths =
+    typeof databasePaths === "string" ? [databasePaths] : databasePaths;
   const rawCards: RawCardRow[] = [];
   const rawTexts: TextRow[] = [];
 
@@ -32,7 +33,8 @@ export function readCatalog(databasePaths: string | string[]): Catalog {
     try {
       rawCards.push(
         ...(database
-          .prepare(`
+          .prepare(
+            `
             SELECT
               id,
               ot,
@@ -47,7 +49,8 @@ export function readCatalog(databasePaths: string | string[]): Catalog {
               category
             FROM datas
             ORDER BY id
-          `)
+          `,
+          )
           .all() as unknown as RawCardRow[]),
       );
       rawTexts.push(
@@ -60,7 +63,10 @@ export function readCatalog(databasePaths: string | string[]): Catalog {
     }
   }
 
-  if (rawCards.length > MAX_CATALOG_RECORDS || rawTexts.length > MAX_CATALOG_RECORDS) {
+  if (
+    rawCards.length > MAX_CATALOG_RECORDS ||
+    rawTexts.length > MAX_CATALOG_RECORDS
+  ) {
     throw new Error(
       `BabelCDB catalog exceeds ${MAX_CATALOG_RECORDS} records: ${rawCards.length} cards, ${rawTexts.length} texts`,
     );
@@ -73,11 +79,20 @@ export function readCatalog(databasePaths: string | string[]): Catalog {
     code: row.id,
     name: row.name,
     description: row.desc,
-    strings: Array.from({ length: 16 }, (_, index) => row[`str${index + 1}`] ?? ""),
+    strings: Array.from(
+      { length: 16 },
+      (_, index) => row[`str${index + 1}`] ?? "",
+    ),
   }));
 
-  assertUniqueCodes(cards.map((card) => card.code), "datas");
-  assertUniqueCodes(texts.map((text) => text.code), "texts");
+  assertUniqueCodes(
+    cards.map((card) => card.code),
+    "datas",
+  );
+  assertUniqueCodes(
+    texts.map((text) => text.code),
+    "texts",
+  );
 
   const cardCodes = new Set(cards.map((card) => card.code));
   const textCodes = new Set(texts.map((text) => text.code));

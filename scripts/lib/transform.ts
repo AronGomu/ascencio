@@ -52,7 +52,5 @@ export function scriptShard(scriptName: string): string {
   if (!match?.[1]) {
     throw new Error(`Official script has an unsupported name: ${scriptName}`);
   }
-  return (Number(match[1]) % SCRIPT_SHARD_COUNT)
-    .toString(16)
-    .padStart(2, "0");
+  return (Number(match[1]) % SCRIPT_SHARD_COUNT).toString(16).padStart(2, "0");
 }

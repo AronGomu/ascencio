@@ -15,7 +15,9 @@ export function resolveProjectSubpath(
   const relative = path.relative(allowedRoot, resolved);
 
   if (relative === "") {
-    throw new Error(`${label} must be a child of ${allowedRelativeRoot}, not the root itself`);
+    throw new Error(
+      `${label} must be a child of ${allowedRelativeRoot}, not the root itself`,
+    );
   }
   if (!relative.startsWith("..") && !path.isAbsolute(relative)) {
     return resolved;

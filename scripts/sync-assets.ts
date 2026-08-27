@@ -58,151 +58,164 @@ const releaseRunLock = await acquireRunLock(
 );
 
 try {
-const repositories = {
-  babel: await syncRepository(
-    cacheRoot,
-    {
-      name: "BabelCDB",
-      repository: "https://github.com/ProjectIgnis/BabelCDB.git",
-      ref: options.babelRef,
-    },
-    options.offline,
-  ),
-  scripts: await syncRepository(
-    cacheRoot,
-    {
-      name: "CardScripts",
-      repository: "https://github.com/ProjectIgnis/CardScripts.git",
-      ref: options.scriptsRef,
-    },
-    options.offline,
-  ),
-  distribution: await syncRepository(
-    cacheRoot,
-    {
-      name: "Distribution",
-      repository: "https://github.com/ProjectIgnis/Distribution.git",
-      ref: options.distributionRef,
-      sparsePaths: ["config"],
-    },
-    options.offline,
-  ),
-};
-
-await rm(staging, { recursive: true, force: true });
-
-try {
-  emitStage("catalog", "start");
-  const catalogDatabases = await findStandardCatalogDatabases(repositories.babel.directory);
-  const catalog = readCatalog(
-    catalogDatabases.map((database) => path.join(repositories.babel.directory, database)),
-  );
-  await writeCatalogShards(staging, catalog.cards, catalog.texts);
-  emitStage("catalog", "ok", { cards: catalog.cards.length, texts: catalog.texts.length });
-
-  emitStage("scripts", "start");
-  const scripts = await writeScriptShards(staging, repositories.scripts.directory);
-  emitStage("scripts", "ok", scripts);
-
-  emitStage("strings", "start");
-  const stringsPath = path.join(
-    repositories.distribution.directory,
-    "config",
-    "strings.conf",
-  );
-  const stringsBytes = (await stat(stringsPath)).size;
-  if (stringsBytes > MAX_STRINGS_CONF_BYTES) {
-    throw new Error(`strings.conf exceeds ${MAX_STRINGS_CONF_BYTES} bytes`);
-  }
-  const stringsContent = await readFile(stringsPath, "utf8");
-  const strings = parseStringsConf(stringsContent);
-  await writeJson(path.join(staging, "strings", "en.json"), strings);
-  emitStage("strings", "ok", { system: Object.keys(strings.system).length });
-
-  emitStage("images", "start");
-  await writeImageShards(staging, catalog.cards.map((card) => card.code));
-  emitStage("images", "ok", { records: catalog.cards.length });
-
-  emitStage("integrityManifest", "start");
-  const files = await describeGeneratedFiles(staging);
-  const manifest: AssetManifest = {
-    schemaVersion: 1,
-    generatedAt: new Date().toISOString(),
-    sources: {
-      babelCdb: repositories.babel.revision,
-      cardScripts: repositories.scripts.revision,
-      distribution: repositories.distribution.revision,
-      imageProvider: {
-        name: "YGOPRODeck",
-        apiGuide: "https://ygoprodeck.com/api-guide/",
-        fullTemplate: "https://images.ygoprodeck.com/images/cards/{id}.jpg",
-        croppedTemplate:
-          "https://images.ygoprodeck.com/images/cards_cropped/{id}.jpg",
-        redistributionApproved: false,
+  const repositories = {
+    babel: await syncRepository(
+      cacheRoot,
+      {
+        name: "BabelCDB",
+        repository: "https://github.com/ProjectIgnis/BabelCDB.git",
+        ref: options.babelRef,
       },
-    },
-    inputs: {
-      catalogDatabases,
-      scriptDirectories: ["official", "pre-release"],
-    },
-    counts: {
-      cards: catalog.cards.length,
-      texts: catalog.texts.length,
-      officialScripts: scripts.officialCount,
-      preReleaseScripts: scripts.preReleaseCount,
-      globalScripts: scripts.globalCount,
-      systemStrings: Object.keys(strings.system).length,
-      victoryStrings: Object.keys(strings.victory).length,
-      counterStrings: Object.keys(strings.counter).length,
-      setNameStrings: Object.keys(strings.setname).length,
-      imageRecords: catalog.cards.length,
-    },
-    sharding: {
-      catalog: CATALOG_SHARD_COUNT,
-      scripts: SCRIPT_SHARD_COUNT,
-      algorithm: "numeric-id-modulo",
-    },
-    files,
+      options.offline,
+    ),
+    scripts: await syncRepository(
+      cacheRoot,
+      {
+        name: "CardScripts",
+        repository: "https://github.com/ProjectIgnis/CardScripts.git",
+        ref: options.scriptsRef,
+      },
+      options.offline,
+    ),
+    distribution: await syncRepository(
+      cacheRoot,
+      {
+        name: "Distribution",
+        repository: "https://github.com/ProjectIgnis/Distribution.git",
+        ref: options.distributionRef,
+        sparsePaths: ["config"],
+      },
+      options.offline,
+    ),
   };
 
-  const manifestPath = path.join(staging, "manifest.json");
-  await writeJson(manifestPath, manifest);
-  await writeFile(
-    path.join(staging, "manifest.sha256"),
-    `${await sha256File(manifestPath)}  manifest.json\n`,
-    "utf8",
-  );
-  emitStage("integrityManifest", "ok", { files: files.length });
+  await rm(staging, { recursive: true, force: true });
 
-  emitStage("verification", "start");
-  runVerifier(staging);
-  emitStage("verification", "ok");
+  try {
+    emitStage("catalog", "start");
+    const catalogDatabases = await findStandardCatalogDatabases(
+      repositories.babel.directory,
+    );
+    const catalog = readCatalog(
+      catalogDatabases.map((database) =>
+        path.join(repositories.babel.directory, database),
+      ),
+    );
+    await writeCatalogShards(staging, catalog.cards, catalog.texts);
+    emitStage("catalog", "ok", {
+      cards: catalog.cards.length,
+      texts: catalog.texts.length,
+    });
 
-  emitStage("publish", "start");
-  await replaceDirectoryRecoverably(staging, destination);
-  emitStage("publish", "ok", { destination });
+    emitStage("scripts", "start");
+    const scripts = await writeScriptShards(
+      staging,
+      repositories.scripts.directory,
+    );
+    emitStage("scripts", "ok", scripts);
 
-  console.log(
-    JSON.stringify(
-      {
-        status: "ok",
-        output: destination,
-        counts: manifest.counts,
-        sources: {
-          babelCdb: manifest.sources.babelCdb.commit,
-          cardScripts: manifest.sources.cardScripts.commit,
-          distribution: manifest.sources.distribution.commit,
+    emitStage("strings", "start");
+    const stringsPath = path.join(
+      repositories.distribution.directory,
+      "config",
+      "strings.conf",
+    );
+    const stringsBytes = (await stat(stringsPath)).size;
+    if (stringsBytes > MAX_STRINGS_CONF_BYTES) {
+      throw new Error(`strings.conf exceeds ${MAX_STRINGS_CONF_BYTES} bytes`);
+    }
+    const stringsContent = await readFile(stringsPath, "utf8");
+    const strings = parseStringsConf(stringsContent);
+    await writeJson(path.join(staging, "strings", "en.json"), strings);
+    emitStage("strings", "ok", { system: Object.keys(strings.system).length });
+
+    emitStage("images", "start");
+    await writeImageShards(
+      staging,
+      catalog.cards.map((card) => card.code),
+    );
+    emitStage("images", "ok", { records: catalog.cards.length });
+
+    emitStage("integrityManifest", "start");
+    const files = await describeGeneratedFiles(staging);
+    const manifest: AssetManifest = {
+      schemaVersion: 1,
+      generatedAt: new Date().toISOString(),
+      sources: {
+        babelCdb: repositories.babel.revision,
+        cardScripts: repositories.scripts.revision,
+        distribution: repositories.distribution.revision,
+        imageProvider: {
+          name: "YGOPRODeck",
+          apiGuide: "https://ygoprodeck.com/api-guide/",
+          fullTemplate: "https://images.ygoprodeck.com/images/cards/{id}.jpg",
+          croppedTemplate:
+            "https://images.ygoprodeck.com/images/cards_cropped/{id}.jpg",
+          redistributionApproved: false,
         },
       },
-      null,
-      2,
-    ),
-  );
-} catch (error) {
-  emitStage("sync", "failed", { detail: (error as Error).message });
-  await rm(staging, { recursive: true, force: true });
-  throw error;
-}
+      inputs: {
+        catalogDatabases,
+        scriptDirectories: ["official", "pre-release"],
+      },
+      counts: {
+        cards: catalog.cards.length,
+        texts: catalog.texts.length,
+        officialScripts: scripts.officialCount,
+        preReleaseScripts: scripts.preReleaseCount,
+        globalScripts: scripts.globalCount,
+        systemStrings: Object.keys(strings.system).length,
+        victoryStrings: Object.keys(strings.victory).length,
+        counterStrings: Object.keys(strings.counter).length,
+        setNameStrings: Object.keys(strings.setname).length,
+        imageRecords: catalog.cards.length,
+      },
+      sharding: {
+        catalog: CATALOG_SHARD_COUNT,
+        scripts: SCRIPT_SHARD_COUNT,
+        algorithm: "numeric-id-modulo",
+      },
+      files,
+    };
+
+    const manifestPath = path.join(staging, "manifest.json");
+    await writeJson(manifestPath, manifest);
+    await writeFile(
+      path.join(staging, "manifest.sha256"),
+      `${await sha256File(manifestPath)}  manifest.json\n`,
+      "utf8",
+    );
+    emitStage("integrityManifest", "ok", { files: files.length });
+
+    emitStage("verification", "start");
+    runVerifier(staging);
+    emitStage("verification", "ok");
+
+    emitStage("publish", "start");
+    await replaceDirectoryRecoverably(staging, destination);
+    emitStage("publish", "ok", { destination });
+
+    console.log(
+      JSON.stringify(
+        {
+          status: "ok",
+          output: destination,
+          counts: manifest.counts,
+          sources: {
+            babelCdb: manifest.sources.babelCdb.commit,
+            cardScripts: manifest.sources.cardScripts.commit,
+            distribution: manifest.sources.distribution.commit,
+          },
+        },
+        null,
+        2,
+      ),
+    );
+  } catch (error) {
+    emitStage("sync", "failed", { detail: (error as Error).message });
+    await rm(staging, { recursive: true, force: true });
+    throw error;
+  }
 } finally {
   await releaseRunLock();
 }
@@ -252,8 +265,7 @@ function parseOptions(args: string[], lock: AssetSourceLock): Options {
 
   const babelRef = values.get("--babel-ref") ?? lock.babelCdb;
   const scriptsRef = values.get("--scripts-ref") ?? lock.cardScripts;
-  const distributionRef =
-    values.get("--distribution-ref") ?? lock.distribution;
+  const distributionRef = values.get("--distribution-ref") ?? lock.distribution;
   for (const [name, requested, pinned] of [
     ["babel-ref", babelRef, lock.babelCdb],
     ["scripts-ref", scriptsRef, lock.cardScripts],
@@ -303,17 +315,31 @@ async function writeCatalogShards(
 
   for (let shard = 0; shard < CATALOG_SHARD_COUNT; shard += 1) {
     const name = shard.toString(16).padStart(2, "0");
-    await writeJson(path.join(root, "catalog", "cards", `${name}.json`), cardShards.get(name) ?? []);
-    await writeJson(path.join(root, "catalog", "texts", "en", `${name}.json`), textShards.get(name) ?? []);
+    await writeJson(
+      path.join(root, "catalog", "cards", `${name}.json`),
+      cardShards.get(name) ?? [],
+    );
+    await writeJson(
+      path.join(root, "catalog", "texts", "en", `${name}.json`),
+      textShards.get(name) ?? [],
+    );
   }
 }
 
 async function writeScriptShards(
   root: string,
   sourceRoot: string,
-): Promise<{ officialCount: number; preReleaseCount: number; globalCount: number }> {
-  const officialFiles = await listCardScripts(path.join(sourceRoot, "official"));
-  const preReleaseFiles = await listCardScripts(path.join(sourceRoot, "pre-release"));
+): Promise<{
+  officialCount: number;
+  preReleaseCount: number;
+  globalCount: number;
+}> {
+  const officialFiles = await listCardScripts(
+    path.join(sourceRoot, "official"),
+  );
+  const preReleaseFiles = await listCardScripts(
+    path.join(sourceRoot, "pre-release"),
+  );
   const globalFiles = (await readdir(sourceRoot, { withFileTypes: true }))
     .filter((entry) => entry.isFile() && entry.name.endsWith(".lua"))
     .map((entry) => path.join(sourceRoot, entry.name))
@@ -360,7 +386,10 @@ async function writeScriptShards(
 
   for (let shard = 0; shard < SCRIPT_SHARD_COUNT; shard += 1) {
     const name = shard.toString(16).padStart(2, "0");
-    await writeJson(path.join(root, "scripts", "cards", `${name}.json`), shards.get(name) ?? {});
+    await writeJson(
+      path.join(root, "scripts", "cards", `${name}.json`),
+      shards.get(name) ?? {},
+    );
   }
 
   const globals: Record<string, string> = {};
@@ -372,7 +401,9 @@ async function writeScriptShards(
     }
     totalScriptBytes += fileBytes;
     if (totalScriptBytes > MAX_TOTAL_CARD_SCRIPT_BYTES) {
-      throw new Error(`CardScripts exceeds ${MAX_TOTAL_CARD_SCRIPT_BYTES} total bytes`);
+      throw new Error(
+        `CardScripts exceeds ${MAX_TOTAL_CARD_SCRIPT_BYTES} total bytes`,
+      );
     }
     globals[name] = await readFile(file, "utf8");
   }
@@ -393,10 +424,14 @@ async function writeScriptShards(
 }
 
 async function listCardScripts(directory: string): Promise<string[]> {
-  return (await listFiles(directory)).filter((file) => /^c\d+\.lua$/.test(path.basename(file)));
+  return (await listFiles(directory)).filter((file) =>
+    /^c\d+\.lua$/.test(path.basename(file)),
+  );
 }
 
-async function findStandardCatalogDatabases(sourceRoot: string): Promise<string[]> {
+async function findStandardCatalogDatabases(
+  sourceRoot: string,
+): Promise<string[]> {
   const names = (await readdir(sourceRoot, { withFileTypes: true }))
     .filter((entry) => entry.isFile() && entry.name.endsWith(".cdb"))
     .map((entry) => entry.name);
@@ -404,7 +439,9 @@ async function findStandardCatalogDatabases(sourceRoot: string): Promise<string[
     "cards.cdb",
     ...names.filter((name) => name.startsWith("release-")).sort(),
     ...names
-      .filter((name) => name.startsWith("prerelease-") && !name.includes("rush"))
+      .filter(
+        (name) => name.startsWith("prerelease-") && !name.includes("rush"),
+      )
       .sort(),
   ];
   if (databases.length > MAX_CATALOG_DATABASES) {
@@ -430,18 +467,27 @@ async function writeImageShards(root: string, codes: number[]): Promise<void> {
 
   for (let shard = 0; shard < CATALOG_SHARD_COUNT; shard += 1) {
     const name = shard.toString(16).padStart(2, "0");
-    await writeJson(path.join(root, "images", `${name}.json`), shards.get(name) ?? []);
+    await writeJson(
+      path.join(root, "images", `${name}.json`),
+      shards.get(name) ?? [],
+    );
   }
 }
 
 function runVerifier(outputDirectory: string): void {
   const result = spawnSync(
     process.execPath,
-    [path.join(scriptDirectory, "verify-assets.ts"), "--output", outputDirectory],
+    [
+      path.join(scriptDirectory, "verify-assets.ts"),
+      "--output",
+      outputDirectory,
+    ],
     { encoding: "utf8" },
   );
   if (result.status !== 0) {
-    throw new Error(`Generated snapshot verification failed:\n${result.stderr || result.stdout}`);
+    throw new Error(
+      `Generated snapshot verification failed:\n${result.stderr || result.stdout}`,
+    );
   }
 }
 

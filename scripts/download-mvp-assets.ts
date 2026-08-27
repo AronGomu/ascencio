@@ -3,7 +3,11 @@ import { spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildAssetStages, parseMvpAssetOptions, type AssetStage } from "./lib/mvp-assets.ts";
+import {
+  buildAssetStages,
+  parseMvpAssetOptions,
+  type AssetStage,
+} from "./lib/mvp-assets.ts";
 import { acquireRunLock, writeJsonAtomic } from "./lib/run-lock.ts";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -41,14 +45,21 @@ The command is resumable. Existing valid JPEGs are verified and skipped.`);
 async function main(): Promise<void> {
   const nodeMajor = Number(process.versions.node.split(".")[0]);
   if (!Number.isSafeInteger(nodeMajor) || nodeMajor < 24) {
-    throw new Error(`Node.js 24 or newer is required; found ${process.versions.node}`);
+    throw new Error(
+      `Node.js 24 or newer is required; found ${process.versions.node}`,
+    );
   }
 
-  const releaseLock = await acquireRunLock(path.join(generatedRoot, ".locks", "mvp-assets"));
+  const releaseLock = await acquireRunLock(
+    path.join(generatedRoot, ".locks", "mvp-assets"),
+  );
   const startedAt = Date.now();
   const stages = buildAssetStages(options);
   await writeStatus("in-progress", { offline: options.offline });
-  emit("run", "start", { offline: options.offline, stages: stages.map((stage) => stage.name) });
+  emit("run", "start", {
+    offline: options.offline,
+    stages: stages.map((stage) => stage.name),
+  });
 
   try {
     for (const stage of stages) {
@@ -56,14 +67,25 @@ async function main(): Promise<void> {
     }
 
     const engineManifest = JSON.parse(
-      await readFile(path.join(generatedRoot, "engine", "current", "engine-manifest.json"), "utf8"),
+      await readFile(
+        path.join(generatedRoot, "engine", "current", "engine-manifest.json"),
+        "utf8",
+      ),
     ) as { package: string; version: string };
     const manifest = JSON.parse(
-      await readFile(path.join(generatedRoot, "assets", "current", "manifest.json"), "utf8"),
+      await readFile(
+        path.join(generatedRoot, "assets", "current", "manifest.json"),
+        "utf8",
+      ),
     ) as { counts: Record<string, number> };
     const imageReport = JSON.parse(
       await readFile(
-        path.join(generatedRoot, "card-images", "archive", "download-report.json"),
+        path.join(
+          generatedRoot,
+          "card-images",
+          "archive",
+          "download-report.json",
+        ),
         "utf8",
       ),
     ) as { requested: number; missing: number; failed: number };
@@ -75,7 +97,8 @@ async function main(): Promise<void> {
       preReleaseScripts: manifest.counts.preReleaseScripts,
       globalScripts: manifest.counts.globalScripts,
       imageRecords: imageReport.requested,
-      archivedImages: imageReport.requested - imageReport.missing - imageReport.failed,
+      archivedImages:
+        imageReport.requested - imageReport.missing - imageReport.failed,
       providerMissingImages: imageReport.missing,
       failedImages: imageReport.failed,
       engineOutput: "generated/engine/current",
@@ -100,11 +123,15 @@ async function runStage(stage: AssetStage): Promise<void> {
   const stageStartedAt = Date.now();
   emit(stage.name, "start", { script: stage.script, args: stage.args });
   const exitCode = await new Promise<number>((resolve, reject) => {
-    const child = spawn(process.execPath, [path.join(scriptDirectory, stage.script), ...stage.args], {
-      cwd: projectRoot,
-      stdio: "inherit",
-      windowsHide: true,
-    });
+    const child = spawn(
+      process.execPath,
+      [path.join(scriptDirectory, stage.script), ...stage.args],
+      {
+        cwd: projectRoot,
+        stdio: "inherit",
+        windowsHide: true,
+      },
+    );
     const forwardSignal = (signal: NodeJS.Signals) => child.kill(signal);
     const onSigint = () => forwardSignal("SIGINT");
     const onSigterm = () => forwardSignal("SIGTERM");
@@ -140,13 +167,21 @@ async function runStage(stage: AssetStage): Promise<void> {
     process.once("SIGTERM", onSigterm);
   });
   if (exitCode !== 0) {
-    emit(stage.name, "failed", { exitCode, durationMs: Date.now() - stageStartedAt });
-    throw new Error(`${stage.name} failed with exit code ${exitCode}; rerun to resume safely`);
+    emit(stage.name, "failed", {
+      exitCode,
+      durationMs: Date.now() - stageStartedAt,
+    });
+    throw new Error(
+      `${stage.name} failed with exit code ${exitCode}; rerun to resume safely`,
+    );
   }
   emit(stage.name, "ok", { durationMs: Date.now() - stageStartedAt });
 }
 
-async function writeStatus(status: "in-progress" | "ready" | "failed", detail: object): Promise<void> {
+async function writeStatus(
+  status: "in-progress" | "ready" | "failed",
+  detail: object,
+): Promise<void> {
   await writeJsonAtomic(statusPath, {
     schemaVersion: 1,
     status,
@@ -155,7 +190,11 @@ async function writeStatus(status: "in-progress" | "ready" | "failed", detail: o
   });
 }
 
-function emit(operation: string, status: string, detail: Record<string, unknown>): void {
+function emit(
+  operation: string,
+  status: string,
+  detail: Record<string, unknown>,
+): void {
   process.stderr.write(
     `${JSON.stringify({ timestamp: new Date().toISOString(), operation, status, ...detail })}\n`,
   );

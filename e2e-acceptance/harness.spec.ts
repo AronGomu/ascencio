@@ -18,14 +18,22 @@ for (const [scenario, extraMonsterZones, zoneCount] of [
   });
 }
 
-test("unknown scenario fails visibly without fallback board", async ({ page }) => {
+test("unknown scenario fails visibly without fallback board", async ({
+  page,
+}) => {
   await page.goto("?scenario=nope");
-  await expect(page.locator('[data-cy="acceptance-scenario-error"]')).toBeVisible();
+  await expect(
+    page.locator('[data-cy="acceptance-scenario-error"]'),
+  ).toBeVisible();
   await expect(page.locator('[data-cy="duel-field-board"]')).toHaveCount(0);
 });
 
-test("missing scenario fails visibly without fallback board", async ({ page }) => {
+test("missing scenario fails visibly without fallback board", async ({
+  page,
+}) => {
   await page.goto("");
-  await expect(page.locator('[data-cy="acceptance-scenario-error"]')).toBeVisible();
+  await expect(
+    page.locator('[data-cy="acceptance-scenario-error"]'),
+  ).toBeVisible();
   await expect(page.locator('[data-cy="duel-field-board"]')).toHaveCount(0);
 });

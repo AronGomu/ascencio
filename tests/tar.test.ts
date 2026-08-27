@@ -3,7 +3,10 @@ import test from "node:test";
 import { readTarFiles } from "../scripts/lib/tar.ts";
 
 test("readTarFiles extracts regular package files", () => {
-  const archive = createTar("package/lib/ocgcore.sync.wasm", new Uint8Array([0, 97, 115, 109]));
+  const archive = createTar(
+    "package/lib/ocgcore.sync.wasm",
+    new Uint8Array([0, 97, 115, 109]),
+  );
   const files = readTarFiles(archive, "package/");
   assert.equal(files[0]?.path, "lib/ocgcore.sync.wasm");
   assert.deepEqual(files[0]?.bytes, new Uint8Array([0, 97, 115, 109]));

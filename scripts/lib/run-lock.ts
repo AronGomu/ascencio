@@ -8,7 +8,9 @@ interface LockOwner {
   startedAt: string;
 }
 
-export async function acquireRunLock(lockFile: string): Promise<() => Promise<void>> {
+export async function acquireRunLock(
+  lockFile: string,
+): Promise<() => Promise<void>> {
   await mkdir(path.dirname(lockFile), { recursive: true });
   const owner: LockOwner = {
     pid: process.pid,
@@ -40,7 +42,8 @@ export async function acquireRunLock(lockFile: string): Promise<() => Promise<vo
         await rename(lockFile, staleFile);
         await rm(staleFile, { force: true });
       } catch (reclaimError) {
-        if ((reclaimError as NodeJS.ErrnoException).code !== "ENOENT") throw reclaimError;
+        if ((reclaimError as NodeJS.ErrnoException).code !== "ENOENT")
+          throw reclaimError;
       }
     }
   }
@@ -53,7 +56,10 @@ export async function acquireRunLock(lockFile: string): Promise<() => Promise<vo
   };
 }
 
-export async function writeJsonAtomic(filePath: string, value: unknown): Promise<void> {
+export async function writeJsonAtomic(
+  filePath: string,
+  value: unknown,
+): Promise<void> {
   await mkdir(path.dirname(filePath), { recursive: true });
   const temporary = `${filePath}.tmp-${process.pid}-${randomUUID()}`;
   await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, "utf8");

@@ -16,12 +16,16 @@ const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptDirectory, "..");
 const outputArgument = readOutputArgument(process.argv.slice(2));
 const root = path.resolve(projectRoot, outputArgument);
-const manifest = await readJson<AssetManifest>(path.join(root, "manifest.json"));
+const manifest = await readJson<AssetManifest>(
+  path.join(root, "manifest.json"),
+);
 const failures: string[] = [];
 
 const digestPath = path.join(root, "manifest.sha256");
 try {
-  const declaredDigest = (await readFile(digestPath, "utf8")).trim().split(/\s+/)[0];
+  const declaredDigest = (await readFile(digestPath, "utf8"))
+    .trim()
+    .split(/\s+/)[0];
   const actualDigest = await sha256File(path.join(root, "manifest.json"));
   if (declaredDigest !== actualDigest) {
     failures.push("manifest.json SHA-256 mismatch");
@@ -46,10 +50,14 @@ const actualFiles = new Set(
     .map((file) => path.relative(root, file).replaceAll(path.sep, "/"))
     .filter((file) => file !== "manifest.json" && file !== "manifest.sha256"),
 );
-for (const extra of [...actualFiles].filter((file) => !expectedFiles.has(file))) {
+for (const extra of [...actualFiles].filter(
+  (file) => !expectedFiles.has(file),
+)) {
   failures.push(`Unmanifested generated file: ${extra}`);
 }
-for (const missing of [...expectedFiles].filter((file) => !actualFiles.has(file))) {
+for (const missing of [...expectedFiles].filter(
+  (file) => !actualFiles.has(file),
+)) {
   failures.push(`Manifest references missing file: ${missing}`);
 }
 
@@ -58,7 +66,9 @@ for (const file of manifest.files) {
   try {
     const fileStat = await stat(absolute);
     if (fileStat.size !== file.bytes) {
-      failures.push(`${file.path}: expected ${file.bytes} bytes, found ${fileStat.size}`);
+      failures.push(
+        `${file.path}: expected ${file.bytes} bytes, found ${fileStat.size}`,
+      );
       continue;
     }
     const hash = await sha256File(absolute);
@@ -70,10 +80,24 @@ for (const file of manifest.files) {
   }
 }
 
-const cards = await readShards<EngineCardRecord>(root, "catalog/cards", CATALOG_SHARD_COUNT);
-const texts = await readShards<CardTextRecord>(root, "catalog/texts/en", CATALOG_SHARD_COUNT);
-const images = await readShards<ImageRecord>(root, "images", CATALOG_SHARD_COUNT);
-const strings = await readJson<SystemStrings>(path.join(root, "strings", "en.json"));
+const cards = await readShards<EngineCardRecord>(
+  root,
+  "catalog/cards",
+  CATALOG_SHARD_COUNT,
+);
+const texts = await readShards<CardTextRecord>(
+  root,
+  "catalog/texts/en",
+  CATALOG_SHARD_COUNT,
+);
+const images = await readShards<ImageRecord>(
+  root,
+  "images",
+  CATALOG_SHARD_COUNT,
+);
+const strings = await readJson<SystemStrings>(
+  path.join(root, "strings", "en.json"),
+);
 const scriptIndex = await readJson<{
   official: string[];
   preRelease: string[];
@@ -87,17 +111,41 @@ const globalScripts = await readJson<Record<string, string>>(
 checkCount("cards", cards.length, manifest.counts.cards);
 checkCount("texts", texts.length, manifest.counts.texts);
 checkCount("images", images.length, manifest.counts.imageRecords);
-checkCount("official scripts", scriptIndex.official.length, manifest.counts.officialScripts);
+checkCount(
+  "official scripts",
+  scriptIndex.official.length,
+  manifest.counts.officialScripts,
+);
 checkCount(
   "pre-release scripts",
   scriptIndex.preRelease.length,
   manifest.counts.preReleaseScripts,
 );
-checkCount("global scripts", scriptIndex.globals.length, manifest.counts.globalScripts);
-checkCount("system strings", Object.keys(strings.system).length, manifest.counts.systemStrings);
-checkCount("victory strings", Object.keys(strings.victory).length, manifest.counts.victoryStrings);
-checkCount("counter strings", Object.keys(strings.counter).length, manifest.counts.counterStrings);
-checkCount("set-name strings", Object.keys(strings.setname).length, manifest.counts.setNameStrings);
+checkCount(
+  "global scripts",
+  scriptIndex.globals.length,
+  manifest.counts.globalScripts,
+);
+checkCount(
+  "system strings",
+  Object.keys(strings.system).length,
+  manifest.counts.systemStrings,
+);
+checkCount(
+  "victory strings",
+  Object.keys(strings.victory).length,
+  manifest.counts.victoryStrings,
+);
+checkCount(
+  "counter strings",
+  Object.keys(strings.counter).length,
+  manifest.counts.counterStrings,
+);
+checkCount(
+  "set-name strings",
+  Object.keys(strings.setname).length,
+  manifest.counts.setNameStrings,
+);
 
 const cardCodes = new Set(cards.map((card) => card.code));
 const textCodes = new Set(texts.map((text) => text.code));
@@ -110,12 +158,18 @@ checkSameCodes("image", cardCodes, imageCodes);
 
 for (const image of images) {
   const expectedSuffix = `/${image.code}.jpg`;
-  if (!image.full.endsWith(expectedSuffix) || !image.cropped.endsWith(expectedSuffix)) {
+  if (
+    !image.full.endsWith(expectedSuffix) ||
+    !image.cropped.endsWith(expectedSuffix)
+  ) {
     failures.push(`Image URLs do not match card ${image.code}`);
   }
 }
 
-const allIndexedScriptNames = [...scriptIndex.official, ...scriptIndex.preRelease];
+const allIndexedScriptNames = [
+  ...scriptIndex.official,
+  ...scriptIndex.preRelease,
+];
 const scriptNames = new Set(allIndexedScriptNames);
 checkUnique("card script", scriptNames.size, allIndexedScriptNames.length);
 const shardedScriptNames = new Set<string>();
@@ -126,7 +180,9 @@ for (let shard = 0; shard < SCRIPT_SHARD_COUNT; shard += 1) {
   );
   for (const scriptName of Object.keys(scripts)) {
     if (shardedScriptNames.has(scriptName)) {
-      failures.push(`Official script appears in multiple shards: ${scriptName}`);
+      failures.push(
+        `Official script appears in multiple shards: ${scriptName}`,
+      );
     }
     shardedScriptNames.add(scriptName);
     const match = /^c(\d+)\.lua$/.exec(scriptName);
@@ -138,18 +194,24 @@ for (let shard = 0; shard < SCRIPT_SHARD_COUNT; shard += 1) {
       .toString(16)
       .padStart(2, "0");
     if (expectedShard !== shardName) {
-      failures.push(`${scriptName}: expected shard ${expectedShard}, found ${shardName}`);
+      failures.push(
+        `${scriptName}: expected shard ${expectedShard}, found ${shardName}`,
+      );
     }
   }
 }
 for (const scriptName of allIndexedScriptNames) {
   if (!shardedScriptNames.has(scriptName)) {
-    failures.push(`Indexed official script is missing from shards: ${scriptName}`);
+    failures.push(
+      `Indexed official script is missing from shards: ${scriptName}`,
+    );
   }
 }
 for (const scriptName of shardedScriptNames) {
   if (!scriptNames.has(scriptName)) {
-    failures.push(`Sharded official script is missing from index: ${scriptName}`);
+    failures.push(
+      `Sharded official script is missing from index: ${scriptName}`,
+    );
   }
 }
 
@@ -161,12 +223,17 @@ if (
 ) {
   failures.push("Global script index does not match globals.json");
 }
-if (!scriptIndex.globals.includes("constant.lua") || !scriptIndex.globals.includes("utility.lua")) {
+if (
+  !scriptIndex.globals.includes("constant.lua") ||
+  !scriptIndex.globals.includes("utility.lua")
+) {
   failures.push("Global scripts must include constant.lua and utility.lua");
 }
 
 if (manifest.sources.imageProvider.redistributionApproved) {
-  failures.push("Image redistribution must remain false until explicitly approved");
+  failures.push(
+    "Image redistribution must remain false until explicitly approved",
+  );
 }
 
 if (failures.length) {
@@ -206,7 +273,9 @@ function readOutputArgument(args: string[]): string {
   if (args.length === 2 && args[0] === "--output" && args[1]) {
     return args[1];
   }
-  throw new Error("Usage: node scripts/verify-assets.ts [--output <directory>]");
+  throw new Error(
+    "Usage: node scripts/verify-assets.ts [--output <directory>]",
+  );
 }
 
 async function readJson<T>(filePath: string): Promise<T> {
@@ -222,7 +291,9 @@ async function readShards<T>(
   for (let shard = 0; shard < shardCount; shard += 1) {
     const name = shard.toString(16).padStart(2, "0");
     records.push(
-      ...(await readJson<T[]>(path.join(rootDirectory, relativeDirectory, `${name}.json`))),
+      ...(await readJson<T[]>(
+        path.join(rootDirectory, relativeDirectory, `${name}.json`),
+      )),
     );
   }
   return records;
@@ -236,11 +307,17 @@ function checkCount(label: string, actual: number, expected: number): void {
 
 function checkUnique(label: string, unique: number, total: number): void {
   if (unique !== total) {
-    failures.push(`${label} IDs/names are not unique: ${unique} unique for ${total} records`);
+    failures.push(
+      `${label} IDs/names are not unique: ${unique} unique for ${total} records`,
+    );
   }
 }
 
-function checkSameCodes(label: string, expected: Set<number>, actual: Set<number>): void {
+function checkSameCodes(
+  label: string,
+  expected: Set<number>,
+  actual: Set<number>,
+): void {
   const missing = [...expected].filter((code) => !actual.has(code));
   const extra = [...actual].filter((code) => !expected.has(code));
   if (missing.length || extra.length) {

@@ -25,8 +25,16 @@ test("wanted image codes include the shop set data", () => {
     ],
   });
   const base = [
-    { code: 2, full: "https://example.com/2.jpg", cropped: "https://example.com/c2.jpg" },
-    { code: 3, full: "https://example.com/3.jpg", cropped: "https://example.com/c3.jpg" },
+    {
+      code: 2,
+      full: "https://example.com/2.jpg",
+      cropped: "https://example.com/c2.jpg",
+    },
+    {
+      code: 3,
+      full: "https://example.com/3.jpg",
+      cropped: "https://example.com/c3.jpg",
+    },
   ];
   const result = mergeShopImageRecords(base, collectShopCodes(shopJson));
   assert.deepEqual(
@@ -47,7 +55,10 @@ test("a code the source cannot serve is reported, not fatal", async () => {
 });
 
 test("isJpeg requires complete JPEG start and end markers", () => {
-  assert.equal(isJpeg(new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0xff, 0xd9])), true);
+  assert.equal(
+    isJpeg(new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0xff, 0xd9])),
+    true,
+  );
   assert.equal(isJpeg(new Uint8Array([0x89, 0x50, 0x4e, 0x47])), false);
   assert.equal(isJpeg(new Uint8Array([0xff, 0xd8, 0xff, 0xe0])), false);
   assert.equal(isJpeg(new Uint8Array([0xff, 0xd8])), false);

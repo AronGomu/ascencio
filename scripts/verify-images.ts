@@ -40,7 +40,10 @@ for (let shard = 0; shard < CATALOG_SHARD_COUNT; shard += 1) {
   }
 }
 for (const code of collectShopCodes(
-  await readFile(path.join(projectRoot, "public/story/shop-sets.v1.json"), "utf8"),
+  await readFile(
+    path.join(projectRoot, "public/story/shop-sets.v1.json"),
+    "utf8",
+  ),
 )) {
   expectedCodes.add(code);
 }
@@ -55,7 +58,9 @@ for (const entry of await readdir(imageRoot, { withFileTypes: true })) {
   const code = Number(entry.name.slice(0, -4));
   archivedCodes.add(code);
   if (!expectedCodes.has(code)) {
-    failures.push(`Image is not present in the current card catalog: ${entry.name}`);
+    failures.push(
+      `Image is not present in the current card catalog: ${entry.name}`,
+    );
   }
   const imagePath = path.join(imageRoot, entry.name);
   if ((await validJpegFileSize(imagePath)) === null) {
@@ -63,15 +68,23 @@ for (const entry of await readdir(imageRoot, { withFileTypes: true })) {
   }
 }
 
-const missingCodes = [...expectedCodes].filter((code) => !archivedCodes.has(code)).sort((a, b) => a - b);
+const missingCodes = [...expectedCodes]
+  .filter((code) => !archivedCodes.has(code))
+  .sort((a, b) => a - b);
 const reportedMissing = new Set(
-  report.unavailable.filter((item) => item.status === "missing").map((item) => item.code),
+  report.unavailable
+    .filter((item) => item.status === "missing")
+    .map((item) => item.code),
 );
 if (report.requested !== expectedCodes.size) {
-  failures.push(`Download report covers ${report.requested} of ${expectedCodes.size} cards`);
+  failures.push(
+    `Download report covers ${report.requested} of ${expectedCodes.size} cards`,
+  );
 }
 if (report.failed !== 0) {
-  failures.push(`Download report still contains ${report.failed} transient failures`);
+  failures.push(
+    `Download report still contains ${report.failed} transient failures`,
+  );
 }
 if (
   missingCodes.length !== reportedMissing.size ||

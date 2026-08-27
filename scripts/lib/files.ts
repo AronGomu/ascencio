@@ -1,9 +1,20 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  readFile,
+  readdir,
+  rename,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import path from "node:path";
 import type { GeneratedFile } from "./model.ts";
 
-export async function writeJson(filePath: string, value: unknown): Promise<void> {
+export async function writeJson(
+  filePath: string,
+  value: unknown,
+): Promise<void> {
   await mkdir(path.dirname(filePath), { recursive: true });
   await writeFile(filePath, `${JSON.stringify(value)}\n`, "utf8");
 }
@@ -32,7 +43,9 @@ export async function listFiles(root: string): Promise<string[]> {
   return files.sort();
 }
 
-export async function describeGeneratedFiles(root: string): Promise<GeneratedFile[]> {
+export async function describeGeneratedFiles(
+  root: string,
+): Promise<GeneratedFile[]> {
   const files = await listFiles(root);
   const described: GeneratedFile[] = [];
 
@@ -97,7 +110,10 @@ export async function replaceDirectoryRecoverably(
   }
 }
 
-async function renameWithRetry(source: string, destination: string): Promise<void> {
+async function renameWithRetry(
+  source: string,
+  destination: string,
+): Promise<void> {
   const maxAttempts = process.platform === "win32" ? 8 : 1;
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {

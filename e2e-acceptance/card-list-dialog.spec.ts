@@ -637,7 +637,10 @@ test("a neutral browse entry shows no halo on hover", async ({ page }) => {
   // Entry 1 has no choices — neutral (entries 0 and 5 are actionable).
   const neutralTile = page.locator(tileSelector).nth(1);
   await neutralTile.hover({ position: { x: 72, y: 50 } });
-  const borderColor = await computed(neutralTile.locator("img"), "border-color");
+  const borderColor = await computed(
+    neutralTile.locator("img"),
+    "border-color",
+  );
   expect(borderColor).not.toBe("rgb(126, 226, 168)"); // not green
   expect(borderColor).not.toBe("rgb(255, 213, 128)"); // not orange
   expect(borderColor).not.toBe("rgb(255, 140, 155)"); // not red

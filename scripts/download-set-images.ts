@@ -8,6 +8,7 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { readCappedResponseBody } from "./lib/capped-response-body.ts";
 import { isJpeg } from "./lib/images.ts";
 import { resolveProjectSubpath } from "./lib/paths.ts";
 import { acquireRunLock, writeJsonAtomic } from "./lib/run-lock.ts";
@@ -32,6 +33,11 @@ const USER_AGENT = "YGO-Story-Duel-Simulator/0.1 asset importer";
 /* YGOPRODeck documents a 20-request/second ceiling; one image every 100 ms
    stays an order of magnitude inside it for a 50-file archive. */
 const REQUEST_INTERVAL_MS = 100;
+/* The biggest of the 50 set images on disk is 152,797 bytes, so this clears
+   legitimate art by roughly 55x. It exists because an endless upstream body has
+   no ceiling otherwise: `arrayBuffer()` allocates outside the V8 heap, and
+   reached 15.7 GB RSS in one 15 s fetch window when measured. */
+const MAX_SET_IMAGE_BYTES = 8 * 1024 * 1024;
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptDirectory, "..");
@@ -66,7 +72,10 @@ try {
       continue;
     }
     await sleep(REQUEST_INTERVAL_MS);
-    const result = await downloadSetImage(source.sourceUrl);
+    const result = await downloadSetImage(
+      source.sourceUrl,
+      setImageFileName(source.setId),
+    );
     if (result.status === "downloaded") {
       downloads.push({ ...source, bytes: result.bytes });
       continue;
@@ -134,7 +143,10 @@ async function fetchSetIndex(): Promise<UpstreamSetRecord[]> {
 }
 
 /** Fetch one set image. HTTP 404 means the upstream record's URL is stale. */
-async function downloadSetImage(url: string): Promise<SetImageResult> {
+async function downloadSetImage(
+  url: string,
+  fileName: string,
+): Promise<SetImageResult> {
   for (let attempt = 1; attempt <= 2; attempt += 1) {
     try {
       const response = await fetch(url, {
@@ -152,7 +164,15 @@ async function downloadSetImage(url: string): Promise<SetImageResult> {
         }
         return { status: "failed", error: `HTTP ${response.status}` };
       }
-      const bytes = new Uint8Array(await response.arrayBuffer());
+      const body = await readCappedResponseBody(
+        response,
+        MAX_SET_IMAGE_BYTES,
+        fileName,
+      );
+      if (body.status === "too-large") {
+        return { status: "failed", error: body.error };
+      }
+      const bytes = body.bytes;
       if (!isJpeg(bytes)) {
         return {
           status: "failed",

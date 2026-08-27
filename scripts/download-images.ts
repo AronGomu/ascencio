@@ -1,6 +1,7 @@
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { readCappedResponseBody } from "./lib/capped-response-body.ts";
 import { isJpeg, validJpegFileSize } from "./lib/images.ts";
 import { CATALOG_SHARD_COUNT, type ImageRecord } from "./lib/model.ts";
 import { resolveProjectSubpath } from "./lib/paths.ts";
@@ -9,6 +10,12 @@ import {
   collectShopCodes,
   mergeShopImageRecords,
 } from "./lib/shop-set-image-codes.ts";
+
+/* The biggest of the 14,579 files in the local card archive is 330,480 bytes,
+   so this clears legitimate art by roughly 25x. It exists because an endless
+   upstream body has no ceiling otherwise: `arrayBuffer()` allocates outside the
+   V8 heap, and reached 15.7 GB RSS in one 15 s fetch window when measured. */
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptDirectory, "..");
@@ -228,7 +235,15 @@ async function downloadCardImage(
         };
       }
 
-      const bytes = new Uint8Array(await response.arrayBuffer());
+      const body = await readCappedResponseBody(
+        response,
+        MAX_IMAGE_BYTES,
+        `${record.code}.jpg`,
+      );
+      if (body.status === "too-large") {
+        return { code: record.code, status: "failed", error: body.error };
+      }
+      const bytes = body.bytes;
       if (!isJpeg(bytes)) {
         return {
           code: record.code,

@@ -108,6 +108,9 @@ export class IndexedDbDeckRepository implements DeckRepository {
     );
     try {
       const database = await Promise.race([openPromise, blockedRejection]);
+      database.onversionchange = () => {
+        database.close();
+      };
       return new IndexedDbDeckRepository(database, now);
     } catch (error) {
       /* If blocked won the race, openDB is still pending and may resolve later

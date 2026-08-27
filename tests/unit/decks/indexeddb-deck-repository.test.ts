@@ -70,6 +70,39 @@ function autosave(id: string, createdAt: string): DeckAutosaveRecord {
 
 describe("IndexedDbDeckRepository", () => {
   it(
+    "closes held connection when onversionchange fires, allowing upgrade",
+    { timeout: 2000 },
+    async () => {
+      const name = "deck-repo-versionchange";
+      names.push(name);
+      /* Open via the repository — this installs the onversionchange handler. */
+      const repo = await IndexedDbDeckRepository.open(
+        name,
+        () => new Date("2026-01-01T00:00:00.000Z"),
+      );
+      /* Request a higher version from raw IndexedDB. This fires `versionchange`
+         on the repository's connection. If the handler closes it, the upgrade
+         proceeds; otherwise it blocks forever. */
+      const higherVersion = DECK_DATABASE_VERSION + 1;
+      const upgraded = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open(name, higherVersion);
+        request.onupgradeneeded = () => {
+          /* Upgrade callback runs only after old connection closed. */
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+        /* If blocked fires and stays blocked, this test times out — proving
+           the handler did not close the old connection. */
+      });
+      expect(upgraded.version).toBe(higherVersion);
+      upgraded.close();
+      /* The repo's connection is already closed by the handler; calling close()
+         again is a no-op but keeps cleanup consistent. */
+      repo.close();
+    },
+  );
+
+  it(
     "rejects with DeckStorageError when another connection blocks the upgrade",
     { timeout: 2000 },
     async () => {

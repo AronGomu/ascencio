@@ -407,6 +407,22 @@ async function verifySizeBudgets(
         ] as const,
     ),
   ];
+
+  /* Headroom enforcement for domain closures. Matches the assertion in
+     tests/unit/domain-chunk-closure.test.ts: (budget - bytes) / budget >= 0.1. */
+  const HEADROOM_MINIMUM = 0.1;
+  for (const { domain, bytes } of domainReports) {
+    const budget = DOMAIN_BUDGET_BYTES[domain];
+    const headroom = (budget - bytes) / budget;
+    if (headroom < HEADROOM_MINIMUM) {
+      throw new Error(
+        `${domain} domain closure has insufficient headroom: ` +
+          `${bytes} of ${budget} bytes = ${((1 - headroom) * 100).toFixed(1)}% used, ` +
+          `need ≤${((1 - HEADROOM_MINIMUM) * 100).toFixed(0)}%`,
+      );
+    }
+  }
+
   const exceeded = budgets.find(([, actual, maximum]) => actual > maximum);
   if (exceeded !== undefined)
     throw new Error(

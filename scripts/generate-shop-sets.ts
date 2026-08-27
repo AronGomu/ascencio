@@ -7,83 +7,13 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { foldSetCards } from "./lib/shop-set-fold.ts";
+import type { CardEntry, FoldedCard } from "./lib/shop-set-fold.ts";
 
 const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "..",
 );
-
-type ShopRarity =
-  | "common"
-  | "rare"
-  | "super-rare"
-  | "ultra-rare"
-  | "secret-rare"
-  | "ultimate-rare"
-  | "ghost-rare";
-
-const RARITY_RANK: Record<ShopRarity, number> = {
-  common: 0,
-  rare: 1,
-  "super-rare": 2,
-  "ultra-rare": 3,
-  "secret-rare": 4,
-  "ultimate-rare": 5,
-  "ghost-rare": 6,
-};
-
-function mapRarity(raw: string): ShopRarity {
-  switch (raw) {
-    case "Common":
-      return "common";
-    case "Rare":
-      return "rare";
-    case "Super Rare":
-      return "super-rare";
-    case "Ultra Rare":
-      return "ultra-rare";
-    case "Secret Rare":
-      return "secret-rare";
-    case "Ultimate Rare":
-      return "ultimate-rare";
-    case "Ghost Rare":
-      return "ghost-rare";
-    // Short Prints → common
-    case "Short Print":
-    case "Super Short Print":
-    case "Duel Terminal Normal Parallel Rare":
-      return "common";
-    // Parallel variants → base rarity
-    case "Parallel Rare":
-    case "Duel Terminal Rare Parallel Rare":
-    case "Mosaic Rare":
-    case "Shatterfoil Rare":
-      return "rare";
-    case "Super Parallel Rare":
-    case "Duel Terminal Super Parallel Rare":
-      return "super-rare";
-    case "Gold Rare":
-    case "Premium Gold Rare":
-    case "Ultra Parallel Rare":
-    case "Duel Terminal Ultra Parallel Rare":
-    case "Ultra Rare (Pharaoh's Rare)":
-      return "ultra-rare";
-    case "Secret Parallel Rare":
-    case "Duel Terminal Secret Parallel Rare":
-    case "Starlight Rare":
-    case "Collector's Rare":
-    case "Prismatic Secret Rare":
-    case "Gold Secret Rare":
-    case "Platinum Secret Rare":
-    case "Extra Secret Rare":
-      return "secret-rare";
-    case "Quarter Century Secret Rare":
-      return "secret-rare";
-    default:
-      console.warn(`  ⚠ unknown rarity "${raw}" — mapped to common`);
-      return "common";
-  }
-}
 
 interface SetSpec {
   id: string;
@@ -448,47 +378,18 @@ const SETS: readonly SetSpec[] = [
   },
 ];
 
-interface CardEntry {
-  id: number;
-  name: string;
-  card_sets: Array<{ set_name: string; set_rarity: string }>;
-}
-
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function fetchSetCards(
-  apiName: string,
-): Promise<Array<{ code: number; name: string; rarity: ShopRarity }>> {
+async function fetchSetCards(apiName: string): Promise<FoldedCard[]> {
   const url = `https://db.ygoprodeck.com/api/v7/cardinfo.php?cardset=${encodeURIComponent(apiName)}`;
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`HTTP ${response.status} fetching "${apiName}"`);
   }
   const json = (await response.json()) as { data: CardEntry[] };
-
-  // Per-code: collect all rarities this card appears at in this set, then keep highest.
-  const byCode = new Map<number, { name: string; best: ShopRarity }>();
-  for (const card of json.data) {
-    const printings = card.card_sets.filter((s) => s.set_name === apiName);
-    for (const printing of printings) {
-      const rarity = mapRarity(printing.set_rarity);
-      const existing = byCode.get(card.id);
-      if (
-        existing === undefined ||
-        RARITY_RANK[rarity] > RARITY_RANK[existing.best]
-      ) {
-        byCode.set(card.id, { name: card.name, best: rarity });
-      }
-    }
-  }
-
-  return Array.from(byCode.entries()).map(([code, { name, best }]) => ({
-    code,
-    name,
-    rarity: best,
-  }));
+  return foldSetCards(json.data, apiName);
 }
 
 console.log(`Fetching ${SETS.length} sets from YGOPRODeck…`);

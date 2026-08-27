@@ -214,6 +214,11 @@
   $: effectiveFullControl = $uiSettings.fullControl || ctrlHeld;
   let injectDuelFieldFailure = false;
   let diagnosticPending = false;
+  /* Whether the trace the store is about to hand over is one the player asked
+     for. Kept apart from `diagnosticPending`, which the failed-duel branch of
+     `afterUpdate` clears on every update: this one has to survive from the
+     click until the Worker answers it. */
+  let diagnosticsRequested = false;
   let diagnosticMessage: string | null = null;
   /* The error a restore was asked for. `restore` reports its outcome as an
      event, not a promise, so the pending label lives until the store either
@@ -233,7 +238,8 @@
     restoreRefusedFor !== null && $duel.error === restoreRefusedFor
       ? ("refused" as const)
       : $duel.restoreFailure;
-  let downloadedDiagnostics = $duel.diagnostics;
+  /* The last trace this component has seen, downloaded or merely held. */
+  let observedDiagnostics = $duel.diagnostics;
   let snapshotStore: SnapshotStore | null = null;
   let snapshotStorageStatus: SnapshotStorageStatus = {
     activeSnapshotId: null,
@@ -578,6 +584,7 @@
     if (context !== generationContext) {
       generationContext = context;
       diagnosticPending = false;
+      diagnosticsRequested = false;
       /* A new worker or session means new cards and a new image library
          generation, so the previewed card — and the image lease behind it —
          must not survive into the next duel. */
@@ -623,14 +630,22 @@
     previousErrorKey = errorKey;
   });
 
+  /* A trace only leaves as a file when the player asked for one. The Worker
+     also pushes a trace nobody requested — a boundary failure reports one on
+     its way out — and that push must not put the production seed on disk by
+     itself. It is still kept: the same failure replaces the Worker, so every
+     later request is refused and this copy is the only one the download button
+     will ever have. */
   $: if (
     $duel.diagnostics !== null &&
-    $duel.diagnostics !== downloadedDiagnostics
+    $duel.diagnostics !== observedDiagnostics
   ) {
+    const requested = diagnosticsRequested;
     // eslint-disable-next-line no-useless-assignment -- retained across reactive runs
-    downloadedDiagnostics = $duel.diagnostics;
+    observedDiagnostics = $duel.diagnostics;
     diagnosticPending = false;
-    handleDiagnosticsDownload($duel.diagnostics);
+    diagnosticsRequested = false;
+    if (requested) handleDiagnosticsDownload($duel.diagnostics);
   }
 
   $: startRequestedDuel(request, $duel.status, $duel.coreVersion);
@@ -816,11 +831,23 @@
     }
   }
 
+  /* The button serves a held trace only when the client can no longer produce
+     a fresh one. A boundary failure pushes a trace and then replaces the
+     Worker, and the replacement has no session to report on, so asking again
+     would answer "unavailable" while the evidence is sitting in the store. A
+     restored duel is a different case: the session is still live and owes a
+     trace of its own, so it must be asked. */
   function requestDiagnostics(): void {
     diagnosticMessage = null;
-    diagnosticPending = duel.requestDiagnostics();
-    if (!diagnosticPending)
-      diagnosticMessage = "Diagnostics are unavailable for this session.";
+    diagnosticsRequested = duel.requestDiagnostics();
+    diagnosticPending = diagnosticsRequested;
+    if (diagnosticsRequested) return;
+    const held = $duel.diagnostics;
+    if (held !== null) {
+      handleDiagnosticsDownload(held);
+      return;
+    }
+    diagnosticMessage = "Diagnostics are unavailable for this session.";
   }
 
   function requestRestore(): void {

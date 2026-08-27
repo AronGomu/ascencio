@@ -19,7 +19,7 @@ Use structured variants such as `completed`, `surrendered`, `unsupported`, and `
 ## Safety
 
 - Keep traces serializable, schema-versioned, exact-key validated, and aggregate-size bounded.
-- Production traces contain the production seed and are explicitly labeled `contains-production-seed`; the UI warns before download and only permits requests after a session becomes inactive.
+- Production traces contain the production seed and are explicitly labeled `contains-production-seed`; the UI warns before download and only permits requests after a session becomes inactive. A file is written only for a download the player asked for: a trace the Worker pushes on its own — the one a boundary failure reports on its way out — is held for the download button instead, because the Worker that replaces it can no longer produce another.
 - Routine Worker failure logs never include the production seed.
 - Redact hidden identities from public trace fields; raw private replay material is restricted to an authorized local workflow.
 - Preserve behavior when logging fails and never replace the original error.

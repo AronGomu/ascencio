@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
+import { tick } from "svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -480,6 +481,77 @@ describe("BattleFacade", () => {
     expect(element("duel-error-message").textContent).toContain(
       "Diagnostics downloaded",
     );
+  });
+
+  /* The Worker pushes a trace nobody asked for when it reports that its own
+     cleanup was uncertain. That push carries the production seed, so it must
+     not reach the disk on its own. */
+  it("an unsolicited diagnostics push writes no file", async () => {
+    await failStartedDuel(true);
+
+    emit({ type: "diagnostics", trace: TRACE });
+    await tick();
+
+    expect(diagnosticsSpies.download).not.toHaveBeenCalled();
+    expect(document.querySelector('[data-cy="duel-error-message"]')).toBeNull();
+  });
+
+  /* The same failure replaces the Worker, so the client refuses every later
+     request: the pushed trace is the only copy that will ever exist, and the
+     button falls back to that one once the refusal comes back. */
+  it("the dialog's download button serves the held push", async () => {
+    const user = await failStartedDuel(true);
+    latestWorker().diagnosticsAccepted = false;
+    emit({ type: "diagnostics", trace: TRACE });
+    await tick();
+
+    await user.click(element("duel-error-download-button"));
+
+    await vi.waitFor(() =>
+      expect(diagnosticsSpies.download).toHaveBeenCalledTimes(1),
+    );
+    expect(diagnosticsSpies.download.mock.calls[0]?.[0]).toBe(TRACE);
+    expect(workerClientSpies.requestDiagnostics).toHaveBeenCalledTimes(1);
+    expect(element("duel-error-message").textContent).toContain(
+      "Diagnostics downloaded",
+    );
+  });
+
+  /* A restore puts the duel back into play and the store keeps the failure's
+     trace, which now describes a duel that no longer exists. This session can
+     still answer for itself, so the button must ask it rather than hand back
+     what it is holding — a held-trace-first button writes the wrong duel's
+     evidence to disk under a "downloaded" notice. */
+  it("a restored duel asks for its own trace, not the failure's", async () => {
+    const user = await failStartedDuel(true);
+    latestWorker().diagnosticsAccepted = true;
+
+    await user.click(element("duel-error-download-button"));
+    emit({ type: "diagnostics", trace: TRACE });
+    await vi.waitFor(() =>
+      expect(diagnosticsSpies.download).toHaveBeenCalledTimes(1),
+    );
+
+    await user.click(element("duel-error-restore-button"));
+    emit({ type: "restored" });
+    emit({ type: "prompt", prompt: RESTORED_PROMPT });
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector('[data-cy="duel-error-dialog"]'),
+      ).toBeNull(),
+    );
+
+    emitResult({ type: "completed", winner: 0, loser: 1, reason: 1 });
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector('[data-cy="duel-result-dialog"]'),
+      ).not.toBeNull(),
+    );
+
+    await user.click(element("app-result-download-diagnostics-button"));
+
+    expect(workerClientSpies.requestDiagnostics).toHaveBeenCalledTimes(2);
+    expect(diagnosticsSpies.download).toHaveBeenCalledTimes(1);
   });
 
   it("Escape does not dismiss a fatal dialog", async () => {

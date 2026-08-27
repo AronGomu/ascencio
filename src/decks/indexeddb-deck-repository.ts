@@ -85,18 +85,35 @@ export class IndexedDbDeckRepository implements DeckRepository {
        `DeckMigrationError` is deliberately not wrapped as a `DeckStorageError`,
        because the deck editor answers it with its own blocking state. */
     if (databaseName === DECK_DATABASE_NAME) await migrateOnce();
-    try {
-      const database = await openDB<DeckDatabase>(
-        databaseName,
-        DECK_DATABASE_VERSION,
-        {
-          upgrade(db) {
-            createDeckStores(unwrap(db));
-          },
+    let rejectBlocked: (err: DeckStorageError) => void;
+    const blockedRejection = new Promise<never>((_, reject) => {
+      rejectBlocked = reject;
+    });
+    const openPromise = openDB<DeckDatabase>(
+      databaseName,
+      DECK_DATABASE_VERSION,
+      {
+        upgrade(db) {
+          createDeckStores(unwrap(db));
         },
-      );
+        blocked() {
+          rejectBlocked(
+            new DeckStorageError(
+              "Another browser tab still has the deck library open at an older version. " +
+                "Close it or reload it, then try again.",
+            ),
+          );
+        },
+      },
+    );
+    try {
+      const database = await Promise.race([openPromise, blockedRejection]);
       return new IndexedDbDeckRepository(database, now);
     } catch (error) {
+      /* If blocked won the race, openDB is still pending and may resolve later
+         with an orphan connection. Attach cleanup so that connection closes
+         without leaving a floating unhandled rejection. */
+      openPromise.then((db) => db.close()).catch(() => {});
       throw storageError("Unable to open deck storage", error);
     }
   }

@@ -226,9 +226,19 @@ async function openLegacyDatabase(
 }
 
 function openProductionDatabase(factory: IDBFactory): Promise<IDBDatabase> {
-  const request = factory.open(DECK_DATABASE_NAME, DECK_DATABASE_VERSION);
-  request.onupgradeneeded = () => createDeckStores(request.result);
-  return toPromise(request);
+  return new Promise((resolve, reject) => {
+    const request = factory.open(DECK_DATABASE_NAME, DECK_DATABASE_VERSION);
+    request.onupgradeneeded = () => createDeckStores(request.result);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () =>
+      reject(request.error ?? new Error("Could not open deck database"));
+    request.onblocked = () =>
+      reject(
+        new Error(
+          "Another browser tab still has the deck library open at an older version",
+        ),
+      );
+  });
 }
 
 async function deleteLegacyDatabase(factory: IDBFactory): Promise<void> {

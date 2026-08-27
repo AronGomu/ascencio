@@ -554,6 +554,47 @@ describe("BattleFacade", () => {
     expect(diagnosticsSpies.download).toHaveBeenCalledTimes(1);
   });
 
+  /* The trace the failure left behind is not evidence about the duel that
+     replaced it. Once a restore puts the player back in play, a later failure
+     that the client cannot answer for owes them "unavailable", not the
+     pre-restore trace written to disk under a "downloaded" notice. */
+  it("a trace the restore left behind is never served to the duel after it", async () => {
+    const user = await failStartedDuel(true);
+    latestWorker().diagnosticsAccepted = true;
+
+    await user.click(element("duel-error-download-button"));
+    emit({ type: "diagnostics", trace: TRACE });
+    await vi.waitFor(() =>
+      expect(diagnosticsSpies.download).toHaveBeenCalledTimes(1),
+    );
+
+    await user.click(element("duel-error-restore-button"));
+    emit({ type: "restored" });
+    emit({ type: "prompt", prompt: RESTORED_PROMPT });
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector('[data-cy="duel-error-dialog"]'),
+      ).toBeNull(),
+    );
+
+    /* The duel now dies for its own reason, and the Worker that replaced it
+       has no session to report on, so every later request is refused. */
+    latestWorker().diagnosticsAccepted = false;
+    emitFatalWorkerError();
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector('[data-cy="duel-error-dialog"]'),
+      ).not.toBeNull(),
+    );
+
+    await user.click(element("duel-error-download-button"));
+
+    expect(diagnosticsSpies.download).toHaveBeenCalledTimes(1);
+    expect(element("duel-error-message").textContent).toContain(
+      "Diagnostics are unavailable for this session.",
+    );
+  });
+
   it("Escape does not dismiss a fatal dialog", async () => {
     await failStartedDuel(true);
 

@@ -240,6 +240,14 @@
       : $duel.restoreFailure;
   /* The last trace this component has seen, downloaded or merely held. */
   let observedDiagnostics = $duel.diagnostics;
+  /* The held trace the download button may still fall back to. Separate from
+     `observedDiagnostics`, which only says what arrived: a trace answers for
+     the duel it was taken from, and it is retired the moment that duel stops
+     being the one on screen. */
+  let serveableDiagnostics = $duel.diagnostics;
+  /* Whether the last update showed a duel in play, so that a restore — which
+     puts the failure's own duel back into play — is visible as an edge. */
+  let duelInPlay = false;
   let snapshotStore: SnapshotStore | null = null;
   let snapshotStorageStatus: SnapshotStorageStatus = {
     activeSnapshotId: null,
@@ -585,12 +593,21 @@
       generationContext = context;
       diagnosticPending = false;
       diagnosticsRequested = false;
+      serveableDiagnostics = null;
       /* A new worker or session means new cards and a new image library
          generation, so the previewed card — and the image lease behind it —
          must not survive into the next duel. */
       previewCard = null;
     }
     if ($duel.error !== null) diagnosticPending = false;
+    /* A restore rebuilds the duel the held trace was taken from, so from here
+       that trace reports on a duel that no longer exists. Serving it to a
+       later failure would put the wrong duel's seed on disk under a
+       "downloaded" notice; the button says "unavailable" instead. */
+    const inPlay =
+      $duel.status === "active" || $duel.status === "awaiting-input";
+    if (inPlay && !duelInPlay) serveableDiagnostics = null;
+    duelInPlay = inPlay;
     if (
       snapshotStaged &&
       !snapshotActivationPending &&
@@ -643,6 +660,7 @@
     const requested = diagnosticsRequested;
     // eslint-disable-next-line no-useless-assignment -- retained across reactive runs
     observedDiagnostics = $duel.diagnostics;
+    serveableDiagnostics = $duel.diagnostics;
     diagnosticPending = false;
     diagnosticsRequested = false;
     if (requested) handleDiagnosticsDownload($duel.diagnostics);
@@ -836,13 +854,14 @@
      Worker, and the replacement has no session to report on, so asking again
      would answer "unavailable" while the evidence is sitting in the store. A
      restored duel is a different case: the session is still live and owes a
-     trace of its own, so it must be asked. */
+     trace of its own, so it must be asked — and once it has been rebuilt, the
+     trace it left behind is no longer served at all. */
   function requestDiagnostics(): void {
     diagnosticMessage = null;
     diagnosticsRequested = duel.requestDiagnostics();
     diagnosticPending = diagnosticsRequested;
     if (diagnosticsRequested) return;
-    const held = $duel.diagnostics;
+    const held = serveableDiagnostics;
     if (held !== null) {
       handleDiagnosticsDownload(held);
       return;

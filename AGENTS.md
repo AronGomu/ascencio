@@ -103,7 +103,7 @@ The ADR-022 boundaries above are machine-enforced, not conventions. Two checks r
 What the rules encode:
 
 - Public entries are `src/shell/index.ts`, `src/story/index.ts`, `src/deck-editor/index.ts`, `src/battle/index.ts` and `src/decks/index.ts`. A cross-domain import targets one of those and nothing deeper.
-- The duel's source lives under `src/battle/` — `app/`, `duel/`, `field/`, `worker/` and `storage/` are battle internals, reachable only through `src/battle/index.ts`.
+- The duel's source lives under `src/battle/` — `app/`, `components/`, `decks/`, `duel/`, `field/`, `storage/` and `worker/` are battle internals, reachable only through `src/battle/index.ts`.
 - `src/decks/` is the shared deck-data library rather than a lazy UI domain, so its modules stay importable; only the shape of its index is frozen.
 - Widening a public API means editing the frozen list in the test on purpose. A silent widening is a failing test.
 - A handful of duel identifiers have no legal path yet, because the only entry that could carry them also exports `BattleFacade` and a static import of it would make the duel eager. Each is allowed against one named file in both checks, with the reason recorded there, and disappears when the module gets a legal home.
@@ -164,10 +164,12 @@ Every HTML element rendered by a Svelte component under `src/battle/`, `src/shel
 │   ├── shell/                         # Routing, composition, stage layout, settings, admin
 │   ├── battle/                        # Duel Simulator domain, entered through index.ts
 │   │   ├── app/                       # Svelte duel shell, atomic components, stores
+│   │   ├── components/                # Shared duel UI components
+│   │   ├── decks/                     # Battle-internal deck selection/loading
 │   │   ├── duel/                      # Atomic contracts, presentation types, presets
 │   │   ├── field/                     # Typed DOM-field layout/model mapping
-│   │   ├── worker/                    # Worker entry, engine, protocol, projection, opponent, assets
-│   │   └── storage/                   # IndexedDB and Cache Storage adapters
+│   │   ├── storage/                   # IndexedDB and Cache Storage adapters
+│   │   └── worker/                    # Worker entry, engine, protocol, projection, opponent, assets
 │   ├── decks/                         # Shared deck-data library
 │   ├── deck-editor/                   # Deck Editor domain
 │   ├── story/                         # Visual Novel domain

@@ -70,7 +70,7 @@
   aria-busy={disabled}
   data-cy="field-action-bar"
 >
-  <PromptContextMessage segments={contextMessage} />
+  <PromptContextMessage dataCyPrefix="field" segments={contextMessage} />
   <p data-cy="field-action-bar-title">{spec.title}</p>
   {#if session.selectedChoiceIds.length > 0}
     <p data-cy="field-action-bar-summary">

@@ -4069,7 +4069,9 @@ async function answerPromptWithKeyboard(
          to say — an open chain link, or an action since the turn started. A
          window that opens on neither says nothing rather than inventing a
          subject, so presence is conditional and emptiness is not. */
-      const contextLine = page.locator('[data-cy="prompt-context-message"]');
+      const contextLine = page.locator(
+        '[data-cy="field-prompt-context-message"]',
+      );
       if ((await contextLine.count()) > 0)
         await expect(contextLine.first()).not.toBeEmpty();
       await answerChainOnField(page, field);

@@ -207,7 +207,7 @@
     >
       {prompt.title}
     </h2>
-    <PromptContextMessage segments={contextMessage} />
+    <PromptContextMessage dataCyPrefix="workspace" segments={contextMessage} />
     {#if prompt.message}<p data-cy="prompt-controls-message">
         {prompt.message}
       </p>{/if}

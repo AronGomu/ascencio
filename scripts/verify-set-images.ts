@@ -2,6 +2,11 @@ import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { sha256File } from "./lib/files.ts";
+import {
+  IMAGE_CONTENT_LOCK_FILE,
+  parseImageContentLock,
+  verifyLockedSetImages,
+} from "./lib/image-content-lock.ts";
 import { resolveProjectSubpath } from "./lib/paths.ts";
 import type { SetImageFile, SetImageManifest } from "./lib/set-images.ts";
 import { verifySetImageManifest } from "./lib/set-images.ts";
@@ -39,6 +44,17 @@ for (const entry of await readdir(imageRoot, { withFileTypes: true })) {
 }
 const verification = verifySetImageManifest(manifest, filesOnDisk);
 failures.push(...verification.failures);
+
+/* Audit F16b. The manifest above was written by the downloader from these same
+   bytes, so it cannot tell art refreshed upstream from art substituted there.
+   The tracked lock can: it is checked in, and only `npm run assets:lock`
+   rewrites it. */
+const lock = parseImageContentLock(
+  JSON.parse(
+    await readFile(path.join(projectRoot, IMAGE_CONTENT_LOCK_FILE), "utf8"),
+  ) as unknown,
+);
+failures.push(...verifyLockedSetImages(lock, filesOnDisk));
 
 console.log(
   JSON.stringify(

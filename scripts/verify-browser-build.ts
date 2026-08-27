@@ -16,6 +16,12 @@ import {
   measureDomainChunks,
   staticHtmlScriptClosure,
 } from "./lib/domain-chunk-closure.ts";
+import type { CardImageDigest } from "./lib/image-content-lock.ts";
+import {
+  IMAGE_CONTENT_LOCK_FILE,
+  parseImageContentLock,
+  verifyLockedCardImages,
+} from "./lib/image-content-lock.ts";
 import { snapshotCopyPaths } from "./lib/vite-runtime-assets.ts";
 
 const projectRoot = path.resolve(
@@ -481,6 +487,7 @@ async function verifyActiveImages(): Promise<void> {
   if (packaged.sort().join("\n") !== declared.join("\n"))
     throw new Error("Packaged active images differ from their manifest");
   const declaredCodes = new Set<number>();
+  const observedCards: CardImageDigest[] = [];
   for (const record of imageManifest.files) {
     if (
       !Number.isSafeInteger(record.code) ||
@@ -491,9 +498,10 @@ async function verifyActiveImages(): Promise<void> {
     )
       throw new Error("Packaged active-image record is invalid");
     const bytes = await readFile(path.join(imageRoot, record.path));
+    const digest = sha256(bytes);
     if (
       bytes.byteLength !== record.bytes ||
-      sha256(bytes) !== record.sha256 ||
+      digest !== record.sha256 ||
       bytes[0] !== 0xff ||
       bytes[1] !== 0xd8 ||
       bytes.at(-2) !== 0xff ||
@@ -505,6 +513,11 @@ async function verifyActiveImages(): Promise<void> {
     if (declaredCodes.has(record.code))
       throw new Error(`Duplicate packaged card image: ${record.code}`);
     declaredCodes.add(record.code);
+    observedCards.push({
+      code: record.code,
+      bytes: bytes.byteLength,
+      sha256: digest,
+    });
   }
   imageManifest.missing.forEach((code) => {
     if (!Number.isSafeInteger(code) || declaredCodes.has(code))
@@ -518,6 +531,24 @@ async function verifyActiveImages(): Promise<void> {
     [...declaredCodes].some((code) => !expectedCodes.has(code))
   )
     throw new Error("Packaged active-image coverage differs from preset decks");
+
+  /* Audit F16b. Everything above re-hashes the packaged art against
+     `active-manifest.json`, which was generated from those same files, so bytes
+     substituted upstream verify clean and `generated/` is gitignored besides.
+     The tracked lock is the one digest the build cannot rewrite and a reviewer
+     does see in a diff. */
+  const lockFailures = verifyLockedCardImages(
+    parseImageContentLock(
+      JSON.parse(
+        await readFile(path.join(projectRoot, IMAGE_CONTENT_LOCK_FILE), "utf8"),
+      ) as unknown,
+    ),
+    observedCards,
+  );
+  if (lockFailures.length > 0)
+    throw new Error(
+      `Packaged card images differ from ${IMAGE_CONTENT_LOCK_FILE}:\n${lockFailures.join("\n")}`,
+    );
 }
 
 async function assertSameFile(

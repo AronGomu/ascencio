@@ -213,6 +213,16 @@ generated/
 - image URL/card-ID consistency;
 - that image redistribution has not been marked approved accidentally.
 
+Every image check above re-hashes files against a manifest generated from those same files, so bytes substituted upstream would verify clean, and `generated/` is ignored by Git, so no reviewer diff would show them either. `image-content-lock.json` at the repository root closes that loop. It is the only image digest under version control and covers the shipped surface alone: the byte length and SHA-256 of every card code the preset decks use (120 today) and every shop set image (50 today). `npm run build:verify` compares the packaged card art against it and `npm run assets:sets:verify` compares the set archive, and either fails on a difference — including art that is shipped without being pinned.
+
+YGOPRODeck publishes no digest of its own, so the lock is seeded from the first fetch: it proves the bytes have not changed since they were pinned, not that they are genuine. Regenerating it after an intended upstream art refresh is a separate, explicit command, never a side effect of downloading or verifying, because a lock rewritten by the run it guards would prove nothing:
+
+```bash
+npm run assets:lock
+```
+
+Entries and keys are ordered by content alone, so the resulting diff shows the art whose bytes moved and nothing else.
+
 ## First successful snapshot
 
 The initial verified run produced:

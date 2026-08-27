@@ -17,6 +17,7 @@
     "assets:images:verify": "node scripts/verify-images.ts",
     "assets:sets": "node scripts/download-set-images.ts",
     "assets:sets:verify": "node scripts/verify-set-images.ts",
+    "assets:lock": "node scripts/generate-image-lock.ts",
     "vendor:verify": "node scripts/verify-vendor.ts",
     "snapshot:generate": "node scripts/generate-runtime-snapshot.ts",
     "snapshot:verify": "node scripts/verify-runtime-snapshot.ts",

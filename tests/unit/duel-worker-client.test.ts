@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { DuelCommand } from "../../src/battle/duel/contracts/duel-command.ts";
 import type { DuelWorkerEvent } from "../../src/battle/duel/contracts/duel-worker-event.ts";
+import type { DuelDiagnosticTrace } from "../../src/battle/duel/contracts/duel-diagnostics.ts";
 import {
   choiceId,
   duelId,
@@ -95,6 +96,24 @@ const promptEvent: DuelWorkerEvent = {
     cancelable: false,
     ordered: false,
   },
+};
+
+const BOUNDARY_TRACE: DuelDiagnosticTrace = {
+  schemaVersion: 2,
+  sensitivity: "contains-production-seed",
+  presetId: "mvp-preset-v1",
+  snapshotId: snapshotId("a".repeat(64)),
+  seed: ["1", "2", "3", "4"],
+  coreVersion: [11, 0],
+  revisions: {
+    enginePackage: "ocgcore-wasm",
+    engineVersion: "0.1.2",
+    babelCdb: "babel",
+    cardScripts: "scripts",
+    distribution: "strings",
+    activeImageManifestSha256: "b".repeat(64),
+  },
+  entries: [],
 };
 
 describe("DuelWorkerClient", () => {
@@ -381,6 +400,45 @@ describe("DuelWorkerClient", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  /* The Worker reports an uncertain cleanup by pushing a trace nobody asked
+     for and then disposing itself uncleanly. The replacement it forces starts
+     at session generation zero, so `requestDiagnostics` is refused from here
+     on: this push is the only copy of the trace that will ever exist. Gate the
+     download in the UI, never the delivery here. */
+  it("keeps delivering a boundary-failure trace the replacement cannot resend", () => {
+    const { client, workers } = createHarness();
+    const worker = workers[0]!;
+    const store = createDuelStore(client);
+    const seen: (DuelDiagnosticTrace | null)[] = [];
+    const unsubscribe = store.subscribe((state) => {
+      seen.push(state.diagnostics);
+    });
+    client.initialize();
+    worker.emit({ type: "ready", coreVersion: [11, 0] });
+    expect(store.start(preset("mvp-player"), preset("mvp-opponent"))).toBe(
+      true,
+    );
+
+    worker.emit({
+      type: "error",
+      error: {
+        code: "engine_error",
+        message: "ocgcore rejected the previous response",
+        recoverable: false,
+      },
+    });
+    worker.emit({ type: "diagnostics", trace: BOUNDARY_TRACE });
+    worker.emit({ type: "disposed", clean: false });
+
+    /* Deep equality, not identity: `parseDuelWorkerEvent` rebuilds every
+       inbound event (`duel-worker-event.ts:263`), so the store holds a clone. */
+    expect(seen.at(-1)).toStrictEqual(BOUNDARY_TRACE);
+    expect(client.requestDiagnostics()).toBe(false);
+    expect(worker.terminated).toBe(true);
+    expect(workers).toHaveLength(2);
+    unsubscribe();
   });
 
   it("ignores late events from a replaced Worker generation", async () => {

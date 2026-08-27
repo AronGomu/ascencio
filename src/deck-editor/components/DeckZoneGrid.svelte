@@ -136,6 +136,8 @@
               currentCopies={totalCopies.get(code) ?? 0}
               selected={selectedCode === code}
               compact={plan.compact}
+              dataCyPrefix={zone}
+              dataCyId={index}
               onselect={() => onselect(catalog.get(code) ?? null, code)}
               ontap={ontap === null ? null : () => ontap(code, zone, index)}
               ondragcard={(event) => ondragcard(code, zone, index, event)}

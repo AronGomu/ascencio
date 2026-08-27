@@ -334,6 +334,8 @@
             selected={selectedCode === card.code}
             draggable={!spent}
             describedby={spent ? capReasonId(card.code) : null}
+            dataCyPrefix="catalog"
+            dataCyId={card.code}
             onselect={() => onselect(card)}
             ontap={ontap === null
               ? null

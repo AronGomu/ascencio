@@ -52,7 +52,7 @@ describe("Tokens in the shared runtime catalog", () => {
 
     expect(
       document.querySelector(
-        `[data-cy="deck-catalog-results"] [data-cy="deck-tile-${SHEEP_TOKEN_CODE}"]`,
+        `[data-cy="deck-catalog-results"] [data-cy="catalog-tile-${SHEEP_TOKEN_CODE}"]`,
       ),
     ).toBeNull();
     expect(

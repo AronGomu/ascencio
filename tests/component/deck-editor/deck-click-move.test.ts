@@ -133,7 +133,7 @@ describe("desktop click editing", () => {
     const { container } = render(DeckEditor, props(onmutate));
     await fireEvent.click(
       container.querySelector(
-        `[data-cy="deck-catalog-results"] [data-cy="deck-tile-${MAIN_CODE}"]`,
+        `[data-cy="deck-catalog-results"] [data-cy="catalog-tile-${MAIN_CODE}"]`,
       )!,
     );
     expect(onmutate).toHaveBeenCalledWith({
@@ -151,7 +151,7 @@ describe("desktop click editing", () => {
     );
     await fireEvent.click(
       container.querySelector(
-        `[data-cy="deck-catalog-results"] [data-cy="deck-tile-${MAIN_CODE}"]`,
+        `[data-cy="deck-catalog-results"] [data-cy="catalog-tile-${MAIN_CODE}"]`,
       )!,
     );
     expect(onmutate).toHaveBeenCalledWith({
@@ -166,7 +166,7 @@ describe("desktop click editing", () => {
     const { container } = render(DeckEditor, props(onmutate));
     await fireEvent.dragStart(
       container.querySelector(
-        `[data-cy="deck-catalog-results"] [data-cy="deck-tile-${MAIN_CODE}"]`,
+        `[data-cy="deck-catalog-results"] [data-cy="catalog-tile-${MAIN_CODE}"]`,
       )!,
     );
     expect(

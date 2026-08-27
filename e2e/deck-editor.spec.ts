@@ -38,7 +38,7 @@ function zoneCount(page: Page, zone: "main" | "extra" | "side"): Locator {
 
 function zoneTile(page: Page, zone: "main" | "extra" | "side", code: number) {
   return page.locator(
-    `[data-cy="deck-zone-drop-area-${zone}"] [data-cy="deck-tile-${code}"]`,
+    `[data-cy="deck-zone-drop-area-${zone}"] [data-card-code="${code}"]`,
   );
 }
 
@@ -46,7 +46,7 @@ function zoneTile(page: Page, zone: "main" | "extra" | "side", code: number) {
    tile locator says which of the two it means. */
 function catalogTile(page: Page, code: number): Locator {
   return page.locator(
-    `[data-cy="deck-catalog-results"] [data-cy="deck-tile-${code}"]`,
+    `[data-cy="deck-catalog-results"] [data-cy="catalog-tile-${code}"]`,
   );
 }
 
@@ -492,7 +492,7 @@ test("the deck editor builds a deck by tap on a small screen", async ({
   await expect(main).toHaveText("1/40");
   /* The tile itself, not the validation issue that also names the card. */
   const deckTile = page.locator(
-    '[data-cy="deck-pane-deck"] [data-cy="deck-tile-89631139"]',
+    '[data-cy="deck-pane-deck"] [data-card-code="89631139"]',
   );
   await deckTile.click();
   await expect(page.locator('[data-cy="deck-tap-menu"]')).toBeVisible();
@@ -648,7 +648,7 @@ test("the tile art fills the tile", async ({ page }) => {
      packages art, the placeholder glyph when it does not. Both sit in the same
      grid area and both have to fill it. */
   const art = tile.locator(
-    `[data-cy="deck-tile-image-${BLUE_EYES}"], [data-cy="deck-tile-art-${BLUE_EYES}"]`,
+    `[data-cy="catalog-tile-image-${BLUE_EYES}"], [data-cy="catalog-tile-art-${BLUE_EYES}"]`,
   );
   await expect(art).toHaveCount(1);
 
@@ -662,7 +662,7 @@ test("the tile art fills the tile", async ({ page }) => {
   const tileBox = (await tile.boundingBox())!;
   const artBox = (await art.boundingBox())!;
   const nameBox = (await tile
-    .locator(`[data-cy="deck-tile-name-${BLUE_EYES}"]`)
+    .locator(`[data-cy="catalog-tile-name-${BLUE_EYES}"]`)
     .boundingBox())!;
   expect(tileBox, "the catalog tile must be laid out").not.toBeNull();
   expect(artBox, "the tile art must be laid out").not.toBeNull();
@@ -724,9 +724,9 @@ test("the catalog tile count stays under the ceiling on a phone", async ({
 
   /* The selector must match only the tile buttons themselves, not their child
      elements (limit badge, image, name), which also have data-cy attributes
-     prefixed with "deck-tile-". The button is the only direct child. */
+     prefixed with "catalog-tile-". The button is the only direct child. */
   const tiles = page.locator(
-    '[data-cy="deck-catalog-results"] > [data-cy^="deck-tile-"]',
+    '[data-cy="deck-catalog-results"] > [data-cy^="catalog-tile-"]',
   );
   await expect(tiles.first()).toBeVisible();
   await expect(
@@ -790,7 +790,7 @@ test("edit mutation count is independent of scroll depth", async ({ page }) => {
 
   /* Direct child selector: only count tile buttons, not their children. */
   const tiles = page.locator(
-    '[data-cy="deck-catalog-results"] > [data-cy^="deck-tile-"]',
+    '[data-cy="deck-catalog-results"] > [data-cy^="catalog-tile-"]',
   );
   await expect(tiles.first()).toBeVisible();
 
@@ -805,7 +805,7 @@ test("edit mutation count is independent of scroll depth", async ({ page }) => {
     observer.observe(results, { childList: true, subtree: true });
     /* Direct child: don't match child elements of the tile. */
     const tile = results.querySelector(
-      ':scope > [data-cy^="deck-tile-"]',
+      ':scope > [data-cy^="catalog-tile-"]',
     ) as HTMLElement | null;
     tile?.click();
     await new Promise((r) => setTimeout(r, 100));
@@ -840,7 +840,7 @@ test("edit mutation count is independent of scroll depth", async ({ page }) => {
     });
     observer.observe(results, { childList: true, subtree: true });
     const tile = results.querySelectorAll(
-      ':scope > [data-cy^="deck-tile-"]',
+      ':scope > [data-cy^="catalog-tile-"]',
     )[10] as HTMLElement | null;
     tile?.click();
     await new Promise((r) => setTimeout(r, 100));

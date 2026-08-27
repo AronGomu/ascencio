@@ -36,7 +36,7 @@ function renderEditor(mainCount = 0) {
 
 function catalogTiles(): HTMLElement[] {
   const results = document.querySelector('[data-cy="deck-catalog-results"]')!;
-  return Array.from(results.querySelectorAll('[data-cy^="deck-tile-"]'));
+  return Array.from(results.querySelectorAll('[data-cy^="catalog-tile-"]'));
 }
 
 describe("editor preview pane", () => {

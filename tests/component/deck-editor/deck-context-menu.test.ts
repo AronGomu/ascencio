@@ -115,7 +115,7 @@ describe("context-menu deck editing", () => {
     const onmutate = vi.fn<(command: DeckCommand) => void>();
     const { container } = render(DeckEditor, props(onmutate));
     const catalogTile = container.querySelector(
-      `[data-cy="deck-catalog-results"] [data-cy="deck-tile-${MAIN_LIMIT_3_CODES[0]!}"]`,
+      `[data-cy="deck-catalog-results"] [data-cy="catalog-tile-${MAIN_LIMIT_3_CODES[0]!}"]`,
     )!;
     await fireEvent.contextMenu(catalogTile);
     expect(onmutate).toHaveBeenCalledWith({
@@ -129,7 +129,7 @@ describe("context-menu deck editing", () => {
     const onmutate = vi.fn<(command: DeckCommand) => void>();
     const { container } = render(DeckEditor, props(onmutate, stateFixture(60)));
     const catalogTile = container.querySelector(
-      `[data-cy="deck-catalog-results"] [data-cy="deck-tile-${MAIN_LIMIT_3_CODES[0]!}"]`,
+      `[data-cy="deck-catalog-results"] [data-cy="catalog-tile-${MAIN_LIMIT_3_CODES[0]!}"]`,
     )!;
     await fireEvent.contextMenu(catalogTile);
     expect(onmutate).toHaveBeenCalledWith(
@@ -144,7 +144,7 @@ describe("context-menu deck editing", () => {
       props(onmutate, stateWith(60, 15)),
     );
     const catalogTile = container.querySelector(
-      `[data-cy="deck-catalog-results"] [data-cy="deck-tile-${MAIN_LIMIT_3_CODES[0]!}"]`,
+      `[data-cy="deck-catalog-results"] [data-cy="catalog-tile-${MAIN_LIMIT_3_CODES[0]!}"]`,
     )!;
     await fireEvent.contextMenu(catalogTile);
     expect(onmutate).not.toHaveBeenCalled();

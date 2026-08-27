@@ -13,6 +13,8 @@ describe("missing-card placeholder", () => {
       code: 99999999,
       limit: 3,
       currentCopies: 1,
+      dataCyPrefix: "catalog",
+      dataCyId: 99999999,
     });
     expect(
       screen.getByRole("button", { name: /Missing card 99999999/ }),

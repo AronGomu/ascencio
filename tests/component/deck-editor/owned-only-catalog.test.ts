@@ -140,7 +140,7 @@ async function openCatalog(props: {
 
 function catalogTile(code: number): HTMLElement | null {
   return document.querySelector(
-    `[data-cy="deck-catalog-results"] [data-cy="deck-tile-${code}"]`,
+    `[data-cy="deck-catalog-results"] [data-cy="catalog-tile-${code}"]`,
   );
 }
 

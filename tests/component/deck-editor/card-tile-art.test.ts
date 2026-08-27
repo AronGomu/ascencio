@@ -41,6 +41,36 @@ function declarations(selector: string): readonly string[] {
     .filter((line) => line.length > 0);
 }
 
+describe("card-tile data-cy uniqueness", () => {
+  it("two tiles with the same code but different prefix+id have distinct data-cy", () => {
+    const base = PROTOTYPE_CATALOG[0]!;
+    const card = { ...base, imageUrl: null };
+    /* Render both tiles into the same document, proving distinctness. */
+    render(CardTile, {
+      card,
+      code: card.code,
+      limit: 3,
+      currentCopies: 0,
+      dataCyPrefix: "a",
+      dataCyId: 1,
+    });
+    render(CardTile, {
+      card,
+      code: card.code,
+      limit: 3,
+      currentCopies: 0,
+      dataCyPrefix: "b",
+      dataCyId: 2,
+    });
+    const tileA = document.querySelector('[data-cy="a-tile-1"]');
+    const tileB = document.querySelector('[data-cy="b-tile-2"]');
+    expect(tileA).not.toBeNull();
+    expect(tileB).not.toBeNull();
+    /* No collision — the old single-code `data-cy` would have failed here. */
+    expect(tileA).not.toBe(tileB);
+  });
+});
+
 describe("card-tile art fit", () => {
   it("the tile image is lazy and asynchronous", () => {
     const base = PROTOTYPE_CATALOG[0]!;
@@ -50,9 +80,11 @@ describe("card-tile art fit", () => {
       code: card.code,
       limit: 3,
       currentCopies: 0,
+      dataCyPrefix: "catalog",
+      dataCyId: card.code,
     });
     const img = container.querySelector(
-      `[data-cy="deck-tile-image-${card.code}"]`,
+      `[data-cy="catalog-tile-image-${card.code}"]`,
     ) as HTMLImageElement | null;
     expect(img).not.toBeNull();
     expect(img!.getAttribute("loading")).toBe("lazy");
@@ -97,18 +129,20 @@ describe("card-tile art fit", () => {
       code: card.code,
       limit: 3,
       currentCopies: 0,
+      dataCyPrefix: "catalog",
+      dataCyId: card.code,
     });
     const img = container.querySelector(
-      `[data-cy="deck-tile-image-${card.code}"]`,
+      `[data-cy="catalog-tile-image-${card.code}"]`,
     )!;
     await fireEvent.error(img);
     await waitFor(() =>
       expect(
-        container.querySelector(`[data-cy="deck-tile-art-${card.code}"]`),
+        container.querySelector(`[data-cy="catalog-tile-art-${card.code}"]`),
       ).not.toBeNull(),
     );
     expect(
-      container.querySelector(`[data-cy="deck-tile-image-${card.code}"]`),
+      container.querySelector(`[data-cy="catalog-tile-image-${card.code}"]`),
     ).toBeNull();
   });
 
@@ -120,12 +154,14 @@ describe("card-tile art fit", () => {
       code: card.code,
       limit: 3,
       currentCopies: 0,
+      dataCyPrefix: "catalog",
+      dataCyId: card.code,
     });
     expect(
-      container.querySelector(`[data-cy="deck-tile-art-${card.code}"]`),
+      container.querySelector(`[data-cy="catalog-tile-art-${card.code}"]`),
     ).not.toBeNull();
     expect(
-      container.querySelector(`[data-cy="deck-tile-image-${card.code}"]`),
+      container.querySelector(`[data-cy="catalog-tile-image-${card.code}"]`),
     ).toBeNull();
   });
 });

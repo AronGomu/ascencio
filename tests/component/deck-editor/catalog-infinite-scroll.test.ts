@@ -25,7 +25,7 @@ function make200Cards(): DeckBuilderCardView[] {
 }
 
 function countTiles(container: HTMLElement): number {
-  return container.querySelectorAll("button[data-cy^='deck-tile-']").length;
+  return container.querySelectorAll("button[data-cy^='catalog-tile-']").length;
 }
 
 interface StubIOHandle {

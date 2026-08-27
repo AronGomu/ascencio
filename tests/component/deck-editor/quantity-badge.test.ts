@@ -24,6 +24,8 @@ describe("maxed highlight", () => {
       limit: 3,
       currentCopies: 3,
       maxed: true,
+      dataCyPrefix: "catalog",
+      dataCyId: card.code,
     });
     expect(container.querySelector("button.maxed")).not.toBeNull();
   });
@@ -42,6 +44,8 @@ describe("quantity-limit badge", () => {
       code: card.code,
       limit,
       currentCopies: 0,
+      dataCyPrefix: "catalog",
+      dataCyId: card.code,
     });
     expect(
       screen.getByRole("button", {
@@ -49,7 +53,7 @@ describe("quantity-limit badge", () => {
       }),
     ).toBeTruthy();
     expect(
-      container.querySelector(`[data-cy="deck-tile-limit-${card.code}"]`)
+      container.querySelector(`[data-cy="catalog-tile-limit-${card.code}"]`)
         ?.textContent,
     ).toBe(String(limit));
   });

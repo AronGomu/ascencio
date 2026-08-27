@@ -23,6 +23,12 @@
      red `maxed` border is the sighted signal; this is the same fact for a
      screen reader, and `null` where there is nothing to explain. */
   export let describedby: string | null = null;
+  /* Selector scope: the mount site names its context, and the id disambiguates
+     one tile from another in that context. Together they build a unique
+     `data-cy` per tile even when the same card code appears in multiple
+     zones or surfaces. */
+  export let dataCyPrefix: string;
+  export let dataCyId: string | number;
 
   /* Art is a URL by convention for every code, so a card this build packages no
      image for is the normal case rather than an error: the tile keeps the glyph
@@ -54,7 +60,7 @@
   aria-label={`${name}. ${limitLabel}, maximum ${limit}. ${currentCopies} copies in deck.`}
   aria-describedby={describedby}
   aria-pressed={selected}
-  data-cy={`deck-tile-${code}`}
+  data-cy={`${dataCyPrefix}-tile-${dataCyId}`}
   data-card-code={code}
   data-deck-zone={zone}
   onclick={() => (ontap === null ? onselect() : ontap())}
@@ -71,7 +77,7 @@
   <span
     class={`limit-badge limit-${limit}`}
     aria-hidden="true"
-    data-cy={`deck-tile-limit-${code}`}>{limit}</span
+    data-cy={`${dataCyPrefix}-tile-limit-${dataCyId}`}>{limit}</span
   >
   {#if artUrl !== null}
     <img
@@ -81,15 +87,15 @@
       src={artUrl}
       alt=""
       onerror={() => (failedArtUrl = artUrl)}
-      data-cy={`deck-tile-image-${code}`}
+      data-cy={`${dataCyPrefix}-tile-image-${dataCyId}`}
     />
   {:else}
     <span
       class="art-placeholder"
       aria-hidden="true"
-      data-cy={`deck-tile-art-${code}`}
+      data-cy={`${dataCyPrefix}-tile-art-${dataCyId}`}
     >
-      <span data-cy={`deck-tile-art-glyph-${code}`}
+      <span data-cy={`${dataCyPrefix}-tile-art-glyph-${dataCyId}`}
         >{card === null ? "!" : card.family.slice(0, 1).toUpperCase()}</span
       >
     </span>
@@ -97,7 +103,7 @@
   <span
     class="card-name"
     class:overlay={artUrl !== null}
-    data-cy={`deck-tile-name-${code}`}>{name}</span
+    data-cy={`${dataCyPrefix}-tile-name-${dataCyId}`}>{name}</span
   >
 </button>
 

@@ -83,7 +83,11 @@ describe("storySaveExists", () => {
 
   it("answers no when only checkpoint:pre-duel is present", async () => {
     const repository = createStorySaveRepository(indexedDB);
-    await repository.write("checkpoint:pre-duel", createInitialStoryState(), null);
+    await repository.write(
+      "checkpoint:pre-duel",
+      createInitialStoryState(),
+      null,
+    );
 
     expect(await storySaveExists(indexedDB)).toBe(false);
   });

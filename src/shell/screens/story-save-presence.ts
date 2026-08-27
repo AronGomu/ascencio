@@ -16,6 +16,17 @@
 export const STORY_SAVES_DATABASE_NAME = "ygo-story-saves";
 export const STORY_SAVES_STORE_NAME = "saves";
 
+/* The slots a player can resume from. Checkpoint is internal, never counted.
+   Keep in sync with `StoryApp.hydrate()` (StoryApp.svelte) — it reads only
+   `manual:1` and `autosave` today. `manual:2`/`manual:3` are inert until a
+   multi-slot feature writes them; the wider list here is forward-compatible. */
+const PLAYER_SLOT_KEYS: readonly string[] = [
+  "manual:1",
+  "manual:2",
+  "manual:3",
+  "autosave",
+];
+
 /**
  * Answers whether any story save is on disk.
  *
@@ -74,8 +85,12 @@ export function storySaveExists(factory: IDBFactory): Promise<boolean> {
           STORY_SAVES_STORE_NAME,
           "readonly",
         );
-        const records = transaction.objectStore(STORY_SAVES_STORE_NAME).count();
-        transaction.oncomplete = () => close(records.result > 0);
+        const store = transaction.objectStore(STORY_SAVES_STORE_NAME);
+        const requests = PLAYER_SLOT_KEYS.map((key) => store.get(key));
+        transaction.oncomplete = () => {
+          const found = requests.some((req) => req.result !== undefined);
+          close(found);
+        };
         transaction.onabort = () => close(false);
         transaction.onerror = () => close(false);
       } catch (error) {

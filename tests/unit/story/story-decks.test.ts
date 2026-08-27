@@ -156,7 +156,7 @@ describe("story deck commands", () => {
     state = reduceStory(state, { type: "deck-set-default", id: "alpha" });
     const shopping = reduceStory(
       { ...state, screen: "shop-browse" },
-      { type: "buy-packs", setId: "metal-raiders", count: 1 },
+      { type: "buy-packs", setId: "metal-raiders", count: 1, released: true },
     );
     expect(shopping.decks).toEqual(state.decks);
     expect(shopping.defaultDeckId).toBe("alpha");

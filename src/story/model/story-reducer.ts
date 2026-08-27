@@ -43,6 +43,10 @@ export type StoryCommand =
       readonly type: "buy-packs";
       readonly setId: string;
       readonly count: number;
+      /* Resolved by the caller from the fetched set list, which this reducer
+         never sees — `StoryApp.svelte` owns that fetch. An id the data does
+         not name resolves to `false`, so one field carries both guards. */
+      readonly released: boolean;
     }
   | { readonly type: "view-set-cards"; readonly setId: string }
   | {
@@ -249,6 +253,12 @@ export function reduceStory(
     case "buy-packs": {
       if (state.screen !== "shop-browse") return state;
       const { setId, count } = command;
+      /* ADR-035 §1 makes `released` the progression switch, so the shelf
+         guards the wallet too: a set that is not for sale yet cannot be
+         bought, whatever screen a tampered save arrives on. The browse screen
+         also refuses it, but a presentation early-return is not an authority.
+         Audit F4, issue #4. */
+      if (command.released !== true) return state;
       if (!Number.isInteger(count) || count < 1) return state;
       const cost = count * PACK_PRICE_DP;
       if (state.dp < cost) return state;

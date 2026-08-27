@@ -50,6 +50,7 @@
   import {
     contentsOf,
     fetchShopSetData,
+    isSetReleased,
     resolveCardRarity,
     type ShopSetData,
   } from "./shop/data/shop-set-data.ts";
@@ -965,7 +966,12 @@
           error={shopDataError}
           dp={state.dp}
           onbuy={(setId, count) =>
-            dispatch({ type: "buy-packs", setId, count })}
+            dispatch({
+              type: "buy-packs",
+              setId,
+              count,
+              released: isSetReleased(shopData, setId),
+            })}
           onviewcards={(setId) => dispatch({ type: "view-set-cards", setId })}
           onretry={() => {
             shopDataError = null;

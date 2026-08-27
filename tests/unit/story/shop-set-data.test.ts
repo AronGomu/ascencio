@@ -6,6 +6,7 @@ import type { DeckBuilderCardView } from "../../../src/decks/catalog/ocg-card-ma
 import {
   contentsOf,
   fetchShopSetData,
+  isSetReleased,
   parseShopSetData,
   resolveCardRarity,
   SHOP_SET_DATA_CACHE,
@@ -377,6 +378,23 @@ describe("contentsOf", () => {
 
   it("returns empty for unknown set id", () => {
     expect(contentsOf(VALID_FIXTURE, "nonexistent")).toHaveLength(0);
+  });
+});
+
+describe("isSetReleased", () => {
+  it("answers true only for a released set", () => {
+    expect(isSetReleased(VALID_FIXTURE, "alpha")).toBe(true);
+    expect(isSetReleased(VALID_FIXTURE, "beta")).toBe(false);
+  });
+
+  it("answers false for a set id the data does not name", () => {
+    expect(isSetReleased(VALID_FIXTURE, "nonexistent")).toBe(false);
+  });
+
+  /* The shop dispatches from a screen that renders before the fetch lands.
+     No data is not "everything is for sale". */
+  it("answers false when the shop data has not loaded", () => {
+    expect(isSetReleased(null, "alpha")).toBe(false);
   });
 });
 

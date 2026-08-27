@@ -262,6 +262,7 @@ describe("story state model", () => {
       type: "buy-packs",
       setId: "metal-raiders",
       count: 10,
+      released: true,
     });
     expect(next.dp).toBe(0);
     expect(next.boosters["metal-raiders"]).toBe(10);
@@ -277,6 +278,7 @@ describe("story state model", () => {
       type: "buy-packs",
       setId: "metal-raiders",
       count: 2,
+      released: true,
     });
     expect(next).toBe(browse);
   });
@@ -293,9 +295,27 @@ describe("story state model", () => {
           type: "buy-packs",
           setId: "metal-raiders",
           count,
+          released: true,
         }),
       ).toBe(browse);
     }
+  });
+
+  it("buying a set the shop has not released is refused", () => {
+    const browse = {
+      ...createInitialStoryState(),
+      screen: "shop-browse" as const,
+      dp: 1500,
+    };
+    const next = reduceStory(browse, {
+      type: "buy-packs",
+      setId: "soul-of-the-duelist",
+      count: 1,
+      released: false,
+    });
+    expect(next).toBe(browse);
+    expect(next.dp).toBe(1500);
+    expect(next.boosters).toEqual({});
   });
 
   it("shop-navigate only walks shop screens", () => {

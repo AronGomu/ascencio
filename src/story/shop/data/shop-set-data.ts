@@ -100,6 +100,19 @@ export function contentsOf(
   return entry.cards.map((c) => ({ code: c.code, rarity: c.rarity }));
 }
 
+/* The shelf's answer to "may this be bought?", resolved where the set list
+   actually lives. `reduceStory` is pure and synchronous and never sees this
+   document, so it takes the answer on the command — the same way
+   `open-boosters` takes cards it could not have generated itself. An id the
+   data does not name is not released: a pack this build cannot list is a pack
+   it cannot sell. */
+export function isSetReleased(
+  data: ShopSetData | null,
+  setId: string,
+): boolean {
+  return data?.sets.find((s) => s.id === setId)?.released === true;
+}
+
 export function resolveCardRarity(
   code: number,
   data: ShopSetData | null,

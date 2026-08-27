@@ -639,8 +639,9 @@ function appendDuelLog(
   existing: readonly DuelLogEntry[],
   entry: Extract<DuelLogEntry, { readonly kind: "activity" }>,
 ): readonly DuelLogEntry[] {
+  // Spread before slice: V8's PACKED_FROZEN_ELEMENTS uses a slow path for slice.
   const activities =
-    existing[0]?.kind === "truncated" ? existing.slice(1) : existing;
+    existing[0]?.kind === "truncated" ? [...existing].slice(1) : existing;
   const appended = [...activities, entry];
   if (
     existing[0]?.kind !== "truncated" &&

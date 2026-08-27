@@ -70,6 +70,22 @@ function expectedSellValue(entry: ShopSetEntry): number {
 }
 
 describe("shipped set pack value", () => {
+  /* The old generator kept a card's highest printing, and ten sets reprint
+     every non-common as an Ultimate Rare foil, so those sets came out priced
+     entirely at 500 DP a card. A set whose only non-common tier is the foil
+     tier is that bug, whatever the numbers work out to. Audit F4, issue #4. */
+  it("no set sells ultimate-rare as its only non-common tier", () => {
+    for (const set of sets) {
+      const tiers = new Set(
+        set.cards.filter((c) => c.rarity !== "common").map((c) => c.rarity),
+      );
+      expect(
+        tiers.size === 1 && tiers.has("ultimate-rare"),
+        `set "${set.id}" prices every non-common at ultimate-rare`,
+      ).toBe(false);
+    }
+  });
+
   /* ADR-035 §5: a pack must cost more than it sells back for, or buy → open →
      sell mints DP without bound. `released` is the progression switch, so this
      assertion is what turns a future flip of that flag into a red test rather

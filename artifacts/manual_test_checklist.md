@@ -3869,3 +3869,19 @@ Run `npm run dev` (default `DEV_PORT=4300`).
 ### Effect descriptions name the card
 
 - [ ] Reach an optional effect prompt — a card that asks "use this effect?" — and read the question above Yes/No: it names the card and the place it is used from, in words. No `%ls` and no other stray placeholder appears in it.
+
+---
+
+## A1 shop-set-base-printings
+
+Ten sets used to price every non-common at **Ultimate Rare**, because the
+generator kept a card's highest printing and those sets reprint their whole
+non-common pool as an Ultimate foil. A 150 DP pack from one of them opened into
+about 580 DP of sellable cards. The shipped data now folds to each card's base
+printing, and `buy-packs` refuses a set that is not released.
+
+Run `npm run dev` (default `DEV_PORT=4300`).
+
+- [ ] Open `#/free-play/collection` and tick **Group by rarity**. That screen lists the whole card database, so it shows the shop's ladders without needing an unlocked set. The **Ultimate Rare** heading is gone, or holds only a handful of cards. It used to cover hundreds — the entire non-common pool of ten sets, every card in it priced at the foil tier. Those cards now sit under Rare, Super Rare, Ultra Rare and Secret Rare instead.
+- [ ] Open `#/story`, New Game, walk to the map, enter the **Card Shop** → **Buy**. Buy a Metal Raiders pack and open it. The pack is still 9 cards, still 8 commons and one better, and the DP spent is still 150.
+- [ ] Sell everything the pack gave you: the money back is **less than 150 DP**. That is the whole point — a pack must never pay for itself.

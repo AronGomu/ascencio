@@ -18,7 +18,9 @@
     "src/**/*.svelte",
     "tests/**/*.ts",
     "e2e/**/*.ts",
+    "e2e-acceptance/**/*.ts",
     "playwright.config.ts",
+    "playwright.acceptance.config.ts",
     "vite.config.ts",
     "vitest.config.ts"
   ]

@@ -578,7 +578,7 @@ function sRgbChannels(value: string): [number, number, number, number] {
   expect(match, `no color(srgb ...) in ${value}`).not.toBeNull();
   const [red, green, blue] = match!
     .slice(1, 4)
-    .map((channel) => Math.round(Number(channel) * 255));
+    .map((channel) => Math.round(Number(channel) * 255)) as [number, number, number];
   return [red, green, blue, Number(match![4])];
 }
 

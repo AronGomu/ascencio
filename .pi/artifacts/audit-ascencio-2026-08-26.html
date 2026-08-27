@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="artifact-kind" content="markdown">
+<meta name="artifact-generated" content="1787777317588">
+<meta name="artifact-project" content="/home/aron/projects/ascencio">
+<title>Audit ascencio 2026-08-26</title>
+<style data-base>:root { color-scheme: light dark;
+  --bg: #ffffff;
+  --fg: #1c1c1a;
+  --muted: #6b6862;
+  --border: #e7e5e0;
+  --code-bg: #f7f6f4;
+  --accent: #b95730;
+  --add-bg: #e9f7ee;
+  --add-word-bg: #c8ecd3;
+  --add-fg: #1a7f37;
+  --del-bg: #feeff1;
+  --del-word-bg: #f8d2d7;
+  --del-fg: #c93c4c;
+  --hl-comment: #6e7781;
+  --hl-keyword: #cf222e;
+  --hl-string: #0a3069;
+  --hl-number: #0550ae;
+  --hl-title: #8250df;
+  --hl-type: #953800;
+  --hl-attr: #0550ae;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --bg: #171614;
+  --fg: #e6e3de;
+  --muted: #94918a;
+  --border: #2e2d29;
+  --code-bg: #201f1c;
+  --accent: #d67858;
+  --add-bg: #1d2a20;
+  --add-word-bg: #2b4232;
+  --add-fg: #85c793;
+  --del-bg: #2e1c1e;
+  --del-word-bg: #4a292c;
+  --del-fg: #e28a91;
+  --hl-comment: #8b949e;
+  --hl-keyword: #ff7b72;
+  --hl-string: #a5d6ff;
+  --hl-number: #79c0ff;
+  --hl-title: #d2a8ff;
+  --hl-type: #ffa657;
+  --hl-attr: #79c0ff;
+} }
+
+* { box-sizing: border-box; }
+html { font-size: 15px; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+article { max-width: 860px; margin: 0 auto; padding: 2.75rem 1.5rem 4rem; }
+h1, h2, h3, h4 { line-height: 1.3; letter-spacing: -0.01em; color: var(--fg); }
+h1 { font-size: 1.45rem; font-weight: 650; margin: 0 0 1rem; }
+h2 { font-size: 1.15rem; font-weight: 650; margin: 2.2em 0 .7em; padding-bottom: .35em; border-bottom: 1px solid var(--border); }
+h3 { font-size: 1rem; font-weight: 600; margin: 1.8em 0 .5em; }
+h4 { font-size: .9rem; font-weight: 600; margin: 1.5em 0 .4em; }
+p { margin: .8em 0; }
+a { color: var(--accent); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 35%, transparent); text-underline-offset: 2px; }
+a:hover { text-decoration-color: var(--accent); }
+strong { font-weight: 600; }
+ul, ol { margin: .8em 0; padding-left: 1.5em; }
+li { margin: .3em 0; }
+li > ul, li > ol { margin: .2em 0; }
+hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
+img, svg, video { max-width: 100%; }
+::selection { background: color-mix(in srgb, var(--accent) 25%, transparent); }
+
+blockquote {
+  margin: 1.2em 0;
+  padding: .1em 1.1em;
+  border-left: 3px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--muted);
+}
+blockquote > :first-child { margin-top: .4em; }
+blockquote > :last-child { margin-bottom: .4em; }
+
+table { border-collapse: collapse; width: 100%; margin: 1.2em 0; font-size: .9rem; }
+th {
+  text-align: left; font-weight: 600; font-size: .74rem;
+  text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+  padding: .5em .75em; border-bottom: 1px solid var(--border);
+}
+td { padding: .55em .75em; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+
+code, kbd, samp { font-family: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace; }
+code { font-size: .85em; background: var(--code-bg); padding: .15em .4em; border-radius: 4px; }
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1em 1.2em;
+  overflow-x: auto;
+  font-size: .82rem;
+  line-height: 1.55;
+  margin: 1.2em 0;
+}
+pre code { background: transparent; padding: 0; font-size: inherit; }
+
+input[type="checkbox"] { accent-color: var(--accent); margin-right: .4em; }
+
+
+.artifact-header {
+  display: flex; align-items: baseline; gap: .75rem; flex-wrap: wrap;
+  margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+}
+.artifact-header h1 { margin: 0; }
+.artifact-badge {
+  font-family: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace; font-size: .66rem; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 999px; padding: .2em .7em; white-space: nowrap;
+}
+.artifact-meta { margin-left: auto; color: var(--muted); font-size: .72rem; font-family: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace; }
+.artifact-footer {
+  margin-top: 4rem; padding-top: 1rem; border-top: 1px solid var(--border);
+  color: var(--muted); font-size: .72rem; font-family: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace;
+}
+.artifact-mermaid { text-align: center; margin: 1.5rem 0; }
+</style>
+<style data-hljs>
+.hljs { color: var(--fg); background: transparent; }
+.hljs-comment, .hljs-quote { color: var(--hl-comment); font-style: italic; }
+.hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-deletion { color: var(--hl-keyword); }
+.hljs-string, .hljs-regexp, .hljs-addition { color: var(--hl-string); }
+.hljs-number, .hljs-symbol, .hljs-bullet, .hljs-meta, .hljs-link { color: var(--hl-number); }
+.hljs-title, .hljs-section, .hljs-function .hljs-title { color: var(--hl-title); }
+.hljs-type, .hljs-class .hljs-title, .hljs-built_in { color: var(--hl-type); }
+.hljs-variable, .hljs-template-variable, .hljs-attr, .hljs-attribute, .hljs-property { color: var(--hl-attr); }
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: 600; }
+</style>
+</head>
+<body>
+<article>
+<header class="artifact-header">
+<h1>Audit ascencio 2026-08-26</h1>
+<span class="artifact-badge">markdown</span>
+<span class="artifact-meta">2026-08-26 20:48:37</span>
+</header>
+<h1>Audit: AronGomu/ascencio — run <code>2026_08_26_ascencio_6922f846dbe2</code></h1>
+<p><strong>Snapshot:</strong> <code>6922f846dbe2</code> (<code>origin/main</code>) · <strong>Visibility:</strong> public · <strong>Issues:</strong> <a href="https://github.com/AronGomu/ascencio/issues">#1–#25</a></p>
+<p><strong>State: <code>partial</code></strong> — audit + validation + 25 GitHub issues complete. Implementation queue <strong>blocked at the sync gate</strong>: your local <code>main</code> is 2 commits ahead of <code>origin/main</code> (<code>7c34d05</code>, <code>2ece24b</code>) with uncommitted changes (<code>feedback.md</code>, <code>StackControl.svelte</code>, <code>src/styles/app.css</code>). Pushing audit commits would also publish your unpushed work, so nothing was implemented. <strong>Zero commits made by the audit.</strong></p>
+<h2>Resume action (exact)</h2>
+<pre><code class="hljs language-bash"><span class="hljs-built_in">cd</span> /home/aron/projects/ascencio
+<span class="hljs-comment"># commit or stash: feedback.md, src/battle/app/components/duel-field/StackControl.svelte, src/styles/app.css</span>
+git push origin main
+<span class="hljs-comment"># then re-invoke make-audit-aron with Run ID 2026_08_26_ascencio_6922f846dbe2 — issues reused via markers, queue resumes at #1</span></code></pre><h2>Pipeline</h2>
+<p>6 deep audit reviewers (one per dimension) → 29 raw findings → normalize/merge → 27 candidates → 27 independent deep validation reviewers (1 per candidate, prove <strong>and</strong> attempt disproof) → 25 hold, 2 disproven-dropped, 3 parent-dropped as cosmetic. Every finding: path:line, trigger, proof/repro, smallest fix scope, validation cmd. Security gate (public repo): nothing exploit-ready → nothing withheld.</p>
+<h2>Findings → issues</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Severity</th>
+<th>Cat</th>
+<th>Finding</th>
+<th>Key evidence</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/1">#1</a></td>
+<td><strong>high</strong></td>
+<td>ops</td>
+<td><code>npm run lint</code> fails 4662 errors → <code>check:headless</code> red at HEAD</td>
+<td>eslint ignores miss <code>.agents/</code>+<code>.claude/</code> skill copies added by HEAD commit</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/2">#2</a></td>
+<td><strong>high</strong></td>
+<td>bug</td>
+<td>Story deck writes dispatch before persist → retry wedge + false &quot;saved&quot; = silent data loss</td>
+<td>both failure modes reproduced against real repository+reducer</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/3">#3</a></td>
+<td>medium</td>
+<td>bug</td>
+<td>Shop set data cached forever under unversioned Cache Storage name</td>
+<td>cache hit returns before fetch; nothing evicts <code>story-shop-data</code></td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/4">#4</a></td>
+<td>medium</td>
+<td>bug</td>
+<td>Shop rarity collapse: 10 sets all-ultimate-rare → 580 DP pack EV vs 150 price; reducer never checks <code>released</code> (dep #3)</td>
+<td>computed over shipped JSON; 39/50 sets EV&gt;150</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/5">#5</a></td>
+<td>medium</td>
+<td>security</td>
+<td>Unsolicited diagnostics event auto-downloads seed-bearing file, bypassing documented warn-before-download</td>
+<td>harness repro; fix = gate side effect in App.svelte (client-drop would destroy sole trace copy)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/6">#6</a></td>
+<td>medium</td>
+<td>bug</td>
+<td>Deck DB open has no <code>blocked</code> handler → editor hangs on skeleton forever</td>
+<td>5 sibling opens handle it; error screen exists but unreachable</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/7">#7</a></td>
+<td>medium</td>
+<td>perf</td>
+<td>Catalog result window unbounded (~14.5k tiles); every mounted tile re-runs per deck edit</td>
+<td>file&#39;s own comment records 543 tiles w/o gesture</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/8">#8</a></td>
+<td>medium</td>
+<td>bug</td>
+<td><code>data-cy</code> uniqueness broken at 2 sites (CardTile ×6 ids, PromptContextMessage ×2 surfaces); coverage test blind</td>
+<td>e2e already scopes around collision</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/9">#9</a></td>
+<td>medium</td>
+<td>ops</td>
+<td>typecheck+format exclude e2e-acceptance, legacy tests, half of scripts/ — 24 unformatted, 3 latent TS2322 (dep #1)</td>
+<td><code>tsc --listFiles</code> → 0 acceptance files</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/10">#10</a></td>
+<td>medium</td>
+<td>ops</td>
+<td>CI archives acceptance-harness build as &quot;verified release candidate&quot;</td>
+<td>reproduced: <code>dist/acceptance.html</code> present, <code>build:verify</code> fails on it</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/11">#11</a></td>
+<td>medium</td>
+<td>test</td>
+<td>10%-headroom budget check runs in no pipeline (always skips)</td>
+<td>16 passed / 2 skipped reproduced</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/12">#12</a></td>
+<td>medium</td>
+<td>bug</td>
+<td>Continue offered for unresumable <code>checkpoint:pre-duel</code> → silent dead click</td>
+<td>first-time player closing tab mid-duel triggers</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/13">#13</a></td>
+<td>medium</td>
+<td>perf</td>
+<td><code>appendDuelLog</code> frozen-array <code>.slice(1)</code> → permanent 56µs/event after truncation; fix = one expression</td>
+<td>measured 164× frozen-slice penalty; <code>[...existing].slice(1)</code> → 5.4µs</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/14">#14</a></td>
+<td>medium</td>
+<td>ops</td>
+<td><code>dist-repro-a/b</code> not gitignored → interrupted build offers non-redistributable art to <code>git add</code></td>
+<td>eslint+prettier already use <code>dist*/</code></td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/15">#15</a></td>
+<td>medium</td>
+<td>ops</td>
+<td>AGENTS.md drift: privacy invariant contradicts documented carve-outs (can steer agent into breaking locked tests); stale internals list; phantom paths; divergent checklist sibling</td>
+<td>probe-verified gates vs prose</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/16">#16</a></td>
+<td>medium</td>
+<td>security</td>
+<td>Image acquisition: unbounded bodies (proven 15.7 GB blowup) + no tracked pin for shipped images</td>
+<td>only unpinned upstream input; scope narrowed to 120+50 shipped surface</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/17">#17</a></td>
+<td>low</td>
+<td>perf</td>
+<td>Board view-model rebuilt N+2× per action (per Worker message)</td>
+<td>0.261 ms/call measured; memo on snapshot identity</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/18">#18</a></td>
+<td>low</td>
+<td>bug</td>
+<td>Admin console reports &quot;Cleared&quot; for blocked deletion</td>
+<td>dev-only console</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/19">#19</a></td>
+<td>low</td>
+<td>refactor</td>
+<td><code>supportedCodes</code> gate unreachable in production; widened frozen battle API</td>
+<td>both sets from one <code>runtimeCatalog()</code> read</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/20">#20</a></td>
+<td>low</td>
+<td>refactor</td>
+<td>Acceptance scenario list ×2; coverage direction unguarded → misleading selector timeout</td>
+<td>proven via set-only deletion</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/21">#21</a></td>
+<td>low</td>
+<td>ops</td>
+<td>Tracked <code>playwright-report/index.html</code> vs own gitignore; stale CI failure evidence</td>
+<td><code>git rm --cached</code>, one path</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/22">#22</a></td>
+<td>low</td>
+<td>ops</td>
+<td><code>assets:images:verify</code> orphan — local <code>check</code> weaker than CI (dep #16)</td>
+<td>~4,654 shop codes unchecked locally</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/23">#23</a></td>
+<td>low</td>
+<td>ops</td>
+<td>Manual checklist: stale free-play-menu steps across T14–T17, unannotated</td>
+<td>full stale-line set enumerated in issue</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/24">#24</a></td>
+<td>low</td>
+<td>ops</td>
+<td>4 dev-only npm audit advisories, fix available</td>
+<td>prod tree clean</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AronGomu/ascencio/issues/25">#25</a></td>
+<td>low</td>
+<td>bug</td>
+<td>Zone-list face-up card rendered as card back when image library unavailable</td>
+<td>surfaced by disproving a dropped candidate; one-line fix</td>
+</tr>
+</tbody></table>
+<h2>Dropped candidates (with reason)</h2>
+<table>
+<thead>
+<tr>
+<th>Candidate</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Image-lease 4× duplication w/ &quot;diverged error fallback&quot;</td>
+<td>duplication real; claimed trigger <strong>proven unreachable</strong> (face-down entries carry no code → data-URL card back, onerror can&#39;t fire). Its validation surfaced #25.</td>
+</tr>
+<tr>
+<td>Engine-location dual mapping, silent <code>&quot;hand&quot;</code> default</td>
+<td>wire field is u8 — value 512 <strong>unrepresentable</strong> in every message reaching the switch; harm overstated</td>
+</tr>
+<tr>
+<td><code>#respondedPromptIds</code> unbounded growth</td>
+<td>~1 MB worst case — below measurable bar</td>
+</tr>
+<tr>
+<td>Dead export <code>choiceIdsForFieldIntent</code></td>
+<td>cosmetic</td>
+</tr>
+<tr>
+<td>Duplicate <code>AssetCardRecord</code> type</td>
+<td>latent only, no current failure</td>
+</tr>
+</tbody></table>
+<h2>Assumptions &amp; residual risk</h2>
+<ul>
+<li>Public repo → security gate active; neither security finding (#5 local-only, #16 hardening) is exploit-ready → published.</li>
+<li>No per-issue blocker comments posted (single sync-gate cause; avoids 25× spam).</li>
+<li>Resume re-baselines on new <code>origin/main</code>; findings validated at <code>6922f84</code> — re-check any whose cited paths your new commits touched (<code>StackControl.svelte</code> is dirty in your tree).</li>
+<li>State kept for resume: <code>.tmp/MAKE_AUDIT_2026_08_26_ascencio_6922f846dbe2/</code> (PROGRESS.md, AUDIT.md, specs, validations) + audit worktree <code>/tmp/make-audit-aron-2026_08_26_ascencio_6922f846dbe2/audit</code>.</li>
+</ul>
+
+<footer class="artifact-footer">source: /home/aron/projects/ascencio</footer>
+</article>
+
+<script>
+(function () {
+  var slug = "audit-ascencio-2026-08-26";
+  var es = new EventSource("/events");
+  es.addEventListener("reload", function (e) {
+    try { if (e.data === slug || e.data === "*") location.reload(); } catch (_) {}
+  });
+})();
+</script>
+</body>
+</html>

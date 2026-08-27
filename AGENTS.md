@@ -4,8 +4,7 @@ This file is the single context initialisation file for all AI agents working on
 
 ## Agent workspace layout
 
-- `docs/` : Project documentation. Contains CONTEXT.md, DESIGN.md, GLOSSARY.md, ADR/
-- `.dev/` : Future implementation resources. Contains bugs.md, feedback.md, ideas.md, decisions/
+- `docs/` : Project documentation. Contains GLOSSARY.md, ADR/, architecture/
 - `artifacts/` : Ephemeral design/prototype artifacts and `make-plan-aron` plan indexes/tickets/HTML. Retired when a round ends; see Document rules.
 - `artifacts/manual_test_checklist.md` : Durable. The human test steps for every shipped slice, kept current, never retired with a plan.
 
@@ -141,8 +140,7 @@ Every HTML element rendered by a Svelte component under `src/battle/`, `src/shel
 ```text
 .
 ├── AGENTS.md                          # Single context initialisation file for agents
-├── context.md                         # Pointer to AGENTS.md (legacy path)
-├── .dev/                              # bugs.md, feedback.md, ideas.md, decisions/
+├── CONTEXT.md                         # Pointer to AGENTS.md (legacy path)
 ├── artifacts/                         # Ephemeral plans/tickets/grills + the durable manual_test_checklist.md
 ├── docs/
 │   ├── README.md                      # Documentation index

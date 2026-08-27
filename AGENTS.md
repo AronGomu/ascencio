@@ -113,7 +113,7 @@ What the rules encode:
 - `vendor/ocgcore-wasm/0.1.2/` is permanently frozen; never update engine binary, loader resolution, or vendor manifest.
 - The main thread never imports or calls the engine.
 - Raw core messages/indexes remain in the Worker; the UI receives clone-safe typed domain data.
-- Opponent hidden information is removed before crossing the Worker boundary.
+- Fixed-slot cards and overlay materials may retain concealed opponent codes (marked `faceUp: false` or `identityVisible: false`); presentation must never reveal them. Opponent hand, deck, extra deck and face-down pile cards must not carry codes at all.
 - Svelte owns all interactive application/field UI; presentation state never determines legality.
 - Canvas may be future pointer-transparent decoration only after separate measured ADR.
 - Synchronous core callbacks use preloaded memory and perform no async I/O.

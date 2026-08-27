@@ -1,9 +1,3 @@
-# Start Duel screen
-
-1.
-
-2.
-
 # Duel Field
 
 1. For xyz monsters. Show the material attached behind the card by putting behind (x-index) and slightly moved to the right from the last material or xyz monster if no material left. Do same as duelink book. And when an effect need to detach materials, show them in the list dialog, exactly like any other zone. In fact, make materials from an xyz act the same as any other zone. Add an action button to look at the materials and open the dialog list.
@@ -20,8 +14,20 @@
 
 7. Remove hover effects over the opened cards by default.
 
+8. Remove the solid card border that represents only vertical card. Make the dashed full size zone a solid border
+
+9. Remove the border around the duel field.
+
+10. Add straight separation border between right pane and duel field
+
+11. BUG : In test game with burning abyss deck, I used Dante to mill 3 cards. I milled Cir but i got proposition to activate its effect even thought the trigger condition is valid.
+
+12. Only highlight you extra deck in orange halo if a monster can be summoned or effect can be activated from there. Same for Deck, Grave, Banish zone.
+
 # Right Pane
 
 1. Remove the border around the avatar when it's the current turn of the player. Instead, update the border around the avatar itself and the life points to be orange. Orange should indicate the active player, and neutral, meaning grey, indicates a non‑active player.
 
-2.
+2. On full hd screen, make the avatar image for both player and opponent bigger
+
+3.

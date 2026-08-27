@@ -25,6 +25,7 @@
     INITIAL_RESULT_WINDOW,
     initialResultWindow,
     nextResultWindow,
+    RESULT_WINDOW_CEILING,
   } from "../layout/result-window.ts";
   import { OverlayScrollbar } from "../../shell/index.ts";
   import CardTile from "./CardTile.svelte";
@@ -87,6 +88,26 @@
     : results.slice(0, FALLBACK_RESULT_CAP);
   $: fallbackTruncated =
     !observerSupported && results.length > FALLBACK_RESULT_CAP;
+  $: ceilingTruncated =
+    observerSupported &&
+    visibleCount >= RESULT_WINDOW_CEILING &&
+    results.length > RESULT_WINDOW_CEILING;
+  /* Pre-compute spent codes for the visible slice. Tiles still re-render when
+     `copies` changes, but each tile now does one Set.has instead of two
+     function calls + arithmetic. */
+  $: spentCodes = new Set(
+    visible
+      .filter(
+        (card) =>
+          availableCopies(
+            card.code,
+            ownership,
+            quantityLimit(ruleset, card.code),
+            copies.get(card.code) ?? 0,
+          ) === 0,
+      )
+      .map((card) => card.code),
+  );
 
   /* `filled` gives the catalog the whole stage, and with it `overflow-y:
      visible` on `.results`: the region grows to its content and an ancestor
@@ -289,6 +310,12 @@
         the filters to reach the rest.
       </p>
     {/if}
+    {#if ceilingTruncated}
+      <p class="ceiling-notice" data-cy="deck-catalog-ceiling-notice">
+        Showing {RESULT_WINDOW_CEILING} of {results.length} cards. Narrow the filters
+        to reach the rest.
+      </p>
+    {/if}
     <div class="results-region" data-cy="deck-catalog-results-region">
       <div
         class="results"
@@ -298,19 +325,7 @@
         bind:this={resultsScroller}
       >
         {#each visible as card (card.code)}
-          <!-- Read per tile rather than into a map over the whole window: the
-               window grows to every result, and a map rebuilt on each of those
-               steps would turn one scroll to the bottom into quadratic work.
-               Spelled out rather than delegated to `addable` because what a
-               `{@const}` re-reads is what it names: through the helper, a tile
-               would keep its affordance after the copy that spent it. -->
-          {@const spent =
-            availableCopies(
-              card.code,
-              ownership,
-              quantityLimit(ruleset, card.code),
-              copies.get(card.code) ?? 0,
-            ) === 0}
+          {@const spent = spentCodes.has(card.code)}
           <CardTile
             {card}
             code={card.code}
@@ -343,7 +358,7 @@
             >
           {/if}
         {/each}
-        {#if observerSupported && visibleCount < results.length}
+        {#if observerSupported && visibleCount < results.length && visibleCount < RESULT_WINDOW_CEILING}
           <div
             class="sentinel"
             aria-hidden="true"
@@ -487,7 +502,8 @@
     height: 1px;
   }
 
-  .fallback-notice {
+  .fallback-notice,
+  .ceiling-notice {
     margin: 0 0 0.5rem;
     color: var(--muted);
   }

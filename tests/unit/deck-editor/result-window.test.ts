@@ -30,7 +30,9 @@ describe("nextResultWindow ceiling", () => {
     // already at ceiling → stays at ceiling
     expect(nextResultWindow(300, 15000)).toBe(RESULT_WINDOW_CEILING);
     // way past what ceiling would allow
-    expect(nextResultWindow(RESULT_WINDOW_CEILING, 100000)).toBe(RESULT_WINDOW_CEILING);
+    expect(nextResultWindow(RESULT_WINDOW_CEILING, 100000)).toBe(
+      RESULT_WINDOW_CEILING,
+    );
   });
 
   it("ceiling is 300", () => {

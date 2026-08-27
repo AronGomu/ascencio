@@ -22,7 +22,7 @@ export default defineConfig({
   ],
   webServer: {
     command:
-      "npm run vendor:verify && npm run snapshot:verify && ACCEPTANCE_SCENARIOS=1 npm run build:app -- --base=/ygo-story-duel/ && npm run preview -- --host 127.0.0.1 --port 4203 --strictPort --base=/ygo-story-duel/",
+      "npm run vendor:verify && npm run snapshot:verify && ACCEPTANCE_SCENARIOS=1 npm run build:app -- --base=/ygo-story-duel/ --outDir dist-acceptance && npm run preview -- --host 127.0.0.1 --port 4203 --strictPort --base=/ygo-story-duel/ --outDir dist-acceptance",
     url: baseURL,
     reuseExistingServer: false,
     timeout: 180_000,

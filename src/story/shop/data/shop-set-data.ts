@@ -127,21 +127,28 @@ export function resolveCardRarity(
 
 /* Network-first with cache fallback: every online visit revalidates the
    shipped JSON so content edits reach returning profiles, while a failed,
-   stalled (3 s abort) or invalid fetch serves the last good cached payload —
-   the ADR-035 offline guarantee. `cache: "no-cache"` keeps freshness
-   independent of host HTTP-cache headers. The cache entry is only replaced
-   by a payload that parsed, so a bad deploy can never clobber a good cache. */
+   stalled or invalid fetch serves the last good cached payload — the ADR-035
+   offline guarantee. The cached entry is read before the fetch because it is
+   what decides the deadline: with a good copy in hand, a 3 s abort stops a
+   stalled revalidation from holding the shop shut, and the fallback covers
+   it. On a cold cache that half-megabyte download is the only copy there is,
+   so it runs unbounded — aborting it would turn a slow-but-working link into
+   a permanent "Shop data unavailable" that no retry can clear. `cache:
+   "no-cache"` keeps freshness independent of host HTTP-cache headers on both
+   paths. The cache entry is only replaced by a payload that parsed, so a bad
+   deploy can never clobber a good cache. */
 export async function fetchShopSetData(
   fetchFn: typeof fetch = fetch,
   cachesRef: CacheStorage = caches,
 ): Promise<ShopSetData> {
   const cache = await cachesRef.open(SHOP_SET_DATA_CACHE);
+  const cached = await cache.match(SHOP_SET_DATA_URL);
 
   let fresh: unknown;
   try {
     const response = await fetchFn(SHOP_SET_DATA_URL, {
       cache: "no-cache",
-      signal: AbortSignal.timeout(3000),
+      ...(cached !== undefined ? { signal: AbortSignal.timeout(3000) } : {}),
     });
     if (response.ok) fresh = await response.json();
   } catch {
@@ -151,17 +158,23 @@ export async function fetchShopSetData(
   if (fresh !== undefined) {
     const parsed = parseShopSetData(fresh);
     if (parsed !== null) {
-      await cache.put(
-        SHOP_SET_DATA_URL,
-        new Response(JSON.stringify(fresh), {
-          headers: { "Content-Type": "application/json" },
-        }),
-      );
+      /* A refused write — quota, private mode — costs the next offline visit
+         its update, not this visit its data: the parsed payload is already in
+         hand, so the storage error stays out of the UI. */
+      try {
+        await cache.put(
+          SHOP_SET_DATA_URL,
+          new Response(JSON.stringify(fresh), {
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
+      } catch {
+        /* previous cache entry stands */
+      }
       return parsed;
     }
   }
 
-  const cached = await cache.match(SHOP_SET_DATA_URL);
   if (cached === undefined) throw new Error("Shop data unavailable");
   let raw: unknown;
   try {

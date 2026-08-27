@@ -314,6 +314,57 @@ describe("fetchShopSetData", () => {
       fetchShopSetData(rejectingFetch, cacheStorage),
     ).rejects.toThrow("Shop data unavailable");
   });
+
+  /* The fetch init is the contract, so both halves of it are pinned here:
+     dropping `cache: "no-cache"` silently restores the stale-payload symptom,
+     and the abort belongs only on the path that has a cached copy to fall back
+     to. */
+  it("a populated cache bounds the revalidation", async () => {
+    const { cacheStorage } = makeFakeCache(VALID_FIXTURE);
+    const stubFetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(UPDATED_FIXTURE), {
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    await fetchShopSetData(stubFetch, cacheStorage);
+
+    const init = stubFetch.mock.calls[0]![1] as RequestInit;
+    expect(init.cache).toBe("no-cache");
+    expect(init.signal).toBeDefined();
+  });
+
+  it("a cold cache fetches unbounded", async () => {
+    const { cacheStorage } = makeFakeCache(null);
+    const stubFetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(VALID_FIXTURE), {
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    await fetchShopSetData(stubFetch, cacheStorage);
+
+    const init = stubFetch.mock.calls[0]![1] as RequestInit;
+    expect(init.cache).toBe("no-cache");
+    expect(init.signal).toBeUndefined();
+  });
+
+  it("a refused cache write still returns the fresh payload", async () => {
+    const { cacheStorage } = makeFakeCache(VALID_FIXTURE);
+    const cache = await cacheStorage.open(SHOP_SET_DATA_CACHE);
+    vi.spyOn(cache, "put").mockRejectedValue(
+      new DOMException("Quota exceeded.", "QuotaExceededError"),
+    );
+    const stubFetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(UPDATED_FIXTURE), {
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    const result = await fetchShopSetData(stubFetch, cacheStorage);
+
+    expect(result.sets[1]!.released).toBe(true);
+  });
 });
 
 describe("contentsOf", () => {

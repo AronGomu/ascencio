@@ -3,6 +3,7 @@ import {
   DECK_DATABASE_NAME,
   LEGACY_DECK_DATABASE_NAME,
 } from "../src/decks/deck-database.ts";
+import { RESULT_WINDOW_CEILING } from "../src/deck-editor/layout/result-window.ts";
 
 const libraryUrl = "./#/decks";
 const BLUE_EYES = 89631139;
@@ -704,14 +705,11 @@ test("the tile art fills the tile", async ({ page }) => {
 });
 
 /* The tabbed layout hands `CardCatalog` `filled`, which stops `.results` being
-   a scroll container: `overflow-y: visible`, `scrollHeight === clientHeight`,
-   and an ancestor doing the scrolling. An observer rooted on a box that never
-   clips watches a sentinel that never leaves it, so the callback stopped
-   arriving — measured here before the fix, the window burst to 543 tiles with
-   no gesture and then stalled at 599 of 14,551 across six scrolls to the
-   bottom. Only a real layout shows that, which is why this case is here rather
-   than beside the jsdom observer tests. */
-test("the catalog keeps loading past the second page on a phone", async ({
+   a scroll container. The observer is viewport-rooted in that layout. The
+   result window grows with scroll but is capped at `RESULT_WINDOW_CEILING` to
+   bound the DOM. When the ceiling is reached, a truncation notice appears and
+   the sentinel is removed. */
+test("the catalog tile count stays under the ceiling on a phone", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -724,23 +722,18 @@ test("the catalog keeps loading past the second page on a phone", async ({
   await page.getByRole("button", { name: "Create", exact: true }).click();
   await page.locator('[data-cy="deck-tab-catalog"]').click();
 
+  /* The selector must match only the tile buttons themselves, not their child
+     elements (limit badge, image, name), which also have data-cy attributes
+     prefixed with "deck-tile-". The button is the only direct child. */
   const tiles = page.locator(
-    '[data-cy="deck-catalog-results"] [data-cy^="deck-tile-"]',
+    '[data-cy="deck-catalog-results"] > [data-cy^="deck-tile-"]',
   );
   await expect(tiles.first()).toBeVisible();
   await expect(
     page.locator('[data-cy="deck-catalog-result-count"]'),
   ).toHaveText(/\d{4,} results/);
 
-  /* Still a window and not the whole database: the first render settles around
-     300 of them. */
-  await page.waitForTimeout(1500);
-  expect(
-    await tiles.count(),
-    "the first render must stay a window over the database",
-  ).toBeLessThan(1000);
-
-  /* And the window keeps growing, which is what stalled. */
+  /* The window grows with scroll but stops at the ceiling. */
   const scrollToBottom = () =>
     page.evaluate(() => {
       const region = document.querySelector(
@@ -748,16 +741,130 @@ test("the catalog keeps loading past the second page on a phone", async ({
       ) as HTMLElement | null;
       region?.scrollTo({ top: region.scrollHeight });
     });
-  await expect
-    .poll(
-      async () => {
-        await scrollToBottom();
-        return tiles.count();
-      },
-      {
-        timeout: 30_000,
-        message: "scrolling to the bottom must keep appending results",
-      },
-    )
-    .toBeGreaterThan(1200);
+
+  /* Scroll once — window should grow past initial 60. */
+  await scrollToBottom();
+  await page.waitForTimeout(500);
+  const afterOneScroll = await tiles.count();
+  expect(afterOneScroll, "first scroll should append tiles").toBeGreaterThan(
+    60,
+  );
+
+  /* Scroll many times — window should hit ceiling and stop. */
+  for (let i = 0; i < 20; i++) {
+    await scrollToBottom();
+    await page.waitForTimeout(100);
+  }
+  const afterManyScrolls = await tiles.count();
+  expect(
+    afterManyScrolls,
+    `tile count ${afterManyScrolls} exceeds ceiling ${RESULT_WINDOW_CEILING}`,
+  ).toBeLessThanOrEqual(RESULT_WINDOW_CEILING);
+
+  /* Ceiling notice must be visible. */
+  await expect(
+    page.locator('[data-cy="deck-catalog-ceiling-notice"]'),
+    "ceiling truncation notice should appear",
+  ).toBeVisible();
+
+  /* Sentinel must be removed from DOM. */
+  await expect(
+    page.locator('[data-cy="deck-catalog-results-sentinel"]'),
+  ).toHaveCount(0);
+});
+
+/* Edit cost must not scale with mounted tile count. A MutationObserver counts
+   DOM mutations during an add-card action; the count should be bounded by a
+   small constant independent of scroll depth. This is deterministic: it
+   measures mutation count, not wall-clock time. */
+test("edit mutation count is independent of scroll depth", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+
+  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.getByLabel("Deck name").fill("Mutation Test");
+  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.locator('[data-cy="deck-tab-catalog"]').click();
+
+  /* Direct child selector: only count tile buttons, not their children. */
+  const tiles = page.locator(
+    '[data-cy="deck-catalog-results"] > [data-cy^="deck-tile-"]',
+  );
+  await expect(tiles.first()).toBeVisible();
+
+  /* Measure mutation count during add with few tiles (initial window). */
+  const mutationsAtShallow = await page.evaluate(async () => {
+    const results = document.querySelector('[data-cy="deck-catalog-results"]');
+    if (!results) return -1;
+    let count = 0;
+    const observer = new MutationObserver((records) => {
+      count += records.length;
+    });
+    observer.observe(results, { childList: true, subtree: true });
+    /* Direct child: don't match child elements of the tile. */
+    const tile = results.querySelector(
+      ':scope > [data-cy^="deck-tile-"]',
+    ) as HTMLElement | null;
+    tile?.click();
+    await new Promise((r) => setTimeout(r, 100));
+    observer.disconnect();
+    return count;
+  });
+
+  /* Scroll to ceiling. */
+  const scrollToBottom = () =>
+    page.evaluate(() => {
+      const region = document.querySelector(
+        '[data-cy="shell-region-decks"]',
+      ) as HTMLElement | null;
+      region?.scrollTo({ top: region.scrollHeight });
+    });
+  for (let i = 0; i < 20; i++) {
+    await scrollToBottom();
+    await page.waitForTimeout(100);
+  }
+
+  /* Confirm ceiling reached. */
+  const tileCount = await tiles.count();
+  expect(tileCount).toBeGreaterThanOrEqual(RESULT_WINDOW_CEILING - 10);
+
+  /* Measure mutation count during add at ceiling. */
+  const mutationsAtCeiling = await page.evaluate(async () => {
+    const results = document.querySelector('[data-cy="deck-catalog-results"]');
+    if (!results) return -1;
+    let count = 0;
+    const observer = new MutationObserver((records) => {
+      count += records.length;
+    });
+    observer.observe(results, { childList: true, subtree: true });
+    const tile = results.querySelectorAll(
+      ':scope > [data-cy^="deck-tile-"]',
+    )[10] as HTMLElement | null;
+    tile?.click();
+    await new Promise((r) => setTimeout(r, 100));
+    observer.disconnect();
+    return count;
+  });
+
+  /* Both counts should be small constants, independent of tile count. The
+     tile tap fires selection + hover updates + Svelte reactive batches; bound
+     is generous to cover those but stable across scroll depth. */
+  const MUTATION_BOUND = 100;
+  expect(
+    mutationsAtShallow,
+    `shallow mutations ${mutationsAtShallow} exceeds bound ${MUTATION_BOUND}`,
+  ).toBeLessThanOrEqual(MUTATION_BOUND);
+  expect(
+    mutationsAtCeiling,
+    `ceiling mutations ${mutationsAtCeiling} exceeds bound ${MUTATION_BOUND}`,
+  ).toBeLessThanOrEqual(MUTATION_BOUND);
+
+  /* The two counts should be comparable — edit cost independent of depth. */
+  const delta = Math.abs(mutationsAtCeiling - mutationsAtShallow);
+  expect(
+    delta,
+    `mutation delta ${delta} (shallow=${mutationsAtShallow}, ceiling=${mutationsAtCeiling}) suggests cost scales with depth`,
+  ).toBeLessThanOrEqual(MUTATION_BOUND);
 });

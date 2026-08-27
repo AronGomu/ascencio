@@ -124,8 +124,8 @@
   <ul>
     <li><b>Sets:</b> first <b>50 TCG English booster sets</b> (LOB 2002 →) in <code>public/story/shop-sets.v1.json</code>,
       hand-assembled once, no pinning ceremony. Per card: <code>{code, name, rarity}</code>. First 3 sets start <code>released</code>.</li>
-    <li><b>Delivery:</b> lazy fetch on first shop entry → structural validation → Cache Storage (<code>story-shop-data</code>,
-      cache-first) → fully offline afterwards (PWA rule). Never bundled into the story JS chunk.</li>
+    <li><b>Delivery:</b> fetch on shop entry → structural validation → Cache Storage (<code>story-shop-data</code>,
+      network-first, cache fallback) → offline serves the last good payload (PWA rule). Never bundled into the story JS chunk.</li>
     <li><b>Coverage:</b> full real lists shown; packs/singles grant any listed card into <code>collection[code]</code>.
       Missing art → placeholder tile until the image pipeline covers the code (plan T14, main-lane).
       Packaged cards outside the 50 sets: invisible test data.</li>

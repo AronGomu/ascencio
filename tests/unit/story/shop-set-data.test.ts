@@ -46,6 +46,11 @@ const VALID_FIXTURE: ShopSetData = {
   ],
 };
 
+const UPDATED_FIXTURE: ShopSetData = {
+  version: 1,
+  sets: [VALID_FIXTURE.sets[0]!, { ...VALID_FIXTURE.sets[1]!, released: true }],
+};
+
 function fakeView(
   overrides: Partial<DeckBuilderCardView> = {},
 ): DeckBuilderCardView {
@@ -71,11 +76,13 @@ function fakeView(
   };
 }
 
-function makeFakeCache(stored: ShopSetData | null): {
+function makeFakeCache(stored: unknown): {
   cacheStorage: CacheStorage;
   putCalls: string[];
+  putBodies: string[];
 } {
   const putCalls: string[] = [];
+  const putBodies: string[] = [];
   const matchResult =
     stored !== null
       ? new Response(JSON.stringify(stored), {
@@ -85,8 +92,9 @@ function makeFakeCache(stored: ShopSetData | null): {
 
   const cache: Cache = {
     match: async () => matchResult,
-    put: async (req: RequestInfo | URL) => {
+    put: async (req: RequestInfo | URL, res: Response) => {
       putCalls.push(typeof req === "string" ? req : String(req));
+      putBodies.push(await res.text());
     },
     add: async () => {},
     addAll: async () => {},
@@ -102,7 +110,7 @@ function makeFakeCache(stored: ShopSetData | null): {
     keys: async () => [],
   };
 
-  return { cacheStorage, putCalls };
+  return { cacheStorage, putCalls, putBodies };
 }
 
 describe("parseShopSetData", () => {
@@ -204,14 +212,84 @@ describe("parseShopSetData", () => {
 });
 
 describe("fetchShopSetData", () => {
-  it("cache-first loader hits the cache before the network", async () => {
-    const { cacheStorage } = makeFakeCache(VALID_FIXTURE);
+  it("fresh payload replaces the cached one", async () => {
+    const { cacheStorage, putCalls, putBodies } = makeFakeCache(VALID_FIXTURE);
+    const stubFetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(UPDATED_FIXTURE), {
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    const result = await fetchShopSetData(stubFetch, cacheStorage);
+
+    expect(stubFetch).toHaveBeenCalledTimes(1);
+    expect(result.sets[1]!.released).toBe(true);
+    expect(putCalls).toContain(SHOP_SET_DATA_URL);
+    expect(JSON.parse(putBodies[0]!)).toEqual(UPDATED_FIXTURE);
+  });
+
+  it("offline visit falls back to the cached payload", async () => {
+    const { cacheStorage, putCalls } = makeFakeCache(VALID_FIXTURE);
     const throwingFetch = vi.fn().mockRejectedValue(new Error("network"));
 
     const result = await fetchShopSetData(throwingFetch, cacheStorage);
 
-    expect(throwingFetch).not.toHaveBeenCalled();
+    expect(throwingFetch).toHaveBeenCalledTimes(1);
     expect(result.sets).toHaveLength(2);
+    expect(putCalls).toHaveLength(0);
+  });
+
+  it("stalled network falls back to the cached payload", async () => {
+    const { cacheStorage, putCalls } = makeFakeCache(VALID_FIXTURE);
+    const abortingFetch = vi
+      .fn()
+      .mockRejectedValue(
+        new DOMException("The operation timed out.", "TimeoutError"),
+      );
+
+    const result = await fetchShopSetData(abortingFetch, cacheStorage);
+
+    expect(abortingFetch).toHaveBeenCalledTimes(1);
+    expect(result.sets).toHaveLength(2);
+    expect(putCalls).toHaveLength(0);
+  });
+
+  it("non-ok response falls back to the cached payload", async () => {
+    const { cacheStorage, putCalls } = makeFakeCache(VALID_FIXTURE);
+    const stubFetch = vi
+      .fn()
+      .mockResolvedValue(new Response("nope", { status: 404 }));
+
+    const result = await fetchShopSetData(stubFetch, cacheStorage);
+
+    expect(stubFetch).toHaveBeenCalledTimes(1);
+    expect(result.sets).toHaveLength(2);
+    expect(putCalls).toHaveLength(0);
+  });
+
+  it("invalid fresh payload falls back to the cached payload", async () => {
+    const { cacheStorage, putCalls } = makeFakeCache(VALID_FIXTURE);
+    const stubFetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ version: 2, sets: [] }), {
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    const result = await fetchShopSetData(stubFetch, cacheStorage);
+
+    expect(stubFetch).toHaveBeenCalledTimes(1);
+    expect(result.sets[1]!.released).toBe(false);
+    expect(putCalls).toHaveLength(0);
+  });
+
+  it("corrupted cached payload with a failed fetch throws", async () => {
+    const { cacheStorage } = makeFakeCache({ version: 2 });
+    const rejectingFetch = vi.fn().mockRejectedValue(new Error("offline"));
+
+    await expect(
+      fetchShopSetData(rejectingFetch, cacheStorage),
+    ).rejects.toThrow("Shop data unavailable");
+    expect(rejectingFetch).toHaveBeenCalledTimes(1);
   });
 
   it("network miss populates the cache", async () => {

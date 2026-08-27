@@ -3378,6 +3378,12 @@ a set with no art is a normal, browsable, buyable tile, not a broken image.
 - [ ] Above the grid, the **Latest Released** row shows only released sets — today that is three: `Legend of Blue Eyes White Dragon`, `Metal Raiders`, `Pharaoh's Servant`, in that order (oldest on the left).
 - [ ] It never shows more than four. When a fourth set is marked released in `public/story/shop-sets.v1.json` the row shows four; a fifth pushes the oldest out, and the row still reads oldest-to-newest left to right.
 
+### Shipped shop data updates reach a returning profile
+
+- [ ] Open the Card Shop once online. Then edit `public/story/shop-sets.v1.json` (flip a fourth set's `released` to `true`), rebuild/re-serve, and revisit the shop in the same browser profile — the change is visible without clearing site data.
+- [ ] DevTools → Network → **Offline**, reload, reopen the shop — the last fetched data still renders (Cache Storage entry `story-shop-data`).
+- [ ] Revert the JSON edit afterwards.
+
 ### A set with no art stays usable
 
 - [ ] Quit the dev server. Run `mv generated/set-images/metal-raiders.jpg /tmp/`, then `npm run dev` and go back to **Shop → Buy packs**.

@@ -125,48 +125,51 @@ export function resolveCardRarity(
   return "common";
 }
 
+/* Network-first with cache fallback: every online visit revalidates the
+   shipped JSON so content edits reach returning profiles, while a failed,
+   stalled (3 s abort) or invalid fetch serves the last good cached payload —
+   the ADR-035 offline guarantee. `cache: "no-cache"` keeps freshness
+   independent of host HTTP-cache headers. The cache entry is only replaced
+   by a payload that parsed, so a bad deploy can never clobber a good cache. */
 export async function fetchShopSetData(
   fetchFn: typeof fetch = fetch,
   cachesRef: CacheStorage = caches,
 ): Promise<ShopSetData> {
   const cache = await cachesRef.open(SHOP_SET_DATA_CACHE);
 
-  const cached = await cache.match(SHOP_SET_DATA_URL);
-  if (cached !== undefined) {
-    let raw: unknown;
-    try {
-      raw = await cached.json();
-    } catch {
-      throw new Error("Shop data unavailable");
-    }
-    const parsed = parseShopSetData(raw);
-    if (parsed === null) throw new Error("Shop data unavailable");
-    return parsed;
-  }
-
-  let response: Response;
+  let fresh: unknown;
   try {
-    response = await fetchFn(SHOP_SET_DATA_URL);
+    const response = await fetchFn(SHOP_SET_DATA_URL, {
+      cache: "no-cache",
+      signal: AbortSignal.timeout(3000),
+    });
+    if (response.ok) fresh = await response.json();
   } catch {
-    throw new Error("Shop data unavailable");
+    fresh = undefined;
   }
-  if (!response.ok) throw new Error("Shop data unavailable");
 
+  if (fresh !== undefined) {
+    const parsed = parseShopSetData(fresh);
+    if (parsed !== null) {
+      await cache.put(
+        SHOP_SET_DATA_URL,
+        new Response(JSON.stringify(fresh), {
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+      return parsed;
+    }
+  }
+
+  const cached = await cache.match(SHOP_SET_DATA_URL);
+  if (cached === undefined) throw new Error("Shop data unavailable");
   let raw: unknown;
   try {
-    raw = await response.json();
+    raw = await cached.json();
   } catch {
     throw new Error("Shop data unavailable");
   }
-
   const parsed = parseShopSetData(raw);
   if (parsed === null) throw new Error("Shop data unavailable");
-
-  await cache.put(
-    SHOP_SET_DATA_URL,
-    new Response(JSON.stringify(raw), {
-      headers: { "Content-Type": "application/json" },
-    }),
-  );
   return parsed;
 }

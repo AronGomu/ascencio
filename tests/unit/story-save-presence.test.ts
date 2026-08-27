@@ -81,6 +81,13 @@ describe("storySaveExists", () => {
     expect(await storySaveExists(indexedDB)).toBe(true);
   });
 
+  it("answers no when only checkpoint:pre-duel is present", async () => {
+    const repository = createStorySaveRepository(indexedDB);
+    await repository.write("checkpoint:pre-duel", createInitialStoryState(), null);
+
+    expect(await storySaveExists(indexedDB)).toBe(false);
+  });
+
   /* Storage being unreachable and storage holding nothing are the same answer
      to the menu: no Continue. The warning is what says which one it was. */
   it("answers no and warns when the database cannot be opened", async () => {

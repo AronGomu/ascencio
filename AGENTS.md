@@ -7,6 +7,7 @@ This file is the single context initialisation file for all AI agents working on
 - `docs/` : Project documentation. Contains GLOSSARY.md, ADR/, architecture/
 - `artifacts/` : Ephemeral design/prototype artifacts and `make-plan-aron` plan indexes/tickets/HTML. Retired when a round ends; see Document rules.
 - `artifacts/manual_test_checklist.md` : Durable. The human test steps for every shipped slice, kept current, never retired with a plan.
+- `ai-artifact/manual_test_checklist.md` : Divergent sibling (221 lines vs 3887). Owner decides merge vs archive.
 
 Read and activate `/home/aron/.claude/skills/make-glossary-aron/SKILL.md` (also vendored at `.claude/skills/make-glossary-aron/SKILL.md`); keep [`docs/GLOSSARY.md`](docs/GLOSSARY.md) up to date.
 

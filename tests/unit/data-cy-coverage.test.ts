@@ -23,10 +23,20 @@ import type {
 } from "../../src/battle/duel/contracts/player-prompt.ts";
 import type { PlayerIndex } from "../../src/battle/duel/contracts/public-duel-state.ts";
 import { mapSnapshotToBoard } from "../../src/battle/field/board-view-model.ts";
+import type { PromptMessageSegment } from "../../src/battle/app/presentation/prompt-context-message.ts";
+import PromptControls from "../../src/battle/app/prompts/PromptControls.svelte";
 import {
   BOARD_CARD_TEXTS,
   BOARD_VIEW_MODEL_FIXTURES,
 } from "../fixtures/board-view-model.ts";
+import CardCatalog from "../../src/deck-editor/components/CardCatalog.svelte";
+import DeckZoneGrid from "../../src/deck-editor/components/DeckZoneGrid.svelte";
+import { PROTOTYPE_CATALOG } from "../../src/deck-editor/fixtures/catalog.ts";
+import {
+  catalogByCode,
+  PROTOTYPE_RULESET,
+} from "../../src/decks/catalog/pinned-ruleset.ts";
+import { mainDeckGridPlan } from "../../src/decks/deck-model.ts";
 import {
   PUBLIC_STATE_CARD_TEXTS,
   publicStateCard,
@@ -533,6 +543,100 @@ describe("data-cy uniqueness in a rendered document", () => {
     expect(
       document.querySelectorAll('[data-cy^="card-tray-pagination-"]'),
     ).toHaveLength(trays.length);
+    expect(duplicateRenderedValues()).toEqual([]);
+  });
+});
+
+describe("data-cy uniqueness in deck editor rendered document", () => {
+  const prototypeCatalogMap = catalogByCode(PROTOTYPE_CATALOG);
+
+  it("catalog and zone grid with overlapping codes render no duplicate data-cy", () => {
+    /* Pick two cards from the fixture catalog that exist. */
+    const code1 = PROTOTYPE_CATALOG[0]!.code;
+    const code2 = PROTOTYPE_CATALOG[1]!.code;
+    /* The zone grid contains the same card twice, which pre-fix would have
+       produced duplicate `deck-tile-{code}` values when both also appeared in
+       the catalog. Post-fix the catalog uses `catalog-tile-{code}` and the
+       zone uses `{zone}-tile-{index}`, so no collision. */
+    const zoneCodes = [code1, code2, code1];
+
+    render(CardCatalog, {
+      cards: PROTOTYPE_CATALOG,
+      ruleset: PROTOTYPE_RULESET,
+    });
+
+    render(DeckZoneGrid, {
+      zone: "main",
+      label: "Main Deck",
+      codes: zoneCodes,
+      plan: mainDeckGridPlan(zoneCodes.length),
+      catalog: prototypeCatalogMap,
+      ruleset: PROTOTYPE_RULESET,
+      totalCopies: new Map([
+        [code1, 2],
+        [code2, 1],
+      ]),
+    });
+
+    /* Verify both surfaces mounted: catalog and zone grid are present. */
+    expect(document.querySelector('[data-cy="deck-catalog"]')).not.toBeNull();
+    expect(document.querySelector('[data-cy="deck-zone-main"]')).not.toBeNull();
+
+    expect(duplicateRenderedValues()).toEqual([]);
+  });
+});
+
+describe("data-cy uniqueness across prompt surfaces", () => {
+  it("DuelField and PromptControls mounted together render no duplicate data-cy", () => {
+    /* A chain prompt triggers FieldActionBar with PromptContextMessage. */
+    const prompt = fieldPrompt("chain", [
+      mountedChoice("respond", "Activate in response"),
+      {
+        id: choiceId("pass"),
+        label: "Pass",
+        action: "pass",
+      } as PromptChoice,
+    ]);
+
+    /* Context message segments produce multiple data-cy elements inside
+       PromptContextMessage. Pre-fix both surfaces used the same values;
+       post-fix they differ by dataCyPrefix (field vs workspace). */
+    const contextMessage: readonly PromptMessageSegment[] = [
+      { kind: "actor", value: "Opponent" },
+      { kind: "text", value: " activated " },
+      { kind: "card", value: "Mirror Force" },
+      { kind: "text", value: " targeting your " },
+      { kind: "zone", value: "Monster Zone" },
+      { kind: "text", value: "." },
+    ];
+
+    const spec = specFor(prompt);
+
+    /* DuelField mounts FieldActionBar → PromptContextMessage with dataCyPrefix="field". */
+    render(DuelField, {
+      board: fixtureBoard("ST-05"),
+      prompt,
+      spec,
+      session: createInteractionSession(spec),
+      contextMessage,
+      oninteraction: vi.fn(),
+    });
+
+    /* PromptControls mounts PromptContextMessage with dataCyPrefix="workspace". */
+    render(PromptControls, {
+      prompt,
+      contextMessage,
+      onsubmit: vi.fn(),
+    });
+
+    /* Verify both surfaces mounted their PromptContextMessage. */
+    expect(
+      document.querySelector('[data-cy="field-prompt-context-message"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="workspace-prompt-context-message"]'),
+    ).not.toBeNull();
+
     expect(duplicateRenderedValues()).toEqual([]);
   });
 });

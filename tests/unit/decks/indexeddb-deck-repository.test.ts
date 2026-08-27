@@ -21,6 +21,8 @@ import {
 } from "../../../src/decks/deck-database.ts";
 import {
   deckDatabaseNames,
+  DECK_DATABASE_VERSION_1,
+  openDeckDatabase,
   seedDeckDatabase,
 } from "../../fixtures/deck-database.ts";
 import {
@@ -67,6 +69,28 @@ function autosave(id: string, createdAt: string): DeckAutosaveRecord {
 }
 
 describe("IndexedDbDeckRepository", () => {
+  it(
+    "rejects with DeckStorageError when another connection blocks the upgrade",
+    { timeout: 2000 },
+    async () => {
+      const name = "deck-repo-blocked";
+      names.push(name);
+      /* Hold a version-1 connection open — any open at version 2 will fire
+         `blocked` and must not hang forever. */
+      const held = await openDeckDatabase(name, DECK_DATABASE_VERSION_1);
+      try {
+        await expect(
+          IndexedDbDeckRepository.open(
+            name,
+            () => new Date("2026-01-01T00:00:00.000Z"),
+          ),
+        ).rejects.toBeInstanceOf(DeckStorageError);
+      } finally {
+        held.close();
+      }
+    },
+  );
+
   it("defaults to the production deck database", async () => {
     expect(DECK_DATABASE_NAME).toBe("ygo-story-decks");
     const repo = await IndexedDbDeckRepository.open();

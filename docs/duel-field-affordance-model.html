@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Duel Field Affordance Model</title>
+<style>
+:root{--bg:#0b121b;--surface:#111c28;--surface2:#172536;--ink:#edf5fa;--muted:#a9b8c5;--line:#2a3c4d;--teal:#65d4da;--green:#7ee2a8;--green2:#163528;--orange:#f1b65f;--orange2:#33270f;--red:#ff8c9b;--red2:#3b1d27;--shadow:0 16px 45px rgb(0 0 0/.25);--code:#07101a;--codeInk:#dceafa}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.62 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+a{color:var(--teal);text-underline-offset:.18em}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+code{padding:.1rem .32rem;border-radius:.28rem;background:var(--surface2);font-size:.88em}
+pre{overflow:auto;padding:1rem;border-radius:.65rem;background:var(--code);color:var(--codeInk);font-size:.82rem;line-height:1.55}
+pre code{padding:0;background:none;color:inherit}
+.hero{border-bottom:1px solid var(--line);background:radial-gradient(circle at 82% 15%,#173a3d,transparent 40%),var(--surface)}
+.hero>div{max-width:1380px;margin:auto;padding:2.7rem clamp(1.1rem,4vw,4rem) 2.2rem}
+.eyebrow{margin:0 0 .5rem;color:var(--teal);font-size:.75rem;font-weight:850;letter-spacing:.14em;text-transform:uppercase}
+.hero h1{max-width:26ch;margin:0;font-size:clamp(2rem,5vw,3.6rem);line-height:1.03;letter-spacing:-.045em}
+.hero p{max-width:83ch;margin:1rem 0 0;color:var(--muted)}
+.status{display:inline-flex;margin-top:14px;padding:6px 10px;border:1px solid var(--teal);border-radius:999px;color:var(--teal);font-weight:750;font-size:.85rem}
+.shell{display:grid;grid-template-columns:16rem minmax(0,1fr);gap:2rem;max-width:1380px;margin:auto;padding:2rem clamp(1.1rem,4vw,4rem) 4rem}
+.toc{position:sticky;top:1rem;align-self:start;max-height:calc(100vh - 2rem);overflow:auto;padding:1rem;border:1px solid var(--line);border-radius:.85rem;background:var(--surface);box-shadow:var(--shadow)}
+.toc h2{margin:0 0 .55rem;color:var(--muted);font-size:.73rem;letter-spacing:.12em;text-transform:uppercase}
+.toc ol{margin:0;padding-left:1.15rem;font-size:.86rem}
+.toc li{margin:.28rem 0}
+.card{margin-bottom:1.5rem;padding:1.35rem clamp(1rem,2.4vw,1.8rem);border:1px solid var(--line);border-radius:.9rem;background:var(--surface);box-shadow:var(--shadow)}
+.card>h2{margin-top:0;font-size:1.42rem;letter-spacing:-.02em}
+.grid2,.grid3,.grid4{display:grid;gap:1rem}
+.grid2{grid-template-columns:repeat(auto-fit,minmax(17rem,1fr))}
+.grid3{grid-template-columns:repeat(auto-fit,minmax(14rem,1fr))}
+.grid4{grid-template-columns:repeat(auto-fit,minmax(11rem,1fr))}
+.tile{padding:.9rem 1rem;border:1px solid var(--line);border-radius:.7rem;background:var(--surface2)}
+.tile h3,.tile h4{margin:0 0 .35rem;font-size:.95rem}
+.tile p{margin:0;color:var(--muted);font-size:.87rem}
+.tablewrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{padding:.55rem .65rem;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--muted);font-size:.72rem;letter-spacing:.09em;text-transform:uppercase}
+tbody tr:last-child td{border-bottom:0}
+.note{padding:.85rem 1rem;border-left:3px solid var(--orange);border-radius:.35rem;background:var(--orange2);font-size:.9rem}
+.note.good{border-color:var(--green);background:var(--green2)}
+.note.bad{border-color:var(--red);background:var(--red2)}
+.tag{display:inline-block;padding:.12rem .5rem;border-radius:999px;font-size:.72rem;font-weight:800;letter-spacing:.03em}
+.tag.today{background:var(--green2);color:var(--green);border:1px solid var(--green)}
+.tag.pending{background:var(--orange2);color:var(--orange);border:1px solid var(--orange)}
+.swatch{display:inline-block;width:.85rem;height:.85rem;margin-right:.35rem;border-radius:999px;vertical-align:-.08rem}
+.swatch.solid-green{background:var(--green)}
+.swatch.dash-green{background:transparent;border:2px dashed var(--green)}
+.swatch.dash-orange{background:transparent;border:2px dashed var(--orange)}
+.swatch.orange{background:var(--orange)}
+figure{margin:0}
+figure svg{width:100%;height:auto;display:block}
+.node{fill:var(--surface2);stroke:var(--line);stroke-width:2}
+.node.hot{stroke:var(--teal)}
+.label{fill:var(--ink);font-size:12px;font-weight:600}
+.note-svg{fill:var(--muted);font-size:10px}
+.linepath{fill:none;stroke:var(--line);stroke-width:2;marker-end:url(#arrow)}
+ul.tight{padding-left:1.1rem}
+ul.tight li{margin:.25rem 0}
+footer{max-width:1380px;margin:auto;padding:0 clamp(1.1rem,4vw,4rem) 3rem;color:var(--muted);font-size:.85rem}
+@media(max-width:64rem){.shell{grid-template-columns:1fr}.toc{position:static;max-height:none}}
+</style>
+</head>
+<body>
+<header class="hero"><div>
+<p class="eyebrow">Architecture · presentation · round 2026-08-27</p>
+<h1>Duel Field Affordance Model</h1>
+<p>How a player learns what they may do right now, and by which of four surfaces the field tells them: card-anchored chips, an invisible per-card target button, pointer drag, and floating list dialogs. Covers the state as landed in source today, and the parts the 2026-08-27 feedback round decided but has not yet shipped.</p>
+<span class="status">Sources verified by inspection · file:line cited throughout</span>
+</div></header>
+<div class="shell">
+<nav class="toc" aria-label="Contents"><h2>Contents</h2><ol>
+<li><a href="#surfaces">Four affordance surfaces</a></li>
+<li><a href="#families">Prompt families</a></li>
+<li><a href="#colour">Colour and shape semantics</a></li>
+<li><a href="#parity">Pointer/keyboard parity</a></li>
+<li><a href="#materials">Materials and local actions</a></li>
+<li><a href="#diagram">Prompt → surface → treatment</a></li>
+<li><a href="#status">Implemented vs decided-but-pending</a></li>
+<li><a href="#adrs">Related ADRs</a></li>
+</ol></nav>
+<main>
+
+<section class="card" id="surfaces"><h2>Four affordance surfaces</h2>
+<p>Every prompt the field can answer reaches the player through exactly one of these four. Each has one owner.</p>
+<div class="grid2">
+<div class="tile"><h3>Card-anchored prompt chips</h3><p><code>CardActionChips.svelte</code> (<code>src/battle/app/components/duel-field/CardActionChips.svelte</code>) renders one button per <code>InteractionChoice</code>, keyboard-navigable with arrow keys/Home/End (<code>CardActionChips.svelte:47-63</code>). It is one implementation reused by three mount points: <code>CardControl.svelte</code> (hover/pin on a field or hand card, <code>CardControl.svelte:290-298</code>), the hand zoom overlay, and the keyboard-pinned list-entry tile.</p></div>
+<div class="tile"><h3>Invisible full-cover toggle</h3><p><code>CardControl.svelte:266-282</code> renders <code>button.duel-field-card__target</code>, <code>data-cy="field-card-target-${card.id}"</code>. It is the sole click surface and sole keyboard-activation surface for an actionable card: pointer down/move/up/cancel handlers live on it (<code>pointerDown</code>/<code>pointerMove</code>/<code>pointerUp</code>, <code>CardControl.svelte:159-233</code>), and it carries <code>aria-pressed</code> for a <code>cardSelection</code> prompt only (<code>aria-pressed={interactionKind === "cardSelection" ? selected : undefined}</code>, <code>CardControl.svelte:271</code>).</p></div>
+<div class="tile"><h3>Drag-and-drop</h3><p>Pointer-only. <code>CardControl.svelte</code>'s pointer handlers on the same target button detect an 8px move threshold (<code>CardControl.svelte:186-192</code>) and call up through <code>ondragstart</code>/<code>ondragmove</code>/<code>ondragend</code> into <code>DuelField.startCardDrag</code> (<code>DuelField.svelte:573</code>) and <code>DuelField.endCardDrag</code> (<code>DuelField.svelte:825</code>). Candidate zones come from <code>placementZoneCandidates</code> (<code>src/battle/field/placement-candidates.ts:35</code>); the dropped zone resolves back to a choice via <code>dropChoicesForZone</code> (<code>src/battle/app/prompts/drop-target.ts:39</code>).</p></div>
+<div class="tile"><h3>List dialogs</h3><p><code>ZoneListDialog.svelte</code> runs in two modes: <code>browse</code> (one pile as-is) and <code>target</code> (only the legal off-field choices of the live prompt, <code>ZoneListDialog.svelte:26-27</code>). It is the sole surface for a choice addressed to hand, graveyard, deck, banished or extra deck — <code>OFF_FIELD_TARGET_LOCATIONS</code> (<code>interaction-spec.ts:180-183</code>).</p></div>
+</div>
+</section>
+
+<section class="card" id="families"><h2>Prompt families that drive the surfaces</h2>
+<p><code>ActiveInteractionSpec</code> (<code>src/battle/app/prompts/interaction-spec.ts:70-102</code>) has six kinds, mapped from raw engine <code>PromptKind</code> by <code>INTERACTION_SPEC_KINDS</code> (<code>interaction-spec.ts:138-160</code>). Every choice a spec keeps lands in <code>cardChoices</code>, <code>zoneChoices</code>, <code>stackChoices</code>, <code>globalChoices</code> or <code>offFieldChoices</code> — the last is a T16 addition collecting any <code>cardSelection</code> choice addressed to an off-field location, while it also stays in its launcher map so the owning card or pile can reopen the list (<code>interaction-spec.ts:236-243</code>).</p>
+<div class="tablewrap"><table><thead><tr><th>Kind</th><th>Feeds</th><th>Example engine prompts</th></tr></thead><tbody>
+<tr><td><code>cardAction</code></td><td><code>cardChoices</code> / <code>zoneChoices</code> / <code>stackChoices</code></td><td><code>idleCommand</code>, <code>battleCommand</code>, <code>chain</code></td></tr>
+<tr><td><code>cardSelection</code></td><td><code>cardChoices</code> and, when off-field, <code>offFieldChoices</code></td><td><code>selectCard</code>, <code>selectTribute</code>, <code>selectSum</code>, <code>selectUnselectCard</code></td></tr>
+<tr><td><code>placeSelection</code></td><td><code>zoneChoices</code></td><td><code>selectPlace</code>, <code>selectDisabledField</code></td></tr>
+<tr><td><code>counterAllocation</code></td><td><code>cardChoices</code></td><td><code>selectCounter</code></td></tr>
+<tr><td><code>order</code></td><td><code>cardChoices</code> / <code>stackChoices</code></td><td><code>sortCard</code>, <code>sortChain</code></td></tr>
+<tr><td><code>nonField</code></td><td><code>globalChoices</code> only, <code>fieldCapable: false</code></td><td><code>yesNo</code>, <code>option</code>, <code>announceNumber</code></td></tr>
+</tbody></table></div>
+<p class="note">Both <code>cardAction</code> and <code>cardSelection</code> mark a card <code>actionable</code> in <code>CardControl</code>, but they must not render the same way. A <code>cardAction</code> card is being offered something to <em>do</em> — summon, activate, attack — resolved by one commit. A <code>cardSelection</code> card is being asked whether it should join a <em>set</em> the engine is building — a tribute, a target list — where the answer is a toggle, not a commit, and only submits once the set is complete. <code>CardControl</code> encodes this split today only in the accessible label (<code>activationLabel</code>, <code>CardControl.svelte:65-71</code>: <code>"Legal action, Open actions for…"</code> vs <code>"Legal action, Select…"</code>) and in <code>aria-pressed</code> being present only for <code>cardSelection</code> (<code>CardControl.svelte:271</code>). The visual ring itself does not yet distinguish them — see <a href="#colour">§ Colour and shape semantics</a>.</p>
+</section>
+
+<section class="card" id="colour"><h2>Colour and shape semantics after the round</h2>
+<p>ADR-058 amends ADR-015's green/orange split. The intended end state:</p>
+<div class="grid4">
+<div class="tile"><h4><span class="swatch solid-green"></span>Solid green ring</h4><p>Legal <code>cardAction</code> — you may act on this now.</p></div>
+<div class="tile"><h4><span class="swatch dash-green"></span>Dashed green</h4><p>Selection candidate — you may pick this for a <code>cardSelection</code> set.</p></div>
+<div class="tile"><h4><span class="swatch dash-orange"></span>Dashed orange</h4><p>Selected — same dashed shape, colour changed only.</p></div>
+<div class="tile"><h4><span class="swatch orange"></span>Orange halo</h4><p>Actionable pile — a stack offered as a legal choice.</p></div>
+</div>
+<p>Orange also marks the active player's rail borders under the same "current locus" reading ADR-058 gives it.</p>
+<p class="note">The invariant lives as a comment above the rule it governs, not in prose elsewhere: <code>src/styles/app.css:1386-1393</code> currently reads <em>"Green is the 'you may act here' colour across the field. Orange is reserved for selection below…"</em> — the pre-round wording. ADR-058 §Decision clause 5 requires this comment be rewritten in the same commit that changes the CSS rules below it, so the comment and the rule it sits above never diverge. Full reasoning: <a href="ADR/058_ADR_duel_field_colour_semantics.md">ADR-058</a>.</p>
+<p><b>Today, verified in <code>app.css:1395-1408</code>:</b> <code>.duel-field-zone.is-actionable</code>, <code>.duel-field-card.is-actionable .duel-field-card__art</code> and <code>.duel-field-stack.is-actionable</code> all share one solid-ring-plus-glow treatment keyed to <code>var(--success)</code> (= <code>var(--legal)</code>, <code>#7ee2a8</code>, <code>tokens.css:40-41</code>). There is no dashed variant and no <code>cardAction</code>/<code>cardSelection</code> split in the CSS yet, and the active-player rail border is still teal <code>var(--accent)</code>, not orange.</p>
+</section>
+
+<section class="card" id="parity"><h2>Pointer/keyboard parity</h2>
+<div class="grid2">
+<div class="tile"><h3>Both paths</h3><p>The invisible target button is click (pointer) and native button activation (Enter/Space, keyboard) at once — <code>CardControl.svelte:280</code>, <code>activate()</code> at <code>CardControl.svelte:224-233</code> tells the two apart only to decide the hand-zoom side effect, not to gate the command. Chips render for both surfaces; the list dialog's entries are buttons, reachable by keyboard.</p></div>
+<div class="tile"><h3>Pointer-only</h3><p>Drag has no keyboard equivalent — there is no keyboard gesture that produces a drop coordinate for <code>zoneIdAtPoint</code> (<code>DuelField.svelte:839</code>) to resolve.</p></div>
+</div>
+<p class="note good"><b>The resulting rule (ADR-057 §Decision clause 4).</b> A chip may never be deleted from the keyboard-pinned menu just because a pointer gesture now covers the same action. <code>CardActionChips</code> stays one implementation; only the <code>choices</code> array passed in from a pointer-hover call site narrows. Deleting the chip everywhere to "clean up" the duplication described below would strand keyboard-only activation on any card whose only other route is a drag. See <a href="ADR/057_ADR_hand_activation_drop_zone.md">ADR-057</a>.</p>
+<p><b>Status today:</b> the asymmetry ADR-057 addresses — an <code>activate</code> choice filtered from the pointer-hover chip set (<code>CardControl.svelte</code>, <code>HandZoomOverlay.svelte</code>) but kept in the pinned menu (<code>ZoneListEntryTile.svelte</code>) — is decided, not yet built: no code in this repo filters <code>activate</code> out of any chip set today, and no <code>hand-activation-drop-zone</code> exists (verified: zero matches for that string under <code>src/</code>). <code>endCardDrag</code> still dispatches a lone single choice immediately regardless of action (<code>DuelField.svelte:850-863</code>), with no confirm step for a single-choice <code>activate</code> drop yet.</p>
+</section>
+
+<section class="card" id="materials"><h2>Materials as a card-anchored zone; local actions</h2>
+<p>Owner feedback from the 2026-08-27 round asked that Xyz materials render behind the monster like Duel Links — stacked, offset — and act as a zone in their own right: an action button opens the same list dialog any other zone uses, and an effect that detaches a material addresses it exactly like a graveyard or banished-pile target. This treats "materials attached to card X" as a fifth address space alongside the field's existing zones, not a property rendered inline on the card.</p>
+<p class="note"><b>Local action</b> is the concept this introduces and keeps distinct from a prompt choice: an affordance the field itself offers with no live engine prompt behind it — "open the materials list to look," independent of whether the engine is currently asking anything. Every surface in <a href="#surfaces">§1</a> today answers a live <code>ActiveInteractionSpec</code>; a look-only materials button would not, since browsing is not a choice the engine tracks in <code>choiceOrder</code>.</p>
+<p><b>Status:</b> decided direction, not yet a numbered ADR in this repository at the time of writing — <code>docs/ADR/</code> holds no materials/local-action decision record, and no material-stacking, material-zone-list, or local-action code exists under <code>src/battle/</code>. Treat this section as scope description of an accepted-but-undocumented decision, not as a description of shipped behaviour.</p>
+</section>
+
+<section class="card" id="diagram"><h2>Prompt family → affordance surface → visual treatment</h2>
+<figure>
+<svg viewBox="0 0 900 300" role="img" aria-labelledby="diag-title diag-desc">
+<title id="diag-title">Prompt family to affordance surface to visual treatment</title>
+<desc id="diag-desc">cardAction routes to the target button, chips and drag with a solid green ring. cardSelection routes to the target button and chips with a dashed green to dashed orange transition. placeSelection and counterAllocation route to zone controls. Off-field cardSelection routes to the list dialog with an orange pile halo.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--line)"/></marker></defs>
+<rect class="node hot" x="15" y="20" width="150" height="46" rx="8"/><text class="label" x="90" y="48" text-anchor="middle">cardAction</text>
+<rect class="node hot" x="15" y="90" width="150" height="46" rx="8"/><text class="label" x="90" y="118" text-anchor="middle">cardSelection</text>
+<rect class="node hot" x="15" y="160" width="150" height="46" rx="8"/><text class="label" x="90" y="188" text-anchor="middle">off-field cardSelection</text>
+<rect class="node hot" x="15" y="230" width="150" height="46" rx="8"/><text class="label" x="90" y="258" text-anchor="middle">placeSelection</text>
+
+<rect class="node" x="290" y="10" width="180" height="46" rx="8"/><text class="label" x="380" y="38" text-anchor="middle">target button + chips</text>
+<rect class="node" x="290" y="80" width="180" height="46" rx="8"/><text class="label" x="380" y="108" text-anchor="middle">target button + chips</text>
+<rect class="node" x="290" y="150" width="180" height="46" rx="8"/><text class="label" x="380" y="178" text-anchor="middle">drag-and-drop</text>
+<rect class="node" x="290" y="220" width="180" height="46" rx="8"/><text class="label" x="380" y="248" text-anchor="middle">ZoneListDialog (target mode)</text>
+
+<rect class="node" x="620" y="10" width="260" height="46" rx="8"/><text class="label" x="750" y="38" text-anchor="middle">solid green ring</text>
+<rect class="node" x="620" y="80" width="260" height="46" rx="8"/><text class="label" x="750" y="102" text-anchor="middle">dashed green → dashed orange</text><text class="note-svg" x="750" y="118" text-anchor="middle">(ADR-058, planned)</text>
+<rect class="node" x="620" y="150" width="260" height="46" rx="8"/><text class="label" x="750" y="172" text-anchor="middle">green fill = drop candidate</text><text class="note-svg" x="750" y="188" text-anchor="middle">pointer-only</text>
+<rect class="node" x="620" y="220" width="260" height="46" rx="8"/><text class="label" x="750" y="242" text-anchor="middle">orange pile halo, list entries</text><text class="note-svg" x="750" y="258" text-anchor="middle">(orange halo per ADR-058, planned)</text>
+
+<path class="linepath" d="M165 43H285"/>
+<path class="linepath" d="M165 113H285"/>
+<path class="linepath" d="M165 113C230 113 230 173 285 173"/>
+<path class="linepath" d="M165 183H285"/>
+<path class="linepath" d="M165 253H285"/>
+<path class="linepath" d="M470 33H615"/>
+<path class="linepath" d="M470 103H615"/>
+<path class="linepath" d="M470 173H615"/>
+<path class="linepath" d="M470 243H615"/>
+</svg>
+</figure>
+<p class="small" style="color:var(--muted);font-size:.85rem">Off-field <code>cardSelection</code> keeps its card-anchored halo as a launcher (the hand card or pile it lives on stays highlighted) while the list dialog carries the actual toggle/confirm UI — both surfaces stay live at once, per the interaction-spec's <code>offFieldChoices</code> dual-bookkeeping (<code>interaction-spec.ts:236-243</code>).</p>
+</section>
+
+<section class="card" id="status"><h2>Implemented vs decided-but-pending</h2>
+<div class="tablewrap"><table><thead><tr><th>Item</th><th>Status</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Four affordance surfaces and their component ownership</td><td><span class="tag today">today</span></td><td><code>CardActionChips.svelte</code>, <code>CardControl.svelte</code>, <code>DuelField.svelte:573,825</code>, <code>ZoneListDialog.svelte</code></td></tr>
+<tr><td><code>ActiveInteractionSpec</code> kinds and choice routing</td><td><span class="tag today">today</span></td><td><code>interaction-spec.ts:70-160</code></td></tr>
+<tr><td>Solid green legal ring on <code>cardAction</code> and <code>cardSelection</code> alike (no visual split)</td><td><span class="tag today">today</span></td><td><code>app.css:1395-1408</code></td></tr>
+<tr><td>Dashed green/orange selection styling, orange pile halo, orange active-player rail</td><td><span class="tag pending">pending</span></td><td>ADR-058, decided 2026-08-27, status "accepted; planned"; no dashed rule or orange stack halo in <code>app.css</code></td></tr>
+<tr><td>Hand activation drop zone; confirm step on single-choice activate drag</td><td><span class="tag pending">pending</span></td><td>ADR-057, decided 2026-08-27, status "accepted; planned"; <code>hand-activation-drop-zone</code> absent from <code>src/</code>; <code>DuelField.svelte:850-863</code> still dispatches immediately</td></tr>
+<tr><td>Chip filtering asymmetry (pointer hides <code>activate</code>, keyboard keeps it)</td><td><span class="tag pending">pending</span></td><td>ADR-057 §Decision clause 4; no filtering code found in <code>CardControl.svelte</code> or <code>HandZoomOverlay.svelte</code></td></tr>
+<tr><td>Materials as a card-anchored zone; local-action concept</td><td><span class="tag pending">pending</span></td><td>owner-requested direction; no ADR file present, no source under <code>src/battle/</code></td></tr>
+</tbody></table></div>
+</section>
+
+<section class="card" id="adrs"><h2>Related ADRs</h2>
+<div class="grid2">
+<div class="tile"><h3>Baseline</h3><p><a href="ADR/015_ADR_halo_semantics_legal_versus_selected.md">ADR-015 halo semantics</a> · <a href="ADR/032_ADR_hand_zoom_overlay_layer.md">ADR-032 hand zoom overlay</a></p></div>
+<div class="tile"><h3>Round 2026-08-27</h3><p><a href="ADR/057_ADR_hand_activation_drop_zone.md">ADR-057 hand activation drop zone</a> · <a href="ADR/058_ADR_duel_field_colour_semantics.md">ADR-058 colour semantics</a></p></div>
+</div>
+</section>
+
+</main></div>
+<footer>Interaction pipeline detail: <a href="duel-field-interaction-model-v3.html"><code>duel-field-interaction-model-v3.html</code></a> · Shell/geometry: <a href="duel-field-architecture.html"><code>duel-field-architecture.html</code></a> · Canonical map: <a href="architecture/architecture.md"><code>architecture/architecture.md</code></a></footer>
+</body></html>

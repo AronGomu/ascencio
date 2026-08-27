@@ -4,6 +4,7 @@
 > Decided: 2026-08-10
 > Owners: field presentation architecture
 > Commit: `5eac0b5` — T12
+> Amended by [ADR-058](058_ADR_duel_field_colour_semantics.md): `cardSelection` prompts now render candidates dashed green with no fill, dashed orange when selected, replacing the solid-fill selected/drop-candidate treatment for that prompt family; `cardAction` legality is unchanged.
 
 ## Context
 

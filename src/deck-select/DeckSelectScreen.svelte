@@ -574,8 +574,8 @@
         yours={seat === "opponent" && candidate.key === playerDeck?.key}
         onpress={() => onselect(candidate.key)}
         ondblpress={() => onopen(candidate.key)}
-        onfavourite={(favourite) => onfavourite(candidate.key, favourite)}
         showMenu={manageable}
+        onfavourite={(favourite) => onfavourite(candidate.key, favourite)}
         onmenu={(anchor) => (menu = { key: candidate.key, anchor })}
       />
     {/each}
@@ -1053,6 +1053,15 @@
     background: none;
     font: inherit;
     text-align: left;
+  }
+
+  /* The tile fills the card, and its own press button covers all of it. That
+     button is disabled here, and a disabled control does not fire a click or
+     let one through — so without this the wrapper never hears the press and
+     the seat card is dead in a browser however it looks. Global because the
+     tile's markup belongs to `DeckTile`. */
+  .seat-card :global(.deck-tile) {
+    pointer-events: none;
   }
 
   .pressable {

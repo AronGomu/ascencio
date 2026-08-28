@@ -87,16 +87,31 @@ Run: `npx vitest run tests/unit/shell tests/component/FreePlayMatchSetup.test.ts
 
 ## Impl steps
 
-- [ ] 1. Add `manageable` prop + test to `DeckSelectScreen` (component test file from T14).
-- [ ] 2. Write failing `tests/unit/shell/free-play-deck-tiles.test.ts`.
-- [ ] 3. Create `src/shell/screens/free-play-deck-tiles.ts` (check local key deckId extraction against a real `deckId` creation site first).
-- [ ] 4. Rewrite `tests/component/FreePlayMatchSetup.test.ts` (red).
-- [ ] 5. Rewrite `src/shell/screens/FreePlayMatchSetup.svelte` per Requirements; delete `src/shell/screens/FreePlayDeckSeat.svelte`.
-- [ ] 6. `git grep -ln "free-play-match" e2e/ tests/` → update every selector (`duel-smoke`, others found).
-- [ ] 7. `npx vitest run tests/unit tests/component` → green.
-- [ ] 8. `npm run dev` + manual: pick decks, change opponent, start duel.
-- [ ] 9. `npx playwright test e2e/duel-smoke.spec.ts` → green.
-- [ ] 10. `npm run lint && npm run typecheck && npm run build` → green.
+- [x] 1. Add `manageable` prop + test to `DeckSelectScreen` (component test file from T14). — red first (`deck-tile-menu-k1` still rendered), then green; `tests/component/deck-select` 63 passed.
+- [x] 2. Write failing `tests/unit/shell/free-play-deck-tiles.test.ts`. — red: `Cannot find module '../../../src/shell/screens/free-play-deck-tiles.ts'`.
+- [x] 3. Create `src/shell/screens/free-play-deck-tiles.ts` (check local key deckId extraction against a real `deckId` creation site first). — checked `src/decks/deck-contracts.ts:3`: `deckId` forbids only `\0`, so a key cannot be parsed back apart; the id is read from `selection.deck.ref.deckId` instead. 5 passed.
+- [x] 4. Rewrite `tests/component/FreePlayMatchSetup.test.ts` (red). — 11 failed against the old `<select>` surface before the screen was rewritten.
+- [x] 5. Rewrite `src/shell/screens/FreePlayMatchSetup.svelte` per Requirements; delete `src/shell/screens/FreePlayDeckSeat.svelte`. — `git rm`'d; 17 passed.
+- [x] 6. `git grep -ln "free-play-match" e2e/ tests/` → update every selector (`duel-smoke`, others found). — `duel-smoke`, `duel-portrait`, `AppShell.test.ts`; the grep now returns only `AppShell.svelte:570`, which is the chunk-load error label rather than a seat.
+- [x] 7. `npx vitest run tests/unit tests/component` → green. — unit 1754 passed, component 1024 passed.
+- [ ] 8. `npm run dev` + manual: pick decks, change opponent, start duel. — NOT RUN: needs a human at a browser. The same path is covered automatically by `duel-smoke` "the match setup persists a chosen pair" (pick both seats, start, reload, still seated) plus the persona-pick and one-duel-override component tests.
+- [x] 9. `npx playwright test e2e/duel-smoke.spec.ts` → green. — 36 passed. 3 failures remain and are pre-existing: they reproduce identically on the clean baseline with these changes stashed, and all three are duel-field drag/hand-band tests unrelated to deck selection.
+- [x] 10. `npm run lint && npm run typecheck && npm run build` → green. — lint clean, svelte-check 0 errors, `build:verify` status ok (shell chunk 93,007 B).
+
+## Defect found and fixed during this slice
+
+The seat cards were dead to a pointer in Chromium. `DeckSelectScreen` renders each
+seat card as a wrapper `<button>` around a `DeckTile` marked `disabled`, and that
+tile's own full-bleed press `<button>` is what the pointer actually lands on — a
+disabled control neither fires a click nor lets one through, so the wrapper never
+heard the press and the opponent seat could not be filled at all. jsdom does not
+model this, so every component test passed while the real browser could not switch
+seats. Fixed at the source with `.seat-card :global(.deck-tile) { pointer-events: none; }`;
+the wrapper keeps both the click and the keyboard, and the tile inside has no
+focusable children (`showFavourite={false}`, `showMenu={false}`). Pinned by
+`duel-smoke` "the match setup persists a chosen pair", which dispatched
+`bundled-v1:nekroz:vs:shaddoll` before the fix and the expected
+`bundled-v1:burning-abyss:vs:nekroz` after.
 
 ## Outputs
 
@@ -107,8 +122,8 @@ Run: `npx vitest run tests/unit/shell tests/component/FreePlayMatchSetup.test.ts
 
 ## Validation
 
-- [ ] `npx vitest run tests/unit tests/component` green
-- [ ] `npx playwright test e2e/duel-smoke.spec.ts` green
-- [ ] `npm run lint && npm run typecheck && npm run build` green
-- [ ] manual: `#/free-play` → new screen, start works, opponent persona persists across reload
-- [ ] commit msg draft: `feat(shell): run free-play duel start on the shared deck-selection screen`
+- [x] `npx vitest run tests/unit tests/component` green — unit 1754 passed, component 1024 passed
+- [x] `npx playwright test e2e/duel-smoke.spec.ts` green — 36 passed; 3 pre-existing failures reproduced on the clean baseline
+- [x] `npm run lint && npm run typecheck && npm run build` green
+- [ ] manual: `#/free-play` → new screen, start works, opponent persona persists across reload — NOT RUN (needs a human at a browser); `duel-smoke` covers the equivalent path automatically
+- [x] commit msg draft: `feat(shell): run free-play duel start on the shared deck-selection screen`

@@ -1,6 +1,17 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import type { BattleRequest, SelectableDeck } from "../../battle/index.ts";
+  import {
+    DeckSelectScreen,
+    type DecklistRow,
+    type DecklistView,
+    type OpponentView,
+  } from "../../deck-select/index.ts";
+  import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
+  import { catalogByCode } from "../../decks/catalog/pinned-ruleset.ts";
+  import { runtimeCatalog } from "../../decks/catalog/runtime-catalog.ts";
+  import type { DeckId } from "../../decks/deck-contracts.ts";
+  import { IndexedDbDeckRepository } from "../../decks/indexeddb-deck-repository.ts";
   import type {
     BattleDeckModule,
     BattleDomainLoader,
@@ -10,9 +21,15 @@
     listedFreePlayDecks,
     refreshFreePlayDecks,
   } from "./free-play-deck-listing.ts";
+  import { freePlayDeckTile } from "./free-play-deck-tiles.ts";
+  import {
+    DEFAULT_FREE_PLAY_OPPONENT_ID,
+    FREE_PLAY_OPPONENTS,
+    freePlayOpponent,
+    type FreePlayOpponent,
+  } from "./free-play-opponents.ts";
   import type { ShellSettingsStore } from "../settings/shell-settings-store.ts";
   import DomainLoadError from "./DomainLoadError.svelte";
-  import FreePlayDeckSeat from "./FreePlayDeckSeat.svelte";
 
   export let settings: ShellSettingsStore;
   /* The battle entry, loaded rather than imported: it also exports the duel,
@@ -29,52 +46,125 @@
 
   let battle: BattleDeckModule | null = null;
   let decks: readonly SelectableDeck[] = [];
+  /* Card art and card names, for the covers and the hover decklists. Empty
+     until the packaged database answers, which is a fetch the seats never wait
+     on: a tile with no cover draws its own placeholder. */
+  let catalog: ReadonlyMap<number, DeckBuilderCardView> = new Map();
+  let favouriteDeckIds: readonly string[] = [];
+  let defaultDeckId: string | null = null;
   let playerKey = "";
   let opponentKey = "";
+  /* Which seat the grid is filling. The player's own, until they press the
+     opponent's card to browse for the deck they want to face. */
+  let seat: "player" | "opponent" = "player";
   let startError: string | null = null;
   /* The battle chunk itself never arrived. It is the duel domain failing one
      screen earlier than it used to, so it is reported as the duel failing:
      a stale dev server or a half-cached build looks the same from here. */
   let loadError: unknown = null;
 
+  /* Which AI owns which bundled deck, so a tile can say so. The roster is the
+     pairing rule — picking a persona brings its deck along — and this is the
+     same fact read from the deck's side. */
+  const aiOwnerByDeckKey = new Map(
+    FREE_PLAY_OPPONENTS.map(({ deckKey, name }) => [deckKey, name]),
+  );
+
   $: ready = battle !== null;
+  $: persona = freePlayOpponent(
+    $settings.freePlayOpponentId ?? DEFAULT_FREE_PLAY_OPPONENT_ID,
+  );
+  $: tiles = decks.map((deck) =>
+    freePlayDeckTile(deck, {
+      catalog,
+      favouriteDeckIds,
+      presetFavouriteIds: $settings.freePlayPresetFavouriteIds,
+      defaultDeckId,
+      aiOwnerByDeckKey,
+    }),
+  );
+  $: playerDeck = tiles.find((tile) => tile.key === playerKey) ?? null;
+  $: opponentDeck = tiles.find((tile) => tile.key === opponentKey) ?? null;
   /* Both seats, or no match: a request is two decks, and a seat that resolves
      to nothing is a duel the Worker would refuse after the click. */
   $: canStart = ready && playerKey !== "" && opponentKey !== "";
+  /* One notice slot, and the refusal outranks the wait: a player who pressed
+     Start is owed the reason it did not run. */
+  $: blockNotice = startError ?? (ready ? null : "Reading your deck library…");
 
   onMount(() => {
     let cancelled = false;
-    void (async () => {
-      try {
-        const loaded = await freePlayBattleModule(loadBattle);
-        if (cancelled) return;
-        battle = loaded;
-        /* Whatever is already known, so the seats fill on the first paint: the
-           listing this page last read, or the bundled decks alone, which are
-           compiled into this build and need no read at all. */
-        adoptDecks(
-          loaded,
-          listedFreePlayDecks() ??
-            loaded.presetSelectableDecks(loaded.DECK_CATALOG),
-        );
-        const listed = await refreshFreePlayDecks(loadBattle);
-        if (cancelled) return;
-        adoptDecks(loaded, listed);
-      } catch (error) {
-        if (!cancelled) loadError = error;
-      }
-    })();
+    const alive = () => !cancelled;
+    void loadListing(alive);
+    /* Neither of these fills a seat, so neither is awaited before the decks
+       are on screen: the art decorates the tiles, and the stars and the
+       default deck are marks on decks the player can already pick. */
+    void loadCatalog(alive);
+    void loadLibraryFlags(alive);
     return () => {
       cancelled = true;
     };
   });
+
+  async function loadListing(alive: () => boolean): Promise<void> {
+    try {
+      const loaded = await freePlayBattleModule(loadBattle);
+      if (!alive()) return;
+      battle = loaded;
+      /* Whatever is already known, so the seats fill on the first paint: the
+         listing this page last read, or the bundled decks alone, which are
+         compiled into this build and need no read at all. */
+      adoptDecks(
+        loaded,
+        listedFreePlayDecks() ??
+          loaded.presetSelectableDecks(loaded.DECK_CATALOG),
+      );
+      const listed = await refreshFreePlayDecks(loadBattle);
+      if (!alive()) return;
+      adoptDecks(loaded, listed);
+    } catch (error) {
+      if (alive()) loadError = error;
+    }
+  }
+
+  async function loadCatalog(alive: () => boolean): Promise<void> {
+    try {
+      const cards = await runtimeCatalog();
+      if (alive()) catalog = catalogByCode(cards);
+    } catch {
+      /* No art and no card names. Every tile draws its own placeholder and a
+         decklist row falls back to the code, which is still a deck the player
+         can pick and play. */
+    }
+  }
+
+  /* The stars and the default deck, read straight from the library the local
+     decks come from. A library that will not open costs a star, not a match:
+     the bundled decks are compiled into this build either way. */
+  async function loadLibraryFlags(alive: () => boolean): Promise<void> {
+    let repository: IndexedDbDeckRepository | null = null;
+    try {
+      repository = await IndexedDbDeckRepository.open();
+      const [favourites, preferred] = await Promise.all([
+        repository.listFavourites(),
+        repository.getDefaultDeck(),
+      ]);
+      if (!alive()) return;
+      favouriteDeckIds = favourites;
+      defaultDeckId = preferred;
+    } catch {
+      // No stars and no default; the decks themselves are listed regardless.
+    } finally {
+      repository?.close();
+    }
+  }
 
   /* A listing, and the seats that survive it. Each seat keeps what it already
      shows — the bundled list is replaced by the full one a moment later, and a
      choice made in between is the player's — then falls back to the pairing
      they last played, then to the bundled default. A deck deleted, or edited
      since — the key carries the revision — simply does not resolve, so no seat
-     ever names a deck the picker does not show. */
+     ever names a deck the grid does not show. */
   function adoptDecks(
     loaded: BattleDeckModule,
     listed: readonly SelectableDeck[],
@@ -87,11 +177,13 @@
       [playerKey, remembered?.player],
       `preset:${loaded.DEFAULT_PLAYER_DECK_ID}`,
     );
+    /* The opponent's own deck is the persona's, so the seat falls back to
+       whichever AI the player last faced rather than to a fixed preset. */
     opponentKey = seatKey(
       loaded,
       listed,
       [opponentKey, remembered?.opponent],
-      `preset:${loaded.DEFAULT_OPPONENT_DECK_ID}`,
+      persona.deckKey,
     );
   }
 
@@ -110,14 +202,92 @@
         return candidate;
     /* The bundled default is normally there — it is compiled into this build —
        but a listing that answered with nothing at all must not preselect a row
-       the picker does not show, or Start would run a deck nobody can see. */
+       the grid does not show, or Start would run a deck nobody can see. */
     return loaded.findSelectableDeck(listed, fallback) === null ? "" : fallback;
   }
 
-  function select(seat: "player" | "opponent", key: string): void {
+  function opponentView(option: FreePlayOpponent): OpponentView {
+    /* Never locked: the story fixes who you face, free play is where the
+       choice lives. */
+    return {
+      id: option.id,
+      name: option.name,
+      line: option.line,
+      locked: false,
+    };
+  }
+
+  /* The grid fills whichever seat is active, so one press means two things and
+     the seat card is what says which. */
+  function select(key: string): void {
     startError = null;
     if (seat === "player") playerKey = key;
     else opponentKey = key;
+  }
+
+  function pickOpponent(id: string): void {
+    startError = null;
+    settings.rememberFreePlayOpponent(id);
+    /* Picking an AI brings its deck along, and hands the grid back to the
+       player: their own deck is the question this screen was opened to ask.
+       Pressing the opponent's card is how that deck is then overridden for one
+       duel, which is a choice about this match rather than about the roster. */
+    opponentKey = freePlayOpponent(id).deckKey;
+    seat = "player";
+  }
+
+  function toggleFavourite(key: string, favourite: boolean): void {
+    const deck = battle?.findSelectableDeck(decks, key) ?? null;
+    if (deck === null) return;
+    /* Two stores for one star: `DeckRepository.setFavourite` only covers decks
+       the player built, so a bundled deck is starred in the shell's settings
+       beside the rest of its free-play preferences. */
+    if (deck.selection.kind === "preset") {
+      settings.setPresetDeckFavourite(key, favourite);
+      return;
+    }
+    void writeLocalFavourite(deck.selection.deck.ref.deckId, favourite);
+  }
+
+  /* Written, then read back rather than assumed: a library that refused the
+     write leaves the tile showing the star it actually has. */
+  async function writeLocalFavourite(
+    id: DeckId,
+    favourite: boolean,
+  ): Promise<void> {
+    let repository: IndexedDbDeckRepository | null = null;
+    try {
+      repository = await IndexedDbDeckRepository.open();
+      await repository.setFavourite(id, favourite);
+      favouriteDeckIds = await repository.listFavourites();
+    } catch {
+      // The star stays as stored; the library is repaired in the deck editor.
+    } finally {
+      repository?.close();
+    }
+  }
+
+  async function decklistFor(key: string): Promise<DecklistView | null> {
+    const deck = battle?.findSelectableDeck(decks, key) ?? null;
+    if (deck === null) return null;
+    return {
+      main: decklistRows(deck.lists.main),
+      extra: decklistRows(deck.lists.extra),
+      side: decklistRows(deck.lists.side),
+    };
+  }
+
+  /* The code is the fallback name rather than an empty row: a card the packaged
+     database has not answered for yet is still one of the forty. */
+  function decklistRows(codes: readonly number[]): readonly DecklistRow[] {
+    return codes.map((code) => ({
+      code,
+      name: catalog.get(code)?.name ?? String(code),
+    }));
+  }
+
+  function cardImageFor(code: number): string | null {
+    return catalog.get(code)?.imageUrl ?? null;
   }
 
   function start(): void {
@@ -157,113 +327,28 @@
 {#if loadError !== null}
   <DomainLoadError label="Duel Simulator" cy="duel" error={loadError} />
 {:else}
-  <main class="match-setup" data-cy="free-play-match-setup">
-    <h1 class="match-setup__title" data-cy="free-play-match-title">
-      Choose the decks
-    </h1>
-
-    {#if !ready}
-      <p class="notice" role="status" data-cy="free-play-match-status">
-        Reading your deck library…
-      </p>
-    {/if}
-
-    {#if startError !== null}
-      <p class="notice error" role="alert" data-cy="free-play-match-error">
-        {startError}
-      </p>
-    {/if}
-
-    <div class="match-setup__seats" data-cy="free-play-match-seats">
-      <!-- The way to the library this seat is filled from sits under the seat
-           itself: a deck the player wants is either in this list or one click
-           from being built, and that click belongs beside the list rather than
-           on a menu one screen back. -->
-      <FreePlayDeckSeat
-        seat="player"
-        label="Your deck"
-        {decks}
-        value={playerKey}
-        disabled={!ready}
-        onselect={(key) => select("player", key)}
-        onmanage={ondecks}
-      />
-      <FreePlayDeckSeat
-        seat="opponent"
-        label="Opponent deck"
-        {decks}
-        value={opponentKey}
-        disabled={!ready}
-        onselect={(key) => select("opponent", key)}
-      />
-    </div>
-
-    <div class="match-setup__actions" data-cy="free-play-match-actions">
-      <button
-        type="button"
-        disabled={!canStart}
-        data-cy="free-play-match-start"
-        onclick={start}>Start the duel</button
-      >
-      <button
-        type="button"
-        class="secondary"
-        data-cy="free-play-match-back"
-        onclick={onback}>Main menu</button
-      >
-    </div>
-  </main>
+  <DeckSelectScreen
+    mode="duel-start"
+    eyebrow="Free play"
+    title="Choose your deck"
+    {tiles}
+    selectedKey={playerKey === "" ? null : playerKey}
+    {canStart}
+    {blockNotice}
+    opponent={opponentView(persona)}
+    opponents={FREE_PLAY_OPPONENTS.map(opponentView)}
+    {opponentDeck}
+    {playerDeck}
+    {seat}
+    {decklistFor}
+    {cardImageFor}
+    onseat={(next) => (seat = next)}
+    onpickopponent={pickOpponent}
+    onselect={select}
+    onstart={start}
+    onfavourite={toggleFavourite}
+    onback={() => onback()}
+    onopen={() => ondecks()}
+    manageable={false}
+  />
 {/if}
-
-<style>
-  .match-setup {
-    display: grid;
-    align-content: start;
-    gap: var(--space-3);
-    width: 100%;
-    height: 100%;
-    padding: clamp(var(--space-3), 5vw, var(--space-6));
-    overflow: auto;
-  }
-
-  .match-setup__title {
-    margin: 0;
-  }
-
-  /* Two seats side by side where the stage is wide enough for both to stay
-     readable, stacked below that; the region itself is what scrolls. */
-  .match-setup__seats {
-    display: grid;
-    gap: var(--space-3);
-    width: min(48rem, 100%);
-  }
-
-  @media (min-width: 40rem) {
-    .match-setup__seats {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-
-  .match-setup__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    margin-block-start: var(--space-2);
-  }
-
-  .notice {
-    width: min(48rem, 100%);
-    margin: 0;
-    padding: var(--space-2) var(--space-3);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--surface-raised);
-    color: var(--muted);
-  }
-
-  .notice.error {
-    border-color: var(--danger-border);
-    background: var(--danger-surface);
-    color: var(--danger);
-  }
-</style>

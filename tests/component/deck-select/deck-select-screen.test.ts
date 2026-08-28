@@ -191,7 +191,11 @@ describe("DeckSelectScreen", () => {
     expect(find("deck-select-delete")).toBeNull();
     expect(find("deck-select-rename")).toBeNull();
     expect(find("deck-select-duplicate")).toBeNull();
-    expect(find("deck-tile-menu-k1")).toBeNull();
+    for (const key of ["k1", "k2", "k3"])
+      expect(find(`deck-tile-menu-${key}`)).toBeNull();
+    /* The picking half of the screen is untouched: this hides operations on a
+       deck, not the deck itself. */
+    expect(find("deck-tile-press-k1")).not.toBeNull();
     expect(find("deck-select-open")).not.toBeNull();
     expect(find("deck-select-start")).not.toBeNull();
   });

@@ -2230,6 +2230,192 @@ describe("DuelField", () => {
     expect(harness.dispatch).not.toHaveBeenCalled();
   });
 
+  /* Item 4: an activated Spell does not stay in the zone it was dropped on, so
+     the board has no honest place to aim the gesture at. Activation gets a
+     target of its own beside the hand, mounted only while a card that offers
+     one is actually in the air. */
+  it("dragging an activatable hand card mounts the dashed activation zone", async () => {
+    const harness = renderDraggableHand({ spellChoices: true });
+
+    await startHandDrag();
+
+    expect(
+      document.querySelector('[data-cy="hand-activation-drop-zone"]'),
+    ).not.toBeNull();
+    expect(harness.dispatch).not.toHaveBeenCalled();
+  });
+
+  it("a drag with no activate choice mounts no activation zone", async () => {
+    renderDraggableHand();
+
+    await startHandDrag();
+
+    expect(
+      document.querySelector('[data-cy="hand-activation-drop-zone"]'),
+    ).toBeNull();
+  });
+
+  /* The zone is a fact about the card's choices, never about the board: a full
+     backrow leaves no drop candidate at all, and an activation that needs no
+     free zone must stay reachable anyway. */
+  it("the activation zone survives a fully occupied backrow", async () => {
+    renderDraggableHand({
+      spellChoices: true,
+      occupiedZoneIds: [
+        "p0:spellTrap:0",
+        "p0:spellTrap:1",
+        "p0:spellTrap:2",
+        "p0:spellTrap:3",
+        "p0:spellTrap:4",
+      ],
+    });
+
+    await startHandDrag();
+
+    expect(
+      document.querySelector('[data-cy="hand-activation-drop-zone"]'),
+    ).not.toBeNull();
+    expect(
+      candidateZoneIds().filter((zoneId) => zoneId.startsWith("p0:spellTrap:")),
+    ).toEqual([]);
+  });
+
+  it("dropping on the activation zone asks before activating", async () => {
+    const harness = renderDraggableHand({ spellChoices: true });
+    await startHandDrag();
+
+    await dropAt(harness, activationZoneElement());
+
+    expect(dropConfirmDialog()).not.toBeNull();
+    expect(
+      [...document.querySelectorAll('[data-cy^="drop-confirm-action-"]')].map(
+        (button) => button.textContent?.trim(),
+      ),
+    ).toEqual(["Activate"]);
+    expect(harness.dispatch).not.toHaveBeenCalled();
+    expect(harness.onplacementintent).not.toHaveBeenCalled();
+  });
+
+  /* No placement intent: the engine's own follow-up place prompt, when it asks
+     one at all, is answered by the player on the field. Arming `p0:hand` would
+     be a claim about where the card is going that nothing supports. */
+  it("confirming an activation drop dispatches activate without a placement intent", async () => {
+    const harness = renderDraggableHand({ spellChoices: true });
+    await startHandDrag();
+    await dropAt(harness, activationZoneElement());
+
+    const activate = document.querySelector<HTMLButtonElement>(
+      '[data-cy="drop-confirm-action-activate"]',
+    );
+    if (activate === null)
+      throw new Error("Missing drop confirm activate button");
+    await fireEvent.click(activate);
+
+    expect(harness.dispatch).toHaveBeenCalledTimes(1);
+    expect(harness.dispatch.mock.calls[0]?.[0]).toMatchObject({
+      type: "chooseChoice",
+      choiceId: "activate",
+    });
+    expect(harness.onplacementintent).not.toHaveBeenCalled();
+    expect(dropConfirmDialog()).toBeNull();
+  });
+
+  it("cancelling an activation drop returns the card with nothing sent", async () => {
+    const harness = renderDraggableHand({ spellChoices: true });
+    await startHandDrag();
+    await dropAt(harness, activationZoneElement());
+
+    const cancel = document.querySelector<HTMLButtonElement>(
+      '[data-cy="drop-confirm-cancel"]',
+    );
+    if (cancel === null) throw new Error("Missing drop confirm cancel button");
+    await fireEvent.click(cancel);
+
+    expect(dropConfirmDialog()).toBeNull();
+    expect(harness.dispatch).not.toHaveBeenCalled();
+    expect(harness.onplacementintent).not.toHaveBeenCalled();
+  });
+
+  /* Item 4's broad cancel: an activation is a question even when it is the
+     only reading of the gesture, because it cannot be taken back. The zone is
+     still real here, so confirming arms it exactly as before. */
+  it("a single-activate backrow drop opens the confirm dialog instead of committing", async () => {
+    const harness = renderDraggableHand({ activateOnly: true });
+    await startHandDrag();
+
+    await dropAt(harness, zoneElement("p0:spellTrap:2"));
+
+    expect(dropConfirmDialog()).not.toBeNull();
+    expect(
+      [...document.querySelectorAll('[data-cy^="drop-confirm-action-"]')].map(
+        (button) => button.textContent?.trim(),
+      ),
+    ).toEqual(["Activate"]);
+    expect(harness.dispatch).not.toHaveBeenCalled();
+    expect(harness.onplacementintent).not.toHaveBeenCalled();
+
+    const activate = document.querySelector<HTMLButtonElement>(
+      '[data-cy="drop-confirm-action-activate"]',
+    );
+    if (activate === null)
+      throw new Error("Missing drop confirm activate button");
+    await fireEvent.click(activate);
+
+    expect(harness.onplacementintent.mock.calls).toEqual([["p0:spellTrap:2"]]);
+    expect(harness.dispatch).toHaveBeenCalledTimes(1);
+    expect(harness.dispatch.mock.calls[0]?.[0]).toMatchObject({
+      type: "chooseChoice",
+      choiceId: "activate",
+    });
+  });
+
+  /* The pointer chips lost activate because the drag answers it now; the
+     pinned menu keeps it, or the keyboard would have no route to an activation
+     on a card that offers more than one action. */
+  it("hand hover chips omit activate; the pinned menu keeps it", async () => {
+    const harness = renderDraggableHand({ spellChoices: true });
+
+    expect(
+      document.querySelector('[data-cy="card-action-chip-setspelltrap"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="card-action-chip-activate"]'),
+    ).toBeNull();
+
+    await harness.rendered.rerender({
+      session: {
+        ...createInteractionSession(harness.spec),
+        menuTarget: `card:${HAND_CARD_ID}` as const,
+      },
+    });
+    await tick();
+
+    expect(
+      document.querySelector('[data-cy="card-action-chip-activate"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="card-action-chip-setspelltrap"]'),
+    ).not.toBeNull();
+  });
+
+  it("the hand zoom overlay never offers an activate chip", async () => {
+    renderDraggableHand({ spellChoices: true });
+
+    await clickHandCard();
+
+    expect(handZoomOverlay()).not.toBeNull();
+    expect(
+      document.querySelector(
+        '[data-cy="hand-zoom-overlay-card-action-chip-setspelltrap"]',
+      ),
+    ).not.toBeNull();
+    expect(
+      document.querySelector(
+        '[data-cy="hand-zoom-overlay-card-action-chip-activate"]',
+      ),
+    ).toBeNull();
+  });
+
   /* A response is already in flight, so the actions cannot be answered twice —
      but backing out must stay available, because cancelling sends nothing. */
   it("a pending response disables the modal's actions, never its cancel", async () => {
@@ -4508,6 +4694,9 @@ function stubRaf() {
 function renderDraggableHand(
   options: {
     readonly occupiedZoneId?: string;
+    /** The same thing for a whole row: item 4's activation zone has to stay
+        reachable with every backrow zone already taken. */
+    readonly occupiedZoneIds?: readonly string[];
     readonly reducedMotion?: boolean;
     /** One legal action instead of two: the shape whose click used to commit
         the play outright. */
@@ -4515,6 +4704,9 @@ function renderDraggableHand(
     /** Item 6's own example: a hand card offering both `activate` and
         `setSpellTrap`, so a backrow drop is ambiguous. */
     readonly spellChoices?: boolean;
+    /** Item 4's broad cancel: a backrow drop that reads as exactly one
+        `activate` and used to commit on release. */
+    readonly activateOnly?: boolean;
     readonly imageLibrary?: {
       lease: (code: number) => { url: string; release: () => void };
     };
@@ -4523,19 +4715,23 @@ function renderDraggableHand(
   const base = board("ST-01");
   const occupant = base.cards[0];
   if (occupant === undefined) throw new Error("Missing hand fixture card");
+  const occupiedZoneIds = [
+    ...(options.occupiedZoneId === undefined ? [] : [options.occupiedZoneId]),
+    ...(options.occupiedZoneIds ?? []),
+  ];
   const valueBoard =
-    options.occupiedZoneId === undefined
+    occupiedZoneIds.length === 0
       ? base
       : {
           ...base,
           cards: [
             ...base.cards,
-            {
+            ...occupiedZoneIds.map((zoneId, index) => ({
               ...occupant,
-              id: "drag-occupant",
-              targetId: "card:drag-occupant" as const,
-              zoneId: options.occupiedZoneId as typeof occupant.zoneId,
-            },
+              id: `drag-occupant-${index}`,
+              targetId: `card:drag-occupant-${index}` as const,
+              zoneId: zoneId as typeof occupant.zoneId,
+            })),
           ],
         };
   const value = fieldPrompt(
@@ -4549,20 +4745,26 @@ function renderDraggableHand(
             action: "setSpellTrap",
           }),
         ]
-      : options.singleChoice === true
+      : options.activateOnly === true
         ? [
-            handChoice("summon", "Summon The Legendary Fisherman", {
-              action: "summon",
+            handChoice("activate", "Activate The Legendary Fisherman", {
+              action: "activate",
             }),
           ]
-        : [
-            handChoice("summon", "Summon The Legendary Fisherman", {
-              action: "summon",
-            }),
-            handChoice("setmonster", "Set The Legendary Fisherman", {
-              action: "setMonster",
-            }),
-          ],
+        : options.singleChoice === true
+          ? [
+              handChoice("summon", "Summon The Legendary Fisherman", {
+                action: "summon",
+              }),
+            ]
+          : [
+              handChoice("summon", "Summon The Legendary Fisherman", {
+                action: "summon",
+              }),
+              handChoice("setmonster", "Set The Legendary Fisherman", {
+                action: "setMonster",
+              }),
+            ],
   );
   const spec = mapPromptToInteractionSpec(
     value,
@@ -4591,6 +4793,7 @@ function renderDraggableHand(
   return {
     rendered,
     board: valueBoard,
+    spec,
     dispatch,
     onplacementintent,
     onpreview,
@@ -4606,6 +4809,14 @@ function dragGhost(): HTMLElement | null {
 
 function dropConfirmDialog(): HTMLElement | null {
   return document.querySelector<HTMLElement>('[data-cy="drop-confirm-dialog"]');
+}
+
+function activationZoneElement(): HTMLElement {
+  const zone = document.querySelector<HTMLElement>(
+    '[data-cy="hand-activation-drop-zone"]',
+  );
+  if (zone === null) throw new Error("Missing hand activation drop zone");
+  return zone;
 }
 
 function handCardArticle(): HTMLElement {

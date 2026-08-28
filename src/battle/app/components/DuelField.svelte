@@ -30,6 +30,10 @@
   import type { OffFieldTargetEntry } from "../../field/off-field-target-list.ts";
   import ZoneListDialog from "./duel-field/ZoneListDialog.svelte";
   import { dropChoicesForZone } from "../prompts/drop-target.ts";
+  import {
+    activateChoices,
+    handChipChoices,
+  } from "../prompts/hand-activation-choices.ts";
   import { validatePromptSelection } from "../prompts/prompt-selection.ts";
   import { placementZoneCandidates } from "../../field/placement-candidates.ts";
   import type { PhysicalZoneId } from "../../field/duel-field-layout.ts";
@@ -221,6 +225,9 @@
     readonly card: BoardCardView;
     readonly zone: BoardZoneView;
     readonly choices: readonly InteractionChoice[];
+    /* "zone": a field-zone drop — confirm arms onplacementintent(zone.id).
+       "handActivation": the dashed zone — confirm dispatches only, no intent. */
+    readonly source: "zone" | "handActivation";
   } | null = null;
 
   $: resolvedCardBackUrl = cardBackUrl || DEFAULT_CARD_BACK;
@@ -262,6 +269,13 @@
     spec !== null &&
     (spec.fieldCapable || spec.promptKind === "chain") &&
     fieldActionBarRequired(spec);
+  /* Item 4: what the dashed zone beside the hand is offering. Read from the
+     dragged card's own choices and nothing else — never from `dropCandidates`,
+     which is occupancy-filtered, and an activation needs no free zone. */
+  $: dragActivateChoices =
+    dragCard === null || spec === null
+      ? []
+      : activateChoices(spec.cardChoices.get(dragCard.targetId) ?? []);
   onDestroy(() => {
     removeGhost();
     resizeObserver?.disconnect();
@@ -278,6 +292,18 @@
       width > 0 ? width : 1280,
       height > 0 ? height : 720,
     );
+  }
+
+  /* The hand placement is center-addressed, so the band's left edge is where
+     the zone starts. One box tall matches the hand row it sits beside; 1.5
+     boxes wide makes it an easy target for a gesture that ends in a question. */
+  function handActivationZoneStyle(layout: FieldRenderLayout): string {
+    const placement = layout.zones.get("p0:hand");
+    if (placement === undefined) return "display: none;";
+    const height = placement.height;
+    const width = Math.round(height * 1.5);
+    const left = placement.x - placement.width / 2;
+    return `--field-x: ${left}px; --field-y: ${placement.y}px; --field-width: ${width}px; --field-height: ${height}px;`;
   }
 
   function observeLayoutBoundary(boundary: HTMLElement | null): void {
@@ -837,38 +863,61 @@
     const cancelled = Number.isNaN(x) || Number.isNaN(y);
     let target: { readonly x: number; readonly y: number } | null = null;
     if (!cancelled) {
-      const zoneId = zoneIdAtPoint(x, y);
-      if (zoneId !== null && candidates.has(zoneId)) {
-        const zone = board.zones.find((value) => value.id === zoneId);
-        const choices =
-          zone === undefined
-            ? []
-            : dropChoicesForZone(
-                zone,
-                spec.cardChoices.get(card.targetId) ?? [],
-              );
-        const choice = choices.length === 1 ? choices[0] : undefined;
-        /* Item 6: two or more readings of the same gesture is a question, not
-           a preference. The card springs home behind the modal and only the
-           answer commits anything. */
-        if (zone !== undefined && choices.length > 1)
-          dropConfirm = { card, zone, choices };
-        else if (zone !== undefined && choice !== undefined) {
-          /* Exactly one placement intent + one chooseChoice, dispatched before
-             any ghost animation starts — the spring never delays or
-             authorizes this. */
-          onplacementintent(zone.id);
-          dispatch({ type: "chooseChoice", choiceId: choice.id });
-          const zoneElement = fieldRoot.querySelector<HTMLElement>(
-            `[data-zone-id="${zone.id}"]`,
-          );
-          const rect = zoneElement?.getBoundingClientRect();
-          if (rect !== undefined) {
-            const framed = toFrameRect(dragStageFrame, rect);
-            target = {
-              x: framed.left + framed.width / 2 - origin.width / 2,
-              y: framed.top + framed.height / 2 - origin.height / 2,
-            };
+      const cardChoices = spec.cardChoices.get(card.targetId) ?? [];
+      /* Item 4: the dashed zone overlaps the band area, so the hit element —
+         not the zone map — decides, and it is asked first. */
+      const hit = hitTest(x, y);
+      const activation =
+        hit !== null &&
+        hit.closest('[data-cy="hand-activation-drop-zone"]') !== null
+          ? activateChoices(cardChoices)
+          : [];
+      if (activation.length > 0) {
+        const handZone = board.zones.find((value) => value.id === "p0:hand");
+        /* `target` stays null on purpose: the ghost springs the card home
+           behind the modal, and no placement intent is armed — an activated
+           card need not stay where the gesture aimed it. */
+        if (handZone !== undefined)
+          dropConfirm = {
+            card,
+            zone: handZone,
+            choices: activation,
+            source: "handActivation",
+          };
+      } else {
+        const zoneId = zoneIdAtPoint(x, y);
+        if (zoneId !== null && candidates.has(zoneId)) {
+          const zone = board.zones.find((value) => value.id === zoneId);
+          const choices =
+            zone === undefined ? [] : dropChoicesForZone(zone, cardChoices);
+          const choice = choices.length === 1 ? choices[0] : undefined;
+          /* Item 6: two or more readings of the same gesture is a question, not
+             a preference. Item 4 adds the lone activation to that: it commits a
+             play that cannot be taken back, so it asks even alone. Summon and
+             set stay a statement and commit on release. The card springs home
+             behind the modal and only the answer commits anything. */
+          const needsConfirm =
+            choices.length > 1 ||
+            (choice !== undefined && choice.action === "activate");
+          if (zone !== undefined && needsConfirm)
+            dropConfirm = { card, zone, choices, source: "zone" };
+          else if (zone !== undefined && choice !== undefined) {
+            /* Exactly one placement intent + one chooseChoice, dispatched
+               before any ghost animation starts — the spring never delays or
+               authorizes this. */
+            onplacementintent(zone.id);
+            dispatch({ type: "chooseChoice", choiceId: choice.id });
+            const zoneElement = fieldRoot.querySelector<HTMLElement>(
+              `[data-zone-id="${zone.id}"]`,
+            );
+            const rect = zoneElement?.getBoundingClientRect();
+            if (rect !== undefined) {
+              const framed = toFrameRect(dragStageFrame, rect);
+              target = {
+                x: framed.left + framed.width / 2 - origin.width / 2,
+                y: framed.top + framed.height / 2 - origin.height / 2,
+              };
+            }
           }
         }
       }
@@ -1127,6 +1176,21 @@
         oncardzoomenter={enterHandZoom}
         oncardzoomleave={leaveHandZoom}
       />
+      <!-- Item 4: the drag-to-activate target. A sibling of the board rather
+           than a child of it, so it shares the board's coordinate space while
+           staying outside the board's own overflow clipping. -->
+      {#if dragCard !== null && dragActivateChoices.length > 0}
+        <div
+          class="duel-hand-activation-zone"
+          data-cy="hand-activation-drop-zone"
+          style={handActivationZoneStyle(renderLayout)}
+        >
+          <span
+            class="duel-hand-activation-zone__label"
+            data-cy="hand-activation-drop-zone-label">Activate</span
+          >
+        </div>
+      {/if}
       <PhaseStrip
         geometry={renderLayout.geometry}
         {phase}
@@ -1158,7 +1222,10 @@
       {imageLibrary}
       cardBackUrl={resolvedCardBackUrl}
       placeholderUrl={resolvedPlaceholderUrl}
-      choices={spec?.cardChoices.get(handZoom.card.targetId) ?? []}
+      choices={handChipChoices(
+        spec?.cardChoices.get(handZoom.card.targetId) ?? [],
+        false,
+      )}
       selected={pinnedHandTarget === handZoom.card.targetId}
       disabled={pending}
       onchoose={(choice) => {
@@ -1180,8 +1247,10 @@
         dropConfirm = null;
         if (confirmed === null) return;
         /* The same pair `endCardDrag` sends for an unambiguous drop, only now
-           the zone was held across the question instead of the gesture. */
-        onplacementintent(confirmed.zone.id);
+           the zone was held across the question instead of the gesture. Item
+           4's activation zone is not a place, so it arms nothing: the engine's
+           own follow-up place prompt is answered on the field. */
+        if (confirmed.source === "zone") onplacementintent(confirmed.zone.id);
         dispatch({ type: "chooseChoice", choiceId: choice.id });
       }}
       oncancel={() => (dropConfirm = null)}

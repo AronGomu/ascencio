@@ -2098,21 +2098,42 @@ async function locateDraggablePlacement(page: Page): Promise<{
     const total = await chips.count();
     for (let index = 0; index < total; index += 1) {
       const chip = chips.nth(index);
-      /* A card offering both would put `activate` in the backrow drop's
-         confirmation, which this test cannot assert on. Skip to the next card
-         instead. */
-      if (
-        placement.action === "setSpellTrap" &&
-        (await chip.evaluate(
+      /* A card offering an activation would answer a backrow drop with the
+         confirm dialog, which this test cannot assert on. Item 4 took the
+         `activate` chip off the pointer surfaces, so the only way left to ask
+         is to lift the card and look for its dashed zone, then abandon the
+         gesture over dead ground — a release outside every zone dispatches
+         nothing. */
+      if (placement.action === "setSpellTrap") {
+        const probeId = await chip.evaluate(
           (element) =>
-            element
-              .closest(".duel-field-card")
-              ?.querySelector(
-                '[data-cy^="card-action-chip-"][data-cy$="-activate"]',
-              ) != null,
-        ))
-      )
-        continue;
+            element.closest(".duel-field-card")?.getAttribute("data-card-id") ??
+            "",
+        );
+        const probeTarget = field.locator(
+          `[data-cy="field-card-target-${probeId}"]`,
+        );
+        await probeTarget.scrollIntoViewIfNeeded();
+        const probeBox = await probeTarget.boundingBox();
+        if (probeBox === null) continue;
+        const probeCentre = {
+          x: probeBox.x + probeBox.width / 2,
+          y: probeBox.y + probeBox.height / 2,
+        };
+        await page.mouse.move(probeCentre.x, probeCentre.y);
+        await page.mouse.down();
+        // 24px clears CardControl's 8px click-suppression gate.
+        await page.mouse.move(probeCentre.x + 24, probeCentre.y - 24, {
+          steps: 3,
+        });
+        const offersActivate =
+          (await page
+            .locator('[data-cy="hand-activation-drop-zone"]')
+            .count()) > 0;
+        await page.mouse.move(8, 8);
+        await page.mouse.up();
+        if (offersActivate) continue;
+      }
       chosen = { chip, zoneId, action: placement.action };
       break;
     }
@@ -2333,6 +2354,80 @@ test("dragging a hand card onto a highlighted zone plays it", async ({
         placeResponse?.promptId,
   ) as unknown as CapturedPromptEvent | undefined;
   expect(placePrompt?.prompt.kind).toBe("selectPlace");
+});
+
+/* Item 4: the drag-to-activate target, and the cancel it asks for by name.
+   Cancel-only on purpose — nothing is dispatched, so whatever the seed dealt,
+   the duel state this test leaves behind is the one it found. */
+test("dragging an activatable hand card into the dashed zone asks and can cancel", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1400 });
+  await openDuel(page);
+  await startPresetDuel(page);
+  await expect(
+    page.locator('[data-cy="duel-field"][data-prompt-kind="idleCommand"]'),
+  ).toBeVisible({ timeout: 120_000 });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  const field = page.getByRole("region", { name: "Duel field" });
+  const activationZone = page.locator('[data-cy="hand-activation-drop-zone"]');
+
+  const respondsBefore = (await readCapture(page)).commands.filter(
+    (command) => command.type === "respond",
+  ).length;
+
+  /* The chips no longer advertise an activation, so the only way to find a
+     card that offers one is to lift each in turn and look for the zone. A
+     release over dead ground abandons the gesture without dispatching. */
+  const handTargets = field.locator(
+    '.duel-field-card.is-actionable[data-card-zone-id="p0:hand"] [data-cy^="field-card-target-"]',
+  );
+  let dragging = false;
+  for (let index = 0; index < (await handTargets.count()); index += 1) {
+    const target = handTargets.nth(index);
+    await target.scrollIntoViewIfNeeded();
+    const box = await target.boundingBox();
+    if (box === null) continue;
+    const centre = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    await page.mouse.move(centre.x, centre.y);
+    await page.mouse.down();
+    await page.mouse.move(centre.x + 24, centre.y - 24, { steps: 3 });
+    if ((await activationZone.count()) > 0) {
+      dragging = true;
+      break;
+    }
+    await page.mouse.move(8, 8);
+    await page.mouse.up();
+  }
+  if (!dragging) {
+    test.skip(true, "opening hand offers no activatable effect");
+    return;
+  }
+
+  const zoneBox = await activationZone.boundingBox();
+  if (zoneBox === null) throw new Error("Missing activation zone geometry");
+  await page.mouse.move(
+    zoneBox.x + zoneBox.width / 2,
+    zoneBox.y + zoneBox.height / 2,
+    { steps: 4 },
+  );
+  await page.mouse.up();
+
+  const dropConfirm = page.locator('[data-cy="drop-confirm-dialog"]');
+  await expect(dropConfirm).toBeVisible();
+  await expect(
+    page.locator('[data-cy^="drop-confirm-action-"]').first(),
+  ).toBeVisible();
+  await page.locator('[data-cy="drop-confirm-cancel"]').click();
+  await expect(dropConfirm).toHaveCount(0);
+  await expect(activationZone).toHaveCount(0);
+
+  // "Cancel and go back": not one response left the page for the whole gesture.
+  expect(
+    (await readCapture(page)).commands.filter(
+      (command) => command.type === "respond",
+    ).length,
+  ).toBe(respondsBefore);
 });
 
 test("item 18: the hovered drop candidate gets its own emphasis, distinct from unhovered candidates, and clears on release", async ({
@@ -4190,40 +4285,39 @@ async function setHandMonsterWithKeyboard(
     const chips = field.locator(`[data-cy="card-action-chips-${cardId}"]`);
     const chipButtonCount = await chips.locator("button").count();
     if (chipButtonCount === 0) continue;
-    if (chipButtonCount === 1) {
-      // A single-choice card fires that choice directly on activation (T5)
-      // instead of pinning a menu, so this helper only bothers activating it
-      // when the one choice on offer is the monster set it exists to produce.
-      if ((await chips.locator(MONSTER_SET_CHIP).count()) === 0) continue;
-      await keyboardActivate(page, opener);
-      // The response goes pending, which drops the card out of its
-      // actionable state and unmounts these chips with it. Waiting on that
-      // keeps the caller from racing the next prompt.
-      await expect(chips).toBeHidden();
-      return true;
-    }
+    if ((await chips.locator(MONSTER_SET_CHIP).count()) === 0) continue;
     await keyboardActivate(page, opener);
-    // Activating the card pins its chips and moves focus onto the first one;
-    // waiting for that focus to land is what makes the arrow walk below
+    // Item 4 retired the old "one chip means one choice" shortcut: a hand card
+    // offering `[activate, setMonster]` shows a single chip because the pointer
+    // surfaces hide activate, yet Enter still pins the whole menu. So the
+    // outcome is read rather than predicted — either the card's one real choice
+    // dispatched and the chips went pending with it, or the menu pinned and
+    // focus landed inside it, which is what makes the arrow walk below
     // deterministic.
-    await expect(chips).toBeVisible();
-    await expect(chips.locator(":focus")).toHaveCount(1);
-    if ((await chips.locator(MONSTER_SET_CHIP).count()) > 0) {
-      const items = chips.locator("button");
-      for (let move = 0; move < (await items.count()); move += 1) {
-        const focused = chips.locator(":focus");
-        if ((await focused.count()) === 0) break;
-        const focusedId = (await focused.getAttribute("data-cy")) ?? "";
-        if (focusedId.endsWith(`-${MONSTER_SET_ACTION}`)) {
-          await page.keyboard.press("Enter");
-          // The response goes pending, which drops the card out of its
-          // actionable state and unmounts these chips with it. Waiting on that
-          // keeps the caller from racing the next prompt.
-          await expect(chips).toBeHidden();
-          return true;
-        }
-        await page.keyboard.press("ArrowRight");
+    await expect(async () => {
+      const visible = await chips.isVisible();
+      const pinned =
+        visible &&
+        (await chips.evaluate((element) =>
+          element.contains(document.activeElement),
+        ));
+      expect(!visible || pinned).toBe(true);
+    }).toPass();
+    if (!(await chips.isVisible())) return true;
+    const items = chips.locator("button");
+    for (let move = 0; move < (await items.count()); move += 1) {
+      const focused = chips.locator(":focus");
+      if ((await focused.count()) === 0) break;
+      const focusedId = (await focused.getAttribute("data-cy")) ?? "";
+      if (focusedId.endsWith(`-${MONSTER_SET_ACTION}`)) {
+        await page.keyboard.press("Enter");
+        // The response goes pending, which drops the card out of its
+        // actionable state and unmounts these chips with it. Waiting on that
+        // keeps the caller from racing the next prompt.
+        await expect(chips).toBeHidden();
+        return true;
       }
+      await page.keyboard.press("ArrowRight");
     }
     // Escape unpins and returns focus to the card target. The chips stay
     // mounted and stay shown while that target holds focus, so the check is

@@ -11,6 +11,7 @@
     InteractionChoice,
   } from "../../prompts/interaction-spec.ts";
   import type { CardDragOrigin } from "../../presentation/drag-ghost-physics.ts";
+  import type { LocalCardAction } from "../../presentation/local-card-action.ts";
   import CardActionChips from "./CardActionChips.svelte";
   import MaterialCard from "./MaterialCard.svelte";
 
@@ -27,6 +28,7 @@
   export let active = false;
   export let disabled = false;
   export let choices: readonly InteractionChoice[] = [];
+  export let localActions: readonly LocalCardAction[] = [];
   export let pinned = false;
   export let zoomServed = false;
   export let draggable = false;
@@ -272,6 +274,7 @@
   class:is-defense={card.position === "faceUpDefense"}
   class:is-set={card.position === "faceDownDefense"}
   class:is-actionable={actionable}
+  class:has-local-actions={localActions.length > 0}
   class:is-dragging={dragging}
   class:is-pinned={pinned}
   class:is-zoom-served={zoomServed}
@@ -321,28 +324,35 @@
       {card.label}
     </span>
   {/if}
-  {#if actionable}
-    <button
-      type="button"
-      class="duel-field-card__target"
-      aria-label={activationLabel}
-      aria-pressed={interactionKind === "cardSelection" ? selected : undefined}
-      data-field-target={card.targetId}
-      tabindex={active ? 0 : -1}
-      {disabled}
-      bind:this={targetElement}
-      onpointerdown={pointerDown}
-      onpointermove={pointerMove}
-      onpointerup={pointerUp}
-      onpointercancel={pointerCancel}
-      onclick={activate}
-      data-cy={`field-card-target-${card.id}`}
-    ></button>
-    {#if choices.length > 0}
+  <!-- A card carrying a local action gets chips without being part of any
+       decision, so the selection button stays gated on `actionable` alone. -->
+  {#if actionable || localActions.length > 0}
+    {#if actionable}
+      <button
+        type="button"
+        class="duel-field-card__target"
+        aria-label={activationLabel}
+        aria-pressed={interactionKind === "cardSelection"
+          ? selected
+          : undefined}
+        data-field-target={card.targetId}
+        tabindex={active ? 0 : -1}
+        {disabled}
+        bind:this={targetElement}
+        onpointerdown={pointerDown}
+        onpointermove={pointerMove}
+        onpointerup={pointerUp}
+        onpointercancel={pointerCancel}
+        onclick={activate}
+        data-cy={`field-card-target-${card.id}`}
+      ></button>
+    {/if}
+    {#if choices.length > 0 || localActions.length > 0}
       <CardActionChips
         cardId={card.id}
         cardLabel={accessibleLabel}
-        {choices}
+        choices={actionable ? choices : []}
+        {localActions}
         {disabled}
         {onchoose}
         {ondismiss}

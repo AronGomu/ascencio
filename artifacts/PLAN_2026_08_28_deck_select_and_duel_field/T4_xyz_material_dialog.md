@@ -176,25 +176,25 @@ Run cmds: `npx vitest run tests/unit/material-list.test.ts`, `npx vitest run tes
 
 ## Impl steps
 
-- [ ] 1. Verify overlay sequence semantics (blocking gate for steps 8–10)
-  - [ ] 1.1 Create `tests/integration/xyz-detach-overlay-address.test.ts` by copying the harness skeleton of `tests/integration/xyz-overlay-progression.test.ts` (imports, `beforeAll` adapter/deck/dependency load, `playScriptedDuel`, `answer`, `candidateResponses`, `seededRandom`), keeping only `SCENARIOS[0]` (`"detaching a material read back from the core"`).
-  - [ ] 1.2 In the prompt loop, when the current state has a monster with `overlayMaterials.length > 0`, record every `prompt.choices[].card` whose emitted shape will carry the overlay marker (until step 2 lands, temporarily assert on the raw trace via `controller` diagnostics or run once with a local `console.log` in the copied loop — the committed test asserts on `PromptCard.overlay` after step 2). Collect `{ hostSequence: hostMonster.sequence, materialSequences: host.overlayMaterials.map(m => m.sequence), choiceSequences }`.
-  - [ ] 1.3 Run `npx vitest run tests/integration/xyz-detach-overlay-address.test.ts` and read the captured data. Decide: **semantics A** (each overlay choice `sequence` maps 1:1 onto a distinct material sequence of one host — materials distinguishable) or **semantics B** (choices indistinguishable). Write the finding as a comment block at the top of the test and pin it with the final assertion (`expect(overlayPromptObservations.length).toBeGreaterThan(0)` plus the semantics assertion). Semantics B → skip steps 8–10 UI wiring, keep the worker marker (harmless, still verified by this test), and record the limitation in Outputs.
-- [ ] 2. Worker overlay marker
-  - [ ] 2.1 `src/battle/duel/contracts/player-prompt.ts` — in `interface PromptCard` (:51-62), after `readonly sequence: number;` add:
+- [x] 1. Verify overlay sequence semantics (blocking gate for steps 8–10) — **neither A nor B: no overlay address is reachable at all**
+  - [x] 1.1 Create `tests/integration/xyz-detach-overlay-address.test.ts` by copying the harness skeleton of `tests/integration/xyz-overlay-progression.test.ts` (imports, `beforeAll` adapter/deck/dependency load, `playScriptedDuel`, `answer`, `candidateResponses`, `seededRandom`), keeping only `SCENARIOS[0]` (`"detaching a material read back from the core"`).
+  - [x] 1.2 In the prompt loop, when the current state has a monster with `overlayMaterials.length > 0`, record every `prompt.choices[].card` whose emitted shape will carry the overlay marker (until step 2 lands, temporarily assert on the raw trace via `controller` diagnostics or run once with a local `console.log` in the copied loop — the committed test asserts on `PromptCard.overlay` after step 2). Collect `{ hostSequence: hostMonster.sequence, materialSequences: host.overlayMaterials.map(m => m.sequence), choiceSequences }`.
+  - [x] 1.3 Run `npx vitest run tests/integration/xyz-detach-overlay-address.test.ts` and read the captured data. **Result: pinned scenario = 206 prompts, 106 overlaid-monster states, 0 overlay-addressed prompt cards. Widened sweep (6 opponent decks × 40 seeds, 8946 overlaid states) saw raw prompt-card locations {1,2,4,8,16,32,64}; bit 128 never set. → R5 fallback: skip steps 8–10, keep the marker, `LIMITATION` recorded in Outputs.** Decide: **semantics A** (each overlay choice `sequence` maps 1:1 onto a distinct material sequence of one host — materials distinguishable) or **semantics B** (choices indistinguishable). Write the finding as a comment block at the top of the test and pin it with the final assertion (`expect(overlayPromptObservations.length).toBeGreaterThan(0)` plus the semantics assertion). Semantics B → skip steps 8–10 UI wiring, keep the worker marker (harmless, still verified by this test), and record the limitation in Outputs.
+- [x] 2. Worker overlay marker
+  - [x] 2.1 `src/battle/duel/contracts/player-prompt.ts` — in `interface PromptCard` (:51-62), after `readonly sequence: number;` add:
         `/** Present when the engine addressed this card as an overlay unit (Xyz material). */`
         `readonly overlay?: true;`
-  - [ ] 2.2 `src/battle/worker/protocol/PromptRegistry.ts` — in `toPromptCard` (:1145), after the `location:` line add:
+  - [x] 2.2 `src/battle/worker/protocol/PromptRegistry.ts` — in `toPromptCard` (:1145), after the `location:` line add:
         `...((card.location & EngineLocation.OVERLAY) !== 0 ? { overlay: true as const } : {}),`
-  - [ ] 2.3 Point the step-1 test's committed assertions at `PromptCard.overlay` (no console.log left behind); rerun it green.
-- [ ] 3. Materials entry builder
-  - [ ] 3.1 Create `src/battle/field/material-list.ts` with `materialListEntries` exactly per contract item 6 (`Object.freeze` each entry and the array; empty input → `Object.freeze([])`).
-  - [ ] 3.2 Create `tests/unit/material-list.test.ts` with the three tests from the Test plan; run `npx vitest run tests/unit/material-list.test.ts` green.
-- [ ] 4. Local card action type
-  - [ ] 4.1 Create `src/battle/app/presentation/local-card-action.ts` with `LocalCardAction` per contract item 1.
-- [ ] 5. `CardActionChips` local chips
-  - [ ] 5.1 `src/battle/app/components/duel-field/CardActionChips.svelte` — import `type { LocalCardAction } from "../../presentation/local-card-action.ts";` and add `export let localActions: readonly LocalCardAction[] = [];` after `dataCyScope`.
-  - [ ] 5.2 In the markup, after the `{#each choices …}` block and before the `{#if variant === "list" && ondetails !== null}` block, add:
+  - [x] 2.3 Point the step-1 test's committed assertions at `PromptCard.overlay` (no console.log left behind); rerun it green. — `Tests  2 passed (2)`
+- [x] 3. Materials entry builder
+  - [x] 3.1 Create `src/battle/field/material-list.ts` with `materialListEntries` exactly per contract item 6 (`Object.freeze` each entry and the array; empty input → `Object.freeze([])`).
+  - [x] 3.2 Create `tests/unit/material-list.test.ts` with the three tests from the Test plan; run `npx vitest run tests/unit/material-list.test.ts` green. — `Tests  3 passed (3)`
+- [x] 4. Local card action type
+  - [x] 4.1 Create `src/battle/app/presentation/local-card-action.ts` with `LocalCardAction` per contract item 1.
+- [x] 5. `CardActionChips` local chips
+  - [x] 5.1 `src/battle/app/components/duel-field/CardActionChips.svelte` — import `type { LocalCardAction } from "../../presentation/local-card-action.ts";` and add `export let localActions: readonly LocalCardAction[] = [];` after `dataCyScope`.
+  - [x] 5.2 In the markup, after the `{#each choices …}` block and before the `{#if variant === "list" && ondetails !== null}` block, add:
         ```svelte
         {#each localActions as action (action.id)}
           <button
@@ -211,21 +211,21 @@ Run cmds: `npx vitest run tests/unit/material-list.test.ts`, `npx vitest run tes
           >
         {/each}
         ```
-  - [ ] 5.3 Same file, wrap the whole root `<div class="card-action-chips" …>…</div>` markup in an empty guard so an all-empty chip set mounts nothing at all:
+  - [x] 5.3 Same file, wrap the whole root `<div class="card-action-chips" …>…</div>` markup in an empty guard so an all-empty chip set mounts nothing at all:
         ```svelte
         {#if choices.length > 0 || localActions.length > 0 || (variant === "list" && ondetails !== null)}
           <div class="card-action-chips" …>…</div>
         {/if}
         ```
         Reason (record it as a comment above the guard): after T6 a selection candidate is passed `choices={[]}` while its gate still sees prompt choices, so without this guard an empty `.card-action-chips` pill stays in the DOM and is revealed on hover by `app.css:2404-2409`. The guard is byte-compatible with every existing caller — today the component is only mounted when `choices.length > 0`.
-  - [ ] 5.4 Add the `CardActionChips` component test from the Test plan to `tests/component/CardActionChips.test.ts` (follow existing render pattern in that file); run green.
-  - [ ] 5.5 Add a second test to the same file: `"renders nothing when there are no prompt choices and no local actions"` — render with `choices: []`, `localActions: []`, `variant: "field"` → `document.querySelector(".card-action-chips") === null`. This is the assertion T6 depends on; it must be committed here, not there.
-- [ ] 6. Thread local actions through `CardControl` and `FieldBoard`
-  - [ ] 6.1 `CardControl.svelte` — import the type; add `export let localActions: readonly LocalCardAction[] = [];` after `choices`.
-  - [ ] 6.2 `CardControl.svelte` markup :307-335 — change the gate `{#if actionable}` to `{#if actionable || localActions.length > 0}`; keep the `.duel-field-card__target` button inside a nested `{#if actionable}` so a prompt-free card gains chips but no selection button; change the chips gate `{#if choices.length > 0}` to `{#if choices.length > 0 || localActions.length > 0}` and pass `choices={actionable ? choices : []}` plus `{localActions}` into `CardActionChips`.
-  - [ ] 6.3 `FieldBoard.svelte` — add prop `export let localActionsFor: (card: BoardCardView) => readonly LocalCardAction[] = () => [];` beside the other card callbacks; in the `{#each fieldCards as card (card.id)}` `CardControl` instantiation (:296) add `localActions={localActionsFor(card)}`.
-  - [ ] 6.4 `CardControl.svelte` — add `class:has-local-actions={localActions.length > 0}` on the card root `<article>`, beside `class:is-actionable={actionable}`. Without it the Materials chip is unreachable on a prompt-free xyz host: every reveal rule in `src/styles/app.css:2404-2409` requires `.is-actionable`, which such a card never carries, so the chip would mount and stay `display: none` forever (jsdom ignores the stylesheet, so no component test catches this).
-  - [ ] 6.5 `src/styles/app.css` — extend the reveal rule group at :2404-2409 with the two matching selectors, keeping the existing three byte-identical:
+  - [x] 5.4 Add the `CardActionChips` component test from the Test plan to `tests/component/CardActionChips.test.ts` (follow existing render pattern in that file); run green. — `Tests  13 passed (13)`
+  - [x] 5.5 Add a second test to the same file: `"renders nothing when there are no prompt choices and no local actions"` — render with `choices: []`, `localActions: []`, `variant: "field"` → `document.querySelector(".card-action-chips") === null`. This is the assertion T6 depends on; it must be committed here, not there.
+- [x] 6. Thread local actions through `CardControl` and `FieldBoard`
+  - [x] 6.1 `CardControl.svelte` — import the type; add `export let localActions: readonly LocalCardAction[] = [];` after `choices`.
+  - [x] 6.2 `CardControl.svelte` markup :307-335 — change the gate `{#if actionable}` to `{#if actionable || localActions.length > 0}`; keep the `.duel-field-card__target` button inside a nested `{#if actionable}` so a prompt-free card gains chips but no selection button; change the chips gate `{#if choices.length > 0}` to `{#if choices.length > 0 || localActions.length > 0}` and pass `choices={actionable ? choices : []}` plus `{localActions}` into `CardActionChips`.
+  - [x] 6.3 `FieldBoard.svelte` — add prop `export let localActionsFor: (card: BoardCardView) => readonly LocalCardAction[] = () => [];` beside the other card callbacks; in the `{#each fieldCards as card (card.id)}` `CardControl` instantiation (:296) add `localActions={localActionsFor(card)}`.
+  - [x] 6.4 `CardControl.svelte` — add `class:has-local-actions={localActions.length > 0}` on the card root `<article>`, beside `class:is-actionable={actionable}`. Without it the Materials chip is unreachable on a prompt-free xyz host: every reveal rule in `src/styles/app.css:2404-2409` requires `.is-actionable`, which such a card never carries, so the chip would mount and stay `display: none` forever (jsdom ignores the stylesheet, so no component test catches this).
+  - [x] 6.5 `src/styles/app.css` — (shipped as an adjacent rule immediately below the group, not appended inside it: `tests/unit/global-styles.test.ts:500` pins that three-selector list verbatim and appending broke it. The existing three stay byte-identical, the two new selectors carry the same `display: flex`, and the comment above the group names both cases.) extend the reveal rule group at :2404-2409 with the two matching selectors, keeping the existing three byte-identical:
         ```css
         .duel-field-card.has-local-actions:hover .card-action-chips,
         .duel-field-card.has-local-actions:focus-within .card-action-chips {
@@ -233,9 +233,9 @@ Run cmds: `npx vitest run tests/unit/material-list.test.ts`, `npx vitest run tes
         }
         ```
         Update the comment above the group to say the chips are mounted for an actionable card **or** a card carrying local actions.
-- [ ] 7. Materials browse mode in `DuelField`
-  - [ ] 7.1 `DuelField.svelte` — widen `ZoneListState` (:144-147) per contract item 5.
-  - [ ] 7.2 Add below `activateStack`:
+- [x] 7. Materials browse mode in `DuelField`
+  - [x] 7.1 `DuelField.svelte` — widen `ZoneListState` (:144-147) per contract item 5.
+  - [x] 7.2 (plus the `outsideDismissedTargetId` consumption `activateStack` performs — without it 7.5's stated purpose is unreachable, because the window's capture-phase `pointerdown` dismissal always runs before the chip's `click`) Add below `activateStack`:
         ```ts
         function openMaterialsDialog(hostId: BoardTargetId): void {
           if (board.cards.find(({ targetId }) => targetId === hostId) === undefined) return;
@@ -246,8 +246,8 @@ Run cmds: `npx vitest run tests/unit/material-list.test.ts`, `npx vitest run tes
           if (zoneListState !== null) activateWindow("zoneList");
         }
         ```
-  - [ ] 7.3 Add derived state after `$: openStack …` (:244): `$: materialsHost = zoneListState?.mode === "materials" ? (board.cards.find(({ targetId }) => targetId === zoneListState.hostId) ?? null) : null;` and `$: materialEntries = materialsHost === null ? [] : materialListEntries(materialsHost);` (import `materialListEntries` from `../../field/material-list.ts` and `LocalCardAction` type).
-  - [ ] 7.4 Add the provider fn:
+  - [x] 7.3 (host resolved through a `browsedMaterialsHost(state, board)` helper mirroring the existing `browsedStack`, so the union narrows for the typechecker) Add derived state after `$: openStack …` (:244): `$: materialsHost = zoneListState?.mode === "materials" ? (board.cards.find(({ targetId }) => targetId === zoneListState.hostId) ?? null) : null;` and `$: materialEntries = materialsHost === null ? [] : materialListEntries(materialsHost);` (import `materialListEntries` from `../../field/material-list.ts` and `LocalCardAction` type).
+  - [x] 7.4 Add the provider fn:
         ```ts
         function cardLocalActions(card: BoardCardView): readonly LocalCardAction[] {
           if (card.materials.length === 0) return [];
@@ -255,35 +255,36 @@ Run cmds: `npx vitest run tests/unit/material-list.test.ts`, `npx vitest run tes
         }
         ```
         and pass `localActionsFor={cardLocalActions}` into `FieldBoard` (:1101-1128).
-  - [ ] 7.5 `isZoneListLauncher` (:1046) — add a materials branch: `state.mode === "materials"` returns `state.hostId === targetId` (so the outside-click that closes the list on its own host does not immediately reopen it; matches the browse pattern).
-  - [ ] 7.6 Render the materials dialog: extend the `{:else if openStack !== null}` chain (:1219) with a preceding branch `{:else if materialsHost !== null}` rendering `ZoneListDialog` with `entries={materialEntries}`, `choices={[]}`, `title={`${materialsHost.label} Materials`}`, and the same `imageLibrary`/`cardBackUrl`/`placeholderUrl`/`disabled`/`boundaryElement`/`windowPosition`/`active`/`onactivate`/`onwindowpositionchange`/`onpreview`/`onclose={dismissZoneList}` bindings as the browse instance (:1220-1237); omit `onchoose` (no choices).
-  - [ ] 7.7 `ZoneListDialog.svelte` `headerTitle` (:80-84) — change the browse arm from `stack === null ? "" : cardListBrowseTitle(stack.zone)` to `stack === null ? title : cardListBrowseTitle(stack.zone)`.
-  - [ ] 7.8 Add the two `DuelField` component tests from the Test plan (use the `board("ST-07")` helper at `tests/component/DuelField.test.ts:81`); run `npx vitest run tests/component/DuelField.test.ts` green.
-- [ ] 8. Detach → target-mode materials list (ONLY if step 1 verified semantics A; otherwise check this box with note `skipped: semantics B fallback` and go to step 11)
+  - [x] 7.5 `isZoneListLauncher` (:1046) — add a materials branch: `state.mode === "materials"` returns `state.hostId === targetId` (so the outside-click that closes the list on its own host does not immediately reopen it; matches the browse pattern).
+  - [x] 7.6 Render the materials dialog: extend the `{:else if openStack !== null}` chain (:1219) with a preceding branch `{:else if materialsHost !== null}` rendering `ZoneListDialog` with `entries={materialEntries}`, `choices={[]}`, `title={`${materialsHost.label} Materials`}`, and the same `imageLibrary`/`cardBackUrl`/`placeholderUrl`/`disabled`/`boundaryElement`/`windowPosition`/`active`/`onactivate`/`onwindowpositionchange`/`onpreview`/`onclose={dismissZoneList}` bindings as the browse instance (:1220-1237); omit `onchoose` (no choices).
+  - [x] 7.7 `ZoneListDialog.svelte` `headerTitle` (:80-84) — change the browse arm from `stack === null ? "" : cardListBrowseTitle(stack.zone)` to `stack === null ? title : cardListBrowseTitle(stack.zone)`.
+  - [x] 7.8 Add the two `DuelField` component tests from the Test plan (use the `board("ST-07")` helper at `tests/component/DuelField.test.ts:81`); run `npx vitest run tests/component/DuelField.test.ts` green. — `Tests  171 passed (171)`. The no-materials test renders `board("ST-02")`: ST-07 holds a single monster, so it has no materials-free card to assert against.
+- [x] 8. **skipped: semantics B fallback** — stronger than B: no overlay address is emitted at all, so there is nothing to classify. Detach → target-mode materials list (ONLY if step 1 verified semantics A; otherwise check this box with note `skipped: semantics B fallback` and go to step 11)
   - [ ] 8.1 `src/battle/app/prompts/interaction-spec.ts` — `InteractionChoice.cardAddress` (:43-47) gains `readonly overlay?: true;`.
   - [ ] 8.2 `sanitizeChoice` (:447-455) — inside the `cardAddress` object add `...(choice.card!.overlay === true ? { overlay: true as const } : {}),`.
   - [ ] 8.3 Off-field classification (:318-324) — widen the condition to `(OFF_FIELD_TARGET_LOCATIONS.has(choice.cardAddress.location) || choice.cardAddress.overlay === true)`.
-- [ ] 9. `MATERIALS` badge entries (semantics A only)
+- [x] 9. **skipped: semantics B fallback** — `MATERIALS` badge entries (semantics A only)
   - [ ] 9.1 `src/battle/field/off-field-target-list.ts` — add `"MATERIALS"` to `OffFieldZoneBadge` (:17-18), append to `OFF_FIELD_ZONE_DISPLAY_ORDER` (:20-21), add `MATERIALS: "Materials"` to `ZONE_NAMES` (:39-45).
   - [ ] 9.2 In `targetEntry` (:88), before the existing `offFieldZoneBadge` gate, add an overlay branch: when `address.overlay === true`, resolve identity from the projection by scanning `snapshot.players[address.controller].monsters` for the host whose `overlayMaterials` contains a material with `sequence === address.sequence` (per verified semantics A; adjust the lookup to the exact verified mapping and say so in a comment), then return a frozen entry `{ id: `target:overlay:${address.controller}:${address.sequence}`, position: address.sequence + 1, controller, location: address.location, sequence: address.sequence, identityVisible, code?, label, zoneBadge: "MATERIALS", zoneLabel: `${address.controller === 0 ? "Your" : "Opponent"} Materials`, choices }` — identity fallback rules identical to the existing body (projected code first, `choices.find(c => c.cardCode)` for controller 0, else `"Face-down card"`).
   - [ ] 9.3 Add unit coverage in `tests/unit/off-field-target-list.test.ts`: `"an overlay-marked choice becomes a MATERIALS entry"` asserting badge, zoneLabel, id scheme, identity resolution (follow the file's existing fixture style).
-- [ ] 10. Target-mode dialog coverage (semantics A only)
+- [x] 10. **skipped: semantics B fallback** — Target-mode dialog coverage (semantics A only)
   - [ ] 10.1 Add `tests/component/ZoneListDialog.test.ts` › `"target mode shows MATERIALS badge entries as selectable targets"` per the Test plan; run green. (No `DuelField` change needed: the T16 auto-open at :959-962 already opens the target list whenever `offFieldTargets.length > 0`.)
-- [ ] 11. Gates
-  - [ ] 11.1 `npm run test:component` — green.
-  - [ ] 11.2 `npm run check:headless` — green (format, lint incl. boundary zones, typecheck, unit incl. `data-cy-coverage` + `domain-boundaries`, integration, vendor/assets/snapshot verify).
-  - [ ] 11.3 Update `artifacts/manual_test_checklist.md`: add a step "Xyz monster with materials → Materials chip opens the material list; detach prompt lists materials in the target dialog (or falls back to host selection — note which shipped)".
+- [x] 11. Gates
+  - [x] 11.1 `npm run test:component` — green. — `Test Files  102 passed (102)` / `Tests  936 passed (936)`
+  - [x] 11.2 `npm run check:headless` — green (format, lint incl. boundary zones, typecheck, unit incl. `data-cy-coverage` + `domain-boundaries`, integration, vendor/assets/snapshot verify). — unit `1702 passed | 2 skipped`, integration `39 passed`, legacy `pass 23`, vendor/assets/snapshot `status: ok`
+  - [x] 11.3 Update `artifacts/manual_test_checklist.md`: add a step "Xyz monster with materials → Materials chip opens the material list; detach prompt lists materials in the target dialog (or falls back to host selection — note which shipped)".
 
 ## Outputs
 
+- `LIMITATION: engine detach payload emits no overlay address at all; fallback to host-card selection.` Stronger than the R5 semantics-B case the ticket anticipated: the payload does not merely fail to *distinguish* materials, it never addresses one. Evidence in `tests/integration/xyz-detach-overlay-address.test.ts` — the pinned scenario answers 206 prompts through 106 states holding an Xyz monster with materials and emits zero overlay-addressed prompt cards; a wider sweep run during step 1 (6 opponent decks × 40 seeds, 8946 overlaid-monster states) saw raw prompt-card locations `{1,2,4,8,16,32,64}` and `EngineLocation.OVERLAY` (128) exactly zero times. Steps 8–10 are therefore not built; `src/battle/app/prompts/interaction-spec.ts` and `src/battle/field/off-field-target-list.ts` are untouched. The `PromptCard.overlay` marker ships anyway (additive, no behaviour change) and the test pins `overlay === ((rawLocation & 128) !== 0)` as the tripwire that turns this decision over if the engine ever starts addressing units.
 - Files touched: `src/battle/duel/contracts/player-prompt.ts`, `src/battle/worker/protocol/PromptRegistry.ts`, `src/battle/field/material-list.ts` (new), `src/battle/app/presentation/local-card-action.ts` (new), `src/battle/app/components/duel-field/CardActionChips.svelte`, `CardControl.svelte`, `FieldBoard.svelte`, `src/battle/app/components/DuelField.svelte`, `src/battle/app/components/duel-field/ZoneListDialog.svelte`; semantics-A only: `src/battle/app/prompts/interaction-spec.ts`, `src/battle/field/off-field-target-list.ts`. Tests: `tests/integration/xyz-detach-overlay-address.test.ts` (new), `tests/unit/material-list.test.ts` (new), `tests/component/CardActionChips.test.ts`, `tests/component/DuelField.test.ts`, semantics-A: `tests/unit/off-field-target-list.test.ts`, `tests/component/ZoneListDialog.test.ts`. Plus `artifacts/manual_test_checklist.md`.
 - Public API / behavior change: `PromptCard.overlay?: true` (contract widening, additive); `CardActionChips.localActions` + its empty-set guard (component now renders nothing when it has nothing to show); card-root class `has-local-actions` + its two reveal rules; `FieldBoard.localActionsFor`; every card with materials gains a "Materials" chip opening a browse dialog; detach prompts list materials as `MATERIALS` target entries (semantics A) or unchanged (semantics B — record `LIMITATION:` line here if so).
 - No migration/config. All frozen public entries (`src/battle/index.ts` etc.) untouched — everything here is battle-internal.
 
 ## Validation
 
-- [ ] tests pass: `npx vitest run tests/unit/material-list.test.ts tests/unit/off-field-target-list.test.ts`, `npx vitest run tests/integration/xyz-detach-overlay-address.test.ts`, `npm run test:component`, `npm run check:headless` — all exit 0.
-- [ ] manual check: `npm run dev`, start a duel with `burning-abyss`, Xyz Summon, hover the Xyz monster → "Materials" chip → dialog lists materials; trigger a detach → target dialog lists materials (or host fallback per recorded semantics). Materials elements themselves still ignore clicks.
-- [ ] no silent-failure swallow on a path this slice adds: `openMaterialsDialog` returning early for a missing host is a deliberate no-op on a stale closure, listed here as the only kept site; no `|| true`, empty catch, or output redirection added.
-- [ ] app functional: browse lists, target lists, drag, hand zoom unaffected — covered by the untouched `DuelField.test.ts` suites staying green.
-- [ ] commit msg draft: `feat(duel): browse xyz materials as a zone list and target them on detach (#1b)`
+- [x] tests pass: `npx vitest run tests/unit/material-list.test.ts tests/unit/off-field-target-list.test.ts` — `Tests  16 passed (16)`; `npx vitest run tests/integration/xyz-detach-overlay-address.test.ts` — `Tests  2 passed (2)`; `npm run test:component` — `Tests  936 passed (936)`; `npm run check:headless` — green end to end. All exit 0.
+- [ ] manual check: **not run — needs a human at a browser; steps written into `artifacts/manual_test_checklist.md` § "Xyz materials are a browsable zone (T4)".** `npm run dev`, start a duel with `burning-abyss`, Xyz Summon, hover the Xyz monster → "Materials" chip → dialog lists materials; trigger a detach → target dialog lists materials (or host fallback per recorded semantics). Materials elements themselves still ignore clicks.
+- [x] no silent-failure swallow on a path this slice adds: `openMaterialsDialog` returning early for a missing host is a deliberate no-op on a stale closure, listed here as the only kept site; no `|| true`, empty catch, or output redirection added.
+- [x] app functional: browse lists, target lists, drag, hand zoom unaffected — covered by the untouched `DuelField.test.ts` suites staying green. — `tests/component/DuelField.test.ts` `171 passed`, whole component suite `936 passed`.
+- [x] commit msg draft: `feat(duel): browse xyz materials as a zone list and target them on detach (#1b)`

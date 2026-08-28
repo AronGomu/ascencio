@@ -56,6 +56,8 @@ export interface PromptCard {
   readonly controller: PlayerIndex;
   readonly location: PublicLocation;
   readonly sequence: number;
+  /** Present when the engine addressed this card as an overlay unit (Xyz material): the raw location carried LOCATION_OVERLAY. */
+  readonly overlay?: true;
   readonly position?: CardPosition;
   readonly contribution?: number;
   readonly alternativeContribution?: number;

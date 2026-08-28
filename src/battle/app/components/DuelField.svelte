@@ -27,6 +27,7 @@
     type InteractionChoice,
   } from "../prompts/interaction-spec.ts";
   import type { ZoneListEntry } from "../../field/zone-list.ts";
+  import { materialListEntries } from "../../field/material-list.ts";
   import type { OffFieldTargetEntry } from "../../field/off-field-target-list.ts";
   import ZoneListDialog from "./duel-field/ZoneListDialog.svelte";
   import { dropChoicesForZone } from "../prompts/drop-target.ts";
@@ -45,6 +46,7 @@
   } from "../presentation/dom-feedback-controller.ts";
   import { presentationCommandForDomEvent } from "../presentation/presentation-command.ts";
   import type { FieldWindowId } from "../presentation/floating-window-position.ts";
+  import type { LocalCardAction } from "../presentation/local-card-action.ts";
   import type { PersistedWindowPosition } from "../stores/persisted-ui-state.ts";
   import {
     dragFrameForPointer,
@@ -139,10 +141,11 @@
   export let fullControlHeld = false;
   export let onfullcontrolchange: (value: boolean) => void = noop;
 
-  /* Exactly one list window: either one browsed pile, or the aggregate target
-     list of one prompt. */
+  /* Exactly one list window: one browsed pile, the materials of one Xyz host,
+     or the aggregate target list of one prompt. */
   type ZoneListState =
     | { readonly mode: "browse"; readonly stackId: PhysicalZoneId }
+    | { readonly mode: "materials"; readonly hostId: BoardTargetId }
     | { readonly mode: "target"; readonly promptKey: string }
     | null;
 
@@ -242,6 +245,9 @@
   $: cancelDragGhostOnPromptChange(spec);
   $: clearHandZoomOnBoardChange(board);
   $: openStack = browsedStack(zoneListState, board);
+  $: materialsHost = browsedMaterialsHost(zoneListState, board);
+  $: materialEntries =
+    materialsHost === null ? [] : materialListEntries(materialsHost);
   $: targetListOpen = zoneListState?.mode === "target";
   $: submittedChoiceIds =
     spec === null ? [] : interactionSessionChoiceIds(session, spec);
@@ -916,6 +922,14 @@
     return value.stacks.find((stack) => stack.id === state.stackId) ?? null;
   }
 
+  function browsedMaterialsHost(
+    state: ZoneListState,
+    value: BoardViewModel,
+  ): BoardCardView | null {
+    if (state === null || state.mode !== "materials") return null;
+    return value.cards.find((card) => card.targetId === state.hostId) ?? null;
+  }
+
   function promptKeyOf(value: ActiveInteractionSpec | null): string | null {
     return value === null
       ? null
@@ -991,6 +1005,35 @@
     if (zoneListState !== null) activateWindow("zoneList");
   }
 
+  /* Materials are a zone the player may read at any time, so this list opens
+     with no prompt in play. A host that already left the board is a stale
+     chip closure and answers with nothing at all. */
+  function openMaterialsDialog(hostId: BoardTargetId): void {
+    if (outsideDismissedTargetId === hostId) {
+      outsideDismissedTargetId = null;
+      return;
+    }
+    outsideDismissedTargetId = null;
+    if (board.cards.find(({ targetId }) => targetId === hostId) === undefined)
+      return;
+    zoneListState =
+      zoneListState?.mode === "materials" && zoneListState.hostId === hostId
+        ? null
+        : { mode: "materials", hostId };
+    if (zoneListState !== null) activateWindow("zoneList");
+  }
+
+  function cardLocalActions(card: BoardCardView): readonly LocalCardAction[] {
+    if (card.materials.length === 0) return [];
+    return [
+      {
+        id: "materials",
+        label: "Materials",
+        onSelect: () => openMaterialsDialog(card.targetId),
+      },
+    ];
+  }
+
   function activateWindow(id: FieldWindowId): void {
     activeWindowId = id;
   }
@@ -1046,6 +1089,7 @@
   function isZoneListLauncher(targetId: BoardTargetId): boolean {
     const state = zoneListState;
     if (state === null) return false;
+    if (state.mode === "materials") return state.hostId === targetId;
     return state.mode === "browse"
       ? board.stacks.some(
           (stack) => stack.id === state.stackId && stack.targetId === targetId,
@@ -1122,6 +1166,7 @@
         oncarddragmove={moveCardDrag}
         oncarddragend={endCardDrag}
         oncardpreview={onpreview}
+        localActionsFor={cardLocalActions}
         {onstackpreview}
         onstackactivate={activateStack}
         oncardzoomenter={enterHandZoom}
@@ -1214,6 +1259,23 @@
       ontargetchoice={chooseTargetChoice}
       onconfirm={() => dispatch({ type: "confirm" })}
       oncancel={() => dispatch({ type: "cancel" })}
+      onpreview={(entry) => onzonelistpreview(entry)}
+      onclose={dismissZoneList}
+    />
+  {:else if materialsHost !== null}
+    <ZoneListDialog
+      entries={materialEntries}
+      choices={[]}
+      title={`${materialsHost.label} Materials`}
+      {imageLibrary}
+      cardBackUrl={resolvedCardBackUrl}
+      placeholderUrl={resolvedPlaceholderUrl}
+      disabled={pending}
+      boundaryElement={fieldRoot}
+      windowPosition={zoneListWindowPosition}
+      active={activeWindowId === "zoneList"}
+      onactivate={activateWindow}
+      onwindowpositionchange={onzoneListWindowPositionChange}
       onpreview={(entry) => onzonelistpreview(entry)}
       onclose={dismissZoneList}
     />

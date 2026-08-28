@@ -3947,3 +3947,15 @@ Run `npm run dev` (default `DEV_PORT=4300`), open `#/free-play`, start a duel.
 - [ ] End the turn: the orange borders move to the other player, the grey to you. Only ever one side is orange.
 - [ ] Take LP into the yellow (≤4000) and red (<2000) tiers: the LP number changes colour but its border stays governed by whose turn it is.
 - [ ] The avatar size is capped by the rail column, which sits at its 240px minimum on a 16:9 window: on 1920×1080 the avatars measure the same 240px as before, and only a wider-than-16:9 stage (for example 2560×1080) shows the raised cap. The rail still shows both identities and the status text without anything spilling out.
+
+### Xyz materials are a browsable zone (T4)
+
+Run `npm run dev` (default `DEV_PORT=4300`), open `#/free-play`, pick
+`burning-abyss`, start a duel and Xyz Summon.
+
+- [ ] Hover the Xyz monster: a **Materials** chip appears in its action row even though no prompt is live, and no card without materials ever grows one.
+- [ ] Click **Materials**: a floating list window opens listing exactly the materials that monster carries, one tile each, with the host's name and the word `Materials` in the header. Drag it, wheel-scroll it, hover a tile for its preview.
+- [ ] Close it three ways: the × button, Escape, and a click outside it. Clicking the **Materials** chip a second time also closes it instead of leaving it open.
+- [ ] Click a material sliver drawn under the monster itself: nothing happens. Only the chip opens the list.
+- [ ] Open a pile browser (graveyard, deck) while the materials list is open: the materials list closes — only ever one list window at a time.
+- [ ] Activate an effect that detaches a material (Dante's, for example). **The detach still selects the host card, not a material.** This is the shipped limitation: the engine never asks which unit to detach, so there is no per-material target to list. The material count drops by one and the detached card appears in the graveyard, exactly as before this slice.

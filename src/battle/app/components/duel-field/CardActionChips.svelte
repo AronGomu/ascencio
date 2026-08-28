@@ -1,5 +1,6 @@
 <script lang="ts">
   import { cardActionLabel } from "../../presentation/card-action-label.ts";
+  import type { LocalCardAction } from "../../presentation/local-card-action.ts";
   import type { InteractionChoice } from "../../prompts/interaction-spec.ts";
 
   export let cardId: string;
@@ -19,6 +20,9 @@
      set. Both would otherwise carry the same `data-cy`, and those values are
      required to be unique within a document. */
   export let dataCyScope = "";
+  /* Chips that act on this client only — opening a list, say. They never
+     answer the prompt, so they mount whether or not one is live. */
+  export let localActions: readonly LocalCardAction[] = [];
 
   $: dataCyPrefix = dataCyScope === "" ? "" : `${dataCyScope}-`;
 
@@ -63,37 +67,56 @@
   }
 </script>
 
-<div
-  class="card-action-chips"
-  class:is-stacked={layout === "stack"}
-  role="group"
-  aria-label={`${cardLabel} actions`}
-  bind:this={chipsElement}
-  data-cy={`${dataCyPrefix}card-action-chips-${cardId}`}
->
-  {#each choices as choice (choice.id)}
-    <button
-      type="button"
-      class="card-action-chip"
-      title={choice.label}
-      aria-label={choice.label}
-      tabindex={variant === "field" ? -1 : 0}
-      {disabled}
-      onclick={() => onchoose(choice)}
-      onkeydown={handleKeydown}
-      data-cy={`${dataCyPrefix}card-action-chip-${choice.id}`}
-      >{variant === "list" && choice.action === "activate"
-        ? "Activate effect"
-        : cardActionLabel(choice.action)}</button
-    >
-  {/each}
-  {#if variant === "list" && ondetails !== null}
-    <button
-      type="button"
-      class="card-action-chip card-action-chip--details"
-      onclick={ondetails}
-      onkeydown={handleKeydown}
-      data-cy={`${dataCyPrefix}card-action-details-${cardId}`}>Details</button
-    >
-  {/if}
-</div>
+<!-- Nothing to show means nothing in the DOM: a caller may pass an empty
+     `choices` while its own gate still sees prompt choices elsewhere, and an
+     empty pill would still be revealed on hover by the rules in app.css. -->
+{#if choices.length > 0 || localActions.length > 0 || (variant === "list" && ondetails !== null)}
+  <div
+    class="card-action-chips"
+    class:is-stacked={layout === "stack"}
+    role="group"
+    aria-label={`${cardLabel} actions`}
+    bind:this={chipsElement}
+    data-cy={`${dataCyPrefix}card-action-chips-${cardId}`}
+  >
+    {#each choices as choice (choice.id)}
+      <button
+        type="button"
+        class="card-action-chip"
+        title={choice.label}
+        aria-label={choice.label}
+        tabindex={variant === "field" ? -1 : 0}
+        {disabled}
+        onclick={() => onchoose(choice)}
+        onkeydown={handleKeydown}
+        data-cy={`${dataCyPrefix}card-action-chip-${choice.id}`}
+        >{variant === "list" && choice.action === "activate"
+          ? "Activate effect"
+          : cardActionLabel(choice.action)}</button
+      >
+    {/each}
+    {#each localActions as action (action.id)}
+      <button
+        type="button"
+        class="card-action-chip card-action-chip--local"
+        title={action.label}
+        aria-label={action.label}
+        tabindex={variant === "field" ? -1 : 0}
+        {disabled}
+        onclick={() => action.onSelect()}
+        onkeydown={handleKeydown}
+        data-cy={`${dataCyPrefix}card-action-chip-local-${action.id}`}
+        >{action.label}</button
+      >
+    {/each}
+    {#if variant === "list" && ondetails !== null}
+      <button
+        type="button"
+        class="card-action-chip card-action-chip--details"
+        onclick={ondetails}
+        onkeydown={handleKeydown}
+        data-cy={`${dataCyPrefix}card-action-details-${cardId}`}>Details</button
+      >
+    {/if}
+  </div>
+{/if}

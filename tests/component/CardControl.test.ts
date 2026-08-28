@@ -7,7 +7,10 @@ import {
   cardCode,
   cardInstanceId,
 } from "../../src/battle/duel/contracts/ids.ts";
-import type { BoardCardView } from "../../src/battle/field/board-view-model.ts";
+import type {
+  BoardCardView,
+  BoardMaterialView,
+} from "../../src/battle/field/board-view-model.ts";
 
 afterEach(() => {
   cleanup();
@@ -39,6 +42,16 @@ function makeCard(overrides: Partial<BoardCardView> = {}): BoardCardView {
   };
 }
 
+function makeMaterial(
+  overrides: Partial<BoardMaterialView> & { id: string; sequence: number },
+): BoardMaterialView {
+  return {
+    identityVisible: false,
+    label: "Hidden material",
+    ...overrides,
+  };
+}
+
 function renderCard(
   card: BoardCardView,
   onzoomenter: (element: HTMLElement) => void = () => undefined,
@@ -51,6 +64,26 @@ function renderCard(
     imageLibrary: null,
     onzoomenter,
   });
+}
+
+/* Materials must render independently of layout, so this mirrors renderCard
+   and only adds the two art urls the material faces resolve against. */
+function renderFieldCard(card: BoardCardView) {
+  return render(CardControl, {
+    card,
+    layout: "hand",
+    placement: null,
+    imageUrl: "/back.webp",
+    imageLibrary: null,
+    cardBackUrl: "/back.webp",
+    placeholderUrl: "/placeholder.webp",
+  });
+}
+
+function materialElements(): readonly HTMLElement[] {
+  return [
+    ...document.querySelectorAll<HTMLElement>(".duel-field-card__material"),
+  ];
 }
 
 async function hoverCard(): Promise<HTMLElement> {
@@ -102,5 +135,83 @@ describe("CardControl zoom gating", () => {
     const label = document.querySelector(".duel-field-card__label");
     expect(label).not.toBeNull();
     expect(label?.textContent?.trim()).toContain("Blue-Eyes White Dragon");
+  });
+});
+
+describe("CardControl xyz materials", () => {
+  it("renders one material element per entry with unique data-cy", () => {
+    renderFieldCard(
+      makeCard({
+        materials: [
+          makeMaterial({ id: "material:a", sequence: 0 }),
+          makeMaterial({ id: "material:b", sequence: 1 }),
+        ],
+      }),
+    );
+    const materials = materialElements();
+    expect(materials).toHaveLength(2);
+    expect(materials.map((element) => element.getAttribute("data-cy"))).toEqual(
+      ["field-card-material-material:a", "field-card-material-material:b"],
+    );
+  });
+
+  it("orders materials by sequence and indexes the offset variable", () => {
+    renderFieldCard(
+      makeCard({
+        materials: [
+          makeMaterial({ id: "material:b", sequence: 1 }),
+          makeMaterial({ id: "material:a", sequence: 0 }),
+        ],
+      }),
+    );
+    const materials = materialElements();
+    expect(materials.map((element) => element.getAttribute("data-cy"))).toEqual(
+      ["field-card-material-material:a", "field-card-material-material:b"],
+    );
+    expect(materials[0]?.getAttribute("style")).toContain(
+      "--material-index: 0",
+    );
+    expect(materials[1]?.getAttribute("style")).toContain(
+      "--material-index: 1",
+    );
+  });
+
+  it("hidden material shows the card back", () => {
+    renderFieldCard(
+      makeCard({
+        materials: [makeMaterial({ id: "material:a", sequence: 0 })],
+      }),
+    );
+    const image = document.querySelector<HTMLImageElement>(
+      '[data-cy="field-card-material-image-material:a"]',
+    );
+    expect(image?.getAttribute("src")).toBe("/back.webp");
+    expect(image?.getAttribute("alt")).toBe("");
+    expect(materialElements()[0]?.getAttribute("aria-hidden")).toBe("true");
+  });
+
+  it("visible material shows art with placeholder fallback", () => {
+    renderFieldCard(
+      makeCard({
+        materials: [
+          makeMaterial({
+            id: "material:a",
+            sequence: 0,
+            identityVisible: true,
+            code: cardCode(5053103),
+            label: "Right Leg of the Forbidden One",
+          }),
+        ],
+      }),
+    );
+    const image = document.querySelector<HTMLImageElement>(
+      '[data-cy="field-card-material-image-material:a"]',
+    );
+    expect(image?.getAttribute("src")).toBe("/placeholder.webp");
+    expect(image?.getAttribute("alt")).toBe("Right Leg of the Forbidden One");
+
+    cleanup();
+    renderFieldCard(makeCard({ materials: [] }));
+    expect(materialElements()).toHaveLength(0);
   });
 });

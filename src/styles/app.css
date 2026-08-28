@@ -2269,6 +2269,35 @@ button.duel-field-zone,
   width: 100%;
 }
 
+/* Xyz materials fan out Duel Links style: each material is a full-size
+   card slid 12% of the card width further right per step, painted at
+   z-index -1 so it sits behind the art inside the card's own stacking
+   context (the card root's z-index makes it one) yet above the board. */
+.duel-field-card__material {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--field-card-edge) 78%, transparent);
+  border-radius: 0.28rem;
+  background: var(--surface-strong);
+  box-shadow: 0 0.35rem 0.8rem
+    color-mix(in srgb, var(--shadow) 32%, transparent);
+  transform: translateX(calc((var(--material-index) + 1) * 12%));
+  pointer-events: none;
+}
+
+.duel-field-card__material img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.duel-field-card.is-opponent .duel-field-card__material img {
+  transform: rotate(180deg);
+}
+
 .duel-field-card__art {
   position: absolute;
   inset: 0;

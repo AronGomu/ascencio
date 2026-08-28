@@ -18,7 +18,7 @@ const SIGNAL_DECK = {
 } as const;
 
 describe("battle handoff", () => {
-  it("shows briefing details, checkpoint, conditional return, and starts once", async () => {
+  it("shows the encounter, checkpoint, conditional return, and starts once", async () => {
     const onstart = vi.fn();
     const rendered = render(PreBattleScreen, {
       allowReturn: false,
@@ -26,21 +26,29 @@ describe("battle handoff", () => {
       defaultDeckId: SIGNAL_DECK.id,
       onstart,
     });
-    for (const text of [
-      /Rin's Echo/i,
-      /Relay Deck/i,
-      /Single duel/i,
-      /Decode the challenge/i,
-      /progress is saved before the duel starts/i,
-    ])
-      expect(screen.getByText(text)).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Return to Map" })).toBeNull();
+
+    /* Who the encounter stages names the screen and its opponent seat alike,
+       so both copies are asked for. */
+    expect(screen.getAllByText(/Rin's Echo/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Relay Deck/i)).toBeTruthy();
+    /* The opponent's line, their deck card's meta and the lock caption under it
+       all say who fixed this seat. */
+    expect(screen.getAllByText(/Set by the story/i).length).toBeGreaterThan(0);
+    expect(
+      screen.getByText(/progress is saved before the duel starts/i),
+    ).toBeTruthy();
+
+    /* Two of them when there is a way back at all — the footer's button and
+       the header's icon, one per width — and none when there is not. */
+    expect(screen.queryAllByRole("button", { name: "Back" })).toHaveLength(0);
     const start = screen.getByRole("button", { name: "Start Duel" });
     await userEvent.setup().click(start);
     await userEvent.setup().click(start);
     expect(onstart).toHaveBeenCalledOnce();
     await rendered.rerender({ allowReturn: true });
-    expect(screen.getByRole("button", { name: "Return to Map" })).toBeTruthy();
+    expect(
+      screen.getAllByRole("button", { name: "Back" }).length,
+    ).toBeGreaterThan(0);
   });
 
   /* The screen reports a handoff; it never produces an outcome of its own.

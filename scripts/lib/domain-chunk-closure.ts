@@ -48,8 +48,17 @@ export const DOMAIN_BUDGET_BYTES: Readonly<
      like the editor and the duel, taking 46,296 bytes of packaged masks and text out of
      this closure. Measured 104,403 bytes → ceil(104403/25_000) = 5 → 125,000 * 1.15,
      leaving 27.4% headroom. A rise back toward 150k would mean a catalog crept into the
-     story bundle again. */
-  story: 143_750,
+     story bundle again.
+
+     T24 2026-08-28: raised from 143_750. The pre-battle briefing now renders the shared
+     deck-selection screen instead of its own two-column deck list, so the screen, its
+     tile, its decklist panel and its two dialogs are part of this closure — a chunk
+     composition change rather than drift, which is what this ceiling exists to surface.
+     Measured 132,212 bytes → ceil(132212/25_000) = 6 → 150,000 * 1.15, leaving 23.4%
+     headroom. It falls back once a second domain loads that screen eagerly enough for the
+     shell to own it: the closure subtracts the shell's. A catalog creeping back in is
+     still what a further rise would mean. */
+  story: 172_500,
 };
 
 /** Bytes each domain's lazy chunk adds on top of the shell it loads into. */

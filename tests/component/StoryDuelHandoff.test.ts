@@ -239,9 +239,9 @@ async function reachEncounter(): Promise<ReturnType<typeof userEvent.setup>> {
   /* The catalog read the briefing gates on resolves a microtask later than the
      screen renders, so Start is briefly disabled on purpose. */
   await vi.waitFor(() =>
-    expect(cy("story-briefing-start").hasAttribute("disabled")).toBe(false),
+    expect(cy("deck-select-start").hasAttribute("disabled")).toBe(false),
   );
-  await user.click(cy("story-briefing-start"));
+  await user.click(cy("deck-select-start"));
   return user;
 }
 

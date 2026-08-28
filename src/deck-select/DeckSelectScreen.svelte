@@ -27,6 +27,13 @@
   export let canStart = false;
   /** Footer notice: why the duel cannot start, when something blocks it. */
   export let blockNotice: string | null = null;
+  /** False hides both back controls. The story's briefing commits to the
+      encounter it is seating, and its own way back sits outside this screen. */
+  export let showBack = true;
+  /** False hides the footer's Delete/Rename/Duplicate cluster and every tile's
+      kebab — a scope whose decks are managed somewhere else. Open and Start
+      stay: they are how this screen is left, not how a deck is edited. */
+  export let manageable = true;
   export let onselect: (key: string) => void = () => undefined;
   export let onstart: () => void = () => undefined;
   export let onback: () => void = () => undefined;
@@ -498,29 +505,31 @@
   {/if}
 
   <header data-cy="deck-select-header">
-    <!-- The phone's Back, always in the document: the footer's button is the
-         wide control and CSS shows whichever one the width uses, so neither is
-         conditional and both stay unique. -->
-    <button
-      type="button"
-      class="back-icon"
-      aria-label="Back"
-      onclick={onback}
-      data-cy="deck-select-back-icon"
-    >
-      <svg
-        viewBox="0 0 20 20"
-        aria-hidden="true"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        data-cy="deck-select-back-icon-glyph"
+    <!-- The phone's Back, in the document whenever there is one at all: the
+         footer's button is the wide control and CSS shows whichever one the
+         width uses, so the two are one affordance and `showBack` takes both. -->
+    {#if showBack}
+      <button
+        type="button"
+        class="back-icon"
+        aria-label="Back"
+        onclick={onback}
+        data-cy="deck-select-back-icon"
       >
-        <path d="M12 4 L6 10 L12 16" data-cy="deck-select-back-icon-arrow" />
-      </svg>
-    </button>
+        <svg
+          viewBox="0 0 20 20"
+          aria-hidden="true"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          data-cy="deck-select-back-icon-glyph"
+        >
+          <path d="M12 4 L6 10 L12 16" data-cy="deck-select-back-icon-arrow" />
+        </svg>
+      </button>
+    {/if}
     <div class="heading" data-cy="deck-select-heading">
       <p class="eyebrow" data-cy="deck-select-eyebrow">{eyebrow}</p>
       <h1 data-cy="deck-select-title">{title}</h1>
@@ -566,45 +575,51 @@
         onpress={() => onselect(candidate.key)}
         ondblpress={() => onopen(candidate.key)}
         onfavourite={(favourite) => onfavourite(candidate.key, favourite)}
+        showMenu={manageable}
         onmenu={(anchor) => (menu = { key: candidate.key, anchor })}
       />
     {/each}
   </div>
 
   <footer data-cy="deck-select-footer">
-    <button
-      type="button"
-      class="secondary wide-only"
-      data-cy="deck-select-back"
-      onclick={onback}>Back</button
-    >
-    <div class="manage" data-cy="deck-select-manage">
+    {#if showBack}
       <button
         type="button"
-        class="secondary"
-        disabled={selectedTile === null || !selectedTile.deletable}
-        data-cy="deck-select-delete"
-        onclick={deleteSelected}>Delete</button
+        class="secondary wide-only"
+        data-cy="deck-select-back"
+        onclick={onback}>Back</button
       >
-      <button
-        type="button"
-        class="secondary"
-        disabled={selectedTile === null}
-        data-cy="deck-select-rename"
-        onclick={renameSelected}>Rename</button
-      >
-      <button
-        type="button"
-        class="secondary"
-        disabled={selectedTile === null}
-        data-cy="deck-select-duplicate"
-        onclick={duplicateSelected}>Duplicate</button
-      >
-    </div>
+    {/if}
+    {#if manageable}
+      <div class="manage" data-cy="deck-select-manage">
+        <button
+          type="button"
+          class="secondary"
+          disabled={selectedTile === null || !selectedTile.deletable}
+          data-cy="deck-select-delete"
+          onclick={deleteSelected}>Delete</button
+        >
+        <button
+          type="button"
+          class="secondary"
+          disabled={selectedTile === null}
+          data-cy="deck-select-rename"
+          onclick={renameSelected}>Rename</button
+        >
+        <button
+          type="button"
+          class="secondary"
+          disabled={selectedTile === null}
+          data-cy="deck-select-duplicate"
+          onclick={duplicateSelected}>Duplicate</button
+        >
+      </div>
+    {/if}
     {#if mode === "duel-start"}
       <button
         type="button"
         class="secondary wide-only"
+        class:pushed={!manageable}
         disabled={selectedTile === null}
         data-cy="deck-select-open"
         onclick={openSelected}>Open</button
@@ -842,6 +857,12 @@
     display: flex;
     margin-right: auto;
     gap: var(--space-2);
+  }
+
+  /* Nothing holds the left edge when the management cluster is gone, so the
+     screen's own actions claim the right edge themselves. */
+  .pushed {
+    margin-left: auto;
   }
 
   footer button {

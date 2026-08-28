@@ -163,7 +163,7 @@ async function matchSetupControl(cy: string): Promise<HTMLButtonElement> {
 /** Duels the pair the setup screen preselected. `#/free-play` opens on that
     screen, so there is nothing to click first (ADR-054). */
 async function startMatch(): Promise<void> {
-  await fireEvent.click(await matchSetupControl("free-play-match-start"));
+  await fireEvent.click(await matchSetupControl("deck-select-start"));
 }
 
 function setViewport(width: number, height: number) {
@@ -244,21 +244,22 @@ describe("AppShell", () => {
       document.querySelector('[data-cy="shell-region-free-play-setup"]'),
     ).not.toBeNull();
     expect(document.querySelector('[data-cy="shell-region-duel"]')).toBeNull();
+    /* The screen's two seat cards, each rendering its deck's tile under its
+       own `cyKey`; the opponent is seated first in the document. */
     const seats = await vi.waitFor(() => {
-      const found = document.querySelectorAll<HTMLSelectElement>(
-        '[data-cy="free-play-match-player-picker"], [data-cy="free-play-match-opponent-picker"]',
+      const found = document.querySelectorAll<HTMLElement>(
+        '[data-cy^="deck-tile-yours-"], [data-cy^="deck-tile-opponent-"]',
       );
       expect(found).toHaveLength(2);
-      expect(found[0]!.value).not.toBe("");
       return found;
     }, REAL_IMPORT);
-    expect([...seats].map((seat) => seat.value)).toEqual([
-      "preset:mvp-player",
-      "preset:shaddoll",
+    expect([...seats].map((card) => card.getAttribute("data-cy"))).toEqual([
+      "deck-tile-opponent-preset:shaddoll",
+      "deck-tile-yours-preset:mvp-player",
     ]);
 
     await fireEvent.click(
-      document.querySelector<HTMLElement>('[data-cy="free-play-match-start"]')!,
+      document.querySelector<HTMLElement>('[data-cy="deck-select-start"]')!,
     );
 
     expect(
@@ -278,7 +279,7 @@ describe("AppShell", () => {
       loaders,
     });
 
-    await fireEvent.click(await matchSetupControl("free-play-match-back"));
+    await fireEvent.click(await matchSetupControl("deck-select-back"));
 
     expect(hashes).toEqual(["#/"]);
     expect(
@@ -289,16 +290,14 @@ describe("AppShell", () => {
 
   /* The library the seats are filled from is one click away from the seats
      themselves, and it is the shell that owns that route. */
-  it("opens the free-play deck library from the player's seat", async () => {
+  it("opens the free-play deck library from the selection screen", async () => {
     const hashes: string[] = [];
     render(AppShell, {
       store: createShellStore("#/free-play", (hash) => hashes.push(hash)),
       loaders,
     });
 
-    await fireEvent.click(
-      await matchSetupControl("free-play-match-player-deck-builder"),
-    );
+    await fireEvent.click(await matchSetupControl("deck-select-open"));
 
     expect(hashes).toEqual(["#/free-play/decks"]);
     expect(

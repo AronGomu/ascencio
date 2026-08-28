@@ -31,7 +31,7 @@ async function openDuel(page: Page, url = "./#/duel"): Promise<void> {
    from the request it builds rather than from a picker of its own. Start is
    dead until the free-play library has answered, which is what the wait is. */
 async function startPresetDuel(page: Page): Promise<void> {
-  const start = page.locator('[data-cy="free-play-match-start"]');
+  const start = page.locator('[data-cy="deck-select-start"]');
   await expect(start).toBeEnabled({ timeout: 120_000 });
   await start.click();
 }

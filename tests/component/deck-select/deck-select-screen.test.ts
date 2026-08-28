@@ -165,6 +165,25 @@ describe("DeckSelectScreen", () => {
     expect(button("deck-select-duplicate").disabled).toBe(false);
   });
 
+  /* T20: free play swaps onto this screen before the operations behind the
+     kebab are wired, and a menu item that does nothing is worse than no menu.
+     The host says so once and both paths to those operations disappear. */
+  it("manageable=false hides every kebab and the footer management cluster", () => {
+    render(DeckSelectScreen, props({ manageable: false, selectedKey: "k1" }));
+
+    for (const key of ["k1", "k2", "k3"])
+      expect(find(`deck-tile-menu-${key}`)).toBeNull();
+    expect(find("deck-select-manage")).toBeNull();
+    expect(find("deck-select-delete")).toBeNull();
+    expect(find("deck-select-rename")).toBeNull();
+    expect(find("deck-select-duplicate")).toBeNull();
+    /* The picking half of the screen is untouched: this hides operations on a
+       deck, not the deck itself. */
+    expect(find("deck-tile-press-k1")).not.toBeNull();
+    expect(find("deck-select-open")).not.toBeNull();
+    expect(find("deck-select-start")).not.toBeNull();
+  });
+
   it("library mode hides Open and Start", () => {
     render(
       DeckSelectScreen,

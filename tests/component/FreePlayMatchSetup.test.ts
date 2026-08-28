@@ -47,19 +47,22 @@ const VALID_MAIN = Array.from(
   (_, index) => mainCodes[index % mainCodes.length]!,
 );
 
-/* Two bundled decks rather than the six this build ships: the screen renders
-   whatever the battle entry hands it, and a short list is what makes "three
-   options per seat" a readable assertion. Both ids are real, because
-   `parseBattleRequest` checks a preset id against the shipped catalog. */
-const PRESETS = DECK_CATALOG.filter(
-  ({ id }) => id === "mvp-player" || id === "shaddoll",
+/* Three bundled decks rather than the six this build ships: the screen renders
+   whatever the battle entry hands it, and a short grid is what makes "these
+   tiles and no others" a readable assertion. All three ids are real, because
+   `parseBattleRequest` checks a preset id against the shipped catalog — and
+   Burning Abyss is here because it is the deck the Blaze Circuit persona owns,
+   which is what picking that AI has to bring along. */
+const PRESETS = DECK_CATALOG.filter(({ id }) =>
+  ["mvp-player", "burning-abyss", "shaddoll"].includes(id),
 );
 const PLAYER_PRESET_KEY = "preset:mvp-player";
 const OPPONENT_PRESET_KEY = "preset:shaddoll";
+const BLAZE_PRESET_KEY = "preset:burning-abyss";
 const LOCAL_KEY = "local:built-deck:1";
 
 /** The slice of the battle entry the screen loads, with the bundled list cut
-    down to the fixture pair. Everything else is the production function. */
+    down to the fixture trio. Everything else is the production function. */
 function battleModule(
   overrides: Partial<BattleDeckModule> = {},
 ): BattleDeckModule {
@@ -120,18 +123,31 @@ function query(value: string): HTMLElement | null {
   return document.querySelector(`[data-cy="${value}"]`);
 }
 
-function seat(which: "player" | "opponent"): HTMLSelectElement {
-  return query(`free-play-match-${which}-picker`) as HTMLSelectElement;
+function control(value: string): HTMLButtonElement {
+  return query(value) as HTMLButtonElement;
 }
 
-function optionKeys(which: "player" | "opponent"): readonly string[] {
-  return [...seat(which).querySelectorAll("option")].map(
-    (option) => option.value,
+/** The tiles the grid shows, in the order it shows them. */
+function gridKeys(): readonly string[] {
+  return [...(query("deck-select-grid")?.children ?? [])].map((child) =>
+    (child.getAttribute("data-cy") ?? "").replace("deck-tile-", ""),
+  );
+}
+
+/** The deck filling a seat, read off the seat card the panel renders it as:
+    the card's tile is the same deck under its own `cyKey`. */
+function seatKey(which: "yours" | "opponent"): string | null {
+  const prefix = `deck-tile-${which}-`;
+  return (
+    document
+      .querySelector(`[data-cy^="${prefix}"]`)
+      ?.getAttribute("data-cy")
+      ?.slice(prefix.length) ?? null
   );
 }
 
 function startButton(): HTMLButtonElement {
-  return query("free-play-match-start") as HTMLButtonElement;
+  return control("deck-select-start");
 }
 
 interface RenderOptions {
@@ -145,29 +161,30 @@ function renderSetup(options: RenderOptions = {}) {
   const onback = vi.fn();
   const ondecks = vi.fn();
   const storage = options.storage ?? memoryStorage();
+  const settings = createShellSettingsStore(storage);
   const rendered = render(FreePlayMatchSetup, {
-    settings: createShellSettingsStore(storage),
+    settings,
     loadBattle:
       options.loadBattle ?? (async () => battleModule(options.module)),
     onstart,
     onback,
     ondecks,
   });
-  return { ...rendered, onstart, onback, ondecks, storage };
+  return { ...rendered, onstart, onback, ondecks, storage, settings };
 }
 
 /** Rendered as far as the bundled decks, which need no library read. */
 async function renderLoadedSetup(options: RenderOptions = {}) {
   const setup = renderSetup(options);
-  await vi.waitFor(() => expect(seat("player").options).not.toHaveLength(0));
+  await vi.waitFor(() => expect(gridKeys()).not.toHaveLength(0));
   return setup;
 }
 
 /** Rendered as far as the library behind those bundled decks, which is what
-    puts the seeded local deck in both seats. */
+    puts the seeded local deck in the grid. */
 async function renderListedSetup(options: RenderOptions = {}) {
   const setup = renderSetup(options);
-  await vi.waitFor(() => expect(optionKeys("player")).toContain(LOCAL_KEY));
+  await vi.waitFor(() => expect(gridKeys()).toContain(LOCAL_KEY));
   return setup;
 }
 
@@ -185,17 +202,30 @@ afterEach(async () => {
 });
 
 describe("FreePlayMatchSetup", () => {
-  it("lists presets and local decks for both seats", async () => {
+  it("opens on the shared selection screen with every deck as a tile", async () => {
     await renderListedSetup();
 
-    expect(query("free-play-match-setup")).not.toBeNull();
-    for (const which of ["player", "opponent"] as const) {
-      expect(optionKeys(which)).toEqual([
-        PLAYER_PRESET_KEY,
-        OPPONENT_PRESET_KEY,
-        LOCAL_KEY,
-      ]);
-    }
+    expect(query("deck-select-screen")).not.toBeNull();
+    expect(query("deck-select-eyebrow")?.textContent).toBe("Free play");
+    expect(query("deck-select-title")?.textContent).toBe("Choose your deck");
+    /* Newest first, and a preset has no stamp at all, so the deck the player
+       built leads the bundled three. */
+    expect(gridKeys()).toEqual([
+      LOCAL_KEY,
+      PLAYER_PRESET_KEY,
+      BLAZE_PRESET_KEY,
+      OPPONENT_PRESET_KEY,
+    ]);
+  });
+
+  /* T21 wires rename, duplicate and delete. Until it does, a kebab that opens
+     a menu of dead items is worse than no kebab. */
+  it("offers no deck management before the operations exist", async () => {
+    await renderListedSetup();
+
+    expect(query(`deck-tile-menu-${PLAYER_PRESET_KEY}`)).toBeNull();
+    expect(query("deck-select-manage")).toBeNull();
+    expect(query("deck-select-delete")).toBeNull();
   });
 
   /* The bundled decks are compiled into this build, so they are on screen and
@@ -208,11 +238,11 @@ describe("FreePlayMatchSetup", () => {
       module: { listSelectableDecks: () => new Promise(() => {}) },
     });
 
-    expect(optionKeys("player")).toEqual([
+    expect(gridKeys()).toEqual([
       PLAYER_PRESET_KEY,
+      BLAZE_PRESET_KEY,
       OPPONENT_PRESET_KEY,
     ]);
-    expect(seat("player").disabled).toBe(false);
     expect(startButton().disabled).toBe(false);
   });
 
@@ -230,8 +260,8 @@ describe("FreePlayMatchSetup", () => {
     expect(startButton().disabled).toBe(false);
   });
 
-  /* A deck built between two visits is listed on the second, so the library
-     the seats show is never the one the page happened to read first. */
+  /* A deck built between two visits is listed on the second, so the grid is
+     never the library the page happened to read first. */
   it("re-reads the library on every visit", async () => {
     await renderListedSetup();
     cleanup();
@@ -240,20 +270,21 @@ describe("FreePlayMatchSetup", () => {
     await renderLoadedSetup();
 
     await vi.waitFor(() =>
-      expect(optionKeys("player")).toEqual([
+      expect(gridKeys()).toEqual([
         PLAYER_PRESET_KEY,
+        BLAZE_PRESET_KEY,
         OPPONENT_PRESET_KEY,
       ]),
     );
   });
 
-  it("builds a battle request from both selections", async () => {
+  it("seats the default pair and builds a battle request from it", async () => {
     const setup = await renderListedSetup();
 
-    await fireEvent.change(seat("player"), { target: { value: LOCAL_KEY } });
-    await fireEvent.change(seat("opponent"), {
-      target: { value: OPPONENT_PRESET_KEY },
-    });
+    expect(seatKey("yours")).toBe(PLAYER_PRESET_KEY);
+    expect(seatKey("opponent")).toBe(OPPONENT_PRESET_KEY);
+
+    await fireEvent.click(control(`deck-tile-press-${LOCAL_KEY}`));
     await fireEvent.click(startButton());
 
     expect(setup.onstart).toHaveBeenCalledTimes(1);
@@ -269,24 +300,23 @@ describe("FreePlayMatchSetup", () => {
     const storage = memoryStorage();
     const first = await renderListedSetup({ storage });
 
-    await fireEvent.change(seat("player"), { target: { value: LOCAL_KEY } });
-    await fireEvent.change(seat("opponent"), {
-      target: { value: PLAYER_PRESET_KEY },
-    });
+    await fireEvent.click(control(`deck-tile-press-${LOCAL_KEY}`));
+    await fireEvent.click(control("duel-start-opponent-deck"));
+    await fireEvent.click(control(`deck-tile-press-${PLAYER_PRESET_KEY}`));
     await fireEvent.click(startButton());
     expect(first.onstart).toHaveBeenCalledTimes(1);
     cleanup();
 
     await renderListedSetup({ storage });
 
-    expect(seat("player").value).toBe(LOCAL_KEY);
-    expect(seat("opponent").value).toBe(PLAYER_PRESET_KEY);
+    expect(seatKey("yours")).toBe(LOCAL_KEY);
+    expect(seatKey("opponent")).toBe(PLAYER_PRESET_KEY);
   });
 
   it("falls back when a remembered deck is gone", async () => {
     const storage = memoryStorage();
     const first = await renderListedSetup({ storage });
-    await fireEvent.change(seat("player"), { target: { value: LOCAL_KEY } });
+    await fireEvent.click(control(`deck-tile-press-${LOCAL_KEY}`));
     await fireEvent.click(startButton());
     expect(first.onstart).toHaveBeenCalledTimes(1);
     cleanup();
@@ -294,27 +324,28 @@ describe("FreePlayMatchSetup", () => {
 
     await renderLoadedSetup({ storage });
 
-    expect(optionKeys("player")).toEqual([
+    expect(gridKeys()).toEqual([
       PLAYER_PRESET_KEY,
+      BLAZE_PRESET_KEY,
       OPPONENT_PRESET_KEY,
     ]);
-    expect(seat("player").value).toBe(PLAYER_PRESET_KEY);
-    expect(seat("opponent").value).toBe(OPPONENT_PRESET_KEY);
-    expect(query("free-play-match-error")).toBeNull();
+    expect(seatKey("yours")).toBe(PLAYER_PRESET_KEY);
+    expect(seatKey("opponent")).toBe(OPPONENT_PRESET_KEY);
     expect(startButton().disabled).toBe(false);
   });
 
-  it("start is disabled until both seats are chosen", async () => {
+  it("cannot start before either seat is filled", async () => {
     renderSetup({ loadBattle: () => new Promise<BattleDeckModule>(() => {}) });
 
     expect(startButton().disabled).toBe(true);
-    expect(seat("player").value).toBe("");
-    expect(seat("opponent").value).toBe("");
+    expect(query("deck-select-block-notice")?.textContent).toContain(
+      "Reading your deck library",
+    );
   });
 
-  /* The seats stay live so the player can pick their way out of it, rather
+  /* The grid stays live so the player can pick their way out of it, rather
      than being left on a screen whose only working control is Back. */
-  it("shows a refused request inline and keeps the pickers usable", async () => {
+  it("shows a refused request inline and keeps the grid usable", async () => {
     const setup = await renderListedSetup({
       module: {
         parseBattleRequest: () => {
@@ -326,36 +357,114 @@ describe("FreePlayMatchSetup", () => {
     await fireEvent.click(startButton());
 
     expect(setup.onstart).not.toHaveBeenCalled();
-    expect(query("free-play-match-error")?.textContent).toContain(
+    expect(query("deck-select-block-notice")?.textContent).toContain(
       "player.deck.main holds 39 cards",
     );
-    expect(seat("player").disabled).toBe(false);
-    expect(seat("opponent").disabled).toBe(false);
 
-    await fireEvent.change(seat("player"), { target: { value: LOCAL_KEY } });
+    await fireEvent.click(control(`deck-tile-press-${LOCAL_KEY}`));
 
-    expect(seat("player").value).toBe(LOCAL_KEY);
-    expect(query("free-play-match-error")).toBeNull();
+    expect(seatKey("yours")).toBe(LOCAL_KEY);
+    expect(query("deck-select-block-notice")).toBeNull();
+  });
+
+  /* A deck the library dropped between the listing and the press: the seat
+     still names it, and Start says so instead of duelling nothing. */
+  it("blocks with a notice when a chosen deck has vanished", async () => {
+    const setup = await renderListedSetup({
+      module: { findSelectableDeck: () => null },
+    });
+
+    await fireEvent.click(startButton());
+
+    expect(setup.onstart).not.toHaveBeenCalled();
+    expect(query("deck-select-block-notice")?.textContent).toContain(
+      "A deck you chose is no longer available. Choose another.",
+    );
   });
 
   it("goes back to the main menu without starting a match", async () => {
     const setup = await renderLoadedSetup();
 
-    await fireEvent.click(query("free-play-match-back")!);
+    await fireEvent.click(control("deck-select-back"));
 
     expect(setup.onback).toHaveBeenCalledTimes(1);
     expect(setup.onstart).not.toHaveBeenCalled();
   });
 
-  /* The deck builder is offered under the seat whose decks the player owns,
-     and only there: nobody builds a deck for the opponent seat. */
-  it("offers the deck builder under the player's seat", async () => {
+  /* The library the grid is filled from is one press away from the grid. */
+  it("opens the deck library from the selection screen", async () => {
     const setup = await renderLoadedSetup();
 
-    expect(query("free-play-match-opponent-deck-builder")).toBeNull();
-    await fireEvent.click(query("free-play-match-player-deck-builder")!);
+    await fireEvent.click(control("deck-select-open"));
 
     expect(setup.ondecks).toHaveBeenCalledTimes(1);
     expect(setup.onstart).not.toHaveBeenCalled();
+  });
+
+  /* The roster is the pairing rule: choosing who you face chooses what they
+     bring, and the choice outlives the match. */
+  it("brings the picked persona's deck to the opponent seat", async () => {
+    const setup = await renderLoadedSetup();
+
+    expect(query("duel-start-opponent-name")?.textContent).toBe("Vault Warden");
+
+    await fireEvent.click(control("duel-start-opponent-portrait"));
+    await fireEvent.click(control("duel-start-opponent-option-blaze-circuit"));
+
+    expect(query("duel-start-opponent-name")?.textContent).toBe(
+      "Blaze Circuit",
+    );
+    expect(seatKey("opponent")).toBe(BLAZE_PRESET_KEY);
+    expect(setup.storage.getItem("ygo.ui.v3")).toContain(
+      '"freePlayOpponentId":"blaze-circuit"',
+    );
+  });
+
+  /* Pressing the opponent's card hands the grid to their seat, so the next
+     press overrides the deck they bring — for this match only. The persona is
+     who you face, not what they happen to be holding today. */
+  it("overrides the opponent's deck for one duel without changing the persona", async () => {
+    await renderLoadedSetup();
+
+    await fireEvent.click(control("duel-start-opponent-deck"));
+    await fireEvent.click(control(`deck-tile-press-${BLAZE_PRESET_KEY}`));
+
+    expect(seatKey("opponent")).toBe(BLAZE_PRESET_KEY);
+    expect(seatKey("yours")).toBe(PLAYER_PRESET_KEY);
+    expect(query("duel-start-opponent-name")?.textContent).toBe("Vault Warden");
+  });
+
+  /* Two stores for one star: the repository only knows decks the player built,
+     so a bundled deck is starred beside the rest of the free-play settings. */
+  it("stars a bundled deck in the shell settings", async () => {
+    const setup = await renderLoadedSetup();
+
+    await fireEvent.click(control(`deck-tile-fav-${OPPONENT_PRESET_KEY}`));
+
+    expect(setup.storage.getItem("ygo.ui.v3")).toContain(
+      '"freePlayPresetFavouriteIds":["preset:shaddoll"]',
+    );
+    await vi.waitFor(() =>
+      expect(
+        control(`deck-tile-fav-${OPPONENT_PRESET_KEY}`).getAttribute(
+          "aria-pressed",
+        ),
+      ).toBe("true"),
+    );
+  });
+
+  it("stars a deck the player built in the library itself", async () => {
+    await renderListedSetup();
+
+    await fireEvent.click(control(`deck-tile-fav-${LOCAL_KEY}`));
+
+    await vi.waitFor(async () => {
+      const repository = await IndexedDbDeckRepository.open();
+      try {
+        expect(await repository.listFavourites()).toEqual(["built-deck"]);
+      } finally {
+        repository.close();
+      }
+    });
   });
 });

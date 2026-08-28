@@ -27,6 +27,11 @@
   export let canStart = false;
   /** Footer notice: why the duel cannot start, when something blocks it. */
   export let blockNotice: string | null = null;
+  /** Whether decks can be operated on here: the tile kebabs and the footer's
+      rename/duplicate/delete cluster. A host that has not wired those handlers
+      passes `false` rather than showing controls that do nothing — Open and
+      the picking half of the screen are unaffected. */
+  export let manageable = true;
   export let onselect: (key: string) => void = () => undefined;
   export let onstart: () => void = () => undefined;
   export let onback: () => void = () => undefined;
@@ -565,42 +570,45 @@
         yours={seat === "opponent" && candidate.key === playerDeck?.key}
         onpress={() => onselect(candidate.key)}
         ondblpress={() => onopen(candidate.key)}
+        showMenu={manageable}
         onfavourite={(favourite) => onfavourite(candidate.key, favourite)}
         onmenu={(anchor) => (menu = { key: candidate.key, anchor })}
       />
     {/each}
   </div>
 
-  <footer data-cy="deck-select-footer">
+  <footer class:unmanaged={!manageable} data-cy="deck-select-footer">
     <button
       type="button"
-      class="secondary wide-only"
+      class="secondary wide-only back"
       data-cy="deck-select-back"
       onclick={onback}>Back</button
     >
-    <div class="manage" data-cy="deck-select-manage">
-      <button
-        type="button"
-        class="secondary"
-        disabled={selectedTile === null || !selectedTile.deletable}
-        data-cy="deck-select-delete"
-        onclick={deleteSelected}>Delete</button
-      >
-      <button
-        type="button"
-        class="secondary"
-        disabled={selectedTile === null}
-        data-cy="deck-select-rename"
-        onclick={renameSelected}>Rename</button
-      >
-      <button
-        type="button"
-        class="secondary"
-        disabled={selectedTile === null}
-        data-cy="deck-select-duplicate"
-        onclick={duplicateSelected}>Duplicate</button
-      >
-    </div>
+    {#if manageable}
+      <div class="manage" data-cy="deck-select-manage">
+        <button
+          type="button"
+          class="secondary"
+          disabled={selectedTile === null || !selectedTile.deletable}
+          data-cy="deck-select-delete"
+          onclick={deleteSelected}>Delete</button
+        >
+        <button
+          type="button"
+          class="secondary"
+          disabled={selectedTile === null}
+          data-cy="deck-select-rename"
+          onclick={renameSelected}>Rename</button
+        >
+        <button
+          type="button"
+          class="secondary"
+          disabled={selectedTile === null}
+          data-cy="deck-select-duplicate"
+          onclick={duplicateSelected}>Duplicate</button
+        >
+      </div>
+    {/if}
     {#if mode === "duel-start"}
       <button
         type="button"
@@ -844,6 +852,13 @@
     gap: var(--space-2);
   }
 
+  /* Without the cluster there is nothing left to push Open and Start to the
+     right edge, so Back takes that job rather than the screen's own action
+     sliding in beside it. */
+  footer.unmanaged .back {
+    margin-right: auto;
+  }
+
   footer button {
     min-height: 2.75rem;
   }
@@ -1032,6 +1047,15 @@
     background: none;
     font: inherit;
     text-align: left;
+  }
+
+  /* The tile fills the card, and its own press button covers all of it. That
+     button is disabled here, and a disabled control does not fire a click or
+     let one through — so without this the wrapper never hears the press and
+     the seat card is dead in a browser however it looks. Global because the
+     tile's markup belongs to `DeckTile`. */
+  .seat-card :global(.deck-tile) {
+    pointer-events: none;
   }
 
   .pressable {

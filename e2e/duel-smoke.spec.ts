@@ -127,7 +127,7 @@ async function openDuel(page: Page, url = "./#/duel"): Promise<void> {
    from the request it builds rather than from a picker of its own. Start is
    dead until the free-play library has answered, which is what the wait is. */
 async function startPresetDuel(page: Page): Promise<void> {
-  const start = page.locator('[data-cy="free-play-match-start"]');
+  const start = page.locator('[data-cy="deck-select-start"]');
   await expect(start).toBeEnabled({ timeout: 120_000 });
   await start.click();
 }
@@ -320,46 +320,39 @@ test("the root route shows the main menu without booting the duel", async ({
 
   /* ADR-054: the entry lands on the seats themselves. The menu that used to
      stand here offered Start a match, Deck builder and Return; the first was a
-     click that named the screen behind it, and the other two are now the deck
-     builder under the player's seat and Main menu beside Start. The duel's own
-     "Choose your deck" picker, which fixed the opponent, is what these seats
-     replaced — so it must not appear here either. */
-  await expect(page.locator('[data-cy="free-play-match-setup"]')).toBeVisible({
+     click that named the screen behind it, and the other two are now Open and
+     Back in the selection screen's own footer. T20: those seats are the shared
+     deck-selection screen, so the duel's own picker — which fixed the opponent
+     — must not appear here either. */
+  await expect(page.locator('[data-cy="deck-select-screen"]')).toBeVisible({
     timeout: 120_000,
   });
-  await expect(
-    page.getByRole("heading", { name: "Choose the decks" }),
-  ).toBeVisible();
-  for (const control of [
-    "free-play-match-player-deck-builder",
-    "free-play-match-back",
-  ])
+  await expect(page.locator('[data-cy="deck-select-eyebrow"]')).toHaveText(
+    "Free play",
+  );
+  for (const control of ["deck-select-open", "deck-select-back"])
     await expect(page.locator(`[data-cy="${control}"]`)).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Choose your deck" }),
-  ).toHaveCount(0);
+  await expect(page.locator('[data-cy="deck-picker"]')).toHaveCount(0);
 
   /* Both seats are offered before the card database behind the library has
      answered: the bundled decks are compiled into this build, so Start is live
      on the first paint rather than after a fetch. */
   await expect(
-    page.locator('[data-cy="free-play-match-player-presets"]'),
+    page.locator('[data-cy="deck-tile-preset:mvp-player"]'),
   ).toHaveCount(1);
 
   await startPresetDuel(page);
-  await expect(
-    page.getByRole("heading", { name: "Choose your deck" }),
-  ).toHaveCount(0);
+  await expect(page.locator('[data-cy="deck-picker"]')).toHaveCount(0);
 
   /* The match is a state of the route, so the way back to the seats is an item
      of the duel's own menu rather than a route the player navigates. */
   await page.locator('[data-cy="duel-right-rail-options"]').click();
   await page.locator('[data-cy="menu-dialog-leave-match-button"]').click();
-  await expect(page.locator('[data-cy="free-play-match-setup"]')).toBeVisible();
+  await expect(page.locator('[data-cy="deck-select-screen"]')).toBeVisible();
   expect(new URL(page.url()).hash).toBe("#/free-play");
 
   /* The library the seats are filled from is one click away from them. */
-  await page.locator('[data-cy="free-play-match-player-deck-builder"]').click();
+  await page.locator('[data-cy="deck-select-open"]').click();
   expect(new URL(page.url()).hash).toBe("#/free-play/decks");
 });
 
@@ -519,7 +512,7 @@ test("the match setup persists a chosen pair and Change decks returns without au
   page,
 }) => {
   await openDuel(page);
-  const setup = page.locator('[data-cy="free-play-match-setup"]');
+  const setup = page.locator('[data-cy="deck-select-screen"]');
   await expect(setup).toBeVisible({ timeout: 120_000 });
   expect(
     (await readCapture(page)).commands.filter(
@@ -527,20 +520,22 @@ test("the match setup persists a chosen pair and Change decks returns without au
     ),
   ).toHaveLength(0);
 
-  const playerSelect = page.locator(
-    '[data-cy="free-play-match-player-picker"]',
-  );
-  const opponentSelect = page.locator(
-    '[data-cy="free-play-match-opponent-picker"]',
-  );
-  await expect(playerSelect).toBeEnabled({ timeout: 120_000 });
-  await playerSelect.selectOption("preset:burning-abyss");
-  /* T17: the opponent seat is a choice now. Picking a deck that is neither
-     seat's default is what proves the request carries it rather than the
-     Shaddoll the duel's own picker used to assign. */
-  await opponentSelect.selectOption("preset:nekroz");
+  const yourSeat = page.locator('[data-cy^="deck-tile-yours-"]');
+  const opponentSeat = page.locator('[data-cy^="deck-tile-opponent-"]');
+  await expect(
+    page.locator('[data-cy="deck-tile-press-preset:burning-abyss"]'),
+  ).toBeEnabled({ timeout: 120_000 });
+  await page
+    .locator('[data-cy="deck-tile-press-preset:burning-abyss"]')
+    .click();
+  /* T17: the opponent seat is a choice now, and T20 makes the choice the cards
+     themselves — pressing their seat card hands the grid to their seat. Picking
+     a deck that is neither seat's default is what proves the request carries it
+     rather than the Shaddoll the duel's own picker used to assign. */
+  await page.locator('[data-cy="duel-start-opponent-deck"]').click();
+  await page.locator('[data-cy="deck-tile-press-preset:nekroz"]').click();
 
-  await page.locator('[data-cy="free-play-match-start"]').click();
+  await page.locator('[data-cy="deck-select-start"]').click();
   await expect(page.locator('[data-cy="duel-field"]')).toBeVisible({
     timeout: 120_000,
   });
@@ -572,8 +567,14 @@ test("the match setup persists a chosen pair and Change decks returns without au
 
   await page.reload();
   await expect(setup).toBeVisible({ timeout: 120_000 });
-  await expect(playerSelect).toHaveValue("preset:burning-abyss");
-  await expect(opponentSelect).toHaveValue("preset:nekroz");
+  await expect(yourSeat).toHaveAttribute(
+    "data-cy",
+    "deck-tile-yours-preset:burning-abyss",
+  );
+  await expect(opponentSeat).toHaveAttribute(
+    "data-cy",
+    "deck-tile-opponent-preset:nekroz",
+  );
 
   await startPresetDuel(page);
   await expect(page.locator('[data-cy="duel-field"]')).toBeVisible({
@@ -640,31 +641,27 @@ test("a local deck built from the packaged catalog is offered and duels", async 
   ).not.toHaveAttribute("aria-busy", "true");
 
   await openDuel(page);
-  await expect(page.locator('[data-cy="free-play-match-setup"]')).toBeVisible({
+  await expect(page.locator('[data-cy="deck-select-screen"]')).toBeVisible({
     timeout: 120_000,
   });
 
   /* The deck a player just built is offered, because the editor may only offer
      cards this build packages and the picker only offers decks it can draw —
      one derivation, so the two sets cannot disagree. */
-  const localGroup = page.locator('[data-cy="free-play-match-player-locals"]');
-  await expect(localGroup).toHaveCount(1, { timeout: 120_000 });
-  const localOption = localGroup.getByRole("option", {
-    name: LOCAL_DECK_NAME,
-    exact: true,
-  });
-  await expect(localOption).toHaveCount(1);
+  const localTile = page
+    .locator('[data-cy="deck-select-grid"] [data-cy^="deck-tile-local:"]')
+    .filter({ hasText: LOCAL_DECK_NAME });
+  await expect(localTile).toHaveCount(1, { timeout: 120_000 });
 
-  const playerSelect = page.locator(
-    '[data-cy="free-play-match-player-picker"]',
+  await localTile.locator('[data-cy^="deck-tile-press-local:"]').click();
+  await expect(page.locator('[data-cy^="deck-tile-yours-local:"]')).toHaveCount(
+    1,
   );
-  await playerSelect.selectOption({ label: LOCAL_DECK_NAME });
-  await expect(playerSelect).toHaveValue(/^local:/);
-  await expect(page.locator('[data-cy="free-play-match-error"]')).toHaveCount(
-    0,
-  );
+  await expect(
+    page.locator('[data-cy="deck-select-block-notice"]'),
+  ).toHaveCount(0);
 
-  await page.locator('[data-cy="free-play-match-start"]').click();
+  await page.locator('[data-cy="deck-select-start"]').click();
   await expect(page.locator('[data-cy="duel-field"]')).toBeVisible({
     timeout: 120_000,
   });
@@ -718,22 +715,20 @@ test("a local deck the pinned ruleset refuses is never offered", async ({
   );
 
   await openDuel(page);
-  await expect(page.locator('[data-cy="free-play-match-setup"]')).toBeVisible({
+  await expect(page.locator('[data-cy="deck-select-screen"]')).toBeVisible({
     timeout: 120_000,
   });
   await expect(
-    page.locator('[data-cy="free-play-match-player-presets"]'),
+    page.locator('[data-cy="deck-tile-preset:mvp-player"]'),
   ).toHaveCount(1, { timeout: 120_000 });
-  /* The starter deck the editor seeded is a legal local row, so the group
-     itself may exist; what must never appear is the deck the ruleset refused,
-     in either seat. */
-  for (const seat of ["player", "opponent"] as const) {
-    await expect(
-      page
-        .locator(`[data-cy="free-play-match-${seat}-picker"]`)
-        .getByRole("option", { name: "Thirty Nine", exact: true }),
-    ).toHaveCount(0);
-  }
+  /* The starter deck the editor seeded is a legal local tile, so local decks
+     may well be in the grid; what must never appear is the deck the ruleset
+     refused, and the grid is what fills both seats. */
+  await expect(
+    page
+      .locator('[data-cy="deck-select-grid"] [data-cy^="deck-tile-"]')
+      .filter({ hasText: "Thirty Nine" }),
+  ).toHaveCount(0);
 });
 
 test("panels stay hidden until settings enable them", async ({ page }) => {

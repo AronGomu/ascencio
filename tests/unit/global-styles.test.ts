@@ -299,11 +299,16 @@ describe("global styles", () => {
     expect(block).not.toContain("var(--warning)");
   });
 
-  it("actionable stack and list halos are green too", () => {
+  /* Item 12 (2026-08-27, owner): the pile halo is orange, unlike every other
+     actionable halo — an actionable pile points at where the game is asking,
+     not at a card the player can read and play. The list entries inside the
+     pile stay green, because those are the playable cards themselves. */
+  it("actionable pile halos are orange, list halos stay green", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     const stack = ruleBlock(css, ".duel-field-stack.is-actionable {");
-    expect(stack).toContain("var(--success)");
-    expect(stack).not.toContain("var(--warning)");
+    expect(stack).toContain("var(--selected)");
+    expect(stack).not.toContain("var(--success)");
+    expect(stack).not.toContain("var(--legal)");
     const list = ruleBlock(css, ".zone-list-entry.is-actionable img {");
     expect(list).toContain("var(--success)");
     expect(list).not.toContain("var(--warning)");

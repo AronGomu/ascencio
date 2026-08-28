@@ -170,8 +170,8 @@ Run: `npm run test:component` (vitest, `tests/component`).
 
 ## Impl steps
 
-- [ ] 1. Lock the gate with the reproduce-owner-scenario test (must pass before any edit)
-  - [ ] 1.1 In `tests/component/DuelField.test.ts`, directly above the test
+- [x] 1. Lock the gate with the reproduce-owner-scenario test (must pass before any edit)
+  - [x] 1.1 In `tests/component/DuelField.test.ts`, directly above the test
         `"actionable stack renders the halo when the pile shows what it holds"`
         (~line 2950), add:
 
@@ -185,11 +185,11 @@ Run: `npm run test:component` (vitest, `tests/component`).
           ).toBe(0);
         });
         ```
-  - [ ] 1.2 Run `npm run test:component -- -t "no stack wears the halo"` —
+  - [x] 1.2 Run `npm run test:component -- -t "no stack wears the halo"` —
         expect pass (gate pre-exists). If it fails, stop: the gating
         assumption is wrong; fix nothing, report the conflict.
-- [ ] 2. Red: invert the suppression test
-  - [ ] 2.1 In `tests/component/DuelField.test.ts` (~2966–2979), replace the
+- [x] 2. Red: invert the suppression test
+  - [x] 2.1 In `tests/component/DuelField.test.ts` (~2966–2979), replace the
         comment + test:
 
         ```ts
@@ -209,10 +209,10 @@ Run: `npm run test:component` (vitest, `tests/component`).
           expect(stack?.tagName).toBe("BUTTON");
         });
         ```
-  - [ ] 2.2 Run `npm run test:component -- -t "keeps the halo even when it shows nothing"` —
+  - [x] 2.2 Run `npm run test:component -- -t "keeps the halo even when it shows nothing"` —
         expect fail (red) against current suppression.
-- [ ] 3. Green: drop the suppression and paint the halo orange
-  - [ ] 3.1 In `src/battle/app/components/duel-field/StackControl.svelte`
+- [x] 3. Green: drop the suppression and paint the halo orange
+  - [x] 3.1 In `src/battle/app/components/duel-field/StackControl.svelte`
         lines 30–37, replace the comment block and reactive statement:
 
         ```ts
@@ -224,7 +224,7 @@ Run: `npm run test:component` (vitest, `tests/component`).
            legal from there. */
         $: haloed = actionable;
         ```
-  - [ ] 3.2 In `src/styles/app.css` lines 1403–1408, replace the rule:
+  - [x] 3.2 In `src/styles/app.css` lines 1403–1408, replace the rule:
 
         ```css
         .duel-field-stack.is-actionable {
@@ -234,10 +234,10 @@ Run: `npm run test:component` (vitest, `tests/component`).
             0 0 10px color-mix(in srgb, var(--selected) 40%, transparent);
         }
         ```
-  - [ ] 3.3 Run `npm run test:component` — expect all green, including steps
+  - [x] 3.3 Run `npm run test:component` — expect all green, including steps
         1.1 and 2.1's tests and the untouched test at 2950.
-- [ ] 4. Refactor: rewrite the colour-semantics comments to plan A12
-  - [ ] 4.1 In `src/styles/app.css` (1386–1393), replace the first three
+- [x] 4. Refactor: rewrite the colour-semantics comments to plan A12
+  - [x] 4.1 In `src/styles/app.css` (1386–1393), replace the first three
         sentences of the comment ("Green is the … must never be confusable.")
         with:
 
@@ -251,7 +251,7 @@ Run: `npm run test:component` (vitest, `tests/component`).
 
         Keep the remaining sentences of the block (the two-layer ring/glow
         rationale) verbatim.
-  - [ ] 4.2 In `src/styles/app.css` (~1570, after the CSS shifts from 3.2),
+  - [x] 4.2 In `src/styles/app.css` (~1570, after the CSS shifts from 3.2),
         replace the comment "Selected overrides plain legal green: same
         orange used for the list-hover affordance below, but selection is a
         persisted class, never a :hover pseudo-class, so the two never
@@ -264,7 +264,7 @@ Run: `npm run test:component` (vitest, `tests/component`).
         never a :hover pseudo-class, so the two never actually collide on
         screen.
         ```
-  - [ ] 4.3 In `src/styles/app.css` (~1852), replace "Selected overrides
+  - [x] 4.3 In `src/styles/app.css` (~1852), replace "Selected overrides
         plain legal green with orange; hover never mutates this class, and no
         hover rule below repaints a selected entry." with:
 
@@ -274,12 +274,12 @@ Run: `npm run test:component` (vitest, `tests/component`).
         never mutates this class, and no hover rule below repaints a selected
         entry.
         ```
-  - [ ] 4.4 Run `npm run test:component` — still green.
-- [ ] 5. Gates
-  - [ ] 5.1 Run `npm run check:headless` — expect exit 0 (format, lint,
+  - [x] 4.4 Run `npm run test:component` — still green.
+- [x] 5. Gates
+  - [x] 5.1 Run `npm run check:headless` — expect exit 0 (format, lint,
         typecheck, legacy/unit/integration tests, vendor/assets/snapshot
         verify).
-  - [ ] 5.2 Run `npm run test:component` — expect exit 0.
+  - [x] 5.2 Run `npm run test:component` — expect exit 0.
 
 ## Outputs
 
@@ -298,16 +298,16 @@ Run: `npm run test:component` (vitest, `tests/component`).
 
 ## Validation
 
-- [ ] tests pass: `npm run test:component` and `npm run check:headless`, both
+- [x] tests pass: `npm run test:component` and `npm run check:headless`, both
       exit 0.
 - [ ] manual check (Chromium): `npm run dev`, start a duel, reach a prompt
       offering an extra-deck summon (or graveyard activation) — the pile
       wears an orange (`#ffd580`) ring+glow; with no such choice active, no
       pile is haloed; zone and card legal halos remain green.
-- [ ] no silent-failure swallow on a path this slice adds — none: no new
+- [x] no silent-failure swallow on a path this slice adds — none: no new
       error paths, no `|| true`, no empty catch.
-- [ ] app functional — duel field renders, stack buttons still open the
+- [x] app functional — duel field renders, stack buttons still open the
       zone-list dialog (e2e `duel-smoke.spec.ts:4320` path unaffected;
       suppression removal only widens its locator's matches).
-- [ ] commit msg draft: `fix(duel): halo every actionable pile in orange —
+- [x] commit msg draft: `fix(duel): halo every actionable pile in orange —
       prompt choice is the signal, not visible top art (item 12)`

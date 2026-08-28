@@ -2947,6 +2947,15 @@ describe("DuelField", () => {
     });
   }
 
+  /* Item 12 regression lock: the halo is gated on the active prompt
+     offering a stack choice — no prompt, no halo, on any pile. */
+  it("no stack wears the halo without a stack choice in the active prompt", () => {
+    render(DuelField, { board: board("ST-05") });
+    expect(
+      document.querySelectorAll(".duel-field-stack.is-actionable").length,
+    ).toBe(0);
+  });
+
   it("actionable stack renders the halo when the pile shows what it holds", () => {
     const stackBoard = mapSnapshotToBoard(
       TWO_CARD_GRAVEYARD_STATE,
@@ -2964,17 +2973,17 @@ describe("DuelField", () => {
     expect(document.querySelector('[data-cy="prompt-dialog"]')).toBeNull();
   });
 
-  /* A pile holding nothing the player is allowed to see cannot tell them what
-     the halo would be pointing at, so it wears none — and stays a button, so
-     the target is still reached by opening it. */
-  it("actionable stack drops the halo when it shows nothing, and stays clickable", () => {
+  /* Item 12 (2026-08-27): an actionable pile wears the halo whether or not it
+     renders its top card — the prompt offering a choice there is the signal,
+     not the visible art. Deck/extra/face-down banish included. */
+  it("actionable stack keeps the halo even when it shows nothing", () => {
     renderGraveyardTargetPrompt(board("ST-05"));
 
     const stack = document.querySelector(
       '[data-cy="field-stack-p0:graveyard"]',
     );
     expect(stack).not.toBeNull();
-    expect(stack?.classList.contains("is-actionable")).toBe(false);
+    expect(stack?.classList.contains("is-actionable")).toBe(true);
     expect(stack?.getAttribute("data-actionable")).toBe("true");
   });
 

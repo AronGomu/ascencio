@@ -68,14 +68,14 @@ Run: `npx vitest run tests/component/deck-select`
 
 ## Impl steps
 
-- [ ] 1. Write failing `tests/component/deck-select/hover-previews.test.ts` (resolvers = vi.fn with controlled promises).
-- [ ] 2. Create `src/deck-select/DecklistPanel.svelte`.
-- [ ] 3. Wire float into grid loop (pointerenter/leave, token guard, flip + viewport-height sizing).
-- [ ] 4. Wire library dock into right column + art float on row hover.
-- [ ] 5. Add `[hidden]` overrides beside every `display` declaration on floating/docked classes.
-- [ ] 6. Export `DecklistPanel` from index; widen frozen list in `tests/unit/domain-boundaries.test.ts`.
-- [ ] 7. `npx vitest run tests/component/deck-select tests/unit/domain-boundaries.test.ts tests/unit/data-cy-coverage.test.ts` → green.
-- [ ] 8. `npm run lint && npm run typecheck` → green.
+- [x] 1. Write failing `tests/component/deck-select/hover-previews.test.ts` (resolvers = vi.fn with controlled promises).
+- [x] 2. Create `src/deck-select/DecklistPanel.svelte`.
+- [x] 3. Wire float into grid loop (pointerenter/leave, token guard, flip + viewport-height sizing).
+- [x] 4. Wire library dock into right column + art float on row hover.
+- [x] 5. Add `[hidden]` overrides beside every `display` declaration on floating/docked classes.
+- [x] 6. Export `DecklistPanel` from index; widen frozen list in `tests/unit/domain-boundaries.test.ts`.
+- [x] 7. `npx vitest run tests/component/deck-select tests/unit/domain-boundaries.test.ts tests/unit/data-cy-coverage.test.ts` → green.
+- [x] 8. `npm run lint && npm run typecheck` → green.
 
 ## Outputs
 
@@ -85,7 +85,7 @@ Run: `npx vitest run tests/component/deck-select`
 
 ## Validation
 
-- [ ] `npx vitest run tests/component/deck-select tests/unit/domain-boundaries.test.ts tests/unit/data-cy-coverage.test.ts` green
-- [ ] `npm run lint && npm run typecheck && npm run build` green
-- [ ] app functional — no consumer yet
-- [ ] commit msg draft: `feat(deck-select): float and dock full decklist previews on hover`
+- [x] `npx vitest run tests/component/deck-select tests/unit/domain-boundaries.test.ts tests/unit/data-cy-coverage.test.ts` green
+- [x] `npm run lint && npm run typecheck && npm run build` green
+- [x] app functional — no consumer yet
+- [x] commit msg draft: `feat(deck-select): float and dock full decklist previews on hover`

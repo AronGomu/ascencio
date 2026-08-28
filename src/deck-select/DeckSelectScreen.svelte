@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import DecklistPanel from "./DecklistPanel.svelte";
   import DeckTile from "./DeckTile.svelte";
   import DeckTileMenu from "./DeckTileMenu.svelte";
   import DeleteDeckConfirm from "./DeleteDeckConfirm.svelte";
@@ -8,6 +9,7 @@
     DeckSelectMode,
     DeckSort,
     DeckTileModel,
+    DecklistView,
     OpponentView,
   } from "./deck-select-contracts.ts";
   import { handleModalKeydown } from "./focus-trap.ts";
@@ -48,6 +50,13 @@
   export let onpickopponent: (id: string) => void = () => undefined;
   /** Test override for the phone layout: null follows the media query. */
   export let forceNarrow: boolean | null = null;
+  /** Full decklist for a tile key; null = no preview for that tile. Async so
+      hosts may lazy-load; the screen ignores stale resolutions, so only the
+      currently hovered key's answer ever renders. */
+  export let decklistFor:
+    ((key: string) => Promise<DecklistView | null>) | null = null;
+  /** Full-size text-free card art URL for a code; null = no art float. */
+  export let cardImageFor: ((code: number) => string | null) | null = null;
 
   let filter = "";
   let filterField: HTMLInputElement;
@@ -57,27 +66,55 @@
   let renaming: string | null = null;
   let deleting: string | null = null;
   let picking = false;
+  let grid: HTMLElement | null = null;
+  /* The deck the pointer is on, the tile it is on, and that deck's list once
+     it resolves. The token is what a late answer is measured against. */
+  let hoverToken = 0;
+  let hoverKey: string | null = null;
+  let hoverAnchor: HTMLElement | null = null;
+  let hoverList: DecklistView | null = null;
+  /** The dock's resting content: the list of whatever `selectedKey` names. */
+  let restToken = 0;
+  let restList: DecklistView | null = null;
+  let art: { readonly url: string; readonly place: string } | null = null;
   /* The portrait opened the picker and is where the caret was, so it is bound
      here to take focus back however the picker closes. */
   let portrait: HTMLElement | null = null;
   let picker: HTMLElement | null = null;
 
   const NARROW_QUERY = "(max-width: 40rem)";
+  /* A hover preview is a pointer's affordance: a finger has no hover to raise
+     it with and none to take it away again, so a coarse pointer gets none. */
+  const COARSE_QUERY = "(pointer: coarse)";
+  /* The gap between a float and what it is floating beside, and the width the
+     `.float` rule below declares — the flip needs it as a number. */
+  const FLOAT_GAP = 12;
+  const FLOAT_WIDTH = 320;
+  const ART_HEIGHT = 340;
   let matchedNarrow = false;
+  let matchedCoarse = false;
 
-  /* One listener for the whole screen rather than one per row: the phone
-     layout is a property of the viewport, and everything that reads it here is
-     the same fact. Guarded because a test document has no `matchMedia` at all,
-     and drives `forceNarrow` instead. */
+  function track(query: string, apply: (matches: boolean) => void): () => void {
+    const media = window.matchMedia(query);
+    apply(media.matches);
+    const change = (event: MediaQueryListEvent) => apply(event.matches);
+    media.addEventListener("change", change);
+    return () => media.removeEventListener("change", change);
+  }
+
+  /* One listener per fact for the whole screen rather than one per row: the
+     phone layout and the pointer's shape are properties of the viewport, and
+     everything that reads them here is the same fact. Guarded because a test
+     document has no `matchMedia` at all, and drives `forceNarrow` instead. */
   onMount(() => {
     if (typeof window.matchMedia !== "function") return;
-    const query = window.matchMedia(NARROW_QUERY);
-    matchedNarrow = query.matches;
-    const track = (event: MediaQueryListEvent) => {
-      matchedNarrow = event.matches;
+    const stop = [
+      track(NARROW_QUERY, (matches) => (matchedNarrow = matches)),
+      track(COARSE_QUERY, (matches) => (matchedCoarse = matches)),
+    ];
+    return () => {
+      for (const off of stop) off();
     };
-    query.addEventListener("change", track);
-    return () => query.removeEventListener("change", track);
   });
 
   $: narrow = forceNarrow ?? matchedNarrow;
@@ -112,6 +149,15 @@
   }
 
   $: seatPanel = mode === "duel-start" && opponent !== null;
+  /* A host that hands over no resolver wants no previews at all, so the whole
+     mechanism turns off with it. */
+  $: previews = decklistFor !== null && !narrow && !matchedCoarse;
+  $: docked = mode === "library" && decklistFor !== null && !narrow;
+  /* Hovering borrows the dock and leaving gives it back, so the resting list
+     is resolved once for the pick rather than re-fetched on every move. */
+  $: dockList = (previews ? hoverList : null) ?? restList;
+  $: void loadRest(decklistFor, selectedKey, docked);
+  $: floatStyle = floatPlacement(hoverAnchor);
   $: selectedTile = tileFor(tiles, selectedKey);
   $: menuTile = tileFor(tiles, menu === null ? null : menu.key);
   $: renameTile = tileFor(tiles, renaming);
@@ -160,6 +206,106 @@
     const origin = event.target;
     if (origin instanceof Node && picker?.contains(origin)) return;
     closePicker();
+  }
+
+  /* The grid cell the pointer is inside, found by position: the tiles are the
+     grid's own children in `shown` order, so the cell containing the event's
+     target names the deck without reaching into the tile's markup. */
+  function cellAt(target: EventTarget | null): {
+    key: string;
+    cell: HTMLElement;
+  } | null {
+    if (grid === null || !(target instanceof Node)) return null;
+    const cells = [...grid.children];
+    const index = cells.findIndex((candidate) => candidate.contains(target));
+    const key = shown[index]?.key;
+    const cell = cells[index];
+    if (key === undefined || !(cell instanceof HTMLElement)) return null;
+    return { key, cell };
+  }
+
+  /* `pointerenter` and `pointerleave` do not bubble, so the grid listens for
+     them in the capture phase: one listener for every tile, and the tiles stay
+     the grid's direct children instead of each gaining a wrapper to hang a
+     handler on. Both fire again for a tile's own children, which is why the
+     key and the target are checked before anything moves. */
+  function enterTile(event: PointerEvent): void {
+    if (!previews) return;
+    const found = cellAt(event.target);
+    if (found === null || found.key === hoverKey) return;
+    void preview(found.key, found.cell);
+  }
+
+  function leaveTile(event: PointerEvent): void {
+    const target = event.target;
+    if (target !== grid && cellAt(target)?.cell !== target) return;
+    clearPreview();
+  }
+
+  async function preview(key: string, cell: HTMLElement): Promise<void> {
+    const resolve = decklistFor;
+    if (resolve === null) return;
+    const token = ++hoverToken;
+    hoverKey = key;
+    hoverAnchor = cell;
+    hoverList = null;
+    const resolved = await resolve(key);
+    /* A slow deck resolving after the pointer moved on is answering a question
+       nobody is asking any more. */
+    if (token !== hoverToken) return;
+    hoverList = resolved;
+  }
+
+  function clearPreview(): void {
+    hoverToken += 1;
+    hoverKey = null;
+    hoverAnchor = null;
+    hoverList = null;
+    art = null;
+  }
+
+  async function loadRest(
+    resolve: ((key: string) => Promise<DecklistView | null>) | null,
+    key: string | null,
+    active: boolean,
+  ): Promise<void> {
+    const token = ++restToken;
+    restList = null;
+    if (!active || resolve === null || key === null) return;
+    const resolved = await resolve(key);
+    if (token !== restToken) return;
+    restList = resolved;
+  }
+
+  /* The float is as tall as the viewport allows — the design's 90-card deck,
+     read with minimal scrolling — so only its side is decided here: beside the
+     tile, and on the tile's other side when it would run off the right edge. */
+  function floatPlacement(anchor: HTMLElement | null): string {
+    if (anchor === null) return "";
+    const rect = anchor.getBoundingClientRect();
+    const flipped = rect.right + FLOAT_GAP + FLOAT_WIDTH > window.innerWidth;
+    return flipped
+      ? `right: ${Math.round(window.innerWidth - rect.left + FLOAT_GAP)}px`
+      : `left: ${Math.round(rect.right + FLOAT_GAP)}px`;
+  }
+
+  /* The row names the card; the float is the card itself, held clear of the
+     dock so it never covers the list it came from. */
+  function showArt(code: number, anchor: HTMLElement): void {
+    const url = cardImageFor?.(code) ?? null;
+    if (url === null) {
+      art = null;
+      return;
+    }
+    const rect = anchor.getBoundingClientRect();
+    const top = Math.max(
+      FLOAT_GAP,
+      Math.min(rect.top, window.innerHeight - ART_HEIGHT - FLOAT_GAP),
+    );
+    art = {
+      url,
+      place: `top: ${Math.round(top)}px; right: ${Math.round(window.innerWidth - rect.left + FLOAT_GAP)}px`,
+    };
   }
 
   function openSelected(): void {
@@ -236,7 +382,7 @@
 
 <section
   class="screen"
-  class:paneled={seatPanel}
+  class:paneled={seatPanel || docked}
   class:library={mode === "library"}
   data-cy="deck-select-screen"
 >
@@ -404,7 +550,13 @@
     </label>
   </div>
 
-  <div class="grid" data-cy="deck-select-grid">
+  <div
+    class="grid"
+    bind:this={grid}
+    onpointerentercapture={enterTile}
+    onpointerleavecapture={leaveTile}
+    data-cy="deck-select-grid"
+  >
     {#each shown as candidate (candidate.key)}
       <DeckTile
         tile={candidate}
@@ -470,7 +622,45 @@
       </p>
     {/if}
   </footer>
+
+  {#if docked}
+    <!-- The library's second column, the space duel start seats its opponent
+         in. Last in the markup rather than first: it answers a question the
+         pointer asked, so a screen reader meets the decks themselves first. -->
+    <aside class="dock" data-cy="deck-select-dock">
+      {#if dockList === null}
+        <p class="dock-empty" data-cy="deck-select-docked-empty">
+          Hover a deck to see its list.
+        </p>
+      {:else}
+        <DecklistPanel
+          decklist={dockList}
+          cy="deck-select-docked-list"
+          onrowhover={showArt}
+          onrowleave={() => (art = null)}
+        />
+      {/if}
+    </aside>
+  {/if}
 </section>
+
+{#if mode === "duel-start" && hoverList !== null}
+  <!-- Fixed to the viewport rather than placed in the grid: the grid scrolls,
+       and the float is a read of the deck the pointer is on. -->
+  <div class="float" style={floatStyle} data-cy="deck-select-hover-float">
+    <DecklistPanel decklist={hoverList} cy="deck-select-hover-list" />
+  </div>
+{/if}
+
+{#if art !== null}
+  <img
+    class="art-float"
+    src={art.url}
+    alt=""
+    style={art.place}
+    data-cy="deck-select-card-art-float"
+  />
+{/if}
 
 {#if menu !== null && menuTile !== null}
   {@const key = menuTile.key}
@@ -665,13 +855,15 @@
     font-size: var(--text-sm);
   }
 
-  /* Duel start's second column. The panel holds the whole of column 2, so the
-     four rows above auto-place down column 1 without being placed by hand. */
+  /* The second column: duel start seats the opponent there and the library
+     docks its preview there. It holds the whole of column 2, so the four rows
+     above auto-place down column 1 without being placed by hand. */
   .screen.paneled {
     grid-template-columns: minmax(0, 73fr) minmax(17rem, 27fr);
   }
 
-  .seat-panel {
+  .seat-panel,
+  .dock {
     display: grid;
     overflow-y: auto;
     min-height: 0;
@@ -692,7 +884,8 @@
       grid-template-rows: auto auto auto minmax(0, 1fr) auto;
     }
 
-    .seat-panel {
+    .seat-panel,
+    .dock {
       grid-row: 1;
       grid-column: 1;
       padding-bottom: var(--space-2);
@@ -908,5 +1101,58 @@
   .option-line {
     color: var(--muted);
     font-size: var(--text-xs);
+  }
+
+  /* `display: grid` on `.seat-panel, .dock` beats the user-agent `[hidden]`
+     rule, so a host that hides the dock with the attribute would still see it
+     on screen. Global for the same reason as the picker's guard: nothing here
+     renders the attribute statically. */
+  .dock:global([hidden]) {
+    display: none;
+  }
+
+  .dock-empty {
+    margin: 0;
+    color: var(--muted);
+    font-size: var(--text-sm);
+  }
+
+  /* Duel start's hover preview. As tall as the viewport allows rather than a
+     short tooltip — a 90-card deck is meant to be read without scrolling
+     inside it — and transparent to the pointer, so floating over the tile it
+     came from never counts as leaving that tile. */
+  .float {
+    position: fixed;
+    z-index: 25;
+    top: 1rem;
+    display: grid;
+    overflow-y: auto;
+    width: 20rem;
+    max-height: calc(100vh - 2rem);
+    padding: var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface-raised);
+    pointer-events: none;
+  }
+
+  .float:global([hidden]) {
+    display: none;
+  }
+
+  /* The card the docked row names, at the size the art is worth looking at. */
+  .art-float {
+    position: fixed;
+    z-index: 25;
+    display: block;
+    width: 15rem;
+    max-height: calc(100vh - 2rem);
+    border-radius: var(--radius-md);
+    box-shadow: 0 0.5rem 1.5rem var(--shadow);
+    pointer-events: none;
+  }
+
+  .art-float:global([hidden]) {
+    display: none;
   }
 </style>

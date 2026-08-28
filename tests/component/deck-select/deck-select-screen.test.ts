@@ -223,6 +223,38 @@ describe("DeckSelectScreen", () => {
     expect(values.onfavourite).toHaveBeenCalledWith("k1", true);
   });
 
+  it("opponent seat mode paints grid red and badges yours", () => {
+    const pool = decks();
+    render(
+      DeckSelectScreen,
+      props({
+        selectedKey: "k1",
+        seat: "opponent",
+        opponent: {
+          id: "vault-warden",
+          name: "Vault Warden",
+          line: "Locks the board, then closes it out.",
+          locked: false,
+        },
+        opponentDeck: pool[1],
+        playerDeck: pool[0],
+      }),
+    );
+
+    /* Your own deck is on its seat card as well as in the grid, so each
+       assertion asks the grid for its copy. */
+    const grid = cy("deck-select-grid");
+    const theirs = grid.querySelector('[data-cy="deck-tile-k2"]');
+    expect(theirs?.classList).toContain("halo-opponent");
+    expect(grid.querySelector('[data-cy="deck-tile-check-k2"]')).not.toBeNull();
+
+    const yours = grid.querySelector('[data-cy="deck-tile-k1"]');
+    expect(yours?.classList).not.toContain("halo-you");
+    expect(
+      grid.querySelector('[data-cy="deck-tile-badge-yours-k1"]'),
+    ).not.toBeNull();
+  });
+
   it("block notice renders", () => {
     render(DeckSelectScreen, props({ blockNotice: "No decks yet" }));
 

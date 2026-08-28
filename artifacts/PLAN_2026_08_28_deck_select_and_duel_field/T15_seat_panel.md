@@ -68,12 +68,12 @@ Run: `npx vitest run tests/component/deck-select`
 
 ## Impl steps
 
-- [ ] 1. Write failing `tests/component/deck-select/seat-panel.test.ts`.
-- [ ] 2. Add props + right column markup to `DeckSelectScreen.svelte`; two-column layout + `62rem` collapse.
-- [ ] 3. Implement seat-mode grid halo/badge switching in the grid loop.
-- [ ] 4. Implement picker overlay + dismissal.
-- [ ] 5. `npx vitest run tests/component/deck-select tests/unit/data-cy-coverage.test.ts` → green.
-- [ ] 6. `npm run lint && npm run typecheck` → green.
+- [x] 1. Write failing `tests/component/deck-select/seat-panel.test.ts`. (red run: `Tests  8 failed | 39 passed (47)`)
+- [x] 2. Add props + right column markup to `DeckSelectScreen.svelte`; two-column layout + `62rem` collapse. (`.screen.paneled` grid + `@media (max-width: 62rem)`)
+- [x] 3. Implement seat-mode grid halo/badge switching in the grid loop. (`haloFor`/`selectedFor`/`yours`)
+- [x] 4. Implement picker overlay + dismissal. (`duel-start-opponent-picker`, Escape + outside pointerdown)
+- [x] 5. `npx vitest run tests/component/deck-select tests/unit/data-cy-coverage.test.ts` → green. (`Test Files  6 passed (6)`, `Tests  81 passed (81)`)
+- [x] 6. `npm run lint && npm run typecheck` → green. (eslint clean; `svelte-check found 0 errors and 2 warnings in 2 files` — both pre-existing, `CardCatalog.svelte`/`ShopSellScreen.svelte`)
 
 ## Outputs
 
@@ -83,7 +83,7 @@ Run: `npx vitest run tests/component/deck-select`
 
 ## Validation
 
-- [ ] `npx vitest run tests/component/deck-select tests/unit/data-cy-coverage.test.ts` green
-- [ ] `npm run lint && npm run typecheck && npm run build` green
-- [ ] app functional — no consumer yet
-- [ ] commit msg draft: `feat(deck-select): add the seat panel with opponent picking as the cards themselves`
+- [x] `npx vitest run tests/component/deck-select tests/unit/data-cy-coverage.test.ts` green (`Tests  81 passed (81)`)
+- [x] `npm run lint && npm run typecheck && npm run build` green (`build:verify` `"status": "ok"`, chunk budgets shell 93007 / battle 344493 / deck-editor 109448 / story 107148)
+- [x] app functional — no consumer yet (`grep -rn "DeckSelectScreen" src` outside `src/deck-select/` returns nothing; `npm run check:headless` and `npm run test:component` both green)
+- [x] commit msg draft: `feat(deck-select): add the seat panel with opponent picking as the cards themselves`

@@ -22,6 +22,13 @@ export interface ShellSettings {
   readonly display: PersistedDisplaySettings;
   /** `null` until a free-play match has been started from the match setup. */
   readonly freePlayPairing: FreePlayPairing | null;
+  /** The AI opponent free play was last duelled against; `null` = the default
+      persona. An id rather than a persona: which personas exist is the
+      roster's question, and a renamed one must read as "none remembered". */
+  readonly freePlayOpponentId: string | null;
+  /** `SelectableDeck` keys of the starred preset decks. Preset favourites live
+      here because `DeckRepository.setFavourite` only covers local decks. */
+  readonly freePlayPresetFavouriteIds: readonly string[];
 }
 
 const DEFAULT_DISPLAY: PersistedDisplaySettings = Object.freeze({
@@ -34,6 +41,8 @@ export const DEFAULT_SHELL_SETTINGS: ShellSettings = Object.freeze({
   rotationNoticeDismissed: false,
   display: DEFAULT_DISPLAY,
   freePlayPairing: null,
+  freePlayOpponentId: null,
+  freePlayPresetFavouriteIds: Object.freeze([]),
 });
 
 /** Reads v3, falling back to a one-way migration of the v2 payload so an
@@ -71,6 +80,8 @@ export function migrateFromV2(raw: string | null): ShellSettings {
     rotationNoticeDismissed: false,
     display: display(parsed.settings),
     freePlayPairing: null,
+    freePlayOpponentId: null,
+    freePlayPresetFavouriteIds: [],
   });
 }
 
@@ -83,6 +94,8 @@ function parseV3(serialized: string): ShellSettings {
     rotationNoticeDismissed: boolean(parsed.rotationNoticeDismissed, false),
     display: display(parsed.display),
     freePlayPairing: freePlayPairing(parsed.freePlayPairing),
+    freePlayOpponentId: opponentId(parsed.freePlayOpponentId),
+    freePlayPresetFavouriteIds: deckKeys(parsed.freePlayPresetFavouriteIds),
   });
 }
 
@@ -94,7 +107,24 @@ function freezeSettings(value: ShellSettings): ShellSettings {
       value.freePlayPairing === null
         ? null
         : Object.freeze(value.freePlayPairing),
+    freePlayPresetFavouriteIds: Object.freeze(value.freePlayPresetFavouriteIds),
   });
+}
+
+/* Whether an id still names a persona is the roster's question, not this one:
+   it answers that with a fallback, and a shape that is not a name at all never
+   reaches it. */
+function opponentId(value: unknown): string | null {
+  return typeof value === "string" && value !== "" ? value : null;
+}
+
+/* A star on a deck that is gone costs nothing, so unknown keys are kept; a
+   blob that is not a list of keys is no favourites at all. */
+function deckKeys(value: unknown): readonly string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(
+    (key): key is string => typeof key === "string" && key !== "",
+  );
 }
 
 /* A blob written by a build that spelled the pairing differently is no pairing

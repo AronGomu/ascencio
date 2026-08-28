@@ -202,4 +202,4 @@ Run: `npx vitest run tests/unit/format-selection-status.test.ts tests/unit/inter
 - [ ] manual check: start a duel, tribute summon a 2-tribute monster → bar shows `0 of 2 selected` before any pick and counts up; trigger a Synchro summon (selectSum) → sum line tracks the level total against the target; an immediate 1-of-1 selection shows the bar with status and no Confirm button, and clicking the card still answers
 - [x] no silent-failure swallow on a path this slice adds — `|| true`, empty catch, `>/dev/null 2>&1`, fire-and-forget with no error path: none
 - [x] app functional — no broken path from this slice: every previously bar-suppressed selection still answerable (card click / target dialog), Confirm gating unchanged
-- [ ] commit msg draft: `feat(duel): keep a live selection/sum status line on every selection prompt (item 6)`
+- [x] commit msg draft: `feat(duel): keep a live selection/sum status line on every selection prompt (item 6)`

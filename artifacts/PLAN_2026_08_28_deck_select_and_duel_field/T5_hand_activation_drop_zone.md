@@ -315,4 +315,4 @@ function activationZoneElement(): HTMLElement {
 - [ ] Manual (Chromium, `npm run dev`): follow the new `artifacts/manual_test_checklist.md` entry; also verify the dashed zone does NOT appear when dragging a monster with only summon/set, and DOES appear with a full backrow.
 - [x] No silent-failure swallow added: the only tolerated no-op paths are `layout.zones.get("p0:hand") === undefined → display: none` and `board.zones` missing `p0:hand` → drop resolves as a miss; both are pre-existing zero-geometry/miss conventions in `DuelField.svelte`, listed here on purpose. No `|| true`, no empty catch, no output redirection added.
 - [x] App functional: a drag with no activate choice behaves byte-identically to before (guarded by the retained "single summon drop commits immediately" test).
-- [ ] Commit msg draft: `feat(duel): drag-to-activate zone beside the hand with confirm/cancel, hide hand activate chips (#4)`
+- [x] Commit msg draft: `feat(duel): drag-to-activate zone beside the hand with confirm/cancel, hide hand activate chips (#4)`

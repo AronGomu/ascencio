@@ -595,7 +595,7 @@ describe("off-field target collection", () => {
 });
 
 describe("fieldActionBarRequired", () => {
-  it("is not required when the target list owns the confirmation", () => {
+  it("is required even when the target list is open (T7 constant status)", () => {
     const spec = specFor(
       prompt("selectCard", {
         choices: [
@@ -607,10 +607,10 @@ describe("fieldActionBarRequired", () => {
       }),
     );
 
-    expect(fieldActionBarRequired(spec)).toBe(false);
+    expect(fieldActionBarRequired(spec)).toBe(true);
   });
 
-  it("is not required for a mixed prompt either", () => {
+  it("is required for a mixed prompt (T7 constant status)", () => {
     const spec = specFor(
       prompt("selectCard", {
         choices: [
@@ -622,7 +622,7 @@ describe("fieldActionBarRequired", () => {
       }),
     );
 
-    expect(fieldActionBarRequired(spec)).toBe(false);
+    expect(fieldActionBarRequired(spec)).toBe(true);
   });
 
   /* Answerability outranks the suppression: a Finish/Cancel choice has no
@@ -640,11 +640,11 @@ describe("fieldActionBarRequired", () => {
     expect(fieldActionBarRequired(spec)).toBe(true);
   });
 
-  it("is not required for an exact singleton card selection", () => {
+  it("is required for an exact singleton card selection (T7 constant status)", () => {
     const spec = specFor(
       prompt("selectCard", { choices: [mountedCardChoice(FIRST)] }),
     );
-    expect(fieldActionBarRequired(spec)).toBe(false);
+    expect(fieldActionBarRequired(spec)).toBe(true);
   });
 
   it("is required for a multi card selection", () => {

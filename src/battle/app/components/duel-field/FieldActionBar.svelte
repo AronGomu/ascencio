@@ -16,6 +16,7 @@
 
   export let spec: ActiveInteractionSpec;
   export let contextMessage: readonly PromptMessageSegment[] = [];
+  export let selectionStatus: string | null = null;
   export let session: InteractionSession;
   export let disabled = false;
   export let confirmValid = false;
@@ -72,9 +73,9 @@
 >
   <PromptContextMessage dataCyPrefix="field" segments={contextMessage} />
   <p data-cy="field-action-bar-title">{spec.title}</p>
-  {#if session.selectedChoiceIds.length > 0}
+  {#if selectionStatus !== null || session.selectedChoiceIds.length > 0}
     <p data-cy="field-action-bar-summary">
-      {session.selectedChoiceIds.length} selected
+      {selectionStatus ?? `${session.selectedChoiceIds.length} selected`}
     </p>
   {/if}
 

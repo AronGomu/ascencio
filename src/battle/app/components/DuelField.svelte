@@ -48,6 +48,7 @@
     type DomFeedbackController,
     type DomFeedbackState,
   } from "../presentation/dom-feedback-controller.ts";
+  import { formatSelectionStatus } from "../presentation/format-selection-status.ts";
   import { presentationCommandForDomEvent } from "../presentation/presentation-command.ts";
   import type { FieldWindowId } from "../presentation/floating-window-position.ts";
   import type { LocalCardAction } from "../presentation/local-card-action.ts";
@@ -262,6 +263,8 @@
     prompt === null || spec === null
       ? { valid: false as const, message: "No active field decision" }
       : validatePromptSelection(prompt, submittedChoiceIds);
+  $: selectionStatus =
+    prompt === null ? null : formatSelectionStatus(prompt, submittedChoiceIds);
   /* Derived from the projected board itself, so the strip can never disagree
      with the zones the mapper actually produced. */
   $: extraMonsterZones = board.zones.some(({ player }) => player === "shared");
@@ -1312,6 +1315,7 @@
       selectedChoiceIds={session.selectedChoiceIds}
       minimum={spec.constraints.minimum}
       maximum={spec.constraints.maximum}
+      {selectionStatus}
       confirmValid={validation.valid}
       cancelable={spec.constraints.cancelable}
       {imageLibrary}
@@ -1386,6 +1390,7 @@
         {spec}
         {session}
         {contextMessage}
+        {selectionStatus}
         disabled={pending}
         confirmValid={validation.valid}
         validationMessage={validation.valid ? "" : validation.message}

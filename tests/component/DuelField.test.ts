@@ -911,8 +911,10 @@ describe("DuelField", () => {
     expect(
       enterCard.closest(".duel-field-card")?.classList.contains("is-selected"),
     ).toBe(false);
+    /* Feedback item 6 keeps the status window mounted for every selection, so
+       the no-dead-end guard is the absent Confirm button, not an absent bar. */
     expect(
-      document.querySelector('[data-cy="floating-field-window-confirm"]'),
+      document.querySelector('[data-cy="field-action-bar-confirm"]'),
     ).toBeNull();
     cleanup();
 
@@ -1347,7 +1349,7 @@ describe("DuelField", () => {
       ).toBe(false);
       expect(screen.queryByRole("button", { name: /Confirm/ })).toBeNull();
       expect(
-        document.querySelector('[data-cy="floating-field-window-confirm"]'),
+        document.querySelector('[data-cy="field-action-bar-confirm"]'),
       ).toBeNull();
     }
   });
@@ -2004,6 +2006,43 @@ describe("DuelField", () => {
     const field = screen.getByRole("region", { name: "Duel field" });
     expect(field.querySelector('[data-cy="field-action-bar"]')).not.toBeNull();
     expect(field.querySelector(".selection-dock")).toBeNull();
+  });
+
+  /* Feedback item 6: the bar carries the live count and, on a sum selection,
+     the running level total against its target. */
+  it("keeps a live selection status on the action bar from zero selected", async () => {
+    const user = userEvent.setup();
+    renderInteractive(
+      fieldPrompt(
+        "selectSum",
+        [
+          mountedChoice("sum", "Tribute monster", {
+            card: {
+              instanceId: cardInstanceId("prompt-sum"),
+              controller: 0,
+              location: "monster",
+              sequence: 0,
+              position: "faceUpAttack",
+              contribution: 4,
+            },
+          }),
+        ],
+        { minimum: 1, maximum: 2, requiredTotal: 8, sumMode: "exact" },
+      ),
+    );
+
+    const summary = document.querySelector(
+      '[data-cy="field-action-bar-summary"]',
+    );
+    expect(summary?.textContent).toBe("0 selected (choose 1–2) · sum 0 of 8");
+
+    await user.click(
+      screen.getByRole("button", { name: /Select The Legendary Fisherman/ }),
+    );
+    expect(
+      document.querySelector('[data-cy="field-action-bar-summary"]')
+        ?.textContent,
+    ).toBe("1 selected (choose 1–2) · sum 4 of 8");
   });
 
   it("renders the action bar inside the confirm window, outside the board scroll region", () => {
@@ -4215,8 +4254,10 @@ describe("DuelField off-field target list", () => {
     expect(confirm.disabled).toBe(false);
     await user.click(confirm);
     expect(harness.commands).toEqual([["gy-0"]]);
+    /* The list still owns the confirmation: the always-mounted status bar of
+       an exact one-of-one selection carries no Confirm button of its own. */
     expect(
-      document.querySelector('[data-cy="floating-field-window-confirm"]'),
+      document.querySelector('[data-cy="field-action-bar-confirm"]'),
     ).toBeNull();
   });
 
@@ -4237,13 +4278,13 @@ describe("DuelField off-field target list", () => {
     expect(
       document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
         ?.textContent,
-    ).toBe("1 selected · choose 1–2");
+    ).toBe("1 selected (choose 1–2)");
 
     await user.click(targetButton("target:0:graveyard:0", "gy-0"));
     expect(
       document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
         ?.textContent,
-    ).toBe("2 selected · choose 1–2");
+    ).toBe("2 selected (choose 1–2)");
 
     const confirm = document.querySelector<HTMLButtonElement>(
       '[data-cy="zone-list-dialog-confirm-button"]',
@@ -4317,14 +4358,14 @@ describe("DuelField off-field target list", () => {
     expect(
       document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
         ?.textContent,
-    ).toBe("1 selected · choose 1–2");
+    ).toBe("1 selected (choose 1–2)");
 
     await user.click(targetButton("target:0:graveyard:0", "gy-0"));
 
     expect(
       document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
         ?.textContent,
-    ).toBe("2 selected · choose 1–2");
+    ).toBe("2 selected (choose 1–2)");
     expect(
       document.querySelector<HTMLButtonElement>(
         '[data-cy="zone-list-dialog-confirm-button"]',
@@ -4367,7 +4408,7 @@ describe("DuelField off-field target list", () => {
     expect(
       document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
         ?.textContent,
-    ).toBe("1 selected · choose 1–2");
+    ).toBe("1 selected (choose 1–2)");
     expect(
       targetButton("target:0:graveyard:0", "gy-0").getAttribute("aria-pressed"),
     ).toBe("true");
@@ -4409,7 +4450,7 @@ describe("DuelField off-field target list", () => {
     expect(
       document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
         ?.textContent,
-    ).toBe("1 selected · choose 1–2");
+    ).toBe("1 selected (choose 1–2)");
     expect(
       targetButton("target:0:hand:0", "hand-0").getAttribute("aria-pressed"),
     ).toBe("true");

@@ -31,6 +31,7 @@
   export let selectedChoiceIds: readonly ChoiceId[] = [];
   export let minimum = 0;
   export let maximum = 0;
+  export let selectionStatus: string | null = null;
   export let confirmValid = false;
   export let cancelable = false;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
@@ -250,7 +251,7 @@
       >
         {#if targetMode}
           <output data-cy="zone-list-dialog-selection-count"
-            >{selectionState.countLabel}</output
+            >{selectionStatus ?? selectionState.countLabel}</output
           >
         {/if}
         <label

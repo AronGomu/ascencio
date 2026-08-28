@@ -163,17 +163,17 @@ Run: `npx vitest run tests/unit/format-selection-status.test.ts tests/unit/inter
 
 ## Impl steps
 
-- [ ] 1. Formatter exists and is fully unit-tested (single source of truth).
-  - [ ] 1.1 Create `tests/unit/format-selection-status.test.ts` with every case from the test plan above, importing `formatSelectionStatus` and `SELECTION_STATUS_KINDS` from `../../src/battle/app/presentation/format-selection-status.ts` and id builders from `../../src/battle/duel/contracts/ids.ts`. Run `npx vitest run tests/unit/format-selection-status.test.ts` — red (module missing).
-  - [ ] 1.2 Create `src/battle/app/presentation/format-selection-status.ts` implementing the exact contract in `## Interface contract`: export `SELECTION_STATUS_KINDS`, export `formatSelectionStatus`; import `contributionOptions` from `../../duel/prompt-sum.ts`; compute achievable totals with a `Set<number>` fold over the option lists (mirror the fold shape of `possibleMandatoryTotals` in `src/battle/duel/prompt-sum.ts:99-114` but without the `<= target` filter); apply the best-fit rule verbatim.
-  - [ ] 1.3 Run `npx vitest run tests/unit/format-selection-status.test.ts` — green.
-- [ ] 2. Bar shows for every selection-family prompt.
-  - [ ] 2.1 In `tests/unit/interaction-spec.test.ts` `describe("fieldActionBarRequired")` (line 597), flip and rename the three card-selection cases exactly as the test-plan table says; leave `single placement needs no confirm bar` and every other case untouched. Run `npx vitest run tests/unit/interaction-spec.test.ts` — red.
-  - [ ] 2.2 In `src/battle/app/prompts/interaction-spec.ts` `fieldActionBarRequired` (lines 247–268): delete the branch `if (spec.kind === "cardSelection" && spec.offFieldChoices.length > 0) return false;` and its T16 comment; change the switch arm so `case "cardSelection": return true;` while `case "placeSelection": return !isImmediateSingleSelection(spec);` stays. Add a one-line comment on the `cardSelection` arm: selection prompts always keep the status bar (feedback item 6); the target window and the bar coexist.
-  - [ ] 2.3 Run `npx vitest run tests/unit/interaction-spec.test.ts` — green.
-- [ ] 3. Both surfaces render the shared string.
-  - [ ] 3.1 In `tests/component/FieldActionBar.test.ts`: update `"summary counts selections"` (line 317) and add the two new tests from the test-plan table (use the existing `fieldPrompt`/`specFor`/`mountedChoice`/`createInteractionSession` helpers; for the counter case reuse the pattern of the existing counter tests at lines 213–261). In `tests/component/ZoneListDialog.test.ts`: add `renders the shared selection status when provided` next to the count tests (line 370 area), passing `selectionStatus` alongside the props the neighbouring target-mode tests already pass. Run `npx vitest run tests/component/FieldActionBar.test.ts tests/component/ZoneListDialog.test.ts` — red.
-  - [ ] 3.2 In `src/battle/app/components/duel-field/FieldActionBar.svelte`: add `export let selectionStatus: string | null = null;` after `export let contextMessage` (line 18 area); replace the summary block (lines 75–79) with:
+- [x] 1. Formatter exists and is fully unit-tested (single source of truth).
+  - [x] 1.1 Create `tests/unit/format-selection-status.test.ts` with every case from the test plan above, importing `formatSelectionStatus` and `SELECTION_STATUS_KINDS` from `../../src/battle/app/presentation/format-selection-status.ts` and id builders from `../../src/battle/duel/contracts/ids.ts`. Run `npx vitest run tests/unit/format-selection-status.test.ts` — red (module missing).
+  - [x] 1.2 Create `src/battle/app/presentation/format-selection-status.ts` implementing the exact contract in `## Interface contract`: export `SELECTION_STATUS_KINDS`, export `formatSelectionStatus`; import `contributionOptions` from `../../duel/prompt-sum.ts`; compute achievable totals with a `Set<number>` fold over the option lists (mirror the fold shape of `possibleMandatoryTotals` in `src/battle/duel/prompt-sum.ts:99-114` but without the `<= target` filter); apply the best-fit rule verbatim.
+  - [x] 1.3 Run `npx vitest run tests/unit/format-selection-status.test.ts` — green. (16 passed)
+- [x] 2. Bar shows for every selection-family prompt.
+  - [x] 2.1 In `tests/unit/interaction-spec.test.ts` `describe("fieldActionBarRequired")` (line 597), flip and rename the three card-selection cases exactly as the test-plan table says; leave `single placement needs no confirm bar` and every other case untouched. Run `npx vitest run tests/unit/interaction-spec.test.ts` — red.
+  - [x] 2.2 In `src/battle/app/prompts/interaction-spec.ts` `fieldActionBarRequired` (lines 247–268): delete the branch `if (spec.kind === "cardSelection" && spec.offFieldChoices.length > 0) return false;` and its T16 comment; change the switch arm so `case "cardSelection": return true;` while `case "placeSelection": return !isImmediateSingleSelection(spec);` stays. Add a one-line comment on the `cardSelection` arm: selection prompts always keep the status bar (feedback item 6); the target window and the bar coexist.
+  - [x] 2.3 Run `npx vitest run tests/unit/interaction-spec.test.ts` — green. (57 passed)
+- [x] 3. Both surfaces render the shared string.
+  - [x] 3.1 In `tests/component/FieldActionBar.test.ts`: update `"summary counts selections"` (line 317) and add the two new tests from the test-plan table (use the existing `fieldPrompt`/`specFor`/`mountedChoice`/`createInteractionSession` helpers; for the counter case reuse the pattern of the existing counter tests at lines 213–261). In `tests/component/ZoneListDialog.test.ts`: add `renders the shared selection status when provided` next to the count tests (line 370 area), passing `selectionStatus` alongside the props the neighbouring target-mode tests already pass. Run `npx vitest run tests/component/FieldActionBar.test.ts tests/component/ZoneListDialog.test.ts` — red.
+  - [x] 3.2 In `src/battle/app/components/duel-field/FieldActionBar.svelte`: add `export let selectionStatus: string | null = null;` after `export let contextMessage` (line 18 area); replace the summary block (lines 75–79) with:
 
         {#if selectionStatus !== null}
           <p data-cy="field-action-bar-summary">{selectionStatus}</p>
@@ -183,12 +183,12 @@ Run: `npx vitest run tests/unit/format-selection-status.test.ts tests/unit/inter
           </p>
         {/if}
 
-  - [ ] 3.3 In `src/battle/app/components/duel-field/ZoneListDialog.svelte`: add `export let selectionStatus: string | null = null;` after `export let maximum = 0;` (line 33); change the count output (lines 252–253) to `<output data-cy="zone-list-dialog-selection-count">{selectionStatus ?? selectionState.countLabel}</output>`.
-  - [ ] 3.4 In `src/battle/app/components/DuelField.svelte`: import `formatSelectionStatus` from `../presentation/format-selection-status.ts` (alongside the existing presentation imports near line 30); add after the `validation` reactive (line 251): `$: selectionStatus = prompt === null ? null : formatSelectionStatus(prompt, submittedChoiceIds);`; pass `{selectionStatus}` to `<FieldActionBar` (line 1253 block) and `{selectionStatus}` to the target-mode `<ZoneListDialog mode="target"` (line 1189 block; browse-mode dialog at line 1219 gets nothing).
-  - [ ] 3.5 Run `npx vitest run tests/component/FieldActionBar.test.ts tests/component/ZoneListDialog.test.ts` — green.
-- [ ] 4. Gates.
-  - [ ] 4.1 Run `npm run check:headless` — exit 0.
-  - [ ] 4.2 Run `npm run test:component` — exit 0.
+  - [x] 3.3 In `src/battle/app/components/duel-field/ZoneListDialog.svelte`: add `export let selectionStatus: string | null = null;` after `export let maximum = 0;` (line 33); change the count output (lines 252–253) to `<output data-cy="zone-list-dialog-selection-count">{selectionStatus ?? selectionState.countLabel}</output>`.
+  - [x] 3.4 In `src/battle/app/components/DuelField.svelte`: import `formatSelectionStatus` from `../presentation/format-selection-status.ts` (alongside the existing presentation imports near line 30); add after the `validation` reactive (line 251): `$: selectionStatus = prompt === null ? null : formatSelectionStatus(prompt, submittedChoiceIds);`; pass `{selectionStatus}` to `<FieldActionBar` (line 1253 block) and `{selectionStatus}` to the target-mode `<ZoneListDialog mode="target"` (line 1189 block; browse-mode dialog at line 1219 gets nothing).
+  - [x] 3.5 Run `npx vitest run tests/component/FieldActionBar.test.ts tests/component/ZoneListDialog.test.ts` — green. (56 passed)
+- [x] 4. Gates.
+  - [x] 4.1 Run `npm run check:headless` — exit 0. (EXIT=0; unit 1743 passed, integration 39 passed, legacy pass 23 fail 0)
+  - [x] 4.2 Run `npm run test:component` — exit 0. (EXIT=0; 105 files, 980 passed)
 
 ## Outputs
 
@@ -198,8 +198,8 @@ Run: `npx vitest run tests/unit/format-selection-status.test.ts tests/unit/inter
 
 ## Validation
 
-- [ ] tests pass: `npx vitest run tests/unit/format-selection-status.test.ts tests/unit/interaction-spec.test.ts`, `npm run test:component`, `npm run check:headless` — all exit 0
+- [x] tests pass: `npx vitest run tests/unit/format-selection-status.test.ts tests/unit/interaction-spec.test.ts` (73 passed), `npm run test:component` (980 passed), `npm run check:headless` (EXIT=0) — all exit 0
 - [ ] manual check: start a duel, tribute summon a 2-tribute monster → bar shows `0 of 2 selected` before any pick and counts up; trigger a Synchro summon (selectSum) → sum line tracks the level total against the target; an immediate 1-of-1 selection shows the bar with status and no Confirm button, and clicking the card still answers
-- [ ] no silent-failure swallow on a path this slice adds — `|| true`, empty catch, `>/dev/null 2>&1`, fire-and-forget with no error path: none
-- [ ] app functional — no broken path from this slice: every previously bar-suppressed selection still answerable (card click / target dialog), Confirm gating unchanged
+- [x] no silent-failure swallow on a path this slice adds — `|| true`, empty catch, `>/dev/null 2>&1`, fire-and-forget with no error path: none
+- [x] app functional — no broken path from this slice: every previously bar-suppressed selection still answerable (card click / target dialog), Confirm gating unchanged
 - [ ] commit msg draft: `feat(duel): keep a live selection/sum status line on every selection prompt (item 6)`

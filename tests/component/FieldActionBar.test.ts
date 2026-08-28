@@ -329,12 +329,56 @@ describe("FieldActionBar", () => {
     render(FieldActionBar, {
       spec,
       session,
+      selectionStatus: "2 of 2 selected",
       oninteraction: vi.fn(),
     });
 
     expect(
       document.querySelector('[data-cy="field-action-bar-summary"]')
         ?.textContent,
-    ).toBe("2 selected");
+    ).toBe("2 of 2 selected");
+  });
+
+  it("renders the selection status at zero selected", () => {
+    const value = fieldPrompt("selectCard", [
+      mountedChoice("c1", "Select monster"),
+    ]);
+    const spec = specFor(value);
+    const session = createInteractionSession(spec);
+    render(FieldActionBar, {
+      spec,
+      session,
+      selectionStatus: "0 of 1 selected",
+      oninteraction: vi.fn(),
+    });
+
+    expect(
+      document.querySelector('[data-cy="field-action-bar-summary"]')
+        ?.textContent,
+    ).toBe("0 of 1 selected");
+    expect(
+      document.querySelector('[data-cy="field-action-bar-confirm"]'),
+    ).toBeNull();
+  });
+
+  it("legacy summary without a selection status", () => {
+    const value = fieldPrompt(
+      "selectCounter",
+      [mountedChoice("c1", "Spell Counter", { allocationMaximum: 2 })],
+      { minimum: 1, maximum: 2 },
+    );
+    const spec = specFor(value);
+    let session = createInteractionSession(spec);
+    session = { ...session, selectedChoiceIds: [choiceId("c1")] };
+    render(FieldActionBar, {
+      spec,
+      session,
+      oninteraction: vi.fn(),
+    });
+
+    expect(
+      document.querySelector('[data-cy="field-action-bar-summary"]')
+        ?.textContent,
+    ).toBe("1 selected");
   });
 });

@@ -22,11 +22,20 @@ const storyRoot = path.resolve("src/story");
    there. Both machine checks already allow it: the story zone in
    `eslint.config.js` re-includes the shell entry, and `isLegalImport` in
    `tests/unit/domain-boundaries.test.ts` resolves it to the shell's public
-   entry. This file was the one list still holding the pre-ADR-036 shape. */
+   entry. This file was the one list still holding the pre-ADR-036 shape.
+
+   T24, the same widening for the same reason: `src/deck-select/index.ts` is
+   the shared deck-selection screen, which the pre-battle briefing renders
+   rather than growing a second deck picker of its own. It is presentational
+   and reads no other domain, so the story chunk pays for a screen and nothing
+   behind it — and both machine checks already allow it, the story zone in
+   `eslint.config.js` re-including the entry and `isLegalImport` resolving it
+   to deck-select's public entry. */
 function reachableFromStory(target: string): boolean {
   return (
     target === "src/battle/battle-contracts.ts" ||
     target === "src/shell/index.ts" ||
+    target === "src/deck-select/index.ts" ||
     target.startsWith("src/decks/")
   );
 }

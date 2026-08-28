@@ -165,6 +165,37 @@ describe("DeckSelectScreen", () => {
     expect(button("deck-select-duplicate").disabled).toBe(false);
   });
 
+  /* The story commits to an encounter on this screen, so it renders no way
+     back at all — and the two controls go together, because they are one
+     affordance the layout shows at two widths. */
+  it("showBack=false hides both back controls", async () => {
+    const base = props();
+    const { rerender } = render(DeckSelectScreen, base);
+
+    expect(find("deck-select-back")).not.toBeNull();
+    expect(find("deck-select-back-icon")).not.toBeNull();
+
+    await rerender({ ...base, showBack: false });
+
+    expect(find("deck-select-back")).toBeNull();
+    expect(find("deck-select-back-icon")).toBeNull();
+  });
+
+  /* A scope whose decks are managed somewhere else renders none of the
+     management affordances: the footer cluster and every tile's kebab go with
+     it, while Open and Start — the ways off this screen — stay. */
+  it("manageable=false hides the manage cluster and the kebabs", () => {
+    render(DeckSelectScreen, props({ selectedKey: "k1", manageable: false }));
+
+    expect(find("deck-select-manage")).toBeNull();
+    expect(find("deck-select-delete")).toBeNull();
+    expect(find("deck-select-rename")).toBeNull();
+    expect(find("deck-select-duplicate")).toBeNull();
+    expect(find("deck-tile-menu-k1")).toBeNull();
+    expect(find("deck-select-open")).not.toBeNull();
+    expect(find("deck-select-start")).not.toBeNull();
+  });
+
   it("library mode hides Open and Start", () => {
     render(
       DeckSelectScreen,

@@ -88,14 +88,14 @@ Run: `npx vitest run tests/unit/story tests/component/story tests/component/deck
 
 ## Impl steps
 
-- [ ] 1. Add `showBack` prop + test to `DeckSelectScreen`.
-- [ ] 2. Read `src/story/decks/encounter-deck.ts`; note opponent deck lists export.
-- [ ] 3. Write failing `tests/unit/story/pre-battle-tiles.test.ts`; implement `src/story/decks/pre-battle-tiles.ts`.
-- [ ] 4. Rewrite `tests/component/story/pre-battle-deck-picker.test.ts` (red), then `PreBattleScreen.svelte` per Requirements.
-- [ ] 5. Wire new props in `StoryApp.svelte`.
-- [ ] 6. Update selectors: `git grep -ln "story-briefing" tests/ e2e/` → adjust.
-- [ ] 7. `npx vitest run tests/unit tests/component` green; `npx playwright test e2e/story-duel.spec.ts` green.
-- [ ] 8. `npm run lint && npm run typecheck && npm run build` → green.
+- [x] 1. Add `showBack` prop + test to `DeckSelectScreen`. — `showBack` + `manageable` (the prop the ticket names from T17 does not exist); `npx vitest run tests/component/deck-select` 64 passed
+- [x] 2. Read `src/story/decks/encounter-deck.ts`; note opponent deck lists export. — only export is `encounterDeck(state)`, which resolves the *player's* deck from `state.defaultDeckId`; it holds no opponent lists (plan defect, see report A2)
+- [x] 3. Write failing `tests/unit/story/pre-battle-tiles.test.ts`; implement `src/story/decks/pre-battle-tiles.ts`. — red: "Failed to load .../pre-battle-tiles.ts"; green: 5 passed
+- [x] 4. Rewrite `tests/component/story/pre-battle-deck-picker.test.ts` (red), then `PreBattleScreen.svelte` per Requirements. — red: 19 failed | 5 passed; green: 24 passed
+- [x] 5. Wire new props in `StoryApp.svelte`. — `deckRecords`/`favouriteDeckIds`/`catalog`/`onfavourite`; "writes a star into the save" passes against the mounted app
+- [x] 6. Update selectors: `git grep -ln "story-briefing" tests/ e2e/` → adjust. — only the three kept names remain (`-screen`, `-block-action`, `-deck-error-retry`); `e2e/story.spec.ts` and `BattleHandoff.test.ts` also adjusted
+- [x] 7. `npx vitest run tests/unit tests/component` green; `npx playwright test e2e/story-duel.spec.ts` green. — 262 files / 2778 passed; 8 passed (16.1s)
+- [x] 8. `npm run lint && npm run typecheck && npm run build` → green. — lint clean, svelte-check 0 errors, build ok after re-deriving the story chunk budget (132,212 bytes)
 
 ## Outputs
 
@@ -105,8 +105,8 @@ Run: `npx vitest run tests/unit/story tests/component/story tests/component/deck
 
 ## Validation
 
-- [ ] `npx vitest run tests/unit tests/component` green
-- [ ] `npx playwright test e2e/story-duel.spec.ts` green
-- [ ] `npm run lint && npm run typecheck && npm run build` green
-- [ ] manual: story pre-battle shows tiles, locked opponent, favourite star persists in save, start latch works
-- [ ] commit msg draft: `feat(story): run the pre-battle briefing on the shared deck-selection screen`
+- [x] `npx vitest run tests/unit tests/component` green — 262 files, 2778 passed | 2 skipped
+- [x] `npx playwright test e2e/story-duel.spec.ts` green — 8 passed; `e2e/story.spec.ts` also re-run, 20 passed
+- [x] `npm run lint && npm run typecheck && npm run build` green — plus `npm run check:headless` and `npm run test:component` both green
+- [ ] manual: story pre-battle shows tiles, locked opponent, favourite star persists in save, start latch works — NOT RUN by this worker (no human at the browser); each half is covered by an automated test instead
+- [x] commit msg draft: `feat(story): run the pre-battle briefing on the shared deck-selection screen`

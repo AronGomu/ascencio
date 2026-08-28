@@ -109,7 +109,12 @@ test("story plays the prologue through to the duel handoff", async ({
     .getByLabel("Location list")
     .getByRole("button", { name: /Old Arena/ })
     .click();
-  await expect(page.getByRole("heading", { name: "Rin's Echo" })).toBeVisible();
+  /* The briefing titles itself after the opponent and seats that same opponent
+     beside the decks, so the encounter names two headings; the screen's own
+     title is the one that says which screen this is. */
+  await expect(page.locator('[data-cy="deck-select-title"]')).toHaveText(
+    "Rin's Echo",
+  );
   await page.getByRole("button", { name: "Start Duel" }).click();
   /* The shell owns the duel, so the story's last act is to hand over: the
      duel region replaces it on a session route of its own. */
@@ -531,7 +536,7 @@ test("the story flow is reachable by keyboard alone", async ({ page }) => {
     page,
     page.getByLabel("Map hotspots").getByRole("button", { name: /Old Arena/ }),
   );
-  await expect(page.getByRole("heading", { name: "Rin's Echo" })).toBeFocused();
+  await expect(page.locator('[data-cy="deck-select-title"]')).toBeFocused();
   await keyboardActivate(
     page,
     page.getByRole("button", { name: "Start Duel" }),

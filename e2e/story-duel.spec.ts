@@ -108,14 +108,24 @@ async function reachEncounter(page: Page): Promise<void> {
     page.getByRole("heading", { name: "City signal map" }),
   ).toBeVisible();
   await page.locator('[data-cy="story-map-location-old-arena"]').click();
-  await expect(page.getByRole("heading", { name: "Rin's Echo" })).toBeVisible();
+  /* Asked for by its own name rather than by role: the briefing titles itself
+     after the opponent and seats that same opponent beside the decks, so two
+     headings carry the encounter. */
+  await expect(page.locator('[data-cy="deck-select-title"]')).toHaveText(
+    "Rin's Echo",
+  );
   /* Disabled until the card database has answered for the save's decks, which
      is the whole read the duel is about to make anyway. */
-  const start = page.locator('[data-cy="story-briefing-start"]');
+  const start = page.locator('[data-cy="deck-select-start"]');
   await expect(start).toBeEnabled({ timeout: 120_000 });
+  /* The save's one deck, picked: the tick is what says the encounter starts on
+     it rather than on nothing. */
   await expect(
-    page.locator('[data-cy="story-briefing-player-deck-value"]'),
+    page.locator(`[data-cy="deck-tile-name-${STARTER.deck.id}"]`),
   ).toHaveText(STARTER.deck.name);
+  await expect(
+    page.locator(`[data-cy="deck-tile-check-${STARTER.deck.id}"]`),
+  ).toBeVisible();
   await start.click();
 }
 
@@ -324,14 +334,18 @@ test("an encounter refuses a deck the save no longer owns and links to the edito
   await seedBrokenDefault(page);
   await page.locator('[data-cy="story-title-continue"]').click();
   await page.locator('[data-cy="story-map-location-old-arena"]').click();
-  await expect(page.getByRole("heading", { name: "Rin's Echo" })).toBeVisible();
+  await expect(page.locator('[data-cy="deck-select-title"]')).toHaveText(
+    "Rin's Echo",
+  );
 
-  const reason = page.locator('[data-cy="story-briefing-block-reason"]');
+  const reason = page.locator('[data-cy="deck-select-block-notice"]');
   await expect(reason).toBeVisible({ timeout: 120_000 });
   await expect(reason).toContainText("you own 0");
-  await expect(page.locator('[data-cy="story-briefing-start"]')).toBeDisabled();
+  await expect(page.locator('[data-cy="deck-select-start"]')).toBeDisabled();
+  /* Listed rather than hidden, because a story's decks live in the save: the
+     player has to see the deck they are being sent to repair. */
   await expect(
-    page.locator(`[data-cy="story-briefing-deck-${STARTER.deck.id}"]`),
+    page.locator(`[data-cy="deck-tile-press-${STARTER.deck.id}"]`),
   ).toBeDisabled();
 
   await page.locator('[data-cy="story-briefing-block-action"]').click();

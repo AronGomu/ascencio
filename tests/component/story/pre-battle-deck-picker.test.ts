@@ -49,86 +49,177 @@ const ILLEGAL: PreBattleDeckOption = {
   issue: "This deck uses 3 copy/copies of Dark Magician; you own 1.",
 };
 
+/* The records behind the three options above. The briefing pairs verdicts with
+   records by id, so a suite that hands over only verdicts would never notice a
+   tile losing its counts. */
+const RECORDS = [
+  storyDeckFixture(LEGAL.id, { name: LEGAL.name }),
+  storyDeckFixture(SECOND.id, { name: SECOND.name }),
+  storyDeckFixture(ILLEGAL.id, { name: ILLEGAL.name }),
+];
+
 function cy(value: string): HTMLElement | null {
   return document.querySelector<HTMLElement>(`[data-cy="${value}"]`);
 }
 
 function start(): HTMLButtonElement {
-  const button = cy("story-briefing-start");
+  const button = cy("deck-select-start");
   if (button === null) throw new Error("No start button");
   return button as HTMLButtonElement;
 }
 
 function deckButton(id: string): HTMLButtonElement {
-  const button = cy(`story-briefing-deck-${id}`);
+  const button = cy(`deck-tile-press-${id}`);
   if (button === null) throw new Error(`No deck button for ${id}`);
   return button as HTMLButtonElement;
 }
 
+/** The tick the tile carries while it is the deck the encounter would start on. */
+function picked(id: string): boolean {
+  return cy(`deck-tile-check-${id}`) !== null;
+}
+
+/* Counted inside the grid rather than across the document: the opponent's own
+   seat card is a deck tile too, and it is never one of the save's. */
+function gridSize(): number {
+  return cy("deck-select-grid")?.children.length ?? -1;
+}
+
+function notice(): string {
+  return cy("deck-select-block-notice")?.textContent?.trim() ?? "";
+}
+
+function props(overrides: Record<string, unknown> = {}) {
+  return { deckRecords: RECORDS, ...overrides };
+}
+
 describe("the pre-battle deck picker", () => {
   it("lists the save's decks with the default preselected", () => {
-    render(PreBattleScreen, {
-      decks: [LEGAL, SECOND, ILLEGAL],
-      defaultDeckId: SECOND.id,
-    });
+    render(
+      PreBattleScreen,
+      props({ decks: [LEGAL, SECOND, ILLEGAL], defaultDeckId: SECOND.id }),
+    );
 
-    expect(
-      document.querySelectorAll('[data-cy^="story-briefing-deck-row-"]'),
-    ).toHaveLength(3);
-    expect(deckButton(SECOND.id).getAttribute("aria-pressed")).toBe("true");
-    expect(deckButton(LEGAL.id).getAttribute("aria-pressed")).toBe("false");
-    expect(cy("story-briefing-player-deck-value")?.textContent).toContain(
-      SECOND.name,
+    expect(gridSize()).toBe(3);
+    expect(picked(SECOND.id)).toBe(true);
+    expect(picked(LEGAL.id)).toBe(false);
+    /* The counts come from the record rather than from the verdict, which is
+       the pairing this screen is responsible for. */
+    expect(cy(`deck-tile-counts-${SECOND.id}`)?.textContent).toBe(
+      "Main 1 · Extra 0 · Side 0",
     );
   });
 
   it("falls back to the first legal deck when the save has no default", () => {
-    render(PreBattleScreen, {
-      decks: [ILLEGAL, LEGAL, SECOND],
-      defaultDeckId: null,
-    });
+    render(
+      PreBattleScreen,
+      props({ decks: [ILLEGAL, LEGAL, SECOND], defaultDeckId: null }),
+    );
 
-    expect(deckButton(LEGAL.id).getAttribute("aria-pressed")).toBe("true");
+    expect(picked(LEGAL.id)).toBe(true);
     expect(start().disabled).toBe(false);
   });
 
-  it("renders an illegal deck disabled and styled as illegal", () => {
-    render(PreBattleScreen, {
-      decks: [LEGAL, ILLEGAL],
-      defaultDeckId: LEGAL.id,
-    });
+  /* Story is save-owned, so an illegal deck is listed rather than hidden: the
+     player has to see the deck they need to repair. It is listed disabled, and
+     the arrow keys walk past it. */
+  it("renders an illegal deck disabled and never selectable", async () => {
+    render(
+      PreBattleScreen,
+      props({ decks: [LEGAL, ILLEGAL, SECOND], defaultDeckId: LEGAL.id }),
+    );
 
-    const button = deckButton(ILLEGAL.id);
-    expect(button.disabled).toBe(true);
-    expect(button.className).toContain("illegal");
+    expect(deckButton(ILLEGAL.id).disabled).toBe(true);
+    expect(cy(`deck-tile-badge-illegal-${ILLEGAL.id}`)).not.toBeNull();
     expect(deckButton(LEGAL.id).disabled).toBe(false);
-    expect(deckButton(LEGAL.id).className).not.toContain("illegal");
+
+    await fireEvent.keyDown(window, { key: "ArrowDown" });
+
+    expect(picked(SECOND.id)).toBe(true);
+    expect(picked(ILLEGAL.id)).toBe(false);
   });
 
-  it("shows an illegal deck's first error", () => {
-    render(PreBattleScreen, {
-      decks: [LEGAL, ILLEGAL],
-      defaultDeckId: LEGAL.id,
-    });
-
-    expect(cy(`story-briefing-deck-issue-${ILLEGAL.id}`)?.textContent).toBe(
-      ILLEGAL.issue,
+  it("shows an illegal deck's first error on its tile", () => {
+    render(
+      PreBattleScreen,
+      props({ decks: [LEGAL, ILLEGAL], defaultDeckId: LEGAL.id }),
     );
-    expect(cy(`story-briefing-deck-issue-${LEGAL.id}`)).toBeNull();
+
+    expect(cy(`deck-tile-meta-${ILLEGAL.id}`)?.textContent).toBe(ILLEGAL.issue);
+    expect(cy(`deck-tile-meta-${LEGAL.id}`)?.textContent).toBe("Save deck");
+  });
+
+  /* The opponent is the encounter's, not a choice: no portrait control, no
+     picker, and the deck card says who fixed it. */
+  it("seats the encounter's opponent locked", async () => {
+    render(PreBattleScreen, props({ decks: [LEGAL], defaultDeckId: LEGAL.id }));
+
+    expect(cy("deck-select-title")?.textContent).toBe("Rin's Echo");
+    const portrait = cy("duel-start-opponent-portrait");
+    expect(portrait?.tagName).toBe("DIV");
+    expect(cy("duel-start-opponent-change-chip")).toBeNull();
+
+    await userEvent.setup().click(portrait!);
+    expect(cy("duel-start-opponent-picker")).toBeNull();
+
+    expect(cy("duel-start-opponent-deck")?.tagName).toBe("DIV");
+    expect(cy("duel-start-opponent-deck-locked")?.textContent).toBe(
+      "🔒 Set by the story",
+    );
+    expect(cy("deck-tile-name-opponent-encounter-deck")?.textContent).toBe(
+      "Relay Deck",
+    );
+  });
+
+  it("reports a starred deck to the save", async () => {
+    const onfavourite = vi.fn();
+    render(
+      PreBattleScreen,
+      props({ decks: [LEGAL], defaultDeckId: LEGAL.id, onfavourite }),
+    );
+
+    await userEvent.setup().click(cy(`deck-tile-fav-${LEGAL.id}`)!);
+
+    expect(onfavourite).toHaveBeenCalledExactlyOnceWith(LEGAL.id, true);
+  });
+
+  it("stars the decks the save already holds", () => {
+    render(
+      PreBattleScreen,
+      props({
+        decks: [LEGAL, SECOND],
+        defaultDeckId: LEGAL.id,
+        favouriteDeckIds: [SECOND.id],
+      }),
+    );
+
+    expect(cy(`deck-tile-fav-${SECOND.id}`)?.getAttribute("aria-pressed")).toBe(
+      "true",
+    );
+    expect(cy(`deck-tile-fav-${LEGAL.id}`)?.getAttribute("aria-pressed")).toBe(
+      "false",
+    );
+  });
+
+  /* A save's decks are managed in the story's own deck editor, which this
+     screen sends the player to rather than editing them here. */
+  it("offers no deck management of its own", () => {
+    render(PreBattleScreen, props({ decks: [LEGAL], defaultDeckId: LEGAL.id }));
+
+    expect(cy("deck-select-manage")).toBeNull();
+    expect(cy(`deck-tile-menu-${LEGAL.id}`)).toBeNull();
   });
 
   it("blocks the start while the selected deck is illegal, and says why", () => {
     const onstart = vi.fn();
-    render(PreBattleScreen, {
-      decks: [ILLEGAL, LEGAL],
-      defaultDeckId: ILLEGAL.id,
-      onstart,
-    });
+    render(
+      PreBattleScreen,
+      props({ decks: [ILLEGAL, LEGAL], defaultDeckId: ILLEGAL.id, onstart }),
+    );
 
     expect(start().disabled).toBe(true);
-    const reason = cy("story-briefing-block-reason")?.textContent ?? "";
-    expect(reason).toContain(ILLEGAL.name);
-    expect(reason).toContain("you own 1");
+    expect(notice()).toContain(ILLEGAL.name);
+    expect(notice()).toContain("you own 1");
     expect(onstart).not.toHaveBeenCalled();
   });
 
@@ -138,11 +229,10 @@ describe("the pre-battle deck picker", () => {
      second, so this screen only says where the player wants to go. */
   it("reports a blocked start as a request for the deck editor", async () => {
     const onopendecks = vi.fn();
-    render(PreBattleScreen, {
-      decks: [ILLEGAL],
-      defaultDeckId: ILLEGAL.id,
-      onopendecks,
-    });
+    render(
+      PreBattleScreen,
+      props({ decks: [ILLEGAL], defaultDeckId: ILLEGAL.id, onopendecks }),
+    );
 
     const way = cy("story-briefing-block-action");
     expect(way?.tagName).toBe("BUTTON");
@@ -156,13 +246,16 @@ describe("the pre-battle deck picker", () => {
      has to be on the screen. */
   it("sends a save with no decks to build one", async () => {
     const onopendecks = vi.fn();
-    render(PreBattleScreen, { decks: [], defaultDeckId: null, onopendecks });
+    render(
+      PreBattleScreen,
+      props({ decks: [], deckRecords: [], defaultDeckId: null, onopendecks }),
+    );
 
     expect(start().disabled).toBe(true);
-    expect(cy("story-briefing-block-reason")?.textContent).toMatch(/no decks/i);
+    expect(notice()).toMatch(/no decks/i);
     const way = cy("story-briefing-block-action");
     expect(way?.textContent).toMatch(/build/i);
-    expect(cy("story-briefing-deck-list")).toBeNull();
+    expect(gridSize()).toBe(0);
 
     await userEvent.setup().click(way!);
     expect(onopendecks).toHaveBeenCalledOnce();
@@ -171,29 +264,33 @@ describe("the pre-battle deck picker", () => {
   it("records the chosen deck once and enables the start", async () => {
     const onselectdeck = vi.fn();
     const onstart = vi.fn();
-    render(PreBattleScreen, {
-      decks: [ILLEGAL, LEGAL, SECOND],
-      defaultDeckId: ILLEGAL.id,
-      onselectdeck,
-      onstart,
-    });
+    render(
+      PreBattleScreen,
+      props({
+        decks: [ILLEGAL, LEGAL, SECOND],
+        defaultDeckId: ILLEGAL.id,
+        onselectdeck,
+        onstart,
+      }),
+    );
     expect(start().disabled).toBe(true);
 
-    await userEvent.setup().click(deckButton(SECOND.id));
+    const user = userEvent.setup();
+    await user.click(deckButton(SECOND.id));
+    /* Pressed twice on purpose: the save already holds this deck after the
+       first press, and a second write would mark the run dirty for a change
+       nobody made. */
+    await user.click(deckButton(SECOND.id));
 
     expect(onselectdeck).toHaveBeenCalledExactlyOnceWith(SECOND.id);
-    expect(cy("story-briefing-block-reason")).toBeNull();
+    expect(cy("deck-select-block-notice")).toBeNull();
+    expect(picked(SECOND.id)).toBe(true);
     expect(start().disabled).toBe(false);
-    expect(cy("story-briefing-player-deck-value")?.textContent).toContain(
-      SECOND.name,
-    );
 
-    await userEvent.setup().click(start());
+    await user.click(start());
     expect(onstart).toHaveBeenCalledOnce();
-    /* Starting on a deck this screen already recorded must not write it a
-       second time: the parent has one save, and a second write marks it dirty
-       for a change nobody made. Asserted after the start, because the props
-       here never flush back the way a mounted parent's would. */
+    /* Asserted after the start, because the props here never flush back the
+       way a mounted parent's would. */
     expect(onselectdeck).toHaveBeenCalledExactlyOnceWith(SECOND.id);
   });
 
@@ -201,11 +298,10 @@ describe("the pre-battle deck picker", () => {
      Starting on it has to, or the encounter carries no deck at all. */
   it("records a fallback selection when the start is taken without a click", async () => {
     const onselectdeck = vi.fn();
-    render(PreBattleScreen, {
-      decks: [LEGAL],
-      defaultDeckId: null,
-      onselectdeck,
-    });
+    render(
+      PreBattleScreen,
+      props({ decks: [LEGAL], defaultDeckId: null, onselectdeck }),
+    );
 
     await userEvent.setup().click(start());
 
@@ -214,50 +310,78 @@ describe("the pre-battle deck picker", () => {
 
   it("does not re-record a selection the save already holds", async () => {
     const onselectdeck = vi.fn();
-    render(PreBattleScreen, {
-      decks: [LEGAL],
-      defaultDeckId: LEGAL.id,
-      onselectdeck,
-    });
+    render(
+      PreBattleScreen,
+      props({ decks: [LEGAL], defaultDeckId: LEGAL.id, onselectdeck }),
+    );
 
     await userEvent.setup().click(start());
 
     expect(onselectdeck).not.toHaveBeenCalled();
   });
 
+  /* The parent writes the checkpoint before the route changes, so a second
+     press during that write would start the encounter twice. */
+  it("latches the start after one press", async () => {
+    const onstart = vi.fn();
+    render(
+      PreBattleScreen,
+      props({ decks: [LEGAL], defaultDeckId: LEGAL.id, onstart }),
+    );
+
+    const user = userEvent.setup();
+    await user.click(start());
+    expect(start().textContent).toBe("Entering duel…");
+    expect(start().disabled).toBe(true);
+
+    await user.click(start());
+    expect(onstart).toHaveBeenCalledOnce();
+  });
+
   /* An empty catalog calls every card missing, so a verdict reached before it
      lands would refuse every deck in the save. The screen waits instead. */
   it("waits rather than refusing while the decks are still being checked", () => {
-    render(PreBattleScreen, { decks: null, defaultDeckId: "signal" });
+    render(PreBattleScreen, props({ decks: null, defaultDeckId: "signal" }));
 
     expect(start().disabled).toBe(true);
-    expect(cy("story-briefing-deck-checking")).not.toBeNull();
-    expect(cy("story-briefing-block-reason")).toBeNull();
+    expect(notice()).toBe("Checking your decks against the card database…");
     expect(cy("story-briefing-block-action")).toBeNull();
   });
 
   it("offers a retry and a way back when the card database will not load", async () => {
     const onretrydecks = vi.fn();
     const onreturn = vi.fn();
-    render(PreBattleScreen, {
-      decks: null,
-      defaultDeckId: null,
-      decksError: "The card database could not load.",
-      onretrydecks,
-      onreturn,
-    });
+    render(
+      PreBattleScreen,
+      props({
+        decks: null,
+        defaultDeckId: null,
+        decksError: "The card database could not load.",
+        onretrydecks,
+        onreturn,
+      }),
+    );
 
     expect(start().disabled).toBe(true);
-    expect(cy("story-briefing-deck-error")?.textContent).toContain(
-      "The card database could not load.",
-    );
+    expect(notice()).toContain("The card database could not load.");
 
     const user = userEvent.setup();
     await user.click(cy("story-briefing-deck-error-retry")!);
-    await user.click(cy("story-briefing-return")!);
+    await user.click(cy("deck-select-back")!);
 
     expect(onretrydecks).toHaveBeenCalledOnce();
     expect(onreturn).toHaveBeenCalledOnce();
+  });
+
+  /* An encounter the player cannot walk away from has no way back to show. */
+  it("hides the way back when the encounter refuses one", () => {
+    render(
+      PreBattleScreen,
+      props({ decks: [LEGAL], defaultDeckId: LEGAL.id, allowReturn: false }),
+    );
+
+    expect(cy("deck-select-back")).toBeNull();
+    expect(cy("deck-select-back-icon")).toBeNull();
   });
 });
 
@@ -295,16 +419,14 @@ describe("the briefing inside the story app", () => {
     /* Blocked while the catalog is still being read, and still blocked once it
        lands — the default deck is 39 cards short. */
     await waitFor(() =>
-      expect(cy(`story-briefing-deck-${FIELDABLE.deck.id}`)).not.toBeNull(),
+      expect(cy(`deck-tile-press-${FIELDABLE.deck.id}`)).not.toBeNull(),
     );
     expect(start().disabled).toBe(true);
     expect(deckButton(BROKEN.id).disabled).toBe(true);
-    expect(cy(`story-briefing-deck-issue-${BROKEN.id}`)?.textContent).toContain(
+    expect(cy(`deck-tile-meta-${BROKEN.id}`)?.textContent).toContain(
       "Main Deck needs 39 more",
     );
-    expect(cy("story-briefing-block-reason")?.textContent).toContain(
-      BROKEN.name,
-    );
+    expect(notice()).toContain(BROKEN.name);
 
     await userEvent.setup().click(deckButton(FIELDABLE.deck.id));
     expect(start().disabled).toBe(false);
@@ -325,23 +447,38 @@ describe("the briefing inside the story app", () => {
     });
   });
 
+  /* The star is the save's, so it survives the round trip the pick does. */
+  it("writes a star into the save", async () => {
+    installPrototypeActiveCatalog();
+    render(StoryApp, { resumeState: preBattleSave() });
+    await waitFor(() =>
+      expect(cy(`deck-tile-press-${FIELDABLE.deck.id}`)).not.toBeNull(),
+    );
+
+    await userEvent.setup().click(cy(`deck-tile-fav-${FIELDABLE.deck.id}`)!);
+
+    await waitFor(() =>
+      expect(
+        cy(`deck-tile-fav-${FIELDABLE.deck.id}`)?.getAttribute("aria-pressed"),
+      ).toBe("true"),
+    );
+  });
+
   it("keeps the pick after a trip back to the map", async () => {
     installPrototypeActiveCatalog();
     render(StoryApp, { resumeState: preBattleSave() });
     await waitFor(() =>
-      expect(cy(`story-briefing-deck-${FIELDABLE.deck.id}`)).not.toBeNull(),
+      expect(cy(`deck-tile-press-${FIELDABLE.deck.id}`)).not.toBeNull(),
     );
 
     await userEvent.setup().click(deckButton(FIELDABLE.deck.id));
-    await userEvent.setup().click(cy("story-briefing-return")!);
+    await userEvent.setup().click(cy("deck-select-back")!);
     await userEvent.setup().click(cy("story-map-location-old-arena")!);
 
     await waitFor(() =>
-      expect(cy(`story-briefing-deck-${FIELDABLE.deck.id}`)).not.toBeNull(),
+      expect(cy(`deck-tile-press-${FIELDABLE.deck.id}`)).not.toBeNull(),
     );
-    expect(deckButton(FIELDABLE.deck.id).getAttribute("aria-pressed")).toBe(
-      "true",
-    );
+    expect(picked(FIELDABLE.deck.id)).toBe(true);
     expect(start().disabled).toBe(false);
   });
 
@@ -355,12 +492,10 @@ describe("the briefing inside the story app", () => {
     render(StoryApp, { resumeState: preBattleSave() });
 
     await waitFor(() =>
-      expect(cy("story-briefing-deck-error")?.textContent).toContain(
-        "The card database could not load.",
-      ),
+      expect(notice()).toContain("The card database could not load."),
     );
     expect(start().disabled).toBe(true);
-    expect(cy("story-briefing-deck-list")).toBeNull();
+    expect(gridSize()).toBe(0);
 
     const before = fetchSpy.mock.calls.length;
     await userEvent.setup().click(cy("story-briefing-deck-error-retry")!);
@@ -368,7 +503,7 @@ describe("the briefing inside the story app", () => {
       expect(fetchSpy.mock.calls.length).toBeGreaterThan(before),
     );
     /* Return to Map is the way out that never depends on the read. */
-    await userEvent.setup().click(cy("story-briefing-return")!);
+    await userEvent.setup().click(cy("deck-select-back")!);
     expect(cy("story-map-screen")).not.toBeNull();
     expect(cy("story-briefing-screen")).toBeNull();
     fetchSpy.mockRestore();

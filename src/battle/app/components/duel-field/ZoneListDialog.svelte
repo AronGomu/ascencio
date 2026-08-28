@@ -74,7 +74,7 @@
   $: headerTitle = targetMode
     ? title || "Select targets"
     : stack === null
-      ? ""
+      ? title
       : cardListBrowseTitle(stack.zone);
   $: count = targetMode ? targetEntries.length : entries.length;
   $: label = targetMode ? headerTitle : `${headerTitle} card browser`;

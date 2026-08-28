@@ -25,6 +25,7 @@
     InteractionChoice,
   } from "../../prompts/interaction-spec.ts";
   import type { CardDragOrigin } from "../../presentation/drag-ghost-physics.ts";
+  import type { LocalCardAction } from "../../presentation/local-card-action.ts";
   import CardControl from "./CardControl.svelte";
   import HandBand from "./HandBand.svelte";
   import StackControl from "./StackControl.svelte";
@@ -62,6 +63,9 @@
   export let oncarddragmove: (x: number, y: number) => void = () => undefined;
   export let oncarddragend: (x: number, y: number) => void = () => undefined;
   export let oncardpreview: (card: BoardCardView) => void = () => undefined;
+  export let localActionsFor: (
+    card: BoardCardView,
+  ) => readonly LocalCardAction[] = () => [];
   export let onstackpreview: (stack: BoardStackView) => void = () => undefined;
   export let onstackactivate: (stack: BoardStackView) => void = () => undefined;
   export let oncardzoomenter: (
@@ -313,6 +317,7 @@
       active={navigationState.activeTarget === card.targetId}
       {disabled}
       choices={spec?.cardChoices.get(card.targetId) ?? []}
+      localActions={localActionsFor(card)}
       pinned={pinnedTarget === card.targetId}
       draggable={false}
       onactivate={(element, source) => oncardactivate(card, element, source)}

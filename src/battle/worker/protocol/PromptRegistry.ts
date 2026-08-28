@@ -1159,6 +1159,9 @@ function toPromptCard(card: {
     controller: card.controller,
     location: engineToPublicLocation(card.location),
     sequence: card.sequence,
+    ...((card.location & EngineLocation.OVERLAY) !== 0
+      ? { overlay: true as const }
+      : {}),
     ...(card.position === undefined
       ? {}
       : { position: engineToPublicPosition(card.position) }),

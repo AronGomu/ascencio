@@ -2421,11 +2421,23 @@ button.duel-field-zone,
   padding: 0;
 }
 
-/* Always mounted for an actionable card, merely hidden: assertions about
-   dismissal must test visibility, never element count. */
+/* Always mounted for an actionable card — or for a card carrying a local
+   action, the rule below — merely hidden: assertions about dismissal must
+   test visibility, never element count. */
 .duel-field-card.is-actionable:hover .card-action-chips,
 .duel-field-card.is-actionable:focus-within .card-action-chips,
 .duel-field-card.is-pinned .card-action-chips {
+  display: flex;
+}
+
+/* A local action answers no prompt, so its host never becomes actionable and
+   every reveal path above misses it: without this rule the Materials chip of
+   a prompt-free Xyz monster would mount and stay `display: none` forever.
+   Kept as its own rule so the group above stays the exact prompt-reveal set.
+   There is no pin arm: a pin belongs to a decision, and this card is in
+   none. */
+.duel-field-card.has-local-actions:hover .card-action-chips,
+.duel-field-card.has-local-actions:focus-within .card-action-chips {
   display: flex;
 }
 

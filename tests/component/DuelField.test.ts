@@ -1076,6 +1076,62 @@ describe("DuelField", () => {
     expect(document.body.innerHTML).not.toContain("46986414");
   });
 
+  it("opens the materials list from the Materials chip and closes it like a browse list", async () => {
+    const user = userEvent.setup();
+    render(DuelField, { board: board("ST-07") });
+
+    const chips = [
+      ...document.querySelectorAll<HTMLButtonElement>(
+        '[data-cy="card-action-chip-local-materials"]',
+      ),
+    ];
+    expect(chips).toHaveLength(1);
+    const chip = chips[0];
+    if (chip === undefined) throw new Error("Missing Materials chip");
+    expect(chip.closest("article")?.dataset.cy).toBe("field-card-st07-host");
+    expect(document.querySelector('[data-cy="zone-list-dialog"]')).toBeNull();
+
+    await fireEvent.click(chip);
+
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog"]'),
+    ).not.toBeNull();
+    const header = document.querySelector(
+      '[data-cy="zone-list-dialog-title"]',
+    )?.textContent;
+    expect(header).toContain("The Legendary Fisherman");
+    expect(header).toContain("Materials");
+    expect(
+      document.querySelectorAll(
+        '[data-cy^="zone-list-entry-st07-host:material:"]',
+      ),
+    ).toHaveLength(2);
+
+    await fireEvent.keyDown(document, { key: "Escape" });
+    expect(document.querySelector('[data-cy="zone-list-dialog"]')).toBeNull();
+
+    /* A second press of the chip travels through the window's outside-click
+       dismissal first, exactly as a pile control does, and must leave the
+       list closed rather than reopening it. */
+    await fireEvent.click(chip);
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog"]'),
+    ).not.toBeNull();
+    await user.click(chip);
+    expect(document.querySelector('[data-cy="zone-list-dialog"]')).toBeNull();
+  });
+
+  /* ST-07 holds a single monster, so a materials-free field card has to come
+     from a fixture that has one. */
+  it("a card without materials shows no Materials chip", () => {
+    render(DuelField, { board: board("ST-02") });
+
+    expect(
+      document.querySelectorAll('[data-cy="card-action-chip-local-materials"]'),
+    ).toHaveLength(0);
+    expect(document.querySelectorAll(".card-action-chips")).toHaveLength(0);
+  });
+
   it("enters a card tray with Enter and returns focus with Escape", async () => {
     const user = userEvent.setup();
     render(CardTray, {

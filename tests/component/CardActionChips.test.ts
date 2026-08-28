@@ -175,6 +175,48 @@ describe("CardActionChips", () => {
     expect(onchoose).toHaveBeenCalledOnce();
   });
 
+  it("renders local action chips after prompt chips and fires onSelect", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    const onchoose = vi.fn();
+    render(CardActionChips, {
+      cardId: "card-1",
+      cardLabel: "Xyz host",
+      choices: [ACTIVATE],
+      localActions: [{ id: "materials", label: "Materials", onSelect }],
+      onchoose,
+      ondismiss: vi.fn(),
+    });
+
+    const rendered = chips();
+    expect(rendered).toHaveLength(2);
+    const local = rendered[1];
+    if (local === undefined) throw new Error("Missing local chip");
+    expect(local.dataset.cy).toBe("card-action-chip-local-materials");
+    expect(local.classList.contains("card-action-chip--local")).toBe(true);
+    expect(local.textContent?.trim()).toBe("Materials");
+
+    await user.click(local);
+    expect(onSelect).toHaveBeenCalledOnce();
+    expect(onchoose).not.toHaveBeenCalled();
+  });
+
+  /* An empty pill is still a hover target and still paints: the component has
+     to mount nothing at all when it has nothing to show. */
+  it("renders nothing when there are no prompt choices and no local actions", () => {
+    render(CardActionChips, {
+      cardId: "card-1",
+      cardLabel: "Xyz host",
+      choices: [],
+      localActions: [],
+      variant: "field",
+      onchoose: vi.fn(),
+      ondismiss: vi.fn(),
+    });
+
+    expect(document.querySelector(".card-action-chips")).toBeNull();
+  });
+
   it("focuses the first chip through the instance binding", async () => {
     const { rendered } = renderChips();
     (

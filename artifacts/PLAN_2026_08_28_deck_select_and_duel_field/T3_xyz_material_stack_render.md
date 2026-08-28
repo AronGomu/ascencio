@@ -284,4 +284,4 @@ Run: `npx vitest run tests/component/CardControl.test.ts` while iterating; full 
 - [ ] manual check: `npm run dev`, start a duel, summon an Xyz monster (or load a diagnostic state with fixture ST-07-like materials); confirm materials peek out to the right behind the host on both your row and (via opponent play) the opponent's row, hidden materials show the back, and hovering/clicking a material hits the host card, not the material.
 - [x] no silent-failure swallow on a path this slice adds: one kept site — `useFallbackImage` clears `onerror` and swaps to `placeholderUrl` on image load failure, mirroring the existing `CardControl`/`StackControl` pattern; a broken art URL must degrade to a placeholder, not surface an error. No `|| true`, empty catch, or discarded promise added.
 - [x] app functional — duel field renders and plays exactly as before for cards without materials (zero-material cards emit zero new elements).
-- [ ] commit msg draft: `feat(duel): render xyz materials fanned behind the host card, Duel Links style`
+- [x] commit msg draft: `feat(duel): render xyz materials fanned behind the host card, Duel Links style`

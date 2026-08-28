@@ -68,8 +68,8 @@ Generated data, downloaded images, caches, and `node_modules/` are intentionally
 ## Setup
 
 ```bash
-git clone git@github.com:AronGomu/ygo-story-duel-simulator.git
-cd ygo-story-duel-simulator
+git clone git@github.com:AronGomu/ascencio.git
+cd ascencio
 npm ci
 npm run assets:mvp
 npm run check

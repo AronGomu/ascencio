@@ -257,8 +257,14 @@ describe("public domain APIs are frozen", () => {
          all mount, so it is a domain of its own rather than a folder inside
          any one of them. It holds view models and pure functions only — hosts
          map their own records into `DeckTileModel`, so nothing here reads
-         storage and nothing here can turn a host eager. */
-      values: ["orderDeckTiles"],
+         storage and nothing here can turn a host eager.
+
+         T12, deliberate widening of one name: `DeckTile` is the one tile the
+         grid, the library, the seat cards and the mobile list all render, so
+         every host reaches the same component instead of copying it. It is a
+         presentational component with no store and no loader, so naming it
+         here makes no host eager. */
+      values: ["DeckTile", "orderDeckTiles"],
       types: [
         "DeckCounts",
         "DeckSelectMode",

@@ -14,6 +14,7 @@ import tseslint from "typescript-eslint";
    airtight half of the pair; both run in `check:headless`. */
 const STORY_INTERNALS = ["**/story/**", "!**/story/index.ts"];
 const DECK_EDITOR_INTERNALS = ["**/deck-editor/**", "!**/deck-editor/index.ts"];
+const DECK_SELECT_INTERNALS = ["**/deck-select/**", "!**/deck-select/index.ts"];
 const SHELL_INTERNALS = ["**/shell/**", "!**/shell/index.ts"];
 const BATTLE_INTERNALS = ["**/battle/**", "!**/battle/index.ts"];
 /* Three allowances, each pinned to one file in the blocks at the bottom of this
@@ -76,6 +77,8 @@ const STORY_MESSAGE =
   "Reach the visual novel through `src/story/index.ts` (ADR-022 domain boundary).";
 const DECK_EDITOR_MESSAGE =
   "Reach the deck editor through `src/deck-editor/index.ts` (ADR-022 domain boundary).";
+const DECK_SELECT_MESSAGE =
+  "Reach the shared deck-selection screen through `src/deck-select/index.ts` (ADR-022 domain boundary).";
 const SHELL_MESSAGE =
   "Reach the shell through `src/shell/index.ts` (ADR-022 domain boundary).";
 const BATTLE_MESSAGE =
@@ -145,6 +148,7 @@ export default tseslint.config(
     [
       { group: STORY_INTERNALS, message: STORY_MESSAGE },
       { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
+      { group: DECK_SELECT_INTERNALS, message: DECK_SELECT_MESSAGE },
       { group: BATTLE_INTERNALS, message: BATTLE_MESSAGE },
     ],
   ),
@@ -152,6 +156,7 @@ export default tseslint.config(
     ["src/story/**"],
     [
       { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
+      { group: DECK_SELECT_INTERNALS, message: DECK_SELECT_MESSAGE },
       { group: SHELL_INTERNALS, message: SHELL_MESSAGE },
       {
         group: [...BATTLE_INTERNALS, "!**/battle/battle-contracts.ts"],
@@ -163,6 +168,20 @@ export default tseslint.config(
     ["src/deck-editor/**"],
     [
       { group: STORY_INTERNALS, message: STORY_MESSAGE },
+      { group: DECK_SELECT_INTERNALS, message: DECK_SELECT_MESSAGE },
+      { group: SHELL_INTERNALS, message: SHELL_MESSAGE },
+      { group: BATTLE_INTERNALS, message: BATTLE_MESSAGE },
+    ],
+  ),
+  /* The shared deck-selection screen is presentational and self-contained: the
+     hosts map their own records into its view models, so it reads no other
+     domain at all. Its own zone therefore excludes every sibling, and every
+     sibling zone excludes its internals. */
+  boundaries(
+    ["src/deck-select/**"],
+    [
+      { group: STORY_INTERNALS, message: STORY_MESSAGE },
+      { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
       { group: SHELL_INTERNALS, message: SHELL_MESSAGE },
       { group: BATTLE_INTERNALS, message: BATTLE_MESSAGE },
     ],
@@ -172,6 +191,7 @@ export default tseslint.config(
     [
       { group: STORY_INTERNALS, message: STORY_MESSAGE },
       { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
+      { group: DECK_SELECT_INTERNALS, message: DECK_SELECT_MESSAGE },
       { group: SHELL_INTERNALS, message: SHELL_MESSAGE },
       { group: BATTLE_INTERNALS, message: BATTLE_MESSAGE },
     ],
@@ -185,6 +205,7 @@ export default tseslint.config(
     [
       { group: STORY_INTERNALS, message: STORY_MESSAGE },
       { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
+      { group: DECK_SELECT_INTERNALS, message: DECK_SELECT_MESSAGE },
       { group: SHELL_INTERNALS, message: SHELL_MESSAGE },
     ],
   ),
@@ -195,6 +216,7 @@ export default tseslint.config(
     [
       { group: STORY_INTERNALS, message: STORY_MESSAGE },
       { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
+      { group: DECK_SELECT_INTERNALS, message: DECK_SELECT_MESSAGE },
       {
         group: [
           ...BATTLE_INTERNALS,
@@ -210,6 +232,7 @@ export default tseslint.config(
     [
       { group: STORY_INTERNALS, message: STORY_MESSAGE },
       { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
+      { group: DECK_SELECT_INTERNALS, message: DECK_SELECT_MESSAGE },
       {
         group: [...BATTLE_INTERNALS, ...STAGE_FRAME_PENDING_RELOCATION],
         message: BATTLE_MESSAGE,
@@ -221,6 +244,7 @@ export default tseslint.config(
     [
       { group: STORY_INTERNALS, message: STORY_MESSAGE },
       { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
+      { group: DECK_SELECT_INTERNALS, message: DECK_SELECT_MESSAGE },
       {
         group: [...BATTLE_INTERNALS, ...DUEL_UI_STATE_PENDING_RELOCATION],
         message: BATTLE_MESSAGE,
@@ -235,6 +259,7 @@ export default tseslint.config(
         message: STORY_MESSAGE,
       },
       { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
+      { group: DECK_SELECT_INTERNALS, message: DECK_SELECT_MESSAGE },
       { group: BATTLE_INTERNALS, message: BATTLE_MESSAGE },
     ],
   ),
@@ -243,6 +268,7 @@ export default tseslint.config(
     [
       { group: STORY_INTERNALS, message: STORY_MESSAGE },
       { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
+      { group: DECK_SELECT_INTERNALS, message: DECK_SELECT_MESSAGE },
       { group: SHELL_INTERNALS, message: SHELL_MESSAGE },
       {
         group: [...BATTLE_INTERNALS, ...DECK_FORMAT_PENDING_RELOCATION],

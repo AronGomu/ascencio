@@ -116,4 +116,8 @@
      ghost — the card springs home behind it while the question is still
      unanswered, and the question must never be the thing that is covered. */
   --duel-field-layer-drop-confirm: 160;
+
+  /* deck-select seat halos */
+  --seat-you: #4ea3ff;
+  --seat-opponent: var(--danger);
 }

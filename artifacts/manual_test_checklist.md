@@ -3959,3 +3959,17 @@ Run `npm run dev` (default `DEV_PORT=4300`), open `#/free-play`, pick
 - [ ] Click a material sliver drawn under the monster itself: nothing happens. Only the chip opens the list.
 - [ ] Open a pile browser (graveyard, deck) while the materials list is open: the materials list closes — only ever one list window at a time.
 - [ ] Activate an effect that detaches a material (Dante's, for example). **The detach still selects the host card, not a material.** This is the shipped limitation: the engine never asks which unit to detach, so there is no per-material target to list. The material count drops by one and the detached card appears in the graveyard, exactly as before this slice.
+
+---
+
+## T5 hand-activation-drop-zone (PLAN_2026_08_28_deck_select_and_duel_field)
+
+Owner feedback item 4: activation is answered by dragging the card onto a zone
+of its own beside the hand, and any activation a drag resolves to can be
+cancelled before it commits.
+
+Run `npm run dev` (default `DEV_PORT=4300`), open `#/free-play`, start a duel.
+
+- [ ] Drag a hand card with an activatable effect — a dashed "Activate" box appears at the left end of your hand; drop the card on it → a confirm dialog offers Activate + Cancel; Cancel returns the card with nothing played; confirm activates. Hovering the same card shows no Activate chip; keyboard Enter on it still opens a menu containing Activate.
+- [ ] Drag a monster that only offers Summon and Set: no dashed box appears at all, and dropping it on a highlighted monster zone still plays it in one gesture, with no dialog.
+- [ ] Fill all five of your Spell/Trap zones, then drag a card with an activatable effect: the dashed box still appears (no backrow zone is highlighted, and none is needed).

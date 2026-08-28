@@ -200,6 +200,48 @@ describe("HandBand", () => {
     expect(onactivate).toHaveBeenCalled();
   });
 
+  /* Item 4: activation is answered by dragging the card onto its own zone, so
+     the pointer chips drop it — but the pinned menu is the keyboard's only
+     route to an activation on a card that offers more than one action. */
+  it("filters activate from an unpinned card's chips and restores it when pinned", async () => {
+    const card = handCard(0, 0);
+    const rendered = renderBand({
+      cards: [card],
+      spec: {
+        kind: "cardAction",
+        cardChoices: new Map([
+          [
+            card.targetId,
+            [
+              { id: "activate", label: "Activate", action: "activate" },
+              { id: "setmonster", label: "Set", action: "setMonster" },
+            ],
+          ],
+        ]),
+        zoneChoices: new Map(),
+        stackChoices: new Map(),
+        key: { workerGeneration: 0, sessionGeneration: 0, promptId: "p" },
+      } as unknown as ActiveInteractionSpec,
+      pinnedTarget: null,
+    });
+
+    expect(
+      document.querySelector('[data-cy="card-action-chip-activate"]'),
+    ).toBeNull();
+    expect(
+      document.querySelector('[data-cy="card-action-chip-setmonster"]'),
+    ).not.toBeNull();
+
+    await rendered.rerender({ pinnedTarget: card.targetId });
+
+    expect(
+      document.querySelector('[data-cy="card-action-chip-activate"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="card-action-chip-setmonster"]'),
+    ).not.toBeNull();
+  });
+
   it("mounts every card when the hand changes, with no count to fall behind", async () => {
     const rendered = renderBand({ cards: handCards(0, 6) });
     expect(cardArticles()).toHaveLength(6);

@@ -1429,6 +1429,35 @@ button.duel-field-zone,
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--legal) 95%, transparent);
 }
 
+/* Item 4: the drag-to-activate target. Mounted only mid-drag, at the left end
+   of the hand band, vertically centered on the hand row. It must catch the
+   release hit test, so it never gets pointer-events: none — the drag's pointer
+   capture keeps it from swallowing anything else. Availability is a fact about
+   the card's choices, never about zone occupancy. */
+.duel-hand-activation-zone {
+  position: absolute;
+  left: var(--field-x);
+  top: var(--field-y);
+  z-index: var(--duel-field-layer-menu);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--field-width);
+  height: var(--field-height);
+  transform: translate(0, -50%);
+  border: 2px dashed var(--success);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--legal) 12%, transparent);
+}
+
+.duel-hand-activation-zone__label {
+  color: var(--success);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .duel-field-zone.is-drop-candidate {
     transition: none;

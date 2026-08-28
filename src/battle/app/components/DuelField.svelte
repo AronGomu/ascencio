@@ -221,6 +221,29 @@
      on a leave — and only a chosen action, a drag, a second click on the card,
      a click outside its union or Escape clears it. */
   let pinnedHandTarget: BoardTargetId | null = null;
+  /* Item 2 anchors the chip stack on the card's bottom edge, and the hand zoom
+     overlay draws that stack over the lower half of the very card it serves —
+     the chips being the overlay's one hit-testable surface besides the bridge.
+     So the press that starts a drag lands on a chip, never on the card's own
+     `.duel-field-card__target`, and `CardControl` never sees the gesture at
+     all. The field runs it here instead, on the one node both the overlay and
+     the card bubble to: a motionless press still clicks the chip, a moving one
+     still lifts the card. */
+  let handZoomDrag: {
+    readonly pointerId: number;
+    readonly card: BoardCardView;
+    readonly article: HTMLElement;
+    readonly startX: number;
+    readonly startY: number;
+    dragging: boolean;
+  } | null = null;
+  /* A forwarded drag presses inside the overlay and releases over a zone, so
+     the browser has no common interactive ancestor left to fire the click on
+     and hands it to the field root — dead ground as `dismissOnOutsideClick`
+     reads it. Answering with that click would cancel or chain-pass the very
+     decision the drop just made. Cleared by the next press on the field, so a
+     release that never produced a click cannot eat a later dismissal. */
+  let suppressFieldClick = false;
   /* Item 6: the drop that could not be read as one action, held until the
      player answers it. Nothing is dispatched and no placement intent is armed
      while it is set, so cancelling leaves the game exactly as the drag found
@@ -562,6 +585,10 @@
   }
 
   function dismissOnOutsideClick(event: MouseEvent): void {
+    if (suppressFieldClick) {
+      suppressFieldClick = false;
+      return;
+    }
     if (spec === null || pending) return;
     /* ADR-017: while the confirm window is up, a live decision is on screen.
        An incidental click anywhere on the field must never answer it — not
@@ -635,6 +662,104 @@
       velocityY: 0,
       tiltDegrees: 0,
     });
+  }
+
+  const HAND_ZOOM_DRAG_THRESHOLD_PX = 8;
+
+  function beginHandZoomDrag(event: PointerEvent): void {
+    suppressFieldClick = false;
+    if (handZoom === null || handZoomDrag !== null) return;
+    const pressed = event.target;
+    if (
+      !(pressed instanceof Element) ||
+      pressed.closest(".hand-zoom-overlay") === null
+    )
+      return;
+    const article =
+      fieldRoot?.querySelector<HTMLElement>(
+        `[data-cy="field-card-${handZoom.card.id}"]`,
+      ) ?? null;
+    if (article === null) return;
+    handZoomDrag = {
+      pointerId: event.pointerId,
+      card: handZoom.card,
+      article,
+      startX: event.clientX,
+      startY: event.clientY,
+      dragging: false,
+    };
+    /* Captured on the pressed element rather than on the card: a press that
+       never travels has to stay that chip's own click. */
+    pressed.setPointerCapture?.(event.pointerId);
+  }
+
+  function moveHandZoomDrag(event: PointerEvent): void {
+    const drag = handZoomDrag;
+    if (drag === null || event.pointerId !== drag.pointerId) return;
+    if (!drag.dragging) {
+      if (
+        Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) <=
+        HAND_ZOOM_DRAG_THRESHOLD_PX
+      )
+        return;
+      startCardDrag(drag.card, handZoomDragOrigin(drag.article, event));
+      /* The prompt may not be offering this card an action to drag at all;
+         `startCardDrag` is the only judge of that. */
+      if (dragCard === null) {
+        handZoomDrag = null;
+        return;
+      }
+      drag.dragging = true;
+      /* Starting the drag drops the zoom, and an unmounted element loses its
+         capture. The card article outlives the whole gesture, so the moves
+         keep arriving once the overlay under the pointer is gone. */
+      drag.article.setPointerCapture?.(event.pointerId);
+    }
+    moveCardDrag(event.clientX, event.clientY);
+  }
+
+  function endHandZoomDrag(event: PointerEvent): void {
+    const drag = handZoomDrag;
+    if (drag === null || event.pointerId !== drag.pointerId) return;
+    handZoomDrag = null;
+    if (!drag.dragging) return;
+    suppressFieldClick = true;
+    endCardDrag(event.clientX, event.clientY);
+  }
+
+  function cancelHandZoomDrag(event: PointerEvent): void {
+    const drag = handZoomDrag;
+    if (drag === null || event.pointerId !== drag.pointerId) return;
+    handZoomDrag = null;
+    if (!drag.dragging) return;
+    endCardDrag(Number.NaN, Number.NaN);
+  }
+
+  /* The ghost is the card, never the overlay: home rect and art both come from
+     the hand card article, so a forwarded drag springs home to the hand exactly
+     as a card-started one does. */
+  function handZoomDragOrigin(
+    article: HTMLElement,
+    event: PointerEvent,
+  ): CardDragOrigin {
+    const rect = article.getBoundingClientRect();
+    const art = article.querySelector<HTMLImageElement>(
+      '[data-cy^="card-control-image-"]',
+    );
+    return {
+      pointer: {
+        x: event.clientX,
+        y: event.clientY,
+        timeMs: performance.now(),
+      },
+      sourceLeft: rect.left,
+      sourceTop: rect.top,
+      width: rect.width,
+      height: rect.height,
+      pointerOffsetX: event.clientX - rect.left,
+      pointerOffsetY: event.clientY - rect.top,
+      imageUrl: art?.getAttribute("src") ?? resolvedPlaceholderUrl,
+    };
   }
 
   /* Turns the viewport-space snapshot `CardControl` took into the coordinate
@@ -1188,6 +1313,10 @@
   data-prompt-kind={prompt === null ? undefined : prompt.kind}
   style={`width: ${renderLayout.geometry.width}px; height: ${renderLayout.geometry.height}px;`}
   onclick={dismissOnOutsideClick}
+  onpointerdown={beginHandZoomDrag}
+  onpointermove={moveHandZoomDrag}
+  onpointerup={endHandZoomDrag}
+  onpointercancel={cancelHandZoomDrag}
 >
   <!-- Inner field is exact geometry-sized position/clamp boundary.
        Wrapper remains non-scrolling; floating windows stay field-local. -->
@@ -1204,6 +1333,7 @@
         disabled={pending}
         pinnedTarget={session.menuTarget}
         zoomServedTarget={handZoom === null ? null : handZoom.card.targetId}
+        draggedTarget={dragCard === null ? null : dragCard.targetId}
         {dropCandidates}
         {dropHoveredZoneId}
         {showZoneOutlines}

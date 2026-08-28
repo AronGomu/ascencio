@@ -29,6 +29,7 @@
   export let disabled = false;
   export let pinnedTarget: BoardTargetId | null = null;
   export let zoomServedTarget: BoardTargetId | null = null;
+  export let draggedTarget: BoardTargetId | null = null;
   export let oncardactivate: (
     card: BoardCardView,
     element: HTMLButtonElement,
@@ -108,6 +109,7 @@
         )}
         pinned={pinnedTarget === card.targetId}
         zoomServed={zoomServedTarget === card.targetId}
+        dragged={draggedTarget === card.targetId}
         draggable={!disabled &&
           spec?.kind === "cardAction" &&
           spec.cardChoices.has(card.targetId) &&

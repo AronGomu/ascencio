@@ -2196,6 +2196,74 @@ describe("DuelField", () => {
     ).toBeNull();
   });
 
+  /* 2026-08-27 item 2 bottom-anchored the chip stack, and the hand zoom overlay
+     draws that stack over the lower half of the card it serves — the card's own
+     centre included. The chips are hit-testable, so from that moment a press
+     meant for the card landed on a chip and no drag ever began. The gesture has
+     to survive a press that starts anywhere on the overlay. */
+  it("arms the zones for a drag pressed on the hand zoom overlay", async () => {
+    const harness = renderDraggableHand();
+    await fireEvent.pointerEnter(handCardArticle());
+    const chip = handZoomChip("summon");
+
+    await fireEvent.pointerDown(chip, { clientX: 10, clientY: 10 });
+    await fireEvent.pointerMove(chip, { clientX: 30, clientY: 30 });
+
+    expect(candidateZoneIds()).toEqual([
+      "p0:mainMonster:0",
+      "p0:mainMonster:1",
+      "p0:mainMonster:2",
+      "p0:mainMonster:3",
+      "p0:mainMonster:4",
+    ]);
+    expect(dragGhost()).not.toBeNull();
+    expect(
+      handCardArticle().getAttribute("data-dragging"),
+      "the card the overlay serves is the one being dragged",
+    ).toBe("true");
+    expect(harness.dispatch).not.toHaveBeenCalled();
+    expect(harness.onplacementintent).not.toHaveBeenCalled();
+  });
+
+  it("commits a drag pressed on the hand zoom overlay onto its zone", async () => {
+    const harness = renderDraggableHand({ singleChoice: true });
+    await fireEvent.pointerEnter(handCardArticle());
+    const chip = handZoomChip("summon");
+    await fireEvent.pointerDown(chip, { clientX: 10, clientY: 10 });
+    await fireEvent.pointerMove(chip, { clientX: 30, clientY: 30 });
+
+    harness.setHit(zoneElement("p0:mainMonster:3"));
+    await fireEvent.pointerUp(duelFieldRoot(), { clientX: 30, clientY: 30 });
+
+    expect(harness.onplacementintent.mock.calls).toEqual([
+      ["p0:mainMonster:3"],
+    ]);
+    expect(harness.dispatch.mock.calls[0]?.[0]).toMatchObject({
+      type: "chooseChoice",
+      choiceId: "summon",
+    });
+    expect(candidateZoneIds()).toEqual([]);
+  });
+
+  /* The release click of a forwarded drag has no interactive common ancestor
+     left — it presses inside the overlay and releases over a zone — so the
+     browser hands it to the field root, which `dismissOnOutsideClick` reads as
+     dead ground. It must not answer the prompt the drop just answered. */
+  it("does not dismiss on the click a forwarded drag releases", async () => {
+    const harness = renderDraggableHand({ singleChoice: true });
+    await fireEvent.pointerEnter(handCardArticle());
+    const chip = handZoomChip("summon");
+    await fireEvent.pointerDown(chip, { clientX: 10, clientY: 10 });
+    await fireEvent.pointerMove(chip, { clientX: 30, clientY: 30 });
+    harness.setHit(zoneElement("p0:mainMonster:3"));
+    await fireEvent.pointerUp(duelFieldRoot(), { clientX: 30, clientY: 30 });
+    harness.dispatch.mockClear();
+
+    await fireEvent.click(duelFieldRoot());
+
+    expect(harness.dispatch).not.toHaveBeenCalled();
+  });
+
   it("a single-action drop dispatches immediately", async () => {
     const harness = renderDraggableHand({ singleChoice: true });
     await startHandDrag();
@@ -5011,6 +5079,21 @@ async function clickHandCard(): Promise<HTMLElement> {
     name strip, counting one overlay three times. */
 function handZoomOverlay(): HTMLElement | null {
   return document.querySelector<HTMLElement>("div.hand-zoom-overlay");
+}
+
+function duelFieldRoot(): HTMLElement {
+  const field = document.querySelector<HTMLElement>('[data-cy="duel-field"]');
+  if (field === null) throw new Error("Missing duel field root");
+  return field;
+}
+
+function handZoomChip(action: string): HTMLButtonElement {
+  const chip = document.querySelector<HTMLButtonElement>(
+    `[data-cy="hand-zoom-overlay-card-action-chip-${action}"]`,
+  );
+  if (chip === null)
+    throw new Error(`Missing hand zoom overlay chip for ${action}`);
+  return chip;
 }
 
 /** 20px past the origin clears `CardControl`'s 8px click-suppression gate. */

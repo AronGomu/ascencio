@@ -3922,3 +3922,20 @@ Run `npm run dev` (default `DEV_PORT=4300`).
 - [ ] Force the art-unavailable case: DevTools → Application → Cache Storage, delete the card-image cache, then reload and reopen the graveyard browser before the images finish re-fetching. Each face-up entry shows the plain grey **placeholder** with its card name still printed under it. None of them shows a card back.
 - [ ] Open your **deck** browser in that same state. Deck cards are concealed, so every slot still shows the **card back** — not the placeholder, not any art. No card name appears under a deck slot.
 - [ ] Reach a prompt that asks you to pick a target from off the field (a graveyard or hand target). In the target window, your own legal targets show art or the placeholder and are named; an opponent target the game will not let you identify still shows the card back and reads "Face-down card".
+
+---
+
+## T1 field-chrome-css (PLAN_2026_08_27_duel_field_right_pane_feedback)
+
+Owner feedback items 7–10: no hover zoom on opened board cards, solid zone
+outlines with no inner slot box, no border around the whole field, and a
+straight divider between the field and the right rail.
+
+Run `npm run dev` (default `DEV_PORT=4300`), open `#/free-play`, start a duel.
+
+- [ ] Summon a monster face-up, then hover it: the card no longer grows. It still rises above its neighbours (nothing clips it) and its action buttons still work.
+- [ ] Tab to a card in your hand: the focused hand card still lifts 1.35× as before.
+- [ ] Look at an empty monster zone: one solid outline, no second card-shaped box inset inside it. Occupied zones show no extra frame around the vertical card either.
+- [ ] Open the admin zone-outline toggle (`data-zone-outlines` off): zone outlines disappear entirely, as before.
+- [ ] The duel field has no border around its outer edge; the play mat's own inner frame is still there.
+- [ ] A single straight vertical line separates the duel field from the right pane, running the pane's full height, with the rail's text not touching it.

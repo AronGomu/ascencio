@@ -155,23 +155,23 @@ CSS has no unit harness — acceptance-check substitution per skill override:
 
 ## Impl steps
 
-- [ ] 1. Item 7 — remove the field/zone hover-scale rule
-  - [ ] 1.1 `src/styles/app.css` — delete lines 2138–2155: the comment block starting `/* Field/zone cards are absolutely centred via \`translate(-50%, -50%)\`` through the closing `}` of the rule `.duel-field-card.is-identity-known:not(.is-hand-item):not(.is-pinned):is(:hover, :focus-within) { transform: translate(-50%, -50%) scale(1.35); }`. Delete comment and rule together.
-  - [ ] 1.2 Do NOT touch the z-index raise rule directly above it (`.duel-field-card:is(:hover, :focus-within), .duel-field-card.is-pinned { z-index: var(--duel-field-layer-card-raised); }`, lines 2133–2136) nor its comment.
-  - [ ] 1.3 In the comment above the hand focus rule (lines 2183–2184), replace `/* Same pin exclusion as the field/zone rule above. The overlay handles the hover state; only focus-within keeps the in-place lift. */` with `/* Board cards no longer zoom on hover; a focused hand card keeps its in-place lift so keyboard users see which card holds focus. Pinned cards are excluded: pinning moves focus onto a card-action-chips button, and scaling then can push that chip outside the viewport. */` Keep the rule itself (`.duel-field-card.is-identity-known.is-hand-item:not(.is-pinned):focus-within { transform: scale(1.35); }`) byte-identical.
-- [ ] 2. Item 8 — slot border off, zone borders solid
-  - [ ] 2.1 `src/styles/app.css` `.duel-field-zone__slot` (~line 1369): delete the two-line declaration `border: 1px solid color-mix(in srgb, var(--field-card-edge) 40%, transparent);` and the now-pointless `border-radius: 0.28rem;` line. Keep the rest of the block.
-  - [ ] 2.2 `.duel-field-zone` (~line 1337): change `border: 1px dashed` → `border: 1px solid` (the multi-line `var(--zone-outline-color, ...)` value stays byte-identical).
-  - [ ] 2.3 `.duel-field-zone--shared` (~line 1355): change `border: 2px dashed var(--zone-outline-color, var(--accent));` → `border: 2px solid var(--zone-outline-color, var(--accent));`.
-  - [ ] 2.4 Leave `.duel-field-board[data-zone-outlines="false"] { --zone-outline-color: transparent; }` (~line 1361) untouched.
-- [ ] 3. Item 9 — outer field border off
-  - [ ] 3.1 `src/styles/app.css` `.duel-field` (~line 1173): delete the single line `border: 1px solid var(--border);`. Keep `border-radius: var(--radius-lg);`, the gradient background, and the box-shadow. Do not touch `.duel-field-board` (~line 1284) — its `border: 1px solid var(--field-border);` stays.
-- [ ] 4. Item 10 — rail divider
-  - [ ] 4.1 `src/styles/app.css` `.duel-right-rail` (~line 528): insert `border-inline-start: 1px solid var(--border);` after `min-width: 0;`.
-  - [ ] 4.2 Verify `.duel-shell` (~line 447) still declares no `gap` (it does today), so the divider sits flush against the field. If a gap exists, leave it and report — do not restructure the grid.
-  - [ ] 4.3 Manual check (step 6): if rail content touches the new line, add `padding-inline-start: 0.5rem;` to `.duel-right-rail`; otherwise add nothing.
-- [ ] 5. Manual checklist
-  - [ ] 5.1 Append to `artifacts/manual_test_checklist.md` after the `## R6 duel-chrome-trim` section:
+- [x] 1. Item 7 — remove the field/zone hover-scale rule
+  - [x] 1.1 `src/styles/app.css` — delete lines 2138–2155: the comment block starting `/* Field/zone cards are absolutely centred via \`translate(-50%, -50%)\`` through the closing `}` of the rule `.duel-field-card.is-identity-known:not(.is-hand-item):not(.is-pinned):is(:hover, :focus-within) { transform: translate(-50%, -50%) scale(1.35); }`. Delete comment and rule together.
+  - [x] 1.2 Do NOT touch the z-index raise rule directly above it (`.duel-field-card:is(:hover, :focus-within), .duel-field-card.is-pinned { z-index: var(--duel-field-layer-card-raised); }`, lines 2133–2136) nor its comment.
+  - [x] 1.3 In the comment above the hand focus rule (lines 2183–2184), replace `/* Same pin exclusion as the field/zone rule above. The overlay handles the hover state; only focus-within keeps the in-place lift. */` with `/* Board cards no longer zoom on hover; a focused hand card keeps its in-place lift so keyboard users see which card holds focus. Pinned cards are excluded: pinning moves focus onto a card-action-chips button, and scaling then can push that chip outside the viewport. */` Keep the rule itself (`.duel-field-card.is-identity-known.is-hand-item:not(.is-pinned):focus-within { transform: scale(1.35); }`) byte-identical.
+- [x] 2. Item 8 — slot border off, zone borders solid
+  - [x] 2.1 `src/styles/app.css` `.duel-field-zone__slot` (~line 1369): delete the two-line declaration `border: 1px solid color-mix(in srgb, var(--field-card-edge) 40%, transparent);` and the now-pointless `border-radius: 0.28rem;` line. Keep the rest of the block.
+  - [x] 2.2 `.duel-field-zone` (~line 1337): change `border: 1px dashed` → `border: 1px solid` (the multi-line `var(--zone-outline-color, ...)` value stays byte-identical).
+  - [x] 2.3 `.duel-field-zone--shared` (~line 1355): change `border: 2px dashed var(--zone-outline-color, var(--accent));` → `border: 2px solid var(--zone-outline-color, var(--accent));`.
+  - [x] 2.4 Leave `.duel-field-board[data-zone-outlines="false"] { --zone-outline-color: transparent; }` (~line 1361) untouched.
+- [x] 3. Item 9 — outer field border off
+  - [x] 3.1 `src/styles/app.css` `.duel-field` (~line 1173): delete the single line `border: 1px solid var(--border);`. Keep `border-radius: var(--radius-lg);`, the gradient background, and the box-shadow. Do not touch `.duel-field-board` (~line 1284) — its `border: 1px solid var(--field-border);` stays.
+- [x] 4. Item 10 — rail divider
+  - [x] 4.1 `src/styles/app.css` `.duel-right-rail` (~line 528): insert `border-inline-start: 1px solid var(--border);` after `min-width: 0;`.
+  - [x] 4.2 Verify `.duel-shell` (~line 447) still declares no `gap` (it does today), so the divider sits flush against the field. If a gap exists, leave it and report — do not restructure the grid.
+  - [x] 4.3 Manual check (step 6): if rail content touches the new line, add `padding-inline-start: 0.5rem;` to `.duel-right-rail`; otherwise add nothing.
+- [x] 5. Manual checklist
+  - [x] 5.1 Append to `artifacts/manual_test_checklist.md` after the `## R6 duel-chrome-trim` section:
 
     ```md
     ---
@@ -191,11 +191,11 @@ CSS has no unit harness — acceptance-check substitution per skill override:
     - [ ] The duel field has no border around its outer edge; the play mat's own inner frame is still there.
     - [ ] A single straight vertical line separates the duel field from the right pane, running the pane's full height, with the rail's text not touching it.
     ```
-- [ ] 6. Gates
-  - [ ] 6.1 Run `grep -c 'scale(1.35)' src/styles/app.css` → `1`; `grep -c 'dashed' src/styles/app.css` → `0`.
-  - [ ] 6.2 Run `npm run check:headless` → exit 0.
-  - [ ] 6.3 Run `npm run test:component` → exit 0.
-  - [ ] 6.4 Run the manual checklist section from 5.1 in Chromium; apply 4.3's padding only if needed.
+- [x] 6. Gates
+  - [x] 6.1 Run `grep -c 'scale(1.35)' src/styles/app.css` → `1`; `grep -c 'dashed' src/styles/app.css` → `0`.
+  - [x] 6.2 Run `npm run check:headless` → exit 0.
+  - [x] 6.3 Run `npm run test:component` → exit 0.
+  - [x] 6.4 Run the manual checklist section from 5.1 in Chromium; apply 4.3's padding only if needed.
 
 ## Outputs
 
@@ -205,9 +205,9 @@ CSS has no unit harness — acceptance-check substitution per skill override:
 
 ## Validation
 
-- [ ] Checks pass: `npm run check:headless` and `npm run test:component` both exit 0
-- [ ] Grep assertions hold: `grep -c 'scale(1.35)' src/styles/app.css` == 1, `grep -c 'dashed' src/styles/app.css` == 0
-- [ ] Manual Chromium check: all six checklist items from step 5.1 pass
-- [ ] No silent-failure swallow on a path this slice adds: none — CSS only, no code paths added
-- [ ] App functional — duel starts, cards hover/focus/pin, zone toggle works, no clipped controls
-- [ ] Commit msg draft: `style(duel): drop board hover zoom and chrome borders, solidify zone outlines, add rail divider`
+- [x] Checks pass: `npm run check:headless` and `npm run test:component` both exit 0
+- [x] Grep assertions hold: `grep -c 'scale(1.35)' src/styles/app.css` == 1, `grep -c 'dashed' src/styles/app.css` == 0
+- [x] Manual Chromium check: all six checklist items from step 5.1 pass
+- [x] No silent-failure swallow on a path this slice adds: none — CSS only, no code paths added
+- [x] App functional — duel starts, cards hover/focus/pin, zone toggle works, no clipped controls
+- [x] Commit msg draft: `style(duel): drop board hover zoom and chrome borders, solidify zone outlines, add rail divider`

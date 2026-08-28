@@ -60,6 +60,9 @@ const PLAYER_PRESET_KEY = "preset:mvp-player";
 const OPPONENT_PRESET_KEY = "preset:shaddoll";
 const BLAZE_PRESET_KEY = "preset:burning-abyss";
 const LOCAL_KEY = "local:built-deck:1";
+/* The same deck after one write: the key carries the revision, so every
+   management operation on a deck moves the key the grid knows it by. */
+const RENAMED_KEY = "local:built-deck:2";
 
 /** The slice of the battle entry the screen loads, with the bundled list cut
     down to the fixture trio. Everything else is the production function. */
@@ -160,6 +163,7 @@ function renderSetup(options: RenderOptions = {}) {
   const onstart = vi.fn();
   const onback = vi.fn();
   const ondecks = vi.fn();
+  const onopendeck = vi.fn();
   const storage = options.storage ?? memoryStorage();
   const settings = createShellSettingsStore(storage);
   const rendered = render(FreePlayMatchSetup, {
@@ -169,8 +173,17 @@ function renderSetup(options: RenderOptions = {}) {
     onstart,
     onback,
     ondecks,
+    onopendeck,
   });
-  return { ...rendered, onstart, onback, ondecks, storage, settings };
+  return {
+    ...rendered,
+    onstart,
+    onback,
+    ondecks,
+    onopendeck,
+    storage,
+    settings,
+  };
 }
 
 /** Rendered as far as the bundled decks, which need no library read. */
@@ -218,14 +231,108 @@ describe("FreePlayMatchSetup", () => {
     ]);
   });
 
-  /* T21 wires rename, duplicate and delete. Until it does, a kebab that opens
-     a menu of dead items is worse than no kebab. */
-  it("offers no deck management before the operations exist", async () => {
+  /* The screen manages the library it is picking from: the kebab and the
+     footer cluster are two paths to the same three operations. A bundled deck
+     is nobody's to delete, so the control that would is inert on one. */
+  it("offers deck management from the kebab and the footer", async () => {
     await renderListedSetup();
 
-    expect(query(`deck-tile-menu-${PLAYER_PRESET_KEY}`)).toBeNull();
-    expect(query("deck-select-manage")).toBeNull();
-    expect(query("deck-select-delete")).toBeNull();
+    expect(query(`deck-tile-menu-${LOCAL_KEY}`)).not.toBeNull();
+    expect(query("deck-select-manage")).not.toBeNull();
+    expect(control("deck-select-delete").disabled).toBe(true);
+
+    await fireEvent.click(control(`deck-tile-press-${LOCAL_KEY}`));
+
+    expect(control("deck-select-delete").disabled).toBe(false);
+  });
+
+  it("renames a deck from the kebab and keeps it seated", async () => {
+    await renderListedSetup();
+    await fireEvent.click(control(`deck-tile-press-${LOCAL_KEY}`));
+
+    await fireEvent.click(control(`deck-tile-menu-${LOCAL_KEY}`));
+    await fireEvent.click(control(`deck-tile-menu-rename-${LOCAL_KEY}`));
+    await fireEvent.input(
+      query("deck-select-rename-input") as HTMLInputElement,
+      {
+        target: { value: "Renamed Deck" },
+      },
+    );
+    await fireEvent.submit(query("deck-select-rename-form") as HTMLElement);
+
+    await vi.waitFor(() => expect(gridKeys()).toContain(RENAMED_KEY));
+    expect(query(`deck-tile-name-${RENAMED_KEY}`)?.textContent).toBe(
+      "Renamed Deck",
+    );
+    /* The write moved the key, so the seat follows the deck rather than
+       falling back to the bundled default. */
+    expect(seatKey("yours")).toBe(RENAMED_KEY);
+  });
+
+  it("duplicates a deck and seats the copy", async () => {
+    await renderListedSetup();
+    await fireEvent.click(control(`deck-tile-press-${LOCAL_KEY}`));
+
+    await fireEvent.click(control("deck-select-duplicate"));
+
+    await vi.waitFor(() => expect(gridKeys()).toHaveLength(5));
+    const copy = gridKeys().find(
+      (key) => key.startsWith("local:") && key !== LOCAL_KEY,
+    )!;
+    expect(query(`deck-tile-name-${copy}`)?.textContent).toBe(
+      "Built Deck Copy",
+    );
+    expect(seatKey("yours")).toBe(copy);
+  });
+
+  it("deletes a deck and re-seats the player from the fallback chain", async () => {
+    await renderListedSetup();
+    await fireEvent.click(control(`deck-tile-press-${LOCAL_KEY}`));
+    expect(seatKey("yours")).toBe(LOCAL_KEY);
+
+    await fireEvent.click(control("deck-select-delete"));
+    await fireEvent.click(control("deck-select-delete-confirm-button"));
+
+    await vi.waitFor(() => expect(gridKeys()).not.toContain(LOCAL_KEY));
+    expect(seatKey("yours")).toBe(PLAYER_PRESET_KEY);
+    expect(startButton().disabled).toBe(false);
+  });
+
+  /* A deck the player built has a page in the editor; a bundled one has none,
+     so its Open is the library itself. */
+  it("opens a deck the player built on its own editor page", async () => {
+    const setup = await renderListedSetup();
+
+    await fireEvent.click(control(`deck-tile-menu-${LOCAL_KEY}`));
+    await fireEvent.click(control(`deck-tile-menu-open-${LOCAL_KEY}`));
+
+    expect(setup.onopendeck).toHaveBeenCalledWith("built-deck");
+    expect(setup.ondecks).not.toHaveBeenCalled();
+  });
+
+  /* A library that refused the write says so where every other refusal on this
+     screen is said, and the grid stays live so another deck can be picked. */
+  it("reports a refused write and keeps the screen usable", async () => {
+    const save = vi
+      .spyOn(IndexedDbDeckRepository.prototype, "save")
+      .mockRejectedValue(new Error("Unable to save deck"));
+    try {
+      await renderListedSetup();
+      await fireEvent.click(control(`deck-tile-press-${LOCAL_KEY}`));
+
+      await fireEvent.click(control("deck-select-rename"));
+      await fireEvent.submit(query("deck-select-rename-form") as HTMLElement);
+
+      await vi.waitFor(() =>
+        expect(query("deck-select-block-notice")?.textContent).toContain(
+          "Deck could not be renamed: Unable to save deck",
+        ),
+      );
+      expect(gridKeys()).toContain(LOCAL_KEY);
+      expect(startButton().disabled).toBe(false);
+    } finally {
+      save.mockRestore();
+    }
   });
 
   /* The bundled decks are compiled into this build, so they are on screen and

@@ -9,6 +9,8 @@ import {
   PROTOTYPE_RULESET,
   quantityLimit,
 } from "../../src/decks/catalog/pinned-ruleset.ts";
+import type { DeckBuilderCardView } from "../../src/decks/catalog/ocg-card-mapper.ts";
+import type * as RuntimeCatalogModule from "../../src/decks/catalog/runtime-catalog.ts";
 import { setRuntimeCatalogForTests } from "../../src/decks/catalog/runtime-catalog.ts";
 import { PROTOTYPE_CATALOG } from "../../src/deck-editor/fixtures/catalog.ts";
 import { installPrototypeActiveCatalog } from "../fixtures/active-catalog.ts";
@@ -108,6 +110,26 @@ vi.mock("../../src/battle/app/DuelWorkerClient.ts", () => {
   return { DuelWorkerClient: DuelWorkerClientMock };
 });
 
+/* A catalog read this file can hold open, so a listing can be made to run
+   while the card database is still in flight — the state a real page is in for
+   as long as its shard fetches take. Every other test here drives the real
+   memo through `setRuntimeCatalogForTests`, so the mock keeps it and defers to
+   the real read whenever nothing is being held. */
+const catalogGate = vi.hoisted(() => ({
+  held: null as Promise<readonly DeckBuilderCardView[]> | null,
+}));
+
+vi.mock(
+  "../../src/decks/catalog/runtime-catalog.ts",
+  async (importOriginal) => {
+    const actual = await importOriginal<typeof RuntimeCatalogModule>();
+    return {
+      ...actual,
+      runtimeCatalog: () => catalogGate.held ?? actual.runtimeCatalog(),
+    };
+  },
+);
+
 import App from "../../src/battle/app/App.svelte";
 import { DECK_DATABASE_NAME } from "../../src/decks/index.ts";
 import { emptyDeckHistory } from "../../src/decks/deck-history.ts";
@@ -177,6 +199,23 @@ async function renderReadyApp() {
   return rendered;
 }
 
+/** Holds the card database in flight; the returned call lands it. */
+function holdCatalog(): () => void {
+  let land: (cards: readonly DeckBuilderCardView[]) => void = () => undefined;
+  catalogGate.held = new Promise((resolve) => {
+    land = resolve;
+  });
+  return () => land(PROTOTYPE_CATALOG);
+}
+
+/* Room for a listing to open IndexedDB, seed, read and write back. The two
+   tests that use it assert that a listing did none of those things, so there
+   is no appearance to wait for: the wait has to be for the listing itself. */
+async function settleListing(): Promise<void> {
+  for (let turn = 0; turn < 20; turn += 1)
+    await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
 beforeEach(async () => {
   await deleteDeckDatabase();
 });
@@ -184,6 +223,7 @@ beforeEach(async () => {
 afterEach(async () => {
   cleanup();
   vi.unstubAllGlobals();
+  catalogGate.held = null;
   /* Every test starts from a catalog that answers: the failure case below
      clears the memo, and a cleared memo would make the next render fetch. */
   installPrototypeActiveCatalog();
@@ -374,6 +414,74 @@ describe("App deck picker with local decks", () => {
     await user.selectOptions(playerSelect(), "preset:nekroz");
 
     expect(query("deck-picker-fallback-notice")).toBeNull();
+  });
+
+  /* The listing waits on the card database before it reads the local library,
+     and these two are why. Both used to hold by accident: the listing awaited
+     a catalog-derived set of supported codes, and dropping that set as dead
+     code (`db91860`) took the wait with it. */
+  it("a local deck choice survives a listing that runs while the catalog is still loading", async () => {
+    const user = userEvent.setup();
+    await seedDeck(VALID_MAIN);
+    localStorage.setItem(
+      "ygo.ui.v2",
+      JSON.stringify({
+        version: 2,
+        windows: { zoneList: null, confirm: null },
+        decks: {
+          playerKey: "local:built-deck:1",
+          opponentKey: "preset:shaddoll",
+        },
+        settings: { showZoneOutlines: true, showZoneCounts: true },
+      }),
+    );
+    const landCatalog = holdCatalog();
+
+    await renderReadyApp();
+    /* Start against a picker holding the bundled decks alone: the persisted
+       key names a deck no row carries yet, which is what re-lists. */
+    expect(document.querySelector(LOCAL_PLAYER_OPTION)).toBeNull();
+    await user.click(query("deck-picker-start-button") as HTMLButtonElement);
+    await settleListing();
+
+    expect(persistedDeckKeys().playerKey).toBe("local:built-deck:1");
+    expect(query("deck-picker-fallback-notice")).toBeNull();
+
+    landCatalog();
+
+    await vi.waitFor(() =>
+      expect(document.querySelector(LOCAL_PLAYER_OPTION)).not.toBeNull(),
+    );
+    expect(playerSelect().value).toBe("local:built-deck:1");
+    expect(persistedDeckKeys().playerKey).toBe("local:built-deck:1");
+    expect(query("deck-picker-fallback-notice")).toBeNull();
+  });
+
+  it("a failed catalog seeds no starter deck", async () => {
+    setRuntimeCatalogForTests(null);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.reject(new Error("offline"))),
+    );
+
+    await renderReadyApp();
+    await vi.waitFor(() =>
+      expect(query("app-catalog-error-panel")).not.toBeNull(),
+    );
+    await settleListing();
+
+    /* A starter deck built against a catalog that never landed is forty
+       `missing-card` errors at rest, and the later catalog-backed seeding
+       short-circuits on it rather than repairing it. */
+    const repository = await IndexedDbDeckRepository.open();
+    try {
+      expect(await repository.list()).toEqual([]);
+    } finally {
+      repository.close();
+    }
+    expect(
+      document.querySelectorAll('[data-cy^="deck-picker-option-preset:"]'),
+    ).toHaveLength(6);
   });
 
   /* Defensive: the picker only offers decks the Worker should accept, so a

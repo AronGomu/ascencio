@@ -950,9 +950,18 @@
   async function listDecksOrBundledOnly(): Promise<DeckListing> {
     let repository: IndexedDbDeckRepository | null = null;
     try {
-      /* No catalog read of its own: `deckBuilderCatalog` is whatever the one
-         read at mount has landed, and a listing that runs before it lands
-         offers the bundled decks alone — `loadCatalog` re-lists either way. */
+      /* The wait is the point of this line, not the value: it is the same
+         memoised read `loadCatalog` made at mount, whose own callback is
+         registered first and so has assigned `deckBuilderCatalog` by the time
+         this resumes. Without it a listing that starts while the catalog is in
+         flight resolves every local deck against an empty catalog, finds none
+         of them, and rewrites the player's own choice to a bundled deck — for
+         good, because the notice that says so is never lowered again.
+
+         A catalog that never lands throws here, before storage opens and
+         before the starter deck is seeded against nothing, and the bundled
+         fallback below is what the player gets. */
+      await runtimeCatalog();
       repository = await IndexedDbDeckRepository.open();
       /* Best-effort and idempotent, so a player who has never opened the
          editor still arrives here with a deck of their own to duel with. */

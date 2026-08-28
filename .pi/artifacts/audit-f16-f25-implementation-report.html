@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="artifact-kind" content="markdown">
+<meta name="artifact-generated" content="1787881026441">
+<meta name="artifact-project" content="/home/aron/projects/ascencio">
+<title>Audit F16-F25 implementation report</title>
+<style data-base>:root { color-scheme: light dark;
+  --bg: #ffffff;
+  --fg: #1c1c1a;
+  --muted: #6b6862;
+  --border: #e7e5e0;
+  --code-bg: #f7f6f4;
+  --accent: #b95730;
+  --add-bg: #e9f7ee;
+  --add-word-bg: #c8ecd3;
+  --add-fg: #1a7f37;
+  --del-bg: #feeff1;
+  --del-word-bg: #f8d2d7;
+  --del-fg: #c93c4c;
+  --hl-comment: #6e7781;
+  --hl-keyword: #cf222e;
+  --hl-string: #0a3069;
+  --hl-number: #0550ae;
+  --hl-title: #8250df;
+  --hl-type: #953800;
+  --hl-attr: #0550ae;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --bg: #171614;
+  --fg: #e6e3de;
+  --muted: #94918a;
+  --border: #2e2d29;
+  --code-bg: #201f1c;
+  --accent: #d67858;
+  --add-bg: #1d2a20;
+  --add-word-bg: #2b4232;
+  --add-fg: #85c793;
+  --del-bg: #2e1c1e;
+  --del-word-bg: #4a292c;
+  --del-fg: #e28a91;
+  --hl-comment: #8b949e;
+  --hl-keyword: #ff7b72;
+  --hl-string: #a5d6ff;
+  --hl-number: #79c0ff;
+  --hl-title: #d2a8ff;
+  --hl-type: #ffa657;
+  --hl-attr: #79c0ff;
+} }
+
+* { box-sizing: border-box; }
+html { font-size: 15px; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+article { max-width: 860px; margin: 0 auto; padding: 2.75rem 1.5rem 4rem; }
+h1, h2, h3, h4 { line-height: 1.3; letter-spacing: -0.01em; color: var(--fg); }
+h1 { font-size: 1.45rem; font-weight: 650; margin: 0 0 1rem; }
+h2 { font-size: 1.15rem; font-weight: 650; margin: 2.2em 0 .7em; padding-bottom: .35em; border-bottom: 1px solid var(--border); }
+h3 { font-size: 1rem; font-weight: 600; margin: 1.8em 0 .5em; }
+h4 { font-size: .9rem; font-weight: 600; margin: 1.5em 0 .4em; }
+p { margin: .8em 0; }
+a { color: var(--accent); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 35%, transparent); text-underline-offset: 2px; }
+a:hover { text-decoration-color: var(--accent); }
+strong { font-weight: 600; }
+ul, ol { margin: .8em 0; padding-left: 1.5em; }
+li { margin: .3em 0; }
+li > ul, li > ol { margin: .2em 0; }
+hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
+img, svg, video { max-width: 100%; }
+::selection { background: color-mix(in srgb, var(--accent) 25%, transparent); }
+
+blockquote {
+  margin: 1.2em 0;
+  padding: .1em 1.1em;
+  border-left: 3px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--muted);
+}
+blockquote > :first-child { margin-top: .4em; }
+blockquote > :last-child { margin-bottom: .4em; }
+
+table { border-collapse: collapse; width: 100%; margin: 1.2em 0; font-size: .9rem; }
+th {
+  text-align: left; font-weight: 600; font-size: .74rem;
+  text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+  padding: .5em .75em; border-bottom: 1px solid var(--border);
+}
+td { padding: .55em .75em; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+
+code, kbd, samp { font-family: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace; }
+code { font-size: .85em; background: var(--code-bg); padding: .15em .4em; border-radius: 4px; }
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1em 1.2em;
+  overflow-x: auto;
+  font-size: .82rem;
+  line-height: 1.55;
+  margin: 1.2em 0;
+}
+pre code { background: transparent; padding: 0; font-size: inherit; }
+
+input[type="checkbox"] { accent-color: var(--accent); margin-right: .4em; }
+
+
+.artifact-header {
+  display: flex; align-items: baseline; gap: .75rem; flex-wrap: wrap;
+  margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+}
+.artifact-header h1 { margin: 0; }
+.artifact-badge {
+  font-family: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace; font-size: .66rem; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 999px; padding: .2em .7em; white-space: nowrap;
+}
+.artifact-meta { margin-left: auto; color: var(--muted); font-size: .72rem; font-family: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace; }
+.artifact-footer {
+  margin-top: 4rem; padding-top: 1rem; border-top: 1px solid var(--border);
+  color: var(--muted); font-size: .72rem; font-family: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace;
+}
+.artifact-mermaid { text-align: center; margin: 1.5rem 0; }
+</style>
+<style data-hljs>
+.hljs { color: var(--fg); background: transparent; }
+.hljs-comment, .hljs-quote { color: var(--hl-comment); font-style: italic; }
+.hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-deletion { color: var(--hl-keyword); }
+.hljs-string, .hljs-regexp, .hljs-addition { color: var(--hl-string); }
+.hljs-number, .hljs-symbol, .hljs-bullet, .hljs-meta, .hljs-link { color: var(--hl-number); }
+.hljs-title, .hljs-section, .hljs-function .hljs-title { color: var(--hl-title); }
+.hljs-type, .hljs-class .hljs-title, .hljs-built_in { color: var(--hl-type); }
+.hljs-variable, .hljs-template-variable, .hljs-attr, .hljs-attribute, .hljs-property { color: var(--hl-attr); }
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: 600; }
+</style>
+</head>
+<body>
+<article>
+<header class="artifact-header">
+<h1>Audit F16-F25 implementation report</h1>
+<span class="artifact-badge">markdown</span>
+<span class="artifact-meta">2026-08-28 01:37:06</span>
+</header>
+<h1>Audit findings F16–F25 — implemented</h1>
+<p>Run baseline <code>06d3a0d</code> (clean tree, <code>HEAD == origin/main</code>). 14 commits on local <code>main</code>, <strong>not pushed</strong>.</p>
+<h2>Ticket table</h2>
+<table>
+<thead>
+<tr>
+<th>Ticket</th>
+<th>Finding</th>
+<th>Issue</th>
+<th>State</th>
+<th>SHA</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>T1</td>
+<td>image download bodies unbounded</td>
+<td>#16</td>
+<td>COMPLETE</td>
+<td><code>3ef4f13</code></td>
+</tr>
+<tr>
+<td>T2</td>
+<td>shipped image art unpinned</td>
+<td>#16</td>
+<td>COMPLETE</td>
+<td><code>73e63e1</code></td>
+</tr>
+<tr>
+<td>T3</td>
+<td><code>assets:images:verify</code> orphan</td>
+<td>#22</td>
+<td>COMPLETE</td>
+<td><code>07ef466</code></td>
+</tr>
+<tr>
+<td>T4</td>
+<td>board rebuilt per Worker message</td>
+<td>#17</td>
+<td>COMPLETE</td>
+<td><code>74475dc</code></td>
+</tr>
+<tr>
+<td>T5</td>
+<td>admin reset reports blocked as cleared</td>
+<td>#18</td>
+<td>COMPLETE</td>
+<td><code>8c4380e</code></td>
+</tr>
+<tr>
+<td>T6</td>
+<td>unreachable <code>supportedCodes</code> gate</td>
+<td>#19</td>
+<td>COMPLETE</td>
+<td><code>db91860</code></td>
+</tr>
+<tr>
+<td>T6b</td>
+<td>repair: catalog-ordering guarantee</td>
+<td>#19</td>
+<td>COMPLETE</td>
+<td><code>26089da</code></td>
+</tr>
+<tr>
+<td>T7</td>
+<td>acceptance scenario list written twice</td>
+<td>#20</td>
+<td>COMPLETE</td>
+<td><code>8142a7d</code></td>
+</tr>
+<tr>
+<td>T8</td>
+<td>tracked <code>playwright-report/index.html</code></td>
+<td>#21</td>
+<td>COMPLETE</td>
+<td><code>eea29eb</code></td>
+</tr>
+<tr>
+<td>T9</td>
+<td>stale free-play-menu checklist steps</td>
+<td>#23</td>
+<td>COMPLETE</td>
+<td><code>ca1f428</code></td>
+</tr>
+<tr>
+<td>T10</td>
+<td>four dev-only npm advisories</td>
+<td>#24</td>
+<td>COMPLETE</td>
+<td><code>ee18197</code></td>
+</tr>
+<tr>
+<td>T11</td>
+<td>zone-list face-up card drawn as back</td>
+<td>#25</td>
+<td>COMPLETE</td>
+<td><code>1e01ddc</code></td>
+</tr>
+<tr>
+<td>—</td>
+<td>plan committed / retired</td>
+<td>—</td>
+<td>—</td>
+<td><code>6c3013a</code> / <code>350e3bd</code></td>
+</tr>
+</tbody></table>
+<h2>Evidence per fix</h2>
+<p><strong>#16 byte cap</strong> — cap 8 MiB, streamed with <code>getReader()</code> and cancelled the moment the running total passes it; <code>content-length</code> rejected before the body is touched. Largest real assets measured: card <code>330,480 B</code>, set image <code>152,797 B</code> → ~25× margin. Non-vacuity proven by reverting the seam: 2 tests went red on the uncapped read.</p>
+<p><strong>#16 pin</strong> — <code>image-content-lock.json</code> at repo root, 170 entries (120 preset-deck codes derived from the <code>.ydk</code> files, 50 shop sets), deterministic. Mutation proof at the real boundary:</p>
+<pre><code class="hljs language-diff"><span class="hljs-deletion">- before fix: byte flipped in 10802915.jpg → npm run build exit 0, &quot;status&quot;: &quot;ok&quot; (tampered byte shipped)</span>
+<span class="hljs-addition">+ after fix:  npm run build exit 1</span>
+<span class="hljs-addition">+ Error: Packaged card images differ from image-content-lock.json:</span>
+<span class="hljs-addition">+ Locked card image bytes drifted: 10802915 expected 652bed86…, found 3be2b361…</span></code></pre><p>Same for set art. What it proves is &quot;unchanged since first fetch&quot;, not &quot;genuine&quot; — YGOPRODeck publishes no digest, so the lock is TOFU-seeded, and the comment says so.</p>
+<p><strong>#17</strong> — <code>mapSnapshotToBoard</code> calls per advance (1 state + 8 events): <strong>9 → 1</strong>. Worker event contract untouched.</p>
+<p><strong>#18</strong> — <code>resetStorageTarget</code> returns <code>{ outcome: &quot;deleted&quot; | &quot;blocked&quot; }</code>. Blocked now reads: <em>&quot;Free-play deck library is still open in another tab, so the delete is queued rather than done. Close the other tab, then reset again.&quot;</em></p>
+<p><strong>#19</strong> — gate, export, frozen-list entry and loader field all removed; <code>grep -rn &quot;supportedCodes\|supportedDuelCardCodes&quot; src/ tests/</code> is empty. The frozen-list edit was proven real by failing first:</p>
+<pre><code>AssertionError: expected [ 'BattleFacade', …(10) ] to deeply equal [ 'BattleFacade', …(9) ]
++   "supportedDuelCardCodes",</code></pre><p><strong>#20</strong> — one <code>ACCEPTANCE_SCENARIO_IDS</code> list, type and set derived. Deleting an id is now a compile error at its consumers (<code>TS2820</code>, <code>TS2678</code>), where before it was a silent runtime <code>null</code> surfacing as a selector timeout.</p>
+<p><strong>#21</strong> — <code>git rm --cached</code> only; the 530 KB file is still on disk, and <code>.gitignore:6</code> already covered it.</p>
+<p><strong>#23</strong> — 31 checklist lines annotated. Verified pure insertions by opcode diff: <em>&quot;all 31 changed lines are pure insertions (no character of any original step was deleted or reworded)&quot;</em>. File length unchanged at 3905 lines.</p>
+<p><strong>#24</strong> — <code>4 vulnerabilities (1 moderate, 3 high)</code> → <code>found 0 vulnerabilities</code>. Lockfile only, no <code>--force</code>: <code>brace-expansion</code> 5.0.7→5.0.9, <code>nanoid</code> 3.3.16→3.3.18, <code>postcss</code> 8.5.18→8.5.26, <code>undici</code> 7.28.0→7.29.0.</p>
+<p><strong>#25</strong> — face-up entry with no image library now renders the placeholder. Privacy stayed one-directional: the concealed cases (<code>identityVisible: false</code>, face-down deck slot) were green before and after, untouched.</p>
+<h2>The one thing that needed repairing</h2>
+<p>T6 (#19) got an independent review because it narrows a machine-frozen public API. The reviewer found the removal was correct <strong>and</strong> that it had dropped something else on the way out:</p>
+<blockquote>
+<p><code>await supportedDuelCardCodes()</code> was doing a second, undocumented job — it held the deck listing until <code>loadCatalog</code>&#39;s callback, registered first on the same memoised promise, had assigned <code>deckBuilderCatalog</code>.</p>
+</blockquote>
+<p>Without it the listing does only IndexedDB work and finishes inside the window of 129 shard fetches. A returning player whose saved deck is a local one, pressing Start while the catalog is still loading, would re-list against an empty catalog → every local deck fails to resolve → the bundled default is written to <code>localStorage</code> and the fallback notice raised. The catalog lands seconds later, the deck reappears in the list, <strong>but the choice is gone permanently</strong> — the notice is only ever set true and nothing restores the key.</p>
+<p>Same path also reached <code>ensureStarterDeck</code> with an empty catalog and persisted a Starter Deck whose stored validation was 40 <code>missing-card</code> errors.</p>
+<p><code>26089da</code> restores the ordering with a direct <code>await runtimeCatalog()</code> and a comment saying why the wait exists, so it is not deleted again as a redundant await. Both faults have red-first tests.</p>
+<h2>Final gates (parent-run, at <code>350e3bd</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>npm run check:headless</code></td>
+<td>exit 0</td>
+</tr>
+<tr>
+<td><code>npm run test:component</code></td>
+<td>exit 0 — 102 files, 923 tests</td>
+</tr>
+<tr>
+<td><code>npm run build</code> + <code>build:verify</code></td>
+<td>exit 0 — <code>&quot;status&quot;: &quot;ok&quot;</code>, budgets intact</td>
+</tr>
+<tr>
+<td><code>assets:verify</code></td>
+<td><code>&quot;status&quot;: &quot;ok&quot;</code> — 14,794 catalogue images, 50 sets, 0 failures</td>
+</tr>
+<tr>
+<td>working tree</td>
+<td>clean</td>
+</tr>
+</tbody></table>
+<h2>Held for you — both outward-facing</h2>
+<p>Nothing was pushed and no issue was commented. Neither had standing authorisation.</p>
+<pre><code class="hljs language-bash"><span class="hljs-built_in">cd</span> /home/aron/projects/ascencio
+git push origin main          <span class="hljs-comment"># 14 commits: 3ef4f13 … 350e3bd</span></code></pre><p>Then close #16–#25 against the SHAs in the table.</p>
+<h2>Residual risks</h2>
+<ul>
+<li><code>tests/unit/duel-worker-runtime.test.ts</code> → <em>&quot;keeps the opponent card list out of every event it sends back&quot;</em> is <strong>flaky</strong>: 2 failures in ~40 runs, passes on rerun and in every full suite run. Pre-existing, unrelated to these findings, not fixed.</li>
+<li><strong>F26 is still unvalidated and unticketed</strong> — <code>e2e-acceptance/full-height-field.spec.ts:550</code> asserts a legal halo of <code>0px 0px 14px 5px</code>, but <code>6922f84</code> deliberately changed the CSS to <code>0 0 10px</code> with no spread. The test is stale, the CSS is intentional, and <code>main</code>&#39;s acceptance suite is red because of it. Invisible to <code>check:headless</code>; only <code>check:browser</code> runs it.</li>
+<li><code>docs/ADR/043</code> and <code>docs/deck-catalog-data-flow.html:86</code> still name the removed <code>supportedDuelCardCodes</code>. The ADR is a historical record; the HTML chart is genuinely stale. Left untouched (out of ticket scope).</li>
+<li><code>check:browser</code> (e2e + acceptance) was not run — it needs browsers and would fail on the pre-existing F26 halo assertion regardless.</li>
+</ul>
+
+<footer class="artifact-footer">source: /home/aron/projects/ascencio</footer>
+</article>
+
+<script>
+(function () {
+  var slug = "audit-f16-f25-implementation-report";
+  var es = new EventSource("/events");
+  es.addEventListener("reload", function (e) {
+    try { if (e.data === slug || e.data === "*") location.reload(); } catch (_) {}
+  });
+})();
+</script>
+</body>
+</html>

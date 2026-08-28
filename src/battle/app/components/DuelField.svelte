@@ -1260,6 +1260,9 @@
     />
   {/if}
   {#if handZoom !== null}
+    <!-- Item 5: a selection is answered by the card's own cover toggle and the
+         target list, never by a chip. The overlay is that same card served
+         larger, so it repeats `CardControl`'s gate rather than its own rule. -->
     <HandZoomOverlay
       card={handZoom.card}
       anchor={handZoom.anchor}
@@ -1267,10 +1270,12 @@
       {imageLibrary}
       cardBackUrl={resolvedCardBackUrl}
       placeholderUrl={resolvedPlaceholderUrl}
-      choices={handChipChoices(
-        spec?.cardChoices.get(handZoom.card.targetId) ?? [],
-        false,
-      )}
+      choices={spec === null || spec.kind === "cardSelection"
+        ? []
+        : handChipChoices(
+            spec.cardChoices.get(handZoom.card.targetId) ?? [],
+            false,
+          )}
       selected={pinnedHandTarget === handZoom.card.targetId}
       disabled={pending}
       onchoose={(choice) => {

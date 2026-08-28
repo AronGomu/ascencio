@@ -90,7 +90,7 @@ Commit a plan before retiring it and that SHA stays a real address: `git show <s
 - Product is one modular-monolith Svelte app: Duel Simulator, Deck Editor, Visual Novel.
 - One shell owns routing/composition; domains expose narrow public `index.ts` contracts.
 - Cross-domain imports target public entry points only; no deep imports.
-- Exclusive directory ownership: Duel → `src/battle/`; Deck → `src/decks/` + `src/deck-editor/`; Story → `src/story/`; Integration → `src/main.ts`, `src/shell/`, root config/contracts/E2E.
+- Exclusive directory ownership: Duel → `src/battle/`; Deck → `src/decks/` + `src/deck-editor/`; Story → `src/story/`; Integration → `src/main.ts`, `src/shell/`, root config/contracts/E2E. `src/deck-select/` is shared by the shell, the deck editor and the story rather than owned by one of them.
 - Read [`docs/ADR/022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md`](docs/ADR/022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md) before cross-domain work; its branch topology is superseded by ADR-045, its import boundaries stand.
 
 ## Boundary rules
@@ -102,7 +102,8 @@ The ADR-022 boundaries above are machine-enforced, not conventions. Two checks r
 
 What the rules encode:
 
-- Public entries are `src/shell/index.ts`, `src/story/index.ts`, `src/deck-editor/index.ts`, `src/battle/index.ts` and `src/decks/index.ts`. A cross-domain import targets one of those and nothing deeper.
+- Public entries are `src/shell/index.ts`, `src/story/index.ts`, `src/deck-editor/index.ts`, `src/battle/index.ts`, `src/deck-select/index.ts` and `src/decks/index.ts`. A cross-domain import targets one of those and nothing deeper.
+- `src/deck-select/` is the shared deck-selection screen: purely presentational, it imports no sibling domain at all, and hosts map their own records into its view models. Its ESLint zone excludes every sibling's internals in both directions.
 - The duel's source lives under `src/battle/` — `app/`, `components/`, `decks/`, `duel/`, `field/`, `storage/` and `worker/` are battle internals, reachable only through `src/battle/index.ts`.
 - `src/decks/` is the shared deck-data library rather than a lazy UI domain, so its modules stay importable; only the shape of its index is frozen.
 - Widening a public API means editing the frozen list in the test on purpose. A silent widening is a failing test.
@@ -134,7 +135,7 @@ Prefer small, cohesive, independently navigable files.
 
 ## HTML element contract
 
-Every HTML element rendered by a Svelte component under `src/battle/`, `src/shell/`, `src/deck-editor/` or `src/story/` must carry a `data-cy` attribute that acts as its variable name. Values are kebab-case, describe the role rather than the styling, and are unique inside a rendered document. Elements rendered in a loop suffix the value with the item's stable id, for example `` data-cy={`field-card-${card.id}`} ``. `tests/unit/data-cy-coverage.test.ts` enforces presence and uniqueness.
+Every HTML element rendered by a Svelte component under `src/battle/`, `src/shell/`, `src/deck-editor/`, `src/deck-select/` or `src/story/` must carry a `data-cy` attribute that acts as its variable name. Values are kebab-case, describe the role rather than the styling, and are unique inside a rendered document. Elements rendered in a loop suffix the value with the item's stable id, for example `` data-cy={`field-card-${card.id}`} ``. `tests/unit/data-cy-coverage.test.ts` enforces presence and uniqueness.
 
 ## Project tree
 

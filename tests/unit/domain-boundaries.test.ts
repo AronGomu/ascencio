@@ -284,11 +284,20 @@ describe("public domain APIs are frozen", () => {
          layout's extra list transform. It sits beside `orderDeckTiles` because
          it is the same kind of thing — a pure ranking step over view models —
          and a host that renders its own phone list has to reach the same order
-         the screen does rather than re-derive it. */
+         the screen does rather than re-derive it.
+
+         T17, deliberate widening of one name: `DecklistPanel`, the sectioned
+         Main/Extra/Side list of one deck. The screen renders it twice over —
+         floated beside a hovered duel-start tile, docked in the library's
+         second column — so it is the same one-atom argument as `DeckTile`, and
+         a host showing a decklist of its own reaches it here. Presentational
+         like the rest: it takes a `DecklistView` the host resolved and reads
+         nothing itself. */
       values: [
         "DeckSelectScreen",
         "DeckTile",
         "DeckTileMenu",
+        "DecklistPanel",
         "DeleteDeckConfirm",
         "RenameDeckDialog",
         "orderDeckTiles",

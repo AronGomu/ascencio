@@ -18,6 +18,11 @@ export { default as DeckTile } from "./DeckTile.svelte";
    three are named separately rather than bundled behind the tile. */
 export { default as DeckTileMenu } from "./DeckTileMenu.svelte";
 export { default as DeleteDeckConfirm } from "./DeleteDeckConfirm.svelte";
+/* The list of one deck, sectioned Main/Extra/Side. The screen floats it beside
+   a duel-start tile and docks it in the library's second column, and a host
+   showing a decklist anywhere else reaches the same panel rather than
+   re-authoring the three sections. */
+export { default as DecklistPanel } from "./DecklistPanel.svelte";
 export { default as RenameDeckDialog } from "./RenameDeckDialog.svelte";
 /* The screen those parts compose into: header, tools, grid and footer, plus
    the menu-and-dialog state machine that owns them. Free play, the story and

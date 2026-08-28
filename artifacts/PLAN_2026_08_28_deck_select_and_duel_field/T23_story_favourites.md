@@ -52,12 +52,12 @@ Run: `npx vitest run tests/unit/story` (match the actual dir of existing reducer
 
 ## Impl steps
 
-- [ ] 1. Locate reducer + save-contract test files; write the 7 failing tests.
-- [ ] 2. Add field to `StoryState` + initial state.
-- [ ] 3. Add `deck-set-favourite` command + case; extend `deck-delete` case with prune.
-- [ ] 4. Persist/validate/default in `story-save-contracts.ts` per its own precedent.
-- [ ] 5. `npx vitest run tests/unit` → green (watch for save-shape snapshot tests needing the new field).
-- [ ] 6. `npm run lint && npm run typecheck && npm run build` → green.
+- [x] 1. Locate reducer + save-contract test files; write the 7 failing tests. — `tests/unit/story/story-decks.test.ts` + `tests/unit/story/story-save-repository.test.ts`; red run reported `Tests  9 failed | 44 passed (53)`.
+- [x] 2. Add field to `StoryState` + initial state. — `src/story/model/story-state.ts` `favouriteDeckIds: readonly string[]`, initial `[]`; `a new save starts with no decks` asserts it.
+- [x] 3. Add `deck-set-favourite` command + case; extend `deck-delete` case with prune. — `src/story/model/story-reducer.ts`; 4 reducer tests green.
+- [x] 4. Persist/validate/default in `story-save-contracts.ts` per its own precedent. — `withFavourites` completion + `isDeckLibrary` check; 3 save tests green.
+- [x] 5. `npx vitest run tests/unit` → green (watch for save-shape snapshot tests needing the new field). — `Test Files  151 passed (151) / Tests  1727 passed | 2 skipped (1729)`; the v2 key-set and v1 fixture assertions were updated for the new field.
+- [x] 6. `npm run lint && npm run typecheck && npm run build` → green. — lint clean, `svelte-check found 0 errors and 2 warnings in 2 files` (both pre-existing, untouched files), `build:verify` `"status": "ok"`.
 
 ## Outputs
 
@@ -66,7 +66,7 @@ Run: `npx vitest run tests/unit/story` (match the actual dir of existing reducer
 
 ## Validation
 
-- [ ] `npx vitest run tests/unit` green
-- [ ] `npm run lint && npm run typecheck && npm run build` green
-- [ ] app functional — story loads old saves unchanged
-- [ ] commit msg draft: `feat(story): let a save remember favourite decks`
+- [x] `npx vitest run tests/unit` green — `Test Files  151 passed (151)`, `Tests  1727 passed | 2 skipped (1729)`
+- [x] `npm run lint && npm run typecheck && npm run build` green — lint silent, 0 typecheck errors, `build:verify` `"status": "ok"`
+- [x] app functional — story loads old saves unchanged. Criterion: every legacy shape parses through the real repository and the record on disk is left byte-identical — `completes a stored state written before favourites existed` (v3 without the field → `[]`, `storedRecord` unchanged), `reads a version 1 envelope by defaulting the economy` (v1 fixture now omits the field), `a v2 save migrates to v3 with a deck it can duel with`, `an unknown future version is incompatible` (v4 still reads `incompatible`, so no schema bump was smuggled in). Plus `npm run check:headless` and `npm run test:component` both green.
+- [x] commit msg draft: `feat(story): let a save remember favourite decks`

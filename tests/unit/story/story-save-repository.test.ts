@@ -87,7 +87,7 @@ function storedRecord(slot: string): Promise<unknown> {
 
 /** A state as a build before the economy existed wrote it: the seven economy
     and shop-session fields are simply absent from the record, and so are the
-    two deck fields no version before 3 ever wrote. */
+    three deck fields, none of which a build this old ever wrote. */
 function version1State(): Record<string, unknown> {
   const state: Record<string, unknown> = { ...storyState() };
   for (const key of [
@@ -100,6 +100,7 @@ function version1State(): Record<string, unknown> {
     "openingMode",
     "decks",
     "defaultDeckId",
+    "favouriteDeckIds",
   ])
     delete state[key];
   return state;
@@ -271,7 +272,7 @@ describe("createStorySaveRepository", () => {
     if (read.kind !== "ready") throw new Error("expected a ready save");
     /* Additive in both directions: every field the record carried comes back
        with the value it carried — the collection with the granted cards added
-       to it — and the only fields it did not carry are the two this version
+       to it — and the only fields it did not carry are the three this build
        adds. */
     for (const [key, value] of Object.entries(VERSION_2_RECORD.state))
       if (key !== "collection")
@@ -283,7 +284,12 @@ describe("createStorySaveRepository", () => {
       ...VERSION_2_RECORD.state.collection,
     });
     expect(Object.keys(read.envelope.state).sort()).toEqual(
-      [...Object.keys(VERSION_2_RECORD.state), "decks", "defaultDeckId"].sort(),
+      [
+        ...Object.keys(VERSION_2_RECORD.state),
+        "decks",
+        "defaultDeckId",
+        "favouriteDeckIds",
+      ].sort(),
     );
     /* Migration happens in memory. A read that rewrote the slot would turn
        every load into a write the player never asked for. */
@@ -445,6 +451,76 @@ describe("createStorySaveRepository", () => {
     }
   });
 
+  /* The favourites a save carries are the marks the player put on their own
+     decks, so they have to come back exactly: a list that returns short or
+     reordered is their work lost. */
+  it("round-trips the favourites a save carries", async () => {
+    const saves = repository();
+    const state = storyState({
+      decks: [storyDeckFixture("alpha"), storyDeckFixture("beta")],
+      defaultDeckId: "beta",
+      favouriteDeckIds: ["alpha"],
+    });
+    await saves.write("manual:1", state, null);
+    const read = await saves.read("manual:1");
+    if (read.kind !== "ready") throw new Error("expected a ready save");
+    expect(read.envelope.state.favouriteDeckIds).toEqual(["alpha"]);
+    expect(JSON.stringify(read.envelope.state)).toBe(JSON.stringify(state));
+  });
+
+  /* Favourites were added without a schema bump, so a record that does not
+     carry them is a version 3 one this build wrote itself a day earlier — the
+     common case rather than the exotic one. It has to open on an empty list
+     rather than on `undefined`, because every reader of the field iterates
+     it. */
+  it("completes a stored state written before favourites existed", async () => {
+    const legacy: Record<string, unknown> = { ...storyState() };
+    delete legacy["favouriteDeckIds"];
+    const record = {
+      schemaVersion: 3,
+      slot: "manual:1",
+      revision: 1,
+      savedAt: 1,
+      state: legacy,
+    };
+    await seedRecord("manual:1", record);
+    const read = await repository().read("manual:1");
+    if (read.kind !== "ready") throw new Error("expected a ready save");
+    expect(read.envelope.state.favouriteDeckIds).toEqual([]);
+    /* Completed in memory like every other migration here: a read that
+       rewrote the slot would turn every load into a write. */
+    expect(await storedRecord("manual:1")).toEqual(record);
+  });
+
+  /* A favourites list this build cannot read is a shape violation like a
+     broken deck list, and it is answered the same way: the record stays on
+     disk for a build that can read it rather than being repaired into
+     something this one invented. */
+  it("reports an unreadable favourites list as corrupt", async () => {
+    const saves = repository();
+    const valid = createInitialStoryState();
+    const invalidStates: readonly unknown[] = [
+      { ...valid, favouriteDeckIds: "alpha" },
+      { ...valid, favouriteDeckIds: null },
+      { ...valid, favouriteDeckIds: [7] },
+      { ...valid, favouriteDeckIds: { alpha: true } },
+    ];
+    for (const state of invalidStates) {
+      const record = {
+        schemaVersion: 3,
+        slot: "manual:1",
+        revision: 1,
+        savedAt: 1,
+        state,
+      };
+      await seedRecord("manual:1", record);
+      expect((await saves.read("manual:1")).kind, JSON.stringify(state)).toBe(
+        "corrupt",
+      );
+      expect(await storedRecord("manual:1")).toEqual(record);
+    }
+  });
+
   /* The economy rides inside the story state, so a save has to carry it back
      exactly: a wallet that rounds down on load is progress a player lost. */
   it("round-trips the economy", async () => {
@@ -560,6 +636,9 @@ describe("createStorySaveRepository", () => {
       second.envelope.state.collection,
     );
     expect(first.envelope.state.decks).not.toBe(second.envelope.state.decks);
+    expect(first.envelope.state.favouriteDeckIds).not.toBe(
+      second.envelope.state.favouriteDeckIds,
+    );
   });
 
   it("an unknown future version is incompatible", async () => {

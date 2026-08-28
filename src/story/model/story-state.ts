@@ -97,6 +97,12 @@ export interface StoryState {
   /** Which of `decks` a duel starts from, by id. Null until one is chosen, and
       cleared again if that deck is deleted. */
   readonly defaultDeckId: string | null;
+  /** Which of `decks` the player has starred, by id. Kept beside the list
+      rather than on each deck record, because the record is the deck domain's
+      own and free play already holds its favourites outside it — and because a
+      star is one save's opinion of one save's decks, so it has to roll back
+      with the save that owns it. Pruned whenever a starred deck is deleted. */
+  readonly favouriteDeckIds: readonly string[];
   /* The four fields below describe one shop visit rather than what the player
      owns. They are still part of the saved state: a save taken mid-visit has
      to resume the visit rather than strand the player on a shop screen with
@@ -138,6 +144,7 @@ export function createInitialStoryState(): StoryState {
     collection: {},
     decks: [],
     defaultDeckId: null,
+    favouriteDeckIds: [],
     shopReturnScreen: null,
     shopSetId: null,
     openedCards: null,

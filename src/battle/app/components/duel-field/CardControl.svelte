@@ -274,6 +274,7 @@
   class:is-defense={card.position === "faceUpDefense"}
   class:is-set={card.position === "faceDownDefense"}
   class:is-actionable={actionable}
+  class:is-selection-candidate={interactionKind === "cardSelection"}
   class:has-local-actions={localActions.length > 0}
   class:is-dragging={dragging}
   class:is-pinned={pinned}
@@ -351,7 +352,9 @@
       <CardActionChips
         cardId={card.id}
         cardLabel={accessibleLabel}
-        choices={actionable ? choices : []}
+        choices={actionable && interactionKind !== "cardSelection"
+          ? choices
+          : []}
         {localActions}
         {disabled}
         {onchoose}

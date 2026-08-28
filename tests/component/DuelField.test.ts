@@ -931,6 +931,32 @@ describe("DuelField", () => {
     ).toBe(false);
   });
 
+  it("a multi-pick selection prompt shows dashed candidates, no chips, and toggles is-selected on activation", async () => {
+    const user = userEvent.setup();
+    const harness = renderInteractive(
+      fieldPrompt("selectCard", [mountedChoice("select", "Select monster")], {
+        minimum: 1,
+        maximum: 2,
+      }),
+    );
+    const card = screen.getByRole("button", {
+      name: /Legal.*Select The Legendary Fisherman/,
+    });
+    const article = card.closest(".duel-field-card");
+    expect(article?.classList.contains("is-selection-candidate")).toBe(true);
+    expect(article?.classList.contains("is-selected")).toBe(false);
+    expect(article?.querySelector(".card-action-chips")).toBeNull();
+
+    card.focus();
+    await user.keyboard("{Enter}");
+    expect(article?.classList.contains("is-selected")).toBe(true);
+    expect(card.getAttribute("aria-pressed")).toBe("true");
+    expect(harness.commands).toEqual([]);
+
+    await user.keyboard("{Enter}");
+    expect(article?.classList.contains("is-selected")).toBe(false);
+  });
+
   it("pins the chips on Enter, walks them, and returns focus on Escape", async () => {
     const user = userEvent.setup();
     const value = fieldPrompt("idleCommand", [

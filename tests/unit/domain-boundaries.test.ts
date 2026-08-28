@@ -263,8 +263,21 @@ describe("public domain APIs are frozen", () => {
          grid, the library, the seat cards and the mobile list all render, so
          every host reaches the same component instead of copying it. It is a
          presentational component with no store and no loader, so naming it
-         here makes no host eager. */
-      values: ["DeckTile", "orderDeckTiles"],
+         here makes no host eager.
+
+         T13, deliberate widening of three names: the tile's kebab sheet and
+         the rename and delete dialogs its actions open. Every host that shows
+         a tile shows the same four actions, and the dialogs are the shape the
+         host confirms them with, so all three are reached here rather than
+         re-authored per screen. Presentational like the tile — the host owns
+         the menu/dialog state and performs the operation itself. */
+      values: [
+        "DeckTile",
+        "DeckTileMenu",
+        "DeleteDeckConfirm",
+        "RenameDeckDialog",
+        "orderDeckTiles",
+      ],
       types: [
         "DeckCounts",
         "DeckSelectMode",

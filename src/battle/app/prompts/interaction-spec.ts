@@ -251,14 +251,14 @@ export function fieldActionBarRequired(spec: ActiveInteractionSpec): boolean {
      an engine choice unanswerable, which is the exact defect T16 exists to
      fix. Phase transitions have the phase strip and never count. */
   if (nonPhaseGlobalChoiceCount(spec) > 0) return true;
-  /* T16: otherwise the target window owns the counter, Confirm and Cancel for
-     any selection with off-field targets, so no separate confirm window. */
-  if (spec.kind === "cardSelection" && spec.offFieldChoices.length > 0)
-    return false;
   switch (spec.kind) {
     case "cardAction":
       return false;
+    /* Feedback item 6: a selection prompt always keeps its status bar, so the
+       count and sum stay visible from the first pick; the target window and
+       the bar coexist. */
     case "cardSelection":
+      return true;
     case "placeSelection":
       return !isImmediateSingleSelection(spec);
     case "counterAllocation":

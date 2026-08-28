@@ -142,6 +142,7 @@ function renderTargetDialog(
     readonly confirmValid?: boolean;
     readonly cancelable?: boolean;
     readonly title?: string;
+    readonly selectionStatus?: string;
   } = {},
 ) {
   const ontargetchoice = vi.fn();
@@ -168,6 +169,9 @@ function renderTargetDialog(
     confirmValid: overrides.confirmValid ?? false,
     cancelable: overrides.cancelable ?? false,
     ...(overrides.title === undefined ? {} : { title: overrides.title }),
+    ...(overrides.selectionStatus === undefined
+      ? {}
+      : { selectionStatus: overrides.selectionStatus }),
     cardBackUrl: "back.png",
     ontargetchoice,
     onconfirm,
@@ -365,6 +369,20 @@ describe("ZoneListDialog target mode", () => {
     expect(harness.ontargetchoice.mock.calls[0]?.[0]).toMatchObject({
       id: choiceId("gy-shuffle"),
     });
+  });
+
+  it("renders the shared selection status when provided", () => {
+    renderTargetDialog({
+      minimum: 1,
+      maximum: 2,
+      selectedChoiceIds: [choiceId("gy-0")],
+      selectionStatus: "1 of 2 selected · sum 4 of 8",
+    });
+
+    expect(
+      document.querySelector('[data-cy="zone-list-dialog-selection-count"]')
+        ?.textContent,
+    ).toBe("1 of 2 selected · sum 4 of 8");
   });
 
   it("counts a fixed selection as selected of maximum", () => {

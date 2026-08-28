@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import * as battle from "../../src/battle/index.ts";
 import * as deckEditor from "../../src/deck-editor/index.ts";
+import * as deckSelect from "../../src/deck-select/index.ts";
 import * as decks from "../../src/decks/index.ts";
 import * as shell from "../../src/shell/index.ts";
 import * as story from "../../src/story/index.ts";
@@ -20,13 +21,21 @@ const projectRoot = path.resolve(
 );
 const sourceRoot = path.join(projectRoot, "src");
 
-type Domain = "main" | "shell" | "story" | "deck-editor" | "battle" | "decks";
+type Domain =
+  | "main"
+  | "shell"
+  | "story"
+  | "deck-editor"
+  | "deck-select"
+  | "battle"
+  | "decks";
 
 const PUBLIC_ENTRY: Readonly<Record<Domain, string | null>> = Object.freeze({
   main: null,
   shell: "src/shell/index.ts",
   story: "src/story/index.ts",
   "deck-editor": "src/deck-editor/index.ts",
+  "deck-select": "src/deck-select/index.ts",
   battle: "src/battle/index.ts",
   /* `src/decks` is the shared deck-data library the three UI domains all read,
      not a lazy UI domain. Its index is frozen below so widening it stays
@@ -80,6 +89,7 @@ function domainOf(file: string): Domain {
   if (file.startsWith("src/shell/")) return "shell";
   if (file.startsWith("src/story/")) return "story";
   if (file.startsWith("src/deck-editor/")) return "deck-editor";
+  if (file.startsWith("src/deck-select/")) return "deck-select";
   if (file.startsWith("src/decks/")) return "decks";
   if (file.startsWith("src/battle/")) return "battle";
   throw new Error(
@@ -237,6 +247,28 @@ describe("public domain APIs are frozen", () => {
       namespace: deckEditor,
       values: ["default"],
       types: ["DeckEditorRoute"],
+    },
+    {
+      name: "deck-select",
+      entry: "src/deck-select/index.ts",
+      namespace: deckSelect,
+      /* T11: a new public entry. The deck-selection screen is one shared
+         presentational library the shell, the visual novel and the deck editor
+         all mount, so it is a domain of its own rather than a folder inside
+         any one of them. It holds view models and pure functions only — hosts
+         map their own records into `DeckTileModel`, so nothing here reads
+         storage and nothing here can turn a host eager. */
+      values: ["orderDeckTiles"],
+      types: [
+        "DeckCounts",
+        "DeckSelectMode",
+        "DeckSelectScope",
+        "DeckSort",
+        "DeckTileModel",
+        "DecklistRow",
+        "DecklistView",
+        "OpponentView",
+      ],
     },
     {
       name: "story",

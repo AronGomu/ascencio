@@ -125,14 +125,14 @@ Run: `npx vitest run tests/unit/deck-select tests/unit/domain-boundaries.test.ts
 
 ## Impl steps
 
-- [ ] 1. Write failing `tests/unit/deck-select/order-deck-tiles.test.ts` with the 6 tests above (helper `tile(overrides)` builder inline in test file).
-- [ ] 2. Create `src/deck-select/deck-select-contracts.ts` with types verbatim from Requirements.
-- [ ] 3. Create `src/deck-select/order-deck-tiles.ts` implementing rank fn.
-- [ ] 4. Create `src/deck-select/index.ts` re-exporting the exact list from Requirements.
-- [ ] 5. Add deck-select zone to `eslint.config.js` (copy shape of an existing domain zone; message: "Import deck-select through src/deck-select/index.ts").
-- [ ] 6. Extend `tests/unit/domain-boundaries.test.ts`: `PUBLIC_ENTRY`, `domainOf`, frozen export list for `src/deck-select/index.ts`.
-- [ ] 7. Append `--seat-you`/`--seat-opponent` to `src/styles/tokens.css`.
-- [ ] 8. `npm run lint && npm run typecheck && npx vitest run tests/unit/deck-select tests/unit/domain-boundaries.test.ts` → green.
+- [x] 1. Write failing `tests/unit/deck-select/order-deck-tiles.test.ts` with the 6 tests above (helper `tile(overrides)` builder inline in test file). — red proven: `Error: Cannot find module '../../../src/deck-select/order-deck-tiles.ts'`
+- [x] 2. Create `src/deck-select/deck-select-contracts.ts` with types verbatim from Requirements. — file exists, `npm run typecheck` green
+- [x] 3. Create `src/deck-select/order-deck-tiles.ts` implementing rank fn. — 6 rank tests green
+- [x] 4. Create `src/deck-select/index.ts` re-exporting the exact list from Requirements. — `deck-select public API is exact` green
+- [x] 5. Add deck-select zone to `eslint.config.js` (copy shape of an existing domain zone; message: "Import deck-select through src/deck-select/index.ts"). — `npm run lint` green
+- [x] 6. Extend `tests/unit/domain-boundaries.test.ts`: `PUBLIC_ENTRY`, `domainOf`, frozen export list for `src/deck-select/index.ts`. — `tests/unit/domain-boundaries.test.ts` 10 passed
+- [x] 7. Append `--seat-you`/`--seat-opponent` to `src/styles/tokens.css`. — both declared at end of `:root`
+- [x] 8. `npm run lint && npm run typecheck && npx vitest run tests/unit/deck-select tests/unit/domain-boundaries.test.ts` → green. — lint clean, `TYPECHECK_EXIT=0`, `Test Files  2 passed (2) / Tests  16 passed (16)`
 
 ## Outputs
 
@@ -142,7 +142,7 @@ Run: `npx vitest run tests/unit/deck-select tests/unit/domain-boundaries.test.ts
 
 ## Validation
 
-- [ ] `npx vitest run tests/unit/deck-select tests/unit/domain-boundaries.test.ts` green
-- [ ] `npm run lint && npm run typecheck` green
-- [ ] `npm run build` succeeds (app functional, nothing consumes lib yet)
-- [ ] commit msg draft: `feat(deck-select): add shared deck-selection view contracts and rank fn behind a new public entry`
+- [x] `npx vitest run tests/unit/deck-select tests/unit/domain-boundaries.test.ts` green — `Test Files  2 passed (2) / Tests  16 passed (16)`
+- [x] `npm run lint && npm run typecheck` green — `eslint .` silent; `svelte-check found 0 errors and 2 warnings in 2 files` (both pre-existing, in `CardCatalog.svelte` and `ShopSellScreen.svelte`)
+- [x] `npm run build` succeeds (app functional, nothing consumes lib yet) — `BUILD_EXIT=0`, `build:verify` `"status": "ok"`, chunk bytes shell 92305 / battle 334069 / deck-editor 109440 / story 106674
+- [x] commit msg draft: `feat(deck-select): add shared deck-selection view contracts and rank fn behind a new public entry`

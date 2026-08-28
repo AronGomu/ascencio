@@ -82,11 +82,11 @@ Run: `npx vitest run tests/component/deck-select/deck-tile.test.ts`
 
 ## Impl steps
 
-- [ ] 1. Write failing `tests/component/deck-select/deck-tile.test.ts` with builder `tile(overrides: Partial<DeckTileModel>)`.
-- [ ] 2. Create `src/deck-select/DeckTile.svelte` per Requirements (markup, then styles).
-- [ ] 3. Export `DeckTile` from `src/deck-select/index.ts`; add name to frozen list in `tests/unit/domain-boundaries.test.ts`.
-- [ ] 4. `npx vitest run tests/component/deck-select tests/unit/domain-boundaries.test.ts tests/unit/data-cy-coverage.test.ts` → green.
-- [ ] 5. `npm run lint && npm run typecheck` → green.
+- [x] 1. Write failing `tests/component/deck-select/deck-tile.test.ts` with builder `tile(overrides: Partial<DeckTileModel>)`. — red proven: `Failed to resolve import "../../../src/deck-select/DeckTile.svelte"`, `Test Files 1 failed (1) / Tests no tests`.
+- [x] 2. Create `src/deck-select/DeckTile.svelte` per Requirements (markup, then styles). — file exists, 9/9 component tests green.
+- [x] 3. Export `DeckTile` from `src/deck-select/index.ts`; add name to frozen list in `tests/unit/domain-boundaries.test.ts`. — `deck-select public API is exact` green with `values: ["DeckTile", "orderDeckTiles"]`.
+- [x] 4. `npx vitest run tests/component/deck-select tests/unit/domain-boundaries.test.ts tests/unit/data-cy-coverage.test.ts` → green. — `Test Files 3 passed (3) / Tests 53 passed (53)`.
+- [x] 5. `npm run lint && npm run typecheck` → green. — eslint silent, `svelte-check found 0 errors and 2 warnings in 2 files` (both pre-existing, `CardCatalog.svelte` + `ShopSellScreen.svelte`), exit 0.
 
 ## Outputs
 
@@ -96,7 +96,7 @@ Run: `npx vitest run tests/component/deck-select/deck-tile.test.ts`
 
 ## Validation
 
-- [ ] `npx vitest run tests/component/deck-select tests/unit/domain-boundaries.test.ts tests/unit/data-cy-coverage.test.ts` green
-- [ ] `npm run lint && npm run typecheck && npm run build` green
-- [ ] app functional — no consumer yet, no broken path
-- [ ] commit msg draft: `feat(deck-select): render the shared 2:1 deck tile with halo and badge semantics`
+- [x] `npx vitest run tests/component/deck-select tests/unit/domain-boundaries.test.ts tests/unit/data-cy-coverage.test.ts` green — `Test Files 3 passed (3) / Tests 53 passed (53)`.
+- [x] `npm run lint && npm run typecheck && npm run build` green — build `exit=0`, `build:verify` `"status": "ok"`, chunk budgets shell 92305 / battle 335937 / deck-editor 109440 / story 106674.
+- [x] app functional — no consumer yet, no broken path — `npm run check:headless` exit 0 (unit 1699 passed, integration 37 passed), `npm run test:component` exit 0 (103 files, 941 passed).
+- [x] commit msg draft: `feat(deck-select): render the shared 2:1 deck tile with halo and badge semantics`

@@ -17,6 +17,12 @@
     BattleDomainLoader,
   } from "../domain-loaders.ts";
   import {
+    deleteLocalDeck,
+    duplicateLocalDeck,
+    parseLocalDeckKey,
+    renameLocalDeck,
+  } from "./free-play-deck-actions.ts";
+  import {
     freePlayBattleModule,
     listedFreePlayDecks,
     refreshFreePlayDecks,
@@ -43,6 +49,9 @@
   /* Leaving the seat for the library it is filled from. Reported rather than
      routed, because the deck editor is a route the shell owns the URL of. */
   export let ondecks: () => void = () => undefined;
+  /* Leaving it for one deck's own page in that editor, reported for the same
+     reason. A bundled deck has no page, so it is the library that opens. */
+  export let onopendeck: (id: string) => void = () => undefined;
 
   let battle: BattleDeckModule | null = null;
   let decks: readonly SelectableDeck[] = [];
@@ -58,6 +67,10 @@
      opponent's card to browse for the deck they want to face. */
   let seat: "player" | "opponent" = "player";
   let startError: string | null = null;
+  /* A deck-library write the library refused. Kept apart from `startError`
+     because it is a different fact about a different press, and shown in the
+     same one notice slot. */
+  let manageError: string | null = null;
   /* The battle chunk itself never arrived. It is the duel domain failing one
      screen earlier than it used to, so it is reported as the duel failing:
      a stale dev server or a half-cached build looks the same from here. */
@@ -89,8 +102,10 @@
      to nothing is a duel the Worker would refuse after the click. */
   $: canStart = ready && playerKey !== "" && opponentKey !== "";
   /* One notice slot, and the refusal outranks the wait: a player who pressed
-     Start is owed the reason it did not run. */
-  $: blockNotice = startError ?? (ready ? null : "Reading your deck library…");
+     Start is owed the reason it did not run. Every press clears both errors
+     before it acts, so the slot always holds the most recent one. */
+  $: blockNotice =
+    startError ?? manageError ?? (ready ? null : "Reading your deck library…");
 
   onMount(() => {
     let cancelled = false;
@@ -221,8 +236,107 @@
      the seat card is what says which. */
   function select(key: string): void {
     startError = null;
+    manageError = null;
     if (seat === "player") playerKey = key;
     else opponentKey = key;
+  }
+
+  /* One library write, then the listing again: the grid and both seats are
+     re-read rather than patched, because every operation moves the key of the
+     deck it touched — a save bumps the revision the key carries, a delete
+     takes the row away entirely. A refusal changes nothing and is reported
+     where every other refusal on this screen is. */
+  async function manage(
+    write: () => Promise<void>,
+    refusal: string,
+  ): Promise<readonly SelectableDeck[] | null> {
+    startError = null;
+    manageError = null;
+    try {
+      await write();
+      return await refreshFreePlayDecks(loadBattle);
+    } catch (error) {
+      manageError = `${refusal}: ${error instanceof Error ? error.message : "Unknown error"}`;
+      return null;
+    }
+  }
+
+  async function renameDeck(key: string, name: string): Promise<void> {
+    const loaded = battle;
+    if (loaded === null) return;
+    const listed = await manage(
+      () => renameLocalDeck(key, name),
+      "Deck could not be renamed",
+    );
+    if (listed === null) return;
+    /* The deck under the key it carries now, so a seat showing it follows the
+       rename instead of falling back to a deck the player did not choose. */
+    const moved = movedKey(listed, key);
+    if (moved !== null) {
+      if (playerKey === key) playerKey = moved;
+      if (opponentKey === key) opponentKey = moved;
+    }
+    adoptDecks(loaded, listed);
+  }
+
+  async function duplicateDeck(key: string): Promise<void> {
+    const loaded = battle;
+    if (loaded === null) return;
+    const listed = await manage(
+      () => duplicateLocalDeck(key),
+      "Deck could not be duplicated",
+    );
+    if (listed === null) return;
+    /* The copy is handed straight to the seat being filled: duplicating a deck
+       is how a player starts from one they already have. */
+    const copy = newestLocalKey(listed);
+    if (copy !== null) select(copy);
+    adoptDecks(loaded, listed);
+  }
+
+  async function deleteDeck(key: string): Promise<void> {
+    const loaded = battle;
+    if (loaded === null) return;
+    const listed = await manage(
+      () => deleteLocalDeck(key),
+      "Deck could not be deleted",
+    );
+    if (listed === null) return;
+    /* Nothing to re-point: the deleted key resolves to nothing now, so a seat
+       holding it falls through the chain `adoptDecks` already owns. */
+    adoptDecks(loaded, listed);
+  }
+
+  /* A deck the player built has a page of its own in the editor; a bundled
+     deck has none, so Open on one is the library it is bundled into. */
+  function openDeck(key: string): void {
+    const local = parseLocalDeckKey(key);
+    if (local === null) ondecks();
+    else onopendeck(local.id);
+  }
+
+  /** The deck `key` named, under the key it carries now. */
+  function movedKey(
+    listed: readonly SelectableDeck[],
+    key: string,
+  ): string | null {
+    const local = parseLocalDeckKey(key);
+    if (local === null) return null;
+    const prefix = `local:${local.id}:`;
+    return listed.find((deck) => deck.key.startsWith(prefix))?.key ?? null;
+  }
+
+  /** The most recently saved deck the player built, which is the copy a
+      duplicate wrote a moment ago. */
+  function newestLocalKey(listed: readonly SelectableDeck[]): string | null {
+    let newest: SelectableDeck | null = null;
+    for (const deck of listed)
+      if (
+        deck.source === "local" &&
+        (newest === null || (deck.updatedAt ?? "") > (newest.updatedAt ?? ""))
+      )
+        newest = deck;
+    return newest?.key ?? null;
   }
 
   function pickOpponent(id: string): void {
@@ -348,7 +462,9 @@
     onstart={start}
     onfavourite={toggleFavourite}
     onback={() => onback()}
-    onopen={() => ondecks()}
-    manageable={false}
+    onopen={openDeck}
+    onrename={(key, name) => void renameDeck(key, name)}
+    onduplicate={(key) => void duplicateDeck(key)}
+    ondelete={(key) => void deleteDeck(key)}
   />
 {/if}

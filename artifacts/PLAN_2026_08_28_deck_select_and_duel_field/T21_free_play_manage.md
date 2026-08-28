@@ -71,14 +71,14 @@ Run: `npx vitest run tests/unit/shell tests/component/FreePlayMatchSetup.test.ts
 
 ## Impl steps
 
-- [ ] 1. Locate repository test harness (`git grep -ln "IndexedDbDeckRepository" tests/`); write failing `tests/unit/shell/free-play-deck-actions.test.ts`.
-- [ ] 2. Read `deck-editor-store.ts` rename/duplicate/delete + repository `save` contract; note revision handling verbatim.
-- [ ] 3. Create `src/shell/screens/free-play-deck-actions.ts`.
-- [ ] 4. Extend `tests/component/FreePlayMatchSetup.test.ts` with the 5 screen cases (red), then wire callbacks + `manageable=true` + `onopendeck` prop in `FreePlayMatchSetup.svelte`.
-- [ ] 5. Wire `onopendeck` in `src/shell/AppShell.svelte` via `deckRoute("free-play", deckId(id))`.
-- [ ] 6. `npx vitest run tests/unit tests/component` → green.
-- [ ] 7. Manual: rename/duplicate/delete a local deck from `#/free-play`; Open lands in editor on that deck.
-- [ ] 8. `npm run lint && npm run typecheck && npm run build` → green.
+- [x] 1. Locate repository test harness (`git grep -ln "IndexedDbDeckRepository" tests/`); write failing `tests/unit/shell/free-play-deck-actions.test.ts`. — harness = `tests/unit/decks/indexeddb-deck-repository.test.ts` (`fake-indexeddb/auto` + `deleteDB`); red: `Error: Cannot find module '.../free-play-deck-actions.ts'`.
+- [x] 2. Read `deck-editor-store.ts` rename/duplicate/delete + repository `save` contract; note revision handling verbatim. — `save` sets `revision: expectedRevision + 1` and `updatedAt` itself (`indexeddb-deck-repository.ts:236-241`); `create` forces `revision: 1`. Caller passes the record unchanged but for `name`, as `renameDeck` does.
+- [x] 3. Create `src/shell/screens/free-play-deck-actions.ts`. — file exists; `npx vitest run tests/unit/shell/free-play-deck-actions.test.ts` → 7 passed.
+- [x] 4. Extend `tests/component/FreePlayMatchSetup.test.ts` with the 5 screen cases (red), then wire callbacks + `manageable=true` + `onopendeck` prop in `FreePlayMatchSetup.svelte`. — red: 6 failed | 16 passed; green: 22 passed.
+- [x] 5. Wire `onopendeck` in `src/shell/AppShell.svelte` via `deckRoute("free-play", deckId(id))`. — `AppShell.svelte:570`.
+- [x] 6. `npx vitest run tests/unit tests/component` → green. — 266 files, 2822 passed | 2 skipped.
+- [x] 7. Manual: rename/duplicate/delete a local deck from `#/free-play`; Open lands in editor on that deck. — walked in real Chromium against the production build (scratch Playwright spec, since an agent cannot press the buttons itself): rename keeps the seat under the new key, duplicate seats the copy, delete removes it with no block notice, bundled Delete stays disabled, Open lands on `#/free-play/decks/<id>` with the deck's name in the editor. 1 passed.
+- [x] 8. `npm run lint && npm run typecheck && npm run build` → green. — eslint clean; `svelte-check found 0 errors and 2 warnings in 2 files` (both pre-existing, in `deck-editor` and `story`); `build:verify` → `"status": "ok"`, shell chunk 93,373 bytes.
 
 ## Outputs
 
@@ -88,7 +88,7 @@ Run: `npx vitest run tests/unit/shell tests/component/FreePlayMatchSetup.test.ts
 
 ## Validation
 
-- [ ] `npx vitest run tests/unit tests/component` green
-- [ ] `npm run lint && npm run typecheck && npm run build` green
-- [ ] manual pass per step 7
-- [ ] commit msg draft: `feat(shell): manage local decks from the duel-start screen itself`
+- [x] `npx vitest run tests/unit tests/component` green — `Test Files 266 passed (266)`, `Tests 2822 passed | 2 skipped (2824)`
+- [x] `npm run lint && npm run typecheck && npm run build` green — plus `npm run check:headless` (format, lint, typecheck, legacy 23, unit 1778, integration 39, vendor/assets/snapshot ok) and `npm run test:component` (110 files, 1046 passed)
+- [x] manual pass per step 7 — Chromium walkthrough passed
+- [x] commit msg draft: `feat(shell): manage local decks from the duel-start screen itself`

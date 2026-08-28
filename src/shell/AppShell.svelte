@@ -16,6 +16,7 @@
     type AppRoute,
     type RouteContext,
   } from "./routes.ts";
+  import { deckId } from "../decks/index.ts";
   import type { DeckContext } from "../decks/deck-repository-context.ts";
   import {
     unlimitedCardOwnership,
@@ -566,6 +567,8 @@
           onstart={(request) => (matchRequest = request)}
           onback={() => store.navigate(HOME_ROUTE)}
           ondecks={() => store.navigate(deckRoute("free-play", null))}
+          onopendeck={(id) =>
+            store.navigate(deckRoute("free-play", deckId(id)))}
         />
       {:catch error}
         <DomainLoadError label="Match setup" cy="free-play-match" {error} />

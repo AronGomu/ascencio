@@ -7,6 +7,7 @@ import type { DeckRecord, DeckRepository } from "../../src/decks/index.ts";
 import AdminConsole from "../../src/shell/admin/AdminConsole.svelte";
 import {
   ADMIN_STORAGE_TARGETS,
+  type AdminResetResult,
   type AdminStorageTarget,
 } from "../../src/shell/admin/admin-actions.ts";
 import MainMenuScreen from "../../src/shell/screens/MainMenuScreen.svelte";
@@ -50,11 +51,19 @@ function fakeRepository(created: DeckRecord[]): DeckRepository & {
   } as unknown as DeckRepository & { close: () => void; closed: () => number };
 }
 
+function recordReset(
+  reset: AdminStorageTarget[],
+  target: AdminStorageTarget,
+): AdminResetResult {
+  reset.push(target);
+  return { outcome: "deleted" };
+}
+
 function mount(
   options: {
     hashes?: string[];
     created?: DeckRecord[];
-    resetTarget?: (target: AdminStorageTarget) => Promise<void>;
+    resetTarget?: (target: AdminStorageTarget) => Promise<AdminResetResult>;
   } = {},
 ) {
   const created = options.created ?? [];
@@ -62,7 +71,8 @@ function mount(
   return render(AdminConsole, {
     store: createShellStore("#/admin", (hash) => options.hashes?.push(hash)),
     openRepository: async () => repository,
-    resetTarget: options.resetTarget ?? (async () => {}),
+    resetTarget:
+      options.resetTarget ?? (async () => ({ outcome: "deleted" }) as const),
     now: () => new Date("2026-08-14T00:00:00.000Z"),
   });
 }
@@ -134,7 +144,7 @@ describe("AdminConsole", () => {
 
   it("asks for confirmation before deleting anything", async () => {
     const reset: AdminStorageTarget[] = [];
-    mount({ resetTarget: async (target) => void reset.push(target) });
+    mount({ resetTarget: async (target) => recordReset(reset, target) });
     expect(query("admin-reset-decks-confirm")).toBeNull();
     await fireEvent.click(query("admin-reset-decks")!);
     expect(query("admin-reset-decks-confirm")).not.toBeNull();
@@ -143,7 +153,7 @@ describe("AdminConsole", () => {
 
   it("resets only the confirmed target", async () => {
     const reset: AdminStorageTarget[] = [];
-    mount({ resetTarget: async (target) => void reset.push(target) });
+    mount({ resetTarget: async (target) => recordReset(reset, target) });
     await fireEvent.click(query("admin-reset-decks")!);
     await fireEvent.click(query("admin-reset-decks-confirm")!);
     await vi.waitFor(() => expect(reset).toHaveLength(1));
@@ -152,9 +162,33 @@ describe("AdminConsole", () => {
     );
   });
 
+  it("reports a completed reset as cleared", async () => {
+    mount({ resetTarget: async () => ({ outcome: "deleted" }) });
+    await fireEvent.click(query("admin-reset-decks")!);
+    await fireEvent.click(query("admin-reset-decks-confirm")!);
+    await vi.waitFor(() =>
+      expect(query("admin-status")!.textContent).toBe(
+        "Cleared Free-play deck library.",
+      ),
+    );
+  });
+
+  /* The delete is queued behind the other tab's connection, so the console may
+     not claim the store is gone (audit F18). */
+  it("reports a blocked reset as still open, not cleared", async () => {
+    mount({ resetTarget: async () => ({ outcome: "blocked" }) });
+    await fireEvent.click(query("admin-reset-decks")!);
+    await fireEvent.click(query("admin-reset-decks-confirm")!);
+    await vi.waitFor(() =>
+      expect(query("admin-status")!.textContent).toBe(
+        "Free-play deck library is still open in another tab, so the delete is queued rather than done. Close the other tab, then reset again.",
+      ),
+    );
+  });
+
   it("cancels a pending reset without deleting", async () => {
     const reset: AdminStorageTarget[] = [];
-    mount({ resetTarget: async (target) => void reset.push(target) });
+    mount({ resetTarget: async (target) => recordReset(reset, target) });
     await fireEvent.click(query("admin-reset-decks")!);
     await fireEvent.click(query("admin-reset-decks-cancel")!);
     expect(query("admin-reset-decks-confirm")).toBeNull();

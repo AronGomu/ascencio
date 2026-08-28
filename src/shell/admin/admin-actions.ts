@@ -74,24 +74,32 @@ export const ADMIN_TEST_DECK_NAME = "Admin test deck";
 const ADMIN_TEST_DECK_SOURCE = "mvp-player";
 const MAIN_DECK_SIZE = 40;
 
+/** A delete that another connection blocks is queued, not performed, so the
+    caller has to be able to tell the two apart before it claims a store is
+    gone. Failures keep throwing. */
+export type AdminResetResult =
+  { readonly outcome: "deleted" } | { readonly outcome: "blocked" };
+
 export async function resetStorageTarget(
   target: AdminStorageTarget,
   factory: IDBFactory,
   storage: Pick<Storage, "removeItem">,
-): Promise<void> {
+): Promise<AdminResetResult> {
   if (target.kind === "localstorage") {
     storage.removeItem(target.name);
-    return;
+    return { outcome: "deleted" };
   }
   if (target.kind !== "indexeddb")
     throw new Error(`Unknown admin storage kind: ${String(target.kind)}`);
 
-  await new Promise<void>((resolve, reject) => {
+  return await new Promise<AdminResetResult>((resolve, reject) => {
     const request = factory.deleteDatabase(target.name);
-    request.onsuccess = () => resolve();
+    request.onsuccess = () => resolve({ outcome: "deleted" });
     /* `blocked` means another tab still holds the database open. The delete
-       stays queued, so the console reports success rather than hanging. */
-    request.onblocked = () => resolve();
+       stays queued behind that connection, so this settles at once rather than
+       hanging — and says it was blocked, so nobody reports a wipe that has not
+       happened. */
+    request.onblocked = () => resolve({ outcome: "blocked" });
     request.onerror = () =>
       reject(
         new Error(`Could not delete database ${target.name}`, {

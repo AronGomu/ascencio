@@ -75,23 +75,49 @@ describe("resetStorageTarget", () => {
       name,
     );
 
-    await resetStorageTarget(
+    const result = await resetStorageTarget(
       { id: "probe", label: "Probe", kind: "indexeddb", name },
       indexedDB,
       { removeItem: () => {} },
     );
 
+    expect(result).toEqual({ outcome: "deleted" });
     expect(
       (await indexedDB.databases()).map((entry) => entry.name),
     ).not.toContain(name);
   });
 
+  /* A delete that another connection blocks is queued rather than performed, so
+     the console has to be able to say the store has not gone yet. */
+  it("reports a blocked delete as not cleared", async () => {
+    const factory = {
+      deleteDatabase: () => {
+        const request = {
+          onsuccess: null,
+          onblocked: null,
+          onerror: null,
+        } as unknown as IDBOpenDBRequest;
+        queueMicrotask(() =>
+          request.onblocked?.(new Event("blocked") as IDBVersionChangeEvent),
+        );
+        return request;
+      },
+    } as unknown as IDBFactory;
+
+    await expect(
+      resetStorageTarget(target("decks"), factory, { removeItem: () => {} }),
+    ).resolves.toEqual({ outcome: "blocked" });
+  });
+
   it("clears a localStorage key", async () => {
     const removeItem = vi.fn();
-    await resetStorageTarget(target("shell-settings"), indexedDB, {
-      removeItem,
-    });
+    const result = await resetStorageTarget(
+      target("shell-settings"),
+      indexedDB,
+      { removeItem },
+    );
     expect(removeItem).toHaveBeenCalledExactlyOnceWith("ygo.ui.v3");
+    expect(result).toEqual({ outcome: "deleted" });
   });
 
   it("rejects a forged target kind", async () => {

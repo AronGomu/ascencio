@@ -12,6 +12,7 @@
     ADMIN_TEST_DECK_NAME,
     buildAdminTestDeck,
     resetStorageTarget,
+    type AdminResetResult,
     type AdminStorageTarget,
   } from "./admin-actions.ts";
 
@@ -24,7 +25,7 @@
     await IndexedDbDeckRepository.open();
   export let resetTarget: (
     target: AdminStorageTarget,
-  ) => Promise<void> = async (target) =>
+  ) => Promise<AdminResetResult> = async (target) =>
     await resetStorageTarget(
       target,
       globalThis.indexedDB,
@@ -83,8 +84,13 @@
     armedTargetId = null;
     busy = true;
     try {
-      await resetTarget(target);
-      status = `Cleared ${target.label}.`;
+      const result = await resetTarget(target);
+      /* A blocked delete is queued behind another tab's connection, so saying
+         "Cleared" here would tell the operator a wipe that did not happen. */
+      status =
+        result.outcome === "blocked"
+          ? `${target.label} is still open in another tab, so the delete is queued rather than done. Close the other tab, then reset again.`
+          : `Cleared ${target.label}.`;
     } catch (error) {
       status = `Could not clear ${target.label}: ${reason(error)}`;
     } finally {

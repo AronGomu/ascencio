@@ -3885,3 +3885,21 @@ Run `npm run dev` (default `DEV_PORT=4300`).
 - [ ] Open `#/free-play/collection` and tick **Group by rarity**. That screen lists the whole card database, so it shows the shop's ladders without needing an unlocked set. The **Ultimate Rare** heading is gone, or holds only a handful of cards. It used to cover hundreds — the entire non-common pool of ten sets, every card in it priced at the foil tier. Those cards now sit under Rare, Super Rare, Ultra Rare and Secret Rare instead.
 - [ ] Open `#/story`, New Game, walk to the map, enter the **Card Shop** → **Buy**. Buy a Metal Raiders pack and open it. The pack is still 9 cards, still 8 commons and one better, and the DP spent is still 150.
 - [ ] Sell everything the pack gave you: the money back is **less than 150 DP**. That is the whole point — a pack must never pay for itself.
+
+---
+
+## T5 admin-reset-blocked-status
+
+An IndexedDB delete that finds the database open in another tab fires `blocked`:
+the delete is queued behind that connection, not performed. The console answered
+that with "Cleared", so the operator was told a wipe had happened that had not.
+The blocked case now gets its own status line.
+
+Run `npm run dev` (default `DEV_PORT=4300`).
+
+- [ ] Tab A: open `http://localhost:4300/#/free-play/decks` and open a deck in the editor. Leave the tab on that screen — it holds the `ygo-story-decks` database open.
+- [ ] Tab B: open `http://localhost:4300/#/admin`, click **Reset…** on **Free-play deck library**, then **Delete for good**. The status line reads exactly: `Free-play deck library is still open in another tab, so the delete is queued rather than done. Close the other tab, then reset again.` It does not say "Cleared", and the console does not hang — the status appears at once.
+- [ ] Still in tab B, open DevTools → Application → IndexedDB: `ygo-story-decks` is still listed. The console told the truth.
+- [ ] Close tab A, then reset the same row again in tab B: the status now reads `Cleared Free-play deck library.` and `ygo-story-decks` is gone from the IndexedDB list.
+- [ ] With only one tab open, reset **Shell settings** (a localStorage key, never blocked): the status still reads `Cleared Shell settings.`
+- [ ] With only one tab open, reset **Duel snapshots** and **Story saves**: each says `Cleared …` and its database disappears from the IndexedDB list — an unblocked delete is unchanged by this slice.

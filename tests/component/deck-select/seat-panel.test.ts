@@ -20,8 +20,8 @@ function cy(value: string): HTMLElement {
 }
 
 /* Your own deck is normally in the grid as well as on its seat card, so the
-   same tile renders twice; every seat assertion asks its own card for the
-   tile rather than the document. */
+   card's copy carries its own `cyKey`; asking the card rather than the document
+   is what proves the renamed tile is the one inside it. */
 function inside(container: HTMLElement, value: string): HTMLElement {
   const element = container.querySelector<HTMLElement>(`[data-cy="${value}"]`);
   if (element === null)
@@ -104,13 +104,15 @@ describe("DeckSelectScreen seat panel", () => {
 
     const theirs = cy("duel-start-opponent-deck");
     expect(theirs.getAttribute("aria-pressed")).toBe("false");
-    expect(inside(theirs, "deck-tile-o1").classList).toContain("halo-opponent");
-    expect(inside(theirs, "deck-tile-name-o1").textContent).toBe(
+    expect(inside(theirs, "deck-tile-opponent-o1").classList).toContain(
+      "halo-opponent",
+    );
+    expect(inside(theirs, "deck-tile-name-opponent-o1").textContent).toBe(
       "Warden Vault",
     );
 
     const yours = cy("duel-start-your-deck");
-    expect(inside(yours, "deck-tile-k1").classList).toContain("halo-you");
+    expect(inside(yours, "deck-tile-yours-k1").classList).toContain("halo-you");
   });
 
   it("panel absent in library mode", async () => {

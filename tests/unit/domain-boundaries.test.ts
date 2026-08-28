@@ -278,7 +278,13 @@ describe("public domain APIs are frozen", () => {
          each time — and it owns the menu/dialog state machine the four names
          above deliberately left to a host. Still presentational: it takes view
          models and callbacks, so it reads no storage and turns no host
-         eager. */
+         eager.
+
+         T16, deliberate widening of one name: `pinSelectedFirst`, the narrow
+         layout's extra list transform. It sits beside `orderDeckTiles` because
+         it is the same kind of thing — a pure ranking step over view models —
+         and a host that renders its own phone list has to reach the same order
+         the screen does rather than re-derive it. */
       values: [
         "DeckSelectScreen",
         "DeckTile",
@@ -286,6 +292,7 @@ describe("public domain APIs are frozen", () => {
         "DeleteDeckConfirm",
         "RenameDeckDialog",
         "orderDeckTiles",
+        "pinSelectedFirst",
       ],
       types: [
         "DeckCounts",

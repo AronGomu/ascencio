@@ -59,13 +59,13 @@ Run: `npx vitest run tests/unit/deck-select tests/component/deck-select`
 
 ## Impl steps
 
-- [ ] 1. Write failing unit tests in `tests/unit/deck-select/order-deck-tiles.test.ts` (pin cases).
-- [ ] 2. Write failing component tests in `tests/component/deck-select/mobile-layout.test.ts`.
-- [ ] 3. Implement `pinSelectedFirst` in `src/deck-select/order-deck-tiles.ts`; export from index; widen frozen list in `tests/unit/domain-boundaries.test.ts`.
-- [ ] 4. Add `forceNarrow` prop + `matchMedia` tracking to `DeckSelectScreen.svelte`; apply pin transform when narrow.
-- [ ] 5. Add narrow CSS: single column, relocation of opponent block, sticky Start footer, back icon, permanent chip.
-- [ ] 6. `npx vitest run tests/unit/deck-select tests/component/deck-select tests/unit/domain-boundaries.test.ts tests/unit/data-cy-coverage.test.ts` → green.
-- [ ] 7. `npm run lint && npm run typecheck` → green.
+- [x] 1. Write failing unit tests in `tests/unit/deck-select/order-deck-tiles.test.ts` (pin cases). — red: 3 × `TypeError: pinSelectedFirst is not a function`
+- [x] 2. Write failing component tests in `tests/component/deck-select/mobile-layout.test.ts`. — red: 4 of 5 fail (pin order, back icon absent)
+- [x] 3. Implement `pinSelectedFirst` in `src/deck-select/order-deck-tiles.ts`; export from index; widen frozen list in `tests/unit/domain-boundaries.test.ts`. — `domain-boundaries.test.ts` green with the widened list
+- [x] 4. Add `forceNarrow` prop + `matchMedia` tracking to `DeckSelectScreen.svelte`; apply pin transform when narrow. — 4 pin/back-icon component tests green
+- [x] 5. Add narrow CSS: single column, relocation of opponent block, sticky Start footer, back icon, permanent chip. — `@media (max-width: 40rem)` + `@media (pointer: coarse), (max-width: 40rem)` in `DeckSelectScreen.svelte`; svelte-check 0 errors, no unused-selector warning
+- [x] 6. `npx vitest run tests/unit/deck-select tests/component/deck-select tests/unit/domain-boundaries.test.ts tests/unit/data-cy-coverage.test.ts` → green. — `Test Files  9 passed (9)` / `Tests  107 passed (107)`
+- [x] 7. `npm run lint && npm run typecheck` → green. — eslint clean; `svelte-check found 0 errors and 2 warnings in 2 files` (both pre-existing, in `CardCatalog.svelte` and `ShopSellScreen.svelte`)
 
 ## Outputs
 
@@ -75,7 +75,7 @@ Run: `npx vitest run tests/unit/deck-select tests/component/deck-select`
 
 ## Validation
 
-- [ ] `npx vitest run tests/unit/deck-select tests/component/deck-select tests/unit/domain-boundaries.test.ts tests/unit/data-cy-coverage.test.ts` green
-- [ ] `npm run lint && npm run typecheck && npm run build` green
-- [ ] app functional — no consumer yet
-- [ ] commit msg draft: `feat(deck-select): fold the screen into the phone layout with the pick pinned first`
+- [x] `npx vitest run tests/unit/deck-select tests/component/deck-select tests/unit/domain-boundaries.test.ts tests/unit/data-cy-coverage.test.ts` green — `Tests  107 passed (107)`
+- [x] `npm run lint && npm run typecheck && npm run build` green — `build:verify` `{"status": "ok", "snapshotId": "a562f5ad…"}`; also `npm run check:headless` (`1749 passed`) and `npm run test:component` (`1008 passed`)
+- [x] app functional — no consumer yet — `grep -rn "DeckSelectScreen" src` outside `src/deck-select/` returns nothing, so no app screen mounts it
+- [x] commit msg draft: `feat(deck-select): fold the screen into the phone layout with the pick pinned first`

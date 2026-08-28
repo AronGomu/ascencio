@@ -1608,6 +1608,22 @@ button.duel-field-zone,
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--selected) 78%, transparent);
 }
 
+/* Item 5: selection candidates wear a dashed outline instead of the solid
+   legality ring — the glow above reads as a green-filled card at field
+   scale. `box-shadow: none` overrides the `.is-actionable` glow; the same
+   dashed weight in orange is the selected state, so selection reads as a
+   colour change, never a shape change. cardAction prompts never carry
+   `.is-selection-candidate` and keep the solid ring. */
+.duel-field-card.is-selection-candidate .duel-field-card__art {
+  border: 3px dashed var(--success);
+  box-shadow: none;
+}
+
+.duel-field-card.is-selection-candidate.is-selected .duel-field-card__art {
+  border-color: var(--selected);
+  box-shadow: none;
+}
+
 /* While a card-targeting prompt is active, hovering a non-candidate field card
    shows a red ring to signal invalid target — hover-only, never persistent. */
 .duel-field[data-targeting="true"]

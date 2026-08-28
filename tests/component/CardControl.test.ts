@@ -1,11 +1,17 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render } from "@testing-library/svelte";
+import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import CardControl from "../../src/battle/app/components/duel-field/CardControl.svelte";
+import type { LocalCardAction } from "../../src/battle/app/presentation/local-card-action.ts";
+import type {
+  ActiveInteractionSpec,
+  InteractionChoice,
+} from "../../src/battle/app/prompts/interaction-spec.ts";
 import {
   cardCode,
   cardInstanceId,
+  choiceId,
 } from "../../src/battle/duel/contracts/ids.ts";
 import type {
   BoardCardView,
@@ -77,6 +83,24 @@ function renderFieldCard(card: BoardCardView) {
     imageLibrary: null,
     cardBackUrl: "/back.webp",
     placeholderUrl: "/placeholder.webp",
+  });
+}
+
+/* Candidacy is only observable on an actionable card, so these mirror
+   renderCard and vary only the interaction kind and the chips it carries. */
+function renderCandidate(props: {
+  interactionKind: ActiveInteractionSpec["kind"];
+  choices: readonly InteractionChoice[];
+  localActions?: readonly LocalCardAction[];
+}) {
+  return render(CardControl, {
+    card: makeCard(),
+    layout: "hand",
+    placement: null,
+    imageUrl: "/back.webp",
+    imageLibrary: null,
+    actionable: true,
+    ...props,
   });
 }
 
@@ -213,5 +237,45 @@ describe("CardControl xyz materials", () => {
     cleanup();
     renderFieldCard(makeCard({ materials: [] }));
     expect(materialElements()).toHaveLength(0);
+  });
+});
+
+describe("CardControl selection candidacy", () => {
+  it("a cardSelection candidate carries the dashed-candidate class and mounts no chips", () => {
+    renderCandidate({
+      interactionKind: "cardSelection",
+      choices: [{ id: choiceId("c1"), label: "Select", action: "select" }],
+    });
+    const article = document.querySelector<HTMLElement>(".duel-field-card");
+    expect(article?.classList.contains("is-selection-candidate")).toBe(true);
+    expect(document.querySelector(".card-action-chips")).toBeNull();
+    const target = document.querySelector(".duel-field-card__target");
+    expect(target).not.toBeNull();
+    expect(target?.getAttribute("aria-pressed")).toBe("false");
+  });
+
+  it("a cardAction card keeps chips and never carries the candidate class", () => {
+    renderCandidate({
+      interactionKind: "cardAction",
+      choices: [
+        { id: choiceId("c1"), label: "Activate effect", action: "activate" },
+      ],
+    });
+    const article = document.querySelector<HTMLElement>(".duel-field-card");
+    expect(article?.classList.contains("is-selection-candidate")).toBe(false);
+    expect(document.querySelector(".card-action-chips")).not.toBeNull();
+  });
+
+  it("a cardSelection candidate still shows a local Materials chip", () => {
+    renderCandidate({
+      interactionKind: "cardSelection",
+      choices: [{ id: choiceId("c1"), label: "Select", action: "select" }],
+      localActions: [
+        { id: "materials", label: "Materials", onSelect: () => undefined },
+      ],
+    });
+    expect(document.querySelector(".card-action-chips")).not.toBeNull();
+    expect(document.querySelector(".card-action-chip--local")).not.toBeNull();
+    expect(screen.queryByRole("button", { name: "Select" })).toBeNull();
   });
 });

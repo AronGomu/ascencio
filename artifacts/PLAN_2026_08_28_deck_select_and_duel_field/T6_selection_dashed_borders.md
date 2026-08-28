@@ -138,20 +138,20 @@ Run: `npx vitest run tests/component/CardControl.test.ts tests/component/DuelFie
 
 ## Impl steps
 
-- [ ] 1. Red: add failing component tests
-  - [ ] 1.1 `tests/component/CardControl.test.ts`: extend the ids import to `import { cardCode, cardInstanceId, choiceId } from "../../src/battle/duel/contracts/ids.ts";`
-  - [ ] 1.2 `tests/component/CardControl.test.ts`: append new `describe("CardControl selection candidacy", …)` with the two tests from the Test plan (exact names, exact assertions), rendering `CardControl` directly with `actionable: true` and the stated `interactionKind`/`choices` props (reuse `makeCard()`; pass `layout: "hand"` and `placement: null` like `renderCard` does)
-  - [ ] 1.3 `tests/component/DuelField.test.ts`: after the test ending at line ~932 (`spaceHarness` block), add test `"a multi-pick selection prompt shows dashed candidates, no chips, and toggles is-selected on activation"` per the Test plan row (`userEvent.setup()` + `renderInteractive` + `{ minimum: 1, maximum: 2 }` override)
-  - [ ] 1.4 Run `npx vitest run tests/component/CardControl.test.ts tests/component/DuelField.test.ts` — expect exactly the 3 new tests failing
-- [ ] 2. Green: derive the candidate class and gate the chips in `CardControl.svelte`
-  - [ ] 2.1 `src/battle/app/components/duel-field/CardControl.svelte`, `<article>` class directives (~line 265): insert `class:is-selection-candidate={interactionKind === "cardSelection"}` on the line directly after `class:is-actionable={actionable}`
-  - [ ] 2.2 same file, chips block (~line 324, post-T4 shape): leave the `{#if choices.length > 0 || localActions.length > 0}` gate untouched; on the `<CardActionChips …/>` invocation change `choices={actionable ? choices : []}` to `choices={actionable && interactionKind !== "cardSelection" ? choices : []}`. Every other attribute, incl. `{localActions}`, stays byte-identical
-- [ ] 3. Green: dashed border styles
-  - [ ] 3.1 `src/styles/app.css`: immediately after the closing `}` of the `.duel-field-zone.is-selected, .duel-field-card.is-selected .duel-field-card__art` rule (line 1576), insert the CSS block quoted verbatim in the Interface contract (comment + two rules). Touch no existing rule
-- [ ] 4. Verify gates
-  - [ ] 4.1 Run `npx vitest run tests/component/CardControl.test.ts tests/component/DuelField.test.ts` — all pass
-  - [ ] 4.2 Run `npm run test:component` — green
-  - [ ] 4.3 Run `npm run check:headless` — green (types, lint, boundaries, data-cy coverage)
+- [x] 1. Red: add failing component tests
+  - [x] 1.1 `tests/component/CardControl.test.ts`: extend the ids import to `import { cardCode, cardInstanceId, choiceId } from "../../src/battle/duel/contracts/ids.ts";`
+  - [x] 1.2 `tests/component/CardControl.test.ts`: append new `describe("CardControl selection candidacy", …)` with the two tests from the Test plan (exact names, exact assertions), rendering `CardControl` directly with `actionable: true` and the stated `interactionKind`/`choices` props (reuse `makeCard()`; pass `layout: "hand"` and `placement: null` like `renderCard` does)
+  - [x] 1.3 `tests/component/DuelField.test.ts`: after the test ending at line ~932 (`spaceHarness` block), add test `"a multi-pick selection prompt shows dashed candidates, no chips, and toggles is-selected on activation"` per the Test plan row (`userEvent.setup()` + `renderInteractive` + `{ minimum: 1, maximum: 2 }` override)
+  - [x] 1.4 Run `npx vitest run tests/component/CardControl.test.ts tests/component/DuelField.test.ts` — expect exactly the 3 new tests failing (`Tests  3 failed | 188 passed (191)`; the 3 failures are exactly the new names)
+- [x] 2. Green: derive the candidate class and gate the chips in `CardControl.svelte`
+  - [x] 2.1 `src/battle/app/components/duel-field/CardControl.svelte`, `<article>` class directives (~line 265): insert `class:is-selection-candidate={interactionKind === "cardSelection"}` on the line directly after `class:is-actionable={actionable}`
+  - [x] 2.2 same file, chips block (~line 324, post-T4 shape) — done; `npm run format` wrapped the ternary across three lines (repo `format:check` gate), semantics identical: leave the `{#if choices.length > 0 || localActions.length > 0}` gate untouched; on the `<CardActionChips …/>` invocation change `choices={actionable ? choices : []}` to `choices={actionable && interactionKind !== "cardSelection" ? choices : []}`. Every other attribute, incl. `{localActions}`, stays byte-identical
+- [x] 3. Green: dashed border styles
+  - [x] 3.1 `src/styles/app.css`: immediately after the closing `}` of the `.duel-field-zone.is-selected, .duel-field-card.is-selected .duel-field-card__art` rule (real line 1609 post-T4/T5; ticket's 1576 predates those merges), insert the CSS block quoted verbatim in the Interface contract (comment + two rules). Touch no existing rule
+- [x] 4. Verify gates
+  - [x] 4.1 Run `npx vitest run tests/component/CardControl.test.ts tests/component/DuelField.test.ts` — all pass (`Test Files  2 passed (2)` / `Tests  191 passed (191)`)
+  - [x] 4.2 Run `npm run test:component` — green (`Test Files  103 passed (103)` / `Tests  959 passed (959)`)
+  - [x] 4.3 Run `npm run check:headless` — green (`EXIT=0`; `svelte-check found 0 errors and 2 warnings in 2 files`, both pre-existing and in untouched files)
 
 ## Outputs
 
@@ -162,8 +162,8 @@ Run: `npx vitest run tests/component/CardControl.test.ts tests/component/DuelFie
 
 ## Validation
 
-- [ ] tests pass: `npx vitest run tests/component/CardControl.test.ts tests/component/DuelField.test.ts` then `npm run test:component` then `npm run check:headless` — all exit 0
-- [ ] manual check: `npm run dev`, start a duel, reach an extra-deck summon material prompt — candidates show dashed green border only (no green fill on hover or rest), clicking one turns its border dashed orange, clicking again reverts, no Select chip appears on hover/focus; a normal main-phase idle prompt still shows solid green ring + chips
-- [ ] no silent-failure swallow on a path this slice adds: none — slice adds no `|| true`, empty catch, output redirection, or fire-and-forget
-- [ ] app functional — no broken path from this slice (selection prompts still answerable via card click, keyboard Enter/Space, and target list)
-- [ ] commit msg draft: `fix(duel): dash selection candidates green/orange, drop select chip and green fill (item 5)`
+- [x] tests pass: `npx vitest run tests/component/CardControl.test.ts tests/component/DuelField.test.ts` (191 passed) then `npm run test:component` (959 passed) then `npm run check:headless` (`EXIT=0`) — all exit 0
+- [ ] manual check (HUMAN-ONLY — not performable by this agent; left unchecked on purpose): `npm run dev`, start a duel, reach an extra-deck summon material prompt — candidates show dashed green border only (no green fill on hover or rest), clicking one turns its border dashed orange, clicking again reverts, no Select chip appears on hover/focus; a normal main-phase idle prompt still shows solid green ring + chips
+- [x] no silent-failure swallow on a path this slice adds: none — slice adds no `|| true`, empty catch, output redirection, or fire-and-forget (residue sweep over added lines: `CLEAN — no residue or secret hits in added lines`; diff is 1 class directive + 1 ternary + 2 CSS rules)
+- [x] app functional — no broken path from this slice (selection prompts still answerable via card click — `tests/component/DuelField.test.ts:1278` and `:1315` both `user.click(target)`; keyboard Enter/Space — `:891` plus the new toggle test; target list — `:4423`-`:4592`; all green in the 959-passing component run)
+- [x] commit msg draft: `fix(duel): dash selection candidates green/orange, drop select chip and green fill (item 5)` — used verbatim, shipped as `8fed487` on `wt/T6`

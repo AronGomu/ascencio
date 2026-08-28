@@ -530,6 +530,10 @@ h4 {
   grid-template-rows: auto auto minmax(0, 1fr) auto;
   gap: 0.75rem;
   min-width: 0;
+  border-inline-start: 1px solid var(--border);
+  /* Without this the header and the prompt copy start one pixel from the new
+     divider and read as if they were leaning on it. */
+  padding-inline-start: 0.5rem;
   /* The pillarbox used to sit between this rail and the edge of the screen.
      Once the duel spends it the rail runs to the true viewport edge, so it
      keeps the same inset the board does — and only while there was a bar to
@@ -1183,7 +1187,6 @@ li + li {
   max-width: 100%;
   padding: 0;
   overflow: hidden;
-  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: linear-gradient(
     180deg,
@@ -1339,7 +1342,7 @@ button.field-phase-chip {
   display: grid;
   place-items: center;
   padding: 0.2rem;
-  border: 1px dashed
+  border: 1px solid
     var(
       --zone-outline-color,
       color-mix(in srgb, var(--field-zone-outline) 48%, transparent)
@@ -1353,7 +1356,7 @@ button.field-phase-chip {
 }
 
 .duel-field-zone--shared {
-  border: 2px dashed var(--zone-outline-color, var(--accent));
+  border: 2px solid var(--zone-outline-color, var(--accent));
   background: color-mix(in srgb, var(--field-zone-shared) 72%, transparent);
   color: var(--text);
 }
@@ -1372,8 +1375,6 @@ button.field-phase-chip {
   top: 50%;
   width: calc(var(--field-width) * 0.6923076923 + 6px);
   height: var(--field-height);
-  border: 1px solid color-mix(in srgb, var(--field-card-edge) 40%, transparent);
-  border-radius: 0.28rem;
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
@@ -2135,25 +2136,6 @@ button.duel-field-zone,
   z-index: var(--duel-field-layer-card-raised);
 }
 
-/* Field/zone cards are absolutely centred via `translate(-50%, -50%)`
-   (shared rule above); the zoom scale composes onto that same transform so
-   the halo/art (which fills the card root) scales with it, origin centre.
-   `:not(.is-pinned)` deliberately excludes the pin flow, which moves focus
-   onto a `card-action-chips` button; zooming the card while that chip holds
-   focus would amplify the chip's offset from the transform origin and can
-   push it outside the (non-scrolling) viewport, which
-   `assertRectInsideViewport` in e2e correctly rejects. A `:has()`-based fix (matching only the card's own target button)
-   was tried first and reverted: `:has()` invalidation cost measurably slowed
-   the keyboard-walker e2e's hundreds of focus moves past its time budget.
-   Pin/menu z-layering (above) is unaffected — only the visual scale is
-   skipped while pinned. */
-.duel-field-card.is-identity-known:not(.is-hand-item):not(.is-pinned):is(
-    :hover,
-    :focus-within
-  ) {
-  transform: translate(-50%, -50%) scale(1.35);
-}
-
 /* Hand cards live in normal document flow inside a HandBand's scrolling
    viewport, not absolutely positioned by board coordinates. Two classes
    outweigh the shared `.duel-field-zone, .duel-field-stack, .duel-field-card`
@@ -2180,8 +2162,10 @@ button.duel-field-zone,
   transform-origin: center top;
 }
 
-/* Same pin exclusion as the field/zone rule above. The overlay handles
-   the hover state; only focus-within keeps the in-place lift. */
+/* Board cards no longer zoom on hover; a focused hand card keeps its in-place
+   lift so keyboard users see which card holds focus. Pinned cards are
+   excluded: pinning moves focus onto a card-action-chips button, and scaling
+   then can push that chip outside the viewport. */
 .duel-field-card.is-identity-known.is-hand-item:not(.is-pinned):focus-within {
   transform: scale(1.35);
 }

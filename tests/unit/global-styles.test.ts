@@ -387,11 +387,11 @@ describe("global styles", () => {
     expect(card).toContain("transition: transform 120ms ease-out");
     const list = ruleBlock(css, ".zone-list-entry {");
     expect(list).toContain("transition: transform 120ms ease-out");
-    const fieldHover = ruleBlock(
-      css,
-      ".duel-field-card.is-identity-known:not(.is-hand-item):not(.is-pinned):is(\n    :hover,\n    :focus-within\n  ) {",
+    // Board cards lost their hover/focus zoom (owner feedback item 7), so the
+    // hand lift below is the only surviving 1.35x on a field card.
+    expect(css).not.toContain(
+      ".duel-field-card.is-identity-known:not(.is-hand-item):not(.is-pinned):is(\n    :hover,\n    :focus-within\n  ) {\n  transform: translate(-50%, -50%) scale(1.35);",
     );
-    expect(fieldHover).toContain("scale(1.35)");
     const handHover = ruleBlock(
       css,
       ".duel-field-card.is-identity-known.is-hand-item:not(.is-pinned):focus-within {",

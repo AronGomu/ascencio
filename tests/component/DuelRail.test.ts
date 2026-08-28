@@ -111,6 +111,16 @@ describe("DuelRail", () => {
     expect(
       rail.querySelectorAll('[data-cy^="duel-right-rail-status-dot-"]'),
     ).toHaveLength(3);
+    expect(
+      rail
+        .querySelector('[data-cy="duel-right-rail-opponent"]')!
+        .classList.contains("active"),
+    ).toBe(false);
+    expect(
+      rail
+        .querySelector('[data-cy="duel-right-rail-player"]')!
+        .classList.contains("active"),
+    ).toBe(false);
   });
   it("falls back to the avatar placeholder when no avatar url is given", () => {
     render(DuelRail, { ...props, playerAvatarUrl: "", opponentAvatarUrl: "" });
@@ -155,6 +165,26 @@ describe("DuelRail", () => {
     await rerender({ ...props, lifePoints: [1500, 8000] as const });
     expect(lp0.classList.contains("is-low")).toBe(true);
     expect(lp1.classList.contains("is-high")).toBe(true);
+  });
+
+  it("avatar and life borders track the turn player", async () => {
+    const { rerender } = render(DuelRail, { ...props, turnPlayer: 1 as const });
+    const active = (cy: string) =>
+      document.querySelector(`[data-cy="${cy}"]`)!.classList.contains("active");
+    expect(active("duel-player-avatar-1")).toBe(true);
+    expect(active("duel-right-rail-life-points-1")).toBe(true);
+    expect(active("duel-player-avatar-0")).toBe(false);
+    expect(active("duel-right-rail-life-points-0")).toBe(false);
+    expect(active("duel-right-rail-opponent")).toBe(false);
+    expect(active("duel-right-rail-player")).toBe(false);
+
+    await rerender({ ...props, turnPlayer: 0 as const });
+    expect(active("duel-player-avatar-0")).toBe(true);
+    expect(active("duel-right-rail-life-points-0")).toBe(true);
+    expect(active("duel-player-avatar-1")).toBe(false);
+    expect(active("duel-right-rail-life-points-1")).toBe(false);
+    expect(active("duel-right-rail-opponent")).toBe(false);
+    expect(active("duel-right-rail-player")).toBe(false);
   });
 
   it("life updates settle on the new value", async () => {

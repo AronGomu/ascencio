@@ -3922,3 +3922,11 @@ Run `npm run dev` (default `DEV_PORT=4300`).
 - [ ] Force the art-unavailable case: DevTools → Application → Cache Storage, delete the card-image cache, then reload and reopen the graveyard browser before the images finish re-fetching. Each face-up entry shows the plain grey **placeholder** with its card name still printed under it. None of them shows a card back.
 - [ ] Open your **deck** browser in that same state. Deck cards are concealed, so every slot still shows the **card back** — not the placeholder, not any art. No card name appears under a deck slot.
 - [ ] Reach a prompt that asks you to pick a target from off the field (a graveyard or hand target). In the target window, your own legal targets show art or the placeholder and are named; an opponent target the game will not let you identify still shows the card back and reads "Face-down card".
+
+### Orange means active player in the right rail
+
+- [ ] Start a duel and look at the right rail: nothing draws a border around an avatar-and-LP block as a whole any more.
+- [ ] The player whose turn it is has an orange border on their avatar picture **and** on their LP plate; the other player's avatar and LP borders are grey.
+- [ ] End the turn: the orange borders move to the other player, the grey to you. Only ever one side is orange.
+- [ ] Take LP into the yellow (≤4000) and red (<2000) tiers: the LP number changes colour but its border stays governed by whose turn it is.
+- [ ] On a full HD window (1920×1080), both avatar images are visibly bigger than before, and the rail still shows both identities and the status text without anything spilling out.

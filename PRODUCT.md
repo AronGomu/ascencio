@@ -82,7 +82,7 @@ Foundation: objectivist (Ayn Rand) philosophy at every level — aesthetics, val
 
 ## Brand Commitments
 
-- **Working name:** YGO Story Duel Simulator (`ygo-story-duel-simulator`). Repository is `ascencio`. A final product name is undecided.
+- **Working name:** YGO Story Duel Simulator. Repository and package are both `ascencio`. A final product name is undecided.
 - **Canon language is English.** The source bible was authored in French on 22 August 2026 and translated; the original is preserved verbatim at commit `e411d03`.
 - **Tone references, stated by the owner and binding**: *Spirit Caller*, *The Duelists of the Roses*, *Nightmare Troubadour*, the *World Championship* series. These are the felt register — an offline handheld story game — not a mandate to copy their pixel art.
 - **The story must generate credible, regular pretexts for playable duels.** A scene that cannot become a duel is doing the wrong job.

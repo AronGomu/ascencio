@@ -16,7 +16,9 @@
   } from "../duel/contracts/public-duel-state.ts";
   import {
     mapSnapshotToBoard,
+    type BoardCardText,
     type BoardCardView,
+    type BoardMappingResult,
     type BoardStackView,
   } from "../field/board-view-model.ts";
   import { zoneListsForBoard, type ZoneListEntry } from "../field/zone-list.ts";
@@ -266,10 +268,40 @@
      one. The host is promised the first ending the duel reached. */
   const stopBattleCompletionReports = duel.subscribe(reportBattleCompletion);
   const pendingStorageOperations = new SvelteSet<Promise<unknown>>();
-  $: boardResult =
-    $duel.snapshot === null
-      ? null
-      : mapSnapshotToBoard($duel.snapshot, activeCardTexts, $duel.prompt);
+  /* The Worker posts every event as its own message and each one replaces
+     `$duel` whole, so the board used to be remapped once per message even
+     though only three parts of the state can change it — and every rebuild
+     handed the field a new object to diff. A snapshot is frozen and only a
+     state event replaces it, so identity is a sound key: a message that
+     touched none of the three gets the previous board back, unchanged. */
+  let mappedBoardSnapshot: PublicDuelState | null = null;
+  let mappedBoardCardTexts: ReadonlyMap<number, BoardCardText> | null = null;
+  let mappedBoardPrompt: PlayerPrompt | null = null;
+  let mappedBoardResult: BoardMappingResult | null = null;
+  function memoizedBoardResult(
+    snapshot: PublicDuelState | null,
+    cardTexts: ReadonlyMap<number, BoardCardText>,
+    prompt: PlayerPrompt | null,
+  ): BoardMappingResult | null {
+    if (snapshot === null) return null;
+    if (
+      mappedBoardResult !== null &&
+      snapshot === mappedBoardSnapshot &&
+      cardTexts === mappedBoardCardTexts &&
+      prompt === mappedBoardPrompt
+    )
+      return mappedBoardResult;
+    mappedBoardSnapshot = snapshot;
+    mappedBoardCardTexts = cardTexts;
+    mappedBoardPrompt = prompt;
+    mappedBoardResult = mapSnapshotToBoard(snapshot, cardTexts, prompt);
+    return mappedBoardResult;
+  }
+  $: boardResult = memoizedBoardResult(
+    $duel.snapshot,
+    activeCardTexts,
+    $duel.prompt,
+  );
   $: duelBoard = boardResult?.ok === true ? boardResult.value : null;
   /* Engine legality and visible geometry disagree about the shared Extra
      Monster Zones. Nothing may hide, auto-answer or generically recover from

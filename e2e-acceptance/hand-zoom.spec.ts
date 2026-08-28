@@ -15,7 +15,7 @@ async function openHandZoom(page: Page) {
   return { card, box };
 }
 
-test("the zoomed hand card overflows the hand band and centres its chips on it", async ({
+test("the zoomed hand card overflows the hand band and bottom-anchors its chips on it", async ({
   page,
 }) => {
   await page.goto("?scenario=field-hand-zoom");
@@ -54,22 +54,22 @@ test("the zoomed hand card overflows the hand band and centres its chips on it",
   expect(overlayBox!.height).toBeGreaterThan(expectedHeight * 0.9);
   expect(overlayBox!.height).toBeLessThan(expectedHeight * 1.1);
 
-  /* Chips are centred on the zoomed card, the same anchor a field card gives
-     its own chips. They used to hang above the overlay's top edge; the two
-     hosts were unified so hover and keyboard focus show one thing. */
+  /* 2026-08-27 item 2: chips are anchored on the zoomed card's bottom edge and
+     grow upward, the same anchor a field card gives its own chips. They used
+     to hang above the overlay's top edge, then were centred on it; the two
+     hosts stay unified so hover and keyboard focus show one thing. */
   const chips = overlay.locator(
     '[data-cy^="hand-zoom-overlay-card-action-chips-"]',
   );
   await expect(chips).toBeVisible();
   const chipsBox = await chips.boundingBox();
   expect(chipsBox).not.toBeNull();
-  const overlayCentre = overlayBox!.y + overlayBox!.height / 2;
-  const chipsCentre = chipsBox!.y + chipsBox!.height / 2;
-  expect(Math.abs(chipsCentre - overlayCentre)).toBeLessThanOrEqual(1);
+  expect(
+    Math.abs(
+      chipsBox!.y + chipsBox!.height - (overlayBox!.y + overlayBox!.height),
+    ),
+  ).toBeLessThanOrEqual(2);
   expect(chipsBox!.y).toBeGreaterThan(overlayBox!.y);
-  expect(chipsBox!.y + chipsBox!.height).toBeLessThan(
-    overlayBox!.y + overlayBox!.height,
-  );
 });
 
 /* The overlay covers the card it was opened from. While it took pointer input

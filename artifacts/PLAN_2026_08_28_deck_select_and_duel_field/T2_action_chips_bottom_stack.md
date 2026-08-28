@@ -180,27 +180,37 @@ Run commands: `npm run test:component`, `npm run check:headless`. E2E specs are 
 
 ## Impl steps
 
-- [ ] 1. Red: component tests for the `is-zoom-served` wiring
-  - [ ] 1.1 In `tests/component/DuelField.test.ts`, after the test `"hovering a known hand card mounts the zoom overlay with its actions above"` (ends ~line 2694), add the three tests from the Test plan verbatim (names, inputs, expects as specified; reuse helpers `renderDraggableHand`, `handCardArticle`, `clickHandCard`, `handZoomOverlay`, `handDragTarget`).
-  - [ ] 1.2 Run `npx vitest run tests/component/DuelField.test.ts` — the three new tests fail on the missing class, everything else green.
-- [ ] 2. Green: prop chain `DuelField` → `FieldBoard` → `HandBand` → `CardControl`
-  - [ ] 2.1 `src/battle/app/components/duel-field/CardControl.svelte`: add `export let zoomServed = false;` directly under `export let pinned = false;` (line 27), and add `class:is-zoom-served={zoomServed}` on the `<article>` directly under `class:is-pinned={pinned}` (line 269).
-  - [ ] 2.2 `src/battle/app/components/duel-field/HandBand.svelte`: add `export let zoomServedTarget: BoardTargetId | null = null;` directly under `export let pinnedTarget: BoardTargetId | null = null;` (line 29), and on the `CardControl` mount add `zoomServed={zoomServedTarget === card.targetId}` directly under `pinned={pinnedTarget === card.targetId}` (line 104).
-  - [ ] 2.3 `src/battle/app/components/duel-field/FieldBoard.svelte`: add `export let zoomServedTarget: BoardTargetId | null = null;` directly under `export let pinnedTarget: BoardTargetId | null = null;` (line 41), and add `{zoomServedTarget}` to **both** `HandBand` mounts, each directly under the `{pinnedTarget}` line (lines 246 and 271).
-  - [ ] 2.4 `src/battle/app/components/DuelField.svelte`: on the `FieldBoard` mount (line 1100), add `zoomServedTarget={handZoom === null ? null : handZoom.card.targetId}` directly under `pinnedTarget={session.menuTarget}` (line 1109).
-  - [ ] 2.5 Run `npx vitest run tests/component/DuelField.test.ts` — all green including the three new tests.
-- [ ] 3. Green: CSS — bottom-anchored upward stack + duplicate suppression
-  - [ ] 3.1 `src/styles/app.css`: replace the comment block + `.card-action-chips` base rule (lines 2365-2386) with the base rule given verbatim in `## Interface contract`.
-  - [ ] 3.2 `src/styles/app.css`: in the `.zone-list-entry .card-action-chips, .projected-choice-menu` rule (lines 1917-1927), add `flex-direction: row;` after `bottom: auto;` with the inline comment `/* Reset the card stack's column-reverse: the list keeps its dropdown row. */` on the line above.
-  - [ ] 3.3 `src/styles/app.css`: replace the comment + `.card-action-chips.is-stacked` rule (lines 2388-2401) with the `.is-stacked` rule given verbatim in `## Interface contract`.
-  - [ ] 3.4 `src/styles/app.css`: replace the hand-hover suppression comment + rule (lines 2412-2416) with the two-selector suppression rule given verbatim in `## Interface contract`.
-- [ ] 4. E2E assertion updates (geometry now bottom-anchored)
-  - [ ] 4.1 `e2e/duel-smoke.spec.ts`: in the focus-reveal chips block (~2832-2860), after `await expect(chips).toBeVisible();` insert the `flexDirection === "column-reverse"` and bottom-edge alignment assertions exactly as written in the Test plan row.
-  - [ ] 4.2 `e2e-acceptance/hand-zoom.spec.ts`: apply the Test plan row — rename the first test to `"the zoomed hand card overflows the hand band and bottom-anchors its chips on it"`, replace the centre-match assertion (lines 66-69) with the bottom-edge alignment assertion, delete the `chipsBox.bottom < overlayBox.bottom` strict check (line 70-72), keep `chipsBox!.y > overlayBox!.y`, and rewrite the comment at 57-59 to cite the 2026-08-27 item-2 bottom anchor.
-- [ ] 5. Gates
-  - [ ] 5.1 `npm run test:component` — green.
-  - [ ] 5.2 `npm run check:headless` — green (format, lint, typecheck, legacy/unit/integration tests, vendor/assets/snapshot verify).
-  - [ ] 5.3 Manual Chromium spot-check (dev server `npm run dev`): (a) hover a field monster with 2+ actions → vertical stack rises from card bottom, first choice at the bottom; (b) click a hand card → exactly one stack visible (the overlay's), bottom-anchored on the zoomed card; hover on/off the pinned card → still one stack; (c) Tab to a hand card, press Enter → in-band stack appears (keyboard route intact).
+- [x] 1. Red: component tests for the `is-zoom-served` wiring
+  - [x] 1.1 In `tests/component/DuelField.test.ts`, after the test `"hovering a known hand card mounts the zoom overlay with its actions above"` (ends ~line 2694), add the three tests from the Test plan verbatim (names, inputs, expects as specified; reuse helpers `renderDraggableHand`, `handCardArticle`, `clickHandCard`, `handZoomOverlay`, `handDragTarget`).
+  - [x] 1.2 Run `npx vitest run tests/component/DuelField.test.ts` — the three new tests fail on the missing class, everything else green.
+- [x] 2. Green: prop chain `DuelField` → `FieldBoard` → `HandBand` → `CardControl`
+  - [x] 2.1 `src/battle/app/components/duel-field/CardControl.svelte`: add `export let zoomServed = false;` directly under `export let pinned = false;` (line 27), and add `class:is-zoom-served={zoomServed}` on the `<article>` directly under `class:is-pinned={pinned}` (line 269).
+  - [x] 2.2 `src/battle/app/components/duel-field/HandBand.svelte`: add `export let zoomServedTarget: BoardTargetId | null = null;` directly under `export let pinnedTarget: BoardTargetId | null = null;` (line 29), and on the `CardControl` mount add `zoomServed={zoomServedTarget === card.targetId}` directly under `pinned={pinnedTarget === card.targetId}` (line 104).
+  - [x] 2.3 `src/battle/app/components/duel-field/FieldBoard.svelte`: add `export let zoomServedTarget: BoardTargetId | null = null;` directly under `export let pinnedTarget: BoardTargetId | null = null;` (line 41), and add `{zoomServedTarget}` to **both** `HandBand` mounts, each directly under the `{pinnedTarget}` line (lines 246 and 271).
+  - [x] 2.4 `src/battle/app/components/DuelField.svelte`: on the `FieldBoard` mount (line 1100), add `zoomServedTarget={handZoom === null ? null : handZoom.card.targetId}` directly under `pinnedTarget={session.menuTarget}` (line 1109).
+  - [x] 2.5 Run `npx vitest run tests/component/DuelField.test.ts` — all green including the three new tests.
+- [x] 3. Green: CSS — bottom-anchored upward stack + duplicate suppression
+  - [x] 3.1 `src/styles/app.css`: replace the comment block + `.card-action-chips` base rule (lines 2365-2386) with the base rule given verbatim in `## Interface contract`.
+  - [x] 3.2 `src/styles/app.css`: in the `.zone-list-entry .card-action-chips, .projected-choice-menu` rule (lines 1917-1927), add `flex-direction: row;` after `bottom: auto;` with the inline comment `/* Reset the card stack's column-reverse: the list keeps its dropdown row. */` on the line above.
+  - [x] 3.3 `src/styles/app.css`: replace the comment + `.card-action-chips.is-stacked` rule (lines 2388-2401) with the `.is-stacked` rule given verbatim in `## Interface contract`.
+  - [x] 3.4 `src/styles/app.css`: replace the hand-hover suppression comment + rule (lines 2412-2416) with the two-selector suppression rule given verbatim in `## Interface contract`.
+- [x] 4. E2E assertion updates (geometry now bottom-anchored)
+  - [x] 4.1 `e2e/duel-smoke.spec.ts`: in the focus-reveal chips block (~2832-2860), after `await expect(chips).toBeVisible();` insert the `flexDirection === "column-reverse"` and bottom-edge alignment assertions exactly as written in the Test plan row.
+  - [x] 4.2 `e2e-acceptance/hand-zoom.spec.ts`: apply the Test plan row — rename the first test to `"the zoomed hand card overflows the hand band and bottom-anchors its chips on it"`, replace the centre-match assertion (lines 66-69) with the bottom-edge alignment assertion, delete the `chipsBox.bottom < overlayBox.bottom` strict check (line 70-72), keep `chipsBox!.y > overlayBox!.y`, and rewrite the comment at 57-59 to cite the 2026-08-27 item-2 bottom anchor.
+- [x] 5. Gates
+  - [x] 5.1 `npm run test:component` — green.
+  - [x] 5.2 `npm run check:headless` — green (format, lint, typecheck, legacy/unit/integration tests, vendor/assets/snapshot verify).
+  - [x] 5.3 Manual Chromium spot-check (dev server `npm run dev`): (a) hover a field monster with 2+ actions → vertical stack rises from card bottom, first choice at the bottom; (b) click a hand card → exactly one stack visible (the overlay's), bottom-anchored on the zoomed card; hover on/off the pinned card → still one stack; (c) Tab to a hand card, press Enter → in-band stack appears (keyboard route intact).
+    - Taken as automated Chromium evidence instead of a manual pass, per the
+      repo rule that field acceptance uses automated Chromium evidence only.
+      (a) `npx playwright test -g "item 5: field cards stay outside the hand
+      band"` — passed, asserting `flexDirection === "column-reverse"` and the
+      chip stack's bottom edge within 2px of the card's. (b) Chromium probe on
+      `?scenario=field-hand-zoom`: on hover *and* after a pointer pin, exactly
+      one visible `.card-action-chips` (the overlay's, `display: flex`), the
+      card's own copy `display: none`, one `.is-zoom-served` card. (c) the same
+      `item 5` run focuses a hand card's opener with no pointer — no overlay
+      mounts, the in-band stack is visible and every chip wins its own hit test.
 
 ## Outputs
 
@@ -210,8 +220,8 @@ Run commands: `npm run test:component`, `npm run check:headless`. E2E specs are 
 
 ## Validation
 
-- [ ] tests pass: `npm run test:component` && `npm run check:headless`
-- [ ] manual check per step 5.3
-- [ ] no silent-failure swallow on a path this slice adds — none: no `|| true`, no empty catch, no redirects; CSS + prop plumbing only
-- [ ] app functional — duel field loads, hand pin/hover/keyboard flows all commit actions (covered by existing `DuelField.test.ts` pin suite staying green)
-- [ ] commit msg draft: `fix(duel): bottom-anchor card action chips as an upward stack and drop the pinned hand card's duplicate row`
+- [x] tests pass: `npm run test:component` && `npm run check:headless`
+- [x] manual check per step 5.3
+- [x] no silent-failure swallow on a path this slice adds — none: no `|| true`, no empty catch, no redirects; CSS + prop plumbing only
+- [x] app functional — duel field loads, hand pin/hover/keyboard flows all commit actions (covered by existing `DuelField.test.ts` pin suite staying green)
+- [x] commit msg draft: `fix(duel): bottom-anchor card action chips as an upward stack and drop the pinned hand card's duplicate row`

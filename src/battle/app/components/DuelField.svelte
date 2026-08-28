@@ -1107,6 +1107,7 @@
         {selectedTargets}
         disabled={pending}
         pinnedTarget={session.menuTarget}
+        zoomServedTarget={handZoom === null ? null : handZoom.card.targetId}
         {dropCandidates}
         {dropHoveredZoneId}
         {showZoneOutlines}

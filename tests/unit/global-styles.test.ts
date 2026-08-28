@@ -471,13 +471,17 @@ describe("global styles", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     const chips = ruleBlock(css, "\n.card-action-chips {");
     expect(chips).toContain("display: none");
-    /* Centring on the card is what keeps a hand card's chips inside the band's
-       clipped scrollport, which the old fixed top offset used to buy. */
-    expect(chips).toContain("top: 0");
+    /* 2026-08-27 item 2: anchored on the card's bottom edge and growing up.
+       The height cap is what keeps a hand card's chips inside the band's
+       clipped scrollport, which the old centring used to buy — past it the
+       stack scrolls rather than overflowing the card's top edge. */
+    expect(chips).toContain("top: auto");
     expect(chips).toContain("bottom: 0");
+    expect(chips).toContain("flex-direction: column-reverse");
     expect(chips).toContain("height: fit-content");
-    expect(chips).toContain("margin-block: auto");
-    /* The overlay's own copy inherits that centring instead of anchoring
+    expect(chips).toContain("max-height: 100%");
+    expect(chips).toContain("overflow-y: auto");
+    /* The overlay's own copy inherits that anchor instead of setting its own,
        itself, so it may not redeclare an edge; all it adds is the reveal and
        the hit testing its pointer-transparent parent gave up. */
     const overlayChips = ruleBlock(

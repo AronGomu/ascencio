@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plan: Deck Select + Duel Field Feedback — 2026-08-28</title>
+<style>
+  :root{
+    --bg:#0b1020;--panel:#121a30;--panel2:#182342;--fg:#e8edf8;--muted:#9fb0cc;
+    --border:#2a3a5f;--accent:#73daca;--trackd:#ff8c9b;--trackk:#4ea3ff;--gold:#ffd580;
+    --danger:#ff8c9b;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;padding:2rem clamp(1rem,4vw,3rem)}
+  main{max-width:78rem;margin:0 auto}
+  h1{font-size:1.7rem;margin:.2rem 0 .3rem}
+  h2{font-size:1.15rem;margin:2.2rem 0 .7rem;color:var(--accent);border-bottom:1px solid var(--border);padding-bottom:.35rem}
+  h3{margin:.1rem 0 .5rem;font-size:.95rem}
+  .sub{color:var(--muted);margin:0 0 1.2rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--panel2);padding:.1em .35em;border-radius:.3em}
+  .grid2{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(20rem,1fr))}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:.7rem;padding:.9rem 1.1rem}
+  ul{margin:.3rem 0 .3rem 1.1rem;padding:0}
+  li{margin:.25rem 0}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}
+  th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--border);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em}
+  tr:hover td{background:var(--panel)}
+  .tid{font-family:var(--mono);white-space:nowrap;font-weight:700}
+  .d .tid{color:var(--trackd)} .k .tid{color:var(--trackk)} .gate .tid{color:var(--gold)}
+  .dep{font-family:var(--mono);color:var(--muted);font-size:.85em;white-space:nowrap}
+  .wave{display:grid;grid-template-columns:4.5rem 1fr;gap:.6rem;align-items:start;margin:.45rem 0}
+  .wave .lbl{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;padding-top:.35rem}
+  .nodes{display:flex;gap:.4rem;flex-wrap:wrap}
+  .node{background:var(--panel2);border:1px solid var(--border);border-left-width:3px;border-radius:.45rem;padding:.28rem .55rem;font-family:var(--mono);font-size:.8rem;white-space:nowrap}
+  .node.d{border-left-color:var(--trackd)} .node.k{border-left-color:var(--trackk)} .node.gate{border-left-color:var(--gold)}
+  .node.crit{box-shadow:0 0 0 1px var(--gold) inset}
+  .legend{display:flex;gap:1.2rem;flex-wrap:wrap;color:var(--muted);font-size:.82rem;margin:.6rem 0 0}
+  .swatch{display:inline-block;width:.75em;height:.75em;border-radius:.2em;margin-right:.35em;vertical-align:-.05em}
+  .warn{border-left:3px solid var(--danger);padding:.5rem .8rem;background:var(--panel);border-radius:0 .5rem .5rem 0;margin:.8rem 0}
+  .ok{border-left:3px solid var(--accent);padding:.5rem .8rem;background:var(--panel);border-radius:0 .5rem .5rem 0;margin:.8rem 0}
+  a{color:var(--trackk)}
+  .small{font-size:.85rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+<h1>Deck Select Screen + Duel Field / Right Pane Feedback — merged plan</h1>
+<p class="sub">2026-08-28 · 25 tickets · 2 file-disjoint tracks · index <code>artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md</code><br>
+Supersedes <code>PLAN_2026_08_27_deck_selection_screen.md</code> + <code>PLAN_2026_08_27_duel_field_right_pane_feedback.md</code>. Deck-selection T1–T15 renumbered to T11–T25; duel-field ids unchanged.</p>
+
+<h2>Goal</h2>
+<div class="grid2">
+  <div class="card"><h3><span class="swatch" style="background:var(--trackd)"></span>Track D — duel field / right pane (T1–T10)</h3>
+    <p class="small">All 14 items of the 2026-08-27 <code>feedback.md</code> round: 12 duel-field, 2 right-pane. Each item observable in a Chromium duel; <code>check:headless</code> + <code>test:component</code> green per ticket.</p>
+    <ul>
+      <li>Chrome CSS, chip stacking, xyz materials (render + browsable zone)</li>
+      <li>Hand activation drop zone with cancel, dashed selection semantics</li>
+      <li>Summon status panel, pile halo actionability, rail active player</li>
+      <li>One worker-side trigger diagnostic (item 11)</li>
+    </ul>
+  </div>
+  <div class="card"><h3><span class="swatch" style="background:var(--trackk)"></span>Track K — deck selection (T11–T25)</h3>
+    <p class="small">Validated design <code>docs/deck-selection-screen-design.md</code> as real Svelte. One shared <code>src/deck-select/</code> screen replaces 4.</p>
+    <ul>
+      <li><code>FreePlayMatchSetup</code>, <code>FreePlayDeckSeat</code>, <code>PreBattleScreen</code>, <code>DeckLibrary</code></li>
+      <li>Tile + kebab + desktop/mobile layouts + hover previews</li>
+      <li>3 AI personas, <code>SelectableDeck</code> widening, story save favourites</li>
+      <li>T25 closes both tracks: budgets, e2e, checklist, glossary, architecture</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Why they merge cleanly</h2>
+<div class="ok">
+No Track K ticket names <code>src/styles/app.css</code>, <code>src/battle/app/</code>, <code>src/battle/field/</code> or <code>DuelRail</code>. No Track D ticket writes <code>src/shell/</code>, <code>src/deck-editor/</code>, <code>src/decks/</code> or <code>src/story/</code> — T1 and T10 mention them only to fence them out. Tracks are safe to run concurrently in separate worktrees, or interleaved on <code>main</code> in any order.
+</div>
+<div class="warn">
+Two shared seams. <b>1.</b> <code>artifacts/manual_test_checklist.md</code> — appended by T1, T4, T5, T9 and rewritten in sections by T25; append to distinct sections, T25 reconciles rather than rewrites the duel-field half. <b>2.</b> Byte budgets in <code>scripts/verify-browser-build.ts</code> — both tracks add bytes, but only T25 raises a ceiling, once, with both tracks landed and the measurement quoted.
+</div>
+
+<h2>Implementation waves (max parallelism)</h2>
+<div class="wave"><div class="lbl">Wave 1</div><div class="nodes">
+  <span class="node d">T1 chrome CSS</span><span class="node d crit">T2 chip stack</span><span class="node d">T3 material render</span>
+  <span class="node d">T8 pile halo</span><span class="node d">T9 rail avatar</span><span class="node d">T10 cir diagnostic</span>
+  <span class="node k crit">T11 lib skeleton</span></div></div>
+<div class="wave"><div class="lbl">Wave 2</div><div class="nodes">
+  <span class="node d">T4 material dialog</span><span class="node d">T5 activation drop</span>
+  <span class="node k crit">T12 DeckTile</span><span class="node k">T18 SelectableDeck</span><span class="node k">T19 opponent roster</span></div></div>
+<div class="wave"><div class="lbl">Wave 3</div><div class="nodes">
+  <span class="node d">T6 dashed selection</span>
+  <span class="node k crit">T13 kebab menu</span><span class="node k">T23 story favourites</span></div></div>
+<div class="wave"><div class="lbl">Wave 4</div><div class="nodes">
+  <span class="node d">T7 status panel</span><span class="node k crit">T14 screen desktop</span>
+  <span class="small" style="align-self:center">← Track D complete</span></div></div>
+<div class="wave"><div class="lbl">Wave 5</div><div class="nodes"><span class="node k crit">T15 seat panel</span></div></div>
+<div class="wave"><div class="lbl">Wave 6</div><div class="nodes"><span class="node k crit">T16 mobile layout</span></div></div>
+<div class="wave"><div class="lbl">Wave 7</div><div class="nodes"><span class="node k crit">T17 hover previews</span></div></div>
+<div class="wave"><div class="lbl">Wave 8</div><div class="nodes"><span class="node k crit">T20 free-play swap</span><span class="node k">T22 library swap</span></div></div>
+<div class="wave"><div class="lbl">Wave 9</div><div class="nodes"><span class="node k crit">T21 free-play manage</span><span class="node k">T24 story swap</span></div></div>
+<div class="wave"><div class="lbl">Wave 10</div><div class="nodes"><span class="node gate crit">T25 budgets + docs — global close</span></div></div>
+<p class="legend">
+  <span><span class="swatch" style="background:var(--trackd)"></span>Track D</span>
+  <span><span class="swatch" style="background:var(--trackk)"></span>Track K</span>
+  <span><span class="swatch" style="background:var(--gold)"></span>gate / critical path</span>
+  <span>Critical path = T11→T12→T13→T14→T15→T16→T17→T20→T21→T25 (10 deep). Track D's longest path is 4 deep, so the whole feedback round fits inside the deck-select build-up at no schedule cost.</span>
+</p>
+
+<h2>Dependency edges</h2>
+<div class="grid2">
+  <div class="card"><h3>Track D</h3><ul class="small">
+    <li>T2 → T4, T5, T6</li><li>T3 → T4</li><li>T4 → T6</li><li>T6 → T7</li>
+    <li>Leaves, no deps: T1, T8, T9, T10</li>
+  </ul></div>
+  <div class="card"><h3>Track K</h3><ul class="small">
+    <li>T11 → T12 → T13 → T14 → T15 → T16 → T17 (component chain)</li>
+    <li>T11 → T18, T19, T23 (parallel data work)</li>
+    <li>T17 + T18 + T19 → T20 → T21</li>
+    <li>T17 → T22 · T17 + T23 → T24</li>
+    <li>T21 + T22 + T24 → T25, which also gates on all of T1–T10</li>
+  </ul></div>
+</div>
+
+<h2>Ticket index</h2>
+<table>
+<thead><tr><th>ID</th><th>Goal</th><th>Track</th><th>Depends</th><th>State</th></tr></thead>
+<tbody>
+<tr class="d"><td class="tid">T1</td><td>Field chrome: hover, zone borders, field border, rail divider (items 7,8,9,10)</td><td>D</td><td class="dep">—</td><td>NOT STARTED</td></tr>
+<tr class="d"><td class="tid">T2</td><td>Card action chips: bottom-anchored upward stack, kill duplicate row (items 2,3)</td><td>D</td><td class="dep">—</td><td>NOT STARTED</td></tr>
+<tr class="d"><td class="tid">T3</td><td>Xyz material stack rendered behind host card (item 1a)</td><td>D</td><td class="dep">—</td><td>NOT STARTED</td></tr>
+<tr class="d"><td class="tid">T4</td><td>Materials as browsable zone: dialog + action button + detach lists (item 1b)</td><td>D</td><td class="dep">T2, T3</td><td>NOT STARTED</td></tr>
+<tr class="d"><td class="tid">T5</td><td>Hand activation drop zone with cancel (item 4)</td><td>D</td><td class="dep">T2</td><td>NOT STARTED</td></tr>
+<tr class="d"><td class="tid">T6</td><td>Selection prompts: dashed green candidates, orange selected, no select button (item 5)</td><td>D</td><td class="dep">T2, T4</td><td>NOT STARTED</td></tr>
+<tr class="d"><td class="tid">T7</td><td>Persistent summon/selection status panel (item 6)</td><td>D</td><td class="dep">T6</td><td>NOT STARTED</td></tr>
+<tr class="d"><td class="tid">T8</td><td>Pile halo: orange, actionability-gated for deck/extra/grave/banish (item 12)</td><td>D</td><td class="dep">—</td><td>NOT STARTED</td></tr>
+<tr class="d"><td class="tid">T9</td><td>Right pane: orange active-player avatar + LP borders, bigger avatar (RP1, RP2)</td><td>D</td><td class="dep">—</td><td>NOT STARTED</td></tr>
+<tr class="d"><td class="tid">T10</td><td>Cir/Dante trigger proposition diagnostic (item 11)</td><td>D</td><td class="dep">—</td><td>NOT STARTED</td></tr>
+<tr class="k"><td class="tid">T11</td><td>deck-select lib skeleton + boundary registration</td><td>K</td><td class="dep">—</td><td>NOT STARTED</td></tr>
+<tr class="k"><td class="tid">T12</td><td>DeckTile component</td><td>K</td><td class="dep">T11</td><td>NOT STARTED</td></tr>
+<tr class="k"><td class="tid">T13</td><td>DeckTileMenu kebab action sheet</td><td>K</td><td class="dep">T12</td><td>NOT STARTED</td></tr>
+<tr class="k"><td class="tid">T14</td><td>DeckSelectScreen desktop layout</td><td>K</td><td class="dep">T13</td><td>NOT STARTED</td></tr>
+<tr class="k"><td class="tid">T15</td><td>Seat panel + opponent picking mode</td><td>K</td><td class="dep">T14</td><td>NOT STARTED</td></tr>
+<tr class="k"><td class="tid">T16</td><td>Mobile layout</td><td>K</td><td class="dep">T15</td><td>NOT STARTED</td></tr>
+<tr class="k"><td class="tid">T17</td><td>Desktop hover previews</td><td>K</td><td class="dep">T16</td><td>NOT STARTED</td></tr>
+<tr class="k"><td class="tid">T18</td><td>SelectableDeck lists + updatedAt</td><td>K</td><td class="dep">T11</td><td>NOT STARTED</td></tr>
+<tr class="k"><td class="tid">T19</td><td>Opponent roster + settings persistence</td><td>K</td><td class="dep">T11</td><td>NOT STARTED</td></tr>
+<tr class="k"><td class="tid">T20</td><td>Free-play duel start swap</td><td>K</td><td class="dep">T17, T18, T19</td><td>NOT STARTED</td></tr>
+<tr class="k"><td class="tid">T21</td><td>Free-play deck management ops</td><td>K</td><td class="dep">T20</td><td>NOT STARTED</td></tr>
+<tr class="k"><td class="tid">T22</td><td>Deck-editor library swap</td><td>K</td><td class="dep">T17</td><td>NOT STARTED</td></tr>
+<tr class="k"><td class="tid">T23</td><td>Story save favourites</td><td>K</td><td class="dep">T11</td><td>NOT STARTED</td></tr>
+<tr class="k"><td class="tid">T24</td><td>Story pre-battle swap</td><td>K</td><td class="dep">T17, T23</td><td>NOT STARTED</td></tr>
+<tr class="gate"><td class="tid">T25</td><td>Budgets + checklist + glossary + docs — closes both tracks</td><td>—</td><td class="dep">T21, T22, T24 + T1–T10</td><td>NOT STARTED</td></tr>
+</tbody>
+</table>
+
+<h2>Merge notes</h2>
+<ul class="small">
+  <li><b>M1.</b> Ticket bodies moved, not rewritten. Track K cross-references shifted +10; two literals protected from the shift — the <code>T11 2026-08-20</code> / <code>T21 2026-08-15</code> budget comments in <code>scripts/verify-browser-build.ts</code> (earlier rounds' ids) and the ISO timestamp <code>2026-08-01T00:00:00.000Z</code>.</li>
+  <li><b>M2.</b> Both source plans were already red-teamed and coherence-reviewed; merging changed no ticket contract. Only new analysis is the cross-track seam; only content edit is T25 becoming the global close.</li>
+  <li><b>M4.</b> Id collision to read carefully: Track D bodies cite a <code>T16</code> that is an <em>earlier</em> round's ticket id recorded in shipped code, not this plan's T16 (mobile layout). Four mentions: <code>T4_xyz_material_dialog.md:271</code>, <code>T6_selection_dashed_borders.md:11</code>, <code>T7_summon_status_panel.md:88</code> and <code>:172</code> (the <code>fieldActionBarRequired</code> off-field suppression branch in <code>src/battle/app/prompts/interaction-spec.ts</code>). Bodies left byte-identical.</li>
+  <li><b>M3.</b> ADRs already durable: <code>055_ADR_shared_deck_select_domain</code>, <code>056_ADR_favourite_and_default_deck_ownership</code>, <code>057_ADR_hand_activation_drop_zone</code>, <code>058_ADR_duel_field_colour_semantics</code>, <code>059_ADR_xyz_materials_as_a_zone</code>. None links this plan file (H6 holds).</li>
+  <li>Assumption ids preserved: Track D keeps <code>A1</code>–<code>A23</code> (ticket bodies cite them verbatim); Track K's unlabelled assumptions became <code>K1</code>–<code>K8</code>.</li>
+</ul>
+
+</main>
+</body>
+</html>

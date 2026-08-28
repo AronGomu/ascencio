@@ -27,13 +27,12 @@
   $: positionStyle = `--field-x: ${placement.x}px; --field-y: ${placement.y}px; --field-width: ${placement.width * (72 / 104)}px; --field-height: ${placement.height}px;`;
   $: synchronizeImageLease(imageLibrary, stack.topCardCode, placeholderUrl);
   $: clickable = stack.count > 0;
-  /* The halo says "a legal target sits in here", which is only ever readable
-     on a pile that shows what it holds. A deck, an extra deck, or a
-     face-down banished pile never renders its top card art (board-view-model
-     always suppresses topCardCode for "deck"/"extra"), so it tells the player
-     nothing they can act on and wears no halo — it stays a button, and
-     opening it is still how the target is reached. */
-  $: haloed = actionable && stack.topCardCode !== undefined;
+  /* Item 12 (2026-08-27, owner): an actionable pile always wears the halo —
+     the active prompt offering a choice inside it is the signal, whether or
+     not the pile renders its top card. Deck, extra deck and face-down banish
+     never show art (board-view-model suppresses their topCardCode) yet must
+     still halo when a summon or activation is legal from there. */
+  $: haloed = actionable;
 
   onDestroy(() => imageLease?.release());
 

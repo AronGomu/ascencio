@@ -1384,15 +1384,17 @@ button.duel-field-zone,
   cursor: pointer;
 }
 
-/* Green is the "you may act here" colour across the field. Orange is
-   reserved for selection below: selection is a different state from
-   legality and the two must never be confusable. Two layers: a near-opaque
-   3px ring reads as an edge at field scale, and the soft outer glow makes a
-   playable card separate from the board behind it at a glance. The glow
-   carries no spread on purpose — a spread paints a hard-edged band, and a
-   card whose art is rotated (defense, set) leaves that band standing inside
-   the card's own upright box, which reads as a card filled solid green
-   rather than a card wearing a ring. */
+/* Green is the "you may act on this card" colour: legal card and zone
+   actions. Orange marks selection, actionable piles (item 12), and the
+   active player — states that answer "where is the game pointing", not
+   "which card is playable". A card is never orange for legality and a
+   pile is never green, so the two stay readable side by side. Two layers:
+   a near-opaque 3px ring reads as an edge at field scale, and the soft
+   outer glow makes a playable card separate from the board behind it at a
+   glance. The glow carries no spread on purpose — a spread paints a
+   hard-edged band, and a card whose art is rotated (defense, set) leaves
+   that band standing inside the card's own upright box, which reads as a
+   card filled solid green rather than a card wearing a ring. */
 .duel-field-zone.is-actionable,
 .duel-field-card.is-actionable .duel-field-card__art {
   border-color: var(--success);
@@ -1402,10 +1404,10 @@ button.duel-field-zone,
 }
 
 .duel-field-stack.is-actionable {
-  border-color: var(--success);
+  border-color: var(--selected);
   box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--legal) 90%, transparent),
-    0 0 10px color-mix(in srgb, var(--legal) 40%, transparent);
+    0 0 0 3px color-mix(in srgb, var(--selected) 90%, transparent),
+    0 0 10px color-mix(in srgb, var(--selected) 40%, transparent);
 }
 
 /* A drop candidate wears the same green as legality, filled in: the tint is
@@ -1568,9 +1570,10 @@ button.duel-field-zone,
   pointer-events: none;
 }
 
-/* Selected overrides plain legal green: same orange used for the list-hover
-   affordance below, but selection is a persisted class, never a :hover
-   pseudo-class, so the two never actually collide on screen. */
+/* Selected overrides plain legal green with orange (orange also marks
+   actionable piles and the active player, per item 12): same token as the
+   list-hover affordance below, but selection is a persisted class, never a
+   :hover pseudo-class, so the two never actually collide on screen. */
 .duel-field-zone.is-selected,
 .duel-field-card.is-selected .duel-field-card__art {
   border-color: var(--warning);
@@ -1850,8 +1853,9 @@ button.duel-field-zone,
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--legal) 55%, transparent);
 }
 
-/* Selected overrides plain legal green with orange; hover never mutates this
-   class, and no hover rule below repaints a selected entry. */
+/* Selected overrides plain legal green with orange — orange is
+   selection/actionable-pile/active-player, never card legality; hover never
+   mutates this class, and no hover rule below repaints a selected entry. */
 .zone-list-entry.is-selected img {
   border-color: var(--warning);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--selected) 78%, transparent);

@@ -10,19 +10,25 @@ import { DECK_CATALOG } from "../../src/battle/duel/presets/deck-catalog.ts";
 
 afterEach(() => cleanup());
 
+/* The picker never reads the card lists — it only shows the label and reports
+   the key — so every list here is left empty on purpose. */
+const NO_CARDS = { main: [], extra: [], side: [] };
+
 const PRESET_DECKS: readonly SelectableDeck[] = DECK_CATALOG.map((preset) => ({
   key: `preset:${preset.id}`,
   label: preset.name,
   source: "preset",
   selection: { kind: "preset", deckId: preset.id },
+  lists: NO_CARDS,
+  updatedAt: null,
 }));
 
-/* The picker never reads the card list — it only shows the label and reports
-   the key — so the seat's snapshot is left empty here on purpose. */
 const LOCAL_DECK: SelectableDeck = {
   key: "local:built-deck:2",
   label: "Built Deck",
   source: "local",
+  lists: NO_CARDS,
+  updatedAt: "2026-08-01T00:00:00.000Z",
   selection: {
     kind: "local",
     deck: {

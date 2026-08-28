@@ -65,11 +65,11 @@ Run: `npx vitest run tests/unit/battle` (plus `npm run test:legacy` if legacy su
 
 ## Impl steps
 
-- [ ] 1. `git grep -ln "listSelectableDecks\|presetSelectableDecks" tests/` — locate existing coverage; write failing tests there (or new file per TDD note).
-- [ ] 2. Read `src/battle/duel/presets/deck-parser.ts`; note exact parse fn.
-- [ ] 3. Widen `SelectableDeck` interface + both builders in `src/battle/decks/selectable-decks.ts`; memoized preset parse.
-- [ ] 4. `npx vitest run tests/unit && npm run test:legacy` → green (fix Node-source injection per Requirements if needed).
-- [ ] 5. `npm run lint && npm run typecheck && npm run build` → green.
+- [x] 1. `git grep -ln "listSelectableDecks\|presetSelectableDecks" tests/` — locate existing coverage; write failing tests there (or new file per TDD note). — found `tests/unit/battle/selectable-decks.test.ts`; extended it; red run = `Tests 3 failed | 9 passed (12)`.
+- [x] 2. Read `src/battle/duel/presets/deck-parser.ts`; note exact parse fn. — `parseYdk(source: string): ParsedDeck` (`deck-parser.ts:30`), returns frozen `main`/`extra`/`side`.
+- [x] 3. Widen `SelectableDeck` interface + both builders in `src/battle/decks/selectable-decks.ts`; memoized preset parse. — `lists` + `updatedAt` added; `listsOfPreset()` parses `DECK_SOURCES` once per module load; `npx vitest run tests/unit/battle/selectable-decks.test.ts` = `Tests 12 passed (12)`.
+- [x] 4. `npx vitest run tests/unit && npm run test:legacy` → green (fix Node-source injection per Requirements if needed). — `Test Files 148 passed (148) / Tests 1702 passed | 2 skipped (1704)`; legacy `pass 23 / fail 0`. No injection needed: no `tests/*.test.ts` reaches `selectable-decks.ts`, so the browser sources map is never loaded under `node --test`.
+- [x] 5. `npm run lint && npm run typecheck && npm run build` → green. — eslint clean; `svelte-check found 0 errors and 2 warnings in 2 files` (both pre-existing, `CardCatalog.svelte` / `ShopSellScreen.svelte`); build `{"status":"ok", chunkBytes.battle: 339493}` under the 488,750 budget.
 
 ## Outputs
 
@@ -78,7 +78,7 @@ Run: `npx vitest run tests/unit/battle` (plus `npm run test:legacy` if legacy su
 
 ## Validation
 
-- [ ] `npx vitest run tests/unit && npm run test:legacy` green
-- [ ] `npm run lint && npm run typecheck && npm run build` green
-- [ ] app functional — existing consumers (`FreePlayMatchSetup`, `free-play-deck-listing`) compile untouched (added fields only)
-- [ ] commit msg draft: `feat(duel): carry card lists and modification time on every selectable deck`
+- [x] `npx vitest run tests/unit && npm run test:legacy` green — `1702 passed | 2 skipped`; legacy `pass 23 / fail 0`.
+- [x] `npm run lint && npm run typecheck && npm run build` green — see step 5.
+- [x] app functional — existing consumers (`FreePlayMatchSetup`, `free-play-deck-listing`) compile untouched (added fields only) — both files unmodified; `npm run test:component` `102 passed / 932 tests`, covering `FreePlayMatchSetup.test.ts` and `AppShell.test.ts` which drive the real listing.
+- [x] commit msg draft: `feat(duel): carry card lists and modification time on every selectable deck` — used verbatim as the subject of the commit carrying this tick.

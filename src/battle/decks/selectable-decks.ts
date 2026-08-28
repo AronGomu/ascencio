@@ -1,7 +1,9 @@
 import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
 import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
 import { resolveDeck, type DeckRepository } from "../../decks/index.ts";
-import type { DeckMetadata } from "../duel/presets/deck-catalog.ts";
+import type { DeckId, DeckMetadata } from "../duel/presets/deck-catalog.ts";
+import { parseYdk } from "../duel/presets/deck-parser.ts";
+import { DECK_SOURCES } from "../duel/presets/deck-sources-browser.ts";
 import type { BattleDeckSelection } from "../battle-contracts.ts";
 
 /** One row of the pre-duel picker: a bundled deck this build ships, or a deck
@@ -13,6 +15,43 @@ export interface SelectableDeck {
   readonly label: string;
   readonly source: "preset" | "local";
   readonly selection: BattleDeckSelection;
+  /** The deck's cards, for tiles: counts, cover art, hover decklists. The
+      cover is derived rather than stored — `lists.extra[0] ?? lists.main[0]` —
+      so a deck edited into a different theme never keeps yesterday's face. */
+  readonly lists: Readonly<{
+    readonly main: readonly number[];
+    readonly extra: readonly number[];
+    readonly side: readonly number[];
+  }>;
+  /** When the deck was last saved, for a tile sorted by recency. `null` for a
+      preset: it is compiled into this build and was never saved at all. */
+  readonly updatedAt: string | null;
+}
+
+/* A bundled deck absent from `DECK_SOURCES` is one the Worker could not draw
+   either — it reads the same map — so an empty list here reports a broken
+   build rather than inventing one. */
+const NO_CARDS: SelectableDeck["lists"] = Object.freeze({
+  main: Object.freeze([]),
+  extra: Object.freeze([]),
+  side: Object.freeze([]),
+});
+
+/* The bundled `.ydk` payloads are compiled in, so parsing one is a walk over a
+   few hundred digits — but the picker relists on every visit to the match
+   setup, and the answer cannot change inside a page: parse the six once. */
+let presetLists: ReadonlyMap<DeckId, SelectableDeck["lists"]> | null = null;
+
+function listsOfPreset(id: DeckId): SelectableDeck["lists"] {
+  presetLists ??= Object.freeze(
+    new Map(
+      [...DECK_SOURCES].map(([deckId, source]) => {
+        const { main, extra, side } = parseYdk(source);
+        return [deckId, Object.freeze({ main, extra, side })] as const;
+      }),
+    ),
+  );
+  return presetLists.get(id) ?? NO_CARDS;
 }
 
 /**
@@ -46,6 +85,16 @@ export async function listSelectableDecks(
         label: deck.name,
         source: "local" as const,
         selection: Object.freeze({ kind: "local" as const, deck }),
+        /* The snapshot's own arrays, already frozen by `resolveDeck`: the row
+           a tile counts is the one the seat will be given. */
+        lists: Object.freeze({
+          main: deck.main,
+          extra: deck.extra,
+          side: deck.side,
+        }),
+        /* From the listed record rather than the resolution, which reports
+           what the deck holds and not when its owner last touched it. */
+        updatedAt: record.updatedAt,
       }),
     );
   }
@@ -75,6 +124,8 @@ export function presetSelectableDecks(
           kind: "preset" as const,
           deckId: preset.id,
         }),
+        lists: listsOfPreset(preset.id),
+        updatedAt: null,
       }),
     ),
   );

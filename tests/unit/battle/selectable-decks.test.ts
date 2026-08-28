@@ -5,7 +5,10 @@ import { buildActiveImageManifest } from "../../../scripts/lib/active-image-mani
 import {
   findSelectableDeck,
   listSelectableDecks,
+  presetSelectableDecks,
 } from "../../../src/battle/decks/selectable-decks.ts";
+import { parseYdk } from "../../../src/battle/duel/presets/deck-parser.ts";
+import { DECK_SOURCES } from "../../../src/battle/duel/presets/deck-sources-browser.ts";
 import {
   catalogByCode,
   PROTOTYPE_RULESET,
@@ -30,6 +33,10 @@ const validMain = Array.from(
   (_, index) => mainCodes[index % mainCodes.length]!,
 );
 
+/** The moment a local deck was last saved, fixed so the listing's copy of it
+    can be asserted rather than merely be a string. */
+const UPDATED_AT = "2026-08-01T00:00:00.000Z";
+
 function deckRecord(
   id: string,
   main: readonly number[],
@@ -39,6 +46,7 @@ function deckRecord(
   return Object.freeze({
     ...base,
     revision,
+    updatedAt: UPDATED_AT,
     main: Object.freeze([...main]),
     validation: validateDeckDraft(
       { main: [...main], extra: [], side: [] },
@@ -102,6 +110,19 @@ describe("listSelectableDecks", () => {
     });
   });
 
+  it("carries the record's save time and the snapshot's lists on a local deck", async () => {
+    const decks = await list(repositoryOf(deckRecord("ready-deck", validMain)));
+    const local = decks.filter((deck) => deck.source === "local");
+
+    expect(local[0]?.updatedAt).toBe(UPDATED_AT);
+    expect(local[0]?.lists).toEqual({
+      main: validMain,
+      extra: [],
+      side: [],
+    });
+    expect(Object.isFrozen(local[0]?.lists)).toBe(true);
+  });
+
   it("hides a deck that resolves invalid", async () => {
     const decks = await list(
       repositoryOf(deckRecord("short-deck", validMain.slice(0, 39))),
@@ -155,6 +176,33 @@ describe("listSelectableDecks", () => {
       ...DECK_CATALOG.map(() => "preset"),
       "local",
     ]);
+  });
+});
+
+describe("presetSelectableDecks", () => {
+  it("carries the card lists of every bundled deck, undated", () => {
+    const decks = presetSelectableDecks(DECK_CATALOG);
+
+    expect(decks).toHaveLength(DECK_CATALOG.length);
+    for (const deck of decks) {
+      expect(deck.lists.main.length).toBeGreaterThan(0);
+      expect(Object.isFrozen(deck.lists)).toBe(true);
+      /* Compiled into the build: no bundled deck has ever been saved. */
+      expect(deck.updatedAt).toBeNull();
+    }
+  });
+
+  /* Parsed rather than restated: a tile counting 40 cards is only worth
+     showing if the count is the one the Worker will draw from. */
+  it("reads each deck's lists from its own `.ydk` source", () => {
+    const player = presetSelectableDecks(DECK_CATALOG).find(
+      (deck) => deck.key === "preset:mvp-player",
+    );
+    const parsed = parseYdk(DECK_SOURCES.get("mvp-player")!);
+
+    expect(player?.lists.main).toEqual(parsed.main);
+    expect(player?.lists.extra).toEqual(parsed.extra);
+    expect(player?.lists.side).toEqual(parsed.side);
   });
 });
 

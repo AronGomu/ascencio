@@ -41,7 +41,11 @@
   let menuTrigger: HTMLButtonElement | undefined;
   let hoverSuppressed = false;
 
-  $: synchronizeImageLease(imageLibrary, entry.code, cardBackUrl);
+  /* Same rule as `FieldBoard`: the back belongs to a concealed entry. An entry
+     the player may identify falls back to the placeholder while its art is
+     unavailable, rather than posing as a hidden card. */
+  $: imageFallbackUrl = entry.identityVisible ? placeholderUrl : cardBackUrl;
+  $: synchronizeImageLease(imageLibrary, entry.code, imageFallbackUrl);
   $: targetUnavailable = !selected && unavailableChoiceIds.size > 0;
 
   onDestroy(() => imageLease?.release());

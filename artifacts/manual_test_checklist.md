@@ -3903,3 +3903,22 @@ Run `npm run dev` (default `DEV_PORT=4300`).
 - [ ] Close tab A, then reset the same row again in tab B: the status now reads `Cleared Free-play deck library.` and `ygo-story-decks` is gone from the IndexedDB list.
 - [ ] With only one tab open, reset **Shell settings** (a localStorage key, never blocked): the status still reads `Cleared Shell settings.`
 - [ ] With only one tab open, reset **Duel snapshots** and **Story saves**: each says `Cleared …` and its database disappears from the IndexedDB list — an unblocked delete is unchanged by this slice.
+
+---
+
+## T11 zonelist-faceup-placeholder-fallback
+
+A zone-list tile leased its art from the card-image library and fell back to the
+**card back** whenever that library was unavailable. The duel drops the library
+to `null` whenever the cached images do not match the running snapshot, so a
+graveyard or banished card the player is fully entitled to read was drawn as if
+it were a hidden card. Face-up entries now fall back to the grey placeholder,
+the same rule the on-field cards already follow. A concealed entry carries no
+card code at all and still shows the back.
+
+Run `npm run dev` (default `DEV_PORT=4300`).
+
+- [ ] Start a duel and send a few cards to your graveyard. Click the graveyard pile to open its browser: every entry shows real card art and its name underneath. That is the normal, art-available case and it is unchanged.
+- [ ] Force the art-unavailable case: DevTools → Application → Cache Storage, delete the card-image cache, then reload and reopen the graveyard browser before the images finish re-fetching. Each face-up entry shows the plain grey **placeholder** with its card name still printed under it. None of them shows a card back.
+- [ ] Open your **deck** browser in that same state. Deck cards are concealed, so every slot still shows the **card back** — not the placeholder, not any art. No card name appears under a deck slot.
+- [ ] Reach a prompt that asks you to pick a target from off the field (a graveyard or hand target). In the target window, your own legal targets show art or the placeholder and are named; an opponent target the game will not let you identify still shows the card back and reads "Face-down card".

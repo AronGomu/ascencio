@@ -1102,4 +1102,37 @@ describe("ZoneListDialog", () => {
     ).toBe("back.png");
     expect(document.body.innerHTML).not.toContain("97590747");
   });
+
+  it("face-up zone-list entry with a null image library renders the placeholder, not the card back", () => {
+    const faceUp = entry(1);
+    render(ZoneListEntryTile, {
+      entry: faceUp,
+      imageLibrary: null,
+      cardBackUrl: "back.png",
+      placeholderUrl: "placeholder.webp",
+    });
+
+    expect(
+      document
+        .querySelector(`[data-cy="zone-list-entry-image-${faceUp.id}"]`)
+        ?.getAttribute("src"),
+    ).toBe("placeholder.webp");
+  });
+
+  it("concealed zone-list entry with a null image library still renders the card back", () => {
+    const concealed = faceDownEntry(1);
+    render(ZoneListEntryTile, {
+      entry: concealed,
+      imageLibrary: null,
+      cardBackUrl: "back.png",
+      placeholderUrl: "placeholder.webp",
+    });
+
+    expect(
+      document
+        .querySelector(`[data-cy="zone-list-entry-image-${concealed.id}"]`)
+        ?.getAttribute("src"),
+    ).toBe("back.png");
+    expect(document.body.innerHTML).not.toContain("placeholder.webp");
+  });
 });

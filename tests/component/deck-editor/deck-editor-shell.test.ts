@@ -128,7 +128,7 @@ describe("DeckEditorApp boot", () => {
     ).toBeTruthy();
     await waitFor(() =>
       expect(
-        screen.getByRole("heading", { name: "Deck Library" }),
+        screen.getByRole("heading", { name: "Deck library" }),
       ).toBeTruthy(),
     );
     expect(screen.queryByText(/Session status/i)).toBeNull();

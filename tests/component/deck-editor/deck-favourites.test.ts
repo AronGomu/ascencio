@@ -28,7 +28,7 @@ describe("starring a deck", () => {
     );
 
     const star = document.querySelector(
-      '[data-cy^="deck-library-favourite-"]',
+      '[data-cy^="deck-tile-fav-"]',
     ) as HTMLButtonElement | null;
     expect(star).not.toBeNull();
     expect(star!.getAttribute("aria-pressed")).toBe("false");
@@ -37,7 +37,7 @@ describe("starring a deck", () => {
     await waitFor(() =>
       expect(
         document
-          .querySelector('[data-cy^="deck-library-favourite-"]')
+          .querySelector('[data-cy^="deck-tile-fav-"]')
           ?.getAttribute("aria-pressed"),
       ).toBe("true"),
     );

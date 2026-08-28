@@ -449,6 +449,46 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
     });
   }
 
+  /** Renaming a deck the library is showing rather than the deck the editor
+      has open. `rename` above can only ever touch `current`, and on the
+      library screen there is no current deck at all, so this one loads the row
+      by id and writes it back. Queued beside the editor's own writes, because
+      the deck being renamed may be the deck a save is still in flight for. */
+  renameDeck(id: DeckId, name: string): Promise<void> {
+    const contextGeneration = this.#contextGeneration;
+    return this.#enqueue(async () => {
+      if (!this.#isCurrentContext(contextGeneration)) return;
+      let trimmed: string;
+      try {
+        trimmed = normalizeDeckName(name);
+      } catch (error) {
+        this.#state.update((state) =>
+          Object.freeze({
+            ...state,
+            message:
+              error instanceof Error ? error.message : "Invalid deck name",
+          }),
+        );
+        return;
+      }
+      try {
+        const stored = await this.#repository.load(id);
+        /* A deck another context deleted is not an error here: the library is
+           about to be re-read anyway, and it will not list it. */
+        if (stored === null) return;
+        await this.#repository.save(
+          stored.deck.revision,
+          Object.freeze({ ...stored.deck, name: trimmed }),
+          stored.history,
+        );
+        await this.#refreshLibrary(null, contextGeneration);
+      } catch (error) {
+        if (this.#isCurrentContext(contextGeneration))
+          this.#fail("Deck could not be renamed", error);
+      }
+    });
+  }
+
   async duplicate(id: DeckId): Promise<void> {
     if (this.#createInFlight) return;
     this.#createInFlight = true;

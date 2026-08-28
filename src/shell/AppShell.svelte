@@ -507,6 +507,7 @@
               onnavigate={({ deckId }) =>
                 store.navigate(deckRoute(context, deckId))}
               oncollection={() => store.navigate(collectionRoute(context))}
+              onexit={() => store.navigate(HOME_ROUTE)}
             />
           {:catch error}
             <DomainLoadError label="Deck Editor" cy="decks" {error} />

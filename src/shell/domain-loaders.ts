@@ -37,6 +37,9 @@ export type DeckEditorDomainProps = DeckEditorRoute & {
       than routed, because `DeckEditorRoute` names a deck and this names a
       screen the shell owns the URL of. */
   readonly oncollection: () => void;
+  /** Leaving the deck menu altogether, which the library screen's own Back
+      asks for. Reported for the same reason `oncollection` is. */
+  readonly onexit: () => void;
 };
 
 /** The duel is reached through the battle facade, which its public entry

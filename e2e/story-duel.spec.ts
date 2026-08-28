@@ -355,6 +355,6 @@ test("an encounter refuses a deck the save no longer owns and links to the edito
   });
   await expect(page).toHaveURL(/#\/story\/decks$/);
   await expect(
-    page.locator(`[data-cy="deck-library-illegal-${STARTER.deck.id}"]`),
+    page.locator(`[data-cy="deck-tile-badge-illegal-${STARTER.deck.id}"]`),
   ).toBeVisible({ timeout: 120_000 });
 });

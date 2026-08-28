@@ -92,7 +92,7 @@ test("seeding fills the deck library and a confirmed reset empties it", async ({
   await page.locator('[data-cy="admin-route-free-play-decks"]').click();
   await expect(page.getByText("Starter Deck")).toBeVisible();
   await expect(page.getByText("Admin test deck")).toHaveCount(0);
-  await expect(page.locator('[data-cy="deck-library-list"] > li')).toHaveCount(
-    1,
-  );
+  await expect(
+    page.locator('[data-cy="deck-select-grid"] > [data-cy^="deck-tile-"]'),
+  ).toHaveCount(1);
 });

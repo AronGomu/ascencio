@@ -39,8 +39,17 @@ export const DOMAIN_BUDGET_BYTES: Readonly<
      of packaged masks and text this chunk used to carry went with it. Measured
      102,745 bytes → ceil(102745/25_000) = 5 → 125,000 * 1.15, leaving 28.5%
      headroom. A future rise here would mean the catalog crept back into the
-     bundle, which is the thing this ceiling now watches for. */
-  "deck-editor": 143_750,
+     bundle, which is the thing this ceiling now watches for.
+
+     T22 2026-08-28: raised from 143_750. The library route stopped rendering a
+     row list of its own and now mounts the shared deck-selection screen, so
+     this closure carries `src/deck-select/` — the screen, the tile, the kebab
+     sheet, the rename and delete dialogs, the decklist panel and the tile
+     ordering. Deliberate chunk composition rather than drift: measured
+     80,453 -> 104,931 bytes for the domain chunk, closure 109,448 -> 133,926.
+     ceil(133926/25_000) = 6 -> 150,000 * 1.15, leaving 22.4% headroom. The
+     catalog is still out, which is what the paragraph above watches for. */
+  "deck-editor": 172_500,
   /* M1 2026-08-20: lowered from 201_250. The shop surface (greeting/browse/cards/sell/
      opening/results screens, set-data loader, economy in story state, save schema v2)
      measured 150,699 bytes while it read the inlined `active-catalog` for card names and

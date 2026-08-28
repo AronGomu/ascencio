@@ -19,3 +19,8 @@ export { default as DeckTile } from "./DeckTile.svelte";
 export { default as DeckTileMenu } from "./DeckTileMenu.svelte";
 export { default as DeleteDeckConfirm } from "./DeleteDeckConfirm.svelte";
 export { default as RenameDeckDialog } from "./RenameDeckDialog.svelte";
+/* The screen those parts compose into: header, tools, grid and footer, plus
+   the menu-and-dialog state machine that owns them. Free play, the story and
+   the deck builder each mount this one screen with their own tiles rather
+   than re-assembling the same four rows. */
+export { default as DeckSelectScreen } from "./DeckSelectScreen.svelte";

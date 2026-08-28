@@ -88,13 +88,13 @@ Run: `npx vitest run tests/component/deck-select/deck-select-screen.test.ts`
 
 ## Impl steps
 
-- [ ] 1. Write failing `tests/component/deck-select/deck-select-screen.test.ts` (builder `tile()` reused from T12 tests — extract shared builder to `tests/component/deck-select/tile-builder.ts`).
-- [ ] 2. Create `src/deck-select/DeckSelectScreen.svelte`: markup (header/tools/grid/footer), derived `shown`, menu+dialog state machine.
-- [ ] 3. Add keyboard handler (`<svelte:window onkeydown>`), guard for open dialog/menu/input focus.
-- [ ] 4. Styles: grid, footer, notice; reuse token vars.
-- [ ] 5. Export `DeckSelectScreen`; extend frozen list in `tests/unit/domain-boundaries.test.ts`.
-- [ ] 6. `npx vitest run tests/component/deck-select tests/unit/domain-boundaries.test.ts tests/unit/data-cy-coverage.test.ts` → green.
-- [ ] 7. `npm run lint && npm run typecheck` → green.
+- [x] 1. Write failing `tests/component/deck-select/deck-select-screen.test.ts` (builder `tile()` reused from T12 tests — extract shared builder to `tests/component/deck-select/tile-builder.ts`).
+- [x] 2. Create `src/deck-select/DeckSelectScreen.svelte`: markup (header/tools/grid/footer), derived `shown`, menu+dialog state machine.
+- [x] 3. Add keyboard handler (`<svelte:window onkeydown>`), guard for open dialog/menu/input focus.
+- [x] 4. Styles: grid, footer, notice; reuse token vars.
+- [x] 5. Export `DeckSelectScreen`; extend frozen list in `tests/unit/domain-boundaries.test.ts`.
+- [x] 6. `npx vitest run tests/component/deck-select tests/unit/domain-boundaries.test.ts tests/unit/data-cy-coverage.test.ts` → green.
+- [x] 7. `npm run lint && npm run typecheck` → green.
 
 ## Outputs
 
@@ -104,7 +104,7 @@ Run: `npx vitest run tests/component/deck-select/deck-select-screen.test.ts`
 
 ## Validation
 
-- [ ] `npx vitest run tests/component/deck-select tests/unit/domain-boundaries.test.ts tests/unit/data-cy-coverage.test.ts` green
-- [ ] `npm run lint && npm run typecheck && npm run build` green
-- [ ] app functional — no consumer yet
-- [ ] commit msg draft: `feat(deck-select): compose the shared selection screen grid, footer and shortcuts`
+- [x] `npx vitest run tests/component/deck-select tests/unit/domain-boundaries.test.ts tests/unit/data-cy-coverage.test.ts` green
+- [x] `npm run lint && npm run typecheck && npm run build` green
+- [x] app functional — no consumer yet
+- [x] commit msg draft: `feat(deck-select): compose the shared selection screen grid, footer and shortcuts`

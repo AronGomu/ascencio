@@ -4,28 +4,9 @@ import { cleanup, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import DeckTile from "../../../src/deck-select/DeckTile.svelte";
-import type { DeckTileModel } from "../../../src/deck-select/deck-select-contracts.ts";
+import { tile } from "./tile-builder.ts";
 
 afterEach(() => cleanup());
-
-function tile(overrides: Partial<DeckTileModel> = {}): DeckTileModel {
-  return {
-    key: "k1",
-    name: "Prototype Control",
-    counts: { main: 40, extra: 15, side: 10 },
-    meta: "Updated 20 Aug 2026",
-    coverImageUrl: null,
-    legal: true,
-    blockReason: null,
-    bundled: false,
-    lockedBy: null,
-    favourite: false,
-    isDefault: false,
-    deletable: true,
-    updatedAt: "2026-08-20T10:00:00.000Z",
-    ...overrides,
-  };
-}
 
 /** The rendered element carrying `data-cy`, or `null` — the tile is queried the
     way every other component test queries this project's element contract. */

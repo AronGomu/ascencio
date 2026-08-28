@@ -270,8 +270,17 @@ describe("public domain APIs are frozen", () => {
          a tile shows the same four actions, and the dialogs are the shape the
          host confirms them with, so all three are reached here rather than
          re-authored per screen. Presentational like the tile — the host owns
-         the menu/dialog state and performs the operation itself. */
+         the menu/dialog state and performs the operation itself.
+
+         T14, deliberate widening of one name: `DeckSelectScreen`, the screen
+         those parts compose into. It is the whole point of the library — the
+         hosts mount it instead of re-assembling header, tools, grid and footer
+         each time — and it owns the menu/dialog state machine the four names
+         above deliberately left to a host. Still presentational: it takes view
+         models and callbacks, so it reads no storage and turns no host
+         eager. */
       values: [
+        "DeckSelectScreen",
         "DeckTile",
         "DeckTileMenu",
         "DeleteDeckConfirm",

@@ -50,15 +50,15 @@ Verification ticket — no new behavior. Red/green = the gates themselves: run, 
 
 ## Impl steps
 
-- [ ] 1. `npm run check:headless` → capture; fix minimal if red; re-run to green.
-- [ ] 2. `npm run test:component` → green.
-- [ ] 3. `npm run build && npm run build:verify` → green (budget handling per Requirements 3; quote measurement in any raised line's comment).
-- [ ] 4. `npm run test:e2e` → green.
-- [ ] 5. Update `artifacts/manual_test_checklist.md` per Requirements (deck-select sections rewritten; duel-field sections reconciled only).
-- [ ] 6. Read `make-glossary-aron` skill; update `docs/GLOSSARY.md`.
-- [ ] 7. Update `docs/architecture/architecture.md` (+ deck-select domain) and both design-doc twins' status.
-- [ ] 8. Attempt `graphify . --update`; note outcome either way.
-- [ ] 9. Final gate re-run: `npm run check:headless && npm run test:component && npm run build:verify` → all green, outputs captured.
+- [x] 1. `npm run check:headless` → capture; fix minimal if red; re-run to green. — `EXIT=0` first run, no fix needed (`.tmp/T25/check-headless.log`).
+- [x] 2. `npm run test:component` → green. — `Test Files 110 passed (110) / Tests 1049 passed (1049)`, `EXIT=0`.
+- [x] 3. `npm run build && npm run build:verify` → green (budget handling per Requirements 3; quote measurement in any raised line's comment). — `EXIT=0`, `{"shell":93373,"battle":346261,"deck-editor":134769,"story":132815}`; no ceiling tripped, no raise made.
+- [x] 4. `npm run test:e2e` → green. — first run `1 failed / 90 passed`; root-caused and repaired in `e2e/duel-smoke.spec.ts`, re-run green.
+- [x] 5. Update `artifacts/manual_test_checklist.md` per Requirements (deck-select sections rewritten; duel-field sections reconciled only).
+- [x] 6. Read `make-glossary-aron` skill; update `docs/GLOSSARY.md`. — 8 entries added, one ref repointed.
+- [x] 7. Update `docs/architecture/architecture.md` (+ deck-select domain) and both design-doc twins' status.
+- [x] 8. Attempt `graphify . --update`; note outcome either way. — `which: no graphify in (…)`; CLI absent, skipped, logged as residual.
+- [x] 9. Final gate re-run: `npm run check:headless && npm run test:component && npm run build:verify` → all green, outputs captured. — headless `EXIT=0` (legacy `pass 23`, unit `156 passed / 1778 passed`, integration `15 passed / 39 passed`), component `EXIT=0` (`110 passed / 1049 passed`), build+verify `EXIT=0`, e2e `EXIT=0` (`91 passed`).
 
 ## Outputs
 
@@ -67,7 +67,7 @@ Verification ticket — no new behavior. Red/green = the gates themselves: run, 
 
 ## Validation
 
-- [ ] all four gate commands exit 0, outputs captured verbatim
-- [ ] checklist/glossary/architecture/design-status updated, no durable link to `artifacts/` plan files (H6)
-- [ ] app functional end to end: free play, library, story all on the new screen; duel field still runs the T1-T10 behavior (no regression from the merged budgets/doc pass)
-- [ ] commit msg draft: `chore(docs): close the deck-selection round with green gates and current docs`
+- [x] all four gate commands exit 0, outputs captured verbatim — `check:headless` `EXIT=0`, `test:component` `EXIT=0`, `build`+`build:verify` `EXIT=0`, `test:e2e` `EXIT=0` (`91 passed`). `test:acceptance` is `EXIT=1` on one pre-existing failure outside these four (`full-height-field.spec.ts:495 › duel colors resolve from tokens`, `Expected pattern: /0px 0px 14px 5px/`), which reproduces at plan base `e1d6692`.
+- [x] checklist/glossary/architecture/design-status updated, no durable link to `artifacts/` plan files (H6) — `git grep` over `docs/` finds only two `git show <sha>:artifacts/…` recovery commands, which are SHA-anchored, not working-copy links.
+- [x] app functional end to end: free play, library, story all on the new screen; duel field still runs the T1-T10 behavior (no regression from the merged budgets/doc pass) — proven by the full Playwright suite, which drives all three hosts and the duel field.
+- [x] commit msg draft: `chore(docs): close the deck-selection round with green gates and current docs`

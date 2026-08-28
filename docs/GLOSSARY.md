@@ -41,11 +41,19 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 | log | Duel event log formatting + panel | `src/battle/app/presentation/format-duel-log-entry.ts`, `src/battle/app/components/duel-field/DuelLog.svelte` |
 | preview | Sticky card art + bounded scroll text column; shared duel/editor component | `src/shell/card-preview/CardPreviewPanel.svelte` (ADR-036), `src/battle/app/presentation/card-preview.ts` |
 | default deck | Player-assigned deck the duel menu auto-selects; stored preference | `preferences["default-deck"]` in `src/decks/indexeddb-deck-repository.ts`, ADR-038 |
-| favourite deck | A deck the player starred; ordering rank between the default deck and the rest | `preferences["favourite-decks"]` in `src/decks/indexeddb-deck-repository.ts`, `src/decks/deck-library-order.ts` |
+| favourite deck | A deck the player starred; ordering rank between the default deck and the rest | `preferences["favourite-decks"]` in `src/decks/indexeddb-deck-repository.ts`, `orderDeckTiles` in `src/deck-select/order-deck-tiles.ts` |
 | starter deck | Seeded "Starter Deck" built from bundled `player.ydk`, default on first run | `src/decks/starter-deck.ts` (`ensureStarterDeck`), ADR-038 |
 | autosave log | Global capped-100 list, one entry per accepted deck command including reorder/sort (timestamp + deck name) | `autosaves` store, `src/decks/deck-database.ts` v2, ADR-038, ADR-044 |
 | load dialog | Editor dialog: saved decks tab + autosave log tab, restore = undoable edit | `src/deck-editor/components/LoadDeckDialog.svelte` |
 | library halo | Green/orange/red validity glow + issue tooltip on deck-library rows | `src/deck-editor/components/DeckLibrary.svelte` (`.halo-valid`/`.halo-warnings`/`.halo-errors`), status from `src/decks/deck-validation.ts` |
+| deck tile | Art-filled 2:1 deck card the grid, the seats and the phone list all render | `src/deck-select/DeckTile.svelte`, `DeckTileModel` in `src/deck-select/deck-select-contracts.ts` |
+| seat halo | Tile glow: blue you, red opponent, teal focus, gold default hairline | `halo` prop in `src/deck-select/DeckTile.svelte`; `--seat-you`, `--seat-opponent`, `--selected` in `src/styles/tokens.css` |
+| kebab menu | ⋮ action sheet on a deck tile: open, rename, duplicate, delete | `src/deck-select/DeckTileMenu.svelte`, `src/deck-select/RenameDeckDialog.svelte`, `DeleteDeckConfirm.svelte` |
+| opponent persona | One of three free-play AIs; each owns one bundled deck | `FREE_PLAY_OPPONENTS` in `src/shell/screens/free-play-opponents.ts` (Practice Bot, Blaze Circuit, Vault Warden) |
+| pinned first | Phone-layout transform lifting the seat's current pick to slot one | `pinSelectedFirst` in `src/deck-select/order-deck-tiles.ts` |
+| duel start | Deck-select mode that fills the seats and starts the duel | `mode="duel-start"` in `src/shell/screens/FreePlayMatchSetup.svelte`, `src/story/screens/PreBattleScreen.svelte` |
+| deck library | Deck-select mode that manages the collection; no seat is filled | `mode="library"` in `src/deck-editor/components/DeckLibrary.svelte` |
+| deckselect | The shared screen behind all three: header, tools, grid, footer, dialogs | `src/deck-select/DeckSelectScreen.svelte`, public entry `src/deck-select/index.ts` |
 | manual order | No auto-sort; cards sit where dropped; reorder/sort commands are position-only and history-blind | `src/decks/deck-model.ts` (`reorder`, `sort` planned), ADR-037 |
 | click intent | What a left click on a tile means, derived from zone + capacity, never from presentation state | `src/deck-editor/layout/click-intent.ts` (`deckCardClickIntent`, `catalogCardClickIntent`, `ClickIntent`) |
 | runtime catalog | The whole packaged card database (14,794 codes), fetched from the runtime assets when a domain opens rather than compiled into the bundle, memoized per page load | `src/decks/catalog/runtime-catalog.ts` (`runtimeCatalog`, `loadRuntimeCatalog`, `setRuntimeCatalogForTests`), ADR-043 |

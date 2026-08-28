@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import DeckTileMenu from "../../../src/deck-select/DeckTileMenu.svelte";
-import type { DeckTileModel } from "../../../src/deck-select/deck-select-contracts.ts";
+import { tile } from "./tile-builder.ts";
 
 let anchor: HTMLButtonElement | null = null;
 
@@ -13,25 +13,6 @@ afterEach(() => {
   anchor?.remove();
   anchor = null;
 });
-
-function tile(overrides: Partial<DeckTileModel> = {}): DeckTileModel {
-  return {
-    key: "k1",
-    name: "Prototype Control",
-    counts: { main: 40, extra: 15, side: 10 },
-    meta: "Updated 20 Aug 2026",
-    coverImageUrl: null,
-    legal: true,
-    blockReason: null,
-    bundled: false,
-    lockedBy: null,
-    favourite: false,
-    isDefault: false,
-    deletable: true,
-    updatedAt: "2026-08-20T10:00:00.000Z",
-    ...overrides,
-  };
-}
 
 /** The kebab the host pressed: the sheet positions against it and hands focus
     back to it, so the anchor has to be a real element in the document. */

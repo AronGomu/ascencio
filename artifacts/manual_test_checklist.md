@@ -1278,6 +1278,12 @@ Buttons gone
 
 ## T11 library-halo-polish
 
+> Partly superseded by **Deck-selection round** at the end of this file. The
+> library no longer renders deck *rows* — it mounts the shared deck-selection
+> tile grid — so **Validation halo** and **Status text gone** below are history.
+> **Import button label** and **Titles removed** still describe the shipped
+> screen and still run.
+
 ### Setup
 - [ ] Run `npm run dev` and open `http://localhost:4300/#/decks`.
 
@@ -2645,6 +2651,12 @@ Run `npm run dev` (default `DEV_PORT=4300`). Free play now has a menu of its own
 
 ## T17 free-play-opponent-picker
 
+> Superseded by **Deck-selection round** at the end of this file. The two
+> dropdowns are gone: free play picks both seats on the shared deck-selection
+> screen, where the opponent's portrait and deck card are themselves the
+> controls. The rules this section pinned — both seats are a choice, the pair is
+> remembered, a vanished deck degrades — still hold; only the shape changed.
+
 Run `npm run dev` (default `DEV_PORT=4300`). A free-play match now chooses both
 decks before the duel starts, and remembers the pair.
 
@@ -3109,6 +3121,11 @@ confirmation that fires on every sale is one the player learns to click through.
 - [ ] Go back to **Sell** and sell one copy of a completely different card that no deck uses. No dialog — the already-broken deck is not reported, because this sale is not what broke it.
 
 ## T27 pre-battle-deck-picker-legality
+
+> Partly superseded by **Deck-selection round** at the end of this file. Every
+> legality rule below still stands and still runs — the briefing now presents it
+> on the shared deck-selection screen, so an illegal deck is a disabled tile
+> carrying its block reason rather than a disabled row.
 
 The briefing before a story encounter now picks the deck the duel will use, out of the
 save's own decks. Legality is recomputed against the live card database and this save's
@@ -3794,6 +3811,11 @@ card database was fetched. The menu is gone (ADR-054), the deck builder moved
 under the player's seat, and the library is read as the player reaches for the
 entry rather than after they arrive.
 
+> Superseded by **Deck-selection round** at the end of this file. `#/free-play`
+> still opens straight on the seats (ADR-054), but the screen it opens is now
+> the shared deck-selection screen rather than the two-seat panel described
+> below.
+
 Run `npm run dev` (default `DEV_PORT=4300`).
 
 ### Free Play lands on the decks
@@ -3925,7 +3947,13 @@ Run `npm run dev` (default `DEV_PORT=4300`).
 
 ---
 
-## T1 field-chrome-css (PLAN_2026_08_27_duel_field_right_pane_feedback)
+## Duel-field feedback round (`e1d6692..bc79588a`)
+
+Owner feedback on the duel field, shipped alongside the deck-selection screen
+in the same round. The ticket ids below are that round's; earlier sections in
+this file reuse the same numbers for unrelated rounds.
+
+## T1 field-chrome-css
 
 Owner feedback items 7–10: no hover zoom on opened board cards, solid zone
 outlines with no inner slot box, no border around the whole field, and a
@@ -3962,7 +3990,7 @@ Run `npm run dev` (default `DEV_PORT=4300`), open `#/free-play`, pick
 
 ---
 
-## T5 hand-activation-drop-zone (PLAN_2026_08_28_deck_select_and_duel_field)
+## T5 hand-activation-drop-zone
 
 Owner feedback item 4: activation is answered by dragging the card onto a zone
 of its own beside the hand, and any activation a drag resolves to can be
@@ -3973,3 +4001,86 @@ Run `npm run dev` (default `DEV_PORT=4300`), open `#/free-play`, start a duel.
 - [ ] Drag a hand card with an activatable effect — a dashed "Activate" box appears at the left end of your hand; drop the card on it → a confirm dialog offers Activate + Cancel; Cancel returns the card with nothing played; confirm activates. Hovering the same card shows no Activate chip; keyboard Enter on it still opens a menu containing Activate.
 - [ ] Drag a monster that only offers Summon and Set: no dashed box appears at all, and dropping it on a highlighted monster zone still plays it in one gesture, with no dialog.
 - [ ] Fill all five of your Spell/Trap zones, then drag a card with an activatable effect: the dashed box still appears (no backrow zone is highlighted, and none is needed).
+
+---
+
+## Deck-selection round (`e1d6692..bc79588a`)
+
+Free play's duel start, the deck builder's library and the story's pre-battle
+briefing all render one screen now — `src/deck-select/DeckSelectScreen.svelte`,
+reached through `src/deck-select/index.ts`. These steps replace the deck lists
+in **T17 free-play-opponent-picker**, **R5 free-play-opens-on-the-seats**,
+**T27 pre-battle-deck-picker-legality** and the row-halo half of
+**T11 library-halo-polish**, each of which now carries a superseded banner.
+
+Run `npm run dev` (default `DEV_PORT=4300`).
+
+### Pick a deck for each seat (free play)
+
+- [ ] Open `http://localhost:4300/#/free-play`. The screen reads **Free play / Choose your deck**, with a deck grid on the left and, on the right, the opponent's portrait, their deck card (red halo) and your deck card (blue halo). There is no "Start a match" menu in front of it.
+- [ ] Press a grid tile: it takes the blue halo and a ✓, and your deck card on the right changes to match. The deck count beside the title reads `shown/total`.
+- [ ] Press the opponent's **deck card** on the right: the grid switches to filling the opponent seat — the tile you pick now takes the **red** halo, and your own current pick is marked `Yours` so it does not vanish from view. Press the opponent's deck card again to go back to picking for yourself.
+- [ ] Press **Start the duel**: the duel starts immediately, with no second picker. Surrender and read the log — the opponent really played the deck you left on their seat.
+
+### Opponent persona, and it sticking
+
+- [ ] Press the opponent's **portrait** (not their deck card): a picker opens listing exactly three personas — **Practice Bot**, **Blaze Circuit**, **Vault Warden** — each with its one-line tagline and no stats row.
+- [ ] Pick **Blaze Circuit**: the portrait and name change, and the opponent's deck card changes with it — the persona brings its own bundled deck along.
+- [ ] Reload the page. Blaze Circuit is still the opponent, and their deck card still shows the deck the persona owns. (The id lives in shell settings; a persona name from an older build falls back to the default rather than rendering nothing.)
+- [ ] Now override just the deck: with Blaze Circuit selected, press their deck card and pick a different deck for that seat. Start the duel, leave it, and come back to `#/free-play` — the persona is still Blaze Circuit and the deck card is back to the persona's own deck. The override was for one duel.
+
+### Favourite star, default badge, and the order
+
+- [ ] Free play, a **local** deck: press its ☆ (top-left of the tile, its own button). It fills to ★ and the tile climbs above the unstarred decks. Reload — still starred.
+- [ ] Free play, a **bundled/preset** deck: star it the same way. Reload — still starred. (Preset stars live in shell settings, because the deck repository only knows local decks.)
+- [ ] The deck marked as default carries a gold **Default** badge and a gold hairline border, and sits first — it keeps the hairline even while a different tile holds the blue selection glow, so the two never compete.
+- [ ] Order, top to bottom: default, then favourites, then the rest by the active **Sort** (Last modified or Name). Change Sort to **Name** and confirm only the third group re-orders — default and favourites keep their ranks.
+- [ ] Story: open a save's pre-battle briefing, star a deck, back out, and open the briefing again — the star survived, and it is stored in the save (not in free play's settings, and not shared with it).
+
+### An illegal deck is disabled, and says why (story)
+
+- [ ] In a story save, sell or spend a card one of your decks needs, then start an encounter. That deck's tile is **disabled**, sits below every legal deck whatever else it is flagged, and its meta line is the block reason rather than "Save deck".
+- [ ] The tile cannot be picked and cannot start a duel. The screen's notice names what to fix, and the button under it leads to the **story's** deck editor, not free play's.
+- [ ] A brand-new save's granted deck has no Extra and no Side deck — warnings, not errors. It is **not** disabled and it starts the first encounter.
+
+### Managing decks from the pick (kebab + footer)
+
+- [ ] Free play, on any local deck tile, press the ⋮ kebab at its bottom-right. A sheet opens with **Open in deck builder**, **Rename**, **Duplicate**, **Delete**. Press Escape, then click outside it — both dismiss it, and focus returns to the kebab.
+- [ ] **Rename** a deck: the dialog opens with the current name selected, renaming re-sorts the grid under Sort = Name, and the new name survives a reload.
+- [ ] **Duplicate** a deck: a copy appears in the grid and becomes the current pick.
+- [ ] **Delete** a deck: a confirm dialog names the deck; confirming removes it and the seat that was holding it falls back to a deck that still exists. On a **bundled** or AI-owned deck, Delete is disabled and the tile shows the 🔒 badge with the owner's name.
+- [ ] The duel-start footer's **Delete / Rename / Duplicate** buttons do the identical three things to the currently-picked deck — the kebab and the footer are two paths to one operation, not two feature sets.
+- [ ] The **Deck Builder Library** (`#/free-play/decks`) offers the same kebab actions on the same tiles.
+- [ ] The **story** briefing offers neither: no kebab on any tile and no manage cluster in the footer. Its Open button leaves for the story deck editor.
+
+### Double-click opens
+
+- [ ] Double-click a grid tile on the duel-start screen: the deck opens in the builder. The single clicks that preceded it only moved the selection — nothing is opened twice.
+- [ ] Double-click a tile in the library: same result.
+
+### Keyboard
+
+- [ ] Press `/` anywhere on the screen: focus lands in the **Filter** field. Type — the grid narrows and the `shown/total` count follows.
+- [ ] With focus outside a text field, press `↓` and `↑`: the pick steps through the **legal** decks only, skipping any disabled tile, and the grid scrolls the pick into view rather than scrolling under it.
+- [ ] Press `Enter` on the duel-start screen: the duel starts (nothing happens while the pick is blocked). Press `Enter` in the library: the focused deck opens in the builder.
+- [ ] Press `f`: the current pick's star toggles. Press it again — it toggles back.
+- [ ] Type `f` or `/` **inside** the Filter field: the character is typed, no shortcut fires.
+
+### Hover previews (desktop)
+
+- [ ] Duel start: hover a grid tile — its full **Main / Extra / Side** decklist floats beside the tile, tall enough for a 90-card deck with little or no internal scrolling, and flips to the other side of the tile rather than running off-screen. Move the pointer away — it disappears at once, and the actual selection never moved.
+- [ ] Library: hover a tile — its decklist appears in the **docked** right panel without changing which deck is focused; move away and the panel reverts to the focused deck.
+- [ ] Library: hover a row inside that docked decklist — a full-size, text-free card image floats near the cursor.
+
+### Phone layout
+
+- [ ] Narrow the window to a phone width (or use DevTools device mode at 430×900). The screen becomes one column: header with a back icon, then the opponent card, then the filter/sort tools, then a one-column deck list, then a sticky footer.
+- [ ] The opponent avatar carries a permanent ⇄ badge (there is no hover on a phone) and opens the persona picker; the deck card under it still toggles opponent-seat picking.
+- [ ] Pick a deck low in the list, then scroll: it is **pinned to slot one** and stays reachable. Pick another — the pin moves with it, and the order of everything behind it is unchanged.
+- [ ] The footer holds **Start the duel** only, and it stays stuck to the bottom while the list scrolls. Deck management is on each tile's kebab.
+
+### The story's locked opponent
+
+- [ ] Open a story encounter's briefing. The opponent's portrait is **not** a control — pressing it opens no picker, and there is no ⇄ chip.
+- [ ] The opponent's deck card reads **🔒 Set by the story** and cannot be pressed into opponent-seat picking.
+- [ ] The deck card's counts read `Main 0 · Extra 0 · Side 0`. **Known gap, not a bug to file:** there is no story-legal source for a bundled preset's card counts, so the locked seat cannot show them yet.

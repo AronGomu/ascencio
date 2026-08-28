@@ -4346,28 +4346,35 @@ async function setHandSpellTrapWithKeyboard(
     const chips = field.locator(`[data-cy="card-action-chips-${cardId}"]`);
     const chipButtonCount = await chips.locator("button").count();
     if (chipButtonCount === 0) continue;
-    if (chipButtonCount === 1) {
-      if ((await chips.locator(SPELLTRAP_SET_CHIP).count()) === 0) continue;
-      await keyboardActivate(page, opener);
-      await expect(chips).toBeHidden();
-      return true;
-    }
+    if ((await chips.locator(SPELLTRAP_SET_CHIP).count()) === 0) continue;
     await keyboardActivate(page, opener);
-    await expect(chips).toBeVisible();
-    await expect(chips.locator(":focus")).toHaveCount(1);
-    if ((await chips.locator(SPELLTRAP_SET_CHIP).count()) > 0) {
-      const items = chips.locator("button");
-      for (let move = 0; move < (await items.count()); move += 1) {
-        const focused = chips.locator(":focus");
-        if ((await focused.count()) === 0) break;
-        const focusedId = (await focused.getAttribute("data-cy")) ?? "";
-        if (focusedId.endsWith(`-${SPELLTRAP_SET_ACTION}`)) {
-          await page.keyboard.press("Enter");
-          await expect(chips).toBeHidden();
-          return true;
-        }
-        await page.keyboard.press("ArrowRight");
+    // Item 4 retired the old "one chip means one choice" shortcut here too: a
+    // hand spell offering `[activate, setSpellTrap]` shows a single chip
+    // because the pointer surfaces hide activate, yet Enter still pins the
+    // whole menu. Read the outcome the same way the monster twin above does --
+    // either the card's one real choice dispatched and the chips went pending
+    // with it, or the menu pinned and focus landed inside it.
+    await expect(async () => {
+      const visible = await chips.isVisible();
+      const pinned =
+        visible &&
+        (await chips.evaluate((element) =>
+          element.contains(document.activeElement),
+        ));
+      expect(!visible || pinned).toBe(true);
+    }).toPass();
+    if (!(await chips.isVisible())) return true;
+    const items = chips.locator("button");
+    for (let move = 0; move < (await items.count()); move += 1) {
+      const focused = chips.locator(":focus");
+      if ((await focused.count()) === 0) break;
+      const focusedId = (await focused.getAttribute("data-cy")) ?? "";
+      if (focusedId.endsWith(`-${SPELLTRAP_SET_ACTION}`)) {
+        await page.keyboard.press("Enter");
+        await expect(chips).toBeHidden();
+        return true;
       }
+      await page.keyboard.press("ArrowRight");
     }
     await page.keyboard.press("Escape");
     await expect(opener).toBeFocused();

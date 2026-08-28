@@ -159,6 +159,10 @@ const CONTRACT_ROOTS = [
   "src/shell",
   "src/deck-editor",
   "src/story",
+  /* The shared deck-selection screen renders inside shell, deck-editor and
+     story alike, so its elements are part of every host's document and belong
+     under the same contract as the domains that mount it. */
+  "src/deck-select",
 ] as const;
 
 function contractFiles(): readonly string[] {

@@ -41,6 +41,9 @@
   export let disabled = false;
   export let pinnedTarget: BoardTargetId | null = null;
   export let zoomServedTarget: BoardTargetId | null = null;
+  /* Only the local hand reads this: `startCardDrag` refuses every card outside
+     `p0:hand`, so the opponent's band can never hold the dragged one. */
+  export let draggedTarget: BoardTargetId | null = null;
   export let dropCandidates: ReadonlySet<PhysicalZoneId> = new Set();
   /* Item 18: the candidate zone directly under the dragged card, distinct
      from the rest of `dropCandidates`, so it can carry its own emphasis. */
@@ -250,6 +253,7 @@
       {disabled}
       {pinnedTarget}
       {zoomServedTarget}
+      {draggedTarget}
       {oncardactivate}
       {oncardchoose}
       {oncarddismiss}

@@ -32,6 +32,11 @@
   export let pinned = false;
   export let zoomServed = false;
   export let draggable = false;
+  /* The field is dragging this card through a gesture that never touched this
+     component — a press forwarded from the hand zoom overlay drawn over it. The
+     card still has to read as lifted, so the dimming and the `data-dragging`
+     contract answer to either source. */
+  export let dragged = false;
   export let onactivate: (
     element: HTMLButtonElement,
     source: "pointer" | "keyboard",
@@ -276,7 +281,7 @@
   class:is-actionable={actionable}
   class:is-selection-candidate={interactionKind === "cardSelection"}
   class:has-local-actions={localActions.length > 0}
-  class:is-dragging={dragging}
+  class:is-dragging={dragging || dragged}
   class:is-pinned={pinned}
   class:is-zoom-served={zoomServed}
   class:is-selected={selected}
@@ -293,7 +298,7 @@
   data-orientation={card.orientation}
   data-position={card.position}
   data-card-zone-id={card.zoneId}
-  data-dragging={dragging ? "true" : undefined}
+  data-dragging={dragging || dragged ? "true" : undefined}
   style={positionStyle}
   data-cy={`field-card-${card.id}`}
 >

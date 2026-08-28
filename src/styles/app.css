@@ -1919,6 +1919,8 @@ button.duel-field-zone,
 .projected-choice-menu {
   top: calc(144px * 614 / 421 - 2px);
   bottom: auto;
+  /* Reset the card stack's column-reverse: the list keeps its dropdown row. */
+  flex-direction: row;
   z-index: 10;
   min-width: 100%;
   min-height: 34px;
@@ -2376,38 +2378,41 @@ button.duel-field-zone,
   cursor: pointer;
 }
 
-/* Chips sit on top of the card, centred on it in both axes: `top`/`bottom` 0
-   with an intrinsic height leaves the two auto block margins to split the
-   leftover space evenly. Inside the card's own box there is no gap at all for
-   a pointer travelling from card to chip to cross, so the `:hover` that
-   reveals them can never be dropped in transit. Every other host of this
-   class — the hand zoom overlay and the zone list — sets its own `top`/
-   `bottom` pair and keeps its own anchor. */
+/* Chips sit on top of the card, anchored to its bottom edge and growing
+   upward: `column-reverse` keeps prompt order in the DOM while drawing the
+   first choice nearest the bottom. The stack is capped at the card's own
+   height and scrolls past that, so it always stays inside the card's box —
+   there is no gap at all for a pointer travelling from card to chip to
+   cross, and the `:hover` that reveals them can never be dropped in
+   transit. Every other host of this class — the zone list — sets its own
+   `top`/`bottom` pair and keeps its own anchor. */
 .card-action-chips {
   position: absolute;
   z-index: var(--duel-field-layer-menu);
-  top: 0;
+  top: auto;
   bottom: 0;
   left: 50%;
   display: none;
+  flex-direction: column-reverse;
   height: fit-content;
+  max-height: 100%;
   gap: 0.15rem;
-  margin-block: auto;
   padding: 0.12rem;
   border-radius: 0.3rem;
   background: color-mix(in srgb, var(--bg) 92%, transparent);
   transform: translateX(-50%);
+  overflow-y: auto;
 }
 
 /* The hand zoom overlay hands its chips a whole enlarged card box, so they
-   stop competing for one row and take one each across its full width. The
-   container's own inset padding goes with the row layout: it would hold every
-   button short of the box the overlay published. Declared after the overlay's
-   own `display: flex` rule above, which it carries the same specificity as and
-   therefore overrides on source order alone — do not hoist it. */
+   stop competing for space and take one full-width row each — still bottom-
+   anchored and growing upward, the same reading order as a field card's own
+   stack. Declared after the overlay's own `display: flex` rule above, which
+   it carries the same specificity as and therefore overrides on source
+   order alone — do not hoist it. */
 .card-action-chips.is-stacked {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column-reverse;
   gap: var(--space-1);
   width: var(--hand-zoom-width);
   padding: 0;
@@ -2423,9 +2428,14 @@ button.duel-field-zone,
 
 /* Hand hover opens the overlay instead; suppress the clipped in-band chips
    on plain hover so they do not peek out below the overlay. Focus and pin
-   keep their own reveal path (the rule above). */
+   keep their own reveal path (the rule above) — except while the overlay is
+   actually serving this card (`is-zoom-served`, set from the mounted
+   overlay's target): then the overlay's stack is the one chip set on
+   screen, whatever :focus-within or the pin say. The keyboard pin mounts no
+   overlay, so its in-band chips survive this rule untouched (ADR-032 §4). */
 .duel-field-card.is-hand-item:not(:focus-within):not(.is-pinned):hover
-  .card-action-chips {
+  .card-action-chips,
+.duel-field-card.is-actionable.is-hand-item.is-zoom-served .card-action-chips {
   display: none;
 }
 

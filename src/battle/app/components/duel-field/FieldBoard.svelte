@@ -39,6 +39,7 @@
   export let selectedTargets: ReadonlySet<BoardTargetId> = new Set();
   export let disabled = false;
   export let pinnedTarget: BoardTargetId | null = null;
+  export let zoomServedTarget: BoardTargetId | null = null;
   export let dropCandidates: ReadonlySet<PhysicalZoneId> = new Set();
   /* Item 18: the candidate zone directly under the dragged card, distinct
      from the rest of `dropCandidates`, so it can carry its own emphasis. */
@@ -244,6 +245,7 @@
       activeTarget={navigationState.activeTarget}
       {disabled}
       {pinnedTarget}
+      {zoomServedTarget}
       {oncardactivate}
       {oncardchoose}
       {oncarddismiss}
@@ -269,6 +271,7 @@
       activeTarget={navigationState.activeTarget}
       {disabled}
       {pinnedTarget}
+      {zoomServedTarget}
       {oncardactivate}
       {oncardchoose}
       {oncarddismiss}

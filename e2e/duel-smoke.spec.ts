@@ -2833,6 +2833,19 @@ test("item 5: field cards stay outside the hand band and hand action chips remai
   );
   await opener.focus();
   await expect(chips).toBeVisible();
+  /* 2026-08-27 item 2: one vertical stack rising from the card's bottom edge.
+     `column-reverse` is what keeps prompt order in the DOM while drawing the
+     first choice nearest that edge, so both halves are asserted here. */
+  expect(await chips.evaluate((e) => getComputedStyle(e).flexDirection)).toBe(
+    "column-reverse",
+  );
+  const cardBox = await field
+    .locator(`[data-card-id="${cardId}"]`)
+    .boundingBox();
+  const chipsBox = await chips.boundingBox();
+  expect(
+    Math.abs(cardBox!.y + cardBox!.height - (chipsBox!.y + chipsBox!.height)),
+  ).toBeLessThanOrEqual(2);
   const chipButtons = chips.locator("button");
   const chipCount = await chipButtons.count();
   expect(chipCount).toBeGreaterThan(0);

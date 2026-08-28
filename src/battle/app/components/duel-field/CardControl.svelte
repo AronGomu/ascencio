@@ -28,6 +28,7 @@
   export let disabled = false;
   export let choices: readonly InteractionChoice[] = [];
   export let pinned = false;
+  export let zoomServed = false;
   export let draggable = false;
   export let onactivate: (
     element: HTMLButtonElement,
@@ -273,6 +274,7 @@
   class:is-actionable={actionable}
   class:is-dragging={dragging}
   class:is-pinned={pinned}
+  class:is-zoom-served={zoomServed}
   class:is-selected={selected}
   class:is-navigation-active={active}
   class:is-identity-known={card.code !== undefined}

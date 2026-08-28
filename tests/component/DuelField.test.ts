@@ -2693,6 +2693,58 @@ describe("DuelField", () => {
     ).toBeNull();
   });
 
+  /* Item 3: a pinned hand card used to show two chip sets — the overlay's
+     stack and its own in-band copy, revealed by the focus the click left
+     inside the card. `is-zoom-served` is the CSS's only way to know the
+     overlay is currently serving this card, so it is asserted here rather
+     than through a computed style jsdom does not resolve. */
+  it("marks the hovered hand card as zoom-served while the overlay is mounted", async () => {
+    renderDraggableHand();
+    const article = handCardArticle();
+
+    await fireEvent.pointerEnter(article);
+    expect(handCardArticle().classList.contains("is-zoom-served")).toBe(true);
+
+    await fireEvent(
+      article,
+      new MouseEvent("pointerleave", {
+        relatedTarget: document.querySelector('[data-cy="duel-field"]'),
+      }),
+    );
+
+    expect(handCardArticle().classList.contains("is-zoom-served")).toBe(false);
+  });
+
+  it("a pinned hand card is zoom-served and keeps only the overlay's chip copy revealed", async () => {
+    renderDraggableHand();
+    await fireEvent.pointerEnter(handCardArticle());
+
+    await clickHandCard();
+
+    expect(handZoomOverlay()).not.toBeNull();
+    expect(handCardArticle().classList.contains("is-zoom-served")).toBe(true);
+    // Mounted, merely hidden: dismissal is a visibility claim, never a count.
+    expect(
+      handCardArticle().querySelector('[data-cy^="card-action-chips-"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector(
+        '[data-cy^="hand-zoom-overlay-card-action-chips-"]',
+      ),
+    ).not.toBeNull();
+  });
+
+  it("the keyboard pin never marks the hand card zoom-served", async () => {
+    const user = userEvent.setup();
+    renderDraggableHand();
+    handDragTarget().focus();
+
+    await user.keyboard("{Enter}");
+
+    expect(handZoomOverlay()).toBeNull();
+    expect(handCardArticle().classList.contains("is-zoom-served")).toBe(false);
+  });
+
   /* The round-4 strobe: the overlay is anchored on the card's bottom edge, so
      it is drawn over the card that opened it. A crossing into it reports the
      card's own `pointerleave`, and closing on that alone unmounts the overlay

@@ -135,17 +135,15 @@ async function appears(value: string): Promise<HTMLElement> {
   }, REAL_IMPORT);
 }
 
-/** The library rows, once the editor has read whichever repository its context
+/** The library tiles, once the editor has read whichever repository its context
     resolved to. */
 async function libraryDeckNames(): Promise<readonly string[]> {
   await vi.waitFor(
-    () => expect(query("deck-library-list")).not.toBeNull(),
+    () => expect(query("deck-select-grid")).not.toBeNull(),
     REAL_IMPORT,
   );
   return [
-    ...document.querySelectorAll<HTMLElement>(
-      '[data-cy^="deck-library-name-"]',
-    ),
+    ...document.querySelectorAll<HTMLElement>('[data-cy^="deck-tile-name-"]'),
   ].map((name) => name.textContent?.trim() ?? "");
 }
 

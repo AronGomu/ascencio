@@ -32,15 +32,17 @@ function deck(id: string, name: string, updatedAt: string): DeckRecord {
   return Object.freeze({ ...base, revision: 1 });
 }
 
-/* The rendered order, read off the list rather than recomputed: the point of
-   these cases is that the DOM says what `orderDeckLibrary` decided, which is
-   the one link `deck-library-order.test.ts` in `tests/unit` cannot see. */
+/* The rendered order, read off the grid rather than recomputed: the point of
+   these cases is that the DOM says what the shared screen's `orderDeckTiles`
+   decided, which is the one link a pure ordering test cannot see. */
 function renderedNames(): readonly string[] {
   return [
-    ...document.querySelectorAll('[data-cy="deck-library-list"] > li'),
+    ...document.querySelectorAll(
+      '[data-cy="deck-select-grid"] > [data-cy^="deck-tile-"]',
+    ),
   ].map(
-    (row) =>
-      row.querySelector('[data-cy^="deck-library-name-"]')?.textContent ?? "",
+    (tile) =>
+      tile.querySelector('[data-cy^="deck-tile-name-"]')?.textContent ?? "",
   );
 }
 
@@ -76,10 +78,10 @@ describe("the library renders decks in order", () => {
     expect(renderedNames()).toEqual(["Bravo", "Alpha", "Charlie", "Delta"]);
   });
 
-  /* The sort control is wired to the rendered rows and not only present: the
+  /* The sort control is wired to the rendered tiles and not only present: the
      alphabetical order is a different permutation from every other case here,
      and the default and the favourite keep their places above it. */
-  it("choosing Name re-sorts the rows the library renders", async () => {
+  it("choosing Name re-sorts the tiles the library renders", async () => {
     renderLibrary({
       defaultDeckId: DEFAULT.id,
       favouriteDeckIds: [OLDEST.id],
@@ -93,11 +95,11 @@ describe("the library renders decks in order", () => {
     expect(renderedNames()).toEqual(["Delta", "Charlie", "Alpha", "Bravo"]);
   });
 
-  it("a search narrows the rows but keeps the order", async () => {
+  it("a filter narrows the tiles but keeps the order", async () => {
     renderLibrary({ favouriteDeckIds: [OLDEST.id] });
     await userEvent
       .setup()
-      .type(screen.getByRole("searchbox", { name: "Search decks" }), "l");
+      .type(screen.getByRole("searchbox", { name: "Filter" }), "l");
 
     expect(renderedNames()).toEqual(["Charlie", "Alpha", "Delta"]);
   });
@@ -106,9 +108,9 @@ describe("the library renders decks in order", () => {
 describe("the app hands the library its ordering inputs", () => {
   /* The component cases above take `defaultDeckId` and `favouriteDeckIds` as
      props, which proves the ordering and not the plumbing. This drives the
-     real star button and watches a row move, so a `DeckEditorApp` that stopped
+     real star button and watches a tile move, so a `DeckEditorApp` that stopped
      passing either one down fails here. */
-  it("starring a deck lifts its row above the decks it was below", async () => {
+  it("starring a deck lifts its tile above the decks it was below", async () => {
     const repository = await IndexedDbDeckRepository.open();
     for (const [id, name] of [
       ["d-alpha", "Alpha Deck"],
@@ -130,19 +132,21 @@ describe("the app hands the library its ordering inputs", () => {
     expect(before[0]).toBe(STARTER_DECK_NAME);
     const last = before[2]!;
 
-    const row = [
-      ...document.querySelectorAll('[data-cy="deck-library-list"] > li'),
+    const tile = [
+      ...document.querySelectorAll(
+        '[data-cy="deck-select-grid"] > [data-cy^="deck-tile-"]',
+      ),
     ].find(
       (candidate) =>
-        candidate.querySelector('[data-cy^="deck-library-name-"]')
-          ?.textContent === last,
+        candidate.querySelector('[data-cy^="deck-tile-name-"]')?.textContent ===
+        last,
     )!;
-    const star = row.querySelector<HTMLButtonElement>(
-      '[data-cy^="deck-library-favourite-"]',
+    const star = tile.querySelector<HTMLButtonElement>(
+      '[data-cy^="deck-tile-fav-"]',
     );
     expect(
       star,
-      `the ${last} row should carry a favourite toggle`,
+      `the ${last} tile should carry a favourite toggle`,
     ).not.toBeNull();
     star!.click();
 
@@ -153,7 +157,7 @@ describe("the app hands the library its ordering inputs", () => {
 });
 
 describe("set default from the deck page", () => {
-  /* Nothing but this asserts that the button does anything: the library-row
+  /* Nothing but this asserts that the button does anything: the library's own
      version of the action was deleted when it moved to the deck page, and its
      replacement checks only that the button exists and is disabled on the deck
      that already is default. `DeckEditorApp` wires it to
@@ -214,14 +218,14 @@ describe("set default from the deck page", () => {
     await waitFor(() =>
       expect(
         document.querySelector(
-          `[data-cy="deck-library-default-badge-${chosen.id}"]`,
+          `[data-cy="deck-tile-badge-default-${chosen.id}"]`,
         ),
       ).not.toBeNull(),
     );
     expect(
       document
-        .querySelector('[data-cy^="deck-library-default-badge-"]')
+        .querySelector('[data-cy^="deck-tile-badge-default-"]')
         ?.getAttribute("data-cy"),
-    ).toBe(`deck-library-default-badge-${chosen.id}`);
+    ).toBe(`deck-tile-badge-default-${chosen.id}`);
   });
 });

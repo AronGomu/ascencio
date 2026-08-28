@@ -78,7 +78,10 @@ describe("Deck page actions", () => {
     expect(ondelete).toHaveBeenCalledOnce();
   });
 
-  it("the library row offers no per-deck actions", () => {
+  /* Rename, duplicate and delete came back to the library with the shared deck
+     grid, but on each tile's own kebab rather than as a row of inline buttons —
+     and export and set-default stayed on the deck page. */
+  it("the library tile carries its actions on the kebab, not inline", () => {
     const deck = deckFixture();
     render(DeckLibrary, {
       decks: [deck],
@@ -86,6 +89,9 @@ describe("Deck page actions", () => {
       onopen: vi.fn(),
       onimport: vi.fn(),
     });
+    expect(
+      document.querySelector(`[data-cy="deck-tile-menu-${deck.id}"]`),
+    ).not.toBeNull();
     expect(
       document.querySelector(`[data-cy="deck-library-rename-${deck.id}"]`),
     ).toBeNull();

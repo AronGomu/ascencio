@@ -239,12 +239,12 @@ test("deck editor persists edits across reloads", async ({ page }) => {
     page.locator('[data-cy="deck-editor-delete-dialog"]'),
   ).toBeVisible();
   await page.locator('[data-cy="deck-editor-delete-confirm"]').click();
-  const list = page.locator('[data-cy="deck-library-list"]');
+  const grid = page.locator('[data-cy="deck-select-grid"]');
   await expect(page.locator('[data-cy="deck-library"]')).toBeVisible();
-  await expect(list).not.toContainText("E2E Renamed Copy");
+  await expect(grid).not.toContainText("E2E Renamed Copy");
   await expect(page.getByText("E2E Renamed", { exact: true })).toBeVisible();
   await page.reload();
-  await expect(list).not.toContainText("E2E Renamed Copy");
+  await expect(grid).not.toContainText("E2E Renamed Copy");
 });
 
 test("the deck route deep-links, survives a reload and answers Back", async ({
@@ -456,8 +456,11 @@ test("a prototype deck database is migrated on first load", async ({
   expect(names).not.toContain(LEGACY_DECK_DATABASE_NAME);
 
   /* Opening the deck reads its history record too, so this also proves the
-     migration copied more than the deck row. */
-  await migrated.click();
+     migration copied more than the deck row. One card is not a legal deck, so
+     its tile cannot be picked and the kebab is the way in — which is the point:
+     a deck is opened to be repaired. */
+  await page.locator('[data-cy="deck-tile-menu-prototype-deck"]').click();
+  await page.locator('[data-cy="deck-tile-menu-open-prototype-deck"]').click();
   await expect(page.getByLabel("Deck name")).toHaveValue("Prototype Survivor");
   await expect(zoneCount(page, "main")).toHaveText("1/40");
 });

@@ -86,11 +86,11 @@ describe("starter deck seeding on mount", () => {
       expect(document.querySelector('[data-cy="deck-library"]')).not.toBeNull(),
     );
     const badge = document.querySelector(
-      '[data-cy^="deck-library-default-badge-"]',
+      '[data-cy^="deck-tile-badge-default-"]',
     );
     expect(badge?.textContent).toContain("Default");
     expect(
-      badge?.closest("li")?.querySelector('[data-cy^="deck-library-name-"]')
+      badge?.closest("article")?.querySelector('[data-cy^="deck-tile-name-"]')
         ?.textContent,
     ).toBe(STARTER_DECK_NAME);
     expect(await libraryRowNames()).toEqual([STARTER_DECK_NAME]);
@@ -157,7 +157,7 @@ describe("starter deck seeding on mount", () => {
     const first = render(DeckEditorApp, { deckId: null, onnavigate: vi.fn() });
     await waitFor(() =>
       expect(
-        document.querySelector('[data-cy^="deck-library-default-badge-"]'),
+        document.querySelector('[data-cy^="deck-tile-badge-default-"]'),
       ).not.toBeNull(),
     );
     first.unmount();
@@ -165,7 +165,7 @@ describe("starter deck seeding on mount", () => {
     render(DeckEditorApp, { deckId: null, onnavigate: vi.fn() });
     await waitFor(() =>
       expect(
-        document.querySelector('[data-cy^="deck-library-default-badge-"]'),
+        document.querySelector('[data-cy^="deck-tile-badge-default-"]'),
       ).not.toBeNull(),
     );
     expect(await libraryRowNames()).toEqual([STARTER_DECK_NAME]);

@@ -1,18 +1,21 @@
 <script lang="ts">
   import { tick } from "svelte";
   import { handleModalKeydown } from "../focus-trap.ts";
-  import type {
-    DeckId,
-    DeckRecord,
-    DeckValidationSummary,
-  } from "../../decks/deck-contracts.ts";
-  import { MAXIMUM_DECK_NAME_LENGTH } from "../../decks/deck-model.ts";
   import {
-    orderDeckLibrary,
-    type DeckLibrarySort,
-  } from "../../decks/deck-library-order.ts";
+    DeckSelectScreen,
+    type DecklistRow,
+    type DecklistView,
+  } from "../../deck-select/index.ts";
+  import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
+  import type { DeckId, DeckRecord } from "../../decks/deck-contracts.ts";
+  import { MAXIMUM_DECK_NAME_LENGTH } from "../../decks/deck-model.ts";
+  import { deckLibraryTiles } from "./deck-library-tiles.ts";
 
   export let decks: readonly DeckRecord[];
+  /** Every card this build packages, for the tile covers and for naming the
+      cards in the docked decklist. Defaulted so a harness that mounts the
+      library alone still renders it, art or no art. */
+  export let catalog: ReadonlyMap<number, DeckBuilderCardView> = new Map();
   export let message: string | null = null;
   export let oncreate: (name: string) => unknown | Promise<unknown>;
   export let onopen: (id: DeckId) => unknown | Promise<unknown>;
@@ -22,14 +25,24 @@
       over one screen and only the host knows which world this library is
       bound to. */
   export let oncollection: () => void = () => undefined;
-  /** Which row wears the badge; the controller owns the value, not the click. */
+  /** Leaving the library, reported for the same reason. */
+  export let onback: () => void = () => undefined;
+  /** Which tile wears the badge; the controller owns the value, not the click. */
   export let defaultDeckId: DeckId | null = null;
   export let favouriteDeckIds: readonly DeckId[] = [];
   export let onfavourite: (id: DeckId, favourite: boolean) => void = () =>
     undefined;
+  /* The three deck operations the grid's kebab and the screen's footer both
+     reach. The screen owns the menu and the dialogs; performing the operation
+     is the host's, so each one arrives here as a decision already confirmed. */
+  export let onrename: (id: DeckId, name: string) => void = () => undefined;
+  export let onduplicate: (id: DeckId) => void = () => undefined;
+  export let ondelete: (id: DeckId, revision: number) => void = () => undefined;
 
-  let search = "";
-  let sort: DeckLibrarySort = "modified";
+  /* Which deck the grid is focused on. Focus only: the library fills no seat,
+     so this decides the teal halo, the docked decklist and which deck the
+     footer's Delete/Rename/Duplicate act on, and nothing else. */
+  let selectedKey: string | null = null;
   let creating = false;
   let createName = "";
   let dialogHeading: HTMLHeadingElement;
@@ -42,30 +55,61 @@
       createName.trim().length > 0 &&
       deck.name.toLocaleLowerCase() === createName.trim().toLocaleLowerCase(),
   );
-  $: filtered = orderDeckLibrary(
-    decks.filter((deck) =>
-      deck.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()),
-    ),
-    { defaultDeckId, favouriteDeckIds, sort },
-  );
+  $: tiles = deckLibraryTiles(decks, catalog, {
+    defaultDeckId,
+    favouriteDeckIds,
+  });
 
-  /** Why the deck cannot be fielded, named after the limit that binds. A deck
-      whose cards the save no longer owns is repaired in the shop; one that
-      breaks a build rule is repaired in the editor, and "Illegal" on its own
-      would send a player who never touched the deck looking for a mistake they
-      did not make (ADR-050).
+  /* The screen names a deck by the key it was given, which is the deck's id;
+     the record behind it carries the revision a delete has to quote. */
+  function forRecord(key: string, use: (deck: DeckRecord) => void): void {
+    const deck = decks.find((candidate) => candidate.id === key);
+    if (deck !== undefined) use(deck);
+  }
 
-      Ownership is claimed only when it is the whole story. A deck that is both
-      short of cards and short of a build rule is not fixed by buying the card
-      back, so promising that in a badge would buy the player a wasted trip; the
-      row's tooltip lists every issue either way. */
-  function illegalLabel(validation: DeckValidationSummary): string {
-    const errors = validation.issues.filter(
-      ({ severity }) => severity === "error",
-    );
-    return errors.every(({ code }) => code === "not-owned")
-      ? "Cards not owned"
-      : "Illegal";
+  function rowOf(
+    cards: ReadonlyMap<number, DeckBuilderCardView>,
+    code: number,
+  ): DecklistRow {
+    return { code, name: cards.get(code)?.name ?? `Missing card ${code}` };
+  }
+
+  /* The decks are already in memory — they are the ones the library is
+     rendering — so the promise the screen asks for is a resolved one.
+
+     Both the pool and the catalog are arguments rather than captures, so the
+     reactive statement below hands over a new resolver whenever either
+     changes. That identity is what the screen re-resolves the docked list on,
+     and at no other time: a deck deleted while it was the focused one would
+     otherwise leave its decklist sitting in the dock. */
+  function decklistResolver(
+    pool: readonly DeckRecord[],
+    cards: ReadonlyMap<number, DeckBuilderCardView>,
+  ): (key: string) => Promise<DecklistView | null> {
+    return (key) => {
+      const deck = pool.find((candidate) => candidate.id === key);
+      return Promise.resolve(
+        deck === undefined
+          ? null
+          : {
+              main: deck.main.map((code) => rowOf(cards, code)),
+              extra: deck.extra.map((code) => rowOf(cards, code)),
+              side: deck.side.map((code) => rowOf(cards, code)),
+            },
+      );
+    };
+  }
+
+  $: decklistFor = decklistResolver(decks, catalog);
+
+  function cardImageFor(code: number): string | null {
+    return catalog.get(code)?.imageUrl ?? null;
+  }
+
+  function openCreateDialog(): void {
+    creating = true;
+    createName = "";
+    void focusDialog();
   }
 
   async function focusDialog(): Promise<void> {
@@ -94,46 +138,15 @@
   }
 </script>
 
-<section
-  class="library"
-  data-cy="deck-library"
-  aria-labelledby="deck-library-heading"
->
-  <header data-cy="deck-library-header">
-    <h1
-      id="deck-library-heading"
-      data-cy="deck-library-heading"
-      class="visually-hidden"
-    >
-      Deck Library
-    </h1>
-  </header>
-
+<section class="library" data-cy="deck-library">
   {#if message}<p class="message" role="status" data-cy="deck-library-message">
       {message}
     </p>{/if}
 
+  <!-- What the shared screen has no place for: this library is also the way in
+       to the collection, to YDK import, and to a deck that does not exist yet.
+       The filter and the sort moved into the screen's own tools row. -->
   <div class="tools" data-cy="deck-library-tools">
-    <label data-cy="deck-library-search-field">
-      <span data-cy="deck-library-search-label">Search decks</span>
-      <input
-        type="search"
-        bind:value={search}
-        placeholder="Deck name"
-        data-cy="deck-library-search-input"
-      />
-    </label>
-    <label data-cy="deck-library-sort-field">
-      <span data-cy="deck-library-sort-label">Sort</span>
-      <select bind:value={sort} data-cy="deck-library-sort-select">
-        <option value="modified" data-cy="deck-library-sort-option-modified"
-          >Last modified</option
-        >
-        <option value="name" data-cy="deck-library-sort-option-name"
-          >Name</option
-        >
-      </select>
-    </label>
     <button
       type="button"
       class="secondary"
@@ -149,11 +162,7 @@
     <button
       type="button"
       data-cy="deck-library-create"
-      onclick={() => {
-        creating = true;
-        createName = "";
-        void focusDialog();
-      }}>Create deck</button
+      onclick={openCreateDialog}>Create deck</button
     >
   </div>
 
@@ -166,85 +175,33 @@
       <button
         type="button"
         data-cy="deck-library-empty-create"
-        onclick={() => {
-          creating = true;
-          void focusDialog();
-        }}>Create blank deck</button
-      >
-    </div>
-  {:else if filtered.length === 0}
-    <div class="empty" data-cy="deck-library-no-matches">
-      <h2 data-cy="deck-library-no-matches-heading">No matching decks</h2>
-      <button
-        type="button"
-        class="secondary"
-        data-cy="deck-library-clear-search"
-        onclick={() => (search = "")}>Clear search</button
+        onclick={openCreateDialog}>Create blank deck</button
       >
     </div>
   {:else}
-    <ul class="deck-list" data-cy="deck-library-list">
-      {#each filtered as deck (deck.id)}
-        <li data-cy={`deck-library-row-${deck.id}`}>
-          <button
-            type="button"
-            class={`deck-open halo-${deck.validation.status}`}
-            data-cy={`deck-library-open-${deck.id}`}
-            data-validation-status={deck.validation.status}
-            title={deck.validation.issues.length === 0
-              ? null
-              : deck.validation.issues.map(({ message }) => message).join("\n")}
-            onclick={() => onopen(deck.id)}
-          >
-            <span
-              class="row-title"
-              data-cy={`deck-library-row-title-${deck.id}`}
-            >
-              <strong data-cy={`deck-library-name-${deck.id}`}
-                >{deck.name}</strong
-              >
-              {#if deck.validation.status === "errors"}
-                <span
-                  class="illegal-badge"
-                  data-cy={`deck-library-illegal-${deck.id}`}
-                  >{illegalLabel(deck.validation)}</span
-                >
-              {/if}
-              {#if deck.id === defaultDeckId}
-                <span
-                  class="default-badge"
-                  data-cy={`deck-library-default-badge-${deck.id}`}
-                  >Default</span
-                >
-              {/if}
-            </span>
-            <span data-cy={`deck-library-counts-${deck.id}`}
-              >Main {deck.main.length} · Extra {deck.extra.length} · Side {deck
-                .side.length}</span
-            >
-            <small data-cy={`deck-library-updated-${deck.id}`}
-              >Updated {new Date(deck.updatedAt).toLocaleString()}</small
-            >
-          </button>
-          <button
-            type="button"
-            class="favourite"
-            data-cy={`deck-library-favourite-${deck.id}`}
-            aria-pressed={favouriteDeckIds.includes(deck.id)}
-            aria-label={`Favourite ${deck.name}`}
-            onclick={() =>
-              onfavourite(deck.id, !favouriteDeckIds.includes(deck.id))}
-          >
-            <span
-              aria-hidden="true"
-              data-cy={`deck-library-favourite-glyph-${deck.id}`}
-            >
-              {favouriteDeckIds.includes(deck.id) ? "★" : "☆"}
-            </span>
-          </button>
-        </li>
-      {/each}
-    </ul>
+    <!-- The screen sizes itself against its box, so it is given one rather
+         than being left to the flow: only the deck grid inside it scrolls. -->
+    <div class="screen-slot" data-cy="deck-library-screen">
+      <DeckSelectScreen
+        mode="library"
+        eyebrow="Deck builder"
+        title="Deck library"
+        {tiles}
+        {selectedKey}
+        {decklistFor}
+        {cardImageFor}
+        {onback}
+        onselect={(key) => (selectedKey = key)}
+        onopen={(key) => forRecord(key, (deck) => onopen(deck.id))}
+        onrename={(key, name) =>
+          forRecord(key, (deck) => onrename(deck.id, name))}
+        onduplicate={(key) => forRecord(key, (deck) => onduplicate(deck.id))}
+        ondelete={(key) =>
+          forRecord(key, (deck) => ondelete(deck.id, deck.revision))}
+        onfavourite={(key, favourite) =>
+          forRecord(key, (deck) => onfavourite(deck.id, favourite))}
+      />
+    </div>
   {/if}
 </section>
 
@@ -256,11 +213,16 @@
     aria-modal="true"
     aria-labelledby="create-heading"
     data-cy="deck-library-create-dialog"
-    onkeydown={(event) =>
+    onkeydown={(event) => {
+      /* The screen behind this dialog listens for its shortcuts on the window,
+         where Enter opens the focused deck. While a modal is up the keyboard
+         is the modal's. */
+      event.stopPropagation();
       handleModalKeydown(
         event,
         () => void closeDialog(() => (creating = false)),
-      )}
+      );
+    }}
   >
     <h2
       id="create-heading"
@@ -319,47 +281,45 @@
 {/if}
 
 <style>
+  /* The 1.5rem context banner `DeckEditorApp` renders above it, so the library
+     ends exactly at the bottom of the stage and the deck grid — not the
+     region — is what scrolls. */
   .library {
-    width: min(78rem, calc(100% - 2rem));
-    margin-inline: auto;
-    padding-block: 2rem;
+    display: flex;
+    width: 100%;
+    height: calc(var(--stage-h, 100svh) - 1.5rem);
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-3);
+  }
+
+  /* The screen is `height: 100%` against whatever box it is given, and this is
+     the box: everything the library keeps above it takes its own height first. */
+  .screen-slot {
+    display: grid;
+    min-height: 0;
+    flex: 1 1 auto;
   }
 
   .tools,
   .actions {
     display: flex;
     align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  .actions {
     justify-content: space-between;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-
-  h1,
-  h2,
-  p {
-    margin-top: 0;
-  }
-
-  label span,
-  .deck-open span,
-  .deck-open small {
-    color: var(--muted);
-  }
-
-  .tools {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: end;
-    gap: 0.75rem;
-    margin-block: 1.5rem 1rem;
-  }
-
-  .tools label {
-    flex: 1 1 12rem;
   }
 
   .tools button {
     min-height: 2.5rem;
+  }
+
+  h2,
+  p {
+    margin-top: 0;
   }
 
   label {
@@ -367,120 +327,17 @@
     gap: 0.3rem;
   }
 
-  input,
-  select {
+  label span {
+    color: var(--muted);
+  }
+
+  input {
     min-height: 2.5rem;
     padding: 0.5rem 0.65rem;
     color: var(--text);
     border: 1px solid var(--border);
     border-radius: 0.5rem;
     background: var(--surface-chain);
-  }
-
-  .deck-list {
-    display: grid;
-    gap: 0.7rem;
-    padding: 0;
-    list-style: none;
-  }
-
-  .deck-list li {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    border: 1px solid var(--border);
-    border-radius: 0.65rem;
-    background: var(--surface);
-  }
-
-  .visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-    border: 0;
-  }
-
-  .deck-open {
-    display: grid;
-    min-width: 0;
-    color: var(--text);
-    background: transparent;
-    text-align: left;
-    border: 1px solid transparent;
-    border-radius: 0.5rem;
-  }
-
-  .deck-open:hover {
-    background: var(--surface-raised);
-  }
-
-  .row-title {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    width: 100%;
-  }
-
-  /* Outranks the `.deck-open span` muted rule above, which every other line
-     inside the row button wants and this one does not. */
-  .deck-open .default-badge {
-    margin-left: auto;
-    padding: 0.1rem 0.4rem;
-    color: var(--success);
-    border: 1px solid var(--success);
-    border-radius: 0.35rem;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  /* Same override as `.default-badge` above, for the same reason: the muted
-     rule would make the one line that says this deck cannot be fielded the
-     quietest thing in the row. No `margin-left`, so the Default badge keeps
-     the right edge when a deck wears both. */
-  .deck-open .illegal-badge {
-    padding: 0.1rem 0.4rem;
-    color: var(--danger);
-    border: 1px solid var(--danger);
-    border-radius: 0.35rem;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  .deck-open.halo-valid {
-    border-color: var(--success);
-    box-shadow: 0 0 0.55rem color-mix(in srgb, var(--success) 55%, transparent);
-  }
-
-  .deck-open.halo-warnings {
-    border-color: var(--warning);
-    box-shadow: 0 0 0.55rem color-mix(in srgb, var(--warning) 55%, transparent);
-  }
-
-  .deck-open.halo-errors {
-    border-color: var(--danger);
-    box-shadow: 0 0 0.55rem color-mix(in srgb, var(--danger) 55%, transparent);
-  }
-
-  .favourite {
-    align-self: start;
-    min-height: 2.2rem;
-    padding: 0.2rem 0.45rem;
-    background: transparent;
-    border: 1px solid transparent;
-    color: var(--muted);
-    font-size: 1.1rem;
-  }
-
-  .favourite[aria-pressed="true"] {
-    color: var(--warning);
   }
 
   .empty,

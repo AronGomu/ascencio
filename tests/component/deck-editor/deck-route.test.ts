@@ -85,11 +85,15 @@ describe("deck editor route binding", () => {
     });
   });
 
-  it("pushes the deck route when a library entry is opened", async () => {
+  it("pushes the deck route when a library deck is opened", async () => {
     await seedDeck("d1", "Pushed Deck");
     const { onnavigate } = mount(null);
-    const entry = await screen.findByRole("button", { name: /^Pushed Deck/ });
-    await userEvent.setup().click(entry);
+    /* A deck this short of cards cannot be picked, so its kebab is the way in
+       — which is the point: an illegal deck is opened to be repaired. */
+    await waitFor(() => expect(query("deck-tile-menu-d1")).not.toBeNull());
+    const user = userEvent.setup();
+    await user.click(query("deck-tile-menu-d1")!);
+    await user.click(query("deck-tile-menu-open-d1")!);
     await waitFor(() =>
       expect(onnavigate).toHaveBeenCalledWith<[DeckEditorRoute]>({
         deckId: deckId("d1"),

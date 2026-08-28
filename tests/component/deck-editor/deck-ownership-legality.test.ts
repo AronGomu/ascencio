@@ -108,41 +108,55 @@ async function openLibrary(collection: Record<number, number>): Promise<void> {
   });
   await waitFor(() =>
     expect(
-      document.querySelector('[data-cy="deck-library-list"]'),
+      document.querySelector('[data-cy="deck-select-grid"]'),
     ).not.toBeNull(),
   );
 }
 
-function row(): Element | null {
-  return document.querySelector(
-    `[data-cy="deck-library-open-${STORY_DECK_ID}"]`,
+/** The press surface of the deck's tile: a deck the save cannot field is not
+    pickable, which is the same fact the badge states in words. */
+function press(): HTMLButtonElement | null {
+  return document.querySelector<HTMLButtonElement>(
+    `[data-cy="deck-tile-press-${STORY_DECK_ID}"]`,
   );
 }
 
 function badge(): Element | null {
   return document.querySelector(
-    `[data-cy="deck-library-illegal-${STORY_DECK_ID}"]`,
+    `[data-cy="deck-tile-badge-illegal-${STORY_DECK_ID}"]`,
+  );
+}
+
+/** Why the deck cannot be fielded, in the tile's own words. */
+function reason(): string {
+  return (
+    document.querySelector(`[data-cy="deck-tile-meta-${STORY_DECK_ID}"]`)
+      ?.textContent ?? ""
   );
 }
 
 describe("ownership legality in the deck library", () => {
   /* Nobody edited this deck. The save sold a card out from under it, which is
      the case T26 warns about before it commits and T27 refuses a duel for. */
-  it("a deck using a card the save sold is badged illegal and names it", async () => {
+  /* Ownership is the only thing wrong with this deck, so "Cards not owned" is
+     reachable at all only if the save's collection reached the verdict: a
+     build-rule error would read "Illegal", and no error at all would leave the
+     tile pickable and unbadged. Which card was sold is named in the editor's
+     validation panel rather than on the tile, which carries one line. */
+  it("a deck using a card the save sold is badged illegal and says why", async () => {
     const collection = collectionOf(MAIN);
     await openLibrary({ ...collection, [SOLD.code]: 0 });
 
-    expect(badge()?.textContent).toContain("Cards not owned");
-    expect(row()?.getAttribute("data-validation-status")).toBe("errors");
-    const title = row()?.getAttribute("title") ?? "";
-    expect(title).toContain(SOLD.name);
-    expect(title).toContain("you own 0");
+    expect(badge()).not.toBeNull();
+    expect(reason()).toContain("Cards not owned");
+    expect(press()?.disabled).toBe(true);
   });
 
   it("the same deck is legal while the save still owns its cards", async () => {
     await openLibrary(collectionOf(MAIN));
 
     expect(badge()).toBeNull();
-    expect(row()?.getAttribute("data-validation-status")).toBe("warnings");
+    expect(reason()).toContain("Updated");
+    expect(press()?.disabled).toBe(false);
   });
 });

@@ -60,14 +60,14 @@ Run: `npx vitest run tests/unit/deck-editor tests/component/deck-editor && npx p
 
 ## Impl steps
 
-- [ ] 1. Write failing `tests/unit/deck-editor/deck-library-tiles.test.ts`.
-- [ ] 2. Write failing store test for `renameDeck` (beside existing store tests — `git grep -ln "deck-editor-store" tests/`).
-- [ ] 3. Implement `renameDeck` in `deck-editor-store.ts`; implement `src/deck-editor/components/deck-library-tiles.ts`.
-- [ ] 4. Rewrite `DeckLibrary.svelte` hosting `DeckSelectScreen` per Requirements.
-- [ ] 5. Wire new props in `DeckEditorApp.svelte` (+ AppShell `onexit` only if no back affordance exists).
-- [ ] 6. Update every test/e2e touching removed selectors (`git grep -ln "deck-library-" tests/ e2e/`).
-- [ ] 7. `npx vitest run tests/unit tests/component` → green; `npx playwright test e2e/deck-editor.spec.ts` → green.
-- [ ] 8. `npm run lint && npm run typecheck && npm run build` → green.
+- [x] 1. Write failing `tests/unit/deck-editor/deck-library-tiles.test.ts`.
+- [x] 2. Write failing store test for `renameDeck` (beside existing store tests — `git grep -ln "deck-editor-store" tests/`).
+- [x] 3. Implement `renameDeck` in `deck-editor-store.ts`; implement `src/deck-editor/components/deck-library-tiles.ts`.
+- [x] 4. Rewrite `DeckLibrary.svelte` hosting `DeckSelectScreen` per Requirements.
+- [x] 5. Wire new props in `DeckEditorApp.svelte` (+ AppShell `onexit` only if no back affordance exists).
+- [x] 6. Update every test/e2e touching removed selectors (`git grep -ln "deck-library-" tests/ e2e/`).
+- [x] 7. `npx vitest run tests/unit tests/component` → green; `npx playwright test e2e/deck-editor.spec.ts` → green.
+- [x] 8. `npm run lint && npm run typecheck && npm run build` → green.
 
 ## Outputs
 
@@ -77,8 +77,8 @@ Run: `npx vitest run tests/unit/deck-editor tests/component/deck-editor && npx p
 
 ## Validation
 
-- [ ] `npx vitest run tests/unit tests/component` green
-- [ ] `npx playwright test e2e/deck-editor.spec.ts` green
-- [ ] `npm run lint && npm run typecheck && npm run build` green
-- [ ] manual: `#/free-play/decks` shows tile grid, docked decklist on hover, rename/duplicate/delete work, create/import/collection intact
-- [ ] commit msg draft: `feat(deck-editor): run the library on the shared deck-selection grid`
+- [x] `npx vitest run tests/unit tests/component` green — unit 1761 passed, component 1026 passed
+- [x] `npx playwright test e2e/deck-editor.spec.ts` green — 13 passed; also admin-console 4, story-duel 8, duel-smoke `-g "a local deck"` 2
+- [x] `npm run lint && npm run typecheck && npm run build` green — svelte-check 0 errors, build:verify status ok
+- [ ] manual: `#/free-play/decks` shows tile grid, docked decklist on hover, rename/duplicate/delete work, create/import/collection intact — owner-run, not agent-verifiable
+- [x] commit msg draft: `feat(deck-editor): run the library on the shared deck-selection grid`

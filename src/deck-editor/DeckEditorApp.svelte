@@ -59,6 +59,11 @@
      that swallows this keeps the library, so the button is inert rather than
      wrong wherever the domain is mounted alone. */
   export let oncollection: () => void = () => undefined;
+  /* Leaving the deck menu altogether. The library screen has a Back of its
+     own, and where Back goes is the host's to say for the same reason the
+     collection is: this domain does not own the URL. A host that swallows it
+     keeps the library, so Back is inert rather than wrong. */
+  export let onexit: () => void = () => undefined;
 
   /* Every card this build packages, fetched once per page: the editor may only
      offer what the duel can draw, so both await the same read. It is ~10 MB of
@@ -328,14 +333,19 @@
 {:else if deckId === null}
   <DeckLibrary
     decks={state.decks}
+    {catalog}
     message={state.message}
     oncreate={(name) => runAndSync(controller?.createDeck(name))}
     onopen={(id) => onnavigate({ deckId: id })}
     onimport={() => openLibraryModal("import")}
     {oncollection}
+    onback={onexit}
     defaultDeckId={state.defaultDeckId}
     favouriteDeckIds={state.favouriteDeckIds}
     onfavourite={(id) => void controller?.toggleFavourite(id)}
+    onrename={(id, name) => void controller?.renameDeck(id, name)}
+    onduplicate={(id) => void controller?.duplicate(id)}
+    ondelete={(id, revision) => void controller?.deleteDeck(id, revision)}
   />
 {:else if state.current !== null && state.current.deck.id === deckId}
   <DeckEditor

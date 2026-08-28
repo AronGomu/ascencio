@@ -123,11 +123,11 @@ Run: `npx vitest run tests/component/CardControl.test.ts` while iterating; full 
 
 ## Impl steps
 
-- [ ] 1. Red: failing component tests
-  - [ ] 1.1 In `tests/component/CardControl.test.ts`, import `BoardMaterialView` alongside the existing `BoardCardView` type import, and `cardCode` is already imported. Add the `makeMaterial` helper and `renderFieldCard` helper (exact shapes above), then the `describe("CardControl xyz materials")` block with the four tests from the test plan, asserting exactly the selectors/attributes in the Expect column.
-  - [ ] 1.2 Run `npx vitest run tests/component/CardControl.test.ts` — the four new tests fail (no material elements rendered), existing tests stay green.
-- [ ] 2. New `MaterialCard.svelte`
-  - [ ] 2.1 Create `src/battle/app/components/duel-field/MaterialCard.svelte`:
+- [x] 1. Red: failing component tests
+  - [x] 1.1 In `tests/component/CardControl.test.ts`, import `BoardMaterialView` alongside the existing `BoardCardView` type import, and `cardCode` is already imported. Add the `makeMaterial` helper and `renderFieldCard` helper (exact shapes above), then the `describe("CardControl xyz materials")` block with the four tests from the test plan, asserting exactly the selectors/attributes in the Expect column.
+  - [x] 1.2 Run `npx vitest run tests/component/CardControl.test.ts` — the four new tests fail (no material elements rendered), existing tests stay green.
+- [x] 2. New `MaterialCard.svelte`
+  - [x] 2.1 Create `src/battle/app/components/duel-field/MaterialCard.svelte`:
 
     ```svelte
     <script lang="ts">
@@ -200,8 +200,8 @@ Run: `npx vitest run tests/component/CardControl.test.ts` while iterating; full 
     </div>
     ```
 
-- [ ] 3. Wire into `CardControl.svelte`
-  - [ ] 3.1 In `src/battle/app/components/duel-field/CardControl.svelte`, script block: add `import MaterialCard from "./MaterialCard.svelte";` under the `CardActionChips` import; add after the `export let imageLibrary ...` line:
+- [x] 3. Wire into `CardControl.svelte`
+  - [x] 3.1 In `src/battle/app/components/duel-field/CardControl.svelte`, script block: add `import MaterialCard from "./MaterialCard.svelte";` under the `CardActionChips` import; add after the `export let imageLibrary ...` line:
 
     ```ts
     export let cardBackUrl = "";
@@ -216,7 +216,7 @@ Run: `npx vitest run tests/component/CardControl.test.ts` while iterating; full 
     );
     ```
 
-  - [ ] 3.2 In the same file's markup, insert as the **first** children of `<article class="duel-field-card" ...>` (before the `.duel-field-card__art` div, so materials also precede it in DOM order):
+  - [x] 3.2 In the same file's markup, insert as the **first** children of `<article class="duel-field-card" ...>` (before the `.duel-field-card__art` div, so materials also precede it in DOM order):
 
     ```svelte
     {#each sortedMaterials as material, index (material.id)}
@@ -230,8 +230,8 @@ Run: `npx vitest run tests/component/CardControl.test.ts` while iterating; full 
     {/each}
     ```
 
-- [ ] 4. CSS
-  - [ ] 4.1 In `src/styles/app.css`, insert directly above the `.duel-field-card__art {` rule (line ~2288):
+- [x] 4. CSS
+  - [x] 4.1 In `src/styles/app.css`, insert directly above the `.duel-field-card__art {` rule (line ~2288):
 
     ```css
     /* Xyz materials fan out Duel Links style: each material is a full-size
@@ -265,12 +265,12 @@ Run: `npx vitest run tests/component/CardControl.test.ts` while iterating; full 
     }
     ```
 
-- [ ] 5. Thread props from the board
-  - [ ] 5.1 In `src/battle/app/components/duel-field/FieldBoard.svelte`, in the `{#each fieldCards as card (card.id)}` `<CardControl ...>` instantiation (line ~297), add `{cardBackUrl}` and `{placeholderUrl}` alongside the existing `{imageLibrary}` shorthand props. Leave `HandBand.svelte` untouched — hand cards never carry materials, and the new props default to `""`.
-- [ ] 6. Green + gates
-  - [ ] 6.1 Run `npx vitest run tests/component/CardControl.test.ts` — all tests green.
-  - [ ] 6.2 Run `npm run test:component` — green (data-cy coverage in `tests/unit/data-cy-coverage.test.ts` re-verifies presence + uniqueness of the two new `data-cy` values; the ST-07 fixture already renders a host with materials through `DuelField`).
-  - [ ] 6.3 Run `npm run check:headless` — green (types, lint, boundaries; new imports stay inside `src/battle/`).
+- [x] 5. Thread props from the board
+  - [x] 5.1 In `src/battle/app/components/duel-field/FieldBoard.svelte`, in the `{#each fieldCards as card (card.id)}` `<CardControl ...>` instantiation (line ~297), add `{cardBackUrl}` and `{placeholderUrl}` alongside the existing `{imageLibrary}` shorthand props. Leave `HandBand.svelte` untouched — hand cards never carry materials, and the new props default to `""`.
+- [x] 6. Green + gates
+  - [x] 6.1 Run `npx vitest run tests/component/CardControl.test.ts` — all tests green.
+  - [x] 6.2 Run `npm run test:component` — green (data-cy coverage in `tests/unit/data-cy-coverage.test.ts` re-verifies presence + uniqueness of the two new `data-cy` values; the ST-07 fixture already renders a host with materials through `DuelField`).
+  - [x] 6.3 Run `npm run check:headless` — green (types, lint, boundaries; new imports stay inside `src/battle/`).
 
 ## Outputs
 
@@ -280,8 +280,8 @@ Run: `npx vitest run tests/component/CardControl.test.ts` while iterating; full 
 
 ## Validation
 
-- [ ] tests pass: `npx vitest run tests/component/CardControl.test.ts`, then `npm run test:component`, then `npm run check:headless` — all exit 0.
+- [x] tests pass: `npx vitest run tests/component/CardControl.test.ts`, then `npm run test:component`, then `npm run check:headless` — all exit 0.
 - [ ] manual check: `npm run dev`, start a duel, summon an Xyz monster (or load a diagnostic state with fixture ST-07-like materials); confirm materials peek out to the right behind the host on both your row and (via opponent play) the opponent's row, hidden materials show the back, and hovering/clicking a material hits the host card, not the material.
-- [ ] no silent-failure swallow on a path this slice adds: one kept site — `useFallbackImage` clears `onerror` and swaps to `placeholderUrl` on image load failure, mirroring the existing `CardControl`/`StackControl` pattern; a broken art URL must degrade to a placeholder, not surface an error. No `|| true`, empty catch, or discarded promise added.
-- [ ] app functional — duel field renders and plays exactly as before for cards without materials (zero-material cards emit zero new elements).
+- [x] no silent-failure swallow on a path this slice adds: one kept site — `useFallbackImage` clears `onerror` and swaps to `placeholderUrl` on image load failure, mirroring the existing `CardControl`/`StackControl` pattern; a broken art URL must degrade to a placeholder, not surface an error. No `|| true`, empty catch, or discarded promise added.
+- [x] app functional — duel field renders and plays exactly as before for cards without materials (zero-material cards emit zero new elements).
 - [ ] commit msg draft: `feat(duel): render xyz materials fanned behind the host card, Duel Links style`

@@ -12,12 +12,15 @@
   } from "../../prompts/interaction-spec.ts";
   import type { CardDragOrigin } from "../../presentation/drag-ghost-physics.ts";
   import CardActionChips from "./CardActionChips.svelte";
+  import MaterialCard from "./MaterialCard.svelte";
 
   export let card: BoardCardView;
   export let layout: "field" | "hand" = "field";
   export let placement: FieldPlacement | null = null;
   export let imageUrl: string;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
+  export let cardBackUrl = "";
+  export let placeholderUrl = "";
   export let interactionKind: ActiveInteractionSpec["kind"] | null = null;
   export let actionable = false;
   export let selected = false;
@@ -60,6 +63,9 @@
     imageUrl,
   );
   $: positionStyle = fieldPositionStyle(layout, placement);
+  $: sortedMaterials = [...card.materials].sort(
+    (a, b) => a.sequence - b.sequence,
+  );
 
   $: accessibleLabel =
     card.facing === "opponent" &&
@@ -285,6 +291,15 @@
   style={positionStyle}
   data-cy={`field-card-${card.id}`}
 >
+  {#each sortedMaterials as material, index (material.id)}
+    <MaterialCard
+      {material}
+      {index}
+      {imageLibrary}
+      {cardBackUrl}
+      {placeholderUrl}
+    />
+  {/each}
   <div class="duel-field-card__art" data-cy={`card-control-art-${card.id}`}>
     <img
       src={renderedImageUrl}

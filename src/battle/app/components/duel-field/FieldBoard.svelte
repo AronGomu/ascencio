@@ -299,6 +299,8 @@
       placement={placementFor(renderLayout, card.zoneId)}
       imageUrl={cardImageUrl(card)}
       {imageLibrary}
+      {cardBackUrl}
+      {placeholderUrl}
       interactionKind={!disabled &&
       spec?.cardChoices.has(card.targetId) === true
         ? spec.kind

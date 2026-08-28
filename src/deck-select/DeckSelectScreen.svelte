@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import DeckTile from "./DeckTile.svelte";
   import DeckTileMenu from "./DeckTileMenu.svelte";
   import DeleteDeckConfirm from "./DeleteDeckConfirm.svelte";
@@ -10,7 +11,7 @@
     OpponentView,
   } from "./deck-select-contracts.ts";
   import { handleModalKeydown } from "./focus-trap.ts";
-  import { orderDeckTiles } from "./order-deck-tiles.ts";
+  import { orderDeckTiles, pinSelectedFirst } from "./order-deck-tiles.ts";
 
   export let mode: DeckSelectMode;
   export let eyebrow: string;
@@ -45,6 +46,8 @@
   export let seat: "player" | "opponent" = "player";
   export let onseat: (seat: "player" | "opponent") => void = () => undefined;
   export let onpickopponent: (id: string) => void = () => undefined;
+  /** Test override for the phone layout: null follows the media query. */
+  export let forceNarrow: boolean | null = null;
 
   let filter = "";
   let filterField: HTMLInputElement;
@@ -59,7 +62,30 @@
   let portrait: HTMLElement | null = null;
   let picker: HTMLElement | null = null;
 
-  $: shown = orderDeckTiles(
+  const NARROW_QUERY = "(max-width: 40rem)";
+  let matchedNarrow = false;
+
+  /* One listener for the whole screen rather than one per row: the phone
+     layout is a property of the viewport, and everything that reads it here is
+     the same fact. Guarded because a test document has no `matchMedia` at all,
+     and drives `forceNarrow` instead. */
+  onMount(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const query = window.matchMedia(NARROW_QUERY);
+    matchedNarrow = query.matches;
+    const track = (event: MediaQueryListEvent) => {
+      matchedNarrow = event.matches;
+    };
+    query.addEventListener("change", track);
+    return () => query.removeEventListener("change", track);
+  });
+
+  $: narrow = forceNarrow ?? matchedNarrow;
+  /** The deck filling the seat the grid is currently picking for. */
+  $: activeKey =
+    seat === "opponent" ? (opponentDeck?.key ?? null) : selectedKey;
+
+  $: ranked = orderDeckTiles(
     tiles.filter((candidate) =>
       candidate.name
         .toLocaleLowerCase()
@@ -67,6 +93,9 @@
     ),
     sort,
   );
+  /* One column on a phone, so the current pick would scroll out of reach while
+     the rest of the list is browsed; the wide grid shows it without help. */
+  $: shown = narrow ? pinSelectedFirst(ranked, activeKey) : ranked;
   /* Built here rather than interpolated in the markup: the count is one token
      and formatter whitespace around `{…}` would land inside it. */
   $: countLabel = `${shown.length}/${tiles.length}`;
@@ -101,9 +130,7 @@
   }
 
   function selectedFor(candidate: DeckTileModel): boolean {
-    return (
-      candidate.key === (seat === "opponent" ? opponentDeck?.key : selectedKey)
-    );
+    return candidate.key === activeKey;
   }
 
   /* The card is the control: pressing the opponent's deck fills their seat,
@@ -207,7 +234,12 @@
 <svelte:window onkeydown={handleKeydown} />
 <svelte:document onpointerdown={pickerPointerDown} />
 
-<section class="screen" class:paneled={seatPanel} data-cy="deck-select-screen">
+<section
+  class="screen"
+  class:paneled={seatPanel}
+  class:library={mode === "library"}
+  data-cy="deck-select-screen"
+>
   {#if mode === "duel-start" && opponent !== null}
     <!-- First in the markup rather than last: a screen reader meets who you
          face before the decks it is choosing against, while the grid places
@@ -281,8 +313,11 @@
           onclick={opponent.locked ? undefined : toggleOpponentSeat}
           data-cy="duel-start-opponent-deck"
         >
+          <!-- The same deck can be a grid tile and this card at once, so the
+               card's copy carries its own `data-cy` identity. -->
           <DeckTile
             tile={opponentDeck}
+            cyKey={`opponent-${opponentDeck.key}`}
             halo="opponent"
             showFavourite={false}
             showMenu={false}
@@ -305,6 +340,7 @@
         >
           <DeckTile
             tile={playerDeck}
+            cyKey={`yours-${playerDeck.key}`}
             halo="you"
             showFavourite={false}
             showMenu={false}
@@ -316,9 +352,34 @@
   {/if}
 
   <header data-cy="deck-select-header">
-    <p class="eyebrow" data-cy="deck-select-eyebrow">{eyebrow}</p>
-    <h1 data-cy="deck-select-title">{title}</h1>
-    <p class="count" data-cy="deck-select-count">{countLabel}</p>
+    <!-- The phone's Back, always in the document: the footer's button is the
+         wide control and CSS shows whichever one the width uses, so neither is
+         conditional and both stay unique. -->
+    <button
+      type="button"
+      class="back-icon"
+      aria-label="Back"
+      onclick={onback}
+      data-cy="deck-select-back-icon"
+    >
+      <svg
+        viewBox="0 0 20 20"
+        aria-hidden="true"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        data-cy="deck-select-back-icon-glyph"
+      >
+        <path d="M12 4 L6 10 L12 16" data-cy="deck-select-back-icon-arrow" />
+      </svg>
+    </button>
+    <div class="heading" data-cy="deck-select-heading">
+      <p class="eyebrow" data-cy="deck-select-eyebrow">{eyebrow}</p>
+      <h1 data-cy="deck-select-title">{title}</h1>
+      <p class="count" data-cy="deck-select-count">{countLabel}</p>
+    </div>
   </header>
 
   <div class="tools" data-cy="deck-select-tools">
@@ -361,7 +422,7 @@
   <footer data-cy="deck-select-footer">
     <button
       type="button"
-      class="secondary"
+      class="secondary wide-only"
       data-cy="deck-select-back"
       onclick={onback}>Back</button
     >
@@ -391,7 +452,7 @@
     {#if mode === "duel-start"}
       <button
         type="button"
-        class="secondary"
+        class="secondary wide-only"
         disabled={selectedTile === null}
         data-cy="deck-select-open"
         onclick={openSelected}>Open</button
@@ -501,6 +562,27 @@
     min-height: 0;
     grid-template-rows: auto auto minmax(0, 1fr) auto;
     gap: var(--space-3);
+  }
+
+  /* Hidden until the phone layout claims it, where the footer's Back is gone
+     and the header is the only place a way out can live. */
+  .back-icon {
+    display: none;
+    width: 2.25rem;
+    height: 2.25rem;
+    flex: 0 0 auto;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    color: var(--text);
+    background: var(--surface-raised);
+    cursor: pointer;
+  }
+
+  .back-icon svg {
+    width: 1rem;
+    height: 1rem;
   }
 
   .eyebrow {
@@ -620,6 +702,59 @@
     }
   }
 
+  /* The phone layout, at the design's 430px frame. Header, opponent, tools,
+     one column of decks, sticky footer — the same markup, re-ordered. */
+  @media (max-width: 40rem) {
+    header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .heading {
+      min-width: 0;
+    }
+
+    .back-icon {
+      display: grid;
+    }
+
+    /* Row 1 is the header here rather than the panel: the phone says which
+       screen you are on before who it is seating. The other four rows
+       auto-place around this one in document order. */
+    .screen.paneled .seat-panel {
+      grid-row: 2;
+    }
+
+    .grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    footer {
+      position: sticky;
+      bottom: 0;
+      padding-top: var(--space-2);
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    /* Deck management lives on each card's own kebab on a phone, so the footer
+       keeps Start alone — and the library, which has no Start, keeps nothing
+       but the header's back icon. */
+    .manage,
+    .wide-only {
+      display: none;
+    }
+
+    .screen.library footer {
+      display: none;
+    }
+
+    footer button {
+      width: 100%;
+    }
+  }
+
   .portrait {
     position: relative;
     display: block;
@@ -667,6 +802,14 @@
     border-color: var(--accent);
     color: var(--accent);
     opacity: 1;
+  }
+
+  /* A phone has no hover to reveal it, so the chip rides the portrait
+     permanently there. Last, so it beats the resting `opacity: 0` above. */
+  @media (pointer: coarse), (max-width: 40rem) {
+    .chip {
+      opacity: 1;
+    }
   }
 
   .identity {

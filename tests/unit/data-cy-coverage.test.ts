@@ -31,6 +31,8 @@ import {
 } from "../fixtures/board-view-model.ts";
 import CardCatalog from "../../src/deck-editor/components/CardCatalog.svelte";
 import DeckZoneGrid from "../../src/deck-editor/components/DeckZoneGrid.svelte";
+import DeckSelectScreen from "../../src/deck-select/DeckSelectScreen.svelte";
+import type { DeckTileModel } from "../../src/deck-select/deck-select-contracts.ts";
 import { PROTOTYPE_CATALOG } from "../../src/deck-editor/fixtures/catalog.ts";
 import {
   catalogByCode,
@@ -581,6 +583,61 @@ describe("data-cy uniqueness in deck editor rendered document", () => {
     /* Verify both surfaces mounted: catalog and zone grid are present. */
     expect(document.querySelector('[data-cy="deck-catalog"]')).not.toBeNull();
     expect(document.querySelector('[data-cy="deck-zone-main"]')).not.toBeNull();
+
+    expect(duplicateRenderedValues()).toEqual([]);
+  });
+});
+
+describe("data-cy uniqueness in deck select rendered document", () => {
+  function deckTile(key: string, name: string): DeckTileModel {
+    return {
+      key,
+      name,
+      counts: { main: 40, extra: 15, side: 10 },
+      meta: "Updated 20 Aug 2026",
+      coverImageUrl: null,
+      legal: true,
+      blockReason: null,
+      bundled: false,
+      lockedBy: null,
+      favourite: false,
+      isDefault: false,
+      deletable: true,
+      updatedAt: "2026-08-20T10:00:00.000Z",
+    };
+  }
+
+  it("duel start renders one deck in the grid and on a seat card without collision", () => {
+    /* Your own deck is normally a grid tile as well as the blue seat card, and
+       the opponent's can be picked into their seat the same way, so both seat
+       cards carry a `cyKey` and this is the claim being checked. */
+    const yours = deckTile("k1", "Aurora Fleet");
+    const theirs = deckTile("k2", "Blaze Circuit");
+
+    render(DeckSelectScreen, {
+      mode: "duel-start",
+      eyebrow: "Free play",
+      title: "Choose your deck",
+      tiles: [yours, theirs],
+      selectedKey: "k1",
+      opponent: {
+        id: "vault-warden",
+        name: "Vault Warden",
+        line: "Locks the board, then closes it out.",
+        locked: false,
+      },
+      opponentDeck: theirs,
+      playerDeck: yours,
+    });
+
+    expect(document.querySelector('[data-cy="deck-tile-k1"]')).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="deck-tile-yours-k1"]'),
+    ).not.toBeNull();
+    expect(document.querySelector('[data-cy="deck-tile-k2"]')).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="deck-tile-opponent-k2"]'),
+    ).not.toBeNull();
 
     expect(duplicateRenderedValues()).toEqual([]);
   });

@@ -30,3 +30,24 @@ export function orderDeckTiles(
     }),
   );
 }
+
+/* The narrow layout's one extra transform, applied on top of the rank above:
+   the phone shows a single column, so the deck currently filling the seat
+   being picked for would otherwise scroll out of reach while the rest of the
+   list is browsed. Slot 1 keeps it in view without disturbing the order of
+   everything behind it. */
+export function pinSelectedFirst(
+  tiles: readonly DeckTileModel[],
+  selectedKey: string | null,
+): readonly DeckTileModel[] {
+  const index =
+    selectedKey === null
+      ? -1
+      : tiles.findIndex((candidate) => candidate.key === selectedKey);
+  if (index < 0) return Object.freeze([...tiles]);
+  return Object.freeze([
+    tiles[index]!,
+    ...tiles.slice(0, index),
+    ...tiles.slice(index + 1),
+  ]);
+}

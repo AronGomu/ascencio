@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { DeckTileModel } from "../../../src/deck-select/deck-select-contracts.ts";
-import { orderDeckTiles } from "../../../src/deck-select/order-deck-tiles.ts";
+import {
+  orderDeckTiles,
+  pinSelectedFirst,
+} from "../../../src/deck-select/order-deck-tiles.ts";
 
 function tile(overrides: Partial<DeckTileModel> = {}): DeckTileModel {
   return Object.freeze({
@@ -84,5 +87,41 @@ describe("orderDeckTiles", () => {
 
     expect(Object.isFrozen(result)).toBe(true);
     expect(input.map(({ key }) => key)).toEqual(["plain", "chosen"]);
+  });
+});
+
+describe("pinSelectedFirst", () => {
+  const ranked = [
+    tile({ key: "k1" }),
+    tile({ key: "k2" }),
+    tile({ key: "k3" }),
+  ];
+
+  it("moves the selection to slot 1, the rest in rank order behind it", () => {
+    const result = pinSelectedFirst(ranked, "k3");
+
+    expect(result.map(({ key }) => key)).toEqual(["k3", "k1", "k2"]);
+  });
+
+  it("leaves the order alone when nothing is selected or the key is absent", () => {
+    expect(pinSelectedFirst(ranked, null).map(({ key }) => key)).toEqual([
+      "k1",
+      "k2",
+      "k3",
+    ]);
+    expect(pinSelectedFirst(ranked, "kX").map(({ key }) => key)).toEqual([
+      "k1",
+      "k2",
+      "k3",
+    ]);
+  });
+
+  it("input array is not mutated and result is frozen", () => {
+    const input = [tile({ key: "k1" }), tile({ key: "k2" })];
+
+    const result = pinSelectedFirst(input, "k2");
+
+    expect(Object.isFrozen(result)).toBe(true);
+    expect(input.map(({ key }) => key)).toEqual(["k1", "k2"]);
   });
 });

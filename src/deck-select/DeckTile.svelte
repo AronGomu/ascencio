@@ -17,6 +17,10 @@
   export let onfavourite: (favourite: boolean) => void = () => undefined;
   /** Kebab pressed; anchor element passed so the menu (T13) can position. */
   export let onmenu: (anchor: HTMLElement) => void = () => undefined;
+  /** Identity every `data-cy` here is built from; null uses the deck's key.
+      One deck can render twice in a document — the grid tile and the seat card
+      showing the same pick — and the element contract wants one value each. */
+  export let cyKey: string | null = null;
 
   /* Built in the script rather than interpolated three times in the markup:
      the stats line is one sentence, and formatter whitespace around `{…}`
@@ -25,6 +29,7 @@
   /* A deck that fails validation cannot be picked, so the press surface itself
      carries the fact — the dimming is the sighted echo, never the source. */
   $: pressDisabled = disabled || !tile.legal;
+  $: cyId = cyKey ?? tile.key;
 </script>
 
 <article
@@ -34,7 +39,7 @@
   class:halo-focus={halo === "focus"}
   class:is-default={tile.isDefault}
   class:illegal={!tile.legal}
-  data-cy={`deck-tile-${tile.key}`}
+  data-cy={`deck-tile-${cyId}`}
 >
   <button
     type="button"
@@ -42,7 +47,7 @@
     disabled={pressDisabled}
     onclick={() => onpress()}
     ondblclick={() => ondblpress()}
-    data-cy={`deck-tile-press-${tile.key}`}
+    data-cy={`deck-tile-press-${cyId}`}
   >
     {#if tile.coverImageUrl !== null}
       <img
@@ -51,7 +56,7 @@
         decoding="async"
         src={tile.coverImageUrl}
         alt=""
-        data-cy={`deck-tile-art-${tile.key}`}
+        data-cy={`deck-tile-art-${cyId}`}
       />
     {:else}
       <!-- Authored geometry rather than a packaged asset: a deck with no cover
@@ -61,58 +66,54 @@
         viewBox="0 0 200 100"
         preserveAspectRatio="xMidYMid slice"
         aria-hidden="true"
-        data-cy={`deck-tile-art-placeholder-${tile.key}`}
+        data-cy={`deck-tile-art-placeholder-${cyId}`}
       >
         <rect
           class="art-field"
           width="200"
           height="100"
-          data-cy={`deck-tile-art-field-${tile.key}`}
+          data-cy={`deck-tile-art-field-${cyId}`}
         />
         <path
           class="art-sigil"
           d="M140 18 L178 50 L140 82 L102 50 Z"
-          data-cy={`deck-tile-art-sigil-${tile.key}`}
+          data-cy={`deck-tile-art-sigil-${cyId}`}
         />
       </svg>
     {/if}
-    <span class="fade" aria-hidden="true" data-cy={`deck-tile-fade-${tile.key}`}
+    <span class="fade" aria-hidden="true" data-cy={`deck-tile-fade-${cyId}`}
     ></span>
-    <span class="body" data-cy={`deck-tile-body-${tile.key}`}>
-      <span class="name" data-cy={`deck-tile-name-${tile.key}`}
-        >{tile.name}</span
-      >
-      <span class="counts" data-cy={`deck-tile-counts-${tile.key}`}
+    <span class="body" data-cy={`deck-tile-body-${cyId}`}>
+      <span class="name" data-cy={`deck-tile-name-${cyId}`}>{tile.name}</span>
+      <span class="counts" data-cy={`deck-tile-counts-${cyId}`}
         >{countsLine}</span
       >
-      <span class="meta" data-cy={`deck-tile-meta-${tile.key}`}
-        >{tile.meta}</span
-      >
-      <span class="badges" data-cy={`deck-tile-badges-${tile.key}`}>
+      <span class="meta" data-cy={`deck-tile-meta-${cyId}`}>{tile.meta}</span>
+      <span class="badges" data-cy={`deck-tile-badges-${cyId}`}>
         {#if tile.isDefault}
           <span
             class="badge badge-default"
-            data-cy={`deck-tile-badge-default-${tile.key}`}>Default</span
+            data-cy={`deck-tile-badge-default-${cyId}`}>Default</span
           >
         {/if}
         {#if !tile.legal}
           <span
             class="badge badge-illegal"
-            data-cy={`deck-tile-badge-illegal-${tile.key}`}>Illegal</span
+            data-cy={`deck-tile-badge-illegal-${cyId}`}>Illegal</span
           >
         {/if}
         {#if tile.bundled}
-          <span class="badge" data-cy={`deck-tile-badge-bundled-${tile.key}`}
+          <span class="badge" data-cy={`deck-tile-badge-bundled-${cyId}`}
             >Bundled</span
           >
         {/if}
         {#if tile.lockedBy !== null}
-          <span class="badge" data-cy={`deck-tile-badge-locked-${tile.key}`}
+          <span class="badge" data-cy={`deck-tile-badge-locked-${cyId}`}
             >🔒 {tile.lockedBy}</span
           >
         {/if}
         {#if yours}
-          <span class="badge" data-cy={`deck-tile-badge-yours-${tile.key}`}
+          <span class="badge" data-cy={`deck-tile-badge-yours-${cyId}`}
             >Yours</span
           >
         {/if}
@@ -132,12 +133,12 @@
         event.stopPropagation();
         onfavourite(!tile.favourite);
       }}
-      data-cy={`deck-tile-fav-${tile.key}`}>{tile.favourite ? "★" : "☆"}</button
+      data-cy={`deck-tile-fav-${cyId}`}>{tile.favourite ? "★" : "☆"}</button
     >
   {/if}
 
   {#if selected}
-    <span class="corner check" data-cy={`deck-tile-check-${tile.key}`}>✓</span>
+    <span class="corner check" data-cy={`deck-tile-check-${cyId}`}>✓</span>
   {/if}
 
   {#if showMenu}
@@ -149,7 +150,7 @@
         event.stopPropagation();
         onmenu(event.currentTarget);
       }}
-      data-cy={`deck-tile-menu-${tile.key}`}>⋮</button
+      data-cy={`deck-tile-menu-${cyId}`}>⋮</button
     >
   {/if}
 </article>

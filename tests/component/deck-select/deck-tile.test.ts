@@ -130,4 +130,16 @@ describe("DeckTile", () => {
     expect(find("deck-tile-fav-k1")).toBeNull();
     expect(find("deck-tile-menu-k1")).not.toBeNull();
   });
+
+  it("cyKey renames every value so one deck can render twice", () => {
+    render(DeckTile, { tile: tile(), cyKey: "yours-k1", selected: true });
+
+    expect(find("deck-tile-k1")).toBeNull();
+    expect(find("deck-tile-yours-k1")).not.toBeNull();
+    expect(cy("deck-tile-name-yours-k1").textContent).toBe("Prototype Control");
+    expect(cy("deck-tile-check-yours-k1").textContent).toBe("✓");
+    expect(cy("deck-tile-menu-yours-k1").getAttribute("aria-label")).toBe(
+      "Actions for Prototype Control",
+    );
+  });
 });

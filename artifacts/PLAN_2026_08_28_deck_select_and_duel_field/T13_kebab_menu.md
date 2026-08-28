@@ -82,13 +82,13 @@ Run: `npx vitest run tests/component/deck-select`
 
 ## Impl steps
 
-- [ ] 1. Write failing `tests/component/deck-select/deck-tile-menu.test.ts` (anchor = rendered dummy button element).
-- [ ] 2. Write failing `tests/component/deck-select/deck-dialogs.test.ts`.
-- [ ] 3. Create `src/deck-select/DeckTileMenu.svelte` per Requirements.
-- [ ] 4. Create `src/deck-select/RenameDeckDialog.svelte` + `src/deck-select/DeleteDeckConfirm.svelte`.
-- [ ] 5. Export `DeckTileMenu`, `RenameDeckDialog`, `DeleteDeckConfirm` from `src/deck-select/index.ts`; extend frozen list in `tests/unit/domain-boundaries.test.ts`.
-- [ ] 6. `npx vitest run tests/component/deck-select tests/unit/domain-boundaries.test.ts tests/unit/data-cy-coverage.test.ts` → green.
-- [ ] 7. `npm run lint && npm run typecheck` → green.
+- [x] 1. Write failing `tests/component/deck-select/deck-tile-menu.test.ts` (anchor = rendered dummy button element).
+- [x] 2. Write failing `tests/component/deck-select/deck-dialogs.test.ts`.
+- [x] 3. Create `src/deck-select/DeckTileMenu.svelte` per Requirements.
+- [x] 4. Create `src/deck-select/RenameDeckDialog.svelte` + `src/deck-select/DeleteDeckConfirm.svelte`.
+- [x] 5. Export `DeckTileMenu`, `RenameDeckDialog`, `DeleteDeckConfirm` from `src/deck-select/index.ts`; extend frozen list in `tests/unit/domain-boundaries.test.ts`.
+- [x] 6. `npx vitest run tests/component/deck-select tests/unit/domain-boundaries.test.ts tests/unit/data-cy-coverage.test.ts` → green (`Test Files 5 passed`, `Tests 68 passed`).
+- [x] 7. `npm run lint && npm run typecheck` → green (lint silent; `svelte-check found 0 errors and 2 warnings in 2 files`, both pre-existing files: `CardCatalog.svelte`, `ShopSellScreen.svelte`).
 
 ## Outputs
 
@@ -98,7 +98,7 @@ Run: `npx vitest run tests/component/deck-select`
 
 ## Validation
 
-- [ ] `npx vitest run tests/component/deck-select tests/unit/domain-boundaries.test.ts tests/unit/data-cy-coverage.test.ts` green
-- [ ] `npm run lint && npm run typecheck && npm run build` green
-- [ ] app functional — no consumer yet
-- [ ] commit msg draft: `feat(deck-select): add the kebab action sheet with rename and delete dialogs`
+- [x] `npx vitest run tests/component/deck-select tests/unit/domain-boundaries.test.ts tests/unit/data-cy-coverage.test.ts` green — `Test Files 5 passed (5)`, `Tests 68 passed (68)`
+- [x] `npm run lint && npm run typecheck && npm run build` green — `build:verify` `{"status": "ok", "chunkBytes": {"shell": 93007, "battle": 343075, "deck-editor": 109448, "story": 106679}}`
+- [x] app functional — no consumer yet: the three components are named only by `src/deck-select/index.ts` and their tests (`grep -rn -l` over `src tests e2e`), so no screen mounts them and the build is byte-identical per domain
+- [x] commit msg draft: `feat(deck-select): add the kebab action sheet with rename and delete dialogs`

@@ -203,7 +203,6 @@ describe("public domain APIs are frozen", () => {
         "parseBattleRequest",
         "presetSelectableDecks",
         "settleOnce",
-        "supportedDuelCardCodes",
       ],
       types: [
         "BattleDeckSelection",

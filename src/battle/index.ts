@@ -17,7 +17,6 @@ export {
   listSelectableDecks,
   presetSelectableDecks,
   findSelectableDeck,
-  supportedDuelCardCodes,
 } from "./decks/selectable-decks.ts";
 /* T17: a host that builds its own pairing needs the bundled list `listSelectableDecks`
    takes and the seats to fall back to when a remembered key no longer resolves.

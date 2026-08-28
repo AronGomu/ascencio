@@ -16,7 +16,6 @@ import {
   presetSelectableDecks,
 } from "../../src/battle/decks/selectable-decks.ts";
 import { DECK_CATALOG } from "../../src/battle/duel/presets/deck-catalog.ts";
-import { PROTOTYPE_CATALOG } from "../../src/deck-editor/fixtures/catalog.ts";
 import AppShell from "../../src/shell/AppShell.svelte";
 import type {
   BattleDeckModule,
@@ -53,8 +52,6 @@ const duelDeckModule = async () =>
     listSelectableDecks,
     findSelectableDeck,
     parseBattleRequest,
-    supportedDuelCardCodes: async () =>
-      new Set(PROTOTYPE_CATALOG.map(({ code }) => code)),
   }) as BattleDeckModule as Awaited<ReturnType<DomainLoaders["duel"]>>;
 
 const loaders: DomainLoaders = {

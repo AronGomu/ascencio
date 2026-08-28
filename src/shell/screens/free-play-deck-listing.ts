@@ -31,19 +31,15 @@ export async function loadFreePlayDecks(
 ): Promise<readonly SelectableDeck[]> {
   let repository: IndexedDbDeckRepository | null = null;
   try {
-    /* Both before the library opens: each is a read the listing needs anyway,
-       and the catalog is what every local deck's codes are resolved against. */
-    const [supportedCodes, cards] = await Promise.all([
-      battle.supportedDuelCardCodes(),
-      runtimeCatalog(),
-    ]);
+    /* Before the library opens: it is a read the listing needs anyway, and the
+       catalog is what every local deck's codes are resolved against. */
+    const cards = await runtimeCatalog();
     repository = await IndexedDbDeckRepository.open();
     return await battle.listSelectableDecks(
       battle.DECK_CATALOG,
       repository,
       catalogByCode(cards),
       PROTOTYPE_RULESET,
-      supportedCodes,
     );
   } catch {
     return battle.presetSelectableDecks(battle.DECK_CATALOG);

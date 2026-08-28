@@ -8,7 +8,6 @@ import type {
   listSelectableDecks,
   parseBattleRequest,
   presetSelectableDecks,
-  supportedDuelCardCodes,
 } from "../battle/index.ts";
 import type { DeckEditorRoute } from "../deck-editor/index.ts";
 import type { DeckContext } from "../decks/deck-repository-context.ts";
@@ -57,7 +56,6 @@ export type BattleDomainLoader = () => Promise<{
   readonly listSelectableDecks: typeof listSelectableDecks;
   readonly parseBattleRequest: typeof parseBattleRequest;
   readonly presetSelectableDecks: typeof presetSelectableDecks;
-  readonly supportedDuelCardCodes: typeof supportedDuelCardCodes;
 }>;
 
 /** What a deck picker reads from the battle entry: everything but the duel

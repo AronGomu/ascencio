@@ -1,11 +1,10 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { buildActiveCardDataManifest } from "../../../scripts/lib/active-card-data-manifest.ts";
 import { buildActiveCardTextManifest } from "../../../scripts/lib/active-card-text-manifest.ts";
 import { buildActiveImageManifest } from "../../../scripts/lib/active-image-manifest.ts";
 import {
   findSelectableDeck,
   listSelectableDecks,
-  supportedDuelCardCodes,
 } from "../../../src/battle/decks/selectable-decks.ts";
 import {
   catalogByCode,
@@ -14,7 +13,6 @@ import {
 } from "../../../src/decks/catalog/pinned-ruleset.ts";
 import { packagedCatalog } from "../../../src/decks/catalog/packaged-catalog.ts";
 import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
-import { setRuntimeCatalogForTests } from "../../../src/decks/catalog/runtime-catalog.ts";
 import type { DeckRecord, DeckRepository } from "../../../src/decks/index.ts";
 import { emptyDeckHistory } from "../../../src/decks/deck-history.ts";
 import { createBlankDeck } from "../../../src/decks/deck-model.ts";
@@ -31,7 +29,6 @@ const validMain = Array.from(
   { length: 40 },
   (_, index) => mainCodes[index % mainCodes.length]!,
 );
-const supported = new Set(PROTOTYPE_CATALOG.map(({ code }) => code));
 
 function deckRecord(
   id: string,
@@ -71,14 +68,8 @@ async function list(repository: Pick<DeckRepository, "list" | "load">) {
     repository,
     catalog,
     PROTOTYPE_RULESET,
-    supported,
   );
 }
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-  setRuntimeCatalogForTests(null);
-});
 
 describe("listSelectableDecks", () => {
   it("lists every bundled preset even with an empty repository", async () => {
@@ -95,7 +86,7 @@ describe("listSelectableDecks", () => {
     });
   });
 
-  it("lists a ready local deck whose codes are all supported", async () => {
+  it("lists a ready local deck", async () => {
     const decks = await list(repositoryOf(deckRecord("ready-deck", validMain)));
     const local = decks.filter((deck) => deck.source === "local");
 
@@ -129,13 +120,17 @@ describe("listSelectableDecks", () => {
     expect(decks.filter((deck) => deck.source === "local")).toEqual([]);
   });
 
-  it("hides a ready deck holding a code outside the active snapshot", async () => {
+  /* What keeps the picker from offering a deck the Worker would refuse: a code
+     the active snapshot does not carry is a `missing-card` error in the
+     catalog the deck is resolved against, so the deck never reaches a seat. */
+  it("hides a ready deck holding a code the catalog does not carry", async () => {
     const decks = await listSelectableDecks(
       DECK_CATALOG,
       repositoryOf(deckRecord("ready-deck", validMain)),
-      catalog,
+      catalogByCode(
+        PROTOTYPE_CATALOG.filter(({ code }) => code !== validMain[0]),
+      ),
       PROTOTYPE_RULESET,
-      new Set([...supported].filter((code) => code !== validMain[0])),
     );
 
     expect(decks.filter((deck) => deck.source === "local")).toEqual([]);
@@ -178,7 +173,7 @@ describe("findSelectableDeck", () => {
   });
 });
 
-/* The filter above is right, and it used to always say no: the editor built
+/* The listing above is right, and it used to always say no: the editor built
    from a hand-written fixture while `__ACTIVE_IMAGE_MANIFEST__` was cut from
    the six bundled `.ydk` decks, so only eight cards were in both and the
    pinned ruleset capped those eight below the 40-card Main minimum. No deck a
@@ -231,55 +226,5 @@ describe("packaged local deck coverage", () => {
     expect(
       validation.issues.filter((issue) => issue.severity === "error"),
     ).toEqual([]);
-  });
-});
-
-describe("supportedDuelCardCodes", () => {
-  it("names exactly the cards the runtime catalog offers", async () => {
-    const offered = PROTOTYPE_CATALOG.slice(0, 2);
-    setRuntimeCatalogForTests(offered);
-
-    expect([...(await supportedDuelCardCodes())]).toEqual(
-      offered.map(({ code }) => code),
-    );
-  });
-
-  /* The claim this ticket exists for. The supported set used to be cut from
-     the art-backed packaged manifest, so a deck holding anything the six
-     bundled `.ydk` decks did not already name was withheld without a word.
-     Reading the runtime catalog means every card the editor could offer is a
-     card the picker will list. */
-  it("offers a local deck built from cards no bundled deck names", async () => {
-    setRuntimeCatalogForTests(PROTOTYPE_CATALOG);
-
-    const decks = await listSelectableDecks(
-      DECK_CATALOG,
-      repositoryOf(deckRecord("own-deck", validMain)),
-      catalog,
-      PROTOTYPE_RULESET,
-      await supportedDuelCardCodes(),
-    );
-
-    expect(decks.filter((deck) => deck.source === "local")).toHaveLength(1);
-    expect(decks.at(-1)?.key).toBe("local:own-deck:1");
-  });
-
-  /* Widening what is supported must not widen it past the catalog: a deck the
-     Worker would refuse still has to be absent, because a refusal that arrives
-     after the player chose the deck is the worse failure. */
-  it("withholds a local deck holding a code the catalog does not carry", async () => {
-    setRuntimeCatalogForTests(
-      PROTOTYPE_CATALOG.filter(({ code }) => code !== validMain[0]),
-    );
-
-    const decks = await listSelectableDecks(
-      DECK_CATALOG,
-      repositoryOf(deckRecord("own-deck", validMain)),
-      catalog,
-      PROTOTYPE_RULESET,
-      await supportedDuelCardCodes(),
-    );
-
-    expect(decks.filter((deck) => deck.source === "local")).toEqual([]);
   });
 });

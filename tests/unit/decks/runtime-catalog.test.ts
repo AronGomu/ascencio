@@ -251,8 +251,8 @@ describe("createFetchShardReader", () => {
 
   /* The Worker refuses a script index bucketed any other way. Sixty-four of a
      hundred and twenty-eight buckets is half a database that looks whole, and
-     `supportedDuelCardCodes()` reads the same catalog, so the duel would agree
-     with the editor about the missing half. */
+     the duel picker validates against the same catalog, so the duel would
+     agree with the editor about the missing half. */
   it("refuses a snapshot bucketed into more shards than it reads", async () => {
     const server = await snapshotServer({ extraCardShards: 1 });
     vi.stubGlobal("fetch", vi.fn(server.fetch));

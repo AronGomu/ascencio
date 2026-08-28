@@ -71,8 +71,6 @@ function battleModule(
     listSelectableDecks,
     findSelectableDeck,
     parseBattleRequest,
-    supportedDuelCardCodes: async () =>
-      new Set(PROTOTYPE_CATALOG.map(({ code }) => code)),
     ...overrides,
   };
 }
@@ -204,9 +202,10 @@ describe("FreePlayMatchSetup", () => {
      playable before the library read behind them has answered. */
   it("offers the bundled decks before the library answers", async () => {
     /* A library read that never answers, so the first stage is what stays on
-       screen: in a browser it is a fetch of the whole card database. */
+       screen: in a browser it is a fetch of the whole card database and an
+       IndexedDB read behind it. */
     await renderLoadedSetup({
-      module: { supportedDuelCardCodes: () => new Promise(() => {}) },
+      module: { listSelectableDecks: () => new Promise(() => {}) },
     });
 
     expect(optionKeys("player")).toEqual([

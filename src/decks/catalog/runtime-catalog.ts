@@ -65,10 +65,10 @@ export interface RuntimeSnapshotPin {
  *
  * These URLs carry no content hash, so a stale Cache Storage entry or a deploy
  * caught half-rolled answers them with a different snapshot's cards. The editor
- * would offer those codes, `supportedDuelCardCodes()` would bless a deck built
- * from them, and the Worker — checking the current manifest — would refuse the
- * deck at duel start. Digesting each body here means the editor and the duel
- * disagree about nothing: they read one snapshot or neither does.
+ * would offer those codes, the duel picker would list a deck built from them,
+ * and the Worker — checking the current manifest — would refuse the deck at
+ * duel start. Digesting each body here means the editor and the duel disagree
+ * about nothing: they read one snapshot or neither does.
  *
  * `timeoutMs` is a parameter only so a test can watch a real abort land as the
  * named-shard failure both surfaces already render; production takes the
@@ -157,8 +157,8 @@ async function loadPinnedManifestFiles(
   /* The Worker refuses a script index bucketed any other way
      (`active-duel-dependencies.ts`), and the catalog has the same exposure with
      none of the noise: reading 64 of, say, 128 buckets is half a database that
-     looks whole, and `supportedDuelCardCodes()` derives from this same read, so
-     the duel would agree with the editor about the missing half. */
+     looks whole, and the duel picker validates against this same read, so the
+     duel would agree with the editor about the missing half. */
   const declaredShards = [...files.keys()].filter((path) =>
     CARD_SHARD_PATTERN.test(path),
   ).length;

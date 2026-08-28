@@ -1,4 +1,3 @@
-import { runtimeCatalog } from "../../decks/catalog/runtime-catalog.ts";
 import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
 import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
 import { resolveDeck, type DeckRepository } from "../../decks/index.ts";
@@ -19,11 +18,12 @@ export interface SelectableDeck {
 /**
  * The decks a seat may be given, bundled first.
  *
- * A local deck earns its row twice over: `resolveDeck` must call it `ready`
- * against the pinned ruleset, and every code it holds must be one the active
- * snapshot can play. Anything else is left out without a word — an offered
- * deck that the Worker then refuses is a worse failure than a deck the player
- * never saw, because the refusal arrives after they chose it.
+ * A local deck earns its row by resolving `ready` against `catalog` and the
+ * pinned ruleset — and `catalog` is the one the editor built the deck against,
+ * so a code this build cannot play is already a `missing-card` error there.
+ * Anything short of `ready` is left out without a word: an offered deck that
+ * the Worker then refuses is a worse failure than a deck the player never saw,
+ * because the refusal arrives after they chose it.
  *
  * Nothing here writes. A deck that misses by one card stays exactly as its
  * owner left it; the editor is where a deck is repaired, not the picker.
@@ -33,7 +33,6 @@ export async function listSelectableDecks(
   repository: Pick<DeckRepository, "list" | "load">,
   catalog: ReadonlyMap<number, DeckBuilderCardView>,
   ruleset: PinnedDeckRuleset,
-  supportedCodes: ReadonlySet<number>,
 ): Promise<readonly SelectableDeck[]> {
   const selectable: SelectableDeck[] = [...presetSelectableDecks(presets)];
 
@@ -41,8 +40,6 @@ export async function listSelectableDecks(
     const resolved = await resolveDeck(record.id, repository, catalog, ruleset);
     if (resolved.type !== "ready") continue;
     const { deck } = resolved;
-    const codes = [...deck.main, ...deck.extra, ...deck.side];
-    if (!codes.every((code) => supportedCodes.has(code))) continue;
     selectable.push(
       Object.freeze({
         key: `local:${deck.ref.deckId}:${deck.ref.revision}`,
@@ -88,19 +85,4 @@ export function findSelectableDeck(
   key: string,
 ): SelectableDeck | null {
   return decks.find((deck) => deck.key === key) ?? null;
-}
-
-/**
- * The codes this build can put on a board: the whole packaged card database,
- * every shard of which the runtime assets carry, which is what the Worker
- * itself demands before it will create a session.
- *
- * It is the deck editor's own catalog read as a set of codes — fetched once
- * per page and shared with the editor through the same memo. One derivation
- * for both surfaces is what lets the picker predict a refusal instead of
- * provoking it, and what stops a card being offered in the editor that the
- * picker would then quietly hold a deck back for.
- */
-export async function supportedDuelCardCodes(): Promise<ReadonlySet<number>> {
-  return new Set((await runtimeCatalog()).map(({ code }) => code));
 }

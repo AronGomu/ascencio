@@ -80,7 +80,6 @@
     findSelectableDeck,
     listSelectableDecks,
     presetSelectableDecks,
-    supportedDuelCardCodes,
     type SelectableDeck,
   } from "../decks/selectable-decks.ts";
   import {
@@ -951,11 +950,9 @@
   async function listDecksOrBundledOnly(): Promise<DeckListing> {
     let repository: IndexedDbDeckRepository | null = null;
     try {
-      /* Before storage opens, and before the starter deck is seeded: both
-         resolve codes against the catalog, so a repository opened first would
-         only wait on it anyway. A catalog that never lands lands here, and the
-         bundled fallback below is what the player gets. */
-      const supportedCodes = await supportedDuelCardCodes();
+      /* No catalog read of its own: `deckBuilderCatalog` is whatever the one
+         read at mount has landed, and a listing that runs before it lands
+         offers the bundled decks alone — `loadCatalog` re-lists either way. */
       repository = await IndexedDbDeckRepository.open();
       /* Best-effort and idempotent, so a player who has never opened the
          editor still arrives here with a deck of their own to duel with. */
@@ -969,7 +966,6 @@
         repository,
         deckBuilderCatalog,
         PROTOTYPE_RULESET,
-        supportedCodes,
       );
       const defaultDeckId = await repository.getDefaultDeck();
       /* A key carries the revision the deck had, so the default is matched by

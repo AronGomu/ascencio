@@ -79,12 +79,12 @@ Run: `npx vitest run tests/unit/shell` (match the actual dir of existing setting
 
 ## Impl steps
 
-- [ ] 1. Locate settings tests (`git grep`), write failing roster test file `tests/unit/shell/free-play-opponents.test.ts` + settings assertions in existing file.
-- [ ] 2. Create `src/shell/screens/free-play-opponents.ts` per Requirements.
-- [ ] 3. Extend `ShellSettings` + defaults + `readShellSettings` tolerance in `src/shell/settings/shell-settings.ts`.
-- [ ] 4. Add both store methods to `src/shell/settings/shell-settings-store.ts`.
-- [ ] 5. `npx vitest run tests/unit` → green.
-- [ ] 6. `npm run lint && npm run typecheck && npm run build` → green.
+- [x] 1. Locate settings tests (`git grep`), write failing roster test file `tests/unit/shell/free-play-opponents.test.ts` + settings assertions in existing file. — red run: `Tests  9 failed | 15 passed (24)`
+- [x] 2. Create `src/shell/screens/free-play-opponents.ts` per Requirements. — file exists; roster tests pass
+- [x] 3. Extend `ShellSettings` + defaults + `readShellSettings` tolerance in `src/shell/settings/shell-settings.ts`. — old-payload test green
+- [x] 4. Add both store methods to `src/shell/settings/shell-settings-store.ts`. — store round-trip tests green (`Tests  28 passed (28)`)
+- [x] 5. `npx vitest run tests/unit` → green. — `Test Files  149 passed (149)` / `Tests  1713 passed (1713)`
+- [x] 6. `npm run lint && npm run typecheck && npm run build` → green. — lint silent, `svelte-check found 0 errors`, `build exit=0` with `"status": "ok"`
 
 ## Outputs
 
@@ -94,7 +94,7 @@ Run: `npx vitest run tests/unit/shell` (match the actual dir of existing setting
 
 ## Validation
 
-- [ ] `npx vitest run tests/unit` green
-- [ ] `npm run lint && npm run typecheck && npm run build` green
-- [ ] app functional — settings additions backward-compatible
-- [ ] commit msg draft: `feat(shell): give free play three AI opponents that own their bundled decks`
+- [x] `npx vitest run tests/unit` green — `Tests  1713 passed (1713)`
+- [x] `npm run lint && npm run typecheck && npm run build` green — all three exit 0; `build:verify` chunk budgets ok
+- [x] app functional — settings additions backward-compatible: a v3 payload lacking both fields reads as `DEFAULT_SHELL_SETTINGS` (test `defaults the free-play opponent and preset favourites, including on an older v3 payload`), and `npm run test:component` is green at `Test Files  102 passed (102)` / `Tests  932 passed (932)`, including `FreePlayMatchSetup` over a real settings store
+- [x] commit msg draft: `feat(shell): give free play three AI opponents that own their bundled decks`

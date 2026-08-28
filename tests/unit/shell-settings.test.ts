@@ -1,5 +1,7 @@
+import { get } from "svelte/store";
 import { describe, expect, it, vi } from "vitest";
 import { PERSISTED_UI_STATE_KEY } from "../../src/battle/app/stores/persisted-ui-state.ts";
+import { createShellSettingsStore } from "../../src/shell/settings/shell-settings-store.ts";
 import {
   DEFAULT_SHELL_SETTINGS,
   migrateFromV2,
@@ -11,6 +13,16 @@ import {
 
 function storageOf(entries: Record<string, string>): Pick<Storage, "getItem"> {
   return { getItem: (key: string) => entries[key] ?? null };
+}
+
+function liveStorage(): Pick<Storage, "getItem" | "setItem"> {
+  const entries: Record<string, string> = {};
+  return {
+    getItem: (key: string) => entries[key] ?? null,
+    setItem: (key: string, value: string) => {
+      entries[key] = value;
+    },
+  };
 }
 
 describe("shell settings", () => {
@@ -57,6 +69,8 @@ describe("shell settings", () => {
       rotationNoticeDismissed: true,
       display: { showZoneOutlines: false, showZoneCounts: true },
       freePlayPairing: { player: "preset:nekroz", opponent: "local:mine:4" },
+      freePlayOpponentId: "blaze-circuit",
+      freePlayPresetFavouriteIds: ["preset:nekroz"],
     };
     writeShellSettings(
       {
@@ -124,6 +138,66 @@ describe("shell settings", () => {
     ).toBeNull();
   });
 
+  /* T19: the chosen AI opponent and the preset decks starred beside it. A
+     payload written before either existed reads as "no persona remembered" and
+     "nothing starred" rather than as a broken roster, so an existing profile
+     opens on the default persona — whose deck is the opponent seat the duel
+     menu has always fixed. */
+  it("defaults the free-play opponent and preset favourites, including on an older v3 payload", () => {
+    expect(DEFAULT_SHELL_SETTINGS.freePlayOpponentId).toBeNull();
+    expect(DEFAULT_SHELL_SETTINGS.freePlayPresetFavouriteIds).toEqual([]);
+    const withoutRoster = JSON.stringify({
+      version: 3,
+      rotationNoticeDismissed: true,
+      display: { showZoneOutlines: true, showZoneCounts: true },
+    });
+    expect(
+      readShellSettings(storageOf({ [SHELL_SETTINGS_KEY]: withoutRoster })),
+    ).toEqual({ ...DEFAULT_SHELL_SETTINGS, rotationNoticeDismissed: true });
+    expect(migrateFromV2(null).freePlayOpponentId).toBeNull();
+    expect(migrateFromV2(null).freePlayPresetFavouriteIds).toEqual([]);
+  });
+
+  /* Whether a persona id still names a persona is the roster's question, not
+     this one — but a shape that is not a string, or a favourites list that is
+     not a list of keys, is dropped here rather than handed to a screen. */
+  it.each([
+    ["a number", 7, null],
+    ["an empty string", "", null],
+    ["an object", { id: "blaze-circuit" }, null],
+  ])("drops a free-play opponent id that is %s", (_name, id, expected) => {
+    const serialized = JSON.stringify({
+      version: 3,
+      display: { showZoneOutlines: true, showZoneCounts: true },
+      freePlayOpponentId: id,
+    });
+    expect(
+      readShellSettings(storageOf({ [SHELL_SETTINGS_KEY]: serialized }))
+        .freePlayOpponentId,
+    ).toBe(expected);
+  });
+
+  it("keeps only the string keys of a stored preset favourites list", () => {
+    const serialized = JSON.stringify({
+      version: 3,
+      display: { showZoneOutlines: true, showZoneCounts: true },
+      freePlayPresetFavouriteIds: ["preset:nekroz", 7, "", "preset:shaddoll"],
+    });
+    expect(
+      readShellSettings(storageOf({ [SHELL_SETTINGS_KEY]: serialized }))
+        .freePlayPresetFavouriteIds,
+    ).toEqual(["preset:nekroz", "preset:shaddoll"]);
+    const notAList = JSON.stringify({
+      version: 3,
+      display: { showZoneOutlines: true, showZoneCounts: true },
+      freePlayPresetFavouriteIds: "preset:nekroz",
+    });
+    expect(
+      readShellSettings(storageOf({ [SHELL_SETTINGS_KEY]: notAList }))
+        .freePlayPresetFavouriteIds,
+    ).toEqual([]);
+  });
+
   it("prefers the v3 payload over a stale v2 payload", () => {
     const entries = {
       [PERSISTED_UI_STATE_KEY]: JSON.stringify({
@@ -161,5 +235,45 @@ describe("shell settings", () => {
         },
       }),
     ).toEqual(DEFAULT_SHELL_SETTINGS);
+  });
+});
+
+/* T19: the two free-play choices the roster screen persists. Both go through
+   the same `persist()` the pairing uses, so a storage write and the live store
+   never disagree about what was chosen. */
+describe("the shell settings store", () => {
+  it("remembers a chosen free-play opponent across a reload", () => {
+    const storage = liveStorage();
+    const store = createShellSettingsStore(storage);
+    expect(get(store).freePlayOpponentId).toBeNull();
+    store.rememberFreePlayOpponent("blaze-circuit");
+    expect(get(store).freePlayOpponentId).toBe("blaze-circuit");
+    expect(readShellSettings(storage).freePlayOpponentId).toBe("blaze-circuit");
+    expect(get(createShellSettingsStore(storage)).freePlayOpponentId).toBe(
+      "blaze-circuit",
+    );
+  });
+
+  it("adds and removes a preset deck favourite", () => {
+    const storage = liveStorage();
+    const store = createShellSettingsStore(storage);
+    store.setPresetDeckFavourite("preset:nekroz", true);
+    expect(get(store).freePlayPresetFavouriteIds).toEqual(["preset:nekroz"]);
+    store.setPresetDeckFavourite("preset:nekroz", true);
+    expect(get(store).freePlayPresetFavouriteIds).toEqual(["preset:nekroz"]);
+    expect(readShellSettings(storage).freePlayPresetFavouriteIds).toEqual([
+      "preset:nekroz",
+    ]);
+    store.setPresetDeckFavourite("preset:nekroz", false);
+    expect(get(store).freePlayPresetFavouriteIds).toEqual([]);
+    expect(readShellSettings(storage).freePlayPresetFavouriteIds).toEqual([]);
+  });
+
+  it("keeps working without storage", () => {
+    const store = createShellSettingsStore(null);
+    store.rememberFreePlayOpponent("practice-bot");
+    store.setPresetDeckFavourite("preset:shaddoll", true);
+    expect(get(store).freePlayOpponentId).toBe("practice-bot");
+    expect(get(store).freePlayPresetFavouriteIds).toEqual(["preset:shaddoll"]);
   });
 });

@@ -3939,3 +3939,11 @@ Run `npm run dev` (default `DEV_PORT=4300`), open `#/free-play`, start a duel.
 - [ ] Open the admin zone-outline toggle (`data-zone-outlines` off): zone outlines disappear entirely, as before.
 - [ ] The duel field has no border around its outer edge; the play mat's own inner frame is still there.
 - [ ] A single straight vertical line separates the duel field from the right pane, running the pane's full height, with the rail's text not touching it.
+
+### Orange means active player in the right rail
+
+- [ ] Start a duel and look at the right rail: nothing draws a border around an avatar-and-LP block as a whole any more.
+- [ ] The player whose turn it is has an orange border on their avatar picture **and** on their LP plate; the other player's avatar and LP borders are grey.
+- [ ] End the turn: the orange borders move to the other player, the grey to you. Only ever one side is orange.
+- [ ] Take LP into the yellow (≤4000) and red (<2000) tiers: the LP number changes colour but its border stays governed by whose turn it is.
+- [ ] The avatar size is capped by the rail column, which sits at its 240px minimum on a 16:9 window: on 1920×1080 the avatars measure the same 240px as before, and only a wider-than-16:9 stage (for example 2560×1080) shows the raised cap. The rail still shows both identities and the status text without anything spilling out.

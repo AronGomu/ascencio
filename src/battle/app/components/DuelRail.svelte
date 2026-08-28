@@ -92,12 +92,9 @@
       >
     </div>
   </header>
-  <div
-    class:active={turnPlayer === 1}
-    class="duel-right-rail__identity"
-    data-cy="duel-right-rail-opponent"
-  >
+  <div class="duel-right-rail__identity" data-cy="duel-right-rail-opponent">
     <img
+      class:active={turnPlayer === 1}
       src={opponentAvatarUrl || AVATAR_PLACEHOLDER}
       alt=""
       aria-hidden="true"
@@ -105,6 +102,7 @@
     />
     <p
       class="duel-right-rail__life"
+      class:active={turnPlayer === 1}
       class:is-high={lifePoints[1] > 4000}
       class:is-mid={lifePoints[1] >= 2000 && lifePoints[1] <= 4000}
       class:is-low={lifePoints[1] < 2000}
@@ -132,13 +130,10 @@
         ></i></span
       >{/if}
   </div>
-  <div
-    class:active={turnPlayer === 0}
-    class="duel-right-rail__identity"
-    data-cy="duel-right-rail-player"
-  >
+  <div class="duel-right-rail__identity" data-cy="duel-right-rail-player">
     <p
       class="duel-right-rail__life"
+      class:active={turnPlayer === 0}
       class:is-high={lifePoints[0] > 4000}
       class:is-mid={lifePoints[0] >= 2000 && lifePoints[0] <= 4000}
       class:is-low={lifePoints[0] < 2000}
@@ -147,6 +142,7 @@
       LP {$displayed0}
     </p>
     <img
+      class:active={turnPlayer === 0}
       src={playerAvatarUrl || AVATAR_PLACEHOLDER}
       alt=""
       aria-hidden="true"

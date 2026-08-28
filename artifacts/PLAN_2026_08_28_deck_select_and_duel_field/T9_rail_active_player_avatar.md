@@ -141,8 +141,8 @@ Run: `npm run test:component -- tests/component/DuelRail.test.ts` (Vitest, jsdom
 
 ## Impl steps
 
-- [ ] 1. Red: failing active-class tests
-  - [ ] 1.1 In `tests/component/DuelRail.test.ts`, inside `describe("DuelRail", …)` after the test `"life plates carry their state class"`, add:
+- [x] 1. Red: failing active-class tests
+  - [x] 1.1 In `tests/component/DuelRail.test.ts`, inside `describe("DuelRail", …)` after the test `"life plates carry their state class"`, add:
 
     ```ts
     it("avatar and life borders track the turn player", async () => {
@@ -166,16 +166,16 @@ Run: `npm run test:component -- tests/component/DuelRail.test.ts` (Vitest, jsdom
     });
     ```
 
-  - [ ] 1.2 Run `npm run test:component -- tests/component/DuelRail.test.ts` — the new test must fail (wrapper divs carry `active` today, img/LP do not).
-- [ ] 2. Green: move `active` in the component, rewire the CSS
-  - [ ] 2.1 In `src/battle/app/components/DuelRail.svelte`: delete `class:active={turnPlayer === 1}` from the div `data-cy="duel-right-rail-opponent"` and `class:active={turnPlayer === 0}` from the div `data-cy="duel-right-rail-player"`; add `class:active={turnPlayer === 1}` to the img `data-cy="duel-player-avatar-1"` and to the p `data-cy="duel-right-rail-life-points-1"`; add `class:active={turnPlayer === 0}` to the img `data-cy="duel-player-avatar-0"` and to the p `data-cy="duel-right-rail-life-points-0"` — exactly as in the Interface contract template fragment.
-  - [ ] 2.2 In `src/styles/app.css` (~560–610): apply the CSS block from the Interface contract verbatim — remove `border: 2px solid transparent;` from `.duel-right-rail__identity`; delete the `.duel-right-rail__identity.active` rule; change the width cap factor `0.26` → `0.32`; avatar border → `4px solid var(--border)` plus new rule `.duel-right-rail__identity img.active { border-color: var(--selected); }`; LP border → `2px solid var(--border)` plus new rule `.duel-right-rail__life.active { border-color: var(--selected); }`; delete `border-color: currentColor;` from `.is-high`, `.is-mid`, `.is-low` (keep their `color:` lines). Update the rationale comment above the width-cap rule: replace "roughly a third" wording so it names the 0.32 cap, e.g. keep the existing explanation but end with "…the square is capped at 0.32 of `--stage-h`" — the comment must state the current factor.
-  - [ ] 2.3 Run `npm run test:component -- tests/component/DuelRail.test.ts` — whole file green.
-- [ ] 3. Manual full-HD fit check (plan A9)
-  - [ ] 3.1 Run `npm run dev` (port 4300), open Chromium at 1920×1080 (device toolbar, no scaling), start a duel via `#/free-play`. Verify: both avatars visibly larger than before; both identities plus the status band fit the rail with no vertical overflow/scroll; active player's avatar and LP borders are orange (#ffd580), the other player's grey (#697895); no border around either identity block; after ending the turn the orange side swaps.
-  - [ ] 3.2 If the rail overflows vertically at 0.32: lower the factor in the `width: min(...)` rule in steps of 0.01 until it fits, update the rationale comment to the final value, and record the actual factor in the commit message body.
-- [ ] 4. Manual checklist + gates
-  - [ ] 4.1 Append to `artifacts/manual_test_checklist.md` (end of file):
+  - [x] 1.2 Run `npm run test:component -- tests/component/DuelRail.test.ts` — the new test must fail (wrapper divs carry `active` today, img/LP do not).
+- [x] 2. Green: move `active` in the component, rewire the CSS
+  - [x] 2.1 In `src/battle/app/components/DuelRail.svelte`: delete `class:active={turnPlayer === 1}` from the div `data-cy="duel-right-rail-opponent"` and `class:active={turnPlayer === 0}` from the div `data-cy="duel-right-rail-player"`; add `class:active={turnPlayer === 1}` to the img `data-cy="duel-player-avatar-1"` and to the p `data-cy="duel-right-rail-life-points-1"`; add `class:active={turnPlayer === 0}` to the img `data-cy="duel-player-avatar-0"` and to the p `data-cy="duel-right-rail-life-points-0"` — exactly as in the Interface contract template fragment.
+  - [x] 2.2 In `src/styles/app.css` (~560–610): apply the CSS block from the Interface contract verbatim — remove `border: 2px solid transparent;` from `.duel-right-rail__identity`; delete the `.duel-right-rail__identity.active` rule; change the width cap factor `0.26` → `0.32`; avatar border → `4px solid var(--border)` plus new rule `.duel-right-rail__identity img.active { border-color: var(--selected); }`; LP border → `2px solid var(--border)` plus new rule `.duel-right-rail__life.active { border-color: var(--selected); }`; delete `border-color: currentColor;` from `.is-high`, `.is-mid`, `.is-low` (keep their `color:` lines). Update the rationale comment above the width-cap rule: replace "roughly a third" wording so it names the 0.32 cap, e.g. keep the existing explanation but end with "…the square is capped at 0.32 of `--stage-h`" — the comment must state the current factor.
+  - [x] 2.3 Run `npm run test:component -- tests/component/DuelRail.test.ts` — whole file green.
+- [x] 3. Manual full-HD fit check (plan A9)
+  - [x] 3.1 Run `npm run dev` (port 4300), open Chromium at 1920×1080 (device toolbar, no scaling), start a duel via `#/free-play`. Verify: both avatars visibly larger than before; both identities plus the status band fit the rail with no vertical overflow/scroll; active player's avatar and LP borders are orange (#ffd580), the other player's grey (#697895); no border around either identity block; after ending the turn the orange side swaps.
+  - [x] 3.2 (not triggered — no overflow at 0.32, factor stays 0.32) If the rail overflows vertically at 0.32: lower the factor in the `width: min(...)` rule in steps of 0.01 until it fits, update the rationale comment to the final value, and record the actual factor in the commit message body.
+- [x] 4. Manual checklist + gates
+  - [x] 4.1 Append to `artifacts/manual_test_checklist.md` (end of file):
 
     ```md
     ### Orange means active player in the right rail
@@ -187,8 +187,8 @@ Run: `npm run test:component -- tests/component/DuelRail.test.ts` (Vitest, jsdom
     - [ ] On a full HD window (1920×1080), both avatar images are visibly bigger than before, and the rail still shows both identities and the status text without anything spilling out.
     ```
 
-  - [ ] 4.2 Run `npm run test:component` — green.
-  - [ ] 4.3 Run `npm run check:headless` — green (types, lint, data-cy coverage, boundaries).
+  - [x] 4.2 Run `npm run test:component` — green.
+  - [x] 4.3 Run `npm run check:headless` — green (types, lint, data-cy coverage, boundaries).
 
 ## Outputs
 
@@ -198,8 +198,8 @@ Run: `npm run test:component -- tests/component/DuelRail.test.ts` (Vitest, jsdom
 
 ## Validation
 
-- [ ] tests pass: `npm run test:component` and `npm run check:headless`, both exit 0.
-- [ ] manual check: step 3.1 performed on 1920×1080 Chromium; final width factor recorded if it deviates from 0.32.
-- [ ] no silent-failure swallow on a path this slice adds — none: no new runtime logic beyond class bindings; no `|| true`, empty catch, or discarded promise introduced.
-- [ ] app functional — duel starts, rail renders, turn swap recolours borders; no broken path from this slice.
-- [ ] commit msg draft: `feat(duel): mark the active player with orange avatar and LP borders, grow the rail avatars` (body notes RP1+RP2, the removed identity-block border, and the actual width factor if not 0.32).
+- [x] tests pass: `npm run test:component` and `npm run check:headless`, both exit 0.
+- [x] manual check: step 3.1 performed on 1920×1080 Chromium; final width factor recorded if it deviates from 0.32.
+- [x] no silent-failure swallow on a path this slice adds — none: no new runtime logic beyond class bindings; no `|| true`, empty catch, or discarded promise introduced.
+- [x] app functional — duel starts, rail renders, turn swap recolours borders; no broken path from this slice.
+- [x] commit msg draft: `feat(duel): mark the active player with orange avatar and LP borders, grow the rail avatars` (body notes RP1+RP2, the removed identity-block border, and the actual width factor if not 0.32).

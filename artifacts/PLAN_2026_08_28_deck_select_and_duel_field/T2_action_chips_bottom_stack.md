@@ -1,6 +1,6 @@
 # T2: Card action chips: bottom-anchored upward stack, kill duplicate row (items 2,3)
 
-**Plan:** `./artifacts/PLAN_2026_08_27_duel_field_right_pane_feedback.md`
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`
 **Depends:** none
 **Commit outcome:** One vertical chip stack per card, anchored bottom growing up; pinned hand card no longer shows second horizontal set
 

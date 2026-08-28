@@ -1,13 +1,13 @@
-# T9: Opponent roster + settings persistence
+# T19: Opponent roster + settings persistence
 
-**Plan:** `./artifacts/PLAN_2026_08_27_deck_selection_screen.md`
-**Depends:** T1
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`
+**Depends:** T11
 **Commit outcome:** Free play has three named AI opponents, each owning one bundled deck; the chosen opponent persists in shell settings. Pure data + settings — no UI yet.
 
 ## Context (self-contained)
 
 - Goal: implement validated deck-selection design (`docs/deck-selection-screen-design.md` §Opponent selection (free play only)): exactly three bundled AI opponents — Practice Bot, Blaze Circuit, Vault Warden — each owning exactly one bundled, undeletable deck; picking an AI brings its deck along.
-- This slice: roster module in shell + settings field. T10 consumes.
+- This slice: roster module in shell + settings field. T20 consumes.
 - Out of scope here: opponent duel behavior (`src/battle/worker/opponent/OpponentPolicy.ts` untouched — personas are presentation/pairing only), portraits beyond inline SVG placeholder ids, story opponents.
 - Assumptions in force (plan `## Assumptions`): mapping Practice Bot→`mvp-opponent`, Blaze Circuit→`burning-abyss`, Vault Warden→`shaddoll`; default persona = Vault Warden (its deck = existing `DEFAULT_OPPONENT_DECK_ID = "shaddoll"` from `src/battle/duel/presets/deck-catalog.ts`, so remembered-nothing behavior matches today's default opponent deck).
 
@@ -56,7 +56,7 @@ setPresetDeckFavourite(id: string, favourite: boolean): void;
 - `src/shell/settings/shell-settings-store.ts` — store + `persist` pattern.
 - `src/battle/index.ts` — `DECK_CATALOG` export (frozen list already carries it).
 - Existing settings tests: `git grep -ln "readShellSettings\|rememberFreePlayPairing" tests/` — extend in place.
-- **From Depends:** T1 unrelated code-wise; ordering only (branch base).
+- **From Depends:** T11 unrelated code-wise; ordering only (branch base).
 
 ## TDD
 
@@ -90,7 +90,7 @@ Run: `npx vitest run tests/unit/shell` (match the actual dir of existing setting
 
 - New: `src/shell/screens/free-play-opponents.ts`, `tests/unit/shell/free-play-opponents.test.ts`.
 - Edited: `src/shell/settings/shell-settings.ts`, `src/shell/settings/shell-settings-store.ts`, settings test file.
-- Public API (shell-internal): `FREE_PLAY_OPPONENTS`, `DEFAULT_FREE_PLAY_OPPONENT_ID`, `freePlayOpponent(id)`, store methods `rememberFreePlayOpponent(id)`, `setPresetDeckFavourite(id, favourite)` — T10 quotes verbatim.
+- Public API (shell-internal): `FREE_PLAY_OPPONENTS`, `DEFAULT_FREE_PLAY_OPPONENT_ID`, `freePlayOpponent(id)`, store methods `rememberFreePlayOpponent(id)`, `setPresetDeckFavourite(id, favourite)` — T20 quotes verbatim.
 
 ## Validation
 

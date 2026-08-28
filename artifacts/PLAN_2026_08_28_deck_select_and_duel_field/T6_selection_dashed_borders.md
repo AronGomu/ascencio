@@ -1,6 +1,6 @@
 # T6: Selection prompts: dashed green candidates, orange selected, no green fill / select button (item 5)
 
-**Plan:** `./artifacts/PLAN_2026_08_27_duel_field_right_pane_feedback.md`
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`
 **Depends:** T2, T4
 **Commit outcome:** Valid targets dashed green border; click toggles dashed orange; green art-fill + select chip gone for selection prompts
 

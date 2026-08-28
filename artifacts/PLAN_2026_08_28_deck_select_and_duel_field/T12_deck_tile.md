@@ -1,15 +1,15 @@
-# T2: DeckTile component
+# T12: DeckTile component
 
-**Plan:** `./artifacts/PLAN_2026_08_27_deck_selection_screen.md`
-**Depends:** T1
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`
+**Depends:** T11
 **Commit outcome:** `DeckTile.svelte` renders one 2:1 deck tile — full-bleed art + fade, star, checkmark, kebab button, name/stats/meta/badges, halo variants — exported from the public entry, component-tested. No screen consumes it yet.
 
 ## Context (self-contained)
 
 - Goal: implement validated deck-selection design (`docs/deck-selection-screen-design.md` §The deck tile, §Halo & badge semantics) as shared Svelte lib `src/deck-select/`.
 - This slice: the atom every context reuses (grid, library, seat cards, mobile list).
-- Out of scope here: kebab menu contents (T3 — this ticket only emits `onmenu`), screen layout, hover previews, any consumer.
-- Assumptions in force: T1 created `src/deck-select/` with `DeckTileModel` (fields: `key,name,counts,meta,coverImageUrl,legal,blockReason,bundled,lockedBy,favourite,isDefault,deletable,updatedAt`), tokens `--seat-you`/`--seat-opponent` exist in `src/styles/tokens.css`; app tokens `--accent`, `--selected`, `--danger` exist.
+- Out of scope here: kebab menu contents (T13 — this ticket only emits `onmenu`), screen layout, hover previews, any consumer.
+- Assumptions in force: T11 created `src/deck-select/` with `DeckTileModel` (fields: `key,name,counts,meta,coverImageUrl,legal,blockReason,bundled,lockedBy,favourite,isDefault,deletable,updatedAt`), tokens `--seat-you`/`--seat-opponent` exist in `src/styles/tokens.css`; app tokens `--accent`, `--selected`, `--danger` exist.
 
 ## Requirements
 
@@ -30,7 +30,7 @@ export let disabled = false;
 export let onpress: () => void = () => undefined;
 export let ondblpress: () => void = () => undefined;
 export let onfavourite: (favourite: boolean) => void = () => undefined;
-/** Kebab pressed; anchor element passed so the menu (T3) can position. */
+/** Kebab pressed; anchor element passed so the menu (T13) can position. */
 export let onmenu: (anchor: HTMLElement) => void = () => undefined;
 ```
 
@@ -54,9 +54,9 @@ export let onmenu: (anchor: HTMLElement) => void = () => undefined;
 
 ## Inputs
 
-- `src/deck-select/deck-select-contracts.ts` — `DeckTileModel` (T1, fields listed above).
+- `src/deck-select/deck-select-contracts.ts` — `DeckTileModel` (T11, fields listed above).
 - `src/styles/tokens.css` — `--seat-you`, `--seat-opponent`, `--accent`, `--selected`, `--danger`, spacing/radius vars.
-- **From Depends:** T1 exports `DeckTileModel` from `src/deck-select/index.ts`; frozen export list in `tests/unit/domain-boundaries.test.ts` must gain `DeckTile`.
+- **From Depends:** T11 exports `DeckTileModel` from `src/deck-select/index.ts`; frozen export list in `tests/unit/domain-boundaries.test.ts` must gain `DeckTile`.
 
 ## TDD
 
@@ -92,7 +92,7 @@ Run: `npx vitest run tests/component/deck-select/deck-tile.test.ts`
 
 - New: `src/deck-select/DeckTile.svelte`, `tests/component/deck-select/deck-tile.test.ts`.
 - Edited: `src/deck-select/index.ts` (+`DeckTile`), `tests/unit/domain-boundaries.test.ts` (frozen list).
-- Public API: `DeckTile` component with props above — T4/T5/T6 quote these prop names verbatim.
+- Public API: `DeckTile` component with props above — T14/T15/T16 quote these prop names verbatim.
 
 ## Validation
 

@@ -1,22 +1,22 @@
-# T6: Mobile layout
+# T16: Mobile layout
 
-**Plan:** `./artifacts/PLAN_2026_08_27_deck_selection_screen.md`
-**Depends:** T5
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`
+**Depends:** T15
 **Commit outcome:** `DeckSelectScreen` renders the phone layout — single column, opponent card under header, selected deck pinned first, sticky Start-only footer, permanent ⇄ badge. Component-tested. No app screen consumes yet.
 
 ## Context (self-contained)
 
 - Goal: implement validated deck-selection design (`docs/deck-selection-screen-design.md` §Mobile layout) in shared lib `src/deck-select/`.
-- This slice: responsive variant of the T4+T5 screen. One component, CSS + one list transform — no separate mobile component.
-- Out of scope here: hover previews (T7 — desktop-only), consumers, real device testing (Chromium viewport only per plan assumption).
-- Assumptions in force: T4/T5 `DeckSelectScreen` props incl. `seat`, `opponent`, `opponentDeck`, `playerDeck`, `selectedKey`, `canStart`, `startLabel`; grid uses `orderDeckTiles`; product = Chromium PWA family.
+- This slice: responsive variant of the T14+T15 screen. One component, CSS + one list transform — no separate mobile component.
+- Out of scope here: hover previews (T17 — desktop-only), consumers, real device testing (Chromium viewport only per plan assumption).
+- Assumptions in force: T14/T15 `DeckSelectScreen` props incl. `seat`, `opponent`, `opponentDeck`, `playerDeck`, `selectedKey`, `canStart`, `startLabel`; grid uses `orderDeckTiles`; product = Chromium PWA family.
 
 ## Requirements
 
-- Breakpoint: narrow layout at container/viewport width `< 40rem` (design phone frame 430px). Wide = T4/T5 layout unchanged.
+- Breakpoint: narrow layout at container/viewport width `< 40rem` (design phone frame 430px). Wide = T14/T15 layout unchanged.
 - Narrow layout order: header (back icon + eyebrow + title + count) → opponent card block → tools → one-column deck list → sticky footer.
   - Back icon button `data-cy="deck-select-back-icon"` appears in header on narrow (footer Back hidden there); fires `onback`. Wide keeps footer Back (both elements exist in DOM once each — icon hidden by CSS on wide; data-cy uniqueness holds because both always rendered exactly once).
-  - Opponent block = same T5 markup relocated by CSS (`order`/grid areas), not duplicated. Portrait's `⇄` chip permanently visible on narrow (`@media (pointer: coarse), (max-width: 40rem)`) — no hover on phones.
+  - Opponent block = same T15 markup relocated by CSS (`order`/grid areas), not duplicated. Portrait's `⇄` chip permanently visible on narrow (`@media (pointer: coarse), (max-width: 40rem)`) — no hover on phones.
   - Deck list: grid becomes one column.
   - **Pinned-first transform** (design §List ordering last ¶): currently selected deck for the active seat (`seat==="player" ? selectedKey : opponentDeck?.key`) moves to visible slot 1, ahead of default/favourite rank. Implement as pure fn in `src/deck-select/order-deck-tiles.ts`:
 
@@ -29,13 +29,13 @@ export function pinSelectedFirst(
 
   Applied only in narrow mode (screen tracks narrowness via one `matchMedia("(max-width: 40rem)")` listener; test override prop `export let forceNarrow: boolean | null = null` — null = follow media query; component tests set it).
   - Sticky footer narrow: only `deck-select-start` visible (design: footer's only job is Start; management lives on kebabs). Back/Delete/Rename/Duplicate/Open hidden by CSS. `library` mode narrow footer: nothing but Back icon in header → footer hidden entirely.
-- Dblclick/double-tap open: `dblclick` already wired (T4) — browsers synthesize it for double-tap; nothing new.
+- Dblclick/double-tap open: `dblclick` already wired (T14) — browsers synthesize it for double-tap; nothing new.
 - `pinSelectedFirst` exported from `src/deck-select/index.ts` → frozen boundary list widened.
 
 ## Inputs
 
-- `src/deck-select/order-deck-tiles.ts`, `src/deck-select/DeckSelectScreen.svelte` (T4/T5).
-- **From Depends:** T5 seat props (`seat`, `opponentDeck`); T4 footer data-cy names (`deck-select-start`, `deck-select-back`).
+- `src/deck-select/order-deck-tiles.ts`, `src/deck-select/DeckSelectScreen.svelte` (T14/T15).
+- **From Depends:** T15 seat props (`seat`, `opponentDeck`); T14 footer data-cy names (`deck-select-start`, `deck-select-back`).
 
 ## TDD
 
@@ -71,7 +71,7 @@ Run: `npx vitest run tests/unit/deck-select tests/component/deck-select`
 
 - New: `tests/component/deck-select/mobile-layout.test.ts`.
 - Edited: `src/deck-select/order-deck-tiles.ts` (+`pinSelectedFirst`), `src/deck-select/DeckSelectScreen.svelte` (+`forceNarrow`), `src/deck-select/index.ts`, boundary test, unit test file.
-- Public API: `pinSelectedFirst(tiles, selectedKey)`; screen prop `forceNarrow` — T10/T14 e2e rely on real media query, tests on the prop.
+- Public API: `pinSelectedFirst(tiles, selectedKey)`; screen prop `forceNarrow` — T20/T24 e2e rely on real media query, tests on the prop.
 
 ## Validation
 

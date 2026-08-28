@@ -1,7 +1,7 @@
-# T8: SelectableDeck lists + updatedAt
+# T18: SelectableDeck lists + updatedAt
 
-**Plan:** `./artifacts/PLAN_2026_08_27_deck_selection_screen.md`
-**Depends:** T1
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`
+**Depends:** T11
 **Commit outcome:** Every `SelectableDeck` (bundled and local) carries its full card lists and, for locals, `updatedAt` — enough for tiles to show `Main N · Extra N · Side N`, cover art (first Extra else first Main), and modified-sort. Existing consumers unaffected.
 
 ## Context (self-contained)
@@ -44,7 +44,7 @@ export interface SelectableDeck {
 - `src/battle/duel/presets/deck-parser.ts` — ydk parser (read for exact API).
 - `src/decks/deck-contracts.ts` — `DeckRecord.updatedAt: string`.
 - Existing tests touching SelectableDeck: `git grep -l "SelectableDeck\|listSelectableDecks\|presetSelectableDecks" tests/` — extend, don't fork.
-- **From Depends:** T1 exists but nothing here imports it (this ticket is battle-internal).
+- **From Depends:** T11 exists but nothing here imports it (this ticket is battle-internal).
 
 ## TDD
 
@@ -74,7 +74,7 @@ Run: `npx vitest run tests/unit/battle` (plus `npm run test:legacy` if legacy su
 ## Outputs
 
 - Edited: `src/battle/decks/selectable-decks.ts`, selectable-decks test file.
-- Public API: `SelectableDeck` gains `lists` + `updatedAt` (via existing `src/battle/index.ts` type export). T10/T11 quote: cover code = `lists.extra[0] ?? lists.main[0] ?? null`.
+- Public API: `SelectableDeck` gains `lists` + `updatedAt` (via existing `src/battle/index.ts` type export). T20/T21 quote: cover code = `lists.extra[0] ?? lists.main[0] ?? null`.
 
 ## Validation
 

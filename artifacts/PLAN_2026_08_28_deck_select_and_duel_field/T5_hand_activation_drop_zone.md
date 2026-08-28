@@ -1,6 +1,6 @@
 # T5: Hand activation drop zone with cancel (item 4)
 
-**Plan:** `./artifacts/PLAN_2026_08_27_duel_field_right_pane_feedback.md`  
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`  
 **Depends:** T2  
 **Commit outcome:** Dragging activatable hand card shows dashed centered zone left of hand; drop → confirm/cancel dialog; hand activate chips removed
 

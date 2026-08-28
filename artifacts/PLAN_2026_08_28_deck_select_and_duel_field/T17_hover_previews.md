@@ -1,15 +1,15 @@
-# T7: Desktop hover previews
+# T17: Desktop hover previews
 
-**Plan:** `./artifacts/PLAN_2026_08_27_deck_selection_screen.md`
-**Depends:** T6
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`
+**Depends:** T16
 **Commit outcome:** Hovering a grid tile in duel-start mode floats its full decklist beside the card; library mode previews the hovered deck in a docked right panel and floats card art over hovered rows. `[hidden]` display trap guarded. Component-tested. No app screen consumes yet.
 
 ## Context (self-contained)
 
 - Goal: implement validated deck-selection design (`docs/deck-selection-screen-design.md` §Desktop hover previews) in shared lib `src/deck-select/`.
-- This slice: last piece of the shared screen. After this, consumers swap in (T10/T12/T14).
+- This slice: last piece of the shared screen. After this, consumers swap in (T20/T22/T24).
 - Out of scope here: data fetching (hosts supply resolvers), touch behavior (previews desktop-only: disabled under `(pointer: coarse)` or narrow), real card art pipeline.
-- Assumptions in force: T4-T6 `DeckSelectScreen` exists; T1 types `DecklistView = {main,extra,side: readonly {code,name}[]}`; design's implementation trap: author-origin `display` on a class beats built-in `[hidden]{display:none}` — every floating element needs explicit `.thing[hidden]{display:none}` or no `display` on the bare class.
+- Assumptions in force: T14-T16 `DeckSelectScreen` exists; T11 types `DecklistView = {main,extra,side: readonly {code,name}[]}`; design's implementation trap: author-origin `display` on a class beats built-in `[hidden]{display:none}` — every floating element needs explicit `.thing[hidden]{display:none}` or no `display` on the bare class.
 
 ## Requirements
 
@@ -42,8 +42,8 @@ export let onrowleave: () => void = () => undefined;
 
 ## Inputs
 
-- `src/deck-select/DeckSelectScreen.svelte`, `deck-select-contracts.ts` (T1-T6).
-- **From Depends:** T6 narrow tracking (`forceNarrow` / matchMedia) — previews inert when narrow.
+- `src/deck-select/DeckSelectScreen.svelte`, `deck-select-contracts.ts` (T11-T16).
+- **From Depends:** T16 narrow tracking (`forceNarrow` / matchMedia) — previews inert when narrow.
 
 ## TDD
 
@@ -81,7 +81,7 @@ Run: `npx vitest run tests/component/deck-select`
 
 - New: `src/deck-select/DecklistPanel.svelte`, `tests/component/deck-select/hover-previews.test.ts`.
 - Edited: `src/deck-select/DeckSelectScreen.svelte` (+`decklistFor`, `cardImageFor`), `src/deck-select/index.ts`, boundary test.
-- Public API: resolvers' signatures above — T10/T12/T14 supply them and quote verbatim.
+- Public API: resolvers' signatures above — T20/T22/T24 supply them and quote verbatim.
 
 ## Validation
 

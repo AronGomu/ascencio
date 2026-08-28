@@ -1,6 +1,6 @@
 # T4: Materials as browsable zone: dialog + action button + detach lists (item 1b)
 
-**Plan:** `./artifacts/PLAN_2026_08_27_duel_field_right_pane_feedback.md`
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`
 **Depends:** T2, T3
 **Commit outcome:** "Materials" action opens ZoneListDialog; detach prompts list materials like any zone
 

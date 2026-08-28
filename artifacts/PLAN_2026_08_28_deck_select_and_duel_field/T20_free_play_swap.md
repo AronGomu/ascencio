@@ -1,15 +1,15 @@
-# T10: Free-play duel start swap
+# T20: Free-play duel start swap
 
-**Plan:** `./artifacts/PLAN_2026_08_27_deck_selection_screen.md`
-**Depends:** T7, T8, T9
-**Commit outcome:** `#/free-play` renders the new `DeckSelectScreen` — grid pick, opponent personas, seat toggling, favourites, keyboard, start — replacing the two-`<select>` UI. `FreePlayDeckSeat.svelte` deleted. Component tests + e2e updated and green. Management ops (rename/duplicate/delete/open) land in T11.
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`
+**Depends:** T17, T18, T19
+**Commit outcome:** `#/free-play` renders the new `DeckSelectScreen` — grid pick, opponent personas, seat toggling, favourites, keyboard, start — replacing the two-`<select>` UI. `FreePlayDeckSeat.svelte` deleted. Component tests + e2e updated and green. Management ops (rename/duplicate/delete/open) land in T21.
 
 ## Context (self-contained)
 
 - Goal: implement validated deck-selection design (`docs/deck-selection-screen-design.md`) — this slice swaps the free-play duel-start screen onto the shared component.
-- This slice: read + pick + start path only. Management (rename/duplicate/delete) is T11; dead buttons in between are not acceptable, so this ticket adds one screen prop `export let manageable = true;` to `DeckSelectScreen` — `false` hides every kebab and the footer management cluster. Free play passes `manageable=false` in this commit; T11 flips it to `true` and wires the ops. `onopen` IS wired now (deck-editor route already exists via `ondecks`).
-- Out of scope here: rename/duplicate/delete wiring (T11), library/story swaps.
-- Assumptions in force: T8 `SelectableDeck` has `lists` + `updatedAt`; T9 roster + settings API; free play never lists illegal local decks (`listSelectableDecks` drops them — design agrees); presets favouritable via settings.
+- This slice: read + pick + start path only. Management (rename/duplicate/delete) is T21; dead buttons in between are not acceptable, so this ticket adds one screen prop `export let manageable = true;` to `DeckSelectScreen` — `false` hides every kebab and the footer management cluster. Free play passes `manageable=false` in this commit; T21 flips it to `true` and wires the ops. `onopen` IS wired now (deck-editor route already exists via `ondecks`).
+- Out of scope here: rename/duplicate/delete wiring (T21), library/story swaps.
+- Assumptions in force: T18 `SelectableDeck` has `lists` + `updatedAt`; T19 roster + settings API; free play never lists illegal local decks (`listSelectableDecks` drops them — design agrees); presets favouritable via settings.
 
 ## Requirements
 
@@ -37,7 +37,7 @@ export function freePlayDeckTile(
   - cover code = `deck.lists.extra[0] ?? deck.lists.main[0] ?? null`; `coverImageUrl = catalog.get(code)?.imageUrl ?? null`.
   - `legal: true`, `blockReason: null` (illegal locals never listed in free play).
   - `bundled = deck.source === "preset"`; `meta` = `bundled ? "Bundled" : `Updated ${new Date(deck.updatedAt).toLocaleDateString()}``.
-  - `lockedBy = aiOwnerByDeckKey.get(deck.key) ?? null`; `deletable = deck.source === "local"` (T11 uses it; this commit passes tiles through with `deletable:false` override at call site — see Context resolution).
+  - `lockedBy = aiOwnerByDeckKey.get(deck.key) ?? null`; `deletable = deck.source === "local"` (T21 uses it; this commit passes tiles through with `deletable:false` override at call site — see Context resolution).
   - `favourite`: preset → `presetFavouriteIds.includes(deck.key)`; local → `favouriteDeckIds.includes(<deckId part of key>)` (key format `local:${deckId}:${revision}` — split on `:` from index 1 to length-2 is wrong for ids containing `:`? `deckId` charset forbids `\0` only — ids come from `crypto.randomUUID()` style; check one real creation site `git grep -n "deckId(" src/deck-editor | head` before assuming; if ambiguous, match by prefix `local:${favId}:`).
   - `isDefault` = local && deckId part === `defaultDeckId`; `updatedAt` passthrough.
 - Screen wiring in rewritten `FreePlayMatchSetup.svelte`:
@@ -58,9 +58,9 @@ export function freePlayDeckTile(
 - `src/shell/screens/FreePlayMatchSetup.svelte` — current logic to port: `adoptDecks`, `seatKey`, `start`, load/error states.
 - `src/shell/screens/free-play-deck-listing.ts` — `freePlayBattleModule`, `listedFreePlayDecks`, `refreshFreePlayDecks`, `resetFreePlayDeckCacheForTests`.
 - `src/shell/AppShell.svelte` ~line 560 — dynamic import + props (unchanged).
-- **From T7:** `DeckSelectScreen` props `mode,eyebrow,title,tiles,sort,selectedKey,startLabel,canStart,blockNotice,opponent,opponents,opponentDeck,playerDeck,seat,onseat,onpickopponent,decklistFor,cardImageFor,onselect,onstart,onback,onopen,onfavourite,forceNarrow` from `src/deck-select/index.ts`.
-- **From T8:** `SelectableDeck.lists` + `.updatedAt`; cover rule `lists.extra[0] ?? lists.main[0] ?? null`.
-- **From T9:** `FREE_PLAY_OPPONENTS`, `DEFAULT_FREE_PLAY_OPPONENT_ID`, `freePlayOpponent(id)` from `src/shell/screens/free-play-opponents.ts`; store methods `rememberFreePlayOpponent(id)`, `setPresetDeckFavourite(id, favourite)`; settings fields `freePlayOpponentId`, `freePlayPresetFavouriteIds`.
+- **From T17:** `DeckSelectScreen` props `mode,eyebrow,title,tiles,sort,selectedKey,startLabel,canStart,blockNotice,opponent,opponents,opponentDeck,playerDeck,seat,onseat,onpickopponent,decklistFor,cardImageFor,onselect,onstart,onback,onopen,onfavourite,forceNarrow` from `src/deck-select/index.ts`.
+- **From T18:** `SelectableDeck.lists` + `.updatedAt`; cover rule `lists.extra[0] ?? lists.main[0] ?? null`.
+- **From T19:** `FREE_PLAY_OPPONENTS`, `DEFAULT_FREE_PLAY_OPPONENT_ID`, `freePlayOpponent(id)` from `src/shell/screens/free-play-opponents.ts`; store methods `rememberFreePlayOpponent(id)`, `setPresetDeckFavourite(id, favourite)`; settings fields `freePlayOpponentId`, `freePlayPresetFavouriteIds`.
 
 ## TDD
 
@@ -87,7 +87,7 @@ Run: `npx vitest run tests/unit/shell tests/component/FreePlayMatchSetup.test.ts
 
 ## Impl steps
 
-- [ ] 1. Add `manageable` prop + test to `DeckSelectScreen` (component test file from T4).
+- [ ] 1. Add `manageable` prop + test to `DeckSelectScreen` (component test file from T14).
 - [ ] 2. Write failing `tests/unit/shell/free-play-deck-tiles.test.ts`.
 - [ ] 3. Create `src/shell/screens/free-play-deck-tiles.ts` (check local key deckId extraction against a real `deckId` creation site first).
 - [ ] 4. Rewrite `tests/component/FreePlayMatchSetup.test.ts` (red).
@@ -103,7 +103,7 @@ Run: `npx vitest run tests/unit/shell tests/component/FreePlayMatchSetup.test.ts
 - New: `src/shell/screens/free-play-deck-tiles.ts`, `tests/unit/shell/free-play-deck-tiles.test.ts`.
 - Edited: `src/shell/screens/FreePlayMatchSetup.svelte` (rewritten), `src/deck-select/DeckSelectScreen.svelte` (+`manageable`), component/e2e tests.
 - Deleted: `src/shell/screens/FreePlayDeckSeat.svelte`.
-- Public API: `freePlayDeckTile` signature above — T11 reuses it and flips `manageable` to true.
+- Public API: `freePlayDeckTile` signature above — T21 reuses it and flips `manageable` to true.
 
 ## Validation
 

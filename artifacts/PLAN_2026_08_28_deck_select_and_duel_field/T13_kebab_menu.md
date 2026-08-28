@@ -1,15 +1,15 @@
-# T3: DeckTileMenu kebab action sheet
+# T13: DeckTileMenu kebab action sheet
 
-**Plan:** `./artifacts/PLAN_2026_08_27_deck_selection_screen.md`
-**Depends:** T2
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`
+**Depends:** T12
 **Commit outcome:** `DeckTileMenu.svelte` action sheet (Open in deck builder / Rename / Duplicate / Delete) with outside-press + Escape dismissal and delete-guard, plus shared Rename dialog and Delete confirm dialog. Component-tested, exported. No screen consumes yet.
 
 ## Context (self-contained)
 
 - Goal: implement validated deck-selection design (`docs/deck-selection-screen-design.md` §Deck actions (kebab menu)) in shared lib `src/deck-select/`.
 - This slice: menu + the two dialogs its actions need. Desktop and mobile share it.
-- Out of scope here: wiring to real rename/duplicate/delete operations (hosts do that in T11/T12/T14), footer buttons (T4), positioning relative to viewport edges beyond simple flip.
-- Assumptions in force: T2's `DeckTile.svelte` emits `onmenu(anchor: HTMLElement)`; repo has focus-trap helper `handleModalKeydown` in `src/deck-editor/focus-trap.ts` — deck-select must NOT import it (cross-domain); copy the minimal pattern locally.
+- Out of scope here: wiring to real rename/duplicate/delete operations (hosts do that in T21/T22/T24), footer buttons (T14), positioning relative to viewport edges beyond simple flip.
+- Assumptions in force: T12's `DeckTile.svelte` emits `onmenu(anchor: HTMLElement)`; repo has focus-trap helper `handleModalKeydown` in `src/deck-editor/focus-trap.ts` — deck-select must NOT import it (cross-domain); copy the minimal pattern locally.
 
 ## Requirements
 
@@ -56,8 +56,8 @@ export let onconfirm: () => void = () => undefined;
 
 ## Inputs
 
-- `src/deck-select/deck-select-contracts.ts` — `DeckTileModel` (T1).
-- **From Depends:** T2 `DeckTile.svelte` emits `onmenu(anchor: HTMLElement)`; menu is a sibling the host screen renders when that fires.
+- `src/deck-select/deck-select-contracts.ts` — `DeckTileModel` (T11).
+- **From Depends:** T12 `DeckTile.svelte` emits `onmenu(anchor: HTMLElement)`; menu is a sibling the host screen renders when that fires.
 
 ## TDD
 
@@ -94,7 +94,7 @@ Run: `npx vitest run tests/component/deck-select`
 
 - New: `src/deck-select/DeckTileMenu.svelte`, `src/deck-select/RenameDeckDialog.svelte`, `src/deck-select/DeleteDeckConfirm.svelte`, 2 test files.
 - Edited: `src/deck-select/index.ts`, `tests/unit/domain-boundaries.test.ts`.
-- Public API: three components with props above — T4 hosts the menu/dialog state machine and quotes these names verbatim.
+- Public API: three components with props above — T14 hosts the menu/dialog state machine and quotes these names verbatim.
 
 ## Validation
 

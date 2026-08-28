@@ -1,6 +1,6 @@
 # T7: Persistent summon/selection status panel (item 6)
 
-**Plan:** `./artifacts/PLAN_2026_08_27_duel_field_right_pane_feedback.md`  
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`  
 **Depends:** T6  
 **Commit outcome:** Live "N of M selected" + level-sum "X of Y" panel during every selection prompt
 

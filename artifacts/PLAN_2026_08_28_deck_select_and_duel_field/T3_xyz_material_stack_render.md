@@ -1,6 +1,6 @@
 # T3: Xyz material stack rendered behind host card (item 1a)
 
-**Plan:** `./artifacts/PLAN_2026_08_27_duel_field_right_pane_feedback.md`  
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`  
 **Depends:** none  
 **Commit outcome:** Materials visible offset right behind xyz monster, Duel Links style.
 

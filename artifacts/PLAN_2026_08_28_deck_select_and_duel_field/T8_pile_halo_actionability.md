@@ -1,6 +1,6 @@
 # T8: Pile halo: orange, actionability-gated for deck/extra/grave/banish (item 12)
 
-**Plan:** `./artifacts/PLAN_2026_08_27_duel_field_right_pane_feedback.md`
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`
 **Depends:** none
 **Commit outcome:** Extra deck (and all piles) halo orange exactly when current prompt offers a choice there, top card shown or not
 

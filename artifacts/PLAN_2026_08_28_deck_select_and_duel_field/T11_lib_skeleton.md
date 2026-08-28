@@ -1,6 +1,6 @@
-# T1: deck-select lib skeleton + boundary registration
+# T11: deck-select lib skeleton + boundary registration
 
-**Plan:** `./artifacts/PLAN_2026_08_27_deck_selection_screen.md`
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`
 **Depends:** none
 **Commit outcome:** New shared presentational lib `src/deck-select/` exists with public entry, view-model contracts, tested rank fn; ESLint zones + domain-boundaries test know it; seat colour tokens exist. App compiles, nothing consumes lib yet.
 

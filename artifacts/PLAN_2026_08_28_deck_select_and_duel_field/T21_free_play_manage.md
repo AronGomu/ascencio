@@ -1,15 +1,15 @@
-# T11: Free-play deck management ops
+# T21: Free-play deck management ops
 
-**Plan:** `./artifacts/PLAN_2026_08_27_deck_selection_screen.md`
-**Depends:** T10
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`
+**Depends:** T20
 **Commit outcome:** On the free-play duel-start screen, local decks can be renamed, duplicated and deleted from kebab or footer; Open jumps into the deck editor on that deck. Bundled/AI-owned decks stay undeletable. Listing refreshes after every op.
 
 ## Context (self-contained)
 
 - Goal: implement validated deck-selection design (`docs/deck-selection-screen-design.md` §Deck actions (kebab menu), §Desktop layout footer) — duel start manages the library in place, kebab and footer being two paths to identical operations.
-- This slice: mutation wiring for free play. T10 shipped the screen with `manageable=false`; this flips it on.
-- Out of scope here: deck-editor library swap (T12), story (T14), new repository capabilities beyond what exists + `renameDeck` semantics done via load-save.
-- Assumptions in force: T10's `FreePlayMatchSetup.svelte` hosts `DeckSelectScreen` with callbacks `onrename(key,name)`, `onduplicate(key)`, `ondelete(key)`, `onopen(key)`; tile mapping fn `freePlayDeckTile` sets `deletable = source === "local"`; local key format `local:${deckId}:${revision}`.
+- This slice: mutation wiring for free play. T20 shipped the screen with `manageable=false`; this flips it on.
+- Out of scope here: deck-editor library swap (T22), story (T24), new repository capabilities beyond what exists + `renameDeck` semantics done via load-save.
+- Assumptions in force: T20's `FreePlayMatchSetup.svelte` hosts `DeckSelectScreen` with callbacks `onrename(key,name)`, `onduplicate(key)`, `ondelete(key)`, `onopen(key)`; tile mapping fn `freePlayDeckTile` sets `deletable = source === "local"`; local key format `local:${deckId}:${revision}`.
 
 ## Requirements
 
@@ -34,17 +34,17 @@ export async function deleteLocalDeck(key: string): Promise<void>;
   - `manageable=true`.
   - `onrename` → `renameLocalDeck` → `refreshFreePlayDecks(loadBattle)` → re-seed selection (renamed deck's key changed revision → re-resolve by deckId prefix `local:${id}:`, keep it selected).
   - `onduplicate` → `duplicateLocalDeck` → refresh → select the new copy (design: "creates an editable local copy and selects it" — newest `updatedAt` local deck after refresh).
-  - `ondelete` → `deleteLocalDeck` → refresh → if deleted deck was a seat's pick, re-seed via existing fallback chain (T10 ported `seatKey`).
+  - `ondelete` → `deleteLocalDeck` → refresh → if deleted deck was a seat's pick, re-seed via existing fallback chain (T20 ported `seatKey`).
   - `onopen(key)`: local → navigate to that deck in the editor — call new prop? No: existing prop `ondecks()` goes to the library route. Extend `FreePlayMatchSetup` props with `export let onopendeck: (id: string) => void = () => undefined;` and wire in `src/shell/AppShell.svelte`: `onopendeck={(id) => store.navigate(deckRoute("free-play", deckId(id)))}` (import `deckRoute` already used there ~line 567; `deckId` from `src/decks/index.ts`). Preset deck open → `ondecks()` (library root; presets have no editor page).
   - Op failure (IndexedDB refused, revision conflict) → `blockNotice` = error message; screen stays usable.
-- All ops are user-local data mutations behind explicit confirm dialogs (delete) — no extra confirmation layer beyond T3's `DeleteDeckConfirm`.
+- All ops are user-local data mutations behind explicit confirm dialogs (delete) — no extra confirmation layer beyond T13's `DeleteDeckConfirm`.
 
 ## Inputs
 
 - `src/deck-editor/deck-editor-store.ts` — `rename` (~421), `duplicate` (~452), `deleteDeck` (~500) for exact record semantics. **Do not import the store** (deck-editor is another domain); replicate the repository calls in the shell module.
 - `src/decks/indexeddb-deck-repository.ts`, `src/decks/deck-repository.ts` — `load/save/delete` contracts.
 - `src/shell/AppShell.svelte` — FreePlayMatchSetup mount (~line 560) + `deckRoute` usage (~line 567).
-- **From Depends (T10):** `FreePlayMatchSetup.svelte` hosts screen with `manageable` prop; `refreshFreePlayDecks(loadBattle)` revalidates; seat re-seed fn ported from old `seatKey`; local key format `local:${deckId}:${revision}`.
+- **From Depends (T20):** `FreePlayMatchSetup.svelte` hosts screen with `manageable` prop; `refreshFreePlayDecks(loadBattle)` revalidates; seat re-seed fn ported from old `seatKey`; local key format `local:${deckId}:${revision}`.
 
 ## TDD
 

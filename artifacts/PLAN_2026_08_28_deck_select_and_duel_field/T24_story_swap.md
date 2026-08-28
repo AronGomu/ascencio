@@ -1,7 +1,7 @@
-# T14: Story pre-battle swap
+# T24: Story pre-battle swap
 
-**Plan:** `./artifacts/PLAN_2026_08_27_deck_selection_screen.md`
-**Depends:** T7, T13
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`
+**Depends:** T17, T23
 **Commit outcome:** The story pre-battle screen renders the shared `DeckSelectScreen` in `duel-start` mode — deck tile grid with favourites, locked opponent seat card ("🔒 Set by the story"), illegal decks visible-but-disabled with reasons, block notices, Start latch preserved. Component + e2e tests green.
 
 ## Context (self-contained)
@@ -9,7 +9,7 @@
 - Goal: implement validated deck-selection design (`docs/deck-selection-screen-design.md`) — Free Play and Story share the exact screen; story differences: opponent fixed by the encounter (portrait/name/deck locked), illegal decks listed disabled with the reason (free play hides them), library = the save's decks.
 - This slice: story domain swap. Encounter briefing copy (title/eyebrow/facts) survives as the screen's eyebrow/title + block notice; the old two-column briefing layout is replaced by the shared screen.
 - Out of scope here: story deck rename/duplicate/delete from this screen — `manageable=false`; the save's decks are managed through the story deck-editor route the screen's Open action already reaches (existing `onopendecks` save-first flow). Logged as plan assumption; kebab arrives for story in a later round if the owner asks.
-- Assumptions in force: T7 `DeckSelectScreen` props (quoted below); T13 `StoryState.favouriteDeckIds` + reducer command `{ type: "deck-set-favourite", id, favourite }`; story verdicts come from `preBattleDeckOptions` (`src/story/decks/pre-battle-decks.ts` — recomputed live, never `deck.validation` cache); default = save's `defaultDeckId`; selecting a deck records `deck-set-default` (current behavior, kept).
+- Assumptions in force: T17 `DeckSelectScreen` props (quoted below); T23 `StoryState.favouriteDeckIds` + reducer command `{ type: "deck-set-favourite", id, favourite }`; story verdicts come from `preBattleDeckOptions` (`src/story/decks/pre-battle-decks.ts` — recomputed live, never `deck.validation` cache); default = save's `defaultDeckId`; selecting a deck records `deck-set-default` (current behavior, kept).
 
 ## Requirements
 
@@ -59,8 +59,8 @@ export function preBattleDeckTile(
 - `src/story/StoryApp.svelte` ~line 914 mount + `cardViewByCode` (~line 172), `preBattleDeckChoices` (~line 365).
 - `src/story/decks/encounter-deck.ts` — opponent deck lists (read for exact export).
 - `src/story/model/story-state.ts` — `StoryDeck` shape (extends `DeckRecord`: `main/extra/side/updatedAt` present).
-- **From T7:** `DeckSelectScreen` props `mode,eyebrow,title,tiles,sort,selectedKey,startLabel,canStart,blockNotice,manageable,opponent,opponents,opponentDeck,playerDeck,seat,decklistFor,cardImageFor,onselect,onstart,onback,onfavourite,forceNarrow` from `src/deck-select/index.ts`; locked opponent renders non-interactive with `🔒 Set by the story` caption (T5).
-- **From T13:** `favouriteDeckIds` on state; command `deck-set-favourite`.
+- **From T17:** `DeckSelectScreen` props `mode,eyebrow,title,tiles,sort,selectedKey,startLabel,canStart,blockNotice,manageable,opponent,opponents,opponentDeck,playerDeck,seat,decklistFor,cardImageFor,onselect,onstart,onback,onfavourite,forceNarrow` from `src/deck-select/index.ts`; locked opponent renders non-interactive with `🔒 Set by the story` caption (T15).
+- **From T23:** `favouriteDeckIds` on state; command `deck-set-favourite`.
 
 ## TDD
 

@@ -1,14 +1,14 @@
-# T13: Story save favourites
+# T23: Story save favourites
 
-**Plan:** `./artifacts/PLAN_2026_08_27_deck_selection_screen.md`
-**Depends:** T1
-**Commit outcome:** A story save carries `favouriteDeckIds`; the reducer can toggle one; old saves load with an empty list. Pure model/save work — the pre-battle UI consumes it in T14.
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`
+**Depends:** T11
+**Commit outcome:** A story save carries `favouriteDeckIds`; the reducer can toggle one; old saves load with an empty list. Pure model/save work — the pre-battle UI consumes it in T24.
 
 ## Context (self-contained)
 
 - Goal: implement validated deck-selection design (`docs/deck-selection-screen-design.md` §The deck tile favourite star, §List ordering rank 3) for the story scope — story decks belong to the save (ADR-049), so their favourites must too; the shared screen's star needs a place to write.
 - This slice: story domain model + save schema only. No UI, no shared-lib import.
-- Out of scope here: PreBattleScreen swap (T14), free-play favourites (already exist via `DeckRepository.listFavourites`), story deck default (exists: `StoryState.defaultDeckId` + `deck-set-default` command).
+- Out of scope here: PreBattleScreen swap (T24), free-play favourites (already exist via `DeckRepository.listFavourites`), story deck default (exists: `StoryState.defaultDeckId` + `deck-set-default` command).
 - Assumptions in force: story save validation is shape-checking in `src/story/saves/story-save-contracts.ts` (`defaultDeckId` checked as id-not-pointer precedent ~line 400); reducer commands are the only mutation path (deck commands ~line 78, ADR pattern "deck-*").
 
 ## Requirements
@@ -28,7 +28,7 @@
 - `src/story/model/story-reducer.ts` — deck command union (~78), `deck-create/save/delete/set-default` cases (~353+), guard precedents.
 - `src/story/saves/story-save-contracts.ts` — save shape validation, `defaultDeckId` handling (~400-408), starter-grant path (~211-218).
 - Existing tests: `git grep -ln "deck-set-default\|deck-delete" tests/` — extend those files.
-- **From Depends:** T1 ordering only (branch base); no code dependency.
+- **From Depends:** T11 ordering only (branch base); no code dependency.
 
 ## TDD
 
@@ -62,7 +62,7 @@ Run: `npx vitest run tests/unit/story` (match the actual dir of existing reducer
 ## Outputs
 
 - Edited: `src/story/model/story-state.ts`, `src/story/model/story-reducer.ts`, `src/story/saves/story-save-contracts.ts`, story test files.
-- Public API: reducer command `{ type: "deck-set-favourite", id, favourite }`; `StoryState.favouriteDeckIds` — T14 quotes both verbatim.
+- Public API: reducer command `{ type: "deck-set-favourite", id, favourite }`; `StoryState.favouriteDeckIds` — T24 quotes both verbatim.
 
 ## Validation
 

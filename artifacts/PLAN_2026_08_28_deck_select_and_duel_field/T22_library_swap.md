@@ -1,15 +1,15 @@
-# T12: Deck-editor library swap
+# T22: Deck-editor library swap
 
-**Plan:** `./artifacts/PLAN_2026_08_27_deck_selection_screen.md`
-**Depends:** T7
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`
+**Depends:** T17
 **Commit outcome:** The deck-editor library route (`#/free-play/decks`, `#/story/decks`) renders the shared `DeckSelectScreen` in `library` mode — tile grid, docked decklist panel, kebab management, teal focus halo — replacing the old row list inside `DeckLibrary.svelte`. Create/Import/Collection tools preserved. Component + e2e tests green.
 
 ## Context (self-contained)
 
 - Goal: implement validated deck-selection design (`docs/deck-selection-screen-design.md` §Two screens, one shell — Library row of the table, §Desktop hover previews — Library) — library shares tile/shell grammar with duel start; grid press focuses (no seat), footer Back · Delete/Rename/Duplicate, dblclick opens.
-- This slice: deck-editor domain swap. Independent of the free-play swap (T10/T11 touch shell; this touches `src/deck-editor/`).
+- This slice: deck-editor domain swap. Independent of the free-play swap (T20/T21 touch shell; this touches `src/deck-editor/`).
 - Out of scope here: free-play/story duel-start screens, editor page itself (`DeckEditor.svelte` untouched), YDK import/export modals (kept as-is, still hosted by `DeckEditorApp.svelte`).
-- Assumptions in force: `src/deck-select/index.ts` (T1-T7) exports `DeckSelectScreen` (props: `mode,eyebrow,title,tiles,sort,selectedKey,blockNotice,manageable,decklistFor,cardImageFor,onselect,onback,onopen,onrename,onduplicate,ondelete,onfavourite`, plus duel-start-only props left at defaults) and type `DeckTileModel`; deck-editor may import it (T1 registered the boundary zone). Editor store (`src/deck-editor/deck-editor-store.ts`) already has by-id ops `duplicate(id)`, `deleteDeck(id, revision)`, `toggleFavourite(id)`, `setDefaultDeck(id)`; `rename(name)` works only on the opened deck.
+- Assumptions in force: `src/deck-select/index.ts` (T11-T17) exports `DeckSelectScreen` (props: `mode,eyebrow,title,tiles,sort,selectedKey,blockNotice,manageable,decklistFor,cardImageFor,onselect,onback,onopen,onrename,onduplicate,ondelete,onfavourite`, plus duel-start-only props left at defaults) and type `DeckTileModel`; deck-editor may import it (T11 registered the boundary zone). Editor store (`src/deck-editor/deck-editor-store.ts`) already has by-id ops `duplicate(id)`, `deleteDeck(id, revision)`, `toggleFavourite(id)`, `setDefaultDeck(id)`; `rename(name)` works only on the opened deck.
 
 ## Requirements
 
@@ -20,7 +20,7 @@
     - `key = record.id`, `name`, counts from list lengths, cover code `record.extra[0] ?? record.main[0] ?? null` → `catalog.get(code)?.imageUrl ?? null`.
     - `legal = record.validation.status !== "errors"`; `blockReason`/`meta` for illegal rows: reuse the existing `illegalLabel(validation)` logic (move it into this module verbatim — "Cards not owned" vs "Illegal" distinction per ADR-050); legal rows `meta = "Updated " + new Date(updatedAt).toLocaleString()`.
     - `bundled=false`, `lockedBy=null`, `deletable=true`, `favourite`/`isDefault` from props, `updatedAt` passthrough.
-  - Screen usage: `mode="library"`, `eyebrow="Deck builder"`, `title="Deck library"`, `manageable=true`, internal `selectedKey` (focus only, teal halo — screen does this in library mode per T4/T5), `onopen(key)` → existing `onopen(id)` prop (navigates to deck page), `onselect` → local focus, `decklistFor(key)` → find record, map codes via catalog names; `cardImageFor(code)` → `catalog.get(code)?.imageUrl ?? null`.
+  - Screen usage: `mode="library"`, `eyebrow="Deck builder"`, `title="Deck library"`, `manageable=true`, internal `selectedKey` (focus only, teal halo — screen does this in library mode per T14/T15), `onopen(key)` → existing `onopen(id)` prop (navigates to deck page), `onselect` → local focus, `decklistFor(key)` → find record, map codes via catalog names; `cardImageFor(code)` → `catalog.get(code)?.imageUrl ?? null`.
   - Tools that the shared screen lacks stay as a toolbar row above/beside it: Create deck (dialog — keep existing create dialog markup + `data-cy` names `deck-library-create*`), Import (`onimport`), Collection (`oncollection`), message strip (`deck-library-message`). Filter/sort now come from the shared screen — delete the old local search/sort controls (`deck-library-search-input`, `deck-library-sort-select`) and update every test that used them (`git grep -ln "deck-library-search\|deck-library-sort" tests/ e2e/`).
   - Old row-list markup (`deck-library-list`, `deck-library-row-*`, `deck-library-open-*`, halo classes) deleted; grid tiles carry `deck-tile-${id}` from the shared component.
   - Empty states: keep `deck-library-empty` (no decks → create CTA); no-matches state now the shared screen's empty grid + count `0/N`.
@@ -34,7 +34,7 @@
 - `src/deck-editor/DeckEditorApp.svelte` ~line 329 — mount site; `catalog` variable in scope.
 - `src/deck-editor/deck-editor-store.ts` — `rename` (~421), `duplicate` (~452), `deleteDeck` (~500), `toggleFavourite` (~517), `#refreshLibrary` pattern.
 - `src/decks/deck-contracts.ts` — `DeckRecord` fields (`id,name,main,extra,side,updatedAt,revision,validation`).
-- **From Depends (T7):** `DeckSelectScreen` + `DeckTileModel` + resolvers from `src/deck-select/index.ts`; library mode = teal focus halo, docked decklist panel, card-art float — all inside the screen already.
+- **From Depends (T17):** `DeckSelectScreen` + `DeckTileModel` + resolvers from `src/deck-select/index.ts`; library mode = teal focus halo, docked decklist panel, card-art float — all inside the screen already.
 
 ## TDD
 

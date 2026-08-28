@@ -1,15 +1,15 @@
-# T4: DeckSelectScreen desktop layout
+# T14: DeckSelectScreen desktop layout
 
-**Plan:** `./artifacts/PLAN_2026_08_27_deck_selection_screen.md`
-**Depends:** T3
-**Commit outcome:** `DeckSelectScreen.svelte` renders header/tools/grid/footer (left column of design's desktop layout), hosts kebab menu + dialogs state machine, keyboard shortcuts, dblclick-open. Component-tested. Right seat panel comes in T5; no app screen consumes yet.
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`
+**Depends:** T13
+**Commit outcome:** `DeckSelectScreen.svelte` renders header/tools/grid/footer (left column of design's desktop layout), hosts kebab menu + dialogs state machine, keyboard shortcuts, dblclick-open. Component-tested. Right seat panel comes in T15; no app screen consumes yet.
 
 ## Context (self-contained)
 
 - Goal: implement validated deck-selection design (`docs/deck-selection-screen-design.md` §Two screens, one shell / §Desktop layout / §Keyboard & a11y) in shared lib `src/deck-select/`.
 - This slice: screen skeleton + grid interaction. Serves both modes: `duel-start` (footer has Open + Start) and `library` (footer Back + Delete/Rename/Duplicate only).
-- Out of scope here: right opponent/seat panel + opponent-seat picking (T5), mobile layout (T6), hover previews (T7), any data loading.
-- Assumptions in force: T1 contracts (`DeckTileModel`, `DeckSort`, `orderDeckTiles`, `DeckSelectMode`); T2 `DeckTile` props `tile,halo,selected,yours,showFavourite,showMenu,disabled,onpress,ondblpress,onfavourite,onmenu`; T3 `DeckTileMenu` props `tile,anchor,onclose,onopen,onrename,onduplicate,ondelete`, `RenameDeckDialog` props `deckName,maxLength,oncancel,onsubmit`, `DeleteDeckConfirm` props `deckName,oncancel,onconfirm`.
+- Out of scope here: right opponent/seat panel + opponent-seat picking (T15), mobile layout (T16), hover previews (T17), any data loading.
+- Assumptions in force: T11 contracts (`DeckTileModel`, `DeckSort`, `orderDeckTiles`, `DeckSelectMode`); T12 `DeckTile` props `tile,halo,selected,yours,showFavourite,showMenu,disabled,onpress,ondblpress,onfavourite,onmenu`; T13 `DeckTileMenu` props `tile,anchor,onclose,onopen,onrename,onduplicate,ondelete`, `RenameDeckDialog` props `deckName,maxLength,oncancel,onsubmit`, `DeleteDeckConfirm` props `deckName,oncancel,onconfirm`.
 
 ## Requirements
 
@@ -35,12 +35,12 @@ export let ondelete: (key: string) => void = () => undefined;
 export let onfavourite: (key: string, favourite: boolean) => void = () => undefined;
 ```
 
-(T5 appends opponent props; T7 appends preview resolvers. Each ticket edits the frozen boundary list once.)
+(T15 appends opponent props; T17 appends preview resolvers. Each ticket edits the frozen boundary list once.)
 
 - Derived state: `filter` (internal string), `shown = orderDeckTiles(tiles.filter(name-includes-filter, case-insensitive), sort)`.
 - Header: root `data-cy="deck-select-screen"`; eyebrow `deck-select-eyebrow`; `<h1 data-cy="deck-select-title">`; live count `data-cy="deck-select-count"` text exactly `` `${shown.length}/${tiles.length}` `` (design: `shown/total`).
 - Tools row `deck-select-tools`: filter `<input type="search" data-cy="deck-select-filter">`; sort `<select data-cy="deck-select-sort">` options `modified` ("Last modified") / `name` ("Name").
-- Grid `deck-select-grid`: `DeckTile` per shown tile. `selected = tile.key === selectedKey`. Halo: `"you"` on selected in duel-start, `"focus"` in library (T5 switches to `"opponent"` mid-opponent-pick). Press → `onselect(key)` (illegal tiles: DeckTile already disables press). Dblpress → `onopen(key)` (design: preceding single click already selected).
+- Grid `deck-select-grid`: `DeckTile` per shown tile. `selected = tile.key === selectedKey`. Halo: `"you"` on selected in duel-start, `"focus"` in library (T15 switches to `"opponent"` mid-opponent-pick). Press → `onselect(key)` (illegal tiles: DeckTile already disables press). Dblpress → `onopen(key)` (design: preceding single click already selected).
 - Kebab state machine hosted here: `onmenu` from a tile stores `{key, anchor}` → renders `DeckTileMenu`; menu `onopen→onopen(key)`, `onrename→` open `RenameDeckDialog` (prefilled `tile.name`, submit → `onrename(key, name)`), `onduplicate→onduplicate(key)`, `ondelete→` open `DeleteDeckConfirm` (confirm → `ondelete(key)`).
 - Footer `deck-select-footer`, left→right (design §Desktop layout):
   - `deck-select-back` "Back" → `onback`
@@ -52,14 +52,14 @@ export let onfavourite: (key: string, favourite: boolean) => void = () => undefi
   - `ArrowUp`/`ArrowDown` → move `onselect` among **legal** tiles in shown order
   - `Enter` → duel-start: `onstart()` if `canStart`; library: `onopen(selectedKey)`
   - `f` → `onfavourite(selectedKey, !selected tile.favourite)`
-- Layout: left column of the 16:9 two-column stage — header→tools→scrolling grid→footer; grid `repeat(auto-fill, minmax(16rem, 1fr))`. (Column split arrives with the panel in T5.)
+- Layout: left column of the 16:9 two-column stage — header→tools→scrolling grid→footer; grid `repeat(auto-fill, minmax(16rem, 1fr))`. (Column split arrives with the panel in T15.)
 - Every element unique role-describing `data-cy` (`tests/unit/data-cy-coverage.test.ts` enforces).
 
 ## Inputs
 
-- `src/deck-select/index.ts` exports from T1-T3 (names quoted in Assumptions).
+- `src/deck-select/index.ts` exports from T11-T13 (names quoted in Assumptions).
 - Testing setup precedent: `tests/component/deck-editor/deck-library.test.ts`.
-- **From Depends:** T3 component props quoted verbatim above.
+- **From Depends:** T13 component props quoted verbatim above.
 
 ## TDD
 
@@ -88,7 +88,7 @@ Run: `npx vitest run tests/component/deck-select/deck-select-screen.test.ts`
 
 ## Impl steps
 
-- [ ] 1. Write failing `tests/component/deck-select/deck-select-screen.test.ts` (builder `tile()` reused from T2 tests — extract shared builder to `tests/component/deck-select/tile-builder.ts`).
+- [ ] 1. Write failing `tests/component/deck-select/deck-select-screen.test.ts` (builder `tile()` reused from T12 tests — extract shared builder to `tests/component/deck-select/tile-builder.ts`).
 - [ ] 2. Create `src/deck-select/DeckSelectScreen.svelte`: markup (header/tools/grid/footer), derived `shown`, menu+dialog state machine.
 - [ ] 3. Add keyboard handler (`<svelte:window onkeydown>`), guard for open dialog/menu/input focus.
 - [ ] 4. Styles: grid, footer, notice; reuse token vars.
@@ -99,8 +99,8 @@ Run: `npx vitest run tests/component/deck-select/deck-select-screen.test.ts`
 ## Outputs
 
 - New: `src/deck-select/DeckSelectScreen.svelte`, `tests/component/deck-select/deck-select-screen.test.ts`, `tests/component/deck-select/tile-builder.ts`.
-- Edited: `src/deck-select/index.ts`, `tests/unit/domain-boundaries.test.ts`, T2 test (builder import).
-- Public API: `DeckSelectScreen` props above — T5/T6/T7 extend, T10/T12/T14 consume; all quote names verbatim.
+- Edited: `src/deck-select/index.ts`, `tests/unit/domain-boundaries.test.ts`, T12 test (builder import).
+- Public API: `DeckSelectScreen` props above — T15/T16/T17 extend, T20/T22/T24 consume; all quote names verbatim.
 
 ## Validation
 

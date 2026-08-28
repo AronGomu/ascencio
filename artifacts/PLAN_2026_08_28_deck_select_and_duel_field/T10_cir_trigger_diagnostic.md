@@ -1,6 +1,6 @@
 # T10: Cir/Dante trigger proposition diagnostic (item 11)
 
-**Plan:** `./artifacts/PLAN_2026_08_27_duel_field_right_pane_feedback.md`
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`
 **Depends:** none
 **Commit outcome:** Deterministic headless repro + engine-passthrough verdict recorded in `.dev/bugs.md`
 

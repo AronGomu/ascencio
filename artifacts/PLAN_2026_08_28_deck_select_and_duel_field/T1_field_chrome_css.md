@@ -1,6 +1,6 @@
 # T1: Field chrome CSS: hover, zone borders, field border, rail divider (items 7,8,9,10)
 
-**Plan:** `./artifacts/PLAN_2026_08_27_duel_field_right_pane_feedback.md`
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`
 **Depends:** none
 **Commit outcome:** Open-card hover scale gone; card-slot border gone; zone border solid; outer field border gone; straight rail divider added
 

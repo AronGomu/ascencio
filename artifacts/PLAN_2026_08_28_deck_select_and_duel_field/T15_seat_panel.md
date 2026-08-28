@@ -1,15 +1,15 @@
-# T5: Seat panel + opponent picking mode
+# T15: Seat panel + opponent picking mode
 
-**Plan:** `./artifacts/PLAN_2026_08_27_deck_selection_screen.md`
-**Depends:** T4
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`
+**Depends:** T14
 **Commit outcome:** `DeckSelectScreen` grows the right seat column (opponent portrait + opponent deck card + your deck card), opponent-seat picking mode with red halos and "Yours" badge, and the opponent picker overlay. Component-tested. No app screen consumes yet.
 
 ## Context (self-contained)
 
 - Goal: implement validated deck-selection design (`docs/deck-selection-screen-design.md` §Desktop layout right column, §Opponent selection (free play only), §Halo & badge semantics) in shared lib `src/deck-select/`.
-- This slice: duel-start mode's second column + seat-mode switching. Library mode ignores all of it (its docked list panel is T7).
-- Out of scope here: mobile placement of the opponent card (T6), hover previews (T7), real persona data (T9), consumers.
-- Assumptions in force: T4 `DeckSelectScreen` exists with props `mode,eyebrow,title,tiles,sort,selectedKey,startLabel,canStart,blockNotice,onselect,onstart,onback,onopen,onrename,onduplicate,ondelete,onfavourite`; T2 `DeckTile` has `halo` ("you"|"opponent"|"focus"|null) + `yours` + `showFavourite` + `showMenu` props; T1 `OpponentView = {id,name,line,locked}`.
+- This slice: duel-start mode's second column + seat-mode switching. Library mode ignores all of it (its docked list panel is T17).
+- Out of scope here: mobile placement of the opponent card (T16), hover previews (T17), real persona data (T19), consumers.
+- Assumptions in force: T14 `DeckSelectScreen` exists with props `mode,eyebrow,title,tiles,sort,selectedKey,startLabel,canStart,blockNotice,onselect,onstart,onback,onopen,onrename,onduplicate,ondelete,onfavourite`; T12 `DeckTile` has `halo` ("you"|"opponent"|"focus"|null) + `yours` + `showFavourite` + `showMenu` props; T11 `OpponentView = {id,name,line,locked}`.
 
 ## Requirements
 
@@ -32,18 +32,18 @@ export let onpickopponent: (id: string) => void = () => undefined;
 
 - Right column `data-cy="duel-start-seat-panel"`, rendered only `mode === "duel-start" && opponent !== null`; ≈27% width, `min-width: 17rem`; below `62rem` container width collapses above grid (CSS container query or media query — match design §Desktop layout).
 - Opponent identity block:
-  - Portrait `<button data-cy="duel-start-opponent-portrait" aria-label={`Change opponent: ${opponent.name}`}>` — inline SVG placeholder + name + `line`. **The portrait is the control** (no "Change opponent" button): hover/focus shows persistent chip `⇄ Change` (`data-cy="duel-start-opponent-change-chip"`; chip always visible via CSS when `:hover,:focus-visible` — permanent when `coarse` pointer, handled T6). Press → opens picker overlay. When `opponent.locked` → rendered as non-interactive `<div>` + caption; no picker.
+  - Portrait `<button data-cy="duel-start-opponent-portrait" aria-label={`Change opponent: ${opponent.name}`}>` — inline SVG placeholder + name + `line`. **The portrait is the control** (no "Change opponent" button): hover/focus shows persistent chip `⇄ Change` (`data-cy="duel-start-opponent-change-chip"`; chip always visible via CSS when `:hover,:focus-visible` — permanent when `coarse` pointer, handled T16). Press → opens picker overlay. When `opponent.locked` → rendered as non-interactive `<div>` + caption; no picker.
 - Opponent deck card: `DeckTile` with `tile=opponentDeck`, `halo="opponent"`, `showFavourite=false`, `showMenu=false`, wrapped in toggle button `data-cy="duel-start-opponent-deck"` with `aria-pressed={seat === "opponent"}`. Press → `onseat(seat === "opponent" ? "player" : "opponent")` (**the card is the control** — press again returns to picking for yourself). When `opponent.locked` → not a button; caption `data-cy="duel-start-opponent-deck-locked"` text `🔒 Set by the story`.
 - Your deck card: `DeckTile` `tile=playerDeck`, `halo="you"`, `showMenu=false`, wrapper `data-cy="duel-start-your-deck"`; press → `onseat("player")`.
-- Grid behavior by seat mode (extends T4):
+- Grid behavior by seat mode (extends T14):
   - `seat === "player"`: selected tile halo `"you"`, `selected` on `selectedKey`.
   - `seat === "opponent"`: tile whose key === `opponentDeck?.key` gets halo `"opponent"` + `selected`; tile whose key === `playerDeck?.key` gets `yours=true` badge (design: your pick must not disappear from view); presses `onselect(key)` still — host interprets per `seat`.
-- Picker overlay `data-cy="duel-start-opponent-picker"`, `role="dialog" aria-modal="true"`: one tile-grammar card per `opponents` entry `data-cy={`duel-start-opponent-option-${o.id}`}` (name + line, no stats row), current one marked `aria-pressed`. Press → `onpickopponent(id)` + close. Escape/outside press closes. Same `[hidden]`/display guard rule as T3.
+- Picker overlay `data-cy="duel-start-opponent-picker"`, `role="dialog" aria-modal="true"`: one tile-grammar card per `opponents` entry `data-cy={`duel-start-opponent-option-${o.id}`}` (name + line, no stats row), current one marked `aria-pressed`. Press → `onpickopponent(id)` + close. Escape/outside press closes. Same `[hidden]`/display guard rule as T13.
 
 ## Inputs
 
-- `src/deck-select/deck-select-contracts.ts` — `OpponentView`, `DeckTileModel` (T1).
-- **From Depends:** T4 screen + prop list quoted above; T2 `DeckTile` props.
+- `src/deck-select/deck-select-contracts.ts` — `OpponentView`, `DeckTileModel` (T11).
+- **From Depends:** T14 screen + prop list quoted above; T12 `DeckTile` props.
 
 ## TDD
 
@@ -79,7 +79,7 @@ Run: `npx vitest run tests/component/deck-select`
 
 - New: `tests/component/deck-select/seat-panel.test.ts`.
 - Edited: `src/deck-select/DeckSelectScreen.svelte` (+8 props above).
-- Public API: screen prop names above — T6/T10/T14 quote verbatim. No new index exports (props only) → frozen list unchanged.
+- Public API: screen prop names above — T16/T20/T24 quote verbatim. No new index exports (props only) → frozen list unchanged.
 
 ## Validation
 

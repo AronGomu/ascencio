@@ -1,6 +1,6 @@
 # T9: Right pane: orange active-player avatar+LP borders, bigger avatar (RP1,RP2)
 
-**Plan:** `./artifacts/PLAN_2026_08_27_duel_field_right_pane_feedback.md`
+**Plan:** `./artifacts/PLAN_2026_08_28_deck_select_and_duel_field.md`
 **Depends:** none
 **Commit outcome:** Identity-block active border gone; avatar img + LP border orange when active, grey otherwise; avatar bigger on full HD.
 

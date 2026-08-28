@@ -2498,6 +2498,45 @@ describe("DuelField", () => {
     ).toBeNull();
   });
 
+  /* Item 5 removed the Select chip from the card; the zoom overlay is the same
+     card served larger, so it may not smuggle the chip back in. The invisible
+     full-cover toggle stays: it is the click/keyboard surface and the only
+     `aria-pressed` carrier the selection has. */
+  it("the hand zoom overlay offers no chip during a card selection prompt", async () => {
+    const valueBoard = board("ST-01");
+    const value = fieldPrompt("selectCard", [
+      handChoice("select", "Select The Legendary Fisherman"),
+    ]);
+    const spec = mapPromptToInteractionSpec(
+      value,
+      BOARD_VIEW_MODEL_FIXTURES["ST-01"],
+      valueBoard,
+      CONTEXT,
+    );
+    if (spec.kind === "inactive") throw new Error("Expected active field spec");
+    render(DuelField, {
+      board: valueBoard,
+      prompt: value,
+      spec,
+      session: createInteractionSession(spec),
+    });
+
+    await fireEvent.pointerEnter(handCardArticle());
+
+    expect(handZoomOverlay()).not.toBeNull();
+    expect(
+      document.querySelector(
+        '[data-cy^="hand-zoom-overlay-card-action-chips-"]',
+      ),
+    ).toBeNull();
+    expect(
+      document.querySelector(
+        '[data-cy="hand-zoom-overlay-card-action-chip-select"]',
+      ),
+    ).toBeNull();
+    expect(handDragTarget().getAttribute("aria-pressed")).toBe("false");
+  });
+
   /* A response is already in flight, so the actions cannot be answered twice —
      but backing out must stay available, because cancelling sends nothing. */
   it("a pending response disables the modal's actions, never its cancel", async () => {

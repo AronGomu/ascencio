@@ -147,8 +147,8 @@ export function parseStorySaveEnvelope(
   /* Rebuilt rather than cast, so a `ready` envelope always describes itself as
      the version this build actually returns: an older record reaches the story
      already migrated, and nothing downstream has to ask which version it came
-     from. The state object is passed through untouched when it is already v3,
-     so a round-trip preserves it exactly. */
+     from. The state object is passed through untouched when it already carries
+     every field this build writes, so a round-trip preserves it exactly. */
   return {
     kind: "ready",
     envelope: {
@@ -260,11 +260,13 @@ function topUpToGrant(
  * Brings a stored story state up to the shape this build runs on, or answers
  * `null` when it cannot be read at all.
  *
- * Version 3 is validated as-is. Older versions have what they are missing
- * spread in *under* the stored fields, one version step at a time, so a value
- * the record already carries always wins over the default and a version 1
- * record picks up the economy and the deck list on its way forward. Nothing is
- * renamed, rewritten or dropped: a migration is only ever an addition here.
+ * Older versions have what they are missing spread in *under* the stored
+ * fields, one version step at a time, so a value the record already carries
+ * always wins over the default and a version 1 record picks up the economy and
+ * the deck list on its way forward. The favourites list is completed at every
+ * version instead of at a step, because it was added without a schema bump —
+ * see `withFavourites`. Nothing is renamed, rewritten or dropped: a migration
+ * is only ever an addition here.
  *
  * The completed state is then validated exactly like a version 3 one — a v1
  * record with a broken beat index stays corrupt rather than being laundered by
@@ -283,7 +285,33 @@ export function migrateStorySaveState(
   if (schemaVersion < 2)
     candidate = withCardShop({ ...economyDefaults(), ...candidate });
   if (schemaVersion < 3) candidate = withStarterDecks(candidate);
+  candidate = withFavourites(candidate);
   return isStoryState(candidate) ? candidate : null;
+}
+
+/** The favourites list a record written before the deck star existed does not
+    carry.
+
+    Completed at every version rather than behind a `schemaVersion < n` step,
+    because the field went in without a schema bump: it is additive and
+    optional, a build that predates it reads a record carrying it without
+    noticing, and bumping would have told every such build that a save it can
+    resume perfectly well is too new to open. So version 3 covers records
+    written both before and after this slice, and the one without the field is
+    completed here.
+
+    Only an absent field is filled. A stored value of any other shape is left
+    exactly as it is, so the record fails validation instead of being laundered
+    into a valid save — the rule `topUpToGrant` follows for an unreadable count.
+
+    Built per call for the same reason as the economy defaults: two completed
+    saves must not come back sharing one list. */
+function withFavourites(
+  state: Record<string, unknown>,
+): Record<string, unknown> {
+  return state.favouriteDeckIds === undefined
+    ? { ...state, favouriteDeckIds: [] }
+    : state;
 }
 
 /** The map a save written before the shop existed carries, plus the node it
@@ -397,15 +425,22 @@ function isEconomy(state: Record<string, unknown>): boolean {
    refused outright, because every command that edits or deletes a deck
    addresses it by id and one of the pair would be unreachable.
 
-   `defaultDeckId` is checked as an id, not as a pointer: a default naming a
-   deck this save no longer has costs the player one pick, while calling that
-   record corrupt costs them the save. */
+   `defaultDeckId` and every id in `favouriteDeckIds` are checked as ids, not
+   as pointers: a default or a star naming a deck this save no longer has costs
+   the player one pick or one grey outline the screens ignore, while calling
+   that record corrupt costs them the save.
+
+   The favourites list itself is required rather than optional, because
+   `withFavourites` has already completed a record that did not carry one — so
+   what reaches here is either a list or something this build must refuse. */
 function isDeckLibrary(state: Record<string, unknown>): boolean {
   const decks = state.decks;
   if (!Array.isArray(decks) || !decks.every(isStoryDeck)) return false;
   if (new Set(decks.map((deck) => deck.id)).size !== decks.length) return false;
   return (
-    state.defaultDeckId === null || typeof state.defaultDeckId === "string"
+    (state.defaultDeckId === null || typeof state.defaultDeckId === "string") &&
+    Array.isArray(state.favouriteDeckIds) &&
+    state.favouriteDeckIds.every((id) => typeof id === "string")
   );
 }
 

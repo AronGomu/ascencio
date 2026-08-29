@@ -2214,7 +2214,7 @@ async function assertHandCouldOfferAPlacement(page: Page): Promise<void> {
 
 test("perspective plane fills the board and excludes fixed descendants at 1280x720", async ({
   page,
-}) => {
+}, testInfo) => {
   await page.setViewportSize({ width: 1280, height: 720 });
   await openDuel(page);
   await startPresetDuel(page);
@@ -2255,6 +2255,30 @@ test("perspective plane fills the board and excludes fixed descendants at 1280x7
   ).toBeLessThanOrEqual(8);
   expect(perspective?.phaseInsidePlane).toBe(false);
   expect(perspective?.fixedDescendants).toEqual([]);
+
+  const handCard = field.locator(".duel-field-card.is-hand-item").first();
+  await expect(handCard).toHaveCount(1);
+  const transforms = await handCard.evaluate((element) => {
+    const board = element.closest(".duel-field-board");
+    const fieldCard =
+      board?.querySelector<HTMLElement>(
+        '.duel-field-card:not([data-card-zone-id="p0:hand"]):not([data-card-zone-id="p1:hand"])',
+      ) ?? null;
+    return {
+      hand: getComputedStyle(element).transform,
+      field: fieldCard === null ? null : getComputedStyle(fieldCard).transform,
+    };
+  });
+  expect(transforms.hand).toMatch(/^matrix3d\(/);
+  if (transforms.field !== null)
+    expect(transforms.field).not.toMatch(/^matrix3d\(/);
+
+  const screenshotPath = testInfo.outputPath("t3-hand-card-presentation.png");
+  await page.screenshot({ path: screenshotPath, fullPage: true });
+  await testInfo.attach("t3-hand-card-presentation", {
+    path: screenshotPath,
+    contentType: "image/png",
+  });
 });
 
 test("dragging a hand card onto a highlighted zone plays it", async ({

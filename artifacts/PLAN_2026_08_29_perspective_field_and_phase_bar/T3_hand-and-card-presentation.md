@@ -25,8 +25,13 @@
 - **From T2:** `FIELD_TILT_DEG` from `src/battle/field/perspective.ts`; plane wrapper `[data-cy="duel-field-board-plane"]`; `FieldBoard` renders `HandBand`/`CardControl` inside it.
 - `src/battle/app/components/duel-field/HandBand.svelte` — band markup, `sortedCards` (`:59`).
 - `src/battle/app/components/duel-field/CardControl.svelte` — card root element + `layout` prop (`"hand"` vs field).
+- `src/battle/app/components/duel-field/FieldBoard.svelte` — plane wrapper + field-card placement.
 - `src/styles/app.css` — `.duel-field-card` block (`:1326` region).
+- `tests/component/FieldBoard.test.ts` — FieldBoard geometry + plane tests.
+- `tests/component/HandBand.test.ts` — HandBand presentation tests.
+- `tests/component/DuelField.test.ts` — existing duel-field component tests.
 - `tests/unit/data-cy-coverage.test.ts` — any new element needs `data-cy`.
+- `e2e/duel-smoke.spec.ts` — existing Chromium duel/drag smoke Input.
 
 ## Interface contract (level 5)
 
@@ -87,17 +92,17 @@ export let droopPx = 0;
 
 ## Impl steps
 
-- [ ] 1. Red component tests (HandBand fan/droop, CardControl passthrough).
-- [ ] 2. HandBand: compute fan/droop from `sortedCards` index; pass to CardControl.
-- [ ] 3. CardControl: `fanDeg`/`droopPx` props → CSS vars on root.
-- [ ] 4. FieldBoard: card box from `geometry.cardWidth/cardHeight`; `--hand-upright` on the plane.
-- [ ] 5. app.css: shadow + hand transform block.
-- [ ] 6. Green: `npx vitest run tests/component/HandBand.test.ts tests/component/DuelField.test.ts`.
+- [x] 1. Red component tests (HandBand fan/droop, CardControl passthrough). Verify: `npx vitest run tests/component/HandBand.test.ts` failed with 2 expected missing-var assertions; 9 tests passed.
+- [x] 2. HandBand: compute fan/droop from `sortedCards` index; pass to CardControl. Verify: `npx vitest run tests/component/HandBand.test.ts` passed 11 tests; observed `[-5, -2.5, 0, 2.5, 5]deg`, display-order mapping, positive outer droop, single-card `0px`.
+- [x] 3. CardControl: `fanDeg`/`droopPx` props → CSS vars on root. Verify: `npx vitest run tests/component/HandBand.test.ts` passed CardControl field-inert assertion within 11 tests.
+- [x] 4. FieldBoard: card box from `geometry.cardWidth/cardHeight`; `--hand-upright` on the plane. Verify: `npx vitest run tests/component/FieldBoard.test.ts` passed 3 tests; observed field-card height `geometry.cardHeight`, transformed plane `-20deg`, flat plane `0deg`.
+- [x] 5. app.css: shadow + hand transform block. Verify: source inspection confirms static shadow, composed hand/focus transforms, no hand `translate(-50%,-50%)`.
+- [x] 6. Green: `npx vitest run tests/component/HandBand.test.ts tests/component/DuelField.test.ts`. Verify: command passed; 2 files, 196 tests passed.
 
 ## Validation
 
-- [ ] `npm run check:headless`
-- [ ] manual: hands fan and stand up, both sides; defense-position card still reads rotated; no card touches a zone border
-- [ ] no silent-failure swallow added — `none` expected
-- [ ] app functional — drag from fanned hand still starts/ends correctly (manual + existing e2e)
-- [ ] commit msg draft: `feat(duel): stand hands upright with a fan and inset field cards with shadows`
+- [x] `npm run check:headless` — Verify: command passed; format, lint, typecheck (0 errors/2 pre-existing warnings), 23 legacy, 1786 unit + 2 skipped, 39 integration, vendor/assets/snapshot verification all passed.
+- [x] manual: hands fan and stand up, both sides; defense-position card still reads rotated; no card touches a zone border — Verify: focused Chromium run passed hand `matrix3d` + screenshot evidence; component suite passed opponent/defense orientation and inset geometry assertions.
+- [x] no silent-failure swallow added — Verify: diff inspection found no new broad catch/swallow path; expected `none`.
+- [x] app functional — drag from fanned hand still starts/ends correctly (manual + existing e2e) — Verify: `npx playwright test e2e/duel-smoke.spec.ts -g 'perspective plane fills|dragging a hand card onto a highlighted zone plays it'` passed 2 tests.
+- [ ] commit msg draft: `feat(duel): stand hands upright with a fan and inset field cards with shadows` — Verify: local commit exists with exact message after all validation passes.

@@ -54,6 +54,17 @@
 
   const mirrored = player === 1;
   let viewportElement: HTMLDivElement | null = null;
+  const HAND_FAN_DEG = 5;
+
+  function fanDegFor(index: number, count: number): number {
+    const offset = index - (count - 1) / 2;
+    return HAND_FAN_DEG * (offset / Math.max(1, (count - 1) / 2));
+  }
+
+  function droopPxFor(index: number, count: number): number {
+    const offset = index - (count - 1) / 2;
+    return Math.abs(offset) * HAND_FAN_DEG * placement.height * 0.004;
+  }
 
   /* `sequence` addresses the engine, `displayOrder` addresses the eye: your
      own hand keeps arrival order across an engine shuffle and a searched card
@@ -89,7 +100,7 @@
     bind:this={viewportElement}
     data-cy={`field-hand-p${player}-viewport`}
   >
-    {#each sortedCards as card (card.id)}
+    {#each sortedCards as card, index (card.id)}
       <CardControl
         {card}
         layout="hand"
@@ -110,6 +121,8 @@
         pinned={pinnedTarget === card.targetId}
         zoomServed={zoomServedTarget === card.targetId}
         dragged={draggedTarget === card.targetId}
+        fanDeg={fanDegFor(index, sortedCards.length)}
+        droopPx={droopPxFor(index, sortedCards.length)}
         draggable={!disabled &&
           spec?.kind === "cardAction" &&
           spec.cardChoices.has(card.targetId) &&

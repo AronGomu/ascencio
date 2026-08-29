@@ -18,6 +18,8 @@
   export let card: BoardCardView;
   export let layout: "field" | "hand" = "field";
   export let placement: FieldPlacement | null = null;
+  export let fanDeg = 0;
+  export let droopPx = 0;
   export let imageUrl: string;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let cardBackUrl = "";
@@ -71,6 +73,10 @@
     imageUrl,
   );
   $: positionStyle = fieldPositionStyle(layout, placement);
+  $: cardStyle =
+    layout === "hand"
+      ? `--card-fan: ${fanDeg}deg; --card-droop: ${droopPx}px;`
+      : positionStyle;
   $: sortedMaterials = [...card.materials].sort(
     (a, b) => a.sequence - b.sequence,
   );
@@ -299,7 +305,7 @@
   data-position={card.position}
   data-card-zone-id={card.zoneId}
   data-dragging={dragging || dragged ? "true" : undefined}
-  style={positionStyle}
+  style={cardStyle}
   data-cy={`field-card-${card.id}`}
 >
   {#each sortedMaterials as material, index (material.id)}

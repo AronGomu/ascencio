@@ -1338,6 +1338,7 @@ button.phase-chip:not(:disabled) {
 }
 
 .duel-field-board__plane {
+  --hand-upright: 0deg;
   position: absolute;
   right: 0;
   bottom: 0;
@@ -2200,6 +2201,7 @@ button.duel-field-zone,
 .duel-field-card {
   z-index: var(--duel-field-layer-card);
   min-width: 2.75rem;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--shadow) 55%, transparent);
   min-height: 2.75rem;
   margin: 0;
   pointer-events: auto;
@@ -2234,7 +2236,8 @@ button.duel-field-zone,
   min-width: 0;
   min-height: 0;
   margin-top: var(--hand-card-halo-gap);
-  transform: none;
+  transform: rotateX(var(--hand-upright, 0deg)) rotate(var(--card-fan, 0deg))
+    translateY(var(--card-droop, 0px));
   transform-origin: center bottom;
 }
 
@@ -2247,7 +2250,8 @@ button.duel-field-zone,
    excluded: pinning moves focus onto a card-action-chips button, and scaling
    then can push that chip outside the viewport. */
 .duel-field-card.is-identity-known.is-hand-item:not(.is-pinned):focus-within {
-  transform: scale(1.35);
+  transform: scale(1.35) rotateX(var(--hand-upright, 0deg))
+    rotate(var(--card-fan, 0deg)) translateY(var(--card-droop, 0px));
 }
 
 /* Auto-margin centering: the free space is absorbed on the outer side of the

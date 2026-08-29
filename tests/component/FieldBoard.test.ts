@@ -34,6 +34,7 @@ describe("FieldBoard perspective plane", () => {
     );
     expect(plane?.style.height).toBe("1422px");
     expect(plane?.style.transform).toBe("perspective(600px) rotateX(20deg)");
+    expect(plane?.style.getPropertyValue("--hand-upright")).toBe("-20deg");
     const zones = container.querySelectorAll('[data-cy^="field-zone-"]');
     expect(zones.length).toBeGreaterThan(0);
     for (const zone of zones) expect(plane?.contains(zone)).toBe(true);
@@ -62,5 +63,37 @@ describe("FieldBoard perspective plane", () => {
     );
     expect(zone?.style.getPropertyValue("--field-x")).toBe(`${placement?.x}px`);
     expect(zone?.style.getPropertyValue("--field-y")).toBe(`${placement?.y}px`);
+    expect(
+      container
+        .querySelector<HTMLElement>('[data-cy="duel-field-board-plane"]')
+        ?.style.getPropertyValue("--hand-upright"),
+    ).toBe("0deg");
+  });
+
+  it("insets field cards within their zone boxes", () => {
+    const mapped = mapSnapshotToBoard(
+      BOARD_VIEW_MODEL_FIXTURES["ST-04"],
+      BOARD_CARD_TEXTS,
+    );
+    if (!mapped.ok) throw new Error("Fixture mapping failed");
+    const renderLayout = createFieldRenderLayout(true, 1280, 720);
+    const zonePlacement = renderLayout.zones.get("p0:mainMonster:1");
+    const { container } = render(FieldBoard, {
+      board: mapped.value,
+      renderLayout,
+      planeHeight: 720,
+      planeTransform: "",
+      cardBackUrl: "card-back.png",
+      placeholderUrl: "placeholder.png",
+    });
+    const card = container.querySelector<HTMLElement>(
+      '[data-card-zone-id="p0:mainMonster:1"]',
+    );
+    expect(card?.style.getPropertyValue("--field-height")).toBe(
+      `${renderLayout.geometry.cardHeight}px`,
+    );
+    expect(card?.style.getPropertyValue("--field-height")).not.toBe(
+      `${zonePlacement?.height}px`,
+    );
   });
 });

@@ -14,6 +14,7 @@
     type FieldNavigationState,
   } from "../../prompts/field-navigation.ts";
   import type { PhysicalZoneId } from "../../../field/duel-field-layout.ts";
+  import { FIELD_TILT_DEG } from "../../../field/perspective.ts";
   import {
     ZONE_GAP,
     type FieldPlacement,
@@ -117,6 +118,19 @@
     if (placement === undefined)
       throw new Error(`Missing field render placement for ${zoneId}`);
     return placement;
+  }
+
+  function cardPlacementFor(
+    layout: FieldRenderLayout,
+    zoneId: PhysicalZoneId,
+  ): FieldPlacement {
+    const zonePlacement = placementFor(layout, zoneId);
+    return {
+      x: zonePlacement.x,
+      y: zonePlacement.y,
+      width: layout.geometry.cardWidth,
+      height: layout.geometry.cardHeight,
+    };
   }
 
   /* Only the pre-lease fallback: `CardControl` swaps in the leased art as
@@ -230,7 +244,7 @@
   <div
     class="duel-field-board__plane"
     data-cy="duel-field-board-plane"
-    style={`height: ${planeHeight}px; transform: ${planeTransform};`}
+    style={`height: ${planeHeight}px; transform: ${planeTransform}; --hand-upright: ${planeTransform === "" ? 0 : -FIELD_TILT_DEG}deg;`}
   >
     <div
       class="duel-field-board__content"
@@ -321,7 +335,7 @@
       {#each fieldCards as card (card.id)}
         <CardControl
           {card}
-          placement={placementFor(renderLayout, card.zoneId)}
+          placement={cardPlacementFor(renderLayout, card.zoneId)}
           imageUrl={cardImageUrl(card)}
           {imageLibrary}
           {cardBackUrl}

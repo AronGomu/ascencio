@@ -1,79 +1,146 @@
 import { describe, expect, it } from "vitest";
 import {
   CARD_ASPECT,
+  CARD_INSET,
   computeFieldGeometry,
   createFieldRenderLayout,
+  perspectiveVirtualHeight,
   ZONE_GAP,
 } from "../../src/battle/field/duel-field-geometry.ts";
 import { STANDARD_DUEL_FIELD_LAYOUT } from "../../src/battle/field/duel-field-layout.ts";
 
-/* M2 2026-08-21: the first column is the middle-column budget
-   `stage - --preview-w - --rail-min`, not a viewport. 1328 and 886 were the
-   1920x1080 and 1366x768 budgets while `--preview-w` was 22rem/18rem; round 2
-   narrowed it to 15.5rem/13.5rem (89faedf, ADR-042 §2), which makes them 1432
-   and 958. Both expected sizes are unchanged because these EMZ fits are
-   height-constrained, so the stale inputs were passing on luck. */
-const budgets = [
-  [1432, 1080, 1229, 1080],
-  [1872, 1440, 1638, 1440],
-  [958, 768, 874, 768],
-] as const;
+function horizontalGap(
+  left: { readonly x: number; readonly width: number },
+  right: { readonly x: number; readonly width: number },
+): number {
+  return right.x - right.width / 2 - (left.x + left.width / 2);
+}
 
 describe("duel field pixel geometry", () => {
-  it.each(budgets)(
-    "computes EMZ geometry from one scale factor at %sx%s",
-    (availableWidth, availableHeight, width, height) => {
-      const geometry = computeFieldGeometry(
-        true,
-        availableWidth,
-        availableHeight,
-      );
-      expect(geometry.width).toBeCloseTo(width, 0);
-      expect(geometry.height).toBeCloseTo(height, 0);
-      expect(geometry.width).toBeLessThanOrEqual(availableWidth);
-      expect(geometry.height).toBeLessThanOrEqual(availableHeight);
-    },
-  );
-
-  it("fills the small no-EMZ viewport height on the narrowed preview budget", () => {
-    /* M2 2026-08-21: was `(false, 886, 768)` -> 886x735, the 95.7% compromise
-       ADR-019 §8 accepted while `--preview-w` was 18rem below 1500px. At
-       13.5rem the budget is 958, so the fit stops being width-constrained and
-       the board takes the whole viewport height. Chromium measures the width
-       as 925.5625 in the acceptance run. */
+  it("uses six rows and a compact middle band without Extra Monster Zones", () => {
     const geometry = computeFieldGeometry(false, 958, 768);
-    expect(geometry.width).toBeCloseTo(925.57, 1);
-    expect(geometry.height).toBeCloseTo(768, 0);
-    expect(geometry.height / 768).toBeCloseTo(1, 3);
+
+    expect(geometry.rowY).toHaveLength(6);
+    expect(geometry.bandHeight).toBeCloseTo(0.12 * geometry.pitch);
+    expect(geometry.bandY).toBeGreaterThan(geometry.rowY[2]!);
+    expect(geometry.bandY).toBeLessThan(geometry.rowY[3]!);
+  });
+
+  it("centres Extra Monster Zones on monster columns in the middle band", () => {
+    const geometry = computeFieldGeometry(true, 1328, 1080);
+
+    expect(geometry.rowY).toHaveLength(6);
+    expect(geometry.bandHeight).toBeCloseTo(0.78 * geometry.pitch);
+    expect(geometry.emzX[0]).toBe(geometry.columnX[2]);
+    expect(geometry.emzX[1]).toBe(geometry.columnX[4]);
+    expect(geometry.bandY).toBeGreaterThan(geometry.rowY[2]!);
+    expect(geometry.bandY).toBeLessThan(geometry.rowY[3]!);
+  });
+
+  it("uses narrow upright pile zones and square central zones", () => {
+    const layout = createFieldRenderLayout(true, 1328, 1080);
+
+    for (const player of [0, 1] as const) {
+      for (const kind of [
+        "field",
+        "deck",
+        "extra",
+        "graveyard",
+        "banished",
+      ] as const) {
+        expect(layout.zones.get(`p${player}:${kind}`)?.width).toBe(
+          layout.geometry.slotWidth,
+        );
+      }
+    }
+    expect(layout.zones.get("p0:mainMonster:0")?.width).toBe(
+      layout.geometry.box,
+    );
+  });
+
+  it("keeps exact horizontal gaps across non-uniform columns", () => {
+    const layout = createFieldRenderLayout(true, 1328, 1080);
+    const field = layout.zones.get("p0:field")!;
+    const monster0 = layout.zones.get("p0:mainMonster:0")!;
+    const monster1 = layout.zones.get("p0:mainMonster:1")!;
+    const monster4 = layout.zones.get("p0:mainMonster:4")!;
+    const graveyard = layout.zones.get("p0:graveyard")!;
+    const banished = layout.zones.get("p0:banished")!;
+
+    for (const gap of [
+      horizontalGap(field, monster0),
+      horizontalGap(monster0, monster1),
+      horizontalGap(monster4, graveyard),
+      horizontalGap(graveyard, banished),
+    ]) {
+      expect(gap).toBeCloseTo(ZONE_GAP, 2);
+    }
+  });
+
+  it("places Extra Monster Zones in the middle band", () => {
+    const layout = createFieldRenderLayout(true, 1328, 1080);
+
+    expect(layout.zones.get("shared:extraMonster:left")).toEqual({
+      x: layout.geometry.columnX[2],
+      y: layout.geometry.bandY,
+      width: layout.geometry.box,
+      height: layout.geometry.bandHeight,
+    });
+    expect(layout.zones.get("shared:extraMonster:right")).toMatchObject({
+      x: layout.geometry.columnX[4],
+      y: layout.geometry.bandY,
+      height: layout.geometry.bandHeight,
+    });
   });
 
   it.each([true, false])(
-    "keeps absolute five-pixel gaps for profile %s",
+    "insets cards inside zone footprints for profile %s",
     (extraMonsterZones) => {
       const geometry = computeFieldGeometry(extraMonsterZones, 1328, 1080);
-      expect(geometry.pitch - geometry.box).toBe(ZONE_GAP);
-      expect(geometry.columnX[1]! - geometry.columnX[0]!).toBeCloseTo(
-        geometry.pitch,
-      );
-      expect(geometry.rowY[1]! - geometry.rowY[0]!).toBeCloseTo(geometry.pitch);
+
+      expect(geometry.cardHeight).toBeCloseTo(geometry.box * CARD_INSET);
+      expect(geometry.cardWidth).toBeCloseTo(geometry.cardHeight * CARD_ASPECT);
+      expect(geometry.slotWidth - geometry.cardWidth).toBe(6);
     },
   );
 
-  it.each([true, false])(
-    "makes square footprints and six-pixel slot pad for profile %s",
-    (extraMonsterZones) => {
-      const layout = createFieldRenderLayout(extraMonsterZones, 1328, 1080);
-      expect(layout.geometry.cardHeight).toBe(layout.geometry.box);
-      expect(layout.geometry.cardWidth).toBe(layout.geometry.box * CARD_ASPECT);
-      expect(layout.geometry.slotWidth - layout.geometry.cardWidth).toBe(6);
-      for (const [id, placement] of layout.zones) {
-        expect(placement.height).toBe(layout.geometry.box);
-        expect(placement.width).toBe(
-          id.endsWith(":hand")
-            ? layout.geometry.width - 2 * layout.geometry.margin
-            : layout.geometry.box,
-        );
-      }
+  it("fits the compact board width from the closed form", () => {
+    const geometry = computeFieldGeometry(true, 1328, 1e9);
+
+    expect(geometry.width).toBeCloseTo(1328, 1);
+    expect(geometry.width).toBeLessThanOrEqual(1328);
+  });
+
+  it("keeps virtual height unchanged at zero tilt", () => {
+    expect(perspectiveVirtualHeight(720, 0, 600)).toBe(720);
+  });
+
+  it("matches the locked perspective virtual height", () => {
+    expect(perspectiveVirtualHeight(738, 20, 600)).toBeCloseTo(1422, 0);
+  });
+
+  it("increases virtual height with tilt while the denominator stays positive", () => {
+    const heights = [0, 5, 10, 15].map((tilt) =>
+      perspectiveVirtualHeight(720, tilt, 1200),
+    );
+
+    expect(heights).toEqual(heights.toSorted((left, right) => left - right));
+    expect(new Set(heights).size).toBe(heights.length);
+  });
+
+  it.each([
+    [2000, 20, 600, 2000],
+    [Number.NaN, 20, 600, Number.NaN],
+    [720, Number.POSITIVE_INFINITY, 600, 720],
+    [720, 20, Number.NEGATIVE_INFINITY, 720],
+    [0, 20, 600, 0],
+    [-1, 20, 600, -1],
+  ])(
+    "falls back for invalid virtual-height input %s, %s, %s",
+    (boardHeight, tiltDeg, cameraPx, expected) => {
+      expect(perspectiveVirtualHeight(boardHeight, tiltDeg, cameraPx)).toEqual(
+        expected,
+      );
     },
   );
 
@@ -84,49 +151,15 @@ describe("duel field pixel geometry", () => {
       const expectedIds = STANDARD_DUEL_FIELD_LAYOUT.map(({ id }) => id).filter(
         (id) => extraMonsterZones || !id.startsWith("shared:extraMonster"),
       );
+
       expect([...layout.zones.keys()]).toEqual(
         expect.arrayContaining(expectedIds),
       );
       expect(layout.zones.size).toBe(extraMonsterZones ? 34 : 32);
-
-      const geometry = layout.geometry;
-      expect(layout.zones.get("p1:hand")).toMatchObject({
-        x: geometry.width / 2,
-        y: geometry.rowY[0],
-      });
-      expect(layout.zones.get("p1:extra")).toMatchObject({
-        x: geometry.columnX[0],
-        y: geometry.rowY[1],
-      });
-      expect(layout.zones.get("p1:mainMonster:0")).toMatchObject({
-        x: geometry.columnX[1],
-        y: geometry.rowY[2],
-      });
-      expect(layout.zones.get("p0:mainMonster:4")).toMatchObject({
-        x: geometry.columnX[5],
-        y: geometry.rowY[extraMonsterZones ? 4 : 3],
-      });
-      expect(layout.zones.get("p0:graveyard")).toMatchObject({
-        x: geometry.columnX[6],
-        y: geometry.rowY[extraMonsterZones ? 4 : 3],
-      });
-      expect(layout.zones.get("p0:banished")).toMatchObject({
-        x: geometry.columnX[7],
-        y: geometry.rowY[extraMonsterZones ? 4 : 3],
-      });
-      if (extraMonsterZones) {
-        expect(layout.zones.get("shared:extraMonster:left")).toMatchObject({
-          x: geometry.emzX[0],
-          y: geometry.rowY[3],
-        });
-        expect(layout.zones.get("shared:extraMonster:right")).toMatchObject({
-          x: geometry.emzX[1],
-          y: geometry.rowY[3],
-        });
-      } else {
-        expect(layout.zones.has("shared:extraMonster:left")).toBe(false);
-        expect(layout.zones.has("shared:extraMonster:right")).toBe(false);
-      }
+      expect(layout.zones.get("p1:hand")?.y).toBe(layout.geometry.rowY[0]);
+      expect(layout.zones.get("p0:mainMonster:4")?.y).toBe(
+        layout.geometry.rowY[3],
+      );
     },
   );
 
@@ -134,15 +167,16 @@ describe("duel field pixel geometry", () => {
     [Number.NaN, 768],
     [Number.POSITIVE_INFINITY, 768],
     [886, Number.NEGATIVE_INFINITY],
-    [0, 768],
+    [0, 100],
     [-1, 768],
     [886, 0],
     [10, 10],
   ])(
-    "returns finite empty geometry for invalid budget %s x %s",
+    "returns frozen finite empty geometry for invalid budget %s x %s",
     (width, height) => {
       const layout = createFieldRenderLayout(true, width, height);
       const geometry = layout.geometry;
+
       expect(Object.isFrozen(layout)).toBe(true);
       expect(Object.isFrozen(layout.zones)).toBe(true);
       expect(layout.zones.size).toBe(0);
@@ -153,8 +187,8 @@ describe("duel field pixel geometry", () => {
       expect(geometry.rowY).toEqual([]);
       expect(geometry.columnX).toEqual([]);
       expect(geometry.emzX).toEqual([0, 0]);
-      for (const value of Object.values(geometry).flatMap((value) =>
-        typeof value === "number" ? [value] : value,
+      for (const value of Object.values(geometry).flatMap((entry) =>
+        typeof entry === "number" ? [entry] : entry,
       )) {
         expect(Number.isFinite(value)).toBe(true);
         expect(value).toBeGreaterThanOrEqual(0);
@@ -164,6 +198,7 @@ describe("duel field pixel geometry", () => {
 
   it("freezes geometry, arrays, map, and placement values", () => {
     const layout = createFieldRenderLayout(true, 1328, 1080);
+
     expect(Object.isFrozen(layout)).toBe(true);
     expect(Object.isFrozen(layout.geometry)).toBe(true);
     expect(Object.isFrozen(layout.geometry.rowY)).toBe(true);

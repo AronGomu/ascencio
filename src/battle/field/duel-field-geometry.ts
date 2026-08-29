@@ -2,9 +2,11 @@ import type { PhysicalZoneId } from "./duel-field-layout.ts";
 
 export const ZONE_GAP = 5;
 export const CARD_ASPECT = 72 / 104;
+export const CARD_INSET = 0.86;
 
 const MARGIN = 0.15;
-const BAND = 0.55;
+const BAND = 0.12;
+const MIDDLE_BAND = 0.78;
 const SLOT_PAD = 6;
 const COLS = 8;
 
@@ -19,6 +21,7 @@ export interface FieldGeometry {
   readonly slotWidth: number;
   readonly rowY: readonly number[];
   readonly bandY: number;
+  readonly bandHeight: number;
   readonly columnX: readonly number[];
   readonly emzX: readonly [number, number];
 }
@@ -46,6 +49,7 @@ const ZERO_GEOMETRY: FieldGeometry = Object.freeze({
   slotWidth: 0,
   rowY: Object.freeze([]),
   bandY: 0,
+  bandHeight: 0,
   columnX: Object.freeze([]),
   emzX: Object.freeze([0, 0] as const),
 });
@@ -63,54 +67,62 @@ export function computeFieldGeometry(
   )
     return ZERO_GEOMETRY;
 
-  const rows = extraMonsterZones ? 7 : 6;
-  const hP = 2 * MARGIN + rows + (extraMonsterZones ? 0 : BAND);
-  const hC = extraMonsterZones ? -ZONE_GAP : 0;
-  const wP = 2 * MARGIN + COLS;
-  const wC = -ZONE_GAP;
+  const middleRows = extraMonsterZones ? MIDDLE_BAND : BAND;
+  const hP = 2 * MARGIN + 6 + middleRows;
+  const k = CARD_INSET * CARD_ASPECT;
+  /* The outer piles contribute three slot widths across the board:
+     width = (2*MARGIN + 5 + 3*k)*pitch
+       + 3*(SLOT_PAD - k*ZONE_GAP) + 2*ZONE_GAP. */
+  const widthCoeff = 2 * MARGIN + 5 + 3 * k;
+  const widthConst = 3 * (SLOT_PAD - k * ZONE_GAP) + 2 * ZONE_GAP;
   const pitch = Math.min(
-    (availableHeight - hC) / hP,
-    (availableWidth - wC) / wP,
+    availableHeight / hP,
+    (availableWidth - widthConst) / widthCoeff,
   );
   if (!Number.isFinite(pitch) || pitch <= ZONE_GAP) return ZERO_GEOMETRY;
 
   const box = pitch - ZONE_GAP;
   const margin = MARGIN * pitch;
-  const band = BAND * pitch;
+  const bandHeight = middleRows * pitch;
+  const cardHeight = box * CARD_INSET;
+  const cardWidth = cardHeight * CARD_ASPECT;
+  const slotWidth = cardWidth + SLOT_PAD;
+
   const rowY: number[] = [];
   let y = margin + box / 2;
   let bandY = 0;
-  for (let index = 0; index < rows; index += 1) {
-    if (!extraMonsterZones && index === 3) {
-      bandY = y - box / 2 + band / 2;
-      y += band + ZONE_GAP;
+  for (let index = 0; index < 6; index += 1) {
+    if (index === 3) {
+      bandY = y - box / 2 + bandHeight / 2;
+      y += bandHeight + ZONE_GAP;
     }
     rowY.push(y);
     y += pitch;
   }
-  if (extraMonsterZones) bandY = rowY[3]!;
 
-  const columnX = Array.from(
-    { length: COLS },
-    (_, index) => margin + box / 2 + index * pitch,
-  );
+  const columnX = new Array<number>(COLS);
+  columnX[0] = margin + slotWidth / 2;
+  columnX[1] = margin + slotWidth + ZONE_GAP + box / 2;
+  for (let index = 2; index <= 5; index += 1)
+    columnX[index] = columnX[index - 1]! + pitch;
+  columnX[6] = columnX[5]! + box / 2 + ZONE_GAP + slotWidth / 2;
+  columnX[7] = columnX[6]! + slotWidth + ZONE_GAP;
+
   const frozenColumns = Object.freeze(columnX);
-  const emzX = Object.freeze([
-    frozenColumns[2]! + pitch / 2,
-    frozenColumns[3]! + pitch / 2,
-  ] as const);
+  const emzX = Object.freeze([frozenColumns[2]!, frozenColumns[4]!] as const);
 
   return Object.freeze({
     pitch,
     box,
-    width: wP * pitch + wC,
-    height: hP * pitch + hC,
+    width: frozenColumns[7]! + slotWidth / 2 + margin,
+    height: hP * pitch,
     margin,
-    cardWidth: box * CARD_ASPECT,
-    cardHeight: box,
-    slotWidth: box * CARD_ASPECT + SLOT_PAD,
+    cardWidth,
+    cardHeight,
+    slotWidth,
     rowY: Object.freeze(rowY),
     bandY,
+    bandHeight,
     columnX: frozenColumns,
     emzX,
   });
@@ -130,15 +142,10 @@ export function createFieldRenderLayout(
   if (geometry.box === 0)
     return Object.freeze({ geometry, zones: Object.freeze(zones) });
 
-  const playerRows = extraMonsterZones
-    ? {
-        1: { hand: 0, spellTrap: 1, monster: 2 },
-        0: { monster: 4, spellTrap: 5, hand: 6 },
-      }
-    : {
-        1: { hand: 0, spellTrap: 1, monster: 2 },
-        0: { monster: 3, spellTrap: 4, hand: 5 },
-      };
+  const playerRows = {
+    1: { hand: 0, spellTrap: 1, monster: 2 },
+    0: { monster: 3, spellTrap: 4, hand: 5 },
+  } as const;
 
   for (const player of [0, 1] as const) {
     const rows = playerRows[player];
@@ -165,7 +172,7 @@ export function createFieldRenderLayout(
       `p${player}:field`,
       geometry.columnX[0]!,
       geometry.rowY[rows.monster]!,
-      geometry.box,
+      geometry.slotWidth,
       geometry.box,
     );
     addZone(
@@ -173,7 +180,7 @@ export function createFieldRenderLayout(
       `p${player}:graveyard`,
       geometry.columnX[6]!,
       geometry.rowY[rows.monster]!,
-      geometry.box,
+      geometry.slotWidth,
       geometry.box,
     );
     addZone(
@@ -181,7 +188,7 @@ export function createFieldRenderLayout(
       `p${player}:banished`,
       geometry.columnX[7]!,
       geometry.rowY[rows.monster]!,
-      geometry.box,
+      geometry.slotWidth,
       geometry.box,
     );
     addZone(
@@ -189,7 +196,7 @@ export function createFieldRenderLayout(
       `p${player}:extra`,
       geometry.columnX[0]!,
       geometry.rowY[rows.spellTrap]!,
-      geometry.box,
+      geometry.slotWidth,
       geometry.box,
     );
     addZone(
@@ -197,7 +204,7 @@ export function createFieldRenderLayout(
       `p${player}:deck`,
       geometry.columnX[6]!,
       geometry.rowY[rows.spellTrap]!,
-      geometry.box,
+      geometry.slotWidth,
       geometry.box,
     );
     addZone(
@@ -215,21 +222,41 @@ export function createFieldRenderLayout(
       zones,
       "shared:extraMonster:left",
       geometry.emzX[0],
-      geometry.rowY[3]!,
+      geometry.bandY,
       geometry.box,
-      geometry.box,
+      geometry.bandHeight,
     );
     addZone(
       zones,
       "shared:extraMonster:right",
       geometry.emzX[1],
-      geometry.rowY[3]!,
+      geometry.bandY,
       geometry.box,
-      geometry.box,
+      geometry.bandHeight,
     );
   }
 
   return Object.freeze({ geometry, zones: Object.freeze(zones) });
+}
+
+export function perspectiveVirtualHeight(
+  boardHeight: number,
+  tiltDeg: number,
+  cameraPx: number,
+): number {
+  if (
+    !Number.isFinite(boardHeight) ||
+    !Number.isFinite(tiltDeg) ||
+    !Number.isFinite(cameraPx) ||
+    boardHeight <= 0
+  )
+    return boardHeight;
+
+  const tiltRad = (tiltDeg * Math.PI) / 180;
+  const denominator =
+    cameraPx * Math.cos(tiltRad) - boardHeight * Math.sin(tiltRad);
+  if (denominator <= 0) return boardHeight;
+  return (boardHeight * cameraPx) / denominator;
 }
 
 function addZone(

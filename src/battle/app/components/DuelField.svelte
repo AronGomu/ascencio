@@ -4,7 +4,6 @@
   import type { DuelPresentationEvent } from "../../duel/contracts/duel-presentation-event.ts";
   import type { PromptMessageSegment } from "../presentation/prompt-context-message.ts";
   import type { PlayerPrompt } from "../../duel/contracts/player-prompt.ts";
-  import type { DuelPhase } from "../../duel/contracts/public-duel-state.ts";
   import type { CardImageLibrary } from "../images/card-image-cache.ts";
   import type {
     BoardCardView,
@@ -40,8 +39,14 @@
   import type { PhysicalZoneId } from "../../field/duel-field-layout.ts";
   import {
     createFieldRenderLayout,
+    perspectiveVirtualHeight,
     type FieldRenderLayout,
   } from "../../field/duel-field-geometry.ts";
+  import {
+    FIELD_CAMERA_PX,
+    FIELD_TILT_DEG,
+    fieldPlaneTransform,
+  } from "../../field/perspective.ts";
   import {
     createDomFeedbackController,
     EMPTY_DOM_FEEDBACK_STATE,
@@ -78,7 +83,6 @@
   import FieldBoard from "./duel-field/FieldBoard.svelte";
   import FieldLines from "./duel-field/FieldLines.svelte";
   import FullControlToggle from "./duel-field/FullControlToggle.svelte";
-  import PhaseStrip from "./duel-field/PhaseStrip.svelte";
 
   const noop = (): void => undefined;
   const EMPTY_TARGETS: ReadonlySet<BoardTargetId> = new Set();
@@ -128,7 +132,6 @@
   export let offFieldTargets: readonly OffFieldTargetEntry[] =
     EMPTY_TARGET_ENTRIES;
   export let onzonelistpreview: (entry: ZoneListEntry) => void = noop;
-  export let phase: DuelPhase = "unknown";
   export let zoneListWindowPosition: PersistedWindowPosition | null = null;
   export let confirmWindowPosition: PersistedWindowPosition | null = null;
   export let showZoneOutlines = true;
@@ -171,6 +174,14 @@
 
   let fieldRoot: HTMLElement;
   let renderLayout: FieldRenderLayout;
+  let boardWidth = 1280;
+  let boardHeight = 720;
+  let planeHeight = perspectiveVirtualHeight(
+    boardHeight,
+    FIELD_TILT_DEG,
+    FIELD_CAMERA_PX,
+  );
+  const planeTransform = fieldPlaneTransform();
   let resizeObserver: ResizeObserver | null = null;
   let observedLayoutBoundary: HTMLElement | null = null;
   let feedbackController: DomFeedbackController | null = null;
@@ -319,11 +330,14 @@
   ): FieldRenderLayout {
     const width = boundary?.clientWidth ?? 0;
     const height = boundary?.clientHeight ?? 0;
-    return createFieldRenderLayout(
-      profile,
-      width > 0 ? width : 1280,
-      height > 0 ? height : 720,
+    boardWidth = width > 0 ? width : 1280;
+    boardHeight = height > 0 ? height : 720;
+    planeHeight = perspectiveVirtualHeight(
+      boardHeight,
+      FIELD_TILT_DEG,
+      FIELD_CAMERA_PX,
     );
+    return createFieldRenderLayout(profile, boardWidth, planeHeight);
   }
 
   /* The hand placement is center-addressed, so the band's left edge is where
@@ -344,11 +358,7 @@
     observedLayoutBoundary = boundary;
     if (boundary === null || typeof ResizeObserver === "undefined") return;
     resizeObserver = new ResizeObserver(() => {
-      renderLayout = createFieldRenderLayout(
-        extraMonsterZones,
-        boundary.clientWidth,
-        boundary.clientHeight,
-      );
+      renderLayout = measuredRenderLayout(boundary, extraMonsterZones);
     });
     resizeObserver.observe(boundary);
   }
@@ -575,7 +585,7 @@
      drives navigation only, so none of them may ever reach the outside-click
      dismissal that answers the live decision. */
   const INTERACTIVE_SELECTOR =
-    "[data-field-target], .card-action-chips, .field-action-bar, .field-phase-strip, .field-end-turn, .floating-field-window, .duel-field-hand-band, .drop-confirm-backdrop";
+    "[data-field-target], .card-action-chips, .field-action-bar, .floating-field-window, .duel-field-hand-band, .drop-confirm-backdrop";
 
   function chainPassChoice(): InteractionChoice | null {
     if (spec === null || spec.promptKind !== "chain") return null;
@@ -1311,7 +1321,7 @@
     ? "true"
     : undefined}
   data-prompt-kind={prompt === null ? undefined : prompt.kind}
-  style={`width: ${renderLayout.geometry.width}px; height: ${renderLayout.geometry.height}px;`}
+  style={`width: ${boardWidth}px; height: ${boardHeight}px;`}
   onclick={dismissOnOutsideClick}
   onpointerdown={beginHandZoomDrag}
   onpointermove={moveHandZoomDrag}
@@ -1338,6 +1348,8 @@
         {dropHoveredZoneId}
         {showZoneOutlines}
         {showZoneCounts}
+        {planeHeight}
+        {planeTransform}
         oncardactivate={activateCard}
         onzoneactivate={activateZone}
         oncardchoose={(choice) => {
@@ -1353,30 +1365,22 @@
         onstackactivate={activateStack}
         oncardzoomenter={enterHandZoom}
         oncardzoomleave={leaveHandZoom}
-      />
-      <!-- Item 4: the drag-to-activate target. A sibling of the board rather
-           than a child of it, so it shares the board's coordinate space while
-           staying outside the board's own overflow clipping. -->
-      {#if dragCard !== null && dragActivateChoices.length > 0}
-        <div
-          class="duel-hand-activation-zone"
-          data-cy="hand-activation-drop-zone"
-          style={handActivationZoneStyle(renderLayout)}
-        >
-          <span
-            class="duel-hand-activation-zone__label"
-            data-cy="hand-activation-drop-zone-label">Activate</span
+      >
+        <!-- Item 4: the drag-to-activate target shares the projected flat-space
+             coordinates used by the player hand placement. -->
+        {#if dragCard !== null && dragActivateChoices.length > 0}
+          <div
+            class="duel-hand-activation-zone"
+            data-cy="hand-activation-drop-zone"
+            style={handActivationZoneStyle(renderLayout)}
           >
-        </div>
-      {/if}
-      <PhaseStrip
-        geometry={renderLayout.geometry}
-        {phase}
-        {spec}
-        disabled={pending}
-        {extraMonsterZones}
-        {oninteraction}
-      />
+            <span
+              class="duel-hand-activation-zone__label"
+              data-cy="hand-activation-drop-zone-label">Activate</span
+            >
+          </div>
+        {/if}
+      </FieldBoard>
     </div>
   </div>
   <FullControlToggle

@@ -2,7 +2,6 @@
   import type { DuelPresentationEvent } from "../../../duel/contracts/duel-presentation-event.ts";
   import type { PromptMessageSegment } from "../../presentation/prompt-context-message.ts";
   import type { PlayerPrompt } from "../../../duel/contracts/player-prompt.ts";
-  import type { DuelPhase } from "../../../duel/contracts/public-duel-state.ts";
   import type { CardImageLibrary } from "../../images/card-image-cache.ts";
   import type {
     BoardCardView,
@@ -47,7 +46,6 @@
   export let offFieldTargets: readonly OffFieldTargetEntry[] = [];
   export let onzonelistpreview: (entry: ZoneListEntry) => void = () =>
     undefined;
-  export let phase: DuelPhase = "unknown";
   export let zoneListWindowPosition: PersistedWindowPosition | null = null;
   export let confirmWindowPosition: PersistedWindowPosition | null = null;
   export let showZoneOutlines = true;
@@ -124,7 +122,6 @@
     {zoneLists}
     {offFieldTargets}
     {onzonelistpreview}
-    {phase}
     {zoneListWindowPosition}
     {confirmWindowPosition}
     {showZoneOutlines}

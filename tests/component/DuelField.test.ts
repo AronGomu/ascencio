@@ -36,7 +36,14 @@ import {
   mapSnapshotToBoard,
   type BoardViewModel,
 } from "../../src/battle/field/board-view-model.ts";
-import { createFieldRenderLayout } from "../../src/battle/field/duel-field-geometry.ts";
+import {
+  createFieldRenderLayout,
+  perspectiveVirtualHeight,
+} from "../../src/battle/field/duel-field-geometry.ts";
+import {
+  FIELD_CAMERA_PX,
+  FIELD_TILT_DEG,
+} from "../../src/battle/field/perspective.ts";
 import { zoneListsForBoard } from "../../src/battle/field/zone-list.ts";
 import { offFieldTargetEntries } from "../../src/battle/field/off-field-target-list.ts";
 import {
@@ -316,6 +323,81 @@ describe("DuelField", () => {
     expect(Number.parseFloat(field?.style.width ?? "NaN")).toBeGreaterThan(0);
   });
 
+  it("keeps the measured board box while the virtual plane fills upward", async () => {
+    let width = 900;
+    let height = 735;
+    const callbacks: ResizeObserverCallback[] = [];
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(callback: ResizeObserverCallback) {
+          callbacks.push(callback);
+        }
+        observe(): void {}
+        disconnect(): void {}
+        unobserve(): void {}
+      },
+    );
+    const boundary = document.createElement("div");
+    Object.defineProperties(boundary, {
+      clientWidth: { configurable: true, get: () => width },
+      clientHeight: { configurable: true, get: () => height },
+    });
+
+    render(DuelField, {
+      board: board("ST-04"),
+      layoutBoundaryElement: boundary,
+    });
+    await tick();
+
+    const field = document.querySelector<HTMLElement>('[data-cy="duel-field"]');
+    const plane = document.querySelector<HTMLElement>(
+      '[data-cy="duel-field-board-plane"]',
+    );
+    const content = document.querySelector<HTMLElement>(
+      '[data-cy="duel-field-board-content"]',
+    );
+    expect(field?.style.width).toBe("900px");
+    expect(field?.style.height).toBe("735px");
+    const renderedPlaneHeight = Number.parseFloat(plane?.style.height ?? "NaN");
+    expect(renderedPlaneHeight).toBeGreaterThan(735);
+    expect(Number.parseFloat(content?.style.height ?? "NaN")).toBeGreaterThan(
+      735,
+    );
+
+    width = 600;
+    height = 900;
+    callbacks[0]?.([], {} as ResizeObserver);
+    await tick();
+
+    const narrowPlaneHeight = perspectiveVirtualHeight(
+      height,
+      FIELD_TILT_DEG,
+      FIELD_CAMERA_PX,
+    );
+    const narrowLayout = createFieldRenderLayout(
+      true,
+      width,
+      narrowPlaneHeight,
+    );
+    const hand = document.querySelector<HTMLElement>(
+      '[data-cy="field-hand-band-p0"]',
+    );
+    const handY = Number.parseFloat(
+      hand?.style.getPropertyValue("--field-y") ?? "NaN",
+    );
+    const handHeight = Number.parseFloat(
+      hand?.style.getPropertyValue("--field-height") ?? "NaN",
+    );
+    const contentHeight = Number.parseFloat(content?.style.height ?? "NaN");
+    const handBottom =
+      narrowPlaneHeight - contentHeight + handY + handHeight / 2;
+    expect(handBottom).toBeCloseTo(
+      narrowPlaneHeight - narrowLayout.geometry.margin,
+      5,
+    );
+  });
+
   it("updates all placement owners on boundary/profile resize and disconnects", async () => {
     let width = 1280;
     let height = 720;
@@ -440,7 +522,7 @@ describe("DuelField", () => {
     expect(document.body.innerHTML).not.toContain("46986414");
   });
 
-  it("omits both shared EMZs and splits nothing for a Link-free board", () => {
+  it("omits both shared EMZs for a Link-free board", () => {
     const result = mapSnapshotToBoard(LINK_FREE_STATE, BOARD_CARD_TEXTS);
     if (!result.ok) throw new Error("Link-free mapping failed");
     render(DuelField, { board: result.value });
@@ -455,48 +537,25 @@ describe("DuelField", () => {
         name: /^Shared Extra Monster Zone/,
       }),
     ).toEqual([]);
-
-    const strip = field.querySelector('[data-cy="field-phase-strip"]');
-    expect(strip?.getAttribute("data-extra-monster-zones")).toBe("false");
-    expect(strip?.classList.contains("is-continuous")).toBe(true);
-    expect(
-      [
-        ...(strip?.querySelectorAll(
-          "[data-cy^='field-phase-chip-'], [data-cy='field-end-turn-button']",
-        ) ?? []),
-      ].map((element) => element.getAttribute("data-cy")),
-    ).toEqual([
-      "field-phase-chip-draw",
-      "field-phase-chip-standby",
-      "field-phase-chip-main1",
-      "field-phase-chip-battle",
-      "field-phase-chip-main2",
-      "field-end-turn-button",
-    ]);
   });
 
-  it("keeps both shared EMZs and the split strip for a Link board", () => {
+  it("keeps both shared EMZs for a Link board", () => {
     render(DuelField, { board: board("ST-01") });
 
     const field = screen.getByRole("region", { name: "Duel field" });
     expect(
       field.querySelectorAll('[data-zone-id^="shared:extraMonster"]'),
     ).toHaveLength(2);
-    const strip = field.querySelector('[data-cy="field-phase-strip"]');
-    expect(strip?.getAttribute("data-extra-monster-zones")).toBe("true");
-    expect(strip?.classList.contains("is-continuous")).toBe(false);
   });
 
-  it("duel field no longer renders the status pills", () => {
+  it("leaves status and phase UI outside the duel field", () => {
     const value = DUEL_FIELD_PUBLIC_STATES["ST-01"];
     render(DuelField, { board: value.board });
 
     expect(document.querySelector('[data-cy="field-status-pills"]')).toBeNull();
     expect(document.querySelector('[data-cy="prio-pill"]')).toBeNull();
     expect(document.querySelector('[data-cy="phase-pill"]')).toBeNull();
-    expect(
-      document.querySelector('[data-cy="field-phase-strip"]'),
-    ).not.toBeNull();
+    expect(document.querySelector('[data-cy="phase-bar"]')).toBeNull();
   });
 
   it("duel field no longer renders the action/phase badge at the opponent hand position (item 26)", () => {
@@ -507,23 +566,6 @@ describe("DuelField", () => {
       document.querySelector('[data-cy="duel-field-feedback"]'),
     ).toBeNull();
     expect(document.querySelector(".duel-field-feedback")).toBeNull();
-  });
-
-  it("renders exactly one End turn button, folded into the phase strip", () => {
-    const value = DUEL_FIELD_PUBLIC_STATES["ST-01"];
-    render(DuelField, { board: value.board });
-
-    expect(
-      document.querySelectorAll('[data-cy="field-end-turn-button"]'),
-    ).toHaveLength(1);
-    expect(
-      document.querySelector('[data-cy="field-phase-chip-end"]'),
-    ).toBeNull();
-    expect(
-      document
-        .querySelector('[data-cy="field-phase-strip"]')
-        ?.contains(document.querySelector('[data-cy="field-end-turn-button"]')),
-    ).toBe(true);
   });
 
   it.each(DUEL_FIELD_PUBLIC_STATE_MATRIX)(
@@ -635,13 +677,7 @@ describe("DuelField", () => {
     const buttons = within(field).queryAllByRole("button");
     expect(
       buttons.map((button) => button.getAttribute("data-cy")).sort(),
-    ).toEqual(
-      [
-        "field-end-turn-button",
-        "field-stack-p0:deck",
-        "field-stack-p1:deck",
-      ].sort(),
-    );
+    ).toEqual(["field-stack-p0:deck", "field-stack-p1:deck"].sort());
   });
 
   it("renders hands through bands and no hand ZoneControl", () => {
@@ -699,6 +735,8 @@ describe("DuelField", () => {
     const { container } = render(FieldBoard, {
       board: value,
       renderLayout: createFieldRenderLayout(true, 1280, 720),
+      planeHeight: 720,
+      planeTransform: "",
       cardBackUrl: "",
       placeholderUrl: "",
     });
@@ -725,6 +763,8 @@ describe("DuelField", () => {
     const { container } = render(FieldBoard, {
       board: value,
       renderLayout: createFieldRenderLayout(true, 1280, 720),
+      planeHeight: 720,
+      planeTransform: "",
       cardBackUrl: "",
       placeholderUrl: "",
     });
@@ -753,6 +793,8 @@ describe("DuelField", () => {
     const { container } = render(FieldBoard, {
       board: value,
       renderLayout: createFieldRenderLayout(true, 1280, 720),
+      planeHeight: 720,
+      planeTransform: "",
       cardBackUrl: "",
       placeholderUrl: "",
     });
@@ -2111,19 +2153,6 @@ describe("DuelField", () => {
     expect(barChoices[0]?.getAttribute("data-cy")).toBe(
       "field-action-bar-choice-pass",
     );
-  });
-
-  it("mounts the corner End turn button inside the field", () => {
-    const value = fieldPrompt("idleCommand", [
-      mountedChoice("activate", "Activate", { action: "activate" }),
-    ]);
-    renderInteractive(value);
-
-    expect(
-      document.querySelector(
-        '[data-cy="duel-field"] [data-cy="field-end-turn-button"]',
-      ),
-    ).not.toBeNull();
   });
 
   it("leases mounted visible art only and releases it on unmount", () => {
@@ -4819,6 +4848,8 @@ describe("FieldBoard", () => {
       const rendered = render(FieldBoard, {
         board: board("ST-05"),
         renderLayout: createFieldRenderLayout(true, 1280, 720),
+        planeHeight: 720,
+        planeTransform: "",
         cardBackUrl: "card-back.png",
         placeholderUrl: "placeholder.png",
       });
@@ -4851,6 +4882,8 @@ describe("FieldBoard", () => {
     const { container } = render(FieldBoard, {
       board: stackBoard.value,
       renderLayout: createFieldRenderLayout(true, 1280, 720),
+      planeHeight: 720,
+      planeTransform: "",
       cardBackUrl,
       placeholderUrl: "",
     });

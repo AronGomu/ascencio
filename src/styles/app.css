@@ -449,7 +449,10 @@ h4 {
   height: var(--stage-h, 100svh);
   margin: 0;
   display: grid;
-  grid-template-columns: var(--preview-w) auto minmax(var(--rail-min), 1fr);
+  grid-template-columns: var(--preview-w) auto var(--phase-bar-w, 8rem) minmax(
+      var(--rail-min),
+      1fr
+    );
   grid-template-rows: minmax(0, 1fr);
   align-items: stretch;
   padding: 0;
@@ -1208,46 +1211,46 @@ li + li {
   overflow: hidden;
 }
 
-.field-phase-strip {
-  position: absolute;
-  z-index: var(--duel-field-layer-control);
-  top: var(--phase-y);
-  right: 0;
-  left: 0;
+.phase-bar {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  transform: translateY(-50%);
-  pointer-events: none;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
 }
-.field-phase-strip__group {
-  position: absolute;
+
+.phase-bar__half {
+  flex: 1;
   display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: var(--phase-gap);
-  pointer-events: none;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  padding: 10px;
 }
-.field-phase-strip__group--left {
-  right: calc(100% - var(--phase-left-emz));
+
+.phase-bar__half--opponent {
+  justify-content: flex-end;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--danger) 30%, var(--surface)),
+    color-mix(in srgb, var(--danger) 12%, var(--surface))
+  );
 }
-.field-phase-strip__group--right {
-  left: var(--phase-right-emz);
+
+.phase-bar__half--player {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--phase-player) 12%, var(--surface)),
+    color-mix(in srgb, var(--phase-player) 30%, var(--surface))
+  );
 }
-.field-phase-strip__end {
-  position: absolute;
-  left: var(--phase-right-edge);
-  transform: translateX(-100%);
-  pointer-events: none;
-}
-.field-phase-strip.is-continuous {
-  gap: var(--phase-gap);
-}
-.field-phase-strip.is-continuous .field-phase-strip__group {
-  position: static;
-}
-.field-phase-chip {
-  min-inline-size: 44px;
+
+.phase-chip {
+  width: 100%;
+  min-inline-size: 0;
   min-block-size: 44px;
   display: inline-grid;
   place-items: center;
@@ -1257,23 +1260,36 @@ li + li {
   border-radius: 999px;
   background: color-mix(in srgb, var(--bg) 72%, transparent);
   color: color-mix(in srgb, var(--muted) 70%, transparent);
-  font-size: var(--label-size);
+  font-size: var(--text-xs);
   font-weight: 800;
+  line-height: 1;
   white-space: nowrap;
 }
-button.field-phase-chip {
+
+button.phase-chip:not(:disabled) {
   pointer-events: auto;
   cursor: pointer;
 }
-.field-phase-chip.is-available {
+
+.phase-chip.is-available {
   color: var(--ink);
   border-color: var(--border);
 }
-.field-phase-chip.is-current {
+
+.phase-chip.is-current {
   box-shadow:
     0 0 0 2px var(--accent),
     0 0 0.6rem var(--accent);
   color: var(--ink);
+}
+
+.phase-chip--end-turn:not(:disabled) {
+  background: var(--warning);
+  color: var(--ink-on-warning);
+}
+
+.phase-chip--end-turn:hover:not(:disabled) {
+  background: var(--selected-strong);
 }
 
 /* Stage uses exact geometry-sized field coordinates. */
@@ -1323,6 +1339,24 @@ button.field-phase-chip {
       var(--field-gradient-from),
       var(--field-gradient-to)
     );
+}
+
+.duel-field-board__plane {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform-origin: 50% 100%;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.duel-field-board__content {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: auto;
 }
 
 .duel-field-zone,
@@ -2529,22 +2563,6 @@ button.card-action-chip {
 
 button.card-action-chip:hover:not(:disabled) {
   background: var(--selected-strong);
-}
-
-/* The strip slot is absolutely positioned from its left edge alone, so its
-   shrink-to-fit width is this button's min-content: without `nowrap` the
-   engine's own label (`End Battle Phase`) breaks over three lines. The height
-   floor stays on the shared 44px control minimum: the button was trimmed back
-   towards the rest of the field's chrome, not below what a thumb can hit. */
-.field-end-turn {
-  min-inline-size: 44px;
-  min-height: 2.75rem;
-  display: inline-grid;
-  place-items: center;
-  pointer-events: auto;
-  padding: 0.35rem var(--space-3);
-  font-size: var(--text-sm);
-  white-space: nowrap;
 }
 
 /* T14: the bar is normal flow inside the confirm window (ADR-017), which

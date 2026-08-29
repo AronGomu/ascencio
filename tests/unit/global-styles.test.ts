@@ -176,12 +176,12 @@ describe("global styles", () => {
     expect(css).not.toContain("max-height: calc(100svh - 1rem)");
   });
 
-  it("uses one full-height three-column shell", () => {
+  it("uses one full-height four-column shell", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     const shell = ruleBlock(css, ".duel-shell {");
     expect(shell).toContain("height: var(--stage-h, 100svh)");
     expect(shell).toContain(
-      "grid-template-columns: var(--preview-w) auto minmax(var(--rail-min), 1fr)",
+      "grid-template-columns: var(--preview-w) auto var(--phase-bar-w, 8rem) minmax(\n      var(--rail-min),\n      1fr\n    )",
     );
     expect(shell).toContain("grid-template-rows: minmax(0, 1fr)");
     expect(shell).toContain("overflow: hidden");
@@ -504,22 +504,17 @@ describe("global styles", () => {
     expect(reveal).toContain("display: flex");
   });
 
-  /* The end-turn strip slot is absolutely positioned from its left edge
-     alone, so its shrink-to-fit width is the label's min-content unless the
-     button forbids wrapping. Without this row `End Battle Phase` breaks over
-     three lines and no jsdom test can see it. */
-  it("end-turn button never wraps its label", () => {
+  /* The phase pane is narrow, so the engine label needs the shared chip's
+     no-wrap rule. Without it `End Battle Phase` can break over several rows
+     and no jsdom test can see the layout defect. */
+  it("phase chips never wrap their labels", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
-    expect(ruleBlock(css, "\n.field-end-turn {")).toContain(
-      "white-space: nowrap",
-    );
+    expect(ruleBlock(css, "\n.phase-chip {")).toContain("white-space: nowrap");
   });
 
-  it("end-turn button keeps the 44px control minimum", () => {
+  it("phase chips keep the 44px control minimum", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
-    expect(ruleBlock(css, "\n.field-end-turn {")).toContain(
-      "min-height: 2.75rem",
-    );
+    expect(ruleBlock(css, "\n.phase-chip {")).toContain("min-block-size: 44px");
   });
 
   /* Both bands centre their cluster with an `auto` margin on the *outer* side

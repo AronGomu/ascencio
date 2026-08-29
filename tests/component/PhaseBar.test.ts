@@ -1,0 +1,236 @@
+// @vitest-environment jsdom
+
+import { cleanup, fireEvent, render } from "@testing-library/svelte";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import PhaseBar from "../../src/battle/app/components/PhaseBar.svelte";
+import { choiceId, promptId } from "../../src/battle/duel/contracts/ids.ts";
+import type { ActiveInteractionSpec } from "../../src/battle/app/prompts/interaction-spec.ts";
+
+const KEY = {
+  workerGeneration: 1,
+  sessionGeneration: 2,
+  promptId: promptId("phase-bar"),
+} as const;
+
+function specWithChoices(
+  entries: readonly [
+    string,
+    string,
+    "battlePhase" | "mainPhase2" | "endPhase",
+  ][],
+): ActiveInteractionSpec {
+  return {
+    key: KEY,
+    globalChoices: new Map(
+      entries.map(([id, label, action]) => [
+        choiceId(id),
+        { id: choiceId(id), label, action },
+      ]),
+    ),
+  } as unknown as ActiveInteractionSpec;
+}
+
+function chipIds(container: Element): string[] {
+  return [...container.children].map(
+    (element) => element.getAttribute("data-cy") ?? "",
+  );
+}
+
+afterEach(() => {
+  cleanup();
+});
+
+describe("PhaseBar", () => {
+  it("renders the player and opponent halves in perspective order", () => {
+    render(PhaseBar);
+
+    const opponent = document.querySelector('[data-cy="phase-bar-opponent"]');
+    const player = document.querySelector('[data-cy="phase-bar-player"]');
+    expect(document.querySelector('[data-cy="phase-bar"]')).not.toBeNull();
+    expect(opponent).not.toBeNull();
+    expect(player).not.toBeNull();
+    expect(chipIds(opponent!)).toEqual([
+      "phase-bar-opp-end",
+      "phase-bar-opp-main2",
+      "phase-bar-opp-battle",
+      "phase-bar-opp-main1",
+      "phase-bar-opp-standby",
+      "phase-bar-opp-draw",
+    ]);
+    expect(chipIds(player!)).toEqual([
+      "phase-bar-you-draw",
+      "phase-bar-you-standby",
+      "phase-bar-you-main1",
+      "phase-bar-you-battle",
+      "phase-bar-you-main2",
+      "field-end-turn-button",
+    ]);
+  });
+
+  it("renders only offered player transitions as buttons", () => {
+    const spec = specWithChoices([
+      ["battle", "Enter Battle Phase", "battlePhase"],
+      ["end", "End turn", "endPhase"],
+    ]);
+    render(PhaseBar, { phase: "main1", spec });
+
+    expect(
+      document.querySelector('[data-cy="phase-bar-you-battle"]')?.tagName,
+    ).toBe("BUTTON");
+    for (const slot of ["draw", "standby", "main1", "main2"]) {
+      const chip = document.querySelector(`[data-cy="phase-bar-you-${slot}"]`);
+      expect(chip?.tagName).toBe("SPAN");
+      expect(chip?.getAttribute("role")).toBe("presentation");
+    }
+    expect(
+      document.querySelector('[data-cy="phase-bar-opp-battle"]')?.tagName,
+    ).toBe("SPAN");
+  });
+
+  it("dispatches an offered player transition", async () => {
+    const spec = specWithChoices([
+      ["battle", "Enter Battle Phase", "battlePhase"],
+    ]);
+    const oninteraction = vi.fn();
+    render(PhaseBar, { phase: "main1", spec, oninteraction });
+
+    await fireEvent.click(
+      document.querySelector('[data-cy="phase-bar-you-battle"]')!,
+    );
+
+    expect(oninteraction).toHaveBeenCalledOnce();
+    expect(oninteraction).toHaveBeenCalledWith({
+      type: "chooseChoice",
+      choiceId: choiceId("battle"),
+      key: spec.key,
+    });
+  });
+
+  it("routes current phase to the opponent half", () => {
+    render(PhaseBar, { phase: "main1", turnPlayer: 1 });
+
+    const opponent = document.querySelector('[data-cy="phase-bar-opponent"]');
+    const player = document.querySelector('[data-cy="phase-bar-player"]');
+    expect(opponent?.getAttribute("data-current-phase")).toBe("main1");
+    expect(player?.hasAttribute("data-current-phase")).toBe(false);
+    expect(
+      document
+        .querySelector('[data-cy="phase-bar-opp-main1"]')
+        ?.classList.contains("is-current"),
+    ).toBe(true);
+    expect(
+      document
+        .querySelector('[data-cy="phase-bar-you-main1"]')
+        ?.classList.contains("is-current"),
+    ).toBe(false);
+    expect(document.querySelectorAll(".phase-chip.is-current")).toHaveLength(1);
+  });
+
+  it("routes battle-family phases to the player battle chip", () => {
+    render(PhaseBar, { phase: "damageCalculation", turnPlayer: 0 });
+
+    expect(
+      document
+        .querySelector('[data-cy="phase-bar-you-battle"]')
+        ?.classList.contains("is-current"),
+    ).toBe(true);
+    expect(
+      document
+        .querySelector('[data-cy="phase-bar-player"]')
+        ?.getAttribute("data-current-phase"),
+    ).toBe("battle");
+  });
+
+  it("uses the engine End label and dispatches its choice", async () => {
+    const spec = specWithChoices([["end", "End Battle Phase", "endPhase"]]);
+    const oninteraction = vi.fn();
+    render(PhaseBar, { spec, oninteraction });
+
+    const button = document.querySelector(
+      '[data-cy="field-end-turn-button"]',
+    ) as HTMLButtonElement;
+    expect(button.textContent).toBe("End Battle Phase");
+    expect(button.disabled).toBe(false);
+    expect(button.classList.contains("is-available")).toBe(true);
+
+    await fireEvent.click(button);
+    expect(oninteraction).toHaveBeenCalledWith({
+      type: "chooseChoice",
+      choiceId: choiceId("end"),
+      key: spec.key,
+    });
+  });
+
+  it("falls back to a muted disabled End turn chip", () => {
+    render(PhaseBar, { spec: null });
+
+    const button = document.querySelector(
+      '[data-cy="field-end-turn-button"]',
+    ) as HTMLButtonElement;
+    expect(button.textContent).toBe("End turn");
+    expect(button.disabled).toBe(true);
+    expect(button.classList.contains("phase-chip--end-turn")).toBe(true);
+    expect(button.classList.contains("is-available")).toBe(false);
+  });
+
+  it("makes every transition inert while disabled", async () => {
+    const spec = specWithChoices([
+      ["battle", "Enter Battle Phase", "battlePhase"],
+      ["main2", "Enter Main Phase 2", "mainPhase2"],
+      ["end", "End turn", "endPhase"],
+    ]);
+    const oninteraction = vi.fn();
+    render(PhaseBar, { spec, disabled: true, oninteraction });
+
+    expect(
+      document.querySelectorAll("button.phase-chip:not(.phase-chip--end-turn)"),
+    ).toHaveLength(0);
+    const battleChip = document.querySelector(
+      '[data-cy="phase-bar-you-battle"]',
+    );
+    expect(battleChip?.tagName).toBe("SPAN");
+    const endButton = document.querySelector(
+      '[data-cy="field-end-turn-button"]',
+    ) as HTMLButtonElement;
+    expect(endButton.disabled).toBe(true);
+
+    await fireEvent.click(battleChip!);
+    await fireEvent.click(endButton);
+    expect(oninteraction).not.toHaveBeenCalled();
+  });
+
+  it("marks the player End button as current during End Phase", () => {
+    render(PhaseBar, { phase: "end", turnPlayer: 0 });
+
+    const endButton = document.querySelector(
+      '[data-cy="field-end-turn-button"]',
+    );
+    expect(endButton?.classList.contains("is-current")).toBe(true);
+    expect(
+      document
+        .querySelector('[data-cy="phase-bar-player"]')
+        ?.getAttribute("data-current-phase"),
+    ).toBe("end");
+    expect(document.querySelectorAll(".phase-chip.is-current")).toHaveLength(1);
+  });
+
+  it("describes current and available transitions to assistive technology", () => {
+    const spec = specWithChoices([
+      ["battle", "Enter Battle Phase", "battlePhase"],
+    ]);
+    render(PhaseBar, { phase: "battle", turnPlayer: 0, spec });
+
+    expect(
+      document
+        .querySelector('[data-cy="phase-bar-you-battle"]')
+        ?.getAttribute("aria-label"),
+    ).toBe("Battle phase, current, available");
+  });
+
+  it("has no current carrier when phase is unknown", () => {
+    render(PhaseBar, { phase: "unknown" });
+
+    expect(document.querySelectorAll("[data-current-phase]")).toHaveLength(0);
+    expect(document.querySelectorAll(".phase-chip.is-current")).toHaveLength(0);
+  });
+});

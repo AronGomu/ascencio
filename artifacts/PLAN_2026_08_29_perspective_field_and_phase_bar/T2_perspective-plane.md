@@ -114,6 +114,13 @@ renderLayout = createFieldRenderLayout(profile, width > 0 ? width : 1280, planeH
 - [x] 5. Green: `npx vitest run tests/component/DuelField.test.ts tests/component/FieldBoard.test.ts` (create FieldBoard test file if absent).
 - [x] 6. e2e: extend `e2e/duel-smoke.spec.ts` with fill + drag assertions — verify: `npx playwright test e2e/duel-smoke.spec.ts` passes.
 
+## Post-review repair
+
+- [x] 7. Pin transformed-plane movement + width-bound content anchoring regressions — verify: targeted `dom-feedback-controller`, `DuelField`, and `FieldBoard` tests fail before source repair, then pass.
+- [x] 8. Convert card-move travel into plane-local coordinates — verify: `npx vitest run tests/unit/dom-feedback-controller.test.ts` passes with transformed-plane fixture proving projected start/end centres.
+- [x] 9. Hoist perspective fill/fixed-descendant proof into a seed-independent browser test — verify: `PLAYWRIGHT_PORT=4302 npx playwright test e2e/duel-smoke.spec.ts` runs the proof without reaching the drag test's `test.skip` branch.
+- [x] 10. Replace stale acceptance board matrix/strip geometry with live slot, board, plane, and content invariants — verify: `npm run test:acceptance` passes and asserts board fills slot plus content is horizontally centred and bottom-anchored.
+
 ## Validation
 
 - [x] `npm run check:headless`

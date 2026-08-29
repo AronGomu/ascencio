@@ -2212,20 +2212,14 @@ async function assertHandCouldOfferAPlacement(page: Page): Promise<void> {
   ).toBeGreaterThan(0);
 }
 
-test("dragging a hand card onto a highlighted zone plays it", async ({
+test("perspective plane fills the board and excludes fixed descendants at 1280x720", async ({
   page,
 }) => {
-  const placement = await locateDraggablePlacement(page);
-  if (placement === null) {
-    await assertHandCouldOfferAPlacement(page);
-    test.skip(
-      true,
-      "opening hand offers no summon, no monster set and no settable spell or trap — there is no placement of any kind to drag",
-    );
-    return;
-  }
-  const { field, dragTarget, targetZone, targetZoneId, cardBox, from, to } =
-    placement;
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await openDuel(page);
+  await startPresetDuel(page);
+  const field = page.getByRole("region", { name: "Duel field" });
+  await expect(field).toBeVisible({ timeout: 120_000 });
 
   const perspective = await field.evaluate((element) => {
     const board = element.querySelector<HTMLElement>(
@@ -2261,6 +2255,22 @@ test("dragging a hand card onto a highlighted zone plays it", async ({
   ).toBeLessThanOrEqual(8);
   expect(perspective?.phaseInsidePlane).toBe(false);
   expect(perspective?.fixedDescendants).toEqual([]);
+});
+
+test("dragging a hand card onto a highlighted zone plays it", async ({
+  page,
+}) => {
+  const placement = await locateDraggablePlacement(page);
+  if (placement === null) {
+    await assertHandCouldOfferAPlacement(page);
+    test.skip(
+      true,
+      "opening hand offers no summon, no monster set and no settable spell or trap — there is no placement of any kind to drag",
+    );
+    return;
+  }
+  const { field, dragTarget, targetZone, targetZoneId, cardBox, from, to } =
+    placement;
 
   const before = await readCapture(page);
   const idlePrompt = [...before.events]
@@ -3982,9 +3992,12 @@ test("spatial field navigation has one visible 44px keyboard entry without a tra
       };
     }),
   );
-  expect(boxes.every(({ width, height }) => width >= 44 && height >= 44)).toBe(
-    true,
-  );
+  expect(
+    boxes.every(({ width, height }) => width >= 44 && height >= 44),
+    `undersized field targets: ${JSON.stringify(
+      boxes.filter(({ width, height }) => width < 44 || height < 44),
+    )}`,
+  ).toBe(true);
 
   expect(
     await entry.evaluate(

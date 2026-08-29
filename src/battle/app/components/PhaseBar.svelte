@@ -44,15 +44,27 @@
   $: endChoice = endPhaseChoice(spec);
   $: endAvailable = !disabled && endChoice !== null && spec !== null;
 
+  function statefulAriaLabel(
+    visibleLabel: string,
+    current: boolean,
+    available: boolean,
+  ): string {
+    let label = visibleLabel;
+    if (current) label += ", current";
+    if (available) label += ", available";
+    return label;
+  }
+
   function ariaLabel(
     slot: PhaseSlot,
     current: boolean,
     available: boolean,
   ): string {
-    let label = `${PHASE_SLOT_LABELS[slot]} phase`;
-    if (current) label += ", current";
-    if (available) label += ", available";
-    return label;
+    return statefulAriaLabel(
+      `${PHASE_SLOT_LABELS[slot]} phase`,
+      current,
+      available,
+    );
   }
 
   function activate(slot: PhaseSlot): void {
@@ -129,8 +141,8 @@
       class:is-available={endAvailable}
       data-cy="field-end-turn-button"
       disabled={!endAvailable}
-      aria-label={ariaLabel(
-        "end",
+      aria-label={statefulAriaLabel(
+        endChoice?.label ?? "End turn",
         turnPlayer === 0 && currentSlot === "end",
         endAvailable,
       )}

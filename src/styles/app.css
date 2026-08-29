@@ -1102,20 +1102,16 @@ li + li {
 
 .duel-field-slot {
   position: relative;
-  /* `--stage-h * 16 / 9` is the letterboxed stage's width in every mode the
-     duel renders — upright and rotated alike, because both derive the two axes
-     from the same 16:9 fit — so this is the width the column had before the
-     full-bleed rule above, and the board it produces is identical.
-     `--stage-w` is not used here on purpose: on this route it is now the whole
-     viewport, and widening the column would only pad the board with dead space
-     that the rail can put to better use.
+  /* Keep the fixed preview, phase bar, and minimum rail inside the 16:9 duel
+     stage budget in upright and rotated modes. `--stage-w` is intentionally
+     unused: this route exposes the full viewport there, while the duel board
+     still follows the stage height's 16:9 width.
 
      The inset is margin, not padding: `DuelField` sizes the board from this
-     element's `clientWidth`, which padding would shrink and margin does not.
-     It is also clamped to the reclaimed bar, so a viewport that is exactly
-     16:9 keeps every pixel of board it has today. */
+     element's `clientWidth`, which padding would shrink and margin does not. */
   width: calc(
-    var(--stage-h, 100svh) * 16 / 9 - var(--preview-w) - var(--rail-min)
+    var(--stage-h, 100svh) * 16 / 9 - var(--preview-w) -
+      var(--phase-bar-w, 8rem) - var(--rail-min)
   );
   margin-inline: var(--duel-field-margin, 0px);
   min-width: 0;
@@ -1222,7 +1218,7 @@ li + li {
 }
 
 .phase-bar__half {
-  flex: 1;
+  flex: 0 0 50%;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -1234,7 +1230,7 @@ li + li {
   justify-content: flex-end;
   border-bottom: 1px solid var(--border);
   background: linear-gradient(
-    180deg,
+    0deg,
     color-mix(in srgb, var(--danger) 30%, var(--surface)),
     color-mix(in srgb, var(--danger) 12%, var(--surface))
   );
@@ -1243,8 +1239,8 @@ li + li {
 .phase-bar__half--player {
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--phase-player) 12%, var(--surface)),
-    color-mix(in srgb, var(--phase-player) 30%, var(--surface))
+    color-mix(in srgb, var(--phase-player) 30%, var(--surface)),
+    color-mix(in srgb, var(--phase-player) 12%, var(--surface))
   );
 }
 
@@ -2130,7 +2126,7 @@ button.duel-field-zone,
 .duel-field-stack {
   z-index: var(--duel-field-layer-stack);
   display: grid;
-  min-width: 2.75rem;
+  min-width: 2.875rem;
   min-height: 2.75rem;
   align-content: center;
   justify-items: center;
@@ -2283,11 +2279,11 @@ button.duel-field-zone,
 }
 
 /* Item 5: the hand and its action chips must never be painted over by a
-   field card, zone, stack or the phase strip. This box creates its own
+   field card, zone, stack, or in-field control. This box creates its own
    stacking context (position + z-index), so its z-index must outrank every
-   field-layer token up through --duel-field-layer-control (phase strip) —
-   the child chip's own --duel-field-layer-menu z-index only orders siblings
-   inside this context, it cannot rescue a lower-z-index parent. */
+   field-layer token up through --duel-field-layer-control — the child chip's
+   own --duel-field-layer-menu z-index only orders siblings inside this
+   context; it cannot rescue a lower-z-index parent. */
 .duel-field-hand-band {
   position: absolute;
   left: var(--field-x);

@@ -299,8 +299,8 @@
       : validatePromptSelection(prompt, submittedChoiceIds);
   $: selectionStatus =
     prompt === null ? null : formatSelectionStatus(prompt, submittedChoiceIds);
-  /* Derived from the projected board itself, so the strip can never disagree
-     with the zones the mapper actually produced. */
+  /* Derived from the projected board itself, so field geometry cannot
+     disagree with the zones the mapper actually produced. */
   $: extraMonsterZones = board.zones.some(({ player }) => player === "shared");
   $: renderLayout = measuredRenderLayout(
     layoutBoundaryElement,

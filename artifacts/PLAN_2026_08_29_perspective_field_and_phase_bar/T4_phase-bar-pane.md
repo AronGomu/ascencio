@@ -37,6 +37,7 @@
 - `tests/component/PhaseStrip.test.ts` — replace with `PhaseBar.test.ts`.
 - `tests/component/EndTurnButton.test.ts` — delete (component dies); port its label/disable cases into `PhaseBar.test.ts`.
 - `tests/unit/phase-transitions.test.ts:3-4,49-58` — imports and asserts `PHASE_SLOTS_LEFT`/`PHASE_SLOTS_RIGHT`; drop those cases with the exports.
+- `e2e-acceptance/full-height-field.spec.ts` — acceptance consumer for live board/phase-bar geometry and 44px actionable controls.
 
 ## Interface contract (level 5)
 
@@ -151,6 +152,14 @@ Blue: no existing blue token — introduce `--phase-player: #2b5f9e;` beside the
 - [x] 3. Mount in `App.svelte` between field slot and DuelRail; pass `phase`, `turnPlayer`, `spec: fieldInteractionSpec`, `disabled: $duel.responsePending`, `oninteraction: duel.dispatchInteraction`; extend `.duel-shell` columns; verify: `npm run check:headless` passes.
 - [x] 4. Delete PhaseStrip/EndTurnButton mounts, files, CSS blocks, `PHASE_SLOTS_LEFT/RIGHT`; drop now-unused DuelField props (trace first; keep the `extraMonsterZones` derivation); verify: `grep -R -E "PhaseStrip|EndTurnButton|field-phase-strip|PHASE_SLOTS_(LEFT|RIGHT)" src tests` returns no matches.
 - [x] 5. Delete `tests/component/PhaseStrip.test.ts` + `tests/component/EndTurnButton.test.ts`; trim `tests/unit/phase-transitions.test.ts` slot-array cases; verify: `npx vitest run tests/component/PhaseBar.test.ts tests/component/DuelField.test.ts tests/unit/phase-transitions.test.ts tests/unit/data-cy-coverage.test.ts` passes.
+
+## Post-review repair
+
+- [x] 6. Register `e2e-acceptance/full-height-field.spec.ts` as a T4 Input — verify: ticket Inputs name the acceptance consumer and its geometry/44px coverage.
+- [x] 7. Include the engine End choice label plus current/available suffixes in the button's accessible name — verify: `npx vitest run tests/component/PhaseBar.test.ts` passes a component assertion for `End Battle Phase, current, available`.
+- [x] 8. Match the locked opponent/player gradient directions and strengths; correct stale phase-strip/field-width comments in touched source/CSS — verify: targeted source grep contains no stale strip comments and CSS declarations match the T4 interface contract.
+- [x] 9. Rewrite acceptance phase checks around the live phase bar, remove obsolete strip-only geometry, preserve 44px actionable-control proof — verify: `npm run test:acceptance` passes.
+- [x] 10. Run combined repair gate — verify: focused Vitest, `npm run check:headless`, `PLAYWRIGHT_PORT=4302 npx playwright test e2e/duel-smoke.spec.ts`, `npm run test:acceptance`, narrow 1280×720 smoke when separate, and diff/secret/residue/conflict checks all pass after final mutation.
 
 ## Validation
 

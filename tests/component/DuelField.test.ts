@@ -389,11 +389,13 @@ describe("DuelField", () => {
     const handHeight = Number.parseFloat(
       hand?.style.getPropertyValue("--field-height") ?? "NaN",
     );
-    const contentHeight = Number.parseFloat(content?.style.height ?? "NaN");
-    const handBottom =
-      narrowPlaneHeight - contentHeight + handY + handHeight / 2;
-    expect(handBottom).toBeCloseTo(
-      narrowPlaneHeight - narrowLayout.geometry.margin,
+    expect(narrowLayout.geometry.height).toBeLessThan(narrowPlaneHeight);
+    expect(Number.parseFloat(content?.style.height ?? "NaN")).toBeCloseTo(
+      narrowLayout.geometry.height,
+      5,
+    );
+    expect(handY + handHeight / 2).toBeCloseTo(
+      narrowLayout.geometry.height - narrowLayout.geometry.margin,
       5,
     );
   });

@@ -1,8 +1,14 @@
 import type { BoardTargetId } from "../../field/board-view-model.ts";
 import type { DomPresentationCommand } from "./presentation-command.ts";
-import { readStageFrame, toFrameDelta, toFrameRect } from "./stage-frame.ts";
+import {
+  readStageFrame,
+  toFrameDelta,
+  toFramePoint,
+  toFrameRect,
+} from "./stage-frame.ts";
 
 const MAXIMUM_FEEDBACK_DURATION_MS = 600;
+const FIELD_PLANE_SELECTOR = '[data-cy="duel-field-board-plane"]';
 
 export interface FieldFeedbackLine {
   readonly kind: "attack" | "target";
@@ -106,13 +112,7 @@ export function createDomFeedbackController(
         if (command.kind === "card-move") {
           const fromRect = from.getBoundingClientRect();
           const toRect = to.getBoundingClientRect();
-          /* The rects are viewport-space but the translate lands inside the
-             field, which a portrait phone turns a quarter turn (T15). */
-          const travel = toFrameDelta(
-            readStageFrame(root),
-            centerX(fromRect) - centerX(toRect),
-            centerY(fromRect) - centerY(toRect),
-          );
+          const travel = cardMoveTravel(root, from, to, fromRect, toRect);
           animate(
             to.querySelector(".duel-field-card__art") ?? to,
             [
@@ -167,6 +167,97 @@ export function createDomFeedbackController(
       onState(EMPTY_DOM_FEEDBACK_STATE);
     },
   };
+}
+
+function cardMoveTravel(
+  root: HTMLElement,
+  from: Element,
+  to: Element,
+  fromRect: DOMRect,
+  toRect: DOMRect,
+): { readonly x: number; readonly y: number } {
+  const frame = readStageFrame(root);
+  const viewportTravel = (): { readonly x: number; readonly y: number } =>
+    toFrameDelta(
+      frame,
+      centerX(fromRect) - centerX(toRect),
+      centerY(fromRect) - centerY(toRect),
+    );
+  const fromPlane = from.closest<HTMLElement>(FIELD_PLANE_SELECTOR);
+  const toPlane = to.closest<HTMLElement>(FIELD_PLANE_SELECTOR);
+  if (fromPlane === null || fromPlane !== toPlane) return viewportTravel();
+  const fromPoint = projectedPointInPlane(
+    frame,
+    fromPlane,
+    centerX(fromRect),
+    centerY(fromRect),
+  );
+  const toPoint = projectedPointInPlane(
+    frame,
+    fromPlane,
+    centerX(toRect),
+    centerY(toRect),
+  );
+  if (fromPoint === null || toPoint === null) return viewportTravel();
+  return { x: fromPoint.x - toPoint.x, y: fromPoint.y - toPoint.y };
+}
+
+/* A plane-local CSS translate is projected by the ancestor's 3D matrix. Map
+   each visible centre back through that plane before subtracting; subtracting
+   viewport pixels first only works when the plane is flat. */
+function projectedPointInPlane(
+  frame: ReturnType<typeof readStageFrame>,
+  plane: HTMLElement,
+  viewportX: number,
+  viewportY: number,
+): { readonly x: number; readonly y: number } | null {
+  const style = getComputedStyle(plane);
+  const values = style.transform
+    .match(/^matrix3d\(([^)]*)\)$/)?.[1]
+    ?.split(",")
+    .map((value) => Number(value.trim()));
+  if (values === undefined || values.length !== 16) return null;
+  if (values.some((value) => !Number.isFinite(value))) return null;
+  const offsetParent = plane.offsetParent ?? plane.parentElement;
+  if (offsetParent === null) return null;
+  const parentRect = toFrameRect(frame, offsetParent.getBoundingClientRect());
+  const [originXToken = "50%", originYToken = "50%"] =
+    style.transformOrigin.split(/\s+/);
+  const originX = transformOriginPixels(originXToken, plane.offsetWidth);
+  const originY = transformOriginPixels(originYToken, plane.offsetHeight);
+  const point = toFramePoint(frame, viewportX, viewportY);
+  const projectedX = point.x - (parentRect.left + plane.offsetLeft + originX);
+  const projectedY = point.y - (parentRect.top + plane.offsetTop + originY);
+  const m11 = values[0]!;
+  const m12 = values[1]!;
+  const m14 = values[3]!;
+  const m21 = values[4]!;
+  const m22 = values[5]!;
+  const m24 = values[7]!;
+  const m41 = values[12]!;
+  const m42 = values[13]!;
+  const m44 = values[15]!;
+  const a = m11 - projectedX * m14;
+  const b = m21 - projectedX * m24;
+  const c = m12 - projectedY * m14;
+  const d = m22 - projectedY * m24;
+  const first = projectedX * m44 - m41;
+  const second = projectedY * m44 - m42;
+  const determinant = a * d - b * c;
+  if (Math.abs(determinant) < 1e-9) return null;
+  return {
+    x: originX + (first * d - b * second) / determinant,
+    y: originY + (a * second - first * c) / determinant,
+  };
+}
+
+function transformOriginPixels(value: string, size: number): number {
+  if (value.endsWith("%")) {
+    const percentage = Number.parseFloat(value);
+    return Number.isFinite(percentage) ? (percentage / 100) * size : size / 2;
+  }
+  const pixels = Number.parseFloat(value);
+  return Number.isFinite(pixels) ? pixels : size / 2;
 }
 
 function boundedDuration(durationMs: number): number {

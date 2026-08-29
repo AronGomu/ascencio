@@ -249,7 +249,7 @@ export function fieldActionBarRequired(spec: ActiveInteractionSpec): boolean {
   /* A genuine global choice (Finish, Cancel, Pass) has no field control of its
      own, so it keeps the window even in target mode: suppressing it would make
      an engine choice unanswerable, which is the exact defect T16 exists to
-     fix. Phase transitions have the phase strip and never count. */
+     fix. Phase transitions have the phase bar and never count. */
   if (nonPhaseGlobalChoiceCount(spec) > 0) return true;
   switch (spec.kind) {
     case "cardAction":

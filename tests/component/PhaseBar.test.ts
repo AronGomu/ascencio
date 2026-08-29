@@ -161,6 +161,17 @@ describe("PhaseBar", () => {
     });
   });
 
+  it("includes the engine End label and state suffixes in its accessible name", () => {
+    const spec = specWithChoices([["end", "End Battle Phase", "endPhase"]]);
+    render(PhaseBar, { phase: "end", turnPlayer: 0, spec });
+
+    expect(
+      document
+        .querySelector('[data-cy="field-end-turn-button"]')
+        ?.getAttribute("aria-label"),
+    ).toBe("End Battle Phase, current, available");
+  });
+
   it("falls back to a muted disabled End turn chip", () => {
     render(PhaseBar, { spec: null });
 

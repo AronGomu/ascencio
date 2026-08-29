@@ -118,10 +118,9 @@ describe("global styles", () => {
   });
 
   /* The duel must measure the stage, not the viewport, or it keeps its old
-     full-viewport height inside a letterboxed box. The field column stays on
-     the *letterboxed* width even though the duel route widens `--stage-w` to
-     the viewport: the board is height-driven, so the reclaimed pillarbox is
-     the rail's, not the board's. */
+     full-viewport height inside a letterboxed box. The field column reserves
+     the fixed preview, phase bar, and rail inside that letterboxed width even
+     though the duel route widens `--stage-w` to the viewport. */
   it("sizes the duel against the stage box with a viewport fallback", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     expect(ruleBlock(css, "main.is-duel-viewport {")).toContain(
@@ -129,7 +128,7 @@ describe("global styles", () => {
     );
     const slot = ruleBlock(css, ".duel-field-slot {");
     expect(slot).toContain(
-      "width: calc(\n    var(--stage-h, 100svh) * 16 / 9 - var(--preview-w) - var(--rail-min)\n  )",
+      "width: calc(\n    var(--stage-h, 100svh) * 16 / 9 - var(--preview-w) -\n      var(--phase-bar-w, 8rem) - var(--rail-min)\n  )",
     );
     expect(slot).not.toContain("width: calc(var(--stage-w");
     expect(slot).toContain("margin-inline: var(--duel-field-margin, 0px)");

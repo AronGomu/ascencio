@@ -6,19 +6,6 @@ async function rect(locator: Locator) {
   return box!;
 }
 
-function intersects(
-  a: { x: number; y: number; width: number; height: number },
-  b: { x: number; y: number; width: number; height: number },
-) {
-  const tolerance = 1;
-  return (
-    a.x < b.x + b.width - tolerance &&
-    a.x + a.width > b.x + tolerance &&
-    a.y < b.y + b.height - tolerance &&
-    a.y + a.height > b.y + tolerance
-  );
-}
-
 test("seeded v2 zone settings hydrate visual state and missing state uses defaults", async ({
   page,
 }) => {
@@ -55,62 +42,51 @@ test("seeded v2 zone settings hydrate visual state and missing state uses defaul
 
 async function openField(page: Page, scenario: "field-emz" | "field-no-emz") {
   await page.goto(`?scenario=${scenario}`);
-  await expect(page.locator('[data-cy="field-phase-strip"]')).toHaveCount(1);
+  await expect(page.locator('[data-cy="duel-field-board-plane"]')).toHaveCount(
+    1,
+  );
+  await expect(page.locator('[data-cy="phase-bar"]')).toHaveCount(1);
 }
 
-/* M2 2026-08-21: every board size below is a Chromium measurement, not a
-   designed figure. `computeFieldGeometry` scales continuously, so a board only
-   lands on an integer when its budget happens to; the sizes the geometry is
-   *required* to hit are asserted as invariants in "pixel board keeps
-   five-pixel gaps and ratio" further down, never as a board width. */
-const BOARD_MATRIX = [
-  {
-    viewport: { width: 1920, height: 1080 },
-    scenario: "field-emz",
-    board: { width: 1229, height: 1080 },
-  },
-  {
-    viewport: { width: 1920, height: 1080 },
-    scenario: "field-no-emz",
-    board: { width: 1304, height: 1080 },
-  },
-  {
-    viewport: { width: 2560, height: 1440 },
-    scenario: "field-emz",
-    board: { width: 1638, height: 1440 },
-  },
-  {
-    viewport: { width: 2560, height: 1440 },
-    scenario: "field-no-emz",
-    board: { width: 1740, height: 1440 },
-  },
-  {
-    viewport: { width: 1366, height: 768 },
-    scenario: "field-emz",
-    board: { width: 874, height: 768 },
-  },
-  {
-    viewport: { width: 1366, height: 768 },
-    scenario: "field-no-emz",
-    /* M2 2026-08-21: re-recorded from 886x735. Round 2 narrowed the shared
-       `--preview-w` to 13.5rem under the 1500px breakpoint (89faedf, ADR-042
-       §2), so the middle column budgets 958px here instead of 886px. This was
-       the only width-constrained entry in the matrix, which is why it is the
-       only one that moved: the board is now height-constrained like every
-       other entry and fills the viewport height. */
-    board: { width: 925.5625, height: 768 },
-  },
+const VIEWPORT_MATRIX = [
+  { viewport: { width: 1920, height: 1080 }, scenario: "field-emz" },
+  { viewport: { width: 1920, height: 1080 }, scenario: "field-no-emz" },
+  { viewport: { width: 2560, height: 1440 }, scenario: "field-emz" },
+  { viewport: { width: 2560, height: 1440 }, scenario: "field-no-emz" },
+  { viewport: { width: 1366, height: 768 }, scenario: "field-emz" },
+  { viewport: { width: 1366, height: 768 }, scenario: "field-no-emz" },
 ] as const;
 
-for (const entry of BOARD_MATRIX) {
-  test(`full-height shell matches ${entry.viewport.width}x${entry.viewport.height} ${entry.scenario}`, async ({
+for (const entry of VIEWPORT_MATRIX) {
+  test(`board fills its slot and anchors projected content at ${entry.viewport.width}x${entry.viewport.height} ${entry.scenario}`, async ({
     page,
   }) => {
     await page.setViewportSize(entry.viewport);
     await openField(page, entry.scenario);
+    const slot = await rect(page.locator('[data-cy="acceptance-field-slot"]'));
     const board = await rect(page.locator('[data-cy="duel-field"]'));
-    expect(board.width).toBeCloseTo(entry.board.width, 0);
-    expect(board.height).toBeCloseTo(entry.board.height, 0);
+    const plane = await rect(
+      page.locator('[data-cy="duel-field-board-plane"]'),
+    );
+    const content = await rect(
+      page.locator('[data-cy="duel-field-board-content"]'),
+    );
+    const planeStyleHeight = await page
+      .locator('[data-cy="duel-field-board-plane"]')
+      .evaluate((element) => Number.parseFloat(element.style.height));
+
+    expect(board.x).toBeCloseTo(slot.x, 0);
+    expect(board.y).toBeCloseTo(slot.y, 0);
+    expect(board.width).toBeCloseTo(slot.width, 0);
+    expect(board.height).toBeCloseTo(slot.height, 0);
+    expect(planeStyleHeight).toBeGreaterThan(board.height);
+    expect(Math.abs(board.y - plane.y)).toBeLessThanOrEqual(8);
+    expect(content.x + content.width / 2).toBeCloseTo(
+      plane.x + plane.width / 2,
+      0,
+    );
+    expect(content.y + content.height).toBeCloseTo(plane.y + plane.height, 0);
+
     const metrics = await page.evaluate(() => ({
       rootWidth: document.documentElement.scrollWidth,
       rootHeight: document.documentElement.scrollHeight,
@@ -119,9 +95,6 @@ for (const entry of BOARD_MATRIX) {
     }));
     expect(metrics.rootWidth).toBe(metrics.clientWidth);
     expect(metrics.rootHeight).toBe(metrics.clientHeight);
-    const slot = await rect(page.locator('[data-cy="acceptance-field-slot"]'));
-    expect(board.x).toBeCloseTo(slot.x + (slot.width - board.width) / 2, 0);
-    expect(board.y).toBeCloseTo(slot.y + (slot.height - board.height) / 2, 0);
   });
 }
 
@@ -131,94 +104,63 @@ for (const scenario of ["field-emz", "field-no-emz"] as const) {
   }) => {
     await page.goto(`?scenario=${scenario}`);
     const zones = page.locator('[data-zone-id^="p0:mainMonster:"]');
-    const left = await zones.nth(0).boundingBox();
-    const right = await zones.nth(1).boundingBox();
-    expect(left).not.toBeNull();
-    expect(right).not.toBeNull();
-    expect(right!.x - (left!.x + left!.width)).toBeCloseTo(5, 0);
-    expect(left!.width).toBeCloseTo(left!.height, 1);
+    const [left, right] = await Promise.all(
+      [0, 1].map((index) =>
+        zones.nth(index).evaluate((element: HTMLElement) => ({
+          x: Number.parseFloat(element.style.getPropertyValue("--field-x")),
+          width: Number.parseFloat(
+            element.style.getPropertyValue("--field-width"),
+          ),
+          height: Number.parseFloat(
+            element.style.getPropertyValue("--field-height"),
+          ),
+        })),
+      ),
+    );
+    expect(right!.x - left!.x - left!.width).toBeCloseTo(5, 5);
+    expect(left!.width).toBeCloseTo(left!.height, 5);
 
-    const slot = await zones
+    const slotWidth = await zones
       .nth(0)
       .locator(".duel-field-zone__slot")
-      .boundingBox();
+      .evaluate((element) =>
+        Number.parseFloat(getComputedStyle(element).width),
+      );
     const cardWidth = left!.width * (72 / 104);
-    expect(slot!.width - cardWidth).toBeCloseTo(6, 0);
+    expect(slotWidth - cardWidth).toBeCloseTo(6, 2);
   });
 }
 
-test("phase anchors split groups around EMZ placements", async ({ page }) => {
+test("phase bar fills its track and splits at the exact midpoint", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
   await openField(page, "field-emz");
-  const left = await rect(page.locator('[data-cy="field-phase-strip-left"]'));
-  const right = await rect(page.locator('[data-cy="field-phase-strip-right"]'));
-  const emzLeft = await rect(
-    page.locator('[data-zone-id="shared:extraMonster:left"]'),
-  );
-  const emzRight = await rect(
-    page.locator('[data-zone-id="shared:extraMonster:right"]'),
-  );
-  expect(left.x + left.width).toBeLessThanOrEqual(emzLeft.x + 1);
-  expect(right.x).toBeGreaterThanOrEqual(emzRight.x + emzRight.width - 1);
-});
+  const slot = await rect(page.locator('[data-cy="acceptance-field-slot"]'));
+  const board = await rect(page.locator('[data-cy="duel-field"]'));
+  const bar = await rect(page.locator('[data-cy="phase-bar"]'));
+  const opponent = await rect(page.locator('[data-cy="phase-bar-opponent"]'));
+  const player = await rect(page.locator('[data-cy="phase-bar-player"]'));
 
-test("phase centers continuous no-EMZ run", async ({ page }) => {
-  await openField(page, "field-no-emz");
-  const left = await rect(page.locator('[data-cy="field-phase-strip-left"]'));
-  const right = await rect(page.locator('[data-cy="field-phase-strip-right"]'));
-  const board = await rect(page.locator('[data-cy="duel-field-board"]'));
-  const runCenter = (left.x + right.x + right.width) / 2;
-  expect(runCenter).toBeCloseTo(board.x + board.width / 2, 0);
-});
+  expect(bar.y).toBeCloseTo(slot.y, 0);
+  expect(bar.height).toBeCloseTo(slot.height, 0);
+  expect(bar.x).toBeGreaterThanOrEqual(board.x + board.width);
+  expect(opponent.y).toBeCloseTo(bar.y + 1, 0);
+  expect(opponent.height).toBeCloseTo(player.height, 0);
+  expect(opponent.y + opponent.height).toBeCloseTo(player.y, 0);
+  expect(player.y + player.height).toBeCloseTo(bar.y + bar.height - 1, 0);
 
-test("phase anchors End turn independently", async ({ page }) => {
-  for (const scenario of ["field-emz", "field-no-emz"] as const) {
-    await openField(page, scenario);
-    const end = await rect(page.locator('[data-cy="field-end-turn-button"]'));
-    const board = await rect(page.locator('[data-cy="duel-field-board"]'));
-    const margin = await page
-      .locator('[data-cy="field-phase-strip"]')
-      .evaluate((element) => {
-        const rightEdge = Number.parseFloat(
-          getComputedStyle(element).getPropertyValue("--phase-right-edge"),
-        );
-        return element.getBoundingClientRect().width - rightEdge;
-      });
-    expect(end.x + end.width).toBeCloseTo(board.x + board.width - margin, 0);
-  }
-});
-
-test("phase keeps controls clear of zones/stacks", async ({ page }) => {
-  for (const viewport of [
-    { width: 1366, height: 768 },
-    { width: 1536, height: 864 },
-    { width: 1920, height: 1080 },
-  ]) {
-    await page.setViewportSize(viewport);
-    for (const scenario of ["field-emz", "field-no-emz"] as const) {
-      await openField(page, scenario);
-      const controls = page.locator(
-        '[data-cy^="field-phase-chip-"], [data-cy="field-end-turn-button"]',
-      );
-      const placements = page.locator(
-        '[data-zone-id], [data-cy^="field-stack-"]',
-      );
-      for (
-        let controlIndex = 0;
-        controlIndex < (await controls.count());
-        controlIndex += 1
-      ) {
-        const control = await rect(controls.nth(controlIndex));
-        for (
-          let placementIndex = 0;
-          placementIndex < (await placements.count());
-          placementIndex += 1
-        )
-          expect(
-            intersects(control, await rect(placements.nth(placementIndex))),
-          ).toBe(false);
-      }
-    }
-  }
+  const gradients = await page.evaluate(() => ({
+    opponent: getComputedStyle(
+      document.querySelector('[data-cy="phase-bar-opponent"]')!,
+    ).backgroundImage,
+    player: getComputedStyle(
+      document.querySelector('[data-cy="phase-bar-player"]')!,
+    ).backgroundImage,
+  }));
+  expect(gradients.opponent).toMatch(/^linear-gradient\(0deg,/);
+  /* Chromium omits the default 180deg token from computed gradients. */
+  expect(gradients.player).toMatch(/^linear-gradient\(color/);
 });
 
 test("phase keeps actionable controls at least forty-four pixels", async ({
@@ -226,12 +168,10 @@ test("phase keeps actionable controls at least forty-four pixels", async ({
 }) => {
   await page.setViewportSize({ width: 1366, height: 768 });
   await openField(page, "field-emz");
-  const phaseButtons = page.locator('button[data-cy^="field-phase-chip-"]');
-  expect(await phaseButtons.count()).toBeGreaterThan(0);
   const controls = page.locator(
-    'button[data-cy^="field-phase-chip-"], [data-cy="field-end-turn-button"]',
+    '[data-cy="phase-bar"] button.phase-chip:not(:disabled)',
   );
-  expect(await controls.count()).toBe((await phaseButtons.count()) + 1);
+  expect(await controls.count()).toBeGreaterThan(0);
   for (let index = 0; index < (await controls.count()); index += 1) {
     const control = await rect(controls.nth(index));
     expect(control.width).toBeGreaterThanOrEqual(44);
@@ -242,7 +182,7 @@ test("phase keeps actionable controls at least forty-four pixels", async ({
 test("phase reduced motion changes no semantics", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await openField(page, "field-no-emz");
-  await expect(page.locator('[data-cy^="field-phase-chip-"]')).toHaveCount(5);
+  await expect(page.locator('[data-cy^="phase-bar-you-"]')).toHaveCount(5);
   await expect(page.locator('[data-cy="field-end-turn-button"]')).toHaveCount(
     1,
   );
@@ -279,16 +219,16 @@ test("Defense and Set rotate inner art without moving outer placement", async ({
     expect(Math.abs(matrix[3]!)).toBeLessThan(0.001);
     expect(matrix[1]! * matrix[2]!).toBeCloseTo(-1, 3);
 
-    const zoneBox = await rect(zone);
+    const [cardPlacement, zonePlacement] = await Promise.all(
+      [card, zone].map((locator) =>
+        locator.evaluate((element: HTMLElement) => ({
+          x: element.style.getPropertyValue("--field-x"),
+          y: element.style.getPropertyValue("--field-y"),
+        })),
+      ),
+    );
+    expect(cardPlacement).toEqual(zonePlacement);
     const rest = await rect(card);
-    expect(rest.x + rest.width / 2).toBeCloseTo(
-      zoneBox.x + zoneBox.width / 2,
-      1,
-    );
-    expect(rest.y + rest.height / 2).toBeCloseTo(
-      zoneBox.y + zoneBox.height / 2,
-      1,
-    );
     await card.hover();
     const hovered = await rect(card);
     expect(hovered.x + hovered.width / 2).toBeCloseTo(
@@ -548,7 +488,7 @@ test("duel colors resolve from tokens", async ({ page }) => {
     0.9,
   ]);
   expect(halos.legalShadow, "legal halo keeps its outer glow layer").toMatch(
-    /0px 0px 14px 5px/,
+    /0px 0px 10px 0px/,
   );
   expect(sRgbChannels(halos.selectedShadow)).toEqual([
     ...hexToChannels(tokens.selected),

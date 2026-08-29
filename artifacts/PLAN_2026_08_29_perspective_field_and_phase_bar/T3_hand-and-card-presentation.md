@@ -105,4 +105,4 @@ export let droopPx = 0;
 - [x] manual: hands fan and stand up, both sides; defense-position card still reads rotated; no card touches a zone border — Verify: focused Chromium run passed hand `matrix3d` + screenshot evidence; component suite passed opponent/defense orientation and inset geometry assertions.
 - [x] no silent-failure swallow added — Verify: diff inspection found no new broad catch/swallow path; expected `none`.
 - [x] app functional — drag from fanned hand still starts/ends correctly (manual + existing e2e) — Verify: `npx playwright test e2e/duel-smoke.spec.ts -g 'perspective plane fills|dragging a hand card onto a highlighted zone plays it'` passed 2 tests.
-- [ ] commit msg draft: `feat(duel): stand hands upright with a fan and inset field cards with shadows` — Verify: local commit exists with exact message after all validation passes.
+- [x] commit msg draft: `feat(duel): stand hands upright with a fan and inset field cards with shadows` — Verify: commit `8234de1` exists with exact message after all validation passes.

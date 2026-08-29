@@ -1,0 +1,1027 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Duel field perspective prototype — CSS 3D</title>
+    <style>
+      :root {
+        --bg: #08101f;
+        --panel: #0d1626;
+        --text: #e8edf8;
+        --muted: #8fa3bf;
+        --ink: #ffffff;
+        --accent: #73daca;
+        --legal: #7ee2a8;
+        --selected: #ffd580;
+        --border: #26364f;
+        --field-border: #436558;
+        --field-surface: #153d35;
+        --field-gradient-from: #173f36;
+        --field-gradient-to: #102e2a;
+        --field-zone-fill: #081a19;
+        --field-zone-outline: #7fd8be;
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          14px/1.45 system-ui,
+          -apple-system,
+          Segoe UI,
+          sans-serif;
+      }
+      aside {
+        padding: 1rem 1.1rem 3rem;
+        overflow-y: auto;
+        max-height: 100vh;
+        border-right: 1px solid var(--border);
+        background: var(--panel);
+      }
+      h1 {
+        margin: 0 0 0.2rem;
+        font-size: 1.05rem;
+      }
+      h2 {
+        margin: 1.4rem 0 0.5rem;
+        font-size: 0.72rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+      p.hint {
+        margin: 0 0 0.8rem;
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+      label.row {
+        display: block;
+        margin-bottom: 0.7rem;
+        font-size: 0.78rem;
+      }
+      label.row .lab {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.2rem;
+        color: var(--muted);
+      }
+      label.row .val {
+        color: var(--ink);
+        font-variant-numeric: tabular-nums;
+      }
+      input[type="range"] {
+        width: 100%;
+        accent-color: var(--accent);
+      }
+      .presets {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+      }
+      .presets button {
+        padding: 0.3rem 0.55rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: #101c30;
+        color: var(--text);
+        cursor: pointer;
+        font: inherit;
+        font-size: 0.74rem;
+      }
+      .checks label {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        margin-bottom: 0.4rem;
+        font-size: 0.8rem;
+      }
+      table.readout {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.72rem;
+        font-variant-numeric: tabular-nums;
+      }
+      table.readout th,
+      table.readout td {
+        padding: 0.15rem 0.3rem;
+        border-bottom: 1px solid var(--border);
+        text-align: right;
+      }
+      table.readout th:first-child,
+      table.readout td:first-child {
+        text-align: left;
+        color: var(--muted);
+      }
+      main {
+        display: grid;
+        place-items: center;
+        padding: 1rem;
+        min-width: 0;
+      }
+      .duel-row {
+        display: flex;
+        gap: 0.8rem;
+        align-items: stretch;
+        width: min(100%, 1320px);
+      }
+      .stage {
+        position: relative;
+        flex: 1;
+        min-width: 0;
+        aspect-ratio: 16 / 10;
+      }
+      /* ---------- phase bar ----------
+         A pane of its own beside the field, like the card preview and the LP
+         panel — it is not part of the board and no perspective applies to it.
+         Symmetric around the horizontal middle: your half fills downward
+         (blue), the opponent's fills upward (red). */
+      .phase-bar {
+        display: flex;
+        flex-direction: column;
+        width: 132px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: 0.8rem;
+        background: var(--panel);
+      }
+      .phase-bar__half {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 6px;
+        padding: 10px;
+        min-height: 0;
+      }
+      .phase-bar__half--opponent {
+        justify-content: flex-end;
+        border-bottom: 1px solid var(--border);
+        background: linear-gradient(
+          0deg,
+          color-mix(in srgb, #9e2b3a 30%, var(--panel)),
+          color-mix(in srgb, #9e2b3a 12%, var(--panel))
+        );
+      }
+      .phase-bar__half--player {
+        background: linear-gradient(
+          180deg,
+          color-mix(in srgb, #2b5f9e 30%, var(--panel)),
+          color-mix(in srgb, #2b5f9e 12%, var(--panel))
+        );
+      }
+      /* Chip states are the shipped .field-phase-chip contract: inert span by
+         default, bordered button when the engine offers the jump, accent ring
+         on the current phase. */
+      .phase-chip {
+        display: grid;
+        width: 100%;
+        place-items: center;
+        min-block-size: 34px;
+        padding: 0.2rem 0.5rem;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--bg) 72%, transparent);
+        color: color-mix(in srgb, var(--muted) 70%, transparent);
+        font: inherit;
+        font-size: 0.72rem;
+        font-weight: 800;
+        white-space: nowrap;
+        pointer-events: none;
+      }
+      button.phase-chip {
+        pointer-events: auto;
+        cursor: pointer;
+      }
+      .phase-chip.is-available {
+        color: var(--ink);
+        border-color: var(--border);
+      }
+      button.phase-chip:hover {
+        background: color-mix(in srgb, var(--accent) 25%, var(--bg));
+      }
+      .phase-chip.is-current {
+        color: var(--ink);
+        box-shadow:
+          0 0 0 2px var(--accent),
+          0 0 0.6rem var(--accent);
+      }
+      /* End turn is a chip like every other phase entry; being enabled is
+         what turns it warning-yellow. Disabled it reads as one more inert
+         chip in the column. */
+      .phase-end-turn {
+        width: 100%;
+        display: grid;
+        place-items: center;
+        min-block-size: 34px;
+        padding: 0.2rem 0.5rem;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--bg) 72%, transparent);
+        color: color-mix(in srgb, var(--muted) 70%, transparent);
+        font: inherit;
+        font-size: 0.72rem;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+      .phase-end-turn:not(:disabled) {
+        background: #d9a233;
+        color: #1c1509;
+        cursor: pointer;
+      }
+      .phase-end-turn:hover:not(:disabled) {
+        background: #e8b64f;
+      }
+      .phase-end-turn:disabled {
+        cursor: not-allowed;
+      }
+
+      .board {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        border: 1px solid var(--field-border);
+        border-radius: 0.8rem;
+        background: var(--field-surface);
+        isolation: isolate;
+      }
+      .surface {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+          radial-gradient(
+            circle at center,
+            color-mix(in srgb, var(--accent) 12%, transparent),
+            transparent 34%
+          ),
+          linear-gradient(
+            135deg,
+            var(--field-gradient-from),
+            var(--field-gradient-to)
+          );
+      }
+      /* The single tilted plane. Everything positioned inside it keeps the flat
+         geometry it always had; the compositor does the projection. */
+      .plane {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        /* height is set per frame: the flat canvas is taller than the board,
+           and the perspective compresses it back down to fill it exactly. */
+        transform-style: preserve-3d;
+      }
+      .zone,
+      .card {
+        position: absolute;
+        left: var(--field-x);
+        top: var(--field-y);
+        width: var(--field-width);
+        height: var(--field-height);
+        transform: translate(-50%, -50%);
+      }
+      .zone {
+        display: grid;
+        place-items: center;
+        padding: 0.2rem;
+        border: 1px solid
+          color-mix(in srgb, var(--field-zone-outline) 48%, transparent);
+        border-radius: 4px;
+        background: color-mix(in srgb, var(--field-zone-fill) 28%, transparent);
+        color: color-mix(in srgb, var(--text) 70%, transparent);
+        font-size: var(--field-label, 8px);
+        line-height: 1.1;
+        text-align: center;
+      }
+      .zone.shared {
+        border: 2px solid var(--accent);
+        background: color-mix(in srgb, #0d3a4a 72%, transparent);
+        color: var(--text);
+      }
+      .card {
+        border-radius: 3px;
+        box-shadow: 0 var(--card-lift, 2px) var(--card-blur, 6px)
+          rgba(0, 0, 0, 0.55);
+        background: #1b2233;
+      }
+      .card .art {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        width: 100%;
+        height: 100%;
+        padding: 6% 6% 8%;
+        border: 1px solid rgba(0, 0, 0, 0.55);
+        border-radius: 3px;
+        background: var(--frame);
+        color: #17110a;
+        font-size: var(--card-font, 7px);
+        font-weight: 700;
+      }
+      .card .name {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+      .card .pic {
+        margin-top: 4%;
+        border: 1px solid rgba(0, 0, 0, 0.4);
+        background: linear-gradient(
+          160deg,
+          #cfe6ff 0%,
+          #6d8fbf 60%,
+          #2f4a72 100%
+        );
+      }
+      .card.back .art {
+        background: linear-gradient(150deg, #7a4a1e, #46280f 55%, #6b3d18);
+        color: #e9c68a;
+      }
+      .card.back .pic {
+        background: repeating-linear-gradient(
+          45deg,
+          #8a5a26 0 3px,
+          #5d3714 3px 6px
+        );
+      }
+      .card.legal .art {
+        border-color: var(--legal);
+        box-shadow:
+          0 0 0 2px color-mix(in srgb, var(--legal) 85%, transparent),
+          0 0 8px color-mix(in srgb, var(--legal) 35%, transparent);
+      }
+      .card.selected .art {
+        border-color: var(--selected);
+        box-shadow: 0 0 0 2px var(--selected);
+      }
+      .lp {
+        position: absolute;
+        left: var(--field-x);
+        top: var(--field-y);
+        transform: translate(-50%, -50%);
+        padding: 0.15rem 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: rgba(8, 16, 31, 0.72);
+        color: var(--ink);
+        font-size: var(--field-label, 9px);
+        font-weight: 800;
+        white-space: nowrap;
+      }
+      .legend {
+        margin-top: 0.8rem;
+        color: var(--muted);
+        font-size: 0.75rem;
+        text-align: center;
+      }
+      code {
+        padding: 0 0.25rem;
+        border-radius: 3px;
+        background: #101c30;
+        color: var(--accent);
+        font-size: 0.9em;
+      }
+    </style>
+  </head>
+  <body>
+    <aside>
+      <h1>Duel field perspective</h1>
+      <p class="hint">
+        One <code>perspective()</code> + <code>rotateX()</code> plane. Layout
+        underneath stays the flat pitch grid; the compositor projects it. Camera
+        sits behind you: your hand is nearest, the opponent's hand smallest.
+      </p>
+
+      <h2>Presets</h2>
+      <div class="presets" id="presets">
+        <button data-preset="subtle">Subtle</button>
+        <button data-preset="tagforce">Tag Force-ish</button>
+        <button data-preset="strong">Strong</button>
+        <button data-preset="off">Off (flat)</button>
+      </div>
+
+      <h2>Camera</h2>
+      <label class="row" data-for="tilt">
+        <span class="lab"><span>Plane tilt</span><span class="val"></span></span>
+        <input type="range" id="tilt" min="0" max="45" step="0.5" value="20" />
+      </label>
+      <label class="row" data-for="depth">
+        <span class="lab"
+          ><span>Camera distance</span><span class="val"></span
+        ></span>
+        <input
+          type="range"
+          id="depth"
+          min="400"
+          max="4000"
+          step="20"
+          value="600"
+        />
+      </label>
+      <label class="row" data-for="upright">
+        <span class="lab"
+          ><span>Hand cards stood upright</span><span class="val"></span
+        ></span>
+        <input type="range" id="upright" min="0" max="1" step="0.01" value="1" />
+      </label>
+      <label class="row" data-for="fan">
+        <span class="lab"><span>Hand fan</span><span class="val"></span></span>
+        <input type="range" id="fan" min="0" max="16" step="0.5" value="5" />
+      </label>
+
+      <h2>Phase bar demo</h2>
+      <p class="hint" style="margin: -0.2rem 0 0.5rem">
+        Your turn: click an available chip to jump there, End turn passes.
+        Opponent turn: nothing on the bar is clickable, step their phases here.
+      </p>
+      <div class="presets" id="phase-demo">
+        <button data-phase-demo="opp-next">Opponent: next phase</button>
+        <button data-phase-demo="reset">Reset to your Main 1</button>
+      </div>
+
+      <h2>Show</h2>
+      <div class="checks">
+        <label
+          ><input type="checkbox" id="emz" checked /> Extra Monster Zones</label
+        >
+        <label
+          ><input type="checkbox" id="shadow" checked /> Depth-scaled
+          shadows</label
+        >
+        <label
+          ><input type="checkbox" id="labels" checked /> Zone labels + LP</label
+        >
+      </div>
+
+      <h2>Measured card height</h2>
+      <p class="hint" style="margin: -0.2rem 0 0.5rem">
+        Read back off the projected DOM, not from the layout numbers.
+      </p>
+      <table class="readout">
+        <thead>
+          <tr>
+            <th>Row</th>
+            <th>px</th>
+            <th>vs. hand</th>
+          </tr>
+        </thead>
+        <tbody id="readout"></tbody>
+      </table>
+    </aside>
+
+    <main>
+      <div class="duel-row">
+        <div class="stage">
+          <div class="board" id="board">
+            <div class="surface"></div>
+            <div class="plane" id="plane"></div>
+          </div>
+        </div>
+        <aside
+          class="phase-bar"
+          id="phase-bar"
+          role="group"
+          aria-label="Duel phases"
+        >
+          <div
+            class="phase-bar__half phase-bar__half--opponent"
+            id="phase-half-opponent"
+          ></div>
+          <div
+            class="phase-bar__half phase-bar__half--player"
+            id="phase-half-player"
+          ></div>
+        </aside>
+      </div>
+      <p class="legend" id="legend"></p>
+    </main>
+
+    <script>
+      /* ---------- geometry ----------
+         Ported from src/battle/field/duel-field-geometry.ts, with the four
+         changes this round asks for:
+
+         1. MIDDLE_BAND replaces the EMZ's full-pitch row, so the two halves sit
+            closer together instead of being held apart by an almost empty row.
+         2. The EMZ columns land on monster columns rather than half a pitch
+            off, so the field's centre no longer steps sideways.
+         3. CARD_INSET shrinks every card inside its zone, so a card never
+            touches the zone border.
+         4. Zones that can only ever hold an upright card — field spell, deck,
+            extra deck, graveyard, banished — are card-width, not pitch-width.
+            Monster and spell/trap zones stay square: a monster still turns a
+            quarter turn for defence, and a set spell/trap uses the same box. */
+      const ZONE_GAP = 5;
+      const CARD_ASPECT = 72 / 104;
+      const MARGIN = 0.15;
+      const BAND = 0.12;
+      const MIDDLE_BAND = 0.78;
+      const CARD_INSET = 0.86;
+      const SLOT_PAD = 6;
+      const COLS = 8;
+
+      const UPRIGHT_ONLY_KINDS = new Set([
+        "field",
+        "deck",
+        "extra",
+        "graveyard",
+        "banished",
+      ]);
+
+      function computeFieldGeometry(emz, availableWidth, availableHeight) {
+        const middleRows = emz ? MIDDLE_BAND : BAND;
+        const hP = 2 * MARGIN + 6 + middleRows;
+        /* Width no longer spends a full pitch on the three upright-only
+           columns. Row width in world units:
+             2*margin + 3*slot + 5*box + 7*ZONE_GAP
+           with slot = k*box + SLOT_PAD, k = CARD_INSET*CARD_ASPECT, which is
+           linear in pitch — so the fitting stays a closed form. */
+        const k = CARD_INSET * CARD_ASPECT;
+        const widthCoeff = 2 * MARGIN + 5 + 3 * k;
+        const widthConst = 3 * (SLOT_PAD - k * ZONE_GAP) + 2 * ZONE_GAP;
+        const pitch = Math.min(
+          availableHeight / hP,
+          (availableWidth - widthConst) / widthCoeff,
+        );
+        const box = pitch - ZONE_GAP;
+        const margin = MARGIN * pitch;
+        const middle = middleRows * pitch;
+
+        /* Six full rows — hand/ST/monster per player — with the middle band
+           between the two monster rows. */
+        const rowY = [];
+        let y = margin + box / 2;
+        let bandY = 0;
+        for (let index = 0; index < 6; index += 1) {
+          if (index === 3) {
+            bandY = y - box / 2 + middle / 2;
+            y += middle + ZONE_GAP;
+          }
+          rowY.push(y);
+          y += pitch;
+        }
+
+        const cardHeight = box * CARD_INSET;
+        const cardWidth = cardHeight * CARD_ASPECT;
+        const slotWidth = cardWidth + SLOT_PAD;
+
+        /* Columns 1–5 (monster/spell-trap) keep the square pitch grid; the
+           upright-only columns hug them at exactly ZONE_GAP border-to-border,
+           same as every square-to-square gap. */
+        const columnX = new Array(COLS);
+        columnX[0] = margin + slotWidth / 2;
+        columnX[1] = margin + slotWidth + ZONE_GAP + box / 2;
+        for (let index = 2; index <= 5; index += 1)
+          columnX[index] = columnX[1] + (index - 1) * pitch;
+        columnX[6] = columnX[5] + box / 2 + ZONE_GAP + slotWidth / 2;
+        columnX[7] = columnX[6] + slotWidth + ZONE_GAP;
+
+        return {
+          pitch,
+          box,
+          width: columnX[7] + slotWidth / 2 + margin,
+          height: hP * pitch,
+          margin,
+          rowY,
+          bandY,
+          columnX,
+          /* Monster sequences 1 and 3 — the EMZ sits on the grid, not between
+             two of its columns. */
+          emzX: [columnX[2], columnX[4]],
+          emzHeight: middle,
+          cardWidth,
+          cardHeight,
+          slotWidth,
+        };
+      }
+
+      /* Rows are the same for both field configurations now that the middle is
+         a band rather than a row of its own. */
+      const ROWS = {
+        p1: { hand: 0, spellTrap: 1, monster: 2 },
+        p0: { monster: 3, spellTrap: 4, hand: 5 },
+      };
+
+      /* ---------- board content ---------- */
+      const FRAMES = {
+        monster: "linear-gradient(160deg,#c69c6d,#a97e4e)",
+        effect: "linear-gradient(160deg,#e0a163,#bd7a3a)",
+        spell: "linear-gradient(160deg,#4fc0a0,#2c8a72)",
+        trap: "linear-gradient(160deg,#d17ba6,#a44d79)",
+        xyz: "linear-gradient(160deg,#4a4a55,#232329)",
+      };
+      const FIELD_CARDS = [
+        { zone: "p0:mainMonster:1", frame: "effect", name: "Dark Magician", legal: true },
+        { zone: "p0:mainMonster:3", frame: "monster", name: "Celtic Guardian", defense: true },
+        { zone: "p0:spellTrap:2", frame: "trap", name: "Set", back: true },
+        { zone: "p0:spellTrap:4", frame: "spell", name: "Mystic Box" },
+        { zone: "shared:extraMonster:left", frame: "xyz", name: "Utopia", legal: true },
+        { zone: "p1:mainMonster:2", frame: "effect", name: "Summoned Skull" },
+        { zone: "p1:mainMonster:4", frame: "monster", name: "Beaver Warrior", defense: true },
+        { zone: "p1:spellTrap:1", frame: "trap", name: "Set", back: true },
+        { zone: "p0:deck", frame: "monster", name: "Deck", back: true },
+        { zone: "p1:deck", frame: "monster", name: "Deck", back: true },
+        { zone: "p0:extra", frame: "monster", name: "Extra", back: true },
+        { zone: "p1:extra", frame: "monster", name: "Extra", back: true },
+        { zone: "p0:graveyard", frame: "spell", name: "Pot of Greed" },
+        { zone: "p1:graveyard", frame: "effect", name: "Man-Eater" },
+        { zone: "p0:field", frame: "spell", name: "Chicory" },
+      ];
+      const P0_HAND = [
+        { frame: "effect", name: "Kuriboh", legal: true },
+        { frame: "spell", name: "Monster Reborn", legal: true },
+        { frame: "monster", name: "Gaia the Fierce", legal: true },
+        { frame: "trap", name: "Mirror Force" },
+        { frame: "effect", name: "Magician's Rod", legal: true, selected: true },
+      ];
+      const OPPONENT_HAND_COUNT = 4;
+      const ZONE_LABELS = {
+        field: "Field",
+        deck: "Deck",
+        extra: "Extra",
+        graveyard: "GY",
+        banished: "Banish",
+      };
+
+      /* ---------- state ---------- */
+      /* Locked-in camera: tilt 20°, camera 600px, hands fully upright. */
+      const state = {
+        tilt: 20,
+        depth: 600,
+        upright: 1,
+        fan: 5,
+        emz: true,
+        shadow: true,
+        labels: true,
+      };
+      const PRESETS = {
+        off: { tilt: 0, depth: 4000, upright: 0, fan: 0 },
+        subtle: { tilt: 12, depth: 2400, upright: 0.5, fan: 3 },
+        tagforce: { tilt: 20, depth: 600, upright: 1, fan: 5 },
+        strong: { tilt: 30, depth: 500, upright: 1, fan: 8 },
+      };
+      const CONTROLS = ["tilt", "depth", "upright", "fan"];
+
+      const boardElement = document.getElementById("board");
+      const plane = document.getElementById("plane");
+      const readout = document.getElementById("readout");
+      const legend = document.getElementById("legend");
+
+      for (const id of CONTROLS) {
+        const input = document.getElementById(id);
+        input.addEventListener("input", () => {
+          state[id] = Number(input.value);
+          render();
+        });
+      }
+      for (const id of ["emz", "shadow", "labels"]) {
+        const input = document.getElementById(id);
+        input.addEventListener("change", () => {
+          state[id] = input.checked;
+          render();
+        });
+      }
+      document.getElementById("presets").addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-preset]");
+        if (button === null) return;
+        Object.assign(state, PRESETS[button.dataset.preset]);
+        for (const id of CONTROLS) document.getElementById(id).value = state[id];
+        render();
+      });
+      window.addEventListener("resize", render);
+
+      /* ---------- render ----------
+         The tilt compresses the plane on screen, so a plane the size of the
+         board would leave the top third of the board empty. Instead the flat
+         canvas is given a *virtual height* larger than the board, sized so
+         that after projection it lands exactly on the board's own height —
+         which makes every zone and card correspondingly bigger. The closed
+         form depends on the perspective division at every depth, so the fit
+         is by evidence: build, measure the projected box, correct, repeat.
+         The plane is bottom-anchored, so the near edge (your hand) never
+         moves while the far edge climbs up to the board's top. */
+      function render() {
+        const rect = boardElement.getBoundingClientRect();
+        for (const id of CONTROLS) {
+          const suffix =
+            id === "tilt" || id === "fan" ? "°" : id === "depth" ? "px" : "";
+          document.querySelector(`label[data-for="${id}"] .val`).textContent =
+            `${state[id]}${suffix}`;
+        }
+
+        if (state.tilt === 0) {
+          plane.style.height = `${rect.height}px`;
+          plane.style.transform = "none";
+          buildBoard(rect, rect.height);
+          measure();
+          return;
+        }
+
+        plane.style.transformOrigin = "50% 100%";
+        let virtualHeight = rect.height / Math.cos((state.tilt * Math.PI) / 180);
+        for (let pass = 0; pass < 5; pass += 1) {
+          buildBoard(rect, virtualHeight);
+          plane.style.height = `${virtualHeight.toFixed(1)}px`;
+          plane.style.transform = `perspective(${state.depth}px) rotateX(${state.tilt}deg)`;
+          const projected = plane.getBoundingClientRect();
+          const fit = rect.height / projected.height;
+          if (Math.abs(fit - 1) < 0.004) break;
+          virtualHeight *= fit;
+        }
+        measure();
+      }
+
+      function buildBoard(rect, virtualHeight) {
+        const geometry = computeFieldGeometry(
+          state.emz,
+          rect.width,
+          virtualHeight,
+        );
+        const origin = {
+          x: (rect.width - geometry.width) / 2,
+          y: virtualHeight - geometry.height,
+        };
+
+        /* Only hand cards stand up toward the camera — a held card faces the
+           player. Everything on the table (field cards, zones, LP) lies flat
+           on the plane. */
+        const handTilt = -state.tilt * state.upright;
+        const parts = [];
+        const labelSize = (geometry.box * 0.16).toFixed(2);
+
+        function zoneBox(kind) {
+          const upright = UPRIGHT_ONLY_KINDS.has(kind);
+          return {
+            width: upright ? geometry.slotWidth : geometry.box,
+            height: kind === "extraMonster" ? geometry.emzHeight : geometry.box,
+          };
+        }
+
+        function placeZone(id, kind, x, y, extraClass, label) {
+          const size = zoneBox(kind);
+          parts.push(
+            `<div class="zone ${extraClass}" data-zone="${id}" data-zone-kind="${kind}" style="--field-x:${(origin.x + x).toFixed(2)}px;--field-y:${(origin.y + y).toFixed(2)}px;--field-width:${size.width.toFixed(2)}px;--field-height:${size.height.toFixed(2)}px;--field-label:${labelSize}px;">${state.labels && label ? label : ""}</div>`,
+          );
+        }
+
+        function placeCard(x, y, spec, boxHeight = geometry.cardHeight, row) {
+          const height = boxHeight;
+          const width = height * CARD_ASPECT;
+          const lift = state.shadow ? 4 : 1;
+          const blur = state.shadow ? 10 : 3;
+          const inHand = row === "p0:hand" || row === "p1:hand";
+          const transforms = ["translate(-50%,-50%)"];
+          if (inHand && handTilt) transforms.push(`rotateX(${handTilt}deg)`);
+          if (spec.fanAngle) transforms.push(`rotate(${spec.fanAngle.toFixed(2)}deg)`);
+          if (spec.defense) transforms.push("rotate(90deg)");
+          parts.push(
+            `<div class="card ${spec.back ? "back" : ""} ${spec.legal ? "legal" : ""} ${spec.selected ? "selected" : ""} ${spec.defense ? "defense" : ""}"
+              data-row="${row ?? ""}"
+              style="--field-x:${(origin.x + x).toFixed(2)}px;--field-y:${(origin.y + y).toFixed(2)}px;--field-width:${width.toFixed(2)}px;--field-height:${height.toFixed(2)}px;--card-lift:${lift}px;--card-blur:${blur}px;--card-font:${Math.max(4, height * 0.13).toFixed(2)}px;transform:${transforms.join(" ")};">
+              <div class="art" style="--frame:${FRAMES[spec.frame]}">
+                <div class="name">${spec.name}</div><div class="pic"></div>
+              </div>
+            </div>`,
+          );
+        }
+
+        for (const player of ["p0", "p1"]) {
+          const rows = ROWS[player];
+          const monsterY = geometry.rowY[rows.monster];
+          const spellY = geometry.rowY[rows.spellTrap];
+          for (let sequence = 0; sequence < 5; sequence += 1) {
+            placeZone(`${player}:mainMonster:${sequence}`, "monster", geometry.columnX[sequence + 1], monsterY, "", "");
+            placeZone(`${player}:spellTrap:${sequence}`, "spellTrap", geometry.columnX[sequence + 1], spellY, "", "");
+          }
+          placeZone(`${player}:field`, "field", geometry.columnX[0], monsterY, "", ZONE_LABELS.field);
+          placeZone(`${player}:graveyard`, "graveyard", geometry.columnX[6], monsterY, "", ZONE_LABELS.graveyard);
+          placeZone(`${player}:banished`, "banished", geometry.columnX[7], monsterY, "", ZONE_LABELS.banished);
+          placeZone(`${player}:extra`, "extra", geometry.columnX[0], spellY, "", ZONE_LABELS.extra);
+          placeZone(`${player}:deck`, "deck", geometry.columnX[6], spellY, "", ZONE_LABELS.deck);
+        }
+        if (state.emz) {
+          placeZone("shared:extraMonster:left", "extraMonster", geometry.emzX[0], geometry.bandY, "shared", "EMZ");
+          placeZone("shared:extraMonster:right", "extraMonster", geometry.emzX[1], geometry.bandY, "shared", "EMZ");
+        }
+
+        for (const spec of FIELD_CARDS) {
+          const [player, kind, sequence] = spec.zone.split(":");
+          if (kind === "extraMonster") {
+            if (!state.emz) continue;
+            placeCard(
+              geometry.emzX[sequence === "left" ? 0 : 1],
+              geometry.bandY,
+              spec,
+              geometry.emzHeight * CARD_INSET,
+              "emz",
+            );
+            continue;
+          }
+          const rows = ROWS[player];
+          const onMonsterRow =
+            kind === "mainMonster" ||
+            kind === "field" ||
+            kind === "graveyard" ||
+            kind === "banished";
+          const column =
+            kind === "mainMonster" || kind === "spellTrap"
+              ? Number(sequence) + 1
+              : kind === "field" || kind === "extra"
+                ? 0
+                : 6;
+          placeCard(
+            geometry.columnX[column],
+            geometry.rowY[onMonsterRow ? rows.monster : rows.spellTrap],
+            spec,
+            geometry.cardHeight,
+            `${player}:${onMonsterRow ? "monster" : "spellTrap"}`,
+          );
+        }
+
+        /* The fan rotates each card around its own centre, growing linearly
+           from the middle card outward, and drops the outer cards a touch so
+           the row reads as an arc held in a hand rather than a ruler. */
+        function placeHand(player, cards) {
+          const y = geometry.rowY[ROWS[player].hand];
+          const step = geometry.cardWidth * 0.86;
+          const start = geometry.width / 2 - ((cards.length - 1) * step) / 2;
+          const half = Math.max(1, (cards.length - 1) / 2);
+          cards.forEach((spec, index) => {
+            const offset = index - (cards.length - 1) / 2;
+            const fanAngle = state.fan * (offset / half);
+            const droop =
+              Math.abs(offset) * state.fan * geometry.cardHeight * 0.004;
+            placeCard(
+              start + index * step,
+              y + droop,
+              { ...spec, fanAngle },
+              geometry.cardHeight,
+              `${player}:hand`,
+            );
+          });
+        }
+        placeHand("p0", P0_HAND);
+        placeHand(
+          "p1",
+          Array.from({ length: OPPONENT_HAND_COUNT }, () => ({
+            frame: "monster",
+            name: "",
+            back: true,
+          })),
+        );
+
+        if (state.labels) {
+          for (const [player, life] of [["p0", "LP 8000"], ["p1", "LP 7300"]]) {
+            parts.push(
+              `<div class="lp" style="--field-x:${(origin.x + geometry.columnX[7]).toFixed(2)}px;--field-y:${(origin.y + geometry.rowY[ROWS[player].spellTrap]).toFixed(2)}px;--field-label:${(geometry.box * 0.2).toFixed(2)}px;">${life}</div>`,
+            );
+          }
+        }
+
+        plane.innerHTML = parts.join("");
+      }
+
+      /* Evidence rather than arithmetic: read the projected size straight off
+         the DOM, which is the only number that survives the compositor.
+
+         Height, not width. `perspective-origin` defaults to the plane's centre,
+         so an element out at the board's edge is projected slightly off-axis
+         and its axis-aligned bounding box picks up a couple of px of width that
+         say nothing about its depth. Height is unaffected by that, so it is the
+         honest depth signal — and defence cards are skipped, since a quarter
+         turn swaps their two numbers. */
+      function measure() {
+        const rows = [
+          ["Your hand", "p0:hand"],
+          ["Your S/T", "p0:spellTrap"],
+          ["Your monsters", "p0:monster"],
+          ["EMZ", "emz"],
+          ["Opp monsters", "p1:monster"],
+          ["Opp S/T", "p1:spellTrap"],
+          ["Opp hand", "p1:hand"],
+        ];
+        const heightOf = (row) => {
+          const element = plane.querySelector(
+            `.card[data-row="${row}"]:not(.defense)`,
+          );
+          return element === null
+            ? null
+            : element.getBoundingClientRect().height;
+        };
+        const handHeight = heightOf("p0:hand") ?? 1;
+        readout.innerHTML = rows
+          .map(([name, row]) => {
+            const height = heightOf(row);
+            return height === null
+              ? `<tr><td>${name}</td><td>—</td><td>—</td></tr>`
+              : `<tr><td>${name}</td><td>${height.toFixed(1)}</td><td>${(height / handHeight).toFixed(3)}</td></tr>`;
+          })
+          .join("");
+        const far = heightOf("p1:hand");
+        legend.innerHTML =
+          state.tilt === 0
+            ? "Flat: no transform on the plane."
+            : `Tilt ${state.tilt}°, camera ${state.depth}px — opponent hand renders <code>${(far === null ? 0 : far / handHeight).toFixed(2)}×</code> your hand.`;
+      }
+
+      render();
+
+      /* ---------- phase bar ----------
+         State machine mirrors the shipped strip: the engine only ever offers
+         battle / main2 / end as jumps (phaseSlotChoices), draw→standby→main1
+         advance on their own, and during the opponent's turn your spec is
+         empty so every control goes inert and End turn disables. */
+      const PHASE_ORDER = ["draw", "standby", "main1", "battle", "main2"];
+      const PHASE_LABELS = {
+        draw: "Draw",
+        standby: "Standby",
+        main1: "Main 1",
+        battle: "Battle",
+        main2: "Main 2",
+        end: "End",
+      };
+      const phaseState = { turn: "you", phase: "main1" };
+
+      function offeredSlots() {
+        if (phaseState.turn !== "you") return new Set();
+        if (phaseState.phase === "main1") return new Set(["battle", "end"]);
+        if (phaseState.phase === "battle") return new Set(["main2", "end"]);
+        if (phaseState.phase === "main2") return new Set(["end"]);
+        return new Set();
+      }
+
+      function chipHtml(slot, side) {
+        const mine = side === "you";
+        const available = mine && offeredSlots().has(slot);
+        const current = phaseState.turn === side && phaseState.phase === slot;
+        const tag = available ? "button" : "span";
+        let aria = `${PHASE_LABELS[slot]} phase`;
+        if (current) aria += ", current";
+        if (available) aria += ", available";
+        return `<${tag} ${available ? 'type="button"' : 'role="presentation"'}
+          class="phase-chip ${current ? "is-current" : ""} ${available ? "is-available" : ""}"
+          data-slot="${slot}" data-side="${side}" aria-label="${aria}">${PHASE_LABELS[slot]}</${tag}>`;
+      }
+
+      function renderPhaseBar() {
+        const opponent = document.getElementById("phase-half-opponent");
+        const player = document.getElementById("phase-half-player");
+        /* Opponent half reads bottom-up: draw nearest the middle, End pinned
+           to the top corner — the player's half mirrored. */
+        opponent.innerHTML = ["end", "main2", "battle", "main1", "standby", "draw"]
+          .map((slot) => chipHtml(slot, "opp"))
+          .join("");
+        const endOffered = offeredSlots().has("end");
+        player.innerHTML =
+          PHASE_ORDER.map((slot) => chipHtml(slot, "you")).join("") +
+          `<button type="button" class="phase-end-turn" id="phase-end-turn" ${endOffered ? "" : "disabled"}>End turn</button>`;
+      }
+
+      document.getElementById("phase-bar").addEventListener("click", (event) => {
+        const chip = event.target.closest("button.phase-chip");
+        if (chip !== null) {
+          if (chip.dataset.slot === "end") return endTurn();
+          phaseState.phase = chip.dataset.slot;
+          return renderPhaseBar();
+        }
+        if (event.target.closest("#phase-end-turn:not(:disabled)")) endTurn();
+      });
+
+      function endTurn() {
+        phaseState.turn = "opp";
+        phaseState.phase = "draw";
+        renderPhaseBar();
+      }
+
+      document
+        .getElementById("phase-demo")
+        .addEventListener("click", (event) => {
+          const button = event.target.closest("button[data-phase-demo]");
+          if (button === null) return;
+          if (button.dataset.phaseDemo === "reset") {
+            phaseState.turn = "you";
+            phaseState.phase = "main1";
+          } else if (phaseState.turn === "opp") {
+            if (phaseState.phase === "end") {
+              phaseState.turn = "you";
+              phaseState.phase = "main1";
+            } else if (phaseState.phase === "main2") {
+              phaseState.phase = "end";
+            } else {
+              const index = PHASE_ORDER.indexOf(phaseState.phase);
+              phaseState.phase = PHASE_ORDER[index + 1];
+            }
+          }
+          renderPhaseBar();
+        });
+
+      renderPhaseBar();
+    </script>
+  </body>
+</html>

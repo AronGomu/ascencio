@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Plan: Perspective duel field + phase bar</title>
+<style>
+  :root { --bg:#0b1220; --panel:#111a2c; --text:#e8edf8; --muted:#8fa3bf; --accent:#73daca;
+    --warn:#d9a233; --border:#26364f; --blue:#2b5f9e; --red:#9e2b3a; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:2rem clamp(1rem,4vw,3rem); background:var(--bg); color:var(--text);
+    font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; max-width:1100px; margin-inline:auto; }
+  h1 { font-size:1.5rem; margin:0 0 .3rem; }
+  h2 { color:var(--accent); font-size:.8rem; letter-spacing:.12em; text-transform:uppercase; margin:2.2rem 0 .7rem; }
+  p.lead { color:var(--muted); margin:.2rem 0 0; }
+  code { background:#0d1626; border:1px solid var(--border); border-radius:4px; padding:0 .3rem; font-size:.88em; color:var(--accent); }
+  table { width:100%; border-collapse:collapse; font-size:.88rem; }
+  th,td { text-align:left; padding:.45rem .6rem; border-bottom:1px solid var(--border); vertical-align:top; }
+  th { color:var(--muted); font-weight:600; }
+  td.num { font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .flow { display:grid; grid-template-columns:repeat(4,1fr); gap:.6rem; margin:.5rem 0; }
+  .node { background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:.6rem .7rem; font-size:.82rem; }
+  .node b { display:block; color:var(--accent); margin-bottom:.15rem; }
+  .arrow { color:var(--muted); font-size:.75rem; margin:.1rem 0 .4rem; }
+  .ticket { background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:1rem 1.2rem; margin-bottom:.8rem; }
+  .ticket h3 { margin:0 0 .3rem; font-size:1rem; }
+  .ticket .meta { color:var(--muted); font-size:.8rem; margin-bottom:.4rem; }
+  .ticket .meta .dep { color:var(--warn); }
+  .ticket ul { margin:.3rem 0 0 1.1rem; padding:0; font-size:.88rem; }
+  .ticket li { margin-bottom:.15rem; }
+  .badge { display:inline-block; border-radius:999px; padding:.05rem .55rem; font-size:.72rem; font-weight:700;
+    background:#233; color:var(--muted); border:1px solid var(--border); }
+  .adr { border-left:3px solid var(--accent); padding-left:.8rem; margin-bottom:.6rem; font-size:.9rem; }
+  .adr b { color:var(--text); }
+  .adr span { color:var(--muted); }
+  .split { display:flex; gap:1.5rem; flex-wrap:wrap; }
+  .split > div { flex:1 1 320px; }
+  a { color:var(--accent); }
+</style>
+</head>
+<body>
+<h1>Perspective duel field + phase bar</h1>
+<p class="lead">Render the duel field on one CSS-3D tilted plane (Tag Force look), compact the board geometry, move phases into a standalone right-hand pane, make card shadows + zone labels toggleable. Validated prototype: <code>artifacts/prototype_field_perspective.html</code>. Index: <code>artifacts/PLAN_2026_08_29_perspective_field_and_phase_bar.md</code>.</p>
+
+<h2>Locked numbers</h2>
+<table>
+<tr><th>Constant</th><th>Value</th></tr>
+<tr><td>Plane tilt / camera</td><td class="num">rotateX(20deg) · perspective(600px)</td></tr>
+<tr><td>Hand cards</td><td class="num">upright rotateX(−20deg), fan ±5°, outer droop — both hands</td></tr>
+<tr><td>Middle band</td><td class="num">0.78·pitch (EMZ) · 0.12·pitch (without)</td></tr>
+<tr><td>Card inset</td><td class="num">0.86 of zone box</td></tr>
+<tr><td>EMZ columns</td><td class="num">on monster columns 1 &amp; 3 (columnX[2], columnX[4])</td></tr>
+<tr><td>Pile zones (field/deck/extra/GY/banish)</td><td class="num">cardWidth + 6px wide; all gaps uniform 5px</td></tr>
+<tr><td>Virtual canvas height</td><td class="num">Hv = Hb·d / (d·cosθ − Hb·sinθ) — closed form, flat fallback</td></tr>
+<tr><td>Phase bar</td><td class="num">separate pane, opponent red top / player blue bottom, End turn = yellow-when-enabled chip</td></tr>
+</table>
+
+<h2>Ticket flow</h2>
+<div class="flow">
+  <div class="node"><b>T1</b>geometry rewrite + virtual-height math</div>
+  <div class="node"><b>T2</b>perspective plane render <span class="arrow">← T1</span></div>
+  <div class="node"><b>T3</b>hand upright/fan + inset/shadows <span class="arrow">← T2</span></div>
+  <div class="node"><b>T5</b>display settings <span class="arrow">← T3</span></div>
+  <div class="node"><b>T4</b>phase bar pane <span class="arrow">← T1 (parallel to T2/T3/T5)</span></div>
+  <div class="node"><b>T6</b>e2e evidence + checklist + docs <span class="arrow">← T4, T5</span></div>
+</div>
+
+<h2>Tickets</h2>
+<div class="ticket"><h3>T1 — Compact flat geometry + perspective virtual-height math</h3>
+<div class="meta"><span class="badge">NOT STARTED</span> <span class="dep">depends: none</span> · <code>T1_geometry-rewrite.md</code></div>
+<ul><li>Pure math in <code>duel-field-geometry.ts</code>: unified 6-row grid, band middle, narrow pile columns, on-grid EMZ, CARD_INSET sizes, closed-form width fit.</li>
+<li>New <code>perspectiveVirtualHeight(boardHeight, tiltDeg, cameraPx)</code>; locked check: (738, 20, 600) ≈ 1422.</li></ul></div>
+
+<div class="ticket"><h3>T2 — Perspective plane render</h3>
+<div class="meta"><span class="badge">NOT STARTED</span> <span class="dep">depends: T1</span> · <code>T2_perspective-plane.md</code></div>
+<ul><li>One <code>.duel-field-board__plane</code> wrapper carries the whole transform; board box, overlays, floating windows stay outside.</li>
+<li>Bottom-anchored, centred content origin (width-bound fits stay bottom-anchored — reviewer finding 1).</li>
+<li>e2e: plane fills board (gap ≤ 8px), drag still works, portrait quarter-turn composes.</li></ul></div>
+
+<div class="ticket"><h3>T3 — Hand upright + fan, card inset + shadows</h3>
+<div class="meta"><span class="badge">NOT STARTED</span> <span class="dep">depends: T2</span> · <code>T3_hand-and-card-presentation.md</code></div>
+<ul><li>Flex-item hand recipe (no translate): <code>rotateX(var(--hand-upright)) rotate(var(--card-fan)) translateY(var(--card-droop))</code>; focus zoom composes the vars.</li>
+<li>Field cards at geometry.cardWidth/Height (height is the red discriminator); static soft shadow on every card.</li></ul></div>
+
+<div class="ticket"><h3>T4 — Phase bar pane replaces PhaseStrip</h3>
+<div class="meta"><span class="badge">NOT STARTED</span> <span class="dep">depends: T1</span> · <code>T4_phase-bar-pane.md</code></div>
+<ul><li>New <code>PhaseBar.svelte</code>, 4th duel-shell column; halves mirror from the middle seam; ADR-010 chip semantics unchanged; <code>data-cy="field-end-turn-button"</code> preserved; End-turn chip carries current ring during End Phase.</li>
+<li>Deletes PhaseStrip, EndTurnButton, their CSS, PHASE_SLOTS_LEFT/RIGHT, EndTurnButton.test.ts; trims phase-transitions.test.ts.</li></ul></div>
+
+<div class="ticket"><h3>T5 — showCardShadows + showZoneLabels settings</h3>
+<div class="meta"><span class="badge">NOT STARTED</span> <span class="dep">depends: T3</span> · <code>T5_display-settings.md</code></div>
+<ul><li>Follows showZoneOutlines pattern end to end: ui-settings-store → persisted v2 (tolerant read, no version bump) → SettingsDialog rows → board data-attrs → CSS gates.</li>
+<li>Labels toggle hides zone name text only; aria-labels and LP untouched.</li></ul></div>
+
+<div class="ticket"><h3>T6 — Chromium evidence, budgets, checklist, docs</h3>
+<div class="meta"><span class="badge">NOT STARTED</span> <span class="dep">depends: T4, T5</span> · <code>T6_integration-evidence.md</code></div>
+<ul><li>Playwright: fill, depth gradient (opp/you hand ratio &lt; 0.9), drag over transform, phase cycle, toggle persistence, portrait drag.</li>
+<li><code>npm run build:verify</code>; manual_test_checklist + GLOSSARY + architecture.md refreshed.</li></ul></div>
+
+<h2>ADRs recorded</h2>
+<div class="adr"><b>ADR-060</b> Perspective-Plane Field Rendering <span>— one transformed wrapper, virtual-height closed form, overlays outside the plane, rejected homography/scale-up/canvas.</span></div>
+<div class="adr"><b>ADR-061</b> Compacted Field Geometry <span>— non-uniform columnX by design, band middle, EMZ on-grid at 0.72× card size, CARD_INSET.</span></div>
+<div class="adr"><b>ADR-062</b> Phase Bar Pane <span>— standalone split pane, red/blue halves, End turn as yellow-when-enabled chip, strip deleted.</span></div>
+
+<h2>Assumptions</h2>
+<table>
+<tr><td>A1</td><td>Bar sits between field slot and DuelRail.</td></tr>
+<tr><td>A2</td><td>LP stays in DuelRail; labels toggle covers zone name text only.</td></tr>
+<tr><td>A3</td><td>Opponent hand also stands upright.</td></tr>
+<tr><td>A4</td><td>Quarter-turn stage composes with the plane — verified by T2/T6 evidence, not assumed.</td></tr>
+</table>
+</body>
+</html>

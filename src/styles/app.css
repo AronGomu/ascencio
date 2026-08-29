@@ -1353,6 +1353,20 @@ button.phase-chip:not(:disabled) {
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+/* In the preserved 3D scene, the content plane must never win hit testing
+   over a projected control. Each positioned interaction owner opts back in. */
+.duel-field-board__content
+  > :is(
+    .duel-field-zone,
+    .duel-field-stack,
+    .duel-field-card,
+    .duel-field-hand-band,
+    .duel-hand-activation-zone
+  ) {
   pointer-events: auto;
 }
 
@@ -1463,8 +1477,9 @@ button.duel-field-zone,
 /* Item 4: the drag-to-activate target. Mounted only mid-drag, at the left end
    of the hand band, vertically centered on the hand row. It must catch the
    release hit test, so it never gets pointer-events: none — the drag's pointer
-   capture keeps it from swallowing anything else. Availability is a fact about
-   the card's choices, never about zone occupancy. */
+   capture keeps it from swallowing anything else. Its 2px depth lift clears
+   the hand carrier's 1px lift in the preserved scene. Availability is a fact
+   about the card's choices, never about zone occupancy. */
 .duel-hand-activation-zone {
   position: absolute;
   left: var(--field-x);
@@ -1475,7 +1490,7 @@ button.duel-field-zone,
   justify-content: center;
   width: var(--field-width);
   height: var(--field-height);
-  transform: translate(0, -50%);
+  transform: translate(0, -50%) translateZ(2px);
   border: 2px dashed var(--success);
   border-radius: 8px;
   background: color-mix(in srgb, var(--legal) 12%, transparent);
@@ -2219,7 +2234,9 @@ button.duel-field-zone,
 }
 
 /* Hand cards live in normal document flow inside a HandBand's scrolling
-   viewport, not absolutely positioned by board coordinates. Two classes
+   viewport, not absolutely positioned by board coordinates. The viewport's
+   overflow flattens its descendants, so cards keep only their 2D fan/droop;
+   the non-scrolling band carries the 3D camera counter-tilt below. Two classes
    outweigh the shared `.duel-field-zone, .duel-field-stack, .duel-field-card`
    group above (one class each), so this always wins regardless of source
    order. */
@@ -2236,8 +2253,7 @@ button.duel-field-zone,
   min-width: 0;
   min-height: 0;
   margin-top: var(--hand-card-halo-gap);
-  transform: rotateX(var(--hand-upright, 0deg)) rotate(var(--card-fan, 0deg))
-    translateY(var(--card-droop, 0px));
+  transform: rotate(var(--card-fan, 0deg)) translateY(var(--card-droop, 0px));
   transform-origin: center bottom;
 }
 
@@ -2250,8 +2266,8 @@ button.duel-field-zone,
    excluded: pinning moves focus onto a card-action-chips button, and scaling
    then can push that chip outside the viewport. */
 .duel-field-card.is-identity-known.is-hand-item:not(.is-pinned):focus-within {
-  transform: scale(1.35) rotateX(var(--hand-upright, 0deg))
-    rotate(var(--card-fan, 0deg)) translateY(var(--card-droop, 0px));
+  transform: scale(1.35) rotate(var(--card-fan, 0deg))
+    translateY(var(--card-droop, 0px));
 }
 
 /* Auto-margin centering: the free space is absorbed on the outer side of the
@@ -2287,7 +2303,11 @@ button.duel-field-zone,
    stacking context (position + z-index), so its z-index must outrank every
    field-layer token up through --duel-field-layer-control — the child chip's
    own --duel-field-layer-menu z-index only orders siblings inside this
-   context; it cannot rescue a lower-z-index parent. */
+   context; it cannot rescue a lower-z-index parent. It also participates
+   directly in the preserved board plane as the counter-tilt carrier; its
+   scrolling viewport stays a descendant, where flattening is harmless. A
+   1px depth lift keeps its controls ahead of coplanar siblings for 3D hit
+   testing while the existing z-index controls paint order. */
 .duel-field-hand-band {
   position: absolute;
   left: var(--field-x);
@@ -2295,7 +2315,8 @@ button.duel-field-zone,
   z-index: var(--duel-field-layer-menu);
   width: var(--field-width);
   height: var(--field-height);
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) translateZ(1px)
+    rotateX(var(--hand-upright, 0deg));
 }
 
 .duel-field-hand-band__viewport {
@@ -2653,7 +2674,11 @@ button.card-action-chip:hover:not(:disabled) {
     transform: translate(-50%, -50%);
   }
 
-  .duel-field-card.is-identity-known.is-hand-item:not(.is-pinned):focus-within {
+  .zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open) {
     transform: none;
+  }
+
+  .duel-field-card.is-identity-known.is-hand-item:not(.is-pinned):focus-within {
+    transform: rotate(var(--card-fan, 0deg)) translateY(var(--card-droop, 0px));
   }
 }

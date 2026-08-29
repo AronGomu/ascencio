@@ -105,7 +105,7 @@
     if (value === "hand") return undefined;
     if (valuePlacement === null)
       throw new Error(`Missing field render placement for card ${card.id}`);
-    return `--field-x: ${valuePlacement.x}px; --field-y: ${valuePlacement.y}px; --field-width: ${valuePlacement.width * (72 / 104)}px; --field-height: ${valuePlacement.height}px;`;
+    return `--field-x: ${valuePlacement.x}px; --field-y: ${valuePlacement.y}px; --field-width: ${valuePlacement.width}px; --field-height: ${valuePlacement.height}px;`;
   }
 
   function synchronizePinnedFocus(next: boolean): void {

@@ -47,8 +47,10 @@ describe("PhaseBar", () => {
     const opponent = document.querySelector('[data-cy="phase-bar-opponent"]');
     const player = document.querySelector('[data-cy="phase-bar-player"]');
     expect(document.querySelector('[data-cy="phase-bar"]')).not.toBeNull();
-    expect(opponent).not.toBeNull();
-    expect(player).not.toBeNull();
+    expect(opponent?.getAttribute("role")).toBe("group");
+    expect(opponent?.getAttribute("aria-label")).toBe("Opponent phases");
+    expect(player?.getAttribute("role")).toBe("group");
+    expect(player?.getAttribute("aria-label")).toBe("Your phases");
     expect(chipIds(opponent!)).toEqual([
       "phase-bar-opp-end",
       "phase-bar-opp-main2",

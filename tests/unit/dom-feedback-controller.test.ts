@@ -117,7 +117,8 @@ describe("DOM feedback controller", () => {
     const source = document.querySelector<HTMLElement>("[data-zone-id]")!;
     const target = document.querySelector<HTMLElement>("[data-card-id]")!;
     const origin = { x: 400, y: 900 };
-    const base = { x: 10, y: 20 };
+    const clientBorder = { x: 7, y: 11 };
+    const base = { x: 10 + clientBorder.x, y: 20 + clientBorder.y };
     const m22 = 0.94;
     const m24 = -0.00057;
     const project = (x: number, y: number) => {
@@ -133,6 +134,10 @@ describe("DOM feedback controller", () => {
     const targetPoint = project(570, 720);
     root.getBoundingClientRect = () => rect(10, 20, 800, 900);
     board.getBoundingClientRect = () => rect(10, 20, 800, 900);
+    Object.defineProperties(board, {
+      clientLeft: { configurable: true, get: () => clientBorder.x },
+      clientTop: { configurable: true, get: () => clientBorder.y },
+    });
     source.getBoundingClientRect = () =>
       rect(sourcePoint.x, sourcePoint.y, 0, 0);
     target.getBoundingClientRect = () =>

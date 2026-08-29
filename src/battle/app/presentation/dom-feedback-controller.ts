@@ -226,8 +226,12 @@ function projectedPointInPlane(
   const originX = transformOriginPixels(originXToken, plane.offsetWidth);
   const originY = transformOriginPixels(originYToken, plane.offsetHeight);
   const point = toFramePoint(frame, viewportX, viewportY);
-  const projectedX = point.x - (parentRect.left + plane.offsetLeft + originX);
-  const projectedY = point.y - (parentRect.top + plane.offsetTop + originY);
+  const projectedX =
+    point.x -
+    (parentRect.left + offsetParent.clientLeft + plane.offsetLeft + originX);
+  const projectedY =
+    point.y -
+    (parentRect.top + offsetParent.clientTop + plane.offsetTop + originY);
   const m11 = values[0]!;
   const m12 = values[1]!;
   const m14 = values[3]!;

@@ -93,6 +93,8 @@
   <div
     class="phase-bar__half phase-bar__half--opponent"
     data-cy="phase-bar-opponent"
+    role="group"
+    aria-label="Opponent phases"
     data-current-phase={turnPlayer === 1
       ? (currentSlot ?? undefined)
       : undefined}
@@ -113,6 +115,8 @@
   <div
     class="phase-bar__half phase-bar__half--player"
     data-cy="phase-bar-player"
+    role="group"
+    aria-label="Your phases"
     data-current-phase={turnPlayer === 0
       ? (currentSlot ?? undefined)
       : undefined}

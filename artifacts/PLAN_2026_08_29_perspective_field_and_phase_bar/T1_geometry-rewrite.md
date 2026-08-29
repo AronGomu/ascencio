@@ -102,15 +102,15 @@ export function perspectiveVirtualHeight(
 
 ## Impl steps
 
-- [ ] 1. Rewrite `tests/unit/duel-field-geometry.test.ts` per table — verify: `npx vitest run tests/unit/duel-field-geometry.test.ts` fails on old code.
-- [ ] 2. Rewrite `src/battle/field/duel-field-geometry.ts` (constants, closed-form fit, non-uniform `columnX`, unified rows, `bandHeight`, `perspectiveVirtualHeight`).
-- [ ] 3. Fix hardcoded-geometry assertions in `tests/unit/field-navigation.test.ts`, `tests/component/PhaseStrip.test.ts`, `tests/component/DuelField.test.ts` — only literals, no behavior edits.
-- [ ] 4. `npm run check:headless` green.
+- [x] 1. Rewrite `tests/unit/duel-field-geometry.test.ts` per table — verify: `npx vitest run tests/unit/duel-field-geometry.test.ts` fails on old code.
+- [x] 2. Rewrite `src/battle/field/duel-field-geometry.ts` (constants, closed-form fit, non-uniform `columnX`, unified rows, `bandHeight`, `perspectiveVirtualHeight`).
+- [x] 3. Fix hardcoded-geometry assertions in `tests/unit/field-navigation.test.ts`, `tests/component/PhaseStrip.test.ts`, `tests/component/DuelField.test.ts` — only literals, no behavior edits.
+- [x] 4. `npm run check:headless` green.
 
 ## Validation
 
-- [ ] `npx vitest run tests/unit/duel-field-geometry.test.ts tests/unit/field-navigation.test.ts`
-- [ ] `npm run check:headless`
-- [ ] no silent-failure swallow added — `none` expected (pure math)
-- [ ] app functional: `npm run dev`, duel renders (flat still — transform lands in T2), no missing-placement throw from `FieldBoard.placementFor`
-- [ ] commit msg draft: `feat(duel): compact field geometry and add perspective virtual-height math`
+- [x] `npx vitest run tests/unit/duel-field-geometry.test.ts tests/unit/field-navigation.test.ts`
+- [x] `npm run check:headless`
+- [x] no silent-failure swallow added — `none` expected (pure math)
+- [x] app functional: `npm run dev`, duel renders (flat still — transform lands in T2), no missing-placement throw from `FieldBoard.placementFor`
+- [x] commit msg draft: `feat(duel): compact field geometry and add perspective virtual-height math`

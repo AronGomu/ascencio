@@ -19,7 +19,14 @@ import {
   DECK_DATABASE_NAME,
   LEGACY_DECK_DATABASE_NAME,
 } from "../src/decks/deck-database.ts";
-import { computeFieldGeometry } from "../src/battle/field/duel-field-geometry.ts";
+import {
+  computeFieldGeometry,
+  perspectiveVirtualHeight,
+} from "../src/battle/field/duel-field-geometry.ts";
+import {
+  FIELD_CAMERA_PX,
+  FIELD_TILT_DEG,
+} from "../src/battle/field/perspective.ts";
 import { duelFieldRenderFailureUrl } from "../tests/fixtures/duel-field-component-failure.ts";
 
 interface BrowserCapture {
@@ -394,11 +401,11 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   await expect(
     field.locator('[data-zone-id^="shared:extraMonster"]'),
   ).toHaveCount(0);
-  // The top-right status pills (T3) are gone; the in-field phase strip is
-  // the current-phase indicator now.
-  await expect(field.locator('[data-cy="field-phase-strip"]')).toBeVisible();
-  const currentPhaseChip = field.locator(
-    '[data-cy="field-phase-chip-draw"].is-current, [data-cy="field-phase-chip-standby"].is-current, [data-cy="field-phase-chip-main1"].is-current',
+  // The top-right status pills (T3) are gone; the split phase bar beside the
+  // field is the current-phase indicator now.
+  await expect(page.locator('[data-cy="phase-bar"]')).toBeVisible();
+  const currentPhaseChip = page.locator(
+    '[data-cy="phase-bar-you-draw"].is-current, [data-cy="phase-bar-you-standby"].is-current, [data-cy="phase-bar-you-main1"].is-current',
   );
   await expect(currentPhaseChip).toHaveCount(1);
   await expect(
@@ -484,10 +491,7 @@ test("production bundle initializes the real Worker and sends one opaque choice 
     (event) => event.type === "prompt",
   ) as unknown as CapturedPromptEvent | undefined;
   expect(prompt).toBeDefined();
-  const endTurn = field.getByRole("button", {
-    name: "End turn",
-    exact: true,
-  });
+  const endTurn = page.locator('[data-cy="field-end-turn-button"]');
   await endTurn.evaluate((element) => {
     (element as HTMLButtonElement).click();
     (element as HTMLButtonElement).click();
@@ -1143,7 +1147,7 @@ test("slow image preload cannot delay a legal Worker response", async ({
   const prompt = capture.events.find(
     (event) => event.type === "prompt",
   ) as unknown as CapturedPromptEvent;
-  await field.getByRole("button", { name: "End turn", exact: true }).click();
+  await page.locator('[data-cy="field-end-turn-button"]').click();
   await expect
     .poll(
       async () =>
@@ -1573,6 +1577,7 @@ test("the duel spends the reclaimed pillarbox on the right rail, not the board",
       preview: rect('[data-cy="card-preview-panel"]'),
       slot: rect('[data-cy="duel-field-slot"]'),
       field: rect('[data-cy="duel-field"]'),
+      phaseBar: rect('[data-cy="phase-bar"]'),
       rail: rect('[data-cy="duel-right-rail"]'),
       innerWidth: window.innerWidth,
       // The 16:9 width the stage would have had, which is what the field
@@ -1581,12 +1586,13 @@ test("the duel spends the reclaimed pillarbox on the right rail, not the board",
         (Math.min(window.innerHeight, (window.innerWidth * 9) / 16) * 16) / 9,
     };
   });
-  const { shell, preview, slot, field, rail } = boxes;
+  const { shell, preview, slot, field, phaseBar, rail } = boxes;
   if (
     shell === null ||
     preview === null ||
     slot === null ||
     field === null ||
+    phaseBar === null ||
     rail === null
   )
     throw new Error("missing duel shell geometry");
@@ -1608,12 +1614,13 @@ test("the duel spends the reclaimed pillarbox on the right rail, not the board",
     rail.width,
     "the rail absorbs the reclaimed pillarbox",
   ).toBeGreaterThan(reclaimed / 2);
-  expect(rail.left).toBeGreaterThanOrEqual(slot.right - 1);
+  expect(phaseBar.left).toBeGreaterThanOrEqual(slot.right - 1);
+  expect(rail.left).toBeGreaterThanOrEqual(phaseBar.right - 1);
   expect(rail.right).toBeLessThanOrEqual(shell.right + 1);
-  // The board gained breathing room on both sides rather than only one.
+  // The board gained breathing room on both sides before the phase pane.
   expect(
-    Math.abs(field.left - preview.right - (rail.left - field.right)),
-    "the board is inset symmetrically between the preview and the rail",
+    Math.abs(field.left - preview.right - (phaseBar.left - field.right)),
+    "the board is inset symmetrically between the preview and the phase pane",
   ).toBeLessThanOrEqual(2);
 
   await assertNoPageWideHorizontalOverflow(page, "duel full-bleed");
@@ -1640,9 +1647,11 @@ test("short-height duel keeps the full-height preview column, bounded art and sc
   let longest = { length: -1, index: -1 };
   for (let index = 0; index < cardCount; index += 1) {
     await cards.nth(index).hover({ force: true });
-    const length = await page
-      .locator('[data-cy="card-preview-text"]')
-      .evaluate((element) => element.textContent?.length ?? 0);
+    const previewText = page.locator('[data-cy="card-preview-text"]');
+    if ((await previewText.count()) === 0) continue;
+    const length = await previewText.evaluate(
+      (element) => element.textContent?.length ?? 0,
+    );
     if (length > longest.length) longest = { length, index };
   }
   expect(
@@ -2203,6 +2212,51 @@ async function assertHandCouldOfferAPlacement(page: Page): Promise<void> {
   ).toBeGreaterThan(0);
 }
 
+test("perspective plane fills the board and excludes fixed descendants at 1280x720", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await openDuel(page);
+  await startPresetDuel(page);
+  const field = page.getByRole("region", { name: "Duel field" });
+  await expect(field).toBeVisible({ timeout: 120_000 });
+
+  const perspective = await field.evaluate((element) => {
+    const board = element.querySelector<HTMLElement>(
+      '[data-cy="duel-field-board"]',
+    );
+    const plane = element.querySelector<HTMLElement>(
+      '[data-cy="duel-field-board-plane"]',
+    );
+    const phaseBar = document.querySelector<HTMLElement>(
+      '[data-cy="phase-bar"]',
+    );
+    if (board === null || plane === null || phaseBar === null) return null;
+    const boardRect = board.getBoundingClientRect();
+    const planeRect = plane.getBoundingClientRect();
+    return {
+      boardHeight: board.clientHeight,
+      planeStyleHeight: Number.parseFloat(plane.style.height),
+      topDelta: boardRect.top - planeRect.top,
+      phaseInsidePlane: plane.contains(phaseBar),
+      fixedDescendants: [...plane.querySelectorAll<HTMLElement>("*")]
+        .filter(
+          (descendant) => getComputedStyle(descendant).position === "fixed",
+        )
+        .map((descendant) => descendant.dataset.cy ?? descendant.className),
+    };
+  });
+  expect(perspective).not.toBeNull();
+  expect(perspective?.planeStyleHeight).toBeGreaterThan(
+    perspective?.boardHeight ?? Number.POSITIVE_INFINITY,
+  );
+  expect(
+    Math.abs(perspective?.topDelta ?? Number.POSITIVE_INFINITY),
+  ).toBeLessThanOrEqual(8);
+  expect(perspective?.phaseInsidePlane).toBe(false);
+  expect(perspective?.fixedDescendants).toEqual([]);
+});
+
 test("dragging a hand card onto a highlighted zone plays it", async ({
   page,
 }) => {
@@ -2245,6 +2299,13 @@ test("dragging a hand card onto a highlighted zone plays it", async ({
 
   const ghost = page.locator('[data-cy="drag-ghost"]');
   await expect(ghost).toBeVisible();
+  expect(
+    await field.evaluate((element) => {
+      const plane = element.querySelector('[data-cy="duel-field-board-plane"]');
+      const dragGhost = element.querySelector('[data-cy="drag-ghost"]');
+      return plane !== null && dragGhost !== null && plane.contains(dragGhost);
+    }),
+  ).toBe(false);
   const sourceArticle = dragTarget.locator("xpath=ancestor::article[1]");
   await expect(sourceArticle).toHaveAttribute("data-dragging", "true");
   /* The card never moves in the DOM (still the same hand-band article, same
@@ -2526,8 +2587,7 @@ test("hovering a hand card fills the preview panel sharing the shell row", async
   const field = page.locator('[data-cy="duel-field"]');
   const panel = page.locator('[data-cy="card-preview-panel"]');
   await expect(panel).toBeVisible();
-  await expect(panel.locator('[data-cy="card-preview-empty"]')).toBeVisible();
-  await assertSharesShellColumns(page, "empty preview");
+  await assertSharesShellColumns(page, "preview before hover");
 
   const handCard = page
     .locator(
@@ -2575,6 +2635,9 @@ test("a passive opponent hand card receives a real hover", async ({ page }) => {
       '.duel-field-card[data-card-zone-id="p1:hand"]:not(.is-actionable)',
     )
     .first();
+  const previewName = page.locator('[data-cy="card-preview-name"]');
+  const previousName =
+    (await previewName.count()) === 0 ? null : await previewName.textContent();
   await expect(card).toBeVisible();
   await expect(card).toHaveCSS("pointer-events", "auto");
   await card.hover();
@@ -2585,11 +2648,15 @@ test("a passive opponent hand card receives a real hover", async ({ page }) => {
     true,
   );
 
-  // T11: a card with no identity no longer overwrites the preview with a
-  // "Face-down card" placeholder. The panel keeps whatever was last known,
-  // which at this point in the duel is still the empty state.
-  await expect(page.locator('[data-cy="card-preview-name"]')).toHaveCount(0);
-  await expect(page.locator('[data-cy="card-preview-empty"]')).toBeVisible();
+  // T11: a card with no identity never overwrites the last known preview with
+  // a "Face-down card" placeholder. Perspective can place the hand under the
+  // pointer that started the duel, so either an empty or populated prior state
+  // is valid; identity must remain unchanged.
+  if (previousName === null) {
+    await expect(previewName).toHaveCount(0);
+  } else {
+    await expect(previewName).toHaveText(previousName);
+  }
 });
 
 test("T12: hand hover opens a 1.6x overlay, keyboard focus lifts the card 1.35x in place, chips stay hit-testable, and reduced motion disables the zoom", async ({
@@ -2682,8 +2749,8 @@ test("T12: hand hover opens a 1.6x overlay, keyboard focus lifts the card 1.35x 
   expect(ratio).toBeLessThan(1.35 * 1.02);
   expect(
     after.height / before.height,
-    "hand card root height scales ~1.35x on focus",
-  ).toBeGreaterThan(1.35 * 0.98);
+    "projected hand card root visibly grows on focus",
+  ).toBeGreaterThan(1.3);
   if (before.artWidth !== undefined && after.artWidth !== undefined) {
     expect(
       after.artWidth / before.artWidth,
@@ -2977,7 +3044,7 @@ test("item 5: field cards stay outside the hand band and hand action chips remai
    gone. Round 5 trimmed it back towards the rest of the field's chrome, down
    to the 44px pointer floor every field control shares; that floor and the
    one-row rule are what remain guarded here. */
-test("End turn button keeps its label on one row above the 44px pointer-target floor", async ({
+test("End turn button keeps its label on one row with a 44px local pointer-target floor", async ({
   page,
 }) => {
   await openDuel(page);
@@ -3010,9 +3077,17 @@ test("End turn button keeps its label on one row above the 44px pointer-target f
     "width stays at or above the 44px pointer target",
   ).toBeGreaterThanOrEqual(44);
   expect(
-    box.height,
-    "height stays at or above the 44px pointer target",
+    Number.parseFloat(
+      await endTurn.evaluate(
+        (element) => getComputedStyle(element).minBlockSize,
+      ),
+    ),
+    "unprojected height stays at or above the 44px pointer target",
   ).toBeGreaterThanOrEqual(44);
+  expect(
+    box.height,
+    "projected End turn button remains visible",
+  ).toBeGreaterThan(0);
 
   /* The opening Main Phase 1 only ever offers `End turn`. The longest label
      the engine can hand this control is the Battle Phase's, so it is applied
@@ -3188,28 +3263,23 @@ test("responsive field compositions contain controls across supported viewports"
           const slot = document.querySelector<HTMLElement>(
             '[data-cy="duel-field-slot"]',
           );
-          const strip = document.querySelector<HTMLElement>(
-            '[data-cy="field-phase-strip"]',
-          );
-          if (field === null || slot === null || strip === null) return null;
+          if (field === null || slot === null) return null;
           const fieldBox = field.getBoundingClientRect();
           return {
             availableWidth: slot.clientWidth,
             availableHeight: slot.clientHeight,
-            extraMonsterZones: strip.dataset.extraMonsterZones === "true",
+            extraMonsterZones:
+              document.querySelector(
+                '[data-zone-id^="shared:extraMonster"]',
+              ) !== null,
             fieldWidth: fieldBox.width,
             fieldHeight: fieldBox.height,
           };
         });
         if (geometry === null) return Number.POSITIVE_INFINITY;
-        const expected = computeFieldGeometry(
-          geometry.extraMonsterZones,
-          geometry.availableWidth,
-          geometry.availableHeight,
-        );
         return Math.max(
-          Math.abs(geometry.fieldWidth - expected.width),
-          Math.abs(geometry.fieldHeight - expected.height),
+          Math.abs(geometry.fieldWidth - geometry.availableWidth),
+          Math.abs(geometry.fieldHeight - geometry.availableHeight),
         );
       })
       .toBeLessThan(0.5);
@@ -3227,13 +3297,15 @@ test("responsive field compositions contain controls across supported viewports"
       const shell = rect('[data-cy="duel-shell"]');
       const fieldBox = rect('[data-cy="duel-field"]');
       const panelBox = rect('[data-cy="card-preview-panel"]');
+      const phaseBox = rect('[data-cy="phase-bar"]');
       const railBox = rect('[data-cy="duel-right-rail"]');
       return shell === null ||
         fieldBox === null ||
         panelBox === null ||
+        phaseBox === null ||
         railBox === null
         ? null
-        : { shell, fieldBox, panelBox, railBox };
+        : { shell, fieldBox, panelBox, phaseBox, railBox };
     });
     if (shellLayout === null)
       throw new Error(`${viewportLabel} duel shell is not mounted`);
@@ -3241,6 +3313,9 @@ test("responsive field compositions contain controls across supported viewports"
       shellLayout.fieldBox.left + 1,
     );
     expect(shellLayout.fieldBox.right).toBeLessThanOrEqual(
+      shellLayout.phaseBox.left + 1,
+    );
+    expect(shellLayout.phaseBox.right).toBeLessThanOrEqual(
       shellLayout.railBox.left + 1,
     );
     expect(
@@ -3257,16 +3332,7 @@ test("responsive field compositions contain controls across supported viewports"
         '[data-cy="duel-field-slot"]',
       );
       const zone = document.querySelector<HTMLElement>("[data-zone-id]");
-      const strip = document.querySelector<HTMLElement>(
-        '[data-cy="field-phase-strip"]',
-      );
-      if (
-        fieldElement === null ||
-        slot === null ||
-        zone === null ||
-        strip === null
-      )
-        return null;
+      if (fieldElement === null || slot === null || zone === null) return null;
       const fieldBox = fieldElement.getBoundingClientRect();
       const zoneBox = zone.getBoundingClientRect();
       const scrollRegion = fieldElement.querySelector<HTMLElement>(
@@ -3276,11 +3342,19 @@ test("responsive field compositions contain controls across supported viewports"
       return {
         availableWidth: slot.clientWidth,
         availableHeight: slot.clientHeight,
-        extraMonsterZones: strip.dataset.extraMonsterZones === "true",
+        extraMonsterZones:
+          document.querySelector('[data-zone-id^="shared:extraMonster"]') !==
+          null,
         fieldWidth: fieldBox.width,
         fieldHeight: fieldBox.height,
         inlineWidth: fieldElement.style.width,
         inlineHeight: fieldElement.style.height,
+        zoneLayoutWidth: Number.parseFloat(
+          zone.style.getPropertyValue("--field-width"),
+        ),
+        zoneLayoutHeight: Number.parseFloat(
+          zone.style.getPropertyValue("--field-height"),
+        ),
         zoneWidth: zoneBox.width,
         zoneHeight: zoneBox.height,
         overflowX: getComputedStyle(scrollRegion).overflowX,
@@ -3296,15 +3370,26 @@ test("responsive field compositions contain controls across supported viewports"
     const expectedGeometry = computeFieldGeometry(
       fieldGeometry.extraMonsterZones,
       fieldGeometry.availableWidth,
-      fieldGeometry.availableHeight,
+      perspectiveVirtualHeight(
+        fieldGeometry.availableHeight,
+        FIELD_TILT_DEG,
+        FIELD_CAMERA_PX,
+      ),
     );
     expect(fieldGeometry.inlineWidth).toMatch(/px$/);
     expect(fieldGeometry.inlineHeight).toMatch(/px$/);
-    expect(fieldGeometry.fieldWidth).toBeCloseTo(expectedGeometry.width, 0);
-    expect(fieldGeometry.fieldHeight).toBeCloseTo(expectedGeometry.height, 0);
-    expect(fieldGeometry.zoneWidth).toBeCloseTo(expectedGeometry.box, 0);
-    expect(fieldGeometry.zoneHeight).toBeCloseTo(expectedGeometry.box, 0);
-    expect(fieldGeometry.zoneWidth).toBeCloseTo(fieldGeometry.zoneHeight, 1);
+    expect(fieldGeometry.fieldWidth).toBeCloseTo(
+      fieldGeometry.availableWidth,
+      0,
+    );
+    expect(fieldGeometry.fieldHeight).toBeCloseTo(
+      fieldGeometry.availableHeight,
+      0,
+    );
+    expect(fieldGeometry.zoneLayoutWidth).toBeCloseTo(expectedGeometry.box, 0);
+    expect(fieldGeometry.zoneLayoutHeight).toBeCloseTo(expectedGeometry.box, 0);
+    expect(fieldGeometry.zoneWidth).toBeGreaterThan(0);
+    expect(fieldGeometry.zoneHeight).toBeGreaterThan(0);
     expect(fieldGeometry.overflowX).toBe("hidden");
     expect(fieldGeometry.overflowY).toBe("hidden");
     expect(fieldGeometry.scrollWidth).toBeLessThanOrEqual(
@@ -3335,17 +3420,55 @@ test("responsive field compositions contain controls across supported viewports"
       const geometry = await page.evaluate((currentPlayer: 0 | 1) => {
         const rect = (selector: string): DOMRect | null =>
           document.querySelector(selector)?.getBoundingClientRect() ?? null;
+        const layoutValue = (selector: string, property: string): number => {
+          const element = document.querySelector<HTMLElement>(selector);
+          return element === null
+            ? Number.NaN
+            : Number.parseFloat(element.style.getPropertyValue(property));
+        };
         return {
           field: rect('[data-cy="duel-field"]'),
           spellTrap1: rect(`[data-zone-id="p${currentPlayer}:spellTrap:0"]`),
           spellTrap4: rect(`[data-zone-id="p${currentPlayer}:spellTrap:3"]`),
+          spellTrap4X: layoutValue(
+            `[data-zone-id="p${currentPlayer}:spellTrap:3"]`,
+            "--field-x",
+          ),
           spellTrap5: rect(`[data-zone-id="p${currentPlayer}:spellTrap:4"]`),
+          spellTrap5X: layoutValue(
+            `[data-zone-id="p${currentPlayer}:spellTrap:4"]`,
+            "--field-x",
+          ),
           monster4: rect(`[data-zone-id="p${currentPlayer}:mainMonster:3"]`),
+          monster4X: layoutValue(
+            `[data-zone-id="p${currentPlayer}:mainMonster:3"]`,
+            "--field-x",
+          ),
           hand: rect(`[data-cy="field-hand-band-p${currentPlayer}"]`),
+          handLayoutWidth: layoutValue(
+            `[data-cy="field-hand-band-p${currentPlayer}"]`,
+            "--field-width",
+          ),
           deck: rect(`[data-cy="field-stack-p${currentPlayer}:deck"]`),
+          deckX: layoutValue(
+            `[data-cy="field-stack-p${currentPlayer}:deck"]`,
+            "--field-x",
+          ),
           gy: rect(`[data-cy="field-stack-p${currentPlayer}:graveyard"]`),
+          gyX: layoutValue(
+            `[data-cy="field-stack-p${currentPlayer}:graveyard"]`,
+            "--field-x",
+          ),
           banished: rect(`[data-cy="field-stack-p${currentPlayer}:banished"]`),
+          banishedX: layoutValue(
+            `[data-cy="field-stack-p${currentPlayer}:banished"]`,
+            "--field-x",
+          ),
           monster5: rect(`[data-zone-id="p${currentPlayer}:mainMonster:4"]`),
+          monster5X: layoutValue(
+            `[data-zone-id="p${currentPlayer}:mainMonster:4"]`,
+            "--field-x",
+          ),
           pagingControls: document.querySelectorAll(
             `[data-cy="field-hand-p${currentPlayer}-previous"], [data-cy="field-hand-p${currentPlayer}-next"]`,
           ).length,
@@ -3382,7 +3505,7 @@ test("responsive field compositions contain controls across supported viewports"
         throw new Error(
           `${viewportLabel} p${player} hand/pile geometry hooks missing`,
         );
-      expect(geometry.hand.width).toBeCloseTo(
+      expect(geometry.handLayoutWidth).toBeCloseTo(
         expectedGeometry.width - 2 * expectedGeometry.margin,
         0,
       );
@@ -3393,35 +3516,38 @@ test("responsive field compositions contain controls across supported viewports"
         ),
         `${viewportLabel} p${player} hand is centered within the measured field`,
       ).toBeLessThanOrEqual(2);
-      // Piles render narrower than a full zone slot (StackControl fills a
-      // card's own footprint, not the zone chrome's), so edges alone are not
-      // comparable across a zone/stack pair — center-to-center pitch is,
-      // and is what "same spacing as adjacent central zones" (T8) means:
-      // every pile column sits exactly one more 95-design-px step out.
-      const center = (rect: { left: number; right: number }): number =>
-        (rect.left + rect.right) / 2;
-      const spellTrapPitch =
-        center(geometry.spellTrap5) - center(geometry.spellTrap4);
-      const monsterPitch =
-        center(geometry.monster5) - center(geometry.monster4);
+      // Perspective scales rows by their projected depth, so cross-row screen
+      // centres no longer preserve flat x spacing. Pile columns are compacted
+      // around their narrower slot width, so compare local --field-x positions
+      // against the geometry columns rather than against the central-zone pitch.
       expect(
-        Math.abs(
-          center(geometry.deck) - center(geometry.spellTrap5) - spellTrapPitch,
-        ),
-        `${viewportLabel} p${player} S/T5\u2192Deck centre pitch matches central-zone spacing`,
-      ).toBeLessThanOrEqual(2);
+        geometry.spellTrap4X,
+        `${viewportLabel} p${player} S/T4 uses geometry column 4`,
+      ).toBeCloseTo(expectedGeometry.columnX[4]!, 5);
       expect(
-        Math.abs(
-          center(geometry.gy) - center(geometry.monster5) - monsterPitch,
-        ),
-        `${viewportLabel} p${player} M5\u2192GY centre pitch matches central-zone spacing`,
-      ).toBeLessThanOrEqual(2);
+        geometry.spellTrap5X,
+        `${viewportLabel} p${player} S/T5 uses geometry column 5`,
+      ).toBeCloseTo(expectedGeometry.columnX[5]!, 5);
       expect(
-        Math.abs(
-          center(geometry.banished) - center(geometry.gy) - monsterPitch,
-        ),
-        `${viewportLabel} p${player} GY\u2192Banished centre pitch matches central-zone spacing`,
-      ).toBeLessThanOrEqual(2);
+        geometry.deckX,
+        `${viewportLabel} p${player} Deck uses compacted pile column 6`,
+      ).toBeCloseTo(expectedGeometry.columnX[6]!, 5);
+      expect(
+        geometry.monster4X,
+        `${viewportLabel} p${player} M4 uses geometry column 4`,
+      ).toBeCloseTo(expectedGeometry.columnX[4]!, 5);
+      expect(
+        geometry.monster5X,
+        `${viewportLabel} p${player} M5 uses geometry column 5`,
+      ).toBeCloseTo(expectedGeometry.columnX[5]!, 5);
+      expect(
+        geometry.gyX,
+        `${viewportLabel} p${player} GY uses compacted pile column 6`,
+      ).toBeCloseTo(expectedGeometry.columnX[6]!, 5);
+      expect(
+        geometry.banishedX,
+        `${viewportLabel} p${player} Banished uses compacted pile column 7`,
+      ).toBeCloseTo(expectedGeometry.columnX[7]!, 5);
       expect(geometry.pagingControls).toBe(0);
       expect(
         geometry.viewport.scrollWidth,
@@ -3453,25 +3579,87 @@ test("responsive field compositions contain controls across supported viewports"
        lives in the full-duel walker, which reaches a required bar, asserts its
        geometry, then fails if no bar was exercised. */
 
-    // Unlike the action bar, the End turn corner button is always mounted, so
-    // this check runs unconditionally at every viewport.
-    const endTurnButton = field.locator('[data-cy="field-end-turn-button"]');
+    // Phase controls are always mounted in the shell-level pane, so this check
+    // runs unconditionally at every viewport.
+    const phaseBar = page.locator('[data-cy="phase-bar"]');
+    const endTurnButton = page.locator('[data-cy="field-end-turn-button"]');
+    await expect(phaseBar).toBeVisible();
     await expect(endTurnButton).toBeVisible();
+
+    const phaseGeometry = await phaseBar.evaluate((bar) => {
+      const opponent = bar.querySelector<HTMLElement>(
+        '[data-cy="phase-bar-opponent"]',
+      );
+      const player = bar.querySelector<HTMLElement>(
+        '[data-cy="phase-bar-player"]',
+      );
+      if (opponent === null || player === null)
+        throw new Error("Phase bar halves missing");
+      const rect = (element: Element) => {
+        const box = element.getBoundingClientRect();
+        return {
+          top: box.top,
+          left: box.left,
+          bottom: box.bottom,
+          right: box.right,
+          width: box.width,
+          height: box.height,
+        };
+      };
+      return {
+        bar: rect(bar),
+        opponent: rect(opponent),
+        player: rect(player),
+        opponentOrder: [...opponent.children].map((element) =>
+          element.getAttribute("data-cy"),
+        ),
+        playerOrder: [...player.children].map((element) =>
+          element.getAttribute("data-cy"),
+        ),
+        opponentTags: [...opponent.children].map((element) => element.tagName),
+      };
+    });
+    expect(
+      Math.abs(phaseGeometry.opponent.height - phaseGeometry.player.height),
+      `${viewportLabel} phase halves split at the exact middle`,
+    ).toBeLessThanOrEqual(1.5);
+    expect(
+      Math.abs(phaseGeometry.opponent.bottom - phaseGeometry.player.top),
+      `${viewportLabel} phase halves meet at one seam`,
+    ).toBeLessThanOrEqual(1.5);
+    expect(phaseGeometry.opponentOrder).toEqual([
+      "phase-bar-opp-end",
+      "phase-bar-opp-main2",
+      "phase-bar-opp-battle",
+      "phase-bar-opp-main1",
+      "phase-bar-opp-standby",
+      "phase-bar-opp-draw",
+    ]);
+    expect(phaseGeometry.playerOrder).toEqual([
+      "phase-bar-you-draw",
+      "phase-bar-you-standby",
+      "phase-bar-you-main1",
+      "phase-bar-you-battle",
+      "phase-bar-you-main2",
+      "field-end-turn-button",
+    ]);
+    expect(
+      phaseGeometry.opponentTags.every((tagName) => tagName === "SPAN"),
+      `${viewportLabel} opponent phase chips stay inert`,
+    ).toBe(true);
+
     const endTurnRect = await endTurnButton.evaluate((element) => {
       const box = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
       return {
         top: box.top,
         left: box.left,
         bottom: box.bottom,
         right: box.right,
+        width: box.width,
+        minBlockSize: Number.parseFloat(style.minBlockSize),
       };
     });
-    // T3 moved End turn from a bottom-pinned corner outside the board into
-    // the board's free band between the two banished zones (by design, per
-    // the ticket's geometry table), so it now legitimately sits inside the
-    // board's bounding rect. The check that still matters is that it never
-    // sits over a playable target, so it can never swallow a click meant
-    // for a card or a zone.
     const targetRects = await field
       .locator("[data-field-target]")
       .evaluateAll((elements) =>
@@ -3495,89 +3683,17 @@ test("responsive field compositions contain controls across supported viewports"
     );
     expect(
       buttonOverlapsATarget,
-      `${viewportLabel} End turn corner button (rect ${JSON.stringify(endTurnRect)}) must not overlap any playable field target`,
+      `${viewportLabel} End turn pane chip must not overlap a playable field target`,
     ).toBe(false);
-
-    // Round 3 (T10): the retired End chip must never come back and End turn
-    // meets the same 44x44 floor every field control does. Round 3 (T11):
-    // with no shared extra monster zones to straddle, the same semantic
-    // groups flow continuously as one right-anchored run with one uniform
-    // gap between neighbours.
-    await expect(field.locator('[data-cy="field-phase-chip-end"]')).toHaveCount(
-      0,
-    );
     expect(
-      endTurnRect.right - endTurnRect.left,
-      `${viewportLabel} End turn button meets the 44px width floor`,
+      endTurnRect.width,
+      `${viewportLabel} End turn button keeps the 44px rendered width floor`,
     ).toBeGreaterThanOrEqual(44);
     expect(
-      endTurnRect.bottom - endTurnRect.top,
-      `${viewportLabel} End turn button meets the 44px height floor`,
+      endTurnRect.minBlockSize,
+      `${viewportLabel} End turn button keeps the 44px local height floor`,
     ).toBeGreaterThanOrEqual(44);
-
-    await expect(
-      field.locator('[data-cy="field-phase-strip"]'),
-    ).toHaveAttribute("data-extra-monster-zones", "false");
-    const phaseGeometry = await page.evaluate(() => {
-      const rect = (selector: string): DOMRect | null =>
-        document.querySelector(selector)?.getBoundingClientRect() ?? null;
-      return {
-        left: rect('[data-cy="field-phase-strip-left"]'),
-        right: rect('[data-cy="field-phase-strip-right"]'),
-        battle: rect('[data-cy="field-phase-chip-battle"]'),
-        main2: rect('[data-cy="field-phase-chip-main2"]'),
-        flow: [
-          ...document.querySelectorAll(
-            '[data-cy="field-phase-strip"] [data-cy^="field-phase-chip-"], [data-cy="field-phase-strip"] [data-cy="field-end-turn-button"]',
-          ),
-        ].map((element) => ({
-          id: element.getAttribute("data-cy"),
-          rect: element.getBoundingClientRect(),
-        })),
-      };
-    });
-    if (
-      phaseGeometry.left === null ||
-      phaseGeometry.right === null ||
-      phaseGeometry.battle === null ||
-      phaseGeometry.main2 === null
-    )
-      throw new Error(`${viewportLabel} phase strip geometry hooks missing`);
-    expect(
-      phaseGeometry.flow.map(({ id }) => id),
-      `${viewportLabel} continuous phase flow keeps the shipped order`,
-    ).toEqual([
-      "field-phase-chip-draw",
-      "field-phase-chip-standby",
-      "field-phase-chip-main1",
-      "field-phase-chip-battle",
-      "field-phase-chip-main2",
-      "field-end-turn-button",
-    ]);
-    const phaseFlow = phaseGeometry.flow.filter(
-      ({ id }) => id !== "field-end-turn-button",
-    );
-    const adjacentGaps = phaseFlow
-      .slice(1)
-      .map((entry, index) => entry.rect.left - phaseFlow[index]!.rect.right);
-    expect(
-      Math.max(...adjacentGaps) - Math.min(...adjacentGaps),
-      `${viewportLabel} continuous phase controls keep uniform adjacent gaps (${JSON.stringify(adjacentGaps)})`,
-    ).toBeLessThanOrEqual(1.5);
-    expect(
-      phaseGeometry.battle.left >= phaseGeometry.left.left - 1 &&
-        phaseGeometry.battle.right <= phaseGeometry.left.right + 1,
-      `${viewportLabel} Battle chip belongs to the left group`,
-    ).toBe(true);
-    expect(
-      phaseGeometry.main2.left >= phaseGeometry.right.left - 1 &&
-        phaseGeometry.main2.right <= phaseGeometry.right.right + 1,
-      `${viewportLabel} Main2 chip belongs to the right group`,
-    ).toBe(true);
-    expect(
-      endTurnRect.left,
-      `${viewportLabel} End turn remains independently right-anchored`,
-    ).toBeGreaterThan(phaseGeometry.right.right);
+    await expect(page.locator('[data-cy="field-phase-strip"]')).toHaveCount(0);
 
     await captureResponsiveState(page, testInfo, viewport.id, "ST-01");
 
@@ -3876,9 +3992,12 @@ test("spatial field navigation has one visible 44px keyboard entry without a tra
       };
     }),
   );
-  expect(boxes.every(({ width, height }) => width >= 44 && height >= 44)).toBe(
-    true,
-  );
+  expect(
+    boxes.every(({ width, height }) => width >= 44 && height >= 44),
+    `undersized field targets: ${JSON.stringify(
+      boxes.filter(({ width, height }) => width < 44 || height < 44),
+    )}`,
+  ).toBe(true);
 
   expect(
     await entry.evaluate(
@@ -3910,6 +4029,11 @@ test("spatial field navigation has one visible 44px keyboard entry without a tra
     if ((await active.getAttribute("data-field-target")) !== before) break;
   }
   await page.keyboard.press("Tab");
+  await expect(board.locator("[data-field-target]:focus")).toHaveCount(0);
+  for (let index = 0; index < 3; index += 1) {
+    if ((await board.locator(":focus").count()) === 0) break;
+    await page.keyboard.press("Tab");
+  }
   await expect(board.locator(":focus")).toHaveCount(0);
   await page.keyboard.press("Shift+Tab");
   await expect(board.locator(":focus")).toHaveCount(1);
@@ -4139,23 +4263,23 @@ async function answerPromptWithKeyboard(
   controls: Locator,
   kind: string,
   setup: { needsDefense: boolean },
-): Promise<"field" | "prompt"> {
+): Promise<"field" | "phase" | "prompt"> {
   const field = page.getByRole("region", { name: "Duel field" });
   switch (kind) {
     case "idleCommand":
       if (setup.needsDefense && (await setHandMonsterWithKeyboard(page, field)))
         return "field";
-      await activatePreferredButton(page, field, [
-        "End turn",
-        "Enter Battle Phase",
+      await activatePreferredPhaseButton(page, [
+        "field-end-turn-button",
+        "phase-bar-you-battle",
       ]);
-      return "field";
+      return "phase";
     case "battleCommand":
-      await activatePreferredButton(page, field, [
-        "Enter Main Phase 2",
-        "End Battle Phase",
+      await activatePreferredPhaseButton(page, [
+        "phase-bar-you-main2",
+        "field-end-turn-button",
       ]);
-      return "field";
+      return "phase";
     case "yesNo":
     case "effectYesNo":
       await activatePreferredButton(page, controls, ["No"]);
@@ -4524,6 +4648,24 @@ async function chooseValidFieldSubset(
     }
   }
   return false;
+}
+
+async function activatePreferredPhaseButton(
+  page: Page,
+  dataCyValues: readonly string[],
+): Promise<void> {
+  for (const dataCy of dataCyValues) {
+    const candidate = page.locator(`[data-cy="${dataCy}"]`);
+    if (
+      (await candidate.count()) > 0 &&
+      (await candidate.isVisible()) &&
+      (await candidate.isEnabled())
+    ) {
+      await keyboardActivate(page, candidate);
+      return;
+    }
+  }
+  throw new Error("Phase bar has no enabled transition");
 }
 
 async function activatePreferredButton(

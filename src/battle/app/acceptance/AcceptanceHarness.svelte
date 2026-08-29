@@ -1,6 +1,7 @@
 <script lang="ts">
   import { CardPreviewPanel } from "../../../shell/index.ts";
   import DuelField from "../components/DuelField.svelte";
+  import PhaseBar from "../components/PhaseBar.svelte";
   import ZoneListDialog from "../components/duel-field/ZoneListDialog.svelte";
   import { cardCode, type ChoiceId } from "../../duel/contracts/ids.ts";
   import type { InteractionChoice } from "../prompts/interaction-spec.ts";
@@ -130,11 +131,11 @@
         board={scenario.board}
         layoutBoundaryElement={fieldSlot}
         spec={scenario.phaseSpec}
-        phase="main1"
         showZoneOutlines={$persistedUi.settings.showZoneOutlines}
         showZoneCounts={$persistedUi.settings.showZoneCounts}
       />
     </div>
+    <PhaseBar phase="main1" spec={scenario.phaseSpec} />
     <aside data-cy="acceptance-rail"></aside>
   </main>
 {/if}

@@ -29,6 +29,7 @@
   import type { PhysicalZoneId } from "../field/duel-field-layout.ts";
   import { CardPreviewPanel } from "../../shell/index.ts";
   import DuelRail from "./components/DuelRail.svelte";
+  import PhaseBar from "./components/PhaseBar.svelte";
   import DeckPicker from "./components/DeckPicker.svelte";
   import DuelErrorDialog from "./components/DuelErrorDialog.svelte";
   import DuelResultDialog from "./components/DuelResultDialog.svelte";
@@ -1489,7 +1490,6 @@
               {zoneLists}
               {offFieldTargets}
               onzonelistpreview={previewZoneListEntry}
-              phase={$duel.snapshot?.phase ?? "unknown"}
               zoneListWindowPosition={$persistedUi.windows.zoneList}
               confirmWindowPosition={$persistedUi.windows.confirm}
               showZoneOutlines={$uiSettings.showZoneOutlines}
@@ -1516,6 +1516,13 @@
         </section>
       {/if}
       {#if $duel.snapshot}
+        <PhaseBar
+          phase={$duel.snapshot.phase}
+          turnPlayer={$duel.snapshot.turnPlayer}
+          spec={fieldInteractionSpec}
+          disabled={$duel.responsePending}
+          oninteraction={duel.dispatchInteraction}
+        />
         <DuelRail
           turn={$duel.snapshot.turn}
           phase={$duel.snapshot.phase}

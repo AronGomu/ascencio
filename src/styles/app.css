@@ -449,7 +449,10 @@ h4 {
   height: var(--stage-h, 100svh);
   margin: 0;
   display: grid;
-  grid-template-columns: var(--preview-w) auto minmax(var(--rail-min), 1fr);
+  grid-template-columns: var(--preview-w) auto var(--phase-bar-w, 8rem) minmax(
+      var(--rail-min),
+      1fr
+    );
   grid-template-rows: minmax(0, 1fr);
   align-items: stretch;
   padding: 0;
@@ -1099,20 +1102,16 @@ li + li {
 
 .duel-field-slot {
   position: relative;
-  /* `--stage-h * 16 / 9` is the letterboxed stage's width in every mode the
-     duel renders — upright and rotated alike, because both derive the two axes
-     from the same 16:9 fit — so this is the width the column had before the
-     full-bleed rule above, and the board it produces is identical.
-     `--stage-w` is not used here on purpose: on this route it is now the whole
-     viewport, and widening the column would only pad the board with dead space
-     that the rail can put to better use.
+  /* Keep the fixed preview, phase bar, and minimum rail inside the 16:9 duel
+     stage budget in upright and rotated modes. `--stage-w` is intentionally
+     unused: this route exposes the full viewport there, while the duel board
+     still follows the stage height's 16:9 width.
 
      The inset is margin, not padding: `DuelField` sizes the board from this
-     element's `clientWidth`, which padding would shrink and margin does not.
-     It is also clamped to the reclaimed bar, so a viewport that is exactly
-     16:9 keeps every pixel of board it has today. */
+     element's `clientWidth`, which padding would shrink and margin does not. */
   width: calc(
-    var(--stage-h, 100svh) * 16 / 9 - var(--preview-w) - var(--rail-min)
+    var(--stage-h, 100svh) * 16 / 9 - var(--preview-w) -
+      var(--phase-bar-w, 8rem) - var(--rail-min)
   );
   margin-inline: var(--duel-field-margin, 0px);
   min-width: 0;
@@ -1208,46 +1207,46 @@ li + li {
   overflow: hidden;
 }
 
-.field-phase-strip {
-  position: absolute;
-  z-index: var(--duel-field-layer-control);
-  top: var(--phase-y);
-  right: 0;
-  left: 0;
+.phase-bar {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  transform: translateY(-50%);
-  pointer-events: none;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
 }
-.field-phase-strip__group {
-  position: absolute;
+
+.phase-bar__half {
+  flex: 0 0 50%;
   display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: var(--phase-gap);
-  pointer-events: none;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  padding: 10px;
 }
-.field-phase-strip__group--left {
-  right: calc(100% - var(--phase-left-emz));
+
+.phase-bar__half--opponent {
+  justify-content: flex-end;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(
+    0deg,
+    color-mix(in srgb, var(--danger) 30%, var(--surface)),
+    color-mix(in srgb, var(--danger) 12%, var(--surface))
+  );
 }
-.field-phase-strip__group--right {
-  left: var(--phase-right-emz);
+
+.phase-bar__half--player {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--phase-player) 30%, var(--surface)),
+    color-mix(in srgb, var(--phase-player) 12%, var(--surface))
+  );
 }
-.field-phase-strip__end {
-  position: absolute;
-  left: var(--phase-right-edge);
-  transform: translateX(-100%);
-  pointer-events: none;
-}
-.field-phase-strip.is-continuous {
-  gap: var(--phase-gap);
-}
-.field-phase-strip.is-continuous .field-phase-strip__group {
-  position: static;
-}
-.field-phase-chip {
-  min-inline-size: 44px;
+
+.phase-chip {
+  width: 100%;
+  min-inline-size: 0;
   min-block-size: 44px;
   display: inline-grid;
   place-items: center;
@@ -1257,23 +1256,36 @@ li + li {
   border-radius: 999px;
   background: color-mix(in srgb, var(--bg) 72%, transparent);
   color: color-mix(in srgb, var(--muted) 70%, transparent);
-  font-size: var(--label-size);
+  font-size: var(--text-xs);
   font-weight: 800;
+  line-height: 1;
   white-space: nowrap;
 }
-button.field-phase-chip {
+
+button.phase-chip:not(:disabled) {
   pointer-events: auto;
   cursor: pointer;
 }
-.field-phase-chip.is-available {
+
+.phase-chip.is-available {
   color: var(--ink);
   border-color: var(--border);
 }
-.field-phase-chip.is-current {
+
+.phase-chip.is-current {
   box-shadow:
     0 0 0 2px var(--accent),
     0 0 0.6rem var(--accent);
   color: var(--ink);
+}
+
+.phase-chip--end-turn:not(:disabled) {
+  background: var(--warning);
+  color: var(--ink-on-warning);
+}
+
+.phase-chip--end-turn:hover:not(:disabled) {
+  background: var(--selected-strong);
 }
 
 /* Stage uses exact geometry-sized field coordinates. */
@@ -1323,6 +1335,24 @@ button.field-phase-chip {
       var(--field-gradient-from),
       var(--field-gradient-to)
     );
+}
+
+.duel-field-board__plane {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform-origin: 50% 100%;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.duel-field-board__content {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: auto;
 }
 
 .duel-field-zone,
@@ -2096,7 +2126,7 @@ button.duel-field-zone,
 .duel-field-stack {
   z-index: var(--duel-field-layer-stack);
   display: grid;
-  min-width: 2.75rem;
+  min-width: 2.875rem;
   min-height: 2.75rem;
   align-content: center;
   justify-items: center;
@@ -2249,11 +2279,11 @@ button.duel-field-zone,
 }
 
 /* Item 5: the hand and its action chips must never be painted over by a
-   field card, zone, stack or the phase strip. This box creates its own
+   field card, zone, stack, or in-field control. This box creates its own
    stacking context (position + z-index), so its z-index must outrank every
-   field-layer token up through --duel-field-layer-control (phase strip) —
-   the child chip's own --duel-field-layer-menu z-index only orders siblings
-   inside this context, it cannot rescue a lower-z-index parent. */
+   field-layer token up through --duel-field-layer-control — the child chip's
+   own --duel-field-layer-menu z-index only orders siblings inside this
+   context; it cannot rescue a lower-z-index parent. */
 .duel-field-hand-band {
   position: absolute;
   left: var(--field-x);
@@ -2529,22 +2559,6 @@ button.card-action-chip {
 
 button.card-action-chip:hover:not(:disabled) {
   background: var(--selected-strong);
-}
-
-/* The strip slot is absolutely positioned from its left edge alone, so its
-   shrink-to-fit width is this button's min-content: without `nowrap` the
-   engine's own label (`End Battle Phase`) breaks over three lines. The height
-   floor stays on the shared 44px control minimum: the button was trimmed back
-   towards the rest of the field's chrome, not below what a thumb can hit. */
-.field-end-turn {
-  min-inline-size: 44px;
-  min-height: 2.75rem;
-  display: inline-grid;
-  place-items: center;
-  pointer-events: auto;
-  padding: 0.35rem var(--space-3);
-  font-size: var(--text-sm);
-  white-space: nowrap;
 }
 
 /* T14: the bar is normal flow inside the confirm window (ADR-017), which

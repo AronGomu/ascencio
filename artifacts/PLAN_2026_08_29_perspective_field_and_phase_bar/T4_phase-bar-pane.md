@@ -37,6 +37,7 @@
 - `tests/component/PhaseStrip.test.ts` — replace with `PhaseBar.test.ts`.
 - `tests/component/EndTurnButton.test.ts` — delete (component dies); port its label/disable cases into `PhaseBar.test.ts`.
 - `tests/unit/phase-transitions.test.ts:3-4,49-58` — imports and asserts `PHASE_SLOTS_LEFT`/`PHASE_SLOTS_RIGHT`; drop those cases with the exports.
+- `e2e-acceptance/full-height-field.spec.ts` — acceptance consumer for live board/phase-bar geometry and 44px actionable controls.
 
 ## Interface contract (level 5)
 
@@ -44,11 +45,9 @@
 
 ```svelte
 <!-- src/battle/app/components/PhaseBar.svelte (app-level pane, sibling of DuelRail) -->
-export let phase: DuelPhase = "unknown";
-export let turnPlayer: PlayerIndex = 0;
-export let spec: ActiveInteractionSpec | null = null;
-export let disabled = false;
-export let oninteraction: (action: InteractionSessionAction) => unknown = () => false;
+export let phase: DuelPhase = "unknown"; export let turnPlayer: PlayerIndex = 0; export
+let spec: ActiveInteractionSpec | null = null; export let disabled = false; export
+let oninteraction: (action: InteractionSessionAction) => unknown = () => false;
 ```
 
 ```html
@@ -66,13 +65,44 @@ export let oninteraction: (action: InteractionSessionAction) => unknown = () => 
 ```
 
 ```css
-.duel-shell { grid-template-columns: var(--preview-w) auto var(--phase-bar-w, 8rem) minmax(var(--rail-min), 1fr); }
-.phase-bar { display: flex; flex-direction: column; min-height: 0; border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
-.phase-bar__half { flex: 1; display: flex; flex-direction: column; gap: 6px; padding: 10px; min-height: 0; }
-.phase-bar__half--opponent { justify-content: flex-end; border-bottom: 1px solid var(--border);
-  background: linear-gradient(0deg, color-mix(in srgb, var(--danger) 30%, var(--surface)), color-mix(in srgb, var(--danger) 12%, var(--surface))); }
+.duel-shell {
+  grid-template-columns: var(--preview-w) auto var(--phase-bar-w, 8rem) minmax(
+      var(--rail-min),
+      1fr
+    );
+}
+.phase-bar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.phase-bar__half {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  min-height: 0;
+}
+.phase-bar__half--opponent {
+  justify-content: flex-end;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(
+    0deg,
+    color-mix(in srgb, var(--danger) 30%, var(--surface)),
+    color-mix(in srgb, var(--danger) 12%, var(--surface))
+  );
+}
 .phase-bar__half--player {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--phase-player) 30%, var(--surface)), color-mix(in srgb, var(--phase-player) 12%, var(--surface))); }
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--phase-player) 30%, var(--surface)),
+    color-mix(in srgb, var(--phase-player) 12%, var(--surface))
+  );
+}
 /* .phase-chip: reuse .field-phase-chip recipe (pill, min-block-size 34px, width 100%);
    .is-current / .is-available identical to the strip's rules.
    .phase-chip--end-turn:not(:disabled) { background: var(--warning); color: var(--ink-on-warning); }
@@ -101,33 +131,41 @@ Blue: no existing blue token — introduce `--phase-player: #2b5f9e;` beside the
 
 ## Test plan
 
-| Test | Input | Expect |
-| --- | --- | --- |
-| order player | render, any state | player half DOM order draw→standby→main1→battle→main2→end-turn |
-| order opponent | render | opponent half DOM order end→main2→battle→main1→standby→draw |
-| availability | spec offering battle+end at main1 | `phase-bar-you-battle` is BUTTON; draw/standby/main1/main2 are SPAN |
-| dispatch | click `phase-bar-you-battle` | `oninteraction` called with `{type:"chooseChoice", choiceId, key}` |
-| current routing | `phase="main1"`, `turnPlayer=1` | opponent `main1` chip `.is-current`; player `main1` chip not |
-| end turn label | spec with endPhaseChoice label "End Battle Phase" | button text "End Battle Phase", enabled |
-| end turn disabled | `spec=null` | button disabled, no warning background class logic applied (assert via class/attr) |
-| disabled prop | `disabled=true`, offering spec | zero BUTTON chips, End turn disabled |
-| end-phase current | `phase="end"`, `turnPlayer=0` | End-turn button has `.is-current`; no other player-half chip does |
-| aria | current+available slot | label "Battle phase, current, available" |
-| strip gone | repo grep | `PhaseStrip`, `EndTurnButton`, `field-phase-strip`, `PHASE_SLOTS_LEFT` absent from `src/` |
+| Test              | Input                                             | Expect                                                                                    |
+| ----------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| order player      | render, any state                                 | player half DOM order draw→standby→main1→battle→main2→end-turn                            |
+| order opponent    | render                                            | opponent half DOM order end→main2→battle→main1→standby→draw                               |
+| availability      | spec offering battle+end at main1                 | `phase-bar-you-battle` is BUTTON; draw/standby/main1/main2 are SPAN                       |
+| dispatch          | click `phase-bar-you-battle`                      | `oninteraction` called with `{type:"chooseChoice", choiceId, key}`                        |
+| current routing   | `phase="main1"`, `turnPlayer=1`                   | opponent `main1` chip `.is-current`; player `main1` chip not                              |
+| end turn label    | spec with endPhaseChoice label "End Battle Phase" | button text "End Battle Phase", enabled                                                   |
+| end turn disabled | `spec=null`                                       | button disabled, no warning background class logic applied (assert via class/attr)        |
+| disabled prop     | `disabled=true`, offering spec                    | zero BUTTON chips, End turn disabled                                                      |
+| end-phase current | `phase="end"`, `turnPlayer=0`                     | End-turn button has `.is-current`; no other player-half chip does                         |
+| aria              | current+available slot                            | label "Battle phase, current, available"                                                  |
+| strip gone        | repo grep                                         | `PhaseStrip`, `EndTurnButton`, `field-phase-strip`, `PHASE_SLOTS_LEFT` absent from `src/` |
 
 ## Impl steps
 
-- [ ] 1. Red `tests/component/PhaseBar.test.ts`.
-- [ ] 2. `PhaseBar.svelte` + `--phase-player` token + CSS.
-- [ ] 3. Mount in `App.svelte` between field slot and DuelRail; pass `phase`, `turnPlayer`, `spec: fieldInteractionSpec`, `disabled: $duel.responsePending`, `oninteraction: duel.dispatchInteraction`; extend `.duel-shell` columns.
-- [ ] 4. Delete PhaseStrip/EndTurnButton mounts, files, CSS blocks, `PHASE_SLOTS_LEFT/RIGHT`; drop now-unused DuelField props (trace first; keep the `extraMonsterZones` derivation).
-- [ ] 5. Delete `tests/component/PhaseStrip.test.ts` + `tests/component/EndTurnButton.test.ts`; trim `tests/unit/phase-transitions.test.ts` slot-array cases; green: `npx vitest run tests/component/PhaseBar.test.ts tests/component/DuelField.test.ts tests/unit/phase-transitions.test.ts tests/unit/data-cy-coverage.test.ts`.
+- [x] 1. Red `tests/component/PhaseBar.test.ts`; verify: targeted Vitest fails because `PhaseBar.svelte` does not exist.
+- [x] 2. `PhaseBar.svelte` + `--phase-player` token + CSS; verify: targeted `PhaseBar.test.ts` passes.
+- [x] 3. Mount in `App.svelte` between field slot and DuelRail; pass `phase`, `turnPlayer`, `spec: fieldInteractionSpec`, `disabled: $duel.responsePending`, `oninteraction: duel.dispatchInteraction`; extend `.duel-shell` columns; verify: `npm run check:headless` passes.
+- [x] 4. Delete PhaseStrip/EndTurnButton mounts, files, CSS blocks, `PHASE_SLOTS_LEFT/RIGHT`; drop now-unused DuelField props (trace first; keep the `extraMonsterZones` derivation); verify: `grep -R -E "PhaseStrip|EndTurnButton|field-phase-strip|PHASE_SLOTS_(LEFT|RIGHT)" src tests` returns no matches.
+- [x] 5. Delete `tests/component/PhaseStrip.test.ts` + `tests/component/EndTurnButton.test.ts`; trim `tests/unit/phase-transitions.test.ts` slot-array cases; verify: `npx vitest run tests/component/PhaseBar.test.ts tests/component/DuelField.test.ts tests/unit/phase-transitions.test.ts tests/unit/data-cy-coverage.test.ts` passes.
+
+## Post-review repair
+
+- [x] 6. Register `e2e-acceptance/full-height-field.spec.ts` as a T4 Input — verify: ticket Inputs name the acceptance consumer and its geometry/44px coverage.
+- [x] 7. Include the engine End choice label plus current/available suffixes in the button's accessible name — verify: `npx vitest run tests/component/PhaseBar.test.ts` passes a component assertion for `End Battle Phase, current, available`.
+- [x] 8. Match the locked opponent/player gradient directions and strengths; correct stale phase-strip/field-width comments in touched source/CSS — verify: targeted source grep contains no stale strip comments and CSS declarations match the T4 interface contract.
+- [x] 9. Rewrite acceptance phase checks around the live phase bar, remove obsolete strip-only geometry, preserve 44px actionable-control proof — verify: `npm run test:acceptance` passes.
+- [x] 10. Run combined repair gate — verify: focused Vitest, `npm run check:headless`, `PLAYWRIGHT_PORT=4302 npx playwright test e2e/duel-smoke.spec.ts`, `npm run test:acceptance`, narrow 1280×720 smoke when separate, and diff/secret/residue/conflict checks all pass after final mutation.
 
 ## Validation
 
-- [ ] `npm run check:headless`
-- [ ] `npx playwright test` — any spec touching `field-end-turn-button` or phase chips updated and green
-- [ ] manual: full duel turn cycle through the bar; opponent turn shows red-half highlight, everything inert
-- [ ] no silent-failure swallow added — `none` expected
-- [ ] app functional — narrow window: bar column doesn't crush the field (check `--phase-bar-w` at 1280×720)
-- [ ] commit msg draft: `feat(duel): move phases into a split vertical bar beside the field`
+- [x] `npm run check:headless`; verify: exit 0.
+- [x] `npx playwright test`; verify: exit 0, including any spec touching `field-end-turn-button` or phase chips.
+- [ ] manual: full duel turn cycle through the bar; verify: opponent turn shows red-half highlight and every opponent chip is inert.
+- [x] no silent-failure swallow added; verify: final diff adds no empty catch or ignored error (`none` expected).
+- [x] app functional; verify: at 1280×720 `--phase-bar-w` bar column stays visible without crushing field.
+- [ ] commit msg draft: `feat(duel): move phases into a split vertical bar beside the field`; verify: local commit subject matches exactly.

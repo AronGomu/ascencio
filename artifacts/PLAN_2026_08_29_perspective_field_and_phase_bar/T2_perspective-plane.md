@@ -28,6 +28,7 @@
 - `src/battle/app/components/duel-field/FieldBoard.svelte` — board root, where the plane wrapper goes.
 - `src/styles/app.css` — `.duel-field-board` block (`:1286`).
 - `src/battle/app/presentation/stage-frame.ts` — read-only; the rotated-phone mapping must keep passing its tests.
+- `e2e/duel-smoke.spec.ts` — existing duel drag flow and perspective fill assertions (supervisor-supplied Input).
 
 ## Interface contract (level 5)
 
@@ -106,18 +107,25 @@ renderLayout = createFieldRenderLayout(profile, width > 0 ? width : 1280, planeH
 
 ## Impl steps
 
-- [ ] 1. `src/battle/field/perspective.ts` + unit test — verify: `npx vitest run tests/unit/perspective.test.ts` (new file).
-- [ ] 2. Red component tests (FieldBoard plane, DuelField sizing) — verify: fail.
-- [ ] 3. FieldBoard wrapper + props; move zone/hand/stack/card markup inside; CSS block.
-- [ ] 4. DuelField: planeHeight computation, section sizing, hand-activation zone + PhaseStrip into the plane.
-- [ ] 5. Green: `npx vitest run tests/component/DuelField.test.ts tests/component/FieldBoard.test.ts` (create FieldBoard test file if absent).
-- [ ] 6. e2e: extend an existing duel e2e spec with the fill + drag assertions.
+- [x] 1. `src/battle/field/perspective.ts` + unit test — verify: `npx vitest run tests/unit/perspective.test.ts` (new file).
+- [x] 2. Red component tests (FieldBoard plane, DuelField sizing) — verify: `npx vitest run tests/component/DuelField.test.ts tests/component/FieldBoard.test.ts` fails on missing plane behavior.
+- [x] 3. FieldBoard wrapper + props; move zone/hand/stack/card markup inside; CSS block — verify: `npx vitest run tests/component/FieldBoard.test.ts` passes.
+- [x] 4. DuelField: planeHeight computation, section sizing, hand-activation zone + PhaseStrip into the plane — verify: `npx vitest run tests/component/DuelField.test.ts` passes.
+- [x] 5. Green: `npx vitest run tests/component/DuelField.test.ts tests/component/FieldBoard.test.ts` (create FieldBoard test file if absent).
+- [x] 6. e2e: extend `e2e/duel-smoke.spec.ts` with fill + drag assertions — verify: `npx playwright test e2e/duel-smoke.spec.ts` passes.
+
+## Post-review repair
+
+- [x] 7. Pin transformed-plane movement + width-bound content anchoring regressions — verify: targeted `dom-feedback-controller`, `DuelField`, and `FieldBoard` tests fail before source repair, then pass.
+- [x] 8. Convert card-move travel into plane-local coordinates — verify: `npx vitest run tests/unit/dom-feedback-controller.test.ts` passes with transformed-plane fixture proving projected start/end centres.
+- [x] 9. Hoist perspective fill/fixed-descendant proof into a seed-independent browser test — verify: `PLAYWRIGHT_PORT=4302 npx playwright test e2e/duel-smoke.spec.ts` runs the proof without reaching the drag test's `test.skip` branch.
+- [x] 10. Replace stale acceptance board matrix/strip geometry with live slot, board, plane, and content invariants — verify: `npm run test:acceptance` passes and asserts board fills slot plus content is horizontally centred and bottom-anchored.
 
 ## Validation
 
-- [ ] `npm run check:headless`
-- [ ] `npx playwright test` (duel specs)
+- [x] `npm run check:headless`
+- [x] `npx playwright test` (duel specs)
 - [ ] manual: `npm run dev` — field tilted, top filled, drag + hover-zoom + keyboard arrows + floating window drag all work; portrait-phone emulation (rotated stage) still drags correctly
-- [ ] no silent-failure swallow added — `none` expected
-- [ ] app functional — flat fallback (`fieldPlaneTransform(0, …)`) renders identically to pre-change
+- [x] no silent-failure swallow added — `none` expected
+- [x] app functional — flat fallback (`fieldPlaneTransform(0, …)`) renders identically to pre-change
 - [ ] commit msg draft: `feat(duel): render the field on a perspective plane filled by virtual height`

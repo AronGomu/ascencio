@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  PHASE_SLOTS_LEFT,
-  PHASE_SLOTS_RIGHT,
   PHASE_SLOT_LABELS,
   phaseSlotChoices,
   phaseSlotForDuelPhase,
@@ -44,18 +42,8 @@ describe("phaseSlotForDuelPhase", () => {
   });
 });
 
-describe("rendered slot partition", () => {
-  it("puts draw/standby/main1/battle on the left", () => {
-    expect(PHASE_SLOTS_LEFT).toEqual(["draw", "standby", "main1", "battle"]);
-  });
-
-  it("puts only main2 on the right", () => {
-    expect(PHASE_SLOTS_RIGHT).toEqual(["main2"]);
-  });
-});
-
 describe("end compatibility", () => {
-  it("keeps the end slot label for EndTurnButton/current-phase compatibility", () => {
+  it("keeps the end slot label for current-phase compatibility", () => {
     expect(PHASE_SLOT_LABELS.end).toBe("End");
   });
 

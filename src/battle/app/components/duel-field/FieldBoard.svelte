@@ -33,6 +33,8 @@
 
   export let board: BoardViewModel;
   export let renderLayout: FieldRenderLayout;
+  export let planeHeight: number;
+  export let planeTransform: string;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let cardBackUrl: string;
   export let placeholderUrl: string;
@@ -225,112 +227,129 @@
     aria-hidden="true"
     data-cy="duel-field-board-surface"
   ></div>
-  {#each fieldZones as zone (zone.id)}
-    <ZoneControl
-      {zone}
-      placement={placementFor(renderLayout, zone.id)}
-      actionable={!disabled && spec?.zoneChoices.has(zone.targetId) === true}
-      selected={selectedTargets.has(zone.targetId)}
-      active={navigationState.activeTarget === zone.targetId}
-      {disabled}
-      dropCandidate={dropCandidates.has(zone.id)}
-      dropHovered={dropHoveredZoneId === zone.id}
-      onactivate={() => onzoneactivate(zone)}
-    />
-  {/each}
-  {#if playerHandZone !== undefined}
-    <HandBand
-      player={0}
-      cards={playerHandCards}
-      zone={playerHandZone}
-      placement={placementFor(renderLayout, playerHandZone.id)}
-      {imageLibrary}
-      {cardBackUrl}
-      {placeholderUrl}
-      {spec}
-      {selectedTargets}
-      activeTarget={navigationState.activeTarget}
-      {disabled}
-      {pinnedTarget}
-      {zoomServedTarget}
-      {draggedTarget}
-      {oncardactivate}
-      {oncardchoose}
-      {oncarddismiss}
-      {oncarddragstart}
-      {oncarddragmove}
-      {oncarddragend}
-      {oncardpreview}
-      {oncardzoomenter}
-      {oncardzoomleave}
-    />
-  {/if}
-  {#if opponentHandZone !== undefined}
-    <HandBand
-      player={1}
-      cards={opponentHandCards}
-      zone={opponentHandZone}
-      placement={placementFor(renderLayout, opponentHandZone.id)}
-      {imageLibrary}
-      {cardBackUrl}
-      {placeholderUrl}
-      {spec}
-      {selectedTargets}
-      activeTarget={navigationState.activeTarget}
-      {disabled}
-      {pinnedTarget}
-      {zoomServedTarget}
-      {oncardactivate}
-      {oncardchoose}
-      {oncarddismiss}
-      {oncarddragstart}
-      {oncarddragmove}
-      {oncarddragend}
-      {oncardpreview}
-      {oncardzoomenter}
-      {oncardzoomleave}
-    />
-  {/if}
-  {#each board.stacks as stack (stack.targetId)}
-    <StackControl
-      {stack}
-      placement={placementFor(renderLayout, stack.id)}
-      active={navigationState.activeTarget === stack.targetId}
-      actionable={!disabled && spec?.stackChoices.has(stack.targetId) === true}
-      onpreview={() => onstackpreview(stack)}
-      onactivate={() => onstackactivate(stack)}
-      {imageLibrary}
-      {placeholderUrl}
-      {cardBackUrl}
-    />
-  {/each}
-  {#each fieldCards as card (card.id)}
-    <CardControl
-      {card}
-      placement={placementFor(renderLayout, card.zoneId)}
-      imageUrl={cardImageUrl(card)}
-      {imageLibrary}
-      {cardBackUrl}
-      {placeholderUrl}
-      interactionKind={!disabled &&
-      spec?.cardChoices.has(card.targetId) === true
-        ? spec.kind
-        : null}
-      actionable={!disabled && spec?.cardChoices.has(card.targetId) === true}
-      selected={selectedTargets.has(card.targetId)}
-      active={navigationState.activeTarget === card.targetId}
-      {disabled}
-      choices={spec?.cardChoices.get(card.targetId) ?? []}
-      localActions={localActionsFor(card)}
-      pinned={pinnedTarget === card.targetId}
-      draggable={false}
-      onactivate={(element, source) => oncardactivate(card, element, source)}
-      onchoose={oncardchoose}
-      ondismiss={oncarddismiss}
-      ondragstart={(origin) => oncarddragstart(card, origin)}
-      ondragmove={oncarddragmove}
-      ondragend={oncarddragend}
-      onpreview={() => oncardpreview(card)}
-    />
-  {/each}
+  <div
+    class="duel-field-board__plane"
+    data-cy="duel-field-board-plane"
+    style={`height: ${planeHeight}px; transform: ${planeTransform};`}
+  >
+    <div
+      class="duel-field-board__content"
+      data-cy="duel-field-board-content"
+      style={`width: ${renderLayout.geometry.width}px; height: ${renderLayout.geometry.height}px;`}
+    >
+      {#each fieldZones as zone (zone.id)}
+        <ZoneControl
+          {zone}
+          placement={placementFor(renderLayout, zone.id)}
+          actionable={!disabled &&
+            spec?.zoneChoices.has(zone.targetId) === true}
+          selected={selectedTargets.has(zone.targetId)}
+          active={navigationState.activeTarget === zone.targetId}
+          {disabled}
+          dropCandidate={dropCandidates.has(zone.id)}
+          dropHovered={dropHoveredZoneId === zone.id}
+          onactivate={() => onzoneactivate(zone)}
+        />
+      {/each}
+      {#if playerHandZone !== undefined}
+        <HandBand
+          player={0}
+          cards={playerHandCards}
+          zone={playerHandZone}
+          placement={placementFor(renderLayout, playerHandZone.id)}
+          {imageLibrary}
+          {cardBackUrl}
+          {placeholderUrl}
+          {spec}
+          {selectedTargets}
+          activeTarget={navigationState.activeTarget}
+          {disabled}
+          {pinnedTarget}
+          {zoomServedTarget}
+          {draggedTarget}
+          {oncardactivate}
+          {oncardchoose}
+          {oncarddismiss}
+          {oncarddragstart}
+          {oncarddragmove}
+          {oncarddragend}
+          {oncardpreview}
+          {oncardzoomenter}
+          {oncardzoomleave}
+        />
+      {/if}
+      {#if opponentHandZone !== undefined}
+        <HandBand
+          player={1}
+          cards={opponentHandCards}
+          zone={opponentHandZone}
+          placement={placementFor(renderLayout, opponentHandZone.id)}
+          {imageLibrary}
+          {cardBackUrl}
+          {placeholderUrl}
+          {spec}
+          {selectedTargets}
+          activeTarget={navigationState.activeTarget}
+          {disabled}
+          {pinnedTarget}
+          {zoomServedTarget}
+          {oncardactivate}
+          {oncardchoose}
+          {oncarddismiss}
+          {oncarddragstart}
+          {oncarddragmove}
+          {oncarddragend}
+          {oncardpreview}
+          {oncardzoomenter}
+          {oncardzoomleave}
+        />
+      {/if}
+      {#each board.stacks as stack (stack.targetId)}
+        <StackControl
+          {stack}
+          placement={placementFor(renderLayout, stack.id)}
+          active={navigationState.activeTarget === stack.targetId}
+          actionable={!disabled &&
+            spec?.stackChoices.has(stack.targetId) === true}
+          onpreview={() => onstackpreview(stack)}
+          onactivate={() => onstackactivate(stack)}
+          {imageLibrary}
+          {placeholderUrl}
+          {cardBackUrl}
+        />
+      {/each}
+      {#each fieldCards as card (card.id)}
+        <CardControl
+          {card}
+          placement={placementFor(renderLayout, card.zoneId)}
+          imageUrl={cardImageUrl(card)}
+          {imageLibrary}
+          {cardBackUrl}
+          {placeholderUrl}
+          interactionKind={!disabled &&
+          spec?.cardChoices.has(card.targetId) === true
+            ? spec.kind
+            : null}
+          actionable={!disabled &&
+            spec?.cardChoices.has(card.targetId) === true}
+          selected={selectedTargets.has(card.targetId)}
+          active={navigationState.activeTarget === card.targetId}
+          {disabled}
+          choices={spec?.cardChoices.get(card.targetId) ?? []}
+          localActions={localActionsFor(card)}
+          pinned={pinnedTarget === card.targetId}
+          draggable={false}
+          onactivate={(element, source) =>
+            oncardactivate(card, element, source)}
+          onchoose={oncardchoose}
+          ondismiss={oncarddismiss}
+          ondragstart={(origin) => oncarddragstart(card, origin)}
+          ondragmove={oncarddragmove}
+          ondragend={oncarddragend}
+          onpreview={() => oncardpreview(card)}
+        />
+      {/each}
+      <slot />
+    </div>
+  </div>
 </div>

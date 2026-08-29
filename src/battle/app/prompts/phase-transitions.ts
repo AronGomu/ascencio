@@ -7,15 +7,6 @@ import type {
 export type PhaseSlot =
   "draw" | "standby" | "main1" | "battle" | "main2" | "end";
 
-export const PHASE_SLOTS_LEFT: readonly PhaseSlot[] = [
-  "draw",
-  "standby",
-  "main1",
-  "battle",
-];
-
-export const PHASE_SLOTS_RIGHT: readonly PhaseSlot[] = ["main2"];
-
 export const PHASE_SLOT_LABELS: Readonly<Record<PhaseSlot, string>> = {
   draw: "Draw",
   standby: "Standby",

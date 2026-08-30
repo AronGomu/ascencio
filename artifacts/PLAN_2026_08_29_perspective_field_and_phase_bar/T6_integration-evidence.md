@@ -80,8 +80,8 @@ expect((await oppCard.boundingBox())!.height / (await youCard.boundingBox())!.he
 ## Impl steps
 
 - [x] 1. Write/extend `e2e/duel-smoke.spec.ts`; focused Chromium test passes, deliberate depth-ratio mutation fails, restored test passes.
-- [x] 2. Run `PLAYWRIGHT_PORT=4304 npx playwright test e2e/duel-smoke.spec.ts`; command exits 0 with T6 tests passing and no new skips.
-- [x] 3. Run `npm run build:verify`; command exits 0 and exact domain budget numbers are captured.
+- [x] 2. Run `PLAYWRIGHT_PORT=4304 npx playwright test e2e/duel-smoke.spec.ts`; command exits 0 with 42 passes and 1 existing data-dependent skip.
+- [x] 3. Run `npm run build:app && npm run build:verify`; command exits 0 with shell 93,666/115,000, Worker 149,859/200,000, battle 350,389/488,750, deck-editor 134,769/172,500, and story 132,815/172,500 bytes.
 - [x] 4. Keep checklist change in `.tmp/T6_manual_test_checklist.patch`; `git apply --check .tmp/T6_manual_test_checklist.patch` exits 0 without staging scratch.
 - [x] 5. Update `docs/GLOSSARY.md` + `docs/architecture/architecture.md`; `npm run check:headless` validates docs-adjacent repo gates.
 
@@ -92,12 +92,12 @@ expect((await oppCard.boundingBox())!.height / (await youCard.boundingBox())!.he
   - A2 finding (`src/shell/card-preview/OverlayScrollbar.svelte`, `src/styles/app.css`): bottom opponent thumb centre hits `field-zone-p1:spellTrap:1`, so `pointerDown` never runs, pointer capture never starts, and `scrollLeft` remains `0`. Moving the mirrored opponent track to its top/outward edge changes the real Chromium hit to `field-hand-p1-scrollbar-thumb`; existing pointer mapping then preserves negative row-reverse writes.
 - [x] 7. Repair A1 without hiding clipping: endpoint assertion uses non-transformed `offsetLeft`/`offsetWidth`/`scrollLeft`/`clientWidth`; projected tolerance is mathematically derived from the ±5° fan overhang; focused endpoint test passes three consecutive runs.
 - [x] 8. Repair A2 at the proven test or runtime seam, add a real Chromium pointer-hit assertion, preserve negative row-reverse scrolling plus component coverage; focused row-reverse test and `tests/component/OverlayScrollbar.test.ts` pass.
-- [x] 9. Run final gates after the last source/test mutation: focused repairs 3x, full acceptance, portrait T6 3x, desktop T6 3x, full duel smoke, `npm run check:headless`, `npm run build`, and `npm run build:verify`; every command exits 0 with exact counts recorded.
+- [x] 9. Run final gates after the last source/test mutation: focused repairs 6/6; acceptance 41/41; portrait T6 3/3; desktop T6 3/3; duel smoke 42 passed + 1 existing data-dependent skip; component 7/7; legacy 23/23; unit 1,790/1,790; integration 39/39; `npm run build:app && npm run build:verify` exits 0 with budgets recorded in step 3.
 - [x] 10. Verify `.tmp/T6_manual_test_checklist.patch` still applies, perform mutate-check plus diff/secret/residue/debug scans, and complete fresh inline review; all checks report no blocker and scratch patch stays untracked/unstaged.
 
 ## Validation
 
-- [x] `npm run check:headless && PLAYWRIGHT_PORT=4304 npx playwright test e2e/duel-smoke.spec.ts && npm run build:verify` — all exit 0; outputs quoted in report.
+- [x] `npm run check:headless && PLAYWRIGHT_PORT=4304 npx playwright test e2e/duel-smoke.spec.ts && npm run build:app && npm run build:verify` — all exit 0; headless passes 23 legacy, 1,790 unit and 39 integration tests; duel smoke passes 42 with 1 existing skip; exact budgets are quoted in step 3.
 - [x] Chromium T6 flows execute checklist-equivalent perspective, phase, drag, toggle steps; focused T6 + full duel spec pass.
 - [x] `git diff -U0 -- e2e/duel-smoke.spec.ts src/styles/app.css` added lines contain no debug/residue, merge markers, or secret literals.
 - [x] App functional — full duel spec includes start → End turn cycles → result; command passes.

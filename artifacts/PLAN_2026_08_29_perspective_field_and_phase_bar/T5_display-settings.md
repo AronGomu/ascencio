@@ -116,7 +116,7 @@ data-cy="settings-show-zone-labels-checkbox"   label "Show zone labels"
 
 - [x] `npm run check:headless` — Verify: command passed; 23 legacy, 1788 unit (+2 skipped), 39 integration; vendor/assets/snapshot all ok; 2 pre-existing Svelte warnings.
 - [x] `npm run build` — Verify: command passed; browser build verification reported status ok and all chunk budgets within limits.
-- [x] Chromium: toggle both in live duel — shadows vanish, labels vanish, LP + counts + outlines unaffected; reload keeps choices; reset restores both on — Verify: `PLAYWRIGHT_PORT=4303 npx playwright test e2e/duel-smoke.spec.ts --grep "zone visuals persist through reload and Reset settings restores defaults"` passed 1 test; full `PLAYWRIGHT_PORT=4303 npx playwright test e2e/duel-smoke.spec.ts` passed 40 tests / 1 pre-existing skip.
+- [x] Chromium: toggle both in live duel — shadows vanish, labels vanish, zone accessible names stay unchanged; reload keeps choices; reset restores both on — Verify: `PLAYWRIGHT_PORT=4303 npx playwright test e2e/duel-smoke.spec.ts --grep "zone visuals persist through reload and Reset settings restores defaults"` passed 1 test; full `PLAYWRIGHT_PORT=4303 npx playwright test e2e/duel-smoke.spec.ts` passed 40 tests / 1 pre-existing skip.
 - [x] no silent-failure swallow added — `none` expected — Verify: settings diff adds no catch blocks; existing persistence best-effort path unchanged.
 - [x] app functional — settings dialog opens/closes clean, reset works — Verify: SettingsDialog component tests passed reset dispatch and existing AppChrome dialog coverage.
 - [x] commit msg draft: `feat(duel): make card shadows and zone labels player-toggleable` — Verify: commit `3f2a26e6e68c91295b3cf21ddc85d853fb346d14` uses exact message.

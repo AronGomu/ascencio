@@ -20,6 +20,7 @@
   export let cards: readonly BoardCardView[];
   export let zone: BoardZoneView;
   export let placement: FieldPlacement;
+  export let cardHeight: number;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let cardBackUrl: string;
   export let placeholderUrl: string;
@@ -63,7 +64,7 @@
 
   function droopPxFor(index: number, count: number): number {
     const offset = index - (count - 1) / 2;
-    return Math.abs(offset) * HAND_FAN_DEG * placement.height * 0.004;
+    return Math.abs(offset) * HAND_FAN_DEG * cardHeight * 0.004;
   }
 
   /* `sequence` addresses the engine, `displayOrder` addresses the eye: your

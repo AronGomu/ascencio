@@ -18,6 +18,7 @@ import {
 import type { FieldPlacement } from "../../src/battle/field/duel-field-geometry.ts";
 
 const PLACEMENT: FieldPlacement = { x: 400, y: 600, width: 760, height: 80 };
+const CARD_HEIGHT = 68.8;
 
 afterEach(() => {
   cleanup();
@@ -86,6 +87,7 @@ function renderBand(
   return render(HandBand, {
     zone: zoneFor(player),
     placement: PLACEMENT,
+    cardHeight: CARD_HEIGHT,
     imageLibrary: null,
     cardBackUrl: "/back.webp",
     placeholderUrl: "/placeholder.webp",
@@ -182,10 +184,13 @@ describe("HandBand", () => {
     const droops = cardArticles().map((card) =>
       Number.parseFloat(card.style.getPropertyValue("--card-droop")),
     );
-    expect(droops[2]).toBe(0);
-    expect(droops[0]).toBeGreaterThan(droops[1]!);
-    expect(droops[4]).toBeGreaterThan(droops[3]!);
-    expect(droops[0]).toBeGreaterThan(0);
+    const expectedDroops = [
+      2.7520000000000002, 1.3760000000000001, 0, 1.3760000000000001,
+      2.7520000000000002,
+    ];
+    expectedDroops.forEach((expected, index) =>
+      expect(droops[index]).toBeCloseTo(expected, 10),
+    );
   });
 
   it("keeps a single card flat with no droop", () => {

@@ -271,6 +271,7 @@
           cards={playerHandCards}
           zone={playerHandZone}
           placement={placementFor(renderLayout, playerHandZone.id)}
+          cardHeight={renderLayout.geometry.cardHeight}
           {imageLibrary}
           {cardBackUrl}
           {placeholderUrl}
@@ -298,6 +299,7 @@
           cards={opponentHandCards}
           zone={opponentHandZone}
           placement={placementFor(renderLayout, opponentHandZone.id)}
+          cardHeight={renderLayout.geometry.cardHeight}
           {imageLibrary}
           {cardBackUrl}
           {placeholderUrl}

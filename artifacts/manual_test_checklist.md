@@ -145,7 +145,7 @@ screenshot before checking out this branch if you want a strict A/B.
 - [ ] Open the card-list dialog (click a zone with a pile): header, body, footer, scrollbar thumb/track colours and the tile borders are all unchanged.
 - [ ] In the card-list dialog, hover a tile (orange border) and confirm an unavailable target tile still shows RED through hover and focus.
 - [ ] Open the card preview panel: panel background, art frame and effect-text colours are unchanged; art is still bounded by viewport height.
-- [ ] Check the status rail and the phase strip / End turn button: chip fills, text colours and the amber "warning" button hover are unchanged.
+- [ ] Check the status rail and the phase bar / End turn button: chip fills, text colours and the amber "warning" button hover are unchanged.
 - [ ] Force an error (or view a known error/result panel): the error panel is still red-bordered on dark maroon, the recoverable variant still amber-bordered, the result panel still teal-bordered.
 - [ ] Confirm no element has visibly different CORNER ROUNDING — `border-radius` values of 0.35/0.6/0.9rem were swapped for `--radius-sm/md/lg`.
 - [ ] Confirm no label or badge changed SIZE — font sizes of 0.72/0.85/1.25rem were swapped for `--text-xs/sm/lg`.
@@ -2243,29 +2243,51 @@ Record what the bundled decks cannot reach
       details tab and hover a card: the preview is still readable, with the effect text
       directly under the name and no giant gap.
 
-## T6 end-turn-button-single-row
+## T6 perspective-field-and-phase-bar
 
-- [ ] Start a duel with the preset decks and look at the End turn button in the phase strip
-      (bottom-right of the board, right-anchored beside the phase chips): its label sits on
-      one single row, not broken over two.
-- [ ] Compare it against the phase chips beside it: the End turn button is clearly the
-      bigger control — taller, wider, and its text is noticeably larger than the chip text.
-      (Corrected by R6: the button was trimmed to the shared 44px control floor, so it is
-      still the bigger control but no longer towers over the chips.)
-- [ ] Play forward to your Battle Phase so the button's label becomes "End Battle Phase":
-      that longer label is also on one row, and the button simply grows leftwards to fit it.
-- [ ] With the longer "End Battle Phase" label showing, check the button's left edge: it
-      does not cover any card, zone outline or pile, and clicking a card near it still
-      selects the card rather than the button.
-- [ ] Click End turn: the phase actually passes (the phase strip's highlighted chip moves
-      on, or the turn changes) — the bigger button is still a working control.
-- [ ] Resize the window to 1280x720 and then to 1920x1080: at both sizes the label stays on
-      one row and the button stays inside the board, hard against its right edge.
-- [ ] Rotate to a portrait/mobile window (narrower than 1024px, taller than wide): the
-      rotated field still shows the End turn label on one row, at a comfortable tap size.
-- [ ] Confirm the button is still the amber "warning" colour with the same hover shade — the
-      size change did not alter its colour or its disabled (dimmed) look while the opponent
-      is thinking.
+Run `npm run dev` or the Chromium evidence command `npx playwright test e2e/duel-smoke.spec.ts`.
+
+### Perspective field
+
+- [ ] Start a duel at 1440×900. Confirm `[data-cy="duel-field-board-plane"]` fills
+      `[data-cy="duel-field-board"]`: plane top is no more than 8px below board top.
+- [ ] Compare first cards in `[data-cy="field-hand-band-p1"]` and
+      `[data-cy="field-hand-band-p0"]`: opponent projected height / player projected
+      height is below 0.9; opponent depth visibly foreshortens toward the far edge.
+- [ ] Confirm board zones, card slots and hand bands share one perspective plane;
+      phase bar and fixed overlays remain outside it.
+- [ ] Fan a hand with multiple cards: cards follow one centred arc with no overlap
+      that hides a card target; centre card stays upright while outer cards tilt.
+
+### Phase bar
+
+- [ ] Start a preset duel in Main 1. Confirm `[data-cy="phase-bar"]` is visible and
+      `[data-cy="phase-bar-player"]` has `data-current-phase="main1"`.
+- [ ] Click `[data-cy="phase-bar-you-battle"]`; confirm player half changes to
+      `data-current-phase="battle"`.
+- [ ] Click `[data-cy="phase-bar-you-main2"]`; confirm player half changes to
+      `data-current-phase="main2"`. Confirm `[data-cy="field-end-turn-button"]` says
+      **End turn**, is enabled, and remains one row.
+- [ ] Click **End turn**. During opponent turn, opponent half carries current phase,
+      no enabled buttons remain in the phase bar, and End turn is disabled.
+- [ ] Confirm opponent phase chips are display-only; clicking them cannot answer an
+      engine prompt or alter your phase.
+
+### Perspective drag and display toggles
+
+- [ ] In Main 1, choose a hand monster whose actions include **Summon** or **Set**.
+      Drag that card to an empty monster zone. While dragging, confirm target zone
+      receives `data-drop-candidate="true"`; release over pointed zone and confirm
+      card leaves hand and lands in that monster zone.
+- [ ] Repeat that actionable Summon/Set drag at 390×844 portrait. Confirm rotated
+      stage stays centred, no page scrollbar appears, and release lands on monster
+      zone under pointer rather than on adjacent zone.
+- [ ] Open Settings. Uncheck **Show card shadows** and **Show zone labels**; confirm
+      board attrs `data-card-shadows="false"` and `data-zone-labels="false"`.
+- [ ] Reload duel. Confirm both checkboxes remain unchecked and both board attrs remain
+      `"false"`; card identity, legality and focus still work.
+- [ ] Run `npx playwright test e2e/duel-smoke.spec.ts`; cite generated Chromium
+      screenshots/evidence in review notes.
 
 ## T7 hand-band-safe-center
 
@@ -3871,7 +3893,7 @@ Run `npm run dev` (default `DEV_PORT=4300`).
 
 ### End turn and the action buttons are smaller
 
-- [ ] Look at **End turn** in the phase strip: it is visibly shorter and its text smaller than before, still on one row, and still comfortably clickable (it holds the 44px floor).
+- [ ] Look at **End turn** in the phase bar: it is visibly shorter and its text smaller than before, still on one row, and still comfortably clickable (it holds the 44px floor).
 - [ ] Play into your Battle Phase so the label becomes **End Battle Phase**: still one row, still not covering a card or pile.
 - [ ] Hover a hand card so the zoom overlay opens with its action buttons stacked under it: each button is half the height it used to be. Every one of them is still readable and still clickable, and clicking one performs that action.
 

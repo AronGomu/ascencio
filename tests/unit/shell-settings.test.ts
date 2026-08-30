@@ -44,6 +44,8 @@ describe("shell settings", () => {
     expect(settings.display).toEqual({
       showZoneOutlines: false,
       showZoneCounts: false,
+      showCardShadows: true,
+      showZoneLabels: true,
     });
     expect(migrateFromV2(v2)).toEqual(settings);
   });
@@ -67,7 +69,12 @@ describe("shell settings", () => {
     const value: ShellSettings = {
       version: 3,
       rotationNoticeDismissed: true,
-      display: { showZoneOutlines: false, showZoneCounts: true },
+      display: {
+        showZoneOutlines: false,
+        showZoneCounts: true,
+        showCardShadows: true,
+        showZoneLabels: true,
+      },
       freePlayPairing: { player: "preset:nekroz", opponent: "local:mine:4" },
       freePlayOpponentId: "blaze-circuit",
       freePlayPresetFavouriteIds: ["preset:nekroz"],

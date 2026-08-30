@@ -1413,6 +1413,14 @@ button.phase-chip:not(:disabled) {
   display: none;
 }
 
+.duel-field-board[data-card-shadows="false"] .duel-field-card {
+  box-shadow: none;
+}
+
+.duel-field-board[data-zone-labels="false"] .duel-field-zone__label {
+  display: none;
+}
+
 .duel-field-zone__slot {
   position: absolute;
   left: 50%;

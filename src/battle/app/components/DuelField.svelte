@@ -136,6 +136,8 @@
   export let confirmWindowPosition: PersistedWindowPosition | null = null;
   export let showZoneOutlines = true;
   export let showZoneCounts = true;
+  export let showCardShadows = true;
+  export let showZoneLabels = true;
   export let onzoneListWindowPositionChange: (
     position: PersistedWindowPosition,
   ) => void = noop;
@@ -1348,6 +1350,8 @@
         {dropHoveredZoneId}
         {showZoneOutlines}
         {showZoneCounts}
+        {showCardShadows}
+        {showZoneLabels}
         {planeHeight}
         {planeTransform}
         oncardactivate={activateCard}

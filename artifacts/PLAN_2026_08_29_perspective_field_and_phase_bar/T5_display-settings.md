@@ -29,6 +29,7 @@
 - `src/battle/app/components/duel-field/DuelFieldErrorBoundary.svelte:53-54`, `DuelField.svelte:134-135`, `FieldBoard.svelte:51-52` — prop chain to extend.
 - `src/battle/app/acceptance/AcceptanceHarness.svelte:134-135` — same wiring for the acceptance build.
 - `tests/unit/persisted-ui-state.test.ts`, `tests/component/DuelField.test.ts`, SettingsDialog tests.
+- Required consumers discovered by typecheck: `src/shell/settings/shell-settings.ts`, `tests/unit/persisted-ui-store.test.ts`, `tests/unit/shell-settings.test.ts`, `tests/component/AppChrome.test.ts` — update only new settings fields/defaults/assertions.
 
 ## Interface contract (level 5)
 
@@ -103,17 +104,18 @@ data-cy="settings-show-zone-labels-checkbox"   label "Show zone labels"
 
 ## Impl steps
 
-- [ ] 1. Red unit tests (`persisted-ui-state.test.ts` additions).
-- [ ] 2. Stores: state, setters, defaults, tolerant read, persisted mirror.
-- [ ] 3. Prop chain App → AcceptanceHarness → DuelFieldErrorBoundary → DuelField → FieldBoard; data attrs.
-- [ ] 4. ZoneControl label class/data-cy; CSS gate rules.
-- [ ] 5. SettingsDialog rows + handlers.
-- [ ] 6. Green: `npx vitest run tests/unit/persisted-ui-state.test.ts tests/component/DuelField.test.ts tests/unit/data-cy-coverage.test.ts`.
+- [x] 1. Red unit tests (`persisted-ui-state.test.ts` additions). Verify: focused Vitest run failed 9 tests / passed 203, exposing missing flags, attrs, and handlers.
+- [x] 2. Stores: state, setters, defaults, tolerant read, persisted mirror. Verify: `npx vitest run tests/unit/persisted-ui-state.test.ts tests/unit/ui-settings-store.test.ts` passed 24 tests.
+- [x] 3. Prop chain App → AcceptanceHarness → DuelFieldErrorBoundary → DuelField → FieldBoard; data attrs. Verify: DuelField component test observed `data-card-shadows="false"` and `data-zone-labels="false"`.
+- [x] 4. ZoneControl label class/data-cy; CSS gate rules. Verify: component test preserved `aria-label="Your Monster Zone 1"`; `app.css` contains both attribute gates.
+- [x] 5. SettingsDialog rows + handlers. Verify: `tests/component/SettingsDialog.test.ts` passed toggle dispatch, checked-state, and reset assertions.
+- [x] 6. Green: `npx vitest run tests/unit/persisted-ui-state.test.ts tests/component/DuelField.test.ts tests/unit/data-cy-coverage.test.ts`. Verify: command passed 3 files / 237 tests; pre-existing CardCatalog a11y warning only.
 
 ## Validation
 
-- [ ] `npm run check:headless`
-- [ ] manual: toggle both in a live duel — shadows vanish, labels vanish, LP + counts + outlines unaffected; reload keeps choices
-- [ ] no silent-failure swallow added — `none` expected
-- [ ] app functional — settings dialog opens/closes clean, reset works
-- [ ] commit msg draft: `feat(duel): make card shadows and zone labels player-toggleable`
+- [x] `npm run check:headless` — Verify: command passed; 23 legacy, 1788 unit (+2 skipped), 39 integration; vendor/assets/snapshot all ok; 2 pre-existing Svelte warnings.
+- [x] `npm run build` — Verify: command passed; browser build verification reported status ok and all chunk budgets within limits.
+- [ ] manual: toggle both in a live duel — shadows vanish, labels vanish, LP + counts + outlines unaffected; reload keeps choices — Verify: no E2E Input path supplied; parent must inline exact Chromium route before manual execution.
+- [x] no silent-failure swallow added — `none` expected — Verify: settings diff adds no catch blocks; existing persistence best-effort path unchanged.
+- [x] app functional — settings dialog opens/closes clean, reset works — Verify: SettingsDialog component tests passed reset dispatch and existing AppChrome dialog coverage.
+- [ ] commit msg draft: `feat(duel): make card shadows and zone labels player-toggleable` — Verify: local commit uses exact message.

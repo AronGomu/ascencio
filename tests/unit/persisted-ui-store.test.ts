@@ -19,7 +19,12 @@ const SEED = JSON.stringify({
   version: 2,
   windows: { zoneList: { x: 12, y: 34 }, confirm: { x: 56, y: 78 } },
   decks: { playerKey: "preset:nekroz", opponentKey: "preset:shaddoll" },
-  settings: { showZoneOutlines: false, showZoneCounts: true },
+  settings: {
+    showZoneOutlines: false,
+    showZoneCounts: true,
+    showCardShadows: true,
+    showZoneLabels: true,
+  },
 });
 
 describe("persisted UI store", () => {
@@ -31,7 +36,12 @@ describe("persisted UI store", () => {
       version: 2,
       windows: { zoneList: { x: 12, y: 34 }, confirm: { x: 56, y: 78 } },
       decks: { playerKey: "preset:nekroz", opponentKey: "preset:shaddoll" },
-      settings: { showZoneOutlines: false, showZoneCounts: true },
+      settings: {
+        showZoneOutlines: false,
+        showZoneCounts: true,
+        showCardShadows: true,
+        showZoneLabels: true,
+      },
     });
     expect(storage.setItem).not.toHaveBeenCalled();
   });
@@ -85,10 +95,17 @@ describe("persisted UI store", () => {
   it("setDisplaySettings preserves decks and windows and writes once", () => {
     const storage = memoryStorage(SEED);
     const store = createPersistedUiStore(storage);
-    store.setDisplaySettings({ showZoneOutlines: true, showZoneCounts: false });
+    store.setDisplaySettings({
+      showZoneOutlines: true,
+      showZoneCounts: false,
+      showCardShadows: false,
+      showZoneLabels: false,
+    });
     expect(get(store).settings).toEqual({
       showZoneOutlines: true,
       showZoneCounts: false,
+      showCardShadows: false,
+      showZoneLabels: false,
     });
     expect(get(store).decks).toEqual({
       playerKey: "preset:nekroz",
@@ -135,7 +152,12 @@ describe("persisted UI store", () => {
         playerKey: "preset:mvp-player",
         opponentKey: "preset:shaddoll",
       },
-      settings: { showZoneOutlines: true, showZoneCounts: true },
+      settings: {
+        showZoneOutlines: true,
+        showZoneCounts: true,
+        showCardShadows: true,
+        showZoneLabels: true,
+      },
     });
   });
 

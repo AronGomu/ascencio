@@ -133,6 +133,8 @@
         spec={scenario.phaseSpec}
         showZoneOutlines={$persistedUi.settings.showZoneOutlines}
         showZoneCounts={$persistedUi.settings.showZoneCounts}
+        showCardShadows={$persistedUi.settings.showCardShadows}
+        showZoneLabels={$persistedUi.settings.showZoneLabels}
       />
     </div>
     <PhaseBar phase="main1" spec={scenario.phaseSpec} />

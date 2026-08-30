@@ -29,12 +29,16 @@
 - **From T4:** `data-cy` contract: `phase-bar`, `phase-bar-opponent`, `phase-bar-player`, `phase-bar-you-{slot}`, `phase-bar-opp-{slot}`, `field-end-turn-button`; halves carry `data-current-phase`.
 - **From T5:** `data-card-shadows`/`data-zone-labels` on `[data-cy="duel-field-board"]`; settings checkboxes `settings-show-card-shadows-checkbox`, `settings-show-zone-labels-checkbox`.
 - **From T2/T3:** `[data-cy="duel-field-board-plane"]`; hand cards under `[data-cy="field-hand-band-p0"]` / `-p1`.
-- `e2e/` existing duel specs + `playwright.config.ts` (Chromium project).
-- `artifacts/manual_test_checklist.md`, `docs/GLOSSARY.md`, `docs/architecture/architecture.md`.
+- `e2e/duel-smoke.spec.ts`, `e2e-acceptance/full-height-field.spec.ts`, and `playwright.config.ts` (Chromium project).
+- `src/battle/app/components/duel-field/HandBand.svelte`, `CardControl.svelte`, and `FieldBoard.svelte` for hand layout and transformed fan geometry.
+- `src/shell/card-preview/OverlayScrollbar.svelte` + `tests/component/OverlayScrollbar.test.ts` for pointer capture and negative row-reverse scrolling.
+- `src/battle/app/presentation/stage-frame.ts` + `tests/unit/stage-frame.test.ts` for transformed pointer-coordinate mapping.
+- `src/styles/app.css` portrait shell-variable, active-candidate depth, hand fan, and overlay-scrollbar seams.
+- `.tmp/T6_manual_test_checklist.patch`, `artifacts/manual_test_checklist.md`, `docs/GLOSSARY.md`, `docs/architecture/architecture.md`.
 
 ## Interface contract (level 5)
 
-- **Produces:** test code + docs only. Assertions verbatim:
+- **Produces:** Chromium test evidence + docs, plus evidence-driven portrait/scrollbar CSS repairs only. Assertions verbatim:
 
 ```ts
 const board = page.locator('[data-cy="duel-field-board"]');
@@ -75,16 +79,27 @@ expect((await oppCard.boundingBox())!.height / (await youCard.boundingBox())!.he
 
 ## Impl steps
 
-- [ ] 1. Write/extend e2e spec; mutate-check one assertion; restore.
-- [ ] 2. `npx playwright test` full duel set green.
-- [ ] 3. `npm run build:verify` — record numbers in the commit body.
-- [ ] 4. Update `artifacts/manual_test_checklist.md` (phase bar section replaces phase strip; perspective + toggles steps).
-- [ ] 5. `docs/GLOSSARY.md` + `docs/architecture/architecture.md` updates.
+- [x] 1. Write/extend `e2e/duel-smoke.spec.ts`; focused Chromium test passes, deliberate depth-ratio mutation fails, restored test passes.
+- [x] 2. Run `PLAYWRIGHT_PORT=4304 npx playwright test e2e/duel-smoke.spec.ts`; command exits 0 with 42 passes and 1 existing data-dependent skip.
+- [x] 3. Run `npm run build:app && npm run build:verify`; command exits 0 with shell 93,666/115,000, Worker 149,859/200,000, battle 350,389/488,750, deck-editor 134,769/172,500, and story 132,815/172,500 bytes.
+- [x] 4. Keep checklist change in `.tmp/T6_manual_test_checklist.patch`; `git apply --check .tmp/T6_manual_test_checklist.patch` exits 0 without staging scratch.
+- [x] 5. Update `docs/GLOSSARY.md` + `docs/architecture/architecture.md`; `npm run check:headless` validates docs-adjacent repo gates.
+
+## Acceptance repair
+
+- [x] 6. Reproduce A1/A2 in Chromium and capture layout, projected, hit-target, pointer-capture, and row-reverse scroll evidence; focused `e2e-acceptance/full-height-field.spec.ts` run exits nonzero with both named failures observed.
+  - A1 finding (`e2e-acceptance/full-height-field.spec.ts`): layout is not clipped — first `offsetLeft=0` at `scrollLeft=0`; final card endpoint `offsetLeft + offsetWidth=1364` stays inside `scrollLeft + clientWidth=1384`. The old transformed edge (`254.159`) extends `5.225px` past the viewport edge (`259.384`) because the endpoint card is fanned `-5deg`; assertion was stale.
+  - A2 finding (`src/shell/card-preview/OverlayScrollbar.svelte`, `src/styles/app.css`): bottom opponent thumb centre hits `field-zone-p1:spellTrap:1`, so `pointerDown` never runs, pointer capture never starts, and `scrollLeft` remains `0`. Moving the mirrored opponent track to its top/outward edge changes the real Chromium hit to `field-hand-p1-scrollbar-thumb`; existing pointer mapping then preserves negative row-reverse writes.
+- [x] 7. Repair A1 without hiding clipping: endpoint assertion uses non-transformed `offsetLeft`/`offsetWidth`/`scrollLeft`/`clientWidth`; projected tolerance is mathematically derived from the ±5° fan overhang; focused endpoint test passes three consecutive runs.
+- [x] 8. Repair A2 at the proven test or runtime seam, add a real Chromium pointer-hit assertion, preserve negative row-reverse scrolling plus component coverage; focused row-reverse test and `tests/component/OverlayScrollbar.test.ts` pass.
+- [x] 9. Run final gates after the last source/test mutation: focused repairs 6/6; acceptance 41/41; portrait T6 3/3; desktop T6 3/3; duel smoke 42 passed + 1 existing data-dependent skip; component 7/7; legacy 23/23; unit 1,790/1,790; integration 39/39; `npm run build:app && npm run build:verify` exits 0 with budgets recorded in step 3.
+- [x] 10. Verify `.tmp/T6_manual_test_checklist.patch` still applies, perform mutate-check plus diff/secret/residue/debug scans, and complete fresh inline review; all checks report no blocker and scratch patch stays untracked/unstaged.
 
 ## Validation
 
-- [ ] `npm run check:headless && npx playwright test && npm run build:verify` — all green, outputs quoted in report
-- [ ] manual: checklist steps executed once top-to-bottom on the new build
-- [ ] no silent-failure swallow added — `none` expected
-- [ ] app functional — full duel playable start → End turn cycles → concede/result
-- [ ] commit msg draft: `chore(duel): prove perspective field and phase bar in Chromium and refresh docs`
+- [x] `npm run check:headless && PLAYWRIGHT_PORT=4304 npx playwright test e2e/duel-smoke.spec.ts && npm run build:app && npm run build:verify` — all exit 0; headless passes 23 legacy, 1,790 unit and 39 integration tests; duel smoke passes 42 with 1 existing skip; exact budgets are quoted in step 3.
+- [x] Chromium T6 flows execute checklist-equivalent perspective, phase, drag, toggle steps; focused T6 + full duel spec pass.
+- [x] `git diff -U0 -- e2e/duel-smoke.spec.ts src/styles/app.css` added lines contain no debug/residue, merge markers, or secret literals.
+- [x] App functional — full duel spec includes start → End turn cycles → result; command passes.
+- [x] `npm run test:acceptance` exits 0 with 41 passes, including repaired hand endpoint and row-reverse thumb tests.
+- [x] Commit created with `chore(duel): prove perspective field and phase bar in Chromium and refresh docs`; `git show -s --format=%s HEAD` matches.

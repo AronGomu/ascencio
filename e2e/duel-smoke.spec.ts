@@ -2272,6 +2272,126 @@ async function assertHandCouldOfferAPlacement(page: Page): Promise<void> {
   ).toBeGreaterThan(0);
 }
 
+async function advanceToPlayerPhase(
+  page: Page,
+  playerHalf: Locator,
+  phase: "main1" | "main2",
+  readyControl: Locator,
+): Promise<void> {
+  const setup = { needsDefense: false };
+  for (let step = 0; step < 40; step += 1) {
+    const result = page.locator(".result-panel");
+    if (
+      (await playerHalf.getAttribute("data-current-phase")) === phase &&
+      (await readyControl.isEnabled())
+    )
+      return;
+    if (await result.isVisible())
+      throw new Error(`Duel completed before player reached ${phase}`);
+    const controls = await activePromptControls(page);
+    await controls.waitFor({ state: "visible", timeout: 30_000 });
+    const kind = await controls.getAttribute("data-prompt-kind");
+    if (kind === null) throw new Error("Prompt kind is missing");
+    /* Prompt id changes before phase controls finish enabling. Once the target
+       phase owns its idle command, wait for that same control instead of
+       answering the idle prompt and accidentally ending the phase. */
+    if (
+      kind === "idleCommand" &&
+      (await playerHalf.getAttribute("data-current-phase")) === phase
+    ) {
+      await expect(readyControl).toBeEnabled();
+      return;
+    }
+    const promptId = await readLatestPromptId(page);
+    if (promptId === undefined) throw new Error("Captured prompt is missing");
+    if (kind === "battleCommand" && phase === "main2") {
+      const main2 = page.locator(
+        'button[data-cy="phase-bar-you-main2"]:enabled',
+      );
+      if ((await main2.count()) > 0) await main2.click();
+    } else {
+      await answerPromptWithKeyboard(page, controls, kind, setup);
+    }
+    await expect
+      .poll(async () => {
+        if (await result.isVisible()) return true;
+        const currentKind = await (
+          await activePromptControls(page)
+        ).getAttribute("data-prompt-kind");
+        if (currentKind !== null && currentKind !== kind) return true;
+        const latest = await readLatestPromptId(page);
+        return latest !== undefined && latest !== promptId;
+      })
+      .toBe(true);
+  }
+  throw new Error(`Player did not reach ${phase} within 40 prompts`);
+}
+
+test("T6 perspective fill and phase bar cycle stay visible in Chromium", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openDuel(page);
+  await startPresetDuel(page);
+  const field = page.getByRole("region", { name: "Duel field" });
+  await expect(field).toBeVisible({ timeout: 120_000 });
+
+  const board = page.locator('[data-cy="duel-field-board"]');
+  const plane = page.locator('[data-cy="duel-field-board-plane"]');
+  await expect(board).toBeVisible();
+  await expect(plane).toBeVisible();
+  const gap = (await plane.boundingBox())!.y - (await board.boundingBox())!.y;
+  expect(gap).toBeGreaterThanOrEqual(-1); // plane top not above board
+  expect(gap).toBeLessThanOrEqual(8); // filled
+
+  const oppCard = page
+    .locator('[data-cy="field-hand-band-p1"] [data-cy^="field-card-"]')
+    .first();
+  const youCard = page
+    .locator('[data-cy="field-hand-band-p0"] [data-cy^="field-card-"]')
+    .first();
+  expect(
+    (await oppCard.boundingBox())!.height /
+      (await youCard.boundingBox())!.height,
+  ).toBeLessThan(0.9);
+
+  const phaseBar = page.locator('[data-cy="phase-bar"]');
+  const playerHalf = page.locator('[data-cy="phase-bar-player"]');
+  const opponentHalf = page.locator('[data-cy="phase-bar-opponent"]');
+  await expect(playerHalf).toHaveAttribute("data-current-phase", "main1");
+  await disableAutoResolveTrivialPrompts(page);
+  await disableAutoPlaceCards(page);
+  const endTurn = page.locator('[data-cy="field-end-turn-button"]');
+  await expect(endTurn).toBeEnabled();
+  await endTurn.click();
+  await expect(playerHalf).not.toHaveAttribute("data-current-phase", "main1");
+  await expect(opponentHalf).toHaveAttribute("data-current-phase", /.+/);
+  await expect(phaseBar.locator("button:enabled")).toHaveCount(0);
+  await advanceToPlayerPhase(page, playerHalf, "main1", endTurn);
+  await expect(playerHalf).toHaveAttribute("data-current-phase", "main1");
+
+  const battle = page.locator('button[data-cy="phase-bar-you-battle"]');
+  await expect(battle).toBeEnabled();
+  await battle.click();
+  await expect(playerHalf).toHaveAttribute("data-current-phase", "battle");
+
+  const main2 = page.locator('button[data-cy="phase-bar-you-main2"]');
+  await expect(main2).toBeEnabled();
+  await main2.click();
+  await advanceToPlayerPhase(page, playerHalf, "main2", endTurn);
+  await expect(playerHalf).toHaveAttribute("data-current-phase", "main2");
+
+  await expect(endTurn).toHaveText("End turn");
+  await expect(endTurn).toBeEnabled();
+  await endTurn.click();
+  await expect(page.locator('[data-cy="phase-bar-opponent"]')).toHaveAttribute(
+    "data-current-phase",
+    /.+/,
+  );
+  await expect(phaseBar.locator("button:enabled")).toHaveCount(0);
+  await expect(endTurn).toBeDisabled();
+});
+
 test("perspective plane fills the board and excludes fixed descendants at 1280x720", async ({
   page,
 }, testInfo) => {
@@ -2612,6 +2732,230 @@ test("dragging a hand card onto a highlighted zone plays it", async ({
         placeResponse?.promptId,
   ) as unknown as CapturedPromptEvent | undefined;
   expect(placePrompt?.prompt.kind).toBe("selectPlace");
+});
+
+type PortraitPlacement = {
+  readonly action: "summon" | "setMonster";
+  readonly cardId: string;
+  readonly dragTarget: Locator;
+};
+
+async function portraitPlacementInHand(
+  page: Page,
+  field: Locator,
+): Promise<PortraitPlacement | null> {
+  for (const action of ["summon", "setMonster"] as const) {
+    const chips = field.locator(
+      `.duel-field-card[data-card-zone-id="p0:hand"] [data-cy^="card-action-chip-"][data-cy$="-${action}"]`,
+    );
+    for (let index = 0; index < (await chips.count()); index += 1) {
+      const cardId = await chips
+        .nth(index)
+        .evaluate(
+          (element) =>
+            element.closest<HTMLElement>(".duel-field-card")?.dataset.cardId ??
+            "",
+        );
+      const dragTarget = field.locator(
+        `[data-cy="field-card-target-${cardId}"]`,
+      );
+      await dragTarget.evaluate((element) =>
+        element.scrollIntoView({ block: "nearest", inline: "center" }),
+      );
+      const box = await dragTarget.boundingBox();
+      const viewport = page.viewportSize();
+      if (
+        cardId !== "" &&
+        box !== null &&
+        viewport !== null &&
+        box.x + box.width > 0 &&
+        box.y + box.height > 0 &&
+        box.x < viewport.width &&
+        box.y < viewport.height
+      )
+        return { action, cardId, dragTarget };
+    }
+  }
+  return null;
+}
+
+/* Production shuffles are real. Walk live prompts until the hand offers a
+   monster placement; if an entire bounded walk cannot acquire one, reuse the
+   established surrender/restart path for a fresh duel. Never skip evidence. */
+async function acquirePortraitPlacement(
+  page: Page,
+  field: Locator,
+): Promise<PortraitPlacement> {
+  const setup = { needsDefense: false };
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    for (let step = 0; step < 40; step += 1) {
+      const result = page.locator(".result-panel");
+      if (await result.isVisible()) break;
+      const controls = await activePromptControls(page);
+      await controls.waitFor({ state: "visible", timeout: 30_000 });
+      const kind = await controls.getAttribute("data-prompt-kind");
+      if (kind === null) throw new Error("Prompt kind is missing");
+      if (kind === "idleCommand") {
+        const placement = await portraitPlacementInHand(page, field);
+        if (placement !== null) return placement;
+      }
+      const promptId = await readLatestPromptId(page);
+      if (promptId === undefined) throw new Error("Captured prompt is missing");
+      await answerPromptWithKeyboard(page, controls, kind, setup);
+      await expect
+        .poll(async () => {
+          if (await result.isVisible()) return true;
+          const latest = await readLatestPromptId(page);
+          return latest !== undefined && latest !== promptId;
+        })
+        .toBe(true);
+    }
+    if (attempt === 1) break;
+    if (await page.locator(".result-panel").isVisible()) {
+      await page.getByRole("button", { name: "Start another duel" }).click();
+      await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+        timeout: 120_000,
+      });
+    } else {
+      await runRestartCycle(page);
+    }
+  }
+  throw new Error(
+    "No portrait monster placement after prompt walk and restart",
+  );
+}
+
+test("portrait rotated-stage drag lands on pointed monster zone", async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openDuel(page);
+  await startPresetDuel(page);
+  await expect(
+    page.locator('[data-cy="duel-field"][data-prompt-kind="idleCommand"]'),
+  ).toBeVisible({ timeout: 120_000 });
+  await disableAutoResolveTrivialPrompts(page);
+  await disableAutoPlaceCards(page);
+
+  const field = page.getByRole("region", { name: "Duel field" });
+  const frame = page.locator('[data-cy="shell-region-duel"]');
+  await expect(frame).toHaveCSS("transform", /matrix\(0, 1, -1, 0,/);
+  const { action, cardId, dragTarget } = await acquirePortraitPlacement(
+    page,
+    field,
+  );
+  const targetZoneId = await field.evaluate((element) => {
+    for (let sequence = 0; sequence < 5; sequence += 1) {
+      const zoneId = `p0:mainMonster:${sequence}`;
+      if (
+        element.querySelector(
+          `.duel-field-card[data-card-zone-id="${zoneId}"]`,
+        ) === null
+      )
+        return zoneId;
+    }
+    return null;
+  });
+  if (targetZoneId === null) throw new Error("No empty portrait monster zone");
+  const monsterZone = field.locator(`[data-zone-id="${targetZoneId}"]`);
+  await expect(monsterZone).toBeVisible();
+  await expect(dragTarget).toBeVisible();
+  await expect(
+    monsterZone.evaluate(
+      (element) =>
+        element.closest('[data-cy="duel-field-board-plane"]') !== null,
+    ),
+  ).resolves.toBe(true);
+  const planeTransform = await page
+    .locator('[data-cy="duel-field-board-plane"]')
+    .evaluate((element) => (element as HTMLElement).style.transform);
+  expect(planeTransform).toMatch(/perspective\(600px\) rotateX\(20deg\)/);
+
+  const cardBox = await dragTarget.boundingBox();
+  const zoneBox = await monsterZone.boundingBox();
+  if (cardBox === null || zoneBox === null)
+    throw new Error("Missing portrait drag geometry");
+  const portraitGeometry = {
+    fieldSlotWidth: await page
+      .locator('[data-cy="duel-field-slot"]')
+      .evaluate((element) => element.clientWidth),
+    zoneLocalWidth: await monsterZone.evaluate((element) =>
+      Number.parseFloat(
+        (element as HTMLElement).style.getPropertyValue("--field-width"),
+      ),
+    ),
+    zoneHitWidth: zoneBox.width,
+    zoneHitHeight: zoneBox.height,
+    cardLocalWidth: await dragTarget.evaluate(
+      (element) => (element as HTMLElement).offsetWidth,
+    ),
+    cardLocalHeight: await dragTarget.evaluate(
+      (element) => (element as HTMLElement).offsetHeight,
+    ),
+    cardHitWidth: cardBox.width,
+    cardHitHeight: cardBox.height,
+  };
+  expect(portraitGeometry.fieldSlotWidth).toBeGreaterThanOrEqual(360);
+  expect(portraitGeometry.zoneLocalWidth).toBeGreaterThanOrEqual(44);
+  expect(portraitGeometry.zoneHitHeight).toBeGreaterThanOrEqual(44);
+  expect(portraitGeometry.cardLocalWidth).toBeGreaterThanOrEqual(44);
+  expect(portraitGeometry.cardLocalHeight).toBeGreaterThanOrEqual(44);
+  expect(portraitGeometry.cardHitWidth).toBeGreaterThanOrEqual(40);
+  expect(portraitGeometry.cardHitHeight).toBeGreaterThanOrEqual(40);
+  const geometryPath = testInfo.outputPath("t6-portrait-geometry.json");
+  await writeFile(geometryPath, JSON.stringify(portraitGeometry, null, 2));
+  await testInfo.attach("t6-portrait-geometry", {
+    path: geometryPath,
+    contentType: "application/json",
+  });
+
+  const cardCentre = {
+    x: cardBox.x + cardBox.width / 2,
+    y: cardBox.y + cardBox.height / 2,
+  };
+  const from = {
+    x: Math.min(Math.max(cardCentre.x, 1), 389),
+    y: Math.min(Math.max(cardCentre.y, 1), 843),
+  };
+  const to = {
+    x: zoneBox.x + zoneBox.width / 2,
+    y: zoneBox.y + zoneBox.height / 2,
+  };
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(to.x, to.y, { steps: 8 });
+  await expect(monsterZone).toHaveAttribute("data-drop-candidate", "true");
+  const releaseHit = await page.evaluate(
+    ([x, y]) =>
+      document
+        .elementFromPoint(x, y)
+        ?.closest<HTMLElement>("[data-zone-id]")
+        ?.getAttribute("data-zone-id") ?? null,
+    [to.x, to.y] as const,
+  );
+  expect(releaseHit).toBe(targetZoneId);
+  await page.mouse.up();
+
+  const dropConfirm = field.locator('[data-cy="drop-confirm-dialog"]');
+  const landedCard = field.locator(
+    `.duel-field-card[data-card-zone-id="${targetZoneId}"]`,
+  );
+  await expect(dropConfirm.or(landedCard).first()).toBeVisible({
+    timeout: 30_000,
+  });
+  if ((await dropConfirm.count()) > 0) {
+    const confirmAction = dropConfirm.locator(
+      `[data-cy^="drop-confirm-action-"][data-cy$="-${action}"]`,
+    );
+    await expect(confirmAction).toHaveCount(1);
+    await confirmAction.click();
+    await expect(dropConfirm).toHaveCount(0);
+  }
+  await expect(landedCard).toHaveCount(1, { timeout: 30_000 });
+  await expect(
+    field.locator(`[data-cy="field-hand-band-p0"] [data-card-id="${cardId}"]`),
+  ).toHaveCount(0);
+  await expect(monsterZone).not.toHaveAttribute("data-drop-candidate", "true");
 });
 
 /* Item 4: the drag-to-activate target, and the cancel it asks for by name.

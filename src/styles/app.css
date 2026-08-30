@@ -140,6 +140,12 @@ body {
   .shell-region--duel {
     --stage-w: min(100svh, calc(100vw * 16 / 9));
     --stage-h: min(100vw, calc(100svh * 9 / 16));
+    /* Portrait's local long axis is only the rotated 16:9 stage width. Keep
+       every shell pane, but compact their existing seams so the field retains
+       enough width for geometry-sized targets instead of shrinking cards. */
+    --preview-w: 8rem;
+    --phase-bar-w: 5rem;
+    --rail-min: 7rem;
 
     position: absolute;
     top: 50%;
@@ -1478,6 +1484,15 @@ button.duel-field-zone,
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--legal) 95%, transparent);
 }
 
+/* Portrait hand controls overlap the near monster row in screen space. During
+   a real drag, lift only legal candidates one pixel beyond the hand carrier's
+   1px depth so native hit testing resolves the pointed zone. */
+@media (max-width: 1023.98px) and (orientation: portrait) {
+  .duel-field[data-dragging="true"] .duel-field-zone.is-drop-candidate {
+    transform: translate(-50%, -50%) translateZ(2px);
+  }
+}
+
 /* Item 4: the drag-to-activate target. Mounted only mid-drag, at the left end
    of the hand band, vertically centered on the hand row. It must catch the
    release hit test, so it never gets pointer-events: none — the drag's pointer
@@ -2358,6 +2373,14 @@ button.duel-field-zone,
   bottom: 0;
   left: 0;
   height: 0.3rem;
+}
+
+/* Opponent hand faces inward from board top. Its bottom edge projects across
+   spell/trap zones, which win 3D hit testing before thumb pointer capture can
+   start. Mirror the thumb onto the hand's outward edge instead. */
+.duel-field-hand-band.is-opponent > .overlay-scrollbar.is-horizontal {
+  top: 0;
+  bottom: auto;
 }
 
 .overlay-scrollbar.is-vertical {

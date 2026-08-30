@@ -77,7 +77,9 @@
     aria-hidden="true"
     data-cy={`field-zone-slot-${zone.id}`}
   ></span>
-  <span aria-hidden="true" data-cy={`zone-control-label-${zone.id}`}
-    >{zone.label}</span
+  <span
+    class="duel-field-zone__label"
+    aria-hidden="true"
+    data-cy={`zone-control-label-${zone.id}`}>{zone.label}</span
   >
 </svelte:element>

@@ -4,6 +4,10 @@
 
   const SHOW_ZONE_COUNTS_DESCRIPTION =
     "Show the number of cards in Deck, Extra Deck, GY, Banished and both hands.";
+  const SHOW_CARD_SHADOWS_DESCRIPTION =
+    "Draw a soft shadow under every card on the field.";
+  const SHOW_ZONE_LABELS_DESCRIPTION =
+    "Name empty zones on the board. Life points are unaffected.";
 
   export let settings: UiSettingsState;
   export let coreVersion: readonly [number, number] | null = null;
@@ -15,6 +19,8 @@
   export let onautoresolvetrivialprompts: (value: boolean) => void;
   export let onshowzoneoutlines: (value: boolean) => void;
   export let onshowzonecounts: (value: boolean) => void;
+  export let onshowcardshadows: (value: boolean) => void;
+  export let onshowzonelabels: (value: boolean) => void;
   export let onreset: () => void;
   export let onclose: () => void;
 
@@ -72,6 +78,14 @@
 
   function handleShowZoneCounts(event: Event): void {
     onshowzonecounts((event.currentTarget as HTMLInputElement).checked);
+  }
+
+  function handleShowCardShadows(event: Event): void {
+    onshowcardshadows((event.currentTarget as HTMLInputElement).checked);
+  }
+
+  function handleShowZoneLabels(event: Event): void {
+    onshowzonelabels((event.currentTarget as HTMLInputElement).checked);
   }
 </script>
 
@@ -153,6 +167,30 @@
       <span data-cy="settings-show-zone-counts-copy">Show card counts</span>
       <span data-cy="settings-show-zone-counts-description"
         >{SHOW_ZONE_COUNTS_DESCRIPTION}</span
+      >
+    </label>
+    <label data-cy="settings-show-card-shadows-label">
+      <input
+        type="checkbox"
+        checked={settings.showCardShadows}
+        onchange={handleShowCardShadows}
+        data-cy="settings-show-card-shadows-checkbox"
+      />
+      <span data-cy="settings-show-card-shadows-copy">Show card shadows</span>
+      <span data-cy="settings-show-card-shadows-description"
+        >{SHOW_CARD_SHADOWS_DESCRIPTION}</span
+      >
+    </label>
+    <label data-cy="settings-show-zone-labels-label">
+      <input
+        type="checkbox"
+        checked={settings.showZoneLabels}
+        onchange={handleShowZoneLabels}
+        data-cy="settings-show-zone-labels-checkbox"
+      />
+      <span data-cy="settings-show-zone-labels-copy">Show zone labels</span>
+      <span data-cy="settings-show-zone-labels-description"
+        >{SHOW_ZONE_LABELS_DESCRIPTION}</span
       >
     </label>
     <button

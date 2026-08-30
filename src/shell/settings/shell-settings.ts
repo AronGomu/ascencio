@@ -34,6 +34,8 @@ export interface ShellSettings {
 const DEFAULT_DISPLAY: PersistedDisplaySettings = Object.freeze({
   showZoneOutlines: true,
   showZoneCounts: true,
+  showCardShadows: true,
+  showZoneLabels: true,
 });
 
 export const DEFAULT_SHELL_SETTINGS: ShellSettings = Object.freeze({
@@ -145,6 +147,8 @@ function display(value: unknown): PersistedDisplaySettings {
   return {
     showZoneOutlines: boolean(value.showZoneOutlines, true),
     showZoneCounts: boolean(value.showZoneCounts, true),
+    showCardShadows: boolean(value.showCardShadows, true),
+    showZoneLabels: boolean(value.showZoneLabels, true),
   };
 }
 

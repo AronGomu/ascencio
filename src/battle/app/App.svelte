@@ -1095,6 +1095,22 @@
     });
   }
 
+  function setShowCardShadows(value: boolean): void {
+    uiSettings.setShowCardShadows(value);
+    persistedUi.setDisplaySettings({
+      ...$persistedUi.settings,
+      showCardShadows: value,
+    });
+  }
+
+  function setShowZoneLabels(value: boolean): void {
+    uiSettings.setShowZoneLabels(value);
+    persistedUi.setDisplaySettings({
+      ...$persistedUi.settings,
+      showZoneLabels: value,
+    });
+  }
+
   function resetUiSettings(): void {
     uiSettings.reset();
     persistedUi.setDisplaySettings(DEFAULT_PERSISTED_UI_STATE.settings);
@@ -1494,6 +1510,8 @@
               confirmWindowPosition={$persistedUi.windows.confirm}
               showZoneOutlines={$uiSettings.showZoneOutlines}
               showZoneCounts={$uiSettings.showZoneCounts}
+              showCardShadows={$uiSettings.showCardShadows}
+              showZoneLabels={$uiSettings.showZoneLabels}
               onzoneListWindowPositionChange={moveZoneListWindow}
               onconfirmWindowPositionChange={moveConfirmWindow}
               contextMessage={promptContextSegments}
@@ -1640,6 +1658,8 @@
       onautoresolvetrivialprompts={uiSettings.setAutoResolveTrivialPrompts}
       onshowzoneoutlines={setShowZoneOutlines}
       onshowzonecounts={setShowZoneCounts}
+      onshowcardshadows={setShowCardShadows}
+      onshowzonelabels={setShowZoneLabels}
       onreset={resetUiSettings}
       onclose={() => void closeSettings()}
     />

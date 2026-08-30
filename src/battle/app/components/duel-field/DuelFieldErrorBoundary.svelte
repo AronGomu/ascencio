@@ -50,6 +50,8 @@
   export let confirmWindowPosition: PersistedWindowPosition | null = null;
   export let showZoneOutlines = true;
   export let showZoneCounts = true;
+  export let showCardShadows = true;
+  export let showZoneLabels = true;
   export let onzoneListWindowPositionChange: (
     position: PersistedWindowPosition,
   ) => void = () => undefined;
@@ -126,6 +128,8 @@
     {confirmWindowPosition}
     {showZoneOutlines}
     {showZoneCounts}
+    {showCardShadows}
+    {showZoneLabels}
     {onzoneListWindowPositionChange}
     {onconfirmWindowPositionChange}
     {fullControl}

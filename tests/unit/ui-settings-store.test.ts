@@ -15,6 +15,8 @@ describe("createUiSettingsStore", () => {
       autoResolveTrivialPrompts: true,
       showZoneOutlines: true,
       showZoneCounts: true,
+      showCardShadows: true,
+      showZoneLabels: true,
       fullControl: false,
     });
   });
@@ -29,6 +31,8 @@ describe("createUiSettingsStore", () => {
       autoResolveTrivialPrompts: true,
       showZoneOutlines: true,
       showZoneCounts: true,
+      showCardShadows: true,
+      showZoneLabels: true,
       fullControl: false,
     });
   });
@@ -43,6 +47,8 @@ describe("createUiSettingsStore", () => {
       autoResolveTrivialPrompts: true,
       showZoneOutlines: true,
       showZoneCounts: true,
+      showCardShadows: true,
+      showZoneLabels: true,
       fullControl: false,
     });
   });
@@ -57,6 +63,8 @@ describe("createUiSettingsStore", () => {
       autoResolveTrivialPrompts: true,
       showZoneOutlines: true,
       showZoneCounts: true,
+      showCardShadows: true,
+      showZoneLabels: true,
       fullControl: false,
     });
   });
@@ -71,6 +79,8 @@ describe("createUiSettingsStore", () => {
       autoResolveTrivialPrompts: false,
       showZoneOutlines: true,
       showZoneCounts: true,
+      showCardShadows: true,
+      showZoneLabels: true,
       fullControl: false,
     });
   });
@@ -97,9 +107,13 @@ describe("createUiSettingsStore", () => {
     });
     expect(Object.isFrozen(get(store))).toBe(true);
     store.setShowZoneCounts(false);
+    store.setShowCardShadows(false);
+    store.setShowZoneLabels(false);
     expect(get(store)).toMatchObject({
       showZoneOutlines: false,
       showZoneCounts: false,
+      showCardShadows: false,
+      showZoneLabels: false,
     });
   });
 

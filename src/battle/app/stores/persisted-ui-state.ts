@@ -13,6 +13,8 @@ export interface PersistedWindowPosition {
 export interface PersistedDisplaySettings {
   readonly showZoneOutlines: boolean;
   readonly showZoneCounts: boolean;
+  readonly showCardShadows: boolean;
+  readonly showZoneLabels: boolean;
 }
 
 export interface PersistedUiState {
@@ -40,7 +42,12 @@ export const DEFAULT_PERSISTED_UI_STATE: PersistedUiState = Object.freeze({
     playerKey: `preset:${DEFAULT_PLAYER_DECK_ID}`,
     opponentKey: `preset:${DEFAULT_OPPONENT_DECK_ID}`,
   }),
-  settings: Object.freeze({ showZoneOutlines: true, showZoneCounts: true }),
+  settings: Object.freeze({
+    showZoneOutlines: true,
+    showZoneCounts: true,
+    showCardShadows: true,
+    showZoneLabels: true,
+  }),
 });
 
 export function readPersistedUiState(
@@ -82,6 +89,14 @@ export function readPersistedUiState(
         showZoneCounts:
           typeof settings.showZoneCounts === "boolean"
             ? settings.showZoneCounts
+            : true,
+        showCardShadows:
+          typeof settings.showCardShadows === "boolean"
+            ? settings.showCardShadows
+            : true,
+        showZoneLabels:
+          typeof settings.showZoneLabels === "boolean"
+            ? settings.showZoneLabels
             : true,
       }),
     });

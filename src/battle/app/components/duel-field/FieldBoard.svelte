@@ -53,6 +53,8 @@
   export let dropHoveredZoneId: PhysicalZoneId | null = null;
   export let showZoneOutlines = true;
   export let showZoneCounts = true;
+  export let showCardShadows = true;
+  export let showZoneLabels = true;
   export let oncardactivate: (
     card: BoardCardView,
     element: HTMLButtonElement,
@@ -227,6 +229,8 @@
   data-cy="duel-field-board"
   data-zone-outlines={showZoneOutlines ? "true" : "false"}
   data-zone-counts={showZoneCounts ? "true" : "false"}
+  data-card-shadows={showCardShadows ? "true" : "false"}
+  data-zone-labels={showZoneLabels ? "true" : "false"}
 >
   <span
     id="duel-field-keyboard-help"

@@ -282,12 +282,23 @@ describe("DuelField", () => {
       board: board("ST-08"),
       showZoneOutlines: false,
       showZoneCounts: false,
+      showCardShadows: false,
+      showZoneLabels: false,
     });
     const value = document.querySelector('[data-cy="duel-field-board"]');
     expect(value?.getAttribute("data-zone-outlines")).toBe("false");
     expect(value?.getAttribute("data-zone-counts")).toBe("false");
+    expect(value?.getAttribute("data-card-shadows")).toBe("false");
+    expect(value?.getAttribute("data-zone-labels")).toBe("false");
     expect(value?.querySelectorAll("[data-zone-id]").length).toBeGreaterThan(0);
     expect(value?.querySelector(".duel-field-stack__count")).not.toBeNull();
+  });
+
+  it("keeps zone accessible names when display labels are hidden", () => {
+    render(DuelField, { board: board("ST-01"), showZoneLabels: false });
+    const zone = screen.getByRole("group", { name: "Your Monster Zone 1" });
+    expect(zone.querySelector(".duel-field-zone__label")).not.toBeNull();
+    expect(zone.getAttribute("aria-label")).toBe("Your Monster Zone 1");
   });
 
   it("renders square px zones with concentric slots and aligned field occupants", () => {

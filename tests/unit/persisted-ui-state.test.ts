@@ -16,7 +16,12 @@ function validState(): PersistedUiState {
       confirm: { x: 56, y: 78 },
     },
     decks: { playerKey: "preset:nekroz", opponentKey: "local:built-deck:3" },
-    settings: { showZoneOutlines: false, showZoneCounts: true },
+    settings: {
+      showZoneOutlines: false,
+      showZoneCounts: true,
+      showCardShadows: false,
+      showZoneLabels: false,
+    },
   };
 }
 
@@ -64,6 +69,8 @@ describe("persisted UI state", () => {
     expect(state.settings).toEqual({
       showZoneOutlines: true,
       showZoneCounts: false,
+      showCardShadows: true,
+      showZoneLabels: true,
     });
   });
 
@@ -117,6 +124,38 @@ describe("persisted UI state", () => {
       readPersistedUiState({ getItem: () => JSON.stringify(persisted) }).windows
         .confirm,
     ).toBeNull();
+  });
+
+  it("defaults new display settings for an older v2 payload", () => {
+    const persisted = {
+      ...validState(),
+      settings: { showZoneOutlines: false, showZoneCounts: false },
+    };
+    expect(
+      readPersistedUiState({ getItem: () => JSON.stringify(persisted) })
+        .settings,
+    ).toEqual({
+      showZoneOutlines: false,
+      showZoneCounts: false,
+      showCardShadows: true,
+      showZoneLabels: true,
+    });
+  });
+
+  it("falls back independently for malformed new display settings", () => {
+    const persisted = {
+      ...validState(),
+      settings: {
+        showZoneOutlines: true,
+        showZoneCounts: true,
+        showCardShadows: "no",
+        showZoneLabels: 1,
+      },
+    };
+    expect(
+      readPersistedUiState({ getItem: () => JSON.stringify(persisted) })
+        .settings,
+    ).toMatchObject({ showCardShadows: true, showZoneLabels: true });
   });
 
   it("round-trips a valid state", () => {

@@ -759,12 +759,19 @@ test("zone visuals persist through reload and Reset settings restores defaults",
   const zone = board
     .locator(".duel-field-zone:not(.is-actionable):not(.is-selected)")
     .first();
+  const zoneLabel = zone.locator(".duel-field-zone__label");
+  const card = board.locator(".duel-field-card:visible").first();
   const count = board.locator(".duel-field-stack__count").first();
 
   await openDuel(page);
   await startPresetDuel(page);
   await expect(board).toBeVisible({ timeout: 120_000 });
   await expect(zone).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(zoneLabel).toBeVisible();
+  await expect(card).toBeVisible();
+  await expect(card).not.toHaveCSS("box-shadow", "none");
+  const zoneAriaLabel = await zone.getAttribute("aria-label");
+  if (zoneAriaLabel === null) throw new Error("Zone has no accessible label");
   await expect(count).toBeVisible();
 
   await openSettingsDialog(page);
@@ -774,9 +781,20 @@ test("zone visuals persist through reload and Reset settings restores defaults",
   await page
     .locator('[data-cy="settings-show-zone-counts-checkbox"]')
     .uncheck();
+  await page
+    .locator('[data-cy="settings-show-card-shadows-checkbox"]')
+    .uncheck();
+  await page
+    .locator('[data-cy="settings-show-zone-labels-checkbox"]')
+    .uncheck();
   await expect(board).toHaveAttribute("data-zone-outlines", "false");
   await expect(board).toHaveAttribute("data-zone-counts", "false");
+  await expect(board).toHaveAttribute("data-card-shadows", "false");
+  await expect(board).toHaveAttribute("data-zone-labels", "false");
   await expect(zone).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(zoneLabel).toHaveCSS("display", "none");
+  await expect(zone).toHaveAttribute("aria-label", zoneAriaLabel);
+  await expect(card).toHaveCSS("box-shadow", "none");
   await expect(count).toBeHidden();
   await page.locator('[data-cy="settings-dialog-close-button"]').click();
   expect(
@@ -792,7 +810,12 @@ test("zone visuals persist through reload and Reset settings restores defaults",
       playerKey: expect.any(String),
       opponentKey: "preset:shaddoll",
     },
-    settings: { showZoneOutlines: false, showZoneCounts: false },
+    settings: {
+      showZoneOutlines: false,
+      showZoneCounts: false,
+      showCardShadows: false,
+      showZoneLabels: false,
+    },
   });
 
   await page.reload();
@@ -800,10 +823,21 @@ test("zone visuals persist through reload and Reset settings restores defaults",
   await expect(board).toBeVisible({ timeout: 120_000 });
   await expect(board).toHaveAttribute("data-zone-outlines", "false");
   await expect(board).toHaveAttribute("data-zone-counts", "false");
+  await expect(board).toHaveAttribute("data-card-shadows", "false");
+  await expect(board).toHaveAttribute("data-zone-labels", "false");
   await expect(zone).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(zoneLabel).toHaveCSS("display", "none");
+  await expect(zone).toHaveAttribute("aria-label", zoneAriaLabel);
+  await expect(card).toHaveCSS("box-shadow", "none");
   await expect(count).toBeHidden();
 
   await openSettingsDialog(page);
+  await expect(
+    page.locator('[data-cy="settings-show-card-shadows-checkbox"]'),
+  ).not.toBeChecked();
+  await expect(
+    page.locator('[data-cy="settings-show-zone-labels-checkbox"]'),
+  ).not.toBeChecked();
   await page.locator('[data-cy="settings-reset-button"]').click();
   await expect(
     page.locator('[data-cy="settings-show-zone-outlines-checkbox"]'),
@@ -811,9 +845,20 @@ test("zone visuals persist through reload and Reset settings restores defaults",
   await expect(
     page.locator('[data-cy="settings-show-zone-counts-checkbox"]'),
   ).toBeChecked();
+  await expect(
+    page.locator('[data-cy="settings-show-card-shadows-checkbox"]'),
+  ).toBeChecked();
+  await expect(
+    page.locator('[data-cy="settings-show-zone-labels-checkbox"]'),
+  ).toBeChecked();
   await expect(board).toHaveAttribute("data-zone-outlines", "true");
   await expect(board).toHaveAttribute("data-zone-counts", "true");
+  await expect(board).toHaveAttribute("data-card-shadows", "true");
+  await expect(board).toHaveAttribute("data-zone-labels", "true");
   await expect(zone).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(zoneLabel).toBeVisible();
+  await expect(zone).toHaveAttribute("aria-label", zoneAriaLabel);
+  await expect(card).not.toHaveCSS("box-shadow", "none");
   await expect(count).toBeVisible();
   await page.locator('[data-cy="settings-dialog-close-button"]').click();
   expect(
@@ -829,7 +874,12 @@ test("zone visuals persist through reload and Reset settings restores defaults",
       playerKey: expect.any(String),
       opponentKey: "preset:shaddoll",
     },
-    settings: { showZoneOutlines: true, showZoneCounts: true },
+    settings: {
+      showZoneOutlines: true,
+      showZoneCounts: true,
+      showCardShadows: true,
+      showZoneLabels: true,
+    },
   });
   expect(
     await page.evaluate(() => localStorage.getItem("ygo.ui.v1")),
@@ -840,7 +890,12 @@ test("zone visuals persist through reload and Reset settings restores defaults",
   await expect(board).toBeVisible({ timeout: 120_000 });
   await expect(board).toHaveAttribute("data-zone-outlines", "true");
   await expect(board).toHaveAttribute("data-zone-counts", "true");
+  await expect(board).toHaveAttribute("data-card-shadows", "true");
+  await expect(board).toHaveAttribute("data-zone-labels", "true");
   await expect(zone).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(zoneLabel).toBeVisible();
+  await expect(zone).toHaveAttribute("aria-label", zoneAriaLabel);
+  await expect(card).not.toHaveCSS("box-shadow", "none");
   await expect(count).toBeVisible();
 });
 
@@ -1803,7 +1858,12 @@ test("floating field windows stay inside the field, persist and never lose a dec
       playerKey: expect.any(String),
       opponentKey: "preset:shaddoll",
     },
-    settings: { showZoneOutlines: true, showZoneCounts: true },
+    settings: {
+      showZoneOutlines: true,
+      showZoneCounts: true,
+      showCardShadows: true,
+      showZoneLabels: true,
+    },
   });
   expect(
     await page.evaluate(() => localStorage.getItem("ygo.ui.v1")),

@@ -66,11 +66,36 @@ describe("SettingsDialog display settings", () => {
       settings: DEFAULT_UI_SETTINGS,
       ...handlers,
     });
-    const reset = rendered.container.querySelector(
-      '[data-cy="settings-reset-button"]',
-    );
-    if (reset === null) throw new Error("Missing reset button");
+    const getByCy = (value: string): Element => {
+      const element = rendered.container.querySelector(`[data-cy="${value}"]`);
+      if (element === null) throw new Error(`Missing ${value}`);
+      return element;
+    };
+    const shadows = getByCy("settings-show-card-shadows-checkbox");
+    const labels = getByCy("settings-show-zone-labels-checkbox");
+    await fireEvent.click(shadows);
+    await fireEvent.click(labels);
+    expect(handlers.onshowcardshadows).toHaveBeenCalledWith(false);
+    expect(handlers.onshowzonelabels).toHaveBeenCalledWith(false);
+
+    const reset = getByCy("settings-reset-button");
     await fireEvent.click(reset);
     expect(handlers.onreset).toHaveBeenCalledOnce();
+
+    rendered.unmount();
+    const resetRendered = render(SettingsDialog, {
+      settings: { ...DEFAULT_UI_SETTINGS },
+      ...handlers,
+    });
+    expect(
+      resetRendered.container.querySelector(
+        '[data-cy="settings-show-card-shadows-checkbox"]',
+      ),
+    ).toHaveProperty("checked", true);
+    expect(
+      resetRendered.container.querySelector(
+        '[data-cy="settings-show-zone-labels-checkbox"]',
+      ),
+    ).toHaveProperty("checked", true);
   });
 });

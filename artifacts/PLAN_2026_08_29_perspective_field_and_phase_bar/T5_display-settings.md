@@ -29,6 +29,7 @@
 - `src/battle/app/components/duel-field/DuelFieldErrorBoundary.svelte:53-54`, `DuelField.svelte:134-135`, `FieldBoard.svelte:51-52` — prop chain to extend.
 - `src/battle/app/acceptance/AcceptanceHarness.svelte:134-135` — same wiring for the acceptance build.
 - `tests/unit/persisted-ui-state.test.ts`, `tests/component/DuelField.test.ts`, SettingsDialog tests.
+- `e2e/duel-smoke.spec.ts` — existing `zone visuals persist through reload and Reset settings restores defaults` test; extend this seam for Chromium toggle, CSS, aria, reload, and reset proof.
 - Required consumers discovered by typecheck: `src/shell/settings/shell-settings.ts`, `tests/unit/persisted-ui-store.test.ts`, `tests/unit/shell-settings.test.ts`, `tests/component/AppChrome.test.ts` — update only new settings fields/defaults/assertions.
 
 ## Interface contract (level 5)
@@ -115,7 +116,7 @@ data-cy="settings-show-zone-labels-checkbox"   label "Show zone labels"
 
 - [x] `npm run check:headless` — Verify: command passed; 23 legacy, 1788 unit (+2 skipped), 39 integration; vendor/assets/snapshot all ok; 2 pre-existing Svelte warnings.
 - [x] `npm run build` — Verify: command passed; browser build verification reported status ok and all chunk budgets within limits.
-- [ ] manual: toggle both in a live duel — shadows vanish, labels vanish, LP + counts + outlines unaffected; reload keeps choices — Verify: no E2E Input path supplied; parent must inline exact Chromium route before manual execution.
+- [x] Chromium: toggle both in live duel — shadows vanish, labels vanish, LP + counts + outlines unaffected; reload keeps choices; reset restores both on — Verify: `PLAYWRIGHT_PORT=4303 npx playwright test e2e/duel-smoke.spec.ts --grep "zone visuals persist through reload and Reset settings restores defaults"` passed 1 test; full `PLAYWRIGHT_PORT=4303 npx playwright test e2e/duel-smoke.spec.ts` passed 40 tests / 1 pre-existing skip.
 - [x] no silent-failure swallow added — `none` expected — Verify: settings diff adds no catch blocks; existing persistence best-effort path unchanged.
 - [x] app functional — settings dialog opens/closes clean, reset works — Verify: SettingsDialog component tests passed reset dispatch and existing AppChrome dialog coverage.
 - [x] commit msg draft: `feat(duel): make card shadows and zone labels player-toggleable` — Verify: commit `3f2a26e6e68c91295b3cf21ddc85d853fb346d14` uses exact message.

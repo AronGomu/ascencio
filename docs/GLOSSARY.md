@@ -29,6 +29,9 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 | store | Typed duel view state store + reducer | `src/battle/app/stores/duel-store.ts` (`createDuelStore`, `reduceDuelViewState`, `DuelViewState`) |
 | client | Main-thread typed Worker client/port | `src/battle/app/DuelWorkerClient.ts` (`DuelWorkerClient`, `DuelWorkerPort`) |
 | field | Semantic DOM duel field component | `src/battle/app/components/DuelField.svelte`, `src/battle/app/components/duel-field/FieldBoard.svelte` |
+| phasebar | Split phase bar for opponent/player transitions | `src/battle/app/components/PhaseBar.svelte`, `src/battle/app/prompts/phase-transitions.ts` |
+| perspectiveplane | Transformed board surface carrying zones, cards and hands | `src/battle/app/components/duel-field/FieldBoard.svelte`, `src/styles/app.css` |
+| virtualheight | Tilt-compensated field height used by geometry | `src/battle/field/duel-field-geometry.ts` (`perspectiveVirtualHeight`) |
 | board | Board view model projected for rendering | `src/battle/field/board-view-model.ts` (`BoardCardView`, `BoardZoneView`, `BoardStackView`) |
 | zone | Physical zone ids + field geometry constants | `src/battle/field/duel-field-layout.ts` (`PhysicalZoneId`, `FieldZoneKind`), `src/battle/app/components/duel-field/ZoneControl.svelte` |
 | hud | Life points / turn / phase heads-up display | `src/battle/app/components/duel-field/DuelHud.svelte`, `.duel-hud` in `src/styles/app.css` |

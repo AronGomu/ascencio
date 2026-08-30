@@ -6,6 +6,45 @@ async function rect(locator: Locator) {
   return box!;
 }
 
+async function handEndpointMetrics(card: Locator) {
+  return card.evaluate((element: HTMLElement) => {
+    const viewport = element.closest<HTMLElement>(
+      ".duel-field-hand-band__viewport",
+    );
+    if (viewport === null) throw new Error("Hand card has no viewport");
+    const cardRect = element.getBoundingClientRect();
+    const viewportRect = viewport.getBoundingClientRect();
+    const fanDegrees = Math.abs(
+      Number.parseFloat(
+        getComputedStyle(element).getPropertyValue("--card-fan"),
+      ),
+    );
+    const fanRadians = (fanDegrees * Math.PI) / 180;
+    const rotatedWidth =
+      element.offsetWidth * Math.cos(fanRadians) +
+      element.offsetHeight * Math.sin(fanRadians);
+    const projectionScale = cardRect.width / rotatedWidth;
+    /* Cards fan around their bottom centre. This is the maximum outward x
+       reach of that rotation, projected through the live hand scale. Positive
+       droop shifts each endpoint inward, so omitting it stays conservative. */
+    const projectedFanOverhang =
+      (element.offsetWidth * (1 - Math.cos(fanRadians)) * 0.5 +
+        element.offsetHeight * Math.sin(fanRadians)) *
+      projectionScale;
+    return {
+      layoutCardStart: element.offsetLeft,
+      layoutCardEnd: element.offsetLeft + element.offsetWidth,
+      layoutViewportStart: viewport.scrollLeft,
+      layoutViewportEnd: viewport.scrollLeft + viewport.clientWidth,
+      projectedCardStart: cardRect.left,
+      projectedCardEnd: cardRect.right,
+      projectedViewportStart: viewportRect.left,
+      projectedViewportEnd: viewportRect.right,
+      projectedFanOverhang,
+    };
+  });
+}
+
 test("seeded v2 zone settings hydrate visual state and missing state uses defaults", async ({
   page,
 }) => {
@@ -377,17 +416,21 @@ test("an overflowing hand still scrolls to both ends", async ({ page }) => {
   await page.goto("?scenario=field-hand-20");
   const viewport = page.locator('[data-cy="field-hand-p0-viewport"]');
   const cards = viewport.locator(".duel-field-card");
-  const viewportBox = await rect(viewport);
-
-  const firstBox = await rect(cards.first());
-  expect(firstBox.x).toBeGreaterThanOrEqual(viewportBox.x - 1);
+  const first = await handEndpointMetrics(cards.first());
+  expect(first.layoutCardStart).toBeGreaterThanOrEqual(
+    first.layoutViewportStart,
+  );
+  expect(first.projectedCardStart).toBeGreaterThanOrEqual(
+    first.projectedViewportStart - first.projectedFanOverhang,
+  );
 
   await viewport.evaluate((el) => {
     el.scrollLeft = el.scrollWidth;
   });
-  const lastBox = await rect(cards.last());
-  expect(lastBox.x + lastBox.width).toBeLessThanOrEqual(
-    viewportBox.x + viewportBox.width + 1,
+  const last = await handEndpointMetrics(cards.last());
+  expect(last.layoutCardEnd).toBeLessThanOrEqual(last.layoutViewportEnd);
+  expect(last.projectedCardEnd).toBeLessThanOrEqual(
+    last.projectedViewportEnd + last.projectedFanOverhang,
   );
 });
 
@@ -407,15 +450,35 @@ test("opponent twenty-card overlay uses negative row-reverse scrolling", async (
   const thumb = page.locator('[data-cy="field-hand-p1-scrollbar-thumb"]');
   await expect(track).toBeVisible();
   const thumbBox = await rect(thumb);
-  await page.mouse.move(
-    thumbBox.x + thumbBox.width / 2,
-    thumbBox.y + thumbBox.height / 2,
+  const thumbCentre = {
+    x: thumbBox.x + thumbBox.width / 2,
+    y: thumbBox.y + thumbBox.height / 2,
+  };
+  const pointerHit = await page.evaluate(
+    ({ x, y }) =>
+      document
+        .elementFromPoint(x, y)
+        ?.closest<HTMLElement>("[data-cy]")
+        ?.getAttribute("data-cy") ?? null,
+    thumbCentre,
   );
+  expect(pointerHit).toBe("field-hand-p1-scrollbar-thumb");
+  await thumb.evaluate((element) => {
+    element.addEventListener(
+      "gotpointercapture",
+      () => {
+        element.setAttribute("data-pointer-capture-observed", "true");
+      },
+      { once: true },
+    );
+  });
+  await page.mouse.move(thumbCentre.x, thumbCentre.y);
   await page.mouse.down();
-  await page.mouse.move(
-    thumbBox.x + thumbBox.width / 2 + 40,
-    thumbBox.y + thumbBox.height / 2,
-  );
+  /* Chromium applies pending capture before the next pointer event, not during
+     pointerdown itself. One pixel forces that event without changing intent. */
+  await page.mouse.move(thumbCentre.x + 1, thumbCentre.y);
+  await expect(thumb).toHaveAttribute("data-pointer-capture-observed", "true");
+  await page.mouse.move(thumbCentre.x + 40, thumbCentre.y);
   await page.mouse.up();
   expect(await viewport.evaluate((element) => element.scrollLeft)).toBeLessThan(
     0,

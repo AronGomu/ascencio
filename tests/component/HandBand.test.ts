@@ -3,6 +3,7 @@
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import HandBand from "../../src/battle/app/components/duel-field/HandBand.svelte";
+import CardControl from "../../src/battle/app/components/duel-field/CardControl.svelte";
 import { cardInstanceId } from "../../src/battle/duel/contracts/ids.ts";
 import type { ActiveInteractionSpec } from "../../src/battle/app/prompts/interaction-spec.ts";
 import type {
@@ -17,6 +18,7 @@ import {
 import type { FieldPlacement } from "../../src/battle/field/duel-field-geometry.ts";
 
 const PLACEMENT: FieldPlacement = { x: 400, y: 600, width: 760, height: 80 };
+const CARD_HEIGHT = 68.8;
 
 afterEach(() => {
   cleanup();
@@ -85,6 +87,7 @@ function renderBand(
   return render(HandBand, {
     zone: zoneFor(player),
     placement: PLACEMENT,
+    cardHeight: CARD_HEIGHT,
     imageLibrary: null,
     cardBackUrl: "/back.webp",
     placeholderUrl: "/placeholder.webp",
@@ -160,6 +163,55 @@ describe("HandBand", () => {
       "p1-hand-1",
       "p1-hand-2",
     ]);
+  });
+
+  it("fans sorted cards and droops outer cards", () => {
+    const cards = handCards(0, 5).map((card, index) =>
+      Object.freeze({ ...card, displayOrder: 4 - index }),
+    );
+    renderBand({ cards });
+
+    expect(cardArticles().map((card) => card.dataset.cardId)).toEqual([
+      "p0-hand-4",
+      "p0-hand-3",
+      "p0-hand-2",
+      "p0-hand-1",
+      "p0-hand-0",
+    ]);
+    expect(
+      cardArticles().map((card) => card.style.getPropertyValue("--card-fan")),
+    ).toEqual(["-5deg", "-2.5deg", "0deg", "2.5deg", "5deg"]);
+    const droops = cardArticles().map((card) =>
+      Number.parseFloat(card.style.getPropertyValue("--card-droop")),
+    );
+    const expectedDroops = [
+      2.7520000000000002, 1.3760000000000001, 0, 1.3760000000000001,
+      2.7520000000000002,
+    ];
+    expectedDroops.forEach((expected, index) =>
+      expect(droops[index]).toBeCloseTo(expected, 10),
+    );
+  });
+
+  it("keeps a single card flat with no droop", () => {
+    renderBand({ cards: handCards(0, 1) });
+    const card = cardArticles()[0];
+    expect(card?.style.getPropertyValue("--card-fan")).toBe("0deg");
+    expect(card?.style.getPropertyValue("--card-droop")).toBe("0px");
+  });
+
+  it("keeps fan props inert for field cards", () => {
+    render(CardControl, {
+      card: handCard(0, 0, { zoneId: "p0:mainMonster:0" }),
+      layout: "field",
+      placement: { x: 10, y: 20, width: 100, height: 100 },
+      imageUrl: "/card.webp",
+      fanDeg: 5,
+      droopPx: 3,
+    });
+    const card = cardArticles()[0];
+    expect(card?.style.getPropertyValue("--card-fan")).toBe("");
+    expect(card?.style.getPropertyValue("--card-droop")).toBe("");
   });
 
   it("mirrors opponent visual flow without changing DOM sequence", () => {

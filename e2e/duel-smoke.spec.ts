@@ -2214,8 +2214,9 @@ async function assertHandCouldOfferAPlacement(page: Page): Promise<void> {
 
 test("perspective plane fills the board and excludes fixed descendants at 1280x720", async ({
   page,
-}) => {
+}, testInfo) => {
   await page.setViewportSize({ width: 1280, height: 720 });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   await openDuel(page);
   await startPresetDuel(page);
   const field = page.getByRole("region", { name: "Duel field" });
@@ -2255,6 +2256,129 @@ test("perspective plane fills the board and excludes fixed descendants at 1280x7
   ).toBeLessThanOrEqual(8);
   expect(perspective?.phaseInsidePlane).toBe(false);
   expect(perspective?.fixedDescendants).toEqual([]);
+
+  const handProof = await field.evaluate((element) => {
+    const plane = element.querySelector<HTMLElement>(
+      '[data-cy="duel-field-board-plane"]',
+    );
+    const content = element.querySelector<HTMLElement>(
+      '[data-cy="duel-field-board-content"]',
+    );
+    const zone = element.querySelector<HTMLElement>(
+      '[data-zone-id="p0:mainMonster:2"]',
+    );
+    if (plane === null || content === null || zone === null) return null;
+
+    const carriers = [0, 1].map((player) => {
+      const carrier = element.querySelector<HTMLElement>(
+        `[data-cy="field-hand-band-p${player}"]`,
+      );
+      const viewport = element.querySelector<HTMLElement>(
+        `[data-cy="field-hand-p${player}-viewport"]`,
+      );
+      if (carrier === null || viewport === null) return null;
+      const carrierStyle = getComputedStyle(carrier);
+      const matrix = new DOMMatrixReadOnly(carrierStyle.transform);
+      return {
+        transform: carrierStyle.transform,
+        counterTiltDeg: (Math.atan2(matrix.m23, matrix.m22) * 180) / Math.PI,
+        directPreservedChild: carrier.parentElement === content,
+        viewportInsideCarrier: viewport.parentElement === carrier,
+        viewportOverflowX: getComputedStyle(viewport).overflowX,
+      };
+    });
+
+    const playerCards = [
+      ...element.querySelectorAll<HTMLElement>(
+        '.duel-field-card.is-hand-item[data-card-zone-id="p0:hand"]',
+      ),
+    ];
+    const centreCard = playerCards.reduce<HTMLElement | null>(
+      (closest, card) => {
+        const fan = Math.abs(
+          Number.parseFloat(
+            card.style.getPropertyValue("--card-fan").replace("deg", ""),
+          ),
+        );
+        if (closest === null) return card;
+        const closestFan = Math.abs(
+          Number.parseFloat(
+            closest.style.getPropertyValue("--card-fan").replace("deg", ""),
+          ),
+        );
+        return fan < closestFan ? card : closest;
+      },
+      null,
+    );
+    if (centreCard === null) return null;
+    const centreStyle = getComputedStyle(centreCard);
+    const centreRect = centreCard.getBoundingClientRect();
+    const centreWidth = Number.parseFloat(centreStyle.width);
+    const centreHeight = Number.parseFloat(centreStyle.height);
+    const centreTransform = centreStyle.transform;
+    const zoneRect = zone.getBoundingClientRect();
+    return {
+      planeTransformStyle: getComputedStyle(plane).transformStyle,
+      contentTransformStyle: getComputedStyle(content).transformStyle,
+      contentInsidePlane: content.parentElement === plane,
+      carriers,
+      centreCardTransform: centreTransform,
+      centreCardFan: Number.parseFloat(
+        centreCard.style.getPropertyValue("--card-fan"),
+      ),
+      centreCardAspect: centreWidth / centreHeight,
+      centreCardForeshortening:
+        centreRect.height / centreHeight / (centreRect.width / centreWidth),
+      fieldForeshortening:
+        zoneRect.height /
+        zone.offsetHeight /
+        (zoneRect.width / zone.offsetWidth),
+    };
+  });
+  expect(handProof).not.toBeNull();
+  expect(handProof?.planeTransformStyle).toBe("preserve-3d");
+  expect(handProof?.contentTransformStyle).toBe("preserve-3d");
+  expect(handProof?.contentInsidePlane).toBe(true);
+  expect(handProof?.carriers).toHaveLength(2);
+  for (const carrier of handProof?.carriers ?? []) {
+    expect(carrier).not.toBeNull();
+    expect(carrier?.transform).toMatch(/^matrix3d\(/);
+    expect(carrier?.counterTiltDeg).toBeCloseTo(-20, 3);
+    expect(carrier?.directPreservedChild).toBe(true);
+    expect(carrier?.viewportInsideCarrier).toBe(true);
+    expect(carrier?.viewportOverflowX).toBe("auto");
+  }
+  expect(handProof?.centreCardTransform).toMatch(/^matrix\(/);
+  expect(handProof?.centreCardFan).toBeCloseTo(0, 5);
+  expect(handProof?.centreCardAspect).toBeCloseTo(72 / 104, 2);
+  expect(handProof?.centreCardForeshortening).toBeCloseTo(1, 1);
+  expect(handProof?.fieldForeshortening).toBeLessThan(0.98);
+
+  const focusTarget = field
+    .locator(
+      '.duel-field-card.is-identity-known.is-hand-item [data-cy^="field-card-target-"]',
+    )
+    .first();
+  await focusTarget.focus();
+  await expect(focusTarget).toBeFocused();
+  await expect
+    .poll(() =>
+      focusTarget.evaluate((element) => {
+        const card = element.closest<HTMLElement>(".duel-field-card");
+        if (card === null) return null;
+        const matrix = new DOMMatrixReadOnly(getComputedStyle(card).transform);
+        return Math.hypot(matrix.m11, matrix.m12);
+      }),
+    )
+    .toBeCloseTo(1.35, 2);
+  await focusTarget.evaluate((element) => element.blur());
+
+  const screenshotPath = testInfo.outputPath("t3-hand-card-presentation.png");
+  await page.screenshot({ path: screenshotPath, fullPage: true });
+  await testInfo.attach("t3-hand-card-presentation", {
+    path: screenshotPath,
+    contentType: "image/png",
+  });
 });
 
 test("dragging a hand card onto a highlighted zone plays it", async ({
@@ -2377,6 +2501,24 @@ test("dragging a hand card onto a highlighted zone plays it", async ({
   }
 
   await expect(landedCard).toHaveCount(1, { timeout: 30_000 });
+  const landedGeometry = await landedCard.evaluate((element) => {
+    if (!(element instanceof HTMLElement))
+      throw new Error("Landed card is not an HTML element");
+    const rect = element.getBoundingClientRect();
+    const width = Number.parseFloat(
+      element.style.getPropertyValue("--field-width"),
+    );
+    const height = Number.parseFloat(
+      element.style.getPropertyValue("--field-height"),
+    );
+    return {
+      aspect: width / height,
+      foreshortening:
+        rect.height / element.offsetHeight / (rect.width / element.offsetWidth),
+    };
+  });
+  expect(landedGeometry.aspect).toBeCloseTo(72 / 104, 5);
+  expect(landedGeometry.foreshortening).toBeLessThan(0.98);
   await expect(targetZone).not.toHaveAttribute("data-drop-candidate", "true");
   await expect(ghost).toHaveCount(0, { timeout: 650 });
 

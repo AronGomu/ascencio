@@ -81,6 +81,7 @@
   class:is-navigation-active={active}
   class:is-actionable={haloed}
   class:is-opponent={stack.player === 1}
+  class:is-empty={stack.count === 0}
   class="duel-field-stack"
   role={clickable ? undefined : "group"}
   aria-label={stack.accessibleLabel}

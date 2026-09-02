@@ -298,6 +298,22 @@ describe("global styles", () => {
     expect(slot).toContain("translate(-50%, -50%)");
   });
 
+  /* Item 2 (2026-09-02, owner): an empty pile must not read as a covered
+     card — no purple pile gradient, no purple border. It wears the same
+     neutral outline and fill as an empty zone, hover included, since an
+     empty pile is still hoverable. */
+  it("an empty pile paints the neutral zone fill, not the pile chrome", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const block = ruleBlock(css, ".duel-field-stack.is-empty {");
+    expect(block).toContain("var(--field-zone-fill)");
+    expect(block).toContain("var(--field-zone-outline)");
+    expect(block).not.toContain("var(--stack-accent)");
+    expect(block).not.toContain("var(--stack-surface)");
+    expect(css).toContain(
+      ".duel-field-stack:hover:not(:disabled):not(.is-empty)",
+    );
+  });
+
   it("the actionable halo is green, not orange", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     const block = ruleBlock(

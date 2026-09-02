@@ -68,14 +68,14 @@ export const CARD_FRAME_COLORS: Readonly<Record<CardFrame, string>> = {
 
 ## Impl steps
 
-- [ ] 1. Write `tests/unit/card-frame.test.ts` per table; run → red.
-- [ ] 2. Write `src/decks/card-frame.ts` per contract; run → green.
-- [ ] 3. `npm run check:headless` — boundaries untouched, still green.
+- [x] 1. Write `tests/unit/card-frame.test.ts` per table; run → red.
+- [x] 2. Write `src/decks/card-frame.ts` per contract; run → green.
+- [x] 3. `npm run check:headless` — boundaries untouched, still green.
 
 ## Validation
 
-- [ ] tests pass: `npx vitest run tests/unit/card-frame.test.ts`
-- [ ] manual check: n/a (pure fn)
-- [ ] no silent-failure swallow added — `none`
-- [ ] app functional — no runtime path changed yet
-- [ ] commit msg draft: `feat(decks): classify card frame from OCG type bits for decklist row styling`
+- [x] tests pass: `npx vitest run tests/unit/card-frame.test.ts`
+- [x] manual check: n/a (pure fn)
+- [x] no silent-failure swallow added — `none`
+- [x] app functional — no runtime path changed yet
+- [x] commit msg draft: `feat(decks): classify card frame from OCG type bits for decklist row styling`

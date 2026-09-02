@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+THESIS: Ascencio brand exploration. Owner-pinned world: dark ground, translucent
+glass panels (modern Linux desktop register), rectangular/angular geometry,
+angelic golden-white identity — gold primary, white secondary — classy serif type.
+This document renders FOUR renditions of that one pinned world, differing on
+warmth of the dark ground, glass density, chamfer language, and serif voice.
+No direction outside the pin is offered; the pin beats the roll.
+OWN-WORLD: near-black grounds, rgba glass + backdrop blur, hairline gold borders,
+chamfered or square corners, inscriptional/classical serifs, gold reserved for
+identity + primary action, white for structure.
+STORY: the owner compares renditions side by side and picks one; the chosen
+rendition later becomes DESIGN.md, written from the built world.
+FIRST VIEWPORT: doc header naming the pin, then variant A's full menu mock.
+FORM: exploratory prototype artifact (artifacts/, ephemeral), not app code.
+FINISH: this is a decision document; the run ends when the owner picks a variant.
+-->
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ascencio — brand renditions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Marcellus&family=Spectral:ital,wght@0,300;0,400;0,500;1,400&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,600&family=Forum&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --doc-bg: #070604;
+    --doc-fg: #ece5d6;
+    --doc-muted: #9a917e;
+    --doc-gold: #d8b45c;
+    --doc-hairline: rgba(216, 180, 92, 0.28);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--doc-bg);
+    color: var(--doc-fg);
+    font-family: "EB Garamond", Georgia, "Times New Roman", serif;
+    font-size: 18px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: rgba(216, 180, 92, 0.35); color: #fff8e8; }
+
+  .doc-head {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 72px 32px 40px;
+    border-bottom: 1px solid var(--doc-hairline);
+  }
+  .doc-head h1 {
+    font-family: Cinzel, Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(2rem, 4.5vw, 3.4rem);
+    letter-spacing: 0.14em;
+    color: #f3e7c8;
+  }
+  .doc-head h1 span { color: var(--doc-gold); }
+  .doc-head p.lede {
+    max-width: 70ch;
+    margin-top: 18px;
+    font-size: 1.1rem;
+    color: var(--doc-muted);
+  }
+  .doc-head p.lede strong { color: var(--doc-fg); font-weight: 600; }
+  .pin-list {
+    display: flex; flex-wrap: wrap; gap: 10px 14px;
+    margin-top: 26px; list-style: none;
+  }
+  .pin-list li {
+    font-size: 0.85rem; letter-spacing: 0.06em;
+    padding: 6px 14px;
+    border: 1px solid var(--doc-hairline);
+    color: #cbbf9d;
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+    background: rgba(216, 180, 92, 0.06);
+  }
+  nav.toc {
+    max-width: 1180px; margin: 0 auto; padding: 20px 32px;
+    display: flex; flex-wrap: wrap; gap: 8px 28px;
+    font-size: 0.92rem;
+  }
+  nav.toc a { color: var(--doc-gold); text-decoration: none; letter-spacing: 0.05em; }
+  nav.toc a:hover { color: #f3e7c8; text-decoration: underline; text-underline-offset: 4px; }
+
+  /* ---------- variant scaffolding ---------- */
+  section.variant {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 64px 32px 72px;
+    border-bottom: 1px solid var(--doc-hairline);
+  }
+  .variant-head { display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; }
+  .variant-head .letter {
+    font-family: Cinzel, serif; font-size: 1rem; letter-spacing: 0.2em;
+    color: var(--doc-gold);
+  }
+  .variant-head h2 {
+    font-family: Cinzel, serif; font-weight: 600;
+    font-size: clamp(1.5rem, 3vw, 2.2rem); letter-spacing: 0.08em; color: #f0e6cd;
+  }
+  .variant-head .voice { font-style: italic; color: var(--doc-muted); font-size: 1rem; }
+  .variant > p.thesis { max-width: 74ch; margin: 14px 0 8px; color: #d5cbb4; }
+  .variant > p.pick-when { max-width: 74ch; margin: 0 0 30px; color: var(--doc-muted); font-size: 0.98rem; }
+  .variant > p.pick-when em { color: var(--doc-gold); font-style: normal; }
+
+  /* the mock "stage" — 16:9-ish window into the game */
+  .stage {
+    position: relative;
+    border-radius: 0;
+    overflow: hidden;
+    aspect-ratio: 16 / 8.2;
+    min-height: 420px;
+    display: grid;
+    place-items: center;
+    isolation: isolate;
+  }
+  .atmo { position: absolute; inset: 0; z-index: 0; }
+  .stage .content { position: relative; z-index: 1; width: 100%; height: 100%; }
+
+  /* component strip under each stage */
+  .comp-row {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 22px;
+    margin-top: 22px;
+  }
+  .comp-cell h4 {
+    font-family: Cinzel, serif; font-weight: 400; font-size: 0.78rem;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--doc-muted); margin-bottom: 10px;
+  }
+  .swatches { display: flex; gap: 10px; margin-top: 26px; flex-wrap: wrap; }
+  .swatch { width: 132px; }
+  .swatch .chip { height: 44px; border: 1px solid rgba(255,255,255,0.14); }
+  .swatch .name { font-size: 0.78rem; letter-spacing: 0.04em; color: var(--doc-muted); margin-top: 6px; }
+  .swatch .hex { font-size: 0.74rem; color: #7c745f; }
+
+  /* ============================================================
+     VARIANT A — GILDED RELIQUARY
+     warm black, deep blur glass, chamfered gold plates, Cinzel
+     ============================================================ */
+  .vA {
+    --bg: #0b0906;
+    --glass: rgba(26, 21, 12, 0.52);
+    --glass-strong: rgba(32, 26, 14, 0.72);
+    --line: rgba(216, 180, 92, 0.45);
+    --line-soft: rgba(216, 180, 92, 0.2);
+    --gold: #d8b45c;
+    --gold-bright: #f2d488;
+    --ivory: #f4ecdb;
+    --dim: #a89a78;
+    --chamfer: 14px;
+  }
+  .vA .stage { background: var(--bg); border: 1px solid var(--line-soft); }
+  .vA .atmo {
+    background:
+      radial-gradient(58% 90% at 50% -18%, rgba(214, 173, 84, 0.32), transparent 62%),
+      radial-gradient(30% 42% at 82% 78%, rgba(120, 86, 30, 0.2), transparent 70%),
+      radial-gradient(24% 36% at 12% 64%, rgba(90, 70, 30, 0.16), transparent 70%),
+      linear-gradient(180deg, #0e0b07 0%, #0b0906 55%, #080604 100%);
+  }
+  .vA .atmo::after {
+    content: ""; position: absolute; inset: 0;
+    background: repeating-linear-gradient(115deg, rgba(244, 220, 160, 0.045) 0 1px, transparent 1px 160px);
+  }
+  .vA .menu-wrap {
+    height: 100%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 24px 0 40px; position: relative;
+  }
+  .logo-A {
+    font-family: Cinzel, serif; font-weight: 700;
+    font-size: clamp(2rem, 4.2vw, 3.1rem);
+    letter-spacing: 0.3em; text-indent: 0.3em;
+    background: linear-gradient(180deg, #fff8e4 0%, #f2d488 38%, #c89a3e 78%, #a87f2e 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 2px 18px rgba(216, 180, 92, 0.35));
+    align-self: end;
+  }
+  .logo-A-sub {
+    font-family: "EB Garamond", serif; font-style: italic;
+    color: var(--dim); font-size: 0.95rem; letter-spacing: 0.28em; text-indent: 0.28em;
+    margin-top: 10px; text-transform: lowercase;
+  }
+  .vA .menu {
+    margin-top: 26px;
+    display: flex; flex-direction: column; gap: 7px; width: 300px;
+  }
+  .vA .menu button {
+    font-family: "EB Garamond", serif; font-size: 1rem; letter-spacing: 0.12em;
+    color: var(--ivory); text-transform: uppercase;
+    background: var(--glass);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--line-soft);
+    padding: 9px 22px; cursor: pointer;
+    clip-path: polygon(var(--chamfer) 0, 100% 0, 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%, 0 var(--chamfer));
+    transition: border-color 160ms ease-out, background 160ms ease-out, color 160ms ease-out;
+    text-align: center;
+  }
+  .vA .menu button:hover { border-color: var(--line); color: var(--gold-bright); background: var(--glass-strong); }
+  .vA .menu button.primary {
+    background: linear-gradient(180deg, rgba(216, 180, 92, 0.28), rgba(150, 112, 40, 0.2)), var(--glass-strong);
+    border-color: var(--line); color: var(--gold-bright); font-weight: 600;
+  }
+  .vA .stage-foot {
+    position: absolute; bottom: 14px; left: 0; right: 0; text-align: center;
+    font-family: "EB Garamond", serif; font-style: italic; color: #6d6350;
+    font-size: 0.85rem; letter-spacing: 0.14em;
+  }
+
+  .vA .hud {
+    display: flex; align-items: stretch; gap: 0;
+    background: var(--glass); backdrop-filter: blur(14px);
+    border: 1px solid var(--line-soft);
+    clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  }
+  .vA .hud > div { padding: 12px 18px; }
+  .vA .hud .lp { flex: 1; }
+  .vA .hud .lp .who {
+    font-family: Cinzel, serif; font-size: 0.7rem; letter-spacing: 0.24em;
+    color: var(--dim); text-transform: uppercase;
+  }
+  .vA .hud .lp .val {
+    font-family: Cinzel, serif; font-size: 1.5rem; font-weight: 600; color: var(--ivory);
+    font-variant-numeric: tabular-nums;
+  }
+  .vA .hud .lp .bar { height: 3px; margin-top: 7px; background: rgba(255,255,255,0.08); }
+  .vA .hud .lp .bar i { display: block; height: 100%; background: linear-gradient(90deg, #c89a3e, #f2d488); width: 78%; }
+  .vA .hud .lp.foe .bar i { width: 45%; background: rgba(244, 236, 219, 0.55); }
+  .vA .hud .phase {
+    border-left: 1px solid var(--line-soft); border-right: 1px solid var(--line-soft);
+    display: grid; place-items: center; min-width: 168px;
+  }
+  .vA .hud .phase .p {
+    font-family: Cinzel, serif; letter-spacing: 0.2em; color: var(--gold-bright);
+    font-size: 0.95rem;
+  }
+  .vA .hud .phase .t { font-size: 0.75rem; color: var(--dim); letter-spacing: 0.12em; margin-top: 2px; }
+
+  .vA .dlg {
+    background: var(--glass-strong); backdrop-filter: blur(16px);
+    border: 1px solid var(--line-soft); border-top: 1px solid var(--line);
+    padding: 18px 24px 20px;
+    clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px);
+  }
+  .vA .dlg .who {
+    font-family: Cinzel, serif; font-size: 0.85rem; letter-spacing: 0.24em;
+    color: var(--gold); text-transform: uppercase;
+  }
+  .vA .dlg .text {
+    font-family: "EB Garamond", serif; font-size: 1.12rem; color: var(--ivory);
+    margin-top: 8px; max-width: 62ch;
+  }
+  .vA .dlg .choices { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .vA .dlg .choices button {
+    font-family: "EB Garamond", serif; font-size: 0.95rem; letter-spacing: 0.08em;
+    color: var(--ivory); background: rgba(216, 180, 92, 0.08);
+    border: 1px solid var(--line-soft); padding: 7px 16px; cursor: pointer;
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  }
+  .vA .dlg .choices button:hover { border-color: var(--line); color: var(--gold-bright); }
+
+  /* ============================================================
+     VARIANT B — OBSIDIAN STANDARD
+     cold graphite black, thin crisp glass, square corners,
+     white-forward, gold only for identity + primary. Marcellus.
+     ============================================================ */
+  .vB {
+    --bg: #0a0b0d;
+    --glass: rgba(230, 235, 245, 0.045);
+    --glass-strong: rgba(230, 235, 245, 0.08);
+    --line: rgba(235, 238, 245, 0.22);
+    --line-gold: rgba(216, 184, 108, 0.6);
+    --gold: #d9bc72;
+    --white: #f2f3f5;
+    --dim: #8e929b;
+  }
+  .vB .stage { background: var(--bg); border: 1px solid rgba(235,238,245,0.1); }
+  .vB .atmo {
+    background:
+      radial-gradient(70% 100% at 50% 118%, rgba(217, 188, 114, 0.13), transparent 60%),
+      radial-gradient(40% 55% at 15% 10%, rgba(150, 160, 180, 0.08), transparent 70%),
+      linear-gradient(180deg, #0c0d10 0%, #0a0b0d 60%, #08090b 100%);
+  }
+  .vB .menu-wrap {
+    height: 100%; display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    align-items: center; padding: 0 7%;
+  }
+  .logo-B {
+    font-family: Marcellus, Cinzel, serif;
+    font-size: clamp(2.4rem, 5.4vw, 4rem);
+    letter-spacing: 0.22em; color: var(--white);
+  }
+  .logo-B::first-letter { color: var(--gold); }
+  .logo-B-rule {
+    width: 120px; height: 1px; background: var(--line-gold); margin: 18px 0 14px;
+  }
+  .vB .tag { font-family: Spectral, serif; font-weight: 300; color: var(--dim); font-size: 1.02rem; max-width: 34ch; }
+  .vB .menu { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--line); background: var(--glass); backdrop-filter: blur(10px); }
+  .vB .menu button {
+    font-family: Marcellus, serif; font-size: 1rem; letter-spacing: 0.18em;
+    color: var(--white); text-transform: uppercase; text-align: left;
+    background: transparent; border: 0; border-bottom: 1px solid rgba(235,238,245,0.09);
+    padding: 15px 24px; cursor: pointer;
+    display: flex; justify-content: space-between; align-items: center;
+    transition: background 140ms ease-out, color 140ms ease-out, padding-left 140ms ease-out;
+  }
+  .vB .menu button:last-child { border-bottom: 0; }
+  .vB .menu button::after { content: "›"; color: var(--dim); font-family: Spectral, serif; }
+  .vB .menu button:hover { background: var(--glass-strong); padding-left: 30px; }
+  .vB .menu button.primary { color: var(--gold); border-left: 2px solid var(--gold); }
+  .vB .menu button.primary::after { color: var(--gold); }
+
+  .vB .hud {
+    display: flex; background: var(--glass); backdrop-filter: blur(10px);
+    border: 1px solid var(--line);
+  }
+  .vB .hud > div { padding: 12px 18px; }
+  .vB .hud .lp { flex: 1; }
+  .vB .hud .lp .who { font-family: Marcellus, serif; font-size: 0.7rem; letter-spacing: 0.26em; color: var(--dim); text-transform: uppercase; }
+  .vB .hud .lp .val { font-family: Spectral, serif; font-weight: 500; font-size: 1.5rem; color: var(--white); font-variant-numeric: tabular-nums; }
+  .vB .hud .lp .bar { height: 2px; margin-top: 8px; background: rgba(255,255,255,0.1); }
+  .vB .hud .lp .bar i { display: block; height: 100%; width: 78%; background: var(--white); }
+  .vB .hud .lp.foe .bar i { width: 45%; background: var(--dim); }
+  .vB .hud .phase { border-left: 1px solid var(--line); border-right: 1px solid var(--line); display: grid; place-items: center; min-width: 168px; }
+  .vB .hud .phase .p { font-family: Marcellus, serif; letter-spacing: 0.24em; color: var(--gold); font-size: 0.92rem; }
+  .vB .hud .phase .t { font-size: 0.74rem; color: var(--dim); letter-spacing: 0.14em; margin-top: 2px; }
+
+  .vB .dlg { background: var(--glass-strong); backdrop-filter: blur(12px); border: 1px solid var(--line); padding: 18px 24px 20px; }
+  .vB .dlg .who { font-family: Marcellus, serif; font-size: 0.82rem; letter-spacing: 0.28em; color: var(--gold); text-transform: uppercase; }
+  .vB .dlg .text { font-family: Spectral, serif; font-weight: 300; font-size: 1.08rem; color: var(--white); margin-top: 8px; max-width: 62ch; }
+  .vB .dlg .choices { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .vB .dlg .choices button {
+    font-family: Spectral, serif; font-size: 0.92rem; color: var(--white);
+    background: transparent; border: 1px solid var(--line); padding: 7px 16px; cursor: pointer;
+  }
+  .vB .dlg .choices button:hover { border-color: var(--line-gold); color: var(--gold); }
+
+  /* ============================================================
+     VARIANT C — AUREA LUX
+     deepest black, dawn-glow atmosphere, luminous gradient-gold
+     bordered glass, Bodoni Moda display. Most dramatic.
+     ============================================================ */
+  .vC {
+    --bg: #050505;
+    --glass: rgba(24, 20, 14, 0.5);
+    --gold: #e8c76d;
+    --gold-hot: #ffe9ad;
+    --ivory: #f7f2e6;
+    --dim: #9c927c;
+  }
+  .vC .stage { background: var(--bg); border: 1px solid rgba(232, 199, 109, 0.16); }
+  .vC .atmo {
+    background:
+      radial-gradient(46% 62% at 50% 106%, rgba(232, 199, 109, 0.5), rgba(150, 110, 40, 0.16) 45%, transparent 72%),
+      radial-gradient(80% 60% at 50% 112%, rgba(255, 233, 173, 0.2), transparent 60%),
+      #050505;
+  }
+  .vC .atmo::before {
+    content: ""; position: absolute; left: 50%; bottom: 0; width: 1px; height: 62%;
+    background: linear-gradient(180deg, transparent, rgba(255, 233, 173, 0.7));
+    box-shadow: 0 0 24px 2px rgba(232, 199, 109, 0.5);
+  }
+  .vC .menu-wrap {
+    height: 100%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 8px; padding-bottom: 24px;
+  }
+  .logo-C {
+    font-family: "Bodoni Moda", serif; font-weight: 400;
+    font-size: clamp(2.6rem, 6vw, 4.4rem);
+    letter-spacing: 0.34em; text-indent: 0.34em;
+    color: var(--gold-hot);
+    text-shadow: 0 0 34px rgba(232, 199, 109, 0.55), 0 0 90px rgba(232, 199, 109, 0.3);
+  }
+  .logo-C-wings {
+    display: flex; align-items: center; gap: 16px; color: rgba(232,199,109,0.7);
+    font-size: 0.8rem; letter-spacing: 0.5em; text-indent: 0.5em;
+    font-family: "Bodoni Moda", serif; margin-top: 4px;
+  }
+  .logo-C-wings::before, .logo-C-wings::after {
+    content: ""; width: 90px; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(232,199,109,0.6));
+  }
+  .logo-C-wings::after { transform: scaleX(-1); }
+  .vC .menu { display: flex; gap: 14px; margin-top: 44px; }
+  .vC .menu button {
+    position: relative;
+    font-family: "Bodoni Moda", serif; font-size: 0.88rem; letter-spacing: 0.22em;
+    color: var(--ivory); text-transform: uppercase;
+    background: var(--glass); backdrop-filter: blur(18px);
+    border: 1px solid transparent;
+    border-image: linear-gradient(180deg, rgba(232,199,109,0.7), rgba(232,199,109,0.12)) 1;
+    padding: 13px 26px; cursor: pointer;
+    transition: color 160ms ease-out, box-shadow 160ms ease-out;
+  }
+  .vC .menu button:hover { color: var(--gold-hot); box-shadow: 0 6px 30px -8px rgba(232, 199, 109, 0.4); }
+  .vC .menu button.primary { color: #14100a; background: linear-gradient(180deg, var(--gold-hot), var(--gold)); font-weight: 600; }
+
+  .vC .hud {
+    display: flex; background: var(--glass); backdrop-filter: blur(18px);
+    border: 1px solid transparent;
+    border-image: linear-gradient(90deg, rgba(232,199,109,0.45), rgba(232,199,109,0.1), rgba(232,199,109,0.45)) 1;
+  }
+  .vC .hud > div { padding: 12px 18px; }
+  .vC .hud .lp { flex: 1; }
+  .vC .hud .lp .who { font-family: "Bodoni Moda", serif; font-size: 0.68rem; letter-spacing: 0.3em; color: var(--dim); text-transform: uppercase; }
+  .vC .hud .lp .val { font-family: "Bodoni Moda", serif; font-size: 1.55rem; color: var(--ivory); font-variant-numeric: tabular-nums; }
+  .vC .hud .lp .bar { height: 3px; margin-top: 7px; background: rgba(255,255,255,0.07); }
+  .vC .hud .lp .bar i { display: block; height: 100%; width: 78%; background: linear-gradient(90deg, var(--gold), var(--gold-hot)); box-shadow: 0 0 10px rgba(232,199,109,0.6); }
+  .vC .hud .lp.foe .bar i { width: 45%; background: rgba(247, 242, 230, 0.5); box-shadow: none; }
+  .vC .hud .phase { border-left: 1px solid rgba(232,199,109,0.2); border-right: 1px solid rgba(232,199,109,0.2); display: grid; place-items: center; min-width: 168px; }
+  .vC .hud .phase .p { font-family: "Bodoni Moda", serif; letter-spacing: 0.26em; color: var(--gold-hot); font-size: 0.92rem; }
+  .vC .hud .phase .t { font-size: 0.72rem; color: var(--dim); letter-spacing: 0.16em; margin-top: 2px; }
+
+  .vC .dlg {
+    background: var(--glass); backdrop-filter: blur(20px);
+    border: 1px solid transparent;
+    border-image: linear-gradient(180deg, rgba(232,199,109,0.55), rgba(232,199,109,0.08)) 1;
+    padding: 18px 24px 20px;
+  }
+  .vC .dlg .who { font-family: "Bodoni Moda", serif; font-size: 0.8rem; letter-spacing: 0.32em; color: var(--gold); text-transform: uppercase; }
+  .vC .dlg .text { font-family: "EB Garamond", serif; font-size: 1.12rem; color: var(--ivory); margin-top: 8px; max-width: 62ch; }
+  .vC .dlg .choices { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .vC .dlg .choices button {
+    font-family: "EB Garamond", serif; font-size: 0.95rem; color: var(--ivory);
+    background: rgba(232, 199, 109, 0.07); border: 1px solid rgba(232,199,109,0.3);
+    padding: 7px 16px; cursor: pointer;
+  }
+  .vC .dlg .choices button:hover { color: var(--gold-hot); border-color: rgba(232,199,109,0.7); }
+
+  /* ============================================================
+     VARIANT D — BASILICA SLATE
+     blue-black bridging the incumbent palette, frosted panels,
+     restrained gold, Forum + Source Serif 4. Least disruptive.
+     ============================================================ */
+  .vD {
+    --bg: #080d16;
+    --glass: rgba(150, 175, 215, 0.055);
+    --glass-strong: rgba(150, 175, 215, 0.1);
+    --line: rgba(170, 190, 220, 0.18);
+    --gold: #d3b268;
+    --gold-line: rgba(211, 178, 104, 0.5);
+    --white: #eef1f7;
+    --dim: #93a0b6;
+    --chamfer: 10px;
+  }
+  .vD .stage { background: var(--bg); border: 1px solid var(--line); }
+  .vD .atmo {
+    background:
+      radial-gradient(55% 75% at 50% -12%, rgba(211, 178, 104, 0.16), transparent 60%),
+      radial-gradient(45% 60% at 85% 90%, rgba(60, 90, 140, 0.22), transparent 70%),
+      linear-gradient(180deg, #0a1019 0%, #080d16 60%, #060a11 100%);
+  }
+  .vD .menu-wrap {
+    height: 100%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding-bottom: 16px;
+  }
+  .logo-D {
+    font-family: Forum, Cinzel, serif;
+    font-size: clamp(2.4rem, 5.4vw, 4rem);
+    letter-spacing: 0.26em; text-indent: 0.26em;
+    color: var(--white);
+    text-shadow: 0 1px 26px rgba(211, 178, 104, 0.3);
+  }
+  .logo-D b { font-weight: 400; color: var(--gold); }
+  .vD .menu {
+    margin-top: 40px; width: 560px; max-width: 90%;
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+  }
+  .vD .menu button {
+    font-family: Forum, serif; font-size: 0.98rem; letter-spacing: 0.16em;
+    color: var(--white); text-transform: uppercase;
+    background: var(--glass); backdrop-filter: blur(12px);
+    border: 1px solid var(--line);
+    padding: 13px 20px; cursor: pointer;
+    clip-path: polygon(var(--chamfer) 0, 100% 0, 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%, 0 var(--chamfer));
+    transition: background 150ms ease-out, border-color 150ms ease-out;
+  }
+  .vD .menu button:hover { background: var(--glass-strong); border-color: var(--gold-line); }
+  .vD .menu button.primary {
+    grid-column: 1 / -1;
+    border-color: var(--gold-line); color: var(--gold);
+    background: linear-gradient(180deg, rgba(211, 178, 104, 0.1), rgba(211, 178, 104, 0.03)), var(--glass);
+  }
+
+  .vD .hud {
+    display: flex; background: var(--glass); backdrop-filter: blur(12px);
+    border: 1px solid var(--line);
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  }
+  .vD .hud > div { padding: 12px 18px; }
+  .vD .hud .lp { flex: 1; }
+  .vD .hud .lp .who { font-family: Forum, serif; font-size: 0.72rem; letter-spacing: 0.24em; color: var(--dim); text-transform: uppercase; }
+  .vD .hud .lp .val { font-family: "Source Serif 4", serif; font-weight: 600; font-size: 1.5rem; color: var(--white); font-variant-numeric: tabular-nums; }
+  .vD .hud .lp .bar { height: 3px; margin-top: 7px; background: rgba(255,255,255,0.08); }
+  .vD .hud .lp .bar i { display: block; height: 100%; width: 78%; background: var(--gold); }
+  .vD .hud .lp.foe .bar i { width: 45%; background: var(--dim); }
+  .vD .hud .phase { border-left: 1px solid var(--line); border-right: 1px solid var(--line); display: grid; place-items: center; min-width: 168px; }
+  .vD .hud .phase .p { font-family: Forum, serif; letter-spacing: 0.22em; color: var(--gold); font-size: 0.95rem; }
+  .vD .hud .phase .t { font-size: 0.74rem; color: var(--dim); letter-spacing: 0.14em; margin-top: 2px; }
+
+  .vD .dlg {
+    background: var(--glass-strong); backdrop-filter: blur(14px);
+    border: 1px solid var(--line); border-top-color: var(--gold-line);
+    padding: 18px 24px 20px;
+    clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  }
+  .vD .dlg .who { font-family: Forum, serif; font-size: 0.85rem; letter-spacing: 0.26em; color: var(--gold); text-transform: uppercase; }
+  .vD .dlg .text { font-family: "Source Serif 4", serif; font-size: 1.05rem; color: var(--white); margin-top: 8px; max-width: 62ch; }
+  .vD .dlg .choices { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .vD .dlg .choices button {
+    font-family: "Source Serif 4", serif; font-size: 0.92rem; color: var(--white);
+    background: transparent; border: 1px solid var(--line); padding: 7px 16px; cursor: pointer;
+    clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
+  }
+  .vD .dlg .choices button:hover { border-color: var(--gold-line); color: var(--gold); }
+
+  /* ---------- comparison ---------- */
+  .compare { max-width: 1180px; margin: 0 auto; padding: 64px 32px 96px; }
+  .compare h2 { font-family: Cinzel, serif; font-weight: 600; letter-spacing: 0.1em; color: #f0e6cd; font-size: 1.7rem; }
+  .compare table { width: 100%; border-collapse: collapse; margin-top: 26px; font-size: 0.95rem; }
+  .compare th, .compare td { text-align: left; padding: 12px 14px; border-bottom: 1px solid rgba(216,180,92,0.16); vertical-align: top; }
+  .compare th { font-family: Cinzel, serif; font-weight: 400; font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--doc-muted); }
+  .compare td:first-child { font-family: Cinzel, serif; color: var(--doc-gold); letter-spacing: 0.06em; white-space: nowrap; }
+  .compare td { color: #d5cbb4; }
+  .compare p.next { margin-top: 34px; color: var(--doc-muted); max-width: 74ch; }
+  .compare p.next strong { color: var(--doc-fg); }
+
+  @media (max-width: 860px) {
+    .comp-row { grid-template-columns: 1fr; }
+    .stage { aspect-ratio: auto; min-height: 480px; }
+    .vB .menu-wrap { grid-template-columns: 1fr; gap: 30px; padding: 40px 8%; }
+    .logo-A { font-size: 1.8rem; }
+    .logo-C { font-size: 1.8rem; letter-spacing: 0.2em; text-indent: 0.2em; }
+    .logo-D { font-size: 1.9rem; }
+    .vC .menu { flex-wrap: wrap; justify-content: center; padding: 0 14px; }
+    .vD .menu { grid-template-columns: 1fr; }
+    .compare { overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header class="doc-head">
+  <h1>ASCEN<span>CIO</span> — brand renditions</h1>
+  <p class="lede">Four renditions of <strong>one pinned world</strong>: dark ground, translucent glass panels, rectangular/angular geometry, angelic golden-white identity — <strong>gold primary, white secondary</strong> — classy serif type. They differ only where the brief left an axis free: warmth of the black, density of the glass, corner language, and serif voice. Each is applied to the same four surfaces — logo, main menu, duel HUD, story dialogue.</p>
+  <ul class="pin-list">
+    <li>dark ground</li>
+    <li>translucent panels · backdrop blur</li>
+    <li>rectangular / angular shapes</li>
+    <li>gold primary · white secondary</li>
+    <li>classy serif</li>
+    <li>angelic golden-white logo</li>
+  </ul>
+</header>
+
+<nav class="toc">
+  <a href="#va">A · Gilded Reliquary</a>
+  <a href="#vb">B · Obsidian Standard</a>
+  <a href="#vc">C · Aurea Lux</a>
+  <a href="#vd">D · Basilica Slate</a>
+  <a href="#compare">Comparison</a>
+</nav>
+
+<!-- ================= VARIANT A ================= -->
+<section class="variant vA" id="va">
+  <div class="variant-head">
+    <span class="letter">VARIANT A</span>
+    <h2>Gilded Reliquary</h2>
+    <span class="voice">Cinzel · EB Garamond</span>
+  </div>
+  <p class="thesis">Warm near-black, like a dim chapel lit from above. Glass panels are deep-blurred and chamfered at 45° — every panel reads as a cut gold-edged plate. The logo is engraved metal: Roman inscriptional capitals with a gold-to-white vertical polish.</p>
+  <p class="pick-when">Pick when the game should feel like a <em>sacred object</em> — richest gold presence of the four, most ornamental, most "angelic" in the literal sense.</p>
+
+  <div class="stage">
+    <div class="atmo"></div>
+    <div class="content menu-wrap">
+      <div style="text-align:center">
+        <div class="logo-A">ASCENCIO</div>
+        <div class="logo-A-sub">every conflict is resolved by play</div>
+      </div>
+      <div class="menu">
+        <button class="primary">New Game</button>
+        <button>Continue</button>
+        <button>Load</button>
+        <button>Settings</button>
+        <button>Free Play</button>
+      </div>
+      <div class="stage-foot">chapter i — duel monsters</div>
+    </div>
+  </div>
+
+  <div class="comp-row">
+    <div class="comp-cell">
+      <h4>Duel HUD</h4>
+      <div class="hud">
+        <div class="lp"><div class="who">Fynn</div><div class="val">6200</div><div class="bar"><i></i></div></div>
+        <div class="phase"><div class="p">MAIN 1</div><div class="t">TURN 4 · YOU</div></div>
+        <div class="lp foe"><div class="who">Opponent</div><div class="val">3600</div><div class="bar"><i></i></div></div>
+      </div>
+    </div>
+    <div class="comp-cell">
+      <h4>Story dialogue</h4>
+      <div class="dlg">
+        <div class="who">The Shopkeeper</div>
+        <div class="text">A spirit chooses its print, not the other way round. If you want that card, prove you're worth imprinting on.</div>
+        <div class="choices">
+          <button>Name your stake.</button>
+          <button>Walk away.</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="swatches">
+    <div class="swatch"><div class="chip" style="background:#0b0906"></div><div class="name">ground</div><div class="hex">#0b0906</div></div>
+    <div class="swatch"><div class="chip" style="background:rgba(32,26,14,0.72)"></div><div class="name">glass</div><div class="hex">rgba glass · blur 14</div></div>
+    <div class="swatch"><div class="chip" style="background:#d8b45c"></div><div class="name">gold primary</div><div class="hex">#d8b45c</div></div>
+    <div class="swatch"><div class="chip" style="background:#f2d488"></div><div class="name">gold bright</div><div class="hex">#f2d488</div></div>
+    <div class="swatch"><div class="chip" style="background:#f4ecdb"></div><div class="name">ivory (white)</div><div class="hex">#f4ecdb</div></div>
+  </div>
+</section>
+
+<!-- ================= VARIANT B ================= -->
+<section class="variant vB" id="vb">
+  <div class="variant-head">
+    <span class="letter">VARIANT B</span>
+    <h2>Obsidian Standard</h2>
+    <span class="voice">Marcellus · Spectral</span>
+  </div>
+  <p class="thesis">Cold graphite black, square corners, hairline borders — the closest to a modern Linux desktop (thin frosted panels, list-style menu, crisp 1px lines). White carries the interface; gold appears only on the logo's initial, the primary action, and phase state. The most disciplined and the most "operable".</p>
+  <p class="pick-when">Pick when long duel sessions matter most — quietest surface, gold stays rare so it keeps meaning. Least ornamental, most <em>tool-grade</em>.</p>
+
+  <div class="stage">
+    <div class="atmo"></div>
+    <div class="content menu-wrap">
+      <div>
+        <div class="logo-B">ASCENCIO</div>
+        <div class="logo-B-rule"></div>
+        <div class="tag">An offline story of duels, spirits, and the price of knowing.</div>
+      </div>
+      <div class="menu">
+        <button class="primary">New Game</button>
+        <button>Continue</button>
+        <button>Load</button>
+        <button>Settings</button>
+        <button>Free Play</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="comp-row">
+    <div class="comp-cell">
+      <h4>Duel HUD</h4>
+      <div class="hud">
+        <div class="lp"><div class="who">Fynn</div><div class="val">6200</div><div class="bar"><i></i></div></div>
+        <div class="phase"><div class="p">MAIN 1</div><div class="t">TURN 4 · YOU</div></div>
+        <div class="lp foe"><div class="who">Opponent</div><div class="val">3600</div><div class="bar"><i></i></div></div>
+      </div>
+    </div>
+    <div class="comp-cell">
+      <h4>Story dialogue</h4>
+      <div class="dlg">
+        <div class="who">The Shopkeeper</div>
+        <div class="text">A spirit chooses its print, not the other way round. If you want that card, prove you're worth imprinting on.</div>
+        <div class="choices">
+          <button>Name your stake.</button>
+          <button>Walk away.</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="swatches">
+    <div class="swatch"><div class="chip" style="background:#0a0b0d"></div><div class="name">ground</div><div class="hex">#0a0b0d</div></div>
+    <div class="swatch"><div class="chip" style="background:rgba(230,235,245,0.08)"></div><div class="name">glass</div><div class="hex">rgba glass · blur 10</div></div>
+    <div class="swatch"><div class="chip" style="background:#d9bc72"></div><div class="name">gold primary</div><div class="hex">#d9bc72</div></div>
+    <div class="swatch"><div class="chip" style="background:#f2f3f5"></div><div class="name">white</div><div class="hex">#f2f3f5</div></div>
+    <div class="swatch"><div class="chip" style="background:#8e929b"></div><div class="name">dim</div><div class="hex">#8e929b</div></div>
+  </div>
+</section>
+
+<!-- ================= VARIANT C ================= -->
+<section class="variant vC" id="vc">
+  <div class="variant-head">
+    <span class="letter">VARIANT C</span>
+    <h2>Aurea Lux</h2>
+    <span class="voice">Bodoni Moda · EB Garamond</span>
+  </div>
+  <p class="thesis">Absolute black with a golden dawn rising from below — the ascension made literal. Panels are glass lit by that dawn, with gradient-gold border light that falls off toward the top. The logo glows rather than shines: high-contrast didone capitals wrapped in halo light. The primary action is the only solid-gold object on screen.</p>
+  <p class="pick-when">Pick when the <em>story's register should dominate</em> — most cinematic and atmospheric, strongest first impression, needs the most care to keep duel screens legible.</p>
+
+  <div class="stage">
+    <div class="atmo"></div>
+    <div class="content menu-wrap">
+      <div class="logo-C">ASCENCIO</div>
+      <div class="logo-C-wings">RISE</div>
+      <div class="menu">
+        <button class="primary">New Game</button>
+        <button>Continue</button>
+        <button>Load</button>
+        <button>Settings</button>
+        <button>Free Play</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="comp-row">
+    <div class="comp-cell">
+      <h4>Duel HUD</h4>
+      <div class="hud">
+        <div class="lp"><div class="who">Fynn</div><div class="val">6200</div><div class="bar"><i></i></div></div>
+        <div class="phase"><div class="p">MAIN 1</div><div class="t">TURN 4 · YOU</div></div>
+        <div class="lp foe"><div class="who">Opponent</div><div class="val">3600</div><div class="bar"><i></i></div></div>
+      </div>
+    </div>
+    <div class="comp-cell">
+      <h4>Story dialogue</h4>
+      <div class="dlg">
+        <div class="who">The Shopkeeper</div>
+        <div class="text">A spirit chooses its print, not the other way round. If you want that card, prove you're worth imprinting on.</div>
+        <div class="choices">
+          <button>Name your stake.</button>
+          <button>Walk away.</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="swatches">
+    <div class="swatch"><div class="chip" style="background:#050505"></div><div class="name">ground</div><div class="hex">#050505</div></div>
+    <div class="swatch"><div class="chip" style="background:rgba(24,20,14,0.5)"></div><div class="name">glass</div><div class="hex">rgba glass · blur 18</div></div>
+    <div class="swatch"><div class="chip" style="background:#e8c76d"></div><div class="name">gold primary</div><div class="hex">#e8c76d</div></div>
+    <div class="swatch"><div class="chip" style="background:#ffe9ad"></div><div class="name">gold hot</div><div class="hex">#ffe9ad</div></div>
+    <div class="swatch"><div class="chip" style="background:#f7f2e6"></div><div class="name">ivory (white)</div><div class="hex">#f7f2e6</div></div>
+  </div>
+</section>
+
+<!-- ================= VARIANT D ================= -->
+<section class="variant vD" id="vd">
+  <div class="variant-head">
+    <span class="letter">VARIANT D</span>
+    <h2>Basilica Slate</h2>
+    <span class="voice">Forum · Source Serif 4</span>
+  </div>
+  <p class="thesis">Blue-black slate — the one rendition that keeps kinship with the shipped duel palette (<code style="font-family:inherit;color:#d3b268">#08101f</code> family), so migration is a restyle, not a repaint. Frosted blue-tinted glass, shallow chamfers, gold used strictly as the ceremonial color: logo warmth, primary action, phase marker.</p>
+  <p class="pick-when">Pick when <em>continuity with the current build</em> matters — cheapest to adopt across all three domains, calm, still unmistakably the pinned brand.</p>
+
+  <div class="stage">
+    <div class="atmo"></div>
+    <div class="content menu-wrap">
+      <div class="logo-D">ASCEN<b>CIO</b></div>
+      <div class="menu">
+        <button class="primary">New Game</button>
+        <button>Continue</button>
+        <button>Load</button>
+        <button>Settings</button>
+        <button>Free Play</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="comp-row">
+    <div class="comp-cell">
+      <h4>Duel HUD</h4>
+      <div class="hud">
+        <div class="lp"><div class="who">Fynn</div><div class="val">6200</div><div class="bar"><i></i></div></div>
+        <div class="phase"><div class="p">MAIN 1</div><div class="t">TURN 4 · YOU</div></div>
+        <div class="lp foe"><div class="who">Opponent</div><div class="val">3600</div><div class="bar"><i></i></div></div>
+      </div>
+    </div>
+    <div class="comp-cell">
+      <h4>Story dialogue</h4>
+      <div class="dlg">
+        <div class="who">The Shopkeeper</div>
+        <div class="text">A spirit chooses its print, not the other way round. If you want that card, prove you're worth imprinting on.</div>
+        <div class="choices">
+          <button>Name your stake.</button>
+          <button>Walk away.</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="swatches">
+    <div class="swatch"><div class="chip" style="background:#080d16"></div><div class="name">ground</div><div class="hex">#080d16</div></div>
+    <div class="swatch"><div class="chip" style="background:rgba(150,175,215,0.1)"></div><div class="name">glass</div><div class="hex">rgba glass · blur 12</div></div>
+    <div class="swatch"><div class="chip" style="background:#d3b268"></div><div class="name">gold primary</div><div class="hex">#d3b268</div></div>
+    <div class="swatch"><div class="chip" style="background:#eef1f7"></div><div class="name">white</div><div class="hex">#eef1f7</div></div>
+    <div class="swatch"><div class="chip" style="background:#93a0b6"></div><div class="name">dim</div><div class="hex">#93a0b6</div></div>
+  </div>
+</section>
+
+<!-- ================= COMPARISON ================= -->
+<section class="compare" id="compare">
+  <h2>Side by side</h2>
+  <table>
+    <thead>
+      <tr><th>Rendition</th><th>Ground</th><th>Glass</th><th>Corners</th><th>Gold budget</th><th>Serif voice</th><th>Risk</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>A · Gilded Reliquary</td><td>warm black</td><td>deep blur, gold-edged</td><td>45° chamfer, large</td><td>generous — panels themselves are gilded</td><td>Cinzel (engraved Roman capitals)</td><td>can tip ornamental; gold everywhere dilutes gold</td></tr>
+      <tr><td>B · Obsidian Standard</td><td>cold graphite</td><td>thin, crisp, hairline</td><td>square 90°</td><td>scarce — initial, primary, phase only</td><td>Marcellus (quiet Roman)</td><td>could read generic-dark if gold gets too shy</td></tr>
+      <tr><td>C · Aurea Lux</td><td>absolute black + dawn glow</td><td>deep blur, gradient-lit borders</td><td>square, light-defined</td><td>as light, not paint — glow carries it</td><td>Bodoni Moda (high-contrast didone)</td><td>most work to keep 12-zone duel field legible</td></tr>
+      <tr><td>D · Basilica Slate</td><td>blue-black (incumbent kin)</td><td>frosted, blue-tinted</td><td>shallow chamfer</td><td>ceremonial only</td><td>Forum + Source Serif 4</td><td>safest — least distinctive of the four</td></tr>
+    </tbody>
+  </table>
+  <p class="next"><strong>All four honor every pin.</strong> The axes left free were warmth, glass density, corner language, and typeface — that is where they differ. Pick one (or name a cross: "A's chamfers on B's discipline"), and the next step is applying it to the real surfaces — <code style="font-family:inherit">src/styles/tokens.css</code> restyle, then main menu, duel field, deck editor, story — with DESIGN.md written from the built result. Fonts here load from Google Fonts for preview; the chosen face gets self-hosted in the app (offline constraint).</p>
+</section>
+
+</body>
+</html>

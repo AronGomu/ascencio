@@ -12,7 +12,6 @@
     InteractionChoice,
   } from "../../prompts/interaction-spec.ts";
   import type { CardDragOrigin } from "../../presentation/drag-ghost-physics.ts";
-  import { handChipChoices } from "../../prompts/hand-activation-choices.ts";
   import { OverlayScrollbar } from "../../../../shell/index.ts";
   import CardControl from "./CardControl.svelte";
 
@@ -120,10 +119,7 @@
         selected={selectedTargets.has(card.targetId)}
         active={activeTarget === card.targetId}
         {disabled}
-        choices={handChipChoices(
-          spec?.cardChoices.get(card.targetId) ?? [],
-          pinnedTarget === card.targetId,
-        )}
+        choices={spec?.cardChoices.get(card.targetId) ?? []}
         pinned={pinnedTarget === card.targetId}
         zoomServed={zoomServedTarget === card.targetId}
         dragged={draggedTarget === card.targetId}

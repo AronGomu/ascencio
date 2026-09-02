@@ -2693,10 +2693,10 @@ describe("DuelField", () => {
     });
   });
 
-  /* The pointer chips lost activate because the drag answers it now; the
-     pinned menu keeps it, or the keyboard would have no route to an activation
-     on a card that offers more than one action. */
-  it("hand hover chips omit activate; the pinned menu keeps it", async () => {
+  /* The drag answers an activation too, but it is no longer the only pointer
+     route to one: hover chips carry the full legal set, the pinned menu keeps
+     what it always had (ADR-067). */
+  it("hand hover chips carry activate, and so does the pinned menu", async () => {
     const harness = renderDraggableHand({ spellChoices: true });
 
     expect(
@@ -2704,7 +2704,7 @@ describe("DuelField", () => {
     ).not.toBeNull();
     expect(
       document.querySelector('[data-cy="card-action-chip-activate"]'),
-    ).toBeNull();
+    ).not.toBeNull();
 
     await harness.rendered.rerender({
       session: {
@@ -2722,7 +2722,7 @@ describe("DuelField", () => {
     ).not.toBeNull();
   });
 
-  it("the hand zoom overlay never offers an activate chip", async () => {
+  it("the hand zoom overlay offers the activate chip beside the rest", async () => {
     renderDraggableHand({ spellChoices: true });
 
     await clickHandCard();
@@ -2737,7 +2737,7 @@ describe("DuelField", () => {
       document.querySelector(
         '[data-cy="hand-zoom-overlay-card-action-chip-activate"]',
       ),
-    ).toBeNull();
+    ).not.toBeNull();
   });
 
   /* Item 5 removed the Select chip from the card; the zoom overlay is the same

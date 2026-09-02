@@ -101,6 +101,10 @@ const THREE_CHOICES: readonly InteractionChoice[] = [
   { id: choiceId("activate"), label: "Activate", action: "activate" },
 ];
 
+const ACTIVATE_ONLY: readonly InteractionChoice[] = [
+  { id: choiceId("activate"), label: "Activate", action: "activate" },
+];
+
 /* Nested under `props`: `anchor` is also a Svelte mount option, so a flat
    object would be read as one and the component would get no props at all. */
 function renderOverlay(
@@ -292,6 +296,19 @@ describe("HandZoomOverlay action rows", () => {
 
     expect(actionList()).toBeNull();
     expect(actionButtons()).toHaveLength(0);
+  });
+
+  /* Item 10: a hand monster whose only legal action is its own effect. The
+     overlay draws that one chip like any other — nothing about `activate`
+     makes it a special case here (ADR-067). */
+  it("draws the single chip of a card whose only action is its effect", () => {
+    renderOverlay(FRAME_WIDTH, ANCHOR, ACTIVATE_ONLY);
+
+    const buttons = actionButtons();
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0]?.getAttribute("data-cy")).toBe(
+      "hand-zoom-overlay-card-action-chip-activate",
+    );
   });
 });
 

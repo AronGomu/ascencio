@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  activateChoices,
-  handChipChoices,
-} from "../../src/battle/app/prompts/hand-activation-choices.ts";
+import { activateChoices } from "../../src/battle/app/prompts/hand-activation-choices.ts";
 import type { InteractionChoice } from "../../src/battle/app/prompts/interaction-spec.ts";
 import { choiceId } from "../../src/battle/duel/contracts/ids.ts";
 
@@ -35,19 +32,5 @@ describe("activateChoices", () => {
     expect(activateChoices(CHOICES)).toEqual([ACTIVATE]);
     expect(activateChoices([SET_SPELL_TRAP, SUMMON])).toEqual([]);
     expect(activateChoices([])).toEqual([]);
-  });
-});
-
-describe("handChipChoices", () => {
-  it("hides activate while unpinned", () => {
-    expect(handChipChoices(CHOICES, false)).toEqual([SET_SPELL_TRAP, SUMMON]);
-  });
-
-  it("keeps the full list for the pinned menu", () => {
-    expect(handChipChoices(CHOICES, true)).toEqual([
-      ACTIVATE,
-      SET_SPELL_TRAP,
-      SUMMON,
-    ]);
   });
 });

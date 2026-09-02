@@ -30,10 +30,7 @@
   import type { OffFieldTargetEntry } from "../../field/off-field-target-list.ts";
   import ZoneListDialog from "./duel-field/ZoneListDialog.svelte";
   import { dropChoicesForZone } from "../prompts/drop-target.ts";
-  import {
-    activateChoices,
-    handChipChoices,
-  } from "../prompts/hand-activation-choices.ts";
+  import { activateChoices } from "../prompts/hand-activation-choices.ts";
   import { validatePromptSelection } from "../prompts/prompt-selection.ts";
   import { placementZoneCandidates } from "../../field/placement-candidates.ts";
   import type { PhysicalZoneId } from "../../field/duel-field-layout.ts";
@@ -1484,10 +1481,7 @@
       placeholderUrl={resolvedPlaceholderUrl}
       choices={spec === null || spec.kind === "cardSelection"
         ? []
-        : handChipChoices(
-            spec.cardChoices.get(handZoomView.card.targetId) ?? [],
-            false,
-          )}
+        : (spec.cardChoices.get(handZoomView.card.targetId) ?? [])}
       selected={selectedTargets.has(handZoomView.card.targetId)}
       disabled={pending}
       onchoose={(choice) => {

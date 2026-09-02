@@ -294,10 +294,10 @@ describe("HandBand", () => {
     expect(onactivate).toHaveBeenCalled();
   });
 
-  /* Item 4: activation is answered by dragging the card onto its own zone, so
-     the pointer chips drop it — but the pinned menu is the keyboard's only
-     route to an activation on a card that offers more than one action. */
-  it("filters activate from an unpinned card's chips and restores it when pinned", async () => {
+  /* Item 10: the drag-to-zone gesture is one route to an activation, not the
+     only one — a hand card's chips carry activate whether the menu is pinned
+     or the pointer merely hovers (ADR-067). */
+  it("keeps activate in a card's chips, pinned or not", async () => {
     const card = handCard(0, 0);
     const rendered = renderBand({
       cards: [card],
@@ -321,7 +321,7 @@ describe("HandBand", () => {
 
     expect(
       document.querySelector('[data-cy="card-action-chip-activate"]'),
-    ).toBeNull();
+    ).not.toBeNull();
     expect(
       document.querySelector('[data-cy="card-action-chip-setmonster"]'),
     ).not.toBeNull();

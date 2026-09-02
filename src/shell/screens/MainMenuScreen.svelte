@@ -30,7 +30,9 @@
   <p class="main-menu__eyebrow" data-cy="main-menu-eyebrow">
     Private prototype · v0.1
   </p>
-  <h1 class="main-menu__title" data-cy="main-menu-title">Echoes of the Draw</h1>
+  <h1 class="main-menu__title" data-cy="main-menu-title">
+    ASCEN<b data-cy="main-menu-title-accent">CIO</b>
+  </h1>
   <p class="main-menu__tagline" data-cy="main-menu-tagline">
     One signal. One duel. More than one way forward.
   </p>

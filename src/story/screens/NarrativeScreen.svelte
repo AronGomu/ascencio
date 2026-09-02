@@ -286,9 +286,7 @@
     border: 2px solid var(--border-light);
     border-radius: 48% 48% 16% 16%;
     background: linear-gradient(var(--border-strong), var(--surface-chain));
-    font:
-      800 clamp(3rem, 12vw, 8rem) Georgia,
-      serif;
+    font: 400 clamp(3rem, 12vw, 8rem) var(--font-display);
     color: var(--text);
     filter: drop-shadow(
       0 1rem 2rem color-mix(in srgb, var(--shadow) 73%, transparent)

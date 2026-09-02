@@ -17,9 +17,7 @@ const STARTER = storyStarterSave();
 async function openStory(page: Page): Promise<void> {
   await page.goto("./#/story");
   await expect(page.locator(STORY_REGION)).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Echoes of the Draw" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "ASCENCIO" })).toBeVisible();
 }
 
 async function startNarrative(page: Page): Promise<void> {
@@ -255,9 +253,7 @@ test("saved progress survives a reload and reaches the end of the prologue", asy
   await page.getByRole("button", { name: "Close Save and load" }).click();
 
   await page.reload();
-  await expect(
-    page.getByRole("heading", { name: "Echoes of the Draw" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "ASCENCIO" })).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByText(/Archive available/)).toBeVisible();
   await page.getByRole("button", { name: "End prototype" }).click();
@@ -336,9 +332,7 @@ test("a manual save is reloadable from the Load screen after a reload", async ({
   expect(await storySaveSlots(page)).toContain("manual:1");
 
   await page.reload();
-  await expect(
-    page.getByRole("heading", { name: "Echoes of the Draw" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "ASCENCIO" })).toBeVisible();
   await page.getByRole("button", { name: "Load", exact: true }).click();
   await page.getByRole("button", { name: "Load manual slot 1" }).click();
   await expect(

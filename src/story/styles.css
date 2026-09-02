@@ -20,7 +20,7 @@
   --story-border: var(--border-light);
 
   color-scheme: dark;
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-ui);
   background: var(--story-bg);
   color: var(--story-text);
 }

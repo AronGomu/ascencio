@@ -1,8 +1,12 @@
 /* Integration-owned design tokens (T3).
-   Every value here is copied byte-for-byte from the pre-token `src/styles/app.css`
-   duel palette; nothing is invented. `app.css` imports this file first and holds
-   no raw colour literals of its own, so the three UI domains (duel, deck editor,
-   visual novel) restyle onto one source of truth in T16. */
+   Originally copied byte-for-byte from the pre-token `src/styles/app.css`
+   duel palette. `app.css` imports this file first and holds no raw colour
+   literals of its own, so the three UI domains (duel, deck editor, visual
+   novel) restyle onto one source of truth in T16.
+   2026-09-02: restyled to the owner-chosen "Basilica Slate" brand direction
+   (PRODUCT.md → Brand Commitments): gold ceremonial accent, warm-white text,
+   serif type, angular radii, translucent glass panel primitives. The slate
+   surface family already matched and is unchanged. */
 :root {
   /* surface */
   --bg: #08101f;
@@ -25,18 +29,25 @@
   --scrollbar-thumb: #73829d;
 
   /* text */
-  --text: #e8edf8;
+  --text: #eef1f7;
   --muted: #a9b5ca;
   --ink: #ffffff;
-  --ink-on-accent: #06111d;
+  --ink-on-accent: #14100a;
   --ink-on-danger: #24060b;
   --ink-on-warning: #2b1d00;
-  --text-accent-soft: #dffbf3;
+  --text-accent-soft: #f7eed8;
 
   /* brand + state */
-  --accent: #73daca;
-  --accent-strong: #42c9b5;
-  --accent-deep: #297f73;
+  --accent: #d3b268;
+  --accent-strong: #c19a45;
+  --accent-deep: #8a6f33;
+  /* Basilica Slate glass + chamfer primitives: translucent blue-tinted
+     panels over the dark ground, hairline gold for ceremonial edges. */
+  --glass: rgba(150, 175, 215, 0.055);
+  --glass-strong: rgba(150, 175, 215, 0.1);
+  --line-soft: rgba(170, 190, 220, 0.18);
+  --gold-line: rgba(211, 178, 104, 0.5);
+  --chamfer: 10px;
   --legal: #7ee2a8;
   --success: var(--legal);
   --selected: #ffd580;
@@ -86,10 +97,11 @@
   --space-4: 1rem;
   --space-5: 1.5rem;
   --space-6: 2rem;
-  --radius-sm: 0.35rem;
-  --radius-md: 0.6rem;
-  --radius-lg: 0.9rem;
-  --font-ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --radius-sm: 0.15rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.4rem;
+  --font-ui: "Source Serif 4", Georgia, ui-serif, serif;
+  --font-display: "Forum", "Source Serif 4", Georgia, serif;
   --text-xs: 0.72rem;
   --text-sm: 0.85rem;
   --text-md: 1rem;

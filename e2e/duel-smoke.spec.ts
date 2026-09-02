@@ -598,8 +598,10 @@ test("the match setup persists a chosen pair and Change decks returns without au
     ),
   ).toHaveLength(0);
 
-  const yourSeat = page.locator('[data-cy^="deck-tile-yours-"]');
-  const opponentSeat = page.locator('[data-cy^="deck-tile-opponent-"]');
+  const yourSeat = page.locator('[data-cy="duel-start-your-deck-name"]');
+  const opponentSeat = page.locator(
+    '[data-cy="duel-start-opponent-deck-name"]',
+  );
   await expect(
     page.locator('[data-cy="deck-tile-press-preset:burning-abyss"]'),
   ).toBeEnabled({ timeout: 120_000 });
@@ -645,14 +647,8 @@ test("the match setup persists a chosen pair and Change decks returns without au
 
   await page.reload();
   await expect(setup).toBeVisible({ timeout: 120_000 });
-  await expect(yourSeat).toHaveAttribute(
-    "data-cy",
-    "deck-tile-yours-preset:burning-abyss",
-  );
-  await expect(opponentSeat).toHaveAttribute(
-    "data-cy",
-    "deck-tile-opponent-preset:nekroz",
-  );
+  await expect(yourSeat).toHaveText("Burning Abyss");
+  await expect(opponentSeat).toHaveText("Nekroz");
 
   await startPresetDuel(page);
   await expect(page.locator('[data-cy="duel-field"]')).toBeVisible({
@@ -732,9 +728,9 @@ test("a local deck built from the packaged catalog is offered and duels", async 
   await expect(localTile).toHaveCount(1, { timeout: 120_000 });
 
   await localTile.locator('[data-cy^="deck-tile-press-local:"]').click();
-  await expect(page.locator('[data-cy^="deck-tile-yours-local:"]')).toHaveCount(
-    1,
-  );
+  await expect(
+    page.locator('[data-cy="duel-start-your-deck-name"]'),
+  ).toHaveText(LOCAL_DECK_NAME);
   await expect(
     page.locator('[data-cy="deck-select-block-notice"]'),
   ).toHaveCount(0);

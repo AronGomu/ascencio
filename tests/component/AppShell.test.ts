@@ -244,18 +244,17 @@ describe("AppShell", () => {
       document.querySelector('[data-cy="shell-region-free-play-setup"]'),
     ).not.toBeNull();
     expect(document.querySelector('[data-cy="shell-region-duel"]')).toBeNull();
-    /* The screen's two seat cards, each rendering its deck's tile under its
-       own `cyKey`; the opponent is seated first in the document. */
+    /* Player-first seat chips name both decks without cloning their grid tiles. */
     const seats = await vi.waitFor(() => {
       const found = document.querySelectorAll<HTMLElement>(
-        '[data-cy^="deck-tile-yours-"], [data-cy^="deck-tile-opponent-"]',
+        '[data-cy="duel-start-your-deck-name"], [data-cy="duel-start-opponent-deck-name"]',
       );
       expect(found).toHaveLength(2);
       return found;
     }, REAL_IMPORT);
-    expect([...seats].map((card) => card.getAttribute("data-cy"))).toEqual([
-      "deck-tile-opponent-preset:shaddoll",
-      "deck-tile-yours-preset:mvp-player",
+    expect([...seats].map((chip) => chip.textContent)).toEqual([
+      "Starter (Player)",
+      "Shaddoll",
     ]);
 
     await fireEvent.click(

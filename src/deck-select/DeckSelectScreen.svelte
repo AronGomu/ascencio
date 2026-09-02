@@ -53,9 +53,9 @@
   export let opponent: OpponentView | null = null;
   /** Free-play picker options; empty + opponent.locked → no picker (story). */
   export let opponents: readonly OpponentView[] = [];
-  /** Opponent's current deck tile; rendered as the red seat card. */
+  /** Opponent's current deck tile; named by the red seat chip. */
   export let opponentDeck: DeckTileModel | null = null;
-  /** Your current deck tile; rendered as the blue seat card. */
+  /** Your current deck tile; null falls back to the selected grid tile. */
   export let playerDeck: DeckTileModel | null = null;
   /** Which seat grid presses fill. Host owns it; card toggle reports. */
   export let seat: "player" | "opponent" = "player";
@@ -80,15 +80,18 @@
   let deleting: string | null = null;
   let picking = false;
   let grid: HTMLElement | null = null;
-  /* The deck the pointer is on, the tile it is on, and that deck's list once
-     it resolves. The token is what a late answer is measured against. */
+  /* The deck the pointer is on and that deck's list once it resolves. The token
+     is what a late answer is measured against. */
   let hoverToken = 0;
   let hoverKey: string | null = null;
-  let hoverAnchor: HTMLElement | null = null;
   let hoverList: DecklistView | null = null;
-  /** The dock's resting content: the list of whatever `selectedKey` names. */
+  /** Resting content for the library dock and both duel-start seats. */
   let restToken = 0;
   let restList: DecklistView | null = null;
+  let playerRestToken = 0;
+  let playerRestList: DecklistView | null = null;
+  let opponentRestToken = 0;
+  let opponentRestList: DecklistView | null = null;
   let art: { readonly url: string; readonly place: string } | null = null;
   /* The portrait opened the picker and is where the caret was, so it is bound
      here to take focus back however the picker closes. */
@@ -99,10 +102,8 @@
   /* A hover preview is a pointer's affordance: a finger has no hover to raise
      it with and none to take it away again, so a coarse pointer gets none. */
   const COARSE_QUERY = "(pointer: coarse)";
-  /* The gap between a float and what it is floating beside, and the width the
-     `.float` rule below declares — the flip needs it as a number. */
+  /* Gap between the library dock's card-art float and the row it accompanies. */
   const FLOAT_GAP = 12;
-  const FLOAT_WIDTH = 320;
   const ART_HEIGHT = 340;
   let matchedNarrow = false;
   let matchedCoarse = false;
@@ -170,8 +171,16 @@
   /* Hovering borrows the dock and leaving gives it back, so the resting list
      is resolved once for the pick rather than re-fetched on every move. */
   $: dockList = (previews ? hoverList : null) ?? restList;
+  $: playerTile = playerDeck ?? tileFor(tiles, selectedKey);
+  $: playerPreviewing =
+    seatPanel && previews && seat === "player" && hoverKey !== null;
+  $: opponentPreviewing =
+    seatPanel && previews && seat === "opponent" && hoverKey !== null;
+  $: playerList = playerPreviewing ? hoverList : playerRestList;
+  $: opponentList = opponentPreviewing ? hoverList : opponentRestList;
   $: void loadRest(decklistFor, selectedKey, docked);
-  $: floatStyle = floatPlacement(hoverAnchor);
+  $: void loadPlayerRest(decklistFor, selectedKey, seatPanel);
+  $: void loadOpponentRest(decklistFor, opponentDeck?.key ?? null, seatPanel);
   $: selectedTile = tileFor(tiles, selectedKey);
   $: menuTile = tileFor(tiles, menu === null ? null : menu.key);
   $: renameTile = tileFor(tiles, renaming);
@@ -247,7 +256,7 @@
     if (!previews) return;
     const found = cellAt(event.target);
     if (found === null || found.key === hoverKey) return;
-    void preview(found.key, found.cell);
+    void preview(found.key);
   }
 
   function leaveTile(event: PointerEvent): void {
@@ -256,12 +265,11 @@
     clearPreview();
   }
 
-  async function preview(key: string, cell: HTMLElement): Promise<void> {
+  async function preview(key: string): Promise<void> {
     const resolve = decklistFor;
     if (resolve === null) return;
     const token = ++hoverToken;
     hoverKey = key;
-    hoverAnchor = cell;
     hoverList = null;
     const resolved = await resolve(key);
     /* A slow deck resolving after the pointer moved on is answering a question
@@ -273,7 +281,6 @@
   function clearPreview(): void {
     hoverToken += 1;
     hoverKey = null;
-    hoverAnchor = null;
     hoverList = null;
     art = null;
   }
@@ -291,16 +298,30 @@
     restList = resolved;
   }
 
-  /* The float is as tall as the viewport allows — the design's 90-card deck,
-     read with minimal scrolling — so only its side is decided here: beside the
-     tile, and on the tile's other side when it would run off the right edge. */
-  function floatPlacement(anchor: HTMLElement | null): string {
-    if (anchor === null) return "";
-    const rect = anchor.getBoundingClientRect();
-    const flipped = rect.right + FLOAT_GAP + FLOAT_WIDTH > window.innerWidth;
-    return flipped
-      ? `right: ${Math.round(window.innerWidth - rect.left + FLOAT_GAP)}px`
-      : `left: ${Math.round(rect.right + FLOAT_GAP)}px`;
+  async function loadPlayerRest(
+    resolve: ((key: string) => Promise<DecklistView | null>) | null,
+    key: string | null,
+    active: boolean,
+  ): Promise<void> {
+    const token = ++playerRestToken;
+    playerRestList = null;
+    if (!active || resolve === null || key === null) return;
+    const resolved = await resolve(key);
+    if (token !== playerRestToken) return;
+    playerRestList = resolved;
+  }
+
+  async function loadOpponentRest(
+    resolve: ((key: string) => Promise<DecklistView | null>) | null,
+    key: string | null,
+    active: boolean,
+  ): Promise<void> {
+    const token = ++opponentRestToken;
+    opponentRestList = null;
+    if (!active || resolve === null || key === null) return;
+    const resolved = await resolve(key);
+    if (token !== opponentRestToken) return;
+    opponentRestList = resolved;
   }
 
   /* The row names the card; the float is the card itself, held clear of the
@@ -394,6 +415,16 @@
 <svelte:window onkeydown={handleKeydown} />
 <svelte:document onpointerdown={pickerPointerDown} />
 
+{#snippet startButton()}
+  <button
+    type="button"
+    class:start={!narrow}
+    disabled={!canStart}
+    data-cy="deck-select-start"
+    onclick={onstart}>{startLabel}</button
+  >
+{/snippet}
+
 <section
   class="screen"
   class:paneled={seatPanel || docked}
@@ -401,115 +432,186 @@
   data-cy="deck-select-screen"
 >
   {#if mode === "duel-start" && opponent !== null}
-    <!-- First in the markup rather than last: a screen reader meets who you
-         face before the decks it is choosing against, while the grid places
-         the panel on the right. -->
+    <!-- Player-first order matches the visual columns and the order in which
+         the two seat choices are read. -->
     <aside class="seat-panel" data-cy="duel-start-seat-panel">
-      <!-- svelte-ignore a11y_no_static_element_interactions (the handler only
-           exists on the button branch; a locked opponent renders an inert div) -->
-      <svelte:element
-        this={opponent.locked ? "div" : "button"}
-        class="portrait"
-        class:pressable={!opponent.locked}
-        type={opponent.locked ? undefined : "button"}
-        aria-label={opponent.locked
-          ? undefined
-          : `Change opponent: ${opponent.name}`}
-        onclick={opponent.locked ? undefined : () => (picking = true)}
-        bind:this={portrait}
-        data-cy="duel-start-opponent-portrait"
-      >
-        <!-- Authored geometry rather than a packaged asset, matching the
-             tile's own placeholder: no portrait art ships yet. -->
-        <svg
-          class="portrait-art"
-          viewBox="0 0 120 90"
-          preserveAspectRatio="xMidYMid slice"
-          aria-hidden="true"
-          data-cy="duel-start-opponent-portrait-art"
-        >
-          <rect
-            class="art-field"
-            width="120"
-            height="90"
-            data-cy="duel-start-opponent-art-field"
-          />
-          <circle
-            class="art-figure"
-            cx="60"
-            cy="38"
-            r="17"
-            data-cy="duel-start-opponent-art-head"
-          />
-          <path
-            class="art-figure"
-            d="M24 92 Q60 56 96 92 Z"
-            data-cy="duel-start-opponent-art-shoulders"
-          />
-        </svg>
-        {#if !opponent.locked}
-          <span
-            class="chip"
-            aria-hidden="true"
-            data-cy="duel-start-opponent-change-chip">⇄ Change</span
-          >
-        {/if}
-      </svelte:element>
+      <div class="seats" data-cy="deck-select-seats">
+        <div class="seat-section player" data-cy="seat-section-player">
+          <div class="avatar" data-cy="duel-start-your-avatar">
+            <svg
+              class="avatar-art"
+              viewBox="0 0 120 90"
+              preserveAspectRatio="xMidYMid slice"
+              aria-hidden="true"
+              data-cy="duel-start-your-avatar-art"
+            >
+              <rect
+                class="art-field"
+                width="120"
+                height="90"
+                data-cy="duel-start-your-art-field"
+              />
+              <circle
+                class="art-figure"
+                cx="60"
+                cy="38"
+                r="17"
+                data-cy="duel-start-your-art-head"
+              />
+              <path
+                class="art-figure"
+                d="M24 92 Q60 56 96 92 Z"
+                data-cy="duel-start-your-art-shoulders"
+              />
+            </svg>
+            <span class="who" data-cy="duel-start-your-name">You</span>
+          </div>
 
-      <div class="identity" data-cy="duel-start-opponent-identity">
-        <h2 data-cy="duel-start-opponent-name">{opponent.name}</h2>
-        <p data-cy="duel-start-opponent-line">{opponent.line}</p>
+          <button
+            type="button"
+            class="seat-chip player-chip"
+            class:active={seat === "player"}
+            aria-pressed={seat === "player"}
+            onclick={() => onseat("player")}
+            data-cy="duel-start-your-deck"
+          >
+            {#if playerTile !== null}
+              <span class="deck-name" data-cy="duel-start-your-deck-name"
+                >{playerTile.name}</span
+              >
+            {:else}
+              <span data-cy="duel-start-your-deck-empty">No deck selected</span>
+            {/if}
+          </button>
+
+          <div
+            class="seat-list"
+            class:previewing={playerPreviewing}
+            data-cy="deck-select-seat-list-player-wrapper"
+          >
+            {#if playerList === null}
+              <p
+                class="seat-list-empty"
+                data-cy="deck-select-seat-list-empty-player"
+              >
+                No list available.
+              </p>
+            {:else}
+              <DecklistPanel
+                decklist={playerList}
+                cy="deck-select-seat-list-player"
+              />
+            {/if}
+          </div>
+        </div>
+
+        <div class="seat-section opponent" data-cy="seat-section-opponent">
+          <!-- svelte-ignore a11y_no_static_element_interactions (the handler only
+               exists on the button branch; a locked opponent renders an inert div) -->
+          <svelte:element
+            this={opponent.locked ? "div" : "button"}
+            class="avatar"
+            class:pressable={!opponent.locked}
+            type={opponent.locked ? undefined : "button"}
+            aria-label={opponent.locked
+              ? undefined
+              : `Change opponent: ${opponent.name}`}
+            onclick={opponent.locked ? undefined : () => (picking = true)}
+            bind:this={portrait}
+            data-cy="duel-start-opponent-portrait"
+          >
+            <svg
+              class="avatar-art"
+              viewBox="0 0 120 90"
+              preserveAspectRatio="xMidYMid slice"
+              aria-hidden="true"
+              data-cy="duel-start-opponent-portrait-art"
+            >
+              <rect
+                class="art-field"
+                width="120"
+                height="90"
+                data-cy="duel-start-opponent-art-field"
+              />
+              <circle
+                class="art-figure"
+                cx="60"
+                cy="38"
+                r="17"
+                data-cy="duel-start-opponent-art-head"
+              />
+              <path
+                class="art-figure"
+                d="M24 92 Q60 56 96 92 Z"
+                data-cy="duel-start-opponent-art-shoulders"
+              />
+            </svg>
+            <span class="who" data-cy="duel-start-opponent-name"
+              >{opponent.name}</span
+            >
+            {#if !opponent.locked}
+              <span
+                class="change-chip"
+                aria-hidden="true"
+                data-cy="duel-start-opponent-change-chip">⇄ Change</span
+              >
+            {/if}
+          </svelte:element>
+
+          <div class="opponent-chip-row" data-cy="duel-start-opponent-chip-row">
+            <!-- svelte-ignore a11y_no_static_element_interactions (the handler only
+                 exists on the button branch; the story's chip is an inert div) -->
+            <svelte:element
+              this={opponent.locked ? "div" : "button"}
+              class="seat-chip opponent-chip"
+              class:active={seat === "opponent" && !opponent.locked}
+              class:pressable={!opponent.locked}
+              type={opponent.locked ? undefined : "button"}
+              aria-pressed={opponent.locked ? undefined : seat === "opponent"}
+              onclick={opponent.locked ? undefined : toggleOpponentSeat}
+              data-cy="duel-start-opponent-deck"
+            >
+              {#if opponentDeck !== null}
+                <span class="deck-name" data-cy="duel-start-opponent-deck-name"
+                  >{opponentDeck.name}</span
+                >
+              {:else}
+                <span data-cy="duel-start-opponent-deck-empty"
+                  >No deck selected</span
+                >
+              {/if}
+            </svelte:element>
+            {#if opponent.locked}
+              <p class="locked" data-cy="duel-start-opponent-deck-locked">
+                🔒 Set by the story
+              </p>
+            {/if}
+          </div>
+
+          <div
+            class="seat-list"
+            class:previewing={opponentPreviewing}
+            data-cy="deck-select-seat-list-opponent-wrapper"
+          >
+            {#if opponentList === null}
+              <p
+                class="seat-list-empty"
+                data-cy="deck-select-seat-list-empty-opponent"
+              >
+                No list available.
+              </p>
+            {:else}
+              <DecklistPanel
+                decklist={opponentList}
+                cy="deck-select-seat-list-opponent"
+              />
+            {/if}
+          </div>
+        </div>
       </div>
 
-      {#if opponentDeck !== null}
-        <!-- svelte-ignore a11y_no_static_element_interactions (the handler only
-             exists on the button branch; the story's deck card is an inert div) -->
-        <svelte:element
-          this={opponent.locked ? "div" : "button"}
-          class="seat-card"
-          class:pressable={!opponent.locked}
-          type={opponent.locked ? undefined : "button"}
-          aria-pressed={opponent.locked ? undefined : seat === "opponent"}
-          onclick={opponent.locked ? undefined : toggleOpponentSeat}
-          data-cy="duel-start-opponent-deck"
-        >
-          <!-- The same deck can be a grid tile and this card at once, so the
-               card's copy carries its own `data-cy` identity. -->
-          <DeckTile
-            tile={opponentDeck}
-            cyKey={`opponent-${opponentDeck.key}`}
-            halo={seat === "opponent" && !opponent.locked
-              ? "focus"
-              : "opponent"}
-            showFavourite={false}
-            showMenu={false}
-            disabled
-          />
-        </svelte:element>
-        {#if opponent.locked}
-          <p class="locked" data-cy="duel-start-opponent-deck-locked">
-            🔒 Set by the story
-          </p>
-        {/if}
-      {/if}
-
-      {#if playerDeck !== null}
-        <button
-          type="button"
-          class="seat-card pressable"
-          aria-pressed={seat === "player"}
-          onclick={() => onseat("player")}
-          data-cy="duel-start-your-deck"
-        >
-          <DeckTile
-            tile={playerDeck}
-            cyKey={`yours-${playerDeck.key}`}
-            halo={seat === "player" ? "focus" : "you"}
-            showFavourite={false}
-            showMenu={false}
-            disabled
-          />
-        </button>
+      {#if !narrow}
+        {@render startButton()}
       {/if}
     </aside>
   {/if}
@@ -647,12 +749,9 @@
         data-cy="deck-select-open"
         onclick={openSelected}>Open</button
       >
-      <button
-        type="button"
-        disabled={!canStart}
-        data-cy="deck-select-start"
-        onclick={onstart}>{startLabel}</button
-      >
+      {#if narrow}
+        {@render startButton()}
+      {/if}
     {/if}
     {#if blockNotice !== null}
       <p class="notice" role="status" data-cy="deck-select-block-notice">
@@ -681,14 +780,6 @@
     </aside>
   {/if}
 </section>
-
-{#if mode === "duel-start" && hoverList !== null}
-  <!-- Fixed to the viewport rather than placed in the grid: the grid scrolls,
-       and the float is a read of the deck the pointer is on. -->
-  <div class="float" style={floatStyle} data-cy="deck-select-hover-float">
-    <DecklistPanel decklist={hoverList} cy="deck-select-hover-list" />
-  </div>
-{/if}
 
 {#if art !== null}
   <img
@@ -785,6 +876,9 @@
   /* The left column of the desktop stage: the title bar and the footer keep
      their height and the grid takes what is left, so only the decks scroll. */
   .screen {
+    --p: 8rem;
+    --chamfer: 12px;
+
     display: grid;
     height: 100%;
     min-height: 0;
@@ -882,9 +976,11 @@
     overflow-y: auto;
     min-height: 0;
     align-content: start;
-    gap: var(--space-3);
+    gap: 0.5rem;
     grid-auto-rows: max-content;
-    grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(12rem, 100%), 1fr));
+    padding-right: var(--space-2);
+    scrollbar-gutter: stable;
   }
 
   /* Stuck to the bottom of whatever scrolls this screen, so the way out and
@@ -1001,21 +1097,38 @@
     font-size: var(--text-sm);
   }
 
-  /* The second column: duel start seats the opponent there and the library
-     docks its preview there. It holds the whole of column 2, so the three rows
-     above auto-place down column 1 without being placed by hand. */
+  /* Library keeps its existing dock width; duel start spends a fixed 38rem on
+     two complete seat columns. */
   .screen.paneled {
     grid-template-columns: minmax(0, 73fr) minmax(17rem, 27fr);
   }
 
+  .screen.paneled:not(.library) {
+    grid-template-columns: minmax(0, 73fr) 38rem;
+  }
+
   .seat-panel,
+  .dock {
+    min-height: 0;
+    grid-row: 1 / -1;
+    grid-column: 2;
+  }
+
+  .seat-panel {
+    display: grid;
+    overflow: hidden;
+    grid-template-rows: minmax(0, 1fr) max-content;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border: 1px solid var(--line-soft);
+    border-left-color: var(--gold-line);
+    background: var(--glass);
+  }
+
   .dock {
     display: grid;
     overflow-y: auto;
-    min-height: 0;
     align-content: start;
-    grid-row: 1 / -1;
-    grid-column: 2;
     grid-auto-rows: max-content;
     gap: var(--space-2);
     padding-left: var(--space-3);
@@ -1026,7 +1139,8 @@
      container: this screen fills the stage, and the collapse stacks the panel
      above the grid it belongs to. */
   @media (max-width: 62rem) {
-    .screen.paneled {
+    .screen.paneled,
+    .screen.paneled:not(.library) {
       grid-template-columns: minmax(0, 1fr);
       grid-template-rows: auto auto minmax(0, 1fr) auto;
     }
@@ -1035,6 +1149,14 @@
     .dock {
       grid-row: 1;
       grid-column: 1;
+    }
+
+    .seat-panel {
+      border-left-color: var(--line-soft);
+      border-bottom-color: var(--gold-line);
+    }
+
+    .dock {
       padding-bottom: var(--space-2);
       padding-left: 0;
       border-bottom: 1px solid var(--border);
@@ -1061,6 +1183,10 @@
        auto-place around this one in document order. */
     .screen.paneled .seat-panel {
       grid-row: 2;
+    }
+
+    .screen .seats {
+      grid-template-columns: minmax(0, 1fr);
     }
 
     .grid {
@@ -1092,7 +1218,22 @@
     }
   }
 
-  .portrait {
+  .seats {
+    display: grid;
+    min-height: 0;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+  }
+
+  .seat-section {
+    display: grid;
+    min-width: 0;
+    min-height: 0;
+    grid-template-rows: max-content max-content minmax(0, 1fr);
+    gap: var(--space-2);
+  }
+
+  .avatar {
     position: relative;
     display: block;
     width: 100%;
@@ -1105,87 +1246,152 @@
     font: inherit;
   }
 
-  .portrait-art {
+  .avatar-art {
     display: block;
     width: 100%;
-    height: 9rem;
+    height: var(--p);
   }
 
   .art-field {
     fill: var(--surface-panel);
   }
 
-  .art-figure {
-    fill: color-mix(in srgb, var(--accent) 22%, transparent);
+  .player .art-figure {
+    fill: color-mix(in srgb, var(--seat-you) 26%, transparent);
   }
 
-  /* The portrait is the control that swaps who you face, so the chip names
-     that affordance the moment the pointer or the caret reaches it. */
-  .chip {
+  .opponent .art-figure {
+    fill: color-mix(in srgb, var(--seat-opponent) 26%, transparent);
+  }
+
+  .who,
+  .change-chip {
     position: absolute;
-    top: var(--space-2);
-    right: var(--space-2);
     padding: 0.15rem 0.55rem;
     border: 1px solid var(--border);
     border-radius: 999px;
-    color: var(--muted);
     background: color-mix(in srgb, var(--shadow) 72%, transparent);
+    font-family: var(--font-display);
     font-size: var(--text-xs);
+    text-transform: uppercase;
+  }
+
+  .who {
+    bottom: var(--space-2);
+    left: var(--space-2);
+    color: var(--text);
+    letter-spacing: 0.12em;
+  }
+
+  /* Opponent avatar remains its picker trigger; this hint appears when mouse
+     or keyboard reaches it. */
+  .change-chip {
+    top: var(--space-2);
+    right: var(--space-2);
+    color: var(--muted);
     opacity: 0;
   }
 
-  .portrait:hover .chip,
-  .portrait:focus-visible .chip {
+  .avatar:hover .change-chip,
+  .avatar:focus-visible .change-chip {
     border-color: var(--accent);
     color: var(--accent);
     opacity: 1;
   }
 
-  /* A phone has no hover to reveal it, so the chip rides the portrait
-     permanently there. Last, so it beats the resting `opacity: 0` above. */
   @media (pointer: coarse), (max-width: 40rem) {
-    .chip {
+    .change-chip {
       opacity: 1;
     }
   }
 
-  .identity {
+  .seat-chip {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    padding: var(--space-2) var(--space-3);
+    overflow: hidden;
+    border: 1px solid var(--line-soft);
+    color: var(--text);
+    background: var(--glass-strong);
+    clip-path: polygon(
+      0 0,
+      calc(100% - var(--chamfer)) 0,
+      100% var(--chamfer),
+      100% 100%,
+      var(--chamfer) 100%,
+      0 calc(100% - var(--chamfer))
+    );
+    font: inherit;
+    text-align: left;
+  }
+
+  .player-chip {
+    border-left: 3px solid var(--seat-you);
+  }
+
+  .opponent-chip {
+    border-left: 3px solid var(--seat-opponent);
+  }
+
+  .seat-chip.active {
+    outline: 2px solid var(--selected);
+    outline-offset: 2px;
+  }
+
+  .seat-chip:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .deck-name {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .opponent-chip-row {
     display: grid;
     gap: var(--space-1);
   }
 
-  .identity h2 {
-    margin: 0;
-    font-size: var(--text-md);
+  .seat-list {
+    display: block;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: var(--space-1);
+    scrollbar-gutter: stable;
   }
 
-  .identity p {
+  .seat-list.previewing {
+    outline: 1px dashed var(--selected);
+    outline-offset: 3px;
+  }
+
+  .seat-list-empty {
     margin: 0;
     color: var(--muted);
     font-size: var(--text-sm);
   }
 
-  /* The card itself is the control, so the wrapper adds a press surface and
-     no chrome of its own — the tile inside is the whole visual. */
-  .seat-card {
-    display: block;
-    width: min(100%, 14rem);
-    justify-self: center;
-    padding: 0;
-    border: 0;
-    color: inherit;
-    background: none;
-    font: inherit;
-    text-align: left;
-  }
-
-  /* The tile fills the card, and its own press button covers all of it. That
-     button is disabled here, and a disabled control does not fire a click or
-     let one through — so without this the wrapper never hears the press and
-     the seat card is dead in a browser however it looks. Global because the
-     tile's markup belongs to `DeckTile`. */
-  .seat-card :global(.deck-tile) {
-    pointer-events: none;
+  .start {
+    width: 100%;
+    min-height: 3.1rem;
+    border-color: var(--accent);
+    color: var(--ink-on-accent);
+    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    clip-path: polygon(
+      0 0,
+      calc(100% - var(--chamfer)) 0,
+      100% var(--chamfer),
+      100% 100%,
+      var(--chamfer) 100%,
+      0 calc(100% - var(--chamfer))
+    );
+    font-family: var(--font-display);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
   }
 
   .pressable {
@@ -1269,29 +1475,6 @@
     margin: 0;
     color: var(--muted);
     font-size: var(--text-sm);
-  }
-
-  /* Duel start's hover preview. As tall as the viewport allows rather than a
-     short tooltip — a 90-card deck is meant to be read without scrolling
-     inside it — and transparent to the pointer, so floating over the tile it
-     came from never counts as leaving that tile. */
-  .float {
-    position: fixed;
-    z-index: 25;
-    top: 1rem;
-    display: grid;
-    overflow-y: auto;
-    width: 20rem;
-    max-height: calc(100vh - 2rem);
-    padding: var(--space-3);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    background: var(--surface-raised);
-    pointer-events: none;
-  }
-
-  .float:global([hidden]) {
-    display: none;
   }
 
   /* The card the docked row names, at the size the art is worth looking at. */

@@ -7,7 +7,10 @@ import DeckSelectScreen from "../../../src/deck-select/DeckSelectScreen.svelte";
 import type { DecklistView } from "../../../src/deck-select/deck-select-contracts.ts";
 import { tile } from "./tile-builder.ts";
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 function find(value: string): HTMLElement | null {
   return document.querySelector<HTMLElement>(`[data-cy="${value}"]`);
@@ -58,7 +61,24 @@ const RELIC: DecklistView = {
   side: [],
 };
 
-const LISTS: Readonly<Record<string, DecklistView>> = { k1: AURORA, k3: RELIC };
+const WARDEN: DecklistView = {
+  main: [
+    {
+      code: 401,
+      name: "Warden Guard",
+      frame: "effect",
+      artUrl: null,
+    },
+  ],
+  extra: [],
+  side: [],
+};
+
+const LISTS: Readonly<Record<string, DecklistView>> = {
+  k1: AURORA,
+  k3: RELIC,
+  o1: WARDEN,
+};
 
 function resolver() {
   return vi.fn(async (key: string) => LISTS[key] ?? null);
@@ -74,61 +94,61 @@ function props(overrides: Record<string, unknown> = {}) {
       tile({ key: "k3", name: "Cracked Relic" }),
     ],
     selectedKey: "k1",
+    opponent: {
+      id: "vault-warden",
+      name: "Vault Warden",
+      line: "Locks the board, then closes it out.",
+      locked: false,
+    },
+    opponentDeck: tile({ key: "o1", name: "Warden Vault", bundled: true }),
+    playerDeck: tile({ key: "k1", name: "Aurora Fleet" }),
     decklistFor: resolver(),
     ...overrides,
   };
 }
 
 describe("DeckSelectScreen hover previews", () => {
-  it("duel-start hover floats the decklist", async () => {
+  it("duel-start hover docks the decklist into the active player seat", async () => {
     const decklistFor = resolver();
     render(DeckSelectScreen, props({ decklistFor }));
 
-    await fireEvent.pointerEnter(cy("deck-tile-k1"));
+    await waitFor(() =>
+      expect(find("deck-select-seat-list-player-row-101")).not.toBeNull(),
+    );
+    await fireEvent.pointerEnter(cy("deck-tile-k3"));
 
-    await waitFor(() => expect(find("deck-select-hover-list")).not.toBeNull());
-    expect(decklistFor).toHaveBeenCalledWith("k1");
-    expect(cy("deck-select-hover-list-main-heading").textContent).toBe(
-      "Main (2)",
+    await waitFor(() =>
+      expect(find("deck-select-seat-list-player-row-301")).not.toBeNull(),
     );
-    expect(cy("deck-select-hover-list-extra-heading").textContent).toBe(
-      "Extra (1)",
+    expect(decklistFor).toHaveBeenCalledWith("k3");
+    expect(cy("deck-select-seat-list-player-wrapper").classList).toContain(
+      "previewing",
     );
-    expect(cy("deck-select-hover-list-side-heading").textContent).toBe(
-      "Side (0)",
+    expect(cy("deck-select-seat-list-player-main-heading").textContent).toBe(
+      "Main (1)",
     );
-    const artRow = cy("deck-select-hover-list-row-101");
-    expect(artRow.textContent).toContain("Aurora Scout");
-    expect(artRow.style.getPropertyValue("--fc")).toBe("#1d9e74");
-    expect(artRow.style.getPropertyValue("--img")).toContain("blob:x");
-    expect(find("deck-select-hover-list-row-art-101")).not.toBeNull();
-    expect(find("deck-select-hover-list-row-fade-101")).not.toBeNull();
-
-    const degradedRow = cy("deck-select-hover-list-row-102");
-    expect(degradedRow.style.getPropertyValue("--fc")).toBe("#b8985a");
-    expect(find("deck-select-hover-list-row-art-102")).toBeNull();
-    expect(find("deck-select-hover-list-row-fade-102")).toBeNull();
-    const degradedName = cy("deck-select-hover-list-row-name-102");
-    expect(degradedName.textContent).toBe("Aurora Sentinel");
-    /* The row ellipsizes, so the full name has to survive somewhere the
-       pointer can reach it. */
-    expect(degradedName.getAttribute("title")).toBe("Aurora Sentinel");
-    /* One copy still counts: the chip reads "1" and only dims itself. */
-    const singleCopies = cy("deck-select-hover-list-row-copies-102");
-    expect(singleCopies.textContent).toBe("1");
-    expect(singleCopies.classList.contains("single")).toBe(true);
-    expect(find("deck-select-hover-list-row-201")).not.toBeNull();
+    expect(find("deck-select-seat-list-opponent-row-401")).not.toBeNull();
+    expect(find("deck-select-hover-float")).toBeNull();
   });
 
-  it("float leaves with the pointer", async () => {
+  it("pointer leave restores the player's picked decklist", async () => {
     render(DeckSelectScreen, props());
 
-    await fireEvent.pointerEnter(cy("deck-tile-k1"));
-    await waitFor(() => expect(find("deck-select-hover-list")).not.toBeNull());
+    await waitFor(() =>
+      expect(find("deck-select-seat-list-player-row-101")).not.toBeNull(),
+    );
+    await fireEvent.pointerEnter(cy("deck-tile-k3"));
+    await waitFor(() =>
+      expect(find("deck-select-seat-list-player-row-301")).not.toBeNull(),
+    );
 
-    await fireEvent.pointerLeave(cy("deck-tile-k1"));
+    await fireEvent.pointerLeave(cy("deck-tile-k3"));
 
-    expect(find("deck-select-hover-list")).toBeNull();
+    expect(find("deck-select-seat-list-player-row-101")).not.toBeNull();
+    expect(find("deck-select-seat-list-player-row-301")).toBeNull();
+    expect(cy("deck-select-seat-list-player-wrapper").classList).not.toContain(
+      "previewing",
+    );
     expect(find("deck-select-hover-float")).toBeNull();
   });
 
@@ -139,12 +159,15 @@ describe("DeckSelectScreen hover previews", () => {
         ? new Promise<DecklistView | null>((resolve) => (settleSlow = resolve))
         : Promise.resolve(LISTS[key] ?? null),
     );
-    render(DeckSelectScreen, props({ decklistFor }));
+    render(
+      DeckSelectScreen,
+      props({ decklistFor, selectedKey: null, playerDeck: null }),
+    );
 
     await fireEvent.pointerEnter(cy("deck-tile-k1"));
     await fireEvent.pointerEnter(cy("deck-tile-k3"));
     await waitFor(() =>
-      expect(find("deck-select-hover-list-row-301")).not.toBeNull(),
+      expect(find("deck-select-seat-list-player-row-301")).not.toBeNull(),
     );
 
     /* The deck the pointer already left answers last; it is answering a
@@ -152,8 +175,50 @@ describe("DeckSelectScreen hover previews", () => {
     settleSlow(AURORA);
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(find("deck-select-hover-list-row-301")).not.toBeNull();
-    expect(find("deck-select-hover-list-row-101")).toBeNull();
+    expect(find("deck-select-seat-list-player-row-301")).not.toBeNull();
+    expect(find("deck-select-seat-list-player-row-101")).toBeNull();
+  });
+
+  it("stale resting seat resolutions never replace newer picks", async () => {
+    let settlePlayer: (list: DecklistView | null) => void = () => undefined;
+    let settleOpponent: (list: DecklistView | null) => void = () => undefined;
+    const decklistFor = vi.fn((key: string) => {
+      if (key === "k1")
+        return new Promise<DecklistView | null>(
+          (resolve) => (settlePlayer = resolve),
+        );
+      if (key === "o1")
+        return new Promise<DecklistView | null>(
+          (resolve) => (settleOpponent = resolve),
+        );
+      return Promise.resolve(key === "k3" ? RELIC : WARDEN);
+    });
+    const base = props({ decklistFor });
+    const { rerender } = render(DeckSelectScreen, base);
+    await waitFor(() => {
+      expect(decklistFor).toHaveBeenCalledWith("k1");
+      expect(decklistFor).toHaveBeenCalledWith("o1");
+    });
+
+    await rerender({
+      ...base,
+      selectedKey: "k3",
+      playerDeck: tile({ key: "k3", name: "Cracked Relic" }),
+      opponentDeck: tile({ key: "o2", name: "Second Warden" }),
+    });
+    await waitFor(() => {
+      expect(find("deck-select-seat-list-player-row-301")).not.toBeNull();
+      expect(find("deck-select-seat-list-opponent-row-401")).not.toBeNull();
+    });
+
+    settlePlayer(AURORA);
+    settleOpponent(AURORA);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(find("deck-select-seat-list-player-row-301")).not.toBeNull();
+    expect(find("deck-select-seat-list-opponent-row-401")).not.toBeNull();
+    expect(find("deck-select-seat-list-player-row-101")).toBeNull();
+    expect(find("deck-select-seat-list-opponent-row-101")).toBeNull();
   });
 
   it("copies of one card share a row", async () => {
@@ -188,24 +253,68 @@ describe("DeckSelectScreen hover previews", () => {
 
     await fireEvent.pointerEnter(cy("deck-tile-k1"));
     await waitFor(() =>
-      expect(find("deck-select-hover-list-row-101")).not.toBeNull(),
+      expect(find("deck-select-seat-list-player-row-101")).not.toBeNull(),
     );
 
     /* Three copies, one row: the heading carries the count and the row carries
        the copies, so the row's `data-cy` stays unique in the document. */
     expect(
-      document.querySelectorAll('[data-cy="deck-select-hover-list-row-101"]'),
+      document.querySelectorAll(
+        '[data-cy="deck-select-seat-list-player-row-101"]',
+      ),
     ).toHaveLength(1);
-    expect(cy("deck-select-hover-list-main-heading").textContent).toBe(
+    expect(cy("deck-select-seat-list-player-main-heading").textContent).toBe(
       "Main (3)",
     );
-    const trioCopies = cy("deck-select-hover-list-row-copies-101");
+    const trioCopies = cy("deck-select-seat-list-player-row-copies-101");
     expect(trioCopies.textContent).toBe("3");
     expect(trioCopies.classList.contains("single")).toBe(false);
     expect(
-      cy("deck-select-hover-list-row-101").style.getPropertyValue("--fc"),
+      cy("deck-select-seat-list-player-row-101").style.getPropertyValue("--fc"),
     ).toBe("#1d9e74");
-    expect(find("deck-select-hover-list-row-art-101")).not.toBeNull();
+    expect(find("deck-select-seat-list-player-row-art-101")).not.toBeNull();
+  });
+
+  it("opponent seat receives hover preview while player list stays put", async () => {
+    render(DeckSelectScreen, props({ seat: "opponent" }));
+
+    await waitFor(() => {
+      expect(find("deck-select-seat-list-player-row-101")).not.toBeNull();
+      expect(find("deck-select-seat-list-opponent-row-401")).not.toBeNull();
+    });
+
+    await fireEvent.pointerEnter(cy("deck-tile-k3"));
+
+    await waitFor(() =>
+      expect(find("deck-select-seat-list-opponent-row-301")).not.toBeNull(),
+    );
+    expect(find("deck-select-seat-list-opponent-row-401")).toBeNull();
+    expect(find("deck-select-seat-list-player-row-101")).not.toBeNull();
+    expect(cy("deck-select-seat-list-opponent-wrapper").classList).toContain(
+      "previewing",
+    );
+    expect(cy("deck-select-seat-list-player-wrapper").classList).not.toContain(
+      "previewing",
+    );
+  });
+
+  it("null seat list renders an explicit empty state", async () => {
+    const base = props();
+    const { rerender } = render(DeckSelectScreen, base);
+    await waitFor(() =>
+      expect(find("deck-select-seat-list-player-row-101")).not.toBeNull(),
+    );
+
+    await rerender({ ...base, decklistFor: async () => null });
+
+    await waitFor(() => {
+      expect(find("deck-select-seat-list-player-row-101")).toBeNull();
+      expect(find("deck-select-seat-list-empty-player")).not.toBeNull();
+      expect(find("deck-select-seat-list-empty-opponent")).not.toBeNull();
+    });
+    expect(cy("deck-select-seat-list-empty-player").textContent).toBe(
+      "No list available.",
+    );
   });
 
   it("library hover previews in dock without moving selection", async () => {
@@ -268,35 +377,54 @@ describe("DeckSelectScreen hover previews", () => {
     expect(find("deck-select-card-art-float")).toBeNull();
   });
 
-  it("hidden floats stay hidden", async () => {
-    render(DeckSelectScreen, props());
+  it("remaining display classes keep hidden guards", () => {
+    render(DeckSelectScreen, props({ mode: "library", title: "Deck library" }));
 
-    await fireEvent.pointerEnter(cy("deck-tile-k1"));
-    await waitFor(() => expect(find("deck-select-hover-float")).not.toBeNull());
-
-    const float = cy("deck-select-hover-float");
-    float.hidden = true;
-
-    expect(getComputedStyle(float).display).toBe("none");
     /* `vite-plugin-svelte` keeps component CSS out of the jsdom document, so
-       the assertion above only proves the user-agent rule still applies — it
-       is the author `display` on these classes that beats it, and that is only
-       visible in the source. Same reading-by-selector as
+       guards are read by selector like
        `tests/component/deck-editor/card-tile-art.test.ts`. */
-    guarded(SCREEN_SOURCE, ".float");
     guarded(SCREEN_SOURCE, ".dock");
     guarded(SCREEN_SOURCE, ".art-float");
     guarded(PANEL_SOURCE, ".decklist");
+    expect(SCREEN_SOURCE).not.toContain('data-cy="deck-select-hover-float"');
   });
 
-  it("no float when narrow", async () => {
+  it("coarse pointers do not preview grid tiles", async () => {
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn((query: string) => ({
+        matches: query === "(pointer: coarse)",
+        media: query,
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    );
+    const decklistFor = resolver();
+    render(DeckSelectScreen, props({ decklistFor }));
+    await waitFor(() =>
+      expect(find("deck-select-seat-list-player-row-101")).not.toBeNull(),
+    );
+
+    await fireEvent.pointerEnter(cy("deck-tile-k3"));
+
+    expect(find("deck-select-seat-list-player-row-301")).toBeNull();
+    expect(decklistFor).not.toHaveBeenCalledWith("k3");
+  });
+
+  it("no hover preview when narrow", async () => {
     const decklistFor = resolver();
     render(DeckSelectScreen, props({ decklistFor, forceNarrow: true }));
+    await waitFor(() => expect(decklistFor).toHaveBeenCalledWith("k1"));
 
-    await fireEvent.pointerEnter(cy("deck-tile-k1"));
+    await fireEvent.pointerEnter(cy("deck-tile-k3"));
 
-    expect(find("deck-select-hover-list")).toBeNull();
-    expect(decklistFor).not.toHaveBeenCalled();
+    expect(find("deck-select-seat-list-player-row-301")).toBeNull();
+    expect(decklistFor).not.toHaveBeenCalledWith("k3");
+    expect(find("deck-select-hover-float")).toBeNull();
   });
 });
 

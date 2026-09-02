@@ -6,7 +6,7 @@ Plan: `artifacts/PLAN_2026_09_02_decklist_row_art.md` (committed before retireme
 
 | Ticket | Goal | State | Commit |
 | ------ | ---- | ----- | ------ |
-| T1 | `cardFrameOf` classifier + `CARD_FRAME_COLORS` palette | DONE — 11 unit tests + `check:headless` pass | pending commit |
+| T1 | `cardFrameOf` classifier + `CARD_FRAME_COLORS` palette | DONE — 11 unit tests + `check:headless` pass | `3023162` |
 | T2 | `DecklistRow` `frame`/`artUrl`; panel + three hosts | NOT STARTED | — |
 | T3 | Chromium evidence, build gates, manual checklist | NOT STARTED | — |
 

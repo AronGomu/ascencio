@@ -87,12 +87,20 @@ describe("DeckSelectScreen compact bars", () => {
     expect(find("deck-select-kebab-menu")).toBeNull();
   });
 
-  it("Escape closes the menu and returns focus to the kebab", async () => {
-    render(DeckSelectScreen, props({ forceCompact: true }));
+  it("Escape closes the menu when its first action is disabled", async () => {
+    render(
+      DeckSelectScreen,
+      props({
+        forceCompact: true,
+        tiles: [tile({ key: "k1", name: "Aurora Fleet", deletable: false })],
+      }),
+    );
     const kebab = cy("deck-select-kebab");
+    const user = userEvent.setup();
 
-    await userEvent.setup().click(kebab);
-    await fireEvent.keyDown(cy("deck-select-kebab-menu"), { key: "Escape" });
+    await user.click(kebab);
+    expect(document.activeElement).toBe(cy("deck-select-rename"));
+    await user.keyboard("{Escape}");
 
     expect(find("deck-select-kebab-menu")).toBeNull();
     expect(document.activeElement).toBe(kebab);
@@ -127,6 +135,13 @@ describe("DeckSelectScreen compact bars", () => {
 
     expect(document.activeElement).not.toBe(cy("deck-select-filter"));
     expect(find("deck-select-kebab-menu")).not.toBeNull();
+  });
+
+  it("excludes the pane-only Start action from the footer probe", () => {
+    render(DeckSelectScreen, props({ forceCompact: false }));
+
+    expect(find("deck-select-footer-probe-open")).not.toBeNull();
+    expect(find("deck-select-footer-probe-start")).toBeNull();
   });
 
   it("measures full probes and uncompacts when space returns", async () => {

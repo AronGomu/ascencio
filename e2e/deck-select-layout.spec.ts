@@ -1,9 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const WIDE_VIEWPORT = { width: 1600, height: 900 } as const;
-/* Measured against the shipped production build: 950px keeps both full bars;
-   resizing downward makes the footer probe overflow first at 903px. */
-const MEASURED_COMPACT_WIDTH = 903;
+/* Measured against the shipped production build after pane-only Start was
+   removed from the footer probe: 789px is full, 788px compacts. */
+const MEASURED_COMPACT_WIDTH = 788;
 
 async function openFreePlayDeckSelect(page: Page): Promise<void> {
   await page.goto("./#/free-play");
@@ -147,6 +147,10 @@ test("compaction", async ({ page }) => {
     "deck-select-open",
     "deck-select-create",
   ]);
+
+  await page.keyboard.press("Escape");
+  await expect(menu).toBeHidden();
+  await expect(page.locator('[data-cy="deck-select-kebab"]')).toBeFocused();
 });
 
 test("copies chip", async ({ page }) => {

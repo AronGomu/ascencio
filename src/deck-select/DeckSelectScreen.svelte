@@ -183,6 +183,11 @@
   /* One column on a phone, so the current pick would scroll out of reach while
      the rest of the list is browsed; the wide grid shows it without help. */
   $: shown = narrow ? pinSelectedFirst(ranked, activeKey) : ranked;
+  $: if (
+    hoverKey !== null &&
+    (!previews || !shown.some((candidate) => candidate.key === hoverKey))
+  )
+    clearPreview();
   /* Built here rather than interpolated in the markup: the count is one token
      and formatter whitespace around `{…}` would land inside it. */
   $: countLabel = `${shown.length}/${tiles.length}`;
@@ -394,7 +399,12 @@
   async function openCompactMenu(): Promise<void> {
     compactMenuOpen = true;
     await tick();
-    compactMenu?.querySelector<HTMLButtonElement>("button")?.focus();
+    const firstEnabled = compactMenu?.querySelector<HTMLButtonElement>(
+      "button:not(:disabled)",
+    );
+    if (firstEnabled !== null && firstEnabled !== undefined)
+      firstEnabled.focus();
+    else compactMenu?.focus();
   }
 
   function closeCompactMenu(returnFocus = false): void {
@@ -973,9 +983,6 @@
     {#if mode === "duel-start"}
       <span class="probe-action" data-cy="deck-select-footer-probe-open"
         >Open</span
-      >
-      <span class="probe-action" data-cy="deck-select-footer-probe-start"
-        >{startLabel}</span
       >
     {/if}
   </div>

@@ -152,6 +152,60 @@ describe("DeckSelectScreen hover previews", () => {
     expect(find("deck-select-hover-float")).toBeNull();
   });
 
+  it("clears a loaded preview when filtering removes its tile", async () => {
+    render(DeckSelectScreen, props());
+
+    await waitFor(() =>
+      expect(find("deck-select-seat-list-player-row-101")).not.toBeNull(),
+    );
+    await fireEvent.pointerEnter(cy("deck-tile-k3"));
+    await waitFor(() =>
+      expect(find("deck-select-seat-list-player-row-301")).not.toBeNull(),
+    );
+
+    await fireEvent.input(cy("deck-select-filter"), {
+      target: { value: "Aurora" },
+    });
+
+    await waitFor(() => expect(find("deck-tile-k3")).toBeNull());
+    expect(find("deck-select-seat-list-player-row-101")).not.toBeNull();
+    expect(find("deck-select-seat-list-player-row-301")).toBeNull();
+    expect(cy("deck-select-seat-list-player-wrapper").classList).not.toContain(
+      "previewing",
+    );
+  });
+
+  it("rejects a pending preview after filtering removes its tile", async () => {
+    let settlePreview: (list: DecklistView | null) => void = () => undefined;
+    const decklistFor = vi.fn((key: string) =>
+      key === "k3"
+        ? new Promise<DecklistView | null>(
+            (resolve) => (settlePreview = resolve),
+          )
+        : Promise.resolve(LISTS[key] ?? null),
+    );
+    render(DeckSelectScreen, props({ decklistFor }));
+
+    await waitFor(() =>
+      expect(find("deck-select-seat-list-player-row-101")).not.toBeNull(),
+    );
+    await fireEvent.pointerEnter(cy("deck-tile-k3"));
+    await waitFor(() => expect(decklistFor).toHaveBeenCalledWith("k3"));
+    await fireEvent.input(cy("deck-select-filter"), {
+      target: { value: "Aurora" },
+    });
+    await waitFor(() => expect(find("deck-tile-k3")).toBeNull());
+
+    settlePreview(RELIC);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(find("deck-select-seat-list-player-row-101")).not.toBeNull();
+    expect(find("deck-select-seat-list-player-row-301")).toBeNull();
+    expect(cy("deck-select-seat-list-player-wrapper").classList).not.toContain(
+      "previewing",
+    );
+  });
+
   it("stale resolution never renders", async () => {
     let settleSlow: (list: DecklistView | null) => void = () => undefined;
     const decklistFor = vi.fn((key: string) =>

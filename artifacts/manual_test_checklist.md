@@ -4143,6 +4143,6 @@ Run `npm run dev` (default `DEV_PORT=4300`), then open `#/free-play` in a
 - [ ] TC4. Hover non-selected grid tile. Active seat list gains dashed preview outline plus swaps rows. Move pointer away: picked deck list returns. No floating decklist covers grid.
 - [ ] TC5. Press opponent deck-name chip. Active outline moves to opponent seat; next grid pick changes opponent list. Press chip again, or press player chip: grid returns to player seat.
 - [ ] TC6. Confirm footer order: red **← Return to Menu** at far left; Delete, Rename, Duplicate, Open, green **+ Create** at far right. Press Return → main menu. Return to free play, press Create → deck library.
-- [ ] TC7. Resize to 950px wide: full title plus footer actions remain, with no kebab. Continue narrowing to about 903px: title becomes **Select Deck**, eyebrow hides, footer actions collapse into ⋯.
+- [ ] TC7. Resize to 950px wide: full title plus footer actions remain, with no kebab. Continue narrowing to about 788px: title becomes **Select Deck**, eyebrow hides, footer actions collapse into ⋯.
 - [ ] TC8. Open ⋯ menu. Exactly five actions appear upward in order: Delete, Rename, Duplicate, Open, + Create. Press Escape: menu closes, focus returns to ⋯.
 - [ ] TC9. Press **Start the duel** from wide layout. Duel field loads using selected player/opponent decks; no second picker appears.

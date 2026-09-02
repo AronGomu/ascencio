@@ -111,6 +111,7 @@ function renderOverlay(
     readonly card?: BoardCardView;
     readonly imageLibrary?: Pick<CardImageLibrary, "lease"> | null;
     readonly onzoomleave?: (related: EventTarget | null) => void;
+    readonly selected?: boolean;
   } = {},
 ) {
   return render(HandZoomOverlay, {
@@ -119,6 +120,7 @@ function renderOverlay(
       anchor,
       frameWidth,
       choices,
+      selected: overrides.selected ?? false,
       imageLibrary: overrides.imageLibrary ?? null,
       cardBackUrl: CARD_BACK_URL,
       placeholderUrl: PLACEHOLDER_URL,
@@ -290,6 +292,23 @@ describe("HandZoomOverlay action rows", () => {
 
     expect(actionList()).toBeNull();
     expect(actionButtons()).toHaveLength(0);
+  });
+});
+
+describe("HandZoomOverlay selection", () => {
+  /* The box covers the card it serves at 1.6x, so the card's own orange ring is
+     drawn behind it: `.is-selected` here is the copy the player actually sees,
+     and `app.css` hangs the halo off it on the art. */
+  it("wears the selected halo when the field says the card is selected", () => {
+    renderOverlay(FRAME_WIDTH, ANCHOR, [], { selected: true });
+
+    expect(overlay().classList.contains("is-selected")).toBe(true);
+  });
+
+  it("wears no halo by default", () => {
+    renderOverlay(FRAME_WIDTH, ANCHOR, []);
+
+    expect(overlay().classList.contains("is-selected")).toBe(false);
   });
 });
 

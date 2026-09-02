@@ -3424,6 +3424,74 @@ describe("DuelField", () => {
     expect(handZoomOverlay()).toBeNull();
   });
 
+  /* Feedback item 1: `.duel-field-hand-band__viewport` clips on the y axis, so
+     nothing mounted inside the band can grow past it whatever its z-index. The
+     fixed-position overlay is the only escape there is, and a selection has to
+     reach it the same way a hover does — the player picking a tribute must see
+     the card they picked, not a halo cropped by the band. */
+  it("a selected hand card floats over the field with the pointer elsewhere", async () => {
+    const harness = renderHandSelection();
+
+    await selectHandTarget(0);
+
+    expect(handZoomOverlay()?.getAttribute("data-cy")).toBe(
+      `hand-zoom-overlay-${HAND_CARD_ID}`,
+    );
+    expect(handZoomOverlay()?.classList.contains("is-selected")).toBe(true);
+    expect(harness.getSession().selectedChoiceIds).toEqual(["select-first"]);
+  });
+
+  /* Pointer intent beats a state display: the hovered card is the one the
+     player is asking about right now, and the selected one returns to the
+     overlay the moment that question ends. */
+  it("a hovered hand card outranks the selected one and hands it back on leave", async () => {
+    renderHandSelection();
+    await selectHandTarget(0);
+
+    await fireEvent.pointerEnter(cardArticle(SECOND_HAND_CARD_ID));
+
+    expect(handZoomOverlay()?.getAttribute("data-cy")).toBe(
+      `hand-zoom-overlay-${SECOND_HAND_CARD_ID}`,
+    );
+    expect(handZoomOverlay()?.classList.contains("is-selected")).toBe(false);
+
+    await fireEvent(
+      cardArticle(SECOND_HAND_CARD_ID),
+      new MouseEvent("pointerleave", { relatedTarget: duelFieldRoot() }),
+    );
+
+    expect(handZoomOverlay()?.getAttribute("data-cy")).toBe(
+      `hand-zoom-overlay-${HAND_CARD_ID}`,
+    );
+  });
+
+  it("deselecting the hand card takes its floating overlay away", async () => {
+    renderHandSelection();
+    await selectHandTarget(0);
+    expect(handZoomOverlay()).not.toBeNull();
+
+    await selectHandTarget(0);
+
+    expect(handZoomOverlay()).toBeNull();
+  });
+
+  /* A multi-pick prompt carries no ordering of its own — `selectedChoiceIds` is
+     rebuilt in prompt order on every toggle — so the overlay serves the card
+     the last toggle added, and the older pick keeps its in-band halo. */
+  it("a second selection moves the floating overlay onto the newer card", async () => {
+    renderHandSelection();
+
+    await selectHandTarget(0);
+    await selectHandTarget(1);
+
+    expect(handZoomOverlay()?.getAttribute("data-cy")).toBe(
+      `hand-zoom-overlay-${SECOND_HAND_CARD_ID}`,
+    );
+    expect(cardArticle(HAND_CARD_ID).classList.contains("is-selected")).toBe(
+      true,
+    );
+  });
+
   it("duel field no longer renders life pills", () => {
     const value = DUEL_FIELD_PUBLIC_STATES["ST-01"];
     render(DuelField, { board: value.board });
@@ -5077,6 +5145,116 @@ function renderDraggableHand(
       hit = element;
     },
   };
+}
+
+/** ST-01 with a second visible card in player 0's hand: one hand card can only
+    be selected while the pointer is on another when there are two of them. */
+const SECOND_HAND_CARD_ID = "st01-own-hand-two";
+
+function handSelectionSnapshot(): PublicDuelState {
+  const base = BOARD_VIEW_MODEL_FIXTURES["ST-01"];
+  return {
+    ...base,
+    players: [
+      {
+        ...base.players[0],
+        handCount: 2,
+        hand: [
+          publicStateCard(
+            HAND_CARD_ID,
+            97590747,
+            0,
+            "hand",
+            0,
+            "faceDownDefense",
+          ),
+          publicStateCard(
+            SECOND_HAND_CARD_ID,
+            89631139,
+            0,
+            "hand",
+            1,
+            "faceDownDefense",
+          ),
+        ],
+      },
+      base.players[1],
+    ],
+  };
+}
+
+function handSelectChoice(
+  id: string,
+  cardId: string,
+  sequence: number,
+): PromptChoice {
+  return promptChoice(id, `Select ${cardId}`, {
+    card: {
+      instanceId: cardInstanceId(cardId),
+      controller: 0,
+      location: "hand",
+      sequence,
+    },
+  } as Partial<PromptChoice>);
+}
+
+/** A multi-pick selection prompt over both hand cards, with the session driven
+    the way the app drives it: every dispatch reduces and re-renders. */
+function renderHandSelection() {
+  const snapshot = handSelectionSnapshot();
+  const mapped = mapSnapshotToBoard(snapshot, BOARD_CARD_TEXTS);
+  if (!mapped.ok)
+    throw new Error(`Hand selection mapping failed: ${mapped.error.type}`);
+  const valueBoard = mapped.value;
+  const value = fieldPrompt(
+    "selectCard",
+    [
+      handSelectChoice("select-first", HAND_CARD_ID, 0),
+      handSelectChoice("select-second", SECOND_HAND_CARD_ID, 1),
+    ],
+    { minimum: 1, maximum: 2 },
+  );
+  const spec = mapPromptToInteractionSpec(value, snapshot, valueBoard, CONTEXT);
+  if (spec.kind === "inactive") throw new Error("Expected active field spec");
+  let session: InteractionSession = createInteractionSession(spec);
+  const dispatch = vi.fn(async (action: InteractionSessionAction) => {
+    const reduction = reduceInteractionSession(session, spec, action);
+    const changed = reduction.session !== session;
+    session = reduction.session;
+    await rendered.rerender({ session });
+    return reduction.command !== null || changed;
+  });
+  const rendered = render(DuelField, {
+    board: valueBoard,
+    prompt: value,
+    spec,
+    session,
+    pending: false,
+    zoneLists: zoneListsForBoard(valueBoard, snapshot, BOARD_CARD_TEXTS),
+    offFieldTargets: offFieldTargetEntries(spec, snapshot, BOARD_CARD_TEXTS),
+    oninteraction: dispatch,
+  });
+  return { rendered, spec, dispatch, getSession: () => session };
+}
+
+/** T16 routes a hand target through the aggregate target window, so that list
+    is where a hand card is picked — its own control only reopens the window. */
+async function selectHandTarget(sequence: number): Promise<HTMLElement> {
+  const button = document.querySelector<HTMLButtonElement>(
+    `[data-cy^="zone-list-entry-target-choice-target:0:hand:${sequence}-"]`,
+  );
+  if (button === null)
+    throw new Error(`Missing hand target button for sequence ${sequence}`);
+  await fireEvent.click(button);
+  return button;
+}
+
+function cardArticle(cardId: string): HTMLElement {
+  const article = document.querySelector<HTMLElement>(
+    `[data-cy="field-card-${cardId}"]`,
+  );
+  if (article === null) throw new Error(`Missing card article ${cardId}`);
+  return article;
 }
 
 function dragGhost(): HTMLElement | null {

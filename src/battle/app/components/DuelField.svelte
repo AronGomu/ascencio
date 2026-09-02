@@ -68,6 +68,10 @@
     type DragPointerSample,
   } from "../presentation/drag-ghost-physics.ts";
   import {
+    selectedHandZoomCandidates,
+    trackLatestSelectedTarget,
+  } from "../presentation/selected-hand-zoom.ts";
+  import {
     readFrameWidth,
     readStageFrame,
     toFramePoint,
@@ -229,6 +233,14 @@
     frameWidth: number;
   } | null = null;
   let handZoomBoardRef: BoardViewModel | null = null;
+  /* Feedback item 1: the hand band clips on its y axis, so a selected card can
+     no more grow out of it than a hovered one can — the fixed overlay is the
+     only escape either has. These two carry the recency the session does not:
+     `selectedChoiceIds` is rebuilt in prompt order on every toggle, so which
+     pick came last is only readable by diffing one selection against the
+     next. */
+  let previousSelectedHandTargets: readonly BoardTargetId[] = [];
+  let latestSelectedHandTarget: BoardTargetId | null = null;
   /* Item 4: the hand card whose zoom a click froze. While it is set the zoom
      ignores the pointer entirely — it neither follows another card nor closes
      on a leave — and only a chosen action, a drag, a second click on the card,
@@ -284,6 +296,15 @@
     spec === null ? EMPTY_TARGETS : targetSelections(spec, session),
     pinnedHandTarget,
   );
+  $: selectedHandCard = latestSelectedHandCard(
+    board,
+    selectedTargets,
+    handZoom,
+  );
+  $: selectedHandZoom = measureSelectedHandZoom(selectedHandCard);
+  /* Pointer intent beats a state display: a hover or a pin serves its own card,
+     and the selected one returns to the overlay as soon as that ends. */
+  $: handZoomView = handZoom ?? selectedHandZoom;
   $: targetLaunchers = targetLauncherIds(spec);
   $: synchronizeZoneList(spec, offFieldTargets);
   $: cancelDragGhostOnPromptChange(spec);
@@ -958,6 +979,51 @@
     return result;
   }
 
+  /* Null while a hover or pinned zoom is up: that one is serving a card of its
+     own. The tracker still runs, so the selection the pointer was covering is
+     the one handed back when it leaves. */
+  function latestSelectedHandCard(
+    value: BoardViewModel,
+    targets: ReadonlySet<BoardTargetId>,
+    zoom: typeof handZoom,
+  ): BoardCardView | null {
+    const candidates = selectedHandZoomCandidates(value.cards, targets);
+    const candidateTargets = candidates.map(({ targetId }) => targetId);
+    latestSelectedHandTarget = trackLatestSelectedTarget(
+      previousSelectedHandTargets,
+      candidateTargets,
+      latestSelectedHandTarget,
+    );
+    previousSelectedHandTargets = candidateTargets;
+    if (zoom !== null) return null;
+    return (
+      candidates.find(
+        ({ targetId }) => targetId === latestSelectedHandTarget,
+      ) ?? null
+    );
+  }
+
+  /* The anchor a hover reads from its own event, measured here from the card
+     the selection names instead. Read on the spot rather than remembered: the
+     band scrolls and re-fans under a selection that outlives several
+     projections, and a stale rect would strand the overlay off its card. */
+  function measureSelectedHandZoom(
+    card: BoardCardView | null,
+  ): typeof handZoom {
+    if (card === null) return null;
+    const article =
+      fieldRoot?.querySelector<HTMLElement>(
+        `[data-cy="field-card-${card.id}"]`,
+      ) ?? null;
+    if (article === null) return null;
+    const frame = readStageFrame(fieldRoot);
+    return {
+      card,
+      anchor: toFrameRect(frame, article.getBoundingClientRect()),
+      frameWidth: readFrameWidth(fieldRoot),
+    };
+  }
+
   function enterHandZoom(card: BoardCardView, element: HTMLElement): void {
     /* A pinned zoom outranks the pointer: hovering a second hand card must
        leave the frozen one exactly where it is. */
@@ -1400,24 +1466,24 @@
       reducedMotion={effectiveReducedMotion}
     />
   {/if}
-  {#if handZoom !== null}
+  {#if handZoomView !== null}
     <!-- Item 5: a selection is answered by the card's own cover toggle and the
          target list, never by a chip. The overlay is that same card served
          larger, so it repeats `CardControl`'s gate rather than its own rule. -->
     <HandZoomOverlay
-      card={handZoom.card}
-      anchor={handZoom.anchor}
-      frameWidth={handZoom.frameWidth}
+      card={handZoomView.card}
+      anchor={handZoomView.anchor}
+      frameWidth={handZoomView.frameWidth}
       {imageLibrary}
       cardBackUrl={resolvedCardBackUrl}
       placeholderUrl={resolvedPlaceholderUrl}
       choices={spec === null || spec.kind === "cardSelection"
         ? []
         : handChipChoices(
-            spec.cardChoices.get(handZoom.card.targetId) ?? [],
+            spec.cardChoices.get(handZoomView.card.targetId) ?? [],
             false,
           )}
-      selected={pinnedHandTarget === handZoom.card.targetId}
+      selected={selectedTargets.has(handZoomView.card.targetId)}
       disabled={pending}
       onchoose={(choice) => {
         dispatch({ type: "chooseChoice", choiceId: choice.id });

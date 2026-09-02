@@ -30,6 +30,9 @@
   /** False hides both back controls. The story's briefing commits to the
       encounter it is seating, and its own way back sits outside this screen. */
   export let showBack = true;
+  /** The origin the way back returns to, named rather than pointed at: only
+      the host knows which screen it opened this one from. */
+  export let backLabel = "Menu";
   /** False hides the footer's Delete/Rename/Duplicate cluster and every tile's
       kebab — a scope whose decks are managed somewhere else. Open and Start
       stay: they are how this screen is left, not how a deck is edited. */
@@ -41,6 +44,9 @@
   export let onrename: (key: string, name: string) => void = () => undefined;
   export let onduplicate: (key: string) => void = () => undefined;
   export let ondelete: (key: string) => void = () => undefined;
+  /** Making a deck belongs to whoever owns somewhere to make it; null is a
+      host that owns none, and renders no Create at all. */
+  export let oncreate: (() => void) | null = null;
   export let onfavourite: (key: string, favourite: boolean) => void = () =>
     undefined;
   /** Duel-start only; null hides the whole right column (library mode passes null). */
@@ -143,6 +149,7 @@
   /* Built here rather than interpolated in the markup: the count is one token
      and formatter whitespace around `{…}` would land inside it. */
   $: countLabel = `${shown.length}/${tiles.length}`;
+  $: backText = `← Return to ${backLabel}`;
 
   /* Every lookup takes the pool as an argument so the reactive statements below
      re-run when the host hands over a new `tiles` — a renamed or deleted deck
@@ -593,34 +600,42 @@
     {#if showBack}
       <button
         type="button"
-        class="secondary wide-only"
+        class="return wide-only"
         data-cy="deck-select-back"
-        onclick={onback}>Back</button
+        onclick={onback}>{backText}</button
       >
     {/if}
     {#if manageable}
       <div class="manage" data-cy="deck-select-manage">
         <button
           type="button"
-          class="secondary"
+          class="secondary act-delete"
           disabled={selectedTile === null || !selectedTile.deletable}
           data-cy="deck-select-delete"
           onclick={deleteSelected}>Delete</button
         >
         <button
           type="button"
-          class="secondary"
+          class="secondary act-rename"
           disabled={selectedTile === null}
           data-cy="deck-select-rename"
           onclick={renameSelected}>Rename</button
         >
         <button
           type="button"
-          class="secondary"
+          class="secondary act-duplicate"
           disabled={selectedTile === null}
           data-cy="deck-select-duplicate"
           onclick={duplicateSelected}>Duplicate</button
         >
+        {#if oncreate !== null}
+          <button
+            type="button"
+            class="act-create"
+            data-cy="deck-select-create"
+            onclick={oncreate}>+ Create</button
+          >
+        {/if}
       </div>
     {/if}
     {#if mode === "duel-start"}
@@ -872,19 +887,101 @@
     grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
   }
 
+  /* Stuck to the bottom of whatever scrolls this screen, so the way out and
+     the actions on a deck stay reachable while the grid is read. */
   footer {
+    position: sticky;
+    bottom: 0;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-2);
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--line-soft);
+    background: var(--bg);
   }
 
-  /* The management cluster sits next to Back; Open and Start hold the right
-     edge, where the screen's own action belongs. */
+  /* Leaving is the one thing the footer says on its left; everything that acts
+     on a deck is gathered against the right edge. */
   .manage {
     display: flex;
-    margin-right: auto;
+    margin-left: auto;
     gap: var(--space-2);
+  }
+
+  /* The way out, weighted like one: taller than the deck actions beside it and
+     the only red on the resting footer. */
+  .return {
+    min-height: 3.1rem;
+    padding: 0 var(--space-5);
+    border: 1px solid var(--danger-border);
+    color: var(--danger);
+    background: var(--danger-surface);
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .return:hover {
+    border-color: var(--danger-strong);
+    color: var(--ink);
+    background: var(--danger-strong);
+  }
+
+  /* One hue per operation, tinted while it rests and solid under the pointer,
+     so the destructive one never reads the same as the rest. Open keeps the
+     neutral secondary: it opens a deck rather than changing one. */
+  .act-delete {
+    border-color: var(--danger-border);
+    color: var(--danger);
+    background: color-mix(in srgb, var(--danger) 12%, var(--surface-raised));
+  }
+
+  .act-delete:hover:not(:disabled) {
+    border-color: var(--danger-strong);
+    color: var(--ink);
+    background: var(--danger-strong);
+  }
+
+  .act-rename {
+    border-color: color-mix(in srgb, var(--selected) 55%, transparent);
+    color: var(--selected);
+    background: color-mix(in srgb, var(--selected) 12%, var(--surface-raised));
+  }
+
+  .act-rename:hover:not(:disabled) {
+    border-color: var(--selected);
+    color: var(--ink-on-accent);
+    background: var(--selected);
+  }
+
+  .act-duplicate {
+    border-color: color-mix(in srgb, var(--seat-you) 55%, transparent);
+    color: var(--seat-you);
+    background: color-mix(in srgb, var(--seat-you) 12%, var(--surface-raised));
+  }
+
+  .act-duplicate:hover:not(:disabled) {
+    border-color: var(--seat-you);
+    color: var(--ink);
+    background: color-mix(in srgb, var(--seat-you) 55%, var(--surface-raised));
+  }
+
+  /* The only solid fill in the cluster: the one action that adds a deck rather
+     than acting on the one already picked. */
+  .act-create {
+    border-color: var(--legal);
+    color: var(--ink-on-legal);
+    background: var(--legal);
+    font-weight: 650;
+  }
+
+  /* The fill is restated rather than left to the rest state above: the global
+     `button:hover` paints gold, and only a rule of this weight keeps green. */
+  .act-create:hover:not(:disabled) {
+    background: var(--legal);
+    filter: brightness(1.08);
   }
 
   /* Nothing holds the left edge when the management cluster is gone, so the

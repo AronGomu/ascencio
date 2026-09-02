@@ -19,7 +19,7 @@ describe("Deck Library CRUD", () => {
       onopen: vi.fn(),
       onimport: vi.fn(),
     });
-    await user.click(screen.getByRole("button", { name: "Create deck" }));
+    await user.click(screen.getByRole("button", { name: "+ Create" }));
     await user.type(screen.getByLabelText("Deck name"), "Blank first");
     await user.click(screen.getByRole("button", { name: "Create" }));
     expect(oncreate).toHaveBeenCalledWith("Blank first");

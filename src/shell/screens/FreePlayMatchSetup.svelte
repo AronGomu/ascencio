@@ -460,6 +460,7 @@
     mode="duel-start"
     eyebrow="Free play"
     title="Choose your deck"
+    backLabel="Menu"
     {tiles}
     selectedKey={playerKey === "" ? null : playerKey}
     {canStart}
@@ -478,6 +479,7 @@
     onfavourite={toggleFavourite}
     onback={() => onback()}
     onopen={openDeck}
+    oncreate={ondecks}
     onrename={(key, name) => void renameDeck(key, name)}
     onduplicate={(key) => void duplicateDeck(key)}
     ondelete={(key) => void deleteDeck(key)}

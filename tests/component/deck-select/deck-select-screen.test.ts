@@ -30,6 +30,13 @@ function gridOrder(): readonly string[] {
   );
 }
 
+/** The management cluster's buttons, in the order the footer shows them. */
+function manageOrder(): readonly string[] {
+  return [...cy("deck-select-manage").children].map(
+    (child) => child.getAttribute("data-cy") ?? "",
+  );
+}
+
 function handlers() {
   return {
     onselect: vi.fn(),
@@ -144,6 +151,46 @@ describe("DeckSelectScreen", () => {
     expect(find("deck-select-delete-confirm")).toBeNull();
   });
 
+  /* The way out names where it goes rather than the direction it goes in: the
+     host owns the origin's name, and the screen owns the sentence. */
+  it("the return button names the origin it goes back to", async () => {
+    const base = props();
+    const { rerender } = render(DeckSelectScreen, base);
+
+    expect(cy("deck-select-back").textContent).toBe("← Return to Menu");
+
+    await rerender({ ...base, backLabel: "Map" });
+
+    expect(cy("deck-select-back").textContent).toBe("← Return to Map");
+  });
+
+  /* Creating a deck is the host's operation, not the screen's, so the button
+     exists exactly when a host offered somewhere for it to land. */
+  it("create renders with a handler and raises it", async () => {
+    const oncreate = vi.fn();
+    const base = props({ oncreate });
+    const { rerender } = render(DeckSelectScreen, base);
+
+    await userEvent.setup().click(cy("deck-select-create"));
+    expect(oncreate).toHaveBeenCalledTimes(1);
+
+    await rerender({ ...base, oncreate: null });
+    expect(find("deck-select-create")).toBeNull();
+  });
+
+  /* Create is the cluster's last word: the destructive actions read first and
+     the one that adds a deck closes the row. */
+  it("the manage cluster orders its actions", () => {
+    render(DeckSelectScreen, props({ oncreate: vi.fn() }));
+
+    expect(manageOrder()).toEqual([
+      "deck-select-delete",
+      "deck-select-rename",
+      "deck-select-duplicate",
+      "deck-select-create",
+    ]);
+  });
+
   it("footer management disabled without selection", () => {
     render(DeckSelectScreen, props({ selectedKey: null }));
 
@@ -186,12 +233,18 @@ describe("DeckSelectScreen", () => {
      management affordances: the footer cluster and every tile's kebab go with
      it, while Open and Start — the ways off this screen — stay. */
   it("manageable=false hides the manage cluster and the kebabs", () => {
-    render(DeckSelectScreen, props({ selectedKey: "k1", manageable: false }));
+    render(
+      DeckSelectScreen,
+      props({ selectedKey: "k1", manageable: false, oncreate: vi.fn() }),
+    );
 
     expect(find("deck-select-manage")).toBeNull();
     expect(find("deck-select-delete")).toBeNull();
     expect(find("deck-select-rename")).toBeNull();
     expect(find("deck-select-duplicate")).toBeNull();
+    /* A scope that manages its decks elsewhere creates them there too, so the
+       handler is not enough to put Create on this footer. */
+    expect(find("deck-select-create")).toBeNull();
     for (const key of ["k1", "k2", "k3"])
       expect(find(`deck-tile-menu-${key}`)).toBeNull();
     /* The picking half of the screen is untouched: this hides operations on a

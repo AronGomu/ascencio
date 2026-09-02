@@ -99,7 +99,7 @@ describe("DeckLibrary", () => {
     const values = callbacks();
     render(DeckLibrary, { decks: [deckFixture()], ...values });
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "Create deck" }));
+    await user.click(cy("deck-select-create"));
     await user.type(screen.getByLabelText("Deck name"), "Prototype Control");
     expect(screen.getByRole("status").textContent).toContain(
       "Another deck already uses this name",
@@ -115,7 +115,7 @@ describe("DeckLibrary", () => {
     render(DeckLibrary, { decks: [deckFixture()], ...values });
     const user = userEvent.setup();
 
-    await user.click(cy("deck-library-create"));
+    await user.click(cy("deck-select-create"));
     await user.type(cy("deck-library-create-name-input"), "Fresh Build");
     await user.click(cy("deck-library-create-submit"));
 

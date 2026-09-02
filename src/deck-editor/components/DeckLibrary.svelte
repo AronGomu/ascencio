@@ -167,8 +167,8 @@
     </p>{/if}
 
   <!-- What the shared screen has no place for: this library is also the way in
-       to the collection, to YDK import, and to a deck that does not exist yet.
-       The filter and the sort moved into the screen's own tools row. -->
+       to the collection and to YDK import. The filter and the sort moved into
+       the screen's own tools row, and creating a deck into its footer. -->
   <div class="tools" data-cy="deck-library-tools">
     <button
       type="button"
@@ -181,11 +181,6 @@
       class="secondary"
       data-cy="deck-library-import"
       onclick={onimport}>Import Deck</button
-    >
-    <button
-      type="button"
-      data-cy="deck-library-create"
-      onclick={openCreateDialog}>Create deck</button
     >
   </div>
 
@@ -214,6 +209,7 @@
         {decklistFor}
         {cardImageFor}
         {onback}
+        oncreate={openCreateDialog}
         onselect={(key) => (selectedKey = key)}
         onopen={(key) => forRecord(key, (deck) => onopen(deck.id))}
         onrename={(key, name) =>

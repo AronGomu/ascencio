@@ -194,6 +194,7 @@
     {blockNotice}
     manageable={false}
     showBack={allowReturn}
+    backLabel="Map"
     {opponent}
     opponents={[]}
     {opponentDeck}

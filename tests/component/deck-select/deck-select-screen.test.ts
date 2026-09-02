@@ -82,6 +82,14 @@ function props(overrides: Record<string, unknown> = {}) {
     title: "Choose your deck",
     tiles: decks(),
     selectedKey: null,
+    opponent: {
+      id: "vault-warden",
+      name: "Vault Warden",
+      line: "Locks the board, then closes it out.",
+      locked: false,
+    },
+    opponentDeck: tile({ key: "o1", name: "Warden Vault", bundled: true }),
+    playerDeck: null,
     ...handlers(),
     ...overrides,
   };
@@ -266,16 +274,28 @@ describe("DeckSelectScreen", () => {
     expect(find("deck-select-rename")).not.toBeNull();
   });
 
-  it("start disabled until canStart", async () => {
+  it("start stays unique in the wide pane and narrow footer", async () => {
     const values = handlers();
     const base = props({ ...values, selectedKey: "k1", canStart: false });
     const { rerender } = render(DeckSelectScreen, base);
 
     expect(button("deck-select-start").disabled).toBe(true);
     expect(button("deck-select-start").textContent).toBe("Start the duel");
+    expect(
+      cy("duel-start-seat-panel").contains(button("deck-select-start")),
+    ).toBe(true);
+    expect(
+      document.querySelectorAll('[data-cy="deck-select-start"]'),
+    ).toHaveLength(1);
 
-    await rerender({ ...base, canStart: true });
+    await rerender({ ...base, canStart: true, forceNarrow: true });
     expect(button("deck-select-start").disabled).toBe(false);
+    expect(cy("deck-select-footer").contains(button("deck-select-start"))).toBe(
+      true,
+    );
+    expect(
+      document.querySelectorAll('[data-cy="deck-select-start"]'),
+    ).toHaveLength(1);
 
     await userEvent.setup().click(cy("deck-select-start"));
     expect(values.onstart).toHaveBeenCalledTimes(1);

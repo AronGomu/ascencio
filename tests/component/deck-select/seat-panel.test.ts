@@ -1,10 +1,14 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render } from "@testing-library/svelte";
+import { readFileSync } from "node:fs";
+import { cleanup, fireEvent, render, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import DeckSelectScreen from "../../../src/deck-select/DeckSelectScreen.svelte";
-import type { OpponentView } from "../../../src/deck-select/deck-select-contracts.ts";
+import type {
+  DecklistView,
+  OpponentView,
+} from "../../../src/deck-select/deck-select-contracts.ts";
 import { tile } from "./tile-builder.ts";
 
 afterEach(() => cleanup());
@@ -16,16 +20,6 @@ function find(value: string): HTMLElement | null {
 function cy(value: string): HTMLElement {
   const element = find(value);
   if (element === null) throw new Error(`No element with data-cy "${value}"`);
-  return element;
-}
-
-/* Your own deck is normally in the grid as well as on its seat card, so the
-   card's copy carries its own `cyKey`; asking the card rather than the document
-   is what proves the renamed tile is the one inside it. */
-function inside(container: HTMLElement, value: string): HTMLElement {
-  const element = container.querySelector<HTMLElement>(`[data-cy="${value}"]`);
-  if (element === null)
-    throw new Error(`No element with data-cy "${value}" inside the card`);
   return element;
 }
 
@@ -58,6 +52,18 @@ const STORY_OPPONENT: OpponentView = {
   locked: true,
 };
 
+const PLAYER_LIST: DecklistView = {
+  main: [{ code: 101, name: "Aurora Scout", frame: "spell", artUrl: null }],
+  extra: [],
+  side: [],
+};
+
+const OPPONENT_LIST: DecklistView = {
+  main: [{ code: 201, name: "Vault Guard", frame: "effect", artUrl: null }],
+  extra: [],
+  side: [],
+};
+
 function handlers() {
   return {
     onselect: vi.fn(),
@@ -81,41 +87,80 @@ function props(overrides: Record<string, unknown> = {}) {
     opponents: OPPONENTS,
     opponentDeck: tile({ key: "o1", name: "Warden Vault", bundled: true }),
     playerDeck: tile({ key: "k1", name: "Aurora Fleet" }),
+    decklistFor: vi.fn(async (key: string) =>
+      key === "k1" ? PLAYER_LIST : key === "o1" ? OPPONENT_LIST : null,
+    ),
     ...handlers(),
     ...overrides,
   };
 }
 
 describe("DeckSelectScreen seat panel", () => {
-  it("panel renders opponent identity and both seat cards", () => {
+  it("renders player-left and opponent-right seat sections with docked lists", async () => {
     render(DeckSelectScreen, props());
 
-    expect(find("duel-start-seat-panel")).not.toBeNull();
-    expect(cy("duel-start-opponent-name").textContent).toBe("Vault Warden");
-    expect(cy("duel-start-opponent-line").textContent).toBe(
-      "Locks the board, then closes it out.",
-    );
+    const panel = cy("duel-start-seat-panel");
+    const seats = cy("deck-select-seats");
+    expect(
+      [...seats.children].map((child) => child.getAttribute("data-cy")),
+    ).toEqual(["seat-section-player", "seat-section-opponent"]);
+    expect(panel.firstElementChild).toBe(seats);
+    expect(panel.lastElementChild).toBe(cy("deck-select-start"));
+
+    expect(cy("duel-start-your-name").textContent).toBe("You");
+    const yours = cy("duel-start-your-deck");
+    expect(yours.getAttribute("aria-pressed")).toBe("true");
+    expect(yours.textContent?.trim()).toBe("Aurora Fleet");
+    expect(yours.textContent).not.toContain("Main");
+
     const portrait = cy("duel-start-opponent-portrait");
     expect(portrait.tagName).toBe("BUTTON");
     expect(portrait.getAttribute("aria-label")).toBe(
       "Change opponent: Vault Warden",
     );
+    expect(cy("duel-start-opponent-name").textContent).toBe("Vault Warden");
     expect(find("duel-start-opponent-change-chip")).not.toBeNull();
 
     const theirs = cy("duel-start-opponent-deck");
     expect(theirs.getAttribute("aria-pressed")).toBe("false");
-    expect(inside(theirs, "deck-tile-opponent-o1").classList).toContain(
-      "halo-opponent",
+    expect(theirs.textContent?.trim()).toBe("Warden Vault");
+    expect(theirs.textContent).not.toContain("Main");
+
+    await waitFor(() =>
+      expect(find("deck-select-seat-list-player-row-101")).not.toBeNull(),
     );
-    expect(inside(theirs, "deck-tile-name-opponent-o1").textContent).toBe(
-      "Warden Vault",
+    expect(find("deck-select-seat-list-opponent-row-201")).not.toBeNull();
+  });
+
+  it("declares the approved twin-column pane and grid parameters", () => {
+    const source = readFileSync(
+      "src/deck-select/DeckSelectScreen.svelte",
+      "utf8",
     );
 
-    const yours = cy("duel-start-your-deck");
-    expect(yours.getAttribute("aria-pressed")).toBe("true");
-    expect(inside(yours, "deck-tile-yours-k1").classList).toContain(
-      "halo-focus",
+    const seats = [...source.matchAll(/\.seats\s*\{([^}]*)\}/g)]
+      .map((match) => match[1] ?? "")
+      .find((body) => body.includes("gap: var(--space-3)"));
+    expect(seats).toContain("grid-template-columns: 1fr 1fr");
+
+    const pane = /\.screen\.paneled:not\(\.library\)\s*\{([^}]*)\}/.exec(
+      source,
+    )?.[1];
+    expect(pane).toContain("grid-template-columns: minmax(0, 73fr) 38rem");
+
+    const seatPanel = [...source.matchAll(/\.seat-panel\s*\{([^}]*)\}/g)]
+      .map((match) => match[1] ?? "")
+      .find((body) => body.includes("grid-template-rows"));
+    expect(seatPanel).toContain(
+      "grid-template-rows: minmax(0, 1fr) max-content",
     );
+    expect(seatPanel).toContain("background: var(--glass)");
+
+    const grid = /\.grid\s*\{([^}]*)\}/.exec(source)?.[1] ?? "";
+    expect(grid).toContain("repeat(auto-fill, minmax(min(12rem, 100%), 1fr))");
+    expect(grid).toContain("gap: 0.5rem");
+    expect(grid).toContain("scrollbar-gutter: stable");
+    expect(grid).toContain("padding-right: var(--space-2)");
   });
 
   it("panel absent in library mode", async () => {
@@ -169,9 +214,8 @@ describe("DeckSelectScreen seat panel", () => {
 
     const deck = cy("duel-start-opponent-deck");
     expect(deck.tagName).toBe("DIV");
-    const lockedTile = inside(deck, "deck-tile-opponent-o1");
-    expect(lockedTile.classList).toContain("halo-opponent");
-    expect(lockedTile.classList).not.toContain("halo-focus");
+    expect(deck.textContent?.trim()).toBe("Warden Vault");
+    expect(deck.classList).not.toContain("active");
     expect(cy("duel-start-opponent-deck-locked").textContent).toBe(
       "🔒 Set by the story",
     );
@@ -193,22 +237,31 @@ describe("DeckSelectScreen seat panel", () => {
     const yours = cy("duel-start-your-deck");
     expect(theirs.getAttribute("aria-pressed")).toBe("true");
     expect(yours.getAttribute("aria-pressed")).toBe("false");
-    expect(inside(theirs, "deck-tile-opponent-o1").classList).toContain(
-      "halo-focus",
-    );
-    expect(inside(yours, "deck-tile-yours-k1").classList).toContain("halo-you");
+    expect(theirs.classList).toContain("active");
+    expect(yours.classList).not.toContain("active");
 
     await user.click(theirs);
     expect(values.onseat).toHaveBeenLastCalledWith("player");
   });
 
-  it("your deck card returns to player seat", async () => {
+  it("your deck chip returns to player seat and falls back to selected tile", async () => {
     const values = handlers();
-    render(DeckSelectScreen, props({ ...values, seat: "opponent" }));
+    const base = props({
+      ...values,
+      seat: "opponent",
+      playerDeck: null,
+    });
+    const { rerender } = render(DeckSelectScreen, base);
 
+    expect(cy("duel-start-your-deck").textContent?.trim()).toBe("Aurora Fleet");
     await userEvent.setup().click(cy("duel-start-your-deck"));
-
     expect(values.onseat).toHaveBeenCalledWith("player");
+
+    await rerender({ ...base, selectedKey: null });
+    expect(find("duel-start-your-deck")).not.toBeNull();
+    expect(cy("duel-start-your-deck-empty").textContent).toBe(
+      "No deck selected",
+    );
   });
 
   it("picker escape closes without pick", async () => {

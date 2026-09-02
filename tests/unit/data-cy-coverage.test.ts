@@ -610,10 +610,9 @@ describe("data-cy uniqueness in deck select rendered document", () => {
     };
   }
 
-  it("duel start renders one deck in the grid and on a seat card without collision", () => {
-    /* Your own deck is normally a grid tile as well as the blue seat card, and
-       the opponent's can be picked into their seat the same way, so both seat
-       cards carry a `cyKey` and this is the claim being checked. */
+  it("duel start renders grid tiles and seat chips without collision", () => {
+    /* Each seat now names its deck with a chip rather than cloning the grid
+       tile, so grid identities remain singular in the rendered document. */
     const yours = deckTile("k1", "Aurora Fleet");
     const theirs = deckTile("k2", "Blaze Circuit");
 
@@ -634,13 +633,17 @@ describe("data-cy uniqueness in deck select rendered document", () => {
     });
 
     expect(document.querySelector('[data-cy="deck-tile-k1"]')).not.toBeNull();
-    expect(
-      document.querySelector('[data-cy="deck-tile-yours-k1"]'),
-    ).not.toBeNull();
     expect(document.querySelector('[data-cy="deck-tile-k2"]')).not.toBeNull();
     expect(
-      document.querySelector('[data-cy="deck-tile-opponent-k2"]'),
+      document.querySelector('[data-cy="duel-start-your-deck"]'),
     ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="duel-start-opponent-deck"]'),
+    ).not.toBeNull();
+    expect(document.querySelector('[data-cy^="deck-tile-yours-"]')).toBeNull();
+    expect(
+      document.querySelector('[data-cy^="deck-tile-opponent-"]'),
+    ).toBeNull();
 
     expect(duplicateRenderedValues()).toEqual([]);
   });

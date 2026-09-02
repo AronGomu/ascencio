@@ -229,7 +229,7 @@
     height: 100%;
     object-fit: cover;
     object-position: center;
-    opacity: 0.75;
+    opacity: 0.8;
   }
 
   .art-field {

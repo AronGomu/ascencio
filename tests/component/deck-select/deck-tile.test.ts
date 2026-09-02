@@ -38,7 +38,7 @@ describe("DeckTile", () => {
 
   it("dims illustration art without dimming tile content", () => {
     const source = readFileSync("src/deck-select/DeckTile.svelte", "utf8");
-    expect(source).toMatch(/\.art\s*\{[^}]*opacity:\s*0\.75/s);
+    expect(source).toMatch(/\.art\s*\{[^}]*opacity:\s*0\.8/s);
   });
 
   it("uses 1rem title type", () => {

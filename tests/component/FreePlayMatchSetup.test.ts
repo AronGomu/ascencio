@@ -137,16 +137,21 @@ function gridKeys(): readonly string[] {
   );
 }
 
-/** The deck filling a seat, read off the seat card the panel renders it as:
-    the card's tile is the same deck under its own `cyKey`. */
+/** The deck filling a seat, matched from its name-only chip to the grid tile. */
 function seatKey(which: "yours" | "opponent"): string | null {
-  const prefix = `deck-tile-${which}-`;
-  return (
-    document
-      .querySelector(`[data-cy^="${prefix}"]`)
-      ?.getAttribute("data-cy")
-      ?.slice(prefix.length) ?? null
+  const chip = query(
+    which === "yours"
+      ? "duel-start-your-deck-name"
+      : "duel-start-opponent-deck-name",
   );
+  const name = chip?.textContent;
+  if (name === undefined || name === null) return null;
+  const match = [...(query("deck-select-grid")?.children ?? [])].find(
+    (tile) =>
+      tile.querySelector<HTMLElement>('[data-cy^="deck-tile-name-"]')
+        ?.textContent === name,
+  );
+  return match?.getAttribute("data-cy")?.replace("deck-tile-", "") ?? null;
 }
 
 function startButton(): HTMLButtonElement {
@@ -253,18 +258,25 @@ describe("FreePlayMatchSetup", () => {
 
     await fireEvent.pointerEnter(query(`deck-tile-${PLAYER_PRESET_KEY}`)!);
     await vi.waitFor(() =>
-      expect(query(`deck-select-hover-list-row-${missingCode}`)).not.toBeNull(),
+      expect(
+        query(`deck-select-seat-list-player-row-${missingCode}`),
+      ).not.toBeNull(),
     );
 
     const row = query(
-      `deck-select-hover-list-row-${missingCode}`,
+      `deck-select-seat-list-player-row-${missingCode}`,
     ) as HTMLElement;
     expect(row.style.getPropertyValue("--fc")).toBe("#b8985a");
     expect(
-      query(`deck-select-hover-list-row-name-${missingCode}`)?.textContent,
+      query(`deck-select-seat-list-player-row-name-${missingCode}`)
+        ?.textContent,
     ).toBe(String(missingCode));
-    expect(query(`deck-select-hover-list-row-art-${missingCode}`)).toBeNull();
-    expect(query(`deck-select-hover-list-row-fade-${missingCode}`)).toBeNull();
+    expect(
+      query(`deck-select-seat-list-player-row-art-${missingCode}`),
+    ).toBeNull();
+    expect(
+      query(`deck-select-seat-list-player-row-fade-${missingCode}`),
+    ).toBeNull();
   });
 
   /* The screen manages the library it is picking from: the kebab and the

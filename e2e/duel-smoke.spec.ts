@@ -1739,13 +1739,14 @@ test("the duel spends the reclaimed pillarbox on the right rail, not the board",
     rail.width,
     "the rail absorbs the reclaimed pillarbox",
   ).toBeGreaterThan(reclaimed / 2);
-  expect(phaseBar.left).toBeGreaterThanOrEqual(slot.right - 1);
-  expect(rail.left).toBeGreaterThanOrEqual(phaseBar.right - 1);
+  // The phase bar shares the board's column, stacked above it.
+  expect(phaseBar.bottom).toBeLessThanOrEqual(slot.top + 1);
+  expect(rail.left).toBeGreaterThanOrEqual(slot.right - 1);
   expect(rail.right).toBeLessThanOrEqual(shell.right + 1);
-  // The board gained breathing room on both sides before the phase pane.
+  // The board gained breathing room on both sides before the rail.
   expect(
-    Math.abs(field.left - preview.right - (phaseBar.left - field.right)),
-    "the board is inset symmetrically between the preview and the phase pane",
+    Math.abs(field.left - preview.right - (rail.left - field.right)),
+    "the board is inset symmetrically between the preview and the rail",
   ).toBeLessThanOrEqual(2);
 
   await assertNoPageWideHorizontalOverflow(page, "duel full-bleed");
@@ -3929,10 +3930,13 @@ test("responsive field compositions contain controls across supported viewports"
       shellLayout.fieldBox.left + 1,
     );
     expect(shellLayout.fieldBox.right).toBeLessThanOrEqual(
-      shellLayout.phaseBox.left + 1,
+      shellLayout.railBox.left + 1,
     );
     expect(shellLayout.phaseBox.right).toBeLessThanOrEqual(
       shellLayout.railBox.left + 1,
+    );
+    expect(shellLayout.phaseBox.bottom).toBeLessThanOrEqual(
+      shellLayout.fieldBox.top + 1,
     );
     expect(
       Math.abs(shellLayout.shell.height - viewport.height),
@@ -4222,10 +4226,13 @@ test("responsive field compositions contain controls across supported viewports"
           height: box.height,
         };
       };
+      const board = document.querySelector('[data-cy="duel-field"]');
+      if (board === null) throw new Error("Duel field missing");
       return {
         bar: rect(bar),
         opponent: rect(opponent),
         player: rect(player),
+        board: rect(board),
         opponentOrder: [...opponent.children].map((element) =>
           element.getAttribute("data-cy"),
         ),
@@ -4236,21 +4243,28 @@ test("responsive field compositions contain controls across supported viewports"
       };
     });
     expect(
-      Math.abs(phaseGeometry.opponent.height - phaseGeometry.player.height),
+      phaseGeometry.bar.bottom,
+      `${viewportLabel} phase bar sits above the board`,
+    ).toBeLessThanOrEqual(phaseGeometry.board.top + 1);
+    expect(
+      Math.abs(phaseGeometry.opponent.width - phaseGeometry.player.width),
       `${viewportLabel} phase halves split at the exact middle`,
     ).toBeLessThanOrEqual(1.5);
     expect(
-      Math.abs(phaseGeometry.opponent.bottom - phaseGeometry.player.top),
+      Math.abs(phaseGeometry.player.right - phaseGeometry.opponent.left),
       `${viewportLabel} phase halves meet at one seam`,
     ).toBeLessThanOrEqual(1.5);
-    expect(phaseGeometry.opponentOrder).toEqual([
-      "phase-bar-opp-end",
-      "phase-bar-opp-main2",
-      "phase-bar-opp-battle",
-      "phase-bar-opp-main1",
-      "phase-bar-opp-standby",
-      "phase-bar-opp-draw",
-    ]);
+    expect(
+      phaseGeometry.player.left,
+      `${viewportLabel} your phases occupy the left half`,
+    ).toBeLessThan(phaseGeometry.opponent.left);
+    expect(
+      Math.abs(
+        phaseGeometry.player.right -
+          (phaseGeometry.board.left + phaseGeometry.board.width / 2),
+      ),
+      `${viewportLabel} the halves meet over the board's vertical middle`,
+    ).toBeLessThanOrEqual(8);
     expect(phaseGeometry.playerOrder).toEqual([
       "phase-bar-you-draw",
       "phase-bar-you-standby",
@@ -4259,10 +4273,50 @@ test("responsive field compositions contain controls across supported viewports"
       "phase-bar-you-main2",
       "field-end-turn-button",
     ]);
+    expect(phaseGeometry.opponentOrder).toEqual([
+      "phase-bar-opp-draw",
+      "phase-bar-opp-standby",
+      "phase-bar-opp-main1",
+      "phase-bar-opp-battle",
+      "phase-bar-opp-main2",
+      "phase-bar-opp-end",
+    ]);
     expect(
       phaseGeometry.opponentTags.every((tagName) => tagName === "SPAN"),
       `${viewportLabel} opponent phase chips stay inert`,
     ).toBe(true);
+
+    if (viewport.id === "VP-02") {
+      /* T2 acceptance: the board is measurably larger than the four-column
+         shell it replaced. 1276.0 x 1064.0 = 1357664 px^2 is the rect the same
+         viewport produced at commit 3609b53, before the phase bar left the
+         grid and the rail narrowed. */
+      const PRE_REWORK_FIELD_AREA = 1_357_664;
+      expect(
+        phaseGeometry.board.width * phaseGeometry.board.height,
+        `${viewportLabel} the board grew against the pre-rework baseline`,
+      ).toBeGreaterThan(PRE_REWORK_FIELD_AREA);
+
+      const toggleBox = await page
+        .locator('[data-cy="full-control-toggle"]')
+        .evaluate((element) => {
+          const box = element.getBoundingClientRect();
+          return { left: box.left, right: box.right, bottom: box.bottom };
+        });
+      expect(
+        toggleBox.left,
+        `${viewportLabel} Full Control sits in the board's bottom-left corner`,
+      ).toBeLessThan(phaseGeometry.board.left + phaseGeometry.board.width / 2);
+      expect(toggleBox.left).toBeGreaterThanOrEqual(
+        phaseGeometry.board.left - 1,
+      );
+      expect(toggleBox.bottom).toBeGreaterThan(
+        phaseGeometry.board.bottom - phaseGeometry.board.height / 2,
+      );
+      expect(toggleBox.bottom).toBeLessThanOrEqual(
+        phaseGeometry.board.bottom + 1,
+      );
+    }
 
     const endTurnRect = await endTurnButton.evaluate((element) => {
       const box = element.getBoundingClientRect();
@@ -5563,16 +5617,28 @@ async function assertSharesShellColumns(
       document.querySelector(selector)?.getBoundingClientRect() ?? null;
     const shell = rect('[data-cy="duel-shell"]');
     const previewColumn = rect('[data-cy="card-preview-panel"]');
+    const fieldColumn = rect('[data-cy="duel-field-column"]');
     const fieldSlot = rect('[data-cy="duel-field-slot"]');
     const field = rect('[data-cy="duel-field"]');
+    const phaseBar = rect('[data-cy="phase-bar"]');
     const rail = rect('[data-cy="duel-right-rail"]');
     return shell === null ||
       previewColumn === null ||
+      fieldColumn === null ||
       fieldSlot === null ||
       field === null ||
+      phaseBar === null ||
       rail === null
       ? null
       : {
+          fieldColumn: {
+            top: fieldColumn.top,
+            bottom: fieldColumn.bottom,
+          },
+          phaseBar: {
+            top: phaseBar.top,
+            bottom: phaseBar.bottom,
+          },
           shell: {
             top: shell.top,
             bottom: shell.bottom,
@@ -5603,9 +5669,11 @@ async function assertSharesShellColumns(
   });
   if (boxes === null)
     throw new Error(`${label}: missing shell column geometry`);
+  /* The board's column, not the board itself, is what spans the shell row now:
+     the phase bar takes the top of it and the slot takes the rest. */
   for (const [column, top, bottom] of [
     ["preview", boxes.previewColumn.top, boxes.previewColumn.bottom] as const,
-    ["field slot", boxes.fieldSlot.top, boxes.fieldSlot.bottom] as const,
+    ["field column", boxes.fieldColumn.top, boxes.fieldColumn.bottom] as const,
     ["rail", boxes.rail.top, boxes.rail.bottom] as const,
   ]) {
     expect(
@@ -5617,6 +5685,18 @@ async function assertSharesShellColumns(
       `${label} ${column} shares shell row bottom`,
     ).toBeLessThanOrEqual(2);
   }
+  expect(
+    Math.abs(boxes.phaseBar.top - boxes.shell.top),
+    `${label} phase bar takes the top of the field column`,
+  ).toBeLessThanOrEqual(2);
+  expect(
+    Math.abs(boxes.fieldSlot.top - boxes.phaseBar.bottom),
+    `${label} field slot starts under the phase bar`,
+  ).toBeLessThanOrEqual(2);
+  expect(
+    Math.abs(boxes.fieldSlot.bottom - boxes.shell.bottom),
+    `${label} field slot shares shell row bottom`,
+  ).toBeLessThanOrEqual(2);
   expect(
     boxes.previewColumn.right,
     `${label} preview column sits left of field slot`,

@@ -15,13 +15,16 @@
     type PhaseSlot,
   } from "../prompts/phase-transitions.ts";
 
+  /* The bar is one left-to-right timeline: your turn ends at the seam in the
+     middle, the opponent's turn starts again on the other side of it, so its
+     draw chip is the innermost and End the outermost. */
   const OPPONENT_SLOTS: readonly PhaseSlot[] = [
-    "end",
-    "main2",
-    "battle",
-    "main1",
-    "standby",
     "draw",
+    "standby",
+    "main1",
+    "battle",
+    "main2",
+    "end",
   ];
   const PLAYER_SLOTS: readonly PhaseSlot[] = [
     "draw",
@@ -91,28 +94,6 @@
   aria-label="Duel phases"
 >
   <div
-    class="phase-bar__half phase-bar__half--opponent"
-    data-cy="phase-bar-opponent"
-    role="group"
-    aria-label="Opponent phases"
-    data-current-phase={turnPlayer === 1
-      ? (currentSlot ?? undefined)
-      : undefined}
-  >
-    {#each OPPONENT_SLOTS as slot (slot)}
-      {@const current = turnPlayer === 1 && slot === currentSlot}
-      <span
-        class="phase-chip"
-        class:is-current={current}
-        role="presentation"
-        aria-label={ariaLabel(slot, current, false)}
-        data-cy={`phase-bar-opp-${slot}`}
-      >
-        {PHASE_SLOT_LABELS[slot]}
-      </span>
-    {/each}
-  </div>
-  <div
     class="phase-bar__half phase-bar__half--player"
     data-cy="phase-bar-player"
     role="group"
@@ -154,5 +135,27 @@
     >
       {endChoice?.label ?? "End turn"}
     </button>
+  </div>
+  <div
+    class="phase-bar__half phase-bar__half--opponent"
+    data-cy="phase-bar-opponent"
+    role="group"
+    aria-label="Opponent phases"
+    data-current-phase={turnPlayer === 1
+      ? (currentSlot ?? undefined)
+      : undefined}
+  >
+    {#each OPPONENT_SLOTS as slot (slot)}
+      {@const current = turnPlayer === 1 && slot === currentSlot}
+      <span
+        class="phase-chip"
+        class:is-current={current}
+        role="presentation"
+        aria-label={ariaLabel(slot, current, false)}
+        data-cy={`phase-bar-opp-${slot}`}
+      >
+        {PHASE_SLOT_LABELS[slot]}
+      </span>
+    {/each}
   </div>
 </aside>

@@ -9,7 +9,11 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   --preview-w: 15.5rem;
-  --rail-min: 15rem;
+  --rail-min: 11rem;
+  /* The phase bar spans the board's own column above it, so it is the one
+     shell pane that costs the board height instead of width. Tall enough for
+     the chips' 44px pointer-target floor plus the bar's own border. */
+  --phase-bar-h: 3rem;
   /* How much of the reclaimed pillarbox the board is allowed to spend on
      breathing room before the rail takes the rest. Never comes out of the
      board's own width — see `.duel-field-slot`. */
@@ -147,7 +151,6 @@ body {
        every shell pane, but compact their existing seams so the field retains
        enough width for geometry-sized targets instead of shrinking cards. */
     --preview-w: 8rem;
-    --phase-bar-w: 5rem;
     --rail-min: 7rem;
 
     position: absolute;
@@ -529,10 +532,7 @@ h4 {
   height: var(--stage-h, 100svh);
   margin: 0;
   display: grid;
-  grid-template-columns: var(--preview-w) auto var(--phase-bar-w, 8rem) minmax(
-      var(--rail-min),
-      1fr
-    );
+  grid-template-columns: var(--preview-w) auto minmax(var(--rail-min), 1fr);
   grid-template-rows: minmax(0, 1fr);
   align-items: stretch;
   padding: 0;
@@ -749,7 +749,7 @@ h4 {
 @media (max-width: 1500px) {
   :root {
     --preview-w: 13.5rem;
-    --rail-min: 12rem;
+    --rail-min: 9rem;
     --duel-field-inset: 0.75rem;
   }
 }
@@ -1180,19 +1180,34 @@ li + li {
   }
 }
 
+/* The board's column: the phase bar on top, the board under it. Both are as
+   wide as the column, so the bar's centre seam falls on the board's own
+   vertical middle without either of them measuring the other. */
+/* No `min-width: 0` and no `overflow: hidden` here on purpose: either one
+   would drop the column's minimum size to zero, and the shell's `auto` track
+   would then shrink under the board's own fixed width and clip it. The board
+   has to keep pushing the track exactly as it did when the slot was the grid
+   item itself. */
+.duel-field-column {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .duel-field-slot {
   position: relative;
-  /* Keep the fixed preview, phase bar, and minimum rail inside the 16:9 duel
-     stage budget in upright and rotated modes. `--stage-w` is intentionally
-     unused: this route exposes the full viewport there, while the duel board
-     still follows the stage height's 16:9 width.
+  /* Keep the fixed preview and minimum rail inside the 16:9 duel stage budget
+     in upright and rotated modes. `--stage-w` is intentionally unused: this
+     route exposes the full viewport there, while the duel board still follows
+     the stage height's 16:9 width. The phase bar is subtracted from the height
+     instead, because it sits above the board rather than beside it.
 
      The inset is margin, not padding: `DuelField` sizes the board from this
      element's `clientWidth`, which padding would shrink and margin does not. */
   width: calc(
-    var(--stage-h, 100svh) * 16 / 9 - var(--preview-w) -
-      var(--phase-bar-w, 8rem) - var(--rail-min)
+    var(--stage-h, 100svh) * 16 / 9 - var(--preview-w) - var(--rail-min)
   );
+  height: calc(100% - var(--phase-bar-h));
   margin-inline: var(--duel-field-margin, 0px);
   min-width: 0;
   min-height: 0;
@@ -1201,12 +1216,12 @@ li + li {
   overflow: hidden;
 }
 
-/* Sits in the field's own bottom-right corner, inside the board rather than in
+/* Sits in the field's own bottom-left corner, inside the board rather than in
    the slot around it: anchored to the slot the box drifted with the empty
    letterboxing and could end up beside the field instead of on it. */
 .full-control-toggle {
   position: absolute;
-  right: 0.5rem;
+  left: 0.5rem;
   bottom: 0.5rem;
   z-index: var(--duel-field-layer-control);
   display: inline-flex;
@@ -1221,10 +1236,10 @@ li + li {
    taken out of flow so appearing cannot move the box it names. */
 .full-control-toggle__text {
   position: absolute;
-  right: 100%;
+  left: 100%;
   bottom: 0;
   visibility: hidden;
-  margin-right: 0.3rem;
+  margin-left: 0.3rem;
   padding: 0.1rem 0.35rem;
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-sm);
@@ -1287,10 +1302,20 @@ li + li {
   overflow: hidden;
 }
 
+/* One horizontal timeline above the board: your turn on the left half running
+   into the End turn chip, the opponent's turn resuming at its draw chip on the
+   other side of the seam. The halves stay exact 50% splits so the seam lands
+   on the board's vertical middle. */
 .phase-bar {
   display: flex;
-  flex-direction: column;
-  min-width: 0;
+  flex-direction: row;
+  height: var(--phase-bar-h);
+  /* Zero width plus a percentage floor: the bar fills the board's column but
+     contributes nothing to it intrinsically, so twelve chips of labels can
+     never widen the column and push the board or the rail out of the shell.
+     The chips shrink inside the bar instead. */
+  width: 0;
+  min-width: 100%;
   min-height: 0;
   overflow: hidden;
   border: 1px solid var(--border);
@@ -1300,17 +1325,19 @@ li + li {
 .phase-bar__half {
   flex: 0 0 50%;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: 6px;
-  min-height: 0;
-  padding: 10px;
+  min-width: 0;
+  padding: 0 10px;
 }
 
+/* Both halves are strongest at the seam they share, so each gradient runs
+   toward the centre of the bar. */
 .phase-bar__half--opponent {
-  justify-content: flex-end;
-  border-bottom: 1px solid var(--border);
+  border-left: 1px solid var(--border);
   background: linear-gradient(
-    0deg,
+    90deg,
     color-mix(in srgb, var(--danger) 30%, var(--surface)),
     color-mix(in srgb, var(--danger) 12%, var(--surface))
   );
@@ -1318,16 +1345,17 @@ li + li {
 
 .phase-bar__half--player {
   background: linear-gradient(
-    180deg,
+    270deg,
     color-mix(in srgb, var(--phase-player) 30%, var(--surface)),
     color-mix(in srgb, var(--phase-player) 12%, var(--surface))
   );
 }
 
 .phase-chip {
-  width: 100%;
+  flex: 1 1 0;
   min-inline-size: 0;
   min-block-size: 44px;
+  overflow: hidden;
   display: inline-grid;
   place-items: center;
   pointer-events: none;

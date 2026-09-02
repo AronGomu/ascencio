@@ -124,8 +124,9 @@ describe("global styles", () => {
 
   /* The duel must measure the stage, not the viewport, or it keeps its old
      full-viewport height inside a letterboxed box. The field column reserves
-     the fixed preview, phase bar, and rail inside that letterboxed width even
-     though the duel route widens `--stage-w` to the viewport. */
+     the fixed preview and rail inside that letterboxed width even though the
+     duel route widens `--stage-w` to the viewport; the phase bar is stacked
+     above the board rather than beside it, so it costs height, not width. */
   it("sizes the duel against the stage box with a viewport fallback", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     expect(ruleBlock(css, "main.is-duel-viewport {")).toContain(
@@ -133,8 +134,9 @@ describe("global styles", () => {
     );
     const slot = ruleBlock(css, ".duel-field-slot {");
     expect(slot).toContain(
-      "width: calc(\n    var(--stage-h, 100svh) * 16 / 9 - var(--preview-w) -\n      var(--phase-bar-w, 8rem) - var(--rail-min)\n  )",
+      "width: calc(\n    var(--stage-h, 100svh) * 16 / 9 - var(--preview-w) - var(--rail-min)\n  )",
     );
+    expect(slot).toContain("height: calc(100% - var(--phase-bar-h))");
     expect(slot).not.toContain("width: calc(var(--stage-w");
     expect(slot).toContain("margin-inline: var(--duel-field-margin, 0px)");
   });
@@ -182,17 +184,18 @@ describe("global styles", () => {
     expect(css).not.toContain("max-height: calc(100svh - 1rem)");
   });
 
-  it("uses one full-height four-column shell", () => {
+  it("uses one full-height three-column shell", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     const shell = ruleBlock(css, ".duel-shell {");
     expect(shell).toContain("height: var(--stage-h, 100svh)");
     expect(shell).toContain(
-      "grid-template-columns: var(--preview-w) auto var(--phase-bar-w, 8rem) minmax(\n      var(--rail-min),\n      1fr\n    )",
+      "grid-template-columns: var(--preview-w) auto minmax(var(--rail-min), 1fr)",
     );
     expect(shell).toContain("grid-template-rows: minmax(0, 1fr)");
     expect(shell).toContain("overflow: hidden");
     expect(css).toContain("--preview-w: 15.5rem");
-    expect(css).toContain("--rail-min: 15rem");
+    expect(css).toContain("--rail-min: 11rem");
+    expect(css).toContain("--phase-bar-h: 3rem");
   });
 
   it("bounds preview art by viewport height so effect text keeps scroll space", () => {

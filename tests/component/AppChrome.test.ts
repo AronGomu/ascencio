@@ -415,7 +415,7 @@ describe("App", () => {
     ).toBeNull();
   });
 
-  it("uses one full-height shell in preview, field, rail order", async () => {
+  it("uses one full-height shell in preview, field column, rail order", async () => {
     const user = userEvent.setup();
     await renderReadyApp();
     await startDuelFromPicker(user);
@@ -429,12 +429,13 @@ describe("App", () => {
       Array.from(shell?.children ?? []).map((child) =>
         child.getAttribute("data-cy"),
       ),
-    ).toEqual([
-      "card-preview-panel",
-      "duel-field-slot",
-      "phase-bar",
-      "duel-right-rail",
-    ]);
+    ).toEqual(["card-preview-panel", "duel-field-column", "duel-right-rail"]);
+    const fieldColumn = document.querySelector('[data-cy="duel-field-column"]');
+    expect(
+      Array.from(fieldColumn?.children ?? []).map((child) =>
+        child.getAttribute("data-cy"),
+      ),
+    ).toEqual(["phase-bar", "duel-field-slot"]);
   });
 
   it("returns focus to the live rail options trigger after Menu and Settings close", async () => {

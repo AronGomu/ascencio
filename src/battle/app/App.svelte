@@ -1484,86 +1484,90 @@
         placeholderUrl={imageLibrary?.placeholderUrl ??
           DEFAULT_CARD_PLACEHOLDER}
       />
-      {#if layoutProfileConflict}
-        <section
-          class="field-error"
-          role="alert"
-          data-cy="layout-profile-conflict"
-          data-conflict-zone-id={layoutProfileConflict.zoneId}
-          data-conflict-source={layoutProfileConflict.source}
-        >
-          <h2 data-cy="layout-profile-conflict-heading">
-            Duel field and rules disagree
-          </h2>
-          <p data-cy="layout-profile-conflict-copy">
-            This duel runs without shared Extra Monster Zones, but the engine
-            still offers {layoutProfileConflict.zoneId} ({layoutProfileConflict.source}).
-            Decisions are paused so no legal choice is hidden or answered for
-            you.
-          </p>
-        </section>
-      {:else if duelBoard}
-        <div
-          class="duel-field-slot"
-          data-cy="duel-field-slot"
-          bind:this={duelFieldSlot}
-        >
-          {#key `${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
-            <DuelFieldErrorBoundary
-              board={duelBoard}
-              layoutBoundaryElement={duelFieldSlot}
-              imageLibrary={imagesMatchRuntime ? imageLibrary : null}
-              cardBackUrl={imageLibrary?.cardBackUrl ?? ""}
-              placeholderUrl={imageLibrary?.placeholderUrl ?? ""}
-              prompt={effectivePrompt}
-              spec={fieldInteractionSpec}
-              session={$duel.interactionSession}
-              pending={$duel.responsePending}
-              presentationEvents={$duel.presentationEvents}
-              feedbackGeneration={`${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
-              injectFailure={injectDuelFieldFailure}
-              oninteraction={duel.dispatchInteraction}
-              onplacementintent={duel.armPlacementIntent}
-              onpreview={previewFieldCard}
-              onstackpreview={previewStackCard}
-              {zoneLists}
-              {offFieldTargets}
-              onzonelistpreview={previewZoneListEntry}
-              zoneListWindowPosition={$persistedUi.windows.zoneList}
-              confirmWindowPosition={$persistedUi.windows.confirm}
-              showZoneOutlines={$uiSettings.showZoneOutlines}
-              showZoneCounts={$uiSettings.showZoneCounts}
-              showCardShadows={$uiSettings.showCardShadows}
-              showZoneLabels={$uiSettings.showZoneLabels}
-              onzoneListWindowPositionChange={moveZoneListWindow}
-              onconfirmWindowPositionChange={moveConfirmWindow}
-              contextMessage={promptContextSegments}
-              fullControl={$uiSettings.fullControl}
-              fullControlHeld={ctrlHeld}
-              onfullcontrolchange={uiSettings.setFullControl}
-            />
-          {/key}
-        </div>
-      {:else if $duel.snapshot}
-        <section
-          class="field-error"
-          role="alert"
-          data-cy="app-field-error-panel"
-        >
-          <h2 data-cy="app-field-error-heading">Duel field unavailable</h2>
-          <p data-cy="app-field-error-copy">
-            Prompt controls remain available.
-          </p>
-        </section>
-      {/if}
+      <div class="duel-field-column" data-cy="duel-field-column">
+        {#if $duel.snapshot}
+          <PhaseBar
+            phase={$duel.snapshot.phase}
+            turnPlayer={$duel.snapshot.turnPlayer}
+            spec={fieldInteractionSpec}
+            disabled={$duel.responsePending}
+            oninteraction={duel.dispatchInteraction}
+          />
+        {/if}
+        {#if layoutProfileConflict}
+          <section
+            class="field-error"
+            role="alert"
+            data-cy="layout-profile-conflict"
+            data-conflict-zone-id={layoutProfileConflict.zoneId}
+            data-conflict-source={layoutProfileConflict.source}
+          >
+            <h2 data-cy="layout-profile-conflict-heading">
+              Duel field and rules disagree
+            </h2>
+            <p data-cy="layout-profile-conflict-copy">
+              This duel runs without shared Extra Monster Zones, but the engine
+              still offers {layoutProfileConflict.zoneId} ({layoutProfileConflict.source}).
+              Decisions are paused so no legal choice is hidden or answered for
+              you.
+            </p>
+          </section>
+        {:else if duelBoard}
+          <div
+            class="duel-field-slot"
+            data-cy="duel-field-slot"
+            bind:this={duelFieldSlot}
+          >
+            {#key `${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
+              <DuelFieldErrorBoundary
+                board={duelBoard}
+                layoutBoundaryElement={duelFieldSlot}
+                imageLibrary={imagesMatchRuntime ? imageLibrary : null}
+                cardBackUrl={imageLibrary?.cardBackUrl ?? ""}
+                placeholderUrl={imageLibrary?.placeholderUrl ?? ""}
+                prompt={effectivePrompt}
+                spec={fieldInteractionSpec}
+                session={$duel.interactionSession}
+                pending={$duel.responsePending}
+                presentationEvents={$duel.presentationEvents}
+                feedbackGeneration={`${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
+                injectFailure={injectDuelFieldFailure}
+                oninteraction={duel.dispatchInteraction}
+                onplacementintent={duel.armPlacementIntent}
+                onpreview={previewFieldCard}
+                onstackpreview={previewStackCard}
+                {zoneLists}
+                {offFieldTargets}
+                onzonelistpreview={previewZoneListEntry}
+                zoneListWindowPosition={$persistedUi.windows.zoneList}
+                confirmWindowPosition={$persistedUi.windows.confirm}
+                showZoneOutlines={$uiSettings.showZoneOutlines}
+                showZoneCounts={$uiSettings.showZoneCounts}
+                showCardShadows={$uiSettings.showCardShadows}
+                showZoneLabels={$uiSettings.showZoneLabels}
+                onzoneListWindowPositionChange={moveZoneListWindow}
+                onconfirmWindowPositionChange={moveConfirmWindow}
+                contextMessage={promptContextSegments}
+                fullControl={$uiSettings.fullControl}
+                fullControlHeld={ctrlHeld}
+                onfullcontrolchange={uiSettings.setFullControl}
+              />
+            {/key}
+          </div>
+        {:else if $duel.snapshot}
+          <section
+            class="field-error"
+            role="alert"
+            data-cy="app-field-error-panel"
+          >
+            <h2 data-cy="app-field-error-heading">Duel field unavailable</h2>
+            <p data-cy="app-field-error-copy">
+              Prompt controls remain available.
+            </p>
+          </section>
+        {/if}
+      </div>
       {#if $duel.snapshot}
-        <PhaseBar
-          phase={$duel.snapshot.phase}
-          turnPlayer={$duel.snapshot.turnPlayer}
-          spec={fieldInteractionSpec}
-          disabled={$duel.responsePending}
-          oninteraction={duel.dispatchInteraction}
-        />
         <DuelRail
           turn={$duel.snapshot.turn}
           phase={$duel.snapshot.phase}

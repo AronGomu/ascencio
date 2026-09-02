@@ -41,24 +41,22 @@ afterEach(() => {
 });
 
 describe("PhaseBar", () => {
-  it("renders the player and opponent halves in perspective order", () => {
+  /* The bar reads left to right as one continuous timeline: your turn runs
+     draw to End turn into the seam, the opponent's turn resumes at draw on the
+     other side of it. So the player half comes first in the DOM, and the
+     opponent's chips run in the same direction rather than mirrored. */
+  it("renders the player half before the opponent half in timeline order", () => {
     render(PhaseBar);
 
+    const bar = document.querySelector('[data-cy="phase-bar"]');
     const opponent = document.querySelector('[data-cy="phase-bar-opponent"]');
     const player = document.querySelector('[data-cy="phase-bar-player"]');
-    expect(document.querySelector('[data-cy="phase-bar"]')).not.toBeNull();
+    expect(bar).not.toBeNull();
+    expect(chipIds(bar!)).toEqual(["phase-bar-player", "phase-bar-opponent"]);
     expect(opponent?.getAttribute("role")).toBe("group");
     expect(opponent?.getAttribute("aria-label")).toBe("Opponent phases");
     expect(player?.getAttribute("role")).toBe("group");
     expect(player?.getAttribute("aria-label")).toBe("Your phases");
-    expect(chipIds(opponent!)).toEqual([
-      "phase-bar-opp-end",
-      "phase-bar-opp-main2",
-      "phase-bar-opp-battle",
-      "phase-bar-opp-main1",
-      "phase-bar-opp-standby",
-      "phase-bar-opp-draw",
-    ]);
     expect(chipIds(player!)).toEqual([
       "phase-bar-you-draw",
       "phase-bar-you-standby",
@@ -66,6 +64,14 @@ describe("PhaseBar", () => {
       "phase-bar-you-battle",
       "phase-bar-you-main2",
       "field-end-turn-button",
+    ]);
+    expect(chipIds(opponent!)).toEqual([
+      "phase-bar-opp-draw",
+      "phase-bar-opp-standby",
+      "phase-bar-opp-main1",
+      "phase-bar-opp-battle",
+      "phase-bar-opp-main2",
+      "phase-bar-opp-end",
     ]);
   });
 

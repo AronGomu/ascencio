@@ -17,6 +17,7 @@
     "assets:images:cropped": "node scripts/download-images.ts --kind cropped",
     "assets:images:cropped:active": "node scripts/download-images.ts --kind cropped --active",
     "assets:images:verify": "node scripts/verify-images.ts",
+    "assets:card-back": "node scripts/download-card-back.ts",
     "assets:sets": "node scripts/download-set-images.ts",
     "assets:sets:verify": "node scripts/verify-set-images.ts",
     "assets:lock": "node scripts/generate-image-lock.ts",

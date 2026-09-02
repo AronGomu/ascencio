@@ -126,6 +126,25 @@ async function copyRuntimeAssets(
       path.join(runtimeOutput, "engine/ocgcore.sync.wasm"),
     ),
   ]);
+  await copyCardBackImage(projectRoot, runtimeOutput);
+}
+
+/* The card back is acquired by `scripts/download-card-back.ts` into ignored
+   `generated/`, so a tree that never ran it still builds and the duel field
+   falls back to its drawn SVG back. It is copied after `copyActiveCardImages`
+   because that step clears the image output root first. */
+async function copyCardBackImage(
+  projectRoot: string,
+  runtimeOutput: string,
+): Promise<void> {
+  try {
+    await copyFileWithParents(
+      path.join(projectRoot, "generated/card-images/card-back.jpg"),
+      path.join(runtimeOutput, "images/card-back.jpg"),
+    );
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
 }
 
 async function copyActiveCardImages(
@@ -290,7 +309,7 @@ async function copyFileWithParents(
   await cp(source, destination, { force: true });
 }
 
-function runtimeSourcePath(
+export function runtimeSourcePath(
   projectRoot: string,
   runtimePath: string,
 ): string | null {
@@ -313,6 +332,9 @@ function runtimeSourcePath(
       projectRoot,
       "vendor/ocgcore-wasm/0.1.2/vendor-manifest.json",
     );
+  }
+  if (normalized === "images/card-back.jpg") {
+    return path.join(projectRoot, "generated/card-images/card-back.jpg");
   }
   if (/^images\/\d+\.jpg$/.test(normalized)) {
     try {

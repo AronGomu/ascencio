@@ -59,6 +59,16 @@ function imageResponse(bytes = JPEG, status = 200): Response {
   });
 }
 
+/* Creating a library also probes the packaged card back, so request counts
+   assert image requests rather than every fetch the cache made. */
+function imageRequests(fetch: {
+  readonly mock: { readonly calls: readonly unknown[][] };
+}): readonly unknown[][] {
+  return fetch.mock.calls.filter(
+    (call) => !String(call[0]).endsWith("card-back.jpg"),
+  );
+}
+
 function fixture(
   snapshotCharacter: string,
   code = 97590747,
@@ -108,7 +118,7 @@ describe("CardImageCache", () => {
       digest,
     );
 
-    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(imageRequests(fetch)).toHaveLength(1);
     expect(first.diagnostics[0]?.status).toBe("cache-miss");
     expect(second.diagnostics[0]?.status).toBe("cache-hit");
     expect(fallback.diagnostics[0]?.status).toBe("cache-hit");
@@ -187,7 +197,7 @@ describe("CardImageCache", () => {
     const second = cache.preload(manifest, digest);
     release?.(imageResponse());
     await Promise.all([first, second]);
-    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(imageRequests(fetch)).toHaveLength(1);
   });
 
   it("lets one concurrent subscriber abort without cancelling the shared fetch", async () => {
@@ -243,7 +253,7 @@ describe("CardImageCache", () => {
     });
 
     const library = await cache.preload(manifest, digest);
-    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(imageRequests(fetch)).toHaveLength(1);
     const lease = library.lease(97590747);
     expect(lease.url).toBe("blob:verified");
     lease.release();
@@ -296,7 +306,7 @@ describe("CardImageCache", () => {
       decodeImage: async () => undefined,
     });
     const missing = await missingCache.preload(missingManifest, missingDigest);
-    expect(noFetch).not.toHaveBeenCalled();
+    expect(imageRequests(noFetch)).toHaveLength(0);
     const missingLease = missing.lease(97590747);
     expect(missingLease.url).toBe(missing.placeholderUrl);
     missingLease.release();
@@ -334,7 +344,7 @@ describe("CardImageCache", () => {
     });
 
     const library = await cache.preload(manifest, digest);
-    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(imageRequests(fetch)).toHaveLength(1);
     const lease = library.lease(97590747);
     expect(lease.url).toBe("blob:network-fallback");
     lease.release();
@@ -385,5 +395,65 @@ describe("CardImageCache", () => {
     );
     controller.abort(new DOMException("cancelled", "AbortError"));
     await expect(pending).rejects.toThrow("cancelled");
+  });
+
+  it("serves the packaged card back when the runtime asset responds", async () => {
+    const { manifest, digest } = fixture("0");
+    const fetch = vi.fn<typeof globalThis.fetch>(async () => imageResponse());
+    const cache = new CardImageCache({
+      applicationBaseUrl: "https://example.test/game/",
+      fetch,
+      cacheStorage: new FakeCacheStorage() as unknown as CacheStorage,
+      createObjectUrl: () => "blob:unused",
+      revokeObjectUrl: vi.fn(),
+      decodeImage: async () => undefined,
+    });
+
+    const library = await cache.preload(manifest, digest);
+    expect(library.cardBackUrl).toBe(
+      "https://example.test/game/runtime/images/card-back.jpg",
+    );
+    expect(fetch).toHaveBeenCalledWith(
+      "https://example.test/game/runtime/images/card-back.jpg",
+      expect.objectContaining({ method: "HEAD" }),
+    );
+  });
+
+  it("keeps the drawn card back when the runtime asset is absent", async () => {
+    const { manifest, digest } = fixture("9");
+    const cache = new CardImageCache({
+      applicationBaseUrl: "https://example.test/game/",
+      fetch: vi.fn<typeof globalThis.fetch>(async (source) =>
+        String(source).endsWith("card-back.jpg")
+          ? new Response("", { status: 404 })
+          : imageResponse(),
+      ),
+      cacheStorage: new FakeCacheStorage() as unknown as CacheStorage,
+      createObjectUrl: () => "blob:unused",
+      revokeObjectUrl: vi.fn(),
+      decodeImage: async () => undefined,
+    });
+
+    const library = await cache.preload(manifest, digest);
+    expect(library.cardBackUrl.startsWith("data:image/svg+xml,")).toBe(true);
+  });
+
+  it("keeps the drawn card back when the availability probe fails", async () => {
+    const { manifest, digest } = fixture("8");
+    const cache = new CardImageCache({
+      applicationBaseUrl: "https://example.test/game/",
+      fetch: vi.fn<typeof globalThis.fetch>(async (source) => {
+        if (String(source).endsWith("card-back.jpg"))
+          throw new TypeError("offline");
+        return imageResponse();
+      }),
+      cacheStorage: new FakeCacheStorage() as unknown as CacheStorage,
+      createObjectUrl: () => "blob:unused",
+      revokeObjectUrl: vi.fn(),
+      decodeImage: async () => undefined,
+    });
+
+    const library = await cache.preload(manifest, digest);
+    expect(library.cardBackUrl.startsWith("data:image/svg+xml,")).toBe(true);
   });
 });

@@ -485,7 +485,13 @@ async function verifyActiveImages(): Promise<void> {
     "active-manifest.json",
     ...imageManifest.files.map((file) => file.path),
   ].sort();
-  if (packaged.sort().join("\n") !== declared.join("\n"))
+  /* The card back sits beside the active images but is not one of them: it is
+     acquired by `scripts/download-card-back.ts` into ignored `generated/`, and
+     a build without it renders the duel field's drawn SVG back instead. */
+  const packagedActiveImages = packaged.filter(
+    (file) => file !== "card-back.jpg",
+  );
+  if (packagedActiveImages.sort().join("\n") !== declared.join("\n"))
     throw new Error("Packaged active images differ from their manifest");
   const declaredCodes = new Set<number>();
   const observedCards: CardImageDigest[] = [];

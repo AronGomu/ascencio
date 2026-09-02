@@ -321,12 +321,7 @@ export class CardImageCache {
     await Promise.all(workers);
     signal?.throwIfAborted();
 
-    const cardBackUrl = svgDataUrl(
-      "Card back",
-      "#241037",
-      "#d9a441",
-      "#6f2d62",
-    );
+    const cardBackUrl = await this.#resolveCardBackUrl(cacheOnly);
     const placeholderUrl = svgDataUrl(
       "Image unavailable",
       "#172033",
@@ -409,6 +404,34 @@ export class CardImageCache {
         this.#revokeObjectUrl(current.url);
       },
     });
+  }
+
+  /* One HEAD per library tells the field whether the packaged Yu-Gi-Oh! card
+     back was acquired. An offline browser, or a tree that never ran
+     `scripts/download-card-back.ts`, keeps the drawn SVG back instead — both
+     are normal states rather than failures, so nothing is logged. The cached
+     fallback path must not reach the network at all, so it never probes. */
+  async #resolveCardBackUrl(cacheOnly: boolean): Promise<string> {
+    const drawnCardBackUrl = svgDataUrl(
+      "Card back",
+      "#241037",
+      "#d9a441",
+      "#6f2d62",
+    );
+    if (cacheOnly) return drawnCardBackUrl;
+    const source = resolveBrowserRuntimeUrl(
+      this.#applicationBaseUrl,
+      "images/card-back.jpg",
+    );
+    try {
+      const response = await this.#fetch(source, {
+        method: "HEAD",
+        signal: AbortSignal.timeout(this.#imageTimeoutMs),
+      });
+      return response.ok ? source : drawnCardBackUrl;
+    } catch {
+      return drawnCardBackUrl;
+    }
   }
 
   async #loadVerifiedBytes(

@@ -21,15 +21,39 @@ function cy(value: string): HTMLElement {
 
 const AURORA: DecklistView = {
   main: [
-    { code: 101, name: "Aurora Scout" },
-    { code: 102, name: "Aurora Sentinel" },
+    {
+      code: 101,
+      name: "Aurora Scout",
+      frame: "spell",
+      artUrl: "blob:x",
+    },
+    {
+      code: 102,
+      name: "Aurora Sentinel",
+      frame: "normal",
+      artUrl: null,
+    },
   ],
-  extra: [{ code: 201, name: "Aurora Colossus" }],
+  extra: [
+    {
+      code: 201,
+      name: "Aurora Colossus",
+      frame: "link",
+      artUrl: "blob:extra",
+    },
+  ],
   side: [],
 };
 
 const RELIC: DecklistView = {
-  main: [{ code: 301, name: "Relic Keeper" }],
+  main: [
+    {
+      code: 301,
+      name: "Relic Keeper",
+      frame: "effect",
+      artUrl: null,
+    },
+  ],
   extra: [],
   side: [],
 };
@@ -73,10 +97,23 @@ describe("DeckSelectScreen hover previews", () => {
     expect(cy("deck-select-hover-list-side-heading").textContent).toBe(
       "Side (0)",
     );
-    expect(cy("deck-select-hover-list-row-101").textContent).toContain(
-      "Aurora Scout",
+    const artRow = cy("deck-select-hover-list-row-101");
+    expect(artRow.textContent).toContain("Aurora Scout");
+    expect(artRow.style.getPropertyValue("--fc")).toBe("#1d9e74");
+    expect(artRow.style.getPropertyValue("--img")).toContain("blob:x");
+    expect(find("deck-select-hover-list-row-art-101")).not.toBeNull();
+    expect(find("deck-select-hover-list-row-fade-101")).not.toBeNull();
+
+    const degradedRow = cy("deck-select-hover-list-row-102");
+    expect(degradedRow.style.getPropertyValue("--fc")).toBe("#b8985a");
+    expect(find("deck-select-hover-list-row-art-102")).toBeNull();
+    expect(find("deck-select-hover-list-row-fade-102")).toBeNull();
+    expect(cy("deck-select-hover-list-row-name-102").textContent).toBe(
+      "Aurora Sentinel",
     );
-    expect(find("deck-select-hover-list-row-102")).not.toBeNull();
+    const singleCopies = cy("deck-select-hover-list-row-copies-102");
+    expect(singleCopies.textContent).toBe("");
+    expect(singleCopies.classList.contains("single")).toBe(true);
     expect(find("deck-select-hover-list-row-201")).not.toBeNull();
   });
 
@@ -119,9 +156,24 @@ describe("DeckSelectScreen hover previews", () => {
   it("copies of one card share a row", async () => {
     const trio: DecklistView = {
       main: [
-        { code: 101, name: "Aurora Scout" },
-        { code: 101, name: "Aurora Scout" },
-        { code: 101, name: "Aurora Scout" },
+        {
+          code: 101,
+          name: "Aurora Scout",
+          frame: "spell",
+          artUrl: "blob:x",
+        },
+        {
+          code: 101,
+          name: "Aurora Scout",
+          frame: "effect",
+          artUrl: null,
+        },
+        {
+          code: 101,
+          name: "Aurora Scout",
+          frame: "normal",
+          artUrl: null,
+        },
       ],
       extra: [],
       side: [],
@@ -144,7 +196,11 @@ describe("DeckSelectScreen hover previews", () => {
     expect(cy("deck-select-hover-list-main-heading").textContent).toBe(
       "Main (3)",
     );
-    expect(cy("deck-select-hover-list-row-copies-101").textContent).toBe("×3");
+    expect(cy("deck-select-hover-list-row-copies-101").textContent).toBe("3");
+    expect(
+      cy("deck-select-hover-list-row-101").style.getPropertyValue("--fc"),
+    ).toBe("#1d9e74");
+    expect(find("deck-select-hover-list-row-art-101")).not.toBeNull();
   });
 
   it("library hover previews in dock without moving selection", async () => {

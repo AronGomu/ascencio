@@ -231,6 +231,42 @@ describe("FreePlayMatchSetup", () => {
     ]);
   });
 
+  it("maps a catalog miss to a normal frame without art", async () => {
+    const missingCode = 987654321;
+    const missingDecks = presetSelectableDecks(PRESETS).map((deck) =>
+      deck.key === PLAYER_PRESET_KEY
+        ? {
+            ...deck,
+            lists: {
+              ...deck.lists,
+              main: [missingCode],
+            },
+          }
+        : deck,
+    );
+    await renderLoadedSetup({
+      module: {
+        presetSelectableDecks: () => missingDecks,
+        listSelectableDecks: async () => missingDecks,
+      },
+    });
+
+    await fireEvent.pointerEnter(query(`deck-tile-${PLAYER_PRESET_KEY}`)!);
+    await vi.waitFor(() =>
+      expect(query(`deck-select-hover-list-row-${missingCode}`)).not.toBeNull(),
+    );
+
+    const row = query(
+      `deck-select-hover-list-row-${missingCode}`,
+    ) as HTMLElement;
+    expect(row.style.getPropertyValue("--fc")).toBe("#b8985a");
+    expect(
+      query(`deck-select-hover-list-row-name-${missingCode}`)?.textContent,
+    ).toBe(String(missingCode));
+    expect(query(`deck-select-hover-list-row-art-${missingCode}`)).toBeNull();
+    expect(query(`deck-select-hover-list-row-fade-${missingCode}`)).toBeNull();
+  });
+
   /* The screen manages the library it is picking from: the kebab and the
      footer cluster are two paths to the same three operations. A bundled deck
      is nobody's to delete, so the control that would is inert on one. */

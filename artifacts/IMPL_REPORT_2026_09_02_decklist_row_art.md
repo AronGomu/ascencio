@@ -6,8 +6,8 @@ Plan: `artifacts/PLAN_2026_09_02_decklist_row_art.md` (committed before retireme
 
 | Ticket | Goal | State | Commit |
 | ------ | ---- | ----- | ------ |
-| T1 | `cardFrameOf` classifier + `CARD_FRAME_COLORS` palette | DONE — 11 unit tests + `check:headless` pass | `3023162` |
-| T2 | `DecklistRow` `frame`/`artUrl`; panel + three hosts | NOT STARTED | — |
+| T1 | `cardFrameOf` classifier + `CARD_FRAME_COLORS` palette | DONE — 11/11 focused tests; headless green | `3023162` |
+| T2 | `DecklistRow` `frame`/`artUrl`; panel + three hosts | DONE — 1059/1059 component tests; headless green | pending commit |
 | T3 | Chromium evidence, build gates, manual checklist | NOT STARTED | — |
 
 ## Assumptions
@@ -23,6 +23,10 @@ The ~96 modified/untracked files predating this round are owner work in progress
 ### A3 — push to main authorized by skill
 
 `make-parallel-aron` mandates commit + push per ticket; treated as explicit authorization to push `main` to `origin`.
+
+### A4 — stage minimal prerequisite from owner WIP
+
+T2 imports `croppedCardImageUrl` from untracked `src/decks/deck-cover.ts`. Remote validation would fail if T2 committed imports without that module. T2 commit therefore stages a minimal version containing only `croppedCardImageUrl`; unrelated owner-WIP cover-selection helpers remain unstaged in the working tree.
 
 ## User TODO
 

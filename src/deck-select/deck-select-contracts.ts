@@ -1,3 +1,5 @@
+import type { CardFrame } from "../decks/card-frame.ts";
+
 export type DeckSelectMode = "duel-start" | "library";
 export type DeckSelectScope = "free-play" | "story";
 export type DeckSort = "modified" | "name";
@@ -34,6 +36,9 @@ export interface DeckTileModel {
 export interface DecklistRow {
   readonly code: number;
   readonly name: string;
+  readonly frame: CardFrame;
+  /** Cropped art URL; null = art unavailable, row degrades to color-only. */
+  readonly artUrl: string | null;
 }
 
 export interface DecklistView {

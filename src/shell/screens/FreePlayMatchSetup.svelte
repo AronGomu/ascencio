@@ -9,6 +9,8 @@
   } from "../../deck-select/index.ts";
   import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
   import { catalogByCode } from "../../decks/catalog/pinned-ruleset.ts";
+  import { cardFrameOf } from "../../decks/card-frame.ts";
+  import { croppedCardImageUrl } from "../../decks/deck-cover.ts";
   import { runtimeCatalog } from "../../decks/catalog/runtime-catalog.ts";
   import type { DeckId } from "../../decks/deck-contracts.ts";
   import { IndexedDbDeckRepository } from "../../decks/indexeddb-deck-repository.ts";
@@ -394,10 +396,15 @@
   /* The code is the fallback name rather than an empty row: a card the packaged
      database has not answered for yet is still one of the forty. */
   function decklistRows(codes: readonly number[]): readonly DecklistRow[] {
-    return codes.map((code) => ({
-      code,
-      name: catalog.get(code)?.name ?? String(code),
-    }));
+    return codes.map((code) => {
+      const card = catalog.get(code);
+      return {
+        code,
+        name: card?.name ?? String(code),
+        frame: cardFrameOf(card?.rawType ?? 0),
+        artUrl: croppedCardImageUrl(card?.imageUrl ?? null),
+      };
+    });
   }
 
   function cardImageFor(code: number): string | null {

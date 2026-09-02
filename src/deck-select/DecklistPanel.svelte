@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { CARD_FRAME_COLORS, type CardFrame } from "../decks/card-frame.ts";
   import type { DecklistRow, DecklistView } from "./deck-select-contracts.ts";
 
   export let decklist: DecklistView;
@@ -15,8 +16,9 @@
   interface Entry {
     readonly code: number;
     readonly name: string;
-    /** "×2" from the second copy on; null for a single one. */
-    readonly copies: string | null;
+    readonly frame: CardFrame;
+    readonly artUrl: string | null;
+    readonly copies: number;
   }
 
   interface Part {
@@ -30,18 +32,26 @@
      keeps the row's `data-cy` — built from the code — unique in the document,
      which repeated rows could not be. */
   function entriesOf(rows: readonly DecklistRow[]): readonly Entry[] {
-    const counted: { code: number; name: string; copies: number }[] = [];
+    const counted: {
+      code: number;
+      name: string;
+      frame: CardFrame;
+      artUrl: string | null;
+      copies: number;
+    }[] = [];
     for (const row of rows) {
       const seen = counted.find((entry) => entry.code === row.code);
       if (seen === undefined)
-        counted.push({ code: row.code, name: row.name, copies: 1 });
+        counted.push({
+          code: row.code,
+          name: row.name,
+          frame: row.frame,
+          artUrl: row.artUrl,
+          copies: 1,
+        });
       else seen.copies += 1;
     }
-    return counted.map((entry) => ({
-      code: entry.code,
-      name: entry.name,
-      copies: entry.copies > 1 ? `×${entry.copies}` : null,
-    }));
+    return counted;
   }
 
   /* The heading and the copies are built here rather than interpolated in the
@@ -74,19 +84,26 @@
         {#each part.entries as entry (entry.code)}
           <li
             class="row"
+            style={`--fc:${CARD_FRAME_COLORS[entry.frame]};${entry.artUrl === null ? "" : `--img:url('${entry.artUrl}')`}`}
             onpointerenter={(event) =>
               onrowhover(entry.code, event.currentTarget)}
             onpointerleave={() => onrowleave()}
             data-cy={`${cy}-row-${entry.code}`}
           >
+            <span
+              class="cp"
+              class:single={entry.copies === 1}
+              data-cy={`${cy}-row-copies-${entry.code}`}
+              >{entry.copies >= 2 ? entry.copies : ""}</span
+            >
+            {#if entry.artUrl !== null}
+              <span class="art" data-cy={`${cy}-row-art-${entry.code}`}></span>
+              <span class="fade" data-cy={`${cy}-row-fade-${entry.code}`}
+              ></span>
+            {/if}
             <span class="name" data-cy={`${cy}-row-name-${entry.code}`}
               >{entry.name}</span
             >
-            {#if entry.copies !== null}
-              <span class="copies" data-cy={`${cy}-row-copies-${entry.code}`}
-                >{entry.copies}</span
-              >
-            {/if}
           </li>
         {/each}
       </ul>
@@ -119,28 +136,73 @@
 
   ul {
     display: grid;
+    gap: 3px;
     margin: var(--space-1) 0 0;
     padding: 0;
     list-style: none;
   }
 
-  /* A full deck is up to 90 cards, so a row is one line of text and nothing
-     more: the name takes the width it needs and the copies hold the far edge. */
   .row {
+    position: relative;
     display: flex;
-    justify-content: space-between;
-    gap: var(--space-2);
-    font-size: var(--text-sm);
+    align-items: center;
+    height: 30px;
+    overflow: hidden;
+    border-left: 5px solid var(--fc);
+    border-radius: 5px;
+    background: #22252c;
+  }
+
+  .cp {
+    position: relative;
+    z-index: 2;
+    align-self: stretch;
+    min-width: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000a;
+    color: #e8e9ec;
+    font-size: 12px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cp.single {
+    background: #0006;
+  }
+
+  .art {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    background-image: var(--img);
+    background-position: center 20%;
+    background-size: cover;
+    opacity: 0.6;
+  }
+
+  .fade {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      #22252c 0%,
+      #22252ccc 38%,
+      #22252c00 100%
+    );
   }
 
   .name {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    padding: 0 8px 0 6px;
     overflow: hidden;
+    font-size: 13px;
     text-overflow: ellipsis;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
     white-space: nowrap;
-  }
-
-  .copies {
-    color: var(--muted);
-    font-variant-numeric: tabular-nums;
   }
 </style>

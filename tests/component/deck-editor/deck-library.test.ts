@@ -325,6 +325,38 @@ describe("DeckLibrary", () => {
   /* The docked column is the focused deck's own list, so it has to stop being
      that deck's list the moment the library stops holding it — otherwise a
      deck the player just deleted keeps its cards on screen. */
+  it("maps catalog frame and cropped art into docked rows", async () => {
+    const spell = prototypeCatalogMap.get(12580477);
+    if (spell === undefined) throw new Error("Missing spell fixture");
+    const deck = Object.freeze({
+      ...legalDeck("t1"),
+      main: Object.freeze([1]),
+    });
+    const catalog = new Map([
+      [
+        1,
+        {
+          ...spell,
+          code: 1,
+          imageUrl: "/runtime/images/1.jpg",
+        },
+      ],
+    ]);
+    render(DeckLibrary, { decks: [deck], catalog, ...callbacks() });
+
+    await userEvent.setup().click(cy("deck-tile-press-t1"));
+    await waitFor(() =>
+      expect(find("deck-select-docked-list-row-1")).not.toBeNull(),
+    );
+
+    const row = cy("deck-select-docked-list-row-1");
+    expect(row.style.getPropertyValue("--fc")).toBe("#1d9e74");
+    expect(row.style.getPropertyValue("--img")).toContain(
+      "/runtime/images-cropped/1.jpg",
+    );
+    expect(find("deck-select-docked-list-row-art-1")).not.toBeNull();
+  });
+
   it("the docked decklist follows the library it was resolved from", async () => {
     const kept = legalDeck("t1", "Kept");
     const doomed = legalDeck("t2", "Doomed");

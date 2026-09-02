@@ -7,6 +7,8 @@
     type DecklistView,
   } from "../../deck-select/index.ts";
   import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
+  import { cardFrameOf } from "../../decks/card-frame.ts";
+  import { croppedCardImageUrl } from "../../decks/deck-cover.ts";
   import type { DeckId, DeckRecord } from "../../decks/deck-contracts.ts";
   import { MAXIMUM_DECK_NAME_LENGTH } from "../../decks/deck-model.ts";
   import { deckLibraryTiles } from "./deck-library-tiles.ts";
@@ -71,7 +73,13 @@
     cards: ReadonlyMap<number, DeckBuilderCardView>,
     code: number,
   ): DecklistRow {
-    return { code, name: cards.get(code)?.name ?? `Missing card ${code}` };
+    const card = cards.get(code);
+    return {
+      code,
+      name: card?.name ?? `Missing card ${code}`,
+      frame: cardFrameOf(card?.rawType ?? 0),
+      artUrl: croppedCardImageUrl(card?.imageUrl ?? null),
+    };
   }
 
   /* The decks are already in memory — they are the ones the library is

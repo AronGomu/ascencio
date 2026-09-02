@@ -102,16 +102,16 @@ export interface DecklistRow {
 
 ## Impl steps
 
-- [ ] 1. Red: update `tests/component/deck-select/hover-previews.test.ts` (fixtures, `--fc`/art/cp assertions, `:147` flip) + row-shape tests in the three host suites.
-- [ ] 2. Contract change in `deck-select-contracts.ts`.
-- [ ] 3. Panel: carry `frame`/`artUrl` through `entriesOf`, markup + CSS per contract.
-- [ ] 4. Hosts: map two fields at the three call sites.
-- [ ] 5. `npm run test:component` + `npm run check:headless` green (`check:headless` does **not** run component tests — both cmds required).
+- [x] 1. Red: update `tests/component/deck-select/hover-previews.test.ts` (fixtures, `--fc`/art/cp assertions, `:147` flip) + row-shape tests in the three host suites.
+- [x] 2. Contract change in `deck-select-contracts.ts`.
+- [x] 3. Panel: carry `frame`/`artUrl` through `entriesOf`, markup + CSS per contract.
+- [x] 4. Hosts: map two fields at the three call sites.
+- [x] 5. `npm run test:component` + `npm run check:headless` green (`check:headless` does **not** run component tests — both cmds required).
 
 ## Validation
 
-- [ ] tests pass: `npm run test:component` && `npm run check:headless` (paste tails)
-- [ ] manual check: dev server — dock (deck editor library) + both floats show art rows
-- [ ] no silent-failure swallow added — `none`
-- [ ] app functional — all three screens render decklists
-- [ ] commit msg draft: `feat(deck-select,shell,story,deck-editor): decklist rows show card art and frame colour`
+- [x] tests pass: `npm run test:component` && `npm run check:headless` (112 files / 1059 component tests; headless exit 0)
+- [ ] manual check: dev server — dock (deck editor library) + both floats show art rows (covered by T3 Chromium evidence + checklist)
+- [x] no silent-failure swallow added — `none`
+- [x] app functional — all three screens render decklists
+- [x] commit msg draft: `feat(deck-select,shell,story,deck-editor): decklist rows show card art and frame colour`

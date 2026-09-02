@@ -23,6 +23,7 @@ import {
   fieldableStoryDeck,
   storyDeckFixture,
 } from "../../fixtures/story-decks.ts";
+import { prototypeCatalogMap } from "../../fixtures/deck-editor.ts";
 
 afterEach(async () => {
   cleanup();
@@ -120,6 +121,31 @@ describe("the pre-battle deck picker", () => {
     expect(start().disabled).toBe(false);
   });
 
+  it("maps a link monster frame into the hover decklist", async () => {
+    const linkRecord = storyDeckFixture(LEGAL.id, {
+      name: LEGAL.name,
+      main: [1322368],
+    });
+    render(
+      PreBattleScreen,
+      props({
+        decks: [LEGAL],
+        deckRecords: [linkRecord],
+        defaultDeckId: LEGAL.id,
+        catalog: prototypeCatalogMap,
+      }),
+    );
+
+    await fireEvent.pointerEnter(cy(`deck-tile-${LEGAL.id}`)!);
+    await waitFor(() =>
+      expect(cy("deck-select-hover-list-row-1322368")).not.toBeNull(),
+    );
+
+    expect(
+      cy("deck-select-hover-list-row-1322368")?.style.getPropertyValue("--fc"),
+    ).toBe("#1d6ea8");
+  });
+
   /* Story is save-owned, so an illegal deck is listed rather than hidden: the
      player has to see the deck they need to repair. It is listed disabled, and
      the arrow keys walk past it. */
@@ -175,7 +201,7 @@ describe("the pre-battle deck picker", () => {
     const onfavourite = vi.fn();
     render(
       PreBattleScreen,
-      props({ decks: [LEGAL], defaultDeckId: LEGAL.id, onfavourite }),
+      props({ decks: [LEGAL], defaultDeckId: null, onfavourite }),
     );
 
     await userEvent.setup().click(cy(`deck-tile-fav-${LEGAL.id}`)!);
@@ -183,22 +209,20 @@ describe("the pre-battle deck picker", () => {
     expect(onfavourite).toHaveBeenCalledExactlyOnceWith(LEGAL.id, true);
   });
 
-  it("stars the decks the save already holds", () => {
+  it("shows favourites except where the default marker overrides them", () => {
     render(
       PreBattleScreen,
       props({
         decks: [LEGAL, SECOND],
         defaultDeckId: LEGAL.id,
-        favouriteDeckIds: [SECOND.id],
+        favouriteDeckIds: [LEGAL.id, SECOND.id],
       }),
     );
 
     expect(cy(`deck-tile-fav-${SECOND.id}`)?.getAttribute("aria-pressed")).toBe(
       "true",
     );
-    expect(cy(`deck-tile-fav-${LEGAL.id}`)?.getAttribute("aria-pressed")).toBe(
-      "false",
-    );
+    expect(cy(`deck-tile-fav-${LEGAL.id}`)).toBeNull();
   });
 
   /* A save's decks are managed in the story's own deck editor, which this

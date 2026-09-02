@@ -108,11 +108,14 @@ describe("DeckSelectScreen hover previews", () => {
     expect(degradedRow.style.getPropertyValue("--fc")).toBe("#b8985a");
     expect(find("deck-select-hover-list-row-art-102")).toBeNull();
     expect(find("deck-select-hover-list-row-fade-102")).toBeNull();
-    expect(cy("deck-select-hover-list-row-name-102").textContent).toBe(
-      "Aurora Sentinel",
-    );
+    const degradedName = cy("deck-select-hover-list-row-name-102");
+    expect(degradedName.textContent).toBe("Aurora Sentinel");
+    /* The row ellipsizes, so the full name has to survive somewhere the
+       pointer can reach it. */
+    expect(degradedName.getAttribute("title")).toBe("Aurora Sentinel");
+    /* One copy still counts: the chip reads "1" and only dims itself. */
     const singleCopies = cy("deck-select-hover-list-row-copies-102");
-    expect(singleCopies.textContent).toBe("");
+    expect(singleCopies.textContent).toBe("1");
     expect(singleCopies.classList.contains("single")).toBe(true);
     expect(find("deck-select-hover-list-row-201")).not.toBeNull();
   });
@@ -196,7 +199,9 @@ describe("DeckSelectScreen hover previews", () => {
     expect(cy("deck-select-hover-list-main-heading").textContent).toBe(
       "Main (3)",
     );
-    expect(cy("deck-select-hover-list-row-copies-101").textContent).toBe("3");
+    const trioCopies = cy("deck-select-hover-list-row-copies-101");
+    expect(trioCopies.textContent).toBe("3");
+    expect(trioCopies.classList.contains("single")).toBe(false);
     expect(
       cy("deck-select-hover-list-row-101").style.getPropertyValue("--fc"),
     ).toBe("#1d9e74");
@@ -213,6 +218,8 @@ describe("DeckSelectScreen hover previews", () => {
     await waitFor(() =>
       expect(find("deck-select-docked-list-row-101")).not.toBeNull(),
     );
+    /* The dock is the same panel: a single copy counts there too. */
+    expect(cy("deck-select-docked-list-row-copies-101").textContent).toBe("1");
 
     await fireEvent.pointerEnter(cy("deck-tile-k3"));
     await waitFor(() =>

@@ -113,4 +113,37 @@ describe("FieldBoard perspective plane", () => {
       `${zonePlacement?.height}px`,
     );
   });
+
+  it("sizes pile stacks exactly like the cards on the field", () => {
+    const mapped = mapSnapshotToBoard(
+      BOARD_VIEW_MODEL_FIXTURES["ST-04"],
+      BOARD_CARD_TEXTS,
+    );
+    if (!mapped.ok) throw new Error("Fixture mapping failed");
+    const renderLayout = createFieldRenderLayout(true, 1280, 720);
+    const { container } = render(FieldBoard, {
+      board: mapped.value,
+      renderLayout,
+      planeHeight: 720,
+      planeTransform: "",
+      cardBackUrl: "card-back.png",
+      placeholderUrl: "placeholder.png",
+    });
+    const card = container.querySelector<HTMLElement>(
+      '[data-card-zone-id="p0:mainMonster:1"]',
+    );
+    const stack = container.querySelector<HTMLElement>(
+      '[data-cy="field-stack-p0:deck"]',
+    );
+
+    expect(stack?.style.getPropertyValue("--field-width")).toBe(
+      `${renderLayout.geometry.cardWidth}px`,
+    );
+    expect(stack?.style.getPropertyValue("--field-width")).toBe(
+      card?.style.getPropertyValue("--field-width"),
+    );
+    expect(stack?.style.getPropertyValue("--field-height")).toBe(
+      card?.style.getPropertyValue("--field-height"),
+    );
+  });
 });

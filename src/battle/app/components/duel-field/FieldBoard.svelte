@@ -328,6 +328,8 @@
         <StackControl
           {stack}
           placement={placementFor(renderLayout, stack.id)}
+          cardWidth={renderLayout.geometry.cardWidth}
+          cardHeight={renderLayout.geometry.cardHeight}
           active={navigationState.activeTarget === stack.targetId}
           actionable={!disabled &&
             spec?.stackChoices.has(stack.targetId) === true}

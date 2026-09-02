@@ -9,6 +9,8 @@
 
   export let stack: BoardStackView;
   export let placement: FieldPlacement;
+  export let cardWidth: number;
+  export let cardHeight: number;
   export let active = false;
   export let actionable = false;
   export let onpreview: () => void = () => undefined;
@@ -24,7 +26,13 @@
   let pointerOrigin: { readonly x: number; readonly y: number } | null = null;
   let pointerMoved = false;
 
-  $: positionStyle = `--field-x: ${placement.x}px; --field-y: ${placement.y}px; --field-width: ${placement.width * (72 / 104)}px; --field-height: ${placement.height}px;`;
+  /* Item 4 (2026-09-02, owner): a pile tile measures exactly one card, like
+     every card in hand and on the field. `placement` is the slot — wider than
+     a card by `SLOT_PAD`, taller by the box inset — and its x/y is the slot
+     centre, which `translate(-50%, -50%)` already centres the tile on. So the
+     card dimensions come from the geometry, never from the slot re-narrowed
+     by a second aspect factor. */
+  $: positionStyle = `--field-x: ${placement.x}px; --field-y: ${placement.y}px; --field-width: ${cardWidth}px; --field-height: ${cardHeight}px;`;
   $: synchronizeImageLease(imageLibrary, stack.topCardCode, placeholderUrl);
   $: clickable = stack.count > 0;
   /* Item 12 (2026-08-27, owner): an actionable pile always wears the halo —

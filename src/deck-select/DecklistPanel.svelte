@@ -93,16 +93,17 @@
             <span
               class="cp"
               class:single={entry.copies === 1}
-              data-cy={`${cy}-row-copies-${entry.code}`}
-              >{entry.copies >= 2 ? entry.copies : ""}</span
+              data-cy={`${cy}-row-copies-${entry.code}`}>{entry.copies}</span
             >
             {#if entry.artUrl !== null}
               <span class="art" data-cy={`${cy}-row-art-${entry.code}`}></span>
               <span class="fade" data-cy={`${cy}-row-fade-${entry.code}`}
               ></span>
             {/if}
-            <span class="name" data-cy={`${cy}-row-name-${entry.code}`}
-              >{entry.name}</span
+            <span
+              class="name"
+              title={entry.name}
+              data-cy={`${cy}-row-name-${entry.code}`}>{entry.name}</span
             >
           </li>
         {/each}

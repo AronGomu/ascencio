@@ -92,6 +92,14 @@ export function ownEffectChainPassResponse(
   /* The chain itself is the stronger attribution: its last link names its own
      controller, so the actor heuristic only answers an empty chain. */
   const lastLink = snapshot === null ? undefined : snapshot.chain.at(-1);
-  const owner = lastLink === undefined ? actor : lastLink.controller;
-  return owner === 0 ? [passChoice.id] : null;
+  if (lastLink === undefined) {
+    /* No open chain means this is a fresh window, and a fresh window is where
+       a trigger first offers itself — a graveyard trigger the player's own
+       play just enabled reads as "the player's own effect" to the actor
+       heuristic. Clicking through your own effect is one thing; having an
+       activation you never saw passed for you is another. */
+    if (prompt.choices.some((c) => c.action !== "pass")) return null;
+    return actor === 0 ? [passChoice.id] : null;
+  }
+  return lastLink.controller === 0 ? [passChoice.id] : null;
 }

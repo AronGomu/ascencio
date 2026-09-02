@@ -201,9 +201,27 @@ describe("ownEffectChainPassResponse", () => {
     expect(response).toBeNull();
   });
 
-  it("passes an empty-chain window after the player's own action", () => {
+  it("passes an own chain link even when the actor is the player too", () => {
     const response = ownEffectChainPassResponse(
       chainPrompt(CHAIN_CHOICES),
+      snapshotWithChain([chainLink(0)]),
+      0,
+    );
+    expect(response).toEqual([choiceId("p")]);
+  });
+
+  it("keeps a fresh window holding a real activation", () => {
+    const response = ownEffectChainPassResponse(
+      chainPrompt(CHAIN_CHOICES),
+      snapshotWithChain([]),
+      0,
+    );
+    expect(response).toBeNull();
+  });
+
+  it("passes a fresh window with nothing to activate", () => {
+    const response = ownEffectChainPassResponse(
+      chainPrompt([choice("p", { action: "pass" })]),
       snapshotWithChain([]),
       0,
     );
@@ -245,12 +263,16 @@ describe("ownEffectChainPassResponse", () => {
     ).toBeNull();
   });
 
+  /* No snapshot is the empty chain by another name, so the actor only decides
+     the windows the guard above leaves to it. */
   it("falls back to the last action actor without a snapshot", () => {
+    const passOnly = chainPrompt([choice("p", { action: "pass" })]);
+    expect(ownEffectChainPassResponse(passOnly, null, 0)).toEqual([
+      choiceId("p"),
+    ]);
+    expect(ownEffectChainPassResponse(passOnly, null, 1)).toBeNull();
     expect(
       ownEffectChainPassResponse(chainPrompt(CHAIN_CHOICES), null, 0),
-    ).toEqual([choiceId("p")]);
-    expect(
-      ownEffectChainPassResponse(chainPrompt(CHAIN_CHOICES), null, 1),
     ).toBeNull();
   });
 });

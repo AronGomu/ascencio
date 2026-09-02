@@ -18,16 +18,12 @@ function callbacks() {
 describe("DeckLibrary toolbar layout", () => {
   /* Filter and sort belong to every deck grid, so they live in the shared
      screen's own tools row. What is left here is what only this library has:
-     the collection, YDK import, and a deck that does not exist yet. */
-  it("collection, import and create share the library's tools row", () => {
+     the collection and YDK import. */
+  it("collection and import share the library's tools row", () => {
     render(DeckLibrary, { decks: [deckFixture()], ...callbacks() });
     const toolsRow = document.querySelector('[data-cy="deck-library-tools"]');
     expect(toolsRow).not.toBeNull();
-    for (const cy of [
-      "deck-library-collection",
-      "deck-library-import",
-      "deck-library-create",
-    ]) {
+    for (const cy of ["deck-library-collection", "deck-library-import"]) {
       const el = document.querySelector(`[data-cy="${cy}"]`);
       expect(el, `${cy} should exist`).not.toBeNull();
       expect(
@@ -35,6 +31,22 @@ describe("DeckLibrary toolbar layout", () => {
         `${cy} should be inside deck-library-tools`,
       ).not.toBeNull();
     }
+  });
+
+  /* Making a deck is one offer, and the shared footer is where it is made:
+     a second button of the library's own would say the same thing twice. */
+  it("the screen's footer holds the library's only create control", () => {
+    render(DeckLibrary, { decks: [deckFixture()], ...callbacks() });
+    const creates = [...document.querySelectorAll("button")].filter((el) =>
+      /create/i.test(el.textContent ?? ""),
+    );
+    expect(creates.map((el) => el.getAttribute("data-cy"))).toEqual([
+      "deck-select-create",
+    ]);
+    expect(
+      creates[0]!.closest('[data-cy="deck-select-footer"]'),
+      "create belongs to the shared screen's footer",
+    ).not.toBeNull();
   });
 
   it("the filter and the sort come from the shared screen", () => {

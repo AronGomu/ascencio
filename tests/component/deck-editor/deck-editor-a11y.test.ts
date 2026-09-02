@@ -77,7 +77,7 @@ describe("deck builder accessibility", () => {
       onopen: vi.fn(),
       onimport: vi.fn(),
     });
-    const opener = screen.getByRole("button", { name: "Create deck" });
+    const opener = screen.getByRole("button", { name: "Create blank deck" });
     await user.click(opener);
     const input = screen.getByLabelText("Deck name");
     expect(document.activeElement).toBe(input);

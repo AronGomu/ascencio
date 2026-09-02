@@ -1361,10 +1361,15 @@
     });
   }
 
+  /* Item 9: once the answer is in flight the draft is no longer the player's,
+     so it stops being drawn. Suppressed rather than cleared: `submissionRejected`
+     returns the session to `editing` with these ids intact, and the halo set has
+     to come back exactly as it was. */
   function targetSelections(
     value: ActiveInteractionSpec,
     draft: InteractionSession,
   ): ReadonlySet<BoardTargetId> {
+    if (draft.status === "submitting") return EMPTY_TARGETS;
     const selected = new SvelteSet(draft.selectedChoiceIds);
     const result = new SvelteSet<BoardTargetId>();
     for (const [target, choices] of [

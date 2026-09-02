@@ -1014,6 +1014,99 @@ describe("DuelField", () => {
     expect(article?.classList.contains("is-selected")).toBe(false);
   });
 
+  /* Item 9: the halo is the draft, and the draft stops being the player's the
+     moment the answer is in flight. The session keeps `selectedChoiceIds` so a
+     rejection can resume it, so the drop is presentational only. */
+  it("drops the selection halo while a submitted answer is in flight", async () => {
+    const user = userEvent.setup();
+    const harness = renderInteractive(
+      fieldPrompt("selectCard", [mountedChoice("select", "Select monster")], {
+        minimum: 1,
+        maximum: 2,
+      }),
+    );
+    const card = screen.getByRole("button", {
+      name: /Legal.*Select The Legendary Fisherman/,
+    });
+    const article = card.closest(".duel-field-card");
+    card.focus();
+    await user.keyboard("{Enter}");
+    expect(article?.classList.contains("is-selected")).toBe(true);
+
+    await harness.dispatch({
+      type: "submissionAccepted",
+      key: harness.spec.key,
+    });
+    await tick();
+
+    expect(harness.getSession().status).toBe("submitting");
+    expect([...harness.getSession().selectedChoiceIds]).toEqual([
+      choiceId("select"),
+    ]);
+    expect(document.querySelectorAll(".is-selected")).toHaveLength(0);
+  });
+
+  it("restores the halo set when the submission is rejected", async () => {
+    const user = userEvent.setup();
+    const harness = renderInteractive(
+      fieldPrompt("selectCard", [mountedChoice("select", "Select monster")], {
+        minimum: 1,
+        maximum: 2,
+      }),
+    );
+    const card = screen.getByRole("button", {
+      name: /Legal.*Select The Legendary Fisherman/,
+    });
+    const article = card.closest(".duel-field-card");
+    card.focus();
+    await user.keyboard("{Enter}");
+    await harness.dispatch({
+      type: "submissionAccepted",
+      key: harness.spec.key,
+    });
+    await harness.dispatch({
+      type: "submissionRejected",
+      key: harness.spec.key,
+    });
+    await tick();
+
+    expect(harness.getSession().status).toBe("editing");
+    expect(article?.classList.contains("is-selected")).toBe(true);
+    expect(document.querySelectorAll(".is-selected")).toHaveLength(1);
+  });
+
+  /* The store hands the field a submitting session together with the stale
+     prompt while `responsePending` holds it (`duel-store.ts:187`), so the
+     first render of that pair carries no halo either. */
+  it("renders no halo for a session that arrives already submitting", () => {
+    const value = fieldPrompt(
+      "selectCard",
+      [mountedChoice("select", "Select monster")],
+      { minimum: 1, maximum: 2 },
+    );
+    const spec = activeSpec(value);
+    const drafted = reduceInteractionSession(
+      createInteractionSession(spec),
+      spec,
+      { type: "toggleChoice", choiceId: choiceId("select"), key: spec.key },
+    ).session;
+    const submitting = reduceInteractionSession(drafted, spec, {
+      type: "submissionAccepted",
+      key: spec.key,
+    }).session;
+
+    render(DuelField, {
+      board: board("ST-05"),
+      prompt: value,
+      spec,
+      session: submitting,
+      pending: false,
+    });
+
+    expect(submitting.selectedChoiceIds).toEqual([choiceId("select")]);
+    expect(document.querySelectorAll(".is-selected")).toHaveLength(0);
+  });
+
   it("pins the chips on Enter, walks them, and returns focus on Escape", async () => {
     const user = userEvent.setup();
     const value = fieldPrompt("idleCommand", [
@@ -3293,6 +3386,25 @@ describe("DuelField", () => {
     // Both halves carry the orange selected halo: the card is the one the
     // requirement names, and the overlay is the one the player can see, since
     // it covers the card's own art at 1.6x.
+    expect(handCardArticle().classList.contains("is-selected")).toBe(true);
+    expect(handZoomOverlay()?.classList.contains("is-selected")).toBe(true);
+  });
+
+  /* The pin is navigation state, not an answer, so the in-flight gate leaves
+     it alone: its halo survives a submission the player did not make with it. */
+  it("keeps the pinned hand halo while a submission is in flight", async () => {
+    const harness = renderDraggableHand({ singleChoice: true });
+    await fireEvent.pointerEnter(handCardArticle());
+    await clickHandCard();
+    expect(handCardArticle().classList.contains("is-selected")).toBe(true);
+
+    const submitting = reduceInteractionSession(
+      createInteractionSession(harness.spec),
+      harness.spec,
+      { type: "submissionAccepted", key: harness.spec.key },
+    ).session;
+    await harness.rendered.rerender({ session: submitting });
+
     expect(handCardArticle().classList.contains("is-selected")).toBe(true);
     expect(handZoomOverlay()?.classList.contains("is-selected")).toBe(true);
   });

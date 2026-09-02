@@ -284,8 +284,16 @@
   async function duplicateDeck(key: string): Promise<void> {
     const loaded = battle;
     if (loaded === null) return;
+    const source = loaded.findSelectableDeck(decks, key);
+    if (source === null) return;
     const listed = await manage(
-      () => duplicateLocalDeck(key),
+      () =>
+        duplicateLocalDeck(
+          key,
+          source.selection.kind === "preset"
+            ? { name: source.label, lists: source.lists }
+            : undefined,
+        ),
       "Deck could not be duplicated",
     );
     if (listed === null) return;

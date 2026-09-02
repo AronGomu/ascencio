@@ -1,0 +1,316 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PLAN 2026-09-02 — decklist row art</title><style>
+:root{color-scheme:dark}body{margin:0;background:#14161a;color:#e8e9ec;font:14px/1.5 system-ui;max-width:960px;margin-inline:auto;padding:24px}
+h1{font-size:20px}pre{background:#1c1f25;border:1px solid #2c313a;border-radius:8px;padding:14px;overflow:auto;font-size:12.5px;white-space:pre-wrap}
+details{margin:10px 0}summary{cursor:pointer;font-weight:600;padding:6px 0}
+.flow{background:#1c1f25;border:1px solid #2c313a;border-radius:8px;padding:14px;font-family:monospace}
+.badge{display:inline-block;background:#2c313a;border-radius:999px;padding:1px 10px;font-size:11px;color:#9aa0ab;margin-left:8px}
+</style></head><body>
+<h1>Decklist row art + frame colour <span class="badge">3 tickets · reviewed</span></h1>
+<p>Approved prototype (Variant A + 2L1) → production. Spec: <code>artifacts/PROTOTYPE_SPEC_decklist_rows.md</code> · ADR-063 · Frozen: <code>docs/feature/PROTOTYPE_decklist_rows.html</code></p>
+<div class="flow">T1 cardFrameOf + palette (src/decks) ──▶ T2 contract + panel + 3 hosts (one commit) ──▶ T3 Chromium evidence + gates + checklist</div>
+<details open><summary>Plan index</summary><pre># Decklist row art + frame color
+
+Upgrade every `DecklistPanel` row (float + docked, all three hosts) from plain name to approved Variant A art-strip row with frame-color border and 2L1 left copy cell, per `artifacts/PROTOTYPE_SPEC_decklist_rows.md`.
+
+## Tickets Flow
+
+```mermaid
+flowchart TD
+T1[T1: cardFrameOf + palette in src/decks] --&gt; T2[T2: contract + panel + hosts, one commit]
+T2 --&gt; T3[T3: evidence + checklist]
+```
+
+## Index
+
+| Ticket ID | Goal | State | Link |
+| --------- | ---- | ----- | ---- |
+| T1 | Pure `cardFrameOf` classifier + `CARD_FRAME_COLORS` palette | NOT STARTED | [[PLAN_2026_09_02_decklist_row_art/T1_card-frame-classifier]] |
+| T2 | `DecklistRow` gains `frame`/`artUrl`; panel renders approved row; three hosts wired — one commit | NOT STARTED | [[PLAN_2026_09_02_decklist_row_art/T2_panel-and-hosts]] |
+| T3 | Chromium evidence, build gates, manual test checklist | NOT STARTED | [[PLAN_2026_09_02_decklist_row_art/T3_evidence-and-checklist]] |
+
+## Assumptions
+
+- No user-frontload needed: no new packages, accounts, or keys (frontload rule satisfied vacuously).
+- `src/decks/` deep imports are legal for every domain **including deck-select**: `tests/unit/domain-boundaries.test.ts:109` (`if (target === &quot;decks&quot;) return true;`) and the deck-select ESLint zone (`eslint.config.js:180`) lists no decks group. Panel imports `CardFrame` + `CARD_FRAME_COLORS` directly — no union or palette duplication.
+- No frozen-list widening: hosts get `CardFrame` by inference from `cardFrameOf`; `src/deck-select/index.ts` exports stay unchanged.
+- Cropped-art URL derivation reuses `croppedCardImageUrl` (`src/decks/deck-cover.ts:20`) — no new image pipeline.
+- Contract change and host wiring are one commit (T2): `frame`/`artUrl` are required fields, so a T2-only commit would leave three hosts failing `tsc` (coherence review F1).
+- PDDR Decision 1 &quot;deck-builder right panel&quot; = the library docked column of `DeckSelectScreen` — same `DecklistPanel`, not the deck editor workspace zones (spec §1 keeps those out of scope).
+
+## Coherence review
+
+Reviewer findings F1–F11 arbitrated 2026-09-02: F1 merge T2+T3 (typecheck gap), F2/F3/F5 deck-select imports `src/decks/card-frame.ts` (kills union + palette duplication and the frozen-list widening), F4 `position:relative` on `.row`, F6 e2e must add navigation (no existing spec touches a decklist), F7–F11 exact-fact fixes folded into tickets.
+</pre></details>
+<details open><summary>T1 — T1: card frame classifier</summary><pre># T1: card frame classifier
+
+**Plan:** `./artifacts/PLAN_2026_09_02_decklist_row_art.md`
+**Depends:** none
+**Commit outcome:** `cardFrameOf(rawType)` returns one of nine frame names for any card; `CARD_FRAME_COLORS` maps each frame to its approved color (consumed by `DecklistPanel` in T2 — deck-select may import `src/decks/`, see plan Assumptions).
+
+## Context (self-contained)
+
+- Goal: decklist rows get card art + frame-color border per approved prototype (`artifacts/PROTOTYPE_SPEC_decklist_rows.md`).
+- This slice: the pure classification every host will call — no UI.
+- Out of scope here: any `.svelte` file, `src/deck-select/`, host wiring, `src/decks/index.ts` (no export widening needed — deep imports of `src/decks/` are legal).
+- Assumptions in force: frame derives from `DeckBuilderCardView.rawType` OCG type bitmask.
+
+## Requirements
+
+- New file `src/decks/card-frame.ts` (File design policy: one concern per file).
+- Nine frames, precedence first-match: spell &gt; trap &gt; link &gt; xyz &gt; synchro &gt; fusion &gt; ritual &gt; effect &gt; normal.
+- Palette constant colocated (it is the frame&#x27;s meaning, not presentation-host styling).
+
+## Inputs
+
+- `src/decks/catalog/ocg-mask.ts` — `OCG_TYPE` bit constants (SPELL 0x2, TRAP 0x4, EFFECT 0x20, FUSION 0x40, RITUAL 0x80, SYNCHRO 0x2000, XYZ 0x800000, LINK 0x4000000). Read the file; use its exported names, not literals.
+- `src/decks/catalog/ocg-card-mapper.ts:54` — `rawType: number` on `DeckBuilderCardView`.
+
+## Interface contract (level 5)
+
+- **Produces** (`src/decks/card-frame.ts`):
+
+```ts
+export type CardFrame =
+  | &quot;normal&quot; | &quot;effect&quot; | &quot;ritual&quot; | &quot;fusion&quot; | &quot;synchro&quot;
+  | &quot;xyz&quot; | &quot;link&quot; | &quot;spell&quot; | &quot;trap&quot;;
+
+export function cardFrameOf(rawType: number): CardFrame;
+
+export const CARD_FRAME_COLORS: Readonly&lt;Record&lt;CardFrame, string&gt;&gt; = {
+  normal: &quot;#b8985a&quot;, effect: &quot;#c26a3d&quot;, ritual: &quot;#4a6fb5&quot;,
+  fusion: &quot;#8a63b0&quot;, synchro: &quot;#c9c9c9&quot;, xyz: &quot;#4a4a55&quot;,
+  link: &quot;#1d6ea8&quot;, spell: &quot;#1d9e74&quot;, trap: &quot;#bc5a84&quot;,
+};
+```
+
+- **Consumes:** `OCG_TYPE` from `src/decks/catalog/ocg-mask.ts`.
+- **Errors:** none — total function; unmatched bits → `&quot;normal&quot;`.
+- **Invariants:** pure, deterministic; precedence exactly as listed (a Pendulum-Fusion is `fusion`; a Link monster with EFFECT bit is `link`; type `0` is `normal`).
+
+## TDD
+
+1. **Red** — `tests/unit/card-frame.test.ts` fails (module absent).
+2. **Green** — implement `cardFrameOf` + palette.
+3. **Refactor** — keep green.
+
+## Test plan
+
+| Test | Input | Expect |
+| ---- | ----- | ------ |
+| spell wins | `OCG_TYPE.SPELL \| OCG_TYPE.QUICKPLAY` | `&quot;spell&quot;` |
+| trap | `OCG_TYPE.TRAP \| OCG_TYPE.COUNTER` | `&quot;trap&quot;` |
+| link over effect | `OCG_TYPE.MONSTER \| OCG_TYPE.LINK \| OCG_TYPE.EFFECT` | `&quot;link&quot;` |
+| xyz | `OCG_TYPE.MONSTER \| OCG_TYPE.XYZ` | `&quot;xyz&quot;` |
+| synchro over effect | `OCG_TYPE.MONSTER \| OCG_TYPE.SYNCHRO \| OCG_TYPE.EFFECT` | `&quot;synchro&quot;` |
+| fusion + pendulum | `OCG_TYPE.MONSTER \| OCG_TYPE.FUSION \| OCG_TYPE.PENDULUM` | `&quot;fusion&quot;` |
+| ritual | `OCG_TYPE.MONSTER \| OCG_TYPE.RITUAL` | `&quot;ritual&quot;` |
+| effect | `OCG_TYPE.MONSTER \| OCG_TYPE.EFFECT` | `&quot;effect&quot;` |
+| plain normal | `OCG_TYPE.MONSTER \| OCG_TYPE.NORMAL` | `&quot;normal&quot;` |
+| zero | `0` | `&quot;normal&quot;` |
+| palette complete | `CARD_FRAME_COLORS` | key for all nine frames, values match spec §6 |
+
+## Impl steps
+
+- [ ] 1. Write `tests/unit/card-frame.test.ts` per table; run → red.
+- [ ] 2. Write `src/decks/card-frame.ts` per contract; run → green.
+- [ ] 3. `npm run check:headless` — boundaries untouched, still green.
+
+## Validation
+
+- [ ] tests pass: `npx vitest run tests/unit/card-frame.test.ts`
+- [ ] manual check: n/a (pure fn)
+- [ ] no silent-failure swallow added — `none`
+- [ ] app functional — no runtime path changed yet
+- [ ] commit msg draft: `feat(decks): classify card frame from OCG type bits for decklist row styling`
+</pre></details><details><summary>T2 — T2: contract + panel + hosts (one commit)</summary><pre># T2: contract + panel + hosts (one commit)
+
+**Plan:** `./artifacts/PLAN_2026_09_02_decklist_row_art.md`
+**Depends:** T1
+**Commit outcome:** every decklist surface (deck editor library dock, story pre-battle float, free-play match setup float) renders the approved Variant A + 2L1 row with real frame colors and cropped art.
+
+## Context (self-contained)
+
+- Goal: decklist rows get art-strip background, frame-color border, left copy cell per `artifacts/PROTOTYPE_SPEC_decklist_rows.md` (§4–§6 hold exact structure/params/colors).
+- This slice: contract widening + `DecklistPanel` visual + all three host resolvers, **one commit** — `frame`/`artUrl` are required fields; a panel-only commit leaves three hosts failing `tsc` (`npm run typecheck` runs `tsc --noEmit &amp;&amp; svelte-check`).
+- Out of scope here: e2e/build evidence (T3), classifier internals (T1), deck editor workspace zones, hover card-preview float, `DeckSelectScreen` layout.
+- Assumptions in force: deck-select legally imports `src/decks/` (`tests/unit/domain-boundaries.test.ts:109` returns true for target `&quot;decks&quot;`; deck-select ESLint zone `eslint.config.js:180` lists no decks group). No `src/deck-select/index.ts` export change.
+
+## Requirements
+
+- Extend `DecklistRow` with required `frame` + `artUrl`.
+- `DecklistPanel` imports `CardFrame`, `CARD_FRAME_COLORS` from `src/decks/card-frame.ts` — single palette source, no duplication.
+- Keep grouped-copies behavior and `onrowhover`/`onrowleave` API unchanged; grouped `Entry` carries `frame`/`artUrl` from the first-seen row of each code.
+- Copy cell 2L1 on every row; count text only when copies ≥ 2; singles keep the cell (dim) so names align.
+- `artUrl === null` → no art/fade layers; frame border + name only.
+- Every element carries unique `data-cy`.
+- Existing assertion flip: `tests/component/deck-select/hover-previews.test.ts:147` expects `&quot;×3&quot;` → new contract renders `&quot;3&quot;`.
+
+## Inputs
+
+- **From T1:** `src/decks/card-frame.ts` — verbatim:
+
+```ts
+export type CardFrame =
+  | &quot;normal&quot; | &quot;effect&quot; | &quot;ritual&quot; | &quot;fusion&quot; | &quot;synchro&quot;
+  | &quot;xyz&quot; | &quot;link&quot; | &quot;spell&quot; | &quot;trap&quot;;
+export function cardFrameOf(rawType: number): CardFrame;
+export const CARD_FRAME_COLORS: Readonly&lt;Record&lt;CardFrame, string&gt;&gt;;
+```
+
+- `src/deck-select/deck-select-contracts.ts:34` — current `DecklistRow { code, name }`.
+- `src/deck-select/DecklistPanel.svelte` — `Entry` (`:15`), `entriesOf` (`:32`, rebuilds entries from `code`/`name` only — must carry the new fields through), markup + style block.
+- `src/decks/deck-cover.ts:20` — `croppedCardImageUrl(imageUrl: string | null): string | null`.
+- Host call sites: `src/deck-editor/components/DeckLibrary.svelte:81` `rowOf`; `src/story/screens/PreBattleScreen.svelte:118` `rows`; `src/shell/screens/FreePlayMatchSetup.svelte:404` `decklistRows`.
+- Host test suites: `tests/component/deck-editor/deck-library.test.ts`, `tests/component/story/pre-battle-deck-picker.test.ts`, `tests/component/FreePlayMatchSetup.test.ts`.
+
+## Interface contract (level 5)
+
+- **Produces** (`src/deck-select/deck-select-contracts.ts`):
+
+```ts
+import type { CardFrame } from &quot;../decks/card-frame.ts&quot;;
+
+export interface DecklistRow {
+  readonly code: number;
+  readonly name: string;
+  readonly frame: CardFrame;
+  /** Cropped art URL; null = art unavailable, row degrades to color-only. */
+  readonly artUrl: string | null;
+}
+```
+
+- **Produces** (DOM, per grouped row, `cy` = caller prefix — real values `deck-select-docked-list` / `deck-select-hover-list`):
+
+```html
+&lt;li class=&quot;row&quot; data-cy=&quot;{cy}-row-{code}&quot; style=&quot;--fc:{CARD_FRAME_COLORS[frame]};--img:url(&#x27;{artUrl}&#x27;)&quot;&gt;
+  &lt;span class=&quot;cp&quot; data-cy=&quot;{cy}-row-copies-{code}&quot;&gt;{copies &gt;= 2 ? copies : &quot;&quot;}&lt;/span&gt;
+  &lt;span class=&quot;art&quot; data-cy=&quot;{cy}-row-art-{code}&quot;&gt;&lt;/span&gt;   &lt;!-- only when artUrl !== null --&gt;
+  &lt;span class=&quot;fade&quot; data-cy=&quot;{cy}-row-fade-{code}&quot;&gt;&lt;/span&gt; &lt;!-- only when artUrl !== null --&gt;
+  &lt;span class=&quot;name&quot; data-cy=&quot;{cy}-row-name-{code}&quot;&gt;{name}&lt;/span&gt;
+&lt;/li&gt;
+```
+
+- CSS (component-scoped, spec §5): `.row` `position:relative; display:flex; align-items:center; height:30px; border-left:5px solid var(--fc); border-radius:5px; overflow:hidden; background:#22252c` (`position:relative` mandatory — without it `.art` resolves against the float&#x27;s `position:fixed` ancestor, `DeckSelectScreen.svelte:1160`); list `gap:3px`; `.cp` `align-self:stretch; min-width:24px; display:flex; align-items:center; justify-content:center; background:#000a; font-size:12px; font-weight:700; font-variant-numeric:tabular-nums; color:#e8e9ec; position:relative; z-index:2`, single-copy modifier `background:#0006`; `.art` `position:absolute; inset:0; z-index:0; background-image:var(--img); background-size:cover; background-position:center 20%; opacity:0.6`; `.fade` `position:absolute; inset:0; z-index:1; background:linear-gradient(90deg,#22252c 0%,#22252ccc 38%,#22252c00 100%)`; `.name` `position:relative; z-index:2; flex:1; padding:0 8px 0 6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; text-shadow:0 1px 2px rgba(0,0,0,.8)` (spec §5 padding row).
+- **Produces** (each host resolver row):
+
+```ts
+{ code, name: /* existing fallback, byte-identical */, 
+  frame: cardFrameOf(catalog.get(code)?.rawType ?? 0),
+  artUrl: croppedCardImageUrl(catalog.get(code)?.imageUrl ?? null) }
+```
+
+- **Consumes:** T1 exports verbatim; `croppedCardImageUrl` verbatim.
+- **Errors:** none; catalog miss → `frame:&quot;normal&quot;`, `artUrl:null`, name fallback unchanged (`Missing card ${code}` / `` `#${code}` `` / `String(code)`).
+- **Invariants:** grouped rows keep first-seen order; `data-cy` unique per document; copies text never renders `×`; hosts never annotate `CardFrame` explicitly (inference — no new deck-select export); imports stay directional (hosts → `src/deck-select/index.ts` + `src/decks/` deep; panel → `src/decks/card-frame.ts` only).
+- **Integration links:** trigger: host resolver (paths above) → dispatch: props through `DeckSelectScreen` (`:654` docked, `:669` hover) → observe: rendered `li` style contains `--fc:` + `--img:` in component tests.
+
+## TDD
+
+1. **Red** — panel tests (fixtures gain `frame`/`artUrl`; assertions on `--fc`, art presence/absence, cp text incl. `&quot;×3&quot;`→`&quot;3&quot;` flip) + one row-shape test per host suite. Red on compile + assertions.
+2. **Green** — contract, panel markup/CSS, three host mappings.
+3. **Refactor** — keep green.
+
+## Test plan
+
+| Test | Input | Expect |
+| ---- | ----- | ------ |
+| frame color on row | row `frame:&quot;spell&quot;` | `li` style contains `--fc:#1d9e74` |
+| art layers present | row `artUrl:&quot;blob:x&quot;` | art + fade spans exist; `--img` set |
+| art degrade | row `artUrl:null` | no art/fade spans; border + name render |
+| copy cell count | 3 copies of one code | one row; cp text `&quot;3&quot;` |
+| copy cell reserved | single copy | cp span exists, empty, single-modifier class |
+| deck-editor rows | fixture spell card `imageUrl:&quot;/runtime/images/1.jpg&quot;` | `frame:&quot;spell&quot;`, `artUrl:&quot;/runtime/images-cropped/1.jpg&quot;` |
+| story rows | link monster fixture | `frame:&quot;link&quot;` |
+| free-play rows | catalog miss | `frame:&quot;normal&quot;`, `artUrl:null`, name `String(code)` |
+| boundaries + data-cy | frozen suites | pass unchanged (no export widening) |
+
+## Impl steps
+
+- [ ] 1. Red: update `tests/component/deck-select/hover-previews.test.ts` (fixtures, `--fc`/art/cp assertions, `:147` flip) + row-shape tests in the three host suites.
+- [ ] 2. Contract change in `deck-select-contracts.ts`.
+- [ ] 3. Panel: carry `frame`/`artUrl` through `entriesOf`, markup + CSS per contract.
+- [ ] 4. Hosts: map two fields at the three call sites.
+- [ ] 5. `npm run test:component` + `npm run check:headless` green (`check:headless` does **not** run component tests — both cmds required).
+
+## Validation
+
+- [ ] tests pass: `npm run test:component` &amp;&amp; `npm run check:headless` (paste tails)
+- [ ] manual check: dev server — dock (deck editor library) + both floats show art rows
+- [ ] no silent-failure swallow added — `none`
+- [ ] app functional — all three screens render decklists
+- [ ] commit msg draft: `feat(deck-select,shell,story,deck-editor): decklist rows show card art and frame colour`
+</pre></details><details><summary>T3 — T3: evidence + checklist</summary><pre># T3: evidence + checklist
+
+**Plan:** `./artifacts/PLAN_2026_09_02_decklist_row_art.md`
+**Depends:** T2
+**Commit outcome:** slice proven in Chromium, budgets green, durable manual test checklist covers the new rows.
+
+## Context (self-contained)
+
+- Goal: decklist rows show art + frame color (`artifacts/PROTOTYPE_SPEC_decklist_rows.md`).
+- This slice: acceptance evidence. Field acceptance uses automated Chromium evidence only; build budgets machine-enforced per domain.
+- Out of scope here: behavior changes. Fix-forward only if a gate fails.
+- Assumptions in force: T1–T2 merged; **no existing e2e spec visits a decklist surface** (`grep -rn &quot;decklist&quot; e2e/` → no matches) — this ticket adds navigation, it does not merely extend assertions.
+
+## Requirements
+
+- E2E: navigate to a decklist surface, assert the approved row. Extend an existing spec file; no new browser project.
+- `artifacts/manual_test_checklist.md` (durable) gains steps for the three surfaces.
+- No budget regression: `npm run build:verify` passes.
+
+## Inputs
+
+- **From T2:** rows on dock + floats; `data-cy` values: rows `deck-select-docked-list-row-{code}` / `deck-select-hover-list-row-{code}`, cp `…-row-copies-{code}`, art `…-row-art-{code}`. Dock renders only with a selected deck (`DeckSelectScreen.svelte:162` `docked` needs library mode + non-null resolver; `loadRest` needs a selected key); hover float needs pointer hover in duel-start mode.
+- `e2e/` — existing specs; pick the one already reaching the deck editor library (locate: `grep -rln &quot;deck-editor\|library&quot; e2e/`), else the free-play flow in `e2e/duel-smoke.spec.ts`.
+- `artifacts/manual_test_checklist.md` — append in its existing format.
+
+## Interface contract (level 5)
+
+- **Produces:** Playwright steps + assertions, shape:
+
+```ts
+// navigate: shell → deck editor → library → select/click a deck tile
+const row = page.locator(&#x27;[data-cy^=&quot;deck-select-docked-list-row-&quot;]&#x27;).first();
+await expect(row).toBeVisible();
+await expect(row).toHaveCSS(&quot;border-left-width&quot;, &quot;5px&quot;);
+await expect(row.locator(&#x27;[data-cy*=&quot;-row-copies-&quot;]&#x27;)).toHaveCount(1);
+await expect(row.locator(&#x27;[data-cy*=&quot;-row-art-&quot;]&#x27;)).toHaveCount(1); // bundled decks have art
+```
+
+- **Consumes:** T2 `data-cy` contract verbatim.
+- **Errors:** failing gate → quote exact output; one bounded repair loop, then stop and report.
+- **Invariants:** DOM/CSS assertions, no screenshot-only evidence.
+- **Integration links:** trigger: `npx playwright test &lt;spec&gt;` → dispatch: built app served to Chromium → receive: DOM assertions above → observe: Playwright pass report + `npm run build:verify` budget output.
+
+## TDD
+
+1. **Red** — prove assertions can fail: run once with a mutated selector (`-row-x-`) → red.
+2. **Green** — real selectors against current build.
+3. **Refactor** — none expected.
+
+## Test plan
+
+| Test | Input | Expect |
+| ---- | ----- | ------ |
+| e2e row visual | deck editor library, deck selected | row visible, 5px left border, cp + art spans present |
+| build gates | `npm run build:verify` | all domain budgets pass |
+| full suites | `npm run check:headless` + `npm run test:component` | green |
+
+## Impl steps
+
+- [ ] 1. Add navigation + assertions to the chosen e2e spec; mutate-selector red check; green run.
+- [ ] 2. `npm run build:verify` — capture output.
+- [ ] 3. Append manual steps to `artifacts/manual_test_checklist.md`: (a) deck editor → library → select deck → dock shows art rows, colored borders, counts, aligned names; (b) free play → hover deck tile → float same; (c) story → pre-battle → float same; (d) missing art → row still readable (color + name).
+- [ ] 4. Update `docs/GLOSSARY.md` if &quot;frame colour&quot; / &quot;decklist row&quot; absent (make-glossary-aron).
+
+## Validation
+
+- [ ] tests pass: `npx playwright test &lt;spec&gt;` + `npm run build:verify` + `npm run check:headless` + `npm run test:component` (paste tails)
+- [ ] manual check: covered by checklist additions
+- [ ] no silent-failure swallow added — `none`
+- [ ] app functional — evidence above
+- [ ] commit msg draft: `test(e2e): prove decklist art rows in Chromium and record manual checks`
+</pre></details>
+</body></html>

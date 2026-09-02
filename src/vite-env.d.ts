@@ -4,6 +4,7 @@ declare const __RUNTIME_MANIFEST_SHA256__: string;
 declare const __RUNTIME_SNAPSHOT_ID__: string;
 declare const __ACTIVATION_SNAPSHOT_ID__: string;
 declare const __APP_BUILD_ID__: string;
+declare const __APP_BUILD_DATE__: string;
 declare const __ACTIVE_IMAGE_MANIFEST_SHA256__: string;
 declare const __ACTIVE_IMAGE_MANIFEST__: Readonly<{
   schemaVersion: 1;

@@ -58,6 +58,8 @@ export interface DeckRecord extends DeckCardLists {
   readonly updatedAt: string;
   readonly validation: DeckValidationSummary;
   readonly importedNeedsReview: boolean;
+  /** Card whose cropped artwork fronts deck tiles. `null` uses automatic cover. */
+  readonly illustrationCardCode: number | null;
 }
 
 export interface ValidatedDeckSnapshot extends DeckCardLists {
@@ -84,7 +86,10 @@ export interface DeckCardUpdate {
   readonly after: DeckCardLists;
   readonly beforeImportedNeedsReview: boolean;
   readonly afterImportedNeedsReview: boolean;
-  readonly reason: "add" | "remove" | "move" | "import" | "restore";
+  readonly beforeIllustrationCardCode: number | null;
+  readonly afterIllustrationCardCode: number | null;
+  readonly reason:
+    "add" | "remove" | "move" | "import" | "restore" | "illustration";
 }
 
 export interface DeckHistory {
@@ -110,6 +115,7 @@ export interface DeckAutosaveRecord {
   readonly main: readonly number[];
   readonly extra: readonly number[];
   readonly side: readonly number[];
+  readonly illustrationCardCode?: number | null;
 }
 
 export function cloneCardLists(value: DeckCardLists): DeckCardLists {

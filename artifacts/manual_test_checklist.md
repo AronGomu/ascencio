@@ -4107,6 +4107,22 @@ Run `npm run dev` (default `DEV_PORT=4300`).
 - [ ] The opponent's deck card reads **🔒 Set by the story** and cannot be pressed into opponent-seat picking.
 - [ ] The deck card's counts read `Main 0 · Extra 0 · Side 0`. **Known gap, not a bug to file:** there is no story-legal source for a bundled preset's card counts, so the locked seat cannot show them yet.
 
+### Face-down Special Summon does not end the duel
+
+- [ ] Shaddoll mirror, your turn: activate **Sinister Shadow Games**, send **Shaddoll Falco** to the graveyard, accept Falco's trigger, and pick a Monster Zone. The duel keeps running — no error screen, no "Invalid card code: 0", no closed session.
+- [ ] The summoned monster sits face-down in the zone you picked, and the duel log reads `You Special Summoned A card.` rather than naming it.
+
+---
+
+## Deck illustrations
+
+- [ ] Open a deck in Deck Editor, right-click a card already in Main, Extra, or Side Deck, then choose **Set as illustration**. Return to Deck Library: deck tile is square like the source crop and uses that card's complete text-free artwork, not whole card frame.
+- [ ] Inspect that tile over both light and dark artwork: illustration renders at 75% opacity with no full-tile black fade; compact translucent backplates and text shadows keep the deck title readable at top-left and counts, metadata, and badges readable at bottom-left.
+- [ ] Focus a deck card with keyboard, press `Shift+F10`, choose **Set as illustration**, then press Undo / Redo. Library illustration follows each history state.
+- [ ] Remove chosen illustration card's final copy. Library falls back to first Extra Deck card, then first Main Deck card. Undo restores chosen illustration.
+- [ ] Reload app, duplicate deck, then open story pre-battle deck picker where applicable. Chosen illustration survives persistence and duplication; same crop fronts every shared deck tile.
+- [ ] In DevTools, block one `runtime/images-cropped/<code>.jpg` request. Tile falls back to full-card image without broken-image icon.
+
 ## Decklist row art
 
 - [ ] Deck Editor → Library → select a deck: dock shows card-art rows with coloured frame borders, copy counts, and aligned names.

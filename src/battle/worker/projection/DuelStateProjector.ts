@@ -362,10 +362,14 @@ export class DuelStateProjector {
         });
         break;
       case EngineMessageType.SPECIAL_SUMMONING:
+        /* A face-down Special Summon is the one summon the core announces
+           without an identity: it writes code 0 rather than naming the card it
+           is about to hide. The announcement still happens, so the event is
+           still emitted — with no card, like every other concealed card. */
         events.push({
           type: "specialSummon",
           player: asPlayer(message.controller),
-          card: cardCode(message.code),
+          ...(message.code === 0 ? {} : { card: cardCode(message.code) }),
         });
         break;
       case EngineMessageType.FLIP_SUMMONING:

@@ -8,6 +8,10 @@ import { STORY_SAVES_DATABASE_NAME } from "../../../src/story/saves/story-save-c
 import { createInitialStoryState } from "../../../src/story/model/story-state.ts";
 import StoryApp from "../../../src/story/StoryApp.svelte";
 import {
+  TOAST_CONTEXT_KEY,
+  type ToastPublisher,
+} from "../../../src/shell/index.ts";
+import {
   installPrototypeActiveCatalog,
   resetRuntimeCatalog,
 } from "../../fixtures/active-catalog.ts";
@@ -71,14 +75,10 @@ function sellState(collection: Record<number, number>) {
 }
 
 describe("StoryApp", () => {
-  it("mounts from the story domain straight onto the title screen", async () => {
+  it("mounts from the story domain straight into the prologue", async () => {
     render(StoryApp);
-    expect(
-      screen.getByRole("heading", { name: "Echoes of the Draw" }),
-    ).toBeTruthy();
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "New Game" })).toBeTruthy(),
-    );
+    await waitFor(() => expect(screen.getByText(/Rain turned/)).toBeTruthy());
+    expect(screen.queryByRole("button", { name: "New Game" })).toBeNull();
   });
 
   /* The reviewer harness was the prototype's entry point; the production
@@ -97,12 +97,10 @@ describe("StoryApp", () => {
     ).toBeNull();
   });
 
-  it("plays New Game into the first narrative beat", async () => {
+  it("starts prologue without a second visual-novel menu", async () => {
     render(StoryApp);
-    await userEvent
-      .setup()
-      .click(screen.getByRole("button", { name: "New Game" }));
     expect(screen.getByText(/Rain turned/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "New Game" })).toBeNull();
   });
 
   it("map screen shows floating menu gear, narrative does not", async () => {
@@ -124,10 +122,7 @@ describe("StoryApp", () => {
 
   it("narrative screen hides the floating menu gear", async () => {
     const { container } = render(StoryApp);
-    // Drive to narrative via New Game
-    await userEvent
-      .setup()
-      .click(screen.getByRole("button", { name: "New Game" }));
+    // Story starts in narrative.
     // On narrative: floating gear (story-global-menu) must be absent;
     // narrative bar's own gear (story-narrative-menu) may still be present
     expect(container.querySelector('[data-cy="story-global-menu"]')).toBeNull();
@@ -137,24 +132,24 @@ describe("StoryApp", () => {
      deck editor in the same document, so a bare `button`/`body` rule would
      repaint them. */
   it("top bar rides narrative, map and shop, not title", async () => {
-    // title: absent
-    const { container: titleContainer } = render(StoryApp);
+    // narrative: present
+    const { container: narrativeContainer } = render(StoryApp);
     expect(
-      titleContainer.querySelector('[data-cy="story-top-bar"]'),
-    ).toBeNull();
+      narrativeContainer.querySelector('[data-cy="story-top-bar"]'),
+    ).not.toBeNull();
     cleanup();
 
-    // narrative: present
+    // narrative state: present
     const narrativeState = {
       ...createInitialStoryState(),
       screen: "narrative" as const,
       savedScreen: "narrative" as const,
     };
-    const { container: narrativeContainer } = render(StoryApp, {
+    const { container: narrativeStateContainer } = render(StoryApp, {
       resumeState: narrativeState,
     });
     expect(
-      narrativeContainer.querySelector('[data-cy="story-top-bar"]'),
+      narrativeStateContainer.querySelector('[data-cy="story-top-bar"]'),
     ).not.toBeNull();
     cleanup();
 
@@ -313,22 +308,26 @@ describe("StoryApp", () => {
      next one, which only holds if it reached IndexedDB. */
   it("saves through the overlay into a store the next mount reads back", async () => {
     const user = userEvent.setup();
-    const first = render(StoryApp);
-    await user.click(screen.getByRole("button", { name: "New Game" }));
-    // T1 consolidated Save into gear menu — open gear first
+    const show = vi.fn<ToastPublisher["show"]>(() => "toast-test");
+    const first = render(StoryApp, {
+      context: new Map([[TOAST_CONTEXT_KEY, { show }]]),
+    });
+    // Story starts in narrative; T1 consolidated Save into gear menu — open gear first
     await user.click(screen.getByRole("button", { name: "Open menu" }));
     await user.click(screen.getByRole("button", { name: /^Save$/ }));
     await user.click(screen.getByRole("button", { name: "Confirm overwrite" }));
-    await waitFor(() => expect(screen.getByText(/Save complete/)).toBeTruthy());
+    await waitFor(() =>
+      expect(show).toHaveBeenCalledWith({
+        message: "Game saved.",
+        tone: "success",
+      }),
+    );
+    expect(screen.queryByText(/Save complete/)).toBeNull();
     first.unmount();
     cleanup();
 
-    render(StoryApp);
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Continue" })).toBeTruthy(),
-    );
-    await user.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByText(/Rain turned/)).toBeTruthy();
+    render(StoryApp, { storyEntryIntent: "continue" });
+    await waitFor(() => expect(screen.getByText(/Rain turned/)).toBeTruthy());
   });
 
   /* A slot this build cannot parse must cost the player their progress and
@@ -350,9 +349,6 @@ describe("StoryApp", () => {
       expect(screen.getByRole("alert").textContent).toMatch(/manual:1/),
     );
     expect(screen.queryByRole("button", { name: "Continue" })).toBeNull();
-    await userEvent
-      .setup()
-      .click(screen.getByRole("button", { name: "New Game" }));
     expect(screen.getByText(/Rain turned/)).toBeTruthy();
   });
 });

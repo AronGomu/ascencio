@@ -452,6 +452,7 @@ async function totalFileBytes(root: string): Promise<number> {
 
 async function verifyActiveImages(): Promise<void> {
   const imageRoot = path.join(runtimeRoot, "images");
+  const cropRoot = path.join(runtimeRoot, "images-cropped");
   const manifestBytes = await readFile(
     path.join(imageRoot, "active-manifest.json"),
   );
@@ -532,19 +533,42 @@ async function verifyActiveImages(): Promise<void> {
   )
     throw new Error("Packaged active-image coverage differs from preset decks");
 
-  /* Audit F16b. Everything above re-hashes the packaged art against
-     `active-manifest.json`, which was generated from those same files, so bytes
-     substituted upstream verify clean and `generated/` is gitignored besides.
-     The tracked lock is the one digest the build cannot rewrite and a reviewer
-     does see in a diff. */
-  const lockFailures = verifyLockedCardImages(
-    parseImageContentLock(
-      JSON.parse(
-        await readFile(path.join(projectRoot, IMAGE_CONTENT_LOCK_FILE), "utf8"),
-      ) as unknown,
-    ),
-    observedCards,
+  const packagedCrops = (await findFiles(cropRoot)).map((file) =>
+    path.relative(cropRoot, file).replaceAll("\\", "/"),
   );
+  const expectedCrops = imageManifest.files.map(({ path }) => path).sort();
+  if (packagedCrops.sort().join("\n") !== expectedCrops.join("\n"))
+    throw new Error("Packaged cropped images differ from active card images");
+  const observedCrops: CardImageDigest[] = [];
+  for (const record of imageManifest.files) {
+    const bytes = await readFile(path.join(cropRoot, record.path));
+    if (
+      bytes[0] !== 0xff ||
+      bytes[1] !== 0xd8 ||
+      bytes.at(-2) !== 0xff ||
+      bytes.at(-1) !== 0xd9
+    )
+      throw new Error(`Packaged cropped image is invalid: ${record.path}`);
+    observedCrops.push({
+      code: record.code,
+      bytes: bytes.byteLength,
+      sha256: sha256(bytes),
+    });
+  }
+
+  /* Audit F16b. Everything above re-hashes packaged art against generated
+     manifests. Tracked lock is digest build cannot rewrite, visible in diff. */
+  const lock = parseImageContentLock(
+    JSON.parse(
+      await readFile(path.join(projectRoot, IMAGE_CONTENT_LOCK_FILE), "utf8"),
+    ) as unknown,
+  );
+  const lockFailures = [
+    ...verifyLockedCardImages(lock, observedCards),
+    ...verifyLockedCardImages({ cards: lock.crops }, observedCrops).map(
+      (failure) => `Crop: ${failure}`,
+    ),
+  ];
   if (lockFailures.length > 0)
     throw new Error(
       `Packaged card images differ from ${IMAGE_CONTENT_LOCK_FILE}:\n${lockFailures.join("\n")}`,

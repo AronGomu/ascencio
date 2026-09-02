@@ -40,22 +40,13 @@ describe("orderDeckTiles", () => {
     expect(result.map(({ key }) => key)).toEqual(["plain", "blocked"]);
   });
 
-  it("default outranks favourite", () => {
-    const favourite = tile({ key: "favourite", favourite: true });
+  it("default outranks plain", () => {
+    const plain = tile({ key: "plain" });
     const chosen = tile({ key: "chosen", isDefault: true });
 
-    const result = orderDeckTiles([favourite, chosen], "modified");
+    const result = orderDeckTiles([plain, chosen], "modified");
 
-    expect(result.map(({ key }) => key)).toEqual(["chosen", "favourite"]);
-  });
-
-  it("favourite outranks plain", () => {
-    const plain = tile({ key: "plain" });
-    const favourite = tile({ key: "favourite", favourite: true });
-
-    const result = orderDeckTiles([plain, favourite], "modified");
-
-    expect(result.map(({ key }) => key)).toEqual(["favourite", "plain"]);
+    expect(result.map(({ key }) => key)).toEqual(["chosen", "plain"]);
   });
 
   it("modified sort orders by updatedAt desc, null last", () => {

@@ -50,6 +50,7 @@ export function storyStarterSave(): StoryStarterSave {
         rulesetRevision: "prototype-2026-01",
       },
       importedNeedsReview: false,
+      illustrationCardCode: null,
     },
     collection,
   };

@@ -6,7 +6,6 @@
   import {
     FIFTEEN_CARD_GRID,
     mainDeckGridPlan,
-    type DeckCommand,
   } from "../../decks/deck-model.ts";
   import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
   import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
@@ -31,7 +30,6 @@
   export let ondragcancel: () => void = () => undefined;
   export let onreorderdrop: (zone: DeckZone, toIndex: number) => void = () =>
     undefined;
-  export let onmutate: (command: DeckCommand) => void = () => undefined;
   export let ondropzone: (zone: DeckZone) => void = () => undefined;
   export let ontap:
     ((code: number, zone: DeckZone, index: number) => void) | null = null;
@@ -41,6 +39,11 @@
     code: number,
     zone: DeckZone,
     index: number,
+    request: {
+      readonly anchor: HTMLElement;
+      readonly x: number;
+      readonly y: number;
+    },
   ) => void = () => undefined;
   /* Its own pane below the breakpoint: the stage scrolls it, not an inner box. */
   export let filled = false;
@@ -110,25 +113,6 @@
   data-cy="deck-workspace"
   bind:this={workspaceElement}
 >
-  <header class="workspace-header" data-cy="deck-workspace-header">
-    <div class="sort-actions" data-cy="deck-workspace-sort-actions">
-      <button
-        type="button"
-        class="secondary"
-        data-cy="deck-workspace-sort-alpha"
-        onclick={() => onmutate({ type: "sort", mode: "alpha" })}
-        >Sort A–Z</button
-      >
-      <button
-        type="button"
-        class="secondary"
-        data-cy="deck-workspace-sort-type"
-        onclick={() => onmutate({ type: "sort", mode: "type" })}
-        >Sort by type</button
-      >
-    </div>
-  </header>
-
   <DeckZoneGrid
     zone="main"
     label="Main Deck"
@@ -229,23 +213,5 @@
   .workspace.filled {
     height: auto;
     overflow-y: visible;
-  }
-
-  .workspace-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-
-  .sort-actions {
-    display: flex;
-    gap: 0.4rem;
-  }
-
-  .sort-actions button {
-    min-height: 2rem;
-    padding: 0.35rem 0.55rem;
-    font-size: 0.8rem;
   }
 </style>

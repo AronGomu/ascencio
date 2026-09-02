@@ -234,7 +234,8 @@ async function seedMapProgress(): Promise<void> {
 async function reachEncounter(): Promise<ReturnType<typeof userEvent.setup>> {
   const user = userEvent.setup();
   renderShell();
-  await user.click(await waitForCy("story-title-continue"));
+  store.enterStory("continue");
+  await waitForCy("story-map-screen");
   await user.click(await waitForCy("story-map-location-old-arena"));
   /* The catalog read the briefing gates on resolves a microtask later than the
      screen renders, so Start is briefly disabled on purpose. */

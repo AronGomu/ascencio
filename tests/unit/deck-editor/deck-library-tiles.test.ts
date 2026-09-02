@@ -60,8 +60,8 @@ function card(code: number, imageUrl: string | null): DeckBuilderCardView {
 }
 
 const CATALOG: ReadonlyMap<number, DeckBuilderCardView> = new Map([
-  [111, card(111, "/images/111.jpg")],
-  [222, card(222, "/images/222.jpg")],
+  [111, card(111, "/runtime/images/111.jpg")],
+  [222, card(222, "/runtime/images/222.jpg")],
   [333, card(333, null)],
 ]);
 
@@ -78,6 +78,7 @@ function record(overrides: Partial<DeckRecord> = {}): DeckRecord {
     side: [],
     validation: { status: "valid", issues: [], rulesetRevision: "test" },
     importedNeedsReview: false,
+    illustrationCardCode: null,
     ...overrides,
   };
 }
@@ -95,15 +96,36 @@ function tileOf(
 }
 
 describe("deckLibraryTiles", () => {
-  it("record maps to tile with cover from first extra", () => {
+  it("record maps to cropped art from first extra", () => {
     const tile = tileOf(record({ extra: [111], main: [222] }));
 
-    expect(tile.coverImageUrl).toBe("/images/111.jpg");
+    expect(tile.coverImageUrl).toBe("/runtime/images-cropped/111.jpg");
   });
 
-  it("a deck with no Extra Deck is fronted by its first Main Deck card", () => {
+  it("uses the selected illustration card instead of the automatic cover", () => {
+    expect(
+      tileOf(
+        record({
+          main: [222],
+          extra: [111],
+          illustrationCardCode: 222,
+        }),
+      ).coverImageUrl,
+    ).toBe("/runtime/images-cropped/222.jpg");
+  });
+
+  it("a missing selected card falls back to first Extra then first Main", () => {
+    expect(
+      tileOf(
+        record({
+          main: [222],
+          extra: [111],
+          illustrationCardCode: 999,
+        }),
+      ).coverImageUrl,
+    ).toBe("/runtime/images-cropped/111.jpg");
     expect(tileOf(record({ main: [222, 111] })).coverImageUrl).toBe(
-      "/images/222.jpg",
+      "/runtime/images-cropped/222.jpg",
     );
   });
 

@@ -177,9 +177,9 @@
     candidate: DeckTileModel,
   ): "you" | "opponent" | "focus" | null {
     if (seat === "opponent")
-      return candidate.key === opponentDeck?.key ? "opponent" : null;
+      return candidate.key === opponentDeck?.key ? "focus" : null;
     if (candidate.key !== selectedKey) return null;
-    return mode === "duel-start" ? "you" : "focus";
+    return "focus";
   }
 
   function selectedFor(candidate: DeckTileModel): boolean {
@@ -471,7 +471,9 @@
           <DeckTile
             tile={opponentDeck}
             cyKey={`opponent-${opponentDeck.key}`}
-            halo="opponent"
+            halo={seat === "opponent" && !opponent.locked
+              ? "focus"
+              : "opponent"}
             showFavourite={false}
             showMenu={false}
             disabled
@@ -488,13 +490,14 @@
         <button
           type="button"
           class="seat-card pressable"
+          aria-pressed={seat === "player"}
           onclick={() => onseat("player")}
           data-cy="duel-start-your-deck"
         >
           <DeckTile
             tile={playerDeck}
             cyKey={`yours-${playerDeck.key}`}
-            halo="you"
+            halo={seat === "player" ? "focus" : "you"}
             showFavourite={false}
             showMenu={false}
             disabled
@@ -841,7 +844,8 @@
     min-height: 0;
     align-content: start;
     gap: var(--space-3);
-    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    grid-auto-rows: max-content;
+    grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
   }
 
   footer {
@@ -891,6 +895,7 @@
     align-content: start;
     grid-row: 1 / -1;
     grid-column: 2;
+    grid-auto-rows: max-content;
     gap: var(--space-2);
     padding-left: var(--space-3);
     border-left: 1px solid var(--border);
@@ -1046,7 +1051,8 @@
      no chrome of its own — the tile inside is the whole visual. */
   .seat-card {
     display: block;
-    width: 100%;
+    width: min(100%, 14rem);
+    justify-self: center;
     padding: 0;
     border: 0;
     color: inherit;

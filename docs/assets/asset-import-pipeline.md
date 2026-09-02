@@ -89,11 +89,14 @@ https://images.ygoprodeck.com/images/cards/<ID>.jpg
 https://images.ygoprodeck.com/images/cards_cropped/<ID>.jpg
 ```
 
-`npm run assets:images` then downloads full-card JPEGs into the local resumable archive:
+`npm run assets:images` downloads full-card JPEGs; `npm run assets:images:cropped` downloads text-free artwork crops into sibling resumable archives:
 
 ```text
 generated/card-images/archive/full/<ID>.jpg
+generated/card-images/archive/cropped/<ID>.jpg
 ```
+
+For browser-build work that only needs bundled preset decks, `npm run assets:images:cropped:active` acquires their cropped art without downloading the complete catalog.
 
 The downloader respects YGOPRODeck's documented 20-request/second ceiling, validates JPEG signatures, retries transient failures, skips valid existing files, and records unavailable IDs in `download-report.json`.
 
@@ -154,6 +157,8 @@ npm run assets:engine:verify
 npm run assets:sync
 npm run assets:verify
 npm run assets:images
+npm run assets:images:cropped
+npm run assets:images:cropped:active
 npm run assets:images:verify
 npm test
 npm run typecheck
@@ -191,7 +196,9 @@ generated/
 │   └── images/<00..3f>.json
 └── card-images/archive/
     ├── download-report.json
-    └── full/<CARD_ID>.jpg
+    ├── cropped-download-report.json
+    ├── full/<CARD_ID>.jpg
+    └── cropped/<CARD_ID>.jpg
 ```
 
 `generated/` and `.cache/` are intentionally ignored by Git. CI or a release job should publish the verified data snapshot and legally approved/re-hosted image archive as versioned application artifacts.
@@ -213,7 +220,7 @@ generated/
 - image URL/card-ID consistency;
 - that image redistribution has not been marked approved accidentally.
 
-Every image check above re-hashes files against a manifest generated from those same files, so bytes substituted upstream would verify clean, and `generated/` is ignored by Git, so no reviewer diff would show them either. `image-content-lock.json` at the repository root closes that loop. It is the only image digest under version control and covers the shipped surface alone: the byte length and SHA-256 of every card code the preset decks use (120 today) and every shop set image (50 today). `npm run build:verify` compares the packaged card art against it and `npm run assets:sets:verify` compares the set archive, and either fails on a difference — including art that is shipped without being pinned.
+Every image check above re-hashes files against a manifest generated from those same files, so bytes substituted upstream would verify clean, and `generated/` is ignored by Git, so no reviewer diff would show them either. `image-content-lock.json` at the repository root closes that loop. It is the only image digest under version control and covers the shipped surface alone: the byte length and SHA-256 of every full card plus cropped illustration the preset decks use (120 each today), and every shop set image (50 today). `npm run build:verify` compares both packaged card-image forms against it and `npm run assets:sets:verify` compares the set archive; either fails on a difference — including art shipped without a pin.
 
 YGOPRODeck publishes no digest of its own, so the lock is seeded from the first fetch: it proves the bytes have not changed since they were pinned, not that they are genuine. Regenerating it after an intended upstream art refresh is a separate, explicit command, never a side effect of downloading or verifying, because a lock rewritten by the run it guards would prove nothing:
 

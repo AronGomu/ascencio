@@ -424,7 +424,7 @@ test("every story overlay opens, traps focus, and restores it on close", async (
   const paused = page.getByRole("dialog", { name: "Menu" });
   await expect(paused).toBeVisible();
   const close = page.getByRole("button", { name: "Close Menu" });
-  const last = page.getByRole("button", { name: "Return to Title" });
+  const last = page.getByRole("button", { name: "Return to Main Menu" });
   await expect(close).toBeFocused();
   await page.keyboard.press("Shift+Tab");
   await expect(last).toBeFocused();

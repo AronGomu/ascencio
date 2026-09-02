@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="artifact-kind" content="markdown">
+<meta name="artifact-generated" content="1788351930324">
+<meta name="artifact-project" content="/home/aron/projects/ascencio">
+<title>Decklist Row Art Final Implementation Report</title>
+<style data-base>:root { color-scheme: light dark;
+  --bg: #ffffff;
+  --fg: #1c1c1a;
+  --muted: #6b6862;
+  --border: #e7e5e0;
+  --code-bg: #f7f6f4;
+  --accent: #b95730;
+  --add-bg: #e9f7ee;
+  --add-word-bg: #c8ecd3;
+  --add-fg: #1a7f37;
+  --del-bg: #feeff1;
+  --del-word-bg: #f8d2d7;
+  --del-fg: #c93c4c;
+  --hl-comment: #6e7781;
+  --hl-keyword: #cf222e;
+  --hl-string: #0a3069;
+  --hl-number: #0550ae;
+  --hl-title: #8250df;
+  --hl-type: #953800;
+  --hl-attr: #0550ae;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --bg: #171614;
+  --fg: #e6e3de;
+  --muted: #94918a;
+  --border: #2e2d29;
+  --code-bg: #201f1c;
+  --accent: #d67858;
+  --add-bg: #1d2a20;
+  --add-word-bg: #2b4232;
+  --add-fg: #85c793;
+  --del-bg: #2e1c1e;
+  --del-word-bg: #4a292c;
+  --del-fg: #e28a91;
+  --hl-comment: #8b949e;
+  --hl-keyword: #ff7b72;
+  --hl-string: #a5d6ff;
+  --hl-number: #79c0ff;
+  --hl-title: #d2a8ff;
+  --hl-type: #ffa657;
+  --hl-attr: #79c0ff;
+} }
+
+* { box-sizing: border-box; }
+html { font-size: 15px; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+article { max-width: 860px; margin: 0 auto; padding: 2.75rem 1.5rem 4rem; }
+h1, h2, h3, h4 { line-height: 1.3; letter-spacing: -0.01em; color: var(--fg); }
+h1 { font-size: 1.45rem; font-weight: 650; margin: 0 0 1rem; }
+h2 { font-size: 1.15rem; font-weight: 650; margin: 2.2em 0 .7em; padding-bottom: .35em; border-bottom: 1px solid var(--border); }
+h3 { font-size: 1rem; font-weight: 600; margin: 1.8em 0 .5em; }
+h4 { font-size: .9rem; font-weight: 600; margin: 1.5em 0 .4em; }
+p { margin: .8em 0; }
+a { color: var(--accent); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 35%, transparent); text-underline-offset: 2px; }
+a:hover { text-decoration-color: var(--accent); }
+strong { font-weight: 600; }
+ul, ol { margin: .8em 0; padding-left: 1.5em; }
+li { margin: .3em 0; }
+li > ul, li > ol { margin: .2em 0; }
+hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
+img, svg, video { max-width: 100%; }
+::selection { background: color-mix(in srgb, var(--accent) 25%, transparent); }
+
+blockquote {
+  margin: 1.2em 0;
+  padding: .1em 1.1em;
+  border-left: 3px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--muted);
+}
+blockquote > :first-child { margin-top: .4em; }
+blockquote > :last-child { margin-bottom: .4em; }
+
+table { border-collapse: collapse; width: 100%; margin: 1.2em 0; font-size: .9rem; }
+th {
+  text-align: left; font-weight: 600; font-size: .74rem;
+  text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+  padding: .5em .75em; border-bottom: 1px solid var(--border);
+}
+td { padding: .55em .75em; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+
+code, kbd, samp { font-family: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace; }
+code { font-size: .85em; background: var(--code-bg); padding: .15em .4em; border-radius: 4px; }
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1em 1.2em;
+  overflow-x: auto;
+  font-size: .82rem;
+  line-height: 1.55;
+  margin: 1.2em 0;
+}
+pre code { background: transparent; padding: 0; font-size: inherit; }
+
+input[type="checkbox"] { accent-color: var(--accent); margin-right: .4em; }
+
+
+.artifact-header {
+  display: flex; align-items: baseline; gap: .75rem; flex-wrap: wrap;
+  margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+}
+.artifact-header h1 { margin: 0; }
+.artifact-badge {
+  font-family: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace; font-size: .66rem; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 999px; padding: .2em .7em; white-space: nowrap;
+}
+.artifact-meta { margin-left: auto; color: var(--muted); font-size: .72rem; font-family: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace; }
+.artifact-footer {
+  margin-top: 4rem; padding-top: 1rem; border-top: 1px solid var(--border);
+  color: var(--muted); font-size: .72rem; font-family: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace;
+}
+.artifact-mermaid { text-align: center; margin: 1.5rem 0; }
+</style>
+</head>
+<body>
+<article>
+<header class="artifact-header">
+<h1>Decklist Row Art Final Implementation Report</h1>
+<span class="artifact-badge">markdown</span>
+<span class="artifact-meta">2026-09-02 12:25:30</span>
+</header>
+<h1>Final implementation report — decklist row art + frame color</h1>
+<p>State: <strong>done</strong>. All tickets implemented, committed, pushed to <code>origin/main</code>.</p>
+<p>Plan anchor: <code>124e824</code> (<code>git show 124e824:artifacts/PLAN_2026_09_02_decklist_row_art.md</code>).</p>
+<h2>Ticket State List</h2>
+<table>
+<thead>
+<tr>
+<th>Ticket</th>
+<th>Outcome</th>
+<th>State</th>
+<th>Commit</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>T1</td>
+<td><code>cardFrameOf(rawType)</code> + nine-value <code>CARD_FRAME_COLORS</code></td>
+<td>DONE</td>
+<td><code>3023162</code></td>
+</tr>
+<tr>
+<td>T2</td>
+<td>Required <code>frame</code>/<code>artUrl</code>, grouped art rows, three host resolvers</td>
+<td>DONE</td>
+<td><code>518c911</code></td>
+</tr>
+<tr>
+<td>T3</td>
+<td>Chromium assertion, build evidence, checklist + glossary</td>
+<td>DONE</td>
+<td><code>461b372</code></td>
+</tr>
+</tbody></table>
+<h2>Evidence</h2>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>npx vitest run tests/unit/card-frame.test.ts</code></td>
+<td>1 file passed; 11 tests passed</td>
+</tr>
+<tr>
+<td><code>npm run test:component</code></td>
+<td>112 files passed; 1059 tests passed</td>
+</tr>
+<tr>
+<td><code>npm run check:headless</code></td>
+<td>exit 0; snapshot/assets checks status <code>ok</code></td>
+</tr>
+<tr>
+<td><code>npx playwright test e2e/deck-editor.spec.ts --grep &quot;deck library shows art rows with frame and copy count&quot;</code></td>
+<td>Chromium 1 passed</td>
+</tr>
+<tr>
+<td><code>npm run build:verify</code></td>
+<td>status <code>ok</code>; shell 96,733 B; battle 351,936 B; deck-editor 142,331 B; story 133,689 B</td>
+</tr>
+<tr>
+<td>TDD red evidence</td>
+<td>T1 missing-module red; T2 five expected assertion/compile failures; T3 mutated-selector failure</td>
+</tr>
+</tbody></table>
+<h2>Files touched</h2>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Paths</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Classifier</td>
+<td><code>src/decks/card-frame.ts</code>, <code>tests/unit/card-frame.test.ts</code></td>
+</tr>
+<tr>
+<td>Contract/panel</td>
+<td><code>src/deck-select/deck-select-contracts.ts</code>, <code>src/deck-select/DecklistPanel.svelte</code></td>
+</tr>
+<tr>
+<td>Art URL</td>
+<td><code>src/decks/deck-cover.ts</code></td>
+</tr>
+<tr>
+<td>Hosts</td>
+<td><code>src/deck-editor/components/DeckLibrary.svelte</code>, <code>src/story/screens/PreBattleScreen.svelte</code>, <code>src/shell/screens/FreePlayMatchSetup.svelte</code></td>
+</tr>
+<tr>
+<td>Component tests</td>
+<td><code>tests/component/deck-select/hover-previews.test.ts</code>, <code>tests/component/deck-editor/deck-library.test.ts</code>, <code>tests/component/story/pre-battle-deck-picker.test.ts</code>, <code>tests/component/FreePlayMatchSetup.test.ts</code></td>
+</tr>
+<tr>
+<td>Browser evidence</td>
+<td><code>e2e/deck-editor.spec.ts</code></td>
+</tr>
+<tr>
+<td>Durable docs</td>
+<td><code>artifacts/manual_test_checklist.md</code>, <code>docs/GLOSSARY.md</code></td>
+</tr>
+</tbody></table>
+<h2>Assumptions</h2>
+<h3>A1 — sequential in-place execution</h3>
+<p>Plan depended on dirty-tree prerequisite <code>src/decks/deck-cover.ts</code>; tickets formed strict T1→T2→T3 chain. Clean HEAD worktrees lacked prerequisite, offered no parallelism. Impl agents ran sequentially in main cwd.</p>
+<h3>A2 — owner WIP preserved</h3>
+<p>Pre-existing modified/untracked files stayed unstaged. Ticket hunks in already-modified host/docs files were staged surgically. No stash/reset/clean used.</p>
+<h3>A3 — push authorization</h3>
+<p><code>make-parallel-aron</code> required commit + push per ticket; commits pushed directly to <code>origin/main</code>.</p>
+<h3>A4 — minimal prerequisite commit</h3>
+<p>Untracked <code>src/decks/deck-cover.ts</code> included unrelated owner-WIP cover helpers. Commit <code>518c911</code> contains only ticket-required <code>croppedCardImageUrl</code>; extra helpers remain unstaged locally.</p>
+<h2>Residual risks</h2>
+<p>R1. Existing Svelte warning remains: <code>src/deck-editor/components/CardCatalog.svelte:320:6</code> — <code>&lt;div&gt;` with a mouseleave handler must have an ARIA role</code>. Pre-existing, out of scope.</p>
+<p>R2. Human checklist steps remain unchecked until owner performs manual checks; automated Chromium gate proves docked deck-editor row only.</p>
+<p>R3. Working tree remains dirty from owner WIP by design. No unrelated changes included in ticket commits.</p>
+<h2>User TODO</h2>
+<p>U1. Run new <code>Decklist row art</code> section in <code>artifacts/manual_test_checklist.md</code> when manual coverage desired.</p>
+<h2>Cleanup</h2>
+<p>C1. Retired plan index, ticket directory, prototype spec after preserving plan at <code>124e824</code>.</p>
+<p>C2. Removed orchestrator <code>.tmp</code> patches/snapshots and impl output artifact.</p>
+
+<footer class="artifact-footer">source: /home/aron/projects/ascencio</footer>
+</article>
+
+<script>
+(function () {
+  var slug = "decklist-row-art-final-implementation-report";
+  var es = new EventSource("/events");
+  es.addEventListener("reload", function (e) {
+    try { if (e.data === slug || e.data === "*") location.reload(); } catch (_) {}
+  });
+})();
+</script>
+</body>
+</html>

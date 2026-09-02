@@ -18,6 +18,42 @@ afterEach(async () =>
 );
 
 describe("deck history orchestration", () => {
+  it("persists illustration changes through Undo/Redo", async () => {
+    const name = "controller-illustration-history";
+    names.push(name);
+    const repo = await IndexedDbDeckRepository.open(name);
+    const controller = new DeckBuilderController(
+      repo,
+      catalogByCode(PROTOTYPE_CATALOG),
+      PROTOTYPE_RULESET,
+    );
+    await controller.initialize();
+    await controller.createDeck("Illustrated");
+    await controller.mutate({ type: "add", cardCode: 89631139 });
+
+    await controller.setIllustration(89631139);
+    expect(get(controller).current?.deck.illustrationCardCode).toBe(89631139);
+    expect(
+      (await repo.load(get(controller).current!.deck.id))?.deck
+        .illustrationCardCode,
+    ).toBe(89631139);
+
+    await controller.undo();
+    expect(get(controller).current?.deck.illustrationCardCode).toBeNull();
+    await controller.redo();
+    expect(get(controller).current?.deck.illustrationCardCode).toBe(89631139);
+
+    await controller.mutate({
+      type: "remove",
+      cardCode: 89631139,
+      zone: "main",
+    });
+    expect(get(controller).current?.deck.illustrationCardCode).toBeNull();
+    await controller.undo();
+    expect(get(controller).current?.deck.illustrationCardCode).toBe(89631139);
+    repo.close();
+  });
+
   it("retains 50 serialized updates and autosaves Undo/Redo", async () => {
     const name = "controller-history";
     names.push(name);

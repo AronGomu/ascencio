@@ -1,6 +1,7 @@
 import type { SelectableDeck } from "../../battle/index.ts";
 import type { DeckTileModel } from "../../deck-select/index.ts";
 import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
+import { deckCoverImageUrl } from "../../decks/deck-cover.ts";
 
 /** What free play knows about its decks beyond the decks themselves: the art
     a cover is drawn from, the stars kept in two places, and which AI owns
@@ -39,7 +40,13 @@ export function freePlayDeckTile(
   /* The Extra Deck's first card is the deck's face — it names the strategy in
      a way the first Main Deck card rarely does — and derived per listing, so a
      deck edited into another theme never keeps yesterday's cover. */
-  const cover = deck.lists.extra[0] ?? deck.lists.main[0] ?? null;
+  const displayedDate =
+    deck.updatedAt === null
+      ? new Date(`${__APP_BUILD_DATE__}T00:00:00.000Z`).toLocaleDateString(
+          undefined,
+          { timeZone: "UTC" },
+        )
+      : new Date(deck.updatedAt).toLocaleDateString();
   return {
     key: deck.key,
     name: deck.label,
@@ -48,14 +55,12 @@ export function freePlayDeckTile(
       extra: deck.lists.extra.length,
       side: deck.lists.side.length,
     },
-    /* A bundled deck is the only one with no stamp: it is compiled into this
-       build and was never saved at all. */
-    meta:
-      deck.updatedAt === null
-        ? "Bundled"
-        : `Updated ${new Date(deck.updatedAt).toLocaleDateString()}`,
-    coverImageUrl:
-      cover === null ? null : (context.catalog.get(cover)?.imageUrl ?? null),
+    /* Local decks show their last save; bundled decks show this app build. */
+    meta: `Updated ${displayedDate}`,
+    coverImageUrl: deckCoverImageUrl(
+      { ...deck.lists, illustrationCardCode: null },
+      context.catalog,
+    ),
     legal: true,
     blockReason: null,
     bundled: deck.source === "preset",

@@ -347,10 +347,20 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
       const before = state.current.deck;
       const importedNeedsReview =
         command.type === "import" ? true : before.importedNeedsReview;
+      const illustrationCardCode =
+        before.illustrationCardCode !== null &&
+        [
+          ...result.cards.main,
+          ...result.cards.extra,
+          ...result.cards.side,
+        ].includes(before.illustrationCardCode)
+          ? before.illustrationCardCode
+          : null;
       const nextDeck: DeckRecord = Object.freeze({
         ...before,
         ...result.cards,
         importedNeedsReview,
+        illustrationCardCode,
         validation: this.#validate({ ...result.cards, importedNeedsReview }),
       });
       /* Reorder and sort leave undo pointing at the last membership change so
@@ -366,7 +376,56 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
             reason: command.type,
             beforeImportedNeedsReview: before.importedNeedsReview,
             afterImportedNeedsReview: importedNeedsReview,
+            beforeIllustrationCardCode: before.illustrationCardCode,
+            afterIllustrationCardCode: illustrationCardCode,
           });
+      this.#appendAutosave(nextDeck);
+      await this.#save(nextDeck, nextHistory);
+    });
+  }
+
+  setIllustration(code: number | null): Promise<void> {
+    const contextGeneration = this.#contextGeneration;
+    const deckId = get(this.#state).current?.deck.id ?? null;
+    return this.#enqueue(async () => {
+      const current = get(this.#state).current;
+      if (
+        current === null ||
+        current.deck.id !== deckId ||
+        !this.#isCurrentContext(contextGeneration) ||
+        current.deck.illustrationCardCode === code
+      )
+        return;
+      if (
+        code !== null &&
+        ![
+          ...current.deck.main,
+          ...current.deck.extra,
+          ...current.deck.side,
+        ].includes(code)
+      ) {
+        this.#state.update((state) =>
+          Object.freeze({
+            ...state,
+            message: "Illustration card is not in deck.",
+          }),
+        );
+        return;
+      }
+      const nextDeck = Object.freeze({
+        ...current.deck,
+        illustrationCardCode: code,
+      });
+      const nextHistory = pushDeckUpdate(current.history, {
+        deckId: current.deck.id,
+        before: current.deck,
+        after: current.deck,
+        reason: "illustration",
+        beforeImportedNeedsReview: current.deck.importedNeedsReview,
+        afterImportedNeedsReview: current.deck.importedNeedsReview,
+        beforeIllustrationCardCode: current.deck.illustrationCardCode,
+        afterIllustrationCardCode: code,
+      });
       this.#appendAutosave(nextDeck);
       await this.#save(nextDeck, nextHistory);
     });
@@ -389,6 +448,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
         current.deck,
         result.cards,
         result.importedNeedsReview,
+        result.illustrationCardCode,
       );
       this.#appendAutosave(restored);
       await this.#save(restored, result.history);
@@ -412,6 +472,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
         current.deck,
         result.cards,
         result.importedNeedsReview,
+        result.illustrationCardCode,
       );
       this.#appendAutosave(restored);
       await this.#save(restored, result.history);
@@ -506,6 +567,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
         main: Object.freeze([...source.deck.main]),
         extra: Object.freeze([...source.deck.extra]),
         side: Object.freeze([...source.deck.side]),
+        illustrationCardCode: source.deck.illustrationCardCode,
         validation: this.#validate({
           ...source.deck,
           importedNeedsReview: false,
@@ -640,6 +702,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
         side: [...entry.side],
       },
     });
+    await this.setIllustration(entry.illustrationCardCode ?? null);
   }
 
   async preserveCurrentAsCopy(): Promise<void> {
@@ -658,6 +721,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
       main: Object.freeze([...current.deck.main]),
       extra: Object.freeze([...current.deck.extra]),
       side: Object.freeze([...current.deck.side]),
+      illustrationCardCode: current.deck.illustrationCardCode,
       validation: this.#validate({
         ...current.deck,
         importedNeedsReview: false,
@@ -700,6 +764,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
         main: [...deck.main],
         extra: [...deck.extra],
         side: [...deck.side],
+        illustrationCardCode: deck.illustrationCardCode,
       })
       .catch(() => undefined);
   }
@@ -791,11 +856,13 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
     deck: DeckRecord,
     cards: DeckCardLists,
     importedNeedsReview = deck.importedNeedsReview,
+    illustrationCardCode = deck.illustrationCardCode,
   ): DeckRecord {
     return Object.freeze({
       ...deck,
       ...cards,
       importedNeedsReview,
+      illustrationCardCode,
       validation: this.#validate({ ...cards, importedNeedsReview }),
     });
   }

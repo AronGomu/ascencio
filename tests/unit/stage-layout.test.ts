@@ -6,12 +6,12 @@ import {
 } from "../../src/shell/stage-layout.ts";
 
 describe("computeStageBox", () => {
-  it("1920x1080 is exact stage", () => {
+  it("1920x1080 keeps a margin around the stage", () => {
     expect(computeStageBox(1920, 1080)).toEqual({
-      width: 1920,
-      height: 1080,
-      offsetX: 0,
-      offsetY: 0,
+      width: 1891,
+      height: 1064,
+      offsetX: 14,
+      offsetY: 8,
       mode: "stage",
       rotated: false,
     });
@@ -20,36 +20,36 @@ describe("computeStageBox", () => {
   it("1920x1200 gets horizontal bars", () => {
     const box = computeStageBox(1920, 1200);
     expect(box.mode).toBe("stage");
-    expect(box.width).toBe(1920);
-    expect(box.height).toBe(1080);
-    expect(box.offsetX).toBe(0);
-    expect(box.offsetY).toBe(60);
+    expect(box.width).toBe(1904);
+    expect(box.height).toBe(1071);
+    expect(box.offsetX).toBe(8);
+    expect(box.offsetY).toBe(64);
   });
 
   it("1280x600 gets vertical bars", () => {
     const box = computeStageBox(1280, 600);
     expect(box.mode).toBe("stage");
-    expect(box.width).toBe(1066);
-    expect(box.height).toBe(600);
-    expect(box.offsetX).toBe(107);
-    expect(box.offsetY).toBe(0);
+    expect(box.width).toBe(1038);
+    expect(box.height).toBe(584);
+    expect(box.offsetX).toBe(121);
+    expect(box.offsetY).toBe(8);
   });
 
   it("1023x800 is mobile-landscape with a 16:9 box", () => {
     const box = computeStageBox(1023, 800);
     expect(box.mode).toBe("mobile-landscape");
-    expect(box.width).toBe(1023);
-    expect(box.height).toBe(575);
-    expect(box.offsetX).toBe(0);
-    expect(box.offsetY).toBe(112);
+    expect(box.width).toBe(1007);
+    expect(box.height).toBe(566);
+    expect(box.offsetX).toBe(8);
+    expect(box.offsetY).toBe(117);
   });
 
-  it("800x1000 is mobile-portrait filling the viewport", () => {
+  it("800x1000 is mobile-portrait inside the stage margin", () => {
     expect(computeStageBox(800, 1000)).toEqual({
-      width: 800,
-      height: 1000,
-      offsetX: 0,
-      offsetY: 0,
+      width: 784,
+      height: 984,
+      offsetX: 8,
+      offsetY: 8,
       mode: "mobile-portrait",
       rotated: true,
     });

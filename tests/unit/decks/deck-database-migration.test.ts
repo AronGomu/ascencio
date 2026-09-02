@@ -52,6 +52,7 @@ function deckRecord(id: string, revision = 1): DeckRecord {
       rulesetRevision: "prototype-2026-01",
     },
     importedNeedsReview: false,
+    illustrationCardCode: null,
   };
 }
 

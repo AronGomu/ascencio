@@ -15,6 +15,7 @@ test("MVP asset command runs every online acquisition and verification stage in 
       "syncDataScriptsAndStrings",
       "verifyDataScriptsAndStrings",
       "downloadCardImages",
+      "downloadCroppedCardImages",
       "verifyCardImages",
       "generateRuntimeSnapshot",
       "verifyRuntimeSnapshot",
@@ -28,7 +29,11 @@ test("offline MVP asset command performs no network image stage", () => {
   assert.deepEqual(stages[0]?.args, ["--offline"]);
   assert.deepEqual(stages[2]?.args, ["--offline"]);
   assert.equal(
-    stages.some((stage) => stage.name === "downloadCardImages"),
+    stages.some(
+      (stage) =>
+        stage.name === "downloadCardImages" ||
+        stage.name === "downloadCroppedCardImages",
+    ),
     false,
   );
   assert.equal(stages.at(-1)?.name, "verifyRuntimeSnapshot");

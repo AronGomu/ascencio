@@ -34,6 +34,12 @@ const cardArchive = resolveProjectSubpath(
   "generated",
   "card image archive",
 );
+const cropArchive = resolveProjectSubpath(
+  projectRoot,
+  "generated/card-images/archive/cropped",
+  "generated",
+  "cropped card image archive",
+);
 const setArchive = resolveProjectSubpath(
   projectRoot,
   "generated/set-images",
@@ -42,7 +48,9 @@ const setArchive = resolveProjectSubpath(
 );
 
 const cards: CardImageDigest[] = [];
+const crops: CardImageDigest[] = [];
 const missingCards: number[] = [];
+const missingCrops: number[] = [];
 for (const code of reviewedCardPool(await loadDeckSources())) {
   const filePath = path.join(cardArchive, `${code}.jpg`);
   if (!existsSync(filePath)) {
@@ -53,6 +61,16 @@ for (const code of reviewedCardPool(await loadDeckSources())) {
     code,
     bytes: (await stat(filePath)).size,
     sha256: await sha256File(filePath),
+  });
+  const cropPath = path.join(cropArchive, `${code}.jpg`);
+  if (!existsSync(cropPath)) {
+    missingCrops.push(code);
+    continue;
+  }
+  crops.push({
+    code,
+    bytes: (await stat(cropPath)).size,
+    sha256: await sha256File(cropPath),
   });
 }
 
@@ -77,7 +95,7 @@ for (const set of shop.sets) {
   });
 }
 
-const lock = buildImageContentLock(cards, sets);
+const lock = buildImageContentLock(cards, crops, sets);
 await writeFile(
   path.join(projectRoot, IMAGE_CONTENT_LOCK_FILE),
   `${JSON.stringify(lock, null, 2)}\n`,
@@ -87,11 +105,16 @@ await writeFile(
 console.log(
   JSON.stringify(
     {
-      status: missingCards.length || missingSets.length ? "partial" : "ok",
+      status:
+        missingCards.length || missingCrops.length || missingSets.length
+          ? "partial"
+          : "ok",
       lock: IMAGE_CONTENT_LOCK_FILE,
       cards: lock.cards.length,
+      crops: lock.crops.length,
       sets: lock.sets.length,
       missingCards: missingCards.sort((left, right) => left - right),
+      missingCrops: missingCrops.sort((left, right) => left - right),
       missingSets: missingSets.sort((left, right) => left.localeCompare(right)),
     },
     null,

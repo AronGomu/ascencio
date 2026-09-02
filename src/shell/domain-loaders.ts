@@ -87,6 +87,7 @@ export type StoryDomainProps = {
       route is the shell's to write — and this one unmounts the visual novel,
       so the story only asks once the run it would lose is on disk. */
   readonly ondecks?: () => void;
+  readonly onmainmenu?: () => void;
 };
 
 export interface DomainLoaders {

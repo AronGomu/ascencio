@@ -45,6 +45,11 @@
     code: number,
     zone: DeckZone,
     index: number,
+    request: {
+      readonly anchor: HTMLElement;
+      readonly x: number;
+      readonly y: number;
+    },
   ) => void = () => undefined;
 
   $: emptyCount = Math.max(0, plan.slots - codes.length);
@@ -143,7 +148,8 @@
               ondragcard={(event) => ondragcard(code, zone, index, event)}
               {ondragcancel}
               onhover={() => onhovercard(code)}
-              oncontext={() => oncontextremove(code, zone, index)}
+              oncontext={(request) =>
+                oncontextremove(code, zone, index, request)}
             />
           </div>
         {/each}

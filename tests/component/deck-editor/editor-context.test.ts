@@ -164,17 +164,12 @@ describe("deck editor context binding", () => {
     expect(names).not.toContain("Free Deck One");
   });
 
-  it("banner names the context", async () => {
+  it("omits the free-play context row but names the story save", async () => {
     await seedFreePlayDeck("free-one", "Free Deck One");
     renderAt("#/free-play/decks");
 
-    await vi.waitFor(
-      () => expect(query("deck-editor-context-banner")).not.toBeNull(),
-      REAL_IMPORT,
-    );
-    expect(query("deck-editor-context-banner")?.textContent).toContain(
-      "Free Play",
-    );
+    await libraryDeckNames();
+    expect(query("deck-editor-context-banner")).toBeNull();
 
     cleanup();
     renderAt("#/story/decks", storySave(["saved-one"]));
@@ -270,8 +265,6 @@ describe("deck editor context binding", () => {
       expect(await libraryDeckNames()).toContain("Free Deck One");
     }, REAL_IMPORT);
     expect(await libraryDeckNames()).not.toContain("Deck saved-one");
-    expect(query("deck-editor-context-banner")?.textContent).toContain(
-      "Free Play",
-    );
+    expect(query("deck-editor-context-banner")).toBeNull();
   });
 });

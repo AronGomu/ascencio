@@ -22,6 +22,16 @@ afterEach(async () => {
 
 describe("starring a deck", () => {
   it("calls onfavourite with the new state when the star button is clicked", async () => {
+    const repository = await IndexedDbDeckRepository.open();
+    const controller = new DeckBuilderController(
+      repository,
+      prototypeCatalogMap,
+      PROTOTYPE_RULESET,
+    );
+    await controller.initialize();
+    await controller.createDeck("Star Target");
+    repository.close();
+
     render(DeckEditorApp, { deckId: null, onnavigate: vi.fn() });
     await waitFor(() =>
       expect(document.querySelector('[data-cy="deck-library"]')).not.toBeNull(),

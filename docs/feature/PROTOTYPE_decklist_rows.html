@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE decklist rows — copy-count placement (Variant A locked)</title>
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#14161a; --panel:#1c1f25; --fg:#e8e9ec; --muted:#9aa0ab; --border:#2c313a;
+    --row-h: 30px; --border-w: 5px; --art-fade: 38%; --art-opacity: 0.6; --tint-alpha: 0.2;
+    --c-normal:#b8985a; --c-effect:#c26a3d; --c-ritual:#4a6fb5; --c-fusion:#8a63b0;
+    --c-synchro:#c9c9c9; --c-xyz:#4a4a55; --c-link:#1d6ea8; --c-spell:#1d9e74; --c-trap:#bc5a84;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.4 system-ui,sans-serif;}
+  header.q{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;color:var(--muted)}
+  header.q b{color:var(--fg)}
+  .stage{display:flex;justify-content:center;padding:24px 16px 120px}
+  .panel{width:340px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;max-height:78vh;overflow:auto}
+  h3{margin:14px 0 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  h3:first-child{margin-top:0}
+  ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+  .row{position:relative;display:flex;align-items:center;height:var(--row-h);border-radius:5px;overflow:hidden;
+       background:#22252c;border-left:var(--border-w) solid var(--fc);cursor:default}
+  .art{position:absolute;inset:0;z-index:0;background-image:var(--img);background-size:cover;background-position:center 20%;opacity:var(--art-opacity)}
+  .fade{position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,#22252c 0%,#22252ccc var(--art-fade),#22252c00 100%)}
+  .name{position:relative;z-index:2;padding:0 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;
+        text-shadow:0 1px 2px rgba(0,0,0,.8)}
+  .row:hover{filter:brightness(1.15)}
+  .cp{position:relative;z-index:2;flex:none}
+  /* right-justified variants: cp hugs the right edge whatever the name length */
+  .right .cp{margin-left:auto}
+
+
+  /* V2L1 — full-height dark cell, flush left after border */
+  .v2L1 .cp{order:-1;align-self:stretch;display:flex;align-items:center;justify-content:center;min-width:24px;
+          background:#000a;
+          font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;color:#e8e9ec}
+  .v2L1 .name{padding-left:6px}
+  /* reserve the cell even for singles so names align */
+  .v2L1 .cp.empty{background:#0006}
+
+
+</style>
+</head>
+<body>
+<header class="q"><b>Frozen prototype</b> — approved decklist row: Variant A art-strip background + 2L1 left copy cell. Params locked in :root. Art paths mock the runtime cropped-image cache.</header>
+
+<div class="stage"><div class="panel" id="panel"></div></div>
+
+  <button id="next">→</button>
+</div>
+
+<script>
+const DECK = {"main": [{"code": 3717252, "name": "Shaddoll Beast", "frame": "effect"}, {"code": 3717252, "name": "Shaddoll Beast", "frame": "effect"}, {"code": 77723643, "name": "Shaddoll Dragon", "frame": "effect"}, {"code": 77723643, "name": "Shaddoll Dragon", "frame": "effect"}, {"code": 37445295, "name": "Shaddoll Falco", "frame": "effect"}, {"code": 37445295, "name": "Shaddoll Falco", "frame": "effect"}, {"code": 4939890, "name": "Shaddoll Hedgehog", "frame": "effect"}, {"code": 4939890, "name": "Shaddoll Hedgehog", "frame": "effect"}, {"code": 30328508, "name": "Shaddoll Squamata", "frame": "effect"}, {"code": 30328508, "name": "Shaddoll Squamata", "frame": "effect"}, {"code": 41386308, "name": "Mathematician", "frame": "effect"}, {"code": 41386308, "name": "Mathematician", "frame": "effect"}, {"code": 41386308, "name": "Mathematician", "frame": "effect"}, {"code": 85087012, "name": "Card Trooper", "frame": "effect"}, {"code": 85087012, "name": "Card Trooper", "frame": "effect"}, {"code": 23434538, "name": "Maxx \"C\"", "frame": "effect"}, {"code": 23434538, "name": "Maxx \"C\"", "frame": "effect"}, {"code": 97268402, "name": "Effect Veiler", "frame": "effect"}, {"code": 97268402, "name": "Effect Veiler", "frame": "effect"}, {"code": 44394295, "name": "Shaddoll Fusion", "frame": "spell"}, {"code": 44394295, "name": "Shaddoll Fusion", "frame": "spell"}, {"code": 44394295, "name": "Shaddoll Fusion", "frame": "spell"}, {"code": 48130397, "name": "Super Polymerization", "frame": "spell"}, {"code": 48130397, "name": "Super Polymerization", "frame": "spell"}, {"code": 81439173, "name": "Foolish Burial", "frame": "spell"}, {"code": 70368879, "name": "Upstart Goblin", "frame": "spell"}, {"code": 53129443, "name": "Dark Hole", "frame": "spell"}, {"code": 14087893, "name": "Book of Moon", "frame": "spell"}, {"code": 14087893, "name": "Book of Moon", "frame": "spell"}, {"code": 77505534, "name": "Sinister Shadow Games", "frame": "trap"}, {"code": 77505534, "name": "Sinister Shadow Games", "frame": "trap"}, {"code": 77505534, "name": "Sinister Shadow Games", "frame": "trap"}, {"code": 4904633, "name": "Shaddoll Core", "frame": "trap"}, {"code": 4904633, "name": "Shaddoll Core", "frame": "trap"}, {"code": 53582587, "name": "Torrential Tribute", "frame": "trap"}, {"code": 44095762, "name": "Mirror Force", "frame": "trap"}, {"code": 44095762, "name": "Mirror Force", "frame": "trap"}, {"code": 5851097, "name": "Vanity's Emptiness", "frame": "trap"}, {"code": 5851097, "name": "Vanity's Emptiness", "frame": "trap"}, {"code": 84749824, "name": "Solemn Warning", "frame": "trap"}], "extra": [{"code": 20366274, "name": "El Shaddoll Construct", "frame": "fusion"}, {"code": 20366274, "name": "El Shaddoll Construct", "frame": "fusion"}, {"code": 20366274, "name": "El Shaddoll Construct", "frame": "fusion"}, {"code": 94977269, "name": "El Shaddoll Winda", "frame": "fusion"}, {"code": 94977269, "name": "El Shaddoll Winda", "frame": "fusion"}, {"code": 94977269, "name": "El Shaddoll Winda", "frame": "fusion"}, {"code": 74822425, "name": "El Shaddoll Shekhinaga", "frame": "fusion"}, {"code": 74822425, "name": "El Shaddoll Shekhinaga", "frame": "fusion"}, {"code": 48424886, "name": "El Shaddoll Grysta", "frame": "fusion"}, {"code": 48424886, "name": "El Shaddoll Grysta", "frame": "fusion"}, {"code": 74009824, "name": "El Shaddoll Wendigo", "frame": "fusion"}, {"code": 74009824, "name": "El Shaddoll Wendigo", "frame": "fusion"}, {"code": 71594310, "name": "Gem-Knight Pearl", "frame": "xyz"}, {"code": 48739166, "name": "Number 101: Silent Honor ARK", "frame": "xyz"}, {"code": 21044178, "name": "Abyss Dweller", "frame": "xyz"}], "side": []};
+const ART = c => `../generated/card-images/archive/cropped/${c}.jpg`;
+const variant = "2L1";
+
+function grouped(rows){
+  const out=[];
+  for(const r of rows){
+    const seen=out.find(e=>e.code===r.code);
+    if(seen) seen.copies++;
+    else out.push({...r,copies:1});
+  }
+  return out;
+}
+function copiesMarkup(n){
+  const single = n<2;
+  return `<span class="cp${single?' empty':''}">${single?"":n}</span>`;
+}
+function render(){
+  const panel=document.getElementById("panel");
+  const right = variant==="1"||variant==="2R"||variant==="3";
+  panel.className="panel v"+variant+(right?" right":"");
+  let html="";
+  for(const [id,label] of [["main","Main"],["extra","Extra"],["side","Side"]]){
+    if(!DECK[id].length) continue;
+    html+=`<h3>${label} (${DECK[id].length})</h3><ul>`;
+    for(const r of grouped(DECK[id])){
+      html+=`<li class="row" style="--fc:var(--c-${r.frame});--img:url('${ART(r.code)}')">`+
+        `<span class="art"></span><span class="fade"></span>`+
+        `<span class="name">${r.name}</span>${copiesMarkup(r.copies)}</li>`;
+    }
+    html+="</ul>";
+  }
+  panel.innerHTML=html;
+}
+function step(d){ variant=ORDER[(ORDER.indexOf(variant)+d+ORDER.length)%ORDER.length]; render(); }
+render();
+</script>
+</body>
+</html>

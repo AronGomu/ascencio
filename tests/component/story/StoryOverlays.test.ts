@@ -125,7 +125,7 @@ describe("story utility overlays", () => {
       "Save",
       "Load",
       "Settings",
-      "Return to Title",
+      "Return to Main Menu",
     ])
       expect(screen.getByRole("button", { name })).toBeTruthy();
     const user = userEvent.setup();
@@ -138,17 +138,23 @@ describe("story utility overlays", () => {
       await user.click(screen.getByRole("button", { name: button }));
       expect(onaction).toHaveBeenCalledWith(action);
     }
-    await user.click(screen.getByRole("button", { name: "Return to Title" }));
+    await user.click(
+      screen.getByRole("button", { name: "Return to Main Menu" }),
+    );
     expect(
-      screen.getByRole("alertdialog", { name: "Return without saving?" }),
+      screen.getByRole("alertdialog", {
+        name: "Return to Main Menu without saving?",
+      }),
     ).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "Stay in story" }));
-    expect(onaction).not.toHaveBeenCalledWith("title");
-    await user.click(screen.getByRole("button", { name: "Return to Title" }));
+    expect(onaction).not.toHaveBeenCalledWith("main-menu");
+    await user.click(
+      screen.getByRole("button", { name: "Return to Main Menu" }),
+    );
     await user.click(
       screen.getByRole("button", { name: "Return without saving" }),
     );
-    expect(onaction).toHaveBeenCalledWith("title");
+    expect(onaction).toHaveBeenCalledWith("main-menu");
   });
 
   it.each(["success", "overwrite", "failure"] as const)(

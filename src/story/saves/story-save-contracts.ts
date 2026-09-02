@@ -460,6 +460,9 @@ export function isStoryDeck(value: unknown): boolean {
     typeof deck.createdAt === "string" &&
     typeof deck.updatedAt === "string" &&
     typeof deck.importedNeedsReview === "boolean" &&
+    (deck.illustrationCardCode === undefined ||
+      deck.illustrationCardCode === null ||
+      isCount(deck.illustrationCardCode)) &&
     isCardCodeList(deck.main) &&
     isCardCodeList(deck.extra) &&
     isCardCodeList(deck.side) &&

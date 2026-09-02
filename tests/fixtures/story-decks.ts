@@ -37,6 +37,7 @@ export function storyDeckFixture(
     side: [],
     validation: VALIDATION,
     importedNeedsReview: false,
+    illustrationCardCode: null,
     ...overrides,
   };
 }

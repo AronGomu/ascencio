@@ -112,7 +112,10 @@ describe("DeckSelectScreen seat panel", () => {
     );
 
     const yours = cy("duel-start-your-deck");
-    expect(inside(yours, "deck-tile-yours-k1").classList).toContain("halo-you");
+    expect(yours.getAttribute("aria-pressed")).toBe("true");
+    expect(inside(yours, "deck-tile-yours-k1").classList).toContain(
+      "halo-focus",
+    );
   });
 
   it("panel absent in library mode", async () => {
@@ -154,7 +157,7 @@ describe("DeckSelectScreen seat panel", () => {
   it("locked opponent has no controls", async () => {
     render(
       DeckSelectScreen,
-      props({ opponent: STORY_OPPONENT, opponents: [] }),
+      props({ opponent: STORY_OPPONENT, opponents: [], seat: "opponent" }),
     );
 
     const portrait = cy("duel-start-opponent-portrait");
@@ -164,13 +167,17 @@ describe("DeckSelectScreen seat panel", () => {
     await userEvent.setup().click(portrait);
     expect(find("duel-start-opponent-picker")).toBeNull();
 
-    expect(cy("duel-start-opponent-deck").tagName).toBe("DIV");
+    const deck = cy("duel-start-opponent-deck");
+    expect(deck.tagName).toBe("DIV");
+    const lockedTile = inside(deck, "deck-tile-opponent-o1");
+    expect(lockedTile.classList).toContain("halo-opponent");
+    expect(lockedTile.classList).not.toContain("halo-focus");
     expect(cy("duel-start-opponent-deck-locked").textContent).toBe(
       "🔒 Set by the story",
     );
   });
 
-  it("opponent deck card toggles seat", async () => {
+  it("opponent deck card toggles seat and moves the orange update halo", async () => {
     const values = handlers();
     const base = props({ ...values, seat: "player" });
     const { rerender } = render(DeckSelectScreen, base);
@@ -182,11 +189,16 @@ describe("DeckSelectScreen seat panel", () => {
     /* The host owns the seat, so the screen only reports the press; the
        second press returns to picking for yourself once it has. */
     await rerender({ ...base, seat: "opponent" });
-    expect(cy("duel-start-opponent-deck").getAttribute("aria-pressed")).toBe(
-      "true",
+    const theirs = cy("duel-start-opponent-deck");
+    const yours = cy("duel-start-your-deck");
+    expect(theirs.getAttribute("aria-pressed")).toBe("true");
+    expect(yours.getAttribute("aria-pressed")).toBe("false");
+    expect(inside(theirs, "deck-tile-opponent-o1").classList).toContain(
+      "halo-focus",
     );
+    expect(inside(yours, "deck-tile-yours-k1").classList).toContain("halo-you");
 
-    await user.click(cy("duel-start-opponent-deck"));
+    await user.click(theirs);
     expect(values.onseat).toHaveBeenLastCalledWith("player");
   });
 

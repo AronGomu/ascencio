@@ -363,6 +363,80 @@ test("the root route shows the main menu without booting the duel", async ({
   expect(new URL(page.url()).hash).toBe("#/free-play/decks");
 });
 
+test("free-play deck tiles keep names and info inside card bounds", async ({
+  page,
+}) => {
+  await page.goto("./#/free-play");
+
+  const tile = page.locator('[data-cy="deck-tile-preset:mvp-player"]');
+  await expect(tile).toBeVisible({ timeout: 120_000 });
+  const art = tile.locator("img.art");
+  await expect(art).toHaveCount(1, { timeout: 120_000 });
+  await expect
+    .poll(() =>
+      art.evaluate(
+        (image) =>
+          image instanceof HTMLImageElement &&
+          image.complete &&
+          image.naturalWidth > 0,
+      ),
+    )
+    .toBe(true);
+
+  const tileBox = await tile.boundingBox();
+  expect(tileBox).not.toBeNull();
+  for (const part of ["name", "counts", "meta"]) {
+    const box = await tile
+      .locator(`[data-cy="deck-tile-${part}-preset:mvp-player"]`)
+      .boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.y).toBeGreaterThanOrEqual(tileBox!.y);
+    expect(box!.y + box!.height).toBeLessThanOrEqual(
+      tileBox!.y + tileBox!.height,
+    );
+  }
+});
+
+test("free-play deck grid adds columns and fills tracks from available width", async ({
+  page,
+}) => {
+  async function gridMetrics(): Promise<{
+    readonly columns: readonly number[];
+    readonly tileWidth: number;
+  }> {
+    return page.locator('[data-cy="deck-select-grid"]').evaluate((grid) => {
+      const firstTile = grid.firstElementChild;
+      if (!(firstTile instanceof HTMLElement))
+        throw new Error("Deck grid has no tile");
+      return {
+        columns: getComputedStyle(grid)
+          .gridTemplateColumns.split(" ")
+          .map(Number.parseFloat),
+        tileWidth: firstTile.getBoundingClientRect().width,
+      };
+    });
+  }
+
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await page.goto("./#/free-play");
+  await expect(page.locator('[data-cy="deck-select-grid"]')).toBeVisible({
+    timeout: 120_000,
+  });
+  const narrower = await gridMetrics();
+
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  const wider = await gridMetrics();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const phone = await gridMetrics();
+
+  expect(wider.columns.length).toBeGreaterThan(narrower.columns.length);
+  expect(phone.columns).toHaveLength(1);
+  expect(narrower.tileWidth).toBeCloseTo(narrower.columns[0]!, 0);
+  expect(wider.tileWidth).toBeCloseTo(wider.columns[0]!, 0);
+  expect(phone.tileWidth).toBeCloseTo(phone.columns[0]!, 0);
+});
+
 test("production bundle initializes the real Worker and sends one opaque choice once", async ({
   page,
 }) => {

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { tick } from "svelte";
+  import { getContext, tick } from "svelte";
   import { handleModalKeydown } from "../focus-trap.ts";
   import {
     DeckSelectScreen,
@@ -12,6 +12,7 @@
   import type { DeckId, DeckRecord } from "../../decks/deck-contracts.ts";
   import { MAXIMUM_DECK_NAME_LENGTH } from "../../decks/deck-model.ts";
   import { deckLibraryTiles } from "./deck-library-tiles.ts";
+  import { TOAST_CONTEXT_KEY, type ToastPublisher } from "../../shell/index.ts";
 
   export let decks: readonly DeckRecord[];
   /** Every card this build packages, for the tile covers and for naming the
@@ -51,7 +52,17 @@
   let dialogInput: HTMLInputElement;
   let dialogOpener: HTMLElement | null = null;
   let dialogBusy = false;
+  let toastedMessage: string | null = null;
+  const toasts = getContext<ToastPublisher | undefined>(TOAST_CONTEXT_KEY);
 
+  $: if (message !== null && message !== toastedMessage) {
+    // eslint-disable-next-line no-useless-assignment -- retained across reactive runs
+    toastedMessage = message;
+    toasts?.show({ message, tone: "warning" });
+  } else if (message === null) {
+    // eslint-disable-next-line no-useless-assignment -- retained across reactive runs
+    toastedMessage = null;
+  }
   $: createNameDuplicate = decks.some(
     (deck) =>
       createName.trim().length > 0 &&
@@ -147,7 +158,11 @@
 </script>
 
 <section class="library" data-cy="deck-library">
-  {#if message}<p class="message" role="status" data-cy="deck-library-message">
+  {#if message && toasts === undefined}<p
+      class="message"
+      role="status"
+      data-cy="deck-library-message"
+    >
       {message}
     </p>{/if}
 
@@ -289,13 +304,12 @@
 {/if}
 
 <style>
-  /* The 1.5rem context banner `DeckEditorApp` renders above it, so the library
-     ends exactly at the bottom of the stage and the deck grid — not the
-     region — is what scrolls. */
+  /* Free play has no context row, so the library owns the full stage. The
+     story banner's parent rule subtracts its fixed height when present. */
   .library {
     display: flex;
     width: 100%;
-    height: calc(var(--stage-h, 100svh) - 1.5rem);
+    height: var(--stage-h, 100svh);
     flex-direction: column;
     gap: var(--space-3);
     padding: var(--space-3);

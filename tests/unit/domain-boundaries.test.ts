@@ -394,6 +394,7 @@ describe("public domain APIs are frozen", () => {
         "STAGE_ASPECT_WIDTH",
         "STAGE_BREAKPOINT_PX",
         "STAGE_CONTEXT_KEY",
+        "TOAST_CONTEXT_KEY",
         "computeStageBox",
         "selectStageMode",
       ],
@@ -402,6 +403,9 @@ describe("public domain APIs are frozen", () => {
         "CardPreviewView",
         "StageBox",
         "StageMode",
+        "ToastPublisher",
+        "ToastRequest",
+        "ToastTone",
       ],
     },
   ] as const;

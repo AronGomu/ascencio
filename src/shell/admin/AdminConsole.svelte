@@ -66,6 +66,7 @@
             rulesetRevision: PROTOTYPE_RULESET.revision,
           },
           importedNeedsReview: false,
+          illustrationCardCode: null,
         },
         emptyDeckHistory(),
       );

@@ -112,14 +112,6 @@
      copy completes, or a second editor session would write into the database
      the next attempt is about to overwrite. */
   let migrationError: DeckMigrationError | null = null;
-  /* What the banner says. Free play is named by this file because the name is
-     presentation; a save names itself, because only the story knows which one
-     the player is in. */
-  $: contextLabel =
-    context.kind === "free-play"
-      ? "Free Play library"
-      : `Story save: ${context.label}`;
-
   /* Applying the route reads IndexedDB, so it is watched here rather than
      from a reactive statement: `routing` keeps one application in flight and
      the tail re-checks a `deckId` that moved while storage was answering. */
@@ -273,13 +265,13 @@
   <title>Deck Editor · YGO Story Duel Simulator</title>
 </svelte:head>
 
-<!-- Which world is being edited, on screen wherever the editor is: the two deck
-     libraries look alike, and a player who cannot tell them apart cannot tell
-     where a deck they just built went. Rendered once here rather than in the
-     library and the deck page, so one document never carries two of it. -->
-<p class="context-banner" data-cy="deck-editor-context-banner">
-  {contextLabel}
-</p>
+{#if context.kind === "story"}
+  <!-- Story decks belong to one save, so that context stays visible. Free play
+       is already named by its route and keeps no redundant banner row. -->
+  <p class="context-banner" data-cy="deck-editor-context-banner">
+    Story save: {context.label}
+  </p>
+{/if}
 
 {#if migrationError !== null}
   <main class="loading error" role="alert" data-cy="deck-migration-error">
@@ -358,6 +350,7 @@
     onlibrary={() => void runAndSync(controller?.showLibrary())}
     onrename={(name) => void controller?.rename(name)}
     onmutate={(command) => controller?.mutate(command)}
+    onsetillustration={(code) => controller?.setIllustration(code)}
     onundo={() => void controller?.undo()}
     onredo={() => void controller?.redo()}
     onretrysave={() => void controller?.retrySave()}
@@ -422,9 +415,8 @@
     overflow-x: hidden;
   }
 
-  /* A fixed 1.5rem: `DeckEditor.svelte` sizes its workspace against the stage
-     minus everything above it, so this bar has to be a height that file can
-     count rather than one that follows the text. */
+  /* A fixed 1.5rem: story screens reserve exactly this row; free play renders
+     neither the banner nor its space. */
   .context-banner {
     display: flex;
     align-items: center;
@@ -433,6 +425,14 @@
     padding-inline: 0.5rem;
     color: var(--muted);
     font-size: 0.72rem;
+  }
+
+  .context-banner + :global(.library) {
+    height: calc(var(--stage-h, 100svh) - 1.5rem);
+  }
+
+  .context-banner ~ :global(.editor-layout) {
+    --deck-editor-header-h: 6.25rem;
   }
 
   .loading {

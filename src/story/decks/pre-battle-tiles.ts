@@ -13,6 +13,7 @@
 import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
 import type { DeckTileModel } from "../../deck-select/index.ts";
 import type { StoryDeck } from "../model/story-state.ts";
+import { deckCoverImageUrl } from "../../decks/deck-cover.ts";
 import type { PreBattleDeckOption } from "./pre-battle-decks.ts";
 
 /** What the briefing knows about the save beyond the one deck being drawn. */
@@ -20,17 +21,6 @@ export interface PreBattleTileContext {
   readonly catalog: ReadonlyMap<number, DeckBuilderCardView>;
   readonly favouriteDeckIds: readonly string[];
   readonly defaultDeckId: string | null;
-}
-
-/* Derived rather than stored, the same rule the duel's own picker follows: a
-   deck edited into a different theme never keeps yesterday's face. */
-function coverImage(
-  record: StoryDeck,
-  catalog: ReadonlyMap<number, DeckBuilderCardView>,
-): string | null {
-  const code = record.extra[0] ?? record.main[0];
-  if (code === undefined) return null;
-  return catalog.get(code)?.imageUrl ?? null;
 }
 
 export function preBattleDeckTile(
@@ -51,7 +41,7 @@ export function preBattleDeckTile(
        it is, because a save's decks are the save's rather than bundled. */
     meta: option.issue ?? "Save deck",
     coverImageUrl:
-      record === undefined ? null : coverImage(record, context.catalog),
+      record === undefined ? null : deckCoverImageUrl(record, context.catalog),
     legal: option.legal,
     blockReason: option.issue,
     bundled: false,

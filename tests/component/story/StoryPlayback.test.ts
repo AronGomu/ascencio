@@ -43,11 +43,7 @@ async function runPlayback(totalMs: number, stepMs = 60): Promise<void> {
 async function startNewGame(): Promise<ReturnType<typeof userEvent.setup>> {
   const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
   render(StoryApp);
-  await waitFor(() =>
-    expect(screen.getByRole("button", { name: "New Game" })).toBeTruthy(),
-  );
-  await user.click(screen.getByRole("button", { name: "New Game" }));
-  expect(screen.getByText(/Rain turned/)).toBeTruthy();
+  await waitFor(() => expect(screen.getByText(/Rain turned/)).toBeTruthy());
   return user;
 }
 

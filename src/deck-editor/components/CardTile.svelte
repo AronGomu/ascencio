@@ -17,7 +17,13 @@
   export let ondragcard: (event: DragEvent) => void = () => undefined;
   export let ondragcancel: () => void = () => undefined;
   export let onhover: (() => void) | null = null;
-  export let oncontext: (() => void) | null = null;
+  export let oncontext:
+    | ((request: {
+        readonly anchor: HTMLElement;
+        readonly x: number;
+        readonly y: number;
+      }) => void)
+    | null = null;
   export let maxed = false;
   /* The id of an element saying why this tile can take no further copy. The
      red `maxed` border is the sighted signal; this is the same fact for a
@@ -47,6 +53,16 @@
         : limit === 2
           ? "Semi-Limited"
           : "Unlimited";
+
+  function openContext(anchor: HTMLElement, x: number, y: number): void {
+    if (oncontext === null) return;
+    const bounds = anchor.getBoundingClientRect();
+    oncontext({
+      anchor,
+      x: x || bounds.left,
+      y: y || bounds.bottom,
+    });
+  }
 </script>
 
 <button
@@ -70,7 +86,16 @@
   oncontextmenu={(event) => {
     if (oncontext !== null) {
       event.preventDefault();
-      oncontext();
+      openContext(event.currentTarget, event.clientX, event.clientY);
+    }
+  }}
+  onkeydown={(event) => {
+    if (
+      oncontext !== null &&
+      (event.key === "ContextMenu" || (event.shiftKey && event.key === "F10"))
+    ) {
+      event.preventDefault();
+      openContext(event.currentTarget, 0, 0);
     }
   }}
 >

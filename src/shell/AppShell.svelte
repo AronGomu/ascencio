@@ -7,7 +7,9 @@
   } from "./domain-loaders.ts";
   import { createHandoffCoordinator } from "./handoff/handoff-coordinator.ts";
   import { storyBattleRequest } from "./handoff/story-battle-request.ts";
-  import { STAGE_CONTEXT_KEY } from "./index.ts";
+  import { STAGE_CONTEXT_KEY, TOAST_CONTEXT_KEY } from "./index.ts";
+  import ToastHost from "./toast/ToastHost.svelte";
+  import { createToastStore } from "./toast/toast-store.ts";
   import {
     collectionRoute,
     deckRoute,
@@ -408,6 +410,8 @@
      mirrors it for domains and for `data-stage-mode`. */
   const stageBox = writable<StageBox>(readViewportBox());
   setContext(STAGE_CONTEXT_KEY, readonly(stageBox));
+  const toasts = createToastStore();
+  setContext(TOAST_CONTEXT_KEY, toasts);
   let box: StageBox;
   const unsubscribeStage = stageBox.subscribe((value) => {
     box = value;
@@ -416,6 +420,9 @@
   onMount(() => {
     const syncFromLocation = () => store.syncFromHash(globalThis.location.hash);
     globalThis.addEventListener("hashchange", syncFromLocation);
+    const syncVisibility = () => toasts.setPageHidden(document.hidden);
+    document.addEventListener("visibilitychange", syncVisibility);
+    syncVisibility();
 
     const measure = () => stageBox.set(readViewportBox());
     measure();
@@ -433,6 +440,8 @@
       observer?.disconnect();
       globalThis.removeEventListener("resize", measure);
       globalThis.removeEventListener("hashchange", syncFromLocation);
+      document.removeEventListener("visibilitychange", syncVisibility);
+      toasts.destroy();
       unsubscribeStage();
       unsubscribe();
     };
@@ -532,6 +541,7 @@
           onencounter={startEncounter}
           {storyEntryIntent}
           ondecks={() => store.navigate(deckRoute("story", null))}
+          onmainmenu={() => store.navigate(HOME_ROUTE)}
           resumeState={handback?.state ?? null}
           resolution={handback?.resolution ?? null}
           onhandled={() => {
@@ -604,4 +614,5 @@
       {/if}
     </div>
   {/if}
+  <ToastHost store={toasts} />
 </div>

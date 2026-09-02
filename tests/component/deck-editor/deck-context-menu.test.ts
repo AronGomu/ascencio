@@ -57,6 +57,7 @@ function stateWith(mainCount: number, sideCount: number): DeckBuilderState {
 function props(
   onmutate: (command: DeckCommand) => void,
   state = stateFixture(0),
+  onsetillustration = vi.fn<(code: number) => void>(),
 ) {
   return {
     state,
@@ -66,6 +67,7 @@ function props(
     onlibrary: vi.fn(),
     onrename: vi.fn(),
     onmutate,
+    onsetillustration,
     onundo: vi.fn(),
     onredo: vi.fn(),
     onretrysave: vi.fn(),
@@ -75,22 +77,55 @@ function props(
 }
 
 describe("context-menu deck editing", () => {
-  it("right-click on a main-deck card removes one copy", async () => {
+  it("right-click opens card actions and sets the card as illustration", async () => {
     const onmutate = vi.fn<(command: DeckCommand) => void>();
-    const { container } = render(DeckEditor, props(onmutate, stateFixture(1)));
+    const onsetillustration = vi.fn<(code: number) => void>();
+    const state = stateFixture(1);
+    const code = state.current!.deck.main[0]!;
+    const { container } = render(
+      DeckEditor,
+      props(onmutate, state, onsetillustration),
+    );
     const deckCard = container.querySelector(
       '[data-cy="deck-slot-main-0"] button',
     )!;
-    await fireEvent.contextMenu(deckCard);
-    expect(onmutate).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "remove", zone: "main" }),
+
+    await fireEvent.contextMenu(deckCard, { clientX: 40, clientY: 60 });
+    expect(onmutate).not.toHaveBeenCalled();
+    expect(
+      container.querySelector('[data-cy="deck-card-context-menu"]'),
+    ).not.toBeNull();
+
+    await fireEvent.click(
+      container.querySelector(
+        '[data-cy="deck-card-context-set-illustration"]',
+      )!,
     );
+    expect(onsetillustration).toHaveBeenCalledWith(code);
   });
 
-  /* The left-click path already carries the index. Right-click did not, so it
-     removed the first copy of a repeated card rather than the one under the
-     pointer, and the clicked tile stayed on screen. */
-  it("right-click on the third tile of a repeated card removes that copy", async () => {
+  it("Shift+F10 opens card actions and Escape restores tile focus", async () => {
+    const { container } = render(DeckEditor, props(vi.fn(), stateFixture(1)));
+    const deckCard = container.querySelector(
+      '[data-cy="deck-slot-main-0"] button',
+    ) as HTMLButtonElement;
+    deckCard.focus();
+
+    await fireEvent.keyDown(deckCard, { key: "F10", shiftKey: true });
+    expect(
+      container.querySelector('[data-cy="deck-card-context-menu"]'),
+    ).not.toBeNull();
+    await fireEvent.keyDown(
+      container.querySelector('[data-cy="deck-card-context-menu"]')!,
+      { key: "Escape" },
+    );
+    expect(
+      container.querySelector('[data-cy="deck-card-context-menu"]'),
+    ).toBeNull();
+    expect(document.activeElement).toBe(deckCard);
+  });
+
+  it("context-menu removal still targets the clicked repeated copy", async () => {
     const onmutate = vi.fn<(command: DeckCommand) => void>();
     const repeated = MAIN_LIMIT_3_CODES[0]!;
     const { container } = render(
@@ -102,6 +137,9 @@ describe("context-menu deck editing", () => {
     );
     await fireEvent.contextMenu(
       container.querySelector('[data-cy="deck-slot-main-2"] button')!,
+    );
+    await fireEvent.click(
+      container.querySelector('[data-cy="deck-card-context-remove"]')!,
     );
     expect(onmutate).toHaveBeenCalledWith({
       type: "remove",

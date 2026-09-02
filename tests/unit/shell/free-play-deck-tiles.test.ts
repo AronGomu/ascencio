@@ -84,7 +84,9 @@ describe("freePlayDeckTile", () => {
     expect(tile.key).toBe("preset:shaddoll");
     expect(tile.name).toBe(SHADDOLL.label);
     expect(tile.bundled).toBe(true);
-    expect(tile.meta).toBe("Bundled");
+    expect(tile.meta).toBe(
+      `Updated ${new Date(`${__APP_BUILD_DATE__}T00:00:00.000Z`).toLocaleDateString(undefined, { timeZone: "UTC" })}`,
+    );
     expect(tile.lockedBy).toBe("Vault Warden");
     /* The Extra Deck's first card is the deck's face: it names the strategy in
        a way the first Main Deck card rarely does. */

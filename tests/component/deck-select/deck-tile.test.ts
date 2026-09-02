@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
-import { cleanup, render } from "@testing-library/svelte";
+import { readFileSync } from "node:fs";
+import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import DeckTile from "../../../src/deck-select/DeckTile.svelte";
@@ -30,6 +31,55 @@ describe("DeckTile", () => {
     expect(cy("deck-tile-meta-k1").textContent).toBe("Updated 20 Aug 2026");
   });
 
+  it("matches the square cropped-illustration ratio", () => {
+    const source = readFileSync("src/deck-select/DeckTile.svelte", "utf8");
+    expect(source).toMatch(/aspect-ratio:\s*1 \/ 1/);
+  });
+
+  it("dims illustration art without dimming tile content", () => {
+    const source = readFileSync("src/deck-select/DeckTile.svelte", "utf8");
+    expect(source).toMatch(/\.art\s*\{[^}]*opacity:\s*0\.75/s);
+  });
+
+  it("uses 1rem title type", () => {
+    const source = readFileSync("src/deck-select/DeckTile.svelte", "utf8");
+    expect(source).toMatch(/\.name\s*\{[^}]*font-size:\s*1rem/s);
+  });
+
+  it("backs text with localized translucent surfaces", () => {
+    const source = readFileSync("src/deck-select/DeckTile.svelte", "utf8");
+    expect(source).toMatch(
+      /\.text-backdrop\s*\{[^}]*background:\s*color-mix\([^;]*transparent\)/s,
+    );
+    expect(source).toContain('class="name text-backdrop"');
+    expect(source).toContain('class="body text-backdrop"');
+  });
+
+  it("places title above bottom metadata without an artwork fade", () => {
+    render(DeckTile, { tile: tile() });
+    expect(find("deck-tile-fade-k1")).toBeNull();
+
+    const source = readFileSync("src/deck-select/DeckTile.svelte", "utf8");
+    expect(source).toMatch(/\.name\s*\{[^}]*align-self:\s*start/s);
+    expect(source).toMatch(/\.body\s*\{[^}]*align-self:\s*end/s);
+    expect(source).toMatch(/text-shadow:/);
+  });
+
+  it("falls back to full card when cropped art is unavailable", async () => {
+    render(DeckTile, {
+      tile: tile({
+        coverImageUrl: "/runtime/images-cropped/89631139.jpg",
+      }),
+    });
+    const image = cy("deck-tile-art-k1") as HTMLImageElement;
+    expect(image.src).toContain("/runtime/images-cropped/89631139.jpg");
+
+    await fireEvent.error(image);
+    expect((cy("deck-tile-art-k1") as HTMLImageElement).src).toContain(
+      "/runtime/images/89631139.jpg",
+    );
+  });
+
   it("press fires onpress, dblclick fires ondblpress", async () => {
     const onpress = vi.fn();
     const ondblpress = vi.fn();
@@ -55,6 +105,22 @@ describe("DeckTile", () => {
 
     expect(onfavourite).toHaveBeenCalledWith(true);
     expect(onpress).not.toHaveBeenCalled();
+  });
+
+  it("fixes the body to the action stack with a medium gap", () => {
+    const source = readFileSync("src/deck-select/DeckTile.svelte", "utf8");
+    expect(source).toMatch(
+      /--deck-tile-body-height:\s*calc\(\s*var\(--corner-size\)\s*\+\s*var\(--corner-size\)\s*\+\s*var\(--space-2\)\s*\)/s,
+    );
+    expect(source).toMatch(
+      /--deck-tile-body-width:\s*calc\(\s*100%\s*-\s*var\(--corner-size\)\s*-\s*var\(--space-2\)\s*-\s*var\(--space-2\)\s*-\s*var\(--space-2\)\s*\)/s,
+    );
+    expect(source).toMatch(
+      /\.body\s*\{[^}]*width:\s*var\(--deck-tile-body-width\);[^}]*height:\s*var\(--deck-tile-body-height\)/s,
+    );
+    expect(source).toMatch(
+      /button\.star\s*\{[^}]*bottom:\s*calc\(var\(--space-2\) \+ var\(--corner-size\) \+ var\(--space-2\)\)/s,
+    );
   });
 
   it("kebab fires onmenu with its element, no tile press", async () => {
@@ -123,6 +189,12 @@ describe("DeckTile", () => {
         root.classList.contains(name),
       ),
     ).toEqual([]);
+  });
+
+  it("shows default star instead of favourite toggle", () => {
+    render(DeckTile, { tile: tile({ isDefault: true, favourite: true }) });
+    expect(cy("deck-tile-default-star-k1").textContent).toBe("★");
+    expect(find("deck-tile-fav-k1")).toBeNull();
   });
 
   it("no favourite star when showFavourite false", () => {

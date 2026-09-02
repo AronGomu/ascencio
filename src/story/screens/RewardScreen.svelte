@@ -1,5 +1,6 @@
 <script lang="ts">
-  export let autosaveStatus: "idle" | "success" | "failure" = "idle";
+  export let autosaveStatus: "idle" | "pending" | "success" | "failure" =
+    "idle";
   export let onretry: () => void = () => undefined;
   export let oncontinue: () => void = () => undefined;
   let continued = false;
@@ -58,7 +59,7 @@
         onclick={onretry}>Retry autosave</button
       >
     </div>
-  {:else}
+  {:else if autosaveStatus === "pending"}
     <p role="status" class="autosave" data-cy="story-reward-autosave-pending">
       Autosave pending.
     </p>

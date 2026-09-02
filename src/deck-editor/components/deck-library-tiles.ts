@@ -5,6 +5,7 @@ import type {
   DeckValidationSummary,
 } from "../../decks/deck-contracts.ts";
 import type { DeckTileModel } from "../../deck-select/index.ts";
+import { deckCoverImageUrl } from "../../decks/deck-cover.ts";
 
 /** Which decks the scope has singled out. Neither is a property of the stored
     record — the controller reads them from their own preference rows — so the
@@ -32,17 +33,6 @@ function illegalLabel(validation: DeckValidationSummary): string {
     : "Illegal";
 }
 
-/** The deck the tile's art is drawn from: the Extra Deck's first card when the
-    deck has one, because that is the deck's own headline, and the first Main
-    Deck card otherwise. */
-function coverImageUrl(
-  deck: DeckRecord,
-  catalog: ReadonlyMap<number, DeckBuilderCardView>,
-): string | null {
-  const code = deck.extra[0] ?? deck.main[0] ?? null;
-  return code === null ? null : (catalog.get(code)?.imageUrl ?? null);
-}
-
 /** Every stored deck as the shared grid renders it. Ordering is the screen's
     own job, so the tiles come back in the order they were handed over. */
 export function deckLibraryTiles(
@@ -67,7 +57,7 @@ export function deckLibraryTiles(
            fielded the answer is why rather than when it was last saved. */
         meta:
           blockReason ?? `Updated ${new Date(deck.updatedAt).toLocaleString()}`,
-        coverImageUrl: coverImageUrl(deck, catalog),
+        coverImageUrl: deckCoverImageUrl(deck, catalog),
         legal,
         blockReason,
         /* Every deck in this library was built in this library: none ships

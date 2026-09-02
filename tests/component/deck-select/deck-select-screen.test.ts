@@ -258,7 +258,7 @@ describe("DeckSelectScreen", () => {
     expect(values.onfavourite).toHaveBeenCalledWith("k1", true);
   });
 
-  it("opponent seat mode paints grid red and badges yours", () => {
+  it("opponent seat mode paints selected grid tile orange and badges yours", () => {
     const pool = decks();
     render(
       DeckSelectScreen,
@@ -280,7 +280,7 @@ describe("DeckSelectScreen", () => {
        assertion asks the grid for its copy. */
     const grid = cy("deck-select-grid");
     const theirs = grid.querySelector('[data-cy="deck-tile-k2"]');
-    expect(theirs?.classList).toContain("halo-opponent");
+    expect(theirs?.classList).toContain("halo-focus");
     expect(grid.querySelector('[data-cy="deck-tile-check-k2"]')).not.toBeNull();
 
     const yours = grid.querySelector('[data-cy="deck-tile-k1"]');

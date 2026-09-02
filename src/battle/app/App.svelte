@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { afterUpdate, onMount, tick } from "svelte";
+  import { afterUpdate, getContext, onMount, tick } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
   import type { DuelDeckSelection } from "../duel/contracts/duel-deck-selection.ts";
   import type { DuelDiagnosticTrace } from "../duel/contracts/duel-diagnostics.ts";
@@ -27,7 +27,12 @@
     type OffFieldTargetEntry,
   } from "../field/off-field-target-list.ts";
   import type { PhysicalZoneId } from "../field/duel-field-layout.ts";
-  import { CardPreviewPanel } from "../../shell/index.ts";
+  import {
+    CardPreviewPanel,
+    TOAST_CONTEXT_KEY,
+    type ToastPublisher,
+    type ToastTone,
+  } from "../../shell/index.ts";
   import DuelRail from "./components/DuelRail.svelte";
   import PhaseBar from "./components/PhaseBar.svelte";
   import DeckPicker from "./components/DeckPicker.svelte";
@@ -222,6 +227,12 @@
      click until the Worker answers it. */
   let diagnosticsRequested = false;
   let diagnosticMessage: string | null = null;
+  const toasts = getContext<ToastPublisher | undefined>(TOAST_CONTEXT_KEY);
+
+  function showTransient(message: string, tone: ToastTone): void {
+    if (toasts === undefined) diagnosticMessage = message;
+    else toasts.show({ message, tone });
+  }
   /* The error a restore was asked for. `restore` reports its outcome as an
      event, not a promise, so the pending label lives until the store either
      retires that error (rebuilt), types a failure against it, or replaces it
@@ -871,13 +882,17 @@
                 : "Debug-run metadata was not saved.";
           });
       }
-      diagnosticMessage =
-        "Diagnostics downloaded. The file contains the production seed; share it carefully.";
+      showTransient(
+        "Diagnostics downloaded. The file contains the production seed; share it carefully.",
+        "success",
+      );
     } catch (error) {
-      diagnosticMessage =
+      showTransient(
         error instanceof Error
           ? `Unable to download diagnostics: ${error.message}`
-          : "Unable to download diagnostics.";
+          : "Unable to download diagnostics.",
+        "error",
+      );
     }
   }
 
@@ -898,7 +913,7 @@
       handleDiagnosticsDownload(held);
       return;
     }
-    diagnosticMessage = "Diagnostics are unavailable for this session.";
+    showTransient("Diagnostics are unavailable for this session.", "warning");
   }
 
   function requestRestore(): void {
@@ -1020,7 +1035,15 @@
       : null;
     /* Only a profile that had a key and lost it is told anything. A first run
        has nothing to have lost, and a notice there reads as a fault. */
-    if (chose && chosen === null) pickerFallbackNotice = true;
+    if (chose && chosen === null) {
+      if (toasts === undefined) pickerFallbackNotice = true;
+      else
+        toasts.show({
+          message:
+            "A deck you had chosen is no longer available. A bundled deck was selected.",
+          tone: "warning",
+        });
+    }
     const nextPlayerKey =
       chosen?.key ??
       defaultDeckKey ??

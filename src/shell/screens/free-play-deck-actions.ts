@@ -13,6 +13,15 @@ import {
 import { validateDeckDraft } from "../../decks/deck-validation.ts";
 import { IndexedDbDeckRepository } from "../../decks/indexeddb-deck-repository.ts";
 
+interface DuplicateSource {
+  readonly name: string;
+  readonly lists: Readonly<{
+    readonly main: readonly number[];
+    readonly extra: readonly number[];
+    readonly side: readonly number[];
+  }>;
+}
+
 /**
  * The three deck-library writes the free-play selection screen offers.
  *
@@ -87,27 +96,40 @@ export async function renameLocalDeck(
     own name, and no history at all — the edits that built the original belong
     to the original. Its cards are validated again rather than copied over,
     because the ruleset the source was stored under may not be this build's. */
-export async function duplicateLocalDeck(key: string): Promise<void> {
-  const { id } = localDeck(key);
+export async function duplicateLocalDeck(
+  key: string,
+  bundledSource?: DuplicateSource,
+): Promise<void> {
   let repository: IndexedDbDeckRepository | null = null;
   try {
     const catalog = catalogByCode(await runtimeCatalog());
-    repository = await IndexedDbDeckRepository.open();
-    const source = await repository.load(id);
-    if (source === null) return;
+    const local = parseLocalDeckKey(key);
+    let source: DuplicateSource | null = bundledSource ?? null;
+    if (local !== null) {
+      repository = await IndexedDbDeckRepository.open();
+      const stored = await repository.load(local.id);
+      if (stored === null) return;
+      source = { name: stored.deck.name, lists: stored.deck };
+    }
+    if (source === null) throw new Error("Bundled decks cannot be modified");
     const copy = createBlankDeck(
-      derivedDeckName(source.deck.name, " Copy"),
+      derivedDeckName(source.name, " Copy"),
       catalog,
       PROTOTYPE_RULESET,
     );
-    await repository.create(
+    const cards = {
+      main: Object.freeze([...source.lists.main]),
+      extra: Object.freeze([...source.lists.extra]),
+      side: Object.freeze([...source.lists.side]),
+    };
+    await (
+      repository ?? (repository = await IndexedDbDeckRepository.open())
+    ).create(
       Object.freeze({
         ...copy,
-        main: Object.freeze([...source.deck.main]),
-        extra: Object.freeze([...source.deck.extra]),
-        side: Object.freeze([...source.deck.side]),
+        ...cards,
         validation: validateDeckDraft(
-          { ...source.deck, importedNeedsReview: false },
+          { ...copy, ...cards, importedNeedsReview: false },
           catalog,
           PROTOTYPE_RULESET,
         ),

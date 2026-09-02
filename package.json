@@ -14,6 +14,8 @@
     "assets:sync:offline": "node scripts/sync-assets.ts --offline",
     "assets:verify": "node scripts/verify-assets.ts && npm run assets:sets:verify && npm run assets:images:verify",
     "assets:images": "node scripts/download-images.ts",
+    "assets:images:cropped": "node scripts/download-images.ts --kind cropped",
+    "assets:images:cropped:active": "node scripts/download-images.ts --kind cropped --active",
     "assets:images:verify": "node scripts/verify-images.ts",
     "assets:sets": "node scripts/download-set-images.ts",
     "assets:sets:verify": "node scripts/verify-set-images.ts",

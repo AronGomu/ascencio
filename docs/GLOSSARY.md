@@ -50,6 +50,7 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 | load dialog | Editor dialog: saved decks tab + autosave log tab, restore = undoable edit | `src/deck-editor/components/LoadDeckDialog.svelte` |
 | library halo | Green/orange/red validity glow + issue tooltip on deck-library rows | `src/deck-editor/components/DeckLibrary.svelte` (`.halo-valid`/`.halo-warnings`/`.halo-errors`), status from `src/decks/deck-validation.ts` |
 | deck tile | Art-filled 2:1 deck card the grid, the seats and the phone list all render | `src/deck-select/DeckTile.svelte`, `DeckTileModel` in `src/deck-select/deck-select-contracts.ts` |
+| illustration | Chosen cropped card art fronting a deck tile | `DeckRecord.illustrationCardCode`, `src/decks/deck-cover.ts` |
 | seat halo | Tile glow: blue you, red opponent, teal focus, gold default hairline | `halo` prop in `src/deck-select/DeckTile.svelte`; `--seat-you`, `--seat-opponent`, `--selected` in `src/styles/tokens.css` |
 | kebab menu | ⋮ action sheet on a deck tile: open, rename, duplicate, delete | `src/deck-select/DeckTileMenu.svelte`, `src/deck-select/RenameDeckDialog.svelte`, `DeleteDeckConfirm.svelte` |
 | opponent persona | One of three free-play AIs; each owns one bundled deck | `FREE_PLAY_OPPONENTS` in `src/shell/screens/free-play-opponents.ts` (Practice Bot, Blaze Circuit, Vault Warden) |

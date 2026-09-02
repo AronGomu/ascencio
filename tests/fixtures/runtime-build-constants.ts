@@ -11,4 +11,5 @@
 Object.assign(globalThis, {
   __RUNTIME_MANIFEST_SHA256__: "0".repeat(64),
   __RUNTIME_SNAPSHOT_ID__: "1".repeat(64),
+  __APP_BUILD_DATE__: "2026-08-20",
 });

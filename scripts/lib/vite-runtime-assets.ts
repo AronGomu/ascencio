@@ -138,6 +138,11 @@ async function copyActiveCardImages(
     "generated/card-images/archive/full",
   );
   const imageOutputRoot = path.join(runtimeOutput, "images");
+  const cropSourceRoot = path.join(
+    projectRoot,
+    "generated/card-images/archive/cropped",
+  );
+  const cropOutputRoot = path.join(runtimeOutput, "images-cropped");
   const runtimeManifest = parseRuntimeSnapshotManifest(
     JSON.parse(
       await readFile(
@@ -159,15 +164,25 @@ async function copyActiveCardImages(
       path.join(path.dirname(runtimeOutput), "PRIVATE_DEPLOYMENT_ONLY.txt"),
       "This artifact contains card images without approved redistribution posture. Keep it private.\n",
     );
-  await rm(imageOutputRoot, { recursive: true, force: true });
-  await mkdir(imageOutputRoot, { recursive: true });
+  await Promise.all([
+    rm(imageOutputRoot, { recursive: true, force: true }),
+    rm(cropOutputRoot, { recursive: true, force: true }),
+  ]);
+  await Promise.all([
+    mkdir(imageOutputRoot, { recursive: true }),
+    mkdir(cropOutputRoot, { recursive: true }),
+  ]);
   for (const file of manifest.files) {
     const source = resolveWithin(imageSourceRoot, file.path);
-    await assertRealPathContained(imageSourceRoot, source);
-    await copyFileWithParents(
-      source,
-      resolveWithin(imageOutputRoot, file.path),
-    );
+    const cropSource = resolveWithin(cropSourceRoot, file.path);
+    await Promise.all([
+      assertRealPathContained(imageSourceRoot, source),
+      assertRealPathContained(cropSourceRoot, cropSource),
+    ]);
+    await Promise.all([
+      copyFileWithParents(source, resolveWithin(imageOutputRoot, file.path)),
+      copyFileWithParents(cropSource, resolveWithin(cropOutputRoot, file.path)),
+    ]);
   }
   await writeFile(
     path.join(imageOutputRoot, "active-manifest.json"),
@@ -304,6 +319,16 @@ function runtimeSourcePath(
       return resolveWithin(
         path.join(projectRoot, "generated/card-images/archive/full"),
         normalized.slice("images/".length),
+      );
+    } catch {
+      return null;
+    }
+  }
+  if (/^images-cropped\/\d+\.jpg$/.test(normalized)) {
+    try {
+      return resolveWithin(
+        path.join(projectRoot, "generated/card-images/archive/cropped"),
+        normalized.slice("images-cropped/".length),
       );
     } catch {
       return null;

@@ -35,9 +35,10 @@ export interface SetImageDigest {
 }
 
 export interface ImageContentLock {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
   readonly provider: "ygoprodeck";
   readonly cards: readonly CardImageDigest[];
+  readonly crops: readonly CardImageDigest[];
   readonly sets: readonly SetImageDigest[];
 }
 
@@ -47,14 +48,18 @@ export interface ImageContentLock {
  */
 export function buildImageContentLock(
   cards: readonly CardImageDigest[],
+  crops: readonly CardImageDigest[],
   sets: readonly SetImageDigest[],
 ): ImageContentLock {
-  return {
-    schemaVersion: 1,
-    provider: "ygoprodeck",
-    cards: [...cards]
+  const orderedCards = (records: readonly CardImageDigest[]) =>
+    [...records]
       .sort((left, right) => left.code - right.code)
-      .map(({ code, bytes, sha256 }) => ({ code, bytes, sha256 })),
+      .map(({ code, bytes, sha256 }) => ({ code, bytes, sha256 }));
+  return {
+    schemaVersion: 2,
+    provider: "ygoprodeck",
+    cards: orderedCards(cards),
+    crops: orderedCards(crops),
     sets: [...sets]
       .sort((left, right) => left.setId.localeCompare(right.setId))
       .map(({ setId, bytes, sha256 }) => ({ setId, bytes, sha256 })),
@@ -132,26 +137,30 @@ export function verifyLockedSetImages(
 export function parseImageContentLock(value: unknown): ImageContentLock {
   const lock = asRecord(value);
   if (
-    lock.schemaVersion !== 1 ||
+    lock.schemaVersion !== 2 ||
     lock.provider !== "ygoprodeck" ||
     !Array.isArray(lock.cards) ||
+    !Array.isArray(lock.crops) ||
     !Array.isArray(lock.sets)
   ) {
     throw new Error(`${IMAGE_CONTENT_LOCK_FILE} is not a valid image lock`);
   }
-  const cards = (lock.cards as unknown[]).map((entry) => {
-    const record = asRecord(entry);
-    if (!Number.isSafeInteger(record.code) || !hasDigestFields(record)) {
-      throw new Error(
-        `${IMAGE_CONTENT_LOCK_FILE} has an invalid card entry: ${JSON.stringify(entry)}`,
-      );
-    }
-    return {
-      code: record.code as number,
-      bytes: record.bytes as number,
-      sha256: record.sha256 as string,
-    };
-  });
+  const parseCards = (entries: unknown[], kind: "card" | "crop") =>
+    entries.map((entry) => {
+      const record = asRecord(entry);
+      if (!Number.isSafeInteger(record.code) || !hasDigestFields(record)) {
+        throw new Error(
+          `${IMAGE_CONTENT_LOCK_FILE} has an invalid ${kind} entry: ${JSON.stringify(entry)}`,
+        );
+      }
+      return {
+        code: record.code as number,
+        bytes: record.bytes as number,
+        sha256: record.sha256 as string,
+      };
+    });
+  const cards = parseCards(lock.cards as unknown[], "card");
+  const crops = parseCards(lock.crops as unknown[], "crop");
   const sets = (lock.sets as unknown[]).map((entry) => {
     const record = asRecord(entry);
     if (typeof record.setId !== "string" || !hasDigestFields(record)) {
@@ -167,7 +176,7 @@ export function parseImageContentLock(value: unknown): ImageContentLock {
       sha256: record.sha256 as string,
     };
   });
-  return { schemaVersion: 1, provider: "ygoprodeck", cards, sets };
+  return { schemaVersion: 2, provider: "ygoprodeck", cards, crops, sets };
 }
 
 function asRecord(value: unknown): Record<string, unknown> {

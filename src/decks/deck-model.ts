@@ -85,6 +85,7 @@ export function createBlankDeck(
     updatedAt: now,
     validation: validateDeckDraft(cards, catalog, ruleset),
     importedNeedsReview: false,
+    illustrationCardCode: null,
   });
 }
 

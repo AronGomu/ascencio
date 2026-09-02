@@ -103,7 +103,7 @@ async function seedBrokenDefault(page: Page): Promise<void> {
 
 async function reachEncounter(page: Page): Promise<void> {
   await seedMapProgress(page);
-  await page.locator('[data-cy="story-title-continue"]').click();
+  await page.locator('[data-cy="main-menu-continue"]').click();
   await expect(
     page.getByRole("heading", { name: "City signal map" }),
   ).toBeVisible();
@@ -255,7 +255,7 @@ test("a session route with no checkpoint lands on the story, not a blank screen"
   await expect(page.locator(STORY_REGION)).toBeVisible();
   await expect(page).toHaveURL(/#\/story$/);
   await expect(page.locator(DUEL_REGION)).toHaveCount(0);
-  await expect(page.locator('[data-cy="story-title-continue"]')).toBeVisible();
+  await expect(page.locator('[data-cy="main-menu-continue"]')).toBeVisible();
 });
 
 /* A checkpoint written by another handoff must not be adopted by this one. */
@@ -319,7 +319,7 @@ test("a corrupt checkpoint lands on the story with progress intact", async ({
 
   await expect(page.locator(STORY_REGION)).toBeVisible();
   await expect(page).toHaveURL(/#\/story$/);
-  await page.locator('[data-cy="story-title-continue"]').click();
+  await page.locator('[data-cy="main-menu-continue"]').click();
   await expect(
     page.getByRole("heading", { name: "City signal map" }),
   ).toBeVisible();
@@ -332,7 +332,7 @@ test("an encounter refuses a deck the save no longer owns and links to the edito
   page,
 }) => {
   await seedBrokenDefault(page);
-  await page.locator('[data-cy="story-title-continue"]').click();
+  await page.locator('[data-cy="main-menu-continue"]').click();
   await page.locator('[data-cy="story-map-location-old-arena"]').click();
   await expect(page.locator('[data-cy="deck-select-title"]')).toHaveText(
     "Rin's Echo",

@@ -4,27 +4,27 @@
   import { trapTabWithin } from "./focus-trap.ts";
   export let unsaved = false;
   export let onaction: (
-    action: "resume" | "save" | "load" | "settings" | "title",
+    action: "resume" | "save" | "load" | "settings" | "main-menu",
   ) => void = () => undefined;
   export let onclose: () => void = () => undefined;
   export let restoreFocusTo: HTMLElement | null = null;
-  let confirmTitle = false;
+  let confirmMainMenu = false;
   let stayButton: HTMLButtonElement;
   let confirmationDialog: HTMLDivElement;
-  async function requestTitle(): Promise<void> {
-    if (!unsaved) onaction("title");
+  async function requestMainMenu(): Promise<void> {
+    if (!unsaved) onaction("main-menu");
     else {
-      confirmTitle = true;
+      confirmMainMenu = true;
       await tick();
       stayButton.focus();
     }
   }
   function handleConfirmationKeydown(event: KeyboardEvent): void {
-    if (!confirmTitle) return;
+    if (!confirmMainMenu) return;
     if (event.key === "Escape") {
       event.preventDefault();
       event.stopImmediatePropagation();
-      confirmTitle = false;
+      confirmMainMenu = false;
       return;
     }
     trapTabWithin(confirmationDialog, event);
@@ -38,11 +38,11 @@
   labelId="pause-title"
   {onclose}
   {restoreFocusTo}
-  controlsSuspended={confirmTitle}
+  controlsSuspended={confirmMainMenu}
 >
   <nav
     aria-label="Pause actions"
-    inert={confirmTitle}
+    inert={confirmMainMenu}
     data-cy="story-pause-menu"
   >
     <button
@@ -71,20 +71,20 @@
     <button
       type="button"
       class="secondary"
-      data-cy="story-pause-return-title"
-      onclick={() => void requestTitle()}>Return to Title</button
+      data-cy="story-pause-return-main-menu"
+      onclick={() => void requestMainMenu()}>Return to Main Menu</button
     >
   </nav>
-  {#if confirmTitle}<div
+  {#if confirmMainMenu}<div
       class="nested"
       role="alertdialog"
-      aria-labelledby="return-title"
+      aria-labelledby="return-main-menu"
       tabindex="-1"
       data-cy="story-pause-return-confirm"
       bind:this={confirmationDialog}
     >
-      <h3 id="return-title" data-cy="story-pause-return-confirm-heading">
-        Return without saving?
+      <h3 id="return-main-menu" data-cy="story-pause-return-confirm-heading">
+        Return to Main Menu without saving?
       </h3>
       <p data-cy="story-pause-return-confirm-message">
         Progress since last mock save will be lost.
@@ -92,13 +92,13 @@
       <button
         type="button"
         data-cy="story-pause-return-confirm-accept"
-        onclick={() => onaction("title")}>Return without saving</button
+        onclick={() => onaction("main-menu")}>Return without saving</button
       ><button
         type="button"
         class="secondary"
         data-cy="story-pause-return-confirm-stay"
         bind:this={stayButton}
-        onclick={() => (confirmTitle = false)}>Stay in story</button
+        onclick={() => (confirmMainMenu = false)}>Stay in story</button
       >
     </div>{/if}
 </OverlayShell>

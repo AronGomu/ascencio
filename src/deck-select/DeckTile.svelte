@@ -2,13 +2,13 @@
   import type { DeckTileModel } from "./deck-select-contracts.ts";
 
   export let tile: DeckTileModel;
-  /** Visual selection halo: null = none. "you" blue, "opponent" red, "focus" teal (--accent). */
+  /** Visual selection halo: null = none. Selected focus uses orange (--selected). */
   export let halo: "you" | "opponent" | "focus" | null = null;
   /** Checkmark top-right shown when true. */
   export let selected = false;
   /** "Yours" badge while filling the opponent seat. */
   export let yours = false;
-  /** Hide star (story scope before favourites, seat-card context). */
+  /** Hide favourite star in seat-card contexts. */
   export let showFavourite = true;
   export let showMenu = true;
   export let disabled = false;
@@ -28,6 +28,19 @@
   $: countsLine = `Main ${tile.counts.main} · Extra ${tile.counts.extra} · Side ${tile.counts.side}`;
   /* A deck that fails validation cannot be picked, so the press surface itself
      carries the fact — the dimming is the sighted echo, never the source. */
+  let failedArtUrls: readonly string[] = [];
+  $: fullCardFallbackUrl =
+    tile.coverImageUrl?.replace(
+      "/runtime/images-cropped/",
+      "/runtime/images/",
+    ) ?? null;
+  $: artUrl =
+    tile.coverImageUrl !== null && !failedArtUrls.includes(tile.coverImageUrl)
+      ? tile.coverImageUrl
+      : fullCardFallbackUrl !== null &&
+          !failedArtUrls.includes(fullCardFallbackUrl)
+        ? fullCardFallbackUrl
+        : null;
   $: pressDisabled = disabled || !tile.legal;
   $: cyId = cyKey ?? tile.key;
 </script>
@@ -49,18 +62,20 @@
     ondblclick={() => ondblpress()}
     data-cy={`deck-tile-press-${cyId}`}
   >
-    {#if tile.coverImageUrl !== null}
+    {#if artUrl !== null}
       <img
         class="art"
         loading="lazy"
         decoding="async"
-        src={tile.coverImageUrl}
+        src={artUrl}
         alt=""
+        onerror={() =>
+          artUrl !== null && (failedArtUrls = [...failedArtUrls, artUrl])}
         data-cy={`deck-tile-art-${cyId}`}
       />
     {:else}
       <!-- Authored geometry rather than a packaged asset: a deck with no cover
-           card still has to fill the whole tile behind the fade. -->
+           card still has to fill the whole tile behind its content. -->
       <svg
         class="art"
         viewBox="0 0 200 100"
@@ -81,10 +96,10 @@
         />
       </svg>
     {/if}
-    <span class="fade" aria-hidden="true" data-cy={`deck-tile-fade-${cyId}`}
-    ></span>
-    <span class="body" data-cy={`deck-tile-body-${cyId}`}>
-      <span class="name" data-cy={`deck-tile-name-${cyId}`}>{tile.name}</span>
+    <span class="name text-backdrop" data-cy={`deck-tile-name-${cyId}`}
+      >{tile.name}</span
+    >
+    <span class="body text-backdrop" data-cy={`deck-tile-body-${cyId}`}>
       <span class="counts" data-cy={`deck-tile-counts-${cyId}`}
         >{countsLine}</span
       >
@@ -121,7 +136,13 @@
     </span>
   </button>
 
-  {#if showFavourite}
+  {#if tile.isDefault}
+    <span
+      class="corner star"
+      aria-label={`Default deck: ${tile.name}`}
+      data-cy={`deck-tile-default-star-${cyId}`}>★</span
+    >
+  {:else if showFavourite}
     <!-- Its own button outside the press surface, so the star stays reachable
          by keyboard and a press on it never picks the deck. -->
     <button
@@ -157,11 +178,20 @@
 
 <style>
   .deck-tile {
+    --corner-size: 2.75rem;
+    --deck-tile-body-height: calc(
+      var(--corner-size) + var(--corner-size) + var(--space-2)
+    );
+    --deck-tile-body-width: calc(
+      100% - var(--corner-size) - var(--space-2) - var(--space-2) -
+        var(--space-2)
+    );
+
     position: relative;
     display: grid;
     width: 100%;
     min-width: 0;
-    aspect-ratio: 2 / 1;
+    aspect-ratio: 1 / 1;
     overflow: hidden;
     color: var(--text);
     border: 1px solid var(--border);
@@ -173,6 +203,7 @@
   .press {
     display: grid;
     grid-template-areas: "tile";
+    grid-template-rows: minmax(0, 1fr);
     width: 100%;
     height: 100%;
     padding: 0;
@@ -198,6 +229,7 @@
     height: 100%;
     object-fit: cover;
     object-position: center;
+    opacity: 0.75;
   }
 
   .art-field {
@@ -208,36 +240,50 @@
     fill: color-mix(in srgb, var(--accent) 22%, transparent);
   }
 
-  /* Solid where the text sits, gone by ~70% across, so the illustration reads
-     as the whole tile rather than as a cropped half. */
-  .fade {
-    background: linear-gradient(
-      to right,
-      var(--shadow) 0%,
-      var(--shadow) 30%,
-      transparent 70%
-    );
-  }
-
   .body {
     z-index: 1;
     display: flex;
-    max-width: 66%;
+    box-sizing: border-box;
+    width: var(--deck-tile-body-width);
+    height: var(--deck-tile-body-height);
     flex-direction: column;
     align-self: end;
+    justify-self: start;
     gap: var(--space-1);
-    padding: var(--space-3);
+    margin: var(--space-2);
+    padding: var(--space-2);
+    overflow: hidden;
   }
 
   .name {
+    z-index: 1;
     display: -webkit-box;
+    max-width: 70%;
+    margin: var(--space-2);
+    padding: var(--space-1) var(--space-2);
     overflow: hidden;
-    font-size: var(--text-md);
+    align-self: start;
+    justify-self: start;
+    font-size: 1rem;
     font-weight: 650;
     line-height: 1.15;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-clamp: 2;
+  }
+
+  .text-backdrop {
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--shadow) 65%, transparent);
+  }
+
+  .name,
+  .counts,
+  .meta,
+  .badge {
+    text-shadow:
+      0 1px 2px var(--shadow),
+      0 0 0.4rem var(--shadow);
   }
 
   .counts,
@@ -277,8 +323,8 @@
     position: absolute;
     z-index: 2;
     display: grid;
-    width: 1.6rem;
-    height: 1.6rem;
+    width: var(--corner-size);
+    height: var(--corner-size);
     place-items: center;
     padding: 0;
     border: 0;
@@ -292,17 +338,25 @@
   .star {
     top: var(--space-2);
     left: var(--space-2);
+  }
+
+  button.star {
+    top: auto;
+    right: var(--space-2);
+    bottom: calc(var(--space-2) + var(--corner-size) + var(--space-2));
+    left: auto;
     cursor: pointer;
   }
 
-  .star[aria-pressed="true"] {
+  .star[aria-pressed="true"],
+  .star:not(button) {
     color: var(--selected);
   }
 
   .check {
     top: var(--space-2);
     right: var(--space-2);
-    color: var(--accent);
+    color: var(--selected);
   }
 
   .kebab {
@@ -323,8 +377,8 @@
   }
 
   .deck-tile.halo-focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0.55rem color-mix(in srgb, var(--accent) 55%, transparent);
+    border-color: var(--selected);
+    box-shadow: 0 0 0.55rem color-mix(in srgb, var(--selected) 65%, transparent);
   }
 
   /* Last on purpose: the gold hairline marks the scope's default deck whatever

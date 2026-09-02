@@ -4,6 +4,9 @@
 export const STAGE_BREAKPOINT_PX = 1024;
 export const STAGE_ASPECT_WIDTH = 16;
 export const STAGE_ASPECT_HEIGHT = 9;
+/* Mirrors `--space-2` in `src/styles/tokens.css`; CSS reserves this inset on
+   every side of `.app-stage`, while this model publishes the same pixel box. */
+const STAGE_MARGIN_PX = 8;
 
 export type StageMode = "stage" | "mobile-portrait" | "mobile-landscape";
 
@@ -53,26 +56,29 @@ export function computeStageBox(
   if (!isUsable(viewportWidth) || !isUsable(viewportHeight)) return EMPTY_BOX;
 
   const mode = selectStageMode(viewportWidth, viewportHeight);
+  const availableWidth = viewportWidth - STAGE_MARGIN_PX * 2;
+  const availableHeight = viewportHeight - STAGE_MARGIN_PX * 2;
+  if (!isUsable(availableWidth) || !isUsable(availableHeight)) return EMPTY_BOX;
   if (mode === "mobile-portrait") {
     return Object.freeze({
-      width: viewportWidth,
-      height: viewportHeight,
-      offsetX: 0,
-      offsetY: 0,
+      width: availableWidth,
+      height: availableHeight,
+      offsetX: STAGE_MARGIN_PX,
+      offsetY: STAGE_MARGIN_PX,
       mode,
       rotated: true,
     });
   }
 
-  // Largest 16:9 rectangle that fits, centred; the leftover is the bar size.
+  // Largest 16:9 rectangle inside the margin, centred; leftover is bar size.
   const heightLimited =
-    viewportWidth * STAGE_ASPECT_HEIGHT > viewportHeight * STAGE_ASPECT_WIDTH;
+    availableWidth * STAGE_ASPECT_HEIGHT > availableHeight * STAGE_ASPECT_WIDTH;
   const width = heightLimited
-    ? Math.floor((viewportHeight * STAGE_ASPECT_WIDTH) / STAGE_ASPECT_HEIGHT)
-    : viewportWidth;
+    ? Math.floor((availableHeight * STAGE_ASPECT_WIDTH) / STAGE_ASPECT_HEIGHT)
+    : availableWidth;
   const height = heightLimited
-    ? viewportHeight
-    : Math.floor((viewportWidth * STAGE_ASPECT_HEIGHT) / STAGE_ASPECT_WIDTH);
+    ? availableHeight
+    : Math.floor((availableWidth * STAGE_ASPECT_HEIGHT) / STAGE_ASPECT_WIDTH);
 
   return Object.freeze({
     width,

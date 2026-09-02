@@ -3,49 +3,13 @@ import { cleanup, render, screen, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import LoadScreen from "../../../src/story/screens/LoadScreen.svelte";
-import TitleScreen from "../../../src/story/screens/TitleScreen.svelte";
 
 afterEach(() => {
   cleanup();
   globalThis.location.hash = "";
 });
 
-describe("title and mock load", () => {
-  it("title offers a main menu return", async () => {
-    const onmainmenu = vi.fn();
-    render(TitleScreen, { onmainmenu });
-    await userEvent
-      .setup()
-      .click(screen.getByRole("button", { name: "Main menu" }));
-    expect(onmainmenu).toHaveBeenCalledOnce();
-  });
-
-  it("main menu return defaults to the shell home hash", async () => {
-    render(TitleScreen);
-    await userEvent
-      .setup()
-      .click(screen.getByRole("button", { name: "Main menu" }));
-    expect(globalThis.location.hash).toBe("#/");
-  });
-
-  it("renders title actions, conditionally shows Continue, focuses primary action", async () => {
-    const onnewgame = vi.fn();
-    const rendered = render(TitleScreen, { hasProgress: false, onnewgame });
-    expect(screen.getByRole("button", { name: "New Game" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Load" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Settings" })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Continue" })).toBeNull();
-    await waitFor(() =>
-      expect(document.activeElement?.textContent).toBe("New Game"),
-    );
-    await userEvent
-      .setup()
-      .click(screen.getByRole("button", { name: "New Game" }));
-    expect(onnewgame).toHaveBeenCalledOnce();
-    await rendered.rerender({ hasProgress: true });
-    expect(screen.getByRole("button", { name: "Continue" })).toBeTruthy();
-  });
-
+describe("mock load", () => {
   it("shows complete slot summaries plus reviewer corrupt state", () => {
     render(LoadScreen, { showCorrupt: true });
     expect(screen.getByText("Manual slot 1")).toBeTruthy();

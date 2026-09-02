@@ -94,6 +94,11 @@ export function buildAssetStages(options: MvpAssetOptions): AssetStage[] {
             script: "download-images.ts",
             args: imageArguments,
           },
+          {
+            name: "downloadCroppedCardImages",
+            script: "download-images.ts",
+            args: [...imageArguments, "--kind", "cropped"],
+          },
         ]),
     { name: "verifyCardImages", script: "verify-images.ts", args: [] },
     {

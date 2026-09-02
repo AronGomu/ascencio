@@ -20,6 +20,10 @@ function lockOfTwo() {
       { code: 10802915, bytes: 3, sha256: ABC_SHA256 },
     ],
     [
+      { code: 46986414, bytes: 5, sha256: HELLO_SHA256 },
+      { code: 10802915, bytes: 3, sha256: ABC_SHA256 },
+    ],
+    [
       { setId: "metal-raiders", bytes: 5, sha256: HELLO_SHA256 },
       { setId: "abyss-rising", bytes: 3, sha256: ABC_SHA256 },
     ],
@@ -109,6 +113,10 @@ describe("image content lock", () => {
         { code: 46986414, bytes: 5, sha256: HELLO_SHA256 },
       ],
       [
+        { code: 10802915, bytes: 3, sha256: ABC_SHA256 },
+        { code: 46986414, bytes: 5, sha256: HELLO_SHA256 },
+      ],
+      [
         { setId: "abyss-rising", bytes: 3, sha256: ABC_SHA256 },
         { setId: "metal-raiders", bytes: 5, sha256: HELLO_SHA256 },
       ],
@@ -119,6 +127,7 @@ describe("image content lock", () => {
       "schemaVersion",
       "provider",
       "cards",
+      "crops",
       "sets",
     ]);
     expect(Object.keys(lock.cards[0]!)).toEqual(["code", "bytes", "sha256"]);
@@ -140,7 +149,7 @@ describe("image content lock", () => {
 
   it("parsing rejects a lock it cannot verify against", () => {
     expect(() =>
-      parseImageContentLock({ ...lockOfTwo(), schemaVersion: 2 }),
+      parseImageContentLock({ ...lockOfTwo(), schemaVersion: 1 }),
     ).toThrow("image-content-lock.json is not a valid image lock");
     expect(() =>
       parseImageContentLock({

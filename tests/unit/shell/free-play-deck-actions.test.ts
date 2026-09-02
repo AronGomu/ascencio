@@ -125,6 +125,19 @@ describe("free-play deck actions", () => {
     expect(copy?.revision).toBe(1);
   });
 
+  it("duplicates a bundled deck into an independent local copy", async () => {
+    await duplicateLocalDeck("preset:starter", {
+      name: "Bundled Starter",
+      lists: { main: VALID_MAIN, extra: [], side: [] },
+    });
+
+    const records = await withRepository((repository) => repository.list());
+    const copy = records.find(({ id }) => id !== "built-deck");
+    expect(copy?.name).toBe("Bundled Starter Copy");
+    expect(copy?.main).toEqual([...VALID_MAIN]);
+    expect(copy?.revision).toBe(1);
+  });
+
   it("deletes a deck at the revision its key names", async () => {
     await deleteLocalDeck("local:built-deck:1");
 

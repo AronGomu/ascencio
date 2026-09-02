@@ -61,12 +61,21 @@ body {
    and the mode on `data-stage-mode`; `selectStageMode` and the query below
    encode the same rule (`STAGE_BREAKPOINT_PX`) and must stay in sync. */
 .app-stage {
-  --stage-w: min(100vw, calc(100svh * 16 / 9));
-  --stage-h: min(100svh, calc(100vw * 9 / 16));
+  --stage-viewport-w: calc(100vw - var(--space-2) * 2);
+  --stage-viewport-h: calc(100svh - var(--space-2) * 2);
+  --stage-w: min(
+    var(--stage-viewport-w),
+    calc(var(--stage-viewport-h) * 16 / 9)
+  );
+  --stage-h: min(
+    var(--stage-viewport-h),
+    calc(var(--stage-viewport-w) * 9 / 16)
+  );
 
   position: relative;
   width: var(--stage-w);
   height: var(--stage-h);
+  margin: var(--space-2);
   overflow: hidden;
 }
 
@@ -74,8 +83,8 @@ body {
    wide drops the letterbox and takes the whole viewport. */
 @media (max-width: 1023.98px) and (orientation: portrait) {
   .app-stage {
-    --stage-w: 100vw;
-    --stage-h: 100svh;
+    --stage-w: var(--stage-viewport-w);
+    --stage-h: var(--stage-viewport-h);
   }
 }
 
@@ -97,10 +106,10 @@ body {
 @media (min-width: 1024px) {
   .app-stage[data-stage-route="free-play"],
   .app-stage[data-stage-route="duel-session"] {
-    --stage-w: 100vw;
+    --stage-w: var(--stage-viewport-w);
     --duel-field-margin: clamp(
       0px,
-      calc((100vw - var(--stage-h) * 16 / 9) / 2),
+      calc((var(--stage-viewport-w) - var(--stage-h) * 16 / 9) / 2),
       var(--duel-field-inset)
     );
   }

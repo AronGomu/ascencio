@@ -1,14 +1,16 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { getContext, onMount } from "svelte";
   import { handleModalKeydown } from "../focus-trap.ts";
   import type { DeckRecord } from "../../decks/deck-contracts.ts";
   import { exportYdk, ydkFilename } from "../../decks/ydk-adapter.ts";
+  import { TOAST_CONTEXT_KEY, type ToastPublisher } from "../../shell/index.ts";
 
   export let deck: DeckRecord;
   export let oncancel: () => void;
 
   let message = "";
   let heading: HTMLHeadingElement;
+  const toasts = getContext<ToastPublisher | undefined>(TOAST_CONTEXT_KEY);
   $: source = exportYdk(deck);
   $: filename = ydkFilename(deck.name);
 
@@ -17,7 +19,9 @@
   async function copyText(): Promise<void> {
     try {
       await navigator.clipboard.writeText(source);
-      message = "YDK text copied.";
+      message = "";
+      if (toasts === undefined) message = "YDK text copied.";
+      else toasts.show({ message: "YDK text copied.", tone: "success" });
     } catch (error) {
       message = `Copy failed: ${error instanceof Error ? error.message : "Clipboard unavailable"}`;
     }
@@ -33,7 +37,10 @@
       link.download = filename;
       link.click();
       URL.revokeObjectURL(url);
-      message = `Downloaded ${filename}.`;
+      const confirmation = `Downloaded ${filename}.`;
+      message = "";
+      if (toasts === undefined) message = confirmation;
+      else toasts.show({ message: confirmation, tone: "success" });
     } catch (error) {
       message = `Download failed: ${error instanceof Error ? error.message : "Browser download unavailable"}`;
     }

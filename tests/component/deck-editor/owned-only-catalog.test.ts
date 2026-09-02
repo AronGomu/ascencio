@@ -31,6 +31,10 @@ import {
 import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts";
 import { prototypeCatalogMap } from "../../fixtures/deck-editor.ts";
 import { storyDeckFixture } from "../../fixtures/story-decks.ts";
+import {
+  TOAST_CONTEXT_KEY,
+  type ToastPublisher,
+} from "../../../src/shell/index.ts";
 
 /* A story save builds from the cards it owns. The catalog is the offer and the
    add path is the enforcement, so both are driven here through the editor the
@@ -125,6 +129,7 @@ function query(value: string): HTMLElement | null {
 async function openCatalog(props: {
   readonly deckId: string;
   readonly context?: DeckContext;
+  readonly toasts?: ToastPublisher;
 }): Promise<void> {
   /* Nested under `props` because `context` is also a `render` option, and the
      harness refuses a props object that shares a name with one. */
@@ -134,6 +139,9 @@ async function openCatalog(props: {
       onnavigate: vi.fn(),
       ...(props.context === undefined ? {} : { context: props.context }),
     },
+    ...(props.toasts === undefined
+      ? {}
+      : { context: new Map([[TOAST_CONTEXT_KEY, props.toasts]]) }),
   });
   await waitFor(() => expect(query("deck-catalog-results")).not.toBeNull());
 }
@@ -189,7 +197,12 @@ describe("owned-only story catalog", () => {
   it("adding is capped by the ruleset limit", async () => {
     const user = userEvent.setup();
     const { context } = storyContext({ [OWNED.code]: 5 });
-    await openCatalog({ deckId: STORY_DECK_ID, context });
+    const show = vi.fn<ToastPublisher["show"]>(() => "toast-test");
+    await openCatalog({
+      deckId: STORY_DECK_ID,
+      context,
+      toasts: { show },
+    });
 
     for (const copies of [1, 2, 3]) {
       await user.click(catalogTile(OWNED.code)!);
@@ -198,9 +211,11 @@ describe("owned-only story catalog", () => {
 
     await user.click(catalogTile(OWNED.code)!);
     expect(zoneCount("main")).toBe("3/40");
-    expect(query("deck-editor-announcement")?.textContent).toContain(
-      `Copy limit ${quantityLimit(PROTOTYPE_RULESET, OWNED.code)} reached.`,
+    const message = `Copy limit ${quantityLimit(PROTOTYPE_RULESET, OWNED.code)} reached.`;
+    expect(query("deck-editor-announcement")?.textContent).not.toContain(
+      message,
     );
+    expect(show).toHaveBeenCalledWith({ message, tone: "warning" });
   });
 
   /* Driven through the controller rather than the tile, because the point of

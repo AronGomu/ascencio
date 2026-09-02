@@ -103,12 +103,17 @@ describe("global styles", () => {
     const stage = ruleBlock(css, ".app-stage {");
     expect(stage).toContain("width: var(--stage-w)");
     expect(stage).toContain("height: var(--stage-h)");
+    expect(stage).toContain("margin: var(--space-2)");
     expect(stage).toContain("overflow: hidden");
     /* The box must be derived in CSS, not published from `AppShell`: a
        JS-published box trails a viewport change by at least a frame, so
        anything measuring right after a resize reads the previous stage. */
-    expect(stage).toContain("--stage-w: min(100vw, calc(100svh * 16 / 9))");
-    expect(stage).toContain("--stage-h: min(100svh, calc(100vw * 9 / 16))");
+    expect(stage).toContain(
+      "--stage-viewport-w: calc(100vw - var(--space-2) * 2)",
+    );
+    expect(stage).toContain(
+      "--stage-viewport-h: calc(100svh - var(--space-2) * 2)",
+    );
     expect(css).toContain(
       "@media (max-width: 1023.98px) and (orientation: portrait)",
     );
@@ -143,11 +148,13 @@ describe("global styles", () => {
       css,
       '.app-stage[data-stage-route="free-play"],\n  .app-stage[data-stage-route="duel-session"] {',
     );
-    expect(bleed).toContain("--stage-w: 100vw");
+    expect(bleed).toContain("--stage-w: var(--stage-viewport-w)");
     // The inset is only ever paid out of the reclaimed bar, so an exactly-16:9
     // viewport keeps the board it has today.
     expect(bleed).toContain("--duel-field-margin: clamp(");
-    expect(bleed).toContain("calc((100vw - var(--stage-h) * 16 / 9) / 2)");
+    expect(bleed).toContain(
+      "calc((var(--stage-viewport-w) - var(--stage-h) * 16 / 9) / 2)",
+    );
     expect(bleed).toContain("var(--duel-field-inset)");
     expect(css.slice(0, css.indexOf(bleed))).toMatch(
       /@media \(min-width: 1024px\) \{\s*$/,

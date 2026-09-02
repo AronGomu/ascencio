@@ -429,7 +429,12 @@ describe("App", () => {
       Array.from(shell?.children ?? []).map((child) =>
         child.getAttribute("data-cy"),
       ),
-    ).toEqual(["card-preview-panel", "duel-field-slot", "duel-right-rail"]);
+    ).toEqual([
+      "card-preview-panel",
+      "duel-field-slot",
+      "phase-bar",
+      "duel-right-rail",
+    ]);
   });
 
   it("returns focus to the live rail options trigger after Menu and Settings close", async () => {

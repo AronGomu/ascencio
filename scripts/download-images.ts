@@ -10,6 +10,8 @@ import {
   collectShopCodes,
   mergeShopImageRecords,
 } from "./lib/shop-set-image-codes.ts";
+import { loadDeckSources } from "../src/battle/duel/presets/deck-sources-node.ts";
+import { reviewedCardPool } from "../src/battle/duel/presets/reviewed-card-pool.ts";
 
 /* The biggest of the 14,579 files in the local card archive is 330,480 bytes,
    so this clears legitimate art by roughly 25x. It exists because an endless
@@ -32,23 +34,35 @@ const imageRoot = resolveProjectSubpath(
   "generated/card-images",
   "--output",
 );
-const fullImageRoot = path.join(imageRoot, "full");
-const reportPath = path.join(imageRoot, "download-report.json");
+const selectedImageRoot = path.join(imageRoot, options.kind);
+const reportPath = path.join(
+  imageRoot,
+  options.kind === "full"
+    ? "download-report.json"
+    : options.active
+      ? "cropped-active-download-report.json"
+      : "cropped-download-report.json",
+);
 const releaseRunLock = await acquireRunLock(
   path.join(projectRoot, "generated", ".locks", "image-download"),
 );
 
 try {
-  await mkdir(fullImageRoot, { recursive: true });
+  await mkdir(selectedImageRoot, { recursive: true });
   const shopJson = await readFile(
     path.join(projectRoot, "public/story/shop-sets.v1.json"),
     "utf8",
   );
   const manifestRecords = await readImageManifest(assetRoot);
-  const records = mergeShopImageRecords(
+  let records = mergeShopImageRecords(
     manifestRecords,
     collectShopCodes(shopJson),
-  ).slice(0, options.limit);
+  );
+  if (options.active) {
+    const activeCodes = new Set(reviewedCardPool(await loadDeckSources()));
+    records = records.filter(({ code }) => activeCodes.has(code));
+  }
+  records = records.slice(0, options.limit);
   const limiter = createRateLimiter(options.requestsPerSecond);
   const queue = [...records];
   const results: DownloadResult[] = [];
@@ -63,9 +77,10 @@ try {
         }
         const result = await downloadCardImage(
           record,
-          fullImageRoot,
+          selectedImageRoot,
           limiter,
           options.force,
+          options.kind,
         );
         results.push(result);
         completed += 1;
@@ -93,7 +108,9 @@ try {
     sourceAssets: path
       .relative(projectRoot, assetRoot)
       .replaceAll(path.sep, "/"),
-    output: path.relative(projectRoot, fullImageRoot).replaceAll(path.sep, "/"),
+    output: path
+      .relative(projectRoot, selectedImageRoot)
+      .replaceAll(path.sep, "/"),
     requested: records.length,
     downloaded: results.filter((result) => result.status === "downloaded")
       .length,
@@ -127,6 +144,8 @@ interface DownloadOptions {
   requestsPerSecond: number;
   limit: number;
   force: boolean;
+  kind: "full" | "cropped";
+  active: boolean;
 }
 
 type DownloadResult =
@@ -137,11 +156,16 @@ type DownloadResult =
 function parseOptions(args: string[]): DownloadOptions {
   const values = new Map<string, string>();
   let force = false;
+  let active = false;
 
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index];
     if (argument === "--force") {
       force = true;
+      continue;
+    }
+    if (argument === "--active") {
+      active = true;
       continue;
     }
     if (!argument?.startsWith("--")) {
@@ -169,6 +193,12 @@ function parseOptions(args: string[]): DownloadOptions {
     );
   }
 
+  const kind = values.get("--kind") ?? "full";
+  if (kind !== "full" && kind !== "cropped")
+    throw new Error("--kind must be full or cropped");
+  if (active && kind !== "cropped")
+    throw new Error("--active is only supported with --kind cropped");
+
   return {
     assetDirectory: values.get("--assets") ?? "generated/assets/current",
     outputDirectory: values.get("--output") ?? "generated/card-images/archive",
@@ -178,6 +208,8 @@ function parseOptions(args: string[]): DownloadOptions {
       ? positiveInteger(values.get("--limit") ?? "", "--limit")
       : Number.POSITIVE_INFINITY,
     force,
+    kind,
+    active,
   };
 }
 
@@ -199,6 +231,7 @@ async function downloadCardImage(
   outputRoot: string,
   rateLimit: () => Promise<void>,
   force: boolean,
+  kind: "full" | "cropped",
 ): Promise<DownloadResult> {
   const output = path.join(outputRoot, `${record.code}.jpg`);
   if (!force) {
@@ -211,7 +244,7 @@ async function downloadCardImage(
   for (let attempt = 1; attempt <= 2; attempt += 1) {
     await rateLimit();
     try {
-      const response = await fetch(record.full, {
+      const response = await fetch(record[kind], {
         headers: {
           "user-agent": "YGO-Story-Duel-Simulator/0.1 asset importer",
         },

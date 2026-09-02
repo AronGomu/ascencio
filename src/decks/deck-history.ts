@@ -25,6 +25,8 @@ export function pushDeckUpdate(
     readonly reason: DeckCardUpdate["reason"];
     readonly beforeImportedNeedsReview?: boolean;
     readonly afterImportedNeedsReview?: boolean;
+    readonly beforeIllustrationCardCode?: number | null;
+    readonly afterIllustrationCardCode?: number | null;
     readonly now?: Date;
     readonly id?: string;
   },
@@ -32,7 +34,9 @@ export function pushDeckUpdate(
   if (
     sameCards(input.before, input.after) &&
     (input.beforeImportedNeedsReview ?? false) ===
-      (input.afterImportedNeedsReview ?? false)
+      (input.afterImportedNeedsReview ?? false) &&
+    (input.beforeIllustrationCardCode ?? null) ===
+      (input.afterIllustrationCardCode ?? null)
   )
     return history;
   const update: DeckCardUpdate = Object.freeze({
@@ -44,6 +48,8 @@ export function pushDeckUpdate(
     after: cloneCardLists(input.after),
     beforeImportedNeedsReview: input.beforeImportedNeedsReview ?? false,
     afterImportedNeedsReview: input.afterImportedNeedsReview ?? false,
+    beforeIllustrationCardCode: input.beforeIllustrationCardCode ?? null,
+    afterIllustrationCardCode: input.afterIllustrationCardCode ?? null,
     reason: input.reason,
   });
   return Object.freeze({
@@ -57,12 +63,14 @@ export function undoDeckUpdate(history: DeckHistory): Readonly<{
   history: DeckHistory;
   cards: DeckCardLists;
   importedNeedsReview: boolean;
+  illustrationCardCode: number | null;
 }> | null {
   const update = history.undo.at(-1);
   if (update === undefined) return null;
   return Object.freeze({
     cards: cloneCardLists(update.before),
     importedNeedsReview: update.beforeImportedNeedsReview,
+    illustrationCardCode: update.beforeIllustrationCardCode,
     history: Object.freeze({
       undo: Object.freeze(history.undo.slice(0, -1)),
       redo: Object.freeze([update, ...history.redo]),
@@ -75,12 +83,14 @@ export function redoDeckUpdate(history: DeckHistory): Readonly<{
   history: DeckHistory;
   cards: DeckCardLists;
   importedNeedsReview: boolean;
+  illustrationCardCode: number | null;
 }> | null {
   const update = history.redo[0];
   if (update === undefined) return null;
   return Object.freeze({
     cards: cloneCardLists(update.after),
     importedNeedsReview: update.afterImportedNeedsReview,
+    illustrationCardCode: update.afterIllustrationCardCode,
     history: Object.freeze({
       undo: Object.freeze(
         [...history.undo, update].slice(-MAXIMUM_DECK_UPDATES),

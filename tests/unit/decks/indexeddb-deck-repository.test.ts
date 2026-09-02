@@ -273,6 +273,46 @@ describe("IndexedDbDeckRepository", () => {
     repo.close();
   });
 
+  it("loads deck rows written before illustration selection existed", async () => {
+    const name = "deck-repo-legacy-illustration";
+    names.push(name);
+    const repo = await IndexedDbDeckRepository.open(name);
+    const created = await repo.create(
+      createBlankDeck("Legacy", catalog, PROTOTYPE_RULESET, { id: "legacy" }),
+      emptyDeckHistory(),
+    );
+    repo.close();
+
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open(name, DECK_DATABASE_VERSION);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const transaction = database.transaction("decks", "readwrite");
+    const store = transaction.objectStore("decks");
+    const legacy = await new Promise<Record<string, unknown>>(
+      (resolve, reject) => {
+        const request = store.get(created.deck.id);
+        request.onsuccess = () =>
+          resolve(request.result as Record<string, unknown>);
+        request.onerror = () => reject(request.error);
+      },
+    );
+    delete legacy.illustrationCardCode;
+    store.put(legacy);
+    await new Promise<void>((resolve, reject) => {
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+    database.close();
+
+    const reopened = await IndexedDbDeckRepository.open(name);
+    expect(
+      (await reopened.load(created.deck.id))?.deck.illustrationCardCode,
+    ).toBeNull();
+    reopened.close();
+  });
+
   it("rejects malformed persisted rows before exposing them", async () => {
     const name = "deck-repo-malformed";
     names.push(name);

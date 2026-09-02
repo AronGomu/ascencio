@@ -85,6 +85,18 @@ describe("drag reordering", () => {
 });
 
 describe("sort actions toolbar", () => {
+  it("renders both sort actions in the editor's top row", () => {
+    const { container } = render(DeckEditor, props(vi.fn(), 3));
+    const header = container.querySelector('[data-cy="deck-editor-header"]');
+
+    expect(
+      header?.querySelector('[data-cy="deck-workspace-sort-alpha"]'),
+    ).not.toBeNull();
+    expect(
+      header?.querySelector('[data-cy="deck-workspace-sort-type"]'),
+    ).not.toBeNull();
+  });
+
   it("sort a-z calls sort alpha command", async () => {
     const onmutate = vi.fn<(command: DeckCommand) => void>();
     const { container } = render(DeckEditor, props(onmutate, 3));

@@ -12,6 +12,7 @@ import { browserRuntimeAssetsPlugin } from "./scripts/lib/vite-runtime-assets.ts
 import { syncOnlyVendoredCorePlugin } from "./scripts/lib/vite-sync-core.ts";
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
+const appBuildDate = new Date().toISOString().slice(0, 10);
 const developmentPort = Number(process.env.DEV_PORT ?? "4202");
 if (!Number.isSafeInteger(developmentPort) || developmentPort <= 0) {
   throw new Error("DEV_PORT must be a positive integer");
@@ -69,6 +70,7 @@ export default defineConfig({
     __APP_BUILD_ID__: JSON.stringify(
       `0.1.0+${runtimeManifestSha256.slice(0, 12)}`,
     ),
+    __APP_BUILD_DATE__: JSON.stringify(appBuildDate),
     __ACTIVE_IMAGE_MANIFEST__: JSON.stringify(activeImageManifest),
     __ACTIVE_IMAGE_MANIFEST_SHA256__: JSON.stringify(activeImageDigest),
     __RUNTIME_REVISIONS__: JSON.stringify({

@@ -472,30 +472,36 @@ export class IndexedDbDeckRepository implements DeckRepository {
 function validateAutosaveRecord(
   record: DeckAutosaveRecord,
 ): DeckAutosaveRecord {
+  const legacyKeys = [
+    "createdAt",
+    "deckId",
+    "deckName",
+    "extra",
+    "id",
+    "main",
+    "side",
+  ];
+  const currentKeys = [...legacyKeys, "illustrationCardCode"];
+  const legacy = hasExactKeys(record, legacyKeys);
   if (
-    !hasExactKeys(record, [
-      "createdAt",
-      "deckId",
-      "deckName",
-      "extra",
-      "id",
-      "main",
-      "side",
-    ]) ||
+    (!legacy && !hasExactKeys(record, currentKeys)) ||
     !validKey(record.id) ||
     !validKey(record.deckId) ||
     typeof record.deckName !== "string" ||
     !validTimestamp(record.createdAt) ||
     !validCardList(record.main) ||
     !validCardList(record.extra) ||
-    !validCardList(record.side)
+    !validCardList(record.side) ||
+    (!legacy && !validOptionalCardCode(record.illustrationCardCode))
   )
     throw new DeckStorageError("Stored autosave entry is invalid");
-  return record;
+  return legacy
+    ? Object.freeze({ ...record, illustrationCardCode: null })
+    : record;
 }
 
 function validateDeckRecord(deck: DeckRecord): DeckRecord {
-  const expectedKeys = [
+  const legacyKeys = [
     "createdAt",
     "extra",
     "id",
@@ -508,8 +514,10 @@ function validateDeckRecord(deck: DeckRecord): DeckRecord {
     "updatedAt",
     "validation",
   ];
+  const currentKeys = [...legacyKeys, "illustrationCardCode"];
+  const legacy = hasExactKeys(deck, legacyKeys);
   if (
-    !hasExactKeys(deck, expectedKeys) ||
+    (!legacy && !hasExactKeys(deck, currentKeys)) ||
     deck.schemaVersion !== 1 ||
     !validKey(deck.id) ||
     !Number.isSafeInteger(deck.revision) ||
@@ -523,15 +531,16 @@ function validateDeckRecord(deck: DeckRecord): DeckRecord {
     !validCardList(deck.main) ||
     !validCardList(deck.extra) ||
     !validCardList(deck.side) ||
-    !validValidation(deck.validation)
+    !validValidation(deck.validation) ||
+    (!legacy && !validOptionalCardCode(deck.illustrationCardCode))
   )
     throw new DeckStorageError("Stored deck record is invalid");
-  return deck;
+  return legacy ? Object.freeze({ ...deck, illustrationCardCode: null }) : deck;
 }
 
 function validateHistory(history: DeckHistory, id: DeckId): DeckHistory {
   const updates = [...history.undo, ...history.redo];
-  const expectedUpdateKeys = [
+  const legacyUpdateKeys = [
     "after",
     "afterImportedNeedsReview",
     "before",
@@ -542,15 +551,21 @@ function validateHistory(history: DeckHistory, id: DeckId): DeckHistory {
     "reason",
     "sequence",
   ];
+  const currentUpdateKeys = [
+    ...legacyUpdateKeys,
+    "afterIllustrationCardCode",
+    "beforeIllustrationCardCode",
+  ];
   if (
     !hasExactKeys(history, ["nextSequence", "redo", "undo"]) ||
     updates.length > MAXIMUM_DECK_UPDATES ||
     !Number.isSafeInteger(history.nextSequence) ||
     history.nextSequence < 1 ||
     new Set(updates.map(({ sequence }) => sequence)).size !== updates.length ||
-    updates.some(
-      (update) =>
-        !hasExactKeys(update, expectedUpdateKeys) ||
+    updates.some((update) => {
+      const legacy = hasExactKeys(update, legacyUpdateKeys);
+      return (
+        (!legacy && !hasExactKeys(update, currentUpdateKeys)) ||
         update.deckId !== id ||
         !validKey(update.id) ||
         !Number.isSafeInteger(update.sequence) ||
@@ -559,15 +574,36 @@ function validateHistory(history: DeckHistory, id: DeckId): DeckHistory {
         !validTimestamp(update.createdAt) ||
         typeof update.beforeImportedNeedsReview !== "boolean" ||
         typeof update.afterImportedNeedsReview !== "boolean" ||
-        !["add", "remove", "move", "import", "restore"].includes(
-          update.reason,
-        ) ||
+        (!legacy &&
+          (!validOptionalCardCode(update.beforeIllustrationCardCode) ||
+            !validOptionalCardCode(update.afterIllustrationCardCode))) ||
+        ![
+          "add",
+          "remove",
+          "move",
+          "import",
+          "restore",
+          "illustration",
+        ].includes(update.reason) ||
         !validCardLists(update.before) ||
-        !validCardLists(update.after),
-    )
+        !validCardLists(update.after)
+      );
+    })
   )
     throw new DeckStorageError("Stored deck history is invalid");
-  return history;
+  const normalize = (update: DeckHistory["undo"][number]) =>
+    hasExactKeys(update, legacyUpdateKeys)
+      ? Object.freeze({
+          ...update,
+          beforeIllustrationCardCode: null,
+          afterIllustrationCardCode: null,
+        })
+      : update;
+  return Object.freeze({
+    undo: Object.freeze(history.undo.map(normalize)),
+    redo: Object.freeze(history.redo.map(normalize)),
+    nextSequence: history.nextSequence,
+  });
 }
 
 function validateDeckHistoryConsistency(
@@ -582,8 +618,10 @@ function validateDeckHistoryConsistency(
       sameHistorySnapshot(
         update.after,
         update.afterImportedNeedsReview,
+        update.afterIllustrationCardCode,
         next.before,
         next.beforeImportedNeedsReview,
+        next.beforeIllustrationCardCode,
       )
     );
   });
@@ -594,8 +632,10 @@ function validateDeckHistoryConsistency(
       sameHistorySnapshot(
         update.after,
         update.afterImportedNeedsReview,
+        update.afterIllustrationCardCode,
         next.before,
         next.beforeImportedNeedsReview,
+        next.beforeIllustrationCardCode,
       )
     );
   });
@@ -615,15 +655,19 @@ function validateDeckHistoryConsistency(
       ? sameHistorySnapshot(
           current.after,
           current.afterImportedNeedsReview,
+          current.afterIllustrationCardCode,
           deck,
           deck.importedNeedsReview,
+          deck.illustrationCardCode,
         )
       : next !== undefined
         ? sameHistorySnapshot(
             next.before,
             next.beforeImportedNeedsReview,
+            next.beforeIllustrationCardCode,
             deck,
             deck.importedNeedsReview,
+            deck.illustrationCardCode,
           )
         : true;
   if (
@@ -643,18 +687,21 @@ function sameHistorySnapshot(
     readonly side: readonly number[];
   },
   leftImported: boolean,
+  leftIllustrationCardCode: number | null,
   right: {
     readonly main: readonly number[];
     readonly extra: readonly number[];
     readonly side: readonly number[];
   },
   rightImported: boolean,
+  rightIllustrationCardCode: number | null,
 ): boolean {
   /* History records which cards a deck held, not the order the player left
      them in, so a reorder saved without a history entry still lines up with
      the snapshot it came from. */
   return (
     leftImported === rightImported &&
+    leftIllustrationCardCode === rightIllustrationCardCode &&
     sameSnapshotZone(left.main, right.main) &&
     sameSnapshotZone(left.extra, right.extra) &&
     sameSnapshotZone(left.side, right.side)
@@ -706,6 +753,10 @@ function validCardList(value: readonly number[]): boolean {
 
 function validCardCode(value: number): boolean {
   return Number.isSafeInteger(value) && value > 0;
+}
+
+function validOptionalCardCode(value: number | null | undefined): boolean {
+  return value === null || (value !== undefined && validCardCode(value));
 }
 
 function latestTimestamp(createdAt: string, now: Date): string {

@@ -7,14 +7,19 @@
     unlimitedCardOwnership,
     type CardOwnership,
   } from "../../decks/card-ownership.ts";
-  import { tick } from "svelte";
+  import { getContext, tick } from "svelte";
   import { SvelteMap } from "svelte/reactivity";
   import type { DeckBuilderState } from "../deck-editor-store.ts";
   import CardCatalog from "./CardCatalog.svelte";
-  import { CardPreviewPanel } from "../../shell/index.ts";
+  import {
+    CardPreviewPanel,
+    TOAST_CONTEXT_KEY,
+    type ToastPublisher,
+  } from "../../shell/index.ts";
   import DeckWorkspace from "./DeckWorkspace.svelte";
   import EditorTabs from "./EditorTabs.svelte";
   import TapTargetMenu from "./TapTargetMenu.svelte";
+  import DeckCardContextMenu from "./DeckCardContextMenu.svelte";
   import {
     defaultPane,
     paneAfterAdd,
@@ -53,6 +58,8 @@
   export let onmutate: (
     command: import("../../decks/deck-model.ts").DeckCommand,
   ) => void | Promise<void>;
+  export let onsetillustration: (code: number) => void | Promise<void> = () =>
+    undefined;
   export let onundo: () => void;
   export let onredo: () => void;
   export let onretrysave: () => void;
@@ -82,11 +89,21 @@
   let pane: EditorPane = defaultPane();
   let tapped: { code: number; zone: DeckZone; index: number } | null = null;
   let tapOpener: HTMLElement | null = null;
+  let contextCard: {
+    code: number;
+    zone: DeckZone;
+    index: number;
+    x: number;
+    y: number;
+    opener: HTMLElement;
+  } | null = null;
   let showLoad = false;
   let loadButton: HTMLButtonElement | null = null;
   let confirmingDelete = false;
   let deleteButton: HTMLButtonElement | null = null;
   let loadedAutosaves: readonly DeckAutosaveRecord[] = [];
+  let toastedMessage: string | null = null;
+  const toasts = getContext<ToastPublisher | undefined>(TOAST_CONTEXT_KEY);
 
   $: tabs = layoutMode === "tabs";
   $: deck = state.current?.deck ?? null;
@@ -98,6 +115,19 @@
   )
     deckName = deck.name;
   $: copies = deck === null ? new Map<number, number>() : countCopies(deck);
+  $: if (
+    state.message !== null &&
+    state.message !== toastedMessage &&
+    state.saveState !== "failed" &&
+    state.saveState !== "conflict"
+  ) {
+    // eslint-disable-next-line no-useless-assignment -- retained across reactive runs
+    toastedMessage = state.message;
+    toasts?.show({ message: state.message, tone: "warning" });
+  } else if (state.message === null) {
+    // eslint-disable-next-line no-useless-assignment -- retained across reactive runs
+    toastedMessage = null;
+  }
   $: previewSource = hovered ?? selected;
   $: previewSourceCode = hovered !== null ? hoveredCode : selectedCode;
   $: previewView =
@@ -222,7 +252,8 @@
   ): void {
     const name = catalog.get(code)?.name ?? `Card ${code}`;
     if (intent.kind === "blocked") {
-      announcement = `${name}: ${intent.reason}`;
+      if (toasts === undefined) announcement = `${name}: ${intent.reason}`;
+      else toasts.show({ message: intent.reason, tone: "warning" });
       return;
     }
     if (intent.kind === "add") {
@@ -309,7 +340,9 @@
         onmutate({ type: "add", cardCode: src.code, zone });
         announcement = `${card.name} added to ${zone}.`;
       } else {
-        announcement = `Card cannot be added to ${zone}.`;
+        const message = `Card cannot be added to ${zone}.`;
+        if (toasts === undefined) announcement = message;
+        else toasts.show({ message, tone: "warning" });
       }
       picked = null;
       return;
@@ -361,9 +394,42 @@
     );
   }
 
-  function contextRemove(code: number, zone: DeckZone, index: number): void {
+  function openCardContext(
+    code: number,
+    zone: DeckZone,
+    index: number,
+    request: {
+      readonly anchor: HTMLElement;
+      readonly x: number;
+      readonly y: number;
+    },
+  ): void {
+    selectCard(catalog.get(code) ?? null, code);
+    contextCard = { code, zone, index, ...request, opener: request.anchor };
+  }
+
+  async function closeCardContext(): Promise<void> {
+    const opener = contextCard?.opener ?? null;
+    contextCard = null;
+    await tick();
+    opener?.focus();
+  }
+
+  async function setCardIllustration(): Promise<void> {
+    if (contextCard === null) return;
+    const code = contextCard.code;
+    const name = catalog.get(code)?.name ?? `Card ${code}`;
+    await onsetillustration(code);
+    announcement = `${name} set as deck illustration.`;
+    await closeCardContext();
+  }
+
+  async function removeContextCard(): Promise<void> {
+    if (contextCard === null) return;
+    const { code, zone, index } = contextCard;
     onmutate({ type: "remove", cardCode: code, zone, index });
     announcement = `${catalog.get(code)?.name ?? `Card ${code}`} removed.`;
+    await closeCardContext();
   }
 
   function endZoneDrag(): void {
@@ -422,7 +488,10 @@
       }
     }
     if (event.key !== "Escape") return;
-    if (tapped !== null) {
+    if (contextCard !== null) {
+      void closeCardContext();
+      announcement = "Card actions closed.";
+    } else if (tapped !== null) {
       void closeTapMenu();
       announcement = "Card move cancelled.";
     } else if (picked !== null) {
@@ -455,6 +524,22 @@
         }}
       />
     </label>
+    <div class="sort-actions" data-cy="deck-workspace-sort-actions">
+      <button
+        type="button"
+        class="secondary"
+        data-cy="deck-workspace-sort-alpha"
+        onclick={() => onmutate({ type: "sort", mode: "alpha" })}
+        >Sort A–Z</button
+      >
+      <button
+        type="button"
+        class="secondary"
+        data-cy="deck-workspace-sort-type"
+        onclick={() => onmutate({ type: "sort", mode: "type" })}
+        >Sort by type</button
+      >
+    </div>
     <button
       type="button"
       class="secondary"
@@ -564,7 +649,7 @@
             onclick={onpreservecopy}>Preserve local edits as copy</button
           >
         </section>
-      {:else if state.message}
+      {:else if state.message && toasts === undefined}
         <p class="message" role="status" data-cy="deck-editor-message">
           {state.message}
         </p>
@@ -611,11 +696,8 @@
             startZoneDrag(code, zone, index, event)}
           ondragcancel={endZoneDrag}
           onreorderdrop={reorderInZone}
-          onmutate={(command) => {
-            onmutate(command);
-          }}
           ondropzone={dropInZone}
-          oncontextremove={contextRemove}
+          oncontextremove={openCardContext}
           onhovercard={(code) => {
             hovered = catalog.get(code) ?? null;
             hoveredCode = code;
@@ -655,7 +737,8 @@
           onblocked={(card, reason) => {
             selected = card;
             selectedCode = card.code;
-            announcement = `${card.name}: ${reason}`;
+            if (toasts === undefined) announcement = `${card.name}: ${reason}`;
+            else toasts.show({ message: reason, tone: "warning" });
             pane = paneAfterSelect(pane, layoutMode);
           }}
           onhovercard={(card) => {
@@ -670,6 +753,18 @@
       </div>
     {/if}
   </main>
+
+  {#if contextCard !== null}
+    <DeckCardContextMenu
+      cardName={catalog.get(contextCard.code)?.name ??
+        `Card ${contextCard.code}`}
+      x={contextCard.x}
+      y={contextCard.y}
+      onsetillustration={() => void setCardIllustration()}
+      onremove={() => void removeContextCard()}
+      oncancel={() => void closeCardContext()}
+    />
+  {/if}
 
   {#if tapped !== null}
     <div class="backdrop" aria-hidden="true" data-cy="deck-tap-backdrop"></div>
@@ -760,6 +855,11 @@
     padding: 0.45rem 0.65rem;
   }
 
+  .sort-actions {
+    display: flex;
+    gap: 0.4rem;
+  }
+
   .name-field {
     display: grid;
     gap: 0.2rem;
@@ -782,9 +882,9 @@
   }
 
   .editor-layout {
-    /* The header plus the 1.5rem context banner `DeckEditorApp` renders above
-       it, so the workspace still ends exactly at the bottom of the stage. */
-    --deck-editor-header-h: 6.25rem;
+    /* Free play pays only for the editor header. `DeckEditorApp` raises this
+       when a story-save context banner is present above it. */
+    --deck-editor-header-h: 4.75rem;
 
     display: grid;
     grid-template-columns: var(--preview-w, 15.5rem) minmax(0, 1fr) minmax(

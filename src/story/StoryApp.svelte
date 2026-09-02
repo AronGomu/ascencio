@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { afterUpdate, onDestroy, onMount } from "svelte";
+  import { afterUpdate, getContext, onDestroy, onMount } from "svelte";
   import { PROLOGUE } from "./content/prologue.ts";
   import {
     createInitialStoryState,
@@ -33,6 +33,7 @@
   import LoadOverlay from "./overlays/LoadOverlay.svelte";
   import PauseOverlay from "./overlays/PauseOverlay.svelte";
   import SaveLoadOverlay from "./overlays/SaveLoadOverlay.svelte";
+  import { TOAST_CONTEXT_KEY, type ToastPublisher } from "../shell/index.ts";
   import SettingsOverlay from "./overlays/SettingsOverlay.svelte";
   import GearIcon from "./components/icons/GearIcon.svelte";
   import StoryTopBar from "./components/StoryTopBar.svelte";
@@ -61,7 +62,6 @@
   import type { DeckBuilderCardView } from "../decks/catalog/ocg-card-mapper.ts";
   import { encounterDeck } from "./decks/encounter-deck.ts";
   import { preBattleDeckOptions } from "./decks/pre-battle-decks.ts";
-  import TitleScreen from "./screens/TitleScreen.svelte";
   import {
     STORY_SLOT_KEYS,
     type StorySaveReadResult,
@@ -92,6 +92,9 @@
      has to be on disk before the shell acts on this, and a refused write must
      leave the player where they are. */
   export let ondecks: () => void = () => undefined;
+  export let onmainmenu: () => void = () => {
+    globalThis.location.hash = "#/";
+  };
 
   /* Which main-menu entry sent the player here, so the shell's menu and this
      domain's title screen are not two menus in a row (ADR-051). `null` is a
@@ -133,10 +136,13 @@
      it. Reader preferences, so they live outside the save slots. */
   const playbackSettings = createStoryPlaybackSettingsStore();
 
+  const entryIntent = storyEntryIntent;
   let state =
-    resumeState === null
-      ? createInitialStoryState()
-      : restoreStoryState(resumeState);
+    resumeState !== null
+      ? restoreStoryState(resumeState)
+      : entryIntent === null || entryIntent === "new"
+        ? reduceStory(createInitialStoryState(), { type: "new-game" })
+        : createInitialStoryState();
   /* A restored checkpoint with no result to apply is a handoff that never
      produced one — a duel that was never mounted, or a session route that
      resolved to nothing. It lands here with a retry rather than on a screen
@@ -152,7 +158,6 @@
      resolution once: the entry belongs to the click that chose it, and a later
      flush of the prop must not throw a player who has walked on back to the
      screen they came in by. */
-  const entryIntent = storyEntryIntent;
   let manualState: StoryState | null = null;
   let autosaveState: StoryState | null = null;
   let latestSaveSlot: "manual" | "autosave" | null = null;
@@ -161,7 +166,7 @@
   let overlayTrigger: HTMLElement | null = null;
   let saveMode: "idle" | "saving" | "success" | "overwrite" | "failure" =
     "idle";
-  let autosaveStatus: "idle" | "success" | "failure" = "idle";
+  let autosaveStatus: "idle" | "pending" | "success" | "failure" = "idle";
   let dirty = false;
   let inputId = 0;
   let previousScreen: StoryScreen = state.screen;
@@ -180,6 +185,7 @@
   let root: HTMLElement;
   let playback: PlaybackMode = "off";
   let playbackMessage: string | null = null;
+  const toasts = getContext<ToastPublisher | undefined>(TOAST_CONTEXT_KEY);
   let playbackTimer: ReturnType<typeof setTimeout> | null = null;
   let playbackKey = "";
   /* Profile-wide rather than per save: skip fast-forwards what this player has
@@ -199,22 +205,12 @@
     void hydrate().then(() => applyEntryIntent());
   });
 
-  /** Opens on the screen the main-menu entry asked for.
-
-      Only ever out of the title screen, which is what the entry was chosen
-      instead of. Storage answers a round-trip after the first render, so the
-      title is live for that window and a player who took it themselves has
-      already answered the question this was going to — and a mount that started
-      from a checkpoint is not on the title at all.
-
-      Continue with nothing on disk stays on the title rather than resuming an
-      empty run: the menu hides that entry once the probe answers, and a stale
-      one must not resolve to a save the player does not have. */
+  /** Applies shell menu intent after save hydration. */
   function applyEntryIntent(): void {
     if (state.screen !== "title") return;
-    if (entryIntent === "new") newGame();
-    else if (entryIntent === "load") go("load");
+    if (entryIntent === "load") go("load");
     else if (entryIntent === "continue" && state.progressExists) continueGame();
+    else if (entryIntent === "new") newGame();
   }
 
   /** Re-reads both player-visible slots and rebuilds what the title screen
@@ -443,7 +439,9 @@
       skipUnread: $playbackSettings.skipUnread,
     });
     if (halt !== null) {
-      playbackMessage = playbackNotice(playback, halt);
+      const message = playbackNotice(playback, halt);
+      if (toasts === undefined) playbackMessage = message;
+      else toasts.show({ message, tone: "info" });
       playback = "off";
       return;
     }
@@ -721,11 +719,20 @@
     const snapshot = { ...state, savedScreen: state.screen };
     saveMode = "saving";
     const result = await saves.write(MANUAL_SLOT, snapshot, null);
-    saveMode = result.kind === "written" ? "success" : "failure";
+    saveMode =
+      result.kind === "written"
+        ? toasts === undefined
+          ? "success"
+          : "idle"
+        : "failure";
     if (result.kind === "written") {
       manualState = snapshot;
       latestSaveSlot = "manual";
       dirty = false;
+      if (toasts !== undefined) {
+        overlay = null;
+        toasts.show({ message: "Game saved.", tone: "success" });
+      }
     } else storageOperationError = writeProblem(result);
   }
   async function retryManualSave(): Promise<void> {
@@ -737,13 +744,20 @@
       autosaveStatus = "failure";
       return;
     }
+    autosaveStatus = "pending";
     const snapshot = { ...state, savedScreen: "reward" as const };
     const result = await saves.write(AUTOSAVE_SLOT, snapshot, null);
-    autosaveStatus = result.kind === "written" ? "success" : "failure";
+    autosaveStatus =
+      result.kind === "written"
+        ? toasts === undefined
+          ? "success"
+          : "idle"
+        : "failure";
     if (result.kind === "written") {
       autosaveState = snapshot;
       latestSaveSlot = "autosave";
       dirty = false;
+      toasts?.show({ message: "Autosave complete.", tone: "success" });
     } else storageOperationError = writeProblem(result);
   }
   /** Leaves for the deck editor, but only once this run is on disk.
@@ -853,19 +867,11 @@
       >
     </section>
   {/if}
-  {#if state.screen === "title"}
-    <TitleScreen
-      hasProgress={state.progressExists}
-      onnewgame={newGame}
-      oncontinue={continueGame}
-      onload={() => go("load")}
-      onsettings={() => openOverlay("settings")}
-    />
-  {:else if state.screen === "load"}
+  {#if state.screen === "load"}
     <LoadScreen
       onload={loadSlot}
       ondelete={deleteManualSave}
-      onback={() => go("title")}
+      onback={onmainmenu}
     />
   {:else if state.screen === "narrative"}
     <NarrativeScreen
@@ -1113,7 +1119,7 @@
       restoreFocusTo={overlayTrigger}
       onaction={(action) => {
         if (action === "resume") closeOverlay();
-        else if (action === "title") go("title");
+        else if (action === "main-menu") onmainmenu();
         else if (action === "settings")
           openOverlay("settings", undefined, true);
         else openOverlay(action, undefined, true);

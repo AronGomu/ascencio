@@ -109,12 +109,12 @@ describe("DeckSelectScreen mobile layout", () => {
     ]);
   });
 
-  it("narrow header carries a back icon that fires onback", async () => {
+  it("narrow title bar carries a back icon that fires onback", async () => {
     const onback = vi.fn();
     render(DeckSelectScreen, props({ onback }));
 
     const icon = cy("deck-select-back-icon");
-    expect(cy("deck-select-header").contains(icon)).toBe(true);
+    expect(cy("deck-select-titlebar").contains(icon)).toBe(true);
     expect(icon.getAttribute("aria-label")).toBe("Back");
 
     await userEvent.setup().click(icon);

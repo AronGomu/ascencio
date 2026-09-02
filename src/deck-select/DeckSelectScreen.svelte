@@ -507,7 +507,9 @@
     </aside>
   {/if}
 
-  <header data-cy="deck-select-header">
+  <!-- One line for everything the screen says about itself and the two controls
+       that change what it shows: mode, name, count, sort, filter. -->
+  <div class="titlebar" data-cy="deck-select-titlebar">
     <!-- The phone's Back, in the document whenever there is one at all: the
          footer's button is the wide control and CSS shows whichever one the
          width uses, so the two are one affordance and `showBack` takes both. -->
@@ -533,25 +535,16 @@
         </svg>
       </button>
     {/if}
-    <div class="heading" data-cy="deck-select-heading">
-      <p class="eyebrow" data-cy="deck-select-eyebrow">{eyebrow}</p>
-      <h1 data-cy="deck-select-title">{title}</h1>
-      <p class="count" data-cy="deck-select-count">{countLabel}</p>
-    </div>
-  </header>
-
-  <div class="tools" data-cy="deck-select-tools">
-    <label data-cy="deck-select-filter-field">
-      <span data-cy="deck-select-filter-label">Filter</span>
-      <input
-        type="search"
-        bind:value={filter}
-        bind:this={filterField}
-        data-cy="deck-select-filter"
-      />
-    </label>
+    <p class="eyebrow" data-cy="deck-select-eyebrow">{eyebrow}</p>
+    <h1 data-cy="deck-select-title">{title}</h1>
+    <p class="count" data-cy="deck-select-count">{countLabel}</p>
+    <span class="sep" aria-hidden="true" data-cy="deck-select-titlebar-sep"
+      >·</span
+    >
+    <!-- The bar reads as a sentence rather than a form, so each control names
+         itself to a screen reader alone. -->
     <label data-cy="deck-select-sort-field">
-      <span data-cy="deck-select-sort-label">Sort</span>
+      <span class="visually-hidden" data-cy="deck-select-sort-label">Sort</span>
       <select bind:value={sort} data-cy="deck-select-sort">
         <option value="modified" data-cy="deck-select-sort-option-modified"
           >Last modified</option
@@ -559,6 +552,18 @@
         <option value="name" data-cy="deck-select-sort-option-name">Name</option
         >
       </select>
+    </label>
+    <label class="filter-field" data-cy="deck-select-filter-field">
+      <span class="visually-hidden" data-cy="deck-select-filter-label"
+        >Filter</span
+      >
+      <input
+        type="search"
+        placeholder="Filter decks…"
+        bind:value={filter}
+        bind:this={filterField}
+        data-cy="deck-select-filter"
+      />
     </label>
   </div>
 
@@ -762,13 +767,20 @@
 {/if}
 
 <style>
-  /* The left column of the desktop stage: the header, tools and footer keep
+  /* The left column of the desktop stage: the title bar and the footer keep
      their height and the grid takes what is left, so only the decks scroll. */
   .screen {
     display: grid;
     height: 100%;
     min-height: 0;
-    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: var(--space-3);
+    padding: var(--space-3);
+  }
+
+  .titlebar {
+    display: flex;
+    align-items: center;
     gap: var(--space-3);
   }
 
@@ -793,49 +805,61 @@
     height: 1rem;
   }
 
+  /* The bar is one line, so nothing in it wraps: the eyebrow, the title and
+     the count are as wide as their words and the filter takes the rest. */
   .eyebrow {
     margin: 0;
     color: var(--muted);
+    font-family: var(--font-display);
     font-size: var(--text-xs);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
+    white-space: nowrap;
   }
 
   h1 {
     margin: 0;
-    font-size: var(--text-lg);
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
   }
 
   .count {
-    margin: var(--space-1) 0 0;
+    margin: 0;
     color: var(--muted);
     font-size: var(--text-sm);
+    white-space: nowrap;
   }
 
-  .tools {
-    display: flex;
-    align-items: end;
-    gap: var(--space-3);
+  .sep {
+    color: var(--gold-line);
   }
 
-  .tools label {
-    display: grid;
-    gap: var(--space-1);
-  }
-
-  .tools label span {
-    color: var(--muted);
-    font-size: var(--text-xs);
-  }
-
-  input,
-  select {
-    min-height: 2.5rem;
+  .titlebar input,
+  .titlebar select {
+    min-height: 2.4rem;
     padding: var(--space-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     color: var(--text);
     background: var(--surface-chain);
+    font: inherit;
+  }
+
+  /* The filter runs to the pane's edge: it is the one control with nothing to
+     say about its own width, so it absorbs whatever the sentence leaves. */
+  .filter-field {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 6rem;
+  }
+
+  .titlebar input[type="search"] {
+    flex: 1 1 auto;
+    min-width: 6rem;
   }
 
   .grid {
@@ -881,7 +905,7 @@
   }
 
   /* The second column: duel start seats the opponent there and the library
-     docks its preview there. It holds the whole of column 2, so the four rows
+     docks its preview there. It holds the whole of column 2, so the three rows
      above auto-place down column 1 without being placed by hand. */
   .screen.paneled {
     grid-template-columns: minmax(0, 73fr) minmax(17rem, 27fr);
@@ -907,7 +931,7 @@
   @media (max-width: 62rem) {
     .screen.paneled {
       grid-template-columns: minmax(0, 1fr);
-      grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
     }
 
     .seat-panel,
@@ -921,25 +945,22 @@
     }
   }
 
-  /* The phone layout, at the design's 430px frame. Header, opponent, tools,
-     one column of decks, sticky footer — the same markup, re-ordered. */
+  /* The phone layout, at the design's 430px frame. Title bar, opponent, one
+     column of decks, sticky footer — the same markup, re-ordered. */
   @media (max-width: 40rem) {
-    header {
-      display: flex;
-      align-items: center;
+    /* No width holds the whole sentence on a phone, so the bar becomes as many
+       lines as it needs rather than running off the screen's edge. */
+    .titlebar {
+      flex-wrap: wrap;
       gap: var(--space-2);
-    }
-
-    .heading {
-      min-width: 0;
     }
 
     .back-icon {
       display: grid;
     }
 
-    /* Row 1 is the header here rather than the panel: the phone says which
-       screen you are on before who it is seating. The other four rows
+    /* Row 1 is the title bar here rather than the panel: the phone says which
+       screen you are on before who it is seating. The other three rows
        auto-place around this one in document order. */
     .screen.paneled .seat-panel {
       grid-row: 2;

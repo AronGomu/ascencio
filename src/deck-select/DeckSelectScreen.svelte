@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
   import DecklistPanel from "./DecklistPanel.svelte";
   import DeckTile from "./DeckTile.svelte";
   import DeckTileMenu from "./DeckTileMenu.svelte";
@@ -63,6 +63,8 @@
   export let onpickopponent: (id: string) => void = () => undefined;
   /** Test override for the phone layout: null follows the media query. */
   export let forceNarrow: boolean | null = null;
+  /** Test override for measured titlebar/footer overflow. */
+  export let forceCompact: boolean | null = null;
   /** Full decklist for a tile key; null = no preview for that tile. Async so
       hosts may lazy-load; the screen ignores stale resolutions, so only the
       currently hovered key's answer ever renders. */
@@ -97,6 +99,14 @@
      here to take focus back however the picker closes. */
   let portrait: HTMLElement | null = null;
   let picker: HTMLElement | null = null;
+  let titlebar: HTMLElement | null = null;
+  let footer: HTMLElement | null = null;
+  let titleProbe: HTMLElement | null = null;
+  let footerProbe: HTMLElement | null = null;
+  let measuredCompact = false;
+  let compactMenuOpen = false;
+  let compactKebab: HTMLButtonElement | null = null;
+  let compactMenu: HTMLElement | null = null;
 
   const NARROW_QUERY = "(max-width: 40rem)";
   /* A hover preview is a pointer's affordance: a finger has no hover to raise
@@ -131,7 +141,33 @@
     };
   });
 
+  /* Probes always contain the full bars, so measuring them remains stable
+     after compact markup replaces the overflowing controls. Observing both
+     live bars and probes catches container resizes plus copy/count changes. */
+  onMount(() => {
+    if (typeof ResizeObserver === "undefined") return;
+    const measure = () => {
+      if (
+        titlebar === null ||
+        footer === null ||
+        titleProbe === null ||
+        footerProbe === null
+      )
+        return;
+      measuredCompact =
+        titleProbe.scrollWidth > titlebar.clientWidth ||
+        footerProbe.scrollWidth > footer.clientWidth;
+    };
+    const observer = new ResizeObserver(measure);
+    for (const element of [titlebar, footer, titleProbe, footerProbe])
+      if (element !== null) observer.observe(element);
+    measure();
+    return () => observer.disconnect();
+  });
+
   $: narrow = forceNarrow ?? matchedNarrow;
+  $: compact = forceCompact ?? (!narrow && measuredCompact);
+  $: if (!compact) compactMenuOpen = false;
   /** The deck filling the seat the grid is currently picking for. */
   $: activeKey =
     seat === "opponent" ? (opponentDeck?.key ?? null) : selectedKey;
@@ -224,11 +260,18 @@
   $: if (picking && picker !== null)
     (picker.querySelector<HTMLElement>("button") ?? picker).focus();
 
-  function pickerPointerDown(event: Event): void {
-    if (!picking) return;
+  function documentPointerDown(event: Event): void {
     const origin = event.target;
-    if (origin instanceof Node && picker?.contains(origin)) return;
-    closePicker();
+    if (picking) {
+      if (!(origin instanceof Node && picker?.contains(origin))) closePicker();
+    }
+    if (!compactMenuOpen) return;
+    if (
+      origin instanceof Node &&
+      (compactMenu?.contains(origin) || compactKebab?.contains(origin))
+    )
+      return;
+    closeCompactMenu();
   }
 
   /* The grid cell the pointer is inside, found by position: the tiles are the
@@ -348,6 +391,17 @@
     onopen(selectedTile.key);
   }
 
+  async function openCompactMenu(): Promise<void> {
+    compactMenuOpen = true;
+    await tick();
+    compactMenu?.querySelector<HTMLButtonElement>("button")?.focus();
+  }
+
+  function closeCompactMenu(returnFocus = false): void {
+    compactMenuOpen = false;
+    if (returnFocus) compactKebab?.focus();
+  }
+
   function duplicateSelected(): void {
     if (selectedTile === null) return;
     onduplicate(selectedTile.key);
@@ -379,7 +433,13 @@
      owns the letters typed into it — `/` and `f` are characters there, not
      shortcuts. */
   function shortcutsInert(event: KeyboardEvent): boolean {
-    if (menu !== null || renaming !== null || deleting !== null || picking)
+    if (
+      menu !== null ||
+      compactMenuOpen ||
+      renaming !== null ||
+      deleting !== null ||
+      picking
+    )
       return true;
     const target = event.target;
     return (
@@ -413,7 +473,74 @@
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
-<svelte:document onpointerdown={pickerPointerDown} />
+<svelte:document onpointerdown={documentPointerDown} />
+
+{#snippet deckAction(
+  action: "delete" | "rename" | "duplicate" | "open" | "create",
+  pushed = false,
+)}
+  {#if action === "delete"}
+    <button
+      type="button"
+      class="secondary act-delete"
+      role={compactMenuOpen ? "menuitem" : undefined}
+      disabled={selectedTile === null || !selectedTile.deletable}
+      data-cy="deck-select-delete"
+      onclick={() => {
+        closeCompactMenu();
+        deleteSelected();
+      }}>Delete</button
+    >
+  {:else if action === "rename"}
+    <button
+      type="button"
+      class="secondary act-rename"
+      role={compactMenuOpen ? "menuitem" : undefined}
+      disabled={selectedTile === null}
+      data-cy="deck-select-rename"
+      onclick={() => {
+        closeCompactMenu();
+        renameSelected();
+      }}>Rename</button
+    >
+  {:else if action === "duplicate"}
+    <button
+      type="button"
+      class="secondary act-duplicate"
+      role={compactMenuOpen ? "menuitem" : undefined}
+      disabled={selectedTile === null}
+      data-cy="deck-select-duplicate"
+      onclick={() => {
+        closeCompactMenu();
+        duplicateSelected();
+      }}>Duplicate</button
+    >
+  {:else if action === "open"}
+    <button
+      type="button"
+      class="secondary"
+      class:pushed
+      role={compactMenuOpen ? "menuitem" : undefined}
+      disabled={selectedTile === null}
+      data-cy="deck-select-open"
+      onclick={() => {
+        closeCompactMenu();
+        openSelected();
+      }}>Open</button
+    >
+  {:else}
+    <button
+      type="button"
+      class="act-create"
+      role={compactMenuOpen ? "menuitem" : undefined}
+      data-cy="deck-select-create"
+      onclick={() => {
+        closeCompactMenu();
+        oncreate?.();
+      }}>+ Create</button
+    >
+  {/if}
+{/snippet}
 
 {#snippet startButton()}
   <button
@@ -429,6 +556,7 @@
   class="screen"
   class:paneled={seatPanel || docked}
   class:library={mode === "library"}
+  class:compact
   data-cy="deck-select-screen"
 >
   {#if mode === "duel-start" && opponent !== null}
@@ -618,7 +746,7 @@
 
   <!-- One line for everything the screen says about itself and the two controls
        that change what it shows: mode, name, count, sort, filter. -->
-  <div class="titlebar" data-cy="deck-select-titlebar">
+  <div class="titlebar" bind:this={titlebar} data-cy="deck-select-titlebar">
     <!-- The phone's Back, in the document whenever there is one at all: the
          footer's button is the wide control and CSS shows whichever one the
          width uses, so the two are one affordance and `showBack` takes both. -->
@@ -644,12 +772,16 @@
         </svg>
       </button>
     {/if}
-    <p class="eyebrow" data-cy="deck-select-eyebrow">{eyebrow}</p>
-    <h1 data-cy="deck-select-title">{title}</h1>
+    {#if !compact}
+      <p class="eyebrow" data-cy="deck-select-eyebrow">{eyebrow}</p>
+    {/if}
+    <h1 data-cy="deck-select-title">{compact ? "Select Deck" : title}</h1>
     <p class="count" data-cy="deck-select-count">{countLabel}</p>
-    <span class="sep" aria-hidden="true" data-cy="deck-select-titlebar-sep"
-      >·</span
-    >
+    {#if !compact}
+      <span class="sep" aria-hidden="true" data-cy="deck-select-titlebar-sep"
+        >·</span
+      >
+    {/if}
     <!-- The bar reads as a sentence rather than a form, so each control names
          itself to a screen reader alone. -->
     <label data-cy="deck-select-sort-field">
@@ -676,6 +808,38 @@
     </label>
   </div>
 
+  <!-- Max-content copy of the full titlebar. It stays measurable while the
+       visible bar is compact, which lets the screen restore without guessing
+       at a breakpoint. -->
+  <div
+    class="bar-probe titlebar-probe"
+    aria-hidden="true"
+    bind:this={titleProbe}
+    data-cy="deck-select-titlebar-probe"
+  >
+    <span class="eyebrow" data-cy="deck-select-titlebar-probe-eyebrow"
+      >{eyebrow}</span
+    >
+    <span class="probe-title" data-cy="deck-select-titlebar-probe-title"
+      >{title}</span
+    >
+    <span class="count" data-cy="deck-select-titlebar-probe-count"
+      >{countLabel}</span
+    >
+    <span class="sep" data-cy="deck-select-titlebar-probe-sep">·</span>
+    <select tabindex="-1" data-cy="deck-select-titlebar-probe-sort">
+      <option data-cy="deck-select-titlebar-probe-sort-option"
+        >Last modified</option
+      >
+    </select>
+    <input
+      type="search"
+      tabindex="-1"
+      placeholder="Filter decks…"
+      data-cy="deck-select-titlebar-probe-filter"
+    />
+  </div>
+
   <div
     class="grid"
     bind:this={grid}
@@ -698,7 +862,7 @@
     {/each}
   </div>
 
-  <footer data-cy="deck-select-footer">
+  <footer bind:this={footer} data-cy="deck-select-footer">
     {#if showBack}
       <button
         type="button"
@@ -707,51 +871,64 @@
         onclick={onback}>{backText}</button
       >
     {/if}
-    {#if manageable}
-      <div class="manage" data-cy="deck-select-manage">
+    {#if !compact}
+      {#if manageable}
+        <div class="manage" data-cy="deck-select-manage">
+          {@render deckAction("delete")}
+          {@render deckAction("rename")}
+          {@render deckAction("duplicate")}
+          {#if oncreate !== null}
+            {@render deckAction("create")}
+          {/if}
+        </div>
+      {/if}
+      {#if mode === "duel-start"}
+        {@render deckAction("open", !manageable)}
+      {/if}
+    {/if}
+    {#if mode === "duel-start" && narrow}
+      {@render startButton()}
+    {/if}
+    {#if compact && (manageable || mode === "duel-start")}
+      <div class="compact-actions" data-cy="deck-select-compact-actions">
         <button
           type="button"
-          class="secondary act-delete"
-          disabled={selectedTile === null || !selectedTile.deletable}
-          data-cy="deck-select-delete"
-          onclick={deleteSelected}>Delete</button
+          class="compact-kebab"
+          aria-label="Deck actions"
+          aria-haspopup="menu"
+          aria-expanded={compactMenuOpen}
+          aria-controls="deck-select-kebab-menu"
+          bind:this={compactKebab}
+          data-cy="deck-select-kebab"
+          onclick={() =>
+            compactMenuOpen ? closeCompactMenu(true) : openCompactMenu()}
+          >⋯</button
         >
-        <button
-          type="button"
-          class="secondary act-rename"
-          disabled={selectedTile === null}
-          data-cy="deck-select-rename"
-          onclick={renameSelected}>Rename</button
-        >
-        <button
-          type="button"
-          class="secondary act-duplicate"
-          disabled={selectedTile === null}
-          data-cy="deck-select-duplicate"
-          onclick={duplicateSelected}>Duplicate</button
-        >
-        {#if oncreate !== null}
-          <button
-            type="button"
-            class="act-create"
-            data-cy="deck-select-create"
-            onclick={oncreate}>+ Create</button
+        {#if compactMenuOpen}
+          <div
+            id="deck-select-kebab-menu"
+            class="compact-menu"
+            role="menu"
+            tabindex="-1"
+            bind:this={compactMenu}
+            data-cy="deck-select-kebab-menu"
+            onkeydown={(event) =>
+              handleModalKeydown(event, () => closeCompactMenu(true))}
           >
+            {#if manageable}
+              {@render deckAction("delete")}
+              {@render deckAction("rename")}
+              {@render deckAction("duplicate")}
+            {/if}
+            {#if mode === "duel-start"}
+              {@render deckAction("open")}
+            {/if}
+            {#if manageable && oncreate !== null}
+              {@render deckAction("create")}
+            {/if}
+          </div>
         {/if}
       </div>
-    {/if}
-    {#if mode === "duel-start"}
-      <button
-        type="button"
-        class="secondary wide-only"
-        class:pushed={!manageable}
-        disabled={selectedTile === null}
-        data-cy="deck-select-open"
-        onclick={openSelected}>Open</button
-      >
-      {#if narrow}
-        {@render startButton()}
-      {/if}
     {/if}
     {#if blockNotice !== null}
       <p class="notice" role="status" data-cy="deck-select-block-notice">
@@ -759,6 +936,47 @@
       </p>
     {/if}
   </footer>
+
+  <!-- Footer probe mirrors full action labels and chrome without rendering a
+       second control site. Its max-content width remains independent of the
+       visible compact menu. -->
+  <div
+    class="bar-probe footer-probe"
+    aria-hidden="true"
+    bind:this={footerProbe}
+    data-cy="deck-select-footer-probe"
+  >
+    {#if showBack}
+      <span
+        class="probe-action probe-return"
+        data-cy="deck-select-footer-probe-back">{backText}</span
+      >
+    {/if}
+    {#if manageable}
+      <span class="probe-action" data-cy="deck-select-footer-probe-delete"
+        >Delete</span
+      >
+      <span class="probe-action" data-cy="deck-select-footer-probe-rename"
+        >Rename</span
+      >
+      <span class="probe-action" data-cy="deck-select-footer-probe-duplicate"
+        >Duplicate</span
+      >
+      {#if oncreate !== null}
+        <span class="probe-action" data-cy="deck-select-footer-probe-create"
+          >+ Create</span
+        >
+      {/if}
+    {/if}
+    {#if mode === "duel-start"}
+      <span class="probe-action" data-cy="deck-select-footer-probe-open"
+        >Open</span
+      >
+      <span class="probe-action" data-cy="deck-select-footer-probe-start"
+        >{startLabel}</span
+      >
+    {/if}
+  </div>
 
   {#if docked}
     <!-- The library's second column, the space duel start seats its opponent
@@ -879,6 +1097,7 @@
     --p: 8rem;
     --chamfer: 12px;
 
+    position: relative;
     display: grid;
     height: 100%;
     min-height: 0;
@@ -891,6 +1110,32 @@
     display: flex;
     align-items: center;
     gap: var(--space-3);
+  }
+
+  /* Invisible full-content bars stay independent of compact rendering. Their
+     max-content widths are the threshold, not a viewport guess. */
+  .bar-probe {
+    position: fixed;
+    z-index: -1;
+    top: 0;
+    left: -100000px;
+    display: flex;
+    visibility: hidden;
+    width: max-content;
+    align-items: center;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .titlebar-probe {
+    gap: var(--space-3);
+  }
+
+  .probe-title {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
   }
 
   /* Hidden until the phone layout claims it, where the footer's Back is gone
@@ -948,7 +1193,9 @@
   }
 
   .titlebar input,
-  .titlebar select {
+  .titlebar select,
+  .titlebar-probe input,
+  .titlebar-probe select {
     min-height: 2.4rem;
     padding: var(--space-2);
     border: 1px solid var(--border);
@@ -1023,6 +1270,70 @@
     border-color: var(--danger-strong);
     color: var(--ink);
     background: var(--danger-strong);
+  }
+
+  .compact .return {
+    min-height: 2.5rem;
+    padding-inline: var(--space-3);
+    font-size: var(--text-sm);
+  }
+
+  .compact-actions {
+    position: relative;
+    margin-left: auto;
+  }
+
+  .compact-kebab {
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    place-items: center;
+    padding: 0;
+    font-size: var(--text-lg);
+  }
+
+  .compact-menu {
+    position: absolute;
+    z-index: 20;
+    right: 0;
+    bottom: calc(100% + var(--space-2));
+    display: grid;
+    min-width: 11rem;
+    gap: var(--space-1);
+    padding: var(--space-2);
+    border: 1px solid var(--gold-line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    box-shadow: 0 0.5rem 1.5rem var(--shadow);
+  }
+
+  .compact-menu button {
+    width: 100%;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .footer-probe {
+    gap: var(--space-2);
+  }
+
+  .probe-action {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    padding: 0.7rem 1rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    font-weight: 750;
+  }
+
+  .probe-return {
+    min-height: 3.1rem;
+    padding-inline: var(--space-5);
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
   }
 
   /* One hue per operation, tinted while it rests and solid under the pointer,
@@ -1205,6 +1516,7 @@
        keeps Start alone — and the library, which has no Start, keeps nothing
        but the header's back icon. */
     .manage,
+    .compact-actions,
     .wide-only {
       display: none;
     }

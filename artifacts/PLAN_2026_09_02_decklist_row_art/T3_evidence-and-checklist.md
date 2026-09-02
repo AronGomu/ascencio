@@ -57,15 +57,15 @@ await expect(row.locator('[data-cy*="-row-art-"]')).toHaveCount(1); // bundled d
 
 ## Impl steps
 
-- [ ] 1. Add navigation + assertions to the chosen e2e spec; mutate-selector red check; green run.
-- [ ] 2. `npm run build:verify` — capture output.
-- [ ] 3. Append manual steps to `artifacts/manual_test_checklist.md`: (a) deck editor → library → select deck → dock shows art rows, colored borders, counts, aligned names; (b) free play → hover deck tile → float same; (c) story → pre-battle → float same; (d) missing art → row still readable (color + name).
-- [ ] 4. Update `docs/GLOSSARY.md` if "frame colour" / "decklist row" absent (make-glossary-aron).
+- [x] 1. Add navigation + assertions to the chosen e2e spec; mutate-selector red check; green run.
+- [x] 2. `npm run build:verify` — capture output.
+- [x] 3. Append manual steps to `artifacts/manual_test_checklist.md`: (a) deck editor → library → select deck → dock shows art rows, colored borders, counts, aligned names; (b) free play → hover deck tile → float same; (c) story → pre-battle → float same; (d) missing art → row still readable (color + name).
+- [x] 4. Update `docs/GLOSSARY.md` if "frame colour" / "decklist row" absent (make-glossary-aron).
 
 ## Validation
 
-- [ ] tests pass: `npx playwright test <spec>` + `npm run build:verify` + `npm run check:headless` + `npm run test:component` (paste tails)
-- [ ] manual check: covered by checklist additions
-- [ ] no silent-failure swallow added — `none`
-- [ ] app functional — evidence above
-- [ ] commit msg draft: `test(e2e): prove decklist art rows in Chromium and record manual checks`
+- [x] tests pass: focused Playwright 1/1; `build:verify` status `ok`; `check:headless` exit 0; component 112 files / 1059 tests
+- [x] manual check: covered by checklist additions
+- [x] no silent-failure swallow added — `none`
+- [x] app functional — evidence above
+- [x] commit msg draft: `test(e2e): prove decklist art rows in Chromium and record manual checks`

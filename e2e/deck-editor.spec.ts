@@ -871,3 +871,46 @@ test("edit mutation count is independent of scroll depth", async ({ page }) => {
     `mutation delta ${delta} (shallow=${mutationsAtShallow}, ceiling=${mutationsAtCeiling}) suggests cost scales with depth`,
   ).toBeLessThanOrEqual(MUTATION_BOUND);
 });
+
+test("deck library shows art rows with frame and copy count", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+
+  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.getByLabel("Deck name").fill("Decklist Rows");
+  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
+  await catalogTile(page, BLUE_EYES).click();
+  await page.getByRole("searchbox", { name: "Name" }).fill("");
+  const catalogTiles = page.locator(
+    '[data-cy="deck-catalog-results"] > [data-cy^="catalog-tile-"]',
+  );
+  const catalogCodes = await catalogTiles.evaluateAll((tiles) =>
+    tiles.map((tile) => tile.getAttribute("data-card-code")),
+  );
+  const additionalCodes = catalogCodes
+    .filter(
+      (code): code is string => code !== null && code !== String(BLUE_EYES),
+    )
+    .slice(0, 59);
+  expect(additionalCodes.length).toBeGreaterThanOrEqual(39);
+  for (const code of additionalCodes) {
+    await catalogTile(page, Number(code)).click();
+    if ((await zoneCount(page, "main").textContent())?.startsWith("40/")) break;
+  }
+  await expect(zoneCount(page, "main")).toHaveText("40/40");
+  await expectSaveSettled(page, { main: 40, extra: 7, side: 0 });
+
+  await page.goto(libraryUrl);
+  await page.getByRole("button", { name: /^Decklist Rows/ }).click();
+
+  const row = page.locator('[data-cy^="deck-select-docked-list-row-"]').first();
+  await expect(row).toBeVisible();
+  await expect(row).toHaveCSS("border-left-width", "5px");
+  await expect(row.locator('[data-cy*="-row-copies-"]')).toHaveCount(1);
+  await expect(row.locator('[data-cy*="-row-art-"]')).toHaveCount(1);
+});

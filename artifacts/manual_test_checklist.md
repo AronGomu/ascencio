@@ -4106,3 +4106,10 @@ Run `npm run dev` (default `DEV_PORT=4300`).
 - [ ] Open a story encounter's briefing. The opponent's portrait is **not** a control — pressing it opens no picker, and there is no ⇄ chip.
 - [ ] The opponent's deck card reads **🔒 Set by the story** and cannot be pressed into opponent-seat picking.
 - [ ] The deck card's counts read `Main 0 · Extra 0 · Side 0`. **Known gap, not a bug to file:** there is no story-legal source for a bundled preset's card counts, so the locked seat cannot show them yet.
+
+## Decklist row art
+
+- [ ] Deck Editor → Library → select a deck: dock shows card-art rows with coloured frame borders, copy counts, and aligned names.
+- [ ] Free play → hover a deck tile: floating decklist shows same art rows, coloured frame borders, copy counts, and aligned names.
+- [ ] Story → open pre-battle: floating decklist shows same art rows, coloured frame borders, copy counts, and aligned names.
+- [ ] Block or remove one card-art request: row remains readable through frame colour and card name.

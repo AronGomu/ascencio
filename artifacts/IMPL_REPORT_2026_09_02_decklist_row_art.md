@@ -1,14 +1,14 @@
 # Implementation report — decklist row art + frame color
 
-Plan: `artifacts/PLAN_2026_09_02_decklist_row_art.md` (committed before retirement; recover via `git show <sha>:artifacts/PLAN_2026_09_02_decklist_row_art.md`).
+Plan: `artifacts/PLAN_2026_09_02_decklist_row_art.md` (retired after completion; recover via `git show 124e824:artifacts/PLAN_2026_09_02_decklist_row_art.md`).
 
 ## Ticket State List
 
 | Ticket | Goal | State | Commit |
 | ------ | ---- | ----- | ------ |
 | T1 | `cardFrameOf` classifier + `CARD_FRAME_COLORS` palette | DONE — 11/11 focused tests; headless green | `3023162` |
-| T2 | `DecklistRow` `frame`/`artUrl`; panel + three hosts | DONE — 1059/1059 component tests; headless green | pending commit |
-| T3 | Chromium evidence, build gates, manual checklist | NOT STARTED | — |
+| T2 | `DecklistRow` `frame`/`artUrl`; panel + three hosts | DONE — 1059/1059 component tests; headless green | `518c911` |
+| T3 | Chromium evidence, build gates, manual checklist | DONE — Chromium 1/1; build/headless/component green | pending commit |
 
 ## Assumptions
 

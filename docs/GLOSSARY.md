@@ -141,3 +141,5 @@ Worker, engine, and asset pipeline are "backend" here — nothing runs on a serv
 | adr | Accepted architecture decision records | `docs/ADR/` |
 | guide | Generated HTML developer guide | `docs/developer-guide/` |
 | checks | Aggregate quality gate npm scripts | `package.json` (`check`, `check:headless`, `check:browser`) |
+| decklist row | Card entry in deck preview with frame colour, copy count, name, and optional art | `src/deck-select/DecklistPanel.svelte` |
+| frame colour | Five-pixel left border on decklist row indicating card type | `src/deck-select/DecklistPanel.svelte` |

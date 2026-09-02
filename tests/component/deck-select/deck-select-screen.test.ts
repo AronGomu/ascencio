@@ -186,8 +186,8 @@ describe("DeckSelectScreen", () => {
     expect(find("deck-select-create")).toBeNull();
   });
 
-  /* Create is the cluster's last word: the destructive actions read first and
-     the one that adds a deck closes the row. */
+  /* Create is the cluster's last word: the destructive actions read first,
+     Open stays neutral, and the one that adds a deck closes the row. */
   it("the manage cluster orders its actions", () => {
     render(DeckSelectScreen, props({ oncreate: vi.fn() }));
 
@@ -195,6 +195,7 @@ describe("DeckSelectScreen", () => {
       "deck-select-delete",
       "deck-select-rename",
       "deck-select-duplicate",
+      "deck-select-open",
       "deck-select-create",
     ]);
   });

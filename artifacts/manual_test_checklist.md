@@ -4129,3 +4129,20 @@ Run `npm run dev` (default `DEV_PORT=4300`).
 - [ ] Free play → hover a deck tile: floating decklist shows same art rows, coloured frame borders, copy counts, and aligned names.
 - [ ] Story → open pre-battle: floating decklist shows same art rows, coloured frame borders, copy counts, and aligned names.
 - [ ] Block or remove one card-art request: row remains readable through frame colour and card name.
+
+---
+
+## Deck select — Twin Columns
+
+Run `npm run dev` (default `DEV_PORT=4300`), then open `#/free-play` in a
+1600×900 Chromium window.
+
+- [ ] TC1. Confirm one-line **Free play / Choose your deck** title bar sits above deck grid. Filter stretches to right edge of grid column. Right pane spans full screen height at 38rem wide.
+- [ ] TC2. Confirm right pane shows **You** left, opponent right, each with avatar, deck-name seat chip, independently scrolling Main / Extra / Side list. **Start the duel** stays visible at pane bottom.
+- [ ] TC3. Check decklist rows with one copy: copies chip reads **1**, not blank.
+- [ ] TC4. Hover non-selected grid tile. Active seat list gains dashed preview outline plus swaps rows. Move pointer away: picked deck list returns. No floating decklist covers grid.
+- [ ] TC5. Press opponent deck-name chip. Active outline moves to opponent seat; next grid pick changes opponent list. Press chip again, or press player chip: grid returns to player seat.
+- [ ] TC6. Confirm footer order: red **← Return to Menu** at far left; Delete, Rename, Duplicate, Open, green **+ Create** at far right. Press Return → main menu. Return to free play, press Create → deck library.
+- [ ] TC7. Resize to 950px wide: full title plus footer actions remain, with no kebab. Continue narrowing to about 903px: title becomes **Select Deck**, eyebrow hides, footer actions collapse into ⋯.
+- [ ] TC8. Open ⋯ menu. Exactly five actions appear upward in order: Delete, Rename, Duplicate, Open, + Create. Press Escape: menu closes, focus returns to ⋯.
+- [ ] TC9. Press **Start the duel** from wide layout. Duel field loads using selected player/opponent decks; no second picker appears.

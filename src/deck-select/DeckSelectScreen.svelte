@@ -877,13 +877,15 @@
           {@render deckAction("delete")}
           {@render deckAction("rename")}
           {@render deckAction("duplicate")}
+          {#if mode === "duel-start"}
+            {@render deckAction("open")}
+          {/if}
           {#if oncreate !== null}
             {@render deckAction("create")}
           {/if}
         </div>
-      {/if}
-      {#if mode === "duel-start"}
-        {@render deckAction("open", !manageable)}
+      {:else if mode === "duel-start"}
+        {@render deckAction("open", true)}
       {/if}
     {/if}
     {#if mode === "duel-start" && narrow}

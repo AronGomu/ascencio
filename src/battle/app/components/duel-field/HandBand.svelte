@@ -55,7 +55,11 @@
 
   const mirrored = player === 1;
   let viewportElement: HTMLDivElement | null = null;
-  const HAND_FAN_DEG = 5;
+  const HAND_FAN_DEG = 6;
+  /* Droop of the outermost card as a fraction of the card height. A droop
+     linear in the offset tracks the tilt and reads as a slanted row; squaring
+     the offset bends the hand into an arc with the centre card at its top. */
+  const HAND_ARC_FACTOR = 0.12;
 
   function fanDegFor(index: number, count: number): number {
     const offset = index - (count - 1) / 2;
@@ -63,8 +67,9 @@
   }
 
   function droopPxFor(index: number, count: number): number {
-    const offset = index - (count - 1) / 2;
-    return Math.abs(offset) * HAND_FAN_DEG * cardHeight * 0.004;
+    const half = Math.max(1, (count - 1) / 2);
+    const offset = (index - (count - 1) / 2) / half;
+    return offset * offset * HAND_ARC_FACTOR * cardHeight;
   }
 
   /* `sequence` addresses the engine, `displayOrder` addresses the eye: your
@@ -88,7 +93,7 @@
 <div
   class="duel-field-hand-band"
   class:is-opponent={mirrored}
-  style={`--field-x: ${placement.x}px; --field-y: ${placement.y}px; --field-width: ${placement.width}px; --field-height: ${placement.height}px;`}
+  style={`--field-x: ${placement.x}px; --field-y: ${placement.y}px; --field-width: ${placement.width}px; --field-height: ${placement.height}px; --hand-card-height: ${cardHeight}px;`}
   role="group"
   aria-label={zone.accessibleLabel}
   data-feedback-zone-id={zone.id}

@@ -575,6 +575,27 @@ describe("global styles", () => {
     expect(block).not.toContain("justify-content");
   });
 
+  /* T5: the fanned hand droops its outer cards below the band box and
+     `overflow-y: hidden` clips at the padding edge, so the viewport has to
+     carry the arc's headroom itself. Under the global `border-box` the
+     padding alone would only shrink the content box, leaving the clip edge
+     where it was: the matching height growth is what moves the clip edge
+     under the deepest card corner. The 0.17 factor is measured, not chosen:
+     the deepest corner is the 0.12 droop plus the bottom corner's sweep
+     through the 6deg fan, and Chromium clipped the outermost card of a five
+     card hand by 3.22px at 0.14. */
+  it("hand viewport reserves clip headroom for the fan arc", () => {
+    const css = readFileSync("src/styles/app.css", "utf8");
+    const block = ruleBlock(css, "\n.duel-field-hand-band__viewport {");
+    expect(block).toContain(
+      "padding-bottom: calc(var(--hand-card-height) * 0.17)",
+    );
+    expect(block).toContain(
+      "height: calc(100% + var(--hand-card-height) * 0.17)",
+    );
+    expect(block).toContain("overflow-y: hidden");
+  });
+
   it("opponent hand band keeps its mirrored direction", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     expect(

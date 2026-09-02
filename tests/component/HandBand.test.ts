@@ -19,6 +19,17 @@ import type { FieldPlacement } from "../../src/battle/field/duel-field-geometry.
 
 const PLACEMENT: FieldPlacement = { x: 400, y: 600, width: 760, height: 80 };
 const CARD_HEIGHT = 68.8;
+/* Mirrors `HAND_ARC_FACTOR` in `HandBand.svelte`: the outermost card's droop
+   as a fraction of the card height. */
+const HAND_ARC_FACTOR = 0.12;
+
+/* Parabolic arc sampled at the given normalised offsets from the centre. */
+function expectedArc(
+  offsets: readonly number[],
+  outerDroop: number,
+): readonly number[] {
+  return offsets.map((offset) => offset * offset * outerDroop);
+}
 
 afterEach(() => {
   cleanup();
@@ -165,11 +176,11 @@ describe("HandBand", () => {
     ]);
   });
 
-  it("fans sorted cards and droops outer cards", () => {
+  it("fans sorted cards along a parabolic arc", () => {
     const cards = handCards(0, 5).map((card, index) =>
       Object.freeze({ ...card, displayOrder: 4 - index }),
     );
-    renderBand({ cards });
+    renderBand({ cards, cardHeight: 100 });
 
     expect(cardArticles().map((card) => card.dataset.cardId)).toEqual([
       "p0-hand-4",
@@ -180,17 +191,48 @@ describe("HandBand", () => {
     ]);
     expect(
       cardArticles().map((card) => card.style.getPropertyValue("--card-fan")),
-    ).toEqual(["-5deg", "-2.5deg", "0deg", "2.5deg", "5deg"]);
+    ).toEqual(["-6deg", "-3deg", "0deg", "3deg", "6deg"]);
+    /* Fan is linear in the offset from the centre, droop is that offset
+       squared against the card height: the centre card sits highest and each
+       card outward of it falls further, which is what makes an arc rather
+       than a row of tilted cards on one y. */
     const droops = cardArticles().map((card) =>
       Number.parseFloat(card.style.getPropertyValue("--card-droop")),
     );
-    const expectedDroops = [
-      2.7520000000000002, 1.3760000000000001, 0, 1.3760000000000001,
-      2.7520000000000002,
-    ];
-    expectedDroops.forEach((expected, index) =>
+    const outer = HAND_ARC_FACTOR * 100;
+    expectedArc([-1, -0.5, 0, 0.5, 1], outer).forEach((expected, index) =>
       expect(droops[index]).toBeCloseTo(expected, 10),
     );
+  });
+
+  it("drops each card of a seven card hand strictly below its inner neighbour", () => {
+    renderBand({ cards: handCards(0, 7), cardHeight: 100 });
+
+    const droops = cardArticles().map((card) =>
+      Number.parseFloat(card.style.getPropertyValue("--card-droop")),
+    );
+    expect(droops).toHaveLength(7);
+    /* Strictly monotonic on both sides of the centre, and symmetric across
+       it: no pair of cards shares a y until the arc reaches its apex. */
+    for (let index = 0; index < 3; index += 1) {
+      expect(droops[index]).toBeGreaterThan(droops[index + 1]!);
+      expect(droops[6 - index]).toBeGreaterThan(droops[5 - index]!);
+      expect(droops[index]).toBeCloseTo(droops[6 - index]!, 10);
+    }
+    expect(droops[3]).toBe(0);
+    expect(droops[0]).toBeCloseTo(HAND_ARC_FACTOR * 100, 10);
+  });
+
+  /* The viewport must reserve headroom for the droop it clips, and custom
+     properties only inherit downward: the value declared on the card itself
+     is invisible to its scrolling ancestor, so the band root republishes it. */
+  it("publishes the card height on the band root", () => {
+    renderBand({ cards: handCards(0, 3), cardHeight: 68.8 });
+
+    const root = document.querySelector<HTMLElement>(
+      '[data-cy="field-hand-band-p0"]',
+    )!;
+    expect(root.style.getPropertyValue("--hand-card-height")).toBe("68.8px");
   });
 
   it("keeps a single card flat with no droop", () => {

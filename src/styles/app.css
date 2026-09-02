@@ -2459,12 +2459,28 @@ button.duel-field-zone,
     rotateX(var(--hand-upright, 0deg));
 }
 
+/* The fan drops its outer cards below the band box — the droop translation
+   plus the rotation sweep of the bottom corner — and `overflow-y: hidden`
+   clips at the padding edge, not the content edge. So the padding alone would
+   only shrink the content box under the global `border-box` and leave the
+   clip where it was; growing the height by the same amount moves the clip
+   edge under the deepest card corner while the content box stays at the band
+   height, so card layout and the scroll extent are untouched. Both bands
+   droop downward (`droopPxFor` is player-agnostic and positive), so the one
+   headroom serves the opponent's mirrored fan too. `--hand-card-height`
+   arrives from the band root: the card's own declaration of it is a
+   descendant, and custom properties inherit downward only. Measured in
+   headless Chromium 1.61.1 on 2026-09-02 at 1920x1080: the outermost card of
+   a five card hand overflowed a 0.14 headroom by 3.22px (own band) and 1.43px
+   (opponent band), because the deepest corner is the 0.12 droop plus the
+   sweep of the bottom corner through the 6deg fan; 0.17 clears both. */
 .duel-field-hand-band__viewport {
   display: flex;
   gap: var(--zone-gap);
   width: 100%;
-  height: 100%;
+  height: calc(100% + var(--hand-card-height) * 0.17);
   min-width: 0;
+  padding-bottom: calc(var(--hand-card-height) * 0.17);
   overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior-x: contain;

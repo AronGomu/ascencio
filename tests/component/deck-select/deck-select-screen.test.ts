@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { readFileSync } from "node:fs";
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -288,6 +289,72 @@ describe("DeckSelectScreen", () => {
     expect(
       grid.querySelector('[data-cy="deck-tile-badge-yours-k1"]'),
     ).not.toBeNull();
+  });
+
+  /* The header and the tools row are one bar: the mode, the screen's name, its
+     count, the sort and the filter read left to right on a single line, so the
+     column keeps three rows for the pane beside it to run the height of. */
+  it("titlebar carries eyebrow, title, count, sort and filter in one row", () => {
+    render(DeckSelectScreen, props());
+
+    expect(
+      [...cy("deck-select-titlebar").children].map(
+        (child) => child.getAttribute("data-cy") ?? "",
+      ),
+    ).toEqual([
+      "deck-select-back-icon",
+      "deck-select-eyebrow",
+      "deck-select-title",
+      "deck-select-count",
+      "deck-select-titlebar-sep",
+      "deck-select-sort-field",
+      "deck-select-filter-field",
+    ]);
+    expect(find("deck-select-header")).toBeNull();
+    expect(find("deck-select-heading")).toBeNull();
+    expect(find("deck-select-tools")).toBeNull();
+  });
+
+  /* The bar is shared markup, so the library gets it too — with its own mode
+     and title, and nothing else about it different. */
+  it("library mode renders the same titlebar", () => {
+    render(
+      DeckSelectScreen,
+      props({
+        mode: "library",
+        eyebrow: "Deck builder",
+        title: "Deck library",
+        selectedKey: "k1",
+      }),
+    );
+
+    const bar = cy("deck-select-titlebar");
+    for (const value of [
+      "deck-select-eyebrow",
+      "deck-select-title",
+      "deck-select-count",
+      "deck-select-sort-field",
+      "deck-select-filter-field",
+    ])
+      expect(bar.contains(cy(value)), value).toBe(true);
+    expect(find("deck-select-tools")).toBeNull();
+  });
+
+  /* jsdom lays nothing out, so the stretch is read off the rule that declares
+     it; the pixel it produces is measured in a browser. */
+  it("filter stretches to the pane edge and the column keeps three rows", () => {
+    const source = readFileSync(
+      "src/deck-select/DeckSelectScreen.svelte",
+      "utf8",
+    );
+
+    const filter =
+      /\.titlebar input\[type="search"\]\s*\{([^}]*)\}/.exec(source)?.[1] ?? "";
+    expect(filter).toContain("flex: 1 1 auto");
+    expect(filter).toContain("min-width: 6rem");
+
+    const screen = /\.screen\s*\{([^}]*)\}/.exec(source)?.[1] ?? "";
+    expect(screen).toContain("grid-template-rows: auto minmax(0, 1fr) auto");
   });
 
   it("block notice renders", () => {

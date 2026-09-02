@@ -144,3 +144,7 @@ Worker, engine, and asset pipeline are "backend" here — nothing runs on a serv
 | checks | Aggregate quality gate npm scripts | `package.json` (`check`, `check:headless`, `check:browser`) |
 | decklist row | Card entry in deck preview with frame colour, copy count, name, and optional art | `src/deck-select/DecklistPanel.svelte` |
 | frame colour | Five-pixel left border on decklist row indicating card type | `src/deck-select/DecklistPanel.svelte` |
+| twin-column seat pane | Duel-start right pane: player column left, opponent right, each avatar + name-only seat chip + scrolling decklist | `docs/ADR/064_ADR_deck_select_twin_column_seat_pane.md` |
+| seat chip | Name-only deck card in the seat pane that toggles which seat the grid fills | `docs/ADR/064_ADR_deck_select_twin_column_seat_pane.md` |
+| docked preview | Hovered deck's list rendered inside the active seat column (dashed gold outline), replacing the old floating window | `docs/ADR/064_ADR_deck_select_twin_column_seat_pane.md` |
+| compact bar | Header/footer state entered on measured overflow: "Select Deck" title, ⋯ action menu | `docs/ADR/064_ADR_deck_select_twin_column_seat_pane.md` |

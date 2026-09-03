@@ -23,13 +23,14 @@ afterEach(async () => {
   await deleteDB(DECK_DATABASE_NAME);
 });
 
-function renderEditor(mainCount = 0) {
-  return render(DeckEditor, {
+function renderEditor(mainCount = 0, onreturn = vi.fn()) {
+  const result = render(DeckEditor, {
     state: stateFixture(mainCount),
     cards: PROTOTYPE_CATALOG,
     catalog: prototypeCatalogMap,
     ruleset: PROTOTYPE_RULESET,
-    onlibrary: vi.fn(),
+    returnLabel: "Story",
+    onreturn,
     onrename: vi.fn(),
     onmutate: vi.fn(),
     onundo: vi.fn(),
@@ -38,6 +39,7 @@ function renderEditor(mainCount = 0) {
     onreload: vi.fn(),
     onpreservecopy: vi.fn(),
   });
+  return { ...result, onreturn };
 }
 
 describe("DeckEditor shell", () => {
@@ -61,11 +63,11 @@ describe("DeckEditor shell", () => {
     ).toBeNull();
   });
 
-  it("the header has library, name, action buttons and history controls", () => {
+  it("the header has name, action buttons and history controls without library", () => {
     renderEditor();
     expect(
       document.querySelector('[data-cy="deck-editor-library-link"]'),
-    ).not.toBeNull();
+    ).toBeNull();
     expect(
       document.querySelector('[data-cy="deck-name-input"]'),
     ).not.toBeNull();
@@ -95,6 +97,25 @@ describe("DeckEditor shell", () => {
       document.querySelector('[data-cy="deck-editor-save-status"]'),
     ).toBeNull();
     expect(document.querySelector('[data-cy="deck-editor-import"]')).toBeNull();
+  });
+
+  it("renders a contextual return after the preview outside its panel", async () => {
+    const { onreturn } = renderEditor();
+    const preview = document.querySelector('[data-cy="card-preview-panel"]')!;
+    const button = screen.getByRole("button", { name: "Return to Story" });
+    const details = document.querySelector('[data-cy="deck-pane-details"]')!;
+
+    expect(button.getAttribute("data-cy")).toBe("deck-editor-return");
+    expect(button.classList.contains("danger")).toBe(true);
+    expect(button.parentElement).toBe(details);
+    expect(preview.parentElement).toBe(details);
+    expect(
+      preview.compareDocumentPosition(button) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+
+    await userEvent.setup().click(button);
+    expect(onreturn).toHaveBeenCalledOnce();
   });
 
   it("workspace and catalog render without decorative headings", () => {

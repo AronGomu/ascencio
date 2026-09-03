@@ -25,7 +25,8 @@ function renderEditor(
     catalog: prototypeCatalogMap,
     ruleset: PROTOTYPE_RULESET,
     layoutMode,
-    onlibrary: vi.fn(),
+    returnLabel: "Deck Selection",
+    onreturn: vi.fn(),
     onrename: vi.fn(),
     onmutate,
     onundo: vi.fn(),
@@ -65,7 +66,7 @@ describe("deck editor portrait layout", () => {
     expect(tab.getAttribute("aria-selected")).toBe("true");
   });
 
-  it("moves between tabs with the arrow keys", async () => {
+  it("moves between tabs with the arrow keys and keeps return with details", async () => {
     const user = userEvent.setup();
     renderEditor("tabs");
     (
@@ -75,7 +76,14 @@ describe("deck editor portrait layout", () => {
     expect(document.activeElement).toBe(
       document.querySelector('[data-cy="deck-tab-details"]'),
     );
-    expect(pane("details")).not.toBeNull();
+    const details = pane("details");
+    expect(details).not.toBeNull();
+    const returnButton = details?.querySelector(
+      '[data-cy="deck-editor-return"]',
+    );
+    expect(returnButton).not.toBeNull();
+    await user.tab();
+    expect(document.activeElement).toBe(returnButton);
   });
 
   it("adds a tapped catalog card to its canonical zone and stays on the catalog", async () => {
@@ -132,7 +140,8 @@ describe("deck editor portrait layout", () => {
       catalog: prototypeCatalogMap,
       ruleset: PROTOTYPE_RULESET,
       layoutMode: "tabs" satisfies EditorLayoutMode,
-      onlibrary: vi.fn(),
+      returnLabel: "Deck Selection",
+      onreturn: vi.fn(),
       onrename: vi.fn(),
       onmutate,
       onundo: vi.fn(),

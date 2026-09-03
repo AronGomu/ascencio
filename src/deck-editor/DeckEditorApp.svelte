@@ -64,6 +64,10 @@
      collection is: this domain does not own the URL. A host that swallows it
      keeps the library, so Back is inert rather than wrong. */
   export let onexit: () => void = () => undefined;
+  /* The shell owns route identity; the editor only receives presentation copy
+     and an action for leaving an open deck. */
+  export let returnLabel = "Deck Selection";
+  export let onreturn: () => void = () => undefined;
 
   /* Every card this build packages, fetched once per page: the editor may only
      offer what the duel can draw, so both await the same read. It is ~10 MB of
@@ -345,7 +349,8 @@
     ruleset={PROTOTYPE_RULESET}
     {ownership}
     {layoutMode}
-    onlibrary={() => void runAndSync(controller?.showLibrary())}
+    {returnLabel}
+    {onreturn}
     onrename={(name) => void controller?.rename(name)}
     onmutate={(command) => controller?.mutate(command)}
     onsetillustration={(code) => controller?.setIllustration(code)}

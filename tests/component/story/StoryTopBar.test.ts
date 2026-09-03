@@ -85,13 +85,14 @@ describe("StoryTopBar", () => {
       ).toBeNull();
   });
 
-  /* The save's own decks, not free play's library: a player inside a story who
-     builds a deck has to find it in that story (ADR-051). */
-  it("defaults to the story's deck builder route", async () => {
+  /* Route ownership stays with the host. A standalone header cannot persist a
+     story save, so navigating from its default would bypass StoryApp's
+     checkpoint and let the shell reject the context as missing. */
+  it("does not route when no deck action is provided", async () => {
     render(StoryTopBar, { dp: 0, showDecks: true });
     await userEvent
       .setup()
       .click(screen.getByRole("button", { name: "Open deck builder" }));
-    expect(globalThis.location.hash).toBe("#/story/decks");
+    expect(globalThis.location.hash).toBe("");
   });
 });

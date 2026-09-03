@@ -16,11 +16,15 @@ import {
   createInitialStoryState,
   type StoryState,
 } from "../../../src/story/model/story-state.ts";
-import type {
-  StorySaveReadResult,
-  StorySlotKey,
+import {
+  STORY_SAVES_DATABASE_NAME,
+  type StorySaveReadResult,
+  type StorySlotKey,
 } from "../../../src/story/saves/story-save-contracts.ts";
-import type { StorySaveRepository } from "../../../src/story/saves/story-save-repository.ts";
+import {
+  createStorySaveRepository,
+  type StorySaveRepository,
+} from "../../../src/story/saves/story-save-repository.ts";
 import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts";
 import { prototypeCatalogMap } from "../../fixtures/deck-editor.ts";
 import { storyDeckFixture } from "../../fixtures/story-decks.ts";
@@ -43,6 +47,11 @@ const loaders: DomainLoaders = {
   story: never,
 };
 
+const storyLoaders: DomainLoaders = {
+  ...loaders,
+  story: async () => await import("../../../src/story/index.ts"),
+};
+
 /* Waiting on the deck editor's own chunk means waiting on a Vite transform of
    the module graph behind it, which the default one-second budget knows
    nothing about. */
@@ -50,7 +59,10 @@ const REAL_IMPORT = { timeout: 15_000 };
 
 afterEach(async () => {
   cleanup();
-  await deleteDB(DECK_DATABASE_NAME);
+  await Promise.all([
+    deleteDB(DECK_DATABASE_NAME),
+    deleteDB(STORY_SAVES_DATABASE_NAME),
+  ]);
 });
 
 /** A story save store answering `manual:1` with `state` and every other slot
@@ -148,6 +160,47 @@ async function libraryDeckNames(): Promise<readonly string[]> {
 }
 
 describe("deck editor context binding", () => {
+  it("routes a persisted story snapshot into its owned-only editor", async () => {
+    const save = {
+      ...storySave(["saved-one"]),
+      collection: { 89631139: 1 },
+    };
+    const saves = createStorySaveRepository(globalThis.indexedDB, () => 1);
+    const seeded = await saves.write("manual:1", save, null);
+    expect(seeded.kind).toBe("written");
+
+    let current = "#/";
+    const store = createShellStore(current, (next) => {
+      current = next;
+    });
+    render(AppShell, { store, loaders: storyLoaders, saves });
+    store.enterStory("continue");
+
+    await appears("story-map-screen");
+    await fireEvent.click(await appears("story-top-bar-decks"));
+
+    await vi.waitFor(() => expect(current).toBe("#/story/decks"), REAL_IMPORT);
+    expect(await libraryDeckNames()).toStrictEqual(["Deck saved-one"]);
+    expect(query("deck-editor-context-banner")?.textContent).toContain(
+      "The Signal Beneath the City · City map",
+    );
+
+    const autosave = await saves.read("autosave");
+    if (autosave.kind !== "ready")
+      throw new Error("expected story route to persist an autosave");
+    expect(autosave.envelope.state.savedScreen).toBe("map");
+
+    await fireEvent.dblClick(await appears("deck-tile-press-saved-one"));
+    await vi.waitFor(
+      () =>
+        expect(query("deck-catalog-result-count")?.textContent).toBe(
+          "1 results",
+        ),
+      REAL_IMPORT,
+    );
+    expect(query("catalog-tile-89631139")).not.toBeNull();
+  });
+
   it("free-play route uses the free-play repository", async () => {
     await seedFreePlayDeck("free-one", "Free Deck One");
     renderAt("#/free-play/decks");

@@ -336,6 +336,7 @@ describe("StoryApp", () => {
   });
 
   it("shows a header deck write failure without navigating", async () => {
+    globalThis.location.hash = "#/story";
     const originalPut = IDBObjectStore.prototype.put;
     IDBObjectStore.prototype.put = function put(
       this: IDBObjectStore,
@@ -369,6 +370,7 @@ describe("StoryApp", () => {
         ).toContain("Storage write failed"),
       );
       expect(ondecks).not.toHaveBeenCalled();
+      expect(globalThis.location.hash).toBe("#/story");
       expect(
         container.querySelector('[data-cy="story-map-screen"]'),
       ).not.toBeNull();

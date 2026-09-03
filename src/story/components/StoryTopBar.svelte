@@ -10,12 +10,7 @@
   export let objective: string | null = null;
   export let showSettings = true;
   export let onshop: () => void = () => undefined;
-  /* The story's own deck route, not `#/decks`: that one is free play's library,
-     so the default sent a player inside a save to build decks their save would
-     never see (ADR-051). */
-  export let ondecks: () => void = () => {
-    globalThis.location.hash = "#/story/decks";
-  };
+  export let ondecks: () => void = () => undefined;
   export let onsettings: () => void = () => undefined;
 </script>
 

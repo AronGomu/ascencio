@@ -17,13 +17,26 @@ const STARTER = storyStarterSave();
 async function openStory(page: Page): Promise<void> {
   await page.goto("./#/story");
   await expect(page.locator(STORY_REGION)).toBeVisible();
+  await expect(page.getByText(/Rain turned/)).toBeVisible();
+}
+
+async function reloadMainMenu(page: Page): Promise<void> {
+  await page.goto("./#/");
+  await page.reload();
   await expect(page.getByRole("heading", { name: "ASCENCIO" })).toBeVisible();
+}
+
+async function dismissToast(page: Page, message: string): Promise<void> {
+  const toast = page
+    .locator('[data-cy^="shell-toast-toast-"]')
+    .filter({ hasText: message });
+  await expect(toast).toBeVisible();
+  await toast.getByRole("button", { name: "Dismiss notification" }).click();
+  await expect(toast).toHaveCount(0);
 }
 
 async function startNarrative(page: Page): Promise<void> {
   await openStory(page);
-  await page.getByRole("button", { name: "New Game" }).click();
-  await expect(page.getByText(/Rain turned/)).toBeVisible();
 }
 
 /** Resumes the story on the outcome screen for `outcome`.
@@ -76,7 +89,7 @@ async function resumeAtOutcome(
       },
     },
   );
-  await page.reload();
+  await reloadMainMenu(page);
   await page.getByRole("button", { name: "Continue" }).click();
 }
 
@@ -107,10 +120,10 @@ test("story plays the prologue through to the duel handoff", async ({
     .getByLabel("Location list")
     .getByRole("button", { name: /Old Arena/ })
     .click();
-  /* The briefing titles itself after the opponent and seats that same opponent
-     beside the decks, so the encounter names two headings; the screen's own
-     title is the one that says which screen this is. */
   await expect(page.locator('[data-cy="deck-select-title"]')).toHaveText(
+    "Select Deck",
+  );
+  await expect(page.locator('[data-cy="duel-start-opponent-name"]')).toHaveText(
     "Rin's Echo",
   );
   await page.getByRole("button", { name: "Start Duel" }).click();
@@ -174,7 +187,7 @@ test("auto advances the scene, and skip stops at unread text until the reader al
      says so, rather than looking like a dead button. */
   const skip = page.getByRole("button", { name: "Skip", exact: true });
   await skip.click();
-  await expect(page.getByRole("status")).toContainText("not read yet");
+  await dismissToast(page, "not read yet");
   await expect(skip).toHaveAttribute("aria-pressed", "false");
 
   await page.getByRole("button", { name: "Open menu" }).first().click();
@@ -249,11 +262,9 @@ test("saved progress survives a reload and reaches the end of the prologue", asy
   await page.getByRole("button", { name: "Continue to updated map" }).click();
   await page.getByRole("button", { name: "Save progress" }).click();
   await page.getByRole("button", { name: "Confirm overwrite" }).click();
-  await expect(page.getByText(/Save complete/)).toBeVisible();
-  await page.getByRole("button", { name: "Close Save and load" }).click();
+  await dismissToast(page, "Game saved.");
 
-  await page.reload();
-  await expect(page.getByRole("heading", { name: "ASCENCIO" })).toBeVisible();
+  await reloadMainMenu(page);
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByText(/Archive available/)).toBeVisible();
   await page.getByRole("button", { name: "End prototype" }).click();
@@ -266,11 +277,10 @@ test("manual save and delete only touch the manual slot", async ({ page }) => {
   await startNarrative(page);
   await page.getByRole("button", { name: "Open menu" }).first().click();
   await page.getByRole("button", { name: "Save", exact: true }).click();
-  /* New Game already marks progress as existing, so the save overlay opens on
-     the overwrite confirmation rather than the empty-slot action. */
+  /* Story entry already marks progress as existing, so the save overlay opens
+     on the overwrite confirmation rather than the empty-slot action. */
   await page.getByRole("button", { name: "Confirm overwrite" }).click();
-  await expect(page.getByText(/Save complete/)).toBeVisible();
-  await page.getByRole("button", { name: "Close Save and load" }).click();
+  await dismissToast(page, "Game saved.");
   await page.getByRole("button", { name: "Open menu" }).first().click();
   await page.getByRole("button", { name: "Load", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Load game" })).toBeVisible();
@@ -293,7 +303,7 @@ test("manual save and delete only touch the manual slot", async ({ page }) => {
   ).toBeVisible();
   await page.getByRole("button", { name: "Close Load game" }).click();
 
-  await page.reload();
+  await reloadMainMenu(page);
   await expect(page.getByRole("button", { name: "Continue" })).toHaveCount(0);
 });
 
@@ -322,23 +332,22 @@ async function storySaveSlots(page: Page): Promise<readonly string[]> {
 test("a manual save is reloadable from the Load screen after a reload", async ({
   page,
 }) => {
-  await reachMap(page);
-  await page.getByRole("button", { name: "Open menu" }).first().click();
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await resumeAtOutcome(page, "win");
+  await page.getByRole("button", { name: "Continue story" }).click();
+  await page.getByRole("button", { name: "Continue to updated map" }).click();
+  await page.getByRole("button", { name: "Save progress" }).click();
   await page.getByRole("button", { name: "Confirm overwrite" }).click();
-  await expect(page.getByText(/Save complete/)).toBeVisible();
-  await page.getByRole("button", { name: "Close Save and load" }).click();
+  await dismissToast(page, "Game saved.");
 
   expect(await storySaveSlots(page)).toContain("manual:1");
 
-  await page.reload();
-  await expect(page.getByRole("heading", { name: "ASCENCIO" })).toBeVisible();
+  await reloadMainMenu(page);
   await page.getByRole("button", { name: "Load", exact: true }).click();
   await page.getByRole("button", { name: "Load manual slot 1" }).click();
   await expect(
     page.getByRole("heading", { name: "City signal map" }),
   ).toBeVisible();
-  await expect(page.getByText(/Earlier choice:/)).toBeVisible();
+  await expect(page.getByText(/Archive available/)).toBeVisible();
 });
 
 /* A record this build cannot read costs the player that slot and nothing
@@ -365,7 +374,6 @@ test("a corrupt slot degrades to no save and the story still plays", async ({
   await page.reload();
   await expect(page.getByRole("alert")).toContainText("manual:1");
   await expect(page.getByRole("button", { name: "Continue" })).toHaveCount(0);
-  await page.getByRole("button", { name: "New Game" }).click();
   await expect(page.getByText(/Rain turned/)).toBeVisible();
 
   /* The banner's reset clears every slot, so the next save writes cleanly on
@@ -664,9 +672,6 @@ async function keyboardActivate(page: Page, target: Locator): Promise<void> {
    the same document, so the whole traversal is asserted through focus. */
 test("the story flow is reachable by keyboard alone", async ({ page }) => {
   await openStory(page);
-  await expect(page.getByRole("button", { name: "New Game" })).toBeFocused();
-  await page.keyboard.press("Enter");
-  await expect(page.getByText(/Rain turned/)).toBeVisible();
   for (let index = 0; index < BEATS_BEFORE_CHOICE; index += 1)
     await page.keyboard.press("Enter");
   const choice = page.getByRole("button", { name: /I trust you/ });

@@ -4,7 +4,8 @@ Date: 2026-09-03
 Branch: `main`
 Plan baseline: `0857479`
 Implementation range: `3609b53..8d950c7`
-Terminal state: **partial** — all requested code/docs merged and pushed; full browser gate blocked by pre-existing deck-editor E2E locator drift.
+Browser-gate repair: `5bfc94d`
+Terminal state: **partial** — requested code/docs merged and pushed; deck-editor blocker fixed, while full browser gate now exposes broader pre-existing route/layout E2E drift.
 
 ## Ticket State List
 
@@ -26,30 +27,27 @@ Terminal state: **partial** — all requested code/docs merged and pushed; full 
 | T14 battle dialogs | done | `f0f9f90` | TDD 9 red → 28 green; unit 1835; component 1117; `check:headless` |
 | T15 deck-editor panels | done | `ce76272` | TDD 9 red → 11 green; component 1128; unit/headless/build; Chromium desktop + portrait |
 | T16 story overlays | done | `f0b04fa` | component 1130; unit 1835; `check:headless`; five overlays in desktop + mobile Chromium |
-| T17 verification/docs closeout | blocked validation | `8d950c7` | docs shipped; headless/component/build/reproducibility green; full E2E blocked below |
+| T17 verification/docs closeout | partial validation | `8d950c7`, `5bfc94d` | docs shipped; headless/component/build/reproducibility green; deck-editor E2E 14/14; broader E2E drift below |
 
 ## Verification
 
 ### Green
 
-- `npm run check:headless`: 23 legacy tests, 162 unit files / 1835 passed + 2 skipped, 17 integration files / 42 passed; vendor/assets/snapshot verification OK.
-- `npm run test:component`: 118 files / 1130 passed.
-- `npm run build`: OK; build budgets: shell 96,805 B, battle 358,272 B, deck-editor 149,985 B, story 141,218 B.
-- `npm run build:reproducible`: `{ "status": "ok", "files": 786 }`.
-- Card-back acquisition: `generated/card-images/card-back.jpg`, 44,343 B, SHA-256 `8b3fee7055b0b819ff3f84bb3c91274cd207f9f3a33966e239c3095b90f9c656`.
+- V1. `npm run check:headless`: 23 legacy tests, 162 unit files / 1835 passed + 2 skipped, 17 integration files / 42 passed; vendor/assets/snapshot verification OK.
+- V2. `npm run test:component`: 118 files / 1130 passed.
+- V3. `npm run build`: OK; build budgets: shell 96,805 B, battle 358,272 B, deck-editor 149,985 B, story 141,218 B.
+- V4. `npm run build:reproducible`: `{ "status": "ok", "files": 786 }`.
+- V5. Card-back acquisition: `generated/card-images/card-back.jpg`, 44,343 B, SHA-256 `8b3fee7055b0b819ff3f84bb3c91274cd207f9f3a33966e239c3095b90f9c656`.
 
-### Blocked gate
+### Partial browser gate
 
-`npm run check:browser` reached `playwright test`. First deck-editor test failed:
+Commit `5bfc94d` restored phone access to Create, gave the control accessible name `Create deck`, and aligned stale deck-editor assertions with the card context menu and shell toast. Evidence:
 
-```text
-Test timeout of 180000ms exceeded.
-Error: locator.click: Test timeout of 180000ms exceeded.
-Call log:
-  - waiting for getByRole('button', { name: 'Create deck' })
-```
+- B1. `npx playwright test e2e/deck-editor.spec.ts --project=chromium`: 14/14 passed.
+- B2. Targeted component suites: 27/27 passed.
+- B3. `npm run check:headless`: 23 legacy, 1837 unit, 42 integration tests passed; verification steps OK.
 
-Rendered accessible name is `+ Create` (`src/deck-select/DeckSelectScreen.svelte:550`); stale locator is `e2e/deck-editor.spec.ts:154`. Eight deck-editor cases then repeated the same ~3.1-minute wait. Run stopped to avoid hours of duplicate timeouts. Docs-only T17 diff cannot cause this mismatch. Fix would touch excluded deck-select/E2E contract, so bounded repair was not applied. Remaining E2E + acceptance tests are unproven in final aggregate run.
+A subsequent `npm run check:browser` passed component/build/reproducibility, then E2E finished with 66 passed, 36 failed, 1 skipped. Failures are broader pre-existing contract drift: story tests expect the removed `ASCENCIO` title screen while `#/story` now opens the narrative directly; duel layout tests still expect a 1920px stage despite shipped 8px margins; several story-duel/shop helpers retain old navigation. Acceptance did not run because E2E failed.
 
 ## Assumptions
 
@@ -83,17 +81,18 @@ Pinned core's tested XYZ detach scenario exposes no individual overlay addresses
 
 ## Residual Risks
 
-- T2: three pre-existing stage-margin E2E assertions expect 1920px while shipped stage is 1904px after 8px margins.
-- T3: pre-existing stack `min-width` can exceed card width at very small geometry.
-- T9: fresh non-pass guard intentionally surfaces every real fresh activation, not only GY triggers → more default-mode prompts.
-- T10: core limitation described in A6.
-- T17: browser/acceptance aggregate gate incomplete due stale `Create deck` locator.
-- Existing Svelte warnings remain: missing ARIA role on `CardCatalog.svelte` mouseleave container; missing standard `line-clamp` in `ShopSellScreen.svelte`.
+- R1. T2: three pre-existing stage-margin E2E assertions expect 1920px while shipped stage is 1904px after 8px margins.
+- R2. T3: pre-existing stack `min-width` can exceed card width at very small geometry.
+- R3. T9: fresh non-pass guard intentionally surfaces every real fresh activation, not only GY triggers → more default-mode prompts.
+- R4. T10: core limitation described in A6.
+- R5. T17: browser/acceptance aggregate gate incomplete due broader stale route/layout E2E contracts; deck-editor locator blocker is fixed.
+- R6. Existing Svelte warnings remain: missing ARIA role on `CardCatalog.svelte` mouseleave container; missing standard `line-clamp` in `ShopSellScreen.svelte`.
 
 ## User TODO
 
-- [ ] Decide accessible-name contract for shared create control: keep visible/accessibility name `+ Create` and update stale E2E locators, or add `aria-label="Create deck"`. Then run `npm run check:browser`.
-- [ ] Run new human checks in `artifacts/manual_test_checklist.md` for duel feedback items 1–14 and Basilica VariantB surfaces.
+- U1. [ ] Run new human checks in `artifacts/manual_test_checklist.md` for duel feedback items 1–14 and Basilica VariantB surfaces.
+
+No user decision remains for deck creation: `aria-label="Create deck"` is shipped, phone Create is restored, and deck-editor E2E is green.
 
 ## Files Touched
 

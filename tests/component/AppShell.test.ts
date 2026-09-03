@@ -5,11 +5,13 @@ import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import BattleFacadeProbe from "../fixtures/BattleFacadeProbe.svelte";
+import DeckEditorProbe from "../fixtures/DeckEditorProbe.svelte";
 import {
   battleFacadeProps,
   resetBattleFacadeProps,
 } from "../fixtures/battle-facade-probe.ts";
 import { parseBattleRequest } from "../../src/battle/battle-contracts.ts";
+import { deckId } from "../../src/decks/index.ts";
 import {
   findSelectableDeck,
   listSelectableDecks,
@@ -139,6 +141,11 @@ const probeLoaders: DomainLoaders = {
       ...(await duelDeckModule()),
       BattleFacade: BattleFacadeProbe,
     }) as Awaited<ReturnType<DomainLoaders["duel"]>>,
+};
+
+const deckProbeLoaders: DomainLoaders = {
+  ...loaders,
+  decks: async () => ({ default: DeckEditorProbe }),
 };
 
 function renderAt(hash: string, domainLoaders: DomainLoaders = loaders) {
@@ -440,6 +447,55 @@ describe("AppShell", () => {
     ).not.toBeNull();
     expect(document.querySelector('[data-cy="shell-region-duel"]')).toBeNull();
   });
+
+  it("returns an editor entered from story to that exact origin", async () => {
+    const hashes: string[] = [];
+    const store = createShellStore("#/story", (hash) => hashes.push(hash));
+    render(AppShell, {
+      store,
+      loaders: deckProbeLoaders,
+      saves: savesHolding({}),
+    });
+
+    store.navigate({ kind: "story-deck", deckId: deckId("story-deck") });
+    const button = await vi.waitFor(() => {
+      const found = document.querySelector<HTMLButtonElement>(
+        '[data-cy="deck-editor-probe-return"]',
+      );
+      expect(found?.textContent).toContain("Return to Story");
+      return found!;
+    }, REAL_IMPORT);
+    hashes.length = 0;
+    await fireEvent.click(button);
+
+    expect(hashes).toEqual(["#/story"]);
+  });
+
+  it.each([
+    ["free-play", "#/free-play/decks/direct", "#/free-play/decks"],
+    ["story", "#/story/decks/direct", "#/story/decks"],
+  ])(
+    "returns a direct %s editor route to its scoped deck selection",
+    async (_context, hash, expected) => {
+      const hashes: string[] = [];
+      render(AppShell, {
+        store: createShellStore(hash, (next) => hashes.push(next)),
+        loaders: deckProbeLoaders,
+        saves: savesHolding({}),
+      });
+
+      const button = await vi.waitFor(() => {
+        const found = document.querySelector<HTMLButtonElement>(
+          '[data-cy="deck-editor-probe-return"]',
+        );
+        expect(found?.textContent).toContain("Return to Deck Selection");
+        return found!;
+      }, REAL_IMPORT);
+      await fireEvent.click(button);
+
+      expect(hashes).toEqual([expected]);
+    },
+  );
 
   it("mounts the story region for the story route", () => {
     renderAt("#/story");

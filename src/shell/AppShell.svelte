@@ -15,6 +15,7 @@
     deckRoute,
     deckRouteContext,
     HOME_ROUTE,
+    routeLabel,
     type AppRoute,
     type RouteContext,
   } from "./routes.ts";
@@ -233,9 +234,11 @@
   }
 
   let route: AppRoute;
+  let previousRoute: AppRoute | null = null;
   let storyEntryIntent: StoryEntryIntent | null = null;
   const unsubscribe = store.subscribe((state) => {
     route = state.route;
+    previousRoute = state.previousRoute;
     storyEntryIntent = state.storyEntryIntent;
   });
   $: syncSession(route);
@@ -257,6 +260,16 @@
      contexts and hands navigation back in the one it was reached from. */
   $: deckContext = deckRouteContext(route);
   $: bindDeckContext(deckContext);
+  $: editorReturnRoute =
+    deckContext === null
+      ? HOME_ROUTE
+      : previousRoute === null || deckRouteContext(previousRoute) !== null
+        ? deckRoute(deckContext, null)
+        : previousRoute;
+  $: editorReturnLabel =
+    previousRoute === null || deckRouteContext(previousRoute) !== null
+      ? "Deck Selection"
+      : routeLabel(previousRoute);
   /* The same question for the collection, which is two routes over one screen
      for the same reason the editor is two over one: a save's cards and free
      play's database are the same browsing, over a different pool. */
@@ -518,6 +531,8 @@
                 store.navigate(deckRoute(context, deckId))}
               oncollection={() => store.navigate(collectionRoute(context))}
               onexit={() => store.navigate(HOME_ROUTE)}
+              returnLabel={editorReturnLabel}
+              onreturn={() => store.navigate(editorReturnRoute)}
             />
           {:catch error}
             <DomainLoadError label="Deck Editor" cy="decks" {error} />

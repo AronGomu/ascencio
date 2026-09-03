@@ -53,7 +53,8 @@
      time below the stage breakpoint. The shell decides which, so no component
      below here reads the stage a second time. */
   export let layoutMode: EditorLayoutMode = "panels";
-  export let onlibrary: () => void;
+  export let returnLabel = "Deck Selection";
+  export let onreturn: () => void = () => undefined;
   export let onrename: (name: string) => void;
   export let onmutate: (
     command: import("../../decks/deck-model.ts").DeckCommand,
@@ -505,12 +506,6 @@
 
 {#if deck}
   <header class="editor-header" data-cy="deck-editor-header">
-    <button
-      type="button"
-      class="secondary"
-      data-cy="deck-editor-library-link"
-      onclick={onlibrary}>Deck Library</button
-    >
     <label class="name-field" data-cy="deck-editor-name-field">
       <span data-cy="deck-editor-name-label">Deck name</span>
       <input
@@ -662,7 +657,7 @@
 
     {#if !tabs || pane === "details"}
       <div
-        class="pane"
+        class="pane details-pane"
         id="deck-pane-details"
         role={tabs ? "tabpanel" : undefined}
         data-cy="deck-pane-details"
@@ -673,6 +668,12 @@
           staticImageUrl={previewImageUrl}
           placeholderUrl=""
         />
+        <button
+          type="button"
+          class="danger return-button"
+          data-cy="deck-editor-return"
+          onclick={onreturn}>Return to {returnLabel}</button
+        >
       </div>
     {/if}
 
@@ -842,7 +843,7 @@
 <style>
   .editor-header {
     display: grid;
-    grid-template-columns: auto auto 1fr repeat(7, auto);
+    grid-template-columns: auto 1fr repeat(7, auto);
     align-items: end;
     gap: 0.55rem;
     width: 100%;
@@ -909,9 +910,21 @@
     display: contents;
   }
 
-  .pane :global(.card-preview-panel) {
+  .details-pane {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 0.5rem;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .details-pane :global(.card-preview-panel) {
     height: 100%;
     overflow-y: auto;
+  }
+
+  .return-button {
+    width: 100%;
   }
 
   .editor-layout.tabs {
@@ -923,6 +936,10 @@
   .editor-layout.tabs .pane {
     display: block;
     min-width: 0;
+  }
+
+  .editor-layout.tabs .details-pane {
+    display: grid;
   }
 
   .message-strip {

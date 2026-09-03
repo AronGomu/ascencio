@@ -143,6 +143,38 @@ test("default route shows the main menu, not the deck editor", async ({
   await expect(page.locator('[data-cy="shell-region-decks"]')).toHaveCount(0);
 });
 
+test("open deck returns through the button below its preview", async ({
+  page,
+}) => {
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+
+  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.getByLabel("Deck name").fill("Return Control");
+  await page.getByRole("button", { name: "Create", exact: true }).click();
+
+  const preview = page.locator('[data-cy="card-preview-panel"]');
+  const back = page.locator('[data-cy="deck-editor-return"]');
+  await expect(back).toHaveText("Return to Deck Selection");
+  await expect(
+    page.locator('[data-cy="deck-editor-library-link"]'),
+  ).toHaveCount(0);
+  const [previewBox, backBox] = await Promise.all([
+    preview.boundingBox(),
+    back.boundingBox(),
+  ]);
+  expect(previewBox).not.toBeNull();
+  expect(backBox).not.toBeNull();
+  expect(backBox!.x).toBeCloseTo(previewBox!.x, 0);
+  expect(backBox!.width).toBeCloseTo(previewBox!.width, 0);
+  expect(backBox!.y).toBeGreaterThanOrEqual(previewBox!.y + previewBox!.height);
+
+  await back.click();
+  await expect(page.locator('[data-cy="deck-library"]')).toBeVisible();
+  expect(new URL(page.url()).hash).toBe("#/free-play/decks");
+});
+
 test("deck editor persists edits across reloads", async ({ page }) => {
   await page.goto(libraryUrl);
   await deleteDeckDatabase(page);

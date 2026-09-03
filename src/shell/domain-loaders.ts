@@ -40,6 +40,9 @@ export type DeckEditorDomainProps = DeckEditorRoute & {
   /** Leaving the deck menu altogether, which the library screen's own Back
       asks for. Reported for the same reason `oncollection` is. */
   readonly onexit: () => void;
+  /** Contextual origin for an open deck. Route identity stays shell-owned. */
+  readonly returnLabel: string;
+  readonly onreturn: () => void;
 };
 
 /** The duel is reached through the battle facade, which its public entry

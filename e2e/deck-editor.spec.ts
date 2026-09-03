@@ -346,6 +346,103 @@ test("Deck Library imports one persisted undoable update", async ({ page }) => {
   );
 });
 
+test("open deck imports YDK with atomic Undo/Redo and keeps failures open", async ({
+  page,
+}) => {
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.getByLabel("Deck name").fill("Open Import E2E");
+  await page.getByRole("button", { name: "Create", exact: true }).click();
+
+  await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
+  await catalogTile(page, BLUE_EYES).click();
+  await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
+
+  const importButton = page.locator('[data-cy="deck-editor-import"]');
+  await importButton.click();
+  await expect(page.getByLabel("Deck name")).toHaveCount(1);
+  await page.getByLabel("Choose .ydk file").setInputFiles({
+    name: "replacement.ydk",
+    mimeType: "text/plain",
+    buffer: Buffer.from(
+      `#main\n${SUMMONED_SKULL}\n99999999\n#extra\n8505920\n!side\n${BLUE_EYES}\n`,
+    ),
+  });
+  await page.getByRole("button", { name: "Replace deck cards" }).click();
+
+  await expect(page.locator('[data-cy="deck-ydk-import"]')).toHaveCount(0);
+  await expect(importButton).toBeFocused();
+  await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
+    "Open Import E2E",
+  );
+  await expect(zoneCount(page, "main")).toHaveText("2/40");
+  await expect(zoneCount(page, "extra")).toHaveText("1/15");
+  await expect(zoneCount(page, "side")).toHaveText("1/15");
+  await expect(zoneTile(page, "main", 99999999)).toHaveAttribute(
+    "aria-label",
+    /Missing card 99999999/,
+  );
+  await expectSaveSettled(page, { main: 2, extra: 1, side: 1 });
+
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+  await expect(zoneCount(page, "extra")).toHaveText("0/15");
+  await expect(zoneCount(page, "side")).toHaveText("0/15");
+  await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
+  await page.getByRole("button", { name: "Redo" }).click();
+  await expect(zoneCount(page, "main")).toHaveText("2/40");
+  await expect(zoneCount(page, "extra")).toHaveText("1/15");
+  await expect(zoneCount(page, "side")).toHaveText("1/15");
+  await expectSaveSettled(page, { main: 2, extra: 1, side: 1 });
+  await page.reload();
+  await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
+    "Open Import E2E",
+  );
+  await expect(zoneCount(page, "main")).toHaveText("2/40");
+  await expect(zoneCount(page, "extra")).toHaveText("1/15");
+  await expect(zoneCount(page, "side")).toHaveText("1/15");
+
+  await page.evaluate(() => {
+    const original = IDBDatabase.prototype.transaction;
+    Object.defineProperty(IDBDatabase.prototype, "transaction", {
+      configurable: true,
+      value: function (this: IDBDatabase, ...args: unknown[]) {
+        const stores = Array.isArray(args[0]) ? args[0] : [args[0]];
+        if (args[1] === "readwrite" && stores.includes("decks")) {
+          Object.defineProperty(IDBDatabase.prototype, "transaction", {
+            configurable: true,
+            value: original,
+          });
+          throw new Error("simulated import transaction failure");
+        }
+        return Reflect.apply(original, this, args);
+      },
+    });
+  });
+  await importButton.click();
+  await page
+    .getByLabel("Or paste YDK text")
+    .fill(`#main\n${CELTIC_GUARDIAN}\n#extra\n!side\n`);
+  await page.getByRole("button", { name: "Preview import" }).click();
+  const commit = page.getByRole("button", { name: "Replace deck cards" });
+  await commit.click();
+
+  await expect(page.locator('[data-cy="deck-ydk-import"]')).toBeVisible();
+  await expect(
+    page.locator('[data-cy="deck-ydk-import-commit-error"]'),
+  ).toContainText("Import could not be saved. Try again.");
+  await expect(
+    page.locator('[data-cy="deck-editor-save-failed"]'),
+  ).toContainText("simulated import transaction failure");
+  await expect(commit).toBeFocused();
+  await page.locator('[data-cy="deck-ydk-import-cancel"]').click();
+  await expect(importButton).toBeFocused();
+  await page.getByRole("button", { name: "Retry autosave" }).click();
+  await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
+});
+
 test("the deck editor recovers real save failures and revision conflicts", async ({
   page,
   context,

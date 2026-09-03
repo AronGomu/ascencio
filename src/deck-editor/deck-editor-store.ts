@@ -306,7 +306,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
     }
   }
 
-  mutate(command: DeckCommand): Promise<void> {
+  mutate(command: DeckCommand): Promise<boolean> {
     const contextGeneration = this.#contextGeneration;
     const deckId = get(this.#state).current?.deck.id ?? null;
     return this.#enqueue(async () => {
@@ -316,7 +316,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
         state.current.deck.id !== deckId ||
         !this.#isCurrentContext(contextGeneration)
       )
-        return;
+        return false;
       const result = applyDeckCommand(
         state.current.deck,
         command,
@@ -327,14 +327,14 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
         this.#state.update((value) =>
           Object.freeze({ ...value, message: result.reason }),
         );
-        return;
+        return false;
       }
       const denial = this.#ownershipDenial(state.current.deck, command);
       if (denial !== null) {
         this.#state.update((value) =>
           Object.freeze({ ...value, message: denial }),
         );
-        return;
+        return false;
       }
       const before = state.current.deck;
       const importedNeedsReview =
@@ -372,7 +372,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
             afterIllustrationCardCode: illustrationCardCode,
           });
       this.#appendAutosave(nextDeck);
-      await this.#save(nextDeck, nextHistory);
+      return this.#save(nextDeck, nextHistory);
     });
   }
 
@@ -748,15 +748,18 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
       .catch(() => undefined);
   }
 
-  #enqueue(operation: () => Promise<void>): Promise<void> {
+  #enqueue<T>(operation: () => Promise<T>): Promise<T> {
     const next = this.#queue.then(operation, operation);
-    this.#queue = next.catch(() => undefined);
+    this.#queue = next.then(
+      () => undefined,
+      () => undefined,
+    );
     return next;
   }
 
-  async #save(deck: DeckRecord, history: DeckHistory): Promise<void> {
+  async #save(deck: DeckRecord, history: DeckHistory): Promise<boolean> {
     const current = get(this.#state).current;
-    if (current === null || current.deck.id !== deck.id) return;
+    if (current === null || current.deck.id !== deck.id) return false;
     const pending = Object.freeze({
       deck,
       history,
@@ -773,17 +776,17 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
         message: null,
       }),
     );
-    await this.#performSave(pending);
+    return this.#performSave(pending);
   }
 
-  async #performSave(pending: PendingDeckSave): Promise<void> {
+  async #performSave(pending: PendingDeckSave): Promise<boolean> {
     try {
       const saved = await this.#repository.save(
         pending.expectedRevision,
         pending.deck,
         pending.history,
       );
-      if (!this.#pendingIsCurrent(pending)) return;
+      if (!this.#pendingIsCurrent(pending)) return false;
       this.#pendingSave = null;
       this.#state.update((state) =>
         Object.freeze({
@@ -793,8 +796,9 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           message: null,
         }),
       );
+      return true;
     } catch (error) {
-      if (!this.#pendingIsCurrent(pending)) return;
+      if (!this.#pendingIsCurrent(pending)) return false;
       this.#state.update((state) =>
         Object.freeze({
           ...state,
@@ -803,6 +807,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
           message: error instanceof Error ? error.message : "Deck save failed.",
         }),
       );
+      return false;
     }
   }
 

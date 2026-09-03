@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
   import { handleModalKeydown } from "../focus-trap.ts";
   import type { DeckCardLists } from "../../decks/deck-contracts.ts";
   import { MAXIMUM_DECK_NAME_LENGTH } from "../../decks/deck-model.ts";
@@ -25,6 +25,7 @@
   let isImporting = false;
   let importError: string | null = null;
   let heading: HTMLHeadingElement;
+  let commitButton: HTMLButtonElement;
 
   $: unknownCodes =
     result?.type === "ready"
@@ -80,6 +81,7 @@
 
   async function commitImport(): Promise<void> {
     if (
+      isImporting ||
       result?.type !== "ready" ||
       (requireName &&
         (deckName.trim().length === 0 ||
@@ -88,14 +90,22 @@
       return;
     isImporting = true;
     importError = null;
+    let failed = false;
     try {
       const imported = await onimport(result.cards, deckName.trim());
-      if (imported === false)
+      if (imported === false) {
         importError = "Import could not be saved. Try again.";
+        failed = true;
+      }
     } catch (error) {
       importError = `Import failed: ${error instanceof Error ? error.message : "Unknown error"}`;
+      failed = true;
     } finally {
       isImporting = false;
+    }
+    if (failed) {
+      await tick();
+      commitButton.focus();
     }
   }
 </script>
@@ -235,6 +245,7 @@
       <button
         type="button"
         data-cy="deck-ydk-import-commit"
+        bind:this={commitButton}
         disabled={isImporting ||
           (requireName &&
             (deckName.trim().length === 0 ||

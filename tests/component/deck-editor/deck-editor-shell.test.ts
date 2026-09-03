@@ -96,7 +96,9 @@ describe("DeckEditor shell", () => {
     expect(
       document.querySelector('[data-cy="deck-editor-save-status"]'),
     ).toBeNull();
-    expect(document.querySelector('[data-cy="deck-editor-import"]')).toBeNull();
+    expect(
+      document.querySelector('[data-cy="deck-editor-import"]'),
+    ).not.toBeNull();
   });
 
   it("renders a contextual return after the preview outside its panel", async () => {

@@ -4,6 +4,10 @@
   import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
   import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
   import { quantityLimit } from "../../decks/catalog/pinned-ruleset.ts";
+  import {
+    unlimitedCardOwnership,
+    type CardOwnership,
+  } from "../../decks/card-ownership.ts";
   import CardTile from "./CardTile.svelte";
 
   export let zone: DeckZone;
@@ -13,6 +17,7 @@
   export let catalog: ReadonlyMap<number, DeckBuilderCardView>;
   export let ruleset: PinnedDeckRuleset;
   export let totalCopies: ReadonlyMap<number, number>;
+  export let ownership: CardOwnership = unlimitedCardOwnership();
   export let selectedCode: number | null = null;
   export let dropAllowed = false;
   export let dragActive = false;
@@ -141,6 +146,8 @@
               limit={quantityLimit(ruleset, code)}
               currentCopies={totalCopies.get(code) ?? 0}
               selected={selectedCode === code}
+              disabled={ownership.ownedCount(code) <
+                (totalCopies.get(code) ?? 0)}
               compact={plan.compact}
               dataCyPrefix={zone}
               dataCyId={index}

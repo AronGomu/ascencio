@@ -1,6 +1,10 @@
 <script lang="ts">
   import { MAXIMUM_DECK_NAME_LENGTH } from "../../decks/deck-model.ts";
-  import type { DeckRecord, DeckZone } from "../../decks/deck-contracts.ts";
+  import type {
+    DeckCardLists,
+    DeckRecord,
+    DeckZone,
+  } from "../../decks/deck-contracts.ts";
   import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
   import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
   import {
@@ -36,6 +40,7 @@
   } from "../layout/click-intent.ts";
   import type { PickedCard } from "../drag-state.ts";
   import LoadDeckDialog from "./LoadDeckDialog.svelte";
+  import YdkImport from "./YdkImport.svelte";
   import type {
     DeckAutosaveRecord,
     DeckId,
@@ -58,7 +63,7 @@
   export let onrename: (name: string) => void;
   export let onmutate: (
     command: import("../../decks/deck-model.ts").DeckCommand,
-  ) => void | Promise<void>;
+  ) => boolean | void | Promise<boolean | void>;
   export let onsetillustration: (code: number) => void | Promise<void> = () =>
     undefined;
   export let onundo: () => void;
@@ -100,6 +105,8 @@
   } | null = null;
   let showLoad = false;
   let loadButton: HTMLButtonElement | null = null;
+  let showImport = false;
+  let importButton: HTMLButtonElement | null = null;
   let confirmingDelete = false;
   let deleteButton: HTMLButtonElement | null = null;
   let loadedAutosaves: readonly DeckAutosaveRecord[] = [];
@@ -463,6 +470,18 @@
     loadButton?.focus();
   }
 
+  async function importCurrentDeck(cards: DeckCardLists): Promise<boolean> {
+    const imported = await onmutate({ type: "import", cards });
+    if (imported === true) await closeImportDialog();
+    return imported === true;
+  }
+
+  async function closeImportDialog(): Promise<void> {
+    showImport = false;
+    await tick();
+    importButton?.focus();
+  }
+
   async function closeDelete(): Promise<void> {
     confirmingDelete = false;
     await tick();
@@ -580,6 +599,13 @@
     <button
       type="button"
       class="secondary"
+      data-cy="deck-editor-import"
+      bind:this={importButton}
+      onclick={() => (showImport = true)}>Import</button
+    >
+    <button
+      type="button"
+      class="secondary"
       data-cy="deck-editor-load"
       bind:this={loadButton}
       onclick={() => void openLoadDialog()}>Load</button
@@ -688,6 +714,7 @@
           {deck}
           {catalog}
           {ruleset}
+          {ownership}
           {selectedCode}
           {picked}
           filled={tabs}
@@ -822,6 +849,21 @@
     </div>
   {/if}
 
+  {#if showImport}
+    <div
+      class="backdrop"
+      aria-hidden="true"
+      data-cy="deck-editor-import-backdrop"
+    ></div>
+    <YdkImport
+      requireName={false}
+      catalogCodes={new Set(catalog.keys())}
+      existingDeckNames={[]}
+      onimport={importCurrentDeck}
+      oncancel={() => void closeImportDialog()}
+    />
+  {/if}
+
   {#if showLoad}
     <div class="backdrop" aria-hidden="true" data-cy="load-deck-backdrop"></div>
     <LoadDeckDialog
@@ -843,7 +885,7 @@
 <style>
   .editor-header {
     display: grid;
-    grid-template-columns: auto 1fr repeat(7, auto);
+    grid-template-columns: auto 1fr repeat(8, auto);
     align-items: end;
     gap: 0.55rem;
     width: 100%;

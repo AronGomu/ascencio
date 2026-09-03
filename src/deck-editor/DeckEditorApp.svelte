@@ -352,7 +352,8 @@
     {returnLabel}
     {onreturn}
     onrename={(name) => void controller?.rename(name)}
-    onmutate={(command) => controller?.mutate(command)}
+    onmutate={(command) =>
+      controller?.mutate(command) ?? Promise.resolve(false)}
     onsetillustration={(code) => controller?.setIllustration(code)}
     onundo={() => void controller?.undo()}
     onredo={() => void controller?.redo()}

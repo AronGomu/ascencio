@@ -7,6 +7,7 @@
   export let currentCopies = 0;
   export let selected = false;
   export let draggable = true;
+  export let disabled = false;
   export let compact = false;
   export let zone: string | null = null;
   export let onselect: () => void = () => undefined;
@@ -71,8 +72,10 @@
   class:selected
   class:missing={card === null}
   class:maxed
+  class:unavailable={disabled}
   class="card-tile"
-  {draggable}
+  draggable={draggable && !disabled}
+  {disabled}
   aria-label={`${name}. ${limitLabel}, maximum ${limit}. ${currentCopies} copies in deck.`}
   aria-describedby={describedby}
   aria-pressed={selected}
@@ -182,6 +185,12 @@
   .card-tile.maxed:hover:not(:disabled) {
     border-color: var(--danger);
     background: var(--danger-surface);
+  }
+
+  .card-tile.unavailable {
+    cursor: not-allowed;
+    filter: grayscale(1);
+    opacity: 0.48;
   }
 
   .art-placeholder {

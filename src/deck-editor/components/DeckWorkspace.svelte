@@ -9,12 +9,17 @@
   } from "../../decks/deck-model.ts";
   import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
   import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
+  import {
+    unlimitedCardOwnership,
+    type CardOwnership,
+  } from "../../decks/card-ownership.ts";
   import DeckZoneGrid from "./DeckZoneGrid.svelte";
   import ValidationIssues from "./ValidationIssues.svelte";
 
   export let deck: DeckRecord;
   export let catalog: ReadonlyMap<number, DeckBuilderCardView>;
   export let ruleset: PinnedDeckRuleset;
+  export let ownership: CardOwnership = unlimitedCardOwnership();
   export let selectedCode: number | null = null;
   export let picked: PickedCard | null = null;
   export let onselect: (
@@ -121,6 +126,7 @@
     {catalog}
     {ruleset}
     {totalCopies}
+    {ownership}
     {selectedCode}
     dropAllowed={mainDropAllowed}
     dragActive={picked !== null}
@@ -146,6 +152,7 @@
     {catalog}
     {ruleset}
     {totalCopies}
+    {ownership}
     {selectedCode}
     dropAllowed={extraDropAllowed}
     dragActive={picked !== null}
@@ -171,6 +178,7 @@
     {catalog}
     {ruleset}
     {totalCopies}
+    {ownership}
     {selectedCode}
     dropAllowed={sideDropAllowed}
     dragActive={picked !== null}

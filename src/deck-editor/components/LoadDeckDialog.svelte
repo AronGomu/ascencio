@@ -23,7 +23,7 @@
 </script>
 
 <div
-  class="dialog"
+  class="dialog ui-dialog-panel ui-chamfer"
   role="dialog"
   aria-modal="true"
   tabindex="-1"
@@ -32,7 +32,13 @@
   bind:this={dialog}
   onkeydown={(e) => handleModalKeydown(e, oncancel)}
 >
-  <h2 id="load-deck-dialog-heading" data-cy="load-dialog-heading">Load deck</h2>
+  <h2
+    id="load-deck-dialog-heading"
+    class="ui-dialog-title"
+    data-cy="load-dialog-heading"
+  >
+    Load deck
+  </h2>
 
   <div
     class="tabs"
@@ -118,10 +124,6 @@
     flex-direction: column;
     padding: 1rem;
     transform: translate(-50%, -50%);
-    border: 1px solid var(--border);
-    border-radius: 0.8rem;
-    background: var(--surface);
-    box-shadow: 0 1.5rem 5rem color-mix(in srgb, var(--shadow) 55%, transparent);
     overflow: hidden;
   }
 

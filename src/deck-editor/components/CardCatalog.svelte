@@ -171,13 +171,15 @@
 </script>
 
 <section
-  class="catalog"
+  class="catalog ui-glass-panel ui-chamfer"
   class:filled
   aria-label="Card catalog"
   data-cy="deck-catalog"
 >
   <header data-cy="deck-catalog-header">
-    <span data-cy="deck-catalog-result-count">{results.length} results</span>
+    <span class="panel-title" data-cy="deck-catalog-result-count"
+      >{results.length} results</span
+    >
     <label class="to-side" data-cy="deck-catalog-to-sideboard-field">
       <input
         type="checkbox"
@@ -388,9 +390,6 @@
     min-height: 0;
     overflow: hidden;
     padding: 1rem;
-    border: 1px solid var(--border);
-    border-radius: 0.8rem;
-    background: var(--surface);
   }
 
   .catalog.filled {
@@ -409,6 +408,14 @@
   h3,
   p {
     margin: 0;
+  }
+
+  .panel-title {
+    color: var(--accent);
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: var(--ls-display);
+    text-transform: uppercase;
   }
 
   .to-side {

@@ -15,7 +15,11 @@
     data-cy="deck-validation"
   >
     <header data-cy="deck-validation-header">
-      <h3 id="validation-heading" data-cy="deck-validation-heading">
+      <h3
+        id="validation-heading"
+        class="panel-title"
+        data-cy="deck-validation-heading"
+      >
         Deck checks
       </h3>
       <span data-cy="deck-validation-count"
@@ -63,9 +67,14 @@
     justify-content: space-between;
   }
 
-  h3 {
+  .panel-title {
     margin: 0;
+    color: var(--accent);
+    font-family: var(--font-display);
     font-size: 0.92rem;
+    font-weight: 400;
+    letter-spacing: var(--ls-display);
+    text-transform: uppercase;
   }
 
   header span {

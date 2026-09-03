@@ -107,7 +107,7 @@
 </script>
 
 <section
-  class="workspace"
+  class="workspace ui-glass-panel ui-chamfer"
   class:filled
   aria-label="Deck workspace"
   data-cy="deck-workspace"
@@ -205,9 +205,6 @@
     min-height: 0;
     overflow-y: auto;
     padding: 1rem;
-    border: 1px solid var(--border);
-    border-radius: 0.8rem;
-    background: var(--surface);
   }
 
   .workspace.filled {

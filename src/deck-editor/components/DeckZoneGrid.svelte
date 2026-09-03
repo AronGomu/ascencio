@@ -72,6 +72,7 @@
         >{collapsed ? "▸" : "▾"}</span
       >
       <h3
+        class="panel-title"
         id={`${zone}-heading`}
         tabindex="-1"
         data-cy={`deck-zone-heading-${zone}`}
@@ -212,9 +213,14 @@
     outline-offset: 3px;
   }
 
-  h3 {
+  .panel-title {
     margin: 0;
+    color: var(--accent);
+    font-family: var(--font-display);
     font-size: 0.94rem;
+    font-weight: 400;
+    letter-spacing: var(--ls-display);
+    text-transform: uppercase;
   }
 
   .count {

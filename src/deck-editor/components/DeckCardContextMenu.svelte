@@ -73,9 +73,9 @@
     display: grid;
     min-width: 12rem;
     padding: 0.35rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    background: var(--surface-raised);
+    border: 1px solid var(--line-soft);
+    border-radius: 0;
+    background: var(--glass-strong);
     box-shadow: 0 0.55rem 1.4rem
       color-mix(in srgb, var(--shadow) 45%, transparent);
   }

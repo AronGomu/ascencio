@@ -26,7 +26,7 @@
 </script>
 
 <div
-  class="tabs"
+  class="tabs ui-glass-panel"
   role="tablist"
   aria-label="Deck editor panes"
   data-cy="deck-editor-tabs"
@@ -52,9 +52,6 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.35rem;
     padding: 0.35rem;
-    border: 1px solid var(--border);
-    border-radius: 0.6rem;
-    background: var(--surface);
   }
 
   button {
@@ -63,6 +60,10 @@
     color: var(--text);
     border: 1px solid transparent;
     background: transparent;
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: var(--ls-display);
+    text-transform: uppercase;
   }
 
   button.active {

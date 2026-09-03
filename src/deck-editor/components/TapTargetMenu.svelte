@@ -65,9 +65,9 @@
     max-height: 80svh;
     overflow-y: auto;
     padding: 0.9rem;
-    border: 1px solid var(--border);
-    border-radius: 0.8rem 0.8rem 0 0;
-    background: var(--surface);
+    border: 1px solid var(--line-soft);
+    border-radius: 0;
+    background: var(--glass-strong);
   }
 
   h2 {

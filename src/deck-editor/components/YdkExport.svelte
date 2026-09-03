@@ -48,7 +48,7 @@
 </script>
 
 <div
-  class="dialog"
+  class="dialog ui-dialog-panel ui-chamfer"
   role="dialog"
   tabindex="-1"
   aria-modal="true"
@@ -61,6 +61,7 @@
       <p data-cy="deck-ydk-export-eyebrow">YDK export</p>
       <h2
         id="ydk-export-heading"
+        class="ui-dialog-title"
         tabindex="-1"
         data-cy="deck-ydk-export-heading"
         bind:this={heading}
@@ -122,10 +123,6 @@
     padding: 1rem;
     overflow-y: auto;
     transform: translate(-50%, -50%);
-    border: 1px solid var(--border);
-    border-radius: 0.85rem;
-    background: var(--surface);
-    box-shadow: 0 1.5rem 5rem color-mix(in srgb, var(--shadow) 55%, transparent);
   }
 
   header,

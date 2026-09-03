@@ -157,7 +157,7 @@
   }
 </script>
 
-<section class="library" data-cy="deck-library">
+<section class="library ui-glass-panel ui-chamfer" data-cy="deck-library">
   {#if message && toasts === undefined}<p
       class="message"
       role="status"

@@ -40,6 +40,8 @@
      edit lands on the tile that was clicked rather than on the first match. */
   export let ontap:
     ((code: number, zone: DeckZone, index: number) => void) | null = null;
+  export let ondoubleclick:
+    ((code: number, zone: DeckZone, index: number) => void) | null = null;
   export let onhovercard: (code: number) => void = () => undefined;
   export let onhoverend: () => void = () => undefined;
   export let collapsed = false;
@@ -153,6 +155,9 @@
               dataCyId={index}
               onselect={() => onselect(catalog.get(code) ?? null, code)}
               ontap={ontap === null ? null : () => ontap(code, zone, index)}
+              ondoubleclick={ondoubleclick === null
+                ? null
+                : () => ondoubleclick(code, zone, index)}
               ondragcard={(event) => ondragcard(code, zone, index, event)}
               {ondragcancel}
               onhover={() => onhovercard(code)}

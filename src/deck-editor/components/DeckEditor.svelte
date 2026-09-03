@@ -38,6 +38,7 @@
   import { deckTapTargets, type TapTarget } from "../layout/tap-targets.ts";
   import {
     catalogCardClickIntent,
+    catalogCardContextIntent,
     deckCardClickIntent,
     type ClickIntent,
     type ZoneCounts,
@@ -267,8 +268,8 @@
     };
   }
 
-  /* One place turns an intent into a command, so the left click, the right
-     click and the tap menu cannot drift apart. */
+  /* One place turns a catalog or double-click intent into a command, so
+     pointer and touch adds keep the same capacity warnings. */
   function applyIntent(
     intent: ClickIntent,
     code: number,
@@ -289,33 +290,20 @@
     /* A catalog tile has no copy in a zone to move or remove, and the catalog
        deriver never asks for one; this narrows `from` to a real zone. */
     if (from === "catalog") return;
-    if (intent.kind === "remove") {
-      onmutate({ type: "remove", cardCode: code, zone: from, index });
-      announcement = `${name} removed.`;
-      return;
-    }
-    onmutate({ type: "move", cardCode: code, from, to: intent.to, index });
-    announcement = `${name} moved to ${intent.to}.`;
+    onmutate({ type: "remove", cardCode: code, zone: from, index });
+    announcement = `${name} removed.`;
   }
 
-  function clickDeckCard(code: number, zone: DeckZone, index: number): void {
-    const card = catalog.get(code) ?? null;
-    selectCard(card, code);
-    /* A card the pinned catalog no longer knows has no canonical zone to
-       swap with, so removal is the only honest edit. */
-    if (card === null) {
-      applyIntent({ kind: "remove" }, code, zone, index);
-      return;
-    }
-    applyIntent(
-      deckCardClickIntent(zone, card.canonicalZone, zoneCounts()),
-      code,
-      zone,
-      index,
-    );
+  function doubleClickDeckCard(
+    code: number,
+    zone: DeckZone,
+    index: number,
+  ): void {
+    selectCard(catalog.get(code) ?? null, code);
+    applyIntent(deckCardClickIntent(), code, zone, index);
   }
 
-  function clickCatalogCard(card: DeckBuilderCardView): void {
+  function doubleClickCatalogCard(card: DeckBuilderCardView): void {
     selectCard(card, card.code);
     applyIntent(
       catalogCardClickIntent(card.canonicalZone, zoneCounts(), toSideboard),
@@ -413,7 +401,7 @@
 
   function contextAdd(card: DeckBuilderCardView): void {
     applyIntent(
-      catalogCardClickIntent(card.canonicalZone, zoneCounts(), toSideboard),
+      catalogCardContextIntent(card.canonicalZone, zoneCounts(), toSideboard),
       card.code,
       "catalog",
     );
@@ -764,7 +752,8 @@
           {picked}
           filled={tabs}
           onselect={selectCard}
-          ontap={tabs ? tapDeckCard : clickDeckCard}
+          ontap={tabs ? tapDeckCard : null}
+          ondoubleclick={tabs ? null : doubleClickDeckCard}
           ondragcard={(code, zone, index, event) =>
             startZoneDrag(code, zone, index, event)}
           ondragcancel={endZoneDrag}
@@ -801,7 +790,8 @@
             selected = card;
             selectedCode = card.code;
           }}
-          ontap={tabs ? tapCatalogCard : clickCatalogCard}
+          ontap={tabs ? tapCatalogCard : null}
+          ondoubleclick={tabs ? null : doubleClickCatalogCard}
           ondragcard={(card, event) => startCatalogDrag(card, event)}
           ondragcancel={endZoneDrag}
           oncontextadd={contextAdd}

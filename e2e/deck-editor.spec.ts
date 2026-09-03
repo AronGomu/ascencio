@@ -389,13 +389,16 @@ test("deck editor persists edits across reloads", async ({ page }) => {
   await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
   const blueEyes = catalogTile(page, BLUE_EYES);
   await expect(blueEyes).toBeVisible();
-  /* A catalog click both selects the card and adds it to its canonical zone. */
+  /* Single click pins preview. Paired clicks from dblclick stay selection-only,
+     so one double-click produces one mutation. */
   await blueEyes.click();
   await expect(
     page.getByText(
       "This legendary dragon is a powerful engine of destruction.",
     ),
   ).toBeVisible();
+  await expect(zoneCount(page, "main")).toHaveText("0/40");
+  await blueEyes.dblclick();
   await expect(zoneCount(page, "main")).toHaveText("1/40");
   await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
 
@@ -410,15 +413,13 @@ test("deck editor persists edits across reloads", async ({ page }) => {
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(zoneCount(page, "main")).toHaveText("1/40");
 
-  /* Above the breakpoint a left click on a deck card is the move itself: out
-     of the Main Deck goes to the Side Deck, and back again from there. */
-  await zoneTile(page, "main", BLUE_EYES).click();
-  await expect(zoneCount(page, "side")).toHaveText("1/15");
+  /* Double-click deletes from source instead of silently sideboarding. */
+  await zoneTile(page, "main", BLUE_EYES).dblclick();
   await expect(zoneCount(page, "main")).toHaveText("0/40");
-  await zoneTile(page, "side", BLUE_EYES).click();
-  await expect(zoneCount(page, "main")).toHaveText("1/40");
   await expect(zoneCount(page, "side")).toHaveText("0/15");
-  /* Right click opens the card actions without losing the exact copy. */
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+  /* Right click opens card actions without losing exact copy. */
   await zoneTile(page, "main", BLUE_EYES).click({ button: "right" });
   await page.locator('[data-cy="deck-card-context-remove"]').click();
   await expect(zoneCount(page, "main")).toHaveText("0/40");
@@ -550,7 +551,7 @@ test("open deck imports YDK with atomic Undo/Redo and keeps failures open", asyn
   await page.getByRole("button", { name: "Create", exact: true }).click();
 
   await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
-  await catalogTile(page, BLUE_EYES).click();
+  await catalogTile(page, BLUE_EYES).dblclick();
   await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
 
   const importButton = page.locator('[data-cy="deck-editor-import"]');
@@ -665,7 +666,7 @@ test("the deck editor recovers real save failures and revision conflicts", async
     });
   });
   await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
-  await catalogTile(page, BLUE_EYES).click();
+  await catalogTile(page, BLUE_EYES).dblclick();
   await expect(page.getByRole("alert")).toContainText(
     "simulated transaction failure",
   );
@@ -683,7 +684,7 @@ test("the deck editor recovers real save failures and revision conflicts", async
   await expect(zoneCount(second, "main")).toHaveText("1/40");
 
   await page.getByRole("searchbox", { name: "Name" }).fill("Summoned Skull");
-  await catalogTile(page, SUMMONED_SKULL).click();
+  await catalogTile(page, SUMMONED_SKULL).dblclick();
   await expect(zoneCount(page, "main")).toHaveText("2/40");
   /* The second context loses the revision race only if this save has actually
      landed before it tries its own; that is exactly what the old barrier could
@@ -879,11 +880,13 @@ test("the deck editor keeps its three panels above the breakpoint", async ({
   for (const pane of ["catalog", "deck", "details"])
     await expect(page.locator(`[data-cy="deck-pane-${pane}"]`)).toHaveCount(1);
   await expect(page.getByRole("tablist")).toHaveCount(0);
-  /* The tap menu stays a touch affordance: above the breakpoint a catalog
-     click is the add itself, with no menu in between. */
+  /* Tap menu stays touch affordance. Desktop click only pins; double-click
+     adds without opening menu. */
   await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
   await catalogTile(page, BLUE_EYES).click();
   await expect(page.locator('[data-cy="deck-tap-menu"]')).toHaveCount(0);
+  await expect(zoneCount(page, "main")).toHaveText("0/40");
+  await catalogTile(page, BLUE_EYES).dblclick();
   await expect(zoneCount(page, "main")).toHaveText("1/40");
 });
 
@@ -1206,7 +1209,7 @@ test("deck library shows art rows with frame and copy count", async ({
   await page.getByLabel("Deck name").fill("Decklist Rows");
   await page.locator('[data-cy="deck-library-create-submit"]').click();
   await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
-  await catalogTile(page, BLUE_EYES).click();
+  await catalogTile(page, BLUE_EYES).dblclick();
   await page.getByRole("searchbox", { name: "Name" }).fill("");
   const catalogTiles = page.locator(
     '[data-cy="deck-catalog-results"] > [data-cy^="catalog-tile-"]',
@@ -1221,7 +1224,7 @@ test("deck library shows art rows with frame and copy count", async ({
     .slice(0, 59);
   expect(additionalCodes.length).toBeGreaterThanOrEqual(39);
   for (const code of additionalCodes) {
-    await catalogTile(page, Number(code)).click();
+    await catalogTile(page, Number(code)).dblclick();
     if ((await zoneCount(page, "main").textContent())?.startsWith("40/")) break;
   }
   await expect(zoneCount(page, "main")).toHaveText("40/40");
@@ -1235,4 +1238,32 @@ test("deck library shows art rows with frame and copy count", async ({
   await expect(row).toHaveCSS("border-left-width", "5px");
   await expect(row.locator('[data-cy*="-row-copies-"]')).toHaveCount(1);
   await expect(row.locator('[data-cy*="-row-art-"]')).toHaveCount(1);
+});
+
+test.describe("touch click regression", () => {
+  test.use({ hasTouch: true, viewport: { width: 390, height: 844 } });
+
+  test("touch taps retain catalog add and deck target-menu behavior", async ({
+    page,
+  }) => {
+    await page.goto(libraryUrl);
+    await deleteDeckDatabase(page);
+    await page.reload();
+
+    await page.locator('[data-cy="deck-select-create"]').click();
+    await page.getByLabel("Deck name").fill("Touch Gestures");
+    await page.locator('[data-cy="deck-library-create-submit"]').click();
+    await page.locator('[data-cy="deck-tab-catalog"]').click();
+    await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
+
+    await catalogTile(page, BLUE_EYES).tap();
+    await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
+
+    await page.locator('[data-cy="deck-tab-deck"]').click();
+    await zoneTile(page, "main", BLUE_EYES).tap();
+    await expect(page.locator('[data-cy="deck-tap-menu"]')).toBeVisible();
+    await expect(
+      page.locator('[data-cy="deck-tap-target-side"]'),
+    ).toBeEnabled();
+  });
 });

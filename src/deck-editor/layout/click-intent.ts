@@ -1,9 +1,8 @@
 import type { DeckZone } from "../../decks/deck-contracts.ts";
 
-/* What a left click on a tile means. Derived from the tile's zone and the
-   deck's fill, never from anything the layout happens to be showing. */
+/* What a double-click on a tile means. Derived from the target and the deck's
+   fill, never from anything the layout happens to be showing. */
 export type ClickIntent =
-  | Readonly<{ kind: "move"; to: DeckZone }>
   | Readonly<{ kind: "remove" }>
   | Readonly<{ kind: "add"; zone: DeckZone }>
   | Readonly<{ kind: "blocked"; reason: string }>;
@@ -31,25 +30,22 @@ function isFull(zone: DeckZone, counts: ZoneCounts): boolean {
   return counts[zone] >= capacityOf(zone);
 }
 
-function moveOrBlocked(to: DeckZone, counts: ZoneCounts): ClickIntent {
-  return isFull(to, counts)
-    ? { kind: "blocked", reason: FULL_REASON[to] }
-    : { kind: "move", to };
-}
-
-export function deckCardClickIntent(
-  zone: DeckZone,
-  canonicalZone: "main" | "extra",
-  counts: ZoneCounts,
-): ClickIntent {
-  /* The Extra Deck has no sideboard of its own to swap against, so a click
-     there is the removal the player means. */
-  if (zone === "extra") return { kind: "remove" };
-  if (zone === "side") return moveOrBlocked(canonicalZone, counts);
-  return moveOrBlocked("side", counts);
+export function deckCardClickIntent(): ClickIntent {
+  return { kind: "remove" };
 }
 
 export function catalogCardClickIntent(
+  canonicalZone: "main" | "extra",
+  counts: ZoneCounts,
+  toSideboard: boolean,
+): ClickIntent {
+  const zone = toSideboard ? "side" : canonicalZone;
+  return isFull(zone, counts)
+    ? { kind: "blocked", reason: FULL_REASON[zone] }
+    : { kind: "add", zone };
+}
+
+export function catalogCardContextIntent(
   canonicalZone: "main" | "extra",
   counts: ZoneCounts,
   toSideboard: boolean,

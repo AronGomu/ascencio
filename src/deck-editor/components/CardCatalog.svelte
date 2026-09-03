@@ -50,6 +50,7 @@
   ) => void = () => undefined;
   /* `null` above the breakpoint, where a tile click only selects. */
   export let ontap: ((card: DeckBuilderCardView) => void) | null = null;
+  export let ondoubleclick: ((card: DeckBuilderCardView) => void) | null = null;
   /* The catalog is a pane of its own below the breakpoint, so it fills the
      stage instead of reserving room for the two panels beside it. */
   export let filled = false;
@@ -344,6 +345,12 @@
               : () =>
                   addable(card)
                     ? ontap(card)
+                    : onblocked(card, blockedReason(card))}
+            ondoubleclick={ondoubleclick === null
+              ? null
+              : () =>
+                  addable(card)
+                    ? ondoubleclick(card)
                     : onblocked(card, blockedReason(card))}
             ondragcard={(event) => ondragcard(card, event)}
             {ondragcancel}

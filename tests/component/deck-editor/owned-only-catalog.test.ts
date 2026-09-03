@@ -184,10 +184,10 @@ describe("owned-only story catalog", () => {
     const { context } = storyContext({ [OWNED.code]: 1 });
     await openCatalog({ deckId: STORY_DECK_ID, context });
 
-    await user.click(catalogTile(OWNED.code)!);
+    await user.dblClick(catalogTile(OWNED.code)!);
     await waitFor(() => expect(zoneCount("main")).toBe("1/40"));
 
-    await user.click(catalogTile(OWNED.code)!);
+    await user.dblClick(catalogTile(OWNED.code)!);
     expect(zoneCount("main")).toBe("1/40");
     expect(query("deck-editor-announcement")?.textContent).toContain(
       "You own 1 of this card.",
@@ -205,11 +205,11 @@ describe("owned-only story catalog", () => {
     });
 
     for (const copies of [1, 2, 3]) {
-      await user.click(catalogTile(OWNED.code)!);
+      await user.dblClick(catalogTile(OWNED.code)!);
       await waitFor(() => expect(zoneCount("main")).toBe(`${copies}/40`));
     }
 
-    await user.click(catalogTile(OWNED.code)!);
+    await user.dblClick(catalogTile(OWNED.code)!);
     expect(zoneCount("main")).toBe("3/40");
     const message = `Copy limit ${quantityLimit(PROTOTYPE_RULESET, OWNED.code)} reached.`;
     expect(query("deck-editor-announcement")?.textContent).not.toContain(
@@ -256,7 +256,7 @@ describe("owned-only story catalog", () => {
 
     expect(query(`deck-catalog-cap-reason-${OWNED.code}`)).toBeNull();
 
-    await user.click(catalogTile(OWNED.code)!);
+    await user.dblClick(catalogTile(OWNED.code)!);
     await waitFor(() =>
       expect(query(`deck-catalog-cap-reason-${OWNED.code}`)).not.toBeNull(),
     );

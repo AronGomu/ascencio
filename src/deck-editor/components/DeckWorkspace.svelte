@@ -38,6 +38,8 @@
   export let ondropzone: (zone: DeckZone) => void = () => undefined;
   export let ontap:
     ((code: number, zone: DeckZone, index: number) => void) | null = null;
+  export let ondoubleclick:
+    ((code: number, zone: DeckZone, index: number) => void) | null = null;
   export let onhovercard: (code: number) => void = () => undefined;
   export let onhoverend: () => void = () => undefined;
   export let oncontextremove: (
@@ -134,6 +136,7 @@
     {ondragcard}
     {ondragcancel}
     {ontap}
+    {ondoubleclick}
     {onreorderdrop}
     reorderActive={mainReorderActive}
     ondropzone={(zone) => void dropAndRestoreFocus(zone)}
@@ -160,6 +163,7 @@
     {ondragcard}
     {ondragcancel}
     {ontap}
+    {ondoubleclick}
     {onreorderdrop}
     reorderActive={extraReorderActive}
     ondropzone={(zone) => void dropAndRestoreFocus(zone)}
@@ -186,6 +190,7 @@
     {ondragcard}
     {ondragcancel}
     {ontap}
+    {ondoubleclick}
     {onreorderdrop}
     reorderActive={sideReorderActive}
     ondropzone={(zone) => void dropAndRestoreFocus(zone)}

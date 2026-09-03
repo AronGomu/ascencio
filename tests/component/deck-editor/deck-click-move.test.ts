@@ -79,46 +79,41 @@ function props(
 }
 
 describe("desktop click editing", () => {
-  it("clicking a main-deck card moves it to the side", async () => {
+  it("single-clicking a main-deck card only selects it", async () => {
     const onmutate = vi.fn<(command: DeckCommand) => void>();
     const { container } = render(DeckEditor, props(onmutate, stateFixture(1)));
-    await fireEvent.click(
-      container.querySelector('[data-cy="deck-slot-main-0"] button')!,
-    );
-    expect(onmutate).toHaveBeenCalledWith({
-      type: "move",
-      cardCode: MAIN_CODE,
-      from: "main",
-      to: "side",
-      index: 0,
-    });
+    const tile = container.querySelector(
+      '[data-cy="deck-slot-main-0"] button',
+    )!;
+    await fireEvent.click(tile);
+    expect(tile.getAttribute("aria-pressed")).toBe("true");
+    expect(onmutate).not.toHaveBeenCalled();
   });
 
-  /* Two copies of one card are two tiles, and the click has to mean the tile
-     under the pointer: naming only the code moved the first copy and left the
-     clicked one on screen, destroying the order ADR-037 preserves. */
-  it("clicking the third tile of a repeated card moves that copy", async () => {
+  /* Two copies of one card are two tiles, and the double-click has to mean the
+     tile under the pointer: naming only the code removes the first copy and
+     leaves the clicked one on screen, destroying the order ADR-037 preserves. */
+  it("double-clicking the third tile of a repeated card removes that copy", async () => {
     const onmutate = vi.fn<(command: DeckCommand) => void>();
     const { container } = render(
       DeckEditor,
       props(onmutate, stateWithMain([MAIN_CODE, EXTRA_MAIN_CODE, MAIN_CODE])),
     );
-    await fireEvent.click(
+    await fireEvent.dblClick(
       container.querySelector('[data-cy="deck-slot-main-2"] button')!,
     );
     expect(onmutate).toHaveBeenCalledWith({
-      type: "move",
+      type: "remove",
       cardCode: MAIN_CODE,
-      from: "main",
-      to: "side",
+      zone: "main",
       index: 2,
     });
   });
 
-  it("clicking an extra-deck card removes it", async () => {
+  it("double-clicking an extra-deck card removes it", async () => {
     const onmutate = vi.fn<(command: DeckCommand) => void>();
     const { container } = render(DeckEditor, props(onmutate, stateWithExtra()));
-    await fireEvent.click(
+    await fireEvent.dblClick(
       container.querySelector('[data-cy="deck-slot-extra-0"] button')!,
     );
     expect(onmutate).toHaveBeenCalledWith({
@@ -129,10 +124,10 @@ describe("desktop click editing", () => {
     });
   });
 
-  it("clicking a catalog card adds it", async () => {
+  it("double-clicking a catalog card adds it", async () => {
     const onmutate = vi.fn<(command: DeckCommand) => void>();
     const { container } = render(DeckEditor, props(onmutate));
-    await fireEvent.click(
+    await fireEvent.dblClick(
       container.querySelector(
         `[data-cy="deck-catalog-results"] [data-cy="catalog-tile-${MAIN_CODE}"]`,
       )!,
@@ -144,13 +139,13 @@ describe("desktop click editing", () => {
     });
   });
 
-  it("the to-sideboard checkbox routes the add", async () => {
+  it("the to-sideboard checkbox routes the double-click add", async () => {
     const onmutate = vi.fn<(command: DeckCommand) => void>();
     const { container } = render(DeckEditor, props(onmutate));
     await fireEvent.click(
       container.querySelector('[data-cy="deck-catalog-to-sideboard"]')!,
     );
-    await fireEvent.click(
+    await fireEvent.dblClick(
       container.querySelector(
         `[data-cy="deck-catalog-results"] [data-cy="catalog-tile-${MAIN_CODE}"]`,
       )!,

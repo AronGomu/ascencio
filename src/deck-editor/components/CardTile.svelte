@@ -15,6 +15,7 @@
      other than "show me this card", the pane hands in that meaning. `null`
      keeps the pointer/keyboard model exactly as it is. */
   export let ontap: (() => void) | null = null;
+  export let ondoubleclick: (() => void) | null = null;
   export let ondragcard: (event: DragEvent) => void = () => undefined;
   export let ondragcancel: () => void = () => undefined;
   export let onhover: (() => void) | null = null;
@@ -83,6 +84,9 @@
   data-card-code={code}
   data-deck-zone={zone}
   onclick={() => (ontap === null ? onselect() : ontap())}
+  ondblclick={() => {
+    if (ontap === null) ondoubleclick?.();
+  }}
   onmouseenter={() => onhover?.()}
   ondragstart={ondragcard}
   ondragend={ondragcancel}

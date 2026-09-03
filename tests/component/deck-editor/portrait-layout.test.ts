@@ -214,24 +214,26 @@ describe("deck editor portrait layout", () => {
     expect(onmutate).not.toHaveBeenCalled();
   });
 
-  it("keeps all three panels and no tabs above the breakpoint", async () => {
+  it("keeps all three panels and no tap menu above the breakpoint", async () => {
     const user = userEvent.setup();
     const onmutate = renderEditor("panels");
     expect(pane("catalog")).not.toBeNull();
     expect(pane("deck")).not.toBeNull();
     expect(pane("details")).not.toBeNull();
     expect(screen.queryByRole("tablist")).toBeNull();
-    /* A desktop click edits straight away: the tap menu is the mobile model
-       and never reaches the stage above the breakpoint. */
-    await user.click(
-      screen.getAllByRole("button", { name: /Blue-Eyes White Dragon/ })[0]!,
-    );
+
+    const deckCard = screen.getAllByRole("button", {
+      name: /Blue-Eyes White Dragon/,
+    })[0]!;
+    await user.click(deckCard);
     expect(document.querySelector('[data-cy="deck-tap-menu"]')).toBeNull();
+    expect(onmutate).not.toHaveBeenCalled();
+
+    await user.dblClick(deckCard);
     expect(onmutate).toHaveBeenCalledWith({
-      type: "move",
+      type: "remove",
       cardCode: 89631139,
-      from: "main",
-      to: "side",
+      zone: "main",
       index: 0,
     });
   });

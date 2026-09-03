@@ -1,7 +1,11 @@
 <script lang="ts">
   import { tick } from "svelte";
   import { SvelteMap } from "svelte/reactivity";
-  import type { DeckRecord, DeckZone } from "../../decks/deck-contracts.ts";
+  import type {
+    DeckRecord,
+    DeckValidationIssue,
+    DeckZone,
+  } from "../../decks/deck-contracts.ts";
   import type { PickedCard } from "../drag-state.ts";
   import {
     FIFTEEN_CARD_GRID,
@@ -14,7 +18,6 @@
     type CardOwnership,
   } from "../../decks/card-ownership.ts";
   import DeckZoneGrid from "./DeckZoneGrid.svelte";
-  import ValidationIssues from "./ValidationIssues.svelte";
 
   export let deck: DeckRecord;
   export let catalog: ReadonlyMap<number, DeckBuilderCardView>;
@@ -55,9 +58,13 @@
   /* Its own pane below the breakpoint: the stage scrolls it, not an inner box. */
   export let filled = false;
 
-  let workspaceElement: HTMLElement;
+  const DECK_ZONES = ["main", "extra", "side"] as const;
+
   let collapsedZones = { main: false, extra: false, side: true };
   $: totalCopies = countCopies(deck);
+  $: mainIssues = issuesForZone("main", deck);
+  $: extraIssues = issuesForZone("extra", deck);
+  $: sideIssues = issuesForZone("side", deck);
   $: mainDropAllowed = canDrop("main", picked, catalog);
   $: extraDropAllowed = canDrop("extra", picked, catalog);
   $: sideDropAllowed = canDrop("side", picked, catalog);
@@ -88,21 +95,23 @@
     document.getElementById(`${zone}-heading`)?.focus();
   }
 
-  async function focusIssue(
-    cardCode: number | null,
-    zone: string | null,
-  ): Promise<void> {
-    if (cardCode !== null) onselect(catalog.get(cardCode) ?? null, cardCode);
-    await tick();
-    const zoneSelector = zone === null ? "" : `[data-deck-zone="${zone}"]`;
-    const card =
-      cardCode === null
-        ? null
-        : workspaceElement.querySelector<HTMLElement>(
-            `[data-card-code="${cardCode}"]${zoneSelector}`,
-          );
-    if (card !== null) card.focus();
-    else if (zone !== null) document.getElementById(`${zone}-heading`)?.focus();
+  function zonesForIssue(
+    issue: DeckValidationIssue,
+    value: DeckRecord,
+  ): readonly DeckZone[] {
+    if (issue.zone !== undefined) return [issue.zone];
+    const { cardCode } = issue;
+    if (cardCode === undefined) return ["main"];
+    return DECK_ZONES.filter((zone) => value[zone].includes(cardCode));
+  }
+
+  function issuesForZone(
+    zone: DeckZone,
+    value: DeckRecord,
+  ): readonly DeckValidationIssue[] {
+    return value.validation.issues.filter((issue) =>
+      zonesForIssue(issue, value).includes(zone),
+    );
   }
 
   function countCopies(value: DeckRecord): ReadonlyMap<number, number> {
@@ -118,7 +127,6 @@
   class:filled
   aria-label="Deck workspace"
   data-cy="deck-workspace"
-  bind:this={workspaceElement}
 >
   <DeckZoneGrid
     zone="main"
@@ -143,6 +151,7 @@
     {onhovercard}
     {onhoverend}
     {oncontextremove}
+    issues={mainIssues}
     collapsed={collapsedZones.main}
     ontogglecollapse={() =>
       (collapsedZones = { ...collapsedZones, main: !collapsedZones.main })}
@@ -170,6 +179,7 @@
     {onhovercard}
     {onhoverend}
     {oncontextremove}
+    issues={extraIssues}
     collapsed={collapsedZones.extra}
     ontogglecollapse={() =>
       (collapsedZones = { ...collapsedZones, extra: !collapsedZones.extra })}
@@ -197,14 +207,10 @@
     {onhovercard}
     {onhoverend}
     {oncontextremove}
+    issues={sideIssues}
     collapsed={collapsedZones.side}
     ontogglecollapse={() =>
       (collapsedZones = { ...collapsedZones, side: !collapsedZones.side })}
-  />
-
-  <ValidationIssues
-    validation={deck.validation}
-    onfocusissue={(code, zone) => void focusIssue(code, zone)}
   />
 </section>
 

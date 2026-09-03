@@ -1,5 +1,8 @@
 <script lang="ts">
-  import type { DeckZone } from "../../decks/deck-contracts.ts";
+  import type {
+    DeckValidationIssue,
+    DeckZone,
+  } from "../../decks/deck-contracts.ts";
   import type { DeckGridPlan } from "../../decks/deck-model.ts";
   import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
   import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
@@ -46,6 +49,7 @@
   export let onhoverend: () => void = () => undefined;
   export let collapsed = false;
   export let ontogglecollapse: () => void = () => undefined;
+  export let issues: readonly DeckValidationIssue[] = [];
   /* The index for the same reason `ontap` carries one: without it the removal
      lands on the first copy of a repeated card rather than the one clicked. */
   export let oncontextremove: (
@@ -59,17 +63,43 @@
     },
   ) => void = () => undefined;
 
+  let tooltipOpen = false;
+  let pointerPressed = false;
+
   $: emptyCount = Math.max(0, plan.slots - codes.length);
+  $: invalid = issues.some(({ severity }) => severity === "error");
+  $: if (issues.length === 0) closeTooltip();
+
+  function closeTooltip(): void {
+    tooltipOpen = false;
+    pointerPressed = false;
+  }
+
+  function handleIssuePointerEnter(event: PointerEvent): void {
+    if (event.pointerType !== "touch") tooltipOpen = true;
+  }
+
+  function handleIssueFocus(): void {
+    if (!pointerPressed) tooltipOpen = true;
+  }
+
+  function handleIssueKeydown(event: KeyboardEvent): void {
+    if (event.key !== "Escape") return;
+    closeTooltip();
+    event.stopPropagation();
+  }
 </script>
 
 <section
   class="zone"
+  class:invalid
   aria-labelledby={`${zone}-heading`}
   data-cy={`deck-zone-${zone}`}
 >
   <header data-cy={`deck-zone-header-${zone}`}>
     <button
       type="button"
+      class="zone-toggle"
       data-cy={`deck-zone-toggle-${zone}`}
       aria-expanded={!collapsed}
       aria-controls={`deck-zone-body-${zone}`}
@@ -98,6 +128,50 @@
           : `${codes.length}/${plan.slots}`}
       </span>
     </button>
+    {#if issues.length > 0}
+      <button
+        type="button"
+        class="issue-indicator"
+        class:error={invalid}
+        aria-label={`${label} has ${issues.length} validation ${issues.length === 1 ? "error" : "errors"}`}
+        aria-expanded={tooltipOpen}
+        aria-describedby={tooltipOpen
+          ? `deck-zone-error-tooltip-${zone}`
+          : undefined}
+        data-cy={`deck-zone-error-${zone}`}
+        onpointerenter={handleIssuePointerEnter}
+        onpointerleave={closeTooltip}
+        onpointerdown={() => (pointerPressed = true)}
+        onfocus={handleIssueFocus}
+        onblur={closeTooltip}
+        onclick={() => {
+          tooltipOpen = !tooltipOpen;
+          pointerPressed = false;
+        }}
+        onkeydown={handleIssueKeydown}
+      >
+        <span aria-hidden="true" data-cy={`deck-zone-error-icon-${zone}`}
+          >(!)</span
+        >
+      </button>
+      {#if tooltipOpen}
+        <div
+          id={`deck-zone-error-tooltip-${zone}`}
+          class="issue-tooltip"
+          class:error={invalid}
+          role="tooltip"
+          data-cy={`deck-zone-error-tooltip-${zone}`}
+        >
+          <ul data-cy={`deck-zone-error-list-${zone}`}>
+            {#each issues as issue (issue.id)}
+              <li data-cy={`deck-zone-error-issue-${zone}-${issue.id}`}>
+                {issue.message}
+              </li>
+            {/each}
+          </ul>
+        </div>
+      {/if}
+    {/if}
   </header>
   {#if !collapsed}
     <div
@@ -196,17 +270,30 @@
 
 <style>
   .zone {
+    position: relative;
     min-width: 0;
+    padding: 0.25rem;
+    border: 2px solid transparent;
+    border-radius: 0.65rem;
+  }
+
+  .zone.invalid {
+    border-color: var(--danger);
   }
 
   header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
     margin-bottom: 0.45rem;
   }
 
-  header button {
+  .zone-toggle {
     all: unset;
     display: flex;
-    width: 100%;
+    flex: 1;
+    min-width: 0;
     align-items: center;
     gap: 0.4rem;
     padding: 0.15rem 0.25rem;
@@ -214,15 +301,73 @@
     cursor: pointer;
   }
 
-  header button:hover {
+  .zone-toggle:hover {
     background: var(--surface-raised);
   }
 
   /* `all: unset` drops the user-agent focus ring, and being an author
      declaration it also beats the global one in `app.css`. */
-  header button:focus-visible {
+  .zone-toggle:focus-visible {
     outline: 3px solid var(--focus-ring);
     outline-offset: 3px;
+  }
+
+  .issue-indicator {
+    flex: none;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0.2rem 0.45rem;
+    color: var(--warning);
+    border: 1px solid var(--warning-border);
+    border-radius: 0.45rem;
+    background: var(--warning-surface);
+    font-weight: 800;
+    cursor: help;
+  }
+
+  .issue-indicator:hover,
+  .issue-indicator:focus-visible {
+    color: var(--surface-sunken);
+    background: var(--warning);
+  }
+
+  .issue-indicator.error {
+    color: var(--danger);
+    border-color: var(--danger);
+    background: var(--danger-surface);
+  }
+
+  .issue-indicator.error:hover,
+  .issue-indicator.error:focus-visible {
+    color: var(--surface-sunken);
+    background: var(--danger);
+  }
+
+  .issue-tooltip {
+    position: absolute;
+    z-index: 10;
+    top: calc(100% + 0.2rem);
+    right: 0;
+    width: min(24rem, calc(100% - 0.5rem));
+    padding: 0.65rem 0.8rem;
+    color: var(--text);
+    border: 1px solid var(--warning-border);
+    border-radius: 0.5rem;
+    background: var(--surface-raised);
+    box-shadow: 0 1.5rem 5rem color-mix(in srgb, var(--shadow) 55%, transparent);
+    font-size: 0.78rem;
+    line-height: 1.4;
+  }
+
+  .issue-tooltip.error {
+    border-color: var(--danger);
+  }
+
+  .issue-tooltip ul {
+    display: grid;
+    gap: 0.3rem;
+    margin: 0;
+    padding-left: 1.15rem;
   }
 
   .panel-title {

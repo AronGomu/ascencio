@@ -46,8 +46,7 @@ describe("deck builder accessibility", () => {
     ).toBe("Control+Z");
   });
 
-  it("moves focus from validation issue to affected zone", async () => {
-    const user = userEvent.setup();
+  it("opens exact zone issues from the focusable indicator", async () => {
     render(DeckEditor, {
       state: stateFixture(),
       cards: PROTOTYPE_CATALOG,
@@ -63,11 +62,13 @@ describe("deck builder accessibility", () => {
       onreload: vi.fn(),
       onpreservecopy: vi.fn(),
     });
-    await user.click(
-      screen.getByRole("button", { name: /Main Deck needs 40 more/ }),
-    );
-    expect(document.activeElement).toBe(
-      screen.getByRole("heading", { name: "Main Deck" }),
+    const indicator = screen.getByRole("button", {
+      name: "Main Deck has 1 validation error",
+    });
+    indicator.focus();
+    expect(document.activeElement).toBe(indicator);
+    expect((await screen.findByRole("tooltip")).textContent).toBe(
+      "Main Deck needs 40 more card(s).",
     );
   });
 

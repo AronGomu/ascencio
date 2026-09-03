@@ -947,6 +947,67 @@ test("small editor polish stays usable in Chromium", async ({ page }) => {
   await expect(page.locator("#deck-zone-body-side")).toHaveCount(0);
 });
 
+test("zone validation tooltips work by pointer, keyboard, and touch", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+  await page.locator('[data-cy="deck-select-create"]').click();
+  await page.getByLabel("Deck name").fill("Zone Validation");
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
+
+  const mainZone = page.locator('[data-cy="deck-zone-main"]');
+  const extraZone = page.locator('[data-cy="deck-zone-extra"]');
+  const sideZone = page.locator('[data-cy="deck-zone-side"]');
+  await expect(mainZone).toHaveClass(/invalid/);
+  await expect(mainZone).toHaveCSS("border-top-color", "rgb(255, 140, 155)");
+  await expect(extraZone).not.toHaveClass(/invalid/);
+  await expect(sideZone).not.toHaveClass(/invalid/);
+  await expect(page.locator('[data-cy="deck-validation"]')).toHaveCount(0);
+
+  const mainIcon = page.locator('[data-cy="deck-zone-error-main"]');
+  const mainTooltip = page.locator('[data-cy="deck-zone-error-tooltip-main"]');
+  await expect(mainIcon).toHaveAccessibleName(
+    "Main Deck has 1 validation error",
+  );
+  await mainIcon.hover();
+  await expect(mainTooltip).toBeVisible();
+  await expect(mainTooltip.locator("li")).toHaveText([
+    "Main Deck needs 40 more card(s).",
+  ]);
+  await page.mouse.move(0, 0);
+  await expect(mainTooltip).toHaveCount(0);
+
+  await mainIcon.focus();
+  await expect(mainIcon).toHaveAttribute("aria-expanded", "true");
+  await expect(mainTooltip).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(mainIcon).toHaveAttribute("aria-expanded", "false");
+  await expect(mainTooltip).toHaveCount(0);
+
+  const sideIcon = page.locator('[data-cy="deck-zone-error-side"]');
+  await expect(page.locator("#deck-zone-body-side")).toHaveCount(0);
+  await expect(sideIcon).toBeVisible();
+  await sideIcon.focus();
+  const sideTooltip = page.locator('[data-cy="deck-zone-error-tooltip-side"]');
+  await expect(sideTooltip).toBeVisible();
+  await expect(sideTooltip.locator("li")).toHaveText(["Side Deck is empty."]);
+  await mainIcon.focus();
+  await expect(
+    page.locator('[data-cy="deck-zone-error-tooltip-side"]'),
+  ).toHaveCount(0);
+  await page.keyboard.press("Escape");
+
+  await mainIcon.dispatchEvent("pointerdown", { pointerType: "touch" });
+  await mainIcon.evaluate((element) => (element as HTMLElement).click());
+  await expect(mainIcon).toHaveAttribute("aria-expanded", "true");
+  await expect(mainTooltip).toBeVisible();
+  await mainIcon.evaluate((element) => (element as HTMLElement).click());
+  await expect(mainIcon).toHaveAttribute("aria-expanded", "false");
+});
+
 test("the deck editor fits the stage without a region scrollbar", async ({
   page,
 }) => {

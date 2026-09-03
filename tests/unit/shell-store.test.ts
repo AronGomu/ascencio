@@ -8,45 +8,79 @@ import {
 } from "../../src/shell/shell-store.ts";
 
 describe("createShellStore", () => {
-  it("starts on the route parsed from the initial hash", () => {
+  it("starts with no previous route", () => {
     const setHash = vi.fn();
     const store = createShellStore("#/free-play", setHash);
-    const seen: string[] = [];
-    store.subscribe((state) => seen.push(state.route.kind));
-    expect(seen).toEqual(["free-play"]);
+    const seen: Array<readonly [string, string | null]> = [];
+    store.subscribe((state) =>
+      seen.push([state.route.kind, state.previousRoute?.kind ?? null]),
+    );
+    expect(seen).toEqual([["free-play", null]]);
     expect(setHash).not.toHaveBeenCalled();
   });
 
-  it("navigates by writing the hash and updating state once", () => {
+  it("remembers the route a navigation left", () => {
     const setHash = vi.fn();
     const store = createShellStore("#/", setHash);
-    const seen: string[] = [];
-    store.subscribe((state) => seen.push(state.route.kind));
+    const seen: Array<readonly [string, string | null]> = [];
+    store.subscribe((state) =>
+      seen.push([state.route.kind, state.previousRoute?.kind ?? null]),
+    );
     store.navigate({ kind: "free-play-decks" });
     expect(setHash).toHaveBeenCalledTimes(1);
     expect(setHash).toHaveBeenCalledWith("#/free-play/decks", false);
-    expect(seen).toEqual(["home", "free-play-decks"]);
+    expect(seen).toEqual([
+      ["home", null],
+      ["free-play-decks", "home"],
+    ]);
+  });
+
+  it("does not overwrite the previous route on same-route navigation", () => {
+    const store = createShellStore("#/", vi.fn());
+    let previousRoute: string | null = null;
+    store.subscribe(
+      (state) => (previousRoute = state.previousRoute?.kind ?? null),
+    );
+
+    store.navigate({ kind: "free-play-decks" });
+    store.navigate({ kind: "free-play-decks" });
+    store.syncFromHash("#/free-play/decks");
+
+    expect(previousRoute).toBe("home");
   });
 
   /* A route the player did not ask for — the correction a finished or
      unresumable duel makes — must not become an entry Back can return to. */
-  it("asks for a replacement when the navigation is a correction", () => {
+  it("remembers origin when replacement navigation is a correction", () => {
     const setHash = vi.fn();
     const store = createShellStore("#/free-play", setHash);
-    const seen: string[] = [];
-    store.subscribe((state) => seen.push(state.route.kind));
+    const seen: Array<readonly [string, string | null]> = [];
+    store.subscribe((state) =>
+      seen.push([state.route.kind, state.previousRoute?.kind ?? null]),
+    );
     store.navigate({ kind: "story" }, { replace: true });
     expect(setHash).toHaveBeenCalledWith("#/story", true);
-    expect(seen).toEqual(["free-play", "story"]);
+    expect(seen).toEqual([
+      ["free-play", null],
+      ["story", "free-play"],
+    ]);
   });
 
-  it("syncs from a hash without writing it back", () => {
+  it("remembers browser-driven hash transitions without writing them back", () => {
     const setHash = vi.fn();
     const store = createShellStore("#/", setHash);
-    const seen: string[] = [];
-    store.subscribe((state) => seen.push(state.route.kind));
-    store.syncFromHash("#/free-play");
-    expect(seen).toEqual(["home", "free-play"]);
+    const seen: Array<readonly [string, string | null]> = [];
+    store.subscribe((state) =>
+      seen.push([state.route.kind, state.previousRoute?.kind ?? null]),
+    );
+    store.navigate({ kind: "free-play" });
+    setHash.mockClear();
+    store.syncFromHash("#/");
+    expect(seen).toEqual([
+      ["home", null],
+      ["free-play", "home"],
+      ["home", "free-play"],
+    ]);
     expect(setHash).not.toHaveBeenCalled();
   });
 
@@ -70,6 +104,19 @@ describe("createShellStore", () => {
 
     expect(setHash).toHaveBeenCalledWith("#/story", false);
     expect(seen).toEqual([null, "new"]);
+  });
+
+  it("does not overwrite the previous route on an intent-only change", () => {
+    const store = createShellStore("#/", vi.fn());
+    let previousRoute: string | null = null;
+    store.subscribe(
+      (state) => (previousRoute = state.previousRoute?.kind ?? null),
+    );
+
+    store.enterStory("continue");
+    store.enterStory("new");
+
+    expect(previousRoute).toBe("home");
   });
 
   /* Otherwise Back into the story replays the menu entry instead of resuming

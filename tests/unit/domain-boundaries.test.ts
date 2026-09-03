@@ -396,6 +396,7 @@ describe("public domain APIs are frozen", () => {
         "STAGE_CONTEXT_KEY",
         "TOAST_CONTEXT_KEY",
         "computeStageBox",
+        "routeLabel",
         "selectStageMode",
       ],
       types: [

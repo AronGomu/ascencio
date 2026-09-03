@@ -141,6 +141,30 @@ export function parseAppRoute(hash: string): AppRoute {
   return HOME_ROUTE;
 }
 
+export function routeLabel(route: AppRoute): string {
+  switch (route.kind) {
+    case "home":
+      return "Main Menu";
+    case "free-play":
+    case "free-play-decks":
+      return "Deck Selection";
+    case "free-play-deck":
+    case "story-deck":
+      return "Deck Builder";
+    case "free-play-collection":
+    case "story-collection":
+      return "Collection";
+    case "story":
+      return "Story";
+    case "story-decks":
+      return "Deck Library";
+    case "duel-session":
+      return "Duel";
+    case "admin":
+      return "Admin";
+  }
+}
+
 export function formatAppRoute(route: AppRoute): string {
   switch (route.kind) {
     case "home":

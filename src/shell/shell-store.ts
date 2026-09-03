@@ -6,6 +6,7 @@ export type StoryEntryIntent = "new" | "continue" | "load";
 
 export interface ShellState {
   readonly route: AppRoute;
+  readonly previousRoute: AppRoute | null;
   /** Set only by `enterStory`, and only for as long as the route is the story:
       leaving it drops the intent, so coming back resumes where the player left
       off rather than replaying the entry they once chose. */
@@ -43,6 +44,7 @@ export function createShellStore(
 ): ShellStore {
   let state: ShellState = {
     route: parseAppRoute(initialHash),
+    previousRoute: null,
     storyEntryIntent: null,
   };
   const subscribers = new Set<(state: ShellState) => void>();
@@ -53,12 +55,13 @@ export function createShellStore(
        navigation that set it provokes; dropping it anywhere else is what stops
        it from outliving the visit. */
     const carried = route.kind === "story" ? intent : null;
-    if (
-      formatAppRoute(route) === formatAppRoute(state.route) &&
-      carried === state.storyEntryIntent
-    )
-      return;
-    state = { route, storyEntryIntent: carried };
+    const routeChanged = formatAppRoute(route) !== formatAppRoute(state.route);
+    if (!routeChanged && carried === state.storyEntryIntent) return;
+    state = {
+      route,
+      previousRoute: routeChanged ? state.route : state.previousRoute,
+      storyEntryIntent: carried,
+    };
     for (const run of subscribers) run(state);
   }
 

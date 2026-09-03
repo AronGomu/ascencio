@@ -8,6 +8,7 @@ import {
   handoffId,
   HOME_ROUTE,
   parseAppRoute,
+  routeLabel,
   type AppRoute,
 } from "../../src/shell/routes.ts";
 
@@ -174,6 +175,30 @@ describe("formatAppRoute", () => {
   it("formats every route back to its canonical hash", () => {
     for (const route of EVERY_ROUTE)
       expect(parseAppRoute(formatAppRoute(route)), route.kind).toEqual(route);
+  });
+});
+
+describe("routeLabel", () => {
+  it("labels every route with stable user-facing copy", () => {
+    const expected = [
+      "Main Menu",
+      "Deck Selection",
+      "Deck Selection",
+      "Deck Builder",
+      "Collection",
+      "Story",
+      "Deck Library",
+      "Deck Builder",
+      "Collection",
+      "Duel",
+      "Admin",
+    ];
+
+    expect(EVERY_ROUTE.map(routeLabel)).toEqual(expected);
+  });
+
+  it("labels an unknown hash through its home fallback", () => {
+    expect(routeLabel(parseAppRoute("#/unknown"))).toBe("Main Menu");
   });
 });
 

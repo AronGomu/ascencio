@@ -89,7 +89,7 @@ export interface DeckCardUpdate {
   readonly beforeIllustrationCardCode: number | null;
   readonly afterIllustrationCardCode: number | null;
   readonly reason:
-    "add" | "remove" | "move" | "import" | "restore" | "illustration";
+    "add" | "remove" | "move" | "import" | "restore" | "sort" | "illustration";
 }
 
 export interface DeckHistory {

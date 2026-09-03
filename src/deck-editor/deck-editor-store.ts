@@ -355,10 +355,10 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
         illustrationCardCode,
         validation: this.#validate({ ...result.cards, importedNeedsReview }),
       });
-      /* Reorder and sort leave undo pointing at the last membership change so
-         undo never fights the player's ordering; the log answers "what did the
-         deck look like a moment ago", which includes where the cards sat. */
-      const positional = command.type === "reorder" || command.type === "sort";
+      /* Reorder leaves undo pointing at the last deck mutation so dragging a
+         tile never spends history. Explicit sorts are ordinary mutations: the
+         player can restore the exact manual order they replaced. */
+      const positional = command.type === "reorder";
       const nextHistory = positional
         ? state.current.history
         : pushDeckUpdate(state.current.history, {

@@ -310,7 +310,7 @@ describe("deck autosave controller", () => {
     repo.close();
   });
 
-  it("a sort appends an autosave entry", async () => {
+  it("a sort appends one autosave and one undoable history entry", async () => {
     const name = "controller-autosave-sort";
     names.push(name);
     const repo = await IndexedDbDeckRepository.open(name);
@@ -321,13 +321,27 @@ describe("deck autosave controller", () => {
     );
     await controller.initialize();
     await controller.createDeck("Sorted");
-    await controller.mutate({ type: "add", cardCode: 89631139 });
     await controller.mutate({ type: "add", cardCode: 46986414 });
+    await controller.mutate({ type: "add", cardCode: 89631139 });
+    const unsorted = [46986414, 89631139];
+    const undoLengthBefore = get(controller).current!.history.undo.length;
 
-    await controller.mutate({ type: "sort", mode: "alpha" });
+    await controller.mutate({
+      type: "sort",
+      mode: "alpha",
+      direction: "asc",
+    });
     const entries = await autosavesReaching(repo, 3);
 
     expect(entries).toHaveLength(3);
+    expect(get(controller).current?.history.undo).toHaveLength(
+      undoLengthBefore + 1,
+    );
+    expect(get(controller).current?.deck.main).toEqual([89631139, 46986414]);
+    await controller.undo();
+    expect(get(controller).current?.deck.main).toEqual(unsorted);
+    await controller.redo();
+    expect(get(controller).current?.deck.main).toEqual([89631139, 46986414]);
     repo.close();
   });
 

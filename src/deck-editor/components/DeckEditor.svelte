@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { MAXIMUM_DECK_NAME_LENGTH } from "../../decks/deck-model.ts";
+  import {
+    MAXIMUM_DECK_NAME_LENGTH,
+    type SortDirection,
+    type SortMode,
+  } from "../../decks/deck-model.ts";
   import type {
     DeckCardLists,
     DeckRecord,
@@ -83,6 +87,8 @@
   export let onsetdefault: () => void = () => undefined;
   export let ondelete: () => void = () => undefined;
 
+  let sortMode: SortMode | "" = "";
+  let sortDirection: SortDirection = "asc";
   let selected: DeckBuilderCardView | null = null;
   let selectedCode: number | null = null;
   let hovered: DeckBuilderCardView | null = null;
@@ -159,6 +165,17 @@
     for (const code of [...value.main, ...value.extra, ...value.side])
       result.set(code, (result.get(code) ?? 0) + 1);
     return result;
+  }
+
+  function selectSortMode(event: Event): void {
+    sortMode = (event.currentTarget as HTMLSelectElement).value as SortMode;
+    onmutate({ type: "sort", mode: sortMode, direction: sortDirection });
+  }
+
+  function toggleSortDirection(): void {
+    if (sortMode === "") return;
+    sortDirection = sortDirection === "asc" ? "desc" : "asc";
+    onmutate({ type: "sort", mode: sortMode, direction: sortDirection });
   }
 
   /* Every tap runs the same command the drag and keyboard paths run, so undo,
@@ -539,19 +556,47 @@
       />
     </label>
     <div class="sort-actions" data-cy="deck-workspace-sort-actions">
-      <button
-        type="button"
-        class="secondary"
-        data-cy="deck-workspace-sort-alpha"
-        onclick={() => onmutate({ type: "sort", mode: "alpha" })}
-        >Sort A–Z</button
+      <select
+        bind:value={sortMode}
+        aria-label="Sort By"
+        data-cy="deck-workspace-sort-mode"
+        onchange={selectSortMode}
       >
+        <option value="" disabled data-cy="deck-workspace-sort-option-none"
+          >Sort By</option
+        >
+        <option value="alpha" data-cy="deck-workspace-sort-option-alpha"
+          >A–Z</option
+        >
+        <option value="type" data-cy="deck-workspace-sort-option-type"
+          >CardType>A–Z</option
+        >
+        <option value="level" data-cy="deck-workspace-sort-option-level"
+          >Level>CardType>A–Z</option
+        >
+        <option value="attribute" data-cy="deck-workspace-sort-option-attribute"
+          >Attribute>CardType>A–Z</option
+        >
+        <option value="race" data-cy="deck-workspace-sort-option-race"
+          >MonsterType>CardType>A–Z</option
+        >
+        <option value="atk" data-cy="deck-workspace-sort-option-atk"
+          >ATK>CardType>A–Z</option
+        >
+        <option value="def" data-cy="deck-workspace-sort-option-def"
+          >DEF>CardType>A–Z</option
+        >
+      </select>
       <button
         type="button"
         class="secondary"
-        data-cy="deck-workspace-sort-type"
-        onclick={() => onmutate({ type: "sort", mode: "type" })}
-        >Sort by type</button
+        disabled={sortMode === ""}
+        aria-label={sortDirection === "asc"
+          ? "Sort descending"
+          : "Sort ascending"}
+        data-cy="deck-workspace-sort-direction"
+        onclick={toggleSortDirection}
+        >{sortDirection === "asc" ? "Descending" : "Ascending"}</button
       >
     </div>
     <button
@@ -901,6 +946,18 @@
   .sort-actions {
     display: flex;
     gap: 0.4rem;
+  }
+
+  .sort-actions select {
+    min-width: 12rem;
+    min-height: 2.45rem;
+    padding: 0.45rem 0.6rem;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface-chain);
+    font-weight: 700;
+    cursor: pointer;
   }
 
   .name-field {

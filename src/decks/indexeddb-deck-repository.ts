@@ -522,6 +522,7 @@ function validateHistory(history: DeckHistory, id: DeckId): DeckHistory {
           "move",
           "import",
           "restore",
+          "sort",
           "illustration",
         ].includes(update.reason) ||
         !validCardLists(update.before) ||

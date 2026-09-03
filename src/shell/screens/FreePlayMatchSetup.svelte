@@ -55,8 +55,8 @@
   /* Leaving the seat for the library it is filled from. Reported rather than
      routed, because the deck editor is a route the shell owns the URL of. */
   export let ondecks: () => void = () => undefined;
-  /* Leaving it for one deck's own page in that editor, reported for the same
-     reason. A bundled deck has no page, so it is the library that opens. */
+  /* Leaving it for one local deck's own page in that editor, reported for the
+     same reason. Bundled decks are blocked before this callback and warn. */
   export let onopendeck: (id: string) => void = () => undefined;
 
   let battle: BattleDeckModule | null = null;

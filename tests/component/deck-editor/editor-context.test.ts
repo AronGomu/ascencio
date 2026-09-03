@@ -59,6 +59,7 @@ const REAL_IMPORT = { timeout: 15_000 };
 
 afterEach(async () => {
   cleanup();
+  vi.restoreAllMocks();
   await Promise.all([
     deleteDB(DECK_DATABASE_NAME),
     deleteDB(STORY_SAVES_DATABASE_NAME),
@@ -161,13 +162,17 @@ async function libraryDeckNames(): Promise<readonly string[]> {
 
 describe("deck editor context binding", () => {
   it("routes a persisted story snapshot into its owned-only editor", async () => {
-    const save = {
-      ...storySave(["saved-one"]),
+    const manual = storySave(["from-manual"]);
+    const autosave = {
+      ...storySave(["from-autosave"]),
       collection: { 89631139: 1 },
     };
+    vi.spyOn(Date, "now").mockReturnValue(1);
     const saves = createStorySaveRepository(globalThis.indexedDB, () => 1);
-    const seeded = await saves.write("manual:1", save, null);
-    expect(seeded.kind).toBe("written");
+    expect((await saves.write("manual:1", manual, null)).kind).toBe("written");
+    expect((await saves.write("autosave", autosave, null)).kind).toBe(
+      "written",
+    );
 
     let current = "#/";
     const store = createShellStore(current, (next) => {
@@ -180,17 +185,20 @@ describe("deck editor context binding", () => {
     await fireEvent.click(await appears("story-top-bar-decks"));
 
     await vi.waitFor(() => expect(current).toBe("#/story/decks"), REAL_IMPORT);
-    expect(await libraryDeckNames()).toStrictEqual(["Deck saved-one"]);
+    expect(await libraryDeckNames()).toStrictEqual(["Deck from-autosave"]);
     expect(query("deck-editor-context-banner")?.textContent).toContain(
       "The Signal Beneath the City · City map",
     );
 
-    const autosave = await saves.read("autosave");
-    if (autosave.kind !== "ready")
+    const persisted = await saves.read("autosave");
+    if (persisted.kind !== "ready")
       throw new Error("expected story route to persist an autosave");
-    expect(autosave.envelope.state.savedScreen).toBe("map");
+    expect(persisted.envelope.state.savedScreen).toBe("map");
+    expect(persisted.envelope.state.decks.map(({ id }) => id)).toStrictEqual([
+      "from-autosave",
+    ]);
 
-    await fireEvent.dblClick(await appears("deck-tile-press-saved-one"));
+    await fireEvent.dblClick(await appears("deck-tile-press-from-autosave"));
     await vi.waitFor(
       () =>
         expect(query("deck-catalog-result-count")?.textContent).toBe(

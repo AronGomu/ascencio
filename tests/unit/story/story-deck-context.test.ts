@@ -82,6 +82,7 @@ describe("openStoryDeckContext", () => {
   it.each([
     ["the autosave is newer", 10, 20, ["from-autosave"]],
     ["the manual save is newer", 20, 10, ["from-manual"]],
+    ["both timestamps tie", 10, 10, ["from-autosave"]],
   ])(
     "edits the save Continue resumes when %s",
     async (_name, manualAt, autosaveAt, expected) => {

@@ -56,8 +56,8 @@ async function putStorySave(
 }
 
 async function seedMapProgress(page: Page): Promise<void> {
-  await page.goto("./#/story");
-  await expect(page.locator(STORY_REGION)).toBeVisible();
+  await page.goto("./#/");
+  await expect(page.locator('[data-cy="shell-region-home"]')).toBeVisible();
   await putStorySave(page, {
     schemaVersion: 3,
     slot: "autosave",
@@ -74,14 +74,15 @@ async function seedMapProgress(page: Page): Promise<void> {
     },
   });
   await page.reload();
+  await expect(page.locator('[data-cy="main-menu-continue"]')).toBeVisible();
 }
 
 /* A save whose default deck the collection no longer covers. Nobody edited it;
    the cards behind it were sold, which is the state T25 badges in the library
    and T26 warns about before the sale commits. */
 async function seedBrokenDefault(page: Page): Promise<void> {
-  await page.goto("./#/story");
-  await expect(page.locator(STORY_REGION)).toBeVisible();
+  await page.goto("./#/");
+  await expect(page.locator('[data-cy="shell-region-home"]')).toBeVisible();
   const [sold] = STARTER.deck.main;
   await putStorySave(page, {
     schemaVersion: 3,
@@ -99,6 +100,7 @@ async function seedBrokenDefault(page: Page): Promise<void> {
     },
   });
   await page.reload();
+  await expect(page.locator('[data-cy="main-menu-continue"]')).toBeVisible();
 }
 
 async function reachEncounter(page: Page): Promise<void> {
@@ -108,24 +110,24 @@ async function reachEncounter(page: Page): Promise<void> {
     page.getByRole("heading", { name: "City signal map" }),
   ).toBeVisible();
   await page.locator('[data-cy="story-map-location-old-arena"]').click();
-  /* Asked for by its own name rather than by role: the briefing titles itself
-     after the opponent and seats that same opponent beside the decks, so two
-     headings carry the encounter. */
   await expect(page.locator('[data-cy="deck-select-title"]')).toHaveText(
+    "Select Deck",
+  );
+  await expect(page.locator('[data-cy="duel-start-opponent-name"]')).toHaveText(
     "Rin's Echo",
   );
   /* Disabled until the card database has answered for the save's decks, which
      is the whole read the duel is about to make anyway. */
   const start = page.locator('[data-cy="deck-select-start"]');
   await expect(start).toBeEnabled({ timeout: 120_000 });
-  /* The save's one deck, picked: the tick is what says the encounter starts on
-     it rather than on nothing. */
+  /* The save's one deck fills the player seat, so the encounter starts on it
+     rather than on an unbound grid row. */
   await expect(
     page.locator(`[data-cy="deck-tile-name-${STARTER.deck.id}"]`),
   ).toHaveText(STARTER.deck.name);
   await expect(
-    page.locator(`[data-cy="deck-tile-check-${STARTER.deck.id}"]`),
-  ).toBeVisible();
+    page.locator('[data-cy="duel-start-your-deck-name"]'),
+  ).toHaveText(STARTER.deck.name);
   await start.click();
 }
 
@@ -255,7 +257,8 @@ test("a session route with no checkpoint lands on the story, not a blank screen"
   await expect(page.locator(STORY_REGION)).toBeVisible();
   await expect(page).toHaveURL(/#\/story$/);
   await expect(page.locator(DUEL_REGION)).toHaveCount(0);
-  await expect(page.locator('[data-cy="main-menu-continue"]')).toBeVisible();
+  await expect(page.getByText(/Rain turned/)).toBeVisible();
+  await expect(page.locator('[data-cy="main-menu-continue"]')).toHaveCount(0);
 });
 
 /* A checkpoint written by another handoff must not be adopted by this one. */
@@ -283,6 +286,7 @@ test("a session route whose checkpoint names another handoff lands on the story"
   await expect(page.locator(STORY_REGION)).toBeVisible();
   await expect(page).toHaveURL(/#\/story$/);
   await expect(page.locator(DUEL_REGION)).toHaveCount(0);
+  await expect(page.getByText(/Rain turned/)).toBeVisible();
 });
 
 /* A record the build cannot parse is the same as no checkpoint: the player
@@ -319,6 +323,9 @@ test("a corrupt checkpoint lands on the story with progress intact", async ({
 
   await expect(page.locator(STORY_REGION)).toBeVisible();
   await expect(page).toHaveURL(/#\/story$/);
+  await expect(page.getByText(/Rain turned/)).toBeVisible();
+
+  await page.goto("./#/");
   await page.locator('[data-cy="main-menu-continue"]').click();
   await expect(
     page.getByRole("heading", { name: "City signal map" }),
@@ -335,6 +342,9 @@ test("an encounter refuses a deck the save no longer owns and links to the edito
   await page.locator('[data-cy="main-menu-continue"]').click();
   await page.locator('[data-cy="story-map-location-old-arena"]').click();
   await expect(page.locator('[data-cy="deck-select-title"]')).toHaveText(
+    "Select Deck",
+  );
+  await expect(page.locator('[data-cy="duel-start-opponent-name"]')).toHaveText(
     "Rin's Echo",
   );
 
@@ -355,6 +365,6 @@ test("an encounter refuses a deck the save no longer owns and links to the edito
   });
   await expect(page).toHaveURL(/#\/story\/decks$/);
   await expect(
-    page.locator(`[data-cy="deck-tile-badge-illegal-${STARTER.deck.id}"]`),
-  ).toBeVisible({ timeout: 120_000 });
+    page.locator(`[data-cy="deck-tile-tags-${STARTER.deck.id}"]`),
+  ).toContainText("Illegal", { timeout: 120_000 });
 });

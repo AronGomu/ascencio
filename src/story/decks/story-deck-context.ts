@@ -47,7 +47,11 @@ export async function openStoryDeckContext(
   );
   const [loaded] = results
     .flatMap((result) => (result.kind === "ready" ? [result.envelope] : []))
-    .sort((a, b) => b.savedAt - a.savedAt);
+    .sort(
+      (a, b) =>
+        b.savedAt - a.savedAt ||
+        (a.slot === "autosave" ? -1 : b.slot === "autosave" ? 1 : 0),
+    );
   return loaded === undefined ? null : storyDeckContext(saves, loaded);
 }
 

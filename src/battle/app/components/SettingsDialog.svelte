@@ -22,6 +22,7 @@
   export let onshowcardshadows: (value: boolean) => void;
   export let onshowzonelabels: (value: boolean) => void;
   export let onreset: () => void;
+  export let ondownloaddiagnostics: (() => void) | null = null;
   export let onclose: () => void;
 
   let panel: HTMLDivElement | undefined;
@@ -198,6 +199,14 @@
       class="secondary"
       data-cy="settings-reset-button"
       onclick={onreset}>Reset settings</button
+    >
+    <button
+      type="button"
+      class="secondary"
+      disabled={ondownloaddiagnostics === null}
+      title={ondownloaddiagnostics === null ? "No duel trace yet" : undefined}
+      onclick={() => ondownloaddiagnostics?.()}
+      data-cy="settings-download-diagnostics-button">Download duel log</button
     >
     <p data-cy="settings-engine-version">{engineText}</p>
     <p data-cy="settings-active-snapshot">{snapshotText}</p>

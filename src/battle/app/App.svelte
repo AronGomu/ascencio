@@ -258,6 +258,9 @@
      the duel it was taken from, and it is retired the moment that duel stops
      being the one on screen. */
   let serveableDiagnostics = $duel.diagnostics;
+  $: diagnosticsAvailable =
+    !diagnosticPending &&
+    ($duel.context.sessionGeneration > 0 || serveableDiagnostics !== null);
   /* Whether the last update showed a duel in play, so that a restore — which
      puts the failure's own duel back into play — is visible as an edge. */
   let duelInPlay = false;
@@ -1688,6 +1691,7 @@
       onshowcardshadows={setShowCardShadows}
       onshowzonelabels={setShowZoneLabels}
       onreset={resetUiSettings}
+      ondownloaddiagnostics={diagnosticsAvailable ? requestDiagnostics : null}
       onclose={() => void closeSettings()}
     />
   {/if}

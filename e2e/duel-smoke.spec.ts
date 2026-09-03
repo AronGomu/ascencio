@@ -586,6 +586,72 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   );
 });
 
+test("duel settings downloads the current diagnostic trace", async ({
+  page,
+}) => {
+  await openDuel(page);
+  await startPresetDuel(page);
+  const field = page.locator(
+    '[data-cy="duel-field"][data-prompt-kind="idleCommand"]',
+  );
+  await expect(field).toBeVisible({ timeout: 120_000 });
+  const promptId = await readLatestPromptId(page);
+  expect(promptId).toBeDefined();
+  await page.locator('[data-cy="field-end-turn-button"]').click();
+  await expect
+    .poll(async () => await countResponsesTo(page, promptId!))
+    .toBe(1);
+
+  await openSettingsDialog(page);
+  const downloadButton = page.locator(
+    '[data-cy="settings-download-diagnostics-button"]',
+  );
+  await expect(downloadButton).toBeEnabled();
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    downloadButton.click(),
+  ]);
+  expect(download.suggestedFilename()).toMatch(
+    /^ygo-duel-diagnostics-[a-f0-9]{12}\.json$/,
+  );
+  const downloadPath = await download.path();
+  if (downloadPath === null) throw new Error("Diagnostic download has no path");
+  const diagnostics = JSON.parse(await readFile(downloadPath, "utf8")) as {
+    readonly trace: {
+      readonly snapshotId: string;
+      readonly entries: readonly { readonly kind: string }[];
+    };
+  };
+  expect(diagnostics.trace.entries.map(({ kind }) => kind)).toEqual(
+    expect.arrayContaining(["prompt", "response"]),
+  );
+
+  await expect
+    .poll(
+      async () =>
+        await page.evaluate(async () => {
+          const database = await new Promise<IDBDatabase>((resolve, reject) => {
+            const request = indexedDB.open("ygo-story-duel");
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+          });
+          try {
+            return await new Promise<number>((resolve, reject) => {
+              const request = database
+                .transaction("debugRuns", "readonly")
+                .objectStore("debugRuns")
+                .count();
+              request.onsuccess = () => resolve(request.result);
+              request.onerror = () => reject(request.error);
+            });
+          } finally {
+            database.close();
+          }
+        }),
+    )
+    .toBeGreaterThan(0);
+});
+
 test("the match setup persists a chosen pair and Change decks returns without auto-start", async ({
   page,
 }) => {

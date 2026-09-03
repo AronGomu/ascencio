@@ -234,7 +234,6 @@ export class DuelWorkerClient implements DuelClient {
       this.#worker !== null &&
       this.#ready &&
       this.#sessionGeneration > 0 &&
-      !this.#active &&
       !this.#diagnosticsPending &&
       this.#shutdown === null &&
       this.#sendDiagnosticsRequest()

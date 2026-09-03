@@ -98,4 +98,34 @@ describe("SettingsDialog display settings", () => {
       ),
     ).toHaveProperty("checked", true);
   });
+
+  it("disables the duel log download when diagnostics are unavailable", () => {
+    const rendered = render(SettingsDialog, {
+      settings: DEFAULT_UI_SETTINGS,
+      ...callbacks(),
+      ondownloaddiagnostics: null,
+    });
+
+    const download = rendered.container.querySelector(
+      '[data-cy="settings-download-diagnostics-button"]',
+    );
+    expect(download).toHaveProperty("disabled", true);
+    expect(download?.getAttribute("title")).toBe("No duel trace yet");
+  });
+
+  it("downloads the duel log when diagnostics are available", async () => {
+    const ondownloaddiagnostics = vi.fn();
+    const rendered = render(SettingsDialog, {
+      settings: DEFAULT_UI_SETTINGS,
+      ...callbacks(),
+      ondownloaddiagnostics,
+    });
+
+    const download = rendered.container.querySelector(
+      '[data-cy="settings-download-diagnostics-button"]',
+    );
+    expect(download).toHaveProperty("disabled", false);
+    await fireEvent.click(download!);
+    expect(ondownloaddiagnostics).toHaveBeenCalledOnce();
+  });
 });

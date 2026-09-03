@@ -72,7 +72,12 @@ function inspector(
   /* Nested under `props` because `anchor` is also a Testing Library render
      option, and a bare `anchor` key would be read as one. */
   return render(CardZoomInspector, {
-    props: { card, rarity, anchor: ANCHOR },
+    props: {
+      card,
+      rarity,
+      anchor: ANCHOR,
+      bounds: { width: globalThis.innerWidth, height: globalThis.innerHeight },
+    },
   });
 }
 
@@ -157,7 +162,24 @@ describe("CardZoomInspector", () => {
     );
   });
 
-  it("never lets the window hang off the bottom of the viewport", () => {
+  it("clamps against supplied stage-local bounds", () => {
+    const { container } = render(CardZoomInspector, {
+      props: {
+        card: MONSTER,
+        anchor: { left: 420, top: 80, width: 60, height: 88 },
+        bounds: { width: 500, height: 400 },
+      },
+    });
+    const frame = container.querySelector(
+      '[data-cy="card-zoom-inspector-card"]',
+    ) as HTMLElement;
+    expect(
+      Number.parseFloat(frame.style.left) +
+        Number.parseFloat(frame.style.width),
+    ).toBeLessThanOrEqual(500 - 8);
+  });
+
+  it("never lets the window hang off the bottom of the stage", () => {
     const window_ = inspector().container.querySelector(
       '[data-cy="card-zoom-inspector-window"]',
     ) as HTMLElement;

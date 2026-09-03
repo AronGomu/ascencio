@@ -407,4 +407,17 @@
     color: var(--muted);
     font-size: 0.85rem;
   }
+
+  @media (max-width: 48rem) {
+    .collection-layout {
+      grid-template-columns: minmax(0, 1fr);
+      overflow-y: auto;
+    }
+    .collection-preview {
+      position: static;
+    }
+    .collection-grid {
+      overflow: visible;
+    }
+  }
 </style>

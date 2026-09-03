@@ -28,7 +28,10 @@
   import { onDestroy } from "svelte";
   import CardZoomInspector from "../components/CardZoomInspector.svelte";
   import StoryCardTile from "../components/StoryCardTile.svelte";
-  import type { ZoomRect } from "../components/zoom-window-position.ts";
+  import type {
+    ZoomRect,
+    ZoomSize,
+  } from "../components/zoom-window-position.ts";
   import {
     createStoryPlaybackSettingsStore,
     type StoryPlaybackSettingsStore,
@@ -67,6 +70,7 @@
   let artElements: (HTMLElement | null)[] = [];
   let pointed: number | null = null;
   let pointedAnchor: ZoomRect | null = null;
+  let zoomBounds: ZoomSize | null = null;
   let autoFlip: AutoFlip | null = null;
   let openingKey = "";
 
@@ -118,6 +122,7 @@
     flipped = Array.from({ length: total }, () => false);
     pointed = null;
     pointedAnchor = null;
+    zoomBounds = null;
     autoFlip?.stop();
     autoFlip = createAutoFlip({ total, onFlip: flip });
     if ($settings.autoFlip) autoFlip.start();
@@ -136,8 +141,14 @@
   }
 
   function point(index: number): void {
-    pointed = index;
-    pointedAnchor = rectOf(artElements[index] ?? null);
+    const frame = frameOf(artElements[index] ?? null);
+    pointed = frame === null ? null : index;
+    pointedAnchor = frame?.anchor ?? null;
+    zoomBounds = frame?.bounds ?? null;
+  }
+
+  function refreshPointedFrame(): void {
+    if (pointed !== null) point(pointed);
   }
 
   /* Guarded by which card is leaving: the pointer moving from one tile to the
@@ -147,14 +158,34 @@
     if (pointed !== index) return;
     pointed = null;
     pointedAnchor = null;
+    zoomBounds = null;
   }
 
-  function rectOf(element: HTMLElement | null): ZoomRect | null {
+  function frameOf(
+    element: HTMLElement | null,
+  ): { readonly anchor: ZoomRect; readonly bounds: ZoomSize } | null {
     if (element === null) return null;
-    const { left, top, width, height } = element.getBoundingClientRect();
-    return { left, top, width, height };
+    const art = element.getBoundingClientRect();
+    const story = element.closest<HTMLElement>(".story-app");
+    const frame = story?.getBoundingClientRect() ?? {
+      left: 0,
+      top: 0,
+      width: globalThis.innerWidth,
+      height: globalThis.innerHeight,
+    };
+    return {
+      anchor: {
+        left: art.left - frame.left,
+        top: art.top - frame.top,
+        width: art.width,
+        height: art.height,
+      },
+      bounds: { width: frame.width, height: frame.height },
+    };
   }
 </script>
+
+<svelte:window onresize={refreshPointedFrame} />
 
 <main class="opening-screen" data-cy="story-shop-opening">
   <header class="opening-header" data-cy="story-shop-opening-header">
@@ -273,10 +304,11 @@
     >
   {/if}
 
-  {#if zoomCard !== null && pointedAnchor !== null}
+  {#if zoomCard !== null && pointedAnchor !== null && zoomBounds !== null}
     <CardZoomInspector
       card={zoomCard}
       anchor={pointedAnchor}
+      bounds={zoomBounds}
       rarity={zoomRarity}
     />
   {/if}

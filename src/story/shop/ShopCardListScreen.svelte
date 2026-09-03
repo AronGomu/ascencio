@@ -259,4 +259,17 @@
     font-size: 0.65rem;
     font-weight: 700;
   }
+
+  @media (max-width: 48rem) {
+    .cards-layout {
+      grid-template-columns: minmax(0, 1fr);
+      overflow-y: auto;
+    }
+    .cards-preview {
+      position: static;
+    }
+    .cards-grid {
+      overflow: visible;
+    }
+  }
 </style>

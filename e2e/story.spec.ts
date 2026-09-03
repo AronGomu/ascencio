@@ -610,8 +610,10 @@ for (const viewport of [
     );
     await expectInternalScroll(
       page,
-      '[data-cy="collection-grid"]',
-      "collection grid",
+      viewport.width <= 768
+        ? '[data-cy="collection-layout"]'
+        : '[data-cy="collection-grid"]',
+      "collection",
     );
   });
 }

@@ -40,7 +40,6 @@
   data-cy="story-shop-browse"
 >
   <header class="browse-header" data-cy="story-shop-browse-header">
-    <h1 data-cy="story-shop-browse-heading">Card Shop</h1>
     <button
       type="button"
       class="story-danger"
@@ -133,11 +132,6 @@
     align-items: center;
     gap: 1rem;
     margin-bottom: 1.5rem;
-  }
-
-  .browse-header h1 {
-    flex: 1;
-    margin: 0;
   }
 
   .row-heading {

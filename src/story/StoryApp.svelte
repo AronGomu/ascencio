@@ -35,7 +35,6 @@
   import SaveLoadOverlay from "./overlays/SaveLoadOverlay.svelte";
   import { TOAST_CONTEXT_KEY, type ToastPublisher } from "../shell/index.ts";
   import SettingsOverlay from "./overlays/SettingsOverlay.svelte";
-  import GearIcon from "./components/icons/GearIcon.svelte";
   import StoryTopBar from "./components/StoryTopBar.svelte";
   import BattleHandoffScreen from "./screens/BattleHandoffScreen.svelte";
   import IllustratedMapScreen from "./screens/IllustratedMapScreen.svelte";
@@ -113,6 +112,45 @@
   const DECK_UNPLAYABLE =
     "The deck this save is set to duel with cannot be played. Return to the map and choose another, or repair it in the deck editor.";
   const CATALOG_UNAVAILABLE = "The card database could not load.";
+
+  interface StoryHeaderConfig {
+    readonly showShop: boolean;
+    readonly showDecks: boolean;
+    readonly title: string | null;
+    readonly objective: string | null;
+    readonly showSettings: boolean;
+  }
+
+  /** Keeps global story chrome derived from screen state in one place. */
+  function storyHeaderConfig(
+    current: StoryState,
+    setName: string,
+    openedCount: number,
+  ): StoryHeaderConfig {
+    const title =
+      current.screen === "map"
+        ? "City signal map"
+        : current.screen === "shop-greeting" || current.screen === "shop-browse"
+          ? "Card Shop"
+          : current.screen === "shop-cards"
+            ? setName || "Card list"
+            : current.screen === "shop-sell"
+              ? "Sell Cards"
+              : current.screen === "shop-opening"
+                ? "Opening packs"
+                : current.screen === "shop-results"
+                  ? `You opened ${String(openedCount)} cards`
+                  : null;
+    const hasStoryContext =
+      current.screen !== "title" && current.screen !== "load";
+    return {
+      showShop: hasStoryContext && !current.screen.startsWith("shop-"),
+      showDecks: hasStoryContext,
+      title,
+      objective: current.screen === "map" ? current.objective : null,
+      showSettings: true,
+    };
+  }
 
   /* The screens that need the card database. The shop ones name, picture or
      price a card; greeting and browse list sets rather than cards, so neither
@@ -361,8 +399,7 @@
     state.screen === "pre-battle" && catalogReady
       ? preBattleDeckOptions(state, cardViewByCode)
       : null;
-  $: topBarVisible =
-    inShop || state.screen === "narrative" || state.screen === "map";
+  $: header = storyHeaderConfig(state, shopSetName, openedCardViews.length);
   $: applyResolution(resolution);
   $: encounterLabel =
     state.encounterId === null
@@ -823,23 +860,26 @@
 </script>
 
 <div class="story-app" data-cy="story-app" bind:this={root}>
-  {#if topBarVisible}
-    <StoryTopBar
-      dp={state.dp}
-      {inShop}
-      onshop={() => dispatch({ type: "open-shop" })}
-    >
-      {#if inShop}
-        <button
-          type="button"
-          class="secondary compact"
-          data-cy="story-top-bar-boosters"
-          onclick={() => (boosterDialogOpen = true)}
-          >{boosterTotal} packs</button
-        >
-      {/if}
-    </StoryTopBar>
-  {/if}
+  <StoryTopBar
+    dp={state.dp}
+    showShop={header.showShop}
+    showDecks={header.showDecks}
+    title={header.title}
+    objective={header.objective}
+    showSettings={header.showSettings}
+    onshop={() => dispatch({ type: "open-shop" })}
+    ondecks={() => void openDeckEditor()}
+    onsettings={() => openOverlay("settings")}
+  >
+    {#if inShop}
+      <button
+        type="button"
+        class="secondary compact"
+        data-cy="story-top-bar-boosters"
+        onclick={() => (boosterDialogOpen = true)}>{boosterTotal} packs</button
+      >
+    {/if}
+  </StoryTopBar>
   {#if storageOperationError}
     <section
       class="storage-error"
@@ -867,7 +907,7 @@
       >
     </section>
   {/if}
-  <div class="story-body" data-cy="story-body">
+  <div class="story-body" data-cy="story-screen-body">
     {#if state.screen === "load"}
       <LoadScreen
         onload={loadSlot}
@@ -893,7 +933,6 @@
     {:else if state.screen === "map"}
       <IllustratedMapScreen
         locations={state.locations}
-        objective={state.objective}
         choiceAcknowledgment={state.laterAcknowledgment}
         allowBack={!state.rewardAcknowledged}
         onselect={(locationId: LocationId) =>
@@ -1094,17 +1133,6 @@
     {/if}
   </div>
 
-  {#if state.screen !== "title" && state.screen !== "load" && state.screen !== "end" && state.screen !== "narrative"}
-    <button
-      type="button"
-      class="global-menu secondary"
-      data-cy="story-global-menu"
-      aria-label="Open menu"
-      onclick={(event) => openOverlay("pause", event)}
-      ><GearIcon cy="story-global-menu-icon" /></button
-    >
-  {/if}
-
   {#if overlay === "history"}<HistoryOverlay
       entries={historyEntries}
       onclose={closeOverlay}
@@ -1207,19 +1235,6 @@
   .storage-error h2,
   .storage-error p {
     margin: 0.2rem;
-  }
-  .global-menu {
-    position: fixed;
-    z-index: 25;
-    right: max(0.5rem, env(safe-area-inset-right));
-    top: max(0.5rem, env(safe-area-inset-top));
-    display: grid;
-    place-items: center;
-    width: 48px;
-    height: 48px;
-    padding: 0;
-    border-radius: 50%;
-    background: color-mix(in srgb, var(--bg) 87%, transparent);
   }
   .completion-panel {
     position: fixed;

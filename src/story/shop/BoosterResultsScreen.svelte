@@ -55,9 +55,6 @@
 
 <main class="results-screen" data-cy="story-shop-results">
   <header class="results-header" data-cy="story-shop-results-header">
-    <h1 data-cy="story-shop-results-heading">
-      You opened {cards.length} cards
-    </h1>
     <RaritySortButton
       grouping={rarityGrouping}
       dataCy="story-shop-results-rarity-sort"
@@ -138,13 +135,9 @@
   }
   .results-header {
     display: flex;
+    justify-content: flex-end;
     align-items: center;
     gap: 1rem;
-  }
-  h1 {
-    flex: 1;
-    margin: 0;
-    font-size: clamp(1.25rem, 4cqw, 2rem);
   }
   .results-grid {
     flex: 1;

@@ -63,7 +63,12 @@
       : groupByRarity(cards, rarityGrouping);
 </script>
 
-<div class="shop-cards" data-cy="story-shop-cards">
+<div
+  class="shop-cards"
+  role="region"
+  aria-label={setName || "Card list"}
+  data-cy="story-shop-cards"
+>
   <header class="cards-header" data-cy="story-shop-cards-header">
     <button
       type="button"
@@ -71,7 +76,6 @@
       data-cy="story-shop-cards-back"
       onclick={onback}>← Back</button
     >
-    <h1 data-cy="story-shop-cards-heading">{setName}</h1>
     <RaritySortButton
       grouping={rarityGrouping}
       dataCy="story-shop-cards-rarity-sort"
@@ -164,14 +168,9 @@
   .cards-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 1rem;
     margin-bottom: 1.5rem;
-  }
-
-  .cards-header h1 {
-    flex: 1;
-    margin: 0;
-    font-size: clamp(1.25rem, 4cqw, 2rem);
   }
 
   .cards-layout {

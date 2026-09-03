@@ -19,16 +19,14 @@ const states: readonly StoryLocationState[] = [
 ];
 
 describe("IllustratedMapScreen", () => {
-  it("renders map/objective/equivalent authored-order hotspot and list surfaces", () => {
+  it("renders equivalent authored-order hotspot and list surfaces", () => {
     render(IllustratedMapScreen, {
       locations: states,
-      objective: "Meet Rin",
       choiceAcknowledgment: "Rin remembers your trust.",
     });
     expect(
       screen.getByRole("img", { name: /Illustrated city map/ }),
     ).toBeTruthy();
-    expect(screen.getByText("Meet Rin")).toBeTruthy();
     expect(screen.getByText(/remembers your trust/)).toBeTruthy();
     const hotspots = screen
       .getByLabelText("Map hotspots")

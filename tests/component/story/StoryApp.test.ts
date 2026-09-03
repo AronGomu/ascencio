@@ -5,7 +5,10 @@ import { cleanup, render, screen, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { STORY_SAVES_DATABASE_NAME } from "../../../src/story/saves/story-save-contracts.ts";
-import { createInitialStoryState } from "../../../src/story/model/story-state.ts";
+import {
+  createInitialStoryState,
+  STORY_SCREENS,
+} from "../../../src/story/model/story-state.ts";
 import StoryApp from "../../../src/story/StoryApp.svelte";
 import {
   TOAST_CONTEXT_KEY,
@@ -103,101 +106,125 @@ describe("StoryApp", () => {
     expect(screen.queryByRole("button", { name: "New Game" })).toBeNull();
   });
 
-  it("map screen shows floating menu gear, narrative does not", async () => {
+  it("replaces the floating map gear with a direct header settings action", async () => {
     const mapState = {
       ...createInitialStoryState(),
       screen: "map" as const,
       savedScreen: "map" as const,
     };
     const { container } = render(StoryApp, { resumeState: mapState });
-    // On map: floating gear present with aria-label
-    expect(screen.getByRole("button", { name: "Open menu" })).toBeTruthy();
-    expect(
-      container.querySelector('[data-cy="story-global-menu"]'),
-    ).not.toBeNull();
-    expect(
-      container.querySelector('[data-cy="story-global-pause"]'),
-    ).toBeNull();
-  });
-
-  it("narrative screen hides the floating menu gear", async () => {
-    const { container } = render(StoryApp);
-    // Story starts in narrative.
-    // On narrative: floating gear (story-global-menu) must be absent;
-    // narrative bar's own gear (story-narrative-menu) may still be present
     expect(container.querySelector('[data-cy="story-global-menu"]')).toBeNull();
+
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "Open settings" }));
+
+    expect(screen.getByRole("dialog", { name: "Settings" })).toBeTruthy();
   });
 
-  /* Story styling has to stay inside its own root: the shell mounts duel and
-     deck editor in the same document, so a bare `button`/`body` rule would
-     repaint them. */
-  it("top bar rides narrative, map and shop, not title", async () => {
-    // narrative: present
-    const { container: narrativeContainer } = render(StoryApp);
+  it("keeps the narrative pause menu without a second floating control", () => {
+    const { container } = render(StoryApp);
+    expect(container.querySelector('[data-cy="story-global-menu"]')).toBeNull();
     expect(
-      narrativeContainer.querySelector('[data-cy="story-top-bar"]'),
+      container.querySelector('[data-cy="story-narrative-menu"]'),
     ).not.toBeNull();
+  });
+
+  /* Every state gets one shell mount. Individual controls and text slots vary,
+     but screen components never mount another copy of global chrome. */
+  it("mounts exactly one top bar for every story screen", () => {
+    for (const storyScreen of STORY_SCREENS) {
+      const state = {
+        ...createInitialStoryState(),
+        screen: storyScreen,
+        savedScreen: storyScreen,
+        shopReturnScreen: storyScreen.startsWith("shop-")
+          ? ("map" as const)
+          : null,
+      };
+      const { container } = render(StoryApp, { resumeState: state });
+      expect(
+        container.querySelectorAll('[data-cy="story-top-bar"]'),
+        storyScreen,
+      ).toHaveLength(1);
+      expect(
+        container.querySelector('[data-cy="story-screen-body"]'),
+        storyScreen,
+      ).not.toBeNull();
+      cleanup();
+    }
+  });
+
+  it("configures narrative, map and shop header slots from screen state", () => {
+    const { container: narrative } = render(StoryApp);
+    expect(
+      narrative.querySelector('[data-cy="story-top-bar-shop"]'),
+    ).not.toBeNull();
+    expect(
+      narrative.querySelector('[data-cy="story-top-bar-decks"]'),
+    ).not.toBeNull();
+    expect(
+      narrative.querySelector('[data-cy="story-top-bar-settings"]'),
+    ).not.toBeNull();
+    expect(
+      narrative.querySelector('[data-cy="story-top-bar-title"]'),
+    ).toBeNull();
+    expect(
+      narrative.querySelector('[data-cy="story-top-bar-objective"]'),
+    ).toBeNull();
     cleanup();
 
-    // narrative state: present
-    const narrativeState = {
-      ...createInitialStoryState(),
-      screen: "narrative" as const,
-      savedScreen: "narrative" as const,
-    };
-    const { container: narrativeStateContainer } = render(StoryApp, {
-      resumeState: narrativeState,
-    });
-    expect(
-      narrativeStateContainer.querySelector('[data-cy="story-top-bar"]'),
-    ).not.toBeNull();
-    cleanup();
-
-    // map: present
     const mapState = {
       ...createInitialStoryState(),
       screen: "map" as const,
       savedScreen: "map" as const,
     };
-    const { container: mapContainer } = render(StoryApp, {
-      resumeState: mapState,
-    });
+    const { container: map } = render(StoryApp, { resumeState: mapState });
     expect(
-      mapContainer.querySelector('[data-cy="story-top-bar"]'),
-    ).not.toBeNull();
+      map.querySelector('[data-cy="story-top-bar-title"]')?.textContent,
+    ).toBe("City signal map");
+    expect(
+      map.querySelector('[data-cy="story-top-bar-objective"]')?.textContent,
+    ).toContain(mapState.objective);
+    expect(map.querySelector('[data-cy="story-map-heading"]')).toBeNull();
+    expect(map.querySelector('[data-cy="story-map-objective"]')).toBeNull();
     cleanup();
 
-    // shop-greeting: present
     const shopState = {
       ...createInitialStoryState(),
-      screen: "shop-greeting" as const,
-      savedScreen: "shop-greeting" as const,
+      screen: "shop-sell" as const,
+      savedScreen: "shop-sell" as const,
+      shopReturnScreen: "map" as const,
     };
-    const { container: shopContainer } = render(StoryApp, {
-      resumeState: shopState,
-    });
+    const { container: shop } = render(StoryApp, { resumeState: shopState });
+    expect(shop.querySelector('[data-cy="story-top-bar-shop"]')).toBeNull();
     expect(
-      shopContainer.querySelector('[data-cy="story-top-bar"]'),
+      shop.querySelector('[data-cy="story-top-bar-decks"]'),
+    ).not.toBeNull();
+    expect(
+      shop.querySelector('[data-cy="story-top-bar-title"]')?.textContent,
+    ).toBe("Sell Cards");
+    expect(
+      shop.querySelector('[data-cy="story-top-bar-settings"]'),
     ).not.toBeNull();
   });
 
-  /* The top bar is how a player inside a save reaches their decks, and from
-     there their collection. `StoryApp` passes no `ondecks`, so what the button
-     does is `StoryTopBar`'s own default — asserted here from the story root,
-     because the requirement is about the bar the story actually mounts. */
-  it("top bar decks button opens the story's own deck builder", async () => {
+  /* The top bar is how a player inside a save reaches their decks. StoryApp
+     must checkpoint first, then report navigation through its public callback. */
+  it("top bar decks button checkpoints before opening story decks", async () => {
+    const ondecks = vi.fn();
     const mapState = {
       ...createInitialStoryState(),
       screen: "map" as const,
       savedScreen: "map" as const,
     };
-    render(StoryApp, { resumeState: mapState });
+    render(StoryApp, { resumeState: mapState, ondecks });
 
     await userEvent
       .setup()
       .click(screen.getByRole("button", { name: "Open deck builder" }));
 
-    expect(globalThis.location.hash).toBe("#/story/decks");
+    await waitFor(() => expect(ondecks).toHaveBeenCalledOnce());
   });
 
   /* Selling is irreversible and priced by rarity, and rarity is only known

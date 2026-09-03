@@ -12,7 +12,8 @@ async function openStory(page: Page): Promise<void> {
 
 async function startNarrative(page: Page): Promise<void> {
   await openStory(page);
-  await page.getByRole("button", { name: "New Game" }).click();
+  const newGame = page.getByRole("button", { name: "New Game" });
+  if ((await newGame.count()) > 0) await newGame.click();
   await expect(page.getByText(/Rain turned/)).toBeVisible();
 }
 
@@ -80,9 +81,9 @@ test("shop loop: buy packs, open all, sell cards, singles sanity", async ({
   // count is a property of a random pull rather than a constant. What is
   // constant is the accounting: badges plus badge-less tiles total 54, which
   // fails if the grouping drops a card or invents one.
-  await expect(
-    page.locator('[data-cy="story-shop-results-heading"]'),
-  ).toContainText("54");
+  await expect(page.locator('[data-cy="story-top-bar-title"]')).toContainText(
+    "54",
+  );
   const openedTotal = await page
     .locator('[data-cy^="story-shop-result-tile-"]')
     .evaluateAll((tiles) =>

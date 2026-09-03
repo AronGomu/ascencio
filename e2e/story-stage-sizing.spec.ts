@@ -376,16 +376,16 @@ for (const viewport of VIEWPORTS) {
     await expectOverlay(page, "history-title", "history overlay");
 
     await openSavedScreen(page, stateAt("map"), '[data-cy="story-map-screen"]');
-    await page.locator('[data-cy="story-global-menu"]').click();
-    await expectOverlay(page, "pause-title", "pause overlay");
-    await page.locator('[data-cy="story-pause-settings"]').click();
+    await page.locator('[data-cy="story-top-bar-settings"]').click();
     await expectOverlay(page, "settings-title", "settings overlay");
     await page.keyboard.press("Escape");
-    await page.locator('[data-cy="story-global-menu"]').click();
+
+    await openNewGame(page);
+    await page.locator('[data-cy="story-narrative-menu"]').click();
     await page.locator('[data-cy="story-pause-save"]').click();
     await expectOverlay(page, "save-load-title", "save overlay");
     await page.keyboard.press("Escape");
-    await page.locator('[data-cy="story-global-menu"]').click();
+    await page.locator('[data-cy="story-narrative-menu"]').click();
     await page.locator('[data-cy="story-pause-load"]').click();
     await expectOverlay(page, "load-overlay-title", "load overlay");
 

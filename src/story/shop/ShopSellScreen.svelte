@@ -107,7 +107,6 @@
   inert={pending !== null}
 >
   <header class="sell-header" data-cy="story-shop-sell-header">
-    <h1 data-cy="story-shop-sell-heading">Sell Cards</h1>
     <button
       type="button"
       class="story-danger"
@@ -213,10 +212,6 @@
     display: flex;
     align-items: center;
     gap: 1rem;
-  }
-  .sell-header h1 {
-    margin: 0;
-    flex: 1;
   }
   .sell-grid {
     display: grid;

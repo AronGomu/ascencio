@@ -225,8 +225,7 @@ describe("opening more than one pack", () => {
       ).not.toBeNull(),
     );
     expect(
-      container.querySelector('[data-cy="story-shop-results-heading"]')
-        ?.textContent,
+      container.querySelector('[data-cy="story-top-bar-title"]')?.textContent,
     ).toContain(`${2 * PACK_SIZE}`);
     expect(
       container.querySelectorAll('[data-cy^="story-shop-result-tile-"]'),

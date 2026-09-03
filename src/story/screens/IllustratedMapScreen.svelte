@@ -2,7 +2,6 @@
   import mapAsset from "../assets/city-map-placeholder.svg";
   import type { LocationId, StoryLocationState } from "../model/story-state.ts";
   export let locations: readonly StoryLocationState[] = [];
-  export let objective = "Investigate the Old Arena signal";
   export let choiceAcknowledgment: string | null = null;
   export let allowBack = false;
   export let onselect: (id: LocationId) => void = () => undefined;
@@ -72,17 +71,12 @@
 
 <section
   class="map-screen"
-  aria-labelledby="map-heading"
+  aria-label="City signal map"
   data-cy="story-map-screen"
 >
   <header data-cy="story-map-header">
     <p class="eyebrow" data-cy="story-map-eyebrow">
       Chapter 1 · River district
-    </p>
-    <h1 id="map-heading" data-cy="story-map-heading">City signal map</h1>
-    <p class="objective" data-cy="story-map-objective">
-      <strong data-cy="story-map-objective-label">Objective:</strong>
-      {objective}
     </p>
     {#if choiceAcknowledgment}
       <p
@@ -211,18 +205,12 @@
     gap: 1rem;
     margin-bottom: 1rem;
   }
-  h1 {
-    margin: 0.2rem 0;
-  }
-  .objective,
   .choice-acknowledgment {
     max-width: 32rem;
     padding: 0.75rem 1rem;
-    border-left: 3px solid var(--story-accent);
+    /* impeccable-disable-next-line side-tab: existing T17-owned acknowledgment treatment */
+    border-left: 3px solid var(--stack-accent);
     background: var(--surface-raised);
-  }
-  .choice-acknowledgment {
-    border-left-color: var(--stack-accent);
   }
   .map-layout {
     display: grid;

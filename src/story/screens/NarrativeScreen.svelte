@@ -1,6 +1,5 @@
 <script lang="ts">
   import ChoiceList from "../components/ChoiceList.svelte";
-  import GearIcon from "../components/icons/GearIcon.svelte";
   import type { StoryBeat } from "../content/prologue.ts";
   import { PROLOGUE } from "../content/prologue.ts";
   import type { ChoiceId } from "../model/story-state.ts";
@@ -156,8 +155,7 @@
         class="secondary compact"
         data-cy="story-narrative-menu"
         aria-label="Open menu"
-        onclick={() => onutility("pause")}
-        ><GearIcon cy="story-narrative-menu-icon" /></button
+        onclick={() => onutility("pause")}>Menu</button
       >
     {/if}
   </div>

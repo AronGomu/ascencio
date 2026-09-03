@@ -543,6 +543,7 @@
       type="button"
       class="act-create"
       role={compactMenuOpen ? "menuitem" : undefined}
+      aria-label="Create deck"
       data-cy="deck-select-create"
       onclick={() => {
         closeCompactMenu();
@@ -1521,16 +1522,11 @@
       background: var(--bg);
     }
 
-    /* Deck management lives on each card's own kebab on a phone, so the footer
-       keeps Start alone — and the library, which has no Start, keeps nothing
-       but the header's back icon. */
-    .manage,
+    /* Deck edits live on each card's kebab on a phone. Creating has no card
+       anchor, so it stays in the library footer. */
     .compact-actions,
-    .wide-only {
-      display: none;
-    }
-
-    .screen.library footer {
+    .wide-only,
+    .manage > :not(.act-create) {
       display: none;
     }
 

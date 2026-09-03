@@ -193,8 +193,9 @@ test("deck editor persists edits across reloads", async ({ page }) => {
   await zoneTile(page, "side", BLUE_EYES).click();
   await expect(zoneCount(page, "main")).toHaveText("1/40");
   await expect(zoneCount(page, "side")).toHaveText("0/15");
-  /* Right click is the remove that the picked-card toolbar used to spell. */
+  /* Right click opens the card actions without losing the exact copy. */
   await zoneTile(page, "main", BLUE_EYES).click({ button: "right" });
+  await page.locator('[data-cy="deck-card-context-remove"]').click();
   await expect(zoneCount(page, "main")).toHaveText("0/40");
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(zoneCount(page, "main")).toHaveText("1/40");
@@ -590,10 +591,9 @@ test("the deck editor fits the stage without a region scrollbar", async ({
     true,
   );
 
-  /* A status message is the ordinary state of this page, not an exception to
-     it: Duplicate posts one, and the budget has to hold while it shows. */
+  /* Duplicate reports through the shell toast without changing region height. */
   await page.locator('[data-cy="deck-editor-duplicate"]').click();
-  await expect(page.locator('[data-cy="deck-editor-message"]')).toHaveText(
+  await expect(page.locator('[data-cy^="shell-toast-message-"]')).toHaveText(
     "Deck duplicated.",
   );
   const withMessage = await measure();

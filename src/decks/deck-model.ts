@@ -8,6 +8,10 @@ import {
 } from "./catalog/pinned-ruleset.ts";
 import { validateDeckDraft } from "./deck-validation.ts";
 
+export type SortMode =
+  "alpha" | "type" | "level" | "attribute" | "race" | "atk" | "def";
+export type SortDirection = "asc" | "desc";
+
 /* `index` names which copy of a repeated card a command means. A tile knows
    its own position; a drag or an import does not, so it stays optional and the
    first copy answers for the callers that cannot say. */
@@ -29,7 +33,11 @@ export type DeckCommand =
   | Readonly<{ type: "import"; cards: DeckCardLists }>
   | Readonly<{ type: "restore"; cards: DeckCardLists }>
   | Readonly<{ type: "reorder"; zone: DeckZone; from: number; to: number }>
-  | Readonly<{ type: "sort"; mode: "alpha" | "type" }>;
+  | Readonly<{
+      type: "sort";
+      mode: SortMode;
+      direction: SortDirection;
+    }>;
 
 export type DeckMutationResult =
   | Readonly<{
@@ -114,10 +122,7 @@ export function applyDeckCommand(
   if (command.type === "sort")
     return Object.freeze({
       type: "accepted",
-      cards:
-        command.mode === "alpha"
-          ? sortDeckCardsAlphabetical(next, catalog)
-          : sortDeckCards(next, catalog),
+      cards: sortDeckCards(next, catalog, command.mode, command.direction),
       reason: "sort",
     });
 
@@ -228,40 +233,31 @@ export function applyDeckCommand(
   });
 }
 
+interface SortableDeckCard {
+  readonly code: number;
+  readonly index: number;
+  readonly card: DeckBuilderCardView | undefined;
+}
+
 export function sortDeckCards(
   cards: DeckCardLists,
   catalog: ReadonlyMap<number, DeckBuilderCardView>,
+  mode: SortMode = "type",
+  direction: SortDirection = "asc",
 ): DeckCardLists {
-  const compare =
-    (zone: DeckZone) =>
-    (left: number, right: number): number => {
-      const a = catalog.get(left);
-      const b = catalog.get(right);
-      if (a === undefined || b === undefined) return left - right;
-      const group = (card: DeckBuilderCardView): number => {
-        const extraOrder = ["Fusion", "Synchro", "Xyz", "Link"];
-        if (
-          zone === "extra" ||
-          (zone === "side" && card.canonicalZone === "extra")
-        ) {
-          const subtype = Math.min(
-            ...card.subtypes.map((type) => {
-              const index = extraOrder.indexOf(type);
-              return index < 0 ? extraOrder.length : index;
-            }),
-          );
-          return (zone === "side" ? 3 : 0) + subtype;
-        }
-        return card.family === "monster" ? 0 : card.family === "spell" ? 1 : 2;
-      };
-      return (
-        group(a) - group(b) || a.name.localeCompare(b.name) || a.code - b.code
-      );
-    };
+  const sortZone = (codes: readonly number[], zone: DeckZone) =>
+    Object.freeze(
+      codes
+        .map((code, index) => ({ code, index, card: catalog.get(code) }))
+        .sort((left, right) =>
+          compareDeckCards(left, right, zone, mode, direction),
+        )
+        .map(({ code }) => code),
+    );
   return Object.freeze({
-    main: Object.freeze([...cards.main].sort(compare("main"))),
-    extra: Object.freeze([...cards.extra].sort(compare("extra"))),
-    side: Object.freeze([...cards.side].sort(compare("side"))),
+    main: sortZone(cards.main, "main"),
+    extra: sortZone(cards.extra, "extra"),
+    side: sortZone(cards.side, "side"),
   });
 }
 
@@ -269,21 +265,95 @@ export function sortDeckCardsAlphabetical(
   cards: DeckCardLists,
   catalog: ReadonlyMap<number, DeckBuilderCardView>,
 ): DeckCardLists {
-  /* A code with no catalog entry has no name to sort by and no tile to read,
-     so it sinks to the end of its zone rather than sorting as an empty name
-     ahead of every real card. */
-  const compare = (left: number, right: number): number => {
-    const a = catalog.get(left);
-    const b = catalog.get(right);
-    if (a === undefined || b === undefined)
-      return a === b ? left - right : a === undefined ? 1 : -1;
-    return a.name.localeCompare(b.name) || a.code - b.code;
-  };
-  return Object.freeze({
-    main: Object.freeze([...cards.main].sort(compare)),
-    extra: Object.freeze([...cards.extra].sort(compare)),
-    side: Object.freeze([...cards.side].sort(compare)),
-  });
+  return sortDeckCards(cards, catalog, "alpha", "asc");
+}
+
+function compareDeckCards(
+  left: SortableDeckCard,
+  right: SortableDeckCard,
+  zone: DeckZone,
+  mode: SortMode,
+  direction: SortDirection,
+): number {
+  const primary = compareNullable(
+    sortPrimary(left, zone, mode),
+    sortPrimary(right, zone, mode),
+    direction,
+  );
+  if (primary !== 0) return primary;
+  if (mode !== "alpha" && mode !== "type") {
+    const type = compareNullable(
+      cardTypeRank(left.card, zone),
+      cardTypeRank(right.card, zone),
+      "asc",
+    );
+    if (type !== 0) return type;
+  }
+  if (mode !== "alpha") {
+    const name = cardName(left).localeCompare(cardName(right));
+    if (name !== 0) return name;
+  }
+  return left.index - right.index;
+}
+
+function sortPrimary(
+  value: SortableDeckCard,
+  zone: DeckZone,
+  mode: SortMode,
+): string | number | null {
+  if (mode === "alpha") return cardName(value);
+  if (mode === "type") return cardTypeRank(value.card, zone);
+  const card = value.card;
+  if (card === undefined) return null;
+  if (mode === "level") return knownNumber(card.levelRankLink);
+  if (mode === "attribute") return knownText(card.attribute, "Attribute ");
+  if (mode === "race") return knownText(card.race, "Race ");
+  if (mode === "atk") return knownNumber(card.attack);
+  return knownNumber(card.defense);
+}
+
+function cardName({ card, code }: SortableDeckCard): string {
+  return card?.name ?? `Card ${code}`;
+}
+
+function cardTypeRank(
+  card: DeckBuilderCardView | undefined,
+  zone: DeckZone,
+): number | null {
+  if (card === undefined) return null;
+  const extraOrder = ["Fusion", "Synchro", "Xyz", "Link"];
+  if (zone === "extra" || (zone === "side" && card.canonicalZone === "extra")) {
+    const subtype = extraOrder.findIndex((type) =>
+      card.subtypes.includes(type),
+    );
+    return subtype < 0 ? null : (zone === "side" ? 3 : 0) + subtype;
+  }
+  return card.family === "monster" ? 0 : card.family === "spell" ? 1 : 2;
+}
+
+function knownNumber(value: number | null): number | null {
+  return value !== null && Number.isFinite(value) && value >= 0 ? value : null;
+}
+
+function knownText(value: string | null, unknownPrefix: string): string | null {
+  const normalized = value?.trim() ?? "";
+  return normalized.length === 0 || normalized.startsWith(unknownPrefix)
+    ? null
+    : normalized;
+}
+
+function compareNullable(
+  left: string | number | null,
+  right: string | number | null,
+  direction: SortDirection,
+): number {
+  if (left === null || right === null)
+    return left === right ? 0 : left === null ? 1 : -1;
+  const compared =
+    typeof left === "number" && typeof right === "number"
+      ? left - right
+      : String(left).localeCompare(String(right));
+  return direction === "asc" ? compared : -compared;
 }
 
 export function mainDeckGridPlan(count: number): DeckGridPlan {

@@ -60,7 +60,7 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 | duel start | Deck-select mode that fills the seats and starts the duel | `mode="duel-start"` in `src/shell/screens/FreePlayMatchSetup.svelte`, `src/story/screens/PreBattleScreen.svelte` |
 | deck library | Deck-select mode that manages the collection; no seat is filled | `mode="library"` in `src/deck-editor/components/DeckLibrary.svelte` |
 | deckselect | The shared screen behind all three: header, tools, grid, footer, dialogs | `src/deck-select/DeckSelectScreen.svelte`, public entry `src/deck-select/index.ts` |
-| manual order | No auto-sort; cards sit where dropped; reorder/sort commands are position-only and history-blind | `src/decks/deck-model.ts` (`reorder`, `sort` planned), ADR-037 |
+| manual order | Cards stay placed; reorder history-blind, explicit sorts undoable | `src/decks/deck-model.ts`, `src/deck-editor/deck-editor-store.ts` |
 | click intent | What a left click on a tile means, derived from zone + capacity, never from presentation state | `src/deck-editor/layout/click-intent.ts` (`deckCardClickIntent`, `catalogCardClickIntent`, `ClickIntent`) |
 | runtime catalog | The whole packaged card database (14,794 codes), fetched from the runtime assets when a domain opens rather than compiled into the bundle, memoized per page load | `src/decks/catalog/runtime-catalog.ts` (`runtimeCatalog`, `loadRuntimeCatalog`, `setRuntimeCatalogForTests`), ADR-043 |
 | buildable card | A catalog card a deck may hold; the runtime catalog less its 243 Tokens (14,551 offered) | `src/decks/catalog/deck-buildable-cards.ts` (`isDeckBuildableCard`, `deckBuildableCards`) |

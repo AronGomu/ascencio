@@ -80,6 +80,36 @@ describe("bounded deck history", () => {
     expect(redoDeckUpdate(undone.history)?.importedNeedsReview).toBe(true);
   });
 
+  it("forces a sort snapshot when before and after order already match", () => {
+    const cards = { main: [1, 2], extra: [], side: [] };
+    const history = pushDeckUpdate(emptyDeckHistory(), {
+      id: "same-order-sort",
+      deckId: deckId("deck-a"),
+      before: cards,
+      after: cards,
+      reason: "sort",
+    });
+
+    expect(history.undo).toHaveLength(1);
+    expect(history.undo[0]).toMatchObject({
+      reason: "sort",
+      before: cards,
+      after: cards,
+    });
+  });
+
+  it("keeps import order-sensitive", () => {
+    const history = pushDeckUpdate(emptyDeckHistory(), {
+      id: "order-only-import",
+      deckId: deckId("deck-a"),
+      before: { main: [1, 2], extra: [], side: [] },
+      after: { main: [2, 1], extra: [], side: [] },
+      reason: "import",
+    });
+
+    expect(history.undo).toHaveLength(1);
+  });
+
   it("a pure reorder pushes no history entry", () => {
     const history = pushDeckUpdate(emptyDeckHistory(), {
       id: "first",

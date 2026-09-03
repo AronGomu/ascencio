@@ -86,33 +86,67 @@ describe("drag reordering", () => {
 });
 
 describe("sort actions toolbar", () => {
-  it("renders both sort actions in the editor's top row", () => {
+  it("offers one Sort By select with all seven modes", () => {
     const { container } = render(DeckEditor, props(vi.fn(), 3));
-    const header = container.querySelector('[data-cy="deck-editor-header"]');
+    const select = container.querySelector<HTMLSelectElement>(
+      '[data-cy="deck-workspace-sort-mode"]',
+    )!;
 
+    expect([...select.options].map(({ text }) => text)).toEqual([
+      "Sort By",
+      "A–Z",
+      "CardType>A–Z",
+      "Level>CardType>A–Z",
+      "Attribute>CardType>A–Z",
+      "MonsterType>CardType>A–Z",
+      "ATK>CardType>A–Z",
+      "DEF>CardType>A–Z",
+    ]);
     expect(
-      header?.querySelector('[data-cy="deck-workspace-sort-alpha"]'),
-    ).not.toBeNull();
+      container.querySelector('[data-cy="deck-workspace-sort-alpha"]'),
+    ).toBeNull();
     expect(
-      header?.querySelector('[data-cy="deck-workspace-sort-type"]'),
-    ).not.toBeNull();
+      container.querySelector('[data-cy="deck-workspace-sort-type"]'),
+    ).toBeNull();
   });
 
-  it("sort a-z calls sort alpha command", async () => {
+  it("selecting a mode immediately dispatches an ascending sort", async () => {
     const onmutate = vi.fn<(command: DeckCommand) => void>();
     const { container } = render(DeckEditor, props(onmutate, 3));
-    await fireEvent.click(
-      container.querySelector('[data-cy="deck-workspace-sort-alpha"]')!,
-    );
-    expect(onmutate).toHaveBeenCalledWith({ type: "sort", mode: "alpha" });
+    const select = container.querySelector<HTMLSelectElement>(
+      '[data-cy="deck-workspace-sort-mode"]',
+    )!;
+
+    await fireEvent.change(select, { target: { value: "level" } });
+
+    expect(onmutate).toHaveBeenCalledWith({
+      type: "sort",
+      mode: "level",
+      direction: "asc",
+    });
   });
 
-  it("sort by type calls sort type command", async () => {
+  it("direction toggle re-applies current mode and names its next action", async () => {
     const onmutate = vi.fn<(command: DeckCommand) => void>();
     const { container } = render(DeckEditor, props(onmutate, 3));
-    await fireEvent.click(
-      container.querySelector('[data-cy="deck-workspace-sort-type"]')!,
-    );
-    expect(onmutate).toHaveBeenCalledWith({ type: "sort", mode: "type" });
+    const select = container.querySelector<HTMLSelectElement>(
+      '[data-cy="deck-workspace-sort-mode"]',
+    )!;
+    const direction = container.querySelector<HTMLButtonElement>(
+      '[data-cy="deck-workspace-sort-direction"]',
+    )!;
+
+    expect(direction.disabled).toBe(true);
+    expect(direction.getAttribute("aria-label")).toBe("Sort descending");
+    await fireEvent.change(select, { target: { value: "race" } });
+    expect(direction.disabled).toBe(false);
+    await fireEvent.click(direction);
+
+    expect(direction.getAttribute("aria-label")).toBe("Sort ascending");
+    expect(onmutate).toHaveBeenLastCalledWith({
+      type: "sort",
+      mode: "race",
+      direction: "desc",
+    });
   });
 });

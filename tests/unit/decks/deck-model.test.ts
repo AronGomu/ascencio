@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   applyDeckCommand,
   sortDeckCards,
-  sortDeckCardsAlphabetical,
+  type SortDirection,
+  type SortMode,
 } from "../../../src/decks/deck-model.ts";
+import type { DeckBuilderCardView } from "../../../src/decks/catalog/ocg-card-mapper.ts";
 import {
   catalogByCode,
   PROTOTYPE_RULESET,
@@ -239,32 +241,160 @@ describe("deck editing model", () => {
     ).toEqual({ type: "rejected", reason: "Nothing to reorder." });
   });
 
-  it("sort type groups monsters, spells then traps alphabetically", () => {
-    const result = applyDeckCommand(
-      { main: [44095762, 12580477, 89631139], extra: [], side: [] },
-      { type: "sort", mode: "type" },
-      catalog,
-      PROTOTYPE_RULESET,
-    );
-    expect(result).toMatchObject({
-      type: "accepted",
-      reason: "sort",
-      cards: { main: [89631139, 12580477, 44095762] },
-    });
+  it.each<readonly [SortMode, SortDirection, readonly number[]]>([
+    [
+      "alpha",
+      "asc",
+      [99999999, 53129443, 46986414, 91152256, 12580477, 74677422],
+    ],
+    [
+      "alpha",
+      "desc",
+      [74677422, 12580477, 91152256, 46986414, 53129443, 99999999],
+    ],
+    [
+      "type",
+      "asc",
+      [46986414, 91152256, 74677422, 53129443, 12580477, 99999999],
+    ],
+    [
+      "type",
+      "desc",
+      [53129443, 12580477, 46986414, 91152256, 74677422, 99999999],
+    ],
+    [
+      "level",
+      "asc",
+      [91152256, 46986414, 74677422, 53129443, 12580477, 99999999],
+    ],
+    [
+      "level",
+      "desc",
+      [46986414, 74677422, 91152256, 53129443, 12580477, 99999999],
+    ],
+    [
+      "attribute",
+      "asc",
+      [46986414, 74677422, 91152256, 53129443, 12580477, 99999999],
+    ],
+    [
+      "attribute",
+      "desc",
+      [91152256, 46986414, 74677422, 53129443, 12580477, 99999999],
+    ],
+    [
+      "race",
+      "asc",
+      [74677422, 46986414, 91152256, 53129443, 12580477, 99999999],
+    ],
+    [
+      "race",
+      "desc",
+      [46986414, 91152256, 74677422, 53129443, 12580477, 99999999],
+    ],
+    [
+      "atk",
+      "asc",
+      [91152256, 74677422, 46986414, 53129443, 12580477, 99999999],
+    ],
+    [
+      "atk",
+      "desc",
+      [46986414, 74677422, 91152256, 53129443, 12580477, 99999999],
+    ],
+    [
+      "def",
+      "asc",
+      [91152256, 74677422, 46986414, 53129443, 12580477, 99999999],
+    ],
+    [
+      "def",
+      "desc",
+      [46986414, 91152256, 74677422, 53129443, 12580477, 99999999],
+    ],
+  ])(
+    "sort %s %s applies its exact comparator chain",
+    (mode, direction, expected) => {
+      const result = applyDeckCommand(
+        {
+          main: [12580477, 74677422, 46986414, 91152256, 99999999, 53129443],
+          extra: [],
+          side: [],
+        },
+        { type: "sort", mode, direction },
+        catalog,
+        PROTOTYPE_RULESET,
+      );
+      expect(result.type === "accepted" && result.cards.main).toEqual(expected);
+    },
+  );
+
+  it("keeps null primary values last in both directions", () => {
+    const cards = {
+      main: [12580477, 74677422, 46986414],
+      extra: [],
+      side: [],
+    };
+    for (const direction of ["asc", "desc"] as const) {
+      expect(sortDeckCards(cards, catalog, "atk", direction).main.at(-1)).toBe(
+        12580477,
+      );
+    }
   });
 
-  it("sort alpha orders the main deck by name", () => {
-    const result = applyDeckCommand(
-      { main: [44095762, 12580477, 89631139], extra: [], side: [] },
-      { type: "sort", mode: "alpha" },
-      catalog,
-      PROTOTYPE_RULESET,
-    );
-    expect(result).toMatchObject({
-      type: "accepted",
-      reason: "sort",
-      cards: { main: [89631139, 44095762, 12580477] },
+  it("pushes unknown metadata last in both directions", () => {
+    const known = catalog.get(46986414)!;
+    const unknown = Object.freeze({
+      ...known,
+      code: 1,
+      subtypes: ["Effect"],
+      attribute: "Attribute 999",
+      race: "Race 999",
+      levelRankLink: -1,
+      attack: -1,
+      defense: -1,
+      canonicalZone: "extra" as const,
     });
+    const knownExtra = catalog.get(8505920)!;
+    const unknownCatalog = new Map<number, DeckBuilderCardView>([
+      [unknown.code, unknown],
+      [knownExtra.code, knownExtra],
+    ]);
+    for (const mode of [
+      "type",
+      "level",
+      "attribute",
+      "race",
+      "atk",
+      "def",
+    ] as const) {
+      for (const direction of ["asc", "desc"] as const) {
+        expect(
+          sortDeckCards(
+            { main: [], extra: [unknown.code, knownExtra.code], side: [] },
+            unknownCatalog,
+            mode,
+            direction,
+          ).extra,
+        ).toEqual([knownExtra.code, unknown.code]);
+      }
+    }
+  });
+
+  it("uses original position as the final tie-break", () => {
+    const source = catalog.get(46986414)!;
+    const tiedCatalog = new Map<number, DeckBuilderCardView>([
+      [900, Object.freeze({ ...source, code: 900 })],
+      [100, Object.freeze({ ...source, code: 100 })],
+    ]);
+    expect(
+      sortDeckCards(
+        { main: [900, 100, 900, 100], extra: [], side: [] },
+        tiedCatalog,
+        "def",
+        "desc",
+      ).main,
+    ).toEqual([900, 100, 900, 100]);
   });
 
   it("removes one repeated tile and enforces the pinned copy limit", () => {
@@ -367,33 +497,27 @@ describe("deck editing model", () => {
       sortDeckCards(
         { main: [], extra: [], side: [8505920, 44095762, 89631139] },
         catalog,
+        "type",
+        "asc",
       ).side,
     ).toEqual([89631139, 44095762, 8505920]);
   });
 
-  it("packs cards deterministically when an explicit sort is asked for", () => {
-    expect(
-      sortDeckCards(
-        { main: [44095762, 12580477, 89631139], extra: [], side: [] },
-        catalog,
-      ).main,
-    ).toEqual([89631139, 12580477, 44095762]);
-  });
-
-  it("sorts every zone by name and pushes uncatalogued codes last", () => {
-    expect(
-      sortDeckCardsAlphabetical(
-        {
-          main: [99999999, 12580477, 89631139, 99999998],
-          extra: [8505920, 1322368],
-          side: [44095762, 46986414],
-        },
-        catalog,
-      ),
-    ).toEqual({
-      main: [89631139, 12580477, 99999998, 99999999],
+  it("sorts every zone without changing any zone multiset", () => {
+    const cards = {
+      main: [44095762, 12580477, 89631139],
+      extra: [1322368, 8505920],
+      side: [44095762, 46986414],
+    };
+    const sorted = sortDeckCards(cards, catalog, "alpha", "asc");
+    expect(sorted).toEqual({
+      main: [89631139, 44095762, 12580477],
       extra: [8505920, 1322368],
       side: [46986414, 44095762],
     });
+    for (const zone of ["main", "extra", "side"] as const)
+      expect([...sorted[zone]].sort((a, b) => a - b)).toEqual(
+        [...cards[zone]].sort((a, b) => a - b),
+      );
   });
 });

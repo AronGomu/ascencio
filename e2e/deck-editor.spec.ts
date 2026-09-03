@@ -132,6 +132,67 @@ async function expectSaveSettled(page: Page, expected: DeckCounts) {
     .toEqual(expected);
 }
 
+interface DeckCardOrder {
+  readonly main: readonly number[];
+  readonly extra: readonly number[];
+  readonly side: readonly number[];
+}
+
+async function replaceOpenDeckCards(
+  page: Page,
+  cards: DeckCardOrder,
+): Promise<void> {
+  await page.evaluate(
+    async ({ databaseName, cards }) => {
+      const database = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open(databaseName);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      const transaction = database.transaction("decks", "readwrite");
+      const store = transaction.objectStore("decks");
+      const decks = await new Promise<readonly Record<string, unknown>[]>(
+        (resolve, reject) => {
+          const request = store.getAll();
+          request.onsuccess = () =>
+            resolve(request.result as readonly Record<string, unknown>[]);
+          request.onerror = () => reject(request.error);
+        },
+      );
+      const deck = decks.find(({ name }) => name === "Sort Matrix");
+      if (deck === undefined) throw new Error("Sort Matrix deck is missing");
+      store.put({ ...deck, ...cards });
+      await new Promise<void>((resolve, reject) => {
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error);
+      });
+      database.close();
+    },
+    { databaseName: DECK_DATABASE_NAME, cards },
+  );
+}
+
+async function renderedDeckOrder(page: Page): Promise<DeckCardOrder> {
+  const codes = (zone: "main" | "extra" | "side") =>
+    page
+      .locator(`[data-cy="deck-zone-drop-area-${zone}"] [data-card-code]`)
+      .evaluateAll((tiles) =>
+        tiles.map((tile) => Number(tile.getAttribute("data-card-code"))),
+      );
+  return {
+    main: await codes("main"),
+    extra: await codes("extra"),
+    side: await codes("side"),
+  };
+}
+
+async function expectDeckOrder(
+  page: Page,
+  expected: DeckCardOrder,
+): Promise<void> {
+  await expect.poll(() => renderedDeckOrder(page)).toEqual(expected);
+}
+
 /* The main menu offers no deck entry of its own — the free-play submenu owns
    that door — so the fact under test is that the editor is not what `#/`
    mounts. */
@@ -173,6 +234,138 @@ test("open deck returns through the button below its preview", async ({
   await back.click();
   await expect(page.locator('[data-cy="deck-library"]')).toBeVisible();
   expect(new URL(page.url()).hash).toBe("#/free-play/decks");
+});
+
+test("sorts every deck zone in all modes and directions with undo", async ({
+  page,
+}) => {
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+  await page.locator('[data-cy="deck-select-create"]').click();
+  await page.getByLabel("Deck name").fill("Sort Matrix");
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
+
+  await replaceOpenDeckCards(page, {
+    main: [12580477, 74677422, 46986414, 91152256, 53129443],
+    extra: [1322368, 8505920, 8809344, 6766208],
+    side: [8505920, 44095762, 89631139, 12580477],
+  });
+  await page.reload();
+
+  const expected = [
+    {
+      mode: "alpha",
+      asc: {
+        main: [91152256, 53129443, 46986414, 12580477, 74677422],
+        extra: [6766208, 8505920, 8809344, 1322368],
+        side: [89631139, 8505920, 44095762, 12580477],
+      },
+      desc: {
+        main: [74677422, 12580477, 46986414, 53129443, 91152256],
+        extra: [1322368, 8809344, 8505920, 6766208],
+        side: [12580477, 44095762, 8505920, 89631139],
+      },
+    },
+    {
+      mode: "type",
+      asc: {
+        main: [91152256, 46986414, 74677422, 53129443, 12580477],
+        extra: [8505920, 6766208, 8809344, 1322368],
+        side: [89631139, 12580477, 44095762, 8505920],
+      },
+      desc: {
+        main: [53129443, 12580477, 91152256, 46986414, 74677422],
+        extra: [1322368, 8809344, 6766208, 8505920],
+        side: [8505920, 44095762, 12580477, 89631139],
+      },
+    },
+    {
+      mode: "level",
+      asc: {
+        main: [91152256, 46986414, 74677422, 53129443, 12580477],
+        extra: [1322368, 8809344, 6766208, 8505920],
+        side: [89631139, 8505920, 12580477, 44095762],
+      },
+      desc: {
+        main: [46986414, 74677422, 91152256, 53129443, 12580477],
+        extra: [8505920, 6766208, 8809344, 1322368],
+        side: [8505920, 89631139, 12580477, 44095762],
+      },
+    },
+    {
+      mode: "attribute",
+      asc: {
+        main: [46986414, 74677422, 91152256, 53129443, 12580477],
+        extra: [8505920, 8809344, 1322368, 6766208],
+        side: [8505920, 89631139, 12580477, 44095762],
+      },
+      desc: {
+        main: [91152256, 46986414, 74677422, 53129443, 12580477],
+        extra: [6766208, 8809344, 1322368, 8505920],
+        side: [89631139, 8505920, 12580477, 44095762],
+      },
+    },
+    {
+      mode: "race",
+      asc: {
+        main: [74677422, 46986414, 91152256, 53129443, 12580477],
+        extra: [6766208, 8809344, 8505920, 1322368],
+        side: [89631139, 8505920, 12580477, 44095762],
+      },
+      desc: {
+        main: [91152256, 46986414, 74677422, 53129443, 12580477],
+        extra: [8505920, 1322368, 6766208, 8809344],
+        side: [8505920, 89631139, 12580477, 44095762],
+      },
+    },
+    {
+      mode: "atk",
+      asc: {
+        main: [91152256, 74677422, 46986414, 53129443, 12580477],
+        extra: [8809344, 1322368, 6766208, 8505920],
+        side: [89631139, 8505920, 12580477, 44095762],
+      },
+      desc: {
+        main: [46986414, 74677422, 91152256, 53129443, 12580477],
+        extra: [8505920, 6766208, 1322368, 8809344],
+        side: [8505920, 89631139, 12580477, 44095762],
+      },
+    },
+    {
+      mode: "def",
+      asc: {
+        main: [91152256, 74677422, 46986414, 53129443, 12580477],
+        extra: [6766208, 8809344, 8505920, 1322368],
+        side: [89631139, 8505920, 12580477, 44095762],
+      },
+      desc: {
+        main: [46986414, 74677422, 91152256, 53129443, 12580477],
+        extra: [8505920, 8809344, 6766208, 1322368],
+        side: [8505920, 89631139, 12580477, 44095762],
+      },
+    },
+  ] as const;
+  const modeSelect = page.locator('[data-cy="deck-workspace-sort-mode"]');
+  const direction = page.locator('[data-cy="deck-workspace-sort-direction"]');
+
+  for (const entry of expected) {
+    await modeSelect.selectOption(entry.mode);
+    await expectDeckOrder(page, entry.asc);
+    await expect(direction).toHaveAttribute("aria-label", "Sort descending");
+
+    await direction.click();
+    await expectDeckOrder(page, entry.desc);
+    await expect(direction).toHaveAttribute("aria-label", "Sort ascending");
+
+    await page.locator('[data-cy="deck-editor-undo"]').click();
+    await expectDeckOrder(page, entry.asc);
+    await page.locator('[data-cy="deck-editor-redo"]').click();
+    await expectDeckOrder(page, entry.desc);
+
+    await direction.click();
+    await expectDeckOrder(page, entry.asc);
+  }
 });
 
 test("deck editor persists edits across reloads", async ({ page }) => {

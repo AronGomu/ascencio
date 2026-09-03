@@ -95,7 +95,7 @@ function props(overrides: Record<string, unknown> = {}) {
 }
 
 describe("DeckSelectScreen", () => {
-  it("orders and filters tiles with live count", async () => {
+  it("orders tiles with live count", () => {
     render(DeckSelectScreen, props());
 
     expect(cy("deck-select-eyebrow").textContent).toBe("Free play");
@@ -106,11 +106,27 @@ describe("DeckSelectScreen", () => {
       "deck-tile-k2",
     ]);
     expect(cy("deck-select-count").textContent).toBe("3/3");
+  });
+
+  it("reports two filtered decks out of eight", async () => {
+    render(
+      DeckSelectScreen,
+      props({
+        tiles: [
+          ...decks(),
+          tile({ key: "k4", name: "Aurora Reserve" }),
+          tile({ key: "k5", name: "Cipher Wing" }),
+          tile({ key: "k6", name: "Dragon Wake" }),
+          tile({ key: "k7", name: "Ember Guard" }),
+          tile({ key: "k8", name: "Frost Archive" }),
+        ],
+      }),
+    );
 
     await userEvent.setup().type(cy("deck-select-filter"), "aurora");
 
-    expect(gridOrder()).toEqual(["deck-tile-k1"]);
-    expect(cy("deck-select-count").textContent).toBe("1/3");
+    expect(gridOrder()).toEqual(["deck-tile-k1", "deck-tile-k4"]);
+    expect(cy("deck-select-count").textContent).toBe("2/8");
   });
 
   it("press selects, dblclick opens", async () => {
@@ -207,12 +223,18 @@ describe("DeckSelectScreen", () => {
 
   /* Creating a deck is the host's operation, not the screen's, so the button
      exists exactly when a host offered somewhere for it to land. */
-  it("create renders with a handler and raises it", async () => {
+  it("create renders with exact copy, raises its handler and sizes from the same copy", async () => {
     const oncreate = vi.fn();
     const base = props({ oncreate });
     const { rerender } = render(DeckSelectScreen, base);
+    const create = button("deck-select-create");
 
-    await userEvent.setup().click(cy("deck-select-create"));
+    expect(create.textContent?.trim()).toBe("Create");
+    expect(create.getAttribute("aria-label")).toBe("Create");
+    expect(cy("deck-select-footer-probe-create").textContent?.trim()).toBe(
+      "Create",
+    );
+    await userEvent.setup().click(create);
     expect(oncreate).toHaveBeenCalledTimes(1);
 
     await rerender({ ...base, oncreate: null });
@@ -389,24 +411,33 @@ describe("DeckSelectScreen", () => {
     ).toContain("Yours");
   });
 
-  /* The header and the tools row are one bar: the mode, the screen's name, its
-     count, the sort and the filter read left to right on a single line, so the
-     column keeps three rows for the pane beside it to run the height of. */
-  it("titlebar carries eyebrow, title, count, sort and filter in one row", () => {
-    render(DeckSelectScreen, props());
+  /* The header and the tools row are one bar: identity leads, controls follow,
+     and the result count closes the filter group it describes. */
+  it("places the result count immediately after the filter in full and compact bars", async () => {
+    const base = props({ forceCompact: false });
+    const { rerender } = render(DeckSelectScreen, base);
 
-    expect(
+    const order = () =>
       [...cy("deck-select-titlebar").children].map(
         (child) => child.getAttribute("data-cy") ?? "",
-      ),
-    ).toEqual([
+      );
+    expect(order()).toEqual([
       "deck-select-back-icon",
       "deck-select-eyebrow",
       "deck-select-title",
-      "deck-select-count",
       "deck-select-titlebar-sep",
       "deck-select-sort-field",
       "deck-select-filter-field",
+      "deck-select-count",
+    ]);
+
+    await rerender({ ...base, forceCompact: true });
+    expect(order()).toEqual([
+      "deck-select-back-icon",
+      "deck-select-title",
+      "deck-select-sort-field",
+      "deck-select-filter-field",
+      "deck-select-count",
     ]);
     expect(find("deck-select-header")).toBeNull();
     expect(find("deck-select-heading")).toBeNull();

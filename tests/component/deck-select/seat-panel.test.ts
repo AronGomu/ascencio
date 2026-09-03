@@ -157,8 +157,8 @@ describe("DeckSelectScreen seat panel", () => {
     expect(seatPanel).toContain("background: var(--glass)");
 
     const grid = /\.grid\s*\{([^}]*)\}/.exec(source)?.[1] ?? "";
-    expect(grid).toContain("repeat(auto-fill, minmax(min(12rem, 100%), 1fr))");
-    expect(grid).toContain("gap: 0.5rem");
+    expect(grid).toContain("repeat(auto-fit, minmax(min(100%, 12rem), 1fr))");
+    expect(grid).toContain("gap: var(--space-2)");
     expect(grid).toContain("scrollbar-gutter: stable");
     expect(grid).toContain("padding-right: var(--space-2)");
   });

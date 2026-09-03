@@ -15,6 +15,47 @@ async function openFreePlayDeckSelect(page: Page): Promise<void> {
   });
 }
 
+/* Layout evidence needs exact sparse/dense counts, independent of whichever
+   bundled decks the product snapshot contains. Clones exercise shipped CSS;
+   interaction behavior remains covered against the original Svelte nodes. */
+async function showTileCount(page: Page, count: number): Promise<void> {
+  await page
+    .locator('[data-cy="deck-select-grid"]')
+    .evaluate((grid, targetCount) => {
+      const tile = grid.firstElementChild;
+      if (tile === null)
+        throw new Error("Deck-select grid has no tile template");
+      while (grid.children.length > 1) grid.lastElementChild?.remove();
+      while (grid.children.length < targetCount)
+        grid.append(tile.cloneNode(true));
+    }, count);
+}
+
+async function gridGeometry(page: Page) {
+  return page.locator('[data-cy="deck-select-grid"]').evaluate((grid) => {
+    const gridRect = grid.getBoundingClientRect();
+    const tiles = [...grid.children].map((tile) =>
+      tile.getBoundingClientRect(),
+    );
+    const firstRow = tiles.filter(
+      (tile) => Math.round(tile.top) === Math.round(tiles[0]!.top),
+    );
+    const rowLeft = Math.min(...firstRow.map((tile) => tile.left));
+    const rowRight = Math.max(
+      ...firstRow.map((tile) => tile.left + tile.width),
+    );
+    return {
+      documentFits: document.documentElement.scrollWidth <= innerWidth,
+      gridFits: grid.scrollWidth <= grid.clientWidth,
+      rows: new Set(tiles.map((tile) => Math.round(tile.top))).size,
+      widths: tiles.map((tile) => tile.width),
+      rowCenterDelta: Math.abs(
+        (rowLeft + rowRight) / 2 - (gridRect.left + gridRect.width / 2),
+      ),
+    };
+  });
+}
+
 test("twin pane geometry", async ({ page }) => {
   await page.setViewportSize(WIDE_VIEWPORT);
   await openFreePlayDeckSelect(page);
@@ -23,38 +64,79 @@ test("twin pane geometry", async ({ page }) => {
   const player = page.locator('[data-cy="seat-section-player"]');
   const opponent = page.locator('[data-cy="seat-section-opponent"]');
   const filter = page.locator('[data-cy="deck-select-filter"]');
+  const count = page.locator('[data-cy="deck-select-count"]');
   const titlebar = page.locator('[data-cy="deck-select-titlebar"]');
 
-  const [paneBox, playerBox, opponentBox, filterBox, titlebarBox, rootFont] =
-    await Promise.all([
-      pane.boundingBox(),
-      player.boundingBox(),
-      opponent.boundingBox(),
-      filter.boundingBox(),
-      titlebar.boundingBox(),
-      page.evaluate(() =>
-        Number.parseFloat(getComputedStyle(document.documentElement).fontSize),
-      ),
-    ]);
+  const [
+    paneBox,
+    playerBox,
+    opponentBox,
+    filterBox,
+    countBox,
+    titlebarBox,
+    rootFont,
+  ] = await Promise.all([
+    pane.boundingBox(),
+    player.boundingBox(),
+    opponent.boundingBox(),
+    filter.boundingBox(),
+    count.boundingBox(),
+    titlebar.boundingBox(),
+    page.evaluate(() =>
+      Number.parseFloat(getComputedStyle(document.documentElement).fontSize),
+    ),
+  ]);
   expect(paneBox).not.toBeNull();
   expect(playerBox).not.toBeNull();
   expect(opponentBox).not.toBeNull();
   expect(filterBox).not.toBeNull();
+  expect(countBox).not.toBeNull();
   expect(titlebarBox).not.toBeNull();
 
   expect(Math.abs(paneBox!.width - 38 * rootFont)).toBeLessThanOrEqual(2);
   expect(playerBox!.x).toBeLessThan(opponentBox!.x);
   await expect(page.locator('[data-cy="deck-select-start"]')).toBeVisible();
-  expect(filterBox!.x + filterBox!.width).toBeCloseTo(
+  expect(countBox!.x - (filterBox!.x + filterBox!.width)).toBeCloseTo(12, 0);
+  expect(countBox!.x + countBox!.width).toBeCloseTo(
     titlebarBox!.x + titlebarBox!.width,
     0,
   );
-  expect(paneBox!.x - (filterBox!.x + filterBox!.width)).toBeCloseTo(12, 0);
+  expect(paneBox!.x - (countBox!.x + countBox!.width)).toBeCloseTo(12, 0);
 
   await page.locator('[data-cy="deck-select-start"]').click();
   await expect(page.locator('[data-cy="duel-field"]')).toBeVisible({
     timeout: 120_000,
   });
+});
+
+test("sparse, dense and mobile grids fit without horizontal overflow", async ({
+  page,
+}) => {
+  await page.setViewportSize(WIDE_VIEWPORT);
+  await openFreePlayDeckSelect(page);
+
+  for (const count of [1, 2, 4]) {
+    await showTileCount(page, count);
+    const geometry = await gridGeometry(page);
+    expect(Math.max(...geometry.widths)).toBeLessThanOrEqual(420.5);
+    expect(Math.min(...geometry.widths)).toBeGreaterThan(192);
+    expect(geometry.rowCenterDelta).toBeLessThanOrEqual(12);
+    expect(geometry.documentFits).toBe(true);
+    expect(geometry.gridFits).toBe(true);
+  }
+
+  await showTileCount(page, 20);
+  const dense = await gridGeometry(page);
+  expect(dense.rows).toBeGreaterThan(1);
+  expect(dense.documentFits).toBe(true);
+  expect(dense.gridFits).toBe(true);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await showTileCount(page, 4);
+  const mobile = await gridGeometry(page);
+  expect(mobile.rows).toBe(4);
+  expect(mobile.documentFits).toBe(true);
+  expect(mobile.gridFits).toBe(true);
 });
 
 test("hover docks preview", async ({ page }) => {
@@ -91,6 +173,9 @@ test("footer actions", async ({ page }) => {
   await expect(page.locator('[data-cy="deck-select-back"]')).toHaveText(
     "← Return to Menu",
   );
+  await expect(
+    page.getByRole("button", { name: "Create", exact: true }),
+  ).toHaveText("Create");
 
   const colors = await page.evaluate(() => {
     function resolvedColor(value: string): string {

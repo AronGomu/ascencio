@@ -19,9 +19,13 @@ describe("Deck Library CRUD", () => {
       onopen: vi.fn(),
       onimport: vi.fn(),
     });
-    await user.click(screen.getByRole("button", { name: "Create deck" }));
+    await user.click(screen.getByRole("button", { name: /^Create$/ }));
     await user.type(screen.getByLabelText("Deck name"), "Blank first");
-    await user.click(screen.getByRole("button", { name: "Create" }));
+    const submit = document.querySelector<HTMLButtonElement>(
+      '[data-cy="deck-library-create-submit"]',
+    );
+    expect(submit).not.toBeNull();
+    await user.click(submit!);
     expect(oncreate).toHaveBeenCalledWith("Blank first");
   });
 });

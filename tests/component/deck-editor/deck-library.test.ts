@@ -104,7 +104,7 @@ describe("DeckLibrary", () => {
     expect(screen.getByRole("status").textContent).toContain(
       "Another deck already uses this name",
     );
-    expect(screen.getByRole("button", { name: /^Create$/ })).not.toHaveProperty(
+    expect(cy("deck-library-create-submit")).not.toHaveProperty(
       "disabled",
       true,
     );

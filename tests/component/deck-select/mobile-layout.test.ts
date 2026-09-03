@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { readFileSync } from "node:fs";
 import { cleanup, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -136,5 +137,23 @@ describe("DeckSelectScreen mobile layout", () => {
     for (const value of ["deck-select-back-icon", "deck-select-back"]) {
       expect(document.querySelectorAll(`[data-cy="${value}"]`)).toHaveLength(1);
     }
+  });
+
+  it("declares capped centered auto-fit tiles and a single mobile column", () => {
+    const source = readFileSync(
+      "src/deck-select/DeckSelectScreen.svelte",
+      "utf8",
+    );
+
+    expect(source).toContain(
+      "grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr))",
+    );
+    expect(source).toMatch(
+      /\.grid\s*>\s*:global\(\*\)\s*\{[^}]*width:\s*100%;[^}]*max-width:\s*420px;/s,
+    );
+    expect(source).toMatch(/\.grid\s*\{[^}]*justify-items:\s*center;/s);
+    expect(source).toMatch(
+      /@media \(max-width: 40rem\)[\s\S]*?\.grid\s*\{\s*grid-template-columns:\s*minmax\(0, 1fr\);/,
+    );
   });
 });

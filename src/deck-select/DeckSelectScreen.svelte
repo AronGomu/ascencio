@@ -597,12 +597,12 @@
       type="button"
       class="act-create"
       role={compactMenuOpen ? "menuitem" : undefined}
-      aria-label="Create deck"
+      aria-label="Create"
       data-cy="deck-select-create"
       onclick={() => {
         closeCompactMenu();
         oncreate?.();
-      }}>+ Create</button
+      }}>Create</button
     >
   {/if}
 {/snippet}
@@ -810,7 +810,7 @@
   {/if}
 
   <!-- One line for everything the screen says about itself and the two controls
-       that change what it shows: mode, name, count, sort, filter. -->
+       that change what it shows: mode, name, sort, filter, then its count. -->
   <div class="titlebar" bind:this={titlebar} data-cy="deck-select-titlebar">
     <!-- The phone's Back, in the document whenever there is one at all: the
          footer's button is the wide control and CSS shows whichever one the
@@ -841,7 +841,6 @@
       <p class="eyebrow" data-cy="deck-select-eyebrow">{eyebrow}</p>
     {/if}
     <h1 data-cy="deck-select-title">{compact ? "Select Deck" : title}</h1>
-    <p class="count" data-cy="deck-select-count">{countLabel}</p>
     {#if !compact}
       <span class="sep" aria-hidden="true" data-cy="deck-select-titlebar-sep"
         >·</span
@@ -871,6 +870,7 @@
         data-cy="deck-select-filter"
       />
     </label>
+    <p class="count" data-cy="deck-select-count">{countLabel}</p>
   </div>
 
   <!-- Max-content copy of the full titlebar. It stays measurable while the
@@ -888,9 +888,6 @@
     <span class="probe-title" data-cy="deck-select-titlebar-probe-title"
       >{title}</span
     >
-    <span class="count" data-cy="deck-select-titlebar-probe-count"
-      >{countLabel}</span
-    >
     <span class="sep" data-cy="deck-select-titlebar-probe-sep">·</span>
     <select tabindex="-1" data-cy="deck-select-titlebar-probe-sort">
       <option data-cy="deck-select-titlebar-probe-sort-option"
@@ -903,6 +900,9 @@
       placeholder="Filter decks…"
       data-cy="deck-select-titlebar-probe-filter"
     />
+    <span class="count" data-cy="deck-select-titlebar-probe-count"
+      >{countLabel}</span
+    >
   </div>
 
   <div
@@ -1031,7 +1031,7 @@
       >
       {#if oncreate !== null}
         <span class="probe-action" data-cy="deck-select-footer-probe-create"
-          >+ Create</span
+          >Create</span
         >
       {/if}
     {/if}
@@ -1226,8 +1226,8 @@
     height: 1rem;
   }
 
-  /* The bar is one line, so nothing in it wraps: the eyebrow, the title and
-     the count are as wide as their words and the filter takes the rest. */
+  /* The bar is one line, so nothing in it wraps: identity and count keep their
+     words while the filter between them takes the remaining width. */
   .eyebrow {
     margin: 0;
     color: var(--muted);
@@ -1252,6 +1252,7 @@
     margin: 0;
     color: var(--muted);
     font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
 
@@ -1290,11 +1291,17 @@
     overflow-y: auto;
     min-height: 0;
     align-content: start;
-    gap: 0.5rem;
+    justify-items: center;
+    gap: var(--space-2);
     grid-auto-rows: max-content;
-    grid-template-columns: repeat(auto-fill, minmax(min(12rem, 100%), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
     padding-right: var(--space-2);
     scrollbar-gutter: stable;
+  }
+
+  .grid > :global(*) {
+    width: 100%;
+    max-width: 420px;
   }
 
   /* Stuck to the bottom of whatever scrolls this screen, so the way out and

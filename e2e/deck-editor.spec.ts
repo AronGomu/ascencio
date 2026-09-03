@@ -150,9 +150,9 @@ test("open deck returns through the button below its preview", async ({
   await deleteDeckDatabase(page);
   await page.reload();
 
-  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.locator('[data-cy="deck-select-create"]').click();
   await page.getByLabel("Deck name").fill("Return Control");
-  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
 
   const preview = page.locator('[data-cy="card-preview-panel"]');
   const back = page.locator('[data-cy="deck-editor-return"]');
@@ -183,9 +183,9 @@ test("deck editor persists edits across reloads", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Deck Library" }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.locator('[data-cy="deck-select-create"]').click();
   await page.getByLabel("Deck name").fill("E2E Control");
-  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
 
   await expect(page.getByLabel("Deck name")).toHaveValue("E2E Control");
   expect(
@@ -287,9 +287,9 @@ test("the deck route deep-links, survives a reload and answers Back", async ({
   await deleteDeckDatabase(page);
   await page.reload();
 
-  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.locator('[data-cy="deck-select-create"]').click();
   await page.getByLabel("Deck name").fill("Deep Link");
-  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
   await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
     "Deep Link",
   );
@@ -353,9 +353,9 @@ test("the deck editor recovers real save failures and revision conflicts", async
   await page.goto(libraryUrl);
   await deleteDeckDatabase(page);
   await page.reload();
-  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.locator('[data-cy="deck-select-create"]').click();
   await page.getByLabel("Deck name").fill("Recovery E2E");
-  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
 
   await page.evaluate(() => {
     const original = IDBDatabase.prototype.transaction;
@@ -506,9 +506,9 @@ test("the deck editor builds a deck by tap on a small screen", async ({
   await deleteDeckDatabase(page);
   await page.reload();
 
-  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.locator('[data-cy="deck-select-create"]').click();
   await page.getByLabel("Deck name").fill("Portrait Build");
-  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
 
   /* One pane at a time, and the deck pane carries the counts. */
   const main = zoneCount(page, "main");
@@ -582,9 +582,9 @@ test("the deck editor keeps its three panels above the breakpoint", async ({
   await page.goto(libraryUrl);
   await deleteDeckDatabase(page);
   await page.reload();
-  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.locator('[data-cy="deck-select-create"]').click();
   await page.getByLabel("Deck name").fill("Desktop Panels");
-  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
 
   for (const pane of ["catalog", "deck", "details"])
     await expect(page.locator(`[data-cy="deck-pane-${pane}"]`)).toHaveCount(1);
@@ -604,9 +604,9 @@ test("the deck editor fits the stage without a region scrollbar", async ({
   await page.goto(libraryUrl);
   await deleteDeckDatabase(page);
   await page.reload();
-  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.locator('[data-cy="deck-select-create"]').click();
   await page.getByLabel("Deck name").fill("Viewport Fit");
-  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
   await expect(page.locator('[data-cy="deck-editor-layout"]')).toBeVisible();
 
   const region = page.locator('[data-cy="shell-region-decks"]');
@@ -644,9 +644,9 @@ test("the card viewer is card width", async ({ page }) => {
   await page.goto(libraryUrl);
   await deleteDeckDatabase(page);
   await page.reload();
-  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.locator('[data-cy="deck-select-create"]').click();
   await page.getByLabel("Deck name").fill("Card Width");
-  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
   await expect(page.locator('[data-cy="deck-editor-layout"]')).toBeVisible();
 
   const preview = page.locator('[data-cy="card-preview-panel"]');
@@ -672,9 +672,9 @@ test("the tile art fills the tile", async ({ page }) => {
   await page.goto(libraryUrl);
   await deleteDeckDatabase(page);
   await page.reload();
-  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.locator('[data-cy="deck-select-create"]').click();
   await page.getByLabel("Deck name").fill("Art Fit");
-  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
   await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
 
   const tile = catalogTile(page, BLUE_EYES);
@@ -752,9 +752,9 @@ test("the catalog tile count stays under the ceiling on a phone", async ({
   await deleteDeckDatabase(page);
   await page.reload();
 
-  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.locator('[data-cy="deck-select-create"]').click();
   await page.getByLabel("Deck name").fill("Scroll Build");
-  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
   await page.locator('[data-cy="deck-tab-catalog"]').click();
 
   /* The selector must match only the tile buttons themselves, not their child
@@ -818,9 +818,9 @@ test("edit mutation count is independent of scroll depth", async ({ page }) => {
   await deleteDeckDatabase(page);
   await page.reload();
 
-  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.locator('[data-cy="deck-select-create"]').click();
   await page.getByLabel("Deck name").fill("Mutation Test");
-  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
   await page.locator('[data-cy="deck-tab-catalog"]').click();
 
   /* Direct child selector: only count tile buttons, not their children. */
@@ -912,9 +912,9 @@ test("deck library shows art rows with frame and copy count", async ({
   await deleteDeckDatabase(page);
   await page.reload();
 
-  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.locator('[data-cy="deck-select-create"]').click();
   await page.getByLabel("Deck name").fill("Decklist Rows");
-  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
   await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
   await catalogTile(page, BLUE_EYES).click();
   await page.getByRole("searchbox", { name: "Name" }).fill("");

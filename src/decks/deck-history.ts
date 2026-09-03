@@ -31,12 +31,10 @@ export function pushDeckUpdate(
     readonly id?: string;
   },
 ): DeckHistory {
+  const forceSnapshot = input.reason === "sort";
   if (
-    sameCards(
-      input.before,
-      input.after,
-      input.reason === "import" || input.reason === "sort",
-    ) &&
+    !forceSnapshot &&
+    sameCards(input.before, input.after, input.reason === "import") &&
     (input.beforeImportedNeedsReview ?? false) ===
       (input.afterImportedNeedsReview ?? false) &&
     (input.beforeIllustrationCardCode ?? null) ===
@@ -110,8 +108,9 @@ function sameCards(
   right: DeckCardLists,
   orderSensitive = false,
 ): boolean {
-  /* Membership edits stay position-blind. Import and explicit sort replace
-     exact lists, so undo must preserve the source order they displaced. */
+  /* Membership edits stay position-blind. Import replaces exact lists, so its
+     undo must preserve the source order it displaced. Sort bypasses this
+     equality check because every explicit sort is its own undoable action. */
   const same = orderSensitive ? sameOrderedZone : sameZone;
   return (
     same(left.main, right.main) &&

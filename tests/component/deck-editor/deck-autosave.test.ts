@@ -345,6 +345,86 @@ describe("deck autosave controller", () => {
     repo.close();
   });
 
+  it("an already-satisfied selected sort and direction toggle each add one undo entry", async () => {
+    const name = "controller-sort-forced-history";
+    names.push(name);
+    const repo = await IndexedDbDeckRepository.open(name);
+    const controller = new DeckBuilderController(
+      repo,
+      catalogByCode(PROTOTYPE_CATALOG),
+      PROTOTYPE_RULESET,
+    );
+    await controller.initialize();
+    await controller.createDeck("Already sorted");
+    await controller.mutate({ type: "add", cardCode: 89631139 });
+    const undoLengthBefore = get(controller).current!.history.undo.length;
+
+    await controller.mutate({
+      type: "sort",
+      mode: "alpha",
+      direction: "asc",
+    });
+    expect(get(controller).current?.history.undo).toHaveLength(
+      undoLengthBefore + 1,
+    );
+
+    await controller.mutate({
+      type: "sort",
+      mode: "alpha",
+      direction: "desc",
+    });
+    expect(get(controller).current?.history.undo).toHaveLength(
+      undoLengthBefore + 2,
+    );
+    expect(
+      get(controller)
+        .current?.history.undo.slice(-2)
+        .map(({ reason }) => reason),
+    ).toEqual(["sort", "sort"]);
+    expect(await autosavesReaching(repo, 3)).toHaveLength(3);
+    repo.close();
+  });
+
+  it("reloads persisted sort history for exact undo and redo", async () => {
+    const name = "controller-sort-history-reload";
+    names.push(name);
+    const catalog = catalogByCode(PROTOTYPE_CATALOG);
+    const repo = await IndexedDbDeckRepository.open(name);
+    const controller = new DeckBuilderController(
+      repo,
+      catalog,
+      PROTOTYPE_RULESET,
+    );
+    await controller.initialize();
+    await controller.createDeck("Persisted sort");
+    await controller.mutate({ type: "add", cardCode: 46986414 });
+    await controller.mutate({ type: "add", cardCode: 89631139 });
+    const unsorted = [46986414, 89631139];
+    const sorted = [89631139, 46986414];
+    await controller.mutate({
+      type: "sort",
+      mode: "alpha",
+      direction: "asc",
+    });
+    repo.close();
+
+    const reopenedRepo = await IndexedDbDeckRepository.open(name);
+    const reopened = new DeckBuilderController(
+      reopenedRepo,
+      catalog,
+      PROTOTYPE_RULESET,
+    );
+    await reopened.initialize();
+    expect(get(reopened).current?.deck.main).toEqual(sorted);
+    expect(get(reopened).current?.history.undo.at(-1)?.reason).toBe("sort");
+
+    await reopened.undo();
+    expect(get(reopened).current?.deck.main).toEqual(unsorted);
+    await reopened.redo();
+    expect(get(reopened).current?.deck.main).toEqual(sorted);
+    reopenedRepo.close();
+  });
+
   it("a reorder is still not undoable", async () => {
     const name = "controller-autosave-not-undoable";
     names.push(name);

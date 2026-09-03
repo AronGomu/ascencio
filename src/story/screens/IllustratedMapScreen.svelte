@@ -3,9 +3,9 @@
   import type { LocationId, StoryLocationState } from "../model/story-state.ts";
   export let locations: readonly StoryLocationState[] = [];
   export let choiceAcknowledgment: string | null = null;
-  export let allowBack = false;
+  export let returnLabel = "Dialog";
   export let onselect: (id: LocationId) => void = () => undefined;
-  export let onback: () => void = () => undefined;
+  export let onreturn: () => void = () => undefined;
 
   const details: Record<
     LocationId,
@@ -178,18 +178,20 @@
             </p>{/if}
         </section>
       {/if}
-      {#if allowBack}<button
-          type="button"
-          class="story-danger"
-          data-cy="story-map-back"
-          onclick={onback}>Back</button
-        >{/if}
     </div>
   </div>
+  <button
+    type="button"
+    class="story-danger map-return"
+    data-cy="story-map-return"
+    onclick={onreturn}>Return to {returnLabel}</button
+  >
 </section>
 
 <style>
   .map-screen {
+    display: flex;
+    flex-direction: column;
     width: 100%;
     height: 100%;
     min-height: 0;
@@ -252,6 +254,10 @@
   }
   .map-sidebar {
     min-width: 0;
+  }
+  .map-return {
+    align-self: flex-start;
+    margin-top: auto;
   }
   ul {
     display: grid;

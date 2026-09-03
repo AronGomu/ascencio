@@ -5,6 +5,7 @@ import {
 import { buildStarterGrant } from "../decks/starter-grant.ts";
 import {
   createInitialStoryState,
+  rememberStoryStateTransition,
   type BattleResult,
   type ChoiceId,
   type LocationId,
@@ -86,6 +87,16 @@ export type StoryCommand =
   | { readonly type: "reset" };
 
 export function reduceStory(
+  state: StoryState,
+  command: StoryCommand,
+): StoryState {
+  return rememberStoryStateTransition(
+    state,
+    reduceStoryCommand(state, command),
+  );
+}
+
+function reduceStoryCommand(
   state: StoryState,
   command: StoryCommand,
 ): StoryState {

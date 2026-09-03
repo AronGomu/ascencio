@@ -59,7 +59,7 @@ async function seedMapProgress(page: Page): Promise<void> {
   await page.goto("./#/");
   await expect(page.locator('[data-cy="shell-region-home"]')).toBeVisible();
   await putStorySave(page, {
-    schemaVersion: 3,
+    schemaVersion: 4,
     slot: "autosave",
     revision: 1,
     savedAt: Date.now(),
@@ -85,7 +85,7 @@ async function seedBrokenDefault(page: Page): Promise<void> {
   await expect(page.locator('[data-cy="shell-region-home"]')).toBeVisible();
   const [sold] = STARTER.deck.main;
   await putStorySave(page, {
-    schemaVersion: 3,
+    schemaVersion: 4,
     slot: "autosave",
     revision: 1,
     savedAt: Date.now(),
@@ -267,7 +267,7 @@ test("a session route whose checkpoint names another handoff lands on the story"
 }) => {
   await seedMapProgress(page);
   await putStorySave(page, {
-    schemaVersion: 3,
+    schemaVersion: 4,
     slot: "checkpoint:pre-duel",
     revision: 1,
     savedAt: Date.now(),

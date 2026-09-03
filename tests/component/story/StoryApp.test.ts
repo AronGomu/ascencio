@@ -312,6 +312,25 @@ describe("StoryApp", () => {
     ).toBeNull();
   });
 
+  it("returns from the map to its persisted origin in the browser", async () => {
+    const mapState = {
+      ...createInitialStoryState(),
+      screen: "map" as const,
+      savedScreen: "map" as const,
+      previousScreen: "narrative" as const,
+    };
+    const { container } = render(StoryApp, { resumeState: mapState });
+
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "Return to Dialog" }));
+
+    expect(
+      container.querySelector('[data-cy="story-narrative-stage"]'),
+    ).not.toBeNull();
+    expect(container.querySelector('[data-cy="story-map-screen"]')).toBeNull();
+  });
+
   /* The top bar is how a player inside a save reaches their decks. StoryApp
      must checkpoint first, then report navigation through its public callback. */
   it("top bar decks button checkpoints before opening story decks", async () => {

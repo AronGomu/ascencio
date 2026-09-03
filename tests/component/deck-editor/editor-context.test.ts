@@ -76,7 +76,7 @@ function savesHolding(state: StoryState | null): StorySaveRepository {
           ? {
               kind: "ready",
               envelope: {
-                schemaVersion: 3,
+                schemaVersion: 4,
                 slot,
                 revision: 1,
                 savedAt: 1,

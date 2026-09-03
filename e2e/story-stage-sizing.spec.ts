@@ -75,7 +75,7 @@ async function openSavedScreen(
 ): Promise<void> {
   await page.goto("./#/");
   const envelope: StorySaveEnvelope = {
-    schemaVersion: 3,
+    schemaVersion: 4,
     slot: "autosave",
     revision: 1,
     savedAt: Date.now(),

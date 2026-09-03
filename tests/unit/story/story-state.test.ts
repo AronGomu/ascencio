@@ -3,7 +3,10 @@ import { PROLOGUE } from "../../../src/story/content/prologue.ts";
 import {
   createInitialStoryState,
   STORY_SCREENS,
+  storyScreenLabel,
+  transitionStoryScreen,
   type ShopRarity,
+  type StoryScreen,
 } from "../../../src/story/model/story-state.ts";
 import { reduceStory } from "../../../src/story/model/story-reducer.ts";
 
@@ -37,6 +40,62 @@ describe("story state model", () => {
       narrativeIndex: 0,
       progressExists: true,
     });
+  });
+
+  it("remembers every distinct screen transition and preserves the prior screen on same-screen updates", () => {
+    for (const from of STORY_SCREENS) {
+      for (const to of STORY_SCREENS) {
+        const state = {
+          ...createInitialStoryState(),
+          screen: from,
+          previousScreen: "narrative" as const,
+        };
+        const next = transitionStoryScreen(state, to);
+        expect(next.screen, `${from} → ${to} screen`).toBe(to);
+        expect(next.previousScreen, `${from} → ${to} previous`).toBe(
+          from === to ? "narrative" : from,
+        );
+      }
+    }
+  });
+
+  it("records reducer transitions but not same-screen state updates", () => {
+    const narrative = {
+      ...createInitialStoryState(),
+      screen: "narrative" as const,
+      previousScreen: "title" as const,
+    };
+    const advanced = reduceStory(narrative, { type: "advance", inputId: 1 });
+    expect(advanced.previousScreen).toBe("title");
+    expect(reduceStory(advanced, { type: "go-to-map" })).toMatchObject({
+      screen: "map",
+      previousScreen: "narrative",
+    });
+  });
+
+  it("labels every story screen for contextual navigation", () => {
+    const labels = {
+      title: "Title",
+      load: "Load",
+      narrative: "Dialog",
+      map: "Map",
+      "pre-battle": "Duel Setup",
+      "battle-mock": "Duel",
+      outcome: "Duel Result",
+      reward: "Duel Result",
+      end: "End",
+      "shop-greeting": "Shop",
+      "shop-browse": "Shop",
+      "shop-cards": "Shop",
+      "shop-sell": "Shop",
+      "shop-opening": "Shop",
+      "shop-results": "Shop",
+    } satisfies Record<StoryScreen, string>;
+    expect(
+      Object.fromEntries(
+        STORY_SCREENS.map((screen) => [screen, storyScreenLabel(screen)]),
+      ),
+    ).toEqual(labels);
   });
 
   /* The wallet is part of the story rather than a store beside it, so a fresh
@@ -241,12 +300,15 @@ describe("story state model", () => {
     },
   );
 
-  it("resets to pristine serializable state", () => {
+  it("resets to pristine serializable state while remembering its origin", () => {
     const changed = reduceStory(createInitialStoryState(), {
       type: "new-game",
     });
     const reset = reduceStory(changed, { type: "reset" });
-    expect(reset).toEqual(createInitialStoryState());
+    expect(reset).toEqual({
+      ...createInitialStoryState(),
+      previousScreen: "narrative",
+    });
     expect(() => JSON.parse(JSON.stringify(reset))).not.toThrow();
     expect(PROLOGUE.beats.length).toBeGreaterThanOrEqual(25);
     expect(PROLOGUE.beats.length).toBeLessThanOrEqual(40);
@@ -330,6 +392,32 @@ describe("story state model", () => {
     expect(
       reduceStory(greeting, { type: "shop-navigate", to: "browse" }).screen,
     ).toBe("shop-browse");
+  });
+
+  it("keeps each distinct shop sub-screen as the meaningful return origin", () => {
+    const greeting = {
+      ...createInitialStoryState(),
+      screen: "shop-greeting" as const,
+      previousScreen: "map" as const,
+    };
+    const browse = reduceStory(greeting, {
+      type: "shop-navigate",
+      to: "browse",
+    });
+    expect(browse.previousScreen).toBe("shop-greeting");
+
+    const cards = reduceStory(browse, {
+      type: "view-set-cards",
+      setId: "lob",
+    });
+    expect(cards.previousScreen).toBe("shop-browse");
+
+    const unchangedScreen = reduceStory(cards, {
+      type: "buy-single",
+      code: 111,
+      rarity: "common",
+    });
+    expect(unchangedScreen.previousScreen).toBe("shop-browse");
   });
 
   it("view-set-cards opens the list for that set", () => {

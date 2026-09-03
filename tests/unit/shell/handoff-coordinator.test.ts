@@ -51,7 +51,7 @@ function createFakeSaves(): FakeSaves {
       return Promise.resolve<StorySaveReadResult>({
         kind: "ready",
         envelope: {
-          schemaVersion: 3,
+          schemaVersion: 4,
           slot,
           revision: record.revision,
           savedAt: record.savedAt,
@@ -300,7 +300,7 @@ describe("resume", () => {
     saves.readAs = {
       kind: "ready",
       envelope: {
-        schemaVersion: 3,
+        schemaVersion: 4,
         slot: CHECKPOINT,
         revision: 1,
         savedAt: 1,

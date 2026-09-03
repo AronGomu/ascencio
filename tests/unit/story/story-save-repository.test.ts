@@ -180,7 +180,7 @@ function seedRecord(slot: string, record: unknown): Promise<void> {
 describe("story save slots", () => {
   it("names the production database and the five slot keys", () => {
     expect(STORY_SAVES_DATABASE_NAME).toBe("ygo-story-saves");
-    expect(STORY_SAVE_SCHEMA_VERSION).toBe(3);
+    expect(STORY_SAVE_SCHEMA_VERSION).toBe(4);
     expect([...STORY_SLOT_KEYS]).toEqual([
       "manual:1",
       "manual:2",
@@ -222,7 +222,7 @@ describe("createStorySaveRepository", () => {
     expect(read).toEqual({
       kind: "ready",
       envelope: {
-        schemaVersion: 3,
+        schemaVersion: 4,
         slot: "manual:1",
         revision: 1,
         savedAt: 1_700_000_000_123,
@@ -237,12 +237,50 @@ describe("createStorySaveRepository", () => {
     expect(JSON.stringify(read.envelope.state)).toBe(JSON.stringify(state));
   });
 
-  it("writes envelopes at schema version 3", async () => {
+  it("writes envelopes at schema version 4", async () => {
     const saves = repository();
     await saves.write("manual:1", storyState(), null);
     expect(await storedRecord("manual:1")).toMatchObject({
-      schemaVersion: 3,
+      schemaVersion: 4,
     });
+  });
+
+  it("loads a legacy save without previousScreen as null", async () => {
+    const legacy = { ...storyState() } as Record<string, unknown>;
+    delete legacy.previousScreen;
+    const record = {
+      schemaVersion: 3,
+      slot: "manual:1",
+      revision: 1,
+      savedAt: 1,
+      state: legacy,
+    };
+    await seedRecord("manual:1", record);
+
+    const read = await repository().read("manual:1");
+
+    expect(read.kind).toBe("ready");
+    if (read.kind !== "ready") throw new Error("expected a ready save");
+    expect(read.envelope.state.previousScreen).toBeNull();
+    expect(await storedRecord("manual:1")).toEqual(record);
+  });
+
+  it("normalizes an invalid saved previousScreen without rejecting the save", async () => {
+    const record = {
+      schemaVersion: 4,
+      slot: "manual:1",
+      revision: 1,
+      savedAt: 1,
+      state: { ...storyState(), previousScreen: "unknown-screen" },
+    };
+    await seedRecord("manual:1", record);
+
+    const read = await repository().read("manual:1");
+
+    expect(read.kind).toBe("ready");
+    if (read.kind !== "ready") throw new Error("expected a ready save");
+    expect(read.envelope.state.previousScreen).toBeNull();
+    expect(await storedRecord("manual:1")).toEqual(record);
   });
 
   /* The one migration a player can lose progress to. What is proved here is
@@ -254,25 +292,25 @@ describe("createStorySaveRepository", () => {
      the pre-battle briefing, `encounterDeck`, the deck editor, which grants a
      story save nothing — reads the deck list, and a migrated save that arrived
      with an empty one could not duel and could not build its way out of it. */
-  it("a v2 save migrates to v3 with a deck it can duel with", async () => {
+  it("a v2 save migrates to v4 with a deck it can duel with", async () => {
     const { deck, collection } = buildStarterGrant();
     await seedRecord("manual:1", VERSION_2_RECORD);
     const read = await repository().read("manual:1");
     expect(read).toMatchObject({
       kind: "ready",
       envelope: {
-        schemaVersion: 3,
+        schemaVersion: 4,
         slot: "manual:1",
         revision: 1,
         savedAt: 1_700_000_000_123,
-        state: { decks: [deck], defaultDeckId: deck.id },
+        state: { decks: [deck], defaultDeckId: deck.id, previousScreen: null },
       },
     });
     if (read.kind !== "ready") throw new Error("expected a ready save");
     /* Additive in both directions: every field the record carried comes back
        with the value it carried — the collection with the granted cards added
-       to it — and the only fields it did not carry are the three this build
-       adds. */
+       to it — and the only fields it did not carry are the three deck/current
+       navigation fields this build adds. */
     for (const [key, value] of Object.entries(VERSION_2_RECORD.state))
       if (key !== "collection")
         expect(read.envelope.state[key as keyof StoryState], key).toEqual(
@@ -283,7 +321,12 @@ describe("createStorySaveRepository", () => {
       ...VERSION_2_RECORD.state.collection,
     });
     expect(Object.keys(read.envelope.state).sort()).toEqual(
-      [...Object.keys(VERSION_2_RECORD.state), "decks", "defaultDeckId"].sort(),
+      [
+        ...Object.keys(VERSION_2_RECORD.state),
+        "decks",
+        "defaultDeckId",
+        "previousScreen",
+      ].sort(),
     );
     /* Migration happens in memory. A read that rewrote the slot would turn
        every load into a write the player never asked for. */
@@ -381,7 +424,7 @@ describe("createStorySaveRepository", () => {
      to hold stays empty: the player deleted their last deck, and a read that
      handed it back would be the fountain the deck editor's seeding was taken
      out to close. */
-  it("leaves a v3 save with no decks exactly as it was written", async () => {
+  it("leaves a v4 save with no decks exactly as it was written", async () => {
     const saves = repository();
     const state = storyState({ decks: [], defaultDeckId: null });
     await saves.write("manual:1", state, null);
@@ -392,9 +435,10 @@ describe("createStorySaveRepository", () => {
     expect(read.envelope.state.collection).toEqual(state.collection);
   });
 
-  it("a v3 save round-trips", async () => {
+  it("a v4 save round-trips", async () => {
     const saves = repository();
     const state = storyState({
+      previousScreen: "shop-browse",
       decks: [storyDeckFixture("alpha"), storyDeckFixture("beta")],
       defaultDeckId: "beta",
     });
@@ -404,9 +448,10 @@ describe("createStorySaveRepository", () => {
     });
     const read = await saves.read("manual:1");
     if (read.kind !== "ready") throw new Error("expected a ready save");
-    expect(read.envelope.schemaVersion).toBe(3);
+    expect(read.envelope.schemaVersion).toBe(4);
     expect(read.envelope.state.decks).toEqual(state.decks);
     expect(read.envelope.state.defaultDeckId).toBe("beta");
+    expect(read.envelope.state.previousScreen).toBe("shop-browse");
     expect(JSON.stringify(read.envelope.state)).toBe(JSON.stringify(state));
   });
 
@@ -594,7 +639,7 @@ describe("createStorySaveRepository", () => {
 
   it("an unknown future version is incompatible", async () => {
     await seedRecord("manual:2", {
-      schemaVersion: 4,
+      schemaVersion: 5,
       slot: "manual:2",
       revision: 1,
       savedAt: 1,
@@ -603,7 +648,7 @@ describe("createStorySaveRepository", () => {
     expect(await repository().read("manual:2")).toEqual({
       kind: "incompatible",
       slot: "manual:2",
-      found: 4,
+      found: 5,
     });
   });
 

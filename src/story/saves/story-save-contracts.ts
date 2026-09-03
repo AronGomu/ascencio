@@ -16,7 +16,7 @@ import {
 export const STORY_SAVES_DATABASE_NAME = "ygo-story-saves";
 export const STORY_SAVES_DATABASE_VERSION = 1;
 export const STORY_SAVES_STORE_NAME = "saves";
-export const STORY_SAVE_SCHEMA_VERSION = 3;
+export const STORY_SAVE_SCHEMA_VERSION = 4;
 
 /** The oldest schema this build can still read. Version 1 predates the shop:
     it carries no economy, and `migrateStorySaveState` completes it. */
@@ -44,7 +44,7 @@ export function isStorySlotKey(value: unknown): value is StorySlotKey {
 }
 
 export interface StorySaveEnvelope {
-  readonly schemaVersion: 3;
+  readonly schemaVersion: 4;
   readonly slot: StorySlotKey;
   readonly revision: number;
   readonly savedAt: number;
@@ -147,8 +147,7 @@ export function parseStorySaveEnvelope(
   /* Rebuilt rather than cast, so a `ready` envelope always describes itself as
      the version this build actually returns: an older record reaches the story
      already migrated, and nothing downstream has to ask which version it came
-     from. The state object is passed through untouched when it already carries
-     every field this build writes, so a round-trip preserves it exactly. */
+     from. */
   return {
     kind: "ready",
     envelope: {
@@ -266,7 +265,7 @@ function topUpToGrant(
  * the deck list on its way forward. Legacy favourites are dropped at every
  * version because they were added without a schema bump.
  *
- * The completed state is then validated exactly like a version 3 one — a v1
+ * The completed state is then validated exactly like a current-version one — a v1
  * record with a broken beat index stays corrupt rather than being laundered by
  * the migration. Any other version answers `null`; the caller has already
  * separated "too new" from "unreadable".
@@ -275,7 +274,12 @@ export function migrateStorySaveState(
   raw: unknown,
   schemaVersion: number,
 ): StoryState | null {
-  if (schemaVersion !== 1 && schemaVersion !== 2 && schemaVersion !== 3)
+  if (
+    schemaVersion !== 1 &&
+    schemaVersion !== 2 &&
+    schemaVersion !== 3 &&
+    schemaVersion !== 4
+  )
     return null;
   if (typeof raw !== "object" || raw === null || Array.isArray(raw))
     return null;
@@ -283,8 +287,25 @@ export function migrateStorySaveState(
   if (schemaVersion < 2)
     candidate = withCardShop({ ...economyDefaults(), ...candidate });
   if (schemaVersion < 3) candidate = withStarterDecks(candidate);
-  candidate = withoutLegacyFavourites(candidate);
+  candidate = withNormalizedPreviousScreen(withoutLegacyFavourites(candidate));
   return isStoryState(candidate) ? candidate : null;
+}
+
+/** Adds the v4 navigation pointer without sacrificing otherwise-valid saves.
+    Unknown screen names cannot be followed safely, so they normalize to the
+    same null fallback as a legacy record that never stored the field. */
+function withNormalizedPreviousScreen(
+  state: Record<string, unknown>,
+): Record<string, unknown> {
+  const previousScreen = state.previousScreen;
+  return {
+    ...state,
+    previousScreen:
+      typeof previousScreen === "string" &&
+      (STORY_SCREENS as readonly string[]).includes(previousScreen)
+        ? previousScreen
+        : null,
+  };
 }
 
 /** Favourites entered v3 without a schema bump. Drop any payload shape before
@@ -529,6 +550,11 @@ function isStoryState(value: unknown): value is StoryState {
   if (
     typeof state.screen !== "string" ||
     !screens.has(state.screen) ||
+    !(
+      state.previousScreen === null ||
+      (typeof state.previousScreen === "string" &&
+        screens.has(state.previousScreen))
+    ) ||
     typeof state.savedScreen !== "string" ||
     !screens.has(state.savedScreen) ||
     typeof state.progressExists !== "boolean" ||

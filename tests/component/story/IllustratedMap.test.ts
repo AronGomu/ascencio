@@ -89,20 +89,30 @@ describe("IllustratedMapScreen", () => {
     ).toBeTruthy();
   });
 
-  it("keeps completion separate from access and conditionally renders Back", () => {
+  it("keeps completion separate from access and returns by pointer or keyboard", async () => {
+    const onreturn = vi.fn();
     const availableCompleted: readonly StoryLocationState[] = [
       { id: "old-arena", access: "available", completed: true },
     ];
-    const rendered = render(IllustratedMapScreen, {
+    render(IllustratedMapScreen, {
       locations: availableCompleted,
-      allowBack: false,
+      returnLabel: "Dialog",
+      onreturn,
     });
     const location = screen.getAllByRole("button", {
       name: /available.*completed/i,
     });
     expect(location).toHaveLength(2);
-    expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
-    rendered.rerender({ allowBack: true });
-    expect(screen.getByRole("button", { name: "Back" })).toBeTruthy();
+    const button = screen.getByRole("button", { name: "Return to Dialog" });
+    expect(button.getAttribute("data-cy")).toBe("story-map-return");
+    expect(button.classList.contains("story-danger")).toBe(true);
+
+    const user = userEvent.setup();
+    await user.click(button);
+    expect(onreturn).toHaveBeenCalledTimes(1);
+    button.focus();
+    await user.keyboard("{Enter}");
+    await user.keyboard(" ");
+    expect(onreturn).toHaveBeenCalledTimes(3);
   });
 });

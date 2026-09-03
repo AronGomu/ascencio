@@ -3,6 +3,8 @@
   import { PROLOGUE } from "./content/prologue.ts";
   import {
     createInitialStoryState,
+    storyScreenLabel,
+    transitionStoryScreen,
     type ChoiceId,
     type LocationId,
     type StoryScreen,
@@ -207,7 +209,7 @@
   let autosaveStatus: "idle" | "pending" | "success" | "failure" = "idle";
   let dirty = false;
   let inputId = 0;
-  let previousScreen: StoryScreen = state.screen;
+  let focusedScreen: StoryScreen = state.screen;
   let shopData: ShopSetData | null = null;
   let shopDataError: string | null = null;
   let shopDataLoading = false;
@@ -321,8 +323,8 @@
   });
 
   afterUpdate(() => {
-    if (state.screen === previousScreen) return;
-    previousScreen = state.screen;
+    if (state.screen === focusedScreen) return;
+    focusedScreen = state.screen;
     queueMicrotask(() => {
       /* Scoped to this domain's own root: the shell mounts other domains in
          the same document, so a document-wide `h1` lookup could steal focus
@@ -565,7 +567,7 @@
   }
 
   function go(screen: StoryScreen): void {
-    state = { ...state, screen };
+    state = transitionStoryScreen(state, screen);
     overlay = null;
   }
   function dispatch(command: Parameters<typeof reduceStory>[1]): void {
@@ -640,24 +642,19 @@
   }
 
   function retryEncounter(): void {
-    state = {
-      ...state,
-      screen: "battle-mock",
-      outcome: null,
-      outcomeScene: null,
-    };
+    state = transitionStoryScreen(
+      { ...state, outcome: null, outcomeScene: null },
+      "battle-mock",
+    );
     void beginHandoff();
   }
 
   function returnToMap(): void {
     handoffError = null;
-    state = {
-      ...state,
-      screen: "map",
-      outcome: null,
-      outcomeScene: null,
-      encounterId: null,
-    };
+    state = transitionStoryScreen(
+      { ...state, outcome: null, outcomeScene: null, encounterId: null },
+      "map",
+    );
   }
 
   function resumeSnapshot(snapshot: StoryState): void {
@@ -934,10 +931,10 @@
       <IllustratedMapScreen
         locations={state.locations}
         choiceAcknowledgment={state.laterAcknowledgment}
-        allowBack={!state.rewardAcknowledged}
+        returnLabel={storyScreenLabel(state.previousScreen ?? "narrative")}
         onselect={(locationId: LocationId) =>
           dispatch({ type: "select-location", locationId })}
-        onback={() => go("narrative")}
+        onreturn={() => go(state.previousScreen ?? "narrative")}
       />
       {#if state.rewardAcknowledged}<section
           class="completion-panel"

@@ -35,7 +35,7 @@ function stateAt(screen: StoryState["screen"]): StoryState {
 
 async function putAutosave(page: Page, state: StoryState): Promise<void> {
   const envelope: StorySaveEnvelope = {
-    schemaVersion: 3,
+    schemaVersion: 4,
     slot: "autosave",
     revision: 1,
     savedAt: Date.now(),
@@ -239,3 +239,24 @@ for (const viewport of VIEWPORTS) {
     await expectHeaderGeometry(page);
   });
 }
+
+test("map return follows persisted origin by pointer and keyboard", async ({
+  page,
+}) => {
+  const map = {
+    ...stateAt("map"),
+    previousScreen: "narrative" as const,
+  };
+  const returnButton = () =>
+    page.getByRole("button", { name: "Return to Dialog" });
+
+  await openSavedScreen(page, map);
+  await expect(returnButton()).toHaveAttribute("data-cy", "story-map-return");
+  await returnButton().click();
+  await expect(page.locator('[data-cy="story-narrative-stage"]')).toBeVisible();
+
+  await openSavedScreen(page, map);
+  await returnButton().focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator('[data-cy="story-narrative-stage"]')).toBeVisible();
+});

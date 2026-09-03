@@ -114,6 +114,7 @@ export function storyBattleResult(
 export function restoreStoryState(state: StoryState): StoryState {
   return {
     ...state,
+    previousScreen: state.previousScreen ?? null,
     encounterId: state.encounterId ?? null,
     pendingHandoffId: state.pendingHandoffId ?? null,
   };

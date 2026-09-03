@@ -64,13 +64,13 @@ const RETURN_CONTROLS: readonly {
     mount: () => render(LoadScreen, { onback: noop }),
   },
   {
-    what: "the city map's Back",
-    dataCy: "story-map-back",
+    what: "the city map's contextual return",
+    dataCy: "story-map-return",
     mount: () =>
       render(IllustratedMapScreen, {
         locations: [{ id: "old-arena", access: "available", completed: false }],
-        allowBack: true,
-        onback: noop,
+        returnLabel: "Dialog",
+        onreturn: noop,
       }),
   },
   {

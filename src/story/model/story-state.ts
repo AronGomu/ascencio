@@ -56,6 +56,7 @@ export interface StoryLocationState {
 
 export interface StoryState {
   readonly screen: StoryScreen;
+  readonly previousScreen: StoryScreen | null;
   readonly savedScreen: StoryScreen;
   readonly progressExists: boolean;
   readonly narrativeIndex: number;
@@ -113,6 +114,7 @@ export interface StoryState {
 export function createInitialStoryState(): StoryState {
   return {
     screen: "title",
+    previousScreen: null,
     savedScreen: "narrative",
     progressExists: false,
     narrativeIndex: 0,
@@ -143,4 +145,50 @@ export function createInitialStoryState(): StoryState {
     openedCards: null,
     openingMode: null,
   };
+}
+
+const STORY_SCREEN_LABELS: Readonly<Record<StoryScreen, string>> =
+  Object.freeze({
+    title: "Title",
+    load: "Load",
+    narrative: "Dialog",
+    map: "Map",
+    "pre-battle": "Duel Setup",
+    "battle-mock": "Duel",
+    outcome: "Duel Result",
+    reward: "Duel Result",
+    end: "End",
+    "shop-greeting": "Shop",
+    "shop-browse": "Shop",
+    "shop-cards": "Shop",
+    "shop-sell": "Shop",
+    "shop-opening": "Shop",
+    "shop-results": "Shop",
+  });
+
+export function storyScreenLabel(screen: StoryScreen): string {
+  return STORY_SCREEN_LABELS[screen];
+}
+
+function rememberStoryScreenTransition(
+  current: StoryState,
+  next: StoryState,
+): StoryState {
+  return next.screen === current.screen
+    ? next
+    : { ...next, previousScreen: current.screen };
+}
+
+export function transitionStoryScreen(
+  state: StoryState,
+  screen: StoryScreen,
+): StoryState {
+  return rememberStoryScreenTransition(state, { ...state, screen });
+}
+
+export function rememberStoryStateTransition(
+  current: StoryState,
+  next: StoryState,
+): StoryState {
+  return rememberStoryScreenTransition(current, next);
 }

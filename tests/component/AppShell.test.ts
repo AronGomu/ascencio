@@ -99,7 +99,7 @@ function savesHolding(
           ? {
               kind: "ready",
               envelope: {
-                schemaVersion: 3,
+                schemaVersion: 4,
                 slot,
                 revision: 1,
                 savedAt: 1,
@@ -118,7 +118,7 @@ function checkpointFor(handoffId: string): StorySaveReadResult {
   return {
     kind: "ready",
     envelope: {
-      schemaVersion: 3,
+      schemaVersion: 4,
       slot: "checkpoint:pre-duel",
       revision: 1,
       savedAt: 1,

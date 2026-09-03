@@ -34,7 +34,7 @@ everything else.
 ## Glass
 
 Panels over the ground are translucent, not painted: `--glass`
-`rgba(150,175,215,0.055)` and `--glass-strong` `rgba(150,175,215,0.1)`, with
+`rgba(150,175,215,0.02)` and `--glass-strong` `rgba(150,175,215,0.036)`, with
 `--line-soft` hairlines and `--gold-line` for ceremonial edges. Overlays that
 sit on live content may add `backdrop-filter: blur(12px)`; do not combine
 `backdrop-filter` with a `clip-path` chamfer on the same element — Chromium
@@ -44,7 +44,7 @@ paints the blur outside the clip.
 
 Angular. Radii are near-square (`--radius-sm 0.15rem`, `--radius-md 0.25rem`,
 `--radius-lg 0.4rem`). Featured panels and menu-grade buttons take the 45°
-chamfer: `clip-path` polygon cut by `--chamfer` (10px) on the top-left and
+chamfer: `clip-path` polygon cut by `--chamfer` (6px) on the top-left and
 bottom-right corners, as `.main-menu__entries button` does. Everyday controls
 keep plain square corners; the chamfer is a ceremonial cut, not a default.
 
@@ -71,6 +71,9 @@ gold and a faint gold halo (`text-shadow` from `--accent`). The main menu
   tokens.
 - The duel field mat keeps its green table palette (`--field-*`): it is the
   game surface, not chrome. Restyling it is its own decision.
-- Residual (not yet given a dedicated pass, inherit tokens only): duel HUD and
-  dialogs, deck editor panels, story overlays. Selection amber `#ffd580` sits
-  near brand gold; if ambiguity shows up in play, selection moves, not gold.
+- Basilica VariantB residual pass is shipped for dialogs, deck editor panels,
+  and story overlays (`docs/feature/PDDR-basilica_residual_ui.md`): dialogs use
+  opaque chamfered plaques with gold lines and centered gold titles; editor
+  panels and story overlays use the approved chamfered-glass treatment. Duel
+  HUD remains excluded by owner decision (2026-09-02). Selection amber
+  `#ffd580` stays; no gold ambiguity was flagged.

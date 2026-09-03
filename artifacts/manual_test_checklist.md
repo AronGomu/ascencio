@@ -4200,3 +4200,13 @@ Fourteen owner feedback items shipped across T1–T11. Run `npm run dev`
 ### T11 diagnostics-download (item 14)
 
 - [ ] Before a duel session exists, open duel settings: **Download duel log** is disabled with the tooltip **No duel trace yet**; during a duel, use that button and confirm `ygo-duel-diagnostics-*.json` downloads with the prompt/response protocol timeline.
+
+---
+
+## Basilica VariantB residual pass
+
+Run `npm run dev` (default `DEV_PORT=4300`) in Chromium.
+
+- [ ] Start a duel, then open its Menu and Settings dialogs: confirm each panel is an opaque plaque with shallow chamfers and a gold-line edge, each titled dialog has a centered gold title and rule, and the blurred backdrop leaves the field recognizable. Toggle a setting, close with Escape, reopen, and confirm the change and dialog controls still work.
+- [ ] Open a deck in Deck Editor: confirm the library, workspace, and validation panels use chamfered glass with gold-line edges. Open Load or Export and confirm its opaque chamfered dialog has the centered gold title treatment; open a card context menu and confirm it stays square. Close each surface with its normal controls and confirm card/deck editing still works.
+- [ ] From a story narrative beat, open Pause, Save, and Load overlays: confirm the scene remains visible through the dark blur-6 scrim, each overlay panel uses chamfered glass with a gold-line edge and centered gold title treatment, and focus stays in the open overlay. Use one action, close with Escape, and confirm focus returns to its trigger.

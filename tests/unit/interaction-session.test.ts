@@ -54,6 +54,7 @@ function spec(
     zoneChoices: new Map(),
     stackChoices: new Map(),
     globalChoices: new Map([[THIRD, choice(THIRD)]]),
+    overlayChoices: new Map(),
     offFieldChoices: [],
     choiceOrder: [FIRST, SECOND, THIRD],
     ...overrides,

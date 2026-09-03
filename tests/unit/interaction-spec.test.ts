@@ -18,6 +18,7 @@ import {
   interactionKey,
   isImmediateSingleSelection,
   isPhaseTransitionChoice,
+  interactionChoicesInPromptOrder,
   mapPromptToInteractionSpec,
   OFF_FIELD_TARGET_LOCATIONS,
   type ActiveInteractionSpec,
@@ -59,6 +60,24 @@ function mountedCardChoice(
       location: "monster",
       sequence: 2,
       position: "faceUpAttack",
+    },
+    ...overrides,
+  });
+}
+
+function overlayCardChoice(
+  id: ChoiceId,
+  sequence = 4,
+  overrides: Partial<PromptChoice> = {},
+): PromptChoice {
+  return choice(id, {
+    card: {
+      instanceId: cardInstanceId(`overlay-${id}`),
+      controller: 0,
+      location: "monster",
+      sequence,
+      overlay: true,
+      code: cardCode(97590747),
     },
     ...overrides,
   });
@@ -463,6 +482,87 @@ describe("prompt interaction spec", () => {
     expect(mapPromptToInteractionSpec(null, SNAPSHOT, BOARD, CONTEXT)).toEqual({
       kind: "inactive",
     });
+  });
+});
+
+describe("overlay material choices", () => {
+  it("routes overlay choices into overlayChoices instead of the global list", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [overlayCardChoice(FIRST), overlayCardChoice(SECOND, 4)],
+        minimum: 1,
+        maximum: 2,
+      }),
+    );
+
+    expect([...spec.overlayChoices.keys()]).toEqual([FIRST, SECOND]);
+    expect(spec.overlayChoices.get(FIRST)?.cardCode).toBe(cardCode(97590747));
+    expect(spec.globalChoices.has(FIRST)).toBe(false);
+    expect(spec.globalChoices.has(SECOND)).toBe(false);
+    expect(spec.offFieldChoices).toEqual([]);
+  });
+
+  /* A material rides on its host's monster zone, so its engine address can
+     collide with a mounted card. The divert runs before that resolution, or
+     the detach choice would silently answer as the host instead. */
+  it("routes an overlay choice whose address collides with a mounted card", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [overlayCardChoice(FIRST, 2), mountedCardChoice(SECOND)],
+      }),
+    );
+
+    expect([...spec.overlayChoices.keys()]).toEqual([FIRST]);
+    expect([...spec.cardChoices.values()].flat().map(({ id }) => id)).toEqual([
+      SECOND,
+    ]);
+  });
+
+  it("keeps a concealed overlay choice without attesting a code", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [
+          choice(FIRST, {
+            card: {
+              instanceId: cardInstanceId("overlay-concealed"),
+              controller: 1,
+              location: "monster",
+              sequence: 0,
+              overlay: true,
+              code: cardCode(97590747),
+            },
+          }),
+        ],
+      }),
+    );
+
+    expect(spec.overlayChoices.get(FIRST)?.cardCode).toBeUndefined();
+  });
+
+  it("keeps overlay choices answerable in raw prompt order", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [overlayCardChoice(FIRST), choice(SECOND, { action: "pass" })],
+        minimum: 1,
+        maximum: 1,
+      }),
+    );
+
+    expect(spec.choiceOrder).toEqual([FIRST, SECOND]);
+    expect(interactionChoicesInPromptOrder(spec).map(({ id }) => id)).toEqual([
+      FIRST,
+      SECOND,
+    ]);
+  });
+
+  it("leaves a non-overlay card selection untouched", () => {
+    const spec = specFor(
+      prompt("selectCard", {
+        choices: [mountedCardChoice(FIRST), graveyardCardChoice(SECOND)],
+      }),
+    );
+
+    expect(spec.overlayChoices.size).toBe(0);
   });
 });
 

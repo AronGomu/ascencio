@@ -1690,6 +1690,72 @@ button.duel-field-zone,
   font-size: 0.85rem;
 }
 
+/* Overlay materials have no field controls of their own. This modal gives each
+   engine choice one art-sized native button while keeping the field visible. */
+.material-select-backdrop {
+  z-index: var(--duel-field-layer-drop-confirm);
+}
+
+.material-select-dialog {
+  width: min(44rem, 100%);
+}
+
+.material-select-dialog__tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 0.85rem;
+}
+
+.material-select-tile {
+  display: grid;
+  min-width: 0;
+  padding: 0.35rem;
+  border-color: var(--border-strong);
+  background: var(--surface-inset);
+}
+
+.material-select-tile:hover:not(:disabled),
+.material-select-tile:focus-visible {
+  border-color: var(--success);
+}
+
+.material-select-tile.is-selected {
+  border-color: var(--warning);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--selected) 78%, transparent);
+}
+
+.material-select-tile img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 421 / 614;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.material-select-tile__name {
+  overflow: hidden;
+  margin-top: 0.4rem;
+  color: var(--ink);
+  font-size: 0.75rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.material-select-dialog__footer {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.material-select-dialog__footer output {
+  margin-right: auto;
+  color: var(--muted);
+  font-weight: 700;
+}
+
 /* Anchored on the card's bottom edge at 1.6x, the overlay is drawn *over* the
    card that opened it. Taking pointer input there would steal that card's own
    hover and press: the card would report a leave the moment the overlay

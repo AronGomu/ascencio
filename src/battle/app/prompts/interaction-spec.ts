@@ -90,6 +90,11 @@ interface ActiveInteractionSpecBase<Kind extends ActiveInteractionKind> {
     readonly InteractionChoice[]
   >;
   readonly globalChoices: ReadonlyMap<ChoiceId, InteractionChoice>;
+  /* T10: every choice the engine addressed as an overlay unit (Xyz material).
+     A material has no mounted control of its own — it rides on its host's
+     zone — so it answers through the visual material dialog instead of the
+     plain text prompt list. */
+  readonly overlayChoices: ReadonlyMap<ChoiceId, InteractionChoice>;
   /* T16: every card-selection choice that lives off the mounted field, in raw
      prompt order. The same choice also stays in its launcher map (card or
      stack) so the hand card or pile that owns it can reopen the target list. */
@@ -222,6 +227,7 @@ export function interactionChoicesInPromptOrder(
     ...spec.zoneChoices.values(),
     ...spec.stackChoices.values(),
     spec.globalChoices.values(),
+    spec.overlayChoices.values(),
     spec.offFieldChoices,
   ]) {
     for (const choice of choices)
@@ -302,6 +308,7 @@ export function mapPromptToInteractionSpec(
   const zoneEntries = new Map<BoardTargetId, InteractionChoice[]>();
   const stackEntries = new Map<BoardTargetId, InteractionChoice[]>();
   const globalEntries = new Map<ChoiceId, InteractionChoice>();
+  const overlayEntries = new Map<ChoiceId, InteractionChoice>();
   const offFieldEntries: InteractionChoice[] = [];
   const orderedIds: ChoiceId[] = [];
   const duplicateIds = duplicateChoiceIds(prompt.choices);
@@ -313,6 +320,14 @@ export function mapPromptToInteractionSpec(
     const targetKind = targetKindFor(kind, rawChoice);
     if (targetKind === "invalid") continue;
     orderedIds.push(choice.id);
+    /* T10: a material's engine address is its host's monster zone, so leaving
+       it to resolve below would either answer as the host or fall through to
+       the text prompt list. Diverted before either, it reaches the player as
+       the visual dialog the detach cost needs. */
+    if (kind === "cardSelection" && rawChoice.card?.overlay === true) {
+      overlayEntries.set(choice.id, choice);
+      continue;
+    }
     /* An off-field target is collected here and still resolved below, so the
        hand card or pile holding it keeps its halo and stays a launcher. */
     if (
@@ -348,6 +363,7 @@ export function mapPromptToInteractionSpec(
   const zoneChoices = freezeChoiceMap(zoneEntries);
   const stackChoices = freezeChoiceMap(stackEntries);
   const globalChoices = Object.freeze(new Map(globalEntries));
+  const overlayChoices = Object.freeze(new Map(overlayEntries));
   const offFieldChoices = Object.freeze([...offFieldEntries]);
   const choiceOrder = Object.freeze([...orderedIds]);
   // T8: the zone list dialog makes a stack clickable and able to answer a
@@ -357,6 +373,7 @@ export function mapPromptToInteractionSpec(
     cardChoices.size > 0 ||
     zoneChoices.size > 0 ||
     stackChoices.size > 0 ||
+    overlayChoices.size > 0 ||
     offFieldChoices.length > 0;
   const base = {
     key: interactionKey(
@@ -374,6 +391,7 @@ export function mapPromptToInteractionSpec(
     zoneChoices,
     stackChoices,
     globalChoices,
+    overlayChoices,
     offFieldChoices,
     choiceOrder,
   };

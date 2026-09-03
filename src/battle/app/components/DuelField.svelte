@@ -79,6 +79,7 @@
   import DragGhost from "./duel-field/DragGhost.svelte";
   import DropConfirmDialog from "./duel-field/DropConfirmDialog.svelte";
   import HandZoomOverlay from "./duel-field/HandZoomOverlay.svelte";
+  import MaterialSelectDialog from "./duel-field/MaterialSelectDialog.svelte";
   import FieldActionBar from "./duel-field/FieldActionBar.svelte";
   import FloatingFieldWindow from "./duel-field/FloatingFieldWindow.svelte";
   import FieldBoard from "./duel-field/FieldBoard.svelte";
@@ -303,6 +304,8 @@
      and the selected one returns to the overlay as soon as that ends. */
   $: handZoomView = handZoom ?? selectedHandZoom;
   $: targetLaunchers = targetLauncherIds(spec);
+  $: overlayChoices =
+    spec?.kind === "cardSelection" ? [...spec.overlayChoices.values()] : [];
   $: synchronizeZoneList(spec, offFieldTargets);
   $: cancelDragGhostOnPromptChange(spec);
   $: clearHandZoomOnBoardChange(board);
@@ -330,6 +333,7 @@
   $: actionBarVisible =
     prompt !== null &&
     spec !== null &&
+    overlayChoices.length === 0 &&
     (spec.fieldCapable || spec.promptKind === "chain") &&
     fieldActionBarRequired(spec);
   /* Item 4: what the dashed zone beside the hand is offering. Read from the
@@ -605,7 +609,7 @@
      drives navigation only, so none of them may ever reach the outside-click
      dismissal that answers the live decision. */
   const INTERACTIVE_SELECTOR =
-    "[data-field-target], .card-action-chips, .field-action-bar, .floating-field-window, .duel-field-hand-band, .drop-confirm-backdrop";
+    "[data-field-target], .card-action-chips, .field-action-bar, .floating-field-window, .duel-field-hand-band, .drop-confirm-backdrop, .material-select-backdrop";
 
   function chainPassChoice(): InteractionChoice | null {
     if (spec === null || spec.promptKind !== "chain") return null;
@@ -1358,6 +1362,30 @@
     });
   }
 
+  function confirmMaterialSelection(choiceIds: readonly string[]): void {
+    if (prompt === null || spec === null || pending) return;
+    const requested = new Set(choiceIds);
+    const selected = new Set(session.selectedChoiceIds);
+    const resolved = overlayChoices
+      .filter(({ id }) => requested.has(id))
+      .map(({ id }) => id);
+    if (
+      resolved.length !== choiceIds.length ||
+      !validatePromptSelection(prompt, resolved).valid
+    ) {
+      return;
+    }
+    const resolvedSet = new Set(resolved);
+    for (const choiceId of session.selectedChoiceIds) {
+      if (!resolvedSet.has(choiceId))
+        dispatch({ type: "toggleChoice", choiceId });
+    }
+    for (const choiceId of resolved) {
+      if (!selected.has(choiceId)) dispatch({ type: "toggleChoice", choiceId });
+    }
+    dispatch({ type: "confirm" });
+  }
+
   /* Item 9: once the answer is in flight the draft is no longer the player's,
      so it stops being drawn. Suppressed rather than cleared: `submissionRejected`
      returns the session to `editing` with these ids intact, and the halo set has
@@ -1490,6 +1518,20 @@
       }}
       ondismiss={clearHandPin}
       onzoomleave={leaveHandZoom}
+    />
+  {/if}
+  {#if overlayChoices.length > 0 && spec !== null}
+    <MaterialSelectDialog
+      choices={overlayChoices}
+      minSelections={spec.constraints.minimum}
+      maxSelections={spec.constraints.maximum}
+      {imageLibrary}
+      cardBackUrl={resolvedCardBackUrl}
+      disabled={pending}
+      onconfirm={confirmMaterialSelection}
+      oncancel={spec.constraints.cancelable
+        ? () => dispatch({ type: "cancel" })
+        : null}
     />
   {/if}
   {#if dropConfirm !== null}

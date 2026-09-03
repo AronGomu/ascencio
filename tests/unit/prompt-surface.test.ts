@@ -60,6 +60,7 @@ function fieldCapableSpec(): ActiveInteractionSpec {
     zoneChoices: new Map(),
     stackChoices: new Map(),
     globalChoices: new Map(),
+    overlayChoices: new Map(),
     offFieldChoices: [],
     choiceOrder: [],
   };
@@ -89,6 +90,7 @@ function nonFieldSpec(): ActiveInteractionSpec {
     zoneChoices: new Map(),
     stackChoices: new Map(),
     globalChoices: new Map(),
+    overlayChoices: new Map(),
     offFieldChoices: [],
     choiceOrder: [],
   };
@@ -109,6 +111,25 @@ function offFieldPrompt(): PlayerPrompt {
           location: "graveyard",
           sequence: 0,
           position: "faceUpAttack",
+        },
+      },
+    ],
+  });
+}
+
+/** One Xyz material: field-capable through its dedicated visual dialog. */
+function overlayPrompt(): PlayerPrompt {
+  return prompt({
+    kind: "selectCard",
+    choices: [
+      {
+        ...choice("material-0", "Xyz material"),
+        card: {
+          instanceId: cardInstanceId("surface-material-0"),
+          controller: 0,
+          location: "monster",
+          sequence: 0,
+          overlay: true,
         },
       },
     ],
@@ -139,6 +160,7 @@ function battleCommandSpec(fieldCapable: boolean): ActiveInteractionSpec {
     zoneChoices: new Map(),
     stackChoices: new Map(),
     globalChoices: new Map(),
+    overlayChoices: new Map(),
     offFieldChoices: [],
     choiceOrder: [],
   };
@@ -239,6 +261,24 @@ describe("promptSurface", () => {
     if (spec.kind === "inactive") throw new Error("Expected an active spec");
     expect(spec.fieldCapable).toBe(true);
 
+    expect(promptSurface(value, spec, false, true)).toBe("field");
+  });
+
+  it("keeps overlay choices off the plain prompt dialog", () => {
+    const value = overlayPrompt();
+    const snapshot = BOARD_VIEW_MODEL_FIXTURES["ST-05"];
+    const mapped = mapSnapshotToBoard(snapshot, BOARD_CARD_TEXTS);
+    if (!mapped.ok) throw new Error("Fixture mapping failed");
+    const spec = mapPromptToInteractionSpec(
+      value,
+      snapshot,
+      mapped.value,
+      CONTEXT,
+    );
+    if (spec.kind === "inactive") throw new Error("Expected an active spec");
+
+    expect(spec.overlayChoices.size).toBe(1);
+    expect(spec.fieldCapable).toBe(true);
     expect(promptSurface(value, spec, false, true)).toBe("field");
   });
 

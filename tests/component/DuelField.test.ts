@@ -243,6 +243,23 @@ function mountedChoice(
   } as Partial<PromptChoice>);
 }
 
+function overlayChoice(
+  id: string,
+  label: string,
+  sequence: number,
+): PromptChoice {
+  return promptChoice(id, label, {
+    card: {
+      instanceId: cardInstanceId(`overlay-${id}`),
+      controller: 0,
+      location: "monster",
+      sequence,
+      overlay: true,
+      code: cardCode(sequence === 0 ? 97590747 : 89631139),
+    },
+  });
+}
+
 function activeSpec(value: PlayerPrompt): ActiveInteractionSpec {
   const snapshot = BOARD_VIEW_MODEL_FIXTURES["ST-05"];
   const valueBoard = board("ST-05");
@@ -5461,3 +5478,62 @@ function candidateZoneIds(): readonly string[] {
     (zone) => zone.getAttribute("data-zone-id") ?? "",
   );
 }
+
+describe("DuelField material selection", () => {
+  it("mounts the visual dialog and submits its selected material through the interaction session", async () => {
+    const user = userEvent.setup();
+    const value = fieldPrompt(
+      "selectCard",
+      [
+        overlayChoice("material-0", "First material", 0),
+        overlayChoice("material-1", "Second material", 1),
+      ],
+      { minimum: 1, maximum: 1 },
+    );
+    const harness = renderInteractive(value);
+
+    expect(harness.spec.overlayChoices.size).toBe(2);
+    expect(promptSurface(value, harness.spec, false, true)).toBe("field");
+    expect(
+      document.querySelector('[data-cy="material-select-dialog"]'),
+    ).not.toBeNull();
+    expect(document.querySelector('[data-cy="field-action-bar"]')).toBeNull();
+
+    await user.click(
+      document.querySelector<HTMLButtonElement>(
+        '[data-cy="material-select-tile-material-1"]',
+      )!,
+    );
+    await user.click(
+      document.querySelector<HTMLButtonElement>(
+        '[data-cy="material-select-confirm"]',
+      )!,
+    );
+
+    expect(harness.commands).toEqual([["material-1"]]);
+    expect(harness.dispatch.mock.calls.map(([action]) => action.type)).toEqual([
+      "toggleChoice",
+      "confirm",
+    ]);
+  });
+
+  it("submits an empty response when an optional material prompt is cancelled", async () => {
+    const user = userEvent.setup();
+    const harness = renderInteractive(
+      fieldPrompt(
+        "selectTribute",
+        [overlayChoice("material-cancel", "Material", 0)],
+        { cancelable: true },
+      ),
+    );
+
+    await user.click(
+      document.querySelector<HTMLButtonElement>(
+        '[data-cy="material-select-cancel"]',
+      )!,
+    );
+
+    expect(harness.commands).toEqual([[]]);
+    expect(harness.dispatch.mock.calls[0]?.[0].type).toBe("cancel");
+  });
+});

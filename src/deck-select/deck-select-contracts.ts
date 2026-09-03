@@ -26,7 +26,6 @@ export interface DeckTileModel {
   readonly bundled: boolean;
   /** AI owner name → 🔒 badge + never deletable; null otherwise. */
   readonly lockedBy: string | null;
-  readonly favourite: boolean;
   readonly isDefault: boolean;
   readonly deletable: boolean;
   /** ISO timestamp for "modified" sort; null sorts last within its rank. */

@@ -14,7 +14,6 @@ export function tile(overrides: Partial<DeckTileModel> = {}): DeckTileModel {
     blockReason: null,
     bundled: false,
     lockedBy: null,
-    favourite: false,
     isDefault: false,
     deletable: true,
     updatedAt: "2026-08-20T10:00:00.000Z",

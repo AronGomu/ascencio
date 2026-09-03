@@ -589,37 +589,9 @@ describe("FreePlayMatchSetup", () => {
     expect(query("duel-start-opponent-name")?.textContent).toBe("Vault Warden");
   });
 
-  /* Two stores for one star: the repository only knows decks the player built,
-     so a bundled deck is starred beside the rest of the free-play settings. */
-  it("stars a bundled deck in the shell settings", async () => {
-    const setup = await renderLoadedSetup();
-
-    await fireEvent.click(control(`deck-tile-fav-${OPPONENT_PRESET_KEY}`));
-
-    expect(setup.storage.getItem("ygo.ui.v3")).toContain(
-      '"freePlayPresetFavouriteIds":["preset:shaddoll"]',
-    );
-    await vi.waitFor(() =>
-      expect(
-        control(`deck-tile-fav-${OPPONENT_PRESET_KEY}`).getAttribute(
-          "aria-pressed",
-        ),
-      ).toBe("true"),
-    );
-  });
-
-  it("stars a deck the player built in the library itself", async () => {
+  it("renders no favourite controls for bundled or local decks", async () => {
     await renderListedSetup();
 
-    await fireEvent.click(control(`deck-tile-fav-${LOCAL_KEY}`));
-
-    await vi.waitFor(async () => {
-      const repository = await IndexedDbDeckRepository.open();
-      try {
-        expect(await repository.listFavourites()).toEqual(["built-deck"]);
-      } finally {
-        repository.close();
-      }
-    });
+    expect(document.querySelector('[data-cy^="deck-tile-fav-"]')).toBeNull();
   });
 });

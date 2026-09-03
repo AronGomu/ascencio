@@ -922,13 +922,10 @@
       allowReturn={true}
       decks={preBattleDeckChoices}
       deckRecords={state.decks}
-      favouriteDeckIds={state.favouriteDeckIds}
       catalog={cardViewByCode}
       defaultDeckId={state.defaultDeckId}
       decksError={catalogError}
       onselectdeck={(id) => dispatch({ type: "deck-set-default", id })}
-      onfavourite={(id, favourite) =>
-        dispatch({ type: "deck-set-favourite", id, favourite })}
       onretrydecks={loadCatalog}
       onstart={startEncounter}
       onreturn={() => go("map")}

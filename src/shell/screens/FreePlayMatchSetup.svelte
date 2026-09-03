@@ -12,7 +12,6 @@
   import { cardFrameOf } from "../../decks/card-frame.ts";
   import { croppedCardImageUrl } from "../../decks/deck-cover.ts";
   import { runtimeCatalog } from "../../decks/catalog/runtime-catalog.ts";
-  import type { DeckId } from "../../decks/deck-contracts.ts";
   import { IndexedDbDeckRepository } from "../../decks/indexeddb-deck-repository.ts";
   import type {
     BattleDeckModule,
@@ -61,7 +60,6 @@
      until the packaged database answers, which is a fetch the seats never wait
      on: a tile with no cover draws its own placeholder. */
   let catalog: ReadonlyMap<number, DeckBuilderCardView> = new Map();
-  let favouriteDeckIds: readonly string[] = [];
   let defaultDeckId: string | null = null;
   let playerKey = "";
   let opponentKey = "";
@@ -92,8 +90,6 @@
   $: tiles = decks.map((deck) =>
     freePlayDeckTile(deck, {
       catalog,
-      favouriteDeckIds,
-      presetFavouriteIds: $settings.freePlayPresetFavouriteIds,
       defaultDeckId,
       aiOwnerByDeckKey,
     }),
@@ -113,9 +109,8 @@
     let cancelled = false;
     const alive = () => !cancelled;
     void loadListing(alive);
-    /* Neither of these fills a seat, so neither is awaited before the decks
-       are on screen: the art decorates the tiles, and the stars and the
-       default deck are marks on decks the player can already pick. */
+    /* Neither fills a seat, so neither is awaited before decks are on screen:
+       art decorates tiles; default marks a deck already selectable. */
     void loadCatalog(alive);
     void loadLibraryFlags(alive);
     return () => {
@@ -155,22 +150,16 @@
     }
   }
 
-  /* The stars and the default deck, read straight from the library the local
-     decks come from. A library that will not open costs a star, not a match:
-     the bundled decks are compiled into this build either way. */
+  /* Default deck comes from the local library. Failure costs its mark, not the
+     match: bundled decks remain compiled into this build. */
   async function loadLibraryFlags(alive: () => boolean): Promise<void> {
     let repository: IndexedDbDeckRepository | null = null;
     try {
       repository = await IndexedDbDeckRepository.open();
-      const [favourites, preferred] = await Promise.all([
-        repository.listFavourites(),
-        repository.getDefaultDeck(),
-      ]);
-      if (!alive()) return;
-      favouriteDeckIds = favourites;
-      defaultDeckId = preferred;
+      const preferred = await repository.getDefaultDeck();
+      if (alive()) defaultDeckId = preferred;
     } catch {
-      // No stars and no default; the decks themselves are listed regardless.
+      // No default; decks themselves remain listed.
     } finally {
       repository?.close();
     }
@@ -360,37 +349,6 @@
     seat = "player";
   }
 
-  function toggleFavourite(key: string, favourite: boolean): void {
-    const deck = battle?.findSelectableDeck(decks, key) ?? null;
-    if (deck === null) return;
-    /* Two stores for one star: `DeckRepository.setFavourite` only covers decks
-       the player built, so a bundled deck is starred in the shell's settings
-       beside the rest of its free-play preferences. */
-    if (deck.selection.kind === "preset") {
-      settings.setPresetDeckFavourite(key, favourite);
-      return;
-    }
-    void writeLocalFavourite(deck.selection.deck.ref.deckId, favourite);
-  }
-
-  /* Written, then read back rather than assumed: a library that refused the
-     write leaves the tile showing the star it actually has. */
-  async function writeLocalFavourite(
-    id: DeckId,
-    favourite: boolean,
-  ): Promise<void> {
-    let repository: IndexedDbDeckRepository | null = null;
-    try {
-      repository = await IndexedDbDeckRepository.open();
-      await repository.setFavourite(id, favourite);
-      favouriteDeckIds = await repository.listFavourites();
-    } catch {
-      // The star stays as stored; the library is repaired in the deck editor.
-    } finally {
-      repository?.close();
-    }
-  }
-
   async function decklistFor(key: string): Promise<DecklistView | null> {
     const deck = battle?.findSelectableDeck(decks, key) ?? null;
     if (deck === null) return null;
@@ -476,7 +434,6 @@
     onpickopponent={pickOpponent}
     onselect={select}
     onstart={start}
-    onfavourite={toggleFavourite}
     onback={() => onback()}
     onopen={openDeck}
     oncreate={ondecks}

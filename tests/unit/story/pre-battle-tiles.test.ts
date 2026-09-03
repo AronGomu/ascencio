@@ -58,7 +58,6 @@ function context(
 ) {
   return {
     catalog: CATALOG,
-    favouriteDeckIds: [] as readonly string[],
     defaultDeckId: null as string | null,
     ...overrides,
   };
@@ -69,7 +68,7 @@ describe("preBattleDeckTile", () => {
     const tile = preBattleDeckTile(
       LEGAL,
       RECORD,
-      context({ favouriteDeckIds: ["signal"], defaultDeckId: "signal" }),
+      context({ defaultDeckId: "signal" }),
     );
 
     expect(tile.key).toBe("signal");
@@ -80,7 +79,7 @@ describe("preBattleDeckTile", () => {
     expect(tile.coverImageUrl).toBe(
       CATALOG.get(RECORD.extra[0]!)?.imageUrl ?? null,
     );
-    expect(tile.favourite).toBe(true);
+    expect("favourite" in tile).toBe(false);
     expect(tile.isDefault).toBe(true);
     expect(tile.legal).toBe(true);
     expect(tile.blockReason).toBeNull();

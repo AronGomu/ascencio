@@ -4,8 +4,8 @@
    load rolls all three back together (ADR-049).
 
    What describes an editing session rather than a save — the last-opened deck,
-   the favourites, the autosave log and each deck's undo history — lives in this
-   closure and dies with it. Persisting any of it would grow every snapshot with
+   the autosave log and each deck's undo history — lives in this closure and
+   dies with it. Persisting any of it would grow every snapshot with
    state the player never asked to keep, and per instance rather than per module
    so two contexts cannot inherit each other's session. */
 
@@ -50,7 +50,6 @@ export function createStoryDeckRepository({
 }: StoryDeckRepositoryDeps): DeckRepository {
   const histories = new Map<DeckId, DeckHistory>();
   const autosaves: DeckAutosaveRecord[] = [];
-  const favourites = new Set<DeckId>();
   let lastOpened: DeckId | null = null;
 
   function find(id: DeckId): DeckRecord | undefined {
@@ -195,7 +194,6 @@ export function createStoryDeckRepository({
          once the write landed, so a refused delete leaves the session pointing
          at a deck the save still has. */
       histories.delete(id);
-      favourites.delete(id);
       if (lastOpened === id) lastOpened = null;
     },
 
@@ -231,22 +229,6 @@ export function createStoryDeckRepository({
       await commit(
         { type: "deck-set-default", id },
         (state) => state.defaultDeckId === id,
-      );
-    },
-
-    async setFavourite(id, favourite) {
-      if (favourite && find(id) === undefined)
-        throw new DeckStorageError("Cannot favourite a missing deck");
-      if (favourite) favourites.add(id);
-      else favourites.delete(id);
-    },
-
-    listFavourites() {
-      const { decks } = readState();
-      return Promise.resolve(
-        Object.freeze(
-          [...favourites].filter((id) => decks.some((deck) => deck.id === id)),
-        ),
       );
     },
 

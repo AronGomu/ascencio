@@ -52,11 +52,6 @@ const NO_DEFAULT_DECK = {
   setDefaultDeck: async () => undefined,
 } satisfies Pick<DeckRepository, "getDefaultDeck" | "setDefaultDeck">;
 
-const NO_FAVOURITES = {
-  listFavourites: async (): Promise<readonly DeckId[]> => [],
-  setFavourite: async () => undefined,
-} satisfies Pick<DeckRepository, "listFavourites" | "setFavourite">;
-
 describe("deck autosave controller", () => {
   it("keeps local edits visible after failure then retries autosave", async () => {
     let stored: StoredDeck | null = null;
@@ -95,7 +90,6 @@ describe("deck autosave controller", () => {
       },
       ...NO_AUTOSAVE_LOG,
       ...NO_DEFAULT_DECK,
-      ...NO_FAVOURITES,
     };
     const controller = new DeckBuilderController(
       repository,
@@ -162,7 +156,6 @@ describe("deck autosave controller", () => {
       clearLastOpened: async () => undefined,
       ...NO_AUTOSAVE_LOG,
       ...NO_DEFAULT_DECK,
-      ...NO_FAVOURITES,
     };
     const controller = new DeckBuilderController(
       repository,
@@ -205,7 +198,6 @@ describe("deck autosave controller", () => {
       clearLastOpened: async () => undefined,
       ...NO_AUTOSAVE_LOG,
       ...NO_DEFAULT_DECK,
-      ...NO_FAVOURITES,
     };
     const controller = new DeckBuilderController(
       repository,

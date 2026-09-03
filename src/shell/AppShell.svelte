@@ -292,7 +292,7 @@
   /* Which world the mounted editor writes into, and the world it was bound for.
      Held apart so moving between a library and one of its decks keeps the one
      binding: rebuilding it would drop the editing session the story adapter
-     holds in that closure — its favourites, its undo log, its last-opened deck.
+     holds in that closure — its undo log and last-opened deck.
 
      Free play is a value, so the editor is bound before the first paint. A save
      has to be read first, and until it answers the region shows nothing rather

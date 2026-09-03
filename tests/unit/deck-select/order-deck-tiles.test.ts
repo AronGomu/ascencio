@@ -16,7 +16,6 @@ function tile(overrides: Partial<DeckTileModel> = {}): DeckTileModel {
     blockReason: null,
     bundled: false,
     lockedBy: null,
-    favourite: false,
     isDefault: false,
     deletable: true,
     updatedAt: "2026-01-01T00:00:00.000Z",
@@ -30,7 +29,6 @@ describe("orderDeckTiles", () => {
       key: "blocked",
       legal: false,
       blockReason: "Too few cards",
-      favourite: true,
       isDefault: true,
     });
     const plain = tile({ key: "plain" });

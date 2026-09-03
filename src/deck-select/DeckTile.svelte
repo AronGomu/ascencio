@@ -8,13 +8,10 @@
   export let selected = false;
   /** "Yours" badge while filling the opponent seat. */
   export let yours = false;
-  /** Hide favourite star in seat-card contexts. */
-  export let showFavourite = true;
   export let showMenu = true;
   export let disabled = false;
   export let onpress: () => void = () => undefined;
   export let ondblpress: () => void = () => undefined;
-  export let onfavourite: (favourite: boolean) => void = () => undefined;
   /** Kebab pressed; anchor element passed so the menu (T13) can position. */
   export let onmenu: (anchor: HTMLElement) => void = () => undefined;
   /** Identity every `data-cy` here is built from; null uses the deck's key.
@@ -141,20 +138,6 @@
       class="corner star"
       aria-label={`Default deck: ${tile.name}`}
       data-cy={`deck-tile-default-star-${cyId}`}>★</span
-    >
-  {:else if showFavourite}
-    <!-- Its own button outside the press surface, so the star stays reachable
-         by keyboard and a press on it never picks the deck. -->
-    <button
-      type="button"
-      class="corner star"
-      aria-pressed={tile.favourite}
-      aria-label={`Favourite ${tile.name}`}
-      onclick={(event) => {
-        event.stopPropagation();
-        onfavourite(!tile.favourite);
-      }}
-      data-cy={`deck-tile-fav-${cyId}`}>{tile.favourite ? "★" : "☆"}</button
     >
   {/if}
 
@@ -340,16 +323,7 @@
     left: var(--space-2);
   }
 
-  button.star {
-    top: auto;
-    right: var(--space-2);
-    bottom: calc(var(--space-2) + var(--corner-size) + var(--space-2));
-    left: auto;
-    cursor: pointer;
-  }
-
-  .star[aria-pressed="true"],
-  .star:not(button) {
+  .star {
     color: var(--selected);
   }
 

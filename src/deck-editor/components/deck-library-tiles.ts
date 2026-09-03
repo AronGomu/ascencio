@@ -7,12 +7,9 @@ import type {
 import type { DeckTileModel } from "../../deck-select/index.ts";
 import { deckCoverImageUrl } from "../../decks/deck-cover.ts";
 
-/** Which decks the scope has singled out. Neither is a property of the stored
-    record — the controller reads them from their own preference rows — so the
-    host hands them over rather than the mapping digging for them. */
+/** Default mark is stored separately from deck records, so host supplies it. */
 export interface DeckLibraryMarks {
   readonly defaultDeckId: DeckId | null;
-  readonly favouriteDeckIds: readonly DeckId[];
 }
 
 /** Why the deck cannot be fielded, named after the limit that binds. A deck
@@ -40,7 +37,6 @@ export function deckLibraryTiles(
   catalog: ReadonlyMap<number, DeckBuilderCardView>,
   marks: DeckLibraryMarks,
 ): readonly DeckTileModel[] {
-  const favourites = new Set(marks.favouriteDeckIds);
   return Object.freeze(
     decks.map((deck) => {
       const legal = deck.validation.status !== "errors";
@@ -64,7 +60,6 @@ export function deckLibraryTiles(
            with the app, none belongs to an AI, and all of them can go. */
         bundled: false,
         lockedBy: null,
-        favourite: favourites.has(deck.id),
         isDefault: deck.id === marks.defaultDeckId,
         deletable: true,
         updatedAt: deck.updatedAt,

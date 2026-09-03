@@ -13,7 +13,6 @@ describe("story deck commands", () => {
     const initial = createInitialStoryState();
     expect(initial.decks).toEqual([]);
     expect(initial.defaultDeckId).toBeNull();
-    expect(initial.favouriteDeckIds).toEqual([]);
   });
 
   it("deck-create appends a deck", () => {
@@ -144,88 +143,6 @@ describe("story deck commands", () => {
     expect(
       reduceStory(state, { type: "deck-set-default", id: null }).defaultDeckId,
     ).toBeNull();
-  });
-
-  /* The star writes into the save rather than onto the deck record, for the
-     same reason the default does: a favourite is one save's opinion of one
-     save's deck, and loading another save has to roll it back with everything
-     else (ADR-049). */
-  it("deck-set-favourite toggles an id on and off", () => {
-    const created = reduceStory(createInitialStoryState(), {
-      type: "deck-create",
-      deck: storyDeck("alpha"),
-    });
-    const starred = reduceStory(created, {
-      type: "deck-set-favourite",
-      id: "alpha",
-      favourite: true,
-    });
-    expect(starred.favouriteDeckIds).toEqual(["alpha"]);
-    expect(created.favouriteDeckIds).toEqual([]);
-    expect(
-      reduceStory(starred, {
-        type: "deck-set-favourite",
-        id: "alpha",
-        favourite: false,
-      }).favouriteDeckIds,
-    ).toEqual([]);
-  });
-
-  /* A favourite naming a deck this save does not hold is a star nothing can
-     render and no later delete can prune, so an unknown id changes nothing in
-     either direction — the guard `deck-save` applies to the same problem. */
-  it("deck-set-favourite refuses an unknown id", () => {
-    const state = reduceStory(createInitialStoryState(), {
-      type: "deck-create",
-      deck: storyDeck("alpha"),
-    });
-    for (const favourite of [true, false])
-      expect(
-        reduceStory(state, {
-          type: "deck-set-favourite",
-          id: "ghost",
-          favourite,
-        }),
-      ).toBe(state);
-  });
-
-  /* The star is a set, not a counter: a second click on an already-starred
-     deck must not list it twice, and unstarring one that is not starred must
-     not rewrite the list. */
-  it("deck-set-favourite is idempotent in both directions", () => {
-    const created = reduceStory(createInitialStoryState(), {
-      type: "deck-create",
-      deck: storyDeck("alpha"),
-    });
-    const star = {
-      type: "deck-set-favourite",
-      id: "alpha",
-      favourite: true,
-    } as const;
-    const starred = reduceStory(created, star);
-    expect(reduceStory(starred, star)).toBe(starred);
-    expect(starred.favouriteDeckIds).toEqual(["alpha"]);
-    expect(reduceStory(created, { ...star, favourite: false })).toBe(created);
-  });
-
-  /* The other half of the no-dangling-favourite rule: refusing to star a deck
-     that is gone is worth nothing if deleting a starred deck leaves the star
-     behind. */
-  it("deck-delete prunes the deleted deck's favourite", () => {
-    let state = createInitialStoryState();
-    for (const id of ["alpha", "beta"])
-      state = reduceStory(state, { type: "deck-create", deck: storyDeck(id) });
-    for (const id of ["alpha", "beta"])
-      state = reduceStory(state, {
-        type: "deck-set-favourite",
-        id,
-        favourite: true,
-      });
-    expect(state.favouriteDeckIds).toEqual(["alpha", "beta"]);
-
-    const deleted = reduceStory(state, { type: "deck-delete", id: "alpha" });
-    expect(deleted.decks.map(({ id }) => id)).toEqual(["beta"]);
-    expect(deleted.favouriteDeckIds).toEqual(["beta"]);
   });
 
   /* The deck list belongs to the save, so every other command has to carry it

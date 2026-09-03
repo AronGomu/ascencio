@@ -279,7 +279,7 @@ test("the deck route deep-links, survives a reload and answers Back", async ({
   await expect(page.locator('[data-cy="deck-not-found"]')).toBeVisible();
   await page.locator('[data-cy="deck-not-found-back"]').click();
   await expect(page.locator('[data-cy="deck-library"]')).toBeVisible();
-  /* Anchored, because the row's favourite toggle is named after the deck too. */
+  /* Anchored because tile press names deck plus its counts and metadata. */
   await expect(page.getByRole("button", { name: /^Deep Link/ })).toBeVisible();
 });
 
@@ -446,7 +446,7 @@ test("a prototype deck database is migrated on first load", async ({
   }, LEGACY_DECK_DATABASE_NAME);
 
   await page.reload();
-  /* Anchored, because the row's favourite toggle is named after the deck too. */
+  /* Anchored because tile press names deck plus its counts and metadata. */
   const migrated = page.getByRole("button", { name: /^Prototype Survivor/ });
   await expect(migrated).toBeVisible();
 

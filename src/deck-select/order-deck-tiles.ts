@@ -5,14 +5,11 @@ export function orderDeckTiles(
   sort: DeckSort,
 ): readonly DeckTileModel[] {
   /* An illegal deck sinks below every legal one whatever else it is flagged —
-     the player cannot duel with it, so no favourite or default mark may lift
-     it back up. Inside each half the default leads, then favourites, then the
-     rest. */
+     the player cannot duel with it, so the default mark cannot lift it back up.
+     Inside each half the default leads, then the selected sort applies. */
   function rank(tile: DeckTileModel): number {
-    const group = tile.legal ? 0 : 3;
-    if (tile.isDefault) return group;
-    if (tile.favourite) return group + 1;
-    return group + 2;
+    const group = tile.legal ? 0 : 2;
+    return tile.isDefault ? group : group + 1;
   }
 
   function compare(a: DeckTileModel, b: DeckTileModel): number {

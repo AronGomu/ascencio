@@ -94,7 +94,6 @@
     saveState: "idle",
     message: null,
     defaultDeckId: null,
-    favouriteDeckIds: [],
   };
   let controller: DeckBuilderController | null = null;
   let showLibraryImport = false;
@@ -333,8 +332,6 @@
     {oncollection}
     onback={onexit}
     defaultDeckId={state.defaultDeckId}
-    favouriteDeckIds={state.favouriteDeckIds}
-    onfavourite={(id) => void controller?.toggleFavourite(id)}
     onrename={(id, name) => void controller?.renameDeck(id, name)}
     onduplicate={(id) => void controller?.duplicate(id)}
     ondelete={(id, revision) => void controller?.deleteDeck(id, revision)}

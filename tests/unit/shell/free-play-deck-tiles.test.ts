@@ -11,7 +11,7 @@ import { freePlayDeckTile } from "../../../src/shell/screens/free-play-deck-tile
 
 /* How free play describes one deck to the shared selection screen. Pure, so it
    is tested against real bundled decks rather than through the screen: the
-   cover rule and the favourite/default flags are the whole of the mapping. */
+   cover rule and default flag are the whole of the mapping. */
 
 const SHADDOLL = presetSelectableDecks(DECK_CATALOG).find(
   (deck) => deck.key === "preset:shaddoll",
@@ -62,8 +62,6 @@ function context(
 ) {
   return {
     catalog: catalogOf(),
-    favouriteDeckIds: [],
-    presetFavouriteIds: [],
     defaultDeckId: null,
     aiOwnerByDeckKey: new Map<string, string>(),
     ...overrides,
@@ -104,23 +102,12 @@ describe("freePlayDeckTile", () => {
     expect(tile.updatedAt).toBeNull();
   });
 
-  it("stars a bundled deck from the settings favourites", () => {
-    expect(freePlayDeckTile(SHADDOLL, context()).favourite).toBe(false);
-    expect(
-      freePlayDeckTile(
-        SHADDOLL,
-        context({ presetFavouriteIds: ["preset:shaddoll"] }),
-      ).favourite,
-    ).toBe(true);
-  });
-
   it("describes a deck the player built", () => {
     const deck = localDeck({ main: [11, 12], extra: [], side: [13] });
     const tile = freePlayDeckTile(
       deck,
       context({
         catalog: catalogOf(11),
-        favouriteDeckIds: [LOCAL_DECK_ID],
         defaultDeckId: LOCAL_DECK_ID,
       }),
     );
@@ -131,7 +118,7 @@ describe("freePlayDeckTile", () => {
     expect(tile.meta).toBe(
       `Updated ${new Date(UPDATED_AT).toLocaleDateString()}`,
     );
-    expect(tile.favourite).toBe(true);
+    expect("favourite" in tile).toBe(false);
     expect(tile.isDefault).toBe(true);
     expect(tile.deletable).toBe(true);
     expect(tile.lockedBy).toBeNull();
@@ -141,18 +128,13 @@ describe("freePlayDeckTile", () => {
     expect(tile.counts).toEqual({ main: 2, extra: 0, side: 1 });
   });
 
-  /* The repository's favourites and default are deck ids, and a key carries
-     the revision the deck had, so another deck's id must not match this one. */
-  it("keeps another deck's favourite and default off this tile", () => {
+  /* A key carries the deck revision, so default comparison uses deck id. */
+  it("keeps another deck's default off this tile", () => {
     const tile = freePlayDeckTile(
       localDeck(),
-      context({
-        favouriteDeckIds: [deckId("other-deck")],
-        defaultDeckId: deckId("other-deck"),
-      }),
+      context({ defaultDeckId: deckId("other-deck") }),
     );
 
-    expect(tile.favourite).toBe(false);
     expect(tile.isDefault).toBe(false);
   });
 

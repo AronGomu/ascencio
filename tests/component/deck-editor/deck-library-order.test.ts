@@ -13,7 +13,6 @@ import { createBlankDeck } from "../../../src/decks/deck-model.ts";
 import { emptyDeckHistory } from "../../../src/decks/deck-history.ts";
 import { DECK_DATABASE_NAME } from "../../../src/decks/deck-database.ts";
 import { IndexedDbDeckRepository } from "../../../src/decks/indexeddb-deck-repository.ts";
-import { STARTER_DECK_NAME } from "../../../src/decks/starter-deck.ts";
 import { prototypeCatalogMap } from "../../fixtures/deck-editor.ts";
 import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts";
 
@@ -63,96 +62,37 @@ function renderLibrary(props: Record<string, unknown> = {}) {
 
 describe("the library renders decks in order", () => {
   /* `Delta` is the stalest deck by a year, so it can only lead by being the
-     default; `Charlie` is the stalest of the rest, so it can only sit second
-     by being a favourite. Neither position is reachable from `updatedAt`. */
-  it("the default leads, then favourites, then the rest by last modified", () => {
-    renderLibrary({
-      defaultDeckId: DEFAULT.id,
-      favouriteDeckIds: [OLDEST.id],
-    });
-    expect(renderedNames()).toEqual(["Delta", "Charlie", "Bravo", "Alpha"]);
+     default. Every remaining deck follows `updatedAt`. */
+  it("the default leads, then the rest sort by last modified", () => {
+    renderLibrary({ defaultDeckId: DEFAULT.id });
+    expect(renderedNames()).toEqual(["Delta", "Bravo", "Alpha", "Charlie"]);
   });
 
-  it("without a default or a favourite the rest still sort by last modified", () => {
+  it("without a default the decks sort by last modified", () => {
     renderLibrary();
     expect(renderedNames()).toEqual(["Bravo", "Alpha", "Charlie", "Delta"]);
   });
 
   /* The sort control is wired to the rendered tiles and not only present: the
-     alphabetical order is a different permutation from every other case here,
-     and the default and the favourite keep their places above it. */
+     alphabetical order differs, while the default keeps its first place. */
   it("choosing Name re-sorts the tiles the library renders", async () => {
-    renderLibrary({
-      defaultDeckId: DEFAULT.id,
-      favouriteDeckIds: [OLDEST.id],
-    });
-    expect(renderedNames()).toEqual(["Delta", "Charlie", "Bravo", "Alpha"]);
+    renderLibrary({ defaultDeckId: DEFAULT.id });
+    expect(renderedNames()).toEqual(["Delta", "Bravo", "Alpha", "Charlie"]);
 
     await userEvent
       .setup()
       .selectOptions(screen.getByRole("combobox", { name: "Sort" }), "name");
 
-    expect(renderedNames()).toEqual(["Delta", "Charlie", "Alpha", "Bravo"]);
+    expect(renderedNames()).toEqual(["Delta", "Alpha", "Bravo", "Charlie"]);
   });
 
   it("a filter narrows the tiles but keeps the order", async () => {
-    renderLibrary({ favouriteDeckIds: [OLDEST.id] });
+    renderLibrary();
     await userEvent
       .setup()
       .type(screen.getByRole("searchbox", { name: "Filter" }), "l");
 
-    expect(renderedNames()).toEqual(["Charlie", "Alpha", "Delta"]);
-  });
-});
-
-describe("the app hands the library its ordering inputs", () => {
-  /* The component cases above take `defaultDeckId` and `favouriteDeckIds` as
-     props, which proves the ordering and not the plumbing. This drives the
-     real star button and watches a tile move, so a `DeckEditorApp` that stopped
-     passing either one down fails here. */
-  it("starring a deck lifts its tile above the decks it was below", async () => {
-    const repository = await IndexedDbDeckRepository.open();
-    for (const [id, name] of [
-      ["d-alpha", "Alpha Deck"],
-      ["d-zulu", "Zulu Deck"],
-    ] as const)
-      await repository.create(
-        deck(id, name, "2026-01-01T00:00:00.000Z"),
-        emptyDeckHistory(),
-      );
-    repository.close();
-
-    render(DeckEditorApp, { deckId: null, onnavigate: vi.fn() });
-    await waitFor(() => expect(renderedNames()).toHaveLength(3));
-    /* The starter deck is seeded on mount and takes the default slot; the two
-       seeded decks land below it in whatever order `updatedAt` gives them,
-       which the repository stamps itself. The claim under test is the move, so
-       the deck at the bottom is the one that gets starred. */
-    const before = renderedNames();
-    expect(before[0]).toBe(STARTER_DECK_NAME);
-    const last = before[2]!;
-
-    const tile = [
-      ...document.querySelectorAll(
-        '[data-cy="deck-select-grid"] > [data-cy^="deck-tile-"]',
-      ),
-    ].find(
-      (candidate) =>
-        candidate.querySelector('[data-cy^="deck-tile-name-"]')?.textContent ===
-        last,
-    )!;
-    const star = tile.querySelector<HTMLButtonElement>(
-      '[data-cy^="deck-tile-fav-"]',
-    );
-    expect(
-      star,
-      `the ${last} tile should carry a favourite toggle`,
-    ).not.toBeNull();
-    star!.click();
-
-    await waitFor(() =>
-      expect(renderedNames()).toEqual([STARTER_DECK_NAME, last, before[1]]),
-    );
+    expect(renderedNames()).toEqual(["Alpha", "Charlie", "Delta"]);
   });
 });
 

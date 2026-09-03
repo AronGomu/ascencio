@@ -94,17 +94,11 @@ describe("DeckTile", () => {
     expect(ondblpress).toHaveBeenCalledTimes(1);
   });
 
-  it("favourite star toggles without pressing the tile", async () => {
-    const onfavourite = vi.fn();
-    const onpress = vi.fn();
-    render(DeckTile, { tile: tile(), onfavourite, onpress });
+  it("renders no favourite control", () => {
+    render(DeckTile, { tile: tile() });
 
-    const star = cy("deck-tile-fav-k1");
-    expect(star.getAttribute("aria-pressed")).toBe("false");
-    await userEvent.setup().click(star);
-
-    expect(onfavourite).toHaveBeenCalledWith(true);
-    expect(onpress).not.toHaveBeenCalled();
+    expect(find("deck-tile-fav-k1")).toBeNull();
+    expect(document.querySelector('[aria-label^="Favourite "]')).toBeNull();
   });
 
   it("fixes the body to the action stack with a medium gap", () => {
@@ -117,9 +111,6 @@ describe("DeckTile", () => {
     );
     expect(source).toMatch(
       /\.body\s*\{[^}]*width:\s*var\(--deck-tile-body-width\);[^}]*height:\s*var\(--deck-tile-body-height\)/s,
-    );
-    expect(source).toMatch(
-      /button\.star\s*\{[^}]*bottom:\s*calc\(var\(--space-2\) \+ var\(--corner-size\) \+ var\(--space-2\)\)/s,
     );
   });
 
@@ -191,16 +182,10 @@ describe("DeckTile", () => {
     ).toEqual([]);
   });
 
-  it("shows default star instead of favourite toggle", () => {
-    render(DeckTile, { tile: tile({ isDefault: true, favourite: true }) });
+  it("shows the default star as the sole mark", () => {
+    render(DeckTile, { tile: tile({ isDefault: true }) });
     expect(cy("deck-tile-default-star-k1").textContent).toBe("★");
     expect(find("deck-tile-fav-k1")).toBeNull();
-  });
-
-  it("no favourite star when showFavourite false", () => {
-    render(DeckTile, { tile: tile(), showFavourite: false });
-    expect(find("deck-tile-fav-k1")).toBeNull();
-    expect(find("deck-tile-menu-k1")).not.toBeNull();
   });
 
   it("cyKey renames every value so one deck can render twice", () => {

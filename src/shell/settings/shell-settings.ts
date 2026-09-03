@@ -26,9 +26,6 @@ export interface ShellSettings {
       persona. An id rather than a persona: which personas exist is the
       roster's question, and a renamed one must read as "none remembered". */
   readonly freePlayOpponentId: string | null;
-  /** `SelectableDeck` keys of the starred preset decks. Preset favourites live
-      here because `DeckRepository.setFavourite` only covers local decks. */
-  readonly freePlayPresetFavouriteIds: readonly string[];
 }
 
 const DEFAULT_DISPLAY: PersistedDisplaySettings = Object.freeze({
@@ -44,7 +41,6 @@ export const DEFAULT_SHELL_SETTINGS: ShellSettings = Object.freeze({
   display: DEFAULT_DISPLAY,
   freePlayPairing: null,
   freePlayOpponentId: null,
-  freePlayPresetFavouriteIds: Object.freeze([]),
 });
 
 /** Reads v3, falling back to a one-way migration of the v2 payload so an
@@ -83,7 +79,6 @@ export function migrateFromV2(raw: string | null): ShellSettings {
     display: display(parsed.settings),
     freePlayPairing: null,
     freePlayOpponentId: null,
-    freePlayPresetFavouriteIds: [],
   });
 }
 
@@ -97,7 +92,6 @@ function parseV3(serialized: string): ShellSettings {
     display: display(parsed.display),
     freePlayPairing: freePlayPairing(parsed.freePlayPairing),
     freePlayOpponentId: opponentId(parsed.freePlayOpponentId),
-    freePlayPresetFavouriteIds: deckKeys(parsed.freePlayPresetFavouriteIds),
   });
 }
 
@@ -109,7 +103,6 @@ function freezeSettings(value: ShellSettings): ShellSettings {
       value.freePlayPairing === null
         ? null
         : Object.freeze(value.freePlayPairing),
-    freePlayPresetFavouriteIds: Object.freeze(value.freePlayPresetFavouriteIds),
   });
 }
 
@@ -118,15 +111,6 @@ function freezeSettings(value: ShellSettings): ShellSettings {
    reaches it. */
 function opponentId(value: unknown): string | null {
   return typeof value === "string" && value !== "" ? value : null;
-}
-
-/* A star on a deck that is gone costs nothing, so unknown keys are kept; a
-   blob that is not a list of keys is no favourites at all. */
-function deckKeys(value: unknown): readonly string[] {
-  if (!Array.isArray(value)) return [];
-  return value.filter(
-    (key): key is string => typeof key === "string" && key !== "",
-  );
 }
 
 /* A blob written by a build that spelled the pairing differently is no pairing

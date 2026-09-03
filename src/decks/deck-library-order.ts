@@ -4,7 +4,6 @@ export type DeckLibrarySort = "modified" | "name";
 
 export interface DeckLibraryOrderOptions {
   readonly defaultDeckId: DeckId | null;
-  readonly favouriteDeckIds: readonly DeckId[];
   readonly sort: DeckLibrarySort;
 }
 
@@ -12,13 +11,10 @@ export function orderDeckLibrary(
   decks: readonly DeckRecord[],
   options: DeckLibraryOrderOptions,
 ): readonly DeckRecord[] {
-  const { defaultDeckId, favouriteDeckIds, sort } = options;
-  const favourites = new Set(favouriteDeckIds);
+  const { defaultDeckId, sort } = options;
 
-  function rank(deck: DeckRecord): 0 | 1 | 2 {
-    if (deck.id === defaultDeckId) return 0;
-    if (favourites.has(deck.id)) return 1;
-    return 2;
+  function rank(deck: DeckRecord): 0 | 1 {
+    return deck.id === defaultDeckId ? 0 : 1;
   }
 
   return Object.freeze(

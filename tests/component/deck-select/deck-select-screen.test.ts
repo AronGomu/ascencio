@@ -46,7 +46,6 @@ function handlers() {
     onrename: vi.fn(),
     onduplicate: vi.fn(),
     ondelete: vi.fn(),
-    onfavourite: vi.fn(),
   };
 }
 
@@ -322,15 +321,6 @@ describe("DeckSelectScreen", () => {
        stays put rather than wrapping onto the illegal tail. */
     await fireEvent.keyDown(window, { key: "ArrowUp" });
     expect(values.onselect).toHaveBeenCalledTimes(1);
-  });
-
-  it("f toggles favourite of selection", async () => {
-    const values = handlers();
-    render(DeckSelectScreen, props({ ...values, selectedKey: "k1" }));
-
-    await fireEvent.keyDown(window, { key: "f" });
-
-    expect(values.onfavourite).toHaveBeenCalledWith("k1", true);
   });
 
   it("opponent seat mode paints selected grid tile orange and badges yours", () => {

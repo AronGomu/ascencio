@@ -20,8 +20,8 @@ afterEach(async () => {
   await deleteDB(DECK_DATABASE_NAME);
 });
 
-describe("starring a deck", () => {
-  it("calls onfavourite with the new state when the star button is clicked", async () => {
+describe("deck library marks", () => {
+  it("exposes no favourite repository or controller API", async () => {
     const repository = await IndexedDbDeckRepository.open();
     const controller = new DeckBuilderController(
       repository,
@@ -29,47 +29,21 @@ describe("starring a deck", () => {
       PROTOTYPE_RULESET,
     );
     await controller.initialize();
-    await controller.createDeck("Star Target");
-    repository.close();
 
+    expect("listFavourites" in repository).toBe(false);
+    expect("setFavourite" in repository).toBe(false);
+    expect("toggleFavourite" in controller).toBe(false);
+    expect("favouriteDeckIds" in get(controller)).toBe(false);
+    repository.close();
+  });
+
+  it("renders no favourite controls", async () => {
     render(DeckEditorApp, { deckId: null, onnavigate: vi.fn() });
     await waitFor(() =>
       expect(document.querySelector('[data-cy="deck-library"]')).not.toBeNull(),
     );
 
-    const star = document.querySelector(
-      '[data-cy^="deck-tile-fav-"]',
-    ) as HTMLButtonElement | null;
-    expect(star).not.toBeNull();
-    expect(star!.getAttribute("aria-pressed")).toBe("false");
-
-    star!.click();
-    await waitFor(() =>
-      expect(
-        document
-          .querySelector('[data-cy^="deck-tile-fav-"]')
-          ?.getAttribute("aria-pressed"),
-      ).toBe("true"),
-    );
-  });
-
-  it("toggling favourite persists and toggleFavourite reflects in controller state", async () => {
-    const repository = await IndexedDbDeckRepository.open();
-    const controller = new DeckBuilderController(
-      repository,
-      prototypeCatalogMap,
-      PROTOTYPE_RULESET,
-    );
-    await controller.initialize();
-    await controller.createDeck("Star Test");
-    const { id } = get(controller).current!.deck;
-    expect(get(controller).favouriteDeckIds).toEqual([]);
-
-    await controller.toggleFavourite(id);
-    expect(get(controller).favouriteDeckIds).toContain(id);
-
-    await controller.toggleFavourite(id);
-    expect(get(controller).favouriteDeckIds).not.toContain(id);
-    repository.close();
+    expect(document.querySelector('[data-cy^="deck-tile-fav-"]')).toBeNull();
+    expect(document.querySelector('[aria-label^="Favourite "]')).toBeNull();
   });
 });

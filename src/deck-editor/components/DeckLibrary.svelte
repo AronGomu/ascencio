@@ -32,9 +32,6 @@
   export let onback: () => void = () => undefined;
   /** Which tile wears the badge; the controller owns the value, not the click. */
   export let defaultDeckId: DeckId | null = null;
-  export let favouriteDeckIds: readonly DeckId[] = [];
-  export let onfavourite: (id: DeckId, favourite: boolean) => void = () =>
-    undefined;
   /* The three deck operations the grid's kebab and the screen's footer both
      reach. The screen owns the menu and the dialogs; performing the operation
      is the host's, so each one arrives here as a decision already confirmed. */
@@ -68,10 +65,7 @@
       createName.trim().length > 0 &&
       deck.name.toLocaleLowerCase() === createName.trim().toLocaleLowerCase(),
   );
-  $: tiles = deckLibraryTiles(decks, catalog, {
-    defaultDeckId,
-    favouriteDeckIds,
-  });
+  $: tiles = deckLibraryTiles(decks, catalog, { defaultDeckId });
 
   /* The screen names a deck by the key it was given, which is the deck's id;
      the record behind it carries the revision a delete has to quote. */
@@ -217,8 +211,6 @@
         onduplicate={(key) => forRecord(key, (deck) => onduplicate(deck.id))}
         ondelete={(key) =>
           forRecord(key, (deck) => ondelete(deck.id, deck.revision))}
-        onfavourite={(key, favourite) =>
-          forRecord(key, (deck) => onfavourite(deck.id, favourite))}
       />
     </div>
   {/if}

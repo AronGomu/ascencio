@@ -19,7 +19,6 @@ import type { PreBattleDeckOption } from "./pre-battle-decks.ts";
 /** What the briefing knows about the save beyond the one deck being drawn. */
 export interface PreBattleTileContext {
   readonly catalog: ReadonlyMap<number, DeckBuilderCardView>;
-  readonly favouriteDeckIds: readonly string[];
   readonly defaultDeckId: string | null;
 }
 
@@ -46,7 +45,6 @@ export function preBattleDeckTile(
     blockReason: option.issue,
     bundled: false,
     lockedBy: null,
-    favourite: context.favouriteDeckIds.includes(option.id),
     isDefault: option.id === context.defaultDeckId,
     /* Deleting a save's deck is the story deck editor's, reached from this
        screen rather than performed on it. */

@@ -603,7 +603,6 @@ describe("data-cy uniqueness in deck select rendered document", () => {
       blockReason: null,
       bundled: false,
       lockedBy: null,
-      favourite: false,
       isDefault: false,
       deletable: true,
       updatedAt: "2026-08-20T10:00:00.000Z",

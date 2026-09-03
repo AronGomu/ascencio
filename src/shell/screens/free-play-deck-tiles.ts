@@ -3,16 +3,10 @@ import type { DeckTileModel } from "../../deck-select/index.ts";
 import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
 import { deckCoverImageUrl } from "../../decks/deck-cover.ts";
 
-/** What free play knows about its decks beyond the decks themselves: the art
-    a cover is drawn from, the stars kept in two places, and which AI owns
-    which bundled deck. */
+/** What free play knows about its decks beyond the decks themselves: cover
+    art, default deck, and which AI owns each bundled deck. */
 export interface FreePlayDeckTileContext {
   readonly catalog: ReadonlyMap<number, DeckBuilderCardView>;
-  /** Local favourites, as the deck ids `DeckRepository.listFavourites` returns. */
-  readonly favouriteDeckIds: readonly string[];
-  /** Bundled favourites, as the full `preset:` keys the shell settings hold —
-      `DeckRepository.setFavourite` only covers decks the player built. */
-  readonly presetFavouriteIds: readonly string[];
   /** The repository's default deck id, or `null` when none is set. */
   readonly defaultDeckId: string | null;
   /** Deck key → the AI persona that owns it, from `FREE_PLAY_OPPONENTS`. */
@@ -65,10 +59,6 @@ export function freePlayDeckTile(
     blockReason: null,
     bundled: deck.source === "preset",
     lockedBy: context.aiOwnerByDeckKey.get(deck.key) ?? null,
-    favourite:
-      localId === null
-        ? context.presetFavouriteIds.includes(deck.key)
-        : context.favouriteDeckIds.includes(localId),
     isDefault: localId !== null && localId === context.defaultDeckId,
     deletable: deck.source === "local",
     updatedAt: deck.updatedAt,

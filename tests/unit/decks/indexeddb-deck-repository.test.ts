@@ -522,48 +522,48 @@ describe("the default deck preference", () => {
   });
 });
 
-describe("the favourite decks preference", () => {
-  it("favourites persist and drop deleted decks", async () => {
-    const repo = await repository("deck-repo-favourites-round-trip");
-    const deckA = createBlankDeck("Alpha", catalog, PROTOTYPE_RULESET, {
-      id: "fav-a",
-    });
-    const deckB = createBlankDeck("Beta", catalog, PROTOTYPE_RULESET, {
-      id: "fav-b",
-    });
-    const createdA = await repo.create(deckA, emptyDeckHistory());
-    const createdB = await repo.create(deckB, emptyDeckHistory());
+describe("legacy favourite preference compatibility", () => {
+  it("exposes no favourite API", async () => {
+    const repo = await repository("deck-repo-no-favourite-api");
 
-    await repo.setFavourite(deckA.id, true);
-    await repo.setFavourite(deckB.id, true);
-    expect(await repo.listFavourites()).toEqual(
-      expect.arrayContaining([deckA.id, deckB.id]),
+    expect("listFavourites" in repo).toBe(false);
+    expect("setFavourite" in repo).toBe(false);
+    repo.close();
+  });
+
+  it("leaves the orphaned preference untouched", async () => {
+    const name = "deck-repo-orphan-favourite";
+    const repo = await repository(name);
+    repo.close();
+
+    const database = await openDeckDatabase(name, DECK_DATABASE_VERSION);
+    const transaction = database.transaction("preferences", "readwrite");
+    await new Promise<void>((resolve, reject) => {
+      transaction.objectStore("preferences").put({
+        key: "favourite-decks",
+        value: '["legacy"]',
+      });
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+    database.close();
+
+    const reopened = await IndexedDbDeckRepository.open(name);
+    await reopened.list();
+    reopened.close();
+
+    const check = await openDeckDatabase(name, DECK_DATABASE_VERSION);
+    const read = check
+      .transaction("preferences", "readonly")
+      .objectStore("preferences")
+      .get("favourite-decks");
+    const row = await new Promise<{ key: string; value: string } | undefined>(
+      (resolve, reject) => {
+        read.onsuccess = () => resolve(read.result);
+        read.onerror = () => reject(read.error);
+      },
     );
-
-    await repo.delete(deckB.id, createdB.deck.revision);
-    expect(await repo.listFavourites()).toEqual([createdA.deck.id]);
-    repo.close();
-  });
-
-  it("setFavourite refuses a missing deck", async () => {
-    const repo = await repository("deck-repo-favourites-missing");
-    await expect(
-      repo.setFavourite(deckId("absent"), true),
-    ).rejects.toBeInstanceOf(DeckStorageError);
-    expect(await repo.listFavourites()).toEqual([]);
-    repo.close();
-  });
-
-  it("unfavouring a deck removes it from the list", async () => {
-    const repo = await repository("deck-repo-favourites-remove");
-    const deck = createBlankDeck("Removable", catalog, PROTOTYPE_RULESET, {
-      id: "fav-remove",
-    });
-    await repo.create(deck, emptyDeckHistory());
-    await repo.setFavourite(deck.id, true);
-    expect(await repo.listFavourites()).toEqual([deck.id]);
-    await repo.setFavourite(deck.id, false);
-    expect(await repo.listFavourites()).toEqual([]);
-    repo.close();
+    expect(row?.value).toBe('["legacy"]');
+    check.close();
   });
 });

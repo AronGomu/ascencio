@@ -25,7 +25,6 @@
   /** The save's decks as records, for counts/cover/decklists; pairs with
       `decks` (verdicts) by id. */
   export let deckRecords: readonly StoryDeck[] = [];
-  export let favouriteDeckIds: readonly string[] = [];
   export let defaultDeckId: string | null = null;
   export let decksError: string | null = null;
   export let catalog: ReadonlyMap<number, DeckBuilderCardView> = new Map();
@@ -35,8 +34,6 @@
   export let onstart: () => void = () => undefined;
   export let onreturn: () => void = () => undefined;
   export let onselectdeck: (deckId: string) => void = () => undefined;
-  export let onfavourite: (deckId: string, favourite: boolean) => void = () =>
-    undefined;
   export let onretrydecks: () => void = () => undefined;
   /* Reported rather than linked. An anchor to `#/story/decks` changes the
      route from inside the story, which unmounts the domain with everything it
@@ -72,7 +69,6 @@
     decks?.map((option) =>
       preBattleDeckTile(option, recordById.get(option.id), {
         catalog,
-        favouriteDeckIds,
         defaultDeckId,
       }),
     ) ?? [];
@@ -111,7 +107,6 @@
     blockReason: null,
     bundled: true,
     lockedBy: null,
-    favourite: false,
     isDefault: false,
     deletable: false,
     updatedAt: null,
@@ -201,7 +196,6 @@
     {decklistFor}
     {cardImageFor}
     onselect={choose}
-    onfavourite={(key, favourite) => onfavourite(key, favourite)}
     onstart={start}
     onback={onreturn}
     onopen={() => void leave()}

@@ -3,7 +3,6 @@ import { deckLibraryTiles } from "../../../src/deck-editor/components/deck-libra
 import type { DeckBuilderCardView } from "../../../src/decks/catalog/ocg-card-mapper.ts";
 import {
   deckId,
-  type DeckId,
   type DeckRecord,
   type DeckValidationIssue,
 } from "../../../src/decks/deck-contracts.ts";
@@ -83,14 +82,11 @@ function record(overrides: Partial<DeckRecord> = {}): DeckRecord {
   };
 }
 
-const NO_MARKS = { defaultDeckId: null, favouriteDeckIds: [] } as const;
+const NO_MARKS = { defaultDeckId: null } as const;
 
 function tileOf(
   deck: DeckRecord,
-  marks: {
-    readonly defaultDeckId: DeckId | null;
-    readonly favouriteDeckIds: readonly DeckId[];
-  } = NO_MARKS,
+  marks: Parameters<typeof deckLibraryTiles>[2] = NO_MARKS,
 ) {
   return deckLibraryTiles([deck], CATALOG, marks)[0]!;
 }
@@ -228,17 +224,13 @@ describe("deckLibraryTiles", () => {
     ).toBe("Cards not owned");
   });
 
-  it("the default and the favourites are the host's marks, not the record's", () => {
+  it("the default is the host's mark, not the record's", () => {
     const plain = tileOf(record());
     expect(plain.isDefault).toBe(false);
-    expect(plain.favourite).toBe(false);
+    expect("favourite" in plain).toBe(false);
 
-    const marked = tileOf(record(), {
-      defaultDeckId: deckId("d1"),
-      favouriteDeckIds: [deckId("d1")],
-    });
+    const marked = tileOf(record(), { defaultDeckId: deckId("d1") });
     expect(marked.isDefault).toBe(true);
-    expect(marked.favourite).toBe(true);
   });
 
   /* Every deck in this library was built by the player in this library: none

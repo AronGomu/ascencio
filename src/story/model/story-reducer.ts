@@ -83,11 +83,6 @@ export type StoryCommand =
   | { readonly type: "deck-save"; readonly deck: StoryDeck }
   | { readonly type: "deck-delete"; readonly id: string }
   | { readonly type: "deck-set-default"; readonly id: string | null }
-  | {
-      readonly type: "deck-set-favourite";
-      readonly id: string;
-      readonly favourite: boolean;
-    }
   | { readonly type: "reset" };
 
 export function reduceStory(
@@ -392,12 +387,6 @@ export function reduceStory(
            next duel looking for it. */
         defaultDeckId:
           state.defaultDeckId === command.id ? null : state.defaultDeckId,
-        /* A favourite pointing at one would be a star no screen can draw and
-           no later command can clear — `deck-set-favourite` refuses the id it
-           would need to name. */
-        favouriteDeckIds: state.favouriteDeckIds.filter(
-          (id) => id !== command.id,
-        ),
       };
     }
     case "deck-set-default": {
@@ -405,21 +394,6 @@ export function reduceStory(
       return state.decks.some(({ id }) => id === command.id)
         ? { ...state, defaultDeckId: command.id }
         : state;
-    }
-    case "deck-set-favourite": {
-      /* An id this save does not hold is refused whichever way the command is
-         aimed: starring it would leave a favourite no screen can draw and no
-         delete can prune, and unstarring it has nothing to remove. */
-      if (!state.decks.some(({ id }) => id === command.id)) return state;
-      /* A set, not a counter — a second star must not list the deck twice. */
-      if (state.favouriteDeckIds.includes(command.id) === command.favourite)
-        return state;
-      return {
-        ...state,
-        favouriteDeckIds: command.favourite
-          ? [...state.favouriteDeckIds, command.id]
-          : state.favouriteDeckIds.filter((id) => id !== command.id),
-      };
     }
     case "reset":
       return createInitialStoryState();

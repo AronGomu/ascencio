@@ -28,7 +28,6 @@ export { DeckRevisionConflictError, DeckStorageError };
 
 const LAST_OPENED_KEY = "last-opened-deck";
 const DEFAULT_DECK_KEY = "default-deck";
-const FAVOURITE_DECKS_KEY = "favourite-decks";
 
 /* One migration per page load, shared by every caller: the deck editor and the
    admin console both open the repository and the copy must not run twice. A
@@ -338,66 +337,6 @@ export class IndexedDbDeckRepository implements DeckRepository {
     } catch (error) {
       await transaction.done.catch(() => undefined);
       throw storageError("Unable to read the default deck", error);
-    }
-  }
-
-  /** Favourites, pruned against existing decks. */
-  async listFavourites(): Promise<readonly DeckId[]> {
-    const transaction = this.#database.transaction(
-      ["decks", "preferences"],
-      "readonly",
-    );
-    try {
-      const row = await transaction
-        .objectStore("preferences")
-        .get(FAVOURITE_DECKS_KEY);
-      const ids = parseFavouritesJson(row?.value);
-      const kept: DeckId[] = [];
-      for (const id of ids) {
-        const exists =
-          (await transaction.objectStore("decks").get(id)) !== undefined;
-        if (exists) kept.push(deckId(id));
-      }
-      await transaction.done;
-      return Object.freeze(kept);
-    } catch (error) {
-      await transaction.done.catch(() => undefined);
-      throw storageError("Unable to read favourite decks", error);
-    }
-  }
-
-  async setFavourite(id: DeckId, favourite: boolean): Promise<void> {
-    const transaction = this.#database.transaction(
-      ["decks", "preferences"],
-      "readwrite",
-    );
-    try {
-      const deckExists =
-        (await transaction.objectStore("decks").get(id)) !== undefined;
-      if (!deckExists && favourite)
-        throw new DeckStorageError("Cannot favourite a missing deck");
-      const row = await transaction
-        .objectStore("preferences")
-        .get(FAVOURITE_DECKS_KEY);
-      const current = parseFavouritesJson(row?.value);
-      const next = favourite
-        ? current.includes(id)
-          ? current
-          : [...current, id]
-        : current.filter((v) => v !== id);
-      if (next.length === 0)
-        await transaction
-          .objectStore("preferences")
-          .delete(FAVOURITE_DECKS_KEY);
-      else
-        await transaction.objectStore("preferences").put({
-          key: FAVOURITE_DECKS_KEY,
-          value: JSON.stringify(next),
-        });
-      await transaction.done;
-    } catch (error) {
-      await transaction.done.catch(() => undefined);
-      throw storageError("Unable to save favourite deck", error);
     }
   }
 
@@ -780,18 +719,6 @@ function hasExactKeys(value: object, expected: readonly string[]): boolean {
   return (
     Object.keys(value).sort().join("\n") === [...expected].sort().join("\n")
   );
-}
-
-function parseFavouritesJson(raw: string | undefined): string[] {
-  if (raw === undefined) return [];
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed)
-      ? parsed.filter((v): v is string => typeof v === "string")
-      : [];
-  } catch {
-    return [];
-  }
 }
 
 function storageError(message: string, cause: unknown): DeckStorageError {

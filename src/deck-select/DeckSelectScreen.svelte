@@ -47,8 +47,6 @@
   /** Making a deck belongs to whoever owns somewhere to make it; null is a
       host that owns none, and renders no Create at all. */
   export let oncreate: (() => void) | null = null;
-  export let onfavourite: (key: string, favourite: boolean) => void = () =>
-    undefined;
   /** Duel-start only; null hides the whole right column (library mode passes null). */
   export let opponent: OpponentView | null = null;
   /** Free-play picker options; empty + opponent.locked → no picker (story). */
@@ -440,8 +438,7 @@
   }
 
   /* A dialog or the kebab sheet owns the keyboard while it is up, and a field
-     owns the letters typed into it — `/` and `f` are characters there, not
-     shortcuts. */
+     owns typed characters rather than screen shortcuts. */
   function shortcutsInert(event: KeyboardEvent): boolean {
     if (
       menu !== null ||
@@ -475,10 +472,7 @@
     if (event.key === "Enter") {
       if (mode === "library") openSelected();
       else if (canStart) onstart();
-      return;
     }
-    if (event.key !== "f" || selectedTile === null) return;
-    onfavourite(selectedTile.key, !selectedTile.favourite);
   }
 </script>
 
@@ -867,7 +861,6 @@
         onpress={() => onselect(candidate.key)}
         ondblpress={() => onopen(candidate.key)}
         showMenu={manageable}
-        onfavourite={(favourite) => onfavourite(candidate.key, favourite)}
         onmenu={(anchor) => (menu = { key: candidate.key, anchor })}
       />
     {/each}

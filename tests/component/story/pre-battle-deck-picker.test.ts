@@ -197,32 +197,14 @@ describe("the pre-battle deck picker", () => {
     expect(cy("duel-start-opponent-deck-name")?.textContent).toBe("Relay Deck");
   });
 
-  it("reports a starred deck to the save", async () => {
-    const onfavourite = vi.fn();
+  it("renders no favourite controls", () => {
     render(
       PreBattleScreen,
-      props({ decks: [LEGAL], defaultDeckId: null, onfavourite }),
+      props({ decks: [LEGAL, SECOND], defaultDeckId: LEGAL.id }),
     );
 
-    await userEvent.setup().click(cy(`deck-tile-fav-${LEGAL.id}`)!);
-
-    expect(onfavourite).toHaveBeenCalledExactlyOnceWith(LEGAL.id, true);
-  });
-
-  it("shows favourites except where the default marker overrides them", () => {
-    render(
-      PreBattleScreen,
-      props({
-        decks: [LEGAL, SECOND],
-        defaultDeckId: LEGAL.id,
-        favouriteDeckIds: [LEGAL.id, SECOND.id],
-      }),
-    );
-
-    expect(cy(`deck-tile-fav-${SECOND.id}`)?.getAttribute("aria-pressed")).toBe(
-      "true",
-    );
-    expect(cy(`deck-tile-fav-${LEGAL.id}`)).toBeNull();
+    expect(document.querySelector('[data-cy^="deck-tile-fav-"]')).toBeNull();
+    expect(cy(`deck-tile-default-star-${LEGAL.id}`)).not.toBeNull();
   });
 
   /* A save's decks are managed in the story's own deck editor, which this
@@ -469,23 +451,6 @@ describe("the briefing inside the story app", () => {
         main: FIELDABLE.deck.main,
       },
     });
-  });
-
-  /* The star is the save's, so it survives the round trip the pick does. */
-  it("writes a star into the save", async () => {
-    installPrototypeActiveCatalog();
-    render(StoryApp, { resumeState: preBattleSave() });
-    await waitFor(() =>
-      expect(cy(`deck-tile-press-${FIELDABLE.deck.id}`)).not.toBeNull(),
-    );
-
-    await userEvent.setup().click(cy(`deck-tile-fav-${FIELDABLE.deck.id}`)!);
-
-    await waitFor(() =>
-      expect(
-        cy(`deck-tile-fav-${FIELDABLE.deck.id}`)?.getAttribute("aria-pressed"),
-      ).toBe("true"),
-    );
   });
 
   it("keeps the pick after a trip back to the map", async () => {

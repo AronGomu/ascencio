@@ -52,6 +52,5 @@ export function stateFixture(mainCount = 0): DeckBuilderState {
     saveState: "saved",
     message: null,
     defaultDeckId: null,
-    favouriteDeckIds: Object.freeze([]),
   });
 }

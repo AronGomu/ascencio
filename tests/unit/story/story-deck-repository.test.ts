@@ -287,32 +287,6 @@ describe("story deck repository", () => {
     ).rejects.toBeInstanceOf(DeckStorageError);
   });
 
-  it("favourites stay in memory and prune against the save", async () => {
-    const context = harness({
-      decks: [storyDeck("alpha"), storyDeck("beta")],
-    });
-    await context.repository.setFavourite(deckId("alpha"), true);
-    await context.repository.setFavourite(deckId("beta"), true);
-    expect(await context.repository.listFavourites()).toEqual([
-      "alpha",
-      "beta",
-    ]);
-    expect(context.persisted).toEqual([]);
-
-    await context.repository.delete(deckId("beta"), 1);
-    expect(await context.repository.listFavourites()).toEqual(["alpha"]);
-
-    await context.repository.setFavourite(deckId("alpha"), false);
-    expect(await context.repository.listFavourites()).toEqual([]);
-  });
-
-  it("setFavourite refuses to favourite a deck the save does not hold", async () => {
-    const { repository } = harness();
-    await expect(
-      repository.setFavourite(deckId("ghost"), true),
-    ).rejects.toBeInstanceOf(DeckStorageError);
-  });
-
   /* The defining invariant. A deck the save layer cannot read back makes the
      whole save unreadable — progress, wallet and collection with it — so the
      record is checked against that layer's own predicate before it is allowed
@@ -438,7 +412,6 @@ describe("a persist the save layer refused", () => {
 
   it("delete keeps the deck and the session, and the retry then writes", async () => {
     const context = harness({ decks: [storyDeck("alpha")] });
-    await context.repository.setFavourite(deckId("alpha"), true);
     await context.repository.setLastOpened(deckId("alpha"));
     context.failPersistWith(refusal());
 
@@ -446,7 +419,6 @@ describe("a persist the save layer refused", () => {
       context.repository.delete(deckId("alpha"), 1),
     ).rejects.toBeInstanceOf(DeckStorageError);
     expect(context.state.decks).toHaveLength(1);
-    expect(await context.repository.listFavourites()).toEqual(["alpha"]);
     expect(await context.repository.getLastOpened()).toBe("alpha");
     expect(context.persisted).toEqual([]);
 
@@ -455,7 +427,6 @@ describe("a persist the save layer refused", () => {
     expect(context.state.decks).toEqual([]);
     expect(context.persisted).toHaveLength(1);
     expect(context.persisted[0]!.decks).toEqual([]);
-    expect(await context.repository.listFavourites()).toEqual([]);
     expect(await context.repository.getLastOpened()).toBeNull();
   });
 

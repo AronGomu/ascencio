@@ -303,7 +303,7 @@ describe("AppShell", () => {
       loaders,
     });
 
-    await fireEvent.click(await matchSetupControl("deck-select-open"));
+    await fireEvent.click(await matchSetupControl("deck-select-create"));
 
     expect(hashes).toEqual(["#/free-play/decks"]);
     expect(

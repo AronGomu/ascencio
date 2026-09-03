@@ -197,16 +197,19 @@ describe("deck validation UI", () => {
     expect(icon.getAttribute("aria-expanded")).toBe("false");
   });
 
-  it("toggles on touch-style activation", async () => {
+  it("toggles through native touch pointerleave order", async () => {
     const { container } = renderWorkspace(deckWith([MAIN_ERROR]));
     const icon = cy(container, "deck-zone-error-main");
 
     await fireEvent.pointerDown(icon, { pointerType: "touch" });
     await fireEvent.focus(icon);
     await fireEvent.click(icon);
+    await fireEvent.pointerLeave(icon, { pointerType: "touch" });
     expect(icon.getAttribute("aria-expanded")).toBe("true");
 
+    await fireEvent.pointerDown(icon, { pointerType: "touch" });
     await fireEvent.click(icon);
+    await fireEvent.pointerLeave(icon, { pointerType: "touch" });
     expect(icon.getAttribute("aria-expanded")).toBe("false");
   });
 

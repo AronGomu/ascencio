@@ -79,6 +79,10 @@
     if (event.pointerType !== "touch") tooltipOpen = true;
   }
 
+  function handleIssuePointerLeave(event: PointerEvent): void {
+    if (event.pointerType !== "touch") closeTooltip();
+  }
+
   function handleIssueFocus(): void {
     if (!pointerPressed) tooltipOpen = true;
   }
@@ -140,7 +144,7 @@
           : undefined}
         data-cy={`deck-zone-error-${zone}`}
         onpointerenter={handleIssuePointerEnter}
-        onpointerleave={closeTooltip}
+        onpointerleave={handleIssuePointerLeave}
         onpointerdown={() => (pointerPressed = true)}
         onfocus={handleIssueFocus}
         onblur={closeTooltip}

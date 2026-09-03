@@ -97,7 +97,13 @@
   let playerRestList: DecklistView | null = null;
   let opponentRestToken = 0;
   let opponentRestList: DecklistView | null = null;
-  let art: { readonly url: string; readonly place: string } | null = null;
+  let artToken = 0;
+  let art: {
+    readonly token: number;
+    readonly url: string;
+    readonly fallbackUrl: string | null;
+    readonly place: string;
+  } | null = null;
   /* The portrait opened the picker and is where the caret was, so it is bound
      here to take focus back however the picker closes. */
   let portrait: HTMLElement | null = null;
@@ -115,9 +121,10 @@
   /* A hover preview is a pointer's affordance: a finger has no hover to raise
      it with and none to take it away again, so a coarse pointer gets none. */
   const COARSE_QUERY = "(pointer: coarse)";
-  /* Gap between the library dock's card-art float and the row it accompanies. */
+  /* Gap between the library dock's card-scan float and the row it accompanies. */
   const FLOAT_GAP = 12;
-  const ART_HEIGHT = 340;
+  const ART_WIDTH = 240;
+  const CARD_ASPECT = 421 / 614;
   let matchedNarrow = false;
   let matchedCoarse = false;
 
@@ -329,7 +336,7 @@
     hoverToken += 1;
     hoverKey = null;
     hoverList = null;
-    art = null;
+    hideArt();
   }
 
   async function loadRest(
@@ -371,23 +378,75 @@
     opponentRestList = resolved;
   }
 
+  /** Cropped runtime art → matching full card scan; other sources pass through. */
+  function fullCardImageUrl(cropped: string | null): string | null {
+    return (
+      cropped?.replace("/runtime/images-cropped/", "/runtime/images/") ?? null
+    );
+  }
+
   /* The row names the card; the float is the card itself, held clear of the
-     dock so it never covers the list it came from. */
+     dock so it never covers the list it came from. Its box keeps the printed
+     card ratio while short or narrow viewports shrink both axes together. */
   function showArt(code: number, anchor: HTMLElement): void {
-    const url = cardImageFor?.(code) ?? null;
-    if (url === null) {
-      art = null;
+    const sourceUrl = cardImageFor?.(code) ?? null;
+    if (sourceUrl === null) {
+      hideArt();
       return;
     }
+    const url = fullCardImageUrl(sourceUrl);
+    if (url === null) {
+      hideArt();
+      return;
+    }
+    const viewportWidth = Math.max(0, window.innerWidth - FLOAT_GAP * 2);
+    const viewportHeight = Math.max(0, window.innerHeight - FLOAT_GAP * 2);
+    const width = Math.min(
+      ART_WIDTH,
+      viewportWidth,
+      viewportHeight * CARD_ASPECT,
+    );
+    if (width <= 0) {
+      hideArt();
+      return;
+    }
+    const height = width / CARD_ASPECT;
     const rect = anchor.getBoundingClientRect();
+    const left = Math.max(
+      FLOAT_GAP,
+      Math.min(
+        rect.left - FLOAT_GAP - width,
+        window.innerWidth - FLOAT_GAP - width,
+      ),
+    );
     const top = Math.max(
       FLOAT_GAP,
-      Math.min(rect.top, window.innerHeight - ART_HEIGHT - FLOAT_GAP),
+      Math.min(rect.top, window.innerHeight - FLOAT_GAP - height),
     );
+    const token = ++artToken;
+    const fallbackUrl = sourceUrl.includes("/runtime/images-cropped/")
+      ? sourceUrl
+      : sourceUrl.replace("/runtime/images/", "/runtime/images-cropped/");
     art = {
+      token,
       url,
-      place: `top: ${Math.round(top)}px; right: ${Math.round(window.innerWidth - rect.left + FLOAT_GAP)}px`,
+      fallbackUrl: fallbackUrl === url ? null : fallbackUrl,
+      place: `top: ${Math.round(top)}px; left: ${Math.round(left)}px; width: ${Math.round(width)}px; height: ${Math.round(height)}px`,
     };
+  }
+
+  function hideArt(): void {
+    artToken += 1;
+    art = null;
+  }
+
+  function handleArtError(token: number, failedUrl: string): void {
+    if (art === null || art.token !== token || art.url !== failedUrl) return;
+    if (art.fallbackUrl === null) {
+      hideArt();
+      return;
+    }
+    art = { ...art, url: art.fallbackUrl, fallbackUrl: null };
   }
 
   function openSelected(): void {
@@ -997,7 +1056,7 @@
           decklist={dockList}
           cy="deck-select-docked-list"
           onrowhover={showArt}
-          onrowleave={() => (art = null)}
+          onrowleave={hideArt}
         />
       {/if}
     </aside>
@@ -1005,11 +1064,14 @@
 </section>
 
 {#if art !== null}
+  {@const visibleArt = art}
   <img
     class="art-float"
-    src={art.url}
+    src={visibleArt.url}
     alt=""
-    style={art.place}
+    aria-hidden="true"
+    style={visibleArt.place}
+    onerror={() => handleArtError(visibleArt.token, visibleArt.url)}
     data-cy="deck-select-card-art-float"
   />
 {/if}
@@ -1789,14 +1851,16 @@
     font-size: var(--text-sm);
   }
 
-  /* The card the docked row names, at the size the art is worth looking at. */
+  /* The full card scan the docked row names. Inline geometry preserves the
+     printed ratio and clamps every edge; styling stays Basilica Slate chrome. */
   .art-float {
     position: fixed;
     z-index: 25;
     display: block;
-    width: 15rem;
-    max-height: calc(100vh - 2rem);
+    object-fit: contain;
+    border: 1px solid var(--gold-line);
     border-radius: var(--radius-md);
+    background: var(--surface-panel);
     box-shadow: 0 0.5rem 1.5rem var(--shadow);
     pointer-events: none;
   }

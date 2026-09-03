@@ -153,26 +153,29 @@ describe("DeckSelectScreen hover previews", () => {
   });
 
   it("clears a loaded preview when filtering removes its tile", async () => {
-    render(DeckSelectScreen, props());
+    render(
+      DeckSelectScreen,
+      props({ mode: "library", cardImageFor: () => "/runtime/images/301.jpg" }),
+    );
 
     await waitFor(() =>
-      expect(find("deck-select-seat-list-player-row-101")).not.toBeNull(),
+      expect(find("deck-select-docked-list-row-101")).not.toBeNull(),
     );
     await fireEvent.pointerEnter(cy("deck-tile-k3"));
     await waitFor(() =>
-      expect(find("deck-select-seat-list-player-row-301")).not.toBeNull(),
+      expect(find("deck-select-docked-list-row-301")).not.toBeNull(),
     );
+    await fireEvent.pointerEnter(cy("deck-select-docked-list-row-301"));
+    expect(find("deck-select-card-art-float")).not.toBeNull();
 
     await fireEvent.input(cy("deck-select-filter"), {
       target: { value: "Aurora" },
     });
 
     await waitFor(() => expect(find("deck-tile-k3")).toBeNull());
-    expect(find("deck-select-seat-list-player-row-101")).not.toBeNull();
-    expect(find("deck-select-seat-list-player-row-301")).toBeNull();
-    expect(cy("deck-select-seat-list-player-wrapper").classList).not.toContain(
-      "previewing",
-    );
+    expect(find("deck-select-docked-list-row-101")).not.toBeNull();
+    expect(find("deck-select-docked-list-row-301")).toBeNull();
+    expect(find("deck-select-card-art-float")).toBeNull();
   });
 
   it("rejects a pending preview after filtering removes its tile", async () => {
@@ -408,9 +411,9 @@ describe("DeckSelectScreen hover previews", () => {
     expect(find("deck-select-docked-list")).toBeNull();
   });
 
-  it("card art floats over dock row", async () => {
+  it("maps cropped row art to a full-card hover float", async () => {
     const cardImageFor = vi.fn((code: number) =>
-      code === 101 ? "/runtime/images/101.jpg" : null,
+      code === 101 ? "/runtime/images-cropped/101.jpg" : null,
     );
     render(DeckSelectScreen, props({ mode: "library", cardImageFor }));
     await waitFor(() =>
@@ -419,9 +422,10 @@ describe("DeckSelectScreen hover previews", () => {
 
     await fireEvent.pointerEnter(cy("deck-select-docked-list-row-101"));
 
-    expect(cy("deck-select-card-art-float").getAttribute("src")).toBe(
-      "/runtime/images/101.jpg",
-    );
+    const float = cy("deck-select-card-art-float");
+    expect(float.getAttribute("src")).toBe("/runtime/images/101.jpg");
+    expect(float.getAttribute("alt")).toBe("");
+    expect(float.getAttribute("aria-hidden")).toBe("true");
 
     await fireEvent.pointerLeave(cy("deck-select-docked-list-row-101"));
     expect(find("deck-select-card-art-float")).toBeNull();
@@ -429,6 +433,84 @@ describe("DeckSelectScreen hover previews", () => {
     /* A card this build packages no art for floats nothing at all. */
     await fireEvent.pointerEnter(cy("deck-select-docked-list-row-102"));
     expect(find("deck-select-card-art-float")).toBeNull();
+  });
+
+  it("shows the same full-card float on row focus and hides it on blur", async () => {
+    render(
+      DeckSelectScreen,
+      props({
+        mode: "library",
+        cardImageFor: () => "/runtime/images-cropped/101.jpg",
+      }),
+    );
+    await waitFor(() =>
+      expect(find("deck-select-docked-list-row-101")).not.toBeNull(),
+    );
+    const row = cy("deck-select-docked-list-row-101");
+
+    expect(row.getAttribute("tabindex")).toBe("0");
+    await fireEvent.focus(row);
+    expect(cy("deck-select-card-art-float").getAttribute("src")).toBe(
+      "/runtime/images/101.jpg",
+    );
+
+    await fireEvent.blur(row);
+    expect(find("deck-select-card-art-float")).toBeNull();
+  });
+
+  it("falls back to cropped art once, then removes a failed float", async () => {
+    render(
+      DeckSelectScreen,
+      props({
+        mode: "library",
+        cardImageFor: () => "/runtime/images-cropped/101.jpg",
+      }),
+    );
+    await waitFor(() =>
+      expect(find("deck-select-docked-list-row-101")).not.toBeNull(),
+    );
+    await fireEvent.pointerEnter(cy("deck-select-docked-list-row-101"));
+
+    await fireEvent.error(cy("deck-select-card-art-float"));
+    expect(cy("deck-select-card-art-float").getAttribute("src")).toBe(
+      "/runtime/images-cropped/101.jpg",
+    );
+
+    await fireEvent.error(cy("deck-select-card-art-float"));
+    expect(find("deck-select-card-art-float")).toBeNull();
+  });
+
+  it("keeps the full-card float inside the viewport at the row anchor", async () => {
+    render(
+      DeckSelectScreen,
+      props({
+        mode: "library",
+        cardImageFor: () => "/runtime/images/101.jpg",
+      }),
+    );
+    await waitFor(() =>
+      expect(find("deck-select-docked-list-row-101")).not.toBeNull(),
+    );
+    const row = cy("deck-select-docked-list-row-101");
+    vi.spyOn(row, "getBoundingClientRect").mockReturnValue({
+      x: 500,
+      y: 740,
+      top: 740,
+      right: 800,
+      bottom: 770,
+      left: 500,
+      width: 300,
+      height: 30,
+      toJSON: () => ({}),
+    });
+
+    await fireEvent.pointerEnter(row);
+
+    const float = cy("deck-select-card-art-float");
+    expect(float.getAttribute("style")).toContain("left: 248px");
+    expect(float.getAttribute("style")).toContain("top: 406px");
+    expect(float.getAttribute("style")).toContain("width: 240px");
+    expect(float.getAttribute("style")).toContain("height: 350px");
   });
 
   it("remaining display classes keep hidden guards", () => {

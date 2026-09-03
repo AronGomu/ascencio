@@ -7,11 +7,12 @@
       duel-start tile and the library's docked column are the same panel, so
       the caller names its copy rather than the panel claiming one identity. */
   export let cy: string;
-  /** A row is under the pointer; the anchor is the row itself, for the card
-      art to float beside. */
-  export let onrowhover: (code: number, anchor: HTMLElement) => void = () =>
-    undefined;
-  export let onrowleave: () => void = () => undefined;
+  /** A row is hovered or focused; the anchor is the row itself, for the card
+      scan to float beside. Null keeps rows out of the tab order when a host
+      does not offer the visual preview. */
+  export let onrowhover: ((code: number, anchor: HTMLElement) => void) | null =
+    null;
+  export let onrowleave: (() => void) | null = null;
 
   interface Entry {
     readonly code: number;
@@ -82,12 +83,17 @@
       <h3 data-cy={`${cy}-${part.id}-heading`}>{part.heading}</h3>
       <ul data-cy={`${cy}-${part.id}-rows`}>
         {#each part.entries as entry (entry.code)}
+          <!-- svelte-ignore a11y_no_noninteractive_tabindex (focus is the keyboard
+               equivalent of hover for this visual-only preview; row stays a list item) -->
           <li
             class="row"
+            tabindex={onrowhover === null ? undefined : 0}
             style={`--fc:${CARD_FRAME_COLORS[entry.frame]};${entry.artUrl === null ? "" : `--img:url('${entry.artUrl}')`}`}
             onpointerenter={(event) =>
-              onrowhover(entry.code, event.currentTarget)}
-            onpointerleave={() => onrowleave()}
+              onrowhover?.(entry.code, event.currentTarget)}
+            onpointerleave={() => onrowleave?.()}
+            onfocus={(event) => onrowhover?.(entry.code, event.currentTarget)}
+            onblur={() => onrowleave?.()}
             data-cy={`${cy}-row-${entry.code}`}
           >
             <span
@@ -152,6 +158,11 @@
     border-left: 5px solid var(--fc);
     border-radius: 5px;
     background: #22252c;
+  }
+
+  .row:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: -2px;
   }
 
   .cp {

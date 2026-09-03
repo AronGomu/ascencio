@@ -25,6 +25,8 @@ export type {
     viewport or import shell internals itself. */
 export const STAGE_CONTEXT_KEY = "shell:stage";
 
+export { routeLabel } from "./routes.ts";
+
 export {
   TOAST_CONTEXT_KEY,
   type ToastPublisher,

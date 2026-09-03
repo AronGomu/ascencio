@@ -480,6 +480,7 @@
     position: relative;
     flex: 1 1 auto;
     min-height: 0;
+    margin-top: var(--space-3);
   }
 
   .results {

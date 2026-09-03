@@ -59,34 +59,44 @@ describe("DeckZoneGrid", () => {
 });
 
 describe("DeckZoneGrid collapsible zones", () => {
-  it("the side deck starts expanded", () => {
+  it("starts with only the side deck collapsed", () => {
     const { container } = render(DeckWorkspace, {
       deck: deckFixture(0),
       catalog: prototypeCatalogMap,
       ruleset: PROTOTYPE_RULESET,
     });
-    expect(container.querySelector("#deck-zone-body-side")).not.toBeNull();
-    const toggle = container.querySelector('[data-cy="deck-zone-toggle-side"]');
-    expect(toggle).not.toBeNull();
-    expect(toggle!.getAttribute("aria-expanded")).toBe("true");
+    expect(container.querySelector("#deck-zone-body-main")).not.toBeNull();
+    expect(container.querySelector("#deck-zone-body-extra")).not.toBeNull();
+    expect(container.querySelector("#deck-zone-body-side")).toBeNull();
+    expect(
+      container
+        .querySelector('[data-cy="deck-zone-toggle-side"]')
+        ?.getAttribute("aria-expanded"),
+    ).toBe("false");
   });
 
-  it("toggling collapses and re-expands a zone", async () => {
+  it("toggles the side deck without resetting after a deck change", async () => {
     const user = userEvent.setup();
-    const { container } = render(DeckWorkspace, {
+    const mounted = render(DeckWorkspace, {
       deck: deckFixture(0),
       catalog: prototypeCatalogMap,
       ruleset: PROTOTYPE_RULESET,
     });
-    expect(container.querySelector("#deck-zone-body-side")).not.toBeNull();
-    await user.click(
-      container.querySelector('[data-cy="deck-zone-toggle-side"]')!,
-    );
-    expect(container.querySelector("#deck-zone-body-side")).toBeNull();
-    await user.click(
-      container.querySelector('[data-cy="deck-zone-toggle-side"]')!,
-    );
-    expect(container.querySelector("#deck-zone-body-side")).not.toBeNull();
+    const toggle = mounted.container.querySelector(
+      '[data-cy="deck-zone-toggle-side"]',
+    )!;
+    await user.click(toggle);
+    expect(
+      mounted.container.querySelector("#deck-zone-body-side"),
+    ).not.toBeNull();
+
+    await mounted.rerender({ deck: deckFixture(1) });
+    expect(
+      mounted.container.querySelector("#deck-zone-body-side"),
+    ).not.toBeNull();
+
+    await user.click(toggle);
+    expect(mounted.container.querySelector("#deck-zone-body-side")).toBeNull();
   });
 
   it("the zone count sits inside the collapse control", () => {

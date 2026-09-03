@@ -76,6 +76,9 @@ describe("pointer deck editing", () => {
   it("moves deck cards to Side deck", async () => {
     const onmutate = vi.fn<(command: DeckCommand) => void>();
     const { container } = render(DeckEditor, props(onmutate, 1));
+    await fireEvent.click(
+      container.querySelector('[data-cy="deck-zone-toggle-side"]')!,
+    );
     const deckCard = container.querySelector(
       '[data-cy="deck-slot-main-0"] button',
     )!;

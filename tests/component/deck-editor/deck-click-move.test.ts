@@ -160,6 +160,9 @@ describe("desktop click editing", () => {
   it("a catalog card can be dropped on the Side Deck", async () => {
     const onmutate = vi.fn<(command: DeckCommand) => void>();
     const { container } = render(DeckEditor, props(onmutate));
+    await fireEvent.click(
+      container.querySelector('[data-cy="deck-zone-toggle-side"]')!,
+    );
     await fireEvent.dragStart(
       container.querySelector(
         `[data-cy="deck-catalog-results"] [data-cy="catalog-tile-${MAIN_CODE}"]`,

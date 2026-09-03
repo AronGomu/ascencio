@@ -25,14 +25,17 @@ describe("deck workspace selector contract", () => {
       ).not.toBeNull();
   });
 
-  it("the side deck drop area is present on first paint", () => {
+  it("keeps the side deck header present while its body starts collapsed", () => {
     const { container } = render(DeckWorkspace, {
       deck: deckFixture(0),
       catalog: prototypeCatalogMap,
       ruleset: PROTOTYPE_RULESET,
     });
     expect(
-      container.querySelector('[data-cy="deck-zone-drop-area-side"]'),
+      container.querySelector('[data-cy="deck-zone-toggle-side"]'),
     ).not.toBeNull();
+    expect(
+      container.querySelector('[data-cy="deck-zone-drop-area-side"]'),
+    ).toBeNull();
   });
 });

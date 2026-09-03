@@ -7,6 +7,9 @@ import { RESULT_WINDOW_CEILING } from "../src/deck-editor/layout/result-window.t
 
 const libraryUrl = "./#/decks";
 const BLUE_EYES = 89631139;
+const OBELISK = 10000000;
+const RAIGEKI = 12580477;
+const MIRROR_FORCE = 44095762;
 /* The catalog is the whole card database, where a name is not unique: six
    printings answer to "Summoned Skull" and three to "Celtic Guardian". Pick the
    card by code, the way the rest of this file already does. */
@@ -830,6 +833,7 @@ test("the deck editor builds a deck by tap on a small screen", async ({
   await page.locator('[data-cy="deck-tap-target-side"]').click();
   await expect(side).toHaveText("1/15");
   await expect(main).toHaveText("0/40");
+  await page.locator('[data-cy="deck-zone-toggle-side"]').click();
 
   await deckTile.click();
   await page.locator('[data-cy="deck-tap-target-remove"]').click();
@@ -888,6 +892,59 @@ test("the deck editor keeps its three panels above the breakpoint", async ({
   await expect(zoneCount(page, "main")).toHaveText("0/40");
   await catalogTile(page, BLUE_EYES).dblclick();
   await expect(zoneCount(page, "main")).toHaveText("1/40");
+});
+
+test("small editor polish stays usable in Chromium", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+  await page.locator('[data-cy="deck-select-create"]').click();
+  await page.getByLabel("Deck name").fill("Small Polish");
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
+
+  const sideToggle = page.locator('[data-cy="deck-zone-toggle-side"]');
+  await expect(sideToggle).toHaveAttribute("aria-expanded", "false");
+  await expect(page.locator("#deck-zone-body-side")).toHaveCount(0);
+  await expect(page.locator("#deck-zone-body-main")).toBeVisible();
+  await expect(page.locator("#deck-zone-body-extra")).toBeVisible();
+
+  const search = page.getByRole("searchbox", { name: "Name" });
+  for (const [name, code, limit] of [
+    ["Obelisk the Tormentor", OBELISK, 0],
+    ["Raigeki", RAIGEKI, 1],
+    ["Mirror Force", MIRROR_FORCE, 2],
+    ["Blue-Eyes White Dragon", BLUE_EYES, 3],
+  ] as const) {
+    await search.fill(name);
+    const tile = catalogTile(page, code);
+    await expect(tile).toHaveAttribute(
+      "aria-label",
+      new RegExp(`maximum ${limit}`),
+    );
+    await expect(
+      tile.locator(`[data-cy="catalog-tile-limit-${code}"]`),
+    ).toHaveCount(limit < 3 ? 1 : 0);
+  }
+
+  const summary = page.locator('[data-cy="deck-catalog-filter-summary"]');
+  const results = page.locator('[data-cy="deck-catalog-results-region"]');
+  const summaryBox = (await summary.boundingBox())!;
+  const resultsBox = (await results.boundingBox())!;
+  expect(
+    resultsBox.y - (summaryBox.y + summaryBox.height),
+  ).toBeGreaterThanOrEqual(11);
+
+  await sideToggle.click();
+  await expect(sideToggle).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator("#deck-zone-body-side")).toBeVisible();
+  await catalogTile(page, BLUE_EYES).dblclick();
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+  await expect(sideToggle).toHaveAttribute("aria-expanded", "true");
+
+  await sideToggle.click();
+  await expect(sideToggle).toHaveAttribute("aria-expanded", "false");
+  await expect(page.locator("#deck-zone-body-side")).toHaveCount(0);
 });
 
 test("the deck editor fits the stage without a region scrollbar", async ({

@@ -106,11 +106,13 @@
     }
   }}
 >
-  <span
-    class={`limit-badge limit-${limit}`}
-    aria-hidden="true"
-    data-cy={`${dataCyPrefix}-tile-limit-${dataCyId}`}>{limit}</span
-  >
+  {#if limit < 3}
+    <span
+      class={`limit-badge limit-${limit}`}
+      aria-hidden="true"
+      data-cy={`${dataCyPrefix}-tile-limit-${dataCyId}`}>{limit}</span
+    >
+  {/if}
   {#if artUrl !== null}
     <img
       class="card-art"
@@ -272,9 +274,5 @@
 
   .limit-2 {
     background: var(--selected);
-  }
-
-  .limit-3 {
-    background: var(--accent);
   }
 </style>

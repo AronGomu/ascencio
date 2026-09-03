@@ -32,7 +32,7 @@ export function pushDeckUpdate(
   },
 ): DeckHistory {
   if (
-    sameCards(input.before, input.after) &&
+    sameCards(input.before, input.after, input.reason === "import") &&
     (input.beforeImportedNeedsReview ?? false) ===
       (input.afterImportedNeedsReview ?? false) &&
     (input.beforeIllustrationCardCode ?? null) ===
@@ -101,14 +101,29 @@ export function redoDeckUpdate(history: DeckHistory): Readonly<{
   });
 }
 
-function sameCards(left: DeckCardLists, right: DeckCardLists): boolean {
-  /* Undo restores which cards a deck holds, never where the player put them,
-     so two lists with the same contents in a different order are the same
-     edit and earn no history entry. */
+function sameCards(
+  left: DeckCardLists,
+  right: DeckCardLists,
+  orderSensitive = false,
+): boolean {
+  /* Membership edits stay position-blind, so reorder and sort do not spend an
+     undo step. Import replaces exact lists, so its undo must preserve source
+     order even when both lists contain the same cards. */
+  const same = orderSensitive ? sameOrderedZone : sameZone;
   return (
-    sameZone(left.main, right.main) &&
-    sameZone(left.extra, right.extra) &&
-    sameZone(left.side, right.side)
+    same(left.main, right.main) &&
+    same(left.extra, right.extra) &&
+    same(left.side, right.side)
+  );
+}
+
+function sameOrderedZone(
+  left: readonly number[],
+  right: readonly number[],
+): boolean {
+  return (
+    left.length === right.length &&
+    left.every((code, index) => code === right[index])
   );
 }
 

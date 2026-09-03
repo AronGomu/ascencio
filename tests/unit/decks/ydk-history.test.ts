@@ -73,6 +73,27 @@ describe("YDK history integration", () => {
     repo.close();
   });
 
+  it("undoes an import that only changes card order", async () => {
+    const { controller, repo } = await controllerFor("ydk-order-history");
+    await controller.mutate({
+      type: "import",
+      cards: { main: [1, 2], extra: [], side: [] },
+    });
+    const before = get(controller).current!;
+
+    await controller.mutate({
+      type: "import",
+      cards: { main: [2, 1], extra: [], side: [] },
+    });
+
+    expect(get(controller).current!.history.undo).toHaveLength(
+      before.history.undo.length + 1,
+    );
+    await controller.undo();
+    expect(get(controller).current!.deck.main).toEqual([1, 2]);
+    repo.close();
+  });
+
   it("keeps known unowned and unknown imported codes as validation errors", async () => {
     const name = "ydk-unowned-history";
     names.push(name);

@@ -692,7 +692,7 @@ test("the deck editor recovers real save failures and revision conflicts", async
   await expectSaveSettled(page, { main: 2, extra: 0, side: 0 });
 
   await second.getByRole("searchbox", { name: "Name" }).fill("Celtic Guardian");
-  await catalogTile(second, CELTIC_GUARDIAN).click();
+  await catalogTile(second, CELTIC_GUARDIAN).dblclick();
   await expect(second.getByRole("alert")).toContainText(
     "changed by another browser context",
   );

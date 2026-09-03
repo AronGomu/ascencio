@@ -96,7 +96,7 @@
   }
   .overlay {
     width: min(42rem, 100%);
-    max-height: min(48rem, calc(100svh - 2rem));
+    max-height: min(48rem, calc(100% - 2rem));
     overflow: auto;
     padding: 1.25rem;
     box-shadow: 0 2rem 6rem color-mix(in srgb, var(--shadow) 80%, transparent);

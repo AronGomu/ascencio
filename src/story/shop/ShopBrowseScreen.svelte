@@ -118,8 +118,11 @@
 
 <style>
   .shop-browse {
-    min-height: 100svh;
-    padding: clamp(1rem, 4vw, 2.5rem);
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: auto;
+    padding: clamp(1rem, 4cqw, 2.5rem);
     background:
       radial-gradient(circle at 70% 20%, var(--field-glow), transparent 30%),
       var(--bg);

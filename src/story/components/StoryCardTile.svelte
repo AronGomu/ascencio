@@ -69,7 +69,7 @@
         transparent 52%
       ),
       var(--surface-panel);
-    font-size: clamp(1rem, 2vw, 2rem);
+    font-size: clamp(1rem, 2cqw, 2rem);
     font-weight: 650;
   }
 </style>

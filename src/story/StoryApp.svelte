@@ -867,227 +867,232 @@
       >
     </section>
   {/if}
-  {#if state.screen === "load"}
-    <LoadScreen
-      onload={loadSlot}
-      ondelete={deleteManualSave}
-      onback={onmainmenu}
-    />
-  {:else if state.screen === "narrative"}
-    <NarrativeScreen
-      {beat}
-      narrativeIndex={state.narrativeIndex}
-      choices={activeChoices}
-      selectedChoice={state.choice}
-      choiceResponse={state.narrativeIndex === 13 ? state.choiceResponse : null}
-      {playback}
-      playbackNotice={playbackMessage}
-      onadvance={advance}
-      ontoggleplayback={togglePlayback}
-      onchoose={choose}
-      onutility={(utility) => openOverlay(utility)}
-    />
-  {:else if state.screen === "map"}
-    <IllustratedMapScreen
-      locations={state.locations}
-      objective={state.objective}
-      choiceAcknowledgment={state.laterAcknowledgment}
-      allowBack={!state.rewardAcknowledged}
-      onselect={(locationId: LocationId) =>
-        dispatch({ type: "select-location", locationId })}
-      onback={() => go("narrative")}
-    />
-    {#if state.rewardAcknowledged}<section
-        class="completion-panel"
-        aria-label="Progression complete"
-        data-cy="story-completion-panel"
-      >
-        <p data-cy="story-completion-message">
-          <strong data-cy="story-completion-message-label">Updated map:</strong> Old
-          Arena completed. Archive available.
-        </p>
-        <button
-          type="button"
-          data-cy="story-completion-save"
-          onclick={() => openOverlay("save")}>Save progress</button
-        ><button
-          type="button"
-          class="secondary"
-          data-cy="story-completion-end"
-          onclick={() => go("end")}>End prototype</button
+  <div class="story-body" data-cy="story-body">
+    {#if state.screen === "load"}
+      <LoadScreen
+        onload={loadSlot}
+        ondelete={deleteManualSave}
+        onback={onmainmenu}
+      />
+    {:else if state.screen === "narrative"}
+      <NarrativeScreen
+        {beat}
+        narrativeIndex={state.narrativeIndex}
+        choices={activeChoices}
+        selectedChoice={state.choice}
+        choiceResponse={state.narrativeIndex === 13
+          ? state.choiceResponse
+          : null}
+        {playback}
+        playbackNotice={playbackMessage}
+        onadvance={advance}
+        ontoggleplayback={togglePlayback}
+        onchoose={choose}
+        onutility={(utility) => openOverlay(utility)}
+      />
+    {:else if state.screen === "map"}
+      <IllustratedMapScreen
+        locations={state.locations}
+        objective={state.objective}
+        choiceAcknowledgment={state.laterAcknowledgment}
+        allowBack={!state.rewardAcknowledged}
+        onselect={(locationId: LocationId) =>
+          dispatch({ type: "select-location", locationId })}
+        onback={() => go("narrative")}
+      />
+      {#if state.rewardAcknowledged}<section
+          class="completion-panel"
+          aria-label="Progression complete"
+          data-cy="story-completion-panel"
         >
-      </section>{/if}
-  {:else if state.screen === "pre-battle"}
-    <PreBattleScreen
-      allowReturn={true}
-      decks={preBattleDeckChoices}
-      deckRecords={state.decks}
-      catalog={cardViewByCode}
-      defaultDeckId={state.defaultDeckId}
-      decksError={catalogError}
-      onselectdeck={(id) => dispatch({ type: "deck-set-default", id })}
-      onretrydecks={loadCatalog}
-      onstart={startEncounter}
-      onreturn={() => go("map")}
-      onopendecks={openDeckEditor}
-    />
-  {:else if state.screen === "battle-mock"}
-    <BattleHandoffScreen
-      label={encounterLabel}
-      error={handoffError}
-      onretry={retryEncounter}
-      onreturn={returnToMap}
-    />
-  {:else if state.screen === "outcome"}
-    <OutcomeScreen
-      outcome={state.outcome ?? "win"}
-      oncontinue={continueOutcome}
-      onretry={retryEncounter}
-      onreturn={returnToMap}
-    />
-  {:else if inShop}
-    <!-- One boundary for the whole shop, entered the way the shell enters a
+          <p data-cy="story-completion-message">
+            <strong data-cy="story-completion-message-label"
+              >Updated map:</strong
+            > Old Arena completed. Archive available.
+          </p>
+          <button
+            type="button"
+            data-cy="story-completion-save"
+            onclick={() => openOverlay("save")}>Save progress</button
+          ><button
+            type="button"
+            class="secondary"
+            data-cy="story-completion-end"
+            onclick={() => go("end")}>End prototype</button
+          >
+        </section>{/if}
+    {:else if state.screen === "pre-battle"}
+      <PreBattleScreen
+        allowReturn={true}
+        decks={preBattleDeckChoices}
+        deckRecords={state.decks}
+        catalog={cardViewByCode}
+        defaultDeckId={state.defaultDeckId}
+        decksError={catalogError}
+        onselectdeck={(id) => dispatch({ type: "deck-set-default", id })}
+        onretrydecks={loadCatalog}
+        onstart={startEncounter}
+        onreturn={() => go("map")}
+        onopendecks={openDeckEditor}
+      />
+    {:else if state.screen === "battle-mock"}
+      <BattleHandoffScreen
+        label={encounterLabel}
+        error={handoffError}
+        onretry={retryEncounter}
+        onreturn={returnToMap}
+      />
+    {:else if state.screen === "outcome"}
+      <OutcomeScreen
+        outcome={state.outcome ?? "win"}
+        oncontinue={continueOutcome}
+        onretry={retryEncounter}
+        onreturn={returnToMap}
+      />
+    {:else if inShop}
+      <!-- One boundary for the whole shop, entered the way the shell enters a
          domain: `{#await}` around the import, a pending line, and something
          that says so if the chunk never arrives. -->
-    {#await import("./shop/shop-screens.ts")}
-      <!-- Announced rather than drawn, the way the shell announces
+      {#await import("./shop/shop-screens.ts")}
+        <!-- Announced rather than drawn, the way the shell announces
            `collection-pending`: the chunk is a cache read in the ordinary
            case, and a placeholder that flashes for a frame reads as a fault. -->
-      <p class="visually-hidden" data-cy="story-shop-pending">
-        Opening the shop
-      </p>
-    {:then shop}
-      {#if state.screen === "shop-greeting"}
-        <svelte:component
-          this={shop.ShopGreetingScreen}
-          onnavigate={(target) =>
-            dispatch({
-              type: "shop-navigate",
-              to: target === "buy" ? "browse" : "sell",
-            })}
-          onleave={() => dispatch({ type: "leave-shop" })}
-        />
-      {:else if state.screen === "shop-browse"}
-        <svelte:component
-          this={shop.ShopBrowseScreen}
-          sets={shopData?.sets ?? null}
-          error={shopDataError}
-          dp={state.dp}
-          onbuy={(setId, count) =>
-            dispatch({
-              type: "buy-packs",
-              setId,
-              count,
-              released: isSetReleased(shopData, setId),
-            })}
-          onviewcards={(setId) => dispatch({ type: "view-set-cards", setId })}
-          onretry={() => {
-            shopDataError = null;
-            void loadShopData();
-          }}
-          onback={() => dispatch({ type: "shop-navigate", to: "greeting" })}
-        />
-      {:else if state.screen === "shop-cards"}
-        <svelte:component
-          this={shop.ShopCardListScreen}
-          setName={shopSetName}
-          dp={state.dp}
-          cards={shopCards}
-          onbuysingle={(code, rarity) =>
-            dispatch({ type: "buy-single", code, rarity })}
-          onback={() => dispatch({ type: "shop-navigate", to: "browse" })}
-        />
-      {:else if state.screen === "shop-sell"}
-        <svelte:component
-          this={shop.ShopSellScreen}
-          cards={sellableCards}
-          error={shopDataError ?? catalogError}
-          {state}
-          onsell={(items) => dispatch({ type: "sell-cards", items })}
-          onretry={retrySellSources}
-          onback={() => dispatch({ type: "shop-navigate", to: "greeting" })}
-        />
-      {:else if state.screen === "shop-opening"}
-        <svelte:component
-          this={shop.BoosterOpeningScreen}
-          cards={openedCardViews}
-          settings={playbackSettings}
-          onfinish={() => dispatch({ type: "finish-opening" })}
-          onback={() => dispatch({ type: "acknowledge-opened" })}
-        />
-      {:else if state.screen === "shop-results"}
-        <svelte:component
-          this={shop.BoosterResultsScreen}
-          cards={openedCardViews}
-          oncontinue={() => dispatch({ type: "acknowledge-opened" })}
-        />
-      {/if}
-    {:catch error}
-      <!-- The shop's chunk never arrived: a stale build, a half-cached
+        <p class="visually-hidden" data-cy="story-shop-pending">
+          Opening the shop
+        </p>
+      {:then shop}
+        {#if state.screen === "shop-greeting"}
+          <svelte:component
+            this={shop.ShopGreetingScreen}
+            onnavigate={(target) =>
+              dispatch({
+                type: "shop-navigate",
+                to: target === "buy" ? "browse" : "sell",
+              })}
+            onleave={() => dispatch({ type: "leave-shop" })}
+          />
+        {:else if state.screen === "shop-browse"}
+          <svelte:component
+            this={shop.ShopBrowseScreen}
+            sets={shopData?.sets ?? null}
+            error={shopDataError}
+            dp={state.dp}
+            onbuy={(setId, count) =>
+              dispatch({
+                type: "buy-packs",
+                setId,
+                count,
+                released: isSetReleased(shopData, setId),
+              })}
+            onviewcards={(setId) => dispatch({ type: "view-set-cards", setId })}
+            onretry={() => {
+              shopDataError = null;
+              void loadShopData();
+            }}
+            onback={() => dispatch({ type: "shop-navigate", to: "greeting" })}
+          />
+        {:else if state.screen === "shop-cards"}
+          <svelte:component
+            this={shop.ShopCardListScreen}
+            setName={shopSetName}
+            dp={state.dp}
+            cards={shopCards}
+            onbuysingle={(code, rarity) =>
+              dispatch({ type: "buy-single", code, rarity })}
+            onback={() => dispatch({ type: "shop-navigate", to: "browse" })}
+          />
+        {:else if state.screen === "shop-sell"}
+          <svelte:component
+            this={shop.ShopSellScreen}
+            cards={sellableCards}
+            error={shopDataError ?? catalogError}
+            {state}
+            onsell={(items) => dispatch({ type: "sell-cards", items })}
+            onretry={retrySellSources}
+            onback={() => dispatch({ type: "shop-navigate", to: "greeting" })}
+          />
+        {:else if state.screen === "shop-opening"}
+          <svelte:component
+            this={shop.BoosterOpeningScreen}
+            cards={openedCardViews}
+            settings={playbackSettings}
+            onfinish={() => dispatch({ type: "finish-opening" })}
+            onback={() => dispatch({ type: "acknowledge-opened" })}
+          />
+        {:else if state.screen === "shop-results"}
+          <svelte:component
+            this={shop.BoosterResultsScreen}
+            cards={openedCardViews}
+            oncontinue={() => dispatch({ type: "acknowledge-opened" })}
+          />
+        {/if}
+      {:catch error}
+        <!-- The shop's chunk never arrived: a stale build, a half-cached
            reload, an offline one. The way out is a reload, which the player is
            told about rather than sent through — a browser remembers a failed
            module load, so walking back in would fail the same way, and a
            reload from here would drop story progress since the last save.
            Leaving the shop keeps it, and keeps Save reachable. -->
-      {@const reason =
-        error instanceof Error ? error.message : "The shop could not load."}
-      <section
-        class="shop-load-error"
-        role="alert"
-        aria-labelledby="shop-load-error-heading"
-        data-cy="story-shop-load-error"
-      >
-        <p class="eyebrow" data-cy="story-shop-load-error-eyebrow">
-          Card shop stopped
+        {@const reason =
+          error instanceof Error ? error.message : "The shop could not load."}
+        <section
+          class="shop-load-error"
+          role="alert"
+          aria-labelledby="shop-load-error-heading"
+          data-cy="story-shop-load-error"
+        >
+          <p class="eyebrow" data-cy="story-shop-load-error-eyebrow">
+            Card shop stopped
+          </p>
+          <h1
+            id="shop-load-error-heading"
+            data-cy="story-shop-load-error-heading"
+          >
+            The shop could not open
+          </h1>
+          <p data-cy="story-shop-load-error-message">{reason}</p>
+          <p data-cy="story-shop-load-error-advice">
+            Reload the page to try again. Leave the shop first if you have
+            progress you have not saved.
+          </p>
+          <button
+            type="button"
+            class="secondary"
+            data-cy="story-shop-load-error-leave"
+            onclick={() => dispatch({ type: "leave-shop" })}
+            >Leave the shop</button
+          >
+        </section>
+      {/await}
+    {:else if state.screen === "reward"}
+      <RewardScreen
+        {autosaveStatus}
+        onretry={() => void retryAutosave()}
+        oncontinue={acknowledgeReward}
+      />
+    {:else}
+      <main class="end-screen" data-cy="story-end-screen">
+        <p class="eyebrow" data-cy="story-end-eyebrow">End of the prologue</p>
+        <h1 data-cy="story-end-heading">Prototype complete</h1>
+        <p data-cy="story-end-body">
+          The authored prologue stops here. Later chapters continue from the
+          updated map.
         </p>
-        <h1
-          id="shop-load-error-heading"
-          data-cy="story-shop-load-error-heading"
-        >
-          The shop could not open
-        </h1>
-        <p data-cy="story-shop-load-error-message">{reason}</p>
-        <p data-cy="story-shop-load-error-advice">
-          Reload the page to try again. Leave the shop first if you have
-          progress you have not saved.
-        </p>
-        <button
-          type="button"
-          class="secondary"
-          data-cy="story-shop-load-error-leave"
-          onclick={() => dispatch({ type: "leave-shop" })}
-          >Leave the shop</button
-        >
-      </section>
-    {/await}
-  {:else if state.screen === "reward"}
-    <RewardScreen
-      {autosaveStatus}
-      onretry={() => void retryAutosave()}
-      oncontinue={acknowledgeReward}
-    />
-  {:else}
-    <main class="end-screen" data-cy="story-end-screen">
-      <p class="eyebrow" data-cy="story-end-eyebrow">End of the prologue</p>
-      <h1 data-cy="story-end-heading">Prototype complete</h1>
-      <p data-cy="story-end-body">
-        The authored prologue stops here. Later chapters continue from the
-        updated map.
-      </p>
-      <div data-cy="story-end-actions">
-        <button
-          type="button"
-          data-cy="story-end-replay"
-          onclick={() => void reset()}>Replay from the title</button
-        ><button
-          type="button"
-          class="secondary"
-          data-cy="story-end-return-map"
-          onclick={() => go("map")}>Return to the updated map</button
-        >
-      </div>
-    </main>
-  {/if}
+        <div data-cy="story-end-actions">
+          <button
+            type="button"
+            data-cy="story-end-replay"
+            onclick={() => void reset()}>Replay from the title</button
+          ><button
+            type="button"
+            class="secondary"
+            data-cy="story-end-return-map"
+            onclick={() => go("map")}>Return to the updated map</button
+          >
+        </div>
+      </main>
+    {/if}
+  </div>
 
   {#if state.screen !== "title" && state.screen !== "load" && state.screen !== "end" && state.screen !== "narrative"}
     <button
@@ -1165,7 +1170,20 @@
   /* The shell gives the story a fixed-size region inside the 16:9 stage, so
      the domain root fills that box rather than the viewport. */
   .story-app {
-    min-height: 100%;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    contain: layout;
+    overflow: hidden;
+  }
+  .story-body {
+    position: relative;
+    grid-row: 2;
+    min-height: 0;
+    overflow: hidden;
   }
   .storage-error {
     position: fixed;
@@ -1226,7 +1244,10 @@
     place-content: center;
     justify-items: start;
     gap: 1rem;
-    padding: clamp(1rem, 8vw, 7rem);
+    height: 100%;
+    min-height: 0;
+    overflow: auto;
+    padding: clamp(1rem, 8cqw, 7rem);
     background:
       radial-gradient(circle at 60% 30%, var(--field-glow), transparent 30%),
       var(--bg);

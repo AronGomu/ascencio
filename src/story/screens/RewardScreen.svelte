@@ -75,9 +75,12 @@
 
 <style>
   .reward-screen {
-    min-height: 100svh;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
     display: grid;
-    place-content: center;
+    place-content: safe center;
+    overflow: auto;
     justify-items: center;
     gap: 0.8rem;
     padding: 1rem;

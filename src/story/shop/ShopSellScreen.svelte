@@ -201,8 +201,11 @@
   .shop-sell {
     display: flex;
     flex-direction: column;
-    min-height: 100svh;
-    padding: clamp(1rem, 4vw, 2.5rem);
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    padding: clamp(1rem, 4cqw, 2.5rem);
     gap: 1.25rem;
     background: var(--bg);
   }
@@ -220,6 +223,8 @@
     grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
     gap: 1rem;
     flex: 1;
+    min-height: 0;
+    overflow: auto;
   }
   .sell-tile {
     display: flex;

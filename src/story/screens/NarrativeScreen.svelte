@@ -230,7 +230,9 @@
 <style>
   .narrative-stage {
     position: relative;
-    min-height: 100svh;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
     overflow: hidden;
     background: var(--bg);
     /* Tapping through a scene must never select the line being tapped; the
@@ -275,18 +277,19 @@
     display: flex;
     justify-content: center;
     align-items: end;
-    gap: min(5vw, 4rem);
+    gap: min(5cqw, 4rem);
     pointer-events: none;
   }
   .character {
-    width: min(33vw, 20rem);
-    height: min(68vh, 37rem);
+    width: min(33cqw, 20rem);
+    height: min(68cqh, 37rem);
+    max-height: 100%;
     display: grid;
     place-items: center;
     border: 2px solid var(--border-light);
     border-radius: 48% 48% 16% 16%;
     background: linear-gradient(var(--border-strong), var(--surface-chain));
-    font: 400 clamp(3rem, 12vw, 8rem) var(--font-display);
+    font: 400 clamp(3rem, 12cqw, 8rem) var(--font-display);
     color: var(--text);
     filter: drop-shadow(
       0 1rem 2rem color-mix(in srgb, var(--shadow) 73%, transparent)
@@ -367,7 +370,7 @@
   .line {
     max-width: 70ch;
     margin: 0;
-    font-size: clamp(1rem, 2.3vw, 1.35rem);
+    font-size: clamp(1rem, 2.3cqw, 1.35rem);
     line-height: 1.55;
     overflow-wrap: anywhere;
   }
@@ -426,8 +429,8 @@
       bottom: 14rem;
     }
     .character {
-      width: 45vw;
-      height: 50vh;
+      width: 45cqw;
+      height: 50cqh;
     }
     .dialogue {
       bottom: max(0.5rem, env(safe-area-inset-bottom));

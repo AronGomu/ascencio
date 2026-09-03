@@ -22,14 +22,17 @@
     placeZoomedCard,
     ZOOM_VIEWPORT_GUTTER,
     type ZoomRect,
+    type ZoomSize,
   } from "./zoom-window-position.ts";
 
   export let card: DeckBuilderCardView;
-  /** The card the zoom grew out of, in viewport pixels — a
-      `getBoundingClientRect()` of the art itself rather than of the labelled
-      tile around it, so the magnified box keeps the card's proportions and the
-      whole card still fits inside the halo. */
+  /** The card the zoom grew out of, in stage-local pixels. The caller subtracts
+      the story root's `getBoundingClientRect()` origin from the art rectangle,
+      because this fixed overlay's containing block is that root rather than
+      the browser viewport. */
   export let anchor: ZoomRect;
+  /** Size of the same stage-local containing block as `anchor`. */
+  export let bounds: ZoomSize;
   /** `null` where the screen has no rarity to tell, which keeps the halo off
       rather than drawing a colourless one. */
   export let rarity: ShopRarity | null = null;
@@ -45,15 +48,10 @@
      bottom-edge clamp reads it. */
   const WINDOW_WIDTH = 260;
 
-  /* Seeded from the window rather than left at zero, so the first paint places
-     against the real viewport; the binding keeps it true across a resize. */
-  let viewportWidth = globalThis.innerWidth;
-  let viewportHeight = globalThis.innerHeight;
   let windowHeight = 0;
 
-  $: viewport = { width: viewportWidth, height: viewportHeight };
-  $: zoom = placeZoomedCard(anchor, viewport, scale);
-  $: placement = placeZoomWindow(zoom, viewport, {
+  $: zoom = placeZoomedCard(anchor, bounds, scale);
+  $: placement = placeZoomWindow(zoom, bounds, {
     width: WINDOW_WIDTH,
     height: windowHeight,
   });
@@ -62,7 +60,7 @@
      after the window has been measured once, so until then the clamp above has
      nothing to clamp, and a tall window would hang off the bottom for a frame.
      Room-below-the-top-edge is knowable immediately and bounds it either way. */
-  $: windowStyle = `left: ${placement.left}px; top: ${placement.top}px; width: ${WINDOW_WIDTH}px; max-height: ${viewportHeight - placement.top - ZOOM_VIEWPORT_GUTTER}px;`;
+  $: windowStyle = `left: ${placement.left}px; top: ${placement.top}px; width: ${WINDOW_WIDTH}px; max-height: ${bounds.height - placement.top - ZOOM_VIEWPORT_GUTTER}px;`;
   $: stats = monsterStatsLine(card);
 
   /** Attribute, race, rating and the battle numbers, in the duel's own order
@@ -91,11 +89,6 @@
     return value < 0 ? "?" : String(value);
   }
 </script>
-
-<svelte:window
-  bind:innerWidth={viewportWidth}
-  bind:innerHeight={viewportHeight}
-/>
 
 <!-- Decoration, and marked as such: it repeats the name the card underneath
      already carries, and it is put up by a pointer or by focus moving, neither

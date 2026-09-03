@@ -98,7 +98,7 @@
   }
   .dialog {
     width: min(30rem, 100%);
-    max-height: min(40rem, calc(100svh - 2rem));
+    max-height: min(40rem, calc(100% - 2rem));
     overflow: auto;
     padding: 1.5rem;
     border: 1px solid var(--story-border);

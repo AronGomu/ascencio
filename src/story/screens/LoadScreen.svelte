@@ -184,7 +184,11 @@
 
 <style>
   .load-screen {
-    padding: clamp(1rem, 4vw, 3rem);
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: auto;
+    padding: clamp(1rem, 4cqw, 3rem);
   }
   .slots {
     display: grid;

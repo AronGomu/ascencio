@@ -254,11 +254,14 @@
      screen and the story's own footnotes: the screen holds a definite row, so
      its deck grid scrolls inside itself rather than growing the page. */
   .briefing {
-    min-height: 100svh;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
     display: grid;
     grid-template-rows: minmax(0, 1fr) auto;
+    overflow: hidden;
     gap: 0.75rem;
-    padding: clamp(0.75rem, 3vw, 2.5rem);
+    padding: clamp(0.75rem, 3cqw, 2.5rem);
     background:
       radial-gradient(circle at 20% 50%, var(--field-glow), transparent 25%),
       var(--bg);

@@ -259,10 +259,13 @@
 
 <style>
   .collection {
-    min-height: 100svh;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    padding: clamp(1rem, 4vw, 2rem);
+    overflow: hidden;
+    padding: clamp(1rem, 4cqw, 2rem);
     background:
       radial-gradient(circle at 30% 20%, var(--field-glow), transparent 30%),
       var(--bg);
@@ -278,7 +281,7 @@
   .collection-header h1 {
     flex: 1;
     margin: 0;
-    font-size: clamp(1.25rem, 4vw, 2rem);
+    font-size: clamp(1.25rem, 4cqw, 2rem);
   }
 
   .collection-controls {
@@ -309,6 +312,7 @@
     grid-template-columns: minmax(14rem, 1fr) 3fr;
     gap: 1.5rem;
     flex: 1;
+    min-height: 0;
     overflow: hidden;
   }
 
@@ -319,8 +323,8 @@
   }
 
   .collection-grid {
+    min-height: 0;
     overflow-y: auto;
-    max-height: calc(100svh - 10rem);
   }
 
   .collection-section {
@@ -402,5 +406,18 @@
     margin: 0;
     color: var(--muted);
     font-size: 0.85rem;
+  }
+
+  @media (max-width: 48rem) {
+    .collection-layout {
+      grid-template-columns: minmax(0, 1fr);
+      overflow-y: auto;
+    }
+    .collection-preview {
+      position: static;
+    }
+    .collection-grid {
+      overflow: visible;
+    }
   }
 </style>

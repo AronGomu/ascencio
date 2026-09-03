@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { readFileSync } from "fs";
 import {
   cleanup,
   fireEvent,
@@ -9,6 +10,7 @@ import {
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import HistoryOverlay from "../../../src/story/overlays/HistoryOverlay.svelte";
+import OverlayShell from "../../../src/story/overlays/OverlayShell.svelte";
 import PauseOverlay from "../../../src/story/overlays/PauseOverlay.svelte";
 import SaveLoadOverlay from "../../../src/story/overlays/SaveLoadOverlay.svelte";
 import SettingsOverlay from "../../../src/story/overlays/SettingsOverlay.svelte";
@@ -16,6 +18,28 @@ import {
   DEFAULT_STORY_PLAYBACK_SETTINGS,
   readStoryPlaybackSettings,
 } from "../../../src/story/playback/story-playback-settings.ts";
+
+const OVERLAY_SHELL_SOURCE = readFileSync(
+  "src/story/overlays/OverlayShell.svelte",
+  "utf8",
+);
+
+function declarations(selector: string): readonly string[] {
+  const style =
+    /<style>([\s\S]*)<\/style>/.exec(OVERLAY_SHELL_SOURCE)?.[1] ?? "";
+  const rules = new Map<string, string>();
+  for (const [, ruleSelector, body] of style.matchAll(/([^{}]+)\{([^{}]*)\}/g))
+    rules.set(
+      (ruleSelector ?? "").trim().replace(/\s+/g, " "),
+      (body ?? "").trim(),
+    );
+  const body = rules.get(selector);
+  expect(body, `OverlayShell.svelte has no \`${selector}\` rule`).toBeDefined();
+  return body!
+    .split(";")
+    .map((line) => line.trim().replace(/\s+/g, " "))
+    .filter((line) => line.length > 0);
+}
 
 afterEach(() => {
   cleanup();
@@ -25,6 +49,34 @@ afterEach(() => {
 });
 
 describe("story utility overlays", () => {
+  it("renders VariantB classes through the shared shell", () => {
+    render(OverlayShell, { title: "History", labelId: "history-title" });
+    const dialog = screen.getByRole("dialog", { name: "History" });
+    expect([...dialog.classList]).toEqual(
+      expect.arrayContaining(["overlay", "ui-glass-panel", "ui-chamfer"]),
+    );
+    expect(
+      screen.getByRole("heading", { name: "History" }).classList,
+    ).toContain("ui-dialog-title");
+  });
+
+  it("keeps blur on the backdrop and panel paint on VariantB primitives", () => {
+    const backdrop = declarations(".overlay-backdrop");
+    expect(backdrop).toContain(
+      "background: color-mix(in srgb, var(--bg-deep) 55%, transparent)",
+    );
+    expect(backdrop).toContain("backdrop-filter: blur(6px)");
+
+    const panel = declarations(".overlay");
+    expect(panel).not.toContain("backdrop-filter: blur(6px)");
+    expect(panel.some((line) => line.includes("var(--story-panel)"))).toBe(
+      false,
+    );
+    expect(
+      panel.some((line) => /^(background|border|border-radius):/.test(line)),
+    ).toBe(false);
+  });
+
   it("shows ordered history and empty state", () => {
     const rendered = render(HistoryOverlay, {
       entries: [

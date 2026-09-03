@@ -46,7 +46,7 @@
 <svelte:window onkeydown={handleKeydown} />
 <div class="overlay-backdrop" data-cy={`story-overlay-backdrop-${labelId}`}>
   <div
-    class="overlay"
+    class="overlay ui-glass-panel ui-chamfer"
     role="dialog"
     aria-modal="true"
     aria-labelledby={labelId}
@@ -59,7 +59,13 @@
       aria-hidden={controlsSuspended}
       data-cy={`story-overlay-header-${labelId}`}
     >
-      <h2 id={labelId} data-cy={`story-overlay-heading-${labelId}`}>{title}</h2>
+      <h2
+        id={labelId}
+        class="ui-dialog-title"
+        data-cy={`story-overlay-heading-${labelId}`}
+      >
+        {title}
+      </h2>
       <button
         type="button"
         class="story-danger"
@@ -85,16 +91,14 @@
       max(1rem, env(safe-area-inset-right))
       max(1rem, env(safe-area-inset-bottom))
       max(1rem, env(safe-area-inset-left));
-    background: color-mix(in srgb, var(--bg-deeper) 85%, transparent);
+    background: color-mix(in srgb, var(--bg-deep) 55%, transparent);
+    backdrop-filter: blur(6px);
   }
   .overlay {
     width: min(42rem, 100%);
     max-height: min(48rem, calc(100svh - 2rem));
     overflow: auto;
     padding: 1.25rem;
-    border: 1px solid var(--story-border);
-    border-radius: 0.8rem;
-    background: var(--story-panel);
     box-shadow: 0 2rem 6rem color-mix(in srgb, var(--shadow) 80%, transparent);
   }
   .overlay:focus {

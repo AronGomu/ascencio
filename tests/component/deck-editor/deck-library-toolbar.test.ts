@@ -61,21 +61,18 @@ describe("DeckLibrary toolbar layout", () => {
     }
   });
 
-  it("the default badge sits on the deck tile's badge row", () => {
+  it("the default star sits on the deck tile", () => {
     const deck = deckFixture();
     render(DeckLibrary, {
       decks: [deck],
       defaultDeckId: deck.id,
       ...callbacks(),
     });
-    const badge = document.querySelector(
-      `[data-cy="deck-tile-badge-default-${deck.id}"]`,
+    const star = document.querySelector(
+      `[data-cy="deck-tile-default-star-${deck.id}"]`,
     );
-    expect(badge, "default badge should exist").not.toBeNull();
-    expect(
-      badge!.parentElement?.getAttribute("data-cy"),
-      "badge parent should be the tile's badge row",
-    ).toBe(`deck-tile-badges-${deck.id}`);
+    expect(star, "default star should exist").not.toBeNull();
+    expect(star?.getAttribute("aria-label")).toBe("Default deck");
     const nameEl = document.querySelector(
       `[data-cy="deck-tile-name-${deck.id}"]`,
     );

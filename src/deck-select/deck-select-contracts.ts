@@ -4,20 +4,13 @@ export type DeckSelectMode = "duel-start" | "library";
 export type DeckSelectScope = "free-play" | "story";
 export type DeckSort = "modified" | "name";
 
-export interface DeckCounts {
-  readonly main: number;
-  readonly extra: number;
-  readonly side: number;
-}
-
 /** One deck as any grid/list/seat renders it. Pure view model — hosts map
     domain records into this; deck-select never reads storage. */
 export interface DeckTileModel {
   /** Stable id, unique per rendered document; data-cy suffix. */
   readonly key: string;
   readonly name: string;
-  readonly counts: DeckCounts;
-  /** Meta line: "Updated <date>" | "Bundled" | block reason for illegal. */
+  /** One concise tag line; availability markers join it in the tile. */
   readonly meta: string;
   readonly coverImageUrl: string | null;
   readonly legal: boolean;

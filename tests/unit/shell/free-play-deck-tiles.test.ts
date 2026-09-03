@@ -82,18 +82,11 @@ describe("freePlayDeckTile", () => {
     expect(tile.key).toBe("preset:shaddoll");
     expect(tile.name).toBe(SHADDOLL.label);
     expect(tile.bundled).toBe(true);
-    expect(tile.meta).toBe(
-      `Updated ${new Date(`${__APP_BUILD_DATE__}T00:00:00.000Z`).toLocaleDateString(undefined, { timeZone: "UTC" })}`,
-    );
+    expect(tile.meta).toBe("Bundled");
     expect(tile.lockedBy).toBe("Vault Warden");
     /* The Extra Deck's first card is the deck's face: it names the strategy in
        a way the first Main Deck card rarely does. */
     expect(tile.coverImageUrl).toBe(`/images/${cover}.jpg`);
-    expect(tile.counts).toEqual({
-      main: SHADDOLL.lists.main.length,
-      extra: SHADDOLL.lists.extra.length,
-      side: SHADDOLL.lists.side.length,
-    });
     /* Free play never lists a deck it cannot play, so every tile is legal and
        none of them is deletable from a bundled row. */
     expect(tile.legal).toBe(true);
@@ -115,9 +108,7 @@ describe("freePlayDeckTile", () => {
     expect(tile.key).toBe(deck.key);
     expect(tile.name).toBe("Built Deck");
     expect(tile.bundled).toBe(false);
-    expect(tile.meta).toBe(
-      `Updated ${new Date(UPDATED_AT).toLocaleDateString()}`,
-    );
+    expect(tile.meta).toBe("Local deck");
     expect("favourite" in tile).toBe(false);
     expect(tile.isDefault).toBe(true);
     expect(tile.deletable).toBe(true);
@@ -125,7 +116,6 @@ describe("freePlayDeckTile", () => {
     expect(tile.updatedAt).toBe(UPDATED_AT);
     /* No Extra Deck, so the cover falls back to the first Main Deck card. */
     expect(tile.coverImageUrl).toBe("/images/11.jpg");
-    expect(tile.counts).toEqual({ main: 2, extra: 0, side: 1 });
   });
 
   /* A key carries the deck revision, so default comparison uses deck id. */

@@ -38,6 +38,7 @@
   export let onrename: (id: DeckId, name: string) => void = () => undefined;
   export let onduplicate: (id: DeckId) => void = () => undefined;
   export let ondelete: (id: DeckId, revision: number) => void = () => undefined;
+  export let onsetdefault: (id: DeckId) => void = () => undefined;
 
   /* Which deck the grid is focused on. Focus only: the library fills no seat,
      so this decides the teal halo, the docked decklist and which deck the
@@ -205,6 +206,7 @@
         {onback}
         oncreate={openCreateDialog}
         onselect={(key) => (selectedKey = key)}
+        onsetdefault={(key) => forRecord(key, (deck) => onsetdefault(deck.id))}
         onopen={(key) => forRecord(key, (deck) => onopen(deck.id))}
         onrename={(key, name) =>
           forRecord(key, (deck) => onrename(deck.id, name))}

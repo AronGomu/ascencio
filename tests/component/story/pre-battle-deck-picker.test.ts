@@ -75,9 +75,9 @@ function deckButton(id: string): HTMLButtonElement {
   return button as HTMLButtonElement;
 }
 
-/** The tick the tile carries while it is the deck the encounter would start on. */
+/** Selection stays a halo; default status belongs to the separate star. */
 function picked(id: string): boolean {
-  return cy(`deck-tile-check-${id}`) !== null;
+  return cy(`deck-tile-${id}`)?.classList.contains("halo-focus") ?? false;
 }
 
 /* Counted inside the grid rather than across the document: the opponent's own
@@ -104,11 +104,8 @@ describe("the pre-battle deck picker", () => {
     expect(gridSize()).toBe(3);
     expect(picked(SECOND.id)).toBe(true);
     expect(picked(LEGAL.id)).toBe(false);
-    /* The counts come from the record rather than from the verdict, which is
-       the pairing this screen is responsible for. */
-    expect(cy(`deck-tile-counts-${SECOND.id}`)?.textContent).toBe(
-      "Main 1 · Extra 0 · Side 0",
-    );
+    expect(cy(`deck-tile-tags-${SECOND.id}`)?.textContent).toBe("Save deck");
+    expect(cy(`deck-tile-counts-${SECOND.id}`)).toBeNull();
   });
 
   it("falls back to the first legal deck when the save has no default", () => {
@@ -158,7 +155,9 @@ describe("the pre-battle deck picker", () => {
     );
 
     expect(deckButton(ILLEGAL.id).disabled).toBe(true);
-    expect(cy(`deck-tile-badge-illegal-${ILLEGAL.id}`)).not.toBeNull();
+    expect(cy(`deck-tile-tags-${ILLEGAL.id}`)?.textContent).toContain(
+      "Illegal",
+    );
     expect(deckButton(LEGAL.id).disabled).toBe(false);
 
     await fireEvent.keyDown(window, { key: "ArrowDown" });
@@ -173,8 +172,10 @@ describe("the pre-battle deck picker", () => {
       props({ decks: [LEGAL, ILLEGAL], defaultDeckId: LEGAL.id }),
     );
 
-    expect(cy(`deck-tile-meta-${ILLEGAL.id}`)?.textContent).toBe(ILLEGAL.issue);
-    expect(cy(`deck-tile-meta-${LEGAL.id}`)?.textContent).toBe("Save deck");
+    expect(cy(`deck-tile-tags-${ILLEGAL.id}`)?.textContent).toBe(
+      `Illegal · ${ILLEGAL.issue}`,
+    );
+    expect(cy(`deck-tile-tags-${LEGAL.id}`)?.textContent).toBe("Save deck");
   });
 
   /* The opponent is the encounter's, not a choice: no portrait control, no
@@ -197,14 +198,25 @@ describe("the pre-battle deck picker", () => {
     expect(cy("duel-start-opponent-deck-name")?.textContent).toBe("Relay Deck");
   });
 
-  it("renders no favourite controls", () => {
-    render(
-      PreBattleScreen,
-      props({ decks: [LEGAL, SECOND], defaultDeckId: LEGAL.id }),
-    );
+  it("sets a story deck as default from its star", async () => {
+    const onselectdeck = vi.fn();
+    const base = props({
+      decks: [LEGAL, SECOND],
+      defaultDeckId: LEGAL.id,
+      onselectdeck,
+    });
+    const { rerender } = render(PreBattleScreen, base);
 
-    expect(document.querySelector('[data-cy^="deck-tile-fav-"]')).toBeNull();
-    expect(cy(`deck-tile-default-star-${LEGAL.id}`)).not.toBeNull();
+    await userEvent.setup().click(cy(`deck-tile-default-star-${SECOND.id}`)!);
+    expect(onselectdeck).toHaveBeenCalledExactlyOnceWith(SECOND.id);
+
+    await rerender({ ...base, defaultDeckId: SECOND.id });
+    expect(
+      (cy(`deck-tile-default-star-${LEGAL.id}`) as HTMLButtonElement).disabled,
+    ).toBe(false);
+    expect(
+      (cy(`deck-tile-default-star-${SECOND.id}`) as HTMLButtonElement).disabled,
+    ).toBe(true);
   });
 
   /* A save's decks are managed in the story's own deck editor, which this
@@ -429,7 +441,7 @@ describe("the briefing inside the story app", () => {
     );
     expect(start().disabled).toBe(true);
     expect(deckButton(BROKEN.id).disabled).toBe(true);
-    expect(cy(`deck-tile-meta-${BROKEN.id}`)?.textContent).toContain(
+    expect(cy(`deck-tile-tags-${BROKEN.id}`)?.textContent).toContain(
       "Main Deck needs 39 more",
     );
     expect(notice()).toContain(BROKEN.name);

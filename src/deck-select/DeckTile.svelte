@@ -4,25 +4,32 @@
   export let tile: DeckTileModel;
   /** Visual selection halo: null = none. Selected focus uses orange (--selected). */
   export let halo: "you" | "opponent" | "focus" | null = null;
-  /** Checkmark top-right shown when true. */
-  export let selected = false;
-  /** "Yours" badge while filling the opponent seat. */
+  /** "Yours" tag while filling the opponent seat. */
   export let yours = false;
   export let showMenu = true;
   export let disabled = false;
+  export let canSetDefault = true;
   export let onpress: () => void = () => undefined;
   export let ondblpress: () => void = () => undefined;
-  /** Kebab pressed; anchor element passed so the menu (T13) can position. */
+  export let onsetdefault: () => void = () => undefined;
+  /** Kebab pressed; anchor element passed so the menu can position. */
   export let onmenu: (anchor: HTMLElement) => void = () => undefined;
   /** Identity every `data-cy` here is built from; null uses the deck's key.
       One deck can render twice in a document — the grid tile and the seat card
       showing the same pick — and the element contract wants one value each. */
   export let cyKey: string | null = null;
 
-  /* Built in the script rather than interpolated three times in the markup:
-     the stats line is one sentence, and formatter whitespace around `{…}`
-     would land inside it. */
-  $: countsLine = `Main ${tile.counts.main} · Extra ${tile.counts.extra} · Side ${tile.counts.side}`;
+  /* Availability stays one scan line. Specific refusal follows its category;
+     repeated bundled copy is collapsed before rendering. */
+  $: tagLine = [
+    ...new Set([
+      ...(tile.legal ? [] : ["Illegal"]),
+      tile.meta,
+      ...(tile.bundled && tile.meta !== "Bundled" ? ["Bundled"] : []),
+      ...(tile.lockedBy === null ? [] : [`Locked: ${tile.lockedBy}`]),
+      ...(yours ? ["Yours"] : []),
+    ]),
+  ].join(" · ");
   /* A deck that fails validation cannot be picked, so the press surface itself
      carries the fact — the dimming is the sighted echo, never the source. */
   let failedArtUrls: readonly string[] = [];
@@ -96,53 +103,43 @@
     <span class="name text-backdrop" data-cy={`deck-tile-name-${cyId}`}
       >{tile.name}</span
     >
-    <span class="body text-backdrop" data-cy={`deck-tile-body-${cyId}`}>
-      <span class="counts" data-cy={`deck-tile-counts-${cyId}`}
-        >{countsLine}</span
-      >
-      <span class="meta" data-cy={`deck-tile-meta-${cyId}`}>{tile.meta}</span>
-      <span class="badges" data-cy={`deck-tile-badges-${cyId}`}>
-        {#if tile.isDefault}
-          <span
-            class="badge badge-default"
-            data-cy={`deck-tile-badge-default-${cyId}`}>Default</span
-          >
-        {/if}
-        {#if !tile.legal}
-          <span
-            class="badge badge-illegal"
-            data-cy={`deck-tile-badge-illegal-${cyId}`}>Illegal</span
-          >
-        {/if}
-        {#if tile.bundled}
-          <span class="badge" data-cy={`deck-tile-badge-bundled-${cyId}`}
-            >Bundled</span
-          >
-        {/if}
-        {#if tile.lockedBy !== null}
-          <span class="badge" data-cy={`deck-tile-badge-locked-${cyId}`}
-            >🔒 {tile.lockedBy}</span
-          >
-        {/if}
-        {#if yours}
-          <span class="badge" data-cy={`deck-tile-badge-yours-${cyId}`}
-            >Yours</span
-          >
-        {/if}
-      </span>
-    </span>
+    <span class="tag-line text-backdrop" data-cy={`deck-tile-tags-${cyId}`}
+      >{tagLine}</span
+    >
   </button>
 
-  {#if tile.isDefault}
-    <span
+  {#if canSetDefault}
+    <button
+      type="button"
       class="corner star"
-      aria-label={`Default deck: ${tile.name}`}
-      data-cy={`deck-tile-default-star-${cyId}`}>★</span
+      class:filled={tile.isDefault}
+      class:outline={!tile.isDefault}
+      disabled={tile.isDefault}
+      aria-label={tile.isDefault
+        ? "Default deck"
+        : `Set ${tile.name} as default deck`}
+      aria-pressed={tile.isDefault ? "true" : "false"}
+      onclick={(event) => {
+        event.stopPropagation();
+        onsetdefault();
+      }}
+      data-cy={`deck-tile-default-star-${cyId}`}
     >
-  {/if}
-
-  {#if selected}
-    <span class="corner check" data-cy={`deck-tile-check-${cyId}`}>✓</span>
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        data-cy={`deck-tile-default-star-icon-${cyId}`}
+      >
+        <path
+          d="M12 2.75 14.77 8.36 20.96 9.26 16.48 13.63 17.54 19.8 12 16.89 6.46 19.8 7.52 13.63 3.04 9.26 9.23 8.36Z"
+          fill={tile.isDefault ? "currentColor" : "none"}
+          stroke="currentColor"
+          stroke-width="1.7"
+          stroke-linejoin="round"
+          data-cy={`deck-tile-default-star-path-${cyId}`}
+        />
+      </svg>
+    </button>
   {/if}
 
   {#if showMenu}
@@ -154,18 +151,40 @@
         event.stopPropagation();
         onmenu(event.currentTarget);
       }}
-      data-cy={`deck-tile-menu-${cyId}`}>⋮</button
+      data-cy={`deck-tile-menu-${cyId}`}
     >
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        data-cy={`deck-tile-menu-icon-${cyId}`}
+      >
+        <circle
+          cx="12"
+          cy="5"
+          r="1.5"
+          data-cy={`deck-tile-menu-dot-1-${cyId}`}
+        />
+        <circle
+          cx="12"
+          cy="12"
+          r="1.5"
+          data-cy={`deck-tile-menu-dot-2-${cyId}`}
+        />
+        <circle
+          cx="12"
+          cy="19"
+          r="1.5"
+          data-cy={`deck-tile-menu-dot-3-${cyId}`}
+        />
+      </svg>
+    </button>
   {/if}
 </article>
 
 <style>
   .deck-tile {
     --corner-size: 2.75rem;
-    --deck-tile-body-height: calc(
-      var(--corner-size) + var(--corner-size) + var(--space-2)
-    );
-    --deck-tile-body-width: calc(
+    --deck-tile-tag-width: calc(
       100% - var(--corner-size) - var(--space-2) - var(--space-2) -
         var(--space-2)
     );
@@ -223,21 +242,6 @@
     fill: color-mix(in srgb, var(--accent) 22%, transparent);
   }
 
-  .body {
-    z-index: 1;
-    display: flex;
-    box-sizing: border-box;
-    width: var(--deck-tile-body-width);
-    height: var(--deck-tile-body-height);
-    flex-direction: column;
-    align-self: end;
-    justify-self: start;
-    gap: var(--space-1);
-    margin: var(--space-2);
-    padding: var(--space-2);
-    overflow: hidden;
-  }
-
   .name {
     z-index: 1;
     display: -webkit-box;
@@ -255,51 +259,31 @@
     line-clamp: 2;
   }
 
-  .text-backdrop {
-    border-radius: var(--radius-sm);
-    background: color-mix(in srgb, var(--shadow) 65%, transparent);
-  }
-
-  .name,
-  .counts,
-  .meta,
-  .badge {
-    text-shadow:
-      0 1px 2px var(--shadow),
-      0 0 0.4rem var(--shadow);
-  }
-
-  .counts,
-  .meta {
+  .tag-line {
+    z-index: 1;
+    box-sizing: border-box;
+    width: var(--deck-tile-tag-width);
+    margin: var(--space-2);
+    padding: var(--space-2);
     overflow: hidden;
+    align-self: end;
+    justify-self: start;
     color: var(--muted);
     font-size: var(--text-xs);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-1);
-  }
-
-  .badge {
-    padding: 0 0.3rem;
-    border: 1px solid var(--border);
+  .text-backdrop {
     border-radius: var(--radius-sm);
-    color: var(--muted);
-    font-size: var(--text-xs);
+    background: color-mix(in srgb, var(--shadow) 65%, transparent);
   }
 
-  .badge-default {
-    border-color: var(--selected);
-    color: var(--selected);
-  }
-
-  .badge-illegal {
-    border-color: var(--danger);
-    color: var(--danger);
+  .name,
+  .tag-line {
+    text-shadow:
+      0 1px 2px var(--shadow),
+      0 0 0.4rem var(--shadow);
   }
 
   .corner {
@@ -310,33 +294,45 @@
     height: var(--corner-size);
     place-items: center;
     padding: 0;
-    border: 0;
+    border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     color: var(--text);
-    background: color-mix(in srgb, var(--shadow) 55%, transparent);
-    font-size: var(--text-sm);
+    background: color-mix(in srgb, var(--shadow) 65%, transparent);
     line-height: 1;
   }
 
-  .star {
-    top: var(--space-2);
-    left: var(--space-2);
+  .corner svg {
+    width: 1.2rem;
+    height: 1.2rem;
   }
 
   .star {
-    color: var(--selected);
-  }
-
-  .check {
     top: var(--space-2);
     right: var(--space-2);
-    color: var(--selected);
+    color: var(--accent);
+    cursor: pointer;
+  }
+
+  .star:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 16%, var(--shadow));
+  }
+
+  .star:disabled {
+    border-color: var(--gold-line);
+    color: var(--accent);
+    cursor: default;
+    opacity: 1;
   }
 
   .kebab {
     right: var(--space-2);
     bottom: var(--space-2);
     cursor: pointer;
+  }
+
+  .kebab circle {
+    fill: currentColor;
   }
 
   .deck-tile.halo-you {
@@ -355,11 +351,9 @@
     box-shadow: 0 0 0.55rem color-mix(in srgb, var(--selected) 65%, transparent);
   }
 
-  /* Last on purpose: the gold hairline marks the scope's default deck whatever
-     is picked right now, so it takes the border from any halo while leaving
-     that halo's glow — the thing that says "this is the current pick" — alone. */
+  /* Default remains independently visible when selection halo moves. */
   .deck-tile.is-default {
-    border-color: var(--selected);
+    border-color: var(--accent);
   }
 
   .deck-tile.illegal {

@@ -22,8 +22,7 @@
      every card missing, so a verdict reached before it lands would refuse every
      deck in the save — the screen waits instead of refusing. */
   export let decks: readonly PreBattleDeckOption[] | null = null;
-  /** The save's decks as records, for counts/cover/decklists; pairs with
-      `decks` (verdicts) by id. */
+  /** The save's deck records for covers/decklists; pairs with verdicts by id. */
   export let deckRecords: readonly StoryDeck[] = [];
   export let defaultDeckId: string | null = null;
   export let decksError: string | null = null;
@@ -100,8 +99,7 @@
   $: opponentDeck = {
     key: "encounter-deck",
     name: opponentDeckName,
-    counts: { main: 0, extra: 0, side: 0 },
-    meta: "🔒 Set by the story",
+    meta: "Locked by story",
     coverImageUrl: null,
     legal: true,
     blockReason: null,
@@ -196,6 +194,8 @@
     {decklistFor}
     {cardImageFor}
     onselect={choose}
+    canSetDefault={() => true}
+    onsetdefault={record}
     onstart={start}
     onback={onreturn}
     onopen={() => void leave()}

@@ -150,22 +150,20 @@ describe("set default from the deck page", () => {
       ).toBe(true),
     );
 
-    /* And it is stored rather than held: a fresh mount reads the default back
-       out of IndexedDB, and the badge is on this deck instead of the starter
-       deck that had it a moment ago. */
+    /* Stored, not held: fresh mount reads filled disabled star back. */
     cleanup();
     render(DeckEditorApp, { deckId: null, onnavigate: vi.fn() });
     await waitFor(() =>
       expect(
         document.querySelector(
-          `[data-cy="deck-tile-badge-default-${chosen.id}"]`,
+          `[data-cy="deck-tile-default-star-${chosen.id}"][disabled]`,
         ),
       ).not.toBeNull(),
     );
     expect(
       document
-        .querySelector('[data-cy^="deck-tile-badge-default-"]')
+        .querySelector('[aria-label="Default deck"]')
         ?.getAttribute("data-cy"),
-    ).toBe(`deck-tile-badge-default-${chosen.id}`);
+    ).toBe(`deck-tile-default-star-${chosen.id}`);
   });
 });

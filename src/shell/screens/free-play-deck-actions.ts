@@ -23,7 +23,7 @@ interface DuplicateSource {
 }
 
 /**
- * The three deck-library writes the free-play selection screen offers.
+ * The four deck-library writes the free-play selection screen offers.
  *
  * Each one opens the library, acts, and closes it again, the way
  * `loadFreePlayDecks` reads it: the screen manages the decks it is picking
@@ -60,6 +60,19 @@ function localDeck(key: string): Readonly<{ id: DeckId; revision: number }> {
   const local = parseLocalDeckKey(key);
   if (local === null) throw new Error("Bundled decks cannot be modified");
   return local;
+}
+
+/** Makes the local deck `key` names the persisted default, then re-reads it. */
+export async function setDefaultLocalDeck(key: string): Promise<DeckId | null> {
+  const { id } = localDeck(key);
+  let repository: IndexedDbDeckRepository | null = null;
+  try {
+    repository = await IndexedDbDeckRepository.open();
+    await repository.setDefaultDeck(id);
+    return await repository.getDefaultDeck();
+  } finally {
+    repository?.close();
+  }
 }
 
 /** Renames the deck `key` names, at whatever revision storage holds now.

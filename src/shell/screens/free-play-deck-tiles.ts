@@ -34,23 +34,10 @@ export function freePlayDeckTile(
   /* The Extra Deck's first card is the deck's face — it names the strategy in
      a way the first Main Deck card rarely does — and derived per listing, so a
      deck edited into another theme never keeps yesterday's cover. */
-  const displayedDate =
-    deck.updatedAt === null
-      ? new Date(`${__APP_BUILD_DATE__}T00:00:00.000Z`).toLocaleDateString(
-          undefined,
-          { timeZone: "UTC" },
-        )
-      : new Date(deck.updatedAt).toLocaleDateString();
   return {
     key: deck.key,
     name: deck.label,
-    counts: {
-      main: deck.lists.main.length,
-      extra: deck.lists.extra.length,
-      side: deck.lists.side.length,
-    },
-    /* Local decks show their last save; bundled decks show this app build. */
-    meta: `Updated ${displayedDate}`,
+    meta: deck.source === "preset" ? "Bundled" : "Local deck",
     coverImageUrl: deckCoverImageUrl(
       { ...deck.lists, illustrationCardCode: null },
       context.catalog,

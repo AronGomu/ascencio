@@ -73,7 +73,6 @@ describe("preBattleDeckTile", () => {
 
     expect(tile.key).toBe("signal");
     expect(tile.name).toBe("Signal Deck");
-    expect(tile.counts).toEqual({ main: 40, extra: 2, side: 0 });
     /* The Extra deck's first card is the deck's face: a deck edited into
        another theme must not keep yesterday's cover. */
     expect(tile.coverImageUrl).toBe(
@@ -119,20 +118,16 @@ describe("preBattleDeckTile", () => {
   it("renders an option whose record has not arrived yet", () => {
     const tile = preBattleDeckTile(LEGAL, undefined, context());
 
-    expect(tile.counts).toEqual({ main: 0, extra: 0, side: 0 });
     expect(tile.coverImageUrl).toBeNull();
     expect(tile.updatedAt).toBeNull();
     expect(tile.name).toBe("Signal Deck");
   });
 
-  /* A code this build's catalog does not know still counts towards the deck;
-     only its picture is missing. */
   it("leaves the cover empty for a card the catalog cannot name", () => {
     const unknown = storyDeckFixture("signal", { main: [1], extra: [] });
 
     expect(
       preBattleDeckTile(LEGAL, unknown, context()).coverImageUrl,
     ).toBeNull();
-    expect(preBattleDeckTile(LEGAL, unknown, context()).counts.main).toBe(1);
   });
 });

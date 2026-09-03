@@ -596,8 +596,7 @@ describe("data-cy uniqueness in deck select rendered document", () => {
     return {
       key,
       name,
-      counts: { main: 40, extra: 15, side: 10 },
-      meta: "Updated 20 Aug 2026",
+      meta: "Local deck",
       coverImageUrl: null,
       legal: true,
       blockReason: null,

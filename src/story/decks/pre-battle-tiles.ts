@@ -7,8 +7,8 @@
 
    The option and the record are matched by id rather than merged upstream
    because the two reach the screen as separate props and flush separately. A
-   record that has not arrived for an option costs the tile its counts and its
-   cover, never its name or its verdict. */
+   record that has not arrived for an option costs the tile its cover, never
+   its name or its verdict. */
 
 import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
 import type { DeckTileModel } from "../../deck-select/index.ts";
@@ -30,11 +30,6 @@ export function preBattleDeckTile(
   return {
     key: option.id,
     name: option.name,
-    counts: {
-      main: record?.main.length ?? 0,
-      extra: record?.extra.length ?? 0,
-      side: record?.side.length ?? 0,
-    },
     /* The tile's one line of prose. An illegal deck spends it on why, which is
        the fact the player is on this screen to act on; a legal one says what
        it is, because a save's decks are the save's rather than bundled. */

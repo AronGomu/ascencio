@@ -22,6 +22,7 @@
     duplicateLocalDeck,
     parseLocalDeckKey,
     renameLocalDeck,
+    setDefaultLocalDeck,
   } from "./free-play-deck-actions.ts";
   import {
     freePlayBattleModule,
@@ -252,6 +253,16 @@
     }
   }
 
+  async function setDefaultDeck(key: string): Promise<void> {
+    startError = null;
+    manageError = null;
+    try {
+      defaultDeckId = await setDefaultLocalDeck(key);
+    } catch (error) {
+      manageError = `Default deck could not be set: ${error instanceof Error ? error.message : "Unknown error"}`;
+    }
+  }
+
   async function renameDeck(key: string, name: string): Promise<void> {
     const loaded = battle;
     if (loaded === null) return;
@@ -433,6 +444,7 @@
     onseat={(next) => (seat = next)}
     onpickopponent={pickOpponent}
     onselect={select}
+    onsetdefault={(key) => void setDefaultDeck(key)}
     onstart={start}
     onback={() => onback()}
     onopen={openDeck}

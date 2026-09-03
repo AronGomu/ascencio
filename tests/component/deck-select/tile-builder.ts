@@ -7,8 +7,7 @@ export function tile(overrides: Partial<DeckTileModel> = {}): DeckTileModel {
   return {
     key: "k1",
     name: "Prototype Control",
-    counts: { main: 40, extra: 15, side: 10 },
-    meta: "Updated 20 Aug 2026",
+    meta: "Local deck",
     coverImageUrl: null,
     legal: true,
     blockReason: null,

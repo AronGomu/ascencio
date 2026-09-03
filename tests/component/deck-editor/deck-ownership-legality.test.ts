@@ -113,24 +113,17 @@ async function openLibrary(collection: Record<number, number>): Promise<void> {
   );
 }
 
-/** The press surface of the deck's tile: a deck the save cannot field is not
-    pickable, which is the same fact the badge states in words. */
+/** Press surface: deck save cannot field remains unpickable. */
 function press(): HTMLButtonElement | null {
   return document.querySelector<HTMLButtonElement>(
     `[data-cy="deck-tile-press-${STORY_DECK_ID}"]`,
   );
 }
 
-function badge(): Element | null {
-  return document.querySelector(
-    `[data-cy="deck-tile-badge-illegal-${STORY_DECK_ID}"]`,
-  );
-}
-
-/** Why the deck cannot be fielded, in the tile's own words. */
+/** One concise tile line carries availability and concrete reason. */
 function reason(): string {
   return (
-    document.querySelector(`[data-cy="deck-tile-meta-${STORY_DECK_ID}"]`)
+    document.querySelector(`[data-cy="deck-tile-tags-${STORY_DECK_ID}"]`)
       ?.textContent ?? ""
   );
 }
@@ -147,7 +140,7 @@ describe("ownership legality in the deck library", () => {
     const collection = collectionOf(MAIN);
     await openLibrary({ ...collection, [SOLD.code]: 0 });
 
-    expect(badge()).not.toBeNull();
+    expect(reason()).toContain("Illegal");
     expect(reason()).toContain("Cards not owned");
     expect(press()?.disabled).toBe(true);
   });
@@ -155,8 +148,8 @@ describe("ownership legality in the deck library", () => {
   it("the same deck is legal while the save still owns its cards", async () => {
     await openLibrary(collectionOf(MAIN));
 
-    expect(badge()).toBeNull();
-    expect(reason()).toContain("Updated");
+    expect(reason()).not.toContain("Illegal");
+    expect(reason()).toBe("Local deck");
     expect(press()?.disabled).toBe(false);
   });
 });

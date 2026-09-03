@@ -131,18 +131,18 @@ describe("deckLibraryTiles", () => {
     expect(tileOf(record({ main: [999] })).coverImageUrl).toBeNull();
   });
 
-  it("the key, name, counts and timestamp come straight off the record", () => {
+  it("the key, name, tag and timestamp come straight off the record", () => {
     const tile = tileOf(
       record({ main: [111, 222], extra: [111], side: [222, 111, 333] }),
     );
 
     expect(tile.key).toBe("d1");
     expect(tile.name).toBe("Prototype Control");
-    expect(tile.counts).toEqual({ main: 2, extra: 1, side: 3 });
+    expect(tile.meta).toBe("Local deck");
     expect(tile.updatedAt).toBe("2026-08-20T10:00:00.000Z");
   });
 
-  it("a legal deck is legal, unblocked, and reports when it was last touched", () => {
+  it("a legal deck is legal, unblocked, and tagged local", () => {
     const tile = tileOf(
       record({
         validation: {
@@ -155,9 +155,7 @@ describe("deckLibraryTiles", () => {
 
     expect(tile.legal).toBe(true);
     expect(tile.blockReason).toBeNull();
-    expect(tile.meta).toBe(
-      `Updated ${new Date("2026-08-20T10:00:00.000Z").toLocaleString()}`,
-    );
+    expect(tile.meta).toBe("Local deck");
   });
 
   /* A deck whose cards the save no longer owns is repaired in the shop; one

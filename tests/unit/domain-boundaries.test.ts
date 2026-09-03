@@ -304,7 +304,6 @@ describe("public domain APIs are frozen", () => {
         "pinSelectedFirst",
       ],
       types: [
-        "DeckCounts",
         "DeckSelectMode",
         "DeckSelectScope",
         "DeckSort",

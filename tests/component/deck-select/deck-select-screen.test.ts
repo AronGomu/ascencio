@@ -126,6 +126,40 @@ describe("DeckSelectScreen", () => {
     expect(values.onopen).toHaveBeenCalledWith("k3");
   });
 
+  it("moves the filled default star after the host refreshes tiles", async () => {
+    const onsetdefault = vi.fn();
+    const first = decks().map((candidate) => ({
+      ...candidate,
+      isDefault: candidate.key === "k1",
+    }));
+    const base = props({ tiles: first, onsetdefault });
+    const { rerender } = render(DeckSelectScreen, base);
+
+    expect(button("deck-tile-default-star-k1").disabled).toBe(true);
+    expect(button("deck-tile-default-star-k3").disabled).toBe(false);
+    await userEvent.setup().click(cy("deck-tile-default-star-k3"));
+    expect(onsetdefault).toHaveBeenCalledExactlyOnceWith("k3");
+
+    await rerender({
+      ...base,
+      tiles: first.map((candidate) => ({
+        ...candidate,
+        isDefault: candidate.key === "k3",
+      })),
+    });
+    expect(button("deck-tile-default-star-k1").disabled).toBe(false);
+    expect(button("deck-tile-default-star-k3").disabled).toBe(true);
+  });
+
+  it("renders no default star for bundled presets", () => {
+    render(
+      DeckSelectScreen,
+      props({ tiles: [tile({ key: "preset", bundled: true })] }),
+    );
+
+    expect(find("deck-tile-default-star-preset")).toBeNull();
+  });
+
   it("kebab flow reaches rename with new name", async () => {
     const values = handlers();
     render(DeckSelectScreen, props(values));
@@ -346,13 +380,13 @@ describe("DeckSelectScreen", () => {
     const grid = cy("deck-select-grid");
     const theirs = grid.querySelector('[data-cy="deck-tile-k2"]');
     expect(theirs?.classList).toContain("halo-focus");
-    expect(grid.querySelector('[data-cy="deck-tile-check-k2"]')).not.toBeNull();
+    expect(grid.querySelector('[data-cy="deck-tile-check-k2"]')).toBeNull();
 
     const yours = grid.querySelector('[data-cy="deck-tile-k1"]');
     expect(yours?.classList).not.toContain("halo-you");
     expect(
-      grid.querySelector('[data-cy="deck-tile-badge-yours-k1"]'),
-    ).not.toBeNull();
+      grid.querySelector('[data-cy="deck-tile-tags-k1"]')?.textContent,
+    ).toContain("Yours");
   });
 
   /* The header and the tools row are one bar: the mode, the screen's name, its

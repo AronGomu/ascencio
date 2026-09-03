@@ -199,18 +199,15 @@ describe("DeckLibrary", () => {
     expect(ondelete).toHaveBeenCalledWith(deck.id, deck.revision);
   });
 
-  /* The halo alone says "something is wrong"; the badge says the deck cannot be
-     fielded, and the meta line names ownership when that is why. A player who
-     sold a card never edited this deck, so "Illegal" on its own would send them
-     to the editor to look for a mistake they did not make. */
-  it("an illegal deck is dimmed, badged, and cannot be picked", () => {
+  /* Dimming echoes the tag line; the concrete reason still names repair. */
+  it("an illegal deck is dimmed, tagged, and cannot be picked", () => {
     render(DeckLibrary, {
       decks: [illegalDeck("o1", [NOT_OWNED])],
       ...callbacks(),
     });
 
     expect(cy("deck-tile-o1").classList.contains("illegal")).toBe(true);
-    expect(find("deck-tile-badge-illegal-o1")).not.toBeNull();
+    expect(cy("deck-tile-tags-o1").textContent).toContain("Illegal");
     expect(
       cy("deck-tile-press-o1").hasAttribute("disabled"),
       "an illegal deck cannot be pressed",
@@ -222,7 +219,7 @@ describe("DeckLibrary", () => {
       decks: [illegalDeck("o1", [NOT_OWNED])],
       ...callbacks(),
     });
-    expect(cy("deck-tile-meta-o1").textContent).toContain("Cards not owned");
+    expect(cy("deck-tile-tags-o1").textContent).toContain("Cards not owned");
   });
 
   it("a build-rule error is blocked without blaming ownership", () => {
@@ -230,7 +227,7 @@ describe("DeckLibrary", () => {
       decks: [illegalDeck("e2", [UNDER_MINIMUM])],
       ...callbacks(),
     });
-    expect(cy("deck-tile-meta-e2").textContent).toContain("Illegal");
+    expect(cy("deck-tile-tags-e2").textContent).toContain("Illegal");
   });
 
   /* Buying the card back would not make this deck legal, so the meta line must
@@ -240,7 +237,7 @@ describe("DeckLibrary", () => {
       decks: [illegalDeck("b1", [NOT_OWNED, UNDER_MINIMUM])],
       ...callbacks(),
     });
-    expect(cy("deck-tile-meta-b1").textContent).toContain("Illegal");
+    expect(cy("deck-tile-tags-b1").textContent).toContain("Illegal");
   });
 
   /* Warnings are not illegal, and this is the case that would lock a brand-new
@@ -265,9 +262,9 @@ describe("DeckLibrary", () => {
     };
     render(DeckLibrary, { decks: [deck], ...callbacks() });
 
-    expect(find("deck-tile-badge-illegal-w2")).toBeNull();
+    expect(cy("deck-tile-tags-w2").textContent).not.toContain("Illegal");
     expect(cy("deck-tile-press-w2").hasAttribute("disabled")).toBe(false);
-    expect(cy("deck-tile-meta-w2").textContent).toContain("Updated");
+    expect(cy("deck-tile-tags-w2").textContent).toBe("Local deck");
   });
 
   it("the status text row is gone", () => {
@@ -305,21 +302,28 @@ describe("DeckLibrary", () => {
     expect(cy("deck-select-count").textContent).toBe("0/1");
   });
 
-  it("the default badge appears when defaultDeckId matches the tile", async () => {
+  it("reports a star press and fills it after refreshed default state", async () => {
     const values = callbacks();
+    const onsetdefault = vi.fn();
     const deck = legalDeck("t1");
-    const { rerender } = render(DeckLibrary, {
+    const base = {
       decks: [deck],
       defaultDeckId: null,
       ...values,
-    });
-    const badge = () => find(`deck-tile-badge-default-${deck.id}`);
-    expect(badge()).toBeNull();
+      onsetdefault,
+    };
+    const { rerender } = render(DeckLibrary, base);
+    const star = () =>
+      find(`deck-tile-default-star-${deck.id}`) as HTMLButtonElement | null;
+    expect(star()?.disabled).toBe(false);
 
-    /* The controller owns which deck is default, so the tile only claims the
-       badge once the refreshed state says so. */
-    await rerender({ decks: [deck], defaultDeckId: deck.id, ...values });
-    expect(badge()?.textContent).toContain("Default");
+    await userEvent.setup().click(star()!);
+    expect(onsetdefault).toHaveBeenCalledExactlyOnceWith(deck.id);
+
+    /* Controller owns default; star fills only after refreshed state. */
+    await rerender({ ...base, defaultDeckId: deck.id });
+    expect(star()?.disabled).toBe(true);
+    expect(star()?.getAttribute("aria-label")).toBe("Default deck");
   });
 
   /* The docked column is the focused deck's own list, so it has to stop being

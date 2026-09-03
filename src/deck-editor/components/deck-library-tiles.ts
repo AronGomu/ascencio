@@ -44,15 +44,9 @@ export function deckLibraryTiles(
       return Object.freeze({
         key: deck.id,
         name: deck.name,
-        counts: Object.freeze({
-          main: deck.main.length,
-          extra: deck.extra.length,
-          side: deck.side.length,
-        }),
-        /* The meta line answers one question, and for a deck that cannot be
-           fielded the answer is why rather than when it was last saved. */
-        meta:
-          blockReason ?? `Updated ${new Date(deck.updatedAt).toLocaleString()}`,
+        /* The one line says what kind of deck this is, unless availability
+           needs the space for its concrete refusal. */
+        meta: blockReason ?? "Local deck",
         coverImageUrl: deckCoverImageUrl(deck, catalog),
         legal,
         blockReason,

@@ -332,6 +332,7 @@
     {oncollection}
     onback={onexit}
     defaultDeckId={state.defaultDeckId}
+    onsetdefault={(id) => void controller?.setDefaultDeck(id)}
     onrename={(id, name) => void controller?.renameDeck(id, name)}
     onduplicate={(id) => void controller?.duplicate(id)}
     ondelete={(id, revision) => void controller?.deleteDeck(id, revision)}

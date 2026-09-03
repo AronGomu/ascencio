@@ -37,6 +37,11 @@
       kebab — a scope whose decks are managed somewhere else. Open and Start
       stay: they are how this screen is left, not how a deck is edited. */
   export let manageable = true;
+  /** Host owns default capability and persistence. Bundled presets default to
+      incapable; story-owned locked decks may opt in independently. */
+  export let canSetDefault: (tile: DeckTileModel) => boolean = (tile) =>
+    !tile.bundled;
+  export let onsetdefault: (key: string) => void = () => undefined;
   export let onselect: (key: string) => void = () => undefined;
   export let onstart: () => void = () => undefined;
   export let onback: () => void = () => undefined;
@@ -235,10 +240,6 @@
       return candidate.key === opponentDeck?.key ? "focus" : null;
     if (candidate.key !== selectedKey) return null;
     return "focus";
-  }
-
-  function selectedFor(candidate: DeckTileModel): boolean {
-    return candidate.key === activeKey;
   }
 
   /* The card is the control: pressing the opponent's deck fills their seat,
@@ -856,10 +857,11 @@
       <DeckTile
         tile={candidate}
         halo={haloFor(candidate)}
-        selected={selectedFor(candidate)}
         yours={seat === "opponent" && candidate.key === playerDeck?.key}
         onpress={() => onselect(candidate.key)}
         ondblpress={() => onopen(candidate.key)}
+        canSetDefault={canSetDefault(candidate)}
+        onsetdefault={() => onsetdefault(candidate.key)}
         showMenu={manageable}
         onmenu={(anchor) => (menu = { key: candidate.key, anchor })}
       />

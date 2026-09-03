@@ -20,10 +20,11 @@ import {
   duplicateLocalDeck,
   parseLocalDeckKey,
   renameLocalDeck,
+  setDefaultLocalDeck,
 } from "../../../src/shell/screens/free-play-deck-actions.ts";
 import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts";
 
-/* The three operations the free-play selection screen offers, against the real
+/* Operations the free-play selection screen offers, against the real
    repository the screen writes to. `runtimeCatalog()` is pointed at the small
    fixture because duplicating a deck validates the copy against the catalog
    this page read, and a node test has no runtime assets to serve. */
@@ -102,6 +103,15 @@ describe("parseLocalDeckKey", () => {
 });
 
 describe("free-play deck actions", () => {
+  it("sets and re-reads the persisted default deck", async () => {
+    await expect(setDefaultLocalDeck("local:built-deck:1")).resolves.toBe(
+      "built-deck",
+    );
+    await expect(
+      withRepository((repository) => repository.getDefaultDeck()),
+    ).resolves.toBe("built-deck");
+  });
+
   it("renames a deck and bumps its revision", async () => {
     await renameLocalDeck("local:built-deck:1", "  New Name  ");
 
@@ -148,6 +158,9 @@ describe("free-play deck actions", () => {
      deletable and the key is a preset — so the throw is the guard behind that,
      not a message a player is meant to read. */
   it("refuses every operation on a bundled deck", async () => {
+    await expect(setDefaultLocalDeck("preset:nekroz")).rejects.toThrow(
+      "Bundled decks cannot be modified",
+    );
     await expect(renameLocalDeck("preset:nekroz", "x")).rejects.toThrow(
       "Bundled decks cannot be modified",
     );

@@ -4,6 +4,7 @@
 > Decided: 2026-08-20
 > Owners: decks UI architecture
 > Relates: ADR-038 (default deck preference), ADR-023 (hash routes)
+> Amended by [ADR-069](069_ADR_default_is_the_only_deck_mark.md): §3 favourite storage and §4 favourite rank are removed.
 > Feedback: [`../../feedback-decks.md`](../../feedback-decks.md) — Decks Menu 1, 2, 3, 4
 
 ## Context

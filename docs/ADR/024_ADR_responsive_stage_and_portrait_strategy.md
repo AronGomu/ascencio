@@ -4,6 +4,7 @@
 > Decided: 2026-08-14
 > Owners: application-shell, duel-field, deck-editor architecture
 > Commit: `c27f4b0` — T4, T14, T15
+> Amended by [ADR-071](071_ADR_story_screens_consume_the_shell_stage.md): §5 now requires story screens to consume shell stage dimensions instead of browser viewport units.
 
 ## Context
 

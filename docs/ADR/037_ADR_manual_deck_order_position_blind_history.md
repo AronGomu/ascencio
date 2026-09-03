@@ -4,6 +4,7 @@
 > Decided: 2026-08-16
 > Owners: decks data architecture
 > Amended by [ADR-044](044_ADR_autosave_records_every_command.md): `reorder`/`sort` now **do** append to the autosave log; the "append nothing" clause in §3 is superseded.
+> Amended by [ADR-070](070_ADR_explicit_sorts_are_undoable.md): §3 remains position-blind for `reorder`, but explicit `sort` now appends one undo-history entry.
 
 ## Context
 

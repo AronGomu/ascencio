@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PROTOTYPE — Basilica Slate residual UI pass</title>
+<style>
+/* ============ Basilica Slate tokens — subset of src/styles/tokens.css ============ */
+:root {
+  --bg: #08101f; --bg-deep: #040912;
+  --surface: #111b2f; --surface-raised: #18243b; --surface-sunken: #0b1424;
+  --surface-panel: #101a2d; --surface-highlight: #22324e;
+  --border: #697895; --border-soft: #53627e; --border-light: #8ba0bf;
+  --text: #eef1f7; --muted: #a9b5ca; --ink-on-accent: #14100a;
+  --accent: #d3b268; --accent-strong: #c19a45; --accent-deep: #8a6f33;
+  --glass: rgba(150,175,215,0.02); --glass-strong: rgba(150,175,215,0.036);
+  --line-soft: rgba(170,190,220,0.18); --gold-line: rgba(211,178,104,0.6);
+  --chamfer: 6px;
+  --legal: #7ee2a8; --selected: #ffd580; --selected-strong: #ffc75c;
+  --danger: #ff8c9b; --danger-border: #a43b50; --danger-surface: #321825;
+  --warning-border: #896b28; --warning-surface: #2e2819;
+  --neutral: #33405a; --neutral-hover: #3f4e6c;
+  --focus-ring: #f6c177; --phase-player: #2b5f9e;
+  --field-surface: #153d35; --field-gradient-from: #173f36; --field-gradient-to: #102e2a;
+  --field-border: #436558; --field-hud-border: #4e8b72;
+  --radius-sm: 0.15rem; --radius-md: 0.25rem; --radius-lg: 0.4rem;
+  --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem; --space-5: 1.5rem;
+  --font-ui: "Source Serif 4", Georgia, ui-serif, serif;
+  --font-display: "Forum", "Source Serif 4", Georgia, serif;
+  --ls-display: 0.16em;
+}
+/* Self-hosted faces (local file read, zero network; serif fallback if moved) */
+@font-face { font-family: "Forum"; src: url("../public/fonts/forum-latin.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Source Serif 4"; src: url("../public/fonts/source-serif-4-latin.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: radial-gradient(ellipse at 50% -10%, #0c1730 0%, var(--bg) 45%, var(--bg-deep) 100%);
+  color: var(--text); font-family: var(--font-ui); font-size: 15px; line-height: 1.45;
+  min-height: 100vh; padding-bottom: 7rem;
+}
+button { font-family: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+/* ============ Prototype chrome (evaluation UI, not part of design) ============ */
+.proto-head { padding: 1rem 1.5rem 0.25rem; }
+.proto-head h1 { font: 400 1.05rem/1.3 var(--font-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+.proto-head p { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.85rem; max-width: 70ch; }
+.proto-head code { color: var(--selected); background: var(--surface-sunken); padding: 0 0.3em; border-radius: 3px; font-size: 0.85em; }
+
+.surface-tabs { display: flex; gap: 0.4rem; padding: 0.9rem 1.5rem; flex-wrap: wrap; }
+.surface-tabs button {
+  background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius-md);
+  color: var(--muted); padding: 0.4rem 0.9rem; font-size: 0.85rem;
+}
+.surface-tabs button[aria-selected="true"] { color: var(--text); border-color: var(--accent-deep); background: var(--surface-raised); }
+
+.stage { padding: 0.5rem 1.5rem 2rem; max-width: 1180px; margin: 0 auto; }
+section[data-surface] { display: none; }
+section[data-surface].active { display: block; }
+.mock-note { font-size: 0.75rem; color: var(--muted); font-style: italic; margin: 0.25rem 0 1rem; }
+
+/* Variant switcher */
+.switcher {
+  position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 0.75rem; z-index: 500;
+  background: rgba(8,16,31,0.92); border: 1px solid var(--border-soft); border-radius: var(--radius-lg);
+  padding: 0.5rem 0.9rem; backdrop-filter: blur(10px); box-shadow: 0 8px 30px rgba(0,0,0,0.55);
+}
+.switcher button { background: var(--neutral); border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: 0.3rem 0.7rem; }
+.switcher button:hover { background: var(--neutral-hover); }
+.switcher .label { min-width: 15rem; text-align: center; font-size: 0.85rem; }
+.switcher .label strong { color: var(--accent); font-family: var(--font-display); letter-spacing: 0.1em; }
+
+/* Param toolbar */
+.toolbar {
+  position: fixed; top: 1rem; right: 1rem; width: 270px; z-index: 500;
+  background: rgba(8,16,31,0.94); border: 1px solid var(--border-soft); border-radius: var(--radius-lg);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.55); font-size: 0.8rem;
+}
+.toolbar-head { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.75rem; cursor: grab; border-bottom: 1px solid var(--line-soft); user-select: none; }
+.toolbar-head strong { font-weight: 600; letter-spacing: 0.05em; }
+.toolbar-body { padding: 0.6rem 0.75rem 0.75rem; display: grid; gap: 0.55rem; }
+.toolbar.collapsed .toolbar-body { display: none; }
+.toolbar label { display: grid; gap: 0.15rem; }
+.toolbar label span { display: flex; justify-content: space-between; color: var(--muted); }
+.toolbar output { color: var(--selected); }
+.toolbar input[type="range"] { width: 100%; accent-color: var(--accent); }
+.toolbar select { background: var(--surface); color: var(--text); border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 0.2rem; font-family: inherit; }
+.toolbar .copy-row { display: flex; justify-content: flex-end; margin-top: 0.2rem; }
+.toolbar .copy-row button { background: var(--accent); color: var(--ink-on-accent); border: none; border-radius: var(--radius-md); padding: 0.35rem 0.7rem; font-weight: 600; }
+.toolbar textarea { width: 100%; height: 6rem; background: var(--surface-sunken); color: var(--text); border: 1px solid var(--border-soft); font-size: 0.7rem; }
+
+/* ============ Shared design primitives (the thing under evaluation) ============ */
+.panel {
+  background: var(--glass);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+.display { font-family: var(--font-display); letter-spacing: var(--ls-display); text-transform: uppercase; font-weight: 400; }
+.gold { color: var(--accent); }
+.chamfered { clip-path: polygon(var(--chamfer) 0, 100% 0, 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%, 0 var(--chamfer)); }
+
+.btn {
+  background: var(--neutral); border: 1px solid var(--border-soft); border-radius: var(--radius-md);
+  padding: 0.45rem 1.1rem; font-size: 0.9rem;
+}
+.btn:hover { background: var(--neutral-hover); }
+.btn-primary { background: var(--accent); border-color: var(--accent-strong); color: var(--ink-on-accent); font-weight: 600; }
+.btn-primary:hover { background: var(--accent-strong); }
+.btn-danger { background: var(--danger-surface); border-color: var(--danger-border); color: var(--danger); }
+.btn-legal { border-color: var(--legal); color: var(--legal); background: color-mix(in srgb, var(--legal) 8%, var(--surface)); }
+.is-selected { border-color: var(--selection-color, var(--selected)); box-shadow: 0 0 0 1px var(--selection-color, var(--selected)), 0 0 12px color-mix(in srgb, var(--selection-color, var(--selected)) 40%, transparent); }
+
+/* ============ Dialog mocks ============ */
+.dialog-row { display: flex; gap: 1.25rem; flex-wrap: wrap; align-items: flex-start; }
+.dialog { width: 330px; background: var(--surface-panel); border: 1px solid var(--border-soft); border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 18px 50px rgba(0,0,0,0.6); }
+.dialog-title { font-family: var(--font-display); letter-spacing: var(--ls-display); text-transform: uppercase; font-size: 0.95rem; padding: 0.8rem 1.1rem 0.6rem; }
+.dialog-body { padding: 0.4rem 1.1rem 1rem; color: var(--muted); font-size: 0.88rem; }
+.dialog-actions { display: flex; gap: 0.5rem; justify-content: flex-end; padding: 0 1.1rem 1rem; }
+.dialog .menu-list { display: grid; gap: 0.5rem; padding: 0.4rem 1.1rem 1.1rem; }
+.dialog .menu-list .btn { width: 100%; text-align: center; font-family: var(--font-display); letter-spacing: 0.12em; text-transform: uppercase; font-size: 0.85rem; }
+.dialog.result .verdict { text-align: center; font: 400 2rem var(--font-display); letter-spacing: 0.3em; text-transform: uppercase; color: var(--accent); padding: 1.4rem 0 0.4rem; text-shadow: 0 0 24px color-mix(in srgb, var(--accent) 45%, transparent); }
+.dialog.error { border-color: var(--danger-border); }
+.dialog.error .dialog-title { color: var(--danger); }
+.choice-list { display: grid; gap: 0.4rem; padding: 0 1.1rem 0.8rem; }
+.choice { display: flex; justify-content: space-between; gap: 0.5rem; background: var(--glass); border: 1px solid var(--line-soft); border-radius: var(--radius-sm); padding: 0.45rem 0.7rem; font-size: 0.85rem; text-align: left; }
+.choice small { color: var(--muted); }
+
+/* ============ Deck editor mocks ============ */
+.editor-mock { display: grid; grid-template-columns: 220px 1fr 240px; gap: 1rem; align-items: start; }
+.panel-title { font-family: var(--font-display); letter-spacing: 0.16em; text-transform: uppercase; font-size: 0.72rem; color: var(--muted); margin: 0 0 0.6rem; }
+.deck-tile { display: flex; justify-content: space-between; gap: 0.5rem; padding: 0.5rem 0.6rem; border: 1px solid var(--line-soft); border-radius: var(--radius-sm); background: var(--glass); margin-bottom: 0.45rem; font-size: 0.82rem; width: 100%; text-align: left; }
+.deck-tile small { color: var(--muted); }
+.zone-head { display: flex; gap: 1rem; align-items: baseline; margin-bottom: 0.6rem; }
+.zone-head .count { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 0.8rem; }
+.zone-head .count b { color: var(--text); }
+.card-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 0.35rem; }
+.card-slot { aspect-ratio: 59/86; background: var(--surface-sunken); border: 1px solid var(--border-soft); border-radius: 2px; position: relative; }
+.card-slot.filled { background: linear-gradient(150deg, #2a3a58, #1a2740); }
+.validation li { color: var(--danger); font-size: 0.82rem; margin: 0.25rem 0; }
+.validation li.warn { color: var(--selected); }
+.search { width: 100%; background: var(--surface-sunken); border: 1px solid var(--border-soft); border-radius: var(--radius-sm); color: var(--text); padding: 0.4rem 0.6rem; font-family: inherit; font-size: 0.82rem; margin-bottom: 0.6rem; }
+
+/* ============ Story overlay mocks ============ */
+.story-mock { position: relative; border-radius: var(--radius-lg); overflow: hidden; min-height: 400px; border: 1px solid var(--border-soft);
+  background: linear-gradient(180deg, #1a2438 0%, #0d1526 60%, #070d1a 100%); display: grid; place-items: center; }
+.story-mock .scene-hint { position: absolute; inset: 0; display: grid; place-items: center; color: rgba(215,225,245,0.1); font: 400 1.6rem var(--font-display); letter-spacing: 0.3em; }
+.overlay-scrim { position: absolute; inset: 0; background: rgba(4,9,18,0.55); backdrop-filter: blur(6px); display: grid; place-items: center; }
+.overlay-card { width: 340px; }
+.save-slot { display: flex; justify-content: space-between; gap: 0.5rem; padding: 0.5rem 0.7rem; border: 1px solid var(--line-soft); background: var(--glass); border-radius: var(--radius-sm); margin-bottom: 0.4rem; font-size: 0.82rem; width: 100%; text-align: left; }
+.save-slot small { color: var(--muted); }
+
+/* ============================================================
+   VariantA — "Quiet Glass": flat translucent panels, hairlines,
+   gold only on active phase + primary action. No chamfer.
+   ============================================================ */
+body.variant-a .dialog-title { border-bottom: 1px solid var(--line-soft); }
+body.variant-a .panel, body.variant-a .overlay-card { backdrop-filter: blur(8px); }
+
+/* ============================================================
+   VariantB — "Chamfered Plaques": glass-strong panels cut with
+   45° chamfers, gold-line edges, active phase = solid gold plaque.
+   ============================================================ */
+body.variant-b .dialog { border-radius: 0; border-color: var(--gold-line);
+  clip-path: polygon(var(--chamfer) 0, 100% 0, 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%, 0 var(--chamfer)); box-shadow: none; }
+body.variant-b .dialog-title { text-align: center; color: var(--accent); }
+body.variant-b .dialog-title::after { content: ""; display: block; width: 3.5rem; height: 1px; background: var(--gold-line); margin: 0.5rem auto 0; }
+body.variant-b .panel, body.variant-b .overlay-card { border-color: var(--gold-line); border-radius: 0; background: var(--glass-strong);
+  clip-path: polygon(var(--chamfer) 0, 100% 0, 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%, 0 var(--chamfer)); }
+body.variant-b .menu-list .btn { clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); border-radius: 0; }
+
+/* ============================================================
+   VariantC — "Inscribed Rules": square geometry, gold top rule +
+   Forum inscription header on every panel; phase bar as text line
+   with interpuncts; gold spent on rules + active word only.
+   ============================================================ */
+body.variant-c .dialog { border-radius: 0; border-top: 2px solid var(--gold-line); }
+body.variant-c .dialog-title { font-size: 0.8rem; color: var(--muted); }
+body.variant-c .dialog-title b { color: var(--text); font-weight: 400; }
+body.variant-c .panel, body.variant-c .overlay-card { border-radius: 0; border-top: 2px solid var(--gold-line); background: var(--surface-panel); }
+body.variant-c .panel-title { color: var(--accent); }
+</style>
+</head>
+<body class="variant-a">
+
+<header class="proto-head">
+  <h1>Prototype · Basilica Slate residual UI pass</h1>
+  <p><b>Branch: UI.</b> Question: how do dialogs, deck editor panels and story overlays wear Basilica Slate
+    (glass panels, chamfers, Forum markers)? Deck select is out of scope (own prototype). Duel HUD is out of
+    scope (owner-excluded 2026-09-02). All data mocked; no engine, no mutations. Chosen: <b>VariantB</b>.</p>
+</header>
+
+<nav class="surface-tabs" role="tablist" aria-label="Surface">
+  <button role="tab" aria-selected="true" data-tab="dialogs">Dialogs</button>
+  <button role="tab" aria-selected="false" data-tab="editor">Deck Editor</button>
+  <button role="tab" aria-selected="false" data-tab="story">Story Overlays</button>
+</nav>
+
+<main class="stage">
+
+<!-- ================= DIALOGS ================= -->
+<section data-surface="dialogs" class="active">
+  <p class="mock-note">Mocked: MenuDialog, DuelResultDialog, PromptDialog (card choice), DuelErrorDialog. Buttons inert.</p>
+  <div class="dialog-row">
+    <div class="dialog" role="dialog" aria-label="Menu">
+      <div class="dialog-title">Duel Menu</div>
+      <div class="menu-list">
+        <button class="btn">Resume</button>
+        <button class="btn">Settings</button>
+        <button class="btn btn-danger">Surrender</button>
+      </div>
+    </div>
+    <div class="dialog result" role="dialog" aria-label="Result">
+      <div class="verdict">Victory</div>
+      <div class="dialog-body" style="text-align:center">Opponent’s LP reached 0.</div>
+      <div class="dialog-actions" style="justify-content:center">
+        <button class="btn btn-primary">Continue</button>
+        <button class="btn">Rematch</button>
+      </div>
+    </div>
+    <div class="dialog" role="dialog" aria-label="Prompt">
+      <div class="dialog-title">Choose 1 card</div>
+      <div class="choice-list">
+        <button class="choice is-selected"><span>Mirror Force</span><small>Trap</small></button>
+        <button class="choice"><span>Call of the Haunted</span><small>Trap</small></button>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn">Cancel</button>
+      </div>
+    </div>
+    <div class="dialog error" role="alertdialog" aria-label="Error">
+      <div class="dialog-title">Duel Error</div>
+      <div class="dialog-body">The duel worker stopped responding. The duel cannot continue.</div>
+      <div class="dialog-actions">
+        <button class="btn">Copy report</button>
+        <button class="btn btn-primary">Back to menu</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DECK EDITOR ================= -->
+<section data-surface="editor">
+  <p class="mock-note">Mocked: DeckLibrary, DeckWorkspace zone grid, ValidationIssues, catalog search. Static counts.</p>
+  <div class="editor-mock">
+    <div class="panel">
+      <h3 class="panel-title">Deck Library</h3>
+      <button class="deck-tile is-selected"><span>Iron Vanguard</span><small>40+15</small></button>
+      <button class="deck-tile"><span>Abyss Ritual</span><small>41+12</small></button>
+      <button class="deck-tile"><span>Sky Dragons</span><small>40+15</small></button>
+    </div>
+    <div class="panel">
+      <div class="zone-head">
+        <h3 class="panel-title" style="margin:0">Main Deck</h3>
+        <span class="count"><b>40</b> / 40–60</span>
+        <span class="count">Extra <b>15</b></span>
+        <span class="count">Side <b>0</b></span>
+      </div>
+      <div class="card-grid" aria-label="Main deck grid"></div>
+    </div>
+    <div class="panel">
+      <h3 class="panel-title">Catalog</h3>
+      <input class="search" placeholder="Search cards…" aria-label="Search cards" />
+      <h3 class="panel-title">Validation</h3>
+      <ul class="validation" style="margin:0;padding-left:1.1rem">
+        <li>3 copies limit exceeded: “Pot of Greed”.</li>
+        <li class="warn">Side deck is empty.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= STORY OVERLAYS ================= -->
+<section data-surface="story">
+  <p class="mock-note">Mocked: PauseOverlay + SaveLoadOverlay over a dimmed narrative scene (OverlayShell scrim + blur).</p>
+  <div style="display:grid; gap:1.25rem">
+    <div class="story-mock">
+      <div class="scene-hint">NARRATIVE SCENE</div>
+      <div class="overlay-scrim">
+        <div class="overlay-card panel" role="dialog" aria-label="Paused">
+          <h3 class="panel-title display" style="font-size:0.9rem; text-align:center">Paused</h3>
+          <div class="menu-list" style="display:grid;gap:0.5rem;padding:0">
+            <button class="btn">Resume</button>
+            <button class="btn">Save</button>
+            <button class="btn">Load</button>
+            <button class="btn">Settings</button>
+            <button class="btn btn-danger">Quit to menu</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="story-mock">
+      <div class="scene-hint">NARRATIVE SCENE</div>
+      <div class="overlay-scrim">
+        <div class="overlay-card panel" role="dialog" aria-label="Save / Load">
+          <h3 class="panel-title display" style="font-size:0.9rem; text-align:center">Save / Load</h3>
+          <button class="save-slot is-selected"><span>Slot 1 — Chapter 2</span><small>2026-09-01 21:40</small></button>
+          <button class="save-slot"><span>Slot 2 — Chapter 1</span><small>2026-08-30 18:12</small></button>
+          <button class="save-slot"><span>Slot 3 — empty</span><small>—</small></button>
+          <div class="dialog-actions" style="padding:0.6rem 0 0">
+            <button class="btn btn-primary">Save here</button>
+            <button class="btn">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- Variant switcher -->
+<div class="switcher" role="group" aria-label="Variant switcher">
+  <button id="prev" aria-label="Previous variant">←</button>
+  <div class="label"><strong id="variant-name"></strong><br /><span id="variant-desc" style="font-size:0.72rem;color:var(--muted)"></span></div>
+  <button id="next" aria-label="Next variant">→</button>
+</div>
+
+<!-- Param toolbar -->
+<aside class="toolbar" id="toolbar">
+  <div class="toolbar-head" id="toolbar-drag"><strong>Parameters</strong><button id="toolbar-collapse" class="btn" style="padding:0 0.5rem">–</button></div>
+  <div class="toolbar-body">
+    <label><span>Chamfer <output id="o-chamfer">6px</output></span>
+      <input type="range" id="p-chamfer" min="0" max="18" step="1" value="6" /></label>
+    <label><span>Glass opacity <output id="o-glass">0.02</output></span>
+      <input type="range" id="p-glass" min="0" max="0.2" step="0.005" value="0.02" /></label>
+    <label><span>Gold line opacity <output id="o-gold">0.6</output></span>
+      <input type="range" id="p-gold" min="0.1" max="1" step="0.05" value="0.6" /></label>
+    <label><span>Display letterspacing <output id="o-ls">0.16em</output></span>
+      <input type="range" id="p-ls" min="0.06" max="0.3" step="0.02" value="0.16" /></label>
+    <label><span>Selection color</span>
+      <select id="p-selection">
+        <option value="#ffd580" selected>Amber #ffd580 (current)</option>
+        <option value="#9bd1ff">Ice blue #9bd1ff</option>
+        <option value="#7ee2a8">Legal green #7ee2a8</option>
+        <option value="#eaf6ff">Ghost white #eaf6ff</option>
+      </select></label>
+    <div class="copy-row"><button id="copy-params">Copy parameters</button></div>
+    <textarea id="copy-fallback" hidden readonly aria-label="Parameters text"></textarea>
+  </div>
+</aside>
+
+<script>
+const VARIANTS = {
+  A: { cls: "variant-a", name: "VariantA — Quiet Glass", desc: "flat glass panels, hairlines, gold = active phase + primary only" },
+  B: { cls: "variant-b", name: "VariantB — Chamfered Plaques", desc: "chamfered glass-strong panels, gold-line edges, gold plaque phase" },
+  C: { cls: "variant-c", name: "VariantC — Inscribed Rules", desc: "square panels, gold top rule + inscription headers, textual phase line" },
+};
+const ORDER = ["A", "B", "C"];
+let current = new URLSearchParams(location.search).get("variant")?.toUpperCase();
+if (!ORDER.includes(current)) current = "B";
+
+function apply(v) {
+  current = v;
+  document.body.className = VARIANTS[v].cls;
+  document.getElementById("variant-name").textContent = VARIANTS[v].name;
+  document.getElementById("variant-desc").textContent = VARIANTS[v].desc;
+  const url = new URL(location); url.searchParams.set("variant", v);
+  history.replaceState(null, "", url);
+}
+function step(d) { apply(ORDER[(ORDER.indexOf(current) + d + ORDER.length) % ORDER.length]); }
+document.getElementById("prev").onclick = () => step(-1);
+document.getElementById("next").onclick = () => step(1);
+document.addEventListener("keydown", (e) => {
+  const t = e.target;
+  if (t.matches("input, textarea, select, [contenteditable]")) return;
+  if (e.key === "ArrowLeft") step(-1);
+  if (e.key === "ArrowRight") step(1);
+});
+apply(current);
+
+// Surface tabs
+document.querySelectorAll(".surface-tabs button").forEach((b) => {
+  b.onclick = () => {
+    document.querySelectorAll(".surface-tabs button").forEach((x) => x.setAttribute("aria-selected", x === b));
+    document.querySelectorAll("section[data-surface]").forEach((s) => s.classList.toggle("active", s.dataset.surface === b.dataset.tab));
+  };
+});
+
+// Deck grid fill
+const grid = document.querySelector(".card-grid");
+for (let i = 0; i < 40; i++) { const d = document.createElement("div"); d.className = "card-slot filled"; grid.appendChild(d); }
+
+// Params
+const root = document.documentElement.style;
+const params = { chamfer: "6px", glassOpacity: "0.02", goldLineOpacity: "0.6", displayLetterspacing: "0.16em", selectionColor: "#ffd580" };
+function bind(id, out, fmt, setter) {
+  const el = document.getElementById(id);
+  el.addEventListener("input", () => {
+    const v = fmt(el.value);
+    if (out) document.getElementById(out).textContent = v;
+    setter(el.value, v);
+  });
+}
+bind("p-chamfer", "o-chamfer", (v) => v + "px", (raw, v) => { root.setProperty("--chamfer", v); params.chamfer = v; });
+bind("p-glass", "o-glass", (v) => v, (raw) => {
+  root.setProperty("--glass", `rgba(150,175,215,${raw})`);
+  root.setProperty("--glass-strong", `rgba(150,175,215,${Math.min(0.3, raw * 1.8).toFixed(3)})`);
+  params.glassOpacity = raw;
+});
+bind("p-gold", "o-gold", (v) => v, (raw) => { root.setProperty("--gold-line", `rgba(211,178,104,${raw})`); params.goldLineOpacity = raw; });
+bind("p-ls", "o-ls", (v) => (+v).toFixed(2) + "em", (raw, v) => { root.setProperty("--ls-display", v); params.displayLetterspacing = v; });
+document.getElementById("p-selection").addEventListener("input", (e) => {
+  root.setProperty("--selection-color", e.target.value); params.selectionColor = e.target.value;
+});
+
+document.getElementById("copy-params").onclick = async () => {
+  const text = [`variant: ${VARIANTS[current].name}`, ...Object.entries(params).map(([k, v]) => `${k}: ${v}`)].join("\n");
+  try { await navigator.clipboard.writeText(text); }
+  catch { const f = document.getElementById("copy-fallback"); f.hidden = false; f.value = text; f.select(); }
+};
+
+// Toolbar drag + collapse
+const tb = document.getElementById("toolbar");
+document.getElementById("toolbar-collapse").onclick = (e) => { e.stopPropagation(); tb.classList.toggle("collapsed"); };
+let drag = null;
+document.getElementById("toolbar-drag").addEventListener("pointerdown", (e) => {
+  if (e.target.tagName === "BUTTON") return;
+  const r = tb.getBoundingClientRect();
+  drag = { dx: e.clientX - r.left, dy: e.clientY - r.top };
+  e.target.setPointerCapture(e.pointerId);
+});
+document.addEventListener("pointermove", (e) => {
+  if (!drag) return;
+  tb.style.left = e.clientX - drag.dx + "px";
+  tb.style.top = e.clientY - drag.dy + "px";
+  tb.style.right = "auto";
+});
+document.addEventListener("pointerup", () => (drag = null));
+</script>
+</body>
+</html>

@@ -4,6 +4,7 @@
 > Decided: 2026-08-20
 > Owners: decks storage architecture
 > Amends: ADR-037 §3 (position-blind history), ADR-038 §3 (autosave log)
+> Amended by [ADR-070](070_ADR_explicit_sorts_are_undoable.md): §2 no longer excludes explicit `sort` from undo history; `reorder` remains excluded.
 > Feedback: [`../../feedback-decks.md`](../../feedback-decks.md) — Deck Builder 11
 
 ## Context

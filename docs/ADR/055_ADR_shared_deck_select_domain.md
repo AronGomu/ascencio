@@ -4,6 +4,7 @@
 > Decided: 2026-08-27
 > Owners: shell, deck-editor, story, integration
 > Relates: ADR-022 (modular monolith import boundaries — this adds a domain to that model), ADR-054 (free play opens on the seats — its screen is the first consumer), ADR-049 (save-owned decks — story tiles read the save, not IndexedDB)
+> Amended by [ADR-069](069_ADR_default_is_the_only_deck_mark.md): §3 drops favourite ranking; default remains the sole mark-based rank.
 
 ## Context
 

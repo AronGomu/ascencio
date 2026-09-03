@@ -20,7 +20,7 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 | collection | Owned card counts by card code | `StoryState.collection` |
 | rarity | Printed rarity from set data, inference fallback, halo colors | `src/story/shop/data/shop-set-data.ts`, ADR-035 |
 | setdata | First-50-sets JSON asset + offline-cached loader | `public/story/shop-sets.v1.json`, `src/story/shop/data/shop-set-data.ts` |
-| topbar | Story DP/shop/deck strip on narrative, map, shop | `src/story/components/StoryTopBar.svelte` |
+| topbar | Shared full-width story header; optional title/objective slots (planned) | `src/story/components/StoryTopBar.svelte`, ADR-071 |
 | playback | Narrative running itself: auto-advance or skip, with the stop reason it reports | `src/story/playback/story-playback.ts` (`PlaybackMode`, `playbackHalt`) |
 | auto | Advances one beat per auto-speed setting until a choice, the scene end, or any manual input | `src/story/playback/story-playback.ts`, `StoryApp.svelte` |
 | skip | Fast-forwards read beats, stopping at the first unread one unless "Skip unread text" is on | `src/story/playback/story-playback.ts`, `src/story/overlays/SettingsOverlay.svelte` |
@@ -44,7 +44,9 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 | log | Duel event log formatting + panel | `src/battle/app/presentation/format-duel-log-entry.ts`, `src/battle/app/components/duel-field/DuelLog.svelte` |
 | preview | Sticky card art + bounded scroll text column; shared duel/editor component | `src/shell/card-preview/CardPreviewPanel.svelte` (ADR-036), `src/battle/app/presentation/card-preview.ts` |
 | default deck | Player-assigned deck the duel menu auto-selects; stored preference | `preferences["default-deck"]` in `src/decks/indexeddb-deck-repository.ts`, ADR-038 |
-| favourite deck | A deck the player starred; ordering rank between the default deck and the rest | `preferences["favourite-decks"]` in `src/decks/indexeddb-deck-repository.ts`, `orderDeckTiles` in `src/deck-select/order-deck-tiles.ts` |
+| favourite deck | Legacy mark being removed; default becomes sole mark | ADR-069, current `src/deck-select/DeckTile.svelte` |
+| decklist | Main/extra/side card rows shown beside deck tiles | `src/deck-select/DecklistPanel.svelte`, `DecklistView` |
+| hotspot | Map location control with anchored info popover (planned) | `src/story/screens/IllustratedMapScreen.svelte`, `LocationId` |
 | starter deck | Seeded "Starter Deck" built from bundled `player.ydk`, default on first run | `src/decks/starter-deck.ts` (`ensureStarterDeck`), ADR-038 |
 | autosave log | Global capped-100 list, one entry per accepted deck command including reorder/sort (timestamp + deck name) | `autosaves` store, `src/decks/deck-database.ts` v2, ADR-038, ADR-044 |
 | load dialog | Editor dialog: saved decks tab + autosave log tab, restore = undoable edit | `src/deck-editor/components/LoadDeckDialog.svelte` |

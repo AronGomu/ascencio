@@ -1,6 +1,8 @@
 # ADR-056: Favourites and defaults live with the deck they mark
 
-> Status: accepted; planned
+> Status: superseded
+> Superseded: 2026-09-02
+> Superseded by [ADR-069](069_ADR_default_is_the_only_deck_mark.md): favourite storage/behavior is removed; default is the sole deck mark.
 > Decided: 2026-08-27
 > Owners: shell, decks, story
 > Relates: ADR-049 (save-owned decks — story decks and their marks belong to the save), ADR-051 (route contexts — the two deck worlds never share state), ADR-055 (shared deck-select domain — the screen that renders these marks)

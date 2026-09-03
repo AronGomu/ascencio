@@ -26,10 +26,10 @@
 
 ## T5 geometry-anchored-phases
 
-- [ ] Confirm EMZ phase groups flank both shared zones without overlap.
-- [ ] Confirm no-EMZ phases form one centered Draw→Standby→Main 1→Battle→Main 2 run.
-- [ ] Confirm End turn aligns board inner-right edge in both profiles.
-- [ ] Use keyboard to reach each legal phase control plus End turn; confirm each activates same offered choice.
+- [ ] Confirm the horizontal phase bar sits above the duel field without overlapping either shared Extra Monster Zone or any card.
+- [ ] Confirm your Draw→Standby→Main 1→Battle→Main 2 controls occupy the left half and the opponent display occupies the right half, meeting at the field's vertical middle.
+- [ ] Confirm End turn stays in your half of the bar and remains comfortably clickable.
+- [ ] Use keyboard to reach each legal phase control plus End turn; confirm each activates the same offered choice.
 
 ## T6 right-rail-replaces-header
 
@@ -1524,7 +1524,7 @@ fix in a browser, which no automated suite covers.
 
 ## T8 full-control-toggle
 
-- [ ] Run `npm run dev` and open the duel at `http://localhost:4173` (or configured dev port); confirm a "Full Control" checkbox sits at the bottom-right corner of the duel field, unchecked.
+- [ ] Run `npm run dev` and open the duel at `http://localhost:4173` (or configured dev port); confirm a "Full Control" checkbox sits at the bottom-left corner of the duel field, unchecked.
 - [ ] With Full Control unchecked, activate one of your own Spell/Trap cards — no chain window appears for your own activation (the engine's own-effect chain window is auto-passed).
 - [ ] With Full Control unchecked, Normal Summon a monster — no extra response window appears after the summon resolves.
 - [ ] With Full Control unchecked and a Trap set on your field, let the opponent activate an effect or declare an attack — a chain window DOES appear so you can respond.
@@ -3899,7 +3899,7 @@ Run `npm run dev` (default `DEV_PORT=4300`).
 
 ### Full Control sits on the board with a tooltip
 
-- [ ] Look at the bottom-right corner **of the board itself** (inside the green field, not beside it): a bare checkbox sits there with no caption next to it.
+- [ ] Look at the bottom-left corner **of the board itself** (inside the green field, not beside it): a bare checkbox sits there with no caption next to it.
 - [ ] Hover the checkbox: a small **Full Control** tooltip appears beside it. Move the pointer away: the tooltip goes.
 - [ ] Click the checkbox: it ticks, and the tooltip is showing while the box has focus. Click it again to untick.
 - [ ] Hold Ctrl: the box stays on whatever you set, the tooltip's text turns accent-coloured when it is showing, and the "held by Ctrl" pill appears beside the box.
@@ -4146,3 +4146,57 @@ Run `npm run dev` (default `DEV_PORT=4300`), then open `#/free-play` in a
 - [ ] TC7. Resize to 950px wide: full title plus footer actions remain, with no kebab. Continue narrowing to about 788px: title becomes **Select Deck**, eyebrow hides, footer actions collapse into ⋯.
 - [ ] TC8. Open ⋯ menu. Exactly five actions appear upward in order: Delete, Rename, Duplicate, Open, + Create. Press Escape: menu closes, focus returns to ⋯.
 - [ ] TC9. Press **Start the duel** from wide layout. Duel field loads using selected player/opponent decks; no second picker appears.
+
+---
+
+## Duel-field feedback round (`3609b53..c0ac51d`)
+
+Fourteen owner feedback items shipped across T1–T11. Run `npm run dev`
+(default `DEV_PORT=4300`), open `#/free-play`, choose decks, then start a duel.
+
+### T6 selected-hand-overlay (item 1)
+
+- [ ] Reach a card-selection prompt, click a card in your hand, then move the pointer away: the selected card remains enlarged over the field with an unclipped orange halo, like the hover preview.
+
+### T4 empty-stack-render (item 2)
+
+- [ ] At duel start, inspect the empty Graveyard and Banished piles: each shows only the bare zone outline, its name, and count `0`; neither shows the purple stack gradient or a card cover.
+
+### T1 card-back-asset (item 3)
+
+- [ ] Inspect the Deck, Extra Deck, and any face-down card: each uses the real Yu-Gi-Oh! card-back image instead of the teal/purple SVG; then block `runtime/images/card-back.jpg` in DevTools and reload — the SVG fallback appears with no broken image or console error.
+
+### T3 stack-width-parity (item 4)
+
+- [ ] Compare Deck, Extra Deck, Graveyard, and Banished tiles with a card in hand: every stack tile has the same width and height as the hand card, within 1px by eye.
+
+### T2 layout-rework (items 5–7 and 13)
+
+- [ ] **Item 5:** inspect the right pane: it is noticeably narrower, while both avatars, LP plates, and status text remain intact without broken wrapping or overflow.
+- [ ] **Item 6:** inspect the area above the field: the phase bar is horizontal, your phases and End turn occupy its left half, the opponent phases occupy its right half, and the halves meet at the field's vertical middle.
+- [ ] **Item 7:** compare the field with a build before `246ad02`: the field is visibly larger and fills the width freed by the narrower rail and relocated phase bar.
+- [ ] **Item 13:** inspect the field's bottom-left corner: the Full Control checkbox sits there, and hovering or focusing it opens its tooltip toward the field without clipping.
+
+### T5 hand-fan-arc (item 8)
+
+- [ ] Hold at least five cards: both hands form a visible arc with the centre card highest and outer cards lower and rotated; no card corner is clipped.
+
+### T7 clear-submitted-selection (item 9)
+
+- [ ] Normal Summon a monster: as soon as the answer is accepted and while the summon resolves, no orange selected halo remains on any card or zone.
+
+### T8 hand-activate-chip (item 10)
+
+- [ ] Hover a hand monster with a legal activation, then a Spell that can be Set or activated: each shows an **Activate** chip, the Spell also shows **Set**, and pressing **Activate** starts that effect.
+
+### T9 chain-autopass-guard (item 11)
+
+- [ ] With Full Control off, send a Graveyard-trigger monster such as Scarm to the Graveyard through your own action: a fresh activation prompt reaches you instead of being auto-passed.
+
+### T10 detach-material-dialog (item 12)
+
+- [ ] Activate an Xyz effect whose cost asks you to detach material: a visual dialog lists every valid material with card art (card back for any concealed material); choose one and confirm that the cost resolves with that material detached.
+
+### T11 diagnostics-download (item 14)
+
+- [ ] Before a duel session exists, open duel settings: **Download duel log** is disabled with the tooltip **No duel trace yet**; during a duel, use that button and confirm `ygo-duel-diagnostics-*.json` downloads with the prompt/response protocol timeline.

@@ -43,6 +43,7 @@ function handlers() {
     onstart: vi.fn(),
     onback: vi.fn(),
     onopen: vi.fn(),
+    onblockedopen: vi.fn(),
     onrename: vi.fn(),
     onduplicate: vi.fn(),
     ondelete: vi.fn(),
@@ -129,7 +130,7 @@ describe("DeckSelectScreen", () => {
     expect(cy("deck-select-count").textContent).toBe("2/8");
   });
 
-  it("press selects, dblclick opens", async () => {
+  it("press selects, local dblclick opens", async () => {
     const values = handlers();
     render(DeckSelectScreen, props(values));
     const user = userEvent.setup();
@@ -140,6 +141,18 @@ describe("DeckSelectScreen", () => {
 
     await user.dblClick(cy("deck-tile-press-k3"));
     expect(values.onopen).toHaveBeenCalledWith("k3");
+    expect(values.onblockedopen).not.toHaveBeenCalled();
+  });
+
+  it("reports bundled dblclick once without opening", async () => {
+    const values = handlers();
+    const bundled = tile({ key: "preset", bundled: true });
+    render(DeckSelectScreen, props({ ...values, tiles: [bundled] }));
+
+    await fireEvent.dblClick(cy("deck-tile-press-preset"));
+
+    expect(values.onblockedopen).toHaveBeenCalledExactlyOnceWith(bundled);
+    expect(values.onopen).not.toHaveBeenCalled();
   });
 
   it("moves the filled default star after the host refreshes tiles", async () => {
@@ -174,6 +187,22 @@ describe("DeckSelectScreen", () => {
     );
 
     expect(find("deck-tile-default-star-preset")).toBeNull();
+  });
+
+  it("bundled kebab keeps Open disabled and names the reason", async () => {
+    render(
+      DeckSelectScreen,
+      props({ tiles: [tile({ key: "preset", bundled: true })] }),
+    );
+
+    await userEvent.setup().click(cy("deck-tile-menu-preset"));
+
+    const open = button("deck-tile-menu-open-preset");
+    const reason = cy("deck-tile-menu-open-reason-preset");
+    expect(open.disabled).toBe(true);
+    expect(open.textContent?.trim()).toBe("Open in deck builder");
+    expect(open.getAttribute("aria-describedby")).toBe(reason.id);
+    expect(reason.textContent?.trim()).toBe("Bundled deck: cannot be modified");
   });
 
   it("kebab flow reaches rename with new name", async () => {

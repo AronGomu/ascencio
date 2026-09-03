@@ -7,6 +7,8 @@
   /** Menu closes itself on any choice, outside press, or Escape; host clears state. */
   export let onclose: () => void = () => undefined;
   export let onopen: () => void = () => undefined;
+  export let openDisabled = false;
+  export let openDisabledReason: string | null = null;
   export let onrename: () => void = () => undefined;
   export let onduplicate: () => void = () => undefined;
   export let ondelete: () => void = () => undefined;
@@ -14,6 +16,7 @@
   let sheet: HTMLElement;
   let top = 0;
   let left = 0;
+  $: openReasonId = `deck-tile-menu-open-reason-${tile.key}`;
 
   onMount(() => {
     place();
@@ -72,9 +75,19 @@
   <button
     type="button"
     role="menuitem"
+    disabled={openDisabled}
+    aria-describedby={openDisabledReason === null ? undefined : openReasonId}
     data-cy={`deck-tile-menu-open-${tile.key}`}
     onclick={() => choose(onopen)}>Open in deck builder</button
   >
+  {#if openDisabledReason !== null}
+    <span
+      id={openReasonId}
+      class="visually-hidden"
+      data-cy={`deck-tile-menu-open-reason-${tile.key}`}
+      >{openDisabledReason}</span
+    >
+  {/if}
   <button
     type="button"
     role="menuitem"

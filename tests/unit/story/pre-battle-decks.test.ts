@@ -82,6 +82,7 @@ describe("which decks a story save may duel with", () => {
       id: deck.id,
       name: deck.name,
       legal: true,
+      bundled: false,
       issue: null,
     });
   });

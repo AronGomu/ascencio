@@ -44,6 +44,7 @@ const LEGAL: PreBattleDeckOption = {
   name: "Signal Deck",
   legal: true,
   issue: null,
+  bundled: false,
 };
 
 const ILLEGAL: PreBattleDeckOption = {
@@ -51,6 +52,7 @@ const ILLEGAL: PreBattleDeckOption = {
   name: "Signal Deck",
   legal: false,
   issue: "Main deck has 39 cards; it needs 40.",
+  bundled: false,
 };
 
 function context(
@@ -89,6 +91,16 @@ describe("preBattleDeckTile", () => {
     expect(tile.deletable).toBe(false);
     expect(tile.bundled).toBe(false);
     expect(tile.lockedBy).toBeNull();
+  });
+
+  it("carries bundled origin onto the tile", () => {
+    const tile = preBattleDeckTile(
+      { ...LEGAL, id: "preset", bundled: true },
+      undefined,
+      context(),
+    );
+
+    expect(tile.bundled).toBe(true);
   });
 
   it("carries an illegal deck's reason onto the tile", () => {

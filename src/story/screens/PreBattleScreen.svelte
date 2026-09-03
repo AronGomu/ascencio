@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { getContext } from "svelte";
   import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
   import { cardFrameOf } from "../../decks/card-frame.ts";
   import { croppedCardImageUrl } from "../../decks/deck-cover.ts";
@@ -16,6 +17,7 @@
   } from "../decks/pre-battle-decks.ts";
   import { preBattleDeckTile } from "../decks/pre-battle-tiles.ts";
   import type { StoryDeck } from "../model/story-state.ts";
+  import { TOAST_CONTEXT_KEY, type ToastPublisher } from "../../shell/index.ts";
 
   export let allowReturn = true;
   /* Null while the card database is still being read. An empty catalog calls
@@ -54,6 +56,9 @@
      than read back off `defaultDeckId`, so recording stays once-per-deck
      whether or not the parent has flushed the new prop yet. */
   let recordedId: string | null = null;
+  let openNotice: string | null = null;
+  const toasts = getContext<ToastPublisher | undefined>(TOAST_CONTEXT_KEY);
+  const BUNDLED_OPEN_REFUSAL = "Bundled deck: cannot be modified";
 
   $: selectedId =
     chosenId ??
@@ -75,6 +80,7 @@
      each other: a database that never loaded says so instead of a verdict it
      could not reach, and a verdict still being computed is not yet a refusal. */
   $: blockNotice =
+    openNotice ??
     decksError ??
     (decks === null
       ? "Checking your decks against the card database…"
@@ -148,12 +154,22 @@
   }
 
   function choose(deckId: string): void {
+    openNotice = null;
     chosenId = deckId;
     record(deckId);
   }
 
+  function blockedOpen(): void {
+    if (toasts === undefined) openNotice = BUNDLED_OPEN_REFUSAL;
+    else {
+      openNotice = null;
+      toasts.show({ message: BUNDLED_OPEN_REFUSAL, tone: "warning" });
+    }
+  }
+
   async function leave(): Promise<void> {
     if (leaving) return;
+    openNotice = null;
     leaving = true;
     await onopendecks();
     /* A write that was refused leaves the player on this screen, and the one
@@ -199,6 +215,7 @@
     onstart={start}
     onback={onreturn}
     onopen={() => void leave()}
+    onblockedopen={blockedOpen}
   />
 
   <div class="under" data-cy="story-briefing-notes">

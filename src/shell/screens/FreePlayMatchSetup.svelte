@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { getContext, onMount } from "svelte";
   import type { BattleRequest, SelectableDeck } from "../../battle/index.ts";
   import {
     DeckSelectScreen,
@@ -37,6 +37,10 @@
     type FreePlayOpponent,
   } from "./free-play-opponents.ts";
   import type { ShellSettingsStore } from "../settings/shell-settings-store.ts";
+  import {
+    TOAST_CONTEXT_KEY,
+    type ToastPublisher,
+  } from "../toast/toast-context.ts";
   import DomainLoadError from "./DomainLoadError.svelte";
 
   export let settings: ShellSettingsStore;
@@ -76,6 +80,8 @@
      screen earlier than it used to, so it is reported as the duel failing:
      a stale dev server or a half-cached build looks the same from here. */
   let loadError: unknown = null;
+  const toasts = getContext<ToastPublisher | undefined>(TOAST_CONTEXT_KEY);
+  const BUNDLED_OPEN_REFUSAL = "Bundled deck: cannot be modified";
 
   /* Which AI owns which bundled deck, so a tile can say so. The roster is the
      pairing rule — picking a persona brings its deck along — and this is the
@@ -317,12 +323,20 @@
     adoptDecks(loaded, listed);
   }
 
-  /* A deck the player built has a page of its own in the editor; a bundled
-     deck has none, so Open on one is the library it is bundled into. */
+  /* Deck-select filters bundled keys before this callback, so every key here
+     names an editor record rather than a preset. */
   function openDeck(key: string): void {
     const local = parseLocalDeckKey(key);
-    if (local === null) ondecks();
-    else onopendeck(local.id);
+    if (local !== null) onopendeck(local.id);
+  }
+
+  function blockedOpen(): void {
+    startError = null;
+    if (toasts === undefined) manageError = BUNDLED_OPEN_REFUSAL;
+    else {
+      manageError = null;
+      toasts.show({ message: BUNDLED_OPEN_REFUSAL, tone: "warning" });
+    }
   }
 
   /** The deck `key` named, under the key it carries now. */
@@ -448,6 +462,7 @@
     onstart={start}
     onback={() => onback()}
     onopen={openDeck}
+    onblockedopen={blockedOpen}
     oncreate={ondecks}
     onrename={(key, name) => void renameDeck(key, name)}
     onduplicate={(key) => void duplicateDeck(key)}

@@ -162,6 +162,50 @@ test("hover docks preview", async ({ page }) => {
   await expect.poll(() => rows.count()).toBe(restingRowCount);
 });
 
+test("bundled deck refuses editor open with disabled reason and toast", async ({
+  page,
+}) => {
+  await page.setViewportSize(WIDE_VIEWPORT);
+  await openFreePlayDeckSelect(page);
+
+  const key = "preset:mvp-player";
+  await page.locator(`[data-cy="deck-tile-menu-${key}"]`).click();
+  const open = page.locator(`[data-cy="deck-tile-menu-open-${key}"]`);
+  const reason = page.locator(`[data-cy="deck-tile-menu-open-reason-${key}"]`);
+  await expect(open).toBeDisabled();
+  await expect(open).toHaveAttribute(
+    "aria-describedby",
+    (await reason.getAttribute("id")) as string,
+  );
+  await expect(reason).toHaveText("Bundled deck: cannot be modified");
+
+  await page.keyboard.press("Escape");
+  await page.locator(`[data-cy="deck-tile-press-${key}"]`).dblclick();
+  await expect(page.locator('[data-cy^="shell-toast-message-"]')).toHaveText(
+    "Bundled deck: cannot be modified",
+  );
+  await expect(page.locator('[data-cy="deck-select-screen"]')).toBeVisible();
+  expect(new URL(page.url()).hash).toBe("#/free-play");
+});
+
+test("local deck still opens its builder on dblclick", async ({ page }) => {
+  await page.goto("./#/free-play/decks");
+  await expect(page.locator('[data-cy="deck-library-screen"]')).toBeVisible({
+    timeout: 120_000,
+  });
+
+  await page.goto("./#/free-play");
+  await expect(
+    page.locator('[data-cy^="deck-tile-press-local:"]').first(),
+  ).toBeVisible({ timeout: 120_000 });
+  await page.locator('[data-cy^="deck-tile-press-local:"]').first().dblclick();
+
+  await expect(page).toHaveURL(/#\/free-play\/decks\/.+$/);
+  await expect(page.locator('[data-cy="deck-editor-layout"]')).toBeVisible({
+    timeout: 120_000,
+  });
+});
+
 test("footer actions", async ({ page }) => {
   await page.setViewportSize(WIDE_VIEWPORT);
   await openFreePlayDeckSelect(page);

@@ -46,6 +46,7 @@
   export let onstart: () => void = () => undefined;
   export let onback: () => void = () => undefined;
   export let onopen: (key: string) => void = () => undefined;
+  export let onblockedopen: (tile: DeckTileModel) => void = () => undefined;
   export let onrename: (key: string, name: string) => void = () => undefined;
   export let onduplicate: (key: string) => void = () => undefined;
   export let ondelete: (key: string) => void = () => undefined;
@@ -449,9 +450,14 @@
     art = { ...art, url: art.fallbackUrl, fallbackUrl: null };
   }
 
+  function openTile(tile: DeckTileModel): void {
+    if (tile.bundled) onblockedopen(tile);
+    else onopen(tile.key);
+  }
+
   function openSelected(): void {
     if (selectedTile === null) return;
-    onopen(selectedTile.key);
+    openTile(selectedTile);
   }
 
   async function openCompactMenu(): Promise<void> {
@@ -918,7 +924,7 @@
         halo={haloFor(candidate)}
         yours={seat === "opponent" && candidate.key === playerDeck?.key}
         onpress={() => onselect(candidate.key)}
-        ondblpress={() => onopen(candidate.key)}
+        ondblpress={() => openTile(candidate)}
         canSetDefault={canSetDefault(candidate)}
         onsetdefault={() => onsetdefault(candidate.key)}
         showMenu={manageable}
@@ -1082,7 +1088,11 @@
     tile={menuTile}
     anchor={menu.anchor}
     onclose={() => (menu = null)}
-    onopen={() => onopen(key)}
+    onopen={() => openTile(menuTile)}
+    openDisabled={menuTile.bundled}
+    openDisabledReason={menuTile.bundled
+      ? "Bundled deck: cannot be modified"
+      : null}
     onrename={() => (renaming = key)}
     onduplicate={() => onduplicate(key)}
     ondelete={() => (deleting = key)}

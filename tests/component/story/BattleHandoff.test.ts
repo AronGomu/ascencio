@@ -15,6 +15,7 @@ const SIGNAL_DECK = {
   name: "Signal Deck",
   legal: true,
   issue: null,
+  bundled: false,
 } as const;
 
 describe("battle handoff", () => {

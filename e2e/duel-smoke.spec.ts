@@ -358,8 +358,8 @@ test("the root route shows the main menu without booting the duel", async ({
   await expect(page.locator('[data-cy="deck-select-screen"]')).toBeVisible();
   expect(new URL(page.url()).hash).toBe("#/free-play");
 
-  /* The library the seats are filled from is one click away from them. */
-  await page.locator('[data-cy="deck-select-open"]').click();
+  /* Create is the library path when only bundled presets are available. */
+  await page.locator('[data-cy="deck-select-create"]').click();
   expect(new URL(page.url()).hash).toBe("#/free-play/decks");
 });
 

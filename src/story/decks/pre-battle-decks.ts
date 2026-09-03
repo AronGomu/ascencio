@@ -25,6 +25,8 @@ export interface PreBattleDeckOption {
   readonly name: string;
   /** Whether an encounter may start on this deck. */
   readonly legal: boolean;
+  /** Bundled presets can duel but have no editor record. */
+  readonly bundled: boolean;
   /** The first thing wrong with it, or null while nothing is. Errors only:
       warnings are not worth stopping a duel for and not worth the space. */
   readonly issue: string | null;
@@ -57,6 +59,7 @@ export function preBattleDeckOptions(
       id: deck.id,
       name: deck.name,
       legal: error === undefined,
+      bundled: false,
       issue: error?.message ?? null,
     });
   });

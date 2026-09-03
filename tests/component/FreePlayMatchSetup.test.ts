@@ -24,6 +24,10 @@ import { validateDeckDraft } from "../../src/decks/deck-validation.ts";
 import { DECK_DATABASE_NAME } from "../../src/decks/index.ts";
 import { IndexedDbDeckRepository } from "../../src/decks/indexeddb-deck-repository.ts";
 import { PROTOTYPE_CATALOG } from "../../src/deck-editor/fixtures/catalog.ts";
+import {
+  TOAST_CONTEXT_KEY,
+  type ToastPublisher,
+} from "../../src/shell/index.ts";
 import type { BattleDeckModule } from "../../src/shell/domain-loaders.ts";
 import {
   listedFreePlayDecks,
@@ -162,6 +166,7 @@ interface RenderOptions {
   readonly storage?: ReturnType<typeof memoryStorage>;
   readonly module?: Partial<BattleDeckModule>;
   readonly loadBattle?: () => Promise<BattleDeckModule>;
+  readonly toasts?: ToastPublisher;
 }
 
 function renderSetup(options: RenderOptions = {}) {
@@ -171,7 +176,7 @@ function renderSetup(options: RenderOptions = {}) {
   const onopendeck = vi.fn();
   const storage = options.storage ?? memoryStorage();
   const settings = createShellSettingsStore(storage);
-  const rendered = render(FreePlayMatchSetup, {
+  const props = {
     settings,
     loadBattle:
       options.loadBattle ?? (async () => battleModule(options.module)),
@@ -179,7 +184,14 @@ function renderSetup(options: RenderOptions = {}) {
     onback,
     ondecks,
     onopendeck,
-  });
+  };
+  const rendered =
+    options.toasts === undefined
+      ? render(FreePlayMatchSetup, props)
+      : render(FreePlayMatchSetup, {
+          props,
+          context: new Map([[TOAST_CONTEXT_KEY, options.toasts]]),
+        });
   return {
     ...rendered,
     onstart,
@@ -346,8 +358,6 @@ describe("FreePlayMatchSetup", () => {
     expect(startButton().disabled).toBe(false);
   });
 
-  /* A deck the player built has a page in the editor; a bundled one has none,
-     so its Open is the library itself. */
   it("opens a deck the player built on its own editor page", async () => {
     const setup = await renderListedSetup();
 
@@ -355,6 +365,53 @@ describe("FreePlayMatchSetup", () => {
     await fireEvent.click(control(`deck-tile-menu-open-${LOCAL_KEY}`));
 
     expect(setup.onopendeck).toHaveBeenCalledWith("built-deck");
+    expect(setup.ondecks).not.toHaveBeenCalled();
+  });
+
+  it("opens the selected local deck from the footer", async () => {
+    const setup = await renderListedSetup();
+
+    await fireEvent.click(control(`deck-tile-press-${LOCAL_KEY}`));
+    await fireEvent.click(control("deck-select-open"));
+
+    expect(setup.onopendeck).toHaveBeenCalledExactlyOnceWith("built-deck");
+    expect(setup.ondecks).not.toHaveBeenCalled();
+  });
+
+  it("opens a local deck on dblclick without publishing a refusal", async () => {
+    const show = vi.fn<ToastPublisher["show"]>(() => "toast-test");
+    const setup = await renderListedSetup({ toasts: { show } });
+
+    await fireEvent.dblClick(control(`deck-tile-press-${LOCAL_KEY}`));
+
+    expect(setup.onopendeck).toHaveBeenCalledExactlyOnceWith("built-deck");
+    expect(setup.ondecks).not.toHaveBeenCalled();
+    expect(show).not.toHaveBeenCalled();
+  });
+
+  it("warns once on bundled dblclick without opening the editor", async () => {
+    const show = vi.fn<ToastPublisher["show"]>(() => "toast-test");
+    const setup = await renderLoadedSetup({ toasts: { show } });
+
+    await fireEvent.dblClick(control(`deck-tile-press-${PLAYER_PRESET_KEY}`));
+
+    expect(show).toHaveBeenCalledExactlyOnceWith({
+      message: "Bundled deck: cannot be modified",
+      tone: "warning",
+    });
+    expect(setup.onopendeck).not.toHaveBeenCalled();
+    expect(setup.ondecks).not.toHaveBeenCalled();
+  });
+
+  it("announces bundled dblclick when toast context is unavailable", async () => {
+    const setup = await renderLoadedSetup();
+
+    await fireEvent.dblClick(control(`deck-tile-press-${PLAYER_PRESET_KEY}`));
+
+    expect(query("deck-select-block-notice")?.textContent).toBe(
+      "Bundled deck: cannot be modified",
+    );
+    expect(setup.onopendeck).not.toHaveBeenCalled();
     expect(setup.ondecks).not.toHaveBeenCalled();
   });
 
@@ -546,13 +603,16 @@ describe("FreePlayMatchSetup", () => {
     expect(setup.onstart).not.toHaveBeenCalled();
   });
 
-  /* The library the grid is filled from is one press away from the grid. */
-  it("opens the deck library from the selection screen", async () => {
+  it("blocks footer Open while the selected deck is bundled", async () => {
     const setup = await renderLoadedSetup();
 
     await fireEvent.click(control("deck-select-open"));
 
-    expect(setup.ondecks).toHaveBeenCalledTimes(1);
+    expect(query("deck-select-block-notice")?.textContent).toBe(
+      "Bundled deck: cannot be modified",
+    );
+    expect(setup.ondecks).not.toHaveBeenCalled();
+    expect(setup.onopendeck).not.toHaveBeenCalled();
     expect(setup.onstart).not.toHaveBeenCalled();
   });
 

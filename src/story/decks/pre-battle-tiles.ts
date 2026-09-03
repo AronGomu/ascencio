@@ -38,7 +38,7 @@ export function preBattleDeckTile(
       record === undefined ? null : deckCoverImageUrl(record, context.catalog),
     legal: option.legal,
     blockReason: option.issue,
-    bundled: false,
+    bundled: option.bundled,
     lockedBy: null,
     isDefault: option.id === context.defaultDeckId,
     /* Deleting a save's deck is the story deck editor's, reached from this

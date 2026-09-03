@@ -16,6 +16,10 @@ import { createInitialStoryState } from "../../../src/story/model/story-state.ts
 import { STORY_SAVES_DATABASE_NAME } from "../../../src/story/saves/story-save-contracts.ts";
 import { createStorySaveRepository } from "../../../src/story/saves/story-save-repository.ts";
 import {
+  TOAST_CONTEXT_KEY,
+  type ToastPublisher,
+} from "../../../src/shell/index.ts";
+import {
   installPrototypeActiveCatalog,
   resetRuntimeCatalog,
 } from "../../fixtures/active-catalog.ts";
@@ -36,18 +40,28 @@ const LEGAL: PreBattleDeckOption = {
   name: "Signal Deck",
   legal: true,
   issue: null,
+  bundled: false,
 };
 const SECOND: PreBattleDeckOption = {
   id: "relay",
   name: "Relay Deck",
   legal: true,
   issue: null,
+  bundled: false,
 };
 const ILLEGAL: PreBattleDeckOption = {
   id: "broken",
   name: "Broken Deck",
   legal: false,
   issue: "This deck uses 3 copy/copies of Dark Magician; you own 1.",
+  bundled: false,
+};
+const BUNDLED: PreBattleDeckOption = {
+  id: "preset",
+  name: "Story Preset",
+  legal: true,
+  issue: null,
+  bundled: true,
 };
 
 /* The records behind the three options above. The briefing pairs verdicts with
@@ -226,6 +240,60 @@ describe("the pre-battle deck picker", () => {
 
     expect(cy("deck-select-manage")).toBeNull();
     expect(cy(`deck-tile-menu-${LEGAL.id}`)).toBeNull();
+  });
+
+  it("opens a local story deck on dblclick without publishing a refusal", async () => {
+    const show = vi.fn<ToastPublisher["show"]>(() => "toast-test");
+    const onopendecks = vi.fn();
+    render(PreBattleScreen, {
+      props: props({ decks: [LEGAL], defaultDeckId: LEGAL.id, onopendecks }),
+      context: new Map([[TOAST_CONTEXT_KEY, { show }]]),
+    });
+
+    await fireEvent.dblClick(deckButton(LEGAL.id));
+
+    expect(onopendecks).toHaveBeenCalledOnce();
+    expect(show).not.toHaveBeenCalled();
+  });
+
+  it("warns once on bundled dblclick without opening the editor", async () => {
+    const show = vi.fn<ToastPublisher["show"]>(() => "toast-test");
+    const onopendecks = vi.fn();
+    render(PreBattleScreen, {
+      props: props({
+        decks: [BUNDLED],
+        deckRecords: [],
+        defaultDeckId: BUNDLED.id,
+        onopendecks,
+      }),
+      context: new Map([[TOAST_CONTEXT_KEY, { show }]]),
+    });
+
+    await fireEvent.dblClick(deckButton(BUNDLED.id));
+
+    expect(show).toHaveBeenCalledExactlyOnceWith({
+      message: "Bundled deck: cannot be modified",
+      tone: "warning",
+    });
+    expect(onopendecks).not.toHaveBeenCalled();
+  });
+
+  it("announces bundled dblclick when toast context is unavailable", async () => {
+    const onopendecks = vi.fn();
+    render(
+      PreBattleScreen,
+      props({
+        decks: [BUNDLED],
+        deckRecords: [],
+        defaultDeckId: BUNDLED.id,
+        onopendecks,
+      }),
+    );
+
+    await fireEvent.dblClick(deckButton(BUNDLED.id));
+
+    expect(notice()).toBe("Bundled deck: cannot be modified");
+    expect(onopendecks).not.toHaveBeenCalled();
   });
 
   it("blocks the start while the selected deck is illegal, and says why", () => {

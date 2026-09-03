@@ -15,6 +15,14 @@ const VIEWPORTS = [
   { id: "mobile-landscape", width: 667, height: 375 },
 ] as const;
 
+const NON_SHOP_SIBLINGS = [
+  "pre-battle",
+  "battle-mock",
+  "outcome",
+  "reward",
+  "end",
+] as const satisfies readonly StoryState["screen"][];
+
 function stateAt(screen: StoryState["screen"]): StoryState {
   return {
     ...createInitialStoryState(),
@@ -164,6 +172,16 @@ for (const viewport of VIEWPORTS) {
       page.locator('[data-cy="story-top-bar-objective"]'),
     ).toHaveCount(0);
     await expectHeaderGeometry(page);
+
+    for (const storyScreen of NON_SHOP_SIBLINGS) {
+      await openSavedScreen(page, stateAt(storyScreen));
+      await expect(
+        page.locator('[data-cy="story-top-bar-shop"]'),
+        `${storyScreen} shop action`,
+      ).toHaveCount(0);
+      await expect(page.locator('[data-cy="story-top-bar"]')).toHaveCount(1);
+      await expectHeaderGeometry(page);
+    }
 
     await openSavedScreen(page, stateAt("map"));
     await expect(page.locator('[data-cy="story-top-bar-title"]')).toHaveText(

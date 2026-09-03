@@ -5,9 +5,11 @@ import { cleanup, render, screen, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { STORY_SAVES_DATABASE_NAME } from "../../../src/story/saves/story-save-contracts.ts";
+import { createStorySaveRepository } from "../../../src/story/saves/story-save-repository.ts";
 import {
   createInitialStoryState,
   STORY_SCREENS,
+  type StoryScreen,
 } from "../../../src/story/model/story-state.ts";
 import StoryApp from "../../../src/story/StoryApp.svelte";
 import {
@@ -77,6 +79,122 @@ function sellState(collection: Record<number, number>) {
   };
 }
 
+interface HeaderExpectation {
+  readonly shop: boolean;
+  readonly decks: boolean;
+  readonly title: string | null;
+  readonly objective: string | null;
+  readonly boosters: boolean;
+}
+
+const HEADER_MATRIX = {
+  title: {
+    shop: false,
+    decks: false,
+    title: null,
+    objective: null,
+    boosters: false,
+  },
+  load: {
+    shop: false,
+    decks: false,
+    title: null,
+    objective: null,
+    boosters: false,
+  },
+  narrative: {
+    shop: true,
+    decks: true,
+    title: null,
+    objective: null,
+    boosters: false,
+  },
+  map: {
+    shop: true,
+    decks: true,
+    title: "City signal map",
+    objective: "Meet Rin at the Old Arena",
+    boosters: false,
+  },
+  "pre-battle": {
+    shop: false,
+    decks: true,
+    title: null,
+    objective: null,
+    boosters: false,
+  },
+  "battle-mock": {
+    shop: false,
+    decks: true,
+    title: null,
+    objective: null,
+    boosters: false,
+  },
+  outcome: {
+    shop: false,
+    decks: true,
+    title: null,
+    objective: null,
+    boosters: false,
+  },
+  reward: {
+    shop: false,
+    decks: true,
+    title: null,
+    objective: null,
+    boosters: false,
+  },
+  end: {
+    shop: false,
+    decks: true,
+    title: null,
+    objective: null,
+    boosters: false,
+  },
+  "shop-greeting": {
+    shop: false,
+    decks: true,
+    title: "Card Shop",
+    objective: null,
+    boosters: true,
+  },
+  "shop-browse": {
+    shop: false,
+    decks: true,
+    title: "Card Shop",
+    objective: null,
+    boosters: true,
+  },
+  "shop-cards": {
+    shop: false,
+    decks: true,
+    title: "Card list",
+    objective: null,
+    boosters: true,
+  },
+  "shop-sell": {
+    shop: false,
+    decks: true,
+    title: "Sell Cards",
+    objective: null,
+    boosters: true,
+  },
+  "shop-opening": {
+    shop: false,
+    decks: true,
+    title: "Opening packs",
+    objective: null,
+    boosters: true,
+  },
+  "shop-results": {
+    shop: false,
+    decks: true,
+    title: "You opened 0 cards",
+    objective: null,
+    boosters: true,
+  },
+} satisfies Record<StoryScreen, HeaderExpectation>;
+
 describe("StoryApp", () => {
   it("mounts from the story domain straight into the prologue", async () => {
     render(StoryApp);
@@ -130,10 +248,12 @@ describe("StoryApp", () => {
     ).not.toBeNull();
   });
 
-  /* Every state gets one shell mount. Individual controls and text slots vary,
-     but screen components never mount another copy of global chrome. */
-  it("mounts exactly one top bar for every story screen", () => {
+  /* Every state gets one shell mount. This table is exhaustive over the
+     exported StoryScreen union so a newly visible unsupported action fails
+     beside the screen that exposed it. */
+  it("configures the exact top-bar matrix for every story screen", () => {
     for (const storyScreen of STORY_SCREENS) {
+      const expected = HEADER_MATRIX[storyScreen];
       const state = {
         ...createInitialStoryState(),
         screen: storyScreen,
@@ -143,70 +263,53 @@ describe("StoryApp", () => {
           : null,
       };
       const { container } = render(StoryApp, { resumeState: state });
+      const present = (suffix: string) =>
+        container.querySelector(`[data-cy="story-top-bar-${suffix}"]`) !== null;
+      const text = (suffix: string) =>
+        container.querySelector(`[data-cy="story-top-bar-${suffix}"]`)
+          ?.textContent ?? null;
+
       expect(
         container.querySelectorAll('[data-cy="story-top-bar"]'),
-        storyScreen,
+        `${storyScreen} bar count`,
       ).toHaveLength(1);
+      expect(present("dp"), `${storyScreen} DP`).toBe(true);
+      expect(present("shop"), `${storyScreen} shop`).toBe(expected.shop);
+      expect(present("decks"), `${storyScreen} decks`).toBe(expected.decks);
+      expect(text("title"), `${storyScreen} title`).toBe(expected.title);
+      expect(text("objective-value"), `${storyScreen} objective`).toBe(
+        expected.objective,
+      );
+      expect(present("boosters"), `${storyScreen} boosters`).toBe(
+        expected.boosters,
+      );
+      expect(present("settings"), `${storyScreen} settings`).toBe(true);
       expect(
         container.querySelector('[data-cy="story-screen-body"]'),
-        storyScreen,
+        `${storyScreen} body`,
       ).not.toBeNull();
       cleanup();
     }
   });
 
-  it("configures narrative, map and shop header slots from screen state", () => {
-    const { container: narrative } = render(StoryApp);
-    expect(
-      narrative.querySelector('[data-cy="story-top-bar-shop"]'),
-    ).not.toBeNull();
-    expect(
-      narrative.querySelector('[data-cy="story-top-bar-decks"]'),
-    ).not.toBeNull();
-    expect(
-      narrative.querySelector('[data-cy="story-top-bar-settings"]'),
-    ).not.toBeNull();
-    expect(
-      narrative.querySelector('[data-cy="story-top-bar-title"]'),
-    ).toBeNull();
-    expect(
-      narrative.querySelector('[data-cy="story-top-bar-objective"]'),
-    ).toBeNull();
-    cleanup();
-
+  it("hoists map title and objective out of map body chrome", () => {
     const mapState = {
       ...createInitialStoryState(),
       screen: "map" as const,
       savedScreen: "map" as const,
     };
-    const { container: map } = render(StoryApp, { resumeState: mapState });
+    const { container } = render(StoryApp, { resumeState: mapState });
     expect(
-      map.querySelector('[data-cy="story-top-bar-title"]')?.textContent,
+      container.querySelector('[data-cy="story-top-bar-title"]')?.textContent,
     ).toBe("City signal map");
     expect(
-      map.querySelector('[data-cy="story-top-bar-objective"]')?.textContent,
+      container.querySelector('[data-cy="story-top-bar-objective"]')
+        ?.textContent,
     ).toContain(mapState.objective);
-    expect(map.querySelector('[data-cy="story-map-heading"]')).toBeNull();
-    expect(map.querySelector('[data-cy="story-map-objective"]')).toBeNull();
-    cleanup();
-
-    const shopState = {
-      ...createInitialStoryState(),
-      screen: "shop-sell" as const,
-      savedScreen: "shop-sell" as const,
-      shopReturnScreen: "map" as const,
-    };
-    const { container: shop } = render(StoryApp, { resumeState: shopState });
-    expect(shop.querySelector('[data-cy="story-top-bar-shop"]')).toBeNull();
+    expect(container.querySelector('[data-cy="story-map-heading"]')).toBeNull();
     expect(
-      shop.querySelector('[data-cy="story-top-bar-decks"]'),
-    ).not.toBeNull();
-    expect(
-      shop.querySelector('[data-cy="story-top-bar-title"]')?.textContent,
-    ).toBe("Sell Cards");
-    expect(
-      shop.querySelector('[data-cy="story-top-bar-settings"]'),
-    ).not.toBeNull();
+      container.querySelector('[data-cy="story-map-objective"]'),
+    ).toBeNull();
   });
 
   /* The top bar is how a player inside a save reaches their decks. StoryApp
@@ -225,6 +328,53 @@ describe("StoryApp", () => {
       .click(screen.getByRole("button", { name: "Open deck builder" }));
 
     await waitFor(() => expect(ondecks).toHaveBeenCalledOnce());
+    const saved = await createStorySaveRepository(globalThis.indexedDB).read(
+      "autosave",
+    );
+    if (saved.kind !== "ready") throw new Error("expected a written save");
+    expect(saved.envelope.state.savedScreen).toBe("map");
+  });
+
+  it("shows a header deck write failure without navigating", async () => {
+    const originalPut = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function put(
+      this: IDBObjectStore,
+      ...args: Parameters<typeof originalPut>
+    ) {
+      const pending = originalPut.apply(this, args);
+      queueMicrotask(() => {
+        this.transaction.abort();
+      });
+      return pending;
+    };
+    const ondecks = vi.fn();
+    const mapState = {
+      ...createInitialStoryState(),
+      screen: "map" as const,
+      savedScreen: "map" as const,
+    };
+    try {
+      const { container } = render(StoryApp, {
+        resumeState: mapState,
+        ondecks,
+      });
+      await userEvent
+        .setup()
+        .click(screen.getByRole("button", { name: "Open deck builder" }));
+
+      await waitFor(() =>
+        expect(
+          container.querySelector('[data-cy="story-storage-error-message"]')
+            ?.textContent,
+        ).toContain("Storage write failed"),
+      );
+      expect(ondecks).not.toHaveBeenCalled();
+      expect(
+        container.querySelector('[data-cy="story-map-screen"]'),
+      ).not.toBeNull();
+    } finally {
+      IDBObjectStore.prototype.put = originalPut;
+    }
   });
 
   /* Selling is irreversible and priced by rarity, and rarity is only known

@@ -144,7 +144,7 @@
     const hasStoryContext =
       current.screen !== "title" && current.screen !== "load";
     return {
-      showShop: hasStoryContext && !current.screen.startsWith("shop-"),
+      showShop: current.screen === "narrative" || current.screen === "map",
       showDecks: hasStoryContext,
       title,
       objective: current.screen === "map" ? current.objective : null,

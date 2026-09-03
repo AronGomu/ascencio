@@ -47,6 +47,19 @@ describe("design tokens", () => {
     }
   });
 
+  it("retunes VariantB tokens to the owner-approved values", () => {
+    const tokens = readFileSync("src/styles/tokens.css", "utf8");
+    for (const declaration of [
+      "--glass: rgba(150, 175, 215, 0.02);",
+      "--glass-strong: rgba(150, 175, 215, 0.036);",
+      "--gold-line: rgba(211, 178, 104, 0.6);",
+      "--chamfer: 6px;",
+      "--ls-display: 0.16em;",
+    ]) {
+      expect(tokens).toContain(declaration);
+    }
+  });
+
   it("app stylesheet has no raw colors", () => {
     const css = stripComments(readFileSync("src/styles/app.css", "utf8"));
     expect(css.match(/#[0-9a-fA-F]{3,8}\b/g)).toBeNull();
@@ -718,6 +731,10 @@ describe("primitives.css (T16)", () => {
     ".ui-overlay",
     ".ui-field",
     ".ui-focusable:focus-visible",
+    ".ui-chamfer",
+    ".ui-glass-panel",
+    ".ui-dialog-panel",
+    ".ui-dialog-title",
   ];
 
   it("primitives.css declares each .ui-* class at least once", () => {

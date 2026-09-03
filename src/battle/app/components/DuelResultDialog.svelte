@@ -36,6 +36,7 @@
         <p class="eyebrow" data-cy="app-result-eyebrow">Duel complete</p>
         <h2
           id="duel-result-heading"
+          class="ui-dialog-title duel-result-dialog-title"
           tabindex="-1"
           bind:this={heading}
           data-cy="app-result-heading"

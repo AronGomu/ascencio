@@ -48,6 +48,13 @@ describe("PromptDialog", () => {
     expect(dialog?.querySelector('[data-prompt-kind="yesNo"]')).not.toBeNull();
   });
 
+  it("marks its nested title with the shared dialog title class", () => {
+    render(PromptDialog, { prompt: prompt(), onsubmit: vi.fn() });
+
+    const title = document.querySelector('[data-cy="prompt-controls-heading"]');
+    expect(title?.classList).toContain("ui-dialog-title");
+  });
+
   it("has no dismiss affordance", () => {
     render(PromptDialog, { prompt: prompt(), onsubmit: vi.fn() });
 

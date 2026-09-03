@@ -14,6 +14,9 @@
 
   onMount(() => {
     panel
+      ?.querySelector('[data-cy="prompt-controls-heading"]')
+      ?.classList.add("ui-dialog-title");
+    panel
       ?.querySelector<HTMLElement>("button, input, select")
       ?.focus({ preventScroll: true });
   });

@@ -70,7 +70,13 @@
     data-cy="menu-dialog"
     bind:this={panel}
   >
-    <h2 id="menu-dialog-heading" data-cy="menu-dialog-heading">Menu</h2>
+    <h2
+      id="menu-dialog-heading"
+      class="ui-dialog-title"
+      data-cy="menu-dialog-heading"
+    >
+      Menu
+    </h2>
     {#if confirming}
       <div role="alert" data-cy="menu-dialog-surrender-warning">
         This immediately awards the duel to your opponent.

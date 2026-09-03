@@ -107,7 +107,11 @@
     data-cy="settings-dialog"
     bind:this={panel}
   >
-    <h2 id="settings-dialog-heading" data-cy="settings-dialog-heading">
+    <h2
+      id="settings-dialog-heading"
+      class="ui-dialog-title"
+      data-cy="settings-dialog-heading"
+    >
       Settings
     </h2>
     <label data-cy="settings-show-duel-hud-label">

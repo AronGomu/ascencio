@@ -43,6 +43,14 @@ describe("DuelResultDialog", () => {
     expect(element("app-result-finish-reason").textContent).toContain("1");
   });
 
+  it("marks its existing verdict with the shared dialog title class", () => {
+    renderDialog();
+
+    expect(element("app-result-heading").classList).toContain(
+      "ui-dialog-title",
+    );
+  });
+
   it("announces a loss", () => {
     renderDialog({ ...COMPLETED_RESULT, winner: 1, loser: 0 });
 

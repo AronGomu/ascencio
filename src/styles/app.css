@@ -438,8 +438,13 @@ button:disabled {
 
 .loading-overlay p {
   margin: 0;
-  color: var(--muted);
+  color: var(--accent);
+  font-family: var(--font-display);
   font-size: 0.78rem;
+  font-weight: 400;
+  letter-spacing: var(--ls-display);
+  text-align: center;
+  text-transform: uppercase;
 }
 
 main {
@@ -472,6 +477,7 @@ main.is-duel-viewport {
   place-items: center;
   padding: 1rem;
   background: color-mix(in srgb, var(--bg-deep) 72%, transparent);
+  backdrop-filter: blur(12px);
 }
 
 .dialog-panel {
@@ -481,10 +487,18 @@ main.is-duel-viewport {
   max-height: 85svh;
   overflow: auto;
   padding: 1.15rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface-strong);
-  box-shadow: 0 1rem 3rem color-mix(in srgb, var(--shadow) 45%, transparent);
+  border: 1px solid var(--gold-line);
+  border-radius: 0;
+  background: var(--surface-panel);
+  box-shadow: none;
+  clip-path: polygon(
+    var(--chamfer) 0,
+    100% 0,
+    100% calc(100% - var(--chamfer)),
+    calc(100% - var(--chamfer)) 100%,
+    0 100%,
+    0 var(--chamfer)
+  );
 }
 
 h1,
@@ -848,6 +862,15 @@ progress {
    carries the danger edge the in-flow error panel would have shown. */
 .duel-error-dialog-panel {
   border-color: var(--danger-border);
+}
+
+.duel-result-dialog-title {
+  color: var(--accent);
+  text-shadow: 0 1px 26px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.duel-error-dialog-title {
+  color: var(--danger);
 }
 
 .restore-failure {

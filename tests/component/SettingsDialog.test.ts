@@ -21,6 +21,18 @@ const callbacks = () => ({
 afterEach(cleanup);
 
 describe("SettingsDialog display settings", () => {
+  it("marks its existing title with the shared dialog title class", () => {
+    const rendered = render(SettingsDialog, {
+      settings: DEFAULT_UI_SETTINGS,
+      ...callbacks(),
+    });
+
+    const title = rendered.container.querySelector(
+      '[data-cy="settings-dialog-heading"]',
+    );
+    expect(title?.classList).toContain("ui-dialog-title");
+  });
+
   it("dispatches new display toggles and reflects updated state", async () => {
     const handlers = callbacks();
     const rendered = render(SettingsDialog, {

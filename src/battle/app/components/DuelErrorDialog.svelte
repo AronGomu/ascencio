@@ -60,6 +60,7 @@
         <p class="eyebrow" data-cy="duel-error-eyebrow">Duel stopped</p>
         <h2
           id="duel-error-dialog-heading"
+          class="ui-dialog-title duel-error-dialog-title"
           tabindex="-1"
           bind:this={heading}
           data-cy="duel-error-heading"

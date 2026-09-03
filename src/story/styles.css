@@ -4,6 +4,11 @@
    refactors; the aliases derive from the shared token set, not from literals). */
 
 .story-app {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  container-type: size;
+
   --rarity-common: transparent;
   --rarity-rare: var(--rarity-halo-rare);
   --rarity-super-rare: var(--rarity-halo-super-rare);
@@ -88,7 +93,7 @@
 }
 .story-app h1 {
   margin: 0.5rem 0 1rem;
-  font-size: clamp(2rem, 8vw, 4rem);
+  font-size: clamp(2rem, 8cqw, 4rem);
   line-height: 0.95;
 }
 .story-app .actions {

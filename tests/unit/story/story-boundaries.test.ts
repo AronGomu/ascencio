@@ -90,16 +90,38 @@ describe("story source boundary", () => {
       }
     }
   });
+
+  it("sizes story surfaces from their shell container, not viewport units", async () => {
+    const files = await findLayoutSourceFiles(storyRoot);
+    expect(files.length).toBeGreaterThan(0);
+    for (const file of files) {
+      const source = await readFile(file, "utf8");
+      const viewportUnits =
+        source.match(/\b\d*\.?\d+(?:s|d|l)?v[hw]\b/gi) ?? [];
+      expect(
+        viewportUnits,
+        `${path.relative(storyRoot, file)} contains viewport units: ${viewportUnits.join(", ")}`,
+      ).toEqual([]);
+    }
+  });
 });
 
 async function findSourceFiles(root: string): Promise<string[]> {
+  return findFiles(root, /\.(?:ts|svelte)$/);
+}
+
+async function findLayoutSourceFiles(root: string): Promise<string[]> {
+  return findFiles(root, /\.(?:css|svelte|ts)$/);
+}
+
+async function findFiles(root: string, extension: RegExp): Promise<string[]> {
   const entries = await readdir(root, { withFileTypes: true });
   const nested = await Promise.all(
     entries.map((entry) => {
       const file = path.join(root, entry.name);
       return entry.isDirectory()
-        ? findSourceFiles(file)
-        : /\.(?:ts|svelte)$/.test(entry.name)
+        ? findFiles(file, extension)
+        : extension.test(entry.name)
           ? [file]
           : [];
     }),

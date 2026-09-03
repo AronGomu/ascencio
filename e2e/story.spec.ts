@@ -80,8 +80,8 @@ async function resumeAtOutcome(
   await page.getByRole("button", { name: "Continue" }).click();
 }
 
-async function reachMap(page: Page): Promise<void> {
-  await startNarrative(page);
+async function reachMap(page: Page, narrativeStarted = false): Promise<void> {
+  if (!narrativeStarted) await startNarrative(page);
   for (let index = 0; index < BEATS_BEFORE_CHOICE; index += 1)
     await page.keyboard.press("Enter");
   await expect(
@@ -441,29 +441,178 @@ async function readOverflow(page: Page) {
   }, STORY_REGION);
 }
 
+async function expectInsideStage(
+  page: Page,
+  selector: string,
+  label: string,
+): Promise<void> {
+  const geometry = await page.evaluate((targetSelector) => {
+    const stage = document.querySelector<HTMLElement>('[data-cy="app-stage"]');
+    const target = document.querySelector<HTMLElement>(targetSelector);
+    if (stage === null || target === null)
+      throw new Error(`${targetSelector} or app stage is missing`);
+    const stageRect = stage.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    return {
+      stage: {
+        top: stageRect.top,
+        right: stageRect.right,
+        bottom: stageRect.bottom,
+        left: stageRect.left,
+      },
+      target: {
+        top: targetRect.top,
+        right: targetRect.right,
+        bottom: targetRect.bottom,
+        left: targetRect.left,
+      },
+    };
+  }, selector);
+  expect(geometry.target.left, `${label} left edge`).toBeGreaterThanOrEqual(
+    geometry.stage.left - 1,
+  );
+  expect(geometry.target.top, `${label} top edge`).toBeGreaterThanOrEqual(
+    geometry.stage.top - 1,
+  );
+  expect(geometry.target.right, `${label} right edge`).toBeLessThanOrEqual(
+    geometry.stage.right + 1,
+  );
+  expect(geometry.target.bottom, `${label} bottom edge`).toBeLessThanOrEqual(
+    geometry.stage.bottom + 1,
+  );
+}
+
+async function expectInternalScroll(
+  page: Page,
+  selector: string,
+  label: string,
+): Promise<void> {
+  const scroll = await page.locator(selector).evaluate((element) => ({
+    clientHeight: element.clientHeight,
+    scrollHeight: element.scrollHeight,
+    overflowY: getComputedStyle(element).overflowY,
+  }));
+  expect(scroll.overflowY, `${label} owns vertical overflow`).toBe("auto");
+  expect(
+    scroll.scrollHeight,
+    `${label} has scrollable content`,
+  ).toBeGreaterThan(scroll.clientHeight);
+}
+
 for (const viewport of [
   { width: 1280, height: 720 },
+  { width: 1280, height: 560 },
   { width: 768, height: 1024 },
   { width: 375, height: 667 },
   { width: 667, height: 375 },
 ]) {
-  test(`story fits ${viewport.width}x${viewport.height} without horizontal overflow`, async ({
+  test(`story screens fit the ${viewport.width}x${viewport.height} shell stage`, async ({
     page,
   }) => {
     await page.setViewportSize(viewport);
-    await reachMap(page);
+    await page.goto("./#/story");
+    await expect(page.locator(STORY_REGION)).toBeVisible();
+    await expect(page.getByText(/Rain turned/)).toBeVisible();
+    await expectInsideStage(page, '[data-cy="story-app"]', "story root");
+    await expectInsideStage(
+      page,
+      '[data-cy="story-narrative-stage"]',
+      "narrative",
+    );
+    await expectInsideStage(
+      page,
+      '[data-cy="story-narrative-background"]',
+      "narrative background",
+    );
+    await expectInsideStage(
+      page,
+      '[data-cy="story-narrative-dialogue"]',
+      "narrative dialogue",
+    );
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Enter");
+    await expectInsideStage(
+      page,
+      '[data-cy^="story-narrative-character-"]',
+      "narrative character",
+    );
+
+    await page.getByRole("button", { name: "Open menu" }).first().click();
+    await expectInsideStage(
+      page,
+      '[data-cy="story-overlay-backdrop-pause-title"]',
+      "pause overlay",
+    );
+    await page.keyboard.press("Escape");
+    await page.reload();
+    await expect(page.getByText(/Rain turned/)).toBeVisible();
+
+    await reachMap(page, true);
+    await expectInsideStage(page, '[data-cy="story-map-screen"]', "map");
     const overflow = await readOverflow(page);
     expect(overflow.documentWidth).toBeLessThanOrEqual(overflow.viewportWidth);
     expect(overflow.regionScrollWidth).toBeLessThanOrEqual(
       overflow.regionClientWidth,
     );
-    if (viewport.width > 667) return;
-    const targets = page.getByLabel("Location list").getByRole("button");
-    for (let index = 0; index < (await targets.count()); index += 1) {
-      const box = await targets.nth(index).boundingBox();
-      expect(box?.height).toBeGreaterThanOrEqual(44);
-      expect(box?.width).toBeGreaterThanOrEqual(44);
+
+    if (viewport.width <= 667) {
+      const targets = page.getByLabel("Location list").getByRole("button");
+      for (let index = 0; index < (await targets.count()); index += 1) {
+        const box = await targets.nth(index).boundingBox();
+        expect(box?.height).toBeGreaterThanOrEqual(44);
+        expect(box?.width).toBeGreaterThanOrEqual(44);
+      }
     }
+
+    await page
+      .getByLabel("Location list")
+      .getByRole("button", { name: /Old Arena/ })
+      .click();
+    await expectInsideStage(
+      page,
+      '[data-cy="story-briefing-screen"]',
+      "pre-battle briefing",
+    );
+    await page
+      .locator(
+        '[data-cy="deck-select-back"]:visible, [data-cy="deck-select-back-icon"]:visible',
+      )
+      .click();
+    await expect(page.locator('[data-cy="story-map-screen"]')).toBeVisible();
+    await page.locator('[data-cy="story-map-hotspot-card-shop"]').click();
+    await expect(page.locator('[data-cy="story-shop-greeting"]')).toBeVisible();
+    await expectInsideStage(
+      page,
+      '[data-cy="story-shop-greeting"]',
+      "shop greeting",
+    );
+    await page.locator('[data-cy="story-shop-greeting-cue"]').click();
+    await page.locator('[data-cy="story-shop-greeting-cue"]').click();
+    await page.locator('[data-cy="story-shop-greeting-buy"]').click();
+    await expect(page.locator('[data-cy="story-shop-set-grid"]')).toBeVisible();
+    await expectInsideStage(
+      page,
+      '[data-cy="story-shop-browse"]',
+      "shop browser",
+    );
+    await expectInternalScroll(
+      page,
+      '[data-cy="story-shop-browse"]',
+      "shop browser",
+    );
+
+    await page.goto("./#/free-play/collection");
+    await expect(page.locator('[data-cy="collection-screen"]')).toBeVisible();
+    await expectInsideStage(
+      page,
+      '[data-cy="collection-screen"]',
+      "collection",
+    );
+    await expectInternalScroll(
+      page,
+      '[data-cy="collection-grid"]',
+      "collection grid",
+    );
   });
 }
 

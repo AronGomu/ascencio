@@ -284,13 +284,16 @@
 
 <style>
   .opening-screen {
-    min-height: 100svh;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
     gap: 0.75rem;
     /* The owner asked for the row to take the whole width: the frame around it
        is the smallest one that still keeps the cards off the screen edge. */
-    padding: clamp(0.5rem, 1.5vw, 1rem);
+    padding: clamp(0.5rem, 1.5cqw, 1rem);
     background:
       radial-gradient(circle at 50% 10%, var(--field-glow), transparent 40%),
       var(--bg);
@@ -330,6 +333,7 @@
     /* `safe`: a column of nine taller than the viewport scrolls from its top
        rather than centring its overflow out of reach. */
     align-content: safe center;
+    min-height: 0;
     overflow-y: auto;
   }
   .opening-tile {

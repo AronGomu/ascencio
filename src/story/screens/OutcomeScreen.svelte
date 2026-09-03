@@ -95,12 +95,15 @@
 
 <style>
   .outcome-screen {
-    min-height: 100svh;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
     display: grid;
-    align-content: center;
+    align-content: safe center;
     justify-items: start;
+    overflow: auto;
     gap: 0.75rem;
-    padding: clamp(1rem, 8vw, 7rem);
+    padding: clamp(1rem, 8cqw, 7rem);
     background:
       radial-gradient(circle at 70% 50%, var(--accent-deep), transparent 25%),
       var(--bg);
@@ -112,7 +115,7 @@
   }
   .outcome-screen p {
     max-width: 55ch;
-    font-size: clamp(1rem, 2.5vw, 1.3rem);
+    font-size: clamp(1rem, 2.5cqw, 1.3rem);
     line-height: 1.6;
   }
   .outcome-screen div {

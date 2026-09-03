@@ -95,10 +95,13 @@
 <style>
   .shop-greeting {
     position: relative;
-    min-height: 100svh;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
     display: grid;
-    place-items: end center;
-    padding: clamp(1rem, 4vw, 3rem);
+    place-items: safe end center;
+    overflow: auto;
+    padding: clamp(1rem, 4cqw, 3rem);
     background:
       radial-gradient(circle at 70% 20%, var(--field-glow), transparent 30%),
       var(--bg);
@@ -126,7 +129,7 @@
   .line {
     max-width: 70ch;
     margin: 0;
-    font-size: clamp(1rem, 2.3vw, 1.35rem);
+    font-size: clamp(1rem, 2.3cqw, 1.35rem);
     line-height: 1.55;
     overflow-wrap: anywhere;
   }

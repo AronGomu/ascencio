@@ -56,19 +56,22 @@
 
 <style>
   .handoff {
-    min-height: 100svh;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
     display: grid;
-    align-content: center;
+    align-content: safe center;
+    overflow: auto;
     gap: 1.5rem;
-    padding: clamp(1rem, 6vw, 5rem);
+    padding: clamp(1rem, 6cqw, 5rem);
     background: linear-gradient(135deg, var(--bg) 40%, var(--field-glow));
   }
   .transition-mark {
-    font: 900 clamp(4rem, 20vw, 13rem)/0.75 sans-serif;
+    font: 900 clamp(4rem, 20cqw, 13rem)/0.75 sans-serif;
     color: color-mix(in srgb, var(--accent) 9%, transparent);
     position: absolute;
-    right: 2vw;
-    top: 10vh;
+    right: 2cqw;
+    top: 10cqh;
   }
   .handoff > div:not(.transition-mark),
   .status,

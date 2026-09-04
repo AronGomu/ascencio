@@ -170,6 +170,35 @@ export function storyScreenLabel(screen: StoryScreen): string {
   return STORY_SCREEN_LABELS[screen];
 }
 
+/** Resolves the map's one-step return pointer only when the named screen still
+    has enough state to function. Invalid and same-screen pointers return to
+    dialog instead of fabricating result data or exposing a no-op control. */
+export function mapReturnScreen(state: StoryState): StoryScreen {
+  const origin = state.previousScreen;
+  if (origin === null || origin === "map") return "narrative";
+  switch (origin) {
+    case "pre-battle":
+    case "battle-mock":
+      return state.encounterId === null ? "narrative" : origin;
+    case "outcome":
+      return state.outcome === null ? "narrative" : origin;
+    case "reward":
+      return state.rewardGranted ? origin : "narrative";
+    case "shop-cards":
+      return state.shopSetId === null ? "narrative" : origin;
+    case "shop-opening":
+      return state.openedCards === null || state.openingMode !== "sequential"
+        ? "narrative"
+        : origin;
+    case "shop-results":
+      return state.openedCards === null || state.openingMode === null
+        ? "narrative"
+        : origin;
+    default:
+      return origin;
+  }
+}
+
 function rememberStoryScreenTransition(
   current: StoryState,
   next: StoryState,

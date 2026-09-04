@@ -3,6 +3,7 @@
   import { PROLOGUE } from "./content/prologue.ts";
   import {
     createInitialStoryState,
+    mapReturnScreen,
     storyScreenLabel,
     transitionStoryScreen,
     type ChoiceId,
@@ -402,6 +403,7 @@
       ? preBattleDeckOptions(state, cardViewByCode)
       : null;
   $: header = storyHeaderConfig(state, shopSetName, openedCardViews.length);
+  $: mapReturnTarget = mapReturnScreen(state);
   $: applyResolution(resolution);
   $: encounterLabel =
     state.encounterId === null
@@ -651,10 +653,22 @@
 
   function returnToMap(): void {
     handoffError = null;
+    state = transitionStoryScreen(state, "map");
+  }
+
+  function resumeMapOrigin(): void {
+    const target = mapReturnScreen(state);
+    if (target === "battle-mock") {
+      retryEncounter();
+      return;
+    }
     state = transitionStoryScreen(
-      { ...state, outcome: null, outcomeScene: null, encounterId: null },
-      "map",
+      target.startsWith("shop-")
+        ? { ...state, shopReturnScreen: "map" }
+        : state,
+      target,
     );
+    overlay = null;
   }
 
   function resumeSnapshot(snapshot: StoryState): void {
@@ -830,6 +844,10 @@
     if (state.screen === "reward") void autosaveReward();
   }
   function acknowledgeReward(): void {
+    if (state.rewardAcknowledged) {
+      go("map");
+      return;
+    }
     dispatch({ type: "acknowledge-reward" });
   }
   async function reset(): Promise<void> {
@@ -931,10 +949,10 @@
       <IllustratedMapScreen
         locations={state.locations}
         choiceAcknowledgment={state.laterAcknowledgment}
-        returnLabel={storyScreenLabel(state.previousScreen ?? "narrative")}
+        returnLabel={storyScreenLabel(mapReturnTarget)}
         onselect={(locationId: LocationId) =>
           dispatch({ type: "select-location", locationId })}
-        onreturn={() => go(state.previousScreen ?? "narrative")}
+        onreturn={resumeMapOrigin}
       />
       {#if state.rewardAcknowledged}<section
           class="completion-panel"
@@ -979,12 +997,36 @@
         onreturn={returnToMap}
       />
     {:else if state.screen === "outcome"}
-      <OutcomeScreen
-        outcome={state.outcome ?? "win"}
-        oncontinue={continueOutcome}
-        onretry={retryEncounter}
-        onreturn={returnToMap}
-      />
+      {#if state.outcome !== null}
+        <OutcomeScreen
+          outcome={state.outcome}
+          oncontinue={continueOutcome}
+          onretry={retryEncounter}
+          onreturn={returnToMap}
+        />
+      {:else}
+        <section
+          role="alert"
+          aria-labelledby="story-outcome-unavailable-heading"
+          data-cy="story-outcome-unavailable"
+        >
+          <h1
+            id="story-outcome-unavailable-heading"
+            data-cy="story-outcome-unavailable-heading"
+          >
+            Duel result unavailable
+          </h1>
+          <p data-cy="story-outcome-unavailable-message">
+            This story state has no duel result to resume.
+          </p>
+          <button
+            type="button"
+            class="story-danger"
+            data-cy="story-outcome-unavailable-return"
+            onclick={returnToMap}>Return to map</button
+          >
+        </section>
+      {/if}
     {:else if inShop}
       <!-- One boundary for the whole shop, entered the way the shell enters a
          domain: `{#await}` around the import, a pending line, and something

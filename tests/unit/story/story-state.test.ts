@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { PROLOGUE } from "../../../src/story/content/prologue.ts";
 import {
   createInitialStoryState,
+  mapReturnScreen,
   STORY_SCREENS,
   storyScreenLabel,
   transitionStoryScreen,
@@ -71,6 +72,42 @@ describe("story state model", () => {
       screen: "map",
       previousScreen: "narrative",
     });
+  });
+
+  it("falls back instead of returning the map to a dead or same-screen origin", () => {
+    const initial = createInitialStoryState();
+    const valid = [
+      { previousScreen: "narrative" as const },
+      {
+        previousScreen: "outcome" as const,
+        outcome: "abort" as const,
+        outcomeScene: "The duel paused.",
+      },
+      { previousScreen: "reward" as const, rewardGranted: true },
+      {
+        previousScreen: "battle-mock" as const,
+        encounterId: "old-arena" as const,
+      },
+      { previousScreen: "shop-greeting" as const },
+    ];
+    for (const state of valid)
+      expect(mapReturnScreen({ ...initial, screen: "map", ...state })).toBe(
+        state.previousScreen,
+      );
+
+    for (const state of [
+      { previousScreen: null },
+      { previousScreen: "map" as const },
+      { previousScreen: "outcome" as const },
+      { previousScreen: "reward" as const },
+      { previousScreen: "battle-mock" as const },
+      { previousScreen: "shop-cards" as const },
+      { previousScreen: "shop-opening" as const },
+      { previousScreen: "shop-results" as const },
+    ])
+      expect(mapReturnScreen({ ...initial, screen: "map", ...state })).toBe(
+        "narrative",
+      );
   });
 
   it("labels every story screen for contextual navigation", () => {
@@ -160,8 +197,9 @@ describe("story state model", () => {
   });
 
   /* The encounter has to outlive the screen: the story is unmounted while its
-     duel runs, and what comes back has to know which node it was. */
-  it("records the selected encounter and clears it once the outcome is read", () => {
+     duel runs, and map return can re-enter the handoff or outcome only while
+     their supporting state still exists. */
+  it("records the selected encounter and preserves it while map can return", () => {
     const map = { ...createInitialStoryState(), screen: "map" as const };
     const briefing = reduceStory(map, {
       type: "select-location",
@@ -175,9 +213,12 @@ describe("story state model", () => {
       { type: "battle-result", result: "abort" },
     );
     expect(aborted.encounterId).toBe("old-arena");
-    expect(
-      reduceStory(aborted, { type: "continue-outcome" }).encounterId,
-    ).toBeNull();
+    expect(reduceStory(aborted, { type: "continue-outcome" })).toMatchObject({
+      screen: "map",
+      previousScreen: "outcome",
+      encounterId: "old-arena",
+      outcome: "abort",
+    });
 
     const rewarded = reduceStory(
       reduceStory(
@@ -187,9 +228,15 @@ describe("story state model", () => {
       { type: "continue-outcome" },
     );
     expect(rewarded.screen).toBe("reward");
-    expect(
-      reduceStory(rewarded, { type: "acknowledge-reward" }).encounterId,
-    ).toBeNull();
+    expect(reduceStory(rewarded, { type: "acknowledge-reward" })).toMatchObject(
+      {
+        screen: "map",
+        previousScreen: "reward",
+        encounterId: null,
+        rewardGranted: true,
+        rewardAcknowledged: true,
+      },
+    );
   });
 
   it("selecting the card shop opens the greeting, not a duel", () => {
@@ -280,7 +327,8 @@ describe("story state model", () => {
       reduceStory(repeatOutcome, { type: "continue-outcome" }),
     ).toMatchObject({
       screen: "map",
-      outcome: null,
+      previousScreen: "outcome",
+      outcome: "win",
       rewardGranted: true,
       rewardAcknowledged: true,
     });
@@ -296,6 +344,8 @@ describe("story state model", () => {
       expect(reduceStory(outcome, { type: "continue-outcome" })).toMatchObject({
         rewardGranted: false,
         screen: "map",
+        previousScreen: "outcome",
+        outcome: result,
       });
     },
   );

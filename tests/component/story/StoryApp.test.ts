@@ -6,6 +6,10 @@ import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { STORY_SAVES_DATABASE_NAME } from "../../../src/story/saves/story-save-contracts.ts";
 import { createStorySaveRepository } from "../../../src/story/saves/story-save-repository.ts";
+import type {
+  StoryEncounterRequest,
+  StoryHandoffOutcome,
+} from "../../../src/story/handoff/story-handoff.ts";
 import {
   createInitialStoryState,
   STORY_SCREENS,
@@ -20,6 +24,7 @@ import {
   installPrototypeActiveCatalog,
   resetRuntimeCatalog,
 } from "../../fixtures/active-catalog.ts";
+import { fieldableStoryDeck } from "../../fixtures/story-decks.ts";
 
 afterEach(async () => {
   cleanup();
@@ -312,23 +317,167 @@ describe("StoryApp", () => {
     ).toBeNull();
   });
 
-  it("returns from the map to its persisted origin in the browser", async () => {
-    const mapState = {
-      ...createInitialStoryState(),
-      screen: "map" as const,
-      savedScreen: "map" as const,
-      previousScreen: "narrative" as const,
-    };
-    const { container } = render(StoryApp, { resumeState: mapState });
+  it.each(["narrative", "map"] as const)(
+    "returns from the map to dialog for a %s origin",
+    async (previousScreen) => {
+      const mapState = {
+        ...createInitialStoryState(),
+        screen: "map" as const,
+        savedScreen: "map" as const,
+        previousScreen,
+      };
+      const { container } = render(StoryApp, { resumeState: mapState });
 
-    await userEvent
-      .setup()
-      .click(screen.getByRole("button", { name: "Return to Dialog" }));
+      await userEvent
+        .setup()
+        .click(screen.getByRole("button", { name: "Return to Dialog" }));
+
+      expect(
+        container.querySelector('[data-cy="story-narrative-stage"]'),
+      ).not.toBeNull();
+      expect(
+        container.querySelector('[data-cy="story-map-screen"]'),
+      ).toBeNull();
+    },
+  );
+
+  it("shows recovery instead of fabricating a win for an incomplete outcome", () => {
+    const outcomeState = {
+      ...createInitialStoryState(),
+      screen: "outcome" as const,
+      savedScreen: "outcome" as const,
+    };
+    const { container } = render(StoryApp, { resumeState: outcomeState });
 
     expect(
-      container.querySelector('[data-cy="story-narrative-stage"]'),
+      container.querySelector('[data-cy="story-outcome-unavailable"]'),
     ).not.toBeNull();
-    expect(container.querySelector('[data-cy="story-map-screen"]')).toBeNull();
+    expect(
+      container.querySelector('[data-cy="story-outcome-win-heading"]'),
+    ).toBeNull();
+  });
+
+  it("returns map to a complete outcome instead of a fabricated win", async () => {
+    const outcomeState = {
+      ...createInitialStoryState(),
+      screen: "outcome" as const,
+      savedScreen: "outcome" as const,
+      outcome: "abort" as const,
+      outcomeScene: "The duel paused.",
+      encounterId: "old-arena" as const,
+    };
+    const { container } = render(StoryApp, { resumeState: outcomeState });
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole("button", { name: "Return to map" }));
+    await user.click(
+      screen.getByRole("button", { name: "Return to Duel Result" }),
+    );
+
+    expect(
+      container.querySelector('[data-cy="story-outcome-abort-heading"]')
+        ?.textContent,
+    ).toContain("Duel paused");
+    expect(
+      container.querySelector('[data-cy="story-outcome-win-heading"]'),
+    ).toBeNull();
+  });
+
+  it("re-enters an acknowledged reward with a working continue route", async () => {
+    const rewardState = {
+      ...createInitialStoryState(),
+      screen: "reward" as const,
+      savedScreen: "reward" as const,
+      rewardGranted: true,
+    };
+    const { container } = render(StoryApp, { resumeState: rewardState });
+    const user = userEvent.setup();
+
+    await user.click(
+      screen.getByRole("button", { name: "Continue to updated map" }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Return to Duel Result" }),
+    );
+    expect(
+      container.querySelector('[data-cy="story-reward-screen"]'),
+    ).not.toBeNull();
+
+    await user.click(
+      screen.getByRole("button", { name: "Continue to updated map" }),
+    );
+    expect(
+      container.querySelector('[data-cy="story-map-screen"]'),
+    ).not.toBeNull();
+  });
+
+  it("re-enters a handoff and restarts its intact encounter", async () => {
+    installPrototypeActiveCatalog();
+    const { deck, collection } = fieldableStoryDeck();
+    const onencounter = vi.fn<
+      (request: StoryEncounterRequest) => Promise<StoryHandoffOutcome>
+    >(() => Promise.resolve("ready"));
+    const handoffState = {
+      ...createInitialStoryState(),
+      screen: "battle-mock" as const,
+      savedScreen: "battle-mock" as const,
+      encounterId: "old-arena" as const,
+      decks: [deck],
+      defaultDeckId: deck.id,
+      collection,
+    };
+    const { container } = render(StoryApp, {
+      resumeState: handoffState,
+      onencounter,
+    });
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole("button", { name: "Return to map" }));
+    await user.click(screen.getByRole("button", { name: "Return to Duel" }));
+
+    expect(
+      container.querySelector('[data-cy="story-handoff-heading"]')?.textContent,
+    ).toBe("Rin's Echo");
+    await waitFor(() => expect(onencounter).toHaveBeenCalledOnce());
+    expect(onencounter.mock.calls[0]?.[0]).toMatchObject({
+      encounterId: "old-arena",
+      state: { screen: "battle-mock" },
+      deck: { ref: { type: "local", deckId: deck.id } },
+    });
+  });
+
+  it("re-enters a shop origin with a working leave route", async () => {
+    const shopState = {
+      ...createInitialStoryState(),
+      screen: "shop-greeting" as const,
+      savedScreen: "shop-greeting" as const,
+      shopReturnScreen: "map" as const,
+    };
+    const { container } = render(StoryApp, { resumeState: shopState });
+    const user = userEvent.setup();
+    const leaveShop = async () => {
+      const stage = await waitFor(() => {
+        const element = container.querySelector<HTMLElement>(
+          '[data-cy="story-shop-greeting"]',
+        );
+        expect(element).not.toBeNull();
+        return element!;
+      });
+      await user.click(stage);
+      await user.click(stage);
+      await user.click(screen.getByRole("button", { name: "Leave Shop" }));
+    };
+
+    await leaveShop();
+    await user.click(screen.getByRole("button", { name: "Return to Shop" }));
+    expect(
+      container.querySelector('[data-cy="story-shop-greeting"]'),
+    ).not.toBeNull();
+
+    await leaveShop();
+    expect(
+      container.querySelector('[data-cy="story-map-screen"]'),
+    ).not.toBeNull();
   });
 
   /* The top bar is how a player inside a save reaches their decks. StoryApp

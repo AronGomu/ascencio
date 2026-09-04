@@ -252,6 +252,36 @@ test("map return follows persisted origin by pointer and keyboard", async ({
 
   await openSavedScreen(page, map);
   await expect(returnButton()).toHaveAttribute("data-cy", "story-map-return");
+  await expect(returnButton()).toHaveClass(/story-danger/);
+  const placement = await returnButton().evaluate((button) => {
+    const stage = button.closest<HTMLElement>('[data-cy="story-map-screen"]');
+    if (stage === null) throw new Error("Map return is outside map stage");
+    const buttonBox = button.getBoundingClientRect();
+    const stageBox = stage.getBoundingClientRect();
+    const probe = document.createElement("span");
+    probe.style.color = "var(--danger-strong)";
+    stage.append(probe);
+    const dangerStrong = getComputedStyle(probe).color;
+    probe.remove();
+    const stageStyle = getComputedStyle(stage);
+    return {
+      inside:
+        buttonBox.left >= stageBox.left &&
+        buttonBox.right <= stageBox.right &&
+        buttonBox.top >= stageBox.top &&
+        buttonBox.bottom <= stageBox.bottom,
+      leftGap: buttonBox.left - stageBox.left,
+      bottomGap: stageBox.bottom - buttonBox.bottom,
+      paddingLeft: Number.parseFloat(stageStyle.paddingLeft),
+      paddingBottom: Number.parseFloat(stageStyle.paddingBottom),
+      background: getComputedStyle(button).backgroundColor,
+      dangerStrong,
+    };
+  });
+  expect(placement.inside).toBe(true);
+  expect(placement.leftGap).toBeCloseTo(placement.paddingLeft, 0);
+  expect(placement.bottomGap).toBeCloseTo(placement.paddingBottom, 0);
+  expect(placement.background).toBe(placement.dangerStrong);
   await returnButton().click();
   await expect(page.locator('[data-cy="story-narrative-stage"]')).toBeVisible();
 
@@ -259,4 +289,50 @@ test("map return follows persisted origin by pointer and keyboard", async ({
   await returnButton().focus();
   await page.keyboard.press("Enter");
   await expect(page.locator('[data-cy="story-narrative-stage"]')).toBeVisible();
+});
+
+test("map return labels and targets stay resumable", async ({ page }) => {
+  await openSavedScreen(page, {
+    ...stateAt("map"),
+    previousScreen: "outcome",
+    outcome: "abort",
+    outcomeScene: "The duel paused.",
+    encounterId: "old-arena",
+  });
+  await page.getByRole("button", { name: "Return to Duel Result" }).click();
+  await expect(
+    page.locator('[data-cy="story-outcome-abort-heading"]'),
+  ).toHaveText("Duel paused");
+  await expect(
+    page.locator('[data-cy="story-outcome-win-heading"]'),
+  ).toHaveCount(0);
+
+  await openSavedScreen(page, {
+    ...stateAt("map"),
+    previousScreen: "reward",
+    rewardGranted: true,
+    rewardAcknowledged: true,
+  });
+  await page.getByRole("button", { name: "Return to Duel Result" }).click();
+  await expect(page.locator('[data-cy="story-reward-screen"]')).toBeVisible();
+  await page.getByRole("button", { name: "Continue to updated map" }).click();
+  await expect(page.locator('[data-cy="story-map-screen"]')).toBeVisible();
+
+  await openSavedScreen(page, {
+    ...stateAt("map"),
+    previousScreen: "battle-mock",
+    encounterId: "old-arena",
+  });
+  await page.getByRole("button", { name: "Return to Duel" }).click();
+  await expect(page.locator('[data-cy="story-handoff-screen"]')).toBeVisible();
+  await expect(page.locator('[data-cy="story-handoff-heading"]')).toHaveText(
+    "Rin's Echo",
+  );
+
+  await openSavedScreen(page, {
+    ...stateAt("map"),
+    previousScreen: "shop-greeting",
+  });
+  await page.getByRole("button", { name: "Return to Shop" }).click();
+  await expect(page.locator('[data-cy="story-shop-greeting"]')).toBeVisible();
 });

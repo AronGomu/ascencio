@@ -184,23 +184,10 @@ function reduceStoryCommand(
     case "continue-outcome":
       if (state.screen !== "outcome") return state;
       if (state.outcome === "abort" || state.outcome === "failure")
-        return {
-          ...state,
-          screen: "map",
-          outcome: null,
-          outcomeScene: null,
-          encounterId: null,
-        };
+        return { ...state, screen: "map" };
       if (state.outcome !== "win" && state.outcome !== "loss") return state;
       return state.rewardGranted
-        ? {
-            ...state,
-            screen: "map",
-            outcome: null,
-            outcomeScene: null,
-            savedScreen: "map",
-            encounterId: null,
-          }
+        ? { ...state, screen: "map", savedScreen: "map" }
         : { ...state, screen: "reward", rewardGranted: true };
     case "acknowledge-reward":
       if (state.screen !== "reward" || state.rewardAcknowledged) return state;

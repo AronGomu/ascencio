@@ -1119,7 +1119,7 @@ against `npm run dev` to see real art.
 - [ ] `npm run dev`, open `http://localhost:5173/#/decks`, open any saved deck.
 - [ ] The left pane shows the shared card preview panel (not "Pinned card details"). Initially it shows "Hover a card to see its details."
 - [ ] Hover a catalog tile (right pane): the preview panel updates with the card's name, effect text, and art.
-- [ ] Click a catalog tile to select/pin it; hover another tile: preview shows the hovered card. (Since T6 of decks-feedback-round-2, that click also adds a copy — press Undo after checking the preview.)
+- [ ] Click a catalog tile to select/pin it without changing the deck; hover another tile: preview shows the hovered card.
 - [ ] Move the cursor off the catalog grid: preview reverts to the previously selected (clicked) card.
 - [ ] Hover a deck workspace card (middle pane): preview shows that card.
 - [ ] Move the cursor off the deck workspace grid: preview reverts to the selected card.
@@ -1219,12 +1219,12 @@ Drag reordering
 - [ ] Drag a Main Deck card to the Side Deck zone — it moves there (cross-zone move still works).
 - [ ] Drag a catalog card to its canonical zone — it is added (catalog add still works).
 
-Sort buttons
+Sort controls
 
-- [ ] Confirm two buttons appear in the deck workspace header: "Sort A–Z" and "Sort by type".
-- [ ] Click "Sort A–Z" — all three zones are sorted alphabetically by card name.
-- [ ] Click "Sort by type" — main/side zones order monsters → spells → traps; extra zone follows Fusion → Synchro → Xyz → Link.
-- [ ] After a sort, confirm the Undo button remains disabled (sort does not enter history).
+- [ ] Confirm the deck workspace header shows one **Sort By** select and an ascending/descending direction toggle.
+- [ ] Choose **A–Z** — all three zones are sorted alphabetically by card name.
+- [ ] Choose **CardType>A–Z** — all three zones sort by card type, then name.
+- [ ] After a sort, confirm Undo restores the prior order and Redo reapplies the sort.
 
 ## T9 drop-removal-semantics
 
@@ -1323,9 +1323,9 @@ Buttons gone
 - [ ] Remove a card, then press Undo, then Redo. Each of those three actions adds one more row.
 - [ ] Rename the deck, then add a card. The new row carries the **new** name; the earlier rows still carry the old one.
 
-### Positional changes are not logged
-- [ ] Note the current row count in `autosaves`. Drag a card to a different position inside Main Deck, then use the Sort action.
-- [ ] The `autosaves` row count is **unchanged** — reordering and sorting append nothing.
+### Positional changes are autosaved; explicit sorts are undoable
+- [ ] Note the current row count in `autosaves`. Drag a card to a different position inside Main Deck — one autosave row appears, while Undo history stays unchanged.
+- [ ] Apply a **Sort By** mode — another autosave row appears, and Undo restores the order from before the sort.
 
 ### 100-entry cap
 - [ ] Add and remove a card repeatedly (roughly 55 add/remove pairs) so the log passes 100 entries.
@@ -1661,7 +1661,7 @@ Start a dev duel (`npm run dev`), open the app in the browser, pick decks and st
 - [ ] Run `npm run dev`, open a deck, and confirm tiles in **Main**, **Extra**, and **Side** zones show the full card art scaled to fill the tile (no top-left-corner clip, no letterbox).
 - [ ] Confirm the card name overlays the bottom of the art with a readable scrim (dark gradient behind the text), and the name still has its own `data-cy` attribute (`deck-tile-name-{code}`).
 - [ ] Open the catalog panel and confirm catalog tiles also show full card art with the name overlay.
-- [ ] Select a card tile and confirm the accent border is still visible around the tile. (Since T6 of decks-feedback-round-2, clicking a deck tile also moves or removes it — press Undo, or select a catalog tile whose copy limit is already reached.)
+- [ ] Single-click a card tile and confirm the accent border is still visible around the pinned tile; deck contents stay unchanged.
 - [ ] Confirm the limit badge (number in circle, top-left) remains above the art and is not obscured.
 - [ ] Scroll to a card whose art this build did not package; confirm the placeholder glyph (letter or `!`) fills the tile and the name appears as a normal (non-overlay) row below it. (Corrected 2026-08-20 by T12: every code now gets an image URL by convention, so the placeholder is reached by the image failing to load rather than by a null URL.)
 - [ ] Confirm no tile overflows its grid slot at any of the default column widths.
@@ -1692,33 +1692,30 @@ Side Deck collapsed on arrival
 - [ ] Open the deck editor from the library; confirm the Side Deck card grid and drop area are **hidden initially** and the toggle reports `aria-expanded="false"`.
 - [ ] Expand Side Deck, then confirm cards can be dragged from Main or Extra Deck onto its drop area.
 
-## T6 click-intents-and-sideboard
+## T6 click-preview-and-double-click
 
-Desktop click intents (viewport ≥1024px wide — the `panels` layout)
+Desktop pointer intents (viewport ≥1024px wide — the `panels` layout)
 
 - [ ] Run `npm run dev`, open `http://localhost:5173/#/decks`, and open a saved deck in a window wider than 1024px.
-- [ ] Click a catalog card whose canonical zone is **Main** — one copy is added to Main Deck, the counts update, and the announcement reads "… added to main."
-- [ ] Click a catalog card whose canonical zone is **Extra** (e.g. a Fusion monster) — it is added to Extra Deck, announcement "… added to extra."
-- [ ] Click the card you just added in the **Main Deck** zone — that copy moves to Side Deck; Main drops by one, Side rises by one, announcement "… moved to side."
-- [ ] Click that same copy in the **Side Deck** zone — it returns to Main Deck, announcement "… moved to main."
-- [ ] Click a card in the **Extra Deck** zone — the copy is removed outright (it does not go to Side), announcement "… removed."
-- [ ] Click an Extra Deck card that you first moved into Side, while in Side — it returns to **Extra**, not Main.
-- [ ] Confirm every click also updates the preview panel to the clicked card, and that hovering another tile still wins over the selection.
+- [ ] Single-click a catalog card whose canonical zone is **Main** — preview pins that card and deck counts do not change.
+- [ ] Hover another catalog card, then leave — preview temporarily shows hovered card, then restores pinned card.
+- [ ] Double-click the pinned Main-canonical catalog card — exactly one copy is added to Main Deck and one history entry appears.
+- [ ] Double-click a catalog card whose canonical zone is **Extra** (e.g. a Fusion monster) — exactly one copy is added to Extra Deck.
+- [ ] Single-click a card in Main, Extra, or Side — preview pins it without moving or removing it.
+- [ ] Double-click a Main Deck card — that copy leaves the deck entirely; Side Deck stays unchanged.
+- [ ] Double-click an Extra or Side Deck card — that copy leaves its source zone entirely.
 
-Blocked click intents
+Blocked double-click intents
 
-- [ ] Fill Side Deck to **15** cards, then click a Main Deck card — nothing moves and the announcement reads "…: Side Deck is full."
-- [ ] With Extra Deck at **15**, move one Extra card to Side first, then click it in Side — nothing moves and the announcement reads "…: Extra Deck is full."
-- [ ] Fill Main Deck to **60** and Side Deck to **15**, then click a Main-canonical catalog card — nothing is added and the announcement reads "…: No space left."
-- [ ] With Main Deck at **60** but Side below 15, click a Main-canonical catalog card — it lands in **Side Deck** instead, announcement "… added to side."
-- [ ] Click a catalog card already at its copy limit (tile shows the maxed border) — nothing is added and the announcement gives the copy-limit reason, not a zone reason.
+- [ ] Fill Main Deck to **60** and Side Deck to **15**, then double-click a Main-canonical catalog card — nothing is added and the announcement reads "…: No space left."
+- [ ] Double-click a catalog card already at its copy limit (tile shows the maxed border) — nothing is added and the announcement gives the copy-limit reason, not a zone reason.
 
 To-sideboard checkbox
 
 - [ ] Confirm a **To sideboard** checkbox sits in the catalog header beside the result count, and that it is **unchecked** on arrival.
-- [ ] Check **To sideboard**, then click a Main-canonical catalog card — it is added to **Side Deck**, not Main.
-- [ ] With **To sideboard** still checked and Side Deck at **15**, click another catalog card — it falls back to its canonical zone (Main/Extra) rather than being blocked.
-- [ ] Uncheck **To sideboard** and click a catalog card — it goes back to landing in its canonical zone.
+- [ ] Check **To sideboard**, then double-click a Main-canonical catalog card — it is added to **Side Deck**, not Main.
+- [ ] With **To sideboard** still checked and Side Deck at **15**, double-click another catalog card — it falls back to its canonical zone (Main/Extra) rather than being blocked.
+- [ ] Uncheck **To sideboard** and double-click a catalog card — it goes back to landing in its canonical zone.
 - [ ] Tab to the checkbox and confirm it takes a visible focus ring and toggles with Space.
 
 Catalog → Side drag
@@ -1731,15 +1728,14 @@ Catalog → Side drag
 Mobile is unchanged
 
 - [ ] Narrow the window below 1024px (or use the device toolbar at e.g. 390x844) so the tabbed layout appears.
-- [ ] Tap a catalog card — the **tap target menu** opens as before; the card is not silently added.
-- [ ] Tap a deck card — the tap target menu opens with its zone choices; no immediate move or removal happens.
+- [ ] Tap a catalog card — the existing **tap target menu** opens; choose a destination to add it.
+- [ ] Tap a deck card — the existing tap target menu opens with zone/removal choices; no immediate move or removal happens.
 
 Undo / redo and persistence
 
-- [ ] After a click-driven add, press **Undo** — the card is removed again; press **Redo** — it comes back.
-- [ ] After a click-driven move (Main → Side), press **Undo** — the copy returns to Main; **Redo** sends it to Side again.
-- [ ] After a click-driven Extra Deck removal, press **Undo** — the copy returns to Extra.
-- [ ] Make several click edits, confirm **Load → Autosaves** lists them, reload the page, and confirm the deck contents match what you left.
+- [ ] After a double-click add, press **Undo** — the card is removed again; press **Redo** — it comes back.
+- [ ] After a double-click removal, press **Undo** — the copy returns to its source zone.
+- [ ] Make several double-click edits, confirm **Load → Autosaves** lists them, reload the page, and confirm the deck contents match what you left.
 
 ## T7 autosave-every-command
 
@@ -1748,12 +1744,12 @@ Autosave log records position changes
 - [ ] Open the deck editor with a deck that has at least two cards in the Main Deck.
 - [ ] Drag one card to a different position within the Main Deck zone.
 - [ ] Open the **Load** dialog — confirm a new autosave entry appears with the current timestamp and the reordered card list.
-- [ ] Click the **Sort** button (alpha or type) — open **Load** again and confirm another fresh entry appears.
+- [ ] Choose a **Sort By** mode — open **Load** again and confirm another fresh entry appears.
 
-Undo still reverts membership only, not order
+Reorder remains history-blind
 
 - [ ] With a deck open, add a card, then drag a different card to a new position.
-- [ ] Press **Undo** — the previously added card is removed; the card you dragged stays in its new position (order is not restored).
+- [ ] Press **Undo** — the previously added card is removed; the card you dragged stays in its new position because reorder does not enter Undo history.
 
 ## T8 editor-viewport-fit
 
@@ -1812,7 +1808,7 @@ Filter resets window
 
 Interaction intact on appended tiles
 
-- [ ] Scroll down to a tile in the second or third batch. Left-click it — the card is added to the deck (or the card preview panel updates) correctly.
+- [ ] Scroll down to a tile in the second or third batch. Left-click it — preview pins that card and deck contents stay unchanged.
 - [ ] Drag an appended tile into the deck zone — drag-and-drop works normally.
 - [ ] Right-click an appended tile (context add) — context menu or direct-add works normally.
 
@@ -1846,7 +1842,7 @@ The whole database is offered
 - [ ] Open `#/decks`, create or open a deck, and clear every catalog filter — the result count reads `14794 results`.
 - [ ] Search `Dark Magician` — the count drops to `40 results` and "Dark Magician" itself is among the tiles.
 - [ ] Search `Blue-Eyes` — 39 results, including printings the old ~120-card catalog never offered (e.g. "Blue-Eyes Shining Dragon", "Blue-Eyes Alternative White Dragon").
-- [ ] Click a card the old catalog did not have — it is added to its canonical zone and the deck counts move.
+- [ ] Double-click a card the old catalog did not have — exactly one copy is added to its canonical zone and deck counts move.
 
 The catalog arrives as a load, not as a bundle
 
@@ -1867,7 +1863,7 @@ Art is a URL by convention, and a miss is not an error
 
 The results grid no longer overlaps itself
 
-- [ ] Search a term matching more than one row of results (`Blue-Eyes` gives 13 rows). Click the card named in the **last** row — the card that is added is the one you clicked, not a card from a row below it.
+- [ ] Search a term matching more than one row of results (`Blue-Eyes` gives 13 rows). Double-click the card named in the **last** row — exactly that card is added, not a card from a row below it.
 - [ ] Scroll the results with the overlay scrollbar and confirm rows stay a full tile apart, with no tile drawn over the tile above it.
 
 Nothing else moved
@@ -2970,16 +2966,16 @@ wrong.
 
 ### You cannot add a copy you do not have
 
-- [ ] In the same deck, empty the Main Deck (right-click each tile, or click each and remove) so you are starting from zero.
-- [ ] Find a card the starter deck gave you exactly **one** of. Click its catalog tile once: it lands in the Main Deck and the zone count goes to `1/40`.
-- [ ] Click the same tile again. Nothing is added, the count stays `1/40`, and the message line under the deck name reads `<card name>: You own 1 of this card.`
+- [ ] In the same deck, empty the Main Deck (right-click or double-click each deck tile) so you are starting from zero.
+- [ ] Find a card the starter deck gave you exactly **one** of. Double-click its catalog tile: one copy lands in Main Deck and the zone count goes to `1/40`.
+- [ ] Double-click the same tile again. Nothing is added, the count stays `1/40`, and the message line under the deck name reads `<card name>: You own 1 of this card.`
 - [ ] That tile now has a red border. Drag it toward the Main Deck: it will not pick up — the tile is no longer draggable.
 - [ ] Right-click the same tile. Still nothing is added, and the same message appears — the context-menu add is capped too.
-- [ ] Tick **To sideboard** in the catalog header, then click the tile again. Nothing lands in the Side Deck; the count there stays `0/15`. The cap counts the copy already sitting in the Main Deck.
+- [ ] Tick **To sideboard** in the catalog header, then double-click the tile again. Nothing lands in Side Deck; its count stays `0/15`. The cap counts the copy already in Main Deck.
 
 ### The ruleset's copy limit still applies on top
 
-- [ ] Find a card the starter deck gave you **three or more** of, and click its tile four times.
+- [ ] Find a card the starter deck gave you **three or more** of, and double-click its tile four times.
 - [ ] Three copies land. The fourth is refused with `Copy limit 3 reached.` — not with an ownership message. Owning more copies never raises the deck limit.
 - [ ] Reload the page (F5) and reopen the deck. It holds the three copies you added, and the tile is still red.
 

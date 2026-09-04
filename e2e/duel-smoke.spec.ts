@@ -334,11 +334,15 @@ test("the root route shows the main menu without booting the duel", async ({
   await expect(page.locator('[data-cy="deck-select-screen"]')).toBeVisible({
     timeout: 120_000,
   });
-  await expect(page.locator('[data-cy="deck-select-eyebrow"]')).toHaveText(
-    "Free play",
+  await expect(page.locator('[data-cy="deck-select-title"]')).toHaveText(
+    "Select Deck",
   );
-  for (const control of ["deck-select-open", "deck-select-back"])
-    await expect(page.locator(`[data-cy="${control}"]`)).toBeVisible();
+  await expect(page.locator('[data-cy="deck-select-back"]')).toBeVisible();
+  const deckActions = page.locator('[data-cy="deck-select-kebab"]');
+  await expect(deckActions).toBeVisible();
+  await deckActions.click();
+  await expect(page.locator('[data-cy="deck-select-open"]')).toBeVisible();
+  await page.keyboard.press("Escape");
   await expect(page.locator('[data-cy="deck-picker"]')).toHaveCount(0);
 
   /* Both seats are offered before the card database behind the library has
@@ -358,7 +362,9 @@ test("the root route shows the main menu without booting the duel", async ({
   await expect(page.locator('[data-cy="deck-select-screen"]')).toBeVisible();
   expect(new URL(page.url()).hash).toBe("#/free-play");
 
-  /* Create is the library path when only bundled presets are available. */
+  /* Create is the library path when only bundled presets are available. In
+     compact mode it lives inside the deck-actions menu. */
+  await page.locator('[data-cy="deck-select-kebab"]').click();
   await page.locator('[data-cy="deck-select-create"]').click();
   expect(new URL(page.url()).hash).toBe("#/free-play/decks");
 });
@@ -385,7 +391,7 @@ test("free-play deck tiles keep names and info inside card bounds", async ({
 
   const tileBox = await tile.boundingBox();
   expect(tileBox).not.toBeNull();
-  for (const part of ["name", "counts", "meta"]) {
+  for (const part of ["name", "tags"]) {
     const box = await tile
       .locator(`[data-cy="deck-tile-${part}-preset:mvp-player"]`)
       .boundingBox();
@@ -769,13 +775,9 @@ test("a local deck built from the packaged catalog is offered and duels", async 
   await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
     LOCAL_DECK_NAME,
   );
-  /* The "Saved locally" chip went with the rest of the editor's header chrome.
-     The commit itself is still announced: the store only reaches this message
-     after the repository has written the record, so it says what the chip said
-     — the deck is in local storage before this test navigates away from it. */
-  await expect(page.locator('[data-cy="deck-editor-message"]')).toHaveText(
-    "Deck imported.",
-  );
+  /* Closing the import dialog means its async mutation returned true after the
+     repository write. The editor no longer keeps a transient import message. */
+  await expect(page.locator('[data-cy="deck-ydk-import"]')).toHaveCount(0);
   await expect(
     page.locator('[data-cy="deck-editor-layout"]'),
   ).not.toHaveAttribute("aria-busy", "true");

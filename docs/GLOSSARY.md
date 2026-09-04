@@ -9,10 +9,10 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 
 | word | short description | ref in code |
 | ---- | ----------------- | ----------- |
-| app | One browser product; current entry selects production duel or isolated prototype while shell migration is pending | `src/main.ts`, `src/battle/app/select-app-entry.ts` |
-| shell | Future thin composition/router layer owning transitions among three lazy UI domains | ADR-022, future `src/shell/` |
+| app | Browser product mounted through modular shell | `src/main.ts` (`mount`), `src/shell/AppShell.svelte` |
+| shell | Router/composition layer owning lazy domain transitions | `src/shell/AppShell.svelte`, `src/shell/routes.ts` (`AppRoute`) |
 | duel simulator | Production battle UI plus Worker-owned rules runtime | `src/battle/app/`, `src/battle/duel/`, `src/battle/field/`, `src/battle/worker/` |
-| deck editor | Local deck library/editor domain; currently integrated as isolated prototype | `src/decks/`, `src/prototypes/deck-builder/` |
+| deck editor | Local deck library/editor domain loaded through shell | `src/deck-editor/DeckEditorApp.svelte`, `src/deck-editor/index.ts` |
 | visual novel | Narrative/map/campaign domain reached at `#/story` | `src/story/` |
 | shop | Story card shop: keeper, 50-set browser, packs, singles, sell | `src/story/shop/` |
 | dp | Duel-point wallet, starts at 1000 | `StoryState.dp`, ADR-033 |
@@ -20,7 +20,7 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 | collection | Owned card counts by card code | `StoryState.collection` |
 | rarity | Printed rarity from set data, inference fallback, halo colors | `src/story/shop/data/shop-set-data.ts`, ADR-035 |
 | setdata | First-50-sets JSON asset + offline-cached loader | `public/story/shop-sets.v1.json`, `src/story/shop/data/shop-set-data.ts` |
-| topbar | Shared full-width story header; optional title/objective slots (planned) | `src/story/components/StoryTopBar.svelte`, ADR-071 |
+| storybar | Shared story header with screen-specific controls and context | `src/story/components/StoryTopBar.svelte` (`StoryTopBar`), `src/story/StoryApp.svelte` (`storyHeaderConfig`) |
 | playback | Narrative running itself: auto-advance or skip, with the stop reason it reports | `src/story/playback/story-playback.ts` (`PlaybackMode`, `playbackHalt`) |
 | auto | Advances one beat per auto-speed setting until a choice, the scene end, or any manual input | `src/story/playback/story-playback.ts`, `StoryApp.svelte` |
 | skip | Fast-forwards read beats, stopping at the first unread one unless "Skip unread text" is on | `src/story/playback/story-playback.ts`, `src/story/overlays/SettingsOverlay.svelte` |
@@ -33,7 +33,7 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 | perspectiveplane | Transformed board surface carrying zones, cards and hands | `src/battle/app/components/duel-field/FieldBoard.svelte`, `src/styles/app.css` |
 | virtualheight | Tilt-compensated field height used by geometry | `src/battle/field/duel-field-geometry.ts` (`perspectiveVirtualHeight`) |
 | board | Board view model projected for rendering | `src/battle/field/board-view-model.ts` (`BoardCardView`, `BoardZoneView`, `BoardStackView`) |
-| zone | Physical zone ids + field geometry constants | `src/battle/field/duel-field-layout.ts` (`PhysicalZoneId`, `FieldZoneKind`), `src/battle/app/components/duel-field/ZoneControl.svelte` |
+| zone | Deck section with count, cards, and validation tooltip | `src/decks/deck-contracts.ts` (`DeckZone`), `src/deck-editor/components/DeckZoneGrid.svelte` |
 | hud | Life points / turn / phase heads-up display | `src/battle/app/components/duel-field/DuelHud.svelte`, `.duel-hud` in `src/styles/app.css` |
 | prompts | Prompt UI controls and control families | `src/battle/app/prompts/PromptControls.svelte`, `prompt-control-family.ts` |
 | selection | Prompt choice validation / field decision bar | `src/battle/app/prompts/prompt-selection.ts` (`validatePromptSelection`), `src/battle/app/components/duel-field/FieldActionBar.svelte` |
@@ -43,15 +43,13 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 | feedback | Non-authoritative CSS/SVG field feedback state | `src/battle/app/presentation/dom-feedback-controller.ts`, `src/battle/app/components/duel-field/FieldLines.svelte` |
 | log | Duel event log formatting + panel | `src/battle/app/presentation/format-duel-log-entry.ts`, `src/battle/app/components/duel-field/DuelLog.svelte` |
 | preview | Sticky card art + bounded scroll text column; shared duel/editor component | `src/shell/card-preview/CardPreviewPanel.svelte` (ADR-036), `src/battle/app/presentation/card-preview.ts` |
-| default deck | Player-assigned deck the duel menu auto-selects; stored preference | `preferences["default-deck"]` in `src/decks/indexeddb-deck-repository.ts`, ADR-038 |
-| favourite deck | Legacy mark being removed; default becomes sole mark | ADR-069, current `src/deck-select/DeckTile.svelte` |
-| decklist | Main/extra/side card rows shown beside deck tiles | `src/deck-select/DecklistPanel.svelte`, `DecklistView` |
-| hotspot | Map location control with anchored info popover | `src/story/screens/IllustratedMapScreen.svelte`, `LocationId` |
+| default | Sole persistent deck mark; preselects player deck | `src/deck-select/deck-select-contracts.ts` (`DeckTileModel.isDefault`), `src/deck-select/DeckTile.svelte` |
+| decklist | Main, Extra, and Side rows beside deck tiles | `src/deck-select/DecklistPanel.svelte`, `src/deck-select/deck-select-contracts.ts` (`DecklistView`) |
+| hotspot | Map location control with anchored context popover | `src/story/screens/IllustratedMapScreen.svelte`, `src/story/model/story-state.ts` (`LocationId`) |
 | starter deck | Seeded "Starter Deck" built from bundled `player.ydk`, default on first run | `src/decks/starter-deck.ts` (`ensureStarterDeck`), ADR-038 |
 | autosave log | Global capped-100 list, one entry per accepted deck command including reorder/sort (timestamp + deck name) | `autosaves` store, `src/decks/deck-database.ts` v2, ADR-038, ADR-044 |
 | load dialog | Editor dialog: saved decks tab + autosave log tab, restore = undoable edit | `src/deck-editor/components/LoadDeckDialog.svelte` |
-| library halo | Green/orange/red validity glow + issue tooltip on deck-library rows | `src/deck-editor/components/DeckLibrary.svelte` (`.halo-valid`/`.halo-warnings`/`.halo-errors`), status from `src/decks/deck-validation.ts` |
-| deck tile | Art-filled 2:1 deck card the grid, the seats and the phone list all render | `src/deck-select/DeckTile.svelte`, `DeckTileModel` in `src/deck-select/deck-select-contracts.ts` |
+| deck tile | Square art-filled deck card shared across grids, seats, phone lists | `src/deck-select/DeckTile.svelte` (`.deck-tile`, `aspect-ratio: 1 / 1`), `DeckTileModel` in `src/deck-select/deck-select-contracts.ts` |
 | illustration | Chosen cropped card art fronting a deck tile | `DeckRecord.illustrationCardCode`, `src/decks/deck-cover.ts` |
 | seat halo | Tile glow: blue you, red opponent, teal focus, gold default hairline | `halo` prop in `src/deck-select/DeckTile.svelte`; `--seat-you`, `--seat-opponent`, `--selected` in `src/styles/tokens.css` |
 | kebab menu | ⋮ action sheet on a deck tile: open, rename, duplicate, delete | `src/deck-select/DeckTileMenu.svelte`, `src/deck-select/RenameDeckDialog.svelte`, `DeleteDeckConfirm.svelte` |
@@ -61,7 +59,7 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 | deck library | Deck-select mode that manages the collection; no seat is filled | `mode="library"` in `src/deck-editor/components/DeckLibrary.svelte` |
 | deckselect | The shared screen behind all three: header, tools, grid, footer, dialogs | `src/deck-select/DeckSelectScreen.svelte`, public entry `src/deck-select/index.ts` |
 | manual order | Cards stay placed; reorder history-blind, explicit sorts undoable | `src/decks/deck-model.ts`, `src/deck-editor/deck-editor-store.ts` |
-| click intent | What a left click on a tile means, derived from zone + capacity, never from presentation state | `src/deck-editor/layout/click-intent.ts` (`deckCardClickIntent`, `catalogCardClickIntent`, `ClickIntent`) |
+| click intent | Double-click mutates; single-click pins preview | `src/deck-editor/layout/click-intent.ts` (`deckCardClickIntent`, `catalogCardClickIntent`, `ClickIntent`) |
 | runtime catalog | The whole packaged card database (14,794 codes), fetched from the runtime assets when a domain opens rather than compiled into the bundle, memoized per page load | `src/decks/catalog/runtime-catalog.ts` (`runtimeCatalog`, `loadRuntimeCatalog`, `setRuntimeCatalogForTests`), ADR-043 |
 | buildable card | A catalog card a deck may hold; the runtime catalog less its 243 Tokens (14,551 offered) | `src/decks/catalog/deck-buildable-cards.ts` (`isDeckBuildableCard`, `deckBuildableCards`) |
 | rail | Right-side LP, turn, phase, status column | planned `src/battle/app/components/DuelRail.svelte`, `docs/ADR/019_ADR_full_height_duel_shell_and_pixel_geometry.md` |
@@ -123,7 +121,7 @@ Worker, engine, and asset pipeline are "backend" here — nothing runs on a serv
 | ---- | ----------------- | ----------- |
 | scripts | Node asset/verify CLI entrypoints | `scripts/sync-assets.ts`, `verify-assets.ts`, `download-images.ts` |
 | sync | Pin/clone upstream card data repos | `scripts/lib/sources.ts` (`syncRepository`, `validatePinnedRevision`) |
-| catalog | SQLite card DB read + sharding | `scripts/lib/catalog.ts` (`readCatalog`), `transform.ts` (`catalogShard`) |
+| catalog | Filterable deck-editor card browser | `src/deck-editor/components/CardCatalog.svelte`, `src/decks/catalog/runtime-catalog.ts` (`loadRuntimeCatalog`) |
 | strings | `strings.conf` system-string parser | `scripts/lib/strings.ts` (`parseStringsConf`) |
 | tar | Minimal tar reader for downloads | `scripts/lib/tar.ts` (`readTarFiles`) |
 | lock | Source pin file + run lock | `assets-source-lock.json`, `scripts/lib/run-lock.ts` |

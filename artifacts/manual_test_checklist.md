@@ -237,9 +237,9 @@ Walk the prologue
 
 - [ ] Click New Game — the first narrative beat ("Rain turned …") renders with the utility bar (History, Save, Load, Settings, Pause).
 - [ ] Press Enter repeatedly (about 13 times) until "Choose your response" appears, and confirm the first choice button takes focus on its own.
-- [ ] Pick "I trust you" — the acknowledgment about earning trust appears.
-- [ ] Press Enter until the "City signal map" heading appears, and confirm the earlier-choice line mentions your trust.
-- [ ] Select Old Arena from the location list — the "Rin's Echo" briefing appears. Go back and select it again from the map hotspots — the same briefing appears.
+- [ ] Pick "I trust you" — narrative continues without a separate map choice-acknowledgment panel.
+- [ ] Press Enter until the "City signal map" header title appears.
+- [ ] Hover or focus the Old Arena hotspot to inspect its popover, then activate it — the "Rin's Echo" briefing appears. Return to the map and activate the same hotspot again — the same briefing appears.
 - [ ] Click Start Duel — the mock "Existing duel experience placeholder" appears. This is expected: the real duel handoff is a later ticket.
 - [ ] Click Simulate Player Win → "Signal broken" → Continue story → "Signal Cipher" reward, with an "Autosave complete" status.
 - [ ] Click Continue to updated map — the map now says "Archive available".
@@ -643,9 +643,7 @@ Tabs and the persistent header (390x844)
 - [ ] Open `#/decks`, create a deck named "Portrait Manual", and shrink the
       window to 390x844. The editor opens on the **Deck** tab; the "Desktop
       viewport required" screen is gone for good.
-- [ ] The header above the tabs shows deck name, Main/Extra/Side counts, the
-      deck status and the autosave status. Switch to Catalog and then Details —
-      the header stays put and keeps showing the same counts on every tab.
+- [ ] The persistent header above the tabs shows deck name plus Duplicate, Export, Set default, Delete, Undo, Redo, Import, and Load. Switch to Catalog and then Preview — the header stays put without count, validation-status, or autosave-status chrome.
 - [ ] Exactly one pane is on screen at a time: on Catalog the deck grid is
       absent, not merely scrolled away.
 - [ ] Tab the keyboard focus into the tab strip and press Left/Right arrows —
@@ -684,7 +682,7 @@ Layout at the sizes that matter
       no sideways scroll.
 - [ ] Tap targets are comfortable: tabs, menu items and card tiles are all
       easily hit with a thumb (44px floor).
-- [ ] Navigate back to the library at 390x844 — "Import Deck" and the per-row "Export" action are accessible from the library and still work. (Import/Export moved to the library menu in T4 — no Import/Export buttons exist in the editor header.)
+- [ ] At 390x844, confirm header **Import** replaces current deck lists in place and **Export** exports the open deck. Return to the library and confirm library **Import Deck** still creates a separate deck.
 
 Desktop is untouched (1440x900)
 
@@ -696,7 +694,7 @@ Desktop is untouched (1440x900)
 - [ ] Drag a card from the catalog into the Main Deck drop area — works as
       before. Right-click a Main Deck card — the context menu removes it;
       right-click a catalog card — the card is added to its canonical zone.
-- [ ] Undo/redo, rename and the Deck Library round trip all behave exactly as they did before this ticket; import and export remain accessible from the library menu (moved in T4).
+- [ ] Undo/redo and rename still work. Header Import/Export operate on the open deck; the red contextual return button below Preview replaces the old Deck Library header button.
 - [ ] Resize from 1440 wide down past 1024 and back up without reloading — the
       editor swaps between panels and tabs each way, keeping the open deck and
       its edits.
@@ -828,9 +826,9 @@ Unchanged: desktop (1440x900 and 1920x1080)
 
 ### `#/decks` Deck editor — desktop
 - [ ] Card tiles: normal state uses dark navy (`var(--surface-raised)`), hover/selected uses slightly lighter `var(--surface-highlight)` with teal border.
-- [ ] Card limit badges: 0-limit is burgundy (`var(--danger-border)`), 1-limit is pink (`var(--danger)`), 2-limit is gold (`var(--selected)`), 3-limit is teal (`var(--accent)`).
+- [ ] Card limit badges: 0-limit is burgundy (`var(--danger-border)`), 1-limit is pink (`var(--danger)`), and 2-limit is gold (`var(--selected)`). A card with the normal maximum of 3 has no visible badge; its accessible label still states maximum 3.
 - [ ] Filter/search inputs have dark navy background (`var(--surface-chain)`) with legible white text.
-- [ ] Validation warning panel uses `var(--warning-surface)` background with `var(--warning-border)` border (amber tones).
+- [ ] Each zone's focusable **(!)** warning indicator uses `var(--warning-surface)` with `var(--warning-border)`; error-bearing zones use a red border.
 - [ ] Error states (missing card, import error) use `var(--danger-surface)` background.
 - [ ] Dialog panels use `var(--surface)` background with dark shadow.
 
@@ -845,7 +843,6 @@ Unchanged: desktop (1440x900 and 1920x1080)
 - [ ] Keyboard nav focus ring is white (`var(--ink)`), distinct from legal/selected.
 - [ ] Feedback halos are teal (`var(--accent)`).
 - [ ] Attack lines are red (`var(--danger)`), default lines are teal (`var(--accent)`).
-- [ ] Card limit badge colours on field cards look right (green/pink/gold/teal).
 
 ### `#/duel` Duel field — portrait (390×844)
 - [ ] Field rotates 90° clockwise (T15 behaviour preserved).
@@ -1056,7 +1053,7 @@ what is playable. The steps below still pass; only the numbers moved.
 - [ ] Open `#/decks`. Press **Create deck**, name it (e.g. `Manual T22`), confirm with **Create**.
 - [ ] The catalog panel lists real cards — search `Nekroz`, `Shaddoll`, `Spellbook` or `Burning Abyss` and each returns several distinct cards with names and effect text.
 - [ ] Add cards until the Main Deck collapse bar reads `40/40`. Fastest route: search a card name, then right-click the catalog tile to add it directly; repeat, or drag tiles onto the Main Deck drop area.
-- [ ] The validation panel shows no **errors**. Warnings such as "Extra Deck is empty" and "Side Deck is empty" are expected and do not block anything. (Corrected 2026-08-20 by T12 of decks-feedback-round-2: the "uses placeholder art" warning was deleted, because art coverage describes the build's images rather than a defect in your deck. If you still see one, the slice regressed.)
+- [ ] No deck zone has a red border. Main/Extra/Side headings may show focusable **(!)** warning tooltips such as "Extra Deck is empty." and "Side Deck is empty."; warnings do not block anything. No tooltip mentions placeholder art.
 - [ ] Confirm the autosave landed: **Load → Autosaves** lists a fresh entry.
 - [ ] Go to `#/duel`. The deck list holds a **Your decks** group below **Bundled decks**, with `Manual T22` in it. (Superseded by T15: one list for the player seat only, and the opponent is a fixed line rather than a column.)
 - [ ] Pick `Manual T22` in the deck list. It becomes the selected row, and no start error appears.
@@ -1101,7 +1098,7 @@ against `npm run dev` to see real art.
 
 - [ ] Open a saved deck in the editor; confirm card tiles display real card art (jpg images, not glyph placeholders).
 - [ ] Search the catalog for a known card (e.g. "Blue-Eyes White Dragon"); confirm the result tile shows the card image.
-- [ ] Click a card to open the detail/preview panel; confirm the art renders at full preview size. (Since T6 of decks-feedback-round-2, a desktop click also edits the deck — hover to preview without editing, or press Undo afterwards.)
+- [ ] Single-click a card to pin the preview without editing the deck; confirm the art renders at full preview size. Double-click is the add/remove gesture.
 - [ ] Confirm cards this build packaged no art for show the glyph placeholder rather than a broken image.
 
 ## T2 shared-card-preview-panel
@@ -1119,7 +1116,7 @@ against `npm run dev` to see real art.
 - [ ] `npm run dev`, open `http://localhost:5173/#/decks`, open any saved deck.
 - [ ] The left pane shows the shared card preview panel (not "Pinned card details"). Initially it shows "Hover a card to see its details."
 - [ ] Hover a catalog tile (right pane): the preview panel updates with the card's name, effect text, and art.
-- [ ] Click a catalog tile to select/pin it; hover another tile: preview shows the hovered card. (Since T6 of decks-feedback-round-2, that click also adds a copy — press Undo after checking the preview.)
+- [ ] Click a catalog tile to select/pin it without changing the deck; hover another tile: preview shows the hovered card.
 - [ ] Move the cursor off the catalog grid: preview reverts to the previously selected (clicked) card.
 - [ ] Hover a deck workspace card (middle pane): preview shows that card.
 - [ ] Move the cursor off the deck workspace grid: preview reverts to the selected card.
@@ -1133,7 +1130,7 @@ Run `npm run dev` and open an existing deck at `#/decks/<id>` (or create one).
 
 Header chrome removed
 
-- [ ] The editor header shows only four controls: a "← Library" link, the deck name input, Undo, and Redo. No card-count display, no validation-status chip, no autosave-status chip, no Import button, no Export button.
+- [ ] The editor header shows deck name plus Duplicate, Export, Set default, Delete, Undo, Redo, Import, and Load. It has no Deck Library button, card-count display, validation-status chip, or autosave-status chip; contextual return sits below Preview.
 - [ ] The deck name input is noticeably narrower than before (≈ 11 rem wide).
 
 Viewport stretch
@@ -1150,7 +1147,7 @@ Decorative headings removed
 
 Import and Export accessible from library
 
-- [ ] Navigate back to the library (`#/decks`). "Import Deck" and the per-row "Export" action are present and functional. (They no longer live in the editor header.)
+- [ ] In the editor header, **Import** replaces the open deck and **Export** exports it. Return to the library; **Import Deck** remains available for creating a separate imported deck.
 
 ## T5 undo-redo-keybinds
 
@@ -1194,9 +1191,9 @@ Zone layout
 
 Collapse / expand controls
 
-- [ ] Confirm the Side Deck zone starts **expanded** on first open (card grid visible; toggle button shows "▾"). *(updated by T5)*
-- [ ] Click the Side Deck toggle — the card grid and drop area collapse; the toggle arrow changes to "▸".
-- [ ] Click the toggle again — the zone expands; toggle arrow returns to "▾".
+- [ ] Confirm the Side Deck zone starts **collapsed** on first open (card grid hidden; toggle button shows "▸").
+- [ ] Click the Side Deck toggle — the card grid and drop area expand; the toggle arrow changes to "▾".
+- [ ] Click the toggle again — the zone collapses; toggle arrow returns to "▸".
 - [ ] Confirm the same expand/collapse works for Main Deck and Extra Deck.
 - [ ] Confirm each toggle button reports its state to assistive technology (`aria-expanded` flips between "true" and "false").
 - [ ] Tab to a zone toggle with the keyboard — a visible focus ring surrounds the toggle, and Enter/Space collapses or expands the zone.
@@ -1219,12 +1216,12 @@ Drag reordering
 - [ ] Drag a Main Deck card to the Side Deck zone — it moves there (cross-zone move still works).
 - [ ] Drag a catalog card to its canonical zone — it is added (catalog add still works).
 
-Sort buttons
+Sort controls
 
-- [ ] Confirm two buttons appear in the deck workspace header: "Sort A–Z" and "Sort by type".
-- [ ] Click "Sort A–Z" — all three zones are sorted alphabetically by card name.
-- [ ] Click "Sort by type" — main/side zones order monsters → spells → traps; extra zone follows Fusion → Synchro → Xyz → Link.
-- [ ] After a sort, confirm the Undo button remains disabled (sort does not enter history).
+- [ ] Confirm the deck workspace header shows one **Sort By** select and an ascending/descending direction toggle.
+- [ ] Choose **A–Z** — all three zones are sorted alphabetically by card name.
+- [ ] Choose **CardType>A–Z** — all three zones sort by card type, then name.
+- [ ] After a sort, confirm Undo restores the prior order and Redo reapplies the sort.
 
 ## T9 drop-removal-semantics
 
@@ -1268,7 +1265,7 @@ Buttons gone
 - [ ] Fill Side Deck to **15** cards (by right-clicking more catalog cards or dragging). Right-click another catalog monster — no card is added and an announcement reads "…: No space left." (wording changed in T6 of decks-feedback-round-2).
 
 ### Maxed (copy-limit) highlight
-- [ ] Find a card that already has **3** copies in the deck (check the copy badge). Its catalog tile should show a **red border** instead of the normal accent border.
+- [ ] Find a card that already has **3** copies in the deck. Its catalog tile has no visible limit badge, its accessible label still states maximum 3, and it shows a **red border** instead of the normal accent border.
 - [ ] Hover that tile — the background also tints red (danger-surface), border stays red.
 - [ ] Remove one copy (right-click in the deck zone). The catalog tile border returns to normal once copies drop below the limit.
 - [ ] A forbidden card (limit-badge shows **0**) always has a red border in the catalog, regardless of how many copies are in the deck.
@@ -1278,11 +1275,9 @@ Buttons gone
 
 ## T11 library-halo-polish
 
-> Partly superseded by **Deck-selection round** at the end of this file. The
-> library no longer renders deck *rows* — it mounts the shared deck-selection
-> tile grid — so **Validation halo** and **Status text gone** below are history.
-> **Import button label** and **Titles removed** still describe the shipped
-> screen and still run.
+> Superseded by **Deck-selection round** at the end of this file. Library rows
+> became shared deck tiles; obsolete row validation-halo/status checks were
+> removed. Import label and hidden-title checks still describe shipped UI.
 
 ### Setup
 - [ ] Run `npm run dev` and open `http://localhost:4300/#/decks`.
@@ -1294,16 +1289,6 @@ Buttons gone
 - [ ] The "Local decks" eyebrow text is gone.
 - [ ] The "Visual Novel chooses a deck ID…" subtitle text is gone.
 - [ ] The "Deck Library" h1 is not visible, but the page landmark is still labelled (screen reader / accessibility tree shows the landmark).
-
-### Validation halo
-- [ ] A deck with errors (e.g. fewer than 40 main cards) — its row button shows a red/danger glow.
-- [ ] A deck with warnings (e.g. empty side) — its row button shows a yellow/warning glow.
-- [ ] A fully valid deck — its row button shows a green (`var(--success)`) glow, visibly distinct from the yellow-orange warning glow and the red error glow.
-- [ ] Hover a warning or error deck row — a native tooltip appears listing each issue message (one per line).
-- [ ] Hover a valid deck row — no tooltip appears.
-
-### Status text gone
-- [ ] No raw status word ("valid", "warnings", "errors") appears as text in any deck row.
 
 ## T12 autosave-log-storage
 
@@ -1323,9 +1308,9 @@ Buttons gone
 - [ ] Remove a card, then press Undo, then Redo. Each of those three actions adds one more row.
 - [ ] Rename the deck, then add a card. The new row carries the **new** name; the earlier rows still carry the old one.
 
-### Positional changes are not logged
-- [ ] Note the current row count in `autosaves`. Drag a card to a different position inside Main Deck, then use the Sort action.
-- [ ] The `autosaves` row count is **unchanged** — reordering and sorting append nothing.
+### Positional changes are autosaved; explicit sorts are undoable
+- [ ] Note the current row count in `autosaves`. Drag a card to a different position inside Main Deck — one autosave row appears, while Undo history stays unchanged.
+- [ ] Apply a **Sort By** mode — another autosave row appears, and Undo restores the order from before the sort.
 
 ### 100-entry cap
 - [ ] Add and remove a card repeatedly (roughly 55 add/remove pairs) so the log passes 100 entries.
@@ -1369,21 +1354,21 @@ Buttons gone
 
 ### Starter deck on a fresh install
 
-- [ ] Wipe site data for the app (DevTools → Application → Storage → "Clear site data"), then reload and open `#/decks`. Exactly one deck named "Starter Deck" is listed, and its row shows the "Default" badge.
-- [ ] Reload the page again. Still exactly one "Starter Deck" row — the seeding did not add a second one.
+- [ ] Wipe site data for the app (DevTools → Application → Storage → "Clear site data"), then reload and open `#/decks`. Exactly one deck named "Starter Deck" is listed; its default star is filled gold and disabled.
+- [ ] Reload the page again. Still exactly one "Starter Deck" tile — the seeding did not add a second one.
 - [ ] Open "Starter Deck". Its card list is the bundled player deck, and no "imported, needs review" banner is shown.
 
 ### Setting the default
 
 - [ ] Create a second deck and open it. Its deck page header has a **Set default** button; open the Starter Deck and confirm its **Set default** button is disabled (it is already the default).
-- [ ] Open the second deck, click **Set default**. The **Default** badge appears on that row in the library; open the Starter Deck — its **Set default** button is now enabled.
-- [ ] Reload the page. The badge is still on the second deck.
+- [ ] Open the second deck, click **Set default**. Its library star fills gold and the Starter Deck star becomes outlined; open the Starter Deck and confirm its **Set default** button is now enabled.
+- [ ] Reload the page. The second deck's star is still filled and that deck remains first.
 
 ### Deleting the default
 
-- [ ] Open the deck that currently holds the **Default** badge and click **Delete** from the deck page header, confirming the dialog. No remaining row in the library shows a **Default** badge.
-- [ ] Reload the page. Because no deck is default any more, seeding runs again: it adopts the existing "Starter Deck" rather than creating a second one, so that row now carries the badge and the deck count is unchanged.
-- [ ] Open each remaining deck and delete it from the deck page (including "Starter Deck"), then reload. A single fresh "Starter Deck" is seeded and marked default.
+- [ ] Open the deck with the filled default star and click **Delete** from the deck page header, confirming the dialog. Before reload, every remaining tile has an outlined star.
+- [ ] Reload the page. Bootstrap adopts the existing "Starter Deck" rather than creating a second one; its star fills gold and the number of decks is unchanged.
+- [ ] Open each remaining deck and delete it from the deck page (including "Starter Deck"), then reload. A single fresh "Starter Deck" is seeded with a filled default star.
 
 ## T15 duel-menu-default-selection
 
@@ -1628,22 +1613,20 @@ Start a dev duel (`npm run dev`), open the app in the browser, pick decks and st
 - [ ] Open `#/decks`. Confirm the library header shows no buttons — only a visually-hidden "Deck Library" heading.
 - [ ] Confirm the search field, sort dropdown, **Import Deck** button, and **Create deck** button all appear on the same horizontal toolbar row below the header.
 - [ ] Resize the window to a narrow viewport (~400 px). Confirm the toolbar wraps gracefully with no overlapping elements.
-- [ ] In the deck list, confirm the **Default** badge appears on the same line as the deck name, pushed to the right edge of that line.
-- [ ] Confirm the counts line (Main · Extra · Side) and the "Updated …" timestamp appear below the name line, unchanged.
+- [ ] In the deck list, confirm each tile shows its name plus exactly one tag line; no Main/Extra/Side counts, modified date, or text **Default** badge appears.
+- [ ] Confirm each editable tile has one top-right default star; the current default's star is filled gold and disabled.
 - [ ] Click **Import Deck** and confirm the import flow opens.
 - [ ] Click **Create deck** and confirm the create-deck dialog opens.
-- [ ] Create a deck, open it, click **Set default** in the deck header, return to the library, and confirm the **Default** badge appears right-aligned on its name row.
+- [ ] Create a deck, open it, click **Set default** in the deck header, return to the library, and confirm its star is filled gold and the former default's star is outlined.
 
-## T2 favourite-decks-ordering
+## T2 default-deck-ordering
 
-- [ ] Open the deck library; confirm every deck row shows a star button (☆) to the right of the open button.
-- [ ] Click the star on a deck; confirm the glyph changes to ★ and the button's `aria-pressed` flips to `true`.
-- [ ] Click the star again; confirm the glyph reverts to ☆.
-- [ ] Star two decks (but not the default), then reload the page; confirm the starred decks still show ★ after reload.
-- [ ] With a default deck and two starred decks, confirm the library order is: default deck first, then starred decks, then unstarred — within starred/unstarred groups the active sort (modified/name) applies.
-- [ ] Switch the sort to **Name** and confirm order within each group respects alphabetical ordering.
-- [ ] Open a starred deck and delete it from the deck page header; reload the page; confirm it no longer appears in the favourites.
-- [ ] Open, create, and delete decks (delete from the deck page) while favourites are set; confirm the library remains functional with no console errors.
+- [ ] Open the deck library; confirm each editable deck tile has one top-right default-star button and no second star control.
+- [ ] Press an outlined star; confirm it fills gold, becomes disabled, reads `Default deck`, and its `aria-pressed` value becomes `true`.
+- [ ] Set another deck as default; confirm its star fills while the former default returns to an enabled outline.
+- [ ] Reload; confirm the same deck remains default and appears before non-default decks.
+- [ ] Switch Sort to **Name**; confirm the default stays first and every remaining deck sorts alphabetically.
+- [ ] Delete the default deck. Before reload, every remaining star is outlined. Reload: bootstrap adopts an existing **Starter Deck** as default, or seeds one if none exists; deleted deck stays deleted.
 
 ## T3 deck-page-actions
 
@@ -1653,17 +1636,17 @@ Start a dev duel (`npm run dev`), open the app in the browser, pick decks and st
 - [ ] Rename the open deck by editing the name input and blurring — the new name is saved (no dialog, no rename button).
 - [ ] Click **Export** — the YDK export dialog opens for the open deck; Close returns focus to the Export button.
 - [ ] Open a deck that is already the default. Confirm **Set default** is disabled.
-- [ ] Open a non-default deck. Click **Set default** — the **Default** badge moves to that deck's row in the library, and **Set default** becomes disabled on the deck page.
+- [ ] Open a non-default deck. Click **Set default** — its library star fills gold, the former default's star becomes outlined, and **Set default** becomes disabled on the deck page.
 - [ ] Click **Delete** — the confirm dialog appears with the deck name and "Local deck and retained history will be removed."; **Delete** (confirm) is available and **Cancel** returns focus to the Delete button without deleting.
 - [ ] Confirm deletion — you land on `#/free-play/decks`; the deleted deck row is gone. Reload and confirm it stays gone.
-- [ ] Delete the default deck — after deletion no row shows the **Default** badge.
+- [ ] Delete the default deck — before reload, every remaining tile has an outlined star.
 
 ## T4 card-tile-art-fit
 
 - [ ] Run `npm run dev`, open a deck, and confirm tiles in **Main**, **Extra**, and **Side** zones show the full card art scaled to fill the tile (no top-left-corner clip, no letterbox).
 - [ ] Confirm the card name overlays the bottom of the art with a readable scrim (dark gradient behind the text), and the name still has its own `data-cy` attribute (`deck-tile-name-{code}`).
 - [ ] Open the catalog panel and confirm catalog tiles also show full card art with the name overlay.
-- [ ] Select a card tile and confirm the accent border is still visible around the tile. (Since T6 of decks-feedback-round-2, clicking a deck tile also moves or removes it — press Undo, or select a catalog tile whose copy limit is already reached.)
+- [ ] Single-click a card tile and confirm the accent border is still visible around the pinned tile; deck contents stay unchanged.
 - [ ] Confirm the limit badge (number in circle, top-left) remains above the art and is not obscured.
 - [ ] Scroll to a card whose art this build did not package; confirm the placeholder glyph (letter or `!`) fills the tile and the name appears as a normal (non-overlay) row below it. (Corrected 2026-08-20 by T12: every code now gets an image URL by convention, so the placeholder is reached by the image failing to load rather than by a null URL.)
 - [ ] Confirm no tile overflows its grid slot at any of the default column widths.
@@ -1689,38 +1672,35 @@ Full-width collapse bar
 - [ ] Confirm a hover highlight appears across the entire header bar (not just the chevron region).
 - [ ] Tab to the Extra Deck toggle and confirm a visible focus ring spans the full button; Enter/Space toggles the zone.
 
-Side Deck expanded on arrival
+Side Deck collapsed on arrival
 
-- [ ] Open the deck editor from the library; confirm the Side Deck card grid and drop area are **visible immediately** without clicking the toggle.
-- [ ] Confirm cards can be dragged from Main or Extra Deck directly onto the Side Deck drop area without first expanding it.
+- [ ] Open the deck editor from the library; confirm the Side Deck card grid and drop area are **hidden initially** and the toggle reports `aria-expanded="false"`.
+- [ ] Expand Side Deck, then confirm cards can be dragged from Main or Extra Deck onto its drop area.
 
-## T6 click-intents-and-sideboard
+## T6 click-preview-and-double-click
 
-Desktop click intents (viewport ≥1024px wide — the `panels` layout)
+Desktop pointer intents (viewport ≥1024px wide — the `panels` layout)
 
 - [ ] Run `npm run dev`, open `http://localhost:5173/#/decks`, and open a saved deck in a window wider than 1024px.
-- [ ] Click a catalog card whose canonical zone is **Main** — one copy is added to Main Deck, the counts update, and the announcement reads "… added to main."
-- [ ] Click a catalog card whose canonical zone is **Extra** (e.g. a Fusion monster) — it is added to Extra Deck, announcement "… added to extra."
-- [ ] Click the card you just added in the **Main Deck** zone — that copy moves to Side Deck; Main drops by one, Side rises by one, announcement "… moved to side."
-- [ ] Click that same copy in the **Side Deck** zone — it returns to Main Deck, announcement "… moved to main."
-- [ ] Click a card in the **Extra Deck** zone — the copy is removed outright (it does not go to Side), announcement "… removed."
-- [ ] Click an Extra Deck card that you first moved into Side, while in Side — it returns to **Extra**, not Main.
-- [ ] Confirm every click also updates the preview panel to the clicked card, and that hovering another tile still wins over the selection.
+- [ ] Single-click a catalog card whose canonical zone is **Main** — preview pins that card and deck counts do not change.
+- [ ] Hover another catalog card, then leave — preview temporarily shows hovered card, then restores pinned card.
+- [ ] Double-click the pinned Main-canonical catalog card — exactly one copy is added to Main Deck and one history entry appears.
+- [ ] Double-click a catalog card whose canonical zone is **Extra** (e.g. a Fusion monster) — exactly one copy is added to Extra Deck.
+- [ ] Single-click a card in Main, Extra, or Side — preview pins it without moving or removing it.
+- [ ] Double-click a Main Deck card — that copy leaves the deck entirely; Side Deck stays unchanged.
+- [ ] Double-click an Extra or Side Deck card — that copy leaves its source zone entirely.
 
-Blocked click intents
+Blocked double-click intents
 
-- [ ] Fill Side Deck to **15** cards, then click a Main Deck card — nothing moves and the announcement reads "…: Side Deck is full."
-- [ ] With Extra Deck at **15**, move one Extra card to Side first, then click it in Side — nothing moves and the announcement reads "…: Extra Deck is full."
-- [ ] Fill Main Deck to **60** and Side Deck to **15**, then click a Main-canonical catalog card — nothing is added and the announcement reads "…: No space left."
-- [ ] With Main Deck at **60** but Side below 15, click a Main-canonical catalog card — it lands in **Side Deck** instead, announcement "… added to side."
-- [ ] Click a catalog card already at its copy limit (tile shows the maxed border) — nothing is added and the announcement gives the copy-limit reason, not a zone reason.
+- [ ] Fill Main Deck to **60** and Side Deck to **15**, then double-click a Main-canonical catalog card — nothing is added and the announcement reads "…: No space left."
+- [ ] Double-click a catalog card already at its copy limit (tile shows the maxed border) — nothing is added and the announcement gives the copy-limit reason, not a zone reason.
 
 To-sideboard checkbox
 
 - [ ] Confirm a **To sideboard** checkbox sits in the catalog header beside the result count, and that it is **unchecked** on arrival.
-- [ ] Check **To sideboard**, then click a Main-canonical catalog card — it is added to **Side Deck**, not Main.
-- [ ] With **To sideboard** still checked and Side Deck at **15**, click another catalog card — it falls back to its canonical zone (Main/Extra) rather than being blocked.
-- [ ] Uncheck **To sideboard** and click a catalog card — it goes back to landing in its canonical zone.
+- [ ] Check **To sideboard**, then double-click a Main-canonical catalog card — it is added to **Side Deck**, not Main.
+- [ ] With **To sideboard** still checked and Side Deck at **15**, double-click another catalog card — it falls back to its canonical zone (Main/Extra) rather than being blocked.
+- [ ] Uncheck **To sideboard** and double-click a catalog card — it goes back to landing in its canonical zone.
 - [ ] Tab to the checkbox and confirm it takes a visible focus ring and toggles with Space.
 
 Catalog → Side drag
@@ -1733,15 +1713,14 @@ Catalog → Side drag
 Mobile is unchanged
 
 - [ ] Narrow the window below 1024px (or use the device toolbar at e.g. 390x844) so the tabbed layout appears.
-- [ ] Tap a catalog card — the **tap target menu** opens as before; the card is not silently added.
-- [ ] Tap a deck card — the tap target menu opens with its zone choices; no immediate move or removal happens.
+- [ ] Tap a catalog card — the existing **tap target menu** opens; choose a destination to add it.
+- [ ] Tap a deck card — the existing tap target menu opens with zone/removal choices; no immediate move or removal happens.
 
 Undo / redo and persistence
 
-- [ ] After a click-driven add, press **Undo** — the card is removed again; press **Redo** — it comes back.
-- [ ] After a click-driven move (Main → Side), press **Undo** — the copy returns to Main; **Redo** sends it to Side again.
-- [ ] After a click-driven Extra Deck removal, press **Undo** — the copy returns to Extra.
-- [ ] Make several click edits, confirm **Load → Autosaves** lists them, reload the page, and confirm the deck contents match what you left.
+- [ ] After a double-click add, press **Undo** — the card is removed again; press **Redo** — it comes back.
+- [ ] After a double-click removal, press **Undo** — the copy returns to its source zone.
+- [ ] Make several double-click edits, confirm **Load → Autosaves** lists them, reload the page, and confirm the deck contents match what you left.
 
 ## T7 autosave-every-command
 
@@ -1750,12 +1729,12 @@ Autosave log records position changes
 - [ ] Open the deck editor with a deck that has at least two cards in the Main Deck.
 - [ ] Drag one card to a different position within the Main Deck zone.
 - [ ] Open the **Load** dialog — confirm a new autosave entry appears with the current timestamp and the reordered card list.
-- [ ] Click the **Sort** button (alpha or type) — open **Load** again and confirm another fresh entry appears.
+- [ ] Choose a **Sort By** mode — open **Load** again and confirm another fresh entry appears.
 
-Undo still reverts membership only, not order
+Reorder remains history-blind
 
 - [ ] With a deck open, add a card, then drag a different card to a new position.
-- [ ] Press **Undo** — the previously added card is removed; the card you dragged stays in its new position (order is not restored).
+- [ ] Press **Undo** — the previously added card is removed; the card you dragged stays in its new position because reorder does not enter Undo history.
 
 ## T8 editor-viewport-fit
 
@@ -1814,7 +1793,7 @@ Filter resets window
 
 Interaction intact on appended tiles
 
-- [ ] Scroll down to a tile in the second or third batch. Left-click it — the card is added to the deck (or the card preview panel updates) correctly.
+- [ ] Scroll down to a tile in the second or third batch. Left-click it — preview pins that card and deck contents stay unchanged.
 - [ ] Drag an appended tile into the deck zone — drag-and-drop works normally.
 - [ ] Right-click an appended tile (context add) — context menu or direct-add works normally.
 
@@ -1848,7 +1827,7 @@ The whole database is offered
 - [ ] Open `#/decks`, create or open a deck, and clear every catalog filter — the result count reads `14794 results`.
 - [ ] Search `Dark Magician` — the count drops to `40 results` and "Dark Magician" itself is among the tiles.
 - [ ] Search `Blue-Eyes` — 39 results, including printings the old ~120-card catalog never offered (e.g. "Blue-Eyes Shining Dragon", "Blue-Eyes Alternative White Dragon").
-- [ ] Click a card the old catalog did not have — it is added to its canonical zone and the deck counts move.
+- [ ] Double-click a card the old catalog did not have — exactly one copy is added to its canonical zone and deck counts move.
 
 The catalog arrives as a load, not as a bundle
 
@@ -1865,11 +1844,11 @@ Art is a URL by convention, and a miss is not an error
 
 - [ ] In `npm run dev`, confirm most catalog tiles show real jpg art.
 - [ ] Run `npm run build && npm run preview`, open the built app at `#/decks`, and search `Blue-Eyes`: exactly one tile shows art and the other 38 show the glyph placeholder. **No tile shows a broken-image icon.**
-- [ ] Open the validation panel on a 40-card deck of art-less cards — there is no "uses placeholder art" warning. That warning was deleted in this slice.
+- [ ] Inspect every zone **(!)** tooltip on a 40-card deck of art-less cards — none says "uses placeholder art". That warning was deleted in this slice.
 
 The results grid no longer overlaps itself
 
-- [ ] Search a term matching more than one row of results (`Blue-Eyes` gives 13 rows). Click the card named in the **last** row — the card that is added is the one you clicked, not a card from a row below it.
+- [ ] Search a term matching more than one row of results (`Blue-Eyes` gives 13 rows). Double-click the card named in the **last** row — exactly that card is added, not a card from a row below it.
 - [ ] Scroll the results with the overlay scrollbar and confirm rows stay a full tile apart, with no tile drawn over the tile above it.
 
 Nothing else moved
@@ -1897,7 +1876,7 @@ a step says otherwise.
 A deck of cards no bundled deck names is offered and duels
 
 - [ ] Open `#/decks`, press **Create deck**, name it `Manual T13`.
-- [ ] Search `Blue-Eyes` and add printings the old ~120-card packaged set never carried (e.g. "Blue-Eyes Alternative White Dragon"), then fill the Main Deck to 40 legal cards so the validation panel shows no errors. Confirm the autosave landed through **Load → Autosaves**.
+- [ ] Search `Blue-Eyes` and add printings the old ~120-card packaged set never carried (e.g. "Blue-Eyes Alternative White Dragon"), then fill the Main Deck to 40 legal cards so no zone has an error-red border. Confirm the autosave landed through **Load → Autosaves**.
 - [ ] Go to `#/duel` — `Manual T13` is listed. Before this slice it was silently absent, because the picker filtered against the ~120 art-backed codes.
 - [ ] Select it and press **Start** — the duel initializes, reaches the first prompt, and the opening hand is drawn from those cards.
 - [ ] Every card in hand shows its real name, never `Card 89631139`. Hover one — the preview panel shows the real name and effect text.
@@ -1957,12 +1936,12 @@ Tokens are never offered and never enter a deck
 - [ ] The card lands in the **Side Deck**, and the live region says it was added to `side`. Before this fix the tap ignored the checkbox and put it in the Main Deck while announcing "Main Deck".
 - [ ] Untick **To sideboard** and tap another card — it goes to the Main Deck as before.
 
-Clicking one copy of a repeated card edits that copy
+Pointer actions target the exact repeated copy
 
 - [ ] Build a Main Deck reading, in order, card A, card B, card A (add A, add B, add A).
-- [ ] Click the **third** tile. That tile is the one that moves to the Side Deck; the first A and B stay put, in that order.
+- [ ] Single-click the **third** tile — preview pins that copy and the deck stays A, B, A. Double-click it — that third copy is removed; the first A and B stay put, in that order.
 - [ ] Repeat below the breakpoint: tap the third tile, choose **Remove from deck** — the third tile is the one that disappears.
-- [ ] Undo twice and confirm the deck returns to A, B, A in that order.
+- [ ] Undo each removal and confirm the deck returns to A, B, A in that order.
 
 A status message does not bring back a scrollbar
 
@@ -2060,12 +2039,12 @@ against `npm run dev`.
       the editor remains on the deck page; neither the library view nor the
       "Opening deck…" loading skeleton replaces it.
 - [ ] Without navigating away, confirm **Set default** is now disabled, and
-      that the **Default** badge has moved to that deck's row in the library
-      panel.
+      that the deck's library star is filled gold while the former default's is
+      outlined.
 - [ ] Open a second non-default deck and click **Set default** — the editor
-      stays on the second deck's page; the badge moves to the second deck's
-      row and the first deck's button becomes enabled again.
-- [ ] Reload — the badge is still on the second deck's row after reload.
+      stays on the second deck's page; its star fills, the first deck's star
+      becomes outlined, and the first deck's button becomes enabled again.
+- [ ] Reload — the second deck's star is still filled after reload.
 
 Drag to an illegal zone removes the copy under the pointer
 
@@ -2773,7 +2752,7 @@ an existing story save moved.
 ### The free-play deck library is untouched
 
 - [ ] Open `#/free-play/decks` and confirm it lists exactly the decks it listed before.
-- [ ] Create a deck there, rename it, set it as default, favourite it, then reload the page (F5). All four survive.
+- [ ] Create a deck there, rename it, set it as default, then reload the page (F5). All three survive.
 - [ ] In DevTools → Application → IndexedDB, `ygo-story-decks` still holds those decks and no store was added, renamed or emptied.
 - [ ] Delete one of those decks and confirm only that deck disappears.
 
@@ -2797,15 +2776,15 @@ check is that nothing changed for a player who already has decks.
 
 ### Decks built before this change are still there
 
-- [ ] Before pulling this build, open `#/free-play/decks` and write down the name of every deck you have, plus which one carries the default badge and which ones are favourited.
-- [ ] Load this build and open `#/free-play/decks` again. Every deck on that list is present, under the same name, in the same order (most recently edited first). The same deck is still the default and the same decks are still favourited.
+- [ ] Before pulling this build, open `#/free-play/decks` and write down every deck name plus which deck is default.
+- [ ] Load this build and open `#/free-play/decks` again. Every deck remains under the same name, most recently edited first after the default, and the same deck is still default.
 - [ ] Open one of those older decks. Its Main/Extra/Side contents are unchanged and the card count matches what it had.
 - [ ] In DevTools → Application → IndexedDB, the database is still named `ygo-story-decks` and there is no second deck database beside it. Its `decks` store holds the same rows as before.
 
 ### The editor still behaves for free play
 
 - [ ] Create a deck, add and remove cards, rename it, undo and redo. Reload the page (F5): everything survived.
-- [ ] Set a deck as default, favourite another, delete a third. Reload — the default, the favourite and the deletion all stuck.
+- [ ] Set a deck as default and delete another. Reload — the default and deletion both stuck.
 - [ ] Open the same deck in two tabs, save in tab A then save in tab B: tab B reports a conflict instead of overwriting.
 - [ ] Leave the deck editor and come back to it several times, then go to `#/admin` and reset the deck library. The reset completes rather than hanging on "another tab still has it open" — each visit released its database connection.
 
@@ -2879,7 +2858,7 @@ more, so the visual novel must still load only when the player goes there.
 - [ ] In `#/free-play/decks`, open a deck you already had. Its Main/Extra/Side contents and card count are unchanged.
 - [ ] Add a fourth copy of an ordinary card. The editor still refuses it at three, as it always did — free play owning every card does not raise the deck limit.
 - [ ] Add a second copy of **Raigeki**. It is still refused at one copy. Ownership never overrides the pinned copy limit.
-- [ ] Create, favourite, set as default and delete a deck, then reload (F5). All four stuck.
+- [ ] Create, set as default and delete a deck, then reload (F5). All three stuck.
 
 ### An existing story save still opens, and its collection is untouched
 
@@ -2944,7 +2923,7 @@ opening an empty editor.
 
 ### Free-play editing is unchanged
 
-- [ ] In `#/free-play/decks`, create, rename, favourite, set as default, duplicate, export and delete a deck. All of it behaves as before, and each survives a reload (F5).
+- [ ] In `#/free-play/decks`, create, rename, set as default, duplicate, export and delete a deck. Every persisted action survives a reload (F5).
 - [ ] Open `#/free-play/decks/no-such-deck`. The "Deck not found" screen appears; click **Back to Deck Library** and it lands on the free-play library.
 - [ ] Do the same at `#/story/decks/no-such-deck` while a save exists. **Back to Deck Library** lands on the **story** library, not free play.
 
@@ -2972,16 +2951,16 @@ wrong.
 
 ### You cannot add a copy you do not have
 
-- [ ] In the same deck, empty the Main Deck (right-click each tile, or click each and remove) so you are starting from zero.
-- [ ] Find a card the starter deck gave you exactly **one** of. Click its catalog tile once: it lands in the Main Deck and the zone count goes to `1/40`.
-- [ ] Click the same tile again. Nothing is added, the count stays `1/40`, and the message line under the deck name reads `<card name>: You own 1 of this card.`
+- [ ] In the same deck, empty the Main Deck (right-click or double-click each deck tile) so you are starting from zero.
+- [ ] Find a card the starter deck gave you exactly **one** of. Double-click its catalog tile: one copy lands in Main Deck and the zone count goes to `1/40`.
+- [ ] Double-click the same tile again. Nothing is added, the count stays `1/40`, and the message line under the deck name reads `<card name>: You own 1 of this card.`
 - [ ] That tile now has a red border. Drag it toward the Main Deck: it will not pick up — the tile is no longer draggable.
 - [ ] Right-click the same tile. Still nothing is added, and the same message appears — the context-menu add is capped too.
-- [ ] Tick **To sideboard** in the catalog header, then click the tile again. Nothing lands in the Side Deck; the count there stays `0/15`. The cap counts the copy already sitting in the Main Deck.
+- [ ] Tick **To sideboard** in the catalog header, then double-click the tile again. Nothing lands in Side Deck; its count stays `0/15`. The cap counts the copy already in Main Deck.
 
 ### The ruleset's copy limit still applies on top
 
-- [ ] Find a card the starter deck gave you **three or more** of, and click its tile four times.
+- [ ] Find a card the starter deck gave you **three or more** of, and double-click its tile four times.
 - [ ] Three copies land. The fourth is refused with `Copy limit 3 reached.` — not with an ownership message. Owning more copies never raises the deck limit.
 - [ ] Reload the page (F5) and reopen the deck. It holds the three copies you added, and the tile is still red.
 
@@ -3020,8 +2999,8 @@ Free play owns every card without limit, so it can never raise an ownership erro
 - [ ] Sell that one copy, then return to the story deck library.
 - [ ] The Starter Deck row now has a **red** halo and a red **CARDS NOT OWNED** badge next to its name.
 - [ ] Hover the row. The tooltip names the card: `This deck uses 1 copy/copies of <card name>; you own 0.`
-- [ ] Open the deck. The **Deck checks** panel lists that same sentence as an error (red, with a `×`), alongside the two empty-deck warnings.
-- [ ] Click the error. The editor jumps to that card in the deck, exactly as it does for any other issue.
+- [ ] Open the deck. Affected zone headings show **(!)**; focus one to read that same ownership sentence plus relevant empty-deck warnings. Zones with errors have red borders.
+- [ ] Confirm each tooltip stays tied to its zone; no removed validation strip or Deck checks panel appears.
 - [ ] Reload the page (F5) and reopen the library. The badge is still there — the verdict is recomputed from the save, not remembered from before the reload.
 
 ### Buying the card back clears it
@@ -3046,7 +3025,7 @@ Free play owns every card without limit, so it can never raise an ownership erro
 
 - [ ] Go to `#/free-play/decks`. No deck there ever wears a **CARDS NOT OWNED** badge, whatever it holds.
 - [ ] Open a free-play deck, remove cards until it is under 40, and go back to the library. That deck is badged **ILLEGAL** — the badge itself still works in free play, it just never blames ownership.
-- [ ] Import a YDK with four copies of an ordinary card into free play. The deck is badged **ILLEGAL** and the Deck checks panel says `<card name> allows 3 copy/copies; found 4.` — a ruleset error, not an ownership one.
+- [ ] Import a YDK with four copies of an ordinary card into free play. The deck is badged **ILLEGAL**; its affected zone's **(!)** tooltip says `<card name> allows 3 copy/copies; found 4.` — a ruleset error, not an ownership one.
 
 ### The paths that carry a whole deck at once are covered too
 
@@ -3069,8 +3048,8 @@ duel with. Cards are granted by **New Game** and by the shop, and nowhere else.
 
 ### Deleting a story save's default deck does not conjure a replacement
 
-- [ ] Start a **New Game**, get to the city map, open the story deck library (`#/story/decks`). One row, **Starter Deck**, wearing the **Default** badge.
-- [ ] Open it, click **Delete** from the deck page header and confirm. The library is now empty: it reads **No local decks** with a **Create blank deck** button, and no row carries a **Default** badge.
+- [ ] Start a **New Game**, get to the city map, open the story deck library (`#/story/decks`). One tile, **Starter Deck**, has a filled gold default star.
+- [ ] Open it, click **Delete** from the deck page header and confirm. The library is now empty: it reads **No local decks** with a **Create blank deck** button.
 - [ ] Navigate away to the city map and back into the deck library. Still empty — no deck was seeded. Reload the page (F5), continue the save, reopen the library: still empty.
 - [ ] DevTools → Application → IndexedDB → `ygo-story-saves` → `saves`. That save's `state.decks` is `[]` and `state.defaultDeckId` is `null`.
 - [ ] In the same record, `state.collection` is unchanged — the cards the deck used are still owned, exactly as they were before the delete. Nothing was granted and nothing was taken.
@@ -3078,7 +3057,7 @@ duel with. Cards are granted by **New Game** and by the shop, and nowhere else.
 ### The empty story library is not a dead end
 
 - [ ] From that empty story library, click **Create blank deck**, type a name and confirm. The editor opens on the new empty deck.
-- [ ] Go back to the library. The new deck is listed. Its halo is red and the **Deck checks** panel says the Main Deck is under 40 — correct for an empty deck, and repairable from the catalog on the left.
+- [ ] Go back to the library. The new deck is listed with an error state. Open it: Main has a red border and its **(!)** tooltip says the Main Deck is under 40 — correct for an empty deck, and repairable from the catalog.
 - [ ] The catalog on that deck page offers only cards this save owns, and adding them works normally.
 - [ ] Reload the page and continue the save. The deck you built is still there.
 
@@ -3089,9 +3068,9 @@ duel with. Cards are granted by **New Game** and by the shop, and nowhere else.
 
 ### Free play still seeds, unchanged
 
-- [ ] DevTools → Application → Storage → **Clear site data**, reload, then open `#/free-play/decks`. Exactly one deck, **Starter Deck**, wearing the **Default** badge, with 40 Main Deck cards.
+- [ ] DevTools → Application → Storage → **Clear site data**, reload, then open `#/free-play/decks`. Exactly one deck, **Starter Deck**, has a filled gold default star and 40 Main Deck cards.
 - [ ] Reload and reopen it. Still exactly one **Starter Deck** — no second one was added.
-- [ ] Open it and delete it, then reload and reopen `#/free-play/decks`. A single fresh **Starter Deck** is seeded and marked default. Free play hands one out for as long as you keep deleting it; a story save never does.
+- [ ] Open it and delete it, then reload and reopen `#/free-play/decks`. A single fresh **Starter Deck** is seeded with a filled default star. Free play hands one out for as long as you keep deleting it; a story save never does.
 - [ ] Open `#/duel` on a cleared free-play library. The picker's **Your decks** group still holds the seeded **Starter Deck** — the duel's own seeding path is untouched by this change.
 
 ### A save that already caught the bug
@@ -3179,7 +3158,7 @@ would lock every new player out of their very first encounter.
 ### The block links to the story deck editor, not free play's
 
 - [ ] From that blocked briefing, press **Open the deck editor**. The URL becomes `#/story/decks` and the story deck library opens — the decks listed are this save's, and **Starter Deck** wears the **CARDS NOT OWNED** badge there too. The two screens agree.
-- [ ] Progress comes with you: this button writes the run to the autosave slot before the route changes, so the editor opens the save you were just playing. See the R3 section at the end of this file for the full check, including what happens when that write is refused. (The top bar's deck icon is *not* this button and does not write — save first, pause menu → Save, if you leave that way.)
+- [ ] Progress comes with you: both this button and the story header's deck control write the run to the autosave slot before route change, so the editor opens the save you were just playing. Refuse the write: route stays on Story and the visible storage error offers retry.
 
 ### Choosing a different deck, and the choice sticking
 
@@ -3751,7 +3730,7 @@ deck a new game is granted, and the cards behind it.
 - [ ] If you have a save from an earlier build, load it. Otherwise make one: DevTools → Application → IndexedDB → `ygo-story-saves` → `saves`, take your `autosave` record, set `schemaVersion` to `2` and delete `state.decks` and `state.defaultDeckId` from it.
 - [ ] Reload and press **Continue**. The save opens where it was left, with the DP and the cards it had.
 - [ ] Choose **Old Arena**. The briefing lists **Starter Deck**, selected, with no red border and no block message. **Start Duel** enables once the card database lands.
-- [ ] Open the story deck library (top bar → deck icon). **Starter Deck** is there with the **Default** badge, and no card in it is badged **CARDS NOT OWNED** — the cards were granted with it.
+- [ ] Open the story deck library (top bar → deck icon). **Starter Deck** is there with a filled gold default star, and no card in it is badged **CARDS NOT OWNED** — the cards were granted with it.
 - [ ] Cards you already owned are still yours: open the collection and confirm a card you had bought before is still there, at the count you had.
 - [ ] Press **Continue** a second time without saving in between, and check the collection again. The counts are the same — the grant completes the save once, it does not pay out again on every load.
 - [ ] A save this build wrote is untouched: on a current save, delete every deck in the story deck editor, then reload and press **Continue**. The library is still empty — an empty library you chose stays empty.
@@ -3797,7 +3776,7 @@ state red", with *Leave shop* as the example. Only the example had shipped.
 - [ ] Open one pack, and check the **← Back** under the reveal is red. Open several: **Skip** beside it is *not* red — it moves you on to the recap, it does not take you back.
 - [ ] Open the packs dialog from the top bar. Its **Close** in the footer and the **Close** in its header are both red.
 - [ ] Open the gear menu → **Settings**, then **History**, then **Save**. Every overlay's header **Close** is red.
-- [ ] On the city map, and on the story's Load screen, **Back** is red.
+- [ ] Enter the city map from narrative: **Return to Dialog** is red; activate it and the narrative resumes. Enter from another supported story screen: the contextual **Return to X** label names that origin and returns there. On the story's Load screen, **Back** is red.
 - [ ] Open the collection from the deck library. Its **← Back** is red.
 - [ ] The label stays readable on the red: no grey-on-red or white-on-red anywhere above — the text is near-black.
 - [ ] One dialog deliberately does not follow the rule: on the Load screen press **Delete manual slot 1**. **Delete save** is the red one and **Cancel delete** is not, because red there marks the button that destroys something.
@@ -4040,7 +4019,7 @@ Run `npm run dev` (default `DEV_PORT=4300`).
 ### Pick a deck for each seat (free play)
 
 - [ ] Open `http://localhost:4300/#/free-play`. The screen reads **Free play / Choose your deck**, with a deck grid on the left and, on the right, the opponent's portrait, their deck card (red halo) and your deck card (blue halo). There is no "Start a match" menu in front of it.
-- [ ] Press a grid tile: it takes the blue halo and a ✓, and your deck card on the right changes to match. The deck count beside the title reads `shown/total`.
+- [ ] Press a grid tile: it takes the blue halo and your deck card on the right changes to match. No ✓ appears. The deck count immediately right of Filter reads `shown/total`.
 - [ ] Press the opponent's **deck card** on the right: the grid switches to filling the opponent seat — the tile you pick now takes the **red** halo, and your own current pick is marked `Yours` so it does not vanish from view. Press the opponent's deck card again to go back to picking for yourself.
 - [ ] Press **Start the duel**: the duel starts immediately, with no second picker. Surrender and read the log — the opponent really played the deck you left on their seat.
 
@@ -4051,17 +4030,17 @@ Run `npm run dev` (default `DEV_PORT=4300`).
 - [ ] Reload the page. Blaze Circuit is still the opponent, and their deck card still shows the deck the persona owns. (The id lives in shell settings; a persona name from an older build falls back to the default rather than rendering nothing.)
 - [ ] Now override just the deck: with Blaze Circuit selected, press their deck card and pick a different deck for that seat. Start the duel, leave it, and come back to `#/free-play` — the persona is still Blaze Circuit and the deck card is back to the persona's own deck. The override was for one duel.
 
-### Favourite star, default badge, and the order
+### Default star and order
 
-- [ ] Free play, a **local** deck: press its ☆ (top-left of the tile, its own button). It fills to ★ and the tile climbs above the unstarred decks. Reload — still starred.
-- [ ] Free play, a **bundled/preset** deck: star it the same way. Reload — still starred. (Preset stars live in shell settings, because the deck repository only knows local decks.)
-- [ ] The deck marked as default carries a gold **Default** badge and a gold hairline border, and sits first — it keeps the hairline even while a different tile holds the blue selection glow, so the two never compete.
-- [ ] Order, top to bottom: default, then favourites, then the rest by the active **Sort** (Last modified or Name). Change Sort to **Name** and confirm only the third group re-orders — default and favourites keep their ranks.
-- [ ] Story: open a save's pre-battle briefing, star a deck, back out, and open the briefing again — the star survived, and it is stored in the save (not in free play's settings, and not shared with it).
+- [ ] Free play, a **local** deck: press its outlined top-right star. It fills gold, becomes disabled with accessible name **Default deck**, and the former default becomes outlined.
+- [ ] Free play, a **bundled/preset** deck: no default star renders.
+- [ ] The default deck carries a gold hairline border and sits first; a different tile can hold the blue selection glow without hiding the default border.
+- [ ] Order, top to bottom: default, then every other deck by active **Sort** (**Last modified** or **Name**). Change Sort to **Name** and confirm only the default keeps a fixed rank.
+- [ ] Story: set a local save deck as default, leave the deck screen, return, then reload. Its filled star persists inside that save.
 
 ### An illegal deck is disabled, and says why (story)
 
-- [ ] In a story save, sell or spend a card one of your decks needs, then start an encounter. That deck's tile is **disabled**, sits below every legal deck whatever else it is flagged, and its meta line is the block reason rather than "Save deck".
+- [ ] In a story save, sell or spend a card one of your decks needs, then start an encounter. That deck's tile is **disabled**, sits below every legal deck whatever else it is flagged, and its tag line is the block reason rather than "Save deck".
 - [ ] The tile cannot be picked and cannot start a duel. The screen's notice names what to fix, and the button under it leads to the **story's** deck editor, not free play's.
 - [ ] A brand-new save's granted deck has no Extra and no Side deck — warnings, not errors. It is **not** disabled and it starts the first encounter.
 
@@ -4075,24 +4054,25 @@ Run `npm run dev` (default `DEV_PORT=4300`).
 - [ ] The **Deck Builder Library** (`#/free-play/decks`) offers the same kebab actions on the same tiles.
 - [ ] The **story** briefing offers neither: no kebab on any tile and no manage cluster in the footer. Its Open button leaves for the story deck editor.
 
-### Double-click opens
+### Double-click opens editable decks only
 
-- [ ] Double-click a grid tile on the duel-start screen: the deck opens in the builder. The single clicks that preceded it only moved the selection — nothing is opened twice.
-- [ ] Double-click a tile in the library: same result.
+- [ ] Double-click a local grid tile on the duel-start screen: the deck opens in the builder. The preceding single clicks only move selection; nothing opens twice.
+- [ ] Double-click a local tile in the library: same result.
+- [ ] Double-click a bundled tile in free play and story: route stays put and one warning reads **Bundled deck: cannot be modified**. Its kebab keeps **Open in deck builder** visible but disabled with the same reason.
 
 ### Keyboard
 
 - [ ] Press `/` anywhere on the screen: focus lands in the **Filter** field. Type — the grid narrows and the `shown/total` count follows.
 - [ ] With focus outside a text field, press `↓` and `↑`: the pick steps through the **legal** decks only, skipping any disabled tile, and the grid scrolls the pick into view rather than scrolling under it.
 - [ ] Press `Enter` on the duel-start screen: the duel starts (nothing happens while the pick is blocked). Press `Enter` in the library: the focused deck opens in the builder.
-- [ ] Press `f`: the current pick's star toggles. Press it again — it toggles back.
-- [ ] Type `f` or `/` **inside** the Filter field: the character is typed, no shortcut fires.
+- [ ] Press `f` with focus outside a text field: no deck mark changes and no removed shortcut fires.
+- [ ] Type `f` or `/` **inside** the Filter field: the character is typed; `/` does not move focus away.
 
 ### Hover previews (desktop)
 
 - [ ] Duel start: hover a grid tile — its full **Main / Extra / Side** decklist floats beside the tile, tall enough for a 90-card deck with little or no internal scrolling, and flips to the other side of the tile rather than running off-screen. Move the pointer away — it disappears at once, and the actual selection never moved.
 - [ ] Library: hover a tile — its decklist appears in the **docked** right panel without changing which deck is focused; move away and the panel reverts to the focused deck.
-- [ ] Library: hover a row inside that docked decklist — a full-size, text-free card image floats near the cursor.
+- [ ] Library: hover or keyboard-focus a row inside that docked decklist — a readable full card scan floats beside it, stays inside the viewport, falls back to cropped art on image failure, and disappears on leave/blur.
 
 ### Phone layout
 
@@ -4116,8 +4096,8 @@ Run `npm run dev` (default `DEV_PORT=4300`).
 
 ## Deck illustrations
 
-- [ ] Open a deck in Deck Editor, right-click a card already in Main, Extra, or Side Deck, then choose **Set as illustration**. Return to Deck Library: deck tile is square like the source crop and uses that card's complete text-free artwork, not whole card frame.
-- [ ] Inspect that tile over both light and dark artwork: illustration renders at 75% opacity with no full-tile black fade; compact translucent backplates and text shadows keep the deck title readable at top-left and counts, metadata, and badges readable at bottom-left.
+- [ ] Open a deck in Deck Editor, right-click a card already in Main, Extra, or Side Deck, then choose **Set as illustration**. Return to Deck Library: the square tile uses that card's complete text-free artwork, not the whole card frame.
+- [ ] Inspect that tile over both light and dark artwork: illustration has no full-tile black fade; compact translucent backplates and text shadows keep deck name and one bottom tag line readable.
 - [ ] Focus a deck card with keyboard, press `Shift+F10`, choose **Set as illustration**, then press Undo / Redo. Library illustration follows each history state.
 - [ ] Remove chosen illustration card's final copy. Library falls back to first Extra Deck card, then first Main Deck card. Undo restores chosen illustration.
 - [ ] Reload app, duplicate deck, then open story pre-battle deck picker where applicable. Chosen illustration survives persistence and duplication; same crop fronts every shared deck tile.
@@ -4142,9 +4122,9 @@ Run `npm run dev` (default `DEV_PORT=4300`), then open `#/free-play` in a
 - [ ] TC3. Check decklist rows with one copy: copies chip reads **1**, not blank.
 - [ ] TC4. Hover non-selected grid tile. Active seat list gains dashed preview outline plus swaps rows. Move pointer away: picked deck list returns. No floating decklist covers grid.
 - [ ] TC5. Press opponent deck-name chip. Active outline moves to opponent seat; next grid pick changes opponent list. Press chip again, or press player chip: grid returns to player seat.
-- [ ] TC6. Confirm footer order: red **← Return to Menu** at far left; Delete, Rename, Duplicate, Open, green **+ Create** at far right. Press Return → main menu. Return to free play, press Create → deck library.
+- [ ] TC6. Confirm footer order: red **← Return to Menu** at far left; Delete, Rename, Duplicate, Open, green **Create** at far right. Press Return → main menu. Return to free play, press Create → deck library.
 - [ ] TC7. Resize to 950px wide: full title plus footer actions remain, with no kebab. Continue narrowing to about 788px: title becomes **Select Deck**, eyebrow hides, footer actions collapse into ⋯.
-- [ ] TC8. Open ⋯ menu. Exactly five actions appear upward in order: Delete, Rename, Duplicate, Open, + Create. Press Escape: menu closes, focus returns to ⋯.
+- [ ] TC8. Open ⋯ menu. Exactly five actions appear upward in order: Delete, Rename, Duplicate, Open, Create. Press Escape: menu closes, focus returns to ⋯.
 - [ ] TC9. Press **Start the duel** from wide layout. Duel field loads using selected player/opponent decks; no second picker appears.
 
 ---
@@ -4208,5 +4188,67 @@ Fourteen owner feedback items shipped across T1–T11. Run `npm run dev`
 Run `npm run dev` (default `DEV_PORT=4300`) in Chromium.
 
 - [ ] Start a duel, then open its Menu and Settings dialogs: confirm each panel is an opaque plaque with shallow chamfers and a gold-line edge, each titled dialog has a centered gold title and rule, and the blurred backdrop leaves the field recognizable. Toggle a setting, close with Escape, reopen, and confirm the change and dialog controls still work.
-- [ ] Open a deck in Deck Editor: confirm the library, workspace, and validation panels use chamfered glass with gold-line edges. Open Load or Export and confirm its opaque chamfered dialog has the centered gold title treatment; open a card context menu and confirm it stays square. Close each surface with its normal controls and confirm card/deck editing still works.
+- [ ] Open a deck in Deck Editor: confirm library and workspace zone surfaces use chamfered glass with gold-line edges; no old validation panel/strip exists. Open a zone **(!)** tooltip, then Load or Export; confirm dialogs keep the opaque chamfered centered-gold-title treatment and card context menu stays square. Close each surface normally and confirm editing still works.
 - [ ] From a story narrative beat, open Pause, Save, and Load overlays: confirm the scene remains visible through the dark blur-6 scrim, each overlay panel uses chamfered glass with a gold-line edge and centered gold title treatment, and focus stays in the open overlay. Use one action, close with Escape, and confirm focus returns to its trigger.
+
+---
+
+## Screen-feedback round (`4682934..0446502`)
+
+Run `npm run dev` (default `DEV_PORT=4300`) in Chromium. Traverse Deck
+Selection, Deck Builder, Visual Novel, and Map in one session. Test desktop,
+keyboard, 430×900 touch emulation, then reload where specified.
+
+### Deck Selection
+
+- [ ] S1. Open `#/free-play`. Confirm each tile shows deck name plus exactly one tag line; no selected checkmark, Main/Extra/Side counts, modified date, text **Default** badge, or removed star control appears.
+- [ ] S2. Confirm each editable non-default deck has one outlined star at top-right. Press it: star fills gold, becomes disabled, reads **Default deck**, gets `aria-pressed="true"`, and former default becomes outlined. Reload: new default persists and stays first.
+- [ ] S3. Confirm bundled presets have no default-star control. Confirm existing old decks and story saves still load even when their persisted records predate removal of the second deck mark.
+- [ ] S3a. In DevTools Console, run `localStorage.setItem("ygo.ui.v3", JSON.stringify({ version: 3, rotationNoticeDismissed: true, display: { showZoneOutlines: false, showZoneCounts: true, showCardShadows: false, showZoneLabels: true }, freePlayPairing: { player: "preset:nekroz", opponent: "preset:shaddoll" }, freePlayOpponentId: "blaze-circuit", freePlayPresetFavouriteIds: ["preset:nekroz"] }))`, then `const { readShellSettings } = await import("/src/shell/settings/shell-settings.ts"); readShellSettings(localStorage)`. Confirm returned settings preserve every value through `freePlayOpponentId` but have no `freePlayPresetFavouriteIds` property.
+- [ ] S3b. Repeat S3a with malformed `freePlayPresetFavouriteIds: "preset:nekroz"`. Confirm returned settings again preserve every unrelated value but have no `freePlayPresetFavouriteIds` property.
+- [ ] S4. Filter tiles to zero and several results. Confirm `shown/total` sits immediately right of Filter and updates through `0/total`; full and compact action copy reads **Create**, never **+ Create**.
+- [ ] S5. Check 1, 2, 4, and 20 visible decks at desktop width, then 430×900. Sparse tiles grow, stay centered, never exceed about 420px; dense/mobile grids wrap without horizontal overflow.
+- [ ] S6. In Library, hover then keyboard-focus a Main, Extra, or Side decklist row. Confirm readable full card scan appears beside row, remains inside viewport, disappears on leave/blur, and falls back once to cropped art if full scan fails.
+- [ ] S7. Open bundled tile kebab. Confirm **Open in deck builder** remains visible but disabled and exposes exact reason **Bundled deck: cannot be modified**.
+- [ ] S8. Double-click bundled tile in free play and story pre-battle. Confirm route does not change and exactly one warning reads **Bundled deck: cannot be modified**. Double-click local tile: matching Deck Builder opens once.
+- [ ] S9. Confirm local rename, duplicate, delete, default, selection, opponent selection, Start the duel, decklist docking, keyboard navigation, and touch tile controls still work.
+
+### Deck Builder
+
+- [ ] B1. Enter local deck from Deck Selection. Confirm header has no **Deck Library** button. Below card preview, red full-column button reads **Return to Deck Selection**; press it and confirm exact origin route opens once.
+- [ ] B2. Enter story deck from Story, then use return button. Confirm it reads **Return to Story** and restores Story. Open a deck route directly with no remembered origin: button falls back to **Return to Deck Selection** and context library.
+- [ ] B3. Press header **Import**. Import pasted YDK with Main, Extra, Side, plus unknown code. Confirm open deck name/id stay unchanged, lists preserve file order, unknown card reads **Missing card {code}**, and story-unowned cards remain visible but disabled.
+- [ ] B4. After import, press Undo once: all prior lists return together. Press Redo once: all imported lists return together. Force save rejection: dialog stays open with visible error; retry succeeds and focus returns to **Import**.
+- [ ] B5. Confirm **Sort By** offers **A–Z**, **CardType>A–Z**, **Level>CardType>A–Z**, **Attribute>CardType>A–Z**, **MonsterType>CardType>A–Z**, **ATK>CardType>A–Z**, and **DEF>CardType>A–Z**.
+- [ ] B6. Apply each sort ascending and descending. Confirm every Main/Extra/Side zone sorts immediately; direction reverses primary key only, ties remain A–Z, missing values stay last, and Undo/Redo restores each full order change.
+- [ ] B7. Single-click catalog card A, hover card B, then leave. Confirm preview shows A, temporarily B, then A again; deck stays unchanged. Double-click A: exactly one copy enters canonical zone.
+- [ ] B8. Single-click deck card: preview pins without mutation. Double-click Main card: it leaves deck entirely and does not move to Side. Confirm one double-click creates at most one history entry.
+- [ ] B9. At touch width, tap catalog card and deck card. Confirm existing add and target-menu behavior remains available where double-click is unavailable.
+- [ ] B10. Inspect catalog cards at limits 0, 1, 2, and 3. Visible badge exists only for 0/1/2; accessible card label still reports limit 3. Confirm clear spacing between catalog filters/summary and results in normal, active-filter, and notice states.
+- [ ] B11. Open editor fresh. Main and Extra start expanded; Side starts collapsed. Expand Side, edit deck, and confirm it stays expanded until toggled or component remounts.
+- [ ] B12. Make each zone invalid in turn. Confirm only zones with errors get red borders; every zone with warnings/errors shows separate focusable **(!)** beside heading, including collapsed Side; old validation strip is absent.
+- [ ] B13. Hover, focus, tap, then Escape/blur/pointer-leave each **(!)**. Tooltip lists exact zone issue messages on separate lines; legal zones show neither icon nor red border.
+
+### Visual Novel
+
+- [ ] V1. Visit narrative, map, pre-battle, battle handoff, outcome, reward, collection, every shop screen, pack opening/results, load, and every overlay at wide, short, and 430×900 sizes. Confirm each stays within shell stage; long content scrolls internally; page and stage do not clip controls.
+- [ ] V2. In narrative, confirm background, characters, dialogue, and utility controls remain visible together while resizing. Open card zoom and overlays in letterboxed layout; none enters black bars.
+- [ ] V3. Across narrative, map, shop, and sibling story screens, confirm exactly one full-width story header. Stable order is DP, shop when valid, deck builder when valid, optional title, optional objective, then settings; every icon target is at least 44×44px.
+- [ ] V4. Confirm map header title reads **City signal map** and shows current objective. Enter shop: title reads **Card Shop**, shop button is absent, deck/settings controls remain, and no header item overlaps or leaves stage at desktop/mobile widths.
+- [ ] V5. Open Settings from header, close it, and confirm focus returns to Settings. Open deck builder from active story: current save persists first and `#/story/decks` opens story-owned decks/collection, never main menu or unlimited free-play data.
+- [ ] V6. Force story-save refusal before deck navigation. Confirm route remains Story and visible storage error offers retry; no failure is swallowed. Confirm direct `#/story/decks` without ready save still redirects safely to Main Menu.
+
+### Map
+
+- [ ] M1. Reach map from Dialog. Confirm red bottom-left button reads **Return to Dialog** and does not cover map/hotspot. Press it by pointer and keyboard: Dialog resumes. Re-enter map from another resumable story screen and confirm label/target name that true origin.
+- [ ] M2. Save/reload on map. Confirm remembered origin survives. Load legacy save with no origin: map return safely falls back to **Return to Dialog**.
+- [ ] M3. Confirm map art fills body below story header: source-aligned cover on roomy layouts, contained interactive canvas over map backdrop on portrait/short layouts so every hotspot stays visible. No chapter eyebrow, duplicate title/objective, choice acknowledgment, sidebar location list, or detail panel appears.
+- [ ] M4. Hover then focus every visible hotspot. Anchored popover stays inside map and shows location name, `marker · access`, summary, optional `· completed`, and exact `Locked: reason`; leave/blur closes according to current input owner.
+- [ ] M5. With touch emulation, first tap available hotspot opens info only; tapping another switches info; outside tap or Escape closes; second tap on same available hotspot activates exactly once.
+- [ ] M6. Tap/click locked hotspot repeatedly. Confirm locked reason remains visible and location never activates. Confirm hidden locations render neither hotspot nor popover.
+- [ ] M7. Use keyboard alone: focus hotspot to inspect, Escape to close, then activate available hotspot per exposed control behavior. Confirm `aria-describedby`, accessible lock/completion state, and focus target stay correct.
+
+### Round-trip regression
+
+- [ ] R1. Complete route chain Main Menu → Deck Selection → Deck Builder → Return → Visual Novel → Deck Builder → Return → Map → Return → pre-battle → duel handoff. Confirm each named return reaches its actual origin and each domain remains lazy until entered.
+- [ ] R2. Keep DevTools console open through S1–R1. Confirm no uncaught error, duplicate action, broken image glyph, horizontal page overflow, or hidden failure appears.

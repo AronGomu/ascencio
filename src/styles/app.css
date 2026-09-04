@@ -501,6 +501,24 @@ main.is-duel-viewport {
   );
 }
 
+@media (max-width: 1023.98px) and (orientation: portrait) {
+  /* Portaled duel dialogs leave the transformed shell so Chromium paint and
+     hit-test geometry agree, then rotate explicitly with the duel. */
+  body > [data-duel-dialog-portal] {
+    inset: auto;
+    top: 50%;
+    left: 50%;
+    width: 100svh;
+    height: 100vw;
+    transform: translate(-50%, -50%) rotate(90deg);
+    backdrop-filter: none;
+  }
+
+  body > [data-duel-dialog-portal] > .dialog-panel {
+    max-height: 85vw;
+  }
+}
+
 h1,
 h2,
 h3,
@@ -568,7 +586,7 @@ h4 {
 .card-preview-panel__art img {
   display: block;
   width: 100%;
-  max-height: min(22rem, 60svh);
+  max-height: min(22rem, calc(var(--stage-h, 100svh) * 0.48));
   object-fit: contain;
   border-radius: 0.5rem;
 }
@@ -1346,7 +1364,8 @@ li + li {
 }
 
 .phase-bar__half {
-  flex: 0 0 50%;
+  flex: 1 1 0;
+  width: 0;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -1358,7 +1377,7 @@ li + li {
 /* Both halves are strongest at the seam they share, so each gradient runs
    toward the centre of the bar. */
 .phase-bar__half--opponent {
-  border-left: 1px solid var(--border);
+  box-shadow: inset 1px 0 var(--border);
   background: linear-gradient(
     90deg,
     color-mix(in srgb, var(--danger) 30%, var(--surface)),
@@ -1394,6 +1413,7 @@ li + li {
 }
 
 button.phase-chip:not(:disabled) {
+  min-inline-size: 44px;
   pointer-events: auto;
   cursor: pointer;
 }
@@ -1417,6 +1437,17 @@ button.phase-chip:not(:disabled) {
 
 .phase-chip--end-turn:hover:not(:disabled) {
   background: var(--selected-strong);
+}
+
+@media (max-width: 1023.98px) {
+  .phase-bar__half {
+    gap: 2px;
+    padding-inline: 2px;
+  }
+
+  .phase-chip {
+    padding-inline: 0;
+  }
 }
 
 /* Stage uses exact geometry-sized field coordinates. */

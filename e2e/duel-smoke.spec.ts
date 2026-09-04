@@ -1689,11 +1689,26 @@ test("the shell letterboxes the app to a 16:9 stage above the breakpoint", async
         `${viewport.id} stage keeps the 16:9 height (got ${b.width}x${b.height})`,
       ).toBeLessThanOrEqual((viewport.width * 9) / 16 + 1);
       expect(b.height).toBeLessThanOrEqual(viewport.height);
-      // The width law is lifted for the duel: no side bars are left unspent.
+      // The width law is lifted for the duel: no side bars remain inside the
+      // shell's intentional outer stage inset.
+      const insets = await stage.evaluate((element) => {
+        const style = getComputedStyle(element);
+        const root = getComputedStyle(document.documentElement);
+        return {
+          actual:
+            Number.parseFloat(style.marginLeft) +
+            Number.parseFloat(style.marginRight),
+          expected:
+            Number.parseFloat(root.getPropertyValue("--space-2")) *
+            Number.parseFloat(root.fontSize) *
+            2,
+        };
+      });
+      expect(insets.actual).toBeCloseTo(insets.expected, 1);
       expect(
         b.width,
-        `${viewport.id} duel stage spans the viewport width`,
-      ).toBeGreaterThanOrEqual(viewport.width - 1);
+        `${viewport.id} duel stage spends all width inside its stage inset`,
+      ).toBeGreaterThanOrEqual(viewport.width - insets.expected - 1);
       box = b;
     }).toPass();
 
@@ -1766,6 +1781,7 @@ test("the duel spends the reclaimed pillarbox on the right rail, not the board",
     const rect = (selector: string): DOMRect | null =>
       document.querySelector(selector)?.getBoundingClientRect() ?? null;
     return {
+      stage: rect('[data-cy="app-stage"]'),
       shell: rect('[data-cy="duel-shell"]'),
       preview: rect('[data-cy="card-preview-panel"]'),
       slot: rect('[data-cy="duel-field-slot"]'),
@@ -1779,8 +1795,9 @@ test("the duel spends the reclaimed pillarbox on the right rail, not the board",
         (Math.min(window.innerHeight, (window.innerWidth * 9) / 16) * 16) / 9,
     };
   });
-  const { shell, preview, slot, field, phaseBar, rail } = boxes;
+  const { stage, shell, preview, slot, field, phaseBar, rail } = boxes;
   if (
+    stage === null ||
     shell === null ||
     preview === null ||
     slot === null ||
@@ -1792,7 +1809,7 @@ test("the duel spends the reclaimed pillarbox on the right rail, not the board",
 
   // 1920x900 is wider than 16:9, so there is a real bar to reclaim.
   expect(boxes.letterboxWidth).toBeLessThan(boxes.innerWidth - 2);
-  expect(shell.width).toBeGreaterThanOrEqual(boxes.innerWidth - 1);
+  expect(shell.width).toBeCloseTo(stage.width, 1);
 
   // The board keeps the width the letterboxed stage gave it.
   expect(field.width).toBeLessThanOrEqual(slot.width + 1);
@@ -3798,6 +3815,47 @@ test("End turn button keeps its label on one row with a 44px local pointer-targe
   );
 });
 
+test("enabled phase controls stay unobstructed on mobile", async ({ page }) => {
+  const viewports = [
+    { id: "portrait", width: 390, height: 844 },
+    { id: "landscape", width: 844, height: 390 },
+  ] as const;
+  await page.setViewportSize(viewports[0]);
+  await openDuel(page);
+  await startPresetDuel(page);
+  await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+    timeout: 120_000,
+  });
+
+  for (const viewport of viewports) {
+    await page.setViewportSize(viewport);
+    await expect
+      .poll(async () => {
+        const controls = await page
+          .locator('[data-cy="phase-bar"] button.phase-chip:not(:disabled)')
+          .evaluateAll((elements) =>
+            elements.map((element) => {
+              const box = element.getBoundingClientRect();
+              const hit = document.elementFromPoint(
+                box.left + box.width / 2,
+                box.top + box.height / 2,
+              );
+              return {
+                width: box.width,
+                height: box.height,
+                hit: hit === element || (hit !== null && element.contains(hit)),
+              };
+            }),
+          );
+        if (controls.length === 0) return -1;
+        return controls.filter(
+          ({ width, height, hit }) => width < 44 || height < 44 || !hit,
+        ).length;
+      })
+      .toBe(0);
+  }
+});
+
 test("opponent pile inversion rotates images only", async ({ page }) => {
   await openDuel(page);
 
@@ -3979,18 +4037,20 @@ test("responsive field compositions contain controls across supported viewports"
     const shellLayout = await page.evaluate(() => {
       const rect = (selector: string): DOMRect | null =>
         document.querySelector(selector)?.getBoundingClientRect() ?? null;
+      const stage = rect('[data-cy="app-stage"]');
       const shell = rect('[data-cy="duel-shell"]');
       const fieldBox = rect('[data-cy="duel-field"]');
       const panelBox = rect('[data-cy="card-preview-panel"]');
       const phaseBox = rect('[data-cy="phase-bar"]');
       const railBox = rect('[data-cy="duel-right-rail"]');
-      return shell === null ||
+      return stage === null ||
+        shell === null ||
         fieldBox === null ||
         panelBox === null ||
         phaseBox === null ||
         railBox === null
         ? null
-        : { shell, fieldBox, panelBox, phaseBox, railBox };
+        : { stage, shell, fieldBox, panelBox, phaseBox, railBox };
     });
     if (shellLayout === null)
       throw new Error(`${viewportLabel} duel shell is not mounted`);
@@ -4007,7 +4067,7 @@ test("responsive field compositions contain controls across supported viewports"
       shellLayout.fieldBox.top + 1,
     );
     expect(
-      Math.abs(shellLayout.shell.height - viewport.height),
+      Math.abs(shellLayout.shell.height - shellLayout.stage.height),
     ).toBeLessThanOrEqual(1);
 
     const field = page.getByRole("region", { name: "Duel field" });
@@ -4385,6 +4445,30 @@ test("responsive field compositions contain controls across supported viewports"
         phaseGeometry.board.bottom + 1,
       );
     }
+
+    const enabledPhaseControls = await page
+      .locator('[data-cy="phase-bar"] button.phase-chip:not(:disabled)')
+      .evaluateAll((elements) =>
+        elements.map((element) => {
+          const box = element.getBoundingClientRect();
+          const hit = document.elementFromPoint(
+            box.left + box.width / 2,
+            box.top + box.height / 2,
+          );
+          return {
+            width: box.width,
+            height: box.height,
+            hit: hit === element || (hit !== null && element.contains(hit)),
+          };
+        }),
+      );
+    expect(enabledPhaseControls.length).toBeGreaterThan(0);
+    expect(
+      enabledPhaseControls.every(
+        ({ width, height, hit }) => width >= 44 && height >= 44 && hit,
+      ),
+      `${viewportLabel} enabled phase controls keep a 44px unobstructed target`,
+    ).toBe(true);
 
     const endTurnRect = await endTurnButton.evaluate((element) => {
       const box = element.getBoundingClientRect();

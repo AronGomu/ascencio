@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { portalDuelDialog } from "./portal-duel-dialog.ts";
 
   export let surrenderAvailable = false;
   export let responsePending = false;
@@ -60,6 +61,7 @@
 <div
   class="dialog-backdrop"
   data-cy="menu-dialog-backdrop"
+  use:portalDuelDialog
   onclick={handleBackdropClick}
 >
   <div

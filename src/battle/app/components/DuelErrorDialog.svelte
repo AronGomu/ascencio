@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import type { DuelError } from "../../duel/contracts/duel-error.ts";
+  import { portalDuelDialog } from "./portal-duel-dialog.ts";
   import type { RestoreFailureReason } from "../../duel/contracts/duel-worker-event.ts";
 
   export let error: DuelError;
@@ -47,7 +48,11 @@
   }
 </script>
 
-<div class="dialog-backdrop" data-cy="duel-error-dialog-backdrop">
+<div
+  class="dialog-backdrop"
+  data-cy="duel-error-dialog-backdrop"
+  use:portalDuelDialog
+>
   <div
     class="dialog-panel duel-error-dialog-panel"
     role="dialog"

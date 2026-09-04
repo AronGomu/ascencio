@@ -4,6 +4,7 @@
   import type { PlayerPrompt } from "../../duel/contracts/player-prompt.ts";
   import PromptControls from "../prompts/PromptControls.svelte";
   import type { PromptMessageSegment } from "../presentation/prompt-context-message.ts";
+  import { portalDuelDialog } from "./portal-duel-dialog.ts";
 
   export let prompt: PlayerPrompt;
   export let disabled = false;
@@ -22,7 +23,11 @@
   });
 </script>
 
-<div class="dialog-backdrop" data-cy="prompt-dialog-backdrop">
+<div
+  class="dialog-backdrop"
+  data-cy="prompt-dialog-backdrop"
+  use:portalDuelDialog
+>
   <div
     class="dialog-panel prompt-dialog-panel"
     role="dialog"

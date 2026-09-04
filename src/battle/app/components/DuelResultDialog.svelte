@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import type { DuelResult } from "../../duel/contracts/duel-result.ts";
+  import { portalDuelDialog } from "./portal-duel-dialog.ts";
 
   export let result: DuelResult;
   export let completed = false;
@@ -16,7 +17,11 @@
   });
 </script>
 
-<div class="dialog-backdrop" data-cy="duel-result-dialog-backdrop">
+<div
+  class="dialog-backdrop"
+  data-cy="duel-result-dialog-backdrop"
+  use:portalDuelDialog
+>
   <div
     class="dialog-panel"
     role="dialog"

@@ -122,22 +122,24 @@
     data-zone-count={scenario.board.zones.length}
   >
     <aside data-cy="acceptance-preview"></aside>
-    <div
-      class="duel-field-slot"
-      data-cy="acceptance-field-slot"
-      bind:this={fieldSlot}
-    >
-      <DuelField
-        board={scenario.board}
-        layoutBoundaryElement={fieldSlot}
-        spec={scenario.phaseSpec}
-        showZoneOutlines={$persistedUi.settings.showZoneOutlines}
-        showZoneCounts={$persistedUi.settings.showZoneCounts}
-        showCardShadows={$persistedUi.settings.showCardShadows}
-        showZoneLabels={$persistedUi.settings.showZoneLabels}
-      />
+    <div class="duel-field-column" data-cy="acceptance-field-column">
+      <PhaseBar phase="main1" spec={scenario.phaseSpec} />
+      <div
+        class="duel-field-slot"
+        data-cy="acceptance-field-slot"
+        bind:this={fieldSlot}
+      >
+        <DuelField
+          board={scenario.board}
+          layoutBoundaryElement={fieldSlot}
+          spec={scenario.phaseSpec}
+          showZoneOutlines={$persistedUi.settings.showZoneOutlines}
+          showZoneCounts={$persistedUi.settings.showZoneCounts}
+          showCardShadows={$persistedUi.settings.showCardShadows}
+          showZoneLabels={$persistedUi.settings.showZoneLabels}
+        />
+      </div>
     </div>
-    <PhaseBar phase="main1" spec={scenario.phaseSpec} />
     <aside data-cy="acceptance-rail"></aside>
   </main>
 {/if}

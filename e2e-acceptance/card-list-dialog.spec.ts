@@ -85,12 +85,10 @@ async function targetButtons(page: Page): Promise<Locator> {
 }
 
 async function clickTarget(page: Page, button: Locator): Promise<void> {
-  // Selected tiles zoom 1.6x and can cover the next tile's hit box. Leave the
-  // list first so zoom collapses, then force-click the live locator.
   await page.mouse.move(1, 1);
   await expect(button).toBeVisible();
   await expect(button).toBeEnabled();
-  await button.click({ force: true });
+  await button.click();
 }
 
 async function expectDocumentFits(page: Page): Promise<void> {

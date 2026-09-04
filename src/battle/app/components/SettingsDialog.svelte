@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import type { UiSettingsState } from "../stores/ui-settings-store.ts";
+  import { portalDuelDialog } from "./portal-duel-dialog.ts";
 
   const SHOW_ZONE_COUNTS_DESCRIPTION =
     "Show the number of cards in Deck, Extra Deck, GY, Banished and both hands.";
@@ -97,6 +98,7 @@
 <div
   class="dialog-backdrop"
   data-cy="settings-dialog-backdrop"
+  use:portalDuelDialog
   onclick={handleBackdropClick}
 >
   <div

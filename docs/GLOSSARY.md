@@ -43,6 +43,7 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 | feedback | Non-authoritative CSS/SVG field feedback state | `src/battle/app/presentation/dom-feedback-controller.ts`, `src/battle/app/components/duel-field/FieldLines.svelte` |
 | log | Duel event log formatting + panel | `src/battle/app/presentation/format-duel-log-entry.ts`, `src/battle/app/components/duel-field/DuelLog.svelte` |
 | preview | Sticky card art + bounded scroll text column; shared duel/editor component | `src/shell/card-preview/CardPreviewPanel.svelte` (ADR-036), `src/battle/app/presentation/card-preview.ts` |
+| portal | Moves duel dialogs outside rotated shell for correct hit-testing | `src/battle/app/components/portal-duel-dialog.ts` (`portalDuelDialog`) |
 | default | Sole persistent deck mark; preselects player deck | `src/deck-select/deck-select-contracts.ts` (`DeckTileModel.isDefault`), `src/deck-select/DeckTile.svelte` |
 | decklist | Main, Extra, and Side rows beside deck tiles | `src/deck-select/DecklistPanel.svelte`, `src/deck-select/deck-select-contracts.ts` (`DecklistView`) |
 | hotspot | Map location control with anchored context popover | `src/story/screens/IllustratedMapScreen.svelte`, `src/story/model/story-state.ts` (`LocationId`) |

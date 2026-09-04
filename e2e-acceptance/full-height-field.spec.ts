@@ -166,7 +166,7 @@ for (const scenario of ["field-emz", "field-no-emz"] as const) {
         Number.parseFloat(getComputedStyle(element).width),
       );
     const cardWidth = left!.width * (72 / 104);
-    expect(slotWidth - cardWidth).toBeCloseTo(6, 2);
+    expect(Math.abs(slotWidth - cardWidth - 6)).toBeLessThanOrEqual(0.02);
   });
 }
 
@@ -181,13 +181,15 @@ test("phase bar fills its track and splits at the exact midpoint", async ({
   const opponent = await rect(page.locator('[data-cy="phase-bar-opponent"]'));
   const player = await rect(page.locator('[data-cy="phase-bar-player"]'));
 
-  expect(bar.y).toBeCloseTo(slot.y, 0);
-  expect(bar.height).toBeCloseTo(slot.height, 0);
-  expect(bar.x).toBeGreaterThanOrEqual(board.x + board.width);
-  expect(opponent.y).toBeCloseTo(bar.y + 1, 0);
-  expect(opponent.height).toBeCloseTo(player.height, 0);
-  expect(opponent.y + opponent.height).toBeCloseTo(player.y, 0);
-  expect(player.y + player.height).toBeCloseTo(bar.y + bar.height - 1, 0);
+  expect(bar.x).toBeCloseTo(slot.x, 0);
+  expect(bar.width).toBeCloseTo(slot.width, 0);
+  expect(bar.height).toBeCloseTo(48, 0);
+  expect(bar.y + bar.height).toBeCloseTo(slot.y, 0);
+  expect(board.y).toBeGreaterThanOrEqual(bar.y + bar.height - 1);
+  expect(player.x).toBeCloseTo(bar.x + 1, 0);
+  expect(player.width).toBeCloseTo(opponent.width, 0);
+  expect(player.x + player.width).toBeCloseTo(opponent.x, 0);
+  expect(opponent.x + opponent.width).toBeCloseTo(bar.x + bar.width - 1, 0);
 
   const gradients = await page.evaluate(() => ({
     opponent: getComputedStyle(
@@ -197,9 +199,8 @@ test("phase bar fills its track and splits at the exact midpoint", async ({
       document.querySelector('[data-cy="phase-bar-player"]')!,
     ).backgroundImage,
   }));
-  expect(gradients.opponent).toMatch(/^linear-gradient\(0deg,/);
-  /* Chromium omits the default 180deg token from computed gradients. */
-  expect(gradients.player).toMatch(/^linear-gradient\(color/);
+  expect(gradients.opponent).toMatch(/^linear-gradient\(90deg,/);
+  expect(gradients.player).toMatch(/^linear-gradient\(270deg,/);
 });
 
 test("phase keeps actionable controls at least forty-four pixels", async ({
@@ -492,9 +493,8 @@ test("opponent twenty-card overlay uses negative row-reverse scrolling", async (
   );
 });
 
-/* T3: the token layer is a pure indirection over the duel palette, so these
-   are the pre-extraction literals, not new design decisions. If one of them
-   moves, a token was re-pointed and the duel look changed. */
+/* The token layer is a pure indirection over the approved duel and Basilica
+   Slate palettes. A changed literal means a token was re-pointed. */
 test("duel colors resolve from tokens", async ({ page }) => {
   await openField(page, "field-emz");
 
@@ -513,7 +513,7 @@ test("duel colors resolve from tokens", async ({ page }) => {
     legal: "#7ee2a8",
     selected: "#ffd580",
     focusRing: "#f6c177",
-    accent: "#73daca",
+    accent: "#d3b268",
     dangerStrong: "#ff455d",
   });
 

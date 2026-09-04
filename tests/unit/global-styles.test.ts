@@ -214,7 +214,9 @@ describe("global styles", () => {
   it("bounds preview art by viewport height so effect text keeps scroll space", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     const art = ruleBlock(css, ".card-preview-panel__art img {");
-    expect(art).toContain("max-height: min(22rem, 60svh)");
+    expect(art).toContain(
+      "max-height: min(22rem, calc(var(--stage-h, 100svh) * 0.48))",
+    );
     expect(art).toContain("object-fit: contain");
   });
 

@@ -3776,7 +3776,7 @@ state red", with *Leave shop* as the example. Only the example had shipped.
 - [ ] Open one pack, and check the **← Back** under the reveal is red. Open several: **Skip** beside it is *not* red — it moves you on to the recap, it does not take you back.
 - [ ] Open the packs dialog from the top bar. Its **Close** in the footer and the **Close** in its header are both red.
 - [ ] Open the gear menu → **Settings**, then **History**, then **Save**. Every overlay's header **Close** is red.
-- [ ] On the city map, and on the story's Load screen, **Back** is red.
+- [ ] Enter the city map from narrative: **Return to Dialog** is red; activate it and the narrative resumes. Enter from another supported story screen: the contextual **Return to X** label names that origin and returns there. On the story's Load screen, **Back** is red.
 - [ ] Open the collection from the deck library. Its **← Back** is red.
 - [ ] The label stays readable on the red: no grey-on-red or white-on-red anywhere above — the text is near-black.
 - [ ] One dialog deliberately does not follow the rule: on the Load screen press **Delete manual slot 1**. **Delete save** is the red one and **Cancel delete** is not, because red there marks the button that destroys something.

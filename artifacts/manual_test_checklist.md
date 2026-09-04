@@ -826,7 +826,7 @@ Unchanged: desktop (1440x900 and 1920x1080)
 
 ### `#/decks` Deck editor — desktop
 - [ ] Card tiles: normal state uses dark navy (`var(--surface-raised)`), hover/selected uses slightly lighter `var(--surface-highlight)` with teal border.
-- [ ] Card limit badges: 0-limit is burgundy (`var(--danger-border)`), 1-limit is pink (`var(--danger)`), 2-limit is gold (`var(--selected)`), 3-limit is teal (`var(--accent)`).
+- [ ] Card limit badges: 0-limit is burgundy (`var(--danger-border)`), 1-limit is pink (`var(--danger)`), and 2-limit is gold (`var(--selected)`). A card with the normal maximum of 3 has no visible badge; its accessible label still states maximum 3.
 - [ ] Filter/search inputs have dark navy background (`var(--surface-chain)`) with legible white text.
 - [ ] Each zone's focusable **(!)** warning indicator uses `var(--warning-surface)` with `var(--warning-border)`; error-bearing zones use a red border.
 - [ ] Error states (missing card, import error) use `var(--danger-surface)` background.
@@ -843,7 +843,6 @@ Unchanged: desktop (1440x900 and 1920x1080)
 - [ ] Keyboard nav focus ring is white (`var(--ink)`), distinct from legal/selected.
 - [ ] Feedback halos are teal (`var(--accent)`).
 - [ ] Attack lines are red (`var(--danger)`), default lines are teal (`var(--accent)`).
-- [ ] Card limit badge colours on field cards look right (green/pink/gold/teal).
 
 ### `#/duel` Duel field — portrait (390×844)
 - [ ] Field rotates 90° clockwise (T15 behaviour preserved).
@@ -1266,7 +1265,7 @@ Buttons gone
 - [ ] Fill Side Deck to **15** cards (by right-clicking more catalog cards or dragging). Right-click another catalog monster — no card is added and an announcement reads "…: No space left." (wording changed in T6 of decks-feedback-round-2).
 
 ### Maxed (copy-limit) highlight
-- [ ] Find a card that already has **3** copies in the deck (check the copy badge). Its catalog tile should show a **red border** instead of the normal accent border.
+- [ ] Find a card that already has **3** copies in the deck. Its catalog tile has no visible limit badge, its accessible label still states maximum 3, and it shows a **red border** instead of the normal accent border.
 - [ ] Hover that tile — the background also tints red (danger-surface), border stays red.
 - [ ] Remove one copy (right-click in the deck zone). The catalog tile border returns to normal once copies drop below the limit.
 - [ ] A forbidden card (limit-badge shows **0**) always has a red border in the catalog, regardless of how many copies are in the deck.

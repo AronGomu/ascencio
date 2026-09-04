@@ -255,6 +255,10 @@ test("sorts every deck zone in all modes and directions with undo", async ({
     side: [8505920, 44095762, 89631139, 12580477],
   });
   await page.reload();
+  const sideToggle = page.locator('[data-cy="deck-zone-toggle-side"]');
+  await expect(sideToggle).toHaveAttribute("aria-expanded", "false");
+  await sideToggle.click();
+  await expect(sideToggle).toHaveAttribute("aria-expanded", "true");
 
   const expected = [
     {
@@ -508,7 +512,7 @@ test("the deck route deep-links, survives a reload and answers Back", async ({
   await expect(page.locator('[data-cy="deck-not-found"]')).toBeVisible();
   await page.locator('[data-cy="deck-not-found-back"]').click();
   await expect(page.locator('[data-cy="deck-library"]')).toBeVisible();
-  /* Anchored because tile press names deck plus its counts and metadata. */
+  /* Anchored because tile press names deck plus its single tag line. */
   await expect(page.getByRole("button", { name: /^Deep Link/ })).toBeVisible();
 });
 
@@ -549,9 +553,9 @@ test("open deck imports YDK with atomic Undo/Redo and keeps failures open", asyn
   await page.goto(libraryUrl);
   await deleteDeckDatabase(page);
   await page.reload();
-  await page.getByRole("button", { name: "Create deck" }).click();
+  await page.locator('[data-cy="deck-select-create"]').click();
   await page.getByLabel("Deck name").fill("Open Import E2E");
-  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
 
   await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
   await catalogTile(page, BLUE_EYES).dblclick();
@@ -772,7 +776,7 @@ test("a prototype deck database is migrated on first load", async ({
   }, LEGACY_DECK_DATABASE_NAME);
 
   await page.reload();
-  /* Anchored because tile press names deck plus its counts and metadata. */
+  /* Anchored because tile press names deck plus its single tag line. */
   const migrated = page.getByRole("button", { name: /^Prototype Survivor/ });
   await expect(migrated).toBeVisible();
 

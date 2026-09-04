@@ -237,9 +237,9 @@ Walk the prologue
 
 - [ ] Click New Game — the first narrative beat ("Rain turned …") renders with the utility bar (History, Save, Load, Settings, Pause).
 - [ ] Press Enter repeatedly (about 13 times) until "Choose your response" appears, and confirm the first choice button takes focus on its own.
-- [ ] Pick "I trust you" — the acknowledgment about earning trust appears.
-- [ ] Press Enter until the "City signal map" heading appears, and confirm the earlier-choice line mentions your trust.
-- [ ] Select Old Arena from the location list — the "Rin's Echo" briefing appears. Go back and select it again from the map hotspots — the same briefing appears.
+- [ ] Pick "I trust you" — narrative continues without a separate map choice-acknowledgment panel.
+- [ ] Press Enter until the "City signal map" header title appears.
+- [ ] Hover or focus the Old Arena hotspot to inspect its popover, then activate it — the "Rin's Echo" briefing appears. Return to the map and activate the same hotspot again — the same briefing appears.
 - [ ] Click Start Duel — the mock "Existing duel experience placeholder" appears. This is expected: the real duel handoff is a later ticket.
 - [ ] Click Simulate Player Win → "Signal broken" → Continue story → "Signal Cipher" reward, with an "Autosave complete" status.
 - [ ] Click Continue to updated map — the map now says "Archive available".
@@ -643,9 +643,7 @@ Tabs and the persistent header (390x844)
 - [ ] Open `#/decks`, create a deck named "Portrait Manual", and shrink the
       window to 390x844. The editor opens on the **Deck** tab; the "Desktop
       viewport required" screen is gone for good.
-- [ ] The header above the tabs shows deck name, Main/Extra/Side counts, the
-      deck status and the autosave status. Switch to Catalog and then Details —
-      the header stays put and keeps showing the same counts on every tab.
+- [ ] The persistent header above the tabs shows deck name plus Duplicate, Export, Set default, Delete, Undo, Redo, Import, and Load. Switch to Catalog and then Preview — the header stays put without count, validation-status, or autosave-status chrome.
 - [ ] Exactly one pane is on screen at a time: on Catalog the deck grid is
       absent, not merely scrolled away.
 - [ ] Tab the keyboard focus into the tab strip and press Left/Right arrows —
@@ -684,7 +682,7 @@ Layout at the sizes that matter
       no sideways scroll.
 - [ ] Tap targets are comfortable: tabs, menu items and card tiles are all
       easily hit with a thumb (44px floor).
-- [ ] Navigate back to the library at 390x844 — "Import Deck" and the per-row "Export" action are accessible from the library and still work. (Import/Export moved to the library menu in T4 — no Import/Export buttons exist in the editor header.)
+- [ ] At 390x844, confirm header **Import** replaces current deck lists in place and **Export** exports the open deck. Return to the library and confirm library **Import Deck** still creates a separate deck.
 
 Desktop is untouched (1440x900)
 
@@ -696,7 +694,7 @@ Desktop is untouched (1440x900)
 - [ ] Drag a card from the catalog into the Main Deck drop area — works as
       before. Right-click a Main Deck card — the context menu removes it;
       right-click a catalog card — the card is added to its canonical zone.
-- [ ] Undo/redo, rename and the Deck Library round trip all behave exactly as they did before this ticket; import and export remain accessible from the library menu (moved in T4).
+- [ ] Undo/redo and rename still work. Header Import/Export operate on the open deck; the red contextual return button below Preview replaces the old Deck Library header button.
 - [ ] Resize from 1440 wide down past 1024 and back up without reloading — the
       editor swaps between panels and tabs each way, keeping the open deck and
       its edits.
@@ -830,7 +828,7 @@ Unchanged: desktop (1440x900 and 1920x1080)
 - [ ] Card tiles: normal state uses dark navy (`var(--surface-raised)`), hover/selected uses slightly lighter `var(--surface-highlight)` with teal border.
 - [ ] Card limit badges: 0-limit is burgundy (`var(--danger-border)`), 1-limit is pink (`var(--danger)`), 2-limit is gold (`var(--selected)`), 3-limit is teal (`var(--accent)`).
 - [ ] Filter/search inputs have dark navy background (`var(--surface-chain)`) with legible white text.
-- [ ] Validation warning panel uses `var(--warning-surface)` background with `var(--warning-border)` border (amber tones).
+- [ ] Each zone's focusable **(!)** warning indicator uses `var(--warning-surface)` with `var(--warning-border)`; error-bearing zones use a red border.
 - [ ] Error states (missing card, import error) use `var(--danger-surface)` background.
 - [ ] Dialog panels use `var(--surface)` background with dark shadow.
 
@@ -1056,7 +1054,7 @@ what is playable. The steps below still pass; only the numbers moved.
 - [ ] Open `#/decks`. Press **Create deck**, name it (e.g. `Manual T22`), confirm with **Create**.
 - [ ] The catalog panel lists real cards — search `Nekroz`, `Shaddoll`, `Spellbook` or `Burning Abyss` and each returns several distinct cards with names and effect text.
 - [ ] Add cards until the Main Deck collapse bar reads `40/40`. Fastest route: search a card name, then right-click the catalog tile to add it directly; repeat, or drag tiles onto the Main Deck drop area.
-- [ ] The validation panel shows no **errors**. Warnings such as "Extra Deck is empty" and "Side Deck is empty" are expected and do not block anything. (Corrected 2026-08-20 by T12 of decks-feedback-round-2: the "uses placeholder art" warning was deleted, because art coverage describes the build's images rather than a defect in your deck. If you still see one, the slice regressed.)
+- [ ] No deck zone has a red border. Main/Extra/Side headings may show focusable **(!)** warning tooltips such as "Extra Deck is empty." and "Side Deck is empty."; warnings do not block anything. No tooltip mentions placeholder art.
 - [ ] Confirm the autosave landed: **Load → Autosaves** lists a fresh entry.
 - [ ] Go to `#/duel`. The deck list holds a **Your decks** group below **Bundled decks**, with `Manual T22` in it. (Superseded by T15: one list for the player seat only, and the opponent is a fixed line rather than a column.)
 - [ ] Pick `Manual T22` in the deck list. It becomes the selected row, and no start error appears.
@@ -1101,7 +1099,7 @@ against `npm run dev` to see real art.
 
 - [ ] Open a saved deck in the editor; confirm card tiles display real card art (jpg images, not glyph placeholders).
 - [ ] Search the catalog for a known card (e.g. "Blue-Eyes White Dragon"); confirm the result tile shows the card image.
-- [ ] Click a card to open the detail/preview panel; confirm the art renders at full preview size. (Since T6 of decks-feedback-round-2, a desktop click also edits the deck — hover to preview without editing, or press Undo afterwards.)
+- [ ] Single-click a card to pin the preview without editing the deck; confirm the art renders at full preview size. Double-click is the add/remove gesture.
 - [ ] Confirm cards this build packaged no art for show the glyph placeholder rather than a broken image.
 
 ## T2 shared-card-preview-panel
@@ -1133,7 +1131,7 @@ Run `npm run dev` and open an existing deck at `#/decks/<id>` (or create one).
 
 Header chrome removed
 
-- [ ] The editor header shows only four controls: a "← Library" link, the deck name input, Undo, and Redo. No card-count display, no validation-status chip, no autosave-status chip, no Import button, no Export button.
+- [ ] The editor header shows deck name plus Duplicate, Export, Set default, Delete, Undo, Redo, Import, and Load. It has no Deck Library button, card-count display, validation-status chip, or autosave-status chip; contextual return sits below Preview.
 - [ ] The deck name input is noticeably narrower than before (≈ 11 rem wide).
 
 Viewport stretch
@@ -1150,7 +1148,7 @@ Decorative headings removed
 
 Import and Export accessible from library
 
-- [ ] Navigate back to the library (`#/decks`). "Import Deck" and the per-row "Export" action are present and functional. (They no longer live in the editor header.)
+- [ ] In the editor header, **Import** replaces the open deck and **Export** exports it. Return to the library; **Import Deck** remains available for creating a separate imported deck.
 
 ## T5 undo-redo-keybinds
 
@@ -1278,11 +1276,9 @@ Buttons gone
 
 ## T11 library-halo-polish
 
-> Partly superseded by **Deck-selection round** at the end of this file. The
-> library no longer renders deck *rows* — it mounts the shared deck-selection
-> tile grid — so **Validation halo** and **Status text gone** below are history.
-> **Import button label** and **Titles removed** still describe the shipped
-> screen and still run.
+> Superseded by **Deck-selection round** at the end of this file. Library rows
+> became shared deck tiles; obsolete row validation-halo/status checks were
+> removed. Import label and hidden-title checks still describe shipped UI.
 
 ### Setup
 - [ ] Run `npm run dev` and open `http://localhost:4300/#/decks`.
@@ -1294,16 +1290,6 @@ Buttons gone
 - [ ] The "Local decks" eyebrow text is gone.
 - [ ] The "Visual Novel chooses a deck ID…" subtitle text is gone.
 - [ ] The "Deck Library" h1 is not visible, but the page landmark is still labelled (screen reader / accessibility tree shows the landmark).
-
-### Validation halo
-- [ ] A deck with errors (e.g. fewer than 40 main cards) — its row button shows a red/danger glow.
-- [ ] A deck with warnings (e.g. empty side) — its row button shows a yellow/warning glow.
-- [ ] A fully valid deck — its row button shows a green (`var(--success)`) glow, visibly distinct from the yellow-orange warning glow and the red error glow.
-- [ ] Hover a warning or error deck row — a native tooltip appears listing each issue message (one per line).
-- [ ] Hover a valid deck row — no tooltip appears.
-
-### Status text gone
-- [ ] No raw status word ("valid", "warnings", "errors") appears as text in any deck row.
 
 ## T12 autosave-log-storage
 
@@ -1859,7 +1845,7 @@ Art is a URL by convention, and a miss is not an error
 
 - [ ] In `npm run dev`, confirm most catalog tiles show real jpg art.
 - [ ] Run `npm run build && npm run preview`, open the built app at `#/decks`, and search `Blue-Eyes`: exactly one tile shows art and the other 38 show the glyph placeholder. **No tile shows a broken-image icon.**
-- [ ] Open the validation panel on a 40-card deck of art-less cards — there is no "uses placeholder art" warning. That warning was deleted in this slice.
+- [ ] Inspect every zone **(!)** tooltip on a 40-card deck of art-less cards — none says "uses placeholder art". That warning was deleted in this slice.
 
 The results grid no longer overlaps itself
 
@@ -1891,7 +1877,7 @@ a step says otherwise.
 A deck of cards no bundled deck names is offered and duels
 
 - [ ] Open `#/decks`, press **Create deck**, name it `Manual T13`.
-- [ ] Search `Blue-Eyes` and add printings the old ~120-card packaged set never carried (e.g. "Blue-Eyes Alternative White Dragon"), then fill the Main Deck to 40 legal cards so the validation panel shows no errors. Confirm the autosave landed through **Load → Autosaves**.
+- [ ] Search `Blue-Eyes` and add printings the old ~120-card packaged set never carried (e.g. "Blue-Eyes Alternative White Dragon"), then fill the Main Deck to 40 legal cards so no zone has an error-red border. Confirm the autosave landed through **Load → Autosaves**.
 - [ ] Go to `#/duel` — `Manual T13` is listed. Before this slice it was silently absent, because the picker filtered against the ~120 art-backed codes.
 - [ ] Select it and press **Start** — the duel initializes, reaches the first prompt, and the opening hand is drawn from those cards.
 - [ ] Every card in hand shows its real name, never `Card 89631139`. Hover one — the preview panel shows the real name and effect text.
@@ -1951,12 +1937,12 @@ Tokens are never offered and never enter a deck
 - [ ] The card lands in the **Side Deck**, and the live region says it was added to `side`. Before this fix the tap ignored the checkbox and put it in the Main Deck while announcing "Main Deck".
 - [ ] Untick **To sideboard** and tap another card — it goes to the Main Deck as before.
 
-Clicking one copy of a repeated card edits that copy
+Pointer actions target the exact repeated copy
 
 - [ ] Build a Main Deck reading, in order, card A, card B, card A (add A, add B, add A).
-- [ ] Click the **third** tile. That tile is the one that moves to the Side Deck; the first A and B stay put, in that order.
+- [ ] Single-click the **third** tile — preview pins that copy and the deck stays A, B, A. Double-click it — that third copy is removed; the first A and B stay put, in that order.
 - [ ] Repeat below the breakpoint: tap the third tile, choose **Remove from deck** — the third tile is the one that disappears.
-- [ ] Undo twice and confirm the deck returns to A, B, A in that order.
+- [ ] Undo each removal and confirm the deck returns to A, B, A in that order.
 
 A status message does not bring back a scrollbar
 
@@ -3014,8 +3000,8 @@ Free play owns every card without limit, so it can never raise an ownership erro
 - [ ] Sell that one copy, then return to the story deck library.
 - [ ] The Starter Deck row now has a **red** halo and a red **CARDS NOT OWNED** badge next to its name.
 - [ ] Hover the row. The tooltip names the card: `This deck uses 1 copy/copies of <card name>; you own 0.`
-- [ ] Open the deck. The **Deck checks** panel lists that same sentence as an error (red, with a `×`), alongside the two empty-deck warnings.
-- [ ] Click the error. The editor jumps to that card in the deck, exactly as it does for any other issue.
+- [ ] Open the deck. Affected zone headings show **(!)**; focus one to read that same ownership sentence plus relevant empty-deck warnings. Zones with errors have red borders.
+- [ ] Confirm each tooltip stays tied to its zone; no removed validation strip or Deck checks panel appears.
 - [ ] Reload the page (F5) and reopen the library. The badge is still there — the verdict is recomputed from the save, not remembered from before the reload.
 
 ### Buying the card back clears it
@@ -3040,7 +3026,7 @@ Free play owns every card without limit, so it can never raise an ownership erro
 
 - [ ] Go to `#/free-play/decks`. No deck there ever wears a **CARDS NOT OWNED** badge, whatever it holds.
 - [ ] Open a free-play deck, remove cards until it is under 40, and go back to the library. That deck is badged **ILLEGAL** — the badge itself still works in free play, it just never blames ownership.
-- [ ] Import a YDK with four copies of an ordinary card into free play. The deck is badged **ILLEGAL** and the Deck checks panel says `<card name> allows 3 copy/copies; found 4.` — a ruleset error, not an ownership one.
+- [ ] Import a YDK with four copies of an ordinary card into free play. The deck is badged **ILLEGAL**; its affected zone's **(!)** tooltip says `<card name> allows 3 copy/copies; found 4.` — a ruleset error, not an ownership one.
 
 ### The paths that carry a whole deck at once are covered too
 
@@ -3072,7 +3058,7 @@ duel with. Cards are granted by **New Game** and by the shop, and nowhere else.
 ### The empty story library is not a dead end
 
 - [ ] From that empty story library, click **Create blank deck**, type a name and confirm. The editor opens on the new empty deck.
-- [ ] Go back to the library. The new deck is listed. Its halo is red and the **Deck checks** panel says the Main Deck is under 40 — correct for an empty deck, and repairable from the catalog on the left.
+- [ ] Go back to the library. The new deck is listed with an error state. Open it: Main has a red border and its **(!)** tooltip says the Main Deck is under 40 — correct for an empty deck, and repairable from the catalog.
 - [ ] The catalog on that deck page offers only cards this save owns, and adding them works normally.
 - [ ] Reload the page and continue the save. The deck you built is still there.
 
@@ -3173,7 +3159,7 @@ would lock every new player out of their very first encounter.
 ### The block links to the story deck editor, not free play's
 
 - [ ] From that blocked briefing, press **Open the deck editor**. The URL becomes `#/story/decks` and the story deck library opens — the decks listed are this save's, and **Starter Deck** wears the **CARDS NOT OWNED** badge there too. The two screens agree.
-- [ ] Progress comes with you: this button writes the run to the autosave slot before the route changes, so the editor opens the save you were just playing. See the R3 section at the end of this file for the full check, including what happens when that write is refused. (The top bar's deck icon is *not* this button and does not write — save first, pause menu → Save, if you leave that way.)
+- [ ] Progress comes with you: both this button and the story header's deck control write the run to the autosave slot before route change, so the editor opens the save you were just playing. Refuse the write: route stays on Story and the visible storage error offers retry.
 
 ### Choosing a different deck, and the choice sticking
 
@@ -4203,7 +4189,7 @@ Fourteen owner feedback items shipped across T1–T11. Run `npm run dev`
 Run `npm run dev` (default `DEV_PORT=4300`) in Chromium.
 
 - [ ] Start a duel, then open its Menu and Settings dialogs: confirm each panel is an opaque plaque with shallow chamfers and a gold-line edge, each titled dialog has a centered gold title and rule, and the blurred backdrop leaves the field recognizable. Toggle a setting, close with Escape, reopen, and confirm the change and dialog controls still work.
-- [ ] Open a deck in Deck Editor: confirm the library, workspace, and validation panels use chamfered glass with gold-line edges. Open Load or Export and confirm its opaque chamfered dialog has the centered gold title treatment; open a card context menu and confirm it stays square. Close each surface with its normal controls and confirm card/deck editing still works.
+- [ ] Open a deck in Deck Editor: confirm library and workspace zone surfaces use chamfered glass with gold-line edges; no old validation panel/strip exists. Open a zone **(!)** tooltip, then Load or Export; confirm dialogs keep the opaque chamfered centered-gold-title treatment and card context menu stays square. Close each surface normally and confirm editing still works.
 - [ ] From a story narrative beat, open Pause, Save, and Load overlays: confirm the scene remains visible through the dark blur-6 scrim, each overlay panel uses chamfered glass with a gold-line edge and centered gold title treatment, and focus stays in the open overlay. Use one action, close with Escape, and confirm focus returns to its trigger.
 
 ---
@@ -4257,7 +4243,7 @@ keyboard, 430×900 touch emulation, then reload where specified.
 
 - [ ] M1. Reach map from Dialog. Confirm red bottom-left button reads **Return to Dialog** and does not cover map/hotspot. Press it by pointer and keyboard: Dialog resumes. Re-enter map from another resumable story screen and confirm label/target name that true origin.
 - [ ] M2. Save/reload on map. Confirm remembered origin survives. Load legacy save with no origin: map return safely falls back to **Return to Dialog**.
-- [ ] M3. Confirm map art fills body below story header with aspect-preserving crop. No chapter eyebrow, duplicate title/objective, choice acknowledgment, sidebar location list, or detail panel appears.
+- [ ] M3. Confirm map art fills body below story header: source-aligned cover on roomy layouts, contained interactive canvas over map backdrop on portrait/short layouts so every hotspot stays visible. No chapter eyebrow, duplicate title/objective, choice acknowledgment, sidebar location list, or detail panel appears.
 - [ ] M4. Hover then focus every visible hotspot. Anchored popover stays inside map and shows location name, `marker · access`, summary, optional `· completed`, and exact `Locked: reason`; leave/blur closes according to current input owner.
 - [ ] M5. With touch emulation, first tap available hotspot opens info only; tapping another switches info; outside tap or Escape closes; second tap on same available hotspot activates exactly once.
 - [ ] M6. Tap/click locked hotspot repeatedly. Confirm locked reason remains visible and location never activates. Confirm hidden locations render neither hotspot nor popover.

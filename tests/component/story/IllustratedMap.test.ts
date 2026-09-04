@@ -111,6 +111,23 @@ describe("IllustratedMapScreen", () => {
     expect(screen.queryByRole("tooltip")).toBeNull();
   });
 
+  it("clears stale touch ownership after pointer cancellation", async () => {
+    render(IllustratedMapScreen, { locations: states });
+    const arena = hotspot(/Old Arena/);
+
+    await fireEvent.pointerDown(arena, { pointerType: "touch" });
+    arena.focus();
+    await fireEvent.focus(arena);
+    expect(screen.queryByRole("tooltip")).toBeNull();
+
+    await fireEvent.pointerCancel(arena, { pointerType: "touch" });
+    expect(screen.getByRole("tooltip").textContent).toContain("Old Arena");
+    await fireEvent.pointerLeave(arena, { pointerType: "mouse" });
+    expect(screen.getByRole("tooltip").textContent).toContain("Old Arena");
+    await fireEvent.blur(arena);
+    expect(screen.queryByRole("tooltip")).toBeNull();
+  });
+
   it("keeps tap selection until outside or Escape and activates on the second same tap", async () => {
     const onselect = vi.fn();
     render(IllustratedMapScreen, { locations: states, onselect });

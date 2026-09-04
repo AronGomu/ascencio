@@ -1,8 +1,15 @@
 <script lang="ts">
+  import { onMount, tick } from "svelte";
   import mapAsset from "../assets/city-map-placeholder.svg";
   import type { LocationId, StoryLocationState } from "../model/story-state.ts";
 
   type SelectionOwner = "hover" | "focus" | "tap";
+  type PopoverPosition = { readonly left: number; readonly top: number };
+
+  const MAP_SOURCE_WIDTH = 1200;
+  const MAP_SOURCE_HEIGHT = 700;
+  const POPOVER_INSET = 0;
+  const POPOVER_GAP = 8;
 
   export let locations: readonly StoryLocationState[] = [];
   export let returnLabel = "Dialog";
@@ -16,60 +23,71 @@
       readonly marker: string;
       readonly summary: string;
       readonly lockedReason?: string;
-      readonly x: string;
-      readonly y: string;
-      readonly popoverX: string;
-      readonly popoverY: string;
+      readonly sourceX: number;
+      readonly sourceY: number;
     }
   > = {
     "old-arena": {
       name: "Old Arena",
       marker: "battle",
       summary: "A dormant transmitter is staging an unanswered duel.",
-      x: "29%",
-      y: "55%",
-      popoverX: "35%",
-      popoverY: "32%",
+      sourceX: 340,
+      sourceY: 370,
     },
     archive: {
       name: "Archive",
       marker: "story",
       summary: "Signal records from the first city tournament.",
       lockedReason: "Requires decoded arena signal.",
-      x: "74%",
-      y: "34%",
-      popoverX: "48%",
-      popoverY: "7%",
+      sourceX: 875,
+      sourceY: 255,
     },
     "hidden-gate": {
       name: "Hidden Gate",
       marker: "story",
       summary: "Reviewer-only hidden location.",
-      x: "52%",
-      y: "25%",
-      popoverX: "55%",
-      popoverY: "30%",
+      sourceX: 624,
+      sourceY: 175,
     },
     "card-shop": {
       name: "Card Shop",
       marker: "shop",
       summary: "Packs, singles, and a keeper who knows every reprint.",
-      x: "62%",
-      y: "72%",
-      popoverX: "37%",
-      popoverY: "48%",
+      sourceX: 744,
+      sourceY: 504,
     },
   };
 
   let selectedId: LocationId | null = null;
   let selectionOwner: SelectionOwner | null = null;
   let lastPointerType: string | null = null;
+  let mapArtElement: HTMLElement | null = null;
+  let popoverElement: HTMLElement | null = null;
+  let popoverPosition: PopoverPosition | null = null;
+  let layoutObserver: ResizeObserver | null = null;
+  let observedPopoverElement: HTMLElement | null = null;
   $: visibleLocations = locations.filter(({ access }) => access !== "hidden");
   $: selectedLocation =
     selectedId === null
       ? null
       : (visibleLocations.find(({ id }) => id === selectedId) ?? null);
   $: if (selectedId !== null && selectedLocation === null) closeSelection();
+
+  onMount(() => {
+    const reposition = () => void positionPopover(selectedId);
+    layoutObserver =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(reposition);
+    if (mapArtElement !== null) layoutObserver?.observe(mapArtElement);
+    window.addEventListener("resize", reposition);
+    return () => {
+      layoutObserver?.disconnect();
+      layoutObserver = null;
+      observedPopoverElement = null;
+      window.removeEventListener("resize", reposition);
+    };
+  });
 
   function label(location: StoryLocationState): string {
     const detail = details[location.id];
@@ -80,14 +98,133 @@
     return `story-map-popover-content-${id}`;
   }
 
+  function sourcePercent(coordinate: number, sourceSize: number): string {
+    return `${(coordinate / sourceSize) * 100}%`;
+  }
+
   function select(location: StoryLocationState, owner: SelectionOwner): void {
+    if (selectedId !== location.id) popoverPosition = null;
     selectedId = location.id;
     selectionOwner = owner;
+    void positionPopover(location.id);
   }
 
   function closeSelection(): void {
     selectedId = null;
     selectionOwner = null;
+    lastPointerType = null;
+    popoverPosition = null;
+    if (observedPopoverElement !== null)
+      layoutObserver?.unobserve(observedPopoverElement);
+    observedPopoverElement = null;
+  }
+
+  async function positionPopover(id: LocationId | null): Promise<void> {
+    if (id === null) return;
+    await tick();
+    if (selectedId !== id || mapArtElement === null || popoverElement === null)
+      return;
+
+    const target = mapArtElement.querySelector<HTMLElement>(
+      `[data-location-id="${id}"]`,
+    );
+    if (target === null) return;
+    if (observedPopoverElement !== popoverElement) {
+      if (observedPopoverElement !== null)
+        layoutObserver?.unobserve(observedPopoverElement);
+      layoutObserver?.observe(popoverElement);
+      observedPopoverElement = popoverElement;
+    }
+
+    const artRect = mapArtElement.getBoundingClientRect();
+    const originX = artRect.left + mapArtElement.clientLeft;
+    const originY = artRect.top + mapArtElement.clientTop;
+    const popoverWidth = popoverElement.offsetWidth;
+    const popoverHeight = popoverElement.offsetHeight;
+    const maxLeft = Math.max(
+      POPOVER_INSET,
+      mapArtElement.clientWidth - popoverWidth - POPOVER_INSET,
+    );
+    const maxTop = Math.max(
+      POPOVER_INSET,
+      mapArtElement.clientHeight - popoverHeight - POPOVER_INSET,
+    );
+    const toLocalRect = (element: HTMLElement) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        left: rect.left - originX,
+        right: rect.right - originX,
+        top: rect.top - originY,
+        bottom: rect.bottom - originY,
+      };
+    };
+    const targetRect = toLocalRect(target);
+    const returnControl = mapArtElement
+      .closest(".map-screen")
+      ?.querySelector<HTMLElement>('[data-cy="story-map-return"]');
+    const obstacles = [
+      ...mapArtElement.querySelectorAll<HTMLElement>(".hotspot"),
+      ...(returnControl === undefined || returnControl === null
+        ? []
+        : [returnControl]),
+    ].map(toLocalRect);
+    const clampLeft = (left: number) =>
+      Math.min(maxLeft, Math.max(POPOVER_INSET, left));
+    const clampTop = (top: number) =>
+      Math.min(maxTop, Math.max(POPOVER_INSET, top));
+    const targetCenterX = (targetRect.left + targetRect.right) / 2;
+    const targetCenterY = (targetRect.top + targetRect.bottom) / 2;
+    const xOptions = [
+      targetRect.right + POPOVER_GAP,
+      targetRect.left - popoverWidth - POPOVER_GAP,
+      targetCenterX - popoverWidth / 2,
+      POPOVER_INSET,
+      maxLeft,
+    ];
+    const yOptions = [
+      targetCenterY - popoverHeight / 2,
+      targetRect.top - popoverHeight - POPOVER_GAP,
+      targetRect.bottom + POPOVER_GAP,
+      POPOVER_INSET,
+      maxTop,
+    ];
+    for (const obstacle of obstacles) {
+      xOptions.push(
+        obstacle.left - popoverWidth - POPOVER_GAP,
+        obstacle.left - popoverWidth,
+        obstacle.right,
+        obstacle.right + POPOVER_GAP,
+      );
+      yOptions.push(
+        obstacle.top - popoverHeight - POPOVER_GAP,
+        obstacle.bottom + POPOVER_GAP,
+      );
+    }
+
+    const candidates: PopoverPosition[] = [];
+    for (const left of xOptions)
+      for (const top of yOptions)
+        candidates.push({ left: clampLeft(left), top: clampTop(top) });
+    const ranked = candidates.sort((first, second) => {
+      const distance = (candidate: PopoverPosition) =>
+        Math.hypot(
+          candidate.left + popoverWidth / 2 - targetCenterX,
+          candidate.top + popoverHeight / 2 - targetCenterY,
+        );
+      return distance(first) - distance(second);
+    });
+    const overlaps = (
+      candidate: PopoverPosition,
+      obstacle: (typeof obstacles)[number],
+    ) =>
+      candidate.left < obstacle.right &&
+      candidate.left + popoverWidth > obstacle.left &&
+      candidate.top < obstacle.bottom &&
+      candidate.top + popoverHeight > obstacle.top;
+    popoverPosition = ranked.find((candidate) =>
+      obstacles.every((obstacle) => !overlaps(candidate, obstacle)),
+    ) ??
+      ranked[0] ?? { left: POPOVER_INSET, top: POPOVER_INSET };
   }
 
   function handlePointerEnter(
@@ -104,6 +241,15 @@
 
   function handlePointerDown(event: PointerEvent): void {
     lastPointerType = event.pointerType;
+  }
+
+  function handlePointerCancel(
+    event: PointerEvent,
+    location: StoryLocationState,
+  ): void {
+    lastPointerType = null;
+    if (document.activeElement === event.currentTarget)
+      select(location, "focus");
   }
 
   function handleFocus(location: StoryLocationState): void {
@@ -155,57 +301,74 @@
   aria-label="City signal map"
   data-cy="story-map-screen"
 >
-  <div class="map-art" data-cy="story-map-art">
+  <div class="map-art" data-cy="story-map-art" bind:this={mapArtElement}>
     <img
+      class="map-backdrop"
       src={mapAsset}
-      alt="Illustrated city map of the river district"
-      data-cy="story-map-image"
+      alt=""
+      aria-hidden="true"
+      data-cy="story-map-backdrop"
     />
-    <div
-      class="hotspots"
-      aria-label="Map hotspots"
-      data-cy="story-map-hotspots"
-    >
-      {#each visibleLocations as location (location.id)}
-        <button
-          type="button"
-          class:locked={location.access === "locked"}
-          class:completed={location.completed}
-          class:selected={selectedId === location.id}
-          class="hotspot"
-          style:left={details[location.id].x}
-          style:top={details[location.id].y}
-          data-location-id={location.id}
-          data-cy={`story-map-hotspot-${location.id}`}
-          aria-label={label(location)}
-          aria-disabled={location.access !== "available"}
-          aria-pressed={selectedId === location.id}
-          aria-describedby={selectedId === location.id
-            ? popoverId(location.id)
-            : undefined}
-          onpointerenter={(event) => handlePointerEnter(event, location)}
-          onpointerleave={() => handlePointerLeave(location)}
-          onpointerdown={handlePointerDown}
-          onfocus={() => handleFocus(location)}
-          onblur={() => handleBlur(location)}
-          onclick={(event) => handleClick(event, location)}
-        >
-          <span
-            class="hotspot-marker"
-            aria-hidden="true"
-            data-cy={`story-map-hotspot-marker-${location.id}`}
-          ></span>
-        </button>
-      {/each}
+    <div class="map-canvas" data-cy="story-map-canvas">
+      <img
+        src={mapAsset}
+        alt="Illustrated city map of the river district"
+        data-cy="story-map-image"
+      />
+      <div
+        class="hotspots"
+        aria-label="Map hotspots"
+        data-cy="story-map-hotspots"
+      >
+        {#each visibleLocations as location (location.id)}
+          <button
+            type="button"
+            class:locked={location.access === "locked"}
+            class:completed={location.completed}
+            class:selected={selectedId === location.id}
+            class="hotspot"
+            style:left={sourcePercent(
+              details[location.id].sourceX,
+              MAP_SOURCE_WIDTH,
+            )}
+            style:top={sourcePercent(
+              details[location.id].sourceY,
+              MAP_SOURCE_HEIGHT,
+            )}
+            data-location-id={location.id}
+            data-cy={`story-map-hotspot-${location.id}`}
+            aria-label={label(location)}
+            aria-disabled={location.access !== "available"}
+            aria-pressed={selectedId === location.id}
+            aria-describedby={selectedId === location.id
+              ? popoverId(location.id)
+              : undefined}
+            onpointerenter={(event) => handlePointerEnter(event, location)}
+            onpointerleave={() => handlePointerLeave(location)}
+            onpointerdown={handlePointerDown}
+            onpointercancel={(event) => handlePointerCancel(event, location)}
+            onfocus={() => handleFocus(location)}
+            onblur={() => handleBlur(location)}
+            onclick={(event) => handleClick(event, location)}
+          >
+            <span
+              class="hotspot-marker"
+              aria-hidden="true"
+              data-cy={`story-map-hotspot-marker-${location.id}`}
+            ></span>
+          </button>
+        {/each}
+      </div>
     </div>
     {#if selectedLocation}
       <section
         id={popoverId(selectedLocation.id)}
         class="map-popover"
         role="tooltip"
-        style:left={details[selectedLocation.id].popoverX}
-        style:top={details[selectedLocation.id].popoverY}
+        style:left={`${popoverPosition?.left ?? POPOVER_INSET}px`}
+        style:top={`${popoverPosition?.top ?? POPOVER_INSET}px`}
         data-cy={`story-map-popover-${selectedLocation.id}`}
+        bind:this={popoverElement}
       >
         <h2 data-cy={`story-map-popover-name-${selectedLocation.id}`}>
           {details[selectedLocation.id].name}
@@ -264,9 +427,32 @@
     background: var(--surface);
     box-shadow: 0 0.5rem 1.5rem
       color-mix(in srgb, var(--shadow) 45%, transparent);
+    container-name: story-map;
+    container-type: size;
   }
 
-  .map-art img {
+  .map-backdrop {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.62;
+    filter: saturate(0.65) brightness(0.7);
+  }
+
+  .map-canvas {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 1;
+    width: max(100%, calc(100cqh * 12 / 7));
+    aspect-ratio: 12 / 7;
+    transform: translate(-50%, -50%);
+  }
+
+  .map-canvas > img {
     position: absolute;
     inset: 0;
     display: block;
@@ -334,9 +520,8 @@
   .map-popover {
     position: absolute;
     z-index: 3;
-    width: clamp(15rem, 24cqw, 18rem);
-    max-width: calc(100% - 1rem);
-    padding: clamp(0.7rem, 1.6cqw, 1rem);
+    width: min(14rem, calc(100% - 1rem));
+    padding: clamp(0.6rem, 1.4cqw, 0.85rem);
     border: 1px solid var(--gold-line);
     border-radius: var(--radius-md);
     background: color-mix(in srgb, var(--surface-raised) 94%, transparent);
@@ -388,13 +573,12 @@
     min-height: 44px;
   }
 
-  @media (max-width: 48rem) {
-    .map-popover {
-      right: 0.5rem;
-      bottom: 0.5rem;
-      left: 0.5rem !important;
-      top: auto !important;
-      width: auto;
+  @container story-map (max-aspect-ratio: 1 / 1) {
+    .map-canvas {
+      width: min(100%, calc(100cqh * 12 / 7));
+      outline: 1px solid var(--line-soft);
+      box-shadow: 0 0.5rem 1.4rem
+        color-mix(in srgb, var(--shadow) 48%, transparent);
     }
   }
 

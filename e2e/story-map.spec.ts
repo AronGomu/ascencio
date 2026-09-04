@@ -10,10 +10,46 @@ import {
 import type { StorySaveEnvelope } from "../src/story/saves/story-save-contracts.ts";
 
 const VIEWPORTS = [
-  { id: "desktop", width: 1280, height: 720 },
-  { id: "mobile-portrait", width: 375, height: 667 },
-  { id: "mobile-landscape", width: 667, height: 375 },
+  { id: "desktop", width: 1280, height: 720, foreground: "cover" },
+  {
+    id: "mobile-portrait",
+    width: 375,
+    height: 667,
+    foreground: "contain",
+  },
+  {
+    id: "mobile-landscape",
+    width: 667,
+    height: 375,
+    foreground: "cover",
+  },
 ] as const;
+
+const MAP_SOURCE = {
+  width: 1200,
+  height: 700,
+  hotspots: {
+    "old-arena": { x: 340, y: 370 },
+    archive: { x: 875, y: 255 },
+    "card-shop": { x: 744, y: 504 },
+  },
+} as const;
+
+type BrowserRect = {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+};
+
+function intersects(first: BrowserRect, second: BrowserRect): boolean {
+  return (
+    first.x < second.x + second.width &&
+    first.x + first.width > second.x &&
+    first.y < second.y + second.height &&
+    first.y + first.height > second.y
+  );
+}
 
 function mapState(): StoryState {
   const initial = createInitialStoryState();
@@ -106,17 +142,31 @@ for (const viewport of VIEWPORTS) {
         const art = screen.querySelector<HTMLElement>(
           '[data-cy="story-map-art"]',
         );
+        const canvas = screen.querySelector<HTMLElement>(
+          '[data-cy="story-map-canvas"]',
+        );
         const image = screen.querySelector<HTMLElement>(
           '[data-cy="story-map-image"]',
+        );
+        const backdrop = screen.querySelector<HTMLElement>(
+          '[data-cy="story-map-backdrop"]',
         );
         const back = screen.querySelector<HTMLElement>(
           '[data-cy="story-map-return"]',
         );
-        if (art === null || image === null || back === null)
+        if (
+          art === null ||
+          canvas === null ||
+          image === null ||
+          backdrop === null ||
+          back === null
+        )
           throw new Error("Map layout nodes are missing");
         const rect = (element: Element) => {
           const box = element.getBoundingClientRect();
           return {
+            x: box.x,
+            y: box.y,
             left: box.left,
             right: box.right,
             top: box.top,
@@ -130,7 +180,9 @@ for (const viewport of VIEWPORTS) {
         return {
           screen: screenBox,
           art: rect(art),
+          canvas: rect(canvas),
           image: rect(image),
+          backdrop: rect(backdrop),
           back: rect(back),
           padding: {
             left: Number.parseFloat(screenStyle.paddingLeft),
@@ -138,7 +190,8 @@ for (const viewport of VIEWPORTS) {
             top: Number.parseFloat(screenStyle.paddingTop),
             bottom: Number.parseFloat(screenStyle.paddingBottom),
           },
-          objectFit: getComputedStyle(image).objectFit,
+          imageObjectFit: getComputedStyle(image).objectFit,
+          backdropObjectFit: getComputedStyle(backdrop).objectFit,
         };
       });
 
@@ -154,11 +207,36 @@ for (const viewport of VIEWPORTS) {
       layout.screen.top + layout.padding.top,
       0,
     );
-    expect(layout.image.left).toBeCloseTo(layout.art.left + 1, 0);
-    expect(layout.image.right).toBeCloseTo(layout.art.right - 1, 0);
-    expect(layout.image.top).toBeCloseTo(layout.art.top + 1, 0);
-    expect(layout.image.bottom).toBeCloseTo(layout.art.bottom - 1, 0);
-    expect(layout.objectFit).toBe("cover");
+    expect(layout.canvas.width / layout.canvas.height).toBeCloseTo(
+      MAP_SOURCE.width / MAP_SOURCE.height,
+      2,
+    );
+    expect(layout.canvas.left + layout.canvas.width / 2).toBeCloseTo(
+      layout.art.left + layout.art.width / 2,
+      1,
+    );
+    expect(layout.canvas.top + layout.canvas.height / 2).toBeCloseTo(
+      layout.art.top + layout.art.height / 2,
+      1,
+    );
+    expect(layout.image).toEqual(layout.canvas);
+    expect(layout.imageObjectFit).toBe("cover");
+    expect(layout.backdrop.left).toBeCloseTo(layout.art.left + 1, 0);
+    expect(layout.backdrop.right).toBeCloseTo(layout.art.right - 1, 0);
+    expect(layout.backdrop.top).toBeCloseTo(layout.art.top + 1, 0);
+    expect(layout.backdrop.bottom).toBeCloseTo(layout.art.bottom - 1, 0);
+    expect(layout.backdropObjectFit).toBe("cover");
+    if (viewport.foreground === "contain") {
+      expect(layout.canvas.left).toBeGreaterThanOrEqual(layout.art.left);
+      expect(layout.canvas.right).toBeLessThanOrEqual(layout.art.right);
+      expect(layout.canvas.top).toBeGreaterThanOrEqual(layout.art.top);
+      expect(layout.canvas.bottom).toBeLessThanOrEqual(layout.art.bottom);
+    } else {
+      expect(layout.canvas.width).toBeGreaterThanOrEqual(layout.art.width - 2);
+      expect(layout.canvas.height).toBeGreaterThanOrEqual(
+        layout.art.height - 2,
+      );
+    }
     expect(layout.art.bottom).toBeLessThanOrEqual(layout.back.top);
     expect(layout.back.left).toBeCloseTo(
       layout.screen.left + layout.padding.left,
@@ -173,10 +251,26 @@ for (const viewport of VIEWPORTS) {
       .locator('[data-cy="story-map-return"]')
       .boundingBox();
     expect(returnBox).not.toBeNull();
-    for (const id of ["old-arena", "archive", "card-shop"]) {
+    for (const [id, sourcePoint] of Object.entries(MAP_SOURCE.hotspots)) {
       const target = hotspot(page, id);
       const targetBox = await target.boundingBox();
       expect(targetBox, `${id} hotspot`).not.toBeNull();
+      const expectedCenter = {
+        x:
+          layout.canvas.left +
+          (sourcePoint.x / MAP_SOURCE.width) * layout.canvas.width,
+        y:
+          layout.canvas.top +
+          (sourcePoint.y / MAP_SOURCE.height) * layout.canvas.height,
+      };
+      expect(targetBox!.x + targetBox!.width / 2).toBeCloseTo(
+        expectedCenter.x,
+        1,
+      );
+      expect(targetBox!.y + targetBox!.height / 2).toBeCloseTo(
+        expectedCenter.y,
+        1,
+      );
       expect(targetBox!.x).toBeGreaterThanOrEqual(layout.art.left);
       expect(targetBox!.x + targetBox!.width).toBeLessThanOrEqual(
         layout.art.right,
@@ -185,12 +279,7 @@ for (const viewport of VIEWPORTS) {
       expect(targetBox!.y + targetBox!.height).toBeLessThanOrEqual(
         layout.art.bottom,
       );
-      expect(
-        targetBox!.x < returnBox!.x + returnBox!.width &&
-          targetBox!.x + targetBox!.width > returnBox!.x &&
-          targetBox!.y < returnBox!.y + returnBox!.height &&
-          targetBox!.y + targetBox!.height > returnBox!.y,
-      ).toBe(false);
+      expect(intersects(targetBox!, returnBox!)).toBe(false);
 
       await target.focus();
       const info = popover(page, id);
@@ -205,6 +294,15 @@ for (const viewport of VIEWPORTS) {
       expect(infoBox!.y + infoBox!.height).toBeLessThanOrEqual(
         layout.art.bottom + 1,
       );
+      expect(intersects(infoBox!, returnBox!)).toBe(false);
+      for (const obstacleId of Object.keys(MAP_SOURCE.hotspots)) {
+        const obstacleBox = await hotspot(page, obstacleId).boundingBox();
+        expect(obstacleBox, `${obstacleId} overlap obstacle`).not.toBeNull();
+        expect(
+          intersects(infoBox!, obstacleBox!),
+          `${id} popover covers ${obstacleId}`,
+        ).toBe(false);
+      }
       await page.keyboard.press("Escape");
     }
   });

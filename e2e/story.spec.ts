@@ -114,12 +114,9 @@ test("story plays the prologue through to the duel handoff", async ({
 }) => {
   await reachMap(page);
   await expect(
-    page.getByText(/Earlier choice:.*remembers your trust/),
-  ).toBeVisible();
-  await page
-    .getByLabel("Location list")
-    .getByRole("button", { name: /Old Arena/ })
-    .click();
+    page.locator('[data-cy="story-map-choice-acknowledgment"]'),
+  ).toHaveCount(0);
+  await page.locator('[data-cy="story-map-hotspot-old-arena"]').click();
   await expect(page.locator('[data-cy="deck-select-title"]')).toHaveText(
     "Select Deck",
   );
@@ -564,7 +561,7 @@ for (const viewport of [
     );
 
     if (viewport.width <= 667) {
-      const targets = page.getByLabel("Location list").getByRole("button");
+      const targets = page.getByLabel("Map hotspots").getByRole("button");
       for (let index = 0; index < (await targets.count()); index += 1) {
         const box = await targets.nth(index).boundingBox();
         expect(box?.height).toBeGreaterThanOrEqual(44);
@@ -572,10 +569,7 @@ for (const viewport of [
       }
     }
 
-    await page
-      .getByLabel("Location list")
-      .getByRole("button", { name: /Old Arena/ })
-      .click();
+    await page.locator('[data-cy="story-map-hotspot-old-arena"]').click();
     await expectInsideStage(
       page,
       '[data-cy="story-briefing-screen"]',

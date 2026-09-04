@@ -236,7 +236,7 @@ async function reachEncounter(): Promise<ReturnType<typeof userEvent.setup>> {
   renderShell();
   store.enterStory("continue");
   await waitForCy("story-map-screen");
-  await user.click(await waitForCy("story-map-location-old-arena"));
+  await user.click(await waitForCy("story-map-hotspot-old-arena"));
   /* The catalog read the briefing gates on resolves a microtask later than the
      screen renders, so Start is briefly disabled on purpose. */
   await vi.waitFor(() =>

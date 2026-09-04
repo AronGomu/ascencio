@@ -46,7 +46,7 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 | default deck | Player-assigned deck the duel menu auto-selects; stored preference | `preferences["default-deck"]` in `src/decks/indexeddb-deck-repository.ts`, ADR-038 |
 | favourite deck | Legacy mark being removed; default becomes sole mark | ADR-069, current `src/deck-select/DeckTile.svelte` |
 | decklist | Main/extra/side card rows shown beside deck tiles | `src/deck-select/DecklistPanel.svelte`, `DecklistView` |
-| hotspot | Map location control with anchored info popover (planned) | `src/story/screens/IllustratedMapScreen.svelte`, `LocationId` |
+| hotspot | Map location control with anchored info popover | `src/story/screens/IllustratedMapScreen.svelte`, `LocationId` |
 | starter deck | Seeded "Starter Deck" built from bundled `player.ydk`, default on first run | `src/decks/starter-deck.ts` (`ensureStarterDeck`), ADR-038 |
 | autosave log | Global capped-100 list, one entry per accepted deck command including reorder/sort (timestamp + deck name) | `autosaves` store, `src/decks/deck-database.ts` v2, ADR-038, ADR-044 |
 | load dialog | Editor dialog: saved decks tab + autosave log tab, restore = undoable edit | `src/deck-editor/components/LoadDeckDialog.svelte` |

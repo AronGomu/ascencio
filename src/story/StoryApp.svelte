@@ -948,7 +948,6 @@
     {:else if state.screen === "map"}
       <IllustratedMapScreen
         locations={state.locations}
-        choiceAcknowledgment={state.laterAcknowledgment}
         returnLabel={storyScreenLabel(mapReturnTarget)}
         onselect={(locationId: LocationId) =>
           dispatch({ type: "select-location", locationId })}

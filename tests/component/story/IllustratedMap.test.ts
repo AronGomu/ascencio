@@ -12,81 +12,164 @@ import IllustratedMapScreen from "../../../src/story/screens/IllustratedMapScree
 import type { StoryLocationState } from "../../../src/story/model/story-state.ts";
 
 afterEach(() => cleanup());
+
 const states: readonly StoryLocationState[] = [
   { id: "old-arena", access: "available", completed: false },
   { id: "archive", access: "locked", completed: true },
   { id: "hidden-gate", access: "hidden", completed: false },
+  { id: "card-shop", access: "available", completed: false },
 ];
 
+function hotspot(name: RegExp): HTMLButtonElement {
+  return within(screen.getByLabelText("Map hotspots")).getByRole("button", {
+    name,
+  });
+}
+
+async function touchTap(target: HTMLElement): Promise<void> {
+  await fireEvent.pointerDown(target, { pointerType: "touch" });
+  await fireEvent.pointerUp(target, { pointerType: "touch" });
+  await fireEvent.click(target);
+}
+
 describe("IllustratedMapScreen", () => {
-  it("renders equivalent authored-order hotspot and list surfaces", () => {
-    render(IllustratedMapScreen, {
+  it("distills the map to one hotspot per visible location", () => {
+    const { container } = render(IllustratedMapScreen, {
       locations: states,
-      choiceAcknowledgment: "Rin remembers your trust.",
     });
+
     expect(
       screen.getByRole("img", { name: /Illustrated city map/ }),
     ).toBeTruthy();
-    expect(screen.getByText(/remembers your trust/)).toBeTruthy();
-    const hotspots = screen
-      .getByLabelText("Map hotspots")
-      .querySelectorAll("[data-location-id]");
-    const list = screen
-      .getByLabelText("Location list")
-      .querySelectorAll("[data-location-id]");
     expect(
-      [...hotspots].map((node) => node.getAttribute("data-location-id")),
-    ).toEqual(["old-arena", "archive"]);
+      within(screen.getByLabelText("Map hotspots")).getAllByRole("button"),
+    ).toHaveLength(3);
+    expect(container.querySelector('[data-cy="story-map-sidebar"]')).toBeNull();
     expect(
-      [...list].map((node) => node.getAttribute("data-location-id")),
-    ).toEqual(["old-arena", "archive"]);
-    expect(screen.queryByText("Hidden Gate")).toBeNull();
+      container.querySelector('[data-cy="story-map-location-list"]'),
+    ).toBeNull();
+    expect(container.querySelector('[data-cy="story-map-eyebrow"]')).toBeNull();
+    expect(
+      container.querySelector('[data-cy="story-map-choice-acknowledgment"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-location-id="hidden-gate"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-cy="story-map-popover-hidden-gate"]'),
+    ).toBeNull();
   });
 
-  it("synchronizes hotspot/list detail and blocks locked activation with reason", async () => {
+  it("links every popover field to its hotspot and exposes locked/completed state", async () => {
+    const { container } = render(IllustratedMapScreen, { locations: states });
+    const archive = hotspot(/Archive.*story.*locked.*completed/i);
+
+    await fireEvent.focus(archive);
+
+    const popover = container.querySelector(
+      '[data-cy="story-map-popover-archive"]',
+    ) as HTMLElement | null;
+    expect(popover).not.toBeNull();
+    expect(popover!.getAttribute("role")).toBe("tooltip");
+    expect(archive.getAttribute("aria-describedby")).toBe(popover!.id);
+    expect(
+      container.querySelector('[data-cy="story-map-popover-name-archive"]')
+        ?.textContent,
+    ).toBe("Archive");
+    expect(
+      container.querySelector('[data-cy="story-map-popover-meta-archive"]')
+        ?.textContent,
+    ).toBe("story · locked · completed");
+    expect(
+      container.querySelector('[data-cy="story-map-popover-summary-archive"]')
+        ?.textContent,
+    ).toBe("Signal records from the first city tournament.");
+    expect(
+      container.querySelector(
+        '[data-cy="story-map-popover-locked-reason-archive"]',
+      )?.textContent,
+    ).toBe("Locked: Requires decoded arena signal.");
+  });
+
+  it("closes only when the current pointer or focus owner leaves", async () => {
+    render(IllustratedMapScreen, { locations: states });
+    const arena = hotspot(/Old Arena/);
+
+    await fireEvent.pointerEnter(arena, { pointerType: "mouse" });
+    expect(screen.getByRole("tooltip").textContent).toContain("Old Arena");
+    await fireEvent.focus(arena);
+    await fireEvent.pointerLeave(arena, { pointerType: "mouse" });
+    expect(screen.getByRole("tooltip").textContent).toContain("Old Arena");
+    await fireEvent.blur(arena);
+    expect(screen.queryByRole("tooltip")).toBeNull();
+
+    await fireEvent.focus(arena);
+    await fireEvent.pointerEnter(arena, { pointerType: "mouse" });
+    await fireEvent.blur(arena);
+    expect(screen.getByRole("tooltip").textContent).toContain("Old Arena");
+    await fireEvent.pointerLeave(arena, { pointerType: "mouse" });
+    expect(screen.queryByRole("tooltip")).toBeNull();
+  });
+
+  it("keeps tap selection until outside or Escape and activates on the second same tap", async () => {
     const onselect = vi.fn();
     render(IllustratedMapScreen, { locations: states, onselect });
-    const hotspot = within(screen.getByLabelText("Map hotspots")).getByRole(
-      "button",
-      { name: /Old Arena.*battle.*available/i },
-    );
-    await fireEvent.focus(hotspot);
-    expect(
-      screen.getByRole("region", { name: "Location detail" }).textContent,
-    ).toContain("Old Arena");
-    await userEvent.setup().click(hotspot);
-    expect(onselect).toHaveBeenCalledWith("old-arena");
-    const locked = within(screen.getByLabelText("Location list")).getByRole(
-      "button",
-      { name: /Archive.*locked.*completed/i },
-    );
-    expect(locked.getAttribute("aria-disabled")).toBe("true");
-    await userEvent.setup().click(locked);
+    const arena = hotspot(/Old Arena/);
+    const shop = hotspot(/Card Shop/);
+
+    await touchTap(arena);
+    expect(screen.getByRole("tooltip").textContent).toContain("Old Arena");
+    expect(onselect).not.toHaveBeenCalled();
+
+    await touchTap(shop);
+    expect(screen.getByRole("tooltip").textContent).toContain("Card Shop");
+    expect(onselect).not.toHaveBeenCalled();
+
+    await fireEvent.click(document.body);
+    expect(screen.queryByRole("tooltip")).toBeNull();
+
+    await touchTap(arena);
+    await fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("tooltip")).toBeNull();
+
+    await touchTap(arena);
+    await touchTap(arena);
     expect(onselect).toHaveBeenCalledTimes(1);
-    expect(screen.getByText(/Requires decoded arena signal/)).toBeTruthy();
+    expect(onselect).toHaveBeenCalledWith("old-arena");
   });
 
-  it("map offers the card shop hotspot", async () => {
+  it("never activates a locked hotspot under repeated pointer, keyboard, or touch input", async () => {
     const onselect = vi.fn();
-    const withShop: readonly StoryLocationState[] = [
-      { id: "old-arena", access: "available", completed: false },
-      { id: "archive", access: "locked", completed: false },
-      { id: "hidden-gate", access: "hidden", completed: false },
-      { id: "card-shop", access: "available", completed: false },
-    ];
-    render(IllustratedMapScreen, { locations: withShop, onselect });
-    const hotspot = within(screen.getByLabelText("Map hotspots")).getByRole(
-      "button",
-      { name: /Card Shop.*shop.*available/i },
+    render(IllustratedMapScreen, { locations: states, onselect });
+    const archive = hotspot(/Archive/);
+
+    await fireEvent.pointerEnter(archive, { pointerType: "mouse" });
+    await fireEvent.click(archive);
+    await fireEvent.click(archive);
+    archive.focus();
+    await userEvent.setup().keyboard("{Enter}{Enter}");
+    await touchTap(archive);
+    await touchTap(archive);
+
+    expect(onselect).not.toHaveBeenCalled();
+    expect(screen.getByRole("tooltip").textContent).toContain(
+      "Locked: Requires decoded arena signal.",
     );
-    expect(hotspot).toBeTruthy();
-    await userEvent.setup().click(hotspot);
-    expect(onselect).toHaveBeenCalledWith("card-shop");
-    expect(
-      within(screen.getByLabelText("Location list")).getByRole("button", {
-        name: /Card Shop.*shop.*available/i,
-      }),
-    ).toBeTruthy();
+    expect(archive.getAttribute("aria-disabled")).toBe("true");
+  });
+
+  it("uses focus as keyboard inspection before Enter activation", async () => {
+    const onselect = vi.fn();
+    render(IllustratedMapScreen, { locations: states, onselect });
+    const arena = hotspot(/Old Arena/);
+
+    arena.focus();
+    await fireEvent.focus(arena);
+    expect(screen.getByRole("tooltip").textContent).toContain("Old Arena");
+    expect(onselect).not.toHaveBeenCalled();
+    await userEvent.setup().keyboard("{Enter}");
+    expect(onselect).toHaveBeenCalledOnce();
+    expect(onselect).toHaveBeenCalledWith("old-arena");
   });
 
   it("keeps completion separate from access and returns by pointer or keyboard", async () => {
@@ -99,10 +182,9 @@ describe("IllustratedMapScreen", () => {
       returnLabel: "Dialog",
       onreturn,
     });
-    const location = screen.getAllByRole("button", {
-      name: /available.*completed/i,
-    });
-    expect(location).toHaveLength(2);
+    expect(
+      screen.getByRole("button", { name: /available.*completed/i }),
+    ).toBeTruthy();
     const button = screen.getByRole("button", { name: "Return to Dialog" });
     expect(button.getAttribute("data-cy")).toBe("story-map-return");
     expect(button.classList.contains("story-danger")).toBe(true);

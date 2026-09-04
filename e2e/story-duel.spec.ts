@@ -109,7 +109,7 @@ async function reachEncounter(page: Page): Promise<void> {
   await expect(
     page.getByRole("heading", { name: "City signal map" }),
   ).toBeVisible();
-  await page.locator('[data-cy="story-map-location-old-arena"]').click();
+  await page.locator('[data-cy="story-map-hotspot-old-arena"]').click();
   await expect(page.locator('[data-cy="deck-select-title"]')).toHaveText(
     "Select Deck",
   );
@@ -340,7 +340,7 @@ test("an encounter refuses a deck the save no longer owns and links to the edito
 }) => {
   await seedBrokenDefault(page);
   await page.locator('[data-cy="main-menu-continue"]').click();
-  await page.locator('[data-cy="story-map-location-old-arena"]').click();
+  await page.locator('[data-cy="story-map-hotspot-old-arena"]').click();
   await expect(page.locator('[data-cy="deck-select-title"]')).toHaveText(
     "Select Deck",
   );

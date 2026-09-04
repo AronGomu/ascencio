@@ -542,7 +542,7 @@ describe("the briefing inside the story app", () => {
 
     await userEvent.setup().click(deckButton(FIELDABLE.deck.id));
     await userEvent.setup().click(cy("deck-select-back")!);
-    await userEvent.setup().click(cy("story-map-location-old-arena")!);
+    await userEvent.setup().click(cy("story-map-hotspot-old-arena")!);
 
     await waitFor(() =>
       expect(cy(`deck-tile-press-${FIELDABLE.deck.id}`)).not.toBeNull(),

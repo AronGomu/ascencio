@@ -49,8 +49,7 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 | starter deck | Seeded "Starter Deck" built from bundled `player.ydk`, default on first run | `src/decks/starter-deck.ts` (`ensureStarterDeck`), ADR-038 |
 | autosave log | Global capped-100 list, one entry per accepted deck command including reorder/sort (timestamp + deck name) | `autosaves` store, `src/decks/deck-database.ts` v2, ADR-038, ADR-044 |
 | load dialog | Editor dialog: saved decks tab + autosave log tab, restore = undoable edit | `src/deck-editor/components/LoadDeckDialog.svelte` |
-| library halo | Green/orange/red validity glow + issue tooltip on deck-library rows | `src/deck-editor/components/DeckLibrary.svelte` (`.halo-valid`/`.halo-warnings`/`.halo-errors`), status from `src/decks/deck-validation.ts` |
-| deck tile | Art-filled 2:1 deck card the grid, the seats and the phone list all render | `src/deck-select/DeckTile.svelte`, `DeckTileModel` in `src/deck-select/deck-select-contracts.ts` |
+| deck tile | Square art-filled deck card shared across grids, seats, phone lists | `src/deck-select/DeckTile.svelte` (`.deck-tile`, `aspect-ratio: 1 / 1`), `DeckTileModel` in `src/deck-select/deck-select-contracts.ts` |
 | illustration | Chosen cropped card art fronting a deck tile | `DeckRecord.illustrationCardCode`, `src/decks/deck-cover.ts` |
 | seat halo | Tile glow: blue you, red opponent, teal focus, gold default hairline | `halo` prop in `src/deck-select/DeckTile.svelte`; `--seat-you`, `--seat-opponent`, `--selected` in `src/styles/tokens.css` |
 | kebab menu | ⋮ action sheet on a deck tile: open, rename, duplicate, delete | `src/deck-select/DeckTileMenu.svelte`, `src/deck-select/RenameDeckDialog.svelte`, `DeleteDeckConfirm.svelte` |

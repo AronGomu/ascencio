@@ -4059,7 +4059,7 @@ Run `npm run dev` (default `DEV_PORT=4300`).
 
 ### An illegal deck is disabled, and says why (story)
 
-- [ ] In a story save, sell or spend a card one of your decks needs, then start an encounter. That deck's tile is **disabled**, sits below every legal deck whatever else it is flagged, and its meta line is the block reason rather than "Save deck".
+- [ ] In a story save, sell or spend a card one of your decks needs, then start an encounter. That deck's tile is **disabled**, sits below every legal deck whatever else it is flagged, and its tag line is the block reason rather than "Save deck".
 - [ ] The tile cannot be picked and cannot start a duel. The screen's notice names what to fix, and the button under it leads to the **story's** deck editor, not free play's.
 - [ ] A brand-new save's granted deck has no Extra and no Side deck — warnings, not errors. It is **not** disabled and it starts the first encounter.
 

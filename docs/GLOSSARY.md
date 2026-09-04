@@ -9,10 +9,10 @@ Shared vocabulary between user and agents. Say the word, mean the code.
 
 | word | short description | ref in code |
 | ---- | ----------------- | ----------- |
-| app | One browser product; current entry selects production duel or isolated prototype while shell migration is pending | `src/main.ts`, `src/battle/app/select-app-entry.ts` |
-| shell | Future thin composition/router layer owning transitions among three lazy UI domains | ADR-022, future `src/shell/` |
+| app | Browser product mounted through modular shell | `src/main.ts` (`mount`), `src/shell/AppShell.svelte` |
+| shell | Router/composition layer owning lazy domain transitions | `src/shell/AppShell.svelte`, `src/shell/routes.ts` (`AppRoute`) |
 | duel simulator | Production battle UI plus Worker-owned rules runtime | `src/battle/app/`, `src/battle/duel/`, `src/battle/field/`, `src/battle/worker/` |
-| deck editor | Local deck library/editor domain; currently integrated as isolated prototype | `src/decks/`, `src/prototypes/deck-builder/` |
+| deck editor | Local deck library/editor domain loaded through shell | `src/deck-editor/DeckEditorApp.svelte`, `src/deck-editor/index.ts` |
 | visual novel | Narrative/map/campaign domain reached at `#/story` | `src/story/` |
 | shop | Story card shop: keeper, 50-set browser, packs, singles, sell | `src/story/shop/` |
 | dp | Duel-point wallet, starts at 1000 | `StoryState.dp`, ADR-033 |

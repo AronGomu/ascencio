@@ -1194,9 +1194,9 @@ Zone layout
 
 Collapse / expand controls
 
-- [ ] Confirm the Side Deck zone starts **expanded** on first open (card grid visible; toggle button shows "▾"). *(updated by T5)*
-- [ ] Click the Side Deck toggle — the card grid and drop area collapse; the toggle arrow changes to "▸".
-- [ ] Click the toggle again — the zone expands; toggle arrow returns to "▾".
+- [ ] Confirm the Side Deck zone starts **collapsed** on first open (card grid hidden; toggle button shows "▸").
+- [ ] Click the Side Deck toggle — the card grid and drop area expand; the toggle arrow changes to "▾".
+- [ ] Click the toggle again — the zone collapses; toggle arrow returns to "▸".
 - [ ] Confirm the same expand/collapse works for Main Deck and Extra Deck.
 - [ ] Confirm each toggle button reports its state to assistive technology (`aria-expanded` flips between "true" and "false").
 - [ ] Tab to a zone toggle with the keyboard — a visible focus ring surrounds the toggle, and Enter/Space collapses or expands the zone.
@@ -1369,21 +1369,21 @@ Buttons gone
 
 ### Starter deck on a fresh install
 
-- [ ] Wipe site data for the app (DevTools → Application → Storage → "Clear site data"), then reload and open `#/decks`. Exactly one deck named "Starter Deck" is listed, and its row shows the "Default" badge.
-- [ ] Reload the page again. Still exactly one "Starter Deck" row — the seeding did not add a second one.
+- [ ] Wipe site data for the app (DevTools → Application → Storage → "Clear site data"), then reload and open `#/decks`. Exactly one deck named "Starter Deck" is listed; its default star is filled gold and disabled.
+- [ ] Reload the page again. Still exactly one "Starter Deck" tile — the seeding did not add a second one.
 - [ ] Open "Starter Deck". Its card list is the bundled player deck, and no "imported, needs review" banner is shown.
 
 ### Setting the default
 
 - [ ] Create a second deck and open it. Its deck page header has a **Set default** button; open the Starter Deck and confirm its **Set default** button is disabled (it is already the default).
-- [ ] Open the second deck, click **Set default**. The **Default** badge appears on that row in the library; open the Starter Deck — its **Set default** button is now enabled.
-- [ ] Reload the page. The badge is still on the second deck.
+- [ ] Open the second deck, click **Set default**. Its library star fills gold and the Starter Deck star becomes outlined; open the Starter Deck and confirm its **Set default** button is now enabled.
+- [ ] Reload the page. The second deck's star is still filled and that deck remains first.
 
 ### Deleting the default
 
-- [ ] Open the deck that currently holds the **Default** badge and click **Delete** from the deck page header, confirming the dialog. No remaining row in the library shows a **Default** badge.
-- [ ] Reload the page. Because no deck is default any more, seeding runs again: it adopts the existing "Starter Deck" rather than creating a second one, so that row now carries the badge and the deck count is unchanged.
-- [ ] Open each remaining deck and delete it from the deck page (including "Starter Deck"), then reload. A single fresh "Starter Deck" is seeded and marked default.
+- [ ] Open the deck with the filled default star and click **Delete** from the deck page header, confirming the dialog. Before reload, every remaining tile has an outlined star.
+- [ ] Reload the page. Bootstrap adopts the existing "Starter Deck" rather than creating a second one; its star fills gold and the number of decks is unchanged.
+- [ ] Open each remaining deck and delete it from the deck page (including "Starter Deck"), then reload. A single fresh "Starter Deck" is seeded with a filled default star.
 
 ## T15 duel-menu-default-selection
 
@@ -1628,11 +1628,11 @@ Start a dev duel (`npm run dev`), open the app in the browser, pick decks and st
 - [ ] Open `#/decks`. Confirm the library header shows no buttons — only a visually-hidden "Deck Library" heading.
 - [ ] Confirm the search field, sort dropdown, **Import Deck** button, and **Create deck** button all appear on the same horizontal toolbar row below the header.
 - [ ] Resize the window to a narrow viewport (~400 px). Confirm the toolbar wraps gracefully with no overlapping elements.
-- [ ] In the deck list, confirm the **Default** badge appears on the same line as the deck name, pushed to the right edge of that line.
-- [ ] Confirm the counts line (Main · Extra · Side) and the "Updated …" timestamp appear below the name line, unchanged.
+- [ ] In the deck list, confirm each tile shows its name plus exactly one tag line; no Main/Extra/Side counts, modified date, or text **Default** badge appears.
+- [ ] Confirm each editable tile has one top-right default star; the current default's star is filled gold and disabled.
 - [ ] Click **Import Deck** and confirm the import flow opens.
 - [ ] Click **Create deck** and confirm the create-deck dialog opens.
-- [ ] Create a deck, open it, click **Set default** in the deck header, return to the library, and confirm the **Default** badge appears right-aligned on its name row.
+- [ ] Create a deck, open it, click **Set default** in the deck header, return to the library, and confirm its star is filled gold and the former default's star is outlined.
 
 ## T2 default-deck-ordering
 
@@ -1641,7 +1641,7 @@ Start a dev duel (`npm run dev`), open the app in the browser, pick decks and st
 - [ ] Set another deck as default; confirm its star fills while the former default returns to an enabled outline.
 - [ ] Reload; confirm the same deck remains default and appears before non-default decks.
 - [ ] Switch Sort to **Name**; confirm the default stays first and every remaining deck sorts alphabetically.
-- [ ] Delete the default deck; reload; confirm it stays deleted and no other deck silently gains default status.
+- [ ] Delete the default deck. Before reload, every remaining star is outlined. Reload: bootstrap adopts an existing **Starter Deck** as default, or seeds one if none exists; deleted deck stays deleted.
 
 ## T3 deck-page-actions
 
@@ -1651,10 +1651,10 @@ Start a dev duel (`npm run dev`), open the app in the browser, pick decks and st
 - [ ] Rename the open deck by editing the name input and blurring — the new name is saved (no dialog, no rename button).
 - [ ] Click **Export** — the YDK export dialog opens for the open deck; Close returns focus to the Export button.
 - [ ] Open a deck that is already the default. Confirm **Set default** is disabled.
-- [ ] Open a non-default deck. Click **Set default** — the **Default** badge moves to that deck's row in the library, and **Set default** becomes disabled on the deck page.
+- [ ] Open a non-default deck. Click **Set default** — its library star fills gold, the former default's star becomes outlined, and **Set default** becomes disabled on the deck page.
 - [ ] Click **Delete** — the confirm dialog appears with the deck name and "Local deck and retained history will be removed."; **Delete** (confirm) is available and **Cancel** returns focus to the Delete button without deleting.
 - [ ] Confirm deletion — you land on `#/free-play/decks`; the deleted deck row is gone. Reload and confirm it stays gone.
-- [ ] Delete the default deck — after deletion no row shows the **Default** badge.
+- [ ] Delete the default deck — before reload, every remaining tile has an outlined star.
 
 ## T4 card-tile-art-fit
 
@@ -1687,10 +1687,10 @@ Full-width collapse bar
 - [ ] Confirm a hover highlight appears across the entire header bar (not just the chevron region).
 - [ ] Tab to the Extra Deck toggle and confirm a visible focus ring spans the full button; Enter/Space toggles the zone.
 
-Side Deck expanded on arrival
+Side Deck collapsed on arrival
 
-- [ ] Open the deck editor from the library; confirm the Side Deck card grid and drop area are **visible immediately** without clicking the toggle.
-- [ ] Confirm cards can be dragged from Main or Extra Deck directly onto the Side Deck drop area without first expanding it.
+- [ ] Open the deck editor from the library; confirm the Side Deck card grid and drop area are **hidden initially** and the toggle reports `aria-expanded="false"`.
+- [ ] Expand Side Deck, then confirm cards can be dragged from Main or Extra Deck onto its drop area.
 
 ## T6 click-intents-and-sideboard
 
@@ -2058,12 +2058,12 @@ against `npm run dev`.
       the editor remains on the deck page; neither the library view nor the
       "Opening deck…" loading skeleton replaces it.
 - [ ] Without navigating away, confirm **Set default** is now disabled, and
-      that the **Default** badge has moved to that deck's row in the library
-      panel.
+      that the deck's library star is filled gold while the former default's is
+      outlined.
 - [ ] Open a second non-default deck and click **Set default** — the editor
-      stays on the second deck's page; the badge moves to the second deck's
-      row and the first deck's button becomes enabled again.
-- [ ] Reload — the badge is still on the second deck's row after reload.
+      stays on the second deck's page; its star fills, the first deck's star
+      becomes outlined, and the first deck's button becomes enabled again.
+- [ ] Reload — the second deck's star is still filled after reload.
 
 Drag to an illegal zone removes the copy under the pointer
 
@@ -3067,8 +3067,8 @@ duel with. Cards are granted by **New Game** and by the shop, and nowhere else.
 
 ### Deleting a story save's default deck does not conjure a replacement
 
-- [ ] Start a **New Game**, get to the city map, open the story deck library (`#/story/decks`). One row, **Starter Deck**, wearing the **Default** badge.
-- [ ] Open it, click **Delete** from the deck page header and confirm. The library is now empty: it reads **No local decks** with a **Create blank deck** button, and no row carries a **Default** badge.
+- [ ] Start a **New Game**, get to the city map, open the story deck library (`#/story/decks`). One tile, **Starter Deck**, has a filled gold default star.
+- [ ] Open it, click **Delete** from the deck page header and confirm. The library is now empty: it reads **No local decks** with a **Create blank deck** button.
 - [ ] Navigate away to the city map and back into the deck library. Still empty — no deck was seeded. Reload the page (F5), continue the save, reopen the library: still empty.
 - [ ] DevTools → Application → IndexedDB → `ygo-story-saves` → `saves`. That save's `state.decks` is `[]` and `state.defaultDeckId` is `null`.
 - [ ] In the same record, `state.collection` is unchanged — the cards the deck used are still owned, exactly as they were before the delete. Nothing was granted and nothing was taken.
@@ -3087,9 +3087,9 @@ duel with. Cards are granted by **New Game** and by the shop, and nowhere else.
 
 ### Free play still seeds, unchanged
 
-- [ ] DevTools → Application → Storage → **Clear site data**, reload, then open `#/free-play/decks`. Exactly one deck, **Starter Deck**, wearing the **Default** badge, with 40 Main Deck cards.
+- [ ] DevTools → Application → Storage → **Clear site data**, reload, then open `#/free-play/decks`. Exactly one deck, **Starter Deck**, has a filled gold default star and 40 Main Deck cards.
 - [ ] Reload and reopen it. Still exactly one **Starter Deck** — no second one was added.
-- [ ] Open it and delete it, then reload and reopen `#/free-play/decks`. A single fresh **Starter Deck** is seeded and marked default. Free play hands one out for as long as you keep deleting it; a story save never does.
+- [ ] Open it and delete it, then reload and reopen `#/free-play/decks`. A single fresh **Starter Deck** is seeded with a filled default star. Free play hands one out for as long as you keep deleting it; a story save never does.
 - [ ] Open `#/duel` on a cleared free-play library. The picker's **Your decks** group still holds the seeded **Starter Deck** — the duel's own seeding path is untouched by this change.
 
 ### A save that already caught the bug
@@ -3749,7 +3749,7 @@ deck a new game is granted, and the cards behind it.
 - [ ] If you have a save from an earlier build, load it. Otherwise make one: DevTools → Application → IndexedDB → `ygo-story-saves` → `saves`, take your `autosave` record, set `schemaVersion` to `2` and delete `state.decks` and `state.defaultDeckId` from it.
 - [ ] Reload and press **Continue**. The save opens where it was left, with the DP and the cards it had.
 - [ ] Choose **Old Arena**. The briefing lists **Starter Deck**, selected, with no red border and no block message. **Start Duel** enables once the card database lands.
-- [ ] Open the story deck library (top bar → deck icon). **Starter Deck** is there with the **Default** badge, and no card in it is badged **CARDS NOT OWNED** — the cards were granted with it.
+- [ ] Open the story deck library (top bar → deck icon). **Starter Deck** is there with a filled gold default star, and no card in it is badged **CARDS NOT OWNED** — the cards were granted with it.
 - [ ] Cards you already owned are still yours: open the collection and confirm a card you had bought before is still there, at the count you had.
 - [ ] Press **Continue** a second time without saving in between, and check the collection again. The counts are the same — the grant completes the save once, it does not pay out again on every load.
 - [ ] A save this build wrote is untouched: on a current save, delete every deck in the story deck editor, then reload and press **Continue**. The library is still empty — an empty library you chose stays empty.
@@ -4223,6 +4223,8 @@ keyboard, 430×900 touch emulation, then reload where specified.
 - [ ] S1. Open `#/free-play`. Confirm each tile shows deck name plus exactly one tag line; no selected checkmark, Main/Extra/Side counts, modified date, text **Default** badge, or removed star control appears.
 - [ ] S2. Confirm each editable non-default deck has one outlined star at top-right. Press it: star fills gold, becomes disabled, reads **Default deck**, gets `aria-pressed="true"`, and former default becomes outlined. Reload: new default persists and stays first.
 - [ ] S3. Confirm bundled presets have no default-star control. Confirm existing old decks and story saves still load even when their persisted records predate removal of the second deck mark.
+- [ ] S3a. In DevTools Console, run `localStorage.setItem("ygo.ui.v3", JSON.stringify({ version: 3, rotationNoticeDismissed: true, display: { showZoneOutlines: false, showZoneCounts: true, showCardShadows: false, showZoneLabels: true }, freePlayPairing: { player: "preset:nekroz", opponent: "preset:shaddoll" }, freePlayOpponentId: "blaze-circuit", freePlayPresetFavouriteIds: ["preset:nekroz"] }))`, then `const { readShellSettings } = await import("/src/shell/settings/shell-settings.ts"); readShellSettings(localStorage)`. Confirm returned settings preserve every value through `freePlayOpponentId` but have no `freePlayPresetFavouriteIds` property.
+- [ ] S3b. Repeat S3a with malformed `freePlayPresetFavouriteIds: "preset:nekroz"`. Confirm returned settings again preserve every unrelated value but have no `freePlayPresetFavouriteIds` property.
 - [ ] S4. Filter tiles to zero and several results. Confirm `shown/total` sits immediately right of Filter and updates through `0/total`; full and compact action copy reads **Create**, never **+ Create**.
 - [ ] S5. Check 1, 2, 4, and 20 visible decks at desktop width, then 430×900. Sparse tiles grow, stay centered, never exceed about 420px; dense/mobile grids wrap without horizontal overflow.
 - [ ] S6. In Library, hover then keyboard-focus a Main, Extra, or Side decklist row. Confirm readable full card scan appears beside row, remains inside viewport, disappears on leave/blur, and falls back once to cropped art if full scan fails.
@@ -4236,7 +4238,7 @@ keyboard, 430×900 touch emulation, then reload where specified.
 - [ ] B2. Enter story deck from Story, then use return button. Confirm it reads **Return to Story** and restores Story. Open a deck route directly with no remembered origin: button falls back to **Return to Deck Selection** and context library.
 - [ ] B3. Press header **Import**. Import pasted YDK with Main, Extra, Side, plus unknown code. Confirm open deck name/id stay unchanged, lists preserve file order, unknown card reads **Missing card {code}**, and story-unowned cards remain visible but disabled.
 - [ ] B4. After import, press Undo once: all prior lists return together. Press Redo once: all imported lists return together. Force save rejection: dialog stays open with visible error; retry succeeds and focus returns to **Import**.
-- [ ] B5. Confirm **Sort By** offers **A–Z**, **Card Type > A–Z**, **Level > Card Type > A–Z**, **Attribute > Card Type > A–Z**, **Monster Type > Card Type > A–Z**, **ATK > Card Type > A–Z**, and **DEF > Card Type > A–Z**.
+- [ ] B5. Confirm **Sort By** offers **A–Z**, **CardType>A–Z**, **Level>CardType>A–Z**, **Attribute>CardType>A–Z**, **MonsterType>CardType>A–Z**, **ATK>CardType>A–Z**, and **DEF>CardType>A–Z**.
 - [ ] B6. Apply each sort ascending and descending. Confirm every Main/Extra/Side zone sorts immediately; direction reverses primary key only, ties remain A–Z, missing values stay last, and Undo/Redo restores each full order change.
 - [ ] B7. Single-click catalog card A, hover card B, then leave. Confirm preview shows A, temporarily B, then A again; deck stays unchanged. Double-click A: exactly one copy enters canonical zone.
 - [ ] B8. Single-click deck card: preview pins without mutation. Double-click Main card: it leaves deck entirely and does not move to Side. Confirm one double-click creates at most one history entry.

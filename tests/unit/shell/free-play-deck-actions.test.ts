@@ -123,7 +123,11 @@ describe("free-play deck actions", () => {
   });
 
   it("duplicates a deck into an independent copy", async () => {
-    await duplicateLocalDeck("local:built-deck:1");
+    await duplicateLocalDeck(
+      "local:built-deck:1",
+      undefined,
+      PROTOTYPE_CATALOG,
+    );
 
     const records = await withRepository((repository) => repository.list());
     expect(records).toHaveLength(2);
@@ -136,10 +140,14 @@ describe("free-play deck actions", () => {
   });
 
   it("duplicates a bundled deck into an independent local copy", async () => {
-    await duplicateLocalDeck("preset:starter", {
-      name: "Bundled Starter",
-      lists: { main: VALID_MAIN, extra: [], side: [] },
-    });
+    await duplicateLocalDeck(
+      "preset:starter",
+      {
+        name: "Bundled Starter",
+        lists: { main: VALID_MAIN, extra: [], side: [] },
+      },
+      PROTOTYPE_CATALOG,
+    );
 
     const records = await withRepository((repository) => repository.list());
     const copy = records.find(({ id }) => id !== "built-deck");
@@ -159,16 +167,16 @@ describe("free-play deck actions", () => {
      not a message a player is meant to read. */
   it("refuses every operation on a bundled deck", async () => {
     await expect(setDefaultLocalDeck("preset:nekroz")).rejects.toThrow(
-      "Bundled decks cannot be modified",
+      "Read-only decks cannot be modified",
     );
     await expect(renameLocalDeck("preset:nekroz", "x")).rejects.toThrow(
-      "Bundled decks cannot be modified",
+      "Read-only decks cannot be modified",
     );
-    await expect(duplicateLocalDeck("preset:nekroz")).rejects.toThrow(
-      "Bundled decks cannot be modified",
-    );
+    await expect(
+      duplicateLocalDeck("preset:nekroz", undefined, PROTOTYPE_CATALOG),
+    ).rejects.toThrow("Read-only decks cannot be modified");
     await expect(deleteLocalDeck("preset:nekroz")).rejects.toThrow(
-      "Bundled decks cannot be modified",
+      "Read-only decks cannot be modified",
     );
   });
 
@@ -181,7 +189,7 @@ describe("free-play deck actions", () => {
       renameLocalDeck("local:built-deck:1", "New Name"),
     ).resolves.toBeUndefined();
     await expect(
-      duplicateLocalDeck("local:built-deck:1"),
+      duplicateLocalDeck("local:built-deck:1", undefined, PROTOTYPE_CATALOG),
     ).resolves.toBeUndefined();
     expect(await withRepository((repository) => repository.list())).toEqual([]);
   });

@@ -1,3 +1,4 @@
+import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -46,7 +47,11 @@ describe("deck editor blocked open", () => {
       DECK_DATABASE_VERSION_1,
     );
 
-    render(DeckEditorApp, { deckId: null, onnavigate: vi.fn() });
+    render(DeckEditorApp, {
+      gameplay: installedDuelGameplayFixture(),
+      deckId: null,
+      onnavigate: vi.fn(),
+    });
 
     await waitFor(() => expect(query("deck-editor-error")).not.toBeNull());
     expect(query("deck-editor-error")?.getAttribute("role")).toBe("alert");

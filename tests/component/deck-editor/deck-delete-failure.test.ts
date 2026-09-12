@@ -1,3 +1,4 @@
+import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -98,7 +99,11 @@ describe("a delete that storage refused", () => {
   it("leaves the route on the deck page, because the deck still exists", async () => {
     const id = await seedDeck("d-route", "Doomed");
     const onnavigate = vi.fn();
-    render(DeckEditorApp, { deckId: deckId("d-route"), onnavigate });
+    render(DeckEditorApp, {
+      gameplay: installedDuelGameplayFixture(),
+      deckId: deckId("d-route"),
+      onnavigate,
+    });
     await waitFor(() =>
       expect(
         document.querySelector('[data-cy="deck-name-input"]'),

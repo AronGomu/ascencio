@@ -91,6 +91,7 @@
   <button
     type="button"
     role="menuitem"
+    disabled={tile.readOnly}
     data-cy={`deck-tile-menu-rename-${tile.key}`}
     onclick={() => choose(onrename)}>Rename</button
   >
@@ -100,14 +101,14 @@
     data-cy={`deck-tile-menu-duplicate-${tile.key}`}
     onclick={() => choose(onduplicate)}>Duplicate</button
   >
-  <!-- The guard is the model's, not the menu's: a bundled or AI-owned deck is
+  <!-- The guard is the model's, not the menu's: a read-only or AI-owned deck is
        never deletable, so the item stays visible and inert rather than
        disappearing and moving the three above it. -->
   <button
     type="button"
     role="menuitem"
     class="danger"
-    disabled={!tile.deletable}
+    disabled={tile.readOnly || !tile.deletable}
     data-cy={`deck-tile-menu-delete-${tile.key}`}
     onclick={() => choose(ondelete)}>Delete</button
   >

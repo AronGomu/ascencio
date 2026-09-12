@@ -102,6 +102,25 @@ function ownHandByEngine(value: DuelStateProjector): readonly number[] {
   return value.snapshot().players[0].hand.map((card) => card.code as number);
 }
 
+describe("engine-created token projection", () => {
+  it("creates and removes token without inventing a source deck movement", () => {
+    const value = projector();
+    const field = {
+      location: EngineLocation.MONSTER,
+      position: EnginePosition.FACE_UP_DEFENSE,
+    };
+    const absent = { location: 0, position: 0 };
+    moveOpponent(value, 73915052, absent, field);
+    expect(value.snapshot().players[1].monsters).toEqual([
+      expect.objectContaining({ code: 73915052, faceUp: true }),
+    ]);
+    expect(value.snapshot().players[1].deckCount).toBe(40);
+    moveOpponent(value, 73915052, field, absent);
+    expect(value.snapshot().players[1].monsters).toEqual([]);
+    expect(value.snapshot().players[1].deckCount).toBe(40);
+  });
+});
+
 describe("DuelStateProjector", () => {
   it.each([true, false])(
     "projects the chosen immutable layout: %s",

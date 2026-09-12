@@ -1,3 +1,4 @@
+import { buildStarterGrant } from "../../../src/story/decks/starter-grant.ts";
 import { ASSET_SOURCES } from "../../../scripts/lib/asset-roots.ts";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -83,7 +84,7 @@ describe("which decks a story save may duel with", () => {
       id: deck.id,
       name: deck.name,
       legal: true,
-      bundled: false,
+      readOnly: false,
       issue: null,
     });
   });
@@ -290,7 +291,10 @@ describe("a brand-new save's first encounter", () => {
   });
 
   it("can duel with the deck it was granted", () => {
-    const fresh = reduceStory(createInitialStoryState(), { type: "new-game" });
+    const fresh = reduceStory(createInitialStoryState(), {
+      type: "new-game",
+      starterGrant: buildStarterGrant(),
+    });
     const options = preBattleDeckOptions(fresh, snapshot);
 
     expect(options).toHaveLength(1);

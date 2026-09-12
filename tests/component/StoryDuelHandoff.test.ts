@@ -1,3 +1,5 @@
+import { installedDuelGameplayFixture } from "../fixtures/installed-duel-gameplay.ts";
+import { contentReaderFixture } from "../fixtures/installed-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -131,7 +133,8 @@ let refuseBattleRequest = false;
 
 const READY_CORE_GATE = {
   kind: "ready" as const,
-  chapterIds: ["chapter-01" as const],
+  gameplay: installedDuelGameplayFixture(),
+  reader: contentReaderFixture(),
   generation: 1,
 };
 
@@ -251,7 +254,11 @@ async function reachEncounter(): Promise<ReturnType<typeof userEvent.setup>> {
   /* The catalog read the briefing gates on resolves a microtask later than the
      screen renders, so Start is briefly disabled on purpose. */
   await vi.waitFor(() =>
-    expect(cy("deck-select-start").hasAttribute("disabled")).toBe(false),
+    expect(
+      cy("deck-select-start").hasAttribute("disabled"),
+      document.querySelector('[data-cy="deck-select-block-notice"]')
+        ?.textContent ?? "no block notice",
+    ).toBe(false),
   );
   await user.click(cy("deck-select-start"));
   return user;
@@ -324,7 +331,7 @@ describe("story duel handoff", () => {
       extra: [],
       side: [],
     });
-    expect(opponent).toEqual({ kind: "preset", deckId: expect.any(String) });
+    expect(opponent).toMatchObject({ kind: "cards" });
   });
 
   /* A reload lands on the session with nothing in memory. The checkpoint holds

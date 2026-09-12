@@ -39,6 +39,7 @@ export async function ensureStarterDeck(
   catalog: ReadonlyMap<number, DeckBuilderCardView>,
   ruleset: PinnedDeckRuleset,
   source: string = starterYdk,
+  name: string = STARTER_DECK_NAME,
 ): Promise<void> {
   try {
     if ((await repository.getDefaultDeck()) !== null) return;
@@ -46,7 +47,7 @@ export async function ensureStarterDeck(
     const imported = importYdk(source);
     if (imported.type !== "ready")
       throw new Error(`Starter deck list is unreadable: ${imported.message}`);
-    const draft = createBlankDeck(STARTER_DECK_NAME, catalog, ruleset);
+    const draft = createBlankDeck(name, catalog, ruleset);
     const result = applyDeckCommand(
       draft,
       { type: "import", cards: imported.cards },

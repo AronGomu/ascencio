@@ -1,3 +1,4 @@
+import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -9,7 +10,6 @@ import {
   PROTOTYPE_RULESET,
   quantityLimit,
 } from "../../../src/decks/catalog/pinned-ruleset.ts";
-import { setRuntimeCatalogForTests } from "../../../src/decks/catalog/runtime-catalog.ts";
 import { DECK_DATABASE_NAME } from "../../../src/decks/deck-database.ts";
 import type { DeckContext } from "../../../src/decks/deck-repository-context.ts";
 import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
@@ -50,8 +50,6 @@ const MAIN = Array.from(
 );
 const SOLD = MAIN_CARDS[6]!;
 const STORY_DECK_ID = "story-legality-deck";
-
-setRuntimeCatalogForTests(PROTOTYPE_CATALOG);
 
 afterEach(async () => {
   cleanup();
@@ -101,6 +99,7 @@ function storyContext(
 async function openLibrary(collection: Record<number, number>): Promise<void> {
   render(DeckEditorApp, {
     props: {
+      gameplay: installedDuelGameplayFixture(),
       deckId: null,
       onnavigate: vi.fn(),
       context: storyContext(collection),

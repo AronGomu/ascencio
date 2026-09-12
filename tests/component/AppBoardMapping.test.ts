@@ -1,3 +1,5 @@
+import { installedDuelGameplayFixture } from "../fixtures/installed-duel-gameplay.ts";
+import { contentReaderFixture } from "../fixtures/installed-gameplay.ts";
 // @vitest-environment jsdom
 
 import { cleanup, render } from "@testing-library/svelte";
@@ -199,7 +201,11 @@ function emitPresentationEvent(
 }
 
 async function renderReadyApp() {
-  const rendered = render(App);
+  const rendered = render(App, {
+    content: installedDuelGameplayFixture().content,
+    gameplay: installedDuelGameplayFixture(),
+    reader: contentReaderFixture(),
+  });
   await vi.waitFor(() =>
     expect(document.querySelector('[data-cy="deck-picker"]')).not.toBeNull(),
   );
@@ -213,7 +219,7 @@ async function startDuelFromPicker(
     document.querySelector(
       '[data-cy="deck-picker-player-select"]',
     ) as HTMLSelectElement,
-    "preset:chapter-one-starter",
+    "chapter:chapter-one-starter",
   );
   await user.click(
     document.querySelector(

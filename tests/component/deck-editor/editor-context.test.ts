@@ -1,3 +1,4 @@
+import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -58,7 +59,8 @@ const storyLoaders: DomainLoaders = {
 const REAL_IMPORT = { timeout: 15_000 };
 const READY_CORE_GATE = {
   kind: "ready" as const,
-  chapterIds: ["chapter-01" as const],
+  gameplay: installedDuelGameplayFixture(),
+  reader: null,
   generation: 1,
 };
 

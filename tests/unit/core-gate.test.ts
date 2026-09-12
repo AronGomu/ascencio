@@ -1,3 +1,5 @@
+import { contentInstallFixture } from "../fixtures/content-install-fixture.ts";
+import { installedGameplayFixture } from "../fixtures/installed-gameplay.ts";
 import { describe, expect, it, vi } from "vitest";
 import { deckId } from "../../src/decks/index.ts";
 import {
@@ -29,7 +31,8 @@ const bootstrap = {
 const locked: CoreGate = { kind: "locked", reason: "content-required" };
 const ready: CoreGate = {
   kind: "ready",
-  chapterIds: ["chapter-01"],
+  gameplay: installedGameplayFixture(),
+  reader: null,
   generation: 1,
 };
 
@@ -47,6 +50,48 @@ const gameplayRoutes: readonly AppRoute[] = [
 ];
 
 describe("CORE startup gate", () => {
+  it.each(["empty", "failed", "throws", "gameplay-failed"])(
+    "closes owned reader on %s startup",
+    async (mode) => {
+      const fixture = await contentInstallFixture();
+      const close = vi.fn();
+      const reader = {
+        close,
+        current: async () => {
+          if (mode === "throws") throw new Error("read failed");
+          if (mode === "failed")
+            return {
+              kind: "failed",
+              code: "CONTENT_INTEGRITY_FAILED",
+              packId: null,
+              path: null,
+            };
+          return {
+            kind: "ok",
+            value: {
+              generation: 1,
+              current: mode === "empty" ? null : fixture.content,
+              previous: null,
+            },
+          };
+        },
+        inspectContent: async () => ({
+          kind: "failed",
+          code: "CONTENT_INTEGRITY_FAILED",
+          packId: null,
+          path: null,
+        }),
+      };
+      const startup = await loadCoreStartup(
+        async () => new Response(JSON.stringify(fixture.bootstrap)),
+        "http://localhost/",
+        {} as IDBFactory,
+        async () => ({ kind: "ok", value: reader as never }),
+      );
+      expect(startup.gate.kind).toBe("locked");
+      expect(close).toHaveBeenCalledOnce();
+    },
+  );
   it("treats delivery:null as content unavailable, not a network failure", async () => {
     const fetch = vi.fn(
       async () =>

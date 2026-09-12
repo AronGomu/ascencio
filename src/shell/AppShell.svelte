@@ -1,7 +1,12 @@
 <script lang="ts">
   import { onMount, setContext } from "svelte";
   import { readonly, writable } from "svelte/store";
-  import type { CoreBootstrap } from "../content/index.ts";
+  import {
+    type OwnedContentReader,
+    type CoreBootstrap,
+    type InstalledGameplay,
+    type InstalledImageLibrary,
+  } from "../content/index.ts";
   import {
     loadCoreStartup,
     routeForCoreGate,
@@ -12,7 +17,6 @@
     type DomainLoaders,
   } from "./domain-loaders.ts";
   import { createHandoffCoordinator } from "./handoff/handoff-coordinator.ts";
-  import { storyBattleRequest } from "./handoff/story-battle-request.ts";
   import { STAGE_CONTEXT_KEY, TOAST_CONTEXT_KEY } from "./index.ts";
   import ToastHost from "./toast/ToastHost.svelte";
   import { createToastStore } from "./toast/toast-store.ts";
@@ -26,14 +30,13 @@
     type AppRoute,
     type RouteContext,
   } from "./routes.ts";
-  import { deckId } from "../decks/index.ts";
+  import { deckId } from "../decks/deck-contracts.ts";
   import type { DeckContext } from "../decks/deck-repository-context.ts";
   import {
     unlimitedCardOwnership,
     type CardOwnership,
   } from "../decks/card-ownership.ts";
   import DomainLoadError from "./screens/DomainLoadError.svelte";
-  import InstallContentScreen from "./screens/InstallContentScreen.svelte";
   import MainMenuScreen from "./screens/MainMenuScreen.svelte";
   import type { BattleFacadeResult, BattleRequest } from "../battle/index.ts";
   import type {
@@ -66,6 +69,13 @@
   export let initialCoreBootstrap: CoreBootstrap | null = null;
   let coreGate: CoreGate = initialCoreGate ?? { kind: "checking" };
   let coreBootstrap: CoreBootstrap | null = initialCoreBootstrap;
+  let duelDomain: ReturnType<DomainLoaders["duel"]> | null = null;
+  const loadDuelDomain = (): ReturnType<DomainLoaders["duel"]> =>
+    (duelDomain ??= loaders.duel());
+  let gameplay: InstalledGameplay | null =
+    coreGate.kind === "ready" ? coreGate.gameplay : null;
+  let contentReader: OwnedContentReader | null =
+    coreGate.kind === "ready" ? coreGate.reader : null;
   /* Story progress is written by the shell only for the pre-duel checkpoint.
      The default reaches the repository through the visual novel's own lazy
      chunk, so `#/free-play` and its decks never load the story to hold it. */
@@ -152,7 +162,12 @@
   async function startEncounter(request: StoryEncounterRequest) {
     let built: BattleRequest;
     try {
-      built = storyBattleRequest(await loaders.duel(), request.deck);
+      if (gameplay === null) return "deck-rejected";
+      const [{ storyBattleRequest }, battle] = await Promise.all([
+        import("./handoff/handoff-request.ts"),
+        loadDuelDomain(),
+      ]);
+      built = storyBattleRequest(battle, request.deck, gameplay);
     } catch (error) {
       /* The duel's own parser refused the snapshot the briefing accepted, which
          means the two contracts drifted apart. The story says so and keeps the
@@ -186,13 +201,17 @@
   ): Promise<BattleRequest | null> {
     try {
       const story = await import("../story/index.ts");
-      const deck = await story.encounterDeck(state);
+      if (gameplay === null) return null;
+      const deck = await story.encounterDeck(state, gameplay);
       /* The battle module is asked for second and only when there is a deck to
          seat with it: a checkpoint naming no fieldable deck must not pay for
          the largest chunk in the build to learn that. */
-      return deck === null
-        ? null
-        : storyBattleRequest(await loaders.duel(), deck);
+      if (deck === null || gameplay === null) return null;
+      const [{ storyBattleRequest }, battle] = await Promise.all([
+        import("./handoff/handoff-request.ts"),
+        loadDuelDomain(),
+      ]);
+      return storyBattleRequest(battle, deck, gameplay);
     } catch {
       return null;
     }
@@ -321,7 +340,8 @@
         import("./screens/free-play-deck-listing.ts"),
         import("./screens/FreePlayMatchSetup.svelte"),
       ]);
-      listing.warmFreePlayDecks(loaders.duel);
+      if (gameplay !== null)
+        listing.warmFreePlayDecks(loadDuelDomain, gameplay);
     })().catch(() => undefined);
   }
 
@@ -375,6 +395,7 @@
     readonly context: RouteContext;
     readonly ownership: CardOwnership;
     readonly catalog: CollectionCatalog;
+    readonly images: InstalledImageLibrary | null;
     readonly Screen: CollectionScreenComponent;
   }
 
@@ -385,12 +406,16 @@
   function bindCollection(world: RouteContext | null): void {
     if (world === boundCollectionWorld) return;
     boundCollectionWorld = world;
+    collection?.images?.dispose();
     collection = null;
-    if (world === null) return;
     const requested = ++collectionToken;
-    void openCollection(world).then(
+    if (world === null) return;
+    void openCollection(world, requested).then(
       (opened) => {
-        if (requested !== collectionToken) return;
+        if (requested !== collectionToken) {
+          opened?.images?.dispose();
+          return;
+        }
         /* No save is loaded, so there is no collection to browse. The main menu
            is where a story route with nothing to show goes (ADR-051), and it is
            replaced rather than pushed because the player asked for their cards
@@ -414,6 +439,7 @@
       which only the story may reach. */
   async function openCollection(
     world: RouteContext,
+    requested: number,
   ): Promise<OpenCollection | null> {
     const story = await import("../story/index.ts");
     let ownership: CardOwnership = unlimitedCardOwnership();
@@ -424,14 +450,51 @@
     }
     /* The screen's chunk and the database read start together: neither needs
        the other, and the region shows nothing until both have landed. */
-    const [catalog, Screen] = await Promise.all([
-      story.loadCollectionCatalog(),
-      story.loadCollectionScreen(),
-    ]);
+    if (gameplay === null) return null;
+    const reader = contentReader;
+    const installed = gameplay;
+    const [catalogResult, screenResult, imagesResult] =
+      await Promise.allSettled([
+        story.loadCollectionCatalog(installed),
+        story.loadCollectionScreen(),
+        reader === null
+          ? Promise.resolve(null)
+          : import("../content/load-installed-images.ts")
+              .then(({ loadInstalledImages }) =>
+                loadInstalledImages(reader, installed),
+              )
+              .then((images) => {
+                if (requested !== collectionToken) {
+                  images.dispose();
+                  throw new Error("Collection closed");
+                }
+                return images;
+              }),
+      ]);
+    if (
+      catalogResult.status === "rejected" ||
+      screenResult.status === "rejected" ||
+      imagesResult.status === "rejected"
+    ) {
+      if (imagesResult.status === "fulfilled") imagesResult.value?.dispose();
+    }
+    if (catalogResult.status === "rejected") throw catalogResult.reason;
+    if (screenResult.status === "rejected") throw screenResult.reason;
+    if (imagesResult.status === "rejected") throw imagesResult.reason;
+    const catalog = catalogResult.value;
+    const Screen = screenResult.value;
+    const images = imagesResult.value;
     return {
       context: world,
       ownership,
-      catalog,
+      catalog: {
+        ...catalog,
+        cards: catalog.cards.map((card) => ({
+          ...card,
+          imageUrl: images?.cardUrls.get(card.code) ?? null,
+        })),
+      },
+      images,
       Screen,
     };
   }
@@ -465,9 +528,15 @@
         appBaseUrl,
         globalThis.indexedDB,
       ).then((startup) => {
-        if (!mounted) return;
+        if (!mounted) {
+          if (startup.gate.kind === "ready") startup.gate.reader?.close();
+          return;
+        }
         coreBootstrap = startup.bootstrap;
         coreGate = startup.gate;
+        gameplay = startup.gate.kind === "ready" ? startup.gate.gameplay : null;
+        contentReader =
+          startup.gate.kind === "ready" ? startup.gate.reader : null;
       });
     }
 
@@ -498,6 +567,9 @@
       toasts.destroy();
       unsubscribeStage();
       unsubscribe();
+      collectionToken += 1;
+      collection?.images?.dispose();
+      contentReader?.close();
     };
   });
 </script>
@@ -524,11 +596,31 @@
       class="shell-region shell-region--install-content"
       data-cy="shell-region-install-content"
     >
-      <InstallContentScreen
-        gate={coreGate}
-        bootstrap={coreBootstrap}
-        onback={() => store.navigate(HOME_ROUTE)}
-      />
+      {#await import("./screens/InstallContentScreen.svelte") then module}
+        <svelte:component
+          this={module.default}
+          gate={coreGate}
+          bootstrap={coreBootstrap}
+          oninstalled={(installed, reader, generation) => {
+            if (contentReader !== reader) contentReader?.close();
+            gameplay = installed;
+            contentReader = reader;
+            coreGate = {
+              kind: "ready",
+              gameplay: installed,
+              reader,
+              generation,
+            };
+          }}
+          onback={() => store.navigate(HOME_ROUTE)}
+        />
+      {:catch error}
+        <DomainLoadError
+          label="Content installer"
+          cy="content-installer"
+          {error}
+        />
+      {/await}
     </div>
   {:else if collectionContext !== null}
     <div
@@ -569,12 +661,14 @@
           <p class="visually-hidden" data-cy="story-decks-pending">
             Opening your story decks
           </p>
-        {:else}
+        {:else if gameplay !== null}
           {@const bound = editorContext}
           {#await loaders.decks() then module}
             <svelte:component
               this={module.default}
               context={bound}
+              {gameplay}
+              reader={contentReader}
               deckId={route.kind === "free-play-deck" ||
               route.kind === "story-deck"
                 ? route.deckId
@@ -595,29 +689,33 @@
   {:else if route.kind === "admin"}
     <div class="shell-region shell-region--admin" data-cy="shell-region-admin">
       {#await import("./admin/AdminConsole.svelte") then module}
-        <svelte:component this={module.default} {store} />
+        <svelte:component this={module.default} {store} {gameplay} />
       {:catch error}
         <DomainLoadError label="Developer console" cy="admin" {error} />
       {/await}
     </div>
   {:else if route.kind === "story"}
     <div class="shell-region shell-region--story" data-cy="shell-region-story">
-      {#await loaders.story() then module}
-        <svelte:component
-          this={module.default}
-          onencounter={startEncounter}
-          {storyEntryIntent}
-          ondecks={() => store.navigate(deckRoute("story", null))}
-          onmainmenu={() => store.navigate(HOME_ROUTE)}
-          resumeState={handback?.state ?? null}
-          resolution={handback?.resolution ?? null}
-          onhandled={() => {
-            handback = null;
-          }}
-        />
-      {:catch error}
-        <DomainLoadError label="Visual novel" cy="story" {error} />
-      {/await}
+      {#if gameplay !== null}
+        {#await loaders.story() then module}
+          <svelte:component
+            this={module.default}
+            {gameplay}
+            reader={contentReader}
+            onencounter={startEncounter}
+            {storyEntryIntent}
+            ondecks={() => store.navigate(deckRoute("story", null))}
+            onmainmenu={() => store.navigate(HOME_ROUTE)}
+            resumeState={handback?.state ?? null}
+            resolution={handback?.resolution ?? null}
+            onhandled={() => {
+              handback = null;
+            }}
+          />
+        {:catch error}
+          <DomainLoadError label="Visual novel" cy="story" {error} />
+        {/await}
+      {/if}
     </div>
   {:else if route.kind === "free-play" && matchRequest === null}
     <!-- Free play opens on the seats themselves: choosing two decks is the only
@@ -636,20 +734,24 @@
       class="shell-region shell-region--free-play"
       data-cy="shell-region-free-play-setup"
     >
-      {#await import("./screens/FreePlayMatchSetup.svelte") then module}
-        <svelte:component
-          this={module.default}
-          {settings}
-          loadBattle={loaders.duel}
-          onstart={(request) => (matchRequest = request)}
-          onback={() => store.navigate(HOME_ROUTE)}
-          ondecks={() => store.navigate(deckRoute("free-play", null))}
-          onopendeck={(id) =>
-            store.navigate(deckRoute("free-play", deckId(id)))}
-        />
-      {:catch error}
-        <DomainLoadError label="Match setup" cy="free-play-match" {error} />
-      {/await}
+      {#if gameplay !== null}
+        {#await import("./screens/FreePlayMatchSetup.svelte") then module}
+          <svelte:component
+            this={module.default}
+            {gameplay}
+            reader={contentReader}
+            {settings}
+            loadBattle={loadDuelDomain}
+            onstart={(request) => (matchRequest = request)}
+            onback={() => store.navigate(HOME_ROUTE)}
+            ondecks={() => store.navigate(deckRoute("free-play", null))}
+            onopendeck={(id) =>
+              store.navigate(deckRoute("free-play", deckId(id)))}
+          />
+        {:catch error}
+          <DomainLoadError label="Match setup" cy="free-play-match" {error} />
+        {/await}
+      {/if}
     </div>
   {:else}
     <div class="shell-region shell-region--duel" data-cy="shell-region-duel">
@@ -660,13 +762,16 @@
         <p class="visually-hidden" data-cy="battle-session-pending">
           Preparing the story duel
         </p>
-      {:else}
-        {#await loaders.duel() then module}
+      {:else if gameplay !== null}
+        {#await loadDuelDomain() then module}
           <!-- The duel is rotated by the stylesheet, so the notice explaining
                it belongs to the duel; its one-time dismissal is a shell
                setting, so the flag and its setter cross as plain props. -->
           <svelte:component
             this={module.BattleFacade}
+            content={gameplay.content}
+            {gameplay}
+            sharedReader={contentReader}
             request={duelRequest}
             hosted={route.kind === "duel-session"}
             oncomplete={settleSession}

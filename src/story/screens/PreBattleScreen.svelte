@@ -58,7 +58,7 @@
   let recordedId: string | null = null;
   let openNotice: string | null = null;
   const toasts = getContext<ToastPublisher | undefined>(TOAST_CONTEXT_KEY);
-  const BUNDLED_OPEN_REFUSAL = "Bundled deck: cannot be modified";
+  const READ_ONLY_OPEN_REFUSAL = "Read-only deck: cannot be modified";
 
   $: selectedId =
     chosenId ??
@@ -97,7 +97,7 @@
     locked: true,
   }) satisfies OpponentView;
 
-  /* The opponent's own cards are the duel's: the shell seats a bundled preset
+  /* The opponent's own cards are the duel's: the shell seats an installed deck
      the story never names, and its lists live inside the duel domain, which
      this screen may not read and could not load without making the duel eager.
      So the card carries the encounter's name and no count it would be making
@@ -109,7 +109,7 @@
     coverImageUrl: null,
     legal: true,
     blockReason: null,
-    bundled: true,
+    readOnly: true,
     lockedBy: null,
     isDefault: false,
     deletable: false,
@@ -160,10 +160,10 @@
   }
 
   function blockedOpen(): void {
-    if (toasts === undefined) openNotice = BUNDLED_OPEN_REFUSAL;
+    if (toasts === undefined) openNotice = READ_ONLY_OPEN_REFUSAL;
     else {
       openNotice = null;
-      toasts.show({ message: BUNDLED_OPEN_REFUSAL, tone: "warning" });
+      toasts.show({ message: READ_ONLY_OPEN_REFUSAL, tone: "warning" });
     }
   }
 

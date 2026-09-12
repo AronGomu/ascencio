@@ -7,9 +7,9 @@ import {
   BattleRequestError,
   parseBattleRequest,
 } from "../../src/battle/battle-contracts.ts";
+import { installedSelectableDecks } from "../../src/battle/decks/installed-selectable-decks.ts";
 import {
   findSelectableDeck,
-  listSelectableDecks,
   presetSelectableDecks,
 } from "../../src/battle/decks/selectable-decks.ts";
 import { DECK_CATALOG } from "../../src/battle/duel/presets/deck-catalog.ts";
@@ -37,6 +37,7 @@ import {
 import FreePlayMatchSetup from "../../src/shell/screens/FreePlayMatchSetup.svelte";
 import { createShellSettingsStore } from "../../src/shell/settings/shell-settings-store.ts";
 import { installPrototypeActiveCatalog } from "../fixtures/active-catalog.ts";
+import { installedGameplayFromCatalog } from "../fixtures/installed-gameplay.ts";
 
 installPrototypeActiveCatalog();
 
@@ -53,8 +54,47 @@ const VALID_MAIN = Array.from(
 
 /* Both active Chapter 1 decks, with real IDs checked by parseBattleRequest. */
 const PRESETS = DECK_CATALOG;
-const PLAYER_PRESET_KEY = "preset:chapter-one-starter";
-const OPPONENT_PRESET_KEY = "preset:chapter-one-practice";
+const PRESET_DECKS = presetSelectableDecks(PRESETS);
+const GAMEPLAY = installedGameplayFromCatalog(PROTOTYPE_CATALOG, {
+  decks: Object.freeze(
+    PRESET_DECKS.map((deck) => ({
+      id: deck.key.slice("preset:".length),
+      name: deck.label,
+      main: deck.lists.main,
+      extra: deck.lists.extra,
+      side: deck.lists.side,
+    })),
+  ),
+  opponents: Object.freeze([
+    {
+      id: "practice-bot",
+      name: "Practice Bot",
+      line: "Practice",
+      deckId: "chapter-one-practice",
+      policyId: "basic",
+    },
+    {
+      id: "blaze-circuit",
+      name: "Blaze Circuit",
+      line: "Blaze",
+      deckId: "chapter-one-practice",
+      policyId: "basic",
+    },
+    {
+      id: "vault-warden",
+      name: "Vault Warden",
+      line: "Vault",
+      deckId: "chapter-one-practice",
+      policyId: "basic",
+    },
+  ]),
+  defaults: Object.freeze({
+    starterDeckId: "chapter-one-starter",
+    opponentId: "practice-bot",
+  }),
+});
+const PLAYER_PRESET_KEY = "chapter:chapter-one-starter";
+const OPPONENT_PRESET_KEY = "chapter:chapter-one-practice";
 const LOCAL_KEY = "local:built-deck:1";
 /* The same deck after one write: the key carries the revision, so every
    management operation on a deck moves the key the grid knows it by. */
@@ -65,13 +105,9 @@ function battleModule(
   overrides: Partial<BattleDeckModule> = {},
 ): BattleDeckModule {
   return {
-    DECK_CATALOG: PRESETS,
-    DEFAULT_PLAYER_DECK_ID: "chapter-one-starter",
-    DEFAULT_OPPONENT_DECK_ID: "chapter-one-practice",
-    presetSelectableDecks,
-    listSelectableDecks,
     findSelectableDeck,
     parseBattleRequest,
+    installedSelectableDecks,
     ...overrides,
   };
 }
@@ -168,6 +204,7 @@ function renderSetup(options: RenderOptions = {}) {
   const storage = options.storage ?? memoryStorage();
   const settings = createShellSettingsStore(storage);
   const props = {
+    gameplay: GAMEPLAY,
     settings,
     loadBattle:
       options.loadBattle ?? (async () => battleModule(options.module)),
@@ -245,71 +282,14 @@ describe("FreePlayMatchSetup", () => {
     expect(seatKey("opponent")).toBe(OPPONENT_PRESET_KEY);
     const tile = query(`deck-tile-${OPPONENT_PRESET_KEY}`)!;
     expect(tile).not.toBeNull();
-    expect(tile.textContent).toContain("Bundled");
+    expect(tile.textContent).toContain("Installed chapter");
+    expect(tile.textContent).not.toMatch(/bundled|preset/i);
     expect(tile.textContent).not.toContain("Locked:");
     for (const name of ["Vault Warden", "Blaze Circuit", "Practice Bot"])
       expect(tile.textContent).not.toContain(name);
 
     await fireEvent.click(control(`deck-tile-press-${OPPONENT_PRESET_KEY}`));
     expect(control("deck-select-delete").disabled).toBe(true);
-  });
-
-  it("maps a catalog miss to a normal frame without art", async () => {
-    const missingCode = 987654321;
-    const missingDecks = presetSelectableDecks(PRESETS).map((deck) =>
-      deck.key === PLAYER_PRESET_KEY
-        ? {
-            ...deck,
-            lists: {
-              ...deck.lists,
-              main: [missingCode],
-            },
-          }
-        : deck,
-    );
-    await renderLoadedSetup({
-      module: {
-        presetSelectableDecks: () => missingDecks,
-        listSelectableDecks: async () => missingDecks,
-      },
-    });
-
-    await fireEvent.pointerEnter(query(`deck-tile-${PLAYER_PRESET_KEY}`)!);
-    await vi.waitFor(() =>
-      expect(
-        query(`deck-select-seat-list-player-row-${missingCode}`),
-      ).not.toBeNull(),
-    );
-
-    const row = query(
-      `deck-select-seat-list-player-row-${missingCode}`,
-    ) as HTMLElement;
-    expect(row.style.getPropertyValue("--fc")).toBe("#b8985a");
-    expect(
-      query(`deck-select-seat-list-player-row-name-${missingCode}`)
-        ?.textContent,
-    ).toBe(String(missingCode));
-    expect(
-      query(`deck-select-seat-list-player-row-art-${missingCode}`),
-    ).toBeNull();
-    expect(
-      query(`deck-select-seat-list-player-row-fade-${missingCode}`),
-    ).toBeNull();
-  });
-
-  /* The screen manages the library it is picking from: the kebab and the
-     footer cluster are two paths to the same three operations. A bundled deck
-     is nobody's to delete, so the control that would is inert on one. */
-  it("offers deck management from the kebab and the footer", async () => {
-    await renderListedSetup();
-
-    expect(query(`deck-tile-menu-${LOCAL_KEY}`)).not.toBeNull();
-    expect(query("deck-select-manage")).not.toBeNull();
-    expect(control("deck-select-delete").disabled).toBe(true);
-
-    await fireEvent.click(control(`deck-tile-press-${LOCAL_KEY}`));
-
-    expect(control("deck-select-delete").disabled).toBe(false);
   });
 
   it("renames a deck from the kebab and keeps it seated", async () => {
@@ -402,7 +382,7 @@ describe("FreePlayMatchSetup", () => {
     await fireEvent.dblClick(control(`deck-tile-press-${PLAYER_PRESET_KEY}`));
 
     expect(show).toHaveBeenCalledExactlyOnceWith({
-      message: "Bundled deck: cannot be modified",
+      message: "Installed chapter deck: cannot be modified",
       tone: "warning",
     });
     expect(setup.onopendeck).not.toHaveBeenCalled();
@@ -415,7 +395,7 @@ describe("FreePlayMatchSetup", () => {
     await fireEvent.dblClick(control(`deck-tile-press-${PLAYER_PRESET_KEY}`));
 
     expect(query("deck-select-block-notice")?.textContent).toBe(
-      "Bundled deck: cannot be modified",
+      "Installed chapter deck: cannot be modified",
     );
     expect(setup.onopendeck).not.toHaveBeenCalled();
     expect(setup.ondecks).not.toHaveBeenCalled();
@@ -446,26 +426,14 @@ describe("FreePlayMatchSetup", () => {
     }
   });
 
-  /* The bundled decks are compiled into this build, so they are on screen and
-     playable before the library read behind them has answered. */
-  it("offers the bundled decks before the library answers", async () => {
-    /* A library read that never answers, so the first stage is what stays on
-       screen: in a browser it is a fetch of the whole card database and an
-       IndexedDB read behind it. */
-    await renderLoadedSetup({
-      module: { listSelectableDecks: () => new Promise(() => {}) },
-    });
-
-    expect(gridKeys()).toEqual([PLAYER_PRESET_KEY, OPPONENT_PRESET_KEY]);
-    expect(startButton().disabled).toBe(false);
-  });
-
   /* What a warmed page opens on: the read the main menu started is already an
      answer, so a second visit never waits on the battle entry again. The
      loader below would hang forever if this mount needed it. */
   it("opens on the library the page already read", async () => {
-    warmFreePlayDecks(async () => battleModule());
-    await vi.waitFor(() => expect(listedFreePlayDecks()).not.toBeNull());
+    warmFreePlayDecks(async () => battleModule(), GAMEPLAY);
+    await vi.waitFor(() =>
+      expect(listedFreePlayDecks(GAMEPLAY)).not.toBeNull(),
+    );
 
     await renderListedSetup({
       loadBattle: () => new Promise<BattleDeckModule>(() => {}),
@@ -502,7 +470,10 @@ describe("FreePlayMatchSetup", () => {
     expect(parseBattleRequest(request)).toStrictEqual(request);
     expect((request as { player: { kind: string } }).player.kind).toBe("local");
     expect(request).toMatchObject({
-      opponent: { kind: "preset", deckId: "chapter-one-practice" },
+      opponent: {
+        kind: "local",
+        deck: { ref: { deckId: "chapter:chapter-one-practice" } },
+      },
     });
   });
 
@@ -603,7 +574,7 @@ describe("FreePlayMatchSetup", () => {
     await fireEvent.click(control("deck-select-open"));
 
     expect(query("deck-select-block-notice")?.textContent).toBe(
-      "Bundled deck: cannot be modified",
+      "Installed chapter deck: cannot be modified",
     );
     expect(setup.ondecks).not.toHaveBeenCalled();
     expect(setup.onopendeck).not.toHaveBeenCalled();
@@ -632,9 +603,16 @@ describe("FreePlayMatchSetup", () => {
       '"freePlayOpponentId":"blaze-circuit"',
     );
     await fireEvent.click(startButton());
-    expect(setup.onstart).toHaveBeenCalledExactlyOnceWith({
-      player: { kind: "preset", deckId: "chapter-one-starter" },
-      opponent: { kind: "preset", deckId: "chapter-one-practice" },
+    expect(setup.onstart).toHaveBeenCalledTimes(1);
+    expect(setup.onstart.mock.calls[0]?.[0]).toMatchObject({
+      player: {
+        kind: "local",
+        deck: { ref: { deckId: "chapter:chapter-one-starter" } },
+      },
+      opponent: {
+        kind: "local",
+        deck: { ref: { deckId: "chapter:chapter-one-practice" } },
+      },
     });
   });
 

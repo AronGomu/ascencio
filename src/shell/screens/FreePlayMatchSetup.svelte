@@ -2,6 +2,12 @@
   import { getContext, onMount } from "svelte";
   import type { BattleRequest, SelectableDeck } from "../../battle/index.ts";
   import {
+    loadInstalledImages,
+    type ContentReadPort,
+    type InstalledGameplay,
+    type InstalledImageLibrary,
+  } from "../../content/index.ts";
+  import {
     DeckSelectScreen,
     type DecklistRow,
     type DecklistView,
@@ -11,7 +17,7 @@
   import { catalogByCode } from "../../decks/catalog/pinned-ruleset.ts";
   import { cardFrameOf } from "../../decks/card-frame.ts";
   import { croppedCardImageUrl } from "../../decks/deck-cover.ts";
-  import { runtimeCatalog } from "../../decks/catalog/runtime-catalog.ts";
+  import { installedDeckCatalog } from "../../decks/catalog/installed-gameplay-cards.ts";
   import { IndexedDbDeckRepository } from "../../decks/indexeddb-deck-repository.ts";
   import type {
     BattleDeckModule,
@@ -31,9 +37,8 @@
   } from "./free-play-deck-listing.ts";
   import { freePlayDeckTile } from "./free-play-deck-tiles.ts";
   import {
-    DEFAULT_FREE_PLAY_OPPONENT_ID,
-    FREE_PLAY_OPPONENTS,
     freePlayOpponent,
+    installedFreePlayOpponents,
     type FreePlayOpponent,
   } from "./free-play-opponents.ts";
   import type { ShellSettingsStore } from "../settings/shell-settings-store.ts";
@@ -43,6 +48,8 @@
   } from "../toast/toast-context.ts";
   import DomainLoadError from "./DomainLoadError.svelte";
 
+  export let gameplay: InstalledGameplay;
+  export let reader: ContentReadPort | null = null;
   export let settings: ShellSettingsStore;
   /* The battle entry, loaded rather than imported: it also exports the duel,
      and a static import here would make the largest chunk in the build eager.
@@ -64,7 +71,9 @@
   /* Card art and card names, for the covers and the hover decklists. Empty
      until the packaged database answers, which is a fetch the seats never wait
      on: a tile with no cover draws its own placeholder. */
-  let catalog: ReadonlyMap<number, DeckBuilderCardView> = new Map();
+  let catalog: ReadonlyMap<number, DeckBuilderCardView> = catalogByCode(
+    installedDeckCatalog(gameplay).cards,
+  );
   let defaultDeckId: string | null = null;
   let playerKey = "";
   let opponentKey = "";
@@ -81,21 +90,26 @@
      a stale dev server or a half-cached build looks the same from here. */
   let loadError: unknown = null;
   const toasts = getContext<ToastPublisher | undefined>(TOAST_CONTEXT_KEY);
-  const BUNDLED_OPEN_REFUSAL = "Bundled deck: cannot be modified";
+  const INSTALLED_OPEN_REFUSAL = "Installed chapter deck: cannot be modified";
+  const opponents = installedFreePlayOpponents(gameplay);
 
   /* Only exclusive roster ownership belongs on a tile. Shared decks remain
-     bundled/read-only without falsely naming one of their personas as owner. */
+     read-only without falsely naming one of their personas as owner. */
   const aiOwnerByDeckKey = new Map(
-    FREE_PLAY_OPPONENTS.filter(
-      ({ deckKey }) =>
-        FREE_PLAY_OPPONENTS.filter((opponent) => opponent.deckKey === deckKey)
-          .length === 1,
-    ).map(({ deckKey, name }) => [deckKey, name]),
+    opponents
+      .filter(
+        ({ deckKey }) =>
+          opponents.filter((opponent) => opponent.deckKey === deckKey)
+            .length === 1,
+      )
+      .map(({ deckKey, name }) => [deckKey, name]),
   );
 
   $: ready = battle !== null;
   $: persona = freePlayOpponent(
-    $settings.freePlayOpponentId ?? DEFAULT_FREE_PLAY_OPPONENT_ID,
+    opponents,
+    gameplay.defaults.opponentId,
+    $settings.freePlayOpponentId,
   );
   $: tiles = decks.map((deck) =>
     freePlayDeckTile(deck, {
@@ -108,23 +122,48 @@
   $: opponentDeck = tiles.find((tile) => tile.key === opponentKey) ?? null;
   /* Both seats, or no match: a request is two decks, and a seat that resolves
      to nothing is a duel the Worker would refuse after the click. */
-  $: canStart = ready && playerKey !== "" && opponentKey !== "";
+  $: canStart =
+    ready && playerDeck?.legal === true && opponentDeck?.legal === true;
   /* One notice slot, and the refusal outranks the wait: a player who pressed
      Start is owed the reason it did not run. Every press clears both errors
      before it acts, so the slot always holds the most recent one. */
   $: blockNotice =
-    startError ?? manageError ?? (ready ? null : "Reading your deck library…");
+    startError ??
+    manageError ??
+    playerDeck?.blockReason ??
+    opponentDeck?.blockReason ??
+    (ready ? null : "Reading your deck library…");
 
   onMount(() => {
     let cancelled = false;
+    const imagesAbort = new AbortController();
+    let images: InstalledImageLibrary | null = null;
     const alive = () => !cancelled;
     void loadListing(alive);
-    /* Neither fills a seat, so neither is awaited before decks are on screen:
-       art decorates tiles; default marks a deck already selectable. */
-    void loadCatalog(alive);
     void loadLibraryFlags(alive);
+    if (reader !== null)
+      void loadInstalledImages(reader, gameplay, imagesAbort.signal).then(
+        (loaded) => {
+          if (cancelled) {
+            loaded.dispose();
+            return;
+          }
+          images = loaded;
+          catalog = catalogByCode(
+            installedDeckCatalog(gameplay).cards.map((card) => ({
+              ...card,
+              imageUrl: loaded.cardUrls.get(card.code) ?? null,
+            })),
+          );
+        },
+        (error: unknown) => {
+          if (!cancelled) loadError = error;
+        },
+      );
     return () => {
       cancelled = true;
+      imagesAbort.abort();
+      images?.dispose();
     };
   });
 
@@ -136,12 +175,8 @@
       /* Whatever is already known, so the seats fill on the first paint: the
          listing this page last read, or the bundled decks alone, which are
          compiled into this build and need no read at all. */
-      adoptDecks(
-        loaded,
-        listedFreePlayDecks() ??
-          loaded.presetSelectableDecks(loaded.DECK_CATALOG),
-      );
-      const listed = await refreshFreePlayDecks(loadBattle);
+      adoptDecks(loaded, listedFreePlayDecks(gameplay) ?? []);
+      const listed = await refreshFreePlayDecks(loadBattle, gameplay);
       if (!alive()) return;
       adoptDecks(loaded, listed);
     } catch (error) {
@@ -149,19 +184,8 @@
     }
   }
 
-  async function loadCatalog(alive: () => boolean): Promise<void> {
-    try {
-      const cards = await runtimeCatalog();
-      if (alive()) catalog = catalogByCode(cards);
-    } catch {
-      /* No art and no card names. Every tile draws its own placeholder and a
-         decklist row falls back to the code, which is still a deck the player
-         can pick and play. */
-    }
-  }
-
   /* Default deck comes from the local library. Failure costs its mark, not the
-     match: bundled decks remain compiled into this build. */
+     match: installed chapter decks remain available from gameplay input. */
   async function loadLibraryFlags(alive: () => boolean): Promise<void> {
     let repository: IndexedDbDeckRepository | null = null;
     try {
@@ -191,7 +215,7 @@
       loaded,
       listed,
       [playerKey, remembered?.player],
-      `preset:${loaded.DEFAULT_PLAYER_DECK_ID}`,
+      `chapter:${gameplay.defaults.starterDeckId}`,
     );
     /* The opponent's own deck is the persona's, so the seat falls back to
        whichever AI the player last faced rather than to a fixed preset. */
@@ -255,7 +279,7 @@
     manageError = null;
     try {
       await write();
-      return await refreshFreePlayDecks(loadBattle);
+      return await refreshFreePlayDecks(loadBattle, gameplay);
     } catch (error) {
       manageError = `${refusal}: ${error instanceof Error ? error.message : "Unknown error"}`;
       return null;
@@ -299,9 +323,10 @@
       () =>
         duplicateLocalDeck(
           key,
-          source.selection.kind === "preset"
+          source.source === "chapter"
             ? { name: source.label, lists: source.lists }
             : undefined,
+          [...catalog.values()],
         ),
       "Deck could not be duplicated",
     );
@@ -335,10 +360,10 @@
 
   function blockedOpen(): void {
     startError = null;
-    if (toasts === undefined) manageError = BUNDLED_OPEN_REFUSAL;
+    if (toasts === undefined) manageError = INSTALLED_OPEN_REFUSAL;
     else {
       manageError = null;
-      toasts.show({ message: BUNDLED_OPEN_REFUSAL, tone: "warning" });
+      toasts.show({ message: INSTALLED_OPEN_REFUSAL, tone: "warning" });
     }
   }
 
@@ -373,7 +398,11 @@
        player: their own deck is the question this screen was opened to ask.
        Pressing the opponent's card is how that deck is then overridden for one
        duel, which is a choice about this match rather than about the roster. */
-    opponentKey = freePlayOpponent(id).deckKey;
+    opponentKey = freePlayOpponent(
+      opponents,
+      gameplay.defaults.opponentId,
+      id,
+    ).deckKey;
     seat = "player";
   }
 
@@ -415,6 +444,13 @@
       startError = "A deck you chose is no longer available. Choose another.";
       return;
     }
+    if (player.selection === null || opponent.selection === null) {
+      startError =
+        player.blockReason ??
+        opponent.blockReason ??
+        "A chosen deck is not legal.";
+      return;
+    }
     let request: BattleRequest;
     /* The duel's own parser, run before the duel mounts: a deck edited to 39
        cards after it was remembered names the rule it broke here, rather than
@@ -452,7 +488,7 @@
     {canStart}
     {blockNotice}
     opponent={opponentView(persona)}
-    opponents={FREE_PLAY_OPPONENTS.map(opponentView)}
+    opponents={opponents.map(opponentView)}
     {opponentDeck}
     {playerDeck}
     {seat}

@@ -169,7 +169,7 @@ describe("DeckTile", () => {
 
   it("collapses availability tags into one line", () => {
     render(DeckTile, {
-      tile: tile({ bundled: true, lockedBy: "Vault Warden", meta: "Bundled" }),
+      tile: tile({ readOnly: true, lockedBy: "Vault Warden", meta: "Bundled" }),
       yours: true,
       canSetDefault: false,
     });
@@ -244,7 +244,7 @@ describe("DeckTile", () => {
   });
 
   it("renders no star when the host denies default capability", () => {
-    render(DeckTile, { tile: tile({ bundled: true }), canSetDefault: false });
+    render(DeckTile, { tile: tile({ readOnly: true }), canSetDefault: false });
 
     expect(find("deck-tile-default-star-k1")).toBeNull();
   });

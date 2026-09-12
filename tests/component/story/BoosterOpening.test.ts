@@ -1,3 +1,4 @@
+import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 import "fake-indexeddb/auto";
 import { deleteDB } from "idb";
@@ -23,7 +24,10 @@ describe("BoosterOpening", () => {
       savedScreen: "shop-browse" as const,
       boosters: { a: 2, b: 1 },
     };
-    const { container } = render(StoryApp, { resumeState: shopState });
+    const { container } = render(StoryApp, {
+      gameplay: installedDuelGameplayFixture(),
+      resumeState: shopState,
+    });
     const chip = container.querySelector('[data-cy="story-top-bar-boosters"]');
     expect(chip).not.toBeNull();
     expect(chip!.textContent).toContain("3 packs");

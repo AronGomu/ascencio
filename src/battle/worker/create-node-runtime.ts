@@ -135,6 +135,7 @@ export function createNodeDuelWorkerRuntime(
         adapter,
         dependencies,
         createPreset,
+        allowPresetDecks: true,
         snapshotId: manifest.snapshotId,
         revisions: {
           babelCdb: manifest.assets.babelCdbRevision,

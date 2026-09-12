@@ -1,5 +1,11 @@
 <script lang="ts">
   import { afterUpdate, getContext, onMount, tick } from "svelte";
+  import {
+    loadInstalledImages,
+    type ContentReadPort,
+    type InstalledGameplay,
+    type InstalledImageLibrary,
+  } from "../content/index.ts";
   import { get, readable, type Readable } from "svelte/store";
   import {
     computeStageBox,
@@ -32,7 +38,7 @@
     type DeckBuilderState,
   } from "./deck-editor-store.ts";
   import type { DeckEditorRoute } from "./deck-editor-route.ts";
-  import { runtimeCatalog } from "../decks/catalog/runtime-catalog.ts";
+  import { installedDeckCatalog } from "../decks/catalog/installed-gameplay-cards.ts";
   import { deckBuildableCards } from "../decks/catalog/deck-buildable-cards.ts";
   import type { DeckBuilderCardView } from "../decks/catalog/ocg-card-mapper.ts";
   import DeckEditor from "./components/DeckEditor.svelte";
@@ -40,6 +46,8 @@
   import YdkExport from "./components/YdkExport.svelte";
   import YdkImport from "./components/YdkImport.svelte";
 
+  export let gameplay: InstalledGameplay;
+  export let reader: ContentReadPort | null = null;
   /** Which deck the app route asks for; `null` is the context's library. */
   export let deckId: DeckId | null = null;
   /** Which of the two deck worlds this mount edits: the free-play library, or
@@ -120,6 +128,19 @@
      the tail re-checks a `deckId` that moved while storage was answering. */
   afterUpdate(() => void watchRoute());
 
+  function chapterDeckSource(deck: InstalledGameplay["decks"][number]): string {
+    return [
+      "#created by YGO Story Duel Simulator",
+      "#main",
+      ...deck.main.map(String),
+      "#extra",
+      ...deck.extra.map(String),
+      "!side",
+      ...deck.side.map(String),
+      "",
+    ].join("\n");
+  }
+
   async function watchRoute(): Promise<void> {
     if (controller === null || routing) return;
     if (routeApplied && deckId === appliedDeckId) return;
@@ -136,16 +157,34 @@
     let disposed = false;
     let unsubscribe: () => void = () => undefined;
     let close: () => void = () => undefined;
-    /* Before storage opens: seeding the starter deck resolves codes against the
-       catalog, so a repository opened first would only wait on it anyway. */
-    void runtimeCatalog()
-      .then(async (loaded) => {
-        buildableCards = deckBuildableCards(loaded);
-        catalog = catalogByCode(loaded);
+    let imageLibrary: InstalledImageLibrary | null = null;
+    const loaded = installedDeckCatalog(gameplay).cards;
+    const prepareCatalog =
+      reader === null
+        ? Promise.resolve(loaded)
+        : loadInstalledImages(reader, gameplay).then((images) => {
+            if (disposed) {
+              images.dispose();
+              throw new Error("Deck Editor closed");
+            }
+            imageLibrary = images;
+            return loaded.map((card) => ({
+              ...card,
+              imageUrl: images.cardUrls.get(card.code) ?? null,
+            }));
+          });
+    void prepareCatalog
+      .then((cards) => {
+        if (disposed) return Promise.reject(new Error("Deck Editor closed"));
+        buildableCards = deckBuildableCards(cards);
+        catalog = catalogByCode(cards);
         catalogReady = true;
         return resolveDeckRepository(context);
       })
       .then(async ({ repository, ownership: resolved, close: release }) => {
+        return { repository, resolved, release };
+      })
+      .then(async ({ repository, resolved, release }) => {
         if (disposed) {
           release();
           return;
@@ -166,8 +205,20 @@
            `new-game`, which hands over the deck and the collection behind it
            together. Granting here instead would be a fountain: delete the deck,
            reopen the editor, receive the cards again. */
-        if (context.kind === "free-play")
-          await ensureStarterDeck(repository, catalog, PROTOTYPE_RULESET);
+        if (context.kind === "free-play") {
+          const starter = gameplay.decks.find(
+            ({ id }) => id === gameplay.defaults.starterDeckId,
+          );
+          if (starter !== undefined)
+            await ensureStarterDeck(
+              repository,
+              catalog,
+              PROTOTYPE_RULESET,
+              chapterDeckSource(starter),
+              starter.name,
+            );
+        }
+        if (disposed) return;
         controller = new DeckBuilderController(
           repository,
           catalog,
@@ -178,6 +229,7 @@
         await controller.initialize();
       })
       .catch((error: unknown) => {
+        if (disposed) return;
         if (error instanceof DeckMigrationError) {
           migrationError = error;
           return;
@@ -192,6 +244,7 @@
       disposed = true;
       unsubscribe();
       close();
+      imageLibrary?.dispose();
     };
   });
 

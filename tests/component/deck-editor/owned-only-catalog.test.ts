@@ -1,3 +1,4 @@
+import { installedGameplayFromCatalog } from "../../fixtures/installed-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -13,7 +14,6 @@ import {
   catalogByCode,
   quantityLimit,
 } from "../../../src/decks/catalog/pinned-ruleset.ts";
-import { setRuntimeCatalogForTests } from "../../../src/decks/catalog/runtime-catalog.ts";
 import { deckId } from "../../../src/decks/deck-contracts.ts";
 import { DECK_DATABASE_NAME } from "../../../src/decks/deck-database.ts";
 import { emptyDeckHistory } from "../../../src/decks/deck-history.ts";
@@ -56,8 +56,6 @@ const OWNED = MAIN_CARDS[0]!;
 const UNOWNED = MAIN_CARDS[1]!;
 const CATALOG_FIVE = Object.freeze([OWNED, UNOWNED, ...MAIN_CARDS.slice(2, 5)]);
 const FIVE_BY_CODE = catalogByCode(CATALOG_FIVE);
-
-setRuntimeCatalogForTests(CATALOG_FIVE);
 
 const STORY_DECK_ID = "story-owned-deck";
 
@@ -135,6 +133,7 @@ async function openCatalog(props: {
      harness refuses a props object that shares a name with one. */
   render(DeckEditorApp, {
     props: {
+      gameplay: installedGameplayFromCatalog(CATALOG_FIVE),
       deckId: deckId(props.deckId),
       onnavigate: vi.fn(),
       ...(props.context === undefined ? {} : { context: props.context }),

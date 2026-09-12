@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/svelte";
+import { Uint8ArrayReader, Uint8ArrayWriter, ZipReader } from "@zip.js/zip.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import InstallContentScreen from "../../src/shell/screens/InstallContentScreen.svelte";
 import type {
@@ -48,6 +49,17 @@ describe("CORE installer screen", () => {
     const bytes = fixture.objects.get(
       `content/indexes/${fixture.bootstrap.delivery!.index.sha256}.json`,
     )!;
+    const chapterArchive = fixture.objects.get(
+      `content/parts/${fixture.chapter.manifest.parts[0]!.sha256}.zip`,
+    )!;
+    const chapterZip = new ZipReader(new Uint8ArrayReader(chapterArchive));
+    const gameplayEntry = (await chapterZip.getEntries()).find(
+      ({ filename }) => filename === fixture.chapter.manifest.gameplayPath,
+    );
+    if (gameplayEntry === undefined || gameplayEntry.directory)
+      throw new Error("Fixture gameplay entry is missing");
+    const gameplayBytes = await gameplayEntry.getData!(new Uint8ArrayWriter());
+    await chapterZip.close();
     let report: ((progress: DownloadProgress) => void) | undefined;
     let finish: ((result: DownloadResult) => void) | undefined;
     let publish:
@@ -59,10 +71,12 @@ describe("CORE installer screen", () => {
           finish = resolve;
         }),
     );
+    const oninstalled = vi.fn();
+    const close = vi.fn();
     const installer = {
       current: async () => ({
         kind: "ok",
-        value: { generation: 0, current: null, previous: null },
+        value: { generation: 1, current: fixture.content, previous: null },
       }),
       subscribeCurrent: (
         listener: Parameters<ContentInstaller["subscribeCurrent"]>[0],
@@ -84,13 +98,32 @@ describe("CORE installer screen", () => {
               : fixture.chapter.manifest,
         },
       }),
+      readFile: async (_ref: unknown, filePath: string) => {
+        const fileBytes =
+          filePath === fixture.chapter.manifest.gameplayPath
+            ? gameplayBytes
+            : undefined;
+        if (fileBytes === undefined)
+          return {
+            kind: "failed" as const,
+            code: "CONTENT_MISSING" as const,
+            packId: null,
+            path: filePath,
+          };
+        return { kind: "ok" as const, value: new Blob([fileBytes]) };
+      },
+      inspectContent: async () => ({
+        kind: "ok" as const,
+        value: fixture.content,
+      }),
       download,
-      close: vi.fn(),
+      close,
     } as unknown as ContentInstaller;
     const view = render(InstallContentScreen, {
       gate: { kind: "locked", reason: "content-required" },
       bootstrap: fixture.bootstrap,
       onback: vi.fn(),
+      oninstalled,
       createInstaller: async () => ({ kind: "ok", value: installer }),
     });
     const manifests = [fixture.runtime.manifest, fixture.chapter.manifest];
@@ -165,18 +198,29 @@ describe("CORE installer screen", () => {
       kind: "ok",
       value: { generation: 1, current: fixture.content, previous: null },
     });
+    await waitFor(() =>
+      expect(view.getByText("Installed — preparing gameplay…")).toBeTruthy(),
+    );
+    expect(oninstalled).not.toHaveBeenCalled();
     finish?.({ kind: "complete", content: fixture.content });
     await waitFor(() =>
       expect(
-        view.getByText("Verified installed — gameplay adapters pending."),
+        view.getByText("Verified installed — gameplay ready."),
       ).toBeTruthy(),
+    );
+    expect(oninstalled).toHaveBeenCalledWith(
+      expect.objectContaining({ chapterIds: ["chapter-01"] }),
+      installer,
+      1,
     );
     expect(
       (view.getByRole("button", { name: "Install" }) as HTMLButtonElement)
         .disabled,
     ).toBe(true);
+    view.unmount();
+    expect(close).not.toHaveBeenCalled();
   });
-  it("renders installed status while keeping destructive controls disabled", async () => {
+  it("keeps installed content pending until gameplay is loaded", async () => {
     const close = vi.fn();
     const current = {
       generation: 1,
@@ -195,9 +239,7 @@ describe("CORE installer screen", () => {
       createInstaller: async () => ({ kind: "ok", value: installer }),
     });
     await waitFor(() =>
-      expect(
-        view.getByText("Verified installed — gameplay adapters pending."),
-      ).toBeTruthy(),
+      expect(view.getByText("Installed — preparing gameplay…")).toBeTruthy(),
     );
     expect(
       (

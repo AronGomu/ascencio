@@ -15,9 +15,9 @@ afterEach(() => cleanup());
 const NO_CARDS = { main: [], extra: [], side: [] };
 
 const PRESET_DECKS: readonly SelectableDeck[] = DECK_CATALOG.map((preset) => ({
-  key: `preset:${preset.id}`,
+  key: `chapter:${preset.id}`,
   label: preset.name,
-  source: "preset",
+  source: "chapter",
   selection: { kind: "preset", deckId: preset.id },
   lists: NO_CARDS,
   updatedAt: null,
@@ -45,7 +45,7 @@ const LOCAL_DECK: SelectableDeck = {
 function renderPicker(overrides: Record<string, unknown> = {}) {
   return render(DeckPicker, {
     decks: PRESET_DECKS,
-    playerKey: "preset:chapter-one-starter",
+    playerKey: "chapter:chapter-one-starter",
     ...overrides,
   });
 }
@@ -65,8 +65,8 @@ describe("DeckPicker", () => {
     expect(
       document.querySelectorAll('[data-cy^="deck-picker-option-"]'),
     ).toHaveLength(3);
-    expect(query("deck-picker-group-preset")?.getAttribute("label")).toBe(
-      "Bundled decks",
+    expect(query("deck-picker-group-chapter")?.getAttribute("label")).toBe(
+      "Installed chapter decks",
     );
     expect(query("deck-picker-group-local")?.getAttribute("label")).toBe(
       "Your decks",
@@ -79,14 +79,14 @@ describe("DeckPicker", () => {
   it("pre-selects the deck the host chose", () => {
     renderPicker();
 
-    expect(playerSelect().value).toBe("preset:chapter-one-starter");
+    expect(playerSelect().value).toBe("chapter:chapter-one-starter");
   });
 
   it("the filter narrows the deck options", async () => {
     const user = userEvent.setup();
     renderPicker({
       decks: [...PRESET_DECKS, LOCAL_DECK],
-      playerKey: "preset:chapter-one-practice",
+      playerKey: "chapter:chapter-one-practice",
     });
 
     await user.type(
@@ -95,9 +95,9 @@ describe("DeckPicker", () => {
     );
 
     expect(
-      query("deck-picker-option-preset:chapter-one-practice"),
+      query("deck-picker-option-chapter:chapter-one-practice"),
     ).not.toBeNull();
-    expect(query("deck-picker-option-preset:chapter-one-starter")).toBeNull();
+    expect(query("deck-picker-option-chapter:chapter-one-starter")).toBeNull();
     expect(query("deck-picker-option-local:built-deck:2")).toBeNull();
     expect(query("deck-picker-no-matches")).toBeNull();
   });
@@ -108,7 +108,7 @@ describe("DeckPicker", () => {
   it("keeps the chosen deck listed even when the filter excludes it", async () => {
     const user = userEvent.setup();
     renderPicker({ decks: [...PRESET_DECKS, LOCAL_DECK] });
-    expect(playerSelect().value).toBe("preset:chapter-one-starter");
+    expect(playerSelect().value).toBe("chapter:chapter-one-starter");
 
     await user.type(
       query("deck-picker-filter") as HTMLInputElement,
@@ -116,11 +116,11 @@ describe("DeckPicker", () => {
     );
 
     expect(
-      query("deck-picker-option-preset:chapter-one-starter"),
+      query("deck-picker-option-chapter:chapter-one-starter"),
     ).not.toBeNull();
-    expect(playerSelect().value).toBe("preset:chapter-one-starter");
+    expect(playerSelect().value).toBe("chapter:chapter-one-starter");
     const matching = query(
-      "deck-picker-option-preset:chapter-one-practice",
+      "deck-picker-option-chapter:chapter-one-practice",
     ) as HTMLOptionElement;
     expect(matching).not.toBeNull();
     expect(matching.selected).toBe(false);
@@ -138,7 +138,7 @@ describe("DeckPicker", () => {
     expect(
       document.querySelectorAll('[data-cy^="deck-picker-option-"]'),
     ).toHaveLength(1);
-    expect(playerSelect().value).toBe("preset:chapter-one-starter");
+    expect(playerSelect().value).toBe("chapter:chapter-one-starter");
   });
 
   it("choosing an option reports its key", async () => {
@@ -146,17 +146,17 @@ describe("DeckPicker", () => {
     const onselect = vi.fn();
     renderPicker({ onselect });
 
-    await user.selectOptions(playerSelect(), "preset:chapter-one-practice");
+    await user.selectOptions(playerSelect(), "chapter:chapter-one-practice");
 
     expect(onselect).toHaveBeenCalledOnce();
-    expect(onselect).toHaveBeenCalledWith("preset:chapter-one-practice");
+    expect(onselect).toHaveBeenCalledWith("chapter:chapter-one-practice");
   });
 
   it("the opponent seat is a fixed chapter-one-practice line", () => {
     renderPicker();
 
     expect(query("deck-picker-opponent-fixed")?.textContent?.trim()).toBe(
-      "Opponent deck: Chapter 1 Practice (auto-assigned)",
+      "Opponent: Installed opponent (auto-assigned)",
     );
     expect(document.querySelectorAll("select")).toHaveLength(1);
     expect(
@@ -189,7 +189,7 @@ describe("DeckPicker", () => {
   it("hides the local group when no local deck qualifies", () => {
     renderPicker();
 
-    expect(query("deck-picker-group-preset")).not.toBeNull();
+    expect(query("deck-picker-group-chapter")).not.toBeNull();
     expect(query("deck-picker-group-local")).toBeNull();
     expect(query("deck-picker-start-button")).not.toBeNull();
   });

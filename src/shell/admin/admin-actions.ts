@@ -1,6 +1,5 @@
 import { DECK_DATABASE_NAME, deckId, type DeckId } from "../../decks/index.ts";
-import { parseYdk } from "../../battle/duel/presets/deck-parser.ts";
-import { DECK_SOURCES } from "../../battle/duel/presets/deck-sources-browser.ts";
+import type { InstalledGameplay } from "../../content/index.ts";
 import { STORY_SAVES_DATABASE_NAME } from "../../story/index.ts";
 import { SNAPSHOT_DATABASE_NAME } from "../../battle/storage/snapshot-store.ts";
 import type { AppRoute } from "../routes.ts";
@@ -72,9 +71,6 @@ export const ADMIN_ROUTES: readonly AppRoute[] = Object.freeze(
 export const ADMIN_TEST_DECK_ID: DeckId = deckId("admin-test-deck");
 export const ADMIN_TEST_DECK_NAME = "Admin test deck";
 
-const ADMIN_TEST_DECK_SOURCE = "chapter-one-starter";
-const MAIN_DECK_SIZE = 40;
-
 /** A delete that another connection blocks is queued, not performed, so the
     caller has to be able to tell the two apart before it claims a store is
     gone. Failures keep throwing. */
@@ -110,22 +106,15 @@ export async function resetStorageTarget(
   });
 }
 
-/** A fixed 40-card Main deck taken from a bundled preset, so the seeded deck is
-    always dispatchable by the duel engine. */
-export function buildAdminTestDeck(): {
-  readonly main: readonly number[];
-  readonly extra: readonly number[];
-  readonly side: readonly number[];
-} {
-  const source = DECK_SOURCES.get(ADMIN_TEST_DECK_SOURCE);
-  if (source === undefined)
-    throw new Error("Admin test deck preset is not bundled");
-  const parsed = parseYdk(source);
-  if (parsed.main.length < MAIN_DECK_SIZE)
-    throw new Error("Admin test deck preset has fewer than 40 Main cards");
+/** Seed only the verified installed default deck. */
+export function buildAdminTestDeck(gameplay: InstalledGameplay) {
+  const deck = gameplay.decks.find(
+    ({ id }) => id === gameplay.defaults.starterDeckId,
+  );
+  if (deck === undefined) throw new Error("Installed default deck is missing");
   return Object.freeze({
-    main: Object.freeze(parsed.main.slice(0, MAIN_DECK_SIZE)),
-    extra: Object.freeze([...parsed.extra]),
-    side: Object.freeze([...parsed.side]),
+    main: Object.freeze([...deck.main]),
+    extra: Object.freeze([...deck.extra]),
+    side: Object.freeze([...deck.side]),
   });
 }

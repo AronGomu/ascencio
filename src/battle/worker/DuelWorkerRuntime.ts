@@ -1,3 +1,6 @@
+import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
+import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
+import type { ContentSetRef } from "../../content/index.ts";
 import { assertNever } from "../duel/contracts/assert-never.ts";
 import {
   DuelCommandValidationError,
@@ -70,6 +73,11 @@ export interface DuelRuntimeResources {
     playerDeckId: DeckId,
     opponentDeckId: DeckId,
   ) => DuelPreset;
+  /** Omitted only by Node/test bootstraps that do not model installed browser content. */
+  readonly allowedCardCodes?: ReadonlySet<number>;
+  readonly deckCatalog?: ReadonlyMap<number, DeckBuilderCardView>;
+  readonly deckRuleset?: PinnedDeckRuleset;
+  readonly allowPresetDecks?: boolean;
   readonly snapshotId: SnapshotId;
   readonly revisions?: DuelRuntimeRevisionMetadata;
 }
@@ -77,6 +85,7 @@ export interface DuelRuntimeResources {
 export type DuelRuntimeInitializer = (
   progress: (stage: string, value?: number) => void,
   signal: AbortSignal,
+  content: ContentSetRef,
 ) => Promise<DuelRuntimeResources>;
 
 export type DuelRuntimeProgressSink = (
@@ -131,6 +140,7 @@ const MAXIMUM_RESTORE_DETAIL_LENGTH = 1_024;
 export class DuelWorkerRuntime {
   readonly #initializeResources: DuelRuntimeInitializer;
   #resources: DuelRuntimeResources | null = null;
+  #contentIdentity: string | null = null;
   #initializationFailure: { readonly error: unknown } | null = null;
   #initializationAbortController: AbortController | null = null;
   #controller: HeadlessDuelController | null = null;
@@ -201,6 +211,7 @@ export class DuelWorkerRuntime {
       return Promise.resolve([{ type: "error", error: duelError }]);
     }
 
+    if (command.type === "initialize") command = structuredClone(command);
     this.#pendingCommands += 1;
     const operation = this.#commandQueue.then(async () => {
       if (this.#disposed || this.#replacementRequired) return [];
@@ -248,7 +259,7 @@ export class DuelWorkerRuntime {
     try {
       switch (command.type) {
         case "initialize": {
-          await this.#initialize(events, progressSink);
+          await this.#initialize(command.content, events, progressSink);
           if (this.#disposed) return [];
           const resources = this.#requireResources();
           events.push({
@@ -340,9 +351,35 @@ export class DuelWorkerRuntime {
   }
 
   async #initialize(
+    content: ContentSetRef,
     events: DuelWorkerEvent[],
     progressSink?: DuelRuntimeProgressSink,
   ): Promise<void> {
+    const identity = JSON.stringify({
+      catalogSha256: content.catalogSha256,
+      snapshot: [
+        content.snapshot.activationId,
+        content.snapshot.runtimeSnapshotId,
+        content.snapshot.runtimeManifestSha256,
+        content.snapshot.releaseCatalogSha256,
+      ],
+      runtime: [
+        content.runtime.packId,
+        content.runtime.sha256,
+        content.runtime.bytes,
+      ],
+      chapters: content.chapters.map(({ packId, sha256, bytes }) => [
+        packId,
+        sha256,
+        bytes,
+      ]),
+    });
+    if (this.#contentIdentity !== null && this.#contentIdentity !== identity)
+      throw duelOperationError(
+        "snapshot_validation_failed",
+        "New installed content requires a new Worker",
+      );
+    this.#contentIdentity ??= identity;
     if (this.#resources !== null) return;
     if (this.#initializationFailure !== null) {
       throw this.#initializationFailure.error;
@@ -351,16 +388,20 @@ export class DuelWorkerRuntime {
     const abortController = new AbortController();
     this.#initializationAbortController = abortController;
     try {
-      const resources = await this.#initializeResources((stage, progress) => {
-        if (this.#disposed) return;
-        const event = {
-          type: "loading" as const,
-          stage,
-          ...(progress === undefined ? {} : { progress }),
-        };
-        if (progressSink === undefined) events.push(event);
-        else progressSink(event);
-      }, abortController.signal);
+      const resources = await this.#initializeResources(
+        (stage, progress) => {
+          if (this.#disposed) return;
+          const event = {
+            type: "loading" as const,
+            stage,
+            ...(progress === undefined ? {} : { progress }),
+          };
+          if (progressSink === undefined) events.push(event);
+          else progressSink(event);
+        },
+        abortController.signal,
+        content,
+      );
       if (!this.#disposed) this.#resources = resources;
     } catch (error) {
       if (!this.#disposed) this.#initializationFailure = { error };

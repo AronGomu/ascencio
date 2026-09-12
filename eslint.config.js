@@ -303,11 +303,7 @@ export default tseslint.config(
       { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
       { group: DECK_SELECT_INTERNALS, message: DECK_SELECT_MESSAGE },
       {
-        group: [
-          ...BATTLE_INTERNALS,
-          ...DECK_FORMAT_PENDING_RELOCATION,
-          ...DUEL_SNAPSHOT_NAME_PENDING_RELOCATION,
-        ],
+        group: [...BATTLE_INTERNALS, ...DUEL_SNAPSHOT_NAME_PENDING_RELOCATION],
         message: BATTLE_MESSAGE,
       },
     ],

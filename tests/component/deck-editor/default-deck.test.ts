@@ -1,3 +1,4 @@
+import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -81,7 +82,11 @@ function emptyStoryContext(): {
    does rather than calling `ensureStarterDeck` directly. */
 describe("starter deck seeding on mount", () => {
   it("a first visit lands on a library holding the default starter deck", async () => {
-    render(DeckEditorApp, { deckId: null, onnavigate: vi.fn() });
+    render(DeckEditorApp, {
+      gameplay: installedDuelGameplayFixture(),
+      deckId: null,
+      onnavigate: vi.fn(),
+    });
     await waitFor(() =>
       expect(document.querySelector('[data-cy="deck-library"]')).not.toBeNull(),
     );
@@ -101,7 +106,12 @@ describe("starter deck seeding on mount", () => {
   it("a story save with no decks is not seeded one it cannot own", async () => {
     const { context, state } = emptyStoryContext();
     render(DeckEditorApp, {
-      props: { deckId: null, onnavigate: vi.fn(), context },
+      props: {
+        gameplay: installedDuelGameplayFixture(),
+        deckId: null,
+        onnavigate: vi.fn(),
+        context,
+      },
     });
     await waitFor(() =>
       expect(document.querySelector('[data-cy="deck-library"]')).not.toBeNull(),
@@ -121,7 +131,12 @@ describe("starter deck seeding on mount", () => {
     const user = userEvent.setup();
     const { context, state } = emptyStoryContext();
     render(DeckEditorApp, {
-      props: { deckId: null, onnavigate: vi.fn(), context },
+      props: {
+        gameplay: installedDuelGameplayFixture(),
+        deckId: null,
+        onnavigate: vi.fn(),
+        context,
+      },
     });
     await waitFor(() =>
       expect(
@@ -152,7 +167,11 @@ describe("starter deck seeding on mount", () => {
   });
 
   it("a second visit does not add a second starter deck", async () => {
-    const first = render(DeckEditorApp, { deckId: null, onnavigate: vi.fn() });
+    const first = render(DeckEditorApp, {
+      gameplay: installedDuelGameplayFixture(),
+      deckId: null,
+      onnavigate: vi.fn(),
+    });
     await waitFor(() =>
       expect(
         document.querySelector('[aria-label="Default deck"]'),
@@ -160,7 +179,11 @@ describe("starter deck seeding on mount", () => {
     );
     first.unmount();
 
-    render(DeckEditorApp, { deckId: null, onnavigate: vi.fn() });
+    render(DeckEditorApp, {
+      gameplay: installedDuelGameplayFixture(),
+      deckId: null,
+      onnavigate: vi.fn(),
+    });
     await waitFor(() =>
       expect(
         document.querySelector('[aria-label="Default deck"]'),

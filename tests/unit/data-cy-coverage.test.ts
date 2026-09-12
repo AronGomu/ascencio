@@ -600,7 +600,7 @@ describe("data-cy uniqueness in deck select rendered document", () => {
       coverImageUrl: null,
       legal: true,
       blockReason: null,
-      bundled: false,
+      readOnly: false,
       lockedBy: null,
       isDefault: false,
       deletable: true,

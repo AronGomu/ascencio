@@ -1,3 +1,4 @@
+import { installedGameplayFixture } from "../fixtures/installed-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -69,6 +70,7 @@ function mount(
   const created = options.created ?? [];
   const repository = fakeRepository(created);
   return render(AdminConsole, {
+    gameplay: installedGameplayFixture(),
     store: createShellStore("#/admin", (hash) => options.hashes?.push(hash)),
     openRepository: async () => repository,
     resetTarget:
@@ -120,11 +122,15 @@ describe("AdminConsole", () => {
     expect(created[0]!.main).toHaveLength(40);
   });
 
-  it("opens the preset duel without writing a deck", async () => {
+  it("opens the installed duel without writing a deck", async () => {
     const hashes: string[] = [];
     const created: DeckRecord[] = [];
     mount({ hashes, created });
-    await fireEvent.click(query("admin-jump-preset-duel")!);
+    expect(query("admin-jump-installed-duel")?.textContent).toContain(
+      "Launch installed duel",
+    );
+    expect(query("admin-jumps")?.textContent).not.toMatch(/bundled|preset/i);
+    await fireEvent.click(query("admin-jump-installed-duel")!);
     expect(hashes).toEqual(["#/free-play"]);
     expect(created).toHaveLength(0);
   });
@@ -206,7 +212,15 @@ describe("AdminConsole", () => {
 
 describe("admin reachability", () => {
   it("exposes no admin control on the main menu", () => {
-    render(MainMenuScreen, { store: createShellStore("#/", () => {}) });
+    render(MainMenuScreen, {
+      store: createShellStore("#/", () => {}),
+      coreGate: {
+        kind: "ready",
+        gameplay: installedGameplayFixture(),
+        reader: null,
+        generation: 1,
+      },
+    });
     expect(document.querySelector('[data-cy^="admin-"]')).toBeNull();
   });
 });

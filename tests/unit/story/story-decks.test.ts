@@ -1,3 +1,4 @@
+import { buildStarterGrant } from "../../../src/story/decks/starter-grant.ts";
 import { describe, expect, it } from "vitest";
 import { storyDeckFixture as storyDeck } from "../../fixtures/story-decks.ts";
 import { createInitialStoryState } from "../../../src/story/model/story-state.ts";
@@ -166,7 +167,10 @@ describe("story deck commands", () => {
     expect(reset.defaultDeckId).toBeNull();
     /* A new game drops the old library too, but lands on the granted starter
        deck rather than on nothing — see `new-game-grant.test.ts`. */
-    const restarted = reduceStory(shopping, { type: "new-game" });
+    const restarted = reduceStory(shopping, {
+      type: "new-game",
+      starterGrant: buildStarterGrant(),
+    });
     expect(restarted.decks.map(({ id }) => id)).not.toContain("alpha");
     expect(restarted.defaultDeckId).toBe(restarted.decks[0]?.id);
   });

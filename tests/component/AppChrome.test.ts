@@ -1,3 +1,5 @@
+import { installedDuelGameplayFixture } from "../fixtures/installed-duel-gameplay.ts";
+import { contentReaderFixture } from "../fixtures/installed-gameplay.ts";
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
@@ -119,7 +121,11 @@ afterEach(() => {
 });
 
 async function renderReadyApp() {
-  const rendered = render(App);
+  const rendered = render(App, {
+    content: installedDuelGameplayFixture().content,
+    gameplay: installedDuelGameplayFixture(),
+    reader: contentReaderFixture(),
+  });
   await vi.waitFor(() =>
     expect(document.querySelector('[data-cy="deck-picker"]')).not.toBeNull(),
   );
@@ -133,7 +139,7 @@ async function startDuelFromPicker(
     document.querySelector(
       '[data-cy="deck-picker-player-select"]',
     ) as HTMLSelectElement,
-    "preset:chapter-one-starter",
+    "chapter:chapter-one-starter",
   );
   await user.click(
     document.querySelector(
@@ -310,7 +316,7 @@ describe("App", () => {
     expect(workerClientSpies.startDuel).not.toHaveBeenCalled();
   });
 
-  it("starting from the picker passes pair-derived preset id and both preset selections", async () => {
+  it("starting from picker passes both installed chapter decks", async () => {
     const user = userEvent.setup();
     await renderReadyApp();
 
@@ -319,11 +325,11 @@ describe("App", () => {
     await startDuelFromPicker(user);
 
     expect(workerClientSpies.startDuel).toHaveBeenCalledOnce();
-    expect(workerClientSpies.startDuel).toHaveBeenCalledWith(
-      "bundled-v1:chapter-one-starter:vs:chapter-one-practice",
-      { kind: "preset", deckId: "chapter-one-starter" },
-      { kind: "preset", deckId: "chapter-one-practice" },
-    );
+    expect(workerClientSpies.startDuel.mock.calls[0]).toMatchObject([
+      "local-v1:local:vs:local",
+      { kind: "cards" },
+      { kind: "cards" },
+    ]);
   });
 
   it("blocks the duel view when a prompt still reaches an omitted shared zone", async () => {

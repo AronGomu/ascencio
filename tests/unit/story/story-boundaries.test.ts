@@ -36,6 +36,7 @@ function reachableFromStory(target: string): boolean {
     target === "src/battle/battle-contracts.ts" ||
     target === "src/shell/index.ts" ||
     target === "src/deck-select/index.ts" ||
+    target === "src/content/index.ts" ||
     // T2 source relocation preserves the existing static SVG import, not a code API.
     target === "assets/story/chapter-01/city-map-placeholder.svg" ||
     target.startsWith("src/decks/")

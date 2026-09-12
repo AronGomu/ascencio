@@ -1,3 +1,4 @@
+import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -38,7 +39,11 @@ describe("deck library marks", () => {
   });
 
   it("renders no favourite controls", async () => {
-    render(DeckEditorApp, { deckId: null, onnavigate: vi.fn() });
+    render(DeckEditorApp, {
+      gameplay: installedDuelGameplayFixture(),
+      deckId: null,
+      onnavigate: vi.fn(),
+    });
     await waitFor(() =>
       expect(document.querySelector('[data-cy="deck-library"]')).not.toBeNull(),
     );

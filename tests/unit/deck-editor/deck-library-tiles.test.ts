@@ -237,7 +237,7 @@ describe("deckLibraryTiles", () => {
   it("a local deck is never bundled or locked, and is always deletable", () => {
     const tile = tileOf(record());
 
-    expect(tile.bundled).toBe(false);
+    expect(tile.readOnly).toBe(false);
     expect(tile.lockedBy).toBeNull();
     expect(tile.deletable).toBe(true);
   });

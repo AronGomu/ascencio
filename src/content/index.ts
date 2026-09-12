@@ -1,3 +1,4 @@
+export type { OwnedContentReader } from "./contracts/owned-content-reader.ts";
 export type { ChapterId } from "./contracts/chapter-id.ts";
 export type {
   CoreBootstrap,
@@ -53,6 +54,10 @@ export { parseChapterGameplay } from "./parsers/chapter-gameplay.ts";
 export { parseChapterStoryDocument } from "./parsers/chapter-story-document.ts";
 export { contentObjectUrl } from "./content-object-url.ts";
 export { loadInstalledGameplay } from "./load-installed-gameplay.ts";
+export {
+  loadInstalledImages,
+  type InstalledImageLibrary,
+} from "./load-installed-images.ts";
 export { acquireInstalledAsset } from "./acquire-installed-asset.ts";
 export {
   ZIP_PART_MAX_BYTES,

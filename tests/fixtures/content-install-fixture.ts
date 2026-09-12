@@ -46,6 +46,7 @@ export async function contentInstallFixture(
   options: ContentRuntimeFixtureOptions & {
     readonly realRuntime?: boolean;
     readonly runtimeCardCodes?: readonly number[];
+    readonly chapterTwo?: boolean;
   } = {},
 ) {
   const objects = new Map<string, Uint8Array>();
@@ -216,6 +217,23 @@ export async function contentInstallFixture(
     ],
     [runtime.ref],
   );
+  const chapterTwoGameplay: ChapterGameplay = {
+    ...gameplay,
+    chapterId: "chapter-02",
+  };
+  const chapterTwo = options.chapterTwo
+    ? await pack(
+        "chapter-02",
+        [
+          {
+            path: "chapters/chapter-02/gameplay.json",
+            bytes: encode(chapterTwoGameplay),
+            mediaType: "application/json",
+          },
+        ],
+        [runtime.ref, chapter.ref],
+      )
+    : null;
   const index = {
     schemaVersion: 2,
     releaseId: "fixture",
@@ -229,6 +247,17 @@ export async function contentInstallFixture(
         status: "published",
         manifest: chapter.ref,
       },
+      ...(chapterTwo === null
+        ? []
+        : [
+            {
+              id: "chapter-02" as const,
+              title: "Chapter 2",
+              description: "Synthetic dependency fixture",
+              status: "published" as const,
+              manifest: chapterTwo.ref,
+            },
+          ]),
     ],
     retainedCatalogs: [],
     retainedManifests: [],
@@ -244,12 +273,21 @@ export async function contentInstallFixture(
     delivery: { baseUrl: "http://localhost/", index: pin },
     chapters: [
       { id: "chapter-01", title: "Chapter 1", description: "Prototype" },
+      ...(chapterTwo === null
+        ? []
+        : [
+            {
+              id: "chapter-02" as const,
+              title: "Chapter 2",
+              description: "Synthetic dependency fixture",
+            },
+          ]),
     ],
   };
   const content: ContentSetRef = {
     catalogSha256: pin.sha256,
     runtime: runtime.ref,
-    chapters: [chapter.ref],
+    chapters: [chapter.ref, ...(chapterTwo === null ? [] : [chapterTwo.ref])],
     snapshot: {
       activationId: sha(
         encode({
@@ -262,5 +300,5 @@ export async function contentInstallFixture(
       releaseCatalogSha256: pin.sha256,
     },
   };
-  return { objects, bootstrap, content, runtime, chapter };
+  return { objects, bootstrap, content, runtime, chapter, chapterTwo };
 }

@@ -1,0 +1,25 @@
+{
+  "status": "ok",
+  "result": "ok",
+  "fetchCalls": 0,
+  "width": 32,
+  "height": 18,
+  "content": {
+    "runtime": {
+      "packId": "runtime",
+      "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "bytes": 1
+    },
+    "chapters": [
+      {
+        "packId": "chapter-01",
+        "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+        "bytes": 1
+      }
+    ]
+  },
+  "file": {
+    "packId": "chapter-01",
+    "path": "chapters/chapter-01/verified-set.svg"
+  }
+}

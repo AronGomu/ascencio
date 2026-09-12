@@ -55,7 +55,80 @@ export async function manifestClosure(
   } catch {
     throw failure("CONTENT_INCOMPATIBLE");
   }
+  const reachesRuntime = new Map<string, boolean>([["runtime", true]]);
+  const reaches = (entry: ManifestEntry): boolean => {
+    const known = reachesRuntime.get(entry.ref.packId);
+    if (known !== undefined) return known;
+    const result = entry.manifest.dependencies.some((dependency) => {
+      const target = done.get(dependency.packId);
+      return (
+        target !== undefined && same(target.ref, dependency) && reaches(target)
+      );
+    });
+    reachesRuntime.set(entry.ref.packId, result);
+    return result;
+  };
+  if (
+    ordered.some((entry) => entry.ref.packId !== "runtime" && !reaches(entry))
+  )
+    throw failure("CONTENT_INCOMPATIBLE");
+  const runtime = done.get("runtime");
+  if (
+    runtime !== undefined &&
+    ordered.some(
+      ({ manifest }) =>
+        manifest.runtimeSnapshotId !== runtime.manifest.runtimeSnapshotId,
+    )
+  )
+    throw failure("CONTENT_INCOMPATIBLE");
   return ordered;
+}
+
+export interface ReducedManifestClosure {
+  readonly invalidated: readonly ManifestRef[];
+  readonly retainedChapters: readonly ManifestRef[];
+  readonly runtimeInvalid: boolean;
+}
+
+export function reduceManifestClosure(
+  entries: readonly ManifestEntry[],
+  invalid: ManifestRef,
+): ReducedManifestClosure {
+  const affected = new Set<string>();
+  const exact = entries.find(
+    ({ ref }) => ref.packId === invalid.packId && same(ref, invalid),
+  );
+  if (exact !== undefined) affected.add(exact.ref.packId);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const entry of entries) {
+      if (
+        affected.has(entry.ref.packId) ||
+        !entry.manifest.dependencies.some((dependency) =>
+          affected.has(dependency.packId),
+        )
+      )
+        continue;
+      affected.add(entry.ref.packId);
+      changed = true;
+    }
+  }
+  const byPack = (left: ManifestRef, right: ManifestRef) =>
+    schema.compare(left.packId, right.packId);
+  return {
+    invalidated: entries
+      .filter(({ ref }) => affected.has(ref.packId))
+      .map(({ ref }) => ref)
+      .sort(byPack),
+    retainedChapters: entries
+      .filter(
+        ({ ref }) => ref.packId !== "runtime" && !affected.has(ref.packId),
+      )
+      .map(({ ref }) => ref)
+      .sort(byPack),
+    runtimeInvalid: affected.has("runtime"),
+  };
 }
 export function validateInstalledState(value: unknown): InstalledContentSet {
   try {

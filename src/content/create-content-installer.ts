@@ -44,6 +44,7 @@ import { parseContentManifest } from "./parsers/content-manifest.ts";
 import { parseContentFailure } from "./parsers/content-failure.ts";
 import {
   manifestClosure,
+  reduceManifestClosure,
   validateInstalledState,
 } from "./install/manifest-closure.ts";
 import { fetchVerified } from "./install/verified-fetch.ts";
@@ -415,31 +416,48 @@ class Installer extends ContentReader implements ContentInstaller {
         async (lock) => {
           if (!lock) throw failure("CONTENT_BUSY");
           unwrap(await this.readManifest(ref));
+          const old = validateInstalledState(
+            (await this.db.get("active", "current")) ?? EMPTY_CONTENT,
+          );
+          let invalidated: readonly ManifestRef[] = [ref];
+          let next = old;
+          if (old.current !== null) {
+            const entries = await manifestClosure(
+              [old.current.runtime, ...old.current.chapters],
+              async (manifestRef) =>
+                unwrap(await this.readManifest(manifestRef)).value,
+            );
+            const reduced = reduceManifestClosure(entries, ref);
+            if (reduced.invalidated.length > 0) {
+              if (old.generation === Number.MAX_SAFE_INTEGER)
+                throw failure("CONTENT_ACTIVATION_CONFLICT");
+              invalidated = reduced.invalidated;
+              next = {
+                generation: old.generation + 1,
+                current:
+                  reduced.runtimeInvalid ||
+                  reduced.retainedChapters.length === 0
+                    ? null
+                    : { ...old.current, chapters: reduced.retainedChapters },
+                previous: old.current,
+              };
+            }
+          }
           const tx = this.db.transaction(["active", "invalid"], "readwrite");
           const done = tx.done.then(
             () => null,
             (error: unknown) => error,
           );
           try {
-            const old = validateInstalledState(
+            const observed = validateInstalledState(
               (await tx.objectStore("active").get("current")) ?? EMPTY_CONTENT,
             );
-            if (old.generation === Number.MAX_SAFE_INTEGER)
+            if (!same(observed, old))
               throw failure("CONTENT_ACTIVATION_CONFLICT");
-            await tx.objectStore("invalid").put(parsed, ref.sha256);
-            const affected =
-              old.current &&
-              [old.current.runtime, ...old.current.chapters].some(
-                (r) => r.sha256 === ref.sha256,
-              );
-            const next = affected
-              ? {
-                  generation: old.generation + 1,
-                  current: null,
-                  previous: old.current,
-                }
-              : old;
-            await tx.objectStore("active").put(next, "current");
+            for (const invalid of invalidated)
+              await tx.objectStore("invalid").put(parsed, invalid.sha256);
+            if (!same(next, old))
+              await tx.objectStore("active").put(next, "current");
             const error = await done;
             if (error) throw error;
             await this.notify();

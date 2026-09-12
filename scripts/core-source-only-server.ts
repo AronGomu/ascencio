@@ -1,5 +1,12 @@
 import { spawn } from "node:child_process";
-import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import {
+  appendFile,
+  cp,
+  mkdir,
+  readFile,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -36,9 +43,13 @@ await cp(
   path.join(projectRoot, "content/core-bootstrap.json"),
   path.join(scratch, "content/core-bootstrap.json"),
 );
-const mapAsset = "assets/story/chapter-01/city-map-placeholder.svg";
-await mkdir(path.dirname(path.join(scratch, mapAsset)), { recursive: true });
-await cp(path.join(projectRoot, mapAsset), path.join(scratch, mapAsset));
+for (const asset of [
+  "assets/core/app-icon.svg",
+  "assets/story/chapter-01/city-map-placeholder.svg",
+] as const) {
+  await mkdir(path.dirname(path.join(scratch, asset)), { recursive: true });
+  await cp(path.join(projectRoot, asset), path.join(scratch, asset));
+}
 for (const file of [
   "index.html",
   "package-lock.json",
@@ -72,21 +83,25 @@ async function run(args: readonly string[]): Promise<void> {
 try {
   await run(["ci"]);
   await run(["run", "build"]);
+  await cp(path.join(scratch, "dist"), path.join(scratch, "dist-a"), {
+    recursive: true,
+  });
+  await appendFile(
+    path.join(scratch, "index.html"),
+    "\n<!-- cold-update-fixture-b -->\n",
+  );
+  await run(["run", "build:app", "--", "--outDir", "dist-b"]);
 } catch (error) {
   await removeOwnedScratch();
   throw error;
 }
 
 const port = process.env.CORE_SOURCE_PORT ?? "4400";
-const server = spawn(
-  npm,
-  ["run", "dev", "--", "--host", "127.0.0.1", "--port", port, "--strictPort"],
-  {
-    cwd: scratch,
-    env: { ...process.env, DEV_PORT: port },
-    stdio: "inherit",
-  },
-);
+const server = spawn(process.execPath, ["scripts/core-pwa-fixture-server.ts"], {
+  cwd: scratch,
+  env: { ...process.env, CORE_SOURCE_PORT: port },
+  stdio: "inherit",
+});
 
 let stopping = false;
 async function stop(signal: NodeJS.Signals): Promise<void> {

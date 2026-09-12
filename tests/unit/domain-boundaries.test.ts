@@ -96,10 +96,10 @@ const ALLOWANCES: Readonly<Record<string, readonly string[]>> = Object.freeze({
   "src/decks/ydk-adapter.ts": ["src/battle/duel/presets/deck-parser.ts"],
 });
 
-/* `src/acceptance-main.ts` is the build entry for the duel acceptance harness
-   that lives in `src/battle/app/acceptance/`, so it belongs to battle. */
+/* Root entrypoints compose owned domains. `src/acceptance-main.ts` is the
+   battle acceptance entry; service worker composes shell-owned PWA policy. */
 function domainOf(file: string): Domain {
-  if (file === "src/main.ts") return "main";
+  if (file === "src/main.ts" || file === "src/service-worker.ts") return "main";
   if (file === "src/acceptance-main.ts") return "battle";
   if (file.startsWith("src/content/")) return "content";
   if (file.startsWith("src/shell/")) return "shell";

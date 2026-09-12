@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { coreGateMessage, type CoreGate } from "../core/core-gate.ts";
+  import { serviceWorkerState } from "../pwa/register-service-worker.ts";
+  import { serviceWorkerStateMessage } from "../pwa/shell-cache-policy.ts";
 
   export let coreGate: CoreGate;
   export let onclose: () => void;
@@ -30,6 +32,9 @@
     </h2>
     <p class="hint" role="status" data-cy="shell-settings-content-status">
       {coreGateMessage(coreGate)}
+    </p>
+    <p class="hint" role="status" data-cy="shell-settings-offline-status">
+      {serviceWorkerStateMessage($serviceWorkerState)}
     </p>
     <p class="hint" data-cy="shell-settings-fullscreen-hint">
       Press F11 for fullscreen.

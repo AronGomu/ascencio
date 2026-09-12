@@ -3,6 +3,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
 const ROOT_FILES = [
+  "assets/core/app-icon.svg",
   "assets/story/chapter-01/city-map-placeholder.svg",
   "index.html",
   "package-lock.json",

@@ -1,5 +1,6 @@
 import { mount } from "svelte";
 import AppShell from "./shell/AppShell.svelte";
+import { registerServiceWorker } from "./shell/pwa/register-service-worker.ts";
 import "./styles/app.css";
 
 const target = document.querySelector<HTMLElement>("#app");
@@ -8,6 +9,9 @@ if (target === null) throw new Error("Application mount point is missing");
 try {
   target.dataset.appShell = "ready";
   mount(AppShell, { target });
+  /* Registration reports every outcome through Settings. No activation request
+     is sent: updated code waits until every old controlled tab has closed. */
+  void registerServiceWorker();
 } catch (error) {
   target.replaceChildren();
   const main = document.createElement("main");

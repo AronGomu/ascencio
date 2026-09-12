@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { appBuildIdentity } from "../../scripts/lib/app-build-identity.ts";
 
 const FILES = [
+  "assets/core/app-icon.svg",
   "assets/story/chapter-01/city-map-placeholder.svg",
   "index.html",
   "package-lock.json",

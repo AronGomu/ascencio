@@ -28,6 +28,8 @@ export type { PackedFile } from "./contracts/packed-file.ts";
 export type { ContentManifest } from "./contracts/content-manifest.ts";
 export type { ContentSetRef } from "./contracts/content-set-ref.ts";
 export type { InstalledContentSet } from "./contracts/installed-content-set.ts";
+export type { InstalledGameplay } from "./contracts/installed-gameplay.ts";
+export type { InstalledAssetLease } from "./contracts/installed-asset-lease.ts";
 export type { ContentFailureCode } from "./contracts/content-failure-code.ts";
 export type { ContentFailure } from "./contracts/content-failure.ts";
 export type { ContentResult } from "./contracts/content-result.ts";
@@ -50,6 +52,8 @@ export { parseContentManifest } from "./parsers/content-manifest.ts";
 export { parseChapterGameplay } from "./parsers/chapter-gameplay.ts";
 export { parseChapterStoryDocument } from "./parsers/chapter-story-document.ts";
 export { contentObjectUrl } from "./content-object-url.ts";
+export { loadInstalledGameplay } from "./load-installed-gameplay.ts";
+export { acquireInstalledAsset } from "./acquire-installed-asset.ts";
 export {
   ZIP_PART_MAX_BYTES,
   ZIP_PART_MAX_UNPACKED_BYTES,

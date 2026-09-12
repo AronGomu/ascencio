@@ -552,6 +552,87 @@ describe("verified installer", () => {
       ),
     ).rejects.toMatchObject({ code: "CONTENT_ARCHIVE_REJECTED" });
   });
+  it("loads gameplay only after exact installed closure inspection", async () => {
+    const fixture = await setup();
+    expect(
+      (await installer!.download({ kind: "all-published" }, () => undefined))
+        .kind,
+    ).toBe("complete");
+    const gameplay = await content.loadInstalledGameplay(
+      installer!,
+      fixture.content,
+    );
+    expect(gameplay).toMatchObject({
+      kind: "ok",
+      value: { chapterIds: ["chapter-01"] },
+    });
+    if (gameplay.kind !== "ok") throw gameplay;
+    expect(gameplay.value.cards.map(({ code }) => code)).toEqual(
+      Array.from({ length: 14 }, (_, index) => index + 1),
+    );
+  });
+
+  it("invalidation retains independent verified chapter closure", async () => {
+    const fixture = await setup(undefined, { chapterTwo: true });
+    expect(
+      (await installer!.download({ kind: "all-published" }, () => undefined))
+        .kind,
+    ).toBe("complete");
+    const reason: content.ContentFailure = {
+      kind: "failed",
+      code: "CONTENT_INTEGRITY_FAILED",
+      packId: "chapter-02",
+      path: "chapters/chapter-02/gameplay.json",
+    };
+    expect(
+      await installer!.invalidate(fixture.chapterTwo!.ref, reason),
+    ).toEqual({
+      kind: "ok",
+      value: {
+        generation: 2,
+        current: { ...fixture.content, chapters: [fixture.chapter.ref] },
+        previous: fixture.content,
+      },
+    });
+    expect(await installer!.current()).toMatchObject({
+      kind: "ok",
+      value: { current: { chapters: [fixture.chapter.ref] } },
+    });
+  });
+
+  it("invalidation marks transitive dependants and removes empty union", async () => {
+    const fixture = await setup(undefined, { chapterTwo: true });
+    expect(
+      (await installer!.download({ kind: "all-published" }, () => undefined))
+        .kind,
+    ).toBe("complete");
+    const reason: content.ContentFailure = {
+      kind: "failed",
+      code: "CONTENT_MISSING",
+      packId: "chapter-01",
+      path: "chapters/chapter-01/card.png",
+    };
+    expect(
+      await installer!.invalidate(fixture.chapter.ref, reason),
+    ).toMatchObject({
+      kind: "ok",
+      value: { generation: 2, current: null, previous: fixture.content },
+    });
+    const db = await openDB("ygo-story-content");
+    try {
+      const invalid = await db.getAllKeys("invalid");
+      expect(invalid).toHaveLength(2);
+      expect(invalid).toEqual(
+        expect.arrayContaining([
+          fixture.chapter.ref.sha256,
+          fixture.chapterTwo!.ref.sha256,
+        ]),
+      );
+    } finally {
+      db.close();
+    }
+  });
+
   it("dependency cycles and conflicting refs reject before extraction", async () => {
     const fixture = await setup();
     await expect(

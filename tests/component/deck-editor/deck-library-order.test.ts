@@ -1,3 +1,4 @@
+import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -109,6 +110,7 @@ describe("set default from the deck page", () => {
     repository.close();
 
     render(DeckEditorApp, {
+      gameplay: installedDuelGameplayFixture(),
       deckId: chosen.id as DeckId,
       onnavigate: vi.fn(),
     });
@@ -152,7 +154,11 @@ describe("set default from the deck page", () => {
 
     /* Stored, not held: fresh mount reads filled disabled star back. */
     cleanup();
-    render(DeckEditorApp, { deckId: null, onnavigate: vi.fn() });
+    render(DeckEditorApp, {
+      gameplay: installedDuelGameplayFixture(),
+      deckId: null,
+      onnavigate: vi.fn(),
+    });
     await waitFor(() =>
       expect(
         document.querySelector(

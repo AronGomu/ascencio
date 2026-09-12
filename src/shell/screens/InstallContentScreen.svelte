@@ -6,10 +6,13 @@
   } from "../content/installer-chapter-sizes.ts";
   import {
     createContentInstaller,
+    loadInstalledGameplay,
     type CoreBootstrap,
     type ContentInstaller,
     type ChapterId,
+    type OwnedContentReader,
     type DownloadProgress,
+    type InstalledGameplay,
   } from "../../content/index.ts";
   import { createRuntimeActivationPort } from "../../battle/content-activation.ts";
   import { contentErrorCopy } from "../content/content-error-copy.ts";
@@ -18,6 +21,11 @@
   export let gate: CoreGate;
   export let bootstrap: CoreBootstrap | null;
   export let onback: () => void;
+  export let oninstalled: (
+    gameplay: InstalledGameplay,
+    reader: OwnedContentReader,
+    generation: number,
+  ) => void = () => undefined;
   export let createInstaller = createContentInstaller;
 
   let installer: ContentInstaller | null = null;
@@ -25,9 +33,12 @@
   let error = "";
   let progress: DownloadProgress | null = null;
   let installed: readonly string[] = [];
+  let gameplayReady: readonly string[] =
+    gate.kind === "ready" ? gate.gameplay.chapterIds : [];
   let descriptions: Record<string, InstallerChapterSizes> = {};
   let mounted = false;
   let started = false;
+  let readerTransferred = false;
   $: if (mounted && bootstrap !== null && !started) void initialize();
   let unsubscribe: () => void = () => undefined;
   const abort = new AbortController();
@@ -122,6 +133,19 @@
       abort.signal,
     );
     if (result.kind === "failed") error = contentErrorCopy(result.code);
+    else if (result.kind === "complete") {
+      const gameplay = await loadInstalledGameplay(installer, result.content);
+      if (gameplay.kind === "failed") error = contentErrorCopy(gameplay.code);
+      else {
+        const current = await installer.current();
+        if (current.kind === "failed") error = contentErrorCopy(current.code);
+        else {
+          gameplayReady = gameplay.value.chapterIds;
+          oninstalled(gameplay.value, installer, current.value.generation);
+          readerTransferred = true;
+        }
+      }
+    }
     busy = false;
   }
   onMount(() => {
@@ -133,7 +157,7 @@
       teardown();
       window.removeEventListener("pagehide", teardown);
       unsubscribe();
-      installer?.close();
+      if (!readerTransferred) installer?.close();
     };
   });
 </script>
@@ -168,11 +192,13 @@
             {:else}Unavailable in this release{/if}
           </span>
           <span role="status" data-cy={`install-content-ready-${chapter.id}`}
-            >{installed.includes(chapter.id)
-              ? "Verified installed — gameplay adapters pending."
-              : descriptions[chapter.id]
-                ? "Available"
-                : "Unavailable"}</span
+            >{gameplayReady.includes(chapter.id)
+              ? "Verified installed — gameplay ready."
+              : installed.includes(chapter.id)
+                ? "Installed — preparing gameplay…"
+                : descriptions[chapter.id]
+                  ? "Available"
+                  : "Unavailable"}</span
           >
           <button
             type="button"
@@ -191,7 +217,7 @@
   <p class="install-content__hint" data-cy="install-content-availability">
     {bootstrap === null || bootstrap.delivery === null
       ? "No content package is available in this build."
-      : "Install verified content. Gameplay remains locked until domain adapters are available."}
+      : "Install verified content to unlock Story and Free Play."}
   </p>
   {#if progress}
     <p role="status" aria-live="polite" data-cy="install-content-progress">

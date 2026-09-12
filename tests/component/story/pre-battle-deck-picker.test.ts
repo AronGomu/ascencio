@@ -1,10 +1,10 @@
+import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 import "fake-indexeddb/auto";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { deleteDB } from "idb";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { setRuntimeCatalogForTests } from "../../../src/decks/catalog/runtime-catalog.ts";
 import StoryApp from "../../../src/story/StoryApp.svelte";
 import PreBattleScreen from "../../../src/story/screens/PreBattleScreen.svelte";
 import type { PreBattleDeckOption } from "../../../src/story/decks/pre-battle-decks.ts";
@@ -40,28 +40,28 @@ const LEGAL: PreBattleDeckOption = {
   name: "Signal Deck",
   legal: true,
   issue: null,
-  bundled: false,
+  readOnly: false,
 };
 const SECOND: PreBattleDeckOption = {
   id: "relay",
   name: "Relay Deck",
   legal: true,
   issue: null,
-  bundled: false,
+  readOnly: false,
 };
 const ILLEGAL: PreBattleDeckOption = {
   id: "broken",
   name: "Broken Deck",
   legal: false,
   issue: "This deck uses 3 copy/copies of Dark Magician; you own 1.",
-  bundled: false,
+  readOnly: false,
 };
 const BUNDLED: PreBattleDeckOption = {
   id: "preset",
   name: "Story Preset",
   legal: true,
   issue: null,
-  bundled: true,
+  readOnly: true,
 };
 
 /* The records behind the three options above. The briefing pairs verdicts with
@@ -272,7 +272,7 @@ describe("the pre-battle deck picker", () => {
     await fireEvent.dblClick(deckButton(BUNDLED.id));
 
     expect(show).toHaveBeenCalledExactlyOnceWith({
-      message: "Bundled deck: cannot be modified",
+      message: "Read-only deck: cannot be modified",
       tone: "warning",
     });
     expect(onopendecks).not.toHaveBeenCalled();
@@ -292,7 +292,7 @@ describe("the pre-battle deck picker", () => {
 
     await fireEvent.dblClick(deckButton(BUNDLED.id));
 
-    expect(notice()).toBe("Bundled deck: cannot be modified");
+    expect(notice()).toBe("Read-only deck: cannot be modified");
     expect(onopendecks).not.toHaveBeenCalled();
   });
 
@@ -500,7 +500,11 @@ describe("the briefing inside the story app", () => {
     const onencounter = vi.fn<
       (request: StoryEncounterRequest) => Promise<StoryHandoffOutcome>
     >(() => Promise.resolve("ready"));
-    render(StoryApp, { resumeState: preBattleSave(), onencounter });
+    render(StoryApp, {
+      gameplay: installedDuelGameplayFixture(),
+      resumeState: preBattleSave(),
+      onencounter,
+    });
 
     /* Blocked while the catalog is still being read, and still blocked once it
        lands — the default deck is 39 cards short. */
@@ -535,7 +539,10 @@ describe("the briefing inside the story app", () => {
 
   it("keeps the pick after a trip back to the map", async () => {
     installPrototypeActiveCatalog();
-    render(StoryApp, { resumeState: preBattleSave() });
+    render(StoryApp, {
+      gameplay: installedDuelGameplayFixture(),
+      resumeState: preBattleSave(),
+    });
     await waitFor(() =>
       expect(cy(`deck-tile-press-${FIELDABLE.deck.id}`)).not.toBeNull(),
     );
@@ -550,44 +557,9 @@ describe("the briefing inside the story app", () => {
     expect(picked(FIELDABLE.deck.id)).toBe(true);
     expect(start().disabled).toBe(false);
   });
-
-  /* A card database that will not load is the one refusal the player cannot
-     repair by editing a deck, so it has to say so and offer the read again. */
-  it("reports a card database that will not load, and retries it", async () => {
-    setRuntimeCatalogForTests(null);
-    const fetchSpy = vi
-      .spyOn(globalThis, "fetch")
-      .mockRejectedValue(new Error("offline"));
-    render(StoryApp, { resumeState: preBattleSave() });
-
-    await waitFor(() =>
-      expect(notice()).toContain("The card database could not load."),
-    );
-    expect(start().disabled).toBe(true);
-    expect(gridSize()).toBe(0);
-
-    const before = fetchSpy.mock.calls.length;
-    await userEvent.setup().click(cy("story-briefing-deck-error-retry")!);
-    await waitFor(() =>
-      expect(fetchSpy.mock.calls.length).toBeGreaterThan(before),
-    );
-    /* Return to Map is the way out that never depends on the read. */
-    await userEvent.setup().click(cy("deck-select-back")!);
-    expect(cy("story-map-screen")).not.toBeNull();
-    expect(cy("story-briefing-screen")).toBeNull();
-    fetchSpy.mockRestore();
-  });
 });
 
-/* The briefing is the one screen a player is *sent* to the deck editor from,
-   and it is the screen furthest from their last save: a new game, a shop trip
-   and a walk to the arena all sit between the two. The story writes on a manual
-   save and on the reward autosave and nowhere else, so leaving for the editor
-   has to write, and has to keep the player here when the write is refused. */
 describe("leaving the briefing for the deck editor", () => {
-  /* A save that cannot start its encounter and cannot repair its way out on
-     this screen: no decks at all, plus a shop trip that is still only in
-     memory. */
   function unsavedProgress() {
     return {
       ...createInitialStoryState(),
@@ -603,13 +575,14 @@ describe("leaving the briefing for the deck editor", () => {
   }
 
   async function blockedBriefing(ondecks: () => void) {
-    installPrototypeActiveCatalog();
-    render(StoryApp, { resumeState: unsavedProgress(), ondecks });
+    render(StoryApp, {
+      gameplay: installedDuelGameplayFixture(),
+      resumeState: unsavedProgress(),
+      ondecks,
+    });
     await waitFor(() =>
       expect(cy("story-briefing-block-action")).not.toBeNull(),
     );
-    /* Dispatched rather than driven through `userEvent`, so the assertion
-       below lands inside the write rather than after it. */
     await fireEvent.click(cy("story-briefing-block-action")!);
   }
 

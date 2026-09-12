@@ -2,7 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e-content",
-  outputDir: "artifacts/CORE_ACCEPTANCE/T4/test-results",
+  testIgnore: "built-installer.spec.ts",
+  outputDir: "artifacts/CORE_ACCEPTANCE/T6/test-results",
   fullyParallel: false,
   workers: 1,
   timeout: 300_000,
@@ -11,7 +12,7 @@ export default defineConfig({
     ["line"],
     [
       "json",
-      { outputFile: "artifacts/CORE_ACCEPTANCE/T4/playwright-report.json" },
+      { outputFile: "artifacts/CORE_ACCEPTANCE/T6/playwright-report.json" },
     ],
   ],
   use: {

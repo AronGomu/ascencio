@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { InstalledGameplay } from "../../content/index.ts";
   import { PROTOTYPE_RULESET } from "../../decks/catalog/pinned-ruleset.ts";
   import { emptyDeckHistory } from "../../decks/deck-history.ts";
   import type { DeckRepository } from "../../decks/index.ts";
@@ -21,6 +22,7 @@
   type ClosableRepository = DeckRepository & { close: () => void };
 
   export let store: ShellStore;
+  export let gameplay: InstalledGameplay | null = null;
   export let openRepository: () => Promise<ClosableRepository> = async () =>
     await IndexedDbDeckRepository.open();
   export let resetTarget: (
@@ -49,6 +51,7 @@
     status = "Seeding the test deck…";
     let repository: ClosableRepository | null = null;
     try {
+      if (gameplay === null) throw new Error("Installed content is required");
       repository = await openRepository();
       const timestamp = now().toISOString();
       await repository.create(
@@ -57,7 +60,7 @@
           id: ADMIN_TEST_DECK_ID,
           revision: 0,
           name: ADMIN_TEST_DECK_NAME,
-          ...buildAdminTestDeck(),
+          ...buildAdminTestDeck(gameplay),
           createdAt: timestamp,
           updatedAt: timestamp,
           validation: {
@@ -130,14 +133,14 @@
     <div class="grid" data-cy="admin-jumps-list">
       <button
         type="button"
-        disabled={busy}
         data-cy="admin-jump-seed-deck"
+        disabled={gameplay === null || busy}
         onclick={seedTestDeck}>Seed test deck &amp; open it</button
       >
       <button
         type="button"
-        data-cy="admin-jump-preset-duel"
-        onclick={() => go({ kind: "free-play" })}>Launch preset duel</button
+        data-cy="admin-jump-installed-duel"
+        onclick={() => go({ kind: "free-play" })}>Launch installed duel</button
       >
       <button
         type="button"

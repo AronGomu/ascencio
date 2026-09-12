@@ -40,6 +40,34 @@ export class ImmutableChoiceIdSet implements ReadonlySet<ChoiceId> {
       callbackfn.call(thisArg, value, value, this);
   }
 
+  union<U>(other: ReadonlySetLike<U>): Set<ChoiceId | U> {
+    return this.#values.union(other);
+  }
+
+  intersection<U>(other: ReadonlySetLike<U>): Set<ChoiceId & U> {
+    return this.#values.intersection(other);
+  }
+
+  difference<U>(other: ReadonlySetLike<U>): Set<ChoiceId> {
+    return this.#values.difference(other);
+  }
+
+  symmetricDifference<U>(other: ReadonlySetLike<U>): Set<ChoiceId | U> {
+    return this.#values.symmetricDifference(other);
+  }
+
+  isSubsetOf(other: ReadonlySetLike<unknown>): boolean {
+    return this.#values.isSubsetOf(other);
+  }
+
+  isSupersetOf(other: ReadonlySetLike<unknown>): boolean {
+    return this.#values.isSupersetOf(other);
+  }
+
+  isDisjointFrom(other: ReadonlySetLike<unknown>): boolean {
+    return this.#values.isDisjointFrom(other);
+  }
+
   [Symbol.iterator](): SetIterator<ChoiceId> {
     return this.values();
   }

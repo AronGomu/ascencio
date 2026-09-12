@@ -1,3 +1,5 @@
+import { installedDuelGameplayFixture } from "../fixtures/installed-duel-gameplay.ts";
+import { contentReaderFixture } from "../fixtures/installed-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -9,9 +11,6 @@ import {
   PROTOTYPE_RULESET,
   quantityLimit,
 } from "../../src/decks/catalog/pinned-ruleset.ts";
-import type { DeckBuilderCardView } from "../../src/decks/catalog/ocg-card-mapper.ts";
-import type * as RuntimeCatalogModule from "../../src/decks/catalog/runtime-catalog.ts";
-import { setRuntimeCatalogForTests } from "../../src/decks/catalog/runtime-catalog.ts";
 import { PROTOTYPE_CATALOG } from "../../src/deck-editor/fixtures/catalog.ts";
 import { installPrototypeActiveCatalog } from "../fixtures/active-catalog.ts";
 
@@ -110,26 +109,6 @@ vi.mock("../../src/battle/app/DuelWorkerClient.ts", () => {
   return { DuelWorkerClient: DuelWorkerClientMock };
 });
 
-/* A catalog read this file can hold open, so a listing can be made to run
-   while the card database is still in flight — the state a real page is in for
-   as long as its shard fetches take. Every other test here drives the real
-   memo through `setRuntimeCatalogForTests`, so the mock keeps it and defers to
-   the real read whenever nothing is being held. */
-const catalogGate = vi.hoisted(() => ({
-  held: null as Promise<readonly DeckBuilderCardView[]> | null,
-}));
-
-vi.mock(
-  "../../src/decks/catalog/runtime-catalog.ts",
-  async (importOriginal) => {
-    const actual = await importOriginal<typeof RuntimeCatalogModule>();
-    return {
-      ...actual,
-      runtimeCatalog: () => catalogGate.held ?? actual.runtimeCatalog(),
-    };
-  },
-);
-
 import App from "../../src/battle/app/App.svelte";
 import { DECK_DATABASE_NAME } from "../../src/decks/index.ts";
 import { emptyDeckHistory } from "../../src/decks/deck-history.ts";
@@ -194,26 +173,13 @@ function query(value: string): HTMLElement | null {
 }
 
 async function renderReadyApp() {
-  const rendered = render(App);
+  const rendered = render(App, {
+    content: installedDuelGameplayFixture().content,
+    gameplay: installedDuelGameplayFixture(),
+    reader: contentReaderFixture(),
+  });
   await vi.waitFor(() => expect(query("deck-picker")).not.toBeNull());
   return rendered;
-}
-
-/** Holds the card database in flight; the returned call lands it. */
-function holdCatalog(): () => void {
-  let land: (cards: readonly DeckBuilderCardView[]) => void = () => undefined;
-  catalogGate.held = new Promise((resolve) => {
-    land = resolve;
-  });
-  return () => land(PROTOTYPE_CATALOG);
-}
-
-/* Room for a listing to open IndexedDB, seed, read and write back. The two
-   tests that use it assert that a listing did none of those things, so there
-   is no appearance to wait for: the wait has to be for the listing itself. */
-async function settleListing(): Promise<void> {
-  for (let turn = 0; turn < 20; turn += 1)
-    await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
 beforeEach(async () => {
@@ -223,7 +189,6 @@ beforeEach(async () => {
 afterEach(async () => {
   cleanup();
   vi.unstubAllGlobals();
-  catalogGate.held = null;
   /* Every test starts from a catalog that answers: the failure case below
      clears the memo, and a cleared memo would make the next render fetch. */
   installPrototypeActiveCatalog();
@@ -237,67 +202,13 @@ describe("App deck picker with local decks", () => {
   it("offers the bundled group before the local library has been read", async () => {
     await renderReadyApp();
 
-    expect(query("deck-picker-group-preset")).not.toBeNull();
+    expect(query("deck-picker-group-chapter")).not.toBeNull();
     expect(
-      document.querySelectorAll('[data-cy^="deck-picker-option-preset:"]'),
+      document.querySelectorAll('[data-cy^="deck-picker-option-chapter:"]'),
     ).toHaveLength(2);
     expect(
       (query("deck-picker-start-button") as HTMLButtonElement).disabled,
     ).toBe(false);
-  });
-
-  /* The card database is a fetch now, and a fetch can fail. The bundled decks
-     are compiled into the build, so they must survive that; the decks the
-     player built cannot be resolved without the catalog, so their absence is
-     explained rather than left looking like deletion. */
-  it("keeps the bundled decks and says so when the card database fails", async () => {
-    await seedDeck(VALID_MAIN);
-    setRuntimeCatalogForTests(null);
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(() => Promise.reject(new Error("offline"))),
-    );
-
-    await renderReadyApp();
-
-    await vi.waitFor(() =>
-      expect(query("app-catalog-error-panel")).not.toBeNull(),
-    );
-    expect(query("app-catalog-error-message")?.textContent).toContain(
-      "Card database could not load",
-    );
-    expect(
-      document.querySelectorAll('[data-cy^="deck-picker-option-preset:"]'),
-    ).toHaveLength(2);
-    expect(document.querySelector(LOCAL_PLAYER_OPTION)).toBeNull();
-  });
-
-  /* The panel used to latch for the session: it is a term in
-     `duelViewportOnly`, so a player who took its offer and duelled with a
-     bundled deck kept a banner over the field and lost the ADR-019 full-height
-     shell until they reloaded. `runtimeCatalog()` no longer memoizes a
-     rejection, so there is now something for a retry to reach. */
-  it("retries the card database and clears the panel when it answers", async () => {
-    const user = userEvent.setup();
-    await seedDeck(VALID_MAIN);
-    setRuntimeCatalogForTests(null);
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(() => Promise.reject(new Error("offline"))),
-    );
-
-    await renderReadyApp();
-    await vi.waitFor(() =>
-      expect(query("app-catalog-error-panel")).not.toBeNull(),
-    );
-
-    installPrototypeActiveCatalog();
-    await user.click(query("app-retry-catalog-button") as HTMLButtonElement);
-
-    await vi.waitFor(() => expect(query("app-catalog-error-panel")).toBeNull());
-    await vi.waitFor(() =>
-      expect(document.querySelector(LOCAL_PLAYER_OPTION)).not.toBeNull(),
-    );
   });
 
   it("lists a playable local deck and dispatches its card list", async () => {
@@ -312,11 +223,11 @@ describe("App deck picker with local decks", () => {
     await user.click(query("deck-picker-start-button") as HTMLButtonElement);
 
     expect(workerClientSpies.startDuel).toHaveBeenCalledOnce();
-    expect(workerClientSpies.startDuel).toHaveBeenCalledWith(
-      "local-v1:local:vs:chapter-one-practice",
+    expect(workerClientSpies.startDuel.mock.calls[0]).toMatchObject([
+      "local-v1:local:vs:local",
       { kind: "cards", main: VALID_MAIN, extra: [], side: [] },
-      { kind: "preset", deckId: "chapter-one-practice" },
-    );
+      { kind: "cards" },
+    ]);
   });
 
   /* The whole point of the stored default: a player who built a deck and
@@ -335,7 +246,7 @@ describe("App deck picker with local decks", () => {
 
   /* The duel menu fixes the opponent even when a profile remembers another
      valid preset or a retired one. The player's chosen key stays untouched. */
-  it.each(["preset:chapter-one-starter", "preset:shaddoll"])(
+  it.each(["chapter:chapter-one-starter", "preset:shaddoll"])(
     "the persisted opponent key %s is forced to chapter-one-practice",
     async (opponentKey) => {
       localStorage.setItem(
@@ -344,7 +255,7 @@ describe("App deck picker with local decks", () => {
           version: 2,
           windows: { zoneList: null, confirm: null },
           decks: {
-            playerKey: "preset:chapter-one-starter",
+            playerKey: "chapter:chapter-one-starter",
             opponentKey,
           },
           settings: { showZoneOutlines: true, showZoneCounts: true },
@@ -352,29 +263,32 @@ describe("App deck picker with local decks", () => {
       );
       expect(persistedDeckKeys().opponentKey).toBe(opponentKey);
       expect(persistedDeckKeys().opponentKey).not.toBe(
-        "preset:chapter-one-practice",
+        "chapter:chapter-one-practice",
       );
 
       await renderReadyApp();
 
       await vi.waitFor(() =>
         expect(persistedDeckKeys().opponentKey).toBe(
-          "preset:chapter-one-practice",
+          "chapter:chapter-one-practice",
         ),
       );
-      expect(persistedDeckKeys().playerKey).toBe("preset:chapter-one-starter");
-      expect(playerSelect().value).toBe("preset:chapter-one-starter");
+      expect(persistedDeckKeys().playerKey).toBe("chapter:chapter-one-starter");
+      expect(playerSelect().value).toBe("chapter:chapter-one-starter");
       expect(query("deck-picker-fallback-notice")).toBeNull();
     },
   );
 
-  it("omits a local deck that does not satisfy the pinned ruleset", async () => {
+  it("keeps invalid local deck visible but disabled", async () => {
     await seedDeck(VALID_MAIN.slice(0, 39));
     await renderReadyApp();
     await vi.waitFor(() => expect(playerSelect()).not.toBeNull());
 
-    expect(query("deck-picker-group-local")).toBeNull();
-    expect(document.querySelector(LOCAL_PLAYER_OPTION)).toBeNull();
+    expect(query("deck-picker-group-local")).not.toBeNull();
+    expect(
+      (document.querySelector(LOCAL_PLAYER_OPTION) as HTMLOptionElement)
+        .disabled,
+    ).toBe(true);
   });
 
   it("falls back to the bundled pair when a persisted deck is gone", async () => {
@@ -385,7 +299,7 @@ describe("App deck picker with local decks", () => {
         windows: { zoneList: null, confirm: null },
         decks: {
           playerKey: "local:deleted-deck:4",
-          opponentKey: "preset:chapter-one-practice",
+          opponentKey: "chapter:chapter-one-practice",
         },
         settings: { showZoneOutlines: true, showZoneCounts: true },
       }),
@@ -396,9 +310,11 @@ describe("App deck picker with local decks", () => {
       expect(query("deck-picker-fallback-notice")).not.toBeNull(),
     );
 
-    expect(playerSelect().value).toBe("preset:chapter-one-starter");
+    expect(playerSelect().value).toBe("chapter:chapter-one-starter");
     expect(query("deck-picker-opponent-fixed")).not.toBeNull();
-    expect(persistedDeckKeys().opponentKey).toBe("preset:chapter-one-practice");
+    expect(persistedDeckKeys().opponentKey).toBe(
+      "chapter:chapter-one-practice",
+    );
     expect(
       document.querySelectorAll('[data-cy="deck-picker-fallback-notice"]'),
     ).toHaveLength(1);
@@ -413,7 +329,7 @@ describe("App deck picker with local decks", () => {
         windows: { zoneList: null, confirm: null },
         decks: {
           playerKey: "local:gone:1",
-          opponentKey: "preset:chapter-one-practice",
+          opponentKey: "chapter:chapter-one-practice",
         },
         settings: { showZoneOutlines: true, showZoneCounts: true },
       }),
@@ -423,77 +339,9 @@ describe("App deck picker with local decks", () => {
       expect(query("deck-picker-fallback-notice")).not.toBeNull(),
     );
 
-    await user.selectOptions(playerSelect(), "preset:chapter-one-starter");
+    await user.selectOptions(playerSelect(), "chapter:chapter-one-starter");
 
     expect(query("deck-picker-fallback-notice")).toBeNull();
-  });
-
-  /* The listing waits on the card database before it reads the local library,
-     and these two are why. Both used to hold by accident: the listing awaited
-     a catalog-derived set of supported codes, and dropping that set as dead
-     code (`db91860`) took the wait with it. */
-  it("a local deck choice survives a listing that runs while the catalog is still loading", async () => {
-    const user = userEvent.setup();
-    await seedDeck(VALID_MAIN);
-    localStorage.setItem(
-      "ygo.ui.v2",
-      JSON.stringify({
-        version: 2,
-        windows: { zoneList: null, confirm: null },
-        decks: {
-          playerKey: "local:built-deck:1",
-          opponentKey: "preset:chapter-one-practice",
-        },
-        settings: { showZoneOutlines: true, showZoneCounts: true },
-      }),
-    );
-    const landCatalog = holdCatalog();
-
-    await renderReadyApp();
-    /* Start against a picker holding the bundled decks alone: the persisted
-       key names a deck no row carries yet, which is what re-lists. */
-    expect(document.querySelector(LOCAL_PLAYER_OPTION)).toBeNull();
-    await user.click(query("deck-picker-start-button") as HTMLButtonElement);
-    await settleListing();
-
-    expect(persistedDeckKeys().playerKey).toBe("local:built-deck:1");
-    expect(query("deck-picker-fallback-notice")).toBeNull();
-
-    landCatalog();
-
-    await vi.waitFor(() =>
-      expect(document.querySelector(LOCAL_PLAYER_OPTION)).not.toBeNull(),
-    );
-    expect(playerSelect().value).toBe("local:built-deck:1");
-    expect(persistedDeckKeys().playerKey).toBe("local:built-deck:1");
-    expect(query("deck-picker-fallback-notice")).toBeNull();
-  });
-
-  it("a failed catalog seeds no starter deck", async () => {
-    setRuntimeCatalogForTests(null);
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(() => Promise.reject(new Error("offline"))),
-    );
-
-    await renderReadyApp();
-    await vi.waitFor(() =>
-      expect(query("app-catalog-error-panel")).not.toBeNull(),
-    );
-    await settleListing();
-
-    /* A starter deck built against a catalog that never landed is forty
-       `missing-card` errors at rest, and the later catalog-backed seeding
-       short-circuits on it rather than repairing it. */
-    const repository = await IndexedDbDeckRepository.open();
-    try {
-      expect(await repository.list()).toEqual([]);
-    } finally {
-      repository.close();
-    }
-    expect(
-      document.querySelectorAll('[data-cy^="deck-picker-option-preset:"]'),
-    ).toHaveLength(2);
   });
 
   /* Defensive: the picker only offers decks the Worker should accept, so a

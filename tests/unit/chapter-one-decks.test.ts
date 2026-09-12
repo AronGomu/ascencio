@@ -1,3 +1,4 @@
+import { buildStarterGrant } from "../../src/story/decks/starter-grant.ts";
 import { ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
@@ -24,11 +25,6 @@ import { STARTER_DECK_LIST } from "../../src/decks/starter-deck.ts";
 import { reduceStory } from "../../src/story/model/story-reducer.ts";
 import { createInitialStoryState } from "../../src/story/model/story-state.ts";
 import { migrateStorySaveState } from "../../src/story/saves/story-save-contracts.ts";
-import {
-  DEFAULT_FREE_PLAY_OPPONENT_ID,
-  FREE_PLAY_OPPONENTS,
-} from "../../src/shell/screens/free-play-opponents.ts";
-import { buildAdminTestDeck } from "../../src/shell/admin/admin-actions.ts";
 import {
   normalizeChapterSource,
   type ChapterSourceCorrections,
@@ -160,11 +156,14 @@ describe("Chapter 1 bundled prerequisites", () => {
     }
   });
 
-  it("new-game, new-library and admin starter agree; all three personas explicitly use DM practice", () => {
+  it("legacy new-game and new-library starter agree; all three personas explicitly use DM practice", () => {
     expect(STARTER_DECK_LIST).toBe(DECK_SOURCES.get("chapter-one-starter"));
     const starter = parseYdk(STARTER_DECK_LIST);
     expect([...starter.main].sort((a, b) => a - b)).toEqual(main(46986414));
-    const state = reduceStory(createInitialStoryState(), { type: "new-game" });
+    const state = reduceStory(createInitialStoryState(), {
+      type: "new-game",
+      starterGrant: buildStarterGrant(),
+    });
     expect(state.decks).toHaveLength(1);
     expect(state.decks[0]).toMatchObject({
       name: "Chapter 1 Starter",
@@ -179,15 +178,6 @@ describe("Chapter 1 bundled prerequisites", () => {
       ),
     );
     expect(state.dp).toBe(1000);
-    expect(buildAdminTestDeck()).toEqual(starter);
-    expect(FREE_PLAY_OPPONENTS.map(({ id, deckKey }) => [id, deckKey])).toEqual(
-      [
-        ["practice-bot", "preset:chapter-one-practice"],
-        ["blaze-circuit", "preset:chapter-one-practice"],
-        ["vault-warden", "preset:chapter-one-practice"],
-      ],
-    );
-    expect(DEFAULT_FREE_PLAY_OPPONENT_ID).toBe("practice-bot");
   });
 
   it("v1/v2 migration keeps the legacy grant; v3/v4 libraries, inventory and checkpoints remain unchanged", async () => {

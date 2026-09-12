@@ -1,3 +1,4 @@
+import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 import "fake-indexeddb/auto";
 import { deleteDB } from "idb";
@@ -115,6 +116,7 @@ describe("leaving a single-pack reveal early", () => {
       opened(1).map(({ code }) => [code, 1]),
     );
     const { container } = render(StoryApp, {
+      gameplay: installedDuelGameplayFixture(),
       resumeState: {
         ...createInitialStoryState(),
         screen: "shop-opening" as const,

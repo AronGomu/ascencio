@@ -1,3 +1,4 @@
+import { TEST_CONTENT_REF } from "../fixtures/installed-gameplay.ts";
 import { describe, expect, it, onTestFinished } from "vitest";
 import { parseDuelDeckSelection } from "../../src/battle/duel/contracts/duel-deck-selection.ts";
 import { duelId } from "../../src/battle/duel/contracts/ids.ts";
@@ -17,7 +18,7 @@ describe("real Node duel Worker thread", () => {
     expect(harness.threadId).toBeGreaterThan(0);
 
     const initializeCursor = harness.cursor;
-    harness.post({ type: "initialize" });
+    harness.post({ type: "initialize", content: TEST_CONTENT_REF });
     await expect(
       harness.waitForMessage(hasWorkerEventType("ready"), {
         afterSequence: initializeCursor,
@@ -87,7 +88,7 @@ describe("real Node duel Worker thread", () => {
     });
 
     const initializeCursor = harness.cursor;
-    harness.post({ type: "initialize" });
+    harness.post({ type: "initialize", content: TEST_CONTENT_REF });
     const failure = await harness.waitForMessage(hasWorkerEventType("error"), {
       afterSequence: initializeCursor,
     });
@@ -111,7 +112,7 @@ describe("real Node duel Worker thread", () => {
     });
 
     const initializeCursor = harness.cursor;
-    harness.post({ type: "initialize" });
+    harness.post({ type: "initialize", content: TEST_CONTENT_REF });
     await harness.waitForMessage(hasWorkerEventType("ready"), {
       afterSequence: initializeCursor,
     });
@@ -203,7 +204,7 @@ describe("real Node duel Worker thread", () => {
     });
 
     const initializeCursor = harness.cursor;
-    harness.post({ type: "initialize" });
+    harness.post({ type: "initialize", content: TEST_CONTENT_REF });
     await harness.waitForMessage(hasWorkerEventType("ready"), {
       afterSequence: initializeCursor,
     });

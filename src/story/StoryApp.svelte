@@ -1,5 +1,11 @@
 <script lang="ts">
   import { afterUpdate, getContext, onDestroy, onMount } from "svelte";
+  import {
+    loadInstalledImages,
+    type ContentReadPort,
+    type InstalledGameplay,
+    type InstalledImageLibrary,
+  } from "../content/index.ts";
   import { PROLOGUE } from "./content/prologue.ts";
   import {
     createInitialStoryState,
@@ -52,17 +58,18 @@
      and they are a fraction of the size. */
   import {
     contentsOf,
-    fetchShopSetData,
+    installedShopSetData,
     isSetReleased,
     resolveCardRarity,
     type ShopSetData,
   } from "./shop/data/shop-set-data.ts";
   import { openablePicks, openBoosters } from "./shop/data/pack-generator.ts";
   import { singlePriceDp } from "./shop/data/shop-pricing.ts";
-  import { runtimeCatalog } from "../decks/catalog/runtime-catalog.ts";
+  import { installedDeckCatalog } from "../decks/catalog/installed-gameplay-cards.ts";
   import { catalogByCode } from "../decks/catalog/pinned-ruleset.ts";
   import type { DeckBuilderCardView } from "../decks/catalog/ocg-card-mapper.ts";
   import { encounterDeck } from "./decks/encounter-deck.ts";
+  import { buildInstalledStarterGrant } from "./decks/starter-grant.ts";
   import { preBattleDeckOptions } from "./decks/pre-battle-decks.ts";
   import {
     STORY_SLOT_KEYS,
@@ -76,6 +83,9 @@
   import "./styles.css";
 
   type Overlay = "history" | "settings" | "pause" | "save" | "load" | null;
+
+  export let gameplay: InstalledGameplay;
+  export let reader: ContentReadPort | null = null;
 
   /* The duel handoff, in three props. The story asks for an encounter and is
      told whether it started; it is unmounted while the duel runs, so what
@@ -114,7 +124,6 @@
     "The duel was interrupted before it started. Try again or return to the map.";
   const DECK_UNPLAYABLE =
     "The deck this save is set to duel with cannot be played. Return to the map and choose another, or repair it in the deck editor.";
-  const CATALOG_UNAVAILABLE = "The card database could not load.";
 
   interface StoryHeaderConfig {
     readonly showShop: boolean;
@@ -182,7 +191,10 @@
     resumeState !== null
       ? restoreStoryState(resumeState)
       : entryIntent === null || entryIntent === "new"
-        ? reduceStory(createInitialStoryState(), { type: "new-game" })
+        ? reduceStory(createInitialStoryState(), {
+            type: "new-game",
+            starterGrant: buildInstalledStarterGrant(gameplay),
+          })
         : createInitialStoryState();
   /* A restored checkpoint with no result to apply is a handoff that never
      produced one — a duel that was never mounted, or a session route that
@@ -211,15 +223,20 @@
   let dirty = false;
   let inputId = 0;
   let focusedScreen: StoryScreen = state.screen;
-  let shopData: ShopSetData | null = null;
+  let shopData: ShopSetData | null = installedShopSetData(gameplay);
+  let imageLibrary: InstalledImageLibrary | null = null;
+  let imageError: string | null = null;
+  let destroyed = false;
   let shopDataError: string | null = null;
   let shopDataLoading = false;
   /* Full views, not a name/image projection: `resolveCardRarity` infers a
      rarity from ATK/type fields when the shop data misses a code. */
-  let cardViewByCode: ReadonlyMap<number, DeckBuilderCardView> = new Map();
+  let cardViewByCode: ReadonlyMap<number, DeckBuilderCardView> = catalogByCode(
+    installedDeckCatalog(gameplay).cards,
+  );
   /* Tracked as a flag rather than as `size > 0`, so a read that answered is
      never mistaken for one still in flight and retried on every flush. */
-  let catalogReady = false;
+  let catalogReady = true;
   let catalogError: string | null = null;
   let catalogLoading = false;
   let boosterDialogOpen = false;
@@ -233,7 +250,11 @@
      read, including beats read in a run that was later loaded over. */
   let readBeats: ReadonlySet<string> = readStoryReadLog();
 
-  onDestroy(() => stopPlaybackTimer());
+  onDestroy(() => {
+    destroyed = true;
+    stopPlaybackTimer();
+    imageLibrary?.dispose();
+  });
 
   onMount(() => {
     if (resumeState !== null || resolution !== null) onhandled();
@@ -244,6 +265,9 @@
        newer of the two player slots, and which one that is only exists once
        storage has answered. */
     void hydrate().then(() => applyEntryIntent());
+    void loadImages().catch(() => {
+      imageError = "Installed card images could not be read.";
+    });
   });
 
   /** Applies shell menu intent after save hydration. */
@@ -496,16 +520,33 @@
   }
 
   async function loadShopData(): Promise<void> {
-    shopDataLoading = true;
     shopDataError = null;
-    try {
-      shopData = await fetchShopSetData();
-    } catch (error) {
-      shopDataError =
-        error instanceof Error ? error.message : "Shop data unavailable";
-    } finally {
-      shopDataLoading = false;
+    shopData = installedShopSetData(gameplay);
+  }
+
+  async function loadImages(): Promise<void> {
+    if (reader === null) return;
+    const loaded = await loadInstalledImages(reader, gameplay);
+    if (destroyed) {
+      loaded.dispose();
+      return;
     }
+    imageLibrary?.dispose();
+    imageLibrary = loaded;
+    const data = installedShopSetData(gameplay);
+    shopData = {
+      ...data,
+      sets: data.sets.map((set) => ({
+        ...set,
+        imageUrl: loaded.setUrls.get(set.id) ?? null,
+      })),
+    };
+    cardViewByCode = catalogByCode(
+      installedDeckCatalog(gameplay).cards.map((card) => ({
+        ...card,
+        imageUrl: loaded.cardUrls.get(card.code) ?? null,
+      })),
+    );
   }
 
   /**
@@ -519,21 +560,10 @@
    * screen whose numbers the catalog changes.
    */
   function loadCatalog(): void {
-    catalogLoading = true;
     catalogError = null;
-    void runtimeCatalog().then(
-      (loaded) => {
-        cardViewByCode = catalogByCode(loaded);
-        catalogReady = true;
-        catalogLoading = false;
-      },
-      (error: unknown) => {
-        catalogLoading = false;
-        catalogError = `${CATALOG_UNAVAILABLE} ${
-          error instanceof Error ? error.message : String(error)
-        }`;
-      },
-    );
+    cardViewByCode = catalogByCode(installedDeckCatalog(gameplay).cards);
+    catalogReady = true;
+    catalogLoading = false;
   }
 
   /** One Retry for the sell screen, which reads both sources and so can be
@@ -579,7 +609,10 @@
     state = next;
   }
   function newGame(): void {
-    dispatch({ type: "new-game" });
+    dispatch({
+      type: "new-game",
+      starterGrant: buildInstalledStarterGrant(gameplay),
+    });
   }
   /** Takes the one result this encounter is allowed to produce. A resolution
       already applied is ignored, so a re-render cannot advance the story a
@@ -617,7 +650,7 @@
          null here is the same save answering differently — a card database
          that changed under it, or a retry reached from the outcome screen
          without ever passing the briefing. */
-      const deck = await encounterDeck(current);
+      const deck = await encounterDeck(current, gameplay);
       if (deck === null) {
         handoffError = DECK_UNPLAYABLE;
         return;
@@ -895,6 +928,9 @@
       >
     {/if}
   </StoryTopBar>
+  {#if imageError !== null}
+    <p role="alert" data-cy="story-installed-image-error">{imageError}</p>
+  {/if}
   {#if storageOperationError}
     <section
       class="storage-error"

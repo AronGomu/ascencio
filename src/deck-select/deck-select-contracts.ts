@@ -16,7 +16,9 @@ export interface DeckTileModel {
   readonly legal: boolean;
   /** Why illegal; null when legal. */
   readonly blockReason: string | null;
-  readonly bundled: boolean;
+  /** Immutable source: cannot edit, rename, delete, or set a local default.
+      Independent from provenance, which the host describes in `meta`. */
+  readonly readOnly: boolean;
   /** AI owner name → 🔒 badge + never deletable; null otherwise. */
   readonly lockedBy: string | null;
   readonly isDefault: boolean;

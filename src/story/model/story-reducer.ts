@@ -2,7 +2,7 @@ import {
   CHOICE_RESPONSES,
   LATER_ACKNOWLEDGMENTS,
 } from "../content/prologue.ts";
-import { buildStarterGrant } from "../decks/starter-grant.ts";
+import type { StarterGrant } from "../decks/starter-grant.ts";
 import {
   createInitialStoryState,
   rememberStoryStateTransition,
@@ -23,7 +23,7 @@ import {
 } from "../shop/data/shop-pricing.ts";
 
 export type StoryCommand =
-  | { readonly type: "new-game" }
+  | { readonly type: "new-game"; readonly starterGrant: StarterGrant }
   | { readonly type: "continue" }
   | { readonly type: "load"; readonly slot: "manual" | "autosave" | "empty" }
   | { readonly type: "advance"; readonly inputId: number }
@@ -107,7 +107,7 @@ function reduceStoryCommand(
          an older save arrives through the migration, which fills an empty deck
          list rather than a granted one. */
       const initial = createInitialStoryState();
-      const { deck, collection } = buildStarterGrant();
+      const { deck, collection } = command.starterGrant;
       return {
         ...initial,
         screen: "narrative",

@@ -325,6 +325,34 @@ export class DuelStateProjector {
         this.#shuffleSetCards(message.cards);
         break;
       case EngineMessageType.MOVE: {
+        // Tokens enter/leave existence at location 0, not a public deck/pile.
+        if (
+          Number(message.from.location) === 0 ||
+          Number(message.to.location) === 0
+        ) {
+          const endpoint =
+            Number(message.from.location) === 0 ? message.to : message.from;
+          if (endpoint.location !== EngineLocation.MONSTER)
+            throw new Error("Token MOVE must name a monster zone");
+          const player = this.#players[endpoint.controller];
+          if (Number(message.to.location) === 0) {
+            removePublicCard(player, "monster", endpoint.sequence);
+          } else {
+            if (
+              findPublicCard(player, "monster", endpoint.sequence) !== undefined
+            )
+              throw new Error("Token MOVE destination is occupied");
+            const card = this.#createCard(
+              endpoint.controller,
+              "monster",
+              endpoint.sequence,
+              endpoint.position,
+              message.card,
+            );
+            insertPublicCard(player, "monster", endpoint.sequence, card);
+          }
+          break;
+        }
         const overlayMove =
           isOverlayAddress(message.from) || isOverlayAddress(message.to);
         const overlayUpdate = overlayMove

@@ -1,5 +1,5 @@
 import type { ContentInstaller } from "./contracts/content-installer.ts";
-import type { ContentReadPort } from "./contracts/content-read-port.ts";
+import type { OwnedContentReader } from "./contracts/owned-content-reader.ts";
 import type { ContentResult } from "./contracts/content-result.ts";
 import type { CoreBootstrap } from "./contracts/core-bootstrap.ts";
 import type { RuntimeActivationPort } from "./contracts/runtime-activation-port.ts";
@@ -24,7 +24,7 @@ export async function createContentInstaller(options: {
   }
 }
 export async function openContentReader(): Promise<
-  ContentResult<ContentReadPort>
+  ContentResult<OwnedContentReader>
 > {
   try {
     const implementation = await import("./storage/content-reader.ts");

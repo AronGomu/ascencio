@@ -1,3 +1,4 @@
+import { TEST_CONTENT_REF } from "../fixtures/installed-gameplay.ts";
 import { describe, expect, it } from "vitest";
 import type { DuelWorkerEvent } from "../../src/battle/duel/contracts/duel-worker-event.ts";
 import {
@@ -232,7 +233,7 @@ class FakeDuelClient implements DuelClient {
 describe("duel view-state reducer", () => {
   it("start forwards pair identity and both deck ids to the client", () => {
     const client = new FakeDuelClient();
-    const store = createDuelStore(client);
+    const store = createDuelStore(client, TEST_CONTENT_REF);
 
     expect(
       store.start(
@@ -251,7 +252,7 @@ describe("duel view-state reducer", () => {
 
   it("restart replays the last started pair after replacement readiness", async () => {
     const client = new FakeDuelClient();
-    const store = createDuelStore(client);
+    const store = createDuelStore(client, TEST_CONTENT_REF);
     expect(
       store.start(
         preset("chapter-one-practice"),
@@ -286,7 +287,7 @@ describe("duel view-state reducer", () => {
 
   it("reset replaces the worker without starting", async () => {
     const client = new FakeDuelClient();
-    const store = createDuelStore(client);
+    const store = createDuelStore(client, TEST_CONTENT_REF);
     let current = createInitialDuelViewState(client.context);
     const unsubscribe = store.subscribe((state) => {
       current = state;
@@ -455,7 +456,7 @@ describe("duel view-state reducer", () => {
 
   it("forwards a restore request to the client", () => {
     const client = new FakeDuelClient();
-    const store = createDuelStore(client);
+    const store = createDuelStore(client, TEST_CONTENT_REF);
 
     expect(store.restore()).toBe(true);
     client.restoreResult = false;
@@ -628,7 +629,7 @@ describe("duel view-state reducer", () => {
 
   it("resets both queues and sequence state on start and replacement paths", async () => {
     const client = new FakeDuelClient();
-    const store = createDuelStore(client);
+    const store = createDuelStore(client, TEST_CONTENT_REF);
     let current = createInitialDuelViewState(client.context);
     const unsubscribe = store.subscribe((state) => {
       current = state;
@@ -673,7 +674,7 @@ describe("duel view-state reducer", () => {
     await store.destroy();
 
     const failingClient = new FakeDuelClient();
-    const failingStore = createDuelStore(failingClient);
+    const failingStore = createDuelStore(failingClient, TEST_CONTENT_REF);
     let failed = createInitialDuelViewState(failingClient.context);
     const unsubscribeFailing = failingStore.subscribe((state) => {
       failed = state;
@@ -750,7 +751,7 @@ describe("duel view-state reducer", () => {
 
   it("accepts one submit across interaction and prompt-control paths", async () => {
     const client = new FakeDuelClient();
-    const store = createDuelStore(client);
+    const store = createDuelStore(client, TEST_CONTENT_REF);
     let current = createInitialDuelViewState(client.context);
     const unsubscribe = store.subscribe((state) => {
       current = state;
@@ -805,7 +806,7 @@ describe("duel view-state reducer", () => {
 
   it("marks local submitting only after client acceptance and resets on new key/result/replacement", async () => {
     const client = new FakeDuelClient();
-    const store = createDuelStore(client);
+    const store = createDuelStore(client, TEST_CONTENT_REF);
     let current = createInitialDuelViewState(client.context);
     const unsubscribe = store.subscribe((state) => {
       current = state;
@@ -871,7 +872,7 @@ describe("duel view-state reducer", () => {
 
   it("refuses a placement intent without an active prompt", () => {
     const client = new FakeDuelClient();
-    const store = createDuelStore(client);
+    const store = createDuelStore(client, TEST_CONTENT_REF);
     let current = createInitialDuelViewState(client.context);
     const unsubscribe = store.subscribe((state) => {
       current = state;
@@ -887,7 +888,7 @@ describe("duel view-state reducer", () => {
 
   it("records the armed zone against the prompt that armed it", () => {
     const client = new FakeDuelClient();
-    const store = createDuelStore(client);
+    const store = createDuelStore(client, TEST_CONTENT_REF);
     let current = createInitialDuelViewState(client.context);
     const unsubscribe = store.subscribe((state) => {
       current = state;
@@ -906,7 +907,7 @@ describe("duel view-state reducer", () => {
 
   it("auto-answers the follow-up place prompt that matches the armed zone", () => {
     const client = new FakeDuelClient();
-    const store = createDuelStore(client);
+    const store = createDuelStore(client, TEST_CONTENT_REF);
     let current = createInitialDuelViewState(client.context);
     const unsubscribe = store.subscribe((state) => {
       current = state;
@@ -934,7 +935,7 @@ describe("duel view-state reducer", () => {
 
   it("leaves a place prompt the guess missed to the player and costs nothing", () => {
     const client = new FakeDuelClient();
-    const store = createDuelStore(client);
+    const store = createDuelStore(client, TEST_CONTENT_REF);
     let current = createInitialDuelViewState(client.context);
     const unsubscribe = store.subscribe((state) => {
       current = state;
@@ -970,7 +971,7 @@ describe("duel view-state reducer", () => {
       { type: "prompt", prompt: IDLE_PROMPT_EVENT.prompt },
     ] as const satisfies readonly DuelWorkerEvent[]) {
       const client = new FakeDuelClient();
-      const store = createDuelStore(client);
+      const store = createDuelStore(client, TEST_CONTENT_REF);
       let current = createInitialDuelViewState(client.context);
       const unsubscribe = store.subscribe((state) => {
         current = state;
@@ -1001,7 +1002,7 @@ describe("duel view-state reducer", () => {
     for (const rejection of ["invalid_response", "stale_prompt"] as const) {
       const client = new FakeDuelClient();
       client.respondResult = rejection !== "stale_prompt";
-      const store = createDuelStore(client);
+      const store = createDuelStore(client, TEST_CONTENT_REF);
       let current = createInitialDuelViewState(client.context);
       const unsubscribe = store.subscribe((state) => {
         current = state;

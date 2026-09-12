@@ -6,6 +6,7 @@ import {
   loadCollectionCatalog,
 } from "../../../src/story/collection/collection-cards.ts";
 import type { ShopSetData } from "../../../src/story/shop/data/shop-set-data.ts";
+import { installedGameplayFromCatalog } from "../../fixtures/installed-gameplay.ts";
 
 /* A collection is counts only, so the tier a card is shown at is resolved
    rather than stored: the shop's set data first, the card itself after
@@ -100,8 +101,10 @@ describe("loadCollectionCatalog", () => {
      tiers are lost, so the screen still groups. */
   it("degrades to inferred rarities when the shop data cannot be read", async () => {
     setRuntimeCatalogForTests(CARDS);
-    const { cards, rarityByCode } = await loadCollectionCatalog();
-    expect(cards).toEqual(CARDS);
+    const { cards, rarityByCode } = await loadCollectionCatalog(
+      installedGameplayFromCatalog(CARDS, { sets: Object.freeze([]) }),
+    );
+    expect(cards.map(({ code }) => code).sort()).toEqual([4007, 4008, 4009]);
     expect(rarityByCode.get(4009)).toBe("secret-rare");
   });
 });

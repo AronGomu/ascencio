@@ -1,3 +1,4 @@
+import { installedGameplayFixture } from "../fixtures/installed-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -12,6 +13,7 @@ import {
 } from "../fixtures/battle-facade-probe.ts";
 import { parseBattleRequest } from "../../src/battle/battle-contracts.ts";
 import { deckId } from "../../src/decks/index.ts";
+import { installedSelectableDecks } from "../../src/battle/decks/installed-selectable-decks.ts";
 import {
   findSelectableDeck,
   listSelectableDecks,
@@ -58,6 +60,7 @@ const duelDeckModule = async () =>
     listSelectableDecks,
     findSelectableDeck,
     parseBattleRequest,
+    installedSelectableDecks,
   }) as BattleDeckModule as Awaited<ReturnType<DomainLoaders["duel"]>>;
 
 const loaders: DomainLoaders = {
@@ -69,7 +72,8 @@ const loaders: DomainLoaders = {
 const SESSION_HANDOFF = "77777777-2222-4333-8444-555555555555";
 const READY_CORE_GATE: CoreGate = {
   kind: "ready",
-  chapterIds: ["chapter-01"],
+  gameplay: installedGameplayFixture(),
+  reader: null,
   generation: 1,
 };
 
@@ -246,7 +250,7 @@ describe("AppShell", () => {
      menu must not be what loads it. Free play may: the player is two clicks
      from duelling by then, and the decks its seats offer come from that same
      entry. */
-  it("loads the battle domain only once free play is opened", async () => {
+  it("loads the battle domain once when free play is opened", async () => {
     const duel = vi.fn(never);
     const store = createShellStore("#/", () => {});
     renderShell({ store, loaders: { ...loaders, duel } });
@@ -255,7 +259,10 @@ describe("AppShell", () => {
 
     store.navigate({ kind: "free-play" });
 
-    await vi.waitFor(() => expect(duel).toHaveBeenCalled(), REAL_IMPORT);
+    await vi.waitFor(() => expect(duel).toHaveBeenCalledOnce(), REAL_IMPORT);
+    window.dispatchEvent(new Event("resize"));
+    await tick();
+    expect(duel).toHaveBeenCalledOnce();
   });
 
   /* The duel still mounts in the shell's own duel region and nowhere else:
@@ -277,8 +284,8 @@ describe("AppShell", () => {
       return found;
     }, REAL_IMPORT);
     expect([...seats].map((chip) => chip.textContent)).toEqual([
-      "Chapter 1 Starter",
-      "Chapter 1 Practice",
+      "Installed Starter",
+      "Installed Starter",
     ]);
 
     await fireEvent.click(
@@ -563,15 +570,15 @@ describe("AppShell", () => {
   /* The loaded save decides what the story collection lists: its own cards, at
      the counts it records, and nothing else in the database. */
   it("lists the loaded save's own cards with their counts", async () => {
-    const darkMagician = 46986414;
+    const installedCard = 1;
     renderShell({
       store: createShellStore("#/story/collection", () => {}),
       loaders,
-      saves: savesHolding({ [darkMagician]: 3 }),
+      saves: savesHolding({ [installedCard]: 3 }),
     });
     const count = await vi.waitFor(() => {
       const found = document.querySelector(
-        `[data-cy="collection-count-${darkMagician}"]`,
+        `[data-cy="collection-count-${installedCard}"]`,
       );
       expect(found).not.toBeNull();
       return found!;

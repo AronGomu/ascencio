@@ -49,7 +49,7 @@ export const DOMAIN_BUDGET_BYTES: Readonly<
      80,453 -> 104,931 bytes for the domain chunk, closure 109,448 -> 133,926.
      ceil(133926/25_000) = 6 -> 150,000 * 1.15, leaving 22.4% headroom. The
      catalog is still out, which is what the paragraph above watches for. */
-  "deck-editor": 172_500,
+  "deck-editor": 201_250,
   /* M1 2026-08-20: lowered from 201_250. The shop surface (greeting/browse/cards/sell/
      opening/results screens, set-data loader, economy in story state, save schema v2)
      measured 150,699 bytes while it read the inlined `active-catalog` for card names and
@@ -66,8 +66,14 @@ export const DOMAIN_BUDGET_BYTES: Readonly<
      Measured 132,212 bytes → ceil(132212/25_000) = 6 → 150,000 * 1.15, leaving 23.4%
      headroom. It falls back once a second domain loads that screen eagerly enough for the
      shell to own it: the closure subtracts the shell's. A catalog creeping back in is
-     still what a further rise would mean. */
-  story: 172_500,
+     still what a further rise would mean.
+
+     T6 2026-09-12: installed Chapter 1 projections add the verified card/set adapter
+     and installed image lease loader to both editor and story closures. Measured
+     deck-editor 163,620 bytes and story 158,739 bytes; each now uses
+     ceil(measured/25,000) = 7 -> 175,000 * 1.15. Static whole-catalog data remains
+     absent; growth is installed-data code shared by both domains. */
+  story: 201_250,
 };
 
 /** Bytes each domain's lazy chunk adds on top of the shell it loads into. */

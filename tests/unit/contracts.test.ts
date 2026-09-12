@@ -1,3 +1,4 @@
+import { TEST_CONTENT_REF } from "../fixtures/installed-gameplay.ts";
 import { describe, expect, it } from "vitest";
 import {
   DuelCommandValidationError,
@@ -20,7 +21,7 @@ import { assertStructuredCloneSafe } from "../../src/battle/duel/contracts/struc
 import { deckSlots } from "../fixtures/board-public-states.ts";
 
 const examples: readonly (DuelCommand | DuelWorkerEvent)[] = [
-  { type: "initialize" },
+  { type: "initialize", content: TEST_CONTENT_REF },
   {
     type: "startDuel",
     duelId: duelId("mvp-preset-v1"),

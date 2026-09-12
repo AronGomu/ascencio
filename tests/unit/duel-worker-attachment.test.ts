@@ -1,3 +1,4 @@
+import { TEST_CONTENT_REF } from "../fixtures/installed-gameplay.ts";
 import { inspect } from "node:util";
 import { describe, expect, it, vi } from "vitest";
 import { DuelOperationError } from "../../src/battle/duel/contracts/duel-error.ts";
@@ -111,7 +112,7 @@ describe("duel Worker attachment", () => {
     const detach = attachDuelWorker(scope, runtime, memoryLogger(logs));
 
     scope.onmessage?.({
-      data: { type: "initialize" },
+      data: { type: "initialize", content: TEST_CONTENT_REF },
     } as MessageEvent<unknown>);
     await Promise.resolve();
     await Promise.resolve();
@@ -355,7 +356,9 @@ describe("duel Worker attachment", () => {
     detach();
 
     expect(scope.onmessage).toBe(replacement);
-    await expect(runtime.handle({ type: "initialize" })).resolves.toEqual([]);
+    await expect(
+      runtime.handle({ type: "initialize", content: TEST_CONTENT_REF }),
+    ).resolves.toEqual([]);
   });
 
   it("reports runtime cleanup failures to the attachment owner", () => {

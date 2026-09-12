@@ -12,7 +12,8 @@
    through `loaders.duel()`, exactly as the free-play match setup does. */
 
 import type { BattleRequest } from "../../battle/index.ts";
-import type { ValidatedDeckSnapshot } from "../../decks/index.ts";
+import type { InstalledGameplay } from "../../content/index.ts";
+import { deckId, type ValidatedDeckSnapshot } from "../../decks/index.ts";
 import type { BattleDeckModule } from "../domain-loaders.ts";
 
 /** Throws `BattleRequestError` when the snapshot is one the duel would refuse,
@@ -21,9 +22,30 @@ import type { BattleDeckModule } from "../domain-loaders.ts";
 export function storyBattleRequest(
   battle: BattleDeckModule,
   deck: ValidatedDeckSnapshot,
+  gameplay: InstalledGameplay,
 ): BattleRequest {
+  const opponent = gameplay.opponents.find(
+    ({ id }) => id === gameplay.defaults.opponentId,
+  );
+  const opponentDeck = gameplay.decks.find(({ id }) => id === opponent?.deckId);
+  if (opponentDeck === undefined)
+    throw new Error("Installed story opponent deck is unavailable");
   return battle.parseBattleRequest({
     player: { kind: "local", deck },
-    opponent: { kind: "preset", deckId: battle.DEFAULT_OPPONENT_DECK_ID },
+    opponent: {
+      kind: "local",
+      deck: {
+        ref: {
+          type: "local",
+          deckId: deckId(`chapter:${opponentDeck.id}`),
+          revision: 0,
+        },
+        name: opponentDeck.name,
+        validationDigest: `${gameplay.content.catalogSha256}:${opponentDeck.id}`,
+        main: opponentDeck.main,
+        extra: opponentDeck.extra,
+        side: opponentDeck.side,
+      },
+    },
   });
 }

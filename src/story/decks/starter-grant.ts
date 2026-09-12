@@ -1,16 +1,12 @@
 /* The deck a new story save opens with, and the cards behind it.
 
-   Built without a catalog on purpose: `reduceStory` is a pure synchronous
-   function while `runtimeCatalog()` is an asynchronous read of 64 card shards
-   and 64 text shards, so `new-game` has no catalog to wait for and must not
-   start one. Only the card-level checks in `validateDeckDraft` need it, and
-   the verdict stored here is a cache rather than an authority: `resolveDeck`
-   and the editor's library refresh both recompute it against the live catalog
-   before anything reads it, and the save layer checks only its shape. What a
-   catalog would decide is pinned by `tests/unit/decks/starter-deck.test.ts`
-   instead, which validates the same list against the real card database. */
+   `StoryApp` selects installed starter deck before dispatching synchronous
+   `new-game`. Grant construction uses no catalog because stored validation is
+   cache, not authority: `resolveDeck` plus editor library recompute it against
+   same installed gameplay union before use. Save layer checks record shape. */
 
 import legacyStarterYdk from "../../decks/starter-deck.ydk?raw";
+import type { InstalledGameplay } from "../../content/index.ts";
 import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
 import { PROTOTYPE_RULESET } from "../../decks/catalog/pinned-ruleset.ts";
 import type { DeckCardLists } from "../../decks/deck-contracts.ts";
@@ -42,6 +38,17 @@ export function buildStarterGrant(): StarterGrant {
   return grantFromList(STARTER_DECK_LIST, STARTER_DECK_NAME);
 }
 
+export function buildInstalledStarterGrant(
+  gameplay: InstalledGameplay,
+): StarterGrant {
+  const installed = gameplay.decks.find(
+    ({ id }) => id === gameplay.defaults.starterDeckId,
+  );
+  if (installed === undefined)
+    throw new Error("Installed starter deck is unavailable");
+  return grantFromCards(installed, installed.name);
+}
+
 /** Old-schema reads must not grant a different historical deck after an update. */
 export function buildLegacyStarterGrant(): StarterGrant {
   return grantFromList(legacyStarterYdk, "Starter Deck");
@@ -54,13 +61,17 @@ function grantFromList(source: string, name: string): StarterGrant {
      deck is worse than a new game that will not start. */
   if (imported.type !== "ready")
     throw new Error(`Starter deck list is unreadable: ${imported.message}`);
+  return grantFromCards(imported.cards, name);
+}
+
+function grantFromCards(lists: DeckCardLists, name: string): StarterGrant {
   const draft = createBlankDeck(name, EMPTY_CATALOG, PROTOTYPE_RULESET, {
     id: STARTER_DECK_ID,
     now: new Date(STARTER_DECK_STAMP),
   });
   const result = applyDeckCommand(
     draft,
-    { type: "import", cards: imported.cards },
+    { type: "import", cards: lists },
     EMPTY_CATALOG,
     PROTOTYPE_RULESET,
   );

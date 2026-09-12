@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   loadBrowserRuntimeAssets,
   resolveBrowserRuntimeUrl,
@@ -198,6 +198,27 @@ describe("browser runtime assets", () => {
     expect(new Uint8Array(cached.wasmBinary)).toEqual(
       new Uint8Array([0, 97, 115, 109]),
     );
+  });
+
+  it("never opens an unrelated cache when an exact installed read fails", async () => {
+    const unrelated = new MemoryCacheStorage();
+    const open = vi.spyOn(unrelated, "open");
+    vi.stubGlobal("caches", unrelated);
+    try {
+      await expect(
+        loadBrowserRuntimeAssets("https://installed.invalid/", {
+          expectedManifestSha256: "a".repeat(64),
+          cacheStorage: null,
+          fetch: (async () => {
+            throw new Error("requested exact revision missing");
+          }) as typeof fetch,
+        }),
+      ).rejects.toThrow("requested exact revision missing");
+      expect(open).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+      vi.restoreAllMocks();
+    }
   });
 
   it("uses the healthy network when Cache Storage or a cached root fails", async () => {

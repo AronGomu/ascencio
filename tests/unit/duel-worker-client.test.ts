@@ -1,3 +1,4 @@
+import { TEST_CONTENT_REF } from "../fixtures/installed-gameplay.ts";
 import { describe, expect, it, vi } from "vitest";
 import type { DuelCommand } from "../../src/battle/duel/contracts/duel-command.ts";
 import type { DuelWorkerEvent } from "../../src/battle/duel/contracts/duel-worker-event.ts";
@@ -121,8 +122,8 @@ describe("DuelWorkerClient", () => {
     const { client, workers } = createHarness();
     const worker = workers[0]!;
 
-    expect(client.initialize()).toBe(true);
-    expect(client.initialize()).toBe(false);
+    expect(client.initialize(TEST_CONTENT_REF)).toBe(true);
+    expect(client.initialize(TEST_CONTENT_REF)).toBe(false);
     worker.emit({ type: "ready", coreVersion: [11, 0] });
 
     const session = client.startDuel(
@@ -152,7 +153,7 @@ describe("DuelWorkerClient", () => {
     );
 
     expect(worker.commands).toEqual([
-      { type: "initialize" },
+      { type: "initialize", content: TEST_CONTENT_REF },
       {
         type: "startDuel",
         duelId: "mvp-preset-v1",
@@ -173,7 +174,7 @@ describe("DuelWorkerClient", () => {
 
     /* Nothing to rebuild before a duel has run. */
     expect(client.restore()).toBe(false);
-    client.initialize();
+    client.initialize(TEST_CONTENT_REF);
     worker.emit({ type: "ready", coreVersion: [11, 0] });
     client.startDuel(
       duelId("mvp-preset-v1"),
@@ -215,7 +216,7 @@ describe("DuelWorkerClient", () => {
   it("lets a refused replay be attempted again", () => {
     const { client, workers } = createHarness();
     const worker = workers[0]!;
-    client.initialize();
+    client.initialize(TEST_CONTENT_REF);
     worker.emit({ type: "ready", coreVersion: [11, 0] });
     client.startDuel(
       duelId("mvp-preset-v1"),
@@ -246,12 +247,12 @@ describe("DuelWorkerClient", () => {
   it("emits one Worker response across field and prompt-control submits", async () => {
     const { client, workers } = createHarness();
     const worker = workers[0]!;
-    const store = createDuelStore(client);
+    const store = createDuelStore(client, TEST_CONTENT_REF);
     let key: InteractionKey | null = null;
     const unsubscribe = store.subscribe((state) => {
       key = state.interactionSession.key;
     });
-    client.initialize();
+    client.initialize(TEST_CONTENT_REF);
     worker.emit({ type: "ready", coreVersion: [11, 0] });
     expect(
       store.start(
@@ -292,7 +293,7 @@ describe("DuelWorkerClient", () => {
     (code) => {
       const { client, workers } = createHarness();
       const worker = workers[0]!;
-      client.initialize();
+      client.initialize(TEST_CONTENT_REF);
       worker.emit({ type: "ready", coreVersion: [11, 0] });
       client.startDuel(
         duelId("mvp-preset-v1"),
@@ -324,7 +325,7 @@ describe("DuelWorkerClient", () => {
   it("deduplicates diagnostic requests until the Worker responds", () => {
     const { client, workers } = createHarness();
     const worker = workers[0]!;
-    client.initialize();
+    client.initialize(TEST_CONTENT_REF);
     worker.emit({ type: "ready", coreVersion: [11, 0] });
     client.startDuel(
       duelId("mvp-preset-v1"),
@@ -379,7 +380,7 @@ describe("DuelWorkerClient", () => {
       });
       const received: DuelWorkerEvent[] = [];
       client.subscribe(({ event }) => received.push(event));
-      client.initialize();
+      client.initialize(TEST_CONTENT_REF);
       workers[0]?.emit({ type: "ready", coreVersion: [11, 0] });
       client.startDuel(
         duelId("mvp-preset-v1"),
@@ -413,12 +414,12 @@ describe("DuelWorkerClient", () => {
   it("keeps delivering a boundary-failure trace the replacement cannot resend", () => {
     const { client, workers } = createHarness();
     const worker = workers[0]!;
-    const store = createDuelStore(client);
+    const store = createDuelStore(client, TEST_CONTENT_REF);
     const seen: (DuelDiagnosticTrace | null)[] = [];
     const unsubscribe = store.subscribe((state) => {
       seen.push(state.diagnostics);
     });
-    client.initialize();
+    client.initialize(TEST_CONTENT_REF);
     worker.emit({ type: "ready", coreVersion: [11, 0] });
     expect(
       store.start(
@@ -513,7 +514,7 @@ describe("DuelWorkerClient", () => {
       });
       const received: DuelWorkerEvent[] = [];
       client.subscribe(({ event }) => received.push(event));
-      expect(client.initialize()).toBe(true);
+      expect(client.initialize(TEST_CONTENT_REF)).toBe(true);
 
       await vi.advanceTimersByTimeAsync(25);
       expect(workers[0]?.terminated).toBe(true);
@@ -541,7 +542,7 @@ describe("DuelWorkerClient", () => {
     const received: DuelWorkerEvent[] = [];
     client.subscribe(({ event }) => received.push(event));
 
-    expect(client.initialize()).toBe(false);
+    expect(client.initialize(TEST_CONTENT_REF)).toBe(false);
     expect(received).toEqual([
       {
         type: "error",
@@ -564,7 +565,7 @@ describe("DuelWorkerClient", () => {
       received.push({ sessionGeneration: context.sessionGeneration, event }),
     );
     const worker = workers[0]!;
-    client.initialize();
+    client.initialize(TEST_CONTENT_REF);
     worker.emit({ type: "ready", coreVersion: [11, 0] });
     worker.postError = new Error("post failed");
 

@@ -20,13 +20,12 @@
       showing the same pick — and the element contract wants one value each. */
   export let cyKey: string | null = null;
 
-  /* Availability stays one scan line. Specific refusal follows its category;
-     repeated bundled copy is collapsed before rendering. */
+  /* Availability stays one scan line. Provenance comes from the host's meta,
+     never from the independent read-only capability. */
   $: tagLine = [
     ...new Set([
       ...(tile.legal ? [] : ["Illegal"]),
       tile.meta,
-      ...(tile.bundled && tile.meta !== "Bundled" ? ["Bundled"] : []),
       ...(tile.lockedBy === null ? [] : [`Locked: ${tile.lockedBy}`]),
       ...(yours ? ["Yours"] : []),
     ]),

@@ -54,6 +54,14 @@ const PUBLIC_ENTRY: Readonly<Record<Domain, string | null>> = Object.freeze({
    takes the entry chunk from 2.62 kB to 339.73 kB. Each allowance disappears
    when its module gets a legal home. */
 const ALLOWANCES: Readonly<Record<string, readonly string[]>> = Object.freeze({
+  /* Installed-content readers stay behind route/startup dynamic imports.
+     Importing the broad content entry at these sites adds its full export graph
+     to the shell closure and exceeds the machine-enforced shell budget. */
+  "src/shell/AppShell.svelte": ["src/content/load-installed-images.ts"],
+  "src/shell/core/core-gate.ts": [
+    "src/content/storage/content-reader.ts",
+    "src/content/load-installed-gameplay.ts",
+  ],
   // Pure install-only validation avoids loading BattleFacade.
   "src/shell/screens/InstallContentScreen.svelte": [
     "src/battle/content-activation.ts",
@@ -66,11 +74,6 @@ const ALLOWANCES: Readonly<Record<string, readonly string[]>> = Object.freeze({
   "src/content/storage/content-database.ts": ["idb"],
   "src/content/storage/content-reader.ts": ["idb"],
   "src/shell/admin/admin-actions.ts": [
-    /* Deck-format and preset asset modules. `src/decks/index.ts` cannot carry
-       them either: it is reached eagerly from `src/shell/routes.ts`, so six raw
-       `.ydk` payloads would land in the entry chunk. */
-    "src/battle/duel/presets/deck-parser.ts",
-    "src/battle/duel/presets/deck-sources-browser.ts",
     /* The duel's snapshot database name, so the console can reset it. */
     "src/battle/storage/snapshot-store.ts",
   ],
@@ -232,6 +235,7 @@ describe("public domain APIs are frozen", () => {
         "contentObjectUrl",
         "createContentInstaller",
         "loadInstalledGameplay",
+        "loadInstalledImages",
         "openContentReader",
         "parseChapterGameplay",
         "parseChapterSelections",
@@ -278,8 +282,10 @@ describe("public domain APIs are frozen", () => {
         "InstalledAssetLease",
         "InstalledContentSet",
         "InstalledGameplay",
+        "InstalledImageLibrary",
         "InstalledRuntimeReceipt",
         "ManifestRef",
+        "OwnedContentReader",
         "PackId",
         "PackedFile",
         "PersistedDownloadJob",
@@ -320,6 +326,7 @@ describe("public domain APIs are frozen", () => {
         "DEFAULT_OPPONENT_DECK_ID",
         "DEFAULT_PLAYER_DECK_ID",
         "findSelectableDeck",
+        "installedSelectableDecks",
         "listSelectableDecks",
         "parseBattleRequest",
         "presetSelectableDecks",

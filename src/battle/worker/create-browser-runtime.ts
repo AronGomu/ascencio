@@ -1,18 +1,23 @@
+import type {
+  ContentReadPort,
+  ContentResult,
+  ContentSetRef,
+  InstalledRuntimeReceipt,
+} from "../../content/index.ts";
+import {
+  loadInstalledGameplay,
+  openContentReader,
+} from "../../content/index.ts";
+import { readInstalledRuntimeReceipt } from "../storage/installed-runtime-receipt.ts";
 import { DuelOperationError } from "../duel/contracts/duel-error.ts";
-import { cardCode } from "../duel/contracts/ids.ts";
+import { verifyDigest } from "../../decks/catalog/snapshot-digest.ts";
+import { installedDeckCatalog } from "../../decks/catalog/installed-gameplay-cards.ts";
 import {
-  MVP_DECK_CONSTRAINTS,
-  validateDeck,
-} from "../duel/presets/deck-parser.ts";
-import { DECK_SOURCES } from "../duel/presets/deck-sources-browser.ts";
-import { createDuelPreset } from "../duel/presets/duel-preset.ts";
-import { reviewedCardPool } from "../duel/presets/reviewed-card-pool.ts";
-import { loadActiveDuelDependencies } from "./assets/active-duel-dependencies.ts";
-import {
-  loadBrowserRuntimeAssets,
-  type BrowserRuntimeAssetOptions,
-} from "./assets/browser-runtime-assets.ts";
-import { readCachedSnapshotFallbacks } from "./assets/browser-snapshot-pointer.ts";
+  catalogByCode,
+  PROTOTYPE_RULESET,
+} from "../../decks/catalog/pinned-ruleset.ts";
+import { loadInstalledRuntimeDependencies } from "./assets/installed-runtime-dependencies.ts";
+import { loadBrowserRuntimeAssets } from "./assets/browser-runtime-assets.ts";
 import {
   safeWorkerLogger,
   workerLog,
@@ -22,246 +27,249 @@ import { DuelWorkerRuntime } from "./DuelWorkerRuntime.ts";
 import { OcgCoreAdapter } from "./engine/OcgCoreAdapter.ts";
 import { runDuelRuntimeInitializationStage } from "./runtime-initialization.ts";
 
-const REVIEWED_CARD_POOL = reviewedCardPool(DECK_SOURCES);
-
 export interface BrowserDuelWorkerRuntimeOptions {
-  readonly applicationBaseUrl?: string;
-  readonly fetch?: BrowserRuntimeAssetOptions["fetch"];
   readonly logger?: WorkerLogger;
+  readonly openReader?: typeof openContentReader;
+  readonly readReceipt?: typeof readInstalledRuntimeReceipt;
 }
 
 export function createBrowserDuelWorkerRuntime(
   options: BrowserDuelWorkerRuntimeOptions = {},
 ): DuelWorkerRuntime {
-  const runtimeManifestSha256 = requiredRuntimeConstant(
-    __RUNTIME_MANIFEST_SHA256__,
-  );
-  const runtimeSnapshotId = requiredRuntimeConstant(__RUNTIME_SNAPSHOT_ID__);
-  const activeImageManifestSha256 = requiredRuntimeConstant(
-    __ACTIVE_IMAGE_MANIFEST_SHA256__,
-  );
   const runtimeId = globalThis.crypto.randomUUID();
   const logger = safeWorkerLogger(options.logger ?? workerLog);
-  const applicationBaseUrl =
-    options.applicationBaseUrl ?? resolveApplicationBaseUrl();
+  const openReader = options.openReader ?? openContentReader;
+  const readReceipt = options.readReceipt ?? readInstalledRuntimeReceipt;
 
   return new DuelWorkerRuntime(
-    async (progress, signal) => {
-      let lastProgressStage = "";
-      let lastProgressPercent = -1;
-      let selectedImageManifestSha256 = activeImageManifestSha256;
-      const assets = await runDuelRuntimeInitializationStage(
-        "snapshot_validation_failed",
-        "Unable to validate the browser runtime snapshot",
-        async () => {
-          const onProgress = (stage: string, value?: number): void => {
-            const mapped = value === undefined ? undefined : value * 0.65;
-            const percent =
-              mapped === undefined ? -1 : Math.floor(mapped * 100);
-            if (stage === lastProgressStage && percent === lastProgressPercent)
-              return;
-            lastProgressStage = stage;
-            lastProgressPercent = percent;
-            progress(stage, mapped);
-          };
-          const common = {
-            ...(options.fetch === undefined ? {} : { fetch: options.fetch }),
-            signal,
-            onProgress,
-          };
-          try {
-            return await loadBrowserRuntimeAssets(applicationBaseUrl, {
-              ...common,
-              expectedManifestSha256: runtimeManifestSha256,
-              cacheSnapshotId: runtimeSnapshotId,
-            });
-          } catch (networkError) {
-            logger.warn({
-              event: "duel.worker.snapshot.current_load_failed",
-              runtimeId,
-              err: networkError,
-            });
-            try {
-              return await loadBrowserRuntimeAssets(applicationBaseUrl, {
-                ...common,
-                expectedManifestSha256: runtimeManifestSha256,
-                cacheOnlySnapshotId: runtimeSnapshotId,
-              });
-            } catch (currentCacheError) {
-              const lookupFallbacks = (): Promise<
-                Awaited<ReturnType<typeof readCachedSnapshotFallbacks>>
-              > =>
-                readCachedSnapshotFallbacks(runtimeSnapshotId).catch(
-                  (error: unknown) => {
-                    logger.warn({
-                      event: "duel.worker.snapshot.fallback_lookup_failed",
-                      runtimeId,
-                      err: error,
-                    });
-                    return [];
-                  },
-                );
-              let fallbacks = await lookupFallbacks();
-              if (fallbacks.length === 0) {
-                await abortableDelay(250, signal);
-                fallbacks = await lookupFallbacks();
-              }
-              const fallbackErrors: unknown[] = [
-                networkError,
-                currentCacheError,
-              ];
-              for (const fallback of fallbacks) {
-                progress("fallback-snapshot", 0.05);
-                try {
-                  const loaded = await loadBrowserRuntimeAssets(
-                    applicationBaseUrl,
-                    {
-                      ...common,
-                      expectedManifestSha256: fallback.runtimeManifestSha256,
-                      cacheOnlySnapshotId: fallback.snapshotId,
-                    },
-                  );
-                  selectedImageManifestSha256 =
-                    fallback.activeImageManifestSha256;
-                  return loaded;
-                } catch (fallbackError) {
-                  fallbackErrors.push(fallbackError);
-                  logger.warn({
-                    event: "duel.worker.snapshot.fallback_load_failed",
-                    runtimeId,
-                    snapshotId: fallback.snapshotId,
-                    err: fallbackError,
-                  });
-                }
-              }
-              throw new AggregateError(
-                fallbackErrors,
-                "Current and fallback runtime snapshots are unavailable",
-              );
-            }
-          }
-        },
+    async (progress, signal, content) => {
+      const reader = resultValue(
+        await runDuelRuntimeInitializationStage(
+          "snapshot_validation_failed",
+          "Unable to open installed content",
+          openReader,
+        ),
       );
-      signal.throwIfAborted();
-      progress("engine", 0.7);
-      const adapter = await runDuelRuntimeInitializationStage(
-        "engine_initialization_failed",
-        "Unable to initialize the vendored engine",
-        () =>
-          OcgCoreAdapter.initialize({
-            wasmBinary: assets.wasmBinary,
-            onDiagnostic: ({ stream, message }) =>
-              logger[stream === "stderr" ? "warn" : "debug"]({
-                event: "duel.worker.engine.initialization.diagnostic",
-                runtimeId,
-                stream,
-                message,
-              }),
-          }),
-      );
-      const coreVersion = adapter.getVersion();
-      if (
-        coreVersion[0] !== assets.manifest.engine.coreVersion[0] ||
-        coreVersion[1] !== assets.manifest.engine.coreVersion[1]
-      ) {
-        throw new DuelOperationError({
-          code: "engine_initialization_failed",
-          message:
-            "Vendored engine version does not match the runtime snapshot",
-          recoverable: false,
-        });
-      }
+      try {
+        signal.throwIfAborted();
+        progress("installed-content", 0.05);
+        const [gameplay, receipt] = await runDuelRuntimeInitializationStage(
+          "snapshot_validation_failed",
+          "Unable to validate installed content",
+          async () =>
+            await Promise.all([
+              loadInstalledGameplay(reader, content).then(resultValue),
+              readReceipt(content.snapshot, content.runtime).then(resultValue),
+            ]),
+        );
+        await runDuelRuntimeInitializationStage(
+          "snapshot_validation_failed",
+          "Unable to validate installed runtime receipt files",
+          () => assertInstalledRuntimeReceipt(receipt, content, reader),
+        );
+        signal.throwIfAborted();
 
-      signal.throwIfAborted();
-      progress("preset", 0.8);
-      let dependencyGroupsLoaded = 0;
-      const reportDependencyProgress = (group: string): void => {
-        dependencyGroupsLoaded += 1;
-        progress(
-          `dependencies:${group}`,
-          Math.min(0.98, 0.85 + dependencyGroupsLoaded * 0.018),
+        let lastProgressStage = "";
+        let lastProgressPercent = -1;
+        const assets = await runDuelRuntimeInitializationStage(
+          "snapshot_validation_failed",
+          "Unable to validate installed runtime files",
+          () =>
+            loadBrowserRuntimeAssets("https://installed.invalid/", {
+              expectedManifestSha256: content.snapshot.runtimeManifestSha256,
+              fetch: installedRuntimeFetch(reader, content, signal),
+              cacheStorage: null,
+              signal,
+              onProgress: (stage, value) => {
+                const mapped =
+                  value === undefined ? undefined : 0.1 + value * 0.55;
+                const percent =
+                  mapped === undefined ? -1 : Math.floor(mapped * 100);
+                if (
+                  stage === lastProgressStage &&
+                  percent === lastProgressPercent
+                )
+                  return;
+                lastProgressStage = stage;
+                lastProgressPercent = percent;
+                progress(stage, mapped);
+              },
+            }),
         );
-      };
-      progress("dependencies", 0.85);
-      const dependencies = await runDuelRuntimeInitializationStage(
-        "dependency_resolution_failed",
-        "Unable to resolve active-duel dependencies",
-        () =>
-          loadActiveDuelDependencies(
-            assets,
-            new Set([...REVIEWED_CARD_POOL].map(cardCode)),
-            reportDependencyProgress,
-          ),
-      );
-      const catalogCodes = new Set(dependencies.cards.keys());
-      const createPreset = (
-        playerDeckId: Parameters<typeof createDuelPreset>[0],
-        opponentDeckId: Parameters<typeof createDuelPreset>[1],
-      ) => {
-        const preset = createDuelPreset(
-          playerDeckId,
-          opponentDeckId,
-          DECK_SOURCES,
+        if (assets.manifest.snapshotId !== content.snapshot.runtimeSnapshotId)
+          throw new DuelOperationError({
+            code: "snapshot_validation_failed",
+            message:
+              "Installed runtime snapshot does not match requested content",
+            recoverable: false,
+          });
+
+        signal.throwIfAborted();
+        progress("engine", 0.7);
+        const adapter = await runDuelRuntimeInitializationStage(
+          "engine_initialization_failed",
+          "Unable to initialize the vendored engine",
+          () =>
+            OcgCoreAdapter.initialize({
+              wasmBinary: assets.wasmBinary,
+              onDiagnostic: ({ stream, message }) =>
+                logger[stream === "stderr" ? "warn" : "debug"]({
+                  event: "duel.worker.engine.initialization.diagnostic",
+                  runtimeId,
+                  stream,
+                  message,
+                }),
+            }),
         );
-        validateDeck(
-          preset.player,
-          catalogCodes,
-          MVP_DECK_CONSTRAINTS,
-          dependencies.cards,
-          REVIEWED_CARD_POOL,
+        const coreVersion = adapter.getVersion();
+        if (
+          coreVersion[0] !== assets.manifest.engine.coreVersion[0] ||
+          coreVersion[1] !== assets.manifest.engine.coreVersion[1]
+        )
+          throw new DuelOperationError({
+            code: "engine_initialization_failed",
+            message:
+              "Vendored engine version does not match the runtime snapshot",
+            recoverable: false,
+          });
+
+        const allowedCardCodes = new Set(
+          gameplay.cards.map(({ code }) => code),
         );
-        validateDeck(
-          preset.opponent,
-          catalogCodes,
-          MVP_DECK_CONSTRAINTS,
-          dependencies.cards,
-          REVIEWED_CARD_POOL,
+        signal.throwIfAborted();
+        progress("dependencies", 0.8);
+        let dependencyGroupsLoaded = 0;
+        const dependencies = await runDuelRuntimeInitializationStage(
+          "dependency_resolution_failed",
+          "Unable to resolve installed duel dependencies",
+          () =>
+            loadInstalledRuntimeDependencies(assets, (group) => {
+              dependencyGroupsLoaded += 1;
+              progress(
+                `dependencies:${group}`,
+                Math.min(0.98, 0.82 + dependencyGroupsLoaded * 0.02),
+              );
+            }),
         );
-        return preset;
-      };
-      signal.throwIfAborted();
-      progress("ready", 1);
-      return {
-        adapter,
-        dependencies,
-        createPreset,
-        snapshotId: assets.manifest.snapshotId,
-        revisions: {
-          babelCdb: assets.manifest.assets.babelCdbRevision,
-          cardScripts: assets.manifest.assets.cardScriptsRevision,
-          distribution: assets.manifest.assets.distributionRevision,
-          activeImageManifestSha256: selectedImageManifestSha256,
-        },
-      };
+        signal.throwIfAborted();
+        progress("ready", 1);
+        return {
+          adapter,
+          dependencies,
+          createPreset: () => {
+            throw new Error(
+              "Installed gameplay does not expose bundled presets",
+            );
+          },
+          allowedCardCodes,
+          deckCatalog: catalogByCode(installedDeckCatalog(gameplay).cards),
+          deckRuleset: PROTOTYPE_RULESET,
+          allowPresetDecks: false,
+          snapshotId: assets.manifest.snapshotId,
+          revisions: {
+            babelCdb: assets.manifest.assets.babelCdbRevision,
+            cardScripts: assets.manifest.assets.cardScriptsRevision,
+            distribution: assets.manifest.assets.distributionRevision,
+            activeImageManifestSha256: content.catalogSha256,
+          },
+        };
+      } finally {
+        reader.close();
+      }
     },
     { runtimeId, logger },
   );
 }
 
-function abortableDelay(
-  milliseconds: number,
-  signal: AbortSignal,
+function resultValue<T>(result: ContentResult<T>): T {
+  if (result.kind === "failed") throw new Error(result.code);
+  return result.value;
+}
+
+export async function assertInstalledRuntimeReceipt(
+  receipt: InstalledRuntimeReceipt,
+  content: ContentSetRef,
+  reader: ContentReadPort,
 ): Promise<void> {
-  signal.throwIfAborted();
-  return new Promise<void>((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      signal.removeEventListener("abort", abort);
-      resolve();
-    }, milliseconds);
-    const abort = (): void => {
-      clearTimeout(timeout);
-      reject(signal.reason);
-    };
-    signal.addEventListener("abort", abort, { once: true });
-  });
+  if (
+    receipt.snapshot.activationId !== content.snapshot.activationId ||
+    receipt.snapshot.runtimeSnapshotId !== content.snapshot.runtimeSnapshotId ||
+    receipt.snapshot.runtimeManifestSha256 !==
+      content.snapshot.runtimeManifestSha256 ||
+    receipt.snapshot.releaseCatalogSha256 !==
+      content.snapshot.releaseCatalogSha256 ||
+    receipt.runtimePack.packId !== content.runtime.packId ||
+    receipt.runtimePack.sha256 !== content.runtime.sha256 ||
+    receipt.runtimePack.bytes !== content.runtime.bytes ||
+    receipt.runtimeManifestFile.sha256 !==
+      content.snapshot.runtimeManifestSha256
+  )
+    throw new Error("CONTENT_INTEGRITY_FAILED");
+  const manifest = resultValue(
+    await reader.readManifest(content.runtime),
+  ).value;
+  const files = [
+    receipt.runtimeManifestFile,
+    receipt.assetManifestFile,
+    receipt.engineManifestFile,
+  ];
+  const paths = [
+    "runtime/current/manifest.json",
+    "runtime/assets/current/manifest.json",
+    "runtime/engine/vendor-manifest.json",
+  ];
+  for (const [index, file] of files.entries()) {
+    const installed = manifest.files.find(({ path }) => path === paths[index]);
+    if (
+      installed === undefined ||
+      file.path !== installed.path ||
+      file.bytes !== installed.bytes ||
+      file.sha256 !== installed.sha256
+    )
+      throw new Error("CONTENT_INTEGRITY_FAILED");
+  }
+  for (const file of files) {
+    const blob = resultValue(await reader.readFile(content.runtime, file.path));
+    if (blob.size !== file.bytes) throw new Error("CONTENT_INTEGRITY_FAILED");
+    await verifyDigest(
+      file.path,
+      new Uint8Array(await blob.arrayBuffer()),
+      file.sha256,
+    );
+  }
 }
 
-function requiredRuntimeConstant(value: string | null): string {
-  if (value === null) throw new Error("Installed runtime is unavailable");
-  return value;
-}
-
-function resolveApplicationBaseUrl(): string {
-  const basePath = import.meta.env.BASE_URL;
-  return new URL(basePath, globalThis.location.origin).href;
+function installedRuntimeFetch(
+  reader: ContentReadPort,
+  content: ContentSetRef,
+  signal: AbortSignal,
+): typeof globalThis.fetch {
+  return async (input): Promise<Response> => {
+    signal.throwIfAborted();
+    const url = new URL(
+      typeof input === "string"
+        ? input
+        : input instanceof URL
+          ? input.href
+          : input.url,
+    );
+    const prefix = "/runtime/";
+    if (
+      url.origin !== "https://installed.invalid" ||
+      !url.pathname.startsWith(prefix)
+    )
+      throw new Error("Installed runtime request path is invalid");
+    const relativePath = url.pathname
+      .slice(prefix.length)
+      .split("/")
+      .map((segment) => decodeURIComponent(segment))
+      .join("/");
+    const result = await reader.readFile(
+      content.runtime,
+      `runtime/${relativePath}`,
+    );
+    signal.throwIfAborted();
+    if (result.kind === "failed") throw new Error(result.code);
+    return new Response(result.value);
+  };
 }

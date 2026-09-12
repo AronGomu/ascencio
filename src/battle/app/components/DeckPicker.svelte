@@ -4,6 +4,7 @@
   export let decks: readonly SelectableDeck[] = [];
   export let playerKey = "";
   export let disabled = false;
+  export let opponentName = "Installed opponent";
   /* Set once by the host when a persisted key no longer resolves, so the
      player is told their deck went away rather than left wondering why a
      different one is selected. */
@@ -28,8 +29,10 @@
   /* The host has already dropped every deck this build cannot play, so the
      local group is either legal rows or nothing at all: there is no disabled
      row here to explain, and no way to choose a deck the duel would refuse. */
-  $: presetDecks = listed.filter((deck) => deck.source === "preset");
+  $: chapterDecks = listed.filter((deck) => deck.source === "chapter");
   $: localDecks = listed.filter((deck) => deck.source === "local");
+  $: selected = decks.find((deck) => deck.key === playerKey) ?? null;
+  $: selectedBlockReason = selected?.blockReason ?? null;
 </script>
 
 <section aria-labelledby="deck-picker-heading" data-cy="deck-picker">
@@ -39,7 +42,7 @@
 
   {#if fallbackNotice}
     <p class="notice" role="status" data-cy="deck-picker-fallback-notice">
-      A deck you had chosen is no longer available, so a bundled deck is
+      A deck you had chosen is no longer available, so an installed deck is
       selected again.
     </p>
   {/if}
@@ -83,9 +86,12 @@
     data-cy="deck-picker-player-select"
     onchange={(event) => onselect(event.currentTarget.value)}
   >
-    {#if presetDecks.length > 0}
-      <optgroup label="Bundled decks" data-cy="deck-picker-group-preset">
-        {#each presetDecks as deck (deck.key)}
+    {#if chapterDecks.length > 0}
+      <optgroup
+        label="Installed chapter decks"
+        data-cy="deck-picker-group-chapter"
+      >
+        {#each chapterDecks as deck (deck.key)}
           <option value={deck.key} data-cy={`deck-picker-option-${deck.key}`}
             >{deck.label}</option
           >
@@ -98,21 +104,27 @@
     {#if localDecks.length > 0}
       <optgroup label="Your decks" data-cy="deck-picker-group-local">
         {#each localDecks as deck (deck.key)}
-          <option value={deck.key} data-cy={`deck-picker-option-${deck.key}`}
-            >{deck.label}</option
+          <option
+            value={deck.key}
+            disabled={deck.selection === null}
+            data-cy={`deck-picker-option-${deck.key}`}>{deck.label}</option
           >
         {/each}
       </optgroup>
     {/if}
   </select>
 
+  {#if selectedBlockReason !== null}
+    <p role="alert" data-cy="deck-picker-block-reason">{selectedBlockReason}</p>
+  {/if}
+
   <p data-cy="deck-picker-opponent-fixed">
-    Opponent deck: Chapter 1 Practice (auto-assigned)
+    Opponent: {opponentName} (auto-assigned)
   </p>
 
   <button
     type="button"
-    {disabled}
+    disabled={disabled || selected === null || selected.selection === null}
     data-cy="deck-picker-start-button"
     onclick={onstart}>Start</button
   >

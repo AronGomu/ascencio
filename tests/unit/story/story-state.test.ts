@@ -1,3 +1,4 @@
+import { buildStarterGrant } from "../../../src/story/decks/starter-grant.ts";
 import { describe, expect, it } from "vitest";
 import { PROLOGUE } from "../../../src/story/content/prologue.ts";
 import {
@@ -35,6 +36,7 @@ describe("story state model", () => {
     expect(createInitialStoryState().screen).toBe("title");
     const state = reduceStory(createInitialStoryState(), {
       type: "new-game",
+      starterGrant: buildStarterGrant(),
     });
     expect(state).toMatchObject({
       screen: "narrative",
@@ -168,6 +170,7 @@ describe("story state model", () => {
   it("advances one beat per unique input and records one choice", () => {
     let state = reduceStory(createInitialStoryState(), {
       type: "new-game",
+      starterGrant: buildStarterGrant(),
     });
     state = reduceStory(state, { type: "advance", inputId: 1 });
     const duplicate = reduceStory(state, { type: "advance", inputId: 1 });
@@ -180,7 +183,10 @@ describe("story state model", () => {
     expect(repeated.choice).toBe("trust-rin");
     expect(repeated.choiceResponse).toMatch(/trust/i);
     const challenged = reduceStory(
-      reduceStory(createInitialStoryState(), { type: "new-game" }),
+      reduceStory(createInitialStoryState(), {
+        type: "new-game",
+        starterGrant: buildStarterGrant(),
+      }),
       { type: "choose", choice: "challenge-rin" },
     );
     expect(challenged.choiceResponse).not.toBe(repeated.choiceResponse);
@@ -188,7 +194,10 @@ describe("story state model", () => {
 
   it("retains choice for later map acknowledgment", () => {
     const state = reduceStory(
-      reduceStory(createInitialStoryState(), { type: "new-game" }),
+      reduceStory(createInitialStoryState(), {
+        type: "new-game",
+        starterGrant: buildStarterGrant(),
+      }),
       { type: "choose", choice: "observe-first" },
     );
     expect(
@@ -353,6 +362,7 @@ describe("story state model", () => {
   it("resets to pristine serializable state while remembering its origin", () => {
     const changed = reduceStory(createInitialStoryState(), {
       type: "new-game",
+      starterGrant: buildStarterGrant(),
     });
     const reset = reduceStory(changed, { type: "reset" });
     expect(reset).toEqual({

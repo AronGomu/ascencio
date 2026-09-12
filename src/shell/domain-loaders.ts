@@ -1,13 +1,10 @@
 import type { Component } from "svelte";
+import type { ContentReadPort, InstalledGameplay } from "../content/index.ts";
 import type {
   BattleFacade,
-  DECK_CATALOG,
-  DEFAULT_OPPONENT_DECK_ID,
-  DEFAULT_PLAYER_DECK_ID,
   findSelectableDeck,
-  listSelectableDecks,
+  installedSelectableDecks,
   parseBattleRequest,
-  presetSelectableDecks,
 } from "../battle/index.ts";
 import type { DeckEditorRoute } from "../deck-editor/index.ts";
 import type { DeckContext } from "../decks/deck-repository-context.ts";
@@ -32,6 +29,8 @@ export type DomainLoader<
     story save's decks and must never write into the wrong one. */
 export type DeckEditorDomainProps = DeckEditorRoute & {
   readonly context: DeckContext;
+  readonly gameplay: InstalledGameplay;
+  readonly reader: ContentReadPort | null;
   readonly onnavigate: (route: DeckEditorRoute) => void;
   /** Leaving the deck menu for the cards the same world owns. Reported rather
       than routed, because `DeckEditorRoute` names a deck and this names a
@@ -55,13 +54,9 @@ export type DeckEditorDomainProps = DeckEditorRoute & {
     is one click away from anyway. */
 export type BattleDomainLoader = () => Promise<{
   readonly BattleFacade: typeof BattleFacade;
-  readonly DECK_CATALOG: typeof DECK_CATALOG;
-  readonly DEFAULT_OPPONENT_DECK_ID: typeof DEFAULT_OPPONENT_DECK_ID;
-  readonly DEFAULT_PLAYER_DECK_ID: typeof DEFAULT_PLAYER_DECK_ID;
   readonly findSelectableDeck: typeof findSelectableDeck;
-  readonly listSelectableDecks: typeof listSelectableDecks;
+  readonly installedSelectableDecks: typeof installedSelectableDecks;
   readonly parseBattleRequest: typeof parseBattleRequest;
-  readonly presetSelectableDecks: typeof presetSelectableDecks;
 }>;
 
 /** What a deck picker reads from the battle entry: everything but the duel
@@ -75,6 +70,8 @@ export type BattleDeckModule = Omit<
     is handed back the checkpointed state plus the one result that encounter
     produced; the shell owns the handoff id, the route and the duel itself. */
 export type StoryDomainProps = {
+  readonly gameplay: InstalledGameplay;
+  readonly reader: ContentReadPort | null;
   /** Which main-menu entry sent the player here, so the story can open on that
       screen rather than repeating a title the shell already showed. `null`
       when the route was reached any other way. */

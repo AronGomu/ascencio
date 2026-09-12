@@ -52,7 +52,7 @@ export function deckLibraryTiles(
         blockReason,
         /* Every deck in this library was built in this library: none ships
            with the app, none belongs to an AI, and all of them can go. */
-        bundled: false,
+        readOnly: false,
         lockedBy: null,
         isDefault: deck.id === marks.defaultDeckId,
         deletable: true,

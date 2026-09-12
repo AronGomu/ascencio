@@ -1,5 +1,5 @@
 import type { IDBPDatabase } from "idb";
-import type { ContentReadPort } from "../contracts/content-read-port.ts";
+import type { OwnedContentReader } from "../contracts/owned-content-reader.ts";
 import type { ContentResult } from "../contracts/content-result.ts";
 import type { InstalledContentSet } from "../contracts/installed-content-set.ts";
 import type { ManifestRef } from "../contracts/manifest-ref.ts";
@@ -30,8 +30,9 @@ import {
   validateInstalledState,
 } from "../install/manifest-closure.ts";
 import { verifyGameplay } from "../install/verify-gameplay.ts";
+import { inspectInstalledContent } from "../installed-content-inspection.ts";
 
-export class ContentReader implements ContentReadPort {
+export class ContentReader implements OwnedContentReader {
   // Scoped to one verification job, never reused across public read operations.
   readonly manifestMemo = new Map<
     string,
@@ -241,7 +242,7 @@ export class ContentReader implements ContentReadPort {
   acquireSession(ref: ContentSetRef) {
     return this.guard(async () => {
       if (this.privateKeys !== null) throw failure("CONTENT_BUSY");
-      const content = unwrap(await this.inspectContent(ref));
+      const content = unwrap(await inspectInstalledContent(this, ref));
       const lease = await acquireContentLease(content, () =>
         this.inspectContent(content),
       );
@@ -261,7 +262,7 @@ export class ContentReader implements ContentReadPort {
   }
 }
 export async function openContentReader(): Promise<
-  ContentResult<ContentReadPort>
+  ContentResult<OwnedContentReader>
 > {
   let db: IDBPDatabase<ContentDatabase> | undefined;
   try {

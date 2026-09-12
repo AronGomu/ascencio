@@ -13,9 +13,13 @@ import { freePlayDeckTile } from "../../../src/shell/screens/free-play-deck-tile
    is tested against real bundled decks rather than through the screen: the
    cover rule and default flag are the whole of the mapping. */
 
-const PRACTICE = presetSelectableDecks(DECK_CATALOG).find(
-  (deck) => deck.key === "preset:chapter-one-practice",
-)!;
+const PRACTICE = {
+  ...presetSelectableDecks(DECK_CATALOG).find(
+    (deck) => deck.key === "preset:chapter-one-practice",
+  )!,
+  key: "chapter:chapter-one-practice",
+  source: "chapter" as const,
+};
 const UPDATED_AT = "2026-08-20T10:00:00.000Z";
 const LOCAL_DECK_ID = deckId("built-deck");
 
@@ -69,22 +73,22 @@ function context(
 }
 
 describe("freePlayDeckTile", () => {
-  it("describes a bundled deck an AI owns", () => {
+  it("describes an immutable installed chapter deck an AI owns", () => {
     const cover = PRACTICE.lists.main[0]!;
     const tile = freePlayDeckTile(
       PRACTICE,
       context({
         catalog: catalogOf(cover, PRACTICE.lists.main[0]!),
         aiOwnerByDeckKey: new Map([
-          ["preset:chapter-one-practice", "Vault Warden"],
+          ["chapter:chapter-one-practice", "Vault Warden"],
         ]),
       }),
     );
 
-    expect(tile.key).toBe("preset:chapter-one-practice");
+    expect(tile.key).toBe("chapter:chapter-one-practice");
     expect(tile.name).toBe(PRACTICE.label);
-    expect(tile.bundled).toBe(true);
-    expect(tile.meta).toBe("Bundled");
+    expect(tile.readOnly).toBe(true);
+    expect(tile.meta).toBe("Installed chapter");
     expect(tile.lockedBy).toBe("Vault Warden");
     /* Chapter 1 practice has no Extra Deck; the first Main card is its cover. */
     expect(tile.coverImageUrl).toBe(`/images/${cover}.jpg`);
@@ -108,7 +112,7 @@ describe("freePlayDeckTile", () => {
 
     expect(tile.key).toBe(deck.key);
     expect(tile.name).toBe("Built Deck");
-    expect(tile.bundled).toBe(false);
+    expect(tile.readOnly).toBe(false);
     expect(tile.meta).toBe("Local deck");
     expect("favourite" in tile).toBe(false);
     expect(tile.isDefault).toBe(true);

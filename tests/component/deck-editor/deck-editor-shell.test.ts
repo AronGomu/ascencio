@@ -1,3 +1,4 @@
+import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -183,7 +184,11 @@ describe("DeckEditor shell", () => {
    reviewer harness anywhere in the tree. */
 describe("DeckEditorApp boot", () => {
   it("loads isolated storage then falls back to Deck Library", async () => {
-    render(DeckEditorApp, { deckId: null, onnavigate: vi.fn() });
+    render(DeckEditorApp, {
+      gameplay: installedDuelGameplayFixture(),
+      deckId: null,
+      onnavigate: vi.fn(),
+    });
     expect(
       screen.getByRole("heading", { name: /Loading local decks/i }),
     ).toBeTruthy();

@@ -4,7 +4,20 @@ import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  installedGameplayFixture,
+  contentReaderFixture,
+  openContentReaderFixture,
+  TEST_CONTENT_REF,
+} from "../fixtures/installed-gameplay.ts";
 
+const debugStore = vi.hoisted(() => ({
+  recordDebugRun: vi.fn(async () => undefined),
+  close: vi.fn(),
+}));
+vi.mock("../../src/battle/storage/snapshot-store.ts", () => ({
+  SnapshotStore: { open: async () => debugStore },
+}));
 const diagnosticsSpies = vi.hoisted(() => ({ download: vi.fn() }));
 
 vi.mock("../../src/battle/app/diagnostics/download-diagnostics.ts", () => ({
@@ -178,6 +191,8 @@ afterEach(() => {
   workerClientSpies.restore.mockReset();
   workerClientSpies.startDuel.mockReset();
   diagnosticsSpies.download.mockReset();
+  debugStore.recordDebugRun.mockClear();
+  debugStore.close.mockClear();
   mockedWorkerClientCtor.instances.length = 0;
 });
 
@@ -237,7 +252,7 @@ async function startDuelFromPicker(
 ): Promise<void> {
   await user.selectOptions(
     element("deck-picker-player-select") as HTMLSelectElement,
-    "preset:chapter-one-starter",
+    "chapter:installed-starter",
   );
   await user.click(element("deck-picker-start-button"));
 }
@@ -269,7 +284,13 @@ async function renderFacade(
   request: ReturnType<typeof parseBattleRequest> | null,
   oncomplete: (result: BattleFacadeResult) => void,
 ) {
-  const rendered = render(BattleFacade, { request, oncomplete });
+  const rendered = render(BattleFacade, {
+    request,
+    oncomplete,
+    content: TEST_CONTENT_REF,
+    gameplay: installedGameplayFixture(),
+    openReader: openContentReaderFixture,
+  });
   await vi.waitFor(() =>
     request === null
       ? expect(document.querySelector('[data-cy="deck-picker"]')).not.toBeNull()
@@ -279,6 +300,67 @@ async function renderFacade(
 }
 
 describe("BattleFacade", () => {
+  it.each(["ready", "failed", "cancelled", "borrowed"])(
+    "releases facade reader ownership on %s",
+    async (mode) => {
+      const close = vi.fn();
+      const release = vi.fn();
+      let finish!: (
+        value: Awaited<ReturnType<typeof openContentReaderFixture>>,
+      ) => void;
+      const reader = {
+        ...contentReaderFixture(),
+        close,
+        acquireSession: async () =>
+          mode === "failed"
+            ? {
+                kind: "failed" as const,
+                code: "CONTENT_MISSING" as const,
+                packId: null,
+                path: null,
+              }
+            : {
+                kind: "ok" as const,
+                value: { content: TEST_CONTENT_REF, release },
+              },
+      };
+      const openReader = vi.fn(() =>
+        mode === "cancelled"
+          ? new Promise<Awaited<ReturnType<typeof openContentReaderFixture>>>(
+              (resolve) => {
+                finish = resolve;
+              },
+            )
+          : Promise.resolve({ kind: "ok" as const, value: reader }),
+      );
+      const view = render(BattleFacade, {
+        content: TEST_CONTENT_REF,
+        gameplay: installedGameplayFixture(),
+        openReader,
+        sharedReader: mode === "borrowed" ? reader : null,
+      });
+      if (mode === "cancelled") {
+        view.unmount();
+        finish({ kind: "ok", value: reader });
+      } else {
+        await vi.waitFor(() =>
+          mode === "failed"
+            ? expect(close).toHaveBeenCalledOnce()
+            : expect(
+                document.querySelector('[data-cy="deck-picker"]'),
+              ).not.toBeNull(),
+        );
+        view.unmount();
+      }
+      await vi.waitFor(() =>
+        expect(close).toHaveBeenCalledTimes(mode === "borrowed" ? 0 : 1),
+      );
+      expect(release).toHaveBeenCalledTimes(
+        mode === "ready" || mode === "borrowed" ? 1 : 0,
+      );
+      if (mode === "borrowed") expect(openReader).not.toHaveBeenCalled();
+    },
+  );
   it("mounts the duel inside the battle root", async () => {
     await renderFacade(null, vi.fn());
 
@@ -511,6 +593,15 @@ describe("BattleFacade", () => {
       expect(diagnosticsSpies.download).toHaveBeenCalledTimes(1),
     );
     expect(diagnosticsSpies.download.mock.calls[0]?.[0]).toBe(TRACE);
+    await vi.waitFor(() =>
+      expect(debugStore.recordDebugRun).toHaveBeenCalledWith(
+        expect.objectContaining({
+          snapshotId: TRACE.snapshotId,
+          traceEntries: TRACE.entries.length,
+        }),
+      ),
+    );
+    expect(debugStore.close).toHaveBeenCalled();
     expect(workerClientSpies.requestDiagnostics).toHaveBeenCalledTimes(1);
     expect(element("duel-error-message").textContent).toContain(
       "Diagnostics downloaded",

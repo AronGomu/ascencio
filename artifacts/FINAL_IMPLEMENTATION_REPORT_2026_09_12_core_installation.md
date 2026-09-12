@@ -13,9 +13,9 @@ Plan: `PLAN_2026_09_12_core_installation`
 | T3 — chapter packs | COMPLETE | Worker `4204cdc`; merge `ad5fecc`; fourth independent review approved; parent 73 Node + 14 Vitest tests + typecheck. Verified pack index `03571be5…08d0`. |
 | T4 — verified installer | COMPLETE | Worker `6a52909`; merged on integration branch; final independent review approved; 42 unit + 3 component + 12 Chromium tests; full suite 3,633 tests. |
 | T5 — installed union | COMPLETE | Worker `dd8dbaf`; independently approved after invalidation-race review; parent 68 focused tests passed. |
-| T6 — installed Free Play | READY | Depends on complete T5. |
-| T7 — installed Story/saves | WAITING | Depends on T6. |
-| T8 — lifecycle | WAITING | Depends on T6 + T7. |
+| T6 — installed Free Play | COMPLETE | Worker/parent commit `ae258cd`; three-stage independent review approved; 12 source Chromium + built root/subpath duels; parent 63 focused tests. |
+| T7 — installed Story/saves | READY | Depends on complete T6. |
+| T8 — lifecycle | WAITING | Depends on complete T6 + T7. |
 | T9 — offline shell | COMPLETE | Worker `7e59b96`; independently approved; 20 unit + 8 Chromium tests; root/subpath full executable JS precache and cold-update behavior verified. |
 | T10 — acceptance | WAITING | Depends on T8 + T9. |
 
@@ -31,6 +31,7 @@ Plan: `PLAN_2026_09_12_core_installation`
 | Verified installer | 468,243,718-byte real install; generation-1 atomic activation; exact runtime receipt; zero Workers | `src/content/create-content-installer.ts`; `src/battle/storage/installed-runtime-receipt.ts`; `artifacts/CORE_ACCEPTANCE/T4/README.md` |
 | Offline shell | Complete executable JS precache; payload exclusion; visible install failure; cold activation after old clients close | `src/service-worker.ts`; `src/shell/pwa/register-service-worker.ts`; `artifacts/CORE_ACCEPTANCE/T9/README.md` |
 | Installed union | Deterministic chapter-only cards/sets/decks/opponents; cache-only verified media leases; invalidation-safe memo/cache races | `src/content/load-installed-gameplay.ts`; `src/content/acquire-installed-asset.ts`; `src/decks/catalog/installed-gameplay-cards.ts` |
+| Installed Free Play | Exact refs reach Worker; runtime-support vs deck-permission separation; both-seat validation; built-app real duel terminal result | `src/battle/worker/create-browser-runtime.ts`; `src/battle/worker/decks/resolve-duel-decks.ts`; `artifacts/CORE_ACCEPTANCE/T6/REPORT.md` |
 
 ## Assumptions
 
@@ -62,4 +63,4 @@ None for current private loopback implementation.
 
 ## Git State
 
-T1–T5 and T9 merged on isolated `integrate/core-install`; ticket branches are pushed. Remote `main` is updated only by fast-forward from this integration branch. Root worktree's unrelated dirty files remain untouched. No history rewrite, force-push, system apply, deployment, or publication performed.
+T1–T6 and T9 merged on isolated `integrate/core-install`; ticket branches are pushed. Remote `main` is updated only by fast-forward from this integration branch. Root worktree's unrelated dirty files remain untouched. No history rewrite, force-push, system apply, deployment, or publication performed.

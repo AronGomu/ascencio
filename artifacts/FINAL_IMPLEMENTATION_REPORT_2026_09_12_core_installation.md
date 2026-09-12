@@ -16,7 +16,7 @@ Plan: `PLAN_2026_09_12_core_installation`
 | T6 — installed Free Play | WAITING | Depends on T5. |
 | T7 — installed Story/saves | WAITING | Depends on T6. |
 | T8 — lifecycle | WAITING | Depends on T6 + T7. |
-| T9 — offline shell | READY | Depends on complete T4. |
+| T9 — offline shell | COMPLETE | Worker `7e59b96`; independently approved; 20 unit + 8 Chromium tests; root/subpath full executable JS precache and cold-update behavior verified. |
 | T10 — acceptance | WAITING | Depends on T8 + T9. |
 
 ## Delivered
@@ -29,6 +29,7 @@ Plan: `PLAN_2026_09_12_core_installation`
 | Set media | 56 verified set images; 19 evidence-backed nullable images; text-only UI fallback | `content/authoring/chapter-one-set-media.json`; `src/story/shop/ShopBrowseScreen.svelte` |
 | Browser delivery | Served index bytes verified with browser `crypto.subtle.digest` | `e2e-core/chapter-content-delivery.spec.ts`; `artifacts/CORE_ACCEPTANCE/T3/` |
 | Verified installer | 468,243,718-byte real install; generation-1 atomic activation; exact runtime receipt; zero Workers | `src/content/create-content-installer.ts`; `src/battle/storage/installed-runtime-receipt.ts`; `artifacts/CORE_ACCEPTANCE/T4/README.md` |
+| Offline shell | Complete executable JS precache; payload exclusion; visible install failure; cold activation after old clients close | `src/service-worker.ts`; `src/shell/pwa/register-service-worker.ts`; `artifacts/CORE_ACCEPTANCE/T9/README.md` |
 
 ## Assumptions
 
@@ -59,4 +60,4 @@ None for current private loopback implementation.
 
 ## Git State
 
-T1–T4 merged on isolated `integrate/core-install`; ticket branches are pushed. Remote `main` is updated only by fast-forward from this integration branch. Root worktree's unrelated dirty files remain untouched. No history rewrite, force-push, system apply, deployment, or publication performed.
+T1–T4 and T9 merged on isolated `integrate/core-install`; ticket branches are pushed. Remote `main` is updated only by fast-forward from this integration branch. Root worktree's unrelated dirty files remain untouched. No history rewrite, force-push, system apply, deployment, or publication performed.

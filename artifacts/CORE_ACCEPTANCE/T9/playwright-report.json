@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "suite": "T9 CORE offline shell",
+  "browser": "chromium",
+  "tests": {
+    "passed": 8,
+    "failed": 0,
+    "flaky": 0,
+    "skipped": 0
+  },
+  "command": "npx playwright test -c playwright.core.config.ts --project=chromium",
+  "observations": {
+    "rootOfflineReopen": true,
+    "subpathOfflineReopen": true,
+    "allBuiltAppJavaScriptPrecached": true,
+    "payloadExcluded": true,
+    "contentMissNotRewritten": true,
+    "failedPrecacheVisible": true,
+    "coldUpdateWaitedForAllOldClients": true,
+    "contentCacheSurvivedShellActivation": true
+  }
+}

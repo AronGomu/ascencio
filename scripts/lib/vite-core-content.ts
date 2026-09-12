@@ -15,6 +15,11 @@ const CONTENT_OBJECT =
   /^content\/(indexes|catalogs|manifests|parts)\/([a-f0-9]{64})\.(json|zip)$/;
 const PRIVATE_MARKER =
   "This CORE artifact has no public-distribution approval. Keep it private.\n";
+const CORE_ICON = Object.freeze({
+  output: "app-icon.svg",
+  source: "assets/core/app-icon.svg",
+  contentType: "image/svg+xml",
+});
 
 export interface CoreDelivery {
   readonly bootstrap: CoreBootstrap;
@@ -115,8 +120,9 @@ function installCoreMiddleware(
     if (request.url === undefined) return next();
     const relative = requestPath(request.url, server.config.base);
     const isBootstrap = relative === "core-bootstrap.json";
+    const isCoreIcon = relative === CORE_ICON.output;
     const ref = relative === null ? undefined : delivery.objects.get(relative);
-    if (!isBootstrap && ref === undefined) return next();
+    if (!isBootstrap && !isCoreIcon && ref === undefined) return next();
     if (request.method !== "GET" && request.method !== "HEAD") {
       response.statusCode = 405;
       response.setHeader("Allow", "GET, HEAD");
@@ -126,7 +132,9 @@ function installCoreMiddleware(
     void (
       isBootstrap
         ? Promise.resolve(delivery.bootstrapBytes)
-        : verifiedObject(projectRoot, delivery, ref!)
+        : isCoreIcon
+          ? readFile(path.join(projectRoot, CORE_ICON.source))
+          : verifiedObject(projectRoot, delivery, ref!)
     ).then(
       (bytes) => {
         response.statusCode = 200;
@@ -134,7 +142,9 @@ function installCoreMiddleware(
           "Content-Type",
           isBootstrap || ref?.key.endsWith(".json")
             ? "application/json; charset=utf-8"
-            : "application/zip",
+            : isCoreIcon
+              ? CORE_ICON.contentType
+              : "application/zip",
         );
         response.setHeader(
           "Cache-Control",
@@ -193,6 +203,10 @@ export function coreContentPlugin(
         writeFile(
           path.join(outputRoot, "PRIVATE_DEPLOYMENT_ONLY.txt"),
           PRIVATE_MARKER,
+        ),
+        cp(
+          path.join(projectRoot, CORE_ICON.source),
+          path.join(outputRoot, CORE_ICON.output),
         ),
         copyLicenses(projectRoot, outputRoot),
       ]);

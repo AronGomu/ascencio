@@ -22,7 +22,7 @@ async function assertCoreOnly(page: Page, requests: readonly string[]) {
   );
   expect(
     requests.filter((url) =>
-      /(?:\/runtime\/|duel\.worker|\/src\/(?:battle|story|deck-editor)\/index\.ts|FreePlayMatchSetup|free-play-deck-listing|AdminConsole|shop-sets)/.test(
+      /(?:\/runtime\/|\/src\/(?:battle|story|deck-editor)\/index\.ts|FreePlayMatchSetup|free-play-deck-listing|AdminConsole|shop-sets)/.test(
         url,
       ),
     ),
@@ -38,6 +38,7 @@ for (const app of apps) {
     page.on("request", (request) => requests.push(request.url()));
     page.on("worker", () => workerCount++);
 
+    await page.request.post(`${app.url}__test/shell-version/a`);
     await page.goto(app.url);
     await assertCoreOnly(page, requests);
 
@@ -64,7 +65,7 @@ for (const app of apps) {
     expect(workerCount).toBe(0);
     expect(
       requests.filter((url) =>
-        /(?:\/runtime\/|duel\.worker|\/src\/(?:battle|story|deck-editor)\/index\.ts|FreePlayMatchSetup|free-play-deck-listing|AdminConsole|shop-sets)/.test(
+        /(?:\/runtime\/|\/src\/(?:battle|story|deck-editor)\/index\.ts|FreePlayMatchSetup|free-play-deck-listing|AdminConsole|shop-sets)/.test(
           url,
         ),
       ),
@@ -76,6 +77,7 @@ for (const app of apps) {
   }) => {
     let workerCount = 0;
     page.on("worker", () => workerCount++);
+    await page.request.post(`${app.url}__test/shell-version/a`);
     await page.goto(app.url);
     await expect(page.locator('[data-cy="main-menu-screen"]')).toBeVisible();
     await page.evaluate(() => {

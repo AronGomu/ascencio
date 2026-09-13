@@ -1,6 +1,6 @@
 # CORE Installation — Final Implementation Report
 
-Status: **in progress**
+Status: **blocked**
 
 Plan: `PLAN_2026_09_12_core_installation`
 
@@ -14,10 +14,10 @@ Plan: `PLAN_2026_09_12_core_installation`
 | T4 — verified installer | COMPLETE | Worker `6a52909`; merged on integration branch; final independent review approved; 42 unit + 3 component + 12 Chromium tests; full suite 3,633 tests. |
 | T5 — installed union | COMPLETE | Worker `dd8dbaf`; independently approved after invalidation-race review; parent 68 focused tests passed. |
 | T6 — installed Free Play | COMPLETE | Worker/parent commit `ae258cd`; three-stage independent review approved; 12 source Chromium + built root/subpath duels; parent 63 focused tests. |
-| T7 — installed Story/saves | READY | Depends on complete T6. |
-| T8 — lifecycle | WAITING | Depends on complete T6 + T7. |
+| T7 — installed Story/saves | BLOCKED | Uncommitted reviewed candidate in `.tmp/worktrees/core-install-t7`; 136 focused tests + exact-current-null Continue pass, but segmented editor readiness remains at `Loading local decks…` beyond 360s after five bounded Chromium repair loops. |
+| T8 — lifecycle | BLOCKED | Depends on complete T7. |
 | T9 — offline shell | COMPLETE | Worker `7e59b96`; independently approved; 20 unit + 8 Chromium tests; root/subpath full executable JS precache and cold-update behavior verified. |
-| T10 — acceptance | WAITING | Depends on T8 + T9. |
+| T10 — acceptance | BLOCKED | Depends on complete T8 + T9. |
 
 ## Delivered
 
@@ -49,7 +49,7 @@ Raw card-set source and frozen vendor remain unchanged. Generated chapter payloa
 
 ## User TODO
 
-None for current private loopback implementation.
+- [ ] Authorize one new T7 performance-repair cycle with this exact scope: request-scoped manifest memoization plus bounded four-worker media acquisition/abort cleanup, then one segmented Chromium acceptance run. Validation: editor leaves `Loading local decks…`; exact Continue, autosave/navigation, editor readiness, duel/checkpoint all pass without weakening SHA/cache verification.
 
 ## Residual Risks
 
@@ -58,6 +58,9 @@ None for current private loopback implementation.
 - Untouched `e2e/asset-root-urls.spec.ts` retains a pre-existing Prettier warning.
 - Integration-worktree typecheck exposes pre-existing TS6 `ReadonlySet` method errors in `src/battle/app/presentation/immutable-choice-id-set.ts`; T5 changed no affected file.
 - `StoryMenuEntry` timed out twice during T4 full runs; isolated and full bounded reruns passed; cause remains unresolved.
+- T7 editor eagerly loads 1,683 images. Current path causes about 5,049 manifest reads/hash/parse passes, about 3.65 GB metadata hashing, before deck repository/controller readiness; `src/content/load-installed-images.ts` plus `src/content/acquire-installed-asset.ts` are the bounded repair targets.
+- T7 shell bundle has 39-byte headroom: 114,961/115,000. No budget raise approved.
+- T7 uncommitted worktree preserves schema-5 binding, per-slot failure isolation, pinned-reader coherence, exact Continue evidence, and failed browser traces. No partial T7 commit merged.
 - Root `main` worktree gained unrelated concurrent edits during T4, including deletion of `docs/GLOSSARY.md`; integration continues in isolated `integrate/core-install` without touching those files.
 - `TEST-LOADING-ASSETS.md`, `feedback.md`, CORE spec, and grill records remain preserved.
 

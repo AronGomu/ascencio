@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   DOMAIN_BUDGET_BYTES,
+  DOMAIN_ENTRY_CHUNK,
   measureDomainChunks,
   staticHtmlScriptClosure,
 } from "../../scripts/lib/domain-chunk-closure.ts";
@@ -66,6 +67,26 @@ describe("measureDomainChunks", () => {
     expect(report?.bytes).toBe(
       (await stat(battle!)).size + (await stat(shared!)).size,
     );
+  });
+
+  it("never mistakes semantic helper chunks for lazy domain entries", async () => {
+    const files = [
+      await writeChunk(
+        "battle-runtime-source-AAAAAAAA.js",
+        "export const helper=1;",
+      ),
+      await writeChunk(
+        "story-save-contracts-AAAAAAAA.js",
+        "export const saves=1;",
+      ),
+      ...(await writeDomainFixture("export const battle=1;")),
+    ];
+    const reports = await measureDomainChunks(fixtureRoot, files, new Set());
+    expect(reports.map((report) => report.entryChunk)).toEqual([
+      "battle-BBBBBBBB.js",
+      "deck-editor-CCCCCCCC.js",
+      "story-DDDDDDDD.js",
+    ]);
   });
 
   it("excludes chunks the shell closure already paid for", async () => {
@@ -230,7 +251,7 @@ describe.skipIf(!builtTreeExists)("the built tree", () => {
     );
 
     const domainChunks = files.filter((file) =>
-      /^(?:battle|deck-editor|story)-/.test(path.basename(file)),
+      DOMAIN_ENTRY_CHUNK.test(path.basename(file)),
     );
 
     expect(domainChunks).toHaveLength(3);

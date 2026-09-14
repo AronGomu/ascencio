@@ -1,3 +1,4 @@
+import type { ShellApplication } from "./shell-application.ts";
 import type {
   ShellGameplay,
   ShellBootstrap,
@@ -21,6 +22,7 @@ export type CoreGate =
     };
 
 export interface CoreStartup {
+  readonly application?: ShellApplication;
   readonly bootstrap: ShellBootstrap | null;
   readonly gate: CoreGate;
 }

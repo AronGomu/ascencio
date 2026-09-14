@@ -1,5 +1,11 @@
 <script lang="ts">
-  import { onMount, setContext } from "svelte";
+  import { onMount, setContext, tick } from "svelte";
+  import type {
+    ShellApplication,
+    ShellDomainSession,
+  } from "./core/shell-application.ts";
+  import { menuSaves } from "./core/menu-saves.ts";
+  import { sessionSaves } from "./core/session-saves.ts";
   import { readonly, writable } from "svelte/store";
   import type {
     ShellSession,
@@ -74,6 +80,156 @@
   export let settings: ShellSettingsStore = createShellSettingsStore();
   export let initialCoreGate: CoreGate | null = null;
   export let initialCoreBootstrap: ShellBootstrap | null = null;
+  export let application: ShellApplication | null = null;
+  let domainSession: ShellDomainSession | null = null;
+  let domainReady = false;
+  let opening: AbortController | null = null;
+  let closing: Promise<void> = Promise.resolve();
+  let closingSession = false;
+  let destroyed = false;
+  const disposals: Promise<void>[] = [];
+  let recoveryMessage: string | null = null;
+  let recovering = false;
+  let menuRepository: GenerationSaveRepository | null;
+  $: menuRepository = application === null ? saves : menuSaves(application);
+  let boundApplication: ShellApplication | null = null;
+  let unsubscribeApplication: (() => void) | null = null;
+  $: bindApplication(application);
+  function bindApplication(app: ShellApplication | null): void {
+    if (app === boundApplication) return;
+    unsubscribeApplication?.();
+    boundApplication = app;
+    unsubscribeApplication =
+      app?.subscribe(() => {
+        if (requestedRoute.kind !== "home") return;
+        void app
+          .acquire(new AbortController().signal)
+          .then(async (session) => {
+            try {
+              if (requestedRoute.kind === "home")
+                coreGate = {
+                  kind: "ready",
+                  gameplay: session.gameplay,
+                  reader: null,
+                  generation: session.generation,
+                };
+            } finally {
+              await session.close();
+            }
+          })
+          .catch(recover);
+      }) ?? null;
+  }
+
+  function applySession(session: ShellDomainSession): void {
+    gameplay = session.gameplay;
+    storyRelease = session.storyRelease;
+    storyCards = session.storyCards;
+    storyMedia = session.storyMedia;
+    saves = sessionSaves(session.saves, recover);
+    cardImages = session.images;
+  }
+  function closeDomain(): void {
+    opening?.abort();
+    opening = null;
+    domainReady = false;
+    if (closingSession) return;
+    closingSession = true;
+    const session = domainSession;
+    closing = closing
+      .then(async () => {
+        let retain = false;
+        try {
+          await tick(); // Teardown may write a checkpoint or return Battle to Story.
+          await Promise.all(disposals.splice(0));
+          retain =
+            session !== null &&
+            !destroyed &&
+            !recovering &&
+            requestedRoute.kind !== "home" &&
+            requestedRoute.kind !== "install-content";
+          if (retain) domainReady = true;
+        } finally {
+          if (!retain) {
+            domainSession = null;
+            await session?.close();
+          }
+          closingSession = false;
+        }
+      })
+      .catch((error: unknown) => {
+        closingSession = false;
+        if (destroyed) console.warn("APP_DISPOSAL_FAILED");
+        else recover(error);
+      });
+  }
+  function syncDomain(current: AppRoute, app: ShellApplication | null): void {
+    if (app === null) return; // Explicit fixture injection; production always uses application service.
+    if (
+      current.kind === "home" ||
+      current.kind === "install-content" ||
+      coreGate.kind !== "ready"
+    ) {
+      if (domainSession !== null || opening !== null) closeDomain();
+      return;
+    }
+    if (domainSession !== null || opening !== null) return;
+    const controller = new AbortController();
+    opening = controller;
+    void closing
+      .then(() => app.acquire(controller.signal))
+      .then(async (session) => {
+        if (controller.signal.aborted || opening !== controller) {
+          await session.close();
+          return;
+        }
+        opening = null;
+        domainSession = session;
+        applySession(session);
+        domainReady = true;
+      })
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted) {
+          opening = null;
+          recover(error);
+        }
+      });
+  }
+  function recover(error: unknown): void {
+    if (recovering) return;
+    const reason =
+      error instanceof Error && error.message === "APP_STORAGE_UNAVAILABLE"
+        ? "storage-unavailable"
+        : "content-invalid";
+    recovering = true;
+    recoveryMessage =
+      "This session stopped because its required data became unavailable. Your saved progress was not replaced.";
+    hostedHandoffId = null;
+    store.navigate(HOME_ROUTE, { replace: true });
+    closeDomain();
+    void closing.then(
+      () => {
+        application?.clear();
+        gameplay = null;
+        saves = null;
+        storyRelease = null;
+        storyCards = null;
+        coreGate = { kind: "locked", reason };
+        recovering = false;
+      },
+      () => {
+        // Disposal failure is visible, never reported as restored readiness.
+        coreGate = { kind: "locked", reason: "storage-unavailable" };
+        recovering = false;
+      },
+    );
+  }
+  const domainError = (error: unknown) => {
+    if (application !== null) recover(error);
+  };
+  const trackDisposal = (done: Promise<void>) => {
+    disposals.push(done);
+  };
   let coreGate: CoreGate = initialCoreGate ?? { kind: "checking" };
   let coreBootstrap: ShellBootstrap | null = initialCoreBootstrap;
   let duelDomain: ReturnType<DomainLoaders["duel"]> | null = null;
@@ -105,7 +261,7 @@
     if (reader === boundImageReader && installed === boundImageGameplay) return;
     boundImageReader = reader;
     boundImageGameplay = installed;
-    cardImages = null;
+    cardImages = domainSession?.images ?? null;
     const requested = ++imageBindingToken;
     if (reader === null || installed === null) return;
     const observedReasons: string[] = [];
@@ -165,7 +321,8 @@
 
   // T9 supplies selected generation under Shell lifecycle lease. Never infer legacy binding.
   function openStorySaves(): GenerationSaveRepository {
-    if (saves === null) throw new Error("STORY_MIGRATION_FAILED");
+    if (saves === null || (application !== null && domainSession === null))
+      throw new Error("STORY_MIGRATION_FAILED");
     return saves;
   }
   const lazySaves: GenerationSaveRepository = {
@@ -209,7 +366,7 @@
   let hostedHandoffId: string | null = null;
 
   const handoff = createHandoffCoordinator({
-    saves: saves ?? lazySaves,
+    saves: lazySaves,
     navigate: (target, options) => store.navigate(target, options),
     onResolution: (resolution) => {
       /* `onRestore` always ran first: a resolution can only exist for a duel
@@ -240,6 +397,7 @@
          player on the screen they can change the deck from. */
       if (error instanceof Error && error.name === "BattleRequestError")
         return "deck-rejected" as const;
+      domainError(error);
       throw error;
     }
     sessionRequest = built;
@@ -280,7 +438,8 @@
         loadDuelDomain(),
       ]);
       return storyBattleRequest(battle, deck, gameplay);
-    } catch {
+    } catch (error) {
+      domainError(error);
       return null;
     }
   }
@@ -310,26 +469,29 @@
     const requested: string = current.handoffId;
     sessionHandoffId = requested;
     sessionReady = false;
-    void handoff.resume(requested).then(async (outcome) => {
-      if (sessionHandoffId !== requested) return;
-      /* Only ever the reload: the encounter that started this session in this
+    void handoff
+      .resume(requested)
+      .then(async (outcome) => {
+        if (sessionHandoffId !== requested) return;
+        /* Only ever the reload: the encounter that started this session in this
          tab already built its request, and rebuilding it would hand the duel a
          second object and restart the match it is running. `resume` restores
          the checkpoint before it answers, so the state is there to rebuild
          from whenever it answered `restored`. */
-      const restored = handback?.state ?? null;
-      if (
-        outcome === "restored" &&
-        sessionRequest === null &&
-        restored !== null
-      ) {
-        const rebuilt = await restoredSessionRequest(restored);
-        if (sessionHandoffId !== requested) return;
-        sessionRequest = rebuilt;
-      }
-      sessionReady = outcome === "restored";
-      if (sessionReady) hostedHandoffId = requested;
-    });
+        const restored = handback?.state ?? null;
+        if (
+          outcome === "restored" &&
+          sessionRequest === null &&
+          restored !== null
+        ) {
+          const rebuilt = await restoredSessionRequest(restored);
+          if (sessionHandoffId !== requested) return;
+          sessionRequest = rebuilt;
+        }
+        sessionReady = outcome === "restored";
+        if (sessionReady) hostedHandoffId = requested;
+      })
+      .catch(domainError);
   }
 
   let requestedRoute: AppRoute = HOME_ROUTE;
@@ -344,7 +506,15 @@
   /* Project the requested route before every reactive binding below. During the
      bootstrap check a direct gameplay hash already renders CORE; once failure is
      known, replace that unsafe history entry with the canonical installer. */
-  $: route = routeForCoreGate(requestedRoute, coreGate);
+  $: syncDomain(requestedRoute, application);
+  $: route =
+    application !== null &&
+    !domainReady &&
+    requestedRoute.kind !== "home" &&
+    requestedRoute.kind !== "install-content" &&
+    coreGate.kind === "ready"
+      ? HOME_ROUTE
+      : routeForCoreGate(requestedRoute, coreGate);
   $: if (
     coreGate.kind === "locked" &&
     requestedRoute.kind !== "home" &&
@@ -403,6 +573,8 @@
       mounts — the whole packaged card database is behind that listing, and a
       player who came for the story must not pay for it. */
   function warmFreePlay(): void {
+    // Selected domains start their reads under the route lease, never a menu hover.
+    if (application !== null) return;
     void (async () => {
       const [listing] = await Promise.all([
         import("./screens/free-play-deck-listing.ts"),
@@ -410,7 +582,7 @@
       ]);
       if (gameplay !== null)
         listing.warmFreePlayDecks(loadDuelDomain, gameplay);
-    })().catch(() => undefined);
+    })().catch(domainError);
   }
 
   /* Which world the mounted editor writes into, and the world it was bound for.
@@ -443,7 +615,9 @@
       },
       () => {
         if (requested === storyDeckToken)
-          store.navigate(HOME_ROUTE, { replace: true });
+          if (application === null)
+            store.navigate(HOME_ROUTE, { replace: true });
+          else recover(new Error("APP_REQUIRED_INPUT_FAILED"));
       },
     );
   }
@@ -493,7 +667,9 @@
       },
       () => {
         if (requested === collectionToken)
-          store.navigate(HOME_ROUTE, { replace: true });
+          if (application === null)
+            store.navigate(HOME_ROUTE, { replace: true });
+          else recover(new Error("APP_REQUIRED_INPUT_FAILED"));
       },
     );
   }
@@ -594,19 +770,38 @@
         (input, init) => globalThis.fetch(input, init),
         appBaseUrl,
         globalThis.indexedDB,
-      ).then((startup) => {
-        if (!mounted) {
-          if (startup.gate.kind === "ready") startup.gate.reader?.close();
-          return;
-        }
-        coreBootstrap = startup.bootstrap;
-        coreGate = startup.gate;
-        gameplay = startup.gate.kind === "ready" ? startup.gate.gameplay : null;
-        contentReader =
-          startup.gate.kind === "ready" ? startup.gate.reader : null;
-      });
+      )
+        .then((startup) => {
+          if (!mounted) {
+            startup.application?.close();
+            if (startup.gate.kind === "ready") startup.gate.reader?.close();
+            return;
+          }
+          application = startup.application ?? null;
+          coreBootstrap = startup.bootstrap;
+          coreGate = startup.gate;
+          gameplay =
+            startup.gate.kind === "ready" ? startup.gate.gameplay : null;
+          contentReader =
+            startup.gate.kind === "ready" ? startup.gate.reader : null;
+        })
+        .catch(recover);
     }
 
+    const asyncFailure = (event: PromiseRejectionEvent) => {
+      if (application !== null && domainSession !== null) {
+        event.preventDefault();
+        recover(event.reason);
+      }
+    };
+    const syncFailure = (event: ErrorEvent) => {
+      if (application !== null && domainSession !== null) {
+        event.preventDefault();
+        recover(event.error);
+      }
+    };
+    globalThis.addEventListener("unhandledrejection", asyncFailure);
+    globalThis.addEventListener("error", syncFailure);
     const syncFromLocation = () => store.syncFromHash(globalThis.location.hash);
     globalThis.addEventListener("hashchange", syncFromLocation);
     const syncVisibility = () => toasts.setPageHidden(document.hidden);
@@ -627,6 +822,12 @@
 
     return () => {
       mounted = false;
+      destroyed = true;
+      unsubscribeApplication?.();
+      globalThis.removeEventListener("unhandledrejection", asyncFailure);
+      globalThis.removeEventListener("error", syncFailure);
+      closeDomain();
+      void closing.then(() => application?.close(), domainError);
       imageBindingToken += 1;
       observer?.disconnect();
       globalThis.removeEventListener("resize", measure);
@@ -655,155 +856,209 @@
   data-stage-route={route.kind}
   bind:this={stage}
 >
-  {#if route.kind === "home"}
-    <div class="shell-region shell-region--home" data-cy="shell-region-home">
-      <MainMenuScreen
-        {saves}
-        {store}
-        {coreGate}
-        onfreeplaywarm={warmFreePlay}
-      />
-    </div>
-  {:else if route.kind === "install-content"}
-    <div
-      class="shell-region shell-region--install-content"
-      data-cy="shell-region-install-content"
-    >
-      {#await import("./screens/InstallContentScreen.svelte") then module}
-        <svelte:component
-          this={module.default}
-          gate={coreGate}
-          bootstrap={coreBootstrap}
-          oninstalled={(installed, reader, generation) => {
-            if (contentReader !== reader) contentReader?.close();
-            gameplay = installed;
-            contentReader = reader;
-            coreGate = {
-              kind: "ready",
-              gameplay: installed,
-              reader,
-              generation,
-            };
-          }}
-          onback={() => store.navigate(HOME_ROUTE)}
-        />
-      {:catch error}
-        <DomainLoadError
-          label="Content installer"
-          cy="content-installer"
-          {error}
-        />
-      {/await}
-    </div>
-  {:else if collectionContext !== null}
-    <div
-      class="shell-region shell-region--collection"
-      data-cy="shell-region-collection"
-    >
-      {#if collection === null}
-        <!-- The save and the card database are still being read. Nothing of the
+  <svelte:boundary
+    onerror={(error, reset) => {
+      recover(error);
+      void closing.then(reset, reset);
+    }}
+  >
+    {#if recoveryMessage !== null}
+      <p role="alert" data-cy="application-recovery-message">
+        {recoveryMessage}
+      </p>
+    {/if}
+    {#if route.kind === "home"}
+      <div class="shell-region shell-region--home" data-cy="shell-region-home">
+        {#key coreGate.kind === "ready" ? coreGate.generation : coreGate.kind}
+          <MainMenuScreen
+            saves={menuRepository}
+            {store}
+            {coreGate}
+            onfreeplaywarm={warmFreePlay}
+          />
+        {/key}
+      </div>
+    {:else if route.kind === "install-content"}
+      <div
+        class="shell-region shell-region--install-content"
+        data-cy="shell-region-install-content"
+      >
+        {#await import("./screens/InstallContentScreen.svelte") then module}
+          <svelte:boundary onerror={domainError}>
+            <svelte:component
+              this={module.default}
+              gate={coreGate}
+              bootstrap={coreBootstrap}
+              oninstalled={(installed, reader, generation) => {
+                if (contentReader !== reader) contentReader?.close();
+                gameplay = installed;
+                contentReader = reader;
+                coreGate = {
+                  kind: "ready",
+                  gameplay: installed,
+                  reader,
+                  generation,
+                };
+              }}
+              onback={() => store.navigate(HOME_ROUTE)}
+            />
+          </svelte:boundary>
+        {:catch error}
+          <DomainLoadError
+            onerror={domainError}
+            label="Content installer"
+            cy="content-installer"
+            {error}
+          />
+        {/await}
+      </div>
+    {:else if collectionContext !== null}
+      <div
+        class="shell-region shell-region--collection"
+        data-cy="shell-region-collection"
+      >
+        {#if collection === null}
+          <!-- The save and the card database are still being read. Nothing of the
              screen mounts until both are in hand, so a route with no save never
              becomes an empty collection. -->
-        <p class="visually-hidden" data-cy="collection-pending">
-          Opening your collection
-        </p>
-      {:else}
-        {@const opened = collection}
-        <svelte:component
-          this={opened.Screen}
-          ownership={opened.ownership}
-          cards={opened.catalog.cards}
-          rarityByCode={opened.catalog.rarityByCode}
-          imageSource={cardImages}
-          onback={() => store.navigate(deckRoute(opened.context, null))}
-        />
-      {/if}
-    </div>
-  {:else if deckContext !== null}
-    {@const context = deckContext}
-    <div class="shell-region shell-region--decks" data-cy="shell-region-decks">
-      <!-- Keyed on the world, so crossing between the two deck libraries — with
+          <p class="visually-hidden" data-cy="collection-pending">
+            Opening your collection
+          </p>
+        {:else}
+          {@const opened = collection}
+          <svelte:boundary onerror={domainError}>
+            <svelte:component
+              this={opened.Screen}
+              ownership={opened.ownership}
+              cards={opened.catalog.cards}
+              rarityByCode={opened.catalog.rarityByCode}
+              imageSource={cardImages}
+              onback={() => store.navigate(deckRoute(opened.context, null))}
+            />
+          </svelte:boundary>
+        {/if}
+      </div>
+    {:else if deckContext !== null}
+      {@const context = deckContext}
+      <div
+        class="shell-region shell-region--decks"
+        data-cy="shell-region-decks"
+      >
+        <!-- Keyed on the world, so crossing between the two deck libraries — with
            Back, or a pasted hash — mounts a new editor rather than handing the
            old one a new banner. The repository is opened once per mount, so a
            reused instance would keep writing into the library it was mounted
            for while naming the one the player is now looking at. -->
-      {#key context}
-        {#if editorContext === null}
-          <!-- The save behind a story deck route is still being read. Nothing
+        {#key context}
+          {#if editorContext === null}
+            <!-- The save behind a story deck route is still being read. Nothing
                of the editor mounts until it is found, so a route with no save
                never becomes an editor over the free-play library. -->
-          <p class="visually-hidden" data-cy="story-decks-pending">
-            Opening your story decks
-          </p>
-        {:else if gameplay !== null}
-          {@const bound = editorContext}
-          {@const installed = gameplay}
-          {@const images = cardImages}
-          {#await Promise.all( [loaders.decks(), Promise.resolve(installed.editor(images ?? undefined))] ) then [module, catalogInput]}
+            <p class="visually-hidden" data-cy="story-decks-pending">
+              Opening your story decks
+            </p>
+          {:else if gameplay !== null}
+            {@const bound = editorContext}
+            {@const installed = gameplay}
+            {@const images = cardImages}
+            {#await Promise.all( [loaders.decks(), Promise.resolve(installed.editor(images ?? undefined))] ) then [module, catalogInput]}
+              <svelte:boundary onerror={domainError}>
+                <svelte:component
+                  this={module.default}
+                  context={bound}
+                  {catalogInput}
+                  deckId={route.kind === "free-play-deck" ||
+                  route.kind === "story-deck"
+                    ? route.deckId
+                    : null}
+                  onnavigate={({ deckId }) =>
+                    store.navigate(deckRoute(context, deckId))}
+                  oncollection={() => store.navigate(collectionRoute(context))}
+                  onexit={() => store.navigate(HOME_ROUTE)}
+                  returnLabel={editorReturnLabel}
+                  onreturn={() => store.navigate(editorReturnRoute)}
+                />
+              </svelte:boundary>
+            {:catch error}
+              <DomainLoadError
+                onerror={domainError}
+                label="Deck Editor"
+                cy="decks"
+                {error}
+              />
+            {/await}
+          {/if}
+        {/key}
+      </div>
+    {:else if route.kind === "admin"}
+      <div
+        class="shell-region shell-region--admin"
+        data-cy="shell-region-admin"
+      >
+        {#await import("./admin/AdminConsole.svelte") then module}
+          <svelte:boundary onerror={domainError}>
             <svelte:component
               this={module.default}
-              context={bound}
-              {catalogInput}
-              deckId={route.kind === "free-play-deck" ||
-              route.kind === "story-deck"
-                ? route.deckId
-                : null}
-              onnavigate={({ deckId }) =>
-                store.navigate(deckRoute(context, deckId))}
-              oncollection={() => store.navigate(collectionRoute(context))}
-              onexit={() => store.navigate(HOME_ROUTE)}
-              returnLabel={editorReturnLabel}
-              onreturn={() => store.navigate(editorReturnRoute)}
+              {store}
+              {gameplay}
+              {saves}
             />
-          {:catch error}
-            <DomainLoadError label="Deck Editor" cy="decks" {error} />
-          {/await}
-        {/if}
-      {/key}
-    </div>
-  {:else if route.kind === "admin"}
-    <div class="shell-region shell-region--admin" data-cy="shell-region-admin">
-      {#await import("./admin/AdminConsole.svelte") then module}
-        <svelte:component this={module.default} {store} {gameplay} {saves} />
-      {:catch error}
-        <DomainLoadError label="Developer console" cy="admin" {error} />
-      {/await}
-    </div>
-  {:else if route.kind === "story"}
-    <div class="shell-region shell-region--story" data-cy="shell-region-story">
-      {#if storyRelease !== null && storyCards !== null && saves !== null}
-        {#await loaders.story() then module}
-          <svelte:component
-            this={module.default}
-            release={storyRelease}
-            cards={storyCards}
-            {saves}
-            media={storyMedia}
-            imageSource={cardImages}
-            onencounter={startEncounter}
-            {storyEntryIntent}
-            ondecks={() => store.navigate(deckRoute("story", null))}
-            onmainmenu={() => store.navigate(HOME_ROUTE)}
-            resumeState={handback?.state ?? null}
-            resumeStory={handback?.story ?? null}
-            resolution={handback?.resolution ?? null}
-            onhandled={() => {
-              handback = null;
-            }}
-          />
+          </svelte:boundary>
         {:catch error}
-          <DomainLoadError label="Visual novel" cy="story" {error} />
+          <DomainLoadError
+            onerror={domainError}
+            label="Developer console"
+            cy="admin"
+            {error}
+          />
         {/await}
-      {:else}
-        <DomainLoadError
-          label="Visual novel"
-          cy="story"
-          error={new Error("STORY_MIGRATION_FAILED")}
-        />
-      {/if}
-    </div>
-  {:else if route.kind === "free-play" && matchRequest === null}
-    <!-- Free play opens on the seats themselves: choosing two decks is the only
+      </div>
+    {:else if route.kind === "story"}
+      <div
+        class="shell-region shell-region--story"
+        data-cy="shell-region-story"
+      >
+        {#if storyRelease !== null && storyCards !== null && saves !== null}
+          {#await loaders.story() then module}
+            <svelte:boundary onerror={domainError}>
+              <svelte:component
+                this={module.default}
+                release={storyRelease}
+                cards={storyCards}
+                {saves}
+                media={storyMedia}
+                imageSource={cardImages}
+                onencounter={startEncounter}
+                {storyEntryIntent}
+                ondecks={() => store.navigate(deckRoute("story", null))}
+                onmainmenu={() => store.navigate(HOME_ROUTE)}
+                resumeState={handback?.state ?? null}
+                resumeStory={handback?.story ?? null}
+                resolution={handback?.resolution ?? null}
+                onhandled={() => {
+                  handback = null;
+                }}
+              />
+            </svelte:boundary>
+          {:catch error}
+            <DomainLoadError
+              onerror={domainError}
+              label="Visual novel"
+              cy="story"
+              {error}
+            />
+          {/await}
+        {:else}
+          <DomainLoadError
+            onerror={domainError}
+            label="Visual novel"
+            cy="story"
+            error={new Error("STORY_MIGRATION_FAILED")}
+          />
+        {/if}
+      </div>
+    {:else if route.kind === "free-play" && matchRequest === null}
+      <!-- Free play opens on the seats themselves: choosing two decks is the only
          thing this mode asks before a duel, and a menu in front of it was one
          click that named the screen behind it (ADR-054). Both seats are chosen
          here rather than inside the duel, whose own picker fixes the opponent.
@@ -815,60 +1070,97 @@
          the free-play library pulls in the deck repository and the card
          catalog, and measured statically that is 24,989 bytes of the shell's
          115,000-byte budget for a screen only a free-play match opens. -->
-    <div
-      class="shell-region shell-region--free-play"
-      data-cy="shell-region-free-play-setup"
-    >
-      {#if gameplay !== null}
-        {#await import("./screens/FreePlayMatchSetup.svelte") then module}
-          <svelte:component
-            this={module.default}
-            {gameplay}
-            {settings}
-            loadBattle={loadDuelDomain}
-            onstart={(request) => (matchRequest = request)}
-            onback={() => store.navigate(HOME_ROUTE)}
-            ondecks={() => store.navigate(deckRoute("free-play", null))}
-            onopendeck={(id) =>
-              store.navigate(deckRoute("free-play", deckId(id)))}
-          />
-        {:catch error}
-          <DomainLoadError label="Match setup" cy="free-play-match" {error} />
-        {/await}
-      {/if}
-    </div>
-  {:else}
-    <div class="shell-region shell-region--duel" data-cy="shell-region-duel">
-      {#if route.kind === "duel-session" && !sessionReady}
-        <!-- The checkpoint is still being read. Nothing of the duel mounts
+      <div
+        class="shell-region shell-region--free-play"
+        data-cy="shell-region-free-play-setup"
+      >
+        {#if gameplay !== null}
+          {#await import("./screens/FreePlayMatchSetup.svelte") then module}
+            <svelte:boundary onerror={domainError}>
+              <svelte:component
+                this={module.default}
+                {gameplay}
+                {settings}
+                loadBattle={loadDuelDomain}
+                onerror={domainError}
+                onstart={(request) => (matchRequest = request)}
+                onback={() => store.navigate(HOME_ROUTE)}
+                ondecks={() => store.navigate(deckRoute("free-play", null))}
+                onopendeck={(id) =>
+                  store.navigate(deckRoute("free-play", deckId(id)))}
+              />
+            </svelte:boundary>
+          {:catch error}
+            <DomainLoadError
+              onerror={domainError}
+              label="Match setup"
+              cy="free-play-match"
+              {error}
+            />
+          {/await}
+        {/if}
+      </div>
+    {:else}
+      <div class="shell-region shell-region--duel" data-cy="shell-region-duel">
+        {#if route.kind === "duel-session" && !sessionReady}
+          <!-- The checkpoint is still being read. Nothing of the duel mounts
              until it is found, so a session that cannot be resumed leaves the
              player on the story rather than inside half a duel. -->
-        <p class="visually-hidden" data-cy="battle-session-pending">
-          Preparing the story duel
-        </p>
-      {:else if battleRuntimeSource !== null && battlePresentation !== null}
-        {#await loadDuelDomain() then module}
-          <!-- The duel is rotated by the stylesheet, so the notice explaining
+          <p class="visually-hidden" data-cy="battle-session-pending">
+            Preparing the story duel
+          </p>
+        {:else if battleRuntimeSource !== null && battlePresentation !== null}
+          {#await loadDuelDomain() then module}
+            <!-- The duel is rotated by the stylesheet, so the notice explaining
                it belongs to the duel; its one-time dismissal is a shell
                setting, so the flag and its setter cross as plain props. -->
-          <svelte:component
-            this={module.BattleFacade}
-            runtimeSource={battleRuntimeSource}
-            presentation={battlePresentation}
-            imageSource={cardImages}
-            request={duelRequest}
-            hosted={route.kind === "duel-session"}
-            oncomplete={settleSession}
-            rotated={box.rotated}
-            rotationNoticeDismissed={$settings.rotationNoticeDismissed}
-            onrotationnoticedismiss={() => settings.dismissRotationNotice()}
-            onleavematch={route.kind === "free-play" ? leaveMatch : null}
-          />
-        {:catch error}
-          <DomainLoadError label="Duel Simulator" cy="duel" {error} />
-        {/await}
-      {/if}
-    </div>
-  {/if}
-  <ToastHost store={toasts} />
+            <svelte:boundary onerror={domainError}>
+              <svelte:component
+                this={module.BattleFacade}
+                runtimeSource={battleRuntimeSource}
+                presentation={battlePresentation}
+                imageSource={cardImages}
+                request={duelRequest}
+                hosted={route.kind === "duel-session"}
+                oncomplete={settleSession}
+                onfatal={domainError}
+                ondispose={trackDisposal}
+                rotated={box.rotated}
+                rotationNoticeDismissed={$settings.rotationNoticeDismissed}
+                onrotationnoticedismiss={() => settings.dismissRotationNotice()}
+                onleavematch={route.kind === "free-play" ? leaveMatch : null}
+              />
+            </svelte:boundary>
+          {:catch error}
+            <DomainLoadError
+              onerror={domainError}
+              label="Duel Simulator"
+              cy="duel"
+              {error}
+            />
+          {/await}
+        {/if}
+      </div>
+    {/if}
+    <ToastHost store={toasts} />
+    {#snippet failed(error, reset)}
+      <p
+        role="alert"
+        aria-label={error instanceof Error
+          ? "Session error"
+          : "Unknown session error"}
+        data-cy="application-boundary-recovery"
+      >
+        Session stopped. Saved progress was not replaced.
+      </p>
+      <button
+        type="button"
+        data-cy="application-boundary-home"
+        onclick={() => {
+          store.navigate(HOME_ROUTE, { replace: true });
+          reset();
+        }}>Main Menu</button
+      >
+    {/snippet}
+  </svelte:boundary>
 </div>

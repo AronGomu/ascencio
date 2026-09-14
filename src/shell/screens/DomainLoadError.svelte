@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { onMount } from "svelte";
+  export let onerror: ((error: unknown) => void) | undefined = undefined;
+  onMount(() => onerror?.(error));
   /* What a player sees when a domain's own chunk never arrives. Without it the
      `{#await}` blocks in the shell render nothing at all on rejection, so a
      failed import — a stale dev server, a half-cached build, an offline

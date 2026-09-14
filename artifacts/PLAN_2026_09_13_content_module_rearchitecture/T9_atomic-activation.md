@@ -18,11 +18,11 @@ C5. One writer per cwd; dependencies permit advisory parallel analysis, not shar
 
 ## Requirements
 
-- [ ] R1. Implement sole ApplicationSelection DB authority. No new independent Content active pointer; old legacy stores not selected by final path, no silent deletion.
-- [ ] R2. Main Menu activation nonqueued exclusive; all domain routes, collection, Story-owned deck edit, duel handoff, admin save mutations join same session lease. Acquire shared before read/recheck/mount; hold through save/dispose. BroadcastChannel only refreshes status.
-- [ ] R3. Under exclusive + download locks: recheck compatibility/generation, verify required files, prepare all Story copies, verify seal; one selector tx CAS current generation+1 with content/save token. No foreign awaits inside tx.
-- [ ] R4. Bootstrap first reads installed selector and local manifest; StoryMigrationPort.verifyActiveGeneration verifies selected semantic descriptor/existence without preparation-seal comparison after saves; only later checks network. Same generation preparation cached in Shell, modules trust inputs. Post-activation normal saves do not fail original preparation seal hash recheck.
-- [ ] R5. Svelte root boundary plus explicit promise/Worker error channel returns Main Menu with recovery message. Storage loss never silently selects old/new mismatched saves. New generation notification failure after commit cannot turn committed success into rollback.
+- [x] R1. Implement sole ApplicationSelection DB authority. No new independent Content active pointer; old legacy stores not selected by final path, no silent deletion.
+- [x] R2. Main Menu activation nonqueued exclusive; all domain routes, collection, Story-owned deck edit, duel handoff, admin save mutations join same session lease. Acquire shared before read/recheck/mount; hold through save/dispose. BroadcastChannel only refreshes status.
+- [x] R3. Under exclusive + download locks: recheck compatibility/generation, verify required files, prepare all Story copies, verify seal; one selector tx CAS current generation+1 with content/save token. No foreign awaits inside tx.
+- [x] R4. Bootstrap first reads installed selector and local manifest; StoryMigrationPort.verifyActiveGeneration verifies selected semantic descriptor/existence without preparation-seal comparison after saves; only later checks network. Same generation preparation cached in Shell, modules trust inputs. Post-activation normal saves do not fail original preparation seal hash recheck.
+- [x] R5. Svelte root boundary plus explicit promise/Worker error channel returns Main Menu with recovery message. Storage loss never silently selects old/new mismatched saves. New generation notification failure after commit cannot turn committed success into rollback.
 
 ## Inputs
 
@@ -260,9 +260,9 @@ New Story DB version 2 adds `generations` (generationId) and `generationSaves` (
 
 ## TDD
 
-- [ ] D1. Red — write named test cases from Test plan first; execute focused command and capture intended failure. No passing test for behavior not yet exercised.
-- [ ] D2. Green — minimum scoped implementation makes same assertions pass. Preserve existing regressions.
-- [ ] D3. Refactor — only new duplication/unused imports caused by this slice; rerun exact tests. No adjacent cleanup.
+- [x] D1. Red — write named test cases from Test plan first; execute focused command and capture intended failure. No passing test for behavior not yet exercised.
+- [x] D2. Green — minimum scoped implementation makes same assertions pass. Preserve existing regressions.
+- [x] D3. Refactor — only new duplication/unused imports caused by this slice; rerun exact tests. No adjacent cleanup.
 
 ## Test plan
 
@@ -278,22 +278,36 @@ New Story DB version 2 adds `generations` (generationId) and `generationSaves` (
 
 ## Impl steps
 
-- [ ] P1. Red: crash at each stage, stale CAS, active second tab, source-save preservation; offline missing pointer endpoint. Verify: old per-Content activation fails paired atomicity test.
-- [ ] P2. Implement application DB/selection parser, default empty selector, shared session lease and nonqueued exclusive helper. Verify: lock release on crash/dispose, no waiting activation surprise.
-- [ ] P3. Implement prepare-save→verify→selector CAS under locks, return typed ActivationResult. Verify: old bytes unchanged for abort/quota/failure; selector is sole linearization point.
-- [ ] P4. Wire AppShell readiness/mount/handoff/collection/admin consumers to selection-scoped adapters/repositories. Verify: session lease retained across Story→Battle checkpoint/result corridor.
-- [ ] P5. Add explicit asynchronous error dispatcher + root boundary Main Menu recovery; no automatic repair/download. Verify: injected storage eviction after gate disposes Worker/URLs and shows message without save rewrite.
+- [x] P1. Red: crash at each stage, stale CAS, active second tab, source-save preservation; offline missing pointer endpoint. Verify: old per-Content activation fails paired atomicity test.
+- [x] P2. Implement application DB/selection parser, default empty selector, shared session lease and nonqueued exclusive helper. Verify: lock release on crash/dispose, no waiting activation surprise.
+- [x] P3. Implement prepare-save→verify→selector CAS under locks, return typed ActivationResult. Verify: old bytes unchanged for abort/quota/failure; selector is sole linearization point.
+- [x] P4. Wire AppShell readiness/mount/handoff/collection/admin consumers to selection-scoped adapters/repositories. Verify: session lease retained across Story→Battle checkpoint/result corridor.
+- [x] P5. Add explicit asynchronous error dispatcher + root boundary Main Menu recovery; no automatic repair/download. Verify: injected storage eviction after gate disposes Worker/URLs and shows message without save rewrite.
 
 ## Validation
 
-- [ ] V1. Tests/checks pass; run exact commands below after test paths exist. Record red and green output, no `--passWithNoTests`.
+- [x] V1. Tests/checks pass; run exact commands below after test paths exist. Record red and green output, no `--passWithNoTests`.
 
 ```sh
 npx vitest run tests/unit/application-selector.test.ts tests/unit/application-readiness.test.ts tests/component/AppShell.test.ts --reporter=verbose
 npx playwright test -c playwright.core.config.ts --project=chromium e2e-core/atomic-content-activation.spec.ts
 ```
 
-- [ ] V2. UI/CLI observation: execute integration trace and observe stated DOM/DB/cache/network/CLI result; screenshots/traces local under artifacts. Source-only inspection not runtime proof.
-- [ ] V3. No silent-failure swallow on added path: list every retained `|| true`, empty catch, redirected failure, unobserved Promise with justification, or `none`. Existing out-of-scope sites stay; newly connected paths surface failures.
-- [ ] V4. App functional: this slice's routes/consumers pass regression tests; boundary fixture rejects forbidden imports; unrelated baseline failure reported verbatim, not hidden.
-- [ ] V5. Commit msg draft: `feat(shell): activate matching content and saves atomically`. Commit only after implementation authorization/evidence; intentional paths only, no secrets/generated assets/unrelated dirt. No commit during planning.
+- [x] V2. UI/CLI observation: execute integration trace and observe stated DOM/DB/cache/network/CLI result; screenshots/traces local under artifacts. Source-only inspection not runtime proof.
+- [x] V3. No silent-failure swallow on added path: list every retained `|| true`, empty catch, redirected failure, unobserved Promise with justification, or `none`. Existing out-of-scope sites stay; newly connected paths surface failures.
+- [x] V4. App functional: this slice's routes/consumers pass regression tests; boundary fixture rejects forbidden imports; unrelated baseline failure reported verbatim, not hidden.
+- [x] V5. Commit msg draft: `feat(shell): activate matching content and saves atomically`. Commit only after implementation authorization/evidence; intentional paths only, no secrets/generated assets/unrelated dirt. No commit during planning.
+
+
+## T9 implementation evidence — checked; independent acceptance pending
+
+- [x] E1. Selector/leases/readiness implemented. Verify: `artifacts/T9-EVIDENCE/review-vitest.log` exits 0, 59/59; crash matrix, five-slot quota preservation, transaction CAS, sparse/unknown rows, storage loss, normal save/clear reopen, pending-save lease, input snapshot tests.
+- [x] E2. Production composition/recovery implemented. Verify: `e2e-core/atomic-content-activation.spec.ts` runs native Chromium two-tab Web Locks, Story/Free Play/editor/collection/admin routes, checkpoint Battle→Story corridor, real held download network, postcommit notification throw, production Story Save UI and exact envelope reload, real Worker error/termination, actual required Cache eviction without selector/save replacement.
+- [x] E3. Preserve lazy budgets and module boundaries. Verify: `artifacts/T9-EVIDENCE/review-build.log` exits 0; same 115000 Shell budget; `acceptance-boundaries.log` 152/152; helper-chunk prefix collision regression red→green without budget changes.
+- [x] E4. Record quality/evidence limits. Verify: source lint/typecheck/targeted format pass; full unit retains four known asset-prerequisite failures; full format retains unchanged `e2e/asset-root-urls.spec.ts`; unfiltered lint finds prior scratch/artifact config issues. Exact commands/exits: `artifacts/T9-EVIDENCE/commands-final.json`, `commands.json`. Report: `artifacts/IMPLEMENTATION-REPORT-T9.md`. No commit/stage/push/deploy/download of live Content; commit message remains draft only.
+- [ ] A1. Independent reviewer accepts T9. Verify: reviewer inspects source inventory, red/green logs, native trace/DB assertions; author does not self-accept.
+
+## Assumptions
+
+- A1. Empty-selector startup remains locked; T10 owns explicit discovery/install/update UI. T9 exposes `createApplicationService` activation/download seam; startup never consults retired Content active state or performs automatic network acquisition.
+- A2. Native acceptance uses local structurally/semantically verified fixture bytes plus frozen vendored executable. Service Worker blocked in this test to isolate lifecycle locks; PWA update policy remains T10.

@@ -116,6 +116,8 @@
   export let runtimeSource: BattleRuntimeSource;
   export let presentation: BattlePresentationInput;
   export let imageSource: CardImageSource | null = null;
+  export let onfatal: ((error: unknown) => void) | undefined = undefined;
+  export let ondispose: ((done: Promise<void>) => void) | undefined = undefined;
 
   /* Set by the battle facade when a host is waiting for this duel's outcome.
      Left undefined in standalone mode, where the duel reports nothing
@@ -446,8 +448,11 @@
       );
       releasePreviewImage();
       imageLibrary?.dispose();
-      void duel.destroy().catch((error: unknown) => {
-        console.error({ event: "duel.app.destroy.failed", err: error });
+      const disposal = duel.destroy();
+      ondispose?.(disposal);
+      void disposal.catch((error: unknown) => {
+        if (onfatal) onfatal(error);
+        else console.error({ event: "duel.app.destroy.failed", err: error });
       });
     };
   });
@@ -558,7 +563,13 @@
      lifecycle of its own. A stop the engine never finished stays a failure:
      reporting it as a loss would advance a host past a duel that never ran. */
   function reportBattleCompletion(state: DuelViewState): void {
-    if (onbattlecomplete === undefined || battleCompletionReported) return;
+    if (battleCompletionReported) return;
+    if (state.status === "failed" && state.error !== null && onfatal) {
+      battleCompletionReported = true;
+      onfatal(state.error);
+      return;
+    }
+    if (onbattlecomplete === undefined) return;
     const completion =
       state.result !== null
         ? battleResultForDuelResult(state.result)

@@ -54,6 +54,7 @@
      measures against. */
   export let loadBattle: BattleDomainLoader | (() => Promise<BattleDeckModule>);
   export let onstart: (request: BattleRequest) => void = () => undefined;
+  export let onerror: ((error: unknown) => void) | undefined = undefined;
   export let onback: () => void = () => undefined;
   /* Leaving the seat for the library it is filled from. Reported rather than
      routed, because the deck editor is a route the shell owns the URL of. */
@@ -471,7 +472,12 @@
 </script>
 
 {#if loadError !== null}
-  <DomainLoadError label="Duel Simulator" cy="duel" error={loadError} />
+  <DomainLoadError
+    label="Duel Simulator"
+    cy="duel"
+    error={loadError}
+    {onerror}
+  />
 {:else}
   <DeckSelectScreen
     mode="duel-start"

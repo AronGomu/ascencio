@@ -1,3 +1,4 @@
+import type { ShellDomainSession } from "../../src/shell/core/shell-application.ts";
 import {
   storyShellProps,
   resetStorySessionFixture,
@@ -786,4 +787,134 @@ it("refuses Story without selected semantic inputs instead of creating legacy bi
   await vi.waitFor(() =>
     expect(mounted.container.textContent).toContain("STORY_MIGRATION_FAILED"),
   );
+});
+
+it("acquires selected lease before Story read/mount; releases after disposal", async () => {
+  const props = storyShellProps();
+  const acquire = Promise.withResolvers<ShellDomainSession>();
+  const close = vi.fn(async () => {
+    expect(document.querySelector('[data-cy="shell-region-story"]')).toBeNull();
+  });
+  const application = {
+    acquire: vi.fn(() => acquire.promise),
+    clear: vi.fn(),
+    close: vi.fn(),
+    subscribe: () => () => undefined,
+  };
+  const storyLoader = vi.fn(never);
+  const store = createShellStore("#/story", () => undefined);
+  render(AppShell, {
+    store,
+    loaders: { ...loaders, story: storyLoader },
+    initialCoreGate: READY_CORE_GATE,
+    application,
+  });
+  expect(storyLoader).not.toHaveBeenCalled();
+  acquire.resolve({
+    generation: 1,
+    gameplay: installedGameplayFixture(),
+    storyRelease: props.storyRelease!,
+    storyCards: props.storyCards!,
+    storyMedia: {
+      acquireMap: async () => null,
+      acquireSetImage: async () => null,
+    },
+    images: {} as never,
+    saves: props.saves!,
+    close,
+  });
+  await vi.waitFor(() => expect(storyLoader).toHaveBeenCalledOnce());
+  await store.navigate({ kind: "home" });
+  await tick();
+  await vi.waitFor(() => expect(close).toHaveBeenCalled());
+});
+
+it("Post-gate eviction: explicit asynchronous error returns Main Menu after lease disposal", async () => {
+  const props = storyShellProps();
+  const close = vi.fn(async () => {
+    expect(document.querySelector('[data-cy="shell-region-story"]')).toBeNull();
+  });
+  const session = {
+    generation: 1,
+    gameplay: installedGameplayFixture(),
+    storyRelease: props.storyRelease!,
+    storyCards: props.storyCards!,
+    storyMedia: {
+      acquireMap: async () => null,
+      acquireSetImage: async () => null,
+    },
+    images: {} as never,
+    saves: props.saves!,
+    close,
+  };
+  const application = {
+    acquire: vi.fn(async () => session),
+    clear: vi.fn(),
+    close: vi.fn(),
+    subscribe: () => () => undefined,
+  };
+  const store = createShellStore("#/story", () => undefined);
+  render(AppShell, {
+    store,
+    loaders,
+    initialCoreGate: READY_CORE_GATE,
+    application,
+  });
+  await vi.waitFor(() =>
+    expect(
+      document.querySelector('[data-cy="shell-region-story"]'),
+    ).not.toBeNull(),
+  );
+  window.dispatchEvent(
+    new ErrorEvent("error", { error: new Error("APP_REQUIRED_INPUT_FAILED") }),
+  );
+  await vi.waitFor(() =>
+    expect(
+      document.querySelector('[data-cy="application-recovery-message"]'),
+    ).not.toBeNull(),
+  );
+  await vi.waitFor(() => expect(application.clear).toHaveBeenCalled());
+  expect(close).toHaveBeenCalled();
+  expect(document.querySelector('[data-cy="main-menu-screen"]')).not.toBeNull();
+});
+
+it("Svelte root boundary disposes failed render and recovers Main Menu", async () => {
+  const { default: Probe } =
+    await import("../fixtures/ApplicationFailureProbe.svelte");
+  const props = storyShellProps();
+  const close = vi.fn(async () => undefined);
+  const application = {
+    acquire: vi.fn(async () => ({
+      generation: 1,
+      gameplay: installedGameplayFixture(),
+      storyRelease: props.storyRelease!,
+      storyCards: props.storyCards!,
+      storyMedia: {
+        acquireMap: async () => null,
+        acquireSetImage: async () => null,
+      },
+      images: {} as never,
+      saves: props.saves!,
+      close,
+    })),
+    clear: vi.fn(),
+    close: vi.fn(),
+    subscribe: () => () => undefined,
+  };
+  render(AppShell, {
+    store: createShellStore("#/story", () => undefined),
+    loaders: { ...loaders, story: async () => ({ default: Probe }) as never },
+    initialCoreGate: READY_CORE_GATE,
+    application,
+  });
+  await vi.waitFor(() => expect(application.clear).toHaveBeenCalled());
+  await vi.waitFor(() =>
+    expect(
+      document.querySelector('[data-cy="main-menu-screen"]'),
+    ).not.toBeNull(),
+  );
+  expect(close).toHaveBeenCalled();
+  expect(
+    document.querySelector('[data-cy="application-recovery-message"]'),
+  ).not.toBeNull();
 });

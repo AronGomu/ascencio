@@ -13,6 +13,9 @@ export interface DomainChunkReport {
    only ever match the prefix. A domain whose prefix is absent is a build the
    budgets cannot describe, so `measureDomainChunks` throws instead of reporting
    zero bytes — a silent zero would read as "well under budget". */
+// Semantic helper chunks share domain prefixes; only the Vite entry + eight-character hash names identify roots.
+export const DOMAIN_ENTRY_CHUNK =
+  /^(?:battle|deck-editor|story)-[A-Za-z0-9_-]{8}\.js$/;
 const DOMAIN_CHUNK_PREFIXES: ReadonlyArray<
   readonly [DomainChunkReport["domain"], string]
 > = [
@@ -87,8 +90,10 @@ export async function measureDomainChunks(
   );
   const reports: DomainChunkReport[] = [];
   for (const [domain, prefix] of DOMAIN_CHUNK_PREFIXES) {
-    const entryFile = javaScriptFiles.find((file) =>
-      path.basename(file).startsWith(prefix),
+    const entryFile = javaScriptFiles.find(
+      (file) =>
+        path.basename(file).startsWith(prefix) &&
+        DOMAIN_ENTRY_CHUNK.test(path.basename(file)),
     );
     if (entryFile === undefined)
       throw new Error(

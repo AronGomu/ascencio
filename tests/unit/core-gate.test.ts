@@ -1,4 +1,3 @@
-import { contentInstallFixture } from "../fixtures/content-install-fixture.ts";
 import { shellGameplayFixture as installedGameplayFixture } from "../fixtures/shell-gameplay.ts";
 import { describe, expect, it, vi } from "vitest";
 import { deckId } from "../../src/decks/index.ts";
@@ -12,21 +11,6 @@ import {
   INSTALL_CONTENT_ROUTE,
   type AppRoute,
 } from "../../src/shell/routes.ts";
-
-const bootstrap = {
-  schemaVersion: 1,
-  appSchemaVersion: 1,
-  contentSchemaVersion: 2,
-  hashAlgorithm: "SHA-256",
-  delivery: null,
-  chapters: [
-    {
-      id: "chapter-01",
-      title: "DM",
-      description: "Current Chapter 1 prototype.",
-    },
-  ],
-} as const;
 
 const locked: CoreGate = { kind: "locked", reason: "content-required" };
 const ready: CoreGate = {
@@ -50,110 +34,26 @@ const gameplayRoutes: readonly AppRoute[] = [
 ];
 
 describe("CORE startup gate", () => {
-  it.each(["empty", "failed", "throws", "gameplay-failed"])(
-    "closes owned reader on %s startup",
-    async (mode) => {
-      const fixture = await contentInstallFixture();
-      const close = vi.fn();
-      const reader = {
-        close,
-        current: async () => {
-          if (mode === "throws") throw new Error("read failed");
-          if (mode === "failed")
-            return {
-              kind: "failed",
-              code: "CONTENT_INTEGRITY_FAILED",
-              packId: null,
-              path: null,
-            };
-          return {
-            kind: "ok",
-            value: {
-              generation: 1,
-              current: mode === "empty" ? null : fixture.content,
-              previous: null,
-            },
-          };
-        },
-        inspectContent: async () => ({
-          kind: "failed",
-          code: "CONTENT_INTEGRITY_FAILED",
-          packId: null,
-          path: null,
-        }),
-      };
-      const startup = await loadCoreStartup(
-        async () => new Response(JSON.stringify(fixture.bootstrap)),
-        "http://localhost/",
-        {} as IDBFactory,
-        async () => ({ kind: "ok", value: reader as never }),
-      );
-      expect(startup.gate.kind).toBe("locked");
-      expect(close).toHaveBeenCalledOnce();
-    },
-  );
-  it("treats delivery:null as content unavailable, not a network failure", async () => {
-    const fetch = vi.fn(
-      async () =>
-        new Response(JSON.stringify(bootstrap), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        }),
-    );
-
+  it("missing Web Locks blocks without consulting network or legacy stores", async () => {
+    const fetch = vi.fn();
     const startup = await loadCoreStartup(
       fetch,
-      "http://127.0.0.1:4202/game/",
+      "https://example.test/",
       {} as IDBFactory,
     );
-
-    expect(startup.gate).toStrictEqual(locked);
-    expect(startup.bootstrap).toMatchObject({
-      chapters: bootstrap.chapters,
-      available: false,
-    });
-    expect(fetch).toHaveBeenCalledWith(
-      "http://127.0.0.1:4202/game/core-bootstrap.json",
-      {
-        cache: "no-store",
-        credentials: "omit",
-        redirect: "error",
-      },
-    );
-    expect(coreGateMessage(startup.gate)).toContain("Content is required");
-  });
-
-  it("reports malformed bootstrap as content-invalid", async () => {
-    const startup = await loadCoreStartup(
-      async () => new Response("{}", { status: 200 }),
-      "https://example.test/game/",
-      {} as IDBFactory,
-    );
-
-    expect(startup).toStrictEqual({
-      bootstrap: null,
-      gate: { kind: "locked", reason: "content-invalid" },
-    });
-  });
-
-  it("reports missing browser storage only for an available delivery", async () => {
-    const available = {
-      ...bootstrap,
-      delivery: {
-        baseUrl: "https://cdn.example.test/",
-        index: { sha256: "a".repeat(64), bytes: 123 },
-      },
-    };
-    const startup = await loadCoreStartup(
-      async () => new Response(JSON.stringify(available), { status: 200 }),
-      "https://example.test/game/",
-      undefined,
-    );
-
-    expect(startup.gate).toStrictEqual({
+    expect(startup.gate).toEqual({
       kind: "locked",
       reason: "storage-unavailable",
     });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it("missing browser storage blocks before network", async () => {
+    const fetch = vi.fn();
+    expect(
+      (await loadCoreStartup(fetch, "https://example.test/", undefined)).gate,
+    ).toEqual({ kind: "locked", reason: "storage-unavailable" });
+    expect(fetch).not.toHaveBeenCalled();
+    expect(coreGateMessage(locked)).toContain("Content is required");
   });
 
   it.each([{ kind: "checking" } as CoreGate, locked])(

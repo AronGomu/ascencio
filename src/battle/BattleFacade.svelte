@@ -16,6 +16,8 @@
   export let runtimeSource: BattleRuntimeSource;
   export let presentation: BattlePresentationInput;
   export let imageSource: CardImageSource | null = null;
+  export let onfatal: ((error: unknown) => void) | undefined = undefined;
+  export let ondispose: ((done: Promise<void>) => void) | undefined = undefined;
 
   /* `null` is standalone mode: the duel renders its own deck picker, owns the
      whole session and reports nothing back, which is exactly what `#/duel`
@@ -58,6 +60,8 @@
     {runtimeSource}
     {presentation}
     {imageSource}
+    {onfatal}
+    {ondispose}
     {request}
     {onleavematch}
     onbattlecomplete={hostWaiting ? settle : undefined}

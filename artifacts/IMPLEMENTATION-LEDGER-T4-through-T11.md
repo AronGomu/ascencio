@@ -152,6 +152,17 @@ Paths: `package.json`; `scripts/content-publish.ts`; `scripts/lib/asset-delivery
 
 - [ ] A1. Independent reviewer accepts B1–B4/E1–E2 publisher + B1–B3/N1 preparation repairs. Verify: reviewer checks `artifacts/IMPLEMENTATION-REPORT-T8-repair.md`, `artifacts/T8-REPAIR-EVIDENCE/`; no self-acceptance. Initial evidence/reviews/source snapshot preserved.
 
+## T9 — atomic application selection and cross-tab readiness
+
+State: **ACCEPTED — independent `artifacts/REVIEW-T9.md`: 59/59 Vitest, 1/1 native Chromium, build/boundaries pass; parent inspected activation lock/CAS source**. Sole root writer; no subagents/commit/stage/push/deploy. Task-requested route `openai-codex/gpt-6-astra:high`; runtime does not expose model metadata. Baseline `c9466f69ef3d4f550ee70d986a2d7f36b4c924b1`.
+
+- [x] T9.1 Add red selector/readiness tests, then one Shell DB authority with strict row parsing and IDB-only generation CAS. Verify: `artifacts/T9-EVIDENCE/review-vitest.log`, 59/59, including crash/quota/concurrent tx conflicts and unchanged old slot values.
+- [x] T9.2 Acquire shared before selection/preparation/mount; nonqueued exclusive lifecycle→download activation; drain pending generation writes and Worker disposal before release. Verify: native two-tab blocking/no queued activation, checkpoint Battle→Story corridor, held real download, Worker constructed/terminated counts.
+- [x] T9.3 Restore selected Story/Cards/repository and fresh Battle source injection; offline local semantic preparation cached per generation; normal writes use `verifyActiveGeneration`, not immutable preparation seals. Verify: production Story Save UI exact envelope survives reload; missing generation/Cache byte fails closed without selecting fallback.
+- [x] T9.4 Add root/awaited Svelte boundaries plus explicit async/Worker recovery; postcommit notification failure remains successful activation. Verify: `artifacts/T9-EVIDENCE/native-observations.log`, native screenshots/trace, unit/component recovery cases.
+- [x] T9.5 Run ticket commands and preserve quality evidence. Verify: scoped checks/build/boundaries pass; legacy 220/220, component 1237/1237, integration 54/54; four baseline unit asset failures remain under T11. `artifacts/IMPLEMENTATION-REPORT-T9.md`, exact paths/commands under `artifacts/T9-EVIDENCE/`.
+- [ ] T9.A1 Independent acceptance. Verify: reviewer checks complete changed-path inventory, red/green assertions, native production trace. No self-acceptance.
+
 ## Pending implementation order
 
 - [x] T4 → T5. Validation: T4 accepted at `5c2ddff`; T5 independently accepted; parent verified 91/91 focused tests. Native Chromium evidence in T5 repair report.

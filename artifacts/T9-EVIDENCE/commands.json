@@ -1,0 +1,224 @@
+[
+  {
+    "command": "npx vitest run tests/unit/application-selector.test.ts tests/unit/application-readiness.test.ts tests/component/AppShell.test.ts --reporter=verbose",
+    "exitCode": 0,
+    "result": "passed",
+    "log": "artifacts/T9-EVIDENCE/final-vitest.log"
+  },
+  {
+    "command": "npx playwright test -c playwright.core.config.ts --project=chromium e2e-core/atomic-content-activation.spec.ts",
+    "exitCode": 0,
+    "result": "passed",
+    "log": "artifacts/T9-EVIDENCE/final-native.log"
+  },
+  {
+    "command": "npm run typecheck",
+    "exitCode": 0,
+    "result": "passed",
+    "log": "artifacts/T9-EVIDENCE/final-types.log"
+  },
+  {
+    "command": "npm run lint -- --ignore-pattern '.tmp/**' --ignore-pattern 'artifacts/**'",
+    "exitCode": 0,
+    "result": "passed",
+    "log": "artifacts/T9-EVIDENCE/final-source-lint.log"
+  },
+  {
+    "command": "npx prettier --check $(cat artifacts/T9-EVIDENCE/source-paths.txt)",
+    "exitCode": 0,
+    "result": "passed",
+    "log": "artifacts/T9-EVIDENCE/final-source-format.log"
+  },
+  {
+    "command": "npm run build",
+    "exitCode": 0,
+    "result": "passed",
+    "log": "artifacts/T9-EVIDENCE/final-build.log"
+  },
+  {
+    "command": "npm run test:unit",
+    "exitCode": 1,
+    "result": "failed",
+    "log": "artifacts/T9-EVIDENCE/final-unit.log"
+  },
+  {
+    "command": "git diff --check && git diff --cached --quiet && git diff --exit-code -- vendor/ package.json package-lock.json src/content/ src/story/ content/core-bootstrap.json e2e/asset-root-urls.spec.ts",
+    "exitCode": 0,
+    "result": "passed",
+    "log": "artifacts/T9-EVIDENCE/final-preservation.log"
+  },
+  {
+    "command": "npx vitest run tests/unit/application-selector.test.ts --reporter=verbose",
+    "exitCode": 1,
+    "result": "failed",
+    "log": "artifacts/T9-EVIDENCE/red-selector.log"
+  },
+  {
+    "command": "npx vitest run tests/unit/application-readiness.test.ts --reporter=verbose",
+    "exitCode": 1,
+    "result": "failed",
+    "log": "artifacts/T9-EVIDENCE/red-readiness.log"
+  },
+  {
+    "command": "npx vitest run tests/component/AppShell.test.ts --reporter=verbose",
+    "exitCode": 1,
+    "result": "failed",
+    "log": "artifacts/T9-EVIDENCE/boundary-component.log"
+  },
+  {
+    "command": "npx vitest run tests/component/AppShell.test.ts -t 'Svelte root boundary' --reporter=verbose",
+    "exitCode": 0,
+    "result": "passed",
+    "log": "artifacts/T9-EVIDENCE/boundary-component-green.log"
+  },
+  {
+    "command": "npx vitest run tests/unit/domain-chunk-closure.test.ts --reporter=verbose",
+    "exitCode": 1,
+    "result": "failed",
+    "log": "artifacts/T9-EVIDENCE/red-domain-budget.log"
+  },
+  {
+    "command": "npx vitest run tests/unit/domain-chunk-closure.test.ts --reporter=verbose",
+    "exitCode": 0,
+    "result": "passed",
+    "log": "artifacts/T9-EVIDENCE/green-domain-budget.log"
+  },
+  {
+    "command": "npx vitest run tests/unit/application-selector.test.ts -t 'sparse chapter' --reporter=verbose",
+    "exitCode": 1,
+    "result": "failed",
+    "log": "artifacts/T9-EVIDENCE/red-sparse-selection.log"
+  },
+  {
+    "command": "npx vitest run tests/unit/application-readiness.test.ts -t 'pinned optional image' --reporter=verbose",
+    "exitCode": 1,
+    "result": "failed",
+    "log": "artifacts/T9-EVIDENCE/red-selected-media.log"
+  },
+  {
+    "command": "npx vitest run tests/unit/application-readiness.test.ts -t 'snapshots state' --reporter=verbose",
+    "exitCode": 1,
+    "result": "failed",
+    "log": "artifacts/T9-EVIDENCE/red-menu-snapshot.log"
+  },
+  {
+    "command": "npx vitest run tests/unit/application-selector.test.ts -t 'classified as application storage' --reporter=verbose",
+    "exitCode": 1,
+    "result": "failed",
+    "log": "artifacts/T9-EVIDENCE/red-storage-classification.log"
+  },
+  {
+    "command": "npx playwright test -c playwright.core.config.ts --project=chromium e2e-core/atomic-content-activation.spec.ts",
+    "exitCode": 1,
+    "result": "failed",
+    "log": "artifacts/T9-EVIDENCE/native-first.log"
+  },
+  {
+    "command": "npx playwright test -c playwright.core.config.ts --project=chromium e2e-core/atomic-content-activation.spec.ts",
+    "exitCode": 1,
+    "result": "failed",
+    "log": "artifacts/T9-EVIDENCE/native-production-save.log"
+  },
+  {
+    "command": "npx playwright test -c playwright.core.config.ts --project=chromium e2e-core/atomic-content-activation.spec.ts",
+    "exitCode": 0,
+    "result": "passed",
+    "log": "artifacts/T9-EVIDENCE/native-production-save-green.log"
+  },
+  {
+    "command": "npm run test:legacy",
+    "exitCode": 0,
+    "result": "passed",
+    "log": "artifacts/T9-EVIDENCE/legacy-full.log"
+  },
+  {
+    "command": "npm run test:component",
+    "exitCode": 0,
+    "result": "passed",
+    "log": "artifacts/T9-EVIDENCE/component-full.log"
+  },
+  {
+    "command": "npm run test:integration",
+    "exitCode": 0,
+    "result": "passed",
+    "log": "artifacts/T9-EVIDENCE/integration-full.log"
+  },
+  {
+    "command": "npx vitest run tests/unit/decks/deck-catalog-performance.test.ts --reporter=verbose",
+    "exitCode": 0,
+    "result": "passed",
+    "log": "artifacts/T9-EVIDENCE/performance-unit.log"
+  },
+  {
+    "command": "npx vitest run tests/unit/semantic-release-preparation.test.ts tests/unit/domain-boundaries.test.ts tests/unit/data-cy-coverage.test.ts tests/unit/domain-chunk-closure.test.ts tests/unit/core-gate.test.ts --reporter=verbose",
+    "exitCode": 0,
+    "result": "passed",
+    "log": "artifacts/T9-EVIDENCE/acceptance-boundaries.log"
+  },
+  {
+    "command": "npm run lint",
+    "exitCode": 1,
+    "result": "failed",
+    "log": "artifacts/T9-EVIDENCE/lint-first.log"
+  },
+  {
+    "command": "npm run lint -- --ignore-pattern '.tmp/**'",
+    "exitCode": 1,
+    "result": "failed",
+    "log": "artifacts/T9-EVIDENCE/lint-with-scratch-excluded.log"
+  },
+  {
+    "command": "npm run format:check",
+    "exitCode": 1,
+    "result": "failed",
+    "log": "artifacts/T9-EVIDENCE/format-full.log"
+  },
+  {
+    "command": "npm run assets:verify",
+    "exitCode": 1,
+    "result": "failed",
+    "log": "artifacts/T9-EVIDENCE/assets-verify.log"
+  },
+  {
+    "command": "npm run snapshot:verify",
+    "exitCode": 0,
+    "result": "passed",
+    "log": "artifacts/T9-EVIDENCE/snapshot-verify.log"
+  },
+  {
+    "command": "npx vitest run tests/unit/application-selector.test.ts tests/unit/application-readiness.test.ts tests/component/AppShell.test.ts --reporter=verbose",
+    "exitCode": 0,
+    "result": "passed",
+    "log": "artifacts/T9-EVIDENCE/review-vitest.log"
+  },
+  {
+    "command": "npx playwright test -c playwright.core.config.ts --project=chromium e2e-core/atomic-content-activation.spec.ts",
+    "exitCode": 0,
+    "result": "passed",
+    "log": "artifacts/T9-EVIDENCE/review-native.log"
+  },
+  {
+    "command": "npm run typecheck",
+    "exitCode": 0,
+    "result": "passed",
+    "log": "artifacts/T9-EVIDENCE/review-types.log"
+  },
+  {
+    "command": "npm run lint -- --ignore-pattern '.tmp/**' --ignore-pattern 'artifacts/**'",
+    "exitCode": 0,
+    "result": "passed",
+    "log": "artifacts/T9-EVIDENCE/review-lint.log"
+  },
+  {
+    "command": "npx prettier --check $(cat artifacts/T9-EVIDENCE/source-paths.txt)",
+    "exitCode": 0,
+    "result": "passed",
+    "log": "artifacts/T9-EVIDENCE/review-format.log"
+  },
+  {
+    "command": "npm run build",
+    "exitCode": 0,
+    "result": "passed",
+    "log": "artifacts/T9-EVIDENCE/review-build.log"
+  }
+]

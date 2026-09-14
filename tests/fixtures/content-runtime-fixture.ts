@@ -9,6 +9,7 @@ export interface ContentRuntimeFixtureOptions {
   readonly omitGlobal?: boolean;
   readonly globals?: Readonly<Record<string, unknown>>;
   readonly globalIndex?: readonly string[];
+  readonly snapshotId?: string;
 }
 const encode = (value: unknown) =>
   new TextEncoder().encode(JSON.stringify(value));
@@ -68,7 +69,12 @@ export async function contentRuntimeFixture(
     );
   assets.set(
     "strings/en.json",
-    encode({ system: {}, victory: {}, counter: {}, setname: {} }),
+    encode({
+      system: { "1": "Normal Summon" },
+      victory: { "0x0": "Surrendered" },
+      counter: {},
+      setname: {},
+    }),
   );
   const files = [...assets]
     .sort(([a], [b]) => a.localeCompare(b))
@@ -95,9 +101,9 @@ export async function contentRuntimeFixture(
   const vendor = JSON.parse(new TextDecoder().decode(vendorBytes));
   const engineManifestSha256 = sha(vendorBytes);
   const assetContentSha256 = sha(encode({ schemaVersion: 1, sources, files }));
-  const snapshotId = sha(
-    encode({ schemaVersion: 1, assetContentSha256, engineManifestSha256 }),
-  );
+  const snapshotId =
+    options.snapshotId ??
+    sha(encode({ schemaVersion: 1, assetContentSha256, engineManifestSha256 }));
   const runtimeRaw = encode({
     schemaVersion: 1,
     generatedAt: assetManifest.generatedAt,

@@ -243,12 +243,6 @@ export default tseslint.config(
                   : node.value;
                 const target = to.startsWith("src/") ? to.split("/")[1] : null;
                 if (source === target) return;
-                const verifierDebt =
-                  from === "src/content/install/verify-gameplay.ts" &&
-                  [
-                    "src/decks/catalog/ocg-mask.ts",
-                    "src/decks/catalog/pinned-ruleset.ts",
-                  ].includes(to);
                 const deckEntries = [
                   "index",
                   "contracts/index",
@@ -264,10 +258,13 @@ export default tseslint.config(
                 ];
                 if (
                   source === "cards" ||
+                  (source === "shell" &&
+                    target === "content" &&
+                    !from.startsWith("src/shell/application/") &&
+                    !from.startsWith("src/shell/adapters/")) ||
                   (["decks", "deck-editor", "story"].includes(source) &&
                     target === "content") ||
                   (target === "decks" &&
-                    !verifierDebt &&
                     !deckEntries.some(
                       (entry) => to === `src/decks/${entry}.ts`,
                     )) ||
@@ -517,31 +514,6 @@ export default tseslint.config(
       {
         group: [...BATTLE_INTERNALS, ...DECK_FORMAT_PENDING_RELOCATION],
         message: BATTLE_MESSAGE,
-      },
-    ],
-  ),
-  // Only this verifier may reuse these pure shared rules. No domain UI imports.
-  boundaries(
-    ["src/content/install/verify-gameplay.ts"],
-    [
-      {
-        group: [
-          "**/battle/**",
-          "**/story/**",
-          "**/shell/**",
-          "**/decks/**",
-          "!**/decks/catalog",
-          "!**/decks/catalog/pinned-ruleset.ts",
-          "!**/decks/catalog/ocg-mask.ts",
-          "**/deck-editor/**",
-          "**/deck-select/**",
-          "**/scripts/**",
-          "node:*",
-          ...builtinModules,
-          "@aws-sdk/**",
-        ],
-        message:
-          "Content validation reuses only pinned quantity/type rules, never domain UI.",
       },
     ],
   ),

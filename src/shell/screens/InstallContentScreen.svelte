@@ -1,48 +1,42 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import {
-    readInstallerChapterSizes,
-    type InstallerChapterSizes,
-  } from "../content/installer-chapter-sizes.ts";
-  import {
-    createContentInstaller,
-    loadInstalledGameplay,
-    type CoreBootstrap,
-    type ContentInstaller,
-    type ChapterId,
-    type OwnedContentReader,
-    type LegacyDownloadProgress as DownloadProgress,
-    type InstalledGameplay,
-  } from "../../content/index.ts";
-  import { createRuntimeActivationPort } from "../adapters/runtime-activation.ts";
+  import type {
+    ShellBootstrap,
+    ShellInstaller,
+    ShellGameplay,
+    ShellSession,
+    ShellChapterSizes,
+    ShellInstallProgress,
+  } from "../core/installed-inputs.ts";
+  import { openShellInstaller } from "../application/legacy-installer.ts";
   import { contentErrorCopy } from "../content/content-error-copy.ts";
   import { coreGateMessage, type CoreGate } from "../core/core-gate.ts";
 
   export let gate: CoreGate;
-  export let bootstrap: CoreBootstrap | null;
+  export let bootstrap: ShellBootstrap | null;
   export let onback: () => void;
   export let oninstalled: (
-    gameplay: InstalledGameplay,
-    reader: OwnedContentReader,
+    gameplay: ShellGameplay,
+    reader: ShellSession,
     generation: number,
   ) => void = () => undefined;
-  export let createInstaller = createContentInstaller;
+  export let createInstaller = openShellInstaller;
 
-  let installer: ContentInstaller | null = null;
+  let installer: ShellInstaller | null = null;
   let busy = false;
   let error = "";
-  let progress: DownloadProgress | null = null;
+  let progress: ShellInstallProgress | null = null;
   let installed: readonly string[] = [];
   let gameplayReady: readonly string[] =
     gate.kind === "ready" ? gate.gameplay.chapterIds : [];
-  let descriptions: Record<string, InstallerChapterSizes> = {};
+  let descriptions: Record<string, ShellChapterSizes> = {};
   let mounted = false;
   let started = false;
   let readerTransferred = false;
   $: if (mounted && bootstrap !== null && !started) void initialize();
   let unsubscribe: () => void = () => undefined;
   const abort = new AbortController();
-  const phaseLabel = (phase: DownloadProgress["phase"]): string =>
+  const phaseLabel = (phase: ShellInstallProgress["phase"]): string =>
     ({
       queued: "checking",
       extracting: "staging",
@@ -60,17 +54,7 @@
     started = true;
     busy = true;
     error = "";
-    const result = await createInstaller({
-      bootstrap,
-      savedRefs: {
-        async read() {
-          const { savedContentRefs } =
-            await import("../content/saved-content-refs.ts");
-          return savedContentRefs.read();
-        },
-      },
-      activation: createRuntimeActivationPort(),
-    });
+    const result = await createInstaller(bootstrap);
     if (!mounted) {
       if (result.kind === "ok") result.value.close();
       return;
@@ -87,37 +71,23 @@
       if (current.kind === "failed") {
         error = contentErrorCopy(current.code);
         installed = [];
-      } else
-        installed = current.value.current?.chapters.map((c) => c.packId) ?? [];
+      } else installed = current.value;
     };
     unsubscribe = result.value.subscribeCurrent((state) => {
       if (!mounted) return;
       if (state.kind === "failed") {
         error = contentErrorCopy(state.code);
         installed = [];
-      } else
-        installed = state.value.current?.chapters.map((c) => c.packId) ?? [];
+      } else installed = state.value;
     });
     await refresh();
-    if (bootstrap.delivery) {
-      const catalog = await result.value.readCatalog(
-        bootstrap.delivery.index.sha256,
-      );
-      if (catalog.kind === "failed") error = contentErrorCopy(catalog.code);
-      else
-        for (const chapter of catalog.value.value.chapters) {
-          if (chapter.status !== "published") continue;
-          const sizes = await readInstallerChapterSizes(
-            result.value,
-            chapter.manifest,
-          );
-          if (sizes.kind === "failed") error = contentErrorCopy(sizes.code);
-          else descriptions = { ...descriptions, [chapter.id]: sizes.value };
-        }
-    }
+    const descriptionsResult = await result.value.descriptions();
+    if (descriptionsResult.kind === "failed")
+      error = contentErrorCopy(descriptionsResult.code);
+    else descriptions = { ...descriptionsResult.value };
     busy = false;
   }
-  async function install(chapterId: ChapterId): Promise<void> {
+  async function install(chapterId: string): Promise<void> {
     if (busy) return;
     if (!installer) {
       await initialize();
@@ -125,29 +95,26 @@
     }
     busy = true;
     error = "";
-    const result = await installer.download(
-      { kind: "chapter", chapterId },
+    const result = await installer.install(
+      chapterId,
       (p) => {
         progress = p;
       },
       abort.signal,
     );
     if (result.kind === "failed") error = contentErrorCopy(result.code);
-    else if (result.kind === "complete") {
-      const gameplay = await loadInstalledGameplay(installer, result.content);
-      if (gameplay.kind === "failed") error = contentErrorCopy(gameplay.code);
-      else {
-        const current = await installer.current();
-        if (current.kind === "failed") error = contentErrorCopy(current.code);
-        else {
-          gameplayReady = gameplay.value.chapterIds;
-          oninstalled(gameplay.value, installer, current.value.generation);
-          readerTransferred = true;
-        }
-      }
+    else if (result.kind === "ok") {
+      gameplayReady = result.value.gameplay.chapterIds;
+      oninstalled(
+        result.value.gameplay,
+        result.value.reader,
+        result.value.generation,
+      );
+      readerTransferred = true;
     }
     busy = false;
   }
+
   onMount(() => {
     mounted = true;
     const teardown = () => abort.abort();
@@ -215,7 +182,7 @@
   {/if}
 
   <p class="install-content__hint" data-cy="install-content-availability">
-    {bootstrap === null || bootstrap.delivery === null
+    {bootstrap === null || !bootstrap.available
       ? "No content package is available in this build."
       : "Install verified content to unlock Story and Free Play."}
   </p>

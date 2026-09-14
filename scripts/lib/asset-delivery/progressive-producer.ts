@@ -7,6 +7,11 @@ import type {
   ProgressiveManifest,
 } from "../../../src/content/index.ts";
 import {
+  parseStoryRelease,
+  type StoryRelease,
+} from "../../../src/story/ports/index.ts";
+import type { VerifiedPublishCandidate } from "../../../src/shell/release-validation.ts";
+import {
   parseLatestContentPointer,
   parseProgressiveManifest,
 } from "../../../src/content/index.ts";
@@ -24,6 +29,8 @@ import { deriveProgressiveManifest } from "./progressive-manifest.ts";
 import { assertSafeParents } from "./path-guards.ts";
 import { digestSource, sameDigest, sourceStat } from "./source-files.ts";
 import { progressiveFail, ProgressiveError } from "./progressive-error.ts";
+import { visitReleaseHistory } from "./progressive-history.ts";
+import { validateProgressiveSemantics } from "./progressive-semantic-validation.ts";
 
 export interface ProgressiveCandidateRecord {
   readonly schemaVersion: 1;
@@ -34,6 +41,8 @@ export interface ProgressiveCandidateRecord {
 
 export interface ProgressiveReleaseCandidate {
   readonly run: string;
+  readonly inventoryVersion: string;
+  readonly story: StoryRelease;
   readonly manifest: ProgressiveManifest;
   readonly manifestBytes: Uint8Array;
   readonly manifestVersion: string;
@@ -149,6 +158,7 @@ export async function packProgressiveRelease(
   )
     progressiveFail("CONTENT_INVALID_MANIFEST");
   let previousManifestVersion: string | null = null;
+  let previousStory: StoryRelease | null = null;
   if (options.releaseSequence > 1) {
     if (!options.previousRun)
       progressiveFail("CONTENT_PREVIOUS_RELEASE_REQUIRED");
@@ -160,6 +170,7 @@ export async function packProgressiveRelease(
     if (previous.manifest.releaseSequence >= options.releaseSequence)
       progressiveFail("CONTENT_PREVIOUS_RELEASE_REQUIRED");
     previousManifestVersion = previous.manifestVersion;
+    previousStory = previous.story;
   } else if (options.previousRun)
     progressiveFail("CONTENT_PREVIOUS_RELEASE_REQUIRED");
   const { manifest, payload } = deriveProgressiveManifest(inventory, {
@@ -180,6 +191,13 @@ export async function packProgressiveRelease(
     root,
     `${run}/progressive/objects/${manifestKey}`,
     manifestBytes,
+  );
+  const story = await validateProgressiveSemantics(
+    root,
+    run,
+    inventory,
+    manifest,
+    previousStory,
   );
   const pointer: LatestContentPointer = {
     schemaVersion: 1,
@@ -206,8 +224,30 @@ export async function packProgressiveRelease(
     `${run}/progressive/inventory.json`,
     canonicalBytes(inventory),
   );
+  await writeExclusive(
+    root,
+    `${run}/progressive/previous-release.json`,
+    canonicalBytes({
+      schemaVersion: 1,
+      run: options.previousRun ?? null,
+      manifestVersion: previousManifestVersion,
+      story: previousStory,
+    }),
+  );
+  await writeExclusive(
+    root,
+    `${run}/progressive/validation.json`,
+    canonicalBytes({
+      schemaVersion: 1,
+      manifestVersion,
+      previousManifestVersion,
+      validation: "passed",
+    } satisfies VerifiedPublishCandidate),
+  );
   return {
     run,
+    inventoryVersion: digest(canonicalBytes(inventory)),
+    story,
     manifest,
     manifestBytes,
     manifestVersion,
@@ -260,20 +300,108 @@ function parseCandidate(value: unknown): ProgressiveCandidateRecord {
   } as ProgressiveCandidateRecord;
 }
 
+function parsePreviousRelease(value: unknown): {
+  readonly run: string | null;
+  readonly manifestVersion: string | null;
+  readonly story: StoryRelease | null;
+} {
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    progressiveFail("CONTENT_INVALID_MANIFEST");
+  const row = value as Record<string, unknown>;
+  if (
+    Object.keys(row).sort().join(",") !==
+      "manifestVersion,run,schemaVersion,story" ||
+    row.schemaVersion !== 1 ||
+    !(row.run === null || typeof row.run === "string") ||
+    !(
+      row.manifestVersion === null ||
+      (typeof row.manifestVersion === "string" &&
+        /^[a-f0-9]{64}$/.test(row.manifestVersion))
+    ) ||
+    (row.manifestVersion === null) !== (row.story === null) ||
+    (row.manifestVersion === null) !== (row.run === null)
+  )
+    progressiveFail("CONTENT_INVALID_MANIFEST");
+  let story: StoryRelease | null = null;
+  if (row.story !== null) {
+    try {
+      story = parseStoryRelease(row.story);
+    } catch {
+      progressiveFail("CONTENT_INVALID_MANIFEST");
+    }
+  }
+  return { run: row.run, manifestVersion: row.manifestVersion, story };
+}
+
 export async function verifyProgressiveRelease(
   root: string,
   run: string,
   checkSources: boolean,
 ): Promise<ProgressiveReleaseCandidate> {
+  const history = { runs: new Set<string>(), sequence: Infinity, bytes: 0 };
+  let currentRun: string | null = run;
+  let first: ProgressiveReleaseCandidate | null = null;
+  let expected: ReturnType<typeof parsePreviousRelease> | null = null;
+  while (currentRun !== null) {
+    const verified = await verifyProgressiveReleaseInternal(
+      root,
+      currentRun,
+      first === null && checkSources,
+      history,
+    );
+    if (
+      expected !== null &&
+      (verified.candidate.manifestVersion !== expected.manifestVersion ||
+        !Buffer.from(canonicalBytes(verified.candidate.story)).equals(
+          Buffer.from(canonicalBytes(expected.story)),
+        ))
+    )
+      progressiveFail("CONTENT_INVALID_MANIFEST");
+    first ??= verified.candidate;
+    expected = verified.previous;
+    currentRun = expected.run;
+  }
+  return first!;
+}
+
+async function verifyProgressiveReleaseInternal(
+  root: string,
+  run: string,
+  checkSources: boolean,
+  history: Parameters<typeof visitReleaseHistory>[0],
+): Promise<{
+  readonly candidate: ProgressiveReleaseCandidate;
+  readonly previous: ReturnType<typeof parsePreviousRelease>;
+}> {
   try {
-    const [manifestBytes, pointerBytes, candidateBytes, inventoryBytes] =
-      await Promise.all([
-        readCandidateFile(root, run, "manifest.json"),
-        readCandidateFile(root, run, "pointer.json"),
-        readCandidateFile(root, run, "candidate.json"),
-        readCandidateFile(root, run, "inventory.json"),
-      ]);
+    const [
+      manifestBytes,
+      pointerBytes,
+      candidateBytes,
+      inventoryBytes,
+      previousReleaseBytes,
+      validationBytes,
+    ] = await Promise.all([
+      readCandidateFile(root, run, "manifest.json"),
+      readCandidateFile(root, run, "pointer.json"),
+      readCandidateFile(root, run, "candidate.json"),
+      readCandidateFile(root, run, "inventory.json"),
+      readCandidateFile(root, run, "previous-release.json"),
+      readCandidateFile(root, run, "validation.json"),
+    ]);
     const manifest = parseProgressiveManifest(parseJsonBytes(manifestBytes));
+    visitReleaseHistory(
+      history,
+      path.posix.normalize(run),
+      manifest.releaseSequence,
+      manifest.files.reduce((total, file) => total + file.bytes, 0) +
+        manifestBytes.length +
+        pointerBytes.length +
+        candidateBytes.length +
+        inventoryBytes.length +
+        previousReleaseBytes.length +
+        validationBytes.length,
+    );
     const pointer = parseLatestContentPointer(parseJsonBytes(pointerBytes));
     const candidate = parseCandidate(parseJsonBytes(candidateBytes));
     const manifestVersion = digest(manifestBytes);
@@ -307,6 +435,12 @@ export async function verifyProgressiveRelease(
     )
       progressiveFail("CONTENT_INVALID_MANIFEST");
     for (const file of manifest.files) {
+      const info = await sourceStat(
+        root,
+        `${run}/progressive/objects/content/files/${file.version}/${file.path}`,
+      );
+      if (!info?.isFile() || info.size !== BigInt(file.bytes))
+        progressiveFail("CONTENT_INVALID_MANIFEST");
       const object = await readFile(
         await assertSafeParents(
           root,
@@ -357,21 +491,62 @@ export async function verifyProgressiveRelease(
           progressiveFail("CONTENT_SOURCE_STALE");
       }
     }
-    return {
+    const previousRelease = parsePreviousRelease(
+      parseJsonBytes(previousReleaseBytes),
+    );
+    if (
+      previousRelease.manifestVersion !== candidate.previousManifestVersion ||
+      (manifest.releaseSequence === 1) !==
+        (candidate.previousManifestVersion === null) ||
+      !Buffer.from(
+        canonicalBytes({
+          schemaVersion: 1,
+          run: previousRelease.run,
+          manifestVersion: previousRelease.manifestVersion,
+          story: previousRelease.story,
+        }),
+      ).equals(Buffer.from(previousReleaseBytes))
+    )
+      progressiveFail("CONTENT_INVALID_MANIFEST");
+    const story = await validateProgressiveSemantics(
+      root,
       run,
+      inventory,
       manifest,
-      manifestBytes,
+      previousRelease.story,
+    );
+    const validation: VerifiedPublishCandidate = {
+      schemaVersion: 1,
       manifestVersion,
-      pointer,
-      pointerBytes,
-      pointerVersion,
-      candidate,
-      objectKeys: [
-        ...manifest.files.map(
-          (file) => `content/files/${file.version}/${file.path}`,
-        ),
-        `content/manifests/${manifestVersion}.json`,
-      ].sort(compareCodePoints),
+      previousManifestVersion: candidate.previousManifestVersion,
+      validation: "passed",
+    };
+    if (
+      !Buffer.from(canonicalBytes(validation)).equals(
+        Buffer.from(validationBytes),
+      )
+    )
+      progressiveFail("CONTENT_INVALID_MANIFEST");
+    return {
+      previous: previousRelease,
+      candidate: {
+        run,
+        inventoryVersion: digest(canonicalBytes(inventory)),
+        story,
+        manifest,
+        manifestBytes,
+        manifestVersion,
+        pointer,
+        pointerBytes,
+        pointerVersion,
+        candidate,
+        objectKeys: [
+          ...manifest.files.map(
+            (file) => `content/files/${file.version}/${file.path}`,
+          ),
+          `content/manifests/${manifestVersion}.json`,
+        ].sort(compareCodePoints),
+      },
     };
   } catch (error) {
     if (error instanceof ProgressiveError) throw error;

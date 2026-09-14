@@ -1,3 +1,4 @@
+import { createShellGameplay } from "../../src/shell/application/legacy-content.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -14,7 +15,7 @@ import FreePlayMatchSetup from "../../src/shell/screens/FreePlayMatchSetup.svelt
 import { createShellSettingsStore } from "../../src/shell/settings/shell-settings-store.ts";
 import { installedDuelGameplayFixture } from "../fixtures/installed-duel-gameplay.ts";
 
-const gameplay = installedDuelGameplayFixture();
+const gameplay = createShellGameplay(installedDuelGameplayFixture(), null);
 
 afterEach(async () => {
   cleanup();
@@ -26,7 +27,6 @@ describe("installed Free Play", () => {
   it("renders chapter-only seats from exact installed gameplay", async () => {
     render(FreePlayMatchSetup, {
       gameplay,
-      reader: null,
       settings: createShellSettingsStore(localStorage),
       loadBattle: async () => ({
         BattleFacade: null as never,

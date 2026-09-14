@@ -1,5 +1,5 @@
 import { DECK_DATABASE_NAME, deckId, type DeckId } from "../../decks/index.ts";
-import type { InstalledGameplay } from "../../content/index.ts";
+import type { ShellGameplay } from "../core/installed-inputs.ts";
 import {
   STORY_SAVES_DATABASE_NAME,
   STORY_SLOT_KEYS,
@@ -117,7 +117,9 @@ export async function resetStorageTarget(
 }
 
 /** Seed only the verified installed default deck. */
-export function buildAdminTestDeck(gameplay: InstalledGameplay) {
+export function buildAdminTestDeck(
+  gameplay: Pick<ShellGameplay, "decks" | "defaults">,
+) {
   const deck = gameplay.decks.find(
     ({ id }) => id === gameplay.defaults.starterDeckId,
   );

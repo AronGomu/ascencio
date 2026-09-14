@@ -1,7 +1,7 @@
-import type { ContentFailureCode } from "../../content/index.ts";
-
-export function contentErrorCopy(code: ContentFailureCode): string {
+export function contentErrorCopy(code: string): string {
   switch (code) {
+    case "APP_REQUIRED_INPUT_FAILED":
+      return "Installed content failed semantic validation.";
     case "CONTENT_INVALID_MANIFEST":
     case "CONTENT_INTEGRITY_FAILED":
     case "CONTENT_ARCHIVE_REJECTED":

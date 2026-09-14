@@ -18,11 +18,11 @@ C5. One writer per cwd; dependencies permit advisory parallel analysis, not shar
 
 ## Requirements
 
-- [ ] R1. Inventory every old verifyGameplay check; assign structural path/hash checks Content, card metadata consistency Cards, token/quantity/zone Decks, story/default/ref/continuity Story, runtime support/ABI Battle. No check deleted merely to satisfy imports.
-- [ ] R2. Implement prepareRelease and Shell adapters; optional refs validated structurally but bytes never required. Return pinned complete domain inputs, not global raw reader exposed to domains.
-- [ ] R3. Canonical chapter/runtime card/text consistency and union conflict/dedup/default semantics preserved; whole runtime never unlocks uninstalled chapter cards. Required semantic failure prevents candidate readiness.
-- [ ] R4. Remove semantic wire contract/parser ownership from Content public surface; producer imports domain pure public validators plus Shell composition only through purpose-built pure validation entry, not UI. Content itself stays import-independent.
-- [ ] R5. Add same semantic/continuity validation to official producer verification/publisher precondition; previous official release descriptor required when releaseSequence>1. Record its manifestVersion in verified run metadata; T4 publisher binds that exact digest to CAS predecessor pointer, not arbitrary local previous-run. Runtime no downloaded code migrations.
+- [x] R1. Inventory every old verifyGameplay check; assign structural path/hash checks Content, card metadata consistency Cards, token/quantity/zone Decks, story/default/ref/continuity Story, runtime support/ABI Battle. No check deleted merely to satisfy imports.
+- [x] R2. Implement prepareRelease and Shell adapters; optional refs validated structurally but bytes never required. Return pinned complete domain inputs, not global raw reader exposed to domains.
+- [x] R3. Canonical chapter/runtime card/text consistency and union conflict/dedup/default semantics preserved; whole runtime never unlocks uninstalled chapter cards. Required semantic failure prevents candidate readiness.
+- [x] R4. Remove semantic wire contract/parser ownership from Content public surface; producer imports domain pure public validators plus Shell composition only through purpose-built pure validation entry, not UI. Content itself stays import-independent.
+- [x] R5. Add same semantic/continuity validation to official producer verification/publisher precondition; previous official release descriptor required when releaseSequence>1. Record its manifestVersion in verified run metadata; T4 publisher binds that exact digest to CAS predecessor pointer, not arbitrary local previous-run. Runtime no downloaded code migrations.
 
 ## Inputs
 
@@ -430,7 +430,7 @@ export declare function parseBattleRuntimeInput(value: unknown): BattleRuntimeIn
 export declare function validateBattleRuntime(input: BattleRuntimeInput): void;
 ```
 
-No Content types/paths/receipts; script.name is engine semantic script filename (e.g. c123.lua), not content-store path. Shell adapter loads+decodes whole frozen-compatible runtime support, allowedCardCodes selected chapter union only. wasmBinary transferred once per fresh source.load; source returns fresh ArrayBuffer so replay/restart cannot reuse detached buffer. requiredScripts comes from verified script index plus global inventory for whole runtime support pool, sorted unique names; missing indexed card/global script rejects BATTLE_RUNTIME_INVALID, genuinely unindexed normal card remains valid. Cards/text/scripts cloned; race decimal -> bigint only inside Worker engine adapter, linkMarker -> link_marker there. Parse IPC rejects invalid/oversized/duplicate data before engine initialization; retain existing runtime bounds, pure validateBattleRuntime checks supported pool, dependency/script/globals/string presence, frozen vendor identity/version checks. Main thread never imports OcgCoreAdapter runtime. Worker initializes engine, ABI checks actual getVersion, preloads callbacks synchronously; no Content re-verification. Existing progress channel, error codes snapshot_validation_failed/engine_initialization_failed/dependency_resolution_failed and diagnostics preserved. New input parse failure exact Error("BATTLE_RUNTIME_INVALID"); source required read failure reaches Shell APP_REQUIRED_INPUT_FAILED.
+No Content types/paths/receipts; script.name is engine semantic script filename (e.g. c123.lua), not content-store path. Shell adapter loads+decodes whole frozen-compatible runtime support, allowedCardCodes selected chapter union only. wasmBinary transferred once per fresh source.load; source returns fresh ArrayBuffer so replay/restart cannot reuse detached buffer. requiredScripts comes from verified script index plus global inventory for whole runtime support pool, sorted unique names; missing indexed card/global script rejects BATTLE_RUNTIME_INVALID, genuinely unindexed normal card remains valid. Cards/text/scripts cloned; race decimal -> bigint only inside Worker engine adapter, linkMarker -> link_marker there. Parse IPC rejects invalid/oversized/duplicate data before engine initialization; retain existing runtime bounds, pure validateBattleRuntime checks supported pool, dependency/script/globals/string presence and supported version. Repair clarification: asynchronous Battle-owned validateFrozenBattleExecutable hashes exact frozen vendor-manifest/WASM bytes before preparation or producer/publisher readiness. Synchronous validateReleaseData signature remains unchanged; it does not hash bytes. Main thread never imports OcgCoreAdapter runtime. Worker initializes engine, ABI checks actual getVersion, preloads callbacks synchronously; no Content re-verification. Existing progress channel, error codes snapshot_validation_failed/engine_initialization_failed/dependency_resolution_failed and diagnostics preserved. New input parse failure exact Error("BATTLE_RUNTIME_INVALID"); source required read failure reaches Shell APP_REQUIRED_INPUT_FAILED.
 
 **Errors:** Required/semantic errors mapped APP_REQUIRED_INPUT_FAILED preserving non-public cause. Optional-media failures reported warning+null only. Publisher semantic error CONTENT_SEMANTIC_INVALID; no raw paths/remote text in player errors.
 
@@ -440,9 +440,9 @@ No Content types/paths/receipts; script.name is engine semantic script filename 
 
 ## TDD
 
-- [ ] D1. Red — write named test cases from Test plan first; execute focused command and capture intended failure. No passing test for behavior not yet exercised.
-- [ ] D2. Green — minimum scoped implementation makes same assertions pass. Preserve existing regressions.
-- [ ] D3. Refactor — only new duplication/unused imports caused by this slice; rerun exact tests. No adjacent cleanup.
+- [x] D1. Red — write named test cases from Test plan first; execute focused command and capture intended failure. No passing test for behavior not yet exercised.
+- [x] D2. Green — minimum scoped implementation makes same assertions pass. Preserve existing regressions.
+- [x] D3. Refactor — only new duplication/unused imports caused by this slice; rerun exact tests. No adjacent cleanup.
 
 ## Test plan
 
@@ -457,15 +457,15 @@ No Content types/paths/receipts; script.name is engine semantic script filename 
 
 ## Impl steps
 
-- [ ] P1. Red: unsupported token/wrong zone/copy limit, conflicting chapter ID, mismatched runtime text, missing media metadata vs missing media bytes. Verify: inventory names old branch and replacement test.
-- [ ] P2. Build Shell adapters under src/shell/adapters/; move/reuse pure validators into proper owner, avoid copied rules. Verify: no foreign internals or new synchronous engine calls.
-- [ ] P3. Implement prepareRelease over staged Content plus consumer validators; track object URL leases per adapter, dispose idempotently. Verify: all input providers pinned to same release receipt.
-- [ ] P4. Replace Content verifyGameplay/loadInstalledGameplay semantic ownership; keep structural parser/integrity code. Remove explicit Content→Decks allowance, enforce only application/adapters import Content. Verify: negative AST fixtures.
-- [ ] P5. Wire producer semantic validation via src/shell/application/validate-release-data.ts pure entry (no DOM/IDB/network imports); official continuity check previous→next. Verify: publish refuses omitted/failed semantic validation.
+- [x] P1. Red: unsupported token/wrong zone/copy limit, conflicting chapter ID, mismatched runtime text, missing media metadata vs missing media bytes. Verify: inventory names old branch and replacement test.
+- [x] P2. Build Shell adapters under src/shell/adapters/; move/reuse pure validators into proper owner, avoid copied rules. Verify: no foreign internals or new synchronous engine calls.
+- [x] P3. Implement prepareRelease over staged Content plus consumer validators; track object URL leases per adapter, dispose idempotently. Verify: all input providers pinned to same release receipt.
+- [x] P4. Replace Content verifyGameplay/loadInstalledGameplay semantic ownership; keep structural parser/integrity code. Remove explicit Content→Decks allowance, enforce only application/adapters import Content. Verify: negative AST fixtures.
+- [x] P5. Wire producer semantic validation via src/shell/application/validate-release-data.ts pure entry (no DOM/IDB/network imports); official continuity check previous→next. Verify: publish refuses omitted/failed semantic validation.
 
 ## Validation
 
-- [ ] V1. Tests/checks pass; run exact commands below after test paths exist. Record red and green output, no `--passWithNoTests`.
+- [x] V1. Tests/checks pass; run exact commands below after test paths exist. Record red and green output, no `--passWithNoTests`.
 
 ```sh
 npx vitest run tests/unit/semantic-release-preparation.test.ts tests/unit/domain-boundaries.test.ts --reporter=verbose
@@ -473,7 +473,27 @@ node --test tests/progressive-producer.test.ts tests/progressive-publisher.test.
 npm run typecheck
 ```
 
-- [ ] V2. UI/CLI observation: execute integration trace and observe stated DOM/DB/cache/network/CLI result; screenshots/traces local under artifacts. Source-only inspection not runtime proof.
-- [ ] V3. No silent-failure swallow on added path: list every retained `|| true`, empty catch, redirected failure, unobserved Promise with justification, or `none`. Existing out-of-scope sites stay; newly connected paths surface failures.
-- [ ] V4. App functional: this slice's routes/consumers pass regression tests; boundary fixture rejects forbidden imports; unrelated baseline failure reported verbatim, not hidden.
-- [ ] V5. Commit msg draft: `refactor(shell): compose semantic validation outside Content`. Commit only after implementation authorization/evidence; intentional paths only, no secrets/generated assets/unrelated dirt. No commit during planning.
+- [x] V2. UI/CLI observation: execute integration trace and observe stated DOM/DB/cache/network/CLI result; screenshots/traces local under artifacts. Source-only inspection not runtime proof.
+- [x] V3. No silent-failure swallow on added path: list every retained `|| true`, empty catch, redirected failure, unobserved Promise with justification, or `none`. Existing out-of-scope sites stay; newly connected paths surface failures.
+- [x] V4. App functional: this slice's routes/consumers pass regression tests; boundary fixture rejects forbidden imports; unrelated baseline failure reported verbatim, not hidden.
+- [x] V5. Commit msg draft: `refactor(shell): compose semantic validation outside Content`. Commit only after implementation authorization/evidence; intentional paths only, no secrets/generated assets/unrelated dirt. No commit during planning.
+
+## Completion evidence
+
+- E1. RED: `artifacts/T8-EVIDENCE/red-vitest.log` and `red-node.log`, both exit `1`, capture missing T8 contracts/behavior before implementation.
+- E2. GREEN: exact Vitest command passes 53/53; exact Node command passes 26/26; `npm run test:legacy` passes 198/198. Logs and exit files: `artifacts/T8-EVIDENCE/`.
+- E3. Quality: typecheck exits `0` with 4 pre-existing warnings; scoped ESLint/Prettier, `git diff --check`, vendor diff, staging checks exit `0`.
+- E4. CLI trace: fake injected S3 transport test passes 1/1; no real endpoint contacted. `validation.json` forgery and stale predecessor tests pass without pointer mutation.
+- E5. Known unrelated build budget remains: current `118072 > 115000`; accepted-baseline reproduction is worse at `130862 > 115000`. Graph update deferred due known external `429 RESOURCE_EXHAUSTED`; no backend update attempted.
+
+## Bounded repair evidence — acceptance pending independent review
+
+- [x] R1. Publisher rights cover every declared metadata source digest, file-only `metadata` approvals, frozen inventory identity, upload-byte hashes, immediate pre-CAS complete verification on every CAS attempt. Verify: exact Node suite 47/47, fake CLI mutation/invalid cases, exact errors/zero pointer writes/closure.
+- [x] R2. Executable/history trust verified. Verify: wrong-WASM/wrong-vendor producer/preparation/publisher cases; strict decreasing predecessor sequence; iterative 4096-release + 64-GiB work budget; cap/cap+1 cheap checks; SHA-matched initial-source replay reproduces old equal-sequence acceptance.
+- [x] R3. Media/staged contracts repaired. Verify: four shared read/Blob slots, queued exact DOMException, nested immutable staged snapshot before first await, pinned lazy media, dispose/release revoke once.
+- [x] R4. Legacy Content type laundering removed without UI redesign. Verify: Shell consumer view models, Content impl in application/adapters, negative export/type alias/multi-hop fixtures; 40-row old verifier branch/owner/test matrix at `artifacts/T8-REPAIR-EVIDENCE/verifyGameplay-parity.md`.
+- [x] R5. Checked validation evidence captured. Verify: focused Vitest 101/101; Node 47/47; legacy 220/220; affected unit 147/147; progressive storage 126/126; component/editor 376/376; bootstrap follow-up 56/56; typecheck 0 errors/4 inherited warnings; scoped quality/vendor/diff checks. `npm run build:verify` now passes with Shell 95987/115000 bytes after lazy bootstrap split, no budget-limit increase. T11 retains broader build/delivery acceptance ownership.
+
+### Independent acceptance
+
+- [ ] A1. Reviewer accepts repaired ticket. Verify: independent review of `artifacts/IMPLEMENTATION-REPORT-T8-repair.md` + `artifacts/T8-REPAIR-EVIDENCE/`. Prior initial completion evidence remains historical, not self-acceptance.

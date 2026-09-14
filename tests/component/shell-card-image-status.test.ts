@@ -1,3 +1,4 @@
+import { createShellGameplay } from "../../src/shell/application/legacy-content.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -7,7 +8,7 @@ import { cardCode } from "../../src/cards/index.ts";
 import type { CardImageSource } from "../../src/cards/images/index.ts";
 import type { OwnedContentReader } from "../../src/content/index.ts";
 import type * as Content from "../../src/content/index.ts";
-import type * as InstalledEditorCatalog from "../../src/shell/cards/installed-editor-catalog.ts";
+import type * as InstalledEditorCatalog from "../../src/shell/adapters/installed-editor-catalog.ts";
 import AppShell from "../../src/shell/AppShell.svelte";
 import { createShellStore } from "../../src/shell/shell-store.ts";
 import { installedGameplayFixture } from "../fixtures/installed-gameplay.ts";
@@ -21,7 +22,7 @@ vi.mock("../../src/content/index.ts", async (importOriginal) => ({
   acquireInstalledAsset,
 }));
 vi.mock(
-  "../../src/shell/cards/installed-editor-catalog.ts",
+  "../../src/shell/adapters/installed-editor-catalog.ts",
   async (importOriginal) => {
     const actual = await importOriginal<typeof InstalledEditorCatalog>();
     installedEditorCatalog.mockImplementation(actual.installedEditorCatalog);
@@ -38,8 +39,15 @@ afterEach(() => {
 async function renderImageShell() {
   const gameplay = installedGameplayFixture();
   const reader = { close: vi.fn() } as unknown as OwnedContentReader;
+  const shellGameplay = createShellGameplay(gameplay, reader);
+  const editor = vi.fn(shellGameplay.editor);
   const view = render(AppShell, {
-    initialCoreGate: { kind: "ready", gameplay, reader, generation: 1 },
+    initialCoreGate: {
+      kind: "ready",
+      gameplay: { ...shellGameplay, editor },
+      reader,
+      generation: 1,
+    },
     store: createShellStore("#/decks", () => {}),
     loaders: {
       duel: () => new Promise<never>(() => {}),
@@ -52,9 +60,8 @@ async function renderImageShell() {
     code: "CONTENT_MISSING",
   });
   const source = await vi.waitFor(() => {
-    const images = installedEditorCatalog.mock.calls.find(
-      ([, images]) => images != null,
-    )?.[1] as CardImageSource | undefined;
+    const images = editor.mock.calls.find(([images]) => images != null)?.[0] as
+      CardImageSource | undefined;
     expect(images).toBeDefined();
     return images!;
   });

@@ -6,7 +6,7 @@ import { installedGameplayFixture } from "../fixtures/installed-gameplay.ts";
 const acquireInstalledAsset = vi.hoisted(() => vi.fn());
 vi.mock("../../src/content/index.ts", () => ({ acquireInstalledAsset }));
 
-import { createInstalledCardImageSource } from "../../src/shell/cards/installed-card-image-source.ts";
+import { createInstalledCardImageSource } from "../../src/shell/adapters/installed-card-image-source.ts";
 
 const failed = { kind: "failed", code: "CONTENT_MISSING" } as const;
 

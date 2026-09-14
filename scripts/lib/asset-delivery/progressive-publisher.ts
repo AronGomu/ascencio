@@ -13,7 +13,10 @@ import {
 import { canonicalBytes, parseJsonBytes } from "./canonical-json.ts";
 import { assertSafeParents } from "./path-guards.ts";
 import { progressiveFail, ProgressiveError } from "./progressive-error.ts";
-import { verifyProgressiveRelease } from "./progressive-producer.ts";
+import {
+  verifyProgressiveRelease,
+  type ProgressiveReleaseCandidate,
+} from "./progressive-producer.ts";
 
 interface S3Sender {
   send(command: object): Promise<Record<string, unknown>>;
@@ -247,14 +250,24 @@ export async function publishProgressiveRelease(
   root: string,
   run: string,
   transport: ProgressiveTransport,
-  options: Readonly<{ semanticValidated: boolean }>,
+  expected?: Pick<
+    ProgressiveReleaseCandidate,
+    "manifestVersion" | "pointerVersion" | "inventoryVersion" | "candidate"
+  >,
 ): Promise<{
   readonly status: "published" | "idempotent";
   readonly manifestVersion: string;
 }> {
-  if (!options.semanticValidated)
-    progressiveFail("PUBLISH_SEMANTIC_VALIDATION_REQUIRED");
   const candidate = await verifyProgressiveRelease(root, run, true);
+  if (
+    expected &&
+    (candidate.manifestVersion !== expected.manifestVersion ||
+      candidate.pointerVersion !== expected.pointerVersion ||
+      candidate.inventoryVersion !== expected.inventoryVersion ||
+      candidate.candidate.previousManifestVersion !==
+        expected.candidate.previousManifestVersion)
+  )
+    progressiveFail("CONTENT_INVALID_MANIFEST");
   const latestObject = await network(() =>
     transport.get("content/latest.json", 32 * 1024 * 1024),
   );
@@ -286,17 +299,28 @@ export async function publishProgressiveRelease(
         await assertSafeParents(root, `${run}/progressive/objects/${key}`),
       ),
     );
+    if (bytes.length !== file.bytes || sha(bytes) !== file.version)
+      progressiveFail("CONTENT_INVALID_MANIFEST");
     await putImmutable(transport, key, bytes);
   }
   const manifestKey = `content/manifests/${candidate.manifestVersion}.json`;
   await putImmutable(transport, manifestKey, candidate.manifestBytes);
-  const result = await network(() =>
-    transport.putPointer(
+  const result = await network(async () => {
+    const verified = await verifyProgressiveRelease(root, run, true);
+    if (
+      verified.inventoryVersion !== candidate.inventoryVersion ||
+      verified.manifestVersion !== candidate.manifestVersion ||
+      verified.pointerVersion !== candidate.pointerVersion ||
+      verified.candidate.previousManifestVersion !==
+        candidate.candidate.previousManifestVersion
+    )
+      progressiveFail("CONTENT_INVALID_MANIFEST");
+    return transport.putPointer(
       "content/latest.json",
       candidate.pointerBytes,
       latestObject?.etag ?? null,
-    ),
-  );
+    );
+  });
   if (result === "conflict") progressiveFail("PUBLISH_CONFLICT");
   return { status: "published", manifestVersion: candidate.manifestVersion };
 }

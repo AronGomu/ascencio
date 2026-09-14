@@ -1,12 +1,12 @@
 <script lang="ts">
   import { onMount, setContext } from "svelte";
   import { readonly, writable } from "svelte/store";
-  import {
-    type OwnedContentReader,
-    type CoreBootstrap,
-    type InstalledGameplay,
-    type InstalledImageLibrary,
-  } from "../content/index.ts";
+  import type {
+    ShellSession,
+    ShellBootstrap,
+    ShellGameplay,
+    ShellImageLibrary,
+  } from "./core/installed-inputs.ts";
   import {
     loadCoreStartup,
     routeForCoreGate,
@@ -45,10 +45,6 @@
     BattlePresentationInput,
     BattleRuntimeSource,
   } from "../battle/ports/index.ts";
-  import {
-    createLegacyBattleRuntimeSource,
-    legacyBattlePresentation,
-  } from "./adapters/legacy-battle-runtime.ts";
   import DomainLoadError from "./screens/DomainLoadError.svelte";
   import MainMenuScreen from "./screens/MainMenuScreen.svelte";
   import type { BattleFacadeResult, BattleRequest } from "../battle/index.ts";
@@ -77,41 +73,34 @@
   export let loaders: DomainLoaders = DEFAULT_DOMAIN_LOADERS;
   export let settings: ShellSettingsStore = createShellSettingsStore();
   export let initialCoreGate: CoreGate | null = null;
-  export let initialCoreBootstrap: CoreBootstrap | null = null;
+  export let initialCoreBootstrap: ShellBootstrap | null = null;
   let coreGate: CoreGate = initialCoreGate ?? { kind: "checking" };
-  let coreBootstrap: CoreBootstrap | null = initialCoreBootstrap;
+  let coreBootstrap: ShellBootstrap | null = initialCoreBootstrap;
   let duelDomain: ReturnType<DomainLoaders["duel"]> | null = null;
   const loadDuelDomain = (): ReturnType<DomainLoaders["duel"]> =>
     (duelDomain ??= loaders.duel());
-  let gameplay: InstalledGameplay | null =
+  let gameplay: ShellGameplay | null =
     coreGate.kind === "ready" ? coreGate.gameplay : null;
-  let contentReader: OwnedContentReader | null =
+  let contentReader: ShellSession | null =
     coreGate.kind === "ready" ? coreGate.reader : null;
   let battleRuntimeSource: BattleRuntimeSource | null;
   let battlePresentation: BattlePresentationInput | null;
   $: if (gameplay !== null) {
-    battleRuntimeSource =
-      contentReader === null
-        ? Object.freeze({
-            load: async () => {
-              throw new Error("APP_REQUIRED_INPUT_FAILED");
-            },
-          })
-        : createLegacyBattleRuntimeSource(contentReader, gameplay);
-    battlePresentation = legacyBattlePresentation(gameplay);
+    battleRuntimeSource = gameplay.battle;
+    battlePresentation = gameplay.presentation;
   } else {
     battleRuntimeSource = null;
     battlePresentation = null;
   }
   let cardImages: CardImageSource | null = null;
-  let boundImageReader: OwnedContentReader | null = null;
-  let boundImageGameplay: InstalledGameplay | null = null;
+  let boundImageReader: ShellSession | null = null;
+  let boundImageGameplay: ShellGameplay | null = null;
   let imageBindingToken = 0;
   $: bindCardImages(contentReader, gameplay);
 
   function bindCardImages(
-    reader: OwnedContentReader | null,
-    installed: InstalledGameplay | null,
+    reader: ShellSession | null,
+    installed: ShellGameplay | null,
   ): void {
     if (reader === boundImageReader && installed === boundImageGameplay) return;
     boundImageReader = reader;
@@ -119,41 +108,38 @@
     cardImages = null;
     const requested = ++imageBindingToken;
     if (reader === null || installed === null) return;
-    void import("./cards/installed-card-image-source.ts").then(
-      ({ createInstalledCardImageSource }) => {
-        if (requested !== imageBindingToken) return;
-        const observedReasons: string[] = [];
-        cardImages = createInstalledCardImageSource(
-          reader,
-          installed,
-          (status) => {
-            if (
-              requested !== imageBindingToken ||
-              observedReasons.includes(status.reason)
-            )
-              return;
-            observedReasons.push(status.reason);
-            console.warn({
-              event: "shell.card-images.missing-media",
-              reason: status.reason,
-            });
-            if (observedReasons.length === 1)
-              toasts.show({
-                message:
-                  "Some card images are unavailable. You can keep playing.",
-                tone: "warning",
-              });
-          },
-        );
-      },
-      () => {
-        if (requested === imageBindingToken)
+    const observedReasons: string[] = [];
+    void installed
+      .cardImages((status) => {
+        if (
+          requested !== imageBindingToken ||
+          observedReasons.includes(status.reason)
+        )
+          return;
+        observedReasons.push(status.reason);
+        console.warn({
+          event: "shell.card-images.missing-media",
+          reason: status.reason,
+        });
+        if (observedReasons.length === 1)
           toasts.show({
-            message: "Card images are unavailable. You can keep playing.",
+            message: "Some card images are unavailable. You can keep playing.",
             tone: "warning",
           });
-      },
-    );
+      })
+      .then(
+        (source) => {
+          if (requested !== imageBindingToken) return;
+          cardImages = source;
+        },
+        () => {
+          if (requested === imageBindingToken)
+            toasts.show({
+              message: "Card images are unavailable. You can keep playing.",
+              tone: "warning",
+            });
+        },
+      );
   }
   /* Story progress is written by the shell only for the pre-duel checkpoint.
      The default reaches the repository through the visual novel's own lazy
@@ -477,7 +463,7 @@
     readonly context: RouteContext;
     readonly ownership: CardOwnership;
     readonly catalog: CollectionCatalog;
-    readonly images: InstalledImageLibrary | null;
+    readonly images: ShellImageLibrary | null;
     readonly Screen: CollectionScreenComponent;
   }
 
@@ -540,26 +526,17 @@
     const installed = gameplay;
     const [catalogResult, screenResult, imagesResult] =
       await Promise.allSettled([
-        import("./adapters/legacy-collection.ts").then(
-          ({ legacyCollectionInputs }) => {
-            const input = legacyCollectionInputs(installed);
-            return story.loadCollectionCatalog(input.cards, input.sets);
-          },
-        ),
+        story.loadCollectionCatalog(installed.cards, installed.sets),
         story.loadCollectionScreen(),
         reader === null
           ? Promise.resolve(null)
-          : import("../content/load-installed-images.ts")
-              .then(({ loadInstalledImages }) =>
-                loadInstalledImages(reader, installed),
-              )
-              .then((images) => {
-                if (requested !== collectionToken) {
-                  images.dispose();
-                  throw new Error("Collection closed");
-                }
-                return images;
-              }),
+          : installed.images().then((images) => {
+              if (requested !== collectionToken) {
+                images.dispose();
+                throw new Error("Collection closed");
+              }
+              return images;
+            }),
       ]);
     if (
       catalogResult.status === "rejected" ||
@@ -762,7 +739,7 @@
           {@const bound = editorContext}
           {@const installed = gameplay}
           {@const images = cardImages}
-          {#await Promise.all( [loaders.decks(), import("./cards/installed-editor-catalog.ts").then( ({ installedEditorCatalog }) => installedEditorCatalog(installed, images ?? undefined) )] ) then [module, catalogInput]}
+          {#await Promise.all( [loaders.decks(), Promise.resolve(installed.editor(images ?? undefined))] ) then [module, catalogInput]}
             <svelte:component
               this={module.default}
               context={bound}
@@ -847,7 +824,6 @@
           <svelte:component
             this={module.default}
             {gameplay}
-            reader={contentReader}
             {settings}
             loadBattle={loadDuelDomain}
             onstart={(request) => (matchRequest = request)}

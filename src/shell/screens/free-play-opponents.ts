@@ -1,4 +1,4 @@
-import type { InstalledGameplay } from "../../content/index.ts";
+import type { ShellGameplay } from "../core/installed-inputs.ts";
 
 export interface FreePlayOpponent {
   readonly id: string;
@@ -9,7 +9,7 @@ export interface FreePlayOpponent {
 }
 
 export function installedFreePlayOpponents(
-  gameplay: InstalledGameplay,
+  gameplay: Pick<ShellGameplay, "opponents">,
 ): readonly FreePlayOpponent[] {
   return Object.freeze(
     gameplay.opponents.map((opponent) =>

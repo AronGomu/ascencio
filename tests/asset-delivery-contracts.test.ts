@@ -1163,3 +1163,64 @@ test("canonical exact byte cap includes delimiters/LF; escaping and Unicode byte
     `${JSON.stringify(small)}\n`,
   );
 });
+
+test("metadata approval requires exact normalized path/digest; no tree or future coverage", () => {
+  const evidence = {
+    path: "evidence/rights.txt",
+    bytes: 1,
+    sha256: "a".repeat(64),
+  };
+  const rule = {
+    root: "metadata",
+    kind: "file",
+    path: "content/authoring/chapter-one-gameplay.json",
+    sha256: "b".repeat(64),
+    evidence,
+  };
+  const input = {
+    schemaVersion: 1,
+    status: "approved",
+    targets: ["prod"],
+    rules: [rule],
+  };
+  const approval = parsePublicationApproval(input);
+  assert.equal(
+    checkPublicationScope(approval, "prod", [rule as never]).status,
+    "ok",
+  );
+  assert.equal(
+    checkPublicationScope(approval, "prod", [
+      { ...rule, sha256: "c".repeat(64) } as never,
+    ]).status,
+    "failed",
+  );
+  for (const path of [
+    "../outside.json",
+    "/absolute.json",
+    "content\\authoring.json",
+    "content/../authoring.json",
+  ])
+    assert.throws(() =>
+      parsePublicationApproval({ ...input, rules: [{ ...rule, path }] }),
+    );
+  assert.throws(() =>
+    parsePublicationApproval({
+      ...input,
+      rules: [
+        {
+          root: "metadata",
+          kind: "tree",
+          path: "",
+          includesFutureFiles: true,
+          evidence,
+        },
+      ],
+    }),
+  );
+  assert.throws(() =>
+    parsePublicationApproval({
+      ...input,
+      rules: [{ ...rule, includesFutureFiles: true }],
+    }),
+  );
+});

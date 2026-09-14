@@ -3,7 +3,7 @@ import type { FileDigest } from "./file-digest.ts";
 
 export type ApprovalRule =
   | {
-      readonly root: AssetRoot | "vendor";
+      readonly root: AssetRoot | "vendor" | "metadata";
       readonly kind: "file";
       readonly path: string;
       readonly sha256: Sha256;
@@ -40,7 +40,7 @@ export function parseApprovalRule(value: unknown): ApprovalRule {
       evidence: parseFileDigest,
     });
   const rule = object(value, {
-    root: (v) => (v === "vendor" ? v : parseAssetRoot(v)),
+    root: (v) => (v === "vendor" || v === "metadata" ? v : parseAssetRoot(v)),
     kind: literal("file"),
     path: assertSourcePath,
     sha256: hash,
@@ -66,7 +66,7 @@ export function checkPublicationScope(
   approval: PublicationApproval,
   target: BundleTarget,
   sources: readonly {
-    readonly root: AssetRoot | "vendor";
+    readonly root: AssetRoot | "vendor" | "metadata";
     readonly path: string;
     readonly sha256: Sha256;
   }[],
@@ -88,7 +88,8 @@ export function checkPublicationScope(
   for (const source of sources) {
     assertSourcePath(source.path);
     hash(source.sha256);
-    if (source.root !== "vendor") parseAssetRoot(source.root);
+    if (source.root !== "vendor" && source.root !== "metadata")
+      parseAssetRoot(source.root);
     let covered = files.get(`${source.root}/${source.path}`) === source.sha256;
     const segments = source.path.split("/");
     for (let i = 0; !covered && i < segments.length; i++) {
@@ -96,8 +97,8 @@ export function checkPublicationScope(
     }
     if (!covered)
       return denied(
-        source.root === "vendor"
-          ? `vendor/${source.path}`
+        source.root === "vendor" || source.root === "metadata"
+          ? `${source.root}/${source.path}`
           : `assets/${source.root}/${source.path}`,
       );
   }

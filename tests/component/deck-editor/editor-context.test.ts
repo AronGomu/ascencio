@@ -1,3 +1,4 @@
+import { createShellGameplay } from "../../../src/shell/application/legacy-content.ts";
 import type {
   StorySaveReadResult,
   StorySlotKey,
@@ -66,7 +67,7 @@ const storyLoaders: DomainLoaders = {
 const REAL_IMPORT = { timeout: 15_000 };
 const READY_CORE_GATE = {
   kind: "ready" as const,
-  gameplay: installedDuelGameplayFixture(),
+  gameplay: createShellGameplay(installedDuelGameplayFixture(), null),
   reader: null,
   generation: 1,
 };

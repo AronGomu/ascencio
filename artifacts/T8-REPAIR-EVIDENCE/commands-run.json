@@ -1,0 +1,181 @@
+[
+  {
+    "command": "npx vitest run tests/unit/semantic-release-preparation.test.ts tests/unit/domain-boundaries.test.ts --reporter=verbose",
+    "result": "failed",
+    "summary": "exit 1; Expected RED: staged validation/freeze, media concurrency/revoke, frozen bytes failures.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/red-vitest.log"
+  },
+  {
+    "command": "node --test tests/progressive-producer.test.ts tests/progressive-publisher.test.ts",
+    "result": "failed",
+    "summary": "exit 1; Expected RED: unapproved metadata accepted; changed upload bytes accepted. Initial CLI mutation cases stopped earlier at missing metadata approval schema; exact baseline replay below isolates pre-CAS defect.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/red-node.log"
+  },
+  {
+    "command": "node --test tests/progressive-producer.test.ts",
+    "result": "failed",
+    "summary": "exit 1; Expected RED: history-budget API absent before implementation.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/red-history.log"
+  },
+  {
+    "command": "npx vitest run tests/unit/domain-boundaries.test.ts --reporter=verbose",
+    "result": "failed",
+    "summary": "exit 1; Expected RED: legacy-content.ts Content type reexports detected.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/red-boundary.log"
+  },
+  {
+    "command": "node --test --test-name-pattern='live rights-approved provenance' tests/progressive-publisher.test.ts",
+    "result": "failed",
+    "summary": "exit 1; Expected RED: factory/upload provenance mutation accepted.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/red-provenance.log"
+  },
+  {
+    "command": "npx vitest run tests/unit/domain-boundaries.test.ts --testNamePattern='Shell installer preserves'",
+    "result": "failed",
+    "summary": "exit 1; Expected RED: moved installer semantic error copy not preserved; fixed.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/red-error-copy.log"
+  },
+  {
+    "command": "python3 artifacts/T8-REPAIR-EVIDENCE/replay-baselines.py",
+    "result": "passed",
+    "summary": "exit 0; Passed reproduction: SHA-matched initial publisher fails 4 new mutation tests; initial producer fails equal-sequence-chain rejection. Expected child exits 1, script exit 0. Retrospective baseline replay, not mislabeled pre-edit execution.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/baseline-replay-verification.log"
+  },
+  {
+    "command": "npx vitest run tests/unit/semantic-release-preparation.test.ts tests/unit/domain-boundaries.test.ts --reporter=verbose",
+    "result": "passed",
+    "summary": "exit 0; 97/97 passed.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/verification-vitest.log"
+  },
+  {
+    "command": "node --test tests/progressive-producer.test.ts tests/progressive-publisher.test.ts",
+    "result": "passed",
+    "summary": "exit 0; 47/47 passed.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/verification-node.log"
+  },
+  {
+    "command": "npm run test:legacy",
+    "result": "passed",
+    "summary": "exit 0; 220/220 passed.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/final-legacy.log"
+  },
+  {
+    "command": "npx vitest run tests/unit/verify-gameplay-parity.test.ts tests/unit/cards.test.ts tests/unit/battle-runtime-input.test.ts tests/unit/story/story-release.test.ts tests/unit/story/story-release-adapter.test.ts tests/unit/installed-gameplay.test.ts tests/unit/content-installer.test.ts tests/unit/progressive-content-store.test.ts tests/unit/core-gate.test.ts tests/unit/admin-actions.test.ts tests/unit/installed-free-play.test.ts tests/unit/shell/free-play-opponents.test.ts tests/unit/shell/story-battle-request.test.ts tests/unit/installed-card-image-source.test.ts",
+    "result": "passed",
+    "summary": "exit 0; 13 existing files, 147/147 passed. progressive-content-store.test.ts path did not exist; corrected full storage command below executes actual tests, 126/126.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/final-unit-regression.log"
+  },
+  {
+    "command": "npx vitest run tests/unit/progressive-storage.test.ts tests/unit/progressive-download.test.ts tests/unit/progressive-manifest.test.ts tests/unit/progressive-release.test.ts --reporter=verbose",
+    "result": "passed",
+    "summary": "exit 0; 4 files, 126/126 passed.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/final-progressive-storage.log"
+  },
+  {
+    "command": "npx vitest run tests/component/AppShell.test.ts tests/component/FreePlayMatchSetup.test.ts tests/component/StoryMenuEntry.test.ts tests/component/StoryDuelHandoff.test.ts tests/component/core-menu.test.ts tests/component/shell-card-image-status.test.ts tests/component/collection-image-teardown.test.ts tests/component/deck-editor tests/component/content-installer.test.ts tests/component/AdminConsole.test.ts tests/component/FreePlayUniqueOwner.test.ts tests/component/MainMenuScreen.test.ts tests/component/installed-free-play.test.ts",
+    "result": "passed",
+    "summary": "exit 0; 66 files, 376/376 passed. Prior focused batch had lazy-import timing failure; await module before ownership assertion, unchanged assertion.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/final-component-regression-2.log"
+  },
+  {
+    "command": "npx vitest run tests/component/AppShell.test.ts tests/component/core-menu.test.ts tests/component/content-installer.test.ts tests/unit/core-gate.test.ts --reporter=verbose",
+    "result": "passed",
+    "summary": "exit 0; 56/56 passed after lazy bootstrap split.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/verification-bootstrap-regression.log"
+  },
+  {
+    "command": "npm run typecheck",
+    "result": "passed",
+    "summary": "exit 0; 0 errors; 4 inherited Svelte/CSS warnings.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/verification-typecheck.log"
+  },
+  {
+    "command": "node artifacts/T8-REPAIR-EVIDENCE/scoped-quality.mjs",
+    "result": "passed",
+    "summary": "exit 0; Scoped ESLint and Prettier pass; exact expanded argv emitted in log, path inventory retained.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/scoped-quality.log"
+  },
+  {
+    "command": "npm run vendor:verify",
+    "result": "passed",
+    "summary": "exit 0; ocgcore-wasm 0.1.2, 21 files verified.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/final-vendor.log"
+  },
+  {
+    "command": "npm run build:app",
+    "result": "passed",
+    "summary": "exit 0; Initial repair build passed before lazy split.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/final-build-app.log"
+  },
+  {
+    "command": "npm run build:verify",
+    "result": "failed",
+    "summary": "exit 1; Intermediate failed: Error: shell initial JavaScript exceeds its production budget: 123081 > 115000 bytes. Inherited pre-repair value was 118072 > 115000; limit unchanged.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/final-build-budget.log"
+  },
+  {
+    "command": "npm run build:app",
+    "result": "passed",
+    "summary": "exit 0; Final lazy-boundary app build passed.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/final-build-app-2.log"
+  },
+  {
+    "command": "npm run build:verify",
+    "result": "passed",
+    "summary": "exit 0; Passed: shell 95987, Worker 139056, Battle 317777, Deck Editor 175480, Story 171170 bytes. No budget-limit edit.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/final-build-budget-2.log"
+  },
+  {
+    "command": "python3 artifacts/T8-REPAIR-EVIDENCE/check-preservation.py",
+    "result": "passed",
+    "summary": "exit 0; 2321 initial regular files: 2258 unchanged, 63 intentionally changed/moved; 44 protected initial evidence/vendor/package/feedback files unchanged; no staged files.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/source-preservation.json"
+  },
+  {
+    "command": "git diff --check",
+    "result": "passed",
+    "summary": "exit 0; Passed.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/final-diff-check.log"
+  },
+  {
+    "command": "git diff --cached --quiet",
+    "result": "passed",
+    "summary": "exit 0; Passed; index empty.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/no-staged-files.json"
+  },
+  {
+    "command": "git diff --check && git diff --cached --quiet && git diff --exit-code -- vendor/ package.json package-lock.json",
+    "result": "passed",
+    "summary": "exit 0; Passed; no vendor/package/index delta.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/verification-diff.log"
+  },
+  {
+    "command": "graphify . --update",
+    "result": "not-run",
+    "summary": "Known graph backend quota; user forbids retry. No graph query/update attempted."
+  },
+  {
+    "command": "npx vitest run tests/unit/semantic-release-preparation.test.ts --testNamePattern='required JSON descriptor' --reporter=verbose",
+    "result": "failed",
+    "summary": "exit 1; Expected RED: four wrong-MIME/padded >4MiB JSON fixtures accepted before pre-read guard.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/red-required-json.log"
+  },
+  {
+    "command": "npx vitest run tests/unit/semantic-release-preparation.test.ts tests/unit/domain-boundaries.test.ts --reporter=verbose",
+    "result": "passed",
+    "summary": "exit 0; 101/101 passed, including required JSON MIME/raw-byte-cap parity.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/verification-vitest-final.log"
+  },
+  {
+    "command": "npm run typecheck",
+    "result": "passed",
+    "summary": "exit 0; 0 errors, 4 inherited warnings.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/verification-typecheck-final.log"
+  },
+  {
+    "command": "node artifacts/T8-REPAIR-EVIDENCE/scoped-quality.mjs",
+    "result": "passed",
+    "summary": "exit 0; Scoped lint/format pass after final JSON descriptor repair.",
+    "log": "artifacts/T8-REPAIR-EVIDENCE/scoped-quality-final.log"
+  }
+]

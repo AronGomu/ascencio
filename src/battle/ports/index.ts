@@ -13,3 +13,4 @@ export type {
   BattlePresentationInput,
   BattlePresentationOpponent,
 } from "./battle-presentation-input.ts";
+export { validateFrozenBattleExecutable } from "./frozen-battle-executable.ts";

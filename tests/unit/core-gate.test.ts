@@ -1,5 +1,5 @@
 import { contentInstallFixture } from "../fixtures/content-install-fixture.ts";
-import { installedGameplayFixture } from "../fixtures/installed-gameplay.ts";
+import { shellGameplayFixture as installedGameplayFixture } from "../fixtures/shell-gameplay.ts";
 import { describe, expect, it, vi } from "vitest";
 import { deckId } from "../../src/decks/index.ts";
 import {
@@ -107,7 +107,11 @@ describe("CORE startup gate", () => {
       {} as IDBFactory,
     );
 
-    expect(startup).toStrictEqual({ bootstrap, gate: locked });
+    expect(startup.gate).toStrictEqual(locked);
+    expect(startup.bootstrap).toMatchObject({
+      chapters: bootstrap.chapters,
+      available: false,
+    });
     expect(fetch).toHaveBeenCalledWith(
       "http://127.0.0.1:4202/game/core-bootstrap.json",
       {

@@ -1,3 +1,5 @@
+import { createShellGameplay } from "../../src/shell/application/legacy-content.ts";
+import { createShellBootstrap } from "../../src/shell/application/legacy-installer.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -54,10 +56,13 @@ describe("asset-free CORE menu", () => {
     });
     view.unmount();
     finish({
-      bootstrap,
+      bootstrap: createShellBootstrap(bootstrap),
       gate: {
         kind: "ready",
-        gameplay: installedGameplayFixture(),
+        gameplay: createShellGameplay(
+          installedGameplayFixture(),
+          contentReaderFixture(),
+        ),
         generation: 1,
         reader: { ...contentReaderFixture(), close },
       },
@@ -76,7 +81,7 @@ describe("asset-free CORE menu", () => {
       store,
       loaders,
       initialCoreGate: locked,
-      initialCoreBootstrap: bootstrap,
+      initialCoreBootstrap: createShellBootstrap(bootstrap),
     });
 
     for (const cy of [
@@ -127,7 +132,7 @@ describe("asset-free CORE menu", () => {
         ),
         loaders,
         initialCoreGate: locked,
-        initialCoreBootstrap: bootstrap,
+        initialCoreBootstrap: createShellBootstrap(bootstrap),
       });
       await tick();
 

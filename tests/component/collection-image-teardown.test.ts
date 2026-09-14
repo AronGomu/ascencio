@@ -1,3 +1,4 @@
+import { createShellGameplay } from "../../src/shell/application/legacy-content.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -39,7 +40,9 @@ function mount() {
     store,
     initialCoreGate: {
       kind: "ready",
-      gameplay: installedGameplayFixture(),
+      gameplay: createShellGameplay(installedGameplayFixture(), {
+        close,
+      } as never),
       reader: { close } as never,
       generation: 1,
     },

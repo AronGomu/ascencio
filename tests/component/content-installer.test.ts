@@ -1,3 +1,4 @@
+import { createShellBootstrap } from "../../src/shell/application/legacy-installer.ts";
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/svelte";
 import { Uint8ArrayReader, Uint8ArrayWriter, ZipReader } from "@zip.js/zip.js";
@@ -36,7 +37,7 @@ describe("CORE installer screen", () => {
       onback: vi.fn(),
       createInstaller,
     });
-    await view.rerender({ bootstrap });
+    await view.rerender({ bootstrap: createShellBootstrap(bootstrap) });
     await waitFor(() => expect(createInstaller).toHaveBeenCalledOnce());
     expect(view.getByRole("alert").textContent).toBe(
       "Browser storage is unavailable. CORE remains usable.",
@@ -121,10 +122,12 @@ describe("CORE installer screen", () => {
     } as unknown as ContentInstaller;
     const view = render(InstallContentScreen, {
       gate: { kind: "locked", reason: "content-required" },
-      bootstrap: fixture.bootstrap,
+      bootstrap: createShellBootstrap(fixture.bootstrap, async () => ({
+        kind: "ok",
+        value: installer,
+      })),
       onback: vi.fn(),
       oninstalled,
-      createInstaller: async () => ({ kind: "ok", value: installer }),
     });
     const manifests = [fixture.runtime.manifest, fixture.chapter.manifest];
     const total = manifests
@@ -210,7 +213,7 @@ describe("CORE installer screen", () => {
     );
     expect(oninstalled).toHaveBeenCalledWith(
       expect.objectContaining({ chapterIds: ["chapter-01"] }),
-      installer,
+      expect.objectContaining({ close: expect.any(Function) }),
       1,
     );
     expect(
@@ -234,9 +237,11 @@ describe("CORE installer screen", () => {
     } as unknown as ContentInstaller;
     const view = render(InstallContentScreen, {
       gate: { kind: "locked", reason: "content-required" },
-      bootstrap,
+      bootstrap: createShellBootstrap(bootstrap, async () => ({
+        kind: "ok",
+        value: installer,
+      })),
       onback: vi.fn(),
-      createInstaller: async () => ({ kind: "ok", value: installer }),
     });
     await waitFor(() =>
       expect(view.getByText("Installed — preparing gameplay…")).toBeTruthy(),

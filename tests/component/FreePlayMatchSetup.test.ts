@@ -1,3 +1,4 @@
+import { createShellGameplay } from "../../src/shell/application/legacy-content.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -57,7 +58,7 @@ const VALID_MAIN = Array.from(
 /* Both active Chapter 1 decks, with real IDs checked by parseBattleRequest. */
 const PRESETS = DECK_CATALOG;
 const PRESET_DECKS = presetSelectableDecks(PRESETS);
-const GAMEPLAY = installedGameplayFromCatalog(PROTOTYPE_CATALOG, {
+const RAW_GAMEPLAY = installedGameplayFromCatalog(PROTOTYPE_CATALOG, {
   decks: Object.freeze(
     PRESET_DECKS.map((deck) => ({
       id: deck.key.slice("preset:".length),
@@ -95,6 +96,8 @@ const GAMEPLAY = installedGameplayFromCatalog(PROTOTYPE_CATALOG, {
     opponentId: "practice-bot",
   }),
 });
+const GAMEPLAY = createShellGameplay(RAW_GAMEPLAY, null);
+
 const PLAYER_PRESET_KEY = "chapter:chapter-one-starter";
 const OPPONENT_PRESET_KEY = "chapter:chapter-one-practice";
 const LOCAL_KEY = "local:built-deck:1";

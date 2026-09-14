@@ -1,4 +1,4 @@
-import { installedEditorCatalog } from "../../../src/shell/cards/installed-editor-catalog.ts";
+import { installedEditorCatalog } from "../../../src/shell/adapters/installed-editor-catalog.ts";
 import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 

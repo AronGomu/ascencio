@@ -992,7 +992,7 @@ test("archive reads are bounded; injected I/O error leaves no active candidate o
   );
 });
 
-test("producer dependency graph has no semantic validator, acquisition, or preparation invocation", async () => {
+test("producer semantic graph has no acquisition or preparation invocation", async () => {
   const visited = new Set<string>();
   const visit = async (file: string): Promise<void> => {
     if (visited.has(file)) return;
@@ -1004,7 +1004,11 @@ test("producer dependency graph has no semantic validator, acquisition, or prepa
       ),
       file,
     );
-    for (const match of text.matchAll(
+    const runtimeImports = text.replace(
+      /import\s+type\s+[\s\S]*?\s+from\s+["'][^"']+["'];/g,
+      "",
+    );
+    for (const match of runtimeImports.matchAll(
       /(?:from\s*|import\s*\(\s*)["'](\.[^"']+\.ts)["']/g,
     )) {
       // Public browser factories are lazy exports, never producer invocations.
@@ -1021,7 +1025,9 @@ test("producer dependency graph has no semantic validator, acquisition, or prepa
         );
         continue;
       }
-      await visit(path.resolve(path.dirname(file), match[1]!));
+      const dependency = path.resolve(path.dirname(file), match[1]!);
+      if (dependency === path.resolve("src/content/index.ts")) continue;
+      await visit(dependency);
     }
   };
   await visit(path.resolve("scripts/bundle-assets.ts"));

@@ -12,7 +12,7 @@
    through `loaders.duel()`, exactly as the free-play match setup does. */
 
 import type { BattleRequest } from "../../battle/index.ts";
-import type { InstalledGameplay } from "../../content/index.ts";
+import type { ShellGameplay } from "../core/installed-inputs.ts";
 import { deckId, type ValidatedDeckSnapshot } from "../../decks/index.ts";
 import type { BattleDeckModule } from "../domain-loaders.ts";
 
@@ -22,7 +22,7 @@ import type { BattleDeckModule } from "../domain-loaders.ts";
 export function storyBattleRequest(
   battle: BattleDeckModule,
   deck: ValidatedDeckSnapshot,
-  gameplay: InstalledGameplay,
+  gameplay: ShellGameplay,
 ): BattleRequest {
   const opponent = gameplay.opponents.find(
     ({ id }) => id === gameplay.defaults.opponentId,
@@ -41,7 +41,7 @@ export function storyBattleRequest(
           revision: 0,
         },
         name: opponentDeck.name,
-        validationDigest: `${gameplay.content.catalogSha256}:${opponentDeck.id}`,
+        validationDigest: `${gameplay.presentation.catalogRevision}:${opponentDeck.id}`,
         main: opponentDeck.main,
         extra: opponentDeck.extra,
         side: opponentDeck.side,

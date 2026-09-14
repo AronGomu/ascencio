@@ -1,3 +1,4 @@
+import { createShellGameplay } from "../../src/shell/application/legacy-content.ts";
 import {
   storyShellProps,
   createStorySaveRepository,
@@ -136,7 +137,7 @@ let refuseBattleRequest = false;
 
 const READY_CORE_GATE = {
   kind: "ready" as const,
-  gameplay: installedDuelGameplayFixture(),
+  gameplay: createShellGameplay(installedDuelGameplayFixture(), null),
   reader: contentReaderFixture(),
   generation: 1,
 };

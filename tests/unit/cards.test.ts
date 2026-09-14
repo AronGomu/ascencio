@@ -15,7 +15,7 @@ import {
 } from "../../src/decks/validation/index.ts";
 import { mapDeckBuilderCard } from "../../src/decks/catalog/ocg-card-mapper.ts";
 import { PROTOTYPE_CATALOG_RECORDS } from "../fixtures/catalog.ts";
-import { installedEditorCatalog } from "../../src/shell/cards/installed-editor-catalog.ts";
+import { installedEditorCatalog } from "../../src/shell/adapters/installed-editor-catalog.ts";
 import { installedDuelGameplayFixture } from "../fixtures/installed-duel-gameplay.ts";
 import { storyCardOwnership } from "../../src/story/decks/card-ownership.ts";
 import { createInitialStoryState } from "../../src/story/model/story-state.ts";

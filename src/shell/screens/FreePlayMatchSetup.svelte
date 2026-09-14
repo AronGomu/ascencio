@@ -1,12 +1,10 @@
 <script lang="ts">
   import { getContext, onMount } from "svelte";
   import type { BattleRequest, SelectableDeck } from "../../battle/index.ts";
-  import {
-    loadInstalledImages,
-    type ContentReadPort,
-    type InstalledGameplay,
-    type InstalledImageLibrary,
-  } from "../../content/index.ts";
+  import type {
+    ShellGameplay,
+    ShellImageLibrary,
+  } from "../core/installed-inputs.ts";
   import {
     DeckSelectScreen,
     type DecklistRow,
@@ -17,7 +15,6 @@
   import { catalogByCode } from "../../decks/validation/index.ts";
   import { CARD_FRAME_COLORS, cardFrameOf } from "../../cards/index.ts";
   import { croppedCardImageUrl } from "../cards/deck-cover.ts";
-  import { installedDeckCatalog } from "../../decks/index.ts";
   import { IndexedDbDeckRepository } from "../../decks/repository/index.ts";
   import type {
     BattleDeckModule,
@@ -48,8 +45,7 @@
   } from "../toast/toast-context.ts";
   import DomainLoadError from "./DomainLoadError.svelte";
 
-  export let gameplay: InstalledGameplay;
-  export let reader: ContentReadPort | null = null;
+  export let gameplay: ShellGameplay;
   export let settings: ShellSettingsStore;
   /* The battle entry, loaded rather than imported: it also exports the duel,
      and a static import here would make the largest chunk in the build eager.
@@ -72,7 +68,7 @@
      until the packaged database answers, which is a fetch the seats never wait
      on: a tile with no cover draws its own placeholder. */
   let catalog: ReadonlyMap<number, DeckBuilderCardView> = catalogByCode(
-    installedDeckCatalog(gameplay).cards,
+    gameplay.presentation.cards,
   );
   let defaultDeckId: string | null = null;
   let playerKey = "";
@@ -137,29 +133,28 @@
   onMount(() => {
     let cancelled = false;
     const imagesAbort = new AbortController();
-    let images: InstalledImageLibrary | null = null;
+    let images: ShellImageLibrary | null = null;
     const alive = () => !cancelled;
     void loadListing(alive);
     void loadLibraryFlags(alive);
-    if (reader !== null)
-      void loadInstalledImages(reader, gameplay, imagesAbort.signal).then(
-        (loaded) => {
-          if (cancelled) {
-            loaded.dispose();
-            return;
-          }
-          images = loaded;
-          catalog = catalogByCode(
-            installedDeckCatalog(gameplay).cards.map((card) => ({
-              ...card,
-              imageUrl: loaded.cardUrls.get(card.code) ?? null,
-            })),
-          );
-        },
-        (error: unknown) => {
-          if (!cancelled) loadError = error;
-        },
-      );
+    void gameplay.images(imagesAbort.signal).then(
+      (loaded) => {
+        if (cancelled) {
+          loaded.dispose();
+          return;
+        }
+        images = loaded;
+        catalog = catalogByCode(
+          gameplay.presentation.cards.map((card) => ({
+            ...card,
+            imageUrl: loaded.cardUrls.get(card.code) ?? null,
+          })),
+        );
+      },
+      (error: unknown) => {
+        if (!cancelled) loadError = error;
+      },
+    );
     return () => {
       cancelled = true;
       imagesAbort.abort();

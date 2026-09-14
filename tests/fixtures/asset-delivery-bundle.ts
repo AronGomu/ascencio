@@ -3,6 +3,7 @@ import { cp, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { after } from "node:test";
 import { canonicalBytes } from "../../scripts/lib/asset-delivery/canonical-json.ts";
+import { contentRuntimeFixture } from "./content-runtime-fixture.ts";
 
 export const sha = (bytes: Uint8Array) =>
   createHash("sha256").update(bytes).digest("hex");
@@ -39,9 +40,9 @@ export async function fixture(reverse = false) {
       rules: [
         {
           root: "shared",
-          path: "data/current/catalog",
+          path: "data/current",
           kind: "tree",
-          logicalPath: "runtime/assets/current/catalog",
+          logicalPath: "runtime/assets/current",
         },
         {
           root: "shared",
@@ -86,26 +87,26 @@ export async function fixture(reverse = false) {
   );
   const files: [string, string][] = [
     ["assets/shared/fonts/test.woff2", "font"],
-    [
-      "assets/shared/runtime/manifest.json",
-      '{"schemaVersion":1,"snapshotId":"' + "a".repeat(64) + '"}',
-    ],
     ["assets/story/map.png", "deliberately-not-decodable-image"],
     ["assets/battle/original.blend", "original"],
     ["assets/deck-editor/unused.kra", "unreleased"],
   ];
   for (const [file, bytes] of reverse ? files.reverse() : files)
     await put(root, file, bytes);
-  await put(
-    root,
-    "assets/shared/data/current/catalog/cards/00.json",
-    canonicalBytes(fixtureCodes.map(fixtureCardRecord)),
-  );
-  await put(
-    root,
-    "assets/shared/data/current/catalog/texts/en/00.json",
-    canonicalBytes(fixtureCodes.map(fixtureCardText)),
-  );
+  const runtime = await contentRuntimeFixture(fixtureGameplay.cards, {
+    snapshotId: prepared.runtimeSnapshotId,
+  });
+  for (const file of runtime.files) {
+    const assetPrefix = "runtime/assets/current/";
+    if (file.path.startsWith(assetPrefix))
+      await put(
+        root,
+        `assets/shared/data/current/${file.path.slice(assetPrefix.length)}`,
+        file.bytes,
+      );
+    else if (file.path === "runtime/current/manifest.json")
+      await put(root, "assets/shared/runtime/manifest.json", file.bytes);
+  }
   await cp(
     "vendor/ocgcore-wasm/0.1.2",
     path.join(root, "vendor/ocgcore-wasm/0.1.2"),

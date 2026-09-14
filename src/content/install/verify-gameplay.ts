@@ -1,8 +1,3 @@
-import { OCG_TYPE, hasOcgType } from "../../decks/catalog/ocg-mask.ts";
-import {
-  PROTOTYPE_RULESET,
-  quantityLimit,
-} from "../../decks/catalog/pinned-ruleset.ts";
 import type { ChapterGameplay } from "../contracts/chapter-gameplay.ts";
 import type { ChapterFileRef } from "../contracts/chapter-file-ref.ts";
 import type { ContentReadPort } from "../contracts/content-read-port.ts";
@@ -154,25 +149,6 @@ export async function verifyGameplay(
       const story = unwrap(parseChapterStoryDocument(json(storyBytes)));
       if (story.contentId !== game.story.contentId) fail();
       fileFor(story.mapImage, "image/");
-    }
-    const isExtra = (code: number) =>
-      [OCG_TYPE.FUSION, OCG_TYPE.SYNCHRO, OCG_TYPE.XYZ, OCG_TYPE.LINK].some(
-        (mask) => hasOcgType(allowed.get(code)?.record.type ?? 0, mask),
-      );
-    for (const deck of game.decks) {
-      const counts = new Map<number, number>();
-      for (const code of [...deck.main, ...deck.extra, ...deck.side]) {
-        if (
-          !allowed.has(code) ||
-          hasOcgType(allowed.get(code)!.record.type, OCG_TYPE.TOKEN)
-        )
-          fail();
-        counts.set(code, (counts.get(code) ?? 0) + 1);
-      }
-      for (const [code, count] of counts)
-        if (count > quantityLimit(PROTOTYPE_RULESET, code)) fail();
-      if (deck.main.some(isExtra) || deck.extra.some((code) => !isExtra(code)))
-        fail();
     }
   }
 }

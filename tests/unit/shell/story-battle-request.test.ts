@@ -6,7 +6,7 @@ import {
 } from "../../../src/decks/contracts/index.ts";
 import type { BattleDeckModule } from "../../../src/shell/domain-loaders.ts";
 import { storyBattleRequest } from "../../../src/shell/handoff/handoff-request.ts";
-import { installedGameplayFixture } from "../../fixtures/installed-gameplay.ts";
+import { shellGameplayFixture as installedGameplayFixture } from "../../fixtures/shell-gameplay.ts";
 
 /* The pairing a story encounter is fought with. Only the player's seat comes
    from the save; the opponent stays the bundled deck the duel has always fixed

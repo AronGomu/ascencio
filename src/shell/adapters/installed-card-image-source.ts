@@ -3,11 +3,11 @@ import type {
   CardImageLease,
   CardImageSource,
 } from "../../cards/images/index.ts";
-import {
-  acquireInstalledAsset,
-  type ContentReadPort,
-  type InstalledGameplay,
+import type {
+  ContentReadPort,
+  InstalledGameplay,
 } from "../../content/index.ts";
+import { acquireInstalledAsset } from "../../content/index.ts";
 
 const MAXIMUM_CONCURRENT_READS = 4;
 

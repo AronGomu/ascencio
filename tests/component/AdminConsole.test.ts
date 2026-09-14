@@ -1,4 +1,4 @@
-import { installedGameplayFixture } from "../fixtures/installed-gameplay.ts";
+import { shellGameplayFixture as installedGameplayFixture } from "../fixtures/shell-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";

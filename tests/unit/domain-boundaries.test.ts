@@ -59,19 +59,6 @@ const PUBLIC_ENTRY: Readonly<Record<Domain, string | null>> = Object.freeze({
    takes the entry chunk from 2.62 kB to 339.73 kB. Each allowance disappears
    when its module gets a legal home. */
 const ALLOWANCES: Readonly<Record<string, readonly string[]>> = Object.freeze({
-  /* Installed-content readers stay behind route/startup dynamic imports.
-     Importing the broad content entry at these sites adds its full export graph
-     to the shell closure and exceeds the machine-enforced shell budget. */
-  "src/shell/AppShell.svelte": ["src/content/load-installed-images.ts"],
-  "src/shell/core/core-gate.ts": [
-    "src/content/storage/content-reader.ts",
-    "src/content/load-installed-gameplay.ts",
-  ],
-  // Shared pure deck rules, never UI/gameplay chunks; owner-approved T4 exception.
-  "src/content/install/verify-gameplay.ts": [
-    "src/decks/catalog/pinned-ruleset.ts",
-    "src/decks/catalog/ocg-mask.ts",
-  ],
   "src/content/storage/content-database.ts": ["idb"],
   "src/content/storage/content-reader.ts": ["idb"],
   "src/shell/admin/admin-actions.ts": [
@@ -117,6 +104,13 @@ function isLegalImport(from: string, to: string): boolean {
 
   const source = domainOf(from);
   if (source === "content") return to.startsWith("src/content/");
+  if (
+    source === "shell" &&
+    domainOf(to) === "content" &&
+    !from.startsWith("src/shell/application/") &&
+    !from.startsWith("src/shell/adapters/")
+  )
+    return false;
   if (source === "cards") return to.startsWith("src/cards/");
   if (source === "shared-svelte-ui")
     return to.startsWith("src/shared-svelte-ui/");
@@ -934,40 +928,40 @@ describe("domain imports", () => {
       ),
     ).toBe(false);
     expect(isLegalImport("src/shell/probe.ts", "src/content/index.ts")).toBe(
-      true,
+      false,
     );
-  });
-  it("installer exceptions remain exact-file pure validation boundaries", () => {
     expect(
-      isLegalImport(
-        "src/content/install/verify-gameplay.ts",
-        "src/decks/catalog/pinned-ruleset.ts",
-      ),
+      isLegalImport("src/shell/application/probe.ts", "src/content/index.ts"),
     ).toBe(true);
-    expect(
-      isLegalImport(
-        "src/content/probe.ts",
-        "src/decks/catalog/pinned-ruleset.ts",
-      ),
-    ).toBe(false);
+  });
+  it("Content has zero outgoing sibling imports and Shell narrows Content composition", () => {
     expect(
       isLegalImport(
         "src/content/install/verify-gameplay.ts",
-        "src/decks/index.ts",
+        "src/decks/catalog/pinned-ruleset.ts",
       ),
     ).toBe(false);
+    expect(isLegalImport("src/content/probe.ts", "src/cards/index.ts")).toBe(
+      false,
+    );
     expect(
       isLegalImport(
         "src/shell/screens/InstallContentScreen.svelte",
-        "src/shell/adapters/runtime-activation.ts",
+        "src/content/index.ts",
+      ),
+    ).toBe(false);
+    expect(
+      isLegalImport(
+        "src/shell/application/prepared-release.ts",
+        "src/content/index.ts",
       ),
     ).toBe(true);
     expect(
       isLegalImport(
-        "src/battle/probe.ts",
         "src/shell/adapters/runtime-activation.ts",
+        "src/content/index.ts",
       ),
-    ).toBe(false);
+    ).toBe(true);
   });
   it("content rejects dynamic Node and scripts imports", () => {
     for (const specifier of [
@@ -1051,6 +1045,22 @@ describe("Story Content isolation", () => {
   });
 });
 
+it("Shell producer validation entry is pure and exact", async () => {
+  expect(declaredExports("src/shell/release-validation.ts")).toEqual({
+    values: ["validateReleaseData"],
+    types: ["ReleaseValidationInput", "VerifiedPublishCandidate"],
+  });
+  expect(
+    importsOf("src/shell/release-validation.ts").some(
+      (target) =>
+        target.endsWith(".svelte") ||
+        target.includes("src/content/") ||
+        target === "idb" ||
+        target.startsWith("node:"),
+    ),
+  ).toBe(false);
+});
+
 it("Story pure ports/saves entries expose exact generation contracts without UI", async () => {
   const ports = await import("../../src/story/ports/index.ts");
   const saves = await import("../../src/story/saves/index.ts");
@@ -1098,7 +1108,11 @@ it("Story pure ports/saves entries expose exact generation contracts without UI"
 
 it("freezes the semantic Battle ports including InitializeRuntimeCommand", () => {
   expect(declaredExports("src/battle/ports/index.ts")).toEqual({
-    values: ["parseBattleRuntimeInput", "validateBattleRuntime"],
+    values: [
+      "parseBattleRuntimeInput",
+      "validateBattleRuntime",
+      "validateFrozenBattleExecutable",
+    ],
     types: [
       "BattlePresentationDeck",
       "BattlePresentationInput",
@@ -1109,4 +1123,128 @@ it("freezes the semantic Battle ports including InitializeRuntimeCommand", () =>
       "InitializeRuntimeCommand",
     ],
   });
+});
+
+it("Shell owner exports cannot launder Content type reexports or imported aliases", () => {
+  const files = sourceFiles().filter((file) => file.startsWith("src/shell/"));
+  const violations = files.flatMap((file) =>
+    contentTypeReexports(
+      file,
+      readFileSync(path.join(projectRoot, file), "utf8"),
+    ),
+  );
+  expect(violations).toEqual([]);
+});
+
+it.each([
+  'export type { ContentReadPort as ShellReader } from "../../content/index.ts";',
+  'export * from "../../content/index.ts";',
+  'import type { ContentReadPort as Reader } from "../../content/index.ts"; export type { Reader };',
+  'import type { ContentReadPort } from "../../content/index.ts"; export type ShellReader = ContentReadPort;',
+  'export type ShellReader = import("../../content/index.ts").ContentReadPort;',
+])("Shell Content reexport negative fixture: %s", (text) => {
+  expect(
+    contentTypeReexports("src/shell/application/probe.ts", text),
+  ).not.toEqual([]);
+});
+
+function contentTypeReexports(file: string, text: string): string[] {
+  if (file.endsWith(".svelte")) return [];
+  const tree = syntaxTree(file, text);
+  const contentSpecifier = (specifier: string): boolean =>
+    path.posix
+      .normalize(path.posix.join(path.posix.dirname(file), specifier))
+      .startsWith("src/content/");
+  const imported = new Set<string>();
+  for (const node of tree.statements) {
+    if (
+      ts.isImportDeclaration(node) &&
+      node.importClause &&
+      node.moduleSpecifier &&
+      ts.isStringLiteral(node.moduleSpecifier) &&
+      contentSpecifier(node.moduleSpecifier.text)
+    ) {
+      if (node.importClause.name) imported.add(node.importClause.name.text);
+      const bindings = node.importClause.namedBindings;
+      if (bindings && ts.isNamespaceImport(bindings))
+        imported.add(bindings.name.text);
+      if (bindings && ts.isNamedImports(bindings))
+        for (const name of bindings.elements) imported.add(name.name.text);
+    }
+  }
+  const tainted = (node: ts.Node): boolean => {
+    if (ts.isIdentifier(node) && imported.has(node.text)) return true;
+    if (ts.isImportTypeNode(node) && node.getText(tree).includes("content/"))
+      return true;
+    return ts.forEachChild(node, tainted) ?? false;
+  };
+  // Alias propagation closes multi-hop local renaming too.
+  for (let pass = 0; pass < tree.statements.length; pass++)
+    for (const node of tree.statements)
+      if (ts.isTypeAliasDeclaration(node) && tainted(node.type))
+        imported.add(node.name.text);
+  return tree.statements.flatMap((node) => {
+    if (
+      ts.isExportDeclaration(node) &&
+      ((node.moduleSpecifier &&
+        ts.isStringLiteral(node.moduleSpecifier) &&
+        contentSpecifier(node.moduleSpecifier.text)) ||
+        (node.exportClause && tainted(node.exportClause)))
+    )
+      return [`${file}: Content reexport`];
+    if (
+      ts.isTypeAliasDeclaration(node) &&
+      node.modifiers?.some(
+        (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword,
+      ) &&
+      tainted(node.type)
+    )
+      return [`${file}: Content alias`];
+    return [];
+  });
+}
+
+it("multi-hop Shell reexport cannot hide Content origin from whole-Shell scan", () => {
+  const chain = new Map([
+    [
+      "src/shell/application/origin.ts",
+      'import type { ContentReadPort as Raw } from "../../content/index.ts"; type Renamed = Raw; export type ShellReader = Renamed;',
+    ],
+    [
+      "src/shell/application/relay.ts",
+      'export type { ShellReader as Reader } from "./origin.ts";',
+    ],
+    [
+      "src/shell/screens/Probe.svelte",
+      '<script lang="ts">import type { Reader } from "../application/relay.ts";</script>',
+    ],
+  ]);
+  const violations = [...chain].flatMap(([file, text]) =>
+    contentTypeReexports(file, text),
+  );
+  expect(violations).toEqual([
+    "src/shell/application/origin.ts: Content alias",
+  ]);
+});
+
+it("Shell view models contain consumer semantics, not raw Content handles", async () => {
+  const { createShellGameplay } =
+    await import("../../src/shell/application/legacy-content.ts");
+  const { installedGameplayFixture } =
+    await import("../fixtures/installed-gameplay.ts");
+  const model = createShellGameplay(installedGameplayFixture(), null);
+  expect(model).not.toHaveProperty("content");
+  expect(model).not.toHaveProperty("readFile");
+  expect(model.cards.all()[0]).not.toHaveProperty("fullImage");
+  expect(model.sets[0]).not.toHaveProperty("image");
+  expect(model.presentation.cards[0]).not.toHaveProperty("packId");
+  expect(model.editor().starter.name).toBe("Installed Starter");
+});
+
+it("Shell installer preserves semantic failure copy after moving Content logic", async () => {
+  const { contentErrorCopy } =
+    await import("../../src/shell/content/content-error-copy.ts");
+  expect(contentErrorCopy("APP_REQUIRED_INPUT_FAILED")).toBe(
+    "Installed content failed semantic validation.",
+  );
 });

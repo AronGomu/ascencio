@@ -2,7 +2,7 @@
 
 import { cleanup, render, waitFor } from "@testing-library/svelte";
 import { afterEach, expect, it, vi } from "vitest";
-import { installedEditorCatalog } from "../../../src/shell/cards/installed-editor-catalog.ts";
+import { installedEditorCatalog } from "../../../src/shell/adapters/installed-editor-catalog.ts";
 import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 
 const mocks = vi.hoisted(() => ({ repository: vi.fn(), initialize: vi.fn() }));

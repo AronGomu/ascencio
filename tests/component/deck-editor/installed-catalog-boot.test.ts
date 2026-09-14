@@ -10,7 +10,7 @@ import {
   IndexedDbDeckRepository,
 } from "../../../src/decks/repository/index.ts";
 import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
-import { installedEditorCatalog } from "../../../src/shell/cards/installed-editor-catalog.ts";
+import { installedEditorCatalog } from "../../../src/shell/adapters/installed-editor-catalog.ts";
 
 function query(name: string): HTMLElement | null {
   return document.querySelector<HTMLElement>(`[data-cy="${name}"]`);

@@ -124,10 +124,38 @@ Paths: `package.json`; `scripts/content-publish.ts`; `scripts/lib/asset-delivery
 - [x] T7.R4 Retain rerunnable same-interval baseline/new client-to-Worker benchmark including Shell source.load; count both isolate heaps/process RSS correctly. Validation: `node --expose-gc artifacts/T7-REPAIR-EVIDENCE/benchmark.mjs`, `benchmark-attempt2.log` exit 0; five fresh-process samples/lane; baseline immutable `86631c98f616efc49ecf61e5a3e259c6130bd404`; identical 2136-file input digest; median startup 546.72 → 416.52 ms, combined sampled heap high-water 191753256 → 147289680 bytes. Node warm installed-storage harness, not browser-wide heap/absolute peak; no >20% regression, no DTO optimization required.
 - [x] T7.R5 Publish exact commands/exits, valid schema-shaped acceptance JSON, vendor/scoped quality/preservation evidence. Validation: repair report plus commands.json/validation logs; acceptance validator exit 0 (JSON, required fields, arrays, status/result enums); vendor 21 files, scoped ESLint/Prettier 10 files clean; 2239 pre-existing files unchanged/11 intentional changes/zero unexpected; diff/staging exit 0. Native Chromium 1/1 passed: frozen WASM ready→prompt→result, mutant rejected/no ready; graph updater/full lint/old installer skipped with recorded existing blockers. Parent review remains required.
 
+## T8 — Shell semantic release preparation
+
+| Field | Value |
+| --- | --- |
+| State | **ACCEPTED retry1** — `artifacts/REVIEW-T8-repair.md` dispositions all findings; independent Vitest 101/101, Node 47/47, parity 27/27, UI/bootstrap 56/56; parent Node initial 26/26 |
+| Writer | Sole root writer; no subagents; no commit/stage/push/deploy/real endpoint |
+| Depends | Accepted T6/T7 at baseline `5a3ba36`; frozen `ocgcore-wasm@0.1.2` |
+| Boundary | Shell application/adapters alone compose Content bytes with Cards, Decks, Story, Battle validators; producer uses exact pure `src/shell/release-validation.ts` entry |
+| Evidence | `artifacts/T8-EVIDENCE/`; `artifacts/IMPLEMENTATION-REPORT-T8.md` |
+
+- [x] T8.1 Capture parity RED first, then implement exact pure validator plus pinned `prepareRelease`. Validation: RED Vitest/Node exit 1; GREEN exact Vitest 53/53 and Node 26/26.
+- [x] T8.2 Preserve owned semantics and chapter-scoped runtime permission. Validation: token/zone/copy, card/text parity, conflicts/dedup/defaults/refs/media/allowed-pool tests pass.
+- [x] T8.3 Enforce Content import independence and narrow Shell Content consumers. Validation: boundary suite passes; public producer entry exact/pure; explicit Content→Decks allowance removed.
+- [x] T8.4 Bind producer/publisher to fresh semantic validation and exact official predecessor. Validation: continuity, stale predecessor, forged stamp, changed source, fake live CLI tests pass; previous pointer remains unchanged on rejection.
+- [x] T8.5 Preserve prior checks and publish checked evidence. Validation: legacy Node 198/198; affected Vitest 78/78; typecheck 0 errors/4 existing warnings; scoped lint/format/diff/vendor/staging clean. Existing shell budget failure recorded current `118072 > 115000` versus accepted-baseline reproduction `130862 > 115000`; graph update deferred for known external `429 RESOURCE_EXHAUSTED`.
+
+### T8 bounded repair — checked, not accepted
+
+- [x] R1. Rights/provenance + pre-CAS trust repaired. Verify: exact Node suite 47/47; fake CLI mutations/invalid candidates assert exact errors, zero pointer writes, transport closure. Canonical inventory identity binds rights-approved entry through final verification.
+- [x] R2. Frozen executable + lineage gates repaired. Verify: wrong vendor/WASM rejected before readiness; strict-sequence/cycle tests pass; 4096-release/64-GiB boundary tests pass without large fixtures; exact original-source replays reproduce prior failures.
+- [x] R3. Media/staging repaired. Verify: shared four-slot queue, exact queued abort, before-await clone/validation/deep freeze, pinned media, single revoke, late-disposal tests pass.
+- [x] R4. Shell Content laundering removed. Verify: Content-dependent impl moved to application/adapters; Shell view models expose consumer semantics; direct/type-alias/multi-hop negative fixtures pass; exhaustive 40-row old-verifier parity matrix recorded.
+- [x] R5. Checked repair evidence recorded. Verify: focused Vitest 101/101; Node 47/47; legacy 220/220; unit regressions 147/147; progressive storage 126/126; component/editor 376/376; bootstrap follow-up 56/56; typecheck 0 errors/4 existing warnings; scoped lint/format/vendor/diff clean. App/build verification now passes, Shell 95987 bytes, unchanged 115000 limit; lazy bootstrap boundary split incidentally removes inherited budget failure. T11 retains broader build/delivery acceptance ownership.
+
+### Acceptance gate
+
+- [ ] A1. Independent reviewer accepts B1–B4/E1–E2 publisher + B1–B3/N1 preparation repairs. Verify: reviewer checks `artifacts/IMPLEMENTATION-REPORT-T8-repair.md`, `artifacts/T8-REPAIR-EVIDENCE/`; no self-acceptance. Initial evidence/reviews/source snapshot preserved.
+
 ## Pending implementation order
 
 - [x] T4 → T5. Validation: T4 accepted at `5c2ddff`; T5 independently accepted; parent verified 91/91 focused tests. Native Chromium evidence in T5 repair report.
-- [ ] T6/T7 → T8. Validation: execute dependency-gated ticket acceptance contracts only after T5 and required T3/T2 baselines.
+- [x] T6/T7 → T8. Validation: T8 implemented with exact 53/53 Vitest, 26/26 producer/publisher, 198/198 legacy, 78/78 affected tests; independent review pending.
 - [ ] T9 → T10 → T11. Validation: execute sequential ticket acceptance contracts; aggregate final boundary/Chromium evidence at T11.
 
 ## Paths

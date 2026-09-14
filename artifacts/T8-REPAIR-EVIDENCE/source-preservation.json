@@ -1,0 +1,9 @@
+{
+  "state": "passed",
+  "initialRegularFiles": 2321,
+  "unchangedInitialFiles": 2258,
+  "intentionalChangedOrMovedInitialFiles": 63,
+  "protectedFilesUnchanged": 44,
+  "directorySymlink": ".pi/skills unchanged vs index (excluded from regular-file snapshot)",
+  "noStagedFiles": true
+}

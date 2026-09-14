@@ -24,6 +24,7 @@ import {
 } from "../scripts/lib/asset-delivery/progressive-producer.ts";
 import { runContent } from "../scripts/lib/asset-delivery/content-cli.ts";
 import { runContentPublish } from "../scripts/lib/asset-delivery/content-publish-cli.ts";
+import { contentRuntimeFixture } from "./fixtures/content-runtime-fixture.ts";
 
 const sha = (bytes: Uint8Array | string): string =>
   createHash("sha256").update(bytes).digest("hex");
@@ -33,34 +34,53 @@ async function fixture(reverseCreation = false): Promise<{
   inventory: FrozenInventory;
 }> {
   const root = await mkdtemp(path.join(os.tmpdir(), "ascencio-progressive-"));
-  const sources = [
-    ["assets/shared/runtime.json", '{"runtime":true}\n'],
-    ["assets/story/card.png", "png-fixture"],
-  ] as const;
+  const runtime = await contentRuntimeFixture(
+    prepared.chapters[0]!.gameplay.cards,
+    {},
+  );
+  const mediaPath = "assets/story/card.png";
+  const mediaBytes = Buffer.from("png-fixture");
+  const runtimePayload = runtime.files.filter(
+    ({ path }) => !path.startsWith("runtime/engine/"),
+  );
+  const sources: readonly (readonly [string, Uint8Array])[] = [
+    ...runtimePayload.map(
+      ({ path: logicalPath, bytes }) =>
+        [`assets/shared/${logicalPath}`, bytes] as const,
+    ),
+    [mediaPath, mediaBytes],
+    ...runtime.files
+      .filter(({ path }) => path.startsWith("runtime/engine/"))
+      .map(
+        ({ path: logicalPath, bytes }) =>
+          [
+            `vendor/ocgcore-wasm/0.1.2/${logicalPath.endsWith(".wasm") ? "lib/ocgcore.sync.wasm" : "vendor-manifest.json"}`,
+            bytes,
+          ] as const,
+      ),
+  ];
   for (const [relative, value] of reverseCreation
     ? [...sources].reverse()
     : sources) {
     await mkdir(path.dirname(path.join(root, relative)), { recursive: true });
     await writeFile(path.join(root, relative), value);
   }
-  const runtimeBytes = Buffer.from(sources[0][1]);
-  const mediaBytes = Buffer.from(sources[1][1]);
-  const runtimeSnapshotId = sha("runtime-snapshot");
+  const runtimeSnapshotId = runtime.snapshotId;
   const metadata = {
     schemaVersion: 2 as const,
     sourceInputs: [],
     runtimeSnapshotId,
-    runtimeCardCodes: [],
+    runtimeCardCodes: prepared.runtimeCardCodes,
     chapters: [
       {
         id: "chapter-01" as const,
         title: "Chapter 1",
         description: "Fixture",
         storyContentId: "prototype-prologue-v1" as const,
-        setIds: [],
+        setIds: prepared.chapters[0]!.setIds,
         unavailableSetImageIds: [],
-        cardCodes: [],
-        opponentIds: [],
+        cardCodes: prepared.chapters[0]!.cardCodes,
+        opponentIds: prepared.chapters[0]!.opponentIds,
         gameplay: prepared.chapters[0]!.gameplay,
         story: prepared.chapters[0]!.story,
       },
@@ -76,26 +96,37 @@ async function fixture(reverseCreation = false): Promise<{
     ],
     selection: { schemaVersion: 1, profiles: ["chapter-01", "runtime"] },
     files: [
+      ...runtimePayload.map(({ path: logicalPath, bytes }) => ({
+        path: `assets/shared/${logicalPath}`,
+        bytes: bytes.length,
+        sha256: sha(bytes),
+        root: "shared" as const,
+        sourcePath: logicalPath,
+        profile: "runtime" as const,
+        logicalPath,
+      })),
       {
-        path: sources[0][0],
-        bytes: runtimeBytes.length,
-        sha256: sha(runtimeBytes),
-        root: "shared",
-        sourcePath: "runtime.json",
-        profile: "runtime",
-        logicalPath: "runtime/data.json",
-      },
-      {
-        path: sources[1][0],
+        path: mediaPath,
         bytes: mediaBytes.length,
         sha256: sha(mediaBytes),
         root: "story",
         sourcePath: "card.png",
         profile: "chapter-01",
-        logicalPath: "chapters/chapter-01/card.png",
+        logicalPath: "story/media/map.png",
       },
-    ],
-    vendorFiles: [],
+    ].sort((left, right) =>
+      left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
+    ),
+    vendorFiles: runtime.files
+      .filter(({ path }) => path.startsWith("runtime/engine/"))
+      .map(({ path: logicalPath, bytes }) => ({
+        path: `vendor/ocgcore-wasm/0.1.2/${logicalPath.endsWith(".wasm") ? "lib/ocgcore.sync.wasm" : "vendor-manifest.json"}`,
+        bytes: bytes.length,
+        sha256: sha(bytes),
+      }))
+      .sort((left, right) =>
+        left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
+      ),
     retainedMetadata: { schemaVersion: 1, catalogs: [], manifests: [] },
     playerMetadata: metadata,
   });
@@ -150,10 +181,7 @@ test("stale generation: verifier rehashes changed canonical source bytes", async
     coreMin: 1,
     coreMaxExclusive: 2,
   });
-  await writeFile(
-    path.join(root, "assets/shared/runtime.json"),
-    '{"runtime":false}\n',
-  );
+  await writeFile(path.join(root, inventory.files[0]!.path), "changed");
   await assert.rejects(
     verifyProgressiveRelease(root, candidate.run, true),
     /CONTENT_SOURCE_STALE/,
@@ -192,9 +220,13 @@ test("CLI verification and publish check observe candidate; stale source returns
     ),
     0,
   );
-  assert.equal(
-    JSON.parse(stdout.at(-1)!).liveBlocked,
-    "PUBLISH_SEMANTIC_VALIDATION_REQUIRED",
+  assert.deepEqual(
+    {
+      mode: JSON.parse(stdout.at(-1)!).mode,
+      validation: JSON.parse(stdout.at(-1)!).validation,
+      publication: JSON.parse(stdout.at(-1)!).publication,
+    },
+    { mode: "check", validation: "passed", publication: null },
   );
   assert.equal(
     await runContentPublish(
@@ -207,7 +239,7 @@ test("CLI verification and publish check observe candidate; stale source returns
     1,
   );
   assert.equal(stderr.at(-1), "PUBLISH_APPROVAL_REQUIRED");
-  await writeFile(path.join(root, "assets/shared/runtime.json"), "changed");
+  await writeFile(path.join(root, inventory.files[0]!.path), "changed");
   assert.equal(
     await runContent(
       root,
@@ -219,6 +251,90 @@ test("CLI verification and publish check observe candidate; stale source returns
     1,
   );
   assert.equal(stderr.at(-1), "CONTENT_SOURCE_STALE");
+});
+
+test("official producer rejects chapter/runtime card text mismatch", async () => {
+  const { root, inventory } = await fixture();
+  const chapter = inventory.playerMetadata!.chapters[0]!;
+  const gameplay = {
+    ...chapter.gameplay,
+    cards: chapter.gameplay.cards.map((card, index) =>
+      index === 0
+        ? {
+            ...card,
+            text: { ...card.text, name: "Conflicting chapter text" },
+          }
+        : card,
+    ),
+  };
+  const changed = parseFrozenInventory({
+    ...inventory,
+    playerMetadata: {
+      ...inventory.playerMetadata!,
+      chapters: [{ ...chapter, gameplay }],
+    },
+  });
+  await assert.rejects(
+    packProgressiveRelease(root, changed, {
+      releaseSequence: 1,
+      coreMin: 1,
+      coreMaxExclusive: 2,
+    }),
+    /CONTENT_SEMANTIC_INVALID/,
+  );
+});
+
+test("verified run metadata records semantic validation and predecessor manifest identity", async () => {
+  const { root, inventory } = await fixture();
+  const first = await packProgressiveRelease(root, inventory, {
+    releaseSequence: 1,
+    coreMin: 1,
+    coreMaxExclusive: 2,
+  });
+  const validation = JSON.parse(
+    await readFile(
+      path.join(root, first.run, "progressive/validation.json"),
+      "utf8",
+    ),
+  );
+  assert.deepEqual(validation, {
+    schemaVersion: 1,
+    manifestVersion: first.manifestVersion,
+    previousManifestVersion: null,
+    validation: "passed",
+  });
+});
+
+test("official continuity: changed predecessor beat identity blocks successor", async () => {
+  const { root, inventory } = await fixture();
+  const first = await packProgressiveRelease(root, inventory, {
+    releaseSequence: 1,
+    coreMin: 1,
+    coreMaxExclusive: 2,
+  });
+  const chapter = inventory.playerMetadata!.chapters[0]!;
+  const changedStory = {
+    ...chapter.story,
+    beats: chapter.story.beats.map((beat, index) =>
+      index === 0 ? { ...beat, id: `${beat.id}-changed` } : beat,
+    ),
+  };
+  const changed = parseFrozenInventory({
+    ...inventory,
+    playerMetadata: {
+      ...inventory.playerMetadata!,
+      chapters: [{ ...chapter, story: changedStory }],
+    },
+  });
+  await assert.rejects(
+    packProgressiveRelease(root, changed, {
+      releaseSequence: 2,
+      coreMin: 1,
+      coreMaxExclusive: 2,
+      previousRun: first.run,
+    }),
+    /CONTENT_SEMANTIC_INVALID/,
+  );
 });
 
 test("previous release: sequence above one requires verified predecessor", async () => {
@@ -254,8 +370,8 @@ test("changed-source successor: historic integrity permits new inventory; candid
   const { root, inventory } = await fixture();
   const options = { releaseSequence: 1, coreMin: 1, coreMaxExclusive: 2 };
   const first = await packProgressiveRelease(root, inventory, options);
-  const source = inventory.files.find((file) => file.profile === "runtime")!;
-  const bytes = Buffer.from('{"runtime":false}\n');
+  const source = inventory.files.find((file) => file.profile === "chapter-01")!;
+  const bytes = Buffer.from("updated-png-fixture");
   await writeFile(path.join(root, source.path), bytes);
   const updated = parseFrozenInventory({
     ...inventory,
@@ -318,7 +434,6 @@ test("changed-source successor: historic integrity permits new inventory; candid
       root,
       second.run,
       new S3ProgressiveTransport(client, "bucket", ""),
-      { semanticValidated: true },
     ),
     /CONTENT_SOURCE_STALE/,
   );
@@ -470,7 +585,6 @@ for (const { name, tamper } of manifestCorruptions) {
         root,
         candidate.run,
         new S3ProgressiveTransport(client, "bucket", ""),
-        { semanticValidated: true },
       ),
       /CONTENT_INVALID_MANIFEST/,
     );
@@ -505,9 +619,168 @@ test("inventory schema: unknown field rejects verify and publish before remote c
       root,
       candidate.run,
       new S3ProgressiveTransport(client, "bucket", ""),
-      { semanticValidated: true },
     ),
     /CONTENT_INVALID_MANIFEST/,
   );
   assert.equal(client.calls, 0);
+});
+
+test("history work limits accept 4096 releases / 64 GiB exactly, reject next step cheaply", async () => {
+  const { visitReleaseHistory, MAX_HISTORY_RELEASES, MAX_HISTORY_BYTES } =
+    await import("../scripts/lib/asset-delivery/progressive-history.ts");
+  const history = {
+    runs: new Set<string>(),
+    sequence: Number.MAX_SAFE_INTEGER,
+    bytes: 0,
+  };
+  for (let index = 0; index < MAX_HISTORY_RELEASES; index++)
+    visitReleaseHistory(
+      history,
+      `run-${index}`,
+      MAX_HISTORY_RELEASES + 1 - index,
+      0,
+    );
+  assert.throws(() => visitReleaseHistory(history, "overflow", 1, 0), {
+    message: "CONTENT_INVALID_MANIFEST",
+  });
+  const bytes = {
+    runs: new Set<string>(),
+    sequence: Number.MAX_SAFE_INTEGER,
+    bytes: 0,
+  };
+  visitReleaseHistory(bytes, "first", 2, MAX_HISTORY_BYTES);
+  assert.throws(() => visitReleaseHistory(bytes, "second", 1, 1), {
+    message: "CONTENT_INVALID_MANIFEST",
+  });
+});
+
+test("history rejects equal/increasing predecessor sequence and cycles", async () => {
+  const { visitReleaseHistory } =
+    await import("../scripts/lib/asset-delivery/progressive-history.ts");
+  for (const [run, sequence] of [
+    ["second", 2],
+    ["second", 3],
+    ["first", 1],
+  ] as const) {
+    const history = {
+      runs: new Set<string>(),
+      sequence: Number.MAX_SAFE_INTEGER,
+      bytes: 0,
+    };
+    visitReleaseHistory(history, "first", 2, 1);
+    assert.throws(() => visitReleaseHistory(history, run, sequence, 1), {
+      message: "CONTENT_INVALID_MANIFEST",
+    });
+  }
+});
+
+for (const filePath of [
+  "runtime/engine/ocgcore.sync.wasm",
+  "runtime/engine/vendor-manifest.json",
+]) {
+  test(`producer rejects self-consistent wrong frozen bytes: ${filePath}`, async () => {
+    const { root, inventory } = await fixture();
+    const vendorPath = `vendor/ocgcore-wasm/0.1.2/${filePath.endsWith(".wasm") ? "lib/ocgcore.sync.wasm" : "vendor-manifest.json"}`;
+    const bytes = Buffer.from("wrong frozen executable");
+    await writeFile(path.join(root, vendorPath), bytes);
+    const changed = parseFrozenInventory({
+      ...inventory,
+      vendorFiles: inventory.vendorFiles.map((file) =>
+        file.path === vendorPath
+          ? { ...file, bytes: bytes.length, sha256: sha(bytes) }
+          : file,
+      ),
+    });
+    await assert.rejects(
+      packProgressiveRelease(root, changed, {
+        releaseSequence: 1,
+        coreMin: 1,
+        coreMaxExclusive: 2,
+      }),
+      { message: "CONTENT_SEMANTIC_INVALID" },
+    );
+  });
+}
+
+test("verifier rejects self-consistent acyclic equal-sequence predecessor chain", async () => {
+  const { root, inventory } = await fixture();
+  const options = { releaseSequence: 1, coreMin: 1, coreMaxExclusive: 2 };
+  const first = await packProgressiveRelease(root, inventory, options);
+  const second = await packProgressiveRelease(root, inventory, {
+    ...options,
+    releaseSequence: 2,
+    previousRun: first.run,
+  });
+  const third = await packProgressiveRelease(root, inventory, {
+    ...options,
+    releaseSequence: 3,
+    previousRun: second.run,
+  });
+  const equalManifest = { ...second.manifest, releaseSequence: 3 };
+  await rewriteManifest(root, second.run, equalManifest);
+  const secondVersion = sha(canonicalBytes(equalManifest));
+  await writeFile(
+    path.join(root, second.run, "progressive/validation.json"),
+    canonicalBytes({
+      schemaVersion: 1,
+      manifestVersion: secondVersion,
+      previousManifestVersion: first.manifestVersion,
+      validation: "passed",
+    }),
+  );
+  await writeFile(
+    path.join(root, third.run, "progressive/previous-release.json"),
+    canonicalBytes({
+      schemaVersion: 1,
+      run: second.run,
+      manifestVersion: secondVersion,
+      story: { ...second.story, revision: 3 },
+    }),
+  );
+  await writeFile(
+    path.join(root, third.run, "progressive/candidate.json"),
+    canonicalBytes({
+      ...third.candidate,
+      previousManifestVersion: secondVersion,
+    }),
+  );
+  await writeFile(
+    path.join(root, third.run, "progressive/validation.json"),
+    canonicalBytes({
+      schemaVersion: 1,
+      manifestVersion: third.manifestVersion,
+      previousManifestVersion: secondVersion,
+      validation: "passed",
+    }),
+  );
+  await assert.rejects(verifyProgressiveRelease(root, third.run, true), {
+    message: "CONTENT_INVALID_MANIFEST",
+  });
+});
+
+test("verifier rejects cyclic predecessor run before repeated object verification", async () => {
+  const { root, inventory } = await fixture();
+  const first = await packProgressiveRelease(root, inventory, {
+    releaseSequence: 1,
+    coreMin: 1,
+    coreMaxExclusive: 2,
+  });
+  const second = await packProgressiveRelease(root, inventory, {
+    releaseSequence: 2,
+    coreMin: 1,
+    coreMaxExclusive: 2,
+    previousRun: first.run,
+  });
+  await writeFile(
+    path.join(root, second.run, "progressive/previous-release.json"),
+    canonicalBytes({
+      schemaVersion: 1,
+      run: second.run,
+      manifestVersion: first.manifestVersion,
+      story: first.story,
+    }),
+  );
+  await assert.rejects(verifyProgressiveRelease(root, second.run, true), {
+    message: "CONTENT_INVALID_MANIFEST",
+  });
 });

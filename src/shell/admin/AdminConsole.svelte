@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { InstalledGameplay } from "../../content/index.ts";
+  import type { ShellGameplay } from "../core/installed-inputs.ts";
   import { PROTOTYPE_RULESET } from "../../decks/validation/index.ts";
   import { emptyDeckHistory } from "../../decks/editing/index.ts";
   import type { DeckRepository } from "../../decks/index.ts";
@@ -24,7 +24,7 @@
   import type { GenerationSaveRepository } from "../../story/saves/index.ts";
   export let saves: GenerationSaveRepository | null = null;
   export let store: ShellStore;
-  export let gameplay: InstalledGameplay | null = null;
+  export let gameplay: ShellGameplay | null = null;
   export let openRepository: () => Promise<ClosableRepository> = async () =>
     await IndexedDbDeckRepository.open();
   export let resetTarget: (
